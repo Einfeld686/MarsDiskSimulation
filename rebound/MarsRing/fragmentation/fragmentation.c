@@ -9,6 +9,15 @@
 double min_frag_mass = 1.4e-8;
 int tot_no_frags = 0;  //if restarting a simulation this needs to be changed to the last number of frags in the simulation, otherwise new fragments added will rewrite exisiting frags
 
+/* --- tidal disruption energy (Stage B) --- */
+static const double Q_nominal = 10.0; /* J/kg */
+static const double r_Roche   = 3.0e7; /* m : placeholder */
+
+double Q_tidal(double r_cm){
+    const double dQ_dr = 0.5; /* J kg^-1 km^-1 (暫定) */
+    return Q_nominal - dQ_dr*(r_Roche - r_cm)/1e3;
+}
+
 
 #define MIN(a, b) ((a) > (b) ? (b) : (a))    ///< Returns the minimum of a and b
 #define MAX(a, b) ((a) > (b) ? (a) : (b))    // Returns the maximum of a and b

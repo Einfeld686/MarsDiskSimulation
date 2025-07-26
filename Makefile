@@ -1,10 +1,14 @@
 # ======== Makefile ========
 
 CC      := gcc
-CFLAGS  := -std=c17 -Irebound -Wall -Wextra -Werror
-SRC     := $(wildcard rebound/src/*.c)          # REBOUND 本体
-# 必要に応じて自分の追加ソースを列挙
-# SRC    += rebound/MarsRing/problem.c
+MODE    ?= A
+CFLAGS  := -std=c17 -Irebound -Isrc -Wall -Wextra -Werror
+
+SRC     := $(wildcard rebound/src/*.c)
+SRC     += src/smoluchowski.c
+ifeq ($(MODE),C)
+SRC     += src/hybrid.c
+endif
 
 TARGET  := bin/problem              # 出力バイナリ
 
