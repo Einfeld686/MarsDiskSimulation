@@ -6,7 +6,7 @@ REBOUND をベースに、火星周回デブリの断片化（fragmentation）�
 ```bash
 sudo apt-get update && sudo apt-get install -y build-essential
 make            # bin/problem が生成される
-make test       # 単体テスト（未実装ならスキップされます）
+make test       # 単体テストを実行する
 ```
 
 ## ディレクトリ構成
