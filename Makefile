@@ -18,8 +18,12 @@ $(TARGET): $(SRC)
 	@mkdir -p bin
 	$(CC) $(CFLAGS) $^ -o $@ -lm
 
-test:
-	@echo "テスト未実装"
+test: bin/test_smol
+	bin/test_smol
+
+bin/test_smol: tests/test_smol.c src/smoluchowski.c
+	@mkdir -p bin
+	$(CC) $(CFLAGS) $^ -o $@ -lm
 
 clean:
 	rm -rf bin
