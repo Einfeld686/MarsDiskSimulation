@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import os  # ADD: 画像保存用ディレクトリ作成に使用
 
 rho = 3000               # 粒子密度 [kg m^-3]
 
@@ -33,4 +34,6 @@ ax.set_xscale('log'); ax.set_yscale('log')
 ax.set_xlabel('Particle radius $s$ [m]')
 ax.set_ylabel('Surface density $\\Sigma$ [kg m$^{-2}$]')
 ax.set_title('Optical depth map ($\\rho$=3000 kg m$^{-3}$)')
+os.makedirs("output", exist_ok=True)  # ADD: 出力フォルダを自動作成
+plt.savefig("output/fig_optical_depth_map.png", dpi=300)  # ADD: 画像保存
 plt.show()
