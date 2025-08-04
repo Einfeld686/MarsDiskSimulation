@@ -176,6 +176,33 @@ def t_PR(s, rho, beta_sun_val):
     return 400 * (rho / 3000) * (s / 1e-6) * (A_MARS / AU) ** 2 / beta_sun_val
 
 
+def t_PR_mars(s, rho, T_mars, Q_pr, r_disk):
+    """Mars-origin Poynting–Robertson drag timescale.
+
+    Parameters
+    ----------
+    s : ndarray
+        Particle radius [m].
+    rho : float
+        Particle density [kg m^-3].
+    T_mars : float
+        Effective temperature of Mars [K].
+    Q_pr : float
+        Radiation pressure efficiency.
+    r_disk : float
+        Disk radius from Mars [m].
+
+    Returns
+    -------
+    ndarray
+        P-R drag timescale due to Mars radiation [yr].
+    """
+    L_mars = 4 * np.pi * R_MARS ** 2 * sigma_SB * T_mars ** 4
+    # Burns+79 Eq.(3)
+    return (4 * np.pi * rho * s * c ** 2 * r_disk ** 2 /
+            (3 * L_mars * Q_pr)) / SECONDS_PER_YEAR
+
+
 def parse_args():
     """CLI パラメータの構築."""
     p = argparse.ArgumentParser()
@@ -187,6 +214,13 @@ def parse_args():
                    help="粒子密度 [kg m^-3]")
     p.add_argument("--qpr", type=float, default=1.0,
                    help="放射圧係数 Q_pr")
+    p.add_argument("--include_mars_pr", choices=["yes", "no"],
+                   default="yes",
+                   help="火星起源 PR を t_PR に含めるか (yes/no)")
+    p.add_argument("--Sigma_min", type=float, default=1e2,
+                   help="表面密度下限 [kg m^-2]")
+    p.add_argument("--Sigma_max", type=float, default=1e6,
+                   help="表面密度上限 [kg m^-2]")
     p.add_argument("--n_s", type=int, default=400)
     p.add_argument("--n_sigma", type=int, default=400)
     return p.parse_args()
@@ -197,7 +231,8 @@ def main():
     args = parse_args()
 
     s_vals = np.logspace(-6, 0, args.n_s)
-    Sigma_vals = np.logspace(2, 6, args.n_sigma)
+    Sigma_vals = np.logspace(np.log10(args.Sigma_min),
+                             np.log10(args.Sigma_max), args.n_sigma)
     S, SIG = np.meshgrid(s_vals, Sigma_vals)
 
     beta_sun0 = beta_sun(S, args.rho)
@@ -208,16 +243,25 @@ def main():
 
     Omega = omega_kepler(args.r_disk)
     t_col = t_collision(S, SIG, args.rho, args.r_disk) / SECONDS_PER_YEAR
-    t_pr = t_PR(S, args.rho, beta_sun0)
-    ratio = np.log10(t_pr / t_col)
+    t_pr_sun = t_PR(S, args.rho, beta_sun0)
+    if args.include_mars_pr == "yes":
+        t_pr_m = t_PR_mars(S, args.rho, args.T_mars, args.qpr,
+                           args.r_disk)
+        t_pr_total = 1 / (1 / t_pr_sun + 1 / t_pr_m)
+    else:
+        t_pr_total = t_pr_sun
+    ratio = np.log10(t_pr_total / t_col)
 
     fig, ax = plt.subplots(figsize=(8, 6))
     abs_max = np.nanmax(np.abs(ratio))
     norm = colors.TwoSlopeNorm(vcenter=0, vmin=-abs_max, vmax=abs_max)
     pcm = ax.pcolormesh(np.log10(S), np.log10(SIG), ratio,
                         cmap="RdBu", norm=norm, shading="auto")
-    fig.colorbar(pcm, ax=ax,
-                 label=r"$\log_{10}(t_{\rm PR}/t_{\rm col})$")
+    fig.colorbar(
+        pcm,
+        ax=ax,
+        label=r"$\log_{10}(t_{\rm PR,total}/t_{\rm col})$",
+    )
 
     ax.contour(np.log10(S), np.log10(SIG), tau, levels=[1], colors="white",
                linestyles="--", linewidths=1)
@@ -228,10 +272,11 @@ def main():
 
     ax.set_xlabel(r"$\log_{10} s$ [m]")
     ax.set_ylabel(r"$\log_{10} \Sigma$ [kg m$^{-2}$]")
-    ax.set_title("Static timescale map around Mars")
+    pr_tag = "+MarsPR" if args.include_mars_pr == "yes" else ""
+    ax.set_title(f"Timescale map around Mars {pr_tag}")
 
     os.makedirs("output", exist_ok=True)
-    plt.savefig("output/map_tau_beta.png", dpi=300)
+    plt.savefig(f"output/map_tau_beta{pr_tag}.png", dpi=300)
     plt.close(fig)
 
     df = pd.DataFrame({
@@ -242,7 +287,7 @@ def main():
         "beta_mars": beta_m.ravel(),
         "beta_eff": beta_eff.ravel(),
         "t_col_yr": t_col.ravel(),
-        "t_PR_yr": t_pr.ravel(),
+        "t_PR_total_yr": t_pr_total.ravel(),
         "log10_ratio": ratio.ravel(),
     })
     df.to_csv("output/disk_map.csv", index=False)
