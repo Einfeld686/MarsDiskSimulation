@@ -59,7 +59,6 @@ ax.set_title('Static timescale map around Mars')
 # Save figure
 os.makedirs('output', exist_ok=True)
 plt.savefig(os.path.join('output', 'fig_static_map.png'), dpi=300)
-=======
 import os  # ADD: 画像保存用ディレクトリ作成に使用
 
 rho = 3000               # 粒子密度 [kg m^-3]
