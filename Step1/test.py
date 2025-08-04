@@ -208,8 +208,8 @@ def parse_args():
     p = argparse.ArgumentParser()
     p.add_argument("--T_mars", type=float, default=3000,
                    help="有効温度 [K] (例: 3000)")
-    p.add_argument("--r_disk", type=float, default=5 * R_MARS,
-                   help="評価半径 [m] (例: 5*R_MARS)")
+    p.add_argument("--r_disk", type=float, default=2 * R_MARS,
+                   help="評価半径 [m] (例: 2*R_MARS)")
     p.add_argument("--rho", type=float, default=3000,
                    help="粒子密度 [kg m^-3]")
     p.add_argument("--qpr", type=float, default=1.0,
