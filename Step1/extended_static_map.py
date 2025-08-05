@@ -92,14 +92,13 @@ def mass_fraction_blowout_map(S, SIG, rho, a_min, a_bl, a_max, q, t_sim, r_disk)
         ``(n_\sigma, n_s)`` 形状の ``F_blow`` マップ / map of ``F_blow`` with
         shape ``(n_sigma, n_s)`` clipped to [0, 1].
     """
-
-    # a_bl may depend on heliocentric beta -> compute per (ρ, a_rep)
-    a_bl_grid = blowout_radius(rho) * np.ones_like(S)   # or β(S,ρ)
-    a_min_grid = 0.05 * a_bl_grid
+    # Dohnanyi 分布に基づく瞬時質量分率
     f_mass = (
-      a_bl_grid ** (4 - q) - a_min_grid ** (4 - q)
-    ) / (a_max ** (4 - q) - a_min_grid ** (4 - q))
-    return f_mass * (1 - np.exp(-t_sim / t_col))
+      a_bl ** (4 - q) - a_min ** (4 - q)
+    ) / (a_max ** (4 - q) - a_min ** (4 - q))
+
+    F_blow = f_mass * (1.0 - np.exp(-t_sim / t_col))
+    return np.clip(F_blow, 0.0, 1.0)
 
 def tau_integral(C, a1, a2, q=3.5):
     """∫_{a1}^{a2} π a² n(a) da （解析解）."""
