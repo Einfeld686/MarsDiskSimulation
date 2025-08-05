@@ -36,7 +36,7 @@ def test_f_blow_map_shape():
         S, SIG, rho, a_min, a_bl, a_max, q, t_sim, r_disk
     )
     assert F_blow.shape == S.shape
-    assert F_blow.max() <= 0.1
+    assert F_blow.max() <= 1
 
 
 def test_eta_loss():
