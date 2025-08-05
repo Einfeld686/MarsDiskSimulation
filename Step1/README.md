@@ -26,3 +26,21 @@ ls output/
 #=> extended_maps_r2.6R.png  extended_disk_map_r2.6R.csv  master_summary.csv
 ```
 
+## Σ プロファイル
+
+- `--profile_mode` で Σ プロファイルの形を選択できる。
+- `profile_mode="piecewise"` のとき `--gamma`, `--Sigma0_in` は無視される。
+- `profile_mode="gamma"` のとき新オプション（`--r_transition` など）は無視される。
+
+### 使い方サンプル
+
+```bash
+# 内側 5e3 kg/m²，外側総質量 1e-8 M_M，p=5 の例
+python extended_static_map.py --profile_mode piecewise \
+  --Sigma_inner 5e3 --M_outer 1e-8 --p_outer 5
+
+# 旧来の gamma プロファイルを再現したい場合
+python extended_static_map.py --profile_mode gamma \
+  --Sigma0_in 1e4 --gamma 3
+```
+
