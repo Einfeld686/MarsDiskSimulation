@@ -47,7 +47,7 @@ def test_eta_loss():
     r_disk = 2 * R_MARS
     t_sim = 10.0
     beta_dummy = np.full_like(S, 0.1)
-    t_col = mod_ts.collision_timescale(S, SIG, rho, r_disk)
+    t_col = mod_ts.collision_timescale_years(S, SIG, rho, r_disk)
     t_pr = mod_ts.pr_timescale_total(S, rho, beta_dummy, False, 3000, 1.0, r_disk)
     tau_eff = (t_col * t_pr) / (t_col + t_pr)
     eta_loss = 1.0 - np.exp(-t_sim / tau_eff)

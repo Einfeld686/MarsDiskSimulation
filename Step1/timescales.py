@@ -11,9 +11,18 @@ def convert_sec_to_year(x):
     return x / SECONDS_PER_YEAR
 
 
-def collision_timescale(s, Sigma, rho, r_disk):
-    """衝突時スケールを年で返す."""
-    return convert_sec_to_year(t_collision(s, Sigma, rho, r_disk))
+def collision_timescale_sec(s, Sigma, rho, r_disk):
+    """衝突時スケール [s]."""
+    return t_collision(s, Sigma, rho, r_disk)
+
+
+def collision_timescale_years(s, Sigma, rho, r_disk):
+    """衝突時スケール [yr]."""
+    return convert_sec_to_year(collision_timescale_sec(s, Sigma, rho, r_disk))
+
+
+# 後方互換性のためのエイリアス
+collision_timescale = collision_timescale_years
 
 
 def pr_timescale_total(s, rho, beta_sun_val, include_mars, T_mars, qpr, r_disk):
