@@ -172,12 +172,28 @@ def parse_args():
         default=1e4,
         help="質量損失評価用シミュレーション時間 [yr]",
     )
-    return p.parse_args()
+    p.add_argument(
+        "--testmode",
+        action="store_true",
+        help="テスト用高速モード",
+    )
+    args = p.parse_args()
+    if args.testmode:
+        args.n_s = 10
+        args.n_sigma = 10
+        args.r_max = args.r_min
+    return args
 
 
 # ── メイン計算 ───────────────────────────
 def calc_maps(args, suffix=""):
-    """3 種の指標マップを計算し CSV/PNG を出力する."""
+    """3 種の指標マップを計算し CSV/PNG を出力する.
+
+    有効寿命と質量損失率 / Effective lifetime and mass-loss rate::
+
+        \tau_{\rm eff}=\frac{t_{\rm col} t_{\rm PR}}{t_{\rm col}+t_{\rm PR}}\ [\rm yr]
+        \eta_{\rm loss}=1-\exp\!\left(-\frac{t_{\rm sim}}{\tau_{\rm eff}}\right)
+    """
 
     a_bl = blowout_radius(args.rho, args.qpr)
     a_min = 0.05 * a_bl
@@ -214,11 +230,15 @@ def calc_maps(args, suffix=""):
     )
     F_blow = np.clip(F_blow, 0, 1)
 
-    eta_loss = t_pr_total / (t_col + t_pr_total)
+    tau_eff = (t_col * t_pr_total) / (t_col + t_pr_total)
+    eta_loss = 1.0 - np.exp(-args.t_sim / tau_eff)
+    eta_loss = np.clip(eta_loss, 0.0, 1.0)
+    assert eta_loss.shape == S.shape
+    assert np.nanmax(eta_loss) <= 1.0
 
     tau0 = tau_integral(C, a_min, args.a_max, args.q)
-    tau_eff = tau_integral(C, a_bl_eff, args.a_max, args.q)
-    R_tau_scalar = tau_eff / tau0
+    tau_eff_tau = tau_integral(C, a_bl_eff, args.a_max, args.q)
+    R_tau_scalar = tau_eff_tau / tau0
     R_tau = np.tile(R_tau_scalar[:, None], (1, args.n_s))
 
     # ── 描画 ──────────────────────────────
