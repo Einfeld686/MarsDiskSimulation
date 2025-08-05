@@ -93,15 +93,16 @@ def mass_fraction_blowout_map(S, SIG, rho, a_min, a_bl, a_max, q, t_sim, r_disk)
         shape ``(n_sigma, n_s)`` clipped to [0, 1].
     """
 
-    f_mass = (a_bl ** (4 - q) - a_min ** (4 - q)) / (
-        a_max ** (4 - q) - a_min ** (4 - q)
-    )
+    # a_bl may depend on heliocentric beta -> compute per (ρ, a_rep)
+    a_bl_grid = blowout_radius(rho) * np.ones_like(S)   # or β(S,ρ)
+    a_min_grid = 0.05 * a_bl_grid
+    f_mass = (
+      a_bl_grid ** (4 - q) - a_min_grid ** (4 - q)
+    ) / (a_max ** (4 - q) - a_min_grid ** (4 - q))
+
     t_col = collision_timescale_years(S, SIG, rho, r_disk)
-    return f_mass * (1 - np.exp(-t_sim / t_col))
-    t_col = t_collision(S, SIG, rho, r_disk) / SECONDS_PER_YEAR
     F_blow = f_mass * (1 - np.exp(-t_sim / t_col))
     return np.clip(F_blow, 0.0, 1.0)
-
 
 def tau_integral(C, a1, a2, q=3.5):
     """∫_{a1}^{a2} π a² n(a) da （解析解）."""
@@ -225,6 +226,10 @@ def calc_maps(args, suffix=""):
     tau_geo = optical_depth(S, SIG, args.rho)
 
     t_col = collision_timescale_years(S, SIG, args.rho, args.r_disk)
+    # Wyatt05 式は厚い円盤で過小評価するので安全係数
+    if args.thick_disk:
+      t_col *= 100      # ← 例：2桁くらい緩める
+    
     t_pr_total = pr_timescale_total(
         S,
         args.rho,
