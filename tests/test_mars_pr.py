@@ -2,7 +2,7 @@ from importlib import util
 from pathlib import Path
 
 spec = util.spec_from_file_location(
-    "step1_test", Path(__file__).resolve().parents[1] / "Step1" / "test.py"
+    "static_map", Path(__file__).resolve().parents[1] / "Step1" / "static_map.py"
 )
 mod = util.module_from_spec(spec)
 spec.loader.exec_module(mod)
