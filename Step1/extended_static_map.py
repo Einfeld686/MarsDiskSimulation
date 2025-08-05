@@ -189,7 +189,7 @@ def parse_args():
     p.add_argument(
         "--t_sim",
         type=float,
-        default=1e4,
+        default=100,
         help="質量損失評価用シミュレーション時間 [yr]",
     )
     p.add_argument(
