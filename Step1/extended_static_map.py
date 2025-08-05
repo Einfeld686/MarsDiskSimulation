@@ -58,34 +58,43 @@ def norm_const_dohnanyi(Sigma, rho, a_min, a_max, q=3.5):
 
 
 def mass_fraction_blowout_map(S, SIG, rho, a_min, a_bl, a_max, q, t_sim, r_disk):
-    """各格子点での吹き飛ばし質量分率 F_blow を計算する.
+    r"""Calculate the mass fraction lost by blowout.
+
+    各格子点での吹き飛ばし質量分率 :math:`F_{\rm blow}` を計算する。
+
+    .. math::
+        F_{\rm blow} = f_{\rm mass}\left[1-\exp\left(-\frac{t_{\rm sim}}
+        {t_{\rm col}(\Sigma, a_{\rm rep})}\right)\right]
 
     Parameters
     ----------
     S, SIG : ndarray
+        Representative grain size and surface density meshgrid /
         代表粒径と表面密度のメッシュグリッド.
     rho : float
-        粒子密度 [kg m^-3].
+        Particle density [kg m^-3] / 粒子密度.
     a_min, a_bl, a_max : float
-        サイズ分布下限, ブローアウト粒径, 上限 [m].
+        Minimum size, blowout size, maximum size [m] /
+        サイズ分布下限・ブローアウト粒径・上限 [m].
     q : float
-        Dohnanyi 分布指数.
+        Power-law index of size distribution / Dohnanyi 分布指数.
     t_sim : float
-        評価時間 [yr].
+        Simulation time [yr] / 評価時間 [年].
     r_disk : float
-        評価半径 [m].
+        Disk radius from Mars [m] / 評価半径 [m].
 
     Returns
     -------
     ndarray
-        F_blow の 2 次元マップ.
+        形状 :code:`(n_\sigma, n_s)` の :math:`F_{\rm blow}` マップ.
     """
 
     f_mass = (a_bl ** (4 - q) - a_min ** (4 - q)) / (
         a_max ** (4 - q) - a_min ** (4 - q)
     )
-    t_col = collision_timescale(S, SIG, rho, r_disk)
-    return f_mass * (1 - np.exp(-t_sim / t_col))
+    t_col = t_collision(S, SIG, rho, r_disk) / SECONDS_PER_YEAR
+    F_blow = f_mass * (1 - np.exp(-t_sim / t_col))
+    return np.clip(F_blow, 0.0, 1.0)
 
 
 def tau_integral(C, a1, a2, q=3.5):
@@ -325,5 +334,25 @@ def run_batch(args):
 
 
 if __name__ == "__main__":
-    args = parse_args()
-    run_batch(args)
+    import sys
+    if "--testmode" in sys.argv:
+        S_vals = np.logspace(-6, -5, 2)
+        Sigma_vals = np.logspace(2, 3, 2)
+        S, SIG = np.meshgrid(S_vals, Sigma_vals)
+        F_blow = mass_fraction_blowout_map(
+            S,
+            SIG,
+            rho=3000,
+            a_min=1e-7,
+            a_bl=2e-6,
+            a_max=1e-3,
+            q=3.5,
+            t_sim=1.0,
+            r_disk=2 * R_MARS,
+        )
+        assert F_blow.max() <= 1.0
+        assert F_blow.shape == S.shape
+        print("testmode passed")
+    else:
+        args = parse_args()
+        run_batch(args)

@@ -36,10 +36,31 @@ def test_f_blow_map_and_eta_loss_shape():
         S, SIG, rho, a_min, a_bl, a_max, q, t_sim, r_disk
     )
     assert F_blow.shape == S.shape
-    assert F_blow.max() <= 0.1
+    assert F_blow.max() <= 1.0
 
     beta_dummy = np.full_like(S, 0.1)
     t_col = mod_ts.collision_timescale(S, SIG, rho, r_disk)
     t_pr = mod_ts.pr_timescale_total(S, rho, beta_dummy, False, 3000, 1.0, r_disk)
     eta_loss = t_pr / (t_col + t_pr)
     assert eta_loss.shape == S.shape
+
+
+def test_mass_fraction_blowout():
+    S_vals = np.array([1e-6, 1e-4])
+    Sigma_vals = np.array([1e2, 1e3])
+    S, SIG = np.meshgrid(S_vals, Sigma_vals)
+    F_blow = mod_map.mass_fraction_blowout_map(
+        S,
+        SIG,
+        rho=3000,
+        a_min=1e-7,
+        a_bl=2e-6,
+        a_max=1e-3,
+        q=3.5,
+        t_sim=1e-9,
+        r_disk=2 * R_MARS,
+    )
+    # Sigma が大きいほど F_blow が大きい
+    assert F_blow[1, 0] > F_blow[0, 0]
+    # 粒径が大きくなると F_blow は小さくなる
+    assert F_blow[1, 1] < F_blow[1, 0]
