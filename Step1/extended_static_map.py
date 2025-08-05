@@ -189,6 +189,11 @@ def parse_args():
         help="質量損失評価用シミュレーション時間 [yr]",
     )
     p.add_argument(
+        "--thick_disk",
+        action="store_true",
+        help="厚い円盤補正：t_col に係数を掛ける",
+    )
+    p.add_argument(
         "--testmode",
         action="store_true",
         help="テスト用高速モード",
@@ -227,7 +232,7 @@ def calc_maps(args, suffix=""):
 
     t_col = collision_timescale_years(S, SIG, args.rho, args.r_disk)
     # Wyatt05 式は厚い円盤で過小評価するので安全係数
-    if args.thick_disk:
+    if getattr(args, "thick_disk", False):
       t_col *= 100      # ← 例：2桁くらい緩める
     
     t_pr_total = pr_timescale_total(
