@@ -83,8 +83,8 @@ def mass_fraction_blowout_map(S, SIG, rho, a_min, a_bl, a_max, q, t_sim, t_col):
         サイズ分布指数.
     t_sim : float
         評価時間 [yr].
-    r_disk : float
-        解析半径 [m].
+    t_col : ndarray
+        衝突時間スケール [yr]. ``S`` と同形状の配列を想定。
 
     Returns
     -------
@@ -247,7 +247,7 @@ def calc_maps(args, suffix=""):
     C = norm_const_dohnanyi(Sigma_vals, args.rho, a_min, args.a_max, args.q)
     a_bl_eff = np.maximum(a_bl, a_min)
     F_blow = mass_fraction_blowout_map(
-        S, SIG, args.rho, a_min, a_bl_eff, args.a_max, args.q, args.t_sim, args.r_disk
+        S, SIG, args.rho, a_min, a_bl_eff, args.a_max, args.q, args.t_sim, t_col
     )
     F_blow = np.clip(F_blow, 0, 1)
 
