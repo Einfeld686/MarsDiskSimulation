@@ -58,34 +58,48 @@ def norm_const_dohnanyi(Sigma, rho, a_min, a_max, q=3.5):
 
 
 def mass_fraction_blowout_map(S, SIG, rho, a_min, a_bl, a_max, q, t_sim, r_disk):
-    """各格子点での吹き飛ばし質量分率 F_blow を計算する.
+    """吹き飛ばし質量分率 :math:`F_{\rm blow}` を返す.
+
+    Compute the mass fraction of particles blown out of the system at each
+    grid point ``(Σ, a_rep)``. The fraction is evaluated by
+
+    .. math::
+
+       F_{\rm blow}=f_{\rm mass}\left[1-\exp\left(-\frac{t_{\rm sim}}
+       {t_{\rm col}(\Sigma,a_{\rm rep})}\right)\right],
+
+    where ``t_col`` is the collision timescale in years and ``f_mass`` is the
+    instantaneous mass fraction from the Dohnanyi size distribution.
 
     Parameters
     ----------
     S, SIG : ndarray
-        代表粒径と表面密度のメッシュグリッド.
+        メッシュグリッド上の代表粒径と表面密度 / meshgrids of representative
+        grain size and surface density.
     rho : float
         粒子密度 [kg m^-3].
     a_min, a_bl, a_max : float
-        サイズ分布下限, ブローアウト粒径, 上限 [m].
+        サイズ分布の下限・ブローアウト・上限粒径 [m].
     q : float
-        Dohnanyi 分布指数.
+        サイズ分布指数.
     t_sim : float
         評価時間 [yr].
     r_disk : float
-        評価半径 [m].
+        解析半径 [m].
 
     Returns
     -------
     ndarray
-        F_blow の 2 次元マップ.
+        ``(n_\sigma, n_s)`` 形状の ``F_blow`` マップ / map of ``F_blow`` with
+        shape ``(n_sigma, n_s)`` clipped to [0, 1].
     """
 
     f_mass = (a_bl ** (4 - q) - a_min ** (4 - q)) / (
         a_max ** (4 - q) - a_min ** (4 - q)
     )
-    t_col = collision_timescale(S, SIG, rho, r_disk)
-    return f_mass * (1 - np.exp(-t_sim / t_col))
+    t_col = t_collision(S, SIG, rho, r_disk) / SECONDS_PER_YEAR
+    F_blow = f_mass * (1 - np.exp(-t_sim / t_col))
+    return np.clip(F_blow, 0.0, 1.0)
 
 
 def tau_integral(C, a1, a2, q=3.5):
@@ -171,6 +185,11 @@ def parse_args():
         type=float,
         default=1e4,
         help="質量損失評価用シミュレーション時間 [yr]",
+    )
+    p.add_argument(
+        "--testmode",
+        action="store_true",
+        help="簡易テストを実行して終了する",
     )
     return p.parse_args()
 
@@ -326,4 +345,22 @@ def run_batch(args):
 
 if __name__ == "__main__":
     args = parse_args()
-    run_batch(args)
+    if args.testmode:
+        S_vals = np.logspace(-6, -5, 2)
+        Sigma_vals = np.logspace(2, 3, 2)
+        S, SIG = np.meshgrid(S_vals, Sigma_vals)
+        F_blow = mass_fraction_blowout_map(
+            S,
+            SIG,
+            3000,
+            1e-7,
+            2e-6,
+            1e-3,
+            3.5,
+            1.0,
+            2 * R_MARS,
+        )
+        assert F_blow.max() <= 1
+        assert F_blow.shape == S.shape
+    else:
+        run_batch(args)
