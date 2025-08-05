@@ -164,7 +164,7 @@ def calc_maps(args, suffix=""):
     tau_geo = optical_depth(S, SIG, args.rho)
 
     t_col = t_collision(S, SIG, args.rho, args.r_disk) / SECONDS_PER_YEAR
-    t_pr_sun = t_PR(S, args.rho, beta_sun0)
+    t_pr_sun = t_PR(S, args.rho, beta_sun0) / SECONDS_PER_YEAR
     t_pr_total = t_pr_sun  # FIX 太陽のみ
 
     ratio = np.log10(t_pr_total / t_col)
