@@ -36,6 +36,13 @@ from static_map import (
     omega_kepler,
     t_collision,
     t_PR,
+    t_PR_mars,
+)
+
+from timescales import (
+    convert_sec_to_year,
+    collision_timescale,
+    pr_timescale_total,
 )
 
 
@@ -46,17 +53,39 @@ def blowout_radius(rho, qpr=1, beta_crit=0.5):  # FIX ブローアウト粒径
 
 def norm_const_dohnanyi(Sigma, rho, a_min, a_max, q=3.5):
     """Dohnanyi 分布の正規化係数 C を返す."""
-    k = (4 * np.pi * rho / 3) * (a_max ** (4 - q) - a_min ** (4 - q)) / (
-        4 - q
-    )
+    k = (4 * np.pi * rho / 3) * (a_max ** (4 - q) - a_min ** (4 - q)) / (4 - q)
     return Sigma / k  # n(a)=C a^{-q}
 
 
-def mass_fraction_blowout(C, rho, a_min, a_bl, a_max, q=3.5):
-    """吹き飛ばしで失われる質量分率 F_blow."""
-    num = a_bl ** (4 - q) - a_min ** (4 - q)
-    den = a_max ** (4 - q) - a_min ** (4 - q)
-    return np.full_like(C, num / den)  # FIX 1D 配列を返す
+def mass_fraction_blowout_map(S, SIG, rho, a_min, a_bl, a_max, q, t_sim, r_disk):
+    """各格子点での吹き飛ばし質量分率 F_blow を計算する.
+
+    Parameters
+    ----------
+    S, SIG : ndarray
+        代表粒径と表面密度のメッシュグリッド.
+    rho : float
+        粒子密度 [kg m^-3].
+    a_min, a_bl, a_max : float
+        サイズ分布下限, ブローアウト粒径, 上限 [m].
+    q : float
+        Dohnanyi 分布指数.
+    t_sim : float
+        評価時間 [yr].
+    r_disk : float
+        評価半径 [m].
+
+    Returns
+    -------
+    ndarray
+        F_blow の 2 次元マップ.
+    """
+
+    f_mass = (a_bl ** (4 - q) - a_min ** (4 - q)) / (
+        a_max ** (4 - q) - a_min ** (4 - q)
+    )
+    t_col = collision_timescale(S, SIG, rho, r_disk)
+    return f_mass * (1 - np.exp(-t_sim / t_col))
 
 
 def tau_integral(C, a1, a2, q=3.5):
@@ -118,10 +147,10 @@ def parse_args():
         help="r=r_min における \u03a3_max [kg m^-2]",
     )
     p.add_argument(
-        "--Sigma_exp",
+        "--gamma",
         type=float,
         default=3.0,
-        help="\u03a3(r) \u221d r^{(-\u03b3)} の指数 \u03b3",
+        help="\u03a3(r) = \u03a30 (r/r_min)^{-\u03b3} の指数 \u03b3",
     )
     p.add_argument("--n_s", type=int, default=400)
     p.add_argument("--n_sigma", type=int, default=400)
@@ -149,6 +178,7 @@ def parse_args():
 # ── メイン計算 ───────────────────────────
 def calc_maps(args, suffix=""):
     """3 種の指標マップを計算し CSV/PNG を出力する."""
+
     a_bl = blowout_radius(args.rho, args.qpr)
     a_min = 0.05 * a_bl
     s_vals = np.logspace(np.log10(a_min), np.log10(args.a_max), args.n_s)
@@ -163,23 +193,29 @@ def calc_maps(args, suffix=""):
     beta_eff = beta_sun_m + beta_m
     tau_geo = optical_depth(S, SIG, args.rho)
 
-    t_col = t_collision(S, SIG, args.rho, args.r_disk) / SECONDS_PER_YEAR
-    t_pr_sun = t_PR(S, args.rho, beta_sun0) / SECONDS_PER_YEAR
-    t_pr_total = t_pr_sun  # FIX 太陽のみ
+    t_col = collision_timescale(S, SIG, args.rho, args.r_disk)
+    t_pr_total = pr_timescale_total(
+        S,
+        args.rho,
+        beta_sun0,
+        args.include_mars_pr == "yes",
+        args.T_mars,
+        args.qpr,
+        args.r_disk,
+    )
 
     ratio = np.log10(t_pr_total / t_col)
 
     # Dohnanyi 分布に基づく各指標
     C = norm_const_dohnanyi(Sigma_vals, args.rho, a_min, args.a_max, args.q)
     a_bl_eff = np.maximum(a_bl, a_min)
-    F_blow_scalar = mass_fraction_blowout(
-        C, args.rho, a_min, a_bl_eff, args.a_max, args.q
+    F_blow = mass_fraction_blowout_map(
+        S, SIG, args.rho, a_min, a_bl_eff, args.a_max, args.q, args.t_sim, args.r_disk
     )
-    F_blow = np.tile(F_blow_scalar[:, None], (1, args.n_s))
     F_blow = np.clip(F_blow, 0, 1)
-    t_col_source = t_col
-    eta0 = t_pr_total / t_col_source
-    eta_loss = 1 - np.exp(-args.t_sim / eta0)
+
+    eta_loss = t_pr_total / (t_col + t_pr_total)
+
     tau0 = tau_integral(C, a_min, args.a_max, args.q)
     tau_eff = tau_integral(C, a_bl_eff, args.a_max, args.q)
     R_tau_scalar = tau_eff / tau0
@@ -192,25 +228,34 @@ def calc_maps(args, suffix=""):
 
     fig, axes = plt.subplots(1, 3, figsize=(18, 6), sharex=True, sharey=True)
     data_list = [F_blow, eta_loss, R_tau]
-    norms = [colors.Normalize(0, 0.1),
-             colors.Normalize(0, 1),
-             colors.Normalize(0, 1)]
-    labels = [r"$F_{\rm blow}$",
-              r"$\eta_{\rm loss}$",
-              r"$R_{\tau}$"]
-    titles = ["吹き飛ばし質量分率",
-              "放射圧除去質量比",
-              "光学厚さ低下率"]
+    norms = [colors.Normalize(0, 0.1), colors.Normalize(0, 1), colors.Normalize(0, 1)]
+    labels = [r"$F_{\rm blow}$", r"$\eta_{\rm loss}$", r"$R_{\tau}$"]
+    titles = ["吹き飛ばし質量分率", "放射圧除去質量比", "光学厚さ低下率"]
 
     for ax, data, norm, lab, title in zip(axes, data_list, norms, labels, titles):
-        pcm = ax.pcolormesh(logS, logSIG, data, cmap="RdYlBu",
-                            norm=norm, shading="auto")
+        pcm = ax.pcolormesh(
+            logS, logSIG, data, cmap="RdYlBu", norm=norm, shading="auto"
+        )
         fig.colorbar(pcm, ax=ax, label=lab)
-        ax.contour(logS, logSIG, tau_geo, levels=[1], colors="white",
-                   linestyles="--", linewidths=1)
+        ax.contour(
+            logS,
+            logSIG,
+            tau_geo,
+            levels=[1],
+            colors="white",
+            linestyles="--",
+            linewidths=1,
+        )
         ax.contour(logS, logSIG, beta_eff, levels=[0.5], colors="red", linewidths=1)
-        ax.contour(logS, logSIG, ratio, levels=[0], colors="cyan",
-                   linestyles="-.", linewidths=1)
+        ax.contour(
+            logS,
+            logSIG,
+            ratio,
+            levels=[0],
+            colors="cyan",
+            linestyles="-.",
+            linewidths=1,
+        )
         ax.set_title(title)
         ax.set_xlabel(r"$\log_{10} a_{\rm rep}$ [m]")
     axes[0].set_ylabel(r"$\log_{10} \Sigma$ [kg m$^{-2}$]")
@@ -222,32 +267,33 @@ def calc_maps(args, suffix=""):
     plt.close(fig)
 
     # ── CSV 出力 ──────────────────────────
-    df = pd.DataFrame({
-        "a_rep_m": S.ravel(),
-        "Sigma_kg_m2": SIG.ravel(),
-        "tau": tau_geo.ravel(),
-        "beta_sun_mars": beta_sun_m.ravel(),
-        "beta_mars": beta_m.ravel(),
-        "beta_eff": beta_eff.ravel(),
-        "t_col_yr": t_col.ravel(),
-        "t_PR_total_yr": t_pr_total.ravel(),
-        "log10_ratio": ratio.ravel(),
-        "a_bl_m": np.full(S.size, a_bl),  # FIX CSV 追加
-        "F_blow": F_blow.ravel(),
-        "eta_loss": eta_loss.ravel(),
-        "R_tau": R_tau.ravel(),
-    })
+    df = pd.DataFrame(
+        {
+            "a_rep_m": S.ravel(),
+            "Sigma_kg_m2": SIG.ravel(),
+            "tau": tau_geo.ravel(),
+            "beta_sun_mars": beta_sun_m.ravel(),
+            "beta_mars": beta_m.ravel(),
+            "beta_eff": beta_eff.ravel(),
+            "t_col_yr": t_col.ravel(),
+            "t_PR_total_yr": t_pr_total.ravel(),
+            "log10_ratio": ratio.ravel(),
+            "a_bl_m": np.full(S.size, a_bl),
+            "F_blow": F_blow.ravel(),
+            "eta_loss": eta_loss.ravel(),
+            "R_tau": R_tau.ravel(),
+        }
+    )
     df.to_csv(f"output/extended_disk_map{suffix}.csv", index=False)
 
     # 代表値の抽出（a_bl 粒径・\u03a3_max）
     a_rep = a_bl
     a_idx = np.argmin(np.abs(s_vals - a_rep))
-    eta_loss_rep = float(eta_loss[-1, a_idx])
     summary = {
         "a_bl_m": float(a_bl),
-        "F_blow_rep": float(F_blow_scalar[0]),
-        "eta_loss_rep": eta_loss_rep,
-        "R_tau_rep": float(R_tau_scalar[0]),
+        "F_blow_rep": float(F_blow[-1, a_idx]),
+        "eta_loss_rep": float(eta_loss[-1, a_idx]),
+        "R_tau_rep": float(R_tau[-1, a_idx]),
     }
     return df, summary
 
@@ -257,7 +303,7 @@ def run_batch(args):
     radius_list = np.arange(args.r_min, args.r_max + args.dr, args.dr) * R_MARS
     summaries = []
     for r in radius_list:
-        Sigma_max = args.Sigma0_in * (r / (args.r_min * R_MARS)) ** (-args.Sigma_exp)
+        Sigma_max = args.Sigma0_in * (r / (args.r_min * R_MARS)) ** (-args.gamma)
         Sigma_min = Sigma_max / 1e3
         iter_args = argparse.Namespace(**vars(args))
         iter_args.r_disk = r
