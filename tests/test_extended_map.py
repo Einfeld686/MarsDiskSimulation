@@ -39,7 +39,7 @@ def test_f_blow_map_and_eta_loss_shape():
     assert F_blow.max() <= 0.1
 
     beta_dummy = np.full_like(S, 0.1)
-    t_col = mod_ts.collision_timescale(S, SIG, rho, r_disk)
+    t_col = mod_ts.collision_timescale_years(S, SIG, rho, r_disk)
     t_pr = mod_ts.pr_timescale_total(S, rho, beta_dummy, False, 3000, 1.0, r_disk)
     eta_loss = t_pr / (t_col + t_pr)
     assert eta_loss.shape == S.shape
