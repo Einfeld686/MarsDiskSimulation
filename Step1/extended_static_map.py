@@ -56,7 +56,7 @@ def norm_const_dohnanyi(Sigma, rho, a_min, a_max, q=3.5):
     return Sigma / k  # n(a)=C a^{-q}
 
 
-def mass_fraction_blowout_map(S, SIG, rho, a_min, a_bl, a_max, q, t_sim, r_disk):
+def mass_fraction_blowout_map(S, SIG, rho, a_min, a_bl, a_max, q, t_sim, t_col):
     """吹き飛ばし質量分率 :math:`F_{\rm blow}` を返す.
 
     Compute the mass fraction of particles blown out of the system at each
