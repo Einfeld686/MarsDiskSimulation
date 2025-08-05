@@ -99,10 +99,7 @@ def mass_fraction_blowout_map(S, SIG, rho, a_min, a_bl, a_max, q, t_sim, r_disk)
     f_mass = (
       a_bl_grid ** (4 - q) - a_min_grid ** (4 - q)
     ) / (a_max ** (4 - q) - a_min_grid ** (4 - q))
-
-    t_col = collision_timescale_years(S, SIG, rho, r_disk)
-    F_blow = f_mass * (1 - np.exp(-t_sim / t_col))
-    return np.clip(F_blow, 0.0, 1.0)
+    return f_mass * (1 - np.exp(-t_sim / t_col))
 
 def tau_integral(C, a1, a2, q=3.5):
     """∫_{a1}^{a2} π a² n(a) da （解析解）."""
