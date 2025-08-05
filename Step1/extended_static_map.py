@@ -68,24 +68,61 @@ def tau_integral(C, a1, a2, q=3.5):
 def parse_args():
     """CLI パラメータの構築."""
     p = argparse.ArgumentParser()
-    p.add_argument("--T_mars", type=float, default=3000,
-                   help="有効温度 [K] (例: 3000)")
-    p.add_argument("--r_disk", type=float, default=2 * R_MARS,
-                   help="評価半径 [m] (例: 2*R_MARS)")
-    p.add_argument("--rho", type=float, default=3000,
-                   help="粒子密度 [kg m^-3]")
-    p.add_argument("--qpr", type=float, default=1.0,
-                   help="放射圧係数 Q_pr")
+    p.add_argument(
+        "--T_mars",
+        type=float,
+        default=3000,
+        help="有効温度 [K] (例: 3000)",
+    )
+    p.add_argument(
+        "--rho",
+        type=float,
+        default=3000,
+        help="粒子密度 [kg m^-3]",
+    )
+    p.add_argument(
+        "--qpr",
+        type=float,
+        default=1.0,
+        help="放射圧係数 Q_pr",
+    )
     p.add_argument(
         "--include_mars_pr",
         choices=["yes", "no"],
         default="no",
         help="火星起源 PR を t_PR に含めるか (yes/no)",
-    )  # FIX デフォルト off
-    p.add_argument("--Sigma_min", type=float, default=1e2,
-                   help="表面密度下限 [kg m^-2]")
-    p.add_argument("--Sigma_max", type=float, default=1e6,
-                   help="表面密度上限 [kg m^-2]")
+    )
+    # ── 半径バッチ処理用パラメータ ──
+    p.add_argument(
+        "--r_min",
+        type=float,
+        default=2.6,
+        help="解析開始半径 [R_MARS]",
+    )
+    p.add_argument(
+        "--r_max",
+        type=float,
+        default=10.0,
+        help="解析終了半径 [R_MARS]",
+    )
+    p.add_argument(
+        "--dr",
+        type=float,
+        default=1.0,
+        help="半径刻み幅 [R_MARS]",
+    )
+    p.add_argument(
+        "--Sigma0_in",
+        type=float,
+        default=1e4,
+        help="r=r_min における \u03a3_max [kg m^-2]",
+    )
+    p.add_argument(
+        "--Sigma_exp",
+        type=float,
+        default=3.0,
+        help="\u03a3(r) \u221d r^{(-\u03b3)} の指数 \u03b3",
+    )
     p.add_argument("--n_s", type=int, default=400)
     p.add_argument("--n_sigma", type=int, default=400)
     p.add_argument(
@@ -93,19 +130,27 @@ def parse_args():
         type=float,
         default=1e-1,
         help="最大粒径 [m]",
-    )  # FIX a_min は動的計算
-    p.add_argument("--q", type=float, default=3.5,
-                   help="Dohnanyi 分布指数")
-    p.add_argument("--t_sim", type=float, default=1e4,
-                   help="質量損失評価用シミュレーション時間 [yr]")
+    )  # a_min は動的計算
+    p.add_argument(
+        "--q",
+        type=float,
+        default=3.5,
+        help="Dohnanyi 分布指数",
+    )
+    p.add_argument(
+        "--t_sim",
+        type=float,
+        default=1e4,
+        help="質量損失評価用シミュレーション時間 [yr]",
+    )
     return p.parse_args()
 
 
 # ── メイン計算 ───────────────────────────
-def calc_maps(args):
+def calc_maps(args, suffix=""):
     """3 種の指標マップを計算し CSV/PNG を出力する."""
-    a_bl = blowout_radius(args.rho, args.qpr)  # FIX ブローアウト粒径
-    a_min = 0.05 * a_bl  # FIX 最小粒径を再定義
+    a_bl = blowout_radius(args.rho, args.qpr)
+    a_min = 0.05 * a_bl
     s_vals = np.logspace(np.log10(a_min), np.log10(args.a_max), args.n_s)
     Sigma_vals = np.logspace(
         np.log10(args.Sigma_min), np.log10(args.Sigma_max), args.n_sigma
@@ -125,20 +170,20 @@ def calc_maps(args):
     ratio = np.log10(t_pr_total / t_col)
 
     # Dohnanyi 分布に基づく各指標
-    C = norm_const_dohnanyi(Sigma_vals, args.rho, a_min, args.a_max, args.q)  # FIX
-    a_bl_eff = np.maximum(a_bl, a_min)  # FIX
+    C = norm_const_dohnanyi(Sigma_vals, args.rho, a_min, args.a_max, args.q)
+    a_bl_eff = np.maximum(a_bl, a_min)
     F_blow_scalar = mass_fraction_blowout(
         C, args.rho, a_min, a_bl_eff, args.a_max, args.q
-    )  # FIX
-    F_blow = np.tile(F_blow_scalar[:, None], (1, args.n_s))  # FIX
-    F_blow = np.clip(F_blow, 0, 1)  # FIX 範囲制限
-    t_col_source = t_col  # FIX 代表粒径の衝突タイムスケール
-    eta0 = t_pr_total / t_col_source  # FIX
-    eta_loss = 1 - np.exp(-args.t_sim / eta0)  # FIX
-    tau0 = tau_integral(C, a_min, args.a_max, args.q)  # FIX
-    tau_eff = tau_integral(C, a_bl_eff, args.a_max, args.q)  # FIX
-    R_tau_scalar = tau_eff / tau0  # FIX
-    R_tau = np.tile(R_tau_scalar[:, None], (1, args.n_s))  # FIX
+    )
+    F_blow = np.tile(F_blow_scalar[:, None], (1, args.n_s))
+    F_blow = np.clip(F_blow, 0, 1)
+    t_col_source = t_col
+    eta0 = t_pr_total / t_col_source
+    eta_loss = 1 - np.exp(-args.t_sim / eta0)
+    tau0 = tau_integral(C, a_min, args.a_max, args.q)
+    tau_eff = tau_integral(C, a_bl_eff, args.a_max, args.q)
+    R_tau_scalar = tau_eff / tau0
+    R_tau = np.tile(R_tau_scalar[:, None], (1, args.n_s))
 
     # ── 描画 ──────────────────────────────
     with np.errstate(divide="ignore"):
@@ -173,7 +218,7 @@ def calc_maps(args):
     pr_tag = "+MarsPR" if args.include_mars_pr == "yes" else ""
     os.makedirs("output", exist_ok=True)
     plt.tight_layout()
-    plt.savefig(f"output/extended_maps{pr_tag}.png", dpi=300)
+    plt.savefig(f"output/extended_maps{suffix}{pr_tag}.png", dpi=300)
     plt.close(fig)
 
     # ── CSV 出力 ──────────────────────────
@@ -192,11 +237,47 @@ def calc_maps(args):
         "eta_loss": eta_loss.ravel(),
         "R_tau": R_tau.ravel(),
     })
-    df.to_csv("output/extended_disk_map.csv", index=False)
-    return df
+    df.to_csv(f"output/extended_disk_map{suffix}.csv", index=False)
+
+    # 代表値の抽出（a_bl 粒径・\u03a3_max）
+    a_rep = a_bl
+    a_idx = np.argmin(np.abs(s_vals - a_rep))
+    eta_loss_rep = float(eta_loss[-1, a_idx])
+    summary = {
+        "a_bl_m": float(a_bl),
+        "F_blow_rep": float(F_blow_scalar[0]),
+        "eta_loss_rep": eta_loss_rep,
+        "R_tau_rep": float(R_tau_scalar[0]),
+    }
+    return df, summary
+
+
+def run_batch(args):
+    """半径ごとのマップ計算をバッチ実行する."""
+    radius_list = np.arange(args.r_min, args.r_max + args.dr, args.dr) * R_MARS
+    summaries = []
+    for r in radius_list:
+        Sigma_max = args.Sigma0_in * (r / (args.r_min * R_MARS)) ** (-args.Sigma_exp)
+        Sigma_min = Sigma_max / 1e3
+        iter_args = argparse.Namespace(**vars(args))
+        iter_args.r_disk = r
+        iter_args.Sigma_max = Sigma_max
+        iter_args.Sigma_min = Sigma_min
+        suffix = f"_r{r / R_MARS:.1f}R"
+        _, summary = calc_maps(iter_args, suffix)
+        summary.update(
+            {
+                "r_Rmars": r / R_MARS,
+                "r_km": r / 1e3,
+                "Sigma_max": Sigma_max,
+                "Sigma_min": Sigma_min,
+            }
+        )
+        summaries.append(summary)
+    os.makedirs("output", exist_ok=True)
+    pd.DataFrame(summaries).to_csv("output/master_summary.csv", index=False)
 
 
 if __name__ == "__main__":
     args = parse_args()
-    calc_maps(args)
-    print("a_bl =", blowout_radius(args.rho))  # FIX デバッグ出力
+    run_batch(args)
