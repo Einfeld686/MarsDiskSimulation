@@ -40,8 +40,7 @@ from static_map import (
 )
 
 from timescales import (
-    convert_sec_to_year,
-    collision_timescale,
+    collision_timescale_years,
     pr_timescale_total,
 )
 
@@ -97,6 +96,8 @@ def mass_fraction_blowout_map(S, SIG, rho, a_min, a_bl, a_max, q, t_sim, r_disk)
     f_mass = (a_bl ** (4 - q) - a_min ** (4 - q)) / (
         a_max ** (4 - q) - a_min ** (4 - q)
     )
+    t_col = collision_timescale_years(S, SIG, rho, r_disk)
+    return f_mass * (1 - np.exp(-t_sim / t_col))
     t_col = t_collision(S, SIG, rho, r_disk) / SECONDS_PER_YEAR
     F_blow = f_mass * (1 - np.exp(-t_sim / t_col))
     return np.clip(F_blow, 0.0, 1.0)
@@ -197,8 +198,6 @@ def parse_args():
         args.n_sigma = 10
         args.r_max = args.r_min
     return args
-  
-    return p.parse_args()
 
 
 # ── メイン計算 ───────────────────────────
@@ -225,7 +224,7 @@ def calc_maps(args, suffix=""):
     beta_eff = beta_sun_m + beta_m
     tau_geo = optical_depth(S, SIG, args.rho)
 
-    t_col = collision_timescale(S, SIG, args.rho, args.r_disk)
+    t_col = collision_timescale_years(S, SIG, args.rho, args.r_disk)
     t_pr_total = pr_timescale_total(
         S,
         args.rho,
