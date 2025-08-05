@@ -197,8 +197,7 @@ def parse_args():
         args.n_sigma = 10
         args.r_max = args.r_min
     return args
-        help="簡易テストを実行して終了する",
-    )
+  
     return p.parse_args()
 
 
