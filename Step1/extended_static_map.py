@@ -134,12 +134,8 @@ def parse_args():
         help="火星起源 PR を t_PR に含めるか (yes/no)",
     )
     # ── 半径バッチ処理用パラメータ ──
-    p.add_argument(
-        "--r_min",
-        type=float,
-        default=2.6,
-        help="解析開始半径 [R_MARS]",
-    )
+    p.add_argument("--r_min", type=float, default=2.6,
+        help="解析開始半径 [R_MARS]")
     p.add_argument(
         "--r_max",
         type=float,
@@ -152,18 +148,30 @@ def parse_args():
         default=1.0,
         help="半径刻み幅 [R_MARS]",
     )
-    p.add_argument(
-        "--Sigma0_in",
-        type=float,
-        default=1e4,
-        help="r=r_min における \u03a3_max [kg m^-2]",
-    )
-    p.add_argument(
-        "--gamma",
-        type=float,
-        default=3.0,
-        help="\u03a3(r) = \u03a30 (r/r_min)^{-\u03b3} の指数 \u03b3",
-    )
+    # --- 旧 gamma プロファイルと排他にする新オプション ---
+    p.add_argument("--profile_mode", choices=["piecewise","gamma"], default="piecewise",
+        help="Σ プロファイルの種類 (内外二分 piecewise か従来 gamma)")
+
+    # piecewise 用：内側一様 Σ
+    p.add_argument("--r_transition", type=float, default=2.7,
+        help="内外円盤の境界半径 [R_MARS]")
+    p.add_argument("--Sigma_inner", type=float, default=5e3,
+        help="内側円盤の一様表面密度 [kg m^-2]")
+
+    # piecewise 用：外側 power-law Σ = Σ_outer0 (r/r_tr)^(-p_outer)
+    group = p.add_mutually_exclusive_group()
+    group.add_argument("--Sigma_outer0", type=float, default=None,
+        help="外側円盤基準表面密度 Σ(r=r_transition) [kg m^-2]")
+    group.add_argument("--M_outer", type=float, default=None,
+        help="外側円盤総質量 [火星質量単位]; 指定時 Σ_outer0 を自動計算")
+    p.add_argument("--p_outer", type=float, default=5.0,
+        help="外側円盤の指数 p (Σ∝r^{-p})")
+
+    # 旧 gamma プロファイルを残す場合のみ必要
+    p.add_argument("--Sigma0_in", type=float, default=1e4,
+        help="[gamma モード専用] r_min での Σ_max [kg m^-2]")
+    p.add_argument("--gamma", type=float, default=3.0,
+        help="[gamma モード専用] Σ ∝ r^{-γ} の γ")
     p.add_argument("--n_s", type=int, default=400)
     p.add_argument("--n_sigma", type=int, default=400)
     p.add_argument(
@@ -200,6 +208,26 @@ def parse_args():
         args.n_sigma = 10
         args.r_max = args.r_min
     return args
+
+# --- 内側一様 ＆ 外側 power-law プロファイルを計算 ---------------------------
+def sigma_piecewise(r_Rmars, args):
+    """半径 r [R_MARS] における Σ_max を返す (piecewise モード専用)."""
+    if r_Rmars <= args.r_transition:
+        return args.Sigma_inner
+    # --- 外側基準 Σ_outer0 を決定 ---
+    if args.Sigma_outer0 is not None:
+        Sigma0 = args.Sigma_outer0
+    else:
+        # 総質量 M_outer [M_MARS] → Σ0 に変換
+        if args.M_outer is None:
+            raise ValueError("Sigma_outer0 か M_outer のどちらかを指定してください")
+        r_tr = args.r_transition * R_MARS
+        r_max = args.r_max * R_MARS
+        p = args.p_outer
+        denom = 2 * np.pi * r_tr**2 * ((r_max / r_tr)**(1 - p) - 1) / (1 - p)
+        Sigma0 = args.M_outer * M_MARS / denom
+    # power-law Σ
+    return Sigma0 * (r_Rmars / args.r_transition) ** (-args.p_outer)
 
 
 # ── メイン計算 ───────────────────────────
@@ -344,7 +372,11 @@ def run_batch(args):
     radius_list = np.arange(args.r_min, args.r_max + args.dr, args.dr) * R_MARS
     summaries = []
     for r in radius_list:
-        Sigma_max = args.Sigma0_in * (r / (args.r_min * R_MARS)) ** (-args.gamma)
+        r_Rmars = r / R_MARS
+        if args.profile_mode == "piecewise":
+            Sigma_max = sigma_piecewise(r_Rmars, args)
+        else:   # 従来 gamma モード
+            Sigma_max = args.Sigma0_in * (r_Rmars / args.r_min) ** (-args.gamma)
         Sigma_min = Sigma_max / 1e3
         iter_args = argparse.Namespace(**vars(args))
         iter_args.r_disk = r
@@ -358,6 +390,7 @@ def run_batch(args):
                 "r_km": r / 1e3,
                 "Sigma_max": Sigma_max,
                 "Sigma_min": Sigma_min,
+                "profile": args.profile_mode,
             }
         )
         summaries.append(summary)
