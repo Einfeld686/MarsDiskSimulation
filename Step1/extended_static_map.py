@@ -154,7 +154,7 @@ def parse_args():
         help="火星起源 PR を t_PR に含めるか (yes/no)",
     )
     # ── 半径バッチ処理用パラメータ ──
-    p.add_argument("--r_min", type=float, default=2.6, help="解析開始半径 [R_MARS]")
+    p.add_argument("--r_min", type=float, default=1.0, help="解析開始半径 [R_MARS]")
     p.add_argument(
         "--r_max",
         type=float,
