@@ -402,7 +402,7 @@ def run_batch(args):
             Sigma_max = args.Sigma0_in * (r_Rmars / args.r_min) ** (-args.gamma)
         Sigma_min = Sigma_max / 1e3
         iter_args = argparse.Namespace(**vars(args))
-        iter_args.r_disk = r
+        iter_args.r_disk = r_Rmars
         iter_args.Sigma_max = Sigma_max
         iter_args.Sigma_min = Sigma_min
         suffix = f"_r{r:.1f}R"
