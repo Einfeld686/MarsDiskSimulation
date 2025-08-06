@@ -3,6 +3,8 @@
 
 Dohnanyi 分布に基づき吹き飛ばし質量分率 F_blow、
 放射圧除去質量比 η_loss、光学厚さ低下率 R_tau を算出する。
+内側円盤は表面密度 ``--Sigma_inner`` だけでなく
+総質量 ``--M_inner`` (火星質量単位) からも指定可能。
 
 参照式
   • Dohnanyi (1969)      … サイズ分布 q=3.5
@@ -61,7 +63,7 @@ def blowout_radius(
 
     # 火星放射を含める場合は太陽→火星スケーリングも反映
     r_m = r_disk_Rmars * R_MARS
-    L_mars = 4 * np.pi * R_MARS ** 2 * sigma_SB * T_mars ** 4
+    L_mars = 4 * np.pi * R_MARS**2 * sigma_SB * T_mars**4
     K_mars = (3 * L_mars * qpr) / (16 * np.pi * G * M_MARS * c)
     K_sun = 5.7e-4 * qpr * (M_SUN / M_MARS) * (r_m / A_MARS) ** 2
     return (K_sun + K_mars) / (beta_crit * rho)
@@ -110,12 +112,13 @@ def mass_fraction_blowout_map(S, SIG, rho, a_min, a_bl, a_max, q, t_sim, t_col):
         shape ``(n_sigma, n_s)`` clipped to [0, 1].
     """
     # Dohnanyi 分布に基づく瞬時質量分率
-    f_mass = (
-      a_bl ** (4 - q) - a_min ** (4 - q)
-    ) / (a_max ** (4 - q) - a_min ** (4 - q))
+    f_mass = (a_bl ** (4 - q) - a_min ** (4 - q)) / (
+        a_max ** (4 - q) - a_min ** (4 - q)
+    )
 
     F_blow = f_mass * (1.0 - np.exp(-t_sim / t_col))
     return np.clip(F_blow, 0.0, 1.0)
+
 
 def tau_integral(C, a1, a2, q=3.5):
     """∫_{a1}^{a2} π a² n(a) da （解析解）."""
@@ -151,8 +154,7 @@ def parse_args():
         help="火星起源 PR を t_PR に含めるか (yes/no)",
     )
     # ── 半径バッチ処理用パラメータ ──
-    p.add_argument("--r_min", type=float, default=2.6,
-        help="解析開始半径 [R_MARS]")
+    p.add_argument("--r_min", type=float, default=2.6, help="解析開始半径 [R_MARS]")
     p.add_argument(
         "--r_max",
         type=float,
@@ -166,29 +168,59 @@ def parse_args():
         help="半径刻み幅 [R_MARS]",
     )
     # --- 旧 gamma プロファイルと排他にする新オプション ---
-    p.add_argument("--profile_mode", choices=["piecewise","gamma"], default="piecewise",
-        help="Σ プロファイルの種類 (内外二分 piecewise か従来 gamma)")
+    p.add_argument(
+        "--profile_mode",
+        choices=["piecewise", "gamma"],
+        default="piecewise",
+        help="Σ プロファイルの種類 (内外二分 piecewise か従来 gamma)",
+    )
 
-    # piecewise 用：内側一様 Σ
-    p.add_argument("--r_transition", type=float, default=2.7,
-        help="内外円盤の境界半径 [R_MARS]")
-    p.add_argument("--Sigma_inner", type=float, default=5e3,
-        help="内側円盤の一様表面密度 [kg m^-2]")
+    # piecewise 用：内側一様 Σ もしくは総質量
+    p.add_argument(
+        "--r_transition", type=float, default=2.7, help="内外円盤の境界半径 [R_MARS]"
+    )
+    group_inner = p.add_mutually_exclusive_group()
+    group_inner.add_argument(
+        "--Sigma_inner",
+        type=float,
+        default=None,
+        help="内側円盤の一様表面密度 [kg m^-2] (未指定時は 5e3)",
+    )
+    group_inner.add_argument(
+        "--M_inner",
+        type=float,
+        default=None,
+        help="内側円盤の総質量 [火星質量単位]; 指定時 Σ_inner を自動計算",
+    )
 
     # piecewise 用：外側 power-law Σ = Σ_outer0 (r/r_tr)^(-p_outer)
-    group = p.add_mutually_exclusive_group()
-    group.add_argument("--Sigma_outer0", type=float, default=None,
-        help="外側円盤基準表面密度 Σ(r=r_transition) [kg m^-2]")
-    group.add_argument("--M_outer", type=float, default=None,
-        help="外側円盤総質量 [火星質量単位]; 指定時 Σ_outer0 を自動計算")
-    p.add_argument("--p_outer", type=float, default=5.0,
-        help="外側円盤の指数 p (Σ∝r^{-p})")
+    group_outer = p.add_mutually_exclusive_group()
+    group_outer.add_argument(
+        "--Sigma_outer0",
+        type=float,
+        default=None,
+        help="外側円盤基準表面密度 Σ(r=r_transition) [kg m^-2]",
+    )
+    group_outer.add_argument(
+        "--M_outer",
+        type=float,
+        default=None,
+        help="外側円盤総質量 [火星質量単位]; 指定時 Σ_outer0 を自動計算",
+    )
+    p.add_argument(
+        "--p_outer", type=float, default=5.0, help="外側円盤の指数 p (Σ∝r^{-p})"
+    )
 
     # 旧 gamma プロファイルを残す場合のみ必要
-    p.add_argument("--Sigma0_in", type=float, default=1e4,
-        help="[gamma モード専用] r_min での Σ_max [kg m^-2]")
-    p.add_argument("--gamma", type=float, default=3.0,
-        help="[gamma モード専用] Σ ∝ r^{-γ} の γ")
+    p.add_argument(
+        "--Sigma0_in",
+        type=float,
+        default=1e4,
+        help="[gamma モード専用] r_min での Σ_max [kg m^-2]",
+    )
+    p.add_argument(
+        "--gamma", type=float, default=3.0, help="[gamma モード専用] Σ ∝ r^{-γ} の γ"
+    )
     p.add_argument("--n_s", type=int, default=400)
     p.add_argument("--n_sigma", type=int, default=400)
     p.add_argument(
@@ -220,17 +252,26 @@ def parse_args():
         help="テスト用高速モード",
     )
     args = p.parse_args()
+    if args.Sigma_inner is None and args.M_inner is None:
+        args.Sigma_inner = 5e3
     if args.testmode:
         args.n_s = 10
         args.n_sigma = 10
         args.r_max = args.r_min
     return args
 
+
 # --- 内側一様 ＆ 外側 power-law プロファイルを計算 ---------------------------
 def sigma_piecewise(r_Rmars, args):
     """半径 r [R_MARS] における Σ_max を返す (piecewise モード専用)."""
     if r_Rmars <= args.r_transition:
-        return args.Sigma_inner
+        if args.Sigma_inner is not None:
+            return args.Sigma_inner
+        if args.M_inner is None:
+            raise ValueError("Sigma_inner か M_inner のどちらか一方を指定してください")
+        area = np.pi * ((args.r_transition * R_MARS) ** 2 - (args.r_min * R_MARS) ** 2)
+        Sigma_inner = args.M_inner * M_MARS / area
+        return Sigma_inner
     # --- 外側基準 Σ_outer0 を決定 ---
     if args.Sigma_outer0 is not None:
         Sigma0 = args.Sigma_outer0
@@ -241,7 +282,7 @@ def sigma_piecewise(r_Rmars, args):
         r_tr = args.r_transition * R_MARS
         r_max = args.r_max * R_MARS
         p = args.p_outer
-        denom = 2 * np.pi * r_tr**2 * ((r_max / r_tr)**(1 - p) - 1) / (1 - p)
+        denom = 2 * np.pi * r_tr**2 * ((r_max / r_tr) ** (1 - p) - 1) / (1 - p)
         Sigma0 = args.M_outer * M_MARS / denom
     # power-law Σ
     return Sigma0 * (r_Rmars / args.r_transition) ** (-args.p_outer)
@@ -280,8 +321,8 @@ def calc_maps(args, suffix=""):
     t_col = collision_timescale_years(S, SIG, args.rho, r_m)
     # Wyatt05 式は厚い円盤で過小評価するので安全係数
     if getattr(args, "thick_disk", False):
-      t_col *= 100      # ← 例：2桁くらい緩める
-    
+        t_col *= 100  # ← 例：2桁くらい緩める
+
     t_pr_total = pr_timescale_total(
         S,
         args.rho,
@@ -398,7 +439,7 @@ def run_batch(args):
         r_Rmars = r
         if args.profile_mode == "piecewise":
             Sigma_max = sigma_piecewise(r_Rmars, args)
-        else:   # 従来 gamma モード
+        else:  # 従来 gamma モード
             Sigma_max = args.Sigma0_in * (r_Rmars / args.r_min) ** (-args.gamma)
         Sigma_min = Sigma_max / 1e3
         iter_args = argparse.Namespace(**vars(args))
