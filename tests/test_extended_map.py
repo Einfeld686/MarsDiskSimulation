@@ -31,9 +31,10 @@ def test_f_blow_map_shape():
     q = 3.5
     t_sim = 1.0
     r_disk = 2 * R_MARS
+    t_col = mod_ts.collision_timescale_years(S, SIG, rho, r_disk)
 
     F_blow = mod_map.mass_fraction_blowout_map(
-        S, SIG, rho, a_min, a_bl, a_max, q, t_sim, r_disk
+        S, SIG, rho, a_min, a_bl, a_max, q, t_sim, t_col
     )
     assert F_blow.shape == S.shape
     assert F_blow.max() <= 1
