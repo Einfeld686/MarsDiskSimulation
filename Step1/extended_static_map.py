@@ -30,7 +30,6 @@ from static_map import (
     A_MARS,
     SECONDS_PER_YEAR,
     beta_sun,
-    beta_sun_to_mars,
     beta_mars,
     optical_depth,
     omega_kepler,
@@ -45,9 +44,27 @@ from timescales import (
 )
 
 
-def blowout_radius(rho, qpr=1, beta_crit=0.5):  # FIX ブローアウト粒径
-    """Burns79 Eq.(1) から β=beta_crit を満たす粒径 [m]"""
-    return 5.7e-4 * qpr / (beta_crit * rho)
+def blowout_radius(
+    rho,
+    qpr=1.0,
+    r_disk_Rmars=1.0,
+    T_mars=3000,
+    include_mars_pr=False,
+    beta_crit=0.5,
+):
+    """ブローアウト粒径 [m] を計算する."""
+
+    # 従来通り太陽のみを考慮する場合
+    a_sun = 5.7e-4 * qpr / (beta_crit * rho)
+    if not include_mars_pr:
+        return a_sun
+
+    # 火星放射を含める場合は太陽→火星スケーリングも反映
+    r_m = r_disk_Rmars * R_MARS
+    L_mars = 4 * np.pi * R_MARS ** 2 * sigma_SB * T_mars ** 4
+    K_mars = (3 * L_mars * qpr) / (16 * np.pi * G * M_MARS * c)
+    K_sun = 5.7e-4 * qpr * (M_SUN / M_MARS) * (r_m / A_MARS) ** 2
+    return (K_sun + K_mars) / (beta_crit * rho)
 
 
 def norm_const_dohnanyi(Sigma, rho, a_min, a_max, q=3.5):
@@ -240,7 +257,14 @@ def calc_maps(args, suffix=""):
         \eta_{\rm loss}=1-\exp\!\left(-\frac{t_{\rm sim}}{\tau_{\rm eff}}\right)
     """
 
-    a_bl = blowout_radius(args.rho, args.qpr)
+    r_m = args.r_disk * R_MARS
+    a_bl = blowout_radius(
+        args.rho,
+        args.qpr,
+        args.r_disk,
+        args.T_mars,
+        args.include_mars_pr == "yes",
+    )
     a_min = 0.05 * a_bl
     s_vals = np.logspace(np.log10(a_min), np.log10(args.a_max), args.n_s)
     Sigma_vals = np.logspace(
@@ -249,12 +273,11 @@ def calc_maps(args, suffix=""):
     S, SIG = np.meshgrid(s_vals, Sigma_vals)
 
     beta_sun0 = beta_sun(S, args.rho)
-    beta_sun_m = beta_sun_to_mars(S, args.rho, args.r_disk)
+    beta_sun_m = beta_sun0 * (M_SUN / M_MARS) * (r_m / A_MARS) ** 2
     beta_m = beta_mars(S, args.rho, args.T_mars, args.qpr)
     beta_eff = beta_sun_m + beta_m
     tau_geo = optical_depth(S, SIG, args.rho)
-
-    t_col = collision_timescale_years(S, SIG, args.rho, args.r_disk)
+    t_col = collision_timescale_years(S, SIG, args.rho, r_m)
     # Wyatt05 式は厚い円盤で過小評価するので安全係数
     if getattr(args, "thick_disk", False):
       t_col *= 100      # ← 例：2桁くらい緩める
@@ -266,7 +289,7 @@ def calc_maps(args, suffix=""):
         args.include_mars_pr == "yes",
         args.T_mars,
         args.qpr,
-        args.r_disk,
+        r_m,
     )
 
     ratio = np.log10(t_pr_total / t_col)
@@ -369,10 +392,10 @@ def calc_maps(args, suffix=""):
 
 def run_batch(args):
     """半径ごとのマップ計算をバッチ実行する."""
-    radius_list = np.arange(args.r_min, args.r_max + args.dr, args.dr) * R_MARS
+    radius_list = np.arange(args.r_min, args.r_max + args.dr, args.dr)
     summaries = []
     for r in radius_list:
-        r_Rmars = r / R_MARS
+        r_Rmars = r
         if args.profile_mode == "piecewise":
             Sigma_max = sigma_piecewise(r_Rmars, args)
         else:   # 従来 gamma モード
@@ -382,12 +405,12 @@ def run_batch(args):
         iter_args.r_disk = r
         iter_args.Sigma_max = Sigma_max
         iter_args.Sigma_min = Sigma_min
-        suffix = f"_r{r / R_MARS:.1f}R"
+        suffix = f"_r{r:.1f}R"
         _, summary = calc_maps(iter_args, suffix)
         summary.update(
             {
-                "r_Rmars": r / R_MARS,
-                "r_km": r / 1e3,
+                "r_Rmars": r,
+                "r_km": r * R_MARS / 1e3,
                 "Sigma_max": Sigma_max,
                 "Sigma_min": Sigma_min,
                 "profile": args.profile_mode,
