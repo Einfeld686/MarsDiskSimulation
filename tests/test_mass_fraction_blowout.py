@@ -15,6 +15,7 @@ def test_mass_fraction_blowout():
     S_vals = np.logspace(-6, -5, 2)
     Sigma_vals = np.logspace(2, 3, 2)
     S, SIG = np.meshgrid(S_vals, Sigma_vals)
+    t_col = mod_map.collision_timescale_years(S, SIG, 3000, 2 * mod_map.R_MARS)
     F_blow = mod_map.mass_fraction_blowout_map(
         S,
         SIG,
@@ -24,7 +25,7 @@ def test_mass_fraction_blowout():
         1e-3,
         3.5,
         1e-9,
-        2 * mod_map.R_MARS,
+        t_col,
     )
     assert F_blow.shape == S.shape
     assert (F_blow >= 0).all() and (F_blow <= 1).all()
