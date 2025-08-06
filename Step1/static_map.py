@@ -203,6 +203,15 @@ def t_PR_mars(s, rho, T_mars, Q_pr, r_disk):
             (3 * L_mars * Q_pr)) / SECONDS_PER_YEAR
 
 
+def kappa_mass_averaged(q, a_min, a_max, rho):
+    """Return mass–weighted opacity κλ [m² kg⁻¹] for n(a) ∝ a^{-q}."""
+    if abs(q - 3) < 1e-8 or abs(q - 4) < 1e-8:
+        raise ValueError("q=3 or 4 not supported analytically.")
+    num = (np.pi * (a_max ** (3 - q) - a_min ** (3 - q))) / (3 - q)
+    den = ((4 / 3) * np.pi * rho * (a_max ** (4 - q) - a_min ** (4 - q))) / (4 - q)
+    return num / den
+
+
 def parse_args():
     """CLI パラメータの構築."""
     p = argparse.ArgumentParser()
