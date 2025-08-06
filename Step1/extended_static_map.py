@@ -158,7 +158,7 @@ def parse_args():
     p.add_argument(
         "--r_max",
         type=float,
-        default=10.0,
+        default=8.0,
         help="解析終了半径 [R_MARS]",
     )
     p.add_argument(
