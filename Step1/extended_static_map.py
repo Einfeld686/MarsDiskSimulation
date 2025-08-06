@@ -282,7 +282,7 @@ def sigma_piecewise(r_Rmars, args):
         r_tr = args.r_transition * R_MARS
         r_max = args.r_max * R_MARS
         p = args.p_outer
-        denom = 2 * np.pi * r_tr**2 * ((r_max / r_tr) ** (1 - p) - 1) / (1 - p)
+        denom = 2 * np.pi * r_tr**2 * ((r_max / r_tr) ** (2 - p) - 1) / (2 - p)
         Sigma0 = args.M_outer * M_MARS / denom
     # power-law Σ
     return Sigma0 * (r_Rmars / args.r_transition) ** (-args.p_outer)
