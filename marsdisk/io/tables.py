@@ -35,8 +35,8 @@ def _approx_qpr(s: float, T: float) -> float:
 
 
 def _approx_phi(tau: float, w0: float, g: float) -> float:
-    """A crude attenuation law used when no table is supplied."""
-    return float(np.exp(-tau * (1 - w0)) * (1 - g))
+    raw = np.exp(-tau * max(0.0, 1.0 - w0)) * (1.0 - g)
+    return float(np.clip(raw, 0.0, 1.0))
 
 
 @dataclass
