@@ -86,3 +86,9 @@ class RadialGrid:
         """Generate a grid with linearly spaced edges."""
         edges = np.linspace(r_min, r_max, n + 1)
         return cls.from_edges(edges)
+
+def omega(r: float) -> float:      # alias
+    return omega_kepler(r)
+
+def v_keplerian(r: float) -> float:  # alias
+    return v_kepler(r)
