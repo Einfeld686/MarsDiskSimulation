@@ -38,6 +38,7 @@ def apply_shielding(
     """
     func = tables.interp_phi if interp is None else interp
     phi = float(func(tau, w0, g))
+    phi = float(np.clip(phi, 0.0, 1.0)) 
     kappa_eff = float(phi * kappa_surf)
     sigma_tau1 = np.inf if kappa_eff <= 0.0 else 1.0 / kappa_eff
     return kappa_eff, sigma_tau1
