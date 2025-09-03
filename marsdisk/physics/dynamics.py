@@ -97,7 +97,7 @@ def solve_c_eq(
     for n in range(max_iter):
         eps = float(eps_model(c))
         eps = min(max(eps, 0.0), 1.0 - 1e-6)
-        c_new = f_wake * tau / (1.0 - eps ** 2)
+        c_new = (f_wake * tau / max(1.0 - eps**2, 1e-12)) ** 0.5
         logger.info("solve_c_eq iter=%d c=%.6e eps=%.3f c_new=%.6e", n, c, eps, c_new)
         if abs(c_new - c) <= tol * max(c_new, 1.0):
             return float(c_new)
