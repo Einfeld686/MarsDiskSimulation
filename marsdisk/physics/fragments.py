@@ -16,7 +16,83 @@ from .sublimation import SublimationParams, s_sink_from_timescale
 
 logger = logging.getLogger(__name__)
 
-__all__ = ["s_sub_boundary", "compute_s_min_F2"]
+__all__ = [
+    "compute_q_r_F2",
+    "compute_largest_remnant_mass_fraction_F2",
+    "s_sub_boundary",
+    "compute_s_min_F2",
+]
+
+
+def compute_q_r_F2(m1: float, m2: float, v: float) -> float:
+    """Return the reduced specific kinetic energy :math:`Q_R`.
+
+    The quantity is defined as
+
+    ``Q_R = 0.5 * μ * v**2 / M_tot`` with ``μ`` the reduced mass and
+    ``M_tot = m1 + m2`` the total mass of the colliding bodies.
+
+    Parameters
+    ----------
+    m1, m2:
+        Masses of the projectile and the target in kilograms.
+    v:
+        Impact velocity in metres per second.
+
+    Returns
+    -------
+    float
+        The specific impact energy in joules per kilogram.
+    """
+
+    if m1 <= 0.0 or m2 <= 0.0:
+        raise MarsDiskError("masses must be positive")
+    if v < 0.0:
+        raise MarsDiskError("velocity must be non-negative")
+    m_tot = m1 + m2
+    mu = m1 * m2 / m_tot
+    q_r = 0.5 * mu * v * v / m_tot
+    logger.info(
+        "compute_q_r_F2: m1=%e m2=%e v=%e -> Q_R=%e", m1, m2, v, q_r
+    )
+    return float(q_r)
+
+
+def compute_largest_remnant_mass_fraction_F2(
+    m1: float, m2: float, v: float, q_rd_star: float
+) -> float:
+    """Return the mass fraction of the largest remnant.
+
+    The approximation from Leinhardt & Stewart (2012) is used:
+
+    ``M_LR/M_tot ≈ 0.5 * (2 - Q_R / Q_RD_star)``.
+
+    Values are clipped to the physical range [0, 1].
+
+    Parameters
+    ----------
+    m1, m2:
+        Masses of the projectile and target in kilograms.
+    v:
+        Impact velocity in metres per second.
+    q_rd_star:
+        Catastrophic disruption threshold :math:`Q_{RD}^*` in J/kg.
+    """
+
+    if q_rd_star <= 0.0:
+        raise MarsDiskError("q_rd_star must be positive")
+    q_r = compute_q_r_F2(m1, m2, v)
+    frac = 0.5 * (2.0 - q_r / q_rd_star)
+    frac = max(0.0, min(1.0, frac))
+    logger.info(
+        "compute_largest_remnant_mass_fraction_F2: m1=%e m2=%e v=%e q_rd_star=%e -> frac=%f",
+        m1,
+        m2,
+        v,
+        q_rd_star,
+        frac,
+    )
+    return float(frac)
 
 
 def s_sub_boundary(
