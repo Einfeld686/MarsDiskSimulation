@@ -33,6 +33,8 @@ def update_psd_state(
     wavy_strength: float,
     n_bins: int = 40,
     rho: float = 3000.0,
+    wavy_decay: float = 0.0,   # wavy の減衰係数（任意, 既定0）
+    alpha_mode: str = "size",
 ) -> Dict[str, np.ndarray | float]:
     """Return a particle size distribution state.
 
@@ -77,16 +79,23 @@ def update_psd_state(
     # three-slope power-law approximation
     s_break1 = s_min * 10.0
     s_break2 = s_max / 10.0
+    if alpha_mode == "mass":
+        q0 = 3.0 * alpha - 2.0  # dN/ds ∝ s^{-q},  m ∝ s^3 より
+    elif alpha_mode == "size":
+        q0 = alpha
+    else:
+        raise MarsDiskError("alpha_mode must be 'size' or 'mass'")
     slopes = np.empty_like(centres)
-    slopes.fill(alpha + 1.5)  # large grains
-    slopes[centres < s_break2] = alpha + 1.0
-    slopes[centres < s_break1] = alpha
+    slopes.fill(q0 + 1.5)            # 大粒子側でより急になる例
+    slopes[centres < s_break2] = q0 + 1.0
+    slopes[centres < s_break1] = q0
 
     number = (centres / s_min) ** (-slopes)
 
     if wavy_strength != 0.0:
         period = np.log(s_max / s_min)
         phase = np.log(centres / s_min)
+        envelope = np.exp(-wavy_decay * phase) if wavy_decay > 0.0 else 1.0
         number *= 1.0 + wavy_strength * np.sin(2.0 * np.pi * phase / period)
 
     logger.info("PSD updated: s_min=%g m, s_max=%g m", s_min, s_max)
@@ -97,6 +106,13 @@ def update_psd_state(
         "rho": rho,
         "s_min": s_min,
         "s_max": s_max,
+        "wavy_decay": wavy_decay,
+        "alpha": alpha,
+        "alpha_mode": alpha_mode,
+        # ---- alias 追加（後段の関数が参照しやすい共通キー）
+        "s": centres,
+        "n": number,
+        "edges": edges,
     }
 
 
