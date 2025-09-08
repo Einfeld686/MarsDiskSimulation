@@ -1,5 +1,5 @@
 """Physics modules for radiation pressure, shielding, dynamics and more."""
-from . import radiation, shielding, dynamics, fragments, sublimation, qstar
+from . import radiation, shielding, dynamics, fragments, sublimation, qstar, psd
 
 __all__ = [
     "radiation",
@@ -8,4 +8,5 @@ __all__ = [
     "fragments",
     "sublimation",
     "qstar",
+    "psd",
 ]
