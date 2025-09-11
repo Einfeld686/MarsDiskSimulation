@@ -11,15 +11,22 @@ a sink leads to a shorter effective lifetime of surface particles.
 
 from dataclasses import dataclass, field
 from typing import Optional
+import logging
 
 from ..errors import MarsDiskError
-from .sublimation import SublimationParams, s_sink_from_timescale
+from .sublimation import (
+    SublimationParams,
+    s_sink_from_timescale,
+    mass_flux_hkl,
+)
 
 __all__ = [
     "SinkOptions",
     "gas_drag_timescale",
     "total_sink_timescale",
 ]
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -58,6 +65,7 @@ def total_sink_timescale(
     The function evaluates the configured sinks and returns the shortest
     time-scale.  ``None`` is returned when all sinks are disabled.  The
     parameter ``s_ref`` denotes the representative grain size used for the
+    sublimation lifetime (when ``mode='hkl_timescale'``) and for the
     gas-drag estimate.
     """
 
@@ -65,13 +73,22 @@ def total_sink_timescale(
     t_ref = 1.0 / Omega
 
     if opts.enable_sublimation:
-        s_sink = s_sink_from_timescale(T, rho_p, t_ref, opts.sub_params)
-        if s_sink > 0.0:
-            times.append(opts.sub_params.eta_instant * t_ref)
+        mode = opts.sub_params.mode.lower()
+        if mode == "hkl_timescale":
+            J = mass_flux_hkl(T, opts.sub_params)
+            if J > 0.0:
+                times.append(rho_p * s_ref / J)
+        else:
+            s_sink = s_sink_from_timescale(T, rho_p, t_ref, opts.sub_params)
+            if s_sink > 0.0:
+                times.append(opts.sub_params.eta_instant * t_ref)
 
     if opts.enable_gas_drag and opts.rho_g > 0.0:
         times.append(gas_drag_timescale(s_ref, rho_p, opts.rho_g))
 
     if not times:
+        logger.info("total_sink_timescale: no active sinks")
         return None
-    return float(min(times))
+    t_min = float(min(times))
+    logger.info("total_sink_timescale: t_sink=%e", t_min)
+    return t_min
