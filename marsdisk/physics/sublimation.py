@@ -96,7 +96,9 @@ def mass_flux_hkl(T: float, params: SublimationParams) -> float:
     """
 
     use_hkl = (
-        params.mode.lower() == "hkl" and params.A is not None and params.B is not None
+        params.mode.lower() in {"hkl", "hkl_timescale"}
+        and params.A is not None
+        and params.B is not None
     )
     if use_hkl:
         P_sat = p_sat_clausius(T, params)
