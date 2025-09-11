@@ -32,9 +32,11 @@ from .schema import Config
 from .physics import psd, surface, radiation, fragments, sinks
 from .physics.sublimation import SublimationParams
 from .io import writer
+from . import constants
 
 logger = logging.getLogger(__name__)
 SECONDS_PER_YEAR = 365.25 * 24 * 3600.0
+MAX_STEPS = 1000
 
 
 # ---------------------------------------------------------------------------
@@ -83,7 +85,8 @@ def step(config: RunConfig, state: RunState, dt: float) -> Dict[str, float]:
     state.sigma_surf = res.sigma_surf
 
     t_blow = 1.0 / config.Omega
-    M_out_dot = res.outflux * config.area
+    # kg/s -> M_Mars/s
+    M_out_dot = (res.outflux * config.area) / constants.M_MARS
     state.M_loss_cum += M_out_dot * dt
     state.time += dt
 
@@ -92,11 +95,11 @@ def step(config: RunConfig, state: RunState, dt: float) -> Dict[str, float]:
         "dt": dt,
         "outflux_surface": res.outflux,
         "t_blow": t_blow,
-        "M_out_dot": M_out_dot,
-        "M_loss_cum": state.M_loss_cum,
+        "M_out_dot": M_out_dot,  # M_Mars/s
+        "M_loss_cum": state.M_loss_cum,  # M_Mars
     }
     logger.info(
-        "run.step: t=%e t_blow=%e outflux=%e M_out_dot=%e M_loss_cum=%e",
+        "run.step: t=%e t_blow=%e outflux=%e M_out_dot[M_Mars/s]=%e M_loss_cum[M_Mars]=%e",
         state.time,
         t_blow,
         res.outflux,
@@ -122,7 +125,7 @@ def run_n_steps(
     df = pd.DataFrame(records)
     if out_dir is not None:
         writer.write_parquet(df, Path(out_dir) / "series" / "run.parquet")
-        summary = {"M_loss_cum": state.M_loss_cum}
+        summary = {"M_loss": state.M_loss_cum}  # M_Mars
         writer.write_summary(summary, Path(out_dir) / "summary.json")
     return df
 
@@ -200,9 +203,9 @@ def run_zero_d(cfg: Config) -> None:
     t_sink = sinks.total_sink_timescale(cfg.temps.T_M, cfg.material.rho, Omega, sink_opts)
 
     t_end = cfg.numerics.t_end_years * SECONDS_PER_YEAR
-    n_steps = max(1, int(t_end / cfg.numerics.dt_init))
-    if n_steps > 1000:
-        n_steps = 1000
+    n_steps = max(1, math.ceil(t_end / max(cfg.numerics.dt_init, 1.0)))
+    if n_steps > MAX_STEPS:
+        n_steps = MAX_STEPS
     dt = t_end / n_steps
 
     records: List[Dict[str, float]] = []
@@ -223,9 +226,12 @@ def run_zero_d(cfg: Config) -> None:
         )
         sigma_surf = res.sigma_surf
 
-        M_out_dot = res.outflux * area
+        # kg/s -> M_Mars/s
+        M_out_dot = (res.outflux * area) / constants.M_MARS
+        M_sink_dot = (res.sink_flux * area) / constants.M_MARS
+        # integrate as M_Mars
         M_loss_cum += M_out_dot * dt
-        M_sink_cum += res.sink_flux * area * dt
+        M_sink_cum += M_sink_dot * dt
         time = (step_no + 1) * dt
 
         record = {
@@ -242,37 +248,37 @@ def run_zero_d(cfg: Config) -> None:
             "outflux_surface": res.outflux,
             "t_blow": t_blow,
             "prod_subblow_area_rate": 0.0,
-            "M_out_dot": M_out_dot,
-            "M_loss_cum": M_loss_cum,
-            "mass_total_bins": cfg.initial.mass_total - M_loss_cum - M_sink_cum,
-            "mass_lost_by_blowout": M_loss_cum,
-            "mass_lost_by_sinks": M_sink_cum,
+            "M_out_dot": M_out_dot,                                                # M_Mars/s
+            "M_loss_cum": M_loss_cum + M_sink_cum,                                 # M_Mars
+            "mass_total_bins": cfg.initial.mass_total - (M_loss_cum + M_sink_cum), # M_Mars
+            "mass_lost_by_blowout": M_loss_cum,                                    # M_Mars
+            "mass_lost_by_sinks": M_sink_cum,                                      # M_Mars
         }
         records.append(record)
 
         mass_budget.append(
             {
                 "time": time,
-                "mass_initial": cfg.initial.mass_total,
-                "mass_remaining": cfg.initial.mass_total - M_loss_cum - M_sink_cum,
-                "mass_lost": M_loss_cum + M_sink_cum,
+                "mass_initial": cfg.initial.mass_total,                          # M_Mars
+                "mass_remaining": cfg.initial.mass_total - (M_loss_cum + M_sink_cum),  # M_Mars
+                "mass_lost": M_loss_cum + M_sink_cum,                          # M_Mars
                 "error_percent": 0.0,
             }
         )
 
         logger.info(
-            "run: t=%e a_blow=%e kappa=%e t_blow=%e M_loss=%e",
+            "run: t=%e a_blow=%e kappa=%e t_blow=%e M_loss[M_Mars]=%e",
             time,
             a_blow,
             kappa,
             t_blow,
-            M_loss_cum,
+            M_loss_cum + M_sink_cum,
         )
 
     df = pd.DataFrame(records)
     outdir = Path(cfg.io.outdir)
     writer.write_parquet(df, outdir / "series" / "run.parquet")
-    writer.write_summary({"M_loss": M_loss_cum}, outdir / "summary.json")
+    writer.write_summary({"M_loss": (M_loss_cum + M_sink_cum)}, outdir / "summary.json")
     writer.write_mass_budget(mass_budget, outdir / "checks" / "mass_budget.csv")
 
 
