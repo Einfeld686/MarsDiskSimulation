@@ -23,14 +23,19 @@ required by the specification.
 """
 
 from dataclasses import dataclass
-from typing import Optional, Tuple
+from typing import Optional
 import logging
 
 import numpy as np
 
 from ..errors import MarsDiskError
 
-__all__ = ["step_surface_density_S1", "wyatt_tcoll_S1"]
+__all__ = [
+    "step_surface_density_S1",
+    "wyatt_tcoll_S1",
+    "step_surface",
+    "compute_surface_outflux",
+]
 
 logger = logging.getLogger(__name__)
 
@@ -132,6 +137,60 @@ def step_surface_density_S1(
     outflux = sigma_new * Omega
     sink_flux = sigma_new / t_sink if (t_sink is not None and t_sink > 0.0) else 0.0
     logger.info(
-        "step_surface_density_S1: dt=%e sigma=%e outflux=%e sink=%e", dt, sigma_new, outflux, sink_flux
+        (
+            "step_surface_density_S1: dt=%e sigma=%e sigma_tau1=%e t_blow=%e t_coll=%e t_sink=%e outflux=%e",
+        ),
+        dt,
+        sigma_new,
+        sigma_tau1 if sigma_tau1 is not None else float("nan"),
+        t_blow,
+        t_coll if t_coll is not None else float("nan"),
+        t_sink if t_sink is not None else float("nan"),
+        outflux,
     )
     return SurfaceStepResult(sigma_new, outflux, sink_flux)
+
+
+def compute_surface_outflux(sigma_surf: float, Omega: float) -> float:
+    """Return the instantaneous outflux ``Σ_surf Ω``.
+
+    This thin wrapper exists for API symmetry with :func:`step_surface` and
+    simply evaluates the definition of the outflux.
+    """
+
+    if Omega <= 0.0:
+        raise MarsDiskError("Omega must be positive")
+    return sigma_surf * Omega
+
+
+def step_surface(
+    sigma_surf: float,
+    prod_subblow_area_rate: float,
+    eps_mix: float,
+    dt: float,
+    Omega: float,
+    *,
+    tau: float | None = None,
+    t_coll: float | None = None,
+    t_sink: float | None = None,
+    sigma_tau1: float | None = None,
+) -> SurfaceStepResult:
+    """Alias for :func:`step_surface_density_S1` with optional Wyatt coupling.
+
+    When ``t_coll`` is not supplied but a positive optical depth ``tau`` is
+    given, the Wyatt collisional time-scale is inserted automatically via
+    :func:`wyatt_tcoll_S1`.
+    """
+
+    if t_coll is None and tau is not None and tau > 0.0:
+        t_coll = wyatt_tcoll_S1(tau, Omega)
+    return step_surface_density_S1(
+        sigma_surf,
+        prod_subblow_area_rate,
+        eps_mix,
+        dt,
+        Omega,
+        t_coll=t_coll,
+        t_sink=t_sink,
+        sigma_tau1=sigma_tau1,
+    )
