@@ -9,6 +9,8 @@ from . import (
     psd,
     collide,
     smol,
+    surface,
+    sinks,
 )
 
 __all__ = [
@@ -21,4 +23,6 @@ __all__ = [
     "psd",
     "collide",
     "smol",
+    "surface",
+    "sinks",
 ]
