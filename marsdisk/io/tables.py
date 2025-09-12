@@ -160,3 +160,14 @@ def interp_phi(tau: float, w0: float, g: float) -> float:
     if _PHI_TABLE is None:
         return _approx_phi(tau, w0, g)
     return _PHI_TABLE.interp(tau, w0, g)
+
+
+def load_qpr_table(path: Path) -> None:
+    """Load a Q_pr table from ``path`` overriding any existing table."""
+
+    global _QPR_TABLE
+    if path.suffix in {".h5", ".hdf", ".hdf5"}:
+        df = pd.read_hdf(path)
+    else:
+        df = pd.read_csv(path)
+    _QPR_TABLE = QPrTable.from_frame(df)

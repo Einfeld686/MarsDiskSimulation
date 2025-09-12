@@ -24,6 +24,58 @@ class Geometry(BaseModel):
     Nr: Optional[int] = Field(None, description="Number of radial zones for 1D runs")
 
 
+class DiskGeometry(BaseModel):
+    """Geometry of the inner disk in units of Mars radii."""
+
+    r_in_RM: float
+    r_out_RM: float
+    r_profile: Literal["uniform", "powerlaw"] = "uniform"
+    p_index: float = 0.0
+
+
+class Disk(BaseModel):
+    """Container for inner disk properties."""
+
+    geometry: DiskGeometry
+
+
+class InnerDiskMass(BaseModel):
+    """Scaling for the total mass of the inner disk."""
+
+    use_Mmars_ratio: bool = True
+    M_in_ratio: float = 3.0e-5
+    map_to_sigma: Literal["analytic"] = "analytic"
+
+
+class SupplyConst(BaseModel):
+    prod_area_rate_kg_m2_s: float = 0.0
+
+
+class SupplyPowerLaw(BaseModel):
+    A_kg_m2_s: Optional[float] = None
+    t0_s: float = 0.0
+    index: float = -1.0
+
+
+class SupplyTable(BaseModel):
+    path: Path = Path("data/supply_rate.csv")
+    interp: Literal["linear"] = "linear"
+
+
+class SupplyMixing(BaseModel):
+    epsilon_mix: float = 1.0
+
+
+class Supply(BaseModel):
+    """Parameterisation of external surface supply."""
+
+    mode: Literal["const", "table", "powerlaw", "piecewise"] = "const"
+    const: SupplyConst = SupplyConst()
+    powerlaw: SupplyPowerLaw = SupplyPowerLaw()
+    table: SupplyTable = SupplyTable()
+    mixing: SupplyMixing = SupplyMixing()
+
+
 class Material(BaseModel):
     """Material properties of the solids."""
 
@@ -80,7 +132,8 @@ class PSD(BaseModel):
 class Surface(BaseModel):
     """Surface layer evolution parameters."""
 
-    eps_mix: float
+    init_policy: Literal["clip_by_tau1", "none"] = "clip_by_tau1"
+    sigma_surf_init_override: Optional[float] = None
     use_tcoll: bool = True
 
 
@@ -110,7 +163,7 @@ class Sinks(BaseModel):
 class Radiation(BaseModel):
     """Radiation pressure options and table paths."""
 
-    use_tables: bool = True
+    TM_K: Optional[float] = None
     qpr_table: Optional[Path] = None
 
 
@@ -147,8 +200,11 @@ class Config(BaseModel):
     dynamics: Dynamics
     psd: PSD
     qstar: QStar
-    surface: Surface
-    sinks: Sinks
+    disk: Optional[Disk] = None
+    inner_disk_mass: Optional[InnerDiskMass] = None
+    surface: Surface = Surface()
+    supply: Supply = Field(default_factory=lambda: Supply())
+    sinks: Sinks = Sinks()
     radiation: Optional[Radiation] = None
     shielding: Optional[Shielding] = None
     numerics: Numerics
@@ -158,6 +214,8 @@ class Config(BaseModel):
 
 __all__ = [
     "Geometry",
+    "DiskGeometry",
+    "Disk",
     "Material",
     "Temps",
     "Sizes",
@@ -166,6 +224,8 @@ __all__ = [
     "QStar",
     "PSD",
     "Surface",
+    "InnerDiskMass",
+    "Supply",
     "Sinks",
     "Radiation",
     "Shielding",

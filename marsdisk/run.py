@@ -29,9 +29,10 @@ import pandas as pd
 
 from . import grid
 from .schema import Config
-from .physics import psd, surface, radiation, fragments, sinks
+from .physics import psd, surface, radiation, fragments, sinks, supply
+from . import initfields
+from .io import writer, tables
 from .physics.sublimation import SublimationParams
-from .io import writer
 from . import constants
 
 logger = logging.getLogger(__name__)
@@ -155,17 +156,34 @@ def run_zero_d(cfg: Config) -> None:
         Parsed configuration object.
     """
 
-    r = cfg.geometry.r if cfg.geometry.r is not None else cfg.geometry.r_in
-    if r is None:
+    if cfg.geometry.r is not None:
+        r = cfg.geometry.r
+    elif cfg.disk is not None:
+        r = (
+            0.5
+            * (cfg.disk.geometry.r_in_RM + cfg.disk.geometry.r_out_RM)
+            * constants.R_MARS
+        )
+    elif cfg.geometry.r_in is not None:
+        r = cfg.geometry.r_in
+    else:
         raise ValueError("geometry.r must be provided for 0D runs")
     Omega = grid.omega_kepler(r)
 
+    if cfg.radiation and cfg.radiation.qpr_table is not None:
+        tables.load_qpr_table(cfg.radiation.qpr_table)
+    T_M = (
+        cfg.radiation.TM_K
+        if cfg.radiation and cfg.radiation.TM_K is not None
+        else cfg.temps.T_M
+    )
+
     # Initial PSD and associated quantities
     sub_params = SublimationParams(**cfg.sinks.sub_params.model_dump())
-    a_blow = radiation.blowout_radius(cfg.material.rho, cfg.temps.T_M)
+    a_blow = radiation.blowout_radius(cfg.material.rho, T_M)
     s_min = fragments.compute_s_min_F2(
         a_blow,
-        cfg.temps.T_M,
+        T_M,
         cfg.sinks.T_sub,
         t_ref=1.0 / Omega,
         rho=cfg.material.rho,
@@ -185,13 +203,27 @@ def run_zero_d(cfg: Config) -> None:
         rho=cfg.material.rho,
     )
     kappa = psd.compute_kappa(psd_state)
-    qpr_mean = radiation.planck_mean_qpr(s_min, cfg.temps.T_M)
-    beta_at_smin = radiation.beta(s_min, cfg.material.rho, cfg.temps.T_M)
+    qpr_mean = radiation.planck_mean_qpr(s_min, T_M)
+    beta_at_smin = radiation.beta(s_min, cfg.material.rho, T_M)
 
-    sigma_surf = 0.0
+    sigma_tau1 = 1.0 / kappa if kappa > 0.0 else None
+    if cfg.disk is not None and cfg.inner_disk_mass is not None:
+        sigma_mid = initfields.sigma_from_mass(
+            cfg.inner_disk_mass, cfg.disk.geometry, r
+        )
+        sigma_surf = initfields.initial_surface_density(
+            sigma_mid, sigma_tau1, cfg.surface
+        )
+    else:
+        sigma_surf = 0.0
     M_loss_cum = 0.0
     M_sink_cum = 0.0
-    area = math.pi * r**2
+    if cfg.disk is not None:
+        r_in_d = cfg.disk.geometry.r_in_RM * constants.R_MARS
+        r_out_d = cfg.disk.geometry.r_out_RM * constants.R_MARS
+        area = math.pi * (r_out_d**2 - r_in_d**2)
+    else:
+        area = math.pi * r**2
     t_blow = 1.0 / Omega
 
     sink_opts = sinks.SinkOptions(
@@ -200,7 +232,10 @@ def run_zero_d(cfg: Config) -> None:
         enable_gas_drag=cfg.sinks.enable_gas_drag,
         rho_g=cfg.sinks.rho_g,
     )
-    t_sink = sinks.total_sink_timescale(cfg.temps.T_M, cfg.material.rho, Omega, sink_opts)
+    t_sink = sinks.total_sink_timescale(T_M, cfg.material.rho, Omega, sink_opts)
+
+    supply_model = supply.SupplyModel(cfg.supply)
+    eps_mix = cfg.supply.mixing.epsilon_mix
 
     t_end = cfg.numerics.t_end_years * SECONDS_PER_YEAR
     n_steps = max(1, math.ceil(t_end / max(cfg.numerics.dt_init, 1.0)))
@@ -212,12 +247,13 @@ def run_zero_d(cfg: Config) -> None:
     mass_budget: List[Dict[str, float]] = []
 
     for step_no in range(n_steps):
+        time = step_no * dt
         tau = kappa * sigma_surf
-        sigma_tau1 = 1.0 / kappa if kappa > 0.0 else None
+        prod_rate = supply_model.rate(time)
         res = surface.step_surface(
             sigma_surf,
-            0.0,
-            cfg.surface.eps_mix,
+            prod_rate,
+            eps_mix,
             dt,
             Omega,
             tau=tau if cfg.surface.use_tcoll else None,
@@ -247,7 +283,7 @@ def run_zero_d(cfg: Config) -> None:
             "Sigma_tau1": sigma_tau1 if sigma_tau1 is not None else float("nan"),
             "outflux_surface": res.outflux,
             "t_blow": t_blow,
-            "prod_subblow_area_rate": 0.0,
+            "prod_subblow_area_rate": prod_rate * eps_mix,
             "M_out_dot": M_out_dot,                                                # M_Mars/s
             "M_loss_cum": M_loss_cum + M_sink_cum,                                 # M_Mars
             "mass_total_bins": cfg.initial.mass_total - (M_loss_cum + M_sink_cum), # M_Mars

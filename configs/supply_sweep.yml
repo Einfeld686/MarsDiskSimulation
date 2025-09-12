@@ -40,12 +40,12 @@ surface:
   sigma_surf_init_override: null
   use_tcoll: true
 supply:
-  mode: "const"
+  mode: "powerlaw"
   const:
     prod_area_rate_kg_m2_s: 0.0
   powerlaw:
-    A_kg_m2_s: null
-    t0_s: 0.0
+    A_kg_m2_s: 1.0e-5
+    t0_s: 1.0
     index: -1.0
   table:
     path: "data/supply_rate.csv"

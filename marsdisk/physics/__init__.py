@@ -12,6 +12,7 @@ from . import (
     surface,
     sinks,
     viscosity,
+    supply,
 )
 
 __all__ = [
@@ -27,4 +28,5 @@ __all__ = [
     "surface",
     "sinks",
     "viscosity",
+    "supply",
 ]
