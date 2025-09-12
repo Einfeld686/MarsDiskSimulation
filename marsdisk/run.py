@@ -38,6 +38,8 @@ from . import constants
 logger = logging.getLogger(__name__)
 SECONDS_PER_YEAR = 365.25 * 24 * 3600.0
 MAX_STEPS = 1000
+TAU_MIN = 1e-12
+KAPPA_MIN = 1e-12
 
 
 # ---------------------------------------------------------------------------
@@ -74,7 +76,9 @@ def step(config: RunConfig, state: RunState, dt: float) -> Dict[str, float]:
     """Advance the coupled S0/S1 system by one time-step."""
 
     kappa_eff = psd.compute_kappa(state.psd_state)
-    sigma_tau1 = 1.0 / kappa_eff if kappa_eff > 0.0 else None
+    sigma_tau1 = (
+        1.0 / kappa_eff if (kappa_eff is not None and kappa_eff > KAPPA_MIN) else None
+    )
     res = surface.step_surface_density_S1(
         state.sigma_surf,
         config.prod_rate,
@@ -206,7 +210,9 @@ def run_zero_d(cfg: Config) -> None:
     qpr_mean = radiation.planck_mean_qpr(s_min, T_M)
     beta_at_smin = radiation.beta(s_min, cfg.material.rho, T_M)
 
-    sigma_tau1 = 1.0 / kappa if kappa > 0.0 else None
+    sigma_tau1 = (
+        1.0 / kappa if (kappa is not None and kappa > KAPPA_MIN) else None
+    )
     if cfg.disk is not None and cfg.inner_disk_mass is not None:
         sigma_mid = initfields.sigma_from_mass(
             cfg.inner_disk_mass, cfg.disk.geometry, r
@@ -249,6 +255,7 @@ def run_zero_d(cfg: Config) -> None:
     for step_no in range(n_steps):
         time = step_no * dt
         tau = kappa * sigma_surf
+        tau_for_coll = None if (not cfg.surface.use_tcoll or tau <= TAU_MIN) else tau
         prod_rate = supply_model.rate(time)
         res = surface.step_surface(
             sigma_surf,
@@ -256,7 +263,7 @@ def run_zero_d(cfg: Config) -> None:
             eps_mix,
             dt,
             Omega,
-            tau=tau if cfg.surface.use_tcoll else None,
+            tau=tau_for_coll,
             t_sink=t_sink,
             sigma_tau1=sigma_tau1,
         )

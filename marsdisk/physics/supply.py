@@ -39,6 +39,11 @@ class SupplyModel:
     def __init__(self, cfg: Supply) -> None:
         self.cfg = cfg
         self._table: Optional[_TableData] = None
+        if cfg.mode == "powerlaw":
+            t0_s = cfg.powerlaw.t0_s
+            self._t0 = t0_s if (t0_s and t0_s > 0.0) else 1.0
+        else:
+            self._t0 = 1.0
 
     def rate(self, t: float) -> float:
         mode = self.cfg.mode
@@ -48,10 +53,7 @@ class SupplyModel:
             A = self.cfg.powerlaw.A_kg_m2_s
             if A is None:
                 return 0.0
-            t0 = self.cfg.powerlaw.t0_s
-            if t0 <= 0.0:
-                return 0.0
-            return A * (t / t0) ** self.cfg.powerlaw.index
+            return A * (t / self._t0) ** self.cfg.powerlaw.index
         if mode == "table":
             if self._table is None:
                 self._table = _TableData.load(self.cfg.table.path)

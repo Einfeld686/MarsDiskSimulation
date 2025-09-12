@@ -30,14 +30,27 @@ import numpy as np
 
 from ..errors import MarsDiskError
 
+logger = logging.getLogger(__name__)
+
+TAU_MIN = 1e-12
+
+
+def _safe_tcoll(Omega: float, tau: float | None) -> float | None:
+    """Return ``t_coll`` or ``None`` when ``tau`` is effectively zero."""
+
+    if tau is None or tau <= TAU_MIN:
+        logger.info(
+            "safe_tcoll: tau=%e <= TAU_MIN=%e; collisions disabled", tau, TAU_MIN
+        )
+        return None
+    return 1.0 / (2.0 * Omega * max(tau, TAU_MIN))
+
 __all__ = [
     "step_surface_density_S1",
     "wyatt_tcoll_S1",
     "step_surface",
     "compute_surface_outflux",
 ]
-
-logger = logging.getLogger(__name__)
 
 
 def wyatt_tcoll_S1(tau: float, Omega: float) -> float:
@@ -180,8 +193,10 @@ def step_surface(
     :func:`wyatt_tcoll_S1`.
     """
 
-    if t_coll is None and tau is not None and tau > 0.0:
-        t_coll = wyatt_tcoll_S1(tau, Omega)
+    if t_coll is None and tau is not None:
+        t_coll = _safe_tcoll(Omega, tau)
+    elif t_coll is not None and t_coll <= 0.0:
+        t_coll = None
     return step_surface_density_S1(
         sigma_surf,
         prod_subblow_area_rate,
