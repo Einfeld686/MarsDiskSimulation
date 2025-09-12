@@ -66,6 +66,15 @@ class SupplyMixing(BaseModel):
     epsilon_mix: float = 1.0
 
 
+class SupplyPiece(BaseModel):
+    t_start_s: float
+    t_end_s: float
+    mode: Literal["const", "powerlaw", "table"] = "const"
+    const: SupplyConst = SupplyConst()
+    powerlaw: SupplyPowerLaw = SupplyPowerLaw()
+    table: SupplyTable = SupplyTable()
+
+
 class Supply(BaseModel):
     """Parameterisation of external surface supply."""
 
@@ -74,6 +83,7 @@ class Supply(BaseModel):
     powerlaw: SupplyPowerLaw = SupplyPowerLaw()
     table: SupplyTable = SupplyTable()
     mixing: SupplyMixing = SupplyMixing()
+    piecewise: list[SupplyPiece] = []
 
 
 class Material(BaseModel):
