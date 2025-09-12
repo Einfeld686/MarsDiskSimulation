@@ -6,12 +6,12 @@ This module implements a minimal zero-dimensional model for the
 surface number/mass density of grains susceptible to radiation-pressure
 blow-out.  The governing ordinary differential equation is
 
-``dΣ_surf/dt = ε_mix · prod_rate - Σ_surf/t_blow - Σ_surf/t_coll - Σ_surf/t_sink``
+``dΣ_surf/dt = prod_rate - Σ_surf/t_blow - Σ_surf/t_coll - Σ_surf/t_sink``
 
 where ``prod_rate`` is the area production rate of sub--blow-out grains
-and ``ε_mix`` denotes the fraction mixed into the optically thin surface
-layer.  The blow-out time-scale is ``t_blow = 1/Ω``.  Collisional erosion
-can optionally be included via the Wyatt scaling.  Additional sinks such
+already mixed into the optically thin surface layer.  The blow-out
+time-scale is ``t_blow = 1/Ω``.  Collisional erosion can optionally be
+included via the Wyatt scaling.  Additional sinks such
 as sublimation or gas drag are represented by a generic time-scale
 ``t_sink``.
 
@@ -90,7 +90,6 @@ class SurfaceStepResult:
 def step_surface_density_S1(
     sigma_surf: float,
     prod_subblow_area_rate: float,
-    eps_mix: float,
     dt: float,
     Omega: float,
     *,
@@ -104,10 +103,8 @@ def step_surface_density_S1(
     ----------
     sigma_surf:
         Current surface mass density ``Σ_surf``.
-    prod_subblow_area_rate:
-        Production rate of sub--blow-out material per unit area.
-    eps_mix:
-        Mixing efficiency ``ε_mix``.
+        prod_subblow_area_rate:
+        Production rate of sub--blow-out material per unit area after mixing.
     dt:
         Time step.
     Omega:
@@ -131,8 +128,6 @@ def step_surface_density_S1(
 
     if dt <= 0.0 or Omega <= 0.0:
         raise MarsDiskError("dt and Omega must be positive")
-    if eps_mix < 0.0:
-        raise MarsDiskError("eps_mix must be non-negative")
 
     t_blow = 1.0 / Omega
     loss = 1.0 / t_blow
@@ -141,7 +136,7 @@ def step_surface_density_S1(
     if t_sink is not None and t_sink > 0.0:
         loss += 1.0 / t_sink
 
-    numerator = sigma_surf + dt * eps_mix * prod_subblow_area_rate
+    numerator = sigma_surf + dt * prod_subblow_area_rate
     sigma_new = numerator / (1.0 + dt * loss)
 
     if sigma_tau1 is not None:
@@ -177,7 +172,6 @@ def compute_surface_outflux(sigma_surf: float, Omega: float) -> float:
 def step_surface(
     sigma_surf: float,
     prod_subblow_area_rate: float,
-    eps_mix: float,
     dt: float,
     Omega: float,
     *,
@@ -200,7 +194,6 @@ def step_surface(
     return step_surface_density_S1(
         sigma_surf,
         prod_subblow_area_rate,
-        eps_mix,
         dt,
         Omega,
         t_coll=t_coll,

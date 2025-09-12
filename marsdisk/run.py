@@ -53,7 +53,6 @@ class RunConfig:
 
     r: float                # orbital radius [m]
     Omega: float            # Keplerian frequency [s^-1]
-    eps_mix: float          # mixing efficiency
     prod_rate: float        # production rate of sub-blow-out grains
     area: float | None = None  # surface area factor
 
@@ -82,7 +81,6 @@ def step(config: RunConfig, state: RunState, dt: float) -> Dict[str, float]:
     res = surface.step_surface_density_S1(
         state.sigma_surf,
         config.prod_rate,
-        config.eps_mix,
         dt,
         config.Omega,
         sigma_tau1=sigma_tau1,
@@ -240,8 +238,7 @@ def run_zero_d(cfg: Config) -> None:
     )
     t_sink = sinks.total_sink_timescale(T_M, cfg.material.rho, Omega, sink_opts)
 
-    supply_model = supply.SupplyModel(cfg.supply)
-    eps_mix = cfg.supply.mixing.epsilon_mix
+    supply_spec = cfg.supply
 
     t_end = cfg.numerics.t_end_years * SECONDS_PER_YEAR
     n_steps = max(1, math.ceil(t_end / max(cfg.numerics.dt_init, 1.0)))
@@ -256,11 +253,10 @@ def run_zero_d(cfg: Config) -> None:
         time = step_no * dt
         tau = kappa * sigma_surf
         tau_for_coll = None if (not cfg.surface.use_tcoll or tau <= TAU_MIN) else tau
-        prod_rate = supply_model.rate(time)
+        prod_rate = supply.get_prod_area_rate(time, r, supply_spec)
         res = surface.step_surface(
             sigma_surf,
             prod_rate,
-            eps_mix,
             dt,
             Omega,
             tau=tau_for_coll,
@@ -290,7 +286,7 @@ def run_zero_d(cfg: Config) -> None:
             "Sigma_tau1": sigma_tau1 if sigma_tau1 is not None else float("nan"),
             "outflux_surface": res.outflux,
             "t_blow": t_blow,
-            "prod_subblow_area_rate": prod_rate * eps_mix,
+            "prod_subblow_area_rate": prod_rate,
             "M_out_dot": M_out_dot,                                                # M_Mars/s
             "M_loss_cum": M_loss_cum + M_sink_cum,                                 # M_Mars
             "mass_total_bins": cfg.initial.mass_total - (M_loss_cum + M_sink_cum), # M_Mars
