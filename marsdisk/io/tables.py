@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Iterable, Optional
+from typing import Iterable, Optional, Callable
 import warnings
 
 import numpy as np
@@ -119,13 +119,28 @@ class PhiTable:
         return float(c0 * (1 - zd) + c1 * zd)
 
 
+def _read_qpr_frame(path: Path) -> pd.DataFrame:
+    if path.suffix in {".h5", ".hdf", ".hdf5"}:
+        df = pd.read_hdf(path)
+    else:
+        df = pd.read_csv(path)
+    if "log10_s" in df.columns and "s" not in df.columns:
+        df = df.rename(columns={"log10_s": "s"})
+        df["s"] = 10.0 ** df["s"].astype(float)
+    return df
+
+
 # Attempt to load tables at import time
 _QPR_TABLE: Optional[QPrTable]
 _PHI_TABLE: Optional[PhiTable]
 
 try:
-    qpr_path = DATA_DIR / "qpr.csv"
-    _QPR_TABLE = QPrTable.from_frame(pd.read_csv(qpr_path)) if qpr_path.exists() else None
+    qpr_path = DATA_DIR / "qpr_planck.h5"
+    if not qpr_path.exists():
+        qpr_path = DATA_DIR / "qpr_planck.csv"
+    _QPR_TABLE = (
+        QPrTable.from_frame(_read_qpr_frame(qpr_path)) if qpr_path.exists() else None
+    )
     if _QPR_TABLE is None:
         warnings.warn("Q_pr table not found; using analytic approximation", RuntimeWarning)
 except Exception as exc:  # pragma: no cover - defensive
@@ -162,12 +177,13 @@ def interp_phi(tau: float, w0: float, g: float) -> float:
     return _PHI_TABLE.interp(tau, w0, g)
 
 
-def load_qpr_table(path: Path) -> None:
-    """Load a Q_pr table from ``path`` overriding any existing table."""
+def load_qpr_table(path: Path) -> Callable[[float, float], float]:
+    """Load a Q_pr table from ``path`` overriding any existing table.
+
+    Returns the interpolation function of the loaded table.
+    """
 
     global _QPR_TABLE
-    if path.suffix in {".h5", ".hdf", ".hdf5"}:
-        df = pd.read_hdf(path)
-    else:
-        df = pd.read_csv(path)
+    df = _read_qpr_frame(path)
     _QPR_TABLE = QPrTable.from_frame(df)
+    return _QPR_TABLE.interp
