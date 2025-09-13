@@ -10,6 +10,7 @@ function can be supplied for testing or when alternative tables are used.
 """
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Callable, Tuple
 
 import numpy as np
@@ -20,22 +21,28 @@ from ..io import tables
 # type alias for a Q_pr interpolation function
 type_QPr = Callable[[float, float], float]
 
+_QPR_LOOKUP: type_QPr = tables.interp_qpr
+
+
+def load_qpr_table(path: Path | str) -> type_QPr:
+    """Load a ``⟨Q_pr⟩`` table and return its interpolator."""
+
+    global _QPR_LOOKUP
+    _QPR_LOOKUP = tables.load_qpr_table(Path(path))
+    return _QPR_LOOKUP
+
+
+def qpr_lookup(s: float, T_M: float, interp: type_QPr | None = None) -> float:
+    """Lookup ``⟨Q_pr⟩`` for grain size ``s`` and temperature ``T_M``."""
+
+    func = _QPR_LOOKUP if interp is None else interp
+    return float(func(s, T_M))
+
 
 def planck_mean_qpr(s: float, T_M: float, interp: type_QPr | None = None) -> float:
-    """Return the Planck-mean radiation pressure efficiency ``⟨Q_pr⟩``.
+    """Backward compatible alias for :func:`qpr_lookup`."""
 
-    Parameters
-    ----------
-    s:
-        Grain radius in metres.
-    T_M:
-        Surface temperature of Mars in Kelvin.
-    interp:
-        Optional custom interpolation function.  Defaults to
-        :func:`marsdisk.io.tables.interp_qpr`.
-    """
-    func = tables.interp_qpr if interp is None else interp
-    return float(func(s, T_M))
+    return qpr_lookup(s, T_M, interp)
 
 
 def beta(
@@ -51,7 +58,7 @@ def beta(
 
     ``β = 3 L_M ⟨Q_pr⟩ / (16 π c G M_M ρ s)``.
     """
-    qpr = planck_mean_qpr(s, T_M, interp)
+    qpr = qpr_lookup(s, T_M, interp)
     L_M = 4.0 * np.pi * constants.R_MARS**2 * constants.SIGMA_SB * T_M**4
     num = 3.0 * L_M * qpr
     den = 16.0 * np.pi * constants.C * constants.G * constants.M_MARS * rho * s
