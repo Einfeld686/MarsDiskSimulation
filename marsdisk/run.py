@@ -29,8 +29,15 @@ import pandas as pd
 
 from . import grid
 from .schema import Config
-from .physics import psd, surface, radiation, fragments, sinks, supply
-from . import initfields
+from .physics import (
+    psd,
+    surface,
+    radiation,
+    fragments,
+    sinks,
+    supply,
+    initfields,
+)
 from .io import writer, tables
 from .physics.sublimation import SublimationParams
 from . import constants
@@ -208,15 +215,26 @@ def run_zero_d(cfg: Config) -> None:
     qpr_mean = radiation.planck_mean_qpr(s_min, T_M)
     beta_at_smin = radiation.beta(s_min, cfg.material.rho, T_M)
 
-    sigma_tau1 = (
-        1.0 / kappa if (kappa is not None and kappa > KAPPA_MIN) else None
-    )
+    sigma_tau1 = 1.0 / kappa if (kappa is not None and kappa > KAPPA_MIN) else None
     if cfg.disk is not None and cfg.inner_disk_mass is not None:
-        sigma_mid = initfields.sigma_from_mass(
-            cfg.inner_disk_mass, cfg.disk.geometry, r
+        r_in_d = cfg.disk.geometry.r_in_RM * constants.R_MARS
+        r_out_d = cfg.disk.geometry.r_out_RM * constants.R_MARS
+        if cfg.inner_disk_mass.use_Mmars_ratio:
+            M_in = cfg.inner_disk_mass.M_in_ratio * constants.M_MARS
+        else:
+            M_in = cfg.inner_disk_mass.M_in_ratio
+        sigma_func = initfields.sigma_from_Minner(
+            M_in,
+            r_in_d,
+            r_out_d,
+            cfg.disk.geometry.p_index,
         )
-        sigma_surf = initfields.initial_surface_density(
-            sigma_mid, sigma_tau1, cfg.surface
+        sigma_mid = sigma_func(r)
+        sigma_surf = initfields.surf_sigma_init(
+            sigma_mid,
+            kappa,
+            cfg.surface.init_policy,
+            sigma_override=cfg.surface.sigma_surf_init_override,
         )
     else:
         sigma_surf = 0.0
