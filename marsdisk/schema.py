@@ -166,7 +166,14 @@ class Sinks(BaseModel):
     enable_sublimation: bool = True
     T_sub: float = 1300.0
     sub_params: SublimationParamsModel = SublimationParamsModel()
-    enable_gas_drag: bool = False
+    enable_gas_drag: bool = Field(
+        False,
+        description=(
+            "Enable gas drag on surface grains. Disabled by default as gas-poor "
+            "disks are dominated by radiation and collisions (Takeuchi & Lin 2003; "
+            "Strubbe & Chiang 2006)."
+        ),
+    )
     rho_g: float = 0.0
 
 
