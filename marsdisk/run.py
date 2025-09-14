@@ -104,6 +104,7 @@ def step(config: RunConfig, state: RunState, dt: float) -> Dict[str, float]:
         "time": state.time,
         "dt": dt,
         "outflux_surface": res.outflux,
+        "sink_flux_surface": res.sink_flux,
         "t_blow": t_blow,
         "M_out_dot": M_out_dot,  # M_Mars/s
         "M_loss_cum": state.M_loss_cum,  # M_Mars
@@ -303,6 +304,7 @@ def run_zero_d(cfg: Config) -> None:
             "Sigma_surf": sigma_surf,
             "Sigma_tau1": sigma_tau1 if sigma_tau1 is not None else float("nan"),
             "outflux_surface": res.outflux,
+            "sink_flux_surface": res.sink_flux,
             "t_blow": t_blow,
             "prod_subblow_area_rate": prod_rate,
             "M_out_dot": M_out_dot,                                                # M_Mars/s
@@ -313,13 +315,20 @@ def run_zero_d(cfg: Config) -> None:
         }
         records.append(record)
 
+        mass_initial = cfg.initial.mass_total
+        mass_remaining = mass_initial - (M_loss_cum + M_sink_cum)
+        mass_lost = M_loss_cum + M_sink_cum
+        mass_diff = mass_initial - mass_remaining - mass_lost
+        error_percent = 0.0
+        if mass_initial != 0.0:
+            error_percent = abs(mass_diff / mass_initial) * 100.0
         mass_budget.append(
             {
                 "time": time,
-                "mass_initial": cfg.initial.mass_total,                          # M_Mars
-                "mass_remaining": cfg.initial.mass_total - (M_loss_cum + M_sink_cum),  # M_Mars
-                "mass_lost": M_loss_cum + M_sink_cum,                          # M_Mars
-                "error_percent": 0.0,
+                "mass_initial": mass_initial,      # M_Mars
+                "mass_remaining": mass_remaining,  # M_Mars
+                "mass_lost": mass_lost,            # M_Mars
+                "error_percent": error_percent,
             }
         )
 
