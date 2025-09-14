@@ -35,6 +35,10 @@ class SinkOptions:
 
     enable_sublimation: bool = False
     sub_params: SublimationParams = field(default_factory=SublimationParams)
+    # Gas drag is disabled by default.  In gas-poor debris disks the
+    # dynamics are governed primarily by radiation pressure and
+    # collisions, making drag a secondary effect (see Takeuchi & Lin
+    # 2003; Strubbe & Chiang 2006).
     enable_gas_drag: bool = False
     rho_g: float = 0.0  # ambient gas density [kg m^-3]
 
