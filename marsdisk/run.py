@@ -37,6 +37,7 @@ from .physics import (
     sinks,
     supply,
     initfields,
+    shielding,
 )
 from .io import writer, tables
 from .physics.sublimation import SublimationParams
@@ -81,10 +82,11 @@ class RunState:
 def step(config: RunConfig, state: RunState, dt: float) -> Dict[str, float]:
     """Advance the coupled S0/S1 system by one time-step."""
 
-    kappa_eff = psd.compute_kappa(state.psd_state)
-    sigma_tau1 = (
-        1.0 / kappa_eff if (kappa_eff is not None and kappa_eff > KAPPA_MIN) else None
-    )
+    kappa_surf = psd.compute_kappa(state.psd_state)
+    tau = kappa_surf * state.sigma_surf
+    kappa_eff, sigma_tau1 = shielding.apply_shielding(kappa_surf, tau, 0.0, 0.0)
+    if kappa_eff <= KAPPA_MIN:
+        sigma_tau1 = None
     res = surface.step_surface_density_S1(
         state.sigma_surf,
         config.prod_rate,
@@ -212,11 +214,11 @@ def run_zero_d(cfg: Config) -> None:
         n_bins=cfg.sizes.n_bins,
         rho=cfg.material.rho,
     )
-    kappa = psd.compute_kappa(psd_state)
+    kappa_surf = psd.compute_kappa(psd_state)
     qpr_mean = radiation.planck_mean_qpr(s_min, T_M)
     beta_at_smin = radiation.beta(s_min, cfg.material.rho, T_M)
 
-    sigma_tau1 = 1.0 / kappa if (kappa is not None and kappa > KAPPA_MIN) else None
+    sigma_tau1 = None
     if cfg.disk is not None and cfg.inner_disk_mass is not None:
         r_in_d = cfg.disk.geometry.r_in_RM * constants.R_MARS
         r_out_d = cfg.disk.geometry.r_out_RM * constants.R_MARS
@@ -233,7 +235,7 @@ def run_zero_d(cfg: Config) -> None:
         sigma_mid = sigma_func(r)
         sigma_surf = initfields.surf_sigma_init(
             sigma_mid,
-            kappa,
+            kappa_surf,
             cfg.surface.init_policy,
             sigma_override=cfg.surface.sigma_surf_init_override,
         )
@@ -270,7 +272,8 @@ def run_zero_d(cfg: Config) -> None:
 
     for step_no in range(n_steps):
         time = step_no * dt
-        tau = kappa * sigma_surf
+        tau = kappa_surf * sigma_surf
+        kappa_eff, sigma_tau1 = shielding.apply_shielding(kappa_surf, tau, 0.0, 0.0)
         tau_for_coll = None if (not cfg.surface.use_tcoll or tau <= TAU_MIN) else tau
         prod_rate = supply.get_prod_area_rate(time, r, supply_spec)
         res = surface.step_surface(
@@ -298,7 +301,7 @@ def run_zero_d(cfg: Config) -> None:
             "tau": tau,
             "a_blow": a_blow,
             "s_min": s_min,
-            "kappa": kappa,
+            "kappa": kappa_eff,
             "Qpr_mean": qpr_mean,
             "beta_at_smin": beta_at_smin,
             "Sigma_surf": sigma_surf,
@@ -336,7 +339,7 @@ def run_zero_d(cfg: Config) -> None:
             "run: t=%e a_blow=%e kappa=%e t_blow=%e M_loss[M_Mars]=%e",
             time,
             a_blow,
-            kappa,
+            kappa_eff,
             t_blow,
             M_loss_cum + M_sink_cum,
         )
