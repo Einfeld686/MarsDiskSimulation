@@ -15,3 +15,7 @@ rebound/   … REBOUND 本体 + 拡張コード
 Makefile   … ビルド定義
 Step1/     … Python 検証スクリプト
 ```
+## Python CLI 実行例
+```bash
+python -m marsdisk.run --config configs/mars_0d_supply_sweep.yaml
+```
