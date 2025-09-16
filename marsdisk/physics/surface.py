@@ -4,7 +4,13 @@ from __future__ import annotations
 
 This module implements a minimal zero-dimensional model for the
 surface number/mass density of grains susceptible to radiation-pressure
-blow-out.  The governing ordinary differential equation is
+blow-out.  Only the optically thin top layer (``\tau\lesssim1``) is
+assumed to receive direct irradiation; deeper layers are treated as
+self-shaded and do not participate in the radiation-driven outflow.
+This follows the conceptual picture of the thin illuminated skin
+discussed by Takeuchi & Lin (2003).
+
+The governing ordinary differential equation is
 
 ``dΣ_surf/dt = prod_rate - Σ_surf/t_blow - Σ_surf/t_coll - Σ_surf/t_sink``
 
