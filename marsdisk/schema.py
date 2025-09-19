@@ -187,7 +187,7 @@ class Radiation(BaseModel):
 class Shielding(BaseModel):
     """Self-shielding table configuration."""
 
-    phi_table: Optional[Path] = None
+    phi_table: Optional[str] = None
 
 
 class Numerics(BaseModel):
