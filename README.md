@@ -19,3 +19,8 @@ Step1/     … Python 検証スクリプト
 ```bash
 python -m marsdisk.run --config configs/mars_0d_supply_sweep.yaml
 ```
+
+## テーブル生成スクリプト実行例
+```bash
+python tools/make_qpr_table.py --s-min 1e-9 --s-max 1e-2 --Ns 60 --T 2000,2500,3000,3500,4000 --out data/qpr_planck.h5
+```
