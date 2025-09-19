@@ -282,3 +282,61 @@ def load_qpr_table(path: str | Path) -> Callable[[float, float], float]:
     df = _read_qpr_frame(table_path)
     _QPR_TABLE = QPrTable.from_frame(df)
     return _QPR_TABLE.interp
+
+
+def load_phi_table(path: str | Path) -> Callable[[float], float]:
+    """Create a clamped interpolator from a Φ(τ) CSV file. Self-shielding Φ."""
+
+    table_path = Path(path)
+    if not table_path.exists():
+        raise ValueError(f"Phi table file does not exist: {table_path}")
+
+    try:
+        df = pd.read_csv(table_path)
+    except Exception as exc:  # pragma: no cover - pandas already tested
+        raise ValueError(f"Failed to read Phi table from {table_path}: {exc}") from exc
+
+    required = {"tau", "phi"}
+    missing = required.difference(df.columns)
+    if missing:
+        names = ", ".join(sorted(missing))
+        raise ValueError(f"Phi table is missing required columns: {names}")
+
+    work = df.copy()
+    work["tau"] = pd.to_numeric(work["tau"], errors="coerce")
+    work["phi"] = pd.to_numeric(work["phi"], errors="coerce")
+    if work[["tau", "phi"]].isna().any().any():
+        raise ValueError("Phi table contains non-numeric or missing values")
+
+    work = work.sort_values("tau")
+    tau_vals = work["tau"].to_numpy(dtype=float)
+    phi_vals = work["phi"].to_numpy(dtype=float)
+
+    if tau_vals.size == 0:
+        raise ValueError("Phi table must contain at least one row")
+    if tau_vals.size >= 2 and np.any(np.diff(tau_vals) <= 0.0):
+        raise ValueError("Phi table requires strictly increasing tau values")
+    if not np.all(np.isfinite(phi_vals)):
+        raise ValueError("Phi table contains non-finite phi values")
+
+    if tau_vals.size == 1:
+        phi_const = float(np.clip(phi_vals[0], 0.0, 1.0))
+
+        def phi_fn(_: float) -> float:
+            return phi_const
+
+        return phi_fn
+
+    def phi_fn(tau: float) -> float:
+        value = float(
+            np.interp(
+                tau,
+                tau_vals,
+                phi_vals,
+                left=phi_vals[0],
+                right=phi_vals[-1],
+            )
+        )
+        return float(np.clip(value, 0.0, 1.0))
+
+    return phi_fn
