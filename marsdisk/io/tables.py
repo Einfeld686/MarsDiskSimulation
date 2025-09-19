@@ -47,10 +47,39 @@ class QPrTable:
 
     @classmethod
     def from_frame(cls, df: pd.DataFrame) -> "QPrTable":
-        pivot = df.pivot_table(index="T_M", columns="s", values="Q_pr")
+        required = {"s", "T_M", "Q_pr"}
+        missing = required.difference(df.columns)
+        if missing:
+            names = ", ".join(sorted(missing))
+            raise ValueError(f"Q_pr table is missing required columns: {names}")
+
+        work = df.copy()
+        work["s"] = pd.to_numeric(work["s"], errors="coerce")
+        work["T_M"] = pd.to_numeric(work["T_M"], errors="coerce")
+        work["Q_pr"] = pd.to_numeric(work["Q_pr"], errors="coerce")
+        if work[["s", "T_M", "Q_pr"]].isna().any().any():
+            raise ValueError("Q_pr table contains non-numeric or missing values")
+
+        if (work["s"] <= 0).any() or (work["T_M"] <= 0).any():
+            raise ValueError("Q_pr table requires positive s and T_M values")
+
+        if work.duplicated(subset=["s", "T_M"]).any():
+            raise ValueError("Q_pr table has duplicate (s, T_M) entries")
+
+        pivot = work.pivot(index="T_M", columns="s", values="Q_pr")
+        pivot = pivot.sort_index(axis=0).sort_index(axis=1)
+        if pivot.isna().any().any():
+            raise ValueError("Q_pr table grid has missing values")
+
         T_vals = pivot.index.to_numpy(dtype=float)
         s_vals = pivot.columns.to_numpy(dtype=float)
+        if len(T_vals) < 2 or len(s_vals) < 2:
+            raise ValueError("Q_pr table needs at least two unique s and T_M values")
+
         q_vals = pivot.to_numpy(dtype=float)
+        if not np.all(np.isfinite(q_vals)):
+            raise ValueError("Q_pr table contains non-finite Q_pr values")
+
         return cls(s_vals=s_vals, T_vals=T_vals, q_vals=q_vals)
 
     def interp(self, s: float, T: float) -> float:
@@ -120,10 +149,15 @@ class PhiTable:
 
 
 def _read_qpr_frame(path: Path) -> pd.DataFrame:
-    if path.suffix in {".h5", ".hdf", ".hdf5"}:
-        df = pd.read_hdf(path)
-    else:
-        df = pd.read_csv(path)
+    try:
+        if path.suffix in {".h5", ".hdf", ".hdf5"}:
+            df = pd.read_hdf(path)
+        else:
+            df = pd.read_csv(path)
+    except FileNotFoundError as exc:  # pragma: no cover - defensive
+        raise ValueError(f"Q_pr table file does not exist: {path}") from exc
+    except Exception as exc:  # pragma: no cover - defensive
+        raise ValueError(f"Failed to read Q_pr table {path}: {exc}") from exc
     if "log10_s" in df.columns and "s" not in df.columns:
         df = df.rename(columns={"log10_s": "s"})
         df["s"] = 10.0 ** df["s"].astype(float)
@@ -177,13 +211,15 @@ def interp_phi(tau: float, w0: float, g: float) -> float:
     return _PHI_TABLE.interp(tau, w0, g)
 
 
-def load_qpr_table(path: Path) -> Callable[[float, float], float]:
-    """Load a Q_pr table from ``path`` overriding any existing table.
-
-    Returns the interpolation function of the loaded table.
-    """
+def load_qpr_table(path: str | Path) -> Callable[[float, float], float]:
+    """Read a table file and build an interpolator. Planck averaged ⟨Q_pr⟩."""
 
     global _QPR_TABLE
-    df = _read_qpr_frame(path)
+
+    table_path = Path(path)
+    if not table_path.exists():
+        raise ValueError(f"Q_pr table file does not exist: {table_path}")
+
+    df = _read_qpr_frame(table_path)
     _QPR_TABLE = QPrTable.from_frame(df)
     return _QPR_TABLE.interp
