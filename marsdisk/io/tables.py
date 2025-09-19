@@ -47,6 +47,9 @@ class QPrTable:
 
     @classmethod
     def from_frame(cls, df: pd.DataFrame) -> "QPrTable":
+        """Q_prテーブルのDataFrameを格子配列へ変換する。Planck 平均⟨Q_pr⟩.
+        T 行 × s 列でピボットする前提を共有する。Planck 平均⟨Q_pr⟩.
+        """
         required = {"s", "T_M", "Q_pr"}
         missing = required.difference(df.columns)
         if missing:
@@ -148,16 +151,72 @@ class PhiTable:
         return float(c0 * (1 - zd) + c1 * zd)
 
 
+def _read_qpr_frame_h5datasets(path: Path) -> pd.DataFrame:
+    """HDF5 datasetsからQ_prテーブルを読み込む。Planck 平均⟨Q_pr⟩."""
+
+    try:
+        import h5py
+    except ImportError as exc:  # pragma: no cover - optional dependency
+        raise ValueError("h5py is required to read HDF5 datasets 'qpr','log10s','T'") from exc
+
+    try:
+        with h5py.File(path, "r") as handle:
+            missing = [name for name in ("qpr", "log10s", "T") if name not in handle]
+            if missing:
+                missing_str = ", ".join(sorted(missing))
+                raise ValueError(f"Q_pr HDF5 file is missing datasets: {missing_str}")
+            qpr = np.array(handle["qpr"], dtype=float)
+            log10s = np.array(handle["log10s"], dtype=float)
+            temperatures = np.array(handle["T"], dtype=float)
+    except OSError as exc:  # pragma: no cover - file level issues
+        raise ValueError(f"Failed to read Q_pr HDF5 datasets from {path}: {exc}") from exc
+
+    if log10s.ndim != 1:
+        raise ValueError("Dataset 'log10s' must be one-dimensional")
+    if temperatures.ndim != 1:
+        raise ValueError("Dataset 'T' must be one-dimensional")
+    if qpr.ndim != 2:
+        raise ValueError("Dataset 'qpr' must be two-dimensional")
+
+    if not np.all(np.isfinite(log10s)):
+        raise ValueError("Dataset 'log10s' must contain finite values")
+    if not np.all(np.isfinite(temperatures)):
+        raise ValueError("Dataset 'T' must contain finite values")
+    if not np.all(np.isfinite(qpr)):
+        raise ValueError("Dataset 'qpr' must contain finite values")
+
+    s_vals = np.power(10.0, log10s)
+    if np.any(s_vals <= 0.0):
+        raise ValueError("Converted grain sizes must be positive")
+    if np.any(temperatures <= 0.0):
+        raise ValueError("Temperatures must be positive")
+
+    expected_shape = (temperatures.size, s_vals.size)
+    if qpr.shape != expected_shape:
+        raise ValueError(
+            f"Dataset 'qpr' has shape {qpr.shape}, expected {expected_shape}"
+        )
+
+    data = {
+        "T_M": np.repeat(temperatures, s_vals.size),
+        "s": np.tile(s_vals, temperatures.size),
+        "Q_pr": qpr.reshape(-1),
+    }
+    return pd.DataFrame(data)
+
+
 def _read_qpr_frame(path: Path) -> pd.DataFrame:
+    if not path.exists():
+        raise ValueError(f"Q_pr table file does not exist: {path}")
+
     try:
         if path.suffix in {".h5", ".hdf", ".hdf5"}:
             df = pd.read_hdf(path)
         else:
             df = pd.read_csv(path)
-    except FileNotFoundError as exc:  # pragma: no cover - defensive
-        raise ValueError(f"Q_pr table file does not exist: {path}") from exc
-    except Exception as exc:  # pragma: no cover - defensive
-        raise ValueError(f"Failed to read Q_pr table {path}: {exc}") from exc
+    except Exception:  # pragma: no cover - handled by fallback
+        return _read_qpr_frame_h5datasets(path)
+
     if "log10_s" in df.columns and "s" not in df.columns:
         df = df.rename(columns={"log10_s": "s"})
         df["s"] = 10.0 ** df["s"].astype(float)

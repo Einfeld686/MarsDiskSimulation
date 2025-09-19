@@ -1,4 +1,5 @@
-"""Planck 平均の放射圧効率テーブルを生成するユーティリティ。Planck 平均⟨Q_pr⟩."""
+"""Planck 平均の放射圧効率テーブルを生成するユーティリティ。Planck 平均⟨Q_pr⟩.
+qpr の shape は (n_T, n_s)、log10s は (n_s,) 、T は (n_T,) で保存する。Planck 平均⟨Q_pr⟩."""
 from __future__ import annotations
 
 import argparse
