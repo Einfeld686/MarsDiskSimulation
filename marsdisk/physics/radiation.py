@@ -21,34 +21,48 @@ from ..io import tables
 # type alias for a Q_pr interpolation function
 type_QPr = Callable[[float, float], float]
 
-_QPR_LOOKUP: type_QPr = tables.interp_qpr
+_QPR_LOOKUP: type_QPr | None = tables.interp_qpr
 
 
 def load_qpr_table(path: Path | str) -> type_QPr:
-    """Load a ``⟨Q_pr⟩`` table and return its interpolator."""
+    """Load a table file and cache the interpolator. Planck averaged ⟨Q_pr⟩."""
 
     global _QPR_LOOKUP
-    _QPR_LOOKUP = tables.load_qpr_table(Path(path))
+    _QPR_LOOKUP = tables.load_qpr_table(path)
     return _QPR_LOOKUP
 
 
-def qpr_lookup(s: float, T_M: float, interp: type_QPr | None = None) -> float:
-    """Lookup ``⟨Q_pr⟩`` for grain size ``s`` and temperature ``T_M``."""
+def qpr_lookup(s: float, T_M: float, table: type_QPr | None = None) -> float:
+    """Return the efficiency for a grain size and temperature. Planck averaged ⟨Q_pr⟩."""
 
-    func = _QPR_LOOKUP if interp is None else interp
+    if s <= 0.0:
+        raise ValueError("grain size must be positive for ⟨Q_pr⟩ lookup")
+    if T_M <= 0.0:
+        raise ValueError("temperature must be positive for ⟨Q_pr⟩ lookup")
+
+    func = table or _QPR_LOOKUP or tables.interp_qpr
     return float(func(s, T_M))
 
 
-def planck_mean_qpr(s: float, T_M: float, interp: type_QPr | None = None) -> float:
-    """Backward compatible alias for :func:`qpr_lookup`."""
+def planck_mean_qpr(
+    s: float,
+    T_M: float,
+    table: type_QPr | None = None,
+    interp: type_QPr | None = None,
+) -> float:
+    """Return the same value as :func:`qpr_lookup`. Planck averaged ⟨Q_pr⟩."""
 
-    return qpr_lookup(s, T_M, interp)
+    if table is not None and interp is not None:
+        raise TypeError("planck_mean_qpr received both 'table' and 'interp'")
+    lookup = table if table is not None else interp
+    return qpr_lookup(s, T_M, lookup)
 
 
 def beta(
     s: float,
     rho: float,
     T_M: float,
+    table: type_QPr | None = None,
     interp: type_QPr | None = None,
 ) -> float:
     """Compute the ratio ``β`` of radiation pressure to gravity (R2).
@@ -58,7 +72,10 @@ def beta(
 
     ``β = 3 L_M ⟨Q_pr⟩ / (16 π c G M_M ρ s)``.
     """
-    qpr = qpr_lookup(s, T_M, interp)
+    if table is not None and interp is not None:
+        raise TypeError("beta received both 'table' and 'interp'")
+    lookup = table if table is not None else interp
+    qpr = qpr_lookup(s, T_M, lookup)
     L_M = 4.0 * np.pi * constants.R_MARS**2 * constants.SIGMA_SB * T_M**4
     num = 3.0 * L_M * qpr
     den = 16.0 * np.pi * constants.C * constants.G * constants.M_MARS * rho * s
@@ -68,6 +85,7 @@ def beta(
 def blowout_radius(
     rho: float,
     T_M: float,
+    table: type_QPr | None = None,
     interp: type_QPr | None = None,
     bounds: Tuple[float, float] = (1e-9, 1e-2),
     samples: int = 256,
@@ -80,9 +98,14 @@ def blowout_radius(
     occurs for the given parameters.
     """
 
+    if table is not None and interp is not None:
+        raise TypeError("blowout_radius received both 'table' and 'interp'")
+    lookup = table if table is not None else interp
+
     s_min, s_max = bounds
     s_grid = np.logspace(np.log10(s_min), np.log10(s_max), samples)
-    beta_vals = np.array([beta(s, rho, T_M, interp) for s in s_grid])
+    kwargs = {"table": lookup} if lookup is not None else {}
+    beta_vals = np.array([beta(s, rho, T_M, **kwargs) for s in s_grid])
     imax = int(np.argmax(beta_vals))
     if beta_vals[imax] <= 0.5:
         raise RuntimeError("β never reaches 0.5; blow-out does not occur")
