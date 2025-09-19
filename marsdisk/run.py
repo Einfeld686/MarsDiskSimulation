@@ -190,6 +190,10 @@ def run_zero_d(cfg: Config) -> None:
         else cfg.temps.T_M
     )
 
+    phi_tau_fn = None
+    if cfg.shielding and cfg.shielding.phi_table:
+        phi_tau_fn = tables.load_phi_table(cfg.shielding.phi_table)
+
     # Initial PSD and associated quantities
     sub_params = SublimationParams(**cfg.sinks.sub_params.model_dump())
     a_blow = radiation.blowout_radius(cfg.material.rho, T_M)
@@ -218,7 +222,6 @@ def run_zero_d(cfg: Config) -> None:
     qpr_mean = radiation.planck_mean_qpr(s_min, T_M)
     beta_at_smin = radiation.beta(s_min, cfg.material.rho, T_M)
 
-    sigma_tau1 = None
     if cfg.disk is not None and cfg.inner_disk_mass is not None:
         r_in_d = cfg.disk.geometry.r_in_RM * constants.R_MARS
         r_out_d = cfg.disk.geometry.r_out_RM * constants.R_MARS
@@ -233,9 +236,13 @@ def run_zero_d(cfg: Config) -> None:
             cfg.disk.geometry.p_index,
         )
         sigma_mid = sigma_func(r)
+        kappa_for_init = kappa_surf
+        if phi_tau_fn is not None:
+            tau_mid = kappa_surf * sigma_mid
+            kappa_for_init = shielding.effective_kappa(kappa_surf, tau_mid, phi_tau_fn)
         sigma_surf = initfields.surf_sigma_init(
             sigma_mid,
-            kappa_surf,
+            kappa_for_init,
             cfg.surface.init_policy,
             sigma_override=cfg.surface.sigma_surf_init_override,
         )
@@ -273,7 +280,11 @@ def run_zero_d(cfg: Config) -> None:
     for step_no in range(n_steps):
         time = step_no * dt
         tau = kappa_surf * sigma_surf
-        kappa_eff, sigma_tau1 = shielding.apply_shielding(kappa_surf, tau, 0.0, 0.0)
+        if phi_tau_fn is not None:
+            kappa_eff = shielding.effective_kappa(kappa_surf, tau, phi_tau_fn)
+            sigma_tau1_limit = shielding.sigma_tau1(kappa_eff)
+        else:
+            kappa_eff, sigma_tau1_limit = shielding.apply_shielding(kappa_surf, tau, 0.0, 0.0)
         tau_for_coll = None if (not cfg.surface.use_tcoll or tau <= TAU_MIN) else tau
         prod_rate = supply.get_prod_area_rate(time, r, supply_spec)
         res = surface.step_surface(
@@ -283,7 +294,7 @@ def run_zero_d(cfg: Config) -> None:
             Omega,
             tau=tau_for_coll,
             t_sink=t_sink,
-            sigma_tau1=sigma_tau1,
+            sigma_tau1=sigma_tau1_limit,
         )
         sigma_surf = res.sigma_surf
 
@@ -305,7 +316,7 @@ def run_zero_d(cfg: Config) -> None:
             "Qpr_mean": qpr_mean,
             "beta_at_smin": beta_at_smin,
             "Sigma_surf": sigma_surf,
-            "Sigma_tau1": sigma_tau1 if sigma_tau1 is not None else float("nan"),
+            "Sigma_tau1": sigma_tau1_limit,
             "outflux_surface": res.outflux,
             "sink_flux_surface": res.sink_flux,
             "t_blow": t_blow,

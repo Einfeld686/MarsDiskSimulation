@@ -8,13 +8,36 @@ calculation and provide a helper to clip the surface density accordingly.
 """
 from __future__ import annotations
 
-from typing import Callable, Tuple
+from typing import Callable, Optional, Tuple
 import numpy as np
 
 from ..io import tables
 
 # type alias for Φ interpolation function
 type_Phi = Callable[[float, float, float], float]
+
+
+def effective_kappa(
+    kappa: float,
+    tau: float,
+    phi_fn: Optional[Callable[[float], float]],
+) -> float:
+    """Compute the effective opacity from Φ. Self-shielding Φ."""
+
+    if phi_fn is None:
+        return float(kappa)
+
+    phi = float(phi_fn(tau))
+    phi = float(np.clip(phi, 0.0, 1.0))
+    return float(phi * kappa)
+
+
+def sigma_tau1(kappa_eff: float) -> float:
+    """Return Σ_{τ=1} derived from κ_eff. Self-shielding Φ."""
+
+    if not np.isfinite(kappa_eff) or kappa_eff <= 0.0:
+        return float(np.inf)
+    return float(1.0 / kappa_eff)
 
 
 def apply_shielding(
@@ -37,11 +60,13 @@ def apply_shielding(
         :func:`marsdisk.io.tables.interp_phi`.
     """
     func = tables.interp_phi if interp is None else interp
-    phi = float(func(tau, w0, g))
-    phi = float(np.clip(phi, 0.0, 1.0)) 
-    kappa_eff = float(phi * kappa_surf)
-    sigma_tau1 = np.inf if kappa_eff <= 0.0 else 1.0 / kappa_eff
-    return kappa_eff, sigma_tau1
+
+    def phi_wrapper(val_tau: float) -> float:
+        return float(func(val_tau, w0, g))
+
+    kappa_eff = effective_kappa(kappa_surf, tau, phi_wrapper)
+    sigma_tau1_limit = sigma_tau1(kappa_eff)
+    return kappa_eff, sigma_tau1_limit
 
 
 def clip_to_tau1(sigma_surf: float, kappa_eff: float) -> float:
@@ -52,6 +77,6 @@ def clip_to_tau1(sigma_surf: float, kappa_eff: float) -> float:
     """
     if kappa_eff <= 0.0:
         return max(0.0, sigma_surf)
-    sigma_tau1 = 1.0 / kappa_eff
-    clipped = min(sigma_surf, sigma_tau1)
+    sigma_tau1_limit = sigma_tau1(kappa_eff)
+    clipped = min(sigma_surf, sigma_tau1_limit)
     return 0.0 if clipped < 0.0 else clipped
