@@ -24,3 +24,5 @@ python -m marsdisk.run --config configs/mars_0d_supply_sweep.yaml
 ```bash
 python tools/make_qpr_table.py --s-min 1e-9 --s-max 1e-2 --Ns 60 --T 2000,2500,3000,3500,4000 --out data/qpr_planck.h5
 ```
+`data/qpr_planck.h5` は `qpr`, `log10s`, `T` の 3 dataset を含む HDF5 ファイルであり、pandas の HDFStore ではありません。
+この形式を読み込むには `h5py` が必要です。
