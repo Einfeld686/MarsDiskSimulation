@@ -192,7 +192,7 @@ def run_zero_d(cfg: Config) -> None:
 
     phi_tau_fn = None
     if cfg.shielding and cfg.shielding.phi_table:
-        phi_tau_fn = tables.load_phi_table(cfg.shielding.phi_table)
+        phi_tau_fn = shielding.load_phi_table(cfg.shielding.phi_table)
 
     # Initial PSD and associated quantities
     sub_params = SublimationParams(**cfg.sinks.sub_params.model_dump())
