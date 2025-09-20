@@ -18,6 +18,9 @@ Step1/     … Python 検証スクリプト
 ## Python CLI 実行例
 ```bash
 python -m marsdisk.run --config configs/mars_0d_supply_sweep.yaml
+python -m marsdisk.run --config configs/tm_qpr.yml
+python -m marsdisk.run --config configs/min_sweep_phi.yml
+python -m marsdisk.run --config configs/table_supply_R_sweep.yml
 ```
 
 ## テーブル生成スクリプト実行例
