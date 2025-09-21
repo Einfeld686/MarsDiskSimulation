@@ -126,7 +126,7 @@ def create_map_definition(map_id: int) -> MapDefinition:
         param_x = ParamSpec(
             key_path="supply.const.prod_area_rate_kg_m2_s",
             values=[1e-10, 3e-10, 1e-9, 3e-9, 1e-8],
-            csv_name="prod_area_rate",
+            csv_name="prod_area",
             label="prodArea",
         )
         param_y = ParamSpec(
@@ -554,7 +554,12 @@ def main(argv: Optional[Iterable[str]] = None) -> None:
     results_dir = root_dir / "results"
     ensure_directory(results_dir)
     output_csv = results_dir / f"map{map_def.map_id}.csv"
-    df = pd.DataFrame(results)
+    df = pd.DataFrame(results)[[
+        "map_id","case_id",
+        "param_x_name","param_x_value",
+        "param_y_name","param_y_value",
+        "total_mass_lost_Mmars","s_min_effective","outdir","case_status"
+    ]]
     df.to_csv(output_csv, index=False)
     print(f"結果を {output_csv} に保存しました")
 
