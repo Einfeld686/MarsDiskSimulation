@@ -267,8 +267,8 @@ def run_zero_d(cfg: Config) -> None:
     kappa_surf = psd.compute_kappa(psd_state)
     qpr_mean = radiation.planck_mean_qpr(s_min, T_M, Q_pr=qpr_override)
     beta_at_smin = radiation.beta(s_min, rho_used, T_M, Q_pr=qpr_override)
-    case_status = "ok" if beta_at_smin >= radiation.BLOWOUT_BETA_THRESHOLD else "failed"
-    if case_status != "ok":
+    case_status = "blowout" if beta_at_smin >= radiation.BLOWOUT_BETA_THRESHOLD else "failed"
+    if case_status != "blowout":
         logger.warning(
             "Blow-out threshold not met at s_min=%.3e m (β=%.3f)", s_min, beta_at_smin
         )
