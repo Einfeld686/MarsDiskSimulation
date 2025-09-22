@@ -44,6 +44,14 @@ def write_summary(summary: Mapping[str, Any], path: Path) -> None:
         json.dump(summary, fh, indent=2, sort_keys=True)
 
 
+def write_run_config(config: Mapping[str, Any], path: Path) -> None:
+    """Persist the deterministic run configuration metadata."""
+
+    _ensure_parent(path)
+    with path.open("w", encoding="utf-8") as fh:
+        json.dump(config, fh, indent=2, sort_keys=True)
+
+
 def write_mass_budget(records: Iterable[Mapping[str, Any]], path: Path) -> None:
     """Write mass conservation diagnostics to a CSV file."""
     _ensure_parent(path)
