@@ -23,9 +23,12 @@ from pathlib import Path
 import argparse
 import logging
 import math
+import random
+import subprocess
 from typing import Any, Dict, List, Optional
 
 import pandas as pd
+import numpy as np
 
 from . import grid
 from .schema import Config
@@ -48,6 +51,7 @@ SECONDS_PER_YEAR = 365.25 * 24 * 3600.0
 MAX_STEPS = 1000
 TAU_MIN = 1e-12
 KAPPA_MIN = 1e-12
+DEFAULT_SEED = 12345
 
 
 # ---------------------------------------------------------------------------
@@ -159,6 +163,33 @@ def load_config(path: Path) -> Config:
     return Config(**data)
 
 
+def _gather_git_info() -> Dict[str, Any]:
+    """Return basic git metadata for provenance recording."""
+
+    repo_root = Path(__file__).resolve().parents[1]
+    info: Dict[str, Any] = {}
+    try:
+        info["commit"] = subprocess.check_output(
+            ["git", "rev-parse", "HEAD"], cwd=repo_root, text=True
+        ).strip()
+    except Exception:
+        info["commit"] = "unknown"
+    try:
+        info["branch"] = subprocess.check_output(
+            ["git", "rev-parse", "--abbrev-ref", "HEAD"], cwd=repo_root, text=True
+        ).strip()
+    except Exception:
+        info["branch"] = "unknown"
+    try:
+        status = subprocess.check_output(
+            ["git", "status", "--short"], cwd=repo_root, text=True
+        )
+        info["dirty"] = bool(status.strip())
+    except Exception:
+        info["dirty"] = None
+    return info
+
+
 def run_zero_d(cfg: Config) -> None:
     """Execute a simple zero-dimensional simulation.
 
@@ -167,6 +198,9 @@ def run_zero_d(cfg: Config) -> None:
     cfg:
         Parsed configuration object.
     """
+
+    random.seed(DEFAULT_SEED)
+    np.random.seed(DEFAULT_SEED)
 
     if cfg.geometry.r is not None:
         r = cfg.geometry.r
@@ -182,13 +216,17 @@ def run_zero_d(cfg: Config) -> None:
         raise ValueError("geometry.r must be provided for 0D runs")
     Omega = grid.omega_kepler(r)
 
+    qpr_override = None
     if cfg.radiation and cfg.radiation.qpr_table is not None:
         tables.load_qpr_table(cfg.radiation.qpr_table)
+    if cfg.radiation and cfg.radiation.Q_pr is not None:
+        qpr_override = cfg.radiation.Q_pr
     T_M = (
         cfg.radiation.TM_K
         if cfg.radiation and cfg.radiation.TM_K is not None
         else cfg.temps.T_M
     )
+    rho_used = cfg.material.rho
 
     phi_tau_fn = None
     if cfg.shielding and cfg.shielding.phi_table:
@@ -196,13 +234,13 @@ def run_zero_d(cfg: Config) -> None:
 
     # Initial PSD and associated quantities
     sub_params = SublimationParams(**cfg.sinks.sub_params.model_dump())
-    a_blow = radiation.blowout_radius(cfg.material.rho, T_M)
+    a_blow = radiation.blowout_radius(rho_used, T_M, Q_pr=qpr_override)
     s_min = fragments.compute_s_min_F2(
         a_blow,
         T_M,
         cfg.sinks.T_sub,
         t_ref=1.0 / Omega,
-        rho=cfg.material.rho,
+        rho=rho_used,
         sub_params=sub_params,
     )
     # guard against pathological cases where the sublimation boundary exceeds
@@ -210,17 +248,30 @@ def run_zero_d(cfg: Config) -> None:
     # placeholder in the absence of calibrated parameters.
     if s_min >= cfg.sizes.s_max:
         s_min = cfg.sizes.s_max * 0.9
+    s_min_config = cfg.sizes.s_min
+    s_min_effective = s_min
+    if s_min_effective > s_min_config:
+        logger.info(
+            "Effective s_min raised from config value %.3e m to %.3e m",
+            s_min_config,
+            s_min_effective,
+        )
     psd_state = psd.update_psd_state(
         s_min=s_min,
         s_max=cfg.sizes.s_max,
         alpha=cfg.psd.alpha,
         wavy_strength=cfg.psd.wavy_strength,
         n_bins=cfg.sizes.n_bins,
-        rho=cfg.material.rho,
+        rho=rho_used,
     )
     kappa_surf = psd.compute_kappa(psd_state)
-    qpr_mean = radiation.planck_mean_qpr(s_min, T_M)
-    beta_at_smin = radiation.beta(s_min, cfg.material.rho, T_M)
+    qpr_mean = radiation.planck_mean_qpr(s_min, T_M, Q_pr=qpr_override)
+    beta_at_smin = radiation.beta(s_min, rho_used, T_M, Q_pr=qpr_override)
+    case_status = "ok" if beta_at_smin >= radiation.BLOWOUT_BETA_THRESHOLD else "failed"
+    if case_status != "ok":
+        logger.warning(
+            "Blow-out threshold not met at s_min=%.3e m (β=%.3f)", s_min, beta_at_smin
+        )
 
     if cfg.disk is not None and cfg.inner_disk_mass is not None:
         r_in_d = cfg.disk.geometry.r_in_RM * constants.R_MARS
@@ -264,7 +315,7 @@ def run_zero_d(cfg: Config) -> None:
         enable_gas_drag=cfg.sinks.enable_gas_drag,
         rho_g=cfg.sinks.rho_g,
     )
-    t_sink = sinks.total_sink_timescale(T_M, cfg.material.rho, Omega, sink_opts)
+    t_sink = sinks.total_sink_timescale(T_M, rho_used, Omega, sink_opts)
 
     supply_spec = cfg.supply
 
@@ -315,6 +366,7 @@ def run_zero_d(cfg: Config) -> None:
             "kappa": kappa_eff,
             "Qpr_mean": qpr_mean,
             "beta_at_smin": beta_at_smin,
+            "beta_threshold": radiation.BLOWOUT_BETA_THRESHOLD,
             "Sigma_surf": sigma_surf,
             "Sigma_tau1": sigma_tau1_limit,
             "outflux_surface": res.outflux,
@@ -326,6 +378,13 @@ def run_zero_d(cfg: Config) -> None:
             "mass_total_bins": cfg.initial.mass_total - (M_loss_cum + M_sink_cum), # M_Mars
             "mass_lost_by_blowout": M_loss_cum,                                    # M_Mars
             "mass_lost_by_sinks": M_sink_cum,                                      # M_Mars
+            "case_status": case_status,
+            "s_blow_m": a_blow,
+            "rho_used": rho_used,
+            "Q_pr_used": qpr_mean,
+            "s_min_effective": s_min_effective,
+            "s_min_config": s_min_config,
+            "s_min_effective_gt_config": s_min_effective > s_min_config,
         }
         records.append(record)
 
@@ -358,8 +417,45 @@ def run_zero_d(cfg: Config) -> None:
     df = pd.DataFrame(records)
     outdir = Path(cfg.io.outdir)
     writer.write_parquet(df, outdir / "series" / "run.parquet")
-    writer.write_summary({"M_loss": (M_loss_cum + M_sink_cum)}, outdir / "summary.json")
+    summary = {
+        "M_loss": (M_loss_cum + M_sink_cum),
+        "case_status": case_status,
+        "beta_threshold": radiation.BLOWOUT_BETA_THRESHOLD,
+        "beta_at_smin": beta_at_smin,
+        "s_blow_m": a_blow,
+        "rho_used": rho_used,
+        "Q_pr_used": qpr_mean,
+        "T_M_used": T_M,
+        "s_min_effective": s_min_effective,
+        "s_min_config": s_min_config,
+        "s_min_effective_gt_config": s_min_effective > s_min_config,
+    }
+    writer.write_summary(summary, outdir / "summary.json")
     writer.write_mass_budget(mass_budget, outdir / "checks" / "mass_budget.csv")
+    run_config = {
+        "beta_formula": "beta = 3 σ_SB T_M^4 R_M^2 Q_pr / (4 G M_M c ρ s)",
+        "s_blow_formula": "s_blow = 3 σ_SB T_M^4 R_M^2 Q_pr / (2 G M_M c ρ)",
+        "defaults": {
+            "Q_pr": radiation.DEFAULT_Q_PR,
+            "rho": radiation.DEFAULT_RHO,
+            "T_M_range_K": list(radiation.T_M_RANGE),
+            "beta_threshold": radiation.BLOWOUT_BETA_THRESHOLD,
+        },
+        "constants": {
+            "G": constants.G,
+            "C": constants.C,
+            "SIGMA_SB": constants.SIGMA_SB,
+            "M_MARS": constants.M_MARS,
+            "R_MARS": constants.R_MARS,
+        },
+        "run_inputs": {
+            "T_M_used": T_M,
+            "rho_used": rho_used,
+            "Q_pr_used": qpr_mean,
+        },
+        "git": _gather_git_info(),
+    }
+    writer.write_run_config(run_config, outdir / "run_config.json")
 
 
 def main(argv: Optional[List[str]] = None) -> None:
