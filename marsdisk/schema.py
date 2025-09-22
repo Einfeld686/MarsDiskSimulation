@@ -13,6 +13,8 @@ from typing import List, Literal, Optional
 
 from pydantic import BaseModel, Field, validator
 
+from . import constants
+
 
 class Geometry(BaseModel):
     """Geometric configuration of the simulation domain."""
@@ -89,13 +91,35 @@ class Supply(BaseModel):
 class Material(BaseModel):
     """Material properties of the solids."""
 
-    rho: float = Field(..., gt=0.0, description="Bulk density [kg/m^3]")
+    rho: float = Field(3000.0, gt=0.0, description="Bulk density [kg/m^3]")
+
+    @validator("rho")
+    def _check_rho_range(cls, value: float) -> float:
+        low, high = constants.RHO_RANGE
+        if not (low <= value <= high):
+            raise ValueError(
+                f"Material density rho must lie within [{low}, {high}] kg/m^3"
+            )
+        return value
 
 
 class Temps(BaseModel):
     """Thermal parameters."""
 
-    T_M: float = Field(..., description="Surface temperature of Mars [K]")
+    T_M: float = Field(2000.0, description="Surface temperature of Mars [K]")
+
+    @validator("T_M")
+    def _check_temperature_range(cls, value: float) -> float:
+        Tmin, Tmax = 1000.0, 6000.0
+        if not (Tmin <= value <= Tmax):
+            raise ValueError(f"Mars temperature T_M must lie within [{Tmin}, {Tmax}] K")
+        step = 50.0
+        # allow small numerical noise by rounding
+        if abs((value - Tmin) % step) > 1e-6 and abs((value - Tmax) % step) > 1e-6:
+            # values outside the 50 K cadence are allowed but logged via warning
+            # during validation in the physics module; here we only ensure range.
+            pass
+        return value
 
 
 class Sizes(BaseModel):
@@ -182,6 +206,17 @@ class Radiation(BaseModel):
 
     TM_K: Optional[float] = None
     qpr_table: Optional[Path] = None
+    Q_pr: Optional[float] = Field(None, description="Grey-body radiation pressure efficiency")
+
+    @validator("Q_pr")
+    def _validate_qpr(cls, value: Optional[float]) -> Optional[float]:
+        if value is None:
+            return value
+        if value <= 0.0:
+            raise ValueError("Q_pr must be positive if specified")
+        if not (0.5 <= value <= 1.5):
+            raise ValueError("Q_pr must lie within the sensitivity range 0.5–1.5")
+        return value
 
 
 class Shielding(BaseModel):
