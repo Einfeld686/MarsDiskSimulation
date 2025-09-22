@@ -49,10 +49,10 @@ def test_beta_density_validation():
     assert "greater" in message
 
 
-def test_blowout_radius_bounds_validation():
+def test_blowout_radius_density_validation():
     with pytest.raises(ValueError) as exc:
-        radiation.blowout_radius(1000.0, 150.0, bounds=(1.0e-6, 1.0e-6), samples=16)
-    assert "bounds[0]" in str(exc.value)
+        radiation.blowout_radius(rho=0.0, T_M=1500.0)
+    assert "rho" in str(exc.value)
 
 
 def test_load_phi_table_logs(tmp_path, caplog):

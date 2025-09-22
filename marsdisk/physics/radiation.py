@@ -13,7 +13,7 @@ from __future__ import annotations
 import logging
 from numbers import Real
 from pathlib import Path
-from typing import Callable, Tuple
+from typing import Callable, Optional
 
 import numpy as np
 
@@ -25,7 +25,96 @@ type_QPr = Callable[[float, float], float]
 
 _QPR_LOOKUP: type_QPr | None = tables.interp_qpr
 
+DEFAULT_Q_PR: float = 1.0
+DEFAULT_RHO: float = 3000.0
+DEFAULT_T_M: float = 2000.0
+T_M_RANGE: tuple[float, float] = (1000.0, 6000.0)
+BLOWOUT_BETA_THRESHOLD: float = 0.5
+
+_DEFAULT_QPR_LOGGED = False
+
 logger = logging.getLogger(__name__)
+
+
+def _validate_size(value: float, *, name: str = "s") -> float:
+    if not isinstance(value, Real):
+        raise TypeError(f"grain size '{name}' must be a real number")
+    if not np.isfinite(value):
+        raise ValueError(f"grain size '{name}' must be finite")
+    if value <= 0.0:
+        raise ValueError(f"grain size '{name}' must be greater than 0")
+    return float(value)
+
+
+def _validate_density(value: Optional[float]) -> float:
+    if value is None:
+        logger.info("No material density provided; using default %.1f kg/m^3", DEFAULT_RHO)
+        return DEFAULT_RHO
+    if not isinstance(value, Real):
+        raise TypeError("material density 'rho' must be a real number")
+    if not np.isfinite(value):
+        raise ValueError("material density 'rho' must be finite")
+    if value <= 0.0:
+        raise ValueError("material density 'rho' must be greater than 0")
+    return float(value)
+
+
+def _validate_temperature(value: Optional[float]) -> float:
+    if value is None:
+        logger.info("No Mars surface temperature provided; using default %.1f K", DEFAULT_T_M)
+        return DEFAULT_T_M
+    if not isinstance(value, Real):
+        raise TypeError("temperature 'T_M' must be a real number")
+    if not np.isfinite(value):
+        raise ValueError("temperature 'T_M' must be finite")
+    Tmin, Tmax = T_M_RANGE
+    if not (Tmin <= value <= Tmax):
+        raise ValueError(f"temperature 'T_M' must lie within [{Tmin}, {Tmax}] K")
+    return float(value)
+
+
+def _validate_qpr(value: Optional[float]) -> Optional[float]:
+    if value is None:
+        return None
+    if not isinstance(value, Real):
+        raise TypeError("Q_pr must be a real number if provided")
+    if not np.isfinite(value):
+        raise ValueError("Q_pr must be finite if provided")
+    if value <= 0.0:
+        raise ValueError("Q_pr must be greater than 0 if provided")
+    return float(value)
+
+
+def _resolve_qpr(
+    s: float,
+    T_M: float,
+    Q_pr: Optional[float],
+    table: type_QPr | None,
+    interp: type_QPr | None,
+) -> float:
+    global _DEFAULT_QPR_LOGGED
+    Q_pr = _validate_qpr(Q_pr)
+    if table is not None and interp is not None:
+        raise TypeError("Q_pr resolution received both 'table' and 'interp'")
+    if Q_pr is not None:
+        return Q_pr
+
+    lookup = table if table is not None else interp
+    if lookup is not None:
+        return qpr_lookup(s, T_M, lookup)
+
+    if _QPR_LOOKUP is not None:
+        lookup = _QPR_LOOKUP
+        table_obj = getattr(lookup, "__self__", None)
+        if table_obj is None and lookup is tables.interp_qpr:
+            table_obj = getattr(tables, "_QPR_TABLE", None)
+        if table_obj is not None:
+            return qpr_lookup(s, T_M, lookup)
+
+    if not _DEFAULT_QPR_LOGGED:
+        logger.info("Using grey-body default ⟨Q_pr⟩=%.2f", DEFAULT_Q_PR)
+        _DEFAULT_QPR_LOGGED = True
+    return DEFAULT_Q_PR
 
 
 def load_qpr_table(path: Path | str) -> type_QPr:
@@ -118,21 +207,22 @@ def qpr_lookup(s: float, T_M: float, table: type_QPr | None = None) -> float:
 def planck_mean_qpr(
     s: float,
     T_M: float,
+    Q_pr: Optional[float] = None,
     table: type_QPr | None = None,
     interp: type_QPr | None = None,
 ) -> float:
-    """Return the same value as :func:`qpr_lookup`. Planck averaged ⟨Q_pr⟩."""
+    """Return the effective grey-body ⟨Q_pr⟩, defaulting to unity."""
 
-    if table is not None and interp is not None:
-        raise TypeError("planck_mean_qpr received both 'table' and 'interp'")
-    lookup = table if table is not None else interp
-    return qpr_lookup(s, T_M, lookup)
+    s_val = _validate_size(s)
+    T_val = _validate_temperature(T_M)
+    return _resolve_qpr(s_val, T_val, Q_pr, table, interp)
 
 
 def beta(
     s: float,
-    rho: float,
-    T_M: float,
+    rho: Optional[float],
+    T_M: Optional[float],
+    Q_pr: Optional[float] = None,
     table: type_QPr | None = None,
     interp: type_QPr | None = None,
 ) -> float:
@@ -143,82 +233,27 @@ def beta(
 
     ``β = 3 L_M ⟨Q_pr⟩ / (16 π c G M_M ρ s)``.
     """
-    if table is not None and interp is not None:
-        raise TypeError("beta received both 'table' and 'interp'")
-    if not isinstance(rho, Real):
-        raise TypeError("material density 'rho' must be a real number for β")
-    if not np.isfinite(rho):
-        raise ValueError("material density 'rho' must be finite for β")
-    if rho <= 0.0:
-        raise ValueError("material density 'rho' must be greater than 0 for β")
-    lookup = table if table is not None else interp
-    qpr = qpr_lookup(s, T_M, lookup)
-    L_M = 4.0 * np.pi * constants.R_MARS**2 * constants.SIGMA_SB * T_M**4
-    num = 3.0 * L_M * qpr
-    den = 16.0 * np.pi * constants.C * constants.G * constants.M_MARS * rho * s
-    return float(num / den)
+    s_val = _validate_size(s)
+    rho_val = _validate_density(rho)
+    T_val = _validate_temperature(T_M)
+    qpr = _resolve_qpr(s_val, T_val, Q_pr, table, interp)
+    numerator = 3.0 * constants.SIGMA_SB * (T_val**4) * (constants.R_MARS**2) * qpr
+    denominator = 4.0 * constants.G * constants.M_MARS * constants.C * rho_val * s_val
+    return float(numerator / denominator)
 
 
 def blowout_radius(
-    rho: float,
-    T_M: float,
+    rho: Optional[float],
+    T_M: Optional[float],
+    Q_pr: Optional[float] = None,
     table: type_QPr | None = None,
     interp: type_QPr | None = None,
-    bounds: Tuple[float, float] = (1e-9, 1e-2),
-    samples: int = 256,
 ) -> float:
-    """Estimate the grain radius where ``β = 0.5`` (R3).
+    """Return the blow-out grain size ``s_blow`` for ``β = 0.5`` (R3)."""
 
-    The function samples ``β(s)`` on a logarithmic grid and linearly
-    interpolates the location where it crosses 0.5.  A ``RuntimeError`` is
-    raised when the maximum ``β`` never exceeds 0.5, i.e. when no blow-out
-    occurs for the given parameters.
-    """
-
-    if table is not None and interp is not None:
-        raise TypeError("blowout_radius received both 'table' and 'interp'")
-    if not isinstance(rho, Real):
-        raise TypeError("material density 'rho' must be a real number for blow-out search")
-    if not np.isfinite(rho):
-        raise ValueError("material density 'rho' must be finite for blow-out search")
-    if rho <= 0.0:
-        raise ValueError("material density 'rho' must be greater than 0 for blow-out search")
-    if not isinstance(T_M, Real):
-        raise TypeError("temperature 'T_M' must be a real number for blow-out search")
-    if not np.isfinite(T_M):
-        raise ValueError("temperature 'T_M' must be finite for blow-out search")
-    if not isinstance(bounds, tuple) or len(bounds) != 2:
-        raise TypeError("'bounds' must be a tuple of two grain sizes for blow-out search")
-    s_min, s_max = bounds
-    if not isinstance(s_min, Real) or not isinstance(s_max, Real):
-        raise TypeError("'bounds' values must be real numbers for blow-out search")
-    if not np.isfinite(s_min) or not np.isfinite(s_max):
-        raise ValueError("'bounds' values must be finite for blow-out search")
-    if s_min <= 0.0:
-        raise ValueError("bounds[0] must be greater than 0 for blow-out search")
-    if s_max <= 0.0:
-        raise ValueError("bounds[1] must be greater than 0 for blow-out search")
-    if s_min >= s_max:
-        raise ValueError("bounds[0] must be smaller than bounds[1] for blow-out search")
-    if not isinstance(samples, int):
-        raise TypeError("'samples' must be an integer for blow-out search")
-    if samples < 2:
-        raise ValueError("'samples' must be at least 2 for blow-out search")
-
-    lookup = table if table is not None else interp
-
-    s_min, s_max = bounds
-    s_grid = np.logspace(np.log10(s_min), np.log10(s_max), samples)
-    kwargs = {"table": lookup} if lookup is not None else {}
-    beta_vals = np.array([beta(s, rho, T_M, **kwargs) for s in s_grid])
-    imax = int(np.argmax(beta_vals))
-    if beta_vals[imax] <= 0.5:
-        raise RuntimeError("β never reaches 0.5; blow-out does not occur")
-    # Search on the descending branch for the 0.5 crossing
-    tail = beta_vals[imax:]
-    idx_offset = np.where(tail <= 0.5)[0][0]
-    j = imax + idx_offset
-    s1, s2 = s_grid[j - 1], s_grid[j]
-    b1, b2 = beta_vals[j - 1], beta_vals[j]
-    # linear interpolation
-    return float(s1 + (0.5 - b1) * (s2 - s1) / (b2 - b1))
+    rho_val = _validate_density(rho)
+    T_val = _validate_temperature(T_M)
+    qpr = _resolve_qpr(1.0, T_val, Q_pr, table, interp)
+    numerator = 3.0 * constants.SIGMA_SB * (T_val**4) * (constants.R_MARS**2) * qpr
+    denominator = 2.0 * constants.G * constants.M_MARS * constants.C * rho_val
+    return float(numerator / denominator)
