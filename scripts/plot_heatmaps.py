@@ -1,5 +1,4 @@
-#!/usr/bin/env python3
-"""結果CSVからメトリクスのカラーマップを生成するユーティリティ。"""
+"""Plot heatmaps and diagnostics from parameter sweep results."""
 from __future__ import annotations
 
 import argparse
@@ -7,13 +6,14 @@ import math
 import re
 import sys
 from pathlib import Path
-from typing import Iterable, List, Sequence
+from typing import Iterable, List, Sequence, Tuple
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from matplotlib import patches
 
+BLOWOUT_STATUS = "blowout"
 DEFAULT_METRIC = "total_mass_lost_Mmars"
 
 
@@ -21,14 +21,13 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     """コマンドライン引数を解釈する。"""
 
     parser = argparse.ArgumentParser(
-        description="results/map{ID}.csv からヒートマップを生成して figures/ に保存します。"
+        description="results/map*.csv からヒートマップを生成して figures/ に保存します。"
     )
     parser.add_argument(
         "--map",
-        type=int,
-        choices=(1, 2, 3),
+        type=str,
         required=True,
-        help="読み込むマップ番号 (1, 2, 3)",
+        help="読み込むマップ番号 (1, 1b, 2, 3)",
     )
     parser.add_argument(
         "--metric",
@@ -45,10 +44,23 @@ def ensure_directory(path: Path) -> None:
     path.mkdir(parents=True, exist_ok=True)
 
 
-def load_csv(map_id: int) -> pd.DataFrame:
+def _normalise_map_key(map_arg: str) -> Tuple[str, str]:
+    key = map_arg.strip().lower()
+    if key in {"1", "map1"}:
+        return "map1", "Map-1"
+    if key in {"1b", "map1b"}:
+        return "map1b", "Map-1b"
+    if key in {"2", "map2"}:
+        return "map2", "Map-2"
+    if key in {"3", "map3"}:
+        return "map3", "Map-3"
+    raise ValueError(f"未知のマップIDです: {map_arg}")
+
+
+def load_csv(map_stub: str) -> pd.DataFrame:
     """指定マップIDのCSVを読み込む。"""
 
-    csv_path = Path("results") / f"map{map_id}.csv"
+    csv_path = Path("results") / f"{map_stub}.csv"
     if not csv_path.exists():
         raise FileNotFoundError(f"CSVファイルが見つかりません: {csv_path}")
     df = pd.read_csv(csv_path)
@@ -78,48 +90,62 @@ def format_tick_label(value: object) -> str:
 
 def prepare_pivot(
     df: pd.DataFrame, metric: str
-) -> tuple[pd.DataFrame, List[object], List[object], str, str]:
+) -> Tuple[pd.DataFrame, List[object], List[object], str, str]:
     """ピボットテーブルと軸ラベル情報を組み立てる。"""
 
     if metric not in df.columns:
         raise ValueError(f"指定されたメトリクス列が存在しません: {metric}")
 
-    x_label = df["param_x_name"].dropna().iloc[0] if not df["param_x_name"].dropna().empty else "param_x"
-    y_label = df["param_y_name"].dropna().iloc[0] if not df["param_y_name"].dropna().empty else "param_y"
-
-    x_order = df["param_x_value"].drop_duplicates().tolist()
-    y_order = df["param_y_value"].drop_duplicates().tolist()
-
     working = df.copy()
     working[metric] = pd.to_numeric(working[metric], errors="coerce")
     if "case_status" in working.columns:
-        working.loc[working["case_status"].astype(str) != "success", metric] = np.nan
+        statuses = working["case_status"].astype(str).str.lower()
+        working.loc[statuses != BLOWOUT_STATUS, metric] = np.nan
+
+    x_label = (
+        working["param_x_name"].dropna().iloc[0]
+        if not working["param_x_name"].dropna().empty
+        else "param_x"
+    )
+    y_label = (
+        working["param_y_name"].dropna().iloc[0]
+        if not working["param_y_name"].dropna().empty
+        else "param_y"
+    )
+
+    x_order = working["param_x_value"].drop_duplicates().tolist()
+    y_order = working["param_y_value"].drop_duplicates().tolist()
 
     working["param_x_value"] = pd.Categorical(working["param_x_value"], categories=x_order, ordered=True)
     working["param_y_value"] = pd.Categorical(working["param_y_value"], categories=y_order, ordered=True)
 
     pivot = working.pivot(index="param_y_value", columns="param_x_value", values=metric)
-    pivot = pivot.reindex(index=pd.Index(y_order, name=pivot.index.name), columns=pd.Index(x_order, name=pivot.columns.name))
+    pivot = pivot.reindex(
+        index=pd.Index(y_order, name=pivot.index.name),
+        columns=pd.Index(x_order, name=pivot.columns.name),
+    )
 
     return pivot, x_order, y_order, str(x_label), str(y_label)
 
 
-def compute_log_values(pivot: pd.DataFrame) -> tuple[np.ndarray, np.ndarray]:
+def compute_log_values(pivot: pd.DataFrame) -> Tuple[np.ndarray, np.ndarray, float, float]:
     """元の値と log10 値 (マスク付き) を計算する。"""
 
     values = pivot.to_numpy(dtype=float)
-    valid = np.isfinite(values) & (values > 0.0)
-    if not np.any(valid):
+    finite = np.isfinite(values) & (values > 0.0)
+    if not np.any(finite):
         raise ValueError("指定されたメトリクスに有効な値がありません。")
 
     log_values = np.full_like(values, np.nan, dtype=float)
-    log_values[valid] = np.log10(values[valid])
+    log_values[finite] = np.log10(values[finite])
     masked_log = np.ma.masked_invalid(log_values)
-    return values, masked_log
+    log_min = float(np.min(log_values[finite]))
+    log_max = float(np.max(log_values[finite]))
+    return values, masked_log, log_min, log_max
 
 
 def plot_heatmap(
-    map_id: int,
+    map_label: str,
     metric: str,
     pivot: pd.DataFrame,
     x_values: List[object],
@@ -127,16 +153,23 @@ def plot_heatmap(
     x_label: str,
     y_label: str,
     output_path: Path,
-) -> None:
+) -> Tuple[float, float]:
     """ヒートマップを描画して保存する。"""
 
-    original_values, masked_log = compute_log_values(pivot)
+    original_values, masked_log, log_min, log_max = compute_log_values(pivot)
 
     cmap = plt.get_cmap("viridis").copy()
     cmap.set_bad(color="lightgray")
 
-    fig, ax = plt.subplots(figsize=(6.5, 5.5))
-    im = ax.imshow(masked_log, origin="lower", cmap=cmap, aspect="auto")
+    fig, ax = plt.subplots(figsize=(7.0, 6.0))
+    im = ax.imshow(
+        masked_log,
+        origin="lower",
+        cmap=cmap,
+        aspect="auto",
+        vmin=log_min,
+        vmax=log_max,
+    )
 
     x_ticks = np.arange(len(x_values))
     y_ticks = np.arange(len(y_values))
@@ -146,9 +179,8 @@ def plot_heatmap(
     ax.set_yticklabels([format_tick_label(v) for v in y_values])
     ax.set_xlabel(x_label)
     ax.set_ylabel(y_label)
-    ax.set_title(f"Map {map_id}: {metric}")
+    ax.set_title(f"{map_label}: {metric}")
 
-    # 罫線を薄く描画してセルを見やすくする。
     ax.set_xticks(np.arange(-0.5, len(x_values), 1), minor=True)
     ax.set_yticks(np.arange(-0.5, len(y_values), 1), minor=True)
     ax.grid(which="minor", color="white", linewidth=0.5)
@@ -157,7 +189,6 @@ def plot_heatmap(
     cbar = fig.colorbar(im, ax=ax)
     cbar.set_label(f"log10({metric})")
 
-    # 無効セルにハッチングを重ねる。
     invalid_mask = ~np.isfinite(original_values) | (original_values <= 0.0)
     if np.any(invalid_mask):
         for (y_idx, x_idx) in zip(*np.where(invalid_mask)):
@@ -172,10 +203,16 @@ def plot_heatmap(
             )
             ax.add_patch(rect)
 
+    clim = im.get_clim()
+    if not np.allclose(clim, (log_min, log_max), rtol=1e-6, atol=1e-8):
+        raise RuntimeError("カラーバー範囲がCSVの最小値/最大値と一致しません。")
+
     fig.tight_layout()
     ensure_directory(output_path.parent)
     fig.savefig(output_path, dpi=300)
     plt.close(fig)
+
+    return log_min, log_max
 
 
 def sanitize_metric_name(metric: str) -> str:
@@ -184,17 +221,76 @@ def sanitize_metric_name(metric: str) -> str:
     return re.sub(r"[^A-Za-z0-9_.-]", "_", metric)
 
 
+def maybe_plot_mass_per_r2_scatter(df: pd.DataFrame, map_stub: str, map_label: str) -> None:
+    """Map-1 系列向けの M/r^2 散布図を保存する。"""
+
+    if "mass_per_r2" not in df.columns:
+        return
+    working = df.copy()
+    run_status = working.get("run_status")
+    if run_status is not None:
+        working = working[run_status.astype(str).str.lower() == "success"]
+    if "case_status" in working.columns:
+        working = working[working["case_status"].astype(str).str.lower() == BLOWOUT_STATUS]
+    working = working[pd.to_numeric(working["mass_per_r2"], errors="coerce").notna()]
+    working = working[working["mass_per_r2"] > 0.0]
+    if working.empty:
+        return
+
+    x_label = (
+        working["param_x_name"].dropna().iloc[0]
+        if not working["param_x_name"].dropna().empty
+        else "param_x"
+    )
+    y_label = (
+        working["param_y_name"].dropna().iloc[0]
+        if not working["param_y_name"].dropna().empty
+        else "param_y"
+    )
+
+    x = pd.to_numeric(working["param_x_value"], errors="coerce")
+    y = pd.to_numeric(working["mass_per_r2"], errors="coerce")
+    color = pd.to_numeric(working["param_y_value"], errors="coerce")
+
+    fig, ax = plt.subplots(figsize=(7.0, 5.0))
+    sc = ax.scatter(x, y, c=color, cmap="viridis", s=24, edgecolor="none")
+    ax.set_xlabel(x_label)
+    ax.set_ylabel("M_loss / r^2 [M_Mars]")
+    ax.set_title(f"{map_label}: M/r^2 分布")
+
+    cbar = fig.colorbar(sc, ax=ax)
+    cbar.set_label(f"{y_label} (K)")
+
+    mean_val = float(np.mean(y)) if len(y) else math.nan
+    if math.isfinite(mean_val):
+        ax.axhline(mean_val, color="gray", linestyle="--", linewidth=1.0, label="全体平均")
+        rel = float(np.max(np.abs(y - mean_val) / abs(mean_val))) if mean_val != 0.0 else math.nan
+        if math.isfinite(rel):
+            ax.text(0.02, 0.95, f"max|Δ|/mean = {rel:.3f}", transform=ax.transAxes, ha="left", va="top")
+
+    handles, labels = ax.get_legend_handles_labels()
+    if handles:
+        ax.legend(loc="lower right")
+    fig.tight_layout()
+    output_path = Path("figures") / f"{map_stub}_mass_per_r2_scatter.png"
+    ensure_directory(output_path.parent)
+    fig.savefig(output_path, dpi=300)
+    plt.close(fig)
+    print(f"散布図を {output_path} に保存しました。")
+
+
 def main(argv: Iterable[str] | None = None) -> None:
     args = parse_args(None if argv is None else list(argv))
 
     try:
-        df = load_csv(args.map)
+        map_stub, map_label = _normalise_map_key(args.map)
+        df = load_csv(map_stub)
         pivot, x_values, y_values, x_label, y_label = prepare_pivot(df, args.metric)
         metric_name_for_file = sanitize_metric_name(args.metric)
-        output_path = Path("figures") / f"map{args.map}_{metric_name_for_file}.png"
+        output_path = Path("figures") / f"{map_stub}_{metric_name_for_file}.png"
         plt.rcParams.update({"font.size": 12})
-        plot_heatmap(
-            args.map,
+        log_min, log_max = plot_heatmap(
+            map_label,
             args.metric,
             pivot,
             x_values,
@@ -203,7 +299,11 @@ def main(argv: Iterable[str] | None = None) -> None:
             y_label,
             output_path,
         )
-        print(f"ヒートマップを {output_path} に保存しました。")
+        print(
+            f"ヒートマップを {output_path} に保存しました (log10範囲: {log_min:.3f} – {log_max:.3f})。"
+        )
+        if map_stub in {"map1", "map1b"} and args.metric == DEFAULT_METRIC:
+            maybe_plot_mass_per_r2_scatter(df, map_stub, map_label)
     except Exception as exc:  # pylint: disable=broad-except
         print(f"エラー: {exc}", file=sys.stderr)
         sys.exit(1)
