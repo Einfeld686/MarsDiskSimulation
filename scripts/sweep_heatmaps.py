@@ -1,12 +1,17 @@
-#!/usr/bin/env python3
-"""Parameter sweep utility for Mars disk zero-dimensional runs.
+"""Batch runner generating parameter sweep maps for the Mars disk model.
 
-This script automates two-dimensional sweeps over selected configuration
-parameters and aggregates the resulting mass loss from each simulation.  It
-supports three predefined maps described in the task instructions.  Each case
-creates a derived YAML configuration, executes ``python -m marsdisk.run`` and
-parses the outputs to obtain the cumulative mass loss and effective minimum
-grain size.  Results are written to ``results/map{ID}.csv``.
+This script automates the production of two-dimensional maps such as the
+``r_{\rm RM} \times T_M`` grid requested for Map‑1.  For each grid point a
+derived YAML configuration is written, ``python -m marsdisk.run`` is executed
+and the resulting ``summary.json`` / ``series/run.parquet`` files are parsed to
+obtain cumulative mass loss and blow-out diagnostics.  Aggregated results are
+stored in ``results/map*.csv`` while per-case outputs are written under the
+``--outdir`` root.
+
+Additional validation helpers ensure that the low-temperature blow-out failures
+form a contiguous band and that the mass-loss scaling ``M / r^2`` remains nearly
+constant across the successful Map‑1 cells.  These checks are persisted in a
+``*_validation.json`` file for downstream inspection.
 """
 from __future__ import annotations
 
@@ -26,7 +31,7 @@ import numpy as np
 import pandas as pd
 from ruamel.yaml import YAML
 
-try:
+try:  # pragma: no cover - fallback when package import fails
     from marsdisk import constants as mars_constants
 except Exception:  # pragma: no cover - fallback when package import fails
     class _FallbackConstants:
@@ -34,6 +39,11 @@ except Exception:  # pragma: no cover - fallback when package import fails
         M_MARS = 6.4171e23
 
     mars_constants = _FallbackConstants()  # type: ignore[assignment]
+
+
+BLOWOUT_STATUS = "blowout"
+DEFAULT_TOL_MASS_PER_R2 = 0.10
+DEFAULT_BASE_CONFIG = Path("configs/map_sweep_base.yml")
 
 
 @dataclass(frozen=True)
@@ -58,7 +68,8 @@ class ParamSpec:
 class MapDefinition:
     """Container bundling the parameter axes for a sweep."""
 
-    map_id: int
+    map_key: str
+    output_stub: str
     param_x: ParamSpec
     param_y: ParamSpec
 
@@ -68,7 +79,7 @@ class CaseSpec:
     """Runtime information for a single sweep case."""
 
     order: int
-    map_id: int
+    map_key: str
     case_id: str
     x_value: float
     y_value: float
@@ -82,11 +93,16 @@ def parse_args(argv: Optional[Iterable[str]] = None) -> argparse.Namespace:
     """Parse command line arguments."""
 
     parser = argparse.ArgumentParser(description="Run marsdisk 0D sweeps")
-    parser.add_argument("--map", type=int, choices=(1, 2, 3), required=True, help="カラーマップID")
+    parser.add_argument(
+        "--map",
+        type=str,
+        required=True,
+        help="マップID (例: 1, 1b, 2, 3)",
+    )
     parser.add_argument(
         "--base",
         type=str,
-        default="config.base.yaml",
+        default=str(DEFAULT_BASE_CONFIG),
         help="ベースとなるYAML設定ファイル",
     )
     parser.add_argument(
@@ -104,25 +120,64 @@ def parse_args(argv: Optional[Iterable[str]] = None) -> argparse.Namespace:
     return parser.parse_args(list(argv) if argv is not None else None)
 
 
-def create_map_definition(map_id: int) -> MapDefinition:
+def _float_grid(start: float, stop: float, step: float) -> List[float]:
+    count = int(round((stop - start) / step)) + 1
+    values = np.linspace(start, stop, count)
+    return [float(np.round(v, 10)) for v in values]
+
+
+def _normalise_map_key(map_arg: str) -> str:
+    key = map_arg.strip().lower()
+    if key in {"1", "map1"}:
+        return "1"
+    if key in {"1b", "map1b"}:
+        return "1b"
+    if key in {"2", "map2"}:
+        return "2"
+    if key in {"3", "map3"}:
+        return "3"
+    raise ValueError(f"未知のマップIDです: {map_arg}")
+
+
+def create_map_definition(map_arg: str) -> MapDefinition:
     """Return the parameter definition for the requested map."""
 
-    if map_id == 1:
+    map_key = _normalise_map_key(map_arg)
+    if map_key == "1":
+        r_values = _float_grid(1.0, 3.0, 0.1)
+        T_values = _float_grid(1000.0, 6000.0, 50.0)
         param_x = ParamSpec(
             key_path="geometry.r",
-            values=[3.0, 4.0, 5.0, 6.0],
+            values=r_values,
             csv_name="r_RM",
             label="rRM",
             transform=lambda v: float(v) * mars_constants.R_MARS,
         )
         param_y = ParamSpec(
             key_path="temps.T_M",
-            values=[1500.0, 1750.0, 2000.0, 2250.0, 2500.0],
+            values=T_values,
             csv_name="T_M",
             label="TM",
         )
-        return MapDefinition(map_id=map_id, param_x=param_x, param_y=param_y)
-    if map_id == 2:
+        return MapDefinition(map_key=map_key, output_stub="map1", param_x=param_x, param_y=param_y)
+    if map_key == "1b":
+        r_values = _float_grid(5.0, 7.0, 0.1)
+        T_values = _float_grid(1000.0, 6000.0, 50.0)
+        param_x = ParamSpec(
+            key_path="geometry.r",
+            values=r_values,
+            csv_name="r_RM",
+            label="rRM",
+            transform=lambda v: float(v) * mars_constants.R_MARS,
+        )
+        param_y = ParamSpec(
+            key_path="temps.T_M",
+            values=T_values,
+            csv_name="T_M",
+            label="TM",
+        )
+        return MapDefinition(map_key=map_key, output_stub="map1b", param_x=param_x, param_y=param_y)
+    if map_key == "2":
         param_x = ParamSpec(
             key_path="supply.const.prod_area_rate_kg_m2_s",
             values=[1e-10, 3e-10, 1e-9, 3e-9, 1e-8],
@@ -135,8 +190,8 @@ def create_map_definition(map_id: int) -> MapDefinition:
             csv_name="T_M",
             label="TM",
         )
-        return MapDefinition(map_id=map_id, param_x=param_x, param_y=param_y)
-    if map_id == 3:
+        return MapDefinition(map_key=map_key, output_stub="map2", param_x=param_x, param_y=param_y)
+    if map_key == "3":
         param_x = ParamSpec(
             key_path="psd.alpha",
             values=[3.0, 3.5, 4.0, 4.5],
@@ -149,8 +204,8 @@ def create_map_definition(map_id: int) -> MapDefinition:
             csv_name="s_min",
             label="smin",
         )
-        return MapDefinition(map_id=map_id, param_x=param_x, param_y=param_y)
-    raise ValueError(f"未知のマップIDです: {map_id}")
+        return MapDefinition(map_key=map_key, output_stub="map3", param_x=param_x, param_y=param_y)
+    raise ValueError(f"未知のマップIDです: {map_arg}")
 
 
 def format_param_value(value: float) -> str:
@@ -159,7 +214,7 @@ def format_param_value(value: float) -> str:
     if isinstance(value, float):
         if math.isfinite(value):
             abs_v = abs(value)
-            if abs_v >= 1e-3 and abs_v < 1e3:
+            if 1e-3 <= abs_v < 1e3:
                 if math.isclose(value, round(value)):
                     return f"{value:.1f}"
                 return f"{value:.6g}"
@@ -237,7 +292,7 @@ def build_cases(map_def: MapDefinition, out_root: Path) -> List[CaseSpec]:
 
     cases: List[CaseSpec] = []
     order = 0
-    map_dir = out_root / f"map{map_def.map_id}"
+    map_dir = out_root / map_def.output_stub
     for x in map_def.param_x.values:
         for y in map_def.param_y.values:
             case_id = build_case_id(map_def.param_x, x, map_def.param_y, y)
@@ -247,7 +302,7 @@ def build_cases(map_def: MapDefinition, out_root: Path) -> List[CaseSpec]:
             cases.append(
                 CaseSpec(
                     order=order,
-                    map_id=map_def.map_id,
+                    map_key=map_def.map_key,
                     case_id=case_id,
                     x_value=float(x),
                     y_value=float(y),
@@ -326,9 +381,7 @@ def extract_smin_from_series(df: pd.DataFrame) -> Optional[float]:
     priority: List[Tuple[int, str]] = []
     for col in df.columns:
         name = col.lower()
-        if "s_min_eff" in name:
-            priority.append((0, col))
-        elif "smin_eff" in name:
+        if "s_min_effective" in name or "smin_effective" in name:
             priority.append((0, col))
         elif "s_min" in name or "smin" in name:
             priority.append((1, col))
@@ -404,6 +457,118 @@ def integrate_outflux(
     return total, note
 
 
+def _to_float(value: Any) -> float:
+    if value is None:
+        return math.nan
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return math.nan
+
+
+def validate_map1_results(df: pd.DataFrame, tolerance: float = DEFAULT_TOL_MASS_PER_R2) -> Dict[str, Any]:
+    """Validate Map‑1 style results for low-T failures and r^2 scaling."""
+
+    result: Dict[str, Any] = {
+        "low_temp_band": {
+            "ok": True,
+            "reentry_r_values": [],
+            "first_row_blowout_r_values": [],
+            "beta_violations_r_values": [],
+            "checked_r_values": 0,
+        },
+        "mass_per_r2": {
+            "ok": True,
+            "max_relative_spread": math.nan,
+            "worst_T_M": math.nan,
+            "worst_r_RM": math.nan,
+            "tolerance": tolerance,
+        },
+    }
+
+    if df.empty:
+        result["low_temp_band"]["ok"] = False
+        result["mass_per_r2"]["ok"] = False
+        return result
+
+    working = df.copy()
+    working["case_status"] = working["case_status"].astype(str).str.lower()
+    working["run_status"] = working.get("run_status", "success").astype(str).str.lower()
+
+    # --- Low temperature failure band ---
+    reentry: List[float] = []
+    first_row_blowout: List[float] = []
+    beta_violations: List[float] = []
+    r_values = sorted(v for v in working["param_x_value"].dropna().unique())
+    for r_val in r_values:
+        column = (
+            working[(working["param_x_value"] == r_val) & (working["run_status"] == "success")]
+            .sort_values("param_y_value")
+        )
+        if column.empty:
+            continue
+        result["low_temp_band"]["checked_r_values"] += 1
+        statuses = column["case_status"].tolist()
+        if statuses and statuses[0] == BLOWOUT_STATUS:
+            first_row_blowout.append(float(r_val))
+        seen_success = False
+        for status in statuses:
+            if status == BLOWOUT_STATUS:
+                seen_success = True
+            else:
+                if seen_success:
+                    reentry.append(float(r_val))
+                    break
+        fails = column[column["case_status"] != BLOWOUT_STATUS]
+        if not fails.empty:
+            thr_series = fails["beta_threshold"].dropna()
+            threshold = float(thr_series.iloc[0]) if not thr_series.empty else 0.5
+            betas = fails["beta_at_smin"].dropna()
+            if betas.empty or np.any(betas.to_numpy(dtype=float) >= threshold):
+                beta_violations.append(float(r_val))
+
+    if reentry or first_row_blowout or beta_violations:
+        result["low_temp_band"]["ok"] = False
+    result["low_temp_band"]["reentry_r_values"] = reentry
+    result["low_temp_band"]["first_row_blowout_r_values"] = first_row_blowout
+    result["low_temp_band"]["beta_violations_r_values"] = beta_violations
+
+    # --- Mass-loss scaling across radii ---
+    success = working[
+        (working["case_status"] == BLOWOUT_STATUS)
+        & (working["run_status"] == "success")
+        & working["mass_per_r2"].notna()
+    ]
+    if success.empty:
+        result["mass_per_r2"]["ok"] = False
+    else:
+        max_rel: float = -math.inf
+        worst_T: float = math.nan
+        worst_r: float = math.nan
+        for T_M, group in success.groupby("param_y_value"):
+            values = group["mass_per_r2"].to_numpy(dtype=float)
+            if values.size < 2:
+                continue
+            mean_val = float(np.nanmean(values))
+            if not math.isfinite(mean_val) or mean_val == 0.0:
+                continue
+            rel = np.max(np.abs(values - mean_val) / abs(mean_val))
+            if rel > max_rel:
+                max_rel = float(rel)
+                worst_T = float(T_M)
+                worst_r = float(group.loc[np.argmax(np.abs(values - mean_val)), "param_x_value"])
+        if max_rel == -math.inf:
+            result["mass_per_r2"]["ok"] = False
+        else:
+            result["mass_per_r2"]["max_relative_spread"] = max_rel
+            result["mass_per_r2"]["worst_T_M"] = worst_T
+            result["mass_per_r2"]["worst_r_RM"] = worst_r
+            if max_rel > tolerance:
+                result["mass_per_r2"]["ok"] = False
+
+    return result
+
+
 def run_case(
     case: CaseSpec,
     base_config: Dict[str, Any],
@@ -414,16 +579,26 @@ def run_case(
 
     record: Dict[str, Any] = {
         "order": case.order,
-        "map_id": case.map_id,
+        "map_id": case.map_key,
         "case_id": case.case_id,
         "param_x_name": case.param_x.csv_name,
         "param_x_value": case.x_value,
         "param_y_name": case.param_y.csv_name,
         "param_y_value": case.y_value,
         "total_mass_lost_Mmars": math.nan,
+        "mass_per_r2": math.nan,
         "s_min_effective": math.nan,
+        "s_min_config": math.nan,
+        "s_min_effective_gt_config": False,
+        "beta_at_smin": math.nan,
+        "beta_threshold": math.nan,
+        "s_blow_m": math.nan,
+        "rho_used": math.nan,
+        "Q_pr_used": math.nan,
+        "T_M_used": math.nan,
         "outdir": str(case.outdir),
-        "case_status": "pending",
+        "run_status": "pending",
+        "case_status": "unknown",
         "message": "",
     }
     config_data = copy.deepcopy(base_config)
@@ -438,10 +613,7 @@ def run_case(
 
         env = os.environ.copy()
         existing = env.get("PYTHONPATH")
-        if existing:
-            env["PYTHONPATH"] = f".{os.pathsep}{existing}"
-        else:
-            env["PYTHONPATH"] = "."
+        env["PYTHONPATH"] = f".{os.pathsep}{existing}" if existing else "."
         cmd = [python_executable, "-m", "marsdisk.run", "--config", str(case.config_path)]
         proc = subprocess.run(
             cmd,
@@ -451,16 +623,34 @@ def run_case(
             text=True,
         )
         if proc.returncode != 0:
-            record["case_status"] = "failed"
+            record["run_status"] = "failed"
             stderr = (proc.stderr or "").strip().splitlines()
             short_err = stderr[-1] if stderr else f"returncode {proc.returncode}"
             record["message"] = short_err
             print(f"[失敗] {case.case_id}: {short_err}")
             return record
 
+        record["run_status"] = "success"
         summary_path = case.outdir / "summary.json"
         series_path = case.outdir / "series" / "run.parquet"
-        loss_value, smin_from_summary, _ = parse_summary(summary_path)
+        loss_value, smin_from_summary, summary_data = parse_summary(summary_path)
+        if summary_data is not None:
+            status = str(summary_data.get("case_status", "unknown")).lower()
+            record["case_status"] = status
+            record["beta_at_smin"] = _to_float(summary_data.get("beta_at_smin"))
+            record["beta_threshold"] = _to_float(summary_data.get("beta_threshold"))
+            record["s_blow_m"] = _to_float(summary_data.get("s_blow_m"))
+            record["rho_used"] = _to_float(summary_data.get("rho_used"))
+            record["Q_pr_used"] = _to_float(summary_data.get("Q_pr_used"))
+            record["T_M_used"] = _to_float(summary_data.get("T_M_used"))
+            record["s_min_effective"] = _to_float(summary_data.get("s_min_effective"))
+            record["s_min_config"] = _to_float(summary_data.get("s_min_config"))
+            sm_gt = summary_data.get("s_min_effective_gt_config")
+            if isinstance(sm_gt, bool):
+                record["s_min_effective_gt_config"] = sm_gt
+        else:
+            record["case_status"] = "unknown"
+
         smin_value = None
         series_df: Optional[pd.DataFrame] = None
         if series_path.exists():
@@ -474,6 +664,8 @@ def run_case(
             smin_value = get_nested(config_data, "sizes.s_min")
             if smin_value is not None:
                 smin_value = float(smin_value)
+        if smin_value is not None:
+            record["s_min_effective"] = _to_float(smin_value)
 
         total_mass = None
         note: Optional[str] = None
@@ -482,7 +674,7 @@ def run_case(
         else:
             if series_df is None:
                 if not series_path.exists():
-                    record["case_status"] = "failed"
+                    record["run_status"] = "failed"
                     record["message"] = "series missing"
                     print(f"[失敗] {case.case_id}: series missing")
                     return record
@@ -492,16 +684,30 @@ def run_case(
         if total_mass is None:
             total_mass = math.nan
         record["total_mass_lost_Mmars"] = float(total_mass)
-        record["s_min_effective"] = float(smin_value) if smin_value is not None else math.nan
-        record["case_status"] = "success"
+        if (
+            case.param_x.csv_name == "r_RM"
+            and math.isfinite(total_mass)
+            and case.x_value > 0.0
+            and str(record.get("case_status", "")) == BLOWOUT_STATUS
+        ):
+            record["mass_per_r2"] = float(total_mass) / (case.x_value ** 2)
         if note:
             record["message"] = note
         return record
-    except Exception as exc:
-        record["case_status"] = "failed"
+    except Exception as exc:  # pragma: no cover - defensive logging
+        record["run_status"] = "failed"
         record["message"] = str(exc)
         print(f"[失敗] {case.case_id}: {exc}")
         return record
+
+
+def _results_dataframe(results: List[Dict[str, Any]]) -> pd.DataFrame:
+    df = pd.DataFrame(results)
+    if "run_status" in df.columns:
+        df["run_status"] = df["run_status"].astype(str)
+    if "case_status" in df.columns:
+        df["case_status"] = df["case_status"].astype(str)
+    return df
 
 
 def main(argv: Optional[Iterable[str]] = None) -> None:
@@ -518,12 +724,12 @@ def main(argv: Optional[Iterable[str]] = None) -> None:
     out_root = Path(args.outdir)
     if not out_root.is_absolute():
         out_root = root_dir / out_root
-    ensure_directory(out_root / f"map{map_def.map_id}")
+    ensure_directory(out_root / map_def.output_stub)
 
     base_config = load_base_config(base_path)
     cases = build_cases(map_def, out_root)
     total_cases = len(cases)
-    print(f"マップ{map_def.map_id}: 合計{total_cases}ケースを実行します")
+    print(f"マップ{map_def.map_key}: 合計{total_cases}ケースを実行します")
 
     python_executable = sys.executable or "python"
     results: List[Dict[str, Any]] = []
@@ -537,32 +743,70 @@ def main(argv: Optional[Iterable[str]] = None) -> None:
             res = future.result()
             results.append(res)
             completed += 1
-            status = res["case_status"]
-            if status == "success":
-                mass = res["total_mass_lost_Mmars"]
+            run_status = res.get("run_status", "")
+            physical_status = res.get("case_status", "")
+            if str(run_status).lower() == "success":
+                mass = res.get("total_mass_lost_Mmars", math.nan)
                 print(
-                    f"[{completed}/{total_cases}] 成功: {res['case_id']} (損失={mass:.3e} M_Mars)"
+                    f"[{completed}/{total_cases}] 実行成功: {res['case_id']} (状態={physical_status}, 損失={mass:.3e} M_Mars)"
                 )
             else:
                 reason = res.get("message", "")
-                print(f"[{completed}/{total_cases}] 失敗: {res['case_id']} ({reason})")
+                print(f"[{completed}/{total_cases}] 実行失敗: {res['case_id']} ({reason})")
 
     results.sort(key=lambda rec: rec.get("order", 0))
     for rec in results:
         rec.pop("order", None)
 
+    df = _results_dataframe(results)
+
     results_dir = root_dir / "results"
     ensure_directory(results_dir)
-    output_csv = results_dir / f"map{map_def.map_id}.csv"
-    df = pd.DataFrame(results)[[
-        "map_id","case_id",
-        "param_x_name","param_x_value",
-        "param_y_name","param_y_value",
-        "total_mass_lost_Mmars","s_min_effective","outdir","case_status"
-    ]]
-    df.to_csv(output_csv, index=False)
+    output_csv = results_dir / f"{map_def.output_stub}.csv"
+    column_order = [
+        "map_id",
+        "case_id",
+        "run_status",
+        "case_status",
+        "param_x_name",
+        "param_x_value",
+        "param_y_name",
+        "param_y_value",
+        "total_mass_lost_Mmars",
+        "mass_per_r2",
+        "s_min_effective",
+        "s_min_config",
+        "s_min_effective_gt_config",
+        "beta_at_smin",
+        "beta_threshold",
+        "s_blow_m",
+        "rho_used",
+        "Q_pr_used",
+        "T_M_used",
+        "outdir",
+        "message",
+    ]
+    available_columns = [col for col in column_order if col in df.columns]
+    df[available_columns].to_csv(output_csv, index=False)
     print(f"結果を {output_csv} に保存しました")
 
+    if map_def.map_key in {"1", "1b"}:
+        validation = validate_map1_results(df)
+        validation_path = results_dir / f"{map_def.output_stub}_validation.json"
+        with validation_path.open("w", encoding="utf-8") as fh:
+            json.dump(validation, fh, indent=2, sort_keys=True)
+        if not (validation["low_temp_band"]["ok"] and validation["mass_per_r2"]["ok"]):
+            print("[警告] Map-1 検証チェックを満たしていません。詳細は validation.json を参照してください。")
 
-if __name__ == "__main__":
+
+if __name__ == "__main__":  # pragma: no cover - CLI entry point
     main()
+
+
+__all__ = [
+    "ParamSpec",
+    "MapDefinition",
+    "CaseSpec",
+    "create_map_definition",
+    "validate_map1_results",
+]
