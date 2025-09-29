@@ -24,6 +24,7 @@ import os
 import subprocess
 import sys
 from dataclasses import dataclass
+from datetime import datetime
 from pathlib import Path
 from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple
 
@@ -55,6 +56,7 @@ class ParamSpec:
     csv_name: str
     label: str
     transform: Optional[Callable[[float], Any]] = None
+    log_spacing: bool = False
 
     def apply(self, value: float) -> Any:
         """Return the value written to the YAML configuration."""
@@ -72,6 +74,7 @@ class MapDefinition:
     output_stub: str
     param_x: ParamSpec
     param_y: ParamSpec
+    preferred_partition_axis: str = "param_y"
 
 
 @dataclass(frozen=True)
@@ -87,6 +90,8 @@ class CaseSpec:
     param_y: ParamSpec
     config_path: Path
     outdir: Path
+    partition_index: int = 1
+    partition_count: int = 1
 
 
 def parse_args(argv: Optional[Iterable[str]] = None) -> argparse.Namespace:
@@ -116,6 +121,18 @@ def parse_args(argv: Optional[Iterable[str]] = None) -> argparse.Namespace:
         type=int,
         default=4,
         help="並列実行するワーカー数",
+    )
+    parser.add_argument(
+        "--num-parts",
+        type=int,
+        default=1,
+        help="Map-3 の s_min 軸を何分割するか (デフォルト: 1)",
+    )
+    parser.add_argument(
+        "--part-index",
+        type=int,
+        default=1,
+        help="実行する分割番号 (1 始まり)",
     )
     return parser.parse_args(list(argv) if argv is not None else None)
 
@@ -192,19 +209,28 @@ def create_map_definition(map_arg: str) -> MapDefinition:
         )
         return MapDefinition(map_key=map_key, output_stub="map2", param_x=param_x, param_y=param_y)
     if map_key == "3":
+        alpha_values = _float_grid(3.0, 5.0, 0.1)
+        s_values = list(np.logspace(-10.0, -6.0, 1000))
         param_x = ParamSpec(
             key_path="psd.alpha",
-            values=[3.0, 3.5, 4.0, 4.5],
+            values=alpha_values,
             csv_name="alpha",
             label="alpha",
         )
         param_y = ParamSpec(
             key_path="sizes.s_min",
-            values=[1e-8, 3e-8, 1e-7, 3e-7, 1e-6],
+            values=s_values,
             csv_name="s_min",
             label="smin",
+            log_spacing=True,
         )
-        return MapDefinition(map_key=map_key, output_stub="map3", param_x=param_x, param_y=param_y)
+        return MapDefinition(
+            map_key=map_key,
+            output_stub="map3",
+            param_x=param_x,
+            param_y=param_y,
+            preferred_partition_axis="param_y",
+        )
     raise ValueError(f"未知のマップIDです: {map_arg}")
 
 
@@ -265,6 +291,60 @@ def ensure_directory(path: Path) -> None:
     path.mkdir(parents=True, exist_ok=True)
 
 
+def partition_param_values(param: ParamSpec, num_parts: int) -> List[np.ndarray]:
+    """Return indices partitioning parameter values into ``num_parts`` segments."""
+
+    values = np.asarray(param.values, dtype=float)
+    if values.ndim != 1:
+        raise ValueError("parameter values must be one-dimensional")
+    total = values.size
+    indices = np.arange(total, dtype=int)
+    if num_parts <= 1 or total == 0:
+        return [indices]
+    if num_parts > total:
+        num_parts = total
+
+    # ``np.array_split`` provides nearly equal sized contiguous chunks.  For the
+    # logarithmically-spaced ``s_min`` axis this corresponds to an equal division
+    # in log-space because ``values`` are already sorted in ascending order.
+    partitions = [np.array(chunk, dtype=int) for chunk in np.array_split(indices, num_parts)]
+    return partitions
+
+
+COMPLETION_FLAG_NAME = "case_completed.json"
+
+
+def completion_flag_path(case: CaseSpec) -> Path:
+    """Return the path to the completion flag for a case."""
+
+    return case.outdir / COMPLETION_FLAG_NAME
+
+
+def mark_case_complete(case: CaseSpec, summary_path: Path, series_path: Path) -> None:
+    """Persist a completion marker allowing interrupted sweeps to resume."""
+
+    ensure_directory(case.outdir)
+    metadata = {
+        "case_id": case.case_id,
+        "timestamp": datetime.utcnow().isoformat() + "Z",
+        "summary": str(summary_path),
+        "series": str(series_path),
+        "partition_index": case.partition_index,
+        "partition_count": case.partition_count,
+    }
+    flag_path = completion_flag_path(case)
+    with flag_path.open("w", encoding="utf-8") as fh:
+        json.dump(metadata, fh, indent=2, sort_keys=True)
+
+
+def case_is_completed(case: CaseSpec) -> bool:
+    """Return ``True`` if the completion flag and summary file are present."""
+
+    flag_path = completion_flag_path(case)
+    summary_path = case.outdir / "summary.json"
+    return flag_path.exists() and summary_path.exists()
+
+
 def load_base_config(base_path: Path) -> Dict[str, Any]:
     """Load the base YAML configuration using ruamel.yaml."""
 
@@ -287,14 +367,25 @@ def write_config(config: Dict[str, Any], path: Path) -> None:
         yaml.dump(config, fh)
 
 
-def build_cases(map_def: MapDefinition, out_root: Path) -> List[CaseSpec]:
+def build_cases(
+    map_def: MapDefinition,
+    out_root: Path,
+    y_index_filter: Optional[Iterable[int]] = None,
+    *,
+    partition_index: int = 1,
+    partition_count: int = 1,
+) -> List[CaseSpec]:
     """Prepare the full list of cases for the sweep."""
 
     cases: List[CaseSpec] = []
     order = 0
     map_dir = out_root / map_def.output_stub
+    allowed_y = set(int(idx) for idx in y_index_filter) if y_index_filter is not None else None
     for x in map_def.param_x.values:
-        for y in map_def.param_y.values:
+        for y_idx, y in enumerate(map_def.param_y.values):
+            if allowed_y is not None and y_idx not in allowed_y:
+                order += 1
+                continue
             case_id = build_case_id(map_def.param_x, x, map_def.param_y, y)
             case_dir = map_dir / case_id
             config_path = case_dir / "config.yaml"
@@ -310,9 +401,12 @@ def build_cases(map_def: MapDefinition, out_root: Path) -> List[CaseSpec]:
                     param_y=map_def.param_y,
                     config_path=config_path,
                     outdir=outdir,
+                    partition_index=partition_index,
+                    partition_count=partition_count,
                 )
             )
             order += 1
+    return cases
     return cases
 
 
@@ -569,6 +663,77 @@ def validate_map1_results(df: pd.DataFrame, tolerance: float = DEFAULT_TOL_MASS_
     return result
 
 
+def populate_record_from_outputs(
+    record: Dict[str, Any],
+    case: CaseSpec,
+    config_data: Dict[str, Any],
+) -> Optional[str]:
+    """Fill bookkeeping fields by reading prior outputs."""
+
+    summary_path = case.outdir / "summary.json"
+    series_path = case.outdir / "series" / "run.parquet"
+    if not summary_path.exists():
+        raise FileNotFoundError(f"summary missing for {case.case_id}")
+
+    loss_value, smin_from_summary, summary_data = parse_summary(summary_path)
+    if summary_data is not None:
+        status = str(summary_data.get("case_status", "unknown")).lower()
+        record["case_status"] = status
+        record["beta_at_smin"] = _to_float(summary_data.get("beta_at_smin"))
+        record["beta_threshold"] = _to_float(summary_data.get("beta_threshold"))
+        record["s_blow_m"] = _to_float(summary_data.get("s_blow_m"))
+        record["rho_used"] = _to_float(summary_data.get("rho_used"))
+        record["Q_pr_used"] = _to_float(summary_data.get("Q_pr_used"))
+        record["T_M_used"] = _to_float(summary_data.get("T_M_used"))
+        record["s_min_effective"] = _to_float(summary_data.get("s_min_effective"))
+        record["s_min_config"] = _to_float(summary_data.get("s_min_config"))
+        sm_gt = summary_data.get("s_min_effective_gt_config")
+        if isinstance(sm_gt, bool):
+            record["s_min_effective_gt_config"] = sm_gt
+    else:
+        record["case_status"] = "unknown"
+
+    smin_value: Optional[float] = None
+    series_df: Optional[pd.DataFrame] = None
+    if series_path.exists():
+        series_df = pd.read_parquet(series_path)
+        smin_from_series = extract_smin_from_series(series_df)
+        if smin_from_series is not None:
+            smin_value = smin_from_series
+    if smin_value is None and smin_from_summary is not None:
+        smin_value = smin_from_summary
+    if smin_value is None:
+        smin_value = get_nested(config_data, "sizes.s_min")
+        if smin_value is not None:
+            smin_value = float(smin_value)
+    if smin_value is not None:
+        record["s_min_effective"] = _to_float(smin_value)
+
+    total_mass: Optional[float] = None
+    note: Optional[str] = None
+    if loss_value is not None:
+        total_mass = loss_value
+    else:
+        if series_df is None:
+            if not series_path.exists():
+                raise FileNotFoundError(f"series missing for {case.case_id}")
+            series_df = pd.read_parquet(series_path)
+        total_mass, note = integrate_outflux(series_df, config_data, case.case_id)
+
+    if total_mass is None:
+        total_mass = math.nan
+    record["total_mass_lost_Mmars"] = float(total_mass)
+    if (
+        case.param_x.csv_name == "r_RM"
+        and math.isfinite(total_mass)
+        and case.x_value > 0.0
+        and str(record.get("case_status", "")).lower() == BLOWOUT_STATUS
+    ):
+        record["mass_per_r2"] = float(total_mass) / (case.x_value ** 2)
+
+    return note
+
+
 def run_case(
     case: CaseSpec,
     base_config: Dict[str, Any],
@@ -585,6 +750,8 @@ def run_case(
         "param_x_value": case.x_value,
         "param_y_name": case.param_y.csv_name,
         "param_y_value": case.y_value,
+        "partition_index": case.partition_index,
+        "partition_count": case.partition_count,
         "total_mass_lost_Mmars": math.nan,
         "mass_per_r2": math.nan,
         "s_min_effective": math.nan,
@@ -609,6 +776,24 @@ def run_case(
 
         ensure_directory(case.config_path.parent)
         ensure_directory(case.outdir)
+        if case_is_completed(case):
+            try:
+                note = populate_record_from_outputs(record, case, config_data)
+                record["run_status"] = "cached"
+                if note:
+                    record["message"] = note
+                else:
+                    record.setdefault("message", "完了済み")
+                return record
+            except Exception as exc:
+                flag_path = completion_flag_path(case)
+                if flag_path.exists():
+                    try:
+                        flag_path.unlink()
+                    except OSError:
+                        pass
+                print(f"[再実行] {case.case_id}: 既存出力の読み込みに失敗 ({exc})")
+
         write_config(config_data, case.config_path)
 
         env = os.environ.copy()
@@ -631,68 +816,10 @@ def run_case(
             return record
 
         record["run_status"] = "success"
-        summary_path = case.outdir / "summary.json"
-        series_path = case.outdir / "series" / "run.parquet"
-        loss_value, smin_from_summary, summary_data = parse_summary(summary_path)
-        if summary_data is not None:
-            status = str(summary_data.get("case_status", "unknown")).lower()
-            record["case_status"] = status
-            record["beta_at_smin"] = _to_float(summary_data.get("beta_at_smin"))
-            record["beta_threshold"] = _to_float(summary_data.get("beta_threshold"))
-            record["s_blow_m"] = _to_float(summary_data.get("s_blow_m"))
-            record["rho_used"] = _to_float(summary_data.get("rho_used"))
-            record["Q_pr_used"] = _to_float(summary_data.get("Q_pr_used"))
-            record["T_M_used"] = _to_float(summary_data.get("T_M_used"))
-            record["s_min_effective"] = _to_float(summary_data.get("s_min_effective"))
-            record["s_min_config"] = _to_float(summary_data.get("s_min_config"))
-            sm_gt = summary_data.get("s_min_effective_gt_config")
-            if isinstance(sm_gt, bool):
-                record["s_min_effective_gt_config"] = sm_gt
-        else:
-            record["case_status"] = "unknown"
-
-        smin_value = None
-        series_df: Optional[pd.DataFrame] = None
-        if series_path.exists():
-            series_df = pd.read_parquet(series_path)
-            smin_from_series = extract_smin_from_series(series_df)
-            if smin_from_series is not None:
-                smin_value = smin_from_series
-        if smin_value is None and smin_from_summary is not None:
-            smin_value = smin_from_summary
-        if smin_value is None:
-            smin_value = get_nested(config_data, "sizes.s_min")
-            if smin_value is not None:
-                smin_value = float(smin_value)
-        if smin_value is not None:
-            record["s_min_effective"] = _to_float(smin_value)
-
-        total_mass = None
-        note: Optional[str] = None
-        if loss_value is not None:
-            total_mass = loss_value
-        else:
-            if series_df is None:
-                if not series_path.exists():
-                    record["run_status"] = "failed"
-                    record["message"] = "series missing"
-                    print(f"[失敗] {case.case_id}: series missing")
-                    return record
-                series_df = pd.read_parquet(series_path)
-            total, note = integrate_outflux(series_df, config_data, case.case_id)
-            total_mass = total
-        if total_mass is None:
-            total_mass = math.nan
-        record["total_mass_lost_Mmars"] = float(total_mass)
-        if (
-            case.param_x.csv_name == "r_RM"
-            and math.isfinite(total_mass)
-            and case.x_value > 0.0
-            and str(record.get("case_status", "")) == BLOWOUT_STATUS
-        ):
-            record["mass_per_r2"] = float(total_mass) / (case.x_value ** 2)
+        note = populate_record_from_outputs(record, case, config_data)
         if note:
             record["message"] = note
+        mark_case_complete(case, case.outdir / "summary.json", case.outdir / "series" / "run.parquet")
         return record
     except Exception as exc:  # pragma: no cover - defensive logging
         record["run_status"] = "failed"
@@ -721,15 +848,46 @@ def main(argv: Optional[Iterable[str]] = None) -> None:
         raise FileNotFoundError(f"ベース設定ファイルが見つかりません: {base_path}")
 
     map_def = create_map_definition(args.map)
+    num_parts = max(1, int(args.num_parts))
+    part_index = int(args.part_index)
+    if part_index < 1 or part_index > num_parts:
+        raise ValueError("part-index は 1 以上 num-parts 以下で指定してください")
+    if num_parts > 1 and map_def.map_key != "3":
+        raise ValueError("分割実行は Map-3 にのみ対応しています")
+
     out_root = Path(args.outdir)
     if not out_root.is_absolute():
         out_root = root_dir / out_root
     ensure_directory(out_root / map_def.output_stub)
 
     base_config = load_base_config(base_path)
-    cases = build_cases(map_def, out_root)
+    partitions: Optional[List[np.ndarray]] = None
+    y_filter: Optional[Iterable[int]] = None
+    if num_parts > 1:
+        partitions = partition_param_values(map_def.param_y, num_parts)
+        if not partitions or len(partitions) != num_parts:
+            raise RuntimeError("分割の生成に失敗しました")
+        y_filter = partitions[part_index - 1].tolist()
+
+    cases = build_cases(
+        map_def,
+        out_root,
+        y_index_filter=y_filter,
+        partition_index=part_index,
+        partition_count=num_parts,
+    )
     total_cases = len(cases)
-    print(f"マップ{map_def.map_key}: 合計{total_cases}ケースを実行します")
+    global_cases = len(map_def.param_x.values) * len(map_def.param_y.values)
+    if num_parts > 1:
+        part_values = [map_def.param_y.values[idx] for idx in partitions[part_index - 1]]
+        smin_min = min(part_values) if part_values else float("nan")
+        smin_max = max(part_values) if part_values else float("nan")
+        print(
+            f"マップ{map_def.map_key}: 全体 {global_cases} 件中 {total_cases} 件を実行 (分割 {part_index}/{num_parts}, "
+            f"s_min∈[{smin_min:.3e}, {smin_max:.3e}] m)"
+        )
+    else:
+        print(f"マップ{map_def.map_key}: 合計{total_cases}ケースを実行します")
 
     python_executable = sys.executable or "python"
     results: List[Dict[str, Any]] = []
@@ -755,14 +913,49 @@ def main(argv: Optional[Iterable[str]] = None) -> None:
                 print(f"[{completed}/{total_cases}] 実行失敗: {res['case_id']} ({reason})")
 
     results.sort(key=lambda rec: rec.get("order", 0))
-    for rec in results:
-        rec.pop("order", None)
 
     df = _results_dataframe(results)
+    if "order" in df.columns:
+        df.sort_values("order", inplace=True)
+    elif {"param_x_value", "param_y_value"}.issubset(df.columns):
+        df.sort_values(["param_x_value", "param_y_value"], inplace=True)
 
     results_dir = root_dir / "results"
     ensure_directory(results_dir)
     output_csv = results_dir / f"{map_def.output_stub}.csv"
+
+    df_to_write = df.copy()
+    write_final = True
+    if num_parts > 1:
+        parts_dir = results_dir / "parts" / map_def.output_stub
+        ensure_directory(parts_dir)
+        part_filename = f"{map_def.output_stub}_part{part_index:02d}_of{num_parts:02d}.csv"
+        part_path = parts_dir / part_filename
+        df_to_write.to_csv(part_path, index=False)
+        print(f"分割結果を {part_path} に保存しました")
+
+        combined_frames: List[pd.DataFrame] = []
+        all_present = True
+        for idx in range(1, num_parts + 1):
+            candidate = parts_dir / f"{map_def.output_stub}_part{idx:02d}_of{num_parts:02d}.csv"
+            if not candidate.exists():
+                all_present = False
+                break
+            combined_frames.append(pd.read_csv(candidate))
+        if all_present and combined_frames:
+            combined = pd.concat(combined_frames, ignore_index=True)
+            if "case_id" in combined.columns:
+                combined = combined.drop_duplicates(subset=["case_id"], keep="last")
+            if "order" in combined.columns:
+                combined.sort_values("order", inplace=True)
+            elif {"param_x_value", "param_y_value"}.issubset(combined.columns):
+                combined.sort_values(["param_x_value", "param_y_value"], inplace=True)
+            df_to_write = combined
+            print(f"全{num_parts}分割が揃ったため {output_csv} を更新します")
+        else:
+            write_final = False
+            print("他の分割完了を待機中のため集約CSVは更新しません")
+
     column_order = [
         "map_id",
         "case_id",
@@ -772,6 +965,8 @@ def main(argv: Optional[Iterable[str]] = None) -> None:
         "param_x_value",
         "param_y_name",
         "param_y_value",
+        "partition_index",
+        "partition_count",
         "total_mass_lost_Mmars",
         "mass_per_r2",
         "s_min_effective",
@@ -786,9 +981,13 @@ def main(argv: Optional[Iterable[str]] = None) -> None:
         "outdir",
         "message",
     ]
-    available_columns = [col for col in column_order if col in df.columns]
-    df[available_columns].to_csv(output_csv, index=False)
-    print(f"結果を {output_csv} に保存しました")
+    if write_final:
+        available_columns = [col for col in column_order if col in df_to_write.columns]
+        df_output = df_to_write[available_columns]
+        df_output.to_csv(output_csv, index=False)
+        print(f"結果を {output_csv} に保存しました")
+    else:
+        print("集約CSVの更新は保留しました")
 
     if map_def.map_key in {"1", "1b"}:
         validation = validate_map1_results(df)
