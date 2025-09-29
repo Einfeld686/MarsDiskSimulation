@@ -407,7 +407,6 @@ def build_cases(
             )
             order += 1
     return cases
-    return cases
 
 
 def compute_area_from_config(config: Dict[str, Any]) -> Optional[float]:
