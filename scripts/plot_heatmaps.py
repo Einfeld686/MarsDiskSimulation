@@ -90,7 +90,7 @@ def format_tick_label(value: object) -> str:
 
 def prepare_pivot(
     df: pd.DataFrame, metric: str
-) -> Tuple[pd.DataFrame, List[object], List[object], str, str]:
+) -> Tuple[pd.DataFrame, pd.DataFrame | None, List[object], List[object], str, str]:
     """ピボットテーブルと軸ラベル情報を組み立てる。"""
 
     if metric not in df.columns:
@@ -98,9 +98,13 @@ def prepare_pivot(
 
     working = df.copy()
     working[metric] = pd.to_numeric(working[metric], errors="coerce")
+    failure_pivot: pd.DataFrame | None = None
     if "case_status" in working.columns:
         statuses = working["case_status"].astype(str).str.lower()
         working.loc[statuses != BLOWOUT_STATUS, metric] = np.nan
+        working["_failed_flag"] = statuses == "failed"
+    else:
+        working["_failed_flag"] = False
 
     x_label = (
         working["param_x_name"].dropna().iloc[0]
@@ -125,7 +129,19 @@ def prepare_pivot(
         columns=pd.Index(x_order, name=pivot.columns.name),
     )
 
-    return pivot, x_order, y_order, str(x_label), str(y_label)
+    if "_failed_flag" in working:
+        failure_pivot = working.pivot(
+            index="param_y_value",
+            columns="param_x_value",
+            values="_failed_flag",
+        )
+        failure_pivot = failure_pivot.reindex(
+            index=pd.Index(y_order, name=failure_pivot.index.name),
+            columns=pd.Index(x_order, name=failure_pivot.columns.name),
+        )
+        failure_pivot = failure_pivot.fillna(False).astype(bool)
+
+    return pivot, failure_pivot, x_order, y_order, str(x_label), str(y_label)
 
 
 def compute_log_values(pivot: pd.DataFrame) -> Tuple[np.ndarray, np.ndarray, float, float]:
@@ -148,6 +164,7 @@ def plot_heatmap(
     map_label: str,
     metric: str,
     pivot: pd.DataFrame,
+    failure_pivot: pd.DataFrame | None,
     x_values: List[object],
     y_values: List[object],
     x_label: str,
@@ -187,21 +204,59 @@ def plot_heatmap(
     ax.tick_params(which="minor", bottom=False, left=False)
 
     cbar = fig.colorbar(im, ax=ax)
-    cbar.set_label(f"log10({metric})")
+    if metric == DEFAULT_METRIC:
+        cbar_label = "log10(M_loss / M_Mars)"
+    else:
+        cbar_label = f"log10({metric})"
+    cbar.set_label(cbar_label)
+
+    failure_mask = (
+        failure_pivot.to_numpy(dtype=bool)
+        if failure_pivot is not None
+        else np.zeros_like(original_values, dtype=bool)
+    )
 
     invalid_mask = ~np.isfinite(original_values) | (original_values <= 0.0)
+    invalid_mask |= failure_mask
     if np.any(invalid_mask):
-        for (y_idx, x_idx) in zip(*np.where(invalid_mask)):
-            rect = patches.Rectangle(
-                (x_idx - 0.5, y_idx - 0.5),
-                1.0,
-                1.0,
-                facecolor="none",
-                hatch="///",
-                edgecolor="gray",
-                linewidth=0.8,
-            )
-            ax.add_patch(rect)
+        hatch_patch = patches.Patch(
+            facecolor="lightgray",
+            edgecolor="gray",
+            hatch="///",
+            label="失敗/未計算",
+        )
+        legend_handles = [hatch_patch]
+        for y_idx, row in enumerate(invalid_mask):
+            start_idx: int | None = None
+            for x_idx, flagged in enumerate(row):
+                if flagged and start_idx is None:
+                    start_idx = x_idx
+                elif not flagged and start_idx is not None:
+                    width = x_idx - start_idx
+                    rect = patches.Rectangle(
+                        (start_idx - 0.5, y_idx - 0.5),
+                        width,
+                        1.0,
+                        facecolor="none",
+                        hatch="///",
+                        edgecolor="gray",
+                        linewidth=0.8,
+                    )
+                    ax.add_patch(rect)
+                    start_idx = None
+            if start_idx is not None:
+                width = len(row) - start_idx
+                rect = patches.Rectangle(
+                    (start_idx - 0.5, y_idx - 0.5),
+                    width,
+                    1.0,
+                    facecolor="none",
+                    hatch="///",
+                    edgecolor="gray",
+                    linewidth=0.8,
+                )
+                ax.add_patch(rect)
+        ax.legend(handles=legend_handles, loc="upper right", frameon=True)
 
     clim = im.get_clim()
     if not np.allclose(clim, (log_min, log_max), rtol=1e-6, atol=1e-8):
@@ -285,7 +340,7 @@ def main(argv: Iterable[str] | None = None) -> None:
     try:
         map_stub, map_label = _normalise_map_key(args.map)
         df = load_csv(map_stub)
-        pivot, x_values, y_values, x_label, y_label = prepare_pivot(df, args.metric)
+        pivot, failure_pivot, x_values, y_values, x_label, y_label = prepare_pivot(df, args.metric)
         metric_name_for_file = sanitize_metric_name(args.metric)
         output_path = Path("figures") / f"{map_stub}_{metric_name_for_file}.png"
         plt.rcParams.update({"font.size": 12})
@@ -293,6 +348,7 @@ def main(argv: Iterable[str] | None = None) -> None:
             map_label,
             args.metric,
             pivot,
+            failure_pivot,
             x_values,
             y_values,
             x_label,
