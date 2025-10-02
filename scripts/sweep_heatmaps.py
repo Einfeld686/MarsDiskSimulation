@@ -649,9 +649,7 @@ def validate_map1_results(df: pd.DataFrame, tolerance: float = DEFAULT_TOL_MASS_
             if rel > max_rel:
                 max_rel = float(rel)
                 worst_T = float(T_M)
-                rel_dev = (group["mass_per_r2"].astype(float) - mean_val).abs()
-                worst_idx = rel_dev.idxmax()  # <-- ここで「行ラベル」を取得
-                worst_r = float(group.loc[worst_idx, "param_x_value"])
+                worst_r = float(group.loc[np.argmax(np.abs(values - mean_val)), "param_x_value"])
         if max_rel == -math.inf:
             result["mass_per_r2"]["ok"] = False
         else:
