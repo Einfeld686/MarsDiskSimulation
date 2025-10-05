@@ -21,7 +21,7 @@
   ```
 - **放射圧対重力比**：放射圧が重力に対して担う比率からブローアウト粒径を決める。[marsdisk/physics/radiation.py:221]
   ```math
-  \beta = \frac{3\,\sigmaa_{\rm SB}\,T_{\rm M}^{4}\,R_{\rm M}^{2}\,\langle Q_{\rm pr}\rangle}{4 G M_{\rm M} c \rho s},\qquad
+  \beta = \frac{3\,\sigma_{\rm SB}\,T_{\rm M}^{4}\,R_{\rm M}^{2}\,\langle Q_{\rm pr}\rangle}{4 G M_{\rm M} c \rho s},\qquad
   s_{\rm blow} = \frac{3\,\sigma_{\rm SB}\,T_{\rm M}^{4}\,R_{\rm M}^{2}\,\langle Q_{\rm pr}\rangle}{2 G M_{\rm M} c \rho}
   ```
 - **粒径分布と不透明度**：三勾配 PSD と “wavy” 補正から光学深度を評価する。[marsdisk/physics/psd.py:119]
