@@ -321,9 +321,7 @@ $$
 
 ### (10) 表面層の放射圧とガス抗力による外向き流
 
-$$
-v_{r,\mathrm{d}}=v_{r,\mathrm{g}}+\beta T_{s} v_{K,\mathrm{mid}}.
-$$
+$$v_{r,\mathrm{d}}=v_{r,\mathrm{g}}+\beta T_{s} v_{K,\mathrm{mid}}$$
 **参照**：放射圧 β とブローアウト半径は `marsdisk/physics/radiation.py` が提供するが、ガス抗力項との和としての速度式は未実装。([marsdisk/physics/radiation.py], [marsdisk/physics/sinks.py])
 
 ### (11) 巨大衝突後の蒸気・凝縮粒子の揮発性散逸（概念式）
@@ -372,9 +370,9 @@ Sim-Qpr: configs/tm_qpr.yml → io.tables.load_qpr_table → radiation.planck_me
 * $\kappa$：表層質量不透明度（`marsdisk/physics/psd.py`）
 * $\nu$：動粘性（未実装）
 * $\Omega$：角速度（`marsdisk/grid.py`）
-* $\Sigma$)：面密度（`marsdisk/physics/initfields.py`）
-* $\beta$)：放射圧／重力比（`marsdisk/physics/radiation.py`）
-* $\Sigma_{\rm surf}$)：表層面密度（`marsdisk/physics/surface.py`）
+* $\Sigma$：面密度（`marsdisk/physics/initfields.py`）
+* $\beta$：放射圧／重力比（`marsdisk/physics/radiation.py`）
+* $\Sigma_{\rm surf}$：表層面密度（`marsdisk/physics/surface.py`）
 * $t_{\rm blow}$：ブローアウト時間（`marsdisk/physics/surface.py`）
 * $M_{\rm loss}$：累積質量損失（`marsdisk/run.py` 出力）
 
