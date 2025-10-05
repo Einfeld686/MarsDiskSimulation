@@ -253,83 +253,83 @@ scripts/plot_heatmaps.py, scripts/sweep_heatmaps.py → pandas/matplotlib (解�
 
 ### (1) 角速度とエピサイクル
 
-\[
+$$
 \Omega(R)=\sqrt{\frac{GM}{R^{3}}},\qquad
 \kappa^{2}(R)=R\frac{d\Omega^{2}}{dR}+4\Omega^{2}.
-\]
-**参照**：`marsdisk/grid.py` がケプラー角速度 `omega_kepler` を実装（エピサイクル係数は未使用だがケプラー場では \(\kappa=\Omega\)）。([marsdisk/grid.py])
+$$
+**参照**：`marsdisk/grid.py` がケプラー角速度 `omega_kepler` を実装（エピサイクル係数は未使用だがケプラー場では \$kappa=\Omega$）。([marsdisk/grid.py])
 
 ### (2) 局所せん断シートの運動方程式（圧力・自己重力・粘性を含む）
 
-\[
+$$
 \frac{d\boldsymbol{u}}{dt}-2\Omega\hat{\boldsymbol{z}}\times\boldsymbol{u}
 = 3\Omega^{2}x\hat{\boldsymbol{x}}
 -\frac{1}{\rho}\nabla P
 -\nabla\Phi_{\mathrm{sg}}
 +\nu\nabla^{2}\boldsymbol{u}.
-\]
+$$
 **参照**：表層 ODE `marsdisk/physics/surface.step_surface_density_S1` が放射圧・Wyatt 衝突・追加シンクを含む 0D 版を実装し、運動方程式の簡約形として用いている。([marsdisk/physics/surface.py])
 
 ### (3) 薄膜ポアソン方程式
 
-\[
+$$
 \nabla^{2}\Phi_{\mathrm{sg}}=4\pi G\Sigma\,\delta(z).
-\]
+$$
 **参照**：現行コードに自己重力ポアソン解は存在せず未実装。([marsdisk/physics/__init__.py])
 
 ### (4) Toomre 安定判定
 
-\[
+$$
 Q=\frac{c_{s}\kappa}{\pi G\Sigma}.
-\]
+$$
 **参照**：Toomre Q の計算は未実装。([marsdisk/physics/__init__.py])
 
 ### (5) 自重力薄膜の分散関係
 
-\[
+$$
 \omega^{2}=\kappa^{2}-2\pi G\Sigma|k|+c_{s}^{2}k^{2}.
-\]
+$$
 **参照**：分散関係の解析機能は未実装。([marsdisk/physics/__init__.py])
 
 ### (6) ロッシュ限界
 
-\[
-a_{\mathrm{R}}=\alpha R_{p}\left(\frac{\rho_{p}}{\rho_{s}}\right)^{1/3}.
-\]
+$$
+a_{\mathrm{R}}=\alpha R_{p}\left$frac{\rho_{p}}{\rho_{s}}\right)^{1/3}.
+$$
 **参照**：ロッシュ限界の計算関数は未実装。([marsdisk/constants.py])
 
 ### (7) ヒル半径
 
-\[
-R_{\mathrm{H}}=a\left(\frac{m}{3M}\right)^{1/3}.
-\]
+$$
+R_{\mathrm{H}}=a\left$frac{m}{3M}\right)^{1/3}.
+$$
 **参照**：ヒル半径の専用計算は未実装。([marsdisk/constants.py])
 
 ### (8) 角運動量流束・応力
 
-\[
+$$
 \mathcal{F}_{J}=r\,\Sigma\,\left\langle v_{r}v_{\phi}-\nu r\frac{\partial\Omega}{\partial r}\right\rangle.
-\]
+$$
 **参照**：角運動量流束の評価機能は未実装。([marsdisk/physics/__init__.py])
 
 ### (9) 粘性時定数
 
-\[
+$$
 t_{\nu}\sim\frac{R^{2}}{\nu}.
-\]
+$$
 **参照**：粘性時定数の直接計算は未実装（`marsdisk/physics/viscosity.py` はプレースホルダ）。([marsdisk/physics/viscosity.py])
 
 ### (10) 表面層の放射圧とガス抗力による外向き流
 
-\[
+$$
 v_{r,\mathrm{d}}=v_{r,\mathrm{g}}+\beta T_{s} v_{K,\mathrm{mid}}.
-\]
+$$
 **参照**：放射圧 β とブローアウト半径は `marsdisk/physics/radiation.py` が提供するが、ガス抗力項との和としての速度式は未実装。([marsdisk/physics/radiation.py], [marsdisk/physics/sinks.py])
 
 ### (11) 巨大衝突後の蒸気・凝縮粒子の揮発性散逸（概念式）
 
-* **脱出パラメータ**：\(\lambda_{\mathrm{esc}}=\frac{GMm}{kT r}\)。
-* **β による輻射圧の有効重力低減**：\(M_{\mathrm{eff}}=(1-\beta)M\)。
+* **脱出パラメータ**：\$lambda_{\mathrm{esc}}=\frac{GMm}{kT r}$。
+* **β による輻射圧の有効重力低減**：\(M_{\mathrm{eff}}=(1-\beta)M$。
 
 **参照**：現行コードは β を計算するが、揮発性散逸モデルは未実装。([marsdisk/physics/radiation.py])
 
@@ -366,17 +366,17 @@ Sim-Qpr: configs/tm_qpr.yml → io.tables.load_qpr_table → radiation.planck_me
 
 # 付録C：記号表（アルファベット順の抜粋）
 
-* (a)：軌道長半径
-* ($(a_{\rm blow}$))：ブローアウト境界粒径（`marsdisk/physics/radiation.py`）
-* (c_s)：音速
-* (\(\kappa\))：表層質量不透明度（`marsdisk/physics/psd.py`）
-* (\(\nu\))：動粘性（未実装）
-* (\(\Omega\))：角速度（`marsdisk/grid.py`）
-* (\(\Sigma\))：面密度（`marsdisk/physics/initfields.py`）
-* (\(\beta\))：放射圧／重力比（`marsdisk/physics/radiation.py`）
-* (\(\Sigma_{\rm surf}\))：表層面密度（`marsdisk/physics/surface.py`）
-* (\(t_{\rm blow}\))：ブローアウト時間（`marsdisk/physics/surface.py`）
-* (\(M_{\rm loss}\))：累積質量損失（`marsdisk/run.py` 出力）
+* $a$：軌道長半径
+* $a_{\rm blow}$：ブローアウト境界粒径（`marsdisk/physics/radiation.py`）
+* $c_s$：音速
+* $\kappa$：表層質量不透明度（`marsdisk/physics/psd.py`）
+* $\nu$：動粘性（未実装）
+* $\Omega$：角速度（`marsdisk/grid.py`）
+* $\Sigma$)：面密度（`marsdisk/physics/initfields.py`）
+* $\beta$)：放射圧／重力比（`marsdisk/physics/radiation.py`）
+* $\Sigma_{\rm surf}$)：表層面密度（`marsdisk/physics/surface.py`）
+* $t_{\rm blow}$：ブローアウト時間（`marsdisk/physics/surface.py`）
+* $M_{\rm loss}$：累積質量損失（`marsdisk/run.py` 出力）
 
 ---
 
