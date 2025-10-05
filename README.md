@@ -293,14 +293,14 @@ Q=\frac{c_{s}\kappa}{\pi G\Sigma}.
 ### (6) ロッシュ限界
 
 ```math
-a_{\mathrm{R}}=\alpha R_{p}\left$frac{\rho_{p}}{\rho_{s}}\right)^{1/3}.
+a_{\mathrm{R}}=\alpha R_{p}\left\frac{\rho_{p}}{\rho_{s}}\right)^{1/3}.
 ```
 **参照**：ロッシュ限界の計算関数は未実装。([marsdisk/constants.py])
 
 ### (7) ヒル半径
 
 ```math
-R_{\mathrm{H}}=a\left$frac{m}{3M}\right)^{1/3}.
+R_{\mathrm{H}}=a\left\frac{m}{3M}\right)^{1/3}.
 ```
 **参照**：ヒル半径の専用計算は未実装。([marsdisk/constants.py])
 
