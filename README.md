@@ -367,7 +367,7 @@ Sim-Qpr: configs/tm_qpr.yml → io.tables.load_qpr_table → radiation.planck_me
 # 付録C：記号表（アルファベット順の抜粋）
 
 * (a)：軌道長半径
-* (\(a_{\rm blow}\))：ブローアウト境界粒径（`marsdisk/physics/radiation.py`）
+* ($(a_{\rm blow}$))：ブローアウト境界粒径（`marsdisk/physics/radiation.py`）
 * (c_s)：音速
 * (\(\kappa\))：表層質量不透明度（`marsdisk/physics/psd.py`）
 * (\(\nu\))：動粘性（未実装）
