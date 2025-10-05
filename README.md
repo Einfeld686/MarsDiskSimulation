@@ -379,27 +379,7 @@ Sim-Qpr: configs/tm_qpr.yml → io.tables.load_qpr_table → radiation.planck_me
 
 ---
 
-## 未解決事項リスト（優先度順）
-
-1. **最小実行コマンド**：`python -m marsdisk.run --config configs/base.yml`（作業ディレクトリ＝リポジトリ直下）。([marsdisk/run.py])
-2. **外部データの完全性**：`data/qpr_planck.h5`・`data/phi_tau.csv` の公式配布元とハッシュは未公開。([marsdisk/io/tables.py])
-3. **計算資源要件**：CPU/GPU・メモリ・実行時間の公式指標は不明。
-
----
-
 ### 参考（物理背景の一次文献）
 
 * 表層ダストの放射圧駆動外向き輸送とその流束評価：Takeuchi & Lin (2003)
 * 火星巨大衝突後の蒸気・凝縮粒子の散逸：Hyodo et al. (2018)
-
----
-
-## 仕上げ手順（埋め込みチェック）
-
-* 本書中の差し込みは全てリポジトリ一次情報に基づき、コミット固定 URL を添付済み。
-* §3 のコマンドは `configs/base.yml` で検証済み。
-* 表現は一次情報に依拠し、不明事項は「不明」と明記。
-
----
-
-**重要な注記**：本書は現行コミット `9b8bd2e1e622d1e458e7715af55021d1877e5eec` を対象としており、後続コミットで仕様が変わる場合は適宜差し替えが必要である。
