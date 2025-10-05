@@ -253,8 +253,10 @@ scripts/plot_heatmaps.py, scripts/sweep_heatmaps.py → pandas/matplotlib (解�
 
 ### (1) 角速度とエピサイクル
 
-```math\Omega(R)=\sqrt{\frac{GM}{R^{3}}},\qquad\kappa^{2}(R)=R\frac{d\Omega^{2}}{dR}+4\Omega^{2}.```
-**参照**：`marsdisk/grid.py` がケプラー角速度 `omega_kepler` を実装（エピサイクル係数は未使用だがケプラー場では \$kappa=\Omega$）。([marsdisk/grid.py])
+```math
+\Omega(R)=\sqrt{\frac{GM}{R^{3}}},\qquad\kappa^{2}(R)=R\frac{d\Omega^{2}}{dR}+4\Omega^{2}.
+```
+**参照**：`marsdisk/grid.py` がケプラー角速度 `omega_kepler` を実装（エピサイクル係数は未使用だがケプラー場では $\kappa=\Omega$。([marsdisk/grid.py])
 
 ### (2) 局所せん断シートの運動方程式（圧力・自己重力・粘性を含む）
 
