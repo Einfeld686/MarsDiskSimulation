@@ -1,4 +1,4 @@
-# marsshearingsheet 取扱説明書（完成版・差し込み用）
+# marsshearingsheet 取扱説明書
 
 **バージョン情報**
 
