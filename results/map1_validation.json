@@ -1,0 +1,16 @@
+{
+  "low_temp_band": {
+    "beta_violations_r_values": [],
+    "checked_r_values": 0,
+    "first_row_blowout_r_values": [],
+    "ok": true,
+    "reentry_r_values": []
+  },
+  "mass_per_r2": {
+    "max_relative_spread": NaN,
+    "ok": false,
+    "tolerance": 0.1,
+    "worst_T_M": NaN,
+    "worst_r_RM": NaN
+  }
+}

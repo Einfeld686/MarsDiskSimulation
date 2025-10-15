@@ -48,6 +48,7 @@ supply:
     t0_s: 0.0
     index: -1.0
   table:
+    # ← 掃引ケースごとにこの CSV のパスだけを差し替える
     path: "data/supply_rate_R_template.csv"
     interp: "linear"
   mixing:
