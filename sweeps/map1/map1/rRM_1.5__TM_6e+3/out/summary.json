@@ -1,0 +1,13 @@
+{
+  "M_loss": 3.991623868473795e-13,
+  "Q_pr_used": 1.0,
+  "T_M_used": 6000.0,
+  "beta_at_smin": 0.002191803046437443,
+  "beta_threshold": 0.5,
+  "case_status": "failed",
+  "rho_used": 2500.0,
+  "s_blow_m": 3.9452454835873976e-05,
+  "s_min_config": 1e-07,
+  "s_min_effective": 0.009000000000000001,
+  "s_min_effective_gt_config": true
+}

@@ -8,13 +8,31 @@
 
 ---
 
-## 1. 概要
+## 1. 概要（アップグレード版）
 
-* **目的（事実ベース）**：本リポジトリは、火星ロッシュ限界内の円盤・環・ダストを局所せん断シートで近似し、火星起源ダストの力学と輸送を数値的に再現・評価することを目的とする。`marsdisk.run` がゼロ次元（0D）の表層進化を統括し、`docs/modeling-notes.md` が Canup & Salmon (2018) との整合性と表層への写像方針を記述している。([marsdisk/run.py], [docs/modeling-notes.md])
-* **再現・評価できる対象**：`marsdisk/physics` 以下に Research Pack 相当のモジュールが揃っており、放射圧係数とブローアウト半径 (R1–R3)、自遮蔽 (S0)、表層 ODE (S1)、Wyatt 衝突寿命スケーリング、Smoluchowski IMEX-BDF(1) (C1–C4)、破片分布と最小サイズ (F1–F2)、サブブロー供給 (P1)、補助シンク (昇華・ガス抗力)、および簡易速度分散調整 (D1–D2) を評価できる。([marsdisk/physics/__init__.py], [marsdisk/physics/radiation.py], [marsdisk/physics/shielding.py], [marsdisk/physics/surface.py], [marsdisk/physics/collide.py], [marsdisk/physics/smol.py], [marsdisk/physics/fragments.py], [marsdisk/physics/psd.py], [marsdisk/physics/sinks.py], [marsdisk/physics/dynamics.py])
-* **小結**：対象と範囲は上記モジュールに限定され、自己重力ポアソン解や Toomre Q など未記載の物理過程は未実装である（追加モデルの有無は不明）。
+本セクションでは、本コードがどの物理プロセスをどの方程式で記述し、どのモジュールがそれらを実装しているかをまとめる。中心となるのは、火星ロッシュ限界内の薄いダスト円盤で生じる「内部破砕 → sub-blow-out 粒子生成 → 表層供給 → 放射圧剥離」という質量パイプラインであり、全体は `marsdisk.run.run_zero_d` が 0D モデルとして統括する。([marsdisk/run.py:193])
 
-**章末出典（リポジトリ一次情報）**：[`docs/modeling-notes.md`], [`marsdisk/run.py`], [`marsdisk/physics/`]
+### 1.1 主要方程式と役割
+- **ケプラー動力学**：角速度 `Ω(r)=√(G M_M/r³)`・公転速度 `v_K=√(G M_M/r)` がダイナミカルタイムと吹き飛び時間 `t_blow=1/Ω` を定義する。[marsdisk/grid.py:19]
+- **放射圧対重力比**：`β=3 σ_SB T_M⁴ R_M² ⟨Q_pr⟩ /(4 G M_M c ρ s)` により `β≥0.5` がブローアウト判定、`s_blow = 3 σ_SB T_M⁴ R_M² ⟨Q_pr⟩ /(2 G M_M c ρ)` が最小粒径を規定する。[marsdisk/physics/radiation.py:221]
+- **粒径分布と不透明度**：三勾配 PSD `n(s)∝(s/s_min)^(-q)` と “wavy” 補正に基づき、`κ = ∫ π s² n(s) ds / ∫ (4/3) π ρ s³ n(s) ds` を算出し光学深度 `τ=κ Σ_surf` を得る。[marsdisk/physics/psd.py:119]
+- **自己遮蔽**：`κ_eff = Φ(τ,w₀,g) κ` と `Σ_{τ=1}=1/κ_eff` により光学深度 1 を超える表層面密度をクリップする。[marsdisk/physics/shielding.py:81]
+- **表層 ODE**：`dΣ_surf/dt = P - Σ/t_blow - Σ/t_coll - Σ/t_sink` が放射圧剥離・Wyatt 衝突寿命 `t_coll=1/(2Ωτ)`・追加シンクを統合し、外向面フラックス `Σ_surf Ω` を生む。[marsdisk/physics/surface.py:138]
+- **衝突破砕**：相対速度 `v_{ij}=v_K √(1.25 e² + i²)` ・衝突カーネル `C_{ij}` ・破砕エネルギー `Q_R=0.5 μ v²/(m₁+m₂)` ・残存率 `M_{LR}/M_tot=0.5(2-Q_R/Q_{RD}^*)` を用いて sub-blow-out 粒子生成率 `Σ_{i≤j} C_{ij} m^{sub}_{ij}` を得る。[marsdisk/physics/collide.py:18]
+- **Smoluchowski IMEX-BDF(1)**：`N^{n+1}=(N^n+Δt(gain-S))/(1+Δt loss)` が内部 PSD の数密発展を解き、`ε_mass=|M^{n+1}+Δt \.dot{M}_{prod}-M^n|/M^n` で質量保存を監視する。[marsdisk/physics/smol.py:18]
+- **昇華・ガス抗力**：ハーツ–クヌーセン–ラングミュア式 `J=α(P_sat-P_gas) √(μ/(2π R T))` から `s_sink=η t_ref J/ρ` を導出し、Epstein 近似 `t_drag=ρ_p s/(ρ_g c_s)` と合わせて `t_sink=min(...)` を設定する。[marsdisk/physics/sublimation.py:85]
+- **供給と出力換算**：外部供給律 `P=A((t-t_0)+ε)^{index}`／テーブル補間で `P(t)` を得て、外向質量流束を `\dot{M}_{out} = (Σ_surf Ω · area)/M_M` へ換算し累積損失 `M_{loss}^{cum}` を更新する。[marsdisk/physics/supply.py:69][marsdisk/run.py:352]
+
+### 1.2 実装モジュール
+これらの方程式は以下のモジュールで連鎖している。
+- `marsdisk.run`: 設定読込・PSD 初期化・遮蔽適用・表層 ODE 解・質量収支出力。
+- `marsdisk/physics/radiation|psd|shielding|surface|collide|smol|fragments|sinks|dynamics`: 各式の実装。
+- `marsdisk/io.writer|tables`: Q_pr/Φ テーブル補間と出力書き出し。
+
+### 1.3 モデル範囲
+自己重力ポアソン解、Toomre Q、角運動量輸送解析などは未実装であり、0D 表層モデルと内部破砕–放射圧連成に焦点を絞っている。追加プロセスを利用する場合は拡張実装が必要である。
+
+**章末出典（リポジトリ一次情報）**：[`marsdisk/run.py`], [`marsdisk/physics/`], [`marsdisk/io/`]
 
 ---
 
