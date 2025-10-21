@@ -1,0 +1,23 @@
+{
+  "function_reference_rate": {
+    "numerator": 48,
+    "denominator": 65,
+    "rate": 0.7384615384615385
+  },
+  "anchor_consistency_rate": {
+    "numerator": 151,
+    "denominator": 151,
+    "rate": 1.0
+  },
+  "equation_unit_coverage": {
+    "numerator": 4,
+    "denominator": 26,
+    "rate": 0.15384615384615385
+  },
+  "sinks_callgraph_documented": false,
+  "holes": [
+    "marsdisk/analysis/beta_sampler.py#sample_beta_over_orbit",
+    "marsdisk/analysis/massloss_sampler.py#sample_mass_loss_one_orbit",
+    "marsdisk/io/tables.py#get_qpr_table_path"
+  ]
+}
