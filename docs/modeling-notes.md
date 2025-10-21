@@ -35,5 +35,10 @@
 
 - シミュレーション出力の質量収支チェックや \(\dot M_{\rm out}(t)\) の検証例は `docs/validation.md` と上記 PDF で管理する。
 
+### 温度選択とデバッグ
+
+- 火星面温度は `radiation.TM_K` が指定されていれば常にこちらを優先し、未設定時は `temps.T_M` を採用する。採用結果は `summary.json` の `T_M_source`（文字列）と `T_M_used[K]` に記録されるため、掃引時に不変となった場合はこのフィールドを確認して上書きが残っていないか判断する。
+- `io.debug_sinks: true` を設定すると昇華シンクおよびガス抗力の寄与を `out/<case>/debug/sinks_trace.jsonl` に JSON Lines 形式で書き出し、`dominant_sink`、`total_sink_dm_dt_kg_s`、`cum_sublimation_mass_kg` などを逐次追跡できる。大規模ジョブでファイルサイズが課題になる場合は既定の `false` へ戻す。
+- 典型的な失敗例として、`radiation.TM_K` を固定したまま `temps.T_M` を掃引しても `M_loss` や `s_blow_m` が変化しないケースがある。この場合は `radiation.TM_K` を明示的に `null` にするか、掃引対象の YAML で `radiation` セクションを削除してから再実行する。
 [^TL03]: Takeuchi, T., & Lin, D. N. C. (2003). *ApJ*, 593, 524. 熱的に加熱された薄層の外向き表層流が低ガス密度で支配的になることを示す。
 [^SC06]: Strubbe, L. E., & Chiang, E. I. (2006). *ApJ*, 648, 652. デブリ円盤において衝突と放射圧/CPR がガス抗力より優勢となる枠組みを提示。

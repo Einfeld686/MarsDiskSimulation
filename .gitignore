@@ -24,3 +24,6 @@ out/
 results/
 .ipynb_checkpoints/
 simulation_results
+out/
+results/
+__pycache__/

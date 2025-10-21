@@ -27,4 +27,10 @@ bin/test_smol: tests/test_smol.c src/smoluchowski.c
 
 clean:
 	rm -rf bin
+
+analysis-sync:
+	python -m tools.doc_sync_agent --all --write
+
+analysis-sync-commit:
+	python -m tools.doc_sync_agent --all --write --commit
 # ==========================

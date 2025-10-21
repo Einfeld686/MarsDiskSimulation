@@ -53,6 +53,8 @@ supply:
   mixing:
     epsilon_mix: 1.0
 sinks:
+  # mode: "none"  # example: disable sublimation and gas-drag sinks entirely
+  mode: "sublimation"  # default behaviour
   enable_sublimation: false
   T_sub: 1300.0
   sub_params:
@@ -68,7 +70,7 @@ sinks:
   rho_g: 0.0
 radiation:
   TM_K: 2500
-  qpr_table: null
+  qpr_table_path: "data/qpr_table.csv"
 shielding:
   phi_table: null
 numerics:
@@ -79,3 +81,5 @@ numerics:
   rtol: 1e-6
 io:
   outdir: "out"
+  debug_sinks: true
+  correct_fast_blowout: false

@@ -28,10 +28,8 @@ _QPR_LOOKUP: type_QPr | None = tables.interp_qpr
 DEFAULT_Q_PR: float = 1.0
 DEFAULT_RHO: float = 3000.0
 DEFAULT_T_M: float = 2000.0
-T_M_RANGE: tuple[float, float] = (1000.0, 6000.0)
+T_M_RANGE: tuple[float, float] = (1000.0, 6500.0)
 BLOWOUT_BETA_THRESHOLD: float = 0.5
-
-_DEFAULT_QPR_LOGGED = False
 
 logger = logging.getLogger(__name__)
 
@@ -92,7 +90,6 @@ def _resolve_qpr(
     table: type_QPr | None,
     interp: type_QPr | None,
 ) -> float:
-    global _DEFAULT_QPR_LOGGED
     Q_pr = _validate_qpr(Q_pr)
     if table is not None and interp is not None:
         raise TypeError("Q_pr resolution received both 'table' and 'interp'")
@@ -111,10 +108,12 @@ def _resolve_qpr(
         if table_obj is not None:
             return qpr_lookup(s, T_M, lookup)
 
-    if not _DEFAULT_QPR_LOGGED:
-        logger.info("Using grey-body default ⟨Q_pr⟩=%.2f", DEFAULT_Q_PR)
-        _DEFAULT_QPR_LOGGED = True
-    return DEFAULT_Q_PR
+    table_path = tables.get_qpr_table_path()
+    location_hint = f" (active table: {table_path})" if table_path is not None else ""
+    raise RuntimeError(
+        "No ⟨Q_pr⟩ lookup table initialised; set radiation.qpr_table_path or call "
+        f"marsdisk.io.tables.load_qpr_table before evaluating radiation terms{location_hint}."
+    )
 
 
 def load_qpr_table(path: Path | str) -> type_QPr:
@@ -211,7 +210,7 @@ def planck_mean_qpr(
     table: type_QPr | None = None,
     interp: type_QPr | None = None,
 ) -> float:
-    """Return the effective grey-body ⟨Q_pr⟩, defaulting to unity."""
+    """Return the effective grey-body ⟨Q_pr⟩ using the active lookup table."""
 
     s_val = _validate_size(s)
     T_val = _validate_temperature(T_M)

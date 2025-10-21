@@ -124,6 +124,26 @@ python diagnostics/minimal/run_minimal_matrix.py
   - サブステップ系列では `n_substeps>1` のステップが現れ、`dt_over_t_blow` が `io.substep_max_ratio` 未満まで分割されている。
   - reference_check で `within_tol` が全件 `true`。NaN を含む指標はスキップされる仕様（`diagnostics/minimal/run_minimal_matrix.py`）。
 
+### 派生レシピ: 内側ロッシュ円盤 Φ×温度スイート
+- 実行例
+```bash
+python scripts/run_inner_disk_suite.py --config configs/base.yml --skip-existing
+```
+- 期待される生成物
+  - `runs/inner_disk_suite/phi_0p37/TM_2000/series/psd_hist.parquet` に `(time, bin_index, s_bin_center, N_bin, Sigma_surf)` が保存される。
+  - `runs/inner_disk_suite/phi_0p37/TM_2000/figs/frame_0000.png` などが生成され、左下に「惑星放射起因のブローアウト」が明記される。
+  - `runs/inner_disk_suite/phi_0p37/TM_2000/animations/psd_evolution.gif` が追加され、Φ=0.37 かつ T_M=2000/4000/6000 K の GIF が `runs/inner_disk_suite/animations/` に複写される。
+  - `runs/inner_disk_suite/phi_0p37/TM_2000/orbit_rollup_summary.csv` が派生し、公転ごとの `mass_blowout_Mmars` が整理される。
+- 確認ポイント
+  - `summary.json` の `phi_table_path` と `shielding_mode` が `shielding.table_path` と `mode=table` の正規化結果を保持する。[marsdisk/run.py:1430–1452]
+  - `psd_hist.parquet` 内の `bin_index` が昇順で、`s_bin_center` と `N_bin` が PNG/GIF のプロットと一致する。[marsdisk/run.py:1281–1297]
+  - GIF 生成ルーチンが `figs/frame_*.png` を束ね、Φ=0.37 の指定温度ではハイライト GIF をベースディレクトリへ複写する。[scripts/run_inner_disk_suite.py:124–203][scripts/run_inner_disk_suite.py:364–380]
+  - `orbit_rollup_summary.csv` が `orbit_rollup.csv` の `M_out_orbit` を `mass_blowout_Mmars` として再出力し、注釈用に `time_s_end` を持つ。[scripts/run_inner_disk_suite.py:183–209]
+- 根拠
+  - 公転周期・オーバーライドの構築は `build_cases` / `build_overrides` が担い、Φ定数テーブルを `tables/phi_const_*.csv` から解決する。[scripts/run_inner_disk_suite.py:78–118][scripts/run_inner_disk_suite.py:226–259]
+  - PSD 可視化と GIF 生成は `render_psd_frames` と `make_gif` が担当し、凡例テキストを固定で描画する。[scripts/run_inner_disk_suite.py:124–203]
+  - 公転集計は `export_orbit_summary` が整形し、ハイライト GIF の複写処理はメインループ終端で実行される。[scripts/run_inner_disk_suite.py:183–209][scripts/run_inner_disk_suite.py:364–380]
+
 ## B. スイープ
 
 1) 目的
