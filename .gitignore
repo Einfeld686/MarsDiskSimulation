@@ -18,3 +18,9 @@ out/
 results/
 .ipynb_checkpoints/
 simulation_results
+.venv/
+__pycache__/
+out/
+results/
+.ipynb_checkpoints/
+simulation_results
