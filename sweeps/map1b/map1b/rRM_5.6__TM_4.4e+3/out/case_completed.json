@@ -1,8 +1,0 @@
-{
-  "case_id": "rRM_5.6__TM_4.4e+3",
-  "partition_count": 1,
-  "partition_index": 1,
-  "series": "/Users/daichi/marsshearingsheet/sweeps/map1b/map1b/rRM_5.6__TM_4.4e+3/out/series/run.parquet",
-  "summary": "/Users/daichi/marsshearingsheet/sweeps/map1b/map1b/rRM_5.6__TM_4.4e+3/out/summary.json",
-  "timestamp": "2025-10-03T05:59:18.944781Z"
-}
