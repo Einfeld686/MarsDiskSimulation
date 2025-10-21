@@ -3,7 +3,7 @@ geometry:
 material:
   rho: 3000.0
 temps:
-  T_M: 2000.0
+  T_M: 2500.0
 sizes:
   s_min: 1.0e-6
   s_max: 3.0
