@@ -68,7 +68,7 @@ sinks:
   rho_g: 0.0
 radiation:
   TM_K: 2500
-  qpr_table: null
+  qpr_table_path: "data/qpr_table.csv"
 shielding:
   phi_table: null
 numerics:

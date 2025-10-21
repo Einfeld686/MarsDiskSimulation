@@ -18,6 +18,9 @@ C: float = 2.99792458e8
 # Stefan-Boltzmann constant (W m^-2 K^-4)
 SIGMA_SB: float = 5.670374419e-8
 
+# Universal gas constant (J mol^-1 K^-1)
+R_GAS: float = 8.314462618
+
 # Mars physical parameters
 M_MARS: float = 6.4171e23  # kg
 R_MARS: float = 3.3895e6   # m
@@ -41,6 +44,7 @@ class MarsConstants:
     G: float = G
     C: float = C
     SIGMA_SB: float = SIGMA_SB
+    R_GAS: float = R_GAS
     M_MARS: float = M_MARS
     R_MARS: float = R_MARS
     RHO_RANGE: Tuple[float, float] = RHO_RANGE

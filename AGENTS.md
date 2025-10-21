@@ -1,9 +1,10 @@
-目的 火星ロッシュ限界内の高密度ダスト円盤を対象に、
+目的火星ロッシュ限界内の高密度ダスト円盤を対象に、
 * 内部（破砕のみSmoluchowski）で生成されるblow‑out未満の小粒子供給（式：C1–C3, P1, F1–F2, D1–D2）と、
-* 表層（剥ぎ取り）での放射圧による剥離・流出（式：R1–R3, S0–S1）、 を2年間カップリングして**$\dot M_{\rm out}(t)$ と $M_{\rm loss}$を定量化するシミュレーションを、新規リポジトリ構造で実装してください。先行研究の式を明示採用し、必要拡張（赤外光源・光学的厚さ・非定常PSD）以外は新式を導入しない**でください。
+* 表層（剥ぎ取り）での放射圧による剥離・流出（式：R1–R3, S0–S1）、を2年間カップリングして**$\dot M_{\rm out}(t)$ と $M_{\rm loss}$を定量化するシミュレーションを、新規リポジトリ構造で実装してください。先行研究の式を明示採用し、必要拡張（赤外光源・光学的厚さ・非定常PSD）以外は新式を導入しない**でください。
 完成条件（必須の動作）
 1. CLI: python -m marsdisk.run --config configs/base.yml で**0D（半径無次元）**が完走。
 2. 出力:
+    * 言語 必ず日本語で回答してください
     * 時系列 out/series/*.parquet：$\dot{\Sigma}^{(<a_{\rm blow})}{\rm prod}(t)$, $\dot M{\rm out}(t)$, 主要スカラー。
     * 集計 out/summary.json：2年間の $M_{\rm loss}$ と感度掃引の表。
     * 検証 out/checks/mass_budget.csv：質量保存（C4）のログ（|誤差| < 0.5%）。
@@ -16,6 +17,15 @@
 * Python 3.11+, numpy, scipy, numba(任意), pydantic, ruamel.yaml, pandas, pyarrow, xarray(任意), matplotlib(検証用プロット)
 * Mie平均$\langle Q_{\rm pr}\rangle$はテーブル読み込みを基本（CSV/NPZ）。ライブラリ（例：miepython）があれば生成ユーティリティも用意。
 * 多層RTの自遮蔽係数$\Phi(\tau,\omega_0,g)$もテーブル入力＋双線形補間をデフォルト。
+
+## ガス希薄（gas‑poor）前提と TL2003 トグル方針
+- 火星ロッシュ限界内の衝突円盤は溶融物主体で蒸気成分が概ね **≲数%**、初期公転で揮発が急速に散逸するため **gas‑poor** 条件を標準とする（Hyodo et al. 2017; 2018）。  
+- Phobos・Deimos を残すには低質量・低ガスの円盤が要ると報告されており、厚いガス層を伴うシナリオは既定の解析対象外とする（Canup & Salmon 2018）。  
+- [無効: gas‑poor 既定] **Takeuchi & Lin (2003)** は光学的に厚い**ガス**円盤の表層塵アウトフローを仮定するため、標準設定では**適用しない**。`ALLOW_TL2003=false` をデフォルト値とし、gas‑rich 想定の感度試験でのみ明示的に `true` へ切り替える。  
+- ガス希薄ディスクの放射圧・PRドラッグ支配の描像としては Strubbe & Chiang (2006) を参照する。総説整理は Kuramoto (2024)。
+
+**参考**: Hyodo et al. 2017; 2018／Canup & Salmon 2018／Takeuchi & Lin 2003／Strubbe & Chiang 2006／Kuramoto 2024
+
 リポジトリ構成
 marsdisk/
   configs/
@@ -69,3 +79,44 @@ marsdisk/
 * 式(C4)に基づく質量差分を毎ステップ記録（%）
 * Wyattスケールの $t_{\rm coll}$ 推定とモデル内 $t_{\rm coll}$ の比
 * “wavy”の指標（隣接ビンの偏差ジグザグ度）
+
+## DocSyncAgent
+- トリガ一文: 「analysis を現在の状況に更新して」
+- 実行コマンド: `python -m tools.doc_sync_agent --all --write`
+- コミットまで行う場合の例: 「analysis を現在の状況に更新して（コミットまで）」 → `python -m tools.doc_sync_agent --all --write --commit`
+- Makefile エイリアス: `make analysis-sync` / `make analysis-sync-commit`
+
+## シミュレーション結果の保管と実行記録
+- 実行結果は simulation_results/<YYYYMMDD-HHMM>_<short-title>__<shortsha>__seed<n>/ を作成して格納する。
+- 各実行フォルダには、（i）参照レシピ名とコミットID、（ii）環境（Python・依存関係・OS等）、（iii）乱数の初期値と主要パラメータ、（iv）実行コマンド、（v）主要生成物とハッシュ、（vi）analysis/run-recipes.md の確認リストの結果――を run_card.md として記録する。
+- 手順の定義や評価基準は analysis/ を唯一の仕様源とし、実行フォルダでは重複記述をしない（参照のみ）。
+- simulation_results/ は Git では原則無視し（大容量を避けるため）、PR には実行ログの抜粋と要約のみ添付する。
+
+## ドキュメントとファイル配置の原則
+- 物理の式・前提・数値処理は `analysis/equations.md` に一本化し、他の資料にはコピーしない。
+- モジュール責務やデータフローは `analysis/overview.md` を更新して整理する。
+- 実行手順・感度掃引は `analysis/run-recipes.md` のレシピを拡張し、ここでは概要だけを指し示す。
+- 生成物・集計・カバレッジは `analysis/coverage.json` と `analysis/coverage_report.md` を自動生成して参照し、手編集を禁止する。
+- 自動生成・テスト支援コードは `agent_test/`、完成済みドキュメントと指標は `analysis/` に集約し、新規ファイルは実務上必要と合意した最小限のものに限る。
+
+## analysisファイルの目的・適用範囲
+`analysis/` 以下の完成済み資料を唯一の仕様源とし、参照手順と合格条件のみを定義します。
+- エージェントとCIは既存の analysis 節を読み込み、更新時は該当節に反映したうえで本書の受入基準を満たすこと。
+- 人手での修正も analysis に直接加筆し、本書に詳細を重複させない。
+- シミュレーション評価は analysis の指標・手順で判定し、乖離が生じた場合は analysis 側を整備してからコード変更を提案する。
+- 物理の式・前提・数値処理は `analysis/equations.md` に一本化し、他の資料にはコピーしない。
+- モジュール責務やデータフローは `analysis/overview.md` を更新して整理する。
+- 実行手順・感度掃引は `analysis/run-recipes.md` のレシピを拡張し、ここでは概要だけを指し示す。
+- 生成物・集計・カバレッジは `analysis/coverage.json` と `analysis/coverage_report.md` を自動生成して参照し、手編集を禁止する。
+- 自動生成・テスト支援コードは `agent_test/`、完成済みドキュメントと指標は `analysis/` に集約し、新規ファイルは実務上必要と合意した最小限のものに限る。
+- コード参照は `[marsdisk/path/file.py:開始–終了]` のコロン型を既定とし、例として `[marsdisk/grid.py:17–49]` を Ω(r) と v_K(r) の定義に割り当てる。
+- `#L` 形式は補助のみ（コメント・脚注用途）で使用し、存在しない行や逆順の範囲を禁止する。
+- 式番号は `(E.###)` を必須とし、既存番号を維持したまま欠番のみ補完する。節の並び替えでも再採番しない。
+- DocSyncAgent が再生成するため `analysis/equations.md` の見出しは削除せず、必要な追記は heading を保ったまま行う。
+
+## 受入基準（Fail-under とアンカー健全性）
+`analysis/coverage.json` を基準に、以下を満たさない変更は差戻します。
+- `function_reference_rate` は 0.75 以上を維持する（現状は 1.0）。下回る場合は欠番関数を特定し、分析文書で参照を補う。
+- `anchor_consistency_rate` は 0.98 以上を保ち、`invalid_anchor_count` と `line_anchor_reversed_count` は常に 0 にする。
+- 重複アンカーは `duplicate_anchor_count` に記録されるが、衝突など実害があれば必ず解消する（将来的にしきい値を引き上げる余地を残す）。
+- CI では `python -m agent_test.ci_guard_analysis --coverage analysis/coverage.json --refs analysis/doc_refs.json --inventory analysis/inventory.json --fail-under 0.75 --require-clean-anchors` を実行し、必要に応じて `--show-top` で不足箇所を確認する。
