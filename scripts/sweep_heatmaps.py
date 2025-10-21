@@ -78,20 +78,169 @@ class MapDefinition:
 
 
 @dataclass(frozen=True)
+class VariantSpec:
+    """Configuration overrides applied on top of the base map settings."""
+
+    label: str
+    overrides: Dict[str, Any]
+    metadata: Dict[str, Any]
+
+
+@dataclass(frozen=True)
 class CaseSpec:
     """Runtime information for a single sweep case."""
 
     order: int
     map_key: str
+    base_case_id: str
     case_id: str
     x_value: float
     y_value: float
     param_x: ParamSpec
     param_y: ParamSpec
+    variant: VariantSpec
     config_path: Path
     outdir: Path
     partition_index: int = 1
     partition_count: int = 1
+
+
+def build_variant_grid(
+    *,
+    s_min_values: Optional[List[Tuple[str, float, float]]] = None,
+    chi_values: Optional[List[Tuple[str, float]]] = None,
+    sink_values: Optional[List[Tuple[str, Dict[str, Any], str]]] = None,
+) -> List[VariantSpec]:
+    """Return the set of parameter variant combinations for Map-1 sweeps."""
+
+    if s_min_values is None:
+        s_min_values = [
+            ("smin_0p1um", 1.0e-7, 0.1),
+            ("smin_0p5um", 5.0e-7, 0.5),
+            ("smin_1um", 1.0e-6, 1.0),
+            ("smin_5um", 5.0e-6, 5.0),
+        ]
+    if chi_values is None:
+        chi_values = [
+            ("chi0p5", 0.5),
+            ("chi1p0", 1.0),
+            ("chi2p0", 2.0),
+        ]
+    if sink_values is None:
+        sink_values = [
+            ("sink_none", {"sinks.mode": "none", "sinks.enable_sublimation": False}, "none"),
+            (
+                "sink_sublimation",
+                {"sinks.mode": "sublimation", "sinks.enable_sublimation": True},
+                "sublimation",
+            ),
+        ]
+
+    variants: List[VariantSpec] = []
+    for s_label, s_value_m, s_value_um in s_min_values:
+        for chi_label, chi_value in chi_values:
+            for sink_label, sink_override, sink_name in sink_values:
+                label = "__".join([s_label, chi_label, sink_label])
+                overrides: Dict[str, Any] = {
+                    "sizes.s_min": s_value_m,
+                    "chi_blow": chi_value,
+                }
+                overrides.update(sink_override)
+                metadata = {
+                    "variant_label": label,
+                    "variant_s_min_m": s_value_m,
+                    "variant_s_min_um": s_value_um,
+                    "variant_chi_blow": chi_value,
+                    "variant_sink_mode": sink_name,
+                }
+                variants.append(
+                    VariantSpec(
+                        label=label,
+                        overrides=overrides,
+                        metadata=metadata,
+                    )
+                )
+    return variants
+
+
+VARIANT_GRID: List[VariantSpec] = build_variant_grid()
+DEFAULT_VARIANT = VariantSpec(label="default", overrides={}, metadata={"variant_label": "default"})
+
+
+def build_variant_grid_from_spec(spec: str) -> List[VariantSpec]:
+    """Parse a variant specification string and return the corresponding grid."""
+
+    if spec is None:
+        raise ValueError("variants specification must be a non-empty string")
+    tokens = {}
+    for raw_part in spec.split(";"):
+        part = raw_part.strip()
+        if not part:
+            continue
+        if "=" not in part:
+            raise ValueError(f"無効なバリアント指定です: {raw_part}")
+        key, value_str = part.split("=", 1)
+        values = [v.strip() for v in value_str.split("|") if v.strip()]
+        if not values:
+            raise ValueError(f"バリアント値が空です: {part}")
+        tokens[key.strip().lower()] = values
+
+    required_keys = {"chi_blow", "sinks", "s_min"}
+    missing = sorted(required_keys - tokens.keys())
+    if missing:
+        raise ValueError(f"variants 指定に必要なキーが不足しています: {', '.join(missing)}")
+
+    def _smin_entry(value_str: str) -> Tuple[str, float, float]:
+        try:
+            value_m = float(value_str)
+        except ValueError as exc:
+            raise ValueError(f"s_min の値が不正です: {value_str}") from exc
+        if value_m <= 0.0:
+            raise ValueError("s_min は正である必要があります")
+        micron = value_m * 1.0e6
+        if math.isfinite(micron):
+            if math.isclose(micron, round(micron)):
+                micron_label = f"{int(round(micron))}"
+            else:
+                micron_label = f"{micron:.3g}"
+            label = f"smin_{micron_label}um"
+        else:
+            label = f"smin_{value_m:.3g}m"
+        return label, value_m, micron
+
+    def _chi_entry(value_str: str) -> Tuple[str, float]:
+        try:
+            value = float(value_str)
+        except ValueError as exc:
+            raise ValueError(f"chi_blow の値が不正です: {value_str}") from exc
+        if value <= 0.0:
+            raise ValueError("chi_blow は正である必要があります")
+        label = f"chi{value:.1f}".replace(".", "p")
+        return label, value
+
+    sink_aliases: Dict[str, Tuple[str, Dict[str, Any], str]] = {
+        "none": ("sink_none", {"sinks.mode": "none", "sinks.enable_sublimation": False}, "none"),
+        "sublimation": (
+            "sink_sublimation",
+            {"sinks.mode": "sublimation", "sinks.enable_sublimation": True},
+            "sublimation",
+        ),
+    }
+
+    s_min_values = [_smin_entry(val) for val in tokens["s_min"]]
+    chi_values = [_chi_entry(val) for val in tokens["chi_blow"]]
+    sink_values: List[Tuple[str, Dict[str, Any], str]] = []
+    for sink_str in tokens["sinks"]:
+        key = sink_str.lower()
+        if key not in sink_aliases:
+            raise ValueError(f"未知の sink モードです: {sink_str}")
+        sink_values.append(sink_aliases[key])
+
+    return build_variant_grid(
+        s_min_values=s_min_values,
+        chi_values=chi_values,
+        sink_values=sink_values,
+    )
 
 
 def parse_args(argv: Optional[Iterable[str]] = None) -> argparse.Namespace:
@@ -134,13 +283,150 @@ def parse_args(argv: Optional[Iterable[str]] = None) -> argparse.Namespace:
         default=1,
         help="実行する分割番号 (1 始まり)",
     )
+    parser.add_argument(
+        "--rRM_min",
+        type=float,
+        default=None,
+        help="[旧形式] Map-1 の r/R_M 最小値を上書きします",
+    )
+    parser.add_argument(
+        "--rRM_max",
+        type=float,
+        default=None,
+        help="[旧形式] Map-1 の r/R_M 最大値を上書きします",
+    )
+    parser.add_argument(
+        "--rRM_step",
+        type=float,
+        default=None,
+        help="[旧形式] Map-1 の r/R_M ステップ幅を上書きします",
+    )
+    parser.add_argument(
+        "--rmin_rm",
+        type=float,
+        default=None,
+        help="Map-1 の r/R_M 最小値 (例: 1.0)",
+    )
+    parser.add_argument(
+        "--rmax_rm",
+        type=float,
+        default=None,
+        help="Map-1 の r/R_M 最大値 (例: 3.0)",
+    )
+    parser.add_argument(
+        "--rstep_rm",
+        type=float,
+        default=None,
+        help="Map-1 の r/R_M ステップ幅 (例: 0.2)",
+    )
+    parser.add_argument(
+        "--rRM",
+        nargs=3,
+        type=float,
+        metavar=("MIN", "MAX", "N"),
+        default=None,
+        help="Map-1 の r/R_M 範囲と分割数をまとめて指定します (min max count)",
+    )
+    parser.add_argument(
+        "--TM_min",
+        type=float,
+        default=None,
+        help="[旧形式] Map-1 の T_M 最小値 (K) を上書きします",
+    )
+    parser.add_argument(
+        "--TM_max",
+        type=float,
+        default=None,
+        help="[旧形式] Map-1 の T_M 最大値 (K) を上書きします",
+    )
+    parser.add_argument(
+        "--TM_step",
+        type=float,
+        default=None,
+        help="[旧形式] Map-1 の T_M ステップ幅 (K) を上書きします",
+    )
+    parser.add_argument(
+        "--tmin_k",
+        type=float,
+        default=None,
+        help="Map-1 の T_M 最小値 [K]",
+    )
+    parser.add_argument(
+        "--tmax_k",
+        type=float,
+        default=None,
+        help="Map-1 の T_M 最大値 [K]",
+    )
+    parser.add_argument(
+        "--tstep_k",
+        type=float,
+        default=None,
+        help="Map-1 の T_M ステップ幅 [K]",
+    )
+    parser.add_argument(
+        "--TM",
+        nargs=3,
+        type=float,
+        metavar=("MIN_K", "MAX_K", "N"),
+        default=None,
+        help="Map-1 の T_M グリッドをまとめて指定します (min max count)",
+    )
+    parser.add_argument(
+        "--qpr_table",
+        type=str,
+        default=None,
+        help="⟨Q_pr⟩ テーブルへのパス (設定時は全ケースに適用)",
+    )
+    parser.add_argument(
+        "--metric",
+        type=str,
+        default="beta_ratio",
+        help="主要なヒートマップ指標列名 (例: beta_ratio)",
+    )
+    parser.add_argument(
+        "--also-metric",
+        dest="also_metrics",
+        action="append",
+        default=None,
+        help="追加で算出してCSVへ含める指標列名 (複数指定可)",
+    )
+    parser.add_argument(
+        "--variants",
+        type=str,
+        default=None,
+        help=(
+            "Map-1 用のバリアント組み合わせを指定します "
+            "(例: 'chi_blow=0.5|1.0|2.0;sinks=none|sublimation;s_min=1e-6|1e-5')"
+        ),
+    )
     return parser.parse_args(list(argv) if argv is not None else None)
 
 
 def _float_grid(start: float, stop: float, step: float) -> List[float]:
-    count = int(round((stop - start) / step)) + 1
-    values = np.linspace(start, stop, count)
-    return [float(np.round(v, 10)) for v in values]
+    if step <= 0.0:
+        raise ValueError("step must be positive")
+    values: List[float] = []
+    current = float(start)
+    tol = abs(step) * 1e-6 + 1e-12
+    max_iter = 10000
+    while current <= stop + tol and len(values) < max_iter:
+        values.append(float(np.round(current, 10)))
+        current += step
+    if not values or abs(values[-1] - stop) > tol:
+        values.append(float(np.round(stop, 10)))
+    # ensure strictly ascending and clipped to stop
+    cleaned = []
+    for v in values:
+        if cleaned and v <= cleaned[-1] + tol:
+            continue
+        if v > stop + tol:
+            continue
+        cleaned.append(v)
+    if not cleaned:
+        cleaned = [float(np.round(start, 10)), float(np.round(stop, 10))]
+    if cleaned[-1] < stop - tol:
+        cleaned.append(float(np.round(stop, 10)))
+    return cleaned
 
 
 def _normalise_map_key(map_arg: str) -> str:
@@ -156,13 +442,43 @@ def _normalise_map_key(map_arg: str) -> str:
     raise ValueError(f"未知のマップIDです: {map_arg}")
 
 
-def create_map_definition(map_arg: str) -> MapDefinition:
+def create_map_definition(
+    map_arg: str,
+    overrides: Optional[Dict[str, float]] = None,
+) -> MapDefinition:
     """Return the parameter definition for the requested map."""
 
+    overrides = overrides or {}
     map_key = _normalise_map_key(map_arg)
     if map_key == "1":
-        r_values = _float_grid(1.0, 3.0, 0.1)
-        T_values = _float_grid(1000.0, 6000.0, 50.0)
+        r_override = (
+            overrides.get("rRM_min"),
+            overrides.get("rRM_max"),
+            overrides.get("rRM_step"),
+        )
+        t_override = (
+            overrides.get("TM_min"),
+            overrides.get("TM_max"),
+            overrides.get("TM_step"),
+        )
+        if any(value is not None for value in r_override):
+            if not all(value is not None for value in r_override):
+                raise ValueError("rRM_min, rRM_max, rRM_step を全て指定してください")
+            r_min, r_max, r_step = (float(v) for v in r_override)  # type: ignore[misc]
+            if r_step <= 0.0:
+                raise ValueError("rRM_step は正である必要があります")
+            r_values = _float_grid(r_min, r_max, r_step)
+        else:
+            r_values = _float_grid(1.0, 3.0, 0.2)
+        if any(value is not None for value in t_override):
+            if not all(value is not None for value in t_override):
+                raise ValueError("TM_min, TM_max, TM_step を全て指定してください")
+            t_min, t_max, t_step = (float(v) for v in t_override)  # type: ignore[misc]
+            if t_step <= 0.0:
+                raise ValueError("TM_step は正である必要があります")
+            T_values = _float_grid(t_min, t_max, t_step)
+        else:
+            T_values = _float_grid(2000.0, 6000.0, 300.0)
         param_x = ParamSpec(
             key_path="geometry.r",
             values=r_values,
@@ -173,7 +489,7 @@ def create_map_definition(map_arg: str) -> MapDefinition:
         param_y = ParamSpec(
             key_path="temps.T_M",
             values=T_values,
-            csv_name="T_M",
+            csv_name="T_M [K]",
             label="TM",
         )
         return MapDefinition(map_key=map_key, output_stub="map1", param_x=param_x, param_y=param_y)
@@ -190,7 +506,7 @@ def create_map_definition(map_arg: str) -> MapDefinition:
         param_y = ParamSpec(
             key_path="temps.T_M",
             values=T_values,
-            csv_name="T_M",
+            csv_name="T_M [K]",
             label="TM",
         )
         return MapDefinition(map_key=map_key, output_stub="map1b", param_x=param_x, param_y=param_y)
@@ -374,6 +690,7 @@ def build_cases(
     *,
     partition_index: int = 1,
     partition_count: int = 1,
+    variants: Optional[List[VariantSpec]] = None,
 ) -> List[CaseSpec]:
     """Prepare the full list of cases for the sweep."""
 
@@ -381,31 +698,44 @@ def build_cases(
     order = 0
     map_dir = out_root / map_def.output_stub
     allowed_y = set(int(idx) for idx in y_index_filter) if y_index_filter is not None else None
-    for x in map_def.param_x.values:
-        for y_idx, y in enumerate(map_def.param_y.values):
-            if allowed_y is not None and y_idx not in allowed_y:
-                order += 1
-                continue
-            case_id = build_case_id(map_def.param_x, x, map_def.param_y, y)
-            case_dir = map_dir / case_id
-            config_path = case_dir / "config.yaml"
-            outdir = case_dir / "out"
-            cases.append(
-                CaseSpec(
-                    order=order,
-                    map_key=map_def.map_key,
-                    case_id=case_id,
-                    x_value=float(x),
-                    y_value=float(y),
-                    param_x=map_def.param_x,
-                    param_y=map_def.param_y,
-                    config_path=config_path,
-                    outdir=outdir,
-                    partition_index=partition_index,
-                    partition_count=partition_count,
+    if variants is not None:
+        variant_list = variants
+    else:
+        variant_list = VARIANT_GRID if map_def.map_key == "1" else [DEFAULT_VARIANT]
+    for variant in variant_list:
+        variant_dir = map_dir / variant.label if variant.label != "default" else map_dir
+        for x in map_def.param_x.values:
+            for y_idx, y in enumerate(map_def.param_y.values):
+                if allowed_y is not None and y_idx not in allowed_y:
+                    order += 1
+                    continue
+                base_case_id = build_case_id(map_def.param_x, x, map_def.param_y, y)
+                if variant.label == "default":
+                    case_id = base_case_id
+                    case_dir = variant_dir / base_case_id
+                else:
+                    case_id = f"{base_case_id}__{variant.label}"
+                    case_dir = variant_dir / base_case_id
+                config_path = case_dir / "config.yaml"
+                outdir = case_dir / "out"
+                cases.append(
+                    CaseSpec(
+                        order=order,
+                        map_key=map_def.map_key,
+                        base_case_id=base_case_id,
+                        case_id=case_id,
+                        x_value=float(x),
+                        y_value=float(y),
+                        param_x=map_def.param_x,
+                        param_y=map_def.param_y,
+                        variant=variant,
+                        config_path=config_path,
+                        outdir=outdir,
+                        partition_index=partition_index,
+                        partition_count=partition_count,
+                    )
                 )
-            )
-            order += 1
+                order += 1
     return cases
 
 
@@ -459,13 +789,38 @@ def parse_summary(summary_path: Path) -> Tuple[Optional[float], Optional[float],
     if not summary_path.exists():
         return None, None, None
     with summary_path.open("r", encoding="utf-8") as fh:
-        data = json.load(fh)
-    loss_value = search_numeric_value(data, lambda k: "loss" in k.lower())
+        raw_data = json.load(fh)
+
+    loss_value = search_numeric_value(raw_data, lambda k: "loss" in k.lower())
     smin_value = search_numeric_value(
-        data,
+        raw_data,
         lambda k: "s_min" in k.lower() or "smin" in k.lower(),
     )
-    return loss_value, smin_value, data
+
+    if not isinstance(raw_data, dict):
+        return loss_value, smin_value, raw_data
+
+    summary: Dict[str, Any] = dict(raw_data)
+    beta_config = summary.get("beta_at_smin_config", summary.get("beta_at_smin"))
+    summary["beta_at_smin_config"] = beta_config
+    if "beta_at_smin" not in summary and beta_config is not None:
+        summary["beta_at_smin"] = beta_config
+    summary["beta_at_smin_effective"] = summary.get("beta_at_smin_effective")
+    summary["s_min_components"] = summary.get("s_min_components")
+    summary["T_M_source"] = summary.get("T_M_source")
+
+    return loss_value, smin_value, summary
+
+
+def _get_beta_for_checks(summary: Optional[Dict[str, Any]]) -> float:
+    """Return the beta value relevant for validation thresholds."""
+
+    if not summary:
+        return math.nan
+    candidate = summary.get("beta_at_smin_config")
+    if candidate is None:
+        candidate = summary.get("beta_at_smin")
+    return _to_float(candidate)
 
 
 def extract_smin_from_series(df: pd.DataFrame) -> Optional[float]:
@@ -595,7 +950,10 @@ def validate_map1_results(df: pd.DataFrame, tolerance: float = DEFAULT_TOL_MASS_
     r_values = sorted(v for v in working["param_x_value"].dropna().unique())
     for r_val in r_values:
         column = (
-            working[(working["param_x_value"] == r_val) & (working["run_status"] == "success")]
+            working[
+                (working["param_x_value"] == r_val)
+                & working["run_status"].isin({"success", "cached"})
+            ]
             .sort_values("param_y_value")
         )
         if column.empty:
@@ -629,7 +987,7 @@ def validate_map1_results(df: pd.DataFrame, tolerance: float = DEFAULT_TOL_MASS_
     # --- Mass-loss scaling across radii ---
     success = working[
         (working["case_status"] == BLOWOUT_STATUS)
-        & (working["run_status"] == "success")
+        & working["run_status"].isin({"success", "cached"})
         & working["mass_per_r2"].notna()
     ]
     if success.empty:
@@ -639,17 +997,23 @@ def validate_map1_results(df: pd.DataFrame, tolerance: float = DEFAULT_TOL_MASS_
         worst_T: float = math.nan
         worst_r: float = math.nan
         for T_M, group in success.groupby("param_y_value"):
-            values = group["mass_per_r2"].to_numpy(dtype=float)
-            if values.size < 2:
+            working_group = group.copy()
+            working_group["mass_per_r2"] = pd.to_numeric(
+                working_group["mass_per_r2"], errors="coerce"
+            )
+            working_group = working_group[np.isfinite(working_group["mass_per_r2"])]
+            if working_group.shape[0] < 2:
                 continue
-            mean_val = float(np.nanmean(values))
+            mean_val = float(np.nanmean(working_group["mass_per_r2"].to_numpy(dtype=float)))
             if not math.isfinite(mean_val) or mean_val == 0.0:
                 continue
-            rel = np.max(np.abs(values - mean_val) / abs(mean_val))
+            diffs = (working_group["mass_per_r2"] - mean_val).abs()
+            rel = float(diffs.max() / abs(mean_val))
             if rel > max_rel:
                 max_rel = float(rel)
                 worst_T = float(T_M)
-                worst_r = float(group.loc[np.argmax(np.abs(values - mean_val)), "param_x_value"])
+                idx = diffs.idxmax()
+                worst_r = float(working_group.loc[idx, "param_x_value"])
         if max_rel == -math.inf:
             result["mass_per_r2"]["ok"] = False
         else:
@@ -675,20 +1039,53 @@ def populate_record_from_outputs(
         raise FileNotFoundError(f"summary missing for {case.case_id}")
 
     loss_value, smin_from_summary, summary_data = parse_summary(summary_path)
-    if summary_data is not None:
-        status = str(summary_data.get("case_status", "unknown")).lower()
+    summary_dict = summary_data if isinstance(summary_data, dict) else None
+    if summary_dict is not None:
+        status = str(summary_dict.get("case_status", "unknown")).lower()
         record["case_status"] = status
-        record["beta_at_smin"] = _to_float(summary_data.get("beta_at_smin"))
-        record["beta_threshold"] = _to_float(summary_data.get("beta_threshold"))
-        record["s_blow_m"] = _to_float(summary_data.get("s_blow_m"))
-        record["rho_used"] = _to_float(summary_data.get("rho_used"))
-        record["Q_pr_used"] = _to_float(summary_data.get("Q_pr_used"))
-        record["T_M_used"] = _to_float(summary_data.get("T_M_used"))
-        record["s_min_effective"] = _to_float(summary_data.get("s_min_effective"))
-        record["s_min_config"] = _to_float(summary_data.get("s_min_config"))
-        sm_gt = summary_data.get("s_min_effective_gt_config")
+        record["beta_at_smin"] = _get_beta_for_checks(summary_dict)
+        beta_config_val = summary_dict.get("beta_at_smin_config")
+        if beta_config_val is not None:
+            record["beta_at_smin_config"] = _to_float(beta_config_val)
+        beta_effective_val = summary_dict.get("beta_at_smin_effective")
+        if beta_effective_val is not None:
+            record["beta_at_smin_effective"] = _to_float(beta_effective_val)
+        tm_source = summary_dict.get("T_M_source")
+        if tm_source is not None:
+            record["T_M_source"] = str(tm_source)
+        record["beta_threshold"] = _to_float(summary_dict.get("beta_threshold"))
+        record["s_blow_m"] = _to_float(summary_dict.get("s_blow_m"))
+        record["rho_used"] = _to_float(summary_dict.get("rho_used"))
+        record["Q_pr_used"] = _to_float(summary_dict.get("Q_pr_used"))
+        record["Q_pr_blow"] = _to_float(summary_dict.get("Q_pr_blow"))
+        record["T_M_used"] = _to_float(summary_dict.get("T_M_used"))
+        record["r_RM_used"] = _to_float(summary_dict.get("r_RM_used"))
+        record["r_m_used"] = _to_float(summary_dict.get("r_m_used"))
+        r_source_summary = summary_dict.get("r_source")
+        if r_source_summary is not None:
+            record["r_source"] = str(r_source_summary)
+        record["s_min_effective"] = _to_float(summary_dict.get("s_min_effective"))
+        record["s_min_config"] = _to_float(summary_dict.get("s_min_config"))
+        sm_gt = summary_dict.get("s_min_effective_gt_config")
         if isinstance(sm_gt, bool):
             record["s_min_effective_gt_config"] = sm_gt
+        table_path_summary = summary_dict.get("qpr_table_path")
+        if table_path_summary is not None:
+            record["qpr_table_path"] = str(table_path_summary)
+        mass_blow_val = _to_float(summary_dict.get("M_out_cum"))
+        mass_sink_val = _to_float(summary_dict.get("M_sink_cum"))
+        if math.isfinite(mass_blow_val):
+            record["mass_lost_by_blowout"] = mass_blow_val
+        if math.isfinite(mass_sink_val):
+            record["mass_lost_by_sinks"] = mass_sink_val
+        if math.isfinite(mass_blow_val) or math.isfinite(mass_sink_val):
+            safe_blow = mass_blow_val if math.isfinite(mass_blow_val) else 0.0
+            safe_sink = mass_sink_val if math.isfinite(mass_sink_val) else 0.0
+            denom = safe_blow + safe_sink
+            if denom > 0.0 and math.isfinite(mass_blow_val):
+                record["blow_fraction"] = safe_blow / denom
+            else:
+                record["blow_fraction"] = math.nan
     else:
         record["case_status"] = "unknown"
 
@@ -730,6 +1127,16 @@ def populate_record_from_outputs(
     ):
         record["mass_per_r2"] = float(total_mass) / (case.x_value ** 2)
 
+    if not math.isfinite(record.get("r_RM_used", math.nan)):
+        record["r_RM_used"] = float(case.x_value)
+    if not math.isfinite(record.get("r_m_used", math.nan)):
+        try:
+            record["r_m_used"] = float(case.param_x.apply(case.x_value))
+        except Exception:
+            pass
+    if not record.get("r_source"):
+        record["r_source"] = "geometry.r"
+
     return note
 
 
@@ -738,12 +1145,14 @@ def run_case(
     base_config: Dict[str, Any],
     root_dir: Path,
     python_executable: str,
+    qpr_table_path: Optional[str] = None,
 ) -> Dict[str, Any]:
     """Execute a single sweep case and collect results."""
 
     record: Dict[str, Any] = {
         "order": case.order,
         "map_id": case.map_key,
+        "base_case_id": case.base_case_id,
         "case_id": case.case_id,
         "param_x_name": case.param_x.csv_name,
         "param_x_value": case.x_value,
@@ -752,6 +1161,9 @@ def run_case(
         "partition_index": case.partition_index,
         "partition_count": case.partition_count,
         "total_mass_lost_Mmars": math.nan,
+        "mass_lost_by_blowout": math.nan,
+        "mass_lost_by_sinks": math.nan,
+        "blow_fraction": math.nan,
         "mass_per_r2": math.nan,
         "s_min_effective": math.nan,
         "s_min_config": math.nan,
@@ -762,15 +1174,25 @@ def run_case(
         "rho_used": math.nan,
         "Q_pr_used": math.nan,
         "T_M_used": math.nan,
+        "r_RM_used": math.nan,
+        "r_source": None,
+        "qpr_table_path": qpr_table_path,
         "outdir": str(case.outdir),
         "run_status": "pending",
         "case_status": "unknown",
         "message": "",
     }
+    record.update(case.variant.metadata)
     config_data = copy.deepcopy(base_config)
     try:
         set_nested(config_data, case.param_x.key_path, case.param_x.apply(case.x_value))
+        if case.param_x.key_path == "geometry.r":
+            set_nested(config_data, "geometry.runtime_orbital_radius_rm", case.x_value)
         set_nested(config_data, case.param_y.key_path, case.param_y.apply(case.y_value))
+        for path, value in case.variant.overrides.items():
+            set_nested(config_data, path, value)
+        if qpr_table_path:
+            set_nested(config_data, "radiation.qpr_table_path", qpr_table_path)
         set_nested(config_data, "io.outdir", str(case.outdir))
 
         ensure_directory(case.config_path.parent)
@@ -846,7 +1268,43 @@ def main(argv: Optional[Iterable[str]] = None) -> None:
     if not base_path.exists():
         raise FileNotFoundError(f"ベース設定ファイルが見つかりません: {base_path}")
 
-    map_def = create_map_definition(args.map)
+    def _pick(new_value: Optional[float], legacy_value: Optional[float]) -> Optional[float]:
+        return new_value if new_value is not None else legacy_value
+
+    map_overrides = {
+        "rRM_min": _pick(args.rmin_rm, args.rRM_min),
+        "rRM_max": _pick(args.rmax_rm, args.rRM_max),
+        "rRM_step": _pick(args.rstep_rm, args.rRM_step),
+        "TM_min": _pick(args.tmin_k, args.TM_min),
+        "TM_max": _pick(args.tmax_k, args.TM_max),
+        "TM_step": _pick(args.tstep_k, args.TM_step),
+    }
+    if args.rRM is not None:
+        r_min, r_max, r_count = args.rRM
+        if r_count <= 1:
+            r_step = r_max - r_min if r_max != r_min else 0.0
+        else:
+            r_step = (r_max - r_min) / max(r_count - 1, 1)
+        map_overrides.update({
+            "rRM_min": r_min,
+            "rRM_max": r_max,
+            "rRM_step": r_step,
+        })
+    if args.TM is not None:
+        T_min, T_max, T_count = args.TM
+        if T_count <= 1:
+            T_step = T_max - T_min if T_max != T_min else 0.0
+        else:
+            T_step = (T_max - T_min) / max(T_count - 1, 1)
+        map_overrides.update({
+            "TM_min": T_min,
+            "TM_max": T_max,
+            "TM_step": T_step,
+        })
+    map_def = create_map_definition(args.map, overrides=map_overrides)
+    variant_override: Optional[List[VariantSpec]] = None
+    if map_def.map_key == "1" and args.variants is not None:
+        variant_override = build_variant_grid_from_spec(args.variants)
     num_parts = max(1, int(args.num_parts))
     part_index = int(args.part_index)
     if part_index < 1 or part_index > num_parts:
@@ -874,6 +1332,7 @@ def main(argv: Optional[Iterable[str]] = None) -> None:
         y_index_filter=y_filter,
         partition_index=part_index,
         partition_count=num_parts,
+        variants=variant_override,
     )
     total_cases = len(cases)
     global_cases = len(map_def.param_x.values) * len(map_def.param_y.values)
@@ -893,7 +1352,14 @@ def main(argv: Optional[Iterable[str]] = None) -> None:
     completed = 0
     with concurrent.futures.ThreadPoolExecutor(max_workers=max(1, args.jobs)) as executor:
         future_map = {
-            executor.submit(run_case, case, base_config, root_dir, python_executable): case
+            executor.submit(
+                run_case,
+                case,
+                base_config,
+                root_dir,
+                python_executable,
+                args.qpr_table,
+            ): case
             for case in cases
         }
         for future in concurrent.futures.as_completed(future_map):
@@ -924,6 +1390,40 @@ def main(argv: Optional[Iterable[str]] = None) -> None:
     output_csv = results_dir / f"{map_def.output_stub}.csv"
 
     df_to_write = df.copy()
+    metrics_requested: set[str] = set()
+    primary_metric = (args.metric or "").strip()
+    if primary_metric:
+        metrics_requested.add(primary_metric)
+    for extra_metric in getattr(args, "also_metrics", None) or []:
+        name = (extra_metric or "").strip()
+        if name:
+            metrics_requested.add(name)
+    if not metrics_requested:
+        metrics_requested.add("beta_ratio")
+
+    if "beta_ratio" in metrics_requested:
+        if {"beta_at_smin_effective", "beta_threshold"}.issubset(df_to_write.columns):
+            with np.errstate(divide="ignore", invalid="ignore"):
+                beta_thresh = df_to_write["beta_threshold"].replace({0.0: np.nan})
+                df_to_write["beta_ratio"] = df_to_write["beta_at_smin_effective"].astype(float) / beta_thresh.astype(float)
+        else:
+            df_to_write["beta_ratio"] = np.nan
+
+    if "blow_fraction" in metrics_requested:
+        if {"mass_lost_by_blowout", "mass_lost_by_sinks"}.issubset(df_to_write.columns):
+            blow_vals = pd.to_numeric(df_to_write["mass_lost_by_blowout"], errors="coerce")
+            sink_vals = pd.to_numeric(df_to_write["mass_lost_by_sinks"], errors="coerce")
+            denom = blow_vals + sink_vals
+            with np.errstate(divide="ignore", invalid="ignore"):
+                fraction = np.where(denom > 0.0, blow_vals / denom, np.nan)
+            df_to_write["blow_fraction"] = fraction
+        else:
+            df_to_write["blow_fraction"] = np.nan
+
+    if primary_metric:
+        df_to_write["metric_primary"] = primary_metric
+    if metrics_requested:
+        df_to_write["metrics_recorded"] = ",".join(sorted(metrics_requested))
     write_final = True
     if num_parts > 1:
         parts_dir = results_dir / "parts" / map_def.output_stub
@@ -957,7 +1457,13 @@ def main(argv: Optional[Iterable[str]] = None) -> None:
 
     column_order = [
         "map_id",
+        "base_case_id",
         "case_id",
+        "variant_label",
+        "variant_s_min_m",
+        "variant_s_min_um",
+        "variant_chi_blow",
+        "variant_sink_mode",
         "run_status",
         "case_status",
         "param_x_name",
@@ -967,17 +1473,31 @@ def main(argv: Optional[Iterable[str]] = None) -> None:
         "partition_index",
         "partition_count",
         "total_mass_lost_Mmars",
+        "mass_lost_by_blowout",
+        "mass_lost_by_sinks",
+        "blow_fraction",
         "mass_per_r2",
         "s_min_effective",
         "s_min_config",
         "s_min_effective_gt_config",
+        "beta_at_smin_config",
+        "beta_at_smin_effective",
         "beta_at_smin",
         "beta_threshold",
+        "beta_ratio",
         "s_blow_m",
         "rho_used",
         "Q_pr_used",
+        "Q_pr_blow",
+        "qpr_table_path",
+        "r_RM_used",
+        "r_m_used",
+        "r_source",
         "T_M_used",
+        "T_M_source",
         "outdir",
+        "metric_primary",
+        "metrics_recorded",
         "message",
     ]
     if write_final:
@@ -985,6 +1505,10 @@ def main(argv: Optional[Iterable[str]] = None) -> None:
         df_output = df_to_write[available_columns]
         df_output.to_csv(output_csv, index=False)
         print(f"結果を {output_csv} に保存しました")
+        sweep_dir = out_root / map_def.output_stub
+        ensure_directory(sweep_dir)
+        df_output.to_csv(sweep_dir / f"{map_def.output_stub}.csv", index=False)
+        print(f"結果を {sweep_dir / (map_def.output_stub + '.csv')} にコピーしました")
     else:
         print("集約CSVの更新は保留しました")
 
@@ -992,6 +1516,9 @@ def main(argv: Optional[Iterable[str]] = None) -> None:
         validation = validate_map1_results(df)
         validation_path = results_dir / f"{map_def.output_stub}_validation.json"
         with validation_path.open("w", encoding="utf-8") as fh:
+            json.dump(validation, fh, indent=2, sort_keys=True)
+        sweep_validation = out_root / f"{map_def.output_stub}_validation.json"
+        with sweep_validation.open("w", encoding="utf-8") as fh:
             json.dump(validation, fh, indent=2, sort_keys=True)
         if not (validation["low_temp_band"]["ok"] and validation["mass_per_r2"]["ok"]):
             print("[警告] Map-1 検証チェックを満たしていません。詳細は validation.json を参照してください。")

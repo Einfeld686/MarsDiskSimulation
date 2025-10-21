@@ -2,15 +2,16 @@
 
 The production code expects pre-computed tables for the radiation pressure
 coefficient :math:`\langle Q_{\rm pr}\rangle` and for the self-shielding
-factor :math:`\Phi`.  During early development such tables may not yet be
-available.  In that case this module falls back to simple analytic
-approximations and emits a :class:`RuntimeWarning` to alert the user.
+factor :math:`\Phi`.  The ⟨Q_pr⟩ table is mandatory—if it cannot be loaded
+the caller must supply a valid file via ``radiation.qpr_table_path``.  An
+analytic fallback is intentionally not provided so that all runs stay
+anchored to the vetted Mie calculations shipped with the repository.
 """
 from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Iterable, Optional, Callable
+from typing import Iterable, Optional, Callable, Sequence
 import warnings
 
 import numpy as np
@@ -18,20 +19,10 @@ import pandas as pd
 
 from .. import constants
 
-DATA_DIR = Path(__file__).resolve().parent / "data"
+PACKAGE_DATA_DIR = Path(__file__).resolve().parent / "data"
+REPO_DATA_DIR = Path(__file__).resolve().parents[2] / "data"
 
-
-def _approx_qpr(s: float, T: float) -> float:
-    """Smooth transition between Rayleigh and geometric optics.
-
-    The approximation uses the size parameter ``x = 2πs/λ`` with the
-    wavelength estimated from Wien's displacement law.  ``Q`` transitions
-    from ``x^4`` (Rayleigh) to unity.
-    """
-    # avoid divide-by-zero
-    lam = 2.897771955e-3 / max(T, 1.0)
-    x = 2.0 * np.pi * s / lam
-    return float(x**4 / (1.0 + x**4))
+DATA_DIR = PACKAGE_DATA_DIR  # retained for backwards compatibility paths
 
 
 def _approx_phi(tau: float, w0: float, g: float) -> float:
@@ -223,22 +214,37 @@ def _read_qpr_frame(path: Path) -> pd.DataFrame:
     return df
 
 
+_EXPECTED_QPR_LOCATIONS: Sequence[Path] = (
+    REPO_DATA_DIR / "qpr_table.csv",
+    PACKAGE_DATA_DIR / "qpr_planck.h5",
+    PACKAGE_DATA_DIR / "qpr_planck.csv",
+)
+
 # Attempt to load tables at import time
 _QPR_TABLE: Optional[QPrTable]
+_QPR_TABLE_PATH: Optional[Path]
 _PHI_TABLE: Optional[PhiTable]
 
-try:
-    qpr_path = DATA_DIR / "qpr_planck.h5"
-    if not qpr_path.exists():
-        qpr_path = DATA_DIR / "qpr_planck.csv"
-    _QPR_TABLE = (
-        QPrTable.from_frame(_read_qpr_frame(qpr_path)) if qpr_path.exists() else None
+_QPR_TABLE = None
+_QPR_TABLE_PATH = None
+for candidate in _EXPECTED_QPR_LOCATIONS:
+    try:
+        if not candidate.exists():
+            continue
+        _QPR_TABLE = QPrTable.from_frame(_read_qpr_frame(candidate))
+        _QPR_TABLE_PATH = candidate.resolve()
+        break
+    except Exception as exc:  # pragma: no cover - defensive logging
+        warnings.warn(f"Failed to load default Q_pr table from {candidate}: {exc}", RuntimeWarning)
+        _QPR_TABLE = None
+        _QPR_TABLE_PATH = None
+
+if _QPR_TABLE is None:
+    joined = ", ".join(str(path) for path in _EXPECTED_QPR_LOCATIONS)
+    raise RuntimeError(
+        f"⟨Q_pr⟩ lookup table not found. Provide a table via radiation.qpr_table_path "
+        f"or place one at: {joined}"
     )
-    if _QPR_TABLE is None:
-        warnings.warn("Q_pr table not found; using analytic approximation", RuntimeWarning)
-except Exception as exc:  # pragma: no cover - defensive
-    warnings.warn(f"Failed to load Q_pr table: {exc}; using approximation", RuntimeWarning)
-    _QPR_TABLE = None
 
 try:
     phi_path = DATA_DIR / "phi.csv"
@@ -253,10 +259,14 @@ except Exception as exc:  # pragma: no cover - defensive
 def interp_qpr(s: float, T_M: float) -> float:
     """Interpolate the mean radiation pressure efficiency.
 
-    Falls back to :func:`_approx_qpr` when the lookup table is not available.
+    Raises :class:`RuntimeError` when the lookup table has not been initialised.
     """
-    if _QPR_TABLE is None:
-        return _approx_qpr(s, T_M)
+    if _QPR_TABLE is None or _QPR_TABLE_PATH is None:
+        joined = ", ".join(str(path) for path in _EXPECTED_QPR_LOCATIONS)
+        raise RuntimeError(
+            "Q_pr table has not been initialised. Call load_qpr_table(path) with a valid file. "
+            f"Expected table at one of: {joined}"
+        )
     return _QPR_TABLE.interp(s, T_M)
 
 
@@ -273,7 +283,7 @@ def interp_phi(tau: float, w0: float, g: float) -> float:
 def load_qpr_table(path: str | Path) -> Callable[[float, float], float]:
     """Read a table file and build an interpolator. Planck averaged ⟨Q_pr⟩."""
 
-    global _QPR_TABLE
+    global _QPR_TABLE, _QPR_TABLE_PATH
 
     table_path = Path(path)
     if not table_path.exists():
@@ -281,6 +291,7 @@ def load_qpr_table(path: str | Path) -> Callable[[float, float], float]:
 
     df = _read_qpr_frame(table_path)
     _QPR_TABLE = QPrTable.from_frame(df)
+    _QPR_TABLE_PATH = table_path.resolve()
     return _QPR_TABLE.interp
 
 
@@ -340,3 +351,9 @@ def load_phi_table(path: str | Path) -> Callable[[float], float]:
         return float(np.clip(value, 0.0, 1.0))
 
     return phi_fn
+
+
+def get_qpr_table_path() -> Optional[Path]:
+    """Return the resolved path of the active ⟨Q_pr⟩ table, if any."""
+
+    return _QPR_TABLE_PATH

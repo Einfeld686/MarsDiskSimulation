@@ -54,14 +54,14 @@ def test_sink_increases_mass_loss():
     )
 
     opts = SinkOptions(enable_sublimation=True, sub_params=SublimationParams())
-    t_sink = total_sink_timescale(1500.0, 3000.0, Omega, opts)
+    sink_result = total_sink_timescale(1500.0, 3000.0, Omega, opts)
     res_sink = step_surface_density_S1(
         sigma0,
         0.0,
         dt,
         Omega,
         sigma_tau1=Sigma_tau1,
-        t_sink=t_sink,
+        t_sink=sink_result.t_sink,
     )
     total_no = res_no.outflux + res_no.sink_flux
     total_sink = res_sink.outflux + res_sink.sink_flux
