@@ -18,13 +18,15 @@ interfaces:
 """
 from __future__ import annotations
 
-from dataclasses import dataclass
-from pathlib import Path
 import argparse
 import logging
 import math
 import random
 import subprocess
+import hashlib
+import json
+from dataclasses import dataclass
+from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 import pandas as pd
@@ -52,6 +54,43 @@ MAX_STEPS = 1000
 TAU_MIN = 1e-12
 KAPPA_MIN = 1e-12
 DEFAULT_SEED = 12345
+MASS_BUDGET_TOLERANCE_PERCENT = 0.5
+SINK_REF_SIZE = 1e-6
+
+
+def _resolve_temperature(cfg: Config) -> tuple[float, str]:
+    """Return the Mars-facing temperature used for radiation calculations."""
+
+    if cfg.radiation is not None and cfg.radiation.TM_K is not None:
+        return cfg.radiation.TM_K, "radiation.TM_K"
+    return cfg.temps.T_M, "temps.T_M"
+
+
+def _derive_seed_components(cfg: Config) -> str:
+    parts: list[str] = []
+    parts.append(f"geometry.r={getattr(cfg.geometry, 'r', None)!r}")
+    if cfg.disk is not None:
+        parts.append(
+            f"disk.r_in_RM={cfg.disk.geometry.r_in_RM!r},r_out_RM={cfg.disk.geometry.r_out_RM!r}"
+        )
+    parts.append(f"temps.T_M={cfg.temps.T_M!r}")
+    parts.append(f"initial.mass_total={cfg.initial.mass_total!r}")
+    return "|".join(parts)
+
+
+def _resolve_seed(cfg: Config) -> tuple[int, str, str]:
+    """Return the RNG seed, seed expression description, and basis."""
+
+    if cfg.dynamics.rng_seed is not None:
+        seed_val = int(cfg.dynamics.rng_seed)
+        return seed_val, "cfg.dynamics.rng_seed", "user"
+
+    basis = _derive_seed_components(cfg)
+    digest = hashlib.sha256(basis.encode("utf-8")).hexdigest()
+    seed_val = int(digest[:8], 16) % (2**31)
+    safe_basis = basis.replace("'", r"\'")
+    expr = f"sha256('{safe_basis}') % 2**31"
+    return seed_val, expr, basis
 
 
 # ---------------------------------------------------------------------------
@@ -190,7 +229,11 @@ def _gather_git_info() -> Dict[str, Any]:
     return info
 
 
-def run_zero_d(cfg: Config) -> None:
+class MassBudgetViolationError(RuntimeError):
+    """Raised when the mass budget tolerance is exceeded."""
+
+
+def run_zero_d(cfg: Config, *, enforce_mass_budget: bool = False) -> None:
     """Execute a simple zero-dimensional simulation.
 
     Parameters
@@ -199,8 +242,79 @@ def run_zero_d(cfg: Config) -> None:
         Parsed configuration object.
     """
 
-    random.seed(DEFAULT_SEED)
-    np.random.seed(DEFAULT_SEED)
+    seed, seed_expr, seed_basis = _resolve_seed(cfg)
+    random.seed(seed)
+    np.random.seed(seed)
+    rng = np.random.default_rng(seed)
+
+    e0_effective = cfg.dynamics.e0
+    i0_effective = cfg.dynamics.i0
+    delta_r_sample = None
+
+    if cfg.dynamics.e_mode == "mars_clearance":
+        if cfg.geometry.r is None:
+            raise ValueError(
+                "dynamics.e_mode='mars_clearance' requires geometry.r in meters"
+            )
+        a_m = cfg.geometry.r
+        dr_min = cfg.dynamics.dr_min_m
+        dr_max = cfg.dynamics.dr_max_m
+        if dr_min is not None and dr_max is not None:
+            if dr_min > dr_max:
+                raise ValueError(
+                    "dynamics.dr_min_m must be smaller than dynamics.dr_max_m in meters"
+                )
+            if cfg.dynamics.dr_dist == "uniform":
+                delta_r_sample = float(rng.uniform(dr_min, dr_max))
+            else:
+                if dr_min <= 0.0 or dr_max <= 0.0:
+                    raise ValueError(
+                        "loguniform Δr sampling requires positive meter bounds"
+                    )
+                log_min = math.log(dr_min)
+                log_max = math.log(dr_max)
+                delta_r_sample = float(math.exp(rng.uniform(log_min, log_max)))
+        elif dr_min is not None:
+            delta_r_sample = float(dr_min)
+        elif dr_max is not None:
+            delta_r_sample = float(dr_max)
+        else:
+            raise ValueError(
+                "dynamics.dr_min_m or dynamics.dr_max_m must be specified in meters "
+                "when using e_mode='mars_clearance'"
+            )
+        e0_sample = 1.0 - (constants.R_MARS + delta_r_sample) / a_m
+        e0_clamped = float(np.clip(e0_sample, 0.0, 0.999999))
+        if not math.isclose(e0_clamped, e0_sample, rel_tol=0.0, abs_tol=1e-12):
+            logger.warning(
+                "Sampled eccentricity %.6f clamped to %.6f to stay within [0, 0.999999]",
+                e0_sample,
+                e0_clamped,
+            )
+        e0_effective = e0_clamped
+        cfg.dynamics.e0 = e0_effective
+
+    i_center_rad = float(np.deg2rad(cfg.dynamics.obs_tilt_deg))
+    spread_rad = float(np.deg2rad(cfg.dynamics.i_spread_deg))
+    if cfg.dynamics.i_mode == "obs_tilt_spread":
+        if spread_rad > 0.0:
+            lower = max(i_center_rad - spread_rad, 0.0)
+            upper = min(i_center_rad + spread_rad, 0.5 * np.pi)
+            if lower >= upper:
+                i_sample = lower
+            else:
+                i_sample = float(rng.uniform(lower, upper))
+        else:
+            i_sample = i_center_rad
+        i_clamped = float(np.clip(i_sample, 0.0, 0.5 * np.pi))
+        if not math.isclose(i_clamped, i_sample, rel_tol=0.0, abs_tol=1e-12):
+            logger.warning(
+                "Sampled inclination %.6f rad clamped to %.6f rad to stay within [0, pi/2]",
+                i_sample,
+                i_clamped,
+            )
+        i0_effective = i_clamped
+        cfg.dynamics.i0 = i0_effective
 
     if cfg.geometry.r is not None:
         r = cfg.geometry.r
@@ -215,17 +329,16 @@ def run_zero_d(cfg: Config) -> None:
     else:
         raise ValueError("geometry.r must be provided for 0D runs")
     Omega = grid.omega_kepler(r)
+    if Omega <= 0.0:
+        raise ValueError("Computed Keplerian frequency must be positive")
+    t_orb = 2.0 * math.pi / Omega
 
     qpr_override = None
     if cfg.radiation and cfg.radiation.qpr_table is not None:
         tables.load_qpr_table(cfg.radiation.qpr_table)
     if cfg.radiation and cfg.radiation.Q_pr is not None:
         qpr_override = cfg.radiation.Q_pr
-    T_M = (
-        cfg.radiation.TM_K
-        if cfg.radiation and cfg.radiation.TM_K is not None
-        else cfg.temps.T_M
-    )
+    T_use, T_M_source = _resolve_temperature(cfg)
     rho_used = cfg.material.rho
 
     phi_tau_fn = None
@@ -234,22 +347,35 @@ def run_zero_d(cfg: Config) -> None:
 
     # Initial PSD and associated quantities
     sub_params = SublimationParams(**cfg.sinks.sub_params.model_dump())
-    a_blow = radiation.blowout_radius(rho_used, T_M, Q_pr=qpr_override)
-    s_min = fragments.compute_s_min_F2(
-        a_blow,
-        T_M,
-        cfg.sinks.T_sub,
-        t_ref=1.0 / Omega,
-        rho=rho_used,
-        sub_params=sub_params,
-    )
+    setattr(sub_params, "runtime_orbital_radius_m", r)
+    setattr(sub_params, "runtime_t_orb_s", t_orb)
+    setattr(sub_params, "runtime_Omega", Omega)
+    a_blow = radiation.blowout_radius(rho_used, T_use, Q_pr=qpr_override)
+    s_min_config = cfg.sizes.s_min
+    s_sub_component = 0.0
+    if cfg.sinks.mode != "none" and cfg.sinks.enable_sublimation:
+        # Documented in analysis/sinks_callgraph.md: HK boundary lifts s_min
+        # through fragments.s_sub_boundary and feeds summary s_min_components.
+        s_sub_component = fragments.s_sub_boundary(
+            T_use,
+            cfg.sinks.T_sub,
+            t_ref=t_orb,
+            rho=rho_used,
+            sub_params=sub_params,
+        )
+    s_min_components = {
+        "config": float(s_min_config),
+        "blowout": float(a_blow),
+        "sublimation": float(s_sub_component),
+    }
+    s_min_pre_clip = max(s_min_components["blowout"], s_min_components["sublimation"])
+    s_min_effective = max(s_min_components["config"], s_min_pre_clip)
     # guard against pathological cases where the sublimation boundary exceeds
     # the configured maximum grain size.  This can happen with the logistic
     # placeholder in the absence of calibrated parameters.
-    if s_min >= cfg.sizes.s_max:
-        s_min = cfg.sizes.s_max * 0.9
-    s_min_config = cfg.sizes.s_min
-    s_min_effective = s_min
+    if s_min_effective >= cfg.sizes.s_max:
+        s_min_effective = cfg.sizes.s_max * 0.9
+    s_min_components["effective"] = float(s_min_effective)
     if s_min_effective > s_min_config:
         logger.info(
             "Effective s_min raised from config value %.3e m to %.3e m",
@@ -257,7 +383,7 @@ def run_zero_d(cfg: Config) -> None:
             s_min_effective,
         )
     psd_state = psd.update_psd_state(
-        s_min=s_min,
+        s_min=s_min_effective,
         s_max=cfg.sizes.s_max,
         alpha=cfg.psd.alpha,
         wavy_strength=cfg.psd.wavy_strength,
@@ -265,12 +391,18 @@ def run_zero_d(cfg: Config) -> None:
         rho=rho_used,
     )
     kappa_surf = psd.compute_kappa(psd_state)
-    qpr_mean = radiation.planck_mean_qpr(s_min, T_M, Q_pr=qpr_override)
-    beta_at_smin = radiation.beta(s_min, rho_used, T_M, Q_pr=qpr_override)
-    case_status = "blowout" if beta_at_smin >= radiation.BLOWOUT_BETA_THRESHOLD else "failed"
+    qpr_mean = radiation.planck_mean_qpr(s_min_effective, T_use, Q_pr=qpr_override)
+    beta_at_smin_config = radiation.beta(s_min_config, rho_used, T_use, Q_pr=qpr_override)
+    beta_at_smin_effective = radiation.beta(
+        s_min_effective, rho_used, T_use, Q_pr=qpr_override
+    )
+    beta_threshold = radiation.BLOWOUT_BETA_THRESHOLD
+    case_status = "blowout" if beta_at_smin_config >= beta_threshold else "ok"
     if case_status != "blowout":
-        logger.warning(
-            "Blow-out threshold not met at s_min=%.3e m (β=%.3f)", s_min, beta_at_smin
+        logger.info(
+            "Blow-out threshold not met at s_min_config=%.3e m (β=%.3f)",
+            s_min_config,
+            beta_at_smin_config,
         )
 
     if cfg.disk is not None and cfg.inner_disk_mass is not None:
@@ -301,6 +433,7 @@ def run_zero_d(cfg: Config) -> None:
         sigma_surf = 0.0
     M_loss_cum = 0.0
     M_sink_cum = 0.0
+    M_sublimation_cum = 0.0
     if cfg.disk is not None:
         r_in_d = cfg.disk.geometry.r_in_RM * constants.R_MARS
         r_out_d = cfg.disk.geometry.r_out_RM * constants.R_MARS
@@ -315,7 +448,6 @@ def run_zero_d(cfg: Config) -> None:
         enable_gas_drag=cfg.sinks.enable_gas_drag,
         rho_g=cfg.sinks.rho_g,
     )
-    t_sink = sinks.total_sink_timescale(T_M, rho_used, Omega, sink_opts)
 
     supply_spec = cfg.supply
 
@@ -327,6 +459,10 @@ def run_zero_d(cfg: Config) -> None:
 
     records: List[Dict[str, float]] = []
     mass_budget: List[Dict[str, float]] = []
+    mass_budget_violation: Optional[Dict[str, float]] = None
+    violation_triggered = False
+    debug_sinks_enabled = bool(getattr(cfg.io, "debug_sinks", False))
+    debug_records: List[Dict[str, Any]] = []
 
     for step_no in range(n_steps):
         time = step_no * dt
@@ -338,6 +474,23 @@ def run_zero_d(cfg: Config) -> None:
             kappa_eff, sigma_tau1_limit = shielding.apply_shielding(kappa_surf, tau, 0.0, 0.0)
         tau_for_coll = None if (not cfg.surface.use_tcoll or tau <= TAU_MIN) else tau
         prod_rate = supply.get_prod_area_rate(time, r, supply_spec)
+        if cfg.sinks.mode == "none":
+            sink_result = sinks.SinkTimescaleResult(
+                t_sink=None,
+                components={"sublimation": None, "gas_drag": None},
+                dominant_sink=None,
+                T_eval=T_use,
+                s_ref=SINK_REF_SIZE,
+            )
+        else:
+            sink_result = sinks.total_sink_timescale(
+                T_use,
+                rho_used,
+                Omega,
+                sink_opts,
+                s_ref=SINK_REF_SIZE,
+            )
+        t_sink = sink_result.t_sink
         res = surface.step_surface(
             sigma_surf,
             prod_rate,
@@ -349,24 +502,64 @@ def run_zero_d(cfg: Config) -> None:
         )
         sigma_surf = res.sigma_surf
 
+        outflux_mass_rate_kg = res.outflux * area
+        sink_mass_rate_kg = res.sink_flux * area
         # kg/s -> M_Mars/s
-        M_out_dot = (res.outflux * area) / constants.M_MARS
-        M_sink_dot = (res.sink_flux * area) / constants.M_MARS
+        M_out_dot = outflux_mass_rate_kg / constants.M_MARS
+        M_sink_dot = sink_mass_rate_kg / constants.M_MARS
         # integrate as M_Mars
         M_loss_cum += M_out_dot * dt
         M_sink_cum += M_sink_dot * dt
+        if sink_result.sublimation_fraction > 0.0:
+            M_sublimation_cum += M_sink_dot * dt * sink_result.sublimation_fraction
         time = (step_no + 1) * dt
+
+        if debug_sinks_enabled:
+            T_d = sink_result.T_eval if sink_result.t_sink is not None else None
+            debug_records.append(
+                {
+                    "step": int(step_no),
+                    "time_s": time,
+                    "dt_s": dt,
+                    "T_M_K": T_use,
+                    "T_d_graybody_K": T_d,
+                    "T_source": T_M_source,
+                    "r_m": r,
+                    "t_sink_s": t_sink,
+                    "dominant_sink": sink_result.dominant_sink,
+                    "sublimation_timescale_s": sink_result.components.get("sublimation"),
+                    "gas_drag_timescale_s": sink_result.components.get("gas_drag"),
+                    "total_sink_dm_dt_kg_s": sink_mass_rate_kg,
+                    "sublimation_dm_dt_kg_s": (
+                        sink_mass_rate_kg if sink_result.dominant_sink == "sublimation" else 0.0
+                    ),
+                    "cum_sink_mass_kg": M_sink_cum * constants.M_MARS,
+                    "cum_sublimation_mass_kg": M_sublimation_cum * constants.M_MARS,
+                    "blowout_mass_rate_kg_s": outflux_mass_rate_kg,
+                    "cum_blowout_mass_kg": M_loss_cum * constants.M_MARS,
+                    "M_loss_components_Mmars": {
+                        "blowout": M_loss_cum,
+                        "sinks": M_sink_cum,
+                        "total": M_loss_cum + M_sink_cum,
+                    },
+                    "sinks_mode": cfg.sinks.mode,
+                    "enable_sublimation": cfg.sinks.enable_sublimation,
+                    "enable_gas_drag": cfg.sinks.enable_gas_drag,
+                    "s_ref_m": sink_result.s_ref,
+                }
+            )
 
         record = {
             "time": time,
             "dt": dt,
             "tau": tau,
             "a_blow": a_blow,
-            "s_min": s_min,
+            "s_min": s_min_effective,
             "kappa": kappa_eff,
             "Qpr_mean": qpr_mean,
-            "beta_at_smin": beta_at_smin,
-            "beta_threshold": radiation.BLOWOUT_BETA_THRESHOLD,
+            "beta_at_smin_config": beta_at_smin_config,
+            "beta_at_smin_effective": beta_at_smin_effective,
+            "beta_threshold": beta_threshold,
             "Sigma_surf": sigma_surf,
             "Sigma_tau1": sigma_tau1_limit,
             "outflux_surface": res.outflux,
@@ -385,6 +578,8 @@ def run_zero_d(cfg: Config) -> None:
             "s_min_effective": s_min_effective,
             "s_min_config": s_min_config,
             "s_min_effective_gt_config": s_min_effective > s_min_config,
+            "T_source": T_M_source,
+            "T_M_used": T_use,
         }
         records.append(record)
 
@@ -394,16 +589,43 @@ def run_zero_d(cfg: Config) -> None:
         mass_diff = mass_initial - mass_remaining - mass_lost
         error_percent = 0.0
         if mass_initial != 0.0:
+            # NOTE: `error_percent` is recorded for diagnostics and may be
+            # enforced via the ``--enforce-mass-budget`` CLI flag.
             error_percent = abs(mass_diff / mass_initial) * 100.0
-        mass_budget.append(
-            {
+        budget_entry = {
+            "time": time,
+            "mass_initial": mass_initial,      # M_Mars
+            "mass_remaining": mass_remaining,  # M_Mars
+            "mass_lost": mass_lost,            # M_Mars
+            "mass_diff": mass_diff,            # M_Mars
+            "error_percent": error_percent,
+            "tolerance_percent": MASS_BUDGET_TOLERANCE_PERCENT,
+        }
+        mass_budget.append(budget_entry)
+
+        if (
+            mass_initial != 0.0
+            and error_percent > MASS_BUDGET_TOLERANCE_PERCENT
+            and mass_budget_violation is None
+        ):
+            mass_budget_violation = {
                 "time": time,
-                "mass_initial": mass_initial,      # M_Mars
-                "mass_remaining": mass_remaining,  # M_Mars
-                "mass_lost": mass_lost,            # M_Mars
                 "error_percent": error_percent,
+                "tolerance_percent": MASS_BUDGET_TOLERANCE_PERCENT,
+                "mass_initial": mass_initial,
+                "mass_remaining": mass_remaining,
+                "mass_lost": mass_lost,
+                "mass_diff": mass_diff,
             }
-        )
+            logger.error(
+                "Mass budget tolerance exceeded at t=%.3e s (err=%.3f%% > %.3f%%)",
+                time,
+                error_percent,
+                MASS_BUDGET_TOLERANCE_PERCENT,
+            )
+            if enforce_mass_budget:
+                violation_triggered = True
+                break
 
         logger.info(
             "run: t=%e a_blow=%e kappa=%e t_blow=%e M_loss[M_Mars]=%e",
@@ -419,19 +641,40 @@ def run_zero_d(cfg: Config) -> None:
     writer.write_parquet(df, outdir / "series" / "run.parquet")
     summary = {
         "M_loss": (M_loss_cum + M_sink_cum),
+        "M_loss_from_sinks": M_sink_cum,
+        "M_loss_from_sublimation": M_sublimation_cum,
         "case_status": case_status,
-        "beta_threshold": radiation.BLOWOUT_BETA_THRESHOLD,
-        "beta_at_smin": beta_at_smin,
+        "beta_threshold": beta_threshold,
+        "beta_at_smin_config": beta_at_smin_config,
+        "beta_at_smin_effective": beta_at_smin_effective,
+        "beta_at_smin": beta_at_smin_config if beta_at_smin_config is not None else beta_at_smin_effective,
         "s_blow_m": a_blow,
         "rho_used": rho_used,
         "Q_pr_used": qpr_mean,
-        "T_M_used": T_M,
+        "T_M_used": T_use,
+        "T_M_used[K]": T_use,
+        "T_M_source": T_M_source,
         "s_min_effective": s_min_effective,
+        "s_min_effective[m]": s_min_effective,
         "s_min_config": s_min_config,
         "s_min_effective_gt_config": s_min_effective > s_min_config,
+        "s_min_components": s_min_components,
+        "enforce_mass_budget": enforce_mass_budget,
     }
+    if mass_budget_violation is not None:
+        summary["mass_budget_violation"] = mass_budget_violation
     writer.write_summary(summary, outdir / "summary.json")
     writer.write_mass_budget(mass_budget, outdir / "checks" / "mass_budget.csv")
+    if debug_sinks_enabled and debug_records:
+        debug_dir = outdir / "debug"
+        debug_dir.mkdir(parents=True, exist_ok=True)
+        trace_path = debug_dir / "sinks_trace.jsonl"
+        with trace_path.open("w", encoding="utf-8") as fh:
+            for row in debug_records:
+                fh.write(json.dumps(row) + "\n")
+    e0_effective = cfg.dynamics.e0
+    i0_effective = cfg.dynamics.i0
+
     run_config = {
         "beta_formula": "beta = 3 σ_SB T_M^4 R_M^2 Q_pr / (4 G M_M c ρ s)",
         "s_blow_formula": "s_blow = 3 σ_SB T_M^4 R_M^2 Q_pr / (2 G M_M c ρ)",
@@ -449,13 +692,61 @@ def run_zero_d(cfg: Config) -> None:
             "R_MARS": constants.R_MARS,
         },
         "run_inputs": {
-            "T_M_used": T_M,
+            "T_M_used": T_use,
             "rho_used": rho_used,
             "Q_pr_used": qpr_mean,
+            "rng_seed": int(seed),
+            "rng_seed_expr": seed_expr,
+            "rng_seed_basis": seed_basis,
+        },
+        "init_ei": {
+            "e_mode": cfg.dynamics.e_mode,
+            "dr_min_m": cfg.dynamics.dr_min_m,
+            "dr_max_m": cfg.dynamics.dr_max_m,
+            "dr_dist": cfg.dynamics.dr_dist,
+            "delta_r_sample_m": delta_r_sample,
+            "e0_applied": e0_effective,
+            "i_mode": cfg.dynamics.i_mode,
+            "obs_tilt_deg": cfg.dynamics.obs_tilt_deg,
+            "i_spread_deg": cfg.dynamics.i_spread_deg,
+            "i0_applied_rad": i0_effective,
+            "seed_used": int(seed),
+            "e_formula_SI": "e = 1 - (R_MARS + Δr)/a; [Δr, a, R_MARS]: meters",
+            "a_m_source": "geometry.r",
         },
         "git": _gather_git_info(),
+        "time_grid": {
+            "dt_s": float(cfg.numerics.dt_init),
+            "t_end_s": float(t_end),
+            "max_steps": MAX_STEPS,
+            "scheme": "fixed-step implicit-Euler (S1)",
+        },
     }
+    run_config.update(
+        {
+            "sublimation_formula": "HK: Phi = alpha * P_vap(Td) * sqrt(mu/(2*pi*Rgas*Td)); Td=TM*sqrt(R/(2r))",
+            "HK_mode": sub_params.mode,
+            "HK_alpha_used": sub_params.alpha_evap,
+            "HK_mu_used": sub_params.mu,
+            "HK_A_used": sub_params.A,
+            "HK_B_used": sub_params.B,
+            "HK_Pgas_used": sub_params.P_gas,
+            "HK_eta_instant_used": sub_params.eta_instant,
+            "HK_AB_source": (
+                "cfg.sinks.sub_params"
+                if sub_params.A is not None and sub_params.B is not None
+                else "not supplied"
+            ),
+            "HK_runtime_radius_m": r,
+            "HK_runtime_t_orb_s": t_orb,
+        }
+    )
     writer.write_run_config(run_config, outdir / "run_config.json")
+
+    if violation_triggered:
+        raise MassBudgetViolationError(
+            "Mass budget tolerance exceeded; see summary.json for details"
+        )
 
 
 def main(argv: Optional[List[str]] = None) -> None:
@@ -463,10 +754,25 @@ def main(argv: Optional[List[str]] = None) -> None:
 
     parser = argparse.ArgumentParser(description="Run a simple Mars disk model")
     parser.add_argument("--config", type=Path, required=True, help="Path to YAML configuration")
+    parser.add_argument(
+        "--enforce-mass-budget",
+        action="store_true",
+        help=(
+            "Abort the run when the mass budget tolerance (%.3f%%) is exceeded"
+            % MASS_BUDGET_TOLERANCE_PERCENT
+        ),
+    )
+    parser.add_argument(
+        "--sinks",
+        choices=["none", "sublimation"],
+        help="Override sinks.mode from the CLI (defaults to configuration file)",
+    )
     args = parser.parse_args(argv)
 
     cfg = load_config(args.config)
-    run_zero_d(cfg)
+    if args.sinks is not None:
+        cfg.sinks.mode = args.sinks
+    run_zero_d(cfg, enforce_mass_budget=args.enforce_mass_budget)
 
 
 if __name__ == "__main__":  # pragma: no cover - CLI entry point
@@ -481,4 +787,5 @@ __all__ = [
     "load_config",
     "run_zero_d",
     "main",
+    "MassBudgetViolationError",
 ]
