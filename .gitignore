@@ -27,3 +27,9 @@ simulation_results
 out/
 results/
 __pycache__/
+!analysis/
+!analysis/**/
+!analysis/**/*.md
+!analysis/**/*.json
+!analysis/**/*.ipynb
+!analysis/**/*.png
