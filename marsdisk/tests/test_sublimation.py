@@ -19,11 +19,12 @@ def test_s_sub_boundary_fallback_warning():
 
 def test_compute_s_min_F2_uses_max():
     params = SublimationParams()
-    s_min = compute_s_min_F2(
-        a_blow=1.0,
-        T=1300.0,
-        t_ref=10.0,
-        rho=2.0,
-        sub_params=params,
-    )
+    with pytest.warns(DeprecationWarning):
+        s_min = compute_s_min_F2(
+            a_blow=1.0,
+            T=1300.0,
+            t_ref=10.0,
+            rho=2.0,
+            sub_params=params,
+        )
     assert s_min == pytest.approx(1.0)

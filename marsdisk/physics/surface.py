@@ -102,6 +102,7 @@ def step_surface_density_S1(
     t_coll: float | None = None,
     t_sink: float | None = None,
     sigma_tau1: float | None = None,
+    enable_blowout: bool = True,
 ) -> SurfaceStepResult:
     """Advance the surface density by one implicit Euler step (S1).
 
@@ -125,6 +126,9 @@ def step_surface_density_S1(
         Optical-depth clipping ``Σ_{τ=1}``.  When provided the updated
         density is limited to ``min(Σ_surf, Σ_{τ=1})`` before computing
         fluxes.
+    enable_blowout:
+        Toggle for the radiation-pressure loss term.  Disable to remove the
+        ``1/t_blow`` contribution and force the returned outflux to zero.
 
     Returns
     -------
@@ -136,7 +140,9 @@ def step_surface_density_S1(
         raise MarsDiskError("dt and Omega must be positive")
 
     t_blow = 1.0 / Omega
-    loss = 1.0 / t_blow
+    loss = 0.0
+    if enable_blowout:
+        loss += 1.0 / t_blow
     if t_coll is not None and t_coll > 0.0:
         loss += 1.0 / t_coll
     if t_sink is not None and t_sink > 0.0:
@@ -148,10 +154,10 @@ def step_surface_density_S1(
     if sigma_tau1 is not None:
         sigma_new = float(min(sigma_new, sigma_tau1))
 
-    outflux = sigma_new * Omega
+    outflux = sigma_new * Omega if enable_blowout else 0.0
     sink_flux = sigma_new / t_sink if (t_sink is not None and t_sink > 0.0) else 0.0
     logger.info(
-        "step_surface_density_S1: dt=%e sigma=%e sigma_tau1=%e t_blow=%e t_coll=%e t_sink=%e outflux=%e",
+        "step_surface_density_S1: dt=%e sigma=%e sigma_tau1=%e t_blow=%e t_coll=%e t_sink=%e outflux=%e blowout=%s",
         dt,
         sigma_new,
         sigma_tau1 if sigma_tau1 is not None else float("nan"),
@@ -159,6 +165,7 @@ def step_surface_density_S1(
         t_coll if t_coll is not None else float("nan"),
         t_sink if t_sink is not None else float("nan"),
         outflux,
+        enable_blowout,
     )
     return SurfaceStepResult(sigma_new, outflux, sink_flux)
 
@@ -185,6 +192,7 @@ def step_surface(
     t_coll: float | None = None,
     t_sink: float | None = None,
     sigma_tau1: float | None = None,
+    enable_blowout: bool = True,
 ) -> SurfaceStepResult:
     """Alias for :func:`step_surface_density_S1` with optional Wyatt coupling.
 
@@ -205,4 +213,5 @@ def step_surface(
         t_coll=t_coll,
         t_sink=t_sink,
         sigma_tau1=sigma_tau1,
+        enable_blowout=enable_blowout,
     )

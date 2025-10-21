@@ -3,6 +3,9 @@ import pytest
 from marsdisk.physics import radiation, shielding
 
 
+radiation.load_qpr_table("data/qpr_table.csv")
+
+
 def test_blowout_radius_scales_with_temperature():
     rho = 3000.0
     temps = [1500.0, 3000.0, 5000.0]
@@ -32,9 +35,12 @@ def test_beta_respects_qpr_override():
     assert beta_high > beta_default > beta_low
 
 
-def test_planck_mean_qpr_defaults_to_unity():
-    value = radiation.planck_mean_qpr(1.0e-6, 2000.0)
-    assert value == pytest.approx(radiation.DEFAULT_Q_PR)
+def test_planck_mean_qpr_uses_table():
+    s = 1.0e-6
+    T = 2000.0
+    table_value = radiation.qpr_lookup(s, T)
+    value = radiation.planck_mean_qpr(s, T)
+    assert value == pytest.approx(table_value)
 
 
 def test_clip_to_tau1_non_negative():

@@ -1,10 +1,9 @@
 """Fragmentation helpers and sublimation boundary utilities (F2).
 
-This module exposes helpers to determine the minimum grain size in the
-particle size distribution by combining the blow-out limit with a
-possible sublimation boundary.  The latter can be evaluated in a
-physically consistent way when the relevant time-scale information is
-provided, otherwise a conservative fixed cut-off is used.
+The routines in this module now focus on exposing the sublimation boundary
+``s_sub`` for use in the grain-size evolution (:math:`ds/dt`).  The legacy
+``compute_s_min_F2`` helper is retained for compatibility but no longer
+participates in the minimum-size selection at run time.
 """
 from __future__ import annotations
 
@@ -12,7 +11,11 @@ import logging
 import warnings
 
 from ..errors import MarsDiskError
-from .sublimation import SublimationParams, s_sink_from_timescale
+from .sublimation import (
+    SublimationParams,
+    grain_temperature_graybody,
+    s_sink_from_timescale,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -124,19 +127,41 @@ def s_sub_boundary(
 
     if T < 0.0:
         raise MarsDiskError("temperature must be non-negative")
-    if T < T_sub:
+    params = sub_params or SublimationParams()
+    radius_m = getattr(params, "runtime_orbital_radius_m", None)
+    if radius_m is None:
+        warnings.warn(
+            "s_sub_boundary: runtime_orbital_radius_m not set on SublimationParams; reverting to planet temperature."
+        )
+        T_eval = T
+    else:
+        try:
+            T_eval = grain_temperature_graybody(T, radius_m)
+        except ValueError as exc:
+            warnings.warn(
+                f"s_sub_boundary: failed to evaluate grey-body temperature ({exc}); using planet temperature."
+            )
+            T_eval = T
+    if T_eval < T_sub:
         boundary = 0.0
     else:
         if t_ref is not None and rho is not None:
-            params = sub_params or SublimationParams()
-            boundary = s_sink_from_timescale(T, rho, t_ref, params)
+            boundary = s_sink_from_timescale(T_eval, rho, t_ref, params)
         else:
             warnings.warn(
                 "s_sub_boundary: t_ref or rho not provided; using fixed s_sink=1e-3 m as a conservative fallback."
             )
             boundary = 1e-3
-    logger.info("s_sub_boundary: T=%f T_sub=%f -> s_sub=%s", T, T_sub, boundary)
-    return float(boundary)
+    boundary = max(0.0, float(boundary))
+    logger.info(
+        "s_sub_boundary: T_M=%f T_d=%f T_sub=%f r=%s -> s_sub=%s",
+        T,
+        T_eval,
+        T_sub,
+        radius_m,
+        boundary,
+    )
+    return boundary
 
 
 def compute_s_min_F2(
@@ -148,24 +173,26 @@ def compute_s_min_F2(
     rho: float | None = None,
     sub_params: SublimationParams | None = None,
 ) -> float:
-    """Return ``s_min`` as the maximum of ``a_blow`` and ``s_sub``.
+    """Legacy helper that now returns the blow-out size only.
 
-    The additional keyword arguments enable time-scale consistent sublimation
-    boundaries while remaining backward compatible.  When omitted, the
-    function behaves as before and applies only the blow-out size.
+    Notes
+    -----
+    This routine previously combined ``a_blow`` with the sublimation boundary
+    ``s_sub``.  The disk model now defines the effective minimum exclusively as
+    ``max(s_min_cfg, a_blow)`` (E.008), leaving sublimation to act through the
+    :math:`ds/dt` evolution path.  Callers should therefore stop relying on
+    this helper and apply the configured minimum grain size together with
+    :func:`marsdisk.physics.radiation.blowout_radius` directly.
     """
 
+    _ = (T, T_sub, t_ref, rho, sub_params)
     if a_blow <= 0.0:
         raise MarsDiskError("a_blow must be positive")
-    s_sub = s_sub_boundary(
-        T,
-        T_sub,
-        t_ref=t_ref,
-        rho=rho,
-        sub_params=sub_params,
+    warnings.warn(
+        "compute_s_min_F2 is deprecated; use max(s_min_cfg, blowout_radius) instead.",
+        DeprecationWarning,
+        stacklevel=2,
     )
-    s_min = max(a_blow, s_sub)
-    logger.info(
-        "compute_s_min_F2: a_blow=%e s_sub=%s -> s_min=%s", a_blow, s_sub, s_min
-    )
+    s_min = max(a_blow, 0.0)
+    logger.info("compute_s_min_F2: a_blow=%e -> s_min=%s", a_blow, s_min)
     return float(s_min)

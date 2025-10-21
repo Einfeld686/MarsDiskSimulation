@@ -11,5 +11,6 @@ sinks:
   enable_sublimation: true
   T_sub: 1300.0
   sub_params: { mode: "logistic", alpha_evap: 1.0, mu: 0.1, dT: 50.0, eta_instant: 0.1, P_gas: 0.0 }
+radiation: { qpr_table_path: "data/qpr_table.csv" }
 numerics: { t_end_years: 0.01, dt_init: 1.0e4 }
 io:       { outdir: "sweeps/__will_be_overwritten__" }  # 実行側でケースごとに上書き

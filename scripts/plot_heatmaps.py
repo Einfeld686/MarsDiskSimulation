@@ -15,6 +15,11 @@ from matplotlib import patches
 
 BLOWOUT_STATUS = "blowout"
 DEFAULT_METRIC = "total_mass_lost_Mmars"
+BETA_METRIC_LABELS = {
+    "beta_at_smin": "β(最小粒径)",
+    "beta_at_smin_config": "β(設定最小粒径)",
+    "beta_at_smin_effective": "β(有効最小粒径)",
+}
 
 
 def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
@@ -175,6 +180,8 @@ def plot_heatmap(
 
     original_values, masked_log, log_min, log_max = compute_log_values(pivot)
 
+    metric_label = metric_axis_label(metric)
+
     cmap = plt.get_cmap("viridis").copy()
     cmap.set_bad(color="lightgray")
 
@@ -204,10 +211,7 @@ def plot_heatmap(
     ax.tick_params(which="minor", bottom=False, left=False)
 
     cbar = fig.colorbar(im, ax=ax)
-    if metric == DEFAULT_METRIC:
-        cbar_label = "log10(M_loss / M_Mars)"
-    else:
-        cbar_label = f"log10({metric})"
+    cbar_label = f"log10({metric_label})"
     cbar.set_label(cbar_label)
 
     failure_mask = (
@@ -274,6 +278,14 @@ def sanitize_metric_name(metric: str) -> str:
     """ファイル名に使いやすいメトリクス名へ変換する。"""
 
     return re.sub(r"[^A-Za-z0-9_.-]", "_", metric)
+
+
+def metric_axis_label(metric: str) -> str:
+    """カラー軸などに用いる表示名を返す。"""
+
+    if metric == DEFAULT_METRIC:
+        return "M_loss / M_Mars"
+    return BETA_METRIC_LABELS.get(metric, metric)
 
 
 def maybe_plot_mass_per_r2_scatter(df: pd.DataFrame, map_stub: str, map_label: str) -> None:

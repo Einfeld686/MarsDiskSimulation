@@ -1,563 +1,109 @@
-# marsshearingsheet 取扱説明書
+# marsshearingsheet クイックガイド
 
-**バージョン情報**
+## ガス希薄（gas‑poor）前提
 
-* 対象ブランチ：`main`（ユーザー指定）
-* コミット：`9b8bd2e1e622d1e458e7715af55021d1877e5eec / 2025-10-02T20:45:42+09:00`
-* 探索範囲：既定ブランチのみ（タグ／Release／LFS／Wiki／Issues 添付は本書では扱わない）
+本モデルは **火星ロッシュ限界内のガスに乏しい衝突起源ダスト円盤**を解析対象としています。溶融主体で蒸気成分が≲数%に留まるという報告（Hyodo et al. 2017; 2018）と、Phobos/Deimos を残すには低質量・低ガス円盤が必要だという Canup & Salmon (2018) を踏まえ、標準ケースでは **Takeuchi & Lin (2003)** が仮定するガスリッチ表層アウトフローを採用しません（`ALLOW_TL2003=false` が既定）。gas-rich 条件を調べる場合のみ、利用者責任で明示的に切り替えてください。参考枠組みとして Strubbe & Chiang (2006)、Kuramoto (2024) を推奨します。
 
----
+## 1. モデル概要
 
-## 1. 概要（アップグレード版）
+- `marsdisk.run.run_zero_d` が 0D（半径無次元）ダスト円盤を時間発展させ、内部破砕で生成される sub-blow-out 粒子供給と表層の放射圧剥離を連成します（式 C1–C4, P1, F1–F2, R1–R3, S0–S1、analysis/equations.md を参照）。
+- 主要モジュール  
+  - `marsdisk/physics/radiation.py`：平均 $\langle Q_{\rm pr}\rangle$、$\beta$、$a_{\rm blow}$。  
+  - `marsdisk/physics/psd.py`：三勾配 + “wavy” 補正付き PSD と不透明度。  
+  - `marsdisk/physics/shielding.py`：多層 RT 由来の自遮蔽係数 $\Phi(\tau,\omega_0,g)$。  
+  - `marsdisk/physics/collide.py`, `smol.py`：Smoluchowski IMEX-BDF(1) による破砕と質量保存検査。  
+  - `marsdisk/physics/surface.py`：Wyatt スケールの衝突寿命と吹き飛び・追加シンクを含む表層 ODE。  
+  - `marsdisk/io/writer.py`：Parquet / JSON / CSV への出力。
+- 再現性のため `random`, `numpy.random`, `numpy.random.default_rng` の全 RNG を同一シードで初期化します（analysis/overview.md §9）。
 
-本セクションでは、本コードがどの物理プロセスをどの方程式で記述し、どのモジュールがそれらを実装しているかをまとめる。中心となるのは、火星ロッシュ限界内の薄いダスト円盤で生じる「内部破砕 → sub-blow-out 粒子生成 → 表層供給 → 放射圧剥離」という質量パイプラインであり、全体は `marsdisk.run.run_zero_d` が 0D モデルとして統括する。([marsdisk/run.py:193])
+詳細な数式・導出・ブロック図は `analysis/overview.md` と `analysis/equations.md` を参照してください。
 
-### 1.1 主要方程式と役割
-
-
-### 1.3 モデル範囲
-自己重力ポアソン解、Toomre Q、角運動量輸送解析などは未実装であり、0D 表層モデルと内部破砕–放射圧連成に焦点を絞っている。追加プロセスを利用する場合は拡張実装が必要である。
-
-**章末出典（リポジトリ一次情報）**：[`marsdisk/run.py`], [`marsdisk/physics/`], [`marsdisk/io/`]
-
----
-
-## 2. 動作環境と依存関係
-
-* **OS／ランタイム／パッケージ**：Python 3.11+、`numpy`、`pandas`、`ruamel.yaml`、`pydantic`、`pyarrow` が必須で、`h5py` は Q_pr テーブル入出力時に必要、`matplotlib`・`xarray`・`numba` は任意。([marsdisk/run.py], [marsdisk/schema.py], [marsdisk/io/writer.py], [marsdisk/io/tables.py], [AGENTS.md])
-* **外部データ**：`data/qpr_planck.h5`（Planck 平均 Q_pr）や `data/phi_tau.csv`（自遮蔽係数 Phi）のテーブルを参照する。未配置の場合は近似式で警告を出してフォールバックする。([marsdisk/io/tables.py], [marsdisk/physics/shielding.py])
-* **インストール手順（番号付き）**：
-  1. 仮想環境を作成：`python -m venv .venv && source .venv/bin/activate`
-  2. 依存関係をインストール：`pip install numpy pandas ruamel.yaml pydantic pyarrow h5py`（必要に応じて `matplotlib` などを追加）
-  3. C 実装を利用する場合は `make` で `bin/problem` をビルド（任意）。([Makefile])
-* **小結**：依存は上記で完結し、GPU や C++ 拡張は必須ではない（任意利用は不明）。
-
-**章末出典**：[`marsdisk/run.py`], [`marsdisk/io/tables.py`], [`Makefile`], [`AGENTS.md`]
-
----
-
-## 3. 実行ガイド（コマンドと設定フルリファレンス）
-
-### 3.1 典型的な実行コマンド
-
-1. 依存パッケージを整える（例）：
-
-   ```bash
-   python -m venv .venv && source .venv/bin/activate
-   pip install -r requirements.txt  # 無い場合は numpy pandas pyarrow ruamel.yaml pydantic などを個別導入
-   ```
-
-2. シミュレーションを走らせる：
-
-   ```bash
-   python -m marsdisk.run --config configs/base.yml
-   ```
-
-   `--config` に任意の YAML を渡すことで、下記の全パラメータを切り替えられる。
-
-3. 主な生成物：`out/series/run.parquet`（時系列）、`out/summary.json`（累積量とダイアグ）、`out/checks/mass_budget.csv`（質量収支ログ）、`out/run_config.json`（使用式と Git 情報）。
-
-### 3.2 YAML で指定できる物理量
-
-| YAML パス | 物理量・役割 | 単位 / 想定範囲 | 主な実装箇所 |
-| --- | --- | --- | --- |
-| `geometry.mode` | 計算ドメイン（現状 `"0D"`） | – | `marsdisk/schema.py:11` |
-| `geometry.r` | 代表半径。0D 計算では必須 | m | `marsdisk/run.py:213` |
-| `material.rho` | 固体粒子のバルク密度 | kg m⁻³（1000–5000） | `marsdisk/schema.py:63` |
-| `temps.T_M` / `radiation.TM_K` | 火星の放射温度（Planck 平均計算に使用） | K（1000–6000） | `marsdisk/physics/radiation.py:221` |
-| `sizes.s_min`, `sizes.s_max`, `sizes.n_bins` | PSD の最小粒径・最大粒径・ビン数 | m, – | `marsdisk/physics/psd.py:28` |
-| `initial.mass_total` | 初期総質量（火星質量比） | Mₘ | `marsdisk/run.py:391` |
-| `initial.s0_mode` | 初期 PSD モード（`"upper"`/`"mono"`） | – | `marsdisk/physics/initfields.py:47` |
-| `dynamics.e0`, `dynamics.i0` | 初期離心率・傾斜 | 無次元 | `marsdisk/physics/dynamics.py:18` |
-| `dynamics.t_damp_orbits` | 離心率の減衰タイムスケール | 軌道数 | `marsdisk/physics/dynamics.py:109` |
-| `dynamics.f_wake` | 自己重力ウェイク倍率 | >= 1 | `marsdisk/physics/dynamics.py:96` |
-| `psd.alpha`, `psd.wavy_strength` | PSD 基本勾配と “wavy” 振幅 | – | `marsdisk/physics/psd.py:28` |
-| `qstar.(Qs,a_s,B,b_g,v_ref_kms)` | 破砕強度モデル係数 | – | `marsdisk/physics/qstar.py:11` |
-| `disk.geometry.(r_in_RM,r_out_RM,r_profile,p_index)` | 内側リングの面密度分布 | 火星半径単位 / 指数 | `marsdisk/physics/initfields.py:17` |
-| `inner_disk_mass.(use_Mmars_ratio,M_in_ratio,map_to_sigma)` | 内側リングの総質量スケール | – | 同上 |
-| `surface.init_policy`, `surface.sigma_surf_init_override`, `surface.use_tcoll` | 表層初期化と Wyatt 衝突寿命スイッチ | – | `marsdisk/physics/surface.py:178` |
-| `supply.mode` | 表層供給モデル（`const`/`powerlaw`/`table`/`piecewise`） | – | `marsdisk/physics/supply.py:69` |
-| `supply.const.prod_area_rate_kg_m2_s` | 定数供給フラックス | kg m⁻² s⁻¹ | 同上 |
-| `supply.powerlaw.(A_kg_m2_s,t0_s,index)` | 時間パワー則供給 | SI | `marsdisk/physics/supply.py:73` |
-| `supply.table.path` / `supply.table.interp` | 時間×半径テーブルと補間法 | – | `marsdisk/physics/supply.py:48` |
-| `supply.mixing.epsilon_mix` | 光学的薄層への混合効率 | 0–1 | `marsdisk/physics/supply.py:93` |
-| `sinks.enable_sublimation`, `sinks.T_sub`, `sinks.sub_params.*` | 昇華シンクの有効化と HKL パラメータ | SI | `marsdisk/physics/sublimation.py:27`, `marsdisk/physics/sinks.py:76` |
-| `sinks.enable_gas_drag`, `sinks.rho_g` | ガス抗力シンクの有効化と背景密度 | kg m⁻³ | `marsdisk/physics/sinks.py:46` |
-| `radiation.Q_pr`, `radiation.qpr_table` | 灰色体 ⟨Q_pr⟩ またはテーブル指定 | – | `marsdisk/physics/radiation.py:120` |
-| `shielding.phi_table` | Phi(tau, omega0, g) テーブルへのパス | – | `marsdisk/physics/shielding.py:52` |
-| `numerics.(t_end_years,dt_init,safety,atol,rtol)` | 積分終了時刻・初期Δt・IMEX 安全係数・許容誤差 | SI / 無次元 | `marsdisk/run.py:320`, `marsdisk/physics/smol.py:18` |
-| `io.outdir` | 出力先ディレクトリ | パス | `marsdisk/io/writer.py:25` |
-
-### 3.3 物理量を全指定した YAML 例
-
-```yaml
-# configs/demo_full.yml
-geometry:
-  mode: "0D"
-  r: 1.45e7
-material:
-  rho: 2800.0
-temps:
-  T_M: 2300.0
-sizes:
-  s_min: 5.0e-7
-  s_max: 3.0
-  n_bins: 48
-initial:
-  mass_total: 2.0e-5
-  s0_mode: "upper"
-dynamics:
-  e0: 0.3
-  i0: 0.02
-  t_damp_orbits: 50.0
-  f_wake: 1.5
-psd:
-  alpha: 1.9
-  wavy_strength: 0.25
-qstar:
-  Qs: 3.5e7
-  a_s: 0.38
-  B: 0.3
-  b_g: 1.36
-  v_ref_kms: [3.0, 5.0]
-disk:
-  geometry:
-    r_in_RM: 2.0
-    r_out_RM: 2.8
-    r_profile: "powerlaw"
-    p_index: 1.0
-inner_disk_mass:
-  use_Mmars_ratio: true
-  M_in_ratio: 4.0e-5
-  map_to_sigma: "analytic"
-surface:
-  init_policy: "clip_by_tau1"
-  sigma_surf_init_override: null
-  use_tcoll: true
-supply:
-  mode: "piecewise"
-  mixing:
-    epsilon_mix: 0.8
-  piecewise:
-    - t_start_s: 0.0
-      t_end_s: 5.0e6
-      mode: "const"
-      const:
-        prod_area_rate_kg_m2_s: 2.0e-8
-    - t_start_s: 5.0e6
-      t_end_s: 6.3e7
-      mode: "powerlaw"
-      powerlaw:
-        A_kg_m2_s: 1.0e-5
-        t0_s: 5.0e6
-        index: -1.2
-sinks:
-  enable_sublimation: true
-  T_sub: 1350.0
-  sub_params:
-    mode: "hkl"
-    alpha_evap: 0.5
-    mu: 0.04
-    A: 9.2
-    B: 3.1e4
-    dT: 60.0
-    eta_instant: 0.08
-    P_gas: 0.0
-  enable_gas_drag: true
-  rho_g: 1.0e-10
-radiation:
-  TM_K: 2300.0
-  qpr_table: "data/qpr_planck.h5"
-  Q_pr: null
-shielding:
-  phi_table: "data/phi_tau.csv"
-numerics:
-  t_end_years: 2.0
-  dt_init: 5.0
-  safety: 0.1
-  atol: 1.0e-10
-  rtol: 1.0e-6
-io:
-  outdir: "out/demo_full"
-```
-
-実行例：
+## 2. クイックスタート
 
 ```bash
-python -m marsdisk.run --config configs/demo_full.yml
+python -m venv .venv && source .venv/bin/activate  # 任意の仮想環境
+pip install -r requirements.txt                    # ない場合は numpy pandas pyarrow ruamel.yaml pydantic 等を個別導入
+
+python -m marsdisk.run --config configs/base.yml   # 0D シミュレーション実行
+# 追加シンク（昇華・ガス抗力）を無効化したい場合
+python -m marsdisk.run --config configs/base.yml --sinks none
 ```
 
-テーブル `data/qpr_planck.h5` と `data/phi_tau.csv` が存在すれば、それぞれ放射圧係数と自己遮蔽係数の補間が自動で有効になる。完了後は `out/demo_full` 配下に Parquet・JSON・CSV・`run_config.json` が揃い、各ステップの質量収支誤差は `checks/mass_budget.csv` に記録される。
+### 生成物（標準設定）
 
-### 3.4 可視化と後処理ワークフロー
+| 出力 | 内容 |
+| --- | --- |
+| `out/series/run.parquet` | 時系列（`prod_subblow_area_rate`, `M_out_dot`, `tau`, `t_blow`, etc.） |
+| `out/summary.json` | `M_loss`, `M_loss_from_sinks`, `M_loss_from_sublimation`, `s_blow_m`, `beta_at_smin*`, `s_min_effective[m]`, `T_M_source`, `T_M_used[K]` 等を含むサマリ |
+| `out/checks/mass_budget.csv` | ステップ毎の質量保存ログ（許容誤差 0.5% 未満） |
+| `out/run_config.json` | 使用した式、定数、シード、`init_ei` ブロック（`dynamics.e_mode/i_mode`、$\Delta r$, $e_0$, $i_0$、`e_formula_SI`, `a_m_source` など） |
 
-感度掃引とヒートマップ作成には `scripts/` 配下のユーティリティを用いる。
+`series/run.parquet` にはタイムステップ毎の高速ブローアウト診断が含まれます。`dt_over_t_blow = Δt / t_{\rm blow}`（無次元）、`fast_blowout_factor = 1 - \exp(-Δt / t_{\rm blow})`（面密度に対する有効損失分率）、`fast_blowout_flag_gt3` / `fast_blowout_flag_gt10`（`dt/t_{\rm blow}` が 3・10 を超えた際に `true`）が出力され、`io.correct_fast_blowout` を `true` にしたケースのみ `fast_blowout_corrected` が `true` になります（既定は `false` で補正は適用されません）。また、表層レートの列として `dSigma_dt_blowout`,`dSigma_dt_sinks`,`dSigma_dt_total`（単位 kg m⁻² s⁻¹）と、同じステップの平均化された惑星質量スケールのレート `M_out_dot_avg`,`M_sink_dot_avg`,`dM_dt_surface_total_avg` が追加されています。`n_substeps` 列は高速ブローアウトをサブステップで解像した場合の分割数（既定 1）を記録します。
 
-1. **掃引実行（CSV 生成）** – `scripts/sweep_heatmaps.py` はマップIDごとに YAML を自動生成し、`python -m marsdisk.run` を多数回実行して結果を `results/map*.csv` と `sweeps/` 以下に保存する。
+`chi_blow` は YAML のトップレベルで設定でき、スカラー値を与えると従来通り `t_{\rm blow} = chi_{\rm blow} / \Omega` を使用、`"auto"` を指定すると β と ⟨Q_pr⟩ から 0.5–2.0 の範囲で自動推定した係数を採用します。自動推定値は `chi_blow_eff` としてタイムシリーズおよびサマリに記録されます。
 
-   ```bash
-   # 例: Map-1 (r_RM × T_M) を4並列で実行し、結果を sweeps/map1/ に格納
-   python scripts/sweep_heatmaps.py --map 1 --jobs 4 --outdir sweeps
-   ```
+初期化温度 `T_M` は `radiation.TM_K` が指定されていれば優先され、未設定の場合は `temps.T_M` が採用されます。どちらが使われたかは `summary.json` の `T_M_source` を参照してください（`radiation.TM_K` / `temps.T_M` が入ります）。採用温度は `T_M_used[K]` に、対応するブローアウト半径や $\beta$ は `s_blow_m`、`beta_at_smin_*` に記録されます。Q_pr/Phi テーブルは `analysis/AI_USAGE.md` に従って `marsdisk/io/tables.py` 経由で読み込み、欠損時は警告付きの解析近似へフォールバックします。
 
-   - 利用可能な `--map` 値は `1`, `1b`, `2`, `3`。Map-3 では `--num-parts` / `--part-index` による分割実行も可能。  
-   - 各ケースの `summary.json`・`series/run.parquet` が `sweeps/<map>/<case_id>/out/` に書き込まれ、集約 CSV は `results/<map>.csv` として更新される。  
-   - 追加指標（質量損失、beta、s_min など）は CSV の列として出力されるため任意の解析ツールで再利用できる。
+## 3. 設定 YAML の要点
 
-2. **可視化（ヒートマップ出力）** – `scripts/plot_heatmaps.py` は `results/map*.csv` を読み込み、`figures/map*_*.png` として可視化を作成する。
+`configs/base.yml` は 0D 実行に必要な最小ブロックを含みます。各セクションの主要項目と挙動は以下の通りです（詳細は `analysis/AI_USAGE.md`）。
 
-   ```bash
-   # 累積質量損失 (total_mass_lost_Mmars) のヒートマップを描画
-   python scripts/plot_heatmaps.py --map 1 --metric total_mass_lost_Mmars
+| セクション | 主なフィールド | 備考 |
+| --- | --- | --- |
+| `geometry` | `mode="0D"`, `r` | 代表半径（m）。`e_mode="mars_clearance"` を使う場合は必須。 |
+| `material` | `rho` | 粒子バルク密度。 |
+| `temps` / `radiation` | `T_M`, `TM_K`, `Q_pr`, `qpr_table` | `radiation.TM_K` が優先。Q_pr テーブル or スカラー上書き可能。 |
+| `sizes` | `s_min`, `s_max`, `n_bins` | 対数ビン数は 30–60 推奨（既定 40）。 |
+| `initial` | `mass_total`, `s0_mode` | 初期 PSD モードは `"upper"` / `"mono"`。 |
+| `dynamics` | `e0`, `i0`, `t_damp_orbits`, `f_wake` | **既定モードは `e_mode="fixed"` / `i_mode="fixed"`**。モードを指定しなければ入力スカラー `e0` / `i0` がそのまま初期値となります。`e_mode="mars_clearance"` を選ぶと Δr（m）を `dr_min_m` / `dr_max_m` からサンプリングし `e = 1 - (R_{\rm MARS}+Δr)/a` を適用、`i_mode="obs_tilt_spread"` では `obs_tilt_deg ± i_spread_deg`（度）をラジアンに変換して一様乱数サンプリングします。`rng_seed` を指定すると再現性を確保できます。 |
+| `psd` | `alpha`, `wavy_strength` | 三勾配 PSD と “wavy” 補正の強さ。 |
+| `qstar` | `Qs`, `a_s`, `B`, `b_g`, `v_ref_kms` | Leinhardt & Stewart (2012) の補間式を採用。 |
+| `surface` | `init_policy`, `use_tcoll` | Wyatt 衝突寿命の導入や Στ=1 のクリップを制御。 |
+| `supply` | `mode`, `const` / `powerlaw` / `table` / `piecewise` | 表層供給の時間依存・空間構造。 |
+| `sinks` | `mode`, `enable_sublimation`, `enable_gas_drag`, `sub_params.*`, `rho_g` | 昇華・ガス抗力など追加シンク。`mode="none"` で一括無効。 |
+| `shielding` | `phi_table` | Φ テーブル経由で自遮蔽係数を補正。 |
+| `numerics` | `t_end_years`, `dt_init`, `safety`, `atol`, `rtol` | IMEX-BDF(1) のタイムステップ制御 (`Δt ≤ 0.1 * min t_{\rm coll,k}` が収束条件)。 |
+| `io` | `outdir` | 出力ディレクトリ。 |
 
-   # beta 閾値比を可視化する場合
-   python scripts/plot_heatmaps.py --map 1 --metric beta_at_smin
-   ```
+サンプルとして `analysis/overview.md` の YAML スニペットや `configs/base.yml` / `configs/sweep_example.yml` を参照してください。
 
-   - `--metric` には CSV に存在する任意列を指定可能。欠損値はグレー、`case_status≠"blowout"` は自動的にマスクされる。  
-   - 出力先は既定で `figures/`。カラーマップは log10 スケール（有効値のみ）で正規化される。  
-   - 低温失敗帯や質量損失の r² スケーリング検証結果は `results/map*_validation.json` に保存される（Map-1 系列のみ）。
+### RNG とプロヴェナンス
 
-3. **追加解析** – `results/*.csv` は Pandas 互換のロングテーブル形式であり、Jupyter/Matplotlib/Seaborn 等での再可視化や統計解析に直接利用できる。未実装項目は含めていないため、必要に応じてスクリプトを拡張する際は教授との合意後に行うこと。
+- `dynamics.rng_seed` を省略した場合は既定シード（`marsdisk/run.py` 内定義）が適用され、`run_config.json` の `init_ei.seed_used` に記録されます。
+- `run_config.json` には式、使用定数、Git 情報、`e_formula_SI`（単位説明付き）を埋め込み、分析再現性を担保します。
 
-**章末出典**：[`configs/base.yml`], [`marsdisk/run.py`], [`marsdisk/schema.py`], [`marsdisk/io/writer.py`]
+## 4. 可視化とバッチ実行
 
----
+`scripts/sweep_heatmaps.py` は感度掃引用に YAML を自動生成し、複数ケースを実行して `results/*.csv` と `sweeps/<map>/<case_id>/out/` へ集計します。  
+`scripts/plot_heatmaps.py` は `results/map*.csv` からヒートマップ（例：`total_mass_lost_Mmars`, `beta_at_smin`）を描画し `figures/` へ保存します。  
+使い方は各スクリプトの `--help` と `analysis/run-recipes.md` を参照してください。
 
-## 4. 全体フロー（矢印のみの地図）
+## 5. テスト
 
-```
-configs/*.yml → marsdisk.schema.Config → marsdisk.run.run_zero_d → marsdisk.physics (radiation/psd/shielding/surface/…)
-              → marsdisk.io.writer (parquet/json/csv) → out/
-```
+ユニットテストは `pytest` で実行します。
 
-**注**：`marsdisk/schema.py` が YAML を構造化し、`marsdisk/run.py` が表層 ODE・Smoluchowski カーネルを統括、`marsdisk/io/writer.py` が成果物を書き出す。([marsdisk/schema.py], [marsdisk/run.py], [marsdisk/io/writer.py])
-
----
-
-## 5. シミュレーション別の使い方
-
-各シミュレーションの目的／入力／主要パラメータ／実行例／出力物／フローを最短で示す。
-
-### 5.1 0D 表層ベースライン（`configs/mars_0d_baseline.yaml`）
-
-* 目的：放射圧・Wyatt 衝突寿命付き 0D 表層モデルの基本挙動を確認する。([configs/mars_0d_baseline.yaml])
-* 入力：`configs/mars_0d_baseline.yaml`（M_in 比・PSD・表層初期化が既定値）。
-* 主要パラメータ：`psd.alpha=1.83`（PSD 3スロープ）、`surface.use_tcoll=true`、`numerics.t_end_years=2.0`。([configs/mars_0d_baseline.yaml])
-* 実行例：
-
-  ```bash
-  python -m marsdisk.run --config configs/mars_0d_baseline.yaml
-  ```
-
-* 出力：`out/series/run.parquet`（時間発展）、`out/summary.json`（M_loss, beta 等）、`out/checks/mass_budget.csv`（質量差ログ。`error_percent` < 0.5% の判定は自動化されていないため手動確認が必要）。([marsdisk/run.py])
-
-**詳細フロー図（矢印のみ）**
-
-```
-configs/mars_0d_baseline.yaml → marsdisk.schema.Config → marsdisk.run.run_zero_d → marsdisk.physics.surface.step_surface_density_S1 → marsdisk.io.writer
+```bash
+pytest
 ```
 
-### 5.2 供給モード掃引（`configs/mars_0d_supply_sweep.yaml`）
-
-* 目的：定数・冪法則・テーブル供給の感度を比較する。([configs/mars_0d_supply_sweep.yaml])
-* 入力：`configs/mars_0d_supply_sweep.yaml`（`supply.mode` を切替えながら使用）。
-* 主要パラメータ：`supply.const.prod_area_rate_kg_m2_s=5e-7`、`supply.powerlaw.A_kg_m2_s=1e-5`。([configs/mars_0d_supply_sweep.yaml], [marsdisk/physics/supply.py])
-* 実行例：
-
-  ```bash
-  python -m marsdisk.run --config configs/mars_0d_supply_sweep.yaml
-  ```
-
-* 出力：供給モードごとの `summary.json` と `series/run.parquet` を比較し、`prod_subblow_area_rate` 列の差異を解析。([marsdisk/run.py])
-
-**詳細フロー**
-
-```
-configs/mars_0d_supply_sweep.yaml → marsdisk.physics.supply.get_prod_area_rate → marsdisk.physics.surface.step_surface_density_S1 → marsdisk.io.writer
-```
-
-### 5.3 Phi テーブル適用テスト（`configs/min_sweep_phi.yml`）
-
-* 目的：自遮蔽テーブル `phi_table` の適用効果と Sigma_tau=1 クリップを検証する。([configs/min_sweep_phi.yml])
-* 入力：`configs/min_sweep_phi.yml` と `data/phi_tau.csv`（Phi テーブル）。
-* 主要パラメータ：`shielding.phi_table` のパス、`surface.init_policy="clip_by_tau1"`。([marsdisk/physics/shielding.py])
-* 実行例：
-
-  ```bash
-  python -m marsdisk.run --config configs/min_sweep_phi.yml
-  ```
-
-* 出力：`Sigma_tau1` 列が Phi テーブル適用前後で変化することを確認。
-
-**詳細フロー**
-
-```
-configs/min_sweep_phi.yml → marsdisk.physics.shielding.load_phi_table → marsdisk.physics.shielding.apply_shielding → marsdisk.physics.surface.step_surface_density_S1
-```
-
-### 5.4 Q_pr テーブル適用（`configs/tm_qpr.yml`）
-
-* 目的：Planck 平均 Q_pr テーブルの読み込みとブローアウトサイズ計算を確認する。([configs/tm_qpr.yml])
-* 入力：`configs/tm_qpr.yml` と `data/qpr_planck.h5`（`tools/make_qpr_table.py` で生成）。
-* 主要パラメータ：`radiation.qpr_table`、`temps.T_M`。([marsdisk/physics/radiation.py], [tools/make_qpr_table.py])
-* 実行例：
-
-  ```bash
-  python -m marsdisk.run --config configs/tm_qpr.yml
-  ```
-
-* 出力：`summary.json` の `Q_pr_used` がテーブル値で更新され、`run_config.json` に使用テーブル情報が記録される。
-
-**詳細フロー**
-
-```
-configs/tm_qpr.yml → marsdisk.io.tables.load_qpr_table → marsdisk.physics.radiation.blowout_radius / planck_mean_qpr → marsdisk.run.run_zero_d
-```
-
-### 5.5 半径依存供給テーブル（`configs/table_supply_R_sweep.yml`）
-
-* 目的：時間×半径グリッドの供給テーブルを双線形補間し、局所前処理を評価する。([configs/table_supply_R_sweep.yml])
-* 入力：`configs/table_supply_R_sweep.yml` と `data/supply_rate_R_template.csv`。
-* 主要パラメータ：`supply.table.path`、`geometry.mode="0D"`（局所半径を `disk.geometry` から取得）。([marsdisk/physics/supply.py])
-* 実行例：
-
-  ```bash
-  python -m marsdisk.run --config configs/table_supply_R_sweep.yml
-  ```
-
-* 出力：`prod_subblow_area_rate` がテーブル値で変化し、`series/run.parquet` に半径依存の供給応答が残る。
-
-**詳細フロー**
-
-```
-configs/table_supply_R_sweep.yml → marsdisk.physics.supply._TableData.load/interp → marsdisk.run.run_zero_d → marsdisk.io.writer
-```
-
-> **5.2 / 5.3 …** 以降、同形式で追加のシナリオを拡張可能。
-
-**章末出典**：[`configs/`], [`marsdisk/physics/`]
-
----
-
-## 6. 依存関係マップ（内部）
-
-```
-src/smoluchowski.c → src/smoluchowski.h → tests/test_smol.c
-src/hybrid.c → rebound/src/… (プレースホルダ)
-marsdisk/run.py → marsdisk/physics/* → marsdisk/io/writer.py → out/
-marsdisk/schema.py → marsdisk/constants.py
-scripts/plot_heatmaps.py, scripts/sweep_heatmaps.py → pandas/matplotlib (解析用)
-```
-
-* 外部ライブラリ名とバージョンは本文 §2 に集約。
-* **小結**：現状の Python モジュール間に循環依存は確認されていない。([marsdisk/physics/__init__.py], [src/], [scripts/])
-
-**章末出典**：[`marsdisk/`], [`src/`], [`scripts/`]
-
----
-
-## 7. 再現実行（論文図・既定実験）
-
-1. データ取得：`data/qpr_planck.h5` を `tools/make_qpr_table.py` で生成、`data/phi_tau.csv` を外部実験値から整備（URL/DOI は未提供）。
-2. パラメータ設定：`configs/tm_qpr.yml`・`configs/min_sweep_phi.yml` を使用し、必要に応じて `supply` セクションを調整。
-3. 実行：
-
-   ```bash
-   python -m marsdisk.run --config configs/tm_qpr.yml
-   python -m marsdisk.run --config configs/min_sweep_phi.yml
-   ```
-
-4. 産物配置：`out/` 配下（`series/`, `summary.json`, `checks/mass_budget.csv`, `run_config.json`）。
-5. 検証：`checks/mass_budget.csv` の `error_percent` 列を目視し（基準 0.5% はドキュメント側の指標で自動判定は実装されていない）、`summary.json` の `case_status` が `blowout` となるかを確認（表層供給がゼロの場合は `failed` となる点に注意）。
-
-**章末出典**：[`tools/make_qpr_table.py`], [`marsdisk/run.py`]
-
----
-
-## 8. トラブルシューティング
-
-* **欠落データ**：`data/qpr_planck.h5`／`data/phi_tau.csv` が存在しない場合、警告が出て近似式へフォールバックする。テーブルを再生成し、ハッシュ（例：`md5sum data/qpr_planck.h5`）で検証。([marsdisk/io/tables.py])
-* **環境差**：依存バージョンが固定されていないため、仮想環境で `pip install …` をやり直す。([AGENTS.md])
-* **計算資源不足**：`sizes.n_bins` や `numerics.dt_init` を減らし、`marsdisk.physics.smol.step_imex_bdf1_C3` の安全係数で安定化する。([configs/base.yml], [marsdisk/physics/smol.py])
-* **再現ずれ**：乱数シードは `marsdisk/run.py` 冒頭で固定 (`DEFAULT_SEED=12345`)。積分刻みは `dt_init`・`numerics.safety` を合わせ、`surface.use_tcoll` を構成ファイルで一致させる。([marsdisk/run.py])
-
-**章末出典**：[`marsdisk/io/tables.py`], [`marsdisk/physics/smol.py`], [`marsdisk/run.py`]
-
----
-
-## 9. FAQ（事実ベース）
-
-* Q. **最小実行に必須の外部データは何か。**  
-  A. 0D ベースラインはテーブル未配置でも近似式で走るが、`data/qpr_planck.h5` と `data/phi_tau.csv` を置くと物理量がテーブル値で再現される。([marsdisk/io/tables.py])
-* Q. **所要時間の目安は。**  
-  A. 既定の 0D 計算は数十秒で終了するが、正式なベンチマーク値はリポジトリ内に記載がなく不明。
-
----
-
-## 10. 既知の制約・未解決事項
-
-1. **（優先度 高）** `Step1/extended_static_map.py` などテストが参照する補助スクリプトが現行ツリーに含まれておらず、`tests/test_mass_tau.py` が失敗する。([tests/test_mass_tau.py])
-2. **（中）** ガス抗力スイッチは `sinks.enable_gas_drag` で用意されているが、実測に基づく係数や検証例が未提供。([marsdisk/physics/sinks.py])
-3. **（低）** C 実装 `src/hybrid.c` はプレースホルダで、REBOUND 結合ハイブリッド計算が未完成。([src/hybrid.c])
-
----
-
-## 11. ライセンス・引用・連絡先
-
-* ライセンス：リポジトリに SPDX／LICENSE ファイルが存在せず不明。
-* 引用方法：`CITATION.cff` や `references.bib` は未収録で不明。
-* 連絡先：メンテナ連絡先情報は未記載。
-
----
-
-# 付録A：実装済み支配方程式と記号表
-
-本付録では、リポジトリ内で実装され実際に数値計算へ組み込まれている式のみを整理する。番号は本文と対応しない。
-
-### A.1 ケプラー運動（`marsdisk/grid.py`）
-
-```math
-\Omega(r)=\sqrt{\frac{G M_{\rm Mars}}{r^{3}}},\qquad v_{K}(r)=\sqrt{\frac{G M_{\rm Mars}}{r}}.
-```
-
-### A.2 放射圧とブローアウト（`marsdisk/physics/radiation.py`）
-
-```math
-\beta(s)=\frac{3\,\sigma_{\rm SB}\,T_{M}^{4}\,R_{\rm Mars}^{2}\,\langle Q_{\rm pr}\rangle}{4 G M_{\rm Mars} c\,\rho\,s},\qquad
-s_{\rm blow}=\frac{3\,\sigma_{\rm SB}\,T_{M}^{4}\,R_{\rm Mars}^{2}\,\langle Q_{\rm pr}\rangle}{2 G M_{\rm Mars} c\,\rho}.
-```
-
-### A.3 粒径分布と不透明度（`marsdisk/physics/psd.py`）
-
-```math
-n(s)\propto\left(\frac{s}{s_{\min}}\right)^{-q(s)}\Bigl[1+A_{\rm w}\sin\Bigl(\frac{2\pi\ln(s/s_{\min})}{\ln(s_{\max}/s_{\min})}\Bigr)\Bigr],
-```
-```math
-\kappa=\frac{\int \pi s^{2} n(s)\,ds}{\int \tfrac{4}{3}\pi\rho s^{3} n(s)\,ds}.
-```
-
-### A.4 自遮蔽補正（`marsdisk/physics/shielding.py`）
-
-```math
-\kappa_{\rm eff}=\Phi(\tau,w_{0},g)\,\kappa,\qquad \Sigma_{\tau=1}=\frac{1}{\kappa_{\rm eff}},\qquad \tau=\kappa\,\Sigma_{\rm surf}.
-```
-
-### A.5 表層質量収支（`marsdisk/physics/surface.py`）
-
-```math
-\frac{d\Sigma_{\rm surf}}{dt}=P-\frac{\Sigma_{\rm surf}}{t_{\rm blow}}-\frac{\Sigma_{\rm surf}}{t_{\rm coll}}-\frac{\Sigma_{\rm surf}}{t_{\rm sink}},
-```
-```math
-t_{\rm blow}=\frac{1}{\Omega},\qquad t_{\rm coll}=\frac{1}{2\,\Omega\,\tau},\qquad \dot{M}_{\rm out}=\frac{\Sigma_{\rm surf}\,\Omega\,A}{M_{\rm Mars}}.
-```
-
-### A.6 衝突カーネルと IMEX 更新（`marsdisk/physics/collide.py`, `marsdisk/physics/smol.py`）
-
-```math
-C_{ij}=\frac{N_{i}N_{j}}{1+\delta_{ij}}\frac{\pi (s_{i}+s_{j})^{2} v_{ij}}{\sqrt{2\pi}\,H_{ij}},
-```
-```math
-N_{k}^{n+1}=\frac{N_{k}^{n}+\Delta t\,(\text{gain}_{k}-S_{k})}{1+\Delta t\,\text{loss}_{k}},\qquad
-\text{gain}_{k}=\tfrac{1}{2}\sum_{ij}C_{ij}Y_{kij},
-```
-```math
-\varepsilon_{\rm mass}=\frac{\bigl|M^{n+1}+\Delta t\,\dot{M}_{\rm prod}-M^{n}\bigr|}{M^{n}},\qquad M^{n}=\sum_{k}m_{k}N_{k}^{n}.
-```
-
-### A.7 破砕エネルギーと最大残骸（`marsdisk/physics/fragments.py`, `marsdisk/physics/qstar.py`）
-
-```math
-Q_{R}=\frac{0.5\,\mu v^{2}}{m_{1}+m_{2}},\qquad \frac{M_{\rm LR}}{M_{\rm tot}}=0.5\left(2-\frac{Q_{R}}{Q_{RD}^{\ast}}\right),
-```
-```math
-Q_{D}^{\ast}(s,\rho,v)=Q_{s}\left(\frac{s}{1\,\rm m}\right)^{-a_{s}}+B\,\rho\left(\frac{s}{1\,\rm m}\right)^{b_{g}}.
-```
-
-### A.8 動力学補助式（`marsdisk/physics/dynamics.py`）
-
-```math
-v_{ij}=v_{K}\sqrt{1.25\,e^{2}+i^{2}},\qquad c_{\rm eq}=\sqrt{\frac{f_{\rm wake}\,\tau}{1-\varepsilon^{2}}},
-```
-```math
-e(t+\Delta t)=e_{\rm eq}+(e(t)-e_{\rm eq})\,\exp\left(-\frac{\Delta t}{t_{\rm damp}}\right).
-```
-
-### A.9 昇華とガスシンク（`marsdisk/physics/sublimation.py`, `marsdisk/physics/sinks.py`）
-
-```math
-\log_{10}\!\left(\frac{P_{\rm sat}}{\rm Pa}\right)=A-\frac{B}{T},\qquad
-J=\alpha_{\rm evap}\,(P_{\rm sat}-P_{\rm gas})\sqrt{\frac{\mu}{2\pi R T}},
-```
-```math
-s_{\rm sink}=\eta_{\rm instant}\,t_{\rm ref}\,\frac{J}{\rho},\qquad t_{\rm drag}\approx\frac{\rho_{p}\,s}{\rho_{g} c_{s}},\qquad t_{\rm sink}=\min(t_{\rm sub},t_{\rm drag},\ldots).
-```
-
-### A.10 初期場と外部供給（`marsdisk/physics/initfields.py`, `marsdisk/physics/supply.py`）
-
-```math
-\Sigma(r)=\begin{cases}
-\dfrac{M_{\rm in}}{\pi (r_{\rm out}^{2}-r_{\rm in}^{2})} & (p\approx 0),\\[0.75em]
-\dfrac{M_{\rm in}(2-p)}{2\pi\bigl(r_{\rm out}^{2-p}-r_{\rm in}^{2-p}\bigr)}\,r^{-p} & (\text{otherwise}),
-\end{cases}
-```
-```math
-\Sigma_{\rm surf,0}=\min(f_{\rm surf}\,\Sigma,1/\kappa_{\rm eff}),\qquad P(t)=A\bigl((t-t_{0})+\varepsilon\bigr)^{\rm index},
-```
-```math
-P(t,r)=\sum_{i,j}w_{ij}(t,r)\,P_{ij},\qquad \dot{M}_{\rm out}^{\rm area}=P(t,r). 
-```
-
-**記号**：主要定数（G：重力定数、c：光速、sigma_SB：ステファン=ボルツマン定数）は `marsdisk/constants.py` を参照。
-
----
-
-# 付録B：全体フロー・依存マップ・詳細フロー（最終形）
-
-**全体フロー（再掲）**
-
-```
-入力（configs/*.yml, data/*.csv/h5） → marsdisk.schema → marsdisk.run.run_zero_d → marsdisk.physics.* → marsdisk.io.writer → out/*
-```
-
-**依存関係マップ（例）**
-
-```
-marsdisk/run.py → marsdisk/physics/radiation.py → marsdisk/io/tables.py → data/qpr_planck.h5
-                                     ↓
-                                   shielding.py → data/phi_tau.csv
-                                   surface.py → sinks.py / fragments.py / psd.py → smol.py → collide.py
-scripts/*.py → marsdisk/physics.*（解析用）
-src/*.c → tests/test_smol.c（C テスト）
-```
-
-**シミュレーション詳細（例）**
-
-```
-Sim-Base: configs/base.yml → marsdisk.run → surface.step_surface_density_S1 → writer.write_parquet/json
-Sim-Supply: configs/mars_0d_supply_sweep.yaml → supply.get_prod_area_rate → run_zero_d → writer
-Sim-Qpr: configs/tm_qpr.yml → io.tables.load_qpr_table → radiation.planck_mean_qpr → run_zero_d → writer
-```
-
----
-
-# 付録C：記号表（アルファベット順の抜粋）
-
-* a：軌道長半径
-* a_blow：ブローアウト境界粒径（`marsdisk/physics/radiation.py`）
-* c_s：音速
-* kappa：表層質量不透明度（`marsdisk/physics/psd.py`）
-* nu：動粘性（未実装）
-* Omega：角速度（`marsdisk/grid.py`）
-* Sigma：面密度（`marsdisk/physics/initfields.py`）
-* beta：放射圧／重力比（`marsdisk/physics/radiation.py`）
-* Sigma_surf：表層面密度（`marsdisk/physics/surface.py`）
-* t_blow：ブローアウト時間（`marsdisk/physics/surface.py`）
-* M_loss：累積質量損失（`marsdisk/run.py` 出力）
-
----
-
-### 参考（物理背景の一次文献）
-
-* 表層ダストの放射圧駆動外向き輸送とその流束評価：Takeuchi & Lin (2003)
-* 火星巨大衝突後の蒸気・凝縮粒子の散逸：Hyodo et al. (2018)
+- Wyatt の衝突寿命スケーリング、ブローアウト即時消滅による “wavy” PSD、IMEX 安定性などのテストが `marsdisk/tests/` に用意されています。
+- RNG 駆動モードの再現性と出力レンジを確認する `test_dynamics_sampling.py` も含まれます。
+
+## 6. 参考ドキュメント
+
+- `analysis/overview.md`：アーキテクチャ／物理式／データフローの詳細。  
+- `analysis/AI_USAGE.md`：YAML 設定のポイントと I/O 契約。  
+- `analysis/run-recipes.md`：ベンチマークや掃引ジョブの運用ノウハウ。  
+- `analysis/sinks_callgraph.md`：追加シンクの流れと依存関係。  
+- `analysis/equations.md`：採用方程式と文献まとめ。
+
+必要に応じて `analysis/` ディレクトリを `python -m tools.doc_sync_agent --all --write` で同期し、コード変更後の参照情報を更新してください。
+
+## 7. デバッグとトラブルシュート
+
+- **温度掃引が変化しない場合**  
+  `radiation.TM_K` が設定されたまま `temps.T_M` を変えても、上書きされた定数温度が使われるため結果が固定されます。`summary.json` の `T_M_source` を確認し、掃引時は `radiation.TM_K` を `null` にするか CLI で未指定にしてください。
+- **昇華シンクの可視化**  
+  YAML で `io.debug_sinks: true` を指定すると `out/<case>/debug/sinks_trace.jsonl` が生成され、各ステップの `t_sink`, `dominant_sink`, `total_sink_dm_dt_kg_s`, `cum_sublimation_mass_kg` などを追跡できます。ロギングを無効に戻すには `false` を指定します。
+- **RNG の再現性**  
+  CLI / YAML の同一設定で再実行しても、`dynamics.rng_seed` が一致していれば `summary.json` / `series/run.parquet` の統計量は一致します。シードを省略した場合は幾何条件からの自動決定値（`run_config.json` の `rng_seed_expr` を参照）が使われます。
