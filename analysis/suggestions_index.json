@@ -1,0 +1,206 @@
+{
+  "marsdisk/io/tables.py:load_phi_table": {
+    "symbol": "load_phi_table",
+    "file": "marsdisk/io/tables.py",
+    "suggested_doc": "analysis/overview.md",
+    "patch": "agent_test/suggestions/marsdisk__io__tables_py__load_phi_table.mdpatch"
+  },
+  "marsdisk/io/writer.py:write_summary": {
+    "symbol": "write_summary",
+    "file": "marsdisk/io/writer.py",
+    "suggested_doc": "analysis/overview.md",
+    "patch": "agent_test/suggestions/marsdisk__io__writer_py__write_summary.mdpatch"
+  },
+  "marsdisk/io/writer.py:write_run_config": {
+    "symbol": "write_run_config",
+    "file": "marsdisk/io/writer.py",
+    "suggested_doc": "analysis/overview.md",
+    "patch": "agent_test/suggestions/marsdisk__io__writer_py__write_run_config.mdpatch"
+  },
+  "marsdisk/io/writer.py:write_mass_budget": {
+    "symbol": "write_mass_budget",
+    "file": "marsdisk/io/writer.py",
+    "suggested_doc": "analysis/overview.md",
+    "patch": "agent_test/suggestions/marsdisk__io__writer_py__write_mass_budget.mdpatch"
+  },
+  "marsdisk/physics/collide.py:compute_collision_kernel_C1": {
+    "symbol": "compute_collision_kernel_C1",
+    "file": "marsdisk/physics/collide.py",
+    "suggested_doc": "analysis/run-recipes.md",
+    "patch": "agent_test/suggestions/marsdisk__physics__collide_py__compute_collision_kernel_C1.mdpatch"
+  },
+  "marsdisk/physics/collide.py:compute_prod_subblow_area_rate_C2": {
+    "symbol": "compute_prod_subblow_area_rate_C2",
+    "file": "marsdisk/physics/collide.py",
+    "suggested_doc": "analysis/run-recipes.md",
+    "patch": "agent_test/suggestions/marsdisk__physics__collide_py__compute_prod_subblow_area_rate_C2.mdpatch"
+  },
+  "marsdisk/physics/dynamics.py:v_ij": {
+    "symbol": "v_ij",
+    "file": "marsdisk/physics/dynamics.py",
+    "suggested_doc": "analysis/run-recipes.md",
+    "patch": "agent_test/suggestions/marsdisk__physics__dynamics_py__v_ij.mdpatch"
+  },
+  "marsdisk/physics/dynamics.py:solve_c_eq": {
+    "symbol": "solve_c_eq",
+    "file": "marsdisk/physics/dynamics.py",
+    "suggested_doc": "analysis/run-recipes.md",
+    "patch": "agent_test/suggestions/marsdisk__physics__dynamics_py__solve_c_eq.mdpatch"
+  },
+  "marsdisk/physics/dynamics.py:update_e": {
+    "symbol": "update_e",
+    "file": "marsdisk/physics/dynamics.py",
+    "suggested_doc": "analysis/run-recipes.md",
+    "patch": "agent_test/suggestions/marsdisk__physics__dynamics_py__update_e.mdpatch"
+  },
+  "marsdisk/physics/fragments.py:compute_q_r_F2": {
+    "symbol": "compute_q_r_F2",
+    "file": "marsdisk/physics/fragments.py",
+    "suggested_doc": "analysis/run-recipes.md",
+    "patch": "agent_test/suggestions/marsdisk__physics__fragments_py__compute_q_r_F2.mdpatch"
+  },
+  "marsdisk/physics/fragments.py:compute_largest_remnant_mass_fraction_F2": {
+    "symbol": "compute_largest_remnant_mass_fraction_F2",
+    "file": "marsdisk/physics/fragments.py",
+    "suggested_doc": "analysis/run-recipes.md",
+    "patch": "agent_test/suggestions/marsdisk__physics__fragments_py__compute_largest_remnant_mass_fraction_F2.mdpatch"
+  },
+  "marsdisk/physics/fragments.py:compute_s_min_F2": {
+    "symbol": "compute_s_min_F2",
+    "file": "marsdisk/physics/fragments.py",
+    "suggested_doc": "analysis/run-recipes.md",
+    "patch": "agent_test/suggestions/marsdisk__physics__fragments_py__compute_s_min_F2.mdpatch"
+  },
+  "marsdisk/physics/initfields.py:sigma_from_Minner": {
+    "symbol": "sigma_from_Minner",
+    "file": "marsdisk/physics/initfields.py",
+    "suggested_doc": "analysis/run-recipes.md",
+    "patch": "agent_test/suggestions/marsdisk__physics__initfields_py__sigma_from_Minner.mdpatch"
+  },
+  "marsdisk/physics/initfields.py:surf_sigma_init": {
+    "symbol": "surf_sigma_init",
+    "file": "marsdisk/physics/initfields.py",
+    "suggested_doc": "analysis/run-recipes.md",
+    "patch": "agent_test/suggestions/marsdisk__physics__initfields_py__surf_sigma_init.mdpatch"
+  },
+  "marsdisk/physics/psd.py:update_psd_state": {
+    "symbol": "update_psd_state",
+    "file": "marsdisk/physics/psd.py",
+    "suggested_doc": "analysis/run-recipes.md",
+    "patch": "agent_test/suggestions/marsdisk__physics__psd_py__update_psd_state.mdpatch"
+  },
+  "marsdisk/physics/qstar.py:compute_q_d_star_F1": {
+    "symbol": "compute_q_d_star_F1",
+    "file": "marsdisk/physics/qstar.py",
+    "suggested_doc": "analysis/run-recipes.md",
+    "patch": "agent_test/suggestions/marsdisk__physics__qstar_py__compute_q_d_star_F1.mdpatch"
+  },
+  "marsdisk/physics/radiation.py:load_qpr_table": {
+    "symbol": "load_qpr_table",
+    "file": "marsdisk/physics/radiation.py",
+    "suggested_doc": "analysis/run-recipes.md",
+    "patch": "agent_test/suggestions/marsdisk__physics__radiation_py__load_qpr_table.mdpatch"
+  },
+  "marsdisk/physics/radiation.py:qpr_lookup": {
+    "symbol": "qpr_lookup",
+    "file": "marsdisk/physics/radiation.py",
+    "suggested_doc": "analysis/run-recipes.md",
+    "patch": "agent_test/suggestions/marsdisk__physics__radiation_py__qpr_lookup.mdpatch"
+  },
+  "marsdisk/physics/radiation.py:planck_mean_qpr": {
+    "symbol": "planck_mean_qpr",
+    "file": "marsdisk/physics/radiation.py",
+    "suggested_doc": "analysis/run-recipes.md",
+    "patch": "agent_test/suggestions/marsdisk__physics__radiation_py__planck_mean_qpr.mdpatch"
+  },
+  "marsdisk/physics/radiation.py:beta": {
+    "symbol": "beta",
+    "file": "marsdisk/physics/radiation.py",
+    "suggested_doc": "analysis/run-recipes.md",
+    "patch": "agent_test/suggestions/marsdisk__physics__radiation_py__beta.mdpatch"
+  },
+  "marsdisk/physics/shielding.py:load_phi_table": {
+    "symbol": "load_phi_table",
+    "file": "marsdisk/physics/shielding.py",
+    "suggested_doc": "analysis/run-recipes.md",
+    "patch": "agent_test/suggestions/marsdisk__physics__shielding_py__load_phi_table.mdpatch"
+  },
+  "marsdisk/physics/shielding.py:effective_kappa": {
+    "symbol": "effective_kappa",
+    "file": "marsdisk/physics/shielding.py",
+    "suggested_doc": "analysis/run-recipes.md",
+    "patch": "agent_test/suggestions/marsdisk__physics__shielding_py__effective_kappa.mdpatch"
+  },
+  "marsdisk/physics/shielding.py:sigma_tau1": {
+    "symbol": "sigma_tau1",
+    "file": "marsdisk/physics/shielding.py",
+    "suggested_doc": "analysis/run-recipes.md",
+    "patch": "agent_test/suggestions/marsdisk__physics__shielding_py__sigma_tau1.mdpatch"
+  },
+  "marsdisk/physics/shielding.py:clip_to_tau1": {
+    "symbol": "clip_to_tau1",
+    "file": "marsdisk/physics/shielding.py",
+    "suggested_doc": "analysis/run-recipes.md",
+    "patch": "agent_test/suggestions/marsdisk__physics__shielding_py__clip_to_tau1.mdpatch"
+  },
+  "marsdisk/physics/sinks.py:gas_drag_timescale": {
+    "symbol": "gas_drag_timescale",
+    "file": "marsdisk/physics/sinks.py",
+    "suggested_doc": "analysis/run-recipes.md",
+    "patch": "agent_test/suggestions/marsdisk__physics__sinks_py__gas_drag_timescale.mdpatch"
+  },
+  "marsdisk/physics/smol.py:step_imex_bdf1_C3": {
+    "symbol": "step_imex_bdf1_C3",
+    "file": "marsdisk/physics/smol.py",
+    "suggested_doc": "analysis/run-recipes.md",
+    "patch": "agent_test/suggestions/marsdisk__physics__smol_py__step_imex_bdf1_C3.mdpatch"
+  },
+  "marsdisk/physics/sublimation.py:p_sat_clausius": {
+    "symbol": "p_sat_clausius",
+    "file": "marsdisk/physics/sublimation.py",
+    "suggested_doc": "analysis/run-recipes.md",
+    "patch": "agent_test/suggestions/marsdisk__physics__sublimation_py__p_sat_clausius.mdpatch"
+  },
+  "marsdisk/physics/sublimation.py:p_sat_tabulated": {
+    "symbol": "p_sat_tabulated",
+    "file": "marsdisk/physics/sublimation.py",
+    "suggested_doc": "analysis/run-recipes.md",
+    "patch": "agent_test/suggestions/marsdisk__physics__sublimation_py__p_sat_tabulated.mdpatch"
+  },
+  "marsdisk/physics/sublimation.py:s_sink_from_timescale": {
+    "symbol": "s_sink_from_timescale",
+    "file": "marsdisk/physics/sublimation.py",
+    "suggested_doc": "analysis/run-recipes.md",
+    "patch": "agent_test/suggestions/marsdisk__physics__sublimation_py__s_sink_from_timescale.mdpatch"
+  },
+  "marsdisk/physics/supply.py:get_prod_area_rate": {
+    "symbol": "get_prod_area_rate",
+    "file": "marsdisk/physics/supply.py",
+    "suggested_doc": "analysis/run-recipes.md",
+    "patch": "agent_test/suggestions/marsdisk__physics__supply_py__get_prod_area_rate.mdpatch"
+  },
+  "marsdisk/physics/surface.py:wyatt_tcoll_S1": {
+    "symbol": "wyatt_tcoll_S1",
+    "file": "marsdisk/physics/surface.py",
+    "suggested_doc": "analysis/run-recipes.md",
+    "patch": "agent_test/suggestions/marsdisk__physics__surface_py__wyatt_tcoll_S1.mdpatch"
+  },
+  "marsdisk/physics/surface.py:compute_surface_outflux": {
+    "symbol": "compute_surface_outflux",
+    "file": "marsdisk/physics/surface.py",
+    "suggested_doc": "analysis/run-recipes.md",
+    "patch": "agent_test/suggestions/marsdisk__physics__surface_py__compute_surface_outflux.mdpatch"
+  },
+  "marsdisk/run.py:step": {
+    "symbol": "step",
+    "file": "marsdisk/run.py",
+    "suggested_doc": "analysis/run-recipes.md",
+    "patch": "agent_test/suggestions/marsdisk__run_py__step.mdpatch"
+  },
+  "marsdisk/run.py:main": {
+    "symbol": "main",
+    "file": "marsdisk/run.py",
+    "suggested_doc": "analysis/run-recipes.md",
+    "patch": "agent_test/suggestions/marsdisk__run_py__main.mdpatch"
+  }
+}

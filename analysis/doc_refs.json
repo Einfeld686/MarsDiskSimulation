@@ -1,0 +1,734 @@
+{
+  "documents": [
+    "analysis/AGENT.md",
+    "analysis/AI_USAGE.md",
+    "analysis/equations.md",
+    "analysis/overview.md",
+    "analysis/run-recipes.md",
+    "analysis/sinks_callgraph.md"
+  ],
+  "colon": [
+    {
+      "doc_path": "analysis/equations.md",
+      "target_path": "marsdisk/grid.py",
+      "line_start": 34,
+      "line_end": 34
+    },
+    {
+      "doc_path": "analysis/overview.md",
+      "target_path": "marsdisk/grid.py",
+      "line_start": 34,
+      "line_end": 34
+    },
+    {
+      "doc_path": "analysis/run-recipes.md",
+      "target_path": "marsdisk/grid.py",
+      "line_start": 34,
+      "line_end": 34
+    },
+    {
+      "doc_path": "analysis/equations.md",
+      "target_path": "marsdisk/grid.py",
+      "line_start": 90,
+      "line_end": 90
+    },
+    {
+      "doc_path": "analysis/overview.md",
+      "target_path": "marsdisk/grid.py",
+      "line_start": 90,
+      "line_end": 90
+    },
+    {
+      "doc_path": "analysis/run-recipes.md",
+      "target_path": "marsdisk/grid.py",
+      "line_start": 90,
+      "line_end": 90
+    },
+    {
+      "doc_path": "analysis/equations.md",
+      "target_path": "marsdisk/grid.py",
+      "line_start": 93,
+      "line_end": 93
+    },
+    {
+      "doc_path": "analysis/equations.md",
+      "target_path": "marsdisk/io/tables.py",
+      "line_start": 253,
+      "line_end": 253
+    },
+    {
+      "doc_path": "analysis/overview.md",
+      "target_path": "marsdisk/io/tables.py",
+      "line_start": 253,
+      "line_end": 253
+    },
+    {
+      "doc_path": "analysis/equations.md",
+      "target_path": "marsdisk/io/tables.py",
+      "line_start": 273,
+      "line_end": 273
+    },
+    {
+      "doc_path": "analysis/overview.md",
+      "target_path": "marsdisk/io/tables.py",
+      "line_start": 273,
+      "line_end": 273
+    },
+    {
+      "doc_path": "analysis/overview.md",
+      "target_path": "marsdisk/io/tables.py",
+      "line_start": 287,
+      "line_end": 342
+    },
+    {
+      "doc_path": "analysis/overview.md",
+      "target_path": "marsdisk/io/writer.py",
+      "line_start": 24,
+      "line_end": 106
+    },
+    {
+      "doc_path": "analysis/overview.md",
+      "target_path": "marsdisk/io/writer.py",
+      "line_start": 109,
+      "line_end": 117
+    },
+    {
+      "doc_path": "analysis/overview.md",
+      "target_path": "marsdisk/io/writer.py",
+      "line_start": 120,
+      "line_end": 125
+    },
+    {
+      "doc_path": "analysis/overview.md",
+      "target_path": "marsdisk/io/writer.py",
+      "line_start": 128,
+      "line_end": 132
+    },
+    {
+      "doc_path": "analysis/overview.md",
+      "target_path": "marsdisk/physics/__init__.py",
+      "line_start": 1,
+      "line_end": 34
+    },
+    {
+      "doc_path": "analysis/equations.md",
+      "target_path": "marsdisk/physics/collide.py",
+      "line_start": 18,
+      "line_end": 77
+    },
+    {
+      "doc_path": "analysis/equations.md",
+      "target_path": "marsdisk/physics/collide.py",
+      "line_start": 80,
+      "line_end": 108
+    },
+    {
+      "doc_path": "analysis/equations.md",
+      "target_path": "marsdisk/physics/dynamics.py",
+      "line_start": 18,
+      "line_end": 45
+    },
+    {
+      "doc_path": "analysis/equations.md",
+      "target_path": "marsdisk/physics/dynamics.py",
+      "line_start": 48,
+      "line_end": 106
+    },
+    {
+      "doc_path": "analysis/equations.md",
+      "target_path": "marsdisk/physics/dynamics.py",
+      "line_start": 109,
+      "line_end": 140
+    },
+    {
+      "doc_path": "analysis/equations.md",
+      "target_path": "marsdisk/physics/fragments.py",
+      "line_start": 31,
+      "line_end": 62
+    },
+    {
+      "doc_path": "analysis/equations.md",
+      "target_path": "marsdisk/physics/fragments.py",
+      "line_start": 65,
+      "line_end": 99
+    },
+    {
+      "doc_path": "analysis/equations.md",
+      "target_path": "marsdisk/physics/initfields.py",
+      "line_start": 17,
+      "line_end": 44
+    },
+    {
+      "doc_path": "analysis/equations.md",
+      "target_path": "marsdisk/physics/initfields.py",
+      "line_start": 47,
+      "line_end": 79
+    },
+    {
+      "doc_path": "analysis/run-recipes.md",
+      "target_path": "marsdisk/physics/psd.py",
+      "line_start": 30,
+      "line_end": 118
+    },
+    {
+      "doc_path": "analysis/equations.md",
+      "target_path": "marsdisk/physics/qstar.py",
+      "line_start": 31,
+      "line_end": 73
+    },
+    {
+      "doc_path": "analysis/AI_USAGE.md",
+      "target_path": "marsdisk/physics/radiation.py",
+      "line_start": 32,
+      "line_end": 32
+    },
+    {
+      "doc_path": "analysis/equations.md",
+      "target_path": "marsdisk/physics/radiation.py",
+      "line_start": 32,
+      "line_end": 32
+    },
+    {
+      "doc_path": "analysis/overview.md",
+      "target_path": "marsdisk/physics/radiation.py",
+      "line_start": 32,
+      "line_end": 32
+    },
+    {
+      "doc_path": "analysis/equations.md",
+      "target_path": "marsdisk/physics/radiation.py",
+      "line_start": 120,
+      "line_end": 147
+    },
+    {
+      "doc_path": "analysis/run-recipes.md",
+      "target_path": "marsdisk/physics/radiation.py",
+      "line_start": 150,
+      "line_end": 204
+    },
+    {
+      "doc_path": "analysis/equations.md",
+      "target_path": "marsdisk/physics/radiation.py",
+      "line_start": 207,
+      "line_end": 218
+    },
+    {
+      "doc_path": "analysis/run-recipes.md",
+      "target_path": "marsdisk/physics/radiation.py",
+      "line_start": 221,
+      "line_end": 242
+    },
+    {
+      "doc_path": "analysis/equations.md",
+      "target_path": "marsdisk/physics/shielding.py",
+      "line_start": 52,
+      "line_end": 67
+    },
+    {
+      "doc_path": "analysis/equations.md",
+      "target_path": "marsdisk/physics/shielding.py",
+      "line_start": 81,
+      "line_end": 120
+    },
+    {
+      "doc_path": "analysis/equations.md",
+      "target_path": "marsdisk/physics/shielding.py",
+      "line_start": 123,
+      "line_end": 130
+    },
+    {
+      "doc_path": "analysis/equations.md",
+      "target_path": "marsdisk/physics/shielding.py",
+      "line_start": 219,
+      "line_end": 261
+    },
+    {
+      "doc_path": "analysis/equations.md",
+      "target_path": "marsdisk/physics/smol.py",
+      "line_start": 18,
+      "line_end": 101
+    },
+    {
+      "doc_path": "analysis/sinks_callgraph.md",
+      "target_path": "marsdisk/physics/sublimation.py",
+      "line_start": 37,
+      "line_end": 37
+    },
+    {
+      "doc_path": "analysis/equations.md",
+      "target_path": "marsdisk/physics/sublimation.py",
+      "line_start": 154,
+      "line_end": 164
+    },
+    {
+      "doc_path": "analysis/equations.md",
+      "target_path": "marsdisk/physics/sublimation.py",
+      "line_start": 369,
+      "line_end": 383
+    },
+    {
+      "doc_path": "analysis/equations.md",
+      "target_path": "marsdisk/physics/sublimation.py",
+      "line_start": 587,
+      "line_end": 603
+    },
+    {
+      "doc_path": "analysis/equations.md",
+      "target_path": "marsdisk/physics/supply.py",
+      "line_start": 93,
+      "line_end": 98
+    },
+    {
+      "doc_path": "analysis/equations.md",
+      "target_path": "marsdisk/physics/surface.py",
+      "line_start": 166,
+      "line_end": 175
+    },
+    {
+      "doc_path": "analysis/run-recipes.md",
+      "target_path": "marsdisk/run.py",
+      "line_start": 55,
+      "line_end": 55
+    },
+    {
+      "doc_path": "analysis/AI_USAGE.md",
+      "target_path": "marsdisk/run.py",
+      "line_start": 56,
+      "line_end": 56
+    }
+  ],
+  "line_anchors": [],
+  "symbol_anchors": [
+    {
+      "doc_path": "analysis/overview.md",
+      "target_path": "marsdisk/grid.py",
+      "symbol": "omega_kepler"
+    },
+    {
+      "doc_path": "analysis/overview.md",
+      "target_path": "marsdisk/io/tables.py",
+      "symbol": "interp_phi"
+    },
+    {
+      "doc_path": "analysis/run-recipes.md",
+      "target_path": "marsdisk/io/writer.py",
+      "symbol": "_ensure_parent"
+    },
+    {
+      "doc_path": "analysis/AI_USAGE.md",
+      "target_path": "marsdisk/io/writer.py",
+      "symbol": "write_mass_budget"
+    },
+    {
+      "doc_path": "analysis/AI_USAGE.md",
+      "target_path": "marsdisk/io/writer.py",
+      "symbol": "write_parquet"
+    },
+    {
+      "doc_path": "analysis/overview.md",
+      "target_path": "marsdisk/io/writer.py",
+      "symbol": "write_parquet"
+    },
+    {
+      "doc_path": "analysis/run-recipes.md",
+      "target_path": "marsdisk/io/writer.py",
+      "symbol": "write_parquet"
+    },
+    {
+      "doc_path": "analysis/sinks_callgraph.md",
+      "target_path": "marsdisk/io/writer.py",
+      "symbol": "write_parquet"
+    },
+    {
+      "doc_path": "analysis/AI_USAGE.md",
+      "target_path": "marsdisk/io/writer.py",
+      "symbol": "write_run_config"
+    },
+    {
+      "doc_path": "analysis/AI_USAGE.md",
+      "target_path": "marsdisk/io/writer.py",
+      "symbol": "write_summary"
+    },
+    {
+      "doc_path": "analysis/sinks_callgraph.md",
+      "target_path": "marsdisk/physics/fragments.py",
+      "symbol": "compute_s_min_F2"
+    },
+    {
+      "doc_path": "analysis/equations.md",
+      "target_path": "marsdisk/physics/fragments.py",
+      "symbol": "s_sub_boundary"
+    },
+    {
+      "doc_path": "analysis/overview.md",
+      "target_path": "marsdisk/physics/fragments.py",
+      "symbol": "s_sub_boundary"
+    },
+    {
+      "doc_path": "analysis/run-recipes.md",
+      "target_path": "marsdisk/physics/fragments.py",
+      "symbol": "s_sub_boundary"
+    },
+    {
+      "doc_path": "analysis/sinks_callgraph.md",
+      "target_path": "marsdisk/physics/fragments.py",
+      "symbol": "s_sub_boundary"
+    },
+    {
+      "doc_path": "analysis/overview.md",
+      "target_path": "marsdisk/physics/psd.py",
+      "symbol": "compute_kappa"
+    },
+    {
+      "doc_path": "analysis/overview.md",
+      "target_path": "marsdisk/physics/psd.py",
+      "symbol": "evolve_min_size"
+    },
+    {
+      "doc_path": "analysis/AI_USAGE.md",
+      "target_path": "marsdisk/physics/radiation.py",
+      "symbol": "beta"
+    },
+    {
+      "doc_path": "analysis/equations.md",
+      "target_path": "marsdisk/physics/radiation.py",
+      "symbol": "beta"
+    },
+    {
+      "doc_path": "analysis/AI_USAGE.md",
+      "target_path": "marsdisk/physics/radiation.py",
+      "symbol": "blowout_radius"
+    },
+    {
+      "doc_path": "analysis/overview.md",
+      "target_path": "marsdisk/physics/radiation.py",
+      "symbol": "blowout_radius"
+    },
+    {
+      "doc_path": "analysis/overview.md",
+      "target_path": "marsdisk/physics/shielding.py",
+      "symbol": "apply_shielding"
+    },
+    {
+      "doc_path": "analysis/AI_USAGE.md",
+      "target_path": "marsdisk/physics/sinks.py",
+      "symbol": "SinkOptions"
+    },
+    {
+      "doc_path": "analysis/sinks_callgraph.md",
+      "target_path": "marsdisk/physics/sinks.py",
+      "symbol": "SinkOptions"
+    },
+    {
+      "doc_path": "analysis/sinks_callgraph.md",
+      "target_path": "marsdisk/physics/sinks.py",
+      "symbol": "gas_drag_timescale"
+    },
+    {
+      "doc_path": "analysis/equations.md",
+      "target_path": "marsdisk/physics/sinks.py",
+      "symbol": "total_sink_timescale"
+    },
+    {
+      "doc_path": "analysis/overview.md",
+      "target_path": "marsdisk/physics/sinks.py",
+      "symbol": "total_sink_timescale"
+    },
+    {
+      "doc_path": "analysis/run-recipes.md",
+      "target_path": "marsdisk/physics/sinks.py",
+      "symbol": "total_sink_timescale"
+    },
+    {
+      "doc_path": "analysis/sinks_callgraph.md",
+      "target_path": "marsdisk/physics/sinks.py",
+      "symbol": "total_sink_timescale"
+    },
+    {
+      "doc_path": "analysis/overview.md",
+      "target_path": "marsdisk/physics/sizes.py",
+      "symbol": "eval_ds_dt_sublimation"
+    },
+    {
+      "doc_path": "analysis/overview.md",
+      "target_path": "marsdisk/physics/smol.py",
+      "symbol": "compute_mass_budget_error_C4"
+    },
+    {
+      "doc_path": "analysis/sinks_callgraph.md",
+      "target_path": "marsdisk/physics/sublimation.py",
+      "symbol": "_is_hkl_active"
+    },
+    {
+      "doc_path": "analysis/AI_USAGE.md",
+      "target_path": "marsdisk/physics/sublimation.py",
+      "symbol": "_load_psat_table"
+    },
+    {
+      "doc_path": "analysis/run-recipes.md",
+      "target_path": "marsdisk/physics/sublimation.py",
+      "symbol": "_load_psat_table"
+    },
+    {
+      "doc_path": "analysis/run-recipes.md",
+      "target_path": "marsdisk/physics/sublimation.py",
+      "symbol": "_local_clausius_fit_selection"
+    },
+    {
+      "doc_path": "analysis/run-recipes.md",
+      "target_path": "marsdisk/physics/sublimation.py",
+      "symbol": "choose_psat_backend"
+    },
+    {
+      "doc_path": "analysis/overview.md",
+      "target_path": "marsdisk/physics/sublimation.py",
+      "symbol": "grain_temperature_graybody"
+    },
+    {
+      "doc_path": "analysis/run-recipes.md",
+      "target_path": "marsdisk/physics/sublimation.py",
+      "symbol": "grain_temperature_graybody"
+    },
+    {
+      "doc_path": "analysis/overview.md",
+      "target_path": "marsdisk/physics/sublimation.py",
+      "symbol": "mass_flux_hkl"
+    },
+    {
+      "doc_path": "analysis/run-recipes.md",
+      "target_path": "marsdisk/physics/sublimation.py",
+      "symbol": "mass_flux_hkl"
+    },
+    {
+      "doc_path": "analysis/run-recipes.md",
+      "target_path": "marsdisk/physics/sublimation.py",
+      "symbol": "p_sat"
+    },
+    {
+      "doc_path": "analysis/run-recipes.md",
+      "target_path": "marsdisk/physics/supply.py",
+      "symbol": "_TableData"
+    },
+    {
+      "doc_path": "analysis/run-recipes.md",
+      "target_path": "marsdisk/physics/supply.py",
+      "symbol": "_rate_basic"
+    },
+    {
+      "doc_path": "analysis/sinks_callgraph.md",
+      "target_path": "marsdisk/physics/surface.py",
+      "symbol": "SurfaceStepResult"
+    },
+    {
+      "doc_path": "analysis/overview.md",
+      "target_path": "marsdisk/physics/surface.py",
+      "symbol": "step_surface"
+    },
+    {
+      "doc_path": "analysis/sinks_callgraph.md",
+      "target_path": "marsdisk/physics/surface.py",
+      "symbol": "step_surface"
+    },
+    {
+      "doc_path": "analysis/AI_USAGE.md",
+      "target_path": "marsdisk/physics/surface.py",
+      "symbol": "step_surface_density_S1"
+    },
+    {
+      "doc_path": "analysis/equations.md",
+      "target_path": "marsdisk/physics/surface.py",
+      "symbol": "step_surface_density_S1"
+    },
+    {
+      "doc_path": "analysis/overview.md",
+      "target_path": "marsdisk/physics/surface.py",
+      "symbol": "step_surface_density_S1"
+    },
+    {
+      "doc_path": "analysis/sinks_callgraph.md",
+      "target_path": "marsdisk/physics/surface.py",
+      "symbol": "step_surface_density_S1"
+    },
+    {
+      "doc_path": "analysis/AI_USAGE.md",
+      "target_path": "marsdisk/physics/surface.py",
+      "symbol": "wyatt_tcoll_S1"
+    },
+    {
+      "doc_path": "analysis/overview.md",
+      "target_path": "marsdisk/physics/viscosity.py",
+      "symbol": "step_viscous_diffusion_C5"
+    },
+    {
+      "doc_path": "analysis/equations.md",
+      "target_path": "marsdisk/run.py",
+      "symbol": "_gather_git_info"
+    },
+    {
+      "doc_path": "analysis/AI_USAGE.md",
+      "target_path": "marsdisk/run.py",
+      "symbol": "load_config"
+    },
+    {
+      "doc_path": "analysis/equations.md",
+      "target_path": "marsdisk/run.py",
+      "symbol": "load_config"
+    },
+    {
+      "doc_path": "analysis/overview.md",
+      "target_path": "marsdisk/run.py",
+      "symbol": "load_config"
+    },
+    {
+      "doc_path": "analysis/AI_USAGE.md",
+      "target_path": "marsdisk/run.py",
+      "symbol": "main"
+    },
+    {
+      "doc_path": "analysis/overview.md",
+      "target_path": "marsdisk/run.py",
+      "symbol": "run_n_steps"
+    },
+    {
+      "doc_path": "analysis/run-recipes.md",
+      "target_path": "marsdisk/run.py",
+      "symbol": "run_n_steps"
+    },
+    {
+      "doc_path": "analysis/AI_USAGE.md",
+      "target_path": "marsdisk/run.py",
+      "symbol": "run_zero_d"
+    },
+    {
+      "doc_path": "analysis/equations.md",
+      "target_path": "marsdisk/run.py",
+      "symbol": "run_zero_d"
+    },
+    {
+      "doc_path": "analysis/overview.md",
+      "target_path": "marsdisk/run.py",
+      "symbol": "run_zero_d"
+    },
+    {
+      "doc_path": "analysis/run-recipes.md",
+      "target_path": "marsdisk/run.py",
+      "symbol": "run_zero_d"
+    },
+    {
+      "doc_path": "analysis/sinks_callgraph.md",
+      "target_path": "marsdisk/run.py",
+      "symbol": "run_zero_d"
+    },
+    {
+      "doc_path": "analysis/sinks_callgraph.md",
+      "target_path": "marsdisk/run.py",
+      "symbol": "step"
+    },
+    {
+      "doc_path": "analysis/AI_USAGE.md",
+      "target_path": "marsdisk/schema.py",
+      "symbol": "Config"
+    },
+    {
+      "doc_path": "analysis/overview.md",
+      "target_path": "marsdisk/schema.py",
+      "symbol": "DiskGeometry"
+    },
+    {
+      "doc_path": "analysis/AI_USAGE.md",
+      "target_path": "marsdisk/schema.py",
+      "symbol": "Dynamics"
+    },
+    {
+      "doc_path": "analysis/overview.md",
+      "target_path": "marsdisk/schema.py",
+      "symbol": "Dynamics"
+    },
+    {
+      "doc_path": "analysis/overview.md",
+      "target_path": "marsdisk/schema.py",
+      "symbol": "Geometry"
+    },
+    {
+      "doc_path": "analysis/overview.md",
+      "target_path": "marsdisk/schema.py",
+      "symbol": "InnerDiskMass"
+    },
+    {
+      "doc_path": "analysis/overview.md",
+      "target_path": "marsdisk/schema.py",
+      "symbol": "Material"
+    },
+    {
+      "doc_path": "analysis/overview.md",
+      "target_path": "marsdisk/schema.py",
+      "symbol": "Numerics"
+    },
+    {
+      "doc_path": "analysis/overview.md",
+      "target_path": "marsdisk/schema.py",
+      "symbol": "QStar"
+    },
+    {
+      "doc_path": "analysis/run-recipes.md",
+      "target_path": "marsdisk/schema.py",
+      "symbol": "QStar"
+    },
+    {
+      "doc_path": "analysis/sinks_callgraph.md",
+      "target_path": "marsdisk/schema.py",
+      "symbol": "QStar"
+    },
+    {
+      "doc_path": "analysis/AI_USAGE.md",
+      "target_path": "marsdisk/schema.py",
+      "symbol": "Radiation"
+    },
+    {
+      "doc_path": "analysis/overview.md",
+      "target_path": "marsdisk/schema.py",
+      "symbol": "Radiation"
+    },
+    {
+      "doc_path": "analysis/AI_USAGE.md",
+      "target_path": "marsdisk/schema.py",
+      "symbol": "Sinks"
+    },
+    {
+      "doc_path": "analysis/overview.md",
+      "target_path": "marsdisk/schema.py",
+      "symbol": "Sizes"
+    },
+    {
+      "doc_path": "analysis/overview.md",
+      "target_path": "marsdisk/schema.py",
+      "symbol": "SublimationParamsModel"
+    },
+    {
+      "doc_path": "analysis/overview.md",
+      "target_path": "marsdisk/schema.py",
+      "symbol": "SupplyConst"
+    },
+    {
+      "doc_path": "analysis/overview.md",
+      "target_path": "marsdisk/schema.py",
+      "symbol": "Surface"
+    },
+    {
+      "doc_path": "analysis/overview.md",
+      "target_path": "marsdisk/schema.py",
+      "symbol": "Temps"
+    }
+  ],
+  "stats": {
+    "colon_total": 48,
+    "line_anchor_total": 0,
+    "symbol_anchor_total": 84,
+    "duplicate_counts": {
+      "colon": 5,
+      "line_anchor": 0,
+      "symbol_anchor": 168
+    },
+    "reversed_line_anchor_count": 0
+  }
+}
