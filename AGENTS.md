@@ -87,10 +87,10 @@ marsdisk/
 - Makefile エイリアス: `make analysis-sync` / `make analysis-sync-commit`
 
 ## シミュレーション結果の保管と実行記録
-- 実行結果は simulation_results/<YYYYMMDD-HHMM>_<short-title>__<shortsha>__seed<n>/ を作成して格納する。
+- 実行結果は out/<YYYYMMDD-HHMM>_<short-title>__<shortsha>__seed<n>/ を作成して格納する。
 - 各実行フォルダには、（i）参照レシピ名とコミットID、（ii）環境（Python・依存関係・OS等）、（iii）乱数の初期値と主要パラメータ、（iv）実行コマンド、（v）主要生成物とハッシュ、（vi）analysis/run-recipes.md の確認リストの結果――を run_card.md として記録する。
 - 手順の定義や評価基準は analysis/ を唯一の仕様源とし、実行フォルダでは重複記述をしない（参照のみ）。
-- simulation_results/ は Git では原則無視し（大容量を避けるため）、PR には実行ログの抜粋と要約のみ添付する。
+- out/ は Git では原則無視し（大容量を避けるため）、PR には実行ログの抜粋と要約のみ添付する。
 
 ## ドキュメントとファイル配置の原則
 - 物理の式・前提・数値処理は `analysis/equations.md` に一本化し、他の資料にはコピーしない。
