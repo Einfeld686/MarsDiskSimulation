@@ -38,13 +38,49 @@ python -m marsdisk.run --config configs/base.yml \
   --override chi_blow=auto
 ```
 
-1. **放射・軌道前処理** — 代表半径からケプラー速度 $`v_K`$ (E.001) と角速度 $`\Omega`$ (E.002) を取得し、$`t_{\rm blow}=1/\Omega`$ を決定します。Planck 平均 $`⟨Q_{\rm pr}⟩`$ はテーブル補間 (E.004, E.012) を使い、放射圧比 $`\beta`$ (E.013) とブローアウト半径 $`s_{\rm blow}`$ (E.014) を得ます。`chi_blow=auto` を使うと $`\beta`$ と $`⟨Q_{\rm pr}⟩`$ から滞在時間係数を推定し、`s_{\min,\rm eff} = \max(s_{\min,\rm cfg}, s_{\rm blow})` (E.008) に反映させます。
-2. **自遮蔽と表層初期化** — `shielding.phi_table` を指定すると、多層 RT 由来の $`\Phi(\tau,w_0,g)`$ を補間 (E.017) し、$`\kappa_{\rm eff}=\Phi\kappa_{\rm surf}`$ (E.015) と $`\Sigma_{\tau=1}=1/\kappa_{\rm eff}`$ (E.016, E.031) を評価します。表層の初期化は `surface.init_policy="clip_by_tau1"` により $`\Sigma_{\rm surf}=\min(f_{\rm surf}\Sigma,\Sigma_{\tau=1})`$ (E.025) を適用します。
-3. **PSD と破砕供給** — 内側質量は $`\Sigma(r)`$ (E.023) から初期化し、`psd.wavy_strength>0` で “wavy” 補正を有効化します。Wyatt 衝突で使う乱流速は $`v_{ij}=v_K\sqrt{1.25e^2+i^2}`$ (E.020) から導出し、衝突カーネル $`C_{ij}`$ (E.024) と破砕エネルギー閾値 $`Q_D^*`$ (E.026) を組み合わせてサブ・ブローアウト生成率 $`\dot{m}_{<a_{\rm blow}}`$ (E.035) を組み立てます。
-4. **Smoluchowski IMEX** — `numerics.eval_per_step=true` の場合、各ステップで $`\Lambda_i=\sum_j C_{ij}`$ を再評価し、IMEX-BDF1 更新 (E.010) を実行します。Wyatt スケール $`t_{\rm coll}=1/(2\Omega\tau)`$ (E.006) を `sinks.total_sink_timescale` とは独立に loss 項へ足し込み、$`\epsilon_{\rm mass}`$ (E.011) による質量保存検査を通過するまで $`\Delta t`$ を半減します。AGENTS.md §6 の制約で $`\Delta t \le 0.1\min t_{{\rm coll},k}`$ も同時に満たすよう安全係数を設定します。
-5. **TL2003 表層 IMEX** — gas-poor を無効化すると、Takeuchi & Lin (2003) の薄いガス層 ODE (E.007) をそのまま適用します。Wyatt 衝突寿命 (E.006) と追加 sink からなる $`\lambda`$ を計算し、$`\Sigma^{n+1}=(\Sigma^n+\Delta t\,\dot{\Sigma}_{\rm prod})/(1+\Delta t\,\lambda)`$ を $`\Sigma_{\tau=1}`$ でクリップ後、$`\dot{M}_{\rm out} = \Sigma^{n+1}\Omega`$ (E.009) を記録します。`enable_blowout` フラグは $`I_{\rm blow}`$ に対応し、`ALLOW_TL2003` を true にすることでガードを越えて gas-rich 想定を採用します。
-6. **昇華・ガス抗力シンク** — `sinks.enable_sublimation=true` と `sinks.sub_params.mode="hkl"` で HKL フラックス $`J(T)`$ (E.018) を用い、参照時間 $`t_{\rm ref}=1/\Omega`$ に基づく即時蒸発サイズ $`s_{\rm sink}`$ (E.019) から $`t_{\rm sink}`$ を構成します。`enable_gas_drag=true` と正の $`\rho_g`$ を与えると、`gas_drag_timescale` と HKL 由来の $`t_{\rm sink}`$ の最小値が `analysis/sinks_callgraph.md` に記載された経路で `step_surface_density_S1` に渡され、$`\Phi_{\rm sink}=\Sigma^{n+1}/t_{\rm sink}`$ を与えます。
-7. **出力と検証** — 各ステップで `prod_subblow_area_rate`, `M_out_dot`, `mass_lost_by_sinks`, `fast_blowout_factor` などが `out/series/*.parquet` に書き出され、$`\epsilon_{\rm mass}`$ (E.011) は `out/checks/mass_budget.csv` に 0.5% 未満で記録されます。`M_{\rm loss}` と `M_{\rm loss_from_sinks}` は 2 年間積分後に `out/summary.json` に反映され、ガスリッチ・全モード ON ケースにおける $`M_{\rm loss}`$ を直接参照できます。
+1. **放射・軌道前処理**
+   - 代表半径から $`v_K`$ (E.001) と $`\Omega`$ (E.002) を取得し、軌道力学の基準量を定めます。
+   - `radiation.qpr_table_path` で補間した $`⟨Q_{\rm pr}⟩`$ から $`\beta`$ (E.013) と $`s_{\rm blow}`$ (E.014) を評価します。
+   - `chi_blow=auto` を指定すると $`\beta`$ と $`⟨Q_{\rm pr}⟩`$ から滞在時間係数を推定し、$`s_{\min,\rm eff}`$ を自動更新します。
+   - **キー式**  
+     > $`t_{\rm blow}=1/\Omega`$  
+     > $`s_{\min,\rm eff} = \max(s_{\min,\rm cfg}, s_{\rm blow})`$
+2. **自遮蔽と表層初期化**
+   - `shielding.phi_table` を読み込み、多層 RT 由来の $`\Phi(\tau,w_0,g)`$ を補間 (E.017) します。
+   - 得られた係数で $`\kappa_{\rm eff}`$ (E.015) と $`\Sigma_{\tau=1}`$ (E.016, E.031) を計算し、`surface.init_policy="clip_by_tau1"` で表層をクリップします。
+   - **キー式**  
+     > $`\kappa_{\rm eff}=\Phi\kappa_{\rm surf}`$  
+     > $`\Sigma_{\tau=1}=1/\kappa_{\rm eff}`$
+3. **PSD と破砕供給**
+   - 内側質量は $`\Sigma(r)`$ (E.023) から初期化し、`psd.wavy_strength>0` なら “wavy” 補正を適用します。
+   - Wyatt 衝突速度 $`v_{ij}`$ (E.020) を用いて $`C_{ij}`$ (E.024) と $`Q_D^*`$ (E.026) を組み立て、$`\dot{m}_{<a_{\rm blow}}`$ (E.035) を得ます。
+   - **キー式**  
+     > $`v_{ij}=v_K\sqrt{1.25 e_i^2 + i_j^2}`$  
+     > $`\dot{m}_{<a_{\rm blow}} = \sum_{ij} C_{ij}\,m_{ij}`$（E.035 の要約）
+4. **Smoluchowski IMEX**
+   - `numerics.eval_per_step=true` では毎ステップ $`\Lambda_i=\sum_j C_{ij}`$ を再評価し、IMEX-BDF1 更新 (E.010) を適用します。
+   - Wyatt スケール $`t_{\rm coll}`$ (E.006) を loss に加え、$`\epsilon_{\rm mass}`$ (E.011) が閾値を超えた場合は $`\Delta t`$ を半減します。
+   - **キー式**  
+     > $`t_{\rm coll}=1/(2\Omega\tau)`$  
+     > $`\Delta t \le 0.1\,\min(t_{{\rm coll},k})`$
+5. **TL2003 表層 IMEX**
+   - gas-poor ガードを外すと Takeuchi & Lin (2003) の薄いガス層 ODE (E.007) をそのまま解きます。
+   - Wyatt 衝突寿命と追加 sink から $`\lambda`$ を組み、$`\Sigma_{\tau=1}`$ でクリップした後に $`\dot{M}_{\rm out}`$ を記録します。
+   - **キー式**  
+     > $`\Sigma^{n+1}=\dfrac{\Sigma^n+\Delta t\,\dot{\Sigma}_{\rm prod}}{1+\Delta t\,\lambda}`$  
+     > $`\dot{M}_{\rm out} = \Sigma^{n+1}\Omega`$
+6. **昇華・ガス抗力シンク**
+   - `sinks.enable_sublimation=true` と `sinks.sub_params.mode="hkl"` で HKL フラックス $`J(T)`$ (E.018) を評価し、$`t_{\rm sink}`$ を構成します。
+   - `enable_gas_drag=true` かつ $`\rho_g>0`$ ならガス抗力タイムスケールを計算し、最小値を `step_surface_density_S1` へ渡します。
+   - **キー式**  
+     > $`t_{\rm ref}=1/\Omega`$  
+     > $`\Phi_{\rm sink}=\Sigma^{n+1}/t_{\rm sink}`$
+7. **出力と検証**
+   - `out/series/*.parquet` に `prod_subblow_area_rate`, `M_out_dot`, `mass_lost_by_sinks` などを逐次保存します。
+   - `out/checks/mass_budget.csv` で $`\epsilon_{\rm mass}`$ を 0.5% 未満に監視し、2 年積分後の $`M_{\rm loss}`$ を `out/summary.json` に記録します。
+   - **キー式**  
+     > $`\epsilon_{\rm mass} = \left|1 - \dfrac{M_{\rm tracked}}{M_{\rm init}-M_{\rm loss}}\right|`$  
+     > $`M_{\rm loss} = \int_0^{2\,{\rm yr}} \dot{M}_{\rm out}\,dt`$
 
 ## 2. クイックスタート
 
@@ -66,9 +102,16 @@ python -m marsdisk.run --config configs/base.yml --sinks none
 | `out/checks/mass_budget.csv` | ステップ毎の質量保存ログ（許容誤差 0.5% 未満） |
 | `out/run_config.json` | 使用した式、定数、シード、`init_ei` ブロック（`dynamics.e_mode/i_mode`、$`\Delta r`$, $`e_0`$, $`i_0`$、`e_formula_SI`, `a_m_source` など） |
 
-`series/run.parquet` にはタイムステップ毎の高速ブローアウト診断が含まれます。`dt_over_t_blow = Δt / t_{\rm blow}`（無次元）、`fast_blowout_factor = 1 - \exp(-Δt / t_{\rm blow})`（面密度に対する有効損失分率）、`fast_blowout_flag_gt3` / `fast_blowout_flag_gt10`（`dt/t_{\rm blow}` が 3・10 を超えた際に `true`）が出力され、`io.correct_fast_blowout` を `true` にしたケースのみ `fast_blowout_corrected` が `true` になります（既定は `false` で補正は適用されません）。また、表層レートの列として `dSigma_dt_blowout`,`dSigma_dt_sinks`,`dSigma_dt_total`（単位 kg m⁻² s⁻¹）と、同じステップの平均化された惑星質量スケールのレート `M_out_dot_avg`,`M_sink_dot_avg`,`dM_dt_surface_total_avg` が追加されています。`n_substeps` 列は高速ブローアウトをサブステップで解像した場合の分割数（既定 1）を記録します。
+`series/run.parquet` にはタイムステップ毎の高速ブローアウト診断が含まれます。主な列は以下の通りです。
 
-`chi_blow` は YAML のトップレベルで設定でき、スカラー値を与えると従来通り `t_{\rm blow} = chi_{\rm blow} / \Omega` を使用、`"auto"` を指定すると β と ⟨Q_pr⟩ から 0.5–2.0 の範囲で自動推定した係数を採用します。自動推定値は `chi_blow_eff` としてタイムシリーズおよびサマリに記録されます。
+- `dt_over_t_blow` = $`\Delta t / t_{\rm blow}`$（無次元）。
+- `fast_blowout_factor` = $`1 - \exp(-\Delta t / t_{\rm blow})`$（面密度に対する有効損失分率）。
+- `fast_blowout_flag_gt3` / `fast_blowout_flag_gt10`：$`\Delta t / t_{\rm blow}`$ が 3・10 を超えたステップで `true`。
+- `fast_blowout_corrected`：`io.correct_fast_blowout=true` のときだけ `true` になり、補正の有無を明示します。
+- `dSigma_dt_blowout`,`dSigma_dt_sinks`,`dSigma_dt_total`（kg m⁻² s⁻¹）と、惑星質量スケールに平均化した `M_out_dot_avg`,`M_sink_dot_avg`,`dM_dt_surface_total_avg`。
+- `n_substeps`：高速ブローアウトをサブステップ分割した場合の分割数（既定 1）。
+
+`chi_blow` は YAML のトップレベルで設定でき、スカラー値を与えると従来通り `t_{\rm blow}` = $`\chi_{\rm blow} / \Omega`$ を使用します。`"auto"` を指定すると $`\beta`$ と $`⟨Q_{\rm pr}⟩`$ から 0.5–2.0 の範囲で自動推定した係数を採用し、その値を `chi_blow_eff` としてタイムシリーズとサマリに記録します。
 
 初期化温度 `T_M` は `radiation.TM_K` が指定されていれば優先され、未設定の場合は `temps.T_M` が採用されます。どちらが使われたかは `summary.json` の `T_M_source` を参照してください（`radiation.TM_K` / `temps.T_M` が入ります）。採用温度は `T_M_used[K]` に、対応するブローアウト半径や $`\beta`$ は `s_blow_m`、`beta_at_smin_*` に記録されます。Q_pr/Phi テーブルは `analysis/AI_USAGE.md` に従って `marsdisk/io/tables.py` 経由で読み込み、欠損時は警告付きの解析近似へフォールバックします。
 
@@ -83,14 +126,14 @@ python -m marsdisk.run --config configs/base.yml --sinks none
 | `temps` / `radiation` | `T_M`, `TM_K`, `Q_pr`, `qpr_table` | `radiation.TM_K` が優先。Q_pr テーブル or スカラー上書き可能。 |
 | `sizes` | `s_min`, `s_max`, `n_bins` | 対数ビン数は 30–60 推奨（既定 40）。 |
 | `initial` | `mass_total`, `s0_mode` | 初期 PSD モードは `"upper"` / `"mono"`。 |
-| `dynamics` | `e0`, `i0`, `t_damp_orbits`, `f_wake` | **既定モードは `e_mode="fixed"` / `i_mode="fixed"`**。モードを指定しなければ入力スカラー `e0` / `i0` がそのまま初期値となります。`e_mode="mars_clearance"` を選ぶと Δr（m）を `dr_min_m` / `dr_max_m` からサンプリングし `e = 1 - (R_{\rm MARS}+Δr)/a` を適用、`i_mode="obs_tilt_spread"` では `obs_tilt_deg ± i_spread_deg`（度）をラジアンに変換して一様乱数サンプリングします。`rng_seed` を指定すると再現性を確保できます。 |
+| `dynamics` | `e0`, `i0`, `t_damp_orbits`, `f_wake` | **既定モードは `e_mode="fixed"` / `i_mode="fixed"`**。モードを指定しなければ入力スカラー `e0` / `i0` がそのまま初期値となります。`e_mode="mars_clearance"` を選ぶと $`\Delta r`$（m）を `dr_min_m` / `dr_max_m` からサンプリングし $`e = 1 - (R_{\rm MARS}+\Delta r)/a`$ を適用、`i_mode="obs_tilt_spread"` では `obs_tilt_deg ± i_spread_deg`（度）をラジアンに変換して一様乱数サンプリングします。`rng_seed` を指定すると再現性を確保できます。 |
 | `psd` | `alpha`, `wavy_strength` | 三勾配 PSD と “wavy” 補正の強さ。 |
 | `qstar` | `Qs`, `a_s`, `B`, `b_g`, `v_ref_kms` | Leinhardt & Stewart (2012) の補間式を採用。 |
-| `surface` | `init_policy`, `use_tcoll` | Wyatt 衝突寿命の導入や Στ=1 のクリップを制御。 |
+| `surface` | `init_policy`, `use_tcoll` | Wyatt 衝突寿命の導入や $`\Sigma_{\tau=1}`$ のクリップを制御。 |
 | `supply` | `mode`, `const` / `powerlaw` / `table` / `piecewise` | 表層供給の時間依存・空間構造。 |
 | `sinks` | `mode`, `enable_sublimation`, `enable_gas_drag`, `sub_params.*`, `rho_g` | 昇華・ガス抗力など追加シンク。`mode="none"` で一括無効。 |
 | `shielding` | `phi_table` | Φ テーブル経由で自遮蔽係数を補正。 |
-| `numerics` | `t_end_years`, `dt_init`, `safety`, `atol`, `rtol` | IMEX-BDF(1) のタイムステップ制御 (`Δt ≤ 0.1 * min t_{\rm coll,k}` が収束条件)。 |
+| `numerics` | `t_end_years`, `dt_init`, `safety`, `atol`, `rtol` | IMEX-BDF(1) のタイムステップ制御 ($`\Delta t \le 0.1 \times \min t_{\rm coll,k}`$ が収束条件)。 |
 | `io` | `outdir` | 出力ディレクトリ。 |
 
 サンプルとして `analysis/overview.md` の YAML スニペットや `configs/base.yml` / `configs/sweep_example.yml` を参照してください。
