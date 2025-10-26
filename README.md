@@ -18,6 +18,34 @@
 
 詳細な数式・導出・ブロック図は `analysis/overview.md` と `analysis/equations.md` を参照してください。
 
+### 全モードON実行フロー（gas-poor 無効）
+
+> **注意**: AGENTS.md §4 にある通り、本プロジェクトは gas-poor を既定とし TL2003 表層方程式の使用を抑制しています。ここでは感度試験として `ALLOW_TL2003=true` などでガードを明示的に外し、昇華・ガス抗力・遮蔽・“wavy” PSD・Wyatt 衝突・HKL 侵食など **全スイッチを有効化した状態**（ただし gas-poor 簡略化は適用しない）で 0D シミュレーションを走らせる手順と式の対応を記述します。
+
+```bash
+ALLOW_TL2003=true \
+python -m marsdisk.run --config configs/base.yml \
+  --override radiation.qpr_table_path=data/qpr_table.csv \
+  --override shielding.phi_table=data/phi_multiscatter.csv \
+  --override numerics.eval_per_step=true \
+  --override io.correct_fast_blowout=true \
+  --override sinks.mode=sublimation \
+  --override sinks.enable_sublimation=true \
+  --override sinks.enable_gas_drag=true \
+  --override sinks.sub_params.mode=hkl \
+  --override sinks.sub_params.psat_model=clausius \
+  --override sinks.sub_params.P_gas=5.0 \
+  --override chi_blow=auto
+```
+
+1. **放射・軌道前処理** — 代表半径からケプラー速度 $v_K$ (E.001) と角速度 $\Omega$ (E.002) を取得し、$t_{\rm blow}=1/\Omega$ を決定します。Planck 平均 $⟨Q_{\rm pr}⟩$ はテーブル補間 (E.004, E.012) を使い、放射圧比 $\beta$ (E.013) とブローアウト半径 $s_{\rm blow}$ (E.014) を得ます。`chi_blow=auto` を使うと $\beta$ と $⟨Q_{\rm pr}⟩$ から滞在時間係数を推定し、`s_{\min,\rm eff} = \max(s_{\min,\rm cfg}, s_{\rm blow})` (E.008) に反映させます。
+2. **自遮蔽と表層初期化** — `shielding.phi_table` を指定すると、多層 RT 由来の $\Phi(\tau,w_0,g)$ を補間 (E.017) し、$\kappa_{\rm eff}=\Phi\kappa_{\rm surf}$ (E.015) と $\Sigma_{\tau=1}=1/\kappa_{\rm eff}$ (E.016, E.031) を評価します。表層の初期化は `surface.init_policy="clip_by_tau1"` により $\Sigma_{\rm surf}=\min(f_{\rm surf}\Sigma,\Sigma_{\tau=1})$ (E.025) を適用します。
+3. **PSD と破砕供給** — 内側質量は $\Sigma(r)$ (E.023) から初期化し、`psd.wavy_strength>0` で “wavy” 補正を有効化します。Wyatt 衝突で使う乱流速は $v_{ij}=v_K\sqrt{1.25e^2+i^2}$ (E.020) から導出し、衝突カーネル $C_{ij}$ (E.024) と破砕エネルギー閾値 $Q_D^*$ (E.026) を組み合わせてサブ・ブローアウト生成率 $\dot{m}_{<a_{\rm blow}}$ (E.035) を組み立てます。
+4. **Smoluchowski IMEX** — `numerics.eval_per_step=true` の場合、各ステップで $\Lambda_i=\sum_j C_{ij}$ を再評価し、IMEX-BDF1 更新 (E.010) を実行します。Wyatt スケール $t_{\rm coll}=1/(2\Omega\tau)$ (E.006) を `sinks.total_sink_timescale` とは独立に loss 項へ足し込み、$\epsilon_{\rm mass}$ (E.011) による質量保存検査を通過するまで $\Delta t$ を半減します。AGENTS.md §6 の制約で $\Delta t \le 0.1\min t_{{\rm coll},k}$ も同時に満たすよう安全係数を設定します。
+5. **TL2003 表層 IMEX** — gas-poor を無効化すると、Takeuchi & Lin (2003) の薄いガス層 ODE (E.007) をそのまま適用します。Wyatt 衝突寿命 (E.006) と追加 sink からなる $\lambda$ を計算し、$\Sigma^{n+1}=(\Sigma^n+\Delta t\,\dot{\Sigma}_{\rm prod})/(1+\Delta t\,\lambda)$ を $\Sigma_{\tau=1}$ でクリップ後、$\dot{M}_{\rm out} = \Sigma^{n+1}\Omega$ (E.009) を記録します。`enable_blowout` フラグは $I_{\rm blow}$ に対応し、`ALLOW_TL2003` を true にすることでガードを越えて gas-rich 想定を採用します。
+6. **昇華・ガス抗力シンク** — `sinks.enable_sublimation=true` と `sinks.sub_params.mode="hkl"` で HKL フラックス $J(T)$ (E.018) を用い、参照時間 $t_{\rm ref}=1/\Omega$ に基づく即時蒸発サイズ $s_{\rm sink}$ (E.019) から $t_{\rm sink}$ を構成します。`enable_gas_drag=true` と正の $\rho_g$ を与えると、`gas_drag_timescale` と HKL 由来の $t_{\rm sink}$ の最小値が `analysis/sinks_callgraph.md` に記載された経路で `step_surface_density_S1` に渡され、$\Phi_{\rm sink}=\Sigma^{n+1}/t_{\rm sink}$ を与えます。
+7. **出力と検証** — 各ステップで `prod_subblow_area_rate`, `M_out_dot`, `mass_lost_by_sinks`, `fast_blowout_factor` などが `out/series/*.parquet` に書き出され、$\epsilon_{\rm mass}$ (E.011) は `out/checks/mass_budget.csv` に 0.5% 未満で記録されます。`M_{\rm loss}` と `M_{\rm loss_from_sinks}` は 2 年間積分後に `out/summary.json` に反映され、ガスリッチ・全モード ON ケースにおける $M_{\rm loss}$ を直接参照できます。
+
 ## 2. クイックスタート
 
 ```bash
@@ -72,13 +100,24 @@ python -m marsdisk.run --config configs/base.yml --sinks none
 - `dynamics.rng_seed` を省略した場合は既定シード（`marsdisk/run.py` 内定義）が適用され、`run_config.json` の `init_ei.seed_used` に記録されます。
 - `run_config.json` には式、使用定数、Git 情報、`e_formula_SI`（単位説明付き）を埋め込み、分析再現性を担保します。
 
-## 4. 可視化とバッチ実行
+## 4. 補助スクリプトの配置
+
+- 可視化ユーティリティは `tools/` 配下に集約しました（`tools/plotting.py`、`tools/diagnostics/` など）。
+- ドキュメント同期や Q_pr テーブル生成などの開発運用向けコードは `marsdisk/ops/` に移動し、`python -m marsdisk.ops.doc_sync_agent --help` などで呼び出せます。既存の `python -m tools.doc_sync_agent` も互換ラッパーとして動作します。
+- PSD 数値実験の試験的スクリプトは `prototypes/psd/` へ分離しました。`tools/psd_*` は新しい配置へのフォワーダとして残しており、既存ワークフローから段階的に切り替え可能です。
+- 可視化ツールの詳細は `analysis/tools/visualizations.md`（スクリプト一覧）および `tools/AGENTS.md`（運用規則）を参照してください。
+
+### スクリプトとツールの役割
+- `scripts/` はエージェント／CI の公式エントリポイントを置く場所です。`python scripts/<name>.py` で直接実行するスイープ・バッチ・CLI はここに集約し、各ファイルの詳細は `scripts/README.md` に記載します。
+- `tools/` は可視化・解析補助・互換ラッパーなどを提供するユーティリティ置き場です。他スクリプトから import される部品や旧 CLI を残す場合はこちらに配置し、徐々に scripts 側へ機能を移管する方針です。
+
+## 5. 可視化とバッチ実行
 
 `scripts/sweep_heatmaps.py` は感度掃引用に YAML を自動生成し、複数ケースを実行して `results/*.csv` と `sweeps/<map>/<case_id>/out/` へ集計します。  
 `scripts/plot_heatmaps.py` は `results/map*.csv` からヒートマップ（例：`total_mass_lost_Mmars`, `beta_at_smin`）を描画し `figures/` へ保存します。  
 使い方は各スクリプトの `--help` と `analysis/run-recipes.md` を参照してください。
 
-## 5. テスト
+## 6. テスト
 
 ユニットテストは `pytest` で実行します。
 
@@ -89,7 +128,7 @@ pytest
 - Wyatt の衝突寿命スケーリング、ブローアウト即時消滅による “wavy” PSD、IMEX 安定性などのテストが `marsdisk/tests/` に用意されています。
 - RNG 駆動モードの再現性と出力レンジを確認する `test_dynamics_sampling.py` も含まれます。
 
-## 6. 参考ドキュメント
+## 7. 参考ドキュメント
 
 - `analysis/overview.md`：アーキテクチャ／物理式／データフローの詳細。  
 - `analysis/AI_USAGE.md`：YAML 設定のポイントと I/O 契約。  
@@ -99,7 +138,7 @@ pytest
 
 必要に応じて `analysis/` ディレクトリを `python -m tools.doc_sync_agent --all --write` で同期し、コード変更後の参照情報を更新してください。
 
-## 7. デバッグとトラブルシュート
+## 8. デバッグとトラブルシュート
 
 - **温度掃引が変化しない場合**  
   `radiation.TM_K` が設定されたまま `temps.T_M` を変えても、上書きされた定数温度が使われるため結果が固定されます。`summary.json` の `T_M_source` を確認し、掃引時は `radiation.TM_K` を `null` にするか CLI で未指定にしてください。
