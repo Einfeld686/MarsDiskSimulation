@@ -8,9 +8,9 @@
 
 - `marsdisk.run.run_zero_d` が 0D（半径無次元）ダスト円盤を時間発展させ、内部破砕で生成される sub-blow-out 粒子供給と表層の放射圧剥離を連成します（式 C1–C4, P1, F1–F2, R1–R3, S0–S1、analysis/equations.md を参照）。
 - 主要モジュール  
-  - `marsdisk/physics/radiation.py`：平均 $\langle Q_{\rm pr}\rangle$、$\beta$、$a_{\rm blow}$。  
+  - `marsdisk/physics/radiation.py`：平均 $`\langle Q_{\rm pr}\rangle`$、$`\beta`$、$`a_{\rm blow}`$。  
   - `marsdisk/physics/psd.py`：三勾配 + “wavy” 補正付き PSD と不透明度。  
-  - `marsdisk/physics/shielding.py`：多層 RT 由来の自遮蔽係数 $\Phi(\tau,\omega_0,g)$。  
+  - `marsdisk/physics/shielding.py`：多層 RT 由来の自遮蔽係数 $`\Phi(\tau,\omega_0,g)`$。  
   - `marsdisk/physics/collide.py`, `smol.py`：Smoluchowski IMEX-BDF(1) による破砕と質量保存検査。  
   - `marsdisk/physics/surface.py`：Wyatt スケールの衝突寿命と吹き飛び・追加シンクを含む表層 ODE。  
   - `marsdisk/io/writer.py`：Parquet / JSON / CSV への出力。
@@ -38,13 +38,13 @@ python -m marsdisk.run --config configs/base.yml \
   --override chi_blow=auto
 ```
 
-1. **放射・軌道前処理** — 代表半径からケプラー速度 $v_K$ (E.001) と角速度 $\Omega$ (E.002) を取得し、$t_{\rm blow}=1/\Omega$ を決定します。Planck 平均 $⟨Q_{\rm pr}⟩$ はテーブル補間 (E.004, E.012) を使い、放射圧比 $\beta$ (E.013) とブローアウト半径 $s_{\rm blow}$ (E.014) を得ます。`chi_blow=auto` を使うと $\beta$ と $⟨Q_{\rm pr}⟩$ から滞在時間係数を推定し、`s_{\min,\rm eff} = \max(s_{\min,\rm cfg}, s_{\rm blow})` (E.008) に反映させます。
-2. **自遮蔽と表層初期化** — `shielding.phi_table` を指定すると、多層 RT 由来の $\Phi(\tau,w_0,g)$ を補間 (E.017) し、$\kappa_{\rm eff}=\Phi\kappa_{\rm surf}$ (E.015) と $\Sigma_{\tau=1}=1/\kappa_{\rm eff}$ (E.016, E.031) を評価します。表層の初期化は `surface.init_policy="clip_by_tau1"` により $\Sigma_{\rm surf}=\min(f_{\rm surf}\Sigma,\Sigma_{\tau=1})$ (E.025) を適用します。
-3. **PSD と破砕供給** — 内側質量は $\Sigma(r)$ (E.023) から初期化し、`psd.wavy_strength>0` で “wavy” 補正を有効化します。Wyatt 衝突で使う乱流速は $v_{ij}=v_K\sqrt{1.25e^2+i^2}$ (E.020) から導出し、衝突カーネル $C_{ij}$ (E.024) と破砕エネルギー閾値 $Q_D^*$ (E.026) を組み合わせてサブ・ブローアウト生成率 $\dot{m}_{<a_{\rm blow}}$ (E.035) を組み立てます。
-4. **Smoluchowski IMEX** — `numerics.eval_per_step=true` の場合、各ステップで $\Lambda_i=\sum_j C_{ij}$ を再評価し、IMEX-BDF1 更新 (E.010) を実行します。Wyatt スケール $t_{\rm coll}=1/(2\Omega\tau)$ (E.006) を `sinks.total_sink_timescale` とは独立に loss 項へ足し込み、$\epsilon_{\rm mass}$ (E.011) による質量保存検査を通過するまで $\Delta t$ を半減します。AGENTS.md §6 の制約で $\Delta t \le 0.1\min t_{{\rm coll},k}$ も同時に満たすよう安全係数を設定します。
-5. **TL2003 表層 IMEX** — gas-poor を無効化すると、Takeuchi & Lin (2003) の薄いガス層 ODE (E.007) をそのまま適用します。Wyatt 衝突寿命 (E.006) と追加 sink からなる $\lambda$ を計算し、$\Sigma^{n+1}=(\Sigma^n+\Delta t\,\dot{\Sigma}_{\rm prod})/(1+\Delta t\,\lambda)$ を $\Sigma_{\tau=1}$ でクリップ後、$\dot{M}_{\rm out} = \Sigma^{n+1}\Omega$ (E.009) を記録します。`enable_blowout` フラグは $I_{\rm blow}$ に対応し、`ALLOW_TL2003` を true にすることでガードを越えて gas-rich 想定を採用します。
-6. **昇華・ガス抗力シンク** — `sinks.enable_sublimation=true` と `sinks.sub_params.mode="hkl"` で HKL フラックス $J(T)$ (E.018) を用い、参照時間 $t_{\rm ref}=1/\Omega$ に基づく即時蒸発サイズ $s_{\rm sink}$ (E.019) から $t_{\rm sink}$ を構成します。`enable_gas_drag=true` と正の $\rho_g$ を与えると、`gas_drag_timescale` と HKL 由来の $t_{\rm sink}$ の最小値が `analysis/sinks_callgraph.md` に記載された経路で `step_surface_density_S1` に渡され、$\Phi_{\rm sink}=\Sigma^{n+1}/t_{\rm sink}$ を与えます。
-7. **出力と検証** — 各ステップで `prod_subblow_area_rate`, `M_out_dot`, `mass_lost_by_sinks`, `fast_blowout_factor` などが `out/series/*.parquet` に書き出され、$\epsilon_{\rm mass}$ (E.011) は `out/checks/mass_budget.csv` に 0.5% 未満で記録されます。`M_{\rm loss}` と `M_{\rm loss_from_sinks}` は 2 年間積分後に `out/summary.json` に反映され、ガスリッチ・全モード ON ケースにおける $M_{\rm loss}$ を直接参照できます。
+1. **放射・軌道前処理** — 代表半径からケプラー速度 $`v_K`$ (E.001) と角速度 $`\Omega`$ (E.002) を取得し、$`t_{\rm blow}=1/\Omega`$ を決定します。Planck 平均 $`⟨Q_{\rm pr}⟩`$ はテーブル補間 (E.004, E.012) を使い、放射圧比 $`\beta`$ (E.013) とブローアウト半径 $`s_{\rm blow}`$ (E.014) を得ます。`chi_blow=auto` を使うと $`\beta`$ と $`⟨Q_{\rm pr}⟩`$ から滞在時間係数を推定し、`s_{\min,\rm eff} = \max(s_{\min,\rm cfg}, s_{\rm blow})` (E.008) に反映させます。
+2. **自遮蔽と表層初期化** — `shielding.phi_table` を指定すると、多層 RT 由来の $`\Phi(\tau,w_0,g)`$ を補間 (E.017) し、$`\kappa_{\rm eff}=\Phi\kappa_{\rm surf}`$ (E.015) と $`\Sigma_{\tau=1}=1/\kappa_{\rm eff}`$ (E.016, E.031) を評価します。表層の初期化は `surface.init_policy="clip_by_tau1"` により $`\Sigma_{\rm surf}=\min(f_{\rm surf}\Sigma,\Sigma_{\tau=1})`$ (E.025) を適用します。
+3. **PSD と破砕供給** — 内側質量は $`\Sigma(r)`$ (E.023) から初期化し、`psd.wavy_strength>0` で “wavy” 補正を有効化します。Wyatt 衝突で使う乱流速は $`v_{ij}=v_K\sqrt{1.25e^2+i^2}`$ (E.020) から導出し、衝突カーネル $`C_{ij}`$ (E.024) と破砕エネルギー閾値 $`Q_D^*`$ (E.026) を組み合わせてサブ・ブローアウト生成率 $`\dot{m}_{<a_{\rm blow}}`$ (E.035) を組み立てます。
+4. **Smoluchowski IMEX** — `numerics.eval_per_step=true` の場合、各ステップで $`\Lambda_i=\sum_j C_{ij}`$ を再評価し、IMEX-BDF1 更新 (E.010) を実行します。Wyatt スケール $`t_{\rm coll}=1/(2\Omega\tau)`$ (E.006) を `sinks.total_sink_timescale` とは独立に loss 項へ足し込み、$`\epsilon_{\rm mass}`$ (E.011) による質量保存検査を通過するまで $`\Delta t`$ を半減します。AGENTS.md §6 の制約で $`\Delta t \le 0.1\min t_{{\rm coll},k}`$ も同時に満たすよう安全係数を設定します。
+5. **TL2003 表層 IMEX** — gas-poor を無効化すると、Takeuchi & Lin (2003) の薄いガス層 ODE (E.007) をそのまま適用します。Wyatt 衝突寿命 (E.006) と追加 sink からなる $`\lambda`$ を計算し、$`\Sigma^{n+1}=(\Sigma^n+\Delta t\,\dot{\Sigma}_{\rm prod})/(1+\Delta t\,\lambda)`$ を $`\Sigma_{\tau=1}`$ でクリップ後、$`\dot{M}_{\rm out} = \Sigma^{n+1}\Omega`$ (E.009) を記録します。`enable_blowout` フラグは $`I_{\rm blow}`$ に対応し、`ALLOW_TL2003` を true にすることでガードを越えて gas-rich 想定を採用します。
+6. **昇華・ガス抗力シンク** — `sinks.enable_sublimation=true` と `sinks.sub_params.mode="hkl"` で HKL フラックス $`J(T)`$ (E.018) を用い、参照時間 $`t_{\rm ref}=1/\Omega`$ に基づく即時蒸発サイズ $`s_{\rm sink}`$ (E.019) から $`t_{\rm sink}`$ を構成します。`enable_gas_drag=true` と正の $`\rho_g`$ を与えると、`gas_drag_timescale` と HKL 由来の $`t_{\rm sink}`$ の最小値が `analysis/sinks_callgraph.md` に記載された経路で `step_surface_density_S1` に渡され、$`\Phi_{\rm sink}=\Sigma^{n+1}/t_{\rm sink}`$ を与えます。
+7. **出力と検証** — 各ステップで `prod_subblow_area_rate`, `M_out_dot`, `mass_lost_by_sinks`, `fast_blowout_factor` などが `out/series/*.parquet` に書き出され、$`\epsilon_{\rm mass}`$ (E.011) は `out/checks/mass_budget.csv` に 0.5% 未満で記録されます。`M_{\rm loss}` と `M_{\rm loss_from_sinks}` は 2 年間積分後に `out/summary.json` に反映され、ガスリッチ・全モード ON ケースにおける $`M_{\rm loss}`$ を直接参照できます。
 
 ## 2. クイックスタート
 
@@ -64,13 +64,13 @@ python -m marsdisk.run --config configs/base.yml --sinks none
 | `out/series/run.parquet` | 時系列（`prod_subblow_area_rate`, `M_out_dot`, `tau`, `t_blow`, etc.） |
 | `out/summary.json` | `M_loss`, `M_loss_from_sinks`, `M_loss_from_sublimation`, `s_blow_m`, `beta_at_smin*`, `s_min_effective[m]`, `T_M_source`, `T_M_used[K]` 等を含むサマリ |
 | `out/checks/mass_budget.csv` | ステップ毎の質量保存ログ（許容誤差 0.5% 未満） |
-| `out/run_config.json` | 使用した式、定数、シード、`init_ei` ブロック（`dynamics.e_mode/i_mode`、$\Delta r$, $e_0$, $i_0$、`e_formula_SI`, `a_m_source` など） |
+| `out/run_config.json` | 使用した式、定数、シード、`init_ei` ブロック（`dynamics.e_mode/i_mode`、$`\Delta r`$, $`e_0`$, $`i_0`$、`e_formula_SI`, `a_m_source` など） |
 
 `series/run.parquet` にはタイムステップ毎の高速ブローアウト診断が含まれます。`dt_over_t_blow = Δt / t_{\rm blow}`（無次元）、`fast_blowout_factor = 1 - \exp(-Δt / t_{\rm blow})`（面密度に対する有効損失分率）、`fast_blowout_flag_gt3` / `fast_blowout_flag_gt10`（`dt/t_{\rm blow}` が 3・10 を超えた際に `true`）が出力され、`io.correct_fast_blowout` を `true` にしたケースのみ `fast_blowout_corrected` が `true` になります（既定は `false` で補正は適用されません）。また、表層レートの列として `dSigma_dt_blowout`,`dSigma_dt_sinks`,`dSigma_dt_total`（単位 kg m⁻² s⁻¹）と、同じステップの平均化された惑星質量スケールのレート `M_out_dot_avg`,`M_sink_dot_avg`,`dM_dt_surface_total_avg` が追加されています。`n_substeps` 列は高速ブローアウトをサブステップで解像した場合の分割数（既定 1）を記録します。
 
 `chi_blow` は YAML のトップレベルで設定でき、スカラー値を与えると従来通り `t_{\rm blow} = chi_{\rm blow} / \Omega` を使用、`"auto"` を指定すると β と ⟨Q_pr⟩ から 0.5–2.0 の範囲で自動推定した係数を採用します。自動推定値は `chi_blow_eff` としてタイムシリーズおよびサマリに記録されます。
 
-初期化温度 `T_M` は `radiation.TM_K` が指定されていれば優先され、未設定の場合は `temps.T_M` が採用されます。どちらが使われたかは `summary.json` の `T_M_source` を参照してください（`radiation.TM_K` / `temps.T_M` が入ります）。採用温度は `T_M_used[K]` に、対応するブローアウト半径や $\beta$ は `s_blow_m`、`beta_at_smin_*` に記録されます。Q_pr/Phi テーブルは `analysis/AI_USAGE.md` に従って `marsdisk/io/tables.py` 経由で読み込み、欠損時は警告付きの解析近似へフォールバックします。
+初期化温度 `T_M` は `radiation.TM_K` が指定されていれば優先され、未設定の場合は `temps.T_M` が採用されます。どちらが使われたかは `summary.json` の `T_M_source` を参照してください（`radiation.TM_K` / `temps.T_M` が入ります）。採用温度は `T_M_used[K]` に、対応するブローアウト半径や $`\beta`$ は `s_blow_m`、`beta_at_smin_*` に記録されます。Q_pr/Phi テーブルは `analysis/AI_USAGE.md` に従って `marsdisk/io/tables.py` 経由で読み込み、欠損時は警告付きの解析近似へフォールバックします。
 
 ## 3. 設定 YAML の要点
 
