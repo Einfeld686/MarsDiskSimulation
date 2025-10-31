@@ -1,0 +1,7 @@
+[ci_guard_analysis] rate=0.633 (38/60) threshold=0.700 anchors=0.909 invalid=2 duplicate=50
+[ci_guard_analysis] FAIL: function reference rate below threshold.
+  - marsdisk/physics/psd.py#update_psd_state
+  - marsdisk/physics/psd.py#compute_kappa
+  - marsdisk/physics/psd.py#evolve_min_size
+  - marsdisk/physics/sizes.py#eval_ds_dt_sublimation
+  - marsdisk/physics/viscosity.py#step_viscous_diffusion_C5

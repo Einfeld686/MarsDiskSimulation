@@ -1,0 +1,30 @@
+{
+  "M_loss": 3.043947891196673e-10,
+  "M_loss_from_sinks": 0.0,
+  "M_loss_from_sublimation": 0.0,
+  "Q_pr_used": 0.9999269067637926,
+  "T_M_source": "temps.T_M",
+  "T_M_used": 3000.0,
+  "T_M_used[K]": 3000.0,
+  "beta_at_smin": 1.0251135520528003,
+  "beta_at_smin_config": 1.0251135520528003,
+  "beta_at_smin_effective": 0.4999634533818963,
+  "beta_threshold": 0.5,
+  "case_status": "blowout",
+  "chi_blow_eff": 1.0,
+  "chi_blow_input": "1.0",
+  "enforce_mass_budget": false,
+  "rho_used": 3000.0,
+  "s_blow_m": 2.054815356035103e-06,
+  "s_min_components": {
+    "blowout": 2.054815356035103e-06,
+    "config": 1e-06,
+    "effective": 2.054815356035103e-06,
+    "evolved": 2.054815356035103e-06,
+    "sublimation": 0.0
+  },
+  "s_min_config": 1e-06,
+  "s_min_effective": 2.054815356035103e-06,
+  "s_min_effective[m]": 2.054815356035103e-06,
+  "s_min_effective_gt_config": true
+}

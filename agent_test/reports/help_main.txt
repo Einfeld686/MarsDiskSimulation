@@ -1,0 +1,13 @@
+usage: doc_sync_agent.py [-h] [--all] [--dry-run] [--write] [--commit]
+                         [--paths [PATHS ...]]
+
+Synchronise analysis documentation.
+
+options:
+  -h, --help           show this help message and exit
+  --all                Run all synchronisation steps (default behaviour).
+  --dry-run            Show diffs without modifying files instead of writing.
+  --write              Apply the computed changes to disk.
+  --commit             After writing, run "git commit -am 'docs: sync
+                       analysis'".
+  --paths [PATHS ...]  Subset of documentation files to refresh.

@@ -1,0 +1,2 @@
+[ci_guard_analysis] rate=0.716 (63/88) threshold=0.200 anchors=1.000 invalid=0 duplicate=220
+[ci_guard_analysis] PASS

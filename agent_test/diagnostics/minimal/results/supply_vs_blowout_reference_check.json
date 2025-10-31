@@ -1,0 +1,205 @@
+{
+  "records": [
+    {
+      "T_input": 2500.0,
+      "computed": 0.0006331064739428115,
+      "metric": "Omega_s",
+      "r_RM": 1.4,
+      "reference": 0.0006331064739428,
+      "rel_error": 1.815262282309986e-14,
+      "series": "baseline",
+      "within_tol": true
+    },
+    {
+      "T_input": 2500.0,
+      "computed": 1579.5131485108302,
+      "metric": "t_blow_s",
+      "r_RM": 1.4,
+      "reference": 1579.5131485108302,
+      "rel_error": 0.0,
+      "series": "baseline",
+      "within_tol": true
+    },
+    {
+      "T_input": 2500.0,
+      "computed": 39.95864172419533,
+      "metric": "dt_over_t_blow",
+      "r_RM": 1.4,
+      "reference": 39.95864172419533,
+      "rel_error": 0.0,
+      "series": "baseline",
+      "within_tol": true
+    },
+    {
+      "T_input": 2500.0,
+      "computed": 5.45354177188265e-18,
+      "metric": "M_out_dot",
+      "r_RM": 1.4,
+      "reference": 0.0,
+      "rel_error": 5.45354177188265e-18,
+      "series": "baseline",
+      "within_tol": true
+    },
+    {
+      "T_input": 2500.0,
+      "computed": 0.0005181897688718022,
+      "metric": "Omega_s",
+      "r_RM": 1.6,
+      "reference": 0.0005181897688718,
+      "rel_error": 4.3938045461157015e-15,
+      "series": "baseline",
+      "within_tol": true
+    },
+    {
+      "T_input": 2500.0,
+      "computed": 1929.7949517166082,
+      "metric": "t_blow_s",
+      "r_RM": 1.6,
+      "reference": 1929.794951716608,
+      "rel_error": 1.1782271232546062e-16,
+      "series": "baseline",
+      "within_tol": true
+    },
+    {
+      "T_input": 2500.0,
+      "computed": 32.70565090029757,
+      "metric": "dt_over_t_blow",
+      "r_RM": 1.6,
+      "reference": 32.70565090029757,
+      "rel_error": 0.0,
+      "series": "baseline",
+      "within_tol": true
+    },
+    {
+      "T_input": 2500.0,
+      "computed": 4.780971785258831e-18,
+      "metric": "M_out_dot",
+      "r_RM": 1.6,
+      "reference": 0.0,
+      "rel_error": 4.780971785258831e-18,
+      "series": "baseline",
+      "within_tol": true
+    },
+    {
+      "T_input": 2500.0,
+      "computed": 0.0004342702216423598,
+      "metric": "Omega_s",
+      "r_RM": 1.8,
+      "reference": 0.0004342702216423,
+      "rel_error": 1.3768788839918785e-13,
+      "series": "baseline",
+      "within_tol": true
+    },
+    {
+      "T_input": 2500.0,
+      "computed": 2302.713725611016,
+      "metric": "t_blow_s",
+      "r_RM": 1.8,
+      "reference": 2302.713725611016,
+      "rel_error": 0.0,
+      "series": "baseline",
+      "within_tol": true
+    },
+    {
+      "T_input": 2500.0,
+      "computed": 27.409051893001866,
+      "metric": "dt_over_t_blow",
+      "r_RM": 1.8,
+      "reference": 27.409051893001863,
+      "rel_error": 1.2961826234155831e-16,
+      "series": "baseline",
+      "within_tol": true
+    },
+    {
+      "T_input": 2500.0,
+      "computed": 4.255713662410983e-18,
+      "metric": "M_out_dot",
+      "r_RM": 1.8,
+      "reference": 0.0,
+      "rel_error": 4.255713662410983e-18,
+      "series": "baseline",
+      "within_tol": true
+    },
+    {
+      "T_input": 2500.0,
+      "computed": 0.0003707864155015214,
+      "metric": "Omega_s",
+      "r_RM": 2.0,
+      "reference": 0.0003707864155015,
+      "rel_error": 5.760400571600237e-14,
+      "series": "baseline",
+      "within_tol": true
+    },
+    {
+      "T_input": 2500.0,
+      "computed": 2696.9704341714128,
+      "metric": "t_blow_s",
+      "r_RM": 2.0,
+      "reference": 2696.9704341714128,
+      "rel_error": 0.0,
+      "series": "baseline",
+      "within_tol": true
+    },
+    {
+      "T_input": 2500.0,
+      "computed": 23.40225877166162,
+      "metric": "dt_over_t_blow",
+      "r_RM": 2.0,
+      "reference": 23.40225877166162,
+      "rel_error": 0.0,
+      "series": "baseline",
+      "within_tol": true
+    },
+    {
+      "T_input": 2500.0,
+      "computed": 3.8342207257212636e-18,
+      "metric": "M_out_dot",
+      "r_RM": 2.0,
+      "reference": 0.0,
+      "rel_error": 3.8342207257212636e-18,
+      "series": "baseline",
+      "within_tol": true
+    },
+    {
+      "T_input": 2500.0,
+      "computed": 0.0003213917961647023,
+      "metric": "Omega_s",
+      "r_RM": 2.2,
+      "reference": 0.0003213917961647,
+      "rel_error": 7.084264717985461e-15,
+      "series": "baseline",
+      "within_tol": true
+    },
+    {
+      "T_input": 2500.0,
+      "computed": 3111.467100073501,
+      "metric": "t_blow_s",
+      "r_RM": 2.2,
+      "reference": 3111.467100073501,
+      "rel_error": 0.0,
+      "series": "baseline",
+      "within_tol": true
+    },
+    {
+      "T_input": 2500.0,
+      "computed": 20.284707493294416,
+      "metric": "dt_over_t_blow",
+      "r_RM": 2.2,
+      "reference": 20.284707493294416,
+      "rel_error": 0.0,
+      "series": "baseline",
+      "within_tol": true
+    },
+    {
+      "T_input": 2500.0,
+      "computed": 3.488550931641641e-18,
+      "metric": "M_out_dot",
+      "r_RM": 2.2,
+      "reference": 0.0,
+      "rel_error": 3.488550931641641e-18,
+      "series": "baseline",
+      "within_tol": true
+    }
+  ],
+  "tolerance": 0.01
+}

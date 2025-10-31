@@ -1,0 +1,2 @@
+removed_writer_symbol_anchors=8
+removed_writer_colon=2

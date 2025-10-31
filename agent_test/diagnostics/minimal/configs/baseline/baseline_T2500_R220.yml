@@ -1,0 +1,60 @@
+chi_blow: 1.0
+geometry:
+  mode: 0D
+  r: 7456900.000000001
+material:
+  rho: 3000.0
+temps:
+  T_M: 2500.0
+radiation: {}
+sizes:
+  s_min: 1e-06
+  s_max: 3.0
+  n_bins: 40
+initial:
+  mass_total: 1e-05
+  s0_mode: upper
+dynamics:
+  e0: 0.5
+  i0: 0.05
+  t_damp_orbits: 1000.0
+  f_wake: 1.0
+  rng_seed: 2025
+psd:
+  alpha: 3.5
+  wavy_strength: 0.3
+qstar:
+  Qs: 35000000.0
+  a_s: 0.38
+  B: 0.3
+  b_g: 1.36
+  v_ref_kms:
+  - 3.0
+  - 5.0
+supply:
+  mode: const
+  const:
+    prod_area_rate_kg_m2_s: 1.288504883546205e-08
+  mixing:
+    epsilon_mix: 1.0
+sinks:
+  mode: none
+  enable_sublimation: false
+  enable_gas_drag: false
+surface:
+  init_policy: clip_by_tau1
+  sigma_surf_init_override:
+  use_tcoll: true
+numerics:
+  t_end_years: 2.0
+  dt_init: 60000.0
+  safety: 0.1
+  atol: 1e-10
+  rtol: 1e-06
+io:
+  outdir: 
+    /Users/daichi/marsshearingsheet/diagnostics/minimal/runs/baseline/baseline_T2500_R220
+  debug_sinks: false
+  correct_fast_blowout: false
+  substep_fast_blowout: false
+  substep_max_ratio: 3.0

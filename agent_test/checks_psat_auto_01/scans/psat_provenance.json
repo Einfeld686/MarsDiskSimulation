@@ -1,0 +1,65 @@
+{
+  "case_A": {
+    "psat_model_resolved": "tabulated",
+    "selection_reason": "tabulated dataset covers requested temperature",
+    "A_active": 13.613,
+    "B_active": 17850.0,
+    "valid_K_active": [
+      1200.0,
+      5000.0
+    ],
+    "valid_K_config": [
+      1200.0,
+      5000.0
+    ],
+    "psat_table_path": "analysis/checks_psat_auto_01/inputs/psat_sio_table.csv",
+    "psat_table_range_K": [
+      1200.0,
+      5000.0
+    ],
+    "T_req_K": 1222.6076639707442,
+    "alpha_evap": 0.007,
+    "mu": 0.0440849
+  },
+  "case_B": {
+    "psat_model_resolved": "clausius(local-fit)",
+    "selection_reason": "local Clausius fit around requested temperature",
+    "A_active": 13.612999995150773,
+    "B_active": 17849.999993378824,
+    "valid_K_active": [
+      1200.0,
+      1500.0
+    ],
+    "valid_K_config": [
+      1200.0,
+      5000.0
+    ],
+    "psat_table_path": "analysis/checks_psat_auto_01/inputs/psat_sio_table.csv",
+    "psat_table_range_K": [
+      1200.0,
+      5000.0
+    ],
+    "T_req_K": 989.7300136906024,
+    "alpha_evap": 0.007,
+    "mu": 0.0440849
+  },
+  "case_C": {
+    "psat_model_resolved": "clausius(baseline)",
+    "selection_reason": "auto fallback to Clausius baseline",
+    "A_active": 13.613,
+    "B_active": 17850.0,
+    "valid_K_active": [
+      1270.0,
+      1600.0
+    ],
+    "valid_K_config": [
+      1270.0,
+      1600.0
+    ],
+    "psat_table_path": null,
+    "psat_table_range_K": null,
+    "T_req_K": 1397.2659016808504,
+    "alpha_evap": 0.007,
+    "mu": 0.0440849
+  }
+}

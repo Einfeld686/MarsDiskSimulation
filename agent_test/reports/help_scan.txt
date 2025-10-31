@@ -1,0 +1,7 @@
+usage: doc_sync_agent.py scan [-h] [--root ROOT] --write WRITE_PATH
+
+options:
+  -h, --help          show this help message and exit
+  --root ROOT         Root directory containing the marsdisk package (default:
+                      current repo root).
+  --write WRITE_PATH  Output path for the generated inventory JSON.

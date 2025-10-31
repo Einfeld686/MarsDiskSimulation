@@ -1,0 +1,402 @@
+{
+  "function_reference_rate": 0.43333333333333335,
+  "function_total": 60,
+  "function_referenced": 26,
+  "class_total": 38,
+  "per_file": [
+    {
+      "file": "marsdisk/constants.py",
+      "function_total": 0,
+      "function_referenced": 0,
+      "function_reference_rate": 1.0,
+      "class_total": 1
+    },
+    {
+      "file": "marsdisk/errors.py",
+      "function_total": 0,
+      "function_referenced": 0,
+      "function_reference_rate": 1.0,
+      "class_total": 1
+    },
+    {
+      "file": "marsdisk/grid.py",
+      "function_total": 4,
+      "function_referenced": 4,
+      "function_reference_rate": 1.0,
+      "class_total": 1
+    },
+    {
+      "file": "marsdisk/io/tables.py",
+      "function_total": 4,
+      "function_referenced": 3,
+      "function_reference_rate": 0.75,
+      "class_total": 2
+    },
+    {
+      "file": "marsdisk/io/writer.py",
+      "function_total": 4,
+      "function_referenced": 1,
+      "function_reference_rate": 0.25,
+      "class_total": 0
+    },
+    {
+      "file": "marsdisk/physics/collide.py",
+      "function_total": 2,
+      "function_referenced": 0,
+      "function_reference_rate": 0.0,
+      "class_total": 0
+    },
+    {
+      "file": "marsdisk/physics/dynamics.py",
+      "function_total": 3,
+      "function_referenced": 0,
+      "function_reference_rate": 0.0,
+      "class_total": 0
+    },
+    {
+      "file": "marsdisk/physics/fragments.py",
+      "function_total": 4,
+      "function_referenced": 1,
+      "function_reference_rate": 0.25,
+      "class_total": 0
+    },
+    {
+      "file": "marsdisk/physics/initfields.py",
+      "function_total": 2,
+      "function_referenced": 0,
+      "function_reference_rate": 0.0,
+      "class_total": 0
+    },
+    {
+      "file": "marsdisk/physics/psd.py",
+      "function_total": 3,
+      "function_referenced": 2,
+      "function_reference_rate": 0.6666666666666666,
+      "class_total": 0
+    },
+    {
+      "file": "marsdisk/physics/qstar.py",
+      "function_total": 1,
+      "function_referenced": 0,
+      "function_reference_rate": 0.0,
+      "class_total": 0
+    },
+    {
+      "file": "marsdisk/physics/radiation.py",
+      "function_total": 5,
+      "function_referenced": 1,
+      "function_reference_rate": 0.2,
+      "class_total": 0
+    },
+    {
+      "file": "marsdisk/physics/shielding.py",
+      "function_total": 5,
+      "function_referenced": 1,
+      "function_reference_rate": 0.2,
+      "class_total": 0
+    },
+    {
+      "file": "marsdisk/physics/sinks.py",
+      "function_total": 2,
+      "function_referenced": 1,
+      "function_reference_rate": 0.5,
+      "class_total": 2
+    },
+    {
+      "file": "marsdisk/physics/sizes.py",
+      "function_total": 1,
+      "function_referenced": 1,
+      "function_reference_rate": 1.0,
+      "class_total": 0
+    },
+    {
+      "file": "marsdisk/physics/smol.py",
+      "function_total": 2,
+      "function_referenced": 1,
+      "function_reference_rate": 0.5,
+      "class_total": 0
+    },
+    {
+      "file": "marsdisk/physics/sublimation.py",
+      "function_total": 7,
+      "function_referenced": 4,
+      "function_reference_rate": 0.5714285714285714,
+      "class_total": 2
+    },
+    {
+      "file": "marsdisk/physics/supply.py",
+      "function_total": 1,
+      "function_referenced": 0,
+      "function_reference_rate": 0.0,
+      "class_total": 0
+    },
+    {
+      "file": "marsdisk/physics/surface.py",
+      "function_total": 4,
+      "function_referenced": 2,
+      "function_reference_rate": 0.5,
+      "class_total": 1
+    },
+    {
+      "file": "marsdisk/physics/viscosity.py",
+      "function_total": 1,
+      "function_referenced": 1,
+      "function_reference_rate": 1.0,
+      "class_total": 0
+    },
+    {
+      "file": "marsdisk/run.py",
+      "function_total": 5,
+      "function_referenced": 3,
+      "function_reference_rate": 0.6,
+      "class_total": 3
+    },
+    {
+      "file": "marsdisk/schema.py",
+      "function_total": 0,
+      "function_referenced": 0,
+      "function_reference_rate": 1.0,
+      "class_total": 25
+    }
+  ],
+  "unreferenced": [
+    {
+      "file": "marsdisk/io/tables.py",
+      "name": "load_phi_table",
+      "lineno": 287,
+      "end_lineno": 342,
+      "kind": "function"
+    },
+    {
+      "file": "marsdisk/io/writer.py",
+      "name": "write_summary",
+      "lineno": 109,
+      "end_lineno": 117,
+      "kind": "function"
+    },
+    {
+      "file": "marsdisk/io/writer.py",
+      "name": "write_run_config",
+      "lineno": 120,
+      "end_lineno": 125,
+      "kind": "function"
+    },
+    {
+      "file": "marsdisk/io/writer.py",
+      "name": "write_mass_budget",
+      "lineno": 128,
+      "end_lineno": 132,
+      "kind": "function"
+    },
+    {
+      "file": "marsdisk/physics/collide.py",
+      "name": "compute_collision_kernel_C1",
+      "lineno": 18,
+      "end_lineno": 77,
+      "kind": "function"
+    },
+    {
+      "file": "marsdisk/physics/collide.py",
+      "name": "compute_prod_subblow_area_rate_C2",
+      "lineno": 80,
+      "end_lineno": 108,
+      "kind": "function"
+    },
+    {
+      "file": "marsdisk/physics/dynamics.py",
+      "name": "v_ij",
+      "lineno": 18,
+      "end_lineno": 45,
+      "kind": "function"
+    },
+    {
+      "file": "marsdisk/physics/dynamics.py",
+      "name": "solve_c_eq",
+      "lineno": 48,
+      "end_lineno": 106,
+      "kind": "function"
+    },
+    {
+      "file": "marsdisk/physics/dynamics.py",
+      "name": "update_e",
+      "lineno": 109,
+      "end_lineno": 140,
+      "kind": "function"
+    },
+    {
+      "file": "marsdisk/physics/fragments.py",
+      "name": "compute_q_r_F2",
+      "lineno": 31,
+      "end_lineno": 62,
+      "kind": "function"
+    },
+    {
+      "file": "marsdisk/physics/fragments.py",
+      "name": "compute_largest_remnant_mass_fraction_F2",
+      "lineno": 65,
+      "end_lineno": 99,
+      "kind": "function"
+    },
+    {
+      "file": "marsdisk/physics/fragments.py",
+      "name": "compute_s_min_F2",
+      "lineno": 168,
+      "end_lineno": 197,
+      "kind": "function"
+    },
+    {
+      "file": "marsdisk/physics/initfields.py",
+      "name": "sigma_from_Minner",
+      "lineno": 17,
+      "end_lineno": 44,
+      "kind": "function"
+    },
+    {
+      "file": "marsdisk/physics/initfields.py",
+      "name": "surf_sigma_init",
+      "lineno": 47,
+      "end_lineno": 79,
+      "kind": "function"
+    },
+    {
+      "file": "marsdisk/physics/psd.py",
+      "name": "update_psd_state",
+      "lineno": 30,
+      "end_lineno": 118,
+      "kind": "function"
+    },
+    {
+      "file": "marsdisk/physics/qstar.py",
+      "name": "compute_q_d_star_F1",
+      "lineno": 31,
+      "end_lineno": 73,
+      "kind": "function"
+    },
+    {
+      "file": "marsdisk/physics/radiation.py",
+      "name": "load_qpr_table",
+      "lineno": 120,
+      "end_lineno": 147,
+      "kind": "function"
+    },
+    {
+      "file": "marsdisk/physics/radiation.py",
+      "name": "qpr_lookup",
+      "lineno": 150,
+      "end_lineno": 204,
+      "kind": "function"
+    },
+    {
+      "file": "marsdisk/physics/radiation.py",
+      "name": "planck_mean_qpr",
+      "lineno": 207,
+      "end_lineno": 218,
+      "kind": "function"
+    },
+    {
+      "file": "marsdisk/physics/radiation.py",
+      "name": "beta",
+      "lineno": 221,
+      "end_lineno": 242,
+      "kind": "function"
+    },
+    {
+      "file": "marsdisk/physics/shielding.py",
+      "name": "load_phi_table",
+      "lineno": 52,
+      "end_lineno": 67,
+      "kind": "function"
+    },
+    {
+      "file": "marsdisk/physics/shielding.py",
+      "name": "effective_kappa",
+      "lineno": 81,
+      "end_lineno": 120,
+      "kind": "function"
+    },
+    {
+      "file": "marsdisk/physics/shielding.py",
+      "name": "sigma_tau1",
+      "lineno": 123,
+      "end_lineno": 130,
+      "kind": "function"
+    },
+    {
+      "file": "marsdisk/physics/shielding.py",
+      "name": "clip_to_tau1",
+      "lineno": 219,
+      "end_lineno": 261,
+      "kind": "function"
+    },
+    {
+      "file": "marsdisk/physics/sinks.py",
+      "name": "gas_drag_timescale",
+      "lineno": 70,
+      "end_lineno": 80,
+      "kind": "function"
+    },
+    {
+      "file": "marsdisk/physics/smol.py",
+      "name": "step_imex_bdf1_C3",
+      "lineno": 18,
+      "end_lineno": 101,
+      "kind": "function"
+    },
+    {
+      "file": "marsdisk/physics/sublimation.py",
+      "name": "p_sat_clausius",
+      "lineno": 154,
+      "end_lineno": 164,
+      "kind": "function"
+    },
+    {
+      "file": "marsdisk/physics/sublimation.py",
+      "name": "p_sat_tabulated",
+      "lineno": 369,
+      "end_lineno": 383,
+      "kind": "function"
+    },
+    {
+      "file": "marsdisk/physics/sublimation.py",
+      "name": "s_sink_from_timescale",
+      "lineno": 587,
+      "end_lineno": 603,
+      "kind": "function"
+    },
+    {
+      "file": "marsdisk/physics/supply.py",
+      "name": "get_prod_area_rate",
+      "lineno": 93,
+      "end_lineno": 98,
+      "kind": "function"
+    },
+    {
+      "file": "marsdisk/physics/surface.py",
+      "name": "wyatt_tcoll_S1",
+      "lineno": 62,
+      "end_lineno": 73,
+      "kind": "function"
+    },
+    {
+      "file": "marsdisk/physics/surface.py",
+      "name": "compute_surface_outflux",
+      "lineno": 166,
+      "end_lineno": 175,
+      "kind": "function"
+    },
+    {
+      "file": "marsdisk/run.py",
+      "name": "step",
+      "lineno": 162,
+      "end_lineno": 202,
+      "kind": "function"
+    },
+    {
+      "file": "marsdisk/run.py",
+      "name": "main",
+      "lineno": 1008,
+      "end_lineno": 1031,
+      "kind": "function"
+    }
+  ]
+}

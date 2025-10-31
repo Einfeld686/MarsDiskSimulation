@@ -1,0 +1,7 @@
+--- a/analysis/run-recipes.md
++++ b/analysis/run-recipes.md
+@@
++#### TODO: `solve_c_eq` を分析ドキュメントへ明示
++根拠: [marsdisk/physics/dynamics.py:48–106] — `solve_c_eq` の概要と使用箇所を追記
++補足: 0D円盤シミュレーションでの役割と、関連する出力指標との つながりを1段落で説明してください。
++
