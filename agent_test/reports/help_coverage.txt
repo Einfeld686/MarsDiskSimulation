@@ -1,0 +1,12 @@
+usage: doc_sync_agent.py coverage [-h] --inv INV --refs REFS --write-json
+                                  WRITE_JSON --write-md WRITE_MD
+
+options:
+  -h, --help            show this help message and exit
+  --inv INV             Path to the inventory JSON produced by the scan
+                        command.
+  --refs REFS           Path to the documentation references JSON produced by
+                        the refs command.
+  --write-json WRITE_JSON
+                        Output path for the coverage summary JSON.
+  --write-md WRITE_MD   Output path for the Markdown coverage report.

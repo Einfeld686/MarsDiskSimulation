@@ -1,0 +1,24 @@
+{
+  "M_loss": 1.5974556826323807e-10,
+  "M_loss_from_sinks": 1.5974556820280894e-10,
+  "M_loss_from_sublimation": 1.5974556820280894e-10,
+  "Q_pr_used": 1.0,
+  "T_M_source": "temps.T_M",
+  "T_M_used": 6000.0,
+  "beta_at_smin_config": 121.74780242941864,
+  "beta_at_smin_effective": 0.0018265025386978693,
+  "beta_threshold": 0.5,
+  "case_status": "blowout",
+  "enforce_mass_budget": false,
+  "rho_used": 3000.0,
+  "s_blow_m": 3.287704569656165e-05,
+  "s_min_components": {
+    "blowout": 3.287704569656165e-05,
+    "config": 1e-07,
+    "effective": 0.009000000000000001,
+    "sublimation": 16609.72009279175
+  },
+  "s_min_config": 1e-07,
+  "s_min_effective": 0.009000000000000001,
+  "s_min_effective_gt_config": true
+}

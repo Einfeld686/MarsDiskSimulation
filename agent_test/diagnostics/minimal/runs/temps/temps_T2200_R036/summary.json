@@ -1,0 +1,27 @@
+{
+  "M_loss": 1.6598555797253107e-11,
+  "M_loss_from_sinks": 0.0,
+  "M_loss_from_sublimation": 0.0,
+  "Q_pr_used": 0.9566609274558696,
+  "T_M_source": "temps.T_M",
+  "T_M_used": 2200.0,
+  "T_M_used[K]": 2200.0,
+  "beta_at_smin": 0.14922054313141422,
+  "beta_at_smin_config": 0.14922054313141422,
+  "beta_at_smin_effective": 0.4783304637279348,
+  "beta_threshold": 0.5,
+  "case_status": "ok",
+  "enforce_mass_budget": false,
+  "rho_used": 3000.0,
+  "s_blow_m": 5.942627482016778e-07,
+  "s_min_components": {
+    "blowout": 5.942627482016778e-07,
+    "config": 1e-07,
+    "effective": 5.942627482016778e-07,
+    "sublimation": 0.0
+  },
+  "s_min_config": 1e-07,
+  "s_min_effective": 5.942627482016778e-07,
+  "s_min_effective[m]": 5.942627482016778e-07,
+  "s_min_effective_gt_config": true
+}

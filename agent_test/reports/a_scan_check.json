@@ -1,0 +1,7 @@
+{
+  "inventory_count": 127,
+  "expected_symbols_present": true,
+  "line_numbers_match_reference": true,
+  "missing_symbols": [],
+  "line_mismatches": []
+}

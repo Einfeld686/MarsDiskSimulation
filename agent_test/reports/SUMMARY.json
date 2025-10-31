@@ -1,0 +1,24 @@
+{
+  "A": {
+    "scan": "agent_test/reports/a_scan_check.json",
+    "refs": "agent_test/reports/a_refs_check.json",
+    "coverage": "agent_test/reports/a_coverage_check.json"
+  },
+  "B": {
+    "autostub": "agent_test/reports/b_autostub_check.json",
+    "idempotent_log": "agent_test/reports/b_autostub_idempotent.log"
+  },
+  "C": {
+    "pass": "agent_test/reports/c_guard_ok.txt",
+    "fail": "agent_test/reports/c_guard_fail.txt",
+    "clean_anchors": "agent_test/reports/c_guard_cleananchors.txt"
+  },
+  "D": {
+    "compat": "agent_test/reports/d_compat_check.json"
+  },
+  "E": {
+    "failure_run": "agent_test/reports/e_anchor_fail_run.txt",
+    "success_run": "agent_test/reports/e_anchor_pass_run.txt",
+    "summary": "agent_test/reports/e_anchor_failure.json"
+  }
+}

@@ -1,0 +1,56 @@
+{
+  "HK_AB_source": "not supplied",
+  "HK_A_used": null,
+  "HK_B_used": null,
+  "HK_Pgas_used": 0.0,
+  "HK_alpha_used": 1.0,
+  "HK_eta_instant_used": 0.1,
+  "HK_mode": "logistic",
+  "HK_mu_used": 0.1,
+  "HK_runtime_radius_m": 11185350.0,
+  "HK_runtime_t_orb_s": 35915.50440678146,
+  "beta_formula": "beta = 3 \u03c3_SB T_M^4 R_M^2 Q_pr / (4 G M_M c \u03c1 s)",
+  "constants": {
+    "C": 299792458.0,
+    "G": 6.6743e-11,
+    "M_MARS": 6.4171e+23,
+    "R_MARS": 3389500.0,
+    "SIGMA_SB": 5.670374419e-08
+  },
+  "defaults": {
+    "Q_pr": 1.0,
+    "T_M_range_K": [
+      1000.0,
+      6500.0
+    ],
+    "beta_threshold": 0.5,
+    "rho": 3000.0
+  },
+  "git": {
+    "branch": "fix/sinks-tm-source",
+    "commit": "1faf7887c638afee1b09d7dec4643ecde544a393",
+    "dirty": true
+  },
+  "init_ei": {
+    "a_m_source": "geometry.r",
+    "delta_r_sample_m": null,
+    "dr_dist": "uniform",
+    "dr_max_m": null,
+    "dr_min_m": null,
+    "e0_applied": 0.1,
+    "e_formula_SI": "e = 1 - (R_MARS + \u0394r)/a; [\u0394r, a, R_MARS]: meters",
+    "e_mode": "fixed",
+    "i0_applied_rad": 0.05,
+    "i_mode": "fixed",
+    "i_spread_deg": 0.0,
+    "obs_tilt_deg": 30.0,
+    "seed_used": 2025
+  },
+  "run_inputs": {
+    "Q_pr_used": 0.6005381399246873,
+    "T_M_used": 1800.0,
+    "rho_used": 3000.0
+  },
+  "s_blow_formula": "s_blow = 3 \u03c3_SB T_M^4 R_M^2 Q_pr / (2 G M_M c \u03c1)",
+  "sublimation_formula": "HK: Phi = alpha * P_vap(Td) * sqrt(mu/(2*pi*Rgas*Td)); Td=TM*sqrt(R/(2r))"
+}

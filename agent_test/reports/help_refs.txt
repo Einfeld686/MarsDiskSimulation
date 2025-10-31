@@ -1,0 +1,7 @@
+usage: doc_sync_agent.py refs [-h] --docs DOCS [DOCS ...] --write WRITE_PATH
+
+options:
+  -h, --help            show this help message and exit
+  --docs DOCS [DOCS ...]
+                        Markdown documents to inspect.
+  --write WRITE_PATH    Output path for the reference summary JSON.
