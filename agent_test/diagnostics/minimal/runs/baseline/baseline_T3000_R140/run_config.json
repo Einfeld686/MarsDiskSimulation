@@ -1,0 +1,84 @@
+{
+  "beta_formula": "beta = 3 \u03c3_SB T_M^4 R_M^2 Q_pr / (4 G M_M c \u03c1 s)",
+  "constants": {
+    "C": 299792458.0,
+    "G": 6.6743e-11,
+    "M_MARS": 6.4171e+23,
+    "R_MARS": 3389500.0,
+    "SIGMA_SB": 5.670374419e-08
+  },
+  "defaults": {
+    "Q_pr": 1.0,
+    "T_M_range_K": [
+      1000.0,
+      6500.0
+    ],
+    "beta_threshold": 0.5,
+    "rho": 3000.0
+  },
+  "git": {
+    "branch": "fix/sinks-tm-source",
+    "commit": "1faf7887c638afee1b09d7dec4643ecde544a393",
+    "dirty": true
+  },
+  "init_ei": {
+    "a_m_source": "geometry.r",
+    "delta_r_sample_m": null,
+    "dr_dist": "uniform",
+    "dr_max_m": null,
+    "dr_min_m": null,
+    "e0_applied": 0.5,
+    "e_formula_SI": "e = 1 - (R_MARS + \u0394r)/a; [\u0394r, a, R_MARS]: meters",
+    "e_mode": "fixed",
+    "i0_applied_rad": 0.05,
+    "i_mode": "fixed",
+    "i_spread_deg": 0.0,
+    "obs_tilt_deg": 30.0,
+    "seed_used": 2025
+  },
+  "run_inputs": {
+    "Q_pr_used": 0.9999269067637926,
+    "T_M_used": 3000.0,
+    "rho_used": 3000.0,
+    "rng_seed": 2025,
+    "rng_seed_basis": "user",
+    "rng_seed_expr": "cfg.dynamics.rng_seed"
+  },
+  "s_blow_formula": "s_blow = 3 \u03c3_SB T_M^4 R_M^2 Q_pr / (2 G M_M c \u03c1)",
+  "sublimation_provenance": {
+    "A": 13.613,
+    "B": 17850.0,
+    "P_gas": 0.0,
+    "P_sat_Pa": null,
+    "T_req": null,
+    "alpha_evap": 0.007,
+    "eta_instant": 0.1,
+    "local_fit_window_K": 300.0,
+    "log10P": null,
+    "log10P_tabulated": null,
+    "min_points_local_fit": 3,
+    "mode": "logistic",
+    "mu": 0.0440849,
+    "psat_model": "auto",
+    "psat_model_resolved": "auto",
+    "psat_selection_reason": null,
+    "psat_table_buffer_K": 75.0,
+    "psat_table_monotonic": null,
+    "psat_table_path": null,
+    "psat_table_range_K": null,
+    "runtime_radius_m": 4745300.0,
+    "runtime_t_orb_s": 9924.373807220216,
+    "sublimation_formula": "HKL",
+    "valid_K_active": null,
+    "valid_K_config": [
+      1270.0,
+      1600.0
+    ]
+  },
+  "time_grid": {
+    "dt_s": 60000.0,
+    "max_steps": 1000,
+    "scheme": "fixed-step implicit-Euler (S1)",
+    "t_end_s": 63115200.0
+  }
+}

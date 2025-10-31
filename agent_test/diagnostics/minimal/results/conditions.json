@@ -1,0 +1,7 @@
+{
+  "A_control_min_loss": true,
+  "B_M_loss_increases_with_T": true,
+  "C_inner_radius_has_higher_loss": true,
+  "D_T_source_is_temps": true,
+  "E_blowout_metrics_vary": true
+}

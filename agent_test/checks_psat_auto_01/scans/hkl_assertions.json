@@ -1,0 +1,26 @@
+{
+  "case_A": {
+    "case": "case_A",
+    "monotonic": true,
+    "finite": true,
+    "nonnegative": true,
+    "min_flux": 0.0002711379535168406,
+    "max_flux": 114067.07832430156
+  },
+  "case_B": {
+    "case": "case_B",
+    "monotonic": true,
+    "finite": true,
+    "nonnegative": true,
+    "min_flux": 0.0002711379535168406,
+    "max_flux": 114067.07832430156
+  },
+  "case_C": {
+    "case": "case_C",
+    "monotonic": true,
+    "finite": true,
+    "nonnegative": true,
+    "min_flux": 0.00027113795351684,
+    "max_flux": 114067.07840234516
+  }
+}
