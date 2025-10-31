@@ -1,0 +1,75 @@
+geometry:
+  mode: "0D"
+  r: 1.69475e7  # ~5.0 R_Mars
+material:
+  rho: 3000.0
+temps:
+  T_M: 2000.0
+sizes:
+  s_min: 1.0e-6
+  s_max: 3.0
+  n_bins: 40
+initial:
+  mass_total: 1.0e-5
+  s0_mode: "upper"
+dynamics:
+  e0: 0.5
+  i0: 0.05
+  t_damp_orbits: 20
+  f_wake: 2.0
+  rng_seed: 24680
+psd:
+  alpha: 1.83
+  wavy_strength: 0.2
+qstar:
+  Qs: 3.5e7
+  a_s: 0.38
+  B: 0.3
+  b_g: 1.36
+  v_ref_kms: [3.0, 5.0]
+disk:
+  geometry:
+    r_in_RM: 2.2
+    r_out_RM: 2.7
+    r_profile: "uniform"
+    p_index: 0.0
+inner_disk_mass:
+  use_Mmars_ratio: true
+  M_in_ratio: 3.0e-5
+  map_to_sigma: "analytic"
+surface:
+  init_policy: "clip_by_tau1"
+  sigma_surf_init_override: null
+  use_tcoll: true
+supply:
+  mode: "const"
+  const:
+    prod_area_rate_kg_m2_s: 0.0
+  powerlaw:
+    A_kg_m2_s: null
+    t0_s: 0.0
+    index: -1.0
+  table:
+    path: "data/supply_rate.csv"
+    interp: "linear"
+  mixing:
+    epsilon_mix: 1.0
+sinks:
+  mode: "none"
+  enable_sublimation: false
+  enable_gas_drag: false
+radiation:
+  TM_K: 2500
+  qpr_table: null
+shielding:
+  phi_table: null
+numerics:
+  t_end_years: 0.02
+  dt_init: 10.0
+  safety: 0.1
+  atol: 1e-10
+  rtol: 1e-6
+io:
+  outdir: "analysis/agent_tests/caseC_outer"
+  debug_sinks: true
+  correct_fast_blowout: false

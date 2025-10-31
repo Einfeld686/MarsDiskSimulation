@@ -1,0 +1,4 @@
+[ci_guard_analysis] rate=0.716 (63/88) threshold=0.200 anchors=0.981 invalid=2 duplicate=221
+[ci_guard_analysis] FAIL: anchor consistency below expectations.
+  ! agent_test/tmp/equations_broken.md: marsdisk/grid.py#v_kelper
+  ! analysis/overview.md: marsdisk/physics/__init__.py#__module__

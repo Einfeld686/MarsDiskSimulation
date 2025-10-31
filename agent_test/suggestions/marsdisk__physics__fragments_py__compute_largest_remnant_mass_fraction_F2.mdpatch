@@ -1,0 +1,7 @@
+--- a/analysis/run-recipes.md
++++ b/analysis/run-recipes.md
+@@
++#### TODO: `compute_largest_remnant_mass_fraction_F2` を分析ドキュメントへ明示
++根拠: [marsdisk/physics/fragments.py:65–99] — `compute_largest_remnant_mass_fraction_F2` の概要と使用箇所を追記
++補足: 0D円盤シミュレーションでの役割と、関連する出力指標との つながりを1段落で説明してください。
++

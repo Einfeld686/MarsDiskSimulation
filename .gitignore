@@ -33,3 +33,10 @@ __pycache__/
 !analysis/**/*.json
 !analysis/**/*.ipynb
 !analysis/**/*.png
+!agent_test/
+!agent_test/**
+agent_test/**/__pycache__/
+agent_test/**/*.py[cod]
+agent_test/**/.DS_Store
+agent_test/agent_runs/
+agent_test/tmp*/

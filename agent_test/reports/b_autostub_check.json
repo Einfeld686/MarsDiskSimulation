@@ -1,0 +1,23 @@
+{
+  "references_before": 230,
+  "references_after": 250,
+  "reference_increase": 20,
+  "top_gaps_pre_autostub": [
+    "marsdisk/io/writer.py#write_parquet",
+    "marsdisk/io/writer.py#write_summary",
+    "marsdisk/io/writer.py#write_run_config",
+    "marsdisk/io/writer.py#write_mass_budget",
+    "marsdisk/physics/dynamics.py#v_ij"
+  ],
+  "top_gaps_covered_after": [
+    "marsdisk/io/writer.py#write_parquet",
+    "marsdisk/io/writer.py#write_summary",
+    "marsdisk/io/writer.py#write_run_config",
+    "marsdisk/io/writer.py#write_mass_budget"
+  ],
+  "min_requirement_met": true,
+  "references_after_final": 243,
+  "reference_increase_final": 13,
+  "idempotent_after_runs": true,
+  "autostub_runs_executed": 4
+}

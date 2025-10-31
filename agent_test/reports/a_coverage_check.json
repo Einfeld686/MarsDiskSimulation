@@ -1,0 +1,24 @@
+{
+  "function_reference_rate": 0.55,
+  "rate_threshold_met": true,
+  "grid_symbol_unreferenced_list": [],
+  "grid_symbols_ok": true,
+  "top_gap_hits": {
+    "writer": true,
+    "phi": true,
+    "collide": true,
+    "dynamics": true
+  },
+  "top_gaps_sample": [
+    "marsdisk/io/writer.py#write_parquet",
+    "marsdisk/io/writer.py#write_summary",
+    "marsdisk/io/writer.py#write_run_config",
+    "marsdisk/io/writer.py#write_mass_budget",
+    "marsdisk/physics/dynamics.py#v_ij",
+    "marsdisk/physics/dynamics.py#solve_c_eq",
+    "marsdisk/physics/dynamics.py#update_e",
+    "marsdisk/physics/initfields.py#sigma_from_Minner",
+    "marsdisk/physics/collide.py#compute_collision_kernel_C1",
+    "marsdisk/physics/initfields.py#surf_sigma_init"
+  ]
+}

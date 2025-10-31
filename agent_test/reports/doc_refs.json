@@ -1,0 +1,1222 @@
+{
+  "doc_paths": [
+    "analysis/equations.md",
+    "analysis/overview.md",
+    "analysis/run-recipes.md",
+    "analysis/sinks_callgraph.md",
+    "analysis/AI_USAGE.md",
+    "analysis/inventory.json"
+  ],
+  "reference_count": 126,
+  "refs": [
+    {
+      "file": "marsdisk/grid.py",
+      "line_start": 34,
+      "line_end": 34,
+      "source_doc": "analysis/equations.md",
+      "anchor": null
+    },
+    {
+      "file": "marsdisk/grid.py",
+      "line_start": 90,
+      "line_end": 90,
+      "source_doc": "analysis/equations.md",
+      "anchor": null
+    },
+    {
+      "file": "marsdisk/grid.py",
+      "line_start": 93,
+      "line_end": 93,
+      "source_doc": "analysis/equations.md",
+      "anchor": null
+    },
+    {
+      "file": "marsdisk/io/tables.py",
+      "line_start": 253,
+      "line_end": 253,
+      "source_doc": "analysis/equations.md",
+      "anchor": null
+    },
+    {
+      "file": "marsdisk/io/tables.py",
+      "line_start": 273,
+      "line_end": 273,
+      "source_doc": "analysis/equations.md",
+      "anchor": null
+    },
+    {
+      "file": "marsdisk/grid.py",
+      "line_start": 90,
+      "line_end": 90,
+      "source_doc": "analysis/overview.md",
+      "anchor": null
+    },
+    {
+      "file": "marsdisk/grid.py",
+      "line_start": 34,
+      "line_end": 34,
+      "source_doc": "analysis/overview.md",
+      "anchor": null
+    },
+    {
+      "file": "marsdisk/grid.py",
+      "line_start": 90,
+      "line_end": 90,
+      "source_doc": "analysis/overview.md",
+      "anchor": null
+    },
+    {
+      "file": "marsdisk/grid.py",
+      "line_start": 34,
+      "line_end": 34,
+      "source_doc": "analysis/overview.md",
+      "anchor": null
+    },
+    {
+      "file": "marsdisk/io/tables.py",
+      "line_start": 253,
+      "line_end": 253,
+      "source_doc": "analysis/overview.md",
+      "anchor": null
+    },
+    {
+      "file": "marsdisk/io/tables.py",
+      "line_start": 273,
+      "line_end": 273,
+      "source_doc": "analysis/overview.md",
+      "anchor": null
+    },
+    {
+      "file": "marsdisk/schema.py",
+      "line_start": 19,
+      "line_end": 26,
+      "source_doc": "analysis/overview.md",
+      "anchor": "Geometry"
+    },
+    {
+      "file": "marsdisk/run.py",
+      "line_start": 273,
+      "line_end": 1005,
+      "source_doc": "analysis/overview.md",
+      "anchor": "run_zero_d"
+    },
+    {
+      "file": "marsdisk/run.py",
+      "line_start": 273,
+      "line_end": 1005,
+      "source_doc": "analysis/overview.md",
+      "anchor": "run_zero_d"
+    },
+    {
+      "file": "marsdisk/grid.py",
+      "line_start": 17,
+      "line_end": 31,
+      "source_doc": "analysis/overview.md",
+      "anchor": "omega_kepler"
+    },
+    {
+      "file": "marsdisk/physics/viscosity.py",
+      "line_start": 51,
+      "line_end": 134,
+      "source_doc": "analysis/overview.md",
+      "anchor": "step_viscous_diffusion_C5"
+    },
+    {
+      "file": "marsdisk/run.py",
+      "line_start": 273,
+      "line_end": 1005,
+      "source_doc": "analysis/overview.md",
+      "anchor": "run_zero_d"
+    },
+    {
+      "file": "marsdisk/schema.py",
+      "line_start": 259,
+      "line_end": 277,
+      "source_doc": "analysis/overview.md",
+      "anchor": "Radiation"
+    },
+    {
+      "file": "marsdisk/physics/__init__.py",
+      "line_start": 1,
+      "line_end": 34,
+      "source_doc": "analysis/overview.md",
+      "anchor": "__module__"
+    },
+    {
+      "file": "marsdisk/run.py",
+      "line_start": 273,
+      "line_end": 1005,
+      "source_doc": "analysis/overview.md",
+      "anchor": "run_zero_d"
+    },
+    {
+      "file": "marsdisk/run.py",
+      "line_start": 273,
+      "line_end": 1005,
+      "source_doc": "analysis/overview.md",
+      "anchor": "run_zero_d"
+    },
+    {
+      "file": "marsdisk/run.py",
+      "line_start": 273,
+      "line_end": 1005,
+      "source_doc": "analysis/overview.md",
+      "anchor": "run_zero_d"
+    },
+    {
+      "file": "marsdisk/physics/fragments.py",
+      "line_start": 102,
+      "line_end": 165,
+      "source_doc": "analysis/overview.md",
+      "anchor": "s_sub_boundary"
+    },
+    {
+      "file": "marsdisk/physics/psd.py",
+      "line_start": 149,
+      "line_end": 224,
+      "source_doc": "analysis/overview.md",
+      "anchor": "evolve_min_size"
+    },
+    {
+      "file": "marsdisk/schema.py",
+      "line_start": 197,
+      "line_end": 204,
+      "source_doc": "analysis/overview.md",
+      "anchor": "QStar"
+    },
+    {
+      "file": "marsdisk/run.py",
+      "line_start": 273,
+      "line_end": 1005,
+      "source_doc": "analysis/overview.md",
+      "anchor": "run_zero_d"
+    },
+    {
+      "file": "marsdisk/physics/surface.py",
+      "line_start": 96,
+      "line_end": 163,
+      "source_doc": "analysis/overview.md",
+      "anchor": "step_surface_density_S1"
+    },
+    {
+      "file": "marsdisk/physics/sinks.py",
+      "line_start": 83,
+      "line_end": 160,
+      "source_doc": "analysis/overview.md",
+      "anchor": "total_sink_timescale"
+    },
+    {
+      "file": "marsdisk/physics/sublimation.py",
+      "line_start": 124,
+      "line_end": 135,
+      "source_doc": "analysis/overview.md",
+      "anchor": "grain_temperature_graybody"
+    },
+    {
+      "file": "marsdisk/run.py",
+      "line_start": 273,
+      "line_end": 1005,
+      "source_doc": "analysis/overview.md",
+      "anchor": "run_zero_d"
+    },
+    {
+      "file": "marsdisk/io/writer.py",
+      "line_start": 24,
+      "line_end": 106,
+      "source_doc": "analysis/overview.md",
+      "anchor": "write_parquet"
+    },
+    {
+      "file": "marsdisk/run.py",
+      "line_start": 273,
+      "line_end": 1005,
+      "source_doc": "analysis/overview.md",
+      "anchor": "run_zero_d"
+    },
+    {
+      "file": "marsdisk/physics/psd.py",
+      "line_start": 121,
+      "line_end": 146,
+      "source_doc": "analysis/overview.md",
+      "anchor": "compute_kappa"
+    },
+    {
+      "file": "marsdisk/physics/radiation.py",
+      "line_start": 245,
+      "line_end": 259,
+      "source_doc": "analysis/overview.md",
+      "anchor": "blowout_radius"
+    },
+    {
+      "file": "marsdisk/physics/shielding.py",
+      "line_start": 133,
+      "line_end": 216,
+      "source_doc": "analysis/overview.md",
+      "anchor": "apply_shielding"
+    },
+    {
+      "file": "marsdisk/physics/surface.py",
+      "line_start": 178,
+      "line_end": 208,
+      "source_doc": "analysis/overview.md",
+      "anchor": "step_surface"
+    },
+    {
+      "file": "marsdisk/run.py",
+      "line_start": 273,
+      "line_end": 1005,
+      "source_doc": "analysis/overview.md",
+      "anchor": "run_zero_d"
+    },
+    {
+      "file": "marsdisk/run.py",
+      "line_start": 273,
+      "line_end": 1005,
+      "source_doc": "analysis/overview.md",
+      "anchor": "run_zero_d"
+    },
+    {
+      "file": "marsdisk/schema.py",
+      "line_start": 259,
+      "line_end": 277,
+      "source_doc": "analysis/overview.md",
+      "anchor": "Radiation"
+    },
+    {
+      "file": "marsdisk/schema.py",
+      "line_start": 19,
+      "line_end": 26,
+      "source_doc": "analysis/overview.md",
+      "anchor": "Geometry"
+    },
+    {
+      "file": "marsdisk/schema.py",
+      "line_start": 91,
+      "line_end": 103,
+      "source_doc": "analysis/overview.md",
+      "anchor": "Material"
+    },
+    {
+      "file": "marsdisk/schema.py",
+      "line_start": 106,
+      "line_end": 122,
+      "source_doc": "analysis/overview.md",
+      "anchor": "Temps"
+    },
+    {
+      "file": "marsdisk/schema.py",
+      "line_start": 125,
+      "line_end": 146,
+      "source_doc": "analysis/overview.md",
+      "anchor": "Sizes"
+    },
+    {
+      "file": "marsdisk/schema.py",
+      "line_start": 125,
+      "line_end": 146,
+      "source_doc": "analysis/overview.md",
+      "anchor": "Sizes"
+    },
+    {
+      "file": "marsdisk/schema.py",
+      "line_start": 125,
+      "line_end": 146,
+      "source_doc": "analysis/overview.md",
+      "anchor": "Sizes"
+    },
+    {
+      "file": "marsdisk/schema.py",
+      "line_start": 156,
+      "line_end": 194,
+      "source_doc": "analysis/overview.md",
+      "anchor": "Dynamics"
+    },
+    {
+      "file": "marsdisk/schema.py",
+      "line_start": 156,
+      "line_end": 194,
+      "source_doc": "analysis/overview.md",
+      "anchor": "Dynamics"
+    },
+    {
+      "file": "marsdisk/schema.py",
+      "line_start": 29,
+      "line_end": 35,
+      "source_doc": "analysis/overview.md",
+      "anchor": "DiskGeometry"
+    },
+    {
+      "file": "marsdisk/schema.py",
+      "line_start": 44,
+      "line_end": 49,
+      "source_doc": "analysis/overview.md",
+      "anchor": "InnerDiskMass"
+    },
+    {
+      "file": "marsdisk/schema.py",
+      "line_start": 156,
+      "line_end": 194,
+      "source_doc": "analysis/overview.md",
+      "anchor": "Dynamics"
+    },
+    {
+      "file": "marsdisk/schema.py",
+      "line_start": 52,
+      "line_end": 53,
+      "source_doc": "analysis/overview.md",
+      "anchor": "SupplyConst"
+    },
+    {
+      "file": "marsdisk/schema.py",
+      "line_start": 197,
+      "line_end": 204,
+      "source_doc": "analysis/overview.md",
+      "anchor": "QStar"
+    },
+    {
+      "file": "marsdisk/schema.py",
+      "line_start": 214,
+      "line_end": 219,
+      "source_doc": "analysis/overview.md",
+      "anchor": "Surface"
+    },
+    {
+      "file": "marsdisk/schema.py",
+      "line_start": 222,
+      "line_end": 238,
+      "source_doc": "analysis/overview.md",
+      "anchor": "SublimationParamsModel"
+    },
+    {
+      "file": "marsdisk/schema.py",
+      "line_start": 222,
+      "line_end": 238,
+      "source_doc": "analysis/overview.md",
+      "anchor": "SublimationParamsModel"
+    },
+    {
+      "file": "marsdisk/schema.py",
+      "line_start": 286,
+      "line_end": 293,
+      "source_doc": "analysis/overview.md",
+      "anchor": "Numerics"
+    },
+    {
+      "file": "marsdisk/physics/radiation.py",
+      "line_start": 245,
+      "line_end": 259,
+      "source_doc": "analysis/overview.md",
+      "anchor": "blowout_radius"
+    },
+    {
+      "file": "marsdisk/physics/psd.py",
+      "line_start": 121,
+      "line_end": 146,
+      "source_doc": "analysis/overview.md",
+      "anchor": "compute_kappa"
+    },
+    {
+      "file": "marsdisk/physics/shielding.py",
+      "line_start": 133,
+      "line_end": 216,
+      "source_doc": "analysis/overview.md",
+      "anchor": "apply_shielding"
+    },
+    {
+      "file": "marsdisk/physics/surface.py",
+      "line_start": 96,
+      "line_end": 163,
+      "source_doc": "analysis/overview.md",
+      "anchor": "step_surface_density_S1"
+    },
+    {
+      "file": "marsdisk/run.py",
+      "line_start": 273,
+      "line_end": 1005,
+      "source_doc": "analysis/overview.md",
+      "anchor": "run_zero_d"
+    },
+    {
+      "file": "marsdisk/physics/smol.py",
+      "line_start": 104,
+      "line_end": 131,
+      "source_doc": "analysis/overview.md",
+      "anchor": "compute_mass_budget_error_C4"
+    },
+    {
+      "file": "marsdisk/physics/radiation.py",
+      "line_start": 32,
+      "line_end": 32,
+      "source_doc": "analysis/overview.md",
+      "anchor": "BLOWOUT_BETA_THRESHOLD"
+    },
+    {
+      "file": "marsdisk/run.py",
+      "line_start": 273,
+      "line_end": 1005,
+      "source_doc": "analysis/overview.md",
+      "anchor": "run_zero_d"
+    },
+    {
+      "file": "marsdisk/run.py",
+      "line_start": 273,
+      "line_end": 1005,
+      "source_doc": "analysis/overview.md",
+      "anchor": "run_zero_d"
+    },
+    {
+      "file": "marsdisk/schema.py",
+      "line_start": 106,
+      "line_end": 122,
+      "source_doc": "analysis/overview.md",
+      "anchor": "Temps"
+    },
+    {
+      "file": "marsdisk/run.py",
+      "line_start": 231,
+      "line_end": 239,
+      "source_doc": "analysis/overview.md",
+      "anchor": "load_config"
+    },
+    {
+      "file": "marsdisk/run.py",
+      "line_start": 273,
+      "line_end": 1005,
+      "source_doc": "analysis/overview.md",
+      "anchor": "run_zero_d"
+    },
+    {
+      "file": "marsdisk/run.py",
+      "line_start": 273,
+      "line_end": 1005,
+      "source_doc": "analysis/overview.md",
+      "anchor": "run_zero_d"
+    },
+    {
+      "file": "marsdisk/io/writer.py",
+      "line_start": 24,
+      "line_end": 106,
+      "source_doc": "analysis/overview.md",
+      "anchor": "write_parquet"
+    },
+    {
+      "file": "marsdisk/run.py",
+      "line_start": 273,
+      "line_end": 1005,
+      "source_doc": "analysis/overview.md",
+      "anchor": "run_zero_d"
+    },
+    {
+      "file": "marsdisk/run.py",
+      "line_start": 273,
+      "line_end": 1005,
+      "source_doc": "analysis/overview.md",
+      "anchor": "run_zero_d"
+    },
+    {
+      "file": "marsdisk/run.py",
+      "line_start": 273,
+      "line_end": 1005,
+      "source_doc": "analysis/overview.md",
+      "anchor": "run_zero_d"
+    },
+    {
+      "file": "marsdisk/io/writer.py",
+      "line_start": 24,
+      "line_end": 106,
+      "source_doc": "analysis/overview.md",
+      "anchor": "write_parquet"
+    },
+    {
+      "file": "marsdisk/physics/psd.py",
+      "line_start": 149,
+      "line_end": 224,
+      "source_doc": "analysis/overview.md",
+      "anchor": "evolve_min_size"
+    },
+    {
+      "file": "marsdisk/physics/sizes.py",
+      "line_start": 10,
+      "line_end": 28,
+      "source_doc": "analysis/overview.md",
+      "anchor": "eval_ds_dt_sublimation"
+    },
+    {
+      "file": "marsdisk/run.py",
+      "line_start": 273,
+      "line_end": 1005,
+      "source_doc": "analysis/overview.md",
+      "anchor": "run_zero_d"
+    },
+    {
+      "file": "marsdisk/io/writer.py",
+      "line_start": 24,
+      "line_end": 106,
+      "source_doc": "analysis/overview.md",
+      "anchor": "write_parquet"
+    },
+    {
+      "file": "marsdisk/run.py",
+      "line_start": 273,
+      "line_end": 1005,
+      "source_doc": "analysis/overview.md",
+      "anchor": "run_zero_d"
+    },
+    {
+      "file": "marsdisk/io/writer.py",
+      "line_start": 24,
+      "line_end": 106,
+      "source_doc": "analysis/overview.md",
+      "anchor": "write_parquet"
+    },
+    {
+      "file": "marsdisk/run.py",
+      "line_start": 205,
+      "line_end": 223,
+      "source_doc": "analysis/overview.md",
+      "anchor": "run_n_steps"
+    },
+    {
+      "file": "marsdisk/run.py",
+      "line_start": 273,
+      "line_end": 1005,
+      "source_doc": "analysis/overview.md",
+      "anchor": "run_zero_d"
+    },
+    {
+      "file": "marsdisk/run.py",
+      "line_start": 273,
+      "line_end": 1005,
+      "source_doc": "analysis/overview.md",
+      "anchor": "run_zero_d"
+    },
+    {
+      "file": "marsdisk/io/tables.py",
+      "line_start": 263,
+      "line_end": 270,
+      "source_doc": "analysis/overview.md",
+      "anchor": "interp_phi"
+    },
+    {
+      "file": "marsdisk/physics/fragments.py",
+      "line_start": 102,
+      "line_end": 165,
+      "source_doc": "analysis/overview.md",
+      "anchor": "s_sub_boundary"
+    },
+    {
+      "file": "marsdisk/physics/sinks.py",
+      "line_start": 83,
+      "line_end": 160,
+      "source_doc": "analysis/overview.md",
+      "anchor": "total_sink_timescale"
+    },
+    {
+      "file": "marsdisk/run.py",
+      "line_start": 273,
+      "line_end": 1005,
+      "source_doc": "analysis/overview.md",
+      "anchor": "run_zero_d"
+    },
+    {
+      "file": "marsdisk/run.py",
+      "line_start": 273,
+      "line_end": 1005,
+      "source_doc": "analysis/overview.md",
+      "anchor": "run_zero_d"
+    },
+    {
+      "file": "marsdisk/physics/sublimation.py",
+      "line_start": 534,
+      "line_end": 584,
+      "source_doc": "analysis/overview.md",
+      "anchor": "mass_flux_hkl"
+    },
+    {
+      "file": "marsdisk/grid.py",
+      "line_start": 90,
+      "line_end": 90,
+      "source_doc": "analysis/run-recipes.md",
+      "anchor": null
+    },
+    {
+      "file": "marsdisk/grid.py",
+      "line_start": 34,
+      "line_end": 34,
+      "source_doc": "analysis/run-recipes.md",
+      "anchor": null
+    },
+    {
+      "file": "marsdisk/run.py",
+      "line_start": 273,
+      "line_end": 1005,
+      "source_doc": "analysis/run-recipes.md",
+      "anchor": "run_zero_d"
+    },
+    {
+      "file": "marsdisk/physics/fragments.py",
+      "line_start": 102,
+      "line_end": 165,
+      "source_doc": "analysis/run-recipes.md",
+      "anchor": "s_sub_boundary"
+    },
+    {
+      "file": "marsdisk/run.py",
+      "line_start": 273,
+      "line_end": 1005,
+      "source_doc": "analysis/run-recipes.md",
+      "anchor": "run_zero_d"
+    },
+    {
+      "file": "marsdisk/run.py",
+      "line_start": 273,
+      "line_end": 1005,
+      "source_doc": "analysis/run-recipes.md",
+      "anchor": "run_zero_d"
+    },
+    {
+      "file": "marsdisk/run.py",
+      "line_start": 273,
+      "line_end": 1005,
+      "source_doc": "analysis/run-recipes.md",
+      "anchor": "run_zero_d"
+    },
+    {
+      "file": "marsdisk/run.py",
+      "line_start": 273,
+      "line_end": 1005,
+      "source_doc": "analysis/run-recipes.md",
+      "anchor": "run_zero_d"
+    },
+    {
+      "file": "marsdisk/run.py",
+      "line_start": 273,
+      "line_end": 1005,
+      "source_doc": "analysis/run-recipes.md",
+      "anchor": "run_zero_d"
+    },
+    {
+      "file": "marsdisk/run.py",
+      "line_start": 273,
+      "line_end": 1005,
+      "source_doc": "analysis/run-recipes.md",
+      "anchor": "run_zero_d"
+    },
+    {
+      "file": "marsdisk/run.py",
+      "line_start": 273,
+      "line_end": 1005,
+      "source_doc": "analysis/run-recipes.md",
+      "anchor": "run_zero_d"
+    },
+    {
+      "file": "marsdisk/run.py",
+      "line_start": 273,
+      "line_end": 1005,
+      "source_doc": "analysis/run-recipes.md",
+      "anchor": "run_zero_d"
+    },
+    {
+      "file": "marsdisk/physics/supply.py",
+      "line_start": 69,
+      "line_end": 90,
+      "source_doc": "analysis/run-recipes.md",
+      "anchor": "_rate_basic"
+    },
+    {
+      "file": "marsdisk/run.py",
+      "line_start": 55,
+      "line_end": 55,
+      "source_doc": "analysis/run-recipes.md",
+      "anchor": "KAPPA_MIN"
+    },
+    {
+      "file": "marsdisk/run.py",
+      "line_start": 273,
+      "line_end": 1005,
+      "source_doc": "analysis/run-recipes.md",
+      "anchor": "run_zero_d"
+    },
+    {
+      "file": "marsdisk/run.py",
+      "line_start": 273,
+      "line_end": 1005,
+      "source_doc": "analysis/run-recipes.md",
+      "anchor": "run_zero_d"
+    },
+    {
+      "file": "marsdisk/run.py",
+      "line_start": 273,
+      "line_end": 1005,
+      "source_doc": "analysis/run-recipes.md",
+      "anchor": "run_zero_d"
+    },
+    {
+      "file": "marsdisk/run.py",
+      "line_start": 273,
+      "line_end": 1005,
+      "source_doc": "analysis/run-recipes.md",
+      "anchor": "run_zero_d"
+    },
+    {
+      "file": "marsdisk/run.py",
+      "line_start": 273,
+      "line_end": 1005,
+      "source_doc": "analysis/run-recipes.md",
+      "anchor": "run_zero_d"
+    },
+    {
+      "file": "marsdisk/physics/sinks.py",
+      "line_start": 83,
+      "line_end": 160,
+      "source_doc": "analysis/run-recipes.md",
+      "anchor": "total_sink_timescale"
+    },
+    {
+      "file": "marsdisk/run.py",
+      "line_start": 273,
+      "line_end": 1005,
+      "source_doc": "analysis/run-recipes.md",
+      "anchor": "run_zero_d"
+    },
+    {
+      "file": "marsdisk/run.py",
+      "line_start": 273,
+      "line_end": 1005,
+      "source_doc": "analysis/run-recipes.md",
+      "anchor": "run_zero_d"
+    },
+    {
+      "file": "marsdisk/run.py",
+      "line_start": 273,
+      "line_end": 1005,
+      "source_doc": "analysis/run-recipes.md",
+      "anchor": "run_zero_d"
+    },
+    {
+      "file": "marsdisk/run.py",
+      "line_start": 273,
+      "line_end": 1005,
+      "source_doc": "analysis/run-recipes.md",
+      "anchor": "run_zero_d"
+    },
+    {
+      "file": "marsdisk/run.py",
+      "line_start": 273,
+      "line_end": 1005,
+      "source_doc": "analysis/run-recipes.md",
+      "anchor": "run_zero_d"
+    },
+    {
+      "file": "marsdisk/schema.py",
+      "line_start": 197,
+      "line_end": 204,
+      "source_doc": "analysis/run-recipes.md",
+      "anchor": "QStar"
+    },
+    {
+      "file": "marsdisk/io/writer.py",
+      "line_start": 20,
+      "line_end": 21,
+      "source_doc": "analysis/run-recipes.md",
+      "anchor": "_ensure_parent"
+    },
+    {
+      "file": "marsdisk/run.py",
+      "line_start": 205,
+      "line_end": 223,
+      "source_doc": "analysis/run-recipes.md",
+      "anchor": "run_n_steps"
+    },
+    {
+      "file": "marsdisk/physics/supply.py",
+      "line_start": 25,
+      "line_end": 63,
+      "source_doc": "analysis/run-recipes.md",
+      "anchor": "_TableData"
+    },
+    {
+      "file": "marsdisk/run.py",
+      "line_start": 273,
+      "line_end": 1005,
+      "source_doc": "analysis/run-recipes.md",
+      "anchor": "run_zero_d"
+    },
+    {
+      "file": "marsdisk/physics/sublimation.py",
+      "line_start": 124,
+      "line_end": 135,
+      "source_doc": "analysis/run-recipes.md",
+      "anchor": "grain_temperature_graybody"
+    },
+    {
+      "file": "marsdisk/physics/sublimation.py",
+      "line_start": 525,
+      "line_end": 531,
+      "source_doc": "analysis/run-recipes.md",
+      "anchor": "p_sat"
+    },
+    {
+      "file": "marsdisk/physics/sublimation.py",
+      "line_start": 167,
+      "line_end": 227,
+      "source_doc": "analysis/run-recipes.md",
+      "anchor": "_load_psat_table"
+    },
+    {
+      "file": "marsdisk/physics/sublimation.py",
+      "line_start": 386,
+      "line_end": 494,
+      "source_doc": "analysis/run-recipes.md",
+      "anchor": "choose_psat_backend"
+    },
+    {
+      "file": "marsdisk/physics/sublimation.py",
+      "line_start": 269,
+      "line_end": 334,
+      "source_doc": "analysis/run-recipes.md",
+      "anchor": "_local_clausius_fit_selection"
+    },
+    {
+      "file": "marsdisk/physics/sublimation.py",
+      "line_start": 534,
+      "line_end": 584,
+      "source_doc": "analysis/run-recipes.md",
+      "anchor": "mass_flux_hkl"
+    },
+    {
+      "file": "marsdisk/io/writer.py",
+      "line_start": 24,
+      "line_end": 106,
+      "source_doc": "analysis/run-recipes.md",
+      "anchor": "write_parquet"
+    }
+  ],
+  "issues": [
+    {
+      "type": "duplicate_reference",
+      "message": "duplicate reference: marsdisk/grid.py:90\u201390",
+      "doc": "analysis/overview.md"
+    },
+    {
+      "type": "duplicate_reference",
+      "message": "duplicate reference: marsdisk/grid.py:34\u201334",
+      "doc": "analysis/overview.md"
+    },
+    {
+      "type": "duplicate_reference",
+      "message": "duplicate reference: marsdisk/run.py:273\u20131005",
+      "doc": "analysis/overview.md"
+    },
+    {
+      "type": "duplicate_reference",
+      "message": "duplicate reference: marsdisk/run.py:273\u20131005",
+      "doc": "analysis/overview.md"
+    },
+    {
+      "type": "duplicate_reference",
+      "message": "duplicate reference: marsdisk/run.py:273\u20131005",
+      "doc": "analysis/overview.md"
+    },
+    {
+      "type": "duplicate_reference",
+      "message": "duplicate reference: marsdisk/run.py:273\u20131005",
+      "doc": "analysis/overview.md"
+    },
+    {
+      "type": "duplicate_reference",
+      "message": "duplicate reference: marsdisk/run.py:273\u20131005",
+      "doc": "analysis/overview.md"
+    },
+    {
+      "type": "duplicate_reference",
+      "message": "duplicate reference: marsdisk/run.py:273\u20131005",
+      "doc": "analysis/overview.md"
+    },
+    {
+      "type": "duplicate_reference",
+      "message": "duplicate reference: marsdisk/run.py:273\u20131005",
+      "doc": "analysis/overview.md"
+    },
+    {
+      "type": "duplicate_reference",
+      "message": "duplicate reference: marsdisk/run.py:273\u20131005",
+      "doc": "analysis/overview.md"
+    },
+    {
+      "type": "duplicate_reference",
+      "message": "duplicate reference: marsdisk/run.py:273\u20131005",
+      "doc": "analysis/overview.md"
+    },
+    {
+      "type": "duplicate_reference",
+      "message": "duplicate reference: marsdisk/run.py:273\u20131005",
+      "doc": "analysis/overview.md"
+    },
+    {
+      "type": "duplicate_reference",
+      "message": "duplicate reference: marsdisk/schema.py:259\u2013277",
+      "doc": "analysis/overview.md"
+    },
+    {
+      "type": "duplicate_reference",
+      "message": "duplicate reference: marsdisk/schema.py:19\u201326",
+      "doc": "analysis/overview.md"
+    },
+    {
+      "type": "duplicate_reference",
+      "message": "duplicate reference: marsdisk/schema.py:125\u2013146",
+      "doc": "analysis/overview.md"
+    },
+    {
+      "type": "duplicate_reference",
+      "message": "duplicate reference: marsdisk/schema.py:125\u2013146",
+      "doc": "analysis/overview.md"
+    },
+    {
+      "type": "duplicate_reference",
+      "message": "duplicate reference: marsdisk/schema.py:156\u2013194",
+      "doc": "analysis/overview.md"
+    },
+    {
+      "type": "duplicate_reference",
+      "message": "duplicate reference: marsdisk/schema.py:156\u2013194",
+      "doc": "analysis/overview.md"
+    },
+    {
+      "type": "duplicate_reference",
+      "message": "duplicate reference: marsdisk/schema.py:197\u2013204",
+      "doc": "analysis/overview.md"
+    },
+    {
+      "type": "duplicate_reference",
+      "message": "duplicate reference: marsdisk/schema.py:222\u2013238",
+      "doc": "analysis/overview.md"
+    },
+    {
+      "type": "duplicate_reference",
+      "message": "duplicate reference: marsdisk/physics/radiation.py:245\u2013259",
+      "doc": "analysis/overview.md"
+    },
+    {
+      "type": "duplicate_reference",
+      "message": "duplicate reference: marsdisk/physics/psd.py:121\u2013146",
+      "doc": "analysis/overview.md"
+    },
+    {
+      "type": "duplicate_reference",
+      "message": "duplicate reference: marsdisk/physics/shielding.py:133\u2013216",
+      "doc": "analysis/overview.md"
+    },
+    {
+      "type": "duplicate_reference",
+      "message": "duplicate reference: marsdisk/physics/surface.py:96\u2013163",
+      "doc": "analysis/overview.md"
+    },
+    {
+      "type": "duplicate_reference",
+      "message": "duplicate reference: marsdisk/run.py:273\u20131005",
+      "doc": "analysis/overview.md"
+    },
+    {
+      "type": "duplicate_reference",
+      "message": "duplicate reference: marsdisk/run.py:273\u20131005",
+      "doc": "analysis/overview.md"
+    },
+    {
+      "type": "duplicate_reference",
+      "message": "duplicate reference: marsdisk/run.py:273\u20131005",
+      "doc": "analysis/overview.md"
+    },
+    {
+      "type": "duplicate_reference",
+      "message": "duplicate reference: marsdisk/schema.py:106\u2013122",
+      "doc": "analysis/overview.md"
+    },
+    {
+      "type": "duplicate_reference",
+      "message": "duplicate reference: marsdisk/run.py:273\u20131005",
+      "doc": "analysis/overview.md"
+    },
+    {
+      "type": "duplicate_reference",
+      "message": "duplicate reference: marsdisk/run.py:273\u20131005",
+      "doc": "analysis/overview.md"
+    },
+    {
+      "type": "duplicate_reference",
+      "message": "duplicate reference: marsdisk/io/writer.py:24\u2013106",
+      "doc": "analysis/overview.md"
+    },
+    {
+      "type": "duplicate_reference",
+      "message": "duplicate reference: marsdisk/run.py:273\u20131005",
+      "doc": "analysis/overview.md"
+    },
+    {
+      "type": "duplicate_reference",
+      "message": "duplicate reference: marsdisk/run.py:273\u20131005",
+      "doc": "analysis/overview.md"
+    },
+    {
+      "type": "duplicate_reference",
+      "message": "duplicate reference: marsdisk/run.py:273\u20131005",
+      "doc": "analysis/overview.md"
+    },
+    {
+      "type": "duplicate_reference",
+      "message": "duplicate reference: marsdisk/io/writer.py:24\u2013106",
+      "doc": "analysis/overview.md"
+    },
+    {
+      "type": "duplicate_reference",
+      "message": "duplicate reference: marsdisk/physics/psd.py:149\u2013224",
+      "doc": "analysis/overview.md"
+    },
+    {
+      "type": "duplicate_reference",
+      "message": "duplicate reference: marsdisk/run.py:273\u20131005",
+      "doc": "analysis/overview.md"
+    },
+    {
+      "type": "duplicate_reference",
+      "message": "duplicate reference: marsdisk/io/writer.py:24\u2013106",
+      "doc": "analysis/overview.md"
+    },
+    {
+      "type": "duplicate_reference",
+      "message": "duplicate reference: marsdisk/run.py:273\u20131005",
+      "doc": "analysis/overview.md"
+    },
+    {
+      "type": "duplicate_reference",
+      "message": "duplicate reference: marsdisk/io/writer.py:24\u2013106",
+      "doc": "analysis/overview.md"
+    },
+    {
+      "type": "duplicate_reference",
+      "message": "duplicate reference: marsdisk/run.py:273\u20131005",
+      "doc": "analysis/overview.md"
+    },
+    {
+      "type": "duplicate_reference",
+      "message": "duplicate reference: marsdisk/run.py:273\u20131005",
+      "doc": "analysis/overview.md"
+    },
+    {
+      "type": "duplicate_reference",
+      "message": "duplicate reference: marsdisk/physics/fragments.py:102\u2013165",
+      "doc": "analysis/overview.md"
+    },
+    {
+      "type": "duplicate_reference",
+      "message": "duplicate reference: marsdisk/physics/sinks.py:83\u2013160",
+      "doc": "analysis/overview.md"
+    },
+    {
+      "type": "duplicate_reference",
+      "message": "duplicate reference: marsdisk/run.py:273\u20131005",
+      "doc": "analysis/overview.md"
+    },
+    {
+      "type": "duplicate_reference",
+      "message": "duplicate reference: marsdisk/run.py:273\u20131005",
+      "doc": "analysis/overview.md"
+    },
+    {
+      "type": "duplicate_reference",
+      "message": "duplicate reference: marsdisk/run.py:273\u20131005",
+      "doc": "analysis/run-recipes.md"
+    },
+    {
+      "type": "duplicate_reference",
+      "message": "duplicate reference: marsdisk/run.py:273\u20131005",
+      "doc": "analysis/run-recipes.md"
+    },
+    {
+      "type": "duplicate_reference",
+      "message": "duplicate reference: marsdisk/run.py:273\u20131005",
+      "doc": "analysis/run-recipes.md"
+    },
+    {
+      "type": "duplicate_reference",
+      "message": "duplicate reference: marsdisk/run.py:273\u20131005",
+      "doc": "analysis/run-recipes.md"
+    },
+    {
+      "type": "duplicate_reference",
+      "message": "duplicate reference: marsdisk/run.py:273\u20131005",
+      "doc": "analysis/run-recipes.md"
+    },
+    {
+      "type": "duplicate_reference",
+      "message": "duplicate reference: marsdisk/run.py:273\u20131005",
+      "doc": "analysis/run-recipes.md"
+    },
+    {
+      "type": "duplicate_reference",
+      "message": "duplicate reference: marsdisk/run.py:273\u20131005",
+      "doc": "analysis/run-recipes.md"
+    },
+    {
+      "type": "duplicate_reference",
+      "message": "duplicate reference: marsdisk/run.py:273\u20131005",
+      "doc": "analysis/run-recipes.md"
+    },
+    {
+      "type": "duplicate_reference",
+      "message": "duplicate reference: marsdisk/run.py:273\u20131005",
+      "doc": "analysis/run-recipes.md"
+    },
+    {
+      "type": "duplicate_reference",
+      "message": "duplicate reference: marsdisk/run.py:273\u20131005",
+      "doc": "analysis/run-recipes.md"
+    },
+    {
+      "type": "duplicate_reference",
+      "message": "duplicate reference: marsdisk/run.py:273\u20131005",
+      "doc": "analysis/run-recipes.md"
+    },
+    {
+      "type": "duplicate_reference",
+      "message": "duplicate reference: marsdisk/run.py:273\u20131005",
+      "doc": "analysis/run-recipes.md"
+    },
+    {
+      "type": "duplicate_reference",
+      "message": "duplicate reference: marsdisk/run.py:273\u20131005",
+      "doc": "analysis/run-recipes.md"
+    },
+    {
+      "type": "duplicate_reference",
+      "message": "duplicate reference: marsdisk/run.py:273\u20131005",
+      "doc": "analysis/run-recipes.md"
+    },
+    {
+      "type": "duplicate_reference",
+      "message": "duplicate reference: marsdisk/run.py:273\u20131005",
+      "doc": "analysis/run-recipes.md"
+    },
+    {
+      "type": "duplicate_reference",
+      "message": "duplicate reference: marsdisk/run.py:273\u20131005",
+      "doc": "analysis/run-recipes.md"
+    },
+    {
+      "type": "duplicate_reference",
+      "message": "duplicate reference: marsdisk/run.py:273\u20131005",
+      "doc": "analysis/run-recipes.md"
+    },
+    {
+      "type": "duplicate_reference",
+      "message": "duplicate reference: marsdisk/run.py:273\u20131005",
+      "doc": "analysis/run-recipes.md"
+    },
+    {
+      "type": "duplicate_reference",
+      "message": "duplicate reference: marsdisk/run.py:273\u20131005",
+      "doc": "analysis/run-recipes.md"
+    }
+  ]
+}
