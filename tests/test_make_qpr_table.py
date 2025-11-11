@@ -1,7 +1,7 @@
 """Planck平均Q_prテーブル生成ユーティリティのテスト。Planck 平均⟨Q_pr⟩."""
 import numpy as np
 
-from tools.make_qpr_table import compute_planck_mean_qpr
+from marsdisk.ops.make_qpr_table import compute_planck_mean_qpr
 
 
 def test_small_grain_qpr_increases_with_temperature():
