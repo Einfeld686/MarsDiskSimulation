@@ -1,0 +1,32 @@
+configs/base.yml (or user YAML)
+  ↳ marsdisk.run.load_config() [marsdisk/run.py:170-187]
+      ↳ marsdisk.schema.Config(...) validates fields including
+          • sinks.mode ∈ {"none","sublimation"}
+          • sinks.enable_sublimation (bool)
+          • temps.T_M (K)
+          • radiation.TM_K (optional override)
+  ↳ marsdisk.run.run_zero_d(cfg) [marsdisk/run.py:200-639]
+      ↳ select orbital radius r and Ω
+      ↳ temperature source: if cfg.radiation.TM_K is set use it, else cfg.temps.T_M → record T_M_source
+      ↳ construct SublimationParams from cfg.sinks.sub_params and attach runtime radius / Ω
+      ↳ compute blow-out size & β via marsdisk.physics.radiation (uses T_M)
+      ↳ if cfg.sinks.mode != "none" and cfg.sinks.enable_sublimation:
+          ↳ marsdisk.physics.fragments.s_sub_boundary(T_M, cfg.sinks.T_sub, t_ref=t_orb, rho, sub_params)
+              ↳ marsdisk.physics.sublimation.grain_temperature_graybody(T_M, r)
+              ↳ marsdisk.physics.sublimation.s_sink_from_timescale(...)
+      ↳ SinkOptions(enable_sublimation = cfg.sinks.enable_sublimation, ...)
+          ↳ if cfg.sinks.mode == "none": t_sink = None (skip all sinks)
+          ↳ else t_sink = marsdisk.physics.sinks.total_sink_timescale(T_M, rho, Ω, opts)
+              ↳ marsdisk.physics.sublimation.grain_temperature_graybody(T_M, r)
+              ↳ marsdisk.physics.sublimation.s_sink_from_timescale(...)
+                  ↳ marsdisk.physics.sublimation.mass_flux_hkl/logistic(T_d, params)
+      ↳ surface evolution: marsdisk.physics.surface.step_surface(..., t_sink=t_sink) [marsdisk/physics/surface.py]
+          ↳ returns outflux and sink_flux per area
+      ↳ accumulate totals:
+          • M_out_dot, M_loss_cum (blow-out)        [marsdisk/run.py:458-484]
+          • M_sink_dot, M_sink_cum (e.g. sublimation) [marsdisk/run.py:459-487]
+      ↳ IO hooks:
+          • writer.write_parquet(out/series/run.parquet) [marsdisk/io/writer.py]
+          • summary dict with M_loss = M_loss_cum + M_sink_cum and T_M_source [marsdisk/run.py:551-573]
+          • writer.write_summary(.../summary.json)
+          • writer.write_mass_budget(.../checks/mass_budget.csv)
