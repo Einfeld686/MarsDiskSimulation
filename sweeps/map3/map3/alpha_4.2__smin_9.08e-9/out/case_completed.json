@@ -1,8 +1,0 @@
-{
-  "case_id": "alpha_4.2__smin_9.08e-9",
-  "partition_count": 4,
-  "partition_index": 2,
-  "series": "/Users/daichi/marsshearingsheet/sweeps/map3/map3/alpha_4.2__smin_9.08e-9/out/series/run.parquet",
-  "summary": "/Users/daichi/marsshearingsheet/sweeps/map3/map3/alpha_4.2__smin_9.08e-9/out/summary.json",
-  "timestamp": "2025-10-02T15:14:23.906896Z"
-}
