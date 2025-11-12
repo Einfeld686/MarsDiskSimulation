@@ -120,3 +120,12 @@ marsdisk/
 - `anchor_consistency_rate` は 0.98 以上を保ち、`invalid_anchor_count` と `line_anchor_reversed_count` は常に 0 にする。
 - 重複アンカーは `duplicate_anchor_count` に記録されるが、衝突など実害があれば必ず解消する（将来的にしきい値を引き上げる余地を残す）。
 - CI では `python -m agent_test.ci_guard_analysis --coverage analysis/coverage.json --refs analysis/doc_refs.json --inventory analysis/inventory.json --fail-under 0.75 --require-clean-anchors` を実行し、必要に応じて `--show-top` で不足箇所を確認する。
+
+@-- BEGIN:SIO2_DISK_COOLING_AGENTS --
+## SiO₂ Disk Cooling シミュレーション（自動生成）
+- 目的：火星放射冷却に基づく SiO₂ 凝固優勢の距離×時間マップの作成
+- 実行: `python siO2_disk_cooling/siO2_cooling_map.py`
+- 出力: `siO2_disk_cooling/outputs/` 配下の PNG/CSV
+@-- END:SIO2_DISK_COOLING_AGENTS --
+
+

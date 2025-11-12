@@ -189,3 +189,19 @@ pytest
   YAML で `io.debug_sinks: true` を指定すると `out/<case>/debug/sinks_trace.jsonl` が生成され、各ステップの `t_sink`, `dominant_sink`, `total_sink_dm_dt_kg_s`, `cum_sublimation_mass_kg` などを追跡できます。ロギングを無効に戻すには `false` を指定します。
 - **RNG の再現性**  
   CLI / YAML の同一設定で再実行しても、`dynamics.rng_seed` が一致していれば `summary.json` / `series/run.parquet` の統計量は一致します。シードを省略した場合は幾何条件からの自動決定値（`run_config.json` の `rng_seed_expr` を参照）が使われます。
+
+@-- BEGIN:SIO2_DISK_COOLING_README --
+### SiO₂ disk cooling（距離×時間マップ）
+SiO₂ 粒子の温度がガラス転移・液相終端に到達する時刻を距離と時間のマップとして評価するシミュレーションです。
+- モデル: $T_{\mathrm{Mars}}(t)=(T_0^{-3}+3\sigma t/(D\rho c_p))^{-1/3}$, $T_p(r,t)=T_{\mathrm{Mars}}(t)\sqrt{R_{\mathrm{Mars}}/(2r)}$
+- 実行方法: `python siO2_disk_cooling/siO2_cooling_map.py`
+- 生成物: `siO2_disk_cooling/outputs/*.png`, `siO2_disk_cooling/outputs/*.csv`
+
+| T0 [K] | T_p \le T_{glass} 到達範囲 | 代表時刻 | T_p \le T_{liquidus} 到達範囲 | 代表時刻 |
+| --- | --- | --- | --- | --- |
+| 6000 | 1.955–2.400 R_Mars | 1.657 年 | 1.080–2.400 R_Mars | 0.841 年 |
+| 4000 | 1.665–2.400 R_Mars | 1.252 年 | 1.000–2.400 R_Mars | 0.265 年 |
+| 2000 | 1.000–2.400 R_Mars | 0.000 年 | 1.000–2.400 R_Mars | 0.000 年 |
+@-- END:SIO2_DISK_COOLING_README --
+
+
