@@ -175,3 +175,13 @@ io:
 - `scripts/run_inner_disk_suite.py` は Φ(1)={0.20,0.37,0.60} と T_M=1000–6000 K（50 K 刻み）を組み合わせ、代表半径 2.5 R_Mars で `geometry.r` と `numerics.dt_init` を公転周期に合わせた `--override` へ展開する。[scripts/run_inner_disk_suite.py:78–118][scripts/run_inner_disk_suite.py:316–365]
 - 各ケース実行後に `series/psd_hist.parquet` を読み込んで PSD の時間変化を描画し、`figs/frame_*.png` と `animations/psd_evolution.gif` を生成して凡例に「惑星放射起因のブローアウト」を記載する。[scripts/run_inner_disk_suite.py:124–203][scripts/run_inner_disk_suite.py:364–380]
 - `orbit_rollup.csv` を `orbit_rollup_summary.csv` に整形し、Φ=0.37 かつ T_M=2000/4000/6000 K の GIF を `runs/inner_disk_suite/animations/Phi0p37_TMXXXX.gif` として複写する。定数Φテーブルは `tables/phi_const_0p20.csv` などに配置する。[scripts/run_inner_disk_suite.py:183–243][scripts/run_inner_disk_suite.py:364–380]
+
+@-- BEGIN:SIO2_DISK_COOLING_ANALYSIS --
+## SiO₂ 凝固優勢（距離×時間マップ）サマリ（2025-11-11 07:38 UTC）
+- T0=6000K: r範囲=1.955–2.400 R_Mars (glass), 代表到達=1.657 年; 液相到達範囲=1.080–2.400 R_Mars, 代表到達=0.841 年
+- T0=4000K: r範囲=1.665–2.400 R_Mars (glass), 代表到達=1.252 年; 液相到達範囲=1.000–2.400 R_Mars, 代表到達=0.265 年
+- T0=2000K: r範囲=1.000–2.400 R_Mars (glass), 代表到達=0.000 年; 液相到達範囲=1.000–2.400 R_Mars, 代表到達=0.000 年
+出力: siO2_disk_cooling/outputs/ 以下を参照
+@-- END:SIO2_DISK_COOLING_ANALYSIS --
+
+
