@@ -18,6 +18,16 @@
 
 詳細な数式・導出・ブロック図は `analysis/overview.md` と `analysis/equations.md` を参照してください。
 
+### 放射条件とプランク平均 ⟨Q_pr⟩
+
+- 本コードは **プランク平均の放射圧効率** ⟨Q_pr⟩ を放射源（火星表面）の黒体スペクトルで重み付けした無次元係数として扱います。定義は  
+  $$
+  \langle Q_{\rm pr}\rangle(T_M) = \frac{\int_0^\infty Q_{\rm pr}(\lambda)\,B_\lambda(T_M)\,{\rm d}\lambda}{\int_0^\infty B_\lambda(T_M)\,{\rm d}\lambda},
+  $$
+  であり、波長依存の吸収・散乱（$Q_{\rm pr}(\lambda)=Q_{\rm abs}+ (1-g)Q_{\rm sca}$）を火星温度 $T_M$ の Planck 関数 $B_\lambda$ で平均化します。
+- 実行時は必ず `radiation.qpr_table_path`（Planck 平均表）を指定するか、`radiation.Q_pr` に ⟨Q_pr⟩ の定数値を与えてください。テーブルは `marsdisk/ops/make_qpr_table.py` または観測／Mie 解析で生成した CSV/NPZ を `marsdisk.io.tables.load_qpr_table` が読み込み、`marsdisk/physics/radiation.py` が補間します。
+- β や blow-out サイズ、滞在時間係数 `chi_blow`、PSD 下限 `s_min` など、放射に依存する全量はこの ⟨Q_pr⟩ を通じて決まり、別個の吸収効率 $Q_{\rm abs}$ を直接入力する経路はありません。必要なら Mie 計算側で $Q_{\rm abs}, Q_{\rm sca}, g$ を評価し、Planck 重み付きの ⟨Q_pr⟩ をテーブルとして渡してください。
+
 ### 全モードON実行フロー（gas-poor 無効）
 
 > **注意**: AGENTS.md §4 にある通り、本プロジェクトは gas-poor を既定とし TL2003 表層方程式の使用を抑制しています。ここでは感度試験として `ALLOW_TL2003=true` などでガードを明示的に外し、昇華・ガス抗力・遮蔽・“wavy” PSD・Wyatt 衝突・HKL 侵食など **全スイッチを有効化した状態**（ただし gas-poor 簡略化は適用しない）で 0D シミュレーションを走らせる手順と式の対応を記述します。
@@ -179,7 +189,7 @@ pytest
 - `analysis/sinks_callgraph.md`：追加シンクの流れと依存関係。  
 - `analysis/equations.md`：採用方程式と文献まとめ。
 
-必要に応じて `analysis/` ディレクトリを `python -m tools.doc_sync_agent --all --write` で同期し、コード変更後の参照情報を更新してください。
+必要に応じて `analysis/` ディレクトリを `python -m tools.doc_sync_agent --all --write`（Makefile では `make analysis-sync`）で同期し、コード変更後の参照情報を更新してください。その直後に `make analysis-doc-tests` を実行すると `tools/run_analysis_doc_tests.py` が `pytest tests/test_analysis_* -q` を一括実行し、合格率を ASCII バーで可視化します。Codex/開発者ともに「DocSync → ドキュメントテスト」の順でまとめて記録するのが標準手順で、チャットで「analysisファイルを更新してください」と頼むだけで `make analysis-update`（両コマンドを連続実行）を走らせられます。
 
 ## 8. デバッグとトラブルシュート
 
@@ -203,5 +213,3 @@ SiO₂ 粒子の温度がガラス転移・液相終端に到達する時刻を�
 | 4000 | 1.665–2.400 R_Mars | 1.252 年 | 1.000–2.400 R_Mars | 0.265 年 |
 | 2000 | 1.000–2.400 R_Mars | 0.000 年 | 1.000–2.400 R_Mars | 0.000 年 |
 @-- END:SIO2_DISK_COOLING_README --
-
-

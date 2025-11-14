@@ -1,23 +1,23 @@
 {
   "function_reference_rate": {
-    "numerator": 48,
-    "denominator": 65,
-    "rate": 0.7384615384615385
+    "numerator": 55,
+    "denominator": 69,
+    "rate": 0.7971014492753623
   },
   "anchor_consistency_rate": {
-    "numerator": 151,
-    "denominator": 151,
+    "numerator": 201,
+    "denominator": 201,
     "rate": 1.0
   },
   "equation_unit_coverage": {
-    "numerator": 4,
-    "denominator": 26,
-    "rate": 0.15384615384615385
+    "numerator": 24,
+    "denominator": 27,
+    "rate": 0.8888888888888888
   },
-  "sinks_callgraph_documented": false,
+  "sinks_callgraph_documented": true,
   "holes": [
-    "marsdisk/analysis/beta_sampler.py#sample_beta_over_orbit",
-    "marsdisk/analysis/massloss_sampler.py#sample_mass_loss_one_orbit",
-    "marsdisk/io/tables.py#get_qpr_table_path"
+    "marsdisk/io/tables.py#interp_phi",
+    "marsdisk/ops/doc_sync_agent.py#ensure_equation_ids",
+    "marsdisk/ops/doc_sync_agent.py#main"
   ]
 }

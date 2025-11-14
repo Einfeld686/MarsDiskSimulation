@@ -33,4 +33,14 @@ analysis-sync:
 
 analysis-sync-commit:
 	python -m tools.doc_sync_agent --all --write --commit
+
+analysis-coverage-guard:
+	python -m tools.coverage_guard --fail-under 0.75
+
+analysis-doc-tests:
+	python tools/run_analysis_doc_tests.py
+
+analysis-update:
+	$(MAKE) analysis-sync
+	$(MAKE) analysis-doc-tests
 # ==========================

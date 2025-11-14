@@ -144,19 +144,19 @@ def _run_parallel(
     results: List[Dict[str, float]] = []
     total = len(grid)
     with ProcessPoolExecutor(max_workers=jobs) as executor:
-            futures = {
-                executor.submit(
-                    _execute_case,
-                    r,
-                    T,
-                    base_config=base_config,
-                    qpr_table=qpr_table,
-                    dt_over_t_blow_max=dt_ratio_max,
-                    include_sinks_none=include_sinks_none,
-                    overrides=overrides,
-                ): (r, T)
-                for r, T in grid
-            }
+        futures = {
+            executor.submit(
+                _execute_case,
+                r,
+                T,
+                base_config=base_config,
+                qpr_table=qpr_table,
+                dt_over_t_blow_max=dt_ratio_max,
+                include_sinks_none=include_sinks_none,
+                overrides=overrides,
+            ): (r, T)
+            for r, T in grid
+        }
         for idx, future in enumerate(as_completed(futures), start=1):
             r, T = futures[future]
             print(_format_case_index(idx, total, r, T), flush=True)

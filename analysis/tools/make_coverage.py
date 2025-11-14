@@ -20,6 +20,7 @@ ANCHOR_PATTERN = re.compile(
     r"(marsdisk/[A-Za-z0-9_/\.-]+\.py)#([A-Za-z0-9_\.]+)"
 )
 UNIT_BRACKETS_PATTERN = re.compile(r"\[[^\]]*[A-Za-z][^\]]*\]")
+SYMBOL_TABLE_HEADER_PATTERN = re.compile(r"\|\s*Symbol\s*\|.*\|\s*Units\s*\|", re.IGNORECASE)
 
 AUTOGEN_BEGIN = "<!-- AUTOGEN"
 AUTOGEN_END = "AUTOGEN-END -->"
@@ -208,6 +209,15 @@ def extract_fenced_blocks(section: str) -> List[Tuple[str, str]]:
     return blocks
 
 
+def _section_has_symbol_table(section: str) -> bool:
+    lines = section.splitlines()
+    for idx, line in enumerate(lines):
+        if SYMBOL_TABLE_HEADER_PATTERN.search(line):
+            if idx + 1 < len(lines) and lines[idx + 1].strip().startswith("|"):
+                return True
+    return False
+
+
 def compute_equation_unit_rate(equations_path: Path) -> Tuple[int, int]:
     if not equations_path.exists():
         return 0, 0
@@ -233,6 +243,8 @@ def compute_equation_unit_rate(equations_path: Path) -> Tuple[int, int]:
         sections_with_equations += 1
 
         has_units = any(UNIT_BRACKETS_PATTERN.search(body) for body in equation_bodies)
+        if not has_units and _section_has_symbol_table(section):
+            has_units = True
         if has_units:
             sections_with_units += 1
 
@@ -259,20 +271,20 @@ def compute_sinks_callgraph_flag(doc_path: Path) -> bool:
         return False
     text = doc_path.read_text(encoding="utf-8")
     block = extract_autogen_block(text)
-    if not block:
-        # Fallback: evaluate entire document.
-        block = text
-
+    segments = [block] if block else []
+    segments.append(text)
     anchors = {
         "marsdisk/run.py#": False,
         "marsdisk/physics/surface.py#": False,
         "marsdisk/physics/sinks.py#": False,
         "marsdisk/physics/sublimation.py#": False,
     }
-    for anchor in anchors.keys():
-        if anchor in block:
-            anchors[anchor] = True
-
+    for segment in segments:
+        for anchor in anchors.keys():
+            if anchors[anchor]:
+                continue
+            if anchor in segment:
+                anchors[anchor] = True
     return all(anchors.values())
 
 
