@@ -85,6 +85,8 @@ marsdisk/
 - 実行コマンド: `python -m tools.doc_sync_agent --all --write`
 - コミットまで行う場合の例: 「analysis を現在の状況に更新して（コミットまで）」 → `python -m tools.doc_sync_agent --all --write --commit`
 - Makefile エイリアス: `make analysis-sync` / `make analysis-sync-commit`
+- Codex がコード／analysis を変更した場合は、DocSyncAgent 実行直後に `make analysis-doc-tests`（`tools/run_analysis_doc_tests.py` 経由で `pytest tests/test_analysis_* -q` を束ね、ASCII バーで合格率を表示）を必ず走らせ、ドキュメント系テストをまとめて確認する。標準手順として同一バッチで実行し忘れを防ぐこと。
+- チャットで「analysisファイルを更新してください」と指示された場合は `make analysis-update`（DocSyncAgent → doc テストの順で実行する複合ターゲット）を走らせること。Codex 側で DocSync とテストを忘れずにセット実行するためのショートカットとする。
 
 ## シミュレーション結果の保管と実行記録
 - 実行結果は out/<YYYYMMDD-HHMM>_<short-title>__<shortsha>__seed<n>/ を作成して格納する。
@@ -127,5 +129,4 @@ marsdisk/
 - 実行: `python siO2_disk_cooling/siO2_cooling_map.py`
 - 出力: `siO2_disk_cooling/outputs/` 配下の PNG/CSV
 @-- END:SIO2_DISK_COOLING_AGENTS --
-
 

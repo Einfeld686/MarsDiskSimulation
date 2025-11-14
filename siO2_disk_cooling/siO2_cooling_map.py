@@ -37,6 +37,39 @@ except ImportError:  # pragma: no cover - fallback for minimal environments
 if HAS_MATPLOTLIB:
     plt.rcParams["font.size"] = 12
 
+    def _configure_japanese_font() -> None:
+        """Pick a CJK-capable font so matplotlib renders Japanese labels."""
+
+        try:
+            from matplotlib import font_manager
+        except Exception:
+            return
+
+        candidate_fonts = [
+            "Hiragino Sans",
+            "Hiragino Kaku Gothic ProN",
+            "Yu Gothic",
+            "YuGothic",
+            "Yu Gothic UI",
+            "IPAexGothic",
+            "IPAPGothic",
+            "Noto Sans CJK JP",
+            "Noto Sans JP",
+            "TakaoPGothic",
+            "MS Gothic",
+        ]
+        available = {font.name for font in font_manager.fontManager.ttflist}
+        for font_name in candidate_fonts:
+            if font_name in available:
+                plt.rcParams["font.family"] = font_name
+                plt.rcParams["font.sans-serif"] = [font_name]
+                return
+
+        # Fallback: still register candidate list so that once installed it'll be used.
+        plt.rcParams["font.family"] = candidate_fonts
+
+    _configure_japanese_font()
+
 # ---------------------------------------------------------------------------
 # 定数定義
 # ---------------------------------------------------------------------------
@@ -1185,7 +1218,10 @@ def main() -> None:
 
     sim_dir = Path(__file__).resolve().parent
     project_dir = sim_dir.parent
-    repo_root = project_dir.parent
+    # detect repo root (prefer local project dir when analysis/ exists)
+    repo_root = project_dir
+    if not (repo_root / "analysis").exists():
+        repo_root = project_dir.parent
     outputs_dir = sim_dir / "outputs"
     logs_dir = sim_dir / "logs"
 

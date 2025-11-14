@@ -1,0 +1,20 @@
+SiO₂ Disk Cooling 実行ログ
+UTC: 20251112_155222
+
+T0=6000 K
+  ガラス転移: 1.955–2.400 R_Mars (1.657 年)
+  液相終端: 1.080–2.400 R_Mars (0.841 年)
+  CSV: /Users/daichi/marsshearingsheet/siO2_disk_cooling/outputs/times_T0_6000K.csv
+  PNG: /Users/daichi/marsshearingsheet/siO2_disk_cooling/outputs/map_T0_6000K.png
+
+T0=4000 K
+  ガラス転移: 1.665–2.400 R_Mars (1.252 年)
+  液相終端: 1.000–2.400 R_Mars (0.265 年)
+  CSV: /Users/daichi/marsshearingsheet/siO2_disk_cooling/outputs/times_T0_4000K.csv
+  PNG: /Users/daichi/marsshearingsheet/siO2_disk_cooling/outputs/map_T0_4000K.png
+
+T0=2000 K
+  ガラス転移: 1.000–2.400 R_Mars (0.000 年)
+  液相終端: 1.000–2.400 R_Mars (0.000 年)
+  CSV: /Users/daichi/marsshearingsheet/siO2_disk_cooling/outputs/times_T0_2000K.csv
+  PNG: /Users/daichi/marsshearingsheet/siO2_disk_cooling/outputs/map_T0_2000K.png

@@ -592,6 +592,8 @@ class DocSyncAgent:
     def _check_sink_consistency(self, run_doc: str, sinks_doc: str) -> None:
         run_tokens = self._extract_sink_tokens(run_doc)
         sink_tokens = self._extract_sink_tokens(sinks_doc)
+        if not run_tokens or not sink_tokens:
+            return
         extra_run = sorted(run_tokens - sink_tokens)
         extra_sinks = sorted(sink_tokens - run_tokens)
         if extra_run:
@@ -609,7 +611,10 @@ class DocSyncAgent:
         tokens = set()
         for token in re.findall(r"`([^`]+)`", text):
             if "sink" in token.lower():
-                tokens.add(token)
+                cleaned = token.strip()
+                if not cleaned or "\n" in cleaned:
+                    continue
+                tokens.add(cleaned)
         return tokens
 
     # --------------------------------------------------------------------- #

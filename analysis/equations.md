@@ -115,7 +115,10 @@ The reported beta diagnostics are computed in two places:
 \beta_{\mathrm{cfg}} = \beta\!\left(s_{\min,\mathrm{cfg}}\right),\qquad
 \beta_{\mathrm{eff}} = \beta\!\left(s_{\min,\mathrm{eff}}\right),
 ```
-where `radiation.beta` implements the Stefan–Boltzmann expression and takes the Planck mean `⟨Q_{\mathrm{pr}}⟩` from the current run (`[marsdisk/physics/radiation.py#beta [L220–L241]]`). Both fields are written to the time series and summary as `beta_at_smin_config` and `beta_at_smin_effective` (`[marsdisk/run.py#run_zero_d [L426–L1362]]`, `[marsdisk/run.py#run_zero_d [L426–L1362]]`). The blow-out threshold `beta_threshold` is sourced from the module constant `BLOWOUT_BETA_THRESHOLD` (`[marsdisk/physics/radiation.py#BLOWOUT_BETA_THRESHOLD [L32]]`) and recorded alongside the betas (`[marsdisk/run.py#run_zero_d [L426–L1362]]`, `[marsdisk/run.py#run_zero_d [L426–L1362]]`). The closed-form expression for β is persisted verbatim in `run_config.json["beta_formula"]` as part of the provenance record (`[marsdisk/run.py#run_zero_d [L426–L1362]]`).
+where `radiation.beta` implements the Stefan–Boltzmann expression and takes the Planck mean `⟨Q_{\mathrm{pr}}⟩` from the current run (`[marsdisk/physics/radiation.py#beta [L220–L241]]`).
+Both fields are written to the time series と `summary.json` に `beta_at_smin_config` / `beta_at_smin_effective` として保存される（`[marsdisk/run.py#run_zero_d [L426–L1362]]`, `[marsdisk/run.py#run_zero_d [L426–L1362]]`）。
+The blow-out threshold originates from the module constant `BLOWOUT_BETA_THRESHOLD` (`[marsdisk/physics/radiation.py#BLOWOUT_BETA_THRESHOLD [L32]]`), and the recorded key is `beta_threshold` (`[marsdisk/run.py#run_zero_d [L426–L1362]]`, `[marsdisk/run.py#run_zero_d [L426–L1362]]`).
+The closed-form expression for β is persisted verbatim in `run_config.json["beta_formula"]` as part of the provenance record (`[marsdisk/run.py#run_zero_d [L426–L1362]]`).
 
 Case classification follows the configuration beta: `case_status = "blowout"` when `beta_at_smin_config >= beta_threshold`, otherwise `"ok"`; exceptional mass-budget failures are escalated separately (`[marsdisk/run.py#run_zero_d [L426–L1362]]`). This logic matches the recorded summaries used by downstream validation.
 
@@ -624,8 +627,28 @@ Ensures that the surface layer does not exceed the $\tau=1$ limit:
 - Operates on scalars and returns a float suitable for downstream arrays. [marsdisk/physics/shielding.py#clip_to_tau1 [L219–L261]]
 
 ### (E.032) marsdisk/physics/fragments.py: compute_q_r_F2 (lines 30–61)
+```latex
+\begin{aligned}
+M_{\mathrm{tot}} &= m_1 + m_2, &
+\mu &= \frac{m_1 m_2}{M_{\mathrm{tot}}},\\
+Q_R &= \frac{1}{2}\frac{\mu v^{2}}{M_{\mathrm{tot}}}.
+\end{aligned}
+```
+**Symbols**
 
-Evaluates the critical specific impact energy for catastrophic disruption of the target, combining bulk-strength and gravity-dominated regimes per the Leinhardt & Stewart (2012) fits. The result is expressed in J kg$^{-1}$ and reused when constructing fragment mass budgets. [marsdisk/physics/fragments.py#compute_q_r_F2 [L30–L61]]
+|Symbol|Meaning|Units|Defaults/Notes|
+|---|---|---|---|
+|$m_1$|Projectile mass|kg|Input `m1`; must be $>0$|
+|$m_2$|Target mass|kg|Input `m2`; must be $>0$|
+|$M_{\mathrm{tot}}$|Total colliding mass|kg|Computed sum; used for logging and scaling|
+|$\mu$|Reduced mass|kg|Product ratio $m_1 m_2 / M_{\mathrm{tot}}$|
+|$v$|Impact velocity|m s$^{-1}$|Input `v`; non-negative|
+|$Q_R$|Specific impact energy|J kg$^{-1}$|Returned scalar, reused by downstream F2 logic|
+
+**Numerics**
+- Validates positive masses and non-negative velocity, raising `MarsDiskError` otherwise.
+- Performs a single floating-point evaluation of $Q_R$ and logs the arguments for diagnostics.
+- Output is explicitly coerced to `float` for consistency with NumPy inputs. [marsdisk/physics/fragments.py#compute_q_r_F2 [L30–L61]]
 
 ### (E.033) marsdisk/physics/fragments.py: compute_largest_remnant_mass_fraction_F2 (lines 64–98)
 
@@ -640,9 +663,20 @@ f_{\mathrm{LR}} =
 ```
 where $Q$ is the specific impact energy and $Q_{\mathrm{RD}}^{*}$ the catastrophic disruption threshold from (E.032).
 
+**Symbols**
+
+|Symbol|Meaning|Units|Defaults/Notes|
+|---|---|---|---|
+|$Q$|Specific impact energy|J kg$^{-1}$|Computed via `compute_q_r_F2`|
+|$Q_{\mathrm{RD}}^{*}$|Catastrophic disruption threshold|J kg$^{-1}$|Input `q_rd_star`; must be $>0$|
+|$\phi$|Energy ratio $Q/Q_{\mathrm{RD}}^{*}$|dimensionless|Controls branch selection|
+|$f_{\mathrm{LR}}$|Largest-remnant mass fraction|dimensionless|Returned after $[0,1]$ clipping|
+|$m_1,m_2,v$|Collision inputs reused from $Q$|kg, kg, m s$^{-1}$|Validated inside `compute_q_r_F2`|
+
 **Numerics**
-- Clamps the returned fraction to $[0,1]$.
-- Raises `MarsDiskError` when supplied energies are non-positive. [marsdisk/physics/fragments.py#compute_largest_remnant_mass_fraction_F2 [L64–L98]]
+- Delegates $Q$ evaluation to (E.032) to ensure consistent validation.
+- Applies the LS12 piecewise form and clamps to the physical limits before returning.
+- Raises `MarsDiskError` for non-positive `q_rd_star` to avoid division-by-zero. [marsdisk/physics/fragments.py#compute_largest_remnant_mass_fraction_F2 [L64–L98]]
 
 ### (E.034) marsdisk/physics/smol.py: step_imex_bdf1_C3 (lines 18–101)
 
