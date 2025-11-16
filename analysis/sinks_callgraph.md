@@ -22,7 +22,7 @@
   Performs the IMEX step. The sink term enters the combined loss rate (`loss += 1/t_sink`, lines `139–143`) and the returned `sink_flux = sigma_new / t_sink` (line `152`).
 
 - `[marsdisk/physics/surface.py#step_surface [L185–L208]]` `step_surface(..., tau: float | None = None, t_sink: float | None = None, sigma_tau1: float | None = None) -> SurfaceStepResult`  
-  Convenience wrapper used in the 0D loop; injects Wyatt collisions before forwarding to `step_surface_density_S1`.
+  Convenience wrapper used in the 0D loop; injects Strubbe–Chiang collisions before forwarding to `step_surface_density_S1`.
 
 - `[marsdisk/run.py#run_zero_d [L426–L1362]]` `run_zero_d(cfg: Config, *, enforce_mass_budget: bool = False) -> None`  
   Orchestrates the 0D evolution,再評価モード (`numerics.eval_per_step=true`) では各ステップの冒頭で⟨Q_pr⟩・`a_blow` と HKL 侵食を更新し、`total_sink_timescale` の結果を IMEX 表層ステップへ渡す。粒径侵食の反映は `psd.apply_uniform_size_drift` により面密度へ折り込まれる。
@@ -38,7 +38,7 @@ flowchart TD
     step_surface_density["step_surface_density_S1<br/>marsdisk/physics/surface.py"]
     run_zero_d -->|mode='sublimation' で有効化| total_sink_timescale
     run_zero_d -->|t_sink を渡す (None でシンク無効)| step_surface
-    step_surface -->|Wyatt 衝突後に委譲| step_surface_density
+    step_surface -->|Strubbe–Chiang 衝突後に委譲| step_surface_density
     total_sink_timescale -->|返値 t_sink / None| step_surface
     total_sink_timescale -->|HK ルート (蒸発率)| mass_flux_hkl
     mass_flux_hkl -->|即時蒸発サイズ s_sink| s_sink_from_timescale

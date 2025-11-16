@@ -49,7 +49,7 @@ def _safe_tcoll(Omega: float, tau: float | None) -> float | None:
             "safe_tcoll: tau=%e <= TAU_MIN=%e; collisions disabled", tau, TAU_MIN
         )
         return None
-    return 1.0 / (2.0 * Omega * max(tau, TAU_MIN))
+    return 1.0 / (Omega * max(tau, TAU_MIN))
 
 __all__ = [
     "step_surface_density_S1",
@@ -60,17 +60,17 @@ __all__ = [
 
 
 def wyatt_tcoll_S1(tau: float, Omega: float) -> float:
-    """Return the Wyatt (2008) collisional time-scale for the surface layer.
+    """Return the Strubbe & Chiang (2006) collisional time-scale. [@StrubbeChiang2006_ApJ648_652]
 
-    The expression follows ``t_coll ≈ T_orb/(4π τ)`` where ``T_orb`` is the
-    orbital period ``2π/Ω``.  Combining the two gives ``t_coll = 1/(2Ωτ)``.
-    ``tau`` must be positive and typically corresponds to the vertical
-    optical depth of the disk.
+    The expression ``t_{\mathrm{coll}} = 1/(\Omega\,\tau_{\perp})`` reduces to the
+    same scaling highlighted by Wyatt (2008) but cites the optically thin
+    derivation in Strubbe & Chiang (2006).  ``tau`` must be positive and
+    typically corresponds to the vertical optical depth of the disk.
     """
 
     if tau <= 0.0 or Omega <= 0.0:
         raise MarsDiskError("tau and Omega must be positive")
-    return 1.0 / (2.0 * Omega * tau)
+    return 1.0 / (Omega * tau)
 
 
 @dataclass
@@ -104,7 +104,7 @@ def step_surface_density_S1(
     sigma_tau1: float | None = None,
     enable_blowout: bool = True,
 ) -> SurfaceStepResult:
-    """Advance the surface density by one implicit Euler step (S1).
+    """Advance the surface density by one implicit Euler step (S1). TODO(REF:tl2003_surface_flow_scope_v1)
 
     Parameters
     ----------

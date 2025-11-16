@@ -106,6 +106,7 @@ class Params:
     d_layer: float = D_LAYER
     r_mars: float = R_MARS
     year_seconds: float = YEAR_SECONDS
+    q_abs_mean: float = 1.0  # Lambertian/Planck平均吸収効率（[@Hyodo2018_ApJ860_150]）
 
 
 PARAMS = Params()
@@ -133,7 +134,7 @@ def tmars(time_s: List[float], t0: float, params: Params = PARAMS) -> List[float
     """
 
     coeff = params.sigma / (params.d_layer * params.rho * params.cp)
-    # 解析解 T_Mars(t) = (T0^{-3} + 3 σ t / (D ρ c_p))^{-1/3}
+    # 解析解 T_Mars(t) = (T0^{-3} + 3 σ t / (D ρ c_p))^{-1/3} [@Hyodo2018_ApJ860_150; 式(2)–(4)]
     base = t0 ** -3
     return [(base + 3.0 * coeff * t) ** (-1.0 / 3.0) for t in time_s]
 
@@ -147,9 +148,11 @@ def tp_of_rt(
     """Return the grain temperature field for given radii and times."""
 
     mars_temp = tmars(time_s, t0, params)
+    q_abs_factor = params.q_abs_mean ** 0.25
     field: List[List[float]] = []
     for radius_m in radii_m:
-        factor = math.sqrt(params.r_mars / (2.0 * radius_m))
+        factor = q_abs_factor * math.sqrt(params.r_mars / (2.0 * radius_m))
+        # 粒子放射平衡 T_p = T_Mars Q_abs^{1/4} sqrt(R_Mars/(2r)) [@Hyodo2018_ApJ860_150; 式(5)–(6)]
         field.append([temp * factor for temp in mars_temp])
     return field
 

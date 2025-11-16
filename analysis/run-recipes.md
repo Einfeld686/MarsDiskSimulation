@@ -1,5 +1,5 @@
 # run-recipes
-> **注記（gas‑poor）**: 本解析は **ガスに乏しい衝突起源デブリ円盤**を前提とします。従って、**光学的に厚いガス円盤**を仮定する Takeuchi & Lin (2003) の表層塵アウトフロー式は**適用外**とし、既定では評価から外しています（必要時のみ明示的に有効化）。この判断は、衝突直後の円盤が溶融主体かつ蒸気≲数%で、初期周回で揮発が散逸しやすいこと、および小衛星を残すには低質量・低ガスの円盤条件が要ることに基づきます。参考: Hyodo et al. 2017; 2018／Canup & Salmon 2018。
+> **注記（gas‑poor）**: 本解析は **ガスに乏しい衝突起源デブリ円盤**を前提とします。従って、**光学的に厚いガス円盤**を仮定する Takeuchi & Lin (2003) の表層塵アウトフロー式は**適用外**とし、既定では評価から外しています（必要時のみ明示的に有効化）。この判断は、衝突直後の円盤が溶融主体かつ蒸気≲数%で、初期周回で揮発が散逸しやすいこと、および小衛星を残すには低質量・低ガスの円盤条件が要ることに基づきます。参考: [@Hyodo2017a_ApJ845_125; @Hyodo2017b_ApJ851_122; @Hyodo2018_ApJ860_150; @CanupSalmon2018_SciAdv4_eaar6887]。
 
 ### DocSync + ドキュメントテスト（標準手順）
 - Codex や開発者が analysis/ を更新する場合は、`make analysis-sync`（DocSyncAgent）で反映した直後に `make analysis-doc-tests` を実行し、`pytest tests/test_analysis_* -q` を一括確認する。
@@ -11,6 +11,7 @@
 
 1) 目的
 最小の0D構成で2年間のcoupled破砕–表層系を完走させ、基準となる Parquet/JSON/CSV 出力を得る。
+ベースラインの質量と tidal パラメータは、リング拡散レジームで衛星列の成長が分岐すること（拡散遅→多衛星、速→単一巨大衛星）と、小衛星を残すには $M_{\rm disk}\le3\times10^{-5}M_{\rm Mars}$ かつ $(Q/k_2)<80$ が必要という制約を満たすように設定する。[\@CridaCharnoz2012_Science338_1196; @CanupSalmon2018_SciAdv4_eaar6887]
 
 2) コマンド
 ```bash
@@ -48,6 +49,8 @@ io:
 - `chi_blow` を `1.0` のままにすると `chi_blow_eff=1.0` がサマリに記録され、`"auto"` に切り替えると β と ⟨Q_pr⟩ に連動した補正値（0.5–2.0）が `chi_blow_eff` に入る。
 - `checks/mass_budget.csv` の `error_percent` が全行で 0.5% 以下に収まり、最終行の `mass_remaining` と `mass_lost` が初期質量と合致する。
 - `run_config.json` の `sublimation_provenance` に HKL 式と選択済み `psat_model`、SiO 既定値（`alpha_evap`,`mu`,`A`,`B`）、`P_gas`、`valid_K`、必要に応じて `psat_table_path`、実行半径・公転時間が保存され、同ファイルに `beta_formula`,`T_M_used`,`rho_used`,`Q_pr_used` も併記されていること。
+- `siO2_disk_cooling/siO2_cooling_map.py` を別途実行し、(E.042)/(E.043) に従った $T_{\rm Mars}(t)$ と $T_p(r,t)$ が Hyodo et al. (2018) の式(2)–(6)と一致することを確認する。初期温度や $\bar{Q}_{\rm abs}$ を掃引し、β 閾値の境界が `out/summary.json` の `beta_at_smin_*` と整合するかをチェックする。[\@Hyodo2018_ApJ860_150]
+- 化学・相平衡フラグを有効化した runs では、気相凝縮と溶融固化物の化学差（Pignatale et al. 2018）および外縁ガス包絡での凝縮スペクトル（Ronnet et al. 2016）によって HKL パラメータや` t_sink`が設定されていることを `sinks.total_sink_timescale` のログで確認する。[\@Pignatale2018_ApJ853_118; @Ronnet2016_ApJ828_109]
 
 - CLI は `python -m marsdisk.run --config …` を受け取り、0D実行を呼び出す。[marsdisk/run.py:426–1362]
 - 0Dケースの軌道量は `omega` と `v_kepler` が `runtime_orbital_radius_m` から導出し、ブローアウト時間や周速度評価の基礎となる。[marsdisk/grid.py:90][marsdisk/grid.py:34]
@@ -364,7 +367,7 @@ PYTHONPATH=. pytest -q tests/test_sublimation_sio.py -q
 
 3) 最小設定断片
 - 0D幾何と40ビンPSD、供給0。`sinks.sub_params.psat_model: "auto"`、`psat_table_path` はケースA/BでCSV指定、ケースCでは未指定。
-- SiO物性は (α=7×10⁻³, μ=4.40849×10⁻² kg mol⁻¹, A=13.613, B=17850, P_gas=0) を `SublimationParams` 既定値から流用する。[analysis/checks_psat_auto_01/inputs/case_A_tabulated.yml][marsdisk/physics/sublimation.py:124–135]
+- SiO物性は (α=7×10⁻³, μ=4.40849×10⁻² kg mol⁻¹, A=13.613, B=17850, P_gas=0) を `SublimationParams` 既定値から流用する。[analysis/checks_psat_auto_01/inputs/case_A_tabulated.yml][marsdisk/physics/sublimation.py:125–135]
 
 4) 期待される出力
 - `analysis/checks_psat_auto_01/runs/case_*/series/run.parquet` → `python -c "import pandas as pd; print(pd.read_parquet('analysis/checks_psat_auto_01/runs/case_A_tabulated/series/run.parquet').head())"`
@@ -380,9 +383,9 @@ PYTHONPATH=. pytest -q tests/test_sublimation_sio.py -q
 - `tests/test_sublimation_sio.py` が pass し、HKL実装とauto-selector回帰が保たれている。
 
 6) 根拠
-- psatテーブルは Clausius式 `log10 P = A - B/T` から生成し、PCHIP補間にロードする。[analysis/checks_psat_auto_01/make_table.py][marsdisk/physics/sublimation.py:167–227]
-- auto-selector はタブレット範囲内で内挿、それ以外で局所最小二乗フィットまたは既定係数にフォールバックする。[marsdisk/physics/sublimation.py:386–494][marsdisk/physics/sublimation.py:269–334]
-- HKLフラックスは `mass_flux_hkl` が評価し、`scan_hkl.py` で同式を再計算して温度スキャンを行う。[marsdisk/physics/sublimation.py:534–584][analysis/checks_psat_auto_01/scan_hkl.py]
+- psatテーブルは Clausius式 `log10 P = A - B/T` から生成し、PCHIP補間にロードする。[analysis/checks_psat_auto_01/make_table.py][marsdisk/physics/sublimation.py:217–227]
+- auto-selector はタブレット範囲内で内挿、それ以外で局所最小二乗フィットまたは既定係数にフォールバックする。[marsdisk/physics/sublimation.py:484–494][marsdisk/physics/sublimation.py:324–334]
+- HKLフラックスは `mass_flux_hkl` が評価し、`scan_hkl.py` で同式を再計算して温度スキャンを行う。[marsdisk/physics/sublimation.py:574–584][analysis/checks_psat_auto_01/scan_hkl.py]
 - 出力ファイル群は既存の writer 実装に従って Parquet/JSON/CSV として保存される。[marsdisk/io/writer.py:24–162]
 
 ## G. 解析ユーティリティ（β・質量損失マップ）
@@ -520,9 +523,9 @@ pytest tests/test_analysis_coverage_guard.py -q
   - `python -m marsdisk.run --config ...` を起動すると、`run_zero_d` がテーブルをロードし `_lookup_qpr` 経由で `radiation.qpr_lookup` を呼び、ブローアウト解を反復評価する。[marsdisk/run.py:480–534]
   - テーブル未指定で override も無い場合は実行開始時に `RuntimeError` で停止するため、CI で早期に検出できる。
 - 入出力
-  - `radiation.qpr_lookup(s, T_M, table=None)` は正の grain size と温度を要求し、既定でキャッシュ済み補間器を用いる。テーブルを渡すとその場で評価する。[marsdisk/physics/radiation.py:149–203]
-  - 戻り値は無次元の `⟨Q_pr⟩` で、後続の `radiation.beta` や `radiation.blowout_radius` に供給される。[marsdisk/physics/radiation.py:244–258]
-- 参照: [marsdisk/physics/radiation.py:149–203]
+  - `radiation.qpr_lookup(s, T_M, table=None)` は正の grain size と温度を要求し、既定でキャッシュ済み補間器を用いる。テーブルを渡すとその場で評価する。[marsdisk/physics/radiation.py:179–203]
+  - 戻り値は無次元の `⟨Q_pr⟩` で、後続の `radiation.beta` や `radiation.blowout_radius` に供給される。[marsdisk/physics/radiation.py:250–258]
+- 参照: [marsdisk/physics/radiation.py:179–203]
 - 根拠: テーブル補間とバリデーションは `tests/test_qpr_lookup.py` が確認し、β計算との整合も同テストで比較される。[tests/test_qpr_lookup.py:1–66]
 
 ### beta — 放射圧比の確認ポイント
@@ -532,7 +535,28 @@ pytest tests/test_analysis_coverage_guard.py -q
 - 実行中は `run_zero_d` が βを `s_min_config` と `s_min_effective` で評価し、`case_status` や `summary.json` の `beta_at_smin_config` / `beta_at_smin_effective` フィールドへ書き出す。[marsdisk/run.py:596–607][marsdisk/run.py:1236–1263]
   - `out/series/run.parquet` で列 `beta_at_smin_config` / `beta_at_smin_effective` を確認し、閾値を超えた場合 `case_status="blowout"` が記録される。
 - 入出力
-- `radiation.beta(s, rho, T_M, Q_pr=None)` はサイズ・密度・温度・任意の Planck平均 `⟨Q_pr⟩` を受け取り、無次元のβを返す。引数が非正の場合は例外で停止する。[marsdisk/physics/radiation.py:220–241]
+- `radiation.beta(s, rho, T_M, Q_pr=None)` はサイズ・密度・温度・任意の Planck平均 `⟨Q_pr⟩` を受け取り、無次元のβを返す。引数が非正の場合は例外で停止する。[marsdisk/physics/radiation.py:236–241]
 - `run_config.json` には採用した Q_pr や β式が `beta_formula` として保存され、再現実行に利用できる。[marsdisk/run.py:1232–1260]
-- 参照: [marsdisk/physics/radiation.py:220–241]
+- 参照: [marsdisk/physics/radiation.py:236–241]
 - 根拠: βの逆サイズ依存と Q_pr 上書きは `marsdisk/tests/test_radiation_shielding.py` が、要約出力との連動は `tests/test_summary_backcompat.py` などの統合テストが担保している。[marsdisk/tests/test_radiation_shielding.py:28–31][tests/test_summary_backcompat.py:1–80]
+
+@-- BEGIN:PROVENANCE_RUNREC --
+## 出典と根拠（Provenance）
+- `analysis/references.registry.json` を唯一の文献レジストリとし、doi/bibtex/採用範囲/主要主張をここへ統合する。
+- `analysis/source_map.json` でコード行→参照キーの表を管理し、`todos` 付きエントリは Unknown slug への橋渡しとする。
+- `analysis/equations.md` の各ブロック末尾は既知 `[@Key]`、未知 `TODO(REF:<slug>)` を徹底し、DocSync で整合をとる。
+@-- END:PROVENANCE_RUNREC --
+
+@-- BEGIN:UNKNOWN_SOURCES_RUNREC --
+## 未解決出典（自動）
+- `analysis/UNKNOWN_REF_REQUESTS.jsonl` を GPT-5 Pro への問い合わせパケットとして維持し、slug 単位で探索を指示する。
+- 対応する Markdown (`analysis/UNKNOWN_REF_REQUESTS.md`) には優先度とコード位置、要約がまとまっている。
+- 現状 slug: `tmars_cooling_solution_v1`, `tp_radiative_equilibrium_v1`, `tl2003_surface_flow_scope_v1`。
+@-- END:UNKNOWN_SOURCES_RUNREC --
+
+@-- BEGIN:PHYSCHECK_RUNREC --
+## 物理チェック（自動）
+- `python -m marsdisk.ops.physcheck --config configs/base.yml` で質量保存・次元解析・極限テストをまとめて走らせ、ログを `reports/physcheck/` に残す。
+- `make analysis-doc-tests` は `tests/test_ref_coverage.py` を含む doc 系 pytest を束ね、参照タグの欠落を早期に検知する。
+- WARN/FAIL が出た際は `analysis/provenance_report.md` へ反映し、DocSync の差分としてレビューする。
+@-- END:PHYSCHECK_RUNREC --

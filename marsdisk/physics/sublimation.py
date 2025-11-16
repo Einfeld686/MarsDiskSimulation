@@ -20,6 +20,7 @@ import pandas as pd
 from scipy.interpolate import PchipInterpolator
 
 from .. import constants
+from .radiation import grain_temperature_graybody
 
 logger = logging.getLogger(__name__)
 
@@ -119,20 +120,6 @@ class SublimationParams:
     _psat_last_selection: Optional[Dict[str, Any]] = field(default=None, init=False, repr=False)
     _psat_last_T: Optional[float] = field(default=None, init=False, repr=False)
     _psat_last_log10P: Optional[float] = field(default=None, init=False, repr=False)
-
-
-def grain_temperature_graybody(T_M: float, radius_m: float) -> float:
-    """Return the grey-body grain temperature ``T_d`` (K).
-
-    The equilibrium expression ``T_d = T_M * sqrt(R_M/(2 r))`` assumes
-    rapidly rotating, grey grains heated by the planet.  The orbital radius
-    ``r`` must be provided in metres.
-    """
-
-    if radius_m <= 0.0:
-        raise ValueError("radius must be positive in metres")
-    factor = math.sqrt(constants.R_MARS / (2.0 * radius_m))
-    return T_M * factor
 
 
 def _is_hkl_active(params: SublimationParams) -> bool:
@@ -532,7 +519,7 @@ def p_sat(T: float, params: SublimationParams) -> float:
 
 
 def mass_flux_hkl(T: float, params: SublimationParams) -> float:
-    """Return the sublimation mass flux ``J(T)`` in kg m^-2 s^-1.
+    """Return the sublimation mass flux ``J(T)`` in kg m^-2 s^-1. [@Pignatale2018_ApJ853_118]
 
     If ``params.mode`` is ``"hkl"`` *and* Clausius–Clapeyron coefficients
     are supplied, the Hertz–Knudsen–Langmuir expression is used:
@@ -587,7 +574,7 @@ def mass_flux_hkl(T: float, params: SublimationParams) -> float:
 def s_sink_from_timescale(
     T: float, rho: float, t_ref: float, params: SublimationParams
 ) -> float:
-    r"""Return the instantaneous-sink size :math:`s_{\rm sink}`.
+    r"""Return the instantaneous-sink size :math:`s_{\rm sink}`. [@Ronnet2016_ApJ828_109]
 
     The sublimation lifetime of a spherical grain of radius ``s`` is
     ``t_sub = ρ s / J(T)``.  Requiring ``t_sub \le η t_ref`` yields the

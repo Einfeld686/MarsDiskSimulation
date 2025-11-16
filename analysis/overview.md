@@ -1,6 +1,7 @@
 ## 1. 目的と範囲
 > **注記（gas‑poor）**: 本解析は **ガスに乏しい衝突起源デブリ円盤**を前提とします。従って、**光学的に厚いガス円盤**を仮定する Takeuchi & Lin (2003) の表層塵アウトフロー式は**適用外**とし、既定では評価から外しています（必要時のみ明示的に有効化）。この判断は、衝突直後の円盤が溶融主体かつ蒸気≲数%で、初期周回で揮発が散逸しやすいこと、および小衛星を残すには低質量・低ガスの円盤条件が要ることに基づきます。参考: Hyodo et al. 2017; 2018／Canup & Salmon 2018。
 - 0D円盤で破砕生成による`prod_subblow_area_rate`と表層剥離による`M_out_dot`を時間発展させ、累積損失`M_loss_cum`を記録する。[marsdisk/schema.py#Geometry [L20–L31]][marsdisk/run.py#run_zero_d [L426–L1362]]
+- 形成・生存制約はリング拡散の遅速により衛星列の質量シーケンスが変わること（遅:多数・外側ほど重い、速:単一巨大衛星）と、Phobos/Deimos を残すには **$M_{\rm disk}\le3\times10^{-5}M_{\rm Mars}$ 且つ $(Q/k_2)<80$** が必要という条件を踏まえて初期質量と tidal パラメータを設定する。[\@CridaCharnoz2012_Science338_1196; @CanupSalmon2018_SciAdv4_eaar6887]
 - CLI経由で呼ばれる`run_zero_d`がYAMLを読み、放射・遮蔽テーブルやPSDを初期化したうえで表層面密度を積分し、出力に書き出す。[marsdisk/run.py#run_zero_d [L426–L1362]]
 - 将来の半径1D拡張に備えてケプラー格子と粘性拡散の骨組みを保持するが、現行は0D主導である。[marsdisk/grid.py#omega_kepler [L17–L31]][marsdisk/physics/viscosity.py#step_viscous_diffusion_C5 [L51–L134]]
 
@@ -17,7 +18,9 @@
 - `s_min_components` には `config`,`blowout`,`effective`,`floor_dynamic` を保持し、`radiation.freeze_kappa` がPlanck平均κを初期値で固定、`surface.freeze_sigma` が表層密度を初期値で保つ。`blowout.enabled=false` では `Σ_surf Ω` を抑制し、`shielding.mode∈{"psitau","fixed_tau1","off"}` がΦテーブル適用／一定τ／遮蔽無効を切り替える。昇華侵食量は `mass_lost_sublimation_step` と `dSigma_dt_sublimation` で診断し、任意の `sizes.evolve_min_size=true` は床を変更せず `s_min_evolved` を追跡する。[marsdisk/run.py#run_zero_d [L623–L1016]][marsdisk/physics/psd.py#evolve_min_size [L267–L356]][marsdisk/physics/surface.py#step_surface_density_S1 [L96–L170]]
 - `sinks.mode` が `"sublimation"` の場合は昇華・ガス抗力を考慮した `t_sink` を `sinks.total_sink_timescale` で計算し、`"none"` の場合は `t_sink=None` を渡して IMEX の追加損失項を無効化する。[marsdisk/schema.py#QStar [L202–L204]][marsdisk/run.py#run_zero_d [L426–L1362]][marsdisk/physics/surface.py#step_surface_density_S1 [L96–L163]]
 - コールグラフ（`run_zero_d → step_surface → total_sink_timescale → mass_flux_hkl → s_sink_from_timescale`）と gas-poor 既定でのフラグ伝播は `analysis/sinks_callgraph.md` に mermaid 図付きで整理し、`ALLOW_TL2003=false` のまま感度試験時に参照する。
-- 昇華シンク時間は `s_sink_from_timescale` が返す「1公転で消える粒径」`s_{\rm sink}` から `t_{\rm sink}=t_{\rm orb}(s_{\rm ref}/s_{\rm sink})` を再構成し、`Φ \le 0` ではシンクを無効化する。[marsdisk/physics/sinks.py#total_sink_timescale [L83–L160]][marsdisk/physics/sublimation.py#grain_temperature_graybody [L124–L135]]
+- `siO2_disk_cooling/siO2_cooling_map.py` の熱史マップは (E.042)/(E.043) の解析解で火星表面温度と粒子温度を評価し、Hyodo et al. (2018) の放射冷却スケーリング（式2–6）を直接適用して β 閾値と IR 加熱の境界を可視化する。[\@Hyodo2018_ApJ860_150]
+- 化学シンクは気相凝縮と溶融固化物の化学差（Pignatale et al. 2018）と外縁ガス包絡での凝縮スペクトル（Ronnet et al. 2016）を根拠に、HKL 昇華フラックスと `s_sink_from_timescale` の係数を設定する。[\@Pignatale2018_ApJ853_118; @Ronnet2016_ApJ828_109]
+- 昇華シンク時間は `s_sink_from_timescale` が返す「1公転で消える粒径」`s_{\rm sink}` から `t_{\rm sink}=t_{\rm orb}(s_{\rm ref}/s_{\rm sink})` を再構成し、`Φ \le 0` ではシンクを無効化する。[marsdisk/physics/sinks.py#total_sink_timescale [L83–L160]][marsdisk/physics/radiation.py#grain_temperature_graybody [L120–L146]]
 - 得られたフラックスと質量収支を逐次蓄積し、Parquet/JSON/CSVに書き出す際に `F_abs`,`sigma_surf`,`kappa_Planck`,`tau_eff`,`psi_shield`,`s_peak`,`M_out_cum` などの診断列を追加し、`dt_over_t_blow` や `fast_blowout_factor = 1 - \exp(-Δt/t_{\rm blow})`、昇華侵食項 `dSigma_dt_sublimation`／`mass_lost_sinks_step` を併記する。Summary には `mass_budget_max_error_percent` と `dt_over_t_blow_median` が追記され、`orbit_rollup.csv` は `mass_loss_frac_per_orbit` や累積損失も含めて更新される (`numerics.orbit_rollup=false` で抑制可)。`chi_blow` が `"auto"` の場合は β と ⟨Q_pr⟩ に基づく 0.5–2.0 の推定値 `chi_blow_eff` が出力され、`t_{\rm blow} = chi_blow_eff/Ω` として用いられる。[marsdisk/run.py#run_zero_d [L1036–L1362]][marsdisk/io/writer.py#write_parquet [L24–L175]]
 
 ## 4. 主要モジュール別の責務と依存
@@ -27,7 +30,7 @@
 - `marsdisk/physics/radiation.py`は平均`Q_pr`や放射圧比`beta`、ブローアウト半径を算出し、テーブル読み込みを`io.tables`に委ねる。[marsdisk/physics/radiation.py#blowout_radius [L244–L258]]
 - `marsdisk/io/tables.py`はPlanck平均⟨Q_pr⟩を `interp_qpr` で補間し、感度試験では `load_qpr_table` が外部テーブルを読み込んで補間器を更新する。[marsdisk/io/tables.py#interp_qpr [L259–L270]][marsdisk/io/tables.py#load_qpr_table [L283–L295]]
 - `marsdisk/physics/shielding.py`はΦテーブルを解釈し有効不透明度と`Sigma_tau1`を返し、必要に応じて値をクリップする。[marsdisk/physics/shielding.py#apply_shielding [L133–L216]]
-- `marsdisk/physics/surface.py`はWyattスケーリングやシンク時間を取り込んだIMEXステップを提供し、外向流束とシンクを算出する。高速ブローアウト補正が有効化されている場合は表層流束が `fast_blowout_factor` でスケールされる。[marsdisk/physics/surface.py#step_surface [L185–L208]][marsdisk/run.py#run_zero_d [L426–L1362]]
+- `marsdisk/physics/surface.py`はStrubbe–Chiang（Wyatt 2008 で紹介）スケーリングやシンク時間を取り込んだIMEXステップを提供し、外向流束とシンクを算出する。高速ブローアウト補正が有効化されている場合は表層流束が `fast_blowout_factor` でスケールされる。[marsdisk/physics/surface.py#step_surface [L185–L208]][marsdisk/run.py#run_zero_d [L426–L1362]]
 - `marsdisk/run.py` は `run_config.json` に `physics_controls` を追加して `blowout.enabled`,`freeze_kappa`,`freeze_sigma`,`shielding.mode`,`psd.floor.mode` などの実行時トグルを記録し、従来通り `sublimation_provenance` で HKL 式や `psat_model`、SiO 既定値、実行半径・公転時間も保持してプロベナンスを残す。`sizes.evolve_min_size` や `io.correct_fast_blowout` の設定は `run_inputs` ブロックから確認できる。[marsdisk/run.py#run_zero_d [L1523–L1611]]
 
 ## 5. 設定スキーマ（主要キー）
@@ -72,7 +75,7 @@
 - 粒径と温度から放射圧比を計算してブローアウト境界を定める（beta）。[marsdisk/physics/radiation.py#blowout_radius [L244–L258]]
 - 粒径分布を三勾配で構築し“wavy”補正込みの数密と不透明度を用意する（PSD）。[marsdisk/physics/psd.py#compute_kappa [L121–L146]]
 - 光学深度からΦテーブルを引いて有効不透明度とΣτ=1の上限を求める（Phi）。[marsdisk/physics/shielding.py#apply_shielding [L133–L216]]
-- Wyattの衝突寿命やシンク時間を組み込んだ表層ODEを暗示的に進めて外向流束とシンクを出力する（S1）。[marsdisk/physics/surface.py#step_surface_density_S1 [L96–L163]][marsdisk/run.py#run_zero_d [L426–L1362]]
+- Strubbe–Chiang衝突寿命やシンク時間を組み込んだ表層ODEを暗示的に進めて外向流束とシンクを出力する（S1）。[marsdisk/physics/surface.py#step_surface_density_S1 [L96–L163]][marsdisk/run.py#run_zero_d [L426–L1362]]
 - Smoluchowski IMEX-BDF(1)で内部PSDを更新し質量保存誤差を評価する（C3）。[marsdisk/physics/smol.py#compute_mass_budget_error_C4 [L104–L131]]
 - 出力判定では `beta_at_smin_config` と `beta_threshold` を比較し、`case_status="blowout"`（閾値以上）、`"ok"`（閾値未満）、質量収支違反など例外時のみ `"failed"` として記録する。[marsdisk/physics/radiation.py#BLOWOUT_BETA_THRESHOLD [L32] :32][marsdisk/run.py#run_zero_d [L426–L1362]][marsdisk/run.py#run_zero_d [L426–L1362]]
 
@@ -131,7 +134,7 @@
 - Q_prやΦテーブルが存在しない場合は解析近似へフォールバックし警告を出すため、精密光学定数は外部入力が必要である。[marsdisk/io/tables.py#interp_qpr [L259–L270]]
 - サブリメーション境界は時間尺度が不足すると固定値1e-3 mと警告で代替され、現状は暫定実装である。[marsdisk/physics/fragments.py#s_sub_boundary [L101–L164]]
 - 追加シンクは代表サイズによる簡易推算で、モードに応じて時間尺度を最小選択するのみである。[marsdisk/physics/sinks.py#total_sink_timescale [L83–L160]]
-- 長期シミュレーションは`MAX_STEPS`で上限制限されWyattカップリングも光学深度閾値に依存するため、高τ領域の精度は未確認である。[marsdisk/run.py#run_zero_d [L426–L1362]]
+- 長期シミュレーションは`MAX_STEPS`で上限制限されStrubbe–Chiangカップリングも光学深度閾値に依存するため、高τ領域の精度は未確認である。[marsdisk/run.py#run_zero_d [L426–L1362]]
 
 ## 11. 最小実行例（1つだけ、実行コマンドと最小設定）
 以下のコマンドと設定を用いるとベースケースの0Dシミュレーションが完走する。[marsdisk/run.py#run_zero_d [L426–L1362]](configs/base.yml)
@@ -190,3 +193,24 @@ io:
 - T0=2000K: r範囲=1.000–2.400 R_Mars (glass), 代表到達=0.000 年; 液相到達範囲=1.000–2.400 R_Mars, 代表到達=0.000 年
 出力: siO2_disk_cooling/outputs/ 以下を参照
 @-- END:SIO2_DISK_COOLING_ANALYSIS --
+
+@-- BEGIN:PROVENANCE_OVERVIEW --
+## 出典と根拠（Provenance）
+- 既知キーは `analysis/references.registry.json` で正規化し、doi／bibtex／適用範囲／主張サマリを一元管理する。
+- `analysis/source_map.json` はコード行→参照キーの多対多マッピングを保持し、未解決項目には `todos` 配列で slug を残す。
+- `analysis/equations.md` は既知のみ `[@Key]` を付与し、未知は `TODO(REF:<slug>)` として `analysis/UNKNOWN_REF_REQUESTS.*` に連動。
+@-- END:PROVENANCE_OVERVIEW --
+
+@-- BEGIN:UNKNOWN_SOURCES_OVERVIEW --
+## 未解決出典（自動）
+- `analysis/UNKNOWN_REF_REQUESTS.jsonl` を GPT-5 Pro が直接読み取り、式・定数・仮定の slug ごとに探索する。
+- 人が読む要約は `analysis/UNKNOWN_REF_REQUESTS.md` に出力し、優先度やコード位置を一覧化する。
+- 現在の登録: `tmars_cooling_solution_v1`, `tp_radiative_equilibrium_v1`, `tl2003_surface_flow_scope_v1`（高優先:最初の2件）。
+@-- END:UNKNOWN_SOURCES_OVERVIEW --
+
+@-- BEGIN:PHYSCHECK_OVERVIEW --
+## 物理チェック（自動）
+- `python -m marsdisk.ops.physcheck --config configs/base.yml` が質量保存・次元解析・極限テストを一括実行。
+- レポートは `reports/physcheck/` に JSON/Markdown で保存し、WARN/FAIL の根拠を列挙。
+- DocSync 後は `make analysis-doc-tests` を実行し、`tests/test_ref_coverage.py` まで含めた検査結果を記録する。
+@-- END:PHYSCHECK_OVERVIEW --

@@ -11,6 +11,7 @@ function can be supplied for testing or when alternative tables are used.
 from __future__ import annotations
 
 import logging
+import math
 from numbers import Real
 from pathlib import Path
 from typing import Callable, Optional
@@ -29,7 +30,7 @@ DEFAULT_Q_PR: float = 1.0
 DEFAULT_RHO: float = 3000.0
 DEFAULT_T_M: float = 2000.0
 T_M_RANGE: tuple[float, float] = (1000.0, 6500.0)
-BLOWOUT_BETA_THRESHOLD: float = 0.5
+BLOWOUT_BETA_THRESHOLD: float = 0.5  # [@StrubbeChiang2006_ApJ648_652]
 
 logger = logging.getLogger(__name__)
 
@@ -114,6 +115,35 @@ def _resolve_qpr(
         "No ⟨Q_pr⟩ lookup table initialised; set radiation.qpr_table_path or call "
         f"marsdisk.io.tables.load_qpr_table before evaluating radiation terms{location_hint}."
     )
+
+
+def grain_temperature_graybody(T_M: float, radius_m: float, *, q_abs: float = 1.0) -> float:
+    """Return the planetary IR equilibrium grain temperature ``T_d`` (E.043). [@Hyodo2018_ApJ860_150]
+
+    The expression follows ``T_d = T_M \bar{Q}_{abs}^{1/4} \sqrt{R_M/(2 r)}`` for a
+    Lambertian planet illuminating an optically thin, gas-poor disk.  The
+    absorption efficiency ``\bar{Q}_{abs}`` defaults to unity but can be supplied
+    to represent material-specific emissivities.
+    """
+
+    if not isinstance(radius_m, Real):
+        raise TypeError("radius_m must be a real number")
+    if not np.isfinite(radius_m):
+        raise ValueError("radius_m must be finite")
+    radius_val = float(radius_m)
+    if radius_val <= 0.0:
+        raise ValueError("radius_m must be positive")
+
+    if not isinstance(q_abs, Real):
+        raise TypeError("q_abs must be a real number")
+    if not np.isfinite(q_abs):
+        raise ValueError("q_abs must be finite")
+    if q_abs <= 0.0:
+        raise ValueError("q_abs must be positive")
+
+    T_val = _validate_temperature(T_M)
+    factor = (float(q_abs) ** 0.25) * math.sqrt(constants.R_MARS / (2.0 * radius_val))
+    return T_val * factor
 
 
 def load_qpr_table(path: Path | str) -> type_QPr:
@@ -225,7 +255,7 @@ def beta(
     table: type_QPr | None = None,
     interp: type_QPr | None = None,
 ) -> float:
-    """Compute the ratio ``β`` of radiation pressure to gravity (R2).
+    """Compute the ratio ``β`` of radiation pressure to gravity (R2). [@StrubbeChiang2006_ApJ648_652]
 
     The expression follows directly from conservation of momentum using the
     luminosity of Mars ``L_M = 4π R_M^2 σ T_M^4`` and reads
@@ -248,7 +278,7 @@ def blowout_radius(
     table: type_QPr | None = None,
     interp: type_QPr | None = None,
 ) -> float:
-    """Return the blow-out grain size ``s_blow`` for ``β = 0.5`` (R3)."""
+    """Return the blow-out grain size ``s_blow`` for ``β = 0.5`` (R3). [@StrubbeChiang2006_ApJ648_652]"""
 
     rho_val = _validate_density(rho)
     T_val = _validate_temperature(T_M)

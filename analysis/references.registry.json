@@ -1,0 +1,137 @@
+{
+  "references": [
+    {
+      "key": "Hyodo2018_ApJ860_150",
+      "short": "Hyodo et al. (2018)",
+      "title": "On the Impact Origin of Phobos and Deimos. IV. Volatile Depletion",
+      "doi": "10.3847/1538-4357/aac024",
+      "bibtex": "@article{Hyodo2018_ApJ860_150, journal = {ApJ}, volume = {860}, pages = {150}, year = {2018}}",
+      "adopted_scope": "Post-impact radiative cooling and volatile loss for gas-poor Martian debris disks.",
+      "claims": [
+        "Equations (2)–(4) provide the radiative-slab cooling law used for Mars surface temperatures.",
+        "Equations (5)–(6) relate particle temperature, ⟨Q_abs⟩, and the dilution factor √(R_p/2r).",
+        "Discusses the few-orbit volatile escape and β-threshold regimes adopted by the simulation."
+      ]
+    },
+    {
+      "key": "Hyodo2017a_ApJ845_125",
+      "short": "Hyodo et al. (2017a)",
+      "title": "On the Impact Origin of Phobos and Deimos I: Thermodynamic and Physical Aspects",
+      "doi": "10.3847/1538-4357/aa80e4",
+      "bibtex": "@article{Hyodo2017a_ApJ845_125, journal = {ApJ}, volume = {845}, pages = {125}, year = {2017}}",
+      "adopted_scope": "Initial conditions of Martian debris disks immediately after the giant impact (molten-rich).",
+      "claims": [
+        "Shows the disk consists of >95 wt% melt and <5 wt% vapor at ~2000 K right after impact.",
+        "Links eccentric orbits and particle-size cascades from meter-scale fragments down to 100 µm–0.1 µm grains."
+      ]
+    },
+    {
+      "key": "Hyodo2017b_ApJ851_122",
+      "short": "Hyodo et al. (2017b)",
+      "title": "On the Impact Origin of Phobos and Deimos II: True Polar Wander and Disk Evolution",
+      "doi": "10.3847/1538-4357/aa9cec",
+      "bibtex": "@article{Hyodo2017b_ApJ851_122, journal = {ApJ}, volume = {851}, pages = {122}, year = {2017}}",
+      "adopted_scope": "Dynamical relaxation of the post-impact disk, including J2-driven precession and inelastic damping.",
+      "claims": [
+        "Shows how J2 precession coupled with inelastic collisions circularises the disk inside the Roche limit.",
+        "Demonstrates the resulting radial density contrast (dense inner disk, dilute outer disk)."
+      ]
+    },
+    {
+      "key": "Pignatale2018_ApJ853_118",
+      "short": "Pignatale et al. (2018)",
+      "title": "On the Impact Origin of Phobos and Deimos III: Resulting Composition from Different Impactors",
+      "doi": "10.3847/1538-4357/aaa5b2",
+      "bibtex": "@article{Pignatale2018_ApJ853_118, journal = {ApJ}, volume = {853}, pages = {118}, year = {2018}}",
+      "adopted_scope": "Chemical contrasts between gas-phase condensates and quenched melts in Martian impact disks.",
+      "claims": [
+        "Explores how vapor condensates and molten-solidified grains diverge compositionally depending on the impactor.",
+        "Supplies the thermochemical motivation for sublimation parameters and SiO-rich sinks."
+      ]
+    },
+    {
+      "key": "Ronnet2016_ApJ828_109",
+      "short": "Ronnet et al. (2016)",
+      "title": "Reconciling the orbital and physical properties of the Martian moons with a giant impact origin",
+      "doi": "10.3847/0004-637X/828/2/109",
+      "bibtex": "@article{Ronnet2016_ApJ828_109, journal = {ApJ}, volume = {828}, pages = {109}, year = {2016}}",
+      "adopted_scope": "Condensation and spectral signatures of dust condensing in the outer gas envelope of a Martian impact disk.",
+      "claims": [
+        "Argues that condensation in the outer tenuous gas envelope best matches the observed spectra of Phobos/Deimos.",
+        "Shows magma-ocean sourced material alone cannot reproduce the remote-sensing constraints."
+      ]
+    },
+    {
+      "key": "CridaCharnoz2012_Science338_1196",
+      "short": "Crida & Charnoz (2012)",
+      "title": "Formation of Regular Satellites from Ancient Massive Rings",
+      "doi": "10.1126/science.1226477",
+      "bibtex": "@article{CridaCharnoz2012_Science338_1196, journal = {Science}, volume = {338}, pages = {1196-1199}, year = {2012}}",
+      "adopted_scope": "Viscous spreading regimes of dense rings near the Roche limit and their satellite-feeding outcomes.",
+      "claims": [
+        "Slow diffusion leads to trains of growing satellites with mass increasing with orbital distance.",
+        "Rapid diffusion yields a single dominant moon accreting most of the ring material."
+      ]
+    },
+    {
+      "key": "CanupSalmon2018_SciAdv4_eaar6887",
+      "short": "Canup & Salmon (2018)",
+      "title": "Origin of Phobos and Deimos by the impact of a Vesta-to-Ceres-sized body with Mars",
+      "doi": "10.1126/sciadv.aar6887",
+      "bibtex": "@article{CanupSalmon2018_SciAdv4_eaar6887, journal = {Science Advances}, volume = {4}, pages = {eaar6887}, year = {2018}}",
+      "adopted_scope": "Constraints on disk mass and planetary tidal parameters required for Phobos/Deimos survival.",
+      "claims": [
+        "Small moons survive only when M_disk ≤ 3×10⁻⁵ M_Mars and the tidal parameter (Q/k₂) < 80 (Fig. 2).",
+        "Establishes the low-mass, low-gas default assumed in configs and analysis recipes."
+      ]
+    },
+    {
+      "key": "StrubbeChiang2006_ApJ648_652",
+      "short": "Strubbe & Chiang (2006)",
+      "title": "Dust Dynamics, Surface Brightness Profiles, and Thermal Spectra of Debris Disks: The Case of AU Mic",
+      "doi": "10.1086/505736",
+      "bibtex": "@article{StrubbeChiang2006_ApJ648_652, journal = {ApJ}, volume = {648}, pages = {652-665}, year = {2006}}",
+      "adopted_scope": "Optically thin, gas-poor debris disks where radiation pressure and CPR drag set the small-grain budget.",
+      "claims": [
+        "Equation (1) gives the collisional time-scale t_c = 1/(Ω τ_⊥) adopted in S1 surface updates.",
+        "Defines β(s), the β = 0.5 blow-out limit, and the type A/B regimes with τ(r) ∝ r^{-5/2} or r^{-3/2}."
+      ]
+    },
+    {
+      "key": "TakeuchiLin2003_ApJ593_524",
+      "short": "Takeuchi & Lin (2003)",
+      "title": "Dust Outflows in Optically Thick Gas Disks",
+      "doi": "10.1086/376407",
+      "bibtex": "@article{TakeuchiLin2003_ApJ593_524, journal = {ApJ}, volume = {593}, pages = {524-535}, year = {2003}}",
+      "adopted_scope": "Optically thick, gas-rich disk surfaces where stellar radiation pressure couples with gas drag to drive flows.",
+      "claims": [
+        "Derives the TL2003 surface-layer ODE referenced only when ALLOW_TL2003=true.",
+        "Notes that net flow is inward under standard parameters; outward flow requires gas-rich, illuminated skins."
+      ]
+    },
+    {
+      "key": "Kuramoto2024",
+      "short": "Kuramoto (2024)",
+      "title": "MMX-era review of Martian satellite origin scenarios",
+      "doi": null,
+      "bibtex": "@article{Kuramoto2024, journal = {Space Science Reviews}, status = {in press}}",
+      "adopted_scope": "Mission context for MMX and the comparative analysis of capture vs impact hypotheses.",
+      "claims": [
+        "Summarises observational requirements feeding β/mass-loss scans.",
+        "Sets expectations for gas-poor vs capture interpretations."
+      ]
+    },
+    {
+      "key": "Wyatt2008",
+      "short": "Wyatt (2008)",
+      "title": "Evolution of Debris Disks",
+      "doi": "10.1146/annurev.astro.45.051806.110525",
+      "bibtex": "@article{Wyatt2008, journal = {ARA&A}, volume = {46}, pages = {339-383}, year = {2008}}",
+      "adopted_scope": "Collisional cascades in optically thin debris disks.",
+      "claims": [
+        "Provides historical context for t_coll ≈ T_orb/(4π τ) scaling used before adopting Strubbe & Chiang.",
+        "Governs qualitative stability tests in surface-layer IMEX steps."
+      ]
+    }
+  ]
+}

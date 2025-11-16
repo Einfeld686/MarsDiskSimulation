@@ -1226,154 +1226,168 @@
   },
   {
     "file_path": "analysis/tools/make_coverage.py",
-    "line_no": 24,
+    "line_no": 23,
+    "symbol": "SYMBOL_TABLE_HEADER_PATTERN",
+    "signature": "SYMBOL_TABLE_HEADER_PATTERN = re.compile('\\\\|\\\\s*Symbol\\\\s*\\\\|.*\\\\|\\\\s*Units\\\\s*\\\\|', re.IGNORECASE)",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "analysis/tools/make_coverage.py",
+    "line_no": 25,
     "symbol": "AUTOGEN_BEGIN",
     "signature": "AUTOGEN_BEGIN = '<!-- AUTOGEN'",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "analysis/tools/make_coverage.py",
-    "line_no": 25,
+    "line_no": 26,
     "symbol": "AUTOGEN_END",
     "signature": "AUTOGEN_END = 'AUTOGEN-END -->'",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "analysis/tools/make_coverage.py",
-    "line_no": 29,
+    "line_no": 30,
     "symbol": "SymbolRef",
     "signature": "class SymbolRef",
     "brief_usage": "No description available."
   },
   {
     "file_path": "analysis/tools/make_coverage.py",
-    "line_no": 34,
+    "line_no": 35,
     "symbol": "load_inventory",
     "signature": "load_inventory() -> List[dict]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "analysis/tools/make_coverage.py",
-    "line_no": 46,
+    "line_no": 47,
     "symbol": "load_symbol_kinds",
     "signature": "load_symbol_kinds() -> Dict[SymbolRef, str]",
     "brief_usage": "Map symbols to rough kinds using symbols.raw.txt lines."
   },
   {
     "file_path": "analysis/tools/make_coverage.py",
-    "line_no": 77,
+    "line_no": 78,
     "symbol": "discover_markdown_paths",
     "signature": "discover_markdown_paths() -> List[Path]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "analysis/tools/make_coverage.py",
-    "line_no": 88,
+    "line_no": 89,
     "symbol": "collect_anchor_occurrences",
     "signature": "collect_anchor_occurrences(paths: Sequence[Path]) -> List[Tuple[Path, SymbolRef]]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "analysis/tools/make_coverage.py",
-    "line_no": 99,
+    "line_no": 100,
     "symbol": "classify_symbols",
     "signature": "classify_symbols(inventory: Sequence[dict], symbol_kinds: Dict[SymbolRef, str]) -> Tuple[Dict[SymbolRef, dict], List[SymbolRef]]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "analysis/tools/make_coverage.py",
-    "line_no": 134,
+    "line_no": 135,
     "symbol": "compute_function_reference_rate",
     "signature": "compute_function_reference_rate(public_functions: Sequence[SymbolRef], occurrences: Sequence[Tuple[Path, SymbolRef]]) -> Tuple[int, int, List[SymbolRef]]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "analysis/tools/make_coverage.py",
-    "line_no": 150,
+    "line_no": 151,
     "symbol": "compute_anchor_consistency_rate",
     "signature": "compute_anchor_consistency_rate(occurrences: Sequence[Tuple[Path, SymbolRef]], known_symbols: Dict[SymbolRef, dict]) -> Tuple[int, int, List[Tuple[Path, SymbolRef]]]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "analysis/tools/make_coverage.py",
-    "line_no": 168,
+    "line_no": 169,
     "symbol": "extract_sections_with_equations",
     "signature": "extract_sections_with_equations(content: str) -> List[str]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "analysis/tools/make_coverage.py",
-    "line_no": 186,
+    "line_no": 187,
     "symbol": "extract_fenced_blocks",
     "signature": "extract_fenced_blocks(section: str) -> List[Tuple[str, str]]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "analysis/tools/make_coverage.py",
-    "line_no": 211,
+    "line_no": 212,
+    "symbol": "_section_has_symbol_table",
+    "signature": "_section_has_symbol_table(section: str) -> bool",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "analysis/tools/make_coverage.py",
+    "line_no": 221,
     "symbol": "compute_equation_unit_rate",
     "signature": "compute_equation_unit_rate(equations_path: Path) -> Tuple[int, int]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "analysis/tools/make_coverage.py",
-    "line_no": 242,
+    "line_no": 254,
     "symbol": "extract_autogen_block",
     "signature": "extract_autogen_block(text: str) -> str",
     "brief_usage": "No description available."
   },
   {
     "file_path": "analysis/tools/make_coverage.py",
-    "line_no": 257,
+    "line_no": 269,
     "symbol": "compute_sinks_callgraph_flag",
     "signature": "compute_sinks_callgraph_flag(doc_path: Path) -> bool",
     "brief_usage": "No description available."
   },
   {
     "file_path": "analysis/tools/make_coverage.py",
-    "line_no": 279,
+    "line_no": 291,
     "symbol": "format_rate",
     "signature": "format_rate(numerator: int, denominator: int) -> float",
     "brief_usage": "No description available."
   },
   {
     "file_path": "analysis/tools/make_coverage.py",
-    "line_no": 285,
+    "line_no": 297,
     "symbol": "rate_to_percent",
     "signature": "rate_to_percent(rate: float) -> str",
     "brief_usage": "No description available."
   },
   {
     "file_path": "analysis/tools/make_coverage.py",
-    "line_no": 289,
+    "line_no": 301,
     "symbol": "build_coverage_markdown",
     "signature": "build_coverage_markdown(function_rate: Tuple[int, int], anchor_rate: Tuple[int, int], equation_rate: Tuple[int, int], sinks_flag: bool, holes: Sequence[SymbolRef]) -> str",
     "brief_usage": "No description available."
   },
   {
     "file_path": "analysis/tools/make_coverage.py",
-    "line_no": 337,
+    "line_no": 349,
     "symbol": "build_coverage_json",
     "signature": "build_coverage_json(function_rate: Tuple[int, int], anchor_rate: Tuple[int, int], equation_rate: Tuple[int, int], sinks_flag: bool, holes: Sequence[SymbolRef]) -> dict",
     "brief_usage": "No description available."
   },
   {
     "file_path": "analysis/tools/make_coverage.py",
-    "line_no": 369,
+    "line_no": 381,
     "symbol": "write_text",
     "signature": "write_text(path: Path, content: str) -> None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "analysis/tools/make_coverage.py",
-    "line_no": 374,
+    "line_no": 386,
     "symbol": "write_json",
     "signature": "write_json(path: Path, payload: dict) -> None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "analysis/tools/make_coverage.py",
-    "line_no": 379,
+    "line_no": 391,
     "symbol": "main",
     "signature": "main() -> int",
     "brief_usage": "No description available."
@@ -2289,6 +2303,97 @@
     "brief_usage": "コマンドライン引数でQ_prテーブルを生成する。Planck 平均⟨Q_pr⟩."
   },
   {
+    "file_path": "marsdisk/ops/physcheck.py",
+    "line_no": 17,
+    "symbol": "REPO_ROOT",
+    "signature": "REPO_ROOT = Path(__file__).resolve().parents[2]",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "marsdisk/ops/physcheck.py",
+    "line_no": 18,
+    "symbol": "REPORT_DIR",
+    "signature": "REPORT_DIR = REPO_ROOT / 'reports' / 'physcheck'",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "marsdisk/ops/physcheck.py",
+    "line_no": 19,
+    "symbol": "UNKNOWN_JSONL_PATH",
+    "signature": "UNKNOWN_JSONL_PATH = REPO_ROOT / 'analysis' / 'UNKNOWN_REF_REQUESTS.jsonl'",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "marsdisk/ops/physcheck.py",
+    "line_no": 20,
+    "symbol": "MASS_BUDGET_LOG",
+    "signature": "MASS_BUDGET_LOG = REPO_ROOT / 'out' / 'checks' / 'mass_budget.csv'",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "marsdisk/ops/physcheck.py",
+    "line_no": 24,
+    "symbol": "CheckResult",
+    "signature": "class CheckResult",
+    "brief_usage": "Container holding the outcome of a single check."
+  },
+  {
+    "file_path": "marsdisk/ops/physcheck.py",
+    "line_no": 35,
+    "symbol": "_dimension_check",
+    "signature": "_dimension_check(config_path: Path) -> CheckResult",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "marsdisk/ops/physcheck.py",
+    "line_no": 64,
+    "symbol": "_limit_check",
+    "signature": "_limit_check() -> CheckResult",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "marsdisk/ops/physcheck.py",
+    "line_no": 92,
+    "symbol": "_mass_budget_check",
+    "signature": "_mass_budget_check() -> CheckResult",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "marsdisk/ops/physcheck.py",
+    "line_no": 128,
+    "symbol": "_unknown_reference_check",
+    "signature": "_unknown_reference_check() -> CheckResult",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "marsdisk/ops/physcheck.py",
+    "line_no": 161,
+    "symbol": "_tl2003_info",
+    "signature": "_tl2003_info() -> CheckResult",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "marsdisk/ops/physcheck.py",
+    "line_no": 169,
+    "symbol": "run_checks",
+    "signature": "run_checks(config_path: Path) -> List[CheckResult]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "marsdisk/ops/physcheck.py",
+    "line_no": 180,
+    "symbol": "_write_reports",
+    "signature": "_write_reports(results: Sequence[CheckResult]) -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "marsdisk/ops/physcheck.py",
+    "line_no": 194,
+    "symbol": "main",
+    "signature": "main(argv: Sequence[str] | None=None) -> int",
+    "brief_usage": "No description available."
+  },
+  {
     "file_path": "marsdisk/physics/collide.py",
     "line_no": 18,
     "symbol": "compute_collision_kernel_C1",
@@ -2437,115 +2542,122 @@
   },
   {
     "file_path": "marsdisk/physics/radiation.py",
-    "line_no": 26,
+    "line_no": 27,
     "symbol": "_QPR_LOOKUP",
     "signature": "_QPR_LOOKUP: type_QPr | None = tables.interp_qpr",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/physics/radiation.py",
-    "line_no": 28,
+    "line_no": 29,
     "symbol": "DEFAULT_Q_PR",
     "signature": "DEFAULT_Q_PR: float = 1.0",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/physics/radiation.py",
-    "line_no": 29,
+    "line_no": 30,
     "symbol": "DEFAULT_RHO",
     "signature": "DEFAULT_RHO: float = 3000.0",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/physics/radiation.py",
-    "line_no": 30,
+    "line_no": 31,
     "symbol": "DEFAULT_T_M",
     "signature": "DEFAULT_T_M: float = 2000.0",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/physics/radiation.py",
-    "line_no": 31,
+    "line_no": 32,
     "symbol": "T_M_RANGE",
     "signature": "T_M_RANGE: tuple[float, float] = (1000.0, 6500.0)",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/physics/radiation.py",
-    "line_no": 32,
+    "line_no": 33,
     "symbol": "BLOWOUT_BETA_THRESHOLD",
     "signature": "BLOWOUT_BETA_THRESHOLD: float = 0.5",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/physics/radiation.py",
-    "line_no": 37,
+    "line_no": 38,
     "symbol": "_validate_size",
     "signature": "_validate_size(value: float, *, name: str='s') -> float",
     "brief_usage": "Function definition"
   },
   {
     "file_path": "marsdisk/physics/radiation.py",
-    "line_no": 47,
+    "line_no": 48,
     "symbol": "_validate_density",
     "signature": "_validate_density(value: Optional[float]) -> float",
     "brief_usage": "Function definition"
   },
   {
     "file_path": "marsdisk/physics/radiation.py",
-    "line_no": 60,
+    "line_no": 61,
     "symbol": "_validate_temperature",
     "signature": "_validate_temperature(value: Optional[float]) -> float",
     "brief_usage": "Function definition"
   },
   {
     "file_path": "marsdisk/physics/radiation.py",
-    "line_no": 74,
+    "line_no": 75,
     "symbol": "_validate_qpr",
     "signature": "_validate_qpr(value: Optional[float]) -> Optional[float]",
     "brief_usage": "Function definition"
   },
   {
     "file_path": "marsdisk/physics/radiation.py",
-    "line_no": 86,
+    "line_no": 87,
     "symbol": "_resolve_qpr",
     "signature": "_resolve_qpr(s: float, T_M: float, Q_pr: Optional[float], table: type_QPr | None, interp: type_QPr | None) -> float",
     "brief_usage": "Function definition"
   },
   {
     "file_path": "marsdisk/physics/radiation.py",
-    "line_no": 119,
+    "line_no": 120,
+    "symbol": "grain_temperature_graybody",
+    "signature": "grain_temperature_graybody(T_M: float, radius_m: float, *, q_abs: float=1.0) -> float",
+    "brief_usage": "Return the planetary IR equilibrium grain temperature ``T_d`` (E.043). [@Hyodo2018_ApJ860_150]"
+  },
+  {
+    "file_path": "marsdisk/physics/radiation.py",
+    "line_no": 149,
     "symbol": "load_qpr_table",
     "signature": "load_qpr_table(path: Path | str) -> type_QPr",
     "brief_usage": "Load a table file and cache the interpolator. Planck averaged ⟨Q_pr⟩."
   },
   {
     "file_path": "marsdisk/physics/radiation.py",
-    "line_no": 149,
+    "line_no": 179,
     "symbol": "qpr_lookup",
     "signature": "qpr_lookup(s: float, T_M: float, table: type_QPr | None=None) -> float",
     "brief_usage": "Return the efficiency for a grain size and temperature. Planck averaged ⟨Q_pr⟩."
   },
   {
     "file_path": "marsdisk/physics/radiation.py",
-    "line_no": 206,
+    "line_no": 236,
     "symbol": "planck_mean_qpr",
     "signature": "planck_mean_qpr(s: float, T_M: float, Q_pr: Optional[float]=None, table: type_QPr | None=None, interp: type_QPr | None=None) -> float",
     "brief_usage": "Return the effective grey-body ⟨Q_pr⟩ using the active lookup table."
   },
   {
     "file_path": "marsdisk/physics/radiation.py",
-    "line_no": 220,
+    "line_no": 250,
     "symbol": "beta",
     "signature": "beta(s: float, rho: Optional[float], T_M: Optional[float], Q_pr: Optional[float]=None, table: type_QPr | None=None, interp: type_QPr | None=None) -> float",
-    "brief_usage": "Compute the ratio ``β`` of radiation pressure to gravity (R2)."
+    "brief_usage": "Compute the ratio ``β`` of radiation pressure to gravity (R2). [@StrubbeChiang2006_ApJ648_652]"
   },
   {
     "file_path": "marsdisk/physics/radiation.py",
-    "line_no": 244,
+    "line_no": 274,
     "symbol": "blowout_radius",
     "signature": "blowout_radius(rho: Optional[float], T_M: Optional[float], Q_pr: Optional[float]=None, table: type_QPr | None=None, interp: type_QPr | None=None) -> float",
-    "brief_usage": "Return the blow-out grain size ``s_blow`` for ``β = 0.5`` (R3)."
+    "brief_usage": "Return the blow-out grain size ``s_blow`` for ``β = 0.5`` (R3). [@StrubbeChiang2006_ApJ648_652]"
   },
   {
     "file_path": "marsdisk/physics/shielding.py",
@@ -2647,136 +2759,129 @@
   },
   {
     "file_path": "marsdisk/physics/sublimation.py",
-    "line_no": 37,
+    "line_no": 38,
     "symbol": "PSAT_TABLE_BUFFER_DEFAULT_K",
     "signature": "PSAT_TABLE_BUFFER_DEFAULT_K = 75.0",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/physics/sublimation.py",
-    "line_no": 38,
+    "line_no": 39,
     "symbol": "PSAT_LOCAL_FIT_WINDOW_DEFAULT_K",
     "signature": "PSAT_LOCAL_FIT_WINDOW_DEFAULT_K = 300.0",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/physics/sublimation.py",
-    "line_no": 39,
+    "line_no": 40,
     "symbol": "PSAT_LOCAL_FIT_MIN_POINTS",
     "signature": "PSAT_LOCAL_FIT_MIN_POINTS = 3",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/physics/sublimation.py",
-    "line_no": 40,
+    "line_no": 41,
     "symbol": "PSAT_VALIDITY_WARNING_MARGIN_K",
     "signature": "PSAT_VALIDITY_WARNING_MARGIN_K = 200.0",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/physics/sublimation.py",
-    "line_no": 43,
+    "line_no": 44,
     "symbol": "PsatSelection",
     "signature": "class PsatSelection(NamedTuple)",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/physics/sublimation.py",
-    "line_no": 50,
+    "line_no": 51,
     "symbol": "SublimationParams",
     "signature": "class SublimationParams",
     "brief_usage": "Parameters governing sublimation calculations."
   },
   {
     "file_path": "marsdisk/physics/sublimation.py",
-    "line_no": 124,
-    "symbol": "grain_temperature_graybody",
-    "signature": "grain_temperature_graybody(T_M: float, radius_m: float) -> float",
-    "brief_usage": "Return the grey-body grain temperature ``T_d`` (K)."
-  },
-  {
-    "file_path": "marsdisk/physics/sublimation.py",
-    "line_no": 138,
+    "line_no": 125,
     "symbol": "_is_hkl_active",
     "signature": "_is_hkl_active(params: SublimationParams) -> bool",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/physics/sublimation.py",
-    "line_no": 154,
+    "line_no": 141,
     "symbol": "p_sat_clausius",
     "signature": "p_sat_clausius(T: float, params: SublimationParams) -> float",
     "brief_usage": "Return the saturation vapour pressure ``P_sat`` in Pascals."
   },
   {
     "file_path": "marsdisk/physics/sublimation.py",
-    "line_no": 167,
+    "line_no": 154,
     "symbol": "_load_psat_table",
     "signature": "_load_psat_table(params: SublimationParams) -> Callable[[float], float]",
     "brief_usage": "Return an interpolator for log10 P_sat based on a tabulated dataset."
   },
   {
     "file_path": "marsdisk/physics/sublimation.py",
-    "line_no": 230,
+    "line_no": 217,
     "symbol": "_get_table_info",
     "signature": "_get_table_info(params: SublimationParams, *, raise_on_error: bool) -> Optional[Dict[str, Any]]",
     "brief_usage": "Return cached table information, optionally raising on load failures."
   },
   {
     "file_path": "marsdisk/physics/sublimation.py",
-    "line_no": 269,
+    "line_no": 256,
     "symbol": "_local_clausius_fit_selection",
     "signature": "_local_clausius_fit_selection(T_req: float, params: SublimationParams, table_info: Dict[str, Any]) -> Optional[PsatSelection]",
     "brief_usage": "Return a local Clausius fit selection when sufficient table data exist."
   },
   {
     "file_path": "marsdisk/physics/sublimation.py",
-    "line_no": 337,
+    "line_no": 324,
     "symbol": "_baseline_clausius_selection",
     "signature": "_baseline_clausius_selection(params: SublimationParams, reason: str, *, model_name: str='clausius(baseline)') -> PsatSelection",
     "brief_usage": "Return a baseline Clausius selection using the configured coefficients."
   },
   {
     "file_path": "marsdisk/physics/sublimation.py",
-    "line_no": 369,
+    "line_no": 356,
     "symbol": "p_sat_tabulated",
     "signature": "p_sat_tabulated(T: float, params: SublimationParams) -> float",
     "brief_usage": "Return ``P_sat`` (Pa) from a tabulated :math:`\\log_{10} P` dataset."
   },
   {
     "file_path": "marsdisk/physics/sublimation.py",
-    "line_no": 386,
+    "line_no": 373,
     "symbol": "choose_psat_backend",
     "signature": "choose_psat_backend(T_req: float, params: SublimationParams, table_meta: Optional[Dict[str, Any]]=None) -> PsatSelection",
     "brief_usage": "Resolve the saturation pressure backend according to configuration and data."
   },
   {
     "file_path": "marsdisk/physics/sublimation.py",
-    "line_no": 497,
+    "line_no": 484,
     "symbol": "_store_psat_selection",
     "signature": "_store_psat_selection(params: SublimationParams, selection: PsatSelection, T_req: float, P_value: float) -> None",
     "brief_usage": "Persist selection metadata on ``params`` for provenance."
   },
   {
     "file_path": "marsdisk/physics/sublimation.py",
-    "line_no": 525,
+    "line_no": 512,
     "symbol": "p_sat",
     "signature": "p_sat(T: float, params: SublimationParams) -> float",
     "brief_usage": "Return the saturation vapour pressure according to the selected model."
   },
   {
     "file_path": "marsdisk/physics/sublimation.py",
-    "line_no": 534,
+    "line_no": 521,
     "symbol": "mass_flux_hkl",
     "signature": "mass_flux_hkl(T: float, params: SublimationParams) -> float",
-    "brief_usage": "Return the sublimation mass flux ``J(T)`` in kg m^-2 s^-1."
+    "brief_usage": "Return the sublimation mass flux ``J(T)`` in kg m^-2 s^-1. [@Pignatale2018_ApJ853_118]"
   },
   {
     "file_path": "marsdisk/physics/sublimation.py",
-    "line_no": 587,
+    "line_no": 574,
     "symbol": "s_sink_from_timescale",
     "signature": "s_sink_from_timescale(T: float, rho: float, t_ref: float, params: SublimationParams) -> float",
-    "brief_usage": "Return the instantaneous-sink size :math:`s_{\\rm sink}`."
+    "brief_usage": "Return the instantaneous-sink size :math:`s_{\\rm sink}`. [@Ronnet2016_ApJ828_109]"
   },
   {
     "file_path": "marsdisk/physics/supply.py",
@@ -2832,7 +2937,7 @@
     "line_no": 62,
     "symbol": "wyatt_tcoll_S1",
     "signature": "wyatt_tcoll_S1(tau: float, Omega: float) -> float",
-    "brief_usage": "Return the Wyatt (2008) collisional time-scale for the surface layer."
+    "brief_usage": "Return the Strubbe & Chiang (2006) collisional time-scale. [@StrubbeChiang2006_ApJ648_652]"
   },
   {
     "file_path": "marsdisk/physics/surface.py",
@@ -2846,7 +2951,7 @@
     "line_no": 96,
     "symbol": "step_surface_density_S1",
     "signature": "step_surface_density_S1(sigma_surf: float, prod_subblow_area_rate: float, dt: float, Omega: float, *, t_coll: float | None=None, t_sink: float | None=None, sigma_tau1: float | None=None, enable_blowout: bool=True) -> SurfaceStepResult",
-    "brief_usage": "Advance the surface density by one implicit Euler step (S1)."
+    "brief_usage": "Advance the surface density by one implicit Euler step (S1). TODO(REF:tl2003_surface_flow_scope_v1)"
   },
   {
     "file_path": "marsdisk/physics/surface.py",
@@ -2874,7 +2979,7 @@
     "line_no": 51,
     "symbol": "step_viscous_diffusion_C5",
     "signature": "step_viscous_diffusion_C5(sigma: Iterable[float], nu: Iterable[float], grid: RadialGrid, dt: float, *, theta: float=0.5) -> np.ndarray",
-    "brief_usage": "Advance ``sigma`` by radial viscous diffusion."
+    "brief_usage": "Advance ``sigma`` by radial viscous diffusion. [@CridaCharnoz2012_Science338_1196]"
   },
   {
     "file_path": "marsdisk/run.py",
@@ -4831,203 +4936,203 @@
   },
   {
     "file_path": "siO2_disk_cooling/siO2_cooling_map.py",
-    "line_no": 111,
+    "line_no": 112,
     "symbol": "PARAMS",
     "signature": "PARAMS = Params()",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "siO2_disk_cooling/siO2_cooling_map.py",
-    "line_no": 117,
+    "line_no": 118,
     "symbol": "tmars",
     "signature": "tmars(time_s: List[float], t0: float, params: Params=PARAMS) -> List[float]",
     "brief_usage": "Return the Martian surface temperature evolution."
   },
   {
     "file_path": "siO2_disk_cooling/siO2_cooling_map.py",
-    "line_no": 141,
+    "line_no": 142,
     "symbol": "tp_of_rt",
     "signature": "tp_of_rt(radii_m: List[float], time_s: List[float], t0: float, params: Params=PARAMS) -> List[List[float]]",
     "brief_usage": "Return the grain temperature field for given radii and times."
   },
   {
     "file_path": "siO2_disk_cooling/siO2_cooling_map.py",
-    "line_no": 157,
+    "line_no": 160,
     "symbol": "first_crossing_time",
     "signature": "first_crossing_time(radius_m: float, t0: float, tcrit: float, time_s: List[float], params: Params=PARAMS) -> float",
     "brief_usage": "Return the first time [s] when T_p <= tcrit; NaN if not reached."
   },
   {
     "file_path": "siO2_disk_cooling/siO2_cooling_map.py",
-    "line_no": 176,
+    "line_no": 179,
     "symbol": "ensure_directory",
     "signature": "ensure_directory(path: Path) -> None",
     "brief_usage": "Create directory if it does not exist."
   },
   {
     "file_path": "siO2_disk_cooling/siO2_cooling_map.py",
-    "line_no": 182,
+    "line_no": 185,
     "symbol": "format_range",
     "signature": "format_range(r_values: List[float], times: List[float]) -> str",
     "brief_usage": "Format radial range string for summary output."
   },
   {
     "file_path": "siO2_disk_cooling/siO2_cooling_map.py",
-    "line_no": 191,
+    "line_no": 194,
     "symbol": "representative_time",
     "signature": "representative_time(times: List[float]) -> str",
     "brief_usage": "Return a representative time in years for logging."
   },
   {
     "file_path": "siO2_disk_cooling/siO2_cooling_map.py",
-    "line_no": 201,
+    "line_no": 204,
     "symbol": "compute_crossing_times",
     "signature": "compute_crossing_times(temp_matrix: List[List[float]], threshold: float, time_s: List[float]) -> List[float]",
     "brief_usage": "Compute first crossing time for each radius in a matrix."
   },
   {
     "file_path": "siO2_disk_cooling/siO2_cooling_map.py",
-    "line_no": 219,
+    "line_no": 222,
     "symbol": "build_arrival_field",
     "signature": "build_arrival_field(times_years: List[float], time_years: List[float]) -> List[List[float]]",
     "brief_usage": "Construct a 2D field where cells retain arrival time once reached."
   },
   {
     "file_path": "siO2_disk_cooling/siO2_cooling_map.py",
-    "line_no": 234,
+    "line_no": 237,
     "symbol": "upsert_marked_block",
     "signature": "upsert_marked_block(path: Path, marker_begin: str, marker_end: str, body: str) -> None",
     "brief_usage": "Insert or replace a marked text block in the target file."
   },
   {
     "file_path": "siO2_disk_cooling/siO2_cooling_map.py",
-    "line_no": 255,
+    "line_no": 258,
     "symbol": "create_simulation_readme",
     "signature": "create_simulation_readme(path: Path) -> None",
     "brief_usage": "Create or overwrite the simulation specific README."
   },
   {
     "file_path": "siO2_disk_cooling/siO2_cooling_map.py",
-    "line_no": 300,
+    "line_no": 303,
     "symbol": "FONT_5X7",
     "signature": "FONT_5X7 = {' ': ['     '] * 7, '0': [' ### ', '#   #', '#   #', '#   #', '#   #', '#   #', ' ### '], '1': ['  #  ', ' ##  ', '  #  ', '  #  ', '  #  ', '  #  ', ' ### '], '2': [' ### ', '#   #', '    #', '   # ', '  #  ', ' #   ', '#####'], '3': [' ### ', '#   #', '    #', ' ### ', '    #', '#   #', ' ### '], '4': ['#   #', '#   #', '#   #', '#####', '    #', '    #', '    #'], '5': ['#####', '#    ', '#    ', '#### ', '    #', '#   #', ' ### '], '6': [' ### ', '#   #', '#    ', '#### ', '#   #', '#   #', ' ### '], '7': ['#####', '    #', '   # ', '  #  ', ' #   ', '#    ', '#    '], '8': [' ### ', '#   #', '#   #', ' ### ', '#   #', '#   #', ' ### '], '9': [' ### ', '#   #', '#   #', ' ####', '    #', '#   #', ' ### '], 'A': [' ### ', '#   #', '#   #', '#####', '#   #', '#   #', '#   #'], 'B': ['#### ', '#   #', '#   #', '#### ', '#   #', '#   #', '#### '], 'C': [' ### ', '#   #', '#    ', '#    ', '#    ', '#   #', ' ### '], 'D': ['#### ', '#   #', '#   #', '#   #', '#   #', '#   #', '#### '], 'E': ['#####', '#    ', '#    ', '#### ', '#    ', '#    ', '#####'], 'F': ['#####', '#    ', '#    ', '#### ', '#    ', '#    ', '#    '], 'G': [' ### ', '#   #', '#    ', '# ###', '#   #', '#   #', ' ### '], 'H': ['#   #', '#   #', '#   #', '#####', '#   #', '#   #', '#   #'], 'I': [' ### ', '  #  ', '  #  ', '  #  ', '  #  ', '  #  ', ' ### '], 'J': ['  ###', '   # ', '   # ', '   # ', '#  # ', '#  # ', ' ##  '], 'K': ['#   #', '#  # ', '# #  ', '##   ', '# #  ', '#  # ', '#   #'], 'L': ['#    ', '#    ', '#    ', '#    ', '#    ', '#    ', '#####'], 'M': ['#   #', '## ##', '# # #', '# # #', '#   #', '#   #', '#   #'], 'N': ['#   #', '##  #', '# # #', '#  ##', '#   #', '#   #', '#   #'], 'O': [' ### ', '#   #', '#   #', '#   #', '#   #', '#   #', ' ### '], 'P': ['#### ', '#   #', '#   #', '#### ', '#    ', '#    ', '#    '], 'Q': [' ### ', '#   #', '#   #', '#   #', '# # #', '#  # ', ' ## #'], 'R': ['#### ', '#   #', '#   #', '#### ', '# #  ', '#  # ', '#   #'], 'S': [' ####', '#    ', '#    ', ' ### ', '    #', '    #', '#### '], 'T': ['#####', '  #  ', '  #  ', '  #  ', '  #  ', '  #  ', '  #  '], 'U': ['#   #', '#   #', '#   #', '#   #', '#   #', '#   #', ' ### '], 'V': ['#   #', '#   #', '#   #', '#   #', ' # # ', ' # # ', '  #  '], 'W': ['#   #', '#   #', '#   #', '# # #', '# # #', '## ##', '#   #'], 'X': ['#   #', '#   #', ' # # ', '  #  ', ' # # ', '#   #', '#   #'], 'Y': ['#   #', '#   #', ' # # ', '  #  ', '  #  ', '  #  ', '  #  '], 'Z': ['#####', '    #', '   # ', '  #  ', ' #   ', '#    ', '#####'], '-': ['     ', '     ', '     ', ' ### ', '     ', '     ', '     '], '=': ['     ', '     ', ' ### ', '     ', ' ### ', '     ', '     '], '<': ['   # ', '  #  ', ' #   ', '#    ', ' #   ', '  #  ', '   # '], '>': ['#    ', ' #   ', '  #  ', '   # ', '  #  ', ' #   ', '#    '], '[': [' ### ', ' #   ', ' #   ', ' #   ', ' #   ', ' #   ', ' ### '], ']': [' ### ', '   # ', '   # ', '   # ', '   # ', '   # ', ' ### '], '_': ['     ', '     ', '     ', '     ', '     ', '     ', '#####'], '/': ['    #', '   # ', '   # ', '  #  ', ' #   ', '#    ', '#    '], '.': ['     ', '     ', '     ', '     ', '     ', ' ##  ', ' ##  ']}",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "siO2_disk_cooling/siO2_cooling_map.py",
-    "line_no": 709,
+    "line_no": 712,
     "symbol": "FONT_WIDTH",
     "signature": "FONT_WIDTH = 5",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "siO2_disk_cooling/siO2_cooling_map.py",
-    "line_no": 710,
+    "line_no": 713,
     "symbol": "FONT_HEIGHT",
     "signature": "FONT_HEIGHT = 7",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "siO2_disk_cooling/siO2_cooling_map.py",
-    "line_no": 713,
+    "line_no": 716,
     "symbol": "_uppercase_char",
     "signature": "_uppercase_char(ch: str) -> str",
     "brief_usage": "No description available."
   },
   {
     "file_path": "siO2_disk_cooling/siO2_cooling_map.py",
-    "line_no": 717,
+    "line_no": 720,
     "symbol": "draw_char",
     "signature": "draw_char(image: List[List[List[int]]], ch: str, x: int, y: int, color: tuple[int, int, int]) -> None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "siO2_disk_cooling/siO2_cooling_map.py",
-    "line_no": 732,
+    "line_no": 735,
     "symbol": "draw_text",
     "signature": "draw_text(image: List[List[List[int]]], text: str, x: int, y: int, color: tuple[int, int, int]) -> None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "siO2_disk_cooling/siO2_cooling_map.py",
-    "line_no": 749,
+    "line_no": 752,
     "symbol": "draw_vertical_text",
     "signature": "draw_vertical_text(image: List[List[List[int]]], text: str, x: int, y: int, color: tuple[int, int, int]) -> None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "siO2_disk_cooling/siO2_cooling_map.py",
-    "line_no": 765,
+    "line_no": 768,
     "symbol": "draw_line",
     "signature": "draw_line(image: List[List[List[int]]], x0: int, y0: int, x1: int, y1: int, color: tuple[int, int, int], thickness: int=1) -> None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "siO2_disk_cooling/siO2_cooling_map.py",
-    "line_no": 800,
+    "line_no": 803,
     "symbol": "draw_polyline",
     "signature": "draw_polyline(image: List[List[List[int]]], points: List[tuple[int, int]], color: tuple[int, int, int], thickness: int=2) -> None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "siO2_disk_cooling/siO2_cooling_map.py",
-    "line_no": 810,
+    "line_no": 813,
     "symbol": "viridis_like",
     "signature": "viridis_like(value: float) -> tuple[int, int, int]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "siO2_disk_cooling/siO2_cooling_map.py",
-    "line_no": 828,
+    "line_no": 831,
     "symbol": "render_heatmap_array",
     "signature": "render_heatmap_array(field: List[List[float]], width: int, height: int) -> List[List[List[int]]]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "siO2_disk_cooling/siO2_cooling_map.py",
-    "line_no": 852,
+    "line_no": 855,
     "symbol": "save_png",
     "signature": "save_png(image: List[List[List[int]]], path: Path) -> None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "siO2_disk_cooling/siO2_cooling_map.py",
-    "line_no": 886,
+    "line_no": 889,
     "symbol": "render_manual_map",
     "signature": "render_manual_map(time_years: List[float], r_ratios: List[float], glass_field: List[List[float]], liquidus_field: List[List[float]], iso_map: Dict[float, List[float]], png_path: Path, t0: float) -> None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "siO2_disk_cooling/siO2_cooling_map.py",
-    "line_no": 1039,
+    "line_no": 1042,
     "symbol": "run_case",
     "signature": "run_case(t0: float, radii_m: List[float], time_s: List[float], r_ratios: List[float], outputs_dir: Path) -> Dict[str, object]",
     "brief_usage": "Execute the cooling analysis for a single initial temperature."
   },
   {
     "file_path": "siO2_disk_cooling/siO2_cooling_map.py",
-    "line_no": 1141,
+    "line_no": 1144,
     "symbol": "update_root_readme",
     "signature": "update_root_readme(root_path: Path, summaries: List[Dict[str, object]]) -> None",
     "brief_usage": "Update the repository README with a summary section."
   },
   {
     "file_path": "siO2_disk_cooling/siO2_cooling_map.py",
-    "line_no": 1168,
+    "line_no": 1171,
     "symbol": "update_root_agents",
     "signature": "update_root_agents(root_path: Path) -> None",
     "brief_usage": "Insert the execution note into AGENTS.md."
   },
   {
     "file_path": "siO2_disk_cooling/siO2_cooling_map.py",
-    "line_no": 1187,
+    "line_no": 1190,
     "symbol": "update_analysis_document",
     "signature": "update_analysis_document(analysis_path: Path, summaries: List[Dict[str, object]]) -> None",
     "brief_usage": "Append the simulation summary inside the analysis overview."
   },
   {
     "file_path": "siO2_disk_cooling/siO2_cooling_map.py",
-    "line_no": 1216,
+    "line_no": 1219,
     "symbol": "main",
     "signature": "main() -> None",
     "brief_usage": "Run the SiO₂ cooling simulation and update documentation."
@@ -5425,6 +5530,76 @@
     "brief_usage": "No description available."
   },
   {
+    "file_path": "tests/test_ref_coverage.py",
+    "line_no": 11,
+    "symbol": "REPO_ROOT",
+    "signature": "REPO_ROOT = Path(__file__).resolve().parents[1]",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "tests/test_ref_coverage.py",
+    "line_no": 12,
+    "symbol": "REGISTRY_PATH",
+    "signature": "REGISTRY_PATH = REPO_ROOT / 'analysis' / 'references.registry.json'",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "tests/test_ref_coverage.py",
+    "line_no": 13,
+    "symbol": "SOURCE_MAP_PATH",
+    "signature": "SOURCE_MAP_PATH = REPO_ROOT / 'analysis' / 'source_map.json'",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "tests/test_ref_coverage.py",
+    "line_no": 14,
+    "symbol": "EQUATIONS_PATH",
+    "signature": "EQUATIONS_PATH = REPO_ROOT / 'analysis' / 'equations.md'",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "tests/test_ref_coverage.py",
+    "line_no": 17,
+    "symbol": "_load_registry",
+    "signature": "_load_registry() -> Dict[str, Dict[str, object]]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/test_ref_coverage.py",
+    "line_no": 29,
+    "symbol": "test_source_map_links_known_keys",
+    "signature": "test_source_map_links_known_keys() -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/test_ref_coverage.py",
+    "line_no": 45,
+    "symbol": "test_equations_have_reference_or_todo",
+    "signature": "test_equations_have_reference_or_todo() -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/test_ref_coverage.py",
+    "line_no": 72,
+    "symbol": "_extract_equation_block",
+    "signature": "_extract_equation_block(label: str) -> str",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/test_ref_coverage.py",
+    "line_no": 84,
+    "symbol": "test_e043_references_hyodo",
+    "signature": "test_e043_references_hyodo() -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/test_ref_coverage.py",
+    "line_no": 89,
+    "symbol": "test_e006_references_strubbe_chiang",
+    "signature": "test_e006_references_strubbe_chiang() -> None",
+    "brief_usage": "No description available."
+  },
+  {
     "file_path": "tests/test_reproducibility.py",
     "line_no": 11,
     "symbol": "_config",
@@ -5476,9 +5651,9 @@
   {
     "file_path": "tests/test_scalings.py",
     "line_no": 13,
-    "symbol": "test_wyatt_collisional_timescale_matches_orbit_scaling",
-    "signature": "test_wyatt_collisional_timescale_matches_orbit_scaling(tau: float) -> None",
-    "brief_usage": "Wyatt (2008) scaling should match T_orb/(4π τ)."
+    "symbol": "test_strubbe_chiang_collisional_timescale_matches_orbit_scaling",
+    "signature": "test_strubbe_chiang_collisional_timescale_matches_orbit_scaling(tau: float) -> None",
+    "brief_usage": "Strubbe–Chiang scaling should match T_orb/(2π τ)."
   },
   {
     "file_path": "tests/test_sinks_none.py",
@@ -5776,21 +5951,21 @@
   },
   {
     "file_path": "tools/coverage_guard.py",
-    "line_no": 49,
+    "line_no": 57,
     "symbol": "run_guard",
-    "signature": "run_guard(*, coverage_source: Path=DEFAULT_COVERAGE, refs_path: Path=DEFAULT_REFS, inventory_path: Path=DEFAULT_INVENTORY, fail_under: float=0.75, require_clean_anchors: bool=True) -> int",
+    "signature": "run_guard(*, coverage_source: Path=DEFAULT_COVERAGE, refs_path: Path=DEFAULT_REFS, inventory_path: Path=DEFAULT_INVENTORY, fail_under: float=0.75, require_clean_anchors: bool=True, equation_fail_under: float=0.25, require_sinks_callgraph: bool=True) -> int",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/coverage_guard.py",
-    "line_no": 76,
+    "line_no": 106,
     "symbol": "_build_parser",
     "signature": "_build_parser() -> argparse.ArgumentParser",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/coverage_guard.py",
-    "line_no": 90,
+    "line_no": 131,
     "symbol": "main",
     "signature": "main(argv: Sequence[str] | None=None) -> int",
     "brief_usage": "No description available."
@@ -6231,49 +6406,56 @@
   },
   {
     "file_path": "tools/run_analysis_doc_tests.py",
-    "line_no": 10,
-    "symbol": "DEFAULT_PATTERN",
-    "signature": "DEFAULT_PATTERN = 'tests/test_analysis_*'",
+    "line_no": 11,
+    "symbol": "DEFAULT_PATTERNS",
+    "signature": "DEFAULT_PATTERNS = ['tests/test_analysis_*', 'tests/test_ref_coverage.py']",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "tools/run_analysis_doc_tests.py",
-    "line_no": 11,
+    "line_no": 12,
     "symbol": "BAR_WIDTH",
     "signature": "BAR_WIDTH = 24",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "tools/run_analysis_doc_tests.py",
-    "line_no": 14,
+    "line_no": 15,
     "symbol": "SummaryPlugin",
     "signature": "class SummaryPlugin",
     "brief_usage": "Collect terminal summary stats from pytest."
   },
   {
     "file_path": "tools/run_analysis_doc_tests.py",
-    "line_no": 28,
+    "line_no": 29,
     "symbol": "_build_args",
     "signature": "_build_args(argv: List[str]) -> List[str]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/run_analysis_doc_tests.py",
-    "line_no": 42,
+    "line_no": 43,
+    "symbol": "_expand_globs",
+    "signature": "_expand_globs(args: List[str]) -> List[str]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tools/run_analysis_doc_tests.py",
+    "line_no": 57,
     "symbol": "_render_bar",
     "signature": "_render_bar(ratio: float) -> str",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/run_analysis_doc_tests.py",
-    "line_no": 48,
+    "line_no": 63,
     "symbol": "_format_counts",
     "signature": "_format_counts(stats: Dict[str, int]) -> str",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/run_analysis_doc_tests.py",
-    "line_no": 57,
+    "line_no": 72,
     "symbol": "main",
     "signature": "main(argv: List[str]) -> int",
     "brief_usage": "No description available."

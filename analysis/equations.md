@@ -1,6 +1,7 @@
-> **注記（gas‑poor）**: 本解析は **ガスに乏しい衝突起源デブリ円盤**を前提とします。従って、**光学的に厚いガス円盤**を仮定する Takeuchi & Lin (2003) の表層塵アウトフロー式は**適用外**とし、既定では評価から外しています（必要時のみ明示的に有効化）。この判断は、衝突直後の円盤が溶融主体かつ蒸気≲数%で、初期周回で揮発が散逸しやすいこと、および小衛星を残すには低質量・低ガスの円盤条件が要ることに基づきます。参考: Hyodo et al. 2017; 2018／Canup & Salmon 2018。
+> **注記（gas‑poor）**: 本解析は **ガスに乏しい衝突起源デブリ円盤**を前提とします。従って、**光学的に厚いガス円盤**を仮定する Takeuchi & Lin (2003) の表層塵アウトフロー式は**適用外**とし、既定では評価から外しています（必要時のみ明示的に有効化）。この判断は、衝突直後の円盤が溶融主体かつ蒸気≲数%で、初期周回で揮発が散逸しやすいこと、および小衛星を残すには低質量・低ガスの円盤条件が要ることに基づきます。参考: [@Hyodo2017a_ApJ845_125; @Hyodo2017b_ApJ851_122; @Hyodo2018_ApJ860_150; @CanupSalmon2018_SciAdv4_eaar6887]。
 
 ### (E.001) v_kepler — ケプラー速度 v_K(r)
+TODO(REF:eq_e001_v_kepler)
 円盤半径に応じた公転速度を、火星重力パラメータから即時に算出する関数です。
 - 用語：ケプラー速度（Keplerian orbital speed）
 - 前提：火星標準重力定数 `G` と質量 `M_MARS` を一定とみなし、入力半径 `r>0` を採用する。
@@ -9,6 +10,7 @@
 - 数値処理：NumPy の平方根を評価し `float` に変換するのみで、負値入力は未定義として利用者側で防ぐ。
 
 ### (E.002) omega — ケプラー角速度 Ω(r)
+TODO(REF:eq_e002_omega)
 0D 半径の局所角速度を、ケプラー解をそのまま返すラッパーです。
 - 用語：ケプラー角速度（Keplerian angular frequency）
 - 前提：`omega_kepler` の結果をそのまま参照し、火星重力を一定とみなす。
@@ -17,6 +19,7 @@
 - 数値処理：別名関数として委譲するだけで追加の丸めや検証は行わない。
 
 ### (E.003) v_keplerian — ケプラー速度（同義関数）
+TODO(REF:eq_e003_v_keplerian)
 `v_kepler` と同一計算を別名で公開し、外部 API の記述ゆれに備えます。
 - 用語：ケプラー速度別名（Keplerian speed alias）
 - 前提：`v_kepler` の実装が正しいと仮定し、その結果を直接返却する。
@@ -25,6 +28,7 @@
 - 数値処理：追加計算は無く、浮動小数変換も呼び先に任せる。
 
 ### (E.004) interp_qpr — Planck平均 ⟨Q_pr⟩ の補間
+TODO(REF:eq_e004_interp_qpr)
 放射圧効率のテーブルからサイズと温度で二次元補間を行い、欠損時は解析近似へフォールバックします。
 - 用語：放射圧効率平均（Planck-averaged radiation pressure efficiency）
 - 前提：起動時に読み込んだ `_QPR_TABLE` を保持し、未ロード時のみ `_approx_qpr` に切り替える。
@@ -33,6 +37,7 @@
 - 数値処理：NumPy 補間値を `float` 化し、テーブルが無い場合は解析近似へフォールバックする分岐のみ。
 
 ### (E.005) load_qpr_table — ⟨Q_pr⟩表のローダ
+TODO(REF:eq_e005_load_qpr_table)
 外部 CSV/HDF テーブルを読み込み、全体の Planck 平均補間器を更新して戻り値として供給します。
 - 用語：放射圧効率テーブルローダ（Planck-mean Q_pr table loader）
 - 前提：指定パスの存在を検査し、`QPrTable.from_frame` で正規化されたフレームを生成する。
@@ -40,24 +45,28 @@
 - 入出力と単位：`path` [str or Path] → `callable(s,T_M)` [dimensionless]
 - 数値処理：読み込み後にグローバル `_QPR_TABLE` を更新して補間関数を返し、失敗時は例外で通知する。
 
-### (E.006) marsdisk/physics/surface.py: wyatt_tcoll_S1 (lines 62-73)
+### (E.006) marsdisk/physics/surface.py: surface_collisional_time (lines 62-73)
+[@StrubbeChiang2006_ApJ648_652; Eq.(1)]
 ```latex
 \begin{equation}
- t_{\mathrm{coll}} = \frac{1}{2\,\Omega\,\tau}
+ t_{\mathrm{coll}} = \frac{1}{\Omega\,\tau_{\perp}}
 \end{equation}
 ```
 **Symbols**
 
 |Symbol|Meaning|Units|Defaults/Notes|
 |---|---|---|---|
-|$t_{\mathrm{coll}}$|Wyatt surface-layer collision time|s|Returned value|
+|$t_{\mathrm{coll}}$|Surface-layer collision time|s|Returned value|
 |$\Omega$|Keplerian angular frequency|s$^{-1}$|Input, must be positive|
-|$\tau$|Vertical optical depth|dimensionless|Input, must be positive|
+|$\tau_{\perp}$|Vertical optical depth (type-A/B regimes)|dimensionless|Input, must be positive|
 
 **Numerics**
-- Pure algebraic evaluation with argument validation; raises `MarsDiskError` when $\tau\le0$ or $\Omega\le0$.
+- Pure algebraic evaluation with argument validation; raises `MarsDiskError` when $\tau_{\perp}\le0$ or $\Omega\le0$.
+
+Type-A disks (collision dominated) inherit $\tau(r) \propto r^{-5/2}$, whereas type-B disks (CPR drag dominated) follow $\tau(r) \propto r^{-3/2}$, both derived from the same scaling. [@StrubbeChiang2006_ApJ648_652]
 
 ### (E.007) marsdisk/physics/surface.py: step_surface_density_S1 (lines 96-163)
+TODO(REF:TakeuchiLin2003_ApJ593_524)
 > **適用範囲の注意（既定は無効）**  
 > この式群は **光学的に厚いガス円盤の表層**を仮定する Takeuchi & Lin (2003) に基づきます。  
 > 当プロジェクトの標準環境（**gas‑poor** な衝突デブリ円盤）では前提が一致しないため、**既定では使用しません**（`ALLOW_TL2003=false`）。  
@@ -98,11 +107,12 @@
 - Returns outflux and sink flux after clipping; logs step parameters.
 - Indicator $I_{\mathrm{blow}}$ is 1 only when the runtime flag `enable_blowout` is true, ensuring both the $1/t_{\mathrm{blow}}$ termと外向流束が無効化される。[marsdisk/physics/surface.py#step_surface_density_S1 [L96–L169]]
 
-When `t_{\mathrm{sink}}` is `None` or non-positive (for example, the CLI passes `cfg.sinks.mode == "none"` through `sinks.total_sink_timescale` which returns `None`; see `[marsdisk/run.py#run_zero_d [L426–L1362]]` and `[marsdisk/physics/sinks.py#total_sink_timescale [L83–L160]]`), `step_surface_density_S1` drops the sink indicator so the IMEX loss term consists solely of the blow-out contribution and any active Wyatt collision sink (`[marsdisk/physics/surface.py#step_surface_density_S1 [L96–L163]]`). In that configuration `sink_flux` evaluates to zero for every step.
+When `t_{\mathrm{sink}}` is `None` or non-positive (for example, the CLI passes `cfg.sinks.mode == "none"` through `sinks.total_sink_timescale` which returns `None`; see `[marsdisk/run.py#run_zero_d [L426–L1362]]` and `[marsdisk/physics/sinks.py#total_sink_timescale [L83–L160]]`), `step_surface_density_S1` drops the sink indicator so the IMEX loss term consists solely of the blow-out contribution and any active Strubbe–Chiang collision sink (`[marsdisk/physics/surface.py#step_surface_density_S1 [L96–L163]]`). In that configuration `sink_flux` evaluates to zero for every step.
 
 **参考**: [無効: gas‑poor 既定] Takeuchi & Lin (2003); Hyodo et al. (2017); Hyodo et al. (2018); Canup & Salmon (2018); Strubbe & Chiang (2006); Kuramoto (2024)
 
 ### (E.008) marsdisk/run.py: effective minimum grain size and beta diagnostics (lines 229-488)
+TODO(REF:eq_e008_marsdisk_run_py)
 ```latex
 \begin{equation}
  s_{\min,\mathrm{eff}} = \max\!\left(s_{\min,\mathrm{cfg}},\, s_{\mathrm{blow}}\right)
@@ -146,6 +156,7 @@ Case classification follows the configuration beta: `case_status = "blowout"` wh
 
 
 ### (E.009) marsdisk/physics/surface.py: compute_surface_outflux (lines 166-175)
+TODO(REF:eq_e009_marsdisk_physics_surface_py)
 ```latex
 \begin{equation}
  \dot{M}_{\mathrm{out}} = \Sigma_{\mathrm{surf}}\,\Omega
@@ -163,6 +174,7 @@ Case classification follows the configuration beta: `case_status = "blowout"` wh
 - Direct multiplication with argument validation; raises `MarsDiskError` when $\Omega\le0$.
 
 ### (E.010) marsdisk/physics/smol.py: step_imex_bdf1_C3 (lines 18-101)
+TODO(REF:eq_e010_marsdisk_physics_smol_py)
 ```latex
 \begin{aligned}
  \Lambda_i &= \sum_j C_{ij}, & t_{\mathrm{coll},i} &= \frac{1}{\max(\Lambda_i, 10^{-30})},\\
@@ -197,6 +209,7 @@ Case classification follows the configuration beta: `case_status = "blowout"` wh
 - Caps step size relative to minimum collision time using `safety` multiplier.
 
 ### (E.011) marsdisk/physics/smol.py: compute_mass_budget_error_C4 (lines 104-131)
+TODO(REF:eq_e011_marsdisk_physics_smol_py)
 ```latex
 \begin{aligned}
  M^{n} &= \sum_k m_k N_k^{n}, & M^{n+1} &= \sum_k m_k N_k^{n+1},\\
@@ -221,6 +234,7 @@ Case classification follows the configuration beta: `case_status = "blowout"` wh
 - Absolute error used to avoid cancellation sign issues; logs diagnostic values.
 
 ### (E.012) marsdisk/physics/radiation.py: planck_mean_qpr (lines 207-218)
+TODO(REF:eq_e012_marsdisk_physics_radiation_py)
 ```latex
 \langle Q_{\mathrm{pr}}\rangle =
 \begin{cases}
@@ -244,6 +258,7 @@ Case classification follows the configuration beta: `case_status = "blowout"` wh
 - Lookup arguments clamped to tabulated ranges within `qpr_lookup`; fallback to unity when no table available.
 
 ### (E.013) marsdisk/physics/radiation.py: beta (lines 221-242)
+[@StrubbeChiang2006_ApJ648_652]
 ```latex
 \begin{equation}
  \beta = \frac{3\,\sigma_{\mathrm{SB}}\,T_{\mathrm{M}}^{4}\,R_{\mathrm{M}}^{2}\,\langle Q_{\mathrm{pr}}\rangle}{4\,G\,M_{\mathrm{M}}\,c\,\rho\,s}
@@ -269,6 +284,7 @@ Case classification follows the configuration beta: `case_status = "blowout"` wh
 - No additional clamps beyond those in the helper routines.
 
 ### (E.014) marsdisk/physics/radiation.py: blowout_radius (lines 245-259)
+[@StrubbeChiang2006_ApJ648_652]
 ```latex
 \begin{equation}
  s_{\mathrm{blow}} = \frac{3\,\sigma_{\mathrm{SB}}\,T_{\mathrm{M}}^{4}\,R_{\mathrm{M}}^{2}\,\langle Q_{\mathrm{pr}}\rangle}{2\,G\,M_{\mathrm{M}}\,c\,\rho}
@@ -293,6 +309,7 @@ Case classification follows the configuration beta: `case_status = "blowout"` wh
 - No iteration; direct algebraic evaluation for $\beta=0.5$ threshold.
 
 ### (E.015) marsdisk/physics/shielding.py: effective_kappa (lines 81-120)
+TODO(REF:eq_e015_marsdisk_physics_shielding_py)
 ```latex
 \begin{equation}
  \kappa_{\mathrm{eff}} = \Phi(\tau)\,\kappa_{\mathrm{surf}}
@@ -312,6 +329,7 @@ Case classification follows the configuration beta: `case_status = "blowout"` wh
 - Clamps $\Phi$ to $[0,1]$ after lookup and logs when clipping occurs.
 
 ### (E.016) marsdisk/physics/shielding.py: sigma_tau1 (lines 123-130)
+TODO(REF:eq_e016_marsdisk_physics_shielding_py)
 ```latex
 \Sigma_{\tau=1} =
 \begin{cases}
@@ -330,6 +348,7 @@ Case classification follows the configuration beta: `case_status = "blowout"` wh
 - Returns infinity when the opacity is non-positive to signal no optical-depth limit; type validation ensures real input.
 
 ### (E.017) marsdisk/physics/shielding.py: apply_shielding (lines 133-216)
+TODO(REF:eq_e017_marsdisk_physics_shielding_py)
 ```latex
 \begin{aligned}
  \Phi &= \Phi(\tau, w_0, g),\\
@@ -358,6 +377,7 @@ Case classification follows the configuration beta: `case_status = "blowout"` wh
 - Wraps the interpolator to reuse `effective_kappa` clamping of $\Phi$ to $[0,1]$.
 
 ### (E.018) marsdisk/physics/sublimation.py: mass_flux (implemented by mass_flux_hkl, lines 85-113)
+[@Pignatale2018_ApJ853_118]
 ```latex
 J(T) =
 \begin{cases}
@@ -401,6 +421,7 @@ P_{\mathrm{sat}}(T) =
 - Stores provenance in `run_config.json` under `sublimation_provenance`, capturing {`sublimation_formula`, `psat_model`, `A`, `B`, `mu`, `alpha_evap`, `P_gas`, `valid_K`, optional `psat_table_path`} for reproducibility.
 
 ### (E.019) marsdisk/physics/sublimation.py: sink_timescale (implemented by s_sink_from_timescale, lines 116-129)
+[@Ronnet2016_ApJ828_109]
 ```latex
 \begin{aligned}
  J(T) &= \text{mass flux from }\texttt{mass\_flux\_hkl}(T, \text{params}),\\
@@ -424,6 +445,7 @@ P_{\mathrm{sat}}(T) =
 - No additional clamping beyond inherited flux behaviour; linear scaling in $t_{\mathrm{ref}}$.
 
 ### (E.020) marsdisk/physics/dynamics.py: v_ij (lines 18–45)
+TODO(REF:eq_e020_marsdisk_physics_dynamics_py)
 ```latex
 v_{ij} = v_{K}\,\sqrt{1.25\,e^{2} + i^{2}}
 ```
@@ -442,6 +464,7 @@ v_{ij} = v_{K}\,\sqrt{1.25\,e^{2} + i^{2}}
 - Exported via `__all__` for optional numba JIT acceleration. [marsdisk/physics/dynamics.py#v_ij [L18–L45]]
 
 ### (E.021) marsdisk/physics/dynamics.py: solve_c_eq (lines 48–106)
+TODO(REF:eq_e021_marsdisk_physics_dynamics_py)
 ```latex
 \begin{aligned}
 \varepsilon_n &= \mathrm{clip}\!\left(\varepsilon(c_n),\,0,\,1-10^{-6}\right),\\
@@ -467,6 +490,7 @@ where the iteration is started with $c_0=\max(e,10^{-6})$ and stops once $|c_{n+
 - Logs iteration progress for traceability. [marsdisk/physics/dynamics.py#solve_c_eq [L48–L106]]
 
 ### (E.022) marsdisk/physics/dynamics.py: update_e (lines 109–140)
+TODO(REF:eq_e022_marsdisk_physics_dynamics_py)
 ```latex
 e_{n+1} = e_{\mathrm{eq}} + \left(e_n - e_{\mathrm{eq}}\right)\exp\!\left(-\frac{\Delta t}{t_{\mathrm{damp}}}\right)
 ```
@@ -485,6 +509,7 @@ e_{n+1} = e_{\mathrm{eq}} + \left(e_n - e_{\mathrm{eq}}\right)\exp\!\left(-\frac
 - Logs the before/after eccentricities for debugging. [marsdisk/physics/dynamics.py#update_e [L109–L140]]
 
 ### (E.023) marsdisk/physics/initfields.py: sigma_from_Minner (lines 17–44)
+TODO(REF:eq_e023_marsdisk_physics_initfields_py)
 ```latex
 \Sigma(r) =
 \begin{cases}
@@ -508,6 +533,7 @@ e_{n+1} = e_{\mathrm{eq}} + \left(e_n - e_{\mathrm{eq}}\right)\exp\!\left(-\frac
 - Returns a Python closure that evaluates $\Sigma(r)$ for downstream use. [marsdisk/physics/initfields.py#sigma_from_Minner [L17–L44]]
 
 ### (E.024) marsdisk/physics/collide.py: compute_collision_kernel_C1 (lines 18–77)
+TODO(REF:eq_e024_marsdisk_physics_collide_py)
 ```latex
 C_{ij} = \frac{N_i N_j}{1+\delta_{ij}}\,
 \frac{\pi\,(s_i+s_j)^{2}\,v_{ij}}{\sqrt{2\pi}\,H_{ij}},
@@ -530,6 +556,7 @@ C_{ij} = \frac{N_i N_j}{1+\delta_{ij}}\,
 - Emits diagnostic logs with the number of size bins. [marsdisk/physics/collide.py#compute_collision_kernel_C1 [L18–L77]]
 
 ### (E.025) marsdisk/physics/initfields.py: surf_sigma_init (lines 47–79)
+TODO(REF:eq_e025_marsdisk_physics_initfields_py)
 ```latex
 \Sigma_{\mathrm{surf}} =
 \begin{cases}
@@ -556,6 +583,7 @@ with $\Sigma_{\tau=1}=1/\kappa_{\mathrm{eff}}$ when $\kappa_{\mathrm{eff}}>0$.
 - When clipping is active, enforces non-negative densities. [marsdisk/physics/initfields.py#surf_sigma_init [L47–L79]]
 
 ### (E.026) marsdisk/physics/qstar.py: compute_q_d_star_F1 (lines 31–73)
+TODO(REF:eq_e026_marsdisk_physics_qstar_py)
 ```latex
 Q_{D}^{*}(s,\rho,v) = Q_{3}(s,\rho)\,w(v) + Q_{5}(s,\rho)\,\bigl(1-w(v)\bigr),
 \qquad
@@ -582,6 +610,7 @@ Q_{v}(s,\rho) = Q_{s}\,s^{-a_{s}} + B\,\rho\,s^{b_{g}}.
 - Helper `_q_d_star` carries out the power-law evaluation for readability. [marsdisk/physics/qstar.py#compute_q_d_star_F1 [L31–L73]]
 
 ### (E.027) marsdisk/physics/supply.py: get_prod_area_rate (lines 93–98)
+TODO(REF:eq_e027_marsdisk_physics_supply_py)
 ```latex
 \dot{\Sigma}_{\mathrm{prod}}(t,r) = \max\!\left(\epsilon_{\mathrm{mix}}\;R_{\mathrm{base}}(t,r),\,0\right)
 ```
@@ -603,6 +632,7 @@ where $R_{\mathrm{base}}$ selects one of the constant, power-law, tabulated, or 
 - Delegates mode-specific logic to `_rate_basic`. [marsdisk/physics/supply.py#_rate_basic [L69–L90]]
 
 ### (E.028) marsdisk/physics/shielding.py: load_phi_table (lines 52–67)
+TODO(REF:eq_e028_marsdisk_physics_shielding_py)
 
 Loads a single-parameter self-shielding table $\Phi(\tau)$ from disk and logs the coverage range. The interpolator returned by `marsdisk.io.tables.load_phi_table` is passed through unchanged.
 
@@ -612,14 +642,17 @@ Loads a single-parameter self-shielding table $\Phi(\tau)$ from disk and logs th
 - Leaves the global shielding state untouched—callers retain the returned callable. [marsdisk/physics/shielding.py#load_phi_table [L52–L67]]
 
 ### (E.029) marsdisk/physics/shielding.py: effective_kappa (lines 81–120)
+TODO(REF:eq_e029_marsdisk_physics_shielding_py)
 
 This entry references the same implementation detailed in (E.015). The function multiplies the unshielded opacity by the clamped self-shielding factor $\Phi(\tau)$ and logs any adjustments. [marsdisk/physics/shielding.py#effective_kappa [L81–L120]]
 
 ### (E.030) marsdisk/physics/shielding.py: sigma_tau1 (lines 123–130)
+TODO(REF:eq_e030_marsdisk_physics_shielding_py)
 
 Identical to (E.016); it converts an effective opacity into the optical-depth unity surface density and returns $\infty$ when $\kappa_{\mathrm{eff}}\le 0$. [marsdisk/physics/shielding.py#sigma_tau1 [L123–L130]]
 
 ### (E.031) marsdisk/physics/shielding.py: clip_to_tau1 (lines 219–261)
+TODO(REF:eq_e031_marsdisk_physics_shielding_py)
 
 Ensures that the surface layer does not exceed the $\tau=1$ limit:
 - Negative opacities or densities trigger informative logging and clamp to zero.
@@ -627,6 +660,7 @@ Ensures that the surface layer does not exceed the $\tau=1$ limit:
 - Operates on scalars and returns a float suitable for downstream arrays. [marsdisk/physics/shielding.py#clip_to_tau1 [L219–L261]]
 
 ### (E.032) marsdisk/physics/fragments.py: compute_q_r_F2 (lines 30–61)
+TODO(REF:eq_e032_marsdisk_physics_fragments_py)
 ```latex
 \begin{aligned}
 M_{\mathrm{tot}} &= m_1 + m_2, &
@@ -651,6 +685,7 @@ Q_R &= \frac{1}{2}\frac{\mu v^{2}}{M_{\mathrm{tot}}}.
 - Output is explicitly coerced to `float` for consistency with NumPy inputs. [marsdisk/physics/fragments.py#compute_q_r_F2 [L30–L61]]
 
 ### (E.033) marsdisk/physics/fragments.py: compute_largest_remnant_mass_fraction_F2 (lines 64–98)
+TODO(REF:eq_e033_marsdisk_physics_fragments_py)
 
 Returns the fractional mass of the largest remnant after a collision. The function implements:
 ```latex
@@ -679,10 +714,12 @@ where $Q$ is the specific impact energy and $Q_{\mathrm{RD}}^{*}$ the catastroph
 - Raises `MarsDiskError` for non-positive `q_rd_star` to avoid division-by-zero. [marsdisk/physics/fragments.py#compute_largest_remnant_mass_fraction_F2 [L64–L98]]
 
 ### (E.034) marsdisk/physics/smol.py: step_imex_bdf1_C3 (lines 18–101)
+TODO(REF:eq_e034_marsdisk_physics_smol_py)
 
 Detailed in (E.010); this duplicate entry records the implementation lines used by the IMEX-BDF1 solver. Refer to (E.010) for equations and symbol definitions. [marsdisk/physics/smol.py#step_imex_bdf1_C3 [L18–L101]]
 
 ### (E.035) marsdisk/physics/collide.py: compute_prod_subblow_area_rate_C2 (lines 80–108)
+TODO(REF:eq_e035_marsdisk_physics_collide_py)
 
 Accumulates the production rate of sub-blowout material via the symmetric half-matrix sum
 ```latex
@@ -691,6 +728,7 @@ Accumulates the production rate of sub-blowout material via the symmetric half-m
 The helper expects square matrices and warns via `MarsDiskError` on shape mismatches. [marsdisk/physics/collide.py#compute_prod_subblow_area_rate_C2 [L80–L108]]
 
 ### (E.036) marsdisk/physics/sublimation.py: p_sat_clausius (lines 154–164)
+TODO(REF:eq_e036_marsdisk_physics_sublimation_py)
 ```latex
 P_{\mathrm{sat}}(T) = 10^{A - B/T}
 ```
@@ -708,10 +746,12 @@ P_{\mathrm{sat}}(T) = 10^{A - B/T}
 - Serves as the baseline branch for HKL mass-flux calculations. [marsdisk/physics/sublimation.py#p_sat_clausius [L154–L164]]
 
 ### (E.037) marsdisk/physics/sublimation.py: p_sat_tabulated (lines 369–383)
+TODO(REF:eq_e037_marsdisk_physics_sublimation_py)
 
 Interpolates $\log_{10}P_{\mathrm{sat}}(T)$ using a shape-preserving cubic (PCHIP) constructed from the loaded table. Temperatures outside the tabulated span are clipped with a logged warning; the interpolant guarantees monotonic pressure. [marsdisk/physics/sublimation.py#p_sat_tabulated [L369–L383]]
 
 ### (E.038) marsdisk/physics/sublimation.py: s_sink_from_timescale (lines 587–603)
+TODO(REF:eq_e038_marsdisk_physics_sublimation_py)
 
 Combines the instantaneous mass flux with the reference orbital time to find the grain size that would fully sublimate within $t_{\mathrm{ref}}$:
 ```latex
@@ -720,13 +760,53 @@ s_{\mathrm{sink}} = \frac{\eta_{\mathrm{instant}}\,t_{\mathrm{ref}}\,J(T)}{\rho}
 See (E.019) for symbol definitions; this helper mainly performs validation and delegates flux evaluation. [marsdisk/physics/sublimation.py#s_sink_from_timescale [L587–L603]]
 
 ### (E.039) marsdisk/physics/radiation.py: load_qpr_table (lines 119–146)
+TODO(REF:eq_e039_marsdisk_physics_radiation_py)
 
 Loads a Planck-mean $⟨Q_{\mathrm{pr}}⟩$ table into the radiation module cache, logging the covered size and temperature ranges when available. The returned callable defaults subsequent lookups via `qpr_lookup`. [marsdisk/physics/radiation.py#load_qpr_table [L119–L146]]
 
 ### (E.040) marsdisk/physics/radiation.py: planck_mean_qpr (lines 206–217)
+TODO(REF:eq_e040_marsdisk_physics_radiation_py)
 
 Refer to (E.012) for the full expression. This heading tracks the same implementation, which prioritises explicit overrides, otherwise uses the active interpolator, and falls back to unity. [marsdisk/physics/radiation.py#planck_mean_qpr [L206–L217]]
 
 ### (E.041) marsdisk/physics/surface.py: compute_surface_outflux (lines 166–175)
+TODO(REF:eq_e041_marsdisk_physics_surface_py)
 
 As documented in (E.009), the function multiplies the current surface density by the Keplerian frequency to obtain $\dot{M}_{\mathrm{out}}$. The duplicate heading is retained for completeness of the S1 module index. [marsdisk/physics/surface.py#step_surface_density_S1 [L166–L170]]
+
+### (E.042) siO2_disk_cooling.py: tmars 放射冷却解析解
+[@Hyodo2018_ApJ860_150; 式(2)–(4)]
+火星表面の温度を放射冷却のみ（定数 $D,\rho,c_p$ の等温スラブ）で進化させる解析解は
+```latex
+T_{\mathrm{Mars}}(t) = \left(T_0^{-3} + \frac{3 \sigma t}{D \rho c_p}\right)^{-1/3}
+```
+で与えられる（`siO2_disk_cooling/siO2_cooling_map.py#tmars [L117–L139]`）。等温層厚さ $D$、密度 $\rho$、比熱 $c_p$ を一定とし、黒体放射（$\sigma$）のみを考慮する。
+
+**Symbols**
+
+|Symbol|Meaning|Units|Defaults/Notes|
+|---|---|---|---|
+|$\sigma$|Stefan–Boltzmann constant|W m$^{-2}$ K$^{-4}$|`5.670374419\times10^{-8}`|
+|$D$|Cooling layer depth|m|`1.0\times10^5`|
+|$\rho$|Bulk density|kg m$^{-3}$|`3000`|
+|$c_p$|Specific heat|J kg$^{-1}$ K$^{-1}$|`1000`|
+|$t$|Elapsed time|s|0–2 年レンジで評価|
+|$T_0$|Initial temperature|K|`{6000, 4000, 2000}`|
+
+### (E.043) siO2_disk_cooling.py: tp_of_rt 粒子放射平衡
+[@Hyodo2018_ApJ860_150; 式(5)–(6)]
+粒子温度は火星からの赤外放射のみを受けるとして、Lambertian 幾何の希薄視界により
+```latex
+T_p(r,t) = T_{\mathrm{Mars}}(t)\,\bar{Q}_{\mathrm{abs}}^{1/4} \sqrt{\frac{R_{\mathrm{Mars}}}{2 r}}
+```
+と評価する（`siO2_disk_cooling/siO2_cooling_map.py#tp_of_rt [L141–L154]`）。相互放射と太陽入射は無視し、既定では $\bar{Q}_{\mathrm{abs}}=1$ を採用する。
+
+**Symbols**
+
+|Symbol|Meaning|Units|Defaults/Notes|
+|---|---|---|---|
+|$T_{\mathrm{Mars}}$|Planet surface temperature|K|(E.042) の結果|
+|$R_{\mathrm{Mars}}$|Planet radius|m|`3.3895\times10^6`|
+|$r$|Grain orbital radius|m|`1.0–2.4 R_{\mathrm{Mars}}`|
+|$\bar{Q}_{\mathrm{abs}}$|Planck平均吸収効率|dimensionless|既定は 1|
+|$T_p$|Grain equilibrium temperature|K|Glass/liquidus 到達判定に使用|
