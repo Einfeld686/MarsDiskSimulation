@@ -71,7 +71,7 @@ def build_mermaid(inv: Dict[SymbolKey, dict]) -> str:
     edges = [
         ("run_zero_d", "total_sink_timescale", "mode='sublimation' で有効化"),
         ("run_zero_d", "step_surface", "t_sink を渡す (None でシンク無効)"),
-        ("step_surface", "step_surface_density", "Wyatt 衝突後に委譲"),
+        ("step_surface", "step_surface_density", "Strubbe–Chiang 衝突後に委譲"),
         ("total_sink_timescale", "step_surface", "返値 t_sink / None"),
         ("total_sink_timescale", "mass_flux_hkl", "HK ルート (蒸発率)"),
         ("mass_flux_hkl", "s_sink_from_timescale", "即時蒸発サイズ s_sink"),

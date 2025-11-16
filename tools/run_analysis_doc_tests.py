@@ -8,7 +8,7 @@ from typing import Dict, List
 
 import pytest
 
-DEFAULT_PATTERN = "tests/test_analysis_*"
+DEFAULT_PATTERNS = ["tests/test_analysis_*", "tests/test_ref_coverage.py"]
 BAR_WIDTH = 24
 
 
@@ -33,7 +33,7 @@ def _build_args(argv: List[str]) -> List[str]:
     if has_positional:
         final_args.extend(user_args)
     else:
-        final_args.append(DEFAULT_PATTERN)
+        final_args.extend(DEFAULT_PATTERNS)
         final_args.extend(user_args)
     if not any(arg in ("-q", "-qq", "--quiet") for arg in final_args):
         final_args.append("-q")

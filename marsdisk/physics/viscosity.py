@@ -56,7 +56,7 @@ def step_viscous_diffusion_C5(
     *,
     theta: float = 0.5,
 ) -> np.ndarray:
-    """Advance ``sigma`` by radial viscous diffusion.
+    """Advance ``sigma`` by radial viscous diffusion. [@CridaCharnoz2012_Science338_1196]
 
     A theta-method with ``theta=0.5`` corresponds to the Crank–Nicolson
     scheme.  Zero-flux (Neumann) boundary conditions are imposed at the inner

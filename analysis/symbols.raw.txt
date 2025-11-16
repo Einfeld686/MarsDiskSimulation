@@ -99,26 +99,27 @@ analysis/tools/list_equations_todo.py:64:def extract_file_from_title(title: str)
 analysis/tools/list_equations_todo.py:73:def choose_candidates(entries: List[InventoryEntry], limit: int=3) -> List[str]
 analysis/tools/list_equations_todo.py:92:def build_report(missing_sections: List[Tuple[str, str]], inventory: Dict[str, List[InventoryEntry]]) -> str
 analysis/tools/list_equations_todo.py:112:def main(argv: Optional[Sequence[str]]=None) -> int
-analysis/tools/make_coverage.py:29:class SymbolRef
-analysis/tools/make_coverage.py:34:def load_inventory() -> List[dict]
-analysis/tools/make_coverage.py:46:def load_symbol_kinds() -> Dict[SymbolRef, str]
-analysis/tools/make_coverage.py:77:def discover_markdown_paths() -> List[Path]
-analysis/tools/make_coverage.py:88:def collect_anchor_occurrences(paths: Sequence[Path]) -> List[Tuple[Path, SymbolRef]]
-analysis/tools/make_coverage.py:99:def classify_symbols(inventory: Sequence[dict], symbol_kinds: Dict[SymbolRef, str]) -> Tuple[Dict[SymbolRef, dict], List[SymbolRef]]
-analysis/tools/make_coverage.py:134:def compute_function_reference_rate(public_functions: Sequence[SymbolRef], occurrences: Sequence[Tuple[Path, SymbolRef]]) -> Tuple[int, int, List[SymbolRef]]
-analysis/tools/make_coverage.py:150:def compute_anchor_consistency_rate(occurrences: Sequence[Tuple[Path, SymbolRef]], known_symbols: Dict[SymbolRef, dict]) -> Tuple[int, int, List[Tuple[Path, SymbolRef]]]
-analysis/tools/make_coverage.py:168:def extract_sections_with_equations(content: str) -> List[str]
-analysis/tools/make_coverage.py:186:def extract_fenced_blocks(section: str) -> List[Tuple[str, str]]
-analysis/tools/make_coverage.py:211:def compute_equation_unit_rate(equations_path: Path) -> Tuple[int, int]
-analysis/tools/make_coverage.py:242:def extract_autogen_block(text: str) -> str
-analysis/tools/make_coverage.py:257:def compute_sinks_callgraph_flag(doc_path: Path) -> bool
-analysis/tools/make_coverage.py:279:def format_rate(numerator: int, denominator: int) -> float
-analysis/tools/make_coverage.py:285:def rate_to_percent(rate: float) -> str
-analysis/tools/make_coverage.py:289:def build_coverage_markdown(function_rate: Tuple[int, int], anchor_rate: Tuple[int, int], equation_rate: Tuple[int, int], sinks_flag: bool, holes: Sequence[SymbolRef]) -> str
-analysis/tools/make_coverage.py:337:def build_coverage_json(function_rate: Tuple[int, int], anchor_rate: Tuple[int, int], equation_rate: Tuple[int, int], sinks_flag: bool, holes: Sequence[SymbolRef]) -> dict
-analysis/tools/make_coverage.py:369:def write_text(path: Path, content: str) -> None
-analysis/tools/make_coverage.py:374:def write_json(path: Path, payload: dict) -> None
-analysis/tools/make_coverage.py:379:def main() -> int
+analysis/tools/make_coverage.py:30:class SymbolRef
+analysis/tools/make_coverage.py:35:def load_inventory() -> List[dict]
+analysis/tools/make_coverage.py:47:def load_symbol_kinds() -> Dict[SymbolRef, str]
+analysis/tools/make_coverage.py:78:def discover_markdown_paths() -> List[Path]
+analysis/tools/make_coverage.py:89:def collect_anchor_occurrences(paths: Sequence[Path]) -> List[Tuple[Path, SymbolRef]]
+analysis/tools/make_coverage.py:100:def classify_symbols(inventory: Sequence[dict], symbol_kinds: Dict[SymbolRef, str]) -> Tuple[Dict[SymbolRef, dict], List[SymbolRef]]
+analysis/tools/make_coverage.py:135:def compute_function_reference_rate(public_functions: Sequence[SymbolRef], occurrences: Sequence[Tuple[Path, SymbolRef]]) -> Tuple[int, int, List[SymbolRef]]
+analysis/tools/make_coverage.py:151:def compute_anchor_consistency_rate(occurrences: Sequence[Tuple[Path, SymbolRef]], known_symbols: Dict[SymbolRef, dict]) -> Tuple[int, int, List[Tuple[Path, SymbolRef]]]
+analysis/tools/make_coverage.py:169:def extract_sections_with_equations(content: str) -> List[str]
+analysis/tools/make_coverage.py:187:def extract_fenced_blocks(section: str) -> List[Tuple[str, str]]
+analysis/tools/make_coverage.py:212:def _section_has_symbol_table(section: str) -> bool
+analysis/tools/make_coverage.py:221:def compute_equation_unit_rate(equations_path: Path) -> Tuple[int, int]
+analysis/tools/make_coverage.py:254:def extract_autogen_block(text: str) -> str
+analysis/tools/make_coverage.py:269:def compute_sinks_callgraph_flag(doc_path: Path) -> bool
+analysis/tools/make_coverage.py:291:def format_rate(numerator: int, denominator: int) -> float
+analysis/tools/make_coverage.py:297:def rate_to_percent(rate: float) -> str
+analysis/tools/make_coverage.py:301:def build_coverage_markdown(function_rate: Tuple[int, int], anchor_rate: Tuple[int, int], equation_rate: Tuple[int, int], sinks_flag: bool, holes: Sequence[SymbolRef]) -> str
+analysis/tools/make_coverage.py:349:def build_coverage_json(function_rate: Tuple[int, int], anchor_rate: Tuple[int, int], equation_rate: Tuple[int, int], sinks_flag: bool, holes: Sequence[SymbolRef]) -> dict
+analysis/tools/make_coverage.py:381:def write_text(path: Path, content: str) -> None
+analysis/tools/make_coverage.py:386:def write_json(path: Path, payload: dict) -> None
+analysis/tools/make_coverage.py:391:def main() -> int
 analysis/tools/make_sinks_callgraph.py:22:class SymbolKey
 analysis/tools/make_sinks_callgraph.py:27:def load_inventory() -> Dict[SymbolKey, dict]
 analysis/tools/make_sinks_callgraph.py:43:def ensure_symbols_present(inv: Dict[SymbolKey, dict], symbols: Iterable[SymbolKey]) -> None
@@ -200,6 +201,15 @@ marsdisk/ops/make_qpr_table.py:81:def _parse_temperatures(raw: str) -> np.ndarra
 marsdisk/ops/make_qpr_table.py:95:def _build_size_grid(s_min: float, s_max: float, count: int) -> np.ndarray
 marsdisk/ops/make_qpr_table.py:106:def _write_hdf5(path: Path, qpr: np.ndarray, log10s: np.ndarray, temperatures: np.ndarray) -> None
 marsdisk/ops/make_qpr_table.py:120:def main(argv: Sequence[str] | None=None) -> None
+marsdisk/ops/physcheck.py:24:class CheckResult
+marsdisk/ops/physcheck.py:35:def _dimension_check(config_path: Path) -> CheckResult
+marsdisk/ops/physcheck.py:64:def _limit_check() -> CheckResult
+marsdisk/ops/physcheck.py:92:def _mass_budget_check() -> CheckResult
+marsdisk/ops/physcheck.py:128:def _unknown_reference_check() -> CheckResult
+marsdisk/ops/physcheck.py:161:def _tl2003_info() -> CheckResult
+marsdisk/ops/physcheck.py:169:def run_checks(config_path: Path) -> List[CheckResult]
+marsdisk/ops/physcheck.py:180:def _write_reports(results: Sequence[CheckResult]) -> None
+marsdisk/ops/physcheck.py:194:def main(argv: Sequence[str] | None=None) -> int
 marsdisk/physics/collide.py:18:def compute_collision_kernel_C1(N: Iterable[float], s: Iterable[float], H: Iterable[float], v_rel: float | np.ndarray) -> np.ndarray
 marsdisk/physics/collide.py:80:def compute_prod_subblow_area_rate_C2(C: np.ndarray, m_subblow: np.ndarray) -> float
 marsdisk/physics/dynamics.py:18:def v_ij(e: float, i: float, v_k: float=1.0) -> float
@@ -217,16 +227,17 @@ marsdisk/physics/psd.py:149:def apply_uniform_size_drift(psd_state: Dict[str, np
 marsdisk/physics/psd.py:267:def evolve_min_size(s_min_prev: float, *, dt: float, model: Optional[str]=None, params: Optional[Mapping[str, float]]=None, T: Optional[float]=None, rho: Optional[float]=None, s_floor: Optional[float]=None, sublimation_params: Optional[SublimationParams]=None) -> float
 marsdisk/physics/qstar.py:23:def _q_d_star(s: float, rho: float, coeffs: Tuple[float, float, float, float]) -> float
 marsdisk/physics/qstar.py:31:def compute_q_d_star_F1(s: float, rho: float, v_kms: float) -> float
-marsdisk/physics/radiation.py:37:def _validate_size(value: float, *, name: str='s') -> float
-marsdisk/physics/radiation.py:47:def _validate_density(value: Optional[float]) -> float
-marsdisk/physics/radiation.py:60:def _validate_temperature(value: Optional[float]) -> float
-marsdisk/physics/radiation.py:74:def _validate_qpr(value: Optional[float]) -> Optional[float]
-marsdisk/physics/radiation.py:86:def _resolve_qpr(s: float, T_M: float, Q_pr: Optional[float], table: type_QPr | None, interp: type_QPr | None) -> float
-marsdisk/physics/radiation.py:119:def load_qpr_table(path: Path | str) -> type_QPr
-marsdisk/physics/radiation.py:149:def qpr_lookup(s: float, T_M: float, table: type_QPr | None=None) -> float
-marsdisk/physics/radiation.py:206:def planck_mean_qpr(s: float, T_M: float, Q_pr: Optional[float]=None, table: type_QPr | None=None, interp: type_QPr | None=None) -> float
-marsdisk/physics/radiation.py:220:def beta(s: float, rho: Optional[float], T_M: Optional[float], Q_pr: Optional[float]=None, table: type_QPr | None=None, interp: type_QPr | None=None) -> float
-marsdisk/physics/radiation.py:244:def blowout_radius(rho: Optional[float], T_M: Optional[float], Q_pr: Optional[float]=None, table: type_QPr | None=None, interp: type_QPr | None=None) -> float
+marsdisk/physics/radiation.py:38:def _validate_size(value: float, *, name: str='s') -> float
+marsdisk/physics/radiation.py:48:def _validate_density(value: Optional[float]) -> float
+marsdisk/physics/radiation.py:61:def _validate_temperature(value: Optional[float]) -> float
+marsdisk/physics/radiation.py:75:def _validate_qpr(value: Optional[float]) -> Optional[float]
+marsdisk/physics/radiation.py:87:def _resolve_qpr(s: float, T_M: float, Q_pr: Optional[float], table: type_QPr | None, interp: type_QPr | None) -> float
+marsdisk/physics/radiation.py:120:def grain_temperature_graybody(T_M: float, radius_m: float, *, q_abs: float=1.0) -> float
+marsdisk/physics/radiation.py:149:def load_qpr_table(path: Path | str) -> type_QPr
+marsdisk/physics/radiation.py:179:def qpr_lookup(s: float, T_M: float, table: type_QPr | None=None) -> float
+marsdisk/physics/radiation.py:236:def planck_mean_qpr(s: float, T_M: float, Q_pr: Optional[float]=None, table: type_QPr | None=None, interp: type_QPr | None=None) -> float
+marsdisk/physics/radiation.py:250:def beta(s: float, rho: Optional[float], T_M: Optional[float], Q_pr: Optional[float]=None, table: type_QPr | None=None, interp: type_QPr | None=None) -> float
+marsdisk/physics/radiation.py:274:def blowout_radius(rho: Optional[float], T_M: Optional[float], Q_pr: Optional[float]=None, table: type_QPr | None=None, interp: type_QPr | None=None) -> float
 marsdisk/physics/shielding.py:26:def _read_tau_range(table_path: Path) -> tuple[float, float] | None
 marsdisk/physics/shielding.py:52:def load_phi_table(path: Path | str) -> Callable[[float], float]
 marsdisk/physics/shielding.py:70:def _infer_phi_table(func: Callable[..., float]) -> Optional[object]
@@ -241,21 +252,20 @@ marsdisk/physics/sinks.py:83:def total_sink_timescale(T_use: float, rho_p: float
 marsdisk/physics/sizes.py:10:def eval_ds_dt_sublimation(T: float, rho_bulk: float, params: sublimation.SublimationParams) -> float
 marsdisk/physics/smol.py:18:def step_imex_bdf1_C3(N: Iterable[float], C: np.ndarray, Y: np.ndarray, S: Iterable[float], m: Iterable[float], prod_subblow_mass_rate: float, dt: float, *, mass_tol: float=0.005, safety: float=0.1) -> tuple[np.ndarray, float, float]
 marsdisk/physics/smol.py:104:def compute_mass_budget_error_C4(N_old: Iterable[float], N_new: Iterable[float], m: Iterable[float], prod_subblow_mass_rate: float, dt: float) -> float
-marsdisk/physics/sublimation.py:43:class PsatSelection(NamedTuple)
-marsdisk/physics/sublimation.py:50:class SublimationParams
-marsdisk/physics/sublimation.py:124:def grain_temperature_graybody(T_M: float, radius_m: float) -> float
-marsdisk/physics/sublimation.py:138:def _is_hkl_active(params: SublimationParams) -> bool
-marsdisk/physics/sublimation.py:154:def p_sat_clausius(T: float, params: SublimationParams) -> float
-marsdisk/physics/sublimation.py:167:def _load_psat_table(params: SublimationParams) -> Callable[[float], float]
-marsdisk/physics/sublimation.py:230:def _get_table_info(params: SublimationParams, *, raise_on_error: bool) -> Optional[Dict[str, Any]]
-marsdisk/physics/sublimation.py:269:def _local_clausius_fit_selection(T_req: float, params: SublimationParams, table_info: Dict[str, Any]) -> Optional[PsatSelection]
-marsdisk/physics/sublimation.py:337:def _baseline_clausius_selection(params: SublimationParams, reason: str, *, model_name: str='clausius(baseline)') -> PsatSelection
-marsdisk/physics/sublimation.py:369:def p_sat_tabulated(T: float, params: SublimationParams) -> float
-marsdisk/physics/sublimation.py:386:def choose_psat_backend(T_req: float, params: SublimationParams, table_meta: Optional[Dict[str, Any]]=None) -> PsatSelection
-marsdisk/physics/sublimation.py:497:def _store_psat_selection(params: SublimationParams, selection: PsatSelection, T_req: float, P_value: float) -> None
-marsdisk/physics/sublimation.py:525:def p_sat(T: float, params: SublimationParams) -> float
-marsdisk/physics/sublimation.py:534:def mass_flux_hkl(T: float, params: SublimationParams) -> float
-marsdisk/physics/sublimation.py:587:def s_sink_from_timescale(T: float, rho: float, t_ref: float, params: SublimationParams) -> float
+marsdisk/physics/sublimation.py:44:class PsatSelection(NamedTuple)
+marsdisk/physics/sublimation.py:51:class SublimationParams
+marsdisk/physics/sublimation.py:125:def _is_hkl_active(params: SublimationParams) -> bool
+marsdisk/physics/sublimation.py:141:def p_sat_clausius(T: float, params: SublimationParams) -> float
+marsdisk/physics/sublimation.py:154:def _load_psat_table(params: SublimationParams) -> Callable[[float], float]
+marsdisk/physics/sublimation.py:217:def _get_table_info(params: SublimationParams, *, raise_on_error: bool) -> Optional[Dict[str, Any]]
+marsdisk/physics/sublimation.py:256:def _local_clausius_fit_selection(T_req: float, params: SublimationParams, table_info: Dict[str, Any]) -> Optional[PsatSelection]
+marsdisk/physics/sublimation.py:324:def _baseline_clausius_selection(params: SublimationParams, reason: str, *, model_name: str='clausius(baseline)') -> PsatSelection
+marsdisk/physics/sublimation.py:356:def p_sat_tabulated(T: float, params: SublimationParams) -> float
+marsdisk/physics/sublimation.py:373:def choose_psat_backend(T_req: float, params: SublimationParams, table_meta: Optional[Dict[str, Any]]=None) -> PsatSelection
+marsdisk/physics/sublimation.py:484:def _store_psat_selection(params: SublimationParams, selection: PsatSelection, T_req: float, P_value: float) -> None
+marsdisk/physics/sublimation.py:512:def p_sat(T: float, params: SublimationParams) -> float
+marsdisk/physics/sublimation.py:521:def mass_flux_hkl(T: float, params: SublimationParams) -> float
+marsdisk/physics/sublimation.py:574:def s_sink_from_timescale(T: float, rho: float, t_ref: float, params: SublimationParams) -> float
 marsdisk/physics/supply.py:25:class _TableData
 marsdisk/physics/supply.py:69:def _rate_basic(t: float, r: float, spec: Supply | SupplyPiece) -> float
 marsdisk/physics/supply.py:93:def get_prod_area_rate(t: float, r: float, spec: Supply) -> float
@@ -472,31 +482,31 @@ scripts/sweep_massloss_map.py:392:def _collect_validation(records: Sequence[Dict
 scripts/sweep_massloss_map.py:420:def parse_args() -> argparse.Namespace
 scripts/sweep_massloss_map.py:468:def main() -> None
 siO2_disk_cooling/siO2_cooling_map.py:100:class Params
-siO2_disk_cooling/siO2_cooling_map.py:117:def tmars(time_s: List[float], t0: float, params: Params=PARAMS) -> List[float]
-siO2_disk_cooling/siO2_cooling_map.py:141:def tp_of_rt(radii_m: List[float], time_s: List[float], t0: float, params: Params=PARAMS) -> List[List[float]]
-siO2_disk_cooling/siO2_cooling_map.py:157:def first_crossing_time(radius_m: float, t0: float, tcrit: float, time_s: List[float], params: Params=PARAMS) -> float
-siO2_disk_cooling/siO2_cooling_map.py:176:def ensure_directory(path: Path) -> None
-siO2_disk_cooling/siO2_cooling_map.py:182:def format_range(r_values: List[float], times: List[float]) -> str
-siO2_disk_cooling/siO2_cooling_map.py:191:def representative_time(times: List[float]) -> str
-siO2_disk_cooling/siO2_cooling_map.py:201:def compute_crossing_times(temp_matrix: List[List[float]], threshold: float, time_s: List[float]) -> List[float]
-siO2_disk_cooling/siO2_cooling_map.py:219:def build_arrival_field(times_years: List[float], time_years: List[float]) -> List[List[float]]
-siO2_disk_cooling/siO2_cooling_map.py:234:def upsert_marked_block(path: Path, marker_begin: str, marker_end: str, body: str) -> None
-siO2_disk_cooling/siO2_cooling_map.py:255:def create_simulation_readme(path: Path) -> None
-siO2_disk_cooling/siO2_cooling_map.py:713:def _uppercase_char(ch: str) -> str
-siO2_disk_cooling/siO2_cooling_map.py:717:def draw_char(image: List[List[List[int]]], ch: str, x: int, y: int, color: tuple[int, int, int]) -> None
-siO2_disk_cooling/siO2_cooling_map.py:732:def draw_text(image: List[List[List[int]]], text: str, x: int, y: int, color: tuple[int, int, int]) -> None
-siO2_disk_cooling/siO2_cooling_map.py:749:def draw_vertical_text(image: List[List[List[int]]], text: str, x: int, y: int, color: tuple[int, int, int]) -> None
-siO2_disk_cooling/siO2_cooling_map.py:765:def draw_line(image: List[List[List[int]]], x0: int, y0: int, x1: int, y1: int, color: tuple[int, int, int], thickness: int=1) -> None
-siO2_disk_cooling/siO2_cooling_map.py:800:def draw_polyline(image: List[List[List[int]]], points: List[tuple[int, int]], color: tuple[int, int, int], thickness: int=2) -> None
-siO2_disk_cooling/siO2_cooling_map.py:810:def viridis_like(value: float) -> tuple[int, int, int]
-siO2_disk_cooling/siO2_cooling_map.py:828:def render_heatmap_array(field: List[List[float]], width: int, height: int) -> List[List[List[int]]]
-siO2_disk_cooling/siO2_cooling_map.py:852:def save_png(image: List[List[List[int]]], path: Path) -> None
-siO2_disk_cooling/siO2_cooling_map.py:886:def render_manual_map(time_years: List[float], r_ratios: List[float], glass_field: List[List[float]], liquidus_field: List[List[float]], iso_map: Dict[float, List[float]], png_path: Path, t0: float) -> None
-siO2_disk_cooling/siO2_cooling_map.py:1039:def run_case(t0: float, radii_m: List[float], time_s: List[float], r_ratios: List[float], outputs_dir: Path) -> Dict[str, object]
-siO2_disk_cooling/siO2_cooling_map.py:1141:def update_root_readme(root_path: Path, summaries: List[Dict[str, object]]) -> None
-siO2_disk_cooling/siO2_cooling_map.py:1168:def update_root_agents(root_path: Path) -> None
-siO2_disk_cooling/siO2_cooling_map.py:1187:def update_analysis_document(analysis_path: Path, summaries: List[Dict[str, object]]) -> None
-siO2_disk_cooling/siO2_cooling_map.py:1216:def main() -> None
+siO2_disk_cooling/siO2_cooling_map.py:118:def tmars(time_s: List[float], t0: float, params: Params=PARAMS) -> List[float]
+siO2_disk_cooling/siO2_cooling_map.py:142:def tp_of_rt(radii_m: List[float], time_s: List[float], t0: float, params: Params=PARAMS) -> List[List[float]]
+siO2_disk_cooling/siO2_cooling_map.py:160:def first_crossing_time(radius_m: float, t0: float, tcrit: float, time_s: List[float], params: Params=PARAMS) -> float
+siO2_disk_cooling/siO2_cooling_map.py:179:def ensure_directory(path: Path) -> None
+siO2_disk_cooling/siO2_cooling_map.py:185:def format_range(r_values: List[float], times: List[float]) -> str
+siO2_disk_cooling/siO2_cooling_map.py:194:def representative_time(times: List[float]) -> str
+siO2_disk_cooling/siO2_cooling_map.py:204:def compute_crossing_times(temp_matrix: List[List[float]], threshold: float, time_s: List[float]) -> List[float]
+siO2_disk_cooling/siO2_cooling_map.py:222:def build_arrival_field(times_years: List[float], time_years: List[float]) -> List[List[float]]
+siO2_disk_cooling/siO2_cooling_map.py:237:def upsert_marked_block(path: Path, marker_begin: str, marker_end: str, body: str) -> None
+siO2_disk_cooling/siO2_cooling_map.py:258:def create_simulation_readme(path: Path) -> None
+siO2_disk_cooling/siO2_cooling_map.py:716:def _uppercase_char(ch: str) -> str
+siO2_disk_cooling/siO2_cooling_map.py:720:def draw_char(image: List[List[List[int]]], ch: str, x: int, y: int, color: tuple[int, int, int]) -> None
+siO2_disk_cooling/siO2_cooling_map.py:735:def draw_text(image: List[List[List[int]]], text: str, x: int, y: int, color: tuple[int, int, int]) -> None
+siO2_disk_cooling/siO2_cooling_map.py:752:def draw_vertical_text(image: List[List[List[int]]], text: str, x: int, y: int, color: tuple[int, int, int]) -> None
+siO2_disk_cooling/siO2_cooling_map.py:768:def draw_line(image: List[List[List[int]]], x0: int, y0: int, x1: int, y1: int, color: tuple[int, int, int], thickness: int=1) -> None
+siO2_disk_cooling/siO2_cooling_map.py:803:def draw_polyline(image: List[List[List[int]]], points: List[tuple[int, int]], color: tuple[int, int, int], thickness: int=2) -> None
+siO2_disk_cooling/siO2_cooling_map.py:813:def viridis_like(value: float) -> tuple[int, int, int]
+siO2_disk_cooling/siO2_cooling_map.py:831:def render_heatmap_array(field: List[List[float]], width: int, height: int) -> List[List[List[int]]]
+siO2_disk_cooling/siO2_cooling_map.py:855:def save_png(image: List[List[List[int]]], path: Path) -> None
+siO2_disk_cooling/siO2_cooling_map.py:889:def render_manual_map(time_years: List[float], r_ratios: List[float], glass_field: List[List[float]], liquidus_field: List[List[float]], iso_map: Dict[float, List[float]], png_path: Path, t0: float) -> None
+siO2_disk_cooling/siO2_cooling_map.py:1042:def run_case(t0: float, radii_m: List[float], time_s: List[float], r_ratios: List[float], outputs_dir: Path) -> Dict[str, object]
+siO2_disk_cooling/siO2_cooling_map.py:1144:def update_root_readme(root_path: Path, summaries: List[Dict[str, object]]) -> None
+siO2_disk_cooling/siO2_cooling_map.py:1171:def update_root_agents(root_path: Path) -> None
+siO2_disk_cooling/siO2_cooling_map.py:1190:def update_analysis_document(analysis_path: Path, summaries: List[Dict[str, object]]) -> None
+siO2_disk_cooling/siO2_cooling_map.py:1219:def main() -> None
 tests/test_analysis_coverage_guard.py:7:def test_analysis_coverage_guard() -> None
 tests/test_analysis_massloss_sampler_doc.py:10:def _slice_section(text: str, header: str) -> str
 tests/test_analysis_massloss_sampler_doc.py:19:def test_massloss_sampler_section_lists_key_requirements() -> None
@@ -549,13 +559,19 @@ tests/test_radiation_shielding_logging.py:58:def test_load_phi_table_logs(tmp_pa
 tests/test_radiation_shielding_logging.py:70:def test_apply_shielding_clamp_logs(caplog)
 tests/test_radiation_shielding_logging.py:91:def test_effective_kappa_phi_clamp_logs(caplog)
 tests/test_radiation_shielding_logging.py:101:def test_clip_to_tau1_logging(caplog)
+tests/test_ref_coverage.py:17:def _load_registry() -> Dict[str, Dict[str, object]]
+tests/test_ref_coverage.py:29:def test_source_map_links_known_keys() -> None
+tests/test_ref_coverage.py:45:def test_equations_have_reference_or_todo() -> None
+tests/test_ref_coverage.py:72:def _extract_equation_block(label: str) -> str
+tests/test_ref_coverage.py:84:def test_e043_references_hyodo() -> None
+tests/test_ref_coverage.py:89:def test_e006_references_strubbe_chiang() -> None
 tests/test_reproducibility.py:11:def _config(outdir: Path) -> schema.Config
 tests/test_reproducibility.py:39:def _run_once(outdir: Path)
 tests/test_reproducibility.py:49:def test_repeated_runs_match(tmp_path: Path) -> None
 tests/test_run_regressions.py:17:def _run_case(overrides: list[str]) -> tuple[dict, pd.DataFrame]
 tests/test_run_regressions.py:31:def test_mass_budget_and_timestep_overrides() -> None
 tests/test_run_regressions.py:59:def test_sublimation_not_double_counted() -> None
-tests/test_scalings.py:13:def test_wyatt_collisional_timescale_matches_orbit_scaling(tau: float) -> None
+tests/test_scalings.py:13:def test_strubbe_chiang_collisional_timescale_matches_orbit_scaling(tau: float) -> None
 tests/test_sinks_none.py:15:def test_run_zero_d_with_sinks_disabled(tmp_path: Path) -> None
 tests/test_sinks_tracing.py:9:def _build_config(outdir: Path) -> schema.Config
 tests/test_sinks_tracing.py:34:def test_debug_sinks_trace_outputs_jsonl(tmp_path: Path) -> None
@@ -593,9 +609,9 @@ tests/test_zero_division_guards.py:22:def test_sigma_tau1_zero_kappa(monkeypatch
 tests/test_zero_division_guards.py:33:def test_supply_powerlaw_t0_zero()
 tests/test_zero_division_guards.py:42:def test_run_zero_d_no_zerodivision(monkeypatch, tmp_path)
 tools/coverage_guard.py:18:def _load_extended_coverage(path: Path) -> Dict[str, Any]
-tools/coverage_guard.py:49:def run_guard(*, coverage_source: Path=DEFAULT_COVERAGE, refs_path: Path=DEFAULT_REFS, inventory_path: Path=DEFAULT_INVENTORY, fail_under: float=0.75, require_clean_anchors: bool=True) -> int
-tools/coverage_guard.py:76:def _build_parser() -> argparse.ArgumentParser
-tools/coverage_guard.py:90:def main(argv: Sequence[str] | None=None) -> int
+tools/coverage_guard.py:57:def run_guard(*, coverage_source: Path=DEFAULT_COVERAGE, refs_path: Path=DEFAULT_REFS, inventory_path: Path=DEFAULT_INVENTORY, fail_under: float=0.75, require_clean_anchors: bool=True, equation_fail_under: float=0.25, require_sinks_callgraph: bool=True) -> int
+tools/coverage_guard.py:106:def _build_parser() -> argparse.ArgumentParser
+tools/coverage_guard.py:131:def main(argv: Sequence[str] | None=None) -> int
 tools/diagnostics/beta_map.py:57:class QPrCounter
 tools/diagnostics/beta_map.py:75:class BetaCellResult
 tools/diagnostics/beta_map.py:90:class RuntimeContext
@@ -650,8 +666,9 @@ tools/plotting/plot_mass_loss_map.py:24:def _build_grid(df: pd.DataFrame, column
 tools/plotting/plot_mass_loss_map.py:43:def parse_args() -> argparse.Namespace
 tools/plotting/plot_mass_loss_map.py:93:def _make_annotation(df: pd.DataFrame, contour_levels: Iterable[float]) -> str
 tools/plotting/plot_mass_loss_map.py:111:def main() -> None
-tools/run_analysis_doc_tests.py:14:class SummaryPlugin
-tools/run_analysis_doc_tests.py:28:def _build_args(argv: List[str]) -> List[str]
-tools/run_analysis_doc_tests.py:42:def _render_bar(ratio: float) -> str
-tools/run_analysis_doc_tests.py:48:def _format_counts(stats: Dict[str, int]) -> str
-tools/run_analysis_doc_tests.py:57:def main(argv: List[str]) -> int
+tools/run_analysis_doc_tests.py:15:class SummaryPlugin
+tools/run_analysis_doc_tests.py:29:def _build_args(argv: List[str]) -> List[str]
+tools/run_analysis_doc_tests.py:43:def _expand_globs(args: List[str]) -> List[str]
+tools/run_analysis_doc_tests.py:57:def _render_bar(ratio: float) -> str
+tools/run_analysis_doc_tests.py:63:def _format_counts(stats: Dict[str, int]) -> str
+tools/run_analysis_doc_tests.py:72:def main(argv: List[str]) -> int

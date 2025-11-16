@@ -12,7 +12,7 @@
   - `marsdisk/physics/psd.py`：三勾配 + “wavy” 補正付き PSD と不透明度。  
   - `marsdisk/physics/shielding.py`：多層 RT 由来の自遮蔽係数 <big><big>$`\Phi(\tau,\omega_0,g)`$</big></big>。  
   - `marsdisk/physics/collide.py`, `smol.py`：Smoluchowski IMEX-BDF(1) による破砕と質量保存検査。  
-  - `marsdisk/physics/surface.py`：Wyatt スケールの衝突寿命と吹き飛び・追加シンクを含む表層 ODE。  
+  - `marsdisk/physics/surface.py`：Strubbe–Chiang（Wyatt 2008 レビュー）スケールの衝突寿命と吹き飛び・追加シンクを含む表層 ODE。  
   - `marsdisk/io/writer.py`：Parquet / JSON / CSV への出力。
 - 再現性のため `random`, `numpy.random`, `numpy.random.default_rng` の全 RNG を同一シードで初期化します（analysis/overview.md §9）。
 
@@ -30,7 +30,7 @@
 
 ### 全モードON実行フロー（gas-poor 無効）
 
-> **注意**: AGENTS.md §4 にある通り、本プロジェクトは gas-poor を既定とし TL2003 表層方程式の使用を抑制しています。ここでは感度試験として `ALLOW_TL2003=true` などでガードを明示的に外し、昇華・ガス抗力・遮蔽・“wavy” PSD・Wyatt 衝突・HKL 侵食など **全スイッチを有効化した状態**（ただし gas-poor 簡略化は適用しない）で 0D シミュレーションを走らせる手順と式の対応を記述します。
+> **注意**: AGENTS.md §4 にある通り、本プロジェクトは gas-poor を既定とし TL2003 表層方程式の使用を抑制しています。ここでは感度試験として `ALLOW_TL2003=true` などでガードを明示的に外し、昇華・ガス抗力・遮蔽・“wavy” PSD・Strubbe–Chiang（Wyatt 2008）衝突・HKL 侵食など **全スイッチを有効化した状態**（ただし gas-poor 簡略化は適用しない）で 0D シミュレーションを走らせる手順と式の対応を記述します。
 
 ```bash
 ALLOW_TL2003=true \
@@ -69,13 +69,13 @@ python -m marsdisk.run --config configs/base.yml \
      > <big><big>$`\dot{m}_{<a_{\rm blow}} = \sum_{ij} C_{ij}\,m_{ij}`$</big></big>（E.035 の要約）
 4. **Smoluchowski IMEX**
    - `numerics.eval_per_step=true` では毎ステップ <big><big>$`\Lambda_i=\sum_j C_{ij}`$</big></big> を再評価し、IMEX-BDF1 更新 (E.010) を適用します。
-   - Wyatt スケール <big><big>$`t_{\rm coll}`$</big></big> (E.006) を loss に加え、<big><big>$`\epsilon_{\rm mass}`$</big></big> (E.011) が閾値を超えた場合は <big><big>$`\Delta t`$</big></big> を半減します。
+   - Strubbe–Chiang スケール <big><big>$`t_{\rm coll}`$</big></big> (E.006) を loss に加え、<big><big>$`\epsilon_{\rm mass}`$</big></big> (E.011) が閾値を超えた場合は <big><big>$`\Delta t`$</big></big> を半減します。
    - **キー式**  
-     > <big><big>$`t_{\rm coll}=1/(2\Omega\tau)`$</big></big>  
+     > <big><big>$`t_{\rm coll}=1/(\Omega\tau_{\perp})`$</big></big>  
      > <big><big>$`\Delta t \le 0.1\,\min(t_{{\rm coll},k})`$</big></big>
 5. **TL2003 表層 IMEX**
    - gas-poor ガードを外すと Takeuchi & Lin (2003) の薄いガス層 ODE (E.007) をそのまま解きます。
-   - Wyatt 衝突寿命と追加 sink から <big><big>$`\lambda`$</big></big> を組み、<big><big>$`\Sigma_{\tau=1}`$</big></big> でクリップした後に <big><big>$`\dot{M}_{\rm out}`$</big></big> を記録します。
+   - Strubbe–Chiang 衝突寿命と追加 sink から <big><big>$`\lambda`$</big></big> を組み、<big><big>$`\Sigma_{\tau=1}`$</big></big> でクリップした後に <big><big>$`\dot{M}_{\rm out}`$</big></big> を記録します。
    - **キー式**  
      > <big><big>$`\Sigma^{n+1}=\dfrac{\Sigma^n+\Delta t\,\dot{\Sigma}_{\rm prod}}{1+\Delta t\,\lambda}`$</big></big>  
      > <big><big>$`\dot{M}_{\rm out} = \Sigma^{n+1}\Omega`$</big></big>
@@ -139,7 +139,7 @@ python -m marsdisk.run --config configs/base.yml --sinks none
 | `dynamics` | `e0`, `i0`, `t_damp_orbits`, `f_wake` | **既定モードは `e_mode="fixed"` / `i_mode="fixed"`**。モードを指定しなければ入力スカラー `e0` / `i0` がそのまま初期値となります。`e_mode="mars_clearance"` を選ぶと <big><big>$`\Delta r`$</big></big>（m）を `dr_min_m` / `dr_max_m` からサンプリングし <big><big>$`e = 1 - (R_{\rm MARS}+\Delta r)/a`$</big></big> を適用、`i_mode="obs_tilt_spread"` では `obs_tilt_deg ± i_spread_deg`（度）をラジアンに変換して一様乱数サンプリングします。`rng_seed` を指定すると再現性を確保できます。 |
 | `psd` | `alpha`, `wavy_strength` | 三勾配 PSD と “wavy” 補正の強さ。 |
 | `qstar` | `Qs`, `a_s`, `B`, `b_g`, `v_ref_kms` | Leinhardt & Stewart (2012) の補間式を採用。 |
-| `surface` | `init_policy`, `use_tcoll` | Wyatt 衝突寿命の導入や <big><big>$`\Sigma_{\tau=1}`$</big></big> のクリップを制御。 |
+| `surface` | `init_policy`, `use_tcoll` | Strubbe–Chiang 衝突寿命の導入や <big><big>$`\Sigma_{\tau=1}`$</big></big> のクリップを制御。 |
 | `supply` | `mode`, `const` / `powerlaw` / `table` / `piecewise` | 表層供給の時間依存・空間構造。 |
 | `sinks` | `mode`, `enable_sublimation`, `enable_gas_drag`, `sub_params.*`, `rho_g` | 昇華・ガス抗力など追加シンク。`mode="none"` で一括無効。 |
 | `shielding` | `phi_table` | Φ テーブル経由で自遮蔽係数を補正。 |
@@ -178,7 +178,7 @@ python -m marsdisk.run --config configs/base.yml --sinks none
 pytest
 ```
 
-- Wyatt の衝突寿命スケーリング、ブローアウト即時消滅による “wavy” PSD、IMEX 安定性などのテストが `marsdisk/tests/` に用意されています。
+- Strubbe–Chiang 衝突寿命スケーリング、ブローアウト即時消滅による “wavy” PSD、IMEX 安定性などのテストが `marsdisk/tests/` に用意されています。
 - RNG 駆動モードの再現性と出力レンジを確認する `test_dynamics_sampling.py` も含まれます。
 
 ## 7. 参考ドキュメント
