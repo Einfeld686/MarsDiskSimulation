@@ -16,18 +16,28 @@ interfaces:
     writes Parquet, JSON and CSV outputs and logs a few key diagnostics such as
     the blow-out size ``a_blow`` and the opacity ``kappa``.
 """
+# Phase7リサーチ概要:
+# - surface.step_surface は Σ_surf を暗黙Eulerで進め、outflux=Sigma_new*Omega（放射圧）、sink_flux=Sigma_new/t_sink を返す; t_blow=1/Omega は内部評価 (marsdisk/physics/surface.py)。
+# - run_zero_d 内では t_blow=chi_blow_eff/Omega を毎ステップ再評価し、Wyatt型 t_coll=1/(Omega*tau) は collisions_active かつ tau>TAU_MIN のとき surface._safe_tcoll 由来で使われる。
+# - 遮蔽は shielding.effective_kappa/sigma_tau1 をサブステップ直前に適用し、kappa_eff と sigma_tau1_limit を保持したまま step_surface へ渡し diagnostics にも流す。
+# - writer.write_parquet/write_orbit_rollup は DataFrame をそのままシリアライズし、units/definitions は writer.write_parquet 内で管理。summary/mass_budget は run_zero_d 終端で writer.write_summary/write_mass_budget が出力。
+# - blowout_gate_factor は _compute_gate_factor 由来で t_blow と t_solid（昇華 or 衝突競合）から計算され、tau_gate_blocked による強制遮断は enable_blowout_step を false にして outflux=0 とする。τゲートは radiation.tau_gate.enable でオン。
+# - docs/devnotes には phase3/phase5/phase6 のメモと phase7_minimal_diagnostics があり、命名・互換方針・テスト観点の参照先となっている。
 from __future__ import annotations
 
 import argparse
+import copy
 import logging
 import math
 import random
+import shutil
 import subprocess
 import hashlib
 import json
+from collections import defaultdict
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Sequence
+from typing import Any, Dict, List, Mapping, Optional, Sequence
 
 import pandas as pd
 import numpy as np
@@ -43,6 +53,8 @@ from .physics import (
     initfields,
     shielding,
     sizes,
+    tempdriver,
+    phase as phase_mod,
 )
 from .io import writer, tables
 from .physics.sublimation import SublimationParams, p_sat, grain_temperature_graybody
@@ -58,6 +70,7 @@ MASS_BUDGET_TOLERANCE_PERCENT = 0.5
 SINK_REF_SIZE = 1e-6
 FAST_BLOWOUT_RATIO_THRESHOLD = 3.0
 FAST_BLOWOUT_RATIO_STRICT = 10.0
+PHASE7_SCHEMA_VERSION = "phase7-minimal-v1"
 
 
 def _parse_override_value(raw: str) -> Any:
@@ -125,12 +138,23 @@ def _apply_overrides_dict(payload: Dict[str, Any], overrides: Sequence[str]) -> 
     return payload
 
 
-def _resolve_temperature(cfg: Config) -> tuple[float, str]:
-    """Return the Mars-facing temperature used for radiation calculations."""
+def _merge_physics_section(payload: Dict[str, Any]) -> Dict[str, Any]:
+    """Inline the optional ``physics`` mapping into the root config tree."""
 
-    if cfg.radiation is not None and cfg.radiation.TM_K is not None:
-        return cfg.radiation.TM_K, "radiation.TM_K"
-    return cfg.temps.T_M, "temps.T_M"
+    if not isinstance(payload, dict):  # pragma: no cover - defensive guard
+        return payload
+    physics_block = payload.pop("physics", None)
+    if isinstance(physics_block, dict):
+        for key, value in physics_block.items():
+            target_key = "physics_mode" if key == "mode" else key
+            if target_key in payload:
+                logger.debug(
+                    "load_config: skipping physics.%s because top-level key exists",
+                    target_key,
+                )
+                continue
+            payload[target_key] = value
+    return payload
 
 
 def _safe_float(value: Any) -> Optional[float]:
@@ -207,6 +231,78 @@ def _fast_blowout_correction_factor(ratio: float) -> float:
     return value
 
 
+def _compute_gate_factor(t_blow: Optional[float], t_solid: Optional[float]) -> float:
+    """Return gate coefficient f_gate=t_solid/(t_solid+t_blow) clipped to [0,1]."""
+
+    if t_blow is None or t_solid is None:
+        return 1.0
+    try:
+        t_blow_val = float(t_blow)
+        t_solid_val = float(t_solid)
+    except (TypeError, ValueError):
+        return 1.0
+    if not (math.isfinite(t_blow_val) and math.isfinite(t_solid_val)):
+        return 1.0
+    if t_blow_val <= 0.0 or t_solid_val <= 0.0:
+        return 1.0
+    factor = t_solid_val / (t_solid_val + t_blow_val)
+    if factor < 0.0:
+        return 0.0
+    if factor > 1.0:
+        return 1.0
+    return factor
+
+
+def _normalise_single_process_mode(value: Any) -> str:
+    """Return the canonical single-process mode string."""
+
+    if value is None:
+        return "off"
+    text = str(value).strip().lower()
+    if text in {"", "off", "none", "default", "full", "both"}:
+        return "off"
+    if text in {"sublimation_only", "sublimation"}:
+        return "sublimation_only"
+    if text in {"collisions_only", "collisional_only", "collision_only"}:
+        return "collisions_only"
+    logger.warning("Unknown single_process_mode=%s; defaulting to 'off'", value)
+    return "off"
+
+
+def _normalise_physics_mode(value: Any) -> str:
+    """Return the canonical physics.mode string."""
+
+    if value is None:
+        return "default"
+    text = str(value).strip().lower()
+    if text in {"", "default", "off", "none", "full", "both"}:
+        return "default"
+    if text in {"sublimation_only", "sublimation"}:
+        return "sublimation_only"
+    if text in {"collisions_only", "collisional_only", "collision_only"}:
+        return "collisions_only"
+    logger.warning("Unknown physics_mode=%s; defaulting to 'default'", value)
+    return "default"
+
+
+def _physics_mode_from_single_process(mode: str) -> str:
+    """Map the internal single-process flag to the user-facing physics mode."""
+
+    if mode == "sublimation_only":
+        return "sublimation_only"
+    if mode == "collisions_only":
+        return "collisions_only"
+    return "default"
+
+
+def _clone_config(cfg: Config) -> Config:
+    """Return a deep copy of a configuration object."""
+
+    if hasattr(cfg, "model_copy"):  # pydantic v2
+        return cfg.model_copy(deep=True)  # type: ignore[attr-defined]
+    return cfg.copy(deep=True)  # type: ignore[attr-defined]
+
+
 def _resolve_time_grid(numerics: Any, Omega: float, t_orb: float) -> tuple[float, float, float, int, Dict[str, Any]]:
     """Return (t_end, dt_nominal, dt_step, n_steps, info) for the integrator."""
 
@@ -269,6 +365,57 @@ def _resolve_time_grid(numerics: Any, Omega: float, t_orb: float) -> tuple[float
         "n_steps": n_steps,
     }
     return t_end, dt_nominal, dt_step, n_steps, info
+
+
+@dataclass
+class _Phase5VariantResult:
+    """Artifacts recorded for a variant within the Phase 5 comparison."""
+
+    variant: str
+    mode: str
+    outdir: Path
+    summary: Dict[str, Any]
+    run_config: Dict[str, Any]
+    series_paths: Dict[str, Path]
+    mass_budget_path: Optional[Path]
+    orbit_rollup_path: Optional[Path]
+
+
+def _read_json(path: Path) -> Dict[str, Any]:
+    with path.open("r", encoding="utf-8") as fh:
+        return json.load(fh)
+
+
+def _hash_payload(payload: Mapping[str, Any]) -> str:
+    data = json.dumps(payload, sort_keys=True).encode("utf-8")
+    return hashlib.sha256(data).hexdigest()
+
+
+def _prepare_phase5_variants(compare_cfg: Any) -> List[Dict[str, str]]:
+    """Return normalized variant specifications or raise when insufficient."""
+
+    if compare_cfg is None:
+        raise ValueError("phase5.compare must be configured when requesting comparison runs")
+
+    def _normalize_label(label: Optional[str], mode: str) -> str:
+        return str(label) if label not in (None, "") else mode
+
+    mode_a_raw = getattr(compare_cfg, "mode_a", None)
+    mode_b_raw = getattr(compare_cfg, "mode_b", None)
+    if mode_a_raw is None or mode_b_raw is None:
+        raise ValueError("phase5.compare.mode_a and mode_b must be provided for comparison runs")
+
+    mode_a = _normalise_single_process_mode(mode_a_raw)
+    mode_b = _normalise_single_process_mode(mode_b_raw)
+    if mode_a == "off" or mode_b == "off":
+        raise ValueError("phase5.compare modes must specify active single-process modes (not 'off')")
+
+    label_a = _normalize_label(getattr(compare_cfg, "label_a", None), mode_a)
+    label_b = _normalize_label(getattr(compare_cfg, "label_b", None), mode_b)
+    return [
+        {"mode": mode_a, "label": label_a},
+        {"mode": mode_b, "label": label_b},
+    ]
 
 
 # ---------------------------------------------------------------------------
@@ -384,6 +531,8 @@ def load_config(path: Path, overrides: Optional[Sequence[str]] = None) -> Config
                 "Configuration overrides require the YAML root to be a mapping"
             )
         data = _apply_overrides_dict(data, overrides)
+    if isinstance(data, dict):
+        data = _merge_physics_section(data)
     cfg = Config(**data)
     try:
         setattr(cfg, "_source_path", source_path)
@@ -423,7 +572,36 @@ class MassBudgetViolationError(RuntimeError):
     """Raised when the mass budget tolerance is exceeded."""
 
 
-def run_zero_d(cfg: Config, *, enforce_mass_budget: bool = False) -> None:
+def _resolve_single_process_choice(
+    cli_mode: Optional[str],
+    physics_mode: Optional[str],
+    cfg_single_process_mode: Optional[str],
+    legacy_mode: Optional[str],
+) -> tuple[str, str]:
+    """Return (mode, source) respecting CLI > physics.mode > single_process > legacy priority."""
+
+    if cli_mode is not None:
+        return _normalise_single_process_mode(cli_mode), "cli"
+    physics_norm = _normalise_physics_mode(physics_mode)
+    if physics_norm != "default":
+        resolved = _normalise_single_process_mode(physics_norm)
+        return resolved, "physics_mode"
+    config_norm = _normalise_single_process_mode(cfg_single_process_mode)
+    if config_norm != "off":
+        return config_norm, "single_process_mode"
+    legacy_norm = _normalise_single_process_mode(legacy_mode)
+    if legacy_norm != "off":
+        return legacy_norm, "modes"
+    return "off", "default"
+
+
+def run_zero_d(
+    cfg: Config,
+    *,
+    enforce_mass_budget: bool = False,
+    single_process_override: Optional[str] = None,
+    single_process_source: Optional[str] = None,
+) -> None:
     """Execute a simple zero-dimensional simulation.
 
     Parameters
@@ -439,6 +617,83 @@ def run_zero_d(cfg: Config, *, enforce_mass_budget: bool = False) -> None:
             config_source_path = Path(config_source_path_raw).resolve()
         except Exception:
             config_source_path = None
+
+    scope_cfg = getattr(cfg, "scope", None)
+    process_cfg = getattr(cfg, "process", None)
+    modes_cfg = getattr(cfg, "modes", None)
+    physics_mode_cfg = getattr(cfg, "physics_mode", None)
+    single_process_mode_cfg = getattr(cfg, "single_process_mode", None)
+    legacy_single_process = None
+    if modes_cfg is not None:
+        legacy_single_process = getattr(modes_cfg, "single_process", None)
+    mode_input_cli = single_process_override
+    mode_input_cfg = physics_mode_cfg
+    mode_input_legacy = legacy_single_process
+    single_process_mode_resolved, single_process_mode_source = _resolve_single_process_choice(
+        mode_input_cli,
+        mode_input_cfg,
+        single_process_mode_cfg,
+        mode_input_legacy,
+    )
+    if single_process_source:
+        single_process_mode_source = single_process_source
+    single_process_mode = single_process_mode_resolved
+    physics_mode = _physics_mode_from_single_process(single_process_mode)
+    physics_mode_source = single_process_mode_source
+    scope_region = getattr(scope_cfg, "region", "inner") if scope_cfg else "inner"
+    analysis_window_years = float(getattr(scope_cfg, "analysis_years", 2.0)) if scope_cfg else 2.0
+    if scope_region != "inner":
+        raise ValueError("scope.region must be 'inner' during the inner-disk campaign")
+    primary_process_cfg = getattr(process_cfg, "primary", "collisions_only") if process_cfg else "collisions_only"
+    primary_process = primary_process_cfg
+    single_process_requested = single_process_mode in {"sublimation_only", "collisions_only"}
+    if single_process_requested:
+        primary_process = single_process_mode
+    process_fields_set = set(getattr(process_cfg, "__fields_set__", set())) if process_cfg else set()
+    primary_field_explicit = "primary" in process_fields_set
+    primary_scenario = "combined"
+    if single_process_requested:
+        primary_scenario = single_process_mode
+    elif primary_field_explicit:
+        primary_scenario = primary_process_cfg
+    state_tagging_enabled = bool(
+        getattr(getattr(process_cfg, "state_tagging", None), "enabled", False)
+    )
+    state_phase_tag = "solid" if state_tagging_enabled else None
+    inner_scope_flag = scope_region == "inner"
+    radiation_field = "mars"
+    radiation_cfg = getattr(cfg, "radiation", None)
+    solar_rp_requested = False
+    mars_rp_enabled_cfg = True
+    if radiation_cfg is not None:
+        source_raw = getattr(radiation_cfg, "source", "mars")
+        radiation_field = str(source_raw).lower()
+        mars_rp_enabled_cfg = bool(getattr(radiation_cfg, "use_mars_rp", True))
+        solar_rp_requested = bool(getattr(radiation_cfg, "use_solar_rp", False))
+        if radiation_field == "off":
+            mars_rp_enabled_cfg = False
+    if not mars_rp_enabled_cfg:
+        radiation_field = "off"
+    if solar_rp_requested:
+        logger.info("radiation: solar radiation toggle requested but disabled (gas-poor scope)")
+    if cfg.numerics.t_end_years is None and cfg.numerics.t_end_orbits is None:
+        cfg.numerics.t_end_years = analysis_window_years
+    logger.info(
+        "scope=%s, window=%.3f yr, radiation=%s, primary=%s, scenario=%s%s",
+        scope_region,
+        analysis_window_years,
+        radiation_field,
+        primary_process,
+        primary_scenario,
+        " (state_tag=solid)" if state_tagging_enabled else "",
+    )
+    enforce_collisions_only = primary_scenario == "collisions_only"
+    enforce_sublimation_only = primary_scenario == "sublimation_only"
+    collisions_active = not enforce_sublimation_only
+    diagnostics_cfg = getattr(cfg, "diagnostics", None)
+    phase7_cfg = getattr(diagnostics_cfg, "phase7", None)
+    phase7_enabled = bool(getattr(phase7_cfg, "enable", False))
+    phase7_schema_version = getattr(phase7_cfg, "schema_version", PHASE7_SCHEMA_VERSION)
 
     seed, seed_expr, seed_basis = _resolve_seed(cfg)
     random.seed(seed)
@@ -558,7 +813,16 @@ def run_zero_d(cfg: Config, *, enforce_mass_budget: bool = False) -> None:
             "⟨Q_pr⟩ lookup table not initialised. Provide radiation.qpr_table_path "
             "or place a table under marsdisk/io/data."
         )
-    T_use, T_M_source = _resolve_temperature(cfg)
+    temp_runtime = tempdriver.resolve_temperature_driver(cfg.temps, cfg.radiation, t_orb=t_orb)
+    T_use = temp_runtime.initial_value
+    T_M_source = temp_runtime.source
+    logger.info(
+        "Mars temperature driver resolved: source=%s mode=%s enabled=%s T_init=%.2f K",
+        temp_runtime.source,
+        temp_runtime.mode,
+        temp_runtime.enabled,
+        T_use,
+    )
     rho_used = cfg.material.rho
 
     phi_tau_fn = None
@@ -577,6 +841,16 @@ def run_zero_d(cfg: Config, *, enforce_mass_budget: bool = False) -> None:
     setattr(sub_params, "runtime_orbital_radius_m", r)
     setattr(sub_params, "runtime_t_orb_s", t_orb)
     setattr(sub_params, "runtime_Omega", Omega)
+    gas_pressure_pa = float(getattr(sub_params, "P_gas", 0.0) or 0.0)
+
+    phase_cfg = getattr(cfg, "phase", None)
+    phase_controller = phase_mod.PhaseEvaluator(phase_cfg)
+    hydro_cfg = getattr(cfg.sinks, "hydro_escape", None)
+    tau_gate_cfg = getattr(cfg.radiation, "tau_gate", None) if cfg.radiation else None
+    tau_gate_enabled = bool(getattr(tau_gate_cfg, "enable", False)) if tau_gate_cfg else False
+    tau_gate_threshold = (
+        float(getattr(tau_gate_cfg, "tau_max", 1.0)) if tau_gate_enabled else float("inf")
+    )
 
     def _lookup_qpr(size: float) -> float:
         """Return ⟨Q_pr⟩ for the provided grain size using the active source."""
@@ -625,7 +899,29 @@ def run_zero_d(cfg: Config, *, enforce_mass_budget: bool = False) -> None:
             return float("nan")
         return float(sizes[idx])
 
-    blowout_enabled = bool(getattr(getattr(cfg, "blowout", None), "enabled", True))
+    blowout_cfg = getattr(cfg, "blowout", None)
+    blowout_enabled_cfg = bool(getattr(blowout_cfg, "enabled", True)) if blowout_cfg else True
+    blowout_target_phase = str(getattr(blowout_cfg, "target_phase", "solid_only")) if blowout_cfg else "solid_only"
+    blowout_layer_mode = str(getattr(blowout_cfg, "layer", "surface_tau_le_1")) if blowout_cfg else "surface_tau_le_1"
+    blowout_gate_mode = str(getattr(blowout_cfg, "gate_mode", "none")).lower() if blowout_cfg else "none"
+    if blowout_gate_mode not in {"none", "sublimation_competition", "collision_competition"}:
+        raise ValueError(f"Unknown blowout.gate_mode={blowout_gate_mode!r}")
+    blowout_enabled = blowout_enabled_cfg
+    rp_blowout_cfg = getattr(cfg.sinks, "rp_blowout", None)
+    rp_blowout_enabled = bool(getattr(rp_blowout_cfg, "enable", True)) if rp_blowout_cfg else True
+    blowout_enabled = (
+        blowout_enabled
+        and collisions_active
+        and rp_blowout_enabled
+        and mars_rp_enabled_cfg
+    )
+    if radiation_field == "off":
+        blowout_enabled = False
+    gate_enabled = blowout_gate_mode != "none"
+    if blowout_gate_mode == "collision_competition" and not bool(getattr(cfg.surface, "use_tcoll", True)):
+        logger.warning(
+            "blowout.gate_mode='collision_competition' requested but surface.use_tcoll=False; gate will ignore collisions"
+        )
     freeze_kappa = bool(getattr(cfg.radiation, "freeze_kappa", False)) if cfg.radiation else False
     freeze_sigma = bool(getattr(cfg.surface, "freeze_sigma", False))
     shielding_mode = shielding_mode_resolved
@@ -677,6 +973,7 @@ def run_zero_d(cfg: Config, *, enforce_mass_budget: bool = False) -> None:
         s_min_effective, rho_used, T_use, Q_pr=qpr_mean
     )
     beta_threshold = radiation.BLOWOUT_BETA_THRESHOLD
+    beta_gate_active = beta_at_smin_effective >= beta_threshold
     case_status = "blowout" if beta_at_smin_config >= beta_threshold else "ok"
     if case_status != "blowout":
         logger.info(
@@ -726,6 +1023,7 @@ def run_zero_d(cfg: Config, *, enforce_mass_budget: bool = False) -> None:
     M_loss_cum = 0.0
     M_sink_cum = 0.0
     M_sublimation_cum = 0.0
+    M_hydro_cum = 0.0
     if cfg.disk is not None:
         r_in_d = cfg.disk.geometry.r_in_RM * constants.R_MARS
         r_out_d = cfg.disk.geometry.r_out_RM * constants.R_MARS
@@ -750,12 +1048,35 @@ def run_zero_d(cfg: Config, *, enforce_mass_budget: bool = False) -> None:
     chi_blow_eff = float(min(max(chi_blow_eff, 0.5), 2.0))
     t_blow = chi_blow_eff / Omega
 
-    sink_opts = sinks.SinkOptions(
-        enable_sublimation=cfg.sinks.enable_sublimation,
-        sub_params=sub_params,
-        enable_gas_drag=cfg.sinks.enable_gas_drag,
-        rho_g=cfg.sinks.rho_g,
+    sinks_mode_value = getattr(cfg.sinks, "mode", "sublimation")
+    sinks_enabled_cfg = sinks_mode_value != "none"
+    sublimation_enabled_cfg = bool(
+        sinks_enabled_cfg
+        and (
+            getattr(cfg.sinks, "enable_sublimation", False)
+            or sinks_mode_value == "sublimation"
+        )
     )
+    gas_drag_enabled_cfg = bool(
+        sinks_enabled_cfg and getattr(cfg.sinks, "enable_gas_drag", False)
+    )
+    sink_opts = sinks.SinkOptions(
+        enable_sublimation=sublimation_enabled_cfg,
+        sub_params=sub_params,
+        enable_gas_drag=gas_drag_enabled_cfg,
+        rho_g=cfg.sinks.rho_g if gas_drag_enabled_cfg else 0.0,
+    )
+    if enforce_collisions_only:
+        sink_opts.enable_sublimation = False
+        sink_opts.enable_gas_drag = False
+    sinks_active = bool(sink_opts.enable_sublimation or sink_opts.enable_gas_drag)
+    if enforce_sublimation_only:
+        sublimation_active_flag = True
+    elif enforce_collisions_only:
+        sublimation_active_flag = False
+    else:
+        sublimation_active_flag = sublimation_enabled_cfg
+    sink_timescale_active = sinks_active and not enforce_collisions_only
 
     supply_spec = cfg.supply
 
@@ -786,6 +1107,7 @@ def run_zero_d(cfg: Config, *, enforce_mass_budget: bool = False) -> None:
         raise ValueError("io.substep_max_ratio must be positive")
     debug_records: List[Dict[str, Any]] = []
     eval_per_step = bool(getattr(cfg.numerics, "eval_per_step", True))
+    eval_requires_step = eval_per_step or temp_runtime.enabled
     orbit_rollup_enabled = bool(getattr(cfg.numerics, "orbit_rollup", True))
     dt_over_t_blow_cfg = getattr(cfg.numerics, "dt_over_t_blow_max", None)
     dt_over_t_blow_max = (
@@ -800,6 +1122,9 @@ def run_zero_d(cfg: Config, *, enforce_mass_budget: bool = False) -> None:
     orbit_loss_sink = 0.0
     orbits_completed = 0
     orbit_rollup_rows: List[Dict[str, float]] = []
+    phase_usage = defaultdict(float)
+    phase_method_usage = defaultdict(float)
+    sink_branch_usage = defaultdict(float)
 
     Omega_step = Omega
     t_orb_step = t_orb
@@ -807,11 +1132,27 @@ def run_zero_d(cfg: Config, *, enforce_mass_budget: bool = False) -> None:
     qpr_mean_step = qpr_mean
     qpr_for_blow_step = qpr_for_blow
 
+    temperature_track: List[float] = []
+    beta_track: List[float] = []
+    ablow_track: List[float] = []
+    gate_factor_track: List[float] = []
+    t_solid_track: List[float] = []
+    tau_gate_block_time = 0.0
+    total_time_elapsed = 0.0
+    phase7_total_rate_track: List[float] = []
+    phase7_total_rate_time_track: List[float] = []
+    phase7_ts_ratio_track: List[float] = []
+
     for step_no in range(n_steps):
         time_start = step_no * dt
         time = time_start
+        T_use = temp_runtime.evaluate(time)
+        temperature_track.append(T_use)
+        rad_flux_step = constants.SIGMA_SB * (T_use**4)
+        gate_factor = 1.0
+        t_solid_step = None
 
-        if eval_per_step or step_no == 0:
+        if eval_requires_step or step_no == 0:
             Omega_step = grid.omega_kepler(r)
             if Omega_step <= 0.0:
                 raise ValueError("Computed Keplerian frequency must be positive")
@@ -846,16 +1187,16 @@ def run_zero_d(cfg: Config, *, enforce_mass_budget: bool = False) -> None:
                 T_use,
                 Q_pr=qpr_mean_step,
             )
+            beta_gate_active = beta_at_smin_effective >= beta_threshold
+        beta_track.append(beta_at_smin_effective)
+        ablow_track.append(a_blow_step)
 
         t_blow_step = chi_blow_eff / Omega_step if Omega_step > 0.0 else float("inf")
 
-        T_grain = grain_temperature_graybody(T_use, r)
         ds_dt_val = 0.0
-        sublimation_active = bool(
-            getattr(cfg.sinks, "enable_sublimation", False)
-            or cfg.sinks.mode == "sublimation"
-        )
+        sublimation_active = sublimation_active_flag
         if sublimation_active:
+            T_grain = grain_temperature_graybody(T_use, r)
             try:
                 ds_dt_val = sizes.eval_ds_dt_sublimation(T_grain, rho_used, sub_params)
             except ValueError:
@@ -897,12 +1238,12 @@ def run_zero_d(cfg: Config, *, enforce_mass_budget: bool = False) -> None:
             M_sink_cum += mass_loss_sublimation_step
             M_sublimation_cum += mass_loss_sublimation_step
 
-        if cfg.sinks.mode == "none":
+        if cfg.sinks.mode == "none" or not sink_timescale_active:
             sink_result = sinks.SinkTimescaleResult(
                 t_sink=None,
                 components={"sublimation": None, "gas_drag": None},
                 dominant_sink=None,
-                T_eval=T_grain,
+                T_eval=T_use,
                 s_ref=SINK_REF_SIZE,
             )
         else:
@@ -914,8 +1255,7 @@ def run_zero_d(cfg: Config, *, enforce_mass_budget: bool = False) -> None:
                 s_ref=SINK_REF_SIZE,
             )
         t_sink_total_value = sink_result.t_sink
-        t_sink_step = t_sink_total_value
-        t_sink_surface_only = t_sink_step
+        t_sink_surface_only = t_sink_total_value
         if sink_result.components:
             non_sub_times: List[float] = []
             for name, value in sink_result.components.items():
@@ -928,7 +1268,72 @@ def run_zero_d(cfg: Config, *, enforce_mass_budget: bool = False) -> None:
                 t_sink_surface_only = float(min(non_sub_times))
             else:
                 t_sink_surface_only = None
-        t_sink_step = t_sink_surface_only
+
+        sigma_for_tau_phase = sigma_surf_reference if freeze_sigma else sigma_surf
+        tau_los_value = kappa_surf * sigma_for_tau_phase
+        tau_los = float(tau_los_value) if math.isfinite(tau_los_value) else 0.0
+        phase_decision = phase_controller.evaluate(
+            T_use,
+            pressure_Pa=gas_pressure_pa,
+            tau=tau_los,
+        )
+        phase_state_step = phase_decision.state
+        phase_method_step = phase_decision.method
+        phase_reason_step = phase_decision.reason
+        phase_payload_step = dict(phase_decision.payload)
+        phase_f_vap_step = phase_decision.f_vap
+        phase_payload_step["tau_mars_line_of_sight"] = tau_los
+        tau_gate_block_step = bool(
+            tau_gate_enabled
+            and math.isfinite(tau_los)
+            and tau_los >= tau_gate_threshold
+        )
+        phase_allows_step = not (
+            blowout_target_phase == "solid_only" and phase_state_step != "solid"
+        )
+        enable_blowout_step = bool(
+            blowout_enabled
+            and beta_gate_active
+            and phase_allows_step
+            and not tau_gate_block_step
+        )
+        hydro_timescale_step = None
+        sink_selected_step = "rp_blowout" if enable_blowout_step else "none"
+        if phase_controller.enabled and phase_state_step == "vapor":
+            hydro_timescale_step = phase_mod.hydro_escape_timescale(
+                hydro_cfg,
+                T_use,
+                phase_f_vap_step,
+            )
+            if hydro_timescale_step is not None:
+                sink_selected_step = "hydro_escape"
+        if enable_blowout_step and hydro_timescale_step is not None:
+            raise RuntimeError(
+                "Blow-out and hydrodynamic escape sinks cannot be active simultaneously"
+            )
+        phase_usage[phase_state_step] += dt
+        phase_method_usage[phase_method_step] += dt
+        sink_branch_usage[sink_selected_step] += dt
+        phase_state_last = phase_state_step
+        phase_method_last = phase_method_step
+        phase_reason_last = phase_reason_step
+        phase_payload_last = dict(phase_payload_step)
+        phase_f_vap_last = phase_f_vap_step
+        sink_selected_last = sink_selected_step
+        tau_gate_block_last = tau_gate_block_step
+        hydro_timescale_last = hydro_timescale_step
+        tau_los_last = tau_los
+        phase_payload_last["sink_selected"] = sink_selected_step
+        phase_payload_last["tau_gate_blocked"] = tau_gate_block_step
+        phase_allows_last = phase_allows_step
+        beta_gate_last = beta_gate_active
+
+        if sink_selected_step == "hydro_escape" and hydro_timescale_step is not None:
+            t_sink_step_effective = hydro_timescale_step
+        elif phase_controller.enabled and phase_state_step == "vapor":
+            t_sink_step_effective = None
+        else:
+            t_sink_step_effective = t_sink_surface_only
 
         if blowout_enabled and t_blow_step > 0.0:
             fast_blowout_ratio = dt / t_blow_step
@@ -974,6 +1379,7 @@ def run_zero_d(cfg: Config, *, enforce_mass_budget: bool = False) -> None:
 
         kappa_eff = kappa_surf
         sigma_tau1_limit = None
+        sigma_tau1_active_last = None
         prod_rate_last = 0.0
         outflux_surface = 0.0
         sink_flux_surface = 0.0
@@ -988,93 +1394,157 @@ def run_zero_d(cfg: Config, *, enforce_mass_budget: bool = False) -> None:
 
         tau_last = None
         phi_effective_last = None
-        for _sub_idx in range(n_substeps):
-            if freeze_sigma:
-                sigma_surf = sigma_surf_reference
-            sigma_for_tau = sigma_surf
-            tau = kappa_surf * sigma_for_tau
-            tau_eval = tau
-            phi_value = None
-            if shielding_mode == "off":
-                kappa_eff = kappa_surf
-                sigma_tau1_limit = float("inf")
-            elif shielding_mode == "fixed_tau1":
-                tau_target = tau_fixed_target
-                if not math.isfinite(tau_target):
-                    tau_target = tau_eval
-                if sigma_tau1_fixed_target is not None:
-                    sigma_tau1_limit = float(sigma_tau1_fixed_target)
-                    if kappa_surf > 0.0 and not math.isfinite(tau_target):
-                        tau_target = kappa_surf * sigma_tau1_limit
-                if phi_tau_fn is not None:
-                    kappa_eff = shielding.effective_kappa(kappa_surf, tau_target, phi_tau_fn)
+        hydro_mass_total = 0.0
+        surface_active = collisions_active or sink_timescale_active
+        if surface_active:
+            for _sub_idx in range(n_substeps):
+                if freeze_sigma:
+                    sigma_surf = sigma_surf_reference
+                sigma_for_tau = sigma_surf
+                tau = kappa_surf * sigma_for_tau
+                tau_eval = tau
+                phi_value = None
+                if collisions_active:
+                    if shielding_mode == "off":
+                        kappa_eff = kappa_surf
+                        sigma_tau1_limit = float("inf")
+                    elif shielding_mode == "fixed_tau1":
+                        tau_target = tau_fixed_target
+                        if not math.isfinite(tau_target):
+                            tau_target = tau_eval
+                        if sigma_tau1_fixed_target is not None:
+                            sigma_tau1_limit = float(sigma_tau1_fixed_target)
+                            if kappa_surf > 0.0 and not math.isfinite(tau_target):
+                                tau_target = kappa_surf * sigma_tau1_limit
+                        if phi_tau_fn is not None:
+                            kappa_eff = shielding.effective_kappa(kappa_surf, tau_target, phi_tau_fn)
+                        else:
+                            kappa_eff = kappa_surf
+                        if sigma_tau1_fixed_target is None:
+                            if kappa_eff <= 0.0:
+                                sigma_tau1_limit = float("inf")
+                            else:
+                                sigma_tau1_limit = float(tau_target / max(kappa_eff, 1.0e-30))
+                        tau_eval = tau_target
+                    else:
+                        tau_eval = tau
+                        if phi_tau_fn is not None:
+                            kappa_eff = shielding.effective_kappa(kappa_surf, tau_eval, phi_tau_fn)
+                            sigma_tau1_limit = shielding.sigma_tau1(kappa_eff)
+                        else:
+                            kappa_eff, sigma_tau1_limit = shielding.apply_shielding(
+                                kappa_surf, tau_eval, 0.0, 0.0
+                            )
                 else:
                     kappa_eff = kappa_surf
-                if sigma_tau1_fixed_target is None:
-                    if kappa_eff <= 0.0:
-                        sigma_tau1_limit = float("inf")
-                    else:
-                        sigma_tau1_limit = float(tau_target / max(kappa_eff, 1.0e-30))
-                tau_eval = tau_target
-            else:
-                tau_eval = tau
-                if phi_tau_fn is not None:
-                    kappa_eff = shielding.effective_kappa(kappa_surf, tau_eval, phi_tau_fn)
-                    sigma_tau1_limit = shielding.sigma_tau1(kappa_eff)
-                else:
-                    kappa_eff, sigma_tau1_limit = shielding.apply_shielding(
-                        kappa_surf, tau_eval, 0.0, 0.0
-                    )
-            if kappa_surf > 0.0 and kappa_eff is not None:
-                phi_value = kappa_eff / kappa_surf
-            phi_effective_last = phi_value
-            tau_last = tau_eval
-            tau_for_coll = None if (not cfg.surface.use_tcoll or tau <= TAU_MIN) else tau
-            prod_rate = supply.get_prod_area_rate(time_sub, r, supply_spec)
-            prod_rate_last = prod_rate
-            total_prod_surface += prod_rate * dt_sub
-            res = surface.step_surface(
-                sigma_surf,
-                prod_rate,
-                dt_sub,
-                Omega_step,
-                tau=tau_for_coll,
-                t_sink=t_sink_step,
-                sigma_tau1=sigma_tau1_limit,
-                enable_blowout=blowout_enabled,
-            )
-            sigma_surf = res.sigma_surf
-            outflux_surface = res.outflux
-            sink_flux_surface = res.sink_flux
-            if freeze_sigma:
-                sigma_surf = sigma_surf_reference
-            if apply_correction:
-                outflux_surface *= fast_blowout_factor_sub
-                fast_blowout_applied = True
-            total_sink_surface += sink_flux_surface * dt_sub
-            fast_factor_numer += fast_blowout_factor_sub * dt_sub
-            fast_factor_denom += dt_sub
-            time_sub += dt_sub
+                    sigma_tau1_limit = None
+                if kappa_surf > 0.0 and kappa_eff is not None:
+                    phi_value = kappa_eff / kappa_surf
+                phi_effective_last = phi_value
+                tau_last = tau_eval
+                enable_blowout_sub = enable_blowout_step and collisions_active
+                t_sink_current = t_sink_step_effective if sink_timescale_active else None
+                tau_for_coll = None
+                if collisions_active and cfg.surface.use_tcoll and tau > TAU_MIN:
+                    tau_for_coll = tau
+                prod_rate = supply.get_prod_area_rate(time_sub, r, supply_spec)
+                prod_rate_last = prod_rate
+                total_prod_surface += prod_rate * dt_sub
+                sigma_tau1_active = (
+                    sigma_tau1_limit
+                    if (blowout_layer_mode == "surface_tau_le_1" and collisions_active)
+                    else None
+                )
+                sigma_tau1_active_last = sigma_tau1_active
+                res = surface.step_surface(
+                    sigma_surf,
+                    prod_rate,
+                    dt_sub,
+                    Omega_step,
+                    tau=tau_for_coll,
+                    t_sink=t_sink_current,
+                    sigma_tau1=sigma_tau1_active,
+                    enable_blowout=enable_blowout_sub,
+                )
+                sigma_surf = res.sigma_surf
+                outflux_surface = res.outflux
+                sink_flux_surface = res.sink_flux
+                if sink_selected_step == "hydro_escape" and hydro_timescale_step is not None:
+                    hydro_mass_total += sink_flux_surface * dt_sub * area / constants.M_MARS
+                if freeze_sigma:
+                    sigma_surf = sigma_surf_reference
+                if apply_correction:
+                    outflux_surface *= fast_blowout_factor_sub
+                    fast_blowout_applied = True
+                total_sink_surface += sink_flux_surface * dt_sub
+                fast_factor_numer += fast_blowout_factor_sub * dt_sub
+                fast_factor_denom += dt_sub
+                time_sub += dt_sub
+        else:
+            time_sub = time_start + dt
+            tau_last = kappa_surf * sigma_surf
+            sigma_tau1_limit = None
+            kappa_eff = kappa_surf
+            sigma_tau1_active_last = None
+
+        if sink_timescale_active:
+            t_sink_step = t_sink_step_effective
+        else:
+            t_sink_step = None
 
         time = time_sub
         if freeze_sigma:
             sigma_surf = sigma_surf_reference
 
-        loss_total_surface = sigma_before_step + total_prod_surface - sigma_surf
-        loss_total_surface = max(loss_total_surface, 0.0)
-        sink_surface_total = max(total_sink_surface, 0.0)
-        blow_surface_total = max(loss_total_surface - sink_surface_total, 0.0)
-        if not blowout_enabled:
+        if blowout_gate_mode == "sublimation_competition":
+            if (
+                ds_dt_val < 0.0
+                and math.isfinite(ds_dt_val)
+                and math.isfinite(a_blow_step)
+            ):
+                candidate = a_blow_step / abs(ds_dt_val)
+                if candidate > 0.0 and math.isfinite(candidate):
+                    t_solid_step = candidate
+        elif blowout_gate_mode == "collision_competition":
+            if tau_last is not None and tau_last > TAU_MIN and Omega_step > 0.0:
+                candidate = 1.0 / (Omega_step * max(tau_last, TAU_MIN))
+                if candidate > 0.0 and math.isfinite(candidate):
+                    t_solid_step = candidate
+        if gate_enabled and enable_blowout_step:
+            gate_factor = _compute_gate_factor(t_blow_step, t_solid_step)
+
+        if collisions_active:
+            loss_total_surface = sigma_before_step + total_prod_surface - sigma_surf
+            loss_total_surface = max(loss_total_surface, 0.0)
+            sink_surface_total = max(total_sink_surface, 0.0)
+            blow_surface_total = max(loss_total_surface - sink_surface_total, 0.0)
+            if not enable_blowout_step:
+                blow_surface_total = 0.0
+        else:
+            loss_total_surface = 0.0
+            sink_surface_total = 0.0
             blow_surface_total = 0.0
+
+        if enable_blowout_step and gate_enabled:
+            blow_surface_total *= gate_factor
+            outflux_surface *= gate_factor
+
+        t_solid_track.append(float(t_solid_step) if t_solid_step is not None else float("nan"))
+        gate_factor_track.append(float(gate_factor))
 
         sink_mass_total = sink_surface_total * area / constants.M_MARS
         blow_mass_total = blow_surface_total * area / constants.M_MARS
-        M_loss_cum += blow_mass_total
-        M_sink_cum += sink_mass_total
-        if sink_result.sublimation_fraction > 0.0:
-            M_sublimation_cum += sink_mass_total * sink_result.sublimation_fraction
+        mass_loss_surface_solid_step = blow_mass_total
+        if collisions_active:
+            M_loss_cum += blow_mass_total
+        if sink_timescale_active:
+            M_sink_cum += sink_mass_total
+            if sink_result.sublimation_fraction > 0.0:
+                M_sublimation_cum += sink_mass_total * sink_result.sublimation_fraction
+        M_hydro_cum += hydro_mass_total
 
         mass_loss_sinks_step_total = mass_loss_sublimation_step + sink_mass_total
+        mass_loss_hydro_step = hydro_mass_total
         M_out_dot_avg = blow_mass_total / dt if dt > 0.0 else 0.0
         M_sink_dot_avg = mass_loss_sinks_step_total / dt if dt > 0.0 else 0.0
         dM_dt_surface_total_avg = M_out_dot_avg + M_sink_dot_avg
@@ -1116,17 +1586,20 @@ def run_zero_d(cfg: Config, *, enforce_mass_budget: bool = False) -> None:
         orbit_loss_sink += mass_loss_sinks_step_total
         if orbit_rollup_enabled and t_orb_step > 0.0:
             while orbit_time_accum >= t_orb_step and orbit_time_accum > 0.0:
-                fraction = t_orb_step / orbit_time_accum
+                orbit_time_accum_before = orbit_time_accum
+                fraction = t_orb_step / orbit_time_accum_before
                 M_orbit_blow = orbit_loss_blow * fraction
                 M_orbit_sink = orbit_loss_sink * fraction
                 orbits_completed += 1
                 mass_loss_frac = float("nan")
                 if cfg.initial.mass_total > 0.0:
                     mass_loss_frac = (M_orbit_blow + M_orbit_sink) / cfg.initial.mass_total
+                time_s_end = time - max(orbit_time_accum_before - t_orb_step, 0.0)
                 orbit_rollup_rows.append(
                     {
                         "orbit_index": orbits_completed,
                         "time_s": time,
+                        "time_s_end": time_s_end,
                         "t_orb_s": t_orb_step,
                         "M_out_orbit": M_orbit_blow,
                         "M_sink_orbit": M_orbit_sink,
@@ -1189,9 +1662,19 @@ def run_zero_d(cfg: Config, *, enforce_mass_budget: bool = False) -> None:
                     "sigma_loss_sublimation_kg_m2": delta_sigma_sub,
                     "M_loss_components_Mmars": {
                         "blowout": M_loss_cum,
+                        "blowout_surface_solid_marsRP": M_loss_cum,
                         "sinks": M_sink_cum,
                         "total": M_loss_cum + M_sink_cum,
                     },
+                    "phase_state": phase_state_last,
+                    "phase_method": phase_method_last,
+                    "phase_reason": phase_reason_last,
+                    "phase_f_vap": phase_f_vap_last,
+                    "tau_mars_line_of_sight": tau_los_last,
+                    "tau_gate_blocked": tau_gate_block_last,
+                    "sink_selected": sink_selected_last,
+                    "hydro_timescale_s": _safe_float(hydro_timescale_last),
+                    "mass_loss_hydro_step": mass_loss_hydro_step,
                     "sinks_mode": cfg.sinks.mode,
                     "enable_sublimation": cfg.sinks.enable_sublimation,
                     "enable_gas_drag": cfg.sinks.enable_gas_drag,
@@ -1213,6 +1696,28 @@ def run_zero_d(cfg: Config, *, enforce_mass_budget: bool = False) -> None:
             )
 
         tau = kappa_surf * sigma_surf
+        sigma_diag = sigma_surf_reference if freeze_sigma else sigma_surf
+        tau_eff_diag = None
+        if kappa_eff is not None and math.isfinite(kappa_eff):
+            tau_eff_diag = kappa_eff * sigma_diag
+        t_coll_step = None
+        if collisions_active and tau_last is not None and tau_last > TAU_MIN and Omega_step > 0.0:
+            try:
+                t_coll_candidate = surface.wyatt_tcoll_S1(float(tau_last), Omega_step)
+            except Exception:
+                t_coll_candidate = None
+            else:
+                if math.isfinite(t_coll_candidate) and t_coll_candidate > 0.0:
+                    t_coll_step = float(t_coll_candidate)
+        ts_ratio_value = None
+        if (
+            t_coll_step is not None
+            and t_coll_step > 0.0
+            and t_blow_step is not None
+            and t_blow_step > 0.0
+            and math.isfinite(t_blow_step)
+        ):
+            ts_ratio_value = float(t_blow_step / t_coll_step)
         record = {
             "time": time,
             "dt": dt,
@@ -1222,19 +1727,28 @@ def run_zero_d(cfg: Config, *, enforce_mass_budget: bool = False) -> None:
             "r_m": r,
             "r_RM": r_RM,
             "r_source": r_source,
+            "T_M_used": T_use,
+            "T_M_source": T_M_source,
+            "rad_flux_Mars": rad_flux_step,
             "dt_over_t_blow": dt_over_t_blow,
             "tau": tau,
             "a_blow_step": a_blow_step,
             "a_blow": a_blow_step,
+            "a_blow_at_smin": a_blow_step,
             "s_min": s_min_effective,
             "kappa": kappa_eff,
             "Qpr_mean": qpr_mean_step,
+            "Q_pr_at_smin": qpr_mean_step,
             "beta_at_smin_config": beta_at_smin_config,
             "beta_at_smin_effective": beta_at_smin_effective,
+            "beta_at_smin": beta_at_smin_effective,
             "beta_threshold": beta_threshold,
             "Sigma_surf": sigma_surf,
             "Sigma_tau1": sigma_tau1_limit,
+            "Sigma_tau1_active": sigma_tau1_active_last,
             "outflux_surface": outflux_surface,
+            "t_solid_s": t_solid_step,
+            "blowout_gate_factor": gate_factor,
             "sink_flux_surface": sink_flux_surface,
             "t_blow": t_blow_step,
             "prod_subblow_area_rate": prod_rate_last,
@@ -1255,6 +1769,11 @@ def run_zero_d(cfg: Config, *, enforce_mass_budget: bool = False) -> None:
             "mass_lost_by_sinks": M_sink_cum,
             "mass_lost_sinks_step": mass_loss_sinks_step_total,
             "mass_lost_sublimation_step": mass_loss_sublimation_step,
+            "mass_lost_hydro_step": mass_loss_hydro_step,
+            "mass_lost_surface_solid_marsRP_step": mass_loss_surface_solid_step,
+            "M_loss_rp_mars": M_loss_cum,
+            "M_loss_surface_solid_marsRP": M_loss_cum,
+            "M_loss_hydro": M_hydro_cum,
             "fast_blowout_factor": fast_blowout_factor_record,
             "fast_blowout_corrected": fast_blowout_applied,
             "fast_blowout_flag_gt3": fast_blowout_flag,
@@ -1273,7 +1792,38 @@ def run_zero_d(cfg: Config, *, enforce_mass_budget: bool = False) -> None:
             "T_source": T_M_source,
             "T_M_used": T_use,
             "ds_dt_sublimation": ds_dt_val,
+            "phase_state": phase_state_last,
+            "phase_f_vap": phase_f_vap_last,
+            "phase_method": phase_method_last,
+            "phase_reason": phase_reason_last,
+            "tau_mars_line_of_sight": tau_los_last,
+            "tau_gate_blocked": tau_gate_block_last,
+            "blowout_beta_gate": beta_gate_last,
+            "blowout_phase_allowed": phase_allows_last,
+            "blowout_layer_mode": blowout_layer_mode,
+            "blowout_target_phase": blowout_target_phase,
+            "sink_selected": sink_selected_last,
         }
+        if phase7_enabled:
+            record.update(
+                {
+                    "mloss_blowout_rate": M_out_dot,
+                    "mloss_sink_rate": M_sink_dot,
+                    "mloss_total_rate": dM_dt_surface_total,
+                    "cum_mloss_blowout": M_loss_cum,
+                    "cum_mloss_sink": M_sink_cum,
+                    "cum_mloss_total": M_loss_cum + M_sink_cum,
+                    "t_coll": t_coll_step,
+                    "ts_ratio": ts_ratio_value,
+                    "beta_eff": beta_at_smin_effective,
+                    "kappa_eff": kappa_eff,
+                    "tau_eff": tau_eff_diag,
+                }
+            )
+            phase7_total_rate_track.append(dM_dt_surface_total)
+            phase7_total_rate_time_track.append(time)
+            if ts_ratio_value is not None and math.isfinite(ts_ratio_value):
+                phase7_ts_ratio_track.append(ts_ratio_value)
         if evolve_min_size_enabled:
             record["s_min_evolved"] = s_min_evolved_value
         records.append(record)
@@ -1301,10 +1851,6 @@ def run_zero_d(cfg: Config, *, enforce_mass_budget: bool = False) -> None:
         if phi_effective_diag is None and kappa_surf > 0.0:
             phi_effective_diag = kappa_eff / kappa_surf
 
-        sigma_diag = sigma_surf_reference if freeze_sigma else sigma_surf
-        tau_eff_diag = None
-        if kappa_eff is not None and math.isfinite(kappa_eff):
-            tau_eff_diag = kappa_eff * sigma_diag
         s_peak_value = _psd_mass_peak()
         F_abs_qpr = F_abs_geom * qpr_mean_step
         diag_entry = {
@@ -1313,12 +1859,15 @@ def run_zero_d(cfg: Config, *, enforce_mass_budget: bool = False) -> None:
             "dt_over_t_blow": dt_over_t_blow,
             "r_m_used": r,
             "r_RM_used": r_RM,
+            "T_M_used": T_use,
+            "rad_flux_Mars": rad_flux_step,
             "F_abs_geom": F_abs_geom,
             "F_abs_geom_qpr": F_abs_qpr,
             "F_abs": F_abs_qpr,
             "Omega_s": Omega_step,
             "t_orb_s": t_orb_step,
             "t_blow_s": t_blow_step,
+            "t_solid_s": t_solid_step,
             "t_sink_total_s": _safe_float(t_sink_total_value),
             "t_sink_surface_s": float(t_sink_step) if t_sink_step is not None else None,
             "t_sink_sublimation_s": _safe_float(sink_result.components.get("sublimation")),
@@ -1327,6 +1876,7 @@ def run_zero_d(cfg: Config, *, enforce_mass_budget: bool = False) -> None:
             "mass_lost_by_sinks": M_sink_cum,
             "mass_loss_sublimation_step": mass_loss_sublimation_step,
             "sigma_tau1": sigma_tau1_limit,
+            "sigma_tau1_active": sigma_tau1_active_last,
             "tau_vertical": tau_last,
             "kappa_eff": kappa_eff,
             "kappa_surf": kappa_surf,
@@ -1336,6 +1886,9 @@ def run_zero_d(cfg: Config, *, enforce_mass_budget: bool = False) -> None:
             "kappa_Planck": kappa_surf,
             "tau_eff": tau_eff_diag,
             "s_min": s_min_effective,
+            "a_blow_at_smin": a_blow_step,
+            "beta_at_smin": beta_at_smin_effective,
+            "Q_pr_at_smin": qpr_mean_step,
             "s_peak": s_peak_value,
             "area_m2": area,
             "prod_subblow_area_rate": prod_rate_last,
@@ -1347,6 +1900,23 @@ def run_zero_d(cfg: Config, *, enforce_mass_budget: bool = False) -> None:
             "M_out_cum": M_loss_cum,
             "M_sink_cum": M_sink_cum,
             "M_loss_cum": M_loss_cum + M_sink_cum,
+            "M_loss_surface_solid_marsRP": M_loss_cum,
+            "M_hydro_cum": M_hydro_cum,
+            "phase_state": phase_state_last,
+            "phase_method": phase_method_last,
+            "phase_reason": phase_reason_last,
+            "phase_f_vap": phase_f_vap_last,
+            "phase_payload": phase_payload_last,
+            "tau_mars_line_of_sight": tau_los_last,
+            "tau_gate_blocked": tau_gate_block_last,
+            "blowout_beta_gate": beta_gate_last,
+            "blowout_phase_allowed": phase_allows_last,
+            "blowout_layer_mode": blowout_layer_mode,
+            "blowout_target_phase": blowout_target_phase,
+            "sink_selected": sink_selected_last,
+            "hydro_timescale_s": _safe_float(hydro_timescale_last),
+            "mass_loss_surface_solid_step": mass_loss_surface_solid_step,
+            "blowout_gate_factor": gate_factor,
         }
         diagnostics.append(diag_entry)
 
@@ -1365,8 +1935,20 @@ def run_zero_d(cfg: Config, *, enforce_mass_budget: bool = False) -> None:
             "mass_diff": mass_diff,
             "error_percent": error_percent,
             "tolerance_percent": MASS_BUDGET_TOLERANCE_PERCENT,
+            "mass_loss_rp_mars": M_loss_cum,
+            "mass_loss_hydro_drag": M_hydro_cum,
+            "mass_loss_surface_solid_marsRP": M_loss_cum,
         }
+        if phase7_enabled:
+            channels_total = M_loss_cum + M_sink_cum
+            denom = abs(channels_total) if abs(channels_total) > 0.0 else 1.0
+            delta_channels = ((mass_lost - channels_total) / denom) * 100.0
+            budget_entry["delta_mloss_vs_channels"] = delta_channels
         mass_budget.append(budget_entry)
+
+        total_time_elapsed += dt
+        if tau_gate_block_last:
+            tau_gate_block_time += dt
 
         if (
             mass_initial != 0.0
@@ -1417,15 +1999,225 @@ def run_zero_d(cfg: Config, *, enforce_mass_budget: bool = False) -> None:
         diag_df = pd.DataFrame(diagnostics)
         writer.write_parquet(diag_df, outdir / "series" / "diagnostics.parquet")
     if orbit_rollup_enabled:
-        writer.write_orbit_rollup(orbit_rollup_rows, outdir / "orbit_rollup.csv")
+        rows_for_rollup = orbit_rollup_rows
+        required_phase7_cols = {
+            "mloss_blowout_rate",
+            "mloss_sink_rate",
+            "mloss_total_rate",
+            "ts_ratio",
+            "dt",
+            "time",
+            "blowout_gate_factor",
+        }
+        if phase7_enabled and orbit_rollup_rows and not df.empty and required_phase7_cols.issubset(set(df.columns)):
+            df_end = df["time"].to_numpy()
+            df_start = (df["time"] - df["dt"]).to_numpy()
+            blow_rates = df["mloss_blowout_rate"].to_numpy()
+            sink_rates = df["mloss_sink_rate"].to_numpy()
+            total_rates = df["mloss_total_rate"].to_numpy()
+            ts_ratio_series = df["ts_ratio"].to_numpy()
+            gate_factor_series = df["blowout_gate_factor"].to_numpy()
+
+            def _safe_peak(arr: np.ndarray, mask: np.ndarray) -> float:
+                subset = arr[mask]
+                subset = subset[np.isfinite(subset)]
+                if subset.size == 0:
+                    return float("nan")
+                return float(np.max(subset))
+
+            def _safe_median(arr: np.ndarray, mask: np.ndarray) -> float:
+                subset = arr[mask]
+                subset = subset[np.isfinite(subset)]
+                if subset.size == 0:
+                    return float("nan")
+                return float(np.median(subset))
+            gate_factor_median_all = _safe_median(gate_factor_series, np.ones_like(gate_factor_series, dtype=bool))
+
+            rows_for_rollup = []
+            orbit_start_time = 0.0
+            for row in orbit_rollup_rows:
+                orbit_end_time = _safe_float(row.get("time_s_end"))
+                if orbit_end_time is None:
+                    t_orb_row = _safe_float(row.get("t_orb_s"))
+                    orbit_end_time = orbit_start_time + (t_orb_row if t_orb_row is not None else 0.0)
+                mask = (df_end > orbit_start_time) & (df_start <= orbit_end_time)
+                blow_peak = _safe_peak(blow_rates, mask)
+                sink_peak = _safe_peak(sink_rates, mask)
+                total_peak = _safe_peak(total_rates, mask)
+                ts_ratio_med = _safe_median(ts_ratio_series, mask)
+                gate_factor_med = _safe_median(gate_factor_series, mask)
+                if not math.isfinite(gate_factor_med):
+                    gate_factor_med = gate_factor_median_all
+                row_aug = dict(row)
+                row_aug["mloss_blowout_rate_mean"] = row.get("M_out_per_orbit")
+                row_aug["mloss_sink_rate_mean"] = row.get("M_sink_per_orbit")
+                row_aug["mloss_total_rate_mean"] = row.get("M_loss_per_orbit")
+                row_aug["mloss_blowout_rate_peak"] = blow_peak
+                row_aug["mloss_sink_rate_peak"] = sink_peak
+                row_aug["mloss_total_rate_peak"] = total_peak
+                row_aug["ts_ratio_median"] = ts_ratio_med
+                row_aug["gate_factor_median"] = gate_factor_med
+                rows_for_rollup.append(row_aug)
+                orbit_start_time = orbit_end_time
+        writer.write_orbit_rollup(rows_for_rollup, outdir / "orbit_rollup.csv")
     mass_budget_max_error = max((entry["error_percent"] for entry in mass_budget), default=0.0)
     dt_over_t_blow_median = float("nan")
     if not df.empty and "dt_over_t_blow" in df.columns:
         dt_over_t_blow_median = float(df["dt_over_t_blow"].median())
+
+    def _series_stats(values: List[float]) -> tuple[float, float, float]:
+        if not values:
+            nan = float("nan")
+            return nan, nan, nan
+        arr = np.asarray(values, dtype=float)
+        arr = arr[np.isfinite(arr)]
+        if arr.size == 0:
+            nan = float("nan")
+            return nan, nan, nan
+        return float(np.min(arr)), float(np.median(arr)), float(np.max(arr))
+
+    T_min, T_median, T_max = _series_stats(temperature_track)
+    beta_min, beta_median, beta_max = _series_stats(beta_track)
+    ablow_min, ablow_median, ablow_max = _series_stats(ablow_track)
+    gate_min, gate_median, gate_max = _series_stats(gate_factor_track)
+    tsolid_min, tsolid_median, tsolid_max = _series_stats(t_solid_track)
+    phase7_max_rate = float("nan")
+    phase7_max_rate_time = None
+    phase7_median_ts_ratio = float("nan")
+    tau_gate_block_fraction = (
+        float(tau_gate_block_time / total_time_elapsed)
+        if total_time_elapsed > 0.0
+        else float("nan")
+    )
+    if phase7_enabled:
+        for rate_val, time_val in zip(phase7_total_rate_track, phase7_total_rate_time_track):
+            if not math.isfinite(rate_val):
+                continue
+            if not math.isfinite(phase7_max_rate) or rate_val > phase7_max_rate:
+                phase7_max_rate = float(rate_val)
+                phase7_max_rate_time = float(time_val)
+        if phase7_ts_ratio_track:
+            ts_arr = np.asarray(phase7_ts_ratio_track, dtype=float)
+            ts_arr = ts_arr[np.isfinite(ts_arr)]
+            if ts_arr.size:
+                phase7_median_ts_ratio = float(np.median(ts_arr))
+    process_overview = {
+        "primary_process_cfg": primary_process_cfg,
+        "primary_process_resolved": primary_process,
+        "primary_scenario": primary_scenario,
+        "primary_field_explicit": primary_field_explicit,
+        "collisions_active": collisions_active,
+        "sinks_mode": sinks_mode_value,
+        "sinks_enabled_cfg": sinks_enabled_cfg,
+        "sinks_active": bool(sublimation_active_flag or sink_timescale_active),
+        "sink_timescale_active": sink_timescale_active,
+        "sublimation_dsdt_active": sublimation_active_flag,
+        "sublimation_sink_active": sink_opts.enable_sublimation and not enforce_collisions_only,
+        "gas_drag_sink_active": sink_opts.enable_gas_drag and not enforce_collisions_only,
+        "blowout_active": blowout_enabled,
+        "rp_blowout_enabled": rp_blowout_enabled,
+    }
+    wyatt_collisional_timescale_active = bool(
+        collisions_active and getattr(cfg.surface, "use_tcoll", True)
+    )
+    active_sinks_list: List[str] = []
+    if sink_opts.enable_sublimation:
+        active_sinks_list.append("sublimation")
+    if sink_opts.enable_gas_drag:
+        active_sinks_list.append("gas_drag")
+    if getattr(hydro_cfg, "enable", False) and sink_timescale_active:
+        active_sinks_list.append("hydro_escape")
+    inner_scope_mode = (
+        "optically_thick_surface_only" if blowout_layer_mode == "surface_tau_le_1" else blowout_layer_mode
+    )
+    tau_gate_mode = "tau_clipped" if tau_gate_enabled else "off"
+    time_grid_summary = {
+        "t_start_s": 0.0,
+        "t_end_s": time_grid_info.get("t_end_seconds"),
+        "dt_s": time_grid_info.get("dt_step", dt),
+        "dt_nominal_s": time_grid_info.get("dt_nominal"),
+        "n_steps": time_grid_info.get("n_steps"),
+        "dt_mode": time_grid_info.get("dt_mode"),
+    }
+    limitations_list = [
+        "Inner-disk only; outer or highly eccentric debris is out of scope.",
+        "Radiation pressure source is fixed to Mars; solar/other external sources are ignored even when requested.",
+        f"Time horizon is short (~{analysis_window_years:.3g} yr); long-term tidal or viscous evolution is not modelled.",
+        "Collisional cascade and sublimation are toggled via single-process modes rather than a fully coupled solver.",
+        "Assumes an optically thick inner surface with tau<=1 clipping; vertical/outer tenuous structure is not resolved.",
+        "PSD uses a three-slope + wavy correction with blow-out/sublimation floors; no self-consistent halo is evolved.",
+    ]
+    scope_limitations_base = {
+        "scope": {
+            "region": scope_region,
+            "reference_radius_m": r,
+            "reference_radius_source": r_source,
+            "analysis_window_years": analysis_window_years,
+            "radiation_source": radiation_field,
+            "solar_radiation_enabled": False,
+            "solar_radiation_requested": solar_rp_requested,
+            "inner_disk_scope": inner_scope_flag,
+            "inner_disk_scope_mode": inner_scope_mode,
+            "tau_gate": {
+                "enabled": tau_gate_enabled,
+                "tau_max": tau_gate_threshold if tau_gate_enabled else None,
+                "mode": tau_gate_mode,
+            },
+            "shielding_mode": shielding_mode,
+            "time_grid_summary": time_grid_summary,
+        },
+        "active_physics": {
+            "primary_scenario": primary_scenario,
+            "single_process_mode": single_process_mode,
+            "collisions_active": collisions_active,
+            "sublimation_active": sublimation_active_flag,
+            "sinks_active": bool(sublimation_active_flag or sink_timescale_active),
+            "rp_blowout_active": blowout_enabled,
+            "wyatt_collisional_timescale_active": wyatt_collisional_timescale_active,
+            "active_sinks": active_sinks_list,
+        },
+        "limitations": limitations_list,
+    }
+    scope_limitations_summary = copy.deepcopy(scope_limitations_base)
+    scope_limitations_config = copy.deepcopy(scope_limitations_base)
+    scope_limitations_config["scope"].update(
+        {
+            "analysis_window_basis": time_grid_info.get("t_end_basis"),
+            "time_grid_dt_mode": time_grid_info.get("dt_mode"),
+            "radiation_use_mars_rp": mars_rp_enabled_cfg,
+            "radiation_use_solar_rp": solar_rp_requested,
+        }
+    )
+    scope_limitations_config["active_physics"].update(
+        {
+            "enforce_sublimation_only": enforce_sublimation_only,
+            "enforce_collisions_only": enforce_collisions_only,
+            "sinks_mode": sinks_mode_value,
+            "sinks_enabled_cfg": sinks_enabled_cfg,
+            "sink_timescale_active": sink_timescale_active,
+            "blowout_enabled_cfg": blowout_enabled_cfg,
+            "rp_blowout_enabled_cfg": rp_blowout_enabled,
+            "shielding_mode": shielding_mode,
+            "freeze_kappa": freeze_kappa,
+            "freeze_sigma": freeze_sigma,
+            "tau_gate_enabled": tau_gate_enabled,
+        }
+    )
+    scope_limitations_config["limitation_codes"] = [
+        "inner_disk_only",
+        "mars_rp_only",
+        "short_timescale",
+        "mode_switching_not_fully_coupled",
+        "optically_thick_surface",
+        "simplified_psd_floor",
+    ]
     summary = {
         "M_loss": (M_loss_cum + M_sink_cum),
         "M_loss_from_sinks": M_sink_cum,
         "M_loss_from_sublimation": M_sublimation_cum,
+        "M_loss_rp_mars": M_loss_cum,
+        "M_loss_surface_solid_marsRP": M_loss_cum,
+        "M_loss_hydro_escape": M_hydro_cum,
         "M_out_cum": M_loss_cum,
         "M_sink_cum": M_sink_cum,
         "orbits_completed": orbits_completed,
@@ -1435,6 +2227,7 @@ def run_zero_d(cfg: Config, *, enforce_mass_budget: bool = False) -> None:
         "beta_at_smin_effective": beta_at_smin_effective,
         "beta_at_smin": beta_at_smin_config if beta_at_smin_config is not None else beta_at_smin_effective,
         "s_blow_m": a_blow,
+        "blowout_gate_mode": blowout_gate_mode,
         "chi_blow_input": chi_config_str,
         "chi_blow_eff": chi_blow_eff,
         "rho_used": rho_used,
@@ -1444,6 +2237,24 @@ def run_zero_d(cfg: Config, *, enforce_mass_budget: bool = False) -> None:
         "T_M_used": T_use,
         "T_M_used[K]": T_use,
         "T_M_source": T_M_source,
+        "T_M_initial": temperature_track[0] if temperature_track else temp_runtime.initial_value,
+        "T_M_final": temperature_track[-1] if temperature_track else temp_runtime.initial_value,
+        "T_M_min": T_min,
+        "T_M_median": T_median,
+        "T_M_max": T_max,
+        "beta_at_smin_min": beta_min,
+        "beta_at_smin_median": beta_median,
+        "beta_at_smin_max": beta_max,
+        "a_blow_min": ablow_min,
+        "a_blow_median": ablow_median,
+        "a_blow_max": ablow_max,
+        "blowout_gate_factor_min": gate_min,
+        "blowout_gate_factor_median": gate_median,
+        "blowout_gate_factor_max": gate_max,
+        "t_solid_min": tsolid_min,
+        "t_solid_median": tsolid_median,
+        "t_solid_max": tsolid_max,
+        "temperature_driver": temp_runtime.provenance,
         "r_m_used": r,
         "r_RM_used": r_RM,
         "r_source": r_source,
@@ -1458,6 +2269,12 @@ def run_zero_d(cfg: Config, *, enforce_mass_budget: bool = False) -> None:
         "s_min_effective_gt_config": s_min_effective > s_min_config,
         "s_min_components": s_min_components,
         "enforce_mass_budget": enforce_mass_budget,
+        "physics_mode": physics_mode,
+        "physics_mode_source": physics_mode_source,
+        "single_process_mode": single_process_mode,
+        "single_process_mode_source": single_process_mode_source,
+        "primary_scenario": primary_scenario,
+        "process_overview": process_overview,
         "time_grid": {
             "basis": time_grid_info.get("t_end_basis"),
             "t_end_input": time_grid_info.get("t_end_input"),
@@ -1470,6 +2287,61 @@ def run_zero_d(cfg: Config, *, enforce_mass_budget: bool = False) -> None:
             "dt_sources_s": time_grid_info.get("dt_sources"),
             "dt_capped_by_max_steps": time_grid_info.get("dt_capped_by_max_steps", False),
         },
+    }
+    summary["scope_limitations"] = scope_limitations_summary
+    if phase7_enabled:
+        summary.update(
+            {
+                "M_loss_blowout_total": M_loss_cum,
+                "M_loss_sink_total": M_sink_cum,
+                "M_loss_total": M_loss_cum + M_sink_cum,
+                "max_mloss_rate": phase7_max_rate,
+                "max_mloss_rate_time": phase7_max_rate_time,
+                "median_ts_ratio": phase7_median_ts_ratio,
+                "median_gate_factor": gate_median,
+                "tau_gate_blocked_time_fraction": tau_gate_block_fraction,
+                "phase7_diagnostics_version": phase7_schema_version,
+            }
+        )
+    summary["inner_disk_scope"] = inner_scope_flag
+    summary["analysis_window_years"] = analysis_window_years
+    summary["radiation_field"] = radiation_field
+    summary["primary_process"] = primary_process
+    summary["primary_scenario"] = primary_scenario
+    summary["collisions_active"] = collisions_active
+    summary["sinks_active"] = bool(sublimation_active_flag or sink_timescale_active)
+    summary["sublimation_active"] = sublimation_active_flag
+    summary["blowout_active"] = blowout_enabled
+    summary["state_tagging_enabled"] = state_tagging_enabled
+    summary["state_phase_tag"] = state_phase_tag
+    summary["single_process"] = {
+        "mode": single_process_mode,
+        "source": single_process_mode_source,
+    }
+    summary["physics"] = {
+        "mode": physics_mode,
+        "source": physics_mode_source,
+    }
+    summary["phase_branching"] = {
+        "enabled": phase_controller.enabled,
+        "source": phase_controller.source,
+        "entrypoint": phase_controller.entrypoint,
+        "phase_usage_time_s": {k: float(v) for k, v in phase_usage.items()},
+        "phase_method_usage_time_s": {k: float(v) for k, v in phase_method_usage.items()},
+        "sink_branch_usage_time_s": {k: float(v) for k, v in sink_branch_usage.items()},
+    }
+    summary["radiation_tau_gate"] = {
+        "enabled": tau_gate_enabled,
+        "tau_max": tau_gate_threshold if tau_gate_enabled else None,
+    }
+    summary["solar_radiation"] = {
+        "enabled": False,
+        "requested": solar_rp_requested,
+        "note": (
+            "Solar radiation disabled (Mars-only scope)"
+            if radiation_field == "mars"
+            else "Radiation disabled via radiation.source='off'"
+        ),
     }
     if orbits_completed > 0:
         summary["M_out_mean_per_orbit"] = M_loss_cum / orbits_completed
@@ -1521,6 +2393,8 @@ def run_zero_d(cfg: Config, *, enforce_mass_budget: bool = False) -> None:
         "run_inputs": {
             "T_M_used": T_use,
             "T_M_source": T_M_source,
+            "T_M_initial": temperature_track[0] if temperature_track else temp_runtime.initial_value,
+            "T_M_final": temperature_track[-1] if temperature_track else temp_runtime.initial_value,
             "rho_used": rho_used,
             "Q_pr_used": qpr_mean,
             "Q_pr_blow": qpr_blow_final,
@@ -1533,6 +2407,8 @@ def run_zero_d(cfg: Config, *, enforce_mass_budget: bool = False) -> None:
             "rng_seed_expr": seed_expr,
             "rng_seed_basis": seed_basis,
             "input_config_path": str(config_source_path) if config_source_path is not None else None,
+            "physics_mode": physics_mode,
+            "physics_mode_source": physics_mode_source,
         },
         "init_ei": {
             "e_mode": cfg.dynamics.e_mode,
@@ -1567,6 +2443,10 @@ def run_zero_d(cfg: Config, *, enforce_mass_budget: bool = False) -> None:
         },
         "physics_controls": {
             "blowout_enabled": blowout_enabled,
+            "rp_blowout_enabled": rp_blowout_enabled,
+            "blowout_target_phase": blowout_target_phase,
+            "blowout_layer": blowout_layer_mode,
+            "blowout_gate_mode": blowout_gate_mode,
             "freeze_kappa": freeze_kappa,
             "freeze_sigma": freeze_sigma,
             "shielding_mode": shielding_mode,
@@ -1574,8 +2454,74 @@ def run_zero_d(cfg: Config, *, enforce_mass_budget: bool = False) -> None:
             "shielding_sigma_tau1_fixed": sigma_tau1_fixed_cfg,
             "shielding_table_path": str(phi_table_path_resolved) if phi_table_path_resolved is not None else None,
             "psd_floor_mode": psd_floor_mode,
+            "phase_enabled": phase_controller.enabled,
+            "phase_source": phase_controller.source,
+            "phase_entrypoint": phase_controller.entrypoint,
+            "tau_gate_enabled": tau_gate_enabled,
+            "tau_gate_tau_max": tau_gate_threshold if tau_gate_enabled else None,
+            "hydro_escape_strength": getattr(hydro_cfg, "strength", None),
+            "hydro_escape_temp_power": getattr(hydro_cfg, "temp_power", None),
+            "radiation_use_mars_rp": mars_rp_enabled_cfg,
+            "radiation_use_solar_rp": solar_rp_requested,
         },
     }
+    run_config["scope_limitations"] = scope_limitations_config
+    run_config["physics_mode"] = physics_mode
+    run_config["physics_mode_source"] = physics_mode_source
+    run_config["scope_controls"] = {
+        "region": scope_region,
+        "analysis_window_years": analysis_window_years,
+        "inner_disk_scope": inner_scope_flag,
+    }
+    run_config["process_controls"] = {
+        "primary_process": primary_process,
+        "primary_process_cfg": primary_process_cfg,
+        "primary_scenario": primary_scenario,
+        "primary_field_explicit": primary_field_explicit,
+        "state_tagging_enabled": state_tagging_enabled,
+        "state_phase_tag": state_phase_tag,
+        "physics_mode": physics_mode,
+        "physics_mode_source": physics_mode_source,
+        "single_process_mode": single_process_mode,
+        "single_process_mode_source": single_process_mode_source,
+        "collisions_active": collisions_active,
+        "sinks_mode": sinks_mode_value,
+        "sinks_enabled_cfg": sinks_enabled_cfg,
+        "sinks_active": bool(sublimation_active_flag or sink_timescale_active),
+        "sublimation_active": sublimation_active_flag,
+        "sink_timescale_active": sink_timescale_active,
+        "blowout_active": blowout_enabled,
+        "rp_blowout_enabled": rp_blowout_enabled,
+    }
+    run_config["single_process_resolution"] = {
+        "resolved_mode": single_process_mode,
+        "source": single_process_mode_source,
+        "inputs": {
+            "cli": mode_input_cli,
+            "physics": mode_input_cfg,
+            "physics_mode_cfg": physics_mode_cfg,
+            "single_process_mode_cfg": single_process_mode_cfg,
+            "legacy_modes": mode_input_legacy,
+        },
+    }
+    run_config["process_overview"] = process_overview
+    run_config["solar_radiation"] = {
+        "enabled": False,
+        "requested": solar_rp_requested,
+        "note": (
+            "Solar radiation disabled (Mars-only scope)"
+            if radiation_field == "mars"
+            else "Radiation disabled via radiation.source='off'"
+        ),
+    }
+    temp_prov = dict(temp_runtime.provenance)
+    temp_prov.setdefault("mode", temp_runtime.mode)
+    temp_prov.setdefault("enabled", temp_runtime.enabled)
+    temp_prov.setdefault("source", temp_runtime.source)
+    run_config["temperature_driver"] = temp_prov
+    run_config["T_M_used"] = float(T_use)
+    run_config["rho_used"] = float(rho_used)
+    run_config["Q_pr_used"] = float(qpr_mean)
     qpr_source = "override" if qpr_override is not None else "table"
     run_config["radiation_provenance"] = {
         "qpr_table_path": str(qpr_table_path_resolved) if qpr_table_path_resolved is not None else None,
@@ -1583,6 +2529,10 @@ def run_zero_d(cfg: Config, *, enforce_mass_budget: bool = False) -> None:
         "Q_pr_source": qpr_source,
         "Q_pr_blow": qpr_blow_final,
         "T_M_source": T_M_source,
+        "radiation_field": radiation_field,
+        "temperature_source": temp_runtime.source,
+        "use_mars_rp": mars_rp_enabled_cfg,
+        "use_solar_rp": solar_rp_requested,
     }
     psat_selection = getattr(sub_params, "_psat_last_selection", None) or {}
     psat_model_resolved = (
@@ -1646,6 +2596,251 @@ def run_zero_d(cfg: Config, *, enforce_mass_budget: bool = False) -> None:
         )
 
 
+def _run_phase5_variant(
+    base_cfg: Config,
+    variant: str,
+    mode: str,
+    base_outdir: Path,
+    duration_years: float,
+    *,
+    enforce_mass_budget: bool,
+) -> _Phase5VariantResult:
+    """Execute a single-process variant run and capture its artifacts."""
+
+    variant_cfg = _clone_config(base_cfg)
+    if hasattr(variant_cfg, "phase5"):
+        variant_cfg.phase5.compare.enable = False
+    variant_cfg.single_process_mode = mode
+    if hasattr(variant_cfg, "modes"):
+        mode_value = "sublimation_only" if mode == "sublimation_only" else "collisional_only"
+        try:
+            variant_cfg.modes.single_process = mode_value
+        except Exception:
+            pass
+    if duration_years > 0.0:
+        variant_cfg.numerics.t_end_years = duration_years
+        variant_cfg.numerics.t_end_orbits = None
+        if hasattr(variant_cfg, "scope") and variant_cfg.scope is not None:
+            variant_cfg.scope.analysis_years = duration_years
+    variant_dir = base_outdir / "variants" / f"variant={variant}"
+    variant_dir.mkdir(parents=True, exist_ok=True)
+    variant_cfg.io.outdir = str(variant_dir)
+    logger.info(
+        "Phase5 comparison: running variant=%s duration=%.3f yr outdir=%s",
+        variant,
+        duration_years,
+        variant_dir,
+    )
+    run_zero_d(
+        variant_cfg,
+        enforce_mass_budget=enforce_mass_budget,
+        single_process_override=mode,
+        single_process_source="phase5_compare",
+    )
+    summary_path = variant_dir / "summary.json"
+    run_config_path = variant_dir / "run_config.json"
+    summary = _read_json(summary_path)
+    run_config_payload = _read_json(run_config_path)
+    series_paths: Dict[str, Path] = {}
+    for name in ("run.parquet", "diagnostics.parquet", "psd_hist.parquet"):
+        candidate = variant_dir / "series" / name
+        if candidate.exists():
+            series_paths[name] = candidate
+    mass_budget_path = variant_dir / "checks" / "mass_budget.csv"
+    if not mass_budget_path.exists():
+        mass_budget_path = None
+    orbit_rollup_path = variant_dir / "orbit_rollup.csv"
+    if not orbit_rollup_path.exists():
+        orbit_rollup_path = None
+    return _Phase5VariantResult(
+        variant=variant,
+        mode=mode,
+        outdir=variant_dir,
+        summary=summary,
+        run_config=run_config_payload,
+        series_paths=series_paths,
+        mass_budget_path=mass_budget_path,
+        orbit_rollup_path=orbit_rollup_path,
+    )
+
+
+def _write_phase5_comparison_products(
+    base_outdir: Path,
+    duration_years: float,
+    results: List[_Phase5VariantResult],
+) -> None:
+    """Aggregate per-variant artifacts into the comparison outputs."""
+
+    if not results:
+        raise RuntimeError("Phase5 comparison runner requires at least one variant result")
+    base_outdir.mkdir(parents=True, exist_ok=True)
+    series_names = ("run.parquet", "diagnostics.parquet", "psd_hist.parquet")
+    run_tables: Dict[str, pd.DataFrame] = {}
+    for name in series_names:
+        frames: List[pd.DataFrame] = []
+        for res in results:
+            path = res.series_paths.get(name)
+            if path is None or not path.exists():
+                continue
+            df = pd.read_parquet(path)
+            if name == "run.parquet":
+                run_tables[res.variant] = df
+            frames.append(df.assign(variant=res.variant, single_process_mode=res.mode))
+        if frames:
+            combined = pd.concat(frames, ignore_index=True)
+            writer.write_parquet(combined, base_outdir / "series" / name)
+
+    budget_frames: List[pd.DataFrame] = []
+    for res in results:
+        path = res.mass_budget_path
+        if path is None or not path.exists():
+            continue
+        df = pd.read_csv(path)
+        df["variant"] = res.variant
+        df["single_process_mode"] = res.mode
+        budget_frames.append(df)
+    if budget_frames:
+        checks_dir = base_outdir / "checks"
+        checks_dir.mkdir(parents=True, exist_ok=True)
+        pd.concat(budget_frames, ignore_index=True).to_csv(
+            checks_dir / "mass_budget.csv", index=False
+        )
+
+    anchor_res = results[0]
+    if anchor_res.orbit_rollup_path and anchor_res.orbit_rollup_path.exists():
+        destination = base_outdir / "orbit_rollup.csv"
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(anchor_res.orbit_rollup_path, destination)
+
+    def _mean_from_df(df: Optional[pd.DataFrame], column: str) -> float:
+        if df is None or column not in df or df.empty:
+            return float("nan")
+        return float(df[column].mean())
+
+    def _final_value(df: Optional[pd.DataFrame], column: str) -> Optional[float]:
+        if df is None or column not in df or df.empty:
+            return None
+        series = df[column].dropna()
+        if series.empty:
+            return None
+        return float(series.iloc[-1])
+
+    comparison_rows: List[Dict[str, Any]] = []
+    for res in results:
+        df = run_tables.get(res.variant)
+        summary = res.summary
+        m_loss_sinks = float(summary.get("M_loss_from_sinks", 0.0) or 0.0)
+        m_loss_sub = float(summary.get("M_loss_from_sublimation", 0.0) or 0.0)
+        comparison_rows.append(
+            {
+                "variant": res.variant,
+                "single_process_mode": res.mode,
+                "duration_yr": float(summary.get("analysis_window_years", duration_years)),
+                "M_loss_total": float(summary.get("M_loss", float("nan"))),
+                "M_loss_blowout": float(summary.get("M_loss_rp_mars", 0.0) or 0.0),
+                "M_loss_other_sinks": max(m_loss_sinks - m_loss_sub, 0.0),
+                "beta_mean": _mean_from_df(df, "beta_at_smin"),
+                "a_blow_mean": _mean_from_df(df, "a_blow"),
+                "s_min_final": _final_value(df, "s_min"),
+                "tau1_area_final": _final_value(df, "Sigma_tau1"),
+                "notes": f"{res.variant} variant",
+            }
+        )
+    if comparison_rows:
+        series_dir = base_outdir / "series"
+        series_dir.mkdir(parents=True, exist_ok=True)
+        pd.DataFrame(comparison_rows).to_csv(
+            series_dir / "orbit_rollup_comparison.csv", index=False
+        )
+
+    combined_summary = copy.deepcopy(anchor_res.summary)
+    phase5_section = combined_summary.setdefault("phase5", {})
+    variant_payloads: List[Dict[str, Any]] = []
+    for res in results:
+        variant_summary = res.summary
+        config_hash = _hash_payload(res.run_config)
+        s_min_components = variant_summary.get("s_min_components", {})
+        variants_entry = {
+            "variant": res.variant,
+            "single_process_mode": res.mode,
+            "outdir": str(res.outdir),
+            "summary_path": str(res.outdir / "summary.json"),
+            "run_config_path": str(res.outdir / "run_config.json"),
+            "config_hash_sha256": config_hash,
+            "analysis_years": variant_summary.get("analysis_window_years"),
+            "r_m_used": variant_summary.get("r_m_used"),
+            "s_min_initial": variant_summary.get("s_min_config", s_min_components.get("config")),
+            "M_loss": variant_summary.get("M_loss"),
+            "M_loss_blowout": variant_summary.get("M_loss_rp_mars"),
+            "M_loss_sinks": variant_summary.get("M_loss_from_sinks"),
+            "M_loss_sublimation": variant_summary.get("M_loss_from_sublimation"),
+        }
+        variant_payloads.append(variants_entry)
+    phase5_section["compare"] = {
+        "enabled": True,
+        "duration_years": duration_years,
+        "default_variant": anchor_res.variant,
+        "variants": variant_payloads,
+        "orbit_rollup_comparison_path": str(base_outdir / "series" / "orbit_rollup_comparison.csv"),
+    }
+    combined_summary["comparison_mode"] = "phase5_single_process"
+    combined_summary["comparison_variants"] = [res.variant for res in results]
+    writer.write_summary(combined_summary, base_outdir / "summary.json")
+
+    combined_run_config = copy.deepcopy(anchor_res.run_config)
+    combined_run_config["comparison_mode"] = "phase5_single_process"
+    combined_run_config["phase5_compare"] = {
+        "duration_years": duration_years,
+        "variants": [
+            {
+                "variant": res.variant,
+                "single_process_mode": res.mode,
+                "outdir": str(res.outdir),
+                "summary_path": str(res.outdir / "summary.json"),
+                "run_config_path": str(res.outdir / "run_config.json"),
+                "config_hash_sha256": _hash_payload(res.run_config),
+            }
+            for res in results
+        ],
+    }
+    writer.write_run_config(combined_run_config, base_outdir / "run_config.json")
+
+
+def run_phase5_comparison(
+    cfg: Config,
+    *,
+    enforce_mass_budget: bool = False,
+    variants_spec: Optional[List[Dict[str, str]]] = None,
+) -> None:
+    """Run the Phase 5 dual single-process comparison workflow."""
+
+    compare_cfg = getattr(getattr(cfg, "phase5", None), "compare", None)
+    variants = variants_spec or _prepare_phase5_variants(compare_cfg)
+    duration_years = float(getattr(compare_cfg, "duration_years", 0.0) or 0.0)
+    if duration_years <= 0.0:
+        scope_cfg = getattr(cfg, "scope", None)
+        duration_years = float(getattr(scope_cfg, "analysis_years", 2.0) or 2.0)
+    base_outdir = Path(cfg.io.outdir)
+    logger.info(
+        "Phase5 comparison enabled: duration=%.3f yr base_outdir=%s",
+        duration_years,
+        base_outdir,
+    )
+    results: List[_Phase5VariantResult] = []
+    for spec in variants:
+        results.append(
+            _run_phase5_variant(
+                cfg,
+                spec["label"],
+                spec["mode"],
+                base_outdir,
+                duration_years,
+                enforce_mass_budget=enforce_mass_budget,
+            )
+        )
+    _write_phase5_comparison_products(base_outdir, duration_years, results)
+
+
 def main(argv: Optional[List[str]] = None) -> None:
     """Command line entry point."""
 
@@ -1663,6 +2858,16 @@ def main(argv: Optional[List[str]] = None) -> None:
         "--sinks",
         choices=["none", "sublimation"],
         help="Override sinks.mode from the CLI (defaults to configuration file)",
+    )
+    parser.add_argument(
+        "--single-process-mode",
+        choices=["off", "sublimation_only", "collisions_only"],
+        help="Override physics.single_process_mode from the CLI",
+    )
+    parser.add_argument(
+        "--compare-single-processes",
+        action="store_true",
+        help="Run both single-process variants sequentially for comparison output.",
     )
     parser.add_argument(
         "--override",
@@ -1683,12 +2888,36 @@ def main(argv: Optional[List[str]] = None) -> None:
     cfg = load_config(args.config, overrides=override_list)
     if args.sinks is not None:
         cfg.sinks.mode = args.sinks
-    run_zero_d(cfg, enforce_mass_budget=args.enforce_mass_budget)
+    if args.single_process_mode is not None:
+        cfg.single_process_mode = args.single_process_mode
+    compare_block = getattr(getattr(cfg, "phase5", None), "compare", None)
+    compare_config_enabled = bool(getattr(compare_block, "enable", False)) if compare_block else False
+    compare_requested = bool(args.compare_single_processes or compare_config_enabled)
+    if compare_requested:
+        if compare_block is None:
+            raise ValueError(
+                "--compare-single-processes requires phase5.compare to define mode_a/mode_b"
+            )
+        variants_spec = _prepare_phase5_variants(compare_block)
+        if args.compare_single_processes:
+            compare_block.enable = True
+        run_phase5_comparison(
+            cfg,
+            enforce_mass_budget=args.enforce_mass_budget,
+            variants_spec=variants_spec,
+        )
+    else:
+        run_zero_d(
+            cfg,
+            enforce_mass_budget=args.enforce_mass_budget,
+            single_process_override=args.single_process_mode,
+            single_process_source="cli" if args.single_process_mode is not None else None,
+        )
 
 
-if __name__ == "__main__":  # pragma: no cover - CLI entry point
-    logging.basicConfig(level=logging.INFO)
-    main()
+    if __name__ == "__main__":  # pragma: no cover - CLI entry point
+        logging.basicConfig(level=logging.INFO)
+        main()
 
 __all__ = [
     "RunConfig",
@@ -1697,6 +2926,7 @@ __all__ = [
     "run_n_steps",
     "load_config",
     "run_zero_d",
+    "run_phase5_comparison",
     "main",
     "MassBudgetViolationError",
 ]

@@ -1,4 +1,6 @@
 目的火星ロッシュ限界内の高密度ダスト円盤を対象に、
+
+> **For AI Agents**: Before starting any task, you MUST read `analysis/AI_USAGE.md`. It contains critical protocols for handling references (`UNKNOWN_REF_REQUESTS`), documentation standards, and automated verification workflows. Failure to follow these protocols will result in rejected work.
 * 内部（破砕のみSmoluchowski）で生成されるblow‑out未満の小粒子供給（式：C1–C3, P1, F1–F2, D1–D2）と、
 * 表層（剥ぎ取り）での放射圧による剥離・流出（式：R1–R3, S0–S1）、を2年間カップリングして**$\dot M_{\rm out}(t)$ と $M_{\rm loss}$を定量化するシミュレーションを、新規リポジトリ構造で実装してください。先行研究の式を明示採用し、必要拡張（赤外光源・光学的厚さ・非定常PSD）以外は新式を導入しない**でください。
 完成条件（必須の動作）
@@ -87,6 +89,7 @@ marsdisk/
 - Makefile エイリアス: `make analysis-sync` / `make analysis-sync-commit`
 - Codex がコード／analysis を変更した場合は、DocSyncAgent 実行直後に `make analysis-doc-tests`（`tools/run_analysis_doc_tests.py` 経由で `pytest tests/test_analysis_* -q` を束ね、ASCII バーで合格率を表示）を必ず走らせ、ドキュメント系テストをまとめて確認する。標準手順として同一バッチで実行し忘れを防ぐこと。
 - チャットで「analysisファイルを更新してください」と指示された場合は `make analysis-update`（DocSyncAgent → doc テストの順で実行する複合ターゲット）を走らせること。Codex 側で DocSync とテストを忘れずにセット実行するためのショートカットとする。
+- Codex が code/analysis をアップデートする際は、上記 `make analysis-update` を完走させた直後に **必ず** 自動評価 CLI `python -m tools.evaluation_system --outdir <run_dir>` を実行し、analysis 仕様に基づく検証レポートを取得・run_card に反映させること（`<run_dir>` は直近のシミュレーション出力パス、例: `out` や `out/20251022-0426_run4000K__0fdd14772`）。
 
 ## シミュレーション結果の保管と実行記録
 - 実行結果は out/<YYYYMMDD-HHMM>_<short-title>__<shortsha>__seed<n>/ を作成して格納する。
@@ -129,4 +132,3 @@ marsdisk/
 - 実行: `python siO2_disk_cooling/siO2_cooling_map.py`
 - 出力: `siO2_disk_cooling/outputs/` 配下の PNG/CSV
 @-- END:SIO2_DISK_COOLING_AGENTS --
-

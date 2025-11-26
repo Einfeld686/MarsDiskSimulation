@@ -33,7 +33,7 @@ SUMMARY_DEFAULT_PATHS = [
 
 # Pattern matching inline references such as `marsdisk/run.py:123–145`
 REF_PATTERN = re.compile(
-    r"(marsdisk/[A-Za-z0-9_/\.-]+\.py):(\d+)(?:([–-])(\d+))?"
+    r"((?:marsdisk|tests|configs|scripts)/[A-Za-z0-9_/\.-]+\.(?:py|yml|yaml)):(\d+)(?:([–-])(\d+))?"
 )
 
 SKIP_DIR_NAMES = {
@@ -52,18 +52,18 @@ SKIP_DIR_NAMES = {
 }
 
 DOC_COLON_REF_PATTERN = re.compile(
-    r"(marsdisk/[A-Za-z0-9_/\.-]+\.py):(\d+)(?:[–—-](\d+))?"
+    r"((?:marsdisk|tests|configs|scripts)/[A-Za-z0-9_/\.-]+\.(?:py|yml|yaml)):(\d+)(?:[–—-](\d+))?"
 )
 DOC_INLINE_LINE_ANCHOR_PATTERN = re.compile(
     r"\s*[（(]\s*#L(\d+)(?:[–—-](\d+))?\s*[）)]",
     re.IGNORECASE,
 )
 DOC_LINE_ANCHOR_PATTERN = re.compile(
-    r"(marsdisk/[A-Za-z0-9_/\.-]+\.py)#L(\d+)(?:[–—-](\d+))?",
+    r"((?:marsdisk|tests|configs|scripts)/[A-Za-z0-9_/\.-]+\.(?:py|yml|yaml))#L(\d+)(?:[–—-](\d+))?",
     re.IGNORECASE,
 )
 DOC_SYMBOL_ANCHOR_PATTERN = re.compile(
-    r"(marsdisk/[A-Za-z0-9_/\.-]+\.py)#(?!L)([A-Za-z0-9_]+)"
+    r"((?:marsdisk|tests|configs|scripts)/[A-Za-z0-9_/\.-]+\.(?:py|yml|yaml))#(?!L)([A-Za-z0-9_]+)"
 )
 
 HEADING_IO_PATTERN = re.compile(r"^## [^\n]*I/O[^\n]*$", re.MULTILINE)

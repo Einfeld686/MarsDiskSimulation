@@ -6,6 +6,7 @@ import argparse
 import datetime as dt
 import json
 from dataclasses import dataclass
+import logging
 from pathlib import Path
 from typing import Dict, Iterable, List, Sequence
 
@@ -13,6 +14,8 @@ import numpy as np
 
 from ..run import load_config
 from ..physics import radiation, surface, smol
+
+logger = logging.getLogger(__name__)
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 REPORT_DIR = REPO_ROOT / "reports" / "physcheck"
@@ -163,6 +166,7 @@ def _tl2003_info() -> CheckResult:
         "TL2003 surface ODE remains opt-in for gas-rich tests; default config keeps "
         "ALLOW_TL2003=false."
     )
+    logger.info("TL2003 is disabled by default (gas-poor); set ALLOW_TL2003=true to opt-in.")
     return CheckResult("surface:tl2003_scope", "INFO", detail)
 
 

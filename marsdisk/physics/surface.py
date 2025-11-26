@@ -7,8 +7,10 @@ surface number/mass density of grains susceptible to radiation-pressure
 blow-out.  Only the optically thin top layer (``\tau\lesssim1``) is
 assumed to receive direct irradiation; deeper layers are treated as
 self-shaded and do not participate in the radiation-driven outflow.
-This follows the conceptual picture of the thin illuminated skin
-discussed by Takeuchi & Lin (2003).
+The loss terms follow the gas-poor, optically thin picture in
+Strubbe & Chiang (2006) [@StrubbeChiang2006_ApJ648_652], while the
+gas-rich Takeuchi & Lin (2003) flow remains an optional path guarded by
+``ALLOW_TL2003`` (disabled by default per the specification) [@TakeuchiLin2003_ApJ593_524].
 
 The governing ordinary differential equation is
 

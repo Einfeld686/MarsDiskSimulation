@@ -13,11 +13,11 @@ from typing import Dict, Iterable, List, Optional, Sequence, Tuple
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
 LINE_REF_PATTERN = re.compile(
-    r"(marsdisk/[A-Za-z0-9_/\.-]+\.py):(\d+)(?:[–-](\d+))?"
+    r"((?:marsdisk|tests|configs|scripts)/[A-Za-z0-9_/\.-]+\.(?:py|yml|yaml)):(\d+)(?:[–-](\d+))?"
 )
 
 ANCHOR_PATTERN = re.compile(
-    r"(marsdisk/[A-Za-z0-9_/\.-]+\.py)#([A-Za-z0-9_\.]+)(?:\s*\[(?:L)?(\d+)(?:[–-](?:L)?(\d+))?\])?"
+    r"((?:marsdisk|tests|configs|scripts)/[A-Za-z0-9_/\.-]+\.(?:py|yml|yaml))#([A-Za-z0-9_\.]+)(?:\s*\[(?:L)?(\d+)(?:[–-](?:L)?(\d+))?\])?"
 )
 
 DEFAULT_MARKDOWN_ROOT = REPO_ROOT / "analysis"

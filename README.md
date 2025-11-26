@@ -1,5 +1,7 @@
 # marsshearingsheet クイックガイド
 
+> **For AI Agents**: Please refer to [`analysis/AI_USAGE.md`](analysis/AI_USAGE.md) for detailed protocols regarding reference management (`UNKNOWN_REF_REQUESTS`), documentation standards, and automated verification workflows.
+
 ## ガス希薄（gas‑poor）前提
 
 本モデルは **火星ロッシュ限界内のガスに乏しい衝突起源ダスト円盤**を解析対象としています。溶融主体で蒸気成分が≲数%に留まるという報告（Hyodo et al. 2017; 2018）と、Phobos/Deimos を残すには低質量・低ガス円盤が必要だという Canup & Salmon (2018) を踏まえ、標準ケースでは **Takeuchi & Lin (2003)** が仮定するガスリッチ表層アウトフローを採用しません（`ALLOW_TL2003=false` が既定）。gas-rich 条件を調べる場合のみ、利用者責任で明示的に切り替えてください。参考枠組みとして Strubbe & Chiang (2006)、Kuramoto (2024) を推奨します。
@@ -107,7 +109,7 @@ python -m marsdisk.run --config configs/base.yml --sinks none
 
 | 出力 | 内容 |
 | --- | --- |
-| `out/series/run.parquet` | 時系列（`prod_subblow_area_rate`, `M_out_dot`, `tau`, `t_blow`, etc.） |
+| `out/series/run.parquet` | 時系列（`prod_subblow_area_rate`, `M_out_dot`, `tau`, `t_blow`, `T_M_used`, `rad_flux_Mars`, `Q_pr_at_smin`, `beta_at_smin`, `a_blow_at_smin` など） |
 | `out/summary.json` | `M_loss`, `M_loss_from_sinks`, `M_loss_from_sublimation`, `s_blow_m`, `beta_at_smin*`, `s_min_effective[m]`, `T_M_source`, `T_M_used[K]` 等を含むサマリ |
 | `out/checks/mass_budget.csv` | ステップ毎の質量保存ログ（許容誤差 0.5% 未満） |
 | `out/run_config.json` | 使用した式、定数、シード、`init_ei` ブロック（`dynamics.e_mode/i_mode`、<big><big>$`\Delta r`$</big></big>, <big><big>$`e_0`$</big></big>, <big><big>$`i_0`$</big></big>、`e_formula_SI`, `a_m_source` など） |
@@ -120,10 +122,11 @@ python -m marsdisk.run --config configs/base.yml --sinks none
 - `fast_blowout_corrected`：`io.correct_fast_blowout=true` のときだけ `true` になり、補正の有無を明示します。
 - `dSigma_dt_blowout`,`dSigma_dt_sinks`,`dSigma_dt_total`（kg m⁻² s⁻¹）と、惑星質量スケールに平均化した `M_out_dot_avg`,`M_sink_dot_avg`,`dM_dt_surface_total_avg`。
 - `n_substeps`：高速ブローアウトをサブステップ分割した場合の分割数（既定 1）。
+- 温度ドライバの列：`T_M_used`（K）、`rad_flux_Mars`（=σ_SB T^4）、`Q_pr_at_smin`、`beta_at_smin`、`a_blow_at_smin` が追加され、火星放射の時系列が追跡できます。
 
 `chi_blow` は YAML のトップレベルで設定でき、スカラー値を与えると従来通り `t_{\rm blow}` = <big><big>$`\chi_{\rm blow} / \Omega`$</big></big> を使用します。`"auto"` を指定すると <big><big>$`\beta`$</big></big> と <big><big>$`⟨Q_{\rm pr}⟩`$</big></big> から 0.5–2.0 の範囲で自動推定した係数を採用し、その値を `chi_blow_eff` としてタイムシリーズとサマリに記録します。
 
-初期化温度 `T_M` は `radiation.TM_K` が指定されていれば優先され、未設定の場合は `temps.T_M` が採用されます。どちらが使われたかは `summary.json` の `T_M_source` を参照してください（`radiation.TM_K` / `temps.T_M` が入ります）。採用温度は `T_M_used[K]` に、対応するブローアウト半径や <big><big>$`\beta`$</big></big> は `s_blow_m`、`beta_at_smin_*` に記録されます。Q_pr/Phi テーブルは `analysis/AI_USAGE.md` に従って `marsdisk/io/tables.py` 経由で読み込み、欠損時は警告付きの解析近似へフォールバックします。
+火星温度は優先順位付きのソースで決定されます。`radiation.TM_K` が明示されていれば従来通りその定数値を使い、未設定かつ `radiation.mars_temperature_driver.enabled=true` の場合は温度ドライバ（`mode="constant"` / `"table"`）から時間依存の `T_M(t)` を取得します。いずれも無効なら `temps.T_M` がフォールバックとして採用されます。採用結果は `summary.json` の `T_M_source` / `temperature_driver` に、時系列は `series/run.parquet` の `T_M_used`・`rad_flux_Mars`・`Q_pr_at_smin`・`beta_at_smin`・`a_blow_at_smin` に記録され、`summary.json` には最小値/中央値/最大値が追記されます。Q_pr/Phi テーブルは `analysis/AI_USAGE.md` に従って `marsdisk/io/tables.py` 経由で読み込み、欠損時は警告付きの解析近似へフォールバックします。
 
 ## 3. 設定 YAML の要点
 
@@ -133,7 +136,7 @@ python -m marsdisk.run --config configs/base.yml --sinks none
 | --- | --- | --- |
 | `geometry` | `mode="0D"`, `r` | 代表半径（m）。`e_mode="mars_clearance"` を使う場合は必須。 |
 | `material` | `rho` | 粒子バルク密度。 |
-| `temps` / `radiation` | `T_M`, `TM_K`, `Q_pr`, `qpr_table` | `radiation.TM_K` が優先。Q_pr テーブル or スカラー上書き可能。 |
+| `temps` / `radiation` | `T_M`, `TM_K`, `mars_temperature_driver.*`, `Q_pr`, `qpr_table` | `radiation.TM_K` → `radiation.mars_temperature_driver` → `temps.T_M` の順で温度ソースを解決。Q_pr はテーブル or スカラーで上書き可能。 |
 | `sizes` | `s_min`, `s_max`, `n_bins` | 対数ビン数は 30–60 推奨（既定 40）。 |
 | `initial` | `mass_total`, `s0_mode` | 初期 PSD モードは `"upper"` / `"mono"`。 |
 | `dynamics` | `e0`, `i0`, `t_damp_orbits`, `f_wake` | **既定モードは `e_mode="fixed"` / `i_mode="fixed"`**。モードを指定しなければ入力スカラー `e0` / `i0` がそのまま初期値となります。`e_mode="mars_clearance"` を選ぶと <big><big>$`\Delta r`$</big></big>（m）を `dr_min_m` / `dr_max_m` からサンプリングし <big><big>$`e = 1 - (R_{\rm MARS}+\Delta r)/a`$</big></big> を適用、`i_mode="obs_tilt_spread"` では `obs_tilt_deg ± i_spread_deg`（度）をラジアンに変換して一様乱数サンプリングします。`rng_seed` を指定すると再現性を確保できます。 |
@@ -147,6 +150,13 @@ python -m marsdisk.run --config configs/base.yml --sinks none
 | `io` | `outdir` | 出力ディレクトリ。 |
 
 サンプルとして `analysis/overview.md` の YAML スニペットや `configs/base.yml` / `configs/sweep_example.yml` を参照してください。
+
+#### 火星温度ドライバ設定例
+
+- **既存互換 (constant)** — `configs/base.yml` では `radiation.mars_temperature_driver.enabled=false` のまま `mode="constant"` と `constant.value_K` を与えており、デフォルトでは従来の定数温度と完全一致します。
+- **テーブル駆動 (table)** — `configs/mars_temperature_driver_table.yml` は `mars_temperature_driver.enabled=true` かつ `mode="table"` を指定し、`data/mars_temperature_table_example.csv` (`time_day`, `T_K`) を線形補間して 2 年の窓を駆動します。外挿モードは `extrapolation: "hold"`（端点保持）または `"error"`（範囲外で停止）から選べます。
+
+CLI からは `--override radiation.mars_temperature_driver.enabled=true` のようにドット記法で上書きできます（`table.path` や `table.time_unit` も同様）。
 
 ### RNG とプロヴェナンス
 

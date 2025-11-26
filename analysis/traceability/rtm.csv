@@ -1,0 +1,4 @@
+ReqID,Source,DesignElement,EquationRefs,TestID,OutputArtifact
+REQ-0D-CLI,"analysis/run-recipes.md:12-76","marsdisk/run.py:426-1362","(E.007);(E.008)","tests/test_run_regressions.py::test_mass_budget_and_timestep_overrides","out/series/run.parquet; out/summary.json"
+REQ-MASS-BUDGET,"analysis/run-recipes.md:45-63","marsdisk/physics/smol.py:18-131","(E.010);(E.011)","tests/test_mass_conservation.py::test_imex_bdf1_limits_timestep_and_preserves_mass","out/checks/mass_budget.csv"
+REQ-WYATT-SCALING,"analysis/overview.md:41-44","marsdisk/physics/surface.py:62-159","(E.006);(E.007)","tests/test_scalings.py::test_strubbe_chiang_collisional_timescale_matches_orbit_scaling","out/series/run.parquet"

@@ -3,6 +3,7 @@
 CC      := gcc
 MODE    ?= A
 CFLAGS  := -std=c17 -Irebound -Isrc -Wall -Wextra -Werror
+OUTDIR  ?= out
 
 SRC     := $(wildcard rebound/src/*.c)
 SRC     += src/smoluchowski.c
@@ -40,7 +41,8 @@ analysis-coverage-guard:
 analysis-doc-tests:
 	python tools/run_analysis_doc_tests.py
 
-analysis-update:
-	$(MAKE) analysis-sync
-	$(MAKE) analysis-doc-tests
+analysis-pipeline:
+	python tools/run_analysis_pipeline.py --outdir $(OUTDIR)
+
+analysis-update: analysis-pipeline
 # ==========================

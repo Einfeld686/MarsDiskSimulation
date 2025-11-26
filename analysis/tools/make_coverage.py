@@ -17,7 +17,7 @@ EQUATIONS_PATH = ANALYSIS_DIR / "equations.md"
 SINKS_DOC_PATH = ANALYSIS_DIR / "sinks_callgraph.md"
 
 ANCHOR_PATTERN = re.compile(
-    r"(marsdisk/[A-Za-z0-9_/\.-]+\.py)#([A-Za-z0-9_\.]+)"
+    r"((?:marsdisk|tests|configs|scripts)/[A-Za-z0-9_/\.-]+\.(?:py|yml|yaml))#([A-Za-z0-9_\.]+)"
 )
 UNIT_BRACKETS_PATTERN = re.compile(r"\[[^\]]*[A-Za-z][^\]]*\]")
 SYMBOL_TABLE_HEADER_PATTERN = re.compile(r"\|\s*Symbol\s*\|.*\|\s*Units\s*\|", re.IGNORECASE)

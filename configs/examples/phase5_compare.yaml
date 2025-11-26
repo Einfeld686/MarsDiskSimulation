@@ -1,0 +1,67 @@
+scope:
+  region: "inner"
+  analysis_years: 2.0
+physics:
+  single_process_mode: "off"
+phase5:
+  compare:
+    enable: true
+    duration_years: 2.0
+    mode_a: "collisions_only"   # variant A の単一過程モード
+    label_a: "collisions"       # 出力で使用するラベル
+    mode_b: "sublimation_only"  # variant B の単一過程モード
+    label_b: "sublimation"      # 出力で使用するラベル
+geometry:
+  mode: "0D"
+  r: 8.0e6
+material:
+  rho: 3000.0
+temps:
+  T_M: 2000.0
+sizes:
+  s_min: 1.0e-6
+  s_max: 3.0
+  n_bins: 40
+initial:
+  mass_total: 1.0e-5
+  s0_mode: "upper"
+dynamics:
+  e0: 0.4
+  i0: 0.05
+  t_damp_orbits: 10.0
+  f_wake: 2.0
+  e_mode: "fixed"
+  i_mode: "fixed"
+psd:
+  alpha: 1.83
+  wavy_strength: 0.2
+qstar:
+  Qs: 3.5e7
+  a_s: 0.38
+  B: 0.3
+  b_g: 1.36
+  v_ref_kms: [3.0, 5.0]
+surface:
+  init_policy: "clip_by_tau1"
+supply:
+  mode: "const"
+  const:
+    prod_area_rate_kg_m2_s: 0.0
+  mixing:
+    epsilon_mix: 1.0
+sinks:
+  mode: "none"
+radiation:
+  source: "mars"
+  use_mars_rp: true
+shielding:
+  mode: "psitau"
+blowout:
+  enabled: true
+numerics:
+  t_end_years: 2.0
+  dt_init: 10.0
+  eval_per_step: true
+  orbit_rollup: true
+io:
+  outdir: "out/phase5_compare"

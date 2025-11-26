@@ -14,6 +14,7 @@ from . import (
     viscosity,
     supply,
     initfields,
+    phase,
 )
 
 __all__ = [
@@ -31,4 +32,5 @@ __all__ = [
     "viscosity",
     "supply",
     "initfields",
+    "phase",
 ]

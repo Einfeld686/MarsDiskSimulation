@@ -28,6 +28,21 @@ def _run_case(overrides: list[str]) -> tuple[dict, pd.DataFrame]:
     return summary, diag
 
 
+def _run_case_with_series(overrides: list[str]) -> tuple[dict, pd.DataFrame, pd.DataFrame]:
+    cfg = load_config(BASE_CONFIG, overrides=overrides)
+    cfg.io.debug_sinks = False
+    with TemporaryDirectory() as tmp:
+        outdir = Path(tmp)
+        cfg.io.outdir = outdir
+        run_zero_d(cfg)
+        with (outdir / "summary.json").open("r", encoding="utf-8") as fh:
+            summary = json.load(fh)
+        run_df = pd.read_parquet(outdir / "series" / "run.parquet")
+        rollup_path = outdir / "orbit_rollup.csv"
+        rollup = pd.read_csv(rollup_path) if rollup_path.exists() else pd.DataFrame()
+    return summary, run_df, rollup
+
+
 def test_mass_budget_and_timestep_overrides() -> None:
     overrides = [
         "numerics.t_end_orbits=0.05",
@@ -65,6 +80,7 @@ def test_sublimation_not_double_counted() -> None:
         "sinks.mode=sublimation",
         "temps.T_M=2500.0",
         "io.debug_sinks=false",
+        "process.primary=sublimation_only",
     ]
     summary, diagnostics = _run_case(overrides)
 
@@ -75,3 +91,118 @@ def test_sublimation_not_double_counted() -> None:
     if not diagnostics.empty:
         delta = diagnostics["mass_loss_sinks_step"] - diagnostics["mass_loss_sublimation_step"]
         assert np.nanmax(np.abs(delta.values)) <= 1e-12
+
+
+def test_phase7_diagnostics_toggle() -> None:
+    common_overrides = [
+        "numerics.t_end_orbits=1.0",
+        "numerics.t_end_years=null",
+        "numerics.dt_init=50.0",
+        "io.debug_sinks=false",
+    ]
+
+    summary_off, run_off, rollup_off = _run_case_with_series(
+        common_overrides + ["diagnostics.phase7.enable=false"]
+    )
+    assert "max_mloss_rate" not in summary_off
+    assert "median_gate_factor" not in summary_off
+    assert "tau_gate_blocked_time_fraction" not in summary_off
+    assert "mloss_total_rate" not in set(run_off.columns)
+    assert rollup_off.empty or "mloss_total_rate_mean" not in set(rollup_off.columns)
+
+    summary_on, run_on, rollup_on = _run_case_with_series(
+        common_overrides + ["diagnostics.phase7.enable=true"]
+    )
+    required_cols = {
+        "mloss_blowout_rate",
+        "mloss_sink_rate",
+        "mloss_total_rate",
+        "cum_mloss_total",
+        "t_coll",
+        "ts_ratio",
+        "beta_eff",
+        "kappa_eff",
+        "tau_eff",
+    }
+    assert required_cols.issubset(set(run_on.columns))
+    assert "max_mloss_rate" in summary_on
+    assert summary_on.get("phase7_diagnostics_version") == "phase7-minimal-v1"
+    assert "median_gate_factor" in summary_on
+    assert "tau_gate_blocked_time_fraction" in summary_on
+    assert summary_on["median_gate_factor"] <= 1.0
+    if not rollup_on.empty:
+        assert {
+            "mloss_total_rate_mean",
+            "mloss_total_rate_peak",
+            "ts_ratio_median",
+            "gate_factor_median",
+        }.issubset(set(rollup_on.columns))
+
+
+def test_tau_gate_blocks_blowout() -> None:
+    overrides = [
+        "diagnostics.phase7.enable=true",
+        "radiation.tau_gate.enable=true",
+        "radiation.tau_gate.tau_max=1e-6",
+        "initial.mass_total=1e-3",
+        "material.rho=1500.0",
+        "numerics.t_end_orbits=0.05",
+        "numerics.t_end_years=null",
+        "numerics.dt_init=20.0",
+    ]
+    summary, run_df, _ = _run_case_with_series(overrides)
+
+    assert summary["tau_gate_blocked_time_fraction"] > 0.5
+    assert run_df["outflux_surface"].abs().max() == 0.0
+    assert run_df["mloss_blowout_rate"].abs().max() == 0.0
+
+
+def test_gate_factor_collision_competition_reduces_flux() -> None:
+    overrides = [
+        "diagnostics.phase7.enable=true",
+        "blowout.gate_mode=collision_competition",
+        "initial.mass_total=1e-1",
+        "material.rho=1200.0",
+        "numerics.t_end_orbits=0.1",
+        "numerics.t_end_years=null",
+        "numerics.dt_init=20.0",
+    ]
+    summary, run_df, _ = _run_case_with_series(overrides)
+
+    assert summary["median_gate_factor"] < 1.0
+    assert run_df["blowout_gate_factor"].median() < 1.0
+
+
+def test_gate_factor_sublimation_competition_reduces_flux() -> None:
+    overrides = [
+        "diagnostics.phase7.enable=true",
+        "blowout.gate_mode=sublimation_competition",
+        "sinks.enable_sublimation=true",
+        "sinks.mode=sublimation",
+        "sinks.sub_params.mode=hkl",
+        "temps.T_M=3000.0",
+        "material.rho=1200.0",
+        "initial.mass_total=1e-3",
+        "numerics.t_end_orbits=0.2",
+        "numerics.t_end_years=null",
+        "numerics.dt_init=20.0",
+    ]
+
+    cfg = load_config(BASE_CONFIG, overrides=overrides)
+    # Allow sublimation competition even though process.primary defaults to collisions_only.
+    if hasattr(cfg.process, "__fields_set__"):
+        try:
+            cfg.process.__fields_set__.discard("primary")
+        except Exception:
+            cfg.process.__fields_set__ = set()
+    cfg.io.debug_sinks = False
+    with TemporaryDirectory() as tmp:
+        outdir = Path(tmp)
+        cfg.io.outdir = outdir
+        run_zero_d(cfg)
+        with (outdir / "summary.json").open("r", encoding="utf-8") as fh:
+            summary = json.load(fh)
+        run_df = pd.read_parquet(outdir / "series" / "run.parquet")
+
+    assert summary["median_gate_factor"] < 1.0
+    assert run_df["blowout_gate_factor"].median() < 1.0

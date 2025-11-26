@@ -1,76 +1,333 @@
 {
   "marsdisk/physics/radiation.py#beta": {
     "kind": "function",
-    "span": [220, 241],
-    "references": ["StrubbeChiang2006_ApJ648_652"],
+    "span": [
+      220,
+      241
+    ],
+    "references": [
+      "StrubbeChiang2006_ApJ648_652"
+    ],
     "notes": "Implements beta(s) and β=0.5 blow-out criteria for gas-poor disks.",
-    "assumptions": ["gas-poor", "optically thin"]
+    "assumptions": [
+      "gas-poor",
+      "optically thin"
+    ]
   },
   "marsdisk/physics/radiation.py#blowout_radius": {
     "kind": "function",
-    "span": [244, 258],
-    "references": ["StrubbeChiang2006_ApJ648_652"],
+    "span": [
+      244,
+      258
+    ],
+    "references": [
+      "StrubbeChiang2006_ApJ648_652"
+    ],
     "notes": "Transforms beta threshold into a blow-out size.",
-    "assumptions": ["beta=0.5 ejects grains"]
+    "assumptions": [
+      "beta=0.5 ejects grains"
+    ]
   },
   "marsdisk/physics/radiation.py#BLOWOUT_BETA_THRESHOLD": {
     "kind": "constant",
-    "span": [31, 31],
-    "references": ["StrubbeChiang2006_ApJ648_652"],
+    "span": [
+      31,
+      31
+    ],
+    "references": [
+      "StrubbeChiang2006_ApJ648_652"
+    ],
     "notes": "β>=0.5 is the ejection criterion."
   },
   "marsdisk/physics/radiation.py#grain_temperature_graybody": {
     "kind": "function",
-    "span": [120, 146],
-    "references": ["Hyodo2018_ApJ860_150"],
+    "span": [
+      120,
+      146
+    ],
+    "references": [
+      "Hyodo2018_ApJ860_150"
+    ],
     "notes": "Lambertian IR equilibrium with \bar{Q}_{abs}^{1/4} √(R_M/(2r)) (E.043).",
-    "assumptions": ["gas-poor", "Lambertian planet"]
+    "assumptions": [
+      "gas-poor",
+      "Lambertian planet"
+    ]
   },
   "marsdisk/physics/surface.py#wyatt_tcoll_S1": {
     "kind": "function",
-    "span": [62, 73],
-    "references": ["StrubbeChiang2006_ApJ648_652"],
+    "span": [
+      62,
+      73
+    ],
+    "references": [
+      "StrubbeChiang2006_ApJ648_652"
+    ],
     "notes": "Surface-layer collisional time-scale t_c=1/(Ωτ_⊥).",
-    "assumptions": ["tau << 1"]
+    "assumptions": [
+      "tau << 1"
+    ]
   },
   "marsdisk/physics/sublimation.py#mass_flux_hkl": {
     "kind": "function",
-    "span": [534, 584],
-    "references": ["Pignatale2018_ApJ853_118"],
+    "span": [
+      534,
+      584
+    ],
+    "references": [
+      "Pignatale2018_ApJ853_118"
+    ],
     "notes": "HKL sublimation flux calibrated for volatile-poor SiO2."
   },
   "marsdisk/physics/sublimation.py#s_sink_from_timescale": {
     "kind": "function",
-    "span": [587, 603],
-    "references": ["Ronnet2016_ApJ828_109"],
+    "span": [
+      587,
+      603
+    ],
+    "references": [
+      "Ronnet2016_ApJ828_109"
+    ],
     "notes": "Converts HKL flux into an effective size/lifetime pair based on outer-envelope condensation."
   },
   "marsdisk/physics/viscosity.py#step_viscous_diffusion_C5": {
     "kind": "function",
-    "span": [51, 134],
-    "references": ["CridaCharnoz2012_Science338_1196"],
+    "span": [
+      51,
+      134
+    ],
+    "references": [
+      "CridaCharnoz2012_Science338_1196"
+    ],
     "notes": "Optional radial diffusion operator mirroring ring-spreading regimes."
   },
   "marsdisk/physics/surface.py#step_surface_density_S1": {
     "kind": "function",
-    "span": [96, 163],
+    "span": [
+      96,
+      163
+    ],
     "references": [],
     "notes": "TL2003 gas-rich surface ODE (opt-out by default). TODO scope vetting.",
     "assumptions": [],
-    "todos": ["tl2003_surface_flow_scope_v1"]
+    "todos": [
+      "tl2003_surface_flow_scope_v1"
+    ]
   },
   "siO2_disk_cooling/siO2_cooling_map.py#tmars": {
     "kind": "function",
-    "span": [117, 139],
-    "references": ["Hyodo2018_ApJ860_150"],
+    "span": [
+      117,
+      139
+    ],
+    "references": [
+      "Hyodo2018_ApJ860_150"
+    ],
     "notes": "Radiative-slab cooling law T^{-3} evolution (E.042).",
-    "assumptions": ["radiative only", "constant D, rho, cp"]
+    "assumptions": [
+      "radiative only",
+      "constant D, rho, cp"
+    ]
   },
   "siO2_disk_cooling/siO2_cooling_map.py#tp_of_rt": {
     "kind": "function",
-    "span": [142, 155],
-    "references": ["Hyodo2018_ApJ860_150"],
+    "span": [
+      142,
+      155
+    ],
+    "references": [
+      "Hyodo2018_ApJ860_150"
+    ],
     "notes": "Grain equilibrium temperature with Q_abs^{1/4} and √(R/(2r)) dilution (E.043).",
-    "assumptions": ["Lambertian planet", "gas-poor, optically thin"]
+    "assumptions": [
+      "Lambertian planet",
+      "gas-poor, optically thin"
+    ]
+  },
+  "analysis/equations.md#E.006": {
+    "kind": "equation",
+    "span": [
+      55,
+      73
+    ],
+    "references": [
+      "StrubbeChiang2006_ApJ648_652"
+    ],
+    "notes": "(E.006) Strubbe–Chiang surface-layer collisional time-scale.",
+    "assumptions": [
+      "gas-poor",
+      "tau << 1"
+    ]
+  },
+  "analysis/equations.md#E.042": {
+    "kind": "equation",
+    "span": [
+      795,
+      812
+    ],
+    "references": [
+      "Hyodo2018_ApJ860_150"
+    ],
+    "notes": "(E.042) Radiative slab cooling solution for T_Mars.",
+    "assumptions": [
+      "radiative only",
+      "constant D,rho,c_p"
+    ]
+  },
+  "analysis/equations.md#E.043": {
+    "kind": "equation",
+    "span": [
+      814,
+      830
+    ],
+    "references": [
+      "Hyodo2018_ApJ860_150"
+    ],
+    "notes": "(E.043) Greybody grain equilibrium with ⟨Q_abs⟩^{1/4} √(R/2r).",
+    "assumptions": [
+      "Lambertian planet",
+      "gas-poor"
+    ]
+  },
+  "analysis/overview.md#gas_poor_scope": {
+    "kind": "doc",
+    "span": [
+      9,
+      11
+    ],
+    "references": [
+      "Hyodo2017a_ApJ845_125",
+      "Hyodo2017b_ApJ851_122",
+      "Hyodo2018_ApJ860_150",
+      "CanupSalmon2018_SciAdv4_eaar6887"
+    ],
+    "notes": "Gas-poor default and TL2003 opt-out reminder.",
+    "assumptions": [
+      "gas-poor",
+      "TL2003 opt-in"
+    ]
+  },
+  "analysis/overview.md#satellite_constraints": {
+    "kind": "doc",
+    "span": [
+      11,
+      13
+    ],
+    "references": [
+      "CridaCharnoz2012_Science338_1196",
+      "CanupSalmon2018_SciAdv4_eaar6887"
+    ],
+    "notes": "Ring diffusion vs satellite mass constraints for Phobos/Deimos survival.",
+    "assumptions": [
+      "low-mass disk"
+    ]
+  },
+  "analysis/overview.md#chemistry_sinks": {
+    "kind": "doc",
+    "span": [
+      34,
+      35
+    ],
+    "references": [
+      "Pignatale2018_ApJ853_118",
+      "Ronnet2016_ApJ828_109"
+    ],
+    "notes": "Chemical sinks calibrated to vapor condensates vs melt composition.",
+    "assumptions": [
+      "SiO2-rich",
+      "outer envelope condensation"
+    ]
+  },
+  "analysis/run-recipes.md#gas_poor_note": {
+    "kind": "doc",
+    "span": [
+      1,
+      5
+    ],
+    "references": [
+      "Hyodo2017a_ApJ845_125",
+      "Hyodo2017b_ApJ851_122",
+      "Hyodo2018_ApJ860_150",
+      "CanupSalmon2018_SciAdv4_eaar6887"
+    ],
+    "notes": "Run recipes reiterate gas-poor default and TL2003 opt-out.",
+    "assumptions": [
+      "gas-poor"
+    ]
+  },
+  "analysis/run-recipes.md#baseline_constraints": {
+    "kind": "doc",
+    "span": [
+      14,
+      17
+    ],
+    "references": [
+      "CridaCharnoz2012_Science338_1196",
+      "CanupSalmon2018_SciAdv4_eaar6887"
+    ],
+    "notes": "Baseline run mass/tidal bounds aligned with ring-spreading regimes.",
+    "assumptions": [
+      "low disk mass",
+      "Q/k2 < 80"
+    ]
+  },
+  "analysis/provenance_report.md#kuramoto_review": {
+    "kind": "doc",
+    "span": [
+      17,
+      30
+    ],
+    "references": [
+      "Kuramoto2024"
+    ],
+    "notes": "MMX-era secondary review used for provenance cross-checks.",
+    "assumptions": [
+      "mission review"
+    ]
+  },
+  "marsdisk/ops/make_qpr_table.py#compute_planck_mean_qpr": {
+    "kind": "function",
+    "span": [
+      40,
+      78
+    ],
+    "references": [
+      "StrubbeChiang2006_ApJ648_652"
+    ],
+    "notes": "Generates Planck-mean ⟨Q_pr⟩ tables feeding the Strubbe–Chiang β(s) relation.",
+    "assumptions": [
+      "Rayleigh-to-geometric bridge"
+    ]
+  },
+  "marsdisk/ops/make_qpr_table.py#main": {
+    "kind": "function",
+    "span": [
+      120,
+      141
+    ],
+    "references": [
+      "StrubbeChiang2006_ApJ648_652"
+    ],
+    "notes": "CLI wrapper to export ⟨Q_pr⟩ tables for radiation.beta/blowout_radius.",
+    "assumptions": [
+      "gas-poor",
+      "Planck mean"
+    ]
+  },
+  "marsdisk/ops/physcheck.py#main": {
+    "kind": "function",
+    "span": [
+      198,
+      210
+    ],
+    "references": [
+      "StrubbeChiang2006_ApJ648_652",
+      "Hyodo2018_ApJ860_150"
+    ],
+    "notes": "CLI that enforces β/blow-out ranges and TL2003 opt-out per gas-poor guidance.",
+    "assumptions": [
+      "gas-poor",
+      "TL2003 opt-in"
+    ]
   }
 }
