@@ -33,6 +33,7 @@ __pycache__/
 !analysis/**/*.json
 !analysis/**/*.ipynb
 !analysis/**/*.png
+analysis/.analysis_pipeline_stamp
 !agent_test/
 !agent_test/**
 agent_test/**/__pycache__/

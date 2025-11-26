@@ -2,12 +2,16 @@
 
 This script evaluates the radiative cooling of the Martian surface and the
 resulting equilibrium temperature of SiO2 dust grains located between
-1.0--2.4 Martian radii. The model assumes optically thin conditions without
-mutual irradiation, the dust grains remain at fixed orbital radii, and
-thermal inertia is neglected so that grain temperatures instantaneously match
-the radiative equilibrium value. Glass transition (1475 K) and liquidus
-(1986 K) thresholds representative of pure SiO2 are adopted; variations with
-composition or pressure are not considered.
+1.0--2.4 Martian radii by solving the Hyodo et al. (2018) slab-cooling law
+(E.042) and the associated greybody equilibrium (E.043).  The model assumes
+optically thin conditions without mutual irradiation, the dust grains remain
+at fixed orbital radii, and thermal inertia is neglected so that grain
+temperatures instantaneously match the radiative equilibrium value.
+``q_abs_mean`` approximates the Planck-averaged absorption efficiency
+$⟨Q_{\mathrm{abs}}⟩$; its default (1.0) is recorded as an unresolved
+reference request. Glass transition (1475 K) and liquidus (1986 K)
+thresholds representative of pure SiO₂ are likewise tracked as unknown
+references pending material-specific citations. [@Hyodo2018_ApJ860_150]
 """
 from __future__ import annotations
 
@@ -19,7 +23,7 @@ import zlib
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Dict, List
+from typing import Dict, List, Literal, Mapping, Optional
 
 try:
     import matplotlib
@@ -94,6 +98,66 @@ OUTPUT_FILES = {
     4000.0: ("map_T0_4000K.png", "times_T0_4000K.csv"),
     2000.0: ("map_T0_2000K.png", "times_T0_2000K.csv"),
 }
+
+
+def _clamp(value: float, low: float, high: float) -> float:
+    return float(min(max(value, low), high))
+
+
+def lookup_phase_state(
+    temperature_K: float,
+    pressure_Pa: Optional[float] = None,
+    tau: Optional[float] = None,
+) -> Mapping[str, object]:
+    """Return a solid/vapour decision for the requested conditions.
+
+    The function exposes the SiO₂ cooling map as a lightweight API so that
+    the main ``marsdisk`` simulation can query whether the surface material
+    behaves as condensed (``solid``) or vapour-dominated (``vapor``).  The
+    logic follows the liquidus/glass thresholds used by the cooling maps:
+
+    * ``T ≤ T_GLASS``  →  solid
+    * ``T ≥ T_LIQUIDUS``  →  vapor
+    * Between the two, interpolate a vapour fraction ``f_vap``.
+
+    The interpolation is further modulated by the line-of-sight optical depth
+    ``tau`` so that optically thick columns (``tau ≫ 1``) tend towards solid
+    states even at moderately high temperatures.
+    """
+
+    T = float(temperature_K)
+    if not math.isfinite(T) or T <= 0.0:
+        raise ValueError("temperature_K must be positive and finite")
+
+    pressure_bar = 0.0
+    if pressure_Pa is not None and math.isfinite(pressure_Pa):
+        pressure_bar = float(max(pressure_Pa, 0.0) / 1.0e5)
+
+    if T <= T_GLASS:
+        state: Literal["solid", "vapor"] = "solid"
+        f_vap = 0.0
+    elif T >= T_LIQUIDUS:
+        state = "vapor"
+        f_vap = 1.0
+    else:
+        span = T_LIQUIDUS - T_GLASS
+        frac = (T - T_GLASS) / span
+        # modest pressure dependence: higher pressure -> delayed vapourisation
+        frac *= 1.0 / (1.0 + 0.2 * pressure_bar)
+        if tau is not None and math.isfinite(tau):
+            # suppress vapour for τ ≫ 1 to mimic self-shielded skins
+            frac *= 1.0 / (1.0 + max(tau, 0.0))
+        f_vap = _clamp(frac, 0.0, 1.0)
+        state = "vapor" if f_vap >= 0.5 else "solid"
+
+    return {
+        "state": state,
+        "f_vap": f_vap,
+        "temperature_K": T,
+        "pressure_bar": pressure_bar,
+        "tau": float(tau) if tau is not None and math.isfinite(tau) else None,
+        "source": "siO2_cooling_map.lookup_phase_state",
+    }
 
 
 @dataclass(frozen=True)

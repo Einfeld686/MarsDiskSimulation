@@ -1,12 +1,12 @@
 # このガイドの目的
 > **注記（gas‑poor）**: 本解析は **ガスに乏しい衝突起源デブリ円盤**を前提とします。従って、**光学的に厚い内側ガス円盤**を仮定する Takeuchi & Lin (2003) の表層塵アウトフロー式は**適用外**とし、既定では評価から外しています（必要時のみ明示的に有効化）。この判断は、衝突直後の円盤が溶融主体かつ蒸気≲数%で、初期周回で揮発が散逸しやすいこと、および小衛星を残すには低質量・低ガスの円盤条件が要ることに基づきます。参考: Hyodo et al. 2017; 2018／Canup & Salmon 2018。
-この資料は0D円盤で破砕供給と表層剥離を組み合わせる既存実装の実行方法と出力解釈を、自動化主体でも誤読しない手順として整理する。（analysis/overview.md, [marsdisk/run.py:426-1611]）
+この資料は0D円盤で破砕供給と表層剥離を組み合わせる既存実装の実行方法と出力解釈を、自動化主体でも誤読しない手順として整理する。（analysis/overview.md, [marsdisk/run.py:598-1611]）
 
 # 誰向けか（AI/自動化ツール）と、何ができるかを1段落で。
 対象は設定ファイルを切り替えながら結果回収を自動化するAIやCIスクリプトであり、CLI起動・成果物の収集・再実行条件の判定を一連のジョブとして扱える。（[marsdisk/run.py:1387-1449], analysis/run-recipes.md）設定スキーマの検証や有効半径の算定はコード側で完結しているので、本資料に沿えば追加の仮定なしにβ判定や質量収支ログを取得できる。
 
 # 最短の実行手順（Quickstart）
-`run_zero_d`は単一コマンドで完結し、出力先は設定の`io.outdir`に従う。（[marsdisk/run.py:1387-1445], [marsdisk/run.py:426-1611]）
+`run_zero_d`は単一コマンドで完結し、出力先は設定の`io.outdir`に従う。（[marsdisk/run.py:1387-1445], [marsdisk/run.py:598-1611]）
 
 ```bash
 python -m marsdisk.run --config analysis/run-recipes/baseline_blowout_only.yml
@@ -18,19 +18,19 @@ python -m marsdisk.run --config analysis/run-recipes/baseline_blowout_only.yml
 - `OUTDIR/run_config.json`：`physics_controls` にブローアウト／遮蔽／凍結／PSD床モードの実行値を残し、`sublimation_provenance` で HKL 式・`psat_model`・SiO 既定パラメータ（`alpha_evap`,`mu`,`A`,`B`）・`P_gas`・`valid_K`・テーブルパス・実行半径・公転時間を追跡できる。（[marsdisk/run.py:1523-1611], [marsdisk/io/writer.py:185-188]）
 
 # 設定の要点（YAML→スキーマ→実行）
-設定値はYAML→Pydantic→実行時オブジェクトの順に検証される。（[marsdisk/run.py:346-360], [marsdisk/schema.py:437-455]）
+設定値はYAML→Pydantic→実行時オブジェクトの順に検証される。（[marsdisk/run.py:357-357], [marsdisk/schema.py:454-455]）
 
-- CLIの `--override path=value` は YAML 読み込み後の辞書にマージされ、`load_config` と CLI エントリポイントで共通に処理される。複数指定は `--override a=b --override c=d` またはスペース区切りで指定可能。（[marsdisk/run.py:372-387], [marsdisk/run.py:1649-1654]）
-- `physics.blowout.enabled`,`radiation.freeze_kappa`,`surface.freeze_sigma`,`shielding.mode`,`psd.floor.mode` などの物理トグルはスキーマで検証され、`run_zero_d` 内でブローアウト損失や遮蔽、床径進化を切り替える。（[marsdisk/schema.py:335-339], [marsdisk/run.py:623-905]）
-- `sinks.mode` は既定で`sublimation`、`none`を選ぶと昇華とガス抗力を同時に停止し、追加シンクの有効化は `SinkOptions` を通じて昇華パラメータ `SublimationParams(**cfg.sinks.sub_params.model_dump())` にコピーされる。HKL 既定値は SiO（`psat_model="clausius"`, μ=0.0440849 kg/mol, α=0.007, A=13.613, B=17850, `valid_K=[1270,1600]`）。`psat_model="tabulated"` を指定すると外部テーブルから `log10P` を読み込む。（[marsdisk/schema.py:263-266], [marsdisk/run.py:571-706], [marsdisk/physics/sublimation.py:217-227], [marsdisk/physics/sinks.py:83-160]）
-- `sinks.mode="none"` の場合は `t_sink=None` が `surface.step_surface` に渡り、光学的厚さが与えられてもシンク項は無効のまま推移する。（[marsdisk/run.py:820-1016], [marsdisk/physics/surface.py:185-196]）
-- `e_mode` / `i_mode` を設定しない場合は従来どおり入力スカラー `e0` / `i0` を使用するが、`mars_clearance` / `obs_tilt_spread` を指定すると Δr サンプリングや観測傾斜を乱数で生成して初期条件を再設定する。`dr_min_m`/`dr_max_m`（m）や`i_spread_deg`（度）と `rng_seed` を併用して再現性を確保する。（[marsdisk/schema.py:173-199], [marsdisk/run.py:448-515]）
-- 温度は `radiation.TM_K` が優先され、未設定時は `temps.T_M` を用い、どちらの経路かを `T_M_source` としてサマリに記録する。（[marsdisk/schema.py:281-314], [marsdisk/run.py:561-563], [marsdisk/run.py:1417-1420]）
+- CLIの `--override path=value` は YAML 読み込み後の辞書にマージされ、`load_config` と CLI エントリポイントで共通に処理される。複数指定は `--override a=b --override c=d` またはスペース区切りで指定可能。（[marsdisk/run.py:385-385], [marsdisk/run.py:1649-1654]）
+- `physics.blowout.enabled`,`radiation.freeze_kappa`,`surface.freeze_sigma`,`shielding.mode`,`psd.floor.mode` などの物理トグルはスキーマで検証され、`run_zero_d` 内でブローアウト損失や遮蔽、床径進化を切り替える。（[marsdisk/schema.py:340-340], [marsdisk/run.py:623-905]）
+- `sinks.mode` は既定で`sublimation`、`none`を選ぶと昇華とガス抗力を同時に停止し、追加シンクの有効化は `SinkOptions` を通じて昇華パラメータ `SublimationParams(**cfg.sinks.sub_params.model_dump())` にコピーされる。HKL 既定値は SiO（`psat_model="clausius"`, μ=0.0440849 kg/mol, α=0.007, A=13.613, B=17850, `valid_K=[1270,1600]`）。`psat_model="tabulated"` を指定すると外部テーブルから `log10P` を読み込む。（[marsdisk/schema.py:263-266], [marsdisk/run.py:598-706], [marsdisk/physics/sublimation.py:219-227], [marsdisk/physics/sinks.py:83-160]）
+- `sinks.mode="none"` の場合は `t_sink=None` が `surface.step_surface` に渡り、光学的厚さが与えられてもシンク項は無効のまま推移する。（[marsdisk/run.py:820-1016], [marsdisk/physics/surface.py:187-196]）
+- `e_mode` / `i_mode` を設定しない場合は従来どおり入力スカラー `e0` / `i0` を使用するが、`mars_clearance` / `obs_tilt_spread` を指定すると Δr サンプリングや観測傾斜を乱数で生成して初期条件を再設定する。`dr_min_m`/`dr_max_m`（m）や`i_spread_deg`（度）と `rng_seed` を併用して再現性を確保する。（[marsdisk/schema.py:187-199], [marsdisk/run.py:519-519]）
+- 温度は `radiation.TM_K` が優先され、未設定時は `temps.T_M` を用い、どちらの経路かを `T_M_source` としてサマリに記録する。（[marsdisk/schema.py:314-314], [marsdisk/run.py:561-562], [marsdisk/run.py:1417-1420]）
 
 # 最小粒径と軽さ指標（データ契約）
 PSDの下限は `psd.floor.mode` に応じて設定値・ブローアウト境界・`ds/dt` 派生値の最大で評価され、辞書 `"s_min_components"` に `config` / `blowout` / `effective` / `floor_mode` / `floor_dynamic` を保持する。（[marsdisk/schema.py:214-220], [marsdisk/run.py:633-705]）ブローアウト境界（[marsdisk/physics/radiation.py:250-258]）が主因となり、`"evolve_smin"` モードでは HKL 由来の `|ds/dt|Δt` が `s_min_floor_dynamic` として単調に蓄積される。（[marsdisk/run.py:748-806], [marsdisk/physics/psd.py:267-356]）
 
-放射圧と重力の比率を表す軽さ指標（β）は `s_min_config` と `s_min_effective` で別々に評価され、それぞれ `beta_at_smin_config` と `beta_at_smin_effective` として記録される。（[marsdisk/run.py:669-686], [marsdisk/physics/radiation.py:236-241]）`beta_threshold` は定数 0.5 で、βが閾値以上なら `case_status="blowout"`（ブローアウト抑止時は `"no_blowout"`）、未満なら `"ok"` となる。（[marsdisk/physics/radiation.py:32-32], [marsdisk/run.py:675-684], [scripts/sweep_heatmaps.py:1248-1264]）
+放射圧と重力の比率を表す軽さ指標（β）は `s_min_config` と `s_min_effective` で別々に評価され、それぞれ `beta_at_smin_config` と `beta_at_smin_effective` として記録される。（[marsdisk/run.py:669-686], [marsdisk/physics/radiation.py:236-241]）`beta_threshold` は定数 0.5 で、βが閾値以上なら `case_status="blowout"`（ブローアウト抑止時は `"no_blowout"`）、未満なら `"ok"` となる。（[marsdisk/physics/radiation.py:32-32], [marsdisk/run.py:675-684], [scripts/sweep_heatmaps.py:1261-1264]）
 
 # 出力ファイルの中身（機械可読の約束）
 `summary.json`の主要キーは次のとおり。
@@ -64,19 +64,33 @@ PSDの下限は `psd.floor.mode` に応じて設定値・ブローアウト境�
 
 # アンカー規約
 - `marsdisk/...` の参照はすべて `[path/to/file.py:start–end]` 形式に統一する。関数名ハッシュや `#symbol` 付きアンカーは禁止。
-- アンカーの解決は `analysis/inventory.json` と `analysis/symbols.raw.txt` を基にする。新しい関数・クラスを追加した際は必ず `analysis/tools/anchor_sync.py --write --root analysis` を実行し、行範囲を再解決する。
-- 既存アンカーが外れた場合は、`analysis/tools/anchor_sync.py --write` を走らせた後で差分を確認し、必要なら `analysis/tools/check_docs.py --strict` の WARN/ERROR を根拠に修正する。
+- アンカーの解決は `analysis/inventory.json` と `analysis/symbols.raw.txt` を基にする。新しい関数・クラスを追加した際は必ず `python -m tools.doc_sync_agent --all --write` を実行し、行範囲を再解決する。
+- 既存アンカーが外れた場合は、同期コマンドを走らせた後で差分を確認し、必要なら `analysis/tools/check_docs.py --strict` の WARN/ERROR を根拠に修正する。
 - モジュール全体を参照する必要があっても `#__module__` アンカー以外の直書きを許可しない。根拠となるセクションを作り、該当関数を列挙すること。
 
 # 日次チェック手順
-1. `python analysis/tools/anchor_sync.py --write`  
-   既存アンカーの行範囲を再解決し、新規シンボルを同期する。
-2. `python analysis/tools/make_coverage.py`  
+1. `python -m tools.doc_sync_agent --all --write`
+   既存アンカーの行範囲を再解決し、新規シンボルを同期する。`tests/` や `configs/` への参照もここで更新される。
+2. `python analysis/tools/make_coverage.py`
    `analysis/coverage/coverage.{json,md}` を更新し、参照率と未解決リストを最新化する。
-3. `python analysis/tools/check_docs.py --strict`  
+3. `python analysis/tools/check_docs.py --strict`
    70%未満の参照率・行範囲ずれ・単位不足を検出し、WARN も ERROR へ昇格させる。
 
 すべて成功したら `git status` で差分を確認し、CI やチーム共有用のメモを残す。
+
+# 未解決参照の管理プロセス (UNKNOWN_REF_REQUESTS)
+コードやドキュメント内で出典が不明確な仮定や、外部文献による裏付けが必要な箇所が見つかった場合は、安易に `TODO` コメントで済ませず、以下の手順で構造化データとして登録する。
+
+1.  **登録**: `analysis/UNKNOWN_REF_REQUESTS.jsonl` に新しい JSON 行を追加する。
+    *   `slug`: 一意な識別子（例: `tl2003_surface_flow_scope_v1`）
+    *   `type`: `assumption` (仮定), `citation_needed` (要出典), `parameter_justification` (パラメータ根拠) など
+    *   `where`: 該当ファイルと行範囲
+    *   `assumptions`: 具体的な仮定の内容
+    *   `priority`: `high`, `medium`, `low`
+2.  **参照**: コードやドキュメントの該当箇所には、登録した slug を用いて `TODO(REF:slug)` と記述する。これにより、将来の自動化ツールがこの参照を追跡可能になる。
+3.  **解決**: 調査により出典が判明した場合は、`analysis/references.registry.json` に文献情報を登録し、`UNKNOWN_REF_REQUESTS.jsonl` からエントリを削除（または解決済みフラグを付与）した上で、コード内の `TODO(REF:slug)` を `[@Key]` 形式の正式な引用に置き換える。
+
+このプロセスにより、「なんとなく書かれた仮定」を排除し、全ての設計判断が文献または明示的な合意に基づいている状態（Provenance）を維持する。
 
 # しきい値と例外対応
 - **アンカー整合率**（= 1.0 を要求）を下回った場合、該当アンカーを修正できない理由を Issue へ記載し、`analysis/coverage/anchor_unresolved.tsv` に除外理由を追記する。緊急度が高い場合は `docs@marsdisk.example`（仮）へ連絡する。
@@ -106,8 +120,8 @@ PSDの下限は `psd.floor.mode` に応じて設定値・ブローアウト境�
 **スイープの最小例** `scripts/sweep_heatmaps.py`はマップ定義と出力CSVを自動構築し、集計CSVに軽さ指標の新旧両カラムと`case_status`を列挙する。（[scripts/sweep_heatmaps.py:1261-1524]）`python scripts/sweep_heatmaps.py --map 1 --outdir sweeps/map1_demo --jobs 4`を用いると、結果CSVに`beta_at_smin_config`,`beta_at_smin_effective`,`beta_at_smin`が同時に含まれ、互換項目との整合を確認できる。
 
 # よくある落とし穴
-- 半径`r`を設定しないと0D実行で例外が発生するため、YAMLで`geometry.r`または`disk.geometry`を必ず与える。（[marsdisk/run.py:517-705], analysis/run-recipes.md）
-- 温度上書きの出典を混同しないよう、`radiation.TM_K`を使った場合はsummaryの`T_M_source`が`"radiation.TM_K"`になる点を確認する。（[marsdisk/run.py:561-563], [marsdisk/run.py:1417-1420]）
+- 半径`r`を設定しないと0D実行で例外が発生するため、YAMLで`geometry.r`または`disk.geometry`を必ず与える。（[marsdisk/run.py:598-705], analysis/run-recipes.md）
+- 温度上書きの出典を混同しないよう、`radiation.TM_K`を使った場合はsummaryの`T_M_source`が`"radiation.TM_K"`になる点を確認する。（[marsdisk/run.py:561-562], [marsdisk/run.py:1417-1420]）
 - `s_min_effective`が`s_max`に近づくと0.9倍でクランプされるため、極端な昇華設定ではPSDの解像度が失われる。（[marsdisk/run.py:635-666]）
 - `pyarrow`未導入だとParquet書き出しが失敗するので、CI環境では事前に依存関係を導入する。（[marsdisk/io/writer.py:24-103]）
 
@@ -119,5 +133,5 @@ PSDの下限は `psd.floor.mode` に応じて設定値・ブローアウト境�
 # 付録：用語の一行定義
 - 軽さ指標（放射圧比 β, radiation pressure ratio）：放射圧と重力の比を表し、0.5を超えると粒子が吹き飛ぶ。（[marsdisk/physics/radiation.py:236-241]）
 - ブローアウト半径（blow-out radius）：軽さ指標が0.5になる粒径で、`s_min`クリップの基準になる。（[marsdisk/physics/radiation.py:250-258]）
-- Strubbe–Chiang 衝突時間（Wyatt legacy collisional time）：`t_{\rm coll}=1/(\Omega\tau_{\perp})` として評価する表層の衝突寿命。（[marsdisk/physics/surface.py:77-87]）
-- 光学的厚さ（optical depth）：遮蔽判断に使う厚さ指標で、`sigma_tau1`によるクリップの上限を定める。（[marsdisk/physics/surface.py:185-196]）
+- Strubbe–Chiang 衝突時間（Wyatt legacy collisional time）：`t_{\rm coll}=1/(\Omega\tau_{\perp})` として評価する表層の衝突寿命。（[marsdisk/physics/surface.py:79-87]）
+- 光学的厚さ（optical depth）：遮蔽判断に使う厚さ指標で、`sigma_tau1`によるクリップの上限を定める。（[marsdisk/physics/surface.py:187-196]）

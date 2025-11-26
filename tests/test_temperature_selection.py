@@ -3,15 +3,15 @@ from pathlib import Path
 
 import pytest
 
-from marsdisk import run, schema
+from marsdisk import constants, run, schema
 
 
 def _make_config(outdir: Path, T_M: float) -> schema.Config:
     cfg = schema.Config(
-        geometry=schema.Geometry(mode="0D", r=1.0),
+        geometry=schema.Geometry(mode="0D", r=2.6 * constants.R_MARS),
         material=schema.Material(rho=3000.0),
         temps=schema.Temps(T_M=T_M),
-        sizes=schema.Sizes(s_min=1.0e-7, s_max=1.0e-3, n_bins=8),
+        sizes=schema.Sizes(s_min=1.0e-8, s_max=1.0e-3, n_bins=8),
         initial=schema.Initial(mass_total=1.0e-9, s0_mode="upper"),
         dynamics=schema.Dynamics(e0=0.05, i0=0.01, t_damp_orbits=1.0, f_wake=1.0),
         psd=schema.PSD(alpha=1.5, wavy_strength=0.0),
@@ -20,6 +20,7 @@ def _make_config(outdir: Path, T_M: float) -> schema.Config:
         io=schema.IO(outdir=outdir),
     )
     cfg.sinks.mode = "none"
+    cfg.radiation = schema.Radiation(qpr_table_path=Path("data/qpr_table.csv"))
     return cfg
 
 

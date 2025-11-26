@@ -8,9 +8,10 @@
       "bibtex": "@article{Hyodo2018_ApJ860_150, journal = {ApJ}, volume = {860}, pages = {150}, year = {2018}}",
       "adopted_scope": "Post-impact radiative cooling and volatile loss for gas-poor Martian debris disks.",
       "claims": [
-        "Equations (2)–(4) provide the radiative-slab cooling law used for Mars surface temperatures.",
-        "Equations (5)–(6) relate particle temperature, ⟨Q_abs⟩, and the dilution factor √(R_p/2r).",
-        "Discusses the few-orbit volatile escape and β-threshold regimes adopted by the simulation."
+        "Equations (2)–(4) provide the radiative-slab cooling law used for Mars surface temperatures (E.042).",
+        "Equations (5)–(6) relate particle temperature, ⟨Q_abs⟩, and the dilution factor √(R_p/2r) (E.043).",
+        "Discusses the few-orbit volatile escape and β-threshold regimes adopted by the simulation.",
+        "Serves as the primary citation for siO2_disk_cooling.tmars/tp_of_rt and radiation.grain_temperature_graybody."
       ]
     },
     {
@@ -93,8 +94,9 @@
       "bibtex": "@article{StrubbeChiang2006_ApJ648_652, journal = {ApJ}, volume = {648}, pages = {652-665}, year = {2006}}",
       "adopted_scope": "Optically thin, gas-poor debris disks where radiation pressure and CPR drag set the small-grain budget.",
       "claims": [
-        "Equation (1) gives the collisional time-scale t_c = 1/(Ω τ_⊥) adopted in S1 surface updates.",
-        "Defines β(s), the β = 0.5 blow-out limit, and the type A/B regimes with τ(r) ∝ r^{-5/2} or r^{-3/2}."
+        "Equation (1) gives the collisional time-scale t_c = 1/(Ω τ_⊥) adopted in S1 surface updates and (E.006).",
+        "Defines β(s), the β = 0.5 blow-out limit, and the type A/B regimes with τ(r) ∝ r^{-5/2} or r^{-3/2}.",
+        "Provides the gas-poor baseline for radiation.beta, blowout_radius, and related diagnostics; Wyatt (2008) is retained as a review-only cross-check."
       ]
     },
     {

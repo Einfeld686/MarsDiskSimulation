@@ -1,5 +1,23 @@
+scope:
+  region: "inner"
+  analysis_years: 2.0
+physics:
+  mode: "default"  # default=全プロセス, "sublimation_only" or "collisions_only" で単独実行
+  single_process_mode: "off"
+process:
+  primary: "collisions_only"
+  state_tagging:
+    enabled: false
+modes:
+  single_process: "none"
+phase5:
+  compare:
+    enable: false
+    duration_years: 2.0
 geometry:
   mode: "0D"
+  r: 8.3e6  # ≈2.45 R_Mars
+chi_blow: "auto"
 material:
   rho: 3000.0
 temps:
@@ -8,17 +26,23 @@ sizes:
   s_min: 1.0e-6
   s_max: 3.0
   n_bins: 40
+  evolve_min_size: false
+  apply_evolved_min_size: false
 initial:
   mass_total: 1.0e-5
   s0_mode: "upper"
 dynamics:
   e0: 0.5
   i0: 0.05
-  t_damp_orbits: 20
+  t_damp_orbits: 20.0
   f_wake: 2.0
+  e_mode: "fixed"
+  i_mode: "fixed"
 psd:
   alpha: 1.83
   wavy_strength: 0.2
+  floor:
+    mode: "fixed"
 qstar:
   Qs: 3.5e7
   a_s: 0.38
@@ -39,6 +63,7 @@ surface:
   init_policy: "clip_by_tau1"
   sigma_surf_init_override: null
   use_tcoll: true
+  freeze_sigma: false
 supply:
   mode: "const"
   const:
@@ -53,8 +78,7 @@ supply:
   mixing:
     epsilon_mix: 1.0
 sinks:
-  # mode: "none"  # example: disable sublimation and gas-drag sinks entirely
-  mode: "sublimation"  # default behaviour
+  mode: "sublimation"
   enable_sublimation: false
   T_sub: 1300.0
   sub_params:
@@ -68,18 +92,62 @@ sinks:
     P_gas: 0.0
   enable_gas_drag: false
   rho_g: 0.0
+  rp_blowout:
+    enable: true
+  hydro_escape:
+    enable: false
 radiation:
-  TM_K: 2500
+  source: "mars"
+  use_mars_rp: true
+  use_solar_rp: false
+  freeze_kappa: false
   qpr_table_path: "data/qpr_table.csv"
+  Q_pr: null
+  mars_temperature_driver:
+    enabled: false
+    mode: "constant"
+    constant:
+      value_K: 2500.0
+    table:
+      path: "data/mars_temperature_table_example.csv"
+      time_unit: "day"
+      column_time: "time_day"
+      column_temperature: "T_K"
+    extrapolation: "hold"
+  tau_gate:
+    enable: false
+    tau_max: 1.0
 shielding:
-  phi_table: null
+  mode: "psitau"
+  table_path: null
+  fixed_tau1_tau: null
+  fixed_tau1_sigma: null
+blowout:
+  enabled: true
+  target_phase: "solid_only"
+  layer: "surface_tau_le_1"
+phase:
+  enabled: false
+  source: "threshold"
+  thresholds:
+    T_condense_K: 1700.0
+    T_vaporize_K: 2000.0
+    P_ref_bar: 1.0
+    tau_ref: 1.0
+  map:
+    entrypoint: "siO2_disk_cooling.siO2_cooling_map:lookup_phase_state"
 numerics:
   t_end_years: 2.0
   dt_init: 10.0
   safety: 0.1
-  atol: 1e-10
-  rtol: 1e-6
+  atol: 1.0e-10
+  rtol: 1.0e-6
+  eval_per_step: true
+  orbit_rollup: true
+  dt_over_t_blow_max: 0.1
 io:
   outdir: "out"
   debug_sinks: true
   correct_fast_blowout: false
+  substep_fast_blowout: false
+  substep_max_ratio: 1.0

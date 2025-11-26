@@ -9,7 +9,7 @@ configuration files remain forward compatible.
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Dict, List, Literal, Optional, Tuple, Union
+from typing import Any, Dict, List, Literal, Optional, Tuple, Union
 import warnings
 
 from pydantic import BaseModel, Field, validator, root_validator
@@ -44,6 +44,20 @@ class Disk(BaseModel):
     """Container for inner disk properties."""
 
     geometry: DiskGeometry
+
+
+class Scope(BaseModel):
+    """Scope settings that restrict the analysis window and region."""
+
+    region: Literal["inner"] = Field(
+        "inner",
+        description="Spatial scope selector. Phase 0 restricts runs to the inner disk.",
+    )
+    analysis_years: float = Field(
+        2.0,
+        gt=0.0,
+        description="Total analysis window expressed in years.",
+    )
 
 
 class InnerDiskMass(BaseModel):
@@ -260,6 +274,30 @@ class SublimationParamsModel(BaseModel):
     P_gas: float = 0.0
 
 
+class RPBlowoutConfig(BaseModel):
+    """Toggle for radiation-pressure blow-out sinks."""
+
+    enable: bool = True
+
+
+class HydroEscapeConfig(BaseModel):
+    """Configuration for vapour-driven hydrodynamic escape sinks."""
+
+    enable: bool = False
+    strength: float = Field(
+        0.0,
+        ge=0.0,
+        description="Base rate coefficient for the hydrodynamic escape sink [s^-1].",
+    )
+    temp_power: float = Field(1.0, description="Temperature scaling index for the escape rate.")
+    T_ref_K: float = Field(2000.0, gt=0.0, description="Reference temperature for the scaling law [K].")
+    f_vap_floor: float = Field(
+        1.0e-3,
+        ge=0.0,
+        description="Minimum vapour fraction used when estimating the escape rate.",
+    )
+
+
 class Sinks(BaseModel):
     """Configuration of additional sink processes."""
 
@@ -276,11 +314,194 @@ class Sinks(BaseModel):
         ),
     )
     rho_g: float = 0.0
+    rp_blowout: RPBlowoutConfig = RPBlowoutConfig()
+    hydro_escape: HydroEscapeConfig = HydroEscapeConfig()
+
+
+class ProcessStateTagging(BaseModel):
+    """Placeholder toggle for future solid/gas tagging."""
+
+    enabled: bool = Field(
+        False,
+        description="Enable the preliminary state-tagging hook (Phase 0 returns 'solid').",
+    )
+
+
+class Process(BaseModel):
+    """Primary-process selector and companion switches."""
+
+    primary: Literal["sublimation_only", "collisions_only"] = Field(
+        "collisions_only",
+        description="Select which physical process drives the evolution in Phase 0.",
+    )
+    state_tagging: ProcessStateTagging = ProcessStateTagging()
+
+
+class Modes(BaseModel):
+    """High-level study modes for isolating single processes."""
+
+    single_process: Literal["none", "sublimation_only", "collisional_only"] = "none"
+
+
+class Phase5CompareConfig(BaseModel):
+    """Phase 5 comparison study controls."""
+
+    enable: bool = Field(
+        False,
+        description="Enable the sequential single-process comparison run.",
+    )
+    duration_years: float = Field(
+        2.0,
+        gt=0.0,
+        description="Override t_end_years when the comparison runner is active (years).",
+    )
+    mode_a: Optional[str] = Field(
+        None,
+        description="Single-process mode for variant A (e.g. collisions_only or sublimation_only).",
+    )
+    mode_b: Optional[str] = Field(
+        None,
+        description="Single-process mode for variant B.",
+    )
+    label_a: Optional[str] = Field(
+        None,
+        description="Human-readable label for variant A; defaults to mode_a when omitted.",
+    )
+    label_b: Optional[str] = Field(
+        None,
+        description="Human-readable label for variant B; defaults to mode_b when omitted.",
+    )
+
+
+class Phase5Config(BaseModel):
+    """Container for the Phase 5 specific options."""
+
+    compare: Phase5CompareConfig = Phase5CompareConfig()
+
+
+class PhaseThresholds(BaseModel):
+    """Fallback thresholds used when no external phase map is available."""
+
+    T_condense_K: float = Field(1700.0, gt=0.0)
+    T_vaporize_K: float = Field(2000.0, gt=0.0)
+    P_ref_bar: float = Field(1.0, ge=0.0)
+    tau_ref: float = Field(1.0, gt=0.0)
+
+    @validator("T_vaporize_K")
+    def _check_temperature_hierarchy(cls, value: float, values: Dict[str, Any]) -> float:
+        condense = values.get("T_condense_K", 0.0)
+        if value <= condense:
+            raise ValueError("phase.thresholds.T_vaporize_K must exceed T_condense_K")
+        return float(value)
+
+
+class PhaseMapConfig(BaseModel):
+    """Entry point for optional external phase maps."""
+
+    entrypoint: str = Field(
+        "siO2_disk_cooling.siO2_cooling_map:lookup_phase_state",
+        description="Python entrypoint 'module:function' resolving to a phase lookup callable.",
+    )
+
+
+class PhaseConfig(BaseModel):
+    """Solid/vapour branching controls."""
+
+    enabled: bool = False
+    source: Literal["map", "threshold"] = "threshold"
+    thresholds: PhaseThresholds = PhaseThresholds()
+    map: Optional[PhaseMapConfig] = None
+
+
+class MarsTemperatureDriverConstant(BaseModel):
+    """Explicit constant value for the Mars temperature driver."""
+
+    value_K: float = Field(..., description="Constant Mars-facing temperature [K].")
+
+    @validator("value_K")
+    def _check_value(cls, value: float) -> float:
+        Tmin, Tmax = 1000.0, 6500.0
+        if not (Tmin <= float(value) <= Tmax):
+            raise ValueError(f"mars_temperature_driver.constant.value_K must lie within [{Tmin}, {Tmax}] K")
+        return float(value)
+
+
+class MarsTemperatureDriverTable(BaseModel):
+    """Tabulated Mars temperature driver."""
+
+    path: Path = Field(..., description="Path to the time-series table file.")
+    time_unit: Literal["s", "day", "yr", "orbit"] = Field(
+        "s",
+        description="Unit of the time column; 'orbit' scales with the representative orbital period.",
+    )
+    column_time: str = Field("time", description="Name of the time column.")
+    column_temperature: str = Field("T_M", description="Name of the temperature column (Kelvin).")
+
+
+class MarsTemperatureDriverConfig(BaseModel):
+    """Configuration container for the Mars temperature driver."""
+
+    enabled: bool = Field(False, description="Toggle the Mars temperature driver.")
+    mode: Literal["constant", "table"] = Field(
+        "constant",
+        description="Driver mode: constant value or external table interpolation.",
+    )
+    constant: Optional[MarsTemperatureDriverConstant] = Field(
+        None,
+        description="Constant driver parameters.",
+    )
+    table: Optional[MarsTemperatureDriverTable] = Field(
+        None,
+        description="Tabulated driver parameters.",
+    )
+    extrapolation: Literal["hold", "error"] = Field(
+        "hold",
+        description="Out-of-sample behaviour for the table driver.",
+    )
+
+    @validator("constant", always=True)
+    def _check_constant_presence(
+        cls,
+        value: Optional[MarsTemperatureDriverConstant],
+        values: Dict[str, Any],
+    ) -> Optional[MarsTemperatureDriverConstant]:
+        if values.get("mode") == "constant" and value is None and values.get("enabled"):
+            raise ValueError("radiation.mars_temperature_driver.constant must be provided when mode='constant'")
+        return value
+
+    @validator("table", always=True)
+    def _check_table_presence(
+        cls,
+        value: Optional[MarsTemperatureDriverTable],
+        values: Dict[str, Any],
+    ) -> Optional[MarsTemperatureDriverTable]:
+        if values.get("mode") == "table" and value is None and values.get("enabled"):
+            raise ValueError("radiation.mars_temperature_driver.table must be provided when mode='table'")
+        return value
+
+
+class RadiationTauGate(BaseModel):
+    """Optical-depth gating options for radiation-pressure blow-out."""
+
+    enable: bool = False
+    tau_max: float = Field(1.0, gt=0.0, description="τ threshold above which blow-out is suppressed.")
 
 
 class Radiation(BaseModel):
     """Radiation pressure options and table paths."""
 
+    source: Literal["mars", "off", "none"] = Field(
+        "mars",
+        description="Origin of the radiation field driving blow-out (restricted to Mars or off).",
+    )
+    use_mars_rp: bool = Field(
+        True,
+        description="Enable Mars radiation-pressure forcing. Disabled automatically when source='off'.",
+    )
+    use_solar_rp: bool = Field(
+        False,
+        description="Legacy solar radiation toggle retained for logging (always forced off in gas-poor mode).",
+    )
     TM_K: Optional[float] = Field(
         None,
         description="Optional override for the Mars-facing temperature [K]; temps.T_M is used when omitted.",
@@ -295,6 +516,11 @@ class Radiation(BaseModel):
         description="Legacy alias for qpr_table_path; kept for backward compatibility.",
     )
     Q_pr: Optional[float] = Field(None, description="Grey-body radiation pressure efficiency")
+    mars_temperature_driver: Optional[MarsTemperatureDriverConfig] = Field(
+        None,
+        description="Time-dependent Mars temperature driver configuration.",
+    )
+    tau_gate: RadiationTauGate = RadiationTauGate()
 
     @validator("qpr_table", always=True)
     def _check_qpr_table_alias(
@@ -324,6 +550,17 @@ class Radiation(BaseModel):
         if not (0.5 <= value <= 1.5):
             raise ValueError("Q_pr must lie within the sensitivity range 0.5–1.5")
         return value
+
+    @validator("source")
+    def _validate_source(cls, value: str) -> str:
+        """Enforce that only Mars-sourced radiation is allowed."""
+
+        value_lower = value.lower()
+        if value_lower in {"none", "off"}:
+            return "off"
+        if value_lower != "mars":
+            raise ValueError("radiation.source must be either 'mars' or 'off'")
+        return "mars"
 
     @property
     def qpr_table_resolved(self) -> Optional[Path]:
@@ -392,6 +629,18 @@ class Blowout(BaseModel):
     """Radiation blow-out control."""
 
     enabled: bool = True
+    target_phase: Literal["solid_only", "any"] = Field(
+        "solid_only",
+        description="Select which phase states participate in the surface blow-out calculation.",
+    )
+    layer: Literal["surface_tau_le_1", "full_surface"] = Field(
+        "surface_tau_le_1",
+        description="Select the surface reservoir feeding blow-out (default: Σ_{τ≤1} skin).",
+    )
+    gate_mode: Literal["none", "sublimation_competition", "collision_competition"] = Field(
+        "none",
+        description="Optional surface gate to suppress blow-out when other solid-loss processes are faster.",
+    )
 
 
 class Numerics(BaseModel):
@@ -508,10 +757,41 @@ class IO(BaseModel):
     )
 
 
+class Phase7Diagnostics(BaseModel):
+    """Optional Phase7 diagnostics controls."""
+
+    enable: bool = Field(
+        False,
+        description="Enable extended Phase7 diagnostics (additional series columns and rollup keys).",
+    )
+    schema_version: str = Field(
+        "phase7-minimal-v1",
+        description="Schema identifier for the Phase7 diagnostics payload.",
+    )
+
+
+class Diagnostics(BaseModel):
+    """Diagnostics toggles grouped by feature phase."""
+
+    phase7: Phase7Diagnostics = Phase7Diagnostics()
+
+
 class Config(BaseModel):
     """Top-level configuration object."""
 
     geometry: Geometry
+    scope: Scope = Scope()
+    physics_mode: Literal["default", "sublimation_only", "collisions_only"] = Field(
+        "default",
+        description="Physics toggle: default enables collisions+sinks; alternatives isolate a single process.",
+    )
+    single_process_mode: Literal["off", "sublimation_only", "collisions_only"] = Field(
+        "off",
+        description="Global single-process override (set via physics.mode / single_process_mode).",
+    )
+    process: Process = Process()
+    modes: Modes = Modes()
+    phase5: Phase5Config = Phase5Config()
     chi_blow: Union[float, Literal["auto"]] = Field(
         1.0,
         description="Blow-out timescale multiplier (float) or 'auto' to estimate from β and Q_pr.",
@@ -525,6 +805,7 @@ class Config(BaseModel):
     qstar: QStar
     disk: Optional[Disk] = None
     inner_disk_mass: Optional[InnerDiskMass] = None
+    phase: PhaseConfig = PhaseConfig()
     surface: Surface = Surface()
     supply: Supply = Field(default_factory=lambda: Supply())
     sinks: Sinks = Sinks()
@@ -533,7 +814,19 @@ class Config(BaseModel):
     blowout: Blowout = Blowout()
     numerics: Numerics
     tables: Optional[dict] = None  # backward compatibility placeholder
+    diagnostics: Diagnostics = Diagnostics()
     io: IO
+
+    @validator("physics_mode")
+    def _normalise_physics_mode(cls, value: str) -> str:
+        text = str(value).strip().lower() if value is not None else "default"
+        if text in {"", "default", "off", "none", "full", "both"}:
+            return "default"
+        if text in {"sublimation_only", "sublimation"}:
+            return "sublimation_only"
+        if text in {"collisions_only", "collisional_only", "collision_only"}:
+            return "collisions_only"
+        raise ValueError("physics_mode must be default, sublimation_only or collisions_only")
 
     @validator("chi_blow")
     def _validate_chi_blow(cls, value: Union[float, str]) -> Union[float, str]:  # type: ignore[override]
@@ -550,6 +843,7 @@ __all__ = [
     "Geometry",
     "DiskGeometry",
     "Disk",
+    "Scope",
     "Material",
     "Temps",
     "Sizes",
@@ -560,11 +854,25 @@ __all__ = [
     "Surface",
     "InnerDiskMass",
     "Supply",
+    "PhaseConfig",
+    "PhaseThresholds",
+    "PhaseMapConfig",
     "Sinks",
+    "Diagnostics",
+    "Phase7Diagnostics",
+    "ProcessStateTagging",
+    "Process",
+    "Modes",
+    "Phase5Config",
+    "Phase5CompareConfig",
+    "MarsTemperatureDriverConfig",
+    "RadiationTauGate",
     "Radiation",
     "Shielding",
     "Blowout",
     "Numerics",
     "IO",
+    "RPBlowoutConfig",
+    "HydroEscapeConfig",
     "Config",
 ]

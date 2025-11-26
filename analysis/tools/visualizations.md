@@ -10,8 +10,8 @@
 | `psd_time_evolution.py` | PSD の 0D 時間進化を描画する CLI ラッパー。 | 入力: Q_pr テーブル、サイズレンジ、温度、シミュレーション設定。出力: PNG/GIF、`run.json`。 | 実装本体は `prototypes/psd/time_evolution.py`。 |
 | `psd_T_time_map.py` | 温度走査付き PSD “wavy” マップの可視化。 | 入力: Q_pr テーブル、温度レンジ、PSD 初期条件。出力: Parquet、PNG、GIF。 | 実装は `prototypes/psd/temperature_time_map.py` に委譲。 |
 | `psd_core.py` | PSD 実験用の物理ルーチンを re-export。 | 入力: なし | 新規コードは `prototypes/psd/core.py` に実装する。 |
-| `doc_sync_agent.py` | ドキュメント同期ユーティリティの後方互換ラッパー。 | CLI 引数。 | 本体は `marsdisk.ops.doc_sync_agent`。 |
-| `make_qpr_table.py` | Planck 平均 ⟨Q_pr⟩ テーブル生成ラッパー。 | 入力: 粒径レンジ、温度リスト。出力: HDF5。 | 本体は `marsdisk.ops.make_qpr_table`。 |
+| `doc_sync_agent.py` | ドキュメント同期ユーティリティの後方互換ラッパー。 | CLI 引数。 | 本体は `marsdisk.ops.doc_sync_agent`。ルート `tools/` に配置。 |
+| `make_qpr_table.py` | Planck 平均 ⟨Q_pr⟩ テーブル生成ラッパー。 | 入力: 粒径レンジ、温度リスト。出力: HDF5。 | 本体は `marsdisk.ops.make_qpr_table`。ルート `tools/` に配置。 |
 
 ## 2. `tools/plotting/` サブディレクトリ
 

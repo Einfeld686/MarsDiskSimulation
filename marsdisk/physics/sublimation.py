@@ -4,7 +4,9 @@ This module provides tools to estimate sublimation mass fluxes and the
 corresponding instantaneous-sink size for dust grains.  When saturation
 vapour pressure data are unavailable a logistic placeholder is used as a
 smooth approximation, allowing the interface to remain stable until
-proper tables are supplied.
+proper tables are supplied.  Grain temperatures feeding the HKL flux
+use :func:`radiation.grain_temperature_graybody`, i.e. the Hyodo et al.
+(2018) Lambertian equilibrium (E.043). [@Hyodo2018_ApJ860_150]
 """
 from __future__ import annotations
 

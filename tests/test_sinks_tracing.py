@@ -3,12 +3,12 @@ from pathlib import Path
 
 import pytest
 
-from marsdisk import run, schema
+from marsdisk import constants, run, schema
 
 
 def _build_config(outdir: Path) -> schema.Config:
     cfg = schema.Config(
-        geometry=schema.Geometry(mode="0D", r=1.5),
+        geometry=schema.Geometry(mode="0D", r=2.6 * constants.R_MARS),
         material=schema.Material(rho=3000.0),
         temps=schema.Temps(T_M=2000.0),
         sizes=schema.Sizes(s_min=1.0e-7, s_max=1.0e-3, n_bins=8),

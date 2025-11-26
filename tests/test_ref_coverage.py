@@ -86,6 +86,11 @@ def test_e043_references_hyodo() -> None:
     assert "Hyodo2018_ApJ860_150" in block, "E.043 must cite Hyodo et al. (2018)"
 
 
+def test_e042_references_hyodo() -> None:
+    block = _extract_equation_block("E.042")
+    assert "Hyodo2018_ApJ860_150" in block, "E.042 must cite Hyodo et al. (2018)"
+
+
 def test_e006_references_strubbe_chiang() -> None:
     block = _extract_equation_block("E.006")
     assert "StrubbeChiang2006_ApJ648_652" in block, "E.006 must cite Strubbe & Chiang (2006)"
