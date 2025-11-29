@@ -520,34 +520,22 @@ scripts/sweep_massloss_map.py:386:def _write_json(path: Path, payload: Dict[str,
 scripts/sweep_massloss_map.py:392:def _collect_validation(records: Sequence[Dict[str, Any]], *, tolerance: float) -> Dict[str, Any]
 scripts/sweep_massloss_map.py:420:def parse_args() -> argparse.Namespace
 scripts/sweep_massloss_map.py:468:def main() -> None
-siO2_disk_cooling/siO2_cooling_map.py:103:def _clamp(value: float, low: float, high: float) -> float
-siO2_disk_cooling/siO2_cooling_map.py:107:def lookup_phase_state(temperature_K: float, pressure_Pa: Optional[float]=None, tau: Optional[float]=None) -> Mapping[str, object]
-siO2_disk_cooling/siO2_cooling_map.py:164:class Params
-siO2_disk_cooling/siO2_cooling_map.py:182:def tmars(time_s: List[float], t0: float, params: Params=PARAMS) -> List[float]
-siO2_disk_cooling/siO2_cooling_map.py:206:def tp_of_rt(radii_m: List[float], time_s: List[float], t0: float, params: Params=PARAMS) -> List[List[float]]
-siO2_disk_cooling/siO2_cooling_map.py:224:def first_crossing_time(radius_m: float, t0: float, tcrit: float, time_s: List[float], params: Params=PARAMS) -> float
-siO2_disk_cooling/siO2_cooling_map.py:243:def ensure_directory(path: Path) -> None
-siO2_disk_cooling/siO2_cooling_map.py:249:def format_range(r_values: List[float], times: List[float]) -> str
-siO2_disk_cooling/siO2_cooling_map.py:258:def representative_time(times: List[float]) -> str
-siO2_disk_cooling/siO2_cooling_map.py:268:def compute_crossing_times(temp_matrix: List[List[float]], threshold: float, time_s: List[float]) -> List[float]
-siO2_disk_cooling/siO2_cooling_map.py:286:def build_arrival_field(times_years: List[float], time_years: List[float]) -> List[List[float]]
-siO2_disk_cooling/siO2_cooling_map.py:301:def upsert_marked_block(path: Path, marker_begin: str, marker_end: str, body: str) -> None
-siO2_disk_cooling/siO2_cooling_map.py:322:def create_simulation_readme(path: Path) -> None
-siO2_disk_cooling/siO2_cooling_map.py:780:def _uppercase_char(ch: str) -> str
-siO2_disk_cooling/siO2_cooling_map.py:784:def draw_char(image: List[List[List[int]]], ch: str, x: int, y: int, color: tuple[int, int, int]) -> None
-siO2_disk_cooling/siO2_cooling_map.py:799:def draw_text(image: List[List[List[int]]], text: str, x: int, y: int, color: tuple[int, int, int]) -> None
-siO2_disk_cooling/siO2_cooling_map.py:816:def draw_vertical_text(image: List[List[List[int]]], text: str, x: int, y: int, color: tuple[int, int, int]) -> None
-siO2_disk_cooling/siO2_cooling_map.py:832:def draw_line(image: List[List[List[int]]], x0: int, y0: int, x1: int, y1: int, color: tuple[int, int, int], thickness: int=1) -> None
-siO2_disk_cooling/siO2_cooling_map.py:867:def draw_polyline(image: List[List[List[int]]], points: List[tuple[int, int]], color: tuple[int, int, int], thickness: int=2) -> None
-siO2_disk_cooling/siO2_cooling_map.py:877:def viridis_like(value: float) -> tuple[int, int, int]
-siO2_disk_cooling/siO2_cooling_map.py:895:def render_heatmap_array(field: List[List[float]], width: int, height: int) -> List[List[List[int]]]
-siO2_disk_cooling/siO2_cooling_map.py:919:def save_png(image: List[List[List[int]]], path: Path) -> None
-siO2_disk_cooling/siO2_cooling_map.py:953:def render_manual_map(time_years: List[float], r_ratios: List[float], glass_field: List[List[float]], liquidus_field: List[List[float]], iso_map: Dict[float, List[float]], png_path: Path, t0: float) -> None
-siO2_disk_cooling/siO2_cooling_map.py:1106:def run_case(t0: float, radii_m: List[float], time_s: List[float], r_ratios: List[float], outputs_dir: Path) -> Dict[str, object]
-siO2_disk_cooling/siO2_cooling_map.py:1208:def update_root_readme(root_path: Path, summaries: List[Dict[str, object]]) -> None
-siO2_disk_cooling/siO2_cooling_map.py:1235:def update_root_agents(root_path: Path) -> None
-siO2_disk_cooling/siO2_cooling_map.py:1254:def update_analysis_document(analysis_path: Path, summaries: List[Dict[str, object]]) -> None
-siO2_disk_cooling/siO2_cooling_map.py:1283:def main() -> None
+siO2_disk_cooling/io_utils.py:13:def ensure_outputs_dir() -> Path
+siO2_disk_cooling/io_utils.py:21:def write_csv(r_over_Rmars: np.ndarray, arrival_glass_s: np.ndarray, arrival_liquidus_s: np.ndarray, path: Path) -> None
+siO2_disk_cooling/io_utils.py:40:def _format_stat(values: Iterable[float]) -> str
+siO2_disk_cooling/io_utils.py:48:def write_log(T0: float, r_over_Rmars: np.ndarray, arrival_glass_s: np.ndarray, arrival_liquidus_s: np.ndarray, path: Path) -> None
+siO2_disk_cooling/model.py:13:class CoolingParams
+siO2_disk_cooling/model.py:25:def mars_temperature(time_s: np.ndarray, T0: float, params: CoolingParams) -> np.ndarray
+siO2_disk_cooling/model.py:48:def dust_temperature(radius_m: float | np.ndarray, time_s: np.ndarray, T0: float, params: CoolingParams) -> np.ndarray
+siO2_disk_cooling/model.py:64:def arrival_time_for_threshold(radius_m: float, time_s: np.ndarray, T_dust: np.ndarray, threshold_K: float) -> float
+siO2_disk_cooling/model.py:81:def compute_arrival_times(T0: float, params: CoolingParams, r_over_Rmars: np.ndarray, time_s: np.ndarray) -> Tuple[np.ndarray, np.ndarray]
+siO2_disk_cooling/plotting.py:13:def _arrival_field(time_s: np.ndarray, arrival_s: np.ndarray) -> np.ndarray
+siO2_disk_cooling/plotting.py:21:def plot_arrival_map(r_over_Rmars: np.ndarray, time_s: np.ndarray, arrival_glass_s: np.ndarray, arrival_liquidus_s: np.ndarray, output_path: Path, *, T0: float, params: CoolingParams) -> None
+siO2_disk_cooling/siO2_cooling_map.py:16:def _parse_args() -> argparse.Namespace
+siO2_disk_cooling/siO2_cooling_map.py:35:def _build_grids(t_max_years: float, dt_hours: float, r_min: float, r_max: float, n_r: int) -> tuple[np.ndarray, np.ndarray]
+siO2_disk_cooling/siO2_cooling_map.py:54:def _format_tag(T0: float) -> str
+siO2_disk_cooling/siO2_cooling_map.py:58:def lookup_phase_state(temperature_K: float, pressure_Pa: Optional[float]=None, tau: Optional[float]=None) -> Dict[str, Any]
+siO2_disk_cooling/siO2_cooling_map.py:82:def main() -> None
 tests/phase_map_stub.py:7:def lookup_phase_state(temperature_K: float, pressure_Pa: Optional[float]=None, tau: Optional[float]=None) -> dict[str, float | str | None]
 tests/phase_map_stub.py:27:def lookup_unphysical_fraction(temperature_K: float, *_args, **_kwargs) -> dict[str, float | str]
 tests/test_analysis_coverage_guard.py:7:def test_analysis_coverage_guard() -> None
@@ -671,6 +659,9 @@ tests/test_scope_limitations_metadata.py:54:def _read_json(path: Path) -> dict
 tests/test_scope_limitations_metadata.py:59:def test_scope_limitations_present_and_populated(tmp_path: Path) -> None
 tests/test_scope_limitations_metadata.py:86:def test_single_process_flags_flow_into_scope_limitations(tmp_path: Path) -> None
 tests/test_scope_limitations_metadata.py:113:def test_solar_radiation_request_is_recorded(tmp_path: Path) -> None
+tests/test_siO2_cooling_model.py:14:def test_mars_temperature_monotonic_decrease() -> None
+tests/test_siO2_cooling_model.py:21:def test_dust_temperature_monotonic_decrease_single_radius() -> None
+tests/test_siO2_cooling_model.py:29:def test_arrival_time_for_threshold() -> None
 tests/test_sinks_none.py:15:def test_run_zero_d_with_sinks_disabled(tmp_path: Path) -> None
 tests/test_sinks_tracing.py:9:def _build_config(outdir: Path) -> schema.Config
 tests/test_sinks_tracing.py:34:def test_debug_sinks_trace_outputs_jsonl(tmp_path: Path) -> None

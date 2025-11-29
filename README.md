@@ -100,9 +100,9 @@ python -m marsdisk.run --config configs/base.yml \
 python -m venv .venv && source .venv/bin/activate  # 任意の仮想環境
 pip install -r requirements.txt                    # ない場合は numpy pandas pyarrow ruamel.yaml pydantic 等を個別導入
 
-python -m marsdisk.run --config configs/base.yml   # 0D シミュレーション実行
-# 追加シンク（昇華・ガス抗力）を無効化したい場合
-python -m marsdisk.run --config configs/base.yml --sinks none
+python -m marsdisk.run --config configs/base.yml   # 0D シミュレーション実行（sinks.mode=none が既定）
+# 昇華・ガス抗力などの追加シンクを試したい場合
+python -m marsdisk.run --config configs/base.yml --sinks sublimation --set sinks.enable_sublimation=true
 ```
 
 ### 生成物（標準設定）

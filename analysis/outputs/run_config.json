@@ -1,0 +1,277 @@
+{
+  "Q_pr_used": 0.9890795191850061,
+  "T_M_used": 2000.0,
+  "beta_formula": "beta = 3 \u03c3_SB T_M^4 R_M^2 Q_pr / (4 G M_M c \u03c1 s)",
+  "constants": {
+    "C": 299792458.0,
+    "G": 6.6743e-11,
+    "M_MARS": 6.4171e+23,
+    "R_MARS": 3389500.0,
+    "SIGMA_SB": 5.670374419e-08
+  },
+  "defaults": {
+    "Q_pr": 1.0,
+    "T_M_range_K": [
+      1000.0,
+      6500.0
+    ],
+    "beta_threshold": 0.5,
+    "rho": 3000.0
+  },
+  "git": {
+    "branch": "main",
+    "commit": "b34fb3e368ab514bb8d93406391f7fb76dff414e",
+    "dirty": true
+  },
+  "init_ei": {
+    "a_m_source": "geometry.r",
+    "delta_r_sample_m": null,
+    "dr_dist": "uniform",
+    "dr_max_m": null,
+    "dr_min_m": null,
+    "e0_applied": 0.5,
+    "e_formula_SI": "e = 1 - (R_MARS + \u0394r)/a; [\u0394r, a, R_MARS]: meters",
+    "e_mode": "fixed",
+    "i0_applied_rad": 0.05,
+    "i_mode": "fixed",
+    "i_spread_deg": 0.0,
+    "obs_tilt_deg": 30.0,
+    "seed_used": 791072165
+  },
+  "physics_controls": {
+    "blowout_enabled": true,
+    "blowout_gate_mode": "none",
+    "blowout_layer": "surface_tau_le_1",
+    "blowout_target_phase": "solid_only",
+    "freeze_kappa": false,
+    "freeze_sigma": false,
+    "hydro_escape_strength": 0.0,
+    "hydro_escape_temp_power": 1.0,
+    "phase_enabled": false,
+    "phase_entrypoint": "siO2_disk_cooling.siO2_cooling_map:lookup_phase_state",
+    "phase_source": "disabled",
+    "psd_floor_mode": "fixed",
+    "radiation_use_mars_rp": true,
+    "radiation_use_solar_rp": false,
+    "rp_blowout_enabled": true,
+    "shielding_mode": "psitau",
+    "shielding_sigma_tau1_fixed": null,
+    "shielding_table_path": null,
+    "shielding_tau_fixed": null,
+    "tau_gate_enabled": false,
+    "tau_gate_tau_max": null
+  },
+  "physics_mode": "default",
+  "physics_mode_source": "default",
+  "process_controls": {
+    "blowout_active": true,
+    "collisions_active": true,
+    "physics_mode": "default",
+    "physics_mode_source": "default",
+    "primary_field_explicit": true,
+    "primary_process": "collisions_only",
+    "primary_process_cfg": "collisions_only",
+    "primary_scenario": "collisions_only",
+    "rp_blowout_enabled": true,
+    "single_process_mode": "off",
+    "single_process_mode_source": "default",
+    "sink_timescale_active": false,
+    "sinks_active": false,
+    "sinks_enabled_cfg": false,
+    "sinks_mode": "none",
+    "state_phase_tag": null,
+    "state_tagging_enabled": false,
+    "sublimation_active": false
+  },
+  "process_overview": {
+    "blowout_active": true,
+    "collisions_active": true,
+    "gas_drag_sink_active": false,
+    "primary_field_explicit": true,
+    "primary_process_cfg": "collisions_only",
+    "primary_process_resolved": "collisions_only",
+    "primary_scenario": "collisions_only",
+    "rp_blowout_enabled": true,
+    "sink_timescale_active": false,
+    "sinks_active": false,
+    "sinks_enabled_cfg": false,
+    "sinks_mode": "none",
+    "sublimation_dsdt_active": false,
+    "sublimation_sink_active": false
+  },
+  "radiation_provenance": {
+    "Q_pr_blow": 0.9890795191850061,
+    "Q_pr_override": null,
+    "Q_pr_source": "table",
+    "T_M_source": "temps.T_M",
+    "qpr_table_path": "data/qpr_table.csv",
+    "radiation_field": "mars",
+    "temperature_source": "temps.T_M",
+    "use_mars_rp": true,
+    "use_solar_rp": false
+  },
+  "rho_used": 3000.0,
+  "run_inputs": {
+    "Q_pr_blow": 0.9890795191850061,
+    "Q_pr_used": 0.9890795191850061,
+    "T_M_final": 2000.0,
+    "T_M_initial": 2000.0,
+    "T_M_source": "temps.T_M",
+    "T_M_used": 2000.0,
+    "input_config_path": "/Users/daichi/marsshearingsheet/configs/base.yml",
+    "phi_table_path": null,
+    "physics_mode": "default",
+    "physics_mode_source": "default",
+    "qpr_table_path": "data/qpr_table.csv",
+    "r_RM_used": 2.448738752028323,
+    "r_m_used": 8300000.0,
+    "r_source": "geometry.r",
+    "rho_used": 3000.0,
+    "rng_seed": 791072165,
+    "rng_seed_basis": "geometry.r=8300000.0|disk.r_in_RM=2.2,r_out_RM=2.7|temps.T_M=2000.0|initial.mass_total=1e-05",
+    "rng_seed_expr": "sha256('geometry.r=8300000.0|disk.r_in_RM=2.2,r_out_RM=2.7|temps.T_M=2000.0|initial.mass_total=1e-05') % 2**31"
+  },
+  "s_blow_formula": "s_blow = 3 \u03c3_SB T_M^4 R_M^2 Q_pr / (2 G M_M c \u03c1)",
+  "scope_controls": {
+    "analysis_window_years": 2.0,
+    "inner_disk_scope": true,
+    "region": "inner"
+  },
+  "scope_limitations": {
+    "active_physics": {
+      "active_sinks": [],
+      "blowout_enabled_cfg": true,
+      "collisions_active": true,
+      "enforce_collisions_only": true,
+      "enforce_sublimation_only": false,
+      "freeze_kappa": false,
+      "freeze_sigma": false,
+      "primary_scenario": "collisions_only",
+      "rp_blowout_active": true,
+      "rp_blowout_enabled_cfg": true,
+      "shielding_mode": "psitau",
+      "single_process_mode": "off",
+      "sink_timescale_active": false,
+      "sinks_active": false,
+      "sinks_enabled_cfg": false,
+      "sinks_mode": "none",
+      "sublimation_active": false,
+      "tau_gate_enabled": false,
+      "wyatt_collisional_timescale_active": true
+    },
+    "limitation_codes": [
+      "inner_disk_only",
+      "mars_rp_only",
+      "short_timescale",
+      "mode_switching_not_fully_coupled",
+      "optically_thick_surface",
+      "simplified_psd_floor"
+    ],
+    "limitations": [
+      "Inner-disk only; outer or highly eccentric debris is out of scope.",
+      "Radiation pressure source is fixed to Mars; solar/other external sources are ignored even when requested.",
+      "Time horizon is short (~2 yr); long-term tidal or viscous evolution is not modelled.",
+      "Collisional cascade and sublimation are toggled via single-process modes rather than a fully coupled solver.",
+      "Assumes an optically thick inner surface with tau<=1 clipping; vertical/outer tenuous structure is not resolved.",
+      "PSD uses a three-slope + wavy correction with blow-out/sublimation floors; no self-consistent halo is evolved."
+    ],
+    "scope": {
+      "analysis_window_basis": "t_end_years",
+      "analysis_window_years": 2.0,
+      "inner_disk_scope": true,
+      "inner_disk_scope_mode": "optically_thick_surface_only",
+      "radiation_source": "mars",
+      "radiation_use_mars_rp": true,
+      "radiation_use_solar_rp": false,
+      "reference_radius_m": 8300000.0,
+      "reference_radius_source": "geometry.r",
+      "region": "inner",
+      "shielding_mode": "psitau",
+      "solar_radiation_enabled": false,
+      "solar_radiation_requested": false,
+      "tau_gate": {
+        "enabled": false,
+        "mode": "off",
+        "tau_max": null
+      },
+      "time_grid_dt_mode": "auto",
+      "time_grid_summary": {
+        "dt_mode": "auto",
+        "dt_nominal_s": 182.69004278971747,
+        "dt_s": 12623.04,
+        "n_steps": 5000,
+        "t_end_s": 63115200.0,
+        "t_start_s": 0.0
+      }
+    }
+  },
+  "single_process_resolution": {
+    "inputs": {
+      "cli": null,
+      "legacy_modes": "none",
+      "physics": "default",
+      "physics_mode_cfg": "default",
+      "single_process_mode_cfg": "off"
+    },
+    "resolved_mode": "off",
+    "source": "default"
+  },
+  "solar_radiation": {
+    "enabled": false,
+    "note": "Solar radiation disabled (Mars-only scope)",
+    "requested": false
+  },
+  "sublimation_provenance": {
+    "A": null,
+    "B": null,
+    "P_gas": 0.0,
+    "P_sat_Pa": null,
+    "T_req": null,
+    "alpha_evap": 1.0,
+    "eta_instant": 0.1,
+    "local_fit_window_K": 300.0,
+    "log10P": null,
+    "log10P_tabulated": null,
+    "min_points_local_fit": 3,
+    "mode": "logistic",
+    "mu": 0.1,
+    "psat_model": "auto",
+    "psat_model_resolved": "auto",
+    "psat_selection_reason": null,
+    "psat_table_buffer_K": 75.0,
+    "psat_table_monotonic": null,
+    "psat_table_path": null,
+    "psat_table_range_K": null,
+    "runtime_radius_m": 8300000.0,
+    "runtime_t_orb_s": 22957.50785248725,
+    "sublimation_formula": "HKL",
+    "valid_K_active": null,
+    "valid_K_config": [
+      1270.0,
+      1600.0
+    ]
+  },
+  "temperature_driver": {
+    "enabled": false,
+    "mode": "constant",
+    "source": "temps.T_M"
+  },
+  "time_grid": {
+    "dt_capped_by_max_steps": true,
+    "dt_input": "auto",
+    "dt_mode": "auto",
+    "dt_nominal_s": 182.69004278971747,
+    "dt_sources_s": {
+      "0.05*t_blow": 182.69004278971747,
+      "t_end/200": 315576.0
+    },
+    "dt_step_s": 12623.04,
+    "max_steps": 5000,
+    "n_steps": 5000,
+    "scheme": "fixed-step implicit-Euler (S1)",
+    "t_blow_nominal_s": 3653.800855794349,
+    "t_end_basis": "t_end_years",
+    "t_end_input": 2.0,
+    "t_end_s": 63115200.0
+  }
+}
