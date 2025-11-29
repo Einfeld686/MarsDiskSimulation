@@ -22,12 +22,16 @@
 > **出典待ち**: $D,\rho,c_p$ の代表値や層厚の仮定は `tmars_cooling_solution_v1` として `analysis/UNKNOWN_REF_REQUESTS.*` に記録し、一次文献の確認を保留しています。
 
 ## 実行方法
+基本
 ```
-python siO2_disk_cooling/siO2_cooling_map.py
+python -m siO2_disk_cooling.siO2_cooling_map
 ```
+- `--plot-mode {arrival,phase}`: 既定は到達時間マップ、`phase` で固体分率マップ（青=固体優勢、赤=蒸気優勢）。
+- `--cell-width-Rmars <Δr/R_Mars>`: marsdisk のセル幅に揃える場合に指定。未指定なら `--marsdisk-config` (既定 `configs/base.yml` が存在すればそれ) から `disk.geometry.r_in_RM`/`r_out_RM`/`n_cells` を読み取り自動推定する。
+- `--marsdisk-config <path>`: 上記のセル幅自動推定に使う marsdisk 設定パス。指定しない場合は隣接リポジトリの `configs/base.yml` を試し、見つからなければ均等分割（`--n_r`）にフォールバック。
 
 ## 出力物
-- PNG: 各初期温度ごとの到達時刻マップ (glass/liquidus)
+- PNG: 各初期温度ごとの到達時刻マップ (glass/liquidus) または固体分率マップ
 - CSV: `r_over_Rmars`, `t_to_Tglass_yr`, `t_to_Tliquidus_yr`
 
 ## 注意事項
