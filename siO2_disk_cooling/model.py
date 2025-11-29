@@ -11,10 +11,14 @@ YEAR_SECONDS: float = 365.25 * 24.0 * 3600.0
 
 @dataclass(frozen=True)
 class CoolingParams:
-    """Physical parameters used by the cooling model."""
+    """Physical parameters used by the cooling model.
+
+    ``q_abs_mean`` is applied as ``q_abs_mean**0.25`` in the grain temperature scaling.
+    """
 
     R_mars: float = 3.3895e6
     sigma: float = 5.670374419e-8
+    q_abs_mean: float = 1.0  # Planck-mean absorption efficiency <Q_abs>
     rho: float = 3000.0
     cp: float = 1000.0
     d_layer: float = 1.0e5
@@ -48,14 +52,15 @@ def mars_temperature(time_s: np.ndarray, T0: float, params: CoolingParams) -> np
 def dust_temperature(
     radius_m: float | np.ndarray, time_s: np.ndarray, T0: float, params: CoolingParams
 ) -> np.ndarray:
-    """Instantaneous greybody temperature of a dust grain."""
+    """Instantaneous greybody temperature of a dust grain (includes ``q_abs_mean**0.25``)."""
 
     radius_arr = np.asarray(radius_m, dtype=float)
     if np.any(radius_arr <= 0.0):
         raise ValueError("radius_m must be positive")
     time_arr = np.asarray(time_s, dtype=float)
     T_mars = mars_temperature(time_arr, T0, params)
-    factor = np.sqrt(params.R_mars / (2.0 * radius_arr))
+    q_factor = float(params.q_abs_mean) ** 0.25
+    factor = q_factor * np.sqrt(params.R_mars / (2.0 * radius_arr))
     if radius_arr.ndim == 0:
         return T_mars * float(factor)
     return T_mars[:, np.newaxis] * factor[np.newaxis, :]
@@ -87,17 +92,17 @@ def compute_arrival_times(
     if np.any(radii <= 0.0):
         raise ValueError("r_over_Rmars must be positive")
     time_arr = np.asarray(time_s, dtype=float)
-    T_mars = mars_temperature(time_arr, T0, params)
-    factors = np.sqrt(params.R_mars / (2.0 * (radii * params.R_mars)))
+    radii_m = radii * params.R_mars
+    T_dust = dust_temperature(radii_m, time_arr, T0, params)
     arrival_glass = np.full(radii.shape, np.nan, dtype=float)
     arrival_liquidus = np.full(radii.shape, np.nan, dtype=float)
-    for i, factor in enumerate(factors):
-        T_dust = T_mars * factor
+    for i, radius_m in enumerate(radii_m):
+        T_dust_col = T_dust[:, i] if T_dust.ndim > 1 else T_dust
         arrival_glass[i] = arrival_time_for_threshold(
-            radii[i] * params.R_mars, time_arr, T_dust, params.T_glass
+            radius_m, time_arr, T_dust_col, params.T_glass
         )
         arrival_liquidus[i] = arrival_time_for_threshold(
-            radii[i] * params.R_mars, time_arr, T_dust, params.T_liquidus
+            radius_m, time_arr, T_dust_col, params.T_liquidus
         )
     return arrival_glass, arrival_liquidus
 

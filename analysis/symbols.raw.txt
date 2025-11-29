@@ -525,17 +525,19 @@ siO2_disk_cooling/io_utils.py:21:def write_csv(r_over_Rmars: np.ndarray, arrival
 siO2_disk_cooling/io_utils.py:40:def _format_stat(values: Iterable[float]) -> str
 siO2_disk_cooling/io_utils.py:48:def write_log(T0: float, r_over_Rmars: np.ndarray, arrival_glass_s: np.ndarray, arrival_liquidus_s: np.ndarray, path: Path) -> None
 siO2_disk_cooling/model.py:13:class CoolingParams
-siO2_disk_cooling/model.py:25:def mars_temperature(time_s: np.ndarray, T0: float, params: CoolingParams) -> np.ndarray
-siO2_disk_cooling/model.py:48:def dust_temperature(radius_m: float | np.ndarray, time_s: np.ndarray, T0: float, params: CoolingParams) -> np.ndarray
-siO2_disk_cooling/model.py:64:def arrival_time_for_threshold(radius_m: float, time_s: np.ndarray, T_dust: np.ndarray, threshold_K: float) -> float
-siO2_disk_cooling/model.py:81:def compute_arrival_times(T0: float, params: CoolingParams, r_over_Rmars: np.ndarray, time_s: np.ndarray) -> Tuple[np.ndarray, np.ndarray]
+siO2_disk_cooling/model.py:29:def mars_temperature(time_s: np.ndarray, T0: float, params: CoolingParams) -> np.ndarray
+siO2_disk_cooling/model.py:52:def dust_temperature(radius_m: float | np.ndarray, time_s: np.ndarray, T0: float, params: CoolingParams) -> np.ndarray
+siO2_disk_cooling/model.py:69:def arrival_time_for_threshold(radius_m: float, time_s: np.ndarray, T_dust: np.ndarray, threshold_K: float) -> float
+siO2_disk_cooling/model.py:86:def compute_arrival_times(T0: float, params: CoolingParams, r_over_Rmars: np.ndarray, time_s: np.ndarray) -> Tuple[np.ndarray, np.ndarray]
 siO2_disk_cooling/plotting.py:13:def _arrival_field(time_s: np.ndarray, arrival_s: np.ndarray) -> np.ndarray
-siO2_disk_cooling/plotting.py:21:def plot_arrival_map(r_over_Rmars: np.ndarray, time_s: np.ndarray, arrival_glass_s: np.ndarray, arrival_liquidus_s: np.ndarray, output_path: Path, *, T0: float, params: CoolingParams) -> None
+siO2_disk_cooling/plotting.py:21:def _centers_to_edges(x: np.ndarray) -> np.ndarray
+siO2_disk_cooling/plotting.py:34:def plot_arrival_map(r_over_Rmars: np.ndarray, time_s: np.ndarray, arrival_glass_s: np.ndarray, arrival_liquidus_s: np.ndarray, output_path: Path, *, T0: float, params: CoolingParams, mode: Literal['arrival', 'phase']='arrival') -> None
 siO2_disk_cooling/siO2_cooling_map.py:16:def _parse_args() -> argparse.Namespace
-siO2_disk_cooling/siO2_cooling_map.py:35:def _build_grids(t_max_years: float, dt_hours: float, r_min: float, r_max: float, n_r: int) -> tuple[np.ndarray, np.ndarray]
-siO2_disk_cooling/siO2_cooling_map.py:54:def _format_tag(T0: float) -> str
-siO2_disk_cooling/siO2_cooling_map.py:58:def lookup_phase_state(temperature_K: float, pressure_Pa: Optional[float]=None, tau: Optional[float]=None) -> Dict[str, Any]
-siO2_disk_cooling/siO2_cooling_map.py:82:def main() -> None
+siO2_disk_cooling/siO2_cooling_map.py:53:def _build_grids(t_max_years: float, dt_hours: float, r_min: float, r_max: float, n_r: int, cell_width_Rmars: Optional[float]=None) -> tuple[np.ndarray, np.ndarray]
+siO2_disk_cooling/siO2_cooling_map.py:87:def _format_tag(T0: float) -> str
+siO2_disk_cooling/siO2_cooling_map.py:91:def _infer_cell_width_from_config(config_path: Path | None) -> Optional[float]
+siO2_disk_cooling/siO2_cooling_map.py:134:def lookup_phase_state(temperature_K: float, pressure_Pa: Optional[float]=None, tau: Optional[float]=None) -> Mapping[str, Any]
+siO2_disk_cooling/siO2_cooling_map.py:178:def main() -> None
 tests/phase_map_stub.py:7:def lookup_phase_state(temperature_K: float, pressure_Pa: Optional[float]=None, tau: Optional[float]=None) -> dict[str, float | str | None]
 tests/phase_map_stub.py:27:def lookup_unphysical_fraction(temperature_K: float, *_args, **_kwargs) -> dict[str, float | str]
 tests/test_analysis_coverage_guard.py:7:def test_analysis_coverage_guard() -> None

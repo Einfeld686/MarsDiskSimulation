@@ -5153,28 +5153,28 @@
   },
   {
     "file_path": "siO2_disk_cooling/model.py",
-    "line_no": 25,
+    "line_no": 29,
     "symbol": "mars_temperature",
     "signature": "mars_temperature(time_s: np.ndarray, T0: float, params: CoolingParams) -> np.ndarray",
     "brief_usage": "Analytic slab-cooling solution for Mars."
   },
   {
     "file_path": "siO2_disk_cooling/model.py",
-    "line_no": 48,
+    "line_no": 52,
     "symbol": "dust_temperature",
     "signature": "dust_temperature(radius_m: float | np.ndarray, time_s: np.ndarray, T0: float, params: CoolingParams) -> np.ndarray",
-    "brief_usage": "Instantaneous greybody temperature of a dust grain."
+    "brief_usage": "Instantaneous greybody temperature of a dust grain (includes ``q_abs_mean**0.25``)."
   },
   {
     "file_path": "siO2_disk_cooling/model.py",
-    "line_no": 64,
+    "line_no": 69,
     "symbol": "arrival_time_for_threshold",
     "signature": "arrival_time_for_threshold(radius_m: float, time_s: np.ndarray, T_dust: np.ndarray, threshold_K: float) -> float",
     "brief_usage": "Return first time [s] when ``T_dust`` crosses below the threshold."
   },
   {
     "file_path": "siO2_disk_cooling/model.py",
-    "line_no": 81,
+    "line_no": 86,
     "symbol": "compute_arrival_times",
     "signature": "compute_arrival_times(T0: float, params: CoolingParams, r_over_Rmars: np.ndarray, time_s: np.ndarray) -> Tuple[np.ndarray, np.ndarray]",
     "brief_usage": "Compute arrival times for glass/liquidus thresholds across radii."
@@ -5189,9 +5189,16 @@
   {
     "file_path": "siO2_disk_cooling/plotting.py",
     "line_no": 21,
+    "symbol": "_centers_to_edges",
+    "signature": "_centers_to_edges(x: np.ndarray) -> np.ndarray",
+    "brief_usage": "Infer cell edges from a 1D array of monotonically increasing centers."
+  },
+  {
+    "file_path": "siO2_disk_cooling/plotting.py",
+    "line_no": 34,
     "symbol": "plot_arrival_map",
-    "signature": "plot_arrival_map(r_over_Rmars: np.ndarray, time_s: np.ndarray, arrival_glass_s: np.ndarray, arrival_liquidus_s: np.ndarray, output_path: Path, *, T0: float, params: CoolingParams) -> None",
-    "brief_usage": "Render the arrival map to a PNG file."
+    "signature": "plot_arrival_map(r_over_Rmars: np.ndarray, time_s: np.ndarray, arrival_glass_s: np.ndarray, arrival_liquidus_s: np.ndarray, output_path: Path, *, T0: float, params: CoolingParams, mode: Literal['arrival', 'phase']='arrival') -> None",
+    "brief_usage": "Render the arrival map or phase-fraction map to a PNG file."
   },
   {
     "file_path": "siO2_disk_cooling/siO2_cooling_map.py",
@@ -5202,28 +5209,35 @@
   },
   {
     "file_path": "siO2_disk_cooling/siO2_cooling_map.py",
-    "line_no": 35,
+    "line_no": 53,
     "symbol": "_build_grids",
-    "signature": "_build_grids(t_max_years: float, dt_hours: float, r_min: float, r_max: float, n_r: int) -> tuple[np.ndarray, np.ndarray]",
+    "signature": "_build_grids(t_max_years: float, dt_hours: float, r_min: float, r_max: float, n_r: int, cell_width_Rmars: Optional[float]=None) -> tuple[np.ndarray, np.ndarray]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "siO2_disk_cooling/siO2_cooling_map.py",
-    "line_no": 54,
+    "line_no": 87,
     "symbol": "_format_tag",
     "signature": "_format_tag(T0: float) -> str",
     "brief_usage": "No description available."
   },
   {
     "file_path": "siO2_disk_cooling/siO2_cooling_map.py",
-    "line_no": 58,
+    "line_no": 91,
+    "symbol": "_infer_cell_width_from_config",
+    "signature": "_infer_cell_width_from_config(config_path: Path | None) -> Optional[float]",
+    "brief_usage": "Try to infer marsdisk cell width (R_Mars units) from a YAML config."
+  },
+  {
+    "file_path": "siO2_disk_cooling/siO2_cooling_map.py",
+    "line_no": 134,
     "symbol": "lookup_phase_state",
-    "signature": "lookup_phase_state(temperature_K: float, pressure_Pa: Optional[float]=None, tau: Optional[float]=None) -> Dict[str, Any]",
+    "signature": "lookup_phase_state(temperature_K: float, pressure_Pa: Optional[float]=None, tau: Optional[float]=None) -> Mapping[str, Any]",
     "brief_usage": "Lightweight phase map compatible with ``marsdisk.physics.phase``."
   },
   {
     "file_path": "siO2_disk_cooling/siO2_cooling_map.py",
-    "line_no": 82,
+    "line_no": 178,
     "symbol": "main",
     "signature": "main() -> None",
     "brief_usage": "Run the SiO₂ cooling simulation and update documentation."
