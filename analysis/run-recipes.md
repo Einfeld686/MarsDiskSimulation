@@ -44,7 +44,7 @@ io:
 
 5) 確認項目
 - `series/run.parquet` の列に `prod_subblow_area_rate`,`M_out_dot`,`mass_lost_by_blowout`,`mass_lost_by_sinks` に加え、`dt_over_t_blow`,`fast_blowout_factor`,`fast_blowout_flag_gt3`,`fast_blowout_flag_gt10`,`fast_blowout_corrected`,`a_blow_step`,`dSigma_dt_sublimation`,`mass_lost_sinks_step`,`mass_lost_sublimation_step`,`ds_dt_sublimation` が揃う。さらに温度ドライバ列 `T_M_used`,`rad_flux_Mars`,`Q_pr_at_smin`,`beta_at_smin`,`a_blow_at_smin` が出力されていること。供給が0のため `prod_subblow_area_rate` は機械誤差内で0に留まり、`mass_lost_by_sinks` が全行で0であれば HK シンク（`sinks.total_sink_timescale`）が `None` を返し損失項へ寄与していないことを示す。高速ブローアウト補正は既定で無効なので `fast_blowout_corrected` は `false`、閾値フラグは `dt_over_t_blow` の大小に一致する。
-- `summary.json` で `case_status` が `beta_at_smin_config` と `beta_threshold` の比較に従い `blowout`（閾値以上）または `ok`（閾値未満）となっていること。加えて `orbits_completed`,`M_out_cum`,`M_sink_cum`，および `M_out_mean_per_orbit` などの公転ロールアップ指標が出力される。温度関連として `T_M_source`,`T_M_initial`,`T_M_final`,`T_M_min/max/median`、`temperature_driver` が記録され、`beta_at_smin_*` と `a_blow_*` についても min/median/max が付与されていることを確認する。
+- `summary.json` で `case_status` が `beta_at_smin_config` と `beta_threshold` の比較に従い `blowout`（閾値以上）または `ok`（閾値未満）となっていること。加えて `orbits_completed`,`M_out_cum`,`M_sink_cum`，および `M_out_mean_per_orbit` などの公転ロールアップ指標が出力される。温度関連として `T_M_source`,`T_M_initial`,`T_M_final`,`T_M_min`,`T_M_median`,`T_M_max`,`temperature_driver` が記録され、`beta_at_smin_min`/`beta_at_smin_median`/`beta_at_smin_max` と `a_blow_min`/`a_blow_median`/`a_blow_max` が統計として付与されていることを確認する。
 - `summary.json` の β関連フィールドが `beta_at_smin_config` / `beta_at_smin_effective` に分かれていること（旧 `beta_at_smin` は出力されない）。
 - `summary.json` の `s_min_components` に `config`,`blowout`,`effective` が揃い、`s_min_effective` が max(config, blowout) であること。昇華設定は床粒径へは反映されず、粒径侵食による欠損は `mass_lost_sublimation_step` と `dSigma_dt_sublimation` で診断する。[marsdisk/run.py:598–1362][marsdisk/physics/psd.py:149–264]
 - `orbit_rollup.csv` が生成され、各公転に対する `M_out_orbit`,`M_sink_orbit`,`M_loss_per_orbit` が累積されていること。
@@ -52,7 +52,7 @@ io:
 - `checks/mass_budget.csv` の `error_percent` が全行で 0.5% 以下に収まり、最終行の `mass_remaining` と `mass_lost` が初期質量と合致する。
 - `run_config.json` の `sublimation_provenance` に HKL 式と選択済み `psat_model`、SiO 既定値（`alpha_evap`,`mu`,`A`,`B`）、`P_gas`、`valid_K`、必要に応じて `psat_table_path`、実行半径・公転時間が保存され、同ファイルに `beta_formula`,`T_M_used`,`rho_used`,`Q_pr_used` も併記されていること。
 - `diagnostics.phase7.enable=true` を指定した場合のみ、`run.parquet` に `mloss_*` と `t_coll`/`ts_ratio`、`kappa_eff`/`tau_eff`/`blowout_gate_factor` が追加され、`summary.json` に `median_gate_factor` と `tau_gate_blocked_time_fraction`、`orbit_rollup.csv` に `gate_factor_median` が出力される（デフォルトでは列追加なし）。[docs/devnotes/phase7_gate_spec.md]
-- `siO2_disk_cooling/siO2_cooling_map.py` を別途実行し、(E.042)/(E.043) に従った $T_{\rm Mars}(t)$ と $T_p(r,t)$ が Hyodo et al. (2018) の式(2)–(6)と一致することを確認する。初期温度や $\bar{Q}_{\rm abs}$ を掃引し、β 閾値の境界が `out/summary.json` の `beta_at_smin_*` と整合するかをチェックする。[\@Hyodo2018_ApJ860_150]
+- `siO2_disk_cooling/siO2_cooling_map.py` を別途実行し、(E.042)/(E.043) に従った $T_{\rm Mars}(t)$ と $T_p(r,t)$ が Hyodo et al. (2018) の式(2)–(6)と一致することを確認する。初期温度や $\bar{Q}_{\rm abs}$ を掃引し、β 閾値の境界が `out/summary.json` の `beta_at_smin_config` と `beta_at_smin_effective` に整合するかをチェックする。[\@Hyodo2018_ApJ860_150]
 - 化学・相平衡フラグを有効化した runs では、気相凝縮と溶融固化物の化学差（Pignatale et al. 2018）および外縁ガス包絡での凝縮スペクトル（Ronnet et al. 2016）によって HKL パラメータや` t_sink`が設定されていることを `sinks.total_sink_timescale` のログで確認する。[\@Pignatale2018_ApJ853_118; @Ronnet2016_ApJ828_109]
 
 - CLI は `python -m marsdisk.run --config …` を受け取り、0D実行を呼び出す。[marsdisk/run.py:598–1362]
@@ -238,7 +238,7 @@ Python から直接呼ぶ場合は `sample_mass_loss_one_orbit(..., sinks_mode="
 - gas drag 感度を取る場合は Python サンプリングで `enable_gas_drag=True` を渡し、`result["sinks_mode"]` が意図どおり変わっているか `map_massloss.csv` もしくは辞書出力で確認する。  
 
 6) 根拠  
-- サンプラーはベース `Config` をディープコピーして r/T/⟨Q_pr⟩/シンク設定/`dt_over_t_blow_max` を上書きし、1公転のみ `run_zero_d` を回す。`summary.json` と `series/run.parquet` を読み直し、`M_out_cum`,`M_sink_cum`,`mass_loss_frac_per_orbit`,`beta_at_smin_*`,`dt_over_t_blow_{median,p90}`、質量収支誤差をまとめた辞書を返す。[marsdisk/analysis/massloss_sampler.py:114–263]  
+- サンプラーはベース `Config` をディープコピーして r/T/⟨Q_pr⟩/シンク設定/`dt_over_t_blow_max` を上書きし、1公転のみ `run_zero_d` を回す。`summary.json` と `series/run.parquet` を読み直し、`M_out_cum`,`M_sink_cum`,`mass_loss_frac_per_orbit`,`beta_at_smin_config`,`beta_at_smin_effective`,`dt_over_t_blow_{median,p90}`、質量収支誤差をまとめた辞書を返す。[marsdisk/analysis/massloss_sampler.py:114–263]  
 - `scripts/sweep_mass_loss_map.py` は全格子に対して同サンプラーを呼び出し、必要に応じて `sinks.mode="none"` 比較も実行したうえで `map_massloss.csv` と `logs/spec.json` を生成する。dt 比や質量収支統計を `spec.json` に追記し、CLI フラグ (`--dt-over-tblow-max`,`--override`) を各呼び出しへ伝搬させる。[scripts/sweep_mass_loss_map.py:25–25]
 
 ## C. 再開・再実行
@@ -517,7 +517,7 @@ pytest tests/test_analysis_coverage_guard.py -q
   - 入力は `s_min`,`s_max`,`alpha`,`wavy_strength`,`n_bins`,`rho`。不正なサイズ順やビン数は `MarsDiskError` で停止する。[marsdisk/physics/psd.py:30–118]
   - 出力は PSD 状態辞書（`sizes`,`widths`,`number`,`edges`,`rho` など）で、`psd.compute_kappa` や `psd.apply_uniform_size_drift` がそのまま利用する。[marsdisk/physics/psd.py:30–118][marsdisk/run.py:598–603]
 - 参照: [marsdisk/physics/psd.py:30–118]
-- 根拠: wavy補正と不透明度の健全性は `tests/test_psd_kappa.py` と `tests/test_surface_outflux.py` が自動検証する。[tests/test_psd_kappa.py:22–30][tests/test_surface_outflux.py:1–37]
+- 根拠: wavy補正と不透明度の健全性は `tests/test_psd_kappa.py` と `marsdisk/tests/test_surface_outflux.py` が自動検証する。[tests/test_psd_kappa.py:22–30][marsdisk/tests/test_surface_outflux.py:33–37]
 
 ### qpr_lookup — ⟨Q_pr⟩ テーブルの運用
 

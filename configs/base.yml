@@ -78,7 +78,7 @@ supply:
   mixing:
     epsilon_mix: 1.0
 sinks:
-  mode: "sublimation"
+  mode: "none"
   enable_sublimation: false
   T_sub: 1300.0
   sub_params:
@@ -107,7 +107,7 @@ radiation:
     enabled: false
     mode: "constant"
     constant:
-      value_K: 2500.0
+      value_K: 2000.0
     table:
       path: "data/mars_temperature_table_example.csv"
       time_unit: "day"
@@ -138,16 +138,20 @@ phase:
     entrypoint: "siO2_disk_cooling.siO2_cooling_map:lookup_phase_state"
 numerics:
   t_end_years: 2.0
-  dt_init: 10.0
+  dt_init: "auto"
   safety: 0.1
   atol: 1.0e-10
   rtol: 1.0e-6
   eval_per_step: true
   orbit_rollup: true
   dt_over_t_blow_max: 0.1
+diagnostics:
+  phase7:
+    enable: false
+    schema_version: "phase7-minimal-v1"
 io:
   outdir: "out"
-  debug_sinks: true
+  debug_sinks: false
   correct_fast_blowout: false
   substep_fast_blowout: false
   substep_max_ratio: 1.0

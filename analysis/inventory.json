@@ -5110,344 +5110,120 @@
     "brief_usage": "No description available."
   },
   {
-    "file_path": "siO2_disk_cooling/siO2_cooling_map.py",
-    "line_no": 80,
-    "symbol": "SIGMA",
-    "signature": "SIGMA = 5.670374419e-08",
+    "file_path": "siO2_disk_cooling/io_utils.py",
+    "line_no": 13,
+    "symbol": "ensure_outputs_dir",
+    "signature": "ensure_outputs_dir() -> Path",
+    "brief_usage": "Create and return the outputs directory."
+  },
+  {
+    "file_path": "siO2_disk_cooling/io_utils.py",
+    "line_no": 21,
+    "symbol": "write_csv",
+    "signature": "write_csv(r_over_Rmars: np.ndarray, arrival_glass_s: np.ndarray, arrival_liquidus_s: np.ndarray, path: Path) -> None",
+    "brief_usage": "Write arrival times to CSV."
+  },
+  {
+    "file_path": "siO2_disk_cooling/io_utils.py",
+    "line_no": 40,
+    "symbol": "_format_stat",
+    "signature": "_format_stat(values: Iterable[float]) -> str",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "siO2_disk_cooling/io_utils.py",
+    "line_no": 48,
+    "symbol": "write_log",
+    "signature": "write_log(T0: float, r_over_Rmars: np.ndarray, arrival_glass_s: np.ndarray, arrival_liquidus_s: np.ndarray, path: Path) -> None",
+    "brief_usage": "Write a minimal plain-text log for quick inspection."
+  },
+  {
+    "file_path": "siO2_disk_cooling/model.py",
+    "line_no": 9,
+    "symbol": "YEAR_SECONDS",
+    "signature": "YEAR_SECONDS: float = 365.25 * 24.0 * 3600.0",
     "brief_usage": "Module constant"
   },
   {
-    "file_path": "siO2_disk_cooling/siO2_cooling_map.py",
+    "file_path": "siO2_disk_cooling/model.py",
+    "line_no": 13,
+    "symbol": "CoolingParams",
+    "signature": "class CoolingParams",
+    "brief_usage": "Physical parameters used by the cooling model."
+  },
+  {
+    "file_path": "siO2_disk_cooling/model.py",
+    "line_no": 25,
+    "symbol": "mars_temperature",
+    "signature": "mars_temperature(time_s: np.ndarray, T0: float, params: CoolingParams) -> np.ndarray",
+    "brief_usage": "Analytic slab-cooling solution for Mars."
+  },
+  {
+    "file_path": "siO2_disk_cooling/model.py",
+    "line_no": 48,
+    "symbol": "dust_temperature",
+    "signature": "dust_temperature(radius_m: float | np.ndarray, time_s: np.ndarray, T0: float, params: CoolingParams) -> np.ndarray",
+    "brief_usage": "Instantaneous greybody temperature of a dust grain."
+  },
+  {
+    "file_path": "siO2_disk_cooling/model.py",
+    "line_no": 64,
+    "symbol": "arrival_time_for_threshold",
+    "signature": "arrival_time_for_threshold(radius_m: float, time_s: np.ndarray, T_dust: np.ndarray, threshold_K: float) -> float",
+    "brief_usage": "Return first time [s] when ``T_dust`` crosses below the threshold."
+  },
+  {
+    "file_path": "siO2_disk_cooling/model.py",
     "line_no": 81,
-    "symbol": "R_MARS",
-    "signature": "R_MARS = 3389500.0",
-    "brief_usage": "Module constant"
+    "symbol": "compute_arrival_times",
+    "signature": "compute_arrival_times(T0: float, params: CoolingParams, r_over_Rmars: np.ndarray, time_s: np.ndarray) -> Tuple[np.ndarray, np.ndarray]",
+    "brief_usage": "Compute arrival times for glass/liquidus thresholds across radii."
+  },
+  {
+    "file_path": "siO2_disk_cooling/plotting.py",
+    "line_no": 13,
+    "symbol": "_arrival_field",
+    "signature": "_arrival_field(time_s: np.ndarray, arrival_s: np.ndarray) -> np.ndarray",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "siO2_disk_cooling/plotting.py",
+    "line_no": 21,
+    "symbol": "plot_arrival_map",
+    "signature": "plot_arrival_map(r_over_Rmars: np.ndarray, time_s: np.ndarray, arrival_glass_s: np.ndarray, arrival_liquidus_s: np.ndarray, output_path: Path, *, T0: float, params: CoolingParams) -> None",
+    "brief_usage": "Render the arrival map to a PNG file."
+  },
+  {
+    "file_path": "siO2_disk_cooling/siO2_cooling_map.py",
+    "line_no": 16,
+    "symbol": "_parse_args",
+    "signature": "_parse_args() -> argparse.Namespace",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "siO2_disk_cooling/siO2_cooling_map.py",
+    "line_no": 35,
+    "symbol": "_build_grids",
+    "signature": "_build_grids(t_max_years: float, dt_hours: float, r_min: float, r_max: float, n_r: int) -> tuple[np.ndarray, np.ndarray]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "siO2_disk_cooling/siO2_cooling_map.py",
+    "line_no": 54,
+    "symbol": "_format_tag",
+    "signature": "_format_tag(T0: float) -> str",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "siO2_disk_cooling/siO2_cooling_map.py",
+    "line_no": 58,
+    "symbol": "lookup_phase_state",
+    "signature": "lookup_phase_state(temperature_K: float, pressure_Pa: Optional[float]=None, tau: Optional[float]=None) -> Dict[str, Any]",
+    "brief_usage": "Lightweight phase map compatible with ``marsdisk.physics.phase``."
   },
   {
     "file_path": "siO2_disk_cooling/siO2_cooling_map.py",
     "line_no": 82,
-    "symbol": "RHO",
-    "signature": "RHO = 3000.0",
-    "brief_usage": "Module constant"
-  },
-  {
-    "file_path": "siO2_disk_cooling/siO2_cooling_map.py",
-    "line_no": 83,
-    "symbol": "CP",
-    "signature": "CP = 1000.0",
-    "brief_usage": "Module constant"
-  },
-  {
-    "file_path": "siO2_disk_cooling/siO2_cooling_map.py",
-    "line_no": 84,
-    "symbol": "D_LAYER",
-    "signature": "D_LAYER = 100000.0",
-    "brief_usage": "Module constant"
-  },
-  {
-    "file_path": "siO2_disk_cooling/siO2_cooling_map.py",
-    "line_no": 85,
-    "symbol": "DT_HOURS",
-    "signature": "DT_HOURS = 6.0",
-    "brief_usage": "Module constant"
-  },
-  {
-    "file_path": "siO2_disk_cooling/siO2_cooling_map.py",
-    "line_no": 86,
-    "symbol": "YEARS",
-    "signature": "YEARS = 2.0",
-    "brief_usage": "Module constant"
-  },
-  {
-    "file_path": "siO2_disk_cooling/siO2_cooling_map.py",
-    "line_no": 87,
-    "symbol": "YEAR_SECONDS",
-    "signature": "YEAR_SECONDS = 365.25 * 24 * 3600",
-    "brief_usage": "Module constant"
-  },
-  {
-    "file_path": "siO2_disk_cooling/siO2_cooling_map.py",
-    "line_no": 88,
-    "symbol": "DT_SECONDS",
-    "signature": "DT_SECONDS = DT_HOURS * 3600.0",
-    "brief_usage": "Module constant"
-  },
-  {
-    "file_path": "siO2_disk_cooling/siO2_cooling_map.py",
-    "line_no": 89,
-    "symbol": "N_R",
-    "signature": "N_R = 300",
-    "brief_usage": "Module constant"
-  },
-  {
-    "file_path": "siO2_disk_cooling/siO2_cooling_map.py",
-    "line_no": 90,
-    "symbol": "R_RATIO_MIN",
-    "signature": "R_RATIO_MIN = 1.0",
-    "brief_usage": "Module constant"
-  },
-  {
-    "file_path": "siO2_disk_cooling/siO2_cooling_map.py",
-    "line_no": 91,
-    "symbol": "R_RATIO_MAX",
-    "signature": "R_RATIO_MAX = 2.4",
-    "brief_usage": "Module constant"
-  },
-  {
-    "file_path": "siO2_disk_cooling/siO2_cooling_map.py",
-    "line_no": 92,
-    "symbol": "T0_LIST",
-    "signature": "T0_LIST = [6000.0, 4000.0, 2000.0]",
-    "brief_usage": "Module constant"
-  },
-  {
-    "file_path": "siO2_disk_cooling/siO2_cooling_map.py",
-    "line_no": 93,
-    "symbol": "T_GLASS",
-    "signature": "T_GLASS = 1475.0",
-    "brief_usage": "Module constant"
-  },
-  {
-    "file_path": "siO2_disk_cooling/siO2_cooling_map.py",
-    "line_no": 94,
-    "symbol": "T_LIQUIDUS",
-    "signature": "T_LIQUIDUS = 1986.0",
-    "brief_usage": "Module constant"
-  },
-  {
-    "file_path": "siO2_disk_cooling/siO2_cooling_map.py",
-    "line_no": 95,
-    "symbol": "ISOTHERM_LEVELS",
-    "signature": "ISOTHERM_LEVELS = [2000.0, 1700.0, 1500.0]",
-    "brief_usage": "Module constant"
-  },
-  {
-    "file_path": "siO2_disk_cooling/siO2_cooling_map.py",
-    "line_no": 96,
-    "symbol": "OUTPUT_FILES",
-    "signature": "OUTPUT_FILES = {6000.0: ('map_T0_6000K.png', 'times_T0_6000K.csv'), 4000.0: ('map_T0_4000K.png', 'times_T0_4000K.csv'), 2000.0: ('map_T0_2000K.png', 'times_T0_2000K.csv')}",
-    "brief_usage": "Module constant"
-  },
-  {
-    "file_path": "siO2_disk_cooling/siO2_cooling_map.py",
-    "line_no": 103,
-    "symbol": "_clamp",
-    "signature": "_clamp(value: float, low: float, high: float) -> float",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "siO2_disk_cooling/siO2_cooling_map.py",
-    "line_no": 107,
-    "symbol": "lookup_phase_state",
-    "signature": "lookup_phase_state(temperature_K: float, pressure_Pa: Optional[float]=None, tau: Optional[float]=None) -> Mapping[str, object]",
-    "brief_usage": "Return a solid/vapour decision for the requested conditions."
-  },
-  {
-    "file_path": "siO2_disk_cooling/siO2_cooling_map.py",
-    "line_no": 164,
-    "symbol": "Params",
-    "signature": "class Params",
-    "brief_usage": "Parameter set passed to the thermal model."
-  },
-  {
-    "file_path": "siO2_disk_cooling/siO2_cooling_map.py",
-    "line_no": 176,
-    "symbol": "PARAMS",
-    "signature": "PARAMS = Params()",
-    "brief_usage": "Module constant"
-  },
-  {
-    "file_path": "siO2_disk_cooling/siO2_cooling_map.py",
-    "line_no": 182,
-    "symbol": "tmars",
-    "signature": "tmars(time_s: List[float], t0: float, params: Params=PARAMS) -> List[float]",
-    "brief_usage": "Return the Martian surface temperature evolution."
-  },
-  {
-    "file_path": "siO2_disk_cooling/siO2_cooling_map.py",
-    "line_no": 206,
-    "symbol": "tp_of_rt",
-    "signature": "tp_of_rt(radii_m: List[float], time_s: List[float], t0: float, params: Params=PARAMS) -> List[List[float]]",
-    "brief_usage": "Return the grain temperature field for given radii and times."
-  },
-  {
-    "file_path": "siO2_disk_cooling/siO2_cooling_map.py",
-    "line_no": 224,
-    "symbol": "first_crossing_time",
-    "signature": "first_crossing_time(radius_m: float, t0: float, tcrit: float, time_s: List[float], params: Params=PARAMS) -> float",
-    "brief_usage": "Return the first time [s] when T_p <= tcrit; NaN if not reached."
-  },
-  {
-    "file_path": "siO2_disk_cooling/siO2_cooling_map.py",
-    "line_no": 243,
-    "symbol": "ensure_directory",
-    "signature": "ensure_directory(path: Path) -> None",
-    "brief_usage": "Create directory if it does not exist."
-  },
-  {
-    "file_path": "siO2_disk_cooling/siO2_cooling_map.py",
-    "line_no": 249,
-    "symbol": "format_range",
-    "signature": "format_range(r_values: List[float], times: List[float]) -> str",
-    "brief_usage": "Format radial range string for summary output."
-  },
-  {
-    "file_path": "siO2_disk_cooling/siO2_cooling_map.py",
-    "line_no": 258,
-    "symbol": "representative_time",
-    "signature": "representative_time(times: List[float]) -> str",
-    "brief_usage": "Return a representative time in years for logging."
-  },
-  {
-    "file_path": "siO2_disk_cooling/siO2_cooling_map.py",
-    "line_no": 268,
-    "symbol": "compute_crossing_times",
-    "signature": "compute_crossing_times(temp_matrix: List[List[float]], threshold: float, time_s: List[float]) -> List[float]",
-    "brief_usage": "Compute first crossing time for each radius in a matrix."
-  },
-  {
-    "file_path": "siO2_disk_cooling/siO2_cooling_map.py",
-    "line_no": 286,
-    "symbol": "build_arrival_field",
-    "signature": "build_arrival_field(times_years: List[float], time_years: List[float]) -> List[List[float]]",
-    "brief_usage": "Construct a 2D field where cells retain arrival time once reached."
-  },
-  {
-    "file_path": "siO2_disk_cooling/siO2_cooling_map.py",
-    "line_no": 301,
-    "symbol": "upsert_marked_block",
-    "signature": "upsert_marked_block(path: Path, marker_begin: str, marker_end: str, body: str) -> None",
-    "brief_usage": "Insert or replace a marked text block in the target file."
-  },
-  {
-    "file_path": "siO2_disk_cooling/siO2_cooling_map.py",
-    "line_no": 322,
-    "symbol": "create_simulation_readme",
-    "signature": "create_simulation_readme(path: Path) -> None",
-    "brief_usage": "Create or overwrite the simulation specific README."
-  },
-  {
-    "file_path": "siO2_disk_cooling/siO2_cooling_map.py",
-    "line_no": 367,
-    "symbol": "FONT_5X7",
-    "signature": "FONT_5X7 = {' ': ['     '] * 7, '0': [' ### ', '#   #', '#   #', '#   #', '#   #', '#   #', ' ### '], '1': ['  #  ', ' ##  ', '  #  ', '  #  ', '  #  ', '  #  ', ' ### '], '2': [' ### ', '#   #', '    #', '   # ', '  #  ', ' #   ', '#####'], '3': [' ### ', '#   #', '    #', ' ### ', '    #', '#   #', ' ### '], '4': ['#   #', '#   #', '#   #', '#####', '    #', '    #', '    #'], '5': ['#####', '#    ', '#    ', '#### ', '    #', '#   #', ' ### '], '6': [' ### ', '#   #', '#    ', '#### ', '#   #', '#   #', ' ### '], '7': ['#####', '    #', '   # ', '  #  ', ' #   ', '#    ', '#    '], '8': [' ### ', '#   #', '#   #', ' ### ', '#   #', '#   #', ' ### '], '9': [' ### ', '#   #', '#   #', ' ####', '    #', '#   #', ' ### '], 'A': [' ### ', '#   #', '#   #', '#####', '#   #', '#   #', '#   #'], 'B': ['#### ', '#   #', '#   #', '#### ', '#   #', '#   #', '#### '], 'C': [' ### ', '#   #', '#    ', '#    ', '#    ', '#   #', ' ### '], 'D': ['#### ', '#   #', '#   #', '#   #', '#   #', '#   #', '#### '], 'E': ['#####', '#    ', '#    ', '#### ', '#    ', '#    ', '#####'], 'F': ['#####', '#    ', '#    ', '#### ', '#    ', '#    ', '#    '], 'G': [' ### ', '#   #', '#    ', '# ###', '#   #', '#   #', ' ### '], 'H': ['#   #', '#   #', '#   #', '#####', '#   #', '#   #', '#   #'], 'I': [' ### ', '  #  ', '  #  ', '  #  ', '  #  ', '  #  ', ' ### '], 'J': ['  ###', '   # ', '   # ', '   # ', '#  # ', '#  # ', ' ##  '], 'K': ['#   #', '#  # ', '# #  ', '##   ', '# #  ', '#  # ', '#   #'], 'L': ['#    ', '#    ', '#    ', '#    ', '#    ', '#    ', '#####'], 'M': ['#   #', '## ##', '# # #', '# # #', '#   #', '#   #', '#   #'], 'N': ['#   #', '##  #', '# # #', '#  ##', '#   #', '#   #', '#   #'], 'O': [' ### ', '#   #', '#   #', '#   #', '#   #', '#   #', ' ### '], 'P': ['#### ', '#   #', '#   #', '#### ', '#    ', '#    ', '#    '], 'Q': [' ### ', '#   #', '#   #', '#   #', '# # #', '#  # ', ' ## #'], 'R': ['#### ', '#   #', '#   #', '#### ', '# #  ', '#  # ', '#   #'], 'S': [' ####', '#    ', '#    ', ' ### ', '    #', '    #', '#### '], 'T': ['#####', '  #  ', '  #  ', '  #  ', '  #  ', '  #  ', '  #  '], 'U': ['#   #', '#   #', '#   #', '#   #', '#   #', '#   #', ' ### '], 'V': ['#   #', '#   #', '#   #', '#   #', ' # # ', ' # # ', '  #  '], 'W': ['#   #', '#   #', '#   #', '# # #', '# # #', '## ##', '#   #'], 'X': ['#   #', '#   #', ' # # ', '  #  ', ' # # ', '#   #', '#   #'], 'Y': ['#   #', '#   #', ' # # ', '  #  ', '  #  ', '  #  ', '  #  '], 'Z': ['#####', '    #', '   # ', '  #  ', ' #   ', '#    ', '#####'], '-': ['     ', '     ', '     ', ' ### ', '     ', '     ', '     '], '=': ['     ', '     ', ' ### ', '     ', ' ### ', '     ', '     '], '<': ['   # ', '  #  ', ' #   ', '#    ', ' #   ', '  #  ', '   # '], '>': ['#    ', ' #   ', '  #  ', '   # ', '  #  ', ' #   ', '#    '], '[': [' ### ', ' #   ', ' #   ', ' #   ', ' #   ', ' #   ', ' ### '], ']': [' ### ', '   # ', '   # ', '   # ', '   # ', '   # ', ' ### '], '_': ['     ', '     ', '     ', '     ', '     ', '     ', '#####'], '/': ['    #', '   # ', '   # ', '  #  ', ' #   ', '#    ', '#    '], '.': ['     ', '     ', '     ', '     ', '     ', ' ##  ', ' ##  ']}",
-    "brief_usage": "Module constant"
-  },
-  {
-    "file_path": "siO2_disk_cooling/siO2_cooling_map.py",
-    "line_no": 776,
-    "symbol": "FONT_WIDTH",
-    "signature": "FONT_WIDTH = 5",
-    "brief_usage": "Module constant"
-  },
-  {
-    "file_path": "siO2_disk_cooling/siO2_cooling_map.py",
-    "line_no": 777,
-    "symbol": "FONT_HEIGHT",
-    "signature": "FONT_HEIGHT = 7",
-    "brief_usage": "Module constant"
-  },
-  {
-    "file_path": "siO2_disk_cooling/siO2_cooling_map.py",
-    "line_no": 780,
-    "symbol": "_uppercase_char",
-    "signature": "_uppercase_char(ch: str) -> str",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "siO2_disk_cooling/siO2_cooling_map.py",
-    "line_no": 784,
-    "symbol": "draw_char",
-    "signature": "draw_char(image: List[List[List[int]]], ch: str, x: int, y: int, color: tuple[int, int, int]) -> None",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "siO2_disk_cooling/siO2_cooling_map.py",
-    "line_no": 799,
-    "symbol": "draw_text",
-    "signature": "draw_text(image: List[List[List[int]]], text: str, x: int, y: int, color: tuple[int, int, int]) -> None",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "siO2_disk_cooling/siO2_cooling_map.py",
-    "line_no": 816,
-    "symbol": "draw_vertical_text",
-    "signature": "draw_vertical_text(image: List[List[List[int]]], text: str, x: int, y: int, color: tuple[int, int, int]) -> None",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "siO2_disk_cooling/siO2_cooling_map.py",
-    "line_no": 832,
-    "symbol": "draw_line",
-    "signature": "draw_line(image: List[List[List[int]]], x0: int, y0: int, x1: int, y1: int, color: tuple[int, int, int], thickness: int=1) -> None",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "siO2_disk_cooling/siO2_cooling_map.py",
-    "line_no": 867,
-    "symbol": "draw_polyline",
-    "signature": "draw_polyline(image: List[List[List[int]]], points: List[tuple[int, int]], color: tuple[int, int, int], thickness: int=2) -> None",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "siO2_disk_cooling/siO2_cooling_map.py",
-    "line_no": 877,
-    "symbol": "viridis_like",
-    "signature": "viridis_like(value: float) -> tuple[int, int, int]",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "siO2_disk_cooling/siO2_cooling_map.py",
-    "line_no": 895,
-    "symbol": "render_heatmap_array",
-    "signature": "render_heatmap_array(field: List[List[float]], width: int, height: int) -> List[List[List[int]]]",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "siO2_disk_cooling/siO2_cooling_map.py",
-    "line_no": 919,
-    "symbol": "save_png",
-    "signature": "save_png(image: List[List[List[int]]], path: Path) -> None",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "siO2_disk_cooling/siO2_cooling_map.py",
-    "line_no": 953,
-    "symbol": "render_manual_map",
-    "signature": "render_manual_map(time_years: List[float], r_ratios: List[float], glass_field: List[List[float]], liquidus_field: List[List[float]], iso_map: Dict[float, List[float]], png_path: Path, t0: float) -> None",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "siO2_disk_cooling/siO2_cooling_map.py",
-    "line_no": 1106,
-    "symbol": "run_case",
-    "signature": "run_case(t0: float, radii_m: List[float], time_s: List[float], r_ratios: List[float], outputs_dir: Path) -> Dict[str, object]",
-    "brief_usage": "Execute the cooling analysis for a single initial temperature."
-  },
-  {
-    "file_path": "siO2_disk_cooling/siO2_cooling_map.py",
-    "line_no": 1208,
-    "symbol": "update_root_readme",
-    "signature": "update_root_readme(root_path: Path, summaries: List[Dict[str, object]]) -> None",
-    "brief_usage": "Update the repository README with a summary section."
-  },
-  {
-    "file_path": "siO2_disk_cooling/siO2_cooling_map.py",
-    "line_no": 1235,
-    "symbol": "update_root_agents",
-    "signature": "update_root_agents(root_path: Path) -> None",
-    "brief_usage": "Insert the execution note into AGENTS.md."
-  },
-  {
-    "file_path": "siO2_disk_cooling/siO2_cooling_map.py",
-    "line_no": 1254,
-    "symbol": "update_analysis_document",
-    "signature": "update_analysis_document(analysis_path: Path, summaries: List[Dict[str, object]]) -> None",
-    "brief_usage": "Append the simulation summary inside the analysis overview."
-  },
-  {
-    "file_path": "siO2_disk_cooling/siO2_cooling_map.py",
-    "line_no": 1283,
     "symbol": "main",
     "signature": "main() -> None",
     "brief_usage": "Run the SiO₂ cooling simulation and update documentation."
@@ -6374,6 +6150,27 @@
     "line_no": 113,
     "symbol": "test_solar_radiation_request_is_recorded",
     "signature": "test_solar_radiation_request_is_recorded(tmp_path: Path) -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/test_siO2_cooling_model.py",
+    "line_no": 14,
+    "symbol": "test_mars_temperature_monotonic_decrease",
+    "signature": "test_mars_temperature_monotonic_decrease() -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/test_siO2_cooling_model.py",
+    "line_no": 21,
+    "symbol": "test_dust_temperature_monotonic_decrease_single_radius",
+    "signature": "test_dust_temperature_monotonic_decrease_single_radius() -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/test_siO2_cooling_model.py",
+    "line_no": 29,
+    "symbol": "test_arrival_time_for_threshold",
+    "signature": "test_arrival_time_for_threshold() -> None",
     "brief_usage": "No description available."
   },
   {
