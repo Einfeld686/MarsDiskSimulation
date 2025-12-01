@@ -1848,6 +1848,13 @@
     "brief_usage": "Serialise orbit-by-orbit loss diagnostics."
   },
   {
+    "file_path": "marsdisk/io/writer.py",
+    "line_no": 304,
+    "symbol": "write_step_diagnostics",
+    "signature": "write_step_diagnostics(rows: Iterable[Mapping[str, Any]], path: Path, *, fmt: Literal['csv', 'jsonl']='csv') -> None",
+    "brief_usage": "Serialise per-step loss channel diagnostics."
+  },
+  {
     "file_path": "marsdisk/ops/doc_sync_agent.py",
     "line_no": 15,
     "symbol": "REPO_ROOT",
@@ -1858,348 +1865,348 @@
     "file_path": "marsdisk/ops/doc_sync_agent.py",
     "line_no": 17,
     "symbol": "DEFAULT_DOC_PATHS",
-    "signature": "DEFAULT_DOC_PATHS = ['analysis/equations.md', 'analysis/overview.md', 'analysis/run-recipes.md', 'analysis/sinks_callgraph.md', 'analysis/AI_USAGE.md', 'analysis/inventory.json', 'analysis/symbols.raw.txt', 'analysis/symbols.rg.txt']",
+    "signature": "DEFAULT_DOC_PATHS = ['analysis/equations.md', 'analysis/overview.md', 'analysis/run-recipes.md', 'analysis/sinks_callgraph.md', 'analysis/AI_USAGE.md', 'analysis/CHANGELOG.md', 'analysis/inventory.json', 'analysis/symbols.raw.txt', 'analysis/symbols.rg.txt']",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/ops/doc_sync_agent.py",
-    "line_no": 28,
+    "line_no": 29,
     "symbol": "RG_PATTERN",
     "signature": "RG_PATTERN = 'beta_at_smin|beta_threshold|s_min'",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/ops/doc_sync_agent.py",
-    "line_no": 29,
+    "line_no": 30,
     "symbol": "SUMMARY_DEFAULT_PATHS",
     "signature": "SUMMARY_DEFAULT_PATHS = [REPO_ROOT / 'analysis' / 'outputs' / 'baseline_blowout_only' / 'summary.json', REPO_ROOT / 'analysis' / 'outputs' / 'summary.json']",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/ops/doc_sync_agent.py",
-    "line_no": 35,
+    "line_no": 36,
     "symbol": "REF_PATTERN",
     "signature": "REF_PATTERN = re.compile('((?:marsdisk|tests|configs|scripts)/[A-Za-z0-9_/\\\\.-]+\\\\.(?:py|yml|yaml)):(\\\\d+)(?:([–-])(\\\\d+))?')",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/ops/doc_sync_agent.py",
-    "line_no": 39,
+    "line_no": 40,
     "symbol": "SKIP_DIR_NAMES",
     "signature": "SKIP_DIR_NAMES = {'.git', '.venv', 'venv', 'env', '__pycache__', '.mypy_cache', '.pytest_cache', '.idea', '.vscode', 'node_modules', 'build', 'dist'}",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/ops/doc_sync_agent.py",
-    "line_no": 54,
+    "line_no": 55,
     "symbol": "DOC_COLON_REF_PATTERN",
     "signature": "DOC_COLON_REF_PATTERN = re.compile('((?:marsdisk|tests|configs|scripts)/[A-Za-z0-9_/\\\\.-]+\\\\.(?:py|yml|yaml)):(\\\\d+)(?:[–—-](\\\\d+))?')",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/ops/doc_sync_agent.py",
-    "line_no": 57,
+    "line_no": 58,
     "symbol": "DOC_INLINE_LINE_ANCHOR_PATTERN",
     "signature": "DOC_INLINE_LINE_ANCHOR_PATTERN = re.compile('\\\\s*[（(]\\\\s*#L(\\\\d+)(?:[–—-](\\\\d+))?\\\\s*[）)]', re.IGNORECASE)",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/ops/doc_sync_agent.py",
-    "line_no": 61,
+    "line_no": 62,
     "symbol": "DOC_LINE_ANCHOR_PATTERN",
     "signature": "DOC_LINE_ANCHOR_PATTERN = re.compile('((?:marsdisk|tests|configs|scripts)/[A-Za-z0-9_/\\\\.-]+\\\\.(?:py|yml|yaml))#L(\\\\d+)(?:[–—-](\\\\d+))?', re.IGNORECASE)",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/ops/doc_sync_agent.py",
-    "line_no": 65,
+    "line_no": 66,
     "symbol": "DOC_SYMBOL_ANCHOR_PATTERN",
     "signature": "DOC_SYMBOL_ANCHOR_PATTERN = re.compile('((?:marsdisk|tests|configs|scripts)/[A-Za-z0-9_/\\\\.-]+\\\\.(?:py|yml|yaml))#(?!L)([A-Za-z0-9_]+)')",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/ops/doc_sync_agent.py",
-    "line_no": 69,
+    "line_no": 70,
     "symbol": "HEADING_IO_PATTERN",
     "signature": "HEADING_IO_PATTERN = re.compile('^## [^\\\\n]*I/O[^\\\\n]*$', re.MULTILINE)",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/ops/doc_sync_agent.py",
-    "line_no": 70,
+    "line_no": 71,
     "symbol": "HEADING_RESPONSIBILITIES_PATTERN",
     "signature": "HEADING_RESPONSIBILITIES_PATTERN = re.compile('^## [^\\\\n]*責務[^\\\\n]*$', re.MULTILINE)",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/ops/doc_sync_agent.py",
-    "line_no": 72,
+    "line_no": 73,
     "symbol": "SUGGESTIONS_DEFAULT_PATH",
     "signature": "SUGGESTIONS_DEFAULT_PATH = REPO_ROOT / 'analysis' / 'suggestions_index.json'",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/ops/doc_sync_agent.py",
-    "line_no": 73,
+    "line_no": 74,
     "symbol": "EQUATIONS_PATH_DEFAULT",
     "signature": "EQUATIONS_PATH_DEFAULT = REPO_ROOT / 'analysis' / 'equations.md'",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/ops/doc_sync_agent.py",
-    "line_no": 74,
+    "line_no": 75,
     "symbol": "OVERVIEW_PATH_DEFAULT",
     "signature": "OVERVIEW_PATH_DEFAULT = REPO_ROOT / 'analysis' / 'overview.md'",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/ops/doc_sync_agent.py",
-    "line_no": 75,
+    "line_no": 76,
     "symbol": "RUN_RECIPES_PATH_DEFAULT",
     "signature": "RUN_RECIPES_PATH_DEFAULT = REPO_ROOT / 'analysis' / 'run-recipes.md'",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/ops/doc_sync_agent.py",
-    "line_no": 76,
+    "line_no": 77,
     "symbol": "DEFAULT_DOCS_FOR_REFS",
-    "signature": "DEFAULT_DOCS_FOR_REFS = [EQUATIONS_PATH_DEFAULT, OVERVIEW_PATH_DEFAULT, RUN_RECIPES_PATH_DEFAULT, REPO_ROOT / 'analysis' / 'sinks_callgraph.md', REPO_ROOT / 'analysis' / 'AI_USAGE.md', REPO_ROOT / 'analysis' / 'AGENT.md']",
+    "signature": "DEFAULT_DOCS_FOR_REFS = [EQUATIONS_PATH_DEFAULT, OVERVIEW_PATH_DEFAULT, RUN_RECIPES_PATH_DEFAULT, REPO_ROOT / 'analysis' / 'sinks_callgraph.md', REPO_ROOT / 'analysis' / 'AI_USAGE.md', REPO_ROOT / 'analysis' / 'CHANGELOG.md', REPO_ROOT / 'analysis' / 'AGENT.md']",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/ops/doc_sync_agent.py",
-    "line_no": 85,
+    "line_no": 87,
     "symbol": "EQUATION_HEADING_PATTERN",
     "signature": "EQUATION_HEADING_PATTERN = re.compile('^### (?:\\\\((E\\\\.\\\\d{3})\\\\)\\\\s*)?(.*)$')",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/ops/doc_sync_agent.py",
-    "line_no": 86,
+    "line_no": 88,
     "symbol": "LINE_ANCHOR_INLINE_PATTERN",
     "signature": "LINE_ANCHOR_INLINE_PATTERN = re.compile('[（(]#L\\\\d+(?:[–—-]L?\\\\d+)?[）)]')",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/ops/doc_sync_agent.py",
-    "line_no": 90,
+    "line_no": 92,
     "symbol": "SymbolInfo",
     "signature": "class SymbolInfo",
     "brief_usage": "Container describing code symbols detected in the repository."
   },
   {
     "file_path": "marsdisk/ops/doc_sync_agent.py",
-    "line_no": 104,
+    "line_no": 106,
     "symbol": "FileChange",
     "signature": "class FileChange",
     "brief_usage": "Track a prospective file update."
   },
   {
     "file_path": "marsdisk/ops/doc_sync_agent.py",
-    "line_no": 135,
+    "line_no": 137,
     "symbol": "InventoryRecord",
     "signature": "class InventoryRecord",
     "brief_usage": "Normalized record describing a top-level symbol."
   },
   {
     "file_path": "marsdisk/ops/doc_sync_agent.py",
-    "line_no": 171,
+    "line_no": 173,
     "symbol": "DocSyncAgent",
     "signature": "class DocSyncAgent",
     "brief_usage": "Synchronise analysis documentation artefacts with repository sources."
   },
   {
     "file_path": "marsdisk/ops/doc_sync_agent.py",
-    "line_no": 662,
+    "line_no": 664,
     "symbol": "_legacy_main",
     "signature": "_legacy_main(argv: Optional[Sequence[str]]=None) -> int",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/ops/doc_sync_agent.py",
-    "line_no": 731,
+    "line_no": 733,
     "symbol": "_collect_inventory_records",
     "signature": "_collect_inventory_records(root: Path) -> List[InventoryRecord]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/ops/doc_sync_agent.py",
-    "line_no": 771,
+    "line_no": 773,
     "symbol": "_resolve_cli_path",
     "signature": "_resolve_cli_path(value: str) -> Path",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/ops/doc_sync_agent.py",
-    "line_no": 778,
+    "line_no": 780,
     "symbol": "_rel_to_repo",
     "signature": "_rel_to_repo(path: Path) -> str",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/ops/doc_sync_agent.py",
-    "line_no": 785,
+    "line_no": 787,
     "symbol": "_cmd_scan",
     "signature": "_cmd_scan(args: argparse.Namespace) -> int",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/ops/doc_sync_agent.py",
-    "line_no": 801,
+    "line_no": 803,
     "symbol": "_collect_doc_references",
     "signature": "_collect_doc_references(doc_paths: Sequence[Path]) -> Dict[str, Any]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/ops/doc_sync_agent.py",
-    "line_no": 927,
+    "line_no": 929,
     "symbol": "_cmd_refs",
     "signature": "_cmd_refs(args: argparse.Namespace) -> int",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/ops/doc_sync_agent.py",
-    "line_no": 950,
+    "line_no": 952,
     "symbol": "_load_inventory_records",
     "signature": "_load_inventory_records(path: Path) -> List[InventoryRecord]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/ops/doc_sync_agent.py",
-    "line_no": 988,
+    "line_no": 990,
     "symbol": "_match_symbol_by_span",
     "signature": "_match_symbol_by_span(symbols: Sequence[InventoryRecord], start: int, end: int) -> Optional[InventoryRecord]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/ops/doc_sync_agent.py",
-    "line_no": 1000,
+    "line_no": 1002,
     "symbol": "_compute_coverage",
     "signature": "_compute_coverage(inventory: Sequence[InventoryRecord], docs_payload: Dict[str, Any]) -> Dict[str, Any]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/ops/doc_sync_agent.py",
-    "line_no": 1147,
+    "line_no": 1149,
     "symbol": "_parse_gap_identifier",
     "signature": "_parse_gap_identifier(identifier: str) -> Optional[Tuple[str, str]]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/ops/doc_sync_agent.py",
-    "line_no": 1159,
+    "line_no": 1161,
     "symbol": "_collect_unreferenced_from_coverage",
     "signature": "_collect_unreferenced_from_coverage(coverage_data: Dict[str, Any]) -> List[Tuple[str, str]]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/ops/doc_sync_agent.py",
-    "line_no": 1184,
+    "line_no": 1186,
     "symbol": "_load_suggestions_index",
     "signature": "_load_suggestions_index(path: Path) -> Dict[Tuple[str, str], Dict[str, Any]]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/ops/doc_sync_agent.py",
-    "line_no": 1207,
+    "line_no": 1209,
     "symbol": "_format_code_anchor",
     "signature": "_format_code_anchor(record: InventoryRecord) -> str",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/ops/doc_sync_agent.py",
-    "line_no": 1214,
+    "line_no": 1216,
     "symbol": "_strip_line_anchor_annotations",
     "signature": "_strip_line_anchor_annotations(text: str) -> str",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/ops/doc_sync_agent.py",
-    "line_no": 1218,
+    "line_no": 1220,
     "symbol": "ensure_equation_ids",
     "signature": "ensure_equation_ids(equations_path: Path) -> None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/ops/doc_sync_agent.py",
-    "line_no": 1278,
+    "line_no": 1280,
     "symbol": "_render_coverage_markdown",
     "signature": "_render_coverage_markdown(data: Dict[str, Any]) -> str",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/ops/doc_sync_agent.py",
-    "line_no": 1335,
+    "line_no": 1337,
     "symbol": "_is_stub_already_present",
     "signature": "_is_stub_already_present(text: str, record: InventoryRecord) -> bool",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/ops/doc_sync_agent.py",
-    "line_no": 1340,
+    "line_no": 1342,
     "symbol": "_render_stub_block",
     "signature": "_render_stub_block(record: InventoryRecord, doc_kind: str) -> str",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/ops/doc_sync_agent.py",
-    "line_no": 1372,
+    "line_no": 1374,
     "symbol": "_append_to_section",
     "signature": "_append_to_section(text: str, heading_pattern: re.Pattern[str], stub: str) -> str",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/ops/doc_sync_agent.py",
-    "line_no": 1387,
+    "line_no": 1389,
     "symbol": "_append_to_end",
     "signature": "_append_to_end(text: str, stub: str) -> str",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/ops/doc_sync_agent.py",
-    "line_no": 1393,
+    "line_no": 1395,
     "symbol": "_determine_autostub_target",
     "signature": "_determine_autostub_target(record: InventoryRecord, suggestions: Dict[Tuple[str, str], Dict[str, Any]], overview_path: Path, equations_path: Path, run_recipes_path: Path) -> Tuple[Path, Optional[re.Pattern[str]], str]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/ops/doc_sync_agent.py",
-    "line_no": 1440,
+    "line_no": 1442,
     "symbol": "_cmd_coverage",
     "signature": "_cmd_coverage(args: argparse.Namespace) -> int",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/ops/doc_sync_agent.py",
-    "line_no": 1473,
+    "line_no": 1475,
     "symbol": "_cmd_autostub",
     "signature": "_cmd_autostub(args: argparse.Namespace) -> int",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/ops/doc_sync_agent.py",
-    "line_no": 1549,
+    "line_no": 1551,
     "symbol": "_cmd_update",
     "signature": "_cmd_update(args: argparse.Namespace) -> int",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/ops/doc_sync_agent.py",
-    "line_no": 1680,
+    "line_no": 1682,
     "symbol": "_run_new_cli",
     "signature": "_run_new_cli(argv: Sequence[str]) -> int",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/ops/doc_sync_agent.py",
-    "line_no": 1894,
+    "line_no": 1896,
     "symbol": "main",
     "signature": "main(argv: Optional[Sequence[str]]=None) -> int",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/ops/doc_sync_agent.py",
-    "line_no": 1902,
+    "line_no": 1904,
     "symbol": "_git_commit",
     "signature": "_git_commit(changes: Iterable[FileChange]) -> None",
     "brief_usage": "No description available."
@@ -2479,28 +2486,35 @@
   },
   {
     "file_path": "marsdisk/physics/phase.py",
-    "line_no": 14,
+    "line_no": 21,
     "symbol": "DEFAULT_ENTRYPOINT",
-    "signature": "DEFAULT_ENTRYPOINT = 'siO2_disk_cooling.siO2_cooling_map:lookup_phase_state'",
+    "signature": "DEFAULT_ENTRYPOINT = DEFAULT_PHASE_ENTRYPOINT",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/physics/phase.py",
-    "line_no": 18,
+    "line_no": 25,
     "symbol": "PhaseDecision",
     "signature": "class PhaseDecision",
     "brief_usage": "Return value describing the resolved phase state for one step."
   },
   {
     "file_path": "marsdisk/physics/phase.py",
-    "line_no": 29,
+    "line_no": 37,
+    "symbol": "BulkPhaseState",
+    "signature": "class BulkPhaseState",
+    "brief_usage": "Bulk (solid/liquid) phase descriptor used for sublimation gating."
+  },
+  {
+    "file_path": "marsdisk/physics/phase.py",
+    "line_no": 53,
     "symbol": "PhaseEvaluator",
     "signature": "class PhaseEvaluator",
     "brief_usage": "Resolve the effective phase state using maps or threshold fallbacks."
   },
   {
     "file_path": "marsdisk/physics/phase.py",
-    "line_no": 238,
+    "line_no": 556,
     "symbol": "hydro_escape_timescale",
     "signature": "hydro_escape_timescale(cfg: Optional[HydroEscapeConfig], temperature_K: float, f_vap: float) -> Optional[float]",
     "brief_usage": "Return ``t_escape`` implied by the hydrodynamic escape scaling."
@@ -3326,329 +3340,343 @@
   },
   {
     "file_path": "marsdisk/run.py",
-    "line_no": 2599,
+    "line_no": 2698,
     "symbol": "_run_phase5_variant",
     "signature": "_run_phase5_variant(base_cfg: Config, variant: str, mode: str, base_outdir: Path, duration_years: float, *, enforce_mass_budget: bool) -> _Phase5VariantResult",
     "brief_usage": "Execute a single-process variant run and capture its artifacts."
   },
   {
     "file_path": "marsdisk/run.py",
-    "line_no": 2667,
+    "line_no": 2766,
     "symbol": "_write_phase5_comparison_products",
     "signature": "_write_phase5_comparison_products(base_outdir: Path, duration_years: float, results: List[_Phase5VariantResult]) -> None",
     "brief_usage": "Aggregate per-variant artifacts into the comparison outputs."
   },
   {
     "file_path": "marsdisk/run.py",
-    "line_no": 2809,
+    "line_no": 2908,
     "symbol": "run_phase5_comparison",
     "signature": "run_phase5_comparison(cfg: Config, *, enforce_mass_budget: bool=False, variants_spec: Optional[List[Dict[str, str]]]=None) -> None",
     "brief_usage": "Run the Phase 5 dual single-process comparison workflow."
   },
   {
     "file_path": "marsdisk/run.py",
-    "line_no": 2844,
+    "line_no": 2943,
     "symbol": "main",
     "signature": "main(argv: Optional[List[str]]=None) -> None",
     "brief_usage": "Command line entry point."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 20,
+    "line_no": 19,
+    "symbol": "DEFAULT_PHASE_ENTRYPOINT",
+    "signature": "DEFAULT_PHASE_ENTRYPOINT = 'siO2_disk_cooling.siO2_cooling_map:lookup_phase_state'",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "marsdisk/schema.py",
+    "line_no": 22,
     "symbol": "Geometry",
     "signature": "class Geometry(BaseModel)",
     "brief_usage": "Geometric configuration of the simulation domain."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 34,
+    "line_no": 36,
     "symbol": "DiskGeometry",
     "signature": "class DiskGeometry(BaseModel)",
     "brief_usage": "Geometry of the inner disk in units of Mars radii."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 43,
+    "line_no": 45,
     "symbol": "Disk",
     "signature": "class Disk(BaseModel)",
     "brief_usage": "Container for inner disk properties."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 49,
+    "line_no": 51,
     "symbol": "Scope",
     "signature": "class Scope(BaseModel)",
     "brief_usage": "Scope settings that restrict the analysis window and region."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 63,
+    "line_no": 65,
     "symbol": "InnerDiskMass",
     "signature": "class InnerDiskMass(BaseModel)",
     "brief_usage": "Scaling for the total mass of the inner disk."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 83,
+    "line_no": 85,
     "symbol": "SupplyConst",
     "signature": "class SupplyConst(BaseModel)",
     "brief_usage": "Class definition"
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 87,
+    "line_no": 89,
     "symbol": "SupplyPowerLaw",
     "signature": "class SupplyPowerLaw(BaseModel)",
     "brief_usage": "Class definition"
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 93,
+    "line_no": 95,
     "symbol": "SupplyTable",
     "signature": "class SupplyTable(BaseModel)",
     "brief_usage": "Class definition"
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 98,
+    "line_no": 100,
     "symbol": "SupplyMixing",
     "signature": "class SupplyMixing(BaseModel)",
     "brief_usage": "Class definition"
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 102,
+    "line_no": 104,
     "symbol": "SupplyPiece",
     "signature": "class SupplyPiece(BaseModel)",
     "brief_usage": "Class definition"
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 111,
+    "line_no": 113,
     "symbol": "Supply",
     "signature": "class Supply(BaseModel)",
     "brief_usage": "Parameterisation of external surface supply."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 122,
+    "line_no": 124,
     "symbol": "Material",
     "signature": "class Material(BaseModel)",
     "brief_usage": "Material properties of the solids."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 137,
+    "line_no": 139,
     "symbol": "Temps",
     "signature": "class Temps(BaseModel)",
     "brief_usage": "Thermal parameters."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 156,
+    "line_no": 158,
     "symbol": "Sizes",
     "signature": "class Sizes(BaseModel)",
     "brief_usage": "Particle size grid specification."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 180,
+    "line_no": 182,
     "symbol": "Initial",
     "signature": "class Initial(BaseModel)",
     "brief_usage": "Initial mass and PSD mode."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 187,
+    "line_no": 189,
     "symbol": "Dynamics",
     "signature": "class Dynamics(BaseModel)",
     "brief_usage": "Parameters governing dynamical excitation."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 228,
+    "line_no": 230,
     "symbol": "QStar",
     "signature": "class QStar(BaseModel)",
     "brief_usage": "Strength law parameters for catastrophic disruption."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 238,
+    "line_no": 240,
     "symbol": "PSD",
     "signature": "class PSD(BaseModel)",
     "brief_usage": "Particle size distribution parameters."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 249,
+    "line_no": 251,
     "symbol": "Surface",
     "signature": "class Surface(BaseModel)",
     "brief_usage": "Surface layer evolution parameters."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 258,
+    "line_no": 260,
     "symbol": "SublimationParamsModel",
     "signature": "class SublimationParamsModel(BaseModel)",
     "brief_usage": "Nested parameters for sublimation models."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 277,
+    "line_no": 279,
     "symbol": "RPBlowoutConfig",
     "signature": "class RPBlowoutConfig(BaseModel)",
     "brief_usage": "Toggle for radiation-pressure blow-out sinks."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 283,
+    "line_no": 285,
     "symbol": "HydroEscapeConfig",
     "signature": "class HydroEscapeConfig(BaseModel)",
     "brief_usage": "Configuration for vapour-driven hydrodynamic escape sinks."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 301,
+    "line_no": 303,
     "symbol": "Sinks",
     "signature": "class Sinks(BaseModel)",
     "brief_usage": "Configuration of additional sink processes."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 321,
+    "line_no": 323,
     "symbol": "ProcessStateTagging",
     "signature": "class ProcessStateTagging(BaseModel)",
     "brief_usage": "Placeholder toggle for future solid/gas tagging."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 330,
+    "line_no": 332,
     "symbol": "Process",
     "signature": "class Process(BaseModel)",
     "brief_usage": "Primary-process selector and companion switches."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 340,
+    "line_no": 342,
     "symbol": "Modes",
     "signature": "class Modes(BaseModel)",
     "brief_usage": "High-level study modes for isolating single processes."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 346,
+    "line_no": 348,
     "symbol": "Phase5CompareConfig",
     "signature": "class Phase5CompareConfig(BaseModel)",
     "brief_usage": "Phase 5 comparison study controls."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 376,
+    "line_no": 378,
     "symbol": "Phase5Config",
     "signature": "class Phase5Config(BaseModel)",
     "brief_usage": "Container for the Phase 5 specific options."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 382,
+    "line_no": 384,
     "symbol": "PhaseThresholds",
     "signature": "class PhaseThresholds(BaseModel)",
     "brief_usage": "Fallback thresholds used when no external phase map is available."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 398,
+    "line_no": 400,
     "symbol": "PhaseMapConfig",
     "signature": "class PhaseMapConfig(BaseModel)",
     "brief_usage": "Entry point for optional external phase maps."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 407,
+    "line_no": 409,
     "symbol": "PhaseConfig",
     "signature": "class PhaseConfig(BaseModel)",
     "brief_usage": "Solid/vapour branching controls."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 416,
+    "line_no": 450,
     "symbol": "MarsTemperatureDriverConstant",
     "signature": "class MarsTemperatureDriverConstant(BaseModel)",
     "brief_usage": "Explicit constant value for the Mars temperature driver."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 429,
+    "line_no": 463,
     "symbol": "MarsTemperatureDriverTable",
     "signature": "class MarsTemperatureDriverTable(BaseModel)",
     "brief_usage": "Tabulated Mars temperature driver."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 441,
+    "line_no": 475,
     "symbol": "MarsTemperatureDriverConfig",
     "signature": "class MarsTemperatureDriverConfig(BaseModel)",
     "brief_usage": "Configuration container for the Mars temperature driver."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 483,
+    "line_no": 517,
     "symbol": "RadiationTauGate",
     "signature": "class RadiationTauGate(BaseModel)",
     "brief_usage": "Optical-depth gating options for radiation-pressure blow-out."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 490,
+    "line_no": 524,
     "symbol": "Radiation",
     "signature": "class Radiation(BaseModel)",
     "brief_usage": "Radiation pressure options and table paths."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 572,
+    "line_no": 606,
     "symbol": "Shielding",
     "signature": "class Shielding(BaseModel)",
     "brief_usage": "Self-shielding table configuration."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 628,
+    "line_no": 662,
     "symbol": "Blowout",
     "signature": "class Blowout(BaseModel)",
     "brief_usage": "Radiation blow-out control."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 646,
+    "line_no": 680,
     "symbol": "Numerics",
     "signature": "class Numerics(BaseModel)",
     "brief_usage": "Integrator control parameters."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 736,
+    "line_no": 770,
+    "symbol": "StepDiagnostics",
+    "signature": "class StepDiagnostics(BaseModel)",
+    "brief_usage": "Per-step loss channel diagnostics output control."
+  },
+  {
+    "file_path": "marsdisk/schema.py",
+    "line_no": 787,
     "symbol": "IO",
     "signature": "class IO(BaseModel)",
     "brief_usage": "Output directories."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 760,
+    "line_no": 812,
     "symbol": "Phase7Diagnostics",
     "signature": "class Phase7Diagnostics(BaseModel)",
     "brief_usage": "Optional Phase7 diagnostics controls."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 773,
+    "line_no": 825,
     "symbol": "Diagnostics",
     "signature": "class Diagnostics(BaseModel)",
     "brief_usage": "Diagnostics toggles grouped by feature phase."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 779,
+    "line_no": 831,
     "symbol": "Config",
     "signature": "class Config(BaseModel)",
     "brief_usage": "Top-level configuration object."
@@ -5189,13 +5217,6 @@
   {
     "file_path": "siO2_disk_cooling/plotting.py",
     "line_no": 21,
-    "symbol": "_centers_to_edges",
-    "signature": "_centers_to_edges(x: np.ndarray) -> np.ndarray",
-    "brief_usage": "Infer cell edges from a 1D array of monotonically increasing centers."
-  },
-  {
-    "file_path": "siO2_disk_cooling/plotting.py",
-    "line_no": 34,
     "symbol": "plot_arrival_map",
     "signature": "plot_arrival_map(r_over_Rmars: np.ndarray, time_s: np.ndarray, arrival_glass_s: np.ndarray, arrival_liquidus_s: np.ndarray, output_path: Path, *, T0: float, params: CoolingParams, mode: Literal['arrival', 'phase']='arrival') -> None",
     "brief_usage": "Render the arrival map or phase-fraction map to a PNG file."
@@ -5230,14 +5251,14 @@
   },
   {
     "file_path": "siO2_disk_cooling/siO2_cooling_map.py",
-    "line_no": 134,
+    "line_no": 128,
     "symbol": "lookup_phase_state",
     "signature": "lookup_phase_state(temperature_K: float, pressure_Pa: Optional[float]=None, tau: Optional[float]=None) -> Mapping[str, Any]",
     "brief_usage": "Lightweight phase map compatible with ``marsdisk.physics.phase``."
   },
   {
     "file_path": "siO2_disk_cooling/siO2_cooling_map.py",
-    "line_no": 178,
+    "line_no": 172,
     "symbol": "main",
     "signature": "main() -> None",
     "brief_usage": "Run the SiO₂ cooling simulation and update documentation."
@@ -5262,6 +5283,20 @@
     "symbol": "lookup_unphysical_fraction",
     "signature": "lookup_unphysical_fraction(temperature_K: float, *_args, **_kwargs) -> dict[str, float | str]",
     "brief_usage": "Return an over-unity vapour fraction to exercise clamping logic."
+  },
+  {
+    "file_path": "tests/phase_map_stub.py",
+    "line_no": 34,
+    "symbol": "lookup_phase_liquid",
+    "signature": "lookup_phase_liquid(*_args, **_kwargs) -> dict[str, float | str]",
+    "brief_usage": "Return a liquid-dominated bulk state for testing."
+  },
+  {
+    "file_path": "tests/phase_map_stub.py",
+    "line_no": 40,
+    "symbol": "lookup_phase_solid",
+    "signature": "lookup_phase_solid(*_args, **_kwargs) -> dict[str, float | str]",
+    "brief_usage": "Return a solid-dominated bulk state for testing."
   },
   {
     "file_path": "tests/test_analysis_coverage_guard.py",
@@ -5427,27 +5462,6 @@
   {
     "file_path": "tests/test_fast_blowout.py",
     "line_no": 54,
-    "symbol": "test_fast_blowout_disabled_matches_baseline",
-    "signature": "test_fast_blowout_disabled_matches_baseline(tmp_path: Path) -> None",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_fast_blowout.py",
-    "line_no": 88,
-    "symbol": "test_fast_blowout_toggle_scales_outflux",
-    "signature": "test_fast_blowout_toggle_scales_outflux(tmp_path: Path) -> None",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_fast_blowout.py",
-    "line_no": 155,
-    "symbol": "test_fast_blowout_substepping_matches_correction",
-    "signature": "test_fast_blowout_substepping_matches_correction(tmp_path: Path) -> None",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_fast_blowout.py",
-    "line_no": 181,
     "symbol": "test_chi_blow_auto_range",
     "signature": "test_chi_blow_auto_range(tmp_path: Path) -> None",
     "brief_usage": "No description available."
@@ -5460,32 +5474,18 @@
     "brief_usage": "No description available."
   },
   {
+    "file_path": "tests/test_mass_budget_combined.py",
+    "line_no": 14,
+    "symbol": "test_mass_budget_closure_with_blowout_and_sinks",
+    "signature": "test_mass_budget_closure_with_blowout_and_sinks(tmp_path: Path) -> None",
+    "brief_usage": "Ensure combined (collisions+sinks) runs keep the mass budget closed."
+  },
+  {
     "file_path": "tests/test_mass_conservation.py",
     "line_no": 10,
     "symbol": "test_imex_bdf1_limits_timestep_and_preserves_mass",
     "signature": "test_imex_bdf1_limits_timestep_and_preserves_mass() -> None",
     "brief_usage": "The integrator should cap dt and keep the mass budget tight."
-  },
-  {
-    "file_path": "tests/test_mass_flux_consistency.py",
-    "line_no": 10,
-    "symbol": "TOL_REL",
-    "signature": "TOL_REL = 0.005",
-    "brief_usage": "Module constant"
-  },
-  {
-    "file_path": "tests/test_mass_flux_consistency.py",
-    "line_no": 13,
-    "symbol": "_build_config",
-    "signature": "_build_config(outdir: Path, mode: str) -> schema.Config",
-    "brief_usage": "Construct a configuration for the requested diagnostic mode."
-  },
-  {
-    "file_path": "tests/test_mass_flux_consistency.py",
-    "line_no": 67,
-    "symbol": "test_mass_flux_integrates_to_cumulative_loss",
-    "signature": "test_mass_flux_integrates_to_cumulative_loss(tmp_path: Path, mode: str) -> None",
-    "brief_usage": "No description available."
   },
   {
     "file_path": "tests/test_min_size_evolution_hook.py",
@@ -5527,41 +5527,6 @@
     "line_no": 47,
     "symbol": "test_mars_clearance_uses_meter_offsets",
     "signature": "test_mars_clearance_uses_meter_offsets(tmp_path: Path) -> None",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_per_step_blowout.py",
-    "line_no": 11,
-    "symbol": "_build_config",
-    "signature": "_build_config(outdir: Path, *, dt_init: float, eval_per_step: bool) -> schema.Config",
-    "brief_usage": "Return a configuration tuned for the per-step blow-out regression tests."
-  },
-  {
-    "file_path": "tests/test_per_step_blowout.py",
-    "line_no": 46,
-    "symbol": "_read_orbit_loss",
-    "signature": "_read_orbit_loss(outdir: Path) -> pd.DataFrame",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_per_step_blowout.py",
-    "line_no": 54,
-    "symbol": "_max_mass_budget_error",
-    "signature": "_max_mass_budget_error(outdir: Path) -> float",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_per_step_blowout.py",
-    "line_no": 61,
-    "symbol": "test_orbit_rollup_agrees_between_timesteps",
-    "signature": "test_orbit_rollup_agrees_between_timesteps(tmp_path: Path) -> None",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_per_step_blowout.py",
-    "line_no": 87,
-    "symbol": "test_eval_per_step_toggle_changes_loss",
-    "signature": "test_eval_per_step_toggle_changes_loss(tmp_path: Path) -> None",
     "brief_usage": "No description available."
   },
   {
@@ -5810,6 +5775,62 @@
     "brief_usage": "No description available."
   },
   {
+    "file_path": "tests/test_phase_integration_siO2.py",
+    "line_no": 11,
+    "symbol": "siO2_evaluator",
+    "signature": "siO2_evaluator() -> phase.PhaseEvaluator",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/test_phase_integration_siO2.py",
+    "line_no": 17,
+    "symbol": "test_siO2_map_liquid_branch",
+    "signature": "test_siO2_map_liquid_branch(radius_rm: float, siO2_evaluator: phase.PhaseEvaluator) -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/test_phase_integration_siO2.py",
+    "line_no": 35,
+    "symbol": "test_siO2_map_solid_branch",
+    "signature": "test_siO2_map_solid_branch(siO2_evaluator: phase.PhaseEvaluator) -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/test_phase_sublimation_integration.py",
+    "line_no": 11,
+    "symbol": "BASE_CONFIG",
+    "signature": "BASE_CONFIG = Path('configs/base.yml')",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "tests/test_phase_sublimation_integration.py",
+    "line_no": 12,
+    "symbol": "DEFAULT_ENTRYPOINT",
+    "signature": "DEFAULT_ENTRYPOINT = 'siO2_disk_cooling.siO2_cooling_map:lookup_phase_state'",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "tests/test_phase_sublimation_integration.py",
+    "line_no": 15,
+    "symbol": "_run_case",
+    "signature": "_run_case(tmp_path: Path, *, T_M: float, r_RM: float) -> tuple[pd.Series, pd.DataFrame]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/test_phase_sublimation_integration.py",
+    "line_no": 41,
+    "symbol": "test_liquid_phase_blocks_sublimation_with_siO2_map",
+    "signature": "test_liquid_phase_blocks_sublimation_with_siO2_map(tmp_path: Path) -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/test_phase_sublimation_integration.py",
+    "line_no": 52,
+    "symbol": "test_solid_phase_allows_sublimation_with_siO2_map",
+    "signature": "test_solid_phase_allows_sublimation_with_siO2_map(tmp_path: Path) -> None",
+    "brief_usage": "No description available."
+  },
+  {
     "file_path": "tests/test_phi_table.py",
     "line_no": 12,
     "symbol": "mock_phi_table",
@@ -5822,20 +5843,6 @@
     "symbol": "test_phi_table_monotonic_effects",
     "signature": "test_phi_table_monotonic_effects(mock_phi_table)",
     "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_psd_kappa.py",
-    "line_no": 9,
-    "symbol": "test_kappa_decreases_with_smin",
-    "signature": "test_kappa_decreases_with_smin() -> None",
-    "brief_usage": "Opacity should decrease when the minimum size increases."
-  },
-  {
-    "file_path": "tests/test_psd_kappa.py",
-    "line_no": 22,
-    "symbol": "test_wavy_correction_creates_oscillation",
-    "signature": "test_wavy_correction_creates_oscillation() -> None",
-    "brief_usage": "Non-zero ``wavy_strength`` should introduce oscillations in ``n``."
   },
   {
     "file_path": "tests/test_qpr_loader_h5datasets.py",
@@ -5896,13 +5903,6 @@
   {
     "file_path": "tests/test_qstar_fragments.py",
     "line_no": 20,
-    "symbol": "test_largest_remnant_fraction_continuity",
-    "signature": "test_largest_remnant_fraction_continuity()",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_qstar_fragments.py",
-    "line_no": 38,
     "symbol": "test_compute_s_min_bounds_and_monotonic",
     "signature": "test_compute_s_min_bounds_and_monotonic()",
     "brief_usage": "No description available."
@@ -5917,48 +5917,41 @@
   {
     "file_path": "tests/test_radiation_shielding_logging.py",
     "line_no": 20,
-    "symbol": "test_qpr_lookup_clamp_logs",
-    "signature": "test_qpr_lookup_clamp_logs(tmp_path, caplog, restore_qpr_lookup)",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_radiation_shielding_logging.py",
-    "line_no": 44,
     "symbol": "test_beta_density_validation",
     "signature": "test_beta_density_validation()",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tests/test_radiation_shielding_logging.py",
-    "line_no": 52,
+    "line_no": 28,
     "symbol": "test_blowout_radius_density_validation",
     "signature": "test_blowout_radius_density_validation()",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tests/test_radiation_shielding_logging.py",
-    "line_no": 58,
+    "line_no": 34,
     "symbol": "test_load_phi_table_logs",
     "signature": "test_load_phi_table_logs(tmp_path, caplog)",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tests/test_radiation_shielding_logging.py",
-    "line_no": 70,
+    "line_no": 46,
     "symbol": "test_apply_shielding_clamp_logs",
     "signature": "test_apply_shielding_clamp_logs(caplog)",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tests/test_radiation_shielding_logging.py",
-    "line_no": 91,
+    "line_no": 67,
     "symbol": "test_effective_kappa_phi_clamp_logs",
     "signature": "test_effective_kappa_phi_clamp_logs(caplog)",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tests/test_radiation_shielding_logging.py",
-    "line_no": 101,
+    "line_no": 77,
     "symbol": "test_clip_to_tau1_logging",
     "signature": "test_clip_to_tau1_logging(caplog)",
     "brief_usage": "No description available."
@@ -6063,63 +6056,84 @@
   },
   {
     "file_path": "tests/test_run_regressions.py",
-    "line_no": 14,
+    "line_no": 17,
     "symbol": "BASE_CONFIG",
     "signature": "BASE_CONFIG = Path('configs/base.yml')",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "tests/test_run_regressions.py",
-    "line_no": 17,
+    "line_no": 18,
+    "symbol": "TOL_MLOSS_PERCENT",
+    "signature": "TOL_MLOSS_PERCENT = 0.5",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "tests/test_run_regressions.py",
+    "line_no": 21,
     "symbol": "_run_case",
     "signature": "_run_case(overrides: list[str]) -> tuple[dict, pd.DataFrame]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tests/test_run_regressions.py",
-    "line_no": 31,
+    "line_no": 35,
     "symbol": "_run_case_with_series",
     "signature": "_run_case_with_series(overrides: list[str]) -> tuple[dict, pd.DataFrame, pd.DataFrame]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tests/test_run_regressions.py",
-    "line_no": 46,
+    "line_no": 50,
     "symbol": "test_mass_budget_and_timestep_overrides",
     "signature": "test_mass_budget_and_timestep_overrides() -> None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tests/test_run_regressions.py",
-    "line_no": 74,
+    "line_no": 78,
     "symbol": "test_sublimation_not_double_counted",
     "signature": "test_sublimation_not_double_counted() -> None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tests/test_run_regressions.py",
-    "line_no": 96,
+    "line_no": 100,
     "symbol": "test_phase7_diagnostics_toggle",
     "signature": "test_phase7_diagnostics_toggle() -> None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tests/test_run_regressions.py",
-    "line_no": 142,
+    "line_no": 146,
     "symbol": "test_tau_gate_blocks_blowout",
     "signature": "test_tau_gate_blocks_blowout() -> None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tests/test_run_regressions.py",
-    "line_no": 160,
+    "line_no": 164,
     "symbol": "test_gate_factor_collision_competition_reduces_flux",
     "signature": "test_gate_factor_collision_competition_reduces_flux() -> None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tests/test_run_regressions.py",
-    "line_no": 176,
+    "line_no": 180,
+    "symbol": "_write_inline_combined_config",
+    "signature": "_write_inline_combined_config(config_path: Path, outdir: Path) -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/test_run_regressions.py",
+    "line_no": 235,
+    "symbol": "test_combined_mass_flux_balance",
+    "signature": "test_combined_mass_flux_balance(tmp_path: Path) -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/test_run_regressions.py",
+    "line_no": 258,
     "symbol": "test_gate_factor_sublimation_competition_reduces_flux",
     "signature": "test_gate_factor_sublimation_competition_reduces_flux() -> None",
     "brief_usage": "No description available."
@@ -6209,45 +6223,45 @@
     "brief_usage": "No description available."
   },
   {
-    "file_path": "tests/test_sublimation_hkl.py",
-    "line_no": 15,
-    "symbol": "_kepler_omega",
-    "signature": "_kepler_omega(radius_m: float) -> float",
+    "file_path": "tests/test_step_diagnostics.py",
+    "line_no": 12,
+    "symbol": "_build_config",
+    "signature": "_build_config(outdir: Path, fmt: str) -> schema.Config",
     "brief_usage": "No description available."
   },
   {
-    "file_path": "tests/test_sublimation_hkl.py",
-    "line_no": 19,
-    "symbol": "_make_params",
-    "signature": "_make_params(**overrides) -> SublimationParams",
+    "file_path": "tests/test_step_diagnostics.py",
+    "line_no": 43,
+    "symbol": "test_step_diagnostics_file_and_mass_budget",
+    "signature": "test_step_diagnostics_file_and_mass_budget(tmp_path: Path, fmt: str) -> None",
     "brief_usage": "No description available."
   },
   {
-    "file_path": "tests/test_sublimation_hkl.py",
-    "line_no": 33,
-    "symbol": "test_s_sub_increases_towards_planet",
-    "signature": "test_s_sub_increases_towards_planet()",
+    "file_path": "tests/test_sublimation_phase_gate.py",
+    "line_no": 11,
+    "symbol": "BASE_CONFIG",
+    "signature": "BASE_CONFIG = Path('configs/base.yml')",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "tests/test_sublimation_phase_gate.py",
+    "line_no": 14,
+    "symbol": "_run_phase_case",
+    "signature": "_run_phase_case(tmp_path: Path, entrypoint: str, *, enable_step_diag: bool=True) -> tuple[pd.Series, pd.DataFrame | None]",
     "brief_usage": "No description available."
   },
   {
-    "file_path": "tests/test_sublimation_hkl.py",
-    "line_no": 69,
-    "symbol": "test_s_sub_scales_with_alpha",
-    "signature": "test_s_sub_scales_with_alpha()",
+    "file_path": "tests/test_sublimation_phase_gate.py",
+    "line_no": 48,
+    "symbol": "test_liquid_phase_blocks_sublimation",
+    "signature": "test_liquid_phase_blocks_sublimation(tmp_path: Path) -> None",
     "brief_usage": "No description available."
   },
   {
-    "file_path": "tests/test_sublimation_hkl.py",
-    "line_no": 99,
-    "symbol": "test_s_sink_matches_boundary_for_one_orbit",
-    "signature": "test_s_sink_matches_boundary_for_one_orbit()",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_sublimation_hkl.py",
-    "line_no": 120,
-    "symbol": "test_total_sink_timescale_returns_none_when_flux_zero",
-    "signature": "test_total_sink_timescale_returns_none_when_flux_zero()",
+    "file_path": "tests/test_sublimation_phase_gate.py",
+    "line_no": 63,
+    "symbol": "test_solid_phase_uses_raw_sublimation",
+    "signature": "test_solid_phase_uses_raw_sublimation(tmp_path: Path) -> None",
     "brief_usage": "No description available."
   },
   {

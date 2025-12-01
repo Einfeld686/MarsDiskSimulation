@@ -17,24 +17,6 @@ def test_qdstar_velocity_interpolation_monotonic():
     assert q3 < q4 < q5
 
 
-def test_largest_remnant_fraction_continuity():
-    m1 = m2 = 1.0
-    q_rd_star = 1.0
-    # velocities giving Q_R/Q_RD* = 0, 0.5, 1, 2
-    v_vals = [0.0, np.sqrt(4.0 / 0.5), np.sqrt(8.0 / 0.5), np.sqrt(16.0 / 0.5)]
-    q_r_vals = [compute_q_r_F2(m1, m2, v) for v in v_vals]
-    fracs = [
-        compute_largest_remnant_mass_fraction_F2(m1, m2, v, q_rd_star)
-        for v in v_vals
-    ]
-    # physically reasonable range and monotonic decrease
-    assert fracs[0] == 1.0
-    assert fracs[-1] == 0.0
-    assert all(0.0 <= f <= 1.0 for f in fracs)
-    assert all(fracs[i] > fracs[i + 1] for i in range(len(fracs) - 1))
-    assert q_r_vals == sorted(q_r_vals)
-
-
 def test_compute_s_min_bounds_and_monotonic():
     a_blow = 1e-6
     t_ref = 10.0

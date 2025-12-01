@@ -129,6 +129,8 @@ blowout:
 phase:
   enabled: false
   source: "threshold"
+  entrypoint: "siO2_disk_cooling.siO2_cooling_map:lookup_phase_state"
+  extra_kwargs: {}
   thresholds:
     T_condense_K: 1700.0
     T_vaporize_K: 2000.0

@@ -29,3 +29,15 @@ def lookup_unphysical_fraction(temperature_K: float, *_args, **_kwargs) -> dict[
 
     state = "vapor" if temperature_K >= 1500.0 else "solid"
     return {"state": state, "f_vap": 2.5}
+
+
+def lookup_phase_liquid(*_args, **_kwargs) -> dict[str, float | str]:
+    """Return a liquid-dominated bulk state for testing."""
+
+    return {"state": "liquid_dominated", "f_liquid": 1.0, "f_solid": 0.0}
+
+
+def lookup_phase_solid(*_args, **_kwargs) -> dict[str, float | str]:
+    """Return a solid-dominated bulk state for testing."""
+
+    return {"state": "solid_dominated", "f_liquid": 0.0, "f_solid": 1.0}

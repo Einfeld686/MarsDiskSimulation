@@ -18,19 +18,6 @@ def _arrival_field(time_s: np.ndarray, arrival_s: np.ndarray) -> np.ndarray:
     return np.where(time_mat >= arrival_mat, arrival_mat / YEAR_SECONDS, np.nan)
 
 
-def _centers_to_edges(x: np.ndarray) -> np.ndarray:
-    """Infer cell edges from a 1D array of monotonically increasing centers."""
-
-    if x.ndim != 1 or x.size < 2:
-        raise ValueError("x must be one-dimensional with at least two points")
-    dx = np.diff(x)
-    edges = np.empty(x.size + 1, dtype=float)
-    edges[1:-1] = x[:-1] + 0.5 * dx
-    edges[0] = x[0] - 0.5 * dx[0]
-    edges[-1] = x[-1] + 0.5 * dx[-1]
-    return edges
-
-
 def plot_arrival_map(
     r_over_Rmars: np.ndarray,
     time_s: np.ndarray,
@@ -53,8 +40,6 @@ def plot_arrival_map(
     if mode not in ("arrival", "phase"):
         raise ValueError(f"Unsupported mode: {mode}")
     time_years = time_arr / YEAR_SECONDS
-    r_edges = _centers_to_edges(r_arr)
-    t_edges = _centers_to_edges(time_years)
     fig, ax = plt.subplots(figsize=(7.5, 4.5))
 
     if mode == "phase":
@@ -65,10 +50,10 @@ def plot_arrival_map(
         f_vap = np.clip(f_vap, 0.0, 1.0)
         f_solid = 1.0 - f_vap
         mesh = ax.pcolormesh(
-            r_edges,
-            t_edges,
+            r_arr,
+            time_years,
             f_solid,
-            shading="flat",
+            shading="auto",
             cmap="bwr_r",
             vmin=0.0,
             vmax=1.0,
@@ -78,10 +63,10 @@ def plot_arrival_map(
     else:
         glass_field = _arrival_field(time_arr, arrival_glass_s)
         mesh = ax.pcolormesh(
-            r_edges,
-            t_edges,
+            r_arr,
+            time_years,
             glass_field,
-            shading="flat",
+            shading="auto",
             cmap="viridis",
         )
         cbar = fig.colorbar(mesh, ax=ax, label="Arrival time to glass transition [years]")
