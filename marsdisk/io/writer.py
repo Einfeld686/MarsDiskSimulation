@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Any, Iterable, Mapping
+from typing import Any, Iterable, Literal, Mapping
 
 import pandas as pd
 import pyarrow as pa
@@ -299,3 +299,26 @@ def write_orbit_rollup(rows: Iterable[Mapping[str, Any]], path: Path) -> None:
     df = pd.DataFrame(rows)
     _ensure_parent(path)
     df.to_csv(path, index=False)
+
+
+def write_step_diagnostics(
+    rows: Iterable[Mapping[str, Any]],
+    path: Path,
+    *,
+    fmt: Literal["csv", "jsonl"] = "csv",
+) -> None:
+    """Serialise per-step loss channel diagnostics."""
+
+    rows = list(rows)
+    _ensure_parent(path)
+    fmt_lower = str(fmt).lower()
+    if fmt_lower == "csv":
+        df = pd.DataFrame(rows)
+        df.to_csv(path, index=False)
+    elif fmt_lower == "jsonl":
+        with path.open("w", encoding="utf-8") as fh:
+            for row in rows:
+                fh.write(json.dumps(row, sort_keys=True))
+                fh.write("\n")
+    else:  # pragma: no cover - defensive guard
+        raise ValueError(f"Unsupported step diagnostics format: {fmt}")

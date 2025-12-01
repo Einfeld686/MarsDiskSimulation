@@ -16,6 +16,8 @@ from pydantic import BaseModel, Field, validator, root_validator
 
 from . import constants
 
+DEFAULT_PHASE_ENTRYPOINT = "siO2_disk_cooling.siO2_cooling_map:lookup_phase_state"
+
 
 class Geometry(BaseModel):
     """Geometric configuration of the simulation domain."""
@@ -399,7 +401,7 @@ class PhaseMapConfig(BaseModel):
     """Entry point for optional external phase maps."""
 
     entrypoint: str = Field(
-        "siO2_disk_cooling.siO2_cooling_map:lookup_phase_state",
+        DEFAULT_PHASE_ENTRYPOINT,
         description="Python entrypoint 'module:function' resolving to a phase lookup callable.",
     )
 
@@ -409,8 +411,40 @@ class PhaseConfig(BaseModel):
 
     enabled: bool = False
     source: Literal["map", "threshold"] = "threshold"
+    entrypoint: str = Field(
+        DEFAULT_PHASE_ENTRYPOINT,
+        description="Python entrypoint 'module:function' resolving to a phase lookup callable.",
+    )
+    extra_kwargs: Dict[str, Any] = Field(
+        default_factory=dict,
+        description="Additional keyword arguments forwarded to the phase map entrypoint.",
+    )
     thresholds: PhaseThresholds = PhaseThresholds()
     map: Optional[PhaseMapConfig] = None
+
+    @validator("entrypoint")
+    def _check_entrypoint_format(cls, value: str) -> str:
+        text = str(value)
+        module, sep, func = text.partition(":")
+        if not module or sep == "" or not func:
+            raise ValueError("phase.entrypoint must be of the form 'module.submodule:function'")
+        return text
+
+    @root_validator(pre=True)
+    def _inherit_map_entrypoint(cls, values: Dict[str, object]) -> Dict[str, object]:
+        """Promote map.entrypoint to the top-level field for backward compatibility."""
+
+        map_cfg = values.get("map")
+        map_entrypoint: Optional[str] = None
+        if isinstance(map_cfg, dict) and "entrypoint" in map_cfg:
+            map_entrypoint = map_cfg["entrypoint"]
+        elif isinstance(map_cfg, PhaseMapConfig):
+            map_entrypoint = map_cfg.entrypoint
+        current_entrypoint = values.get("entrypoint")
+        if map_entrypoint:
+            if current_entrypoint in (None, DEFAULT_PHASE_ENTRYPOINT):
+                values["entrypoint"] = map_entrypoint
+        return values
 
 
 class MarsTemperatureDriverConstant(BaseModel):
@@ -733,10 +767,28 @@ class Numerics(BaseModel):
 
 
 
+class StepDiagnostics(BaseModel):
+    """Per-step loss channel diagnostics output control."""
+
+    enable: bool = Field(
+        False,
+        description="Write per-step loss diagnostics to disk (CSV or JSONL).",
+    )
+    format: Literal["csv", "jsonl"] = Field(
+        "csv",
+        description="Serialisation format for the per-step diagnostics table.",
+    )
+    path: Optional[Path] = Field(
+        None,
+        description="Optional path (absolute or relative to outdir) for the diagnostics file.",
+    )
+
+
 class IO(BaseModel):
     """Output directories."""
 
     outdir: Path = Path("out")
+    step_diagnostics: StepDiagnostics = StepDiagnostics()
     debug_sinks: bool = Field(
         False,
         description="Enable verbose sink logging to out/<run>/debug/sinks_trace.jsonl",

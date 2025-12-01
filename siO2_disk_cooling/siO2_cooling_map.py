@@ -112,23 +112,17 @@ def _infer_cell_width_from_config(config_path: Path | None) -> Optional[float]:
         )
     r_in = geom.get("r_in_RM")
     r_out = geom.get("r_out_RM")
-    if r_in is None or r_out is None:
+    n_cells = geom.get("n_cells") or geom.get("n")
+    if r_in is None or r_out is None or n_cells is None:
         return None
     try:
         span = float(r_out) - float(r_in)
+        n_val = float(n_cells)
     except Exception:
         return None
-    if span <= 0.0:
+    if span <= 0.0 or n_val <= 0.0:
         return None
-    n_cells = geom.get("n_cells") or geom.get("n")
-    if n_cells:
-        try:
-            n_val = float(n_cells)
-            if n_val > 0:
-                return span / n_val
-        except Exception:
-            pass
-    return span
+    return span / n_val
 
 
 def lookup_phase_state(

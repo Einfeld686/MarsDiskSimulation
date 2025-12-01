@@ -844,7 +844,7 @@ def run_zero_d(
     gas_pressure_pa = float(getattr(sub_params, "P_gas", 0.0) or 0.0)
 
     phase_cfg = getattr(cfg, "phase", None)
-    phase_controller = phase_mod.PhaseEvaluator(phase_cfg)
+    phase_controller = phase_mod.PhaseEvaluator.from_config(phase_cfg, logger=logger)
     hydro_cfg = getattr(cfg.sinks, "hydro_escape", None)
     tau_gate_cfg = getattr(cfg.radiation, "tau_gate", None) if cfg.radiation else None
     tau_gate_enabled = bool(getattr(tau_gate_cfg, "enable", False)) if tau_gate_cfg else False
@@ -1097,8 +1097,15 @@ def run_zero_d(
     psd_hist_records: List[Dict[str, float]] = []
     diagnostics: List[Dict[str, Any]] = []
     mass_budget: List[Dict[str, float]] = []
+    step_diag_records: List[Dict[str, Any]] = []
     mass_budget_violation: Optional[Dict[str, float]] = None
     violation_triggered = False
+    step_diag_cfg = getattr(cfg.io, "step_diagnostics", None)
+    step_diag_enabled = bool(getattr(step_diag_cfg, "enable", False)) if step_diag_cfg else False
+    step_diag_format = str(getattr(step_diag_cfg, "format", "csv") or "csv").lower()
+    if step_diag_format not in {"csv", "jsonl"}:
+        raise ValueError("io.step_diagnostics.format must be either 'csv' or 'jsonl'")
+    step_diag_path_cfg = getattr(step_diag_cfg, "path", None) if step_diag_cfg else None
     debug_sinks_enabled = bool(getattr(cfg.io, "debug_sinks", False))
     correct_fast_blowout = bool(getattr(cfg.io, "correct_fast_blowout", False))
     substep_fast_enabled = bool(getattr(cfg.io, "substep_fast_blowout", False))
@@ -1142,6 +1149,10 @@ def run_zero_d(
     phase7_total_rate_track: List[float] = []
     phase7_total_rate_time_track: List[float] = []
     phase7_ts_ratio_track: List[float] = []
+    phase_bulk_state_last: Optional[str] = None
+    phase_bulk_f_liquid_last: Optional[float] = None
+    phase_bulk_f_solid_last: Optional[float] = None
+    phase_bulk_f_vapor_last: Optional[float] = None
 
     for step_no in range(n_steps):
         time_start = step_no * dt
@@ -1193,14 +1204,42 @@ def run_zero_d(
 
         t_blow_step = chi_blow_eff / Omega_step if Omega_step > 0.0 else float("inf")
 
+        sigma_for_tau_phase = sigma_surf_reference if freeze_sigma else sigma_surf
+        tau_los_phase = kappa_surf * sigma_for_tau_phase
+        phase_decision, phase_bulk_step = phase_controller.evaluate_with_bulk(
+            T_use,
+            pressure_Pa=gas_pressure_pa,
+            tau=tau_los_phase,
+            radius_m=r,
+            time_s=time,
+            T0_K=temp_runtime.initial_value,
+        )
+        phase_state_step = phase_decision.state
+        phase_method_step = phase_decision.method
+        phase_reason_step = phase_decision.reason
+        phase_f_vap_step = phase_decision.f_vap
+        phase_payload_step = dict(phase_decision.payload)
+        phase_payload_step["tau_input_before_psd"] = tau_los_phase
+        phase_payload_step["phase_bulk_state"] = phase_bulk_step.state
+        phase_payload_step["phase_bulk_f_liquid"] = phase_bulk_step.f_liquid
+        phase_payload_step["phase_bulk_f_solid"] = phase_bulk_step.f_solid
+        phase_payload_step["phase_bulk_f_vapor"] = phase_bulk_step.f_vapor
+        phase_usage[phase_state_step] += dt
+        phase_method_usage[phase_method_step] += dt
+
+        ds_dt_raw = 0.0
         ds_dt_val = 0.0
+        sublimation_blocked_by_phase = False
         sublimation_active = sublimation_active_flag
+        liquid_block_step = sublimation_active and phase_bulk_step.state == "liquid_dominated"
         if sublimation_active:
             T_grain = grain_temperature_graybody(T_use, r)
             try:
-                ds_dt_val = sizes.eval_ds_dt_sublimation(T_grain, rho_used, sub_params)
+                ds_dt_raw = sizes.eval_ds_dt_sublimation(T_grain, rho_used, sub_params)
             except ValueError:
-                ds_dt_val = 0.0
+                ds_dt_raw = 0.0
+            sublimation_blocked_by_phase = bool(liquid_block_step and ds_dt_raw < 0.0)
+            ds_dt_val = 0.0 if liquid_block_step else ds_dt_raw
         floor_for_step = s_min_effective
         if psd_floor_mode == "none":
             floor_for_step = float(s_min_config)
@@ -1272,16 +1311,6 @@ def run_zero_d(
         sigma_for_tau_phase = sigma_surf_reference if freeze_sigma else sigma_surf
         tau_los_value = kappa_surf * sigma_for_tau_phase
         tau_los = float(tau_los_value) if math.isfinite(tau_los_value) else 0.0
-        phase_decision = phase_controller.evaluate(
-            T_use,
-            pressure_Pa=gas_pressure_pa,
-            tau=tau_los,
-        )
-        phase_state_step = phase_decision.state
-        phase_method_step = phase_decision.method
-        phase_reason_step = phase_decision.reason
-        phase_payload_step = dict(phase_decision.payload)
-        phase_f_vap_step = phase_decision.f_vap
         phase_payload_step["tau_mars_line_of_sight"] = tau_los
         tau_gate_block_step = bool(
             tau_gate_enabled
@@ -1311,20 +1340,23 @@ def run_zero_d(
             raise RuntimeError(
                 "Blow-out and hydrodynamic escape sinks cannot be active simultaneously"
             )
-        phase_usage[phase_state_step] += dt
-        phase_method_usage[phase_method_step] += dt
         sink_branch_usage[sink_selected_step] += dt
         phase_state_last = phase_state_step
         phase_method_last = phase_method_step
         phase_reason_last = phase_reason_step
         phase_payload_last = dict(phase_payload_step)
         phase_f_vap_last = phase_f_vap_step
+        phase_bulk_state_last = phase_bulk_step.state
+        phase_bulk_f_liquid_last = phase_bulk_step.f_liquid
+        phase_bulk_f_solid_last = phase_bulk_step.f_solid
+        phase_bulk_f_vapor_last = phase_bulk_step.f_vapor
         sink_selected_last = sink_selected_step
         tau_gate_block_last = tau_gate_block_step
         hydro_timescale_last = hydro_timescale_step
         tau_los_last = tau_los
         phase_payload_last["sink_selected"] = sink_selected_step
         phase_payload_last["tau_gate_blocked"] = tau_gate_block_step
+        phase_payload_last["sublimation_blocked_by_phase"] = bool(sublimation_blocked_by_phase)
         phase_allows_last = phase_allows_step
         beta_gate_last = beta_gate_active
 
@@ -1500,9 +1532,9 @@ def run_zero_d(
             if (
                 ds_dt_val < 0.0
                 and math.isfinite(ds_dt_val)
-                and math.isfinite(a_blow_step)
+                and math.isfinite(s_min_effective)
             ):
-                candidate = a_blow_step / abs(ds_dt_val)
+                candidate = s_min_effective / abs(ds_dt_val)
                 if candidate > 0.0 and math.isfinite(candidate):
                     t_solid_step = candidate
         elif blowout_gate_mode == "collision_competition":
@@ -1659,6 +1691,7 @@ def run_zero_d(
                     "blowout_mass_rate_kg_s": outflux_mass_rate_kg,
                     "cum_blowout_mass_kg": M_loss_cum * constants.M_MARS,
                     "ds_dt_sublimation_m_s": ds_dt_val,
+                    "ds_dt_sublimation_raw_m_s": ds_dt_raw,
                     "sigma_loss_sublimation_kg_m2": delta_sigma_sub,
                     "M_loss_components_Mmars": {
                         "blowout": M_loss_cum,
@@ -1670,9 +1703,13 @@ def run_zero_d(
                     "phase_method": phase_method_last,
                     "phase_reason": phase_reason_last,
                     "phase_f_vap": phase_f_vap_last,
+                    "phase_bulk_state": phase_bulk_state_last,
+                    "phase_bulk_f_liquid": phase_bulk_f_liquid_last,
+                    "phase_bulk_f_solid": phase_bulk_f_solid_last,
                     "tau_mars_line_of_sight": tau_los_last,
                     "tau_gate_blocked": tau_gate_block_last,
                     "sink_selected": sink_selected_last,
+                    "sublimation_blocked_by_phase": bool(sublimation_blocked_by_phase),
                     "hydro_timescale_s": _safe_float(hydro_timescale_last),
                     "mass_loss_hydro_step": mass_loss_hydro_step,
                     "sinks_mode": cfg.sinks.mode,
@@ -1792,10 +1829,15 @@ def run_zero_d(
             "T_source": T_M_source,
             "T_M_used": T_use,
             "ds_dt_sublimation": ds_dt_val,
+            "ds_dt_sublimation_raw": ds_dt_raw,
             "phase_state": phase_state_last,
             "phase_f_vap": phase_f_vap_last,
             "phase_method": phase_method_last,
             "phase_reason": phase_reason_last,
+            "phase_bulk_state": phase_bulk_state_last,
+            "phase_bulk_f_liquid": phase_bulk_f_liquid_last,
+            "phase_bulk_f_solid": phase_bulk_f_solid_last,
+            "phase_bulk_f_vapor": phase_bulk_f_vapor_last,
             "tau_mars_line_of_sight": tau_los_last,
             "tau_gate_blocked": tau_gate_block_last,
             "blowout_beta_gate": beta_gate_last,
@@ -1803,6 +1845,7 @@ def run_zero_d(
             "blowout_layer_mode": blowout_layer_mode,
             "blowout_target_phase": blowout_target_phase,
             "sink_selected": sink_selected_last,
+            "sublimation_blocked_by_phase": bool(sublimation_blocked_by_phase),
         }
         if phase7_enabled:
             record.update(
@@ -1906,7 +1949,14 @@ def run_zero_d(
             "phase_method": phase_method_last,
             "phase_reason": phase_reason_last,
             "phase_f_vap": phase_f_vap_last,
+            "phase_bulk_state": phase_bulk_state_last,
+            "phase_bulk_f_liquid": phase_bulk_f_liquid_last,
+            "phase_bulk_f_solid": phase_bulk_f_solid_last,
+            "phase_bulk_f_vapor": phase_bulk_f_vapor_last,
             "phase_payload": phase_payload_last,
+            "ds_dt_sublimation": ds_dt_val,
+            "ds_dt_sublimation_raw": ds_dt_raw,
+            "sublimation_blocked_by_phase": bool(sublimation_blocked_by_phase),
             "tau_mars_line_of_sight": tau_los_last,
             "tau_gate_blocked": tau_gate_block_last,
             "blowout_beta_gate": beta_gate_last,
@@ -1945,6 +1995,44 @@ def run_zero_d(
             delta_channels = ((mass_lost - channels_total) / denom) * 100.0
             budget_entry["delta_mloss_vs_channels"] = delta_channels
         mass_budget.append(budget_entry)
+        if step_diag_enabled:
+            tau_surf_val = tau_last if tau_last is not None else kappa_surf * sigma_diag
+            tau_surf_val = _safe_float(tau_surf_val)
+            sink_sub_timescale = sink_result.components.get("sublimation")
+            sink_drag_timescale = sink_result.components.get("gas_drag")
+            dM_sub = mass_loss_sublimation_step
+            dM_drag = 0.0
+            if sink_result.dominant_sink == "sublimation":
+                dM_sub += sink_mass_total
+            elif sink_result.dominant_sink == "gas_drag":
+                dM_drag = sink_mass_total
+            step_diag_records.append(
+                {
+                    "time": float(time),
+                    "sigma_surf": float(sigma_diag),
+                    "tau_surf": tau_surf_val,
+                    "t_coll": _safe_float(t_coll_step),
+                    "t_blow": _safe_float(t_blow_step),
+                    "t_sink": _safe_float(t_sink_step),
+                    "t_sink_sub": _safe_float(sink_sub_timescale),
+                    "t_sink_drag": _safe_float(sink_drag_timescale),
+                    "phase_state_step": phase_state_last,
+                    "phase_bulk_state": phase_bulk_state_last,
+                    "phase_bulk_f_liquid": _safe_float(phase_bulk_f_liquid_last),
+                    "phase_bulk_f_solid": _safe_float(phase_bulk_f_solid_last),
+                    "phase_bulk_f_vapor": _safe_float(phase_bulk_f_vapor_last),
+                    "ds_dt_sublimation": _safe_float(ds_dt_val),
+                    "ds_dt_sublimation_raw": _safe_float(ds_dt_raw),
+                    "sublimation_blocked_by_phase": bool(sublimation_blocked_by_phase),
+                    "dM_blowout_step": float(mass_loss_surface_solid_step),
+                    "dM_sinks_step": float(mass_loss_sinks_step_total),
+                    "dM_sublimation_step": float(dM_sub),
+                    "dM_gas_drag_step": float(dM_drag),
+                    "mass_total_bins": float(mass_remaining),
+                    "mass_lost_by_blowout": float(M_loss_cum),
+                    "mass_lost_by_sinks": float(M_sink_cum),
+                }
+            )
 
         total_time_elapsed += dt
         if tau_gate_block_last:
@@ -1991,6 +2079,15 @@ def run_zero_d(
 
     df = pd.DataFrame(records)
     outdir = Path(cfg.io.outdir)
+    step_diag_path = None
+    if step_diag_enabled:
+        if step_diag_path_cfg is not None:
+            step_diag_path = Path(step_diag_path_cfg)
+            if not step_diag_path.is_absolute():
+                step_diag_path = outdir / step_diag_path
+        else:
+            ext = "jsonl" if step_diag_format == "jsonl" else "csv"
+            step_diag_path = outdir / "series" / f"step_diagnostics.{ext}"
     writer.write_parquet(df, outdir / "series" / "run.parquet")
     if psd_hist_records:
         psd_hist_df = pd.DataFrame(psd_hist_records)
@@ -1998,6 +2095,8 @@ def run_zero_d(
     if diagnostics:
         diag_df = pd.DataFrame(diagnostics)
         writer.write_parquet(diag_df, outdir / "series" / "diagnostics.parquet")
+    if step_diag_enabled and step_diag_path is not None:
+        writer.write_step_diagnostics(step_diag_records, step_diag_path, fmt=step_diag_format)
     if orbit_rollup_enabled:
         rows_for_rollup = orbit_rollup_rows
         required_phase7_cols = {

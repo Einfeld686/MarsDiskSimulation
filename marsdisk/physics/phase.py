@@ -2,16 +2,23 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import inspect
 import importlib
 import logging
 import math
-from typing import Any, Callable, Dict, Literal, Optional
+from typing import Any, Callable, Dict, Literal, Optional, Tuple
 
-from ..schema import HydroEscapeConfig, PhaseConfig, PhaseMapConfig, PhaseThresholds
+from ..schema import (
+    DEFAULT_PHASE_ENTRYPOINT,
+    HydroEscapeConfig,
+    PhaseConfig,
+    PhaseMapConfig,
+    PhaseThresholds,
+)
 
 logger = logging.getLogger(__name__)
 
-DEFAULT_ENTRYPOINT = "siO2_disk_cooling.siO2_cooling_map:lookup_phase_state"
+DEFAULT_ENTRYPOINT = DEFAULT_PHASE_ENTRYPOINT
 
 
 @dataclass
@@ -26,52 +33,84 @@ class PhaseDecision:
     payload: Dict[str, Any]
 
 
+@dataclass
+class BulkPhaseState:
+    """Bulk (solid/liquid) phase descriptor used for sublimation gating."""
+
+    state: Literal["solid_dominated", "liquid_dominated", "mixed"]
+    f_liquid: float
+    f_solid: float
+    f_vapor: float
+    method: str
+    reason: str
+    used_map: bool
+    payload: Dict[str, Any]
+    temperature_K: Optional[float] = None
+    pressure_Pa: Optional[float] = None
+    tau: Optional[float] = None
+
+
 class PhaseEvaluator:
     """Resolve the effective phase state using maps or threshold fallbacks."""
 
-    def __init__(self, cfg: Optional[PhaseConfig]) -> None:
+    def __init__(self, cfg: Optional[PhaseConfig] = None, *, logger: Optional[logging.Logger] = None) -> None:
+        self.logger = logger or logging.getLogger(__name__)
         self._cfg = cfg
         self.enabled = bool(cfg and cfg.enabled)
         self.source = (cfg.source if cfg is not None else "threshold") if self.enabled else "disabled"
         self.thresholds = cfg.thresholds if cfg is not None else PhaseThresholds()
-        self.entrypoint = self._resolve_entrypoint(cfg.map if cfg else None)
-        self._map_callable: Optional[Callable[..., Any]] = None
+        self.entrypoint = self._resolve_entrypoint(cfg)
+        self.extra_kwargs: Dict[str, Any] = dict(getattr(cfg, "extra_kwargs", {}) or {})
+        self._lookup_func: Optional[Callable[..., Any]] = None
         self._map_error_logged = False
         if self.enabled and self.source == "map":
-            self._map_callable = self._load_map_callable(self.entrypoint)
+            try:
+                self._lookup_func = self._load_entrypoint(self.entrypoint)
+            except Exception as exc:
+                self._map_error_logged = True
+                raise RuntimeError(
+                    f"phase: failed to load map entrypoint '{self.entrypoint}': {exc}"
+                ) from exc
+
+    @classmethod
+    def from_config(
+        cls,
+        cfg: Optional[PhaseConfig],
+        *,
+        logger: Optional[logging.Logger] = None,
+    ) -> "PhaseEvaluator":
+        """Construct a phase evaluator from a configuration object."""
+
+        return cls(cfg, logger=logger)
 
     @staticmethod
-    def _resolve_entrypoint(map_cfg: Optional[PhaseMapConfig]) -> str:
-        if map_cfg is None or not map_cfg.entrypoint:
+    def _resolve_entrypoint(cfg: Optional[PhaseConfig]) -> str:
+        if cfg is None:
             return DEFAULT_ENTRYPOINT
-        return str(map_cfg.entrypoint)
+        if getattr(cfg, "entrypoint", None):
+            return str(cfg.entrypoint)
+        map_cfg = getattr(cfg, "map", None)
+        if map_cfg is not None and getattr(map_cfg, "entrypoint", None):
+            return str(map_cfg.entrypoint)
+        return DEFAULT_ENTRYPOINT
 
-    def _load_map_callable(self, entrypoint: str | None) -> Optional[Callable[..., Any]]:
+    @staticmethod
+    def _load_entrypoint(entrypoint: Optional[str]) -> Optional[Callable[..., Any]]:
         if entrypoint is None:
             return None
-        module_name, sep, func_name = entrypoint.partition(":")
-        if not module_name:
-            logger.warning("phase: invalid map entrypoint '%s'", entrypoint)
-            return None
-        target_attr = func_name or "lookup_phase_state"
+        module_name, sep, func_name = str(entrypoint).partition(":")
+        if not module_name or not func_name:
+            raise RuntimeError(f"Invalid phase map entrypoint '{entrypoint}' (expected 'module:function')")
         try:
             module = importlib.import_module(module_name)
         except ImportError as exc:
-            logger.warning("phase: unable to import map module '%s': %s", module_name, exc)
-            return None
+            raise RuntimeError(f"Unable to import map module '{module_name}': {exc}") from exc
         try:
-            func = getattr(module, target_attr)
-        except AttributeError:
-            logger.warning(
-                "phase: entrypoint '%s' missing attribute '%s'", module_name, target_attr
-            )
-            return None
+            func = getattr(module, func_name)
+        except AttributeError as exc:
+            raise RuntimeError(f"phase entrypoint '{entrypoint}' missing attribute '{func_name}'") from exc
         if not callable(func):
-            logger.warning(
-                "phase: entrypoint '%s:%s' is not callable", module_name, target_attr
-            )
-            return None
-        logger.info("phase: using map entrypoint %s:%s", module_name, target_attr)
+            raise RuntimeError(f"phase entrypoint '{entrypoint}' is not callable")
         return func
 
     def evaluate(
@@ -80,21 +119,39 @@ class PhaseEvaluator:
         *,
         pressure_Pa: Optional[float] = None,
         tau: Optional[float] = None,
+        radius_m: Optional[float] = None,
+        time_s: Optional[float] = None,
+        T0_K: Optional[float] = None,
     ) -> PhaseDecision:
-        pressure_clean: Optional[float] = None
-        if pressure_Pa is not None and math.isfinite(pressure_Pa):
-            pressure_clean = float(max(pressure_Pa, 0.0))
-        tau_clean: Optional[float] = None
-        if tau is not None and math.isfinite(tau):
-            tau_clean = float(max(tau, 0.0))
-        diagnostics: Dict[str, Any] = {
-            "temperature_K": float(temperature_K),
-            "pressure_Pa": pressure_clean,
-            "pressure_bar": (pressure_clean / 1.0e5) if pressure_clean is not None else None,
-            "tau_clamped": tau_clean,
-        }
+        decision, _ = self.evaluate_with_bulk(
+            temperature_K,
+            pressure_Pa=pressure_Pa,
+            tau=tau,
+            radius_m=radius_m,
+            time_s=time_s,
+            T0_K=T0_K,
+        )
+        return decision
+
+    def evaluate_with_bulk(
+        self,
+        temperature_K: float,
+        *,
+        pressure_Pa: Optional[float] = None,
+        tau: Optional[float] = None,
+        radius_m: Optional[float] = None,
+        time_s: Optional[float] = None,
+        T0_K: Optional[float] = None,
+    ) -> Tuple[PhaseDecision, BulkPhaseState]:
+        """Return (solid/vapour decision, bulk solid/liquid state)."""
+
+        diagnostics = self._build_diagnostics(temperature_K, pressure_Pa, tau, radius_m, time_s, T0_K)
+        diagnostics_bulk = dict(diagnostics)
+        pressure_clean = diagnostics["pressure_Pa"]
+        tau_clean = diagnostics["tau_clamped"]
+
         if not self.enabled:
-            return PhaseDecision(
+            decision = PhaseDecision(
                 state="solid",
                 f_vap=0.0,
                 method="disabled",
@@ -102,22 +159,71 @@ class PhaseEvaluator:
                 used_map=False,
                 payload=diagnostics,
             )
+            bulk = self._bulk_state_from_fraction(
+                f_liquid=0.0,
+                f_vapor=0.0,
+                diagnostics=diagnostics_bulk,
+                method="disabled",
+                reason="phase.disabled",
+                used_map=False,
+            )
+            return decision, bulk
 
-        if self.source == "map" and self._map_callable is not None:
+        if self.source == "map" and self._lookup_func is not None:
             try:
-                raw = self._call_map(self._map_callable, temperature_K, pressure_clean, tau_clean)
-                decision = self._parse_map_result(raw, diagnostics)
-                if decision is not None:
-                    return decision
+                raw = self._call_map(
+                    self._lookup_func,
+                    temperature_K,
+                    pressure_clean,
+                    tau_clean,
+                    radius_m=radius_m,
+                    time_s=time_s,
+                    T0_K=T0_K,
+                )
+                decision = self._parse_map_result(raw, dict(diagnostics))
+                bulk = self._parse_bulk_map_result(raw, diagnostics_bulk)
+                if decision is not None or bulk is not None:
+                    decision_final = decision
+                    if decision_final is None and bulk is not None:
+                        decision_final = PhaseDecision(
+                            state="vapor" if bulk.state == "liquid_dominated" else "solid",
+                            f_vap=float(self._clamp_fraction(bulk.f_vapor, default=bulk.f_liquid)),
+                            method="map",
+                            reason="phase.map.bulk_only",
+                            used_map=True,
+                            payload=dict(bulk.payload),
+                        )
+                    if bulk is None and decision_final is not None:
+                        bulk = self._bulk_state_from_fraction(
+                            f_liquid=decision_final.f_vap,
+                            f_vapor=decision_final.f_vap,
+                            diagnostics=diagnostics_bulk,
+                            method="map",
+                            reason=decision_final.reason,
+                            used_map=True,
+                        )
+                    if decision_final is not None and bulk is not None:
+                        return decision_final, bulk
             except Exception as exc:  # pragma: no cover - defensive logging
                 if not self._map_error_logged:
-                    logger.warning("phase: map evaluation failed (%s); falling back to thresholds", exc)
+                    self.logger.warning(
+                        "phase: map evaluation failed (%s); falling back to thresholds", exc
+                    )
                     self._map_error_logged = True
         elif self.source == "map" and not self._map_error_logged:
-            logger.info("phase: map source requested but entrypoint unavailable; using thresholds")
+            self.logger.info("phase: map source requested but entrypoint unavailable; using thresholds")
             self._map_error_logged = True
 
-        return self._threshold_decision(temperature_K, pressure_clean, tau_clean, diagnostics)
+        decision = self._threshold_decision(temperature_K, pressure_clean, tau_clean, diagnostics)
+        bulk = self._bulk_state_from_fraction(
+            f_liquid=decision.f_vap,
+            f_vapor=decision.f_vap,
+            diagnostics=diagnostics_bulk,
+            method=decision.method,
+            reason=decision.reason,
+            used_map=False,
+        )
+        return decision, bulk
 
     def _call_map(
         self,
@@ -125,16 +231,40 @@ class PhaseEvaluator:
         temperature_K: float,
         pressure_Pa: Optional[float],
         tau: Optional[float],
+        *,
+        radius_m: Optional[float] = None,
+        time_s: Optional[float] = None,
+        T0_K: Optional[float] = None,
     ) -> Any:
-        try:
-            return func(temperature_K, pressure_Pa, tau)
-        except TypeError:
-            pass
-        try:
-            return func(temperature_K, pressure_Pa)
-        except TypeError:
-            pass
-        return func(temperature_K)
+        kwargs: Dict[str, Any] = {
+            "temperature_K": temperature_K,
+            "pressure_Pa": pressure_Pa,
+            "tau": tau,
+            "radius_m": radius_m,
+            "time_s": time_s,
+            "T0_K": T0_K,
+        }
+        kwargs.update(self.extra_kwargs)
+        return self._invoke_with_signature(func, kwargs)
+
+    @staticmethod
+    def _invoke_with_signature(func: Callable[..., Any], kwargs: Dict[str, Any]) -> Any:
+        signature = inspect.signature(func)
+        params = signature.parameters
+        accepts_var_kwargs = any(p.kind == inspect.Parameter.VAR_KEYWORD for p in params.values())
+        call_kwargs: Dict[str, Any] = {}
+        for name in params.keys():
+            if name in kwargs:
+                call_kwargs[name] = kwargs[name]
+        if accepts_var_kwargs:
+            for name, value in kwargs.items():
+                if name not in call_kwargs:
+                    call_kwargs[name] = value
+        if call_kwargs:
+            return func(**call_kwargs)
+        if "temperature_K" in kwargs:
+            return func(kwargs["temperature_K"])
+        return func()
 
     def _parse_map_result(
         self,
@@ -149,7 +279,7 @@ class PhaseEvaluator:
         if isinstance(payload, dict):
             diagnostics.update({k: v for k, v in payload.items() if k not in diagnostics})
             state = payload.get("state") or payload.get("phase_state")
-            f_vap = payload.get("f_vap") or payload.get("fraction")
+            f_vap = payload.get("f_vap") or payload.get("f_vapor") or payload.get("fraction")
         elif isinstance(payload, (list, tuple)) and payload:
             state = payload[0]
             if len(payload) > 1:
@@ -167,11 +297,7 @@ class PhaseEvaluator:
             return None
         f_vap_val = 1.0 if state_norm == "vapor" else 0.0
         if f_vap is not None:
-            try:
-                f_vap_val = float(f_vap)
-            except (TypeError, ValueError):
-                f_vap_val = 0.0
-        f_vap_val = float(min(max(f_vap_val, 0.0), 1.0))
+            f_vap_val = self._clamp_fraction(f_vap, default=f_vap_val)
         state_final: Literal["solid", "vapor"] = "vapor" if f_vap_val >= 0.5 else "solid"
         return PhaseDecision(
             state=state_final,
@@ -234,6 +360,198 @@ class PhaseEvaluator:
             payload=diagnostics,
         )
 
+    @staticmethod
+    def _build_diagnostics(
+        temperature_K: float,
+        pressure_Pa: Optional[float],
+        tau: Optional[float],
+        radius_m: Optional[float],
+        time_s: Optional[float],
+        T0_K: Optional[float],
+    ) -> Dict[str, Any]:
+        pressure_clean: Optional[float] = None
+        if pressure_Pa is not None and math.isfinite(pressure_Pa):
+            pressure_clean = float(max(pressure_Pa, 0.0))
+        tau_clean: Optional[float] = None
+        if tau is not None and math.isfinite(tau):
+            tau_clean = float(max(tau, 0.0))
+        diagnostics: Dict[str, Any] = {
+            "temperature_K": float(temperature_K),
+            "pressure_Pa": pressure_clean,
+            "pressure_bar": (pressure_clean / 1.0e5) if pressure_clean is not None else None,
+            "tau_clamped": tau_clean,
+        }
+        if radius_m is not None and math.isfinite(radius_m):
+            diagnostics["radius_m"] = float(radius_m)
+        if time_s is not None and math.isfinite(time_s):
+            diagnostics["time_s"] = float(time_s)
+        if T0_K is not None and math.isfinite(T0_K):
+            diagnostics["temperature_initial_K"] = float(T0_K)
+        return diagnostics
+
+    @staticmethod
+    def _clamp_fraction(value: Optional[float], default: float = 0.0) -> float:
+        if value is None:
+            return float(default)
+        try:
+            val = float(value)
+        except (TypeError, ValueError):
+            return float(default)
+        if not math.isfinite(val):
+            return float(default)
+        return float(min(max(val, 0.0), 1.0))
+
+    def _bulk_state_from_fraction(
+        self,
+        f_liquid: float,
+        *,
+        diagnostics: Dict[str, Any],
+        method: str,
+        reason: str,
+        used_map: bool,
+        f_solid: Optional[float] = None,
+        f_vapor: Optional[float] = None,
+    ) -> BulkPhaseState:
+        f_liquid_clean = self._clamp_fraction(f_liquid)
+        f_solid_clean = None if f_solid is None else self._clamp_fraction(f_solid)
+        f_vapor_clean = None if f_vapor is None else self._clamp_fraction(f_vapor)
+        if f_solid_clean is None and f_vapor_clean is not None:
+            f_solid_clean = max(0.0, 1.0 - f_liquid_clean - f_vapor_clean)
+        if f_solid_clean is None:
+            f_solid_clean = max(0.0, 1.0 - f_liquid_clean)
+        if f_vapor_clean is None:
+            f_vapor_clean = max(0.0, 1.0 - f_liquid_clean - f_solid_clean)
+        total = f_liquid_clean + f_solid_clean + f_vapor_clean
+        if total > 0.0 and not math.isclose(total, 1.0):
+            scale = 1.0 / total
+            f_liquid_clean *= scale
+            f_solid_clean *= scale
+            f_vapor_clean *= scale
+        if total <= 0.0:
+            f_liquid_clean = 0.0
+            f_solid_clean = 1.0
+            f_vapor_clean = 0.0
+        if f_liquid_clean >= 0.95:
+            state: Literal["solid_dominated", "liquid_dominated", "mixed"] = "liquid_dominated"
+        elif f_liquid_clean <= 0.05:
+            state = "solid_dominated"
+        else:
+            state = "mixed"
+        return BulkPhaseState(
+            state=state,
+            f_liquid=f_liquid_clean,
+            f_solid=f_solid_clean,
+            f_vapor=f_vapor_clean,
+            method=method,
+            reason=reason,
+            used_map=used_map,
+            payload=diagnostics,
+            temperature_K=diagnostics.get("temperature_K"),
+            pressure_Pa=diagnostics.get("pressure_Pa"),
+            tau=diagnostics.get("tau_clamped"),
+        )
+
+    def _parse_bulk_map_result(
+        self,
+        payload: Any,
+        diagnostics: Dict[str, Any],
+    ) -> Optional[BulkPhaseState]:
+        state_raw: Optional[str] = None
+        f_liquid_raw: Optional[float] = None
+        f_solid_raw: Optional[float] = None
+        f_vapor_raw: Optional[float] = None
+        reason = "phase.map"
+
+        if isinstance(payload, dict):
+            diagnostics.update({k: v for k, v in payload.items() if k not in diagnostics})
+            state_raw = payload.get("state") or payload.get("phase_state")
+            f_liquid_raw = payload.get("f_liquid")
+            f_solid_raw = payload.get("f_solid")
+            f_vapor_raw = payload.get("f_vapor")
+            frac_raw = payload.get("f_vap") or payload.get("fraction")
+            if f_liquid_raw is None and frac_raw is not None:
+                f_liquid_raw = frac_raw
+            if f_vapor_raw is None and frac_raw is not None:
+                f_vapor_raw = frac_raw
+        elif isinstance(payload, (list, tuple)) and payload:
+            state_raw = payload[0]
+            if len(payload) > 1:
+                try:
+                    f_liquid_raw = float(payload[1])
+                except (TypeError, ValueError):
+                    f_liquid_raw = None
+        elif isinstance(payload, str):
+            state_raw = payload
+
+        def _maybe_float(value: Optional[float]) -> Optional[float]:
+            if value is None:
+                return None
+            try:
+                return float(value)
+            except (TypeError, ValueError):
+                return None
+
+        f_liquid_val: Optional[float] = _maybe_float(f_liquid_raw)
+        f_solid_val: Optional[float] = _maybe_float(f_solid_raw)
+        f_vapor_val: Optional[float] = _maybe_float(f_vapor_raw)
+
+        state_norm = state_raw.lower().strip() if isinstance(state_raw, str) else None
+        liquids = {"liquid", "vapor", "vapour", "molten", "liquidus", "liquid_dominated"}
+        solids = {"solid", "glass", "solidus", "solid_dominated"}
+        mixed = {"mixed", "blend", "partial", "partially_molten"}
+
+        if f_liquid_val is None and f_solid_val is None and f_vapor_val is None:
+            if state_norm in liquids:
+                f_liquid_val, f_solid_val = 1.0, 0.0
+            elif state_norm in solids:
+                f_liquid_val, f_solid_val = 0.0, 1.0
+            elif state_norm in mixed:
+                f_liquid_val, f_solid_val = 0.5, 0.5
+
+        if f_vapor_val is not None:
+            f_vapor_val = self._clamp_fraction(f_vapor_val)
+        if f_liquid_val is not None:
+            f_liquid_val = self._clamp_fraction(f_liquid_val)
+        if f_solid_val is not None:
+            f_solid_val = self._clamp_fraction(f_solid_val)
+
+        if f_liquid_val is None and f_vapor_val is not None:
+            condensed = max(0.0, 1.0 - f_vapor_val)
+            if state_norm in liquids:
+                f_liquid_val, f_solid_val = condensed, f_solid_val or 0.0
+            elif state_norm in solids:
+                f_liquid_val, f_solid_val = 0.0, condensed
+            elif state_norm in mixed:
+                f_liquid_val = 0.5 * condensed
+                f_solid_val = 0.5 * condensed
+
+        if f_liquid_val is None and f_solid_val is not None:
+            f_liquid_val = 1.0 - f_solid_val
+        if f_solid_val is None and f_liquid_val is not None and f_vapor_val is not None:
+            f_solid_val = max(0.0, 1.0 - f_liquid_val - f_vapor_val)
+        if f_solid_val is None and f_liquid_val is not None:
+            f_solid_val = 1.0 - f_liquid_val
+
+        if state_norm in liquids and f_liquid_val is None:
+            f_liquid_val, f_solid_val = 1.0, 0.0
+        elif state_norm in solids and f_liquid_val is None:
+            f_liquid_val, f_solid_val = 0.0, 1.0
+        elif state_norm in mixed and f_liquid_val is None:
+            f_liquid_val, f_solid_val = 0.5, 0.5
+
+        if f_liquid_val is None:
+            return None
+
+        return self._bulk_state_from_fraction(
+            f_liquid=float(f_liquid_val),
+            f_solid=f_solid_val,
+            f_vapor=f_vapor_val,
+            diagnostics=diagnostics,
+            method="map",
+            reason=reason,
+            used_map=True,
+        )
+
 
 def hydro_escape_timescale(
     cfg: Optional[HydroEscapeConfig],
@@ -260,4 +578,4 @@ def hydro_escape_timescale(
     return 1.0 / rate
 
 
-__all__ = ["PhaseEvaluator", "PhaseDecision", "hydro_escape_timescale"]
+__all__ = ["PhaseEvaluator", "PhaseDecision", "BulkPhaseState", "hydro_escape_timescale"]

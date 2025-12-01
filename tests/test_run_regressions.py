@@ -9,9 +9,13 @@ from tempfile import TemporaryDirectory
 import numpy as np
 import pandas as pd
 
+from ruamel.yaml import YAML
+
+from marsdisk import constants
 from marsdisk.run import load_config, run_zero_d
 
 BASE_CONFIG = Path("configs/base.yml")
+TOL_MLOSS_PERCENT = 0.5
 
 
 def _run_case(overrides: list[str]) -> tuple[dict, pd.DataFrame]:
@@ -171,6 +175,84 @@ def test_gate_factor_collision_competition_reduces_flux() -> None:
 
     assert summary["median_gate_factor"] < 1.0
     assert run_df["blowout_gate_factor"].median() < 1.0
+
+
+def _write_inline_combined_config(config_path: Path, outdir: Path) -> None:
+    yaml = YAML()
+    yaml.indent(mapping=2, sequence=4, offset=2)
+    config = {
+        "geometry": {"mode": "0D", "r": 1.3 * constants.R_MARS},
+        "material": {"rho": 3000.0},
+        "temps": {"T_M": 4000.0},
+        "sizes": {"s_min": 1.0e-7, "s_max": 1.0e-3, "n_bins": 24},
+        "initial": {"mass_total": 1.0e-8, "s0_mode": "upper"},
+        "dynamics": {
+            "e0": 0.05,
+            "i0": 0.01,
+            "t_damp_orbits": 5.0,
+            "f_wake": 1.0,
+            "rng_seed": 9876,
+            "e_mode": "fixed",
+            "i_mode": "fixed",
+        },
+        "psd": {"alpha": 1.8, "wavy_strength": 0.05},
+        "qstar": {"Qs": 1.0e5, "a_s": 0.1, "B": 0.3, "b_g": 1.36, "v_ref_kms": [1.0, 2.0]},
+        "supply": {
+            "mode": "const",
+            "const": {"prod_area_rate_kg_m2_s": 1.0e-5},
+            "mixing": {"epsilon_mix": 1.0},
+        },
+        "sinks": {
+            "mode": "sublimation",
+            "enable_sublimation": True,
+            "enable_gas_drag": False,
+            "T_sub": 1300.0,
+            "sub_params": {
+                "mode": "hkl",
+                "psat_model": "clausius",
+                "alpha_evap": 0.02,
+                "mu": 0.0440849,
+                "A": 13.613,
+                "B": 17850.0,
+                "eta_instant": 0.2,
+                "dT": 50.0,
+                "P_gas": 0.0,
+            },
+        },
+        "numerics": {
+            "t_end_orbits": 0.25,
+            "t_end_years": None,
+            "dt_init": 5.0,
+            "eval_per_step": False,
+            "orbit_rollup": False,
+        },
+        "io": {"outdir": outdir.as_posix(), "debug_sinks": False},
+    }
+    with config_path.open("w", encoding="utf-8") as fh:
+        yaml.dump(config, fh)
+
+
+def test_combined_mass_flux_balance(tmp_path: Path) -> None:
+    outdir = tmp_path / "combined_mass_balance"
+    config_path = tmp_path / "combined_config.yml"
+    _write_inline_combined_config(config_path, outdir)
+
+    cfg = load_config(config_path)
+    run_zero_d(cfg)
+
+    summary_path = outdir / "summary.json"
+    series_path = outdir / "series" / "run.parquet"
+    summary = json.loads(summary_path.read_text(encoding="utf-8"))
+    series = pd.read_parquet(series_path)
+
+    assert summary["primary_scenario"] == "combined"
+    blowout_loss = float(series["mass_lost_by_blowout"].iloc[-1])
+    sink_loss = float(series["mass_lost_by_sinks"].iloc[-1])
+    total_loss = float(summary["M_loss"])
+    assert blowout_loss > 0.0
+    assert sink_loss > 0.0
+    rel_err_percent = abs(total_loss - (blowout_loss + sink_loss)) / total_loss * 100.0
+    assert rel_err_percent <= TOL_MLOSS_PERCENT
 
 
 def test_gate_factor_sublimation_competition_reduces_flux() -> None:

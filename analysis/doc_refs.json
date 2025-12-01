@@ -2,6 +2,7 @@
   "documents": [
     "analysis/AGENT.md",
     "analysis/AI_USAGE.md",
+    "analysis/CHANGELOG.md",
     "analysis/equations.md",
     "analysis/overview.md",
     "analysis/run-recipes.md",

@@ -1,0 +1,4 @@
+# Generated outputs (PNG/CSV/logs)
+outputs/*.png
+outputs/*.csv
+outputs/*.txt

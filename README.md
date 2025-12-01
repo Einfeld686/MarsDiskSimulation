@@ -146,6 +146,7 @@ python -m marsdisk.run --config configs/base.yml --sinks sublimation --set sinks
 | `supply` | `mode`, `const` / `powerlaw` / `table` / `piecewise` | 表層供給の時間依存・空間構造。 |
 | `sinks` | `mode`, `enable_sublimation`, `enable_gas_drag`, `sub_params.*`, `rho_g` | 昇華・ガス抗力など追加シンク。`mode="none"` で一括無効。 |
 | `shielding` | `phi_table` | Φ テーブル経由で自遮蔽係数を補正。 |
+| `phase` | `enabled`, `source`, `entrypoint`, `extra_kwargs` | バルク相判定を外部エントリポイントで切替可能。既定は `siO2_disk_cooling.siO2_cooling_map:lookup_phase_state` を用いた SiO₂ 冷却マップ。 |
 | `numerics` | `t_end_years`, `dt_init`, `safety`, `atol`, `rtol` | IMEX-BDF(1) のタイムステップ制御 (<big><big>$`\Delta t \le 0.1 \times \min t_{\rm coll,k}`$</big></big> が収束条件)。 |
 | `io` | `outdir` | 出力ディレクトリ。 |
 
@@ -197,7 +198,8 @@ pytest
 - `analysis/AI_USAGE.md`：YAML 設定のポイントと I/O 契約。  
 - `analysis/run-recipes.md`：ベンチマークや掃引ジョブの運用ノウハウ。  
 - `analysis/sinks_callgraph.md`：追加シンクの流れと依存関係。  
-- `analysis/equations.md`：採用方程式と文献まとめ。
+- `analysis/equations.md`：採用方程式と文献まとめ。  
+- `analysis/CHANGELOG.md`：リリースノートと変更履歴（analysis 配下に統合）。  
 
 必要に応じて `analysis/` ディレクトリを `python -m tools.doc_sync_agent --all --write`（Makefile では `make analysis-sync`）で同期し、コード変更後の参照情報を更新してください。その直後に `make analysis-doc-tests` を実行すると `tools/run_analysis_doc_tests.py` が `pytest tests/test_analysis_* -q` を一括実行し、合格率を ASCII バーで可視化します。Codex/開発者ともに「DocSync → ドキュメントテスト」の順でまとめて記録するのが標準手順で、チャットで「analysisファイルを更新してください」と頼むだけで `make analysis-update`（両コマンドを連続実行）を走らせられます。
 

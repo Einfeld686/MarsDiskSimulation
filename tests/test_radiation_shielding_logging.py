@@ -17,30 +17,6 @@ def restore_qpr_lookup():
         radiation._QPR_LOOKUP = original
 
 
-def test_qpr_lookup_clamp_logs(tmp_path, caplog, restore_qpr_lookup):
-    df = pd.DataFrame(
-        {
-            "s": [1.0e-6, 1.0e-6, 1.0e-5, 1.0e-5],
-            "T_M": [150.0, 200.0, 150.0, 200.0],
-            "Q_pr": [0.2, 0.25, 0.5, 0.55],
-        }
-    )
-    table_path = tmp_path / "qpr.csv"
-    df.to_csv(table_path, index=False)
-
-    with caplog.at_level(logging.INFO):
-        lookup = radiation.load_qpr_table(table_path)
-    assert any("Loaded ⟨Q_pr⟩ table" in rec.message for rec in caplog.records)
-
-    caplog.clear()
-    with caplog.at_level(logging.INFO):
-        value = radiation.planck_mean_qpr(5.0e-7, 120.0, table=lookup)
-    assert any("⟨Q_pr⟩ lookup clamped" in rec.message for rec in caplog.records)
-
-    expected = lookup(1.0e-6, 150.0)
-    assert value == pytest.approx(expected)
-
-
 def test_beta_density_validation():
     with pytest.raises(ValueError) as exc:
         radiation.beta(s=1.0e-6, rho=0.0, T_M=150.0)

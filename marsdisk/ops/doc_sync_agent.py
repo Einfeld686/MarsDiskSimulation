@@ -20,6 +20,7 @@ DEFAULT_DOC_PATHS = [
     "analysis/run-recipes.md",
     "analysis/sinks_callgraph.md",
     "analysis/AI_USAGE.md",
+    "analysis/CHANGELOG.md",
     "analysis/inventory.json",
     "analysis/symbols.raw.txt",
     "analysis/symbols.rg.txt",
@@ -79,6 +80,7 @@ DEFAULT_DOCS_FOR_REFS = [
     RUN_RECIPES_PATH_DEFAULT,
     REPO_ROOT / "analysis" / "sinks_callgraph.md",
     REPO_ROOT / "analysis" / "AI_USAGE.md",
+    REPO_ROOT / "analysis" / "CHANGELOG.md",
     REPO_ROOT / "analysis" / "AGENT.md",
 ]
 
