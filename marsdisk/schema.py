@@ -283,7 +283,12 @@ class RPBlowoutConfig(BaseModel):
 
 
 class HydroEscapeConfig(BaseModel):
-    """Configuration for vapour-driven hydrodynamic escape sinks."""
+    """Configuration for vapour-driven hydrodynamic escape sinks.
+
+    ``strength`` is interpreted as the base escape rate (s⁻¹) at
+    ``T_ref_K`` for a unit vapour fraction; tune it to match the expected
+    one-orbit loss fraction (e.g. Hyodo-style 10–40%) at the chosen radius.
+    """
 
     enable: bool = False
     strength: float = Field(
@@ -305,6 +310,10 @@ class Sinks(BaseModel):
 
     mode: Literal["none", "sublimation"] = "sublimation"
     enable_sublimation: bool = True
+    sublimation_location: Literal["surface", "smol", "both"] = Field(
+        "surface",
+        description="Select whether sublimation acts via the surface ODE, the Smol solver, or both.",
+    )
     T_sub: float = 1300.0
     sub_params: SublimationParamsModel = SublimationParamsModel()
     enable_gas_drag: bool = Field(
@@ -382,7 +391,15 @@ class Phase5Config(BaseModel):
 
 
 class PhaseThresholds(BaseModel):
-    """Fallback thresholds used when no external phase map is available."""
+    """Fallback thresholds used when no external phase map is available.
+
+    The thresholds approximate a solid↔vapour split with a linear ramp between
+    ``T_condense_K`` and ``T_vaporize_K`` and optional damping by ambient
+    pressure (``P_ref_bar``) and line-of-sight optical depth (``tau_ref``).
+    They provide a gas-poor inner-disk heuristic when a detailed Ronnet/Hyodo-
+    style map is not present; tune the numbers when exploring more opaque or
+    vapour-rich scenarios.
+    """
 
     T_condense_K: float = Field(1700.0, gt=0.0)
     T_vaporize_K: float = Field(2000.0, gt=0.0)

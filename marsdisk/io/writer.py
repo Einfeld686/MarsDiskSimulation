@@ -100,6 +100,7 @@ def write_parquet(df: pd.DataFrame, path: Path) -> None:
         "fast_blowout_flag_gt10": "bool",
         "s_min_evolved": "m",
         "ds_dt_sublimation": "m s^-1",
+        "ds_dt_sublimation_raw": "m s^-1",
         "blowout_gate_factor": "dimensionless",
         "F_abs_geom": "W m^-2",
         "F_abs_geom_qpr": "W m^-2",
@@ -132,6 +133,10 @@ def write_parquet(df: pd.DataFrame, path: Path) -> None:
         "phase_method": "category",
         "phase_reason": "category",
         "phase_f_vap": "dimensionless",
+        "phase_bulk_state": "category",
+        "phase_bulk_f_liquid": "dimensionless",
+        "phase_bulk_f_solid": "dimensionless",
+        "phase_bulk_f_vapor": "dimensionless",
         "tau_mars_line_of_sight": "dimensionless",
         "tau_gate_blocked": "bool",
         "blowout_beta_gate": "bool",
@@ -141,6 +146,7 @@ def write_parquet(df: pd.DataFrame, path: Path) -> None:
         "sink_selected": "category",
         "hydro_timescale_s": "s",
         "mass_loss_surface_solid_step": "M_Mars",
+        "sublimation_blocked_by_phase": "bool",
     }
     definitions = {
         "time": "Cumulative elapsed time at the end of each step [s].",
@@ -210,6 +216,7 @@ def write_parquet(df: pd.DataFrame, path: Path) -> None:
         "s_bin_center": "Logarithmic bin center used in the PSD histogram (m).",
         "N_bin": "Number surface density (arbitrary normalisation) recorded per PSD bin.",
         "ds_dt_sublimation": "Uniform size-change rate applied to each bin from the HKL sublimation model (m s^-1).",
+        "ds_dt_sublimation_raw": "Raw HKL-derived ds/dt before phase gating is applied (m s^-1).",
         "blowout_gate_factor": "Gate coefficient f_gate=t_solid/(t_solid+t_blow) applied to blow-out outflux (dimensionless).",
         "F_abs_geom": "Unattenuated geometric absorbed flux σ T_M^4 (R_M/r)^2 [W m^-2].",
         "F_abs_geom_qpr": "Absorbed flux scaled by ⟨Q_pr⟩ for the effective minimum size [W m^-2].",
@@ -242,6 +249,10 @@ def write_parquet(df: pd.DataFrame, path: Path) -> None:
         "phase_method": "Phase inference mode used on the step (map/threshold/disabled).",
         "phase_reason": "Short note describing why a particular branch was selected (e.g. tau gating).",
         "phase_f_vap": "Estimated vapour fraction returned by the phase evaluator (dimensionless).",
+        "phase_bulk_state": "Bulk solid/liquid classification derived from the phase map or thresholds (solid_dominated/liquid_dominated/mixed).",
+        "phase_bulk_f_liquid": "Liquid fraction inferred for the bulk phase (dimensionless).",
+        "phase_bulk_f_solid": "Solid fraction inferred for the bulk phase (dimensionless).",
+        "phase_bulk_f_vapor": "Vapour fraction inferred for the bulk phase (dimensionless).",
         "tau_mars_line_of_sight": "Optical depth along the Mars line of sight used for gating (dimensionless).",
         "tau_gate_blocked": "Indicates that the optical-depth gate suppressed radiation-pressure blow-out on the step.",
         "blowout_beta_gate": "Boolean showing whether β ≥ 0.5 at the active minimum size (True when blow-out is energetically allowed).",
@@ -251,6 +262,7 @@ def write_parquet(df: pd.DataFrame, path: Path) -> None:
         "sink_selected": "Sink branch chosen for the step (rp_blowout, hydro_escape or none).",
         "hydro_timescale_s": "Hydrodynamic escape timescale applied when the vapor branch is active [s].",
         "mass_loss_surface_solid_step": "Step-level mass removed from the Σ_{τ≤1} surface reservoir regardless of whether it is counted as a sink or as radiation loss (Mars masses).",
+        "sublimation_blocked_by_phase": "True when the bulk phase is liquid-dominated and HKL sublimation drift is suppressed.",
     }
     table = pa.Table.from_pandas(df, preserve_index=False)
     metadata = dict(table.schema.metadata or {})

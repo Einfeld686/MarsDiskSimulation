@@ -34,9 +34,15 @@ def test_refs_and_coverage_pipeline(tmp_path) -> None:
     docs = [
         "analysis/equations.md",
         "analysis/overview.md",
+        "analysis/slides_outline.md",
+        "analysis/run_catalog.md",
+        "analysis/figures_catalog.md",
+        "analysis/glossary.md",
+        "analysis/literature_map.md",
         "analysis/run-recipes.md",
         "analysis/sinks_callgraph.md",
         "analysis/AI_USAGE.md",
+        "analysis/CHANGELOG.md",
     ]
     assert (
         doc_sync_agent.main(
