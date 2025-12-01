@@ -196,7 +196,6 @@ class PhaseEvaluator:
                     if bulk is None and decision_final is not None:
                         bulk = self._bulk_state_from_fraction(
                             f_liquid=decision_final.f_vap,
-                            f_vapor=decision_final.f_vap,
                             diagnostics=diagnostics_bulk,
                             method="map",
                             reason=decision_final.reason,
@@ -217,7 +216,6 @@ class PhaseEvaluator:
         decision = self._threshold_decision(temperature_K, pressure_clean, tau_clean, diagnostics)
         bulk = self._bulk_state_from_fraction(
             f_liquid=decision.f_vap,
-            f_vapor=decision.f_vap,
             diagnostics=diagnostics_bulk,
             method=decision.method,
             reason=decision.reason,
@@ -315,6 +313,12 @@ class PhaseEvaluator:
         tau: Optional[float],
         diagnostics: Dict[str, Any],
     ) -> PhaseDecision:
+        """Fallback solid/vapour decision using the configured thresholds.
+
+        The ramp between ``T_condense_K`` and ``T_vaporize_K`` is a gas-poor,
+        optically-thin heuristic; pressure and optical-depth terms soften the
+        transition when the disk deviates from that limit.
+        """
         T = float(temperature_K)
         if not math.isfinite(T) or T <= 0.0:
             raise ValueError("temperature_K must be positive and finite for phase evaluation")
@@ -558,7 +562,14 @@ def hydro_escape_timescale(
     temperature_K: float,
     f_vap: float,
 ) -> Optional[float]:
-    """Return ``t_escape`` implied by the hydrodynamic escape scaling."""
+    """Return ``t_escape`` implied by the hydrodynamic escape scaling.
+
+    ``strength`` acts as the reference escape rate at ``T_ref_K`` for
+    ``f_vap≈1``, so it can be calibrated to match a target orbital-loss
+    fraction or scale-height assumption before toggling the sink on.  The
+    scaling is deliberately 0D; callers choose the representative radius/
+    layer when setting ``strength``.
+    """
 
     if cfg is None or not cfg.enable:
         return None

@@ -35,7 +35,7 @@ import subprocess
 import hashlib
 import json
 from collections import defaultdict
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Dict, List, Mapping, Optional, Sequence
 
@@ -55,9 +55,10 @@ from .physics import (
     sizes,
     tempdriver,
     phase as phase_mod,
+    smol,
 )
 from .io import writer, tables
-from .physics.sublimation import SublimationParams, p_sat, grain_temperature_graybody
+from .physics.sublimation import SublimationParams, p_sat, grain_temperature_graybody, sublimation_sink_from_dsdt
 from . import constants
 
 logger = logging.getLogger(__name__)
@@ -447,8 +448,38 @@ class RunState:
     time: float = 0.0
 
 
+@dataclass
+class ZeroDHistory:
+    """Per-step history bundle used by the full-feature zero-D driver."""
+
+    records: List[Dict[str, Any]] = field(default_factory=list)
+    psd_hist_records: List[Dict[str, Any]] = field(default_factory=list)
+    diagnostics: List[Dict[str, Any]] = field(default_factory=list)
+    mass_budget: List[Dict[str, float]] = field(default_factory=list)
+    step_diag_records: List[Dict[str, Any]] = field(default_factory=list)
+    debug_records: List[Dict[str, Any]] = field(default_factory=list)
+    orbit_rollup_rows: List[Dict[str, float]] = field(default_factory=list)
+    temperature_track: List[float] = field(default_factory=list)
+    beta_track: List[float] = field(default_factory=list)
+    ablow_track: List[float] = field(default_factory=list)
+    gate_factor_track: List[float] = field(default_factory=list)
+    t_solid_track: List[float] = field(default_factory=list)
+    phase7_total_rate_track: List[float] = field(default_factory=list)
+    phase7_total_rate_time_track: List[float] = field(default_factory=list)
+    phase7_ts_ratio_track: List[float] = field(default_factory=list)
+    mass_budget_violation: Optional[Dict[str, float]] = None
+    violation_triggered: bool = False
+    tau_gate_block_time: float = 0.0
+    total_time_elapsed: float = 0.0
+
+
 def step(config: RunConfig, state: RunState, dt: float) -> Dict[str, float]:
-    """Advance the coupled S0/S1 system by one time-step."""
+    """Advance the coupled S0/S1 system by one time-step.
+
+    This is a lean helper for tests and tutorials; it does not exercise the
+    full zero-D driver, PSD floor handling, or the rich I/O used by
+    :func:`run_zero_d`.
+    """
 
     kappa_surf = psd.compute_kappa(state.psd_state)
     tau = kappa_surf * state.sigma_surf
@@ -497,7 +528,11 @@ def run_n_steps(
     dt: float,
     out_dir: Path | None = None,
 ) -> pd.DataFrame:
-    """Run ``n`` steps and optionally serialise results."""
+    """Run ``n`` steps and optionally serialise results.
+
+    Intended for quick checks; the production-oriented :func:`run_zero_d`
+    performs full configuration validation, adaptive floors, and richer output.
+    """
 
     records: List[Dict[str, float]] = []
     for _ in range(n):
@@ -595,6 +630,106 @@ def _resolve_single_process_choice(
     return "off", "default"
 
 
+def _write_zero_d_history(
+    cfg: Config,
+    df: pd.DataFrame,
+    history: ZeroDHistory,
+    *,
+    step_diag_enabled: bool,
+    step_diag_format: str,
+    step_diag_path_cfg: Optional[Path],
+    orbit_rollup_enabled: bool,
+    phase7_enabled: bool,
+) -> None:
+    """Persist time series, diagnostics, and rollups for a zero-D run."""
+
+    outdir = Path(cfg.io.outdir)
+    step_diag_path = None
+    if step_diag_enabled:
+        if step_diag_path_cfg is not None:
+            step_diag_path = Path(step_diag_path_cfg)
+            if not step_diag_path.is_absolute():
+                step_diag_path = outdir / step_diag_path
+        else:
+            ext = "jsonl" if step_diag_format == "jsonl" else "csv"
+            step_diag_path = outdir / "series" / f"step_diagnostics.{ext}"
+    writer.write_parquet(df, outdir / "series" / "run.parquet")
+    if history.psd_hist_records:
+        psd_hist_df = pd.DataFrame(history.psd_hist_records)
+        writer.write_parquet(psd_hist_df, outdir / "series" / "psd_hist.parquet")
+    if history.diagnostics:
+        diag_df = pd.DataFrame(history.diagnostics)
+        writer.write_parquet(diag_df, outdir / "series" / "diagnostics.parquet")
+    if step_diag_enabled and step_diag_path is not None:
+        writer.write_step_diagnostics(history.step_diag_records, step_diag_path, fmt=step_diag_format)
+    if orbit_rollup_enabled:
+        rows_for_rollup = history.orbit_rollup_rows
+        required_phase7_cols = {
+            "mloss_blowout_rate",
+            "mloss_sink_rate",
+            "mloss_total_rate",
+            "ts_ratio",
+            "dt",
+            "time",
+            "blowout_gate_factor",
+        }
+        if phase7_enabled and rows_for_rollup and not df.empty and required_phase7_cols.issubset(set(df.columns)):
+            df_end = df["time"].to_numpy()
+            df_start = (df["time"] - df["dt"]).to_numpy()
+            blow_rates = df["mloss_blowout_rate"].to_numpy()
+            sink_rates = df["mloss_sink_rate"].to_numpy()
+            total_rates = df["mloss_total_rate"].to_numpy()
+            ts_ratio_series = df["ts_ratio"].to_numpy()
+            gate_factor_series = df["blowout_gate_factor"].to_numpy()
+
+            def _safe_peak(arr: np.ndarray, mask: np.ndarray) -> float:
+                subset = arr[mask]
+                subset = subset[np.isfinite(subset)]
+                if subset.size == 0:
+                    return float("nan")
+                return float(np.max(subset))
+
+            def _safe_median(arr: np.ndarray, mask: np.ndarray) -> float:
+                subset = arr[mask]
+                subset = subset[np.isfinite(subset)]
+                if subset.size == 0:
+                    return float("nan")
+                return float(np.median(subset))
+
+            gate_factor_median_all = _safe_median(
+                gate_factor_series,
+                np.ones_like(gate_factor_series, dtype=bool),
+            )
+
+            rows_for_rollup = []
+            orbit_start_time = 0.0
+            for row in history.orbit_rollup_rows:
+                orbit_end_time = _safe_float(row.get("time_s_end"))
+                if orbit_end_time is None:
+                    t_orb_row = _safe_float(row.get("t_orb_s"))
+                    orbit_end_time = orbit_start_time + (t_orb_row if t_orb_row is not None else 0.0)
+                mask = (df_end > orbit_start_time) & (df_start <= orbit_end_time)
+                blow_peak = _safe_peak(blow_rates, mask)
+                sink_peak = _safe_peak(sink_rates, mask)
+                total_peak = _safe_peak(total_rates, mask)
+                ts_ratio_med = _safe_median(ts_ratio_series, mask)
+                gate_factor_med = _safe_median(gate_factor_series, mask)
+                if not math.isfinite(gate_factor_med):
+                    gate_factor_med = gate_factor_median_all
+                row_aug = dict(row)
+                row_aug["mloss_blowout_rate_mean"] = row.get("M_out_per_orbit")
+                row_aug["mloss_sink_rate_mean"] = row.get("M_sink_per_orbit")
+                row_aug["mloss_total_rate_mean"] = row.get("M_loss_per_orbit")
+                row_aug["mloss_blowout_rate_peak"] = blow_peak
+                row_aug["mloss_sink_rate_peak"] = sink_peak
+                row_aug["mloss_total_rate_peak"] = total_peak
+                row_aug["ts_ratio_median"] = ts_ratio_med
+                row_aug["gate_factor_median"] = gate_factor_med
+                rows_for_rollup.append(row_aug)
+                orbit_start_time = orbit_end_time
+        writer.write_orbit_rollup(rows_for_rollup, outdir / "orbit_rollup.csv")
+
+
 def run_zero_d(
     cfg: Config,
     *,
@@ -602,7 +737,12 @@ def run_zero_d(
     single_process_override: Optional[str] = None,
     single_process_source: Optional[str] = None,
 ) -> None:
-    """Execute a simple zero-dimensional simulation.
+    """Execute the full-feature zero-dimensional simulation.
+
+    This is the production driver: it resolves configuration, builds PSD
+    floors, advances the coupled physics, and emits the on-disk artifacts.
+    The lightweight :func:`step` / :func:`run_n_steps` helpers remain available
+    for tutorial or unit-test scenarios.
 
     Parameters
     ----------
@@ -1050,6 +1190,12 @@ def run_zero_d(
 
     sinks_mode_value = getattr(cfg.sinks, "mode", "sublimation")
     sinks_enabled_cfg = sinks_mode_value != "none"
+    sublimation_location_raw = getattr(cfg.sinks, "sublimation_location", "surface")
+    sublimation_location = str(sublimation_location_raw or "surface").lower()
+    if sublimation_location not in {"surface", "smol", "both"}:
+        raise ValueError(f"sinks.sublimation_location must be 'surface', 'smol' or 'both' (got {sublimation_location!r})")
+    sublimation_to_surface = sublimation_location in {"surface", "both"}
+    sublimation_to_smol = sublimation_location in {"smol", "both"}
     sublimation_enabled_cfg = bool(
         sinks_enabled_cfg
         and (
@@ -1069,14 +1215,25 @@ def run_zero_d(
     if enforce_collisions_only:
         sink_opts.enable_sublimation = False
         sink_opts.enable_gas_drag = False
-    sinks_active = bool(sink_opts.enable_sublimation or sink_opts.enable_gas_drag)
+    sink_opts_surface = copy.deepcopy(sink_opts)
+    sink_opts_surface.enable_sublimation = bool(
+        sink_opts.enable_sublimation and sublimation_to_surface and not enforce_collisions_only
+    )
+    sink_opts_surface.enable_gas_drag = bool(sink_opts.enable_gas_drag and not enforce_collisions_only)
+    sinks_active = bool(
+        (sublimation_enabled_cfg and (sublimation_to_surface or sublimation_to_smol))
+        or sink_opts_surface.enable_gas_drag
+    )
     if enforce_sublimation_only:
         sublimation_active_flag = True
     elif enforce_collisions_only:
         sublimation_active_flag = False
     else:
         sublimation_active_flag = sublimation_enabled_cfg
-    sink_timescale_active = sinks_active and not enforce_collisions_only
+    sink_timescale_active = bool(
+        (sink_opts_surface.enable_sublimation or sink_opts_surface.enable_gas_drag)
+        and not enforce_collisions_only
+    )
 
     supply_spec = cfg.supply
 
@@ -1093,13 +1250,12 @@ def run_zero_d(
         time_grid_info["dt_step"] = dt
         time_grid_info["dt_capped_by_max_steps"] = True
 
-    records: List[Dict[str, float]] = []
-    psd_hist_records: List[Dict[str, float]] = []
-    diagnostics: List[Dict[str, Any]] = []
-    mass_budget: List[Dict[str, float]] = []
-    step_diag_records: List[Dict[str, Any]] = []
-    mass_budget_violation: Optional[Dict[str, float]] = None
-    violation_triggered = False
+    history = ZeroDHistory()
+    records = history.records
+    psd_hist_records = history.psd_hist_records
+    diagnostics = history.diagnostics
+    mass_budget = history.mass_budget
+    step_diag_records = history.step_diag_records
     step_diag_cfg = getattr(cfg.io, "step_diagnostics", None)
     step_diag_enabled = bool(getattr(step_diag_cfg, "enable", False)) if step_diag_cfg else False
     step_diag_format = str(getattr(step_diag_cfg, "format", "csv") or "csv").lower()
@@ -1112,7 +1268,7 @@ def run_zero_d(
     substep_max_ratio = float(getattr(cfg.io, "substep_max_ratio", 1.0))
     if substep_max_ratio <= 0.0:
         raise ValueError("io.substep_max_ratio must be positive")
-    debug_records: List[Dict[str, Any]] = []
+    debug_records = history.debug_records
     eval_per_step = bool(getattr(cfg.numerics, "eval_per_step", True))
     eval_requires_step = eval_per_step or temp_runtime.enabled
     orbit_rollup_enabled = bool(getattr(cfg.numerics, "orbit_rollup", True))
@@ -1128,7 +1284,7 @@ def run_zero_d(
     orbit_loss_blow = 0.0
     orbit_loss_sink = 0.0
     orbits_completed = 0
-    orbit_rollup_rows: List[Dict[str, float]] = []
+    orbit_rollup_rows = history.orbit_rollup_rows
     phase_usage = defaultdict(float)
     phase_method_usage = defaultdict(float)
     sink_branch_usage = defaultdict(float)
@@ -1139,16 +1295,16 @@ def run_zero_d(
     qpr_mean_step = qpr_mean
     qpr_for_blow_step = qpr_for_blow
 
-    temperature_track: List[float] = []
-    beta_track: List[float] = []
-    ablow_track: List[float] = []
-    gate_factor_track: List[float] = []
-    t_solid_track: List[float] = []
-    tau_gate_block_time = 0.0
-    total_time_elapsed = 0.0
-    phase7_total_rate_track: List[float] = []
-    phase7_total_rate_time_track: List[float] = []
-    phase7_ts_ratio_track: List[float] = []
+    temperature_track = history.temperature_track
+    beta_track = history.beta_track
+    ablow_track = history.ablow_track
+    gate_factor_track = history.gate_factor_track
+    t_solid_track = history.t_solid_track
+    tau_gate_block_time = history.tau_gate_block_time
+    total_time_elapsed = history.total_time_elapsed
+    phase7_total_rate_track = history.phase7_total_rate_track
+    phase7_total_rate_time_track = history.phase7_total_rate_time_track
+    phase7_ts_ratio_track = history.phase7_ts_ratio_track
     phase_bulk_state_last: Optional[str] = None
     phase_bulk_f_liquid_last: Optional[float] = None
     phase_bulk_f_solid_last: Optional[float] = None
@@ -1229,6 +1385,7 @@ def run_zero_d(
 
         ds_dt_raw = 0.0
         ds_dt_val = 0.0
+        T_grain = None
         sublimation_blocked_by_phase = False
         sublimation_active = sublimation_active_flag
         liquid_block_step = sublimation_active and phase_bulk_step.state == "liquid_dominated"
@@ -1240,6 +1397,12 @@ def run_zero_d(
                 ds_dt_raw = 0.0
             sublimation_blocked_by_phase = bool(liquid_block_step and ds_dt_raw < 0.0)
             ds_dt_val = 0.0 if liquid_block_step else ds_dt_raw
+        sublimation_surface_active_step = bool(
+            sublimation_active and sublimation_to_surface and not sublimation_blocked_by_phase
+        )
+        sublimation_smol_active_step = bool(
+            sublimation_active and sublimation_to_smol and not sublimation_blocked_by_phase
+        )
         floor_for_step = s_min_effective
         if psd_floor_mode == "none":
             floor_for_step = float(s_min_config)
@@ -1261,7 +1424,7 @@ def run_zero_d(
             psd_state["s_min"] = s_min_effective
         sigma_surf, delta_sigma_sub, erosion_diag = psd.apply_uniform_size_drift(
             psd_state,
-            ds_dt=ds_dt_val,
+            ds_dt=ds_dt_val if sublimation_surface_active_step else 0.0,
             dt=dt,
             floor=floor_for_step,
             sigma_surf=sigma_surf,
@@ -1273,7 +1436,7 @@ def run_zero_d(
         mass_loss_sublimation_step = delta_sigma_sub * area / constants.M_MARS
         if mass_loss_sublimation_step < 0.0:
             mass_loss_sublimation_step = 0.0
-        if mass_loss_sublimation_step > 0.0:
+        if mass_loss_sublimation_step > 0.0 and sublimation_surface_active_step:
             M_sink_cum += mass_loss_sublimation_step
             M_sublimation_cum += mass_loss_sublimation_step
 
@@ -1290,7 +1453,7 @@ def run_zero_d(
                 T_use,
                 rho_used,
                 Omega_step,
-                sink_opts,
+                sink_opts_surface,
                 s_ref=SINK_REF_SIZE,
             )
         t_sink_total_value = sink_result.t_sink
@@ -1427,6 +1590,9 @@ def run_zero_d(
         tau_last = None
         phi_effective_last = None
         hydro_mass_total = 0.0
+        mass_loss_sublimation_smol_step = 0.0
+        mass_loss_rate_sublimation_smol = 0.0
+        sigma_loss_smol = 0.0
         surface_active = collisions_active or sink_timescale_active
         if surface_active:
             for _sub_idx in range(n_substeps):
@@ -1525,6 +1691,70 @@ def run_zero_d(
             t_sink_step = None
 
         time = time_sub
+        if sublimation_smol_active_step:
+            try:
+                sizes_arr = np.asarray(psd_state.get("sizes"), dtype=float)
+                widths_arr = np.asarray(psd_state.get("widths"), dtype=float)
+                number_arr = np.asarray(psd_state.get("number"), dtype=float)
+            except Exception:
+                sizes_arr = np.empty(0, dtype=float)
+                widths_arr = np.empty(0, dtype=float)
+                number_arr = np.empty(0, dtype=float)
+            rho_psd = float(psd_state.get("rho", rho_used))
+            if (
+                sizes_arr.size
+                and widths_arr.size == sizes_arr.size
+                and number_arr.size == sizes_arr.size
+                and sigma_surf > 0.0
+            ):
+                base_counts = number_arr * widths_arr
+                m_k = (4.0 / 3.0) * math.pi * rho_psd * sizes_arr**3
+                mass_density_raw = float(np.sum(m_k * base_counts))
+                scale_to_sigma = sigma_surf / mass_density_raw if mass_density_raw > 0.0 else 0.0
+                N_k = base_counts * scale_to_sigma if scale_to_sigma > 0.0 else np.zeros_like(base_counts)
+                ds_dt_fill = ds_dt_val if ds_dt_val is not None else 0.0
+                ds_dt_k = np.full_like(sizes_arr, ds_dt_fill, dtype=float)
+                if not sublimation_smol_active_step:
+                    ds_dt_k.fill(0.0)
+                S_sub_k, mass_loss_rate_sub = sublimation_sink_from_dsdt(
+                    sizes_arr,
+                    N_k,
+                    ds_dt_k,
+                    m_k,
+                )
+                mass_loss_rate_sublimation_smol = mass_loss_rate_sub
+                if np.any(S_sub_k):
+                    n_bins_smol = sizes_arr.size
+                    zeros_kernel = np.zeros((n_bins_smol, n_bins_smol))
+                    zeros_frag = np.zeros((n_bins_smol, n_bins_smol, n_bins_smol))
+                    N_new_smol, smol_dt_eff, smol_mass_err = smol.step_imex_bdf1_C3(
+                        N_k,
+                        zeros_kernel,
+                        zeros_frag,
+                        np.zeros_like(N_k),
+                        m_k,
+                        prod_subblow_mass_rate=0.0,
+                        dt=dt,
+                        S_external_k=None,
+                        S_sublimation_k=S_sub_k,
+                        extra_mass_loss_rate=mass_loss_rate_sub,
+                    )
+                    sigma_before_smol = sigma_surf
+                    sigma_after_smol = float(np.sum(m_k * N_new_smol))
+                    sigma_surf = max(sigma_after_smol, 0.0)
+                    sigma_loss_smol = max(sigma_before_smol - sigma_surf, 0.0)
+                    mass_loss_sublimation_smol_step = sigma_loss_smol * area / constants.M_MARS
+                    if sigma_loss_smol > 0.0 and dt > 0.0:
+                        mass_loss_rate_sublimation_smol = sigma_loss_smol / dt
+                    if scale_to_sigma > 0.0:
+                        number_new = N_new_smol / (scale_to_sigma * widths_arr)
+                    else:
+                        number_new = np.zeros_like(number_arr)
+                    psd_state["number"] = number_new
+                    psd_state["n"] = number_new
+                    if mass_loss_sublimation_smol_step > 0.0:
+                        M_sink_cum += mass_loss_sublimation_smol_step
+                        M_sublimation_cum += mass_loss_sublimation_smol_step
         if freeze_sigma:
             sigma_surf = sigma_surf_reference
 
@@ -1575,7 +1805,8 @@ def run_zero_d(
                 M_sublimation_cum += sink_mass_total * sink_result.sublimation_fraction
         M_hydro_cum += hydro_mass_total
 
-        mass_loss_sinks_step_total = mass_loss_sublimation_step + sink_mass_total
+        mass_loss_sublimation_step_total = mass_loss_sublimation_step + mass_loss_sublimation_smol_step
+        mass_loss_sinks_step_total = mass_loss_sublimation_step_total + sink_mass_total
         mass_loss_hydro_step = hydro_mass_total
         M_out_dot_avg = blow_mass_total / dt if dt > 0.0 else 0.0
         M_sink_dot_avg = mass_loss_sinks_step_total / dt if dt > 0.0 else 0.0
@@ -1588,14 +1819,15 @@ def run_zero_d(
 
         outflux_mass_rate_kg = outflux_surface * area
         sink_mass_rate_kg = sink_flux_surface * area
-        sink_mass_rate_kg_total = sink_mass_rate_kg + (
-            mass_loss_sublimation_step * constants.M_MARS / dt if dt > 0.0 else 0.0
-        )
+        sink_mass_rate_kg_total = sink_mass_rate_kg
+        if dt > 0.0:
+            sink_mass_rate_kg_total += mass_loss_sublimation_step * constants.M_MARS / dt
+            sink_mass_rate_kg_total += mass_loss_rate_sublimation_smol * area
         M_out_dot = outflux_mass_rate_kg / constants.M_MARS
         M_sink_dot = sink_mass_rate_kg_total / constants.M_MARS
         dM_dt_surface_total = M_out_dot + M_sink_dot
         dSigma_dt_blowout = outflux_surface
-        dSigma_dt_sinks = sink_flux_surface + dSigma_dt_sublimation
+        dSigma_dt_sinks = sink_flux_surface + dSigma_dt_sublimation + mass_loss_rate_sublimation_smol
         dSigma_dt_total = dSigma_dt_blowout + dSigma_dt_sinks
         dt_over_t_blow = fast_blowout_ratio
         fast_blowout_factor_record = (
@@ -1612,6 +1844,9 @@ def run_zero_d(
             fast_blowout_factor_avg = 0.0
             fast_blowout_factor_record = 0.0
             fast_blowout_ratio_alias = 0.0
+        dSigma_dt_sublimation_total = dSigma_dt_sublimation + mass_loss_rate_sublimation_smol
+        sigma_loss_total_sub = delta_sigma_sub + sigma_loss_smol
+        mass_loss_sublimation_step_diag = mass_loss_sublimation_step_total
 
         orbit_time_accum += dt
         orbit_loss_blow += blow_mass_total
@@ -1692,7 +1927,7 @@ def run_zero_d(
                     "cum_blowout_mass_kg": M_loss_cum * constants.M_MARS,
                     "ds_dt_sublimation_m_s": ds_dt_val,
                     "ds_dt_sublimation_raw_m_s": ds_dt_raw,
-                    "sigma_loss_sublimation_kg_m2": delta_sigma_sub,
+                    "sigma_loss_sublimation_kg_m2": sigma_loss_total_sub,
                     "M_loss_components_Mmars": {
                         "blowout": M_loss_cum,
                         "blowout_surface_solid_marsRP": M_loss_cum,
@@ -1799,13 +2034,13 @@ def run_zero_d(
             "dSigma_dt_blowout": dSigma_dt_blowout,
             "dSigma_dt_sinks": dSigma_dt_sinks,
             "dSigma_dt_total": dSigma_dt_total,
-            "dSigma_dt_sublimation": dSigma_dt_sublimation,
+            "dSigma_dt_sublimation": dSigma_dt_sublimation_total,
             "M_loss_cum": M_loss_cum + M_sink_cum,
             "mass_total_bins": cfg.initial.mass_total - (M_loss_cum + M_sink_cum),
             "mass_lost_by_blowout": M_loss_cum,
             "mass_lost_by_sinks": M_sink_cum,
             "mass_lost_sinks_step": mass_loss_sinks_step_total,
-            "mass_lost_sublimation_step": mass_loss_sublimation_step,
+            "mass_lost_sublimation_step": mass_loss_sublimation_step_diag,
             "mass_lost_hydro_step": mass_loss_hydro_step,
             "mass_lost_surface_solid_marsRP_step": mass_loss_surface_solid_step,
             "M_loss_rp_mars": M_loss_cum,
@@ -1917,7 +2152,7 @@ def run_zero_d(
             "t_sink_gas_drag_s": _safe_float(sink_result.components.get("gas_drag")),
             "mass_loss_sinks_step": mass_loss_sinks_step_total,
             "mass_lost_by_sinks": M_sink_cum,
-            "mass_loss_sublimation_step": mass_loss_sublimation_step,
+            "mass_loss_sublimation_step": mass_loss_sublimation_step_diag,
             "sigma_tau1": sigma_tau1_limit,
             "sigma_tau1_active": sigma_tau1_active_last,
             "tau_vertical": tau_last,
@@ -2000,7 +2235,7 @@ def run_zero_d(
             tau_surf_val = _safe_float(tau_surf_val)
             sink_sub_timescale = sink_result.components.get("sublimation")
             sink_drag_timescale = sink_result.components.get("gas_drag")
-            dM_sub = mass_loss_sublimation_step
+            dM_sub = mass_loss_sublimation_step_diag
             dM_drag = 0.0
             if sink_result.dominant_sink == "sublimation":
                 dM_sub += sink_mass_total
@@ -2041,9 +2276,9 @@ def run_zero_d(
         if (
             mass_initial != 0.0
             and error_percent > MASS_BUDGET_TOLERANCE_PERCENT
-            and mass_budget_violation is None
+            and history.mass_budget_violation is None
         ):
-            mass_budget_violation = {
+            history.mass_budget_violation = {
                 "time": time,
                 "error_percent": error_percent,
                 "tolerance_percent": MASS_BUDGET_TOLERANCE_PERCENT,
@@ -2059,7 +2294,7 @@ def run_zero_d(
                 MASS_BUDGET_TOLERANCE_PERCENT,
             )
             if enforce_mass_budget:
-                violation_triggered = True
+                history.violation_triggered = True
                 break
 
         logger.info(
@@ -2071,6 +2306,9 @@ def run_zero_d(
             M_loss_cum + M_sink_cum,
         )
 
+    history.tau_gate_block_time = tau_gate_block_time
+    history.total_time_elapsed = total_time_elapsed
+
     qpr_mean = qpr_mean_step
     a_blow = a_blow_step
     Omega = Omega_step
@@ -2078,87 +2316,17 @@ def run_zero_d(
     qpr_blow_final = _lookup_qpr(max(s_min_config, a_blow))
 
     df = pd.DataFrame(records)
+    _write_zero_d_history(
+        cfg,
+        df,
+        history,
+        step_diag_enabled=step_diag_enabled,
+        step_diag_format=step_diag_format,
+        step_diag_path_cfg=step_diag_path_cfg,
+        orbit_rollup_enabled=orbit_rollup_enabled,
+        phase7_enabled=phase7_enabled,
+    )
     outdir = Path(cfg.io.outdir)
-    step_diag_path = None
-    if step_diag_enabled:
-        if step_diag_path_cfg is not None:
-            step_diag_path = Path(step_diag_path_cfg)
-            if not step_diag_path.is_absolute():
-                step_diag_path = outdir / step_diag_path
-        else:
-            ext = "jsonl" if step_diag_format == "jsonl" else "csv"
-            step_diag_path = outdir / "series" / f"step_diagnostics.{ext}"
-    writer.write_parquet(df, outdir / "series" / "run.parquet")
-    if psd_hist_records:
-        psd_hist_df = pd.DataFrame(psd_hist_records)
-        writer.write_parquet(psd_hist_df, outdir / "series" / "psd_hist.parquet")
-    if diagnostics:
-        diag_df = pd.DataFrame(diagnostics)
-        writer.write_parquet(diag_df, outdir / "series" / "diagnostics.parquet")
-    if step_diag_enabled and step_diag_path is not None:
-        writer.write_step_diagnostics(step_diag_records, step_diag_path, fmt=step_diag_format)
-    if orbit_rollup_enabled:
-        rows_for_rollup = orbit_rollup_rows
-        required_phase7_cols = {
-            "mloss_blowout_rate",
-            "mloss_sink_rate",
-            "mloss_total_rate",
-            "ts_ratio",
-            "dt",
-            "time",
-            "blowout_gate_factor",
-        }
-        if phase7_enabled and orbit_rollup_rows and not df.empty and required_phase7_cols.issubset(set(df.columns)):
-            df_end = df["time"].to_numpy()
-            df_start = (df["time"] - df["dt"]).to_numpy()
-            blow_rates = df["mloss_blowout_rate"].to_numpy()
-            sink_rates = df["mloss_sink_rate"].to_numpy()
-            total_rates = df["mloss_total_rate"].to_numpy()
-            ts_ratio_series = df["ts_ratio"].to_numpy()
-            gate_factor_series = df["blowout_gate_factor"].to_numpy()
-
-            def _safe_peak(arr: np.ndarray, mask: np.ndarray) -> float:
-                subset = arr[mask]
-                subset = subset[np.isfinite(subset)]
-                if subset.size == 0:
-                    return float("nan")
-                return float(np.max(subset))
-
-            def _safe_median(arr: np.ndarray, mask: np.ndarray) -> float:
-                subset = arr[mask]
-                subset = subset[np.isfinite(subset)]
-                if subset.size == 0:
-                    return float("nan")
-                return float(np.median(subset))
-            gate_factor_median_all = _safe_median(gate_factor_series, np.ones_like(gate_factor_series, dtype=bool))
-
-            rows_for_rollup = []
-            orbit_start_time = 0.0
-            for row in orbit_rollup_rows:
-                orbit_end_time = _safe_float(row.get("time_s_end"))
-                if orbit_end_time is None:
-                    t_orb_row = _safe_float(row.get("t_orb_s"))
-                    orbit_end_time = orbit_start_time + (t_orb_row if t_orb_row is not None else 0.0)
-                mask = (df_end > orbit_start_time) & (df_start <= orbit_end_time)
-                blow_peak = _safe_peak(blow_rates, mask)
-                sink_peak = _safe_peak(sink_rates, mask)
-                total_peak = _safe_peak(total_rates, mask)
-                ts_ratio_med = _safe_median(ts_ratio_series, mask)
-                gate_factor_med = _safe_median(gate_factor_series, mask)
-                if not math.isfinite(gate_factor_med):
-                    gate_factor_med = gate_factor_median_all
-                row_aug = dict(row)
-                row_aug["mloss_blowout_rate_mean"] = row.get("M_out_per_orbit")
-                row_aug["mloss_sink_rate_mean"] = row.get("M_sink_per_orbit")
-                row_aug["mloss_total_rate_mean"] = row.get("M_loss_per_orbit")
-                row_aug["mloss_blowout_rate_peak"] = blow_peak
-                row_aug["mloss_sink_rate_peak"] = sink_peak
-                row_aug["mloss_total_rate_peak"] = total_peak
-                row_aug["ts_ratio_median"] = ts_ratio_med
-                row_aug["gate_factor_median"] = gate_factor_med
-                rows_for_rollup.append(row_aug)
-                orbit_start_time = orbit_end_time
-        writer.write_orbit_rollup(rows_for_rollup, outdir / "orbit_rollup.csv")
     mass_budget_max_error = max((entry["error_percent"] for entry in mass_budget), default=0.0)
     dt_over_t_blow_median = float("nan")
     if not df.empty and "dt_over_t_blow" in df.columns:
@@ -2408,8 +2576,9 @@ def run_zero_d(
     summary["primary_process"] = primary_process
     summary["primary_scenario"] = primary_scenario
     summary["collisions_active"] = collisions_active
-    summary["sinks_active"] = bool(sublimation_active_flag or sink_timescale_active)
+    summary["sinks_active"] = sinks_active
     summary["sublimation_active"] = sublimation_active_flag
+    summary["sublimation_location"] = sublimation_location
     summary["blowout_active"] = blowout_enabled
     summary["state_tagging_enabled"] = state_tagging_enabled
     summary["state_phase_tag"] = state_phase_tag
@@ -2446,8 +2615,8 @@ def run_zero_d(
         summary["M_out_mean_per_orbit"] = M_loss_cum / orbits_completed
         summary["M_sink_mean_per_orbit"] = M_sink_cum / orbits_completed
         summary["M_loss_mean_per_orbit"] = (M_loss_cum + M_sink_cum) / orbits_completed
-    if mass_budget_violation is not None:
-        summary["mass_budget_violation"] = mass_budget_violation
+    if history.mass_budget_violation is not None:
+        summary["mass_budget_violation"] = history.mass_budget_violation
     writer.write_summary(summary, outdir / "summary.json")
     writer.write_mass_budget(mass_budget, outdir / "checks" / "mass_budget.csv")
     if debug_sinks_enabled and debug_records:
@@ -2586,8 +2755,9 @@ def run_zero_d(
         "collisions_active": collisions_active,
         "sinks_mode": sinks_mode_value,
         "sinks_enabled_cfg": sinks_enabled_cfg,
-        "sinks_active": bool(sublimation_active_flag or sink_timescale_active),
+        "sinks_active": sinks_active,
         "sublimation_active": sublimation_active_flag,
+        "sublimation_location": sublimation_location,
         "sink_timescale_active": sink_timescale_active,
         "blowout_active": blowout_enabled,
         "rp_blowout_enabled": rp_blowout_enabled,
@@ -2689,7 +2859,7 @@ def run_zero_d(
     }
     writer.write_run_config(run_config, outdir / "run_config.json")
 
-    if violation_triggered:
+    if history.violation_triggered:
         raise MassBudgetViolationError(
             "Mass budget tolerance exceeded; see summary.json for details"
         )

@@ -17,6 +17,11 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_DOC_PATHS = [
     "analysis/equations.md",
     "analysis/overview.md",
+    "analysis/slides_outline.md",
+    "analysis/run_catalog.md",
+    "analysis/figures_catalog.md",
+    "analysis/glossary.md",
+    "analysis/literature_map.md",
     "analysis/run-recipes.md",
     "analysis/sinks_callgraph.md",
     "analysis/AI_USAGE.md",
@@ -77,6 +82,11 @@ RUN_RECIPES_PATH_DEFAULT = REPO_ROOT / "analysis" / "run-recipes.md"
 DEFAULT_DOCS_FOR_REFS = [
     EQUATIONS_PATH_DEFAULT,
     OVERVIEW_PATH_DEFAULT,
+    REPO_ROOT / "analysis" / "slides_outline.md",
+    REPO_ROOT / "analysis" / "run_catalog.md",
+    REPO_ROOT / "analysis" / "figures_catalog.md",
+    REPO_ROOT / "analysis" / "glossary.md",
+    REPO_ROOT / "analysis" / "literature_map.md",
     RUN_RECIPES_PATH_DEFAULT,
     REPO_ROOT / "analysis" / "sinks_callgraph.md",
     REPO_ROOT / "analysis" / "AI_USAGE.md",

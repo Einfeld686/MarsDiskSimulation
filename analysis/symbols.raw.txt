@@ -158,43 +158,43 @@ marsdisk/io/tables.py:298:def load_phi_table(path: str | Path) -> Callable[[floa
 marsdisk/io/tables.py:356:def get_qpr_table_path() -> Optional[Path]
 marsdisk/io/writer.py:20:def _ensure_parent(path: Path) -> None
 marsdisk/io/writer.py:24:def write_parquet(df: pd.DataFrame, path: Path) -> None
-marsdisk/io/writer.py:267:def write_summary(summary: Mapping[str, Any], path: Path) -> None
-marsdisk/io/writer.py:278:def write_run_config(config: Mapping[str, Any], path: Path) -> None
-marsdisk/io/writer.py:286:def write_mass_budget(records: Iterable[Mapping[str, Any]], path: Path) -> None
-marsdisk/io/writer.py:293:def write_orbit_rollup(rows: Iterable[Mapping[str, Any]], path: Path) -> None
-marsdisk/io/writer.py:304:def write_step_diagnostics(rows: Iterable[Mapping[str, Any]], path: Path, *, fmt: Literal['csv', 'jsonl']='csv') -> None
-marsdisk/ops/doc_sync_agent.py:92:class SymbolInfo
-marsdisk/ops/doc_sync_agent.py:106:class FileChange
-marsdisk/ops/doc_sync_agent.py:137:class InventoryRecord
-marsdisk/ops/doc_sync_agent.py:173:class DocSyncAgent
-marsdisk/ops/doc_sync_agent.py:664:def _legacy_main(argv: Optional[Sequence[str]]=None) -> int
-marsdisk/ops/doc_sync_agent.py:733:def _collect_inventory_records(root: Path) -> List[InventoryRecord]
-marsdisk/ops/doc_sync_agent.py:773:def _resolve_cli_path(value: str) -> Path
-marsdisk/ops/doc_sync_agent.py:780:def _rel_to_repo(path: Path) -> str
-marsdisk/ops/doc_sync_agent.py:787:def _cmd_scan(args: argparse.Namespace) -> int
-marsdisk/ops/doc_sync_agent.py:803:def _collect_doc_references(doc_paths: Sequence[Path]) -> Dict[str, Any]
-marsdisk/ops/doc_sync_agent.py:929:def _cmd_refs(args: argparse.Namespace) -> int
-marsdisk/ops/doc_sync_agent.py:952:def _load_inventory_records(path: Path) -> List[InventoryRecord]
-marsdisk/ops/doc_sync_agent.py:990:def _match_symbol_by_span(symbols: Sequence[InventoryRecord], start: int, end: int) -> Optional[InventoryRecord]
-marsdisk/ops/doc_sync_agent.py:1002:def _compute_coverage(inventory: Sequence[InventoryRecord], docs_payload: Dict[str, Any]) -> Dict[str, Any]
-marsdisk/ops/doc_sync_agent.py:1149:def _parse_gap_identifier(identifier: str) -> Optional[Tuple[str, str]]
-marsdisk/ops/doc_sync_agent.py:1161:def _collect_unreferenced_from_coverage(coverage_data: Dict[str, Any]) -> List[Tuple[str, str]]
-marsdisk/ops/doc_sync_agent.py:1186:def _load_suggestions_index(path: Path) -> Dict[Tuple[str, str], Dict[str, Any]]
-marsdisk/ops/doc_sync_agent.py:1209:def _format_code_anchor(record: InventoryRecord) -> str
-marsdisk/ops/doc_sync_agent.py:1216:def _strip_line_anchor_annotations(text: str) -> str
-marsdisk/ops/doc_sync_agent.py:1220:def ensure_equation_ids(equations_path: Path) -> None
-marsdisk/ops/doc_sync_agent.py:1280:def _render_coverage_markdown(data: Dict[str, Any]) -> str
-marsdisk/ops/doc_sync_agent.py:1337:def _is_stub_already_present(text: str, record: InventoryRecord) -> bool
-marsdisk/ops/doc_sync_agent.py:1342:def _render_stub_block(record: InventoryRecord, doc_kind: str) -> str
-marsdisk/ops/doc_sync_agent.py:1374:def _append_to_section(text: str, heading_pattern: re.Pattern[str], stub: str) -> str
-marsdisk/ops/doc_sync_agent.py:1389:def _append_to_end(text: str, stub: str) -> str
-marsdisk/ops/doc_sync_agent.py:1395:def _determine_autostub_target(record: InventoryRecord, suggestions: Dict[Tuple[str, str], Dict[str, Any]], overview_path: Path, equations_path: Path, run_recipes_path: Path) -> Tuple[Path, Optional[re.Pattern[str]], str]
-marsdisk/ops/doc_sync_agent.py:1442:def _cmd_coverage(args: argparse.Namespace) -> int
-marsdisk/ops/doc_sync_agent.py:1475:def _cmd_autostub(args: argparse.Namespace) -> int
-marsdisk/ops/doc_sync_agent.py:1551:def _cmd_update(args: argparse.Namespace) -> int
-marsdisk/ops/doc_sync_agent.py:1682:def _run_new_cli(argv: Sequence[str]) -> int
-marsdisk/ops/doc_sync_agent.py:1896:def main(argv: Optional[Sequence[str]]=None) -> int
-marsdisk/ops/doc_sync_agent.py:1904:def _git_commit(changes: Iterable[FileChange]) -> None
+marsdisk/io/writer.py:279:def write_summary(summary: Mapping[str, Any], path: Path) -> None
+marsdisk/io/writer.py:290:def write_run_config(config: Mapping[str, Any], path: Path) -> None
+marsdisk/io/writer.py:298:def write_mass_budget(records: Iterable[Mapping[str, Any]], path: Path) -> None
+marsdisk/io/writer.py:305:def write_orbit_rollup(rows: Iterable[Mapping[str, Any]], path: Path) -> None
+marsdisk/io/writer.py:316:def write_step_diagnostics(rows: Iterable[Mapping[str, Any]], path: Path, *, fmt: Literal['csv', 'jsonl']='csv') -> None
+marsdisk/ops/doc_sync_agent.py:102:class SymbolInfo
+marsdisk/ops/doc_sync_agent.py:116:class FileChange
+marsdisk/ops/doc_sync_agent.py:147:class InventoryRecord
+marsdisk/ops/doc_sync_agent.py:183:class DocSyncAgent
+marsdisk/ops/doc_sync_agent.py:674:def _legacy_main(argv: Optional[Sequence[str]]=None) -> int
+marsdisk/ops/doc_sync_agent.py:743:def _collect_inventory_records(root: Path) -> List[InventoryRecord]
+marsdisk/ops/doc_sync_agent.py:783:def _resolve_cli_path(value: str) -> Path
+marsdisk/ops/doc_sync_agent.py:790:def _rel_to_repo(path: Path) -> str
+marsdisk/ops/doc_sync_agent.py:797:def _cmd_scan(args: argparse.Namespace) -> int
+marsdisk/ops/doc_sync_agent.py:813:def _collect_doc_references(doc_paths: Sequence[Path]) -> Dict[str, Any]
+marsdisk/ops/doc_sync_agent.py:939:def _cmd_refs(args: argparse.Namespace) -> int
+marsdisk/ops/doc_sync_agent.py:962:def _load_inventory_records(path: Path) -> List[InventoryRecord]
+marsdisk/ops/doc_sync_agent.py:1000:def _match_symbol_by_span(symbols: Sequence[InventoryRecord], start: int, end: int) -> Optional[InventoryRecord]
+marsdisk/ops/doc_sync_agent.py:1012:def _compute_coverage(inventory: Sequence[InventoryRecord], docs_payload: Dict[str, Any]) -> Dict[str, Any]
+marsdisk/ops/doc_sync_agent.py:1159:def _parse_gap_identifier(identifier: str) -> Optional[Tuple[str, str]]
+marsdisk/ops/doc_sync_agent.py:1171:def _collect_unreferenced_from_coverage(coverage_data: Dict[str, Any]) -> List[Tuple[str, str]]
+marsdisk/ops/doc_sync_agent.py:1196:def _load_suggestions_index(path: Path) -> Dict[Tuple[str, str], Dict[str, Any]]
+marsdisk/ops/doc_sync_agent.py:1219:def _format_code_anchor(record: InventoryRecord) -> str
+marsdisk/ops/doc_sync_agent.py:1226:def _strip_line_anchor_annotations(text: str) -> str
+marsdisk/ops/doc_sync_agent.py:1230:def ensure_equation_ids(equations_path: Path) -> None
+marsdisk/ops/doc_sync_agent.py:1290:def _render_coverage_markdown(data: Dict[str, Any]) -> str
+marsdisk/ops/doc_sync_agent.py:1347:def _is_stub_already_present(text: str, record: InventoryRecord) -> bool
+marsdisk/ops/doc_sync_agent.py:1352:def _render_stub_block(record: InventoryRecord, doc_kind: str) -> str
+marsdisk/ops/doc_sync_agent.py:1384:def _append_to_section(text: str, heading_pattern: re.Pattern[str], stub: str) -> str
+marsdisk/ops/doc_sync_agent.py:1399:def _append_to_end(text: str, stub: str) -> str
+marsdisk/ops/doc_sync_agent.py:1405:def _determine_autostub_target(record: InventoryRecord, suggestions: Dict[Tuple[str, str], Dict[str, Any]], overview_path: Path, equations_path: Path, run_recipes_path: Path) -> Tuple[Path, Optional[re.Pattern[str]], str]
+marsdisk/ops/doc_sync_agent.py:1452:def _cmd_coverage(args: argparse.Namespace) -> int
+marsdisk/ops/doc_sync_agent.py:1485:def _cmd_autostub(args: argparse.Namespace) -> int
+marsdisk/ops/doc_sync_agent.py:1561:def _cmd_update(args: argparse.Namespace) -> int
+marsdisk/ops/doc_sync_agent.py:1692:def _run_new_cli(argv: Sequence[str]) -> int
+marsdisk/ops/doc_sync_agent.py:1906:def main(argv: Optional[Sequence[str]]=None) -> int
+marsdisk/ops/doc_sync_agent.py:1914:def _git_commit(changes: Iterable[FileChange]) -> None
 marsdisk/ops/make_qpr_table.py:22:def _rayleigh_geometric_qpr(size_parameter: np.ndarray) -> np.ndarray
 marsdisk/ops/make_qpr_table.py:28:def _planck_lambda(wavelength_m: np.ndarray, temperature: float) -> np.ndarray
 marsdisk/ops/make_qpr_table.py:40:def compute_planck_mean_qpr(s_values: Sequence[float], temperatures: Sequence[float], wavelengths_um: Iterable[float] | None=None) -> np.ndarray
@@ -225,7 +225,7 @@ marsdisk/physics/initfields.py:47:def surf_sigma_init(sigma: float, kappa_eff: O
 marsdisk/physics/phase.py:25:class PhaseDecision
 marsdisk/physics/phase.py:37:class BulkPhaseState
 marsdisk/physics/phase.py:53:class PhaseEvaluator
-marsdisk/physics/phase.py:556:def hydro_escape_timescale(cfg: Optional[HydroEscapeConfig], temperature_K: float, f_vap: float) -> Optional[float]
+marsdisk/physics/phase.py:560:def hydro_escape_timescale(cfg: Optional[HydroEscapeConfig], temperature_K: float, f_vap: float) -> Optional[float]
 marsdisk/physics/psd.py:30:def update_psd_state(*, s_min: float, s_max: float, alpha: float, wavy_strength: float, n_bins: int=40, rho: float=3000.0, wavy_decay: float=0.0, alpha_mode: str='size') -> Dict[str, np.ndarray | float]
 marsdisk/physics/psd.py:121:def compute_kappa(psd_state: Dict[str, np.ndarray | float]) -> float
 marsdisk/physics/psd.py:149:def apply_uniform_size_drift(psd_state: Dict[str, np.ndarray | float], *, ds_dt: float, dt: float, floor: float, sigma_surf: float) -> tuple[float, float, Dict[str, float]]
@@ -255,22 +255,23 @@ marsdisk/physics/sinks.py:49:class SinkTimescaleResult
 marsdisk/physics/sinks.py:70:def gas_drag_timescale(s: float, rho_p: float, rho_g: float, c_s: float=500.0) -> float
 marsdisk/physics/sinks.py:83:def total_sink_timescale(T_use: float, rho_p: float, Omega: float, opts: SinkOptions, *, s_ref: float=1e-06) -> SinkTimescaleResult
 marsdisk/physics/sizes.py:10:def eval_ds_dt_sublimation(T: float, rho_bulk: float, params: sublimation.SublimationParams) -> float
-marsdisk/physics/smol.py:18:def step_imex_bdf1_C3(N: Iterable[float], C: np.ndarray, Y: np.ndarray, S: Iterable[float], m: Iterable[float], prod_subblow_mass_rate: float, dt: float, *, mass_tol: float=0.005, safety: float=0.1) -> tuple[np.ndarray, float, float]
-marsdisk/physics/smol.py:104:def compute_mass_budget_error_C4(N_old: Iterable[float], N_new: Iterable[float], m: Iterable[float], prod_subblow_mass_rate: float, dt: float) -> float
-marsdisk/physics/sublimation.py:46:class PsatSelection(NamedTuple)
-marsdisk/physics/sublimation.py:53:class SublimationParams
-marsdisk/physics/sublimation.py:127:def _is_hkl_active(params: SublimationParams) -> bool
-marsdisk/physics/sublimation.py:143:def p_sat_clausius(T: float, params: SublimationParams) -> float
-marsdisk/physics/sublimation.py:156:def _load_psat_table(params: SublimationParams) -> Callable[[float], float]
-marsdisk/physics/sublimation.py:219:def _get_table_info(params: SublimationParams, *, raise_on_error: bool) -> Optional[Dict[str, Any]]
-marsdisk/physics/sublimation.py:258:def _local_clausius_fit_selection(T_req: float, params: SublimationParams, table_info: Dict[str, Any]) -> Optional[PsatSelection]
-marsdisk/physics/sublimation.py:326:def _baseline_clausius_selection(params: SublimationParams, reason: str, *, model_name: str='clausius(baseline)') -> PsatSelection
-marsdisk/physics/sublimation.py:358:def p_sat_tabulated(T: float, params: SublimationParams) -> float
-marsdisk/physics/sublimation.py:375:def choose_psat_backend(T_req: float, params: SublimationParams, table_meta: Optional[Dict[str, Any]]=None) -> PsatSelection
-marsdisk/physics/sublimation.py:486:def _store_psat_selection(params: SublimationParams, selection: PsatSelection, T_req: float, P_value: float) -> None
-marsdisk/physics/sublimation.py:514:def p_sat(T: float, params: SublimationParams) -> float
-marsdisk/physics/sublimation.py:523:def mass_flux_hkl(T: float, params: SublimationParams) -> float
-marsdisk/physics/sublimation.py:576:def s_sink_from_timescale(T: float, rho: float, t_ref: float, params: SublimationParams) -> float
+marsdisk/physics/smol.py:18:def step_imex_bdf1_C3(N: Iterable[float], C: np.ndarray, Y: np.ndarray, S: Iterable[float] | None, m: Iterable[float], prod_subblow_mass_rate: float, dt: float, *, S_external_k: Iterable[float] | None=None, S_sublimation_k: Iterable[float] | None=None, extra_mass_loss_rate: float=0.0, mass_tol: float=0.005, safety: float=0.1) -> tuple[np.ndarray, float, float]
+marsdisk/physics/smol.py:131:def compute_mass_budget_error_C4(N_old: Iterable[float], N_new: Iterable[float], m: Iterable[float], prod_subblow_mass_rate: float, dt: float) -> float
+marsdisk/physics/sublimation.py:47:class PsatSelection(NamedTuple)
+marsdisk/physics/sublimation.py:54:class SublimationParams
+marsdisk/physics/sublimation.py:128:def _is_hkl_active(params: SublimationParams) -> bool
+marsdisk/physics/sublimation.py:144:def p_sat_clausius(T: float, params: SublimationParams) -> float
+marsdisk/physics/sublimation.py:157:def _load_psat_table(params: SublimationParams) -> Callable[[float], float]
+marsdisk/physics/sublimation.py:220:def _get_table_info(params: SublimationParams, *, raise_on_error: bool) -> Optional[Dict[str, Any]]
+marsdisk/physics/sublimation.py:259:def _local_clausius_fit_selection(T_req: float, params: SublimationParams, table_info: Dict[str, Any]) -> Optional[PsatSelection]
+marsdisk/physics/sublimation.py:327:def _baseline_clausius_selection(params: SublimationParams, reason: str, *, model_name: str='clausius(baseline)') -> PsatSelection
+marsdisk/physics/sublimation.py:359:def p_sat_tabulated(T: float, params: SublimationParams) -> float
+marsdisk/physics/sublimation.py:376:def choose_psat_backend(T_req: float, params: SublimationParams, table_meta: Optional[Dict[str, Any]]=None) -> PsatSelection
+marsdisk/physics/sublimation.py:487:def _store_psat_selection(params: SublimationParams, selection: PsatSelection, T_req: float, P_value: float) -> None
+marsdisk/physics/sublimation.py:515:def p_sat(T: float, params: SublimationParams) -> float
+marsdisk/physics/sublimation.py:524:def mass_flux_hkl(T: float, params: SublimationParams) -> float
+marsdisk/physics/sublimation.py:577:def s_sink_from_timescale(T: float, rho: float, t_ref: float, params: SublimationParams) -> float
+marsdisk/physics/sublimation.py:596:def sublimation_sink_from_dsdt(s_grid_m: np.ndarray, N_k: np.ndarray, ds_dt_k: np.ndarray, m_k: np.ndarray) -> tuple[np.ndarray, float]
 marsdisk/physics/supply.py:25:class _TableData
 marsdisk/physics/supply.py:69:def _rate_basic(t: float, r: float, spec: Supply | SupplyPiece) -> float
 marsdisk/physics/supply.py:93:def get_prod_area_rate(t: float, r: float, spec: Supply) -> float
@@ -288,37 +289,39 @@ marsdisk/physics/tempdriver.py:132:class TemperatureDriverRuntime
 marsdisk/physics/tempdriver.py:149:def resolve_temperature_driver(temps_cfg: Temps, radiation_cfg: Optional[Radiation], *, t_orb: float) -> TemperatureDriverRuntime
 marsdisk/physics/viscosity.py:18:def _solve_tridiagonal(a: np.ndarray, b: np.ndarray, c: np.ndarray, d: np.ndarray) -> np.ndarray
 marsdisk/physics/viscosity.py:51:def step_viscous_diffusion_C5(sigma: Iterable[float], nu: Iterable[float], grid: RadialGrid, dt: float, *, theta: float=0.5) -> np.ndarray
-marsdisk/run.py:76:def _parse_override_value(raw: str) -> Any
-marsdisk/run.py:103:def _apply_overrides_dict(payload: Dict[str, Any], overrides: Sequence[str]) -> Dict[str, Any]
-marsdisk/run.py:141:def _merge_physics_section(payload: Dict[str, Any]) -> Dict[str, Any]
-marsdisk/run.py:160:def _safe_float(value: Any) -> Optional[float]
-marsdisk/run.py:172:def _derive_seed_components(cfg: Config) -> str
-marsdisk/run.py:184:def _resolve_seed(cfg: Config) -> tuple[int, str, str]
-marsdisk/run.py:199:def _auto_chi_blow(beta: float, qpr: float) -> float
-marsdisk/run.py:214:def _fast_blowout_correction_factor(ratio: float) -> float
-marsdisk/run.py:234:def _compute_gate_factor(t_blow: Optional[float], t_solid: Optional[float]) -> float
-marsdisk/run.py:256:def _normalise_single_process_mode(value: Any) -> str
-marsdisk/run.py:272:def _normalise_physics_mode(value: Any) -> str
-marsdisk/run.py:288:def _physics_mode_from_single_process(mode: str) -> str
-marsdisk/run.py:298:def _clone_config(cfg: Config) -> Config
-marsdisk/run.py:306:def _resolve_time_grid(numerics: Any, Omega: float, t_orb: float) -> tuple[float, float, float, int, Dict[str, Any]]
-marsdisk/run.py:371:class _Phase5VariantResult
-marsdisk/run.py:384:def _read_json(path: Path) -> Dict[str, Any]
-marsdisk/run.py:389:def _hash_payload(payload: Mapping[str, Any]) -> str
-marsdisk/run.py:394:def _prepare_phase5_variants(compare_cfg: Any) -> List[Dict[str, str]]
-marsdisk/run.py:427:class RunConfig
-marsdisk/run.py:441:class RunState
-marsdisk/run.py:450:def step(config: RunConfig, state: RunState, dt: float) -> Dict[str, float]
-marsdisk/run.py:493:def run_n_steps(config: RunConfig, state: RunState, n: int, dt: float, out_dir: Path | None=None) -> pd.DataFrame
-marsdisk/run.py:519:def load_config(path: Path, overrides: Optional[Sequence[str]]=None) -> Config
-marsdisk/run.py:544:def _gather_git_info() -> Dict[str, Any]
-marsdisk/run.py:571:class MassBudgetViolationError(RuntimeError)
-marsdisk/run.py:575:def _resolve_single_process_choice(cli_mode: Optional[str], physics_mode: Optional[str], cfg_single_process_mode: Optional[str], legacy_mode: Optional[str]) -> tuple[str, str]
-marsdisk/run.py:598:def run_zero_d(cfg: Config, *, enforce_mass_budget: bool=False, single_process_override: Optional[str]=None, single_process_source: Optional[str]=None) -> None
-marsdisk/run.py:2698:def _run_phase5_variant(base_cfg: Config, variant: str, mode: str, base_outdir: Path, duration_years: float, *, enforce_mass_budget: bool) -> _Phase5VariantResult
-marsdisk/run.py:2766:def _write_phase5_comparison_products(base_outdir: Path, duration_years: float, results: List[_Phase5VariantResult]) -> None
-marsdisk/run.py:2908:def run_phase5_comparison(cfg: Config, *, enforce_mass_budget: bool=False, variants_spec: Optional[List[Dict[str, str]]]=None) -> None
-marsdisk/run.py:2943:def main(argv: Optional[List[str]]=None) -> None
+marsdisk/run.py:77:def _parse_override_value(raw: str) -> Any
+marsdisk/run.py:104:def _apply_overrides_dict(payload: Dict[str, Any], overrides: Sequence[str]) -> Dict[str, Any]
+marsdisk/run.py:142:def _merge_physics_section(payload: Dict[str, Any]) -> Dict[str, Any]
+marsdisk/run.py:161:def _safe_float(value: Any) -> Optional[float]
+marsdisk/run.py:173:def _derive_seed_components(cfg: Config) -> str
+marsdisk/run.py:185:def _resolve_seed(cfg: Config) -> tuple[int, str, str]
+marsdisk/run.py:200:def _auto_chi_blow(beta: float, qpr: float) -> float
+marsdisk/run.py:215:def _fast_blowout_correction_factor(ratio: float) -> float
+marsdisk/run.py:235:def _compute_gate_factor(t_blow: Optional[float], t_solid: Optional[float]) -> float
+marsdisk/run.py:257:def _normalise_single_process_mode(value: Any) -> str
+marsdisk/run.py:273:def _normalise_physics_mode(value: Any) -> str
+marsdisk/run.py:289:def _physics_mode_from_single_process(mode: str) -> str
+marsdisk/run.py:299:def _clone_config(cfg: Config) -> Config
+marsdisk/run.py:307:def _resolve_time_grid(numerics: Any, Omega: float, t_orb: float) -> tuple[float, float, float, int, Dict[str, Any]]
+marsdisk/run.py:372:class _Phase5VariantResult
+marsdisk/run.py:385:def _read_json(path: Path) -> Dict[str, Any]
+marsdisk/run.py:390:def _hash_payload(payload: Mapping[str, Any]) -> str
+marsdisk/run.py:395:def _prepare_phase5_variants(compare_cfg: Any) -> List[Dict[str, str]]
+marsdisk/run.py:428:class RunConfig
+marsdisk/run.py:442:class RunState
+marsdisk/run.py:452:class ZeroDHistory
+marsdisk/run.py:476:def step(config: RunConfig, state: RunState, dt: float) -> Dict[str, float]
+marsdisk/run.py:524:def run_n_steps(config: RunConfig, state: RunState, n: int, dt: float, out_dir: Path | None=None) -> pd.DataFrame
+marsdisk/run.py:554:def load_config(path: Path, overrides: Optional[Sequence[str]]=None) -> Config
+marsdisk/run.py:579:def _gather_git_info() -> Dict[str, Any]
+marsdisk/run.py:606:class MassBudgetViolationError(RuntimeError)
+marsdisk/run.py:610:def _resolve_single_process_choice(cli_mode: Optional[str], physics_mode: Optional[str], cfg_single_process_mode: Optional[str], legacy_mode: Optional[str]) -> tuple[str, str]
+marsdisk/run.py:633:def _write_zero_d_history(cfg: Config, df: pd.DataFrame, history: ZeroDHistory, *, step_diag_enabled: bool, step_diag_format: str, step_diag_path_cfg: Optional[Path], orbit_rollup_enabled: bool, phase7_enabled: bool) -> None
+marsdisk/run.py:733:def run_zero_d(cfg: Config, *, enforce_mass_budget: bool=False, single_process_override: Optional[str]=None, single_process_source: Optional[str]=None) -> None
+marsdisk/run.py:2868:def _run_phase5_variant(base_cfg: Config, variant: str, mode: str, base_outdir: Path, duration_years: float, *, enforce_mass_budget: bool) -> _Phase5VariantResult
+marsdisk/run.py:2936:def _write_phase5_comparison_products(base_outdir: Path, duration_years: float, results: List[_Phase5VariantResult]) -> None
+marsdisk/run.py:3078:def run_phase5_comparison(cfg: Config, *, enforce_mass_budget: bool=False, variants_spec: Optional[List[Dict[str, str]]]=None) -> None
+marsdisk/run.py:3113:def main(argv: Optional[List[str]]=None) -> None
 marsdisk/schema.py:22:class Geometry(BaseModel)
 marsdisk/schema.py:36:class DiskGeometry(BaseModel)
 marsdisk/schema.py:45:class Disk(BaseModel)
@@ -341,28 +344,28 @@ marsdisk/schema.py:251:class Surface(BaseModel)
 marsdisk/schema.py:260:class SublimationParamsModel(BaseModel)
 marsdisk/schema.py:279:class RPBlowoutConfig(BaseModel)
 marsdisk/schema.py:285:class HydroEscapeConfig(BaseModel)
-marsdisk/schema.py:303:class Sinks(BaseModel)
-marsdisk/schema.py:323:class ProcessStateTagging(BaseModel)
-marsdisk/schema.py:332:class Process(BaseModel)
-marsdisk/schema.py:342:class Modes(BaseModel)
-marsdisk/schema.py:348:class Phase5CompareConfig(BaseModel)
-marsdisk/schema.py:378:class Phase5Config(BaseModel)
-marsdisk/schema.py:384:class PhaseThresholds(BaseModel)
-marsdisk/schema.py:400:class PhaseMapConfig(BaseModel)
-marsdisk/schema.py:409:class PhaseConfig(BaseModel)
-marsdisk/schema.py:450:class MarsTemperatureDriverConstant(BaseModel)
-marsdisk/schema.py:463:class MarsTemperatureDriverTable(BaseModel)
-marsdisk/schema.py:475:class MarsTemperatureDriverConfig(BaseModel)
-marsdisk/schema.py:517:class RadiationTauGate(BaseModel)
-marsdisk/schema.py:524:class Radiation(BaseModel)
-marsdisk/schema.py:606:class Shielding(BaseModel)
-marsdisk/schema.py:662:class Blowout(BaseModel)
-marsdisk/schema.py:680:class Numerics(BaseModel)
-marsdisk/schema.py:770:class StepDiagnostics(BaseModel)
-marsdisk/schema.py:787:class IO(BaseModel)
-marsdisk/schema.py:812:class Phase7Diagnostics(BaseModel)
-marsdisk/schema.py:825:class Diagnostics(BaseModel)
-marsdisk/schema.py:831:class Config(BaseModel)
+marsdisk/schema.py:308:class Sinks(BaseModel)
+marsdisk/schema.py:332:class ProcessStateTagging(BaseModel)
+marsdisk/schema.py:341:class Process(BaseModel)
+marsdisk/schema.py:351:class Modes(BaseModel)
+marsdisk/schema.py:357:class Phase5CompareConfig(BaseModel)
+marsdisk/schema.py:387:class Phase5Config(BaseModel)
+marsdisk/schema.py:393:class PhaseThresholds(BaseModel)
+marsdisk/schema.py:417:class PhaseMapConfig(BaseModel)
+marsdisk/schema.py:426:class PhaseConfig(BaseModel)
+marsdisk/schema.py:467:class MarsTemperatureDriverConstant(BaseModel)
+marsdisk/schema.py:480:class MarsTemperatureDriverTable(BaseModel)
+marsdisk/schema.py:492:class MarsTemperatureDriverConfig(BaseModel)
+marsdisk/schema.py:534:class RadiationTauGate(BaseModel)
+marsdisk/schema.py:541:class Radiation(BaseModel)
+marsdisk/schema.py:623:class Shielding(BaseModel)
+marsdisk/schema.py:679:class Blowout(BaseModel)
+marsdisk/schema.py:697:class Numerics(BaseModel)
+marsdisk/schema.py:787:class StepDiagnostics(BaseModel)
+marsdisk/schema.py:804:class IO(BaseModel)
+marsdisk/schema.py:829:class Phase7Diagnostics(BaseModel)
+marsdisk/schema.py:842:class Diagnostics(BaseModel)
+marsdisk/schema.py:848:class Config(BaseModel)
 marsdisk/tests/test_core.py:11:def test_constants_values()
 marsdisk/tests/test_core.py:17:def test_grid_relations()
 marsdisk/tests/test_core.py:24:def test_writer_and_tables(tmp_path: Path)
@@ -557,7 +560,7 @@ tests/test_ci_guard_analysis.py:33:def test_ci_guard_analysis_pass(tmp_path) -> 
 tests/test_ci_guard_analysis.py:41:def test_ci_guard_analysis_anchor_failure(tmp_path) -> None
 tests/test_doc_sync_agent.py:9:def test_scan_generates_inventory(tmp_path) -> None
 tests/test_doc_sync_agent.py:26:def test_refs_and_coverage_pipeline(tmp_path) -> None
-tests/test_doc_sync_agent.py:74:def test_autostub_inserts_stubs(tmp_path) -> None
+tests/test_doc_sync_agent.py:80:def test_autostub_inserts_stubs(tmp_path) -> None
 tests/test_evaluation_system.py:13:def _build_series_frame() -> pd.DataFrame
 tests/test_evaluation_system.py:53:def _write_json(path: Path, payload: dict) -> None
 tests/test_evaluation_system.py:57:def _prepare_outdir(tmp_path: Path, *, drop_series_columns: Sequence[str] | None=None) -> Path
@@ -611,11 +614,9 @@ tests/test_phase_branching_run.py:10:def _build_phase_config(outdir: Path, *, T_
 tests/test_phase_branching_run.py:41:def _load_run(outdir: Path) -> pd.DataFrame
 tests/test_phase_branching_run.py:47:def test_sink_selection_is_mutually_exclusive(tmp_path: Path) -> None
 tests/test_phase_integration_siO2.py:11:def siO2_evaluator() -> phase.PhaseEvaluator
-tests/test_phase_integration_siO2.py:17:def test_siO2_map_liquid_branch(radius_rm: float, siO2_evaluator: phase.PhaseEvaluator) -> None
-tests/test_phase_integration_siO2.py:35:def test_siO2_map_solid_branch(siO2_evaluator: phase.PhaseEvaluator) -> None
+tests/test_phase_integration_siO2.py:16:def test_siO2_map_solid_branch(siO2_evaluator: phase.PhaseEvaluator) -> None
 tests/test_phase_sublimation_integration.py:15:def _run_case(tmp_path: Path, *, T_M: float, r_RM: float) -> tuple[pd.Series, pd.DataFrame]
-tests/test_phase_sublimation_integration.py:41:def test_liquid_phase_blocks_sublimation_with_siO2_map(tmp_path: Path) -> None
-tests/test_phase_sublimation_integration.py:52:def test_solid_phase_allows_sublimation_with_siO2_map(tmp_path: Path) -> None
+tests/test_phase_sublimation_integration.py:41:def test_solid_phase_allows_sublimation_with_siO2_map(tmp_path: Path) -> None
 tests/test_phi_table.py:12:def mock_phi_table(tmp_path)
 tests/test_phi_table.py:24:def test_phi_table_monotonic_effects(mock_phi_table)
 tests/test_qpr_loader_h5datasets.py:18:def _write_three_dataset(path, qpr, log10s, temperatures)
@@ -679,6 +680,7 @@ tests/test_sublimation_sio.py:80:def test_auto_prefers_tabulated_within_range(tm
 tests/test_sublimation_sio.py:106:def test_auto_switches_to_local_clausius_fit(tmp_path) -> None
 tests/test_sublimation_sio.py:136:def test_auto_baseline_warns_when_out_of_range(caplog) -> None
 tests/test_sublimation_sio.py:155:def test_run_config_records_psat_selection(tmp_path) -> None
+tests/test_sublimation_smol_sink.py:12:def test_smol_sublimation_sink_mass_budget(tmp_path: Path) -> None
 tests/test_summary_backcompat.py:9:def _write_summary(path: Path, payload: dict) -> None
 tests/test_summary_backcompat.py:13:def test_parse_summary_backwards_compatibility(tmp_path: Path) -> None
 tests/test_surface_outflux_wavy.py:10:def test_blowout_driven_wavy_pattern_emerges() -> None
