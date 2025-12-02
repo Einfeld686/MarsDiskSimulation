@@ -1727,7 +1727,7 @@ def run_zero_d(
                     n_bins_smol = sizes_arr.size
                     zeros_kernel = np.zeros((n_bins_smol, n_bins_smol))
                     zeros_frag = np.zeros((n_bins_smol, n_bins_smol, n_bins_smol))
-                    N_new_smol, smol_dt_eff, smol_mass_err = smol.step_imex_bdf1_C3(
+                    N_new_smol, _smol_dt_eff, _smol_mass_err = smol.step_imex_bdf1_C3(
                         N_k,
                         zeros_kernel,
                         zeros_frag,

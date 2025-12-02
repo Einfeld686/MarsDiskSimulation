@@ -1,0 +1,103 @@
+# 昇華モードのみ（ブローアウト無効）の2年ラン設定
+scope:
+  region: "inner"
+physics:
+  mode: "sublimation_only"
+geometry:
+  mode: "0D"
+  r: 8.3e6
+material:
+  rho: 3000.0
+temps:
+  T_M: 1850.0
+sizes:
+  s_min: 1.0e-6
+  s_max: 3.0
+  n_bins: 40
+  evolve_min_size: false
+  apply_evolved_min_size: false
+initial:
+  mass_total: 1.0e-5
+  s0_mode: "upper"
+dynamics:
+  e0: 0.2
+  i0: 0.03
+  t_damp_orbits: 20.0
+  f_wake: 2.0
+psd:
+  alpha: 1.83
+  wavy_strength: 0.0
+  floor:
+    mode: "fixed"
+qstar:
+  Qs: 3.5e7
+  a_s: 0.38
+  B: 0.3
+  b_g: 1.36
+  v_ref_kms: [3.0, 5.0]
+disk:
+  geometry:
+    r_in_RM: 2.2
+    r_out_RM: 2.7
+    r_profile: "uniform"
+    p_index: 0.0
+inner_disk_mass:
+  use_Mmars_ratio: true
+  M_in_ratio: 3.0e-5
+  map_to_sigma: "analytic"
+surface:
+  init_policy: "clip_by_tau1"
+  sigma_surf_init_override: null
+  use_tcoll: true
+supply:
+  mode: "const"
+  const:
+    prod_area_rate_kg_m2_s: 0.0
+  mixing:
+    epsilon_mix: 1.0
+sinks:
+  mode: "sublimation"
+  enable_sublimation: true
+  enable_gas_drag: false
+  T_sub: 1300.0
+  sub_params:
+    mode: "logistic"
+    alpha_evap: 1.0
+    mu: 0.1
+    A: null
+    B: null
+    dT: 50.0
+    eta_instant: 0.1
+    P_gas: 0.0
+  rp_blowout:
+    enable: false
+  hydro_escape:
+    enable: false
+radiation:
+  TM_K: 1850.0
+  qpr_table_path: "data/qpr_table.csv"
+  tau_gate:
+    enable: false
+shielding:
+  mode: "psitau"
+  table_path: null
+blowout:
+  enabled: false
+phase:
+  enabled: false
+  source: "threshold"
+numerics:
+  t_end_years: 2.0
+  t_end_orbits: null
+  dt_init: "auto"
+  safety: 0.1
+  atol: 1.0e-10
+  rtol: 1.0e-6
+  eval_per_step: true
+  orbit_rollup: true
+  dt_over_t_blow_max: 0.1
+io:
+  outdir: "out/innerdisk_sublimation_only"
+  step_diagnostics:
+    enable: true
+    format: "csv"

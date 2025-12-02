@@ -133,6 +133,21 @@ marsdisk/analysis/beta_sampler.py:91:def _prepare_case_config(cfg: Config, *, r_
 marsdisk/analysis/beta_sampler.py:136:def _run_single_case(args: Mapping[str, Any]) -> Dict[str, Any]
 marsdisk/analysis/beta_sampler.py:211:def _iter_cases(r_values: Sequence[float], T_values: Sequence[float]) -> Iterable[Tuple[int, int, float, float]]
 marsdisk/analysis/beta_sampler.py:217:def sample_beta_over_orbit(cfg: BetaSamplingConfig) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]
+marsdisk/analysis/inner_disk_runner.py:29:def _safe_float(value: Any) -> float
+marsdisk/analysis/inner_disk_runner.py:36:def _read_json(path: Path) -> Dict[str, Any]
+marsdisk/analysis/inner_disk_runner.py:41:def _read_mass_budget(outdir: Path) -> Optional[pd.DataFrame]
+marsdisk/analysis/inner_disk_runner.py:51:def _read_step_diagnostics(outdir: Path, format_hint: Optional[str]) -> Optional[pd.DataFrame]
+marsdisk/analysis/inner_disk_runner.py:78:def _infer_initial_mass(cfg: Config, budget: Optional[pd.DataFrame], step_df: Optional[pd.DataFrame]) -> float
+marsdisk/analysis/inner_disk_runner.py:97:def _infer_remaining_mass(m_init: float, m_loss_total: float, budget: Optional[pd.DataFrame], step_df: Optional[pd.DataFrame]) -> float
+marsdisk/analysis/inner_disk_runner.py:117:def _max_budget_error(summary: Mapping[str, Any], budget: Optional[pd.DataFrame]) -> float
+marsdisk/analysis/inner_disk_runner.py:129:def _sanitize_label(label: Optional[str], config_path: Path) -> str
+marsdisk/analysis/inner_disk_runner.py:136:def _extract_inputs(cfg: Config, summary: Mapping[str, Any]) -> Dict[str, Any]
+marsdisk/analysis/inner_disk_runner.py:180:def _build_record(*, label: str, config_path: Path, cfg: Config, outdir: Path, summary: Mapping[str, Any], budget: Optional[pd.DataFrame], step_df: Optional[pd.DataFrame], t_end_years: float) -> Dict[str, Any]
+marsdisk/analysis/inner_disk_runner.py:245:def run_inner_disk_case(config_path: Path | str, *, label: Optional[str]=None, overrides: Optional[Sequence[str]]=None, t_end_years: float=DEFAULT_T_END_YEARS, enable_step_diagnostics: bool=False, append_label_to_outdir: bool=True) -> Dict[str, Any]
+marsdisk/analysis/inner_disk_runner.py:292:def run_inner_disk_sweep(config_paths: Iterable[str | Path], *, overrides: Optional[Sequence[str]]=None, labels: Optional[Sequence[str]]=None, t_end_years: float=DEFAULT_T_END_YEARS, enable_step_diagnostics: bool=False, append_label_to_outdir: bool=True) -> pd.DataFrame
+marsdisk/analysis/inner_disk_runner.py:319:def save_massloss_table(df: pd.DataFrame, out_path: Path) -> None
+marsdisk/analysis/inner_disk_runner.py:325:def _parse_args(argv: Optional[Sequence[str]]=None) -> argparse.Namespace
+marsdisk/analysis/inner_disk_runner.py:369:def main(argv: Optional[Sequence[str]]=None) -> None
 marsdisk/analysis/massloss_sampler.py:28:def _prepare_config(base_cfg: Config, *, r_rm: float, T_M: float, qpr_table_path: Path, dt_over_t_blow_max: float, sinks_mode: str, enable_sublimation: Optional[bool], enable_gas_drag: bool) -> Config
 marsdisk/analysis/massloss_sampler.py:81:def _percentile(values: Iterable[float], q: float) -> float
 marsdisk/analysis/massloss_sampler.py:94:def _median_dt_ratio(series: pd.Series) -> float
@@ -163,38 +178,38 @@ marsdisk/io/writer.py:290:def write_run_config(config: Mapping[str, Any], path: 
 marsdisk/io/writer.py:298:def write_mass_budget(records: Iterable[Mapping[str, Any]], path: Path) -> None
 marsdisk/io/writer.py:305:def write_orbit_rollup(rows: Iterable[Mapping[str, Any]], path: Path) -> None
 marsdisk/io/writer.py:316:def write_step_diagnostics(rows: Iterable[Mapping[str, Any]], path: Path, *, fmt: Literal['csv', 'jsonl']='csv') -> None
-marsdisk/ops/doc_sync_agent.py:102:class SymbolInfo
-marsdisk/ops/doc_sync_agent.py:116:class FileChange
-marsdisk/ops/doc_sync_agent.py:147:class InventoryRecord
-marsdisk/ops/doc_sync_agent.py:183:class DocSyncAgent
-marsdisk/ops/doc_sync_agent.py:674:def _legacy_main(argv: Optional[Sequence[str]]=None) -> int
-marsdisk/ops/doc_sync_agent.py:743:def _collect_inventory_records(root: Path) -> List[InventoryRecord]
-marsdisk/ops/doc_sync_agent.py:783:def _resolve_cli_path(value: str) -> Path
-marsdisk/ops/doc_sync_agent.py:790:def _rel_to_repo(path: Path) -> str
-marsdisk/ops/doc_sync_agent.py:797:def _cmd_scan(args: argparse.Namespace) -> int
-marsdisk/ops/doc_sync_agent.py:813:def _collect_doc_references(doc_paths: Sequence[Path]) -> Dict[str, Any]
-marsdisk/ops/doc_sync_agent.py:939:def _cmd_refs(args: argparse.Namespace) -> int
-marsdisk/ops/doc_sync_agent.py:962:def _load_inventory_records(path: Path) -> List[InventoryRecord]
-marsdisk/ops/doc_sync_agent.py:1000:def _match_symbol_by_span(symbols: Sequence[InventoryRecord], start: int, end: int) -> Optional[InventoryRecord]
-marsdisk/ops/doc_sync_agent.py:1012:def _compute_coverage(inventory: Sequence[InventoryRecord], docs_payload: Dict[str, Any]) -> Dict[str, Any]
-marsdisk/ops/doc_sync_agent.py:1159:def _parse_gap_identifier(identifier: str) -> Optional[Tuple[str, str]]
-marsdisk/ops/doc_sync_agent.py:1171:def _collect_unreferenced_from_coverage(coverage_data: Dict[str, Any]) -> List[Tuple[str, str]]
-marsdisk/ops/doc_sync_agent.py:1196:def _load_suggestions_index(path: Path) -> Dict[Tuple[str, str], Dict[str, Any]]
-marsdisk/ops/doc_sync_agent.py:1219:def _format_code_anchor(record: InventoryRecord) -> str
-marsdisk/ops/doc_sync_agent.py:1226:def _strip_line_anchor_annotations(text: str) -> str
-marsdisk/ops/doc_sync_agent.py:1230:def ensure_equation_ids(equations_path: Path) -> None
-marsdisk/ops/doc_sync_agent.py:1290:def _render_coverage_markdown(data: Dict[str, Any]) -> str
-marsdisk/ops/doc_sync_agent.py:1347:def _is_stub_already_present(text: str, record: InventoryRecord) -> bool
-marsdisk/ops/doc_sync_agent.py:1352:def _render_stub_block(record: InventoryRecord, doc_kind: str) -> str
-marsdisk/ops/doc_sync_agent.py:1384:def _append_to_section(text: str, heading_pattern: re.Pattern[str], stub: str) -> str
-marsdisk/ops/doc_sync_agent.py:1399:def _append_to_end(text: str, stub: str) -> str
-marsdisk/ops/doc_sync_agent.py:1405:def _determine_autostub_target(record: InventoryRecord, suggestions: Dict[Tuple[str, str], Dict[str, Any]], overview_path: Path, equations_path: Path, run_recipes_path: Path) -> Tuple[Path, Optional[re.Pattern[str]], str]
-marsdisk/ops/doc_sync_agent.py:1452:def _cmd_coverage(args: argparse.Namespace) -> int
-marsdisk/ops/doc_sync_agent.py:1485:def _cmd_autostub(args: argparse.Namespace) -> int
-marsdisk/ops/doc_sync_agent.py:1561:def _cmd_update(args: argparse.Namespace) -> int
-marsdisk/ops/doc_sync_agent.py:1692:def _run_new_cli(argv: Sequence[str]) -> int
-marsdisk/ops/doc_sync_agent.py:1906:def main(argv: Optional[Sequence[str]]=None) -> int
-marsdisk/ops/doc_sync_agent.py:1914:def _git_commit(changes: Iterable[FileChange]) -> None
+marsdisk/ops/doc_sync_agent.py:104:class SymbolInfo
+marsdisk/ops/doc_sync_agent.py:118:class FileChange
+marsdisk/ops/doc_sync_agent.py:149:class InventoryRecord
+marsdisk/ops/doc_sync_agent.py:185:class DocSyncAgent
+marsdisk/ops/doc_sync_agent.py:676:def _legacy_main(argv: Optional[Sequence[str]]=None) -> int
+marsdisk/ops/doc_sync_agent.py:745:def _collect_inventory_records(root: Path) -> List[InventoryRecord]
+marsdisk/ops/doc_sync_agent.py:785:def _resolve_cli_path(value: str) -> Path
+marsdisk/ops/doc_sync_agent.py:792:def _rel_to_repo(path: Path) -> str
+marsdisk/ops/doc_sync_agent.py:799:def _cmd_scan(args: argparse.Namespace) -> int
+marsdisk/ops/doc_sync_agent.py:815:def _collect_doc_references(doc_paths: Sequence[Path]) -> Dict[str, Any]
+marsdisk/ops/doc_sync_agent.py:941:def _cmd_refs(args: argparse.Namespace) -> int
+marsdisk/ops/doc_sync_agent.py:964:def _load_inventory_records(path: Path) -> List[InventoryRecord]
+marsdisk/ops/doc_sync_agent.py:1002:def _match_symbol_by_span(symbols: Sequence[InventoryRecord], start: int, end: int) -> Optional[InventoryRecord]
+marsdisk/ops/doc_sync_agent.py:1014:def _compute_coverage(inventory: Sequence[InventoryRecord], docs_payload: Dict[str, Any]) -> Dict[str, Any]
+marsdisk/ops/doc_sync_agent.py:1161:def _parse_gap_identifier(identifier: str) -> Optional[Tuple[str, str]]
+marsdisk/ops/doc_sync_agent.py:1173:def _collect_unreferenced_from_coverage(coverage_data: Dict[str, Any]) -> List[Tuple[str, str]]
+marsdisk/ops/doc_sync_agent.py:1198:def _load_suggestions_index(path: Path) -> Dict[Tuple[str, str], Dict[str, Any]]
+marsdisk/ops/doc_sync_agent.py:1221:def _format_code_anchor(record: InventoryRecord) -> str
+marsdisk/ops/doc_sync_agent.py:1228:def _strip_line_anchor_annotations(text: str) -> str
+marsdisk/ops/doc_sync_agent.py:1232:def ensure_equation_ids(equations_path: Path) -> None
+marsdisk/ops/doc_sync_agent.py:1292:def _render_coverage_markdown(data: Dict[str, Any]) -> str
+marsdisk/ops/doc_sync_agent.py:1349:def _is_stub_already_present(text: str, record: InventoryRecord) -> bool
+marsdisk/ops/doc_sync_agent.py:1354:def _render_stub_block(record: InventoryRecord, doc_kind: str) -> str
+marsdisk/ops/doc_sync_agent.py:1386:def _append_to_section(text: str, heading_pattern: re.Pattern[str], stub: str) -> str
+marsdisk/ops/doc_sync_agent.py:1401:def _append_to_end(text: str, stub: str) -> str
+marsdisk/ops/doc_sync_agent.py:1407:def _determine_autostub_target(record: InventoryRecord, suggestions: Dict[Tuple[str, str], Dict[str, Any]], overview_path: Path, equations_path: Path, run_recipes_path: Path) -> Tuple[Path, Optional[re.Pattern[str]], str]
+marsdisk/ops/doc_sync_agent.py:1454:def _cmd_coverage(args: argparse.Namespace) -> int
+marsdisk/ops/doc_sync_agent.py:1487:def _cmd_autostub(args: argparse.Namespace) -> int
+marsdisk/ops/doc_sync_agent.py:1563:def _cmd_update(args: argparse.Namespace) -> int
+marsdisk/ops/doc_sync_agent.py:1694:def _run_new_cli(argv: Sequence[str]) -> int
+marsdisk/ops/doc_sync_agent.py:1908:def main(argv: Optional[Sequence[str]]=None) -> int
+marsdisk/ops/doc_sync_agent.py:1916:def _git_commit(changes: Iterable[FileChange]) -> None
 marsdisk/ops/make_qpr_table.py:22:def _rayleigh_geometric_qpr(size_parameter: np.ndarray) -> np.ndarray
 marsdisk/ops/make_qpr_table.py:28:def _planck_lambda(wavelength_m: np.ndarray, temperature: float) -> np.ndarray
 marsdisk/ops/make_qpr_table.py:40:def compute_planck_mean_qpr(s_values: Sequence[float], temperatures: Sequence[float], wavelengths_um: Iterable[float] | None=None) -> np.ndarray
@@ -569,6 +584,9 @@ tests/test_evaluation_system.py:155:def test_evaluation_system_detects_missing_s
 tests/test_fast_blowout.py:12:def _build_fast_blowout_config(outdir: Path, *, correct: bool, substep: bool=False, substep_ratio: float=1.0) -> schema.Config
 tests/test_fast_blowout.py:46:def test_fast_blowout_factor_samples() -> None
 tests/test_fast_blowout.py:54:def test_chi_blow_auto_range(tmp_path: Path) -> None
+tests/test_inner_disk_massloss.py:12:def _build_config(outdir: Path, *, sinks_mode: str, enable_sublimation: bool, enable_gas_drag: bool) -> schema.Config
+tests/test_inner_disk_massloss.py:37:def _write_yaml(cfg: schema.Config, path: Path) -> Path
+tests/test_inner_disk_massloss.py:46:def test_inner_disk_sweep_runs_and_collects_massloss(tmp_path: Path) -> None
 tests/test_make_qpr_table.py:7:def test_small_grain_qpr_increases_with_temperature()
 tests/test_mass_budget_combined.py:14:def test_mass_budget_closure_with_blowout_and_sinks(tmp_path: Path) -> None
 tests/test_mass_conservation.py:10:def test_imex_bdf1_limits_timestep_and_preserves_mass() -> None
@@ -619,6 +637,8 @@ tests/test_phase_sublimation_integration.py:15:def _run_case(tmp_path: Path, *, 
 tests/test_phase_sublimation_integration.py:41:def test_solid_phase_allows_sublimation_with_siO2_map(tmp_path: Path) -> None
 tests/test_phi_table.py:12:def mock_phi_table(tmp_path)
 tests/test_phi_table.py:24:def test_phi_table_monotonic_effects(mock_phi_table)
+tests/test_psd_kappa.py:11:def test_compute_kappa_single_bin_matches_geometry() -> None
+tests/test_psd_kappa.py:29:def test_compute_kappa_stays_finite_with_wavy_modulation() -> None
 tests/test_qpr_loader_h5datasets.py:18:def _write_three_dataset(path, qpr, log10s, temperatures)
 tests/test_qpr_loader_h5datasets.py:28:def test_load_qpr_table_from_h5datasets(tmp_path)
 tests/test_qpr_loader_h5datasets.py:50:def test_h5datasets_shape_mismatch(tmp_path)

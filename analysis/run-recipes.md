@@ -517,7 +517,7 @@ pytest tests/test_analysis_coverage_guard.py -q
   - 入力は `s_min`,`s_max`,`alpha`,`wavy_strength`,`n_bins`,`rho`。不正なサイズ順やビン数は `MarsDiskError` で停止する。[marsdisk/physics/psd.py:30–118]
   - 出力は PSD 状態辞書（`sizes`,`widths`,`number`,`edges`,`rho` など）で、`psd.compute_kappa` や `psd.apply_uniform_size_drift` がそのまま利用する。[marsdisk/physics/psd.py:30–118][marsdisk/run.py:598–602]
 - 参照: [marsdisk/physics/psd.py:30–118]
-- 根拠: wavy補正と不透明度の健全性は `tests/test_psd_kappa.py` と `marsdisk/tests/test_surface_outflux.py` が自動検証する。[tests/test_psd_kappa.py:22–30][marsdisk/tests/test_surface_outflux.py:33–37]
+- 根拠: wavy補正の波状パターンは `tests/test_surface_outflux_wavy.py` が、質量不透明度 κ の幾何計算は `tests/test_psd_kappa.py` が自動検証する。[tests/test_surface_outflux_wavy.py:10–37][tests/test_psd_kappa.py:29–48]
 
 ### qpr_lookup — ⟨Q_pr⟩ テーブルの運用
 
