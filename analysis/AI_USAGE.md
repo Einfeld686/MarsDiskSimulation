@@ -26,6 +26,23 @@ python -m marsdisk.run --config analysis/run-recipes/baseline_blowout_only.yml
 - FIG_ / RUN_ / REF_ の ID は必ず一意にし、新規追加前に重複を検索すること。これらのファイルを変更した場合も DocSyncAgent → analysis-doc-tests → evaluation_system の順に束で回し、`function_reference_rate≥0.75` と `anchor_consistency_rate≥0.98` を崩さない。
 - スライド生成エージェントの読み方: 並びと意図は `slides_outline.md`、使う run/fig は `run_catalog.md` / `figures_catalog.md` から選び、用語と引用は `glossary.md` と `literature_map.md` で確定した上で `analysis/equations.md` のアンカーを参照する。
 
+## analysis カタログ群の役割（AI向け）
+- `analysis/slides_outline.md`: 著者向けスライド骨子。AIはここからSxx ID順にサマリを生成し、人間読みの流れを崩さずに要約する。
+- `analysis/run_catalog.md`: 重要 run の索引。`configs/*` と `out/*/run_card.md` の対応を橋渡しし、再実行や比較対象の選択に使う。
+- `analysis/figures_catalog.md`: 再利用したい図のカタログ。fig_idとrun_id, eq_refsを紐付け、スライド生成時の図選択ガイドとする。
+- `analysis/glossary.md`: 用語・記法のテーブル。対象読者や数学レベルのタグ付きで、AIが表記ゆれを避けるための辞書として扱う。
+- `analysis/literature_map.md`: Hyodo+, Ronnet+, Kuramoto 2024 など主要論文とステータス（replicated/planned/reference_only）をまとめた表。AIは引用や位置づけ確認にのみ使用し、式を再掲しない。
+
+## ラベルとアンカーの補足規約
+- 数式のアンカー(E.xxx)は `analysis/equations.md` のみで定義し、他のドキュメントは参照に徹する。新しい E.xxx を他所に作らない。
+- スライドID(Sxx_*), run ID(RUN.*), 図ID(FIG.*)はリポジトリ全体で一意に保つ。存在しない ID を AI が使いたい場合は、`UNKNOWN_REF_REQUESTS` に従い相談または TODO(REF:slug) として記録し、捏造しない。
+
+## DocSync と coverage メモ
+- `analysis/*.md` を編集したら DocSyncAgent（`python -m tools.doc_sync_agent --all --write` か `make analysis-sync`）でアンカー同期→`make analysis-doc-tests` で `function_reference_rate≥0.75` と `anchor_consistency_rate≥0.98` を確認する。新カタログ（run_catalog / figures_catalog / glossary / literature_map）も coverage 対象に含まれる。
+
+## out/ ディレクトリの扱い
+- `out/` は Git 無視でドキュメントソースではない。`analysis/run_catalog.md` は `out/*/run_card.md` を出典とするパターンを示し、参照先が消えた場合は該当 run_id を `deprecated` にし、同じ ID を黙って再利用しない。
+
 # 設定の要点（YAML→スキーマ→実行）
 設定値はYAML→Pydantic→実行時オブジェクトの順に検証される。（[marsdisk/run.py:357-357], [marsdisk/schema.py:454-455]）
 

@@ -14,6 +14,8 @@ from typing import Any, Dict, Iterable, List, Optional, Sequence, Tuple
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
+# Default markdown docs to keep in sync (slide-facing files intentionally carry no equations,
+# only anchors into analysis/equations.md and catalog IDs).
 DEFAULT_DOC_PATHS = [
     "analysis/equations.md",
     "analysis/overview.md",

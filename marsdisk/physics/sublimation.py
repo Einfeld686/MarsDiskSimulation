@@ -607,8 +607,8 @@ def sublimation_sink_from_dsdt(
 
     Notes
     -----
-    将来は ``Y_sub`` による再分配へ拡張可能だが、現状では各ビンの質量を
-    そのまま系外へ失う近似を採用する。
+    Future extension: redistribute the eroded mass into smaller bins via a
+    dedicated ``Y_sub`` matrix instead of removing it from the system.
     """
 
     s_arr = np.asarray(s_grid_m, dtype=float)

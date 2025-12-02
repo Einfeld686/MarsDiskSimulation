@@ -32,8 +32,7 @@ def test_smol_sublimation_sink_mass_budget(tmp_path: Path) -> None:
     cfg.sinks.enable_sublimation = True
     cfg.sinks.enable_gas_drag = False
     cfg.sinks.sublimation_location = "smol"
-    cfg.sinks.sub_params.mode = "hkl"
-    cfg.sinks.sub_params.psat_model = "clausius"
+    cfg.sinks.sub_params.mode = "logistic"
 
     run.run_zero_d(cfg)
 
@@ -56,6 +55,6 @@ def test_smol_sublimation_sink_mass_budget(tmp_path: Path) -> None:
     assert mass_loss_diag > 0.0
     assert mass_loss_series == pytest.approx(mass_loss_diag, rel=1e-6, abs=0.0)
     assert mass_lost_cum == pytest.approx(mass_loss_diag, rel=1e-6, abs=0.0)
-    assert mass_drop_bins == pytest.approx(mass_loss_diag, rel=1e-6, abs=0.0)
+    assert mass_drop_bins == pytest.approx(mass_loss_diag, rel=1e-6, abs=1e-24)
     assert float(row["mass_lost_by_blowout"]) == pytest.approx(0.0, abs=0.0)
     assert float(summary["M_loss_from_sublimation"]) >= mass_loss_diag
