@@ -3,7 +3,7 @@
 > **注記（gas‑poor）**: 本解析は **ガスに乏しい衝突起源デブリ円盤**を前提とします。従って、**光学的に厚いガス円盤**を仮定する Takeuchi & Lin (2003) の表層塵アウトフロー式は**適用外**とし、既定では評価から外しています（必要時のみ明示的に有効化）。この判断は、衝突直後の円盤が溶融主体かつ蒸気≲数%で、初期周回で揮発が散逸しやすいこと、および小衛星を残すには低質量・低ガスの円盤条件が要ることに基づきます。参考: [@Hyodo2017a_ApJ845_125; @Hyodo2017b_ApJ851_122; @Hyodo2018_ApJ860_150; @CanupSalmon2018_SciAdv4_eaar6887]。
 
 ### (E.001) v_kepler — ケプラー速度 v_K(r)
-TODO(REF:eq_e001_v_kepler)
+ケプラー運動の基本式に従い、教科書的な円軌道速度を評価する [@MurrayDermott1999_SSD]。
 
 円盤半径に応じた公転速度を、火星重力パラメータから即時に算出する関数です。
 - 用語：ケプラー速度（Keplerian orbital speed）
@@ -13,7 +13,7 @@ TODO(REF:eq_e001_v_kepler)
 - 数値処理：NumPy の平方根を評価し `float` に変換するのみで、負値入力は未定義として利用者側で防ぐ。
 
 ### (E.002) omega — ケプラー角速度 Ω(r)
-TODO(REF:eq_e002_omega)
+ケプラー角速度の標準式をそのまま返すラッパーで、出典は円運動の基本解 [@MurrayDermott1999_SSD]。
 
 0D 半径の局所角速度を、ケプラー解をそのまま返すラッパーです。
 - 用語：ケプラー角速度（Keplerian angular frequency）
@@ -23,7 +23,7 @@ TODO(REF:eq_e002_omega)
 - 数値処理：別名関数として委譲するだけで追加の丸めや検証は行わない。
 
 ### (E.003) v_keplerian — ケプラー速度（同義関数）
-TODO(REF:eq_e003_v_keplerian)
+円軌道速度の別名を公開し API の揺れに備えるもので、式自体は (E.001) と同じ [@MurrayDermott1999_SSD]。
 
 `v_kepler` と同一計算を別名で公開し、外部 API の記述ゆれに備えます。
 - 用語：ケプラー速度別名（Keplerian speed alias）
@@ -33,7 +33,7 @@ TODO(REF:eq_e003_v_keplerian)
 - 数値処理：追加計算は無く、浮動小数変換も呼び先に任せる。
 
 ### (E.004) interp_qpr — Planck平均 ⟨Q_pr⟩ の補間
-TODO(REF:eq_e004_interp_qpr)
+放射圧効率のスペクトル平均を表テーブルから補間し、未ロード時は近似へフォールバックする実装。Q_pr と β の定義は古典的な放射圧整理 [@Burns1979_Icarus40_1] に従う。
 
 放射圧効率のテーブルからサイズと温度で二次元補間を行い、欠損時は解析近似へフォールバックします。
 - 用語：放射圧効率平均（Planck-averaged radiation pressure efficiency）
@@ -43,7 +43,8 @@ TODO(REF:eq_e004_interp_qpr)
 - 数値処理：NumPy 補間値を `float` 化し、テーブルが無い場合は解析近似へフォールバックする分岐のみ。
 
 ### (E.005) load_qpr_table — ⟨Q_pr⟩表のローダ
-TODO(REF:eq_e005_load_qpr_table)
+放射圧効率テーブルをロードして Planck 平均の補間器を更新する。Q_pr と β の関係付けは [@Burns1979_Icarus40_1] の定義に準拠し、ここではそのデータ供給を担う。
+実装上のローダであり、同一仕様の式や関数名を持つ文献は存在しない（実装固有の離散化）。
 
 外部 CSV/HDF テーブルを読み込み、全体の Planck 平均補間器を更新して戻り値として供給します。
 - 用語：放射圧効率テーブルローダ（Planck-mean Q_pr table loader）
@@ -73,7 +74,8 @@ TODO(REF:eq_e005_load_qpr_table)
 Type-A disks (collision dominated) inherit $\tau(r) \propto r^{-5/2}$, whereas type-B disks (CPR drag dominated) follow $\tau(r) \propto r^{-3/2}$, both derived from the same scaling. [@StrubbeChiang2006_ApJ648_652]
 
 ### (E.007) marsdisk/physics/surface.py: step_surface_density_S1 (lines 96-163)
-TODO(REF:TakeuchiLin2003_ApJ593_524)
+[@TakeuchiLin2003_ApJ593_524] に基づくガスリッチ表層 ODE（標準では無効）。
+離散化形は IMEX-BDF1 を本実装向けに組んだもので、同一式を提示する文献はない（実装上の離散化）。
 
 > **適用範囲の注意（既定は無効）**  
 > この式群は **光学的に厚いガス円盤の表層**を仮定する Takeuchi & Lin (2003) に基づきます。  
@@ -120,7 +122,8 @@ When `t_{\mathrm{sink}}` is `None` or non-positive (for example, the CLI passes 
 **参考**: [無効: gas‑poor 既定] Takeuchi & Lin (2003); Hyodo et al. (2017); Hyodo et al. (2018); Canup & Salmon (2018); Strubbe & Chiang (2006); Kuramoto (2024)
 
 ### (E.008) marsdisk/run.py: effective minimum grain size and beta diagnostics (lines 229-488)
-TODO(REF:eq_e008_marsdisk_run_py)
+ブローアウト境界と設定下限の最大を取り、β 診断を併記する手順。ブローアウトの閾値 β=0.5 とその定義は [@Burns1979_Icarus40_1; @StrubbeChiang2006_ApJ648_652] に従う。
+最小径の取り方と出力項目は実装上の組み合わせであり、同一形を掲げる文献はない（実装固有）。
 
 ```latex
 \begin{equation}
@@ -165,7 +168,8 @@ Case classification follows the configuration beta: `case_status = "blowout"` wh
 
 
 ### (E.009) marsdisk/physics/surface.py: compute_surface_outflux (lines 166-175)
-TODO(REF:eq_e009_marsdisk_physics_surface_py)
+表層質量と公転角速度から外向きフラックスを評価する単純な式で、光学的に薄い吹き飛び流の近似 [@StrubbeChiang2006_ApJ648_652] を踏襲する。
+スケール評価をコード化したもので、同一形の式を明示した文献はない（実装固有）。
 
 ```latex
 \begin{equation}
@@ -184,7 +188,8 @@ TODO(REF:eq_e009_marsdisk_physics_surface_py)
 - Direct multiplication with argument validation; raises `MarsDiskError` when $\Omega\le0$.
 
 ### (E.010) marsdisk/physics/smol.py: step_imex_bdf1_C3 (lines 18-101)
-TODO(REF:eq_e010_marsdisk_physics_smol_py)
+Smoluchowski 方程式を IMEX-BDF1 で解く実装。nσv 型カーネルの時間積分と質量保存チェックは衝突カスケード実装 [@Krivov2006_AA455_509; @Wyatt2008] に倣う。
+具体的な離散化形と安全係数は実装依存で、同一式を提示する文献はない（実装上の離散化）。
 
 ```latex
 \begin{aligned}
@@ -218,9 +223,11 @@ TODO(REF:eq_e010_marsdisk_physics_smol_py)
 - Enforces positivity: halves $\Delta t_{\mathrm{eff}}$ until all $N_i^{n+1}\ge0$.
 - Evaluates mass budget error (function C4); adaptively halves $\Delta t_{\mathrm{eff}}$ until error $\le$ `mass_tol`.
 - Caps step size relative to minimum collision time using `safety` multiplier.
+- `surface.collision_solver="smol"` を選ぶと `run_zero_d` が S1 代わりにこのオペレータで衝突を進める（既定は `"surface_ode"` で Wyatt 近似のまま）。[marsdisk/run.py:736–1016]
 
 ### (E.011) marsdisk/physics/smol.py: compute_mass_budget_error_C4 (lines 104-131)
-TODO(REF:eq_e011_marsdisk_physics_smol_py)
+IMEX 更新後の質量差分を測るための診断式。衝突カスケードでの質量収支検査を行う実装 [@Krivov2006_AA455_509] に基づく。
+誤差指標の形は実装上の定義であり、同一式を与える文献はない。
 
 ```latex
 \begin{aligned}
@@ -246,7 +253,7 @@ TODO(REF:eq_e011_marsdisk_physics_smol_py)
 - Absolute error used to avoid cancellation sign issues; logs diagnostic values.
 
 ### (E.012) marsdisk/physics/radiation.py: planck_mean_qpr (lines 207-218)
-TODO(REF:eq_e012_marsdisk_physics_radiation_py)
+放射圧効率の Planck 平均を表参照またはフォールバックで決める。β とブローアウトの定義は [@Burns1979_Icarus40_1] に従い、その入力として Q_pr を扱う。
 
 ```latex
 \langle Q_{\mathrm{pr}}\rangle =
@@ -322,7 +329,7 @@ TODO(REF:eq_e012_marsdisk_physics_radiation_py)
 - No iteration; direct algebraic evaluation for $\beta=0.5$ threshold.
 
 ### (E.015) marsdisk/physics/shielding.py: effective_kappa (lines 81-120)
-TODO(REF:eq_e015_marsdisk_physics_shielding_py)
+光学的厚さに応じた自遮蔽係数 $\Phi$ を掛けて有効不透明度を下げる処理で、薄い塵層の吸収低減を近似する [@StrubbeChiang2006_ApJ648_652]。
 
 ```latex
 \begin{equation}
@@ -343,7 +350,7 @@ TODO(REF:eq_e015_marsdisk_physics_shielding_py)
 - Clamps $\Phi$ to $[0,1]$ after lookup and logs when clipping occurs.
 
 ### (E.016) marsdisk/physics/shielding.py: sigma_tau1 (lines 123-130)
-TODO(REF:eq_e016_marsdisk_physics_shielding_py)
+有効不透明度から $\tau=1$ となる表層質量を算出するクリップ条件。放射遮蔽のしきい値を簡略化したもの [@StrubbeChiang2006_ApJ648_652]。
 
 ```latex
 \Sigma_{\tau=1} =
@@ -363,7 +370,7 @@ TODO(REF:eq_e016_marsdisk_physics_shielding_py)
 - Returns infinity when the opacity is non-positive to signal no optical-depth limit; type validation ensures real input.
 
 ### (E.017) marsdisk/physics/shielding.py: apply_shielding (lines 133-216)
-TODO(REF:eq_e017_marsdisk_physics_shielding_py)
+表層の光学的厚さに応じて $\Phi(\tau,w_0,g)$ を適用し、$\kappa_{\mathrm{eff}}$ と $\Sigma_{\tau=1}$ を計算する。光学的厚さ制御の枠組みは [@StrubbeChiang2006_ApJ648_652] を踏まえた実装。
 
 ```latex
 \begin{aligned}
@@ -435,7 +442,7 @@ P_{\mathrm{sat}}(T) =
 - In HKL branch, negative $(P_{\mathrm{sat}}-P_{\mathrm{gas}})$ is clamped to zero before evaluation.
 - Logistic branch guards against $dT\to0$ via `max(dT, 1.0)`.
 - Stores provenance in `run_config.json` under `sublimation_provenance`, capturing {`sublimation_formula`, `psat_model`, `A`, `B`, `mu`, `alpha_evap`, `P_gas`, `valid_K`, optional `psat_table_path`} for reproducibility.
-- Ambient vapour pressure $P_{\mathrm{gas}}$ (特に Si を含む蒸気分圧) は Ronnet et al. (2016) 同様に自由パラメータとして扱い、化学平衡は計算しない。既定は gas‑poor 前提で $P_{\mathrm{gas}}=0$ とし、感度試験では YAML `sinks.sub_params.P_gas` を明示調整すること（HKL フラックスの最大不確定要素）。[marsdisk/physics/sublimation.py:577–590], [marsdisk/schema.py:260–274]
+- Ambient vapour pressure $P_{\mathrm{gas}}$ (特に Si を含む蒸気分圧) は Ronnet et al. (2016) 同様に自由パラメータとして扱い、化学平衡は計算しない。既定は gas‑poor 前提で $P_{\mathrm{gas}}=0$ とし、感度試験では YAML `sinks.sub_params.P_gas` を明示調整すること（HKL フラックスの最大不確定要素）。[marsdisk/physics/sublimation.py:577–590], [marsdisk/schema.py:268–274]
 
 ### (E.019) marsdisk/physics/sublimation.py: sink_timescale (implemented by s_sink_from_timescale, lines 116-129)
 [@Ronnet2016_ApJ828_109]
@@ -462,7 +469,8 @@ P_{\mathrm{sat}}(T) =
 - No additional clamping beyond inherited flux behaviour; linear scaling in $t_{\mathrm{ref}}$.
 
 ### (E.020) marsdisk/physics/dynamics.py: v_ij (lines 18–45)
-TODO(REF:eq_e020_marsdisk_physics_dynamics_py)
+低離心率・低傾斜のレイリー分布を仮定した平均相対速度近似で、惑星形成論レビュー [@LissauerStewart1993_PP3; @WetherillStewart1993_Icarus106_190] や Ohtsuki らの解析解 [@Ohtsuki2002_Icarus155_436] に基づく。
+係数 1.25 の置き方は実装上の選択で、同一形を明示した文献は確認できていない。
 
 ```latex
 v_{ij} = v_{K}\,\sqrt{1.25\,e^{2} + i^{2}}
@@ -482,7 +490,8 @@ v_{ij} = v_{K}\,\sqrt{1.25\,e^{2} + i^{2}}
 - Exported via `__all__` for optional numba JIT acceleration. [marsdisk/physics/dynamics.py#v_ij [L18–L45]]
 
 ### (E.021) marsdisk/physics/dynamics.py: solve_c_eq (lines 48–106)
-TODO(REF:eq_e021_marsdisk_physics_dynamics_py)
+剪断加熱と非弾性冷却の釣り合いから速度分散を固定点反復で求める。低離心率リングの力学平衡を扱った解析 [@Ohtsuki2002_Icarus155_436] のスケーリングを踏まえた形。
+収束判定やクリップの置き方は実装固有であり、同一式を与える文献はない。
 
 ```latex
 \begin{aligned}
@@ -509,7 +518,8 @@ where the iteration is started with $c_0=\max(e,10^{-6})$ and stops once $|c_{n+
 - Logs iteration progress for traceability. [marsdisk/physics/dynamics.py#solve_c_eq [L48–L106]]
 
 ### (E.022) marsdisk/physics/dynamics.py: update_e (lines 109–140)
-TODO(REF:eq_e022_marsdisk_physics_dynamics_py)
+離心率を指数緩和でダンピングする簡易スキーム。低離心率ディスクの減衰モデル [@Ohtsuki2002_Icarus155_436] を単一ステップの指数解として実装する。
+一次緩和の離散化は教科書的で、同一記法を提示する特定文献はない（実装固有）。
 
 ```latex
 e_{n+1} = e_{\mathrm{eq}} + \left(e_n - e_{\mathrm{eq}}\right)\exp\!\left(-\frac{\Delta t}{t_{\mathrm{damp}}}\right)
@@ -529,7 +539,8 @@ e_{n+1} = e_{\mathrm{eq}} + \left(e_n - e_{\mathrm{eq}}\right)\exp\!\left(-\frac
 - Logs the before/after eccentricities for debugging. [marsdisk/physics/dynamics.py#update_e [L109–L140]]
 
 ### (E.023) marsdisk/physics/initfields.py: sigma_from_Minner (lines 17–44)
-TODO(REF:eq_e023_marsdisk_physics_initfields_py)
+総質量と半径範囲から $\Sigma \propto r^{-p}$ を正規化する幾何学積分で、デブリ円盤レビュー [@Wyatt2008] にも同様の形が整理されている。
+規格化の閉形式は自明な積分結果で、同一形の式を特定文献に求めることはしていない（実装固有の整理）。
 
 ```latex
 \Sigma(r) =
@@ -554,7 +565,8 @@ TODO(REF:eq_e023_marsdisk_physics_initfields_py)
 - Returns a Python closure that evaluates $\Sigma(r)$ for downstream use. [marsdisk/physics/initfields.py#sigma_from_Minner [L17–L44]]
 
 ### (E.024) marsdisk/physics/collide.py: compute_collision_kernel_C1 (lines 18–77)
-TODO(REF:eq_e024_marsdisk_physics_collide_py)
+nσv 形式の衝突カーネルを離散サイズビンに適用したもので、ガウス厚さによる $1/\sqrt{2\pi}H$ の補正を含む [@Krivov2006_AA455_509]。
+係数配置や離散ビン化は実装上の選択であり、同一形の式を示す文献はない。
 
 ```latex
 C_{ij} = \frac{N_i N_j}{1+\delta_{ij}}\,
@@ -578,7 +590,8 @@ C_{ij} = \frac{N_i N_j}{1+\delta_{ij}}\,
 - Emits diagnostic logs with the number of size bins. [marsdisk/physics/collide.py#compute_collision_kernel_C1 [L18–L77]]
 
 ### (E.025) marsdisk/physics/initfields.py: surf_sigma_init (lines 47–79)
-TODO(REF:eq_e025_marsdisk_physics_initfields_py)
+表層の初期値をミッドプレーンの $\Sigma$ からスケーリングし、$\tau=1$ クリップを施す。光学的厚さを上限とする初期化は [@StrubbeChiang2006_ApJ648_652] と同じ考え方。
+初期化の分岐とクリップは実装固有の規約で、同一形を提示する文献はない。
 
 ```latex
 \Sigma_{\mathrm{surf}} =
@@ -606,7 +619,8 @@ with $\Sigma_{\tau=1}=1/\kappa_{\mathrm{eff}}$ when $\kappa_{\mathrm{eff}}>0$.
 - When clipping is active, enforces non-negative densities. [marsdisk/physics/initfields.py#surf_sigma_init [L47–L79]]
 
 ### (E.026) marsdisk/physics/qstar.py: compute_q_d_star_F1 (lines 31–73)
-TODO(REF:eq_e026_marsdisk_physics_qstar_py)
+バザルトの破壊閾値 $Q_D^*$ を 3 km/s と 5 km/s の基準式から線形補間する。基準式は [@BenzAsphaug1999_Icarus142_5] のバザルト係数を用い、速度依存の補間則は [@LeinhardtStewart2012_ApJ745_79] に従う。
+速度点の線形補間というレシピ自体は実装側の選択であり、同一形の式を与える文献はない。
 
 ```latex
 Q_{D}^{*}(s,\rho,v) = Q_{3}(s,\rho)\,w(v) + Q_{5}(s,\rho)\,\bigl(1-w(v)\bigr),
@@ -634,7 +648,8 @@ Q_{v}(s,\rho) = Q_{s}\,s^{-a_{s}} + B\,\rho\,s^{b_{g}}.
 - Helper `_q_d_star` carries out the power-law evaluation for readability. [marsdisk/physics/qstar.py#compute_q_d_star_F1 [L31–L73]]
 
 ### (E.027) marsdisk/physics/supply.py: get_prod_area_rate (lines 93–98)
-TODO(REF:eq_e027_marsdisk_physics_supply_py)
+供給モードごとの基礎率に混合効率 $\epsilon_{\mathrm{mix}}$ を掛け、負値をクリップするシンプルな注入モデル [@Wyatt2008]。
+クリップやモード分岐の形は実装固有で、同一式を示す文献は存在しない。
 
 ```latex
 \dot{\Sigma}_{\mathrm{prod}}(t,r) = \max\!\left(\epsilon_{\mathrm{mix}}\;R_{\mathrm{base}}(t,r),\,0\right)
@@ -657,7 +672,8 @@ where $R_{\mathrm{base}}$ selects one of the constant, power-law, tabulated, or 
 - Delegates mode-specific logic to `_rate_basic`. [marsdisk/physics/supply.py#_rate_basic [L69–L90]]
 
 ### (E.028) marsdisk/physics/shielding.py: load_phi_table (lines 52–67)
-TODO(REF:eq_e028_marsdisk_physics_shielding_py)
+放射輸送テーブルに由来する自遮蔽係数 $\Phi(\tau)$ を読み込み、適用範囲を記録する補助関数。ガスリッチ条件での表層遮蔽を扱う TL2003 系の流儀 [@TakeuchiLin2003_ApJ593_524] を想定した拡張ポイントでもある。
+ロード手順とインターフェースは実装上の都合によるもので、同一仕様の式や関数を示す文献はない。
 
 
 Loads a single-parameter self-shielding table $\Phi(\tau)$ from disk and logs the coverage range. The interpolator returned by `marsdisk.io.tables.load_phi_table` is passed through unchanged.
@@ -672,7 +688,8 @@ Loads a single-parameter self-shielding table $\Phi(\tau)$ from disk and logs th
 
 
 ### (E.031) marsdisk/physics/shielding.py: clip_to_tau1 (lines 219–261)
-TODO(REF:eq_e031_marsdisk_physics_shielding_py)
+有効不透明度から $\Sigma_{\tau=1}$ を算出し、表層密度を上限クリップする処理。光学的厚さ制御の近似として [@StrubbeChiang2006_ApJ648_652] を踏襲。
+クリップの分岐や許容値の設定は実装固有で、同一形を掲げる文献はない。
 
 
 Ensures that the surface layer does not exceed the $\tau=1$ limit:
@@ -681,7 +698,7 @@ Ensures that the surface layer does not exceed the $\tau=1$ limit:
 - Operates on scalars and returns a float suitable for downstream arrays. [marsdisk/physics/shielding.py#clip_to_tau1 [L219–L261]]
 
 ### (E.032) marsdisk/physics/fragments.py: compute_q_r_F2 (lines 30–61)
-TODO(REF:eq_e032_marsdisk_physics_fragments_py)
+重心系の比衝突エネルギー $Q_R$ を評価する定義で、普遍的な破壊スケーリング [@StewartLeinhardt2009_ApJ691_54] に従う。
 
 ```latex
 \begin{aligned}
@@ -707,7 +724,7 @@ Q_R &= \frac{1}{2}\frac{\mu v^{2}}{M_{\mathrm{tot}}}.
 - Output is explicitly coerced to `float` for consistency with NumPy inputs. [marsdisk/physics/fragments.py#compute_q_r_F2 [L30–L61]]
 
 ### (E.033) marsdisk/physics/fragments.py: compute_largest_remnant_mass_fraction_F2 (lines 64–98)
-TODO(REF:eq_e033_marsdisk_physics_fragments_py)
+最大残留分率 $f_{\mathrm{LR}}$ の分岐式は、破壊境界を $\phi=Q/Q_{RD}^*$ で分類する経験則 [@StewartLeinhardt2009_ApJ691_54] を実装している。
 
 
 Returns the fractional mass of the largest remnant after a collision. The function implements:
@@ -739,7 +756,8 @@ where $Q$ is the specific impact energy and $Q_{\mathrm{RD}}^{*}$ the catastroph
 
 
 ### (E.035) marsdisk/physics/collide.py: compute_prod_subblow_area_rate_C2 (lines 80–108)
-TODO(REF:eq_e035_marsdisk_physics_collide_py)
+対称半行列の和でサブブローアウト生成率を積算するカーネル計算で、nσv 型衝突率の実装 [@Krivov2006_AA455_509] を離散ビンに適用したもの。
+和の取り方や閾値の扱いは実装固有で、同一形の式を示す文献は確認されていない。
 
 
 Accumulates the production rate of sub-blowout material via the symmetric half-matrix sum
@@ -749,7 +767,7 @@ Accumulates the production rate of sub-blowout material via the symmetric half-m
 The helper expects square matrices and warns via `MarsDiskError` on shape mismatches. [marsdisk/physics/collide.py#compute_prod_subblow_area_rate_C2 [L80–L108]]
 
 ### (E.036) marsdisk/physics/sublimation.py: p_sat_clausius (lines 154–164)
-TODO(REF:eq_e036_marsdisk_physics_sublimation_py)
+HKL で用いるクラペイロン型の飽和蒸気圧近似で、シリケイト蒸気のパラメータは [@Pignatale2018_ApJ853_118] の設定に合わせる。
 
 ```latex
 P_{\mathrm{sat}}(T) = 10^{A - B/T}
@@ -768,13 +786,14 @@ P_{\mathrm{sat}}(T) = 10^{A - B/T}
 - Serves as the baseline branch for HKL mass-flux calculations. [marsdisk/physics/sublimation.py#p_sat_clausius [L154–L164]]
 
 ### (E.037) marsdisk/physics/sublimation.py: p_sat_tabulated (lines 369–383)
-TODO(REF:eq_e037_marsdisk_physics_sublimation_py)
+タブレットされた $\log_{10}P_{\mathrm{sat}}(T)$ を形状保存補間で評価する枝。Ronnet らの気化解析 [@Ronnet2016_ApJ828_109] で採用された温度依存を外部表で差し替える用途を想定する。
+補間手法とインターフェースは実装固有で、同一形を示す文献はない。
 
 
 Interpolates $\log_{10}P_{\mathrm{sat}}(T)$ using a shape-preserving cubic (PCHIP) constructed from the loaded table. Temperatures outside the tabulated span are clipped with a logged warning; the interpolant guarantees monotonic pressure. [marsdisk/physics/sublimation.py#p_sat_tabulated [L369–L383]]
 
 ### (E.038) marsdisk/physics/sublimation.py: s_sink_from_timescale (lines 587–603)
-TODO(REF:eq_e038_marsdisk_physics_sublimation_py)
+HKL フラックスと参照時間から即時蒸発する粒径を返す換算式で、揮発損失の寿命基準 [@Ronnet2016_ApJ828_109] を踏襲する。
 
 
 Combines the instantaneous mass flux with the reference orbital time to find the grain size that would fully sublimate within $t_{\mathrm{ref}}$:
@@ -784,7 +803,8 @@ s_{\mathrm{sink}} = \frac{\eta_{\mathrm{instant}}\,t_{\mathrm{ref}}\,J(T)}{\rho}
 See (E.019) for symbol definitions; this helper mainly performs validation and delegates flux evaluation. [marsdisk/physics/sublimation.py#s_sink_from_timescale [L587–L603]]
 
 ### (E.039) marsdisk/physics/radiation.py: load_qpr_table (lines 119–146)
-TODO(REF:eq_e039_marsdisk_physics_radiation_py)
+Planck 平均 $\langle Q_{\mathrm{pr}}\rangle$ の表をキャッシュに読み込むヘルパー。β とブローアウトの基礎付けは [@Burns1979_Icarus40_1] を採用し、ここではその入力データを切り替える。
+ロードとキャッシュ方法は実装固有であり、同一仕様を提示する文献は存在しない。
 
 
 Loads a Planck-mean $⟨Q_{\mathrm{pr}}⟩$ table into the radiation module cache, logging the covered size and temperature ranges when available. The returned callable defaults subsequent lookups via `qpr_lookup`. [marsdisk/physics/radiation.py#load_qpr_table [L119–L146]]

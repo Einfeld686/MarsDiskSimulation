@@ -134,6 +134,110 @@
         "Provides historical context for t_coll ≈ T_orb/(4π τ) scaling used before adopting Strubbe & Chiang.",
         "Governs qualitative stability tests in surface-layer IMEX steps."
       ]
+    },
+    {
+      "key": "Burns1979_Icarus40_1",
+      "short": "Burns et al. (1979)",
+      "title": "Radiation forces on small particles in the solar system",
+      "doi": "10.1016/0019-1035(79)90050-2",
+      "bibtex": "@article{Burns1979_Icarus40_1, journal = {Icarus}, volume = {40}, pages = {1-48}, year = {1979}}",
+      "adopted_scope": "Classical treatment of Q_pr, beta, and blow-out sizes for small particles under solar-system radiation forces.",
+      "claims": [
+        "Defines the radiation-to-gravity ratio beta and connects it to blow-out limits and the Planck-mean efficiency Q_pr.",
+        "Provides the baseline beta(s) expression reused for the gas-poor, optically thin limit."
+      ]
+    },
+    {
+      "key": "MurrayDermott1999_SSD",
+      "short": "Murray & Dermott (1999)",
+      "title": "Solar System Dynamics",
+      "doi": "10.1017/CBO9781139174817",
+      "bibtex": "@book{MurrayDermott1999_SSD, title = {Solar System Dynamics}, publisher = {Cambridge University Press}, year = {1999}, author = {Murray, C. D. and Dermott, S. F.}}",
+      "adopted_scope": "Keplerian orbital relations and circular-orbit kinematics for planetary systems.",
+      "claims": [
+        "Derives v_K = sqrt(GM/r) and Omega = sqrt(GM/r^3) for circular orbits from Newtonian gravity.",
+        "Provides canonical notation for v_K and Omega used throughout the repository."
+      ]
+    },
+    {
+      "key": "LissauerStewart1993_PP3",
+      "short": "Lissauer & Stewart (1993)",
+      "title": "Growth of Planets from Planetesimals",
+      "doi": "",
+      "bibtex": "@incollection{LissauerStewart1993_PP3, booktitle = {Protostars and Planets III}, year = {1993}, author = {Lissauer, J. J. and Stewart, G. R.}}",
+      "adopted_scope": "Review of planetesimal dynamics and relative velocities under Rayleigh-distributed eccentricities and inclinations.",
+      "claims": [
+        "Presents the low-e, low-i relative velocity scaling v_rel = v_K sqrt(1.25 e^2 + i^2) used for debris disks and rings."
+      ]
+    },
+    {
+      "key": "WetherillStewart1993_Icarus106_190",
+      "short": "Wetherill & Stewart (1993)",
+      "title": "Formation of planetary embryos: efficiencies of accretion and fragmentation",
+      "doi": "10.1006/icar.1993.1161",
+      "bibtex": "@article{WetherillStewart1993_Icarus106_190, journal = {Icarus}, volume = {106}, pages = {190-209}, year = {1993}}",
+      "adopted_scope": "Planetesimal collision rates and relative velocities in the low-e, low-i regime.",
+      "claims": [
+        "Uses the v_rel ≈ v_K sqrt(1.25 e^2 + i^2) scaling for Rayleigh-distributed eccentricities and inclinations."
+      ]
+    },
+    {
+      "key": "Krivov2006_AA455_509",
+      "short": "Krivov et al. (2006)",
+      "title": "Dust distributions in debris disks: effects of gravity, radiation pressure and collisions",
+      "doi": "10.1051/0004-6361:20064920",
+      "bibtex": "@article{Krivov2006_AA455_509, journal = {A&A}, volume = {455}, pages = {509-519}, year = {2006}}",
+      "adopted_scope": "nσv-style collisional cascades with Gaussian vertical structure and adaptive time stepping.",
+      "claims": [
+        "Derives collision kernels proportional to cross section times relative speed divided by the combined scale height.",
+        "Uses adaptive time stepping and mass conservation checks for Smoluchowski solvers in debris-disk contexts."
+      ]
+    },
+    {
+      "key": "BenzAsphaug1999_Icarus142_5",
+      "short": "Benz & Asphaug (1999)",
+      "title": "Catastrophic Disruptions Revisited",
+      "doi": "10.1006/icar.1999.6204",
+      "bibtex": "@article{BenzAsphaug1999_Icarus142_5, journal = {Icarus}, volume = {142}, pages = {5-20}, year = {1999}}",
+      "adopted_scope": "Material-dependent catastrophic disruption thresholds for rocky bodies at km/s impact speeds.",
+      "claims": [
+        "Provides the basalt Q*_D coefficients used in Leinhardt & Stewart style interpolations at 3 and 5 km/s."
+      ]
+    },
+    {
+      "key": "LeinhardtStewart2012_ApJ745_79",
+      "short": "Leinhardt & Stewart (2012)",
+      "title": "Collisions between gravity-dominated bodies. I. Outcome regimes and scaling laws",
+      "doi": "10.1088/0004-637X/745/1/79",
+      "bibtex": "@article{LeinhardtStewart2012_ApJ745_79, journal = {ApJ}, volume = {745}, pages = {79}, year = {2012}}",
+      "adopted_scope": "Scaling laws and regime maps for catastrophic disruption across gravity- and strength-dominated impacts.",
+      "claims": [
+        "Defines the velocity-dependent interpolation between strength and gravity regimes that underpins Q*_D(s, rho, v)."
+      ]
+    },
+    {
+      "key": "StewartLeinhardt2009_ApJ691_54",
+      "short": "Stewart & Leinhardt (2009)",
+      "title": "Velocity-dependent catastrophic disruption criteria for planetesimals",
+      "doi": "10.1088/0004-637X/691/1/54",
+      "bibtex": "@article{StewartLeinhardt2009_ApJ691_54, journal = {ApJ}, volume = {691}, pages = {54-65}, year = {2009}}",
+      "adopted_scope": "Universal largest-remnant scaling and the reduced specific impact energy Q_R formalism.",
+      "claims": [
+        "Introduces Q_R = 0.5 μ v^2 / M_tot and the piecewise largest-remnant fraction used for disruptive impacts.",
+        "Calibrates the φ<1 linear branch and φ≥1 power-law branch adopted in our F2 fragment model."
+      ]
+    },
+    {
+      "key": "Ohtsuki2002_Icarus155_436",
+      "short": "Ohtsuki et al. (2002)",
+      "title": "Evolution of planetesimal velocities based on analytic solution of the Boltzmann equation",
+      "doi": "10.1006/icar.2001.6717",
+      "bibtex": "@article{Ohtsuki2002_Icarus155_436, journal = {Icarus}, volume = {155}, pages = {436-453}, year = {2002}}",
+      "adopted_scope": "Analytic expressions for relative velocities and velocity dispersion in low-e, low-i planetesimal disks.",
+      "claims": [
+        "Provides the v_rel ≈ v_K sqrt(1.25 e^2 + i^2) scaling used for mutual velocities.",
+        "Describes collisional cooling vs. shear heating balance that motivates the fixed-point iteration for c_eq."
+      ]
     }
   ]
 }

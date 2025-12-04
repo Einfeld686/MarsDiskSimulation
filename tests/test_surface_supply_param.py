@@ -1,8 +1,10 @@
+import math
 import numpy as np
 import pandas as pd
 import pytest
 
-from marsdisk.physics import supply
+from marsdisk import constants, grid
+from marsdisk.physics import collisions_smol, psd, supply
 from marsdisk.physics.surface import step_surface_density_S1
 from marsdisk.schema import (
     Supply,
@@ -196,3 +198,41 @@ def test_surface_table_supply_tracks_changes(tmp_path):
     assert avg_high_initial["sigma"] > avg_zero["sigma"]
     assert avg_zero["sigma"] > avg_moderate["sigma"]
     assert avg_high_final["sigma"] > avg_moderate["sigma"]
+
+
+def test_smol_helper_respects_tau_clip_and_budget():
+    r = constants.R_MARS
+    Omega = grid.omega_kepler(r)
+    psd_state = psd.update_psd_state(
+        s_min=1.0e-6,
+        s_max=1.0e-3,
+        alpha=1.5,
+        wavy_strength=0.0,
+        n_bins=16,
+        rho=3000.0,
+    )
+    prod_rate = 5.0e-7
+    dt = 25.0
+    sigma_tau1 = 1.0e-4
+
+    res = collisions_smol.step_collisions_smol_0d(
+        psd_state,
+        sigma_surf=0.0,
+        dt=dt,
+        prod_subblow_area_rate=prod_rate,
+        r=r,
+        Omega=Omega,
+        a_blow=5.0e-6,
+        rho=3000.0,
+        e_value=0.01,
+        i_value=0.005,
+        sigma_tau1=sigma_tau1,
+        enable_blowout=True,
+        t_sink=None,
+        ds_dt_val=None,
+    )
+
+    assert res.sigma_for_step <= sigma_tau1 + 1e-12
+    assert res.sigma_after > 0.0
+    assert math.isfinite(res.mass_error)
+    assert res.mass_error <= 5e-3

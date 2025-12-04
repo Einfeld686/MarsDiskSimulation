@@ -3,16 +3,144 @@ from __future__ import annotations
 """Smoluchowski coagulation/fragmentation solver (C3--C4)."""
 
 import logging
-from typing import Iterable
+from typing import Iterable, MutableMapping
 
 import numpy as np
 
 from ..errors import MarsDiskError
 from .collide import compute_collision_kernel_C1, compute_prod_subblow_area_rate_C2
 
-__all__ = ["step_imex_bdf1_C3", "compute_mass_budget_error_C4", "compute_collision_kernel_C1", "compute_prod_subblow_area_rate_C2"]
+__all__ = [
+    "step_imex_bdf1_C3",
+    "compute_mass_budget_error_C4",
+    "compute_collision_kernel_C1",
+    "compute_prod_subblow_area_rate_C2",
+    "psd_state_to_number_density",
+    "number_density_to_psd_state",
+]
 
 logger = logging.getLogger(__name__)
+
+
+def psd_state_to_number_density(
+    psd_state: MutableMapping[str, np.ndarray | float],
+    sigma_surf: float,
+    *,
+    rho_fallback: float | None = None,
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, float]:
+    """Return Smoluchowski-ready arrays derived from a PSD state.
+
+    The conversion preserves the existing scaling convention used in
+    ``run_zero_d``: ``number * width`` gives the unscaled per-bin counts and
+    the result is normalised so that ``sum(m_k * N_k) == sigma_surf``.
+
+    Parameters
+    ----------
+    psd_state:
+        PSD dictionary containing ``sizes``, ``widths``, ``number`` and ``rho``.
+    sigma_surf:
+        Surface mass density (kg/m^2) used to scale the counts.
+    rho_fallback:
+        Optional material density used when ``psd_state`` lacks ``rho``.
+
+    Returns
+    -------
+    sizes_k, widths_k, m_k, N_k, scale_to_sigma:
+        Bin centres, widths, per-particle masses, number densities (#/m^2) and
+        the scaling factor applied to match ``sigma_surf``.
+    """
+
+    try:
+        sizes_arr = np.asarray(psd_state.get("sizes"), dtype=float)
+        widths_arr = np.asarray(psd_state.get("widths"), dtype=float)
+        number_arr = np.asarray(psd_state.get("number"), dtype=float)
+    except Exception:
+        return (
+            np.empty(0, dtype=float),
+            np.empty(0, dtype=float),
+            np.empty(0, dtype=float),
+            np.empty(0, dtype=float),
+            0.0,
+        )
+    if (
+        sizes_arr.size == 0
+        or widths_arr.size != sizes_arr.size
+        or number_arr.size != sizes_arr.size
+    ):
+        return (
+            np.empty(0, dtype=float),
+            np.empty(0, dtype=float),
+            np.empty(0, dtype=float),
+            np.empty(0, dtype=float),
+            0.0,
+        )
+
+    rho_psd = float(psd_state.get("rho", rho_fallback if rho_fallback is not None else 0.0))
+    m_k = (4.0 / 3.0) * np.pi * rho_psd * sizes_arr**3
+
+    if sigma_surf <= 0.0 or not np.isfinite(sigma_surf):
+        return sizes_arr, widths_arr, m_k, np.zeros_like(sizes_arr), 0.0
+
+    base_counts = number_arr * widths_arr
+    mass_density_raw = float(np.sum(m_k * base_counts))
+    scale_to_sigma = sigma_surf / mass_density_raw if mass_density_raw > 0.0 else 0.0
+    N_k = base_counts * scale_to_sigma if scale_to_sigma > 0.0 else np.zeros_like(base_counts)
+    return sizes_arr, widths_arr, m_k, N_k, scale_to_sigma
+
+
+def number_density_to_psd_state(
+    N_new: np.ndarray,
+    psd_state: MutableMapping[str, np.ndarray | float],
+    sigma_before: float,
+    *,
+    widths: np.ndarray,
+    m: np.ndarray,
+    scale_to_sigma: float,
+) -> tuple[MutableMapping[str, np.ndarray | float], float, float]:
+    """Update ``psd_state`` from Smol output while preserving the current scaling.
+
+    The helper mirrors :func:`psd_state_to_number_density` by rescaling the
+    updated ``N_new`` back into the PSD's ``number`` array using the same
+    ``scale_to_sigma`` factor.  ``sigma_before`` is used to report the
+    per-step mass loss for diagnostics.
+
+    Parameters
+    ----------
+    N_new:
+        Number density per bin after the Smol step (#/m^2).
+    psd_state:
+        Mutable PSD dictionary updated in-place.
+    sigma_before:
+        Surface mass density (kg/m^2) prior to the Smol step.
+    widths:
+        Bin widths used for the PSD representation.
+    m:
+        Particle masses associated with each bin.
+    scale_to_sigma:
+        Scaling factor returned by :func:`psd_state_to_number_density`.
+
+    Returns
+    -------
+    psd_state, sigma_after, sigma_loss:
+        Updated PSD state, new surface density and the mass density removed by
+        the Smol step (all in kg/m^2).
+    """
+
+    widths_arr = np.asarray(widths, dtype=float)
+    N_arr = np.asarray(N_new, dtype=float)
+    m_arr = np.asarray(m, dtype=float)
+    sigma_after = float(np.sum(m_arr * N_arr))
+    sigma_after = max(sigma_after, 0.0)
+    sigma_loss = max(sigma_before - sigma_after, 0.0)
+
+    if scale_to_sigma > 0.0 and widths_arr.shape == N_arr.shape:
+        number_new = N_arr / (scale_to_sigma * widths_arr)
+    else:
+        number_new = np.zeros_like(N_arr)
+
+    psd_state["number"] = number_new
+    psd_state["n"] = number_new
+    return psd_state, sigma_after, sigma_loss
 
 
 def step_imex_bdf1_C3(
@@ -33,7 +161,10 @@ def step_imex_bdf1_C3(
     """Advance the Smoluchowski system by one time step.
 
     The integration employs an IMEX-BDF(1) scheme: loss terms are treated
-    implicitly while the gain terms and sink ``S`` are explicit.
+    implicitly while the gain terms and sink ``S`` are explicit.  In the
+    sublimation-only configuration used by :func:`marsdisk.run.run_zero_d`,
+    this reduces to a pure sink update with ``C=0``, ``Y=0`` and non-zero
+    ``S_sublimation_k``.
 
     Parameters
     ----------
@@ -50,14 +181,17 @@ def step_imex_bdf1_C3(
     S_external_k:
         Optional additional sink term combined with ``S`` (1/s).
     S_sublimation_k:
-        Optional sublimation sink (1/s) summed with ``S``.
+        Optional sublimation sink (1/s) summed with ``S``.  This is the
+        preferred entrypoint for the pure-sink mode.
     m:
         Particle mass associated with each bin.
     prod_subblow_mass_rate:
         Rate at which mass below the blow-out limit is produced.
     extra_mass_loss_rate:
         Additional mass flux leaving the system (kg m^-2 s^-1) that should be
-        included in the mass budget check (e.g., sublimation sinks).
+        included in the mass budget check (e.g. sublimation sinks handled
+        outside the explicit ``S`` vector).  This feeds directly into
+        :func:`compute_mass_budget_error_C4`.
     dt:
         Initial time step.
     mass_tol:

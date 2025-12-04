@@ -1,26 +1,15 @@
-# Literature Map for Mars Impact Disk Studies
-This file is a machine- and human-readable map of papers relevant to Mars giant impacts, Borealis-scale events, and the origin and evolution of Phobos/Deimos debris disks. Equations stay in `analysis/equations.md`; use this table to decide what to cite for composition, dynamics, or volatile assumptions when drafting slides or code.
+# literature_map (A-priority only)
 
-## Schema
-- **key**: Stable identifier (all caps, no spaces).
-- **short_cite**: Minimal label with authors/year.
-- **topic**: One-line statement of how the paper is used here.
-- **origin**: `global_review` | `impact_sph_dynamics` | `disk_thermodynamics` | `composition_observations` | `volatile_evolution` | `other`.
-- **status**: `core` (shapes model) | `supporting` (parameters/background) | `reference` (not yet wired).
-- **priority**: `must_read` | `high` | `medium` | `low` for this project.
-- **audience**: `self` | `ai_assistant` | `both`.
-- **math_level**: `low` | `medium` | `high`.
-- **notes**: 1–3 sentences on what to remember for slides and assumptions; do not restate equations (see `equations.md` for formulas).
+本ファイルは、火星月形成円盤モデルに直接関わる「最重要（A優先）」文献だけをまとめた対応表です。どの論文をどの目的で参照するかを固定し、スライド自動生成や AI ガイダンスの土台とします。数式は `analysis/equations.md` を参照してください。
 
-## Literature table
-| key | short_cite | topic | origin | status | priority | audience | math_level | notes |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| LIT_PIGNATALE2018_COMP | Pignatale+2018 (impact origin III) | Composition outcomes of Mars moon-forming impacts for different impactors/materials. | disk_thermodynamics | supporting | high | both | medium | Provides volatile/silicate partitioning after impact; useful for setting initial composition and comparing to MMX targets; cite when arguing for impactor diversity effects. |
-| LIT_RONNET2016_DISK | Ronnet+2016 (reconciling moons) | Orbits and physical properties of Phobos/Deimos under impact disk and condensation scenarios. | impact_sph_dynamics | core | must_read | both | medium | Frames gas-poor disk plus condensation pathways; constraints on optical depth/texture consistent with MMX spectra; good anchor for background slides. |
-| LIT_HYODO2018_VOLATILES | Hyodo+2018 (impact origin IV) | Volatile depletion and loss pathways in post-impact Mars disks. | volatile_evolution | core | must_read | both | medium | Gives volatile escape timescales and depletion factors; informs whether gas-rich TL2003-like layers are plausible; cite when justifying gas-poor default. |
-| LIT_KURAMOTO2024_REVIEW | Kuramoto 2024 (AR-EPS review) | High-level review of Phobos/Deimos origin scenarios and observational constraints. | global_review | supporting | high | both | low | Broad synthesis for slide framing; use to contrast capture vs impact vs co-accretion without new equations. |
-| LIT_CANUP2018_GASPOOR | Canup & Salmon 2018 (impact sims) | SPH/N-body constraints on low-mass, gas-poor disks that leave small moons. | impact_sph_dynamics | core | high | both | medium | Supports low-gas, low-mass disk assumption; handy for arguing against long-lived dense gas layers; informs initial Σ and vapor fractions. |
-| LIT_MMX2021_OVERVIEW | Usui+2021 (MMX mission) | Mission goals and expected measurements relevant to composition/volatiles of Phobos/Deimos. | composition_observations | reference | medium | both | low | Useful for slide context and for mapping model outputs to MMX observables; does not provide equations but sets observational targets. |
-
-## Maintenance
-This file is manually curated; keep the column set and value vocabularies unchanged when adding entries. Do not move it out of `analysis/` because tooling and AI agents expect it here. Append new rows with stable `key` values, avoid auto-generation, and keep detailed formulas in `analysis/equations.md`.
+| lit_id | citation_short | year | category | status | priority | audience | math_level | origin | role_ja |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Hyodo2017a | Hyodo et al. 2017, ApJ 845, 125 | 2017 | impact-disk:SPH-ICs | reference-only | A | me+ai | full | Impact origin I | 巨大衝突 SPH から円盤質量・角運動量・温度など初期条件を与える基礎論文。gas-poor 前提や初期質量スケールの根拠として採用する。 |
+| Hyodo2017b | Hyodo et al. 2017, ApJ 851, 122 | 2017 | impact-disk:evolution | reference-only | A | me+ai | full | Impact origin II | 衝突後の円盤進化と衛星成長を追うモデル。0D 近似の適用範囲や拡散時間との比較に使う背景シナリオ。 |
+| Pignatale2018 | Pignatale et al. 2018, ApJ 853, 118 | 2018 | impact-disk:composition | reference-only | A | me+ai | full | Impact origin III | 衝突円盤内での蒸気・溶融物からの凝縮組成を計算する論文。粒子密度や揮発性元素の扱いを決める際の組成モデルとして参照する。 |
+| Ronnet2016 | Ronnet et al. 2016, ApJ 828, 109 | 2016 | impact-disk:condensation | reference-only | A | me+ai | light | extended gaseous disk | 外縁に広がるガス円盤での凝縮が衛星性質を再現しうることを示す。ガス圧・温度構造と粒径スケールの整合性チェックに用いる。 |
+| Hyodo2018 | Hyodo et al. 2018, ApJ 860, 150 | 2018 | impact-disk:volatile-loss | reference-only | A | me+ai | full | Impact origin IV | 高温円盤での揮発性蒸気や微小ダストの脱出・放射圧損失を評価する。β や gas-poor 前提の妥当性を検討する土台とする。 |
+| Kuramoto2024 | Kuramoto 2024, review | 2024 | review:origin-scenarios | reference-only | A | me | light | Mars moons origin review | 火星衛星の起源シナリオを総覧し、gas-poor と gas-rich の位置付けを整理する総説。標準前提の説明や感度試験の枠組みに使う。 |
+| CanupSalmon2018 | Canup & Salmon 2018, SciAdv 4, eaar6887 | 2018 | impact-disk:mass-gas-constraints | reference-only | A | me+ai | light | low-mass gas-poor disk | Phobos/Deimos を残すには低質量・低ガス円盤が必要と示す。gas-poor を標準とする根拠と初期質量上限の制約に用いる。 |
+| TakeuchiLin2003 | Takeuchi & Lin 2003, ApJ 593, 524 | 2003 | gas-disk:surface-outflow | partial | A | me+ai | full | TL2003 surface outflow | 光学的に厚いガス円盤の表層ダスト外流を与える TL2003 方程式の出典。gas-rich 感度試験でのみ有効化するオプションモードの根拠として使う。 |
+| StrubbeChiang2006 | Strubbe & Chiang 2006, ApJ 648, 652 | 2006 | debris-disk:collisional-outflow | implemented | A | me+ai | full | collisional cascade + outflow | 衝突カスケードと放射圧 blow-out が作る外向きダスト流を扱う。表層 ODE、衝突寿命スケール、sub-blow-out 粒子流束のベースモデルとして採用する。 |
