@@ -11,7 +11,7 @@
 - `marsdisk.run.run_zero_d` が 0D（半径無次元）ダスト円盤を時間発展させ、内部破砕で生成される sub-blow-out 粒子供給と表層の放射圧剥離を連成します（式 C1–C4, P1, F1–F2, R1–R3, S0–S1、analysis/equations.md を参照）。
 - 主要モジュール  
   - `marsdisk/physics/radiation.py`：平均 <big><big>$`\langle Q_{\rm pr}\rangle`$</big></big>、<big><big>$`\beta`$</big></big>、<big><big>$`a_{\rm blow}`$</big></big>。  
-  - `marsdisk/physics/psd.py`：三勾配 + “wavy” 補正付き PSD と不透明度。  
+  - `marsdisk/physics/psd.py`：三勾配 + “wavy” 補正付き PSD と不透明度（既定の `configs/base.yml` では `wavy_strength=0.0` で平滑化）。  
   - `marsdisk/physics/shielding.py`：多層 RT 由来の自遮蔽係数 <big><big>$`\Phi(\tau,\omega_0,g)`$</big></big>。  
   - `marsdisk/physics/collide.py`, `smol.py`：Smoluchowski IMEX-BDF(1) による破砕と質量保存検査。  
   - `marsdisk/physics/surface.py`：Strubbe–Chiang（Wyatt 2008 レビュー）スケールの衝突寿命と吹き飛び・追加シンクを含む表層 ODE。  
@@ -100,9 +100,11 @@ python -m marsdisk.run --config configs/base.yml \
 python -m venv .venv && source .venv/bin/activate  # 任意の仮想環境
 pip install -r requirements.txt                    # ない場合は numpy pandas pyarrow ruamel.yaml pydantic 等を個別導入
 
-python -m marsdisk.run --config configs/base.yml   # 0D シミュレーション実行（sinks.mode=none が既定）
+python -m marsdisk.run --config configs/base.yml   # 0D シミュレーション実行（sinks.mode=none, wavy_strength=0.0 が既定）
 # 昇華・ガス抗力などの追加シンクを試したい場合
 python -m marsdisk.run --config configs/base.yml --sinks sublimation --set sinks.enable_sublimation=true
+# wavy 補正を有効化したい場合
+python -m marsdisk.run --config configs/base.yml --override psd.wavy_strength=0.2
 ```
 
 ### 生成物（標準設定）
@@ -140,7 +142,7 @@ python -m marsdisk.run --config configs/base.yml --sinks sublimation --set sinks
 | `sizes` | `s_min`, `s_max`, `n_bins` | 対数ビン数は 30–60 推奨（既定 40）。 |
 | `initial` | `mass_total`, `s0_mode` | 初期 PSD モードは `"upper"` / `"mono"`。 |
 | `dynamics` | `e0`, `i0`, `t_damp_orbits`, `f_wake` | **既定モードは `e_mode="fixed"` / `i_mode="fixed"`**。モードを指定しなければ入力スカラー `e0` / `i0` がそのまま初期値となります。`e_mode="mars_clearance"` を選ぶと <big><big>$`\Delta r`$</big></big>（m）を `dr_min_m` / `dr_max_m` からサンプリングし <big><big>$`e = 1 - (R_{\rm MARS}+\Delta r)/a`$</big></big> を適用、`i_mode="obs_tilt_spread"` では `obs_tilt_deg ± i_spread_deg`（度）をラジアンに変換して一様乱数サンプリングします。`rng_seed` を指定すると再現性を確保できます。 |
-| `psd` | `alpha`, `wavy_strength` | 三勾配 PSD と “wavy” 補正の強さ。 |
+| `psd` | `alpha`, `wavy_strength` | 三勾配 PSD と “wavy” 補正の強さ。`configs/base.yml` では wavy を無効化するため `0.0` を既定とし、必要に応じて CLI で上書き。 |
 | `qstar` | `Qs`, `a_s`, `B`, `b_g`, `v_ref_kms` | Leinhardt & Stewart (2012) の補間式を採用。 |
 | `surface` | `init_policy`, `use_tcoll` | Strubbe–Chiang 衝突寿命の導入や <big><big>$`\Sigma_{\tau=1}`$</big></big> のクリップを制御。 |
 | `supply` | `mode`, `const` / `powerlaw` / `table` / `piecewise` | 表層供給の時間依存・空間構造。 |

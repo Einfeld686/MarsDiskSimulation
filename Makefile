@@ -30,9 +30,11 @@ clean:
 	rm -rf bin
 
 analysis-sync:
+	python -m analysis.tools.render_assumptions
 	python -m tools.doc_sync_agent --all --write
 
 analysis-sync-commit:
+	python -m analysis.tools.render_assumptions
 	python -m tools.doc_sync_agent --all --write --commit
 
 analysis-coverage-guard:
@@ -40,6 +42,10 @@ analysis-coverage-guard:
 
 analysis-doc-tests:
 	python tools/run_analysis_doc_tests.py
+
+analysis-assumptions:
+	python -m analysis.tools.render_assumptions
+	python -m tools.doc_sync_agent --all --write
 
 analysis-pipeline:
 	python tools/run_analysis_pipeline.py --outdir $(OUTDIR)

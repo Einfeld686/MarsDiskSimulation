@@ -255,6 +255,14 @@ class Surface(BaseModel):
     sigma_surf_init_override: Optional[float] = None
     use_tcoll: bool = True
     freeze_sigma: bool = False
+    collision_solver: Literal["surface_ode", "smol"] = Field(
+        "surface_ode",
+        description=(
+            "Collision/outflux update scheme. 'surface_ode' preserves the legacy "
+            "Wyatt-style implicit step, while 'smol' routes collisions through the "
+            "Smoluchowski operator (experimental)."
+        ),
+    )
 
 
 class SublimationParamsModel(BaseModel):

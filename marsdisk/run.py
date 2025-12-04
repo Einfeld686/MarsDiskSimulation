@@ -56,6 +56,9 @@ from .physics import (
     tempdriver,
     phase as phase_mod,
     smol,
+    dynamics,
+    collide,
+    collisions_smol,
 )
 from .io import writer, tables
 from .physics.sublimation import SublimationParams, p_sat, grain_temperature_graybody, sublimation_sink_from_dsdt
@@ -1071,6 +1074,9 @@ def run_zero_d(
         tau_fixed_cfg = getattr(cfg.shielding, "fixed_tau1_tau", None)
         sigma_tau1_fixed_cfg = getattr(cfg.shielding, "fixed_tau1_sigma", None)
     psd_floor_mode = getattr(getattr(cfg.psd, "floor", None), "mode", "fixed")
+    collision_solver_mode = str(getattr(cfg.surface, "collision_solver", "surface_ode") or "surface_ode")
+    if collision_solver_mode not in {"surface_ode", "smol"}:
+        raise ValueError(f"Unknown surface.collision_solver={collision_solver_mode!r}")
 
     s_min_config = cfg.sizes.s_min
     qpr_for_blow, a_blow = _resolve_blowout(s_min_config)
@@ -1220,10 +1226,6 @@ def run_zero_d(
         sink_opts.enable_sublimation and sublimation_to_surface and not enforce_collisions_only
     )
     sink_opts_surface.enable_gas_drag = bool(sink_opts.enable_gas_drag and not enforce_collisions_only)
-    sinks_active = bool(
-        (sublimation_enabled_cfg and (sublimation_to_surface or sublimation_to_smol))
-        or sink_opts_surface.enable_gas_drag
-    )
     if enforce_sublimation_only:
         sublimation_active_flag = True
     elif enforce_collisions_only:
@@ -1234,6 +1236,7 @@ def run_zero_d(
         (sink_opts_surface.enable_sublimation or sink_opts_surface.enable_gas_drag)
         and not enforce_collisions_only
     )
+    sinks_active = bool(sublimation_active_flag or sink_timescale_active)
 
     supply_spec = cfg.supply
 
@@ -1318,6 +1321,7 @@ def run_zero_d(
         rad_flux_step = constants.SIGMA_SB * (T_use**4)
         gate_factor = 1.0
         t_solid_step = None
+        mass_err_percent_step = None
 
         if eval_requires_step or step_no == 0:
             Omega_step = grid.omega_kepler(r)
@@ -1594,8 +1598,99 @@ def run_zero_d(
         mass_loss_rate_sublimation_smol = 0.0
         sigma_loss_smol = 0.0
         surface_active = collisions_active or sink_timescale_active
-        if surface_active:
-            for _sub_idx in range(n_substeps):
+        if collision_solver_mode == "surface_ode":
+            if surface_active:
+                for _sub_idx in range(n_substeps):
+                    if freeze_sigma:
+                        sigma_surf = sigma_surf_reference
+                    sigma_for_tau = sigma_surf
+                    tau = kappa_surf * sigma_for_tau
+                    tau_eval = tau
+                    phi_value = None
+                    if collisions_active:
+                        if shielding_mode == "off":
+                            kappa_eff = kappa_surf
+                            sigma_tau1_limit = float("inf")
+                        elif shielding_mode == "fixed_tau1":
+                            tau_target = tau_fixed_target
+                            if not math.isfinite(tau_target):
+                                tau_target = tau_eval
+                            if sigma_tau1_fixed_target is not None:
+                                sigma_tau1_limit = float(sigma_tau1_fixed_target)
+                                if kappa_surf > 0.0 and not math.isfinite(tau_target):
+                                    tau_target = kappa_surf * sigma_tau1_limit
+                            if phi_tau_fn is not None:
+                                kappa_eff = shielding.effective_kappa(kappa_surf, tau_target, phi_tau_fn)
+                            else:
+                                kappa_eff = kappa_surf
+                            if sigma_tau1_fixed_target is None:
+                                if kappa_eff <= 0.0:
+                                    sigma_tau1_limit = float("inf")
+                                else:
+                                    sigma_tau1_limit = float(tau_target / max(kappa_eff, 1.0e-30))
+                            tau_eval = tau_target
+                        else:
+                            tau_eval = tau
+                            if phi_tau_fn is not None:
+                                kappa_eff = shielding.effective_kappa(kappa_surf, tau_eval, phi_tau_fn)
+                                sigma_tau1_limit = shielding.sigma_tau1(kappa_eff)
+                            else:
+                                kappa_eff, sigma_tau1_limit = shielding.apply_shielding(
+                                    kappa_surf, tau_eval, 0.0, 0.0
+                                )
+                    else:
+                        kappa_eff = kappa_surf
+                        sigma_tau1_limit = None
+                    if kappa_surf > 0.0 and kappa_eff is not None:
+                        phi_value = kappa_eff / kappa_surf
+                    phi_effective_last = phi_value
+                    tau_last = tau_eval
+                    enable_blowout_sub = enable_blowout_step and collisions_active
+                    t_sink_current = t_sink_step_effective if sink_timescale_active else None
+                    tau_for_coll = None
+                    if collisions_active and cfg.surface.use_tcoll and tau > TAU_MIN:
+                        tau_for_coll = tau
+                    prod_rate = supply.get_prod_area_rate(time_sub, r, supply_spec)
+                    prod_rate_last = prod_rate
+                    total_prod_surface += prod_rate * dt_sub
+                    sigma_tau1_active = (
+                        sigma_tau1_limit
+                        if (blowout_layer_mode == "surface_tau_le_1" and collisions_active)
+                        else None
+                    )
+                    sigma_tau1_active_last = sigma_tau1_active
+                    res = surface.step_surface(
+                        sigma_surf,
+                        prod_rate,
+                        dt_sub,
+                        Omega_step,
+                        tau=tau_for_coll,
+                        t_sink=t_sink_current,
+                        sigma_tau1=sigma_tau1_active,
+                        enable_blowout=enable_blowout_sub,
+                    )
+                    sigma_surf = res.sigma_surf
+                    outflux_surface = res.outflux
+                    sink_flux_surface = res.sink_flux
+                    if sink_selected_step == "hydro_escape" and hydro_timescale_step is not None:
+                        hydro_mass_total += sink_flux_surface * dt_sub * area / constants.M_MARS
+                    if freeze_sigma:
+                        sigma_surf = sigma_surf_reference
+                    if apply_correction:
+                        outflux_surface *= fast_blowout_factor_sub
+                        fast_blowout_applied = True
+                    total_sink_surface += sink_flux_surface * dt_sub
+                    fast_factor_numer += fast_blowout_factor_sub * dt_sub
+                    fast_factor_denom += dt_sub
+                    time_sub += dt_sub
+            else:
+                time_sub = time_start + dt
+                tau_last = kappa_surf * sigma_surf
+                sigma_tau1_limit = None
+                kappa_eff = kappa_surf
+                sigma_tau1_active_last = None
+        else:
+            if surface_active:
                 if freeze_sigma:
                     sigma_surf = sigma_surf_reference
                 sigma_for_tau = sigma_surf
@@ -1642,48 +1737,63 @@ def run_zero_d(
                 tau_last = tau_eval
                 enable_blowout_sub = enable_blowout_step and collisions_active
                 t_sink_current = t_sink_step_effective if sink_timescale_active else None
-                tau_for_coll = None
-                if collisions_active and cfg.surface.use_tcoll and tau > TAU_MIN:
-                    tau_for_coll = tau
-                prod_rate = supply.get_prod_area_rate(time_sub, r, supply_spec)
+                prod_rate = supply.get_prod_area_rate(time_start, r, supply_spec)
                 prod_rate_last = prod_rate
-                total_prod_surface += prod_rate * dt_sub
                 sigma_tau1_active = (
                     sigma_tau1_limit
                     if (blowout_layer_mode == "surface_tau_le_1" and collisions_active)
                     else None
                 )
                 sigma_tau1_active_last = sigma_tau1_active
-                res = surface.step_surface(
+                sigma_before_step = sigma_surf
+                smol_res = collisions_smol.step_collisions_smol_0d(
+                    psd_state,
                     sigma_surf,
-                    prod_rate,
-                    dt_sub,
-                    Omega_step,
-                    tau=tau_for_coll,
-                    t_sink=t_sink_current,
+                    dt=dt,
+                    prod_subblow_area_rate=prod_rate,
+                    r=r,
+                    Omega=Omega_step,
+                    a_blow=a_blow_step,
+                    rho=rho_used,
+                    e_value=e0_effective,
+                    i_value=i0_effective,
                     sigma_tau1=sigma_tau1_active,
                     enable_blowout=enable_blowout_sub,
+                    t_sink=t_sink_current if sink_timescale_active else None,
+                    ds_dt_val=ds_dt_val if sublimation_smol_active_step else None,
                 )
-                sigma_surf = res.sigma_surf
-                outflux_surface = res.outflux
-                sink_flux_surface = res.sink_flux
-                if sink_selected_step == "hydro_escape" and hydro_timescale_step is not None:
-                    hydro_mass_total += sink_flux_surface * dt_sub * area / constants.M_MARS
-                if freeze_sigma:
-                    sigma_surf = sigma_surf_reference
+                psd_state = smol_res.psd_state
+                sigma_surf = smol_res.sigma_after
+                sigma_loss_smol = max(sigma_loss_smol, 0.0) + max(smol_res.sigma_loss, 0.0)
+                total_prod_surface = smol_res.prod_mass_rate_effective * dt
+                outflux_surface = smol_res.dSigma_dt_blowout
                 if apply_correction:
                     outflux_surface *= fast_blowout_factor_sub
                     fast_blowout_applied = True
-                total_sink_surface += sink_flux_surface * dt_sub
-                fast_factor_numer += fast_blowout_factor_sub * dt_sub
-                fast_factor_denom += dt_sub
-                time_sub += dt_sub
-        else:
-            time_sub = time_start + dt
-            tau_last = kappa_surf * sigma_surf
-            sigma_tau1_limit = None
-            kappa_eff = kappa_surf
-            sigma_tau1_active_last = None
+                clip_rate = max(
+                    smol_res.dSigma_dt_sinks
+                    - smol_res.mass_loss_rate_sinks
+                    - smol_res.mass_loss_rate_sublimation,
+                    0.0,
+                )
+                sink_flux_surface = (
+                    smol_res.mass_loss_rate_sinks
+                    + smol_res.mass_loss_rate_sublimation
+                    + clip_rate
+                )
+                total_sink_surface = smol_res.dSigma_dt_sinks * dt
+                mass_loss_rate_sublimation_smol = smol_res.mass_loss_rate_sublimation
+                mass_loss_sublimation_smol_step = mass_loss_rate_sublimation_smol * dt * area / constants.M_MARS
+                fast_factor_numer = fast_blowout_factor_sub * dt
+                fast_factor_denom = dt
+                mass_err_percent_step = smol_res.mass_error * 100.0
+                time_sub = time_start + dt
+            else:
+                time_sub = time_start + dt
+                tau_last = kappa_surf * sigma_surf
+                sigma_tau1_limit = None
+                kappa_eff = kappa_surf
+                sigma_tau1_active_last = None
 
         if sink_timescale_active:
             t_sink_step = t_sink_step_effective
@@ -1691,31 +1801,17 @@ def run_zero_d(
             t_sink_step = None
 
         time = time_sub
-        if sublimation_smol_active_step:
-            try:
-                sizes_arr = np.asarray(psd_state.get("sizes"), dtype=float)
-                widths_arr = np.asarray(psd_state.get("widths"), dtype=float)
-                number_arr = np.asarray(psd_state.get("number"), dtype=float)
-            except Exception:
-                sizes_arr = np.empty(0, dtype=float)
-                widths_arr = np.empty(0, dtype=float)
-                number_arr = np.empty(0, dtype=float)
-            rho_psd = float(psd_state.get("rho", rho_used))
-            if (
-                sizes_arr.size
-                and widths_arr.size == sizes_arr.size
-                and number_arr.size == sizes_arr.size
-                and sigma_surf > 0.0
-            ):
-                base_counts = number_arr * widths_arr
-                m_k = (4.0 / 3.0) * math.pi * rho_psd * sizes_arr**3
-                mass_density_raw = float(np.sum(m_k * base_counts))
-                scale_to_sigma = sigma_surf / mass_density_raw if mass_density_raw > 0.0 else 0.0
-                N_k = base_counts * scale_to_sigma if scale_to_sigma > 0.0 else np.zeros_like(base_counts)
+        if sublimation_smol_active_step and collision_solver_mode != "smol":
+            # Sublimation-to-Smol path: gated by phase and sigma_surf>0 to avoid
+            # changing the existing surface sink semantics.
+            sizes_arr, widths_arr, m_k, N_k, scale_to_sigma = smol.psd_state_to_number_density(
+                psd_state,
+                sigma_surf,
+                rho_fallback=rho_used,
+            )
+            if N_k.size and sigma_surf > 0.0:
                 ds_dt_fill = ds_dt_val if ds_dt_val is not None else 0.0
                 ds_dt_k = np.full_like(sizes_arr, ds_dt_fill, dtype=float)
-                if not sublimation_smol_active_step:
-                    ds_dt_k.fill(0.0)
                 S_sub_k, mass_loss_rate_sub = sublimation_sink_from_dsdt(
                     sizes_arr,
                     N_k,
@@ -1740,18 +1836,19 @@ def run_zero_d(
                         extra_mass_loss_rate=mass_loss_rate_sub,
                     )
                     sigma_before_smol = sigma_surf
-                    sigma_after_smol = float(np.sum(m_k * N_new_smol))
-                    sigma_surf = max(sigma_after_smol, 0.0)
-                    sigma_loss_smol = max(sigma_before_smol - sigma_surf, 0.0)
+                    psd_state, sigma_after_smol, sigma_loss_smol = smol.number_density_to_psd_state(
+                        N_new_smol,
+                        psd_state,
+                        sigma_before_smol,
+                        widths=widths_arr,
+                        m=m_k,
+                        scale_to_sigma=scale_to_sigma,
+                    )
+                    sigma_surf = sigma_after_smol
+                    sigma_loss_smol = max(sigma_loss_smol, 0.0)
                     mass_loss_sublimation_smol_step = sigma_loss_smol * area / constants.M_MARS
                     if sigma_loss_smol > 0.0 and dt > 0.0:
                         mass_loss_rate_sublimation_smol = sigma_loss_smol / dt
-                    if scale_to_sigma > 0.0:
-                        number_new = N_new_smol / (scale_to_sigma * widths_arr)
-                    else:
-                        number_new = np.zeros_like(number_arr)
-                    psd_state["number"] = number_new
-                    psd_state["n"] = number_new
                     if mass_loss_sublimation_smol_step > 0.0:
                         M_sink_cum += mass_loss_sublimation_smol_step
                         M_sublimation_cum += mass_loss_sublimation_smol_step
@@ -1795,18 +1892,28 @@ def run_zero_d(
         gate_factor_track.append(float(gate_factor))
 
         sink_mass_total = sink_surface_total * area / constants.M_MARS
+        sink_mass_total_effective = sink_mass_total
+        if collision_solver_mode == "smol":
+            sink_mass_total_effective = max(
+                sink_mass_total - mass_loss_sublimation_smol_step, 0.0
+            )
         blow_mass_total = blow_surface_total * area / constants.M_MARS
         mass_loss_surface_solid_step = blow_mass_total
         if collisions_active:
             M_loss_cum += blow_mass_total
         if sink_timescale_active:
-            M_sink_cum += sink_mass_total
+            M_sink_cum += sink_mass_total_effective
             if sink_result.sublimation_fraction > 0.0:
                 M_sublimation_cum += sink_mass_total * sink_result.sublimation_fraction
         M_hydro_cum += hydro_mass_total
+        if collision_solver_mode == "smol" and mass_loss_sublimation_smol_step > 0.0:
+            M_sink_cum += mass_loss_sublimation_smol_step
+            M_sublimation_cum += mass_loss_sublimation_smol_step
 
         mass_loss_sublimation_step_total = mass_loss_sublimation_step + mass_loss_sublimation_smol_step
-        mass_loss_sinks_step_total = mass_loss_sublimation_step_total + sink_mass_total
+        mass_loss_sinks_step_total = (
+            mass_loss_sublimation_step_total + sink_mass_total_effective
+        )
         mass_loss_hydro_step = hydro_mass_total
         M_out_dot_avg = blow_mass_total / dt if dt > 0.0 else 0.0
         M_sink_dot_avg = mass_loss_sinks_step_total / dt if dt > 0.0 else 0.0
@@ -1819,6 +1926,10 @@ def run_zero_d(
 
         outflux_mass_rate_kg = outflux_surface * area
         sink_mass_rate_kg = sink_flux_surface * area
+        if collision_solver_mode == "smol":
+            sink_mass_rate_kg = max(
+                sink_mass_rate_kg - mass_loss_rate_sublimation_smol * area, 0.0
+            )
         sink_mass_rate_kg_total = sink_mass_rate_kg
         if dt > 0.0:
             sink_mass_rate_kg_total += mass_loss_sublimation_step * constants.M_MARS / dt
@@ -1827,7 +1938,8 @@ def run_zero_d(
         M_sink_dot = sink_mass_rate_kg_total / constants.M_MARS
         dM_dt_surface_total = M_out_dot + M_sink_dot
         dSigma_dt_blowout = outflux_surface
-        dSigma_dt_sinks = sink_flux_surface + dSigma_dt_sublimation + mass_loss_rate_sublimation_smol
+        sink_flux_nosub = max(sink_flux_surface - mass_loss_rate_sublimation_smol, 0.0)
+        dSigma_dt_sinks = sink_flux_nosub + dSigma_dt_sublimation + mass_loss_rate_sublimation_smol
         dSigma_dt_total = dSigma_dt_blowout + dSigma_dt_sinks
         dt_over_t_blow = fast_blowout_ratio
         fast_blowout_factor_record = (
@@ -2210,7 +2322,9 @@ def run_zero_d(
         mass_lost = M_loss_cum + M_sink_cum
         mass_diff = mass_initial - mass_remaining - mass_lost
         error_percent = 0.0
-        if mass_initial != 0.0:
+        if mass_err_percent_step is not None:
+            error_percent = mass_err_percent_step
+        elif mass_initial != 0.0:
             error_percent = abs(mass_diff / mass_initial) * 100.0
         budget_entry = {
             "time": time,
@@ -2383,6 +2497,7 @@ def run_zero_d(
         "gas_drag_sink_active": sink_opts.enable_gas_drag and not enforce_collisions_only,
         "blowout_active": blowout_enabled,
         "rp_blowout_enabled": rp_blowout_enabled,
+        "collision_solver": collision_solver_mode,
     }
     wyatt_collisional_timescale_active = bool(
         collisions_active and getattr(cfg.surface, "use_tcoll", True)
@@ -2538,6 +2653,7 @@ def run_zero_d(
         "enforce_mass_budget": enforce_mass_budget,
         "physics_mode": physics_mode,
         "physics_mode_source": physics_mode_source,
+        "collision_solver": collision_solver_mode,
         "single_process_mode": single_process_mode,
         "single_process_mode_source": single_process_mode_source,
         "primary_scenario": primary_scenario,
@@ -2752,6 +2868,7 @@ def run_zero_d(
         "physics_mode_source": physics_mode_source,
         "single_process_mode": single_process_mode,
         "single_process_mode_source": single_process_mode_source,
+        "collision_solver": collision_solver_mode,
         "collisions_active": collisions_active,
         "sinks_mode": sinks_mode_value,
         "sinks_enabled_cfg": sinks_enabled_cfg,

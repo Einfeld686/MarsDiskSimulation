@@ -83,6 +83,23 @@ analysis/tools/anchor_sync.py:77:class SymbolResolver
 analysis/tools/anchor_sync.py:314:class AnchorSync
 analysis/tools/anchor_sync.py:417:def _discover_markdown_paths(root: Path, pattern: str) -> List[Path]
 analysis/tools/anchor_sync.py:421:def main(argv: Optional[Sequence[str]]=None) -> int
+analysis/tools/assumption_trace_phase3.py:31:class Gap
+analysis/tools/assumption_trace_phase3.py:46:def normalise_label(text: str) -> str
+analysis/tools/assumption_trace_phase3.py:54:def parse_gap_list(path: Path) -> list[Gap]
+analysis/tools/assumption_trace_phase3.py:93:def _iter_equation_blocks(text: str) -> Iterable[tuple[str, str]]
+analysis/tools/assumption_trace_phase3.py:109:def _keywords_for_gap(gap: Gap) -> list[str]
+analysis/tools/assumption_trace_phase3.py:128:def map_gaps_to_equations(gaps: list[Gap], equations_md: Path) -> None
+analysis/tools/assumption_trace_phase3.py:152:def search_code_paths(gaps: list[Gap], code_roots: Sequence[Path]) -> None
+analysis/tools/assumption_trace_phase3.py:181:def search_config_keys(gaps: list[Gap], config_root: Path) -> None
+analysis/tools/assumption_trace_phase3.py:216:def load_unknown_refs(path: Path) -> Dict[str, Dict[str, Any]]
+analysis/tools/assumption_trace_phase3.py:236:def upsert_unknown_refs(path: Path, gaps: list[Gap]) -> Dict[str, Dict[str, Any]]
+analysis/tools/assumption_trace_phase3.py:270:def load_assumption_trace(path: Path) -> list[Dict[str, Any]]
+analysis/tools/assumption_trace_phase3.py:289:def _map_run_stage_from_code(code_path: str) -> Optional[str]
+analysis/tools/assumption_trace_phase3.py:303:def upsert_assumption_trace(path: Path, gaps: list[Gap]) -> list[Dict[str, Any]]
+analysis/tools/assumption_trace_phase3.py:350:def render_overview_block(gaps: list[Gap]) -> str
+analysis/tools/assumption_trace_phase3.py:370:def update_overview(path: Path, block: str) -> None
+analysis/tools/assumption_trace_phase3.py:390:def find_gap_list_path() -> Path
+analysis/tools/assumption_trace_phase3.py:402:def main(argv: Optional[List[str]]=None) -> int
 analysis/tools/check_docs.py:32:class AnchorOccurrence
 analysis/tools/check_docs.py:43:def load_coverage_json() -> Dict[str, object]
 analysis/tools/check_docs.py:55:def discover_markdown_paths() -> List[Path]
@@ -128,6 +145,17 @@ analysis/tools/make_sinks_callgraph.py:54:def build_mermaid(inv: Dict[SymbolKey,
 analysis/tools/make_sinks_callgraph.py:94:def inject_autogen_block(original: str, block: str) -> str
 analysis/tools/make_sinks_callgraph.py:116:def parse_args(argv: Optional[Sequence[str]]) -> argparse.Namespace
 analysis/tools/make_sinks_callgraph.py:128:def main(argv: Optional[Sequence[str]]=None) -> int
+analysis/tools/render_assumptions.py:54:class TraceEntry
+analysis/tools/render_assumptions.py:68:class GapItem
+analysis/tools/render_assumptions.py:73:def discover_trace_files() -> list[Path]
+analysis/tools/render_assumptions.py:84:def load_json_or_jsonl(path: Path) -> list[dict]
+analysis/tools/render_assumptions.py:111:def coerce_entry(raw: dict) -> TraceEntry
+analysis/tools/render_assumptions.py:128:def load_traces(paths: list[Path]) -> list[TraceEntry]
+analysis/tools/render_assumptions.py:138:def load_gap_list() -> list[GapItem]
+analysis/tools/render_assumptions.py:156:def group_by_tag(traces: list[TraceEntry]) -> dict[str, list[TraceEntry]]
+analysis/tools/render_assumptions.py:164:def render_overview(traces: list[TraceEntry], gaps: list[GapItem]) -> str
+analysis/tools/render_assumptions.py:242:def write_overview(content: str, path: Path=OUTPUT_MD) -> None
+analysis/tools/render_assumptions.py:246:def main(argv: Optional[list[str]]=None) -> int
 marsdisk/analysis/beta_sampler.py:39:class BetaSamplingConfig
 marsdisk/analysis/beta_sampler.py:91:def _prepare_case_config(cfg: Config, *, r_rm: float, T_M: float, qpr_table_path: Path, dt_over_t_blow_max: float) -> Config
 marsdisk/analysis/beta_sampler.py:136:def _run_single_case(args: Mapping[str, Any]) -> Dict[str, Any]
@@ -178,6 +206,24 @@ marsdisk/io/writer.py:290:def write_run_config(config: Mapping[str, Any], path: 
 marsdisk/io/writer.py:298:def write_mass_budget(records: Iterable[Mapping[str, Any]], path: Path) -> None
 marsdisk/io/writer.py:305:def write_orbit_rollup(rows: Iterable[Mapping[str, Any]], path: Path) -> None
 marsdisk/io/writer.py:316:def write_step_diagnostics(rows: Iterable[Mapping[str, Any]], path: Path, *, fmt: Literal['csv', 'jsonl']='csv') -> None
+marsdisk/ops/assumption_trace.py:20:class AssumptionRecord
+marsdisk/ops/assumption_trace.py:38:def load_equation_index(path: Path) -> list[dict[str, Any]]
+marsdisk/ops/assumption_trace.py:56:def _iter_equation_blocks(lines: list[str]) -> Iterable[tuple[str, str, list[str]]]
+marsdisk/ops/assumption_trace.py:70:def _clean_code_path(raw: str) -> str
+marsdisk/ops/assumption_trace.py:77:def _extract_code_paths(header_rest: str, block_text: str) -> list[str]
+marsdisk/ops/assumption_trace.py:108:def _extract_paper_refs(block_text: str) -> list[str]
+marsdisk/ops/assumption_trace.py:122:def _extract_assumption_tags(block_text: str) -> list[str]
+marsdisk/ops/assumption_trace.py:136:def _extract_config_keys(block_text: str) -> list[str]
+marsdisk/ops/assumption_trace.py:146:def _parse_symbols_table(block_lines: list[str]) -> tuple[list[dict[str, str]], list[dict[str, str]]]
+marsdisk/ops/assumption_trace.py:175:def _guess_status(eq_id: str) -> str
+marsdisk/ops/assumption_trace.py:182:def _map_run_stage(code_paths: list[str]) -> Optional[str]
+marsdisk/ops/assumption_trace.py:202:def _parse_block(eq_id: str, header_rest: str, block_lines: list[str]) -> dict[str, Any]
+marsdisk/ops/assumption_trace.py:222:def parse_equations_md(path: Path) -> dict[str, dict[str, Any]]
+marsdisk/ops/assumption_trace.py:232:def build_assumption_trace(index_path: Path, equations_md: Path) -> list[AssumptionRecord]
+marsdisk/ops/assumption_trace.py:264:def write_jsonl(records: Iterable[AssumptionRecord], path: Path) -> None
+marsdisk/ops/assumption_trace.py:273:def write_markdown(records: Iterable[AssumptionRecord], path: Path) -> None
+marsdisk/ops/assumption_trace.py:297:def _parse_args(argv: Optional[list[str]]=None) -> argparse.Namespace
+marsdisk/ops/assumption_trace.py:323:def main(argv: Optional[list[str]]=None) -> int
 marsdisk/ops/doc_sync_agent.py:104:class SymbolInfo
 marsdisk/ops/doc_sync_agent.py:118:class FileChange
 marsdisk/ops/doc_sync_agent.py:149:class InventoryRecord
@@ -228,6 +274,10 @@ marsdisk/ops/physcheck.py:184:def _write_reports(results: Sequence[CheckResult])
 marsdisk/ops/physcheck.py:198:def main(argv: Sequence[str] | None=None) -> int
 marsdisk/physics/collide.py:18:def compute_collision_kernel_C1(N: Iterable[float], s: Iterable[float], H: Iterable[float], v_rel: float | np.ndarray) -> np.ndarray
 marsdisk/physics/collide.py:80:def compute_prod_subblow_area_rate_C2(C: np.ndarray, m_subblow: np.ndarray) -> float
+marsdisk/physics/collisions_smol.py:17:class Smol0DStepResult
+marsdisk/physics/collisions_smol.py:37:def _fragment_tensor(sizes: np.ndarray, masses: np.ndarray, v_rel: float | np.ndarray, rho: float, alpha_frag: float=3.5) -> np.ndarray
+marsdisk/physics/collisions_smol.py:88:def _blowout_sink_vector(sizes: np.ndarray, a_blow: float, Omega: float, enable_blowout: bool) -> np.ndarray
+marsdisk/physics/collisions_smol.py:104:def step_collisions_smol_0d(psd_state: MutableMapping[str, np.ndarray | float], sigma_surf: float, *, dt: float, prod_subblow_area_rate: float, r: float, Omega: float, a_blow: float, rho: float, e_value: float, i_value: float, sigma_tau1: float | None, enable_blowout: bool, t_sink: float | None, ds_dt_val: float | None=None) -> Smol0DStepResult
 marsdisk/physics/dynamics.py:18:def v_ij(e: float, i: float, v_k: float=1.0) -> float
 marsdisk/physics/dynamics.py:48:def solve_c_eq(tau: float, e: float, eps_model: Callable[[float], float], *, f_wake: float=1.0, max_iter: int=100, tol: float=1e-06) -> float
 marsdisk/physics/dynamics.py:109:def update_e(e: float, e_eq: float, t_damp: float, dt: float) -> float
@@ -270,8 +320,10 @@ marsdisk/physics/sinks.py:49:class SinkTimescaleResult
 marsdisk/physics/sinks.py:70:def gas_drag_timescale(s: float, rho_p: float, rho_g: float, c_s: float=500.0) -> float
 marsdisk/physics/sinks.py:83:def total_sink_timescale(T_use: float, rho_p: float, Omega: float, opts: SinkOptions, *, s_ref: float=1e-06) -> SinkTimescaleResult
 marsdisk/physics/sizes.py:10:def eval_ds_dt_sublimation(T: float, rho_bulk: float, params: sublimation.SublimationParams) -> float
-marsdisk/physics/smol.py:18:def step_imex_bdf1_C3(N: Iterable[float], C: np.ndarray, Y: np.ndarray, S: Iterable[float] | None, m: Iterable[float], prod_subblow_mass_rate: float, dt: float, *, S_external_k: Iterable[float] | None=None, S_sublimation_k: Iterable[float] | None=None, extra_mass_loss_rate: float=0.0, mass_tol: float=0.005, safety: float=0.1) -> tuple[np.ndarray, float, float]
-marsdisk/physics/smol.py:131:def compute_mass_budget_error_C4(N_old: Iterable[float], N_new: Iterable[float], m: Iterable[float], prod_subblow_mass_rate: float, dt: float) -> float
+marsdisk/physics/smol.py:25:def psd_state_to_number_density(psd_state: MutableMapping[str, np.ndarray | float], sigma_surf: float, *, rho_fallback: float | None=None) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, float]
+marsdisk/physics/smol.py:91:def number_density_to_psd_state(N_new: np.ndarray, psd_state: MutableMapping[str, np.ndarray | float], sigma_before: float, *, widths: np.ndarray, m: np.ndarray, scale_to_sigma: float) -> tuple[MutableMapping[str, np.ndarray | float], float, float]
+marsdisk/physics/smol.py:146:def step_imex_bdf1_C3(N: Iterable[float], C: np.ndarray, Y: np.ndarray, S: Iterable[float] | None, m: Iterable[float], prod_subblow_mass_rate: float, dt: float, *, S_external_k: Iterable[float] | None=None, S_sublimation_k: Iterable[float] | None=None, extra_mass_loss_rate: float=0.0, mass_tol: float=0.005, safety: float=0.1) -> tuple[np.ndarray, float, float]
+marsdisk/physics/smol.py:265:def compute_mass_budget_error_C4(N_old: Iterable[float], N_new: Iterable[float], m: Iterable[float], prod_subblow_mass_rate: float, dt: float) -> float
 marsdisk/physics/sublimation.py:47:class PsatSelection(NamedTuple)
 marsdisk/physics/sublimation.py:54:class SublimationParams
 marsdisk/physics/sublimation.py:128:def _is_hkl_active(params: SublimationParams) -> bool
@@ -304,39 +356,39 @@ marsdisk/physics/tempdriver.py:132:class TemperatureDriverRuntime
 marsdisk/physics/tempdriver.py:149:def resolve_temperature_driver(temps_cfg: Temps, radiation_cfg: Optional[Radiation], *, t_orb: float) -> TemperatureDriverRuntime
 marsdisk/physics/viscosity.py:18:def _solve_tridiagonal(a: np.ndarray, b: np.ndarray, c: np.ndarray, d: np.ndarray) -> np.ndarray
 marsdisk/physics/viscosity.py:51:def step_viscous_diffusion_C5(sigma: Iterable[float], nu: Iterable[float], grid: RadialGrid, dt: float, *, theta: float=0.5) -> np.ndarray
-marsdisk/run.py:77:def _parse_override_value(raw: str) -> Any
-marsdisk/run.py:104:def _apply_overrides_dict(payload: Dict[str, Any], overrides: Sequence[str]) -> Dict[str, Any]
-marsdisk/run.py:142:def _merge_physics_section(payload: Dict[str, Any]) -> Dict[str, Any]
-marsdisk/run.py:161:def _safe_float(value: Any) -> Optional[float]
-marsdisk/run.py:173:def _derive_seed_components(cfg: Config) -> str
-marsdisk/run.py:185:def _resolve_seed(cfg: Config) -> tuple[int, str, str]
-marsdisk/run.py:200:def _auto_chi_blow(beta: float, qpr: float) -> float
-marsdisk/run.py:215:def _fast_blowout_correction_factor(ratio: float) -> float
-marsdisk/run.py:235:def _compute_gate_factor(t_blow: Optional[float], t_solid: Optional[float]) -> float
-marsdisk/run.py:257:def _normalise_single_process_mode(value: Any) -> str
-marsdisk/run.py:273:def _normalise_physics_mode(value: Any) -> str
-marsdisk/run.py:289:def _physics_mode_from_single_process(mode: str) -> str
-marsdisk/run.py:299:def _clone_config(cfg: Config) -> Config
-marsdisk/run.py:307:def _resolve_time_grid(numerics: Any, Omega: float, t_orb: float) -> tuple[float, float, float, int, Dict[str, Any]]
-marsdisk/run.py:372:class _Phase5VariantResult
-marsdisk/run.py:385:def _read_json(path: Path) -> Dict[str, Any]
-marsdisk/run.py:390:def _hash_payload(payload: Mapping[str, Any]) -> str
-marsdisk/run.py:395:def _prepare_phase5_variants(compare_cfg: Any) -> List[Dict[str, str]]
-marsdisk/run.py:428:class RunConfig
-marsdisk/run.py:442:class RunState
-marsdisk/run.py:452:class ZeroDHistory
-marsdisk/run.py:476:def step(config: RunConfig, state: RunState, dt: float) -> Dict[str, float]
-marsdisk/run.py:524:def run_n_steps(config: RunConfig, state: RunState, n: int, dt: float, out_dir: Path | None=None) -> pd.DataFrame
-marsdisk/run.py:554:def load_config(path: Path, overrides: Optional[Sequence[str]]=None) -> Config
-marsdisk/run.py:579:def _gather_git_info() -> Dict[str, Any]
-marsdisk/run.py:606:class MassBudgetViolationError(RuntimeError)
-marsdisk/run.py:610:def _resolve_single_process_choice(cli_mode: Optional[str], physics_mode: Optional[str], cfg_single_process_mode: Optional[str], legacy_mode: Optional[str]) -> tuple[str, str]
-marsdisk/run.py:633:def _write_zero_d_history(cfg: Config, df: pd.DataFrame, history: ZeroDHistory, *, step_diag_enabled: bool, step_diag_format: str, step_diag_path_cfg: Optional[Path], orbit_rollup_enabled: bool, phase7_enabled: bool) -> None
-marsdisk/run.py:733:def run_zero_d(cfg: Config, *, enforce_mass_budget: bool=False, single_process_override: Optional[str]=None, single_process_source: Optional[str]=None) -> None
-marsdisk/run.py:2868:def _run_phase5_variant(base_cfg: Config, variant: str, mode: str, base_outdir: Path, duration_years: float, *, enforce_mass_budget: bool) -> _Phase5VariantResult
-marsdisk/run.py:2936:def _write_phase5_comparison_products(base_outdir: Path, duration_years: float, results: List[_Phase5VariantResult]) -> None
-marsdisk/run.py:3078:def run_phase5_comparison(cfg: Config, *, enforce_mass_budget: bool=False, variants_spec: Optional[List[Dict[str, str]]]=None) -> None
-marsdisk/run.py:3113:def main(argv: Optional[List[str]]=None) -> None
+marsdisk/run.py:80:def _parse_override_value(raw: str) -> Any
+marsdisk/run.py:107:def _apply_overrides_dict(payload: Dict[str, Any], overrides: Sequence[str]) -> Dict[str, Any]
+marsdisk/run.py:145:def _merge_physics_section(payload: Dict[str, Any]) -> Dict[str, Any]
+marsdisk/run.py:164:def _safe_float(value: Any) -> Optional[float]
+marsdisk/run.py:176:def _derive_seed_components(cfg: Config) -> str
+marsdisk/run.py:188:def _resolve_seed(cfg: Config) -> tuple[int, str, str]
+marsdisk/run.py:203:def _auto_chi_blow(beta: float, qpr: float) -> float
+marsdisk/run.py:218:def _fast_blowout_correction_factor(ratio: float) -> float
+marsdisk/run.py:238:def _compute_gate_factor(t_blow: Optional[float], t_solid: Optional[float]) -> float
+marsdisk/run.py:260:def _normalise_single_process_mode(value: Any) -> str
+marsdisk/run.py:276:def _normalise_physics_mode(value: Any) -> str
+marsdisk/run.py:292:def _physics_mode_from_single_process(mode: str) -> str
+marsdisk/run.py:302:def _clone_config(cfg: Config) -> Config
+marsdisk/run.py:310:def _resolve_time_grid(numerics: Any, Omega: float, t_orb: float) -> tuple[float, float, float, int, Dict[str, Any]]
+marsdisk/run.py:375:class _Phase5VariantResult
+marsdisk/run.py:388:def _read_json(path: Path) -> Dict[str, Any]
+marsdisk/run.py:393:def _hash_payload(payload: Mapping[str, Any]) -> str
+marsdisk/run.py:398:def _prepare_phase5_variants(compare_cfg: Any) -> List[Dict[str, str]]
+marsdisk/run.py:431:class RunConfig
+marsdisk/run.py:445:class RunState
+marsdisk/run.py:455:class ZeroDHistory
+marsdisk/run.py:479:def step(config: RunConfig, state: RunState, dt: float) -> Dict[str, float]
+marsdisk/run.py:527:def run_n_steps(config: RunConfig, state: RunState, n: int, dt: float, out_dir: Path | None=None) -> pd.DataFrame
+marsdisk/run.py:557:def load_config(path: Path, overrides: Optional[Sequence[str]]=None) -> Config
+marsdisk/run.py:582:def _gather_git_info() -> Dict[str, Any]
+marsdisk/run.py:609:class MassBudgetViolationError(RuntimeError)
+marsdisk/run.py:613:def _resolve_single_process_choice(cli_mode: Optional[str], physics_mode: Optional[str], cfg_single_process_mode: Optional[str], legacy_mode: Optional[str]) -> tuple[str, str]
+marsdisk/run.py:636:def _write_zero_d_history(cfg: Config, df: pd.DataFrame, history: ZeroDHistory, *, step_diag_enabled: bool, step_diag_format: str, step_diag_path_cfg: Optional[Path], orbit_rollup_enabled: bool, phase7_enabled: bool) -> None
+marsdisk/run.py:736:def run_zero_d(cfg: Config, *, enforce_mass_budget: bool=False, single_process_override: Optional[str]=None, single_process_source: Optional[str]=None) -> None
+marsdisk/run.py:2989:def _run_phase5_variant(base_cfg: Config, variant: str, mode: str, base_outdir: Path, duration_years: float, *, enforce_mass_budget: bool) -> _Phase5VariantResult
+marsdisk/run.py:3057:def _write_phase5_comparison_products(base_outdir: Path, duration_years: float, results: List[_Phase5VariantResult]) -> None
+marsdisk/run.py:3199:def run_phase5_comparison(cfg: Config, *, enforce_mass_budget: bool=False, variants_spec: Optional[List[Dict[str, str]]]=None) -> None
+marsdisk/run.py:3234:def main(argv: Optional[List[str]]=None) -> None
 marsdisk/schema.py:22:class Geometry(BaseModel)
 marsdisk/schema.py:36:class DiskGeometry(BaseModel)
 marsdisk/schema.py:45:class Disk(BaseModel)
@@ -356,31 +408,31 @@ marsdisk/schema.py:189:class Dynamics(BaseModel)
 marsdisk/schema.py:230:class QStar(BaseModel)
 marsdisk/schema.py:240:class PSD(BaseModel)
 marsdisk/schema.py:251:class Surface(BaseModel)
-marsdisk/schema.py:260:class SublimationParamsModel(BaseModel)
-marsdisk/schema.py:279:class RPBlowoutConfig(BaseModel)
-marsdisk/schema.py:285:class HydroEscapeConfig(BaseModel)
-marsdisk/schema.py:308:class Sinks(BaseModel)
-marsdisk/schema.py:332:class ProcessStateTagging(BaseModel)
-marsdisk/schema.py:341:class Process(BaseModel)
-marsdisk/schema.py:351:class Modes(BaseModel)
-marsdisk/schema.py:357:class Phase5CompareConfig(BaseModel)
-marsdisk/schema.py:387:class Phase5Config(BaseModel)
-marsdisk/schema.py:393:class PhaseThresholds(BaseModel)
-marsdisk/schema.py:417:class PhaseMapConfig(BaseModel)
-marsdisk/schema.py:426:class PhaseConfig(BaseModel)
-marsdisk/schema.py:467:class MarsTemperatureDriverConstant(BaseModel)
-marsdisk/schema.py:480:class MarsTemperatureDriverTable(BaseModel)
-marsdisk/schema.py:492:class MarsTemperatureDriverConfig(BaseModel)
-marsdisk/schema.py:534:class RadiationTauGate(BaseModel)
-marsdisk/schema.py:541:class Radiation(BaseModel)
-marsdisk/schema.py:623:class Shielding(BaseModel)
-marsdisk/schema.py:679:class Blowout(BaseModel)
-marsdisk/schema.py:697:class Numerics(BaseModel)
-marsdisk/schema.py:787:class StepDiagnostics(BaseModel)
-marsdisk/schema.py:804:class IO(BaseModel)
-marsdisk/schema.py:829:class Phase7Diagnostics(BaseModel)
-marsdisk/schema.py:842:class Diagnostics(BaseModel)
-marsdisk/schema.py:848:class Config(BaseModel)
+marsdisk/schema.py:268:class SublimationParamsModel(BaseModel)
+marsdisk/schema.py:287:class RPBlowoutConfig(BaseModel)
+marsdisk/schema.py:293:class HydroEscapeConfig(BaseModel)
+marsdisk/schema.py:316:class Sinks(BaseModel)
+marsdisk/schema.py:340:class ProcessStateTagging(BaseModel)
+marsdisk/schema.py:349:class Process(BaseModel)
+marsdisk/schema.py:359:class Modes(BaseModel)
+marsdisk/schema.py:365:class Phase5CompareConfig(BaseModel)
+marsdisk/schema.py:395:class Phase5Config(BaseModel)
+marsdisk/schema.py:401:class PhaseThresholds(BaseModel)
+marsdisk/schema.py:425:class PhaseMapConfig(BaseModel)
+marsdisk/schema.py:434:class PhaseConfig(BaseModel)
+marsdisk/schema.py:475:class MarsTemperatureDriverConstant(BaseModel)
+marsdisk/schema.py:488:class MarsTemperatureDriverTable(BaseModel)
+marsdisk/schema.py:500:class MarsTemperatureDriverConfig(BaseModel)
+marsdisk/schema.py:542:class RadiationTauGate(BaseModel)
+marsdisk/schema.py:549:class Radiation(BaseModel)
+marsdisk/schema.py:631:class Shielding(BaseModel)
+marsdisk/schema.py:687:class Blowout(BaseModel)
+marsdisk/schema.py:705:class Numerics(BaseModel)
+marsdisk/schema.py:795:class StepDiagnostics(BaseModel)
+marsdisk/schema.py:812:class IO(BaseModel)
+marsdisk/schema.py:837:class Phase7Diagnostics(BaseModel)
+marsdisk/schema.py:850:class Diagnostics(BaseModel)
+marsdisk/schema.py:856:class Config(BaseModel)
 marsdisk/tests/test_core.py:11:def test_constants_values()
 marsdisk/tests/test_core.py:17:def test_grid_relations()
 marsdisk/tests/test_core.py:24:def test_writer_and_tables(tmp_path: Path)
@@ -565,6 +617,10 @@ tests/phase_map_stub.py:40:def lookup_phase_solid(*_args, **_kwargs) -> dict[str
 tests/test_analysis_coverage_guard.py:7:def test_analysis_coverage_guard() -> None
 tests/test_analysis_massloss_sampler_doc.py:10:def _slice_section(text: str, header: str) -> str
 tests/test_analysis_massloss_sampler_doc.py:19:def test_massloss_sampler_section_lists_key_requirements() -> None
+tests/test_assumption_trace_phase2.py:6:def test_build_assumption_trace_smoke(tmp_path: Path) -> None
+tests/test_assumptions_docs.py:6:def test_render_assumptions_runs(tmp_path: Path) -> None
+tests/test_assumptions_docs.py:17:def test_trace_entries_follow_schema() -> None
+tests/test_assumptions_docs.py:30:def test_gap_titles_appear_in_overview() -> None
 tests/test_blowout_gate.py:10:def test_compute_gate_factor_bounds() -> None
 tests/test_blowout_gate.py:18:def _build_gate_config(outdir: Path, gate_mode: str) -> schema.Config
 tests/test_blowout_gate.py:41:def test_gate_reduces_outflux_with_sublimation(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None
@@ -573,6 +629,7 @@ tests/test_blowout_gate.py:86:def test_gate_reduces_outflux_with_collisions(tmp_
 tests/test_ci_guard_analysis.py:8:def _write_coverage(tmp_path, **overrides)
 tests/test_ci_guard_analysis.py:33:def test_ci_guard_analysis_pass(tmp_path) -> None
 tests/test_ci_guard_analysis.py:41:def test_ci_guard_analysis_anchor_failure(tmp_path) -> None
+tests/test_collision_solver_modes.py:12:def test_collision_solver_smol_mass_budget(tmp_path: Path) -> None
 tests/test_doc_sync_agent.py:9:def test_scan_generates_inventory(tmp_path) -> None
 tests/test_doc_sync_agent.py:26:def test_refs_and_coverage_pipeline(tmp_path) -> None
 tests/test_doc_sync_agent.py:80:def test_autostub_inserts_stubs(tmp_path) -> None
@@ -687,6 +744,7 @@ tests/test_siO2_cooling_model.py:29:def test_arrival_time_for_threshold() -> Non
 tests/test_sinks_none.py:15:def test_run_zero_d_with_sinks_disabled(tmp_path: Path) -> None
 tests/test_sinks_tracing.py:9:def _build_config(outdir: Path) -> schema.Config
 tests/test_sinks_tracing.py:34:def test_debug_sinks_trace_outputs_jsonl(tmp_path: Path) -> None
+tests/test_smol_sublimation_consistency.py:11:def test_smol_sublimation_matches_surface_drift() -> None
 tests/test_step_diagnostics.py:12:def _build_config(outdir: Path, fmt: str) -> schema.Config
 tests/test_step_diagnostics.py:43:def test_step_diagnostics_file_and_mass_budget(tmp_path: Path, fmt: str) -> None
 tests/test_sublimation_phase_gate.py:14:def _run_phase_case(tmp_path: Path, entrypoint: str, *, enable_step_diag: bool=True) -> tuple[pd.Series, pd.DataFrame | None]
@@ -704,14 +762,15 @@ tests/test_sublimation_smol_sink.py:12:def test_smol_sublimation_sink_mass_budge
 tests/test_summary_backcompat.py:9:def _write_summary(path: Path, payload: dict) -> None
 tests/test_summary_backcompat.py:13:def test_parse_summary_backwards_compatibility(tmp_path: Path) -> None
 tests/test_surface_outflux_wavy.py:10:def test_blowout_driven_wavy_pattern_emerges() -> None
-tests/test_surface_supply_param.py:16:def test_const_mode()
-tests/test_surface_supply_param.py:26:def test_powerlaw_mode()
-tests/test_surface_supply_param.py:35:def test_table_mode(tmp_path)
-tests/test_surface_supply_param.py:46:def _surface_mass_budget_error(sigma_prev: float, sigma_next: float, prod_rate: float, outflux: float, sink_flux: float, dt: float, Omega: float, *, t_coll: float | None=None, t_sink: float | None=None) -> float
-tests/test_surface_supply_param.py:73:def _run_surface(cfg: Supply, *, Omega: float, sigma_tau1: float, dt: float, steps: int, sigma0: float=0.0) -> list[dict[str, float]]
-tests/test_surface_supply_param.py:119:def test_surface_const_supply_loss_limited()
-tests/test_surface_supply_param.py:136:def test_surface_no_supply_decay()
-tests/test_surface_supply_param.py:160:def test_surface_table_supply_tracks_changes(tmp_path)
+tests/test_surface_supply_param.py:18:def test_const_mode()
+tests/test_surface_supply_param.py:28:def test_powerlaw_mode()
+tests/test_surface_supply_param.py:37:def test_table_mode(tmp_path)
+tests/test_surface_supply_param.py:48:def _surface_mass_budget_error(sigma_prev: float, sigma_next: float, prod_rate: float, outflux: float, sink_flux: float, dt: float, Omega: float, *, t_coll: float | None=None, t_sink: float | None=None) -> float
+tests/test_surface_supply_param.py:75:def _run_surface(cfg: Supply, *, Omega: float, sigma_tau1: float, dt: float, steps: int, sigma0: float=0.0) -> list[dict[str, float]]
+tests/test_surface_supply_param.py:121:def test_surface_const_supply_loss_limited()
+tests/test_surface_supply_param.py:138:def test_surface_no_supply_decay()
+tests/test_surface_supply_param.py:162:def test_surface_table_supply_tracks_changes(tmp_path)
+tests/test_surface_supply_param.py:203:def test_smol_helper_respects_tau_clip_and_budget()
 tests/test_temperature_driver.py:12:def test_temperature_driver_prefers_radiation_override() -> None
 tests/test_temperature_driver.py:24:def test_temperature_driver_table_interpolates_sample() -> None
 tests/test_temperature_selection.py:9:def _make_config(outdir: Path, T_M: float) -> schema.Config
