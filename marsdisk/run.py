@@ -1761,10 +1761,14 @@ def run_zero_d(
                     enable_blowout=enable_blowout_sub,
                     t_sink=t_sink_current if sink_timescale_active else None,
                     ds_dt_val=ds_dt_val if sublimation_smol_active_step else None,
+                    s_min_effective=s_min_effective,
+                    dynamics_cfg=cfg.dynamics,
+                    tau_eff=tau_eval,
                 )
                 psd_state = smol_res.psd_state
                 sigma_surf = smol_res.sigma_after
                 sigma_loss_smol = max(sigma_loss_smol, 0.0) + max(smol_res.sigma_loss, 0.0)
+                prod_rate_last = smol_res.prod_mass_rate_effective
                 total_prod_surface = smol_res.prod_mass_rate_effective * dt
                 outflux_surface = smol_res.dSigma_dt_blowout
                 if apply_correction:
@@ -2321,11 +2325,12 @@ def run_zero_d(
         mass_remaining = mass_initial - (M_loss_cum + M_sink_cum)
         mass_lost = M_loss_cum + M_sink_cum
         mass_diff = mass_initial - mass_remaining - mass_lost
-        error_percent = 0.0
+        mass_diff_percent = 0.0
+        if mass_initial != 0.0:
+            mass_diff_percent = abs(mass_diff / mass_initial) * 100.0
+        error_percent = mass_diff_percent
         if mass_err_percent_step is not None:
-            error_percent = mass_err_percent_step
-        elif mass_initial != 0.0:
-            error_percent = abs(mass_diff / mass_initial) * 100.0
+            error_percent = max(mass_err_percent_step, mass_diff_percent)
         budget_entry = {
             "time": time,
             "mass_initial": mass_initial,
@@ -2419,6 +2424,35 @@ def run_zero_d(
             t_blow_step,
             M_loss_cum + M_sink_cum,
         )
+
+    if orbit_rollup_enabled and not orbit_rollup_rows:
+        # Fallback rollup for short integrations that do not complete a full orbit.
+        mass_loss_frac = float("nan")
+        if cfg.initial.mass_total > 0.0:
+            mass_loss_frac = (orbit_loss_blow + orbit_loss_sink) / cfg.initial.mass_total
+        denom = t_orb_step if t_orb_step > 0.0 else float("nan")
+        orbit_rollup_rows.append(
+            {
+                "orbit_index": 1,
+                "time_s": time,
+                "time_s_end": time,
+                "t_orb_s": t_orb_step,
+                "M_out_orbit": orbit_loss_blow,
+                "M_sink_orbit": orbit_loss_sink,
+                "M_loss_orbit": orbit_loss_blow + orbit_loss_sink,
+                "M_out_per_orbit": orbit_loss_blow / denom if math.isfinite(denom) else float("nan"),
+                "M_sink_per_orbit": orbit_loss_sink / denom if math.isfinite(denom) else float("nan"),
+                "M_loss_per_orbit": (orbit_loss_blow + orbit_loss_sink) / denom if math.isfinite(denom) else float("nan"),
+                "mass_loss_frac_per_orbit": mass_loss_frac,
+                "M_out_cum": M_loss_cum,
+                "M_sink_cum": M_sink_cum,
+                "M_loss_cum": M_loss_cum + M_sink_cum,
+                "r_RM": r_RM,
+                "T_M": T_use,
+                "slope_dlnM_dlnr": None,
+            }
+        )
+        orbits_completed = max(orbits_completed, 1)
 
     history.tau_gate_block_time = tau_gate_block_time
     history.total_time_elapsed = total_time_elapsed

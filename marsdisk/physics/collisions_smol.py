@@ -4,13 +4,16 @@ from __future__ import annotations
 
 import math
 from dataclasses import dataclass
-from typing import MutableMapping
+from typing import MutableMapping, TYPE_CHECKING
 
 import numpy as np
 from ..errors import MarsDiskError
 from . import collide, dynamics, qstar, smol
 from .fragments import compute_largest_remnant_mass_fraction_F2
 from .sublimation import sublimation_sink_from_dsdt
+
+if TYPE_CHECKING:
+    from ..schema import Dynamics
 
 
 @dataclass
@@ -32,6 +35,40 @@ class Smol0DStepResult:
     mass_loss_rate_blowout: float
     mass_loss_rate_sinks: float
     mass_loss_rate_sublimation: float
+    t_coll_kernel: float | None = None
+    e_kernel_used: float | None = None
+    i_kernel_used: float | None = None
+
+
+def supply_mass_rate_to_number_source(
+    prod_subblow_mass_rate: float,
+    s_bin_center: np.ndarray,
+    m_bin: np.ndarray,
+    s_min_eff: float,
+) -> np.ndarray:
+    """Convert a mass flux to a per-bin number source ``F_k`` (1/s).
+
+    The mapping injects all supplied mass into the smallest bin with
+    ``s >= s_min_eff`` (falling back to the last bin) so that
+    ``sum(m_k * F_k) == prod_subblow_mass_rate`` holds by construction.
+    Negative mass fluxes are treated as zero.
+    """
+
+    prod_rate = max(float(prod_subblow_mass_rate), 0.0)
+    s_arr = np.asarray(s_bin_center, dtype=float)
+    m_arr = np.asarray(m_bin, dtype=float)
+    if s_arr.shape != m_arr.shape:
+        raise MarsDiskError("s_bin_center and m_bin must share the same shape")
+    if prod_rate <= 0.0 or s_arr.size == 0:
+        return np.zeros_like(m_arr)
+
+    candidates = np.nonzero(s_arr >= s_min_eff)[0]
+    k_inj = int(candidates[0]) if candidates.size else int(len(s_arr) - 1)
+
+    F = np.zeros_like(m_arr, dtype=float)
+    if m_arr[k_inj] > 0.0:
+        F[k_inj] = prod_rate / m_arr[k_inj]
+    return F
 
 
 def _fragment_tensor(
@@ -101,6 +138,70 @@ def _blowout_sink_vector(
     return sink
 
 
+def kernel_minimum_tcoll(C_kernel: np.ndarray) -> float:
+    """Return the minimum collisional time-scale implied by ``C``."""
+
+    if C_kernel.size == 0:
+        return math.inf
+    rates = np.sum(C_kernel, axis=1)
+    rate_max = float(np.max(rates))
+    if rate_max <= 0.0:
+        return math.inf
+    return 1.0 / rate_max
+
+
+def compute_kernel_e_i_H(
+    dynamics_cfg: "Dynamics",
+    tau_eff: float,
+    a_orbit_m: float,
+    v_k: float,
+    sizes: np.ndarray,
+) -> tuple[float, float, np.ndarray]:
+    """Return ``(e_kernel, i_kernel, H_k)`` for the Smol collision kernel.
+
+    - ``kernel_ei_mode='config'`` uses ``e0``/``i0`` directly.
+    - ``kernel_ei_mode='wyatt_eq'`` solves for ``c_eq`` (using a constant
+      restitution coefficient) and maps to ``e_kernel=c_eq/v_k`` with
+      ``i_kernel=0.5 e_kernel``.
+    - ``kernel_H_mode='ia'`` sets ``H_k = H_factor * i_kernel * a`` (all bins).
+      ``'fixed'`` uses ``H_fixed_over_a * a`` if provided.
+    """
+
+    tau_eff = max(float(tau_eff), 0.0)
+    e_kernel = float(dynamics_cfg.e0)
+    i_kernel = float(dynamics_cfg.i0)
+    v_k_safe = max(float(v_k), 1.0e-12)
+
+    if dynamics_cfg.kernel_ei_mode == "wyatt_eq":
+        def _eps_model(_v: float) -> float:
+            return 0.5
+
+        try:
+            c_eq = dynamics.solve_c_eq(
+                tau_eff,
+                max(dynamics_cfg.e0, 1.0e-6),
+                _eps_model,
+                f_wake=float(dynamics_cfg.f_wake),
+            )
+        except Exception:
+            c_eq = max(dynamics_cfg.e0 * v_k_safe, 0.0)
+        e_kernel = max(c_eq / v_k_safe, 1.0e-8)
+        i_kernel = 0.5 * e_kernel
+
+    if dynamics_cfg.kernel_H_mode == "ia":
+        H_base = dynamics_cfg.H_factor * i_kernel * a_orbit_m
+    elif dynamics_cfg.kernel_H_mode == "fixed":
+        if dynamics_cfg.H_fixed_over_a is None:
+            raise MarsDiskError("kernel_H_mode='fixed' requires H_fixed_over_a")
+        H_base = dynamics_cfg.H_fixed_over_a * a_orbit_m
+    else:
+        raise MarsDiskError(f"Unknown kernel_H_mode={dynamics_cfg.kernel_H_mode}")
+
+    H_base = max(H_base, 1.0e-12)
+    H_k = np.full_like(np.asarray(sizes, dtype=float), H_base, dtype=float)
+    return e_kernel, i_kernel, H_k
+
+
 def step_collisions_smol_0d(
     psd_state: MutableMapping[str, np.ndarray | float],
     sigma_surf: float,
@@ -117,17 +218,24 @@ def step_collisions_smol_0d(
     enable_blowout: bool,
     t_sink: float | None,
     ds_dt_val: float | None = None,
+    s_min_effective: float | None = None,
+    dynamics_cfg: "Dynamics | None" = None,
+    tau_eff: float | None = None,
 ) -> Smol0DStepResult:
     """Advance collisions+fragmentation in 0D using the Smol solver."""
 
     sigma_before_step = float(sigma_surf)
-    sigma_target = sigma_before_step + prod_subblow_area_rate * dt
     sigma_clip_loss = 0.0
-    sigma_for_step = sigma_target
+    sigma_for_step = sigma_before_step
+    prod_subblow_area_rate = max(float(prod_subblow_area_rate), 0.0)
     if sigma_tau1 is not None and math.isfinite(sigma_tau1):
-        if sigma_target > sigma_tau1:
-            sigma_clip_loss = max(sigma_target - sigma_tau1, 0.0)
-        sigma_for_step = float(min(sigma_target, sigma_tau1))
+        sigma_for_step = float(min(sigma_for_step, sigma_tau1))
+        headroom = max(sigma_tau1 - sigma_for_step, 0.0)
+        if dt > 0.0 and headroom >= 0.0:
+            prod_cap = headroom / dt
+            if prod_subblow_area_rate > prod_cap:
+                sigma_clip_loss = (prod_subblow_area_rate - prod_cap) * dt
+                prod_subblow_area_rate = prod_cap
 
     sizes_arr, widths_arr, m_k, N_k, scale_to_sigma = smol.psd_state_to_number_density(
         psd_state,
@@ -153,9 +261,21 @@ def step_collisions_smol_0d(
             0.0,
         )
 
-    H_arr = np.full_like(N_k, max(r * max(i_value, 1.0e-6), 1.0e-6))
-    v_rel_scalar = dynamics.v_ij(e_value, i_value, v_k=r * Omega)
+    if dynamics_cfg is not None:
+        e_kernel, i_kernel, H_arr = compute_kernel_e_i_H(
+            dynamics_cfg,
+            tau_eff if tau_eff is not None else 0.0,
+            a_orbit_m=r,
+            v_k=r * Omega,
+            sizes=sizes_arr,
+        )
+    else:
+        e_kernel = e_value
+        i_kernel = i_value
+        H_arr = np.full_like(N_k, max(r * max(i_value, 1.0e-6), 1.0e-6))
+    v_rel_scalar = dynamics.v_ij(e_kernel, i_kernel, v_k=r * Omega)
     C_kernel = collide.compute_collision_kernel_C1(N_k, sizes_arr, H_arr, v_rel_scalar)
+    t_coll_kernel = kernel_minimum_tcoll(C_kernel)
     Y_tensor = _fragment_tensor(sizes_arr, m_k, v_rel_scalar, rho)
 
     S_blow = _blowout_sink_vector(sizes_arr, a_blow, Omega, enable_blowout)
@@ -180,10 +300,14 @@ def step_collisions_smol_0d(
         )
 
     extra_mass_loss_rate = mass_loss_rate_blow + mass_loss_rate_sink + mass_loss_rate_sub
-    if sigma_clip_loss > 0.0 and dt > 0.0:
-        extra_mass_loss_rate += sigma_clip_loss / dt
 
-    prod_mass_rate_eff = (sigma_for_step - sigma_before_step + sigma_clip_loss) / dt if dt > 0.0 else 0.0
+    prod_mass_rate_eff = prod_subblow_area_rate if dt > 0.0 else 0.0
+    source_k = supply_mass_rate_to_number_source(
+        prod_mass_rate_eff,
+        sizes_arr,
+        m_k,
+        s_min_eff=s_min_effective if s_min_effective is not None else 0.0,
+    )
 
     N_new, dt_eff, mass_err = smol.step_imex_bdf1_C3(
         N_k,
@@ -193,6 +317,7 @@ def step_collisions_smol_0d(
         m_k,
         prod_subblow_mass_rate=prod_mass_rate_eff,
         dt=dt,
+        source_k=source_k,
         S_external_k=S_sink,
         S_sublimation_k=S_sub_k,
         extra_mass_loss_rate=extra_mass_loss_rate,
@@ -210,8 +335,6 @@ def step_collisions_smol_0d(
     dSigma_dt_blowout = mass_loss_rate_blow
     dSigma_dt_sublimation = mass_loss_rate_sub
     dSigma_dt_sinks = mass_loss_rate_sink + dSigma_dt_sublimation
-    if sigma_clip_loss > 0.0 and dt > 0.0:
-        dSigma_dt_sinks += sigma_clip_loss / dt
 
     return Smol0DStepResult(
         psd_state,
@@ -229,4 +352,7 @@ def step_collisions_smol_0d(
         mass_loss_rate_blow,
         mass_loss_rate_sink,
         mass_loss_rate_sub,
+        t_coll_kernel,
+        e_kernel,
+        i_kernel,
     )

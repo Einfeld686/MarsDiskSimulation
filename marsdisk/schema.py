@@ -193,6 +193,22 @@ class Dynamics(BaseModel):
     i0: float
     t_damp_orbits: float
     f_wake: float = 1.0
+    kernel_ei_mode: Literal["config", "wyatt_eq"] = Field(
+        "config",
+        description="How to choose e/i for collision kernels: 'config' uses e0/i0, 'wyatt_eq' solves for c_eq",
+    )
+    kernel_H_mode: Literal["ia", "fixed"] = Field(
+        "ia",
+        description="Scale height prescription for collision kernels",
+    )
+    H_factor: float = Field(
+        1.0,
+        description="Multiplier applied to H when kernel_H_mode='ia'",
+    )
+    H_fixed_over_a: Optional[float] = Field(
+        None,
+        description="Fixed H/a used when kernel_H_mode='fixed'",
+    )
     e_mode: Literal["fixed", "mars_clearance"] = Field(
         "fixed",
         description="Initial eccentricity mode; 'mars_clearance' samples Δr in meters",
@@ -225,6 +241,12 @@ class Dynamics(BaseModel):
         None,
         description="Optional seed for eccentricity/inclination RNG sampling (dimensionless)",
     )
+
+    @root_validator(skip_on_failure=True)
+    def _check_kernel_H_params(cls, values: Dict[str, Any]) -> Dict[str, Any]:
+        if values.get("kernel_H_mode") == "fixed" and values.get("H_fixed_over_a") is None:
+            raise ValueError("kernel_H_mode='fixed' requires H_fixed_over_a to be set")
+        return values
 
 
 class QStar(BaseModel):

@@ -74,6 +74,7 @@
 >   i_spread_deg: 5.0
 >   rng_seed: 42
 > ```
+> **衝突カーネル用トグル**: `kernel_ei_mode` でカーネルに渡す e,i を (`config`: e0/i0 をそのまま, `wyatt_eq`: `solve_c_eq` から導出) 切替え、`kernel_H_mode` + `H_factor` で H≃i a スケールを調整する。[marsdisk/physics/collisions_smol.py#compute_kernel_e_i_H [L63–L116]]
 | psd | PSD | wavy_strength=0.0 | alpha必須 | [marsdisk/schema.py#PSD [L212–L216]] |
 | qstar | QStar | なし | Qs,a_s,B,b_g,v_ref_kms必須 | [marsdisk/schema.py#QStar [L202–L209]] |
 | disk | Disk | なし | geometryにr_in_RM,r_out_RM必須 | [marsdisk/schema.py#Disk [L43–L46]] |
@@ -91,15 +92,19 @@
 - 粒径分布を `update_psd_state` で三勾配＋任意の“wavy”補正付きに構築し、その状態から不透明度 `\kappa` を計算する（PSD）。[marsdisk/physics/psd.py#update_psd_state [L30–118]][marsdisk/physics/psd.py#compute_kappa [L121–146]]
 - 光学深度からΦテーブルを引いて有効不透明度とΣτ=1の上限を求める（Phi）。Φの 0–1 クランプと κ_eff の計算は `effective_kappa` が担い、`apply_shielding` が Στ=1 を返す。[marsdisk/physics/shielding.py#effective_kappa [L90–120]][marsdisk/physics/shielding.py#apply_shielding [L133–216]]
 - τ=1 の表層面密度を近似して返す（光学的深さの定義に基づく）。[marsdisk/physics/shielding.py#sigma_tau1 [L123–L130]]
-- Strubbe–Chiang衝突寿命やシンク時間を組み込んだ表層ODEを暗示的に進めて外向流束とシンクを出力する（S1）。[marsdisk/physics/surface.py#step_surface_density_S1 [L96–L163]][marsdisk/run.py#run_zero_d [L426–L1362]]
+- Strubbe–Chiang衝突寿命やシンク時間を組み込んだ表層ODEを暗示的に進めて外向流束とシンクを出力する（S1）。`surface.collision_solver="surface_ode"` を指定したときのみ用い、標準の Smol 経路とは診断精度が異なる点に留意する。[marsdisk/physics/surface.py#step_surface_density_S1 [L96–L163]][marsdisk/run.py#run_zero_d [L426–L1362]]
 - 飽和蒸気圧モデルのバックエンドを選ぶ（Clausius–Clapeyron／表引き）。[marsdisk/physics/sublimation.py#choose_psat_backend [L386–L496]]
-- Smoluchowski IMEX-BDF(1)で内部PSDを更新し質量保存誤差を評価する（C3）。[marsdisk/physics/smol.py#compute_mass_budget_error_C4 [L104–L131]]
+- Smoluchowski IMEX-BDF(1)で内部PSDを更新し質量保存誤差を評価する（C3）。`collisions_smol` がソースベクトルやカーネルを構築して標準経路として呼び出す。[marsdisk/physics/collisions_smol.py:L1–L220][marsdisk/physics/smol.py#compute_mass_budget_error_C4 [L104–L131]]
 - Smol 方程式の時刻更新（剛性=陰／非剛性=陽の IMEX＋一次BDF）。[marsdisk/physics/smol.py#step_imex_bdf1_C3 [L18–L101]]
 - 出力判定では `beta_at_smin_config` と `beta_threshold` を比較し、`case_status="blowout"`（閾値以上）、`"ok"`（閾値未満）、質量収支違反など例外時のみ `"failed"` として記録する。[marsdisk/physics/radiation.py#BLOWOUT_BETA_THRESHOLD [L32] :32][marsdisk/run.py#run_zero_d [L426–L1362]][marsdisk/run.py#run_zero_d [L426–L1362]]
 
+### Smol (C3/C4) と表層ODE (S1) の扱い
+- 標準経路は Smoluchowski IMEX-BDF(1)（C3/C4）。`collisions_smol` が PSD→数密度変換・遮蔽後 τ=1 クリップ・供給フラックスからのソースベクトル化・カーネル/破片分布生成・昇華/外部シンク合流を行い、`smol.step_imex_bdf1_C3` へ渡す。結果の `N_k` から `sigma_surf` を再構成し、ブローアウトゲート/fast blowout を適用して `outflux_surface`・`M_out_dot`・`mass_lost_by_*` を評価する。[marsdisk/physics/collisions_smol.py:L1–L220][marsdisk/physics/smol.py#step_imex_bdf1_C3 [L146–L237]]
+- 旧来の表層ODE（S1）は Wyatt の 1/t_coll 近似による簡易モデルで、`surface.collision_solver="surface_ode"` を明示したときのみ使うレガシー経路。光学的に薄い近似で `step_surface_density_S1` が Σ を直接更新するため、標準モードとは診断精度が異なる点に留意する。[marsdisk/physics/surface.py:L120–L196]
+
 ## 7. 温度・放射の上書きと出力フィールド
 - `T_M_used` は放射計算に採用された火星面温度で、`radiation.TM_K`（存在する場合）が `temps.T_M` を上書きしたかどうかを `T_M_source` が `"radiation.TM_K"` または `"temps.T_M"` として示す。[marsdisk/schema.py#Temps [L111–L127]][marsdisk/run.py#load_config [L372]][marsdisk/run.py#run_zero_d [L426–L1362]]
-- `mass_lost_by_blowout` は放射圧剥離による累積損失、`mass_lost_by_sinks` は昇華・ガス抗力による累積損失を示す。`sinks.mode="none"` では後者が全ステップで0になり、`checks/mass_budget.csv` で許容誤差0.5%以下が確認される。[marsdisk/run.py#run_zero_d [L426–L1362]][marsdisk/io/writer.py#write_parquet [L24–L162]](tests/test_sinks_none.py)
+- `mass_lost_by_blowout` は放射圧剥離による累積損失、`mass_lost_by_sinks` は昇華・ガス抗力による累積損失を示す。`sinks.mode="none"` では後者が全ステップで0になり、Smol 経路でも `checks/mass_budget.csv` の誤差0.5%以下が維持される。[marsdisk/run.py#run_zero_d [L426–L1362]][marsdisk/io/writer.py#write_parquet [L24–L162]](tests/test_sinks_none.py)
 
 ## 8. I/O 仕様（出力ファイル種別、カラム/フィールドの最低限）
 - 時系列は積分結果をDataFrameにし`out/series/run.parquet`として`tau`, `a_blow`, `prod_subblow_area_rate`などを保持する。[marsdisk/run.py#run_zero_d [L426–L1362]][marsdisk/run.py#run_zero_d [L426–L1362]]
@@ -206,9 +211,9 @@ io:
 - どちらのユーティリティも `marsdisk.io.tables.get_qpr_table_path()` を参照して実行時の ⟨Q_pr⟩ テーブルを `run_zero_d` と共有し、`run_config.json` や例外ログにパスを残す。Planck平均テーブルが遅延ロードされると `get_qpr_table_path` が解決済みパスを返し、`radiation.qpr_lookup` はこのパスを用いた β/ブローアウト評価を継続する。[marsdisk/io/tables.py#get_qpr_table_path [L356–359]][marsdisk/run.py:557–558][marsdisk/physics/radiation.py:111–116]
 
 ## 16. 将来実装プラン（0D完成→1D拡張）
-- **0Dカップリングの仕上げ**: `run_zero_d` の IMEX 主ループで `prod_subblow_area_rate`,`M_out_dot`,`M_out_cum` を常時計算し、`write_parquet`/`write_summary`/`write_mass_budget_log` を経由して `series`・`summary`・`checks` へ `M_out_cum`,`M_sink_cum`,`M_loss` を揃えて記録する。衝突は既定の `surface.collision_solver="surface_ode"` で Wyatt 近似（S1）を用い、`"smol"` では Smoluchowski (C3) が S1 を置き換える。どちらでも遮蔽・ゲート・fast_blowout 補正の順序は維持し、`mass_lost_by_blowout`・`mass_lost_by_sinks` と C4 差分を突き合わせる。[marsdisk/run.py:736–1016][marsdisk/io/writer.py:24–145][marsdisk/physics/surface.py:98–170][marsdisk/physics/sinks.py:83–160][marsdisk/physics/smol.py:131–131]
-- **物理スイッチの YAML 外出し**: 昇華・ガス抗力・自遮蔽倍率・wake 係数などのトグルを `Config` モデルに追加して `configs/base.yml` から切り替え可能にし、`ALLOW_TL2003=false` を標準値として schema 検証に組み込む。`shielding` や `radiation` が legacy alias を吸収している流儀を再利用し、依存項目の整合性チェックを Pydantic validator で実装する。[marsdisk/schema.py:454–455][configs/base.yml:1–40]
-- **テーブル／テスト整備**: Q_pr と Φ のロード／補間を `marsdisk/io/tables.py` に統一関数としてまとめ、テーブルの存在確認とメタデータ保存を一本化する。同時に pytest で Wyatt スケール、Blow-out 起因の wavy PSD、IMEX 収束制限を検証する 3 本のテスト（`tests/test_scalings.py`,`tests/test_mass_conservation.py`,`tests/test_surface_outflux_wavy.py`）を拡張し、CI が数値退行を先に検出できるようにする。[marsdisk/io/tables.py:22–22][tests/test_scalings.py:13–20][tests/test_mass_conservation.py:10–41][tests/test_surface_outflux_wavy.py:10–37]
+- **0Dカップリングの仕上げ**: `run_zero_d` の IMEX 主ループで `prod_subblow_area_rate`,`M_out_dot`,`M_out_cum` を常時計算し、`write_parquet`/`write_summary`/`write_mass_budget_log` を経由して `series`・`summary`・`checks` へ `M_out_cum`,`M_sink_cum`,`M_loss` を揃えて記録する。衝突は既定の `surface.collision_solver="smol"` で Smoluchowski (C3/C4) を用い、Wyatt 近似の表層 ODE を試す場合のみ `surface.collision_solver="surface_ode"` を明示する。どちらでも遮蔽・ゲート・fast_blowout 補正の順序は維持し、`mass_lost_by_blowout`・`mass_lost_by_sinks` と C4 差分を突き合わせる。[marsdisk/run.py:736–1016][marsdisk/io/writer.py:24–145][marsdisk/physics/surface.py:98–170][marsdisk/physics/sinks.py:83–160][marsdisk/physics/smol.py:131–131]
+- **物理スイッチの YAML 外出し**: 昇華・ガス抗力・自遮蔽倍率・wake 係数などのトグルを `Config` モデルに追加して `configs/base.yml` から切り替え可能にし、`ALLOW_TL2003=false` を標準値として schema 検証に組み込む。`shielding` や `radiation` が legacy alias を吸収している流儀を再利用し、依存項目の整合性チェックを Pydantic validator で実装する。[marsdisk/schema.py:456–456][configs/base.yml:1–40]
+- **テーブル／テスト整備**: Q_pr と Φ のロード／補間を `marsdisk/io/tables.py` に統一関数としてまとめ、テーブルの存在確認とメタデータ保存を一本化する。同時に pytest で Wyatt スケール、Blow-out 起因の wavy PSD、IMEX 収束制限を検証する 3 本のテスト（`tests/test_scalings.py`,`tests/test_mass_conservation.py`,`tests/test_surface_outflux_wavy.py`）を拡張し、CI が数値退行を先に検出できるようにする。[marsdisk/io/tables.py:22–22][tests/test_scalings.py:16–20][tests/test_mass_conservation.py:10–41][tests/test_surface_outflux_wavy.py:10–37]
 - **1D拡張の受け皿**: `RadialGrid.from_edges` と `step_viscous_diffusion_C5` を `numerics.enable_viscosity` で有効化できるフックとして維持し、0D 実行でも格子初期化と粘性係数の placeholder を通す。将来 1D へ拡張するときはこのフックに演算子分割（C5）を組み込むだけで済む構成へ整える。[marsdisk/grid.py:93–94][marsdisk/physics/viscosity.py:51–134]
 - **DocSync/検証フローの固定**: 変更を入れたら `python -m tools.doc_sync_agent --all --write` → `make analysis-doc-tests` → `python -m tools.evaluation_system --outdir <run_dir>` の順に実行し、run_card（`out/<timestamp>_<title>__<shortsha>__seed<n>/run_card.md`）へコマンド・乱数種・主要ハッシュ・analysis レシピ確認結果を集約する。`analysis/run-recipes.md` には当該 run の操作手順を追加し、analysis を唯一の仕様源に保つ。
 
