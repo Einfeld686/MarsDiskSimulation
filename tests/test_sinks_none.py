@@ -26,6 +26,7 @@ def test_run_zero_d_with_sinks_disabled(tmp_path: Path) -> None:
         io=schema.IO(outdir=tmp_path),
     )
     cfg.sinks.mode = "none"
+    cfg.surface.collision_solver = "smol"
 
     run.run_zero_d(cfg)
 

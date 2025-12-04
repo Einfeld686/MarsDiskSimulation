@@ -26,6 +26,8 @@ def _base_surface_cfg(outdir: Path, *, s_min: float = 1.0e-6, prod_rate: float =
         io=schema.IO(outdir=outdir, debug_sinks=False, correct_fast_blowout=False),
     )
     cfg.sinks.mode = "none"
+    cfg.surface.collision_solver = "smol"
+    cfg.shielding = schema.Shielding(mode="off")
     return cfg
 
 

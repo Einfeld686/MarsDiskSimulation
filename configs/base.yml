@@ -36,6 +36,10 @@ dynamics:
   i0: 0.05
   t_damp_orbits: 20.0
   f_wake: 2.0
+  # Wyatt スケール / カーネル e,i 設定
+  kernel_ei_mode: "config"   # or "wyatt_eq"
+  kernel_H_mode: "ia"        # or "fixed"
+  H_factor: 1.0
   e_mode: "fixed"
   i_mode: "fixed"
 psd:
@@ -64,6 +68,7 @@ surface:
   sigma_surf_init_override: null
   use_tcoll: true
   freeze_sigma: false
+  collision_solver: "smol"
 supply:
   mode: "const"
   const:

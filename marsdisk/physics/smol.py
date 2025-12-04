@@ -149,9 +149,10 @@ def step_imex_bdf1_C3(
     Y: np.ndarray,
     S: Iterable[float] | None,
     m: Iterable[float],
-    prod_subblow_mass_rate: float,
+    prod_subblow_mass_rate: float | None,
     dt: float,
     *,
+    source_k: Iterable[float] | None = None,
     S_external_k: Iterable[float] | None = None,
     S_sublimation_k: Iterable[float] | None = None,
     extra_mass_loss_rate: float = 0.0,
@@ -186,7 +187,13 @@ def step_imex_bdf1_C3(
     m:
         Particle mass associated with each bin.
     prod_subblow_mass_rate:
-        Rate at which mass below the blow-out limit is produced.
+        Nominal mass source rate (kg/m^2/s) associated with external supply.
+        When ``source_k`` is provided the per-bin source is mapped back to a
+        mass rate via ``sum(m_k * source_k)`` for the mass budget check.  A
+        ``None`` value defers entirely to that computed rate.
+    source_k:
+        Optional explicit source vector ``F_k`` (1/s) that injects particles
+        into the Smol system.  A zero vector preserves the legacy behaviour.
     extra_mass_loss_rate:
         Additional mass flux leaving the system (kg m^-2 s^-1) that should be
         included in the mass budget check (e.g. sublimation sinks handled
@@ -229,6 +236,7 @@ def step_imex_bdf1_C3(
             raise MarsDiskError(f"{name} has incompatible shape")
         return arr_np
 
+    source_arr = _optional_sink(source_k, "source_k")
     S_external_arr = _optional_sink(S_external_k, "S_external_k")
     S_sub_arr = _optional_sink(S_sublimation_k, "S_sublimation_k")
     S_arr = S_base + S_external_arr + S_sub_arr
@@ -238,10 +246,16 @@ def step_imex_bdf1_C3(
     dt_max = safety * float(np.min(t_coll))
     dt_eff = min(float(dt), dt_max)
 
+    source_mass_rate = float(np.sum(m_arr * source_arr))
+    if prod_subblow_mass_rate is None:
+        prod_mass_rate_budget = source_mass_rate
+    else:
+        prod_mass_rate_budget = float(prod_subblow_mass_rate)
+
     gain = 0.5 * np.einsum("ij,kij->k", C, Y)
 
     while True:
-        N_new = (N_arr + dt_eff * (gain - S_arr)) / (1.0 + dt_eff * loss)
+        N_new = (N_arr + dt_eff * (gain + source_arr - S_arr * N_arr)) / (1.0 + dt_eff * loss)
         if np.any(N_new < 0.0):
             dt_eff *= 0.5
             continue
@@ -249,8 +263,9 @@ def step_imex_bdf1_C3(
             N_arr,
             N_new,
             m_arr,
-            prod_subblow_mass_rate + float(extra_mass_loss_rate),
+            prod_mass_rate_budget,
             dt_eff,
+            extra_mass_loss_rate=float(extra_mass_loss_rate),
         )
         logger.info(
             "step_imex_bdf1_C3: dt=%e mass_err=%e", dt_eff, mass_err
@@ -268,24 +283,36 @@ def compute_mass_budget_error_C4(
     m: Iterable[float],
     prod_subblow_mass_rate: float,
     dt: float,
+    *,
+    extra_mass_loss_rate: float = 0.0,
 ) -> float:
-    """Return the relative mass budget error according to (C4)."""
+    """Return the relative mass budget error according to (C4).
+
+    The budget compares the initial mass to the combination of retained mass
+    and explicit source/sink fluxes:
+
+    ``M_old + dt * prod_subblow_mass_rate = M_new + dt * extra_mass_loss_rate``.
+    """
 
     N_old_arr = np.asarray(N_old, dtype=float)
     N_new_arr = np.asarray(N_new, dtype=float)
     m_arr = np.asarray(m, dtype=float)
     if not (N_old_arr.shape == N_new_arr.shape == m_arr.shape):
         raise MarsDiskError("array shapes must match")
+
     M_before = float(np.sum(m_arr * N_old_arr))
     M_after = float(np.sum(m_arr * N_new_arr))
-    if M_before <= 0.0:
-        raise MarsDiskError("total mass must be positive")
-    diff = M_after + dt * prod_subblow_mass_rate - M_before
-    err = abs(diff) / M_before
+    prod_term = dt * float(prod_subblow_mass_rate)
+    extra_term = dt * float(extra_mass_loss_rate)
+    diff = M_after + extra_term - (M_before + prod_term)
+    baseline = M_before if M_before > 0.0 else max(M_before + prod_term, 1.0e-30)
+    err = abs(diff) / baseline
     logger.info(
-        "compute_mass_budget_error_C4: M_before=%e M_after=%e diff=%e err=%e",
+        "compute_mass_budget_error_C4: M_before=%e M_after=%e prod=%e extra=%e diff=%e err=%e",
         M_before,
         M_after,
+        prod_subblow_mass_rate,
+        extra_mass_loss_rate,
         diff,
         err,
     )

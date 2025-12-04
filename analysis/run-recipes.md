@@ -3,13 +3,24 @@
 # run-recipes
 > **注記（gas‑poor）**: 本解析は **ガスに乏しい衝突起源デブリ円盤**を前提とします。従って、**光学的に厚いガス円盤**を仮定する Takeuchi & Lin (2003) の表層塵アウトフロー式は**適用外**とし、既定では評価から外しています（必要時のみ明示的に有効化）。この判断は、衝突直後の円盤が溶融主体かつ蒸気≲数%で、初期周回で揮発が散逸しやすいこと、および小衛星を残すには低質量・低ガスの円盤条件が要ることに基づきます。参考: [@Hyodo2017a_ApJ845_125; @Hyodo2017b_ApJ851_122; @Hyodo2018_ApJ860_150; @CanupSalmon2018_SciAdv4_eaar6887]。
 
+## モード早見表（0D 基本）
+目的別に 0D モードと主要トグル・コマンドを一覧する。詳細な確認ポイントは各節を参照。
+
+| 目的 | 主要トグル / 設定 | 推奨コマンド | 出力確認 |
+| --- | --- | --- | --- |
+| ベースライン gas-poor（既定） | `surface.collision_solver=smol`, `sinks.mode=none`, `psd.wavy_strength=0.0`, `shielding.mode=psitau` | `python -m marsdisk.run --config configs/base.yml` | `out/series/run.parquet` に `mass_lost_by_sinks=0`、`summary.json` の `case_status` と β 統計、`checks/mass_budget.csv` 誤差 ≤0.5% |
+| 昇華シンク ON | `sinks.mode=sublimation`, `enable_sublimation=true` | `python -m marsdisk.run --config configs/base_sublimation.yml` | `mass_lost_by_sinks` が増分を持ち、`s_min_components` は `config/blowout/effective` のまま |
+| レガシー表層 ODE（gas-rich 試験時のみ） | **環境変数** `ALLOW_TL2003=true`、`surface.collision_solver=surface_ode` | `ALLOW_TL2003=true python -m marsdisk.run --config configs/base.yml --override surface.collision_solver=surface_ode` | `run_config.json` に `collision_solver: surface_ode`、質量誤差 ≤0.5%（gas-poor 既定では無効のまま） |
+| “wavy” PSD 感度 | `psd.wavy_strength>0` | `python -m marsdisk.run --config configs/base.yml --override psd.wavy_strength=0.2` | `series/run.parquet` に “wavy” の波形が残り、`summary.json` で `psd.wavy_strength` を確認 |
+| 高速ブローアウト解像 | `io.substep_fast_blowout=true`, `io.substep_max_ratio≈1`（必要に応じ補正 `io.correct_fast_blowout=true`） | `python -m marsdisk.run --config configs/base.yml --set io.substep_fast_blowout=true --set io.substep_max_ratio=1.0` | `series/run.parquet` の `n_substeps>1` と `fast_blowout_*` 列、積分値と累積損失の一致 |
+
 ### DocSync + ドキュメントテスト（標準手順）
 - Codex や開発者が analysis/ を更新する場合は、`make analysis-sync`（DocSyncAgent）で反映した直後に `make analysis-doc-tests` を実行し、`pytest tests/test_analysis_* -q` を一括確認する。
 - CI でも同じターゲットをフックできるため、分析手順の追加・改稿時は必ずこの 2 コマンドをセットで記録する。
 - 解析手順を変える PR では「DocSync済み／analysis-doc-tests 済み」をチェックリストへ含めると運用が安定する。
 - チャットでの簡易リクエストとして「analysisファイルを更新してください」と指示された場合は `make analysis-update`（DocSync + docテストの複合ターゲット）を必ず実行する。
 
-## A. ベースライン実行
+## A. ベースライン 0D 実行（既定は Smol 衝突モード）
 
 1) 目的
 最小の0D構成で2年間のcoupled破砕–表層系を完走させ、基準となる Parquet/JSON/CSV 出力を得る。
@@ -18,6 +29,12 @@
 2) コマンド
 ```bash
 python -m marsdisk.run --config configs/base.yml
+```
+- 衝突解法のデフォルトは `surface.collision_solver="smol"`（Smoluchowski 経路）。レガシーの表層 ODE を使う場合のみ `surface.collision_solver="surface_ode"` を明示する。
+- Smol ベースラインを走らせて評価まで回す最小例:
+```bash
+python -m marsdisk.run --config configs/base.yml --set io.outdir=out/base_smol
+python -m tools.evaluation_system --outdir out/base_smol
 ```
 
 3) 最小設定断片
@@ -43,7 +60,7 @@ io:
 - `out/run_config.json` → `head -n 8 out/run_config.json`
 
 5) 確認項目
-- `series/run.parquet` の列に `prod_subblow_area_rate`,`M_out_dot`,`mass_lost_by_blowout`,`mass_lost_by_sinks` に加え、`dt_over_t_blow`,`fast_blowout_factor`,`fast_blowout_flag_gt3`,`fast_blowout_flag_gt10`,`fast_blowout_corrected`,`a_blow_step`,`dSigma_dt_sublimation`,`mass_lost_sinks_step`,`mass_lost_sublimation_step`,`ds_dt_sublimation` が揃う。さらに温度ドライバ列 `T_M_used`,`rad_flux_Mars`,`Q_pr_at_smin`,`beta_at_smin`,`a_blow_at_smin` が出力されていること。供給が0のため `prod_subblow_area_rate` は機械誤差内で0に留まり、`mass_lost_by_sinks` が全行で0であれば HK シンク（`sinks.total_sink_timescale`）が `None` を返し損失項へ寄与していないことを示す。高速ブローアウト補正は既定で無効なので `fast_blowout_corrected` は `false`、閾値フラグは `dt_over_t_blow` の大小に一致する。
+- `series/run.parquet` の列に `prod_subblow_area_rate`,`M_out_dot`,`mass_lost_by_blowout`,`mass_lost_by_sinks` に加え、`dt_over_t_blow`,`fast_blowout_factor`,`fast_blowout_flag_gt3`,`fast_blowout_flag_gt10`,`fast_blowout_corrected`,`a_blow_step`,`dSigma_dt_sublimation`,`mass_lost_sinks_step`,`mass_lost_sublimation_step`,`ds_dt_sublimation` が揃う。さらに温度ドライバ列 `T_M_used`,`rad_flux_Mars`,`Q_pr_at_smin`,`beta_at_smin`,`a_blow_at_smin` が出力されていること。供給が0のため `prod_subblow_area_rate` は機械誤差内で0に留まり、`mass_lost_by_sinks` が全行で0であれば HK シンク（`sinks.total_sink_timescale`）が `None` を返し損失項へ寄与していないことを示す。高速ブローアウト補正は既定で無効なので `fast_blowout_corrected` は `false`、閾値フラグは `dt_over_t_blow` の大小に一致する。これらは `collisions_smol` + Smol 解法で一貫して計算され、solver モードに依存せず列名・単位は不変。
 - `summary.json` で `case_status` が `beta_at_smin_config` と `beta_threshold` の比較に従い `blowout`（閾値以上）または `ok`（閾値未満）となっていること。加えて `orbits_completed`,`M_out_cum`,`M_sink_cum`，および `M_out_mean_per_orbit` などの公転ロールアップ指標が出力される。温度関連として `T_M_source`,`T_M_initial`,`T_M_final`,`T_M_min`,`T_M_median`,`T_M_max`,`temperature_driver` が記録され、`beta_at_smin_min`/`beta_at_smin_median`/`beta_at_smin_max` と `a_blow_min`/`a_blow_median`/`a_blow_max` が統計として付与されていることを確認する。
 - `summary.json` の β関連フィールドが `beta_at_smin_config` / `beta_at_smin_effective` に分かれていること（旧 `beta_at_smin` は出力されない）。
 - `summary.json` の `s_min_components` に `config`,`blowout`,`effective` が揃い、`s_min_effective` が max(config, blowout) であること。昇華設定は床粒径へは反映されず、粒径侵食による欠損は `mass_lost_sublimation_step` と `dSigma_dt_sublimation` で診断する。[marsdisk/run.py:736–1362][marsdisk/physics/psd.py:149–264]
@@ -54,6 +71,9 @@ io:
 - `diagnostics.phase7.enable=true` を指定した場合のみ、`run.parquet` に `mloss_*` と `t_coll`/`ts_ratio`、`kappa_eff`/`tau_eff`/`blowout_gate_factor` が追加され、`summary.json` に `median_gate_factor` と `tau_gate_blocked_time_fraction`、`orbit_rollup.csv` に `gate_factor_median` が出力される（デフォルトでは列追加なし）。[docs/devnotes/phase7_gate_spec.md]
 - `siO2_disk_cooling/siO2_cooling_map.py` を別途実行し、(E.042)/(E.043) に従った $T_{\rm Mars}(t)$ と $T_p(r,t)$ が Hyodo et al. (2018) の式(2)–(6)と一致することを確認する。初期温度や $\bar{Q}_{\rm abs}$ を掃引し、β 閾値の境界が `out/summary.json` の `beta_at_smin_config` と `beta_at_smin_effective` に整合するかをチェックする。[\@Hyodo2018_ApJ860_150]
 - 化学・相平衡フラグを有効化した runs では、気相凝縮と溶融固化物の化学差（Pignatale et al. 2018）および外縁ガス包絡での凝縮スペクトル（Ronnet et al. 2016）によって HKL パラメータや` t_sink`が設定されていることを `sinks.total_sink_timescale` のログで確認する。[\@Pignatale2018_ApJ853_118; @Ronnet2016_ApJ828_109]
+
+DocSync/テスト
+- DocSyncAgent → doc テストの順で回す。Smol/衝突経路周りを更新した場合も必ず `make analysis-update`（`make analysis-sync` + `make analysis-doc-tests` の短縮）と `make analysis-coverage-guard` を実行し、coverage ガードを維持する。
 
 - CLI は `python -m marsdisk.run --config …` を受け取り、0D実行を呼び出す。[marsdisk/run.py:736–1362]
 - 0Dケースの軌道量は `omega` と `v_kepler` が `runtime_orbital_radius_m` から導出し、ブローアウト時間や周速度評価の基礎となる。[marsdisk/grid.py:90][marsdisk/grid.py:34]
@@ -101,15 +121,15 @@ sinks:
     昇華境界は `s_min_evolved` 列で追跡され、床粒径の決定には反映されない。
   - `run_config.json` の `sublimation_provenance` に HKL 選択と SiO パラメータ、`psat_model`、`valid_K`、タブレット使用時のファイルパスがまとまり、実行半径・公転時間とともに再現条件が残る。
 
-### 派生レシピ: Smol 衝突解法を有効にする（実験的）
+### 派生レシピ: 表層 ODE を使う（Wyatt 近似のレガシー）
 - 実行例
 ```bash
-python -m marsdisk.run --config configs/base.yml --set surface.collision_solver=smol
+python -m marsdisk.run --config configs/base.yml --set surface.collision_solver=surface_ode
 ```
 - 確認ポイント
-  - `summary.json` に `collision_solver: "smol"` が記録され、`mass_budget_max_error_percent` が 0.5% 以下に収まる。
-  - `run_config.json` の `process_controls.collision_solver` が `"smol"` となり、既存の `prod_subblow_area_rate`,`M_out_dot`,`mass_lost_by_blowout` 列が Parquet に残る。
-  - デフォルト (`surface.collision_solver="surface_ode"`) は旧 S1（Wyatt 近似）のままであり、既存レシピの期待値を変えない。
+  - `summary.json` に `collision_solver: "surface_ode"` が記録され、Wyatt 近似ベースの表層 ODE で `mass_budget_max_error_percent` が 0.5% 以下に収まる。
+  - `run_config.json` の `process_controls.collision_solver` が `"surface_ode"` となり、`prod_subblow_area_rate`,`M_out_dot`,`mass_lost_by_blowout` 列が Smol 時と同じ名前・単位で残る。
+  - Smol （標準）に比べて光学的に薄い近似を置いた簡易モデルである点を踏まえ、`t_coll` や外向流束の診断値が Smol 経路と異なる場合は差分理由を併記する。
 
 ### 派生レシピ: サブステップで高速ブローアウトを解像する
 - 実行例

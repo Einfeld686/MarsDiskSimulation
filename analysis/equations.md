@@ -74,13 +74,11 @@
 Type-A disks (collision dominated) inherit $\tau(r) \propto r^{-5/2}$, whereas type-B disks (CPR drag dominated) follow $\tau(r) \propto r^{-3/2}$, both derived from the same scaling. [@StrubbeChiang2006_ApJ648_652]
 
 ### (E.007) marsdisk/physics/surface.py: step_surface_density_S1 (lines 96-163)
-[@TakeuchiLin2003_ApJ593_524] に基づくガスリッチ表層 ODE（標準では無効）。
-離散化形は IMEX-BDF1 を本実装向けに組んだもので、同一式を提示する文献はない（実装上の離散化）。
+Wyatt 型の $t_{\mathrm{coll}} = 1/(\Omega\tau_{\perp})$ 減衰を用いて表層面密度を直接更新する ODE[@Wyatt2008; @StrubbeChiang2006_ApJ648_652]。Smol のフル Smoluchowski 解法（C3/C4）に対する光学的に薄いレガシー簡略版で、Wyatt スケールとの整合確認や対照実験用に保持している。
 
-> **適用範囲の注意（既定は無効）**  
-> この式群は **光学的に厚いガス円盤の表層**を仮定する Takeuchi & Lin (2003) に基づきます。  
-> 当プロジェクトの標準環境（**gas‑poor** な衝突デブリ円盤）では前提が一致しないため、**既定では使用しません**（`ALLOW_TL2003=false`）。  
-> ガスが十分に存在すると仮定する対照実験に限り、利用者が明示的に有効化してください。
+> **適用範囲の注意（既定は Smol）**  
+> この ODE は `surface.collision_solver="surface_ode"` を明示した場合のみ使う。  
+> Takeuchi & Lin (2003) のガスリッチ表層アウトフロー式[@TakeuchiLin2003_ApJ593_524]を下敷きにしているため、gas‑poor を標準とする本プロジェクトでは `ALLOW_TL2003=false` を維持し、対照的な gas-rich 仮定を試すときだけ有効化する。
 ```latex
 \begin{aligned}
  t_{\mathrm{blow}} &= \frac{1}{\Omega},\\
@@ -117,9 +115,9 @@ Type-A disks (collision dominated) inherit $\tau(r) \propto r^{-5/2}$, whereas t
 - Returns outflux and sink flux after clipping; logs step parameters.
 - Indicator $I_{\mathrm{blow}}$ is 1 only when the runtime flag `enable_blowout` is true, ensuring both the $1/t_{\mathrm{blow}}$ termと外向流束が無効化される。[marsdisk/physics/surface.py#step_surface_density_S1 [L96–L169]]
 
-When `t_{\mathrm{sink}}` is `None` or non-positive (for example, the CLI passes `cfg.sinks.mode == "none"` through `sinks.total_sink_timescale` which returns `None`; see `[marsdisk/run.py#run_zero_d [L426–L1362]]` and `[marsdisk/physics/sinks.py#total_sink_timescale [L83–L160]]`), `step_surface_density_S1` drops the sink indicator so the IMEX loss term consists solely of the blow-out contribution and any active Strubbe–Chiang collision sink (`[marsdisk/physics/surface.py#step_surface_density_S1 [L96–L163]]`). In that configuration `sink_flux` evaluates to zero for every step.
+`surface.collision_solver="surface_ode"` を選んだ場合にのみ呼び出され、`t_{\mathrm{sink}}` が `None` または非正（`sinks.mode="none"` のときなど）ならシンク指標を落として吹き飛びと Wyatt/Strubbe–Chiang 型衝突寿命のみを損失項に残す。[marsdisk/run.py#run_zero_d [L426–L1362]][marsdisk/physics/sinks.py#total_sink_timescale [L83–L160]][marsdisk/physics/surface.py#step_surface_density_S1 [L96–L163]] その構成では `sink_flux` は常に0となる。
 
-**参考**: [無効: gas‑poor 既定] Takeuchi & Lin (2003); Hyodo et al. (2017); Hyodo et al. (2018); Canup & Salmon (2018); Strubbe & Chiang (2006); Kuramoto (2024)
+**参考**: [無効: gas‑poor 既定] Takeuchi & Lin (2003); Hyodo et al. (2017); Hyodo et al. (2018); Canup & Salmon (2018); Strubbe & Chiang (2006); Kuramoto (2024); Wyatt (2008)
 
 ### (E.008) marsdisk/run.py: effective minimum grain size and beta diagnostics (lines 229-488)
 ブローアウト境界と設定下限の最大を取り、β 診断を併記する手順。ブローアウトの閾値 β=0.5 とその定義は [@Burns1979_Icarus40_1; @StrubbeChiang2006_ApJ648_652] に従う。
@@ -188,8 +186,11 @@ Case classification follows the configuration beta: `case_status = "blowout"` wh
 - Direct multiplication with argument validation; raises `MarsDiskError` when $\Omega\le0$.
 
 ### (E.010) marsdisk/physics/smol.py: step_imex_bdf1_C3 (lines 18-101)
-Smoluchowski 方程式を IMEX-BDF1 で解く実装。nσv 型カーネルの時間積分と質量保存チェックは衝突カスケード実装 [@Krivov2006_AA455_509; @Wyatt2008] に倣う。
-具体的な離散化形と安全係数は実装依存で、同一式を提示する文献はない（実装上の離散化）。
+粒径 PSD に対する Smoluchowski 方程式を IMEX-BDF1 で解く標準の衝突解法（C3/C4）。供給・昇華・追加シンク（ガス抗力など）をまとめたソースベクトル $f_k$ を明示的項として扱い、
+```latex
+\dot{N}_k = \tfrac{1}{2}\sum_{i,j} K_{ij}\,N_i N_j\,Y_{kij} - N_k\sum_j K_{kj}N_j + f_k,
+```
+と定義する。`collisions_smol` が `prod_subblow_mass_rate`（ソース）と昇華/外部シンク（負の項）を束ねて $f_k$ を組み立て、Wyatt 型 $t_{\rm coll}\approx T_{\rm orb}/(4\pi\tau)$ スケール [@Wyatt2008] と Strubbe & Chiang (2006) の PR drag/衝突寿命整合を踏まえた $e,i,H$ を `compute_kernel_e_i_H` で評価したカーネル $K_{ij}(e,v_{\mathrm{rel}},H)$ を与える。[marsdisk/physics/collisions_smol.py:L1–L220][marsdisk/physics/collisions_smol.py#compute_kernel_e_i_H [L63–L116]]
 
 ```latex
 \begin{aligned}
@@ -207,7 +208,7 @@ Smoluchowski 方程式を IMEX-BDF1 で解く実装。nσv 型カーネルの時
 |$N_i^{n+1}$|Updated number surface density|m$^{-2}$|Returned array|
 |$C_{ij}$|Collision kernel between bins $i$ and $j$|s$^{-1}$|Input matrix `C`|
 |$Y_{kij}$|Fragment mass fraction to bin $k$ from $(i,j)$ collision|dimensionless|Input tensor `Y`|
-|$S_i$|Explicit sink term for bin $i$|m$^{-2}$ s$^{-1}$|Input array `S`|
+|$S_i$|Explicit source/sink term for bin $i$|m$^{-2}$ s$^{-1}$|Input array `S` assembled from $f_k$（供給は正、昇華や追加シンクは負の項）|
 |$G_i$|Gain term from fragment production|m$^{-2}$ s$^{-1}$|Computed internally|
 |$\Lambda_i$|Total loss rate for bin $i$|s$^{-1}$|Row sum of `C`|
 |$t_{\mathrm{coll},i}$|Collision time per bin|s|Lower bounded via $10^{-30}$ in denominator|
@@ -219,11 +220,11 @@ Smoluchowski 方程式を IMEX-BDF1 で解く実装。nσv 型カーネルの時
 |$\dot{m}_{<a_{\mathrm{blow}}}$|Sub-blow-out mass production rate|kg m$^{-2}$ s$^{-1}$|Input `prod_subblow_mass_rate` used in mass check|
 
 **Numerics**
-- IMEX-BDF1 update: implicit handling of loss via denominator, explicit gain and sink.
+- IMEX-BDF1 update: implicit handling of loss via denominator, explicit gain and source/sink vector $S$.
 - Enforces positivity: halves $\Delta t_{\mathrm{eff}}$ until all $N_i^{n+1}\ge0$.
 - Evaluates mass budget error (function C4); adaptively halves $\Delta t_{\mathrm{eff}}$ until error $\le$ `mass_tol`.
 - Caps step size relative to minimum collision time using `safety` multiplier.
-- `surface.collision_solver="smol"` を選ぶと `run_zero_d` が S1 代わりにこのオペレータで衝突を進める（既定は `"surface_ode"` で Wyatt 近似のまま）。[marsdisk/run.py:736–1016]
+- Smol が既定の衝突経路（`surface.collision_solver="smol"`）。表層 ODE (S1) を試す場合のみ `surface_ode` へ切り替える。[marsdisk/run.py:736–1016]
 
 ### (E.011) marsdisk/physics/smol.py: compute_mass_budget_error_C4 (lines 104-131)
 IMEX 更新後の質量差分を測るための診断式。衝突カスケードでの質量収支検査を行う実装 [@Krivov2006_AA455_509] に基づく。
@@ -442,7 +443,7 @@ P_{\mathrm{sat}}(T) =
 - In HKL branch, negative $(P_{\mathrm{sat}}-P_{\mathrm{gas}})$ is clamped to zero before evaluation.
 - Logistic branch guards against $dT\to0$ via `max(dT, 1.0)`.
 - Stores provenance in `run_config.json` under `sublimation_provenance`, capturing {`sublimation_formula`, `psat_model`, `A`, `B`, `mu`, `alpha_evap`, `P_gas`, `valid_K`, optional `psat_table_path`} for reproducibility.
-- Ambient vapour pressure $P_{\mathrm{gas}}$ (特に Si を含む蒸気分圧) は Ronnet et al. (2016) 同様に自由パラメータとして扱い、化学平衡は計算しない。既定は gas‑poor 前提で $P_{\mathrm{gas}}=0$ とし、感度試験では YAML `sinks.sub_params.P_gas` を明示調整すること（HKL フラックスの最大不確定要素）。[marsdisk/physics/sublimation.py:577–590], [marsdisk/schema.py:268–274]
+- Ambient vapour pressure $P_{\mathrm{gas}}$ (特に Si を含む蒸気分圧) は Ronnet et al. (2016) 同様に自由パラメータとして扱い、化学平衡は計算しない。既定は gas‑poor 前提で $P_{\mathrm{gas}}=0$ とし、感度試験では YAML `sinks.sub_params.P_gas` を明示調整すること（HKL フラックスの最大不確定要素）。[marsdisk/physics/sublimation.py:577–590], [marsdisk/schema.py:273–274]
 
 ### (E.019) marsdisk/physics/sublimation.py: sink_timescale (implemented by s_sink_from_timescale, lines 116-129)
 [@Ronnet2016_ApJ828_109]

@@ -1,33 +1,32 @@
 from pathlib import Path
 import math
-from pathlib import Path
 
+import pandas as pd
 import pytest
 
-from marsdisk.physics import surface, supply
+from marsdisk.physics import supply
 from marsdisk import run, schema
 
 
-def test_step_surface_tau_zero_no_error():
-    res = surface.step_surface(
-        sigma_surf=0.0,
-        prod_subblow_area_rate=0.0,
-        dt=1.0,
-        Omega=1.0,
-        tau=0.0,
+def test_run_zero_d_tau_zero_no_error(tmp_path: Path):
+    cfg = schema.Config(
+        geometry=schema.Geometry(mode="0D", r=1.0),
+        material=schema.Material(rho=3000.0),
+        temps=schema.Temps(T_M=2000.0),
+        sizes=schema.Sizes(s_min=1.0e-6, s_max=1.0e-3, n_bins=4),
+        initial=schema.Initial(mass_total=1.0e-12, s0_mode="upper"),
+        dynamics=schema.Dynamics(e0=1e-4, i0=1e-4, t_damp_orbits=1.0, f_wake=1.0),
+        psd=schema.PSD(alpha=1.5, wavy_strength=0.0),
+        qstar=schema.QStar(Qs=1.0e5, a_s=0.1, B=0.3, b_g=1.36, v_ref_kms=[1.0, 2.0]),
+        numerics=schema.Numerics(t_end_years=1.0e-10, dt_init=1.0),
+        io=schema.IO(outdir=tmp_path),
     )
-    assert math.isfinite(res.sigma_surf)
-
-
-def test_sigma_tau1_zero_kappa(monkeypatch):
-    def fake_kappa(state):
-        return 0.0
-
-    monkeypatch.setattr(run.psd, "compute_kappa", fake_kappa)
-    rc = run.RunConfig(r=1.0, Omega=1.0, prod_rate=0.0)
-    rs = run.RunState(sigma_surf=0.0, psd_state={})
-    rec = run.step(rc, rs, dt=1.0)
-    assert math.isfinite(rec["outflux_surface"])
+    cfg.surface.collision_solver = "smol"
+    cfg.sinks.mode = "none"
+    cfg.shielding = schema.Shielding(mode="off")
+    run.run_zero_d(cfg)
+    df = pd.read_parquet(tmp_path / "series" / "run.parquet")
+    assert math.isfinite(df["Sigma_surf"].iloc[-1])
 
 
 def test_supply_powerlaw_t0_zero():
@@ -43,4 +42,7 @@ def test_run_zero_d_no_zerodivision(monkeypatch, tmp_path):
     cfg = run.load_config(Path("configs/base.yml"))
     monkeypatch.setattr(run, "MAX_STEPS", 1)
     monkeypatch.setattr(cfg.io, "outdir", tmp_path)
+    cfg.surface.collision_solver = "smol"
+    cfg.sinks.mode = "none"
+    cfg.shielding = schema.Shielding(mode="off")
     run.run_zero_d(cfg)

@@ -45,7 +45,7 @@ python -m marsdisk.run --config analysis/run-recipes/baseline_blowout_only.yml
 - `out/` は Git 無視でドキュメントソースではない。`analysis/run_catalog.md` は `out/*/run_card.md` を出典とするパターンを示し、参照先が消えた場合は該当 run_id を `deprecated` にし、同じ ID を黙って再利用しない。
 
 # 設定の要点（YAML→スキーマ→実行）
-設定値はYAML→Pydantic→実行時オブジェクトの順に検証される。（[marsdisk/run.py:357-357], [marsdisk/schema.py:454-455]）
+設定値はYAML→Pydantic→実行時オブジェクトの順に検証される。（[marsdisk/run.py:357-357], [marsdisk/schema.py:456-456]）
 
 - CLIの `--override path=value` は YAML 読み込み後の辞書にマージされ、`load_config` と CLI エントリポイントで共通に処理される。複数指定は `--override a=b --override c=d` またはスペース区切りで指定可能。（[marsdisk/run.py:388-388], [marsdisk/run.py:1649-1654]）
 - `physics.blowout.enabled`,`radiation.freeze_kappa`,`surface.freeze_sigma`,`shielding.mode`,`psd.floor.mode` などの物理トグルはスキーマで検証され、`run_zero_d` 内でブローアウト損失や遮蔽、床径進化を切り替える。（[marsdisk/schema.py:342-342], [marsdisk/run.py:736-905]）
