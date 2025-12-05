@@ -3350,3 +3350,9 @@ __all__ = [
     "main",
     "MassBudgetViolationError",
 ]
+
+if __name__ == "__main__":  # pragma: no cover - standard CLI entrypoint
+    import logging
+
+    logging.basicConfig(level=logging.INFO)
+    main()
