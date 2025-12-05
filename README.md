@@ -42,6 +42,13 @@
 - `run_config.json`：使用した式・定数・トグル・シード・温度ソース・⟨Q_pr⟩/Φテーブルのパスが記録される。再現や差分解析時はここを参照。
 
 ## さらに詳しく
-- モード別の詳細手順と確認ポイント: `analysis/run-recipes.md`（冒頭のモード早見表を参照）。
+- モード別の詳細手順と確認ポイント: `analysis/run-recipes.md`（モード早見表、感度スイープレシピ、失敗時のチェック項目）。
 - 代表RUNの索引: `analysis/run_catalog.md`（RUN_* ID と config/outdir の対応表）。
-- 数式・物理: `analysis/equations.md`。アンカー付きで唯一の式ソース。
+- 数式・物理: `analysis/equations.md`（E.xxx が唯一の式ソース、単位付きで参照専用）。
+
+## analysis ドキュメントの読みどころ（人向けサマリ）
+- `analysis/overview.md`：全体像。gas-poor 前提の理由、CLI→設定→物理モジュールのデータフロー、トレース/ADR/RTM の位置づけを解説。
+- `analysis/run-recipes.md`：手順集。ベースライン・昇華ON・Smol・wavy・高速ブローアウトの切替手順、チェック項目（質量保存、β判定、dt/t_blow など）、感度スイープの走らせ方を具体例付きで列挙。
+- `analysis/equations.md`：式リファレンスの唯一のソース。β・a_blow・遮蔽Φ・PSD傾斜・昇華・衝突時間などを (E.xxx) で管理し、単位や記号の定義もここに集中。
+- `analysis/literature_map.md`：文献索引。Hyodo+, Ronnet+, Kuramoto ほか主要論文を REF_ID と紐づけ、replicated/planned/reference_only などのステータス付きで一覧化。引用の際はここを起点にする。
+- `analysis/sinks_callgraph.md`：0D 昇華・ガス抗力の呼び出し経路を図解。どの YAML トグルがどの関数に渡り、`t_sink` や `sink_flux` にどう反映されるかを確認できる。

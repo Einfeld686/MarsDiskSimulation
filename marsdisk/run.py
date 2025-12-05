@@ -66,7 +66,7 @@ from . import constants
 
 logger = logging.getLogger(__name__)
 SECONDS_PER_YEAR = 365.25 * 24 * 3600.0
-MAX_STEPS = 5000
+MAX_STEPS = 50000000
 TAU_MIN = 1e-12
 KAPPA_MIN = 1e-12
 DEFAULT_SEED = 12345
