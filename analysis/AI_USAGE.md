@@ -1,21 +1,21 @@
 # このガイドの目的
 > **注記（gas‑poor）**: 本解析は **ガスに乏しい衝突起源デブリ円盤**を前提とします。従って、**光学的に厚い内側ガス円盤**を仮定する Takeuchi & Lin (2003) の表層塵アウトフロー式は**適用外**とし、既定では評価から外しています（必要時のみ明示的に有効化）。この判断は、衝突直後の円盤が溶融主体かつ蒸気≲数%で、初期周回で揮発が散逸しやすいこと、および小衛星を残すには低質量・低ガスの円盤条件が要ることに基づきます。参考: Hyodo et al. 2017; 2018／Canup & Salmon 2018。
-この資料は0D円盤で破砕供給と表層剥離を組み合わせる既存実装の実行方法と出力解釈を、自動化主体でも誤読しない手順として整理する。（analysis/overview.md, [marsdisk/run.py:736-1611]）
+この資料は0D円盤で破砕供給と表層剥離を組み合わせる既存実装の実行方法と出力解釈を、自動化主体でも誤読しない手順として整理する。（analysis/overview.md, [marsdisk/run.py:736–2795]）
 
 # 誰向けか（AI/自動化ツール）と、何ができるかを1段落で。
-対象は設定ファイルを切り替えながら結果回収を自動化するAIやCIスクリプトであり、CLI起動・成果物の収集・再実行条件の判定を一連のジョブとして扱える。（[marsdisk/run.py:1387-1449], analysis/run-recipes.md）設定スキーマの検証や有効半径の算定はコード側で完結しているので、本資料に沿えば追加の仮定なしにβ判定や質量収支ログを取得できる。
+対象は設定ファイルを切り替えながら結果回収を自動化するAIやCIスクリプトであり、CLI起動・成果物の収集・再実行条件の判定を一連のジョブとして扱える。（[marsdisk/run.py:1622–1654], analysis/run-recipes.md）設定スキーマの検証や有効半径の算定はコード側で完結しているので、本資料に沿えば追加の仮定なしにβ判定や質量収支ログを取得できる。
 
 # 最短の実行手順（Quickstart）
-`run_zero_d`は単一コマンドで完結し、出力先は設定の`io.outdir`に従う。（[marsdisk/run.py:1387-1445], [marsdisk/run.py:736-1611]）
+`run_zero_d`は単一コマンドで完結し、出力先は設定の`io.outdir`に従う。（[marsdisk/run.py:1622–1654], [marsdisk/run.py:736–2795]）
 
 ```bash
 python -m marsdisk.run --config analysis/run-recipes/baseline_blowout_only.yml
 ```
 
-- `OUTDIR/series/run.parquet`：各ステップの記録を`writer.write_parquet`が生成するタイムシリーズで、`F_abs`,`psi_shield`,`kappa_Planck`,`tau_eff`,`sigma_surf`,`s_peak`,`M_out_cum` などの診断列を保持する。（[marsdisk/run.py:1287-1327], [marsdisk/io/writer.py:80-171]）
-- `OUTDIR/summary.json`：累積損失とβ診断に加え、`mass_budget_max_error_percent` や `dt_over_t_blow_median` を含む集約で、`run_zero_d`終端で書き出される。（[marsdisk/run.py:1395-1420], [marsdisk/io/writer.py:191-193]）
-- `OUTDIR/checks/mass_budget.csv`：C4質量検査を逐次追記したCSVで、許容差と実測誤差を比較する。（[marsdisk/run.py:1330-1369], [marsdisk/io/writer.py:191-193]）
-- `OUTDIR/run_config.json`：`physics_controls` にブローアウト／遮蔽／凍結／PSD床モードの実行値を残し、`sublimation_provenance` で HKL 式・`psat_model`・SiO 既定パラメータ（`alpha_evap`,`mu`,`A`,`B`）・`P_gas`・`valid_K`・テーブルパス・実行半径・公転時間を追跡できる。（[marsdisk/run.py:1523-1611], [marsdisk/io/writer.py:185-188]）
+- `OUTDIR/series/run.parquet`：各ステップの記録を`writer.write_parquet`が生成するタイムシリーズで、`F_abs`,`psi_shield`,`kappa_Planck`,`tau_eff`,`sigma_surf`,`s_peak`,`M_out_cum` などの診断列を保持する。（[marsdisk/run.py:1281–1415], [marsdisk/io/writer.py:24–162]）
+- `OUTDIR/summary.json`：累積損失とβ診断に加え、`mass_budget_max_error_percent` や `dt_over_t_blow_median` を含む集約で、`run_zero_d`終端で書き出される。（[marsdisk/run.py:2660–2771], [marsdisk/io/writer.py:185–193]）
+- `OUTDIR/checks/mass_budget.csv`：C4質量検査を逐次追記したCSVで、許容差と実測誤差を比較する。（[marsdisk/run.py:2334–2351], [marsdisk/io/writer.py:191–193]）
+- `OUTDIR/run_config.json`：`physics_controls` にブローアウト／遮蔽／凍結／PSD床モードの実行値を残し、`sublimation_provenance` で HKL 式・`psat_model`・SiO 既定パラメータ（`alpha_evap`,`mu`,`A`,`B`）・`P_gas`・`valid_K`・テーブルパス・実行半径・公転時間を追跡できる。（[marsdisk/run.py:2795–2889], [marsdisk/io/writer.py:185–188]）
 
 # analysis のシングルソースと参照カタログ
 - 数式・変数定義の唯一のソースは `analysis/equations.md`。`slides_outline.md` / `run_catalog.md` / `figures_catalog.md` / `glossary.md` / `literature_map.md` は参照ビューであり、式本体や独自定義を持たず eq_refs や FIG_/RUN_/REF_ ID を列挙するだけとする。
@@ -48,7 +48,7 @@ python -m marsdisk.run --config analysis/run-recipes/baseline_blowout_only.yml
 設定値はYAML→Pydantic→実行時オブジェクトの順に検証される。（[marsdisk/run.py:357-357], [marsdisk/schema.py:456-456]）
 
 - CLIの `--override path=value` は YAML 読み込み後の辞書にマージされ、`load_config` と CLI エントリポイントで共通に処理される。複数指定は `--override a=b --override c=d` またはスペース区切りで指定可能。（[marsdisk/run.py:388-388], [marsdisk/run.py:1649-1654]）
-- `physics.blowout.enabled`,`radiation.freeze_kappa`,`surface.freeze_sigma`,`shielding.mode`,`psd.floor.mode` などの物理トグルはスキーマで検証され、`run_zero_d` 内でブローアウト損失や遮蔽、床径進化を切り替える。（[marsdisk/schema.py:342-342], [marsdisk/run.py:736-905]）
+- `physics.blowout.enabled`,`radiation.freeze_kappa`,`surface.freeze_sigma`,`shielding.mode`,`psd.floor.mode` などの物理トグルはスキーマで検証され、`run_zero_d` 内でブローアウト損失や遮蔽、床径進化を切り替える。（[marsdisk/schema.py:342-342], [marsdisk/run.py:736-1100]）
 - `sinks.mode` は既定で`sublimation`、`none`を選ぶと昇華とガス抗力を同時に停止し、追加シンクの有効化は `SinkOptions` を通じて昇華パラメータ `SublimationParams(**cfg.sinks.sub_params.model_dump())` にコピーされる。HKL 既定値は SiO（`psat_model="clausius"`, μ=0.0440849 kg/mol, α=0.007, A=13.613, B=17850, `valid_K=[1270,1600]`）。`psat_model="tabulated"` を指定すると外部テーブルから `log10P` を読み込む。（[marsdisk/schema.py:263-265], [marsdisk/run.py:636-706], [marsdisk/physics/sublimation.py:220-227], [marsdisk/physics/sinks.py:83-160]）
 - `sinks.mode="none"` の場合は `t_sink=None` が `surface.step_surface` に渡り、光学的厚さが与えられてもシンク項は無効のまま推移する。（[marsdisk/run.py:820-1016], [marsdisk/physics/surface.py:187-196]）
 - `e_mode` / `i_mode` を設定しない場合は従来どおり入力スカラー `e0` / `i0` を使用するが、`mars_clearance` / `obs_tilt_spread` を指定すると Δr サンプリングや観測傾斜を乱数で生成して初期条件を再設定する。`dr_min_m`/`dr_max_m`（m）や`i_spread_deg`（度）と `rng_seed` を併用して再現性を確保する。（[marsdisk/schema.py:189-199], [marsdisk/run.py:519-519]）
@@ -64,26 +64,26 @@ PSDの下限は `psd.floor.mode` に応じて設定値・ブローアウト境�
 
 | キー | 意味 | 単位 | 記録箇所 |
 | --- | --- | --- | --- |
-| `M_loss` | 吹き飛び損失とシンク損失の合計 | M_Mars | [marsdisk/run.py:1400-1405] |
-| `M_out_cum` / `M_sink_cum` | 各経路の累積損失 | M_Mars | [marsdisk/run.py:1400-1405] |
-| `case_status` | 軽さ指標によるケース分類 (`blowout` / `ok` / `no_blowout`) | 文字列 | [marsdisk/run.py:1405-1408] |
-| `beta_threshold` | 軽さ指標の閾値 | 無次元 | [marsdisk/physics/radiation.py:32-32], [marsdisk/run.py:1406-1410] |
-| `beta_at_smin_config` / `beta_at_smin_effective` | 設定・有効下限でのβ | 無次元 | [marsdisk/run.py:1408-1410] |
-| `s_min_config` / `s_min_effective` | YAML指定とクリップ後の最小粒径 | m | [marsdisk/run.py:636-705], [marsdisk/run.py:1427-1430] |
-| `s_min_effective_gt_config` | 有効下限が設定値より大きいか | 真偽値 | [marsdisk/run.py:1427-1431] |
-| `s_min_components` | `config`/`blowout`/`effective`/`floor_dynamic` 等を保持 | m | [marsdisk/run.py:642-649], [marsdisk/run.py:1430-1431] |
-| `T_M_used` / `T_M_source` | 使用温度と出典ラベル | K / 文字列 | [marsdisk/run.py:1418-1420] |
-| `rho_used` / `Q_pr_used` | 材料密度と Planck 平均効率 | kg/m³ / 無次元 | [marsdisk/run.py:1414-1416] |
-| `mass_budget_max_error_percent` | ステップ最大質量誤差 | % | [marsdisk/run.py:1395-1425] |
-| `dt_over_t_blow_median` | ブローアウト時間に対するΔt中央値 | 無次元 | [marsdisk/run.py:1395-1425] |
-| `mass_budget_violation` | 許容超過時の詳細（オプション） | 辞書 | [marsdisk/run.py:1446-1451] |
+| `M_loss` | 吹き飛び損失とシンク損失の合計 | M_Mars | [marsdisk/run.py:2708-2723] |
+| `M_out_cum` / `M_sink_cum` | 各経路の累積損失 | M_Mars | [marsdisk/run.py:2708-2723] |
+| `case_status` | 軽さ指標によるケース分類 (`blowout` / `ok` / `no_blowout`) | 文字列 | [marsdisk/run.py:2556-2636] |
+| `beta_threshold` | 軽さ指標の閾値 | 無次元 | [marsdisk/physics/radiation.py:32-32], [marsdisk/run.py:2556-2636] |
+| `beta_at_smin_config` / `beta_at_smin_effective` | 設定・有効下限でのβ | 無次元 | [marsdisk/run.py:2556-2636] |
+| `s_min_config` / `s_min_effective` | YAML指定とクリップ後の最小粒径 | m | [marsdisk/run.py:1080-1150], [marsdisk/run.py:2680-2685] |
+| `s_min_effective_gt_config` | 有効下限が設定値より大きいか | 真偽値 | [marsdisk/run.py:2682-2685] |
+| `s_min_components` | `config`/`blowout`/`effective`/`floor_dynamic` 等を保持 | m | [marsdisk/run.py:1089-1096], [marsdisk/run.py:1336-1434], [marsdisk/run.py:2680-2685] |
+| `T_M_used` / `T_M_source` | 使用温度と出典ラベル | K / 文字列 | [marsdisk/run.py:2556-2636] |
+| `rho_used` / `Q_pr_used` | 材料密度と Planck 平均効率 | kg/m³ / 無次元 | [marsdisk/run.py:2556-2636] |
+| `mass_budget_max_error_percent` | ステップ最大質量誤差 | % | [marsdisk/run.py:2334-2351], [marsdisk/run.py:2670-2678] |
+| `dt_over_t_blow_median` | ブローアウト時間に対するΔt中央値 | 無次元 | [marsdisk/run.py:2334-2351], [marsdisk/run.py:2670-2678] |
+| `mass_budget_violation` | 許容超過時の詳細（オプション） | 辞書 | [marsdisk/run.py:2334-2351], [marsdisk/run.py:2768-2770] |
 
 - `series/run.parquet`で最低限確認する列は次のとおり。
 
-  - `time` / `dt`：通算時刻とステップ幅。[marsdisk/run.py:1210-1243]
-  - `prod_subblow_area_rate`：光学クリップ後に混合された供給率[kg m⁻² s⁻¹]。[marsdisk/run.py:1235-1236]
-  - `M_out_dot` / `M_sink_dot`：吹き飛び・追加シンクの瞬時流出率[M_Mars s⁻¹]。[marsdisk/run.py:1236-1238]
-  - `mass_lost_by_blowout` / `mass_lost_by_sinks`：累積損失[M_Mars]。[marsdisk/run.py:1246-1250]
+  - `time` / `dt`：通算時刻とステップ幅。[marsdisk/run.py:2120-2185]
+  - `prod_subblow_area_rate`：光学クリップ後に混合された供給率[kg m⁻² s⁻¹]。[marsdisk/run.py:2120-2185]
+  - `M_out_dot` / `M_sink_dot`：吹き飛び・追加シンクの瞬時流出率[M_Mars s⁻¹]。[marsdisk/run.py:2120-2185]
+  - `mass_lost_by_blowout` / `mass_lost_by_sinks`：累積損失[M_Mars]。[marsdisk/run.py:2120-2185]
 
 - `series/diagnostics.parquet` では幾何吸収量や遮蔽を追跡できる。`F_abs`,`psi_shield`,`kappa_Planck`,`tau_eff`,`sigma_surf`,`s_peak`,`M_out_cum` を確認し、遮蔽モードやPSD床の挙動をレビューする。（[marsdisk/run.py:1287-1327], [marsdisk/io/writer.py:80-171]）
 
@@ -142,14 +142,13 @@ PSDの下限は `psd.floor.mode` に応じて設定値・ブローアウト境�
 スイープ集計では互換カラムとして`beta_at_smin`が残り、新フィールドが利用可能なら`beta_at_smin_config`と`beta_at_smin_effective`を優先し、旧カラムは後方互換のために並列表記される。（[scripts/sweep_heatmaps.py:1252–1258]定義（概ね994–1012行））自動処理では新フィールドを参照し、欠損時のみ旧カラムで補う方針を推奨する。
 
 # 代表レシピ
-**ブローアウトのみ（baseline_blowout_only.yml）** `sinks.mode: "none"`と`enable_sublimation: false`がセットされ、`t_sink=None`が表層解法に渡るため`mass_lost_by_sinks`は全行で0になる。（analysis/run-recipes/baseline_blowout_only.yml, [marsdisk/run.py:736-1016]）実行後に`python -c "import pandas as pd; df=pd.read_parquet('analysis/outputs/baseline_blowout_only/series/run.parquet'); print(df['mass_lost_by_sinks'].sum())"`などでゼロを確認する。
+**ブローアウトのみ（baseline_blowout_only.yml）** `sinks.mode: "none"`と`enable_sublimation: false`がセットされ、`t_sink=None`が表層解法に渡るため`mass_lost_by_sinks`は全行で0になる。（analysis/run-recipes/baseline_blowout_only.yml, [marsdisk/run.py:1447-1463][marsdisk/run.py:1654-1683][marsdisk/run.py:2120-2185]）実行後に`python -c "import pandas as pd; df=pd.read_parquet('analysis/outputs/baseline_blowout_only/series/run.parquet'); print(df['mass_lost_by_sinks'].sum())"`などでゼロを確認する。
 
 **スイープの最小例** `scripts/sweep_heatmaps.py`はマップ定義と出力CSVを自動構築し、集計CSVに軽さ指標の新旧両カラムと`case_status`を列挙する。（[scripts/sweep_heatmaps.py:1261-1524]）`python scripts/sweep_heatmaps.py --map 1 --outdir sweeps/map1_demo --jobs 4`を用いると、結果CSVに`beta_at_smin_config`,`beta_at_smin_effective`,`beta_at_smin`が同時に含まれ、互換項目との整合を確認できる。
 
 # よくある落とし穴
 - 半径`r`を設定しないと0D実行で例外が発生するため、YAMLで`geometry.r`または`disk.geometry`を必ず与える。（[marsdisk/run.py:636-705], analysis/run-recipes.md）
 - 温度上書きの出典を混同しないよう、`radiation.TM_K`を使った場合はsummaryの`T_M_source`が`"radiation.TM_K"`になる点を確認する。（[marsdisk/run.py:561-562], [marsdisk/run.py:1417-1420]）
-- `s_min_effective`が`s_max`に近づくと0.9倍でクランプされるため、極端な昇華設定ではPSDの解像度が失われる。（[marsdisk/run.py:636-666]）
 - `pyarrow`未導入だとParquet書き出しが失敗するので、CI環境では事前に依存関係を導入する。（[marsdisk/io/writer.py:24-103]）
 
 # 検証チェックリスト（短縮版）
