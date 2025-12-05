@@ -1,0 +1,10 @@
+# Core runtime dependencies for marsdisk simulations
+numpy
+scipy
+pandas
+pyarrow
+ruamel.yaml
+pydantic
+matplotlib
+numba
+xarray

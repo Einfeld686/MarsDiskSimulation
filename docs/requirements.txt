@@ -1,0 +1,7 @@
+# Docs build dependencies; includes core runtime deps so autodoc can import modules
+-r ../requirements.txt
+
+sphinx>=7.2
+myst-parser>=2.0
+sphinx-autodoc-typehints>=1.25
+furo>=2024.1.0
