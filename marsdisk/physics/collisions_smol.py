@@ -9,7 +9,7 @@ from typing import MutableMapping, TYPE_CHECKING
 import numpy as np
 from ..errors import MarsDiskError
 from . import collide, dynamics, qstar, smol
-from .fragments import compute_largest_remnant_mass_fraction_F2
+from .fragments import largest_remnant_fraction_array, q_r_array
 from .sublimation import sublimation_sink_from_dsdt
 
 if TYPE_CHECKING:
@@ -80,44 +80,59 @@ def _fragment_tensor(
 ) -> np.ndarray:
     """Return a mass-conserving fragment distribution ``Y[k, i, j]``."""
 
-    n = sizes.size
-    Y = np.zeros((n, n, n))
+    sizes_arr = np.asarray(sizes, dtype=float)
+    masses_arr = np.asarray(masses, dtype=float)
+    if sizes_arr.shape != masses_arr.shape:
+        raise MarsDiskError("sizes and masses must share the same shape")
+
+    n = sizes_arr.size
+    Y = np.zeros((n, n, n), dtype=float)
     if n == 0:
         return Y
+    if rho <= 0.0:
+        raise MarsDiskError("rho must be positive")
 
-    v_matrix = v_rel
     if np.isscalar(v_rel):
         v_matrix = np.full((n, n), float(v_rel), dtype=float)
     else:
         v_matrix = np.asarray(v_rel, dtype=float)
         if v_matrix.shape != (n, n):
             raise MarsDiskError("v_rel must be scalar or (n, n)")
+    v_matrix = np.maximum(v_matrix, 1.0e-12)
+
+    m1 = masses_arr[:, None]
+    m2 = masses_arr[None, :]
+    m_tot = m1 + m2
+    valid_pair = (m1 > 0.0) & (m2 > 0.0) & (m_tot > 0.0)
+
+    size_ref = np.maximum.outer(sizes_arr, sizes_arr)
+    q_star_matrix = qstar.compute_q_d_star_array(size_ref, rho, v_matrix / 1.0e3)
+    q_r_matrix = q_r_array(m1, m2, v_matrix)
+    f_lr_matrix = np.clip(largest_remnant_fraction_array(q_r_matrix, q_star_matrix), 0.0, 1.0)
+    k_lr_matrix = np.maximum.outer(np.arange(n), np.arange(n))
+
+    weights_table = np.zeros((n, n), dtype=float)
+    for k_lr in range(n):
+        weights = np.power(sizes_arr[: k_lr + 1], -alpha_frag)
+        weights_sum = float(np.sum(weights))
+        if weights_sum > 0.0:
+            weights_table[k_lr, : k_lr + 1] = weights / weights_sum
 
     for i in range(n):
         for j in range(n):
-            m1 = masses[i]
-            m2 = masses[j]
-            m_tot = m1 + m2
-            if m1 <= 0.0 or m2 <= 0.0 or m_tot <= 0.0:
+            if not valid_pair[i, j]:
                 continue
-            v_pair = max(float(v_matrix[i, j]), 1.0e-12)
-            v_kms = v_pair / 1.0e3
-            size_ref = max(sizes[i], sizes[j])
-            q_star = qstar.compute_q_d_star_F1(size_ref, rho, v_kms)
-            f_lr = compute_largest_remnant_mass_fraction_F2(m1, m2, v_pair, q_star)
-            m_lr = f_lr * m_tot
-            k_lr = int(max(i, j))
-            Y[k_lr, i, j] += m_lr / m_tot
+            k_lr = int(k_lr_matrix[i, j])
+            f_lr = float(f_lr_matrix[i, j])
+            Y[k_lr, i, j] += f_lr
 
-            remainder = m_tot - m_lr
-            if remainder <= 0.0:
+            remainder_frac = 1.0 - f_lr
+            if remainder_frac <= 0.0:
                 continue
-            weights = sizes[: k_lr + 1] ** (-alpha_frag)
-            weights_sum = float(np.sum(weights))
-            if weights_sum <= 0.0:
+            weights = weights_table[k_lr, : k_lr + 1]
+            if weights.size == 0 or weights.sum() <= 0.0:
                 continue
-            frac_vec = remainder / m_tot * (weights / weights_sum)
-            Y[: k_lr + 1, i, j] += frac_vec
+            Y[: k_lr + 1, i, j] += remainder_frac * weights
 
     return Y
 

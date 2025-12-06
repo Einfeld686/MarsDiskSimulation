@@ -1,54 +1,148 @@
-# marsshearingsheet クイックガイド
+# Mars Disk Simulation
 
-> **For AI Agents**: 必ず [`analysis/AI_USAGE.md`](analysis/AI_USAGE.md) を読んでから作業してください。UNKNOWN_REF_REQUESTS や DocSync 手順はそちらが唯一の基準です。
+> **火星ロッシュ限界内ダスト円盤の衝突・放射圧・昇華過程シミュレーション**
 
-## 前提とルール
-- 解析対象は **gas-poor** の火星ロッシュ内ダスト円盤。Takeuchi & Lin (2003) は既定で無効（`ALLOW_TL2003=false`）。gas-rich 試験をする場合のみ環境変数で明示的に許可する。
-- CLI ドライバは `python -m marsdisk.run --config <yaml>`。追加上書きは `--override path=value` を複数指定する。`--sinks {none,sublimation}` と `--single-process-mode {off,sublimation_only,collisions_only}` も用意。
-- ⟨Q_pr⟩ テーブルが必須（例: `data/qpr_table.csv`）。存在しないとエラーになるので最初に確認する。
-- 出力ルートは `io.outdir`（YAML側）。既定は `out`。サブフォルダは自動で作成しないので、モードごとに outdir を変えると管理が楽。
+---
 
-## 最短クイックスタート（0D）
-1. 任意: `python -m venv .venv && source .venv/bin/activate`
-2. 依存導入: `pip install -r requirements.txt`（少なくとも numpy/pandas/pyarrow/ruamel.yaml/pydantic）
-3. ベースライン実行（gas-poor, 供給0, ブローアウトON, 昇華OFF, 表層ODE）  
-   ```bash
-   python -m marsdisk.run --config configs/base.yml
-   ```
-4. 成功確認  
-   - `out/series/run.parquet` があり `mass_lost_by_sinks=0`（昇華無効）。  
-   - `out/summary.json` の `case_status` が β判定と一致、`mass_budget_max_error_percent ≤ 0.5`。  
-   - `out/checks/mass_budget.csv` の `error_percent` が 0.5% 以内。
+## 🌍 このプロジェクトについて
 
-## モードピッカー（0D）
-「何を指定すれば何が動くか」を最短で把握するための一覧。コマンドは必要に応じて `--override io.outdir=...` で出力先を分けると便利。
+### 科学的背景
 
-| シナリオ | 主要トグル / 設定 | コマンド例 |
-| --- | --- | --- |
-| ベースライン（gas-poor、昇華OFF） | `sinks.mode=none`（既定）、`surface.collision_solver=surface_ode`、`psd.wavy_strength=0.0`、`supply.const=0` | `python -m marsdisk.run --config configs/base.yml` |
-| 昇華 ON（wavy=0.2付き） | `sinks.mode=sublimation`、`enable_sublimation=true`、`psd.wavy_strength=0.2` | `python -m marsdisk.run --config configs/base_sublimation.yml` |
-| フル衝突カスケード（Smol） | 多ビン Smoluchowski に切替: `surface.collision_solver=smol` | `python -m marsdisk.run --config configs/base.yml --override surface.collision_solver=smol` |
-| “wavy” PSD 感度だけ見たい | wavy を上書き: `psd.wavy_strength>0`（他はベースライン） | `python -m marsdisk.run --config configs/base.yml --override psd.wavy_strength=0.2` |
-| 高速ブローアウトをサブステップ解像 | `io.substep_fast_blowout=true`、`io.substep_max_ratio=1.0`（必要なら `io.correct_fast_blowout=true`） | `python -m marsdisk.run --config configs/base.yml --override io.substep_fast_blowout=true --override io.substep_max_ratio=1.0` |
-| gas-rich/TL2003 試験（オプトイン） | **環境変数** `ALLOW_TL2003=true` を付け、表層ODEを強制。gas-poor 既定の外なので要注意。 | `ALLOW_TL2003=true python -m marsdisk.run --config configs/base.yml --override surface.collision_solver=surface_ode` |
+火星の衛星フォボス・ダイモスの起源は、巨大衝突による火星周回円盤から形成されたとする説が有力です（Rosenblatt 2011, Canup & Salmon 2018）。本シミュレーションは、ロッシュ限界（~2.4 火星半径）内に形成された高温・高密度ダスト円盤の時間進化を追跡します。
 
-- 供給を入れたい場合は `--override supply.mode=const --override supply.const.prod_area_rate_kg_m2_s=1e-8` のように追加する。
-- 昇華を完全に切りたい場合はどの YAML でも `--sinks none` で上書きできる。
+**3つの主要過程をモデル化:**
 
-## 出力チェックの定型
-- `series/run.parquet`：`prod_subblow_area_rate`, `M_out_dot`, `mass_lost_by_blowout`, `mass_lost_by_sinks`, `dt_over_t_blow`, `fast_blowout_*` を確認。Smol 時は `n_substeps` や `dSigma_dt_*` がカスケード経路の値になる。
-- `summary.json`：`case_status`（β>=0.5 なら blowout）、`s_min_components`（config/blowout/effective）、`mass_budget_max_error_percent`（0.5% 以内）、`collision_solver`, `single_process_mode` を見る。
-- `checks/mass_budget.csv`：質量収支が 0.5% 以内かを確認し、超えたら `--enforce-mass-budget` で再実行する。
-- `run_config.json`：使用した式・定数・トグル・シード・温度ソース・⟨Q_pr⟩/Φテーブルのパスが記録される。再現や差分解析時はここを参照。
+1. **衝突カスケード** — 粒子同士の衝突による破砕・再分布
+2. **放射圧 blow-out** — 火星からの赤外放射による小粒子の吹き飛ばし
+3. **昇華** — 高温環境での粒子蒸発
 
-## さらに詳しく
-- モード別の詳細手順と確認ポイント: `analysis/run-recipes.md`（モード早見表、感度スイープレシピ、失敗時のチェック項目）。
-- 代表RUNの索引: `analysis/run_catalog.md`（RUN_* ID と config/outdir の対応表）。
-- 数式・物理: `analysis/equations.md`（E.xxx が唯一の式ソース、単位付きで参照専用）。
+### 主な出力
 
-## analysis ドキュメントの読みどころ（人向けサマリ）
-- `analysis/overview.md`：全体像。gas-poor 前提の理由、CLI→設定→物理モジュールのデータフロー、トレース/ADR/RTM の位置づけを解説。
-- `analysis/run-recipes.md`：手順集。ベースライン・昇華ON・Smol・wavy・高速ブローアウトの切替手順、チェック項目（質量保存、β判定、dt/t_blow など）、感度スイープの走らせ方を具体例付きで列挙。
-- `analysis/equations.md`：式リファレンスの唯一のソース。β・a_blow・遮蔽Φ・PSD傾斜・昇華・衝突時間などを (E.xxx) で管理し、単位や記号の定義もここに集中。
-- `analysis/literature_map.md`：文献索引。Hyodo+, Ronnet+, Kuramoto ほか主要論文を REF_ID と紐づけ、replicated/planned/reference_only などのステータス付きで一覧化。引用の際はここを起点にする。
-- `analysis/sinks_callgraph.md`：0D 昇華・ガス抗力の呼び出し経路を図解。どの YAML トグルがどの関数に渡り、`t_sink` や `sink_flux` にどう反映されるかを確認できる。
+- 2年間の質量損失履歴 $\dot{M}_{\rm out}(t)$ と累積質量損失 $M_{\rm loss}$
+- 粒径分布（PSD）の時間発展
+- blow-out 境界サイズ $a_{\rm blow}$ の動的変化
+
+---
+
+## 📚 ドキュメントガイド
+
+```text
+どこから読むべき？
+│
+├─ 初めての方 ─────────────────────────┐
+│   └─ README.md（このファイル）         │
+│       ↓                               │
+│   └─ analysis/config_guide.md          │──→ 設定の書き方
+│       （🚀 クイックスタートから開始）    │
+│                                        │
+├─ 設定を詳しく知りたい ────────────────┤
+│   └─ analysis/config_guide.md          │──→ 全設定キーの解説
+│       （セクション3以降）               │
+│                                        │
+├─ 物理式を確認したい ──────────────────┤
+│   └─ analysis/equations.md             │──→ 式の一元管理
+│                                        │
+├─ 実行手順・レシピ ────────────────────┤
+│   └─ analysis/run-recipes.md           │──→ モード別手順
+│                                        │
+└─ アーキテクチャ・内部構造 ─────────────┤
+    └─ analysis/overview.md              │──→ 開発者向け詳細
+```
+
+| ドキュメント | 対象読者 | 内容 |
+|-------------|---------|------|
+| `README.md` | 全員 | プロジェクト概要・クイックスタート |
+| `analysis/config_guide.md` | ユーザー | 設定ファイルの書き方・トラブルシューティング |
+| `analysis/equations.md` | 研究者 | 物理式の定義（唯一のソース） |
+| `analysis/run-recipes.md` | ユーザー | 実行レシピ・感度解析手順 |
+| `analysis/overview.md` | 開発者 | アーキテクチャ・データフロー |
+| `analysis/literature_map.md` | 研究者 | 文献索引・先行研究との対応 |
+
+---
+
+## 🚀 クイックスタート
+
+### 1. 環境セットアップ
+
+```bash
+# 仮想環境（推奨）
+python -m venv .venv && source .venv/bin/activate
+
+# 依存パッケージ
+pip install -r requirements.txt
+```
+
+### 2. 最初の実行
+
+```bash
+# 標準シナリオ（gas-poor、衝突＋blow-out＋昇華）
+python -m marsdisk.run --config configs/scenarios/fiducial.yml
+```
+
+### 3. 結果確認
+
+```bash
+ls out/fiducial/
+# series/run.parquet  - 時系列データ
+# summary.json        - 集計結果（M_loss など）
+# checks/             - 質量保存検証ログ
+```
+
+> 💡 **詳細なクイックスタート**: `analysis/config_guide.md` の「🚀 クイックスタート」セクションを参照
+
+---
+
+## 📖 基本的な使い方
+
+> **For AI Agents**: 必ず [`analysis/AI_USAGE.md`](analysis/AI_USAGE.md) を読んでから作業してください。
+
+### 前提とルール
+
+- 解析対象は **gas-poor** の火星ロッシュ内ダスト円盤
+- Takeuchi & Lin (2003) は既定で無効（`ALLOW_TL2003=false`）
+- CLI ドライバは `python -m marsdisk.run --config <yaml>`
+- ⟨Q_pr⟩ テーブルが必須（例: `data/qpr_table.csv`）
+
+---
+
+## 🎛️ シナリオ別コマンド例
+
+| シナリオ | コマンド例 |
+| --- | --- |
+| ベースライン（昇華OFF） | `python -m marsdisk.run --config configs/base.yml` |
+| 昇華 ON | `python -m marsdisk.run --config configs/base_sublimation.yml` |
+| 標準シナリオ | `python -m marsdisk.run --config configs/scenarios/fiducial.yml` |
+| 高温シナリオ | `python -m marsdisk.run --config configs/scenarios/high_temp.yml` |
+
+> 💡 設定の上書き: `--override radiation.TM_K=5000`
+
+---
+
+## 📊 出力チェック
+
+| 出力ファイル | 確認項目 |
+|-------------|---------|
+| `series/run.parquet` | `M_out_dot`, `mass_lost_by_blowout`, `mass_lost_by_sinks` |
+| `summary.json` | `case_status`, `mass_budget_max_error_percent`（≤0.5%） |
+| `checks/mass_budget.csv` | 質量収支の検証ログ |
+
+---
+
+## 📖 さらに詳しく
+
+| 目的 | 参照先 |
+|------|--------|
+| 設定キーの詳細解説 | `analysis/config_guide.md` |
+| モード別の詳細手順 | `analysis/run-recipes.md` |
+| 数式・物理 | `analysis/equations.md` |
+| アーキテクチャ | `analysis/overview.md` |
+| 文献索引 | `analysis/literature_map.md` |
+
+---
+
+## 📜 参考文献
+
+- Hyodo et al. (2017, 2018): gas-poor 仮定の根拠
+- Canup & Salmon (2018): 衛星形成シナリオ
+- Leinhardt & Stewart (2012): 破砕強度モデル
+- Strubbe & Chiang (2006): 放射圧支配の描像

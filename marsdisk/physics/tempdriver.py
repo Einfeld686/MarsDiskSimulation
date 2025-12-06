@@ -147,7 +147,7 @@ class TemperatureDriverRuntime:
 
 
 def resolve_temperature_driver(
-    temps_cfg: Temps,
+    temps_cfg: Optional[Temps],
     radiation_cfg: Optional[Radiation],
     *,
     t_orb: float,
@@ -209,13 +209,16 @@ def resolve_temperature_driver(
             )
         raise ValueError(f"Unsupported mars_temperature_driver.mode='{driver_cfg.mode}'")
 
-    fallback = _validate_temperature(float(temps_cfg.T_M), context="temps.T_M fallback")
-    provenance = {"source": "temps.T_M", "enabled": False, "mode": "constant"}
-    return TemperatureDriverRuntime(
-        source="temps.T_M",
-        mode="constant",
-        enabled=False,
-        initial_value=fallback,
-        provenance=provenance,
-        _driver_fn=lambda _time: fallback,
-    )
+    if temps_cfg is not None and getattr(temps_cfg, "T_M", None) is not None:
+        fallback = _validate_temperature(float(temps_cfg.T_M), context="temps.T_M fallback")
+        provenance = {"source": "temps.T_M", "enabled": False, "mode": "constant"}
+        return TemperatureDriverRuntime(
+            source="temps.T_M",
+            mode="constant",
+            enabled=False,
+            initial_value=fallback,
+            provenance=provenance,
+            _driver_fn=lambda _time: fallback,
+        )
+
+    raise ValueError("Mars temperature is not specified: set radiation.TM_K or provide temps.T_M")

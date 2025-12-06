@@ -10,6 +10,8 @@ from __future__ import annotations
 import logging
 import warnings
 
+import numpy as np
+
 from ..errors import MarsDiskError
 from .sublimation import (
     SublimationParams,
@@ -22,9 +24,50 @@ logger = logging.getLogger(__name__)
 __all__ = [
     "compute_q_r_F2",
     "compute_largest_remnant_mass_fraction_F2",
+    "q_r_array",
+    "largest_remnant_fraction_array",
     "s_sub_boundary",
     "compute_s_min_F2",
 ]
+
+
+def q_r_array(m1: np.ndarray, m2: np.ndarray, v: np.ndarray) -> np.ndarray:
+    """Vectorised reduced specific kinetic energy ``Q_R``."""
+
+    m1_arr, m2_arr, v_arr = np.broadcast_arrays(
+        np.asarray(m1, dtype=float),
+        np.asarray(m2, dtype=float),
+        np.asarray(v, dtype=float),
+    )
+    if np.any(v_arr < 0.0):
+        raise MarsDiskError("velocity must be non-negative")
+    m_tot = m1_arr + m2_arr
+    valid = (m1_arr > 0.0) & (m2_arr > 0.0) & (m_tot > 0.0)
+    q_r = np.zeros_like(m1_arr, dtype=float)
+    if not np.any(valid):
+        return q_r
+    with np.errstate(divide="ignore", invalid="ignore"):
+        mu = np.where(valid, m1_arr * m2_arr / m_tot, 0.0)
+        q_r = np.where(valid, 0.5 * mu * v_arr * v_arr / m_tot, 0.0)
+    return q_r
+
+
+def largest_remnant_fraction_array(q_r: np.ndarray, q_rd_star: np.ndarray) -> np.ndarray:
+    """Vectorised largest-remnant fraction ``M_LR/M_tot``."""
+
+    q_r_arr, q_star_arr = np.broadcast_arrays(
+        np.asarray(q_r, dtype=float),
+        np.asarray(q_rd_star, dtype=float),
+    )
+    valid = q_star_arr > 0.0
+    frac = np.zeros_like(q_r_arr, dtype=float)
+    if not np.any(valid):
+        return frac
+    with np.errstate(divide="ignore", invalid="ignore"):
+        raw = 0.5 * (2.0 - q_r_arr / q_star_arr)
+    frac_valid = np.clip(raw, 0.0, 1.0, out=np.zeros_like(raw), where=valid)
+    frac[valid] = frac_valid[valid]
+    return frac
 
 
 def compute_q_r_F2(m1: float, m2: float, v: float) -> float:
@@ -55,9 +98,7 @@ def compute_q_r_F2(m1: float, m2: float, v: float) -> float:
     m_tot = m1 + m2
     mu = m1 * m2 / m_tot
     q_r = 0.5 * mu * v * v / m_tot
-    logger.info(
-        "compute_q_r_F2: m1=%e m2=%e v=%e -> Q_R=%e", m1, m2, v, q_r
-    )
+    logger.debug("compute_q_r_F2: m1=%e m2=%e v=%e -> Q_R=%e", m1, m2, v, q_r)
     return float(q_r)
 
 
@@ -87,7 +128,7 @@ def compute_largest_remnant_mass_fraction_F2(
     q_r = compute_q_r_F2(m1, m2, v)
     frac = 0.5 * (2.0 - q_r / q_rd_star)
     frac = max(0.0, min(1.0, frac))
-    logger.info(
+    logger.debug(
         "compute_largest_remnant_mass_fraction_F2: m1=%e m2=%e v=%e q_rd_star=%e -> frac=%f",
         m1,
         m2,

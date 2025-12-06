@@ -38,13 +38,21 @@ class CheckResult:
 def _dimension_check(config_path: Path) -> CheckResult:
     cfg = load_config(config_path)
     rho = cfg.material.rho if getattr(cfg, "material", None) else 3000.0
+    try:
+        T_M = cfg.get_effective_TM_K()
+    except Exception as exc:
+        return CheckResult(
+            "dimension:temperature",
+            "FAIL",
+            f"火星温度が未指定です: {exc}",
+        )
     beta_val = radiation.beta(
         s=1e-6,
-        T_M=cfg.temps.T_M,
+        T_M=T_M,
         rho=rho,
         Q_pr=1.0,
     )
-    blow = radiation.blowout_radius(rho=rho, T_M=cfg.temps.T_M, Q_pr=1.0)
+    blow = radiation.blowout_radius(rho=rho, T_M=T_M, Q_pr=1.0)
     if not (0.0 < beta_val < 10.0):
         return CheckResult(
             "dimension:beta",

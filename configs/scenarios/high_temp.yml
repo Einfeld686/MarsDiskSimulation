@@ -1,0 +1,131 @@
+# 高温円盤ケース: 昇華強化シナリオ
+#
+# 物理的前提:
+#   - 火星表面温度が高い初期状態
+#   - 昇華による粒子消失が支配的
+#   - 凝縮温度も高め
+#
+# 用途: 初期高温環境での円盤進化
+
+_scenario:
+  name: "high_temp"
+  description: "High temperature disk with enhanced sublimation"
+  assumptions:
+    - "Elevated Mars infrared temperature"
+    - "Sublimation-dominated mass loss"
+    - "Earlier condensation threshold"
+
+# ===========================================================================
+# 物理モード（統一フィールド）
+# ===========================================================================
+physics_mode: "full"
+
+# ===========================================================================
+# 空間・物質
+# ===========================================================================
+geometry:
+  mode: "0D"
+
+material:
+  rho: 3000.0  # kg/m³, 岩石質
+
+# --- 温度設定（高温）---
+radiation:
+  TM_K: 5000  # K, 高温
+  qpr_table_path: "data/qpr_table.csv"
+
+# --- サイズビン ---
+sizes:
+  s_min: 1.0e-6  # m
+  s_max: 3.0     # m
+  n_bins: 40
+
+# --- 初期条件 ---
+initial:
+  mass_total: 1.0e-5
+  s0_mode: "upper"
+
+# --- 速度分散 ---
+dynamics:
+  e0: 0.5
+  i0: 0.05
+  t_damp_orbits: 20
+  f_wake: 2.0
+
+# --- 粒径分布 ---
+psd:
+  alpha: 1.83
+  wavy_strength: 0.2
+
+# --- 破砕強度 ---
+qstar:
+  Qs: 3.5e7
+  a_s: 0.38
+  B: 0.3
+  b_g: 1.36
+  v_ref_kms: [1.0, 5.0]
+
+# --- 円盤幾何 ---
+disk:
+  geometry:
+    r_in_RM: 2.2
+    r_out_RM: 2.7
+    r_profile: "uniform"
+    p_index: 0.0
+
+inner_disk_mass:
+  use_Mmars_ratio: true
+  M_in_ratio: 3.0e-5
+  map_to_sigma: "analytic"
+
+# --- 表層モデル ---
+surface:
+  init_policy: "clip_by_tau1"
+  sigma_surf_init_override: null
+  use_tcoll: true
+
+# ===========================================================================
+# シンク設定（昇華強化）
+# ===========================================================================
+sinks:
+  mode: "sublimation"
+  enable_sublimation: true
+  T_sub: 1100.0  # 低めの昇華開始温度
+  sub_params:
+    mode: "logistic"
+    alpha_evap: 1.0
+    dT: 30.0  # 急峻な遷移
+  enable_gas_drag: false
+  rho_g: 0.0
+
+# --- 供給 ---
+supply:
+  mode: "const"
+  const:
+    prod_area_rate_kg_m2_s: 0.0
+
+# --- 自遮蔽 ---
+shielding:
+  phi_table: null
+
+# ===========================================================================
+# 相状態（高温閾値）
+# ===========================================================================
+phase:
+  enabled: true
+  source: "threshold"
+  thresholds:
+    T_condense_K: 2000.0  # 高め
+    T_vaporize_K: 2500.0
+
+# --- 数値パラメータ ---
+numerics:
+  t_end_years: 2.0
+  dt_init: 2.0
+  safety: 0.08
+  atol: 1e-10
+  rtol: 1e-6
+
+# --- 出力 ---
+io:
+  outdir: "out/high_temp"
