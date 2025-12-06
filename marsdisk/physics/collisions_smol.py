@@ -236,6 +236,7 @@ def step_collisions_smol_0d(
     s_min_effective: float | None = None,
     dynamics_cfg: "Dynamics | None" = None,
     tau_eff: float | None = None,
+    collisions_enabled: bool = True,
 ) -> Smol0DStepResult:
     """Advance collisions+fragmentation in 0D using the Smol solver."""
 
@@ -276,22 +277,27 @@ def step_collisions_smol_0d(
             0.0,
         )
 
-    if dynamics_cfg is not None:
-        e_kernel, i_kernel, H_arr = compute_kernel_e_i_H(
-            dynamics_cfg,
-            tau_eff if tau_eff is not None else 0.0,
-            a_orbit_m=r,
-            v_k=r * Omega,
-            sizes=sizes_arr,
-        )
+    if collisions_enabled:
+        if dynamics_cfg is not None:
+            e_kernel, i_kernel, H_arr = compute_kernel_e_i_H(
+                dynamics_cfg,
+                tau_eff if tau_eff is not None else 0.0,
+                a_orbit_m=r,
+                v_k=r * Omega,
+                sizes=sizes_arr,
+            )
+        else:
+            e_kernel = e_value
+            i_kernel = i_value
+            H_arr = np.full_like(N_k, max(r * max(i_value, 1.0e-6), 1.0e-6))
+        v_rel_scalar = dynamics.v_ij(e_kernel, i_kernel, v_k=r * Omega)
+        C_kernel = collide.compute_collision_kernel_C1(N_k, sizes_arr, H_arr, v_rel_scalar)
+        t_coll_kernel = kernel_minimum_tcoll(C_kernel)
+        Y_tensor = _fragment_tensor(sizes_arr, m_k, v_rel_scalar, rho)
     else:
-        e_kernel = e_value
-        i_kernel = i_value
-        H_arr = np.full_like(N_k, max(r * max(i_value, 1.0e-6), 1.0e-6))
-    v_rel_scalar = dynamics.v_ij(e_kernel, i_kernel, v_k=r * Omega)
-    C_kernel = collide.compute_collision_kernel_C1(N_k, sizes_arr, H_arr, v_rel_scalar)
-    t_coll_kernel = kernel_minimum_tcoll(C_kernel)
-    Y_tensor = _fragment_tensor(sizes_arr, m_k, v_rel_scalar, rho)
+        C_kernel = np.zeros((N_k.size, N_k.size))
+        Y_tensor = np.zeros((N_k.size, N_k.size, N_k.size))
+        t_coll_kernel = float("inf")
 
     S_blow = _blowout_sink_vector(sizes_arr, a_blow, Omega, enable_blowout)
     mass_loss_rate_blow = float(np.sum(m_k * S_blow * N_k))

@@ -28,3 +28,4 @@
 - すべてのスクリプトは `python scripts/<name>.py [options]` で単独起動できます。CI・エージェントから呼び出す場合もこのパスを基準にしてください。
 - 分析用ユーティリティが必要になった場合は、`tools/` ではなく本ディレクトリに追加し、本 README の表へ追記する運用に統一します。
 - 既存の `tools/` には互換ラッパーが一時的に残っていますが、将来的に削除されても本 README に列挙した機能は維持される想定です。
+- 新しいシミュレーションランナーを Windows 向けに用意する場合は、本ディレクトリ直下に `.cmd` 形式で追加します。`run_sublim_windows.cmd` を雛形に、(1) `.venv` が無ければ作成し `requirements.txt` から依存を取得、(2) `OUTDIR` を標準の保存規則（例: `out/<YYYYMMDD-HHMM>_<short-title>__<shortsha>__seed<n>/`）に従って設定し、必要なら `if not exist "%OUTDIR%" mkdir "%OUTDIR%"` で生成、(3) `python -m marsdisk.run` を既存スクリプトと同じフローで起動して結果を書き込む、を必須手順とします。追加した `.cmd` はこの README の表にも用途を一行で追記してください。
