@@ -37,13 +37,13 @@ flowchart TD
 
 ## HK Boundary → `ds/dt` diagnostics
 
-1. `fragments.s_sub_boundary` は灰色体温度と `s_sink_from_timescale` を用いた HKL 境界を計算するが、床粒径の決定には使わない（診断用のみ）。[marsdisk/physics/fragments.py:101–164]
+1. `fragments.s_sub_boundary` は灰色体温度と `s_sink_from_timescale` を用いた HKL 境界を計算するが、床粒径の決定には使わない（診断用のみ）。[marsdisk/physics/fragments.py:142–164]
 2. Runtimeでは `psd.apply_uniform_size_drift` が `ds/dt` を PSD バケットへ反映し、欠損を `mass_lost_sublimation_step` と `dSigma_dt_sublimation` に出力しつつ床粒径は `max(s_min_cfg, a_blow)` を維持する。[marsdisk/physics/psd.py:149–264]
 3. `compute_s_min_F2` は現在ブローアウトサイズのみ返し、警告を発する互換用ヘルパー。[marsdisk/physics/fragments.py:167–198]
 
 ## 0D Loop Call Order (t<sub>sink</sub> Propagation)
 
-1. **Initialise radiation and PSD** – `run_zero_d` 解法の冒頭で温度・⟨Q_pr⟩・`a_blow` を決定し PSD を構築。[marsdisk/run.py:736–1100]
+1. **Initialise radiation and PSD** – `run_zero_d` 解法の冒頭で温度・⟨Q_pr⟩・`a_blow` を決定し PSD を構築。[marsdisk/run.py:814–1100]
 2. **Set the PSD floor** – 各ステップで `s_min_effective = max(cfg.sizes.s_min, a_blow, s_min_floor_dynamic)` を更新し、床情報を `s_min_components` に記録。[marsdisk/run.py:1340–1434]
 3. **Instantiate sink physics** – YAML `sinks` を `SinkOptions` へ束ね、昇華/drag の有効・無効を反映。[marsdisk/physics/sinks.py:83–160][marsdisk/run.py:1447–1463]
 4. **Evaluate `t_sink`** – `sinks.mode="none"` では `t_sink=None` を強制し、そうでなければ `total_sink_timescale` で最短寿命を取得。[marsdisk/run.py:1447–1463]

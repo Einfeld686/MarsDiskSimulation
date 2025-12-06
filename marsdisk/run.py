@@ -34,6 +34,9 @@ import shutil
 import subprocess
 import hashlib
 import json
+import sys
+import time
+import warnings
 from collections import defaultdict
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -75,6 +78,64 @@ SINK_REF_SIZE = 1e-6
 FAST_BLOWOUT_RATIO_THRESHOLD = 3.0
 FAST_BLOWOUT_RATIO_STRICT = 10.0
 PHASE7_SCHEMA_VERSION = "phase7-minimal-v1"
+
+
+class ProgressReporter:
+    """Lightweight terminal progress bar with ETA feedback."""
+
+    def __init__(
+        self,
+        total_steps: int,
+        total_time_s: float,
+        *,
+        refresh_seconds: float = 1.0,
+        enabled: bool = False,
+    ) -> None:
+        self.enabled = bool(enabled and total_steps > 0)
+        self.total_steps = max(int(total_steps), 1)
+        self.total_time_s = max(float(total_time_s), 0.0)
+        self.refresh_seconds = max(float(refresh_seconds), 0.1)
+        self.start = time.monotonic()
+        self.last = self.start
+        self._finished = False
+
+    def update(self, step_no: int, sim_time_s: float, *, force: bool = False) -> None:
+        """Render the progress bar if enabled and refresh interval elapsed."""
+
+        if not self.enabled or self._finished:
+            return
+        now = time.monotonic()
+        is_last = (step_no + 1) >= self.total_steps
+        if not force and not is_last and (now - self.last) < self.refresh_seconds:
+            return
+        self.last = now
+        frac = min(max((step_no + 1) / self.total_steps, 0.0), 1.0)
+        elapsed = now - self.start
+        eta = (elapsed / frac - elapsed) if frac > 0.0 else float("nan")
+        bar_width = 28
+        filled = int(bar_width * frac)
+        bar = "#" * filled + "-" * (bar_width - filled)
+        sim_years = sim_time_s / SECONDS_PER_YEAR if math.isfinite(sim_time_s) else float("nan")
+        eta_text = f"ETA {eta:0.0f}s" if math.isfinite(eta) else "ETA ?"
+        sys.stdout.write(
+            f"\r[{bar}] {frac * 100:5.1f}% step {step_no + 1}/{self.total_steps} "
+            f"t={sim_years:.3g} yr {eta_text}"
+        )
+        if is_last:
+            sys.stdout.write("\n")
+            self._finished = True
+        sys.stdout.flush()
+
+    def finish(self, step_no: int, sim_time_s: float) -> None:
+        """Force a final render to end the line cleanly."""
+
+        if not self.enabled:
+            return
+        self.update(step_no, sim_time_s, force=True)
+        if not self._finished:
+            sys.stdout.write("\n")
+            sys.stdout.flush()
+            self._finished = True
 
 
 def _parse_override_value(raw: str) -> Any:
@@ -180,7 +241,14 @@ def _derive_seed_components(cfg: Config) -> str:
         parts.append(
             f"disk.r_in_RM={cfg.disk.geometry.r_in_RM!r},r_out_RM={cfg.disk.geometry.r_out_RM!r}"
         )
-    parts.append(f"temps.T_M={cfg.temps.T_M!r}")
+    tm_seed = None
+    radiation_cfg = getattr(cfg, "radiation", None)
+    temps_cfg = getattr(cfg, "temps", None)
+    if radiation_cfg is not None and getattr(radiation_cfg, "TM_K", None) is not None:
+        tm_seed = getattr(radiation_cfg, "TM_K", None)
+    elif temps_cfg is not None and getattr(temps_cfg, "T_M", None) is not None:
+        tm_seed = getattr(temps_cfg, "T_M", None)
+    parts.append(f"temps.T_M={tm_seed!r}")
     parts.append(f"initial.mass_total={cfg.initial.mass_total!r}")
     return "|".join(parts)
 
@@ -604,6 +672,16 @@ def _gather_git_info() -> Dict[str, Any]:
     except Exception:
         info["dirty"] = None
     return info
+
+
+def _configure_logging(level: int, suppress_warnings: bool = False) -> None:
+    """Configure root logging and optionally silence Python warnings."""
+
+    logging.basicConfig(level=level)
+    logging.getLogger().setLevel(level)
+    if suppress_warnings:
+        warnings.filterwarnings("ignore")
+    logging.captureWarnings(True)
 
 
 class MassBudgetViolationError(RuntimeError):
@@ -1253,6 +1331,24 @@ def run_zero_d(
         time_grid_info["dt_step"] = dt
         time_grid_info["dt_capped_by_max_steps"] = True
 
+    quiet_mode = bool(getattr(cfg.io, "quiet", False))
+    progress_cfg = getattr(cfg.io, "progress", None)
+    progress_enabled = bool(getattr(progress_cfg, "enable", False)) if progress_cfg else False
+    progress_refresh = (
+        float(getattr(progress_cfg, "refresh_seconds", 1.0))
+        if progress_cfg is not None
+        else 1.0
+    )
+    progress = ProgressReporter(
+        n_steps,
+        t_end,
+        refresh_seconds=max(progress_refresh, 0.1),
+        enabled=progress_enabled,
+    )
+    if quiet_mode:
+        warnings.filterwarnings("ignore")
+        logging.getLogger().setLevel(logging.WARNING)
+
     history = ZeroDHistory()
     records = history.records
     psd_hist_records = history.psd_hist_records
@@ -1312,6 +1408,8 @@ def run_zero_d(
     phase_bulk_f_liquid_last: Optional[float] = None
     phase_bulk_f_solid_last: Optional[float] = None
     phase_bulk_f_vapor_last: Optional[float] = None
+    last_step_index = -1
+    last_time_value = 0.0
 
     for step_no in range(n_steps):
         time_start = step_no * dt
@@ -2392,6 +2490,10 @@ def run_zero_d(
         if tau_gate_block_last:
             tau_gate_block_time += dt
 
+        last_step_index = step_no
+        last_time_value = time
+        progress.update(step_no, time)
+
         if (
             mass_initial != 0.0
             and error_percent > MASS_BUDGET_TOLERANCE_PERCENT
@@ -2416,14 +2518,18 @@ def run_zero_d(
                 history.violation_triggered = True
                 break
 
-        logger.info(
-            "run: t=%e a_blow=%.3e kappa=%e t_blow=%e M_loss[M_Mars]=%e",
-            time,
-            a_blow_step,
-            kappa_eff,
-            t_blow_step,
-            M_loss_cum + M_sink_cum,
-        )
+        if not quiet_mode and not progress_enabled and logger.isEnabledFor(logging.INFO):
+            logger.info(
+                "run: t=%e a_blow=%.3e kappa=%e t_blow=%e M_loss[M_Mars]=%e",
+                time,
+                a_blow_step,
+                kappa_eff,
+                t_blow_step,
+                M_loss_cum + M_sink_cum,
+            )
+
+    if last_step_index >= 0:
+        progress.finish(last_step_index, last_time_value)
 
     if orbit_rollup_enabled and not orbit_rollup_rows:
         # Fallback rollup for short integrations that do not complete a full orbit.
@@ -3267,6 +3373,16 @@ def main(argv: Optional[List[str]] = None) -> None:
     parser = argparse.ArgumentParser(description="Run a simple Mars disk model")
     parser.add_argument("--config", type=Path, required=True, help="Path to YAML configuration")
     parser.add_argument(
+        "--progress",
+        action="store_true",
+        help="Show a console progress bar with ETA for the main integration loop.",
+    )
+    parser.add_argument(
+        "--quiet",
+        action="store_true",
+        help="Suppress INFO logs and Python warnings for a cleaner CLI.",
+    )
+    parser.add_argument(
         "--enforce-mass-budget",
         action="store_true",
         help=(
@@ -3306,6 +3422,21 @@ def main(argv: Optional[List[str]] = None) -> None:
         for group in args.override:
             override_list.extend(group)
     cfg = load_config(args.config, overrides=override_list)
+    if args.quiet:
+        try:
+            cfg.io.quiet = True
+        except Exception:
+            pass
+    if args.progress:
+        try:
+            cfg.io.progress.enable = True
+        except Exception:
+            pass
+    quiet_effective = bool(getattr(cfg.io, "quiet", False))
+    _configure_logging(
+        logging.WARNING if quiet_effective else logging.INFO,
+        suppress_warnings=quiet_effective,
+    )
     if args.sinks is not None:
         cfg.sinks.mode = args.sinks
     if args.single_process_mode is not None:
@@ -3333,11 +3464,6 @@ def main(argv: Optional[List[str]] = None) -> None:
             single_process_override=args.single_process_mode,
             single_process_source="cli" if args.single_process_mode is not None else None,
         )
-
-
-    if __name__ == "__main__":  # pragma: no cover - CLI entry point
-        logging.basicConfig(level=logging.INFO)
-        main()
 
 __all__ = [
     "RunConfig",

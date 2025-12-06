@@ -20,30 +20,74 @@ DEFAULT_PHASE_ENTRYPOINT = "siO2_disk_cooling.siO2_cooling_map:lookup_phase_stat
 
 
 class Geometry(BaseModel):
-    """Geometric configuration of the simulation domain."""
+    """Geometric configuration of the simulation domain.
 
-    mode: Literal["0D", "1D"] = "0D"
-    r: Optional[float] = Field(None, description="Orbital radius for 0D runs [m]")
+    Recommended Usage:
+        For specifying orbital radius, use `disk.geometry.r_in_RM` and `disk.geometry.r_out_RM`
+        instead of `geometry.r` or `geometry.runtime_orbital_radius_rm`.
+
+        Example (0D mode - recommended):
+            geometry:
+              mode: "0D"
+            disk:
+              geometry:
+                r_in_RM: 2.2
+                r_out_RM: 2.7
+
+    .. deprecated::
+        `geometry.r` and `geometry.runtime_orbital_radius_rm` are deprecated.
+        Use `disk.geometry.r_in_RM` and `disk.geometry.r_out_RM` instead.
+    """
+
+    mode: Literal["0D", "1D"] = Field("0D", description="Spatial dimension: '0D' (radially uniform) or '1D'")
+    r: Optional[float] = Field(
+        None,
+        description="DEPRECATED: Use disk.geometry instead. Orbital radius for 0D runs [m]",
+    )
     r_in: Optional[float] = Field(None, description="Inner radius for 1D runs [m]")
     r_out: Optional[float] = Field(None, description="Outer radius for 1D runs [m]")
     Nr: Optional[int] = Field(None, description="Number of radial zones for 1D runs")
     runtime_orbital_radius_rm: Optional[float] = Field(
         None,
-        description="Optional orbital radius expressed in Mars radii; takes effect when geometry.r is omitted.",
+        description="DEPRECATED: Use disk.geometry.r_in_RM instead.",
     )
 
 
 class DiskGeometry(BaseModel):
-    """Geometry of the inner disk in units of Mars radii."""
+    """Geometry of the inner disk in units of Mars radii.
 
-    r_in_RM: float
-    r_out_RM: float
-    r_profile: Literal["uniform", "powerlaw"] = "uniform"
-    p_index: float = 0.0
+    This is the preferred way to specify orbital geometry.
+    All radii are expressed in Mars radii (R_Mars ≈ 3389.5 km).
+
+    Example:
+        disk:
+          geometry:
+            r_in_RM: 2.2   # Inner edge at 2.2 Mars radii
+            r_out_RM: 2.7  # Outer edge at 2.7 Mars radii
+    """
+
+    r_in_RM: float = Field(..., gt=0, description="Inner radius [Mars radii]")
+    r_out_RM: float = Field(..., gt=0, description="Outer radius [Mars radii]")
+    r_profile: Literal["uniform", "powerlaw"] = Field(
+        "uniform",
+        description="Radial surface density profile: 'uniform' or 'powerlaw' (Σ ∝ r^-p)",
+    )
+    p_index: float = Field(0.0, description="Power-law index for surface density (Σ ∝ r^-p)")
+
+    @root_validator(skip_on_failure=True)
+    def _check_radius_order(cls, values: Dict[str, Any]) -> Dict[str, Any]:
+        r_in = values.get("r_in_RM")
+        r_out = values.get("r_out_RM")
+        if r_in is not None and r_out is not None and r_in >= r_out:
+            raise ValueError(f"disk.geometry.r_in_RM ({r_in}) must be less than r_out_RM ({r_out})")
+        return values
 
 
 class Disk(BaseModel):
-    """Container for inner disk properties."""
+    """Container for inner disk properties.
+
+    This is the preferred location for specifying disk geometry.
+    """
 
     geometry: DiskGeometry
 
@@ -111,14 +155,49 @@ class SupplyPiece(BaseModel):
 
 
 class Supply(BaseModel):
-    """Parameterisation of external surface supply."""
+    """Parameterisation of external surface supply.
 
-    mode: Literal["const", "table", "powerlaw", "piecewise"] = "const"
-    const: SupplyConst = SupplyConst()
-    powerlaw: SupplyPowerLaw = SupplyPowerLaw()
-    table: SupplyTable = SupplyTable()
-    mixing: SupplyMixing = SupplyMixing()
-    piecewise: list[SupplyPiece] = []
+    Simplified Usage:
+        Only specify the parameters for the mode you're using.
+        Other mode parameters can be omitted and will use defaults.
+
+        Example (const mode - minimal):
+            supply:
+              mode: "const"
+              const:
+                prod_area_rate_kg_m2_s: 1.0e-10
+
+        Example (table mode - minimal):
+            supply:
+              mode: "table"
+              table:
+                path: "data/my_supply.csv"
+    """
+
+    mode: Literal["const", "table", "powerlaw", "piecewise"] = Field(
+        "const",
+        description="Supply mode: 'const' (default), 'table', 'powerlaw', or 'piecewise'",
+    )
+    const: SupplyConst = Field(
+        default_factory=SupplyConst,
+        description="Parameters for const mode (only needed if mode='const')",
+    )
+    powerlaw: SupplyPowerLaw = Field(
+        default_factory=SupplyPowerLaw,
+        description="Parameters for powerlaw mode (only needed if mode='powerlaw')",
+    )
+    table: SupplyTable = Field(
+        default_factory=SupplyTable,
+        description="Parameters for table mode (only needed if mode='table')",
+    )
+    mixing: SupplyMixing = Field(
+        default_factory=SupplyMixing,
+        description="Mixing parameters (optional, applies to all modes)",
+    )
+    piecewise: list[SupplyPiece] = Field(
+        default_factory=list,
+        description="Piecewise segments (only needed if mode='piecewise')",
+    )
 
 
 class Material(BaseModel):
@@ -137,9 +216,17 @@ class Material(BaseModel):
 
 
 class Temps(BaseModel):
-    """Thermal parameters."""
+    """Thermal parameters.
 
-    T_M: float = Field(2000.0, description="Surface temperature of Mars [K]")
+    .. deprecated::
+        `temps.T_M` is deprecated and will be removed in a future version.
+        Use `radiation.TM_K` instead for specifying the Mars infrared temperature.
+        During the transition period, if both are specified, `radiation.TM_K` takes
+        precedence. If only `temps.T_M` is specified, a DeprecationWarning is issued
+        and the value is automatically used as a fallback for `radiation.TM_K`.
+    """
+
+    T_M: float = Field(2000.0, description="Surface temperature of Mars [K] (DEPRECATED: use radiation.TM_K)")
 
     @validator("T_M")
     def _check_temperature_range(cls, value: float) -> float:
@@ -288,22 +375,61 @@ class Surface(BaseModel):
 
 
 class SublimationParamsModel(BaseModel):
-    """Nested parameters for sublimation models."""
+    """Nested parameters for sublimation models.
 
-    mode: Literal["logistic", "hkl", "hkl_timescale"] = "logistic"
-    psat_model: Literal["auto", "clausius", "tabulated"] = "auto"
-    alpha_evap: float = 0.007
-    mu: float = 0.0440849
-    A: Optional[float] = 13.613
-    B: Optional[float] = 17850.0
-    valid_K: Optional[Tuple[float, float]] = (1270.0, 1600.0)
-    psat_table_path: Optional[Path] = None
-    psat_table_buffer_K: float = 75.0
-    local_fit_window_K: float = 300.0
-    min_points_local_fit: int = 3
-    dT: float = 50.0
-    eta_instant: float = 0.1
-    P_gas: float = 0.0
+    Simplified Usage:
+        Only specify parameters relevant to your chosen mode.
+        Irrelevant parameters can be omitted and will use defaults.
+
+        Example (logistic mode - minimal):
+            sub_params:
+              mode: "logistic"
+              dT: 50.0
+
+        Example (hkl mode - minimal):
+            sub_params:
+              mode: "hkl"
+              alpha_evap: 0.007
+              mu: 0.044
+
+    Mode-Specific Parameters:
+        - logistic: dT, eta_instant
+        - hkl/hkl_timescale: alpha_evap, mu, A, B, valid_K, psat_model, psat_table_*
+    """
+
+    mode: Literal["logistic", "hkl", "hkl_timescale"] = Field(
+        "logistic",
+        description="Sublimation model: 'logistic' (simple), 'hkl' (Hertz-Knudsen-Langmuir), 'hkl_timescale'",
+    )
+    # --- Common parameters ---
+    P_gas: float = Field(0.0, ge=0.0, description="Ambient gas pressure [Pa]")
+
+    # --- Logistic mode parameters ---
+    dT: float = Field(50.0, gt=0.0, description="Transition width for logistic mode [K]")
+    eta_instant: float = Field(0.1, ge=0.0, le=1.0, description="Instantaneous loss fraction for logistic mode")
+
+    # --- HKL mode parameters ---
+    alpha_evap: float = Field(0.007, ge=0.0, le=1.0, description="Evaporation coefficient for HKL modes")
+    mu: float = Field(0.0440849, gt=0.0, description="Molecular weight [kg/mol] for HKL modes")
+    A: Optional[float] = Field(13.613, description="Clausius-Clapeyron A coefficient (log10 scale)")
+    B: Optional[float] = Field(17850.0, description="Clausius-Clapeyron B coefficient [K]")
+    valid_K: Optional[Tuple[float, float]] = Field(
+        (1270.0, 1600.0),
+        description="Valid temperature range for Clausius-Clapeyron fit [K]"
+    )
+
+    # --- Tabulated psat parameters (advanced) ---
+    psat_model: Literal["auto", "clausius", "tabulated"] = Field(
+        "auto",
+        description="Saturation pressure model: 'auto' (default), 'clausius', or 'tabulated'",
+    )
+    psat_table_path: Optional[Path] = Field(
+        None,
+        description="Path to tabulated psat data (only for psat_model='tabulated')",
+    )
+    psat_table_buffer_K: float = Field(75.0, gt=0.0, description="Buffer for psat table interpolation [K]")
+    local_fit_window_K: float = Field(300.0, gt=0.0, description="Local fit window for psat [K]")
+    min_points_local_fit: int = Field(3, ge=2, description="Minimum points for local psat fit")
 
 
 class RPBlowoutConfig(BaseModel):
@@ -369,19 +495,32 @@ class ProcessStateTagging(BaseModel):
 
 
 class Process(BaseModel):
-    """Primary-process selector and companion switches."""
+    """Primary-process selector and companion switches.
+
+    .. deprecated::
+        `process.primary` is deprecated. Use `physics_mode` instead.
+        This field is retained for backward compatibility only.
+    """
 
     primary: Literal["sublimation_only", "collisions_only"] = Field(
         "collisions_only",
-        description="Select which physical process drives the evolution in Phase 0.",
+        description="DEPRECATED: Use physics_mode instead. Select which physical process drives the evolution.",
     )
     state_tagging: ProcessStateTagging = ProcessStateTagging()
 
 
 class Modes(BaseModel):
-    """High-level study modes for isolating single processes."""
+    """High-level study modes for isolating single processes.
 
-    single_process: Literal["none", "sublimation_only", "collisional_only"] = "none"
+    .. deprecated::
+        `modes.single_process` is deprecated. Use `physics_mode` instead.
+        This field is retained for backward compatibility only.
+    """
+
+    single_process: Literal["none", "sublimation_only", "collisional_only"] = Field(
+        "none",
+        description="DEPRECATED: Use physics_mode instead.",
+    )
 
 
 class Phase5CompareConfig(BaseModel):
@@ -445,29 +584,61 @@ class PhaseThresholds(BaseModel):
 
 
 class PhaseMapConfig(BaseModel):
-    """Entry point for optional external phase maps."""
+    """Entry point for optional external phase maps.
+
+    .. deprecated::
+        `phase.map.entrypoint` is deprecated. Use `phase.entrypoint` directly instead.
+        This nested structure is retained for backward compatibility only.
+    """
 
     entrypoint: str = Field(
         DEFAULT_PHASE_ENTRYPOINT,
-        description="Python entrypoint 'module:function' resolving to a phase lookup callable.",
+        description="DEPRECATED: Use phase.entrypoint instead.",
     )
 
 
 class PhaseConfig(BaseModel):
-    """Solid/vapour branching controls."""
+    """Solid/vapour branching controls.
 
-    enabled: bool = False
-    source: Literal["map", "threshold"] = "threshold"
+    Simplified Usage:
+        Use `phase.entrypoint` directly instead of `phase.map.entrypoint`.
+
+        Example (threshold mode - recommended):
+            phase:
+              enabled: true
+              source: "threshold"
+              thresholds:
+                T_condense_K: 1700.0
+                T_vaporize_K: 2000.0
+
+        Example (map mode - recommended):
+            phase:
+              enabled: true
+              source: "map"
+              entrypoint: "mymodule:my_phase_lookup"
+    """
+
+    enabled: bool = Field(False, description="Enable phase state branching")
+    source: Literal["map", "threshold"] = Field(
+        "threshold",
+        description="Phase source: 'threshold' (simple T-based) or 'map' (external lookup)",
+    )
     entrypoint: str = Field(
         DEFAULT_PHASE_ENTRYPOINT,
-        description="Python entrypoint 'module:function' resolving to a phase lookup callable.",
+        description="Python entrypoint 'module:function' for phase lookup (used when source='map')",
     )
     extra_kwargs: Dict[str, Any] = Field(
         default_factory=dict,
         description="Additional keyword arguments forwarded to the phase map entrypoint.",
     )
-    thresholds: PhaseThresholds = PhaseThresholds()
-    map: Optional[PhaseMapConfig] = None
+    thresholds: PhaseThresholds = Field(
+        default_factory=PhaseThresholds,
+        description="Temperature thresholds (used when source='threshold')",
+    )
+    map: Optional[PhaseMapConfig] = Field(
+        None,
+        description="DEPRECATED: Use phase.entrypoint directly instead of phase.map.entrypoint",
+    )
 
     @validator("entrypoint")
     def _check_entrypoint_format(cls, value: str) -> str:
@@ -485,6 +656,12 @@ class PhaseConfig(BaseModel):
         map_entrypoint: Optional[str] = None
         if isinstance(map_cfg, dict) and "entrypoint" in map_cfg:
             map_entrypoint = map_cfg["entrypoint"]
+            warnings.warn(
+                "DEPRECATED: 'phase.map.entrypoint' is deprecated. "
+                "Use 'phase.entrypoint' directly instead.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
         elif isinstance(map_cfg, PhaseMapConfig):
             map_entrypoint = map_cfg.entrypoint
         current_entrypoint = values.get("entrypoint")
@@ -831,11 +1008,30 @@ class StepDiagnostics(BaseModel):
     )
 
 
+class Progress(BaseModel):
+    """Console progress display controls."""
+
+    enable: bool = Field(
+        False,
+        description="Enable a lightweight progress bar with ETA on the CLI.",
+    )
+    refresh_seconds: float = Field(
+        1.0,
+        gt=0.0,
+        description="Wall-clock interval in seconds between progress updates.",
+    )
+
+
 class IO(BaseModel):
     """Output directories."""
 
     outdir: Path = Path("out")
     step_diagnostics: StepDiagnostics = StepDiagnostics()
+    progress: Progress = Progress()
+    quiet: bool = Field(
+        False,
+        description="Suppress INFO logging and Python warnings for cleaner CLI output.",
+    )
     debug_sinks: bool = Field(
         False,
         description="Enable verbose sink logging to out/<run>/debug/sinks_trace.jsonl",
@@ -876,17 +1072,35 @@ class Diagnostics(BaseModel):
 
 
 class Config(BaseModel):
-    """Top-level configuration object."""
+    """Top-level configuration object.
+
+    Physics Mode Consolidation:
+        The preferred way to specify single-process execution is via `physics_mode`.
+        The following legacy fields are deprecated and will be removed:
+        - `single_process_mode`: Use `physics_mode` instead
+        - `modes.single_process`: Use `physics_mode` instead
+        - `process.primary`: Use `physics_mode` instead
+
+    Physics Mode Values:
+        - "default": Run both collisions and sublimation/sinks (combined mode)
+        - "sublimation_only": Run only sublimation, disable collisions and blow-out
+        - "collisions_only": Run only collisions, disable sublimation sinks
+    """
 
     geometry: Geometry
     scope: Scope = Scope()
-    physics_mode: Literal["default", "sublimation_only", "collisions_only"] = Field(
+    physics_mode: Literal["default", "full", "sublimation_only", "collisions_only"] = Field(
         "default",
-        description="Physics toggle: default enables collisions+sinks; alternatives isolate a single process.",
+        description=(
+            "Primary physics mode selector. "
+            "'default'/'full' runs combined collisions+sinks; "
+            "'sublimation_only' disables collisions/blow-out; "
+            "'collisions_only' disables sublimation sinks."
+        ),
     )
     single_process_mode: Literal["off", "sublimation_only", "collisions_only"] = Field(
         "off",
-        description="Global single-process override (set via physics.mode / single_process_mode).",
+        description="DEPRECATED: Use physics_mode instead.",
     )
     process: Process = Process()
     modes: Modes = Modes()
@@ -896,7 +1110,7 @@ class Config(BaseModel):
         description="Blow-out timescale multiplier (float) or 'auto' to estimate from β and Q_pr.",
     )
     material: Material
-    temps: Temps
+    temps: Optional[Temps] = None  # DEPRECATED: Use radiation.TM_K instead
     sizes: Sizes
     initial: Initial
     dynamics: Dynamics
@@ -936,6 +1150,122 @@ class Config(BaseModel):
         if value <= 0.0:
             raise ValueError("chi_blow must be positive")
         return float(value)
+
+    @root_validator(skip_on_failure=True)
+    def _migrate_temps_to_radiation(cls, values: Dict[str, Any]) -> Dict[str, Any]:
+        """Migrate temps.T_M to radiation.TM_K with deprecation warning.
+
+        This validator implements the temperature parameter consolidation:
+        - If radiation.TM_K is set, it takes precedence (no warning)
+        - If only temps.T_M is set, issue deprecation warning and use as fallback
+        - If both are set with different values, warn and prefer radiation.TM_K
+        """
+        temps = values.get("temps")
+        radiation = values.get("radiation")
+
+        if temps is None:
+            return values
+
+        temps_T_M = temps.T_M if isinstance(temps, Temps) else temps.get("T_M")
+
+        if temps_T_M is None:
+            return values
+
+        # Check if radiation.TM_K is set
+        radiation_TM_K = None
+        if radiation is not None:
+            radiation_TM_K = (
+                radiation.TM_K if isinstance(radiation, Radiation) else radiation.get("TM_K")
+            )
+
+        if radiation_TM_K is None:
+            # Only temps.T_M is set - issue deprecation warning
+            warnings.warn(
+                "DEPRECATED: 'temps.T_M' is deprecated and will be removed in a future version. "
+                "Please use 'radiation.TM_K' instead. "
+                f"Current value temps.T_M={temps_T_M} K will be used as a fallback.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+            # Note: The actual fallback logic is handled in physics code
+            # where it checks radiation.TM_K first, then falls back to temps.T_M
+        elif abs(radiation_TM_K - temps_T_M) > 1e-6:
+            # Both are set with different values
+            warnings.warn(
+                f"Both temps.T_M ({temps_T_M} K) and radiation.TM_K ({radiation_TM_K} K) are set "
+                "with different values. radiation.TM_K takes precedence. "
+                "Please remove temps.T_M from your configuration.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+
+        return values
+
+    @root_validator(skip_on_failure=True)
+    def _warn_deprecated_physics_modes(cls, values: Dict[str, Any]) -> Dict[str, Any]:
+        """Warn about deprecated physics mode fields.
+
+        Checks for usage of deprecated fields and issues warnings:
+        - single_process_mode (use physics_mode instead)
+        - modes.single_process (use physics_mode instead)
+        - process.primary (use physics_mode instead)
+        """
+        # Check single_process_mode
+        single_process_mode = values.get("single_process_mode")
+        if single_process_mode and single_process_mode != "off":
+            warnings.warn(
+                f"DEPRECATED: 'single_process_mode' is deprecated. "
+                f"Use 'physics_mode: {single_process_mode}' instead.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+
+        # Check modes.single_process
+        modes = values.get("modes")
+        if modes is not None:
+            single_process = (
+                modes.single_process if isinstance(modes, Modes) else modes.get("single_process")
+            )
+            if single_process and single_process not in ("none", None):
+                # Map collisional_only -> collisions_only
+                mapped = "collisions_only" if single_process == "collisional_only" else single_process
+                warnings.warn(
+                    f"DEPRECATED: 'modes.single_process' is deprecated. "
+                    f"Use 'physics_mode: {mapped}' instead.",
+                    DeprecationWarning,
+                    stacklevel=2,
+                )
+
+        # Check process.primary (only warn if it differs from default)
+        process = values.get("process")
+        if process is not None:
+            primary = (
+                process.primary if isinstance(process, Process) else process.get("primary")
+            )
+            # process.primary defaults to collisions_only, so only warn if explicitly set differently
+            # We can't easily detect if it was explicitly set, so we skip this check
+            # to avoid false positives
+
+        return values
+
+    def get_effective_TM_K(self) -> float:
+        """Return the effective Mars temperature, preferring radiation.TM_K over temps.T_M.
+
+        This helper method implements the temperature parameter consolidation logic:
+        1. If radiation.TM_K is set, use it
+        2. Otherwise, fall back to temps.T_M
+        3. If neither is provided, raise a descriptive error
+
+        Returns:
+            float: Effective Mars infrared temperature in Kelvin
+        Raises:
+            ValueError: If neither radiation.TM_K nor temps.T_M is provided.
+        """
+        if self.radiation is not None and getattr(self.radiation, "TM_K", None) is not None:
+            return float(self.radiation.TM_K)  # type: ignore[return-value]
+        if self.temps is not None and getattr(self.temps, "T_M", None) is not None:
+            return float(self.temps.T_M)  # type: ignore[return-value]
+        raise ValueError("radiation.TM_K is required (temps.T_M is deprecated and absent)")
 
 
 __all__ = [

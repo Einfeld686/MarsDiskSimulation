@@ -4,9 +4,11 @@ from __future__ import annotations
 
 from typing import Dict, Tuple
 
+import numpy as np
+
 from ..errors import MarsDiskError
 
-__all__ = ["compute_q_d_star_F1"]
+__all__ = ["compute_q_d_star_F1", "compute_q_d_star_array"]
 
 # Coefficients for Benz & Asphaug (1999) power-law at reference velocities in km/s
 # Values correspond to basalt-like material as in Leinhardt & Stewart (2012).
@@ -26,6 +28,49 @@ def _q_d_star(s: float, rho: float, coeffs: Tuple[float, float, float, float]) -
     Qs, a_s, B, b_g = coeffs
     s_ratio = s / 1.0  # metres; explicit for clarity
     return Qs * s_ratio ** (-a_s) + B * rho * s_ratio ** b_g
+
+
+def _q_d_star_array(
+    s: np.ndarray,
+    rho: float,
+    coeffs: Tuple[float, float, float, float],
+) -> np.ndarray:
+    """Vectorised :math:`Q_D^*` evaluation for array inputs."""
+
+    if rho <= 0.0:
+        raise MarsDiskError("density must be positive")
+    s_arr = np.asarray(s, dtype=float)
+    if np.any(s_arr <= 0.0):
+        raise MarsDiskError("size must be positive")
+    Qs, a_s, B, b_g = coeffs
+    s_ratio = s_arr / 1.0
+    return Qs * np.power(s_ratio, -a_s) + B * rho * np.power(s_ratio, b_g)
+
+
+def compute_q_d_star_array(s: np.ndarray, rho: float, v_kms: np.ndarray) -> np.ndarray:
+    """Return :math:`Q_D^*` for array inputs with velocity interpolation."""
+
+    s_arr = np.asarray(s, dtype=float)
+    v_arr = np.asarray(v_kms, dtype=float)
+    try:
+        s_arr, v_arr = np.broadcast_arrays(s_arr, v_arr)
+    except ValueError as exc:  # pragma: no cover - defensive guard
+        raise MarsDiskError(f"cannot broadcast s and v_kms: {exc}") from exc
+    if np.any(s_arr <= 0.0):
+        raise MarsDiskError("size must be positive")
+    if rho <= 0.0:
+        raise MarsDiskError("density must be positive")
+    if np.any(v_arr <= 0.0):
+        raise MarsDiskError("velocity must be positive")
+
+    coeff_lo = _COEFFS[_V_MIN]
+    coeff_hi = _COEFFS[_V_MAX]
+    q_lo = _q_d_star_array(s_arr, rho, coeff_lo)
+    q_hi = _q_d_star_array(s_arr, rho, coeff_hi)
+
+    weight = (v_arr - _V_MIN) / (_V_MAX - _V_MIN)
+    weight = np.clip(weight, 0.0, 1.0)
+    return q_lo * (1.0 - weight) + q_hi * weight
 
 
 def compute_q_d_star_F1(s: float, rho: float, v_kms: float) -> float:

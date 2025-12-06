@@ -81,7 +81,7 @@ DocSync/テスト
 - 出力として `series/run.parquet`,`summary.json`,`checks/mass_budget.csv`,`run_config.json` を書き出す。[marsdisk/run.py:2120–2185][marsdisk/run.py:2270–2387][marsdisk/run.py:1330–1357][marsdisk/run.py:1477–1547]
 - タイムシリーズのレコード構造に上記カラムを追加し、損失項と高速ブローアウト診断を分離して記録する。[marsdisk/run.py:2120–2185][marsdisk/io/writer.py:24–162]
 - 供給が定数モード0のため生成率は0で、ミキシング後もクリップされる。(configs/base.yml)[marsdisk/physics/supply.py:69–90]
-- 質量収支許容値と違反時の処理を 0.5% で定義している。[marsdisk/run.py:68][marsdisk/run.py:1330–1357]
+- 質量収支許容値と違反時の処理を 0.5% で定義している。[marsdisk/run.py:71][marsdisk/run.py:1330–1357]
 - `run_config.json` に式と使用値を格納している。[marsdisk/run.py:1477–1547]
 
 ### 派生レシピ: `analysis/run-recipes/baseline_blowout_only.yml`
@@ -342,7 +342,7 @@ sinks:
 6) 根拠
 - `summary.json` の `M_loss` は `M_out_cum + M_sink_cum` を記録する。[marsdisk/run.py:2270–2387]
 - タイムシリーズ `M_loss_cum`,`mass_lost_by_blowout`,`mass_lost_by_sinks`,`mass_total_bins` の更新式。[marsdisk/run.py:2120–2185]
-- シンク無効設定は昇華・ガス抗力を停止させる。(configs/base.yml)[marsdisk/schema.py:202–204]
+- シンク無効設定は昇華・ガス抗力を停止させる。(configs/base.yml)[marsdisk/schema.py:203–204]
 
 ## E. トラブルシュート
 
@@ -542,9 +542,9 @@ pytest tests/test_analysis_coverage_guard.py -q
 ### update_psd_state — PSD初期化の流れ
 
 - 手順
-  - `configs/*.yml` で `sizes` と `psd` セクションを調整する。`sizes.s_min/s_max/n_bins` がビン定義を、`psd.alpha` と `psd.wavy_strength` が三勾配＋“wavy”補正を決め、`psd.floor.mode` を `fixed`/`evolve_smin`/`none` から選ぶと床処理が切り替わる。[marsdisk/schema.py:142–151][marsdisk/schema.py:189–199]
+  - `configs/*.yml` で `sizes` と `psd` セクションを調整する。`sizes.s_min/s_max/n_bins` がビン定義を、`psd.alpha` と `psd.wavy_strength` が三勾配＋“wavy”補正を決め、`psd.floor.mode` を `fixed`/`evolve_smin`/`none` から選ぶと床処理が切り替わる。[marsdisk/schema.py:148–151][marsdisk/schema.py:189–199]
   - 標準の `configs/base.yml` では力学系を平滑に保つため `psd.wavy_strength=0.0` を既定とし、wavy パターンを検証したい場合は CLI で `--override psd.wavy_strength=0.2` などと上書きする。
-  - 実行時は `run_zero_d` がブローアウト境界を評価したあと `psd.update_psd_state` を呼び出し、初期PSDを構築する。[marsdisk/run.py:582–593]
+  - 実行時は `run_zero_d` がブローアウト境界を評価したあと `psd.update_psd_state` を呼び出し、初期PSDを構築する。[marsdisk/run.py:582–592]
   - 完走後、`out/series/run.parquet` に `kappa`,`s_min`,`mass_total_bins` などが記録される。`psd.floor.mode="evolve_smin"` の場合は `s_min_evolved` 列で進化床を確認する。
 - 入出力
   - 入力は `s_min`,`s_max`,`alpha`,`wavy_strength`,`n_bins`,`rho`。不正なサイズ順やビン数は `MarsDiskError` で停止する。[marsdisk/physics/psd.py:30–118]
@@ -567,7 +567,7 @@ pytest tests/test_analysis_coverage_guard.py -q
 ### beta — 放射圧比の確認ポイント
 
 - 手順
-  - `material.rho` と `temps.T_M`（または `radiation.TM_K`）を設定し、`radiation.qpr_table_path` もしくは `radiation.Q_pr` で `⟨Q_pr⟩` を定義する。[marsdisk/schema.py:108–108][marsdisk/schema.py:124–127][marsdisk/schema.py:316–316]
+  - `material.rho` と `temps.T_M`（または `radiation.TM_K`）を設定し、`radiation.qpr_table_path` もしくは `radiation.Q_pr` で `⟨Q_pr⟩` を定義する。[marsdisk/schema.py:109–109][marsdisk/schema.py:124–126][marsdisk/schema.py:316–316]
 - 実行中は `run_zero_d` が βを `s_min_config` と `s_min_effective` で評価し、`case_status` や `summary.json` の `beta_at_smin_config` / `beta_at_smin_effective` フィールドへ書き出す。[marsdisk/run.py:598–602][marsdisk/run.py:1236–1263]
   - `out/series/run.parquet` で列 `beta_at_smin_config` / `beta_at_smin_effective` を確認し、閾値を超えた場合 `case_status="blowout"` が記録される。
 - 入出力

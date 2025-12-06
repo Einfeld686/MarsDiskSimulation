@@ -224,7 +224,7 @@ Case classification follows the configuration beta: `case_status = "blowout"` wh
 - Enforces positivity: halves $\Delta t_{\mathrm{eff}}$ until all $N_i^{n+1}\ge0$.
 - Evaluates mass budget error (function C4); adaptively halves $\Delta t_{\mathrm{eff}}$ until error $\le$ `mass_tol`.
 - Caps step size relative to minimum collision time using `safety` multiplier.
-- Smol が既定の衝突経路（`surface.collision_solver="smol"`）。表層 ODE (S1) を試す場合のみ `surface_ode` へ切り替える。[marsdisk/run.py:736–1016]
+- Smol が既定の衝突経路（`surface.collision_solver="smol"`）。表層 ODE (S1) を試す場合のみ `surface_ode` へ切り替える。[marsdisk/run.py:814–1016]
 
 ### (E.011) marsdisk/physics/smol.py: compute_mass_budget_error_C4 (lines 104-131)
 IMEX 更新後の質量差分を測るための診断式。衝突カスケードでの質量収支検査を行う実装 [@Krivov2006_AA455_509] に基づく。
@@ -443,7 +443,7 @@ P_{\mathrm{sat}}(T) =
 - In HKL branch, negative $(P_{\mathrm{sat}}-P_{\mathrm{gas}})$ is clamped to zero before evaluation.
 - Logistic branch guards against $dT\to0$ via `max(dT, 1.0)`.
 - Stores provenance in `run_config.json` under `sublimation_provenance`, capturing {`sublimation_formula`, `psat_model`, `A`, `B`, `mu`, `alpha_evap`, `P_gas`, `valid_K`, optional `psat_table_path`} for reproducibility.
-- Ambient vapour pressure $P_{\mathrm{gas}}$ (特に Si を含む蒸気分圧) は Ronnet et al. (2016) 同様に自由パラメータとして扱い、化学平衡は計算しない。既定は gas‑poor 前提で $P_{\mathrm{gas}}=0$ とし、感度試験では YAML `sinks.sub_params.P_gas` を明示調整すること（HKL フラックスの最大不確定要素）。[marsdisk/physics/sublimation.py:577–590], [marsdisk/schema.py:273–274]
+- Ambient vapour pressure $P_{\mathrm{gas}}$ (特に Si を含む蒸気分圧) は Ronnet et al. (2016) 同様に自由パラメータとして扱い、化学平衡は計算しない。既定は gas‑poor 前提で $P_{\mathrm{gas}}=0$ とし、感度試験では YAML `sinks.sub_params.P_gas` を明示調整すること（HKL フラックスの最大不確定要素）。[marsdisk/physics/sublimation.py:577–590], [marsdisk/schema.py:273–273]
 
 ### (E.019) marsdisk/physics/sublimation.py: sink_timescale (implemented by s_sink_from_timescale, lines 116-129)
 [@Ronnet2016_ApJ828_109]
