@@ -39,6 +39,7 @@ if exist "%REQ_FILE%" (
 
 python -m marsdisk.run ^
   --config out\run_template_sublim_smol_phase_MAX50M\config_base_sublimation.yml ^
+  --progress ^
   --override io.outdir=%OUTDIR% ^
   --override sinks.sub_params.mode=hkl ^
   --override sinks.sub_params.alpha_evap=0.007 ^

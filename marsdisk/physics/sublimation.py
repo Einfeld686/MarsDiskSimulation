@@ -535,30 +535,22 @@ def mass_flux_hkl(T: float, params: SublimationParams) -> float:
     """
 
     use_hkl = _is_hkl_active(params)
+    validity_status = "unknown"
+    validity_direction: Optional[str] = None
+    validity_delta = 0.0
+    if use_hkl and params.valid_K is not None:
+        T_valid_low, T_valid_high = params.valid_K
+        validity_status = "within"
+        if T < T_valid_low:
+            validity_status = "below"
+            validity_direction = "below"
+            validity_delta = T_valid_low - T
+        elif T > T_valid_high:
+            validity_status = "above"
+            validity_direction = "above"
+            validity_delta = T - T_valid_high
+
     if use_hkl:
-        if params.valid_K is not None:
-            T_valid_low, T_valid_high = params.valid_K
-            if not (T_valid_low <= T <= T_valid_high):
-                if T < T_valid_low:
-                    delta = T_valid_low - T
-                    direction = "below"
-                else:
-                    delta = T - T_valid_high
-                    direction = "above"
-                logger.warning(
-                    "HKL: T=%.1f K lies %s the validated SiO window [%.1f, %.1f] K by %.0f K.",
-                    T,
-                    direction,
-                    T_valid_low,
-                    T_valid_high,
-                    delta,
-                )
-                if delta >= PSAT_VALIDITY_WARNING_MARGIN_K:
-                    logger.warning(
-                        "HKL: extending the Kubaschewski & Chart (1974) / Ferguson et al. (2012) SiO vapour curve %.0f K %s its calibration risks unphysical pressures; gas-poor disk studies (Hyodo et al. 2017; Hyodo et al. 2018; Canup & Salmon 2018; Kraus 2012) advise supplying high-T tables.",
-                        delta,
-                        direction,
-                    )
         P_sat = p_sat(T, params)
         P_ex = max(0.0, P_sat - params.P_gas)
         if P_ex <= 0.0:
@@ -567,6 +559,15 @@ def mass_flux_hkl(T: float, params: SublimationParams) -> float:
             raise ValueError("molar mass mu must be positive")
         # Hertz–Knudsen–Langmuir: P in Pa, T in K, μ in kg/mol, R_GAS in J mol^-1 K^-1.
         root = math.sqrt(params.mu / (2.0 * math.pi * constants.R_GAS * T))
+        meta = getattr(params, "_psat_last_selection", None)
+        if meta is not None:
+            meta.setdefault(
+                "valid_K_config",
+                list(params.valid_K) if params.valid_K is not None else None,
+            )
+            meta["psat_validity_status"] = validity_status
+            meta["psat_validity_direction"] = validity_direction
+            meta["psat_validity_delta_K"] = float(validity_delta)
         return params.alpha_evap * P_ex * root
 
     # logistic placeholder: J0 * exp((T - T_sub)/dT)
