@@ -7,6 +7,8 @@ output/
 /output/
 .venv/
 marsdisk/.venv/
+# Python bytecode / cache artifacts
+**/__pycache__/
 __pycache__/
 *.py[cod]
 .ipynb_checkpoints/
