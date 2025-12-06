@@ -78,6 +78,8 @@ SINK_REF_SIZE = 1e-6
 FAST_BLOWOUT_RATIO_THRESHOLD = 3.0
 FAST_BLOWOUT_RATIO_STRICT = 10.0
 PHASE7_SCHEMA_VERSION = "phase7-minimal-v1"
+MEMORY_RUN_ROW_BYTES = 1400.0
+MEMORY_PSD_ROW_BYTES = 40.0
 
 
 class ProgressReporter:
@@ -90,6 +92,8 @@ class ProgressReporter:
         *,
         refresh_seconds: float = 1.0,
         enabled: bool = False,
+        memory_hint: Optional[str] = None,
+        memory_header: Optional[str] = None,
     ) -> None:
         self.enabled = bool(enabled and total_steps > 0)
         self.total_steps = max(int(total_steps), 1)
@@ -98,6 +102,19 @@ class ProgressReporter:
         self.start = time.monotonic()
         self.last = self.start
         self._finished = False
+        self.memory_hint = memory_hint
+        self.memory_header = memory_header
+        self._header_emitted = False
+
+    def emit_header(self) -> None:
+        """Print a one-line header (e.g., memory estimate) before the bar."""
+
+        if not self.enabled or self._header_emitted:
+            return
+        if self.memory_header:
+            sys.stdout.write(f"{self.memory_header}\n")
+            sys.stdout.flush()
+        self._header_emitted = True
 
     def update(self, step_no: int, sim_time_s: float, *, force: bool = False) -> None:
         """Render the progress bar if enabled and refresh interval elapsed."""
@@ -117,9 +134,10 @@ class ProgressReporter:
         bar = "#" * filled + "-" * (bar_width - filled)
         sim_years = sim_time_s / SECONDS_PER_YEAR if math.isfinite(sim_time_s) else float("nan")
         eta_text = f"ETA {eta:0.0f}s" if math.isfinite(eta) else "ETA ?"
+        memory_text = f" mem~{self.memory_hint}" if self.memory_hint else ""
         sys.stdout.write(
             f"\r[{bar}] {frac * 100:5.1f}% step {step_no + 1}/{self.total_steps} "
-            f"t={sim_years:.3g} yr {eta_text}"
+            f"t={sim_years:.3g} yr {eta_text}{memory_text}"
         )
         if is_last:
             sys.stdout.write("\n")
@@ -323,6 +341,39 @@ def _compute_gate_factor(t_blow: Optional[float], t_solid: Optional[float]) -> f
     if factor > 1.0:
         return 1.0
     return factor
+
+
+def _human_bytes(value: float) -> str:
+    """Return a human-readable byte string."""
+
+    units = ("B", "KB", "MB", "GB", "TB", "PB", "EB")
+    amount = float(value)
+    for unit in units:
+        if abs(amount) < 1024.0:
+            return f"{amount:,.1f} {unit}"
+        amount /= 1024.0
+    return f"{amount:,.1f} EB"
+
+
+def _memory_estimate(
+    n_steps: int,
+    n_bins: int,
+    run_row_bytes: float = MEMORY_RUN_ROW_BYTES,
+    psd_row_bytes: float = MEMORY_PSD_ROW_BYTES,
+) -> tuple[str, str]:
+    """Return short and long memory hints estimated from steps and bins."""
+
+    run_rows = max(int(n_steps), 0)
+    psd_rows = max(int(n_steps * n_bins), 0)
+    run_mem = run_rows * float(run_row_bytes)
+    psd_mem = psd_rows * float(psd_row_bytes)
+    total_mem = run_mem + psd_mem
+    short = f"{_human_bytes(total_mem)} est"
+    long = (
+        f"[mem est] run_rows={run_rows:,} psd_rows={psd_rows:,} "
+        f"run~{_human_bytes(run_mem)} psd~{_human_bytes(psd_mem)} total~{_human_bytes(total_mem)}"
+    )
+    return short, long
 
 
 def _normalise_single_process_mode(value: Any) -> str:
@@ -1339,12 +1390,20 @@ def run_zero_d(
         if progress_cfg is not None
         else 1.0
     )
+    memory_hint_short: Optional[str] = None
+    memory_hint_header: Optional[str] = None
+    if progress_enabled:
+        n_bins_cfg = int(getattr(cfg.sizes, "n_bins", 0) or 0)
+        memory_hint_short, memory_hint_header = _memory_estimate(n_steps, n_bins_cfg)
     progress = ProgressReporter(
         n_steps,
         t_end,
         refresh_seconds=max(progress_refresh, 0.1),
         enabled=progress_enabled,
+        memory_hint=memory_hint_short,
+        memory_header=memory_hint_header,
     )
+    progress.emit_header()
     if quiet_mode:
         warnings.filterwarnings("ignore")
         logging.getLogger().setLevel(logging.WARNING)
@@ -3141,6 +3200,9 @@ def run_zero_d(
         "psat_table_buffer_K": sub_params.psat_table_buffer_K,
         "local_fit_window_K": sub_params.local_fit_window_K,
         "min_points_local_fit": sub_params.min_points_local_fit,
+        "psat_validity_status": psat_selection.get("psat_validity_status"),
+        "psat_validity_direction": psat_selection.get("psat_validity_direction"),
+        "psat_validity_delta_K": psat_selection.get("psat_validity_delta_K"),
         "T_req": psat_selection.get("T_req"),
         "P_sat_Pa": psat_selection.get("P_sat_Pa"),
         "log10P": psat_selection.get("log10P"),

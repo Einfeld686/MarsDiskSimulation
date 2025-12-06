@@ -133,7 +133,7 @@ def test_auto_switches_to_local_clausius_fit(tmp_path) -> None:
     assert meta["valid_K_active"][1] <= 2200.0
 
 
-def test_auto_baseline_warns_when_out_of_range(caplog) -> None:
+def test_auto_records_validity_when_out_of_range(caplog) -> None:
     params = SublimationParams(
         mode="hkl",
         psat_model="auto",
@@ -147,9 +147,12 @@ def test_auto_baseline_warns_when_out_of_range(caplog) -> None:
         flux = mass_flux_hkl(3000.0, params)
     assert flux >= 0.0
     assert params.psat_model_resolved == "clausius(baseline)"
-    joined = " ".join(rec.message for rec in caplog.records)
-    assert "Hyodo et al. 2017" in joined
-    assert "Ferguson et al. (2012)" in joined
+    assert not caplog.records
+    meta = params._psat_last_selection
+    assert meta["psat_validity_status"] == "above"
+    assert meta["psat_validity_direction"] == "above"
+    assert meta["psat_validity_delta_K"] == pytest.approx(1400.0, rel=1e-6)
+    assert meta["valid_K_config"] == [1270.0, 1600.0]
 
 
 def test_run_config_records_psat_selection(tmp_path) -> None:
@@ -228,3 +231,5 @@ def test_run_config_records_psat_selection(tmp_path) -> None:
     assert prov["B"] == pytest.approx(17850.0, rel=1e-6)
     assert prov["psat_table_buffer_K"] == pytest.approx(75.0, rel=1e-6)
     assert prov["T_req"] is not None
+    assert prov["psat_validity_status"] in {"within", "above", "below", "unknown"}
+    assert prov["psat_validity_delta_K"] is not None
