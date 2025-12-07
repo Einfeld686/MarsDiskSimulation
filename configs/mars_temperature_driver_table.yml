@@ -100,8 +100,6 @@ phase:
     T_vaporize_K: 2000.0
     P_ref_bar: 1.0
     tau_ref: 1.0
-  map:
-    entrypoint: "siO2_disk_cooling.siO2_cooling_map:lookup_phase_state"
 numerics:
   t_end_years: 2.0
   dt_init: "auto"

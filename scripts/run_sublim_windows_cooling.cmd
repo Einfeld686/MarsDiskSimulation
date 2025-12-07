@@ -31,7 +31,7 @@ if %errorlevel% neq 0 (
 
 if exist "%REQ_FILE%" (
   echo [setup] Installing/upgrading dependencies from %REQ_FILE% ...
-  pip install --upgrade pip
+  python -m pip install --upgrade pip
   pip install -r "%REQ_FILE%"
   if %errorlevel% neq 0 (
     echo [error] Dependency installation failed.
