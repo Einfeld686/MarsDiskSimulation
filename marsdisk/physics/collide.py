@@ -73,7 +73,8 @@ def compute_collision_kernel_C1(
         * v_mat
         / (np.sqrt(2.0 * np.pi) * H_ij)
     )
-    logger.info("compute_collision_kernel_C1: n_bins=%d", n)
+    if logger.isEnabledFor(logging.DEBUG):
+        logger.debug("compute_collision_kernel_C1: n_bins=%d", n)
     return kernel
 
 
@@ -104,5 +105,6 @@ def compute_prod_subblow_area_rate_C2(
     n = C.shape[0]
     idx = np.triu_indices(n)
     rate = float(np.sum(C[idx] * m_subblow[idx]))
-    logger.info("compute_prod_subblow_area_rate_C2: rate=%e", rate)
+    if logger.isEnabledFor(logging.DEBUG):
+        logger.debug("compute_prod_subblow_area_rate_C2: rate=%e", rate)
     return rate

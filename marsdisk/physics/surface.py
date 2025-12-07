@@ -158,17 +158,18 @@ def step_surface_density_S1(
 
     outflux = sigma_new * Omega if enable_blowout else 0.0
     sink_flux = sigma_new / t_sink if (t_sink is not None and t_sink > 0.0) else 0.0
-    logger.info(
-        "step_surface_density_S1: dt=%e sigma=%e sigma_tau1=%e t_blow=%e t_coll=%e t_sink=%e outflux=%e blowout=%s",
-        dt,
-        sigma_new,
-        sigma_tau1 if sigma_tau1 is not None else float("nan"),
-        t_blow,
-        t_coll if t_coll is not None else float("nan"),
-        t_sink if t_sink is not None else float("nan"),
-        outflux,
-        enable_blowout,
-    )
+    if logger.isEnabledFor(logging.DEBUG):
+        logger.debug(
+            "step_surface_density_S1: dt=%e sigma=%e sigma_tau1=%e t_blow=%e t_coll=%e t_sink=%e outflux=%e blowout=%s",
+            dt,
+            sigma_new,
+            sigma_tau1 if sigma_tau1 is not None else float("nan"),
+            t_blow,
+            t_coll if t_coll is not None else float("nan"),
+            t_sink if t_sink is not None else float("nan"),
+            outflux,
+            enable_blowout,
+        )
     return SurfaceStepResult(sigma_new, outflux, sink_flux)
 
 

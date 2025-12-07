@@ -3,6 +3,8 @@ from __future__ import annotations
 """Smoluchowski collision+fragmentation step specialised for the 0D loop."""
 
 import math
+import os
+import warnings
 from dataclasses import dataclass
 from typing import MutableMapping, TYPE_CHECKING
 
@@ -11,6 +13,28 @@ from ..errors import MarsDiskError
 from . import collide, dynamics, qstar, smol
 from .fragments import largest_remnant_fraction_array, q_r_array
 from .sublimation import sublimation_sink_from_dsdt
+
+# Numba-accelerated kernels (optional)
+try:
+    from ._numba_kernels import (
+        NUMBA_AVAILABLE,
+        compute_weights_table_numba,
+        fill_fragment_tensor_numba,
+    )
+    _NUMBA_AVAILABLE = NUMBA_AVAILABLE()
+except ImportError:
+    _NUMBA_AVAILABLE = False
+
+# Honour opt-out via environment variable to aid debugging or CI sandboxes.
+_NUMBA_DISABLED_ENV = os.environ.get("MARSDISK_DISABLE_NUMBA", "").lower() in {
+    "1",
+    "true",
+    "yes",
+    "on",
+}
+_USE_NUMBA = _NUMBA_AVAILABLE and not _NUMBA_DISABLED_ENV
+# Set to True after a runtime failure to avoid repeatedly calling broken JIT kernels.
+_NUMBA_FAILED = False
 
 if TYPE_CHECKING:
     from ..schema import Dynamics
@@ -71,35 +95,61 @@ def supply_mass_rate_to_number_source(
     return F
 
 
+_FRAG_CACHE: dict[tuple, np.ndarray] = {}
+_FRAG_CACHE_MAX = 8
+
+
 def _fragment_tensor(
     sizes: np.ndarray,
     masses: np.ndarray,
     v_rel: float | np.ndarray,
     rho: float,
     alpha_frag: float = 3.5,
+    *,
+    use_numba: bool | None = None,
 ) -> np.ndarray:
-    """Return a mass-conserving fragment distribution ``Y[k, i, j]``."""
+    """Return a mass-conserving fragment distribution ``Y[k, i, j]``.
 
-    sizes_arr = np.asarray(sizes, dtype=float)
-    masses_arr = np.asarray(masses, dtype=float)
+    When Numba is available, the inner loops are JIT-compiled and parallelised
+    for significant speedup on multi-core systems.
+    """
+    global _NUMBA_FAILED
+
+    sizes_arr = np.asarray(sizes, dtype=np.float64)
+    masses_arr = np.asarray(masses, dtype=np.float64)
     if sizes_arr.shape != masses_arr.shape:
         raise MarsDiskError("sizes and masses must share the same shape")
 
     n = sizes_arr.size
-    Y = np.zeros((n, n, n), dtype=float)
     if n == 0:
-        return Y
+        return np.zeros((0, 0, 0), dtype=np.float64)
     if rho <= 0.0:
         raise MarsDiskError("rho must be positive")
 
+    use_cache = np.isscalar(v_rel)
+    cache_key: tuple | None = None
+    if use_cache:
+        cache_key = (
+            "scalar",
+            float(v_rel),
+            float(rho),
+            tuple(sizes_arr.tolist()),
+            tuple(masses_arr.tolist()),
+            float(alpha_frag),
+        )
+        cached = _FRAG_CACHE.get(cache_key)
+        if cached is not None:
+            return cached
+
     if np.isscalar(v_rel):
-        v_matrix = np.full((n, n), float(v_rel), dtype=float)
+        v_matrix = np.full((n, n), float(v_rel), dtype=np.float64)
     else:
-        v_matrix = np.asarray(v_rel, dtype=float)
+        v_matrix = np.asarray(v_rel, dtype=np.float64)
         if v_matrix.shape != (n, n):
             raise MarsDiskError("v_rel must be scalar or (n, n)")
     v_matrix = np.maximum(v_matrix, 1.0e-12)
 
+    # Precompute matrices needed for fragment distribution
     m1 = masses_arr[:, None]
     m2 = masses_arr[None, :]
     m_tot = m1 + m2
@@ -108,32 +158,67 @@ def _fragment_tensor(
     size_ref = np.maximum.outer(sizes_arr, sizes_arr)
     q_star_matrix = qstar.compute_q_d_star_array(size_ref, rho, v_matrix / 1.0e3)
     q_r_matrix = q_r_array(m1, m2, v_matrix)
-    f_lr_matrix = np.clip(largest_remnant_fraction_array(q_r_matrix, q_star_matrix), 0.0, 1.0)
-    k_lr_matrix = np.maximum.outer(np.arange(n), np.arange(n))
+    f_lr_matrix = np.clip(
+        largest_remnant_fraction_array(q_r_matrix, q_star_matrix), 0.0, 1.0
+    ).astype(np.float64)
+    k_lr_matrix = np.maximum.outer(
+        np.arange(n, dtype=np.int64), np.arange(n, dtype=np.int64)
+    )
 
-    weights_table = np.zeros((n, n), dtype=float)
-    for k_lr in range(n):
-        weights = np.power(sizes_arr[: k_lr + 1], -alpha_frag)
-        weights_sum = float(np.sum(weights))
-        if weights_sum > 0.0:
-            weights_table[k_lr, : k_lr + 1] = weights / weights_sum
+    # Output tensor
+    Y = np.zeros((n, n, n), dtype=np.float64)
 
-    for i in range(n):
-        for j in range(n):
-            if not valid_pair[i, j]:
-                continue
-            k_lr = int(k_lr_matrix[i, j])
-            f_lr = float(f_lr_matrix[i, j])
-            Y[k_lr, i, j] += f_lr
+    # Decide whether to attempt JIT, with per-call override.
+    use_jit = _USE_NUMBA and not _NUMBA_FAILED if use_numba is None else bool(use_numba)
+    if use_jit and not _NUMBA_AVAILABLE:
+        use_jit = False
 
-            remainder_frac = 1.0 - f_lr
-            if remainder_frac <= 0.0:
-                continue
-            weights = weights_table[k_lr, : k_lr + 1]
-            if weights.size == 0 or weights.sum() <= 0.0:
-                continue
-            Y[: k_lr + 1, i, j] += remainder_frac * weights
+    # Branch: Numba-accelerated or pure Python fallback
+    if use_jit:
+        try:
+            weights_table = compute_weights_table_numba(sizes_arr, float(alpha_frag))
+            fill_fragment_tensor_numba(
+                Y, n, valid_pair, f_lr_matrix, k_lr_matrix, weights_table
+            )
+        except Exception as exc:  # pragma: no cover - exercised via fallback test
+            # Reset and fall back to the pure-Python implementation.
+            Y.fill(0.0)
+            use_jit = False
+            warnings.warn(
+                f"_fragment_tensor: numba kernel failed ({exc!r}); falling back to pure Python.",
+                RuntimeWarning,
+            )
+            _NUMBA_FAILED = True
 
+    if not use_jit:
+        # Pure Python fallback (original implementation)
+        weights_table = np.zeros((n, n), dtype=np.float64)
+        for k_lr in range(n):
+            weights = np.power(sizes_arr[: k_lr + 1], -alpha_frag)
+            weights_sum = float(np.sum(weights))
+            if weights_sum > 0.0:
+                weights_table[k_lr, : k_lr + 1] = weights / weights_sum
+
+        for i in range(n):
+            for j in range(n):
+                if not valid_pair[i, j]:
+                    continue
+                k_lr = int(k_lr_matrix[i, j])
+                f_lr = float(f_lr_matrix[i, j])
+                Y[k_lr, i, j] += f_lr
+
+                remainder_frac = 1.0 - f_lr
+                if remainder_frac <= 0.0:
+                    continue
+                weights = weights_table[k_lr, : k_lr + 1]
+                if weights.size == 0 or weights.sum() <= 0.0:
+                    continue
+                Y[: k_lr + 1, i, j] += remainder_frac * weights
+
+    if use_cache and cache_key is not None:
+        if len(_FRAG_CACHE) >= _FRAG_CACHE_MAX:
+            _FRAG_CACHE.pop(next(iter(_FRAG_CACHE)))
+        _FRAG_CACHE[cache_key] = Y
     return Y
 
 
