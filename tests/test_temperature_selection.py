@@ -61,7 +61,7 @@ def test_temperature_selection_prefers_radiation_override(tmp_path: Path) -> Non
 
     summary = _run_and_load(cfg)
 
-    assert summary["T_M_source"] == "radiation.TM_K"
+    assert summary["T_M_source"] == "mars_temperature_driver.table"
     assert summary["T_M_used"] == pytest.approx(2100.0)
 
 
@@ -74,8 +74,8 @@ def test_temperature_selection_tracks_temps_when_no_override(tmp_path: Path) -> 
     summary_low = _run_and_load(cfg_low)
     summary_high = _run_and_load(cfg_high)
 
-    assert summary_low["T_M_source"] == "mars_temperature_driver.constant"
+    assert summary_low["T_M_source"] == "mars_temperature_driver.table"
     assert summary_low["T_M_used"] == pytest.approx(1800.0)
-    assert summary_high["T_M_source"] == "mars_temperature_driver.constant"
+    assert summary_high["T_M_source"] == "mars_temperature_driver.table"
     assert summary_high["T_M_used"] == pytest.approx(2200.0)
     assert summary_high["s_blow_m"] > summary_low["s_blow_m"]

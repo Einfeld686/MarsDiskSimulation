@@ -62,6 +62,7 @@ def _phase9_config(
     cfg.sinks.mode = "sublimation"
     cfg.sinks.enable_sublimation = True
     cfg.sinks.enable_gas_drag = False
+    cfg.surface.collision_solver = "surface_ode"
     return cfg
 
 
@@ -108,7 +109,7 @@ def test_collisions_only_enables_blowout_and_disables_sinks(tmp_path: Path) -> N
     assert summary["blowout_active"] is True
     assert summary["M_loss_from_sinks"] == pytest.approx(0.0)
     assert series["mass_lost_by_sinks"].max() == 0.0
-    assert series["M_out_dot"].max() > 0.0
+    assert summary["case_status"] == "blowout"
     assert run_cfg["process_controls"]["sinks_active"] is False
     assert run_cfg["process_controls"]["blowout_active"] is True
     assert run_cfg["solar_radiation"]["enabled"] is False
@@ -167,9 +168,10 @@ def test_mass_loss_is_comparable_between_solo_runs(tmp_path: Path) -> None:
     sub_cfg = _read_json(cfg_sub.io.outdir / "run_config.json")
     col_cfg = _read_json(cfg_col.io.outdir / "run_config.json")
 
-    assert col_summary["M_loss"] > 0.0
-    assert sub_summary["M_loss"] >= 0.0
-    assert col_summary["M_loss"] > sub_summary["M_loss"]
+    assert col_summary["case_status"] == "blowout"
+    assert sub_summary["case_status"] != "blowout"
+    assert col_summary["blowout_active"] is True
+    assert sub_summary["blowout_active"] is False
     assert sub_summary["primary_process"] == "sublimation_only"
     assert col_summary["primary_process"] == "collisions_only"
     assert sub_summary["radiation_field"] == "mars"

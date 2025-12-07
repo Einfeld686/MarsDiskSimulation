@@ -9,7 +9,8 @@ setlocal enabledelayedexpansion
 set OUTDIR=out\run_sublim_smol_phase_cooling
 set TMK=4000.0
 set TEMP_TABLE=data\mars_temperature_T4000p0K.csv
-set CONFIG=out\run_template_sublim_smol_phase_MAX50M\config_base_sublimation.yml
+rem Use a schema-compliant config (temps.* is no longer supported)
+set CONFIG=configs\mars_temperature_driver_table.yml
 set VENV_DIR=.venv
 set REQ_FILE=requirements.txt
 
