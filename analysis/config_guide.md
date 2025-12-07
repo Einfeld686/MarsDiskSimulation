@@ -456,6 +456,8 @@ phase:
   entrypoint: "mymodule:my_phase_lookup"  # 直接指定
 ```
 
+`phase.source="map"` の場合、`PhaseEvaluator` は起動時に `phase.entrypoint` を必須でインポートし、見つからない/読み込みに失敗すると `RuntimeError` で即停止する（フォールバックなし）。閾値モードを使わない限り、エントリポイントのパスと依存を事前に整えておくこと。
+
 ### 3.7 `radiation` — 放射圧（温度統一先）
 
 | キー | 型 | 単位 | 説明 |

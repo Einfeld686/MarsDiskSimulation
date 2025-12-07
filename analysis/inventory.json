@@ -3494,7 +3494,7 @@
   },
   {
     "file_path": "marsdisk/physics/phase.py",
-    "line_no": 559,
+    "line_no": 564,
     "symbol": "hydro_escape_timescale",
     "signature": "hydro_escape_timescale(cfg: Optional[HydroEscapeConfig], temperature_K: float, f_vap: float) -> Optional[float]",
     "brief_usage": "Return ``t_escape`` implied by the hydrodynamic escape scaling."
@@ -5358,54 +5358,54 @@
     "file_path": "scripts/run_axis_r_sweep.py",
     "line_no": 138,
     "symbol": "render_config_yaml",
-    "signature": "render_config_yaml(*, r_m: float, temperature_k: float, mass_mmars: float, outdir: Path, seed: int) -> str",
+    "signature": "render_config_yaml(*, r_m: float, r_rm: float, temperature_k: float, mass_mmars: float, outdir: Path, seed: int) -> str",
     "brief_usage": "Materialise the YAML template with units annotated via inline comments."
   },
   {
     "file_path": "scripts/run_axis_r_sweep.py",
-    "line_no": 216,
+    "line_no": 221,
     "symbol": "ensure_directories",
     "signature": "ensure_directories() -> None",
     "brief_usage": "Create output directories if they do not already exist."
   },
   {
     "file_path": "scripts/run_axis_r_sweep.py",
-    "line_no": 223,
+    "line_no": 228,
     "symbol": "build_cases",
     "signature": "build_cases(root: Path) -> List[CaseResult]",
     "brief_usage": "Construct CaseResult objects for all sweep combinations."
   },
   {
     "file_path": "scripts/run_axis_r_sweep.py",
-    "line_no": 252,
+    "line_no": 257,
     "symbol": "write_configs",
     "signature": "write_configs(cases: Iterable[CaseResult], root: Path) -> None",
     "brief_usage": "Write configuration YAML files for each case."
   },
   {
     "file_path": "scripts/run_axis_r_sweep.py",
-    "line_no": 267,
+    "line_no": 273,
     "symbol": "run_case",
     "signature": "run_case(case: CaseResult, root: Path) -> None",
     "brief_usage": "Execute marsdisk.run for the provided case."
   },
   {
     "file_path": "scripts/run_axis_r_sweep.py",
-    "line_no": 286,
+    "line_no": 292,
     "symbol": "collect_outputs",
     "signature": "collect_outputs(case: CaseResult) -> None",
     "brief_usage": "Populate summary and run_config information for an executed case."
   },
   {
     "file_path": "scripts/run_axis_r_sweep.py",
-    "line_no": 309,
+    "line_no": 315,
     "symbol": "write_summary_csv",
     "signature": "write_summary_csv(cases: Iterable[CaseResult], output_path: Path) -> None",
     "brief_usage": "Aggregate summary metrics into a CSV file as specified in step 5."
   },
   {
     "file_path": "scripts/run_axis_r_sweep.py",
-    "line_no": 362,
+    "line_no": 368,
     "symbol": "main",
     "signature": "main(argv: Optional[List[str]]=None) -> int",
     "brief_usage": "No description available."
@@ -6238,91 +6238,91 @@
   },
   {
     "file_path": "scripts/sweep_massloss_map.py",
-    "line_no": 207,
+    "line_no": 219,
     "symbol": "_read_summary",
     "signature": "_read_summary(path: Path) -> Dict[str, Any]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "scripts/sweep_massloss_map.py",
-    "line_no": 214,
+    "line_no": 226,
     "symbol": "_read_series",
     "signature": "_read_series(path: Path) -> pd.DataFrame",
     "brief_usage": "No description available."
   },
   {
     "file_path": "scripts/sweep_massloss_map.py",
-    "line_no": 220,
+    "line_no": 232,
     "symbol": "_read_mass_budget",
     "signature": "_read_mass_budget(path: Path) -> Dict[str, float]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "scripts/sweep_massloss_map.py",
-    "line_no": 233,
+    "line_no": 245,
     "symbol": "_median_ratio",
     "signature": "_median_ratio(numerator: pd.Series, denominator: pd.Series) -> float",
     "brief_usage": "No description available."
   },
   {
     "file_path": "scripts/sweep_massloss_map.py",
-    "line_no": 246,
+    "line_no": 258,
     "symbol": "_median_finite",
     "signature": "_median_finite(series: pd.Series) -> float",
     "brief_usage": "No description available."
   },
   {
     "file_path": "scripts/sweep_massloss_map.py",
-    "line_no": 254,
+    "line_no": 266,
     "symbol": "_run_case",
     "signature": "_run_case(spec: CaseSpec, *, base_cfg: Dict[str, Any], qpr_table: Path) -> Dict[str, Any]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "scripts/sweep_massloss_map.py",
-    "line_no": 339,
+    "line_no": 351,
     "symbol": "_iter_specs",
     "signature": "_iter_specs(r_values: Iterable[float], T_values: Iterable[float], *, base_outdir: Path, logs_dir: Path, steps_per_orbit: int, dt_ratio_cap: float) -> List[CaseSpec]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "scripts/sweep_massloss_map.py",
-    "line_no": 364,
+    "line_no": 376,
     "symbol": "_run_sequential",
     "signature": "_run_sequential(specs: Sequence[CaseSpec], *, base_cfg: Dict[str, Any], qpr_table: Path) -> List[Dict[str, Any]]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "scripts/sweep_massloss_map.py",
-    "line_no": 378,
+    "line_no": 390,
     "symbol": "_run_parallel",
     "signature": "_run_parallel(specs: Sequence[CaseSpec], *, base_cfg: Dict[str, Any], qpr_table: Path, jobs: int) -> List[Dict[str, Any]]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "scripts/sweep_massloss_map.py",
-    "line_no": 409,
+    "line_no": 421,
     "symbol": "_write_json",
     "signature": "_write_json(path: Path, payload: Dict[str, Any]) -> None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "scripts/sweep_massloss_map.py",
-    "line_no": 415,
+    "line_no": 427,
     "symbol": "_collect_validation",
     "signature": "_collect_validation(records: Sequence[Dict[str, Any]], *, tolerance: float) -> Dict[str, Any]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "scripts/sweep_massloss_map.py",
-    "line_no": 443,
+    "line_no": 455,
     "symbol": "parse_args",
     "signature": "parse_args() -> argparse.Namespace",
     "brief_usage": "No description available."
   },
   {
     "file_path": "scripts/sweep_massloss_map.py",
-    "line_no": 491,
+    "line_no": 503,
     "symbol": "main",
     "signature": "main() -> None",
     "brief_usage": "No description available."
@@ -7060,6 +7060,20 @@
     "line_no": 16,
     "symbol": "test_siO2_map_solid_branch",
     "signature": "test_siO2_map_solid_branch(siO2_evaluator: phase.PhaseEvaluator) -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/test_phase_map_fallback.py",
+    "line_no": 11,
+    "symbol": "BASE_CONFIG",
+    "signature": "BASE_CONFIG = Path('configs/base.yml')",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "tests/test_phase_map_fallback.py",
+    "line_no": 14,
+    "symbol": "test_phase_map_missing_entrypoint_falls_back_to_threshold",
+    "signature": "test_phase_map_missing_entrypoint_falls_back_to_threshold(tmp_path: Path) -> None",
     "brief_usage": "No description available."
   },
   {

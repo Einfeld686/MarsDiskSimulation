@@ -335,7 +335,7 @@ marsdisk/physics/initfields.py:47:def surf_sigma_init(sigma: float, kappa_eff: O
 marsdisk/physics/phase.py:24:class PhaseDecision
 marsdisk/physics/phase.py:36:class BulkPhaseState
 marsdisk/physics/phase.py:52:class PhaseEvaluator
-marsdisk/physics/phase.py:559:def hydro_escape_timescale(cfg: Optional[HydroEscapeConfig], temperature_K: float, f_vap: float) -> Optional[float]
+marsdisk/physics/phase.py:564:def hydro_escape_timescale(cfg: Optional[HydroEscapeConfig], temperature_K: float, f_vap: float) -> Optional[float]
 marsdisk/physics/psd.py:30:def update_psd_state(*, s_min: float, s_max: float, alpha: float, wavy_strength: float, n_bins: int=40, rho: float=3000.0, wavy_decay: float=0.0, alpha_mode: str='size') -> Dict[str, np.ndarray | float]
 marsdisk/physics/psd.py:121:def compute_kappa(psd_state: Dict[str, np.ndarray | float]) -> float
 marsdisk/physics/psd.py:149:def apply_uniform_size_drift(psd_state: Dict[str, np.ndarray | float], *, ds_dt: float, dt: float, floor: float, sigma_surf: float) -> tuple[float, float, Dict[str, float]]
@@ -553,14 +553,14 @@ scripts/run_axis_r_sweep.py:97:def format_r_rm(value: float) -> str
 scripts/run_axis_r_sweep.py:102:def format_mass_tag(value: float) -> str
 scripts/run_axis_r_sweep.py:115:def format_float(value: float) -> str
 scripts/run_axis_r_sweep.py:131:def compute_seed(r_m: float, temperature_k: float, mass_mmars: float) -> int
-scripts/run_axis_r_sweep.py:138:def render_config_yaml(*, r_m: float, temperature_k: float, mass_mmars: float, outdir: Path, seed: int) -> str
-scripts/run_axis_r_sweep.py:216:def ensure_directories() -> None
-scripts/run_axis_r_sweep.py:223:def build_cases(root: Path) -> List[CaseResult]
-scripts/run_axis_r_sweep.py:252:def write_configs(cases: Iterable[CaseResult], root: Path) -> None
-scripts/run_axis_r_sweep.py:267:def run_case(case: CaseResult, root: Path) -> None
-scripts/run_axis_r_sweep.py:286:def collect_outputs(case: CaseResult) -> None
-scripts/run_axis_r_sweep.py:309:def write_summary_csv(cases: Iterable[CaseResult], output_path: Path) -> None
-scripts/run_axis_r_sweep.py:362:def main(argv: Optional[List[str]]=None) -> int
+scripts/run_axis_r_sweep.py:138:def render_config_yaml(*, r_m: float, r_rm: float, temperature_k: float, mass_mmars: float, outdir: Path, seed: int) -> str
+scripts/run_axis_r_sweep.py:221:def ensure_directories() -> None
+scripts/run_axis_r_sweep.py:228:def build_cases(root: Path) -> List[CaseResult]
+scripts/run_axis_r_sweep.py:257:def write_configs(cases: Iterable[CaseResult], root: Path) -> None
+scripts/run_axis_r_sweep.py:273:def run_case(case: CaseResult, root: Path) -> None
+scripts/run_axis_r_sweep.py:292:def collect_outputs(case: CaseResult) -> None
+scripts/run_axis_r_sweep.py:315:def write_summary_csv(cases: Iterable[CaseResult], output_path: Path) -> None
+scripts/run_axis_r_sweep.py:368:def main(argv: Optional[List[str]]=None) -> int
 scripts/run_inner_disk_suite.py:55:class CaseSpec
 scripts/run_inner_disk_suite.py:67:def format_phi_tag(value: float) -> str
 scripts/run_inner_disk_suite.py:73:def compute_orbit(r_rm: float) -> Tuple[float, float]
@@ -646,19 +646,19 @@ scripts/sweep_massloss_map.py:114:def _compute_dt_controls(r_rm: float, steps_pe
 scripts/sweep_massloss_map.py:133:def _case_identifier(r_rm: float, T_M: float) -> str
 scripts/sweep_massloss_map.py:137:def _prepare_case_spec(r_rm: float, T_M: float, *, base_outdir: Path, logs_dir: Path, steps_per_orbit: int, dt_ratio_cap: float) -> CaseSpec
 scripts/sweep_massloss_map.py:161:def _inject_case_parameters(base_cfg: Dict[str, Any], *, spec: CaseSpec, qpr_table: Path) -> Dict[str, Any]
-scripts/sweep_massloss_map.py:207:def _read_summary(path: Path) -> Dict[str, Any]
-scripts/sweep_massloss_map.py:214:def _read_series(path: Path) -> pd.DataFrame
-scripts/sweep_massloss_map.py:220:def _read_mass_budget(path: Path) -> Dict[str, float]
-scripts/sweep_massloss_map.py:233:def _median_ratio(numerator: pd.Series, denominator: pd.Series) -> float
-scripts/sweep_massloss_map.py:246:def _median_finite(series: pd.Series) -> float
-scripts/sweep_massloss_map.py:254:def _run_case(spec: CaseSpec, *, base_cfg: Dict[str, Any], qpr_table: Path) -> Dict[str, Any]
-scripts/sweep_massloss_map.py:339:def _iter_specs(r_values: Iterable[float], T_values: Iterable[float], *, base_outdir: Path, logs_dir: Path, steps_per_orbit: int, dt_ratio_cap: float) -> List[CaseSpec]
-scripts/sweep_massloss_map.py:364:def _run_sequential(specs: Sequence[CaseSpec], *, base_cfg: Dict[str, Any], qpr_table: Path) -> List[Dict[str, Any]]
-scripts/sweep_massloss_map.py:378:def _run_parallel(specs: Sequence[CaseSpec], *, base_cfg: Dict[str, Any], qpr_table: Path, jobs: int) -> List[Dict[str, Any]]
-scripts/sweep_massloss_map.py:409:def _write_json(path: Path, payload: Dict[str, Any]) -> None
-scripts/sweep_massloss_map.py:415:def _collect_validation(records: Sequence[Dict[str, Any]], *, tolerance: float) -> Dict[str, Any]
-scripts/sweep_massloss_map.py:443:def parse_args() -> argparse.Namespace
-scripts/sweep_massloss_map.py:491:def main() -> None
+scripts/sweep_massloss_map.py:219:def _read_summary(path: Path) -> Dict[str, Any]
+scripts/sweep_massloss_map.py:226:def _read_series(path: Path) -> pd.DataFrame
+scripts/sweep_massloss_map.py:232:def _read_mass_budget(path: Path) -> Dict[str, float]
+scripts/sweep_massloss_map.py:245:def _median_ratio(numerator: pd.Series, denominator: pd.Series) -> float
+scripts/sweep_massloss_map.py:258:def _median_finite(series: pd.Series) -> float
+scripts/sweep_massloss_map.py:266:def _run_case(spec: CaseSpec, *, base_cfg: Dict[str, Any], qpr_table: Path) -> Dict[str, Any]
+scripts/sweep_massloss_map.py:351:def _iter_specs(r_values: Iterable[float], T_values: Iterable[float], *, base_outdir: Path, logs_dir: Path, steps_per_orbit: int, dt_ratio_cap: float) -> List[CaseSpec]
+scripts/sweep_massloss_map.py:376:def _run_sequential(specs: Sequence[CaseSpec], *, base_cfg: Dict[str, Any], qpr_table: Path) -> List[Dict[str, Any]]
+scripts/sweep_massloss_map.py:390:def _run_parallel(specs: Sequence[CaseSpec], *, base_cfg: Dict[str, Any], qpr_table: Path, jobs: int) -> List[Dict[str, Any]]
+scripts/sweep_massloss_map.py:421:def _write_json(path: Path, payload: Dict[str, Any]) -> None
+scripts/sweep_massloss_map.py:427:def _collect_validation(records: Sequence[Dict[str, Any]], *, tolerance: float) -> Dict[str, Any]
+scripts/sweep_massloss_map.py:455:def parse_args() -> argparse.Namespace
+scripts/sweep_massloss_map.py:503:def main() -> None
 siO2_disk_cooling/io_utils.py:13:def ensure_outputs_dir() -> Path
 siO2_disk_cooling/io_utils.py:21:def write_csv(r_over_Rmars: np.ndarray, arrival_glass_s: np.ndarray, arrival_liquidus_s: np.ndarray, path: Path) -> None
 siO2_disk_cooling/io_utils.py:40:def _format_stat(values: Iterable[float]) -> str
@@ -760,6 +760,7 @@ tests/test_phase_branching_run.py:48:def _load_run(outdir: Path) -> pd.DataFrame
 tests/test_phase_branching_run.py:54:def test_sink_selection_is_mutually_exclusive(tmp_path: Path) -> None
 tests/test_phase_integration_siO2.py:11:def siO2_evaluator() -> phase.PhaseEvaluator
 tests/test_phase_integration_siO2.py:16:def test_siO2_map_solid_branch(siO2_evaluator: phase.PhaseEvaluator) -> None
+tests/test_phase_map_fallback.py:14:def test_phase_map_missing_entrypoint_falls_back_to_threshold(tmp_path: Path) -> None
 tests/test_phase_sublimation_integration.py:15:def _run_case(tmp_path: Path, *, T_M: float, r_RM: float) -> tuple[pd.Series, pd.DataFrame]
 tests/test_phase_sublimation_integration.py:42:def test_solid_phase_allows_sublimation_with_siO2_map(tmp_path: Path) -> None
 tests/test_phi_table.py:12:def mock_phi_table(tmp_path)

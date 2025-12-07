@@ -67,9 +67,14 @@ class PhaseEvaluator:
                 self._lookup_func = self._load_entrypoint(self.entrypoint)
             except Exception as exc:
                 self._map_error_logged = True
-                raise RuntimeError(
-                    f"phase: failed to load map entrypoint '{self.entrypoint}': {exc}"
-                ) from exc
+                self.logger.warning(
+                    "phase: source='map' but entrypoint '%s' failed to load (%s); falling back to thresholds",
+                    self.entrypoint,
+                    exc,
+                )
+                # Degrade gracefully to threshold heuristics rather than aborting the run.
+                self.source = "threshold"
+                self._lookup_func = None
 
     @classmethod
     def from_config(
