@@ -18,6 +18,28 @@ that can be fed directly into post-processing pipelines (e.g. movie rendering).
 """
 from __future__ import annotations
 
+# ---------------------------------------------------------------------------
+# Thread environment setup for parallel execution (must be before numpy/numba)
+# ---------------------------------------------------------------------------
+# When using ProcessPoolExecutor, each worker spawns its own process. If BLAS
+# or Numba also spawn multiple threads, the total thread count can explode.
+# Setting these to "1" ensures "process parallelism only" mode. Set
+# MARSDISK_THREAD_GUARD=0 to retain default threading behaviour.
+import os as _os
+
+
+def _apply_thread_guard() -> None:
+    guard = _os.environ.get("MARSDISK_THREAD_GUARD", "1").lower()
+    if guard in {"0", "false", "off", "no"}:
+        return
+    _os.environ.setdefault("OMP_NUM_THREADS", "1")
+    _os.environ.setdefault("MKL_NUM_THREADS", "1")
+    _os.environ.setdefault("OPENBLAS_NUM_THREADS", "1")
+    _os.environ.setdefault("NUMBA_NUM_THREADS", "1")
+
+
+_apply_thread_guard()
+
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Mapping, Optional, Sequence, Tuple

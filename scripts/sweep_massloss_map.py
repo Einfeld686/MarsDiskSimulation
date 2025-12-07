@@ -12,6 +12,29 @@ violations are written to ``map1_validation.json`` for quick inspection.
 """
 from __future__ import annotations
 
+# ---------------------------------------------------------------------------
+# Thread environment setup for parallel execution (must be before numpy/numba)
+# ---------------------------------------------------------------------------
+# When using ProcessPoolExecutor, each worker spawns its own process. If BLAS
+# or Numba also spawn multiple threads, the total thread count can explode
+# (e.g., 4 workers × 8 threads = 32 threads). Setting these to "1" ensures
+# "process parallelism only" mode, which is optimal for embarrassingly parallel
+# workloads like parameter sweeps. Set MARSDISK_THREAD_GUARD=0 to opt out.
+import os as _os
+
+
+def _apply_thread_guard() -> None:
+    guard = _os.environ.get("MARSDISK_THREAD_GUARD", "1").lower()
+    if guard in {"0", "false", "off", "no"}:
+        return
+    _os.environ.setdefault("OMP_NUM_THREADS", "1")
+    _os.environ.setdefault("MKL_NUM_THREADS", "1")
+    _os.environ.setdefault("OPENBLAS_NUM_THREADS", "1")
+    _os.environ.setdefault("NUMBA_NUM_THREADS", "1")
+
+
+_apply_thread_guard()
+
 import argparse
 import copy
 import json

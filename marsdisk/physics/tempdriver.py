@@ -10,8 +10,16 @@ import logging
 import numpy as np
 import pandas as pd
 
+from siO2_disk_cooling.model import CoolingParams, YEAR_SECONDS, mars_temperature
+
 from .. import constants
-from ..schema import MarsTemperatureDriverConfig, Radiation, Temps
+from ..schema import (
+    MarsTemperatureAutogen,
+    MarsTemperatureDriverConfig,
+    MarsTemperatureDriverTable,
+    Radiation,
+    Temps,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -128,6 +136,125 @@ def _prepare_table_driver(
     return _interp, provenance
 
 
+def _format_temperature_tag(T0: float) -> str:
+    """Return a filesystem-friendly tag for the initial temperature."""
+
+    tag = f"{float(T0):.1f}"
+    safe = tag.replace("-", "m").replace(".", "p")
+    return safe
+
+
+def _target_years(t_end_years: float, autogen_cfg: MarsTemperatureAutogen) -> float:
+    """Return the coverage horizon with padding applied."""
+
+    horizon = max(float(t_end_years), float(autogen_cfg.min_years))
+    return horizon + float(autogen_cfg.time_margin_years)
+
+
+def _read_existing_max_time_s(
+    path: Path, autogen_cfg: MarsTemperatureAutogen, *, t_orb: float
+) -> Optional[float]:
+    """Return max time in seconds from an existing table, or None if unusable."""
+
+    if not path.exists():
+        return None
+    try:
+        df = _load_table(path)
+    except Exception:
+        return None
+    if autogen_cfg.column_time not in df.columns:
+        return None
+    scale = _time_unit_scale(autogen_cfg.time_unit, t_orb)
+    times = pd.to_numeric(df[autogen_cfg.column_time], errors="coerce").to_numpy(dtype=float)
+    if times.size == 0:
+        return None
+    max_time = float(np.nanmax(times))
+    if not np.isfinite(max_time):
+        return None
+    return max_time * scale
+
+
+def _write_temperature_table(
+    path: Path,
+    autogen_cfg: MarsTemperatureAutogen,
+    *,
+    T0: float,
+    t_end_years: float,
+    t_orb: float,
+) -> float:
+    """Generate and write T(t) using the SiO2 cooling analytic solution."""
+
+    path.parent.mkdir(parents=True, exist_ok=True)
+    dt_s = float(autogen_cfg.dt_hours) * 3600.0
+    if dt_s <= 0.0:
+        raise ValueError("autogen.dt_hours must be positive")
+    scale = _time_unit_scale(autogen_cfg.time_unit, t_orb)
+    t_end_s = float(t_end_years) * YEAR_SECONDS
+    time_s = np.arange(0.0, t_end_s + 0.5 * dt_s, dt_s, dtype=float)
+    temps = mars_temperature(time_s, float(T0), CoolingParams())
+    df = pd.DataFrame(
+        {
+            autogen_cfg.column_time: time_s / scale,
+            autogen_cfg.column_temperature: temps,
+        }
+    )
+    df.to_csv(path, index=False)
+    return float(time_s[-1]) if time_s.size else 0.0
+
+
+def ensure_temperature_table(
+    autogen_cfg: MarsTemperatureAutogen,
+    *,
+    T0: float,
+    t_end_years: float,
+    t_orb: float,
+) -> Dict[str, Any]:
+    """Ensure a Mars temperature table exists and covers the requested horizon."""
+
+    T_val = _validate_temperature(float(T0), context="temperature autogen")
+    target_years = _target_years(t_end_years, autogen_cfg)
+    tag = _format_temperature_tag(T_val)
+    filename = autogen_cfg.filename_template.format(tag=tag)
+    path = Path(autogen_cfg.output_dir) / filename
+    required_s = target_years * YEAR_SECONDS
+    existing_max_s = _read_existing_max_time_s(path, autogen_cfg, t_orb=t_orb)
+    generated = False
+    last_time_s = existing_max_s if existing_max_s is not None else 0.0
+    if existing_max_s is None or existing_max_s + 1.0 < required_s:
+        last_time_s = _write_temperature_table(
+            path,
+            autogen_cfg,
+            T0=T_val,
+            t_end_years=target_years,
+            t_orb=t_orb,
+        )
+        generated = True
+        logger.info(
+            "Generated Mars temperature table at %s (T0=%.1f K, span=%.3f yr, dt=%.2f h)",
+            path,
+            T_val,
+            last_time_s / YEAR_SECONDS if last_time_s else target_years,
+            autogen_cfg.dt_hours,
+        )
+    else:
+        logger.info(
+            "Reusing existing Mars temperature table at %s (coverage=%.3f yr required=%.3f yr)",
+            path,
+            last_time_s / YEAR_SECONDS,
+            target_years,
+        )
+
+    return {
+        "path": path,
+        "generated": generated,
+        "coverage_years": last_time_s / YEAR_SECONDS if last_time_s else target_years,
+        "target_years": target_years,
+        "time_unit": autogen_cfg.time_unit,
+        "column_time": autogen_cfg.column_time,
+        "column_temperature": autogen_cfg.column_temperature,
+    }
+
+
 @dataclass
 class TemperatureDriverRuntime:
     """Runtime helper that evaluates the Mars temperature at arbitrary times."""
@@ -151,10 +278,11 @@ def resolve_temperature_driver(
     radiation_cfg: Optional[Radiation],
     *,
     t_orb: float,
+    prefer_driver: bool = False,
 ) -> TemperatureDriverRuntime:
     """Return the driver controlling the Mars-facing temperature."""
 
-    tm_override = getattr(radiation_cfg, "TM_K", None) if radiation_cfg is not None else None
+    tm_override = None if prefer_driver else getattr(radiation_cfg, "TM_K", None) if radiation_cfg is not None else None
     driver_cfg = getattr(radiation_cfg, "mars_temperature_driver", None) if radiation_cfg is not None else None
 
     if tm_override is not None:
@@ -222,3 +350,90 @@ def resolve_temperature_driver(
         )
 
     raise ValueError("Mars temperature is not specified: set radiation.TM_K or provide temps.T_M")
+
+
+def autogenerate_temperature_table_if_needed(
+    cfg: Any,
+    *,
+    t_end_years: float,
+    t_orb: float,
+) -> Optional[Dict[str, Any]]:
+    """Generate a Mars temperature table when autogen is enabled on the driver."""
+
+    rad_cfg = getattr(cfg, "radiation", None)
+    driver_cfg: Optional[MarsTemperatureDriverConfig] = (
+        getattr(rad_cfg, "mars_temperature_driver", None) if rad_cfg is not None else None
+    )
+    if rad_cfg is None or getattr(rad_cfg, "source", "mars") == "off":
+        return None
+
+    # If a table driver with a path is already provided, assume cooling is handled.
+    if (
+        driver_cfg is not None
+        and getattr(driver_cfg, "enabled", False)
+        and getattr(driver_cfg, "mode", "table") == "table"
+        and getattr(driver_cfg, "table", None) is not None
+        and getattr(driver_cfg.table, "path", None) is not None
+        and Path(driver_cfg.table.path).exists()
+    ):
+        return None
+
+    autogen_cfg: Optional[MarsTemperatureAutogen] = getattr(driver_cfg, "autogenerate", None) if driver_cfg else None
+    if autogen_cfg is None:
+        autogen_cfg = MarsTemperatureAutogen(enabled=True)
+    else:
+        autogen_cfg.enabled = True
+
+    if rad_cfg.TM_K is not None:
+        T0 = float(rad_cfg.TM_K)
+    elif driver_cfg is not None and driver_cfg.mode == "constant" and driver_cfg.constant is not None:
+        T0 = float(driver_cfg.constant.value_K)
+    elif getattr(cfg, "temps", None) is not None and getattr(cfg.temps, "T_M", None) is not None:
+        T0 = float(cfg.temps.T_M)
+    else:
+        raise ValueError("Temperature autogeneration enabled but no initial temperature specified")
+
+    table_info = ensure_temperature_table(
+        autogen_cfg,
+        T0=T0,
+        t_end_years=t_end_years,
+        t_orb=t_orb,
+    )
+
+    table_cfg = (
+        driver_cfg.table
+        if driver_cfg is not None and driver_cfg.table is not None
+        else MarsTemperatureDriverTable(
+            path=table_info["path"],
+            time_unit=autogen_cfg.time_unit,
+            column_time=autogen_cfg.column_time,
+            column_temperature=autogen_cfg.column_temperature,
+        )
+    )
+    table_cfg.path = Path(table_info["path"])
+    table_cfg.time_unit = autogen_cfg.time_unit
+    table_cfg.column_time = autogen_cfg.column_time
+    table_cfg.column_temperature = autogen_cfg.column_temperature
+
+    if driver_cfg is None:
+        driver_cfg = MarsTemperatureDriverConfig(
+            enabled=True,
+            mode="table",
+            table=table_cfg,
+            extrapolation="hold",
+            autogenerate=autogen_cfg,
+        )
+        rad_cfg.mars_temperature_driver = driver_cfg
+    else:
+        driver_cfg.enabled = True
+        driver_cfg.mode = "table"
+        driver_cfg.table = table_cfg
+        driver_cfg.autogenerate = autogen_cfg
+
+    rad_cfg.TM_K = None
+    logger.info(
+        "Mars temperature autogen selected table %s (generated=%s)",
+        table_info["path"],
+        table_info["generated"],
+    )
+    return table_info

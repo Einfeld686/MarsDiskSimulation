@@ -106,15 +106,23 @@ radiation:
   use_mars_rp: true
   use_solar_rp: false
   freeze_kappa: false
+  TM_K: 4000.0
   qpr_table_path: "data/qpr_table.csv"
   Q_pr: null
   mars_temperature_driver:
-    enabled: false
-    mode: "constant"
-    constant:
-      value_K: 2000.0
+    enabled: true
+    mode: "table"
     table:
-      path: "data/mars_temperature_table_example.csv"
+      path: "data/mars_temperature_T4000p0K.csv"
+      time_unit: "day"
+      column_time: "time_day"
+      column_temperature: "T_K"
+    autogenerate:
+      enabled: true
+      output_dir: "data"
+      dt_hours: 1.0
+      min_years: 2.0
+      time_margin_years: 0.5
       time_unit: "day"
       column_time: "time_day"
       column_temperature: "T_K"

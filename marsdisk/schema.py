@@ -696,6 +696,35 @@ class MarsTemperatureDriverTable(BaseModel):
     column_temperature: str = Field("T_M", description="Name of the temperature column (Kelvin).")
 
 
+class MarsTemperatureAutogen(BaseModel):
+    """Options for auto-generating Mars temperature tables."""
+
+    enabled: bool = Field(False, description="Toggle automatic generation of Mars temperature tables.")
+    output_dir: Path = Field(Path("data"), description="Directory to write generated temperature tables.")
+    dt_hours: float = Field(1.0, gt=0.0, description="Time step of the generated table [hours].")
+    min_years: float = Field(
+        2.0, gt=0.0, description="Minimum coverage of the generated table [years]."
+    )
+    time_margin_years: float = Field(
+        0.2,
+        ge=0.0,
+        description="Extra padding beyond the simulation horizon when generating tables [years].",
+    )
+    known_T0s: List[float] = Field(
+        default_factory=lambda: [2000.0, 4000.0, 6000.0],
+        description="Commonly pre-generated initial temperatures [K].",
+    )
+    time_unit: Literal["s", "day", "yr", "orbit"] = Field(
+        "day", description="Unit of the generated time column."
+    )
+    column_time: str = Field("time_day", description="Name of the generated time column.")
+    column_temperature: str = Field("T_K", description="Name of the generated temperature column.")
+    filename_template: str = Field(
+        "mars_temperature_T{tag}K.csv",
+        description="Filename template for generated tables. Uses `{tag}` placeholder for temperature.",
+    )
+
+
 class MarsTemperatureDriverConfig(BaseModel):
     """Configuration container for the Mars temperature driver."""
 
@@ -715,6 +744,9 @@ class MarsTemperatureDriverConfig(BaseModel):
     extrapolation: Literal["hold", "error"] = Field(
         "hold",
         description="Out-of-sample behaviour for the table driver.",
+    )
+    autogenerate: Optional[MarsTemperatureAutogen] = Field(
+        None, description="Automatically generate a table from the SiO2 cooling model when needed."
     )
 
     @validator("constant", always=True)

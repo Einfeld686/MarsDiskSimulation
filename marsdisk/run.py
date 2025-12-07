@@ -128,16 +128,31 @@ class ProgressReporter:
         self.last = now
         frac = min(max((step_no + 1) / self.total_steps, 0.0), 1.0)
         elapsed = now - self.start
-        eta = (elapsed / frac - elapsed) if frac > 0.0 else float("nan")
         bar_width = 28
         filled = int(bar_width * frac)
         bar = "#" * filled + "-" * (bar_width - filled)
         sim_years = sim_time_s / SECONDS_PER_YEAR if math.isfinite(sim_time_s) else float("nan")
-        eta_text = f"ETA {eta:0.0f}s" if math.isfinite(eta) else "ETA ?"
+        remaining_s = float("nan")
+        if math.isfinite(self.total_time_s) and math.isfinite(sim_time_s):
+            remaining_s = max(self.total_time_s - sim_time_s, 0.0)
+        remaining_years = remaining_s / SECONDS_PER_YEAR if math.isfinite(remaining_s) else float("nan")
+        rem_text = f"rem~{remaining_years:.3g} yr" if math.isfinite(remaining_years) else "rem~?"
+        eta_seconds = (elapsed / frac - elapsed) if frac > 0.0 else float("nan")
+
+        def _format_eta(seconds: float) -> str:
+            if not math.isfinite(seconds) or seconds < 0.0:
+                return "ETA ?"
+            if seconds >= 3600.0:
+                return f"ETA {seconds/3600.0:.1f}h"
+            if seconds >= 60.0:
+                return f"ETA {seconds/60.0:.1f}m"
+            return f"ETA {seconds:.0f}s"
+
+        eta_text = _format_eta(eta_seconds)
         memory_text = f" mem~{self.memory_hint}" if self.memory_hint else ""
         sys.stdout.write(
             f"\r[{bar}] {frac * 100:5.1f}% step {step_no + 1}/{self.total_steps} "
-            f"t={sim_years:.3g} yr {eta_text}{memory_text}"
+            f"t={sim_years:.3g} yr {rem_text} {eta_text}{memory_text}"
         )
         if is_last:
             sys.stdout.write("\n")
@@ -728,8 +743,16 @@ def _gather_git_info() -> Dict[str, Any]:
 def _configure_logging(level: int, suppress_warnings: bool = False) -> None:
     """Configure root logging and optionally silence Python warnings."""
 
+    class _NoWarningFilter(logging.Filter):
+        """Drop WARNING records from the console to keep noise down."""
+
+        def filter(self, record: logging.LogRecord) -> bool:
+            return record.levelno != logging.WARNING
+
     logging.basicConfig(level=level)
-    logging.getLogger().setLevel(level)
+    root = logging.getLogger()
+    root.setLevel(level)
+    root.addFilter(_NoWarningFilter())
     if suppress_warnings:
         warnings.filterwarnings("ignore")
     logging.captureWarnings(True)
@@ -1085,7 +1108,24 @@ def run_zero_d(
             "⟨Q_pr⟩ lookup table not initialised. Provide radiation.qpr_table_path "
             "or place a table under marsdisk/io/data."
         )
-    temp_runtime = tempdriver.resolve_temperature_driver(cfg.temps, cfg.radiation, t_orb=t_orb)
+    numerics_cfg = getattr(cfg, "numerics", None)
+    t_end_years_cfg = (
+        float(getattr(numerics_cfg, "t_end_years", 0.0) or 0.0)
+        if numerics_cfg is not None and getattr(numerics_cfg, "t_end_years", None) is not None
+        else (
+            float(getattr(numerics_cfg, "t_end_orbits", 0.0) or 0.0) * t_orb / SECONDS_PER_YEAR
+            if numerics_cfg is not None and getattr(numerics_cfg, "t_end_orbits", None) is not None
+            else 0.0
+        )
+    )
+    temp_autogen_info = tempdriver.autogenerate_temperature_table_if_needed(
+        cfg,
+        t_end_years=t_end_years_cfg,
+        t_orb=t_orb,
+    )
+    temp_runtime = tempdriver.resolve_temperature_driver(
+        cfg.temps, cfg.radiation, t_orb=t_orb, prefer_driver=bool(temp_autogen_info)
+    )
     T_use = temp_runtime.initial_value
     T_M_source = temp_runtime.source
     logger.info(
@@ -3139,6 +3179,16 @@ def run_zero_d(
     temp_prov.setdefault("enabled", temp_runtime.enabled)
     temp_prov.setdefault("source", temp_runtime.source)
     run_config["temperature_driver"] = temp_prov
+    if temp_autogen_info is not None:
+        run_config["temperature_autogen"] = {
+            "path": str(temp_autogen_info.get("path")),
+            "generated": bool(temp_autogen_info.get("generated", False)),
+            "coverage_years": temp_autogen_info.get("coverage_years"),
+            "target_years": temp_autogen_info.get("target_years"),
+            "time_unit": temp_autogen_info.get("time_unit"),
+            "column_time": temp_autogen_info.get("column_time"),
+            "column_temperature": temp_autogen_info.get("column_temperature"),
+        }
     run_config["T_M_used"] = float(T_use)
     run_config["rho_used"] = float(rho_used)
     run_config["Q_pr_used"] = float(qpr_mean)

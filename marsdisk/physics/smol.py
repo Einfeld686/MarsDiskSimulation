@@ -267,9 +267,8 @@ def step_imex_bdf1_C3(
             dt_eff,
             extra_mass_loss_rate=float(extra_mass_loss_rate),
         )
-        logger.info(
-            "step_imex_bdf1_C3: dt=%e mass_err=%e", dt_eff, mass_err
-        )
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug("step_imex_bdf1_C3: dt=%e mass_err=%e", dt_eff, mass_err)
         if mass_err <= mass_tol:
             break
         dt_eff *= 0.5
@@ -307,13 +306,14 @@ def compute_mass_budget_error_C4(
     diff = M_after + extra_term - (M_before + prod_term)
     baseline = M_before if M_before > 0.0 else max(M_before + prod_term, 1.0e-30)
     err = abs(diff) / baseline
-    logger.info(
-        "compute_mass_budget_error_C4: M_before=%e M_after=%e prod=%e extra=%e diff=%e err=%e",
-        M_before,
-        M_after,
-        prod_subblow_mass_rate,
-        extra_mass_loss_rate,
-        diff,
-        err,
-    )
+    if logger.isEnabledFor(logging.DEBUG):
+        logger.debug(
+            "compute_mass_budget_error_C4: M_before=%e M_after=%e prod=%e extra=%e diff=%e err=%e",
+            M_before,
+            M_after,
+            prod_subblow_mass_rate,
+            extra_mass_loss_rate,
+            diff,
+            err,
+        )
     return err
