@@ -480,14 +480,13 @@ def create_map_definition(
         else:
             T_values = _float_grid(2000.0, 6000.0, 300.0)
         param_x = ParamSpec(
-            key_path="geometry.r",
+            key_path="disk.geometry.r_in_RM",
             values=r_values,
             csv_name="r_RM",
             label="rRM",
-            transform=lambda v: float(v) * mars_constants.R_MARS,
         )
         param_y = ParamSpec(
-            key_path="temps.T_M",
+            key_path="radiation.TM_K",
             values=T_values,
             csv_name="T_M [K]",
             label="TM",
@@ -497,14 +496,13 @@ def create_map_definition(
         r_values = _float_grid(5.0, 7.0, 0.1)
         T_values = _float_grid(1000.0, 6000.0, 50.0)
         param_x = ParamSpec(
-            key_path="geometry.r",
+            key_path="disk.geometry.r_in_RM",
             values=r_values,
             csv_name="r_RM",
             label="rRM",
-            transform=lambda v: float(v) * mars_constants.R_MARS,
         )
         param_y = ParamSpec(
-            key_path="temps.T_M",
+            key_path="radiation.TM_K",
             values=T_values,
             csv_name="T_M [K]",
             label="TM",
@@ -518,7 +516,7 @@ def create_map_definition(
             label="prodArea",
         )
         param_y = ParamSpec(
-            key_path="temps.T_M",
+            key_path="radiation.TM_K",
             values=[1500.0, 2000.0, 2500.0],
             csv_name="T_M",
             label="TM",
@@ -1135,7 +1133,7 @@ def populate_record_from_outputs(
         except Exception:
             pass
     if not record.get("r_source"):
-        record["r_source"] = "geometry.r"
+        record["r_source"] = "disk.geometry"
 
     return note
 
@@ -1186,8 +1184,8 @@ def run_case(
     config_data = copy.deepcopy(base_config)
     try:
         set_nested(config_data, case.param_x.key_path, case.param_x.apply(case.x_value))
-        if case.param_x.key_path == "geometry.r":
-            set_nested(config_data, "geometry.runtime_orbital_radius_rm", case.x_value)
+        if case.param_x.key_path == "disk.geometry.r_in_RM":
+            set_nested(config_data, "disk.geometry.r_out_RM", case.param_x.apply(case.x_value))
         set_nested(config_data, case.param_y.key_path, case.param_y.apply(case.y_value))
         for path, value in case.variant.overrides.items():
             set_nested(config_data, path, value)

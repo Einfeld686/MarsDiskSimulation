@@ -6,8 +6,8 @@
 
 - `[marsdisk/physics/sublimation.py:54–120]` `SublimationParams(...)` と HKL パラメータ群。`run_zero_d` は YAML `sinks.sub_params` から `SublimationParams(**cfg.sinks.sub_params.model_dump())` を構築する。
 - `[marsdisk/physics/sinks.py:83–160]` `SinkOptions` と `total_sink_timescale`。`sinks.mode="none"` では `SinkTimescaleResult(t_sink=None, ...)` を返し、昇華/drag スイッチが立つと最短寿命を計算する。
-- `[marsdisk/physics/surface.py:79–95]` `SurfaceStepResult` / `step_surface_density_S1`。`t_sink` が有限のときのみ `loss += 1/t_sink` と `sink_flux = sigma_new / t_sink` を適用する。
-- `[marsdisk/physics/surface.py:187–219]` `step_surface`。Wyatt 衝突寿命を挿入してから `step_surface_density_S1` へ委譲するラッパー。
+- `[marsdisk/physics/surface.py:81–95]` `SurfaceStepResult` / `step_surface_density_S1`。`t_sink` が有限のときのみ `loss += 1/t_sink` と `sink_flux = sigma_new / t_sink` を適用する。
+- `[marsdisk/physics/surface.py:190–219]` `step_surface`。Wyatt 衝突寿命を挿入してから `step_surface_density_S1` へ委譲するラッパー。
 - `[marsdisk/run.py:1447–1463]` 0D 本体での `t_sink` 解決と “no active sinks” 分岐。
 - `[marsdisk/run.py:1654–1683]` `surface.step_surface(..., t_sink=t_sink_current, ...)` を呼び出し、`sink_flux_surface` を積分するループ。
 
@@ -43,11 +43,11 @@ flowchart TD
 
 ## 0D Loop Call Order (t<sub>sink</sub> Propagation)
 
-1. **Initialise radiation and PSD** – `run_zero_d` 解法の冒頭で温度・⟨Q_pr⟩・`a_blow` を決定し PSD を構築。[marsdisk/run.py:814–1100]
+1. **Initialise radiation and PSD** – `run_zero_d` 解法の冒頭で温度・⟨Q_pr⟩・`a_blow` を決定し PSD を構築。[marsdisk/run.py:845–1100]
 2. **Set the PSD floor** – 各ステップで `s_min_effective = max(cfg.sizes.s_min, a_blow, s_min_floor_dynamic)` を更新し、床情報を `s_min_components` に記録。[marsdisk/run.py:1340–1434]
 3. **Instantiate sink physics** – YAML `sinks` を `SinkOptions` へ束ね、昇華/drag の有効・無効を反映。[marsdisk/physics/sinks.py:83–160][marsdisk/run.py:1447–1463]
 4. **Evaluate `t_sink`** – `sinks.mode="none"` では `t_sink=None` を強制し、そうでなければ `total_sink_timescale` で最短寿命を取得。[marsdisk/run.py:1447–1463]
-5. **Advance the surface layer** – `surface.step_surface(..., t_sink=t_sink_current, ...)` で IMEX ステップを進め、`sink_flux_surface` を積分。[marsdisk/physics/surface.py:79–95][marsdisk/physics/surface.py:187–219][marsdisk/run.py:1654–1683]
+5. **Advance the surface layer** – `surface.step_surface(..., t_sink=t_sink_current, ...)` で IMEX ステップを進め、`sink_flux_surface` を積分。[marsdisk/physics/surface.py:81–95][marsdisk/physics/surface.py:190–219][marsdisk/run.py:1654–1683]
 6. **Accumulate diagnostics** – `mass_lost_by_sinks` と `M_sink_cum` は `sink_flux_surface` が有限だったステップのみ増える。[marsdisk/run.py:2120–2185]
 
 The blow-out and sink channels therefore remain disentangled even when additional sinks are disabled at the schema level.

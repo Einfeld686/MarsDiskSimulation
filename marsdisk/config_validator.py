@@ -10,7 +10,6 @@ Usage:
 from __future__ import annotations
 
 import math
-import warnings
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
@@ -91,18 +90,6 @@ def validate_config(config: "Config") -> ValidationResult:
     # --- 6. 物理モデル間の整合性 ---
     messages.extend(_check_physics_consistency(config))
 
-    # --- 7. 温度パラメータ移行の警告 ---
-    messages.extend(_check_temperature_migration(config))
-
-    # --- 8. 物理モード非推奨警告 ---
-    messages.extend(_check_deprecated_physics_modes(config))
-
-    # --- 9. geometry 非推奨警告 ---
-    messages.extend(_check_deprecated_geometry(config))
-
-    # --- 10. phase.map 非推奨警告 ---
-    messages.extend(_check_deprecated_phase_map(config))
-
     return ValidationResult(messages)
 
 
@@ -117,8 +104,8 @@ def _check_temperature_consistency(config: "Config") -> List[ValidationMessage]:
         msgs.append(ValidationMessage(
             Severity.ERROR,
             "TEMP000",
-            "火星温度が未指定です (radiation.TM_K または temps.T_M が必要)",
-            "radiation.TM_K を設定してください（temps.T_M は非推奨）"
+            "火星温度が未指定です (radiation.TM_K または mars_temperature_driver.constant が必要)",
+            "radiation.TM_K もしくは mars_temperature_driver.constant を設定してください"
         ))
         return msgs
     T_sub = config.sinks.T_sub if config.sinks else 1300.0
@@ -303,94 +290,6 @@ def _check_physics_consistency(config: "Config") -> List[ValidationMessage]:
             f"wavy補正有効だが alpha ({alpha}) が Dohnanyi (1.83) から乖離",
             "wavy 構造は衝突平衡 PSD を前提としています"
         ))
-
-    return msgs
-
-
-def _check_temperature_migration(config: "Config") -> List[ValidationMessage]:
-    """温度パラメータ移行の警告チェック"""
-    msgs: List[ValidationMessage] = []
-
-    # temps.T_M が設定されていて、radiation.TM_K が未設定の場合
-    temps_T_M = config.temps.T_M if config.temps else None
-    radiation_TM_K = config.radiation.TM_K if config.radiation else None
-
-    if temps_T_M is not None and radiation_TM_K is None:
-        msgs.append(ValidationMessage(
-            Severity.WARNING,
-            "MIGRATE001",
-            f"temps.T_M ({temps_T_M} K) は廃止予定です",
-            "radiation.TM_K に移行してください。詳細は analysis/config_guide.md を参照"
-        ))
-
-    return msgs
-
-
-def _check_deprecated_physics_modes(config: "Config") -> List[ValidationMessage]:
-    """物理モード指定の非推奨警告チェック"""
-    msgs: List[ValidationMessage] = []
-
-    # single_process_mode が使用されている場合
-    if hasattr(config, 'single_process_mode') and config.single_process_mode != "off":
-        msgs.append(ValidationMessage(
-            Severity.WARNING,
-            "MIGRATE002",
-            f"single_process_mode ('{config.single_process_mode}') は廃止予定です",
-            f"physics_mode: '{config.single_process_mode}' に移行してください"
-        ))
-
-    # modes.single_process が使用されている場合
-    if hasattr(config, 'modes') and config.modes:
-        single_process = getattr(config.modes, 'single_process', None)
-        if single_process and single_process not in ("none", None):
-            mapped = "collisions_only" if single_process == "collisional_only" else single_process
-            msgs.append(ValidationMessage(
-                Severity.WARNING,
-                "MIGRATE003",
-                f"modes.single_process ('{single_process}') は廃止予定です",
-                f"physics_mode: '{mapped}' に移行してください"
-            ))
-
-    return msgs
-
-
-def _check_deprecated_geometry(config: "Config") -> List[ValidationMessage]:
-    """geometry フィールドの非推奨警告チェック"""
-    msgs: List[ValidationMessage] = []
-
-    # geometry.r が使用されている場合
-    if hasattr(config, 'geometry') and config.geometry:
-        if config.geometry.r is not None:
-            msgs.append(ValidationMessage(
-                Severity.WARNING,
-                "MIGRATE004",
-                "geometry.r は廃止予定です",
-                "disk.geometry.r_in_RM / r_out_RM に移行してください"
-            ))
-
-        if config.geometry.runtime_orbital_radius_rm is not None:
-            msgs.append(ValidationMessage(
-                Severity.WARNING,
-                "MIGRATE005",
-                "geometry.runtime_orbital_radius_rm は廃止予定です",
-                "disk.geometry.r_in_RM / r_out_RM に移行してください"
-            ))
-
-    return msgs
-
-
-def _check_deprecated_phase_map(config: "Config") -> List[ValidationMessage]:
-    """phase.map.entrypoint の非推奨警告チェック"""
-    msgs: List[ValidationMessage] = []
-
-    if hasattr(config, 'phase') and config.phase:
-        if config.phase.map is not None:
-            msgs.append(ValidationMessage(
-                Severity.WARNING,
-                "MIGRATE006",
-                "phase.map.entrypoint は廃止予定です",
-                "phase.entrypoint を直接使用してください"
-            ))
 
     return msgs
 

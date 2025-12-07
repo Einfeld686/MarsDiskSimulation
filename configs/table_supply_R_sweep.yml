@@ -1,9 +1,8 @@
+physics_mode: "default"
 geometry:
   mode: "0D"
 material:
   rho: 3000.0
-temps:
-  T_M: 2000.0
 sizes:
   s_min: 1.0e-6
   s_max: 3.0
@@ -71,7 +70,7 @@ radiation:
   TM_K: 2500
   qpr_table_path: "data/qpr_table.csv"
 shielding:
-  phi_table: null
+  table_path: null
 numerics:
   t_end_years: 2.0
   dt_init: 10.0

@@ -1,15 +1,11 @@
 # 昇華モードのみ（ブローアウト無効）の2年ラン設定
 scope:
   region: "inner"
-physics:
-  mode: "sublimation_only"
+physics_mode: "sublimation_only"
 geometry:
   mode: "0D"
-  r: 8.3e6
 material:
   rho: 3000.0
-temps:
-  T_M: 1850.0
 sizes:
   s_min: 1.0e-6
   s_max: 3.0

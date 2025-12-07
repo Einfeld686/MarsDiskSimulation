@@ -51,7 +51,7 @@ import tempfile
 import numpy as np
 import pandas as pd
 
-from .. import constants
+from .. import config_utils, constants
 from ..schema import Config, Radiation
 from ..physics import radiation
 from ..run import run_zero_d
@@ -122,19 +122,14 @@ def _prepare_case_config(
 
     work = cfg.model_copy(deep=True)
 
-    # Geometry: enforce 0D radius in metres.
-    radius_m = float(r_rm) * constants.R_MARS
     work.geometry.mode = "0D"
-    work.geometry.r = radius_m
-    work.geometry.runtime_orbital_radius_rm = float(r_rm)
+    config_utils.ensure_disk_geometry(work, r_rm=float(r_rm))
 
     # Temperature floor and Q_pr table provenance.
-    work.temps.T_M = float(T_M)
     if work.radiation is None:
-        work.radiation = Radiation(qpr_table_path=qpr_table_path)
+        work.radiation = Radiation(qpr_table_path=qpr_table_path, TM_K=float(T_M))
     else:
         work.radiation.qpr_table_path = qpr_table_path
-        work.radiation.qpr_table = None  # clear legacy alias to avoid conflicts
     work.radiation.TM_K = float(T_M)
 
     # Enforce gas-poor defaults.

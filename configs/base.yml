@@ -1,27 +1,19 @@
 scope:
   region: "inner"
   analysis_years: 2.0
-physics:
-  mode: "default"  # default=全プロセス, "sublimation_only" or "collisions_only" で単独実行
-  single_process_mode: "off"
+physics_mode: "default"  # default=全プロセス, "sublimation_only" or "collisions_only" で単独実行
 process:
-  primary: "collisions_only"
   state_tagging:
     enabled: false
-modes:
-  single_process: "none"
 phase5:
   compare:
     enable: false
     duration_years: 2.0
 geometry:
   mode: "0D"
-  r: 8.3e6  # ≈2.45 R_Mars
 chi_blow: "auto"
 material:
   rho: 3000.0
-temps:
-  T_M: 2000.0
 sizes:
   s_min: 1.0e-6
   s_max: 3.0
@@ -149,8 +141,6 @@ phase:
     T_vaporize_K: 2000.0
     P_ref_bar: 1.0
     tau_ref: 1.0
-  map:
-    entrypoint: "siO2_disk_cooling.siO2_cooling_map:lookup_phase_state"
 numerics:
   t_end_years: 2.0
   dt_init: "auto"

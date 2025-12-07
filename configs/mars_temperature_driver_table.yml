@@ -1,9 +1,8 @@
+physics_mode: "default"
 geometry:
   mode: "0D"
 material:
   rho: 3000.0
-temps:
-  T_M: 2000.0
 sizes:
   s_min: 1.0e-6
   s_max: 3.0
@@ -68,7 +67,7 @@ sinks:
   enable_gas_drag: false
   rho_g: 0.0
 radiation:
-  TM_K: null
+  TM_K: 2000.0
   qpr_table_path: "data/qpr_table.csv"
   mars_temperature_driver:
     enabled: true
@@ -80,7 +79,7 @@ radiation:
       column_temperature: "T_K"
     extrapolation: "hold"
 shielding:
-  phi_table: null
+  table_path: null
 numerics:
   t_end_years: 2.0
   dt_init: 10.0

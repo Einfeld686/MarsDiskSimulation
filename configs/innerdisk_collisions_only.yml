@@ -1,15 +1,11 @@
 # ブローアウト主体（昇華・ガス抗力なし）の2年ラン比較用設定
 scope:
   region: "inner"
-physics:
-  mode: "collisions_only"
+physics_mode: "collisions_only"
 geometry:
   mode: "0D"
-  r: 8.3e6
 material:
   rho: 3000.0
-temps:
-  T_M: 1900.0
 sizes:
   s_min: 1.0e-6
   s_max: 3.0

@@ -46,7 +46,7 @@ ls out/my_run/
 2. [廃止予定・非推奨フィールド](#2-廃止予定非推奨フィールドの一覧)
 3. [設定グループ別解説](#3-設定グループ別解説)
 4. [最小構成の例](#4-最小構成の例)
-5. [移行ガイド](#5-移行ガイド旧形式から新形式へ)
+5. [移行ガイド](#5-移行ガイド)
 6. [シナリオ選択ガイド](#6-シナリオ選択ガイド)
 7. [トラブルシューティング](#7-トラブルシューティング)
 8. [検証ツール](#8-検証ツール)
@@ -60,24 +60,28 @@ ls out/my_run/
 
 ```text
 configs/<scenario>.yml
-├── geometry          # 空間次元（0D/1D）⚠️ 軌道半径は disk.geometry を使用
-├── physics_mode      # 物理モード（推奨：統一された指定方法）
+├── geometry          # 空間次元（0D/1D）。軌道半径は disk.geometry 側で指定
+├── scope             # 解析窓の長さ（years）
+├── physics_mode      # 物理モード（統一された指定方法）
+├── chi_blow          # ブローアウト時間スケール倍率
 ├── material          # 物質パラメータ
-├── temps             # ⚠️ 廃止予定 → radiation.TM_K へ統合
 ├── sizes             # サイズビン定義
 ├── initial           # 初期条件
 ├── dynamics          # 速度分散モデル
 ├── psd               # 粒径分布パラメータ
 ├── qstar             # 破砕強度モデル
-├── disk              # 円盤幾何（推奨：軌道半径の指定先）
+├── disk              # 円盤幾何（0D では必須）
 ├── inner_disk_mass   # 質量正規化
 ├── surface           # 表層モデル
-├── supply            # 外部供給（簡略化済み）
-├── sinks             # 消失過程（昇華パラメータ簡略化済み）
+├── supply            # 外部供給（modeごとに分岐）
+├── sinks             # 消失過程（昇華・ガス抗力）
 ├── radiation         # 放射圧（温度パラメータの統一先）
 ├── shielding         # 自遮蔽
 ├── phase             # 相状態判定（entrypoint 統一済み）
+├── blowout           # 表層ブローアウトの挙動
+├── phase5/process    # 追加診断・比較ラン用のトグル
 ├── numerics          # 数値パラメータ
+├── diagnostics       # 追加ダイアグノスティクス
 └── io                # 入出力設定
 ```
 
@@ -96,21 +100,211 @@ configs/<scenario>.yml
 
 ## 2. 廃止予定・非推奨フィールドの一覧
 
-以下のフィールドは非推奨となり、将来削除されます。新規設定では使用しないでください。
+以下のフィールドは**スキーマで即時エラーとなるため使用不可**です（後方互換の警告レベルではありません）。
 
-| 非推奨フィールド | 推奨される代替 | 理由 |
-|-----------------|---------------|------|
-| `temps.T_M` | `radiation.TM_K` | 温度パラメータの統合 |
+| 使用不可フィールド | 推奨される代替 | 理由 |
+|-------------------|---------------|------|
+| `temps.T_M` | `radiation.TM_K` または `radiation.mars_temperature_driver.constant.value_K` | 温度パラメータを radiation へ統合 |
 | `single_process_mode` | `physics_mode` | 物理モード指定の統合 |
 | `modes.single_process` | `physics_mode` | 物理モード指定の統合 |
 | `process.primary` | `physics_mode` | 物理モード指定の統合 |
-| `geometry.r` | `disk.geometry.r_in_RM` | 軌道半径指定の統合 |
-| `geometry.runtime_orbital_radius_rm` | `disk.geometry.r_in_RM` | 軌道半径指定の統合 |
-| `phase.map.entrypoint` | `phase.entrypoint` | 二重構造の解消 |
+| `geometry.r` | `disk.geometry.r_in_RM / r_out_RM` | 軌道半径指定の統合 |
+| `geometry.runtime_orbital_radius_rm` | `disk.geometry.r_in_RM / r_out_RM` | 軌道半径指定の統合 |
+| `phase.map.entrypoint` / `phase.map` | `phase.entrypoint` | 二重構造の解消 |
+| `radiation.qpr_table` | `radiation.qpr_table_path` | フィールド名を正規化 |
+| `shielding.phi_table` | `shielding.table_path` | フィールド名を正規化 |
 
 ---
 
 ## 3. 設定グループ別解説
+
+### 3.0 物理パラメータ完全一覧
+
+以下は**現行スキーマ**で有効な全パラメータの体系的一覧です。フィールド名は `marsdisk/schema.py` の定義に揃えています。
+
+#### 🌡️ 放射・温度関連 (`radiation`)
+
+火星からの赤外放射が粒子に与える放射圧と、それに伴う blow-out（小粒子の吹き飛ばし）を制御します。
+
+| パラメータ | 型 | 物理的意味 | 典型値 |
+|-----------|-----|-----------|--------|
+| `radiation.source` | `"mars"` / `"off"` | 放射源の選択。`"mars"` は火星表面からの赤外放射を考慮し、`"off"` は放射圧を無効化 | `"mars"` |
+| `radiation.TM_K` | float | 火星表面の有効温度 [K]。Stefan-Boltzmann則で放射フラックスを決定（driver を使わない場合は必須） | 4000 |
+| `radiation.use_mars_rp` | bool | 火星放射圧の有効化フラグ。`false` にすると放射圧による加速を無視 | `true` |
+| `radiation.freeze_kappa` | bool | ⟨Q_pr⟩ を固定するかどうか | `false` |
+| `radiation.qpr_table_path` | Path | Planck平均した放射圧効率 ⟨Q_pr⟩(s,T) のルックアップテーブル。Mie理論に基づく波長積分済みの値。フィールド名は `qpr_table_path`（`qpr_table` は使用不可） | `null` (必要に応じ指定) |
+| `radiation.Q_pr` | float | 灰色体近似での放射圧効率（テーブル不使用時）。通常は波長依存性があるためテーブル推奨 | - |
+
+##### 時変温度ドライバ (`radiation.mars_temperature_driver`)
+
+火星表面温度の時間発展を扱います。衝突直後の高温状態から放射冷却で温度が下がる過程をモデル化。
+
+| パラメータ | 型 | 物理的意味 | 典型値 |
+|-----------|-----|-----------|--------|
+| `.enabled` | bool | 時変温度モデルの有効化。`false` なら `TM_K` を定数として使用 | `false` |
+| `.mode` | `"constant"` / `"table"` | `"constant"` は固定温度、`"table"` は時系列テーブルから補間 | `"constant"` |
+| `.table.path` | Path | 温度時系列CSVのパス。SiO₂冷却モデルなどから生成 | `"data/mars_temperature_T4000p0K.csv"` |
+| `.table.time_unit` | str | テーブルの時間単位。`"orbit"` は軌道周期でスケール | `"s"` |
+| `.table.column_time` | str | 時間列の列名 | `"time"` |
+| `.table.column_temperature` | str | 温度列の列名 | `"T_M"` |
+| `.autogenerate.enabled` | bool | テーブルが存在しない場合に自動生成するか | `false` |
+| `.autogenerate.output_dir` | Path | 自動生成テーブルの出力先 | `"data"` |
+| `.autogenerate.dt_hours` | float | 自動生成時の時間解像度 [hours] | 1.0 |
+| `.autogenerate.min_years` | float | 自動生成テーブルの最小期間 [years] | 2.0 |
+| `.autogenerate.time_margin_years` | float | シミュレーション終了後のマージン [years] | 0.2 |
+
+#### 💨 昇華・シンク関連 (`sinks`)
+
+粒子の消失メカニズム（昇華・ガスドラッグなど）を制御します。高温環境での SiO₂ 昇華が主要なシンク。
+
+| パラメータ | 型 | 物理的意味 | 典型値 |
+|-----------|-----|-----------|--------|
+| `sinks.mode` | `"none"` / `"sublimation"` | シンク機構全体の有効化。`"none"` は全シンク無効（純粋衝突のみ） | `"sublimation"` |
+| `sinks.enable_sublimation` | bool | 昇華過程の個別スイッチ | `true` |
+| `sinks.sublimation_location` | str | 昇華が作用する場所。`"surface"` は表層ODE、`"smol"` はSmoluchowski積分器内、`"both"` は併用 | `"surface"` |
+| `sinks.T_sub` | float | 昇華が顕著になる閾値温度 [K]。これ以上で急速な質量損失が始まる | 1300 |
+| `sinks.enable_gas_drag` | bool | ガスドラッグの有効化。gas-poor 条件では通常 `false` | `false` |
+
+##### 昇華パラメータ (`sinks.sub_params`)
+
+Hertz-Knudsen-Langmuir (HKL) 理論に基づく昇華速度の詳細パラメータ。
+
+| パラメータ | 型 | 物理的意味 | 典型値 |
+|-----------|-----|-----------|--------|
+| `.mode` | str | 昇華モデル。`"hkl"` は HKL 理論、`"logistic"` は簡易シグモイド関数 | `"hkl"` |
+| `.alpha_evap` | float | 蒸発係数（0–1）。表面から実際に蒸発する分子の割合。SiO₂ では ~0.007 と低い | 0.007 |
+| `.mu` | float | 蒸発種の分子量 [kg/mol]。SiO₂ なら 0.060 kg/mol、SiO なら 0.044 kg/mol | 0.0440849 |
+| `.A` | float | Clausius-Clapeyron 式の係数 A（$\log_{10} P_{\rm sat} = A - B/T$）。飽和蒸気圧の温度依存性を決定 | 13.613 |
+| `.B` | float | Clausius-Clapeyron 式の係数 B [K]。蒸発潜熱に比例する値 | 17850 |
+| `.dT` | float | ロジスティックモードでの遷移幅 [K]。T_sub 周辺での昇華率の立ち上がり幅 | 50.0 |
+| `.eta_instant` | float | ロジスティックモードでの瞬時損失分率（0–1） | 0.1 |
+| `.P_gas` | float | 周囲ガス圧 [Pa]。昇華を抑制する背圧。真空では 0 | 0.0 |
+
+#### 🌬️ 表層ブローアウト (`blowout`)
+
+| パラメータ | 型 | 物理的意味 | 典型値 |
+|-----------|-----|-----------|--------|
+| `enabled` | bool | 表層ブローアウトの有効/無効 | `true` |
+| `target_phase` | `"solid_only"` / `"any"` | ブローアウト対象の相 | `"solid_only"` |
+| `layer` | `"surface_tau_le_1"` / `"full_surface"` | どの表層リザーバーを削減するか | `"surface_tau_le_1"` |
+| `gate_mode` | `"none"` / `"sublimation_competition"` / `"collision_competition"` | 他シンクとの競合による抑制 | `"none"` |
+
+#### 🔵 円盤ジオメトリ (`disk.geometry`)
+
+ダスト円盤の空間的範囲を火星半径単位で指定。ロッシュ限界（~2.4 R_Mars）付近が対象。0D 実行では `disk.geometry` の指定が必須。
+
+| パラメータ | 型 | 物理的意味 | 典型値 |
+|-----------|-----|-----------|--------|
+| `r_in_RM` | float | 円盤内縁の軌道半径 [Mars半径]。火星表面に近いほど高温・短周期 | 2.2 |
+| `r_out_RM` | float | 円盤外縁の軌道半径 [Mars半径]。ロッシュ限界を超えると衛星形成領域 | 2.7 |
+| `r_profile` | str | 表面密度の半径依存性。`"uniform"` は一様、`"powerlaw"` は Σ ∝ r^(-p) | `"uniform"` |
+| `p_index` | float | べき乗則の指数 p。p=0 で一様、p>0 で内側が高密度 | 0.0 |
+
+#### 📏 解析窓 (`scope`)
+
+| パラメータ | 型 | 物理的意味 | 典型値 |
+|-----------|-----|-----------|--------|
+| `region` | `"inner"` | 対象領域のラベル（Phase 0 では固定） | `"inner"` |
+| `analysis_years` | float | 集計対象とする期間 [years] | 2.0 |
+
+#### 💨 ブローアウト時定数スケール (`chi_blow`)
+
+| パラメータ | 型 | 物理的意味 | 典型値 |
+|-----------|-----|-----------|--------|
+| `chi_blow` | float / `"auto"` | ブローアウト時間 $t_{\rm blow}$ の倍率。`"auto"` で β と ⟨Q_pr⟩ に基づき推定 | 1.0 |
+
+#### 🪨 物質特性 (`material`)
+
+粒子の物質パラメータ。SiO₂ ガラスを標準物質と想定。
+
+| パラメータ | 型 | 物理的意味 | 典型値 |
+|-----------|-----|-----------|--------|
+| `rho` | float | 粒子のバルク密度 [kg/m³]。質量-サイズ変換、重力パラメータ、光学的厚さ計算に使用。SiO₂ ガラスで ~2200、玄武岩で ~3000 | 3000 |
+
+#### 📊 サイズ分布 (`sizes`, `psd`)
+
+粒径分布（PSD: Particle Size Distribution）の離散化とべき乗則パラメータ。
+
+| パラメータ | 型 | 物理的意味 | 典型値 |
+|-----------|-----|-----------|--------|
+| `s_min` | float | 追跡する最小粒径 [m]。blow-out サイズ $a_{\rm blow}$ 以下の粒子は即座に系外へ | 1.0e-6 |
+| `s_max` | float | 追跡する最大粒径 [m]。衝突カスケードの上限。大きいほど計算コスト増 | 3.0 |
+| `n_bins` | int | 対数空間でのサイズビン数。解像度と計算コストのトレードオフ。30–60 が推奨 | 40 |
+| `alpha` | float | 定常 PSD のべき指数。Dohnanyi (1969) の衝突平衡では α≈1.83（n(s)∝s^(-2-3α)） | 1.83 |
+| `wavy_strength` | float | "wavy" PSD 補正の強度。blow-out 境界付近での波状構造（Campo Bagatin 1994）を再現 | 0.2 |
+
+#### 🚀 初期条件 (`initial`, `inner_disk_mass`)
+
+シミュレーション開始時の質量分布を設定。
+
+| パラメータ | 型 | 物理的意味 | 典型値 |
+|-----------|-----|-----------|--------|
+| `mass_total` | float | 初期総質量（火星質量比）。巨大衝突後の円盤質量の推定値に基づく | 1.0e-5 |
+| `s0_mode` | str | 初期 PSD の形状。`"upper"` は大粒子に集中、`"mono"` は単一サイズ | `"upper"` |
+| `M_in_ratio` | float | 内部円盤質量と火星質量の比。Σ の正規化に使用 | 3.0e-5 |
+
+#### ⚡ 力学 (`dynamics`)
+
+粒子の軌道力学パラメータ。衝突速度と衝突頻度を決定。
+
+| パラメータ | 型 | 物理的意味 | 典型値 |
+|-----------|-----|-----------|--------|
+| `e0` | float | 初期軌道離心率。衝突速度 $v_{\rm rel} \sim e \cdot v_K$ を決定。高いほど破壊的衝突が増加 | 0.5 |
+| `i0` | float | 初期軌道傾斜角 [rad]。円盤の幾何学的厚さ H ∼ i·r を決定 | 0.05 |
+| `t_damp_orbits` | float | 速度分散のダンピング時間スケール [軌道周期]。衝突による運動量交換で e,i が減衰 | 20 |
+| `f_wake` | float | 自己重力ウェイク増幅係数。光学的に厚い円盤で速度分散が増幅される効果（Ohtsuki型） | 2.0 |
+| `kernel_ei_mode` | str | 衝突カーネルの e,i 決定法。`"config"` は設定値使用、`"wyatt_eq"` は平衡解を計算 | `"config"` |
+
+#### 💥 破壊強度 (`qstar`)
+
+衝突破壊の閾値を決める強度法則。Leinhardt & Stewart (2012) に基づく。
+
+| パラメータ | 型 | 物理的意味 | 典型値 |
+|-----------|-----|-----------|--------|
+| `Qs` | float | 強度レジームの基準強度 [J/kg]。小粒子の分子間結合で決まる | 3.5e7 |
+| `a_s` | float | 強度レジームのサイズべき指数。Q*_D ∝ s^(-a_s) で小粒子ほど強い | 0.38 |
+| `B` | float | 重力レジームの係数 [J/kg]。大粒子では自己重力が支配的 | 0.3 |
+| `b_g` | float | 重力レジームのサイズべき指数。Q*_D ∝ s^(b_g) で大粒子ほど強い | 1.36 |
+| `v_ref_kms` | list | 参照衝突速度 [km/s]。Q*_D の速度依存性補正に使用 | [1.0, 5.0] |
+
+#### 🧊 相状態 (`phase`)
+
+固相・気相の判定と相転移の閾値。SiO₂ の凝縮・蒸発を制御。
+
+| パラメータ | 型 | 物理的意味 | 典型値 |
+|-----------|-----|-----------|--------|
+| `enabled` | bool | 相状態分岐の有効化。`false` なら常に固相として扱う | `true` |
+| `source` | str | 相判定の方法。`"threshold"` は温度閾値、`"map"` は外部ルックアップ | `"threshold"` |
+| `T_condense_K` | float | 凝縮温度 [K]。これ以下で蒸気→固体への相転移が起こる | 1700 |
+| `T_vaporize_K` | float | 蒸発温度 [K]。これ以上で固体→蒸気への相転移が支配的 | 2000 |
+
+#### ⏱️ 数値積分 (`numerics`)
+
+時間積分の制御パラメータ。IMEX-BDF スキームの設定。
+
+| パラメータ | 型 | 物理的意味 | 典型値 |
+|-----------|-----|-----------|--------|
+| `t_end_years` | float | シミュレーション総時間 [years]。`t_end_orbits` と排他 | 2.0 |
+| `t_end_orbits` | float | シミュレーション総時間 [orb]。`t_end_years` と排他 | - |
+| `dt_init` | float/str | 初期時間ステップ [s]。`"auto"` で衝突時間スケールから自動設定 | 60000.0 |
+| `safety` | float | 適応時間ステップの安全係数。dt ≤ safety × min(t_coll) を維持 | 0.1 |
+| `atol` | float | 絶対許容誤差。質量保存の精度に影響 | 1e-10 |
+| `rtol` | float | 相対許容誤差。PSD 形状の精度に影響 | 1e-6 |
+| `eval_per_step` | bool | 毎ステップ ⟨Q_pr⟩ や ds/dt を再計算するか | `true` |
+| `dt_over_t_blow_max` | float | dt/t_blow の警告閾値（null で無効） | `null` |
+
+#### 📁 出力制御 (`io`)
+
+シミュレーション結果の出力設定。
+
+| パラメータ | 型 | 物理的意味 | 典型値 |
+|-----------|-----|-----------|--------|
+| `outdir` | Path | 出力ディレクトリ。series/, checks/, summary.json などが格納される | `"out"` |
+| `quiet` | bool | INFO ログの抑制。バッチ実行時に便利 | `false` |
+| `progress.enable` | bool | CLI プログレスバーの表示 | `false` |
+| `debug_sinks` | bool | シンク詳細ログの出力。デバッグ用 | `false` |
+
+---
 
 ### 3.1 `physics_mode` — 物理モード（推奨）
 
@@ -131,10 +325,10 @@ physics_mode: "default"  # または "sublimation_only" / "collisions_only"
 | キー | 型 | 説明 | 推奨 |
 |------|-----|------|------|
 | `mode` | `"0D"` / `"1D"` | 空間次元 | ✓ |
-| `r` | float | 軌道半径 [m] | ⚠️ 非推奨 |
-| `runtime_orbital_radius_rm` | float | 軌道半径 [R_Mars] | ⚠️ 非推奨 |
+| `r` | float | 軌道半径 [m]（使用不可） | ✗ |
+| `runtime_orbital_radius_rm` | float | 軌道半径 [R_Mars]（使用不可） | ✗ |
 
-**推奨**: 軌道半径は `disk.geometry` で指定
+**推奨**: 軌道半径は `disk.geometry` で指定（0D では必須）。`geometry.r_in/r_out` は 1D グリッド用にのみ使用。
 
 ### 3.3 `disk.geometry` — 円盤幾何（推奨）
 
@@ -156,7 +350,7 @@ disk:
 
 ### 3.4 `supply` — 外部供給（簡略化済み）
 
-選択したモードのパラメータのみ記述すれば OK。他はデフォルト値が使用されます。
+選択したモードのパラメータのみ記述すれば OK。他はデフォルト値が使用されます。`mode` は `"const"` / `"table"` / `"powerlaw"` / `"piecewise"` から選択でき、全モードに共通で `mixing.epsilon_mix` を指定可能です。
 
 **例（const モード - 最小構成）:**
 
@@ -174,6 +368,37 @@ supply:
   mode: "table"
   table:
     path: "data/my_supply.csv"
+```
+
+**例（powerlaw モード - 最小構成）:**
+
+```yaml
+supply:
+  mode: "powerlaw"
+  powerlaw:
+    A_kg_m2_s: 1.0e-9
+    t0_s: 0.0
+    index: -1.0
+```
+
+**例（piecewise モード - 抜粋）:**
+
+```yaml
+supply:
+  mode: "piecewise"
+  piecewise:
+    - t_start_s: 0.0
+      t_end_s: 1.0e6
+      mode: "const"
+      const:
+        prod_area_rate_kg_m2_s: 1.0e-10
+    - t_start_s: 1.0e6
+      t_end_s: 2.0e6
+      mode: "powerlaw"
+      powerlaw:
+        A_kg_m2_s: 1.0e-9
+        t0_s: 1.0e6
+        index: -0.5
 ```
 
 ### 3.5 `sinks.sub_params` — 昇華パラメータ（簡略化済み）
@@ -236,14 +461,57 @@ phase:
 | キー | 型 | 単位 | 説明 |
 |------|-----|------|------|
 | `TM_K` | float | K | 火星赤外温度（**統一先**） |
-| `qpr_table_path` | str | - | Qpr テーブルパス |
+| `source` | str | - | 放射源: `"mars"` / `"off"` |
+| `use_mars_rp` | bool | - | 火星放射圧の有効化 |
+| `qpr_table_path` | str | - | ⟨Q_pr⟩テーブルパス |
+| `Q_pr` | float | - | 灰色体放射圧効率（手動指定時） |
 
 **例:**
 
 ```yaml
 radiation:
   TM_K: 4000
+  source: "mars"
   qpr_table_path: "data/qpr_table.csv"
+```
+
+### 3.8 `radiation.mars_temperature_driver` — 時変温度ドライバ
+
+火星表面温度の時間発展を指定するための設定です（放射冷却テーブル対応）。
+
+| キー | 型 | 単位 | 説明 |
+|------|-----|------|------|
+| `enabled` | bool | - | 時変温度ドライバの有効化 |
+| `mode` | str | - | `"constant"` / `"table"` |
+| `table.path` | Path | - | 温度テーブルCSVのパス |
+| `table.time_unit` | str | - | 時間列の単位: `"s"` / `"day"` / `"yr"` / `"orbit"` |
+| `table.column_time` | str | - | 時間列名 |
+| `table.column_temperature` | str | - | 温度列名 |
+| `autogenerate.enabled` | bool | - | テーブル自動生成の有効化 |
+| `autogenerate.output_dir` | Path | - | 生成先ディレクトリ |
+| `autogenerate.dt_hours` | float | hours | 時間ステップ |
+| `autogenerate.min_years` | float | yr | 最小カバー期間 |
+| `autogenerate.time_margin_years` | float | yr | マージン |
+
+**例（テーブルモード）:**
+
+```yaml
+radiation:
+  TM_K: 4000
+  mars_temperature_driver:
+    enabled: true
+    mode: "table"
+    table:
+      path: "data/mars_temperature_T4000p0K.csv"
+      time_unit: "day"
+      column_time: "time_day"
+      column_temperature: "T_K"
+    autogenerate:
+      enabled: true
+      output_dir: "data"
+      dt_hours: 1.0
+      min_years: 2.0
+      time_margin_years: 0.5
 ```
 
 ---
@@ -306,8 +574,8 @@ sinks:
 
 numerics:
   t_end_years: 2.0
-  dt_init: 2.0
-  safety: 0.08
+  dt_init: 60000.0
+  safety: 0.1
 
 io:
   outdir: "out"
@@ -398,6 +666,38 @@ phase:
   entrypoint: "mymodule:my_func"
 ```
 
+### 5.5 自遮蔽テーブルの移行
+
+**Before（使用不可）:**
+
+```yaml
+shielding:
+  phi_table: "data/phi.csv"
+```
+
+**After:**
+
+```yaml
+shielding:
+  table_path: "data/phi.csv"
+```
+
+### 5.6 Q_pr テーブルの移行
+
+**Before（使用不可）:**
+
+```yaml
+radiation:
+  qpr_table: "data/qpr.csv"
+```
+
+**After:**
+
+```yaml
+radiation:
+  qpr_table_path: "data/qpr.csv"
+```
+
 ---
 
 ## 6. シナリオ選択ガイド
@@ -465,7 +765,7 @@ flowchart TD
 
 #### TEMP001: 昇華温度が凝縮温度を超えている
 
-```
+```text
 [WARNING] TEMP001: 昇華温度 (1500 K) > 凝縮温度 (1400 K)
 ```
 
@@ -491,7 +791,7 @@ phase:
 
 #### TEMP004: 火星温度が蒸発温度を超えている
 
-```
+```text
 [WARNING] TEMP004: 火星温度 (4000.0 K) > 蒸発温度 (2000.0 K)
 ```
 
@@ -510,11 +810,11 @@ phase:
 
 #### MIGRATE001–006: 非推奨フィールドの警告
 
-```
+```text
 [WARNING] MIGRATE001: temps.T_M (4000 K) は廃止予定です
 ```
 
-**対処**: [移行ガイド](#5-移行ガイド旧形式から新形式へ) を参照
+**対処**: [移行ガイド](#5-移行ガイド) を参照
 
 ### 7.2 よくある設定ミス
 

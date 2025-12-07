@@ -107,11 +107,16 @@
       96,
       163
     ],
-    "references": [],
-    "notes": "TL2003 gas-rich surface ODE (opt-out by default). TODO scope vetting.",
-    "assumptions": [],
-    "todos": [
-      "tl2003_surface_flow_scope_v1"
+    "references": [
+      "StrubbeChiang2006_ApJ648_652",
+      "TakeuchiLin2003_ApJ593_524",
+      "TakeuchiLin2002_ApJ581_1344",
+      "Shadmehri2007_MNRAS378_1365"
+    ],
+    "notes": "Gas-poor surface loss term with optional TL2002/2003 gas-rich outflow (disabled by default).",
+    "assumptions": [
+      "gas-poor default",
+      "TL2003 opt-in"
     ]
   },
   "siO2_disk_cooling/siO2_cooling_map.py#tmars": {
@@ -121,9 +126,12 @@
       139
     ],
     "references": [
-      "Hyodo2018_ApJ860_150"
+      "Hyodo2018_ApJ860_150",
+      "Hyodo2017a_ApJ845_125",
+      "LesherSpera2015_EncyclopediaVolcanoes",
+      "Robertson1988_USGS_OFR88_441"
     ],
-    "notes": "Radiative-slab cooling law T^{-3} evolution (E.042).",
+    "notes": "Radiative-slab cooling law T^{-3} evolution (E.042) with ρ/c_p/D drawn from molten silicate ranges.",
     "assumptions": [
       "radiative only",
       "constant D, rho, cp"
@@ -136,7 +144,12 @@
       155
     ],
     "references": [
-      "Hyodo2018_ApJ860_150"
+      "Hyodo2018_ApJ860_150",
+      "Burns1979_Icarus40_1",
+      "BohrenHuffman1983_Wiley",
+      "Blanco1976_ApSS41_447",
+      "Draine2003_SaasFee32",
+      "Hocuk2017_AA604_A58"
     ],
     "notes": "Grain equilibrium temperature with Q_abs^{1/4} and √(R/(2r)) dilution (E.043).",
     "assumptions": [

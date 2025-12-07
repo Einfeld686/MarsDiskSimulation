@@ -238,6 +238,138 @@
         "Provides the v_rel ≈ v_K sqrt(1.25 e^2 + i^2) scaling used for mutual velocities.",
         "Describes collisional cooling vs. shear heating balance that motivates the fixed-point iteration for c_eq."
       ]
+    },
+    {
+      "key": "TakeuchiLin2002_ApJ581_1344",
+      "short": "Takeuchi & Lin (2002)",
+      "title": "Radial Flow of Dust Particles in Accretion Disks",
+      "doi": "10.1086/344430",
+      "bibtex": "@article{TakeuchiLin2002_ApJ581_1344, journal = {ApJ}, volume = {581}, pages = {1344-1355}, year = {2002}}",
+      "adopted_scope": "Gas-rich, optically thick protoplanetary disks where dust motion is coupled to 2D gas structure.",
+      "claims": [
+        "Shows dust radial drift is set by gas drag in vertically stratified, optically thick disks and can reverse in surface layers.",
+        "Provides the gas-rich context and assumptions extended by Takeuchi & Lin (2003) for surface outflows."
+      ]
+    },
+    {
+      "key": "Shadmehri2007_MNRAS378_1365",
+      "short": "Shadmehri (2007)",
+      "title": "Dynamics of charged dust particles in protoplanetary discs",
+      "doi": "10.1111/j.1365-2966.2007.11868.x",
+      "bibtex": "@article{Shadmehri2007_MNRAS378_1365, journal = {MNRAS}, volume = {378}, pages = {1365-1372}, year = {2007}}",
+      "adopted_scope": "Review and extension of TL2002/2003-style dust flows in gas-rich, optically thick disks.",
+      "claims": [
+        "Summarises that outward surface drift driven by radiation pressure plus gas drag applies to optically thick, gas-loaded disks.",
+        "Reiterates TL2003's limitation to illuminated surface skins rather than debris-disk, gas-poor regimes."
+      ]
+    },
+    {
+      "key": "LesherSpera2015_EncyclopediaVolcanoes",
+      "short": "Lesher & Spera (2015)",
+      "title": "Thermodynamic and Transport Properties of Silicate Melts and Magma",
+      "doi": null,
+      "bibtex": "@incollection{LesherSpera2015_EncyclopediaVolcanoes, booktitle = {The Encyclopedia of Volcanoes, 2nd ed.}, pages = {113-141}, year = {2015}, author = {Lesher, C. E. and Spera, F. J.}}",
+      "adopted_scope": "Representative high-temperature properties for basaltic/silicate melts.",
+      "claims": [
+        "Reports melt densities around 2600 kg m^{-3}, specific heats ≈1450 J kg^{-1} K^{-1}, and thermal conductivity ≈0.6 W m^{-1} K^{-1}.",
+        "Provides the property ranges used for slab depth, ρ, and c_p choices in the Mars cooling model."
+      ]
+    },
+    {
+      "key": "Robertson1988_USGS_OFR88_441",
+      "short": "Robertson (1988)",
+      "title": "Thermal Properties of Rocks",
+      "doi": null,
+      "bibtex": "@techreport{Robertson1988_USGS_OFR88_441, institution = {U.S. Geological Survey}, number = {88-441}, year = {1988}, author = {Robertson, E. C.}}",
+      "adopted_scope": "Compiled density, specific heat, and conductivity for crustal and mantle rocks.",
+      "claims": [
+        "Lists basaltic to ultramafic rocks with ρ ≈ 2800–3300 kg m^{-3} and c_p ≈ 700–1200 J kg^{-1} K^{-1} near room to elevated temperatures.",
+        "Supports the order-of-magnitude thermal capacity used for the post-impact Martian surface layer."
+      ]
+    },
+    {
+      "key": "BohrenHuffman1983_Wiley",
+      "short": "Bohren & Huffman (1983)",
+      "title": "Absorption and Scattering of Light by Small Particles",
+      "doi": null,
+      "bibtex": "@book{BohrenHuffman1983_Wiley, title = {Absorption and Scattering of Light by Small Particles}, publisher = {Wiley}, year = {1983}, author = {Bohren, C. F. and Huffman, D. R.}}",
+      "adopted_scope": "Mie-theory baseline for Q_abs, Q_pr, and scattering efficiencies across grain sizes and compositions.",
+      "claims": [
+        "Provides the formalism for calculating Q_abs(λ,a) and Planck-mean efficiencies used in debris-disk grain heating.",
+        "Serves as the theoretical source behind size- and composition-dependent ⟨Q_abs⟩ tables."
+      ]
+    },
+    {
+      "key": "Blanco1976_ApSS41_447",
+      "short": "Blanco et al. (1976)",
+      "title": "Planck mean efficiency factors for six material candidates for interstellar grains",
+      "doi": "10.1007/BF00640752",
+      "bibtex": "@article{Blanco1976_ApSS41_447, journal = {Ap\\&SS}, volume = {41}, pages = {447-463}, year = {1976}}",
+      "adopted_scope": "Tabulated Planck-mean absorption efficiencies for common grain materials vs. size.",
+      "claims": [
+        "Computes Planck-mean Q_abs for graphite, iron, ice, olivine, amorphous quartz, and lunar silicate over sub-µm to multi-µm sizes.",
+        "Provides reference values to replace the placeholder q_abs_mean=1.0 in radiative equilibrium calculations."
+      ]
+    },
+    {
+      "key": "Draine2003_SaasFee32",
+      "short": "Draine (2003)",
+      "title": "Astrophysics of Dust in Cold Clouds",
+      "doi": null,
+      "bibtex": "@incollection{Draine2003_SaasFee32, booktitle = {Saas-Fee Advanced Course 32}, year = {2003}, author = {Draine, B. T.}}",
+      "adopted_scope": "Optical constants and efficiency tables for astronomical silicates/graphite with Planck-mean treatments.",
+      "claims": [
+        "Provides Q_abs(λ,a) data and methodology to compute ⟨Q_abs⟩(T,a,composition) used for grain temperature estimates.",
+        "Supplies canonical optical constants for astronomical silicate and graphite that inform future table generation."
+      ]
+    },
+    {
+      "key": "Hocuk2017_AA604_A58",
+      "short": "Hocuk et al. (2017)",
+      "title": "Parameterizing the interstellar dust temperature",
+      "doi": "10.1051/0004-6361/201629944",
+      "bibtex": "@article{Hocuk2017_AA604_A58, journal = {A\\&A}, volume = {604}, pages = {A58}, year = {2017}}",
+      "adopted_scope": "Parametrisation of dust temperature and Planck-mean absorption efficiency in ISM environments.",
+      "claims": [
+        "Gives fitted ⟨Q_abs⟩ and temperature relations illustrating size/composition dependence beyond the q_abs_mean=1.0 placeholder.",
+        "Demonstrates the impact of grain material on radiative equilibrium temperatures."
+      ]
+    },
+    {
+      "key": "Bruning2003_JNCS330_13",
+      "short": "Bruning (2003)",
+      "title": "On the glass transition in vitreous silica by differential thermal analysis measurements",
+      "doi": "10.1016/S0022-3093(03)00631-8",
+      "bibtex": "@article{Bruning2003_JNCS330_13, journal = {Journal of Non-Crystalline Solids}, volume = {330}, pages = {13-22}, year = {2003}}",
+      "adopted_scope": "Experimental DTA constraints on glass transition behavior of vitreous silica.",
+      "claims": [
+        "Finds glass transition onset near 1247 K with relaxed supercooled liquid behavior around 1475 K for high-purity SiO2.",
+        "Supports using T_glass ≈ 1475 K as the transition proxy in phase maps."
+      ]
+    },
+    {
+      "key": "Ojovan2021_Materials14_5354",
+      "short": "Ojovan (2021)",
+      "title": "On Structural Rearrangements Near the Glass Transition in Vitreous Silica",
+      "doi": "10.3390/ma14185354",
+      "bibtex": "@article{Ojovan2021_Materials14_5354, journal = {Materials}, volume = {14}, pages = {5354}, year = {2021}}",
+      "adopted_scope": "Review of glass-transition physics and melting limits for pure silica at low pressure.",
+      "claims": [
+        "Quotes the SiO2 melting/liquidus temperature near 1986 K under low-pressure conditions.",
+        "Summarises structural rearrangement ranges across the glass transition relevant to SiO2 phase thresholds."
+      ]
+    },
+    {
+      "key": "Melosh2007_MPS42_2079",
+      "short": "Melosh (2007)",
+      "title": "A Hydrocode Equation of State for SiO2",
+      "doi": "10.1111/j.1945-5100.2007.tb01009.x",
+      "bibtex": "@article{Melosh2007_MPS42_2079, journal = {Meteoritics & Planetary Science}, volume = {42}, pages = {2079-2098}, year = {2007}}",
+      "adopted_scope": "Equation of state for SiO2 used in high-temperature impact simulations.",
+      "claims": [
+        "Locates melt/vapor boundaries for SiO2 around the ~2000 K regime used for liquidus thresholds.",
+        "Provides consistency between impact hydrocode setups and the phase thresholds adopted in the SiO2 cooling map."
+      ]
     }
   ]
 }

@@ -2,6 +2,16 @@
 
 `tools/` はシミュレーション結果を可視化・診断する補助スクリプトを置くディレクトリです。本書では配置や命名、入出力の基本ルールのみを定めます。各スクリプトの詳細な説明や使用手順は `analysis/tools/visualizations.md` を参照してください。
 
+## ディレクトリ構成（互換ラッパー付き）
+- `pipeline/`: DocSyncAgent, coverage guard, analysis-doc-tests, evaluation_system などドキュメント・検証系 CLI。
+- `qpr/`: Planck 平均 ⟨Q_pr⟩ テーブル生成ユーティリティ。
+- `legacy_psd/`: 旧 PSD プロトタイプ（core, time_evolution, T–time map）への互換ラッパー。
+- `utilities/`: メモリ試算などの単機能ユーティリティ。
+- `plotting/`: 図生成スクリプトと共通ヘルパー（旧 `tools/plotting.py` は `plotting/base.py` へ移動）。
+- `diagnostics/`: β マップなどの解析診断スクリプト。
+
+互換性のため、`python -m tools.<name>` での既存 CLI はトップレベルの薄いラッパー経由で従来どおり利用できます。
+
 ## 1. 適用範囲
 - 可視化・解析を目的とした Python スクリプトのみを配置すること。
 - 数値モデルや運用ユーティリティは `marsdisk/` や `marsdisk/ops/`、試験的コードは `prototypes/` へ配置する。

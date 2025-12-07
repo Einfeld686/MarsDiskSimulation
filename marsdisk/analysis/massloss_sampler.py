@@ -17,7 +17,7 @@ from typing import Any, Dict, Iterable, Optional, Sequence
 import numpy as np
 import pandas as pd
 
-from .. import constants
+from .. import config_utils, constants
 from ..run import load_config, run_zero_d
 from ..schema import Config, Radiation
 from ..physics import radiation
@@ -40,18 +40,14 @@ def _prepare_config(
 
     work = base_cfg.model_copy(deep=True)
 
-    radius_m = float(r_rm) * constants.R_MARS
     work.geometry.mode = "0D"
-    work.geometry.r = radius_m
-    work.geometry.runtime_orbital_radius_rm = float(r_rm)
+    config_utils.ensure_disk_geometry(work, r_rm=float(r_rm))
 
-    work.temps.T_M = float(T_M)
     if work.radiation is None:
         work.radiation = Radiation(TM_K=float(T_M), qpr_table_path=qpr_table_path)
     else:
         work.radiation.TM_K = float(T_M)
         work.radiation.qpr_table_path = qpr_table_path
-        work.radiation.qpr_table = None
     work.radiation.Q_pr = None
 
     work.sinks.mode = sinks_mode
