@@ -7,21 +7,28 @@ import pandas as pd
 
 from marsdisk import schema
 from marsdisk.physics import tempdriver
-from marsdisk import constants, run
+from marsdisk import run
 from siO2_disk_cooling.model import YEAR_SECONDS
 
 SECONDS_PER_DAY = 86400.0
 
 
 def test_temperature_driver_prefers_radiation_override() -> None:
-    temps = schema.Temps(T_M=2100.0)
     radiation = schema.Radiation(TM_K=2300.0)
 
     info = tempdriver.autogenerate_temperature_table_if_needed(
         schema.Config(
-            geometry=schema.Geometry(mode="0D", r=2.6 * constants.R_MARS),
+            geometry=schema.Geometry(mode="0D"),
+            disk=schema.Disk(
+                geometry=schema.DiskGeometry(
+                    r_in_RM=2.6,
+                    r_out_RM=2.6,
+                    r_profile="uniform",
+                    p_index=0.0,
+                )
+            ),
             material=schema.Material(rho=3000.0),
-            temps=temps,
+            radiation=radiation,
             sizes=schema.Sizes(s_min=1.0e-8, s_max=1.0e-3, n_bins=8),
             initial=schema.Initial(mass_total=1.0e-9, s0_mode="upper"),
             dynamics=schema.Dynamics(e0=0.05, i0=0.01, t_damp_orbits=1.0, f_wake=1.0),
@@ -29,12 +36,11 @@ def test_temperature_driver_prefers_radiation_override() -> None:
             qstar=schema.QStar(Qs=1.0e5, a_s=0.1, B=0.3, b_g=1.36, v_ref_kms=[1.0, 2.0]),
             numerics=schema.Numerics(t_end_years=0.01, dt_init=1.0),
             io=schema.IO(outdir=Path("out_dummy")),
-            radiation=radiation,
         ),
         t_end_years=0.01,
         t_orb=10.0,
     )
-    driver = tempdriver.resolve_temperature_driver(temps, radiation, t_orb=10.0, prefer_driver=True)
+    driver = tempdriver.resolve_temperature_driver(radiation, t_orb=10.0, prefer_driver=True)
 
     assert driver.source == "mars_temperature_driver.table"
     assert driver.mode == "table"
@@ -43,7 +49,6 @@ def test_temperature_driver_prefers_radiation_override() -> None:
 
 
 def test_temperature_driver_table_interpolates_sample() -> None:
-    temps = schema.Temps(T_M=2100.0)
     table_path = Path(__file__).resolve().parents[1] / "data" / "mars_temperature_table_example.csv"
     driver_cfg = schema.MarsTemperatureDriverConfig(
         enabled=True,
@@ -58,7 +63,7 @@ def test_temperature_driver_table_interpolates_sample() -> None:
     )
     radiation = schema.Radiation(TM_K=None, mars_temperature_driver=driver_cfg)
 
-    driver = tempdriver.resolve_temperature_driver(temps, radiation, t_orb=2.0 * np.pi)
+    driver = tempdriver.resolve_temperature_driver(radiation, t_orb=2.0 * np.pi)
 
     assert driver.source == "mars_temperature_driver.table"
     assert driver.mode == "table"
@@ -124,9 +129,16 @@ def test_autogen_used_in_run(tmp_path: Path) -> None:
         autogenerate=autogen_cfg,
     )
     cfg = schema.Config(
-        geometry=schema.Geometry(mode="0D", r=2.6 * constants.R_MARS),
+        geometry=schema.Geometry(mode="0D"),
+        disk=schema.Disk(
+            geometry=schema.DiskGeometry(
+                r_in_RM=2.6,
+                r_out_RM=2.6,
+                r_profile="uniform",
+                p_index=0.0,
+            )
+        ),
         material=schema.Material(rho=3000.0),
-        temps=schema.Temps(T_M=1800.0),
         sizes=schema.Sizes(s_min=1.0e-8, s_max=1.0e-3, n_bins=8),
         initial=schema.Initial(mass_total=1.0e-9, s0_mode="upper"),
         dynamics=schema.Dynamics(e0=0.05, i0=0.01, t_damp_orbits=1.0, f_wake=1.0),

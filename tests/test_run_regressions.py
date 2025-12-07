@@ -10,8 +10,6 @@ import numpy as np
 import pandas as pd
 
 from ruamel.yaml import YAML
-
-from marsdisk import constants
 from marsdisk.run import load_config, run_zero_d
 
 BASE_CONFIG = Path("configs/base.yml")
@@ -82,9 +80,9 @@ def test_sublimation_not_double_counted() -> None:
         "numerics.dt_init=10.0",
         "sinks.enable_sublimation=true",
         "sinks.mode=sublimation",
-        "temps.T_M=2500.0",
+        "radiation.TM_K=2500.0",
         "io.debug_sinks=false",
-        "process.primary=sublimation_only",
+        "physics_mode=sublimation_only",
     ]
     summary, diagnostics = _run_case(overrides)
 
@@ -180,10 +178,19 @@ def test_gate_factor_collision_competition_reduces_flux() -> None:
 def _write_inline_combined_config(config_path: Path, outdir: Path) -> None:
     yaml = YAML()
     yaml.indent(mapping=2, sequence=4, offset=2)
+    r_rm = 1.3
     config = {
-        "geometry": {"mode": "0D", "r": 1.3 * constants.R_MARS},
+        "geometry": {"mode": "0D"},
+        "disk": {
+            "geometry": {
+                "r_in_RM": r_rm,
+                "r_out_RM": r_rm,
+                "r_profile": "uniform",
+                "p_index": 0.0,
+            }
+        },
         "material": {"rho": 3000.0},
-        "temps": {"T_M": 4000.0},
+        "radiation": {"TM_K": 4000.0},
         "sizes": {"s_min": 1.0e-7, "s_max": 1.0e-3, "n_bins": 24},
         "initial": {"mass_total": 1.0e-8, "s0_mode": "upper"},
         "dynamics": {
@@ -262,7 +269,7 @@ def test_gate_factor_sublimation_competition_reduces_flux() -> None:
         "sinks.enable_sublimation=true",
         "sinks.mode=sublimation",
         "sinks.sub_params.mode=hkl",
-        "temps.T_M=3000.0",
+        "radiation.TM_K=3000.0",
         "material.rho=1200.0",
         "initial.mass_total=1e-3",
         "numerics.t_end_orbits=0.2",
@@ -271,12 +278,6 @@ def test_gate_factor_sublimation_competition_reduces_flux() -> None:
     ]
 
     cfg = load_config(BASE_CONFIG, overrides=overrides)
-    # Allow sublimation competition even though process.primary defaults to collisions_only.
-    if hasattr(cfg.process, "__fields_set__"):
-        try:
-            cfg.process.__fields_set__.discard("primary")
-        except Exception:
-            cfg.process.__fields_set__ = set()
     cfg.io.debug_sinks = False
     with TemporaryDirectory() as tmp:
         outdir = Path(tmp)

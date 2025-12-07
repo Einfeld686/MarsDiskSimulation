@@ -18,14 +18,14 @@ def _run_phase_case(tmp_path: Path, entrypoint: str, *, enable_step_diag: bool =
         "sinks.mode=sublimation",
         "sinks.enable_sublimation=true",
         "sinks.sub_params.mode=logistic",
-        "process.primary=sublimation_only",
+        "physics_mode=sublimation_only",
         "phase.enabled=true",
         "phase.source=map",
-        f"phase.map.entrypoint={entrypoint}",
+        f"phase.entrypoint={entrypoint}",
         "blowout.enabled=false",
         "numerics.t_end_years=1e-9",
         "numerics.dt_init=1.0",
-        "temps.T_M=2000.0",
+        "radiation.TM_K=2000.0",
     ]
     if enable_step_diag:
         overrides.extend(

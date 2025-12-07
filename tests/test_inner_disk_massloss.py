@@ -5,15 +5,23 @@ from pathlib import Path
 import numpy as np
 from ruamel.yaml import YAML
 
-from marsdisk import constants, schema
+from marsdisk import schema
 from marsdisk.analysis.inner_disk_runner import run_inner_disk_sweep
 
 
 def _build_config(outdir: Path, *, sinks_mode: str, enable_sublimation: bool, enable_gas_drag: bool) -> schema.Config:
     cfg = schema.Config(
-        geometry=schema.Geometry(mode="0D", r=2.6 * constants.R_MARS),
+        geometry=schema.Geometry(mode="0D"),
+        disk=schema.Disk(
+            geometry=schema.DiskGeometry(
+                r_in_RM=2.6,
+                r_out_RM=2.6,
+                r_profile="uniform",
+                p_index=0.0,
+            )
+        ),
         material=schema.Material(rho=3000.0),
-        temps=schema.Temps(T_M=1800.0),
+        radiation=schema.Radiation(TM_K=1800.0, Q_pr=1.0),
         sizes=schema.Sizes(s_min=1.0e-7, s_max=1.0e-3, n_bins=12),
         initial=schema.Initial(mass_total=1.0e-8, s0_mode="upper"),
         dynamics=schema.Dynamics(e0=0.05, i0=0.01, t_damp_orbits=1.0, f_wake=1.0),
@@ -26,7 +34,6 @@ def _build_config(outdir: Path, *, sinks_mode: str, enable_sublimation: bool, en
             mixing=schema.SupplyMixing(epsilon_mix=1.0),
         ),
         io=schema.IO(outdir=outdir, step_diagnostics=schema.StepDiagnostics(enable=True, format="csv")),
-        radiation=schema.Radiation(Q_pr=1.0),
     )
     cfg.sinks.mode = sinks_mode
     cfg.sinks.enable_sublimation = enable_sublimation

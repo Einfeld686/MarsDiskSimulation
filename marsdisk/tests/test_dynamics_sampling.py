@@ -2,12 +2,12 @@ import json
 
 import numpy as np
 
-from marsdisk import constants, run as run_module
-from marsdisk import schema
+from marsdisk import config_utils, constants, run as run_module, schema
 
 
 def _make_config(outdir):
-    geometry = schema.Geometry(mode="0D", r=1.3558e7)
+    geometry = schema.Geometry(mode="0D")
+    r_rm = 1.3558e7 / constants.R_MARS
     dynamics = schema.Dynamics(
         e0=0.1,
         i0=0.05,
@@ -24,8 +24,16 @@ def _make_config(outdir):
     )
     return schema.Config(
         geometry=geometry,
+        disk=schema.Disk(
+            geometry=schema.DiskGeometry(
+                r_in_RM=r_rm,
+                r_out_RM=r_rm,
+                r_profile="uniform",
+                p_index=0.0,
+            )
+        ),
         material=schema.Material(rho=3000.0),
-        temps=schema.Temps(T_M=2000.0),
+        radiation=schema.Radiation(TM_K=2000.0),
         sizes=schema.Sizes(s_min=1e-6, s_max=1e-2, n_bins=32),
         initial=schema.Initial(mass_total=1e-8, s0_mode="upper"),
         dynamics=dynamics,
@@ -45,7 +53,7 @@ def test_stochastic_ei_sampling(tmp_path):
 
     rng = np.random.default_rng(42)
     delta_r = rng.uniform(1.0, 10.0)
-    a_m = cfg.geometry.r
+    a_m, _, r_source = config_utils.resolve_reference_radius(cfg)
     expected_e0 = 1.0 - (constants.R_MARS + delta_r) / a_m
     assert np.isclose(cfg.dynamics.e0, expected_e0, atol=1e-12)
 
@@ -56,4 +64,4 @@ def test_stochastic_ei_sampling(tmp_path):
     run_config = json.loads((outdir / "run_config.json").read_text(encoding="utf-8"))
     init_block = run_config.get("init_ei", {})
     assert init_block.get("e_formula_SI")
-    assert init_block.get("a_m_source") == "geometry.r"
+    assert init_block.get("a_m_source") == r_source

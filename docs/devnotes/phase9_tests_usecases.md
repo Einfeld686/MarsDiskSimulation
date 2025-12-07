@@ -2,7 +2,7 @@
 
 ## 目的
 - 研究者が **「昇華のみ（経路A）」** と **「衝突カスケード＋火星放射圧ブローアウトのみ（経路B）」** を **同一の時間グリッドで別々に走らせ、2 年スケールの質量損失を比較**できるようにする。
-- スコープは内側円盤固定・火星放射限定で、`single_process_mode` / `process.primary` の解決結果を `primary_process` / `primary_scenario` として出力メタデータに残す。[marsdisk/run.py:575–695][marsdisk/run.py:2142–2352][marsdisk/run.py:2429–2535]
+- スコープは内側円盤固定・火星放射限定で、`physics_mode` の解決結果を `primary_process` / `primary_scenario` として出力メタデータに残す。[marsdisk/run.py:575–695][marsdisk/run.py:2142–2352][marsdisk/run.py:2429–2535]
 
 ## 適用範囲と既知の限界
 - 対象は `scope.region="inner"` の 0D 内側円盤のみ。外側円盤や半径方向輸送は含まない。[marsdisk/run.py:575–695]
@@ -43,4 +43,4 @@
 - いずれも Mars-only scope なので `summary.solar_radiation.enabled=false` と `run_config.radiation_provenance.use_solar_rp=false` が一致しているか確認する。
 
 ## 既存との差分・後方互換性
-- Phase3/5/7 で導入したブローアウト監査・単一過程モードの仕様を流用し、**新しい式や計算モードは追加していない**。既存 YAML/Phase5 比較ランは `single_process_mode=off` のまま動作し、後方互換テスト（A1-3/A2-1）で scope ガードと time_grid 書き戻しが維持されることを保証する。
+- Phase3/5/7 で導入したブローアウト監査・単一過程モードの仕様を流用し、**新しい式や計算モードは追加していない**。既存 YAML/Phase5 比較ランは `physics_mode=default` のまま動作し、後方互換テスト（A1-3/A2-1）で scope ガードと time_grid 書き戻しが維持されることを保証する。

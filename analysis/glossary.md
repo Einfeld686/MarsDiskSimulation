@@ -211,7 +211,7 @@ gate_factor = t_solid / (t_solid + t_blow) # ゲート係数
 
 ```python
 # 物理量 + 単位
-r_m = cfg.geometry.r                    # 軌道半径 [m]
+r_m = 0.5 * (cfg.disk.geometry.r_in_RM + cfg.disk.geometry.r_out_RM) * R_MARS  # 軌道半径 [m]
 T_M_K = temp_runtime.evaluate(time)     # 火星温度 [K]
 Sigma_surf_kg_m2 = sigma_surf           # 面密度 [kg/m²]
 

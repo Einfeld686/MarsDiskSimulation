@@ -14,9 +14,17 @@ from marsdisk import constants, run, schema
 @pytest.mark.filterwarnings("ignore:Phi table not found")
 def test_run_zero_d_with_sinks_disabled(tmp_path: Path) -> None:
     cfg = schema.Config(
-        geometry=schema.Geometry(mode="0D", r=1.0),
+        geometry=schema.Geometry(mode="0D"),
+        disk=schema.Disk(
+            geometry=schema.DiskGeometry(
+                r_in_RM=2.6,
+                r_out_RM=2.6,
+                r_profile="uniform",
+                p_index=0.0,
+            )
+        ),
         material=schema.Material(rho=3000.0),
-        temps=schema.Temps(T_M=2000.0),
+        radiation=schema.Radiation(TM_K=2000.0),
         sizes=schema.Sizes(s_min=1.0e-6, s_max=1.0e-3, n_bins=8),
         initial=schema.Initial(mass_total=1.0e-9, s0_mode="upper"),
         dynamics=schema.Dynamics(e0=0.1, i0=0.01, t_damp_orbits=1.0, f_wake=1.0),
@@ -99,7 +107,8 @@ def test_run_zero_d_with_sinks_disabled(tmp_path: Path) -> None:
     assert np.allclose(df["chi_blow_eff"], 1.0)
 
     # surface-rate to planetary-scale rate consistency
-    area = math.pi * cfg.geometry.r ** 2
+    r_m = cfg.disk.geometry.r_in_RM * constants.R_MARS
+    area = math.pi * r_m ** 2
     dSigma_total = df["dSigma_dt_total"].to_numpy()
     dSigma_blowout = df["dSigma_dt_blowout"].to_numpy()
     dSigma_sinks = df["dSigma_dt_sinks"].to_numpy()

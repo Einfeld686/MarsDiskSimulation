@@ -4,14 +4,22 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from marsdisk import constants, run, schema
+from marsdisk import run, schema
 
 
 def _base_surface_cfg(outdir: Path, *, s_min: float = 1.0e-6, prod_rate: float = 1.0e-9, t_end_years: float = 5.0e-4, dt_init: float = 400.0, T_M: float = 2000.0) -> schema.Config:
     cfg = schema.Config(
-        geometry=schema.Geometry(mode="0D", r=2.5 * constants.R_MARS),
+        geometry=schema.Geometry(mode="0D"),
+        disk=schema.Disk(
+            geometry=schema.DiskGeometry(
+                r_in_RM=2.5,
+                r_out_RM=2.5,
+                r_profile="uniform",
+                p_index=0.0,
+            )
+        ),
         material=schema.Material(rho=3000.0),
-        temps=schema.Temps(T_M=T_M),
+        radiation=schema.Radiation(TM_K=T_M),
         sizes=schema.Sizes(s_min=s_min, s_max=1.0e-2, n_bins=32),
         initial=schema.Initial(mass_total=1.0e-5, s0_mode="upper"),
         dynamics=schema.Dynamics(e0=0.05, i0=0.01, t_damp_orbits=10.0, f_wake=1.0),
@@ -68,7 +76,7 @@ def test_blowout_disabled_in_vapor_state(tmp_path: Path) -> None:
 
 def test_solar_toggle_forced_off(tmp_path: Path) -> None:
     cfg = _base_surface_cfg(tmp_path / "solar_toggle")
-    cfg.radiation = schema.Radiation(use_mars_rp=True, use_solar_rp=True)
+    cfg.radiation = schema.Radiation(TM_K=cfg.radiation.TM_K, use_mars_rp=True, use_solar_rp=True)
     run.run_zero_d(cfg)
 
     summary = json.loads((Path(cfg.io.outdir) / "summary.json").read_text())

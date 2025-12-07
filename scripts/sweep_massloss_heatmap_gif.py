@@ -9,7 +9,7 @@ static PNG heatmaps and animated GIFs for different Φ(1) cases.
 
 This script adheres to the user brief:
 
-* Temperature sweeps use ``radiation.TM_K``; ``temps.T_M`` remains untouched.
+* Temperature sweeps use ``radiation.TM_K`` exclusively（legacy ``temps.T_M`` は廃止）。
 * Φ tables are two-point τ lookups (τ=0→Φ=1, τ=1→Φ(1) case value).
 * Per-orbit mass loss is sourced from ``orbit_rollup.csv`` with consistency
   checks against ``summary.json`` (T_M provenance, β diagnostics, orbit count).
@@ -58,7 +58,7 @@ PHI_CASE_VALUES = {
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from marsdisk import constants
+from marsdisk import config_utils, constants
 from marsdisk.run import load_config, run_zero_d
 from marsdisk.schema import Config, Radiation, Shielding
 
@@ -97,10 +97,8 @@ def _prepare_case_config(
 
     cfg = base_cfg.model_copy(deep=True)
 
-    radius_m = float(r_rm) * constants.R_MARS
     cfg.geometry.mode = "0D"
-    cfg.geometry.r = radius_m
-    cfg.geometry.runtime_orbital_radius_rm = float(r_rm)
+    config_utils.ensure_disk_geometry(cfg, float(r_rm))
 
     if cfg.radiation is None:
         cfg.radiation = Radiation(TM_K=float(T_M))
@@ -110,7 +108,7 @@ def _prepare_case_config(
 
     if cfg.shielding is None:
         cfg.shielding = Shielding()
-    cfg.shielding.phi_table = str(phi_table)
+    cfg.shielding.table_path = str(phi_table)
 
     cfg.sinks.mode = "none"
     cfg.sinks.enable_sublimation = False

@@ -121,7 +121,7 @@ def _keywords_for_gap(gap: Gap) -> list[str]:
     if "sublim" in lowered or "gasdrag" in lowered or "gas_drag" in lowered:
         return ["sinks", "sublimation", "gas_drag", "TL2003", "rp_blowout"]
     if "radius" in lowered or "geometry" in lowered:
-        return ["geometry.r", "runtime_orbital_radius", "disk.geometry", "0D"]
+        return ["disk.geometry", "0D"]
     return [gap.label]
 
 
@@ -199,8 +199,6 @@ def search_config_keys(gaps: list[Gap], config_root: Path) -> None:
         "sinks.mode",
         "sinks.enable_gas_drag",
         "sinks.enable_sublimation",
-        "geometry.r",
-        "geometry.runtime_orbital_radius_rm",
         "disk.geometry.r_in_rm",
         "disk.geometry.r_out_rm",
         "surface.use_tcoll",

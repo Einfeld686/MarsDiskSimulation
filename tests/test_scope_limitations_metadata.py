@@ -15,10 +15,18 @@ def _base_config(outdir: Path, *, window_years: float = 1.0e-6) -> schema.Config
     """Return a minimal config tuned for fast runs."""
 
     cfg = schema.Config(
-        geometry=schema.Geometry(mode="0D", r=1.3 * constants.R_MARS),
+        geometry=schema.Geometry(mode="0D"),
+        disk=schema.Disk(
+            geometry=schema.DiskGeometry(
+                r_in_RM=1.3,
+                r_out_RM=1.3,
+                r_profile="uniform",
+                p_index=0.0,
+            )
+        ),
         scope=schema.Scope(region="inner", analysis_years=window_years),
         material=schema.Material(rho=3000.0),
-        temps=schema.Temps(T_M=4000.0),
+        radiation=schema.Radiation(TM_K=4000.0),
         sizes=schema.Sizes(s_min=1.0e-7, s_max=1.0e-3, n_bins=24),
         initial=schema.Initial(mass_total=1.0e-8, s0_mode="upper"),
         dynamics=schema.Dynamics(
@@ -63,13 +71,14 @@ def test_scope_limitations_present_and_populated(tmp_path: Path) -> None:
 
     summary = _read_json(cfg.io.outdir / "summary.json")
     run_cfg = _read_json(cfg.io.outdir / "run_config.json")
+    r_m = cfg.disk.geometry.r_in_RM * constants.R_MARS
 
     for payload in (summary, run_cfg):
         scope_limits = payload["scope_limitations"]
         scope = scope_limits["scope"]
         active = scope_limits["active_physics"]
         assert scope["region"] == "inner"
-        assert scope["reference_radius_m"] == pytest.approx(cfg.geometry.r)
+        assert scope["reference_radius_m"] == pytest.approx(r_m)
         assert scope["analysis_window_years"] == pytest.approx(cfg.scope.analysis_years)
         assert scope["radiation_source"] == "mars"
         assert scope["solar_radiation_enabled"] is False
@@ -85,7 +94,7 @@ def test_scope_limitations_present_and_populated(tmp_path: Path) -> None:
 
 def test_single_process_flags_flow_into_scope_limitations(tmp_path: Path) -> None:
     cfg_sub = _base_config(tmp_path / "sub_only")
-    cfg_sub.single_process_mode = "sublimation_only"
+    cfg_sub.physics_mode = "sublimation_only"
 
     run.run_zero_d(cfg_sub)
 
@@ -95,7 +104,7 @@ def test_single_process_flags_flow_into_scope_limitations(tmp_path: Path) -> Non
     assert sub_summary["sublimation_active"] is True
 
     cfg_col = _base_config(tmp_path / "collisions_only")
-    cfg_col.single_process_mode = "collisions_only"
+    cfg_col.physics_mode = "collisions_only"
     cfg_col.sinks.enable_gas_drag = True
 
     run.run_zero_d(cfg_col)
@@ -112,7 +121,7 @@ def test_single_process_flags_flow_into_scope_limitations(tmp_path: Path) -> Non
 
 def test_solar_radiation_request_is_recorded(tmp_path: Path) -> None:
     cfg = _base_config(tmp_path / "solar_requested")
-    cfg.radiation = schema.Radiation(use_solar_rp=True)
+    cfg.radiation = schema.Radiation(TM_K=4000.0, use_solar_rp=True)
 
     run.run_zero_d(cfg)
 

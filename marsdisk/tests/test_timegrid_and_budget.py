@@ -14,9 +14,17 @@ def _tiny_config(outdir: Path, dt_init: float, n_steps: int) -> schema.Config:
     """Return a minimal 0D configuration for rapid implicit-Euler runs."""
 
     t_end_s = dt_init * n_steps
-    geometry = schema.Geometry(mode="0D", r=1.4e7)
+    geometry = schema.Geometry(mode="0D")
     material = schema.Material(rho=3000.0)
-    temps = schema.Temps(T_M=2000.0)
+    disk = schema.Disk(
+        geometry=schema.DiskGeometry(
+            r_in_RM=4.13,
+            r_out_RM=4.13,
+            r_profile="uniform",
+            p_index=0.0,
+        )
+    )
+    radiation = schema.Radiation(TM_K=2000.0)
     sizes = schema.Sizes(s_min=1.0e-6, s_max=1.0e-2, n_bins=32)
     initial = schema.Initial(mass_total=1.0e-8, s0_mode="upper")
     dynamics = schema.Dynamics(
@@ -38,8 +46,9 @@ def _tiny_config(outdir: Path, dt_init: float, n_steps: int) -> schema.Config:
 
     return schema.Config(
         geometry=geometry,
+        disk=disk,
         material=material,
-        temps=temps,
+        radiation=radiation,
         sizes=sizes,
         initial=initial,
         dynamics=dynamics,

@@ -14,9 +14,17 @@ pytestmark = [
 
 def _scenario_config(outdir: Path) -> schema.Config:
     cfg = schema.Config(
-        geometry=schema.Geometry(mode="0D", r=1.3 * constants.R_MARS),
+        geometry=schema.Geometry(mode="0D"),
+        disk=schema.Disk(
+            geometry=schema.DiskGeometry(
+                r_in_RM=1.3,
+                r_out_RM=1.3,
+                r_profile="uniform",
+                p_index=0.0,
+            )
+        ),
         material=schema.Material(rho=3000.0),
-        temps=schema.Temps(T_M=4000.0),
+        radiation=schema.Radiation(TM_K=4000.0),
         sizes=schema.Sizes(s_min=1.0e-7, s_max=1.0e-3, n_bins=24),
         initial=schema.Initial(mass_total=1.0e-8, s0_mode="upper"),
         dynamics=schema.Dynamics(
@@ -56,7 +64,7 @@ def _read_json(path: Path) -> dict:
 
 def test_sublimation_only_disables_collisions_and_blowout(tmp_path: Path) -> None:
     cfg = _scenario_config(tmp_path / "sub_only")
-    cfg.single_process_mode = "sublimation_only"
+    cfg.physics_mode = "sublimation_only"
 
     run.run_zero_d(cfg)
 
@@ -77,7 +85,7 @@ def test_sublimation_only_disables_collisions_and_blowout(tmp_path: Path) -> Non
 
 def test_collisions_only_disables_sinks(tmp_path: Path) -> None:
     cfg = _scenario_config(tmp_path / "collisions_only")
-    cfg.single_process_mode = "collisions_only"
+    cfg.physics_mode = "collisions_only"
     cfg.sinks.enable_gas_drag = True
 
     run.run_zero_d(cfg)
