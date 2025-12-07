@@ -1,11 +1,8 @@
 # Base configuration for the r/R_M – T_M one-orbit mass-loss sweep (gas-poor).
 geometry:
   mode: "0D"
-  r: 3.0e6
 material:
   rho: 3000.0
-temps:
-  T_M: 3000.0
 sizes:
   s_min: 1.0e-6
   s_max: 3.0
@@ -30,6 +27,12 @@ qstar:
   v_ref_kms:
     - 3.0
     - 5.0
+disk:
+  geometry:
+    r_in_RM: 0.885086
+    r_out_RM: 0.885086
+    r_profile: "uniform"
+    p_index: 0.0
 supply:
   mode: "const"
   const:
@@ -52,7 +55,7 @@ radiation:
   qpr_table_path: "data/qpr_table.csv"
   TM_K: 3000.0
 shielding:
-  phi_table: null
+  table_path: null
 numerics:
   t_end_orbits: 1.0
   dt_init: "auto"

@@ -138,6 +138,7 @@ def compute_seed(r_m: float, temperature_k: float, mass_mmars: float) -> int:
 def render_config_yaml(
     *,
     r_m: float,
+    r_rm: float,
     temperature_k: float,
     mass_mmars: float,
     outdir: Path,
@@ -146,14 +147,13 @@ def render_config_yaml(
     """Materialise the YAML template with units annotated via inline comments."""
 
     outdir_str = outdir.as_posix()
+    r_rm_str = format_float(r_rm)
+    temp_str = format_float(temperature_k)
     return (
         "geometry:\n"
-        f'  mode: "0D"\n'
-        f"  r: {format_float(r_m)}  # [m] (multiple of R_M)\n"
+        '  mode: "0D"\n'
         "material:\n"
         "  rho: 2500.0  # [kg/m^3]\n"
-        "temps:\n"
-        f"  T_M: {format_float(temperature_k)}  # [K]\n"
         "sizes:\n"
         "  s_min: 1.0e-7  # [m]\n"
         "  s_max: 1.0  # [m]\n"
@@ -184,8 +184,8 @@ def render_config_yaml(
         "  v_ref_kms: [3.0]\n"
         "disk:\n"
         "  geometry:\n"
-        "    r_in_RM: 2.3\n"
-        "    r_out_RM: 7.5\n"
+        f"    r_in_RM: {r_rm_str}\n"
+        f"    r_out_RM: {r_rm_str}\n"
         '    r_profile: "uniform"\n'
         "    p_index: 0.0\n"
         "inner_disk_mass:\n"
@@ -199,9 +199,14 @@ def render_config_yaml(
         '  mode: "none"\n'
         "  rho_g: 0.0\n"
         "radiation:\n"
-        "  Q_pr: 1.0\n"
+        f"  TM_K: {temp_str}\n"
+        '  qpr_table_path: "data/qpr_table.csv"\n'
+        "  Q_pr: null\n"
+        "  use_mars_rp: true\n"
+        "  use_solar_rp: false\n"
         "shielding:\n"
-        "  phi_table: null\n"
+        '  mode: "psitau"\n'
+        "  table_path: null\n"
         "numerics:\n"
         "  t_end_years: 2.0\n"
         "  dt_init: 10.0\n"
@@ -255,6 +260,7 @@ def write_configs(cases: Iterable[CaseResult], root: Path) -> None:
     for case in cases:
         yaml_content = render_config_yaml(
             r_m=case.r_m,
+            r_rm=case.r_rm,
             temperature_k=case.temperature_k,
             mass_mmars=case.mass_mmars,
             outdir=case.outdir,

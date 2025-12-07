@@ -1,7 +1,6 @@
 # 1) 最小設定はそのまま
-geometry: { mode: "0D", r: 1.3558e7 }
+geometry: { mode: "0D" }
 material: { rho: 2500.0 }
-temps:    { T_M: 2000.0 }
 sizes:    { s_min: 1.0e-7, s_max: 1.0e-2, n_bins: 40 }
 initial:  { mass_total: 1.0e-6, s0_mode: "upper" }
 dynamics: { e0: 0.1, i0: 0.05, t_damp_orbits: 1000.0, f_wake: 1.0 }
@@ -12,10 +11,12 @@ sinks:
   enable_sublimation: true
   T_sub: 1300.0
   sub_params: { mode: "logistic", alpha_evap: 1.0, mu: 0.1, dT: 50.0, eta_instant: 0.1, P_gas: 0.0 }
+disk:
+  geometry: { r_in_RM: 4.0, r_out_RM: 4.0, r_profile: "uniform", p_index: 0.0 }
 
 # 2) テーブルを指定
 radiation: { TM_K: 2000.0, qpr_table_path: "data/qpr_table.csv" }
-shielding: { phi_table: "tables/phi.csv" }
+shielding: { table_path: "tables/phi.csv" }
 
 # 3) 出力
 numerics: { t_end_years: 0.01, dt_init: 1.0e4 }
