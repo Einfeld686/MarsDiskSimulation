@@ -47,7 +47,7 @@ python -m marsdisk.run ^
   --quiet ^
   --progress ^
   --override numerics.dt_init=auto ^
-  --override numerics.safety=0.05 ^
+  --override numerics.safety=0.005 ^
   --override numerics.t_end_years=2.0 ^
   --override io.outdir=%OUTDIR% ^
   --override radiation.source=mars ^
