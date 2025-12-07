@@ -16,8 +16,8 @@ from marsdisk import constants, grid, run
 
 SECONDS_PER_YEAR = 365.25 * 24.0 * 3600.0
 
-DEFAULT_RUN_ROW_BYTES = 1400.0  # run.parquet の 1 行あたり概算（約 89 列, float 主体）
-DEFAULT_PSD_ROW_BYTES = 40.0    # psd_hist.parquet の 1 行あたり概算（5 列）
+DEFAULT_RUN_ROW_BYTES = 2200.0  # run.parquet の 1 行あたり概算（dict/listオーバーヘッド込み）
+DEFAULT_PSD_ROW_BYTES = 320.0   # psd_hist.parquet の 1 行あたり概算（dict/listオーバーヘッド込み）
 
 
 def _human_bytes(value: float) -> str:
@@ -102,7 +102,7 @@ def main(argv: Iterable[str] | None = None) -> int:
     run_mem = _estimate_memory(run_rows, args.run_row_bytes)
     psd_mem = _estimate_memory(psd_rows, args.psd_row_bytes)
     smol_mem = 8.0 * (n_bins**2 + n_bins**3)  # C(n^2) + Y(n^3) を float64 前提で計算
-    total_mem = run_mem + psd_mem
+    total_mem = run_mem + psd_mem + smol_mem
 
     print("=== メモリ試算 ===")
     print(f"config: {args.config}")
@@ -123,7 +123,7 @@ def main(argv: Iterable[str] | None = None) -> int:
     print(f"run.parquet   ~ {_human_bytes(run_mem)} (1 行あたり {args.run_row_bytes:.0f} B 仮定)")
     print(f"psd_hist      ~ {_human_bytes(psd_mem)} (1 行あたり {args.psd_row_bytes:.0f} B 仮定)")
     print(f"Smol tensors  ~ {_human_bytes(smol_mem)} (C + Y を float64 で保持する場合)")
-    print(f"合計（run + psd_hist）~ {_human_bytes(total_mem)}")
+    print(f"合計（run + psd_hist + smol）~ {_human_bytes(total_mem)}")
     print("--- 注意 ---")
     print("ここでのバイト数は DataFrame/辞書のオーバーヘッドを含む概算です。実際のピークはやや大きくなります。")
     return 0

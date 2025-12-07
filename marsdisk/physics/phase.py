@@ -12,7 +12,6 @@ from ..schema import (
     DEFAULT_PHASE_ENTRYPOINT,
     HydroEscapeConfig,
     PhaseConfig,
-    PhaseMapConfig,
     PhaseThresholds,
 )
 

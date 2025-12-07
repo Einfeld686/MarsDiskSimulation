@@ -4,14 +4,22 @@ from pathlib import Path
 import numpy as np
 import pytest
 
-from marsdisk import constants, run, schema
+from marsdisk import config_utils, constants, run, schema
 
 
 def _base_config(outdir: Path) -> schema.Config:
     cfg = schema.Config(
-        geometry=schema.Geometry(mode="0D", r=1.4 * constants.R_MARS),
+        geometry=schema.Geometry(mode="0D"),
+        disk=schema.Disk(
+            geometry=schema.DiskGeometry(
+                r_in_RM=1.4,
+                r_out_RM=1.4,
+                r_profile="uniform",
+                p_index=0.0,
+            )
+        ),
         material=schema.Material(rho=3000.0),
-        temps=schema.Temps(T_M=2000.0),
+        radiation=schema.Radiation(TM_K=2000.0),
         sizes=schema.Sizes(s_min=1.0e-7, s_max=1.0e-3, n_bins=16),
         initial=schema.Initial(mass_total=2.0e-8, s0_mode="upper"),
         dynamics=schema.Dynamics(
@@ -49,7 +57,7 @@ def test_mars_clearance_uses_meter_offsets(tmp_path: Path) -> None:
 
     run.run_zero_d(cfg)
 
-    a_m = cfg.geometry.r
+    a_m, _, _ = config_utils.resolve_reference_radius(cfg)
     delta_r = cfg.dynamics.dr_min_m  # deterministic because min == max
     expected_e = 1.0 - (constants.R_MARS + delta_r) / a_m
     assert cfg.dynamics.e0 == pytest.approx(expected_e)

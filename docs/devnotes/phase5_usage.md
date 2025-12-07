@@ -1,12 +1,12 @@
 # フェーズ5 単一過程モードと比較枠の使い方
 
 ## 単一過程トグル
-- 設定キー: `physics.single_process_mode ∈ {"off","sublimation_only","collisions_only"}`。既定値 `"off"` は従来の複合モードと同一挙動で、`modes.single_process` によるレガシー指定も継続して参照する。[marsdisk/run.py:441–520]
-- CLI からは `--single-process-mode=<off|sublimation_only|collisions_only>` を渡す。`--override physics.single_process_mode=sublimation_only` も可。
+- 設定キー: `physics_mode ∈ {"default","sublimation_only","collisions_only"}`。既定値 `"default"` は従来の複合モードと同一挙動。[marsdisk/run.py:845–1180]
+- CLI からは `--physics-mode=<default|sublimation_only|collisions_only>` を渡す。`--override physics_mode=sublimation_only` も可。
 - `sublimation_only` は昇華/ガス抗力のみを残し、Wyatt 型衝突項・ブローアウト・表層 ODE を停止する。`collisions_only` は昇華シンクを完全に無効化し、`sinks.enable_sublimation=true` でも質量損失への寄与が0になる。[marsdisk/run.py:872–1342]
 
 ## 比較ランナー（Phase5）
-- 設定: `phase5.compare.enable=true` と `phase5.compare.duration_years`（既定2年）、`mode_a`/`mode_b`（例: `collisions_only` / `sublimation_only`）と `label_a`/`label_b` を指定する。CLI フラグ `--compare-single-processes` も同等の挙動を強制する。
+- 設定: `phase5.compare.enable=true` と `phase5.compare.duration_years`（既定2年）、`mode_a`/`mode_b`（例: `collisions_only` / `sublimation_only`）と `label_a`/`label_b` を指定する。CLI フラグ `--compare-physics-modes` も同等の挙動を強制する。
 - ランは `run_phase5_comparison` がまとめて実行し、指定モードの2本を同一初期状態から分岐させる。[marsdisk/run.py:2232–2406]
 - それぞれのサブランは `out/variants/variant=<label>/` に通常出力を生成し、最後にベース outdir に集約成果物を再構築する。
 
@@ -21,14 +21,14 @@ python -m marsdisk.run --config configs/base.yml
 
 # 昇華のみ（単一過程）
 python -m marsdisk.run --config configs/base.yml \
-  --single-process-mode=sublimation_only
+  --physics-mode=sublimation_only
 
 # 衝突のみ（単一過程）
 python -m marsdisk.run --config configs/base.yml \
-  --single-process-mode=collisions_only
+  --physics-mode=collisions_only
 
 # 比較枠（2年）
 python -m marsdisk.run --config configs/base.yml \
-  --compare-single-processes \
+  --compare-physics-modes \
   --override phase5.compare.duration_years=2
 ```

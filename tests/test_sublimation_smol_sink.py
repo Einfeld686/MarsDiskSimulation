@@ -11,9 +11,9 @@ from marsdisk import constants, run, schema
 @pytest.mark.filterwarnings("ignore:Phi table not found")
 def test_smol_sublimation_sink_mass_budget(tmp_path: Path) -> None:
     cfg = schema.Config(
-        geometry=schema.Geometry(mode="0D", r=2.0 * constants.R_MARS),
+        geometry=schema.Geometry(mode="0D"),
         material=schema.Material(rho=3000.0),
-        temps=schema.Temps(T_M=1800.0),
+        radiation=schema.Radiation(TM_K=1800.0),
         sizes=schema.Sizes(s_min=1.0e-6, s_max=1.0e-3, n_bins=8),
         initial=schema.Initial(mass_total=2.0e-9, s0_mode="upper"),
         dynamics=schema.Dynamics(e0=0.05, i0=0.01, t_damp_orbits=1.0, f_wake=1.0),
@@ -28,7 +28,7 @@ def test_smol_sublimation_sink_mass_budget(tmp_path: Path) -> None:
     )
     cfg.disk = schema.Disk(geometry=schema.DiskGeometry(r_in_RM=1.5, r_out_RM=2.5, r_profile="uniform", p_index=0.0))
     cfg.inner_disk_mass = schema.InnerDiskMass(use_Mmars_ratio=True, M_in_ratio=1.0e-8)
-    cfg.process.primary = "sublimation_only"
+    cfg.physics_mode = "sublimation_only"
     cfg.sinks.enable_sublimation = True
     cfg.sinks.enable_gas_drag = False
     cfg.sinks.sublimation_location = "smol"

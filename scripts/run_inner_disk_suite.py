@@ -83,23 +83,21 @@ def build_overrides(spec: CaseSpec) -> List[str]:
     """Assemble CLI ``--override`` strings for a single case."""
 
     base = [
-        f"geometry.r={spec.r_m:.6e}",
+        f"disk.geometry.r_in_RM={spec.r_rm:.6f}",
+        f"disk.geometry.r_out_RM={spec.r_rm:.6f}",
         f"numerics.dt_init={spec.t_orb:.6e}",
         "numerics.t_end_years=1.0",
         "numerics.orbit_rollup=true",
         f"radiation.TM_K={spec.temperature_k:.1f}",
-        f"temps.T_M={spec.temperature_k:.1f}",
         "shielding.mode=table",
         f"shielding.table_path={spec.phi_table_path.as_posix()}",
         "inner_disk_mass.use_Mmars_ratio=true",
         "inner_disk_mass.M_over_Mmars=1.0e-5",
-        "disk.geometry.r_in_RM=1.6",
-        "disk.geometry.r_out_RM=3.0",
         "sizes.s_min=1.0e-7",
         "sizes.s_max=1.0",
         "sizes.n_bins=80",
         f"io.outdir={spec.outdir.as_posix()}",
-        'sinks.mode="none"',
+        "sinks.mode=none",
     ]
     return base
 

@@ -18,15 +18,23 @@ def _phase9_config(
     analysis_years: float = 2.0,
     t_end_years: float | None = 1.0e-6,
     dt_init: float = 1.0,
-    prod_area_rate: float = 1.0e-5,
+    prod_area_rate: float = 1.0e-3,
 ) -> schema.Config:
     cfg = schema.Config(
         scope=schema.Scope(region="inner", analysis_years=analysis_years),
-        geometry=schema.Geometry(mode="0D", r=1.3 * constants.R_MARS),
+        geometry=schema.Geometry(mode="0D"),
+        disk=schema.Disk(
+            geometry=schema.DiskGeometry(
+                r_in_RM=1.3,
+                r_out_RM=1.3,
+                r_profile="uniform",
+                p_index=0.0,
+            )
+        ),
         material=schema.Material(rho=3000.0),
-        temps=schema.Temps(T_M=4000.0),
+        radiation=schema.Radiation(TM_K=4000.0),
         sizes=schema.Sizes(s_min=1.0e-7, s_max=1.0e-3, n_bins=24),
-        initial=schema.Initial(mass_total=1.0e-8, s0_mode="upper"),
+        initial=schema.Initial(mass_total=1.0e-6, s0_mode="upper"),
         dynamics=schema.Dynamics(
             e0=0.05,
             i0=0.01,
@@ -64,7 +72,7 @@ def _read_json(path: Path) -> dict:
 
 def test_sublimation_only_zeroes_blowout_flux_and_sets_metadata(tmp_path: Path) -> None:
     cfg = _phase9_config(tmp_path / "sub_only")
-    cfg.single_process_mode = "sublimation_only"
+    cfg.physics_mode = "sublimation_only"
 
     run.run_zero_d(cfg)
 
@@ -85,7 +93,7 @@ def test_sublimation_only_zeroes_blowout_flux_and_sets_metadata(tmp_path: Path) 
 
 def test_collisions_only_enables_blowout_and_disables_sinks(tmp_path: Path) -> None:
     cfg = _phase9_config(tmp_path / "collisions_only")
-    cfg.single_process_mode = "collisions_only"
+    cfg.physics_mode = "collisions_only"
     cfg.sinks.enable_gas_drag = True
 
     run.run_zero_d(cfg)
@@ -122,7 +130,7 @@ def test_analysis_window_defaults_to_scope_when_t_end_missing(tmp_path: Path) ->
         dt_init=5.0e6,
         prod_area_rate=0.0,
     )
-    cfg.single_process_mode = "collisions_only"
+    cfg.physics_mode = "collisions_only"
     cfg.sinks.mode = "none"
 
     run.run_zero_d(cfg)
@@ -144,14 +152,14 @@ def test_analysis_window_defaults_to_scope_when_t_end_missing(tmp_path: Path) ->
 
 
 def test_mass_loss_is_comparable_between_solo_runs(tmp_path: Path) -> None:
-    base_kwargs = dict(t_end_years=2.0e-6, dt_init=1.0, prod_area_rate=2.5e-5)
+    base_kwargs = dict(t_end_years=2.0e-6, dt_init=1.0, prod_area_rate=1.0e-3)
 
     cfg_sub = _phase9_config(tmp_path / "sub_run", **base_kwargs)
-    cfg_sub.single_process_mode = "sublimation_only"
+    cfg_sub.physics_mode = "sublimation_only"
     run.run_zero_d(cfg_sub)
 
     cfg_col = _phase9_config(tmp_path / "coll_run", **base_kwargs)
-    cfg_col.single_process_mode = "collisions_only"
+    cfg_col.physics_mode = "collisions_only"
     run.run_zero_d(cfg_col)
 
     sub_summary = _read_json(cfg_sub.io.outdir / "summary.json")
@@ -173,7 +181,7 @@ def test_mass_loss_is_comparable_between_solo_runs(tmp_path: Path) -> None:
     assert col_cfg["process_controls"]["primary_process"] == "collisions_only"
 
     cfg_col_repeat = _phase9_config(tmp_path / "coll_run_repeat", **base_kwargs)
-    cfg_col_repeat.single_process_mode = "collisions_only"
+    cfg_col_repeat.physics_mode = "collisions_only"
     run.run_zero_d(cfg_col_repeat)
     col_repeat = _read_json(cfg_col_repeat.io.outdir / "summary.json")
 

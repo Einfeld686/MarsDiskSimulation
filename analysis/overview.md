@@ -70,7 +70,7 @@
 | config | Config | 必須 | トップレベルで全セクションを保持 | [marsdisk/schema.py#IO [L437–L455]] |
 | geometry | Geometry | mode="0D" | mode∈{"0D","1D"}; 半径は任意入力 | [marsdisk/schema.py#Geometry [L20–L31]] |
 | material | Material | rho=3000.0 | rho∈[1000,5000]kg/m³ | [marsdisk/schema.py#Material [L96–L108]] |
-| temps | Temps | T_M=2000.0 | T_M∈[1000,6000]K | [marsdisk/schema.py#Temps [L111–L127]] |
+| temps (removed) | – | – | 旧 `temps.T_M` は無効化。`radiation.TM_K` または温度ドライバで必須入力を与える。 | [marsdisk/config_utils.py:44–76][marsdisk/schema.py:101–156] |
 | sizes | Sizes | n_bins=40 | s_min,s_max必須; n_bins≥1 | [marsdisk/schema.py#Sizes [L130–L151]] |
 | initial | Initial | s0_mode="upper" | mass_total必須; s0_mode∈{"mono","upper"} | [marsdisk/schema.py#Initial [L154–L158]] |
 | dynamics | Dynamics | f_wake=1.0 | e0,i0,t_damp_orbits必須 | [marsdisk/schema.py#Dynamics [L161–L199]] |
@@ -119,7 +119,7 @@
 - 旧来の表層ODE（S1）は Wyatt の 1/t_coll 近似による簡易モデルで、`surface.collision_solver="surface_ode"` を明示したときのみ使うレガシー経路。光学的に薄い近似で `step_surface_density_S1` が Σ を直接更新するため、標準モードとは診断精度が異なる点に留意する。[marsdisk/physics/surface.py:L120–L196]
 
 ## 7. 温度・放射の上書きと出力フィールド
-- `T_M_used` は放射計算に採用された火星面温度で、`radiation.TM_K`（存在する場合）が `temps.T_M` を上書きしたかどうかを `T_M_source` が `"radiation.TM_K"` または `"temps.T_M"` として示す。[marsdisk/schema.py#Temps [L111–L127]][marsdisk/run.py:561–562][marsdisk/run.py:2556–2636]
+- `T_M_used` は放射計算に採用された火星面温度で、`T_M_source` が `radiation.TM_K` / `mars_temperature_driver.constant` / `mars_temperature_driver.table` を区別する（`temps.T_M` は廃止）。[marsdisk/config_utils.py:44–76][marsdisk/physics/tempdriver.py:275–343][marsdisk/run.py:2556–2636]
 - `mass_lost_by_blowout` は放射圧剥離による累積損失、`mass_lost_by_sinks` は昇華・ガス抗力による累積損失を示す。`sinks.mode="none"` では後者が全ステップで0になり、Smol 経路でも `checks/mass_budget.csv` の誤差0.5%以下が維持される。[marsdisk/run.py:1654–1683][marsdisk/run.py:2120–2185][marsdisk/io/writer.py:24–162](tests/test_sinks_none.py)
 
 ## 8. I/O 仕様（出力ファイル種別、カラム/フィールドの最低限）
@@ -186,10 +186,17 @@ python -m marsdisk.run --config configs/base.yml
 ```yaml
 geometry:
   mode: "0D"
+disk:
+  geometry:
+    r_in_RM: 2.2
+    r_out_RM: 2.7
+    r_profile: "uniform"
+    p_index: 0.0
 material:
   rho: 3000.0
-temps:
-  T_M: 2000.0
+radiation:
+  TM_K: 4000.0
+  qpr_table_path: "data/qpr_table.csv"
 sizes:
   s_min: 1.0e-6
   s_max: 3.0
@@ -216,7 +223,7 @@ io:
 - 各ケースは `analysis/checks_psat_auto_01/logs/run.log` に CLI 実行ログを、`logs/pytest_sio.log` に昇華ユニットテスト結果を保存し、`scans/psat_provenance.json` にresolvedモデル・A/B係数・valid_Kをサマリして再分析に備える。[analysis/checks_psat_auto_01/scans/psat_provenance.json][analysis/checks_psat_auto_01/logs/pytest_sio.log]
 
 ## 14. 内側ロッシュ円盤 Φ×温度スイート
-- `scripts/run_inner_disk_suite.py` は Φ(1)={0.20,0.37,0.60} と T_M=1000–6000 K（50 K 刻み）を組み合わせ、代表半径 2.5 R_Mars で `geometry.r` と `numerics.dt_init` を公転周期に合わせた `--override` へ展開する。[scripts/run_inner_disk_suite.py:78–79][scripts/run_inner_disk_suite.py:321–365]
+- `scripts/run_inner_disk_suite.py` は Φ(1)={0.20,0.37,0.60} と T_M=1000–6000 K（50 K 刻み）を組み合わせ、代表半径 2.5 R_Mars で `disk.geometry.r_in_RM/r_out_RM` と `numerics.dt_init` を公転周期に合わせた `--override` へ展開する。[scripts/run_inner_disk_suite.py:78–79][scripts/run_inner_disk_suite.py:321–365]
 - 各ケース実行後に `series/psd_hist.parquet` を読み込んで PSD の時間変化を描画し、`figs/frame_*.png` と `animations/psd_evolution.gif` を生成して凡例に「惑星放射起因のブローアウト」を記載する。[scripts/run_inner_disk_suite.py:187–203][scripts/run_inner_disk_suite.py:364–380]
 - `orbit_rollup.csv` を `orbit_rollup_summary.csv` に整形し、Φ=0.37 かつ T_M=2000/4000/6000 K の GIF を `runs/inner_disk_suite/animations/Phi0p37_TMXXXX.gif` として複写する。定数Φテーブルは `tables/phi_const_0p20.csv` などに配置する。[scripts/run_inner_disk_suite.py:230–243][scripts/run_inner_disk_suite.py:364–380]
 

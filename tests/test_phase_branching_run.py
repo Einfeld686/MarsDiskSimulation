@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from marsdisk import constants, run, schema
+from marsdisk import run, schema
 
 
 def _build_phase_config(outdir: Path, *, T_M: float) -> schema.Config:
@@ -16,9 +16,16 @@ def _build_phase_config(outdir: Path, *, T_M: float) -> schema.Config:
     )
     hydro_cfg = schema.HydroEscapeConfig(enable=True, strength=5.0e-5, temp_power=1.0, T_ref_K=T_M)
     cfg = schema.Config(
-        geometry=schema.Geometry(mode="0D", r=2.6 * constants.R_MARS),
+        geometry=schema.Geometry(mode="0D"),
+        disk=schema.Disk(
+            geometry=schema.DiskGeometry(
+                r_in_RM=2.6,
+                r_out_RM=2.6,
+                r_profile="uniform",
+                p_index=0.0,
+            )
+        ),
         material=schema.Material(rho=3000.0),
-        temps=schema.Temps(T_M=T_M),
         sizes=schema.Sizes(s_min=1.0e-6, s_max=1.0, n_bins=24),
         initial=schema.Initial(mass_total=2.0e-8, s0_mode="upper"),
         dynamics=schema.Dynamics(e0=0.05, i0=0.01, t_damp_orbits=15.0, f_wake=1.0),

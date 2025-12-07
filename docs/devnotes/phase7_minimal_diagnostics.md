@@ -37,35 +37,34 @@ diagnostics:
 | --- | --- | --- | --- | --- | --- |
 | sublimation_only | OFF | OFF | ON | OFF | 昇華のみで質量損失を評価 |
 | collisions_only | ON | ON | OFF | OFF | 衝突＋放射圧だけの損失を評価 |
-| combined (default/off) | ON | ON | ON | OFF | 従来の複合挙動を維持 |
+| combined (default) | ON | ON | ON | OFF | 従来の複合挙動を維持 |
 
-`single_process_mode`（CLI/physics.mode 経由）と `process.primary` は上記 3 値に正規化され、解決結果は `primary_scenario` に保存される。`collisions_active`/`blowout_active` は `primary_scenario` が `sublimation_only` 以外のときに有効、`sinks_active` は `single_process_mode` が `collisions_only` でないかつ `sinks.mode!="none"` のときに有効。
+`physics_mode`（CLI/Config 経由）は上記 3 値に正規化され、解決結果は `primary_scenario` に保存される。`collisions_active`/`blowout_active` は `primary_scenario` が `sublimation_only` 以外のときに有効、`sinks_active` は `physics_mode` が `collisions_only` でないかつ `sinks.mode!="none"` のときに有効。
 
 ### 設定キーと例
 
-- 単一過程指定: `single_process_mode: sublimation_only` / `collisions_only` / `off`（既定で combined）。レガシー `modes.single_process` や `process.primary: sublimation_only|collisions_only` も同じ正規化を受ける。
+- 単一過程指定: `physics_mode: sublimation_only` / `collisions_only` / `default`（既定で combined）。
 - ブローアウトは `blowout.enabled=true` かつ `sinks.rp_blowout.enable=true` かつ `radiation.use_mars_rp=true` かつ `collisions_active=true` のときのみ有効。太陽放射は常に無効（gas-poor 内側前提）。
-- 昇華/ガス抗力シンクは `sinks.mode!="none"` かつ `single_process_mode!="collisions_only"` のときに残り、`collisions_only` では `ds/dt` と追加シンクの両方が停止する。
+- 昇華/ガス抗力シンクは `sinks.mode!="none"` かつ `physics_mode!="collisions_only"` のときに残り、`collisions_only` では `ds/dt` と追加シンクの両方が停止する。
 
 ```yaml
 # 昇華のみ
-physics:
-  mode: sublimation_only  # または single_process_mode: sublimation_only
+physics_mode: sublimation_only
 sinks:
   mode: sublimation
 
 # 衝突のみ
-single_process_mode: collisions_only
+physics_mode: collisions_only
 sinks:
   mode: sublimation  # 設定は残っても無効化される
 
 # 既定（併用）
-single_process_mode: off  # 省略可
+physics_mode: default
 ```
 
 ### 出力での可視化
 
-- summary.json に `primary_scenario` と `process_overview` ブロックを追加。`collisions_active` / `sinks_active` / `sublimation_active` / `blowout_active` の真偽と、入力元（`primary_process_cfg`・`single_process_mode_source`）を記録する。
+- summary.json に `primary_scenario` と `process_overview` ブロックを追加。`collisions_active` / `sinks_active` / `sublimation_active` / `blowout_active` の真偽と、入力元（`primary_process_cfg`・`physics_mode_source`）を記録する。
 - run_config.json の `process_controls` と `process_overview` に同じ解決結果を保存し、`blowout_active` や `sinks_mode` を実行時の値で追跡する。
 - `diagnostics` / `mass_budget` の列構造は従来のまま。モードに応じてブローアウト系カラムが 0 になるか、シンク系カラムが 0 になるかでゲート状態を確認できる。
 

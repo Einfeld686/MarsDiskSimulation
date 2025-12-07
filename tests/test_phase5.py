@@ -9,9 +9,17 @@ from marsdisk import constants, run, schema
 
 def _phase5_base_config(outdir: Path) -> schema.Config:
     cfg = schema.Config(
-        geometry=schema.Geometry(mode="0D", r=1.3 * constants.R_MARS),
+        geometry=schema.Geometry(mode="0D"),
+        disk=schema.Disk(
+            geometry=schema.DiskGeometry(
+                r_in_RM=1.3,
+                r_out_RM=1.3,
+                r_profile="uniform",
+                p_index=0.0,
+            )
+        ),
         material=schema.Material(rho=3000.0),
-        temps=schema.Temps(T_M=2000.0),
+        radiation=schema.Radiation(TM_K=2000.0),
         sizes=schema.Sizes(s_min=1.0e-7, s_max=1.0e-3, n_bins=16),
         initial=schema.Initial(mass_total=1.0e-8, s0_mode="upper"),
         dynamics=schema.Dynamics(
@@ -58,35 +66,11 @@ def _read_run_config(outdir: Path) -> dict:
 
 @pytest.mark.filterwarnings("ignore:Q_pr table not found")
 @pytest.mark.filterwarnings("ignore:Phi table not found")
-def test_single_process_mode_matches_legacy(tmp_path: Path) -> None:
-    legacy_cfg = _phase5_base_config(tmp_path / "legacy")
-    legacy_cfg.modes.single_process = "sublimation_only"
-    legacy_cfg.single_process_mode = "off"
-
-    new_cfg = _phase5_base_config(tmp_path / "new")
-    new_cfg.modes.single_process = "none"
-    new_cfg.single_process_mode = "sublimation_only"
-
-    run.run_zero_d(legacy_cfg)
-    run.run_zero_d(new_cfg)
-
-    legacy_summary = _read_summary(legacy_cfg.io.outdir)
-    new_summary = _read_summary(new_cfg.io.outdir)
-
-    assert legacy_summary["single_process_mode"] == "sublimation_only"
-    assert new_summary["single_process_mode"] == "sublimation_only"
-    assert legacy_summary["physics_mode"] == "sublimation_only"
-    assert new_summary["physics_mode"] == "sublimation_only"
-    assert new_summary["M_loss"] == pytest.approx(legacy_summary["M_loss"])
-
-
-@pytest.mark.filterwarnings("ignore:Q_pr table not found")
-@pytest.mark.filterwarnings("ignore:Phi table not found")
 def test_collisions_only_disables_sinks(tmp_path: Path) -> None:
     cfg = _phase5_base_config(tmp_path / "collisions")
     cfg.sinks.mode = "sublimation"
     cfg.sinks.enable_sublimation = True
-    cfg.single_process_mode = "collisions_only"
+    cfg.physics_mode = "collisions_only"
 
     run.run_zero_d(cfg)
     summary = _read_summary(cfg.io.outdir)
@@ -95,8 +79,10 @@ def test_collisions_only_disables_sinks(tmp_path: Path) -> None:
     assert summary["M_loss_from_sinks"] == pytest.approx(0.0)
     assert summary["M_loss_from_sublimation"] == pytest.approx(0.0)
     assert summary["physics_mode"] == "collisions_only"
-    assert summary["single_process_mode_source"] in {"physics_mode", "single_process_mode", "cli"}
+    assert summary["physics_mode_source"] == "config"
     assert run_cfg["physics_mode"] == "collisions_only"
+    assert run_cfg["physics_mode_resolution"]["resolved_mode"] == "collisions_only"
+    assert run_cfg["physics_mode_resolution"]["source"] == "config"
 
 
 @pytest.mark.filterwarnings("ignore:Q_pr table not found")
@@ -121,6 +107,7 @@ def test_phase5_comparison_outputs_combined_series(tmp_path: Path) -> None:
         "sublimation",
         "collisions",
     }
+    assert summary.get("comparison_mode") == "phase5_physics_modes"
 
     comp_csv = outdir / "series" / "orbit_rollup_comparison.csv"
     assert comp_csv.exists()
@@ -146,26 +133,19 @@ def test_variant_column_absent_when_not_comparing(tmp_path: Path) -> None:
 def test_physics_mode_config_applies(tmp_path: Path) -> None:
     cfg = _phase5_base_config(tmp_path / "physics_mode_cfg")
     cfg.physics_mode = "collisions_only"
-    cfg.single_process_mode = "off"
-    cfg.modes.single_process = "none"
 
     run.run_zero_d(cfg)
     summary = _read_summary(cfg.io.outdir)
     run_cfg = _read_run_config(cfg.io.outdir)
 
     assert summary["physics_mode"] == "collisions_only"
-    assert summary["physics_mode_source"] == "physics_mode"
-    assert summary["single_process_mode"] == "collisions_only"
-    assert summary["single_process_mode_source"] == "physics_mode"
-    assert summary["single_process"]["mode"] == "collisions_only"
-    assert summary["single_process"]["source"] == "physics_mode"
+    assert summary["physics_mode_source"] == "config"
     assert summary["physics"]["mode"] == "collisions_only"
     assert summary["physics"]["source"] == "physics_mode"
     assert run_cfg["physics_mode"] == "collisions_only"
-    assert run_cfg["physics_mode_source"] == "physics_mode"
-    assert run_cfg["process_controls"]["single_process_mode_source"] in {"physics_mode"}
-    assert run_cfg["single_process_resolution"]["resolved_mode"] == "collisions_only"
-    assert run_cfg["single_process_resolution"]["source"] == "physics_mode"
+    assert run_cfg["physics_mode_source"] == "config"
+    assert run_cfg["physics_mode_resolution"]["resolved_mode"] == "collisions_only"
+    assert run_cfg["physics_mode_resolution"]["source"] == "config"
 
 
 @pytest.mark.filterwarnings("ignore:Q_pr table not found")
@@ -173,22 +153,19 @@ def test_physics_mode_config_applies(tmp_path: Path) -> None:
 def test_cli_override_wins_over_config(tmp_path: Path) -> None:
     cfg = _phase5_base_config(tmp_path / "cli_override")
     cfg.physics_mode = "sublimation_only"
-    cfg.single_process_mode = "off"
-    cfg.modes.single_process = "none"
-
-    run.run_zero_d(cfg, single_process_override="collisions_only", single_process_source="cli")
+    run.run_zero_d(
+        cfg,
+        physics_mode_override="collisions_only",
+        physics_mode_source_override="cli",
+    )
     summary = _read_summary(cfg.io.outdir)
     run_cfg = _read_run_config(cfg.io.outdir)
 
     assert summary["physics_mode"] == "collisions_only"
     assert summary["physics_mode_source"] == "cli"
-    assert summary["single_process_mode"] == "collisions_only"
-    assert summary["single_process_mode_source"] == "cli"
-    assert summary["single_process"]["mode"] == "collisions_only"
-    assert summary["single_process"]["source"] == "cli"
     assert summary["physics"]["mode"] == "collisions_only"
     assert summary["physics"]["source"] == "cli"
     assert run_cfg["physics_mode"] == "collisions_only"
     assert run_cfg["physics_mode_source"] == "cli"
-    assert run_cfg["single_process_resolution"]["resolved_mode"] == "collisions_only"
-    assert run_cfg["single_process_resolution"]["source"] == "cli"
+    assert run_cfg["physics_mode_resolution"]["resolved_mode"] == "collisions_only"
+    assert run_cfg["physics_mode_resolution"]["source"] == "cli"

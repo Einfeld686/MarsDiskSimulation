@@ -78,8 +78,9 @@ SINK_REF_SIZE = 1e-6
 FAST_BLOWOUT_RATIO_THRESHOLD = 3.0
 FAST_BLOWOUT_RATIO_STRICT = 10.0
 PHASE7_SCHEMA_VERSION = "phase7-minimal-v1"
-MEMORY_RUN_ROW_BYTES = 1400.0
-MEMORY_PSD_ROW_BYTES = 40.0
+# Conservative per-row byte guesses including Python dict/list overheads.
+MEMORY_RUN_ROW_BYTES = 2200.0
+MEMORY_PSD_ROW_BYTES = 320.0
 
 
 class ProgressReporter:
@@ -381,6 +382,8 @@ def _memory_estimate(
     n_bins: int,
     run_row_bytes: float = MEMORY_RUN_ROW_BYTES,
     psd_row_bytes: float = MEMORY_PSD_ROW_BYTES,
+    *,
+    smol_value_bytes: float = 8.0,
 ) -> tuple[str, str]:
     """Return short and long memory hints estimated from steps and bins."""
 
@@ -388,11 +391,13 @@ def _memory_estimate(
     psd_rows = max(int(n_steps * n_bins), 0)
     run_mem = run_rows * float(run_row_bytes)
     psd_mem = psd_rows * float(psd_row_bytes)
-    total_mem = run_mem + psd_mem
+    smol_mem = smol_value_bytes * (n_bins**2 + n_bins**3)  # C_ij + Y_ijk dense tensors
+    total_mem = run_mem + psd_mem + smol_mem
     short = f"{_human_bytes(total_mem)} est"
     long = (
         f"[mem est] run_rows={run_rows:,} psd_rows={psd_rows:,} "
-        f"run~{_human_bytes(run_mem)} psd~{_human_bytes(psd_mem)} total~{_human_bytes(total_mem)}"
+        f"run~{_human_bytes(run_mem)} psd~{_human_bytes(psd_mem)} "
+        f"smol~{_human_bytes(smol_mem)} total~{_human_bytes(total_mem)}"
     )
     return short, long
 
@@ -3058,7 +3063,7 @@ def run_zero_d(
         "resolved_mode": physics_mode,
         "source": physics_mode_source,
         "inputs": {
-            "cli": single_process_override,
+            "cli": physics_mode_override,
             "physics_mode_cfg": physics_mode_cfg,
         },
     }
@@ -3348,12 +3353,12 @@ def _write_phase5_comparison_products(
         "variants": variant_payloads,
         "orbit_rollup_comparison_path": str(base_outdir / "series" / "orbit_rollup_comparison.csv"),
     }
-    combined_summary["comparison_mode"] = "phase5_single_process"
+    combined_summary["comparison_mode"] = "phase5_physics_modes"
     combined_summary["comparison_variants"] = [res.variant for res in results]
     writer.write_summary(combined_summary, base_outdir / "summary.json")
 
     combined_run_config = copy.deepcopy(anchor_res.run_config)
-    combined_run_config["comparison_mode"] = "phase5_single_process"
+    combined_run_config["comparison_mode"] = "phase5_physics_modes"
     combined_run_config["phase5_compare"] = {
         "duration_years": duration_years,
         "variants": [
@@ -3440,9 +3445,16 @@ def main(argv: Optional[List[str]] = None) -> None:
         help="Override physics_mode from the CLI",
     )
     parser.add_argument(
-        "--compare-single-processes",
+        "--compare-physics-modes",
+        dest="compare_physics_modes",
         action="store_true",
-        help="Run both single-process variants sequentially for comparison output.",
+        help="Run both physics_mode variants sequentially for comparison output.",
+    )
+    parser.add_argument(
+        "--compare-single-processes",
+        dest="compare_physics_modes",
+        action="store_true",
+        help=argparse.SUPPRESS,
     )
     parser.add_argument(
         "--override",
@@ -3482,14 +3494,14 @@ def main(argv: Optional[List[str]] = None) -> None:
         cfg.physics_mode = args.physics_mode
     compare_block = getattr(getattr(cfg, "phase5", None), "compare", None)
     compare_config_enabled = bool(getattr(compare_block, "enable", False)) if compare_block else False
-    compare_requested = bool(args.compare_single_processes or compare_config_enabled)
+    compare_requested = bool(args.compare_physics_modes or compare_config_enabled)
     if compare_requested:
         if compare_block is None:
             raise ValueError(
-                "--compare-single-processes requires phase5.compare to define mode_a/mode_b"
+                "--compare-physics-modes requires phase5.compare to define mode_a/mode_b"
             )
         variants_spec = _prepare_phase5_variants(compare_block)
-        if args.compare_single_processes:
+        if args.compare_physics_modes:
             compare_block.enable = True
         run_phase5_comparison(
             cfg,

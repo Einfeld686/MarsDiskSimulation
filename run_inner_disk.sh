@@ -63,11 +63,13 @@ for radius in $RADII_LIST; do
   echo "Running blowout case at R_M=${radius}"
   "$PYTHON_BIN" -m marsdisk.run \
     --config "$BLOWOUT_CONFIG" \
-    --override "geometry.runtime_orbital_radius_rm=${radius}" "radiation.qpr_table_path=${QPR_PATH}"
+    --override "disk.geometry.r_in_RM=${radius}" "disk.geometry.r_out_RM=${radius}" \
+    "radiation.qpr_table_path=${QPR_PATH}"
   echo "Running sublimation case at R_M=${radius}"
   "$PYTHON_BIN" -m marsdisk.run \
     --config "$SUBLIMATION_CONFIG" \
-    --override "geometry.runtime_orbital_radius_rm=${radius}" "radiation.qpr_table_path=${QPR_PATH}" \
+    --override "disk.geometry.r_in_RM=${radius}" "disk.geometry.r_out_RM=${radius}" \
+    "radiation.qpr_table_path=${QPR_PATH}" \
     --sinks "sublimation"
 done
 

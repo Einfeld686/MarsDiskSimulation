@@ -591,11 +591,11 @@ io:
 
 ```yaml
 # 方法1
-single_process_mode: "sublimation_only"
+physics_mode: "sublimation_only"
 
 # 方法2
 modes:
-  single_process: "sublimation_only"
+  physics_mode: "sublimation_only"
 
 # 方法3
 process:

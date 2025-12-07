@@ -85,7 +85,7 @@ def _prepare_outdir(tmp_path: Path, *, drop_series_columns: Sequence[str] | None
         "qpr_table_path": "data/qpr.csv",
         "rho_used": 3000.0,
         "T_M_used": 2500.0,
-        "T_M_source": "temps.T_M",
+        "T_M_source": "radiation.TM_K",
         "T_M_initial": 2500.0,
         "T_M_final": 2490.0,
         "T_M_min": 2490.0,
@@ -97,7 +97,7 @@ def _prepare_outdir(tmp_path: Path, *, drop_series_columns: Sequence[str] | None
         "a_blow_min": 1e-6,
         "a_blow_median": 1e-6,
         "a_blow_max": 1e-6,
-        "temperature_driver": {"source": "temps.T_M", "mode": "constant", "enabled": False},
+        "temperature_driver": {"source": "radiation.TM_K", "mode": "constant", "enabled": False},
         "solar_radiation": {"enabled": False},
     }
     _write_json(outdir / "summary.json", summary)
@@ -136,7 +136,7 @@ def _prepare_outdir(tmp_path: Path, *, drop_series_columns: Sequence[str] | None
         "T_M_used": 2500.0,
         "rho_used": 3000.0,
         "Q_pr_used": 0.9,
-        "temperature_driver": {"source": "temps.T_M", "mode": "constant", "enabled": False},
+        "temperature_driver": {"source": "radiation.TM_K", "mode": "constant", "enabled": False},
         "solar_radiation": {"enabled": False},
     }
     _write_json(outdir / "run_config.json", run_config)

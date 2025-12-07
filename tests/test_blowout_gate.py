@@ -4,7 +4,7 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
-from marsdisk import constants, run, schema
+from marsdisk import run, schema
 
 
 def test_compute_gate_factor_bounds() -> None:
@@ -17,9 +17,17 @@ def test_compute_gate_factor_bounds() -> None:
 
 def _build_gate_config(outdir: Path, gate_mode: str) -> schema.Config:
     cfg = schema.Config(
-        geometry=schema.Geometry(mode="0D", r=2.5 * constants.R_MARS),
+        geometry=schema.Geometry(mode="0D"),
+        disk=schema.Disk(
+            geometry=schema.DiskGeometry(
+                r_in_RM=2.5,
+                r_out_RM=2.5,
+                r_profile="uniform",
+                p_index=0.0,
+            )
+        ),
         material=schema.Material(rho=1500.0),
-        temps=schema.Temps(T_M=4000.0),
+        radiation=schema.Radiation(TM_K=4000.0),
         sizes=schema.Sizes(s_min=5.0e-7, s_max=1.0e-2, n_bins=16),
         initial=schema.Initial(mass_total=1.0e-8, s0_mode="upper"),
         dynamics=schema.Dynamics(e0=0.05, i0=0.01, t_damp_orbits=10.0, f_wake=1.0),
@@ -60,9 +68,17 @@ def test_gate_reduces_outflux_with_sublimation(monkeypatch: pytest.MonkeyPatch, 
 
 def _build_collision_config(outdir: Path, gate_mode: str) -> schema.Config:
     cfg = schema.Config(
-        geometry=schema.Geometry(mode="0D", r=2.5 * constants.R_MARS),
+        geometry=schema.Geometry(mode="0D"),
+        disk=schema.Disk(
+            geometry=schema.DiskGeometry(
+                r_in_RM=2.5,
+                r_out_RM=2.5,
+                r_profile="uniform",
+                p_index=0.0,
+            )
+        ),
         material=schema.Material(rho=1500.0),
-        temps=schema.Temps(T_M=4000.0),
+        radiation=schema.Radiation(TM_K=4000.0),
         sizes=schema.Sizes(s_min=1.0e-7, s_max=1.0e-2, n_bins=24),
         initial=schema.Initial(mass_total=1.0e-6, s0_mode="upper"),
         dynamics=schema.Dynamics(e0=0.05, i0=0.01, t_damp_orbits=10.0, f_wake=1.0),
