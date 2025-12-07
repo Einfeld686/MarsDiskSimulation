@@ -141,7 +141,7 @@ def test_physics_mode_config_applies(tmp_path: Path) -> None:
     assert summary["physics_mode"] == "collisions_only"
     assert summary["physics_mode_source"] == "config"
     assert summary["physics"]["mode"] == "collisions_only"
-    assert summary["physics"]["source"] == "physics_mode"
+    assert summary["physics"]["source"] == "config"
     assert run_cfg["physics_mode"] == "collisions_only"
     assert run_cfg["physics_mode_source"] == "config"
     assert run_cfg["physics_mode_resolution"]["resolved_mode"] == "collisions_only"

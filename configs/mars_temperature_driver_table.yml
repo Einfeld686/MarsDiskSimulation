@@ -38,6 +38,7 @@ surface:
   init_policy: "clip_by_tau1"
   sigma_surf_init_override: null
   use_tcoll: true
+  collision_solver: "smol"
 supply:
   mode: "const"
   const:
@@ -53,21 +54,21 @@ supply:
     epsilon_mix: 1.0
 sinks:
   mode: "sublimation"
-  enable_sublimation: false
+  enable_sublimation: true
   T_sub: 1300.0
   sub_params:
-    mode: "logistic"
-    alpha_evap: 1.0
-    mu: 0.1
-    A: null
-    B: null
+    mode: "hkl"
+    alpha_evap: 0.007
+    mu: 0.0440849
+    A: 13.613
+    B: 17850.0
     dT: 50.0
     eta_instant: 0.1
     P_gas: 0.0
   enable_gas_drag: false
   rho_g: 0.0
 radiation:
-  TM_K: 2000.0
+  TM_K: 4000.0
   qpr_table_path: "data/qpr_table.csv"
   mars_temperature_driver:
     enabled: true
@@ -77,13 +78,34 @@ radiation:
       time_unit: "day"
       column_time: "time_day"
       column_temperature: "T_K"
+    autogenerate:
+      enabled: true
+      output_dir: "data"
+      dt_hours: 1.0
+      min_years: 2.0
+      time_margin_years: 0.5
+      time_unit: "day"
+      column_time: "time_day"
+      column_temperature: "T_K"
     extrapolation: "hold"
 shielding:
   table_path: null
+phase:
+  enabled: true
+  source: "threshold"
+  entrypoint: "siO2_disk_cooling.siO2_cooling_map:lookup_phase_state"
+  extra_kwargs: {}
+  thresholds:
+    T_condense_K: 1700.0
+    T_vaporize_K: 2000.0
+    P_ref_bar: 1.0
+    tau_ref: 1.0
+  map:
+    entrypoint: "siO2_disk_cooling.siO2_cooling_map:lookup_phase_state"
 numerics:
   t_end_years: 2.0
-  dt_init: 10.0
-  safety: 0.1
+  dt_init: "auto"
+  safety: 0.05
   atol: 1e-10
   rtol: 1e-6
 io:

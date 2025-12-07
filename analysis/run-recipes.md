@@ -226,12 +226,12 @@ io:       { outdir: "sweeps/__will_be_overwritten__" }
 - `scripts/analyze_radius_trend.py` を実行した場合は `analysis/radius_sweep/radius_sweep_metrics.csv` に `Omega_s`,`t_orb_s`,`dt_over_t_blow`,`fast_blowout_factor`,`fast_blowout_flag_gt3/gt10` が追加され、警告ログに `dt/t_blow` の閾値超過ケースが列挙されること。
 
 6) 根拠
-- スイープCLI引数とベース設定のデフォルトを `DEFAULT_BASE_CONFIG` と `parse_args` が提供し、マップ仕様は `create_map_definition` で組み立てる。[scripts/sweep_heatmaps.py:47][scripts/sweep_heatmaps.py:246–402][scripts/sweep_heatmaps.py:445–550]
-- ケースごとに `geometry.r`,`temps.T_M`,`io.outdir` を設定し、設定ファイルと出力先を準備して `run_case` へ渡す処理を `build_cases` と `run_case` が担う。[scripts/sweep_heatmaps.py:686–739][scripts/sweep_heatmaps.py:1143–1249]
-- 出力を読み込み `case_status` や `s_min_effective` を抽出する処理は `_get_beta_for_checks`,`extract_smin_from_series`,`populate_record_from_outputs` が担当する。[scripts/sweep_heatmaps.py:786–812][scripts/sweep_heatmaps.py:815–823][scripts/sweep_heatmaps.py:826–846][scripts/sweep_heatmaps.py:1029–1140]
+- スイープCLI引数とベース設定のデフォルトを `DEFAULT_BASE_CONFIG` と `parse_args` が提供し、マップ仕様は `create_map_definition` で組み立てる。[scripts/sweep_heatmaps.py:47][scripts/sweep_heatmaps.py:246–402][scripts/sweep_heatmaps.py:445–548]
+- ケースごとに `geometry.r`,`temps.T_M`,`io.outdir` を設定し、設定ファイルと出力先を準備して `run_case` へ渡す処理を `build_cases` と `run_case` が担う。[scripts/sweep_heatmaps.py:686–737][scripts/sweep_heatmaps.py:1143–1247]
+- 出力を読み込み `case_status` や `s_min_effective` を抽出する処理は `_get_beta_for_checks`,`extract_smin_from_series`,`populate_record_from_outputs` が担当する。[scripts/sweep_heatmaps.py:786–810][scripts/sweep_heatmaps.py:815–821][scripts/sweep_heatmaps.py:826–844][scripts/sweep_heatmaps.py:1029–1138]
   事前の JSON 読み出しは `parse_summary` がまとめ、上記ヘルパーへ辞書を受け渡す。
-- 完了フラグ `case_completed.json` の生成と再実行判定は `mark_case_complete` と `case_is_completed` で実装される。[scripts/sweep_heatmaps.py:639–653][scripts/sweep_heatmaps.py:656–661]
-- 集約CSVの出力は `_results_dataframe` と `main` 内の集計ロジックで行い、`total_mass_lost_Mmars` などを整形して保存する。[scripts/sweep_heatmaps.py:1252–1258][scripts/sweep_heatmaps.py:1261–1524]
+- 完了フラグ `case_completed.json` の生成と再実行判定は `mark_case_complete` と `case_is_completed` で実装される。[scripts/sweep_heatmaps.py:639–651][scripts/sweep_heatmaps.py:656–659]
+- 集約CSVの出力は `_results_dataframe` と `main` 内の集計ロジックで行い、`total_mass_lost_Mmars` などを整形して保存する。[scripts/sweep_heatmaps.py:1252–1256][scripts/sweep_heatmaps.py:1261–1522]
 
 ### 感度掃引（質量損失サンプラー連携）
 
@@ -307,8 +307,8 @@ io:
 - `--enforce-mass-budget` を付与すると許容超過時に早期終了するため、再開前に質量収支を把握しておくこと。
 
 6) 根拠
-- ケース再利用時の `case_is_completed` 判定と `run_status` 更新ロジック。[scripts/sweep_heatmaps.py:656–661][scripts/sweep_heatmaps.py:1143–1249]
-- 完了フラグ削除後は再実行し、新たなフラグと出力を生成する。[scripts/sweep_heatmaps.py:639–653][scripts/sweep_heatmaps.py:1143–1249][scripts/sweep_heatmaps.py:1261–1524]
+- ケース再利用時の `case_is_completed` 判定と `run_status` 更新ロジック。[scripts/sweep_heatmaps.py:656–659][scripts/sweep_heatmaps.py:1143–1247]
+- 完了フラグ削除後は再実行し、新たなフラグと出力を生成する。[scripts/sweep_heatmaps.py:639–651][scripts/sweep_heatmaps.py:1143–1247][scripts/sweep_heatmaps.py:1261–1522]
 - 単発実行は `io.outdir` に書き込み、既存内容を上書きする。[marsdisk/run.py:2120–2185][marsdisk/io/writer.py:24–193]
 - CLI フラグ `--enforce-mass-budget` で許容超過時に例外を送出する。[marsdisk/run.py:1323–1369]
 
@@ -457,7 +457,7 @@ PY
 - 0DベースYAML（`configs/base.yml`）と `data/qpr_table.csv`。  
 - `BetaSamplingConfig` に `jobs=1` 以上、`min_steps>=100` を渡す。  
 - `dt_over_t_blow_max` は既定 0.1 を推奨。
-- YAML は `marsdisk.run.load_config` などで `Config` に変換し、その写像を `_prepare_case_config` が各 (r,T) サンプル用に 0D 半径・温度・⟨Q_pr⟩テーブルへ上書きしつつ `geometry.s_min` を動かさず gas drag を強制無効化するため、元 YAML の物理スイッチが汚染されない。[marsdisk/analysis/beta_sampler.py:113–133][marsdisk/run.py:641–646]
+- YAML は `marsdisk.run.load_config` などで `Config` に変換し、その写像を `_prepare_case_config` が各 (r,T) サンプル用に 0D 半径・温度・⟨Q_pr⟩テーブルへ上書きしつつ `geometry.s_min` を動かさず gas drag を強制無効化するため、元 YAML の物理スイッチが汚染されない。[marsdisk/analysis/beta_sampler.py:113–133][marsdisk/run.py:646–646]
 
 4) 期待される出力  
 - `beta_cube.shape == (len(r_values), len(T_values), len(time_grid_fraction))`。  
@@ -470,7 +470,7 @@ PY
 - `dt_over_t_blow_median` と `dt_over_t_blow_p90` が 0.1 未満で IMEX 安定条件を満たす。
 
 6) 根拠  
-- βサンプラーは YAML→`Config` 変換後のオブジェクトを深いコピーし、`_prepare_case_config` が 0D 半径・温度・⟨Q_pr⟩テーブルを書き換えつつ gas drag を落とし、`geometry.s_min` を固定したまま `max(s_{\min,{\rm cfg}},a_{\rm blow})` のクランプに任せる。[marsdisk/analysis/beta_sampler.py:113–133][marsdisk/run.py:641–646]
+- βサンプラーは YAML→`Config` 変換後のオブジェクトを深いコピーし、`_prepare_case_config` が 0D 半径・温度・⟨Q_pr⟩テーブルを書き換えつつ gas drag を落とし、`geometry.s_min` を固定したまま `max(s_{\min,{\rm cfg}},a_{\rm blow})` のクランプに任せる。[marsdisk/analysis/beta_sampler.py:113–133][marsdisk/run.py:646–646]
 - `BetaSamplingConfig.jobs` と `min_steps` は `sample_beta_over_orbit` 内で `ProcessPoolExecutor(max_workers=jobs)` の並列度および各 `_run_single_case` の最小タイムステップ数を規制し、`dt_over_t_blow_max` の伝播もここで行う。[marsdisk/analysis/beta_sampler.py:239–256]
 - `diagnostics` には `time_grid_fraction`, `time_grid_s_reference`, `time_steps_per_orbit`, `t_orb_reference_s`, `t_orb_range_s`, `dt_over_t_blow_{median,p90,max_observed}`, `qpr_used_stats`, `example_run_config` が格納される。[marsdisk/analysis/beta_sampler.py:274–331]
 - 実行中に解決されたテーブルパスは `tables.get_qpr_table_path()` と `run_zero_d` が共有する。[marsdisk/io/tables.py:356–359][marsdisk/run.py:559–559]

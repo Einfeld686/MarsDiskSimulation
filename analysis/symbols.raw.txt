@@ -102,15 +102,15 @@ analysis/tools/assumption_trace_phase3.py:109:def _keywords_for_gap(gap: Gap) ->
 analysis/tools/assumption_trace_phase3.py:128:def map_gaps_to_equations(gaps: list[Gap], equations_md: Path) -> None
 analysis/tools/assumption_trace_phase3.py:152:def search_code_paths(gaps: list[Gap], code_roots: Sequence[Path]) -> None
 analysis/tools/assumption_trace_phase3.py:181:def search_config_keys(gaps: list[Gap], config_root: Path) -> None
-analysis/tools/assumption_trace_phase3.py:216:def load_unknown_refs(path: Path) -> Dict[str, Dict[str, Any]]
-analysis/tools/assumption_trace_phase3.py:236:def upsert_unknown_refs(path: Path, gaps: list[Gap]) -> Dict[str, Dict[str, Any]]
-analysis/tools/assumption_trace_phase3.py:270:def load_assumption_trace(path: Path) -> list[Dict[str, Any]]
-analysis/tools/assumption_trace_phase3.py:289:def _map_run_stage_from_code(code_path: str) -> Optional[str]
-analysis/tools/assumption_trace_phase3.py:303:def upsert_assumption_trace(path: Path, gaps: list[Gap]) -> list[Dict[str, Any]]
-analysis/tools/assumption_trace_phase3.py:350:def render_overview_block(gaps: list[Gap]) -> str
-analysis/tools/assumption_trace_phase3.py:370:def update_overview(path: Path, block: str) -> None
-analysis/tools/assumption_trace_phase3.py:390:def find_gap_list_path() -> Path
-analysis/tools/assumption_trace_phase3.py:402:def main(argv: Optional[List[str]]=None) -> int
+analysis/tools/assumption_trace_phase3.py:214:def load_unknown_refs(path: Path) -> Dict[str, Dict[str, Any]]
+analysis/tools/assumption_trace_phase3.py:234:def upsert_unknown_refs(path: Path, gaps: list[Gap]) -> Dict[str, Dict[str, Any]]
+analysis/tools/assumption_trace_phase3.py:268:def load_assumption_trace(path: Path) -> list[Dict[str, Any]]
+analysis/tools/assumption_trace_phase3.py:287:def _map_run_stage_from_code(code_path: str) -> Optional[str]
+analysis/tools/assumption_trace_phase3.py:301:def upsert_assumption_trace(path: Path, gaps: list[Gap]) -> list[Dict[str, Any]]
+analysis/tools/assumption_trace_phase3.py:348:def render_overview_block(gaps: list[Gap]) -> str
+analysis/tools/assumption_trace_phase3.py:368:def update_overview(path: Path, block: str) -> None
+analysis/tools/assumption_trace_phase3.py:388:def find_gap_list_path() -> Path
+analysis/tools/assumption_trace_phase3.py:400:def main(argv: Optional[List[str]]=None) -> int
 analysis/tools/check_docs.py:32:class AnchorOccurrence
 analysis/tools/check_docs.py:43:def load_coverage_json() -> Dict[str, object]
 analysis/tools/check_docs.py:55:def discover_markdown_paths() -> List[Path]
@@ -332,10 +332,10 @@ marsdisk/physics/fragments.py:142:def s_sub_boundary(T: float, T_sub: float=1300
 marsdisk/physics/fragments.py:208:def compute_s_min_F2(a_blow: float, T: float, T_sub: float=1300.0, *, t_ref: float | None=None, rho: float | None=None, sub_params: SublimationParams | None=None) -> float
 marsdisk/physics/initfields.py:17:def sigma_from_Minner(M_in: float, r_in: float, r_out: float, p_index: float) -> Callable[[float], float]
 marsdisk/physics/initfields.py:47:def surf_sigma_init(sigma: float, kappa_eff: Optional[float], policy: str, f_surf: float | None=None, sigma_override: float | None=None) -> float
-marsdisk/physics/phase.py:25:class PhaseDecision
-marsdisk/physics/phase.py:37:class BulkPhaseState
-marsdisk/physics/phase.py:53:class PhaseEvaluator
-marsdisk/physics/phase.py:560:def hydro_escape_timescale(cfg: Optional[HydroEscapeConfig], temperature_K: float, f_vap: float) -> Optional[float]
+marsdisk/physics/phase.py:24:class PhaseDecision
+marsdisk/physics/phase.py:36:class BulkPhaseState
+marsdisk/physics/phase.py:52:class PhaseEvaluator
+marsdisk/physics/phase.py:559:def hydro_escape_timescale(cfg: Optional[HydroEscapeConfig], temperature_K: float, f_vap: float) -> Optional[float]
 marsdisk/physics/psd.py:30:def update_psd_state(*, s_min: float, s_max: float, alpha: float, wavy_strength: float, n_bins: int=40, rho: float=3000.0, wavy_decay: float=0.0, alpha_mode: str='size') -> Dict[str, np.ndarray | float]
 marsdisk/physics/psd.py:121:def compute_kappa(psd_state: Dict[str, np.ndarray | float]) -> float
 marsdisk/physics/psd.py:149:def apply_uniform_size_drift(psd_state: Dict[str, np.ndarray | float], *, ds_dt: float, dt: float, floor: float, sigma_surf: float) -> tuple[float, float, Dict[str, float]]
@@ -420,40 +420,40 @@ marsdisk/physics_step.py:317:def compute_sublimation(T_M: float, r: float, rho: 
 marsdisk/physics_step.py:378:def step_surface_layer(sigma_surf: float, prod_rate: float, dt: float, Omega: float, *, tau: Optional[float]=None, t_sink: Optional[float]=None, sigma_tau1: Optional[float]=None, enable_blowout: bool=True, chi_blow: float=1.0) -> SurfaceStepResult
 marsdisk/physics_step.py:460:def fast_blowout_correction_factor(ratio: float) -> float
 marsdisk/physics_step.py:484:def compute_gate_factor(t_blow: Optional[float], t_solid: Optional[float]) -> float
-marsdisk/run.py:85:class ProgressReporter
-marsdisk/run.py:174:def _parse_override_value(raw: str) -> Any
-marsdisk/run.py:201:def _apply_overrides_dict(payload: Dict[str, Any], overrides: Sequence[str]) -> Dict[str, Any]
-marsdisk/run.py:239:def _merge_physics_section(payload: Dict[str, Any]) -> Dict[str, Any]
-marsdisk/run.py:258:def _safe_float(value: Any) -> Optional[float]
-marsdisk/run.py:270:def _derive_seed_components(cfg: Config) -> str
-marsdisk/run.py:295:def _resolve_seed(cfg: Config) -> tuple[int, str, str]
-marsdisk/run.py:310:def _auto_chi_blow(beta: float, qpr: float) -> float
-marsdisk/run.py:325:def _fast_blowout_correction_factor(ratio: float) -> float
-marsdisk/run.py:345:def _compute_gate_factor(t_blow: Optional[float], t_solid: Optional[float]) -> float
-marsdisk/run.py:367:def _human_bytes(value: float) -> str
-marsdisk/run.py:379:def _memory_estimate(n_steps: int, n_bins: int, run_row_bytes: float=MEMORY_RUN_ROW_BYTES, psd_row_bytes: float=MEMORY_PSD_ROW_BYTES) -> tuple[str, str]
-marsdisk/run.py:400:def _normalise_physics_mode(value: Any) -> str
-marsdisk/run.py:416:def _clone_config(cfg: Config) -> Config
-marsdisk/run.py:424:def _resolve_time_grid(numerics: Any, Omega: float, t_orb: float) -> tuple[float, float, float, int, Dict[str, Any]]
-marsdisk/run.py:489:class _Phase5VariantResult
-marsdisk/run.py:502:def _read_json(path: Path) -> Dict[str, Any]
-marsdisk/run.py:507:def _hash_payload(payload: Mapping[str, Any]) -> str
-marsdisk/run.py:512:def _prepare_phase5_variants(compare_cfg: Any) -> List[Dict[str, str]]
-marsdisk/run.py:545:class RunConfig
-marsdisk/run.py:559:class RunState
-marsdisk/run.py:569:class ZeroDHistory
-marsdisk/run.py:593:def step(config: RunConfig, state: RunState, dt: float) -> Dict[str, float]
-marsdisk/run.py:641:def run_n_steps(config: RunConfig, state: RunState, n: int, dt: float, out_dir: Path | None=None) -> pd.DataFrame
-marsdisk/run.py:671:def load_config(path: Path, overrides: Optional[Sequence[str]]=None) -> Config
-marsdisk/run.py:696:def _gather_git_info() -> Dict[str, Any]
-marsdisk/run.py:723:def _configure_logging(level: int, suppress_warnings: bool=False) -> None
-marsdisk/run.py:741:class MassBudgetViolationError(RuntimeError)
-marsdisk/run.py:745:def _write_zero_d_history(cfg: Config, df: pd.DataFrame, history: ZeroDHistory, *, step_diag_enabled: bool, step_diag_format: str, step_diag_path_cfg: Optional[Path], orbit_rollup_enabled: bool, phase7_enabled: bool) -> None
-marsdisk/run.py:845:def run_zero_d(cfg: Config, *, enforce_mass_budget: bool=False, physics_mode_override: Optional[str]=None, physics_mode_source_override: Optional[str]=None) -> None
-marsdisk/run.py:3170:def _run_phase5_variant(base_cfg: Config, variant: str, mode: str, base_outdir: Path, duration_years: float, *, enforce_mass_budget: bool) -> _Phase5VariantResult
-marsdisk/run.py:3232:def _write_phase5_comparison_products(base_outdir: Path, duration_years: float, results: List[_Phase5VariantResult]) -> None
-marsdisk/run.py:3374:def run_phase5_comparison(cfg: Config, *, enforce_mass_budget: bool=False, variants_spec: Optional[List[Dict[str, str]]]=None) -> None
-marsdisk/run.py:3409:def main(argv: Optional[List[str]]=None) -> None
+marsdisk/run.py:86:class ProgressReporter
+marsdisk/run.py:175:def _parse_override_value(raw: str) -> Any
+marsdisk/run.py:202:def _apply_overrides_dict(payload: Dict[str, Any], overrides: Sequence[str]) -> Dict[str, Any]
+marsdisk/run.py:240:def _merge_physics_section(payload: Dict[str, Any]) -> Dict[str, Any]
+marsdisk/run.py:259:def _safe_float(value: Any) -> Optional[float]
+marsdisk/run.py:271:def _derive_seed_components(cfg: Config) -> str
+marsdisk/run.py:296:def _resolve_seed(cfg: Config) -> tuple[int, str, str]
+marsdisk/run.py:311:def _auto_chi_blow(beta: float, qpr: float) -> float
+marsdisk/run.py:326:def _fast_blowout_correction_factor(ratio: float) -> float
+marsdisk/run.py:346:def _compute_gate_factor(t_blow: Optional[float], t_solid: Optional[float]) -> float
+marsdisk/run.py:368:def _human_bytes(value: float) -> str
+marsdisk/run.py:380:def _memory_estimate(n_steps: int, n_bins: int, run_row_bytes: float=MEMORY_RUN_ROW_BYTES, psd_row_bytes: float=MEMORY_PSD_ROW_BYTES, *, smol_value_bytes: float=8.0) -> tuple[str, str]
+marsdisk/run.py:405:def _normalise_physics_mode(value: Any) -> str
+marsdisk/run.py:421:def _clone_config(cfg: Config) -> Config
+marsdisk/run.py:429:def _resolve_time_grid(numerics: Any, Omega: float, t_orb: float) -> tuple[float, float, float, int, Dict[str, Any]]
+marsdisk/run.py:494:class _Phase5VariantResult
+marsdisk/run.py:507:def _read_json(path: Path) -> Dict[str, Any]
+marsdisk/run.py:512:def _hash_payload(payload: Mapping[str, Any]) -> str
+marsdisk/run.py:517:def _prepare_phase5_variants(compare_cfg: Any) -> List[Dict[str, str]]
+marsdisk/run.py:550:class RunConfig
+marsdisk/run.py:564:class RunState
+marsdisk/run.py:574:class ZeroDHistory
+marsdisk/run.py:598:def step(config: RunConfig, state: RunState, dt: float) -> Dict[str, float]
+marsdisk/run.py:646:def run_n_steps(config: RunConfig, state: RunState, n: int, dt: float, out_dir: Path | None=None) -> pd.DataFrame
+marsdisk/run.py:676:def load_config(path: Path, overrides: Optional[Sequence[str]]=None) -> Config
+marsdisk/run.py:701:def _gather_git_info() -> Dict[str, Any]
+marsdisk/run.py:728:def _configure_logging(level: int, suppress_warnings: bool=False) -> None
+marsdisk/run.py:746:class MassBudgetViolationError(RuntimeError)
+marsdisk/run.py:750:def _write_zero_d_history(cfg: Config, df: pd.DataFrame, history: ZeroDHistory, *, step_diag_enabled: bool, step_diag_format: str, step_diag_path_cfg: Optional[Path], orbit_rollup_enabled: bool, phase7_enabled: bool) -> None
+marsdisk/run.py:850:def run_zero_d(cfg: Config, *, enforce_mass_budget: bool=False, physics_mode_override: Optional[str]=None, physics_mode_source_override: Optional[str]=None) -> None
+marsdisk/run.py:3175:def _run_phase5_variant(base_cfg: Config, variant: str, mode: str, base_outdir: Path, duration_years: float, *, enforce_mass_budget: bool) -> _Phase5VariantResult
+marsdisk/run.py:3237:def _write_phase5_comparison_products(base_outdir: Path, duration_years: float, results: List[_Phase5VariantResult]) -> None
+marsdisk/run.py:3379:def run_phase5_comparison(cfg: Config, *, enforce_mass_budget: bool=False, variants_spec: Optional[List[Dict[str, str]]]=None) -> None
+marsdisk/run.py:3414:def main(argv: Optional[List[str]]=None) -> None
 marsdisk/schema.py:21:class Geometry(BaseModel)
 marsdisk/schema.py:42:class DiskGeometry(BaseModel)
 marsdisk/schema.py:72:class Disk(BaseModel)
@@ -505,8 +505,8 @@ marsdisk/tests/test_dynamics.py:4:def const_eps(v: float) -> float
 marsdisk/tests/test_dynamics.py:8:def test_v_ij_zero_limit()
 marsdisk/tests/test_dynamics.py:13:def test_c_eq_monotonic_tau_fwake()
 marsdisk/tests/test_dynamics.py:21:def test_update_e_relaxation()
-marsdisk/tests/test_dynamics_sampling.py:9:def _make_config(outdir)
-marsdisk/tests/test_dynamics_sampling.py:40:def test_stochastic_ei_sampling(tmp_path)
+marsdisk/tests/test_dynamics_sampling.py:8:def _make_config(outdir)
+marsdisk/tests/test_dynamics_sampling.py:48:def test_stochastic_ei_sampling(tmp_path)
 marsdisk/tests/test_radiation_shielding.py:9:def test_blowout_radius_scales_with_temperature()
 marsdisk/tests/test_radiation_shielding.py:18:def test_beta_inverse_size_scaling()
 marsdisk/tests/test_radiation_shielding.py:28:def test_beta_respects_qpr_override()
@@ -520,7 +520,7 @@ marsdisk/tests/test_surface_outflux.py:24:def test_supply_limited_outflux()
 marsdisk/tests/test_surface_outflux.py:33:def test_saturation_limited_outflux()
 marsdisk/tests/test_surface_outflux.py:42:def test_sink_increases_mass_loss()
 marsdisk/tests/test_timegrid_and_budget.py:13:def _tiny_config(outdir: Path, dt_init: float, n_steps: int) -> schema.Config
-marsdisk/tests/test_timegrid_and_budget.py:54:def test_time_grid_and_mass_budget(tmp_path)
+marsdisk/tests/test_timegrid_and_budget.py:63:def test_time_grid_and_mass_budget(tmp_path)
 marsdisk/tests/test_viscosity.py:7:def _run(N: int, dt: float)
 marsdisk/tests/test_viscosity.py:18:def test_viscous_diffusion_converges_and_conserves_mass()
 marsdisk/tests/test_wyatt_scaling.py:6:def test_wyatt_scaling_inverse_tau()
@@ -565,15 +565,15 @@ scripts/run_inner_disk_suite.py:55:class CaseSpec
 scripts/run_inner_disk_suite.py:67:def format_phi_tag(value: float) -> str
 scripts/run_inner_disk_suite.py:73:def compute_orbit(r_rm: float) -> Tuple[float, float]
 scripts/run_inner_disk_suite.py:82:def build_overrides(spec: CaseSpec) -> List[str]
-scripts/run_inner_disk_suite.py:107:def ensure_required_outputs(case: CaseSpec) -> None
-scripts/run_inner_disk_suite.py:120:def load_series_tables(case: CaseSpec) -> Tuple[pd.DataFrame, pd.DataFrame]
-scripts/run_inner_disk_suite.py:128:def render_psd_frames(case: CaseSpec, run_df: pd.DataFrame, hist_df: pd.DataFrame) -> List[Path]
-scripts/run_inner_disk_suite.py:177:def make_gif(frame_paths: Sequence[Path], gif_path: Path) -> None
-scripts/run_inner_disk_suite.py:187:def export_orbit_summary(case: CaseSpec) -> Path
-scripts/run_inner_disk_suite.py:216:def write_command_metadata(case: CaseSpec, command: Sequence[str], result: subprocess.CompletedProcess[str]) -> None
-scripts/run_inner_disk_suite.py:230:def build_cases(*, phi_values: Iterable[float], r_rm: float, temperature_min: float, temperature_max: float, temperature_step: float, out_root: Path, phi_table_root: Path) -> List[CaseSpec]
-scripts/run_inner_disk_suite.py:266:def parse_args(argv: Sequence[str] | None=None) -> argparse.Namespace
-scripts/run_inner_disk_suite.py:321:def main(argv: Sequence[str] | None=None) -> None
+scripts/run_inner_disk_suite.py:105:def ensure_required_outputs(case: CaseSpec) -> None
+scripts/run_inner_disk_suite.py:118:def load_series_tables(case: CaseSpec) -> Tuple[pd.DataFrame, pd.DataFrame]
+scripts/run_inner_disk_suite.py:126:def render_psd_frames(case: CaseSpec, run_df: pd.DataFrame, hist_df: pd.DataFrame) -> List[Path]
+scripts/run_inner_disk_suite.py:175:def make_gif(frame_paths: Sequence[Path], gif_path: Path) -> None
+scripts/run_inner_disk_suite.py:185:def export_orbit_summary(case: CaseSpec) -> Path
+scripts/run_inner_disk_suite.py:214:def write_command_metadata(case: CaseSpec, command: Sequence[str], result: subprocess.CompletedProcess[str]) -> None
+scripts/run_inner_disk_suite.py:228:def build_cases(*, phi_values: Iterable[float], r_rm: float, temperature_min: float, temperature_max: float, temperature_step: float, out_root: Path, phi_table_root: Path) -> List[CaseSpec]
+scripts/run_inner_disk_suite.py:264:def parse_args(argv: Sequence[str] | None=None) -> argparse.Namespace
+scripts/run_inner_disk_suite.py:319:def main(argv: Sequence[str] | None=None) -> None
 scripts/sweep_beta_map.py:30:def _parse_grid(start: float, stop: float, count: int, label: str) -> np.ndarray
 scripts/sweep_beta_map.py:39:def _load_config(path: Path) -> Config
 scripts/sweep_beta_map.py:50:def _write_json(path: Path, payload: dict) -> None
@@ -590,31 +590,31 @@ scripts/sweep_heatmaps.py:246:def parse_args(argv: Optional[Iterable[str]]=None)
 scripts/sweep_heatmaps.py:405:def _float_grid(start: float, stop: float, step: float) -> List[float]
 scripts/sweep_heatmaps.py:432:def _normalise_map_key(map_arg: str) -> str
 scripts/sweep_heatmaps.py:445:def create_map_definition(map_arg: str, overrides: Optional[Dict[str, float]]=None) -> MapDefinition
-scripts/sweep_heatmaps.py:553:def format_param_value(value: float) -> str
-scripts/sweep_heatmaps.py:569:def build_case_id(param_x: ParamSpec, x_value: float, param_y: ParamSpec, y_value: float) -> str
-scripts/sweep_heatmaps.py:577:def set_nested(data: Dict[str, Any], path: str, value: Any) -> None
-scripts/sweep_heatmaps.py:589:def get_nested(data: Dict[str, Any], path: str) -> Any
-scripts/sweep_heatmaps.py:604:def ensure_directory(path: Path) -> None
-scripts/sweep_heatmaps.py:610:def partition_param_values(param: ParamSpec, num_parts: int) -> List[np.ndarray]
-scripts/sweep_heatmaps.py:633:def completion_flag_path(case: CaseSpec) -> Path
-scripts/sweep_heatmaps.py:639:def mark_case_complete(case: CaseSpec, summary_path: Path, series_path: Path) -> None
-scripts/sweep_heatmaps.py:656:def case_is_completed(case: CaseSpec) -> bool
-scripts/sweep_heatmaps.py:664:def load_base_config(base_path: Path) -> Dict[str, Any]
-scripts/sweep_heatmaps.py:677:def write_config(config: Dict[str, Any], path: Path) -> None
-scripts/sweep_heatmaps.py:686:def build_cases(map_def: MapDefinition, out_root: Path, y_index_filter: Optional[Iterable[int]]=None, *, partition_index: int=1, partition_count: int=1, variants: Optional[List[VariantSpec]]=None) -> List[CaseSpec]
-scripts/sweep_heatmaps.py:742:def compute_area_from_config(config: Dict[str, Any]) -> Optional[float]
-scripts/sweep_heatmaps.py:768:def search_numeric_value(data: Any, key_pred: Callable[[str], bool]) -> Optional[float]
-scripts/sweep_heatmaps.py:786:def parse_summary(summary_path: Path) -> Tuple[Optional[float], Optional[float], Optional[Dict[str, Any]]]
-scripts/sweep_heatmaps.py:815:def _get_beta_for_checks(summary: Optional[Dict[str, Any]]) -> float
-scripts/sweep_heatmaps.py:826:def extract_smin_from_series(df: pd.DataFrame) -> Optional[float]
-scripts/sweep_heatmaps.py:849:def _build_time_array(df: pd.DataFrame) -> Optional[np.ndarray]
-scripts/sweep_heatmaps.py:860:def integrate_outflux(df: pd.DataFrame, config: Dict[str, Any], case_id: str) -> Tuple[float, Optional[str]]
-scripts/sweep_heatmaps.py:908:def _to_float(value: Any) -> float
-scripts/sweep_heatmaps.py:917:def validate_map1_results(df: pd.DataFrame, tolerance: float=DEFAULT_TOL_MASS_PER_R2) -> Dict[str, Any]
-scripts/sweep_heatmaps.py:1029:def populate_record_from_outputs(record: Dict[str, Any], case: CaseSpec, config_data: Dict[str, Any]) -> Optional[str]
-scripts/sweep_heatmaps.py:1143:def run_case(case: CaseSpec, base_config: Dict[str, Any], root_dir: Path, python_executable: str, qpr_table_path: Optional[str]=None) -> Dict[str, Any]
-scripts/sweep_heatmaps.py:1252:def _results_dataframe(results: List[Dict[str, Any]]) -> pd.DataFrame
-scripts/sweep_heatmaps.py:1261:def main(argv: Optional[Iterable[str]]=None) -> None
+scripts/sweep_heatmaps.py:551:def format_param_value(value: float) -> str
+scripts/sweep_heatmaps.py:567:def build_case_id(param_x: ParamSpec, x_value: float, param_y: ParamSpec, y_value: float) -> str
+scripts/sweep_heatmaps.py:575:def set_nested(data: Dict[str, Any], path: str, value: Any) -> None
+scripts/sweep_heatmaps.py:587:def get_nested(data: Dict[str, Any], path: str) -> Any
+scripts/sweep_heatmaps.py:602:def ensure_directory(path: Path) -> None
+scripts/sweep_heatmaps.py:608:def partition_param_values(param: ParamSpec, num_parts: int) -> List[np.ndarray]
+scripts/sweep_heatmaps.py:631:def completion_flag_path(case: CaseSpec) -> Path
+scripts/sweep_heatmaps.py:637:def mark_case_complete(case: CaseSpec, summary_path: Path, series_path: Path) -> None
+scripts/sweep_heatmaps.py:654:def case_is_completed(case: CaseSpec) -> bool
+scripts/sweep_heatmaps.py:662:def load_base_config(base_path: Path) -> Dict[str, Any]
+scripts/sweep_heatmaps.py:675:def write_config(config: Dict[str, Any], path: Path) -> None
+scripts/sweep_heatmaps.py:684:def build_cases(map_def: MapDefinition, out_root: Path, y_index_filter: Optional[Iterable[int]]=None, *, partition_index: int=1, partition_count: int=1, variants: Optional[List[VariantSpec]]=None) -> List[CaseSpec]
+scripts/sweep_heatmaps.py:740:def compute_area_from_config(config: Dict[str, Any]) -> Optional[float]
+scripts/sweep_heatmaps.py:766:def search_numeric_value(data: Any, key_pred: Callable[[str], bool]) -> Optional[float]
+scripts/sweep_heatmaps.py:784:def parse_summary(summary_path: Path) -> Tuple[Optional[float], Optional[float], Optional[Dict[str, Any]]]
+scripts/sweep_heatmaps.py:813:def _get_beta_for_checks(summary: Optional[Dict[str, Any]]) -> float
+scripts/sweep_heatmaps.py:824:def extract_smin_from_series(df: pd.DataFrame) -> Optional[float]
+scripts/sweep_heatmaps.py:847:def _build_time_array(df: pd.DataFrame) -> Optional[np.ndarray]
+scripts/sweep_heatmaps.py:858:def integrate_outflux(df: pd.DataFrame, config: Dict[str, Any], case_id: str) -> Tuple[float, Optional[str]]
+scripts/sweep_heatmaps.py:906:def _to_float(value: Any) -> float
+scripts/sweep_heatmaps.py:915:def validate_map1_results(df: pd.DataFrame, tolerance: float=DEFAULT_TOL_MASS_PER_R2) -> Dict[str, Any]
+scripts/sweep_heatmaps.py:1027:def populate_record_from_outputs(record: Dict[str, Any], case: CaseSpec, config_data: Dict[str, Any]) -> Optional[str]
+scripts/sweep_heatmaps.py:1141:def run_case(case: CaseSpec, base_config: Dict[str, Any], root_dir: Path, python_executable: str, qpr_table_path: Optional[str]=None) -> Dict[str, Any]
+scripts/sweep_heatmaps.py:1250:def _results_dataframe(results: List[Dict[str, Any]]) -> pd.DataFrame
+scripts/sweep_heatmaps.py:1259:def main(argv: Optional[Iterable[str]]=None) -> None
 scripts/sweep_mass_loss_map.py:46:def _parse_grid(spec: Sequence[float], label: str) -> np.ndarray
 scripts/sweep_mass_loss_map.py:60:def _iter_grid(r_values: Iterable[float], T_values: Iterable[float]) -> List[Tuple[float, float]]
 scripts/sweep_mass_loss_map.py:64:def _format_case_index(idx: int, total: int, r_rm: float, T_m: float) -> str
@@ -629,14 +629,14 @@ scripts/sweep_massloss_heatmap_gif.py:66:class SimulationFailure(RuntimeError)
 scripts/sweep_massloss_heatmap_gif.py:70:def _build_temperature_grid(T_min: float, T_max: float, spacing: float) -> np.ndarray
 scripts/sweep_massloss_heatmap_gif.py:80:def _build_radius_grid(r_min: float, r_max: float, count: int) -> np.ndarray
 scripts/sweep_massloss_heatmap_gif.py:88:def _prepare_case_config(base_cfg: Config, *, r_rm: float, T_M: float, phi_table: Path, outdir: Path) -> Config
-scripts/sweep_massloss_heatmap_gif.py:131:def _validate_summary(summary: Dict[str, object], *, phi_label: str, r_rm: float, T_M: float) -> None
-scripts/sweep_massloss_heatmap_gif.py:157:def _run_single_case(base_cfg: Config, *, r_rm: float, T_M: float, phi_table: Path, phi_label: str) -> Tuple[Dict[str, object], pd.DataFrame]
-scripts/sweep_massloss_heatmap_gif.py:270:def _gif_backend() -> str
-scripts/sweep_massloss_heatmap_gif.py:280:def _save_gif(frame_paths: Iterable[Path], output_path: Path, duration_ms: int) -> None
-scripts/sweep_massloss_heatmap_gif.py:301:def _plot_heatmap(data: np.ndarray, *, r_values: np.ndarray, T_values: np.ndarray, phi_label: str, frame_index: int, total_frames: int, output_path: Path, colour_range: Tuple[float, float]) -> None
-scripts/sweep_massloss_heatmap_gif.py:336:def run_sweep(*, base_config_path: Path, outdir: Path, phi_tables: Dict[str, Path], T_values: np.ndarray, r_values: np.ndarray, frame_duration_ms: int, max_frames: int | None) -> None
-scripts/sweep_massloss_heatmap_gif.py:472:def parse_args(argv: Iterable[str] | None=None) -> argparse.Namespace
-scripts/sweep_massloss_heatmap_gif.py:539:def main(argv: Iterable[str] | None=None) -> None
+scripts/sweep_massloss_heatmap_gif.py:129:def _validate_summary(summary: Dict[str, object], *, phi_label: str, r_rm: float, T_M: float) -> None
+scripts/sweep_massloss_heatmap_gif.py:155:def _run_single_case(base_cfg: Config, *, r_rm: float, T_M: float, phi_table: Path, phi_label: str) -> Tuple[Dict[str, object], pd.DataFrame]
+scripts/sweep_massloss_heatmap_gif.py:268:def _gif_backend() -> str
+scripts/sweep_massloss_heatmap_gif.py:278:def _save_gif(frame_paths: Iterable[Path], output_path: Path, duration_ms: int) -> None
+scripts/sweep_massloss_heatmap_gif.py:299:def _plot_heatmap(data: np.ndarray, *, r_values: np.ndarray, T_values: np.ndarray, phi_label: str, frame_index: int, total_frames: int, output_path: Path, colour_range: Tuple[float, float]) -> None
+scripts/sweep_massloss_heatmap_gif.py:334:def run_sweep(*, base_config_path: Path, outdir: Path, phi_tables: Dict[str, Path], T_values: np.ndarray, r_values: np.ndarray, frame_duration_ms: int, max_frames: int | None) -> None
+scripts/sweep_massloss_heatmap_gif.py:470:def parse_args(argv: Iterable[str] | None=None) -> argparse.Namespace
+scripts/sweep_massloss_heatmap_gif.py:537:def main(argv: Iterable[str] | None=None) -> None
 scripts/sweep_massloss_map.py:26:def _apply_thread_guard() -> None
 scripts/sweep_massloss_map.py:70:class CaseSpec
 scripts/sweep_massloss_map.py:82:def _parse_grid(spec: Sequence[float], label: str) -> np.ndarray
@@ -690,14 +690,14 @@ tests/test_assumptions_docs.py:30:def test_gap_titles_appear_in_overview() -> No
 tests/test_baseline_smol_pipeline.py:12:def test_base_config_smol_mass_budget_and_eval(tmp_path: Path) -> None
 tests/test_blowout_gate.py:10:def test_compute_gate_factor_bounds() -> None
 tests/test_blowout_gate.py:18:def _build_gate_config(outdir: Path, gate_mode: str) -> schema.Config
-tests/test_blowout_gate.py:41:def test_gate_reduces_outflux_with_sublimation(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None
-tests/test_blowout_gate.py:61:def _build_collision_config(outdir: Path, gate_mode: str) -> schema.Config
-tests/test_blowout_gate.py:86:def test_gate_reduces_outflux_with_collisions(tmp_path: Path) -> None
+tests/test_blowout_gate.py:49:def test_gate_reduces_outflux_with_sublimation(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None
+tests/test_blowout_gate.py:69:def _build_collision_config(outdir: Path, gate_mode: str) -> schema.Config
+tests/test_blowout_gate.py:102:def test_gate_reduces_outflux_with_collisions(tmp_path: Path) -> None
 tests/test_ci_guard_analysis.py:8:def _write_coverage(tmp_path, **overrides)
 tests/test_ci_guard_analysis.py:33:def test_ci_guard_analysis_pass(tmp_path) -> None
 tests/test_ci_guard_analysis.py:41:def test_ci_guard_analysis_anchor_failure(tmp_path) -> None
 tests/test_collision_solver_modes.py:15:def test_collision_solver_smol_mass_budget(tmp_path: Path) -> None
-tests/test_collision_solver_modes.py:48:def test_surface_and_smol_series_columns_match(tmp_path: Path) -> None
+tests/test_collision_solver_modes.py:47:def test_surface_and_smol_series_columns_match(tmp_path: Path) -> None
 tests/test_doc_sync_agent.py:9:def test_scan_generates_inventory(tmp_path) -> None
 tests/test_doc_sync_agent.py:26:def test_refs_and_coverage_pipeline(tmp_path) -> None
 tests/test_doc_sync_agent.py:80:def test_autostub_inserts_stubs(tmp_path) -> None
@@ -707,62 +707,61 @@ tests/test_evaluation_system.py:57:def _prepare_outdir(tmp_path: Path, *, drop_s
 tests/test_evaluation_system.py:146:def test_evaluation_system_with_complete_outputs(tmp_path: Path) -> None
 tests/test_evaluation_system.py:155:def test_evaluation_system_detects_missing_series_columns(tmp_path: Path) -> None
 tests/test_fast_blowout.py:12:def _build_fast_blowout_config(outdir: Path, *, correct: bool, substep: bool=False, substep_ratio: float=1.0) -> schema.Config
-tests/test_fast_blowout.py:46:def test_fast_blowout_factor_samples() -> None
-tests/test_fast_blowout.py:54:def test_chi_blow_auto_range(tmp_path: Path) -> None
+tests/test_fast_blowout.py:54:def test_fast_blowout_factor_samples() -> None
+tests/test_fast_blowout.py:62:def test_chi_blow_auto_range(tmp_path: Path) -> None
 tests/test_fragment_tensor_numba.py:7:def _sample_inputs()
 tests/test_fragment_tensor_numba.py:19:def test_fragment_tensor_numba_matches_python()
 tests/test_fragment_tensor_numba.py:42:def test_fragment_tensor_numba_failure_falls_back(monkeypatch)
 tests/test_inner_disk_massloss.py:12:def _build_config(outdir: Path, *, sinks_mode: str, enable_sublimation: bool, enable_gas_drag: bool) -> schema.Config
-tests/test_inner_disk_massloss.py:37:def _write_yaml(cfg: schema.Config, path: Path) -> Path
-tests/test_inner_disk_massloss.py:46:def test_inner_disk_sweep_runs_and_collects_massloss(tmp_path: Path) -> None
+tests/test_inner_disk_massloss.py:44:def _write_yaml(cfg: schema.Config, path: Path) -> Path
+tests/test_inner_disk_massloss.py:53:def test_inner_disk_sweep_runs_and_collects_massloss(tmp_path: Path) -> None
 tests/test_make_qpr_table.py:7:def test_small_grain_qpr_increases_with_temperature()
 tests/test_mass_budget_combined.py:14:def test_mass_budget_closure_with_blowout_and_sinks(tmp_path: Path) -> None
 tests/test_mass_conservation.py:10:def test_imex_bdf1_limits_timestep_and_preserves_mass() -> None
 tests/test_min_size_evolution_hook.py:9:def _base_config(outdir: Path) -> schema.Config
-tests/test_min_size_evolution_hook.py:31:def test_s_min_evolved_column_absent_when_disabled(tmp_path: Path) -> None
-tests/test_min_size_evolution_hook.py:40:def test_s_min_evolved_column_records_candidate_when_enabled(tmp_path: Path) -> None
-tests/test_min_size_evolution_hook.py:52:def test_s_min_evolved_monotonic_with_linear_decay(tmp_path: Path) -> None
+tests/test_min_size_evolution_hook.py:39:def test_s_min_evolved_column_absent_when_disabled(tmp_path: Path) -> None
+tests/test_min_size_evolution_hook.py:48:def test_s_min_evolved_column_records_candidate_when_enabled(tmp_path: Path) -> None
+tests/test_min_size_evolution_hook.py:60:def test_s_min_evolved_monotonic_with_linear_decay(tmp_path: Path) -> None
 tests/test_modes_units.py:10:def _base_config(outdir: Path) -> schema.Config
-tests/test_modes_units.py:47:def test_mars_clearance_uses_meter_offsets(tmp_path: Path) -> None
+tests/test_modes_units.py:55:def test_mars_clearance_uses_meter_offsets(tmp_path: Path) -> None
 tests/test_phase3_surface_blowout.py:10:def _base_surface_cfg(outdir: Path, *, s_min: float=1e-06, prod_rate: float=1e-09, t_end_years: float=0.0005, dt_init: float=400.0, T_M: float=2000.0) -> schema.Config
-tests/test_phase3_surface_blowout.py:34:def test_blowout_inactive_when_smin_above_blowout(tmp_path: Path) -> None
-tests/test_phase3_surface_blowout.py:44:def test_surface_layer_clipped_to_sigma_tau1(tmp_path: Path) -> None
-tests/test_phase3_surface_blowout.py:55:def test_blowout_disabled_in_vapor_state(tmp_path: Path) -> None
-tests/test_phase3_surface_blowout.py:69:def test_solar_toggle_forced_off(tmp_path: Path) -> None
-tests/test_phase3_surface_blowout.py:80:def test_mass_budget_and_fast_factor_stable(tmp_path: Path) -> None
+tests/test_phase3_surface_blowout.py:42:def test_blowout_inactive_when_smin_above_blowout(tmp_path: Path) -> None
+tests/test_phase3_surface_blowout.py:52:def test_surface_layer_clipped_to_sigma_tau1(tmp_path: Path) -> None
+tests/test_phase3_surface_blowout.py:63:def test_blowout_disabled_in_vapor_state(tmp_path: Path) -> None
+tests/test_phase3_surface_blowout.py:77:def test_solar_toggle_forced_off(tmp_path: Path) -> None
+tests/test_phase3_surface_blowout.py:88:def test_mass_budget_and_fast_factor_stable(tmp_path: Path) -> None
 tests/test_phase5.py:10:def _phase5_base_config(outdir: Path) -> schema.Config
-tests/test_phase5.py:49:def _read_summary(outdir: Path) -> dict
-tests/test_phase5.py:54:def _read_run_config(outdir: Path) -> dict
-tests/test_phase5.py:61:def test_single_process_mode_matches_legacy(tmp_path: Path) -> None
-tests/test_phase5.py:85:def test_collisions_only_disables_sinks(tmp_path: Path) -> None
-tests/test_phase5.py:104:def test_phase5_comparison_outputs_combined_series(tmp_path: Path) -> None
-tests/test_phase5.py:133:def test_variant_column_absent_when_not_comparing(tmp_path: Path) -> None
-tests/test_phase5.py:146:def test_physics_mode_config_applies(tmp_path: Path) -> None
-tests/test_phase5.py:173:def test_cli_override_wins_over_config(tmp_path: Path) -> None
+tests/test_phase5.py:57:def _read_summary(outdir: Path) -> dict
+tests/test_phase5.py:62:def _read_run_config(outdir: Path) -> dict
+tests/test_phase5.py:69:def test_collisions_only_disables_sinks(tmp_path: Path) -> None
+tests/test_phase5.py:90:def test_phase5_comparison_outputs_combined_series(tmp_path: Path) -> None
+tests/test_phase5.py:120:def test_variant_column_absent_when_not_comparing(tmp_path: Path) -> None
+tests/test_phase5.py:133:def test_physics_mode_config_applies(tmp_path: Path) -> None
+tests/test_phase5.py:153:def test_cli_override_wins_over_config(tmp_path: Path) -> None
 tests/test_phase7_single_process.py:15:def _scenario_config(outdir: Path) -> schema.Config
-tests/test_phase7_single_process.py:52:def _read_json(path: Path) -> dict
-tests/test_phase7_single_process.py:57:def test_sublimation_only_disables_collisions_and_blowout(tmp_path: Path) -> None
-tests/test_phase7_single_process.py:78:def test_collisions_only_disables_sinks(tmp_path: Path) -> None
-tests/test_phase7_single_process.py:101:def test_combined_mode_keeps_both_channels(tmp_path: Path) -> None
-tests/test_phase9_usecases.py:15:def _phase9_config(outdir: Path, *, analysis_years: float=2.0, t_end_years: float | None=1e-06, dt_init: float=1.0, prod_area_rate: float=1e-05) -> schema.Config
-tests/test_phase9_usecases.py:60:def _read_json(path: Path) -> dict
-tests/test_phase9_usecases.py:65:def test_sublimation_only_zeroes_blowout_flux_and_sets_metadata(tmp_path: Path) -> None
-tests/test_phase9_usecases.py:86:def test_collisions_only_enables_blowout_and_disables_sinks(tmp_path: Path) -> None
-tests/test_phase9_usecases.py:109:def test_scope_region_guard_rejects_outer_disk(tmp_path: Path) -> None
-tests/test_phase9_usecases.py:117:def test_analysis_window_defaults_to_scope_when_t_end_missing(tmp_path: Path) -> None
-tests/test_phase9_usecases.py:146:def test_mass_loss_is_comparable_between_solo_runs(tmp_path: Path) -> None
+tests/test_phase7_single_process.py:60:def _read_json(path: Path) -> dict
+tests/test_phase7_single_process.py:65:def test_sublimation_only_disables_collisions_and_blowout(tmp_path: Path) -> None
+tests/test_phase7_single_process.py:86:def test_collisions_only_disables_sinks(tmp_path: Path) -> None
+tests/test_phase7_single_process.py:109:def test_combined_mode_keeps_both_channels(tmp_path: Path) -> None
+tests/test_phase9_usecases.py:15:def _phase9_config(outdir: Path, *, analysis_years: float=2.0, t_end_years: float | None=1e-06, dt_init: float=1.0, prod_area_rate: float=0.001) -> schema.Config
+tests/test_phase9_usecases.py:69:def _read_json(path: Path) -> dict
+tests/test_phase9_usecases.py:74:def test_sublimation_only_zeroes_blowout_flux_and_sets_metadata(tmp_path: Path) -> None
+tests/test_phase9_usecases.py:95:def test_collisions_only_enables_blowout_and_disables_sinks(tmp_path: Path) -> None
+tests/test_phase9_usecases.py:118:def test_scope_region_guard_rejects_outer_disk(tmp_path: Path) -> None
+tests/test_phase9_usecases.py:126:def test_analysis_window_defaults_to_scope_when_t_end_missing(tmp_path: Path) -> None
+tests/test_phase9_usecases.py:155:def test_mass_loss_is_comparable_between_solo_runs(tmp_path: Path) -> None
 tests/test_phase_branching.py:12:def test_phase_threshold_fallback_handles_tau_and_pressure() -> None
 tests/test_phase_branching.py:28:def test_phase_map_entrypoint_and_hydro_timescale() -> None
 tests/test_phase_branching.py:46:def test_phase_boundary_values_are_unique() -> None
 tests/test_phase_branching.py:67:def test_phase_map_fraction_clamped_to_physical_range() -> None
 tests/test_phase_branching.py:79:def test_radiation_source_accepts_only_mars_or_off() -> None
 tests/test_phase_branching_run.py:10:def _build_phase_config(outdir: Path, *, T_M: float) -> schema.Config
-tests/test_phase_branching_run.py:41:def _load_run(outdir: Path) -> pd.DataFrame
-tests/test_phase_branching_run.py:47:def test_sink_selection_is_mutually_exclusive(tmp_path: Path) -> None
+tests/test_phase_branching_run.py:48:def _load_run(outdir: Path) -> pd.DataFrame
+tests/test_phase_branching_run.py:54:def test_sink_selection_is_mutually_exclusive(tmp_path: Path) -> None
 tests/test_phase_integration_siO2.py:11:def siO2_evaluator() -> phase.PhaseEvaluator
 tests/test_phase_integration_siO2.py:16:def test_siO2_map_solid_branch(siO2_evaluator: phase.PhaseEvaluator) -> None
 tests/test_phase_sublimation_integration.py:15:def _run_case(tmp_path: Path, *, T_M: float, r_RM: float) -> tuple[pd.Series, pd.DataFrame]
-tests/test_phase_sublimation_integration.py:41:def test_solid_phase_allows_sublimation_with_siO2_map(tmp_path: Path) -> None
+tests/test_phase_sublimation_integration.py:42:def test_solid_phase_allows_sublimation_with_siO2_map(tmp_path: Path) -> None
 tests/test_phi_table.py:12:def mock_phi_table(tmp_path)
 tests/test_phi_table.py:24:def test_phi_table_monotonic_effects(mock_phi_table)
 tests/test_psd_kappa.py:11:def test_compute_kappa_single_bin_matches_geometry() -> None
@@ -791,40 +790,40 @@ tests/test_ref_coverage.py:84:def test_e043_references_hyodo() -> None
 tests/test_ref_coverage.py:89:def test_e042_references_hyodo() -> None
 tests/test_ref_coverage.py:94:def test_e006_references_strubbe_chiang() -> None
 tests/test_reproducibility.py:11:def _config(outdir: Path) -> schema.Config
-tests/test_reproducibility.py:39:def _run_once(outdir: Path)
-tests/test_reproducibility.py:49:def test_repeated_runs_match(tmp_path: Path) -> None
-tests/test_run_regressions.py:21:def _run_case(overrides: list[str]) -> tuple[dict, pd.DataFrame]
-tests/test_run_regressions.py:35:def _run_case_with_series(overrides: list[str]) -> tuple[dict, pd.DataFrame, pd.DataFrame]
-tests/test_run_regressions.py:50:def test_mass_budget_and_timestep_overrides() -> None
-tests/test_run_regressions.py:78:def test_sublimation_not_double_counted() -> None
-tests/test_run_regressions.py:100:def test_phase7_diagnostics_toggle() -> None
-tests/test_run_regressions.py:146:def test_tau_gate_blocks_blowout() -> None
-tests/test_run_regressions.py:164:def test_gate_factor_collision_competition_reduces_flux() -> None
-tests/test_run_regressions.py:180:def _write_inline_combined_config(config_path: Path, outdir: Path) -> None
-tests/test_run_regressions.py:235:def test_combined_mass_flux_balance(tmp_path: Path) -> None
-tests/test_run_regressions.py:258:def test_gate_factor_sublimation_competition_reduces_flux() -> None
+tests/test_reproducibility.py:47:def _run_once(outdir: Path)
+tests/test_reproducibility.py:57:def test_repeated_runs_match(tmp_path: Path) -> None
+tests/test_run_regressions.py:19:def _run_case(overrides: list[str]) -> tuple[dict, pd.DataFrame]
+tests/test_run_regressions.py:33:def _run_case_with_series(overrides: list[str]) -> tuple[dict, pd.DataFrame, pd.DataFrame]
+tests/test_run_regressions.py:48:def test_mass_budget_and_timestep_overrides() -> None
+tests/test_run_regressions.py:76:def test_sublimation_not_double_counted() -> None
+tests/test_run_regressions.py:98:def test_phase7_diagnostics_toggle() -> None
+tests/test_run_regressions.py:144:def test_tau_gate_blocks_blowout() -> None
+tests/test_run_regressions.py:162:def test_gate_factor_collision_competition_reduces_flux() -> None
+tests/test_run_regressions.py:178:def _write_inline_combined_config(config_path: Path, outdir: Path) -> None
+tests/test_run_regressions.py:242:def test_combined_mass_flux_balance(tmp_path: Path) -> None
+tests/test_run_regressions.py:265:def test_gate_factor_sublimation_competition_reduces_flux() -> None
 tests/test_scalings.py:16:def test_strubbe_chiang_collisional_timescale_matches_orbit_scaling(tau: float) -> None
 tests/test_scalings.py:26:def _smol_to_wyatt_ratio(kernel_mode: str, H_factor: float) -> float
 tests/test_scalings.py:57:def test_smol_tcoll_matches_wyatt_config_mode() -> None
 tests/test_scalings.py:62:def test_smol_tcoll_matches_wyatt_wyatt_eq_mode() -> None
 tests/test_scope_limitations_metadata.py:14:def _base_config(outdir: Path, *, window_years: float=1e-06) -> schema.Config
-tests/test_scope_limitations_metadata.py:54:def _read_json(path: Path) -> dict
-tests/test_scope_limitations_metadata.py:59:def test_scope_limitations_present_and_populated(tmp_path: Path) -> None
-tests/test_scope_limitations_metadata.py:86:def test_single_process_flags_flow_into_scope_limitations(tmp_path: Path) -> None
-tests/test_scope_limitations_metadata.py:113:def test_solar_radiation_request_is_recorded(tmp_path: Path) -> None
+tests/test_scope_limitations_metadata.py:62:def _read_json(path: Path) -> dict
+tests/test_scope_limitations_metadata.py:67:def test_scope_limitations_present_and_populated(tmp_path: Path) -> None
+tests/test_scope_limitations_metadata.py:95:def test_single_process_flags_flow_into_scope_limitations(tmp_path: Path) -> None
+tests/test_scope_limitations_metadata.py:122:def test_solar_radiation_request_is_recorded(tmp_path: Path) -> None
 tests/test_siO2_cooling_model.py:14:def test_mars_temperature_monotonic_decrease() -> None
 tests/test_siO2_cooling_model.py:21:def test_dust_temperature_monotonic_decrease_single_radius() -> None
 tests/test_siO2_cooling_model.py:29:def test_arrival_time_for_threshold() -> None
 tests/test_sinks_none.py:15:def test_run_zero_d_with_sinks_disabled(tmp_path: Path) -> None
 tests/test_sinks_tracing.py:9:def _build_config(outdir: Path) -> schema.Config
-tests/test_sinks_tracing.py:34:def test_debug_sinks_trace_outputs_jsonl(tmp_path: Path) -> None
+tests/test_sinks_tracing.py:42:def test_debug_sinks_trace_outputs_jsonl(tmp_path: Path) -> None
 tests/test_smol_sublimation_consistency.py:11:def test_smol_sublimation_matches_surface_drift() -> None
 tests/test_smol_supply_source.py:11:def test_supply_injected_into_first_valid_bin() -> None
 tests/test_smol_supply_source.py:27:def test_supply_zero_rate_returns_zero_vector() -> None
 tests/test_smol_supply_source.py:38:def test_supply_injects_into_last_bin_when_floor_above_max() -> None
 tests/test_smol_supply_source.py:52:def test_smol_source_mass_budget_matches_supply() -> None
 tests/test_step_diagnostics.py:12:def _build_config(outdir: Path, fmt: str) -> schema.Config
-tests/test_step_diagnostics.py:43:def test_step_diagnostics_file_and_mass_budget(tmp_path: Path, fmt: str) -> None
+tests/test_step_diagnostics.py:50:def test_step_diagnostics_file_and_mass_budget(tmp_path: Path, fmt: str) -> None
 tests/test_sublimation_phase_gate.py:14:def _run_phase_case(tmp_path: Path, entrypoint: str, *, enable_step_diag: bool=True) -> tuple[pd.Series, pd.DataFrame | None]
 tests/test_sublimation_phase_gate.py:48:def test_liquid_phase_blocks_sublimation(tmp_path: Path) -> None
 tests/test_sublimation_phase_gate.py:63:def test_solid_phase_uses_raw_sublimation(tmp_path: Path) -> None
@@ -847,16 +846,16 @@ tests/test_surface_supply_param.py:61:def test_smol_helper_respects_tau_clip_and
 tests/test_surface_supply_param.py:99:def _smol_cfg(outdir: Path, *, supply_cfg: Supply) -> Config
 tests/test_surface_supply_param.py:120:def test_supply_modes_preserve_columns_and_budget(tmp_path: Path) -> None
 tests/test_temperature_driver.py:16:def test_temperature_driver_prefers_radiation_override() -> None
-tests/test_temperature_driver.py:45:def test_temperature_driver_table_interpolates_sample() -> None
-tests/test_temperature_driver.py:72:def test_temperature_autogen_generates_table(tmp_path: Path) -> None
-tests/test_temperature_driver.py:102:def test_autogen_used_in_run(tmp_path: Path) -> None
-tests/test_temperature_selection.py:9:def _make_config(outdir: Path, T_M: float) -> schema.Config
-tests/test_temperature_selection.py:27:def _run_and_load(cfg: schema.Config) -> dict
-tests/test_temperature_selection.py:35:def test_temperature_selection_prefers_radiation_override(tmp_path: Path) -> None
-tests/test_temperature_selection.py:47:def test_temperature_selection_tracks_temps_when_no_override(tmp_path: Path) -> None
+tests/test_temperature_driver.py:51:def test_temperature_driver_table_interpolates_sample() -> None
+tests/test_temperature_driver.py:77:def test_temperature_autogen_generates_table(tmp_path: Path) -> None
+tests/test_temperature_driver.py:107:def test_autogen_used_in_run(tmp_path: Path) -> None
+tests/test_temperature_selection.py:9:def _make_config(outdir: Path, *, TM_K: float | None=None, driver_constant: float | None=None) -> schema.Config
+tests/test_temperature_selection.py:47:def _run_and_load(cfg: schema.Config) -> dict
+tests/test_temperature_selection.py:55:def test_temperature_selection_prefers_radiation_override(tmp_path: Path) -> None
+tests/test_temperature_selection.py:70:def test_temperature_selection_tracks_temps_when_no_override(tmp_path: Path) -> None
 tests/test_zero_division_guards.py:11:def test_run_zero_d_tau_zero_no_error(tmp_path: Path)
-tests/test_zero_division_guards.py:32:def test_supply_powerlaw_t0_zero()
-tests/test_zero_division_guards.py:41:def test_run_zero_d_no_zerodivision(monkeypatch, tmp_path)
+tests/test_zero_division_guards.py:40:def test_supply_powerlaw_t0_zero()
+tests/test_zero_division_guards.py:49:def test_run_zero_d_no_zerodivision(monkeypatch, tmp_path)
 tools/diagnostics/beta_map.py:57:class QPrCounter
 tools/diagnostics/beta_map.py:75:class BetaCellResult
 tools/diagnostics/beta_map.py:90:class RuntimeContext

@@ -224,7 +224,7 @@ Case classification follows the configuration beta: `case_status = "blowout"` wh
 - Enforces positivity: halves $\Delta t_{\mathrm{eff}}$ until all $N_i^{n+1}\ge0$.
 - Evaluates mass budget error (function C4); adaptively halves $\Delta t_{\mathrm{eff}}$ until error $\le$ `mass_tol`.
 - Caps step size relative to minimum collision time using `safety` multiplier.
-- Smol が既定の衝突経路（`surface.collision_solver="smol"`）。表層 ODE (S1) を試す場合のみ `surface_ode` へ切り替える。[marsdisk/run.py:845–1016]
+- Smol が既定の衝突経路（`surface.collision_solver="smol"`）。表層 ODE (S1) を試す場合のみ `surface_ode` へ切り替える。[marsdisk/run.py:850–1016]
 
 ### (E.011) marsdisk/physics/smol.py: compute_mass_budget_error_C4 (lines 104-131)
 IMEX 更新後の質量差分を測るための診断式。衝突カスケードでの質量収支検査を行う実装 [@Krivov2006_AA455_509] に基づく。
