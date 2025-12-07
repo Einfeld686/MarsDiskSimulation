@@ -157,7 +157,7 @@ Case classification follows the configuration beta: `case_status = "blowout"` wh
 | Mean blow-out per orbit (M_Mars) | `M_out_mean_per_orbit` | `[marsdisk/run.py#run_zero_d [L426–L1362]]` | Reported when at least one orbit completes |
 | Mean sink per orbit (M_Mars) | `M_sink_mean_per_orbit` | `[marsdisk/run.py#run_zero_d [L426–L1362]]` | Reported when at least one orbit completes |
 | Orbit counter (dimensionless) | `orbits_completed` | `[marsdisk/run.py#run_zero_d [L426–L1362]]` | Number of completed orbital rollups |
-| Mars-facing temperature (K) | `T_M_used`, `T_M_source` | `[marsdisk/run.py#load_config [L372]]`, `[marsdisk/run.py#run_zero_d [L426–L1362]]` | CLI or YAML `radiation.TM_K` overrides `temps.T_M` |
+| Mars-facing temperature (K) | `T_M_used`, `T_M_source` | `[marsdisk/run.py#load_config [L372]]`, `[marsdisk/run.py#run_zero_d [L426–L1362]]` | `radiation.TM_K` または温度ドライバから決定（legacy `temps.T_M` は廃止） |
 | Radiation efficiency (dimensionless) | `Q_pr_used` | `[marsdisk/run.py#run_zero_d [L426–L1362]]`, `[marsdisk/run.py#run_zero_d [L426–L1362]]` | Planck mean stored for reference |
 | Shielding Φ table path | `phi_table_path` | `[marsdisk/run.py:1430–1452]` | Summary retains the resolved τ-table for provenance |
 | PSD bin index (dimensionless) | `bin_index` | `[marsdisk/run.py:1281–1295][marsdisk/io/writer.py:75–137]` | Time×bin identifier stored in `psd_hist.parquet` |

@@ -242,7 +242,7 @@ last_checked: YYYY-MM-DD
 - 次に確認する資料: `assumption_trace_data_sources.md` の設定パース手順、`analysis/equations.md` の昇華式、`analysis/UNKNOWN_REF_REQUESTS.jsonl` での TL2003 slug 登録。
 
 ### 2.6 半径・幾何の固定（0D vs disk.geometry） — assumption cluster "radius_fix_0d_scope_v1"
-0D 実行では `geometry.r` が唯一の半径入力だが、`disk.geometry`（r_in_RM, r_out_RM）や `runtime_orbital_radius_rm` との優先順位が run ごとに揺れている。半径固定のまま 1D 拡張へ式を持ち越す際に、どの E.xxx が 0D 前提かをタグ付けできていない。
+0D 実行では `disk.geometry`（r_in_RM, r_out_RM）が必須入力で、legacy `geometry.r` / `runtime_orbital_radius_rm` は無効化済み。半径固定のまま 1D 拡張へ式を持ち越す際に、どの E.xxx が 0D 前提かをタグ付けできていない。
 
 このクラスターに対応する UNKNOWN_REF_REQUESTS slug: `radius_fix_0d_scope_v1`
 
@@ -255,11 +255,11 @@ assumption_tags:
   - fixed_radius
   - inner_disk_scope
 config_keys:
-  - geometry.mode
-  - geometry.r
-  - geometry.runtime_orbital_radius_rm
   - disk.geometry.r_in_RM
   - disk.geometry.r_out_RM
+  - geometry.mode
+  - geometry.r  # legacy (disallowed)
+  - geometry.runtime_orbital_radius_rm  # legacy (disallowed)
 run_stage:
   - config loading
   - orbital grid initialisation
@@ -268,8 +268,7 @@ code_path:
   - [marsdisk/grid.py:17–49]
   - [marsdisk/run.py:966–1016]
 inputs:
-  - r [m]  # 0D radius
-  - r_in_RM / r_out_RM  # when mapping to runtime_orbital_radius_rm
+  - r_in_RM / r_out_RM  # runtime radius is derived from disk.geometry
 outputs:
   - summary.runtime_orbital_radius_m
   - run_config.runtime_orbital_radius_rm

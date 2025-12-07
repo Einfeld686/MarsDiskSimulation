@@ -205,8 +205,10 @@ python scripts/sweep_heatmaps.py --map 1 --outdir sweeps/map1_demo --jobs 4
 
 3) 最小設定断片
 ```yaml
-geometry: { mode: "0D", r: 1.5e7 }
-temps:    { T_M: 2000.0 }
+disk:
+  geometry: { r_in_RM: 2.4, r_out_RM: 2.4 }  # 0D用に内外縁を同じ値で指定
+radiation:
+  TM_K: 2000.0
 supply:   { mode: "const", const: { prod_area_rate_kg_m2_s: 1.0e-8 } }
 numerics: { t_end_years: 0.01, dt_init: 1.0e4 }
 io:       { outdir: "sweeps/__will_be_overwritten__" }
@@ -219,7 +221,7 @@ io:       { outdir: "sweeps/__will_be_overwritten__" }
 - `results/map1.csv` → `head -n 5 results/map1.csv`
 
 5) 確認項目
-- 各 `config.yaml` に `geometry.r` と `temps.T_M` が軸値で上書きされていること。
+- 各 `config.yaml` に `disk.geometry.r_in_RM/r_out_RM` と `radiation.TM_K` が軸値で上書きされていること。
 - 生成された `out/summary.json` / `out/series/run.parquet` が各ケースごとに存在し、`case_status` や `s_min_effective` が反映されていること。
 - `case_completed.json` が各ケースの `out/` に置かれ、タイムスタンプと `summary`/`series` パスが記録されていること。
 - `results/map1.csv` に `map_id`,`case_id`,`total_mass_lost_Mmars`,`run_status`,`case_status` が揃い、行順が `order` で整列していること。
@@ -227,7 +229,7 @@ io:       { outdir: "sweeps/__will_be_overwritten__" }
 
 6) 根拠
 - スイープCLI引数とベース設定のデフォルトを `DEFAULT_BASE_CONFIG` と `parse_args` が提供し、マップ仕様は `create_map_definition` で組み立てる。[scripts/sweep_heatmaps.py:47][scripts/sweep_heatmaps.py:246–402][scripts/sweep_heatmaps.py:445–548]
-- ケースごとに `geometry.r`,`temps.T_M`,`io.outdir` を設定し、設定ファイルと出力先を準備して `run_case` へ渡す処理を `build_cases` と `run_case` が担う。[scripts/sweep_heatmaps.py:686–737][scripts/sweep_heatmaps.py:1143–1247]
+- ケースごとに `disk.geometry.*`,`radiation.TM_K`,`io.outdir` を設定し、設定ファイルと出力先を準備して `run_case` へ渡す処理を `build_cases` と `run_case` が担う。[scripts/sweep_heatmaps.py:686–737][scripts/sweep_heatmaps.py:1143–1247]
 - 出力を読み込み `case_status` や `s_min_effective` を抽出する処理は `_get_beta_for_checks`,`extract_smin_from_series`,`populate_record_from_outputs` が担当する。[scripts/sweep_heatmaps.py:786–810][scripts/sweep_heatmaps.py:815–821][scripts/sweep_heatmaps.py:826–844][scripts/sweep_heatmaps.py:1029–1138]
   事前の JSON 読み出しは `parse_summary` がまとめ、上記ヘルパーへ辞書を受け渡す。
 - 完了フラグ `case_completed.json` の生成と再実行判定は `mark_case_complete` と `case_is_completed` で実装される。[scripts/sweep_heatmaps.py:639–651][scripts/sweep_heatmaps.py:656–659]
@@ -249,7 +251,7 @@ python scripts/sweep_mass_loss_map.py \
   --jobs 4 \
   --dt-over-tblow-max 0.05 \
   --include-sinks-none \
-  --override temps.T_M=2400 numerics.dt_init=auto sinks.mode=sublimation \
+  --override radiation.TM_K=2400 numerics.dt_init=auto sinks.mode=sublimation \
   --override supply.const.prod_area_rate_kg_m2_s=5e-9 material.rho=2900
 ```
 Python から直接呼ぶ場合は `sample_mass_loss_one_orbit(..., sinks_mode="sublimation", enable_sublimation=True, enable_gas_drag=False)` のように明示する。
@@ -267,7 +269,7 @@ Python から直接呼ぶ場合は `sample_mass_loss_one_orbit(..., sinks_mode="
 5) 確認項目  
 - `sample_mass_loss_one_orbit` は一時 outdir に `summary.json` と `series/run.parquet` を生成し、累積 `M_out_cum`,`M_sink_cum` が欠損した場合は最終行の `mass_lost_by_*` を読み出す。`checks/mass_budget.csv` の `|error_percent|` 最大値が 0.5% 未満であることを `mass_budget_max_error_percent` から確認する。[marsdisk/analysis/massloss_sampler.py:174–259]  
 - `dt_over_t_blow_requirement_pass` が `True` でも、中央値・p90 が `--dt-over-tblow-max` を超えないか `map_massloss.csv` 側で再確認する。  
-- `--override` は `PATH=VALUE` をスペース区切りで並べる書式で、`PATH` は `temps.T_M` のようなドット区切り、`VALUE` は bool/数値/quoted string を自動解釈する。複数指定する場合は `--override ... --override ...` と繰り返すか、単一フラグに複数パラメータを与える。解析側では `_apply_overrides_dict` が YAML dict にマージするため、r/T の固定や追加のシンク係数を安全に上書きできる。[scripts/sweep_mass_loss_map.py:302–325][marsdisk/run.py:136–137]  
+- `--override` は `PATH=VALUE` をスペース区切りで並べる書式で、`PATH` は `radiation.TM_K` や `disk.geometry.r_in_RM` のようなドット区切り、`VALUE` は bool/数値/quoted string を自動解釈する。複数指定する場合は `--override ... --override ...` と繰り返すか、単一フラグに複数パラメータを与える。解析側では `_apply_overrides_dict` が YAML dict にマージするため、r/T の固定や追加のシンク係数を安全に上書きできる。[scripts/sweep_mass_loss_map.py:302–325][marsdisk/run.py:136–137]  
 - gas drag 感度を取る場合は Python サンプリングで `enable_gas_drag=True` を渡し、`result["sinks_mode"]` が意図どおり変わっているか `map_massloss.csv` もしくは辞書出力で確認する。  
 
 6) 根拠  
@@ -359,8 +361,12 @@ python -m marsdisk.run --config configs/base.yml --enforce-mass-budget
 
 3) 最小設定断片
 ```yaml
-geometry:
-  r: 5.0e6  # 0Dでは必須
+disk:
+  geometry:
+    r_in_RM: 2.5  # 0Dでは r_in_RM=r_out_RM を指定
+    r_out_RM: 2.5
+radiation:
+  TM_K: 2000
 supply:
   mode: "const"
   const: { prod_area_rate_kg_m2_s: 0.0 }
@@ -372,13 +378,13 @@ supply:
 
 5) 確認項目
 - `pyarrow` が無いと `df.to_parquet(..., engine="pyarrow")` で ImportError になるため事前に導入する。
-- `geometry.r` が未指定だと 0D 実行で `ValueError` になるので、必ず `r` か `disk.geometry` を与える。
+- `disk.geometry`（r_in_RM/r_out_RM）が未指定だと 0D 実行で例外になるので必ず設定する（legacy `geometry.r` は使用不可）。
 - `Supply.mode: table` を使う際は `path` のCSVを設置する。無い場合は `const` モードに戻す。
 - `s_min` が `s_max` を上回ると 0.9倍のクランプが入り、意図しない下限になる。設定値の整合を事前に確認する。
 
 6) 根拠
 - Parquet書き出しが `pyarrow` 依存である。[marsdisk/io/writer.py:20–21]
-- 0D実行は `geometry.r` 未指定時に例外を送出する。[marsdisk/run.py:466–468]
+- 0D実行は `disk.geometry` 未指定時に例外を送出する。[marsdisk/run.py:466–468]
 - 供給テーブル読込は `pd.read_csv` でパスが必要。[marsdisk/physics/supply.py:25–63]
 
 ## F. SiO psat auto-selector と HKLフラックスの最小検証
@@ -567,7 +573,7 @@ pytest tests/test_analysis_coverage_guard.py -q
 ### beta — 放射圧比の確認ポイント
 
 - 手順
-  - `material.rho` と `temps.T_M`（または `radiation.TM_K`）を設定し、`radiation.qpr_table_path` もしくは `radiation.Q_pr` で `⟨Q_pr⟩` を定義する。[marsdisk/schema.py:109–109][marsdisk/schema.py:125–126][marsdisk/schema.py:316–316]
+- `material.rho` と `radiation.TM_K`（または `radiation.mars_temperature_driver`）を設定し、`radiation.qpr_table_path` もしくは `radiation.Q_pr` で `⟨Q_pr⟩` を定義する。[marsdisk/schema.py:109–109][marsdisk/schema.py:125–126][marsdisk/schema.py:316–316]
 - 実行中は `run_zero_d` が βを `s_min_config` と `s_min_effective` で評価し、`case_status` や `summary.json` の `beta_at_smin_config` / `beta_at_smin_effective` フィールドへ書き出す。[marsdisk/run.py:598–602][marsdisk/run.py:1236–1263]
   - `out/series/run.parquet` で列 `beta_at_smin_config` / `beta_at_smin_effective` を確認し、閾値を超えた場合 `case_status="blowout"` が記録される。
 - 入出力
