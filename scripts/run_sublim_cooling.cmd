@@ -45,7 +45,12 @@ python -m marsdisk.run ^
   --config "%CONFIG%" ^
   --quiet ^
   --progress ^
-  --override numerics.dt_init=auto ^
+  --override io.streaming.enable=true ^
+  --override io.streaming.memory_limit_gb=80.0 ^
+  --override io.streaming.step_flush_interval=10000 ^
+  --override io.streaming.compression=snappy ^
+  --override io.streaming.merge_at_end=true ^
+  --override numerics.dt_init=2.0 ^
   --override numerics.safety=0.05 ^
   --override io.outdir=%OUTDIR% ^
   --override radiation.source=mars ^

@@ -44,6 +44,7 @@ from typing import Any, Dict, List, Mapping, Optional, Sequence
 
 import pandas as pd
 import numpy as np
+import pyarrow.parquet as pq
 
 from . import config_utils, grid
 from .schema import Config
@@ -81,6 +82,7 @@ PHASE7_SCHEMA_VERSION = "phase7-minimal-v1"
 # Conservative per-row byte guesses including Python dict/list overheads.
 MEMORY_RUN_ROW_BYTES = 2200.0
 MEMORY_PSD_ROW_BYTES = 320.0
+MEMORY_DIAG_ROW_BYTES = 1400.0
 
 
 class ProgressReporter:
@@ -595,6 +597,139 @@ class ZeroDHistory:
     total_time_elapsed: float = 0.0
 
 
+class StreamingState:
+    """Manage streaming flush of large histories to Parquet/CSV chunks."""
+
+    def __init__(
+        self,
+        *,
+        enabled: bool,
+        outdir: Path,
+        compression: str = "snappy",
+        memory_limit_gb: float = 80.0,
+        step_flush_interval: int = 10000,
+        merge_at_end: bool = False,
+        step_diag_enabled: bool = False,
+        step_diag_path: Optional[Path] = None,
+        step_diag_format: str = "csv",
+    ) -> None:
+        self.enabled = bool(enabled)
+        self.outdir = Path(outdir)
+        self.compression = compression
+        self.memory_limit_bytes = float(memory_limit_gb) * (1024.0**3)
+        self.step_flush_interval = int(step_flush_interval) if step_flush_interval > 0 else 0
+        self.merge_at_end = bool(merge_at_end)
+        self.step_diag_enabled = bool(step_diag_enabled)
+        self.step_diag_path = step_diag_path if step_diag_enabled else None
+        self.step_diag_format = step_diag_format
+        self.chunk_index = 0
+        self.chunk_start_step = 0
+        self.run_chunks: List[Path] = []
+        self.psd_chunks: List[Path] = []
+        self.diag_chunks: List[Path] = []
+        self.mass_budget_path: Path = self.outdir / "checks" / "mass_budget.csv"
+        self.mass_budget_header_written = False
+        self.step_diag_header_written = False
+
+    def _estimate_bytes(self, history: ZeroDHistory) -> float:
+        run_bytes = len(history.records) * MEMORY_RUN_ROW_BYTES
+        psd_bytes = len(history.psd_hist_records) * MEMORY_PSD_ROW_BYTES
+        diag_bytes = len(history.diagnostics) * MEMORY_DIAG_ROW_BYTES
+        budget_bytes = len(history.mass_budget) * MEMORY_RUN_ROW_BYTES
+        step_diag_bytes = len(history.step_diag_records) * MEMORY_DIAG_ROW_BYTES
+        return run_bytes + psd_bytes + diag_bytes + budget_bytes + step_diag_bytes
+
+    def should_flush(self, history: ZeroDHistory, steps_since_flush: int) -> bool:
+        if not self.enabled:
+            return False
+        if self.memory_limit_bytes > 0 and self._estimate_bytes(history) >= self.memory_limit_bytes:
+            return True
+        if self.step_flush_interval > 0 and steps_since_flush >= self.step_flush_interval:
+            return True
+        return False
+
+    def _chunk_label(self, step_end: int) -> str:
+        step_end = max(step_end, self.chunk_start_step)
+        return f"{self.chunk_start_step:09d}_{step_end:09d}"
+
+    def flush(self, history: ZeroDHistory, step_end: int) -> None:
+        if not self.enabled:
+            return
+        label = self._chunk_label(step_end)
+        series_dir = self.outdir / "series"
+        wrote_any = False
+        if history.records:
+            path = series_dir / f"run_chunk_{label}.parquet"
+            writer.write_parquet(pd.DataFrame(history.records), path, compression=self.compression)
+            self.run_chunks.append(path)
+            history.records.clear()
+            wrote_any = True
+        if history.psd_hist_records:
+            path = series_dir / f"psd_hist_chunk_{label}.parquet"
+            writer.write_parquet(
+                pd.DataFrame(history.psd_hist_records), path, compression=self.compression
+            )
+            self.psd_chunks.append(path)
+            history.psd_hist_records.clear()
+            wrote_any = True
+        if history.diagnostics:
+            path = series_dir / f"diagnostics_chunk_{label}.parquet"
+            writer.write_parquet(
+                pd.DataFrame(history.diagnostics), path, compression=self.compression
+            )
+            self.diag_chunks.append(path)
+            history.diagnostics.clear()
+            wrote_any = True
+        if history.mass_budget:
+            header = not self.mass_budget_header_written
+            wrote = writer.append_csv(history.mass_budget, self.mass_budget_path, header=header)
+            self.mass_budget_header_written = self.mass_budget_header_written or wrote
+            history.mass_budget.clear()
+        if self.step_diag_enabled and history.step_diag_records and self.step_diag_path is not None:
+            header = not self.step_diag_header_written
+            wrote = writer.append_step_diagnostics(
+                history.step_diag_records,
+                self.step_diag_path,
+                fmt=self.step_diag_format,
+                header=header,
+            )
+            self.step_diag_header_written = self.step_diag_header_written or wrote
+            history.step_diag_records.clear()
+        if wrote_any:
+            self.chunk_index += 1
+            self.chunk_start_step = step_end + 1
+
+    def merge_chunks(self) -> None:
+        if not self.enabled or not self.merge_at_end:
+            return
+        if self.run_chunks:
+            self._merge_parquet_chunks(self.run_chunks, self.outdir / "series" / "run.parquet")
+        if self.psd_chunks:
+            self._merge_parquet_chunks(
+                self.psd_chunks, self.outdir / "series" / "psd_hist.parquet"
+            )
+        if self.diag_chunks:
+            self._merge_parquet_chunks(
+                self.diag_chunks, self.outdir / "series" / "diagnostics.parquet"
+            )
+
+    def _merge_parquet_chunks(self, chunks: List[Path], destination: Path) -> None:
+        if not chunks:
+            return
+        writer._ensure_parent(destination)
+        sorted_chunks = sorted(chunks)
+        parquet_writer: Optional[pq.ParquetWriter] = None
+        try:
+            for path in sorted_chunks:
+                table = pq.read_table(path)
+                if parquet_writer is None:
+                    parquet_writer = pq.ParquetWriter(
+                        destination, table.schema, compression=self.compression
+                    )
+                parquet_writer.write_table(table)
+        finally:
+            if parquet_writer is not None:
+                parquet_writer.close()
 def step(config: RunConfig, state: RunState, dt: float) -> Dict[str, float]:
     """Advance the coupled S0/S1 system by one time-step.
 
@@ -755,21 +890,22 @@ def _write_zero_d_history(
     step_diag_enabled: bool,
     step_diag_format: str,
     step_diag_path_cfg: Optional[Path],
+    step_diag_path: Optional[Path],
     orbit_rollup_enabled: bool,
     phase7_enabled: bool,
 ) -> None:
     """Persist time series, diagnostics, and rollups for a zero-D run."""
 
     outdir = Path(cfg.io.outdir)
-    step_diag_path = None
-    if step_diag_enabled:
+    resolved_step_diag_path = step_diag_path
+    if step_diag_enabled and resolved_step_diag_path is None:
         if step_diag_path_cfg is not None:
-            step_diag_path = Path(step_diag_path_cfg)
-            if not step_diag_path.is_absolute():
-                step_diag_path = outdir / step_diag_path
+            resolved_step_diag_path = Path(step_diag_path_cfg)
+            if not resolved_step_diag_path.is_absolute():
+                resolved_step_diag_path = outdir / resolved_step_diag_path
         else:
             ext = "jsonl" if step_diag_format == "jsonl" else "csv"
-            step_diag_path = outdir / "series" / f"step_diagnostics.{ext}"
+            resolved_step_diag_path = outdir / "series" / f"step_diagnostics.{ext}"
     writer.write_parquet(df, outdir / "series" / "run.parquet")
     if history.psd_hist_records:
         psd_hist_df = pd.DataFrame(history.psd_hist_records)
@@ -777,8 +913,10 @@ def _write_zero_d_history(
     if history.diagnostics:
         diag_df = pd.DataFrame(history.diagnostics)
         writer.write_parquet(diag_df, outdir / "series" / "diagnostics.parquet")
-    if step_diag_enabled and step_diag_path is not None:
-        writer.write_step_diagnostics(history.step_diag_records, step_diag_path, fmt=step_diag_format)
+    if step_diag_enabled and resolved_step_diag_path is not None:
+        writer.write_step_diagnostics(
+            history.step_diag_records, resolved_step_diag_path, fmt=step_diag_format
+        )
     if orbit_rollup_enabled:
         rows_for_rollup = history.orbit_rollup_rows
         required_phase7_cols = {
@@ -1362,18 +1500,50 @@ def run_zero_d(
         warnings.filterwarnings("ignore")
         logging.getLogger().setLevel(logging.WARNING)
 
-    history = ZeroDHistory()
-    records = history.records
-    psd_hist_records = history.psd_hist_records
-    diagnostics = history.diagnostics
-    mass_budget = history.mass_budget
-    step_diag_records = history.step_diag_records
     step_diag_cfg = getattr(cfg.io, "step_diagnostics", None)
     step_diag_enabled = bool(getattr(step_diag_cfg, "enable", False)) if step_diag_cfg else False
     step_diag_format = str(getattr(step_diag_cfg, "format", "csv") or "csv").lower()
     if step_diag_format not in {"csv", "jsonl"}:
         raise ValueError("io.step_diagnostics.format must be either 'csv' or 'jsonl'")
     step_diag_path_cfg = getattr(step_diag_cfg, "path", None) if step_diag_cfg else None
+    step_diag_path: Optional[Path] = None
+    if step_diag_enabled:
+        if step_diag_path_cfg is not None:
+            step_diag_path = Path(step_diag_path_cfg)
+            if not step_diag_path.is_absolute():
+                step_diag_path = Path(cfg.io.outdir) / step_diag_path
+        else:
+            ext = "jsonl" if step_diag_format == "jsonl" else "csv"
+            step_diag_path = Path(cfg.io.outdir) / "series" / f"step_diagnostics.{ext}"
+
+    streaming_cfg = getattr(cfg.io, "streaming", None)
+    streaming_enabled = bool(
+        streaming_cfg
+        and getattr(streaming_cfg, "enable", False)
+        and not getattr(streaming_cfg, "opt_out", False)
+    )
+    streaming_memory_limit_gb = float(getattr(streaming_cfg, "memory_limit_gb", 80.0) or 80.0)
+    streaming_step_interval = int(getattr(streaming_cfg, "step_flush_interval", 10000) or 0)
+    streaming_compression = str(getattr(streaming_cfg, "compression", "snappy") or "snappy")
+    streaming_merge_at_end = bool(getattr(streaming_cfg, "merge_at_end", False))
+    streaming_state = StreamingState(
+        enabled=streaming_enabled,
+        outdir=Path(cfg.io.outdir),
+        compression=streaming_compression,
+        memory_limit_gb=streaming_memory_limit_gb,
+        step_flush_interval=streaming_step_interval,
+        merge_at_end=streaming_merge_at_end,
+        step_diag_enabled=step_diag_enabled,
+        step_diag_path=step_diag_path,
+        step_diag_format=step_diag_format,
+    )
+
+    history = ZeroDHistory()
+    records = history.records
+    psd_hist_records = history.psd_hist_records
+    diagnostics = history.diagnostics
+    mass_budget = history.mass_budget
+    step_diag_records = history.step_diag_records
     debug_sinks_enabled = bool(getattr(cfg.io, "debug_sinks", False))
     correct_fast_blowout = bool(getattr(cfg.io, "correct_fast_blowout", False))
     substep_fast_enabled = bool(getattr(cfg.io, "substep_fast_blowout", False))
@@ -1417,6 +1587,9 @@ def run_zero_d(
     phase7_total_rate_track = history.phase7_total_rate_track
     phase7_total_rate_time_track = history.phase7_total_rate_time_track
     phase7_ts_ratio_track = history.phase7_ts_ratio_track
+    dt_over_t_blow_values: List[float] = []
+    mass_budget_max_error = 0.0
+    steps_since_flush = 0
     phase_bulk_state_last: Optional[str] = None
     phase_bulk_f_liquid_last: Optional[float] = None
     phase_bulk_f_solid_last: Optional[float] = None
@@ -2092,6 +2265,8 @@ def run_zero_d(
         dSigma_dt_sinks = sink_flux_nosub + dSigma_dt_sublimation + mass_loss_rate_sublimation_smol
         dSigma_dt_total = dSigma_dt_blowout + dSigma_dt_sinks
         dt_over_t_blow = fast_blowout_ratio
+        if math.isfinite(dt_over_t_blow):
+            dt_over_t_blow_values.append(float(dt_over_t_blow))
         fast_blowout_factor_record = (
             fast_blowout_factor_calc if case_status == "blowout" else 0.0
         )
@@ -2477,6 +2652,7 @@ def run_zero_d(
         error_percent = mass_diff_percent
         if mass_err_percent_step is not None:
             error_percent = max(mass_err_percent_step, mass_diff_percent)
+        mass_budget_max_error = max(mass_budget_max_error, error_percent)
         budget_entry = {
             "time": time,
             "mass_initial": mass_initial,
@@ -2576,8 +2752,17 @@ def run_zero_d(
                 M_loss_cum + M_sink_cum,
             )
 
+        steps_since_flush += 1
+        if streaming_state.should_flush(history, steps_since_flush):
+            streaming_state.flush(history, step_no)
+            steps_since_flush = 0
+
     if last_step_index >= 0:
         progress.finish(last_step_index, last_time_value)
+
+    final_step_index = last_step_index if last_step_index >= 0 else 0
+    if streaming_state.enabled:
+        streaming_state.flush(history, final_step_index)
 
     if orbit_rollup_enabled and not orbit_rollup_rows:
         # Fallback rollup for short integrations that do not complete a full orbit.
@@ -2617,22 +2802,26 @@ def run_zero_d(
     t_orb = t_orb_step
     qpr_blow_final = _lookup_qpr(max(s_min_config, a_blow))
 
-    df = pd.DataFrame(records)
-    _write_zero_d_history(
-        cfg,
-        df,
-        history,
-        step_diag_enabled=step_diag_enabled,
-        step_diag_format=step_diag_format,
-        step_diag_path_cfg=step_diag_path_cfg,
-        orbit_rollup_enabled=orbit_rollup_enabled,
-        phase7_enabled=phase7_enabled,
-    )
+    df: Optional[pd.DataFrame] = None
+    if not streaming_state.enabled:
+        df = pd.DataFrame(records)
+        _write_zero_d_history(
+            cfg,
+            df,
+            history,
+            step_diag_enabled=step_diag_enabled,
+            step_diag_format=step_diag_format,
+            step_diag_path_cfg=step_diag_path_cfg,
+            step_diag_path=step_diag_path,
+            orbit_rollup_enabled=orbit_rollup_enabled,
+            phase7_enabled=phase7_enabled,
+        )
+    else:
+        streaming_state.merge_chunks()
     outdir = Path(cfg.io.outdir)
-    mass_budget_max_error = max((entry["error_percent"] for entry in mass_budget), default=0.0)
     dt_over_t_blow_median = float("nan")
-    if not df.empty and "dt_over_t_blow" in df.columns:
-        dt_over_t_blow_median = float(df["dt_over_t_blow"].median())
+    if dt_over_t_blow_values:
+        dt_over_t_blow_median = float(np.median(np.asarray(dt_over_t_blow_values, dtype=float)))
 
     def _series_stats(values: List[float]) -> tuple[float, float, float]:
         if not values:
@@ -2715,7 +2904,7 @@ def run_zero_d(
         f"Time horizon is short (~{analysis_window_years:.3g} yr); long-term tidal or viscous evolution is not modelled.",
         "Collisional cascade and sublimation are toggled via physics_mode switches rather than a fully coupled solver.",
         "Assumes an optically thick inner surface with tau<=1 clipping; vertical/outer tenuous structure is not resolved.",
-        "PSD uses a three-slope + wavy correction with blow-out/sublimation floors; no self-consistent halo is evolved.",
+        "PSD uses a three-slope core with optional wavy correction and blow-out/sublimation floors; no self-consistent halo is evolved.",
     ]
     scope_limitations_base = {
         "scope": {
@@ -2856,6 +3045,17 @@ def run_zero_d(
             "dt_sources_s": time_grid_info.get("dt_sources"),
             "dt_capped_by_max_steps": time_grid_info.get("dt_capped_by_max_steps", False),
         },
+        "streaming": {
+            "enabled": streaming_state.enabled,
+            "memory_limit_gb": streaming_memory_limit_gb if streaming_state.enabled else None,
+            "step_flush_interval": streaming_step_interval if streaming_state.enabled else None,
+            "compression": streaming_compression if streaming_state.enabled else None,
+            "merge_at_end": streaming_merge_at_end if streaming_state.enabled else False,
+            "run_chunks": [str(p) for p in streaming_state.run_chunks],
+            "psd_chunks": [str(p) for p in streaming_state.psd_chunks],
+            "diagnostics_chunks": [str(p) for p in streaming_state.diag_chunks],
+            "mass_budget_path": str(streaming_state.mass_budget_path if streaming_state.enabled else outdir / "checks" / "mass_budget.csv"),
+        },
     }
     summary["scope_limitations"] = scope_limitations_summary
     if phase7_enabled:
@@ -2916,7 +3116,8 @@ def run_zero_d(
     if history.mass_budget_violation is not None:
         summary["mass_budget_violation"] = history.mass_budget_violation
     writer.write_summary(summary, outdir / "summary.json")
-    writer.write_mass_budget(mass_budget, outdir / "checks" / "mass_budget.csv")
+    if not streaming_state.enabled:
+        writer.write_mass_budget(mass_budget, outdir / "checks" / "mass_budget.csv")
     if debug_sinks_enabled and debug_records:
         debug_dir = outdir / "debug"
         debug_dir.mkdir(parents=True, exist_ok=True)

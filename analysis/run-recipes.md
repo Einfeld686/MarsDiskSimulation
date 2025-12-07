@@ -81,7 +81,7 @@ DocSync/テスト
 - 出力として `series/run.parquet`,`summary.json`,`checks/mass_budget.csv`,`run_config.json` を書き出す。[marsdisk/run.py:2120–2185][marsdisk/run.py:2270–2387][marsdisk/run.py:1330–1357][marsdisk/run.py:1477–1547]
 - タイムシリーズのレコード構造に上記カラムを追加し、損失項と高速ブローアウト診断を分離して記録する。[marsdisk/run.py:2120–2185][marsdisk/io/writer.py:24–162]
 - 供給が定数モード0のため生成率は0で、ミキシング後もクリップされる。(configs/base.yml)[marsdisk/physics/supply.py:69–90]
-- 質量収支許容値と違反時の処理を 0.5% で定義している。[marsdisk/run.py:71][marsdisk/run.py:1330–1357]
+- 質量収支許容値と違反時の処理を 0.5% で定義している。[marsdisk/run.py:72][marsdisk/run.py:1330–1357]
 - `run_config.json` に式と使用値を格納している。[marsdisk/run.py:1477–1547]
 
 ### 派生レシピ: `analysis/run-recipes/baseline_blowout_only.yml`
@@ -554,7 +554,7 @@ pytest tests/test_analysis_coverage_guard.py -q
   - 完走後、`out/series/run.parquet` に `kappa`,`s_min`,`mass_total_bins` などが記録される。`psd.floor.mode="evolve_smin"` の場合は `s_min_evolved` 列で進化床を確認する。
 - 入出力
   - 入力は `s_min`,`s_max`,`alpha`,`wavy_strength`,`n_bins`,`rho`。不正なサイズ順やビン数は `MarsDiskError` で停止する。[marsdisk/physics/psd.py:30–118]
-  - 出力は PSD 状態辞書（`sizes`,`widths`,`number`,`edges`,`rho` など）で、`psd.compute_kappa` や `psd.apply_uniform_size_drift` がそのまま利用する。[marsdisk/physics/psd.py:30–118][marsdisk/run.py:598–602]
+  - 出力は PSD 状態辞書（`sizes`,`widths`,`number`,`edges`,`rho` など）で、`psd.compute_kappa` や `psd.apply_uniform_size_drift` がそのまま利用する。[marsdisk/physics/psd.py:30–118][marsdisk/run.py:600–602]
 - 参照: [marsdisk/physics/psd.py:30–118]
 - 根拠: wavy補正の波状パターンは `tests/test_surface_outflux_wavy.py` が、質量不透明度 κ の幾何計算は `tests/test_psd_kappa.py` が自動検証する。[tests/test_surface_outflux_wavy.py:10–37][tests/test_psd_kappa.py:29–48]
 
@@ -574,7 +574,7 @@ pytest tests/test_analysis_coverage_guard.py -q
 
 - 手順
 - `material.rho` と `radiation.TM_K`（または `radiation.mars_temperature_driver`）を設定し、`radiation.qpr_table_path` もしくは `radiation.Q_pr` で `⟨Q_pr⟩` を定義する。[marsdisk/schema.py:109–109][marsdisk/schema.py:125–126][marsdisk/schema.py:316–316]
-- 実行中は `run_zero_d` が βを `s_min_config` と `s_min_effective` で評価し、`case_status` や `summary.json` の `beta_at_smin_config` / `beta_at_smin_effective` フィールドへ書き出す。[marsdisk/run.py:598–602][marsdisk/run.py:1236–1263]
+- 実行中は `run_zero_d` が βを `s_min_config` と `s_min_effective` で評価し、`case_status` や `summary.json` の `beta_at_smin_config` / `beta_at_smin_effective` フィールドへ書き出す。[marsdisk/run.py:600–602][marsdisk/run.py:1236–1263]
   - `out/series/run.parquet` で列 `beta_at_smin_config` / `beta_at_smin_effective` を確認し、閾値を超えた場合 `case_status="blowout"` が記録される。
 - 入出力
 - `radiation.beta(s, rho, T_M, Q_pr=None)` はサイズ・密度・温度・任意の Planck平均 `⟨Q_pr⟩` を受け取り、無次元のβを返す。引数が非正の場合は例外で停止する。[marsdisk/physics/radiation.py:236–241]
