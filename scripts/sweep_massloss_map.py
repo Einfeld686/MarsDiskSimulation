@@ -168,17 +168,29 @@ def _inject_case_parameters(
 
     geometry = cfg.setdefault("geometry", {})
     geometry["mode"] = "0D"
-    geometry["r"] = float(spec.r_rm * constants.R_MARS)
-    geometry["runtime_orbital_radius_rm"] = float(spec.r_rm)
+    geometry.pop("r", None)
+    geometry.pop("runtime_orbital_radius_rm", None)
 
-    temps = cfg.setdefault("temps", {})
-    temps["T_M"] = float(spec.T_M)
+    disk_cfg = cfg.setdefault("disk", {})
+    geom_cfg = disk_cfg.setdefault("geometry", {})
+    geom_cfg["r_in_RM"] = float(spec.r_rm)
+    geom_cfg["r_out_RM"] = float(spec.r_rm)
+    geom_cfg.setdefault("r_profile", "uniform")
+    geom_cfg.setdefault("p_index", 0.0)
+
+    cfg.pop("temps", None)
 
     radiation_cfg = cfg.setdefault("radiation", {})
     radiation_cfg["TM_K"] = float(spec.T_M)
     radiation_cfg["qpr_table_path"] = str(qpr_table)
     radiation_cfg.pop("qpr_table", None)
     radiation_cfg.pop("Q_pr", None)
+
+    shielding_cfg = cfg.setdefault("shielding", {})
+    if "phi_table" in shielding_cfg and "table_path" not in shielding_cfg:
+        shielding_cfg["table_path"] = shielding_cfg.pop("phi_table")
+    else:
+        shielding_cfg.pop("phi_table", None)
 
     sinks_cfg = cfg.setdefault("sinks", {})
     sinks_cfg["mode"] = "sublimation"
