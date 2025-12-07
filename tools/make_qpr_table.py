@@ -1,13 +1,16 @@
-"""Planck 平均 Q_pr テーブル生成ユーティリティの互換ラッパー."""
+"""Compatibility shim for the relocated make_qpr_table utility."""
 
 from __future__ import annotations
 
-from marsdisk.ops.make_qpr_table import (  # noqa: F401
-    compute_planck_mean_qpr,
-    main,
-)
+import sys
+from pathlib import Path
 
-__all__ = ["compute_planck_mean_qpr", "main"]
+if __package__ is None or __package__ == "":  # pragma: no cover - compatibility path
+    sys.path.append(str(Path(__file__).resolve().parents[1]))
+
+from tools.qpr.make_qpr_table import *  # noqa: E402,F401,F403
 
 if __name__ == "__main__":
+    from tools.qpr.make_qpr_table import main
+
     raise SystemExit(main())

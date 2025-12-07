@@ -1,10 +1,8 @@
+physics_mode: "default"
 geometry:
   mode: "0D"
-  r: 8.0e6
 material:
   rho: 3000.0
-temps:
-  T_M: 2400.0
 sizes:
   s_min: 5.0e-7
   s_max: 5.0e-2
@@ -61,7 +59,7 @@ radiation:
   TM_K: 2400.0
   qpr_table_path: "data/qpr_table.csv"
 shielding:
-  phi_table: null
+  table_path: null
 blowout:
   enabled: true
   target_phase: "solid_only"

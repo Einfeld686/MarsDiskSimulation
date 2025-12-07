@@ -2,21 +2,13 @@ scope:
   region: "inner"
   analysis_years: 2.0
 
-physics:
-  single_process_mode: "sublimation_only"
-
-process:
-  primary: "sublimation_only"
+physics_mode: "sublimation_only"
 
 geometry:
   mode: "0D"
-  r: 8.0e6
 
 material:
   rho: 3000.0
-
-temps:
-  T_M: 2000.0
 
 sizes:
   s_min: 1.0e-6
@@ -48,6 +40,12 @@ qstar:
 
 surface:
   init_policy: "clip_by_tau1"
+disk:
+  geometry:
+    r_in_RM: 2.3602301224369375
+    r_out_RM: 2.3602301224369375
+    r_profile: "uniform"
+    p_index: 0.0
 
 supply:
   mode: "const"
@@ -65,6 +63,8 @@ radiation:
   source: "mars"
   use_mars_rp: true
   use_solar_rp: false
+  TM_K: 2000.0
+  qpr_table_path: "data/qpr_table.csv"
 
 shielding:
   mode: "psitau"

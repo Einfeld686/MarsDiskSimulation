@@ -1,12 +1,14 @@
-"""互換性のための薄いラッパー。
-
-実体は ``scripts.doc_sync_agent`` に移動した。``python -m tools.doc_sync_agent``
-など既存の呼び出しからも引き続き利用できる。
-"""
+"""Compatibility shim for the relocated doc_sync_agent."""
 
 from __future__ import annotations
 
-from marsdisk.ops.doc_sync_agent import main  # noqa: F401
+import sys
+from pathlib import Path
+
+if __package__ is None or __package__ == "":  # pragma: no cover - compatibility path
+    sys.path.append(str(Path(__file__).resolve().parents[1]))
+
+from tools.pipeline.doc_sync_agent import main  # noqa: E402,F401
 
 __all__ = ["main"]
 

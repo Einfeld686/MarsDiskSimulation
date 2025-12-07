@@ -2,15 +2,17 @@ from __future__ import annotations
 
 """Surface layer evolution and outflux (S1).
 
-This module implements a minimal zero-dimensional model for the
-surface number/mass density of grains susceptible to radiation-pressure
+This module implements a minimal zero-dimensional model for the surface
+number/mass density of grains susceptible to radiation-pressure
 blow-out.  Only the optically thin top layer (``\tau\lesssim1``) is
 assumed to receive direct irradiation; deeper layers are treated as
 self-shaded and do not participate in the radiation-driven outflow.
 The loss terms follow the gas-poor, optically thin picture in
 Strubbe & Chiang (2006) [@StrubbeChiang2006_ApJ648_652], while the
-gas-rich Takeuchi & Lin (2003) flow remains an optional path guarded by
-``ALLOW_TL2003`` (disabled by default per the specification) [@TakeuchiLin2003_ApJ593_524].
+gas-rich Takeuchi & Lin (2002, 2003) and Shadmehri (2007) surface-flow
+solution remains an optional path guarded by ``ALLOW_TL2003`` (disabled
+by default per the specification)
+[@TakeuchiLin2003_ApJ593_524; @TakeuchiLin2002_ApJ581_1344; @Shadmehri2007_MNRAS378_1365].
 
 The governing ordinary differential equation is
 
@@ -106,7 +108,7 @@ def step_surface_density_S1(
     sigma_tau1: float | None = None,
     enable_blowout: bool = True,
 ) -> SurfaceStepResult:
-    """Advance the surface density by one implicit Euler step (S1). TODO(REF:tl2003_surface_flow_scope_v1)
+    """Advance the surface density by one implicit Euler step (S1).
 
     Parameters
     ----------

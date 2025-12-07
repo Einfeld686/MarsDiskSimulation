@@ -12,7 +12,7 @@ from typing import Any, Dict, Iterable, List, Mapping, Optional, Sequence
 import numpy as np
 import pandas as pd
 
-from marsdisk import constants
+from marsdisk import config_utils, constants
 from marsdisk.run import load_config, run_zero_d
 from marsdisk.schema import Config
 
@@ -136,23 +136,22 @@ def _sanitize_label(label: Optional[str], config_path: Path) -> str:
 def _extract_inputs(cfg: Config, summary: Mapping[str, Any]) -> Dict[str, Any]:
     r_m_summary = _safe_float(summary.get("r_m_used"))
     r_rm_summary = _safe_float(summary.get("r_RM_used"))
-    r_m = r_m_summary
-    if not math.isfinite(r_m):
-        r_m = _safe_float(getattr(cfg.geometry, "r", None))
-        runtime_rm = getattr(cfg.geometry, "runtime_orbital_radius_rm", None)
-        if math.isfinite(r_m) and r_m > 0.0:
-            r_rm_summary = r_m / constants.R_MARS
-        elif runtime_rm is not None:
-            r_rm_summary = _safe_float(runtime_rm)
-            r_m = r_rm_summary * constants.R_MARS
-    if not math.isfinite(r_rm_summary) and math.isfinite(r_m):
-        r_rm_summary = r_m / constants.R_MARS
+    if not math.isfinite(r_m_summary) or not math.isfinite(r_rm_summary):
+        try:
+            r_m_calc, r_rm_calc, _ = config_utils.resolve_reference_radius(cfg)
+            if not math.isfinite(r_m_summary):
+                r_m_summary = r_m_calc
+            if not math.isfinite(r_rm_summary):
+                r_rm_summary = r_rm_calc
+        except Exception:
+            pass
 
     T_M = _safe_float(summary.get("T_M_used"))
     if not math.isfinite(T_M):
-        T_M = _safe_float(getattr(cfg.radiation, "TM_K", None))
-    if not math.isfinite(T_M):
-        T_M = _safe_float(getattr(cfg.temps, "T_M", None))
+        try:
+            T_M, _ = config_utils.resolve_temperature_field(cfg)
+        except Exception:
+            T_M = float("nan")
 
     s_min_effective = _safe_float(summary.get("s_min_effective"))
     if not math.isfinite(s_min_effective):
@@ -164,7 +163,7 @@ def _extract_inputs(cfg: Config, summary: Mapping[str, Any]) -> Dict[str, Any]:
         supply_const_rate = _safe_float(cfg.supply.const.prod_area_rate_kg_m2_s)
 
     return {
-        "r_m": r_m,
+        "r_m": r_m_summary,
         "r_RM": r_rm_summary,
         "T_M": T_M,
         "s_min": s_min_effective,

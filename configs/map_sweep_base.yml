@@ -1,6 +1,12 @@
-geometry: { mode: "0D", r: 1.5e7 }   # r は後で上書きされる
+physics_mode: "default"
+geometry: { mode: "0D" }   # r は後で上書きされる
+disk:
+  geometry:
+    r_in_RM: 4.425431479569258
+    r_out_RM: 4.425431479569258
+    r_profile: "uniform"
+    p_index: 0.0
 material: { rho: 2500.0 }
-temps:    { T_M: 2000.0 }            # T_M も後で上書き
 sizes:    { s_min: 1.0e-7, s_max: 1.0e-2, n_bins: 40 }
 initial:  { mass_total: 1.0e-6, s0_mode: "upper" }
 dynamics: { e0: 0.1, i0: 0.05, t_damp_orbits: 1000.0, f_wake: 1.0 }
@@ -11,6 +17,6 @@ sinks:
   enable_sublimation: true
   T_sub: 1300.0
   sub_params: { mode: "logistic", alpha_evap: 1.0, mu: 0.1, dT: 50.0, eta_instant: 0.1, P_gas: 0.0 }
-radiation: { qpr_table_path: "data/qpr_table.csv" }
+radiation: { TM_K: 2000.0, qpr_table_path: "data/qpr_table.csv" }  # T_M も後で上書き
 numerics: { t_end_years: 0.01, dt_init: 1.0e4 }
 io:       { outdir: "sweeps/__will_be_overwritten__" }  # 実行側でケースごとに上書き

@@ -1,6 +1,6 @@
+physics_mode: "default"
 geometry:
   mode: "0D"
-  runtime_orbital_radius_rm: null  # 上書きで設定（半径は R_Mars 単位）
 
 disk:
   geometry:
@@ -11,9 +11,6 @@ disk:
 
 material:
   rho: 3000.0
-
-temps:
-  T_M: 2000.0
 
 sizes:
   s_min: 1.0e-7
@@ -64,12 +61,12 @@ sinks:
   T_sub: 1300.0
 
 radiation:
-  TM_K: null    # 必ず override で指定
+  TM_K: 2000.0
   qpr_table_path: "data/qpr_table.csv"
   Q_pr: null
 
 shielding:
-  phi_table: null
+  table_path: null
 
 numerics:
   t_end_years: null

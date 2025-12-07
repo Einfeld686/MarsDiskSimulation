@@ -52,7 +52,7 @@ import numpy as np
 import pandas as pd
 
 from .schema import Config
-from . import constants
+from . import config_utils, constants
 
 logger = logging.getLogger(__name__)
 
@@ -306,70 +306,29 @@ def resolve_time_grid(
 # ===========================================================================
 
 def resolve_orbital_radius(cfg: Config) -> tuple[float, str]:
-    """Resolve orbital radius from configuration.
-    
-    Checks multiple configuration paths in priority order:
-    1. geometry.r (direct specification in meters)
-    2. geometry.runtime_orbital_radius_rm (Mars radii, deprecated)
-    3. disk.geometry (r_in_RM, r_out_RM average)
-    4. geometry.r_in (fallback)
-    
-    Parameters
-    ----------
-    cfg : Config
-        The configuration object.
-        
-    Returns
-    -------
-    tuple[float, str]
-        (radius_m, source_description)
-        
-    Raises
-    ------
-    ValueError
-        If no radius can be determined.
-    """
-    r_source = "geometry.r"
-    
-    if cfg.geometry.r is not None:
-        r = cfg.geometry.r
-        r_source = "geometry.r"
-    elif getattr(cfg.geometry, "runtime_orbital_radius_rm", None) is not None:
-        r = float(cfg.geometry.runtime_orbital_radius_rm) * constants.R_MARS
-        r_source = "geometry.runtime_orbital_radius_rm"
-    elif cfg.disk is not None:
-        r = (
-            0.5
-            * (cfg.disk.geometry.r_in_RM + cfg.disk.geometry.r_out_RM)
-            * constants.R_MARS
-        )
-        r_source = "disk.geometry"
-    elif cfg.geometry.r_in is not None:
-        r = cfg.geometry.r_in
-        r_source = "geometry.r_in"
-    else:
-        raise ValueError("geometry.r must be provided for 0D runs")
-    
-    return r, r_source
+    """Resolve orbital radius from configuration."""
+
+    r_m, _, source = config_utils.resolve_reference_radius(cfg)
+    return r_m, source
 
 
-def resolve_physics_flags(cfg: Config, single_process_mode: str) -> PhysicsFlags:
+def resolve_physics_flags(cfg: Config, physics_mode: str) -> PhysicsFlags:
     """Resolve physics control flags from configuration.
     
     Parameters
     ----------
     cfg : Config
         The configuration object.
-    single_process_mode : str
-        The resolved single-process mode ("off", "sublimation_only", "collisions_only").
+    physics_mode : str
+        The resolved physics mode ("default", "sublimation_only", "collisions_only").
         
     Returns
     -------
     PhysicsFlags
         Resolved physics flags.
     """
-    enforce_sublimation_only = single_process_mode == "sublimation_only"
-    enforce_collisions_only = single_process_mode == "collisions_only"
+    enforce_sublimation_only = physics_mode == "sublimation_only"
+    enforce_collisions_only = physics_mode == "collisions_only"
     
     collisions_active = not enforce_sublimation_only
     

@@ -1,8 +1,7 @@
 scope:
   region: "inner"
   analysis_years: 2.0
-physics:
-  single_process_mode: "off"
+physics_mode: "default"
 phase5:
   compare:
     enable: true
@@ -13,11 +12,8 @@ phase5:
     label_b: "sublimation"      # 出力で使用するラベル
 geometry:
   mode: "0D"
-  r: 8.0e6
 material:
   rho: 3000.0
-temps:
-  T_M: 2000.0
 sizes:
   s_min: 1.0e-6
   s_max: 3.0
@@ -43,6 +39,12 @@ qstar:
   v_ref_kms: [3.0, 5.0]
 surface:
   init_policy: "clip_by_tau1"
+disk:
+  geometry:
+    r_in_RM: 2.3602301224369375
+    r_out_RM: 2.3602301224369375
+    r_profile: "uniform"
+    p_index: 0.0
 supply:
   mode: "const"
   const:
@@ -54,6 +56,8 @@ sinks:
 radiation:
   source: "mars"
   use_mars_rp: true
+  TM_K: 2000.0
+  qpr_table_path: "data/qpr_table.csv"
 shielding:
   mode: "psitau"
 blowout:

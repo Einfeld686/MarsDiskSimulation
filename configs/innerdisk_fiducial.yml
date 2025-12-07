@@ -1,13 +1,11 @@
 # 内側0D円盤の2年質量損失評価用フィデューシャル設定（衝突＋ブローアウト＋昇華）
 scope:
   region: "inner"
+physics_mode: "default"
 geometry:
   mode: "0D"
-  r: 8.3e6  # ≈2.45 R_Mars
 material:
   rho: 3000.0
-temps:
-  T_M: 1950.0
 sizes:
   s_min: 1.0e-6
   s_max: 3.0

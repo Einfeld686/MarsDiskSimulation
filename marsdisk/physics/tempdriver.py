@@ -18,7 +18,6 @@ from ..schema import (
     MarsTemperatureDriverConfig,
     MarsTemperatureDriverTable,
     Radiation,
-    Temps,
 )
 
 logger = logging.getLogger(__name__)
@@ -274,7 +273,6 @@ class TemperatureDriverRuntime:
 
 
 def resolve_temperature_driver(
-    temps_cfg: Optional[Temps],
     radiation_cfg: Optional[Radiation],
     *,
     t_orb: float,
@@ -282,20 +280,11 @@ def resolve_temperature_driver(
 ) -> TemperatureDriverRuntime:
     """Return the driver controlling the Mars-facing temperature."""
 
-    tm_override = None if prefer_driver else getattr(radiation_cfg, "TM_K", None) if radiation_cfg is not None else None
     driver_cfg = getattr(radiation_cfg, "mars_temperature_driver", None) if radiation_cfg is not None else None
+    tm_override = getattr(radiation_cfg, "TM_K", None) if radiation_cfg is not None else None
 
-    if tm_override is not None:
-        value = _validate_temperature(float(tm_override), context="radiation.TM_K override")
-        provenance = {"source": "radiation.TM_K", "enabled": False, "mode": "constant"}
-        return TemperatureDriverRuntime(
-            source="radiation.TM_K",
-            mode="constant",
-            enabled=False,
-            initial_value=value,
-            provenance=provenance,
-            _driver_fn=lambda _time: value,
-        )
+    if driver_cfg is not None and driver_cfg.enabled and prefer_driver:
+        tm_override = None
 
     if driver_cfg is not None and driver_cfg.enabled:
         if driver_cfg.mode == "constant":
@@ -337,36 +326,33 @@ def resolve_temperature_driver(
             )
         raise ValueError(f"Unsupported mars_temperature_driver.mode='{driver_cfg.mode}'")
 
-    if temps_cfg is not None and getattr(temps_cfg, "T_M", None) is not None:
-        fallback = _validate_temperature(float(temps_cfg.T_M), context="temps.T_M fallback")
-        provenance = {"source": "temps.T_M", "enabled": False, "mode": "constant"}
+    if tm_override is not None:
+        value = _validate_temperature(float(tm_override), context="radiation.TM_K override")
+        provenance = {"source": "radiation.TM_K", "enabled": False, "mode": "constant"}
         return TemperatureDriverRuntime(
-            source="temps.T_M",
+            source="radiation.TM_K",
             mode="constant",
             enabled=False,
-            initial_value=fallback,
+            initial_value=value,
             provenance=provenance,
-            _driver_fn=lambda _time: fallback,
+            _driver_fn=lambda _time: value,
         )
 
-    raise ValueError("Mars temperature is not specified: set radiation.TM_K or provide temps.T_M")
+    raise ValueError("Mars temperature is not specified: set radiation.TM_K or enable mars_temperature_driver")
 
 
 def autogenerate_temperature_table_if_needed(
-    cfg: Any,
+    rad_cfg: Any,
     *,
     t_end_years: float,
     t_orb: float,
 ) -> Optional[Dict[str, Any]]:
     """Generate a Mars temperature table when autogen is enabled on the driver."""
 
-    rad_cfg = getattr(cfg, "radiation", None)
-    driver_cfg: Optional[MarsTemperatureDriverConfig] = (
-        getattr(rad_cfg, "mars_temperature_driver", None) if rad_cfg is not None else None
-    )
     if rad_cfg is None or getattr(rad_cfg, "source", "mars") == "off":
         return None
 
+    driver_cfg: Optional[MarsTemperatureDriverConfig] = getattr(rad_cfg, "mars_temperature_driver", None)
     # If a table driver with a path is already provided, assume cooling is handled.
     if (
         driver_cfg is not None
@@ -388,8 +374,6 @@ def autogenerate_temperature_table_if_needed(
         T0 = float(rad_cfg.TM_K)
     elif driver_cfg is not None and driver_cfg.mode == "constant" and driver_cfg.constant is not None:
         T0 = float(driver_cfg.constant.value_K)
-    elif getattr(cfg, "temps", None) is not None and getattr(cfg.temps, "T_M", None) is not None:
-        T0 = float(cfg.temps.T_M)
     else:
         raise ValueError("Temperature autogeneration enabled but no initial temperature specified")
 
@@ -430,7 +414,7 @@ def autogenerate_temperature_table_if_needed(
         driver_cfg.table = table_cfg
         driver_cfg.autogenerate = autogen_cfg
 
-    rad_cfg.TM_K = None
+    rad_cfg.TM_K = rad_cfg.TM_K if rad_cfg.TM_K is not None else T0
     logger.info(
         "Mars temperature autogen selected table %s (generated=%s)",
         table_info["path"],

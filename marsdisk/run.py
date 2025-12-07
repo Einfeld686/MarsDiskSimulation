@@ -45,7 +45,7 @@ from typing import Any, Dict, List, Mapping, Optional, Sequence
 import pandas as pd
 import numpy as np
 
-from . import grid
+from . import config_utils, grid
 from .schema import Config
 from .physics import (
     psd,
@@ -269,19 +269,25 @@ def _safe_float(value: Any) -> Optional[float]:
 
 def _derive_seed_components(cfg: Config) -> str:
     parts: list[str] = []
-    parts.append(f"geometry.r={getattr(cfg.geometry, 'r', None)!r}")
+    try:
+        r_m, r_rm, r_source = config_utils.resolve_reference_radius(cfg)
+        parts.append(f"reference_radius_m={r_m!r}")
+        parts.append(f"reference_radius_RM={r_rm!r}")
+        parts.append(f"r_source={r_source}")
+    except Exception:
+        parts.append("reference_radius_m=None")
     if cfg.disk is not None:
         parts.append(
             f"disk.r_in_RM={cfg.disk.geometry.r_in_RM!r},r_out_RM={cfg.disk.geometry.r_out_RM!r}"
         )
     tm_seed = None
     radiation_cfg = getattr(cfg, "radiation", None)
-    temps_cfg = getattr(cfg, "temps", None)
     if radiation_cfg is not None and getattr(radiation_cfg, "TM_K", None) is not None:
         tm_seed = getattr(radiation_cfg, "TM_K", None)
-    elif temps_cfg is not None and getattr(temps_cfg, "T_M", None) is not None:
-        tm_seed = getattr(temps_cfg, "T_M", None)
-    parts.append(f"temps.T_M={tm_seed!r}")
+    driver_cfg = getattr(radiation_cfg, "mars_temperature_driver", None) if radiation_cfg else None
+    if tm_seed is None and driver_cfg is not None and getattr(driver_cfg, "constant", None) is not None:
+        tm_seed = getattr(driver_cfg.constant, "value_K", None)
+    parts.append(f"T_M_basis={tm_seed!r}")
     parts.append(f"initial.mass_total={cfg.initial.mass_total!r}")
     return "|".join(parts)
 
@@ -391,22 +397,6 @@ def _memory_estimate(
     return short, long
 
 
-def _normalise_single_process_mode(value: Any) -> str:
-    """Return the canonical single-process mode string."""
-
-    if value is None:
-        return "off"
-    text = str(value).strip().lower()
-    if text in {"", "off", "none", "default", "full", "both"}:
-        return "off"
-    if text in {"sublimation_only", "sublimation"}:
-        return "sublimation_only"
-    if text in {"collisions_only", "collisional_only", "collision_only"}:
-        return "collisions_only"
-    logger.warning("Unknown single_process_mode=%s; defaulting to 'off'", value)
-    return "off"
-
-
 def _normalise_physics_mode(value: Any) -> str:
     """Return the canonical physics.mode string."""
 
@@ -420,16 +410,6 @@ def _normalise_physics_mode(value: Any) -> str:
     if text in {"collisions_only", "collisional_only", "collision_only"}:
         return "collisions_only"
     logger.warning("Unknown physics_mode=%s; defaulting to 'default'", value)
-    return "default"
-
-
-def _physics_mode_from_single_process(mode: str) -> str:
-    """Map the internal single-process flag to the user-facing physics mode."""
-
-    if mode == "sublimation_only":
-        return "sublimation_only"
-    if mode == "collisions_only":
-        return "collisions_only"
     return "default"
 
 
@@ -543,10 +523,10 @@ def _prepare_phase5_variants(compare_cfg: Any) -> List[Dict[str, str]]:
     if mode_a_raw is None or mode_b_raw is None:
         raise ValueError("phase5.compare.mode_a and mode_b must be provided for comparison runs")
 
-    mode_a = _normalise_single_process_mode(mode_a_raw)
-    mode_b = _normalise_single_process_mode(mode_b_raw)
-    if mode_a == "off" or mode_b == "off":
-        raise ValueError("phase5.compare modes must specify active single-process modes (not 'off')")
+    mode_a = _normalise_physics_mode(mode_a_raw)
+    mode_b = _normalise_physics_mode(mode_b_raw)
+    if mode_a == "default" or mode_b == "default":
+        raise ValueError("phase5.compare modes must specify explicit physics modes (not 'default')")
 
     label_a = _normalize_label(getattr(compare_cfg, "label_a", None), mode_a)
     label_b = _normalize_label(getattr(compare_cfg, "label_b", None), mode_b)
@@ -762,29 +742,6 @@ class MassBudgetViolationError(RuntimeError):
     """Raised when the mass budget tolerance is exceeded."""
 
 
-def _resolve_single_process_choice(
-    cli_mode: Optional[str],
-    physics_mode: Optional[str],
-    cfg_single_process_mode: Optional[str],
-    legacy_mode: Optional[str],
-) -> tuple[str, str]:
-    """Return (mode, source) respecting CLI > physics.mode > single_process > legacy priority."""
-
-    if cli_mode is not None:
-        return _normalise_single_process_mode(cli_mode), "cli"
-    physics_norm = _normalise_physics_mode(physics_mode)
-    if physics_norm != "default":
-        resolved = _normalise_single_process_mode(physics_norm)
-        return resolved, "physics_mode"
-    config_norm = _normalise_single_process_mode(cfg_single_process_mode)
-    if config_norm != "off":
-        return config_norm, "single_process_mode"
-    legacy_norm = _normalise_single_process_mode(legacy_mode)
-    if legacy_norm != "off":
-        return legacy_norm, "modes"
-    return "off", "default"
-
-
 def _write_zero_d_history(
     cfg: Config,
     df: pd.DataFrame,
@@ -889,8 +846,8 @@ def run_zero_d(
     cfg: Config,
     *,
     enforce_mass_budget: bool = False,
-    single_process_override: Optional[str] = None,
-    single_process_source: Optional[str] = None,
+    physics_mode_override: Optional[str] = None,
+    physics_mode_source_override: Optional[str] = None,
 ) -> None:
     """Execute the full-feature zero-dimensional simulation.
 
@@ -915,42 +872,19 @@ def run_zero_d(
 
     scope_cfg = getattr(cfg, "scope", None)
     process_cfg = getattr(cfg, "process", None)
-    modes_cfg = getattr(cfg, "modes", None)
     physics_mode_cfg = getattr(cfg, "physics_mode", None)
-    single_process_mode_cfg = getattr(cfg, "single_process_mode", None)
-    legacy_single_process = None
-    if modes_cfg is not None:
-        legacy_single_process = getattr(modes_cfg, "single_process", None)
-    mode_input_cli = single_process_override
-    mode_input_cfg = physics_mode_cfg
-    mode_input_legacy = legacy_single_process
-    single_process_mode_resolved, single_process_mode_source = _resolve_single_process_choice(
-        mode_input_cli,
-        mode_input_cfg,
-        single_process_mode_cfg,
-        mode_input_legacy,
-    )
-    if single_process_source:
-        single_process_mode_source = single_process_source
-    single_process_mode = single_process_mode_resolved
-    physics_mode = _physics_mode_from_single_process(single_process_mode)
-    physics_mode_source = single_process_mode_source
+    primary_process_cfg = _normalise_physics_mode(physics_mode_cfg)
+    physics_mode = _normalise_physics_mode(physics_mode_override or physics_mode_cfg)
+    physics_mode_source = "cli" if physics_mode_override is not None else "config"
+    if physics_mode_source_override:
+        physics_mode_source = physics_mode_source_override
+    primary_field_explicit = "physics_mode" in getattr(cfg, "__fields_set__", set())
     scope_region = getattr(scope_cfg, "region", "inner") if scope_cfg else "inner"
     analysis_window_years = float(getattr(scope_cfg, "analysis_years", 2.0)) if scope_cfg else 2.0
     if scope_region != "inner":
         raise ValueError("scope.region must be 'inner' during the inner-disk campaign")
-    primary_process_cfg = getattr(process_cfg, "primary", "collisions_only") if process_cfg else "collisions_only"
-    primary_process = primary_process_cfg
-    single_process_requested = single_process_mode in {"sublimation_only", "collisions_only"}
-    if single_process_requested:
-        primary_process = single_process_mode
-    process_fields_set = set(getattr(process_cfg, "__fields_set__", set())) if process_cfg else set()
-    primary_field_explicit = "primary" in process_fields_set
-    primary_scenario = "combined"
-    if single_process_requested:
-        primary_scenario = single_process_mode
-    elif primary_field_explicit:
-        primary_scenario = primary_process_cfg
+    primary_scenario = physics_mode if physics_mode in {"sublimation_only", "collisions_only"} else "combined"
+    primary_process = primary_scenario
     state_tagging_enabled = bool(
         getattr(getattr(process_cfg, "state_tagging", None), "enabled", False)
     )
@@ -974,11 +908,11 @@ def run_zero_d(
     if cfg.numerics.t_end_years is None and cfg.numerics.t_end_orbits is None:
         cfg.numerics.t_end_years = analysis_window_years
     logger.info(
-        "scope=%s, window=%.3f yr, radiation=%s, primary=%s, scenario=%s%s",
+        "scope=%s, window=%.3f yr, radiation=%s, physics_mode=%s, scenario=%s%s",
         scope_region,
         analysis_window_years,
         radiation_field,
-        primary_process,
+        physics_mode,
         primary_scenario,
         " (state_tag=solid)" if state_tagging_enabled else "",
     )
@@ -995,16 +929,18 @@ def run_zero_d(
     np.random.seed(seed)
     rng = np.random.default_rng(seed)
 
+    r, r_RM, r_source = config_utils.resolve_reference_radius(cfg)
+    Omega = grid.omega_kepler(r)
+    if Omega <= 0.0:
+        raise ValueError("Computed Keplerian frequency must be positive")
+    t_orb = 2.0 * math.pi / Omega
+
     e0_effective = cfg.dynamics.e0
     i0_effective = cfg.dynamics.i0
     delta_r_sample = None
 
     if cfg.dynamics.e_mode == "mars_clearance":
-        if cfg.geometry.r is None:
-            raise ValueError(
-                "dynamics.e_mode='mars_clearance' requires geometry.r in meters"
-            )
-        a_m = cfg.geometry.r
+        a_m = r
         dr_min = cfg.dynamics.dr_min_m
         dr_max = cfg.dynamics.dr_max_m
         if dr_min is not None and dr_max is not None:
@@ -1063,33 +999,6 @@ def run_zero_d(
             )
         i0_effective = i_clamped
         cfg.dynamics.i0 = i0_effective
-
-    r_source = "geometry.r"
-    if cfg.geometry.r is not None:
-        r = cfg.geometry.r
-    elif getattr(cfg.geometry, "runtime_orbital_radius_rm", None) is not None:
-        r = float(cfg.geometry.runtime_orbital_radius_rm) * constants.R_MARS
-        r_source = "geometry.runtime_orbital_radius_rm"
-        try:
-            cfg.geometry.r = r
-        except Exception:
-            pass
-    elif cfg.disk is not None:
-        r = (
-            0.5
-            * (cfg.disk.geometry.r_in_RM + cfg.disk.geometry.r_out_RM)
-            * constants.R_MARS
-        )
-        r_source = "disk.geometry"
-    elif cfg.geometry.r_in is not None:
-        r = cfg.geometry.r_in
-        r_source = "geometry.r_in"
-    else:
-        raise ValueError("geometry.r must be provided for 0D runs")
-    Omega = grid.omega_kepler(r)
-    if Omega <= 0.0:
-        raise ValueError("Computed Keplerian frequency must be positive")
-    t_orb = 2.0 * math.pi / Omega
     r_RM = r / constants.R_MARS
 
     qpr_override = None
@@ -1119,12 +1028,12 @@ def run_zero_d(
         )
     )
     temp_autogen_info = tempdriver.autogenerate_temperature_table_if_needed(
-        cfg,
+        cfg.radiation,
         t_end_years=t_end_years_cfg,
         t_orb=t_orb,
     )
     temp_runtime = tempdriver.resolve_temperature_driver(
-        cfg.temps, cfg.radiation, t_orb=t_orb, prefer_driver=bool(temp_autogen_info)
+        cfg.radiation, t_orb=t_orb, prefer_driver=bool(temp_autogen_info)
     )
     T_use = temp_runtime.initial_value
     T_M_source = temp_runtime.source
@@ -2799,7 +2708,7 @@ def run_zero_d(
         "Inner-disk only; outer or highly eccentric debris is out of scope.",
         "Radiation pressure source is fixed to Mars; solar/other external sources are ignored even when requested.",
         f"Time horizon is short (~{analysis_window_years:.3g} yr); long-term tidal or viscous evolution is not modelled.",
-        "Collisional cascade and sublimation are toggled via single-process modes rather than a fully coupled solver.",
+        "Collisional cascade and sublimation are toggled via physics_mode switches rather than a fully coupled solver.",
         "Assumes an optically thick inner surface with tau<=1 clipping; vertical/outer tenuous structure is not resolved.",
         "PSD uses a three-slope + wavy correction with blow-out/sublimation floors; no self-consistent halo is evolved.",
     ]
@@ -2824,7 +2733,7 @@ def run_zero_d(
         },
         "active_physics": {
             "primary_scenario": primary_scenario,
-            "single_process_mode": single_process_mode,
+            "physics_mode": physics_mode,
             "collisions_active": collisions_active,
             "sublimation_active": sublimation_active_flag,
             "sinks_active": bool(sublimation_active_flag or sink_timescale_active),
@@ -2928,8 +2837,6 @@ def run_zero_d(
         "physics_mode": physics_mode,
         "physics_mode_source": physics_mode_source,
         "collision_solver": collision_solver_mode,
-        "single_process_mode": single_process_mode,
-        "single_process_mode_source": single_process_mode_source,
         "primary_scenario": primary_scenario,
         "process_overview": process_overview,
         "time_grid": {
@@ -2972,10 +2879,6 @@ def run_zero_d(
     summary["blowout_active"] = blowout_enabled
     summary["state_tagging_enabled"] = state_tagging_enabled
     summary["state_phase_tag"] = state_phase_tag
-    summary["single_process"] = {
-        "mode": single_process_mode,
-        "source": single_process_mode_source,
-    }
     summary["physics"] = {
         "mode": physics_mode,
         "source": physics_mode_source,
@@ -3081,7 +2984,7 @@ def run_zero_d(
             "i0_applied_rad": i0_effective,
             "seed_used": int(seed),
             "e_formula_SI": "e = 1 - (R_MARS + Δr)/a; [Δr, a, R_MARS]: meters",
-            "a_m_source": "geometry.r",
+            "a_m_source": r_source,
         },
         "git": _gather_git_info(),
         "time_grid": {
@@ -3140,8 +3043,6 @@ def run_zero_d(
         "state_phase_tag": state_phase_tag,
         "physics_mode": physics_mode,
         "physics_mode_source": physics_mode_source,
-        "single_process_mode": single_process_mode,
-        "single_process_mode_source": single_process_mode_source,
         "collision_solver": collision_solver_mode,
         "collisions_active": collisions_active,
         "sinks_mode": sinks_mode_value,
@@ -3153,15 +3054,12 @@ def run_zero_d(
         "blowout_active": blowout_enabled,
         "rp_blowout_enabled": rp_blowout_enabled,
     }
-    run_config["single_process_resolution"] = {
-        "resolved_mode": single_process_mode,
-        "source": single_process_mode_source,
+    run_config["physics_mode_resolution"] = {
+        "resolved_mode": physics_mode,
+        "source": physics_mode_source,
         "inputs": {
-            "cli": mode_input_cli,
-            "physics": mode_input_cfg,
+            "cli": single_process_override,
             "physics_mode_cfg": physics_mode_cfg,
-            "single_process_mode_cfg": single_process_mode_cfg,
-            "legacy_modes": mode_input_legacy,
         },
     }
     run_config["process_overview"] = process_overview
@@ -3283,13 +3181,7 @@ def _run_phase5_variant(
     variant_cfg = _clone_config(base_cfg)
     if hasattr(variant_cfg, "phase5"):
         variant_cfg.phase5.compare.enable = False
-    variant_cfg.single_process_mode = mode
-    if hasattr(variant_cfg, "modes"):
-        mode_value = "sublimation_only" if mode == "sublimation_only" else "collisional_only"
-        try:
-            variant_cfg.modes.single_process = mode_value
-        except Exception:
-            pass
+    variant_cfg.physics_mode = mode
     if duration_years > 0.0:
         variant_cfg.numerics.t_end_years = duration_years
         variant_cfg.numerics.t_end_orbits = None
@@ -3307,8 +3199,8 @@ def _run_phase5_variant(
     run_zero_d(
         variant_cfg,
         enforce_mass_budget=enforce_mass_budget,
-        single_process_override=mode,
-        single_process_source="phase5_compare",
+        physics_mode_override=None,
+        physics_mode_source_override="phase5_compare",
     )
     summary_path = variant_dir / "summary.json"
     run_config_path = variant_dir / "run_config.json"
@@ -3358,7 +3250,7 @@ def _write_phase5_comparison_products(
             df = pd.read_parquet(path)
             if name == "run.parquet":
                 run_tables[res.variant] = df
-            frames.append(df.assign(variant=res.variant, single_process_mode=res.mode))
+            frames.append(df.assign(variant=res.variant, physics_mode=res.mode))
         if frames:
             combined = pd.concat(frames, ignore_index=True)
             writer.write_parquet(combined, base_outdir / "series" / name)
@@ -3370,7 +3262,7 @@ def _write_phase5_comparison_products(
             continue
         df = pd.read_csv(path)
         df["variant"] = res.variant
-        df["single_process_mode"] = res.mode
+        df["physics_mode"] = res.mode
         budget_frames.append(df)
     if budget_frames:
         checks_dir = base_outdir / "checks"
@@ -3407,7 +3299,7 @@ def _write_phase5_comparison_products(
         comparison_rows.append(
             {
                 "variant": res.variant,
-                "single_process_mode": res.mode,
+                "physics_mode": res.mode,
                 "duration_yr": float(summary.get("analysis_window_years", duration_years)),
                 "M_loss_total": float(summary.get("M_loss", float("nan"))),
                 "M_loss_blowout": float(summary.get("M_loss_rp_mars", 0.0) or 0.0),
@@ -3435,7 +3327,7 @@ def _write_phase5_comparison_products(
         s_min_components = variant_summary.get("s_min_components", {})
         variants_entry = {
             "variant": res.variant,
-            "single_process_mode": res.mode,
+            "physics_mode": res.mode,
             "outdir": str(res.outdir),
             "summary_path": str(res.outdir / "summary.json"),
             "run_config_path": str(res.outdir / "run_config.json"),
@@ -3467,7 +3359,7 @@ def _write_phase5_comparison_products(
         "variants": [
             {
                 "variant": res.variant,
-                "single_process_mode": res.mode,
+                "physics_mode": res.mode,
                 "outdir": str(res.outdir),
                 "summary_path": str(res.outdir / "summary.json"),
                 "run_config_path": str(res.outdir / "run_config.json"),
@@ -3543,9 +3435,9 @@ def main(argv: Optional[List[str]] = None) -> None:
         help="Override sinks.mode from the CLI (defaults to configuration file)",
     )
     parser.add_argument(
-        "--single-process-mode",
-        choices=["off", "sublimation_only", "collisions_only"],
-        help="Override physics.single_process_mode from the CLI",
+        "--physics-mode",
+        choices=["default", "sublimation_only", "collisions_only"],
+        help="Override physics_mode from the CLI",
     )
     parser.add_argument(
         "--compare-single-processes",
@@ -3586,8 +3478,8 @@ def main(argv: Optional[List[str]] = None) -> None:
     )
     if args.sinks is not None:
         cfg.sinks.mode = args.sinks
-    if args.single_process_mode is not None:
-        cfg.single_process_mode = args.single_process_mode
+    if args.physics_mode is not None:
+        cfg.physics_mode = args.physics_mode
     compare_block = getattr(getattr(cfg, "phase5", None), "compare", None)
     compare_config_enabled = bool(getattr(compare_block, "enable", False)) if compare_block else False
     compare_requested = bool(args.compare_single_processes or compare_config_enabled)
@@ -3608,8 +3500,8 @@ def main(argv: Optional[List[str]] = None) -> None:
         run_zero_d(
             cfg,
             enforce_mass_budget=args.enforce_mass_budget,
-            single_process_override=args.single_process_mode,
-            single_process_source="cli" if args.single_process_mode is not None else None,
+            physics_mode_override=args.physics_mode,
+            physics_mode_source_override="cli" if args.physics_mode is not None else None,
         )
 
 __all__ = [

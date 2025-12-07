@@ -10,7 +10,6 @@ from __future__ import annotations
 
 from pathlib import Path
 from typing import Any, Dict, List, Literal, Optional, Tuple, Union
-import warnings
 
 from pydantic import BaseModel, Field, validator, root_validator
 
@@ -20,37 +19,24 @@ DEFAULT_PHASE_ENTRYPOINT = "siO2_disk_cooling.siO2_cooling_map:lookup_phase_stat
 
 
 class Geometry(BaseModel):
-    """Geometric configuration of the simulation domain.
-
-    Recommended Usage:
-        For specifying orbital radius, use `disk.geometry.r_in_RM` and `disk.geometry.r_out_RM`
-        instead of `geometry.r` or `geometry.runtime_orbital_radius_rm`.
-
-        Example (0D mode - recommended):
-            geometry:
-              mode: "0D"
-            disk:
-              geometry:
-                r_in_RM: 2.2
-                r_out_RM: 2.7
-
-    .. deprecated::
-        `geometry.r` and `geometry.runtime_orbital_radius_rm` are deprecated.
-        Use `disk.geometry.r_in_RM` and `disk.geometry.r_out_RM` instead.
-    """
+    """Geometric configuration of the simulation domain."""
 
     mode: Literal["0D", "1D"] = Field("0D", description="Spatial dimension: '0D' (radially uniform) or '1D'")
-    r: Optional[float] = Field(
-        None,
-        description="DEPRECATED: Use disk.geometry instead. Orbital radius for 0D runs [m]",
-    )
     r_in: Optional[float] = Field(None, description="Inner radius for 1D runs [m]")
     r_out: Optional[float] = Field(None, description="Outer radius for 1D runs [m]")
     Nr: Optional[int] = Field(None, description="Number of radial zones for 1D runs")
-    runtime_orbital_radius_rm: Optional[float] = Field(
-        None,
-        description="DEPRECATED: Use disk.geometry.r_in_RM instead.",
-    )
+
+    @root_validator(pre=True)
+    def _forbid_deprecated_radius(cls, values: Dict[str, Any]) -> Dict[str, Any]:
+        """Disallow legacy radius keys that have been fully removed."""
+
+        if "r" in values and values.get("r") is not None:
+            raise ValueError("geometry.r is no longer supported; use disk.geometry.r_in_RM/r_out_RM instead.")
+        if "runtime_orbital_radius_rm" in values and values.get("runtime_orbital_radius_rm") is not None:
+            raise ValueError(
+                "geometry.runtime_orbital_radius_rm is no longer supported; use disk.geometry.r_in_RM/r_out_RM instead."
+            )
+        return values
 
 
 class DiskGeometry(BaseModel):
@@ -78,8 +64,8 @@ class DiskGeometry(BaseModel):
     def _check_radius_order(cls, values: Dict[str, Any]) -> Dict[str, Any]:
         r_in = values.get("r_in_RM")
         r_out = values.get("r_out_RM")
-        if r_in is not None and r_out is not None and r_in >= r_out:
-            raise ValueError(f"disk.geometry.r_in_RM ({r_in}) must be less than r_out_RM ({r_out})")
+        if r_in is not None and r_out is not None and r_in > r_out:
+            raise ValueError(f"disk.geometry.r_in_RM ({r_in}) must be less than or equal to r_out_RM ({r_out})")
         return values
 
 
@@ -495,32 +481,15 @@ class ProcessStateTagging(BaseModel):
 
 
 class Process(BaseModel):
-    """Primary-process selector and companion switches.
+    """Companion switches for phase tagging."""
 
-    .. deprecated::
-        `process.primary` is deprecated. Use `physics_mode` instead.
-        This field is retained for backward compatibility only.
-    """
-
-    primary: Literal["sublimation_only", "collisions_only"] = Field(
-        "collisions_only",
-        description="DEPRECATED: Use physics_mode instead. Select which physical process drives the evolution.",
-    )
     state_tagging: ProcessStateTagging = ProcessStateTagging()
 
-
-class Modes(BaseModel):
-    """High-level study modes for isolating single processes.
-
-    .. deprecated::
-        `modes.single_process` is deprecated. Use `physics_mode` instead.
-        This field is retained for backward compatibility only.
-    """
-
-    single_process: Literal["none", "sublimation_only", "collisional_only"] = Field(
-        "none",
-        description="DEPRECATED: Use physics_mode instead.",
-    )
+    @root_validator(pre=True)
+    def _forbid_primary(cls, values: Dict[str, Any]) -> Dict[str, Any]:
+        if "primary" in values:
+            raise ValueError("process.primary has been removed; use physics_mode instead.")
+        return values
 
 
 class Phase5CompareConfig(BaseModel):
@@ -583,25 +552,11 @@ class PhaseThresholds(BaseModel):
         return float(value)
 
 
-class PhaseMapConfig(BaseModel):
-    """Entry point for optional external phase maps.
-
-    .. deprecated::
-        `phase.map.entrypoint` is deprecated. Use `phase.entrypoint` directly instead.
-        This nested structure is retained for backward compatibility only.
-    """
-
-    entrypoint: str = Field(
-        DEFAULT_PHASE_ENTRYPOINT,
-        description="DEPRECATED: Use phase.entrypoint instead.",
-    )
-
-
 class PhaseConfig(BaseModel):
     """Solid/vapour branching controls.
 
     Simplified Usage:
-        Use `phase.entrypoint` directly instead of `phase.map.entrypoint`.
+        Use `phase.entrypoint` directly to specify the map function.
 
         Example (threshold mode - recommended):
             phase:
@@ -635,10 +590,6 @@ class PhaseConfig(BaseModel):
         default_factory=PhaseThresholds,
         description="Temperature thresholds (used when source='threshold')",
     )
-    map: Optional[PhaseMapConfig] = Field(
-        None,
-        description="DEPRECATED: Use phase.entrypoint directly instead of phase.map.entrypoint",
-    )
 
     @validator("entrypoint")
     def _check_entrypoint_format(cls, value: str) -> str:
@@ -647,28 +598,6 @@ class PhaseConfig(BaseModel):
         if not module or sep == "" or not func:
             raise ValueError("phase.entrypoint must be of the form 'module.submodule:function'")
         return text
-
-    @root_validator(pre=True)
-    def _inherit_map_entrypoint(cls, values: Dict[str, object]) -> Dict[str, object]:
-        """Promote map.entrypoint to the top-level field for backward compatibility."""
-
-        map_cfg = values.get("map")
-        map_entrypoint: Optional[str] = None
-        if isinstance(map_cfg, dict) and "entrypoint" in map_cfg:
-            map_entrypoint = map_cfg["entrypoint"]
-            warnings.warn(
-                "DEPRECATED: 'phase.map.entrypoint' is deprecated. "
-                "Use 'phase.entrypoint' directly instead.",
-                DeprecationWarning,
-                stacklevel=2,
-            )
-        elif isinstance(map_cfg, PhaseMapConfig):
-            map_entrypoint = map_cfg.entrypoint
-        current_entrypoint = values.get("entrypoint")
-        if map_entrypoint:
-            if current_entrypoint in (None, DEFAULT_PHASE_ENTRYPOINT):
-                values["entrypoint"] = map_entrypoint
-        return values
 
 
 class MarsTemperatureDriverConstant(BaseModel):
@@ -794,16 +723,12 @@ class Radiation(BaseModel):
     )
     TM_K: Optional[float] = Field(
         None,
-        description="Optional override for the Mars-facing temperature [K]; temps.T_M is used when omitted.",
+        description="Optional override for the Mars-facing temperature [K].",
     )
     freeze_kappa: bool = False
     qpr_table_path: Optional[Path] = Field(
         None,
         description="Path to the Planck-averaged ⟨Q_pr⟩ lookup table. When omitted the analytic fallback is used.",
-    )
-    qpr_table: Optional[Path] = Field(
-        None,
-        description="Legacy alias for qpr_table_path; kept for backward compatibility.",
     )
     Q_pr: Optional[float] = Field(None, description="Grey-body radiation pressure efficiency")
     mars_temperature_driver: Optional[MarsTemperatureDriverConfig] = Field(
@@ -811,25 +736,6 @@ class Radiation(BaseModel):
         description="Time-dependent Mars temperature driver configuration.",
     )
     tau_gate: RadiationTauGate = RadiationTauGate()
-
-    @validator("qpr_table", always=True)
-    def _check_qpr_table_alias(
-        cls,
-        value: Optional[Path],
-        values: Dict[str, Optional[Path]],
-    ) -> Optional[Path]:
-        """Ensure that qpr_table/qpr_table_path do not conflict."""
-
-        new_style = values.get("qpr_table_path")
-        if value is not None and new_style is not None and Path(value) != Path(new_style):
-            raise ValueError("Specify either radiation.qpr_table_path or radiation.qpr_table (legacy), not both.")
-        if value is not None and new_style is None:
-            warnings.warn(
-                "radiation.qpr_table is deprecated; please migrate to radiation.qpr_table_path.",
-                DeprecationWarning,
-                stacklevel=2,
-            )
-        return value
 
     @validator("Q_pr")
     def _validate_qpr(cls, value: Optional[float]) -> Optional[float]:
@@ -854,9 +760,9 @@ class Radiation(BaseModel):
 
     @property
     def qpr_table_resolved(self) -> Optional[Path]:
-        """Return the preferred ⟨Q_pr⟩ table path, respecting legacy keys."""
+        """Return the preferred ⟨Q_pr⟩ table path."""
 
-        return self.qpr_table_path or self.qpr_table
+        return self.qpr_table_path
 
 
 class Shielding(BaseModel):
@@ -865,10 +771,6 @@ class Shielding(BaseModel):
     table_path: Optional[Path] = Field(
         None,
         description="Primary path to the Φ(τ) lookup table.",
-    )
-    phi_table: Optional[Path] = Field(
-        None,
-        description="Legacy alias for table_path retained for backward compatibility.",
     )
     mode: Literal["off", "psitau", "fixed_tau1", "table"] = "psitau"
     fixed_tau1_tau: Optional[float] = Field(
@@ -880,30 +782,11 @@ class Shielding(BaseModel):
         description="Optional direct specification of Σ_{τ=1} when shielding.mode='fixed_tau1'.",
     )
 
-    @validator("phi_table", always=True)
-    def _check_phi_table_alias(
-        cls,
-        value: Optional[Path],
-        values: Dict[str, Optional[Path]],
-    ) -> Optional[Path]:
-        """Ensure that table_path/phi_table do not conflict."""
-
-        primary = values.get("table_path")
-        if value is not None and primary is not None and Path(value) != Path(primary):
-            raise ValueError("Specify either shielding.table_path or shielding.phi_table (legacy), not both.")
-        if value is not None and primary is None:
-            warnings.warn(
-                "shielding.phi_table is deprecated; please migrate to shielding.table_path.",
-                DeprecationWarning,
-                stacklevel=2,
-            )
-        return value
-
     @property
     def table_path_resolved(self) -> Optional[Path]:
         """Return the preferred Φ(τ) table path."""
 
-        return self.table_path or self.phi_table
+        return self.table_path
 
     @property
     def mode_resolved(self) -> str:
@@ -1106,13 +989,6 @@ class Diagnostics(BaseModel):
 class Config(BaseModel):
     """Top-level configuration object.
 
-    Physics Mode Consolidation:
-        The preferred way to specify single-process execution is via `physics_mode`.
-        The following legacy fields are deprecated and will be removed:
-        - `single_process_mode`: Use `physics_mode` instead
-        - `modes.single_process`: Use `physics_mode` instead
-        - `process.primary`: Use `physics_mode` instead
-
     Physics Mode Values:
         - "default": Run both collisions and sublimation/sinks (combined mode)
         - "sublimation_only": Run only sublimation, disable collisions and blow-out
@@ -1130,19 +1006,13 @@ class Config(BaseModel):
             "'collisions_only' disables sublimation sinks."
         ),
     )
-    single_process_mode: Literal["off", "sublimation_only", "collisions_only"] = Field(
-        "off",
-        description="DEPRECATED: Use physics_mode instead.",
-    )
     process: Process = Process()
-    modes: Modes = Modes()
     phase5: Phase5Config = Phase5Config()
     chi_blow: Union[float, Literal["auto"]] = Field(
         1.0,
         description="Blow-out timescale multiplier (float) or 'auto' to estimate from β and Q_pr.",
     )
     material: Material
-    temps: Optional[Temps] = None  # DEPRECATED: Use radiation.TM_K instead
     sizes: Sizes
     initial: Initial
     dynamics: Dynamics
@@ -1161,6 +1031,38 @@ class Config(BaseModel):
     tables: Optional[dict] = None  # backward compatibility placeholder
     diagnostics: Diagnostics = Diagnostics()
     io: IO
+
+    @root_validator(pre=True)
+    def _forbid_deprecated_paths(cls, values: Dict[str, Any]) -> Dict[str, Any]:
+        """Reject legacy configuration keys that have been removed."""
+
+        forbidden: Dict[tuple[str, ...], str] = {
+            ("geometry", "r"): "disk.geometry.r_in_RM / r_out_RM",
+            ("geometry", "runtime_orbital_radius_rm"): "disk.geometry.r_in_RM / r_out_RM",
+            ("temps",): "radiation.TM_K or mars_temperature_driver.constant",
+            ("single_process_mode",): "physics_mode",
+            ("modes", "single_process"): "physics_mode",
+            ("process", "primary"): "physics_mode",
+            ("phase", "map", "entrypoint"): "phase.entrypoint",
+            ("phase", "map"): "phase.entrypoint",
+            ("radiation", "qpr_table"): "radiation.qpr_table_path",
+            ("shielding", "phi_table"): "shielding.table_path",
+        }
+
+        def _walk(node: Any, path: tuple[str, ...]) -> None:
+            if not isinstance(node, dict):
+                return
+            for key, val in node.items():
+                new_path = path + (str(key),)
+                if new_path in forbidden:
+                    raise ValueError(
+                        f"Configuration key '{'.'.join(new_path)}' is no longer supported; "
+                        f"use {forbidden[new_path]} instead."
+                    )
+                _walk(val, new_path)
+
+        _walk(values, tuple())
+        return values
 
     @validator("physics_mode")
     def _normalise_physics_mode(cls, value: str) -> str:
@@ -1183,121 +1085,15 @@ class Config(BaseModel):
             raise ValueError("chi_blow must be positive")
         return float(value)
 
-    @root_validator(skip_on_failure=True)
-    def _migrate_temps_to_radiation(cls, values: Dict[str, Any]) -> Dict[str, Any]:
-        """Migrate temps.T_M to radiation.TM_K with deprecation warning.
-
-        This validator implements the temperature parameter consolidation:
-        - If radiation.TM_K is set, it takes precedence (no warning)
-        - If only temps.T_M is set, issue deprecation warning and use as fallback
-        - If both are set with different values, warn and prefer radiation.TM_K
-        """
-        temps = values.get("temps")
-        radiation = values.get("radiation")
-
-        if temps is None:
-            return values
-
-        temps_T_M = temps.T_M if isinstance(temps, Temps) else temps.get("T_M")
-
-        if temps_T_M is None:
-            return values
-
-        # Check if radiation.TM_K is set
-        radiation_TM_K = None
-        if radiation is not None:
-            radiation_TM_K = (
-                radiation.TM_K if isinstance(radiation, Radiation) else radiation.get("TM_K")
-            )
-
-        if radiation_TM_K is None:
-            # Only temps.T_M is set - issue deprecation warning
-            warnings.warn(
-                "DEPRECATED: 'temps.T_M' is deprecated and will be removed in a future version. "
-                "Please use 'radiation.TM_K' instead. "
-                f"Current value temps.T_M={temps_T_M} K will be used as a fallback.",
-                DeprecationWarning,
-                stacklevel=2,
-            )
-            # Note: The actual fallback logic is handled in physics code
-            # where it checks radiation.TM_K first, then falls back to temps.T_M
-        elif abs(radiation_TM_K - temps_T_M) > 1e-6:
-            # Both are set with different values
-            warnings.warn(
-                f"Both temps.T_M ({temps_T_M} K) and radiation.TM_K ({radiation_TM_K} K) are set "
-                "with different values. radiation.TM_K takes precedence. "
-                "Please remove temps.T_M from your configuration.",
-                DeprecationWarning,
-                stacklevel=2,
-            )
-
-        return values
-
-    @root_validator(skip_on_failure=True)
-    def _warn_deprecated_physics_modes(cls, values: Dict[str, Any]) -> Dict[str, Any]:
-        """Warn about deprecated physics mode fields.
-
-        Checks for usage of deprecated fields and issues warnings:
-        - single_process_mode (use physics_mode instead)
-        - modes.single_process (use physics_mode instead)
-        - process.primary (use physics_mode instead)
-        """
-        # Check single_process_mode
-        single_process_mode = values.get("single_process_mode")
-        if single_process_mode and single_process_mode != "off":
-            warnings.warn(
-                f"DEPRECATED: 'single_process_mode' is deprecated. "
-                f"Use 'physics_mode: {single_process_mode}' instead.",
-                DeprecationWarning,
-                stacklevel=2,
-            )
-
-        # Check modes.single_process
-        modes = values.get("modes")
-        if modes is not None:
-            single_process = (
-                modes.single_process if isinstance(modes, Modes) else modes.get("single_process")
-            )
-            if single_process and single_process not in ("none", None):
-                # Map collisional_only -> collisions_only
-                mapped = "collisions_only" if single_process == "collisional_only" else single_process
-                warnings.warn(
-                    f"DEPRECATED: 'modes.single_process' is deprecated. "
-                    f"Use 'physics_mode: {mapped}' instead.",
-                    DeprecationWarning,
-                    stacklevel=2,
-                )
-
-        # Check process.primary (only warn if it differs from default)
-        process = values.get("process")
-        if process is not None:
-            primary = (
-                process.primary if isinstance(process, Process) else process.get("primary")
-            )
-            # process.primary defaults to collisions_only, so only warn if explicitly set differently
-            # We can't easily detect if it was explicitly set, so we skip this check
-            # to avoid false positives
-
-        return values
-
     def get_effective_TM_K(self) -> float:
-        """Return the effective Mars temperature, preferring radiation.TM_K over temps.T_M.
+        """Return the effective Mars temperature from the radiation block."""
 
-        This helper method implements the temperature parameter consolidation logic:
-        1. If radiation.TM_K is set, use it
-        2. Otherwise, fall back to temps.T_M
-        3. If neither is provided, raise a descriptive error
-
-        Returns:
-            float: Effective Mars infrared temperature in Kelvin
-        Raises:
-            ValueError: If neither radiation.TM_K nor temps.T_M is provided.
-        """
         if self.radiation is not None and getattr(self.radiation, "TM_K", None) is not None:
             return float(self.radiation.TM_K)  # type: ignore[return-value]
-        if self.temps is not None and getattr(self.temps, "T_M", None) is not None:
-            return float(self.temps.T_M)  # type: ignore[return-value]
-        raise ValueError("radiation.TM_K is required (temps.T_M is deprecated and absent)")
+        driver = getattr(self.radiation, "mars_temperature_driver", None) if self.radiation else None
+        if driver is not None and getattr(driver, "constant", None) is not None and getattr(driver, "enabled", False):
+            return float(driver.constant.value_K)
+        raise ValueError("radiation.TM_K is required when no temperature driver constant is provided")
 
 
 __all__ = [
@@ -1317,13 +1113,11 @@ __all__ = [
     "Supply",
     "PhaseConfig",
     "PhaseThresholds",
-    "PhaseMapConfig",
     "Sinks",
     "Diagnostics",
     "Phase7Diagnostics",
     "ProcessStateTagging",
     "Process",
-    "Modes",
     "Phase5Config",
     "Phase5CompareConfig",
     "MarsTemperatureDriverConfig",
