@@ -227,12 +227,14 @@ marsdisk/io/tables.py:283:def load_qpr_table(path: str | Path) -> Callable[[floa
 marsdisk/io/tables.py:298:def load_phi_table(path: str | Path) -> Callable[[float], float]
 marsdisk/io/tables.py:356:def get_qpr_table_path() -> Optional[Path]
 marsdisk/io/writer.py:20:def _ensure_parent(path: Path) -> None
-marsdisk/io/writer.py:24:def write_parquet(df: pd.DataFrame, path: Path) -> None
-marsdisk/io/writer.py:279:def write_summary(summary: Mapping[str, Any], path: Path) -> None
-marsdisk/io/writer.py:290:def write_run_config(config: Mapping[str, Any], path: Path) -> None
-marsdisk/io/writer.py:298:def write_mass_budget(records: Iterable[Mapping[str, Any]], path: Path) -> None
-marsdisk/io/writer.py:305:def write_orbit_rollup(rows: Iterable[Mapping[str, Any]], path: Path) -> None
-marsdisk/io/writer.py:316:def write_step_diagnostics(rows: Iterable[Mapping[str, Any]], path: Path, *, fmt: Literal['csv', 'jsonl']='csv') -> None
+marsdisk/io/writer.py:24:def write_parquet(df: pd.DataFrame, path: Path, *, compression: str='snappy') -> None
+marsdisk/io/writer.py:280:def write_summary(summary: Mapping[str, Any], path: Path) -> None
+marsdisk/io/writer.py:291:def write_run_config(config: Mapping[str, Any], path: Path) -> None
+marsdisk/io/writer.py:299:def write_mass_budget(records: Iterable[Mapping[str, Any]], path: Path) -> None
+marsdisk/io/writer.py:306:def append_csv(records: Iterable[Mapping[str, Any]], path: Path, *, header: bool=True) -> bool
+marsdisk/io/writer.py:325:def write_orbit_rollup(rows: Iterable[Mapping[str, Any]], path: Path) -> None
+marsdisk/io/writer.py:336:def write_step_diagnostics(rows: Iterable[Mapping[str, Any]], path: Path, *, fmt: Literal['csv', 'jsonl']='csv') -> None
+marsdisk/io/writer.py:359:def append_step_diagnostics(rows: Iterable[Mapping[str, Any]], path: Path, *, fmt: Literal['csv', 'jsonl']='csv', header: bool=True) -> bool
 marsdisk/ops/assumption_trace.py:20:class AssumptionRecord
 marsdisk/ops/assumption_trace.py:38:def load_equation_index(path: Path) -> list[dict[str, Any]]
 marsdisk/ops/assumption_trace.py:56:def _iter_equation_blocks(lines: list[str]) -> Iterable[tuple[str, str, list[str]]]
@@ -420,40 +422,41 @@ marsdisk/physics_step.py:317:def compute_sublimation(T_M: float, r: float, rho: 
 marsdisk/physics_step.py:378:def step_surface_layer(sigma_surf: float, prod_rate: float, dt: float, Omega: float, *, tau: Optional[float]=None, t_sink: Optional[float]=None, sigma_tau1: Optional[float]=None, enable_blowout: bool=True, chi_blow: float=1.0) -> SurfaceStepResult
 marsdisk/physics_step.py:460:def fast_blowout_correction_factor(ratio: float) -> float
 marsdisk/physics_step.py:484:def compute_gate_factor(t_blow: Optional[float], t_solid: Optional[float]) -> float
-marsdisk/run.py:86:class ProgressReporter
-marsdisk/run.py:175:def _parse_override_value(raw: str) -> Any
-marsdisk/run.py:202:def _apply_overrides_dict(payload: Dict[str, Any], overrides: Sequence[str]) -> Dict[str, Any]
-marsdisk/run.py:240:def _merge_physics_section(payload: Dict[str, Any]) -> Dict[str, Any]
-marsdisk/run.py:259:def _safe_float(value: Any) -> Optional[float]
-marsdisk/run.py:271:def _derive_seed_components(cfg: Config) -> str
-marsdisk/run.py:296:def _resolve_seed(cfg: Config) -> tuple[int, str, str]
-marsdisk/run.py:311:def _auto_chi_blow(beta: float, qpr: float) -> float
-marsdisk/run.py:326:def _fast_blowout_correction_factor(ratio: float) -> float
-marsdisk/run.py:346:def _compute_gate_factor(t_blow: Optional[float], t_solid: Optional[float]) -> float
-marsdisk/run.py:368:def _human_bytes(value: float) -> str
-marsdisk/run.py:380:def _memory_estimate(n_steps: int, n_bins: int, run_row_bytes: float=MEMORY_RUN_ROW_BYTES, psd_row_bytes: float=MEMORY_PSD_ROW_BYTES, *, smol_value_bytes: float=8.0) -> tuple[str, str]
-marsdisk/run.py:405:def _normalise_physics_mode(value: Any) -> str
-marsdisk/run.py:421:def _clone_config(cfg: Config) -> Config
-marsdisk/run.py:429:def _resolve_time_grid(numerics: Any, Omega: float, t_orb: float) -> tuple[float, float, float, int, Dict[str, Any]]
-marsdisk/run.py:494:class _Phase5VariantResult
-marsdisk/run.py:507:def _read_json(path: Path) -> Dict[str, Any]
-marsdisk/run.py:512:def _hash_payload(payload: Mapping[str, Any]) -> str
-marsdisk/run.py:517:def _prepare_phase5_variants(compare_cfg: Any) -> List[Dict[str, str]]
-marsdisk/run.py:550:class RunConfig
-marsdisk/run.py:564:class RunState
-marsdisk/run.py:574:class ZeroDHistory
-marsdisk/run.py:598:def step(config: RunConfig, state: RunState, dt: float) -> Dict[str, float]
-marsdisk/run.py:646:def run_n_steps(config: RunConfig, state: RunState, n: int, dt: float, out_dir: Path | None=None) -> pd.DataFrame
-marsdisk/run.py:676:def load_config(path: Path, overrides: Optional[Sequence[str]]=None) -> Config
-marsdisk/run.py:701:def _gather_git_info() -> Dict[str, Any]
-marsdisk/run.py:728:def _configure_logging(level: int, suppress_warnings: bool=False) -> None
-marsdisk/run.py:746:class MassBudgetViolationError(RuntimeError)
-marsdisk/run.py:750:def _write_zero_d_history(cfg: Config, df: pd.DataFrame, history: ZeroDHistory, *, step_diag_enabled: bool, step_diag_format: str, step_diag_path_cfg: Optional[Path], orbit_rollup_enabled: bool, phase7_enabled: bool) -> None
-marsdisk/run.py:850:def run_zero_d(cfg: Config, *, enforce_mass_budget: bool=False, physics_mode_override: Optional[str]=None, physics_mode_source_override: Optional[str]=None) -> None
-marsdisk/run.py:3175:def _run_phase5_variant(base_cfg: Config, variant: str, mode: str, base_outdir: Path, duration_years: float, *, enforce_mass_budget: bool) -> _Phase5VariantResult
-marsdisk/run.py:3237:def _write_phase5_comparison_products(base_outdir: Path, duration_years: float, results: List[_Phase5VariantResult]) -> None
-marsdisk/run.py:3379:def run_phase5_comparison(cfg: Config, *, enforce_mass_budget: bool=False, variants_spec: Optional[List[Dict[str, str]]]=None) -> None
-marsdisk/run.py:3414:def main(argv: Optional[List[str]]=None) -> None
+marsdisk/run.py:88:class ProgressReporter
+marsdisk/run.py:177:def _parse_override_value(raw: str) -> Any
+marsdisk/run.py:204:def _apply_overrides_dict(payload: Dict[str, Any], overrides: Sequence[str]) -> Dict[str, Any]
+marsdisk/run.py:242:def _merge_physics_section(payload: Dict[str, Any]) -> Dict[str, Any]
+marsdisk/run.py:261:def _safe_float(value: Any) -> Optional[float]
+marsdisk/run.py:273:def _derive_seed_components(cfg: Config) -> str
+marsdisk/run.py:298:def _resolve_seed(cfg: Config) -> tuple[int, str, str]
+marsdisk/run.py:313:def _auto_chi_blow(beta: float, qpr: float) -> float
+marsdisk/run.py:328:def _fast_blowout_correction_factor(ratio: float) -> float
+marsdisk/run.py:348:def _compute_gate_factor(t_blow: Optional[float], t_solid: Optional[float]) -> float
+marsdisk/run.py:370:def _human_bytes(value: float) -> str
+marsdisk/run.py:382:def _memory_estimate(n_steps: int, n_bins: int, run_row_bytes: float=MEMORY_RUN_ROW_BYTES, psd_row_bytes: float=MEMORY_PSD_ROW_BYTES, *, smol_value_bytes: float=8.0) -> tuple[str, str]
+marsdisk/run.py:407:def _normalise_physics_mode(value: Any) -> str
+marsdisk/run.py:423:def _clone_config(cfg: Config) -> Config
+marsdisk/run.py:431:def _resolve_time_grid(numerics: Any, Omega: float, t_orb: float) -> tuple[float, float, float, int, Dict[str, Any]]
+marsdisk/run.py:496:class _Phase5VariantResult
+marsdisk/run.py:509:def _read_json(path: Path) -> Dict[str, Any]
+marsdisk/run.py:514:def _hash_payload(payload: Mapping[str, Any]) -> str
+marsdisk/run.py:519:def _prepare_phase5_variants(compare_cfg: Any) -> List[Dict[str, str]]
+marsdisk/run.py:552:class RunConfig
+marsdisk/run.py:566:class RunState
+marsdisk/run.py:576:class ZeroDHistory
+marsdisk/run.py:600:class StreamingState
+marsdisk/run.py:733:def step(config: RunConfig, state: RunState, dt: float) -> Dict[str, float]
+marsdisk/run.py:781:def run_n_steps(config: RunConfig, state: RunState, n: int, dt: float, out_dir: Path | None=None) -> pd.DataFrame
+marsdisk/run.py:811:def load_config(path: Path, overrides: Optional[Sequence[str]]=None) -> Config
+marsdisk/run.py:836:def _gather_git_info() -> Dict[str, Any]
+marsdisk/run.py:863:def _configure_logging(level: int, suppress_warnings: bool=False) -> None
+marsdisk/run.py:881:class MassBudgetViolationError(RuntimeError)
+marsdisk/run.py:885:def _write_zero_d_history(cfg: Config, df: pd.DataFrame, history: ZeroDHistory, *, step_diag_enabled: bool, step_diag_format: str, step_diag_path_cfg: Optional[Path], step_diag_path: Optional[Path], orbit_rollup_enabled: bool, phase7_enabled: bool) -> None
+marsdisk/run.py:988:def run_zero_d(cfg: Config, *, enforce_mass_budget: bool=False, physics_mode_override: Optional[str]=None, physics_mode_source_override: Optional[str]=None) -> None
+marsdisk/run.py:3376:def _run_phase5_variant(base_cfg: Config, variant: str, mode: str, base_outdir: Path, duration_years: float, *, enforce_mass_budget: bool) -> _Phase5VariantResult
+marsdisk/run.py:3438:def _write_phase5_comparison_products(base_outdir: Path, duration_years: float, results: List[_Phase5VariantResult]) -> None
+marsdisk/run.py:3580:def run_phase5_comparison(cfg: Config, *, enforce_mass_budget: bool=False, variants_spec: Optional[List[Dict[str, str]]]=None) -> None
+marsdisk/run.py:3615:def main(argv: Optional[List[str]]=None) -> None
 marsdisk/schema.py:21:class Geometry(BaseModel)
 marsdisk/schema.py:42:class DiskGeometry(BaseModel)
 marsdisk/schema.py:72:class Disk(BaseModel)
@@ -494,10 +497,11 @@ marsdisk/schema.py:801:class Blowout(BaseModel)
 marsdisk/schema.py:819:class Numerics(BaseModel)
 marsdisk/schema.py:909:class StepDiagnostics(BaseModel)
 marsdisk/schema.py:926:class Progress(BaseModel)
-marsdisk/schema.py:940:class IO(BaseModel)
-marsdisk/schema.py:970:class Phase7Diagnostics(BaseModel)
-marsdisk/schema.py:983:class Diagnostics(BaseModel)
-marsdisk/schema.py:989:class Config(BaseModel)
+marsdisk/schema.py:940:class Streaming(BaseModel)
+marsdisk/schema.py:983:class IO(BaseModel)
+marsdisk/schema.py:1014:class Phase7Diagnostics(BaseModel)
+marsdisk/schema.py:1027:class Diagnostics(BaseModel)
+marsdisk/schema.py:1033:class Config(BaseModel)
 marsdisk/tests/test_core.py:11:def test_constants_values()
 marsdisk/tests/test_core.py:17:def test_grid_relations()
 marsdisk/tests/test_core.py:24:def test_writer_and_tables(tmp_path: Path)

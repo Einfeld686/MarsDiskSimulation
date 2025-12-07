@@ -937,12 +937,56 @@ class Progress(BaseModel):
     )
 
 
+class Streaming(BaseModel):
+    """Streaming write controls for large zero-D runs."""
+
+    enable: bool = Field(
+        False,
+        description="Enable chunked streaming writes when memory usage exceeds thresholds.",
+    )
+    opt_out: bool = Field(
+        False,
+        description="Force-disable streaming even if enable=true (safety valve).",
+    )
+    memory_limit_gb: float = Field(
+        80.0,
+        gt=0.0,
+        description="Approximate in-memory buffer limit in gigabytes that triggers a flush.",
+    )
+    step_flush_interval: int = Field(
+        10000,
+        ge=0,
+        description="Optional step interval trigger for flushing buffers (0 to disable).",
+    )
+    compression: Literal["snappy", "zstd", "brotli", "gzip", "none"] = Field(
+        "snappy",
+        description="Compression codec for Parquet chunk outputs.",
+    )
+    merge_at_end: bool = Field(
+        False,
+        description="Merge Parquet chunks into single files at the end of the run.",
+    )
+
+    @validator("memory_limit_gb")
+    def _check_memory_limit(cls, value: float) -> float:
+        if value <= 0.0:
+            raise ValueError("io.streaming.memory_limit_gb must be positive")
+        return float(value)
+
+    @validator("step_flush_interval")
+    def _check_step_interval(cls, value: int) -> int:
+        if value < 0:
+            raise ValueError("io.streaming.step_flush_interval must be non-negative")
+        return int(value)
+
+
 class IO(BaseModel):
     """Output directories."""
 
     outdir: Path = Path("out")
     step_diagnostics: StepDiagnostics = StepDiagnostics()
     progress: Progress = Progress()
+    streaming: Optional[Streaming] = None
     quiet: bool = Field(
         False,
         description="Suppress INFO logging and Python warnings for cleaner CLI output.",

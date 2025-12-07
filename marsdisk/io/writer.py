@@ -21,7 +21,7 @@ def _ensure_parent(path: Path) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
 
 
-def write_parquet(df: pd.DataFrame, path: Path) -> None:
+def write_parquet(df: pd.DataFrame, path: Path, *, compression: str = "snappy") -> None:
     """Write a DataFrame to a Parquet file using ``pyarrow``.
 
     Parameters
@@ -273,7 +273,8 @@ def write_parquet(df: pd.DataFrame, path: Path) -> None:
         }
     )
     table = table.replace_schema_metadata(metadata)
-    pq.write_table(table, path)
+    compression_arg = None if compression == "none" else compression
+    pq.write_table(table, path, compression=compression_arg)
 
 
 def write_summary(summary: Mapping[str, Any], path: Path) -> None:
@@ -300,6 +301,25 @@ def write_mass_budget(records: Iterable[Mapping[str, Any]], path: Path) -> None:
     _ensure_parent(path)
     df = pd.DataFrame(list(records))
     df.to_csv(path, index=False)
+
+
+def append_csv(
+    records: Iterable[Mapping[str, Any]],
+    path: Path,
+    *,
+    header: bool = True,
+) -> bool:
+    """Append records to a CSV file, creating the file if needed.
+
+    Returns True if any rows were written.
+    """
+    rows = list(records)
+    if not rows:
+        return False
+    _ensure_parent(path)
+    df = pd.DataFrame(rows)
+    df.to_csv(path, mode="a", header=header, index=False)
+    return True
 
 
 def write_orbit_rollup(rows: Iterable[Mapping[str, Any]], path: Path) -> None:
@@ -334,3 +354,31 @@ def write_step_diagnostics(
                 fh.write("\n")
     else:  # pragma: no cover - defensive guard
         raise ValueError(f"Unsupported step diagnostics format: {fmt}")
+
+
+def append_step_diagnostics(
+    rows: Iterable[Mapping[str, Any]],
+    path: Path,
+    *,
+    fmt: Literal["csv", "jsonl"] = "csv",
+    header: bool = True,
+) -> bool:
+    """Append per-step diagnostics in CSV or JSONL format."""
+
+    rows = list(rows)
+    if not rows:
+        return False
+    _ensure_parent(path)
+    fmt_lower = str(fmt).lower()
+    if fmt_lower == "csv":
+        df = pd.DataFrame(rows)
+        df.to_csv(path, mode="a", header=header, index=False)
+    elif fmt_lower == "jsonl":
+        mode = "a" if path.exists() else "w"
+        with path.open(mode, encoding="utf-8") as fh:
+            for row in rows:
+                fh.write(json.dumps(row, sort_keys=True))
+                fh.write("\n")
+    else:  # pragma: no cover - defensive guard
+        raise ValueError(f"Unsupported step diagnostics format: {fmt}")
+    return True

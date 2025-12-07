@@ -75,6 +75,30 @@
       ]
     },
     {
+      "key": "SalmonCanup2010_Icarus208_33",
+      "short": "Salmon & Canup (2010)",
+      "title": "Long-term and large-scale viscous evolution of dense planetary rings",
+      "doi": null,
+      "bibtex": "@article{SalmonCanup2010_Icarus208_33, journal = {Icarus}, volume = {208}, pages = {33-48}, year = {2010}}",
+      "adopted_scope": "Viscous diffusion of Roche-interior fluid disks with ν ∝ Σ² scaling relevant to massive inner rings.",
+      "claims": [
+        "Shows how initial Σ(r) choices control spreading time and mass delivery beyond the Roche limit.",
+        "Provides analytic normalisations for mapping total ring mass to surface density profiles."
+      ]
+    },
+    {
+      "key": "SalmonCanup2012_ApJ760_83",
+      "short": "Salmon & Canup (2012)",
+      "title": "Lunar accretion from a Roche-interior fluid disk",
+      "doi": "10.1088/0004-637X/760/1/83",
+      "bibtex": "@article{SalmonCanup2012_ApJ760_83, journal = {ApJ}, volume = {760}, pages = {83}, year = {2012}}",
+      "adopted_scope": "Satellite growth fed by viscously spreading Roche-interior disks.",
+      "claims": [
+        "Uses uniform/power-law Σ(r) prescriptions tied to total disk mass when initializing fluid disks.",
+        "Links disk mass fraction to moon-forming mass fluxes across the Roche limit."
+      ]
+    },
+    {
       "key": "CanupSalmon2018_SciAdv4_eaar6887",
       "short": "Canup & Salmon (2018)",
       "title": "Origin of Phobos and Deimos by the impact of a Vesta-to-Ceres-sized body with Mars",
@@ -112,6 +136,42 @@
       ]
     },
     {
+      "key": "PollackBurnsTauber1979_Icarus37_587",
+      "short": "Pollack, Burns & Tauber (1979)",
+      "title": "Gas drag in primordial circumplanetary envelopes: A mechanism for satellite capture",
+      "doi": "10.1016/0019-1035(79)90016-2",
+      "bibtex": "@article{PollackBurnsTauber1979_Icarus37_587, journal = {Icarus}, volume = {37}, pages = {587-611}, year = {1979}}",
+      "adopted_scope": "High-density circumplanetary gas envelopes where drag rapidly damps passing bodies.",
+      "claims": [
+        "Computes gas densities required for aerodynamic capture of km-scale bodies in proto-satellite envelopes.",
+        "Used as an upper bound; such densities are absent in the gas-poor baseline, so drag is normally disabled."
+      ]
+    },
+    {
+      "key": "Hunten1979_Icarus37_113",
+      "short": "Hunten (1979)",
+      "title": "Capture of Phobos and Deimos by protoatmospheric drag",
+      "doi": null,
+      "bibtex": "@article{Hunten1979_Icarus37_113, journal = {Icarus}, volume = {37}, pages = {113-123}, year = {1979}}",
+      "adopted_scope": "Mars protoatmosphere drag capture estimates for small satellites.",
+      "claims": [
+        "Shows that only dense protoatmospheres (near MMSN levels) can capture Phobos/Deimos by drag.",
+        "Supports treating gas drag as negligible in thin-atmosphere, gas-poor post-impact disks."
+      ]
+    },
+    {
+      "key": "Olofsson2022_MNRAS513_713",
+      "short": "Olofsson et al. (2022)",
+      "title": "The vertical structure of debris discs and the impact of gas",
+      "doi": null,
+      "bibtex": "@article{Olofsson2022_MNRAS513_713, journal = {MNRAS}, volume = {513}, pages = {713-731}, year = {2022}}",
+      "adopted_scope": "Gas–dust coupling in debris disks at low gas surface densities.",
+      "claims": [
+        "Shows that when gas Σ is low, drag times exceed collisional times and radiation pressure dominates small-grain dynamics.",
+        "Provides the gas-poor baseline justifying enable_gas_drag=false unless dense gas is imposed."
+      ]
+    },
+    {
       "key": "Kuramoto2024",
       "short": "Kuramoto (2024)",
       "title": "MMX-era review of Martian satellite origin scenarios",
@@ -133,6 +193,91 @@
       "claims": [
         "Provides historical context for t_coll ≈ T_orb/(4π τ) scaling used before adopting Strubbe & Chiang.",
         "Governs qualitative stability tests in surface-layer IMEX steps."
+      ]
+    },
+    {
+      "key": "WyattClarkeBooth2011_CeMDA111_1",
+      "short": "Wyatt, Clarke & Booth (2011)",
+      "title": "Debris disk size distributions: steady state collisional evolution with Poynting-Robertson drag and other loss processes",
+      "doi": "10.1007/s10569-011-9345-3",
+      "bibtex": "@article{WyattClarkeBooth2011_CeMDA111_1, journal = {Celestial Mechanics and Dynamical Astronomy}, volume = {111}, pages = {1-28}, year = {2011}}",
+      "adopted_scope": "Analytic steady-state size distributions balancing supply terms against collisional and PR-drag losses.",
+      "claims": [
+        "Provides source-plus-loss balance equations per size bin that are generalised in supply.mode implementations.",
+        "Shows how minimum grain sizes are set by competition between blow-out, PR drag, and collisional removal.",
+        "Used as a template for introducing epsilon_mix and other mixing coefficients alongside external fluxes."
+      ]
+    },
+    {
+      "key": "Birnstiel2011_AA525_A11",
+      "short": "Birnstiel et al. (2011)",
+      "title": "Dust size distributions in coagulation/fragmentation equilibrium: numerical solutions and analytical fits",
+      "doi": "10.1051/0004-6361/201015228",
+      "bibtex": "@article{Birnstiel2011_AA525_A11, journal = {A&A}, volume = {525}, pages = {A11}, year = {2011}}",
+      "adopted_scope": "Grid-resolution and slope requirements for coagulation/fragmentation equilibria in disks.",
+      "claims": [
+        "Recommends logarithmic spacing with a_{i+1}/a_i ≲ 1.1–1.2 to resolve steady-state PSDs without bias.",
+        "Demonstrates how coarse binning suppresses small-grain production, motivating ≥40 bins over 6–7 decades."
+      ]
+    },
+    {
+      "key": "ThebaultAugereau2007_AA472_169",
+      "short": "Thébault & Augereau (2007)",
+      "title": "Collisional processes and size distribution in spatially extended debris discs",
+      "doi": "10.1051/0004-6361:20077258",
+      "bibtex": "@article{ThebaultAugereau2007_AA472_169, journal = {A&A}, volume = {472}, pages = {169-185}, year = {2007}}",
+      "adopted_scope": "Wavy PSD structures induced by blow-out and collisional processing in debris disks.",
+      "claims": [
+        "Shows blow-out cut-offs imprint oscillatory 'wavy' patterns on PSDs that require fine binning to resolve.",
+        "Used to justify keeping wavy_strength optional and grid spacing flexible in non-wavy baseline runs."
+      ]
+    },
+    {
+      "key": "Dohnanyi1969_JGR74_2531",
+      "short": "Dohnanyi (1969)",
+      "title": "Collisional Model of Asteroids and Their Debris",
+      "doi": "10.1029/JB074i010p02531",
+      "bibtex": "@article{Dohnanyi1969_JGR74_2531, journal = {J. Geophys. Res.}, volume = {74}, pages = {2531-2554}, year = {1969}}",
+      "adopted_scope": "Self-similar collisional cascades yielding the canonical n(a) ∝ a^{-3.5} slope.",
+      "claims": [
+        "Derives the steady-state differential size distribution with slope q = 3.5 used as the PSD baseline.",
+        "Provides the reference exponent for α≈1.83 in the configuration defaults."
+      ]
+    },
+    {
+      "key": "KrijtKama2014_AA566_A2",
+      "short": "Krijt & Kama (2014)",
+      "title": "A dearth of small particles in debris disks: evidence for radiation pressure?",
+      "doi": "10.1051/0004-6361/201423384",
+      "bibtex": "@article{KrijtKama2014_AA566_A2, journal = {A&A}, volume = {566}, pages = {A2}, year = {2014}}",
+      "adopted_scope": "Conditions under which blow-out or collisions truncate the PSD above the nominal blow-out size.",
+      "claims": [
+        "Shows regimes where collisional grinding or drag outcompetes blow-out, raising the minimum grain size.",
+        "Motivates gate_mode choices that suppress blow-out when other loss processes dominate."
+      ]
+    },
+    {
+      "key": "EstradaDurisen2015_Icarus248_379",
+      "short": "Estrada & Durisen (2015)",
+      "title": "Combined structural and compositional evolution of Saturn's rings due to ballistic transport",
+      "doi": "10.1016/j.icarus.2014.10.009",
+      "bibtex": "@article{EstradaDurisen2015_Icarus248_379, journal = {Icarus}, volume = {248}, pages = {379-392}, year = {2015}}",
+      "adopted_scope": "Ballistic transport and mixing of meteoroid ejecta across dense planetary rings.",
+      "claims": [
+        "Introduces mixing-efficiency factors that motivate epsilon_mix in external supply parameterisations.",
+        "Quantifies how external ejecta sources redistribute mass radially over viscous timescales."
+      ]
+    },
+    {
+      "key": "CuzziEstrada1998_RingSystems",
+      "short": "Cuzzi & Estrada (1998)",
+      "title": "Meteoroid bombardment and ballistic transport in planetary rings",
+      "doi": null,
+      "bibtex": "@incollection{CuzziEstrada1998_RingSystems, booktitle = {Planetary Ring Systems}, pages = {545-572}, year = {1998}}",
+      "adopted_scope": "Review of meteoroid supply, ballistic transport, and compositional mixing in dense rings.",
+      "claims": [
+        "Summarises external flux estimates and redistribution efficiencies used to motivate epsilon_mix.",
+        "Provides canonical mixing/erosion coefficients for ring-evolution models with exogenous supply."
       ]
     },
     {
@@ -333,6 +478,54 @@
       "claims": [
         "Gives fitted ⟨Q_abs⟩ and temperature relations illustrating size/composition dependence beyond the q_abs_mean=1.0 placeholder.",
         "Demonstrates the impact of grain material on radiative equilibrium temperatures."
+      ]
+    },
+    {
+      "key": "Joseph1976_JAS33_2452",
+      "short": "Joseph et al. (1976)",
+      "title": "The delta-Eddington approximation for radiative flux transfer",
+      "doi": null,
+      "bibtex": "@article{Joseph1976_JAS33_2452, journal = {J. Atmos. Sci.}, volume = {33}, pages = {2452-2459}, year = {1976}}",
+      "adopted_scope": "Delta-Eddington treatment of slab reflectance/transmittance for given τ, ω₀, and g.",
+      "claims": [
+        "Provides analytic flux solutions tabulated as functions of τ, single-scattering albedo, and asymmetry factor.",
+        "Motivates using precomputed Φ(τ,ω₀,g) tables as shielding inputs."
+      ]
+    },
+    {
+      "key": "HansenTravis1974_SSR16_527",
+      "short": "Hansen & Travis (1974)",
+      "title": "Light scattering in planetary atmospheres",
+      "doi": null,
+      "bibtex": "@article{HansenTravis1974_SSR16_527, journal = {Space Science Reviews}, volume = {16}, pages = {527-610}, year = {1974}}",
+      "adopted_scope": "Multiple-scattering treatments with Henyey–Greenstein phase functions applied to planetary atmospheres.",
+      "claims": [
+        "Details reflectance and transmittance computation versus τ, ω₀, and g using doubling and related methods.",
+        "Serves as a reference for generating Φ tables that depend on optical depth and asymmetry."
+      ]
+    },
+    {
+      "key": "CogleyBergstrom1979_JQSRT22_267",
+      "short": "Cogley & Bergstrom (1979)",
+      "title": "Numerical results for the thermal scattering functions",
+      "doi": "10.1016/0022-4073(79)90017-7",
+      "bibtex": "@article{CogleyBergstrom1979_JQSRT22_267, journal = {J. Quant. Spectrosc. Radiat. Transf.}, volume = {22}, pages = {267-280}, year = {1979}}",
+      "adopted_scope": "Tabulated scattering functions for plane-parallel layers parameterised by τ, ω₀, and g.",
+      "claims": [
+        "Supplies numerical reflectance/exitance values used as templates for Φ(τ,ω₀,g) lookup tables.",
+        "Confirms saturation of direct beam transmission for τ≳1 motivating τ-clipping."
+      ]
+    },
+    {
+      "key": "Chandrasekhar1960_RadiativeTransfer",
+      "short": "Chandrasekhar (1960)",
+      "title": "Radiative Transfer",
+      "doi": null,
+      "bibtex": "@book{Chandrasekhar1960_RadiativeTransfer, publisher = {Dover}, year = {1960}}",
+      "adopted_scope": "Classic treatment of radiative transfer and τ≈1 effective photospheres.",
+      "claims": [
+        "Defines the τ≈1 surface as the effective emission/absorption layer for plane-parallel media.",
+        "Supports clipping Σ at τ=1 when computing shielding in optically thick slabs."
       ]
     },
     {
