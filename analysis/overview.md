@@ -2,6 +2,8 @@
 
 ## 0. ドキュメント指針
 - `analysis/overview.md`（本書）はアーキテクチャや仕様の「解説」に位置付け、同系列で `analysis/run-recipes.md` を「手順」、`analysis/equations.md` を「リファレンス」とする Diátaxis 分類を明示した。各ファイル先頭に文書種別メタデータを挿入し、読者が用途別に資料を切り替えられるようにした。
+- **物理計算フローの視覚化**は `analysis/physics_flow.md` に Mermaid 形式のシーケンス図・フローチャートを集約し、モジュール間依存と計算順序を一目で把握できるようにした。
+- **変数命名ガイドライン**は `analysis/glossary.md` を拡充し、略語一覧・単位規約・接頭辞/接尾辞の意味を体系化した。
 - 重要な設計判断は `analysis/adr/` 以下の Architecture Decision Record (ADR) シリーズで管理する。第1号として `analysis/adr/0001-choose-solver.md` に IMEX-BDF(1) 採用理由と影響範囲を記録し、将来の solver/physics 切り替え議論のたたき台にする。
 - 要求→設計→式→テスト→成果物を一表で紐づける要求トレーサビリティマトリクス (RTM) を `analysis/traceability/rtm.csv` に追加し、CI やレビュー時に仕様充足状況を即座に確認できるようにした。
 - ドキュメントとコードの整合性は `marsdisk/ops/doc_sync_agent.py` によって維持され、`ensure_equation_ids` が式番号を管理する。[marsdisk/ops/doc_sync_agent.py#main][marsdisk/ops/doc_sync_agent.py#ensure_equation_ids]
@@ -14,6 +16,20 @@
 - 形成・生存制約はリング拡散の遅速により衛星列の質量シーケンスが変わること（遅:多数・外側ほど重い、速:単一巨大衛星）と、Phobos/Deimos を残すには **$M_{\rm disk}\le3\times10^{-5}M_{\rm Mars}$ 且つ $(Q/k_2)<80$** が必要という条件を踏まえて初期質量と tidal パラメータを設定する。[\@CridaCharnoz2012_Science338_1196; @CanupSalmon2018_SciAdv4_eaar6887]
 - CLI経由で呼ばれる`run_zero_d`がYAMLを読み、放射・遮蔽テーブルやPSDを初期化したうえで表層面密度を積分し、出力に書き出す。[marsdisk/run.py:814–2795]
 - 将来の半径1D拡張に備えてケプラー格子と粘性拡散の骨組みを保持するが、現行は0D主導である。[marsdisk/grid.py#omega_kepler [L17–L31]][marsdisk/physics/viscosity.py#step_viscous_diffusion_C5 [L51–L134]]
+
+## 1.1 モジュール構成の3層分離
+`marsdisk/run.py` は以下の3層に論理分割されている（詳細は `analysis/physics_flow.md` 参照）：
+
+| 層 | モジュール | 責務 |
+|----|-----------|------|
+| **オーケストレータ** | `orchestrator.py` | 設定解決・時間グリッド・ループ制御・進捗報告 |
+| **物理ステップ** | `physics_step.py` | 1ステップの放射→遮蔽→昇華→表層計算 |
+| **I/O** | `io/writer.py`, `io/tables.py` | Parquet/JSON/CSV 出力、テーブル読込 |
+
+計算フローの結合順序は AGENTS.md で規定：
+```text
+⟨Q_pr⟩ → β → a_blow → sublimation ds/dt → τ & Φ → surface sink fluxes
+```
 
 ## 2. 全体アーキテクチャ
 - CLI層は`argparse`で`--config`を受け取ると同時に、オプションの`--override path=value`を複数解釈してYAML辞書にマージしたうえで`load_config`を通じて設定を生成する。[marsdisk/run.py#load_config [L372–L387]][marsdisk/run.py#main [L1622–L1654]]

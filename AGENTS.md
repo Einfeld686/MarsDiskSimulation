@@ -104,6 +104,7 @@ marsdisk/
 - 生成物・集計・カバレッジは `analysis/coverage.json` と `analysis/coverage_report.md` を自動生成して参照し、手編集を禁止する。
 - 自動生成・テスト支援コードは `agent_test/`、完成済みドキュメントと指標は `analysis/` に集約し、新規ファイルは実務上必要と合意した最小限のものに限る。
 - AI エージェント向け補足: `analysis/slides_outline.md` は人間向けスライドビューなのでまずここで骨子を掴み、必要に応じて `analysis/overview.md` に潜る。FIG_/RUN_/REF_ を選ぶときは `run_catalog.md` / `figures_catalog.md` / `literature_map.md` を優先的に参照し、out/ を自動スキャンしてスライド構成を作らない。新しい ID を使う場合は `analysis/AI_USAGE.md` のラベル一意性・coverage ポリシーに従う。
+- 開発プランは `docs/plan/README.md` の規約（`YYYYMMDD_プラン名.md` 命名など）に従い、必ず `docs/plan/` に記録する。AI 実行時もここを参照し、新規プランや進捗追記は同ディレクトリで行う。
 
 ## analysisファイルの目的・適用範囲
 `analysis/` 以下の完成済み資料を唯一の仕様源とし、参照手順と合格条件のみを定義します。
