@@ -4,7 +4,7 @@ geometry:
 material:
   rho: 3000.0
 sizes:
-  s_min: 1.0e-6
+  s_min: 1.0e-7
   s_max: 3.0
   n_bins: 40
 initial:
@@ -17,7 +17,7 @@ dynamics:
   f_wake: 2.0
 psd:
   alpha: 1.83
-  wavy_strength: 0.2
+  wavy_strength: 0.0
 qstar:
   Qs: 3.5e7
   a_s: 0.38

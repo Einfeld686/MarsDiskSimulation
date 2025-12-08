@@ -69,6 +69,7 @@ python -m marsdisk.run ^
   --override radiation.mars_temperature_driver.autogenerate.time_unit=day ^
   --override radiation.mars_temperature_driver.autogenerate.column_time=time_day ^
   --override radiation.mars_temperature_driver.autogenerate.column_temperature=T_K ^
+  --override psd.wavy_strength=0.0 ^
   --override sinks.sub_params.mode=hkl ^
   --override sinks.sub_params.alpha_evap=0.007 ^
   --override sinks.sub_params.mu=0.0440849 ^
