@@ -14,6 +14,37 @@ set STREAMING_MEMORY_GB=70.0
 set STREAMING_FLUSH_STEPS=10000
 set MU_HKL=0.0440849
 
+rem Optional venv setup (portable, avoids system Python pollution)
+set VENV_DIR=.venv
+set REQ_FILE=requirements.txt
+
+if not exist "%VENV_DIR%\Scripts\python.exe" (
+  echo [setup] Creating virtual environment in "%VENV_DIR%"...
+  python -m venv "%VENV_DIR%"
+  if %errorlevel% neq 0 (
+    echo [error] Failed to create virtual environment.
+    exit /b %errorlevel%
+  )
+)
+
+call "%VENV_DIR%\Scripts\activate.bat"
+if %errorlevel% neq 0 (
+  echo [error] Failed to activate virtual environment.
+  exit /b %errorlevel%
+)
+
+if exist "%REQ_FILE%" (
+  echo [setup] Installing/upgrading dependencies from %REQ_FILE% ...
+  python -m pip install --upgrade pip
+  pip install -r "%REQ_FILE%"
+  if %errorlevel% neq 0 (
+    echo [error] Dependency installation failed.
+    exit /b %errorlevel%
+  )
+) else (
+  echo [warn] %REQ_FILE% not found; skipping dependency install.
+)
+
 rem Prioritise the baseline T=4000 K, epsilon_mix=1.0 first for a quick sanity check.
 for %%T in (4000 2000 6000) do (
   for %%M in (1.0 0.1) do (
