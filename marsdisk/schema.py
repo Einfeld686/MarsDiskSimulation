@@ -270,6 +270,14 @@ class Dynamics(BaseModel):
         "config",
         description="How to choose e/i for collision kernels: 'config' uses e0/i0, 'wyatt_eq' solves for c_eq",
     )
+    v_rel_mode: Literal["ohtsuki", "pericenter"] = Field(
+        "ohtsuki",
+        description=(
+            "Relative speed prescription for collision kernels. "
+            "'ohtsuki' uses v_rel=v_K*sqrt(1.25 e^2+i^2); "
+            "'pericenter' uses v_rel=v_K/√(1-e) (near-periapsis speed)."
+        ),
+    )
     kernel_H_mode: Literal["ia", "fixed"] = Field(
         "ia",
         description="Scale height prescription for collision kernels",
