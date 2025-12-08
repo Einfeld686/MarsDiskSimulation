@@ -18,12 +18,16 @@
 
 ### 主な出力
 
-- 2年間の質量損失履歴と累積質量損失  
+- 2年間の質量損失履歴と累積質量損失
+
   $$\large
   \dot{M}_{\rm out}(t),\quad M_{\rm loss}
   $$
+
 - 粒径分布（PSD）の時間発展
-- blow-out 境界サイズの動的変化  
+
+- blow-out 境界サイズの動的変化
+
   $$\large
   a_{\rm blow}
   $$
@@ -239,7 +243,8 @@ ls out/fiducial/
 
 - 火星表面温度 T_M からの黒体放射が粒子を加熱
 - 粒子サイズが小さいほど軽さ指標 β（放射圧/重力比）が大きくなる
-- 脱出条件  
+- 脱出条件
+
   $$\large
   \beta > 0.5
   $$
@@ -247,16 +252,19 @@ ls out/fiducial/
 #### 代表式
 
 **放射圧/重力比 β** (E.013):
+
 $$\large
 \beta = \frac{3\,\sigma_{\rm SB}\,T_{\rm M}^{4}\,R_{\rm M}^{2}\,\langle Q_{\rm pr}\rangle}{4\,G\,M_{\rm M}\,c\,\rho\,s}
 $$
 
 **ブローアウト境界サイズ a_blow** (E.014, β = 0.5 となるサイズ):
+
 $$\large
 a_{\rm blow} = \frac{3\,\sigma_{\rm SB}\,T_{\rm M}^{4}\,R_{\rm M}^{2}\,\langle Q_{\rm pr}\rangle}{2\,G\,M_{\rm M}\,c\,\rho}
 $$
 
 **表層外向きフラックス** (E.009):
+
 $$\large
 \dot{M}_{\rm out} = \Sigma_{\rm surf}\,\Omega
 $$
@@ -272,6 +280,7 @@ $$
 | Ω | ケプラー角速度 | rad s⁻¹ | 下記参照 |
 
 ケプラー角速度の定義:
+
 $$\large
 \Omega = \sqrt{\frac{G\,M_{\rm M}}{r^{3}}}
 $$
@@ -280,7 +289,8 @@ $$
 
 - `radiation.TM_K`: 火星表面温度（高いほど a_blow が大きくなる）
 - `blowout.enabled`: ブローアウト損失の有効/無効
-- `blowout.chi_blow`: ブローアウト滞在時間係数  
+- `blowout.chi_blow`: ブローアウト滞在時間係数
+
   $$\large
   t_{\rm blow} = \frac{\chi}{\Omega}
   $$
@@ -300,16 +310,19 @@ $$
 #### 昇華の代表式
 
 **HKL 質量フラックス** (E.018):
+
 $$\large
 J(T) = \alpha_{\rm evap}\left(P_{\rm sat}(T) - P_{\rm gas}\right)\sqrt{\frac{\mu}{2\pi R T}}
 $$
 
 **Clausius-Clapeyron 型蒸気圧** (E.036):
+
 $$\large
 P_{\rm sat}(T) = 10^{A - B/T}
 $$
 
 **昇華による損失粒径スケール** (E.019):
+
 $$\large
 s_{\rm sink} = \frac{\eta_{\rm instant}\,t_{\rm ref}\,J(T)}{\rho}
 $$
@@ -344,21 +357,25 @@ $$
 #### 衝突の代表式
 
 **Smoluchowski 方程式** (E.010):
+
 $$\large
 \dot{N}_k = \frac{1}{2}\sum_{i,j} K_{ij}\,N_i N_j\,Y_{kij} - N_k\sum_j K_{kj}N_j + f_k
 $$
 
 **衝突カーネル** (E.024):
+
 $$\large
 C_{ij} = \frac{N_i N_j}{1+\delta_{ij}}\,\frac{\pi(s_i+s_j)^{2}\,v_{ij}}{\sqrt{2\pi}\,H_{ij}}
 $$
 
 **衝突寿命（Wyatt スケーリング）** (E.006):
+
 $$\large
 t_{\rm coll} = \frac{1}{\Omega\,\tau_{\perp}}
 $$
 
 **IMEX-BDF(1) 時間積分** (E.010):
+
 $$\large
 N_i^{n+1} = \frac{N_i^{n} + \Delta t(G_i - S_i)}{1 + \Delta t\,\Lambda_i}
 $$
@@ -417,17 +434,20 @@ $$
 光学的に厚い円盤では、表層のみが放射を受けます：
 
 **有効不透明度** (E.015):
+
 $$\large
 \kappa_{\rm eff} = \Phi(\tau)\,\kappa_{\rm surf}
 $$
 
 **τ=1 表層質量** (E.016):
+
 $$\large
 \Sigma_{\tau=1} = \kappa_{\rm eff}^{-1}
 $$
 
 - Φ(τ): 自遮蔽係数（テーブル補間）
-- 表層密度のクリップ条件  
+- 表層密度のクリップ条件
+
   $$\large
   \Sigma_{\rm surf,clip} = \min(\Sigma_{\rm surf}, \Sigma_{\tau=1})
   $$
