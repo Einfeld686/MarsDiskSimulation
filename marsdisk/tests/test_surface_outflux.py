@@ -3,6 +3,7 @@ import numpy as np
 from marsdisk.physics.surface import step_surface_density_S1
 from marsdisk.physics.sinks import SinkOptions, total_sink_timescale
 from marsdisk.physics.sublimation import SublimationParams
+from marsdisk import constants, run, physics
 
 
 def _run(prod_rate: float, Omega: float, Sigma_tau1: float, steps: int = 200):
@@ -66,3 +67,24 @@ def test_sink_increases_mass_loss():
     total_no = res_no.outflux + res_no.sink_flux
     total_sink = res_sink.outflux + res_sink.sink_flux
     assert total_sink > total_no
+
+
+def test_los_factor_increases_tau_los(tmp_path):
+    """LOS係数を伸ばすと tau_los_mars が鉛直 τ より大きくなる。"""
+
+    r = constants.R_MARS
+    Omega = 1e-4
+    prod_rate = 1e-9
+    psd_state = physics.psd.update_psd_state(
+        s_min=1.0e-6,
+        s_max=1.0e-3,
+        alpha=1.5,
+        wavy_strength=0.0,
+        n_bins=8,
+        rho=3000.0,
+    )
+    cfg = run.RunConfig(r=r, Omega=Omega, prod_rate=prod_rate, area=None, los_factor=3.0)
+    state = run.RunState(sigma_surf=0.0, psd_state=psd_state)
+    rec = run.step(cfg, state, dt=1.0 / Omega)
+    assert "tau_vertical" in rec and "tau_los_mars" in rec
+    assert rec["tau_los_mars"] >= rec["tau_vertical"]

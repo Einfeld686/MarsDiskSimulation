@@ -95,3 +95,32 @@ def test_mass_budget_and_fast_factor_stable(tmp_path: Path) -> None:
 
     budget = pd.read_csv(Path(cfg.io.outdir) / "checks" / "mass_budget.csv")
     assert budget["error_percent"].abs().max() <= run.MASS_BUDGET_TOLERANCE_PERCENT + 1e-6
+
+
+def test_los_shielding_reduces_phi(tmp_path: Path) -> None:
+    """LOS経路を伸ばすと Φ が小さくなることを確認する。"""
+
+    # baseline (los_factor=1)
+    cfg_base = _base_surface_cfg(tmp_path / "los_base", s_min=5.0e-7, prod_rate=1.0e-9, dt_init=500.0)
+    cfg_base.shielding = schema.Shielding()  # psitau, los_factor=1
+    run.run_zero_d(cfg_base)
+
+    # los stretched
+    cfg_los = _base_surface_cfg(tmp_path / "los_stretched", s_min=5.0e-7, prod_rate=1.0e-9, dt_init=500.0)
+    cfg_los.shielding = schema.Shielding()
+    cfg_los.shielding.los_geometry.path_multiplier = 3.0  # f_los > 1
+    cfg_los.shielding.los_geometry.h_over_r = 1.0
+    run.run_zero_d(cfg_los)
+
+    diag_base = pd.read_parquet(Path(cfg_base.io.outdir) / "series" / "diagnostics.parquet")
+    diag_los = pd.read_parquet(Path(cfg_los.io.outdir) / "series" / "diagnostics.parquet")
+
+    # Φ=κ_eff/κ_surf が LOS 伸長で小さくなる（同一設定で比較）
+    phi_base = diag_base["phi_effective"].median()
+    phi_los = diag_los["phi_effective"].median()
+    assert phi_los <= phi_base + 1e-12
+
+    # τ_los_mars が τ_vertical 以上になっていることを確認
+    tau_los = diag_los["tau_los_mars"].median()
+    tau_vert = diag_los["tau_vertical"].median()
+    assert tau_los >= tau_vert

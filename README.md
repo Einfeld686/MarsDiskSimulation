@@ -411,6 +411,9 @@ $$
 | H_ij | 鉛直スケール高 | m |
 | tau_perp | 鉛直光学深度 | — |
 
+> **K_ij と C_ij の使い分け**  
+> (E.010) の $K_{ij}$ は文献表記どおり「幾何＋速度」だけの係数を指しますが、実装の (E.024) `compute_collision_kernel_C1` は $N_i N_j/(1+\delta_{ij})$ まで掛け込んだ $C_{ij}$ 行列を返します（`marsdisk/physics/collide.py:18-77`）。Smol ステップではこの $C_{ij}$ をそのまま損失・生成項に使い、数密度を重ねて乗じる操作は行いません（`marsdisk/physics/smol.py:244-275`）。
+
 #### 衝突の重要なパラメータ
 
 - `sizes.n_bins`: 粒径ビン数（30–60、デフォルト40）

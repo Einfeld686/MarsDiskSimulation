@@ -572,10 +572,13 @@ class RunConfig:
     Omega: float            # Keplerian frequency [s^-1]
     prod_rate: float        # production rate of sub-blow-out grains
     area: float | None = None  # surface area factor
+    los_factor: float = 1.0  # τ scaling from vertical to Mars line-of-sight
 
     def __post_init__(self) -> None:
         if self.area is None:
             self.area = math.pi * self.r ** 2
+        if self.los_factor <= 0.0 or not math.isfinite(self.los_factor):
+            self.los_factor = 1.0
 
 
 @dataclass
@@ -755,8 +758,10 @@ def step(config: RunConfig, state: RunState, dt: float) -> Dict[str, float]:
     """
 
     kappa_surf = psd.compute_kappa(state.psd_state)
-    tau = kappa_surf * state.sigma_surf
-    kappa_eff, sigma_tau1 = shielding.apply_shielding(kappa_surf, tau, 0.0, 0.0)
+    tau_vert = kappa_surf * state.sigma_surf
+    los_factor = config.los_factor if config.los_factor > 0.0 else 1.0
+    tau_los = tau_vert * los_factor
+    kappa_eff, sigma_tau1 = shielding.apply_shielding(kappa_surf, tau_los, 0.0, 0.0)
     if kappa_eff <= KAPPA_MIN:
         sigma_tau1 = None
     res = surface.step_surface_density_S1(
@@ -780,6 +785,8 @@ def step(config: RunConfig, state: RunState, dt: float) -> Dict[str, float]:
         "outflux_surface": res.outflux,
         "sink_flux_surface": res.sink_flux,
         "t_blow": t_blow,
+        "tau_vertical": tau_vert,
+        "tau_los_mars": tau_los,
         "M_out_dot": M_out_dot,  # M_Mars/s
         "M_loss_cum": state.M_loss_cum,  # M_Mars
     }
