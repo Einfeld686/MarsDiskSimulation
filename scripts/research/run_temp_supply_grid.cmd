@@ -7,7 +7,7 @@ rem Update SUPPLY_RATE below to set supply.const.prod_area_rate_kg_m2_s.
 setlocal enabledelayedexpansion
 
 set CONFIG=configs\temp_supply_sweep.yml
-set OUTBASE=out\temp_supply_grid
+set OUTROOT=out\temp_supply_grid
 set SUPPLY_RATE=1.0e-10
 set STREAMING_ENABLE=true
 set STREAMING_MEMORY_GB=70.0
@@ -45,6 +45,21 @@ if exist "%REQ_FILE%" (
   echo [warn] %REQ_FILE% not found; skipping dependency install.
 )
 
+rem Ensure base output directory exists and is not a file
+if exist "%OUTROOT%" (
+  if not exist "%OUTROOT%\NUL" (
+    echo [error] %OUTROOT% exists as a file. Remove or rename it before running.
+    exit /b 1
+  )
+) else (
+  mkdir "%OUTROOT%"
+)
+
+rem Build a timestamp tag for unique subdirectories
+set HOUR=%TIME:~0,2%
+if "%HOUR:~0,1%"==" " set HOUR=0%HOUR:~1,1%
+set RUN_TAG=%DATE:~0,4%%DATE:~5,2%%DATE:~8,2%_%HOUR%%TIME:~3,2%%TIME:~6,2%
+
 rem Prioritise the baseline T=4000 K, epsilon_mix=1.0 first for a quick sanity check.
 for %%T in (4000 2000 6000) do (
   for %%M in (1.0 0.1) do (
@@ -52,7 +67,7 @@ for %%T in (4000 2000 6000) do (
     set "M_LABEL=!M_LABEL:.=p!"
     set "MU_LABEL=%MU_HKL%"
     set "MU_LABEL=!MU_LABEL:.=p!"
-    set "OUTDIR=%OUTBASE%_T%%T_eps!M_LABEL!_mu!MU_LABEL!"
+    set "OUTDIR=%OUTROOT%\%RUN_TAG%_T%%T_eps!M_LABEL!_mu!MU_LABEL!"
 
     echo [run] T_M=%%T K, epsilon_mix=%%M -> !OUTDIR!
     python -m marsdisk.run ^
