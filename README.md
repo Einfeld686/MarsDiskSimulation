@@ -18,9 +18,15 @@
 
 ### 主な出力
 
-- 2年間の質量損失履歴 $\dot{M}_{\rm out}(t)$ と累積質量損失 $M_{\rm loss}$
+- 2年間の質量損失履歴と累積質量損失  
+  $$\large
+  \dot{M}_{\rm out}(t),\quad M_{\rm loss}
+  $$
 - 粒径分布（PSD）の時間発展
-- blow-out 境界サイズ $a_{\rm blow}$ の動的変化
+- blow-out 境界サイズの動的変化  
+  $$\large
+  a_{\rm blow}
+  $$
 
 ---
 
@@ -231,42 +237,53 @@ ls out/fiducial/
 
 #### 概念
 
-- 火星表面温度 $T_{\rm M}$ からの黒体放射が粒子を加熱
-- 粒子サイズが小さいほど $\beta$（放射圧/重力比）が大きくなる
-- $\beta > 0.5$ の粒子は脱出軌道に乗り、円盤から失われる
+- 火星表面温度 T_M からの黒体放射が粒子を加熱
+- 粒子サイズが小さいほど軽さ指標 β（放射圧/重力比）が大きくなる
+- 脱出条件  
+  $$\large
+  \beta > 0.5
+  $$
 
 #### 代表式
 
 **放射圧/重力比 β** (E.013):
-$$
+$$\large
 \beta = \frac{3\,\sigma_{\rm SB}\,T_{\rm M}^{4}\,R_{\rm M}^{2}\,\langle Q_{\rm pr}\rangle}{4\,G\,M_{\rm M}\,c\,\rho\,s}
 $$
 
-**ブローアウト境界サイズ a_blow** (E.014, $\beta = 0.5$ となるサイズ):
-$$
+**ブローアウト境界サイズ a_blow** (E.014, β = 0.5 となるサイズ):
+$$\large
 a_{\rm blow} = \frac{3\,\sigma_{\rm SB}\,T_{\rm M}^{4}\,R_{\rm M}^{2}\,\langle Q_{\rm pr}\rangle}{2\,G\,M_{\rm M}\,c\,\rho}
 $$
 
 **表層外向きフラックス** (E.009):
-$$
+$$\large
 \dot{M}_{\rm out} = \Sigma_{\rm surf}\,\Omega
 $$
 
 | 記号 | 意味 | 単位 | 典型値 |
 |------|------|------|--------|
-| $\sigma_{\rm SB}$ | Stefan-Boltzmann 定数 | W m⁻² K⁻⁴ | $5.67 \times 10^{-8}$ |
-| $T_{\rm M}$ | 火星表面温度 | K | 2000–6000 |
-| $R_{\rm M}$ | 火星半径 | m | $3.39 \times 10^{6}$ |
-| $\langle Q_{\rm pr}\rangle$ | Planck平均放射圧効率 | — | 0.5–1.5 |
-| $\rho$ | 粒子密度 | kg m⁻³ | 3000 |
-| $s$ | 粒子半径 | m | $10^{-6}$–3 |
-| $\Omega$ | ケプラー角速度 | rad s⁻¹ | $\sqrt{GM_{\rm M}/r^3}$ |
+| σ_SB | Stefan-Boltzmann 定数 | W m⁻² K⁻⁴ | 5.67e-8 |
+| T_M | 火星表面温度 | K | 2000–6000 |
+| R_M | 火星半径 | m | 3.39e6 |
+| ⟨Q_pr⟩ | Planck平均放射圧効率 | — | 0.5–1.5 |
+| ρ | 粒子密度 | kg m⁻³ | 3000 |
+| s | 粒子半径 | m | 1e-6–3 |
+| Ω | ケプラー角速度 | rad s⁻¹ | 下記参照 |
+
+ケプラー角速度の定義:
+$$\large
+\Omega = \sqrt{\frac{G\,M_{\rm M}}{r^{3}}}
+$$
 
 #### 重要なパラメータ
 
-- `radiation.TM_K`: 火星表面温度（高いほど $a_{\rm blow}$ が大きくなる）
+- `radiation.TM_K`: 火星表面温度（高いほど a_blow が大きくなる）
 - `blowout.enabled`: ブローアウト損失の有効/無効
-- `blowout.chi_blow`: ブローアウト滞在時間係数（$t_{\rm blow} = \chi/\Omega$）
+- `blowout.chi_blow`: ブローアウト滞在時間係数  
+  $$\large
+  t_{\rm blow} = \frac{\chi}{\Omega}
+  $$
 
 ---
 
@@ -278,34 +295,34 @@ $$
 
 - 粒子温度が蒸発温度を超えると表面から物質が蒸発
 - Hertz–Knudsen–Langmuir (HKL) 式で質量フラックスを評価
-- 主成分 SiO の蒸気圧で支配（gas-poor 条件では $P_{\rm gas} \approx 0$）
+- 主成分 SiO の蒸気圧で支配（gas-poor 条件では P_gas ≈ 0）
 
 #### 昇華の代表式
 
 **HKL 質量フラックス** (E.018):
-$$
+$$\large
 J(T) = \alpha_{\rm evap}\left(P_{\rm sat}(T) - P_{\rm gas}\right)\sqrt{\frac{\mu}{2\pi R T}}
 $$
 
 **Clausius-Clapeyron 型蒸気圧** (E.036):
-$$
+$$\large
 P_{\rm sat}(T) = 10^{A - B/T}
 $$
 
 **昇華による損失粒径スケール** (E.019):
-$$
+$$\large
 s_{\rm sink} = \frac{\eta_{\rm instant}\,t_{\rm ref}\,J(T)}{\rho}
 $$
 
 | 記号 | 意味 | 単位 | 典型値 |
 |------|------|------|--------|
-| $\alpha_{\rm evap}$ | 蒸発係数 | — | 0.007 |
-| $P_{\rm sat}$ | 飽和蒸気圧 | Pa | 温度依存 |
-| $P_{\rm gas}$ | 周囲蒸気圧 | Pa | 0（gas-poor） |
-| $\mu$ | 分子量 | kg mol⁻¹ | 0.044 (SiO) |
-| $R$ | 気体定数 | J mol⁻¹ K⁻¹ | 8.314 |
-| $A, B$ | Clausius係数 | —, K | 13.613, 17850 |
-| $\eta_{\rm instant}$ | 即時蒸発閾値 | — | 0.1 |
+| alpha_evap | 蒸発係数 | — | 0.007 |
+| P_sat | 飽和蒸気圧 | Pa | 温度依存 |
+| P_gas | 周囲蒸気圧 | Pa | 0（gas-poor） |
+| mu | 分子量 | kg mol⁻¹ | 0.044 (SiO) |
+| R | 気体定数 | J mol⁻¹ K⁻¹ | 8.314 |
+| A, B | Clausius係数 | —, K | 13.613, 17850 |
+| eta_instant | 即時蒸発閾値 | — | 0.1 |
 
 #### 昇華の重要なパラメータ
 
@@ -327,34 +344,34 @@ $$
 #### 衝突の代表式
 
 **Smoluchowski 方程式** (E.010):
-$$
+$$\large
 \dot{N}_k = \frac{1}{2}\sum_{i,j} K_{ij}\,N_i N_j\,Y_{kij} - N_k\sum_j K_{kj}N_j + f_k
 $$
 
 **衝突カーネル** (E.024):
-$$
+$$\large
 C_{ij} = \frac{N_i N_j}{1+\delta_{ij}}\,\frac{\pi(s_i+s_j)^{2}\,v_{ij}}{\sqrt{2\pi}\,H_{ij}}
 $$
 
 **衝突寿命（Wyatt スケーリング）** (E.006):
-$$
+$$\large
 t_{\rm coll} = \frac{1}{\Omega\,\tau_{\perp}}
 $$
 
 **IMEX-BDF(1) 時間積分** (E.010):
-$$
+$$\large
 N_i^{n+1} = \frac{N_i^{n} + \Delta t(G_i - S_i)}{1 + \Delta t\,\Lambda_i}
 $$
 
 | 記号 | 意味 | 単位 |
 |------|------|------|
-| $N_k$ | ビン $k$ の数密度 | m⁻² |
-| $K_{ij}$ | 衝突カーネル | s⁻¹ |
-| $Y_{kij}$ | 破片分配係数 | — |
-| $f_k$ | ソース/シンク項 | m⁻² s⁻¹ |
-| $v_{ij}$ | 相対速度 | m s⁻¹ |
-| $H_{ij}$ | 鉛直スケール高 | m |
-| $\tau_{\perp}$ | 鉛直光学深度 | — |
+| N_k | ビン k の数密度 | m⁻² |
+| K_ij | 衝突カーネル | s⁻¹ |
+| Y_kij | 破片分配係数 | — |
+| f_k | ソース/シンク項 | m⁻² s⁻¹ |
+| v_ij | 相対速度 | m s⁻¹ |
+| H_ij | 鉛直スケール高 | m |
+| tau_perp | 鉛直光学深度 | — |
 
 #### 衝突の重要なパラメータ
 
@@ -400,17 +417,20 @@ $$
 光学的に厚い円盤では、表層のみが放射を受けます：
 
 **有効不透明度** (E.015):
-$$
+$$\large
 \kappa_{\rm eff} = \Phi(\tau)\,\kappa_{\rm surf}
 $$
 
 **τ=1 表層質量** (E.016):
-$$
+$$\large
 \Sigma_{\tau=1} = \kappa_{\rm eff}^{-1}
 $$
 
-- $\Phi(\tau)$: 自遮蔽係数（テーブル補間）
-- 表層密度は $\min(\Sigma_{\rm surf}, \Sigma_{\tau=1})$ でクリップ
+- Φ(τ): 自遮蔽係数（テーブル補間）
+- 表層密度のクリップ条件  
+  $$\large
+  \Sigma_{\rm surf,clip} = \min(\Sigma_{\rm surf}, \Sigma_{\tau=1})
+  $$
 
 ---
 
@@ -418,7 +438,7 @@ $$
 
 シミュレーションは質量保存を常時監視します (E.011):
 
-$$
+$$\large
 \epsilon_{\rm mass} = \frac{|M^{n+1} + \Delta t\,\dot{m}_{<a_{\rm blow}} - M^{n}|}{M^{n}} < 0.5\%
 $$
 
