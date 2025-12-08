@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
-# Mars disk sublimation + smol + phase runner (macOS/Linux shell).
+# Mars disk sublimation + smol + phase runner (macOS/Linux shell, T_M=2000 K).
 # - Sets up .venv, installs requirements, then runs with radiative cooling table/autogen enabled.
 # - 1か月ラン向けに t_end_years を短縮し、ストリーミング閾値を 20 GB に設定。
 
 set -euo pipefail
 
-OUTDIR="out/run_sublim_smol_phase_cooling_1month"
-TMK="4000.0"
-TEMP_TABLE="data/mars_temperature_T4000p0K.csv"
+OUTDIR="out/run_sublim_smol_phase_cooling_1month_T2000"
+TMK="2000.0"
+TEMP_TABLE="data/mars_temperature_T2000p0K.csv"
 CONFIG="configs/mars_temperature_driver_table.yml"
 VENV_DIR=".venv"
 REQ_FILE="requirements.txt"
