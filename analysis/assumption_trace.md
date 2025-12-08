@@ -55,6 +55,7 @@ last_checked: YYYY-MM-DD
 
 - 欠落情報: β と a_blow の参照式 (E.xxx)、`fast_blowout` 補正式の根拠、`use_solar_rp` 無効時の取り扱い。
 - 次に確認する資料: `assumption_trace_data_sources.md` のテーブル出典、`analysis/equations.md` の R1–R3 節、`analysis/UNKNOWN_REF_REQUESTS.jsonl`（未登録なら追加）。
+- 先行研究メモ: β>0.5 で非束縛となる基準とブローアウト径の決定は [@Burns1979_Icarus40_1] に拠り、軌道時間オーダーで除去される近似は [@StrubbeChiang2006_ApJ648_652] やレビュー [@Wyatt2008] と整合する。一方、`t_blow=1/Ω` を固定する実装方針や `io.correct_fast_blowout` の補正式に直接対応する文献は見当たらない。
 
 ### 2.2 遮蔽・ゲート（Φ(τ, ω0, g), τ=1 クリップ, gate_mode） — assumption cluster "shielding_gate_order_v1"
 Φテーブルの補間と τ=1 クリップの適用順が `shielding.mode` と `blowout.gate_mode` の組み合わせに依存し、τゲート（`radiation.tau_gate.enable`）との重ねがけ順序がコード依存のまま。ゲート係数 `f_gate` が衝突・昇華どちらと競合するかも明文化が不足している。
@@ -103,6 +104,7 @@ last_checked: YYYY-MM-DD
 
 - 欠落情報: Φテーブル出典の正式引用、ゲート適用順序の図式化、`tau_gate_block_time` の式番号。
 - 次に確認する資料: `assumption_trace_data_sources.md` のテーブル節、`analysis/equations.md` の遮蔽式、`analysis/overview.md` Provenance セクション。
+- 先行研究メモ: デブリ円盤は光学的に薄いという前提は [@Krivov2006_AA455_509] などで共有され、gas-rich の自己遮蔽を扱う例として [@TakeuchiLin2003_ApJ593_524] がある。ただし、Φテーブル→τ=1クリップ→gate/tau_gate の順序を明示した手順に合致する文献は確認できていない。
 
 ### 2.3 PSD と wavy 補正（s_min_effective, psd.floor.mode） — assumption cluster "psd_wavy_floor_scope_v1"
 `wavy_strength` と最小粒径のクリップ（ブローアウト／設定／動的床）が混在しており、どの PSD 式 (P1) と結び付けるかが未指定。`psd.floor.mode` 切替と `sizes.evolve_min_size` の同時使用時の優先順位も曖昧なままである。
@@ -151,6 +153,7 @@ last_checked: YYYY-MM-DD
 
 - 欠落情報: wavy 振幅とフェーズの式番号、`s_min_effective` 算定の優先順位、`apply_evolved_min_size` の適用条件。
 - 次に確認する資料: `assumption_trace_data_sources.md` の PSD ソース一覧、`analysis/equations.md` の P1 節。
+- 先行研究メモ: ブローアウト近傍で波打つ PSD は [@Krivov2006_AA455_509; @ThebaultAugereau2007_AA472_169] で示され、最小粒径をどうクリップするかが光学的厚さやSEDに効くことも報告されている。`wavy_strength` のような振幅パラメータ化や s_min クリップ優先順位を明示する実装は既存論文に見当たらない。
 
 ### 2.4 衝突時間スケール（Wyatt / Ohtsuki regime） — assumption cluster "tcoll_regime_switch_v1"
 表層 ODE の `t_coll` は Wyatt スケーリング（Ωτ⁻¹）を既定にする一方、Smol カーネルや `surface.use_tcoll` フラグで無効化される経路が混在する。`f_wake` や e/i ダンピングの仮定により τ 推定が揺れるため、どの regime でどの式を使うかが明確でない。
@@ -193,6 +196,7 @@ last_checked: YYYY-MM-DD
 
 - 欠落情報: Ohtsuki regime への切替条件、`f_wake` の式番号、Smol カーネルと表層 t_coll の整合性。
 - 次に確認する資料: `assumption_trace_data_sources.md` のコード走査ターゲット、`analysis/equations.md` の C1–C4 節。
+- 先行研究メモ: τ_eff から t_coll≈t_per/(4π τ) を与える簡易式はレビュー [@Wyatt2008] で整理され、内在衝突確率ベースの計算法は [@Ohtsuki2002_Icarus155_436] に代表される。これらを条件分岐でスイッチし、Smoluchowski 解と突き合わせる具体手順を示す文献は見つかっていない。
 
 ### 2.5 昇華・ガス抗力（sinks.mode, rp_blowout.enable, TL2003） — assumption cluster "sublimation_gasdrag_scope_v1"
 gas-poor 既定で昇華のみを有効にし、TL2003（gas-rich 前提）は `ALLOW_TL2003=false` で無効化する運用だが、設定 YAML とドキュメントの整合が未確認。`sinks.mode` や `rp_blowout.enable`、`sinks.enable_gas_drag` の組み合わせが式参照なしに切り替わる点が曖昧。
@@ -240,6 +244,7 @@ last_checked: YYYY-MM-DD
 
 - 欠落情報: 昇華式の (E.xxx) ひも付け、TL2003 無効の根拠引用位置、gas-rich 感度試験時の手順。
 - 次に確認する資料: `assumption_trace_data_sources.md` の設定パース手順、`analysis/equations.md` の昇華式、`analysis/UNKNOWN_REF_REQUESTS.jsonl` での TL2003 slug 登録。
+- 先行研究メモ: gas-poor を前提に放射圧と衝突・昇華を扱う枠組みはレビュー [@Krivov2006_AA455_509] で整理され、gas-drag を含む遷移円盤の解析は [@TakeuchiLin2002_ApJ581_1344; @TakeuchiLin2003_ApJ593_524]、drag が支配的になる密度域の例は [@PollackBurnsTauber1979_Icarus37_587; @Olofsson2022_MNRAS513_713] にみられる。TL2003/gas_drag フラグのオン/オフ条件を定量規定する文献は見当たらない。
 
 ### 2.6 半径・幾何の固定（0D vs disk.geometry） — assumption cluster "radius_fix_0d_scope_v1"
 0D 実行では `disk.geometry`（r_in_RM, r_out_RM）が必須入力で、legacy `geometry.r` / `runtime_orbital_radius_rm` は無効化済み。半径固定のまま 1D 拡張へ式を持ち越す際に、どの E.xxx が 0D 前提かをタグ付けできていない。
@@ -282,3 +287,4 @@ last_checked: YYYY-MM-DD
 
 - 欠落情報: 半径解像度を持たない式の一覧、1D 拡張時に再確認すべき E.xxx、`scope.region` との整合。
 - 次に確認する資料: `assumption_trace_data_sources.md` の設定ファミリ、`analysis/overview.md` の geometry 記述。
+- 先行研究メモ: single-annulus 的に代表半径で衝突カスケードを解く枠組みはレビュー [@Wyatt2008] で整理されるが、火星ロッシュ円盤のような高光学的厚さリングを 0D 固定で扱い、後段で 1D に拡張する手順を明文化した文献は未確認。

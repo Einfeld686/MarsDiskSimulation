@@ -403,6 +403,26 @@ class SublimationParamsModel(BaseModel):
         (1270.0, 1600.0),
         description="Valid temperature range for Clausius-Clapeyron fit [K]"
     )
+    enable_liquid_branch: bool = Field(
+        True,
+        description="Enable HKL Clausius liquid branch when temperatures exceed psat_liquid_switch_K",
+    )
+    psat_liquid_switch_K: Optional[float] = Field(
+        1900.0,
+        description="Switch temperature [K] for activating the liquid Clausius branch (None keeps solid-only)",
+    )
+    A_liq: Optional[float] = Field(
+        13.203,
+        description="Clausius-Clapeyron A coefficient (log10 scale) for the liquid branch",
+    )
+    B_liq: Optional[float] = Field(
+        25898.9,
+        description="Clausius-Clapeyron B coefficient [K] for the liquid branch",
+    )
+    valid_liquid_K: Optional[Tuple[float, float]] = Field(
+        (1900.0, 3500.0),
+        description="Valid temperature range for the liquid Clausius branch [K]",
+    )
 
     # --- Tabulated psat parameters (advanced) ---
     psat_model: Literal["auto", "clausius", "tabulated"] = Field(
@@ -589,6 +609,10 @@ class PhaseConfig(BaseModel):
     thresholds: PhaseThresholds = Field(
         default_factory=PhaseThresholds,
         description="Temperature thresholds (used when source='threshold')",
+    )
+    allow_liquid_hkl: bool = Field(
+        False,
+        description="Allow HKL sublimation when the bulk phase is liquid-dominated",
     )
 
     @validator("entrypoint")

@@ -156,6 +156,11 @@ configs/<scenario>.yml
 | `radiation.qpr_table_path` | Path | Planck平均した放射圧効率 ⟨Q_pr⟩(s,T) のルックアップテーブル。Mie理論に基づく波長積分済みの値。フィールド名は `qpr_table_path`（`qpr_table` は使用不可） | `null` (必要に応じ指定) |
 | `radiation.Q_pr` | float | 灰色体近似での放射圧効率（テーブル不使用時）。通常は波長依存性があるためテーブル推奨 | - |
 
+補足: ⟨Q_pr⟩ テーブルの近似と SiO₂ への妥当性
+- 同梱の `data/qpr_table.csv` は材料固有の屈折率を使わず、サイズパラメータ $x=2\pi s/\lambda$ に対する Rayleigh–幾何ブリッジ $Q_{\rm pr}=x^4/(1+x^4)$ を 0.5–30 µm で黒体加重積分した汎用近似。Q_abs ではなく放射圧効率そのものを近似している。
+- μm 級以上のシリケイト（SiO₂ を含む）では Mie 計算・実験の典型値が $Q_{\rm pr}\sim1$ で飽和するため、現行テーブルでもオーダー感は整合的。一方で 0.1 µm 前後の最小粒では Mie 計算よりやや小さめを返す可能性がある。
+- SiO₂ 固有の挙動を重視する場合は、複素屈折率から作成した Mie ベースの ⟨Q_pr⟩ テーブルを別途生成し、`radiation.qpr_table_path` で差し替える。
+
 ##### 時変温度ドライバ (`radiation.mars_temperature_driver`)
 
 火星表面温度の時間発展を扱います。衝突直後の高温状態から放射冷却で温度が下がる過程をモデル化。
@@ -199,6 +204,11 @@ Hertz-Knudsen-Langmuir (HKL) 理論に基づく昇華速度の詳細パラメー
 | `.mu` | float | 蒸発種の分子量 [kg/mol]。SiO₂ なら 0.060 kg/mol、SiO なら 0.044 kg/mol | 0.0440849 |
 | `.A` | float | Clausius-Clapeyron 式の係数 A（$\log_{10} P_{\rm sat} = A - B/T$）。飽和蒸気圧の温度依存性を決定 | 13.613 |
 | `.B` | float | Clausius-Clapeyron 式の係数 B [K]。蒸発潜熱に比例する値 | 17850 |
+| `.enable_liquid_branch` | bool | psat を液相係数へ切替（スイッチ温度以上で有効） | `true` |
+| `.psat_liquid_switch_K` | float? | 液相係数への切替温度 [K]。`null` なら固体のみ | 1900 |
+| `.A_liq` | float | 液相用 Clausius A（融液 SiO₂ 蒸気圧フィット） | 13.203 |
+| `.B_liq` | float | 液相用 Clausius B [K]（Fegley & Schaefer / Visscher & Fegley） | 25898.9 |
+| `.valid_liquid_K` | tuple? | 液相フィットの有効温度域 [K] | `(1900, 3500)` |
 | `.dT` | float | ロジスティックモードでの遷移幅 [K]。T_sub 周辺での昇華率の立ち上がり幅 | 50.0 |
 | `.eta_instant` | float | ロジスティックモードでの瞬時損失分率（0–1） | 0.1 |
 | `.P_gas` | float | 周囲ガス圧 [Pa]。昇華を抑制する背圧。真空では 0 | 0.0 |
@@ -381,6 +391,14 @@ disk:
 
 選択したモードのパラメータのみ記述すれば OK。他はデフォルト値が使用されます。`mode` は `"const"` / `"table"` / `"powerlaw"` / `"piecewise"` から選択でき、全モードに共通で `mixing.epsilon_mix` を指定可能です。
 
+**μ から供給率を決める補助CLI（オプション）**
+
+- 内部ディスク→表層の定常供給を無次元 μ で指定したい場合は、`tools/derive_supply_rate.py` を使って定数供給率 `supply.const.prod_area_rate_kg_m2_s` を生成できる。
+- 基本形:  
+  `python -m tools.derive_supply_rate --mu 0.3 --sigma-tau1 1.0 --t-blow 1000 --epsilon-mix 1.0`
+- YAML 生成: `--format yaml` を付けると `supply: { mode: "const", const: { prod_area_rate_kg_m2_s: ... } }` を出力。
+- デフォルト源: `--config <yaml>` で設定ファイルから `supply.mixing.epsilon_mix` と `shielding.fixed_tau1_sigma` を読み込み、環境変数 `MARS_DISK_SIGMA_TAU1` / `MARS_DISK_EPSILON_MIX` もフォールバックとして利用する。通常は `--mu` と `--r`（または `--t-blow`）だけで済む運用を想定。
+
 **例（const モード - 最小構成）:**
 
 ```yaml
@@ -441,7 +459,7 @@ Wyatt, Clarke & Booth (2011) が提示するサイズ別源・損失の解析式
 | モード | 主要パラメータ |
 |--------|---------------|
 | `logistic` | `dT`, `eta_instant` |
-| `hkl` | `alpha_evap`, `mu`, `A`, `B` |
+| `hkl` | `alpha_evap`, `mu`, `A`, `B` （任意で `A_liq`, `B_liq`, `psat_liquid_switch_K`） |
 | `hkl_timescale` | `alpha_evap`, `mu`, `A`, `B` |
 
 **例（logistic モード - 最小構成）:**
@@ -488,6 +506,7 @@ phase:
 ```
 
 `phase.source="map"` の場合、`PhaseEvaluator` は起動時に `phase.entrypoint` を必須でインポートし、見つからない/読み込みに失敗すると `RuntimeError` で即停止する（フォールバックなし）。閾値モードを使わない限り、エントリポイントのパスと依存を事前に整えておくこと。
+- `allow_liquid_hkl`: bulk が液相優勢でも HKL 昇華を許可するフラグ（既定 `false`）。高温の融液ディスクで蒸発フラックスを追う場合にのみ有効化する。
 
 ### 3.7 `radiation` — 放射圧（温度統一先）
 

@@ -214,6 +214,8 @@ numerics: { t_end_years: 0.01, dt_init: 1.0e4 }
 io:       { outdir: "sweeps/__will_be_overwritten__" }
 ```
 
+補足: 無次元 μ から供給率を決める場合は `python -m tools.derive_supply_rate --mu <value> --r <RM>` などで `prod_area_rate_kg_m2_s` を生成し、`--override supply.const.prod_area_rate_kg_m2_s=<value>` として渡す。`--config` を付けると YAML の `epsilon_mix` や `fixed_tau1_sigma` を既定値として読み込める。
+
 4) 期待される出力
 - `sweeps/map1_demo/map1/*/config.yaml` → `ls sweeps/map1_demo/map1 | head`
 - `sweeps/map1_demo/map1/*/out/summary.json` → `find sweeps/map1_demo/map1 -path '*/out/summary.json' | head`
@@ -408,7 +410,7 @@ PYTHONPATH=. pytest -q tests/test_sublimation_sio.py -q
 
 3) 最小設定断片
 - 0D幾何と40ビンPSD、供給0。`sinks.sub_params.psat_model: "auto"`、`psat_table_path` はケースA/BでCSV指定、ケースCでは未指定。
-- SiO物性は (α=7×10⁻³, μ=4.40849×10⁻² kg mol⁻¹, A=13.613, B=17850, P_gas=0) を `SublimationParams` 既定値から流用する。[analysis/checks_psat_auto_01/inputs/case_A_tabulated.yml][marsdisk/physics/sublimation.py:128–135]
+- SiO物性は (α=7×10⁻³, μ=4.40849×10⁻² kg mol⁻¹, A=13.613, B=17850, P_gas=0) を `SublimationParams` 既定値から流用する。[analysis/checks_psat_auto_01/inputs/case_A_tabulated.yml][marsdisk/physics/sublimation.py:133–135]
 
 4) 期待される出力
 - `analysis/checks_psat_auto_01/runs/case_*/series/run.parquet` → `python -c "import pandas as pd; print(pd.read_parquet('analysis/checks_psat_auto_01/runs/case_A_tabulated/series/run.parquet').head())"`
@@ -426,7 +428,7 @@ PYTHONPATH=. pytest -q tests/test_sublimation_sio.py -q
 6) 根拠
 - psatテーブルは Clausius式 `log10 P = A - B/T` から生成し、PCHIP補間にロードする。[analysis/checks_psat_auto_01/make_table.py][marsdisk/physics/sublimation.py:220–227]
 - auto-selector はタブレット範囲内で内挿、それ以外で局所最小二乗フィットまたは既定係数にフォールバックする。[marsdisk/physics/sublimation.py:487–494][marsdisk/physics/sublimation.py:327–334]
-- HKLフラックスは `mass_flux_hkl` が評価し、`scan_hkl.py` で同式を再計算して温度スキャンを行う。[marsdisk/physics/sublimation.py:578–584][analysis/checks_psat_auto_01/scan_hkl.py]
+- HKLフラックスは `mass_flux_hkl` が評価し、`scan_hkl.py` で同式を再計算して温度スキャンを行う。[marsdisk/physics/sublimation.py:584–584][analysis/checks_psat_auto_01/scan_hkl.py]
 - 出力ファイル群は既存の writer 実装に従って Parquet/JSON/CSV として保存される。[marsdisk/io/writer.py:24–162]
 
 ## G. 解析ユーティリティ（β・質量損失マップ）

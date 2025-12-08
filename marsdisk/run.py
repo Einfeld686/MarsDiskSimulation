@@ -1209,6 +1209,7 @@ def run_zero_d(
 
     phase_cfg = getattr(cfg, "phase", None)
     phase_controller = phase_mod.PhaseEvaluator.from_config(phase_cfg, logger=logger)
+    allow_liquid_hkl = bool(getattr(phase_cfg, "allow_liquid_hkl", True)) if phase_cfg else True
     hydro_cfg = getattr(cfg.sinks, "hydro_escape", None)
     tau_gate_cfg = getattr(cfg.radiation, "tau_gate", None) if cfg.radiation else None
     tau_gate_enabled = bool(getattr(tau_gate_cfg, "enable", False)) if tau_gate_cfg else False
@@ -1668,6 +1669,7 @@ def run_zero_d(
         phase_payload_step["phase_bulk_f_liquid"] = phase_bulk_step.f_liquid
         phase_payload_step["phase_bulk_f_solid"] = phase_bulk_step.f_solid
         phase_payload_step["phase_bulk_f_vapor"] = phase_bulk_step.f_vapor
+        phase_payload_step["allow_liquid_hkl"] = allow_liquid_hkl
         phase_usage[phase_state_step] += dt
         phase_method_usage[phase_method_step] += dt
 
@@ -1680,7 +1682,11 @@ def run_zero_d(
         T_grain = None
         sublimation_blocked_by_phase = False
         sublimation_active = sublimation_active_flag
-        liquid_block_step = sublimation_active and phase_bulk_step.state == "liquid_dominated"
+        liquid_block_step = (
+            sublimation_active
+            and phase_bulk_step.state == "liquid_dominated"
+            and not allow_liquid_hkl
+        )
         if sublimation_active:
             T_grain = grain_temperature_graybody(T_use, r)
             try:
@@ -3320,6 +3326,9 @@ def run_zero_d(
     valid_config = (
         list(sub_params.valid_K) if sub_params.valid_K is not None else None
     )
+    valid_liquid_config = (
+        list(sub_params.valid_liquid_K) if sub_params.valid_liquid_K is not None else None
+    )
     valid_active = psat_selection.get("valid_K_active")
     if isinstance(valid_active, tuple):
         valid_active = list(valid_active)
@@ -3345,8 +3354,11 @@ def run_zero_d(
             if psat_selection.get("B_active") is not None
             else sub_params.B
         ),
+        "A_liq": sub_params.A_liq,
+        "B_liq": sub_params.B_liq,
         "P_gas": sub_params.P_gas,
         "valid_K_config": valid_config,
+        "valid_liquid_K_config": valid_liquid_config,
         "valid_K_active": valid_active,
         "psat_table_path": psat_table_path,
         "psat_table_range_K": psat_table_range,
@@ -3357,6 +3369,7 @@ def run_zero_d(
         "psat_validity_status": psat_selection.get("psat_validity_status"),
         "psat_validity_direction": psat_selection.get("psat_validity_direction"),
         "psat_validity_delta_K": psat_selection.get("psat_validity_delta_K"),
+        "psat_branch": psat_selection.get("psat_branch"),
         "T_req": psat_selection.get("T_req"),
         "P_sat_Pa": psat_selection.get("P_sat_Pa"),
         "log10P": psat_selection.get("log10P"),
@@ -3364,6 +3377,14 @@ def run_zero_d(
         "eta_instant": sub_params.eta_instant,
         "runtime_radius_m": r,
         "runtime_t_orb_s": t_orb,
+        "enable_liquid_branch": bool(getattr(sub_params, "enable_liquid_branch", False)),
+        "psat_liquid_switch_K": getattr(sub_params, "psat_liquid_switch_K", None),
+        "valid_liquid_K_active": (
+            list(psat_selection["valid_K_active"])
+            if isinstance(psat_selection.get("valid_K_active"), (tuple, list))
+            else psat_selection.get("valid_K_active")
+        ),
+        "allow_liquid_hkl": allow_liquid_hkl,
     }
     writer.write_run_config(run_config, outdir / "run_config.json")
 
