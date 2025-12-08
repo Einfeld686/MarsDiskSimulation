@@ -11,8 +11,10 @@ from marsdisk.physics import collisions_smol, psd, supply
 from marsdisk.schema import (
     Config,
     Geometry,
+    Disk,
+    DiskGeometry,
     Material,
-    Temps,
+    Radiation,
     Sizes,
     Initial,
     Dynamics,
@@ -44,7 +46,8 @@ def test_powerlaw_mode():
         powerlaw=SupplyPowerLaw(A_kg_m2_s=2.0, t0_s=1.0, index=-1.0),
     )
     rate = supply.get_prod_area_rate(2.0, 1.0, cfg)
-    assert rate == pytest.approx(2.0 * ((2.0 - 1.0) + 1.0e-12) ** -1.0)
+    expected = 0.05 * (2.0 * ((2.0 - 1.0) + 1.0e-12) ** -1.0)
+    assert rate == pytest.approx(expected)
 
 
 def test_table_mode(tmp_path):
@@ -52,7 +55,7 @@ def test_table_mode(tmp_path):
     pd.DataFrame({"t": [0.0, 10.0], "rate": [1.0, 3.0]}).to_csv(path, index=False)
     cfg = Supply(mode="table", table=SupplyTable(path=path))
     rate = supply.get_prod_area_rate(5.0, 1.0, cfg)
-    assert rate == pytest.approx(2.0)
+    assert rate == pytest.approx(0.05 * 2.0)
 
 
 MASS_TOL = 5e-3
@@ -98,9 +101,17 @@ def test_smol_helper_respects_tau_clip_and_budget():
 
 def _smol_cfg(outdir: Path, *, supply_cfg: Supply) -> Config:
     cfg = Config(
-        geometry=Geometry(mode="0D", r=constants.R_MARS),
+        geometry=Geometry(mode="0D"),
+        disk=Disk(
+            geometry=DiskGeometry(
+                r_in_RM=1.0,
+                r_out_RM=1.0,
+                r_profile="uniform",
+                p_index=0.0,
+            )
+        ),
         material=Material(rho=3000.0),
-        temps=Temps(T_M=1800.0),
+        radiation=Radiation(TM_K=1800.0),
         sizes=Sizes(s_min=1.0e-6, s_max=1.0e-3, n_bins=12),
         initial=Initial(mass_total=1.0e-9, s0_mode="upper"),
         dynamics=Dynamics(e0=0.05, i0=0.01, t_damp_orbits=1.0, f_wake=1.0),

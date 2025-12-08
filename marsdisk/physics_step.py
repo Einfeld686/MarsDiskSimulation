@@ -224,6 +224,7 @@ def compute_shielding(
     phi_tau_fn: Any = None,
     tau_fixed: Optional[float] = None,
     sigma_tau1_fixed: Optional[float] = None,
+    los_factor: float = 1.0,
 ) -> ShieldingResult:
     """Compute optical depth and shielding correction.
     
@@ -243,6 +244,8 @@ def compute_shielding(
         Fixed τ value for "fixed_tau1" mode.
     sigma_tau1_fixed : float, optional
         Fixed Σ_{τ=1} value.
+    los_factor : float, optional
+        Multiplicative factor converting vertical τ to Mars line-of-sight τ.
         
     Returns
     -------
@@ -253,7 +256,9 @@ def compute_shielding(
     --------
     analysis/equations.md : (E.020)–(E.022)
     """
-    tau = kappa_surf * sigma_surf
+    los_factor_val = los_factor if los_factor > 0.0 else 1.0
+    tau_vert = kappa_surf * sigma_surf
+    tau = tau_vert * los_factor_val
     
     if mode == "off":
         return ShieldingResult(

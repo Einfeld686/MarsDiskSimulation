@@ -853,12 +853,12 @@ tests/test_sublimation_smol_sink.py:12:def test_smol_sublimation_sink_mass_budge
 tests/test_summary_backcompat.py:9:def _write_summary(path: Path, payload: dict) -> None
 tests/test_summary_backcompat.py:13:def test_parse_summary_backwards_compatibility(tmp_path: Path) -> None
 tests/test_surface_outflux_wavy.py:10:def test_blowout_driven_wavy_pattern_emerges() -> None
-tests/test_surface_supply_param.py:31:def test_const_mode()
-tests/test_surface_supply_param.py:41:def test_powerlaw_mode()
-tests/test_surface_supply_param.py:50:def test_table_mode(tmp_path)
-tests/test_surface_supply_param.py:61:def test_smol_helper_respects_tau_clip_and_budget()
-tests/test_surface_supply_param.py:99:def _smol_cfg(outdir: Path, *, supply_cfg: Supply) -> Config
-tests/test_surface_supply_param.py:120:def test_supply_modes_preserve_columns_and_budget(tmp_path: Path) -> None
+tests/test_surface_supply_param.py:33:def test_const_mode()
+tests/test_surface_supply_param.py:43:def test_powerlaw_mode()
+tests/test_surface_supply_param.py:53:def test_table_mode(tmp_path)
+tests/test_surface_supply_param.py:64:def test_smol_helper_respects_tau_clip_and_budget()
+tests/test_surface_supply_param.py:102:def _smol_cfg(outdir: Path, *, supply_cfg: Supply) -> Config
+tests/test_surface_supply_param.py:131:def test_supply_modes_preserve_columns_and_budget(tmp_path: Path) -> None
 tests/test_temperature_driver.py:16:def test_temperature_driver_prefers_radiation_override() -> None
 tests/test_temperature_driver.py:51:def test_temperature_driver_table_interpolates_sample() -> None
 tests/test_temperature_driver.py:77:def test_temperature_autogen_generates_table(tmp_path: Path) -> None

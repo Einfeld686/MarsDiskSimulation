@@ -398,6 +398,7 @@ disk:
   `python -m tools.derive_supply_rate --mu 0.3 --sigma-tau1 1.0 --t-blow 1000 --epsilon-mix 1.0`
 - YAML 生成: `--format yaml` を付けると `supply: { mode: "const", const: { prod_area_rate_kg_m2_s: ... } }` を出力。
 - デフォルト源: `--config <yaml>` で設定ファイルから `supply.mixing.epsilon_mix` と `shielding.fixed_tau1_sigma` を読み込み、環境変数 `MARS_DISK_SIGMA_TAU1` / `MARS_DISK_EPSILON_MIX` もフォールバックとして利用する。通常は `--mu` と `--r`（または `--t-blow`）だけで済む運用を想定。
+- デフォルト値: `epsilon_mix` の標準値は 0.05（表層スキン分率のオーダー）に下げており、明示指定がない場合はこの値が掛かる点に注意。
 
 **例（const モード - 最小構成）:**
 

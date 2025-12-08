@@ -174,7 +174,13 @@ def main(argv: list[str] | None = None) -> int:
     epsilon_mix = (
         args.epsilon_mix
         if args.epsilon_mix is not None
-        else (float(env_eps) if env_eps is not None else cfg_eps if cfg_eps is not None else 1.0)
+        else (
+            float(env_eps)
+            if env_eps is not None
+            else cfg_eps
+            if cfg_eps is not None
+            else 0.05
+        )
     )
 
     if args.format == "csv":
