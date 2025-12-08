@@ -18,7 +18,7 @@ gas-poor かつ火星放射のみを前提に β・ブローアウト境界・`t
 
 ```yaml
 # NOTE: Phase 1 skeleton example, not yet complete.
-eq_id: TODO(REF:blowout_core_eid_v1)
+eq_id: E.007/E.013/E.014
 source_doc: analysis/equations.md
 paper_ref: Hyodo2018_ApJ860_150
 assumption_tags:
@@ -53,6 +53,8 @@ owner: TODO
 last_checked: YYYY-MM-DD
 ```
 
+- 出典がある要素: β と a_blow の閾値判定および軌道時間スケールでの除去は [@Burns1979_Icarus40_1; @Wyatt2008]、火星放射で「一軌道以内に吹き飛ぶ」近似は [@Hyodo2018_ApJ860_150] で裏付けられる。
+- 先行研究が見当たらない要素: `io.correct_fast_blowout` の補正式や `use_solar_rp` / `radiation.source` のスイッチ設計はコード固有（モデル設計扱い）。
 - 欠落情報: β と a_blow の参照式 (E.xxx)、`fast_blowout` 補正式の根拠、`use_solar_rp` 無効時の取り扱い。
 - 次に確認する資料: `assumption_trace_data_sources.md` のテーブル出典、`analysis/equations.md` の R1–R3 節、`analysis/UNKNOWN_REF_REQUESTS.jsonl`（未登録なら追加）。
 - 先行研究メモ: β>0.5 で非束縛となる基準とブローアウト径の決定は [@Burns1979_Icarus40_1] に拠り、軌道時間オーダーで除去される近似は [@StrubbeChiang2006_ApJ648_652] やレビュー [@Wyatt2008] と整合する。一方、`t_blow=1/Ω` を固定する実装方針や `io.correct_fast_blowout` の補正式に直接対応する文献は見当たらない。
@@ -64,7 +66,7 @@ last_checked: YYYY-MM-DD
 
 ```yaml
 # NOTE: Phase 1 skeleton example, not yet complete.
-eq_id: TODO(REF:shielding_gate_order_v1)
+eq_id: E.015/E.016/E.017/E.031
 source_doc: analysis/equations.md
 paper_ref: TODO(REF:shielding_gate_order_v1)
 assumption_tags:
@@ -102,6 +104,8 @@ owner: TODO
 last_checked: YYYY-MM-DD
 ```
 
+- 出典がある要素: 光学的に厚い表層のみが放射圧を受けるという遮蔽の描像は [@TakeuchiLin2003_ApJ593_524] に代表される。
+- 先行研究が見当たらない要素: Φテーブルの出典特定、Φ→τ=1クリップ→tau_gate/gate_mode の順序、`tau_gate_block_time` のようなゲート持続時間の式はコード固有。
 - 欠落情報: Φテーブル出典の正式引用、ゲート適用順序の図式化、`tau_gate_block_time` の式番号。
 - 次に確認する資料: `assumption_trace_data_sources.md` のテーブル節、`analysis/equations.md` の遮蔽式、`analysis/overview.md` Provenance セクション。
 - 先行研究メモ: デブリ円盤は光学的に薄いという前提は [@Krivov2006_AA455_509] などで共有され、gas-rich の自己遮蔽を扱う例として [@TakeuchiLin2003_ApJ593_524] がある。ただし、Φテーブル→τ=1クリップ→gate/tau_gate の順序を明示した手順に合致する文献は確認できていない。
@@ -113,7 +117,7 @@ last_checked: YYYY-MM-DD
 
 ```yaml
 # NOTE: Phase 1 skeleton example, not yet complete.
-eq_id: TODO(REF:psd_wavy_floor_scope_v1)
+eq_id: E.008
 source_doc: analysis/equations.md
 assumption_tags:
   - gas-poor
@@ -151,6 +155,8 @@ owner: TODO
 last_checked: YYYY-MM-DD
 ```
 
+- 出典がある要素: ブローアウト近傍で PSD が波打つという現象は [@Krivov2006_AA455_509; @ThebaultAugereau2007_AA472_169] で示されている。
+- 先行研究が見当たらない要素: `wavy_strength` で振幅をパラメータ化する設計、複数の s_min 床（ブローアウト/設定/動的）の優先順位、`apply_evolved_min_size` の適用条件は文献に直接の類例がない。
 - 欠落情報: wavy 振幅とフェーズの式番号、`s_min_effective` 算定の優先順位、`apply_evolved_min_size` の適用条件。
 - 次に確認する資料: `assumption_trace_data_sources.md` の PSD ソース一覧、`analysis/equations.md` の P1 節。
 - 先行研究メモ: ブローアウト近傍で波打つ PSD は [@Krivov2006_AA455_509; @ThebaultAugereau2007_AA472_169] で示され、最小粒径をどうクリップするかが光学的厚さやSEDに効くことも報告されている。`wavy_strength` のような振幅パラメータ化や s_min クリップ優先順位を明示する実装は既存論文に見当たらない。
@@ -162,7 +168,7 @@ last_checked: YYYY-MM-DD
 
 ```yaml
 # NOTE: Phase 1 skeleton example, not yet complete.
-eq_id: TODO(REF:tcoll_regime_switch_v1)
+eq_id: E.006/E.007
 source_doc: analysis/equations.md
 assumption_tags:
   - wyatt_scaling
@@ -194,6 +200,8 @@ owner: TODO
 last_checked: YYYY-MM-DD
 ```
 
+- 出典がある要素: t_coll ∝ (Ω τ)^-1 のスケーリングや高τで t_coll ≃ Ω^-1 となる描像は [@Wyatt2008; @Ohtsuki2002_Icarus155_436] で整理される。
+- 先行研究が見当たらない要素: Wyatt/Ohtsuki の regime 切替条件、Smol カーネルと表層 t_coll を併用する設計、`f_wake` 係数の形はコード固有。
 - 欠落情報: Ohtsuki regime への切替条件、`f_wake` の式番号、Smol カーネルと表層 t_coll の整合性。
 - 次に確認する資料: `assumption_trace_data_sources.md` のコード走査ターゲット、`analysis/equations.md` の C1–C4 節。
 - 先行研究メモ: τ_eff から t_coll≈t_per/(4π τ) を与える簡易式はレビュー [@Wyatt2008] で整理され、内在衝突確率ベースの計算法は [@Ohtsuki2002_Icarus155_436] に代表される。これらを条件分岐でスイッチし、Smoluchowski 解と突き合わせる具体手順を示す文献は見つかっていない。
@@ -205,7 +213,7 @@ gas-poor 既定で昇華のみを有効にし、TL2003（gas-rich 前提）は `
 
 ```yaml
 # NOTE: Phase 1 skeleton example, not yet complete.
-eq_id: TODO(REF:sublimation_gasdrag_scope_v1)
+eq_id: E.018/E.019/E.036/E.037/E.038
 source_doc: analysis/equations.md
 assumption_tags:
   - gas-poor
@@ -242,6 +250,8 @@ owner: TODO
 last_checked: YYYY-MM-DD
 ```
 
+- 出典がある要素: gas-rich 円盤での放射圧＋ガス抗力流は [@TakeuchiLin2002_ApJ581_1344; @TakeuchiLin2003_ApJ593_524]、昇華支配ダストの寿命スケールは蒸気圧起源の ds/dt モデル（例: [@PollackBurnsTauber1979_Icarus37_587; @Olofsson2022_MNRAS513_713]）で与えられる。
+- 先行研究が見当たらない要素: gas-poor を既定にして TL2003 を無効化する運用、gas-rich 感度試験時のフラグ切替や `sinks.mode` の優先順位はコード固有。
 - 欠落情報: 昇華式の (E.xxx) ひも付け、TL2003 無効の根拠引用位置、gas-rich 感度試験時の手順。
 - 次に確認する資料: `assumption_trace_data_sources.md` の設定パース手順、`analysis/equations.md` の昇華式、`analysis/UNKNOWN_REF_REQUESTS.jsonl` での TL2003 slug 登録。
 - 先行研究メモ: gas-poor を前提に放射圧と衝突・昇華を扱う枠組みはレビュー [@Krivov2006_AA455_509] で整理され、gas-drag を含む遷移円盤の解析は [@TakeuchiLin2002_ApJ581_1344; @TakeuchiLin2003_ApJ593_524]、drag が支配的になる密度域の例は [@PollackBurnsTauber1979_Icarus37_587; @Olofsson2022_MNRAS513_713] にみられる。TL2003/gas_drag フラグのオン/オフ条件を定量規定する文献は見当たらない。
@@ -253,7 +263,7 @@ last_checked: YYYY-MM-DD
 
 ```yaml
 # NOTE: Phase 1 skeleton example, not yet complete.
-eq_id: TODO(REF:radius_fix_0d_scope_v1)
+eq_id: E.001/E.002
 source_doc: analysis/equations.md
 assumption_tags:
   - 0D
@@ -285,6 +295,16 @@ owner: TODO
 last_checked: YYYY-MM-DD
 ```
 
+- 出典がある要素: one-zone / annulus 近似の使用や狭いリングを代表半径で扱う手法は [@Wyatt2008; @CridaCharnoz2012_Science338_1196] などで一般的。
+- 先行研究が見当たらない要素: `disk.geometry` を 0D 必須入力とし、1D 拡張時に 0D 前提の式をタグ管理する運用はコード固有。
 - 欠落情報: 半径解像度を持たない式の一覧、1D 拡張時に再確認すべき E.xxx、`scope.region` との整合。
 - 次に確認する資料: `assumption_trace_data_sources.md` の設定ファミリ、`analysis/overview.md` の geometry 記述。
 - 先行研究メモ: single-annulus 的に代表半径で衝突カスケードを解く枠組みはレビュー [@Wyatt2008] で整理されるが、火星ロッシュ円盤のような高光学的厚さリングを 0D 固定で扱い、後段で 1D に拡張する手順を明文化した文献は未確認。
+
+## 3. 先行研究の有無まとめ
+- blowout_core_eid_v1 (E.007/E.013/E.014): β・a_blow・t_blow≃Ω^-1 は [@Burns1979_Icarus40_1; @Wyatt2008; @Hyodo2018_ApJ860_150] に依拠、一方で `fast_blowout` 補正や `use_solar_rp` は文献なしの設計。
+- shielding_gate_order_v1 (E.015/E.016/E.017/E.031): Φ(τ, ω0, g) で遮蔽する考え方は [@TakeuchiLin2003_ApJ593_524] で妥当、ゲート順序や τ=1 クリップのロジックは先行研究なし。
+- psd_wavy_floor_scope_v1 (E.008): wavy PSD の存在は [@Krivov2006_AA455_509; @ThebaultAugereau2007_AA472_169] が裏付け、`wavy_strength` や s_min 床の優先順位は設計判断。
+- tcoll_regime_switch_v1 (E.006/E.007): t_coll∝(Ωτ)^-1 のスケーリングは [@Wyatt2008; @Ohtsuki2002_Icarus155_436] に合致、Wyatt/Ohtsuki 切替や Smol 併用ルールは設計判断。
+- sublimation_gasdrag_scope_v1 (E.018/E.019/E.036/E.037/E.038): 昇華・gas-drag の基礎式は [@TakeuchiLin2002_ApJ581_1344; @TakeuchiLin2003_ApJ593_524; @PollackBurnsTauber1979_Icarus37_587] などで定義済み、gas-poor 既定で TL2003 無効とする運用はコード固有。
+- radius_fix_0d_scope_v1 (E.001/E.002): 0D one-zone/annulus 近似は [@Wyatt2008; @CridaCharnoz2012_Science338_1196] で一般的だが、`disk.geometry` 固定を前提とするタグ管理は文献なし。

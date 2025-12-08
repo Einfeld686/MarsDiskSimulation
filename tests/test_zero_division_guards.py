@@ -43,7 +43,7 @@ def test_supply_powerlaw_t0_zero():
         powerlaw=schema.SupplyPowerLaw(A_kg_m2_s=1.0, t0_s=0.0, index=0.0),
     )
     rate = supply.get_prod_area_rate(10.0, 1.0, cfg)
-    assert rate == pytest.approx(1.0)
+    assert rate == pytest.approx(0.05)
 
 
 def test_run_zero_d_no_zerodivision(monkeypatch, tmp_path):

@@ -7792,49 +7792,49 @@
   },
   {
     "file_path": "tests/test_surface_supply_param.py",
-    "line_no": 31,
+    "line_no": 33,
     "symbol": "test_const_mode",
     "signature": "test_const_mode()",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tests/test_surface_supply_param.py",
-    "line_no": 41,
+    "line_no": 43,
     "symbol": "test_powerlaw_mode",
     "signature": "test_powerlaw_mode()",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tests/test_surface_supply_param.py",
-    "line_no": 50,
+    "line_no": 53,
     "symbol": "test_table_mode",
     "signature": "test_table_mode(tmp_path)",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tests/test_surface_supply_param.py",
-    "line_no": 58,
+    "line_no": 61,
     "symbol": "MASS_TOL",
     "signature": "MASS_TOL = 0.005",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "tests/test_surface_supply_param.py",
-    "line_no": 61,
+    "line_no": 64,
     "symbol": "test_smol_helper_respects_tau_clip_and_budget",
     "signature": "test_smol_helper_respects_tau_clip_and_budget()",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tests/test_surface_supply_param.py",
-    "line_no": 99,
+    "line_no": 102,
     "symbol": "_smol_cfg",
     "signature": "_smol_cfg(outdir: Path, *, supply_cfg: Supply) -> Config",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tests/test_surface_supply_param.py",
-    "line_no": 120,
+    "line_no": 131,
     "symbol": "test_supply_modes_preserve_columns_and_budget",
     "signature": "test_supply_modes_preserve_columns_and_budget(tmp_path: Path) -> None",
     "brief_usage": "Smolモードで各種供給モードの出力カラムと質量収支を確認する。"

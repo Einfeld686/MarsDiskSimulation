@@ -128,7 +128,7 @@ class SupplyTable(BaseModel):
 
 
 class SupplyMixing(BaseModel):
-    epsilon_mix: float = 1.0
+    epsilon_mix: float = 0.05
 
 
 class SupplyPiece(BaseModel):
@@ -792,6 +792,24 @@ class Radiation(BaseModel):
 class Shielding(BaseModel):
     """Self-shielding table configuration."""
 
+    class LOSGeometry(BaseModel):
+        """Line-of-sight geometry parameters for Mars-directed radiation."""
+
+        mode: Literal["aspect_ratio_factor", "none"] = Field(
+            "aspect_ratio_factor",
+            description="How to scale τ from vertical to Mars line-of-sight; 'aspect_ratio_factor' multiplies by path_multiplier/h_over_r.",
+        )
+        h_over_r: float = Field(
+            1.0,
+            gt=0.0,
+            description="Disk aspect ratio H/r used to convert vertical τ to LOS τ.",
+        )
+        path_multiplier: float = Field(
+            1.0,
+            gt=0.0,
+            description="Geometric multiplier for the Mars-directed path length relative to r.",
+        )
+
     table_path: Optional[Path] = Field(
         None,
         description="Primary path to the Φ(τ) lookup table.",
@@ -805,6 +823,7 @@ class Shielding(BaseModel):
         None,
         description="Optional direct specification of Σ_{τ=1} when shielding.mode='fixed_tau1'.",
     )
+    los_geometry: LOSGeometry = LOSGeometry()
 
     @property
     def table_path_resolved(self) -> Optional[Path]:
