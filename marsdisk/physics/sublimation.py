@@ -105,6 +105,11 @@ class SublimationParams:
     A: Optional[float] = 13.613
     B: Optional[float] = 17850.0
     valid_K: Optional[Tuple[float, float]] = (1270.0, 1600.0)
+    enable_liquid_branch: bool = True
+    psat_liquid_switch_K: Optional[float] = 1900.0
+    A_liq: Optional[float] = 13.203
+    B_liq: Optional[float] = 25898.9
+    valid_liquid_K: Optional[Tuple[float, float]] = (1900.0, 3500.0)
     psat_table_path: Optional[Path] = None
     psat_table_buffer_K: float = PSAT_TABLE_BUFFER_DEFAULT_K
     local_fit_window_K: float = PSAT_LOCAL_FIT_WINDOW_DEFAULT_K
@@ -131,17 +136,56 @@ def _is_hkl_active(params: SublimationParams) -> bool:
         return False
     psat_model = params.psat_model.lower()
     if psat_model == "clausius":
-        return params.A is not None and params.B is not None
+        has_solid = params.A is not None and params.B is not None
+        has_liquid = (
+            params.enable_liquid_branch
+            and params.A_liq is not None
+            and params.B_liq is not None
+        )
+        return has_solid or has_liquid
     if psat_model == "tabulated":
         return params.psat_table_path is not None or params._psat_interp is not None
     if psat_model == "auto":
         has_table = params.psat_table_path is not None or params._psat_interp is not None
-        has_clausius = params.A is not None and params.B is not None
+        has_clausius = (params.A is not None and params.B is not None) or (
+            params.enable_liquid_branch and params.A_liq is not None and params.B_liq is not None
+        )
         return has_table or has_clausius
     return False
 
 
-def p_sat_clausius(T: float, params: SublimationParams) -> float:
+def _resolve_clausius_branch(
+    T: float, params: SublimationParams
+) -> Tuple[str, Optional[float], Optional[float], Optional[Tuple[float, float]]]:
+    """Return the active Clausius branch (solid/liquid) and coefficients."""
+
+    branch = "solid"
+    A = params.A
+    B = params.B
+    valid = params.valid_K
+
+    if (
+        params.enable_liquid_branch
+        and params.psat_liquid_switch_K is not None
+        and T >= float(params.psat_liquid_switch_K)
+        and params.A_liq is not None
+        and params.B_liq is not None
+    ):
+        branch = "liquid"
+        A = params.A_liq
+        B = params.B_liq
+        valid = params.valid_liquid_K or params.valid_K
+
+    return branch, A, B, valid
+
+
+def p_sat_clausius(
+    T: float,
+    params: SublimationParams,
+    *,
+    A_override: Optional[float] = None,
+    B_override: Optional[float] = None,
+) -> float:
     """Return the saturation vapour pressure ``P_sat`` in Pascals.
 
     The relation ``log10(P_sat / Pa) = A - B / T`` is used (Kubaschewski 1974),
@@ -149,9 +193,11 @@ def p_sat_clausius(T: float, params: SublimationParams) -> float:
     coefficients raise :class:`ValueError`.
     """
 
-    if params.A is None or params.B is None:
+    A = params.A if A_override is None else A_override
+    B = params.B if B_override is None else B_override
+    if A is None or B is None:
         raise ValueError("Clausius–Clapeyron coefficients A and B must be provided")
-    return 10.0 ** (params.A - params.B / float(T))
+    return 10.0 ** (A - B / float(T))
 
 
 def _load_psat_table(params: SublimationParams) -> Callable[[float], float]:
@@ -316,6 +362,7 @@ def _local_clausius_fit_selection(
         "psat_table_path": table_info.get("path"),
         "psat_table_range_K": (float(Tmin), float(Tmax)),
         "valid_K_active": (float(T_sel.min()), float(T_sel.max())),
+        "psat_branch": "clausius_local_fit",
     }
 
     def evaluator(T: float) -> float:
@@ -329,29 +376,34 @@ def _baseline_clausius_selection(
     reason: str,
     *,
     model_name: str = "clausius(baseline)",
+    A_override: Optional[float] = None,
+    B_override: Optional[float] = None,
+    valid_override: Optional[Tuple[float, float]] = None,
+    branch: Optional[str] = None,
 ) -> PsatSelection:
     """Return a baseline Clausius selection using the configured coefficients."""
 
-    if params.A is None or params.B is None:
+    A_active = params.A if A_override is None else A_override
+    B_active = params.B if B_override is None else B_override
+    valid_range = valid_override if valid_override is not None else params.valid_K
+
+    if A_active is None or B_active is None:
         raise ValueError(
             "Clausius coefficients (A, B) must be provided for baseline sublimation calculations"
         )
 
     metadata: Dict[str, Any] = {
         "selection_reason": reason,
-        "A_active": float(params.A),
-        "B_active": float(params.B),
+        "A_active": float(A_active),
+        "B_active": float(B_active),
         "psat_table_path": str(params.psat_table_path) if params.psat_table_path else None,
         "psat_table_range_K": None,
-        "valid_K_active": (
-            tuple(float(x) for x in params.valid_K)
-            if params.valid_K is not None
-            else None
-        ),
+        "valid_K_active": (tuple(float(x) for x in valid_range) if valid_range is not None else None),
+        "psat_branch": branch or "solid",
     }
 
     def evaluator(T: float) -> float:
-        return p_sat_clausius(T, params)
+        return p_sat_clausius(T, params, A_override=A_active, B_override=B_active)
 
     return PsatSelection(model_name, evaluator, metadata)
 
@@ -404,6 +456,7 @@ def choose_psat_backend(
                     "monotonic": monotonic,
                     "A_active": None,
                     "B_active": None,
+                    "psat_branch": "tabulated",
                     "log10P_tabulated": log10P,
                 }
                 if not monotonic:
@@ -417,11 +470,11 @@ def choose_psat_backend(
 
                 return PsatSelection("tabulated", evaluator, metadata)
 
-            selection = _local_clausius_fit_selection(T_req, params, info)
-            if selection is not None:
-                selection.metadata.setdefault(
-                    "selection_reason",
-                    "temperature outside tabulated range; applied local Clausius fit",
+                selection = _local_clausius_fit_selection(T_req, params, info)
+                if selection is not None:
+                    selection.metadata.setdefault(
+                        "selection_reason",
+                        "temperature outside tabulated range; applied local Clausius fit",
                 )
                 fit_center = selection.metadata.get("fit_T_center", Tmin)
                 delta = abs(float(T_req) - float(fit_center))
@@ -441,7 +494,16 @@ def choose_psat_backend(
                 Tmax,
             )
 
-        return _baseline_clausius_selection(params, "auto fallback to Clausius baseline")
+        branch, A_active, B_active, valid_range = _resolve_clausius_branch(T_req, params)
+        return _baseline_clausius_selection(
+            params,
+            "auto fallback to Clausius baseline",
+            model_name="clausius",
+            A_override=A_active,
+            B_override=B_active,
+            valid_override=valid_range,
+            branch=branch,
+        )
 
     if model == "tabulated":
         info = table_meta if table_meta is not None else _get_table_info(params, raise_on_error=True)
@@ -462,6 +524,7 @@ def choose_psat_backend(
             "monotonic": monotonic,
             "A_active": None,
             "B_active": None,
+            "psat_branch": "tabulated",
         }
         if not monotonic:
             logger.warning(
@@ -475,10 +538,15 @@ def choose_psat_backend(
         return PsatSelection("tabulated", evaluator, metadata)
 
     if model == "clausius":
+        branch, A_active, B_active, valid_range = _resolve_clausius_branch(T_req, params)
         return _baseline_clausius_selection(
             params,
             "psat_model='clausius'",
             model_name="clausius",
+            A_override=A_active,
+            B_override=B_active,
+            valid_override=valid_range,
+            branch=branch,
         )
 
     raise ValueError(f"Unrecognised psat_model '{params.psat_model}'")
@@ -505,6 +573,7 @@ def _store_psat_selection(
             "log10P": log10P,
         }
     )
+    metadata.setdefault("psat_branch", "solid")
     params.psat_model_resolved = selection.model
     params.psat_selection_reason = metadata.get("selection_reason")
     params._psat_last_selection = metadata
@@ -535,11 +604,12 @@ def mass_flux_hkl(T: float, params: SublimationParams) -> float:
     """
 
     use_hkl = _is_hkl_active(params)
-    validity_status = "unknown"
+    branch, A_active, B_active, valid_range = _resolve_clausius_branch(T, params)
+    validity_status: Optional[str] = None
     validity_direction: Optional[str] = None
-    validity_delta = 0.0
-    if use_hkl and params.valid_K is not None:
-        T_valid_low, T_valid_high = params.valid_K
+    validity_delta: Optional[float] = None
+    if use_hkl and valid_range is not None:
+        T_valid_low, T_valid_high = valid_range
         validity_status = "within"
         if T < T_valid_low:
             validity_status = "below"
@@ -567,7 +637,11 @@ def mass_flux_hkl(T: float, params: SublimationParams) -> float:
             )
             meta["psat_validity_status"] = validity_status
             meta["psat_validity_direction"] = validity_direction
-            meta["psat_validity_delta_K"] = float(validity_delta)
+            meta["psat_validity_delta_K"] = float(validity_delta) if validity_delta is not None else None
+            meta["psat_branch"] = meta.get("psat_branch", branch)
+            meta["valid_K_active"] = (
+                tuple(float(x) for x in valid_range) if valid_range is not None else None
+            )
         return params.alpha_evap * P_ex * root
 
     # logistic placeholder: J0 * exp((T - T_sub)/dT)
