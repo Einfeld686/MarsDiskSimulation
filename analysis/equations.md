@@ -108,6 +108,7 @@ Wyatt 型の $t_{\mathrm{coll}} = 1/(\Omega\tau_{\perp})$ 減衰を用いて表�
 |$\Sigma_{\tau=1}$|Optical-depth clipping lid|kg m$^{-2}$|Input `sigma_tau1`; if absent no clipping|
 |$\dot{M}_{\mathrm{out}}$|Surface outflux|kg m$^{-2}$ s$^{-1}$|Returned as `outflux`|
 |$\Phi_{\mathrm{sink}}$|Additional sink flux|kg m$^{-2}$ s$^{-1}$|Returned as `sink_flux`|
+|$\tau_{\perp}$ / $\tau_{\mathrm{los}}$|Vertical vs Mars line-of-sight optical depth|dimensionless|`tau_vertical` for collisions/transport, `tau_los_mars` for shielding and $\Sigma_{\tau=1}$|
 
 **Numerics**
 - Implicit Euler for loss terms (IMEX-BDF1 style); production handled explicitly.
@@ -224,7 +225,7 @@ Case classification follows the configuration beta: `case_status = "blowout"` wh
 - Enforces positivity: halves $\Delta t_{\mathrm{eff}}$ until all $N_i^{n+1}\ge0$.
 - Evaluates mass budget error (function C4); adaptively halves $\Delta t_{\mathrm{eff}}$ until error $\le$ `mass_tol`.
 - Caps step size relative to minimum collision time using `safety` multiplier.
-- Smol が既定の衝突経路（`surface.collision_solver="smol"`）。表層 ODE (S1) を試す場合のみ `surface_ode` へ切り替える。[marsdisk/run.py:988–1016]
+- Smol が既定の衝突経路（`surface.collision_solver="smol"`）。表層 ODE (S1) を試す場合のみ `surface_ode` へ切り替える。[marsdisk/run.py:1011–1016]
 
 ### (E.011) marsdisk/physics/smol.py: compute_mass_budget_error_C4 (lines 104-131)
 IMEX 更新後の質量差分を測るための診断式。衝突カスケードでの質量収支検査を行う実装 [@Krivov2006_AA455_509] に基づく。

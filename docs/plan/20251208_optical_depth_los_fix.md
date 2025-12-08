@@ -49,6 +49,7 @@
   - **案A（Σ_tau1 を直接縮める）**: `tau_vert` で Φ を計算し `Sigma_tau1_vert` を得た後、`Sigma_tau1_los = Sigma_tau1_vert / f_los` として表層クリップに使う。Σ_tau1 の縮小を保証する。
   - **案B（Φ の τ を LOS にする）**: `tau_los_mars` を `apply_shielding` に渡し、`kappa_eff_los` と `Sigma_tau1_los` を得てそのまま使う。Σ_tau1_los が増える場合もあるが、Φ が下がることで κ_eff/β_eff が減少し、結果としてブローアウトが抑制されることをテストで確認する。
 - μ 定義、`tau_gate`、出力カラムの説明はいずれの案でも LOS 前提で統一する。
+- **方向の使い分けを明記**: 垂直方向の物質輸送・衝突タイムスケールは鉛直 τ (`tau_vert`) を使い、放射圧の遮蔽・ゲート・クリップは視線方向 τ (`tau_los_mars`) を使う。ドキュメントにもこの役割分担を明記して混同を避ける。
 
 ## 実装フロー（案B 基準）
 1. **スキーマ**: `schema.py` に `shielding.los_geometry` を追加（`h_over_r`, `path_multiplier`, `mode`）。デフォルトは 1.0 で互換維持。

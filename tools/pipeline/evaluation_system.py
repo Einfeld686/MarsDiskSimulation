@@ -23,6 +23,8 @@ REQUIRED_SERIES_COLUMNS = [
     "T_M_used",
     "rad_flux_Mars",
     "tau",
+    "tau_los_mars",
+    "tau_vertical",
     "a_blow",
     "a_blow_at_smin",
     "s_min",

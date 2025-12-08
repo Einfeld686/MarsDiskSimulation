@@ -64,6 +64,8 @@ last_checked: YYYY-MM-DD
 
 このクラスターに対応する UNKNOWN_REF_REQUESTS slug: `shielding_gate_order_v1`
 
+- LOS/鉛直の使い分け: 衝突寿命や質量輸送は鉛直光学的厚さ τ_vert を、遮蔽・τ=1 クリップ・tau_gate・ブローアウト判定は火星視線方向 τ_los を用いる。Σ_tau1 は τ_los 基準の Σ_tau1_los を意味する。
+
 ```yaml
 # NOTE: Phase 1 skeleton example, not yet complete.
 eq_id: E.015/E.016/E.017/E.031
