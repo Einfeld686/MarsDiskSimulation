@@ -327,12 +327,12 @@ marsdisk/physics/dynamics.py:18:def v_ij(e: float, i: float, v_k: float=1.0) -> 
 marsdisk/physics/dynamics.py:48:def v_rel_pericenter(e: float, v_k: float) -> float
 marsdisk/physics/dynamics.py:60:def solve_c_eq(tau: float, e: float, eps_model: Callable[[float], float], *, f_wake: float=1.0, max_iter: int=100, tol: float=1e-06) -> float
 marsdisk/physics/dynamics.py:121:def update_e(e: float, e_eq: float, t_damp: float, dt: float) -> float
-marsdisk/physics/fragments.py:34:def q_r_array(m1: np.ndarray, m2: np.ndarray, v: np.ndarray) -> np.ndarray
-marsdisk/physics/fragments.py:55:def largest_remnant_fraction_array(q_r: np.ndarray, q_rd_star: np.ndarray) -> np.ndarray
-marsdisk/physics/fragments.py:73:def compute_q_r_F2(m1: float, m2: float, v: float) -> float
-marsdisk/physics/fragments.py:105:def compute_largest_remnant_mass_fraction_F2(m1: float, m2: float, v: float, q_rd_star: float) -> float
-marsdisk/physics/fragments.py:142:def s_sub_boundary(T: float, T_sub: float=1300.0, *, t_ref: float | None=None, rho: float | None=None, sub_params: SublimationParams | None=None) -> float
-marsdisk/physics/fragments.py:208:def compute_s_min_F2(a_blow: float, T: float, T_sub: float=1300.0, *, t_ref: float | None=None, rho: float | None=None, sub_params: SublimationParams | None=None) -> float
+marsdisk/physics/fragments.py:39:def q_r_array(m1: np.ndarray, m2: np.ndarray, v: np.ndarray) -> np.ndarray
+marsdisk/physics/fragments.py:60:def largest_remnant_fraction_array(q_r: np.ndarray, q_rd_star: np.ndarray) -> np.ndarray
+marsdisk/physics/fragments.py:78:def compute_q_r_F2(m1: float, m2: float, v: float) -> float
+marsdisk/physics/fragments.py:110:def compute_largest_remnant_mass_fraction_F2(m1: float, m2: float, v: float, q_rd_star: float) -> float
+marsdisk/physics/fragments.py:148:def s_sub_boundary(T: float, T_sub: float=1300.0, *, t_ref: float | None=None, rho: float | None=None, sub_params: SublimationParams | None=None) -> float
+marsdisk/physics/fragments.py:214:def compute_s_min_F2(a_blow: float, T: float, T_sub: float=1300.0, *, t_ref: float | None=None, rho: float | None=None, sub_params: SublimationParams | None=None) -> float
 marsdisk/physics/initfields.py:17:def sigma_from_Minner(M_in: float, r_in: float, r_out: float, p_index: float) -> Callable[[float], float]
 marsdisk/physics/initfields.py:47:def surf_sigma_init(sigma: float, kappa_eff: Optional[float], policy: str, f_surf: float | None=None, sigma_override: float | None=None) -> float
 marsdisk/physics/phase.py:24:class PhaseDecision
@@ -343,10 +343,10 @@ marsdisk/physics/psd.py:30:def update_psd_state(*, s_min: float, s_max: float, a
 marsdisk/physics/psd.py:121:def compute_kappa(psd_state: Dict[str, np.ndarray | float]) -> float
 marsdisk/physics/psd.py:149:def apply_uniform_size_drift(psd_state: Dict[str, np.ndarray | float], *, ds_dt: float, dt: float, floor: float, sigma_surf: float) -> tuple[float, float, Dict[str, float]]
 marsdisk/physics/psd.py:267:def evolve_min_size(s_min_prev: float, *, dt: float, model: Optional[str]=None, params: Optional[Mapping[str, float]]=None, T: Optional[float]=None, rho: Optional[float]=None, s_floor: Optional[float]=None, sublimation_params: Optional[SublimationParams]=None) -> float
-marsdisk/physics/qstar.py:25:def _q_d_star(s: float, rho: float, coeffs: Tuple[float, float, float, float]) -> float
-marsdisk/physics/qstar.py:33:def _q_d_star_array(s: np.ndarray, rho: float, coeffs: Tuple[float, float, float, float]) -> np.ndarray
-marsdisk/physics/qstar.py:50:def compute_q_d_star_array(s: np.ndarray, rho: float, v_kms: np.ndarray) -> np.ndarray
-marsdisk/physics/qstar.py:76:def compute_q_d_star_F1(s: float, rho: float, v_kms: float) -> float
+marsdisk/physics/qstar.py:32:def _q_d_star(s: float, rho: float, coeffs: Tuple[float, float, float, float]) -> float
+marsdisk/physics/qstar.py:40:def _q_d_star_array(s: np.ndarray, rho: float, coeffs: Tuple[float, float, float, float]) -> np.ndarray
+marsdisk/physics/qstar.py:57:def compute_q_d_star_array(s: np.ndarray, rho: float, v_kms: np.ndarray) -> np.ndarray
+marsdisk/physics/qstar.py:83:def compute_q_d_star_F1(s: float, rho: float, v_kms: float) -> float
 marsdisk/physics/radiation.py:38:def _validate_size(value: float, *, name: str='s') -> float
 marsdisk/physics/radiation.py:48:def _validate_density(value: Optional[float]) -> float
 marsdisk/physics/radiation.py:61:def _validate_temperature(value: Optional[float]) -> float
@@ -968,6 +968,23 @@ tools/plotting/plot_mass_loss_map.py:24:def _build_grid(df: pd.DataFrame, column
 tools/plotting/plot_mass_loss_map.py:43:def parse_args() -> argparse.Namespace
 tools/plotting/plot_mass_loss_map.py:93:def _make_annotation(df: pd.DataFrame, contour_levels: Iterable[float]) -> str
 tools/plotting/plot_mass_loss_map.py:111:def main() -> None
+tools/reference_tracker.py:84:class ReferenceLocation
+tools/reference_tracker.py:95:class FunctionReference
+tools/reference_tracker.py:108:class RegistryEntry
+tools/reference_tracker.py:121:class ReferenceReport
+tools/reference_tracker.py:139:def load_registry() -> Dict[str, RegistryEntry]
+tools/reference_tracker.py:168:def iter_python_files() -> List[Path]
+tools/reference_tracker.py:181:def extract_references_from_file(file_path: Path) -> List[ReferenceLocation]
+tools/reference_tracker.py:236:def _resolve_informal_key(author1: str, year: str, author2: str=None) -> str
+tools/reference_tracker.py:258:def extract_function_references(file_path: Path) -> List[FunctionReference]
+tools/reference_tracker.py:320:def _extract_refs_from_docstring(lines: List[str]) -> Dict[str, List[str]]
+tools/reference_tracker.py:347:def generate_report() -> ReferenceReport
+tools/reference_tracker.py:379:def print_scan_results(report: ReferenceReport) -> None
+tools/reference_tracker.py:403:def print_validation_results(report: ReferenceReport) -> None
+tools/reference_tracker.py:433:def print_function_mapping(report: ReferenceReport) -> None
+tools/reference_tracker.py:448:def export_bibtex(report: ReferenceReport, output_path: Optional[Path]=None) -> str
+tools/reference_tracker.py:469:def print_full_report(report: ReferenceReport) -> None
+tools/reference_tracker.py:502:def main()
 tools/utilities/memory_probe.py:23:def _human_bytes(value: float) -> str
 tools/utilities/memory_probe.py:35:def _resolve_radius(cfg: object) -> Tuple[float, str]
 tools/utilities/memory_probe.py:52:def _estimate_memory(rows: int, bytes_per_row: float) -> float

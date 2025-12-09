@@ -47,7 +47,7 @@ flowchart TD
 
 ## HK Boundary → `ds/dt` diagnostics
 
-1. `fragments.s_sub_boundary` は灰色体温度と `s_sink_from_timescale` を用いた HKL 境界を計算するが、床粒径の決定には使わない（診断用のみ）。[marsdisk/physics/fragments.py:142–164]
+1. `fragments.s_sub_boundary` は灰色体温度と `s_sink_from_timescale` を用いた HKL 境界を計算するが、床粒径の決定には使わない（診断用のみ）。[marsdisk/physics/fragments.py:148–164]
 2. Runtimeでは `psd.apply_uniform_size_drift` が `ds/dt` を PSD バケットへ反映し、欠損を `mass_lost_sublimation_step` と `dSigma_dt_sublimation` に出力しつつ床粒径は `max(s_min_cfg, a_blow)` を維持する。[marsdisk/physics/psd.py:149–264]
 3. `compute_s_min_F2` は現在ブローアウトサイズのみ返し、警告を発する互換用ヘルパー。[marsdisk/physics/fragments.py:167–198]
 

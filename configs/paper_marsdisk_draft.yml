@@ -1,0 +1,81 @@
+paper:
+  id: PAPER_MARSDISK_DRAFT
+  title: 火星ロッシュ円盤のブローアウト・剥離カップリング草稿（自動生成パイプライン試作）
+  authors:
+    - Daichi (仮)
+  keywords:
+    - Mars
+    - debris disk
+    - blowout
+    - sublimation
+  template_set: baseline_v1
+  output_root: out/paper_inputs
+  checks:
+    mass_budget_tolerance_percent: 0.5
+    imex_dt_ratio_max: 0.1
+    allow_missing_runs: false
+  manual_blocks:
+    discussion: paper/manual/discussion.md
+    conclusion: paper/manual/conclusion.md
+
+runs:
+  - run_id: RUN_MARS_GASPOOR_v01
+    label: ガス希薄基準
+    outdir_glob: "out/*RUN_MARS_GASPOOR_v01*"
+    run_card: run_card.md
+    summary: summary.json
+    series:
+      main: series/run.parquet
+      diagnostics: series/diagnostics.parquet
+    checks:
+      mass_budget: checks/mass_budget.csv
+    tags: [baseline, gas-poor]
+
+  - run_id: RUN_TL2003_TOGGLE_v01
+    label: TL2003トグル感度
+    outdir_glob: "out/*RUN_TL2003_TOGGLE_v01*"
+    run_card: run_card.md
+    summary: summary.json
+    series:
+      main: series/run.parquet
+      diagnostics: series/diagnostics.parquet
+    checks:
+      mass_budget: checks/mass_budget.csv
+    tags: [gas-rich-test, shielding]
+
+  - run_id: RUN_TEMP_DRIVER_v01
+    label: 強放射・β掃引
+    outdir_glob: "out/*RUN_TEMP_DRIVER_v01*"
+    run_card: run_card.md
+    summary: summary.json
+    series:
+      main: series/run.parquet
+      diagnostics: series/diagnostics.parquet
+    checks:
+      mass_budget: checks/mass_budget.csv
+    tags: [beta-sweep, temperature]
+
+figures:
+  - fig_id: FIG_BETA_SERIES_01
+    script: scripts/plot_heatmaps.py
+    runs: [RUN_MARS_GASPOOR_v01, RUN_TEMP_DRIVER_v01]
+    params:
+      mode: beta_timeseries
+
+  - fig_id: FIG_MASS_BUDGET_01
+    script: scripts/analyze_radius_trend.py
+    runs: [RUN_MARS_GASPOOR_v01]
+    params:
+      product: mass_budget
+
+  - fig_id: FIG_SHIELDING_SERIES_01
+    script: scripts/plot_heatmaps.py
+    runs: [RUN_TL2003_TOGGLE_v01, RUN_HIGH_BETA_SHIELD_v01]
+    params:
+      mode: shielding_series
+
+  - fig_id: FIG_PSD_WAVY_01
+    script: scripts/plot_heatmaps.py
+    runs: [RUN_WAVY_PSD_v01]
+    params:
+      mode: psd_wavy
