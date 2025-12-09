@@ -23,8 +23,6 @@ REQUIRED_SERIES_COLUMNS = [
     "T_M_used",
     "rad_flux_Mars",
     "tau",
-    "tau_los_mars",
-    "tau_vertical",
     "a_blow",
     "a_blow_at_smin",
     "s_min",
@@ -226,11 +224,22 @@ def _check_required_outputs(ctx: EvaluationContext) -> Tuple[bool, str]:
     return True, "all baseline artefacts detected"
 
 
+# Column aliases: at least one column from each group must be present
+SERIES_COLUMN_ALIASES = [
+    ("tau_los_mars", "tau_mars_line_of_sight"),  # Either of these is acceptable
+]
+OPTIONAL_SERIES_COLUMNS = ["tau_vertical"]  # Optional in legacy outputs
+
+
 def _check_series_columns(ctx: EvaluationContext) -> Tuple[bool, str]:
     df = ctx.series
     missing = [name for name in REQUIRED_SERIES_COLUMNS if name not in df.columns]
     if missing:
         return False, f"missing columns: {', '.join(missing)}"
+    # Check aliased columns: at least one from each alias group must exist
+    for alias_group in SERIES_COLUMN_ALIASES:
+        if not any(col in df.columns for col in alias_group):
+            return False, f"missing one of aliased columns: {alias_group}"
     return True, f"{len(REQUIRED_SERIES_COLUMNS)} required columns present"
 
 

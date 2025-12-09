@@ -78,42 +78,42 @@
   },
   {
     "file_path": "agent_test/ci_guard_analysis.py",
-    "line_no": 61,
+    "line_no": 71,
     "symbol": "resolve_path",
     "signature": "resolve_path(candidate: Path) -> Path",
     "brief_usage": "No description available."
   },
   {
     "file_path": "agent_test/ci_guard_analysis.py",
-    "line_no": 67,
+    "line_no": 77,
     "symbol": "build_parser",
     "signature": "build_parser() -> argparse.ArgumentParser",
     "brief_usage": "No description available."
   },
   {
     "file_path": "agent_test/ci_guard_analysis.py",
-    "line_no": 109,
+    "line_no": 119,
     "symbol": "iter_missing",
     "signature": "iter_missing(snapshot: CoverageSnapshot) -> Iterable[str]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "agent_test/ci_guard_analysis.py",
-    "line_no": 122,
+    "line_no": 132,
     "symbol": "_load_inventory_records",
     "signature": "_load_inventory_records(path: Path) -> List[Tuple[str, str, int, int]]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "agent_test/ci_guard_analysis.py",
-    "line_no": 138,
+    "line_no": 148,
     "symbol": "find_invalid_anchors",
     "signature": "find_invalid_anchors(refs_path: Path, inventory_path: Path) -> List[str]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "agent_test/ci_guard_analysis.py",
-    "line_no": 176,
+    "line_no": 186,
     "symbol": "main",
     "signature": "main(argv: Sequence[str] | None=None) -> int",
     "brief_usage": "No description available."
@@ -1534,105 +1534,105 @@
   },
   {
     "file_path": "analysis/tools/make_coverage.py",
-    "line_no": 135,
+    "line_no": 151,
     "symbol": "compute_function_reference_rate",
     "signature": "compute_function_reference_rate(public_functions: Sequence[SymbolRef], occurrences: Sequence[Tuple[Path, SymbolRef]]) -> Tuple[int, int, List[SymbolRef]]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "analysis/tools/make_coverage.py",
-    "line_no": 151,
+    "line_no": 167,
     "symbol": "compute_anchor_consistency_rate",
     "signature": "compute_anchor_consistency_rate(occurrences: Sequence[Tuple[Path, SymbolRef]], known_symbols: Dict[SymbolRef, dict]) -> Tuple[int, int, List[Tuple[Path, SymbolRef]]]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "analysis/tools/make_coverage.py",
-    "line_no": 169,
+    "line_no": 185,
     "symbol": "extract_sections_with_equations",
     "signature": "extract_sections_with_equations(content: str) -> List[str]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "analysis/tools/make_coverage.py",
-    "line_no": 187,
+    "line_no": 203,
     "symbol": "extract_fenced_blocks",
     "signature": "extract_fenced_blocks(section: str) -> List[Tuple[str, str]]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "analysis/tools/make_coverage.py",
-    "line_no": 212,
+    "line_no": 228,
     "symbol": "_section_has_symbol_table",
     "signature": "_section_has_symbol_table(section: str) -> bool",
     "brief_usage": "No description available."
   },
   {
     "file_path": "analysis/tools/make_coverage.py",
-    "line_no": 221,
+    "line_no": 237,
     "symbol": "compute_equation_unit_rate",
     "signature": "compute_equation_unit_rate(equations_path: Path) -> Tuple[int, int]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "analysis/tools/make_coverage.py",
-    "line_no": 254,
+    "line_no": 270,
     "symbol": "extract_autogen_block",
     "signature": "extract_autogen_block(text: str) -> str",
     "brief_usage": "No description available."
   },
   {
     "file_path": "analysis/tools/make_coverage.py",
-    "line_no": 269,
+    "line_no": 285,
     "symbol": "compute_sinks_callgraph_flag",
     "signature": "compute_sinks_callgraph_flag(doc_path: Path) -> bool",
     "brief_usage": "No description available."
   },
   {
     "file_path": "analysis/tools/make_coverage.py",
-    "line_no": 291,
+    "line_no": 307,
     "symbol": "format_rate",
     "signature": "format_rate(numerator: int, denominator: int) -> float",
     "brief_usage": "No description available."
   },
   {
     "file_path": "analysis/tools/make_coverage.py",
-    "line_no": 297,
+    "line_no": 313,
     "symbol": "rate_to_percent",
     "signature": "rate_to_percent(rate: float) -> str",
     "brief_usage": "No description available."
   },
   {
     "file_path": "analysis/tools/make_coverage.py",
-    "line_no": 301,
+    "line_no": 317,
     "symbol": "build_coverage_markdown",
     "signature": "build_coverage_markdown(function_rate: Tuple[int, int], anchor_rate: Tuple[int, int], equation_rate: Tuple[int, int], sinks_flag: bool, holes: Sequence[SymbolRef]) -> str",
     "brief_usage": "No description available."
   },
   {
     "file_path": "analysis/tools/make_coverage.py",
-    "line_no": 349,
+    "line_no": 365,
     "symbol": "build_coverage_json",
     "signature": "build_coverage_json(function_rate: Tuple[int, int], anchor_rate: Tuple[int, int], equation_rate: Tuple[int, int], sinks_flag: bool, holes: Sequence[SymbolRef]) -> dict",
     "brief_usage": "No description available."
   },
   {
     "file_path": "analysis/tools/make_coverage.py",
-    "line_no": 381,
+    "line_no": 397,
     "symbol": "write_text",
     "signature": "write_text(path: Path, content: str) -> None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "analysis/tools/make_coverage.py",
-    "line_no": 386,
+    "line_no": 402,
     "symbol": "write_json",
     "signature": "write_json(path: Path, payload: dict) -> None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "analysis/tools/make_coverage.py",
-    "line_no": 391,
+    "line_no": 407,
     "symbol": "main",
     "signature": "main() -> int",
     "brief_usage": "No description available."
@@ -3404,13 +3404,20 @@
   {
     "file_path": "marsdisk/physics/dynamics.py",
     "line_no": 48,
+    "symbol": "v_rel_pericenter",
+    "signature": "v_rel_pericenter(e: float, v_k: float) -> float",
+    "brief_usage": "Return periapsis Kepler speed ``v_K(a)/sqrt(1-e)`` for encounters near periapsis."
+  },
+  {
+    "file_path": "marsdisk/physics/dynamics.py",
+    "line_no": 60,
     "symbol": "solve_c_eq",
     "signature": "solve_c_eq(tau: float, e: float, eps_model: Callable[[float], float], *, f_wake: float=1.0, max_iter: int=100, tol: float=1e-06) -> float",
     "brief_usage": "Return the equilibrium velocity dispersion ``c_eq``."
   },
   {
     "file_path": "marsdisk/physics/dynamics.py",
-    "line_no": 109,
+    "line_no": 121,
     "symbol": "update_e",
     "signature": "update_e(e: float, e_eq: float, t_damp: float, dt: float) -> float",
     "brief_usage": "Relax ``e`` towards ``e_eq`` over the damping time scale."
@@ -4712,203 +4719,203 @@
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 325,
+    "line_no": 333,
     "symbol": "QStar",
     "signature": "class QStar(BaseModel)",
     "brief_usage": "Strength law parameters for catastrophic disruption."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 335,
+    "line_no": 343,
     "symbol": "PSD",
     "signature": "class PSD(BaseModel)",
     "brief_usage": "Particle size distribution parameters."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 346,
+    "line_no": 354,
     "symbol": "Surface",
     "signature": "class Surface(BaseModel)",
     "brief_usage": "Surface layer evolution parameters."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 363,
+    "line_no": 371,
     "symbol": "SublimationParamsModel",
     "signature": "class SublimationParamsModel(BaseModel)",
     "brief_usage": "Nested parameters for sublimation models."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 441,
+    "line_no": 449,
     "symbol": "RPBlowoutConfig",
     "signature": "class RPBlowoutConfig(BaseModel)",
     "brief_usage": "Toggle for radiation-pressure blow-out sinks."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 447,
+    "line_no": 455,
     "symbol": "HydroEscapeConfig",
     "signature": "class HydroEscapeConfig(BaseModel)",
     "brief_usage": "Configuration for vapour-driven hydrodynamic escape sinks."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 470,
+    "line_no": 478,
     "symbol": "Sinks",
     "signature": "class Sinks(BaseModel)",
     "brief_usage": "Configuration of additional sink processes."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 494,
+    "line_no": 502,
     "symbol": "ProcessStateTagging",
     "signature": "class ProcessStateTagging(BaseModel)",
     "brief_usage": "Placeholder toggle for future solid/gas tagging."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 503,
+    "line_no": 511,
     "symbol": "Process",
     "signature": "class Process(BaseModel)",
     "brief_usage": "Companion switches for phase tagging."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 515,
+    "line_no": 523,
     "symbol": "Phase5CompareConfig",
     "signature": "class Phase5CompareConfig(BaseModel)",
     "brief_usage": "Phase 5 comparison study controls."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 545,
+    "line_no": 553,
     "symbol": "Phase5Config",
     "signature": "class Phase5Config(BaseModel)",
     "brief_usage": "Container for the Phase 5 specific options."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 551,
+    "line_no": 559,
     "symbol": "PhaseThresholds",
     "signature": "class PhaseThresholds(BaseModel)",
     "brief_usage": "Fallback thresholds used when no external phase map is available."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 575,
+    "line_no": 583,
     "symbol": "PhaseConfig",
     "signature": "class PhaseConfig(BaseModel)",
     "brief_usage": "Solid/vapour branching controls."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 627,
+    "line_no": 635,
     "symbol": "MarsTemperatureDriverConstant",
     "signature": "class MarsTemperatureDriverConstant(BaseModel)",
     "brief_usage": "Explicit constant value for the Mars temperature driver."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 640,
+    "line_no": 648,
     "symbol": "MarsTemperatureDriverTable",
     "signature": "class MarsTemperatureDriverTable(BaseModel)",
     "brief_usage": "Tabulated Mars temperature driver."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 652,
+    "line_no": 660,
     "symbol": "MarsTemperatureAutogen",
     "signature": "class MarsTemperatureAutogen(BaseModel)",
     "brief_usage": "Options for auto-generating Mars temperature tables."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 681,
+    "line_no": 689,
     "symbol": "MarsTemperatureDriverConfig",
     "signature": "class MarsTemperatureDriverConfig(BaseModel)",
     "brief_usage": "Configuration container for the Mars temperature driver."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 726,
+    "line_no": 734,
     "symbol": "RadiationTauGate",
     "signature": "class RadiationTauGate(BaseModel)",
     "brief_usage": "Optical-depth gating options for radiation-pressure blow-out."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 733,
+    "line_no": 741,
     "symbol": "Radiation",
     "signature": "class Radiation(BaseModel)",
     "brief_usage": "Radiation pressure options and table paths."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 792,
+    "line_no": 800,
     "symbol": "Shielding",
     "signature": "class Shielding(BaseModel)",
     "brief_usage": "Self-shielding table configuration."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 844,
+    "line_no": 852,
     "symbol": "Blowout",
     "signature": "class Blowout(BaseModel)",
     "brief_usage": "Radiation blow-out control."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 862,
+    "line_no": 870,
     "symbol": "Numerics",
     "signature": "class Numerics(BaseModel)",
     "brief_usage": "Integrator control parameters."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 952,
+    "line_no": 960,
     "symbol": "StepDiagnostics",
     "signature": "class StepDiagnostics(BaseModel)",
     "brief_usage": "Per-step loss channel diagnostics output control."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 969,
+    "line_no": 977,
     "symbol": "Progress",
     "signature": "class Progress(BaseModel)",
     "brief_usage": "Console progress display controls."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 983,
+    "line_no": 991,
     "symbol": "Streaming",
     "signature": "class Streaming(BaseModel)",
     "brief_usage": "Streaming write controls for large zero-D runs."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 1026,
+    "line_no": 1034,
     "symbol": "IO",
     "signature": "class IO(BaseModel)",
     "brief_usage": "Output directories."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 1057,
+    "line_no": 1065,
     "symbol": "Phase7Diagnostics",
     "signature": "class Phase7Diagnostics(BaseModel)",
     "brief_usage": "Optional Phase7 diagnostics controls."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 1070,
+    "line_no": 1078,
     "symbol": "Diagnostics",
     "signature": "class Diagnostics(BaseModel)",
     "brief_usage": "Diagnostics toggles grouped by feature phase."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 1076,
+    "line_no": 1084,
     "symbol": "Config",
     "signature": "class Config(BaseModel)",
     "brief_usage": "Top-level configuration object."
@@ -8263,145 +8270,159 @@
     "file_path": "tools/pipeline/evaluation_system.py",
     "line_no": 20,
     "symbol": "REQUIRED_SERIES_COLUMNS",
-    "signature": "REQUIRED_SERIES_COLUMNS = ['time', 'dt', 'T_M_used', 'rad_flux_Mars', 'tau', 'tau_los_mars', 'tau_vertical', 'a_blow', 'a_blow_at_smin', 's_min', 'kappa', 'Qpr_mean', 'Q_pr_at_smin', 'beta_at_smin_config', 'beta_at_smin_effective', 'beta_at_smin', 'Sigma_surf', 'Sigma_tau1', 'outflux_surface', 't_blow', 'prod_subblow_area_rate', 'M_out_dot', 'M_loss_cum', 'mass_total_bins', 'mass_lost_by_blowout', 'mass_lost_by_sinks', 'dt_over_t_blow', 'fast_blowout_factor', 'fast_blowout_flag_gt3', 'fast_blowout_flag_gt10', 'fast_blowout_corrected', 'a_blow_step', 'dSigma_dt_sublimation', 'mass_lost_sinks_step', 'mass_lost_sublimation_step', 'ds_dt_sublimation']",
+    "signature": "REQUIRED_SERIES_COLUMNS = ['time', 'dt', 'T_M_used', 'rad_flux_Mars', 'tau', 'a_blow', 'a_blow_at_smin', 's_min', 'kappa', 'Qpr_mean', 'Q_pr_at_smin', 'beta_at_smin_config', 'beta_at_smin_effective', 'beta_at_smin', 'Sigma_surf', 'Sigma_tau1', 'outflux_surface', 't_blow', 'prod_subblow_area_rate', 'M_out_dot', 'M_loss_cum', 'mass_total_bins', 'mass_lost_by_blowout', 'mass_lost_by_sinks', 'dt_over_t_blow', 'fast_blowout_factor', 'fast_blowout_flag_gt3', 'fast_blowout_flag_gt10', 'fast_blowout_corrected', 'a_blow_step', 'dSigma_dt_sublimation', 'mass_lost_sinks_step', 'mass_lost_sublimation_step', 'ds_dt_sublimation']",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "tools/pipeline/evaluation_system.py",
-    "line_no": 59,
+    "line_no": 57,
     "symbol": "REQUIRED_SUMMARY_FIELDS",
     "signature": "REQUIRED_SUMMARY_FIELDS = ['case_status', 'beta_at_smin_config', 'beta_at_smin_effective', 'beta_at_smin_min', 'beta_at_smin_median', 'beta_at_smin_max', 'beta_threshold', 'a_blow_min', 'a_blow_median', 'a_blow_max', 'M_out_cum', 'M_sink_cum', 'M_out_mean_per_orbit', 'M_sink_mean_per_orbit', 'M_loss', 'M_loss_from_sinks', 'M_loss_from_sublimation', 'orbits_completed', 'chi_blow_eff', 's_min_components', 's_min_effective', 'time_grid', 'mass_budget_max_error_percent', 'qpr_table_path', 'rho_used', 'T_M_used', 'T_M_initial', 'T_M_final', 'T_M_min', 'T_M_median', 'T_M_max', 'temperature_driver', 'solar_radiation']",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "tools/pipeline/evaluation_system.py",
-    "line_no": 95,
+    "line_no": 93,
     "symbol": "REQUIRED_RUN_CONFIG_FIELDS",
     "signature": "REQUIRED_RUN_CONFIG_FIELDS = ['sublimation_provenance', 'beta_formula', 'T_M_used', 'rho_used', 'Q_pr_used', 'temperature_driver', 'solar_radiation']",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "tools/pipeline/evaluation_system.py",
-    "line_no": 105,
+    "line_no": 103,
     "symbol": "ORBIT_ROLLUP_COLUMNS",
     "signature": "ORBIT_ROLLUP_COLUMNS = ['time_s_end', 'M_out_orbit', 'M_sink_orbit', 'M_loss_per_orbit']",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "tools/pipeline/evaluation_system.py",
-    "line_no": 106,
+    "line_no": 104,
     "symbol": "MASS_BUDGET_COLUMNS",
     "signature": "MASS_BUDGET_COLUMNS = ['time', 'mass_initial', 'mass_remaining', 'mass_lost', 'error_percent', 'tolerance_percent']",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "tools/pipeline/evaluation_system.py",
-    "line_no": 117,
+    "line_no": 115,
     "symbol": "CheckResult",
     "signature": "class CheckResult",
     "brief_usage": "Encapsulate the outcome of a single evaluation step."
   },
   {
     "file_path": "tools/pipeline/evaluation_system.py",
-    "line_no": 128,
+    "line_no": 126,
     "symbol": "EvaluationCheck",
     "signature": "class EvaluationCheck",
     "brief_usage": "Associate a name/reference pair with a callable check."
   },
   {
     "file_path": "tools/pipeline/evaluation_system.py",
-    "line_no": 137,
+    "line_no": 135,
     "symbol": "EvaluationContext",
     "signature": "class EvaluationContext",
     "brief_usage": "Lazy loaders for output artefacts required by the evaluation."
   },
   {
     "file_path": "tools/pipeline/evaluation_system.py",
-    "line_no": 212,
+    "line_no": 210,
     "symbol": "_check_required_outputs",
     "signature": "_check_required_outputs(ctx: EvaluationContext) -> Tuple[bool, str]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/pipeline/evaluation_system.py",
-    "line_no": 229,
+    "line_no": 228,
+    "symbol": "SERIES_COLUMN_ALIASES",
+    "signature": "SERIES_COLUMN_ALIASES = [('tau_los_mars', 'tau_mars_line_of_sight')]",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "tools/pipeline/evaluation_system.py",
+    "line_no": 231,
+    "symbol": "OPTIONAL_SERIES_COLUMNS",
+    "signature": "OPTIONAL_SERIES_COLUMNS = ['tau_vertical']",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "tools/pipeline/evaluation_system.py",
+    "line_no": 234,
     "symbol": "_check_series_columns",
     "signature": "_check_series_columns(ctx: EvaluationContext) -> Tuple[bool, str]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/pipeline/evaluation_system.py",
-    "line_no": 237,
+    "line_no": 246,
     "symbol": "_check_summary_fields",
     "signature": "_check_summary_fields(ctx: EvaluationContext) -> Tuple[bool, str]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/pipeline/evaluation_system.py",
-    "line_no": 245,
+    "line_no": 254,
     "symbol": "_check_case_status",
     "signature": "_check_case_status(ctx: EvaluationContext) -> Tuple[bool, str]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/pipeline/evaluation_system.py",
-    "line_no": 260,
+    "line_no": 269,
     "symbol": "_check_s_min_components",
     "signature": "_check_s_min_components(ctx: EvaluationContext) -> Tuple[bool, str]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/pipeline/evaluation_system.py",
-    "line_no": 283,
+    "line_no": 292,
     "symbol": "_check_mass_budget",
     "signature": "_check_mass_budget(ctx: EvaluationContext) -> Tuple[bool, str]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/pipeline/evaluation_system.py",
-    "line_no": 298,
+    "line_no": 307,
     "symbol": "_check_orbit_rollup",
     "signature": "_check_orbit_rollup(ctx: EvaluationContext) -> Tuple[bool, str]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/pipeline/evaluation_system.py",
-    "line_no": 308,
+    "line_no": 317,
     "symbol": "_check_run_config",
     "signature": "_check_run_config(ctx: EvaluationContext) -> Tuple[bool, str]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/pipeline/evaluation_system.py",
-    "line_no": 323,
+    "line_no": 332,
     "symbol": "DEFAULT_CHECKS",
     "signature": "DEFAULT_CHECKS: Sequence[EvaluationCheck] = [EvaluationCheck(name='required_outputs', description='出力 artefacts (series/summary/checks/orbit_rollup/run_config) の存在確認', reference='analysis/run-recipes.md:37-41', func=_check_required_outputs), EvaluationCheck(name='series_columns', description='タイムシリーズの必須列チェック', reference=SERIES_COLUMNS_REF, func=_check_series_columns), EvaluationCheck(name='summary_fields', description='summary.json の基本フィールド検証', reference=SUMMARY_FIELDS_REF, func=_check_summary_fields), EvaluationCheck(name='case_status', description='β比較に基づく case_status 一貫性', reference='analysis/run-recipes.md:45', func=_check_case_status), EvaluationCheck(name='s_min_components', description='s_min_components のキーと max(config, blowout)', reference=S_MIN_REF, func=_check_s_min_components), EvaluationCheck(name='mass_budget', description='質量保存ログの閾値確認', reference=MASS_BUDGET_REF, func=_check_mass_budget), EvaluationCheck(name='orbit_rollup', description='公転集計ファイルと列の存在確認', reference=ORBIT_ROLLUP_REF, func=_check_orbit_rollup), EvaluationCheck(name='run_config_meta', description='run_config.json の昇華由来メタデータ検証', reference=RUN_CONFIG_REF, func=_check_run_config)]",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "tools/pipeline/evaluation_system.py",
-    "line_no": 375,
+    "line_no": 384,
     "symbol": "EvaluationSystem",
     "signature": "class EvaluationSystem",
     "brief_usage": "Orchestrate evaluation checks for a given output directory."
   },
   {
     "file_path": "tools/pipeline/evaluation_system.py",
-    "line_no": 403,
+    "line_no": 412,
     "symbol": "_render_table",
     "signature": "_render_table(results: Iterable[CheckResult]) -> str",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/pipeline/evaluation_system.py",
-    "line_no": 411,
+    "line_no": 420,
     "symbol": "_build_parser",
     "signature": "_build_parser() -> argparse.ArgumentParser",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/pipeline/evaluation_system.py",
-    "line_no": 427,
+    "line_no": 436,
     "symbol": "main",
     "signature": "main(argv: Sequence[str] | None=None) -> int",
     "brief_usage": "No description available."

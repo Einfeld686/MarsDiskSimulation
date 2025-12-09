@@ -1,23 +1,23 @@
 {
   "function_reference_rate": {
-    "numerator": 66,
-    "denominator": 74,
-    "rate": 0.8918918918918919
+    "numerator": 58,
+    "denominator": 77,
+    "rate": 0.7532467532467533
   },
   "anchor_consistency_rate": {
-    "numerator": 208,
-    "denominator": 208,
+    "numerator": 156,
+    "denominator": 156,
     "rate": 1.0
   },
   "equation_unit_coverage": {
-    "numerator": 26,
-    "denominator": 29,
-    "rate": 0.896551724137931
+    "numerator": 27,
+    "denominator": 31,
+    "rate": 0.8709677419354839
   },
   "sinks_callgraph_documented": true,
   "holes": [
-    "marsdisk/physics/sublimation.py#p_sat",
-    "marsdisk/physics/supply.py#get_prod_area_rate",
-    "marsdisk/physics/surface.py#compute_surface_outflux"
+    "marsdisk/physics/collisions_smol.py#kernel_minimum_tcoll",
+    "marsdisk/physics/collisions_smol.py#step_collisions_smol_0d",
+    "marsdisk/physics/collisions_smol.py#supply_mass_rate_to_number_source"
   ]
 }

@@ -5,12 +5,12 @@ agent_test/checks_psat_auto_01/scan_hkl.py:42:def scan_case(case: CaseConfig, T_
 agent_test/checks_psat_auto_01/scan_hkl.py:74:def main() -> None
 agent_test/ci_guard_analysis.py:17:class CoverageSnapshot
 agent_test/ci_guard_analysis.py:28:def load_coverage(path: Path) -> CoverageSnapshot
-agent_test/ci_guard_analysis.py:61:def resolve_path(candidate: Path) -> Path
-agent_test/ci_guard_analysis.py:67:def build_parser() -> argparse.ArgumentParser
-agent_test/ci_guard_analysis.py:109:def iter_missing(snapshot: CoverageSnapshot) -> Iterable[str]
-agent_test/ci_guard_analysis.py:122:def _load_inventory_records(path: Path) -> List[Tuple[str, str, int, int]]
-agent_test/ci_guard_analysis.py:138:def find_invalid_anchors(refs_path: Path, inventory_path: Path) -> List[str]
-agent_test/ci_guard_analysis.py:176:def main(argv: Sequence[str] | None=None) -> int
+agent_test/ci_guard_analysis.py:71:def resolve_path(candidate: Path) -> Path
+agent_test/ci_guard_analysis.py:77:def build_parser() -> argparse.ArgumentParser
+agent_test/ci_guard_analysis.py:119:def iter_missing(snapshot: CoverageSnapshot) -> Iterable[str]
+agent_test/ci_guard_analysis.py:132:def _load_inventory_records(path: Path) -> List[Tuple[str, str, int, int]]
+agent_test/ci_guard_analysis.py:148:def find_invalid_anchors(refs_path: Path, inventory_path: Path) -> List[str]
+agent_test/ci_guard_analysis.py:186:def main(argv: Sequence[str] | None=None) -> int
 agent_test/diagnostics/minimal/run_minimal_matrix.py:60:class SeriesSpec
 agent_test/diagnostics/minimal/run_minimal_matrix.py:138:def ensure_dirs(paths: Iterable[Path]) -> None
 agent_test/diagnostics/minimal/run_minimal_matrix.py:143:def build_config(series: SeriesSpec, T: float, r_rm: float, outdir: Path) -> tuple[dict, float]
@@ -133,21 +133,21 @@ analysis/tools/make_coverage.py:47:def load_symbol_kinds() -> Dict[SymbolRef, st
 analysis/tools/make_coverage.py:78:def discover_markdown_paths() -> List[Path]
 analysis/tools/make_coverage.py:89:def collect_anchor_occurrences(paths: Sequence[Path]) -> List[Tuple[Path, SymbolRef]]
 analysis/tools/make_coverage.py:100:def classify_symbols(inventory: Sequence[dict], symbol_kinds: Dict[SymbolRef, str]) -> Tuple[Dict[SymbolRef, dict], List[SymbolRef]]
-analysis/tools/make_coverage.py:135:def compute_function_reference_rate(public_functions: Sequence[SymbolRef], occurrences: Sequence[Tuple[Path, SymbolRef]]) -> Tuple[int, int, List[SymbolRef]]
-analysis/tools/make_coverage.py:151:def compute_anchor_consistency_rate(occurrences: Sequence[Tuple[Path, SymbolRef]], known_symbols: Dict[SymbolRef, dict]) -> Tuple[int, int, List[Tuple[Path, SymbolRef]]]
-analysis/tools/make_coverage.py:169:def extract_sections_with_equations(content: str) -> List[str]
-analysis/tools/make_coverage.py:187:def extract_fenced_blocks(section: str) -> List[Tuple[str, str]]
-analysis/tools/make_coverage.py:212:def _section_has_symbol_table(section: str) -> bool
-analysis/tools/make_coverage.py:221:def compute_equation_unit_rate(equations_path: Path) -> Tuple[int, int]
-analysis/tools/make_coverage.py:254:def extract_autogen_block(text: str) -> str
-analysis/tools/make_coverage.py:269:def compute_sinks_callgraph_flag(doc_path: Path) -> bool
-analysis/tools/make_coverage.py:291:def format_rate(numerator: int, denominator: int) -> float
-analysis/tools/make_coverage.py:297:def rate_to_percent(rate: float) -> str
-analysis/tools/make_coverage.py:301:def build_coverage_markdown(function_rate: Tuple[int, int], anchor_rate: Tuple[int, int], equation_rate: Tuple[int, int], sinks_flag: bool, holes: Sequence[SymbolRef]) -> str
-analysis/tools/make_coverage.py:349:def build_coverage_json(function_rate: Tuple[int, int], anchor_rate: Tuple[int, int], equation_rate: Tuple[int, int], sinks_flag: bool, holes: Sequence[SymbolRef]) -> dict
-analysis/tools/make_coverage.py:381:def write_text(path: Path, content: str) -> None
-analysis/tools/make_coverage.py:386:def write_json(path: Path, payload: dict) -> None
-analysis/tools/make_coverage.py:391:def main() -> int
+analysis/tools/make_coverage.py:151:def compute_function_reference_rate(public_functions: Sequence[SymbolRef], occurrences: Sequence[Tuple[Path, SymbolRef]]) -> Tuple[int, int, List[SymbolRef]]
+analysis/tools/make_coverage.py:167:def compute_anchor_consistency_rate(occurrences: Sequence[Tuple[Path, SymbolRef]], known_symbols: Dict[SymbolRef, dict]) -> Tuple[int, int, List[Tuple[Path, SymbolRef]]]
+analysis/tools/make_coverage.py:185:def extract_sections_with_equations(content: str) -> List[str]
+analysis/tools/make_coverage.py:203:def extract_fenced_blocks(section: str) -> List[Tuple[str, str]]
+analysis/tools/make_coverage.py:228:def _section_has_symbol_table(section: str) -> bool
+analysis/tools/make_coverage.py:237:def compute_equation_unit_rate(equations_path: Path) -> Tuple[int, int]
+analysis/tools/make_coverage.py:270:def extract_autogen_block(text: str) -> str
+analysis/tools/make_coverage.py:285:def compute_sinks_callgraph_flag(doc_path: Path) -> bool
+analysis/tools/make_coverage.py:307:def format_rate(numerator: int, denominator: int) -> float
+analysis/tools/make_coverage.py:313:def rate_to_percent(rate: float) -> str
+analysis/tools/make_coverage.py:317:def build_coverage_markdown(function_rate: Tuple[int, int], anchor_rate: Tuple[int, int], equation_rate: Tuple[int, int], sinks_flag: bool, holes: Sequence[SymbolRef]) -> str
+analysis/tools/make_coverage.py:365:def build_coverage_json(function_rate: Tuple[int, int], anchor_rate: Tuple[int, int], equation_rate: Tuple[int, int], sinks_flag: bool, holes: Sequence[SymbolRef]) -> dict
+analysis/tools/make_coverage.py:397:def write_text(path: Path, content: str) -> None
+analysis/tools/make_coverage.py:402:def write_json(path: Path, payload: dict) -> None
+analysis/tools/make_coverage.py:407:def main() -> int
 analysis/tools/make_sinks_callgraph.py:22:class SymbolKey
 analysis/tools/make_sinks_callgraph.py:27:def load_inventory() -> Dict[SymbolKey, dict]
 analysis/tools/make_sinks_callgraph.py:43:def ensure_symbols_present(inv: Dict[SymbolKey, dict], symbols: Iterable[SymbolKey]) -> None
@@ -324,8 +324,9 @@ marsdisk/physics/collisions_smol.py:241:def kernel_minimum_tcoll(C_kernel: np.nd
 marsdisk/physics/collisions_smol.py:253:def compute_kernel_e_i_H(dynamics_cfg: 'Dynamics', tau_eff: float, a_orbit_m: float, v_k: float, sizes: np.ndarray) -> tuple[float, float, np.ndarray]
 marsdisk/physics/collisions_smol.py:305:def step_collisions_smol_0d(psd_state: MutableMapping[str, np.ndarray | float], sigma_surf: float, *, dt: float, prod_subblow_area_rate: float, r: float, Omega: float, a_blow: float, rho: float, e_value: float, i_value: float, sigma_tau1: float | None, enable_blowout: bool, t_sink: float | None, ds_dt_val: float | None=None, s_min_effective: float | None=None, dynamics_cfg: 'Dynamics | None'=None, tau_eff: float | None=None, collisions_enabled: bool=True) -> Smol0DStepResult
 marsdisk/physics/dynamics.py:18:def v_ij(e: float, i: float, v_k: float=1.0) -> float
-marsdisk/physics/dynamics.py:48:def solve_c_eq(tau: float, e: float, eps_model: Callable[[float], float], *, f_wake: float=1.0, max_iter: int=100, tol: float=1e-06) -> float
-marsdisk/physics/dynamics.py:109:def update_e(e: float, e_eq: float, t_damp: float, dt: float) -> float
+marsdisk/physics/dynamics.py:48:def v_rel_pericenter(e: float, v_k: float) -> float
+marsdisk/physics/dynamics.py:60:def solve_c_eq(tau: float, e: float, eps_model: Callable[[float], float], *, f_wake: float=1.0, max_iter: int=100, tol: float=1e-06) -> float
+marsdisk/physics/dynamics.py:121:def update_e(e: float, e_eq: float, t_damp: float, dt: float) -> float
 marsdisk/physics/fragments.py:34:def q_r_array(m1: np.ndarray, m2: np.ndarray, v: np.ndarray) -> np.ndarray
 marsdisk/physics/fragments.py:55:def largest_remnant_fraction_array(q_r: np.ndarray, q_rd_star: np.ndarray) -> np.ndarray
 marsdisk/physics/fragments.py:73:def compute_q_r_F2(m1: float, m2: float, v: float) -> float
@@ -475,35 +476,35 @@ marsdisk/schema.py:204:class Temps(BaseModel)
 marsdisk/schema.py:231:class Sizes(BaseModel)
 marsdisk/schema.py:255:class Initial(BaseModel)
 marsdisk/schema.py:262:class Dynamics(BaseModel)
-marsdisk/schema.py:325:class QStar(BaseModel)
-marsdisk/schema.py:335:class PSD(BaseModel)
-marsdisk/schema.py:346:class Surface(BaseModel)
-marsdisk/schema.py:363:class SublimationParamsModel(BaseModel)
-marsdisk/schema.py:441:class RPBlowoutConfig(BaseModel)
-marsdisk/schema.py:447:class HydroEscapeConfig(BaseModel)
-marsdisk/schema.py:470:class Sinks(BaseModel)
-marsdisk/schema.py:494:class ProcessStateTagging(BaseModel)
-marsdisk/schema.py:503:class Process(BaseModel)
-marsdisk/schema.py:515:class Phase5CompareConfig(BaseModel)
-marsdisk/schema.py:545:class Phase5Config(BaseModel)
-marsdisk/schema.py:551:class PhaseThresholds(BaseModel)
-marsdisk/schema.py:575:class PhaseConfig(BaseModel)
-marsdisk/schema.py:627:class MarsTemperatureDriverConstant(BaseModel)
-marsdisk/schema.py:640:class MarsTemperatureDriverTable(BaseModel)
-marsdisk/schema.py:652:class MarsTemperatureAutogen(BaseModel)
-marsdisk/schema.py:681:class MarsTemperatureDriverConfig(BaseModel)
-marsdisk/schema.py:726:class RadiationTauGate(BaseModel)
-marsdisk/schema.py:733:class Radiation(BaseModel)
-marsdisk/schema.py:792:class Shielding(BaseModel)
-marsdisk/schema.py:844:class Blowout(BaseModel)
-marsdisk/schema.py:862:class Numerics(BaseModel)
-marsdisk/schema.py:952:class StepDiagnostics(BaseModel)
-marsdisk/schema.py:969:class Progress(BaseModel)
-marsdisk/schema.py:983:class Streaming(BaseModel)
-marsdisk/schema.py:1026:class IO(BaseModel)
-marsdisk/schema.py:1057:class Phase7Diagnostics(BaseModel)
-marsdisk/schema.py:1070:class Diagnostics(BaseModel)
-marsdisk/schema.py:1076:class Config(BaseModel)
+marsdisk/schema.py:333:class QStar(BaseModel)
+marsdisk/schema.py:343:class PSD(BaseModel)
+marsdisk/schema.py:354:class Surface(BaseModel)
+marsdisk/schema.py:371:class SublimationParamsModel(BaseModel)
+marsdisk/schema.py:449:class RPBlowoutConfig(BaseModel)
+marsdisk/schema.py:455:class HydroEscapeConfig(BaseModel)
+marsdisk/schema.py:478:class Sinks(BaseModel)
+marsdisk/schema.py:502:class ProcessStateTagging(BaseModel)
+marsdisk/schema.py:511:class Process(BaseModel)
+marsdisk/schema.py:523:class Phase5CompareConfig(BaseModel)
+marsdisk/schema.py:553:class Phase5Config(BaseModel)
+marsdisk/schema.py:559:class PhaseThresholds(BaseModel)
+marsdisk/schema.py:583:class PhaseConfig(BaseModel)
+marsdisk/schema.py:635:class MarsTemperatureDriverConstant(BaseModel)
+marsdisk/schema.py:648:class MarsTemperatureDriverTable(BaseModel)
+marsdisk/schema.py:660:class MarsTemperatureAutogen(BaseModel)
+marsdisk/schema.py:689:class MarsTemperatureDriverConfig(BaseModel)
+marsdisk/schema.py:734:class RadiationTauGate(BaseModel)
+marsdisk/schema.py:741:class Radiation(BaseModel)
+marsdisk/schema.py:800:class Shielding(BaseModel)
+marsdisk/schema.py:852:class Blowout(BaseModel)
+marsdisk/schema.py:870:class Numerics(BaseModel)
+marsdisk/schema.py:960:class StepDiagnostics(BaseModel)
+marsdisk/schema.py:977:class Progress(BaseModel)
+marsdisk/schema.py:991:class Streaming(BaseModel)
+marsdisk/schema.py:1034:class IO(BaseModel)
+marsdisk/schema.py:1065:class Phase7Diagnostics(BaseModel)
+marsdisk/schema.py:1078:class Diagnostics(BaseModel)
+marsdisk/schema.py:1084:class Config(BaseModel)
 marsdisk/tests/test_core.py:11:def test_constants_values()
 marsdisk/tests/test_core.py:17:def test_grid_relations()
 marsdisk/tests/test_core.py:24:def test_writer_and_tables(tmp_path: Path)
@@ -904,21 +905,21 @@ tools/pipeline/coverage_guard.py:19:def _load_extended_coverage(path: Path) -> D
 tools/pipeline/coverage_guard.py:58:def run_guard(*, coverage_source: Path=DEFAULT_COVERAGE, refs_path: Path=DEFAULT_REFS, inventory_path: Path=DEFAULT_INVENTORY, fail_under: float=0.75, require_clean_anchors: bool=True, equation_fail_under: float=0.25, require_sinks_callgraph: bool=True) -> int
 tools/pipeline/coverage_guard.py:107:def _build_parser() -> argparse.ArgumentParser
 tools/pipeline/coverage_guard.py:132:def main(argv: Sequence[str] | None=None) -> int
-tools/pipeline/evaluation_system.py:117:class CheckResult
-tools/pipeline/evaluation_system.py:128:class EvaluationCheck
-tools/pipeline/evaluation_system.py:137:class EvaluationContext
-tools/pipeline/evaluation_system.py:212:def _check_required_outputs(ctx: EvaluationContext) -> Tuple[bool, str]
-tools/pipeline/evaluation_system.py:229:def _check_series_columns(ctx: EvaluationContext) -> Tuple[bool, str]
-tools/pipeline/evaluation_system.py:237:def _check_summary_fields(ctx: EvaluationContext) -> Tuple[bool, str]
-tools/pipeline/evaluation_system.py:245:def _check_case_status(ctx: EvaluationContext) -> Tuple[bool, str]
-tools/pipeline/evaluation_system.py:260:def _check_s_min_components(ctx: EvaluationContext) -> Tuple[bool, str]
-tools/pipeline/evaluation_system.py:283:def _check_mass_budget(ctx: EvaluationContext) -> Tuple[bool, str]
-tools/pipeline/evaluation_system.py:298:def _check_orbit_rollup(ctx: EvaluationContext) -> Tuple[bool, str]
-tools/pipeline/evaluation_system.py:308:def _check_run_config(ctx: EvaluationContext) -> Tuple[bool, str]
-tools/pipeline/evaluation_system.py:375:class EvaluationSystem
-tools/pipeline/evaluation_system.py:403:def _render_table(results: Iterable[CheckResult]) -> str
-tools/pipeline/evaluation_system.py:411:def _build_parser() -> argparse.ArgumentParser
-tools/pipeline/evaluation_system.py:427:def main(argv: Sequence[str] | None=None) -> int
+tools/pipeline/evaluation_system.py:115:class CheckResult
+tools/pipeline/evaluation_system.py:126:class EvaluationCheck
+tools/pipeline/evaluation_system.py:135:class EvaluationContext
+tools/pipeline/evaluation_system.py:210:def _check_required_outputs(ctx: EvaluationContext) -> Tuple[bool, str]
+tools/pipeline/evaluation_system.py:234:def _check_series_columns(ctx: EvaluationContext) -> Tuple[bool, str]
+tools/pipeline/evaluation_system.py:246:def _check_summary_fields(ctx: EvaluationContext) -> Tuple[bool, str]
+tools/pipeline/evaluation_system.py:254:def _check_case_status(ctx: EvaluationContext) -> Tuple[bool, str]
+tools/pipeline/evaluation_system.py:269:def _check_s_min_components(ctx: EvaluationContext) -> Tuple[bool, str]
+tools/pipeline/evaluation_system.py:292:def _check_mass_budget(ctx: EvaluationContext) -> Tuple[bool, str]
+tools/pipeline/evaluation_system.py:307:def _check_orbit_rollup(ctx: EvaluationContext) -> Tuple[bool, str]
+tools/pipeline/evaluation_system.py:317:def _check_run_config(ctx: EvaluationContext) -> Tuple[bool, str]
+tools/pipeline/evaluation_system.py:384:class EvaluationSystem
+tools/pipeline/evaluation_system.py:412:def _render_table(results: Iterable[CheckResult]) -> str
+tools/pipeline/evaluation_system.py:420:def _build_parser() -> argparse.ArgumentParser
+tools/pipeline/evaluation_system.py:436:def main(argv: Sequence[str] | None=None) -> int
 tools/pipeline/run_analysis_doc_tests.py:15:class SummaryPlugin
 tools/pipeline/run_analysis_doc_tests.py:29:def _build_args(argv: List[str]) -> List[str]
 tools/pipeline/run_analysis_doc_tests.py:43:def _expand_globs(args: List[str]) -> List[str]
