@@ -27,12 +27,22 @@ class CoverageSnapshot:
 
 def load_coverage(path: Path) -> CoverageSnapshot:
     data = json.loads(path.read_text(encoding="utf-8"))
-    rate = float(data.get("function_reference_rate", 0.0))
-    referenced = int(data.get("function_referenced", 0))
-    total = int(data.get("function_total", 0))
+    # Support both old (scalar) and new (dict with rate/numerator/denominator) formats
+    func_ref_raw = data.get("function_reference_rate", 0.0)
+    if isinstance(func_ref_raw, dict):
+        rate = float(func_ref_raw.get("rate", 0.0))
+        referenced = int(func_ref_raw.get("numerator", 0))
+        total = int(func_ref_raw.get("denominator", 0))
+    else:
+        rate = float(func_ref_raw)
+        referenced = int(data.get("function_referenced", 0))
+        total = int(data.get("function_total", 0))
 
     anchor_info = data.get("anchor_consistency_rate", {}) or {}
-    anchor_rate = float(anchor_info.get("rate", 1.0))
+    if isinstance(anchor_info, dict):
+        anchor_rate = float(anchor_info.get("rate", 1.0))
+    else:
+        anchor_rate = float(anchor_info)
     invalid_anchor_count = int(data.get("invalid_anchor_count", 0))
     duplicate_anchor_count = int(data.get("duplicate_anchor_count", 0))
 

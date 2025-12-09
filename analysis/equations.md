@@ -69,7 +69,7 @@
 |$\tau_{\perp}$|Vertical optical depth (type-A/B regimes)|dimensionless|Input, must be positive|
 
 **Numerics**
-- Pure algebraic evaluation with argument validation; raises `MarsDiskError` when $\tau_{\perp}\le0$ or $\Omega\le0$.
+- Pure algebraic evaluation with argument validation; raises `MarsDiskError` when $\tau_{\perp}\le0$ or $\Omega\le0$. [marsdisk/physics/surface.py#wyatt_tcoll_S1 [L66–L78]]
 
 Type-A disks (collision dominated) inherit $\tau(r) \propto r^{-5/2}$, whereas type-B disks (CPR drag dominated) follow $\tau(r) \propto r^{-3/2}$, both derived from the same scaling. [@StrubbeChiang2006_ApJ648_652]
 
@@ -166,7 +166,7 @@ Case classification follows the configuration beta: `case_status = "blowout"` wh
 | PSD bin number density | `N_bin` | `[marsdisk/run.py:1281–1295][marsdisk/io/writer.py:75–137]` | Relative number surface density per bin |
 
 
-### (E.009) marsdisk/physics/surface.py: compute_surface_outflux (lines 166-175)
+### (E.009) marsdisk/physics/surface.py: compute_surface_outflux (lines 178–188)
 表層質量と公転角速度から外向きフラックスを評価する単純な式で、光学的に薄い吹き飛び流の近似 [@StrubbeChiang2006_ApJ648_652] を踏襲する。
 スケール評価をコード化したもので、同一形の式を明示した文献はない（実装固有）。
 
@@ -184,7 +184,7 @@ Case classification follows the configuration beta: `case_status = "blowout"` wh
 |$\Omega$|Keplerian angular frequency|s$^{-1}$|Input; must be positive|
 
 **Numerics**
-- Direct multiplication with argument validation; raises `MarsDiskError` when $\Omega\le0$.
+- Direct multiplication with argument validation; raises `MarsDiskError` when $\Omega\le0$. [marsdisk/physics/surface.py#compute_surface_outflux [L178–L188]]
 
 ### (E.010) marsdisk/physics/smol.py: step_imex_bdf1_C3 (lines 18-101)
 粒径 PSD に対する Smoluchowski 方程式を IMEX-BDF1 で解く標準の衝突解法（C3/C4）。供給・昇華・追加シンク（ガス抗力など）をまとめたソースベクトル $f_k$ を明示的項として扱い、
@@ -471,6 +471,7 @@ P_{\mathrm{sat}}(T) =
 - Validates positivity of $\rho$ and $t_{\mathrm{ref}}$.
 - Delegates to `mass_flux_hkl`; inherits its branch selection (HKL versus logistic).
 - No additional clamping beyond inherited flux behaviour; linear scaling in $t_{\mathrm{ref}}$.
+- See also [marsdisk/physics/sublimation.py#sublimation_sink_from_dsdt [L671–L708]] for per-bin sink conversion.
 
 ### (E.020) marsdisk/physics/dynamics.py: v_ij (lines 18–45)
 低離心率・低傾斜のレイリー分布を仮定した平均相対速度近似で、惑星形成論レビュー [@LissauerStewart1993_PP3; @WetherillStewart1993_Icarus106_190] や Ohtsuki らの解析解 [@Ohtsuki2002_Icarus155_436] に基づく。
@@ -493,7 +494,26 @@ v_{ij} = v_{K}\,\sqrt{1.25\,e^{2} + i^{2}}
 - Uses NumPy for the square-root evaluation and logs the evaluated speed for diagnostics.
 - Exported via `__all__` for optional numba JIT acceleration. [marsdisk/physics/dynamics.py#v_ij [L18–L45]]
 
-### (E.021) marsdisk/physics/dynamics.py: solve_c_eq (lines 48–106)
+### (E.020b) marsdisk/physics/dynamics.py: v_rel_pericenter (lines 48–59)
+近点通過時の相対速度を計算する。離心軌道粒子が近点を通る際のケプラー速度の増大を評価する。
+
+```latex
+v_{\mathrm{peri}} = \frac{v_{K}}{\sqrt{1-e}}
+```
+
+**Symbols**
+
+|Symbol|Meaning|Units|Defaults/Notes|
+|---|---|---|---|
+|$v_{\mathrm{peri}}$|Periapsis relative speed|m s$^{-1}$|Return value|
+|$v_{K}$|Local Keplerian speed|m s$^{-1}$|Input `v_k`|
+|$e$|Orbital eccentricity|dimensionless|Input `e`; must be $<1$|
+
+**Numerics**
+- Validates that eccentricity is less than 1 to ensure physical validity.
+- Clamps the denominator to avoid division by zero for $e \to 1$. [marsdisk/physics/dynamics.py#v_rel_pericenter [L48–L59]]
+
+### (E.021) marsdisk/physics/dynamics.py: solve_c_eq (lines 60–118)
 剪断加熱と非弾性冷却の釣り合いから速度分散を固定点反復で求める。低離心率リングの力学平衡を扱った解析 [@Ohtsuki2002_Icarus155_436] のスケーリングを踏まえた形。
 収束判定やクリップの置き方は実装固有であり、同一式を与える文献はない。
 
@@ -519,9 +539,9 @@ where the iteration is started with $c_0=\max(e,10^{-6})$ and stops once $|c_{n+
 **Numerics**
 - Iterates up to `max_iter` (default 100) and raises `MarsDiskError` on non-convergence.
 - Clamps the restitution coefficient to avoid division by zero and enforces positivity of the optical depth and wake factor.
-- Logs iteration progress for traceability. [marsdisk/physics/dynamics.py#solve_c_eq [L48–L106]]
+- Logs iteration progress for traceability. [marsdisk/physics/dynamics.py#solve_c_eq [L60–L118]]
 
-### (E.022) marsdisk/physics/dynamics.py: update_e (lines 109–140)
+### (E.022) marsdisk/physics/dynamics.py: update_e (lines 121–152)
 離心率を指数緩和でダンピングする簡易スキーム。低離心率ディスクの減衰モデル [@Ohtsuki2002_Icarus155_436] を単一ステップの指数解として実装する。
 一次緩和の離散化は教科書的で、同一記法を提示する特定文献はない（実装固有）。
 
@@ -540,7 +560,7 @@ e_{n+1} = e_{\mathrm{eq}} + \left(e_n - e_{\mathrm{eq}}\right)\exp\!\left(-\frac
 **Numerics**
 - Raises `MarsDiskError` when `t_damp<=0`.
 - Uses NumPy’s exponential; result is returned as Python `float`.
-- Logs the before/after eccentricities for debugging. [marsdisk/physics/dynamics.py#update_e [L109–L140]]
+- Logs the before/after eccentricities for debugging. [marsdisk/physics/dynamics.py#update_e [L121–L152]]
 
 ### (E.023) marsdisk/physics/initfields.py: sigma_from_Minner (lines 17–44)
 総質量と半径範囲から $\Sigma \propto r^{-p}$ を正規化する幾何学積分で、デブリ円盤レビュー [@Wyatt2008] にも同様の形が整理されている。
@@ -672,8 +692,8 @@ where $R_{\mathrm{base}}$ selects one of the constant, power-law, tabulated, or 
 
 **Numerics**
 - Caches table data to avoid repeated disk I/O.
-- Ensures non-negative output by clipping with `max`.
-- Delegates mode-specific logic to `_rate_basic`. [marsdisk/physics/supply.py#_rate_basic [L69–L90]]
+- Ensures non-negative output by clipping with `max`. [marsdisk/physics/supply.py#get_prod_area_rate [L93–98]]
+- Delegates mode-specific logic to `_rate_basic`. [marsdisk/physics/supply.py#_rate_basic [L69–90]]
 
 ### (E.028) marsdisk/physics/shielding.py: load_phi_table (lines 52–67)
 放射輸送テーブルに由来する自遮蔽係数 $\Phi(\tau)$ を読み込み、適用範囲を記録する補助関数。ガスリッチ条件での表層遮蔽を扱う TL2003 系の流儀 [@TakeuchiLin2003_ApJ593_524] を想定した拡張ポイントでもある。
@@ -795,6 +815,19 @@ P_{\mathrm{sat}}(T) = 10^{A - B/T}
 
 
 Interpolates $\log_{10}P_{\mathrm{sat}}(T)$ using a shape-preserving cubic (PCHIP) constructed from the loaded table. Temperatures outside the tabulated span are clipped with a logged warning; the interpolant guarantees monotonic pressure. [marsdisk/physics/sublimation.py#p_sat_tabulated [L369–L383]]
+
+### (E.037b) marsdisk/physics/sublimation.py: p_sat (lines 584–591)
+温度とパラメータに応じて Clausius / tabulated / local-fit のいずれかを選択し、飽和蒸気圧 $P_{\mathrm{sat}}$ を返す統合関数。
+`choose_psat_backend` がモデル選択を行い、結果は `_store_psat_selection` で記録される。
+
+```latex
+P_{\mathrm{sat}}(T) = \texttt{choose\_psat\_backend}(T, \mathtt{params}).\texttt{evaluator}(T)
+```
+
+**Key behaviours**
+- `psat_model="auto"` の場合は tabulated → local-fit → baseline Clausius の順でフォールバック。
+- 選択結果を `params._psat_last_selection` に保存し、診断出力で活用可能。
+- ログに選択ブランチを記録。 [marsdisk/physics/sublimation.py#p_sat [L584–L591]]
 
 ### (E.038) marsdisk/physics/sublimation.py: s_sink_from_timescale (lines 587–603)
 HKL フラックスと参照時間から即時蒸発する粒径を返す換算式で、揮発損失の寿命基準 [@Ronnet2016_ApJ828_109] を踏襲する。

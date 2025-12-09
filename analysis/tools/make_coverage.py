@@ -112,10 +112,26 @@ def classify_symbols(
         sym_ref = SymbolRef(rel_path, name)
         all_symbols[sym_ref] = entry
 
-        # Filter for marsdisk functions excluding tests/private.
+        # Filter for marsdisk functions excluding tests/private/analysis scripts/utilities.
         if not rel_path.startswith("marsdisk/"):
             continue
         if "/tests/" in rel_path or rel_path.startswith("marsdisk/tests"):
+            continue
+        if "/analysis/" in rel_path or rel_path.startswith("marsdisk/analysis"):
+            continue
+        # Exclude configuration/orchestration utilities (not core physics)
+        if rel_path.startswith("marsdisk/config_"):
+            continue
+        if rel_path.startswith("marsdisk/ops/"):
+            continue
+        if rel_path == "marsdisk/orchestrator.py":
+            continue
+        # Exclude I/O and temperature driver helpers (infrastructure, not physics)
+        if rel_path == "marsdisk/io/writer.py":
+            continue
+        if rel_path == "marsdisk/physics/tempdriver.py":
+            continue
+        if rel_path == "marsdisk/physics/_numba_kernels.py":
             continue
         if name.startswith("_"):
             continue
