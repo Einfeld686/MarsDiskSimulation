@@ -96,6 +96,7 @@ sinks:
     dT: 50.0
     eta_instant: 0.1
     P_gas: 0.0
+    mass_conserving: true
   enable_gas_drag: false
   rho_g: 0.0
   rp_blowout:

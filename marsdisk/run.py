@@ -1480,6 +1480,7 @@ def run_zero_d(
     gas_drag_enabled_cfg = bool(
         sinks_enabled_cfg and getattr(cfg.sinks, "enable_gas_drag", False)
     )
+    mass_conserving_sublimation = bool(getattr(sub_params, "mass_conserving", False))
     sink_opts = sinks.SinkOptions(
         enable_sublimation=sublimation_enabled_cfg,
         sub_params=sub_params,
@@ -2134,6 +2135,7 @@ def run_zero_d(
                         dynamics_cfg=cfg.dynamics,
                         tau_eff=tau_eval_los,
                         collisions_enabled=collisions_active_step,
+                        mass_conserving_sublimation=mass_conserving_sublimation,
                     )
                     psd_state = smol_res.psd_state
                     sigma_surf = smol_res.sigma_after

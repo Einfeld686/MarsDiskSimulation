@@ -444,6 +444,13 @@ class SublimationParamsModel(BaseModel):
     psat_table_buffer_K: float = Field(75.0, gt=0.0, description="Buffer for psat table interpolation [K]")
     local_fit_window_K: float = Field(300.0, gt=0.0, description="Local fit window for psat [K]")
     min_points_local_fit: int = Field(3, ge=2, description="Minimum points for local psat fit")
+    mass_conserving: bool = Field(
+        False,
+        description=(
+            "If true, ds/dt-driven shrinkage does not remove mass except when grains cross the blow-out size "
+            "within a step; crossing mass is treated as blow-out instead of a sublimation sink."
+        ),
+    )
 
 
 class RPBlowoutConfig(BaseModel):
