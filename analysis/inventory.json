@@ -3510,7 +3510,7 @@
     "file_path": "marsdisk/physics/collisions_smol.py",
     "line_no": 305,
     "symbol": "step_collisions_smol_0d",
-    "signature": "step_collisions_smol_0d(psd_state: MutableMapping[str, np.ndarray | float], sigma_surf: float, *, dt: float, prod_subblow_area_rate: float, r: float, Omega: float, a_blow: float, rho: float, e_value: float, i_value: float, sigma_tau1: float | None, enable_blowout: bool, t_sink: float | None, ds_dt_val: float | None=None, s_min_effective: float | None=None, dynamics_cfg: 'Dynamics | None'=None, tau_eff: float | None=None, collisions_enabled: bool=True) -> Smol0DStepResult",
+    "signature": "step_collisions_smol_0d(psd_state: MutableMapping[str, np.ndarray | float], sigma_surf: float, *, dt: float, prod_subblow_area_rate: float, r: float, Omega: float, a_blow: float, rho: float, e_value: float, i_value: float, sigma_tau1: float | None, enable_blowout: bool, t_sink: float | None, ds_dt_val: float | None=None, s_min_effective: float | None=None, dynamics_cfg: 'Dynamics | None'=None, tau_eff: float | None=None, collisions_enabled: bool=True, mass_conserving_sublimation: bool=False) -> Smol0DStepResult",
     "brief_usage": "Advance collisions+fragmentation in 0D using the Smol solver."
   },
   {
@@ -3991,98 +3991,98 @@
   },
   {
     "file_path": "marsdisk/physics/sublimation.py",
-    "line_no": 133,
+    "line_no": 134,
     "symbol": "_is_hkl_active",
     "signature": "_is_hkl_active(params: SublimationParams) -> bool",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/physics/sublimation.py",
-    "line_no": 157,
+    "line_no": 158,
     "symbol": "_resolve_clausius_branch",
     "signature": "_resolve_clausius_branch(T: float, params: SublimationParams) -> Tuple[str, Optional[float], Optional[float], Optional[Tuple[float, float]]]",
     "brief_usage": "Return the active Clausius branch (solid/liquid) and coefficients."
   },
   {
     "file_path": "marsdisk/physics/sublimation.py",
-    "line_no": 182,
+    "line_no": 183,
     "symbol": "p_sat_clausius",
     "signature": "p_sat_clausius(T: float, params: SublimationParams, *, A_override: Optional[float]=None, B_override: Optional[float]=None) -> float",
     "brief_usage": "Return the saturation vapour pressure ``P_sat`` in Pascals."
   },
   {
     "file_path": "marsdisk/physics/sublimation.py",
-    "line_no": 203,
+    "line_no": 204,
     "symbol": "_load_psat_table",
     "signature": "_load_psat_table(params: SublimationParams) -> Callable[[float], float]",
     "brief_usage": "Return an interpolator for log10 P_sat based on a tabulated dataset."
   },
   {
     "file_path": "marsdisk/physics/sublimation.py",
-    "line_no": 266,
+    "line_no": 267,
     "symbol": "_get_table_info",
     "signature": "_get_table_info(params: SublimationParams, *, raise_on_error: bool) -> Optional[Dict[str, Any]]",
     "brief_usage": "Return cached table information, optionally raising on load failures."
   },
   {
     "file_path": "marsdisk/physics/sublimation.py",
-    "line_no": 305,
+    "line_no": 306,
     "symbol": "_local_clausius_fit_selection",
     "signature": "_local_clausius_fit_selection(T_req: float, params: SublimationParams, table_info: Dict[str, Any]) -> Optional[PsatSelection]",
     "brief_usage": "Return a local Clausius fit selection when sufficient table data exist."
   },
   {
     "file_path": "marsdisk/physics/sublimation.py",
-    "line_no": 374,
+    "line_no": 375,
     "symbol": "_baseline_clausius_selection",
     "signature": "_baseline_clausius_selection(params: SublimationParams, reason: str, *, model_name: str='clausius(baseline)', A_override: Optional[float]=None, B_override: Optional[float]=None, valid_override: Optional[Tuple[float, float]]=None, branch: Optional[str]=None) -> PsatSelection",
     "brief_usage": "Return a baseline Clausius selection using the configured coefficients."
   },
   {
     "file_path": "marsdisk/physics/sublimation.py",
-    "line_no": 411,
+    "line_no": 412,
     "symbol": "p_sat_tabulated",
     "signature": "p_sat_tabulated(T: float, params: SublimationParams) -> float",
     "brief_usage": "Return ``P_sat`` (Pa) from a tabulated :math:`\\log_{10} P` dataset."
   },
   {
     "file_path": "marsdisk/physics/sublimation.py",
-    "line_no": 428,
+    "line_no": 429,
     "symbol": "choose_psat_backend",
     "signature": "choose_psat_backend(T_req: float, params: SublimationParams, table_meta: Optional[Dict[str, Any]]=None) -> PsatSelection",
     "brief_usage": "Resolve the saturation pressure backend according to configuration and data."
   },
   {
     "file_path": "marsdisk/physics/sublimation.py",
-    "line_no": 555,
+    "line_no": 556,
     "symbol": "_store_psat_selection",
     "signature": "_store_psat_selection(params: SublimationParams, selection: PsatSelection, T_req: float, P_value: float) -> None",
     "brief_usage": "Persist selection metadata on ``params`` for provenance."
   },
   {
     "file_path": "marsdisk/physics/sublimation.py",
-    "line_no": 584,
+    "line_no": 585,
     "symbol": "p_sat",
     "signature": "p_sat(T: float, params: SublimationParams) -> float",
     "brief_usage": "Return the saturation vapour pressure according to the selected model."
   },
   {
     "file_path": "marsdisk/physics/sublimation.py",
-    "line_no": 593,
+    "line_no": 594,
     "symbol": "mass_flux_hkl",
     "signature": "mass_flux_hkl(T: float, params: SublimationParams) -> float",
     "brief_usage": "Return the sublimation mass flux ``J(T)`` in kg m^-2 s^-1. [@Pignatale2018_ApJ853_118]"
   },
   {
     "file_path": "marsdisk/physics/sublimation.py",
-    "line_no": 652,
+    "line_no": 653,
     "symbol": "s_sink_from_timescale",
     "signature": "s_sink_from_timescale(T: float, rho: float, t_ref: float, params: SublimationParams) -> float",
     "brief_usage": "Return the instantaneous-sink size :math:`s_{\\rm sink}`. [@Ronnet2016_ApJ828_109]"
   },
   {
     "file_path": "marsdisk/physics/sublimation.py",
-    "line_no": 671,
+    "line_no": 672,
     "symbol": "sublimation_sink_from_dsdt",
     "signature": "sublimation_sink_from_dsdt(s_grid_m: np.ndarray, N_k: np.ndarray, ds_dt_k: np.ndarray, m_k: np.ndarray) -> tuple[np.ndarray, float]",
     "brief_usage": "Return per-bin sublimation sinks and the associated mass loss rate."
@@ -4691,28 +4691,28 @@
   },
   {
     "file_path": "marsdisk/run.py",
-    "line_no": 3500,
+    "line_no": 3502,
     "symbol": "_run_phase5_variant",
     "signature": "_run_phase5_variant(base_cfg: Config, variant: str, mode: str, base_outdir: Path, duration_years: float, *, enforce_mass_budget: bool) -> _Phase5VariantResult",
     "brief_usage": "Execute a single-process variant run and capture its artifacts."
   },
   {
     "file_path": "marsdisk/run.py",
-    "line_no": 3562,
+    "line_no": 3564,
     "symbol": "_write_phase5_comparison_products",
     "signature": "_write_phase5_comparison_products(base_outdir: Path, duration_years: float, results: List[_Phase5VariantResult]) -> None",
     "brief_usage": "Aggregate per-variant artifacts into the comparison outputs."
   },
   {
     "file_path": "marsdisk/run.py",
-    "line_no": 3704,
+    "line_no": 3706,
     "symbol": "run_phase5_comparison",
     "signature": "run_phase5_comparison(cfg: Config, *, enforce_mass_budget: bool=False, variants_spec: Optional[List[Dict[str, str]]]=None) -> None",
     "brief_usage": "Run the Phase 5 dual single-process comparison workflow."
   },
   {
     "file_path": "marsdisk/run.py",
-    "line_no": 3739,
+    "line_no": 3741,
     "symbol": "main",
     "signature": "main(argv: Optional[List[str]]=None) -> None",
     "brief_usage": "Command line entry point."
@@ -4866,175 +4866,175 @@
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 449,
+    "line_no": 456,
     "symbol": "RPBlowoutConfig",
     "signature": "class RPBlowoutConfig(BaseModel)",
     "brief_usage": "Toggle for radiation-pressure blow-out sinks."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 455,
+    "line_no": 462,
     "symbol": "HydroEscapeConfig",
     "signature": "class HydroEscapeConfig(BaseModel)",
     "brief_usage": "Configuration for vapour-driven hydrodynamic escape sinks."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 478,
+    "line_no": 485,
     "symbol": "Sinks",
     "signature": "class Sinks(BaseModel)",
     "brief_usage": "Configuration of additional sink processes."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 502,
+    "line_no": 509,
     "symbol": "ProcessStateTagging",
     "signature": "class ProcessStateTagging(BaseModel)",
     "brief_usage": "Placeholder toggle for future solid/gas tagging."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 511,
+    "line_no": 518,
     "symbol": "Process",
     "signature": "class Process(BaseModel)",
     "brief_usage": "Companion switches for phase tagging."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 523,
+    "line_no": 530,
     "symbol": "Phase5CompareConfig",
     "signature": "class Phase5CompareConfig(BaseModel)",
     "brief_usage": "Phase 5 comparison study controls."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 553,
+    "line_no": 560,
     "symbol": "Phase5Config",
     "signature": "class Phase5Config(BaseModel)",
     "brief_usage": "Container for the Phase 5 specific options."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 559,
+    "line_no": 566,
     "symbol": "PhaseThresholds",
     "signature": "class PhaseThresholds(BaseModel)",
     "brief_usage": "Fallback thresholds used when no external phase map is available."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 583,
+    "line_no": 590,
     "symbol": "PhaseConfig",
     "signature": "class PhaseConfig(BaseModel)",
     "brief_usage": "Solid/vapour branching controls."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 635,
+    "line_no": 642,
     "symbol": "MarsTemperatureDriverConstant",
     "signature": "class MarsTemperatureDriverConstant(BaseModel)",
     "brief_usage": "Explicit constant value for the Mars temperature driver."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 648,
+    "line_no": 655,
     "symbol": "MarsTemperatureDriverTable",
     "signature": "class MarsTemperatureDriverTable(BaseModel)",
     "brief_usage": "Tabulated Mars temperature driver."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 660,
+    "line_no": 667,
     "symbol": "MarsTemperatureAutogen",
     "signature": "class MarsTemperatureAutogen(BaseModel)",
     "brief_usage": "Options for auto-generating Mars temperature tables."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 689,
+    "line_no": 696,
     "symbol": "MarsTemperatureDriverConfig",
     "signature": "class MarsTemperatureDriverConfig(BaseModel)",
     "brief_usage": "Configuration container for the Mars temperature driver."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 734,
+    "line_no": 741,
     "symbol": "RadiationTauGate",
     "signature": "class RadiationTauGate(BaseModel)",
     "brief_usage": "Optical-depth gating options for radiation-pressure blow-out."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 741,
+    "line_no": 748,
     "symbol": "Radiation",
     "signature": "class Radiation(BaseModel)",
     "brief_usage": "Radiation pressure options and table paths."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 800,
+    "line_no": 807,
     "symbol": "Shielding",
     "signature": "class Shielding(BaseModel)",
     "brief_usage": "Self-shielding table configuration."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 852,
+    "line_no": 859,
     "symbol": "Blowout",
     "signature": "class Blowout(BaseModel)",
     "brief_usage": "Radiation blow-out control."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 870,
+    "line_no": 877,
     "symbol": "Numerics",
     "signature": "class Numerics(BaseModel)",
     "brief_usage": "Integrator control parameters."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 960,
+    "line_no": 967,
     "symbol": "StepDiagnostics",
     "signature": "class StepDiagnostics(BaseModel)",
     "brief_usage": "Per-step loss channel diagnostics output control."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 977,
+    "line_no": 984,
     "symbol": "Progress",
     "signature": "class Progress(BaseModel)",
     "brief_usage": "Console progress display controls."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 991,
+    "line_no": 998,
     "symbol": "Streaming",
     "signature": "class Streaming(BaseModel)",
     "brief_usage": "Streaming write controls for large zero-D runs."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 1034,
+    "line_no": 1041,
     "symbol": "IO",
     "signature": "class IO(BaseModel)",
     "brief_usage": "Output directories."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 1065,
+    "line_no": 1072,
     "symbol": "Phase7Diagnostics",
     "signature": "class Phase7Diagnostics(BaseModel)",
     "brief_usage": "Optional Phase7 diagnostics controls."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 1078,
+    "line_no": 1085,
     "symbol": "Diagnostics",
     "signature": "class Diagnostics(BaseModel)",
     "brief_usage": "Diagnostics toggles grouped by feature phase."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 1084,
+    "line_no": 1091,
     "symbol": "Config",
     "signature": "class Config(BaseModel)",
     "brief_usage": "Top-level configuration object."
@@ -7957,6 +7957,13 @@
     "symbol": "test_p_sat_switches_to_liquid_branch",
     "signature": "test_p_sat_switches_to_liquid_branch() -> None",
     "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/test_sublimation_mass_conserving.py",
+    "line_no": 9,
+    "symbol": "test_mass_conserving_sublimation_redirects_to_blowout",
+    "signature": "test_mass_conserving_sublimation_redirects_to_blowout() -> None",
+    "brief_usage": "ds/dt で blowout を跨いだ分が昇華シンクではなく blowout に振替される。"
   },
   {
     "file_path": "tests/test_sublimation_phase_gate.py",

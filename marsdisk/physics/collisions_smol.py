@@ -322,6 +322,7 @@ def step_collisions_smol_0d(
     dynamics_cfg: "Dynamics | None" = None,
     tau_eff: float | None = None,
     collisions_enabled: bool = True,
+    mass_conserving_sublimation: bool = False,
 ) -> Smol0DStepResult:
     """Advance collisions+fragmentation in 0D using the Smol solver."""
 
@@ -387,9 +388,10 @@ def step_collisions_smol_0d(
         C_kernel = np.zeros((N_k.size, N_k.size))
         Y_tensor = np.zeros((N_k.size, N_k.size, N_k.size))
         t_coll_kernel = float("inf")
+        e_kernel = None
+        i_kernel = None
 
     S_blow = _blowout_sink_vector(sizes_arr, a_blow, Omega, enable_blowout)
-    mass_loss_rate_blow = float(np.sum(m_k * S_blow * N_k))
 
     S_sink = None
     mass_loss_rate_sink = 0.0
@@ -402,12 +404,28 @@ def step_collisions_smol_0d(
     mass_loss_rate_sub = 0.0
     if ds_dt_val is not None:
         ds_dt_k = np.full_like(sizes_arr, float(ds_dt_val), dtype=float)
-        S_sub_k, mass_loss_rate_sub = sublimation_sink_from_dsdt(
-            sizes_arr,
-            N_k,
-            ds_dt_k,
-            m_k,
-        )
+        if mass_conserving_sublimation and a_blow > 0.0 and dt > 0.0:
+            mask = (ds_dt_k < 0.0) & np.isfinite(ds_dt_k) & (sizes_arr > a_blow)
+            if np.any(mask):
+                t_cross = (sizes_arr[mask] - a_blow) / np.abs(ds_dt_k[mask])
+                t_cross = np.where(t_cross <= 0.0, np.inf, t_cross)
+                mask_cross = t_cross <= dt
+                if np.any(mask_cross):
+                    t_cross_use = np.maximum(t_cross[mask_cross], 1.0e-30)
+                    rates = 1.0 / t_cross_use
+                    S_extra = np.zeros_like(sizes_arr, dtype=float)
+                    S_extra_indices = np.nonzero(mask)[0][mask_cross]
+                    S_extra[S_extra_indices] = rates
+                    S_blow = S_blow + S_extra
+        else:
+            S_sub_k, mass_loss_rate_sub = sublimation_sink_from_dsdt(
+                sizes_arr,
+                N_k,
+                ds_dt_k,
+                m_k,
+            )
+
+    mass_loss_rate_blow = float(np.sum(m_k * S_blow * N_k))
 
     extra_mass_loss_rate = mass_loss_rate_blow + mass_loss_rate_sink + mass_loss_rate_sub
 

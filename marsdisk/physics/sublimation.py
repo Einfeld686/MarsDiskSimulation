@@ -119,6 +119,7 @@ class SublimationParams:
     eta_instant: float = 0.1
     dT: float = 50.0
     P_gas: float = 0.0
+    mass_conserving: bool = False
     _psat_interp: Optional[Callable[[float], float]] = field(default=None, init=False, repr=False)
     _psat_table_T: Optional[np.ndarray] = field(default=None, init=False, repr=False)
     _psat_table_log10P: Optional[np.ndarray] = field(default=None, init=False, repr=False)
