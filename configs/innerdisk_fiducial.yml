@@ -7,7 +7,7 @@ geometry:
 material:
   rho: 3000.0
 sizes:
-  s_min: 1.0e-6
+  s_min: 1.0e-7
   s_max: 3.0
   n_bins: 40
   evolve_min_size: false

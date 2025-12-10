@@ -26,6 +26,7 @@ interfaces:
 from __future__ import annotations
 
 import argparse
+import atexit
 import copy
 import logging
 import math
@@ -37,6 +38,7 @@ import json
 import sys
 import time
 import warnings
+import weakref
 from collections import defaultdict
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -1552,6 +1554,7 @@ def run_zero_d(
     streaming_step_interval = int(getattr(streaming_cfg, "step_flush_interval", 10000) or 0)
     streaming_compression = str(getattr(streaming_cfg, "compression", "snappy") or "snappy")
     streaming_merge_at_end = bool(getattr(streaming_cfg, "merge_at_end", False))
+    streaming_merge_completed: Optional[bool] = None
     streaming_state = StreamingState(
         enabled=streaming_enabled,
         outdir=Path(cfg.io.outdir),
@@ -1564,7 +1567,27 @@ def run_zero_d(
         step_diag_format=step_diag_format,
     )
 
+    last_step_index = -1
     history = ZeroDHistory()
+
+    def _streaming_cleanup_on_exit() -> None:
+        """Flush remaining streaming buffers and merge chunks on shutdown."""
+
+        if not streaming_state.enabled:
+            return
+        try:
+            final_idx = last_step_index if last_step_index >= 0 else streaming_state.chunk_start_step
+            streaming_state.flush(history, final_idx)
+            if streaming_state.merge_at_end:
+                streaming_state.merge_chunks()
+        except Exception as exc:  # pragma: no cover - best-effort cleanup
+            logger.error("Streaming cleanup failed during shutdown: %s", exc)
+
+    if streaming_state.enabled:
+        weakref.finalize(history, _streaming_cleanup_on_exit)
+        if streaming_state.merge_at_end:
+            atexit.register(_streaming_cleanup_on_exit)
+
     records = history.records
     psd_hist_records = history.psd_hist_records
     diagnostics = history.diagnostics
@@ -1620,7 +1643,6 @@ def run_zero_d(
     phase_bulk_f_liquid_last: Optional[float] = None
     phase_bulk_f_solid_last: Optional[float] = None
     phase_bulk_f_vapor_last: Optional[float] = None
-    last_step_index = -1
     last_time_value = 0.0
 
     for step_no in range(n_steps):
@@ -2812,6 +2834,7 @@ def run_zero_d(
         progress.finish(last_step_index, last_time_value)
 
     final_step_index = last_step_index if last_step_index >= 0 else 0
+    merge_status_message: Optional[str] = None
     if streaming_state.enabled:
         streaming_state.flush(history, final_step_index)
 
@@ -2868,7 +2891,16 @@ def run_zero_d(
             phase7_enabled=phase7_enabled,
         )
     else:
-        streaming_state.merge_chunks()
+        try:
+            streaming_state.merge_chunks()
+            if streaming_state.merge_at_end:
+                streaming_merge_completed = True
+                merge_status_message = "streaming merge completed"
+                logger.info("Streaming merge completed for %s", cfg.io.outdir)
+        except Exception as exc:
+            streaming_merge_completed = False
+            merge_status_message = "streaming merge failed"
+            logger.error("Streaming merge failed for %s: %s", cfg.io.outdir, exc)
     outdir = Path(cfg.io.outdir)
     dt_over_t_blow_median = float("nan")
     if dt_over_t_blow_values:
@@ -3058,6 +3090,9 @@ def run_zero_d(
         "a_blow_min": ablow_min,
         "a_blow_median": ablow_median,
         "a_blow_max": ablow_max,
+        "streaming_merge_completed": streaming_merge_completed
+        if streaming_state.enabled and streaming_state.merge_at_end
+        else None,
         "blowout_gate_factor_min": gate_min,
         "blowout_gate_factor_median": gate_median,
         "blowout_gate_factor_max": gate_max,
@@ -3169,6 +3204,10 @@ def run_zero_d(
     writer.write_summary(summary, outdir / "summary.json")
     if not streaming_state.enabled:
         writer.write_mass_budget(mass_budget, outdir / "checks" / "mass_budget.csv")
+
+    # Quiet でも完了ステータスを一行で把握できるよう、進捗バーの完了後に短いメッセージを出す。
+    if progress_enabled and merge_status_message is not None:
+        progress._print(f"[info] {merge_status_message}")
     if debug_sinks_enabled and debug_records:
         debug_dir = outdir / "debug"
         debug_dir.mkdir(parents=True, exist_ok=True)

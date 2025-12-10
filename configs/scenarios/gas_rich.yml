@@ -45,7 +45,7 @@ radiation:
 
 # --- サイズビン ---
 sizes:
-  s_min: 1.0e-6  # m
+  s_min: 1.0e-7  # m
   s_max: 3.0     # m
   n_bins: 40
 
