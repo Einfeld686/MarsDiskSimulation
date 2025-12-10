@@ -20,9 +20,9 @@ paper:
 
 runs:
   - run_id: RUN_MARS_GASPOOR_v01
-    label: ガス希薄基準
-    outdir_glob: "out/*RUN_MARS_GASPOOR_v01*"
-    run_card: run_card.md
+    label: ガス希薄基準（既存0D出力）
+    outdir: "out/01_inner1RM_blowout"
+    run_card: run_config.json
     summary: summary.json
     series:
       main: series/run.parquet
@@ -31,51 +31,45 @@ runs:
       mass_budget: checks/mass_budget.csv
     tags: [baseline, gas-poor]
 
-  - run_id: RUN_TL2003_TOGGLE_v01
-    label: TL2003トグル感度
-    outdir_glob: "out/*RUN_TL2003_TOGGLE_v01*"
-    run_card: run_card.md
+  - run_id: RUN_SINKS_SUBLIM_v01
+    label: 昇華オン基準
+    outdir: "out/02_inner1RM_sublimation"
+    run_card: run_config.json
     summary: summary.json
     series:
       main: series/run.parquet
       diagnostics: series/diagnostics.parquet
     checks:
       mass_budget: checks/mass_budget.csv
-    tags: [gas-rich-test, shielding]
+    tags: [sinks, sublimation]
 
-  - run_id: RUN_TEMP_DRIVER_v01
-    label: 強放射・β掃引
-    outdir_glob: "out/*RUN_TEMP_DRIVER_v01*"
-    run_card: run_card.md
+  - run_id: RUN_WAVY_PSD_v01
+    label: PSD波状構造テスト
+    outdir: "out/20251022-0501_chi05_r1RM_dtOrb100__0fdd14772"
+    run_card: run_config.json
     summary: summary.json
     series:
       main: series/run.parquet
       diagnostics: series/diagnostics.parquet
     checks:
       mass_budget: checks/mass_budget.csv
-    tags: [beta-sweep, temperature]
+    tags: [psd, wavy]
 
 figures:
   - fig_id: FIG_BETA_SERIES_01
-    script: scripts/plot_heatmaps.py
-    runs: [RUN_MARS_GASPOOR_v01, RUN_TEMP_DRIVER_v01]
+    script: scripts/plot_from_runs.py
+    runs: [RUN_MARS_GASPOOR_v01, RUN_SINKS_SUBLIM_v01]
     params:
       mode: beta_timeseries
 
   - fig_id: FIG_MASS_BUDGET_01
-    script: scripts/analyze_radius_trend.py
+    script: scripts/plot_from_runs.py
     runs: [RUN_MARS_GASPOOR_v01]
     params:
-      product: mass_budget
-
-  - fig_id: FIG_SHIELDING_SERIES_01
-    script: scripts/plot_heatmaps.py
-    runs: [RUN_TL2003_TOGGLE_v01, RUN_HIGH_BETA_SHIELD_v01]
-    params:
-      mode: shielding_series
+      mode: mass_budget
 
   - fig_id: FIG_PSD_WAVY_01
-    script: scripts/plot_heatmaps.py
+    script: scripts/plot_from_runs.py
     runs: [RUN_WAVY_PSD_v01]
     params:
       mode: psd_wavy

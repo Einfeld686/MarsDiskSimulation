@@ -111,7 +111,7 @@
       "StrubbeChiang2006_ApJ648_652",
       "TakeuchiLin2003_ApJ593_524",
       "TakeuchiLin2002_ApJ581_1344",
-      "Shadmehri2007_MNRAS378_1365"
+      "Shadmehri2008_ApSS314_217"
     ],
     "notes": "Gas-poor surface loss term with optional TL2002/2003 gas-rich outflow (disabled by default).",
     "assumptions": [

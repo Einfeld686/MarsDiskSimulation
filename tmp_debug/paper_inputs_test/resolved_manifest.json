@@ -26,42 +26,291 @@
   "runs": [
     {
       "run_id": "RUN_MARS_GASPOOR_v01",
-      "label": "ガス希薄基準",
+      "label": "ガス希薄基準（既存0D出力）",
       "tags": [
         "baseline",
         "gas-poor"
       ],
-      "outdir": null,
-      "outdir_candidates": []
+      "outdir": "/Users/daichi/marsshearingsheet/out/01_inner1RM_blowout",
+      "outdir_candidates": [
+        "/Users/daichi/marsshearingsheet/out/01_inner1RM_blowout"
+      ],
+      "paths": {
+        "run_card": "/Users/daichi/marsshearingsheet/out/01_inner1RM_blowout/run_config.json",
+        "summary": "/Users/daichi/marsshearingsheet/out/01_inner1RM_blowout/summary.json",
+        "series_main": "/Users/daichi/marsshearingsheet/out/01_inner1RM_blowout/series/run.parquet",
+        "series_diagnostics": null,
+        "check_mass_budget": "/Users/daichi/marsshearingsheet/out/01_inner1RM_blowout/checks/mass_budget.csv"
+      },
+      "summary": {
+        "M_loss": 3.124989219336934e-09,
+        "M_loss_from_sinks": 0.0,
+        "M_loss_from_sublimation": 0.0,
+        "M_loss_mean_per_orbit": 3.124989219336934e-09,
+        "M_out_cum": 3.124989219336934e-09,
+        "M_out_mean_per_orbit": 3.124989219336934e-09,
+        "M_sink_cum": 0.0,
+        "M_sink_mean_per_orbit": 0.0,
+        "Q_pr_blow": 0.9999995773188095,
+        "Q_pr_used": 0.9999995773188095,
+        "T_M_source": "radiation.TM_K",
+        "T_M_used": 4000.0,
+        "T_M_used[K]": 4000.0,
+        "beta_at_smin": 3.244833240534708,
+        "beta_at_smin_config": 3.244833240534708,
+        "beta_at_smin_effective": 0.5,
+        "beta_threshold": 0.5,
+        "case_status": "blowout",
+        "chi_blow_eff": 0.9999995773188095,
+        "chi_blow_input": "auto",
+        "config_source_path": "/Users/daichi/marsshearingsheet/simulation_results/_configs/01_inner1RM_blowout.yml",
+        "enforce_mass_budget": false,
+        "orbits_completed": 1,
+        "qpr_table_path": "data/qpr_table.csv",
+        "r_RM_used": 1.0,
+        "r_m_used": 3389500.0,
+        "r_source": "geometry.runtime_orbital_radius_rm",
+        "rho_used": 3000.0,
+        "s_blow_m": 6.4942285037141404e-06,
+        "s_min_components": {
+          "blowout": 6.4942285037141404e-06,
+          "config": 1e-06,
+          "effective": 6.4942285037141404e-06
+        },
+        "s_min_config": 1e-06,
+        "s_min_effective": 6.4942285037141404e-06,
+        "s_min_effective[m]": 6.4942285037141404e-06,
+        "s_min_effective_gt_config": true,
+        "time_grid": {
+          "basis": "t_end_orbits",
+          "dt_capped_by_max_steps": false,
+          "dt_input": "auto",
+          "dt_mode": "auto",
+          "dt_nominal_s": 29.955809816744328,
+          "dt_sources_s": {
+            "0.05*t_blow": 47.67615206655584,
+            "t_end/200": 29.955809816744328
+          },
+          "dt_step_s": 29.955809816744328,
+          "n_steps": 200,
+          "t_end_input": 1.0,
+          "t_end_s": 5991.161963348865
+        }
+      },
+      "mass_budget": {
+        "max_error_percent": 8.387611411287699e-15,
+        "max_error_row": {
+          "time": 2366.508975522802,
+          "mass_initial": 1e-05,
+          "mass_remaining": 9.996968948117891e-06,
+          "mass_lost": 3.031051882110157e-09,
+          "mass_diff": -8.387611411287702e-22,
+          "error_percent": 8.387611411287699e-15,
+          "tolerance_percent": 0.5,
+          "abs_error": 8.387611411287699e-15
+        },
+        "within_tolerance": true,
+        "tolerance_percent": 0.5
+      },
+      "dt_over_t_blow": null
     },
     {
-      "run_id": "RUN_TL2003_TOGGLE_v01",
-      "label": "TL2003トグル感度",
+      "run_id": "RUN_SINKS_SUBLIM_v01",
+      "label": "昇華オン基準",
       "tags": [
-        "gas-rich-test",
-        "shielding"
+        "sinks",
+        "sublimation"
       ],
-      "outdir": null,
-      "outdir_candidates": []
+      "outdir": "/Users/daichi/marsshearingsheet/out/02_inner1RM_sublimation",
+      "outdir_candidates": [
+        "/Users/daichi/marsshearingsheet/out/02_inner1RM_sublimation"
+      ],
+      "paths": {
+        "run_card": "/Users/daichi/marsshearingsheet/out/02_inner1RM_sublimation/run_config.json",
+        "summary": "/Users/daichi/marsshearingsheet/out/02_inner1RM_sublimation/summary.json",
+        "series_main": "/Users/daichi/marsshearingsheet/out/02_inner1RM_sublimation/series/run.parquet",
+        "series_diagnostics": null,
+        "check_mass_budget": "/Users/daichi/marsshearingsheet/out/02_inner1RM_sublimation/checks/mass_budget.csv"
+      },
+      "summary": {
+        "M_loss": 3.127136332233974e-09,
+        "M_loss_from_sinks": 3.1271363318413264e-09,
+        "M_loss_from_sublimation": 3.1271363318413264e-09,
+        "M_loss_mean_per_orbit": 3.127136332233974e-09,
+        "M_out_cum": 3.9264790314502735e-19,
+        "M_out_mean_per_orbit": 3.9264790314502735e-19,
+        "M_sink_cum": 3.1271363318413264e-09,
+        "M_sink_mean_per_orbit": 3.1271363318413264e-09,
+        "Q_pr_blow": 0.9999995773188097,
+        "Q_pr_used": 0.9999995773188097,
+        "T_M_source": "radiation.TM_K",
+        "T_M_used": 4000.0,
+        "T_M_used[K]": 4000.0,
+        "beta_at_smin": 3.244833240534708,
+        "beta_at_smin_config": 3.244833240534708,
+        "beta_at_smin_effective": 0.5,
+        "beta_threshold": 0.5,
+        "case_status": "blowout",
+        "chi_blow_eff": 0.9999995773188095,
+        "chi_blow_input": "auto",
+        "config_source_path": "/Users/daichi/marsshearingsheet/simulation_results/_configs/02_inner1RM_sublimation.yml",
+        "enforce_mass_budget": false,
+        "orbits_completed": 1,
+        "qpr_table_path": "data/qpr_table.csv",
+        "r_RM_used": 1.0,
+        "r_m_used": 3389500.0,
+        "r_source": "geometry.runtime_orbital_radius_rm",
+        "rho_used": 3000.0,
+        "s_blow_m": 6.494228503714141e-06,
+        "s_min_components": {
+          "blowout": 6.494228503714141e-06,
+          "config": 1e-06,
+          "effective": 6.494228503714141e-06
+        },
+        "s_min_config": 1e-06,
+        "s_min_effective": 6.494228503714141e-06,
+        "s_min_effective[m]": 6.494228503714141e-06,
+        "s_min_effective_gt_config": true,
+        "time_grid": {
+          "basis": "t_end_orbits",
+          "dt_capped_by_max_steps": false,
+          "dt_input": "auto",
+          "dt_mode": "auto",
+          "dt_nominal_s": 29.955809816744328,
+          "dt_sources_s": {
+            "0.05*t_blow": 47.67615206655584,
+            "t_end/200": 29.955809816744328
+          },
+          "dt_step_s": 29.955809816744328,
+          "n_steps": 200,
+          "t_end_input": 1.0,
+          "t_end_s": 5991.161963348865
+        }
+      },
+      "mass_budget": {
+        "max_error_percent": 5.802671997059489e-15,
+        "max_error_row": {
+          "time": 29.955809816744328,
+          "mass_initial": 1e-05,
+          "mass_remaining": 9.99687286367986e-06,
+          "mass_lost": 3.127136320140805e-09,
+          "mass_diff": 5.802671997059489e-22,
+          "error_percent": 5.802671997059489e-15,
+          "tolerance_percent": 0.5,
+          "abs_error": 5.802671997059489e-15
+        },
+        "within_tolerance": true,
+        "tolerance_percent": 0.5
+      },
+      "dt_over_t_blow": null
     },
     {
-      "run_id": "RUN_TEMP_DRIVER_v01",
-      "label": "強放射・β掃引",
+      "run_id": "RUN_WAVY_PSD_v01",
+      "label": "PSD波状構造テスト",
       "tags": [
-        "beta-sweep",
-        "temperature"
+        "psd",
+        "wavy"
       ],
-      "outdir": null,
-      "outdir_candidates": []
+      "outdir": "/Users/daichi/marsshearingsheet/out/20251022-0501_chi05_r1RM_dtOrb100__0fdd14772",
+      "outdir_candidates": [
+        "/Users/daichi/marsshearingsheet/out/20251022-0501_chi05_r1RM_dtOrb100__0fdd14772"
+      ],
+      "paths": {
+        "run_card": "/Users/daichi/marsshearingsheet/out/20251022-0501_chi05_r1RM_dtOrb100__0fdd14772/run_config.json",
+        "summary": "/Users/daichi/marsshearingsheet/out/20251022-0501_chi05_r1RM_dtOrb100__0fdd14772/summary.json",
+        "series_main": "/Users/daichi/marsshearingsheet/out/20251022-0501_chi05_r1RM_dtOrb100__0fdd14772/series/run.parquet",
+        "series_diagnostics": "/Users/daichi/marsshearingsheet/out/20251022-0501_chi05_r1RM_dtOrb100__0fdd14772/series/diagnostics.parquet",
+        "check_mass_budget": "/Users/daichi/marsshearingsheet/out/20251022-0501_chi05_r1RM_dtOrb100__0fdd14772/checks/mass_budget.csv"
+      },
+      "summary": {
+        "M_loss": 1.3589179232845857e-11,
+        "M_loss_from_sinks": 1.2830697261636125e-11,
+        "M_loss_from_sublimation": 1.2830697261636125e-11,
+        "M_loss_mean_per_orbit": 1.3589179232845857e-11,
+        "M_out_cum": 7.58481971209731e-13,
+        "M_out_mean_per_orbit": 7.58481971209731e-13,
+        "M_sink_cum": 1.2830697261636125e-11,
+        "M_sink_mean_per_orbit": 1.2830697261636125e-11,
+        "Q_pr_blow": 0.9999995773188095,
+        "Q_pr_used": 0.9999995773188095,
+        "T_M_source": "radiation.TM_K",
+        "T_M_used": 4000.0,
+        "T_M_used[K]": 4000.0,
+        "beta_at_smin": 11.737339431190682,
+        "beta_at_smin_config": 11.737339431190682,
+        "beta_at_smin_effective": 0.5,
+        "beta_threshold": 0.5,
+        "case_status": "blowout",
+        "chi_blow_eff": 0.5,
+        "chi_blow_input": "0.5",
+        "config_source_path": "/Users/daichi/marsshearingsheet/configs/base.yml",
+        "dt_over_t_blow_median": 0.1256637061435917,
+        "enforce_mass_budget": false,
+        "mass_budget_max_error_percent": 6.773817579113689e-15,
+        "orbits_completed": 1,
+        "phi_table_path": null,
+        "qpr_table_path": "data/qpr_table.csv",
+        "r_RM_used": 1.0,
+        "r_m_used": 3389500.0,
+        "r_source": "geometry.runtime_orbital_radius_rm",
+        "rho_used": 3000.0,
+        "s_blow_m": 6.4942285037141404e-06,
+        "s_min_components": {
+          "blowout": 6.4942285037141404e-06,
+          "config": 1e-07,
+          "effective": 6.4942285037141404e-06,
+          "floor_dynamic": 6.4942285037141404e-06,
+          "floor_mode": "fixed"
+        },
+        "s_min_config": 1e-07,
+        "s_min_effective": 6.4942285037141404e-06,
+        "s_min_effective[m]": 6.4942285037141404e-06,
+        "s_min_effective_gt_config": true,
+        "shielding_mode": "psitau",
+        "time_grid": {
+          "basis": "t_end_orbits",
+          "dt_capped_by_max_steps": false,
+          "dt_input": 59.9116196335,
+          "dt_mode": "explicit",
+          "dt_nominal_s": 59.9116196335,
+          "dt_sources_s": {
+            "explicit": 59.9116196335
+          },
+          "dt_step_s": 59.911619633488655,
+          "n_steps": 100,
+          "t_end_input": 1.0,
+          "t_end_s": 5991.161963348865
+        }
+      },
+      "mass_budget": {
+        "max_error_percent": 6.7738175791136885e-15,
+        "max_error_row": {
+          "time": 2276.641546072569,
+          "mass_initial": 0.0001,
+          "mass_remaining": 9.999998646385356e-05,
+          "mass_lost": 1.3536146426561882e-11,
+          "mass_diff": 6.7738175791136885e-21,
+          "error_percent": 6.7738175791136885e-15,
+          "tolerance_percent": 0.5,
+          "abs_error": 6.7738175791136885e-15
+        },
+        "within_tolerance": true,
+        "tolerance_percent": 0.5
+      },
+      "dt_over_t_blow": {
+        "value": 0.1256637061435917,
+        "within_limit": false,
+        "limit": 0.1
+      }
     }
   ],
   "figures": [
     {
       "fig_id": "FIG_BETA_SERIES_01",
-      "script": "scripts/plot_heatmaps.py",
+      "script": "scripts/plot_from_runs.py",
       "runs": [
         "RUN_MARS_GASPOOR_v01",
-        "RUN_TEMP_DRIVER_v01"
+        "RUN_SINKS_SUBLIM_v01"
       ],
       "params": {
         "mode": "beta_timeseries"
@@ -69,28 +318,17 @@
     },
     {
       "fig_id": "FIG_MASS_BUDGET_01",
-      "script": "scripts/analyze_radius_trend.py",
+      "script": "scripts/plot_from_runs.py",
       "runs": [
         "RUN_MARS_GASPOOR_v01"
       ],
       "params": {
-        "product": "mass_budget"
-      }
-    },
-    {
-      "fig_id": "FIG_SHIELDING_SERIES_01",
-      "script": "scripts/plot_heatmaps.py",
-      "runs": [
-        "RUN_TL2003_TOGGLE_v01",
-        "RUN_HIGH_BETA_SHIELD_v01"
-      ],
-      "params": {
-        "mode": "shielding_series"
+        "mode": "mass_budget"
       }
     },
     {
       "fig_id": "FIG_PSD_WAVY_01",
-      "script": "scripts/plot_heatmaps.py",
+      "script": "scripts/plot_from_runs.py",
       "runs": [
         "RUN_WAVY_PSD_v01"
       ],
@@ -99,6 +337,6 @@
       }
     }
   ],
-  "generated_at": "2025-12-09T06:40:28.434607+00:00",
+  "generated_at": "2025-12-09T06:53:07.574448+00:00",
   "base_dir": "/Users/daichi/marsshearingsheet"
 }

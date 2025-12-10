@@ -27,6 +27,7 @@
 ## 1. 火星衛星形成・衝突起源
 
 火星衛星 (Phobos/Deimos) の巨大衝突起源仮説に関する論文群。初期条件、円盤構造、ガス希薄仮定の根拠を提供する。
+**Analysis参照**: 背景・前提は `analysis/overview.md` の起源シナリオ節を参照。
 
 ### Hyodo et al. (2017a)
 - **Key**: `Hyodo2017a_ApJ845_125`
@@ -106,6 +107,7 @@
 ## 2. 放射圧・Blow-out・デブリディスク物理
 
 放射圧による粒子排出（blow-out）とデブリディスクの力学を扱う論文群。
+**Analysis参照**: `analysis/equations.md` (E.012–E.014) の β・blow-out、(E.006) の Wyatt 型 t_coll、(E.015–E.017, E.028, E.031) の遮蔽・Φ を参照。
 
 ### Strubbe & Chiang (2006) ⭐⭐
 - **Key**: `StrubbeChiang2006_ApJ648_652`
@@ -153,10 +155,10 @@
   - epsilon_mix と外部フラックスの導入テンプレート
 
 ### Krijt & Kama (2014)
-- **Key**: `KrijtKama2014_AA566_A2`
-- **Title**: A dearth of small particles in debris disks: evidence for radiation pressure?
-- **Journal**: A&A, 566, A2
-- **DOI**: [10.1051/0004-6361/201423384](https://doi.org/10.1051/0004-6361/201423384)
+- **Key**: `KrijtKama2014_AA566_L2`
+- **Title**: A dearth of small particles in debris disks
+- **Journal**: A&A, 566, L2
+- **DOI**: [10.1051/0004-6361/201423862](https://doi.org/10.1051/0004-6361/201423862)
 - **使用箇所**: gate_mode選択の動機
 - **主張**:
   - 衝突研削やドラッグが blow-out より優勢な条件
@@ -167,6 +169,7 @@
 ## 3. 衝突カスケード・粒径分布
 
 衝突カスケードと粒径分布 (PSD) の理論的基盤。
+**Analysis参照**: `analysis/equations.md` (E.010–E.011, E.024, E.035) の Smol/カーネル、(E.032–E.033) の破片分布を参照。
 
 ### Dohnanyi (1969)
 - **Key**: `Dohnanyi1969_JGR74_2531`
@@ -182,7 +185,7 @@
 - **Key**: `ThebaultAugereau2007_AA472_169`
 - **Title**: Collisional processes and size distribution in spatially extended debris discs
 - **Journal**: A&A, 472, 169–185
-- **DOI**: [10.1051/0004-6361:20077258](https://doi.org/10.1051/0004-6361:20077258)
+- **DOI**: [10.1051/0004-6361:20077709](https://doi.org/10.1051/0004-6361:20077709)
 - **使用箇所**: wavy PSD 構造
 - **主張**:
   - blow-out カットオフによる振動的 "wavy" パターン
@@ -202,7 +205,7 @@
 - **Key**: `Krivov2006_AA455_509`
 - **Title**: Dust distributions in debris disks: effects of gravity, radiation pressure and collisions
 - **Journal**: A&A, 455, 509–519
-- **DOI**: [10.1051/0004-6361:20064920](https://doi.org/10.1051/0004-6361:20064920)
+- **DOI**: [10.1051/0004-6361:20064907](https://doi.org/10.1051/0004-6361:20064907)
 - **使用箇所**: Smoluchowskiソルバー
 - **主張**:
   - nσv スタイルの衝突カーネル
@@ -213,6 +216,7 @@
 ## 4. 破砕強度・衝突破壊
 
 衝突による破壊閾値 Q*_D と破片分布の理論。
+**Analysis参照**: `analysis/equations.md` (E.026, E.032–E.033) の Q*_D 補間と最大残留体分率を参照。
 
 ### Benz & Asphaug (1999) ⭐
 - **Key**: `BenzAsphaug1999_Icarus142_5`
@@ -236,10 +240,10 @@
   - 強度支配 ↔ 重力支配の遷移スケーリング則
 
 ### Stewart & Leinhardt (2009)
-- **Key**: `StewartLeinhardt2009_ApJ691_54`
+- **Key**: `StewartLeinhardt2009_ApJ691_L133`
 - **Title**: Velocity-dependent catastrophic disruption criteria for planetesimals
-- **Journal**: ApJ, 691, 54–65
-- **DOI**: [10.1088/0004-637X/691/1/54](https://doi.org/10.1088/0004-637X/691/1/54)
+- **Journal**: ApJ, 691, L133–L137
+- **DOI**: [10.1088/0004-637X/691/2/L133](https://doi.org/10.1088/0004-637X/691/2/L133)
 - **使用箇所**: F2 破片モデル
 - **主張**:
   - Q_R に基づく最大残留体分率の枝分け根拠（破片分布は (E.032–E.033) へ委譲）
@@ -249,12 +253,13 @@
 ## 5. 速度分散・相対速度
 
 衝突速度と速度分散の計算根拠。
+**Analysis参照**: `analysis/equations.md` (E.020–E.022) の相対速度・c_eq・e ダンピングを参照。
 
 ### Ohtsuki et al. (2002)
 - **Key**: `Ohtsuki2002_Icarus155_436`
-- **Title**: Evolution of planetesimal velocities based on analytic solution of the Boltzmann equation
+- **Title**: Evolution of Planetesimal Velocities Based on Three-Body Orbital Integrations and Growth of Protoplanets
 - **Journal**: Icarus, 155, 436–453
-- **DOI**: [10.1006/icar.2001.6717](https://doi.org/10.1006/icar.2001.6717)
+- **DOI**: [10.1006/icar.2001.6741](https://doi.org/10.1006/icar.2001.6741)
 - **使用箇所**: c_eq 固定点反復
 - **主張**:
   - レイリー近似の相対速度式 (E.020) の出典
@@ -282,6 +287,7 @@
 ## 6. 粘性進化・リング力学
 
 ロッシュ限界内の円盤粘性拡散と衛星形成。
+**Analysis参照**: C5 拡張の位置づけは `analysis/overview.md` の粘性拡散節を参照。
 
 ### Crida & Charnoz (2012) ⭐
 - **Key**: `CridaCharnoz2012_Science338_1196`
@@ -298,6 +304,7 @@
 - **Key**: `SalmonCanup2010_Icarus208_33`
 - **Title**: Long-term and large-scale viscous evolution of dense planetary rings
 - **Journal**: Icarus, 208, 33–48
+- **DOI**: [10.1016/j.icarus.2010.05.030](https://doi.org/10.1016/j.icarus.2010.05.030)
 - **使用箇所**: 粘性拡散モデル
 - **主張**:
   - 高密度リングの粘性拡散スケーリングと時間尺度の出典
@@ -317,6 +324,7 @@
 ## 7. 昇華・蒸気圧
 
 高温円盤での昇華損失の熱化学的基盤。
+**Analysis参照**: `analysis/equations.md` (E.018–E.019, E.036–E.038) の HKL フラックス・蒸気圧・シンク尺度を参照。
 
 ### Fegley & Schaefer (2012)
 - **Key**: `FegleySchaefer2012_arXiv`
@@ -327,18 +335,29 @@
   - 溶融SiO₂の平衡蒸気圧フィット（HKL 液体枝、(E.018) に集約）
 
 ### Visscher & Fegley (2013)
-- **Key**: `VisscherFegley2013_arXiv`
-- **Title**: Chemistry of impact-generated silicate vapor
-- **Journal**: arXiv
+- **Key**: `VisscherFegley2013_ApJL767_L12`
+- **Title**: Chemistry of Impact-Generated Silicate Melt-Vapor Debris Disks
+- **Journal**: ApJL, 767, L12
+- **DOI**: [10.1088/2041-8205/767/1/L12](https://doi.org/10.1088/2041-8205/767/1/L12)
 - **使用箇所**: HKL液体枝の独立検証
 - **主張**:
   - 溶融SiO₂蒸気圧フィットの追試（HKL 液体枝の係数確認）
+  - SiO 支配の蒸気組成とクラウジウス型近似の妥当性を示す
+
+### Visscher & Fegley (2013, arXiv)
+- **Key**: `VisscherFegley2013_arXiv`
+- **Title**: Chemistry of impact-generated silicate melt-vapor debris disks
+- **Journal**: arXiv:1303.3905
+- **使用箇所**: ApJL 版の予備・閲覧用
+- **主張**:
+  - ApJL 掲載版と同一内容のプレプリント
 
 ---
 
 ## 8. 光学特性・Mie理論
 
 粒子の吸収・散乱効率とプランク平均の理論。
+**Analysis参照**: `analysis/equations.md` (E.004–E.005, E.039) の ⟨Q_pr⟩ 補間・テーブル読込を参照。
 
 ### Bohren & Huffman (1983)
 - **Key**: `BohrenHuffman1983_Wiley`
@@ -380,6 +399,7 @@
 ## 9. 輻射輸送・遮蔽
 
 光学的深さと遮蔽効果の計算。
+**Analysis参照**: `analysis/equations.md` (E.015–E.017, E.028, E.031) の Φ 適用と τ=1 クリップを参照。
 
 ### Chandrasekhar (1960)
 - **Key**: `Chandrasekhar1960_RadiativeTransfer`
@@ -393,6 +413,7 @@
 - **Key**: `Joseph1976_JAS33_2452`
 - **Title**: The delta-Eddington approximation for radiative flux transfer
 - **Journal**: J. Atmos. Sci., 33, 2452–2459
+- **DOI**: [10.1175/1520-0469(1976)033<2452:TDEAFR>2.0.CO;2](https://doi.org/10.1175/1520-0469(1976)033<2452:TDEAFR>2.0.CO;2)
 - **使用箇所**: Φ(τ,ω₀,g) テーブル
 - **主張**:
   - Delta-Eddington 近似のフラックス解
@@ -401,6 +422,7 @@
 - **Key**: `HansenTravis1974_SSR16_527`
 - **Title**: Light scattering in planetary atmospheres
 - **Journal**: Space Science Reviews, 16, 527–610
+- **DOI**: [10.1007/BF00168069](https://doi.org/10.1007/BF00168069)
 - **使用箇所**: Φ テーブル生成
 - **主張**:
   - Henyey-Greenstein 位相関数による多重散乱
@@ -419,21 +441,22 @@
 ## 10. 相転移・SiO₂物性
 
 SiO₂ の相転移温度と物性パラメータ。
+**Analysis参照**: 放射冷却と粒子温度は `analysis/equations.md` (E.042–E.043) を参照。
 
 ### Bruning (2003)
 - **Key**: `Bruning2003_JNCS330_13`
 - **Title**: On the glass transition in vitreous silica by differential thermal analysis measurements
 - **Journal**: Journal of Non-Crystalline Solids, 330, 13–22
-- **DOI**: [10.1016/S0022-3093(03)00631-8](https://doi.org/10.1016/S0022-3093(03)00631-8)
+- **DOI**: [10.1016/j.jnoncrysol.2003.08.051](https://doi.org/10.1016/j.jnoncrysol.2003.08.051)
 - **使用箇所**: T_glass ≈ 1475 K
 - **主張**:
   - ガラス転移開始 ~1247 K、緩和 ~1475 K
 
 ### Ojovan (2021)
-- **Key**: `Ojovan2021_Materials14_5354`
-- **Title**: On Structural Rearrangements Near the Glass Transition in Vitreous Silica
-- **Journal**: Materials, 14, 5354
-- **DOI**: [10.3390/ma14185354](https://doi.org/10.3390/ma14185354)
+- **Key**: `Ojovan2021_Materials14_5235`
+- **Title**: On Structural Rearrangements Near the Glass Transition Temperature in Amorphous Silica
+- **Journal**: Materials, 14, 5235
+- **DOI**: [10.3390/ma14185235](https://doi.org/10.3390/ma14185235)
 - **使用箇所**: SiO₂ 融点
 - **主張**:
   - 低圧での融点 ~1986 K
@@ -468,6 +491,7 @@ SiO₂ の相転移温度と物性パラメータ。
 ## 11. 軌道力学・基礎
 
 ケプラー運動と軌道パラメータの標準参照。
+**Analysis参照**: `analysis/equations.md` (E.001–E.003) の v_K・Ω 定義を参照。
 
 ### Murray & Dermott (1999)
 - **Key**: `MurrayDermott1999_SSD`
@@ -483,6 +507,7 @@ SiO₂ の相転移温度と物性パラメータ。
 ## 12. ガスドラッグ・大気捕獲
 
 （gas-poor 標準では無効化されているが、感度試験用に参照）
+**Analysis参照**: gas-rich 感度や TL2003 トグルの位置づけは `analysis/overview.md` と `analysis/equations.md` (E.028) の遮蔽テーブル読込節を参照。
 
 ### Takeuchi & Lin (2002)
 - **Key**: `TakeuchiLin2002_ApJ581_1344`
@@ -496,8 +521,8 @@ SiO₂ の相転移温度と物性パラメータ。
 ### Takeuchi & Lin (2003)
 - **Key**: `TakeuchiLin2003_ApJ593_524`
 - **Title**: Dust Outflows in Optically Thick Gas Disks
-- **Journal**: ApJ, 593, 524–535
-- **DOI**: [10.1086/376407](https://doi.org/10.1086/376407)
+- **Journal**: ApJ, 593, 524–533
+- **DOI**: [10.1086/376496](https://doi.org/10.1086/376496)
 - **使用箇所**: ALLOW_TL2003=true 時のみ
 - **主張**:
   - 光学的に厚いガス円盤表層での外向きフロー
@@ -516,6 +541,7 @@ SiO₂ の相転移温度と物性パラメータ。
 - **Key**: `Hunten1979_Icarus37_113`
 - **Title**: Capture of Phobos and Deimos by protoatmospheric drag
 - **Journal**: Icarus, 37, 113–123
+- **DOI**: [10.1016/0019-1035(79)90119-2](https://doi.org/10.1016/0019-1035(79)90119-2)
 - **使用箇所**: ガスドラッグ感度試験
 - **主張**:
   - 高密度原始大気でのみ捕獲可能
@@ -524,32 +550,34 @@ SiO₂ の相転移温度と物性パラメータ。
 - **Key**: `Olofsson2022_MNRAS513_713`
 - **Title**: The vertical structure of debris discs and the impact of gas
 - **Journal**: MNRAS, 513, 713–731
+- **DOI**: [10.1093/mnras/stac455](https://doi.org/10.1093/mnras/stac455)
 - **使用箇所**: enable_gas_drag=false の根拠
 - **主張**:
   - 低ガス密度ではドラッグ時間 > 衝突時間
 
-### Shadmehri (2007)
-- **Key**: `Shadmehri2007_MNRAS378_1365`
+### Shadmehri (2008)
+- **Key**: `Shadmehri2008_ApSS314_217`
 - **Title**: Dynamics of charged dust particles in protoplanetary discs
-- **Journal**: MNRAS, 378, 1365–1372
-- **DOI**: [10.1111/j.1365-2966.2007.11868.x](https://doi.org/10.1111/j.1365-2966.2007.11868.x)
+- **Journal**: Ap&SS, 314, 217–223
+- **DOI**: [10.1007/s10509-008-9762-2](https://doi.org/10.1007/s10509-008-9762-2)
 - **使用箇所**: TL2002/TL2003 のレビュー
 - **主張**:
   - 外向き表層ドリフトは光学的に厚いガス円盤に限定
 
 ### Estrada & Durisen (2015)
-- **Key**: `EstradaDurisen2015_Icarus248_379`
-- **Title**: Combined structural and compositional evolution of Saturn's rings due to ballistic transport
-- **Journal**: Icarus, 248, 379–392
-- **DOI**: [10.1016/j.icarus.2014.10.009](https://doi.org/10.1016/j.icarus.2014.10.009)
+- **Key**: `EstradaDurisen2015_Icarus252_415`
+- **Title**: Combined structural and compositional evolution of planetary rings due to micrometeoroid impacts and ballistic transport
+- **Journal**: Icarus, 252, 415–439
+- **DOI**: [10.1016/j.icarus.2015.02.005](https://doi.org/10.1016/j.icarus.2015.02.005)
 - **使用箇所**: epsilon_mix
 - **主張**:
   - 弾道輸送による混合効率
 
 ### Cuzzi & Estrada (1998)
-- **Key**: `CuzziEstrada1998_RingSystems`
-- **Title**: Meteoroid bombardment and ballistic transport in planetary rings
-- **Journal**: Planetary Ring Systems, 545–572
+- **Key**: `CuzziEstrada1998_Icarus132_1`
+- **Title**: Compositional Evolution of Saturn's Rings Due to Meteoroid Bombardment
+- **Journal**: Icarus, 132, 1–35
+- **DOI**: [10.1006/icar.1997.5863](https://doi.org/10.1006/icar.1997.5863)
 - **使用箇所**: 外部フラックス
 - **主張**:
   - 隕石供給と再分配係数

@@ -16,9 +16,8 @@ from ..errors import MarsDiskError
 
 __all__ = ["compute_q_d_star_F1", "compute_q_d_star_array"]
 
-# Coefficients for Benz & Asphaug (1999) power-law at reference velocities in km/s
-# Values correspond to basalt-like material as in Leinhardt & Stewart (2012)
-# [@BenzAsphaug1999_Icarus142_5; @LeinhardtStewart2012_ApJ745_79].
+# Coefficients from [@BenzAsphaug1999_Icarus142_5] evaluated at reference velocities in km/s.
+# Basalt-like material parameters follow [@LeinhardtStewart2012_ApJ745_79].
 # The keys represent the impact velocity in km/s.
 _COEFFS: Dict[float, Tuple[float, float, float, float]] = {
     3.0: (3.5e7, 0.38, 0.3, 1.36),  # Qs, a_s, B, b_g at 3 km/s
@@ -83,11 +82,10 @@ def compute_q_d_star_array(s: np.ndarray, rho: float, v_kms: np.ndarray) -> np.n
 def compute_q_d_star_F1(s: float, rho: float, v_kms: float) -> float:
     """Return the catastrophic disruption threshold ``Q_D^*``.
 
-    The Benz & Asphaug (1999) size-dependent law[@BenzAsphaug1999_Icarus142_5]
-    is evaluated and then linearly interpolated in velocity between the 3 and
-    5 km/s reference values following Leinhardt & Stewart (2012)
-    [@LeinhardtStewart2012_ApJ745_79]. Velocities outside this range adopt the
-    nearest reference value.
+    The size-dependent law from [@BenzAsphaug1999_Icarus142_5] is evaluated and
+    then linearly interpolated in velocity between the 3 and 5 km/s reference
+    values following [@LeinhardtStewart2012_ApJ745_79]. Velocities outside this
+    range adopt the nearest reference value.
 
     Parameters
     ----------

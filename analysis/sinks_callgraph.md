@@ -6,8 +6,8 @@
 
 - `[marsdisk/physics/sublimation.py:54–130]` `SublimationParams(...)` と HKL パラメータ群。`run_zero_d` は YAML `sinks.sub_params` から `SublimationParams(**cfg.sinks.sub_params.model_dump())` を構築する。
 - `[marsdisk/physics/sinks.py:35–45]` `SinkOptions` と `total_sink_timescale`。`sinks.mode="none"` では `SinkTimescaleResult(t_sink=None, ...)` を返し、昇華・gas drag の有効化時のみ最短寿命を採用する。
-- `[marsdisk/physics/surface.py:81–97]` `SurfaceStepResult` / `step_surface_density_S1`。`t_sink` が有限のときのみ `loss += 1/t_sink` と `sink_flux = sigma_new / t_sink` を適用する。
-- `[marsdisk/physics/surface.py:190–222]` `step_surface`。Wyatt 衝突寿命を挿入してから `step_surface_density_S1` へ委譲するラッパー。
+- `[marsdisk/physics/surface.py:81–96]` `SurfaceStepResult` / `step_surface_density_S1`。`t_sink` が有限のときのみ `loss += 1/t_sink` と `sink_flux = sigma_new / t_sink` を適用する。
+- `[marsdisk/physics/surface.py:190–221]` `step_surface`。Wyatt 衝突寿命を挿入してから `step_surface_density_S1` へ委譲するラッパー。
 - `[marsdisk/physics/collisions_smol.py:305–360]` `step_collisions_smol_0d`。Smol 経路で `t_sink` と `ds_dt_val` を受け取り、表層以外でも昇華・追加シンクを適用する。
 - `[marsdisk/physics/phase.py:564–593]` `hydro_escape_timescale`。蒸気相でのみ有効になる水素逸脱スケールを返し、ブローアウトと同時には作動しない。
 - `[marsdisk/run.py:1444–1487]` 0D 本体での sink オプション解決と "no active sinks" 分岐。
@@ -57,7 +57,7 @@ flowchart TD
 2. **Set the PSD floor** – 各ステップで `s_min_effective = max(cfg.sizes.s_min, a_blow, s_min_floor_dynamic)` を更新し、床情報を `s_min_components` に記録。[marsdisk/run.py:1340–1434]
 3. **Instantiate sink physics** – YAML `sinks` を `SinkOptions` へ束ね、昇華/drag の有効・無効と `sublimation_location` を反映。[marsdisk/physics/sinks.py:35–45][marsdisk/run.py:1444–1487]
 4. **Evaluate `t_sink`** – `sinks.mode="none"` では `t_sink=None` を強制し、そうでなければ `total_sink_timescale` で最短寿命を取得。`hydro_escape` が vapor 相で選択されるとブローアウトと排他的に `t_sink` を置換。[marsdisk/physics/phase.py:564–593][marsdisk/run.py:1816–1852]
-5. **Advance the surface/Smol layers** – `surface.step_surface(..., t_sink=t_sink_current, ...)` で表層 IMEX を進めつつ、`sublimation_location` が `smol`/`both` なら `collisions_smol.step_collisions_smol_0d(..., t_sink=t_sink_current, ds_dt_val=...)` にも同じ `t_sink` を渡す。[marsdisk/physics/surface.py:190–222][marsdisk/physics/collisions_smol.py:305–360][marsdisk/run.py:1654–2185]
+5. **Advance the surface/Smol layers** – `surface.step_surface(..., t_sink=t_sink_current, ...)` で表層 IMEX を進めつつ、`sublimation_location` が `smol`/`both` なら `collisions_smol.step_collisions_smol_0d(..., t_sink=t_sink_current, ds_dt_val=...)` にも同じ `t_sink` を渡す。[marsdisk/physics/surface.py:190–221][marsdisk/physics/collisions_smol.py:305–360][marsdisk/run.py:1654–2185]
 6. **Accumulate diagnostics** – `mass_lost_by_sinks` と `M_sink_cum` は `sink_flux_surface` が有限だったステップのみ増え、`M_hydro_cum` は水素逸脱を選択したステップでのみ加算される。[marsdisk/run.py:2120–2185]
 
 The blow-out and sink channels therefore remain disentangled even when additional sinks are disabled at the schema level.

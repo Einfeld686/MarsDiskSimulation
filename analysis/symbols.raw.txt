@@ -331,8 +331,8 @@ marsdisk/physics/fragments.py:39:def q_r_array(m1: np.ndarray, m2: np.ndarray, v
 marsdisk/physics/fragments.py:60:def largest_remnant_fraction_array(q_r: np.ndarray, q_rd_star: np.ndarray) -> np.ndarray
 marsdisk/physics/fragments.py:78:def compute_q_r_F2(m1: float, m2: float, v: float) -> float
 marsdisk/physics/fragments.py:110:def compute_largest_remnant_mass_fraction_F2(m1: float, m2: float, v: float, q_rd_star: float) -> float
-marsdisk/physics/fragments.py:148:def s_sub_boundary(T: float, T_sub: float=1300.0, *, t_ref: float | None=None, rho: float | None=None, sub_params: SublimationParams | None=None) -> float
-marsdisk/physics/fragments.py:214:def compute_s_min_F2(a_blow: float, T: float, T_sub: float=1300.0, *, t_ref: float | None=None, rho: float | None=None, sub_params: SublimationParams | None=None) -> float
+marsdisk/physics/fragments.py:147:def s_sub_boundary(T: float, T_sub: float=1300.0, *, t_ref: float | None=None, rho: float | None=None, sub_params: SublimationParams | None=None) -> float
+marsdisk/physics/fragments.py:213:def compute_s_min_F2(a_blow: float, T: float, T_sub: float=1300.0, *, t_ref: float | None=None, rho: float | None=None, sub_params: SublimationParams | None=None) -> float
 marsdisk/physics/initfields.py:17:def sigma_from_Minner(M_in: float, r_in: float, r_out: float, p_index: float) -> Callable[[float], float]
 marsdisk/physics/initfields.py:47:def surf_sigma_init(sigma: float, kappa_eff: Optional[float], policy: str, f_surf: float | None=None, sigma_override: float | None=None) -> float
 marsdisk/physics/phase.py:24:class PhaseDecision
@@ -343,10 +343,10 @@ marsdisk/physics/psd.py:30:def update_psd_state(*, s_min: float, s_max: float, a
 marsdisk/physics/psd.py:121:def compute_kappa(psd_state: Dict[str, np.ndarray | float]) -> float
 marsdisk/physics/psd.py:149:def apply_uniform_size_drift(psd_state: Dict[str, np.ndarray | float], *, ds_dt: float, dt: float, floor: float, sigma_surf: float) -> tuple[float, float, Dict[str, float]]
 marsdisk/physics/psd.py:267:def evolve_min_size(s_min_prev: float, *, dt: float, model: Optional[str]=None, params: Optional[Mapping[str, float]]=None, T: Optional[float]=None, rho: Optional[float]=None, s_floor: Optional[float]=None, sublimation_params: Optional[SublimationParams]=None) -> float
-marsdisk/physics/qstar.py:32:def _q_d_star(s: float, rho: float, coeffs: Tuple[float, float, float, float]) -> float
-marsdisk/physics/qstar.py:40:def _q_d_star_array(s: np.ndarray, rho: float, coeffs: Tuple[float, float, float, float]) -> np.ndarray
-marsdisk/physics/qstar.py:57:def compute_q_d_star_array(s: np.ndarray, rho: float, v_kms: np.ndarray) -> np.ndarray
-marsdisk/physics/qstar.py:83:def compute_q_d_star_F1(s: float, rho: float, v_kms: float) -> float
+marsdisk/physics/qstar.py:31:def _q_d_star(s: float, rho: float, coeffs: Tuple[float, float, float, float]) -> float
+marsdisk/physics/qstar.py:39:def _q_d_star_array(s: np.ndarray, rho: float, coeffs: Tuple[float, float, float, float]) -> np.ndarray
+marsdisk/physics/qstar.py:56:def compute_q_d_star_array(s: np.ndarray, rho: float, v_kms: np.ndarray) -> np.ndarray
+marsdisk/physics/qstar.py:82:def compute_q_d_star_F1(s: float, rho: float, v_kms: float) -> float
 marsdisk/physics/radiation.py:38:def _validate_size(value: float, *, name: str='s') -> float
 marsdisk/physics/radiation.py:48:def _validate_density(value: Optional[float]) -> float
 marsdisk/physics/radiation.py:61:def _validate_temperature(value: Optional[float]) -> float
@@ -393,12 +393,12 @@ marsdisk/physics/sublimation.py:671:def sublimation_sink_from_dsdt(s_grid_m: np.
 marsdisk/physics/supply.py:25:class _TableData
 marsdisk/physics/supply.py:69:def _rate_basic(t: float, r: float, spec: Supply | SupplyPiece) -> float
 marsdisk/physics/supply.py:93:def get_prod_area_rate(t: float, r: float, spec: Supply) -> float
-marsdisk/physics/surface.py:48:def _safe_tcoll(Omega: float, tau: float | None) -> float | None
-marsdisk/physics/surface.py:66:def wyatt_tcoll_S1(tau: float, Omega: float) -> float
-marsdisk/physics/surface.py:81:class SurfaceStepResult
-marsdisk/physics/surface.py:100:def step_surface_density_S1(sigma_surf: float, prod_subblow_area_rate: float, dt: float, Omega: float, *, t_coll: float | None=None, t_sink: float | None=None, sigma_tau1: float | None=None, enable_blowout: bool=True) -> SurfaceStepResult
-marsdisk/physics/surface.py:178:def compute_surface_outflux(sigma_surf: float, Omega: float) -> float
-marsdisk/physics/surface.py:190:def step_surface(sigma_surf: float, prod_subblow_area_rate: float, dt: float, Omega: float, *, tau: float | None=None, t_coll: float | None=None, t_sink: float | None=None, sigma_tau1: float | None=None, enable_blowout: bool=True) -> SurfaceStepResult
+marsdisk/physics/surface.py:47:def _safe_tcoll(Omega: float, tau: float | None) -> float | None
+marsdisk/physics/surface.py:65:def wyatt_tcoll_S1(tau: float, Omega: float) -> float
+marsdisk/physics/surface.py:80:class SurfaceStepResult
+marsdisk/physics/surface.py:99:def step_surface_density_S1(sigma_surf: float, prod_subblow_area_rate: float, dt: float, Omega: float, *, t_coll: float | None=None, t_sink: float | None=None, sigma_tau1: float | None=None, enable_blowout: bool=True) -> SurfaceStepResult
+marsdisk/physics/surface.py:177:def compute_surface_outflux(sigma_surf: float, Omega: float) -> float
+marsdisk/physics/surface.py:189:def step_surface(sigma_surf: float, prod_subblow_area_rate: float, dt: float, Omega: float, *, tau: float | None=None, t_coll: float | None=None, t_sink: float | None=None, sigma_tau1: float | None=None, enable_blowout: bool=True) -> SurfaceStepResult
 marsdisk/physics/tempdriver.py:31:def _validate_temperature(value: float, *, context: str) -> float
 marsdisk/physics/tempdriver.py:42:def _time_unit_scale(unit: str, t_orb: Optional[float]) -> float
 marsdisk/physics/tempdriver.py:56:def _load_table(path: Path) -> pd.DataFrame
@@ -532,6 +532,8 @@ marsdisk/tests/test_timegrid_and_budget.py:63:def test_time_grid_and_mass_budget
 marsdisk/tests/test_viscosity.py:7:def _run(N: int, dt: float)
 marsdisk/tests/test_viscosity.py:18:def test_viscous_diffusion_converges_and_conserves_mass()
 marsdisk/tests/test_wyatt_scaling.py:6:def test_wyatt_scaling_inverse_tau()
+paper/plot_style.py:28:def resolve_style(overrides: Dict[str, Any] | None=None) -> Dict[str, Any]
+paper/plot_style.py:36:def apply_default_style(overrides: Dict[str, Any] | None=None) -> Dict[str, Any]
 scripts/analyze_radius_trend.py:44:def parse_args(argv: Iterable[str] | None=None) -> argparse.Namespace
 scripts/analyze_radius_trend.py:73:def load_config(path: Path) -> dict
 scripts/analyze_radius_trend.py:81:def write_config(data: dict, path: Path) -> None
@@ -544,6 +546,10 @@ scripts/collect_series.py:39:def _parse_args() -> argparse.Namespace
 scripts/collect_series.py:55:def main() -> None
 scripts/plot_axis_r_sweep.py:11:def parse_args() -> argparse.Namespace
 scripts/plot_axis_r_sweep.py:30:def main() -> None
+scripts/plot_from_runs.py:31:def plot_beta_timeseries(runs: List[Path], params: Dict[str, Any], output_dir: Path, fig_id: str) -> Path
+scripts/plot_from_runs.py:54:def plot_mass_budget(runs: List[Path], params: Dict[str, Any], output_dir: Path, fig_id: str) -> Path
+scripts/plot_from_runs.py:77:def plot_psd_wavy(runs: List[Path], params: Dict[str, Any], output_dir: Path, fig_id: str) -> Path
+scripts/plot_from_runs.py:100:def main() -> None
 scripts/plot_heatmaps.py:25:def parse_args(argv: Sequence[str] | None=None) -> argparse.Namespace
 scripts/plot_heatmaps.py:46:def ensure_directory(path: Path) -> None
 scripts/plot_heatmaps.py:52:def _normalise_map_key(map_arg: str) -> Tuple[str, str]
@@ -556,6 +562,9 @@ scripts/plot_heatmaps.py:277:def sanitize_metric_name(metric: str) -> str
 scripts/plot_heatmaps.py:283:def metric_axis_label(metric: str) -> str
 scripts/plot_heatmaps.py:291:def maybe_plot_mass_per_r2_scatter(df: pd.DataFrame, map_stub: str, map_label: str) -> None
 scripts/plot_heatmaps.py:349:def main(argv: Iterable[str] | None=None) -> None
+scripts/render_figures_from_tasks.py:25:def load_json(path: Path) -> Any
+scripts/render_figures_from_tasks.py:30:def build_command(script: str, fig_id: str, run_paths: List[str], params: Dict[str, Any]) -> str
+scripts/render_figures_from_tasks.py:47:def main() -> None
 scripts/run_axis_r_sweep.py:68:class CaseResult
 scripts/run_axis_r_sweep.py:97:def format_r_rm(value: float) -> str
 scripts/run_axis_r_sweep.py:102:def format_mass_tag(value: float) -> str
@@ -901,6 +910,22 @@ tools/diagnostics/beta_map.py:442:def build_heatmap(data: np.ndarray, r_values: 
 tools/diagnostics/beta_map.py:479:def summarise_variation(matrix: np.ndarray, axis: int) -> np.ndarray
 tools/diagnostics/beta_map.py:490:def write_readme(outdir: Path, ctx: RuntimeContext, config_path: Path, qpr_table_path: Path, phi_origin: str, beta_raw_map: np.ndarray, beta_eff_map: np.ndarray, r_values: np.ndarray, T_values: np.ndarray, dt_warning_cells: int, total_cells: int, qpr_counter: QPrCounter) -> None
 tools/diagnostics/beta_map.py:563:def main() -> None
+tools/paper_manifest.py:30:class PaperCheckSettings(BaseModel)
+tools/paper_manifest.py:36:class PaperSettings(BaseModel)
+tools/paper_manifest.py:47:class RunEntry(BaseModel)
+tools/paper_manifest.py:77:class FigureEntry(BaseModel)
+tools/paper_manifest.py:84:class PaperManifest(BaseModel)
+tools/paper_manifest.py:90:def _load_manifest(path: Path) -> PaperManifest
+tools/paper_manifest.py:96:def _model_dump(model: BaseModel) -> Dict[str, Any]
+tools/paper_manifest.py:104:def _resolve_outdir(run: RunEntry, base_dir: Path) -> Tuple[Optional[Path], List[Path]]
+tools/paper_manifest.py:119:def _read_summary(path: Path) -> Dict[str, Any]
+tools/paper_manifest.py:126:def _evaluate_mass_budget(csv_path: Path, tolerance_percent: float) -> Tuple[Optional[Dict[str, Any]], Optional[Dict[str, Any]]]
+tools/paper_manifest.py:151:def _evaluate_dt_ratio(summary: Dict[str, Any], max_ratio: float) -> Optional[Dict[str, Any]]
+tools/paper_manifest.py:164:def _collect_run(run: RunEntry, base_dir: Path, checks_cfg: PaperCheckSettings, strict: bool) -> Tuple[Dict[str, Any], List[Dict[str, Any]]]
+tools/paper_manifest.py:244:def _collect_figures(figs: List[FigureEntry], known_run_ids: List[str]) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]]]
+tools/paper_manifest.py:270:def _load_extra_checks(paths: Optional[List[Path]]) -> List[Dict[str, Any]]
+tools/paper_manifest.py:300:def parse_args() -> argparse.Namespace
+tools/paper_manifest.py:320:def main() -> None
 tools/pipeline/coverage_guard.py:19:def _load_extended_coverage(path: Path) -> Dict[str, Any]
 tools/pipeline/coverage_guard.py:58:def run_guard(*, coverage_source: Path=DEFAULT_COVERAGE, refs_path: Path=DEFAULT_REFS, inventory_path: Path=DEFAULT_INVENTORY, fail_under: float=0.75, require_clean_anchors: bool=True, equation_fail_under: float=0.25, require_sinks_callgraph: bool=True) -> int
 tools/pipeline/coverage_guard.py:107:def _build_parser() -> argparse.ArgumentParser
