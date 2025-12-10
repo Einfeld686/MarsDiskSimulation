@@ -9,7 +9,7 @@ assumed to receive direct irradiation; deeper layers are treated as
 self-shaded and do not participate in the radiation-driven outflow.
 The loss terms follow the gas-poor, optically thin picture in
 [@StrubbeChiang2006_ApJ648_652], while the gas-rich surface-flow solution
-[@TakeuchiLin2003_ApJ593_524; @TakeuchiLin2002_ApJ581_1344; @Shadmehri2007_MNRAS378_1365]
+[@TakeuchiLin2003_ApJ593_524; @TakeuchiLin2002_ApJ581_1344; @Shadmehri2008_ApSS314_217]
 remains an optional path guarded by ``ALLOW_TL2003`` (disabled by default
 per the specification).
 
@@ -63,11 +63,11 @@ __all__ = [
 
 
 def wyatt_tcoll_S1(tau: float, Omega: float) -> float:
-    """Return the Strubbe & Chiang (2006) collisional time-scale. [@StrubbeChiang2006_ApJ648_652]
+    """Return the collisional time-scale from [@StrubbeChiang2006_ApJ648_652].
 
     The expression ``t_{\mathrm{coll}} = 1/(\Omega\,\tau_{\perp})`` reduces to the
-    same scaling highlighted by Wyatt (2008) but cites the optically thin
-    derivation in Strubbe & Chiang (2006).  ``tau`` must be positive and
+    same scaling highlighted by [@Wyatt2008] but cites the optically thin
+    derivation in [@StrubbeChiang2006_ApJ648_652]. ``tau`` must be positive and
     typically corresponds to the vertical optical depth of the disk.
     """
 

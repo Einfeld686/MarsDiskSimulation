@@ -3452,14 +3452,14 @@
   },
   {
     "file_path": "marsdisk/physics/fragments.py",
-    "line_no": 148,
+    "line_no": 147,
     "symbol": "s_sub_boundary",
     "signature": "s_sub_boundary(T: float, T_sub: float=1300.0, *, t_ref: float | None=None, rho: float | None=None, sub_params: SublimationParams | None=None) -> float",
     "brief_usage": "Return the sublimation boundary size ``s_sub``."
   },
   {
     "file_path": "marsdisk/physics/fragments.py",
-    "line_no": 214,
+    "line_no": 213,
     "symbol": "compute_s_min_F2",
     "signature": "compute_s_min_F2(a_blow: float, T: float, T_sub: float=1300.0, *, t_ref: float | None=None, rho: float | None=None, sub_params: SublimationParams | None=None) -> float",
     "brief_usage": "Legacy helper that now returns the blow-out size only."
@@ -3550,49 +3550,49 @@
   },
   {
     "file_path": "marsdisk/physics/qstar.py",
-    "line_no": 23,
+    "line_no": 22,
     "symbol": "_COEFFS",
     "signature": "_COEFFS: Dict[float, Tuple[float, float, float, float]] = {3.0: (35000000.0, 0.38, 0.3, 1.36), 5.0: (70000000.0, 0.38, 0.5, 1.36)}",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/physics/qstar.py",
-    "line_no": 28,
+    "line_no": 27,
     "symbol": "_V_MIN",
     "signature": "_V_MIN = min(_COEFFS.keys())",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/physics/qstar.py",
-    "line_no": 29,
+    "line_no": 28,
     "symbol": "_V_MAX",
     "signature": "_V_MAX = max(_COEFFS.keys())",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/physics/qstar.py",
-    "line_no": 32,
+    "line_no": 31,
     "symbol": "_q_d_star",
     "signature": "_q_d_star(s: float, rho: float, coeffs: Tuple[float, float, float, float]) -> float",
     "brief_usage": "Evaluate :math:`Q_D^*` using a single coefficient set."
   },
   {
     "file_path": "marsdisk/physics/qstar.py",
-    "line_no": 40,
+    "line_no": 39,
     "symbol": "_q_d_star_array",
     "signature": "_q_d_star_array(s: np.ndarray, rho: float, coeffs: Tuple[float, float, float, float]) -> np.ndarray",
     "brief_usage": "Vectorised :math:`Q_D^*` evaluation for array inputs."
   },
   {
     "file_path": "marsdisk/physics/qstar.py",
-    "line_no": 57,
+    "line_no": 56,
     "symbol": "compute_q_d_star_array",
     "signature": "compute_q_d_star_array(s: np.ndarray, rho: float, v_kms: np.ndarray) -> np.ndarray",
     "brief_usage": "Return :math:`Q_D^*` for array inputs with velocity interpolation."
   },
   {
     "file_path": "marsdisk/physics/qstar.py",
-    "line_no": 83,
+    "line_no": 82,
     "symbol": "compute_q_d_star_F1",
     "signature": "compute_q_d_star_F1(s: float, rho: float, v_kms: float) -> float",
     "brief_usage": "Return the catastrophic disruption threshold ``Q_D^*``."
@@ -4005,49 +4005,49 @@
   },
   {
     "file_path": "marsdisk/physics/surface.py",
-    "line_no": 45,
+    "line_no": 44,
     "symbol": "TAU_MIN",
     "signature": "TAU_MIN = 1e-12",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/physics/surface.py",
-    "line_no": 48,
+    "line_no": 47,
     "symbol": "_safe_tcoll",
     "signature": "_safe_tcoll(Omega: float, tau: float | None) -> float | None",
     "brief_usage": "Return ``t_coll`` or ``None`` when ``tau`` is effectively zero."
   },
   {
     "file_path": "marsdisk/physics/surface.py",
-    "line_no": 66,
+    "line_no": 65,
     "symbol": "wyatt_tcoll_S1",
     "signature": "wyatt_tcoll_S1(tau: float, Omega: float) -> float",
-    "brief_usage": "Return the Strubbe & Chiang (2006) collisional time-scale. [@StrubbeChiang2006_ApJ648_652]"
+    "brief_usage": "Return the collisional time-scale from [@StrubbeChiang2006_ApJ648_652]."
   },
   {
     "file_path": "marsdisk/physics/surface.py",
-    "line_no": 81,
+    "line_no": 80,
     "symbol": "SurfaceStepResult",
     "signature": "class SurfaceStepResult",
     "brief_usage": "Container returned by :func:`step_surface_density_S1`."
   },
   {
     "file_path": "marsdisk/physics/surface.py",
-    "line_no": 100,
+    "line_no": 99,
     "symbol": "step_surface_density_S1",
     "signature": "step_surface_density_S1(sigma_surf: float, prod_subblow_area_rate: float, dt: float, Omega: float, *, t_coll: float | None=None, t_sink: float | None=None, sigma_tau1: float | None=None, enable_blowout: bool=True) -> SurfaceStepResult",
     "brief_usage": "Advance the surface density by one implicit Euler step (S1)."
   },
   {
     "file_path": "marsdisk/physics/surface.py",
-    "line_no": 178,
+    "line_no": 177,
     "symbol": "compute_surface_outflux",
     "signature": "compute_surface_outflux(sigma_surf: float, Omega: float) -> float",
     "brief_usage": "Return the instantaneous outflux ``Σ_surf Ω``."
   },
   {
     "file_path": "marsdisk/physics/surface.py",
-    "line_no": 190,
+    "line_no": 189,
     "symbol": "step_surface",
     "signature": "step_surface(sigma_surf: float, prod_subblow_area_rate: float, dt: float, Omega: float, *, tau: float | None=None, t_coll: float | None=None, t_sink: float | None=None, sigma_tau1: float | None=None, enable_blowout: bool=True) -> SurfaceStepResult",
     "brief_usage": "Alias for :func:`step_surface_density_S1` with optional Wyatt coupling."
@@ -5110,6 +5110,27 @@
     "brief_usage": "No description available."
   },
   {
+    "file_path": "paper/plot_style.py",
+    "line_no": 12,
+    "symbol": "DEFAULT_STYLE",
+    "signature": "DEFAULT_STYLE: Dict[str, Any] = {'figure.figsize': (6.0, 3.5), 'figure.dpi': 150, 'axes.titlesize': 12, 'axes.labelsize': 11, 'axes.grid': True, 'grid.alpha': 0.3, 'grid.linestyle': '--', 'lines.linewidth': 1.6, 'lines.markersize': 5, 'legend.frameon': False, 'legend.fontsize': 10, 'font.family': 'DejaVu Sans'}",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "paper/plot_style.py",
+    "line_no": 28,
+    "symbol": "resolve_style",
+    "signature": "resolve_style(overrides: Dict[str, Any] | None=None) -> Dict[str, Any]",
+    "brief_usage": "Return merged rcParams style without applying it."
+  },
+  {
+    "file_path": "paper/plot_style.py",
+    "line_no": 36,
+    "symbol": "apply_default_style",
+    "signature": "apply_default_style(overrides: Dict[str, Any] | None=None) -> Dict[str, Any]",
+    "brief_usage": "Apply style if matplotlib is available; always return the merged dict."
+  },
+  {
     "file_path": "scripts/analyze_radius_trend.py",
     "line_no": 31,
     "symbol": "REPO_ROOT",
@@ -5229,6 +5250,41 @@
     "brief_usage": "No description available."
   },
   {
+    "file_path": "scripts/plot_from_runs.py",
+    "line_no": 24,
+    "symbol": "REPO_ROOT",
+    "signature": "REPO_ROOT = Path(__file__).resolve().parent.parent",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "scripts/plot_from_runs.py",
+    "line_no": 31,
+    "symbol": "plot_beta_timeseries",
+    "signature": "plot_beta_timeseries(runs: List[Path], params: Dict[str, Any], output_dir: Path, fig_id: str) -> Path",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/plot_from_runs.py",
+    "line_no": 54,
+    "symbol": "plot_mass_budget",
+    "signature": "plot_mass_budget(runs: List[Path], params: Dict[str, Any], output_dir: Path, fig_id: str) -> Path",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/plot_from_runs.py",
+    "line_no": 77,
+    "symbol": "plot_psd_wavy",
+    "signature": "plot_psd_wavy(runs: List[Path], params: Dict[str, Any], output_dir: Path, fig_id: str) -> Path",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/plot_from_runs.py",
+    "line_no": 100,
+    "symbol": "main",
+    "signature": "main() -> None",
+    "brief_usage": "No description available."
+  },
+  {
     "file_path": "scripts/plot_heatmaps.py",
     "line_no": 16,
     "symbol": "BLOWOUT_STATUS",
@@ -5331,6 +5387,27 @@
     "line_no": 349,
     "symbol": "main",
     "signature": "main(argv: Iterable[str] | None=None) -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/render_figures_from_tasks.py",
+    "line_no": 25,
+    "symbol": "load_json",
+    "signature": "load_json(path: Path) -> Any",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/render_figures_from_tasks.py",
+    "line_no": 30,
+    "symbol": "build_command",
+    "signature": "build_command(script: str, fig_id: str, run_paths: List[str], params: Dict[str, Any]) -> str",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/render_figures_from_tasks.py",
+    "line_no": 47,
+    "symbol": "main",
+    "signature": "main() -> None",
     "brief_usage": "No description available."
   },
   {
@@ -8169,6 +8246,118 @@
     "brief_usage": "No description available."
   },
   {
+    "file_path": "tools/paper_manifest.py",
+    "line_no": 30,
+    "symbol": "PaperCheckSettings",
+    "signature": "class PaperCheckSettings(BaseModel)",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tools/paper_manifest.py",
+    "line_no": 36,
+    "symbol": "PaperSettings",
+    "signature": "class PaperSettings(BaseModel)",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tools/paper_manifest.py",
+    "line_no": 47,
+    "symbol": "RunEntry",
+    "signature": "class RunEntry(BaseModel)",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tools/paper_manifest.py",
+    "line_no": 77,
+    "symbol": "FigureEntry",
+    "signature": "class FigureEntry(BaseModel)",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tools/paper_manifest.py",
+    "line_no": 84,
+    "symbol": "PaperManifest",
+    "signature": "class PaperManifest(BaseModel)",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tools/paper_manifest.py",
+    "line_no": 90,
+    "symbol": "_load_manifest",
+    "signature": "_load_manifest(path: Path) -> PaperManifest",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tools/paper_manifest.py",
+    "line_no": 96,
+    "symbol": "_model_dump",
+    "signature": "_model_dump(model: BaseModel) -> Dict[str, Any]",
+    "brief_usage": "Compatibility wrapper for pydantic v1/v2."
+  },
+  {
+    "file_path": "tools/paper_manifest.py",
+    "line_no": 104,
+    "symbol": "_resolve_outdir",
+    "signature": "_resolve_outdir(run: RunEntry, base_dir: Path) -> Tuple[Optional[Path], List[Path]]",
+    "brief_usage": "Return chosen outdir and all matches considered."
+  },
+  {
+    "file_path": "tools/paper_manifest.py",
+    "line_no": 119,
+    "symbol": "_read_summary",
+    "signature": "_read_summary(path: Path) -> Dict[str, Any]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tools/paper_manifest.py",
+    "line_no": 126,
+    "symbol": "_evaluate_mass_budget",
+    "signature": "_evaluate_mass_budget(csv_path: Path, tolerance_percent: float) -> Tuple[Optional[Dict[str, Any]], Optional[Dict[str, Any]]]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tools/paper_manifest.py",
+    "line_no": 151,
+    "symbol": "_evaluate_dt_ratio",
+    "signature": "_evaluate_dt_ratio(summary: Dict[str, Any], max_ratio: float) -> Optional[Dict[str, Any]]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tools/paper_manifest.py",
+    "line_no": 164,
+    "symbol": "_collect_run",
+    "signature": "_collect_run(run: RunEntry, base_dir: Path, checks_cfg: PaperCheckSettings, strict: bool) -> Tuple[Dict[str, Any], List[Dict[str, Any]]]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tools/paper_manifest.py",
+    "line_no": 244,
+    "symbol": "_collect_figures",
+    "signature": "_collect_figures(figs: List[FigureEntry], known_run_ids: List[str]) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]]]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tools/paper_manifest.py",
+    "line_no": 270,
+    "symbol": "_load_extra_checks",
+    "signature": "_load_extra_checks(paths: Optional[List[Path]]) -> List[Dict[str, Any]]",
+    "brief_usage": "Load external check entries from json or jsonl."
+  },
+  {
+    "file_path": "tools/paper_manifest.py",
+    "line_no": 300,
+    "symbol": "parse_args",
+    "signature": "parse_args() -> argparse.Namespace",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tools/paper_manifest.py",
+    "line_no": 320,
+    "symbol": "main",
+    "signature": "main() -> None",
+    "brief_usage": "No description available."
+  },
+  {
     "file_path": "tools/pipeline/coverage_guard.py",
     "line_no": 13,
     "symbol": "REPO_ROOT",
@@ -8858,7 +9047,7 @@
     "file_path": "tools/reference_tracker.py",
     "line_no": 52,
     "symbol": "INFORMAL_TO_KEY",
-    "signature": "INFORMAL_TO_KEY = {('Strubbe', 'Chiang', '2006'): 'StrubbeChiang2006_ApJ648_652', ('Hyodo', '2018'): 'Hyodo2018_ApJ860_150', ('Hyodo', '2017'): 'Hyodo2017a_ApJ845_125', ('Pignatale', '2018'): 'Pignatale2018_ApJ853_118', ('Ronnet', '2016'): 'Ronnet2016_ApJ828_109', ('Canup', 'Salmon', '2018'): 'CanupSalmon2018_SciAdv4_eaar6887', ('Takeuchi', 'Lin', '2003'): 'TakeuchiLin2003_ApJ593_524', ('Takeuchi', 'Lin', '2002'): 'TakeuchiLin2002_ApJ581_1344', ('Crida', 'Charnoz', '2012'): 'CridaCharnoz2012_Science338_1196', ('Wyatt', '2008'): 'Wyatt2008', ('Ohtsuki', '2002'): 'Ohtsuki2002_Icarus155_436', ('Benz', 'Asphaug', '1999'): 'BenzAsphaug1999_Icarus142_5', ('Leinhardt', 'Stewart', '2012'): 'LeinhardtStewart2012_ApJ745_79', ('Stewart', 'Leinhardt', '2009'): 'StewartLeinhardt2009_ApJ691_54', ('Krivov', '2006'): 'Krivov2006_AA455_509', ('Dohnanyi', '1969'): 'Dohnanyi1969_JGR74_2531', ('Burns', '1979'): 'Burns1979_Icarus40_1', ('Murray', 'Dermott', '1999'): 'MurrayDermott1999_SSD', ('Kubaschewski', '1974'): 'Kubaschewski1974', ('Shadmehri', '2007'): 'Shadmehri2007_MNRAS378_1365', ('Fegley', 'Schaefer', '2012'): 'FegleySchaefer2012_arXiv', ('Kuramoto', '2024'): 'Kuramoto2024'}",
+    "signature": "INFORMAL_TO_KEY = {('Strubbe', 'Chiang', '2006'): 'StrubbeChiang2006_ApJ648_652', ('Hyodo', '2018'): 'Hyodo2018_ApJ860_150', ('Hyodo', '2017'): 'Hyodo2017a_ApJ845_125', ('Pignatale', '2018'): 'Pignatale2018_ApJ853_118', ('Ronnet', '2016'): 'Ronnet2016_ApJ828_109', ('Canup', 'Salmon', '2018'): 'CanupSalmon2018_SciAdv4_eaar6887', ('Takeuchi', 'Lin', '2003'): 'TakeuchiLin2003_ApJ593_524', ('Takeuchi', 'Lin', '2002'): 'TakeuchiLin2002_ApJ581_1344', ('Crida', 'Charnoz', '2012'): 'CridaCharnoz2012_Science338_1196', ('Wyatt', '2008'): 'Wyatt2008', ('Ohtsuki', '2002'): 'Ohtsuki2002_Icarus155_436', ('Benz', 'Asphaug', '1999'): 'BenzAsphaug1999_Icarus142_5', ('Leinhardt', 'Stewart', '2012'): 'LeinhardtStewart2012_ApJ745_79', ('Stewart', 'Leinhardt', '2009'): 'StewartLeinhardt2009_ApJ691_L133', ('Krivov', '2006'): 'Krivov2006_AA455_509', ('Dohnanyi', '1969'): 'Dohnanyi1969_JGR74_2531', ('Burns', '1979'): 'Burns1979_Icarus40_1', ('Murray', 'Dermott', '1999'): 'MurrayDermott1999_SSD', ('Kubaschewski', '1974'): 'Kubaschewski1974', ('Shadmehri', '2008'): 'Shadmehri2008_ApSS314_217', ('Fegley', 'Schaefer', '2012'): 'FegleySchaefer2012_arXiv', ('Kuramoto', '2024'): 'Kuramoto2024'}",
     "brief_usage": "Module constant"
   },
   {

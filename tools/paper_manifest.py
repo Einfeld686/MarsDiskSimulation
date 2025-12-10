@@ -267,12 +267,53 @@ def _collect_figures(figs: List[FigureEntry], known_run_ids: List[str]) -> Tuple
     return tasks, messages
 
 
+def _load_extra_checks(paths: Optional[List[Path]]) -> List[Dict[str, Any]]:
+    """Load external check entries from json or jsonl."""
+    if not paths:
+        return []
+    entries: List[Dict[str, Any]] = []
+    for path in paths:
+        if not path.exists():
+            continue
+        text = path.read_text()
+        try:
+            if path.suffix.lower() == ".jsonl":
+                for line in text.splitlines():
+                    if not line.strip():
+                        continue
+                    obj = json.loads(line)
+                    if isinstance(obj, dict):
+                        entries.append(obj)
+            else:
+                obj = json.loads(text)
+                if isinstance(obj, dict) and "checks" in obj and isinstance(obj["checks"], list):
+                    entries.extend(obj["checks"])
+                elif isinstance(obj, list):
+                    entries.extend([c for c in obj if isinstance(c, dict)])
+                elif isinstance(obj, dict):
+                    entries.append(obj)
+        except json.JSONDecodeError:
+            continue
+    return entries
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Resolve paper manifest and emit checks")
     parser.add_argument("--manifest", required=True, type=Path, help="path to paper YAML (configs/paper_*.yml)")
     parser.add_argument("--outdir", type=Path, help="output directory for resolved manifest and checks")
     parser.add_argument("--base-dir", type=Path, default=Path("."), help="base directory to resolve relative paths (default: repo root)")
     parser.add_argument("--strict", action="store_true", help="treat missing runs as errors even if manifest allows missing")
+    parser.add_argument(
+        "--extra-checks",
+        action="append",
+        type=Path,
+        help="additional check logs (json or jsonl). Accepts list/dict or {checks:[...]}. Can be given multiple times.",
+    )
+    parser.add_argument(
+        "--emit-figure-tasks",
+        action="store_true",
+        help="also write figure_tasks.json for downstream plotting scripts",
+    )
     return parser.parse_args()
 
 
@@ -295,10 +336,14 @@ def main() -> None:
     figure_tasks, fig_messages = _collect_figures(manifest.figures, [r.run_id for r in manifest.runs])
     checks.extend(fig_messages)
 
+    # merge external checks (spell/grammar/anchor 等を後付けで集約できる)
+    checks.extend(_load_extra_checks(args.extra_checks))
+
     # summarize levels
     level_counts = {"error": 0, "warning": 0, "info": 0}
     for m in checks:
-        level_counts[m["level"]] = level_counts.get(m["level"], 0) + 1
+        level = m.get("level", "info")
+        level_counts[level] = level_counts.get(level, 0) + 1
 
     resolved_manifest = {
         "paper": _model_dump(manifest.paper),
@@ -322,6 +367,10 @@ def main() -> None:
 
     print(f"[paper_manifest] wrote {resolved_path}")
     print(f"[paper_manifest] wrote {checks_path}")
+    if args.emit_figure_tasks:
+        fig_path = outdir / "figure_tasks.json"
+        fig_path.write_text(json.dumps(figure_tasks, indent=2, ensure_ascii=False))
+        print(f"[paper_manifest] wrote {fig_path}")
     if level_counts["error"] > 0:
         print("[paper_manifest] errors present", file=sys.stderr)
 

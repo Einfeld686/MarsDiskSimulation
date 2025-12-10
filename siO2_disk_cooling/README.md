@@ -7,7 +7,7 @@
 - 解析解: $T_{\mathrm{Mars}}(t)=(T_0^{-3}+3\sigma t/(D\rho c_p))^{-1/3}$（(E.042)）
 - 粒子温度: $T_p(r,t)=T_{\mathrm{Mars}}(t)\,\bar{Q}_{\mathrm{abs}}^{1/4}\sqrt{R_{\mathrm{Mars}}/(2r)}$（(E.043)）
 - $⟨Q_{\mathrm{abs}}⟩$: 既定は上限近似として $q_{\mathrm{abs,mean}}=1.0$ を置き、将来は Bohren & Huffman の Mie 理論と Blanco/Draine/Hocuk のプランク平均表へ差し替える。[@BohrenHuffman1983_Wiley; @Blanco1976_ApSS41_447; @Draine2003_SaasFee32; @Hocuk2017_AA604_A58]
-- 閾値: $T_{\mathrm{glass}}=1475~\mathrm{K}$, $T_{\mathrm{liquidus}}=1986~\mathrm{K}$（Bruning の DTA 測定と Ojovan/Melosh の低圧 SiO₂ 相図に基づく）[@Bruning2003_JNCS330_13; @Ojovan2021_Materials14_5354; @Melosh2007_MPS42_2079]
+- 閾値: $T_{\mathrm{glass}}=1475~\mathrm{K}$, $T_{\mathrm{liquidus}}=1986~\mathrm{K}$（Bruning の DTA 測定と Ojovan/Melosh の低圧 SiO₂ 相図に基づく）[@Bruning2003_JNCS330_13; @Ojovan2021_Materials14_5235; @Melosh2007_MPS42_2079]
 
 ## パラメータ
 | 記号 | 値 | 単位 |

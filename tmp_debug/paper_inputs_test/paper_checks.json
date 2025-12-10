@@ -1,41 +1,17 @@
 {
   "paper_id": "PAPER_MARSDISK_DRAFT",
-  "generated_at": "2025-12-09T06:40:28.434607+00:00",
+  "generated_at": "2025-12-09T06:53:07.574448+00:00",
   "level_counts": {
-    "error": 3,
-    "warning": 2,
+    "error": 0,
+    "warning": 1,
     "info": 0
   },
   "checks": [
     {
-      "level": "error",
-      "code": "missing_outdir",
-      "run_id": "RUN_MARS_GASPOOR_v01",
-      "message": "outdir not found (glob=out/*RUN_MARS_GASPOOR_v01*, explicit=None)"
-    },
-    {
-      "level": "error",
-      "code": "missing_outdir",
-      "run_id": "RUN_TL2003_TOGGLE_v01",
-      "message": "outdir not found (glob=out/*RUN_TL2003_TOGGLE_v01*, explicit=None)"
-    },
-    {
-      "level": "error",
-      "code": "missing_outdir",
-      "run_id": "RUN_TEMP_DRIVER_v01",
-      "message": "outdir not found (glob=out/*RUN_TEMP_DRIVER_v01*, explicit=None)"
-    },
-    {
       "level": "warning",
-      "code": "figure_missing_run",
-      "fig_id": "FIG_SHIELDING_SERIES_01",
-      "message": "runs not in manifest: RUN_HIGH_BETA_SHIELD_v01"
-    },
-    {
-      "level": "warning",
-      "code": "figure_missing_run",
-      "fig_id": "FIG_PSD_WAVY_01",
-      "message": "runs not in manifest: RUN_WAVY_PSD_v01"
+      "code": "dt_ratio_high",
+      "run_id": "RUN_WAVY_PSD_v01",
+      "message": "dt_over_t_blow_median=0.1256637061435917 exceeds limit 0.1"
     }
   ]
 }

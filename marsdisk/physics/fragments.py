@@ -7,7 +7,7 @@ participates in the minimum-size selection at run time.
 
 References
 ----------
-- [@StewartLeinhardt2009_ApJ691_54] velocity-dependent disruption criteria
+- [@StewartLeinhardt2009_ApJ691_L133] velocity-dependent disruption criteria
 - [@LeinhardtStewart2012_ApJ745_79] largest-remnant scaling adopted in F2
 """
 from __future__ import annotations
@@ -112,8 +112,7 @@ def compute_largest_remnant_mass_fraction_F2(
 ) -> float:
     """Return the mass fraction of the largest remnant.
 
-    The approximation from Leinhardt & Stewart (2012)
-    [@LeinhardtStewart2012_ApJ745_79] is used:
+    The approximation from [@LeinhardtStewart2012_ApJ745_79] is used:
 
     ``M_LR/M_tot ≈ 0.5 * (2 - Q_R / Q_RD_star)``.
 
