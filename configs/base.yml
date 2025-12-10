@@ -1,7 +1,7 @@
 scope:
   region: "inner"
   analysis_years: 2.0
-physics_mode: "default"  # default=全プロセス, "sublimation_only" or "collisions_only" で単独実行
+physics_mode: "default"  # collisions + sublimation
 process:
   state_tagging:
     enabled: false
@@ -15,7 +15,7 @@ chi_blow: "auto"
 material:
   rho: 3000.0
 sizes:
-  s_min: 1.0e-6
+  s_min: 1.0e-7
   s_max: 3.0
   n_bins: 40
   evolve_min_size: false
@@ -28,12 +28,16 @@ dynamics:
   i0: 0.05
   t_damp_orbits: 20.0
   f_wake: 2.0
-  # Wyatt スケール / カーネル e,i 設定
-  kernel_ei_mode: "config"   # or "wyatt_eq"
-  kernel_H_mode: "ia"        # or "fixed"
+  v_rel_mode: "pericenter"
+  kernel_ei_mode: "config"
+  kernel_H_mode: "ia"
   H_factor: 1.0
-  e_mode: "fixed"
+  e_mode: "mars_clearance"
+  dr_min_m: 7.5e5     # ≈e=0.5 at r~2.45 R_M
+  dr_max_m: 3.3e6     # ≈e=0.2 at r~2.45 R_M
+  dr_dist: "uniform"
   i_mode: "fixed"
+  rng_seed: 42
 psd:
   alpha: 1.83
   wavy_strength: 0.0
@@ -47,7 +51,7 @@ qstar:
   v_ref_kms: [3.0, 5.0]
 disk:
   geometry:
-    r_in_RM: 2.2
+    r_in_RM: 1.0
     r_out_RM: 2.7
     r_profile: "uniform"
     p_index: 0.0
@@ -64,7 +68,7 @@ surface:
 supply:
   mode: "const"
   const:
-    prod_area_rate_kg_m2_s: 0.0
+    prod_area_rate_kg_m2_s: 1.0e-10
   powerlaw:
     A_kg_m2_s: null
     t0_s: 0.0
@@ -75,15 +79,20 @@ supply:
   mixing:
     epsilon_mix: 1.0
 sinks:
-  mode: "none"
-  enable_sublimation: false
+  mode: "sublimation"
+  enable_sublimation: true
+  sublimation_location: "surface"
   T_sub: 1300.0
   sub_params:
-    mode: "logistic"
-    alpha_evap: 1.0
-    mu: 0.1
-    A: null
-    B: null
+    mode: "hkl"
+    alpha_evap: 0.007
+    mu: 0.0440849
+    A: 13.613
+    B: 17850.0
+    enable_liquid_branch: true
+    psat_liquid_switch_K: 1900.0
+    A_liq: 13.203
+    B_liq: 25898.9
     dT: 50.0
     eta_instant: 0.1
     P_gas: 0.0
@@ -118,7 +127,6 @@ radiation:
       time_unit: "day"
       column_time: "time_day"
       column_temperature: "T_K"
-    extrapolation: "hold"
   tau_gate:
     enable: false
     tau_max: 1.0
@@ -143,7 +151,7 @@ phase:
     tau_ref: 1.0
 numerics:
   t_end_years: 2.0
-  dt_init: "auto"
+  dt_init: 2.0
   safety: 0.1
   atol: 1.0e-10
   rtol: 1.0e-6
