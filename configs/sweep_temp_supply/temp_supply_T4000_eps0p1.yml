@@ -170,7 +170,7 @@ io:
   substep_max_ratio: 1.0
   streaming:
     enable: true
-    memory_limit_gb: 70.0
+    memory_limit_gb: 20.0
     step_flush_interval: 10000
     compression: snappy
     merge_at_end: true
