@@ -79,9 +79,9 @@ supply:
   mixing:
     epsilon_mix: 1.0
 sinks:
-  mode: "sublimation"
-  enable_sublimation: true
-  sublimation_location: "surface"
+  mode: "none"  # デフォルトでは昇華・ガスシンクで質量を削らない
+  enable_sublimation: false
+  sublimation_location: "smol"
   T_sub: 1300.0
   sub_params:
     mode: "hkl"

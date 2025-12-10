@@ -126,6 +126,8 @@ class ProgressReporter:
         self.memory_hint = memory_hint
         self.memory_header = memory_header
         self._header_emitted = False
+        self._isatty = sys.stdout.isatty()
+        self._last_percent_int: int = -1
 
     def emit_header(self) -> None:
         """Print a one-line header (e.g., memory estimate) before the bar."""
@@ -171,12 +173,21 @@ class ProgressReporter:
 
         eta_text = _format_eta(eta_seconds)
         memory_text = f" mem~{self.memory_hint}" if self.memory_hint else ""
-        sys.stdout.write(
-            f"\r[{bar}] {frac * 100:5.1f}% step {step_no + 1}/{self.total_steps} "
+        line = (
+            f"[{bar}] {frac * 100:5.1f}% step {step_no + 1}/{self.total_steps} "
             f"t={sim_years:.3g} yr {rem_text} {eta_text}{memory_text}"
         )
+        if self._isatty:
+            sys.stdout.write(f"\r\033[2K{line}")
+            if is_last:
+                sys.stdout.write("\n")
+        else:
+            percent_int = int(frac * 100)
+            if percent_int == self._last_percent_int and not is_last:
+                return
+            self._last_percent_int = percent_int
+            sys.stdout.write(f"{line}\n")
         if is_last:
-            sys.stdout.write("\n")
             self._finished = True
         sys.stdout.flush()
 
@@ -190,6 +201,14 @@ class ProgressReporter:
             sys.stdout.write("\n")
             sys.stdout.flush()
             self._finished = True
+
+    def _print(self, message: str) -> None:
+        """Emit a one-line message after the bar (used for final status)."""
+
+        if not self.enabled:
+            return
+        sys.stdout.write(f"{message}\n")
+        sys.stdout.flush()
 
 
 def _parse_override_value(raw: str) -> Any:

@@ -53,7 +53,7 @@ flowchart TD
 
 ## 0D Loop Call Order (t<sub>sink</sub> Propagation)
 
-1. **Initialise radiation and PSD** – `run_zero_d` 解法の冒頭で温度・⟨Q_pr⟩・`a_blow` を決定し PSD を構築。[marsdisk/run.py:1011–1100]
+1. **Initialise radiation and PSD** – `run_zero_d` 解法の冒頭で温度・⟨Q_pr⟩・`a_blow` を決定し PSD を構築。[marsdisk/run.py:1032–1100]
 2. **Set the PSD floor** – 各ステップで `s_min_effective = max(cfg.sizes.s_min, a_blow, s_min_floor_dynamic)` を更新し、床情報を `s_min_components` に記録。[marsdisk/run.py:1340–1434]
 3. **Instantiate sink physics** – YAML `sinks` を `SinkOptions` へ束ね、昇華/drag の有効・無効と `sublimation_location` を反映。[marsdisk/physics/sinks.py:35–45][marsdisk/run.py:1444–1487]
 4. **Evaluate `t_sink`** – `sinks.mode="none"` では `t_sink=None` を強制し、そうでなければ `total_sink_timescale` で最短寿命を取得。`hydro_escape` が vapor 相で選択されるとブローアウトと排他的に `t_sink` を置換。[marsdisk/physics/phase.py:564–593][marsdisk/run.py:1816–1852]
@@ -71,7 +71,7 @@ sinks.mode (YAML)
 schema.Sinks.mode  ([marsdisk/schema.py:478–499])
    │
    ▼
-cfg.sinks.mode in run_zero_d  ([marsdisk/run.py:1011–3010])
+cfg.sinks.mode in run_zero_d  ([marsdisk/run.py:1032–3010])
    ├─ "none"  ──► t_sink = None ──► surface.step_surface_density_S1(t_sink=None)
    └─ "sublimation" ──► total_sink_timescale(...) ──► surface.step_surface_density_S1 / collisions_smol(t_sink>0)
 ```
