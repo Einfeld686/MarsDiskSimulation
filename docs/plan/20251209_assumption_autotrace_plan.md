@@ -22,7 +22,7 @@
 
 ## 2. 正式スキーマ（assumption_registry の1レコード）
 - フィールド（schema が truth、registry はそれに従う。生成方法/責務を併記）
-  - `id`（必須）: 安定な識別子。Phase1 は人手で `category:slug`（例: `physics:thin_disk:001`）を付与、将来は eq_id+tag から自動生成も検討。
+  - `id`（必須）: 安定な識別子。Phase1 は人手で `category:slug`（例: `physics:thin_disk:001`、英小文字+数字+ハイフン/コロン推奨）を付与、将来は eq_id+tag から自動生成も検討。
   - `scope`（任意）: `project_default` | `module_default` | `toggle`。人手で指定。
   - `eq_id`（0件以上）: (E.xxx) 配列。DocSync が保証する `analysis/equations.md` 辞書からスキャナが自動付与。
   - `assumption_tags`（0件以上）: ラベル群。Phase1 人手、Phase2 以降スキャナが TODO(REF:slug) やタグ候補から補完。
@@ -73,6 +73,7 @@
 - config_keys: ドット付きパス（例: `surface.use_tcoll`, `radiation.TM_K`）。`config_utils` の返す label を provenance.note に写し、YAML の生値ではなく schema 上のキーを canonical にする。
 - assumption_trace.* の運用: 自動ブロックを上書きし、手書き部分は保持。完全自動ファイルに分離する場合は `.autogen.md` を別途用意するオプションを残す。
 - code_path/run_stage: run.py の段階構造に沿って run_stage を付与し、code_path は JSONPath 風を基本形とする。段階マップ（init_ei/time_grid/physics_controls/surface_loop/smol_kernel）はフェーズ1で固定し、decorator 化も検討。
+- run_stage テンプレ（初期案）: `init_ei`（初期 e/i 設定、例: run_config["init_ei"] セクション）、`time_grid`（_resolve_time_grid 系）、`physics_controls`（blowout/shielding/psd_floor 等の有効化判断）、`surface_loop`（表層 ODE, tau_gate/gate_factor, fast_blowout 判定）、`smol_kernel`（Smoluchowski カーネル・質量検査）。フェーズ1で run.py の該当関数/辞書キーとの対応表を作る。
 
 ## 6. リスクと緩和
 - アンカーずれ・誤検出: DocSyncAgent 連動と `analysis/tools/check_docs.py --strict` で検査。eq_id 未発見は WARN だが、coverage 指標が閾値未達なら make ターゲットで FAIL。

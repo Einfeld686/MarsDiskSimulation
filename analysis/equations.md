@@ -695,6 +695,27 @@ where $R_{\mathrm{base}}$ selects one of the constant, power-law, tabulated, or 
 - Ensures non-negative output by clipping with `max`. [marsdisk/physics/supply.py#get_prod_area_rate [L93–98]]
 - Delegates mode-specific logic to `_rate_basic`. [marsdisk/physics/supply.py#_rate_basic [L69–90]]
 
+### (E.027a) tools/derive_supply_rate.py: compute_r_base (lines 75–118)
+無次元の外部供給パラメータ $\mu$ から、定数モードの基礎供給率 $R_{\mathrm{base}}$ を復元する補助式。$\mu$ は $\dot{\Sigma}_{\mathrm{prod}} t_{\mathrm{blow}} / \Sigma_{\tau=1}$ として定義され、`tools/derive_supply_rate.py` が YAML に焼き付ける際の入力となる。
+
+```latex
+R_{\mathrm{base}} = \frac{\mu\,\Sigma_{\tau=1}}{\epsilon_{\mathrm{mix}}\,t_{\mathrm{blow}}}
+```
+
+**Symbols**
+
+|Symbol|Meaning|Units|Defaults/Notes|
+|---|---|---|---|
+|$R_{\mathrm{base}}$|Raw production rate before mixing|kg m$^{-2}$ s$^{-1}$|Returned by `compute_r_base`|
+|$\mu$|Dimensionless supply parameter|dimensionless|Input `mu`; $\mu>0$|
+|$\Sigma_{\tau=1}$|Surface density at $\tau_{\mathrm{los}}\simeq1$|kg m$^{-2}$|Input `sigma_tau1`; $\Sigma_{\tau=1}>0$|
+|$\epsilon_{\mathrm{mix}}$|Mixing efficiency|dimensionless|Input `epsilon_mix`; $\epsilon_{\mathrm{mix}}>0$|
+|$t_{\mathrm{blow}}$|Blow-out residence time|s|Either input `t_blow` or $1/\Omega(r)$ when radius is provided|
+
+**Numerics**
+- Validates positivity/有限性の引数のみを受け付ける。 [tools/derive_supply_rate.py:75–118]
+- 半径が与えられた場合は $\Omega(r)$ から $t_{\mathrm{blow}}=1/\Omega$ を算出し、`supply.const.prod_area_rate_kg_m2_s` に直書きするための値を返す。
+
 ### (E.028) marsdisk/physics/shielding.py: load_phi_table (lines 52–67)
 放射輸送テーブルに由来する自遮蔽係数 $\Phi(\tau)$ を読み込み、適用範囲を記録する補助関数。ガスリッチ条件での表層遮蔽を扱う TL2003 系の流儀 [@TakeuchiLin2003_ApJ593_524] を想定した拡張ポイントでもある。
 ロード手順とインターフェースは実装上の都合によるもので、同一仕様の式や関数を示す文献はない。

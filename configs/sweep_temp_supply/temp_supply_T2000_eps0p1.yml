@@ -81,7 +81,7 @@ supply:
 sinks:
   mode: sublimation
   enable_sublimation: true
-  sublimation_location: surface
+  sublimation_location: smol
   T_sub: 1300.0
   sub_params:
     mode: hkl

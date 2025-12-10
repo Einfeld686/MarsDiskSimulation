@@ -82,7 +82,7 @@ DocSync/テスト
 - 出力として `series/run.parquet`,`summary.json`,`checks/mass_budget.csv`,`run_config.json` を書き出す。[marsdisk/run.py:2120–2185][marsdisk/run.py:2270–2387][marsdisk/run.py:1330–1357][marsdisk/run.py:1477–1547]
 - タイムシリーズのレコード構造に上記カラムを追加し、損失項と高速ブローアウト診断を分離して記録する。[marsdisk/run.py:2120–2185][marsdisk/io/writer.py:24–162]
 - 供給が定数モード0のため生成率は0で、ミキシング後もクリップされる。(configs/base.yml)[marsdisk/physics/supply.py:69–90]
-- 質量収支許容値と違反時の処理を 0.5% で定義している。[marsdisk/run.py:72][marsdisk/run.py:1330–1357]
+- 質量収支許容値と違反時の処理を 0.5% で定義している。[marsdisk/run.py:74][marsdisk/run.py:1330–1357]
 - `run_config.json` に式と使用値を格納している。[marsdisk/run.py:1477–1547]
 
 ### 派生レシピ: `analysis/run-recipes/baseline_blowout_only.yml`
@@ -387,7 +387,7 @@ supply:
 
 6) 根拠
 - Parquet書き出しが `pyarrow` 依存である。[marsdisk/io/writer.py:20–21]
-- 0D実行は `disk.geometry` 未指定時に例外を送出する。[marsdisk/run.py:466–468]
+- 0D実行は `disk.geometry` 未指定時に例外を送出する。[marsdisk/run.py:468–468]
 - 供給テーブル読込は `pd.read_csv` でパスが必要。[marsdisk/physics/supply.py:25–63]
 
 ## F. SiO psat auto-selector と HKLフラックスの最小検証
@@ -553,7 +553,7 @@ pytest tests/test_analysis_coverage_guard.py -q
 - 手順
   - `configs/*.yml` で `sizes` と `psd` セクションを調整する。`sizes.s_min/s_max/n_bins` がビン定義を、`psd.alpha` と `psd.wavy_strength` が三勾配＋“wavy”補正を決め、`psd.floor.mode` を `fixed`/`evolve_smin`/`none` から選ぶと床処理が切り替わる。[marsdisk/schema.py:148–151][marsdisk/schema.py:189–199]
   - 標準の `configs/base.yml` では力学系を平滑に保つため `psd.wavy_strength=0.0` を既定とし、wavy パターンを検証したい場合は CLI で `--override psd.wavy_strength=0.2` などと上書きする。
-  - 実行時は `run_zero_d` がブローアウト境界を評価したあと `psd.update_psd_state` を呼び出し、初期PSDを構築する。[marsdisk/run.py:585–590]
+  - 実行時は `run_zero_d` がブローアウト境界を評価したあと `psd.update_psd_state` を呼び出し、初期PSDを構築する。[marsdisk/run.py:589–590]
   - 完走後、`out/series/run.parquet` に `kappa`,`s_min`,`mass_total_bins` などが記録される。`psd.floor.mode="evolve_smin"` の場合は `s_min_evolved` 列で進化床を確認する。
 - 入出力
   - 入力は `s_min`,`s_max`,`alpha`,`wavy_strength`,`n_bins`,`rho`。不正なサイズ順やビン数は `MarsDiskError` で停止する。[marsdisk/physics/psd.py:30–118]

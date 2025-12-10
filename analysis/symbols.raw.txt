@@ -76,17 +76,17 @@ agent_test/rc_scan_docs.py:77:def _register_reference(refs: List[DocReference], 
 agent_test/rc_scan_docs.py:117:def normalise_doc_paths(paths: Iterable[str]) -> List[Path]
 agent_test/rc_scan_docs.py:128:def build_argument_parser() -> argparse.ArgumentParser
 agent_test/rc_scan_docs.py:148:def main(argv: Sequence[str] | None=None) -> int
-analysis/assumption_registry.py:15:def _require_list_of_strings(name: str, values: object, allow_empty: bool=False) -> list[str]
-analysis/assumption_registry.py:27:class InputRef
-analysis/assumption_registry.py:59:class AssumptionRecord
-analysis/assumption_registry.py:190:def load_registry(path: Path | str=DEFAULT_REGISTRY_PATH) -> list[AssumptionRecord]
-analysis/assumption_registry.py:206:def save_registry(records: Sequence[AssumptionRecord], path: Path | str=DEFAULT_REGISTRY_PATH) -> None
-analysis/assumption_registry.py:215:def validate_registry(records: Sequence[AssumptionRecord]) -> list[str]
-analysis/assumption_registry.py:242:def find_by_cluster_slug(records: Iterable[AssumptionRecord], slug: str) -> Optional[AssumptionRecord]
-analysis/assumption_registry.py:249:def find_by_config_key(records: Iterable[AssumptionRecord], key: str) -> list[AssumptionRecord]
-analysis/assumption_registry.py:253:def find_by_tag(records: Iterable[AssumptionRecord], tag: str) -> list[AssumptionRecord]
-analysis/assumption_registry.py:257:def _print_stats(records: Sequence[AssumptionRecord]) -> None
-analysis/assumption_registry.py:269:def main(argv: Optional[Sequence[str]]=None) -> int
+analysis/assumption_registry.py:18:def _slugify(value: str) -> str
+analysis/assumption_registry.py:24:def _ensure_list_of_str(name: str, value: object, allow_empty: bool=True) -> list[str]
+analysis/assumption_registry.py:43:def _split_eq_ids(value: object) -> list[str]
+analysis/assumption_registry.py:55:class InputRef
+analysis/assumption_registry.py:83:class Provenance
+analysis/assumption_registry.py:116:class AssumptionRecord
+analysis/assumption_registry.py:207:def load_registry(path: Path | str=DEFAULT_REGISTRY_PATH) -> list[AssumptionRecord]
+analysis/assumption_registry.py:225:def dump_registry(records: Iterable[AssumptionRecord], path: Path | str=DEFAULT_REGISTRY_PATH) -> None
+analysis/assumption_registry.py:233:def validate_registry(records: Iterable[AssumptionRecord]) -> list[str]
+analysis/assumption_registry.py:251:def _print_stats(records: list[AssumptionRecord]) -> None
+analysis/assumption_registry.py:263:def main(argv: Optional[Sequence[str]]=None) -> int
 analysis/tools/anchor_sync.py:30:class SymbolRange
 analysis/tools/anchor_sync.py:42:class UnresolvedEntry
 analysis/tools/anchor_sync.py:49:class FileChange
@@ -156,17 +156,24 @@ analysis/tools/make_sinks_callgraph.py:54:def build_mermaid(inv: Dict[SymbolKey,
 analysis/tools/make_sinks_callgraph.py:94:def inject_autogen_block(original: str, block: str) -> str
 analysis/tools/make_sinks_callgraph.py:116:def parse_args(argv: Optional[Sequence[str]]) -> argparse.Namespace
 analysis/tools/make_sinks_callgraph.py:128:def main(argv: Optional[Sequence[str]]=None) -> int
-analysis/tools/render_assumptions.py:54:class TraceEntry
-analysis/tools/render_assumptions.py:68:class GapItem
-analysis/tools/render_assumptions.py:73:def discover_trace_files() -> list[Path]
-analysis/tools/render_assumptions.py:84:def load_json_or_jsonl(path: Path) -> list[dict]
-analysis/tools/render_assumptions.py:111:def coerce_entry(raw: dict) -> TraceEntry
-analysis/tools/render_assumptions.py:128:def load_traces(paths: list[Path]) -> list[TraceEntry]
-analysis/tools/render_assumptions.py:138:def load_gap_list() -> list[GapItem]
-analysis/tools/render_assumptions.py:156:def group_by_tag(traces: list[TraceEntry]) -> dict[str, list[TraceEntry]]
-analysis/tools/render_assumptions.py:164:def render_overview(traces: list[TraceEntry], gaps: list[GapItem]) -> str
-analysis/tools/render_assumptions.py:242:def write_overview(content: str, path: Path=OUTPUT_MD) -> None
-analysis/tools/render_assumptions.py:246:def main(argv: Optional[list[str]]=None) -> int
+analysis/tools/render_assumptions.py:35:def _render_table(records: Iterable[AssumptionRecord]) -> list[str]
+analysis/tools/render_assumptions.py:57:def render_overview(records: list[AssumptionRecord], report: CoverageReport) -> str
+analysis/tools/render_assumptions.py:87:def render_trace_block(records: list[AssumptionRecord]) -> str
+analysis/tools/render_assumptions.py:95:def _replace_block(path: Path, content: str) -> None
+analysis/tools/render_assumptions.py:122:def _load_records(path: Path) -> list[AssumptionRecord]
+analysis/tools/render_assumptions.py:126:def main(argv: Sequence[str] | None=None) -> int
+analysis/tools/scan_assumptions.py:61:class CoverageReport
+analysis/tools/scan_assumptions.py:73:def parse_equations(path: Path=EQUATIONS_MD) -> list[str]
+analysis/tools/scan_assumptions.py:85:def load_source_map(path: Path=SOURCE_MAP) -> dict[str, dict]
+analysis/tools/scan_assumptions.py:91:def load_inventory(path: Path=INVENTORY) -> list[dict]
+analysis/tools/scan_assumptions.py:100:def _normalise_codepath(cp: str) -> str
+analysis/tools/scan_assumptions.py:110:def _parse_span(cp: str) -> Optional[Tuple[int, int, str]]
+analysis/tools/scan_assumptions.py:122:def guess_scope(record: AssumptionRecord) -> str
+analysis/tools/scan_assumptions.py:134:def fill_defaults(records: list[AssumptionRecord]) -> list[AssumptionRecord]
+analysis/tools/scan_assumptions.py:185:def compute_coverage(records: list[AssumptionRecord], eq_ids: list[str], source_map: dict) -> CoverageReport
+analysis/tools/scan_assumptions.py:228:def align_code_paths(records: list[AssumptionRecord], source_map: dict) -> list[AssumptionRecord]
+analysis/tools/scan_assumptions.py:279:def _print_report(report: CoverageReport) -> None
+analysis/tools/scan_assumptions.py:285:def main(argv: Optional[Sequence[str]]=None) -> int
 marsdisk/analysis/beta_sampler.py:31:def _apply_thread_guard() -> None
 marsdisk/analysis/beta_sampler.py:61:class BetaSamplingConfig
 marsdisk/analysis/beta_sampler.py:113:def _prepare_case_config(cfg: Config, *, r_rm: float, T_M: float, qpr_table_path: Path, dt_over_t_blow_max: float) -> Config
@@ -424,42 +431,42 @@ marsdisk/physics_step.py:322:def compute_sublimation(T_M: float, r: float, rho: 
 marsdisk/physics_step.py:383:def step_surface_layer(sigma_surf: float, prod_rate: float, dt: float, Omega: float, *, tau: Optional[float]=None, t_sink: Optional[float]=None, sigma_tau1: Optional[float]=None, enable_blowout: bool=True, chi_blow: float=1.0) -> SurfaceStepResult
 marsdisk/physics_step.py:465:def fast_blowout_correction_factor(ratio: float) -> float
 marsdisk/physics_step.py:489:def compute_gate_factor(t_blow: Optional[float], t_solid: Optional[float]) -> float
-marsdisk/run.py:88:def _resolve_los_factor(los_geom: Optional[object]) -> float
-marsdisk/run.py:104:class ProgressReporter
-marsdisk/run.py:193:def _parse_override_value(raw: str) -> Any
-marsdisk/run.py:220:def _apply_overrides_dict(payload: Dict[str, Any], overrides: Sequence[str]) -> Dict[str, Any]
-marsdisk/run.py:258:def _merge_physics_section(payload: Dict[str, Any]) -> Dict[str, Any]
-marsdisk/run.py:277:def _safe_float(value: Any) -> Optional[float]
-marsdisk/run.py:289:def _derive_seed_components(cfg: Config) -> str
-marsdisk/run.py:314:def _resolve_seed(cfg: Config) -> tuple[int, str, str]
-marsdisk/run.py:329:def _auto_chi_blow(beta: float, qpr: float) -> float
-marsdisk/run.py:344:def _fast_blowout_correction_factor(ratio: float) -> float
-marsdisk/run.py:364:def _compute_gate_factor(t_blow: Optional[float], t_solid: Optional[float]) -> float
-marsdisk/run.py:386:def _human_bytes(value: float) -> str
-marsdisk/run.py:398:def _memory_estimate(n_steps: int, n_bins: int, run_row_bytes: float=MEMORY_RUN_ROW_BYTES, psd_row_bytes: float=MEMORY_PSD_ROW_BYTES, *, smol_value_bytes: float=8.0) -> tuple[str, str]
-marsdisk/run.py:423:def _normalise_physics_mode(value: Any) -> str
-marsdisk/run.py:439:def _clone_config(cfg: Config) -> Config
-marsdisk/run.py:447:def _resolve_time_grid(numerics: Any, Omega: float, t_orb: float) -> tuple[float, float, float, int, Dict[str, Any]]
-marsdisk/run.py:512:class _Phase5VariantResult
-marsdisk/run.py:525:def _read_json(path: Path) -> Dict[str, Any]
-marsdisk/run.py:530:def _hash_payload(payload: Mapping[str, Any]) -> str
-marsdisk/run.py:535:def _prepare_phase5_variants(compare_cfg: Any) -> List[Dict[str, str]]
-marsdisk/run.py:568:class RunConfig
-marsdisk/run.py:585:class RunState
-marsdisk/run.py:595:class ZeroDHistory
-marsdisk/run.py:619:class StreamingState
-marsdisk/run.py:752:def step(config: RunConfig, state: RunState, dt: float) -> Dict[str, float]
-marsdisk/run.py:804:def run_n_steps(config: RunConfig, state: RunState, n: int, dt: float, out_dir: Path | None=None) -> pd.DataFrame
-marsdisk/run.py:834:def load_config(path: Path, overrides: Optional[Sequence[str]]=None) -> Config
-marsdisk/run.py:859:def _gather_git_info() -> Dict[str, Any]
-marsdisk/run.py:886:def _configure_logging(level: int, suppress_warnings: bool=False) -> None
-marsdisk/run.py:904:class MassBudgetViolationError(RuntimeError)
-marsdisk/run.py:908:def _write_zero_d_history(cfg: Config, df: pd.DataFrame, history: ZeroDHistory, *, step_diag_enabled: bool, step_diag_format: str, step_diag_path_cfg: Optional[Path], step_diag_path: Optional[Path], orbit_rollup_enabled: bool, phase7_enabled: bool) -> None
-marsdisk/run.py:1011:def run_zero_d(cfg: Config, *, enforce_mass_budget: bool=False, physics_mode_override: Optional[str]=None, physics_mode_source_override: Optional[str]=None) -> None
-marsdisk/run.py:3442:def _run_phase5_variant(base_cfg: Config, variant: str, mode: str, base_outdir: Path, duration_years: float, *, enforce_mass_budget: bool) -> _Phase5VariantResult
-marsdisk/run.py:3504:def _write_phase5_comparison_products(base_outdir: Path, duration_years: float, results: List[_Phase5VariantResult]) -> None
-marsdisk/run.py:3646:def run_phase5_comparison(cfg: Config, *, enforce_mass_budget: bool=False, variants_spec: Optional[List[Dict[str, str]]]=None) -> None
-marsdisk/run.py:3681:def main(argv: Optional[List[str]]=None) -> None
+marsdisk/run.py:90:def _resolve_los_factor(los_geom: Optional[object]) -> float
+marsdisk/run.py:106:class ProgressReporter
+marsdisk/run.py:214:def _parse_override_value(raw: str) -> Any
+marsdisk/run.py:241:def _apply_overrides_dict(payload: Dict[str, Any], overrides: Sequence[str]) -> Dict[str, Any]
+marsdisk/run.py:279:def _merge_physics_section(payload: Dict[str, Any]) -> Dict[str, Any]
+marsdisk/run.py:298:def _safe_float(value: Any) -> Optional[float]
+marsdisk/run.py:310:def _derive_seed_components(cfg: Config) -> str
+marsdisk/run.py:335:def _resolve_seed(cfg: Config) -> tuple[int, str, str]
+marsdisk/run.py:350:def _auto_chi_blow(beta: float, qpr: float) -> float
+marsdisk/run.py:365:def _fast_blowout_correction_factor(ratio: float) -> float
+marsdisk/run.py:385:def _compute_gate_factor(t_blow: Optional[float], t_solid: Optional[float]) -> float
+marsdisk/run.py:407:def _human_bytes(value: float) -> str
+marsdisk/run.py:419:def _memory_estimate(n_steps: int, n_bins: int, run_row_bytes: float=MEMORY_RUN_ROW_BYTES, psd_row_bytes: float=MEMORY_PSD_ROW_BYTES, *, smol_value_bytes: float=8.0) -> tuple[str, str]
+marsdisk/run.py:444:def _normalise_physics_mode(value: Any) -> str
+marsdisk/run.py:460:def _clone_config(cfg: Config) -> Config
+marsdisk/run.py:468:def _resolve_time_grid(numerics: Any, Omega: float, t_orb: float) -> tuple[float, float, float, int, Dict[str, Any]]
+marsdisk/run.py:533:class _Phase5VariantResult
+marsdisk/run.py:546:def _read_json(path: Path) -> Dict[str, Any]
+marsdisk/run.py:551:def _hash_payload(payload: Mapping[str, Any]) -> str
+marsdisk/run.py:556:def _prepare_phase5_variants(compare_cfg: Any) -> List[Dict[str, str]]
+marsdisk/run.py:589:class RunConfig
+marsdisk/run.py:606:class RunState
+marsdisk/run.py:616:class ZeroDHistory
+marsdisk/run.py:640:class StreamingState
+marsdisk/run.py:773:def step(config: RunConfig, state: RunState, dt: float) -> Dict[str, float]
+marsdisk/run.py:825:def run_n_steps(config: RunConfig, state: RunState, n: int, dt: float, out_dir: Path | None=None) -> pd.DataFrame
+marsdisk/run.py:855:def load_config(path: Path, overrides: Optional[Sequence[str]]=None) -> Config
+marsdisk/run.py:880:def _gather_git_info() -> Dict[str, Any]
+marsdisk/run.py:907:def _configure_logging(level: int, suppress_warnings: bool=False) -> None
+marsdisk/run.py:925:class MassBudgetViolationError(RuntimeError)
+marsdisk/run.py:929:def _write_zero_d_history(cfg: Config, df: pd.DataFrame, history: ZeroDHistory, *, step_diag_enabled: bool, step_diag_format: str, step_diag_path_cfg: Optional[Path], step_diag_path: Optional[Path], orbit_rollup_enabled: bool, phase7_enabled: bool) -> None
+marsdisk/run.py:1032:def run_zero_d(cfg: Config, *, enforce_mass_budget: bool=False, physics_mode_override: Optional[str]=None, physics_mode_source_override: Optional[str]=None) -> None
+marsdisk/run.py:3500:def _run_phase5_variant(base_cfg: Config, variant: str, mode: str, base_outdir: Path, duration_years: float, *, enforce_mass_budget: bool) -> _Phase5VariantResult
+marsdisk/run.py:3562:def _write_phase5_comparison_products(base_outdir: Path, duration_years: float, results: List[_Phase5VariantResult]) -> None
+marsdisk/run.py:3704:def run_phase5_comparison(cfg: Config, *, enforce_mass_budget: bool=False, variants_spec: Optional[List[Dict[str, str]]]=None) -> None
+marsdisk/run.py:3739:def main(argv: Optional[List[str]]=None) -> None
 marsdisk/schema.py:21:class Geometry(BaseModel)
 marsdisk/schema.py:42:class DiskGeometry(BaseModel)
 marsdisk/schema.py:72:class Disk(BaseModel)
@@ -532,6 +539,14 @@ marsdisk/tests/test_timegrid_and_budget.py:63:def test_time_grid_and_mass_budget
 marsdisk/tests/test_viscosity.py:7:def _run(N: int, dt: float)
 marsdisk/tests/test_viscosity.py:18:def test_viscous_diffusion_converges_and_conserves_mass()
 marsdisk/tests/test_wyatt_scaling.py:6:def test_wyatt_scaling_inverse_tau()
+paper/pdf_extractor/main.py:7:def main()
+paper/pdf_extractor/main.py:76:def get_safe_path(path_str)
+paper/pdf_extractor/src/ai_handler.py:5:def configure_gemini()
+paper/pdf_extractor/src/ai_handler.py:13:def refine_text_with_gemini(text_chunk)
+paper/pdf_extractor/src/ai_handler.py:33:def derive_caption_for_image(image_path)
+paper/pdf_extractor/src/ai_handler.py:59:def generate_markdown_from_page_image(image_data, mime_type='image/png')
+paper/pdf_extractor/src/extractor.py:6:def extract_content_hybrid(doc, output_dir, force_ocr=False)
+paper/pdf_extractor/src/extractor.py:67:def process_pdf(pdf_path, output_base_dir='outputs', force_ocr=False)
 paper/plot_style.py:28:def resolve_style(overrides: Dict[str, Any] | None=None) -> Dict[str, Any]
 paper/plot_style.py:36:def apply_default_style(overrides: Dict[str, Any] | None=None) -> Dict[str, Any]
 scripts/analyze_radius_trend.py:44:def parse_args(argv: Iterable[str] | None=None) -> argparse.Namespace
@@ -849,6 +864,7 @@ tests/test_smol_supply_source.py:38:def test_supply_injects_into_last_bin_when_f
 tests/test_smol_supply_source.py:52:def test_smol_source_mass_budget_matches_supply() -> None
 tests/test_step_diagnostics.py:12:def _build_config(outdir: Path, fmt: str) -> schema.Config
 tests/test_step_diagnostics.py:50:def test_step_diagnostics_file_and_mass_budget(tmp_path: Path, fmt: str) -> None
+tests/test_streaming_merge.py:6:def test_streaming_flush_and_merge(tmp_path)
 tests/test_sublimation_liquid_branch.py:8:def test_p_sat_switches_to_liquid_branch() -> None
 tests/test_sublimation_phase_gate.py:14:def _run_phase_case(tmp_path: Path, entrypoint: str, *, enable_step_diag: bool=True, extra_overrides: list[str] | None=None) -> tuple[pd.Series, pd.DataFrame | None]
 tests/test_sublimation_phase_gate.py:52:def test_liquid_phase_blocks_sublimation(tmp_path: Path) -> None
@@ -910,6 +926,11 @@ tools/diagnostics/beta_map.py:442:def build_heatmap(data: np.ndarray, r_values: 
 tools/diagnostics/beta_map.py:479:def summarise_variation(matrix: np.ndarray, axis: int) -> np.ndarray
 tools/diagnostics/beta_map.py:490:def write_readme(outdir: Path, ctx: RuntimeContext, config_path: Path, qpr_table_path: Path, phi_origin: str, beta_raw_map: np.ndarray, beta_eff_map: np.ndarray, r_values: np.ndarray, T_values: np.ndarray, dt_warning_cells: int, total_cells: int, qpr_counter: QPrCounter) -> None
 tools/diagnostics/beta_map.py:563:def main() -> None
+tools/merge_streaming_chunks.py:19:def _detect_series_dirs(paths: Sequence[Path]) -> List[Path]
+tools/merge_streaming_chunks.py:47:def _probe_compression(path: Path) -> str
+tools/merge_streaming_chunks.py:59:def _merge_chunks(chunks: List[Path], destination: Path, *, force: bool) -> Tuple[bool, str]
+tools/merge_streaming_chunks.py:84:def merge_series_dir(series_dir: Path, *, force: bool=False) -> List[str]
+tools/merge_streaming_chunks.py:100:def main(argv: Iterable[str] | None=None) -> int
 tools/paper_manifest.py:30:class PaperCheckSettings(BaseModel)
 tools/paper_manifest.py:36:class PaperSettings(BaseModel)
 tools/paper_manifest.py:47:class RunEntry(BaseModel)
