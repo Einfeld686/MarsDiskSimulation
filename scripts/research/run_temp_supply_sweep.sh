@@ -81,18 +81,27 @@ PY
       TITLE="T${T}_mu${MU_TITLE}_phi${PHI}"
       OUTDIR="${BATCH_DIR}/${TITLE}"
       echo "[run] T=${T} mu=${MU} phi=${PHI} -> ${OUTDIR} (batch=${BATCH_SEED}, seed=${SEED})"
-      python -m marsdisk.run \
-        --config "${BASE_CONFIG}" \
-        --quiet \
-        "${PROGRESS_FLAG[@]}" \
-        --override numerics.dt_init=20 \
-        --override "io.outdir=${OUTDIR}" \
-        --override "dynamics.rng_seed=${SEED}" \
-        --override "radiation.TM_K=${T}" \
-        --override "radiation.mars_temperature_driver.table.path=${T_TABLE}" \
-        --override "supply.mixing.mu=${MU}" \
-        "${STREAMING_OVERRIDES[@]}" \
-        --override "shielding.table_path=tables/phi_const_0p${PHI}.csv"
+      cmd=(
+        python -m marsdisk.run
+        --config "${BASE_CONFIG}"
+        --quiet
+      )
+      if ((${#PROGRESS_FLAG[@]})); then
+        cmd+=("${PROGRESS_FLAG[@]}")
+      fi
+      cmd+=(
+        --override numerics.dt_init=20
+        --override "io.outdir=${OUTDIR}"
+        --override "dynamics.rng_seed=${SEED}"
+        --override "radiation.TM_K=${T}"
+        --override "radiation.mars_temperature_driver.table.path=${T_TABLE}"
+        --override "supply.mixing.mu=${MU}"
+      )
+      if ((${#STREAMING_OVERRIDES[@]})); then
+        cmd+=("${STREAMING_OVERRIDES[@]}")
+      fi
+      cmd+=(--override "shielding.table_path=tables/phi_const_0p${PHI}.csv")
+      "${cmd[@]}"
 
       final_dir="${OUTDIR}"
       mkdir -p "${final_dir}/series" "${final_dir}/checks"

@@ -39,6 +39,7 @@ python -m marsdisk.run --config analysis/run-recipes/baseline_blowout_only.yml
 
 ## DocSync と coverage メモ
 - `analysis/*.md` を編集したら DocSyncAgent（`python -m tools.doc_sync_agent --all --write` か `make analysis-sync`）でアンカー同期→`make analysis-doc-tests` で `function_reference_rate≥0.75` と `anchor_consistency_rate≥0.98` を確認する。新カタログ（run_catalog / figures_catalog / glossary / literature_map）も coverage 対象に含まれる。
+- 現在のカバレッジ状況（[coverage.json](file:///Users/daichi/marsshearingsheet/analysis/coverage/coverage.json) / [coverage_report.md](file:///Users/daichi/marsshearingsheet/analysis/coverage/coverage_report.md)）を参照し、未文書化関数（holes）の削減に努める。
 - `analysis/assumptions_overview.md`: 仮定タグと式・設定・コードパスの対応を自動生成したメモ。`python -m analysis.tools.render_assumptions` で更新し、DocSync/coverage ガードの対象に含める。
 
 ## out/ ディレクトリの扱い
