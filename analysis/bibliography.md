@@ -33,7 +33,7 @@
 - **Key**: `Hyodo2017a_ApJ845_125`
 - **Title**: On the Impact Origin of Phobos and Deimos I: Thermodynamic and Physical Aspects
 - **Journal**: ApJ, 845, 125
-- **DOI**: [10.3847/1538-4357/aa80e4](https://doi.org/10.3847/1538-4357/aa80e4)
+- **DOI**: [10.3847/1538-4357/aa81c4](https://doi.org/10.3847/1538-4357/aa81c4)
 - **使用箇所**: 初期条件設定、gas-poor前提の根拠
 - **主張**:
   - 巨大衝突直後の円盤は >95 wt% 溶融物、<5 wt% 蒸気（~2000 K）
@@ -43,7 +43,7 @@
 - **Key**: `Hyodo2017b_ApJ851_122`
 - **Title**: On the Impact Origin of Phobos and Deimos II: True Polar Wander and Disk Evolution
 - **Journal**: ApJ, 851, 122
-- **DOI**: [10.3847/1538-4357/aa9cec](https://doi.org/10.3847/1538-4357/aa9cec)
+- **DOI**: [10.3847/1538-4357/aa9984](https://doi.org/10.3847/1538-4357/aa9984)
 - **使用箇所**: 円盤進化シナリオ
 - **主張**:
   - J2歳差と非弾性衝突による円盤の円形化
@@ -65,7 +65,7 @@
 - **Key**: `Pignatale2018_ApJ853_118`
 - **Title**: On the Impact Origin of Phobos and Deimos III: Resulting Composition from Different Impactors
 - **Journal**: ApJ, 853, 118
-- **DOI**: [10.3847/1538-4357/aaa5b2](https://doi.org/10.3847/1538-4357/aaa5b2)
+- **DOI**: [10.3847/1538-4357/aaa23e](https://doi.org/10.3847/1538-4357/aaa23e)
 - **使用箇所**: `sublimation.mass_flux_hkl()`
 - **コード引用**: ✅ `[@Pignatale2018_ApJ853_118]`
 - **主張**:
@@ -120,7 +120,6 @@
 - **主張**:
   - 衝突時間と Type A/B レジームの参照源（t_coll は E.006 を採用）
   - β 閾値 0.5 の根拠（E.013, E.014 と整合）
-  - **gas-poor 標準設定の主要参照文献**
   - **gas-poor 標準設定の主要参照文献**
 
 ### Burns et al. (1979)
@@ -268,7 +267,9 @@
 ### Lissauer & Stewart (1993)
 - **Key**: `LissauerStewart1993_PP3`
 - **Title**: Growth of Planets from Planetesimals
-- **Journal**: Protostars and Planets III
+- **Journal**: Protostars and Planets III (eds. Levy & Lunine)
+- **Publisher**: University of Arizona Press
+- **ISBN**: 0-8165-1334-1
 - **使用箇所**: 相対速度スケーリング
 - **主張**:
   - Rayleigh分布を仮定した相対速度スケーリングの根拠 (E.020)
@@ -363,10 +364,12 @@
 - **Key**: `BohrenHuffman1983_Wiley`
 - **Title**: Absorption and Scattering of Light by Small Particles
 - **Publisher**: Wiley
+- **ISBN**: 0-471-05772-X
 - **使用箇所**: Q_abs, Q_pr テーブル生成の理論基盤
 - **主張**:
   - Mie理論による Q_abs(λ,a) 計算式
   - プランク平均効率の定義
+
 
 ### Blanco et al. (1976)
 - **Key**: `Blanco1976_ApSS41_447`
@@ -380,10 +383,12 @@
 ### Draine (2003)
 - **Key**: `Draine2003_SaasFee32`
 - **Title**: Astrophysics of Dust in Cold Clouds
-- **Journal**: Saas-Fee Advanced Course 32
+- **Journal**: Saas-Fee Advanced Course 32 (The Cold Universe)
+- **DOI**: [10.48550/arXiv.astro-ph/0304488](https://doi.org/10.48550/arXiv.astro-ph/0304488)
 - **使用箇所**: 光学定数
 - **主張**:
-  - 天文学的シリケート/グラファイトの Q_abs データ
+  - 天文学的シリケイト/グラファイトの Q_abs データ
+
 
 ### Hocuk et al. (2017)
 - **Key**: `Hocuk2017_AA604_A58`
@@ -404,10 +409,12 @@
 ### Chandrasekhar (1960)
 - **Key**: `Chandrasekhar1960_RadiativeTransfer`
 - **Title**: Radiative Transfer
-- **Publisher**: Dover
+- **Publisher**: Dover Publications
+- **ISBN**: 978-0-486-60590-6
 - **使用箇所**: τ≈1 光球面クリッピングの背景
 - **主張**:
   - 有効光球面を τ≈1 とみなす古典的扱い（E.017 の基盤）
+
 
 ### Joseph et al. (1976)
 - **Key**: `Joseph1976_JAS33_2452`
@@ -513,14 +520,14 @@ SiO₂ の相転移温度と物性パラメータ。
 - **Key**: `TakeuchiLin2002_ApJ581_1344`
 - **Title**: Radial Flow of Dust Particles in Accretion Disks
 - **Journal**: ApJ, 581, 1344–1355
-- **DOI**: [10.1086/344430](https://doi.org/10.1086/344430)
+- **DOI**: [10.1086/344437](https://doi.org/10.1086/344437)
 - **使用箇所**: TL2003の前提
 - **主張**:
   - ガスドラッグによる半径方向ドリフト
 
 ### Takeuchi & Lin (2003)
 - **Key**: `TakeuchiLin2003_ApJ593_524`
-- **Title**: Dust Outflows in Optically Thick Gas Disks
+- **Title**: Surface Outflow in Optically Thick Dust Disks by Radiation Pressure
 - **Journal**: ApJ, 593, 524–533
 - **DOI**: [10.1086/376496](https://doi.org/10.1086/376496)
 - **使用箇所**: ALLOW_TL2003=true 時のみ
@@ -598,6 +605,7 @@ python -m tools.reference_tracker export-bibtex -o paper/references.bib
 
 | 日付 | 内容 |
 |------|------|
+| 2025-12-11 | ISBN/DOI 情報の補完、重複行の削除、PDF との整合性確認 |
 | 2025-12-09 | 初版作成。references.registry.json の全49件を網羅 |
 
 ---
