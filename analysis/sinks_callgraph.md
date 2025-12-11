@@ -16,6 +16,7 @@
 ## I/O とトグルの対応
 - `sinks.mode=none` → `total_sink_timescale` を呼ばず `t_sink=None` を強制し、`mass_lost_by_sinks` は終始 0。[marsdisk/run.py:1444–1455][marsdisk/run.py:2120–2185]
 - `sinks.mode=sublimation` → HKL 由来の `t_sink` が有効化され、`sink_flux_surface` と `mass_lost_by_sinks` が増分を持つ。`sublimation_location` が `surface` / `smol` / `both` を切り替え、Smol 経路にも `t_sink` と `ds_dt_val` が伝搬する。[marsdisk/physics/sublimation.py:54–130][marsdisk/physics/sinks.py:35–45][marsdisk/run.py:1444–1487][marsdisk/run.py:1715–2185][marsdisk/physics/collisions_smol.py:305–360]
+- `sub_params.mass_conserving=true` の場合、昇華 ds/dt は粒径のみを縮小し、blowout サイズを跨いだ分だけをブローアウト損失へ振替える（`M_sink_dot` は 0 を維持）。false で従来どおり昇華シンクとして質量減算。[marsdisk/physics/collisions_smol.py:305–486][marsdisk/run.py:1654–2185]
 - `hydro_escape.enable=true` かつ相が vapor のときだけ水素逸脱スケールを使用し、ブローアウトとは排他的に選択される。[marsdisk/physics/phase.py:564–593][marsdisk/run.py:1816–1852]
 
 <!-- AUTOGEN:CALLGRAPH START -->

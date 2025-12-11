@@ -212,6 +212,7 @@ Hertz-Knudsen-Langmuir (HKL) 理論に基づく昇華速度の詳細パラメー
 | `.dT` | float | ロジスティックモードでの遷移幅 [K]。T_sub 周辺での昇華率の立ち上がり幅 | 50.0 |
 | `.eta_instant` | float | ロジスティックモードでの瞬時損失分率（0–1） | 0.1 |
 | `.P_gas` | float | 周囲ガス圧 [Pa]。昇華を抑制する背圧。真空では 0 | 0.0 |
+| `.mass_conserving` | bool | ds/dt で粒径のみ縮小し、blowout サイズ未満に跨いだ分だけをブローアウト損失へ振替える | false（検証後に true へ移行予定） |
 
 #### 🌬️ 表層ブローアウト (`blowout`)
 
