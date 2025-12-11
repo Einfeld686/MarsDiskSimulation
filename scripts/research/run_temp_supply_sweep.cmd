@@ -20,6 +20,7 @@ pushd "%~dp0\..\.."
 set "REPO_ROOT=%CD%"
 set "CONFIG_DIR=%REPO_ROOT%\configs\sweep_temp_supply"
 set CONFIGS_LIST="%CONFIG_DIR%\temp_supply_T2000_eps1.yml" "%CONFIG_DIR%\temp_supply_T2000_eps0p1.yml" "%CONFIG_DIR%\temp_supply_T4000_eps1.yml" "%CONFIG_DIR%\temp_supply_T4000_eps0p1.yml" "%CONFIG_DIR%\temp_supply_T6000_eps1.yml" "%CONFIG_DIR%\temp_supply_T6000_eps0p1.yml"
+set "BATCH_BASE=%REPO_ROOT%\out\temp_supply_sweep"
 
 for /f %%i in ('powershell -NoLogo -NoProfile -Command "Get-Date -Format \"yyyyMMdd-HHmmss\""') do set RUN_TS=%%i
 if not defined RUN_TS set RUN_TS=run
@@ -27,7 +28,18 @@ for /f "delims=" %%i in ('git rev-parse --short HEAD 2^>nul') do set GIT_SHA=%%i
 if not defined GIT_SHA set GIT_SHA=nogit
 for /f %%i in ('python -c "import secrets; print(secrets.randbelow(2**31))"') do set BATCH_SEED=%%i
 if not defined BATCH_SEED set BATCH_SEED=!RANDOM!
-set "BATCH_DIR=out\temp_supply_sweep\%RUN_TS%__%GIT_SHA%__seed%BATCH_SEED%"
+set "BATCH_DIR=%BATCH_BASE%\%RUN_TS%__%GIT_SHA%__seed%BATCH_SEED%"
+
+rem out/temp_supply_sweep がファイル化していないか確認
+if exist "%BATCH_BASE%\NUL" (
+  rem OK: directory
+) else if exist "%BATCH_BASE%" (
+  echo [error] %BATCH_BASE% exists as a file. Remove or rename it, then rerun.
+  popd
+  exit /b 1
+) else (
+  mkdir "%BATCH_BASE%"
+)
 if not exist "%BATCH_DIR%" mkdir "%BATCH_DIR%"
 
 if not exist "%VENV_DIR%\Scripts\python.exe" (
