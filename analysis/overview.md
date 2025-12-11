@@ -20,6 +20,8 @@
 ## 1.1 モジュール構成の3層分離
 `marsdisk/run.py` は以下の3層に論理分割されている（詳細は `analysis/physics_flow.md` 参照）：
 
+![Mars Disk Architecture (Dark)](assets/marsdisk_architecture_diagram_dark.png)
+
 | 層 | モジュール | 責務 |
 |----|-----------|------|
 | **オーケストレータ** | `orchestrator.py` | 設定解決・時間グリッド・ループ制御・進捗報告 |
@@ -70,7 +72,7 @@
 | config | Config | 必須 | トップレベルで全セクションを保持 | [marsdisk/schema.py#IO [L437–L455]] |
 | geometry | Geometry | mode="0D" | mode∈{"0D","1D"}; 半径は任意入力 | [marsdisk/schema.py#Geometry [L20–L31]] |
 | material | Material | rho=3000.0 | rho∈[1000,5000]kg/m³ | [marsdisk/schema.py#Material [L96–L108]] |
-| temps (removed) | – | – | 旧 `temps.T_M` は無効化。`radiation.TM_K` または温度ドライバで必須入力を与える。 | [marsdisk/config_utils.py:44–48][marsdisk/schema.py:143–156] |
+| temps (removed) | – | – | 旧 `temps.T_M` は無効化。`radiation.TM_K` または温度ドライバで必須入力を与える。 | [marsdisk/config_utils.py:44–48][marsdisk/schema.py:155–156] |
 | sizes | Sizes | n_bins=40 | s_min,s_max必須; n_bins≥1 | [marsdisk/schema.py#Sizes [L130–L151]] |
 | initial | Initial | s0_mode="upper" | mass_total必須; s0_mode∈{"mono","upper"} | [marsdisk/schema.py#Initial [L154–L158]] |
 | dynamics | Dynamics | f_wake=1.0 | e0,i0,t_damp_orbits必須 | [marsdisk/schema.py#Dynamics [L161–L199]] |

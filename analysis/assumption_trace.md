@@ -49,7 +49,7 @@ tests:
   - tests/test_scalings.py
   - tests/test_fast_blowout.py
 status: draft
-owner: TODO
+owner: maintainer
 last_checked: YYYY-MM-DD
 ```
 
@@ -102,7 +102,7 @@ tests:
   - tests/test_radiation_shielding_logging.py
   - tests/test_blowout_gate.py
 status: draft
-owner: TODO
+owner: maintainer
 last_checked: YYYY-MM-DD
 ```
 
@@ -153,7 +153,7 @@ tests:
   - tests/test_surface_outflux_wavy.py
   - tests/test_min_size_evolution_hook.py
 status: draft
-owner: TODO
+owner: maintainer
 last_checked: YYYY-MM-DD
 ```
 
@@ -198,7 +198,7 @@ tests:
   - tests/test_scalings.py
   - tests/test_phase3_surface_blowout.py
 status: draft
-owner: TODO
+owner: maintainer
 last_checked: YYYY-MM-DD
 ```
 
@@ -248,7 +248,7 @@ tests:
   - tests/test_sublimation_phase_gate.py
   - tests/test_phase_branching_run.py
 status: draft
-owner: TODO
+owner: maintainer
 last_checked: YYYY-MM-DD
 ```
 
@@ -293,7 +293,7 @@ tests:
   - tests/test_scope_limitations_metadata.py
   - tests/test_run_regressions.py
 status: draft
-owner: TODO
+owner: maintainer
 last_checked: YYYY-MM-DD
 ```
 
