@@ -55,6 +55,18 @@ else
   PROGRESS_FLAG=()
 fi
 
+STREAM_MEM_GB="${STREAM_MEM_GB:-}"
+STREAM_STEP_INTERVAL="${STREAM_STEP_INTERVAL:-}"
+STREAMING_OVERRIDES=()
+if [[ -n "${STREAM_MEM_GB}" ]]; then
+  STREAMING_OVERRIDES+=(--override "io.streaming.memory_limit_gb=${STREAM_MEM_GB}")
+  echo "[info] override io.streaming.memory_limit_gb=${STREAM_MEM_GB}"
+fi
+if [[ -n "${STREAM_STEP_INTERVAL}" ]]; then
+  STREAMING_OVERRIDES+=(--override "io.streaming.step_flush_interval=${STREAM_STEP_INTERVAL}")
+  echo "[info] override io.streaming.step_flush_interval=${STREAM_STEP_INTERVAL}"
+fi
+
 for T in "${T_LIST[@]}"; do
   T_TABLE="data/mars_temperature_T${T}p0K.csv"
   for MU in "${MU_LIST[@]}"; do
@@ -79,6 +91,7 @@ PY
         --override "radiation.TM_K=${T}" \
         --override "radiation.mars_temperature_driver.table.path=${T_TABLE}" \
         --override "supply.mixing.mu=${MU}" \
+        "${STREAMING_OVERRIDES[@]}" \
         --override "shielding.table_path=tables/phi_const_0p${PHI}.csv"
 
       final_dir="${OUTDIR}"
