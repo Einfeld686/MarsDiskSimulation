@@ -1,0 +1,96 @@
+@echo off
+rem Syntax check and dry-run test for Windows batch files.
+rem Usage: test_cmd_syntax.cmd [script.cmd ...]
+rem
+rem If no arguments given, tests all .cmd files in scripts/research/
+
+setlocal enabledelayedexpansion
+
+set "SCRIPT_DIR=%~dp0"
+for %%A in ("%SCRIPT_DIR:~0,-1%") do set "PARENT1=%%~dpA"
+for %%B in ("%PARENT1:~0,-1%") do set "REPO_ROOT=%%~dpB"
+if "%REPO_ROOT:~-1%"=="\" set "REPO_ROOT=%REPO_ROOT:~0,-1%"
+
+set PASS=0
+set FAIL=0
+set TESTED=
+
+if "%~1"=="" (
+  echo [test] No arguments given, testing all .cmd files in scripts\research\
+  for %%f in ("%REPO_ROOT%\scripts\research\*.cmd") do (
+    if /i not "%%~nxf"=="test_cmd_syntax.cmd" (
+      call :test_one "%%f"
+    )
+  )
+) else (
+  for %%f in (%*) do (
+    call :test_one "%%f"
+  )
+)
+
+echo.
+echo ========================================
+echo Test Summary: PASS=%PASS% FAIL=%FAIL%
+echo ========================================
+if %FAIL% gtr 0 exit /b 1
+exit /b 0
+
+:test_one
+set "FILE=%~1"
+echo.
+echo [test] Checking: %FILE%
+
+rem Check 1: File exists
+if not exist "%FILE%" (
+  echo   [FAIL] File not found
+  set /a FAIL+=1
+  goto :eof
+)
+
+rem Check 2: Line endings (requires PowerShell)
+powershell -NoLogo -NoProfile -Command "$content = [IO.File]::ReadAllText('%FILE%'); if ($content -match \"`r`n\") { exit 0 } else { exit 1 }" 2>nul
+if errorlevel 1 (
+  echo   [WARN] File may have Unix line endings (LF instead of CRLF)
+)
+
+rem Check 3: Check for common problematic patterns
+findstr /r /c:"pushd.*\.\.\\\.\." "%FILE%" >nul 2>&1
+if not errorlevel 1 (
+  echo   [WARN] Found 'pushd ..\..' pattern - may cause path issues
+)
+
+findstr /r /c:"\\NUL" "%FILE%" >nul 2>&1
+if not errorlevel 1 (
+  echo   [WARN] Found '\NUL' pattern - deprecated on Windows 10+
+)
+
+findstr /r /c:"|| *(" "%FILE%" >nul 2>&1
+if not errorlevel 1 (
+  echo   [WARN] Found '|| (' pattern - unreliable with 'call' in cmd.exe
+)
+
+rem Check 4: Very long lines (>1000 chars, may cause issues)
+powershell -NoLogo -NoProfile -Command "$lines = Get-Content '%FILE%'; $long = $lines | Where-Object { $_.Length -gt 1000 }; if ($long) { Write-Host '  [WARN] Found lines over 1000 characters'; $long | ForEach-Object { Write-Host ('    Line ' + ([array]::IndexOf($lines, $_) + 1) + ': ' + $_.Length + ' chars') } }" 2>nul
+
+rem Check 5: Dry-run if script supports it
+findstr /c:"--dry-run" "%FILE%" >nul 2>&1
+if not errorlevel 1 (
+  echo   [info] Script supports --dry-run, attempting dry-run test...
+  pushd "%REPO_ROOT%"
+  call "%FILE%" --dry-run >nul 2>&1
+  if errorlevel 1 (
+    echo   [FAIL] Dry-run failed with errorlevel %errorlevel%
+    set /a FAIL+=1
+    popd
+    goto :eof
+  ) else (
+    echo   [PASS] Dry-run succeeded
+  )
+  popd
+) else (
+  echo   [info] Script does not support --dry-run, skipping execution test
+)
+
+echo   [PASS] Basic checks passed
+set /a PASS+=1
+goto :eof
