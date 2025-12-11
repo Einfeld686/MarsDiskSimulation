@@ -91,6 +91,16 @@ set "TITLE=%~n1"
 set "OUTDIR=%BATCH_DIR%\!TITLE!"
 echo [run] %CFG% -> !OUTDIR! (batch=%BATCH_SEED%, seed=!SEED!)
 
+rem OUTDIR がファイルとして存在していないか事前に確認
+if exist "!OUTDIR!\NUL" (
+  rem already a directory -> OK
+) else if exist "!OUTDIR!" (
+  echo [error] OUTDIR exists as a file: !OUTDIR!  (remove or rename it)
+  exit /b 1
+) else (
+  mkdir "!OUTDIR!"
+)
+
 python -m marsdisk.run ^
   --config "%CFG%" ^
   --quiet !PROGRESS_OPT! !STREAMING_OVERRIDES! ^
