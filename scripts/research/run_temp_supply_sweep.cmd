@@ -100,18 +100,26 @@ if not exist "%CFG%" (
 for /f %%s in ('python -c "import secrets; print(secrets.randbelow(2**31))"') do set SEED=%%s
 if not defined SEED set SEED=!RANDOM!
 set "TITLE=%~n1"
-set "OUTDIR=%BATCH_DIR%\!TITLE!"
-echo [run] %CFG% -> !OUTDIR! (batch=%BATCH_SEED%, seed=!SEED!)
+set "OUTDIR_BASE=%BATCH_DIR%\!TITLE!"
+set "OUTDIR=%OUTDIR_BASE%"
+set OUTDIR_IDX=0
 
-rem OUTDIR がファイルとして存在していないか事前に確認
+:find_outdir
 if exist "!OUTDIR!\NUL" (
   rem already a directory -> OK
 ) else if exist "!OUTDIR!" (
-  echo [error] OUTDIR exists as a file: !OUTDIR!  (remove or rename it)
-  exit /b 1
+  set /a OUTDIR_IDX+=1
+  set "OUTDIR=%OUTDIR_BASE%__alt!OUTDIR_IDX!"
+  goto find_outdir
 ) else (
   mkdir "!OUTDIR!"
 )
+
+if %OUTDIR_IDX% gtr 0 (
+  echo [info] OUTDIR existed as file; using !OUTDIR! instead
+)
+
+echo [run] %CFG% -> !OUTDIR! (batch=%BATCH_SEED%, seed=!SEED!)
 
 python -m marsdisk.run ^
   --config "%CFG%" ^
