@@ -41,16 +41,20 @@ set SKIP_PLOTS=
 set VENV_DIR=venv
 set REQ_FILE=requirements.txt
 
-rem Get the directory where this script is located
-set SCRIPT_DIR=%~dp0
-
-rem Navigate to repo root (two levels up from scripts\research\)
-cd /d "%SCRIPT_DIR%"
-cd ..\..
+rem Get the directory where this script is located and navigate to repo root
+rem Script is in: REPO_ROOT\scripts\research\run_temp_supply_sweep.cmd
+rem So we go up two levels
+pushd "%~dp0"
+cd ..
+cd ..
 set REPO_ROOT=%CD%
+popd
+
+rem Change to repo root
+cd /d "%REPO_ROOT%"
 
 set CONFIG_DIR=%REPO_ROOT%\configs\sweep_temp_supply
-set CONFIGS_LIST="%CONFIG_DIR%\temp_supply_T2000_eps1.yml" "%CONFIG_DIR%\temp_supply_T2000_eps0p1.yml" "%CONFIG_DIR%\temp_supply_T4000_eps1.yml" "%CONFIG_DIR%\temp_supply_T4000_eps0p1.yml" "%CONFIG_DIR%\temp_supply_T6000_eps1.yml" "%CONFIG_DIR%\temp_supply_T6000_eps0p1.yml"
+
 set BATCH_BASE=%REPO_ROOT%\out\temp_supply_sweep
 
 for /f %%i in ('powershell -NoLogo -NoProfile -Command "Get-Date -Format \"yyyyMMdd-HHmmss\""') do set RUN_TS=%%i
@@ -61,7 +65,7 @@ for /f %%i in ('python -c "import secrets; print(secrets.randbelow(2**31))"') do
 if not defined BATCH_SEED set BATCH_SEED=%RANDOM%
 set BATCH_DIR=%BATCH_BASE%\%RUN_TS%__%GIT_SHA%__seed%BATCH_SEED%
 
-rem Check that out/temp_supply_sweep is not a file
+rem Create directories
 if not exist "%BATCH_BASE%" mkdir "%BATCH_BASE%"
 if not exist "%BATCH_DIR%" mkdir "%BATCH_DIR%"
 
@@ -106,9 +110,13 @@ if defined STREAM_STEP_INTERVAL (
   echo [info] override io.streaming.step_flush_interval=!STREAM_STEP_INTERVAL!
 )
 
-for %%C in (%CONFIGS_LIST%) do (
-  call :run_one "%%~fC"
-)
+rem Run each config one by one
+call :run_one "%CONFIG_DIR%\temp_supply_T2000_eps1.yml"
+call :run_one "%CONFIG_DIR%\temp_supply_T2000_eps0p1.yml"
+call :run_one "%CONFIG_DIR%\temp_supply_T4000_eps1.yml"
+call :run_one "%CONFIG_DIR%\temp_supply_T4000_eps0p1.yml"
+call :run_one "%CONFIG_DIR%\temp_supply_T6000_eps1.yml"
+call :run_one "%CONFIG_DIR%\temp_supply_T6000_eps0p1.yml"
 
 echo [done] All 6 runs completed.
 exit /b 0
@@ -122,38 +130,16 @@ if not exist "%CFG%" (
 for /f %%s in ('python -c "import secrets; print(secrets.randbelow(2**31))"') do set SEED=%%s
 if not defined SEED set SEED=%RANDOM%
 for %%F in ("%CFG%") do set TITLE=%%~nF
-set OUTDIR_BASE=%BATCH_DIR%\%TITLE%
-set OUTDIR=%OUTDIR_BASE%
-set OUTDIR_IDX=0
+set OUTDIR=%BATCH_DIR%\%TITLE%
 
-:find_outdir
-if exist "%OUTDIR%\" (
-  rem already a directory - OK
-  goto :outdir_ready
-)
-if exist "%OUTDIR%" (
-  rem exists as file, try alternate name
-  set /a OUTDIR_IDX+=1
-  set OUTDIR=%OUTDIR_BASE%__alt%OUTDIR_IDX%
-  goto :find_outdir
-)
-rem does not exist, create it
-mkdir "%OUTDIR%" 2>nul
-if errorlevel 1 (
-  echo [error] Failed to create OUTDIR "%OUTDIR%" (permission/lock?).
-  exit /b 1
-)
-:outdir_ready
-
-if %OUTDIR_IDX% gtr 0 (
-  echo [info] OUTDIR existed as file; using %OUTDIR% instead
-)
+rem Create output directory
+if not exist "%OUTDIR%" mkdir "%OUTDIR%"
 
 echo [run] %CFG% to %OUTDIR% (batch=%BATCH_SEED%, seed=%SEED%)
 
 if %DRY_RUN%==1 (
   echo [dry-run] Would execute: python -m marsdisk.run --config "%CFG%" ...
-  goto :eof
+  exit /b 0
 )
 
 python -m marsdisk.run --config "%CFG%" --quiet %PROGRESS_OPT% %STREAMING_OVERRIDES% --override numerics.dt_init=2 --override "io.outdir=%OUTDIR%" --override "dynamics.rng_seed=%SEED%"
@@ -174,4 +160,4 @@ if /i "%SKIP_PLOTS%"=="1" (
     echo [warn] Plotting failed for %CFG% (non-fatal, continuing)
   )
 )
-goto :eof
+exit /b 0
