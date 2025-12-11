@@ -98,13 +98,13 @@ marsdisk/
 - out/ は Git では原則無視し（大容量を避けるため）、PR には実行ログの抜粋と要約のみ添付する。
 
 ## ドキュメントとファイル配置の原則
-- 物理の式・前提・数値処理は `analysis/equations.md` に一本化し、他の資料にはコピーしない。
-- モジュール責務やデータフローは `analysis/overview.md` を更新して整理する。
-- 実行手順・感度掃引は `analysis/run-recipes.md` のレシピを拡張し、ここでは概要だけを指し示す。
-- 生成物・集計・カバレッジは `analysis/coverage.json` と `analysis/coverage_report.md` を自動生成して参照し、手編集を禁止する。
-- 自動生成・テスト支援コードは `agent_test/`、完成済みドキュメントと指標は `analysis/` に集約し、新規ファイルは実務上必要と合意した最小限のものに限る。
-- AI エージェント向け補足: `analysis/slides_outline.md` は人間向けスライドビューなのでまずここで骨子を掴み、必要に応じて `analysis/overview.md` に潜る。FIG_/RUN_/REF_ を選ぶときは `run_catalog.md` / `figures_catalog.md` / `literature_map.md` を優先的に参照し、out/ を自動スキャンしてスライド構成を作らない。新しい ID を使う場合は `analysis/AI_USAGE.md` のラベル一意性・coverage ポリシーに従う。
-- 開発プランは `docs/plan/README.md` の規約（`YYYYMMDD_プラン名.md` 命名など）に従い、必ず `docs/plan/` に記録する。AI 実行時もここを参照し、新規プランや進捗追記は同ディレクトリで行う。
+- ドキュメント体系、物理式、実行レシピ、検証基準の詳細はすべて **`analysis/` ディレクトリ内のドキュメント** を正とします。詳細は `analysis/overview.md` の「ドキュメント指針」および `analysis/AI_USAGE.md` を参照してください。
+- 以下の原則は `analysis/overview.md` に集約しています。
+    - 物理の式・前提・数値処理 → `analysis/equations.md`
+    - モジュール責務やデータフロー → `analysis/overview.md`
+    - 実行手順・感度掃引 → `analysis/run-recipes.md`
+    - 生成物・集計・カバレッジ → `analysis/coverage.json`
+- 開発プランのみ `docs/plan/` で管理します。
 
 ## analysisファイルの目的・適用範囲
 `analysis/` 以下の完成済み資料を唯一の仕様源とし、参照手順と合格条件のみを定義します。

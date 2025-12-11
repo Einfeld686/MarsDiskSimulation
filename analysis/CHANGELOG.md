@@ -11,3 +11,9 @@
 - Added Phase 6 surface gate support: `blowout.gate_mode` (`none`/`sublimation_competition`/`collision_competition`)
   scales blow-out outflux via `f_gate=t_solid/(t_solid+t_blow)`; defaults to `none` for bitwise compatibility and
   emits new diagnostics (`t_solid_s`, `blowout_gate_factor`) and summary stats.
+
+## [2025-12-11] Documentation Pipeline & Phase Logic Refinement
+- **Document Synchronization**: Integrated `DocSyncAgent` with `analysis-doc-tests` and `coverage-guard` targets (`make analysis-sync`, `make analysis-coverage-guard`).
+- **Temperature Driver**: Introduced `mars_temperature_driver` to decouple T_M source logic; deprecated `temps.T_M` in favor of `radiation.TM_K` or driver tables.
+- **Phase Evaluation**: Centralized phase state logic into `PhaseEvaluator`. `checks_psat_auto_01` validates `psat_model="auto"` behavior (tabulated/local-fit/Clausius fallback).
+- **Visualization Docs**: Updated `analysis/tools/visualizations.md` to reflect `tools/plotting/` structure.

@@ -1968,6 +1968,8 @@ def run_zero_d(
         total_sink_surface = 0.0
         fast_factor_numer = 0.0
         fast_factor_denom = 0.0
+        e_kernel_step = None
+        i_kernel_step = None
 
         tau_vert_last = None
         tau_los_last = None
@@ -2156,6 +2158,8 @@ def run_zero_d(
                     psd_state = smol_res.psd_state
                     sigma_surf = smol_res.sigma_after
                     t_coll_kernel_last = smol_res.t_coll_kernel
+                    e_kernel_step = smol_res.e_kernel_used
+                    i_kernel_step = smol_res.i_kernel_used
                     sigma_loss_smol = max(sigma_loss_smol, 0.0) + max(smol_res.sigma_loss, 0.0)
                     prod_rate_last = smol_res.prod_mass_rate_effective
                     total_prod_surface = smol_res.prod_mass_rate_effective * dt
@@ -2541,6 +2545,8 @@ def run_zero_d(
             "Omega_s": Omega_step,
             "t_orb_s": t_orb_step,
             "t_blow_s": t_blow_step,
+            "t_coll": t_coll_step,
+            "ts_ratio": ts_ratio_value,
             "r_m": r,
             "r_RM": r_RM,
             "r_source": r_source,
@@ -2560,7 +2566,6 @@ def run_zero_d(
             "Q_pr_at_smin": qpr_mean_step,
             "beta_at_smin_config": beta_at_smin_config,
             "beta_at_smin_effective": beta_at_smin_effective,
-            "beta_at_smin": beta_at_smin_effective,
             "beta_threshold": beta_threshold,
             "Sigma_surf": sigma_surf,
             "Sigma_tau1": sigma_tau1_limit,
@@ -2612,6 +2617,9 @@ def run_zero_d(
             "T_M_used": T_use,
             "ds_dt_sublimation": ds_dt_val,
             "ds_dt_sublimation_raw": ds_dt_raw,
+            "phi_effective": phi_effective_last,
+            "e_kernel_used": _safe_float(e_kernel_step),
+            "i_kernel_used": _safe_float(i_kernel_step),
             "phase_state": phase_state_last,
             "phase_f_vap": phase_f_vap_last,
             "phase_method": phase_method_last,
@@ -2638,8 +2646,6 @@ def run_zero_d(
                     "cum_mloss_blowout": M_loss_cum,
                     "cum_mloss_sink": M_sink_cum,
                     "cum_mloss_total": M_loss_cum + M_sink_cum,
-                    "t_coll": t_coll_step,
-                    "ts_ratio": ts_ratio_value,
                     "beta_eff": beta_at_smin_effective,
                     "kappa_eff": kappa_eff,
                     "tau_eff": tau_eff_diag,
@@ -2715,7 +2721,7 @@ def run_zero_d(
             "tau_eff": tau_eff_diag,
             "s_min": s_min_effective,
             "a_blow_at_smin": a_blow_step,
-            "beta_at_smin": beta_at_smin_effective,
+            "beta_at_smin_effective": beta_at_smin_effective,
             "Q_pr_at_smin": qpr_mean_step,
             "s_peak": s_peak_value,
             "area_m2": area,
@@ -3000,7 +3006,9 @@ def run_zero_d(
         "collision_solver": collision_solver_mode,
     }
     wyatt_collisional_timescale_active = bool(
-        collisions_active and getattr(cfg.surface, "use_tcoll", True)
+        collisions_active
+        and getattr(cfg.surface, "use_tcoll", True)
+        and collision_solver_mode != "smol"
     )
     active_sinks_list: List[str] = []
     if sink_opts.enable_sublimation:
@@ -3107,7 +3115,6 @@ def run_zero_d(
         "beta_threshold": beta_threshold,
         "beta_at_smin_config": beta_at_smin_config,
         "beta_at_smin_effective": beta_at_smin_effective,
-        "beta_at_smin": beta_at_smin_config if beta_at_smin_config is not None else beta_at_smin_effective,
         "s_blow_m": a_blow,
         "blowout_gate_mode": blowout_gate_mode,
         "chi_blow_input": chi_config_str,
@@ -3662,7 +3669,7 @@ def _write_phase5_comparison_products(
                 "M_loss_total": float(summary.get("M_loss", float("nan"))),
                 "M_loss_blowout": float(summary.get("M_loss_rp_mars", 0.0) or 0.0),
                 "M_loss_other_sinks": max(m_loss_sinks - m_loss_sub, 0.0),
-                "beta_mean": _mean_from_df(df, "beta_at_smin"),
+                "beta_mean": _mean_from_df(df, "beta_at_smin_effective"),
                 "a_blow_mean": _mean_from_df(df, "a_blow"),
                 "s_min_final": _final_value(df, "s_min"),
                 "tau1_area_final": _final_value(df, "Sigma_tau1"),

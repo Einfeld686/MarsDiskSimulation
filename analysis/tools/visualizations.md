@@ -21,6 +21,7 @@
 | `make_figs.py` | Map-1 のレジーム図、サイズ別寄与、質量収支タイムライン。 | `sweeps/*/map*/` の集計 CSV、`out/series/run.parquet` 等。 | 複数 PNG。 |
 | `make_massloss_map.py` | 総質量損失率ヒートマップとシンク分率等値線。 | `results/*.csv`（`sweep_mass_loss_map.py` 生成）。 | PNG (`fig_massloss_map.png`)。 |
 | `plot_mass_loss_map.py` | 1 周期あたり質量損失率ヒートマップ。 | `scripts/sweep_mass_loss_map.py` が生成した CSV。 | PNG (`fig_massloss_heatmap.png`)。 |
+| `base.py` | プロット共通設定（フォント、スタイル、カラーマップ）。 | なし。 | 他スクリプトがインポートして使用。`configure_matplotlib()` 等を提供。 |
 
 ## 3. `tools/diagnostics/`
 
@@ -28,7 +29,15 @@
 | --- | --- | --- | --- |
 | `beta_map.py` | β（遮蔽前後）を r×T グリッドで評価し CSV/PNG に出力。 | `configs/base.yml`、⟨Q_pr⟩ テーブル、Φ テーブル。 | CSV (`beta_map.csv` 等)、ヒートマップ PNG。 |
 
-## 4. 参照・運用ノート
+## 4. `tools/` 直下のその他のユーティリティ
+
+| ファイル | 用途 | 備考 |
+| --- | --- | --- |
+| `derive_supply_rate.py` | 無次元パラメータ μ から供給率を計算し YAML 形式で出力。 | `supply` 設定の構築支援。 |
+| `evaluation_system.py` | シミュレーション結果の自動検証・指標評価システム。 | CI/検証フローの中核。 |
+| `run_analysis_doc_tests.py` | analysis ドキュメントのテストランナー。 | `make analysis-doc-tests` の実体。 |
+
+## 5. 参照・運用ノート
 
 - 各スクリプトは `python -m tools.<module>` で起動できる互換ラッパーを保持している。内部実装を移動した場合は本書を更新する。
 - 生成物は `simulation_results/` または `figures/` 配下に保存するのが既定であり、ユーザー指定パスを優先する。

@@ -283,11 +283,11 @@ class Dynamics(BaseModel):
         description="How to choose e/i for collision kernels: 'config' uses e0/i0, 'wyatt_eq' solves for c_eq",
     )
     v_rel_mode: Literal["ohtsuki", "pericenter"] = Field(
-        "ohtsuki",
+        "pericenter",
         description=(
             "Relative speed prescription for collision kernels. "
-            "'ohtsuki' uses v_rel=v_K*sqrt(1.25 e^2+i^2); "
-            "'pericenter' uses v_rel=v_K/√(1-e) (near-periapsis speed)."
+            "'pericenter' (default) uses v_rel=v_K/√(1-e) near periapsis and is recommended for high-e discs; "
+            "'ohtsuki' (legacy, discouraged for e≳0.1) uses v_rel=v_K*sqrt(1.25 e^2+i^2)."
         ),
     )
     kernel_H_mode: Literal["ia", "fixed"] = Field(
@@ -371,11 +371,12 @@ class Surface(BaseModel):
     use_tcoll: bool = True
     freeze_sigma: bool = False
     collision_solver: Literal["surface_ode", "smol"] = Field(
-        "surface_ode",
+        "smol",
         description=(
             "Collision/outflux update scheme. 'surface_ode' preserves the legacy "
-            "Wyatt-style implicit step, while 'smol' routes collisions through the "
-            "Smoluchowski operator (experimental)."
+            "Wyatt-style implicit step (suited to e<<0.1), while 'smol' routes collisions "
+            "through the Smoluchowski operator. Default is 'smol' to avoid overestimating "
+            "t_coll in high-eccentricity (e~0.1–0.5) regimes."
         ),
     )
 

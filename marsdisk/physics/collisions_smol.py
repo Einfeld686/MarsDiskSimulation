@@ -376,7 +376,12 @@ def step_collisions_smol_0d(
             e_kernel = e_value
             i_kernel = i_value
             H_arr = np.full_like(N_k, max(r * max(i_value, 1.0e-6), 1.0e-6))
-        v_rel_mode = getattr(dynamics_cfg, "v_rel_mode", "ohtsuki") if dynamics_cfg is not None else "ohtsuki"
+        v_rel_mode = getattr(dynamics_cfg, "v_rel_mode", "pericenter") if dynamics_cfg is not None else "pericenter"
+        if v_rel_mode == "ohtsuki":
+            warnings.warn(
+                "v_rel_mode='ohtsuki' is deprecated for high-e discs; prefer 'pericenter'.",
+                RuntimeWarning,
+            )
         if v_rel_mode == "pericenter":
             v_rel_scalar = dynamics.v_rel_pericenter(e_kernel, v_k=r * Omega)
         else:
