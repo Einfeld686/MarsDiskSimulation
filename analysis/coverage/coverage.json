@@ -5,16 +5,16 @@
     "rate": 0.7532467532467533
   },
   "anchor_consistency_rate": {
-    "numerator": 156,
-    "denominator": 156,
+    "numerator": 148,
+    "denominator": 148,
     "rate": 1.0
   },
   "equation_unit_coverage": {
-    "numerator": 27,
-    "denominator": 31,
-    "rate": 0.8709677419354839
+    "numerator": 33,
+    "denominator": 35,
+    "rate": 0.9428571428571428
   },
-  "sinks_callgraph_documented": true,
+  "sinks_callgraph_documented": false,
   "holes": [
     "marsdisk/physics/collisions_smol.py#kernel_minimum_tcoll",
     "marsdisk/physics/collisions_smol.py#step_collisions_smol_0d",

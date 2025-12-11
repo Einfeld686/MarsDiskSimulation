@@ -22,6 +22,16 @@
 - 入出力と単位：`r` [m] → `Ω` [rad s$^{-1}$]
 - 数値処理：別名関数として委譲するだけで追加の丸めや検証は行わない。
 
+**Symbols**
+
+|Symbol|Meaning|Units|Defaults/Notes|
+|---|---|---|---|
+|$r$|Orbital radius|m|Input; must be positive|
+|$\Omega$|Keplerian angular frequency|rad s$^{-1}$|Return value|
+|$G$|Gravitational constant|m$^3$ kg$^{-1}$ s$^{-2}$|`6.67430\times10^{-11}`|
+|$M_{\mathrm{MARS}}$|Mars mass|kg|`6.4171\times10^{23}`|
+
+
 ### (E.003) v_keplerian — ケプラー速度（同義関数）
 円軌道速度の別名を公開し API の揺れに備えるもので、式自体は (E.001) と同じ [@MurrayDermott1999_SSD]。
 
@@ -31,6 +41,14 @@
 - 式と参照：$v_K(r)=\sqrt{G M_{\mathrm{MARS}}/r}$ を `v_kepler` に委譲（[marsdisk/grid.py#v_keplerian [L93]]）
 - 入出力と単位：`r` [m] → `v_K` [m s$^{-1}$]
 - 数値処理：追加計算は無く、浮動小数変換も呼び先に任せる。
+
+**Symbols**
+
+|Symbol|Meaning|Units|Defaults/Notes|
+|---|---|---|---|
+|$r$|Orbital radius|m|Input|
+|$v_K$|Keplerian orbital speed|m s$^{-1}$|Return value|
+
 
 ### (E.004) interp_qpr — Planck平均 ⟨Q_pr⟩ の補間
 放射圧効率のスペクトル平均を表テーブルから補間し、未ロード時は近似へフォールバックする実装。Q_pr と β の定義は古典的な放射圧整理 [@Burns1979_Icarus40_1] に従う。
@@ -42,6 +60,15 @@
 - 入出力と単位：`s` [m], `T_M` [K] → `⟨Q_pr⟩` [dimensionless]
 - 数値処理：NumPy 補間値を `float` 化し、テーブルが無い場合は解析近似へフォールバックする分岐のみ。
 
+**Symbols**
+
+|Symbol|Meaning|Units|Defaults/Notes|
+|---|---|---|---|
+|$s$|Grain size|m|Input|
+|$T_M$|Mars surface temperature|K|Input|
+|$\langle Q_{\mathrm{pr}}\rangle$|Planck-mean radiation pressure efficiency|dimensionless|Return value|
+
+
 ### (E.005) load_qpr_table — ⟨Q_pr⟩表のローダ
 放射圧効率テーブルをロードして Planck 平均の補間器を更新する。Q_pr と β の関係付けは [@Burns1979_Icarus40_1] の定義に準拠し、ここではそのデータ供給を担う。
 実装上のローダであり、同一仕様の式や関数名を持つ文献は存在しない（実装固有の離散化）。
@@ -52,6 +79,14 @@
 - 式と参照：$⟨Q_{\mathrm{pr}}⟩_{\mathrm{interp}} = \text{QPrTable.from\_frame}(\text{read}(path))$（[marsdisk/io/tables.py#load_qpr_table [L283–L295]]）
 - 入出力と単位：`path` [str or Path] → `callable(s,T_M)` [dimensionless]
 - 数値処理：読み込み後にグローバル `_QPR_TABLE` を更新して補間関数を返し、失敗時は例外で通知する。
+
+**Symbols**
+
+|Symbol|Meaning|Units|Defaults/Notes|
+|---|---|---|---|
+|path|Path to Q_pr table file|str or Path|Input|
+|$\langle Q_{\mathrm{pr}}\rangle_{\mathrm{interp}}$|Interpolated Q_pr function|callable|Return value|
+
 
 ### (E.006) marsdisk/physics/surface.py: surface_collisional_time (lines 62-73)
 [@StrubbeChiang2006_ApJ648_652; Eq.(1)]
@@ -446,7 +481,7 @@ P_{\mathrm{sat}}(T) =
 - In HKL branch, negative $(P_{\mathrm{sat}}-P_{\mathrm{gas}})$ is clamped to zero before evaluation.
 - Logistic branch guards against $dT\to0$ via `max(dT, 1.0)`.
 - Stores provenance in `run_config.json` under `sublimation_provenance`, capturing {`sublimation_formula`, `psat_model`, `A`, `B`, `mu`, `alpha_evap`, `P_gas`, `valid_K`, optional `psat_table_path`} for reproducibility.
-- Ambient vapour pressure $P_{\mathrm{gas}}$ (特に Si を含む蒸気分圧) は Ronnet et al. (2016) 同様に自由パラメータとして扱い、化学平衡は計算しない。既定は gas‑poor 前提で $P_{\mathrm{gas}}=0$ とし、感度試験では YAML `sinks.sub_params.P_gas` を明示調整すること（HKL フラックスの最大不確定要素）。[marsdisk/physics/sublimation.py:585–590], [marsdisk/schema.py:273–273]
+- Ambient vapour pressure $P_{\mathrm{gas}}$ (特に Si を含む蒸気分圧) は Ronnet et al. (2016) 同様に自由パラメータとして扱い、化学平衡は計算しない。既定は gas‑poor 前提で $P_{\mathrm{gas}}=0$ とし、感度試験では YAML `sinks.sub_params.P_gas` を明示調整すること（HKL フラックスの最大不確定要素）。[marsdisk/physics/sublimation.py:585–590], [marsdisk/schema.py:274–274]
 - `sub_params.mass_conserving=true` の場合、昇華由来の ds/dt は粒径のみを縮小し、1 ステップ内に $s<a_{\rm blow}$ を跨いだ分だけをブローアウト損失として処理する（質量シンクには入れない）。false で従来どおり昇華シンクとして質量減算。[marsdisk/physics/collisions_smol.py:305–486][marsdisk/run.py:1654–2185]
 
 ### (E.019) marsdisk/physics/sublimation.py: sink_timescale (implemented by s_sink_from_timescale, lines 116-129)
@@ -743,6 +778,15 @@ Ensures that the surface layer does not exceed the $\tau=1$ limit:
 - For $\kappa_{\mathrm{eff}}>0$, applies `min(Σ_surf, Σ_{τ=1})` with $Σ_{τ=1}=1/\kappa_{\mathrm{eff}}$.
 - Operates on scalars and returns a float suitable for downstream arrays. [marsdisk/physics/shielding.py#clip_to_tau1 [L219–L261]]
 
+**Symbols**
+
+|Symbol|Meaning|Units|Defaults/Notes|
+|---|---|---|---|
+|$\Sigma_{\mathrm{surf}}$|Surface density|kg m$^{-2}$|Input|
+|$\kappa_{\mathrm{eff}}$|Effective opacity|m$^2$ kg$^{-1}$|Input|
+|$\Sigma_{\tau=1}$|Optical depth unity density|kg m$^{-2}$|$1/\kappa_{\mathrm{eff}}$|
+
+
 ### (E.032) marsdisk/physics/fragments.py: compute_q_r_F2 (lines 30–61)
 重心系の比衝突エネルギー $Q_R$ を評価する定義で、普遍的な破壊スケーリング [@StewartLeinhardt2009_ApJ691_L133] に従う。
 
@@ -835,8 +879,15 @@ P_{\mathrm{sat}}(T) = 10^{A - B/T}
 タブレットされた $\log_{10}P_{\mathrm{sat}}(T)$ を形状保存補間で評価する枝。Ronnet らの気化解析 [@Ronnet2016_ApJ828_109] で採用された温度依存を外部表で差し替える用途を想定する。
 補間手法とインターフェースは実装固有で、同一形を示す文献はない。
 
-
 Interpolates $\log_{10}P_{\mathrm{sat}}(T)$ using a shape-preserving cubic (PCHIP) constructed from the loaded table. Temperatures outside the tabulated span are clipped with a logged warning; the interpolant guarantees monotonic pressure. [marsdisk/physics/sublimation.py#p_sat_tabulated [L369–L383]]
+
+**Symbols**
+
+|Symbol|Meaning|Units|Defaults/Notes|
+|---|---|---|---|
+|$P_{\mathrm{sat}}$|Saturation vapour pressure|Pa|Interpolated return value|
+|$T$|Grain temperature|K|Argument|
+
 
 ### (E.037b) marsdisk/physics/sublimation.py: p_sat (lines 584–591)
 温度とパラメータに応じて Clausius / tabulated / local-fit のいずれかを選択し、飽和蒸気圧 $P_{\mathrm{sat}}$ を返す統合関数。
@@ -851,6 +902,15 @@ P_{\mathrm{sat}}(T) = \texttt{choose\_psat\_backend}(T, \mathtt{params}).\texttt
 - 選択結果を `params._psat_last_selection` に保存し、診断出力で活用可能。
 - ログに選択ブランチを記録。 [marsdisk/physics/sublimation.py#p_sat [L584–L591]]
 
+**Symbols**
+
+|Symbol|Meaning|Units|Defaults/Notes|
+|---|---|---|---|
+|$P_{\mathrm{sat}}$|Saturation vapour pressure|Pa|Return value from selected backend|
+|$T$|Grain temperature|K|Argument|
+|params|Sublimation configuration|`SublimationParams`|Determines backend selection|
+
+
 ### (E.038) marsdisk/physics/sublimation.py: s_sink_from_timescale (lines 587–603)
 HKL フラックスと参照時間から即時蒸発する粒径を返す換算式で、揮発損失の寿命基準 [@Ronnet2016_ApJ828_109] を踏襲する。
 
@@ -861,12 +921,32 @@ s_{\mathrm{sink}} = \frac{\eta_{\mathrm{instant}}\,t_{\mathrm{ref}}\,J(T)}{\rho}
 ```
 See (E.019) for symbol definitions; this helper mainly performs validation and delegates flux evaluation. [marsdisk/physics/sublimation.py#s_sink_from_timescale [L587–L603]]
 
+**Symbols**
+
+|Symbol|Meaning|Units|Defaults/Notes|
+|---|---|---|---|
+|$s_{\mathrm{sink}}$|Sink-limited grain size|m|Return value|
+|$\eta_{\mathrm{instant}}$|Instantaneous sublimation efficiency|dimensionless|~ 1 typical|
+|$t_{\mathrm{ref}}$|Reference timescale|s|Orbital period or similar|
+|$J(T)$|Mass flux|kg m$^{-2}$ s$^{-1}$|From HKL model|
+|$\rho$|Grain density|kg m$^{-3}$|`rho_used`|
+
+
 ### (E.039) marsdisk/physics/radiation.py: load_qpr_table (lines 119–146)
 Planck 平均 $\langle Q_{\mathrm{pr}}\rangle$ の表をキャッシュに読み込むヘルパー。β とブローアウトの基礎付けは [@Burns1979_Icarus40_1] を採用し、ここではその入力データを切り替える。
 ロードとキャッシュ方法は実装固有であり、同一仕様を提示する文献は存在しない。
 
 
 Loads a Planck-mean $⟨Q_{\mathrm{pr}}⟩$ table into the radiation module cache, logging the covered size and temperature ranges when available. The returned callable defaults subsequent lookups via `qpr_lookup`. [marsdisk/physics/radiation.py#load_qpr_table [L119–L146]]
+
+**Symbols**
+
+|Symbol|Meaning|Units|Defaults/Notes|
+|---|---|---|---|
+|$\langle Q_{\mathrm{pr}}\rangle$|Planck-mean radiation pressure efficiency|dimensionless|Loaded from table|
+|$s$|Grain size|m|Table axis|
+|$T$|Temperature|K|Table axis|
+
 
 
 
@@ -908,3 +988,64 @@ T_p(r,t) = T_{\mathrm{Mars}}(t)\,\bar{Q}_{\mathrm{abs}}^{1/4} \sqrt{\frac{R_{\ma
 |$r$|Grain orbital radius|m|`1.0–2.4 R_{\mathrm{Mars}}`|
 |$\bar{Q}_{\mathrm{abs}}$|Planck平均吸収効率|dimensionless|既定は 1|
 |$T_p$|Grain equilibrium temperature|K|Glass/liquidus 到達判定に使用|
+
+---
+
+### (E.044) marsdisk/physics/collisions_smol.py: kernel_minimum_tcoll (lines 241–250)
+[@Wyatt2008]
+
+衝突カーネル $C_{ij}$ の各行合計から最大衝突レートを求め、その逆数を「最小衝突時間スケール」$t_{\rm coll,min}$ として返す。
+```latex
+t_{\mathrm{coll,min}} = \frac{1}{\max_i \sum_j C_{ij}}
+```
+$C_{ij}$ が全てゼロまたは空の場合は $\infty$ を返す。`step_collisions_smol_0d` 内で IMEX ステップ幅の上限推定に利用される。
+
+**Symbols**
+
+|Symbol|Meaning|Units|Defaults/Notes|
+|---|---|---|---|
+|$C_{ij}$|Collision kernel|s$^{-1}$|`compute_collision_kernel_C1` から与える|
+|$t_{\mathrm{coll,min}}$|Minimum collision timescale|s|$\infty$ if no collisions|
+
+---
+
+### (E.045) marsdisk/physics/collisions_smol.py: supply_mass_rate_to_number_source (lines 67–95)
+TODO(REF:smol_source_injection_v1)
+
+質量フラックス $\dot{M}_{\rm supply}$ (kg s$^{-1}$) をビン別個数ソース $F_k$ (s$^{-1}$) に変換する。供給質量は $s \ge s_{\rm min,eff}$ を満たす最小ビンに集中注入され、質量保存条件
+```latex
+\sum_{k} m_k F_k = \dot{M}_{\mathrm{supply}}
+```
+が成り立つよう $F_{k_{\rm inj}} = \dot{M}_{\rm supply} / m_{k_{\rm inj}}$ とする。負のフラックスはゼロとして扱う。
+
+**Symbols**
+
+|Symbol|Meaning|Units|Defaults/Notes|
+|---|---|---|---|
+|$\dot{M}_{\mathrm{supply}}$|Mass supply rate|kg s$^{-1}$|`prod_subblow_mass_rate`|
+|$s_{\rm min,eff}$|Effective minimum size|m|Blow-out or config floor|
+|$m_k$|Particle mass in bin $k$|kg|PSD state から取得|
+|$F_k$|Number source rate in bin $k$|s$^{-1}$|Smol ODE のソース項|
+
+---
+
+### (E.046) marsdisk/physics/collisions_smol.py: step_collisions_smol_0d (lines 305–491)
+[@Wyatt2008]
+
+0D Smoluchowski ソルバーの 1 ステップを実行し、衝突+破砕+ブローアウト+昇華+外部シンクを統合した PSD 更新を行う。`step_imex_bdf1_C3` を呼び出し、IMEX-BDF1 スキームで
+```latex
+\frac{dN_k}{dt} = F_k + \sum_{i,j} Y_{kij} K_{ij} N_i N_j / 2 - N_k \sum_j K_{kj} N_j - S_k N_k
+```
+を時間積分する（$Y_{kij}$: 破片分配テンソル, $S_k$: ブローアウト+昇華シンク）。
+
+**Symbols**
+
+|Symbol|Meaning|Units|Defaults/Notes|
+|---|---|---|---|
+|$N_k$|Number density in bin $k$|m$^{-3}$|PSD state|
+|$K_{ij}$|Collision kernel|m$^3$ s$^{-1}$|`compute_collision_kernel_C1`|
+|$Y_{kij}$|Fragment tensor|dimensionless|`_fragment_tensor`|
+|$S_k$|Sink rate (blow-out + sublimation)|s$^{-1}$|`_blowout_sink_vector` + `sublimation_sink_from_dsdt`|
+|$F_k$|Source rate|s$^{-1}$|`supply_mass_rate_to_number_source`|
+|$dt$|Time step|s|Caller determines|
+
