@@ -22,10 +22,12 @@ flowchart TB
         E --> F[Φ遮蔽テーブル読込]
         F --> G[PSD初期化]
         G --> H[表層Σ_surf初期化]
+        H --> H2[PhaseEvaluator初期化]
+        H2 --> H3[SupplySpec解決]
     end
     
     subgraph LOOP["時間積分ループ"]
-        H --> I{step_no < n_steps?}
+        H3 --> I{step_no < n_steps?}
         I -->|Yes| J[物理ステップ]
         J --> K[診断記録]
         K --> I
@@ -36,6 +38,8 @@ flowchart TB
         L --> M[run.parquet]
         L --> N[summary.json]
         L --> O[mass_budget.csv]
+        L --> P[psd_hist.parquet]
+        L --> Q[diagnostics.parquet]
     end
 ```
 
@@ -45,7 +49,7 @@ flowchart TB
 
 AGENTS.md で規定された結合順序:
 
-> ⟨Q_pr⟩ → β → a_blow → sublimation ds/dt → τ & Φ → surface sink fluxes
+> ⟨Q_pr⟩ → β → a_blow → sublimation ds/dt → τ & Φ → phase → supply → surface sink fluxes
 
 ```mermaid
 sequenceDiagram
@@ -56,6 +60,7 @@ sequenceDiagram
     participant PSD as psd
     participant SH as shielding
     participant PH as phase
+    participant SP as supply
     participant SK as sinks
     participant SF as surface
     participant SM as smol
@@ -64,7 +69,7 @@ sequenceDiagram
     
     rect rgb(240, 248, 255)
         Note right of M: 1. 温度評価 (E.042-043)
-        M->>TD: evaluate(t)
+        M->>TD: driver.evaluate(t)
         TD-->>M: T_M(t)
     end
     
@@ -104,18 +109,26 @@ sequenceDiagram
     
     rect rgb(255, 240, 245)
         Note right of M: 6. 相判定 (Phase)
-        M->>PH: evaluate(T_M, P, τ)
-        PH-->>M: phase_state, f_vap
+        M->>PH: evaluate_with_bulk(T_M, P, τ)
+        PH-->>M: PhaseDecision, BulkPhaseState
+        Note right of M: solid → rp_blowout
+        Note right of M: vapor → hydro_escape
+    end
+
+    rect rgb(240, 255, 255)
+        Note right of M: 7. 外部供給 (Supply)
+        M->>SP: get_prod_area_rate(t, r, spec)
+        SP-->>M: Σ_prod
     end
     
     rect rgb(245, 255, 250)
-        Note right of M: 7. シンク時間スケール
+        Note right of M: 8. シンク時間スケール
         M->>SK: total_sink_timescale(T, ρ, Ω)
         SK-->>M: t_sink, components
     end
     
     rect rgb(255, 255, 240)
-        Note right of M: 8. 表層進化 (S1) or Smol (C3)
+        Note right of M: 9. 表層進化 (S1) or Smol (C3)
         alt collision_solver = "surface_ode"
             M->>SF: step_surface(Σ, prod, dt, Ω, τ, t_sink)
             SF-->>M: Σ_new, outflux, sink_flux
@@ -130,7 +143,124 @@ sequenceDiagram
 
 ---
 
-## 3. 表層進化ステップ (S1) の詳細
+## 3. 温度ドライバ解決フロー
+
+`tempdriver.py` による火星温度の動的解決:
+
+```mermaid
+flowchart TB
+    subgraph RESOLVE["resolve_temperature_driver"]
+        A[radiation_cfg] --> B{TM_K 明示?}
+        B -->|Yes| C["ConstantDriver(TM_K)"]
+        B -->|No| D{driver.mode?}
+        
+        D -->|"constant"| E["ConstantDriver(driver.constant)"]
+        D -->|"table"| F["TableDriver(path)"]
+        D -->|"autogen"| G{テーブル存在?}
+        
+        G -->|No| H["SiO2冷却式でテーブル生成"]
+        G -->|Yes| I{時間範囲OK?}
+        I -->|No| H
+        I -->|Yes| J["既存テーブルをロード"]
+        
+        H --> K["_write_temperature_table"]
+        K --> J
+        J --> F
+    end
+    
+    subgraph RUNTIME["TemperatureDriverRuntime"]
+        L[source: str]
+        M[mode: str]
+        N["evaluate(time_s) → T_M"]
+    end
+    
+    C --> RUNTIME
+    E --> RUNTIME
+    F --> RUNTIME
+```
+
+---
+
+## 4. 相判定フロー (PhaseEvaluator)
+
+`phase.py` による固体/蒸気相の判定とシンク選択:
+
+```mermaid
+flowchart TB
+    subgraph INPUT["入力"]
+        A[temperature_K]
+        B[pressure_Pa]
+        C[tau]
+        D[radius_m, time_s]
+    end
+    
+    subgraph EVAL["PhaseEvaluator.evaluate_with_bulk"]
+        E{map_fn 利用可能?}
+        E -->|Yes| F["_call_map(map_fn, T, P, τ)"]
+        E -->|No| G["_threshold_decision(T, P, τ)"]
+        
+        F --> H["_parse_map_result"]
+        G --> I["T_condense/T_vaporize ランプ"]
+        
+        H --> J[PhaseDecision]
+        I --> J
+        
+        J --> K{state?}
+        K -->|"solid"| L["sink_selected = 'rp_blowout'"]
+        K -->|"vapor"| M["sink_selected = 'hydro_escape'"]
+    end
+    
+    subgraph OUTPUT["出力"]
+        N["PhaseDecision(state, f_vap, method)"]
+        O["BulkPhaseState(f_liquid, f_solid, f_vapor)"]
+        P["sink_selected ∈ {rp_blowout, hydro_escape, none}"]
+    end
+    
+    A & B & C & D --> EVAL
+    J --> N
+    EVAL --> O
+    L & M --> P
+```
+
+---
+
+## 5. 外部供給モード (Supply)
+
+`supply.py` による生成率の評価:
+
+```mermaid
+flowchart LR
+    subgraph CONFIG["YAML設定"]
+        A1["mode: const"]
+        A2["mode: powerlaw"]
+        A3["mode: table"]
+        A4["mode: piecewise"]
+    end
+    
+    subgraph RATE["_rate_basic"]
+        B1["prod_area_rate_kg_m2_s"]
+        B2["A × (t - t₀)^index"]
+        B3["TableData.interp(t, r)"]
+        B4["区間ごとに再帰評価"]
+    end
+    
+    subgraph OUTPUT["get_prod_area_rate"]
+        C["R_base × ε_mix"]
+        D["max(rate, 0)"]
+    end
+    
+    A1 --> B1
+    A2 --> B2
+    A3 --> B3
+    A4 --> B4
+    
+    B1 & B2 & B3 & B4 --> C
+    C --> D
+```
+
+---
+
+## 6. 表層進化ステップ (S1) の詳細
 
 Strubbe & Chiang (2006) / Wyatt (2008) に基づく表層 ODE:
 
@@ -139,7 +269,7 @@ flowchart LR
     subgraph INPUT["入力"]
         A[Σ_surf^n]
         B[prod_rate]
-        C[Ω, τ, t_sink]
+        C["Ω, τ, t_sink"]
     end
     
     subgraph CALC["計算"]
@@ -166,7 +296,7 @@ flowchart LR
 
 ---
 
-## 4. Smoluchowski 衝突積分 (C3) の詳細
+## 7. Smoluchowski 衝突積分 (C3) の詳細
 
 IMEX-BDF(1) による粒径分布の時間発展:
 
@@ -202,7 +332,7 @@ flowchart TB
 
 ---
 
-## 5. 放射圧ブローアウト判定フロー
+## 8. 放射圧ブローアウト判定フロー
 
 ```mermaid
 flowchart TB
@@ -217,7 +347,7 @@ flowchart TB
     F -->|Yes| H[ブローアウト有効]
     F -->|No| I[τゲートでブロック]
     
-    H --> J["outflux = Σ_surf × Ω"]
+    H --> J["outflux = Σ_surf × Ω × gate_factor"]
     G --> K["outflux = 0"]
     I --> K
     D --> L[軌道束縛維持]
@@ -225,7 +355,7 @@ flowchart TB
 
 ---
 
-## 6. モジュール依存関係
+## 9. モジュール依存関係
 
 ```mermaid
 graph TD
@@ -247,6 +377,9 @@ graph TD
         DY[dynamics.py]
         COL[collide.py]
         CSMO[collisions_smol.py]
+        SP[supply.py]
+        FRAG[fragments.py]
+        QSTAR[qstar.py]
     end
     
     subgraph IO["io/"]
@@ -260,7 +393,7 @@ graph TD
         CN[constants.py]
     end
     
-    RUN --> RAD & SH & PSD & SF & SM & SK & TD & PH & CSMO
+    RUN --> RAD & SH & PSD & SF & SM & SK & TD & PH & CSMO & SP
     RUN --> WR & TB
     RUN --> GR & SC & CN
     
@@ -272,14 +405,15 @@ graph TD
     SK --> SUB & RAD & CN
     SUB --> CN
     SZ --> SUB & CN
-    CSMO --> SM & COL & DY & PSD
+    CSMO --> SM & COL & DY & PSD & FRAG & QSTAR
     TD --> TB
-    PH --> CN
+    PH --> CN & SC
+    SP --> SC
 ```
 
 ---
 
-## 7. 出力データフロー
+## 10. 出力データフロー
 
 ```mermaid
 flowchart LR
@@ -296,28 +430,31 @@ flowchart LR
         G[write_summary]
         H[write_mass_budget]
         I[write_orbit_rollup]
+        J[write_run_config]
     end
     
     subgraph FILES["出力ファイル"]
-        J[series/run.parquet]
-        K[series/psd_hist.parquet]
-        L[series/diagnostics.parquet]
-        M[summary.json]
-        N[checks/mass_budget.csv]
-        O[orbit_rollup.csv]
+        K[series/run.parquet]
+        L[series/psd_hist.parquet]
+        M[series/diagnostics.parquet]
+        N[summary.json]
+        O[checks/mass_budget.csv]
+        P[orbit_rollup.csv]
+        Q[run_config.json]
     end
     
-    A --> F --> J
-    B --> F --> K
-    C --> F --> L
-    D --> H --> N
-    E --> I --> O
-    A --> G --> M
+    A --> F --> K
+    B --> F --> L
+    C --> F --> M
+    D --> H --> O
+    E --> I --> P
+    A --> G --> N
+    A --> J --> Q
 ```
 
 ---
 
-## 8. 式番号とモジュールの対応表
+## 11. 式番号とモジュールの対応表
 
 | 式番号 | 式名 | モジュール | 関数/行番号 |
 |--------|------|-----------|-------------|
@@ -326,16 +463,21 @@ flowchart LR
 | (E.004) | interp_qpr | io/tables.py | `interp_qpr` L259-270 |
 | (E.006) | t_coll | surface.py | `wyatt_tcoll_S1` L62-73 |
 | (E.007) | step_surface_density_S1 | surface.py | `step_surface_density_S1` L96-163 |
-| (E.013) | β | radiation.py | `beta` |
+| (E.010) | IMEX-BDF(1) | smol.py | `step_imex_bdf1_C3` L18-101 |
+| (E.011) | mass_budget_error | smol.py | `compute_mass_budget_error_C4` L104-131 |
+| (E.013) | β | radiation.py | `beta` L220-241 |
 | (E.014) | a_blow | radiation.py | `blowout_radius` L274-288 |
-| (C3) | IMEX-BDF(1) | smol.py | `step_imex_bdf1_C3` L18-101 |
-| (C4) | mass_budget_error | smol.py | `compute_mass_budget_error_C4` L104-131 |
-| (S0) | effective_kappa | shielding.py | `effective_kappa` L90-120 |
-| (S1) | step_surface | surface.py | `step_surface` L185-208 |
+| (E.015) | effective_kappa | shielding.py | `effective_kappa` L90-120 |
+| (E.016) | sigma_tau1 | shielding.py | `sigma_tau1` L123-130 |
+| (E.018) | mass_flux_hkl | sublimation.py | `mass_flux_hkl` L534-584 |
+| (E.027) | get_prod_area_rate | supply.py | `get_prod_area_rate` L93-98 |
+| (E.042-043) | T_M(t) | tempdriver.py | `resolve_temperature_driver` L275-341 |
+| — | PhaseDecision | phase.py | `PhaseEvaluator.evaluate` L120-138 |
+| — | hydro_escape_timescale | phase.py | `hydro_escape_timescale` L564-593 |
 
 ---
 
-## 9. 設定キー → 物理モジュールのマッピング
+## 12. 設定キー → 物理モジュールのマッピング
 
 ```mermaid
 flowchart LR
@@ -347,6 +489,9 @@ flowchart LR
         C5[surface.collision_solver]
         C6[blowout.enabled]
         C7[numerics.dt_init]
+        C8["mars_temperature_driver.*"]
+        C9[phase.mode]
+        C10[supply.mode]
     end
     
     subgraph MODULE["物理モジュール"]
@@ -355,8 +500,10 @@ flowchart LR
         M3[shielding]
         M4[sinks / sublimation]
         M5[surface / collisions_smol]
-        M6[surface (outflux)]
+        M6["surface (outflux)"]
         M7[time loop dt]
+        M8[phase]
+        M9[supply]
     end
     
     C1 --> M1
@@ -366,7 +513,56 @@ flowchart LR
     C5 --> M5
     C6 --> M6
     C7 --> M7
+    C8 --> M1
+    C9 --> M8
+    C10 --> M9
 ```
+
+---
+
+## 13. 流体逃亡スケーリング (hydro_escape)
+
+相が `vapor` の場合に適用される流体力学的散逸:
+
+```mermaid
+flowchart LR
+    subgraph INPUT["入力"]
+        A[HydroEscapeConfig]
+        B[temperature_K]
+        C[f_vap]
+    end
+    
+    subgraph CALC["hydro_escape_timescale"]
+        D["ΔT = T - T_ref"]
+        E["g(ΔT) = exp(-ΔT/scale)"]
+        F["t_escape = 1 / (strength × f_vap × g)"]
+    end
+    
+    subgraph OUTPUT["出力"]
+        G[t_escape_s]
+    end
+    
+    A & B & C --> CALC
+    D --> E --> F
+    F --> G
+```
+
+---
+
+## 14. バルク相状態 (BulkPhaseState)
+
+`PhaseEvaluator.evaluate_with_bulk` が返す詳細な相情報:
+
+| フィールド | 型 | 意味 |
+|-----------|----|----|
+| `state` | `solid_dominated`/`liquid_dominated`/`mixed` | 支配相 |
+| `f_liquid` | float | 液相分率 [0,1] |
+| `f_solid` | float | 固相分率 [0,1] |
+| `f_vapor` | float | 蒸気分率 [0,1] |
+| `method` | str | 判定手法 (`map`/`threshold`) |
+| `used_map` | bool | マップ関数使用の有無 |
+| `temperature_K` | float | 評価温度 |
+| `tau` | float | 光学深度 |
 
 ---
 
@@ -376,3 +572,5 @@ flowchart LR
 - Wyatt (2008): ARA&A 46, 339 — デブリ円盤の衝突カスケード
 - Burns et al. (1979): Icarus 40, 1 — 放射圧効率 Q_pr と β の定義
 - Hyodo et al. (2017, 2018): ApJ — 火星月形成円盤の放射冷却
+- Pignatale et al. (2018): ApJ 853, 118 — HKL昇華フラックス
+- Ronnet et al. (2016): ApJ 828, 109 — 外縁ガス包絡での凝縮

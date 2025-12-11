@@ -279,6 +279,7 @@
 - **Title**: Formation of planetary embryos: efficiencies of accretion and fragmentation
 - **Journal**: Icarus, 106, 190–209
 - **DOI**: [10.1006/icar.1993.1161](https://doi.org/10.1006/icar.1993.1161)
+- **Online**: [ScienceDirect](https://www.sciencedirect.com/science/article/pii/S001910358371161X)
 - **使用箇所**: 衝突率計算
 - **主張**:
   - 低 e, i での衝突率スケール設定の参照
@@ -302,9 +303,9 @@
   - 速い拡散 → 単一主衛星
 
 ### Salmon & Canup (2010)
-- **Key**: `SalmonCanup2010_Icarus208_33`
+- **Key**: `SalmonCanup2010_Icarus209_771`
 - **Title**: Long-term and large-scale viscous evolution of dense planetary rings
-- **Journal**: Icarus, 208, 33–48
+- **Journal**: Icarus, 209, 771–785
 - **DOI**: [10.1016/j.icarus.2010.05.030](https://doi.org/10.1016/j.icarus.2010.05.030)
 - **使用箇所**: 粘性拡散モデル
 - **主張**:
@@ -331,6 +332,7 @@
 - **Key**: `FegleySchaefer2012_arXiv`
 - **Title**: Chemistry of impact-generated silicate vapors (MAGMA calculations)
 - **Journal**: arXiv
+- **Online**: [arXiv:1303.3905](https://arxiv.org/abs/1303.3905)
 - **使用箇所**: HKL液体枝
 - **主張**:
   - 溶融SiO₂の平衡蒸気圧フィット（HKL 液体枝、(E.018) に集約）
@@ -375,7 +377,7 @@
 - **Key**: `Blanco1976_ApSS41_447`
 - **Title**: Planck mean efficiency factors for six material candidates for interstellar grains
 - **Journal**: Ap&SS, 41, 447–463
-- **DOI**: [10.1007/BF00640752](https://doi.org/10.1007/BF00640752)
+- **DOI**: [10.1007/BF00640498](https://doi.org/10.1007/BF00640498)
 - **使用箇所**: Q_abs テーブル参照値
 - **主張**:
   - 複数組成のプランク平均 Q_abs テーブル
@@ -395,9 +397,11 @@
 - **Title**: Parameterizing the interstellar dust temperature
 - **Journal**: A&A, 604, A58
 - **DOI**: [10.1051/0004-6361/201629944](https://doi.org/10.1051/0004-6361/201629944)
+- **Online**: [A&A Open Access](https://www.aanda.org/articles/aa/abs/2017/08/aa29944-16/aa29944-16.html)
 - **使用箇所**: ⟨Q_abs⟩ パラメタリゼーション
 - **主張**:
   - サイズ・組成依存の温度フィット
+
 
 ---
 
@@ -411,6 +415,7 @@
 - **Title**: Radiative Transfer
 - **Publisher**: Dover Publications
 - **ISBN**: 978-0-486-60590-6
+- **Online**: [Internet Archive](https://archive.org/details/radiativetransfe00chan)
 - **使用箇所**: τ≈1 光球面クリッピングの背景
 - **主張**:
   - 有効光球面を τ≈1 とみなす古典的扱い（E.017 の基盤）
@@ -436,9 +441,9 @@
 
 ### Cogley & Bergstrom (1979)
 - **Key**: `CogleyBergstrom1979_JQSRT22_267`
-- **Title**: Numerical results for the thermal scattering functions
-- **Journal**: J. Quant. Spectrosc. Radiat. Transf., 22, 267–280
-- **DOI**: [10.1016/0022-4073(79)90017-7](https://doi.org/10.1016/0022-4073(79)90017-7)
+- **Title**: Thermal scattering functions for diatomic molecules
+- **Journal**: J. Quant. Spectrosc. Radiat. Transf., 22, 267–276
+- **DOI**: [10.1016/0022-4073(79)90103-X](https://doi.org/10.1016/0022-4073(79)90103-X)
 - **使用箇所**: Φ(τ,ω₀,g) 数値テーブル
 - **主張**:
   - 高光学的厚さでの直達光透過飽和を定量化
@@ -505,6 +510,8 @@ SiO₂ の相転移温度と物性パラメータ。
 - **Title**: Solar System Dynamics
 - **Publisher**: Cambridge University Press
 - **DOI**: [10.1017/CBO9781139174817](https://doi.org/10.1017/CBO9781139174817)
+- **ISBN**: 0-521-57295-9
+- **Online**: [Cambridge Core](https://www.cambridge.org/core/books/solar-system-dynamics/108745034742B5A6F0793FA0B3B673CC)
 - **使用箇所**: v_K, Ω の定義（E.001–E.002）
 - **主張**:
   - ケプラー速度・角速度の標準式の参照元（E.001–E.002）

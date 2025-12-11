@@ -1,6 +1,13 @@
 # Changelog
 
 ## [Unreleased]
+- **Physics Flow Document Upgrade**: Expanded `analysis/physics_flow.md` with new Mermaid diagrams:
+  - Temperature driver resolution flow (`tempdriver.py` → `TemperatureDriverRuntime`)
+  - Phase evaluation flow (`PhaseEvaluator` → `PhaseDecision` / `BulkPhaseState`)
+  - External supply modes (`supply.py` → const/powerlaw/table/piecewise)
+  - Hydrodynamic escape scaling (`hydro_escape_timescale`)
+  - Updated module dependency graph including `phase.py`, `supply.py`, `tempdriver.py`
+  - Added式番号 cross-reference table entries for E.027, E.042-043, and phase/supply functions
 - Added explicit `radiation.use_mars_rp` / `use_solar_rp` toggles and new `blowout.target_phase`/`layer`
   configuration keys to make the Mars-only surface blow-out contract explicit.
 - Tightened the runtime blow-out gating (β threshold, Σ_{τ≤1} skin, solid-only phase guard) and

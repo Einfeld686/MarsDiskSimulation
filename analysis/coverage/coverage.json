@@ -5,8 +5,8 @@
     "rate": 0.7532467532467533
   },
   "anchor_consistency_rate": {
-    "numerator": 148,
-    "denominator": 148,
+    "numerator": 156,
+    "denominator": 156,
     "rate": 1.0
   },
   "equation_unit_coverage": {
@@ -14,7 +14,7 @@
     "denominator": 35,
     "rate": 0.9428571428571428
   },
-  "sinks_callgraph_documented": false,
+  "sinks_callgraph_documented": true,
   "holes": [
     "marsdisk/physics/collisions_smol.py#kernel_minimum_tcoll",
     "marsdisk/physics/collisions_smol.py#step_collisions_smol_0d",
