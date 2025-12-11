@@ -31,16 +31,8 @@ if not defined BATCH_SEED set BATCH_SEED=!RANDOM!
 set "BATCH_DIR=%BATCH_BASE%\%RUN_TS%__%GIT_SHA%__seed%BATCH_SEED%"
 
 rem out/temp_supply_sweep がファイル化していないか確認
-if exist "%BATCH_BASE%\NUL" (
-  rem OK: directory
-) else if exist "%BATCH_BASE%" (
-  echo [error] %BATCH_BASE% exists as a file. Remove or rename it, then rerun.
-  popd
-  exit /b 1
-) else (
-  mkdir "%BATCH_BASE%"
-)
-if not exist "%BATCH_DIR%" mkdir "%BATCH_DIR%"
+call :ensure_dir "%BATCH_BASE%" || (popd & exit /b 1)
+call :ensure_dir "%BATCH_DIR%"  || (popd & exit /b 1)
 
 if not exist "%VENV_DIR%\Scripts\python.exe" (
   echo [setup] Creating virtual environment in "%VENV_DIR%"...
@@ -105,14 +97,21 @@ set "OUTDIR=%OUTDIR_BASE%"
 set OUTDIR_IDX=0
 
 :find_outdir
-if exist "!OUTDIR!\NUL" (
-  rem already a directory -> OK
-) else if exist "!OUTDIR!" (
-  set /a OUTDIR_IDX+=1
-  set "OUTDIR=%OUTDIR_BASE%__alt!OUTDIR_IDX!"
-  goto find_outdir
+if exist "!OUTDIR!" (
+  dir /a:d "!OUTDIR!" >nul 2>&1
+  if not errorlevel 1 (
+    rem already a directory -> OK
+  ) else (
+    set /a OUTDIR_IDX+=1
+    set "OUTDIR=%OUTDIR_BASE%__alt!OUTDIR_IDX!"
+    goto find_outdir
+  )
 ) else (
   mkdir "!OUTDIR!"
+  if errorlevel 1 (
+    echo [error] Failed to create OUTDIR "!OUTDIR!" (permission/lock?). >nul
+    exit /b 1
+  )
 )
 
 if %OUTDIR_IDX% gtr 0 (
@@ -146,3 +145,19 @@ if /i "!SKIP_PLOTS!"=="1" (
   )
 )
 goto :eof
+
+:ensure_dir
+set "TARGET=%~1"
+if exist "%TARGET%\NUL" (
+  exit /b 0
+) else if exist "%TARGET%" (
+  echo [error] %TARGET% exists as a file. Remove or rename it, then rerun.
+  exit /b 1
+) else (
+  mkdir "%TARGET%"
+  if errorlevel 1 (
+    echo [error] Failed to create %TARGET% (permission/lock?). >nul
+    exit /b 1
+  )
+  exit /b 0
+)
