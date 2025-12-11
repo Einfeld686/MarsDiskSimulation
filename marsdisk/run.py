@@ -1976,6 +1976,7 @@ def run_zero_d(
         mass_loss_sublimation_smol_step = 0.0
         mass_loss_rate_sublimation_smol = 0.0
         sigma_loss_smol = 0.0
+        t_coll_kernel_last = None
         surface_active = collisions_active_step or sink_timescale_active
         if collision_solver_mode == "surface_ode":
             if surface_active:
@@ -2154,6 +2155,7 @@ def run_zero_d(
                     )
                     psd_state = smol_res.psd_state
                     sigma_surf = smol_res.sigma_after
+                    t_coll_kernel_last = smol_res.t_coll_kernel
                     sigma_loss_smol = max(sigma_loss_smol, 0.0) + max(smol_res.sigma_loss, 0.0)
                     prod_rate_last = smol_res.prod_mass_rate_effective
                     total_prod_surface = smol_res.prod_mass_rate_effective * dt
@@ -2507,13 +2509,15 @@ def run_zero_d(
             tau_eff_diag = kappa_eff * sigma_diag
         t_coll_step = None
         if collisions_active_step and tau_vert_last is not None and tau_vert_last > TAU_MIN and Omega_step > 0.0:
-            try:
-                t_coll_candidate = surface.wyatt_tcoll_S1(float(tau_vert_last), Omega_step)
-            except Exception:
-                t_coll_candidate = None
+            if collision_solver_mode == "smol":
+                t_coll_candidate = t_coll_kernel_last
             else:
-                if math.isfinite(t_coll_candidate) and t_coll_candidate > 0.0:
-                    t_coll_step = float(t_coll_candidate)
+                try:
+                    t_coll_candidate = surface.wyatt_tcoll_S1(float(tau_vert_last), Omega_step)
+                except Exception:
+                    t_coll_candidate = None
+            if t_coll_candidate is not None and math.isfinite(t_coll_candidate) and t_coll_candidate > 0.0:
+                t_coll_step = float(t_coll_candidate)
         ts_ratio_value = None
         if (
             t_coll_step is not None

@@ -129,6 +129,18 @@ class SupplyTable(BaseModel):
 
 class SupplyMixing(BaseModel):
     epsilon_mix: float = 0.05
+    mu: Optional[float] = Field(
+        None,
+        description="Alias for epsilon_mix; if provided, overrides epsilon_mix.",
+    )
+
+    @root_validator(pre=True)
+    def _alias_mu(cls, values: Dict[str, Any]) -> Dict[str, Any]:
+        """Allow 'mu' as an alias for 'epsilon_mix'."""
+
+        if "mu" in values and "epsilon_mix" not in values:
+            values["epsilon_mix"] = values["mu"]
+        return values
 
 
 class SupplyPiece(BaseModel):

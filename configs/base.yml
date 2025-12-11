@@ -79,7 +79,7 @@ supply:
     path: "data/supply_rate.csv"
     interp: "linear"
   mixing:
-    epsilon_mix: 1.0
+    mu: 1.0
 sinks:
   mode: "sublimation"
   enable_sublimation: true

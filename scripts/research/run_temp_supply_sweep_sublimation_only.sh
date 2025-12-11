@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
-# Run temp supply parameter sweep:
-#   T_M = {2000, 4000, 6000} K
-#   epsilon_mix = {0.1, 0.5, 1.0}
-#   shielding.table_path = {phi_const_0p20, phi_const_0p37, phi_const_0p60}
-# 出力は out/temp_supply_sweep/<ts>__<sha>__seed<batch>/T{T}_eps{eps}_phi{phi}/ に配置。
+# Run temp supply sweep (sublimation only)
+# T_M = {2000, 4000, 6000}
+# mu  = {0.1, 0.5, 1.0}
+# phi = {0p20, 0p37, 0p60}
+# Outputs under: out/temp_supply_sweep/<ts>__<sha>__seed<BATCH>/T{T}_mu{mu}_phi{phi}_mode-sublimation_only/
 
 set -euo pipefail
 
@@ -34,15 +34,12 @@ else
   echo "[warn] ${REQ_FILE} not found; skipping dependency install."
 fi
 
-# Base config to override per run
 BASE_CONFIG="configs/sweep_temp_supply/temp_supply_T4000_eps1.yml"
-
-# Parameter grids
 T_LIST=("2000" "4000" "6000")
 MU_LIST=("0.1" "0.5" "1.0")
-PHI_LIST=("20" "37" "60")  # maps to tables/phi_const_0pXX.csv
+PHI_LIST=("20" "37" "60")
+MODE="sublimation_only"
 
-# Progress bar: default ON when stdout is a TTY; OFF otherwise to avoid CR->LF spam.
 PROGRESS_FLAG=()
 if [[ -t 1 ]]; then
   if [[ "${ENABLE_PROGRESS:-1}" != "0" ]]; then
@@ -66,9 +63,9 @@ import secrets
 print(secrets.randbelow(2**31))
 PY
 )
-      TITLE="T${T}_mu${MU_TITLE}_phi${PHI}"
+      TITLE="T${T}_mu${MU_TITLE}_phi${PHI}_mode-${MODE}"
       OUTDIR="${BATCH_DIR}/${TITLE}"
-      echo "[run] T=${T} mu=${MU} phi=${PHI} -> ${OUTDIR} (batch=${BATCH_SEED}, seed=${SEED})"
+      echo "[run] mode=${MODE} T=${T} mu=${MU} phi=${PHI} -> ${OUTDIR} (batch=${BATCH_SEED}, seed=${SEED})"
       python -m marsdisk.run \
         --config "${BASE_CONFIG}" \
         --quiet \
@@ -79,13 +76,10 @@ PY
         --override "radiation.TM_K=${T}" \
         --override "radiation.mars_temperature_driver.table.path=${T_TABLE}" \
         --override "supply.mixing.mu=${MU}" \
-        --override "shielding.table_path=tables/phi_const_0p${PHI}.csv"
+        --override "shielding.table_path=tables/phi_const_0p${PHI}.csv" \
+        --override "physics_mode=${MODE}"
 
-      final_dir="${OUTDIR}"
-      mkdir -p "${final_dir}/series" "${final_dir}/checks"
-
-      # Generate quick-look plots into <final_dir>/plots
-      RUN_DIR="${final_dir}" python - <<'PY'
+      RUN_DIR="${OUTDIR}" python - <<'PY'
 import os
 import json
 from pathlib import Path
@@ -188,4 +182,4 @@ PY
   done
 done
 
-echo "[done] Sweep completed (batch=${BATCH_SEED}, dir=${BATCH_DIR})."
+echo "[done] Sweep (sublimation_only) completed (batch=${BATCH_SEED}, dir=${BATCH_DIR})."
