@@ -1398,6 +1398,12 @@ def run_zero_d(
     if not blowout_enabled:
         case_status = "no_blowout"
 
+    init_tau1_enabled = bool(
+        getattr(cfg, "init_tau1", None) is not None and getattr(cfg.init_tau1, "enabled", False)
+    )
+    sigma_tau1_unity = None
+    sigma_override_applied = cfg.surface.sigma_surf_init_override
+
     if cfg.disk is not None and cfg.inner_disk_mass is not None:
         r_in_d = cfg.disk.geometry.r_in_RM * constants.R_MARS
         r_out_d = cfg.disk.geometry.r_out_RM * constants.R_MARS
@@ -1416,11 +1422,15 @@ def run_zero_d(
         if phi_tau_fn is not None:
             tau_mid = kappa_surf * sigma_mid
             kappa_for_init = shielding.effective_kappa(kappa_surf, tau_mid, phi_tau_fn)
+        if kappa_for_init > 0.0 and math.isfinite(kappa_for_init):
+            sigma_tau1_unity = 1.0 / kappa_for_init
+        if init_tau1_enabled and sigma_tau1_unity is not None and math.isfinite(sigma_tau1_unity):
+            sigma_override_applied = sigma_tau1_unity
         sigma_surf = initfields.surf_sigma_init(
             sigma_mid,
             kappa_for_init,
             cfg.surface.init_policy,
-            sigma_override=cfg.surface.sigma_surf_init_override,
+            sigma_override=sigma_override_applied,
         )
     else:
         sigma_surf = 0.0
@@ -1444,6 +1454,11 @@ def run_zero_d(
         area = math.pi * (r_out_d**2 - r_in_d**2)
     else:
         area = math.pi * r**2
+    mass_total_original = cfg.initial.mass_total
+    mass_total_applied = mass_total_original
+    if init_tau1_enabled and sigma_override_applied is not None and area > 0.0:
+        mass_total_applied = float(sigma_override_applied * area / constants.M_MARS)
+        cfg.initial.mass_total = mass_total_applied
     chi_config_raw = getattr(cfg, "chi_blow", 1.0)
     chi_config = chi_config_raw
     chi_config_str = str(chi_config_raw)
@@ -3287,6 +3302,13 @@ def run_zero_d(
             "input_config_path": str(config_source_path) if config_source_path is not None else None,
             "physics_mode": physics_mode,
             "physics_mode_source": physics_mode_source,
+        },
+        "init_tau1": {
+            "enabled": init_tau1_enabled,
+            "sigma_tau1_target": sigma_tau1_unity,
+            "sigma_surf_init_override_applied": sigma_override_applied,
+            "mass_total_original_Mmars": mass_total_original,
+            "mass_total_applied_Mmars": mass_total_applied,
         },
         "init_ei": {
             "e_mode": cfg.dynamics.e_mode,

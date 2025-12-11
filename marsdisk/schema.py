@@ -368,6 +368,15 @@ class Surface(BaseModel):
     )
 
 
+class InitTau1(BaseModel):
+    """Optional toggle to initialise the surface at τ≈1."""
+
+    enabled: bool = Field(
+        False,
+        description="When true, set σ_surf (and derived mass_total) to the Σ_τ=1 value at start-up.",
+    )
+
+
 class SublimationParamsModel(BaseModel):
     """Nested parameters for sublimation models.
 
@@ -1124,6 +1133,7 @@ class Config(BaseModel):
     inner_disk_mass: Optional[InnerDiskMass] = None
     phase: PhaseConfig = PhaseConfig()
     surface: Surface = Surface()
+    init_tau1: InitTau1 = InitTau1()
     supply: Supply = Field(default_factory=lambda: Supply())
     sinks: Sinks = Sinks()
     radiation: Optional[Radiation] = None
@@ -1211,6 +1221,7 @@ __all__ = [
     "QStar",
     "PSD",
     "Surface",
+    "InitTau1",
     "InnerDiskMass",
     "Supply",
     "PhaseConfig",

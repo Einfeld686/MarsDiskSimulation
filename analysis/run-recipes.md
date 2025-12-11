@@ -9,8 +9,8 @@
 
 | 目的 | 主要トグル / 設定 | 推奨コマンド | 出力確認 |
 | --- | --- | --- | --- |
-| ベースライン gas-poor（既定） | `surface.collision_solver=smol`, `sinks.mode=none`, `psd.wavy_strength=0.0`, `shielding.mode=psitau` | `python -m marsdisk.run --config configs/base.yml` | `out/series/run.parquet` に `mass_lost_by_sinks=0`、`summary.json` の `case_status` と β 統計、`checks/mass_budget.csv` 誤差 ≤0.5% |
-| 昇華シンク ON | `sinks.mode=sublimation`, `enable_sublimation=true` | `python -m marsdisk.run --config configs/base_sublimation.yml` | `mass_lost_by_sinks` が増分を持ち、`s_min_components` は `config/blowout/effective` のまま |
+| ベースライン gas-poor（既定） | `surface.collision_solver=smol`, `sinks.mode=sublimation`, `sub_params.mass_conserving=true`, `sublimation_location=smol`, `psd.wavy_strength=0.0`, `shielding.mode=psitau` | `python -m marsdisk.run --config configs/base.yml` | `out/series/run.parquet` に `mass_lost_by_sinks≈0`（昇華は粒径のみ）、`summary.json` の `case_status` と β 統計、`checks/mass_budget.csv` 誤差 ≤0.5% |
+| 昇華シンク ON（質量減算） | `sinks.mode=sublimation`, `enable_sublimation=true`, `sub_params.mass_conserving=false` | `python -m marsdisk.run --config configs/base_sublimation.yml` | `mass_lost_by_sinks` が増分を持ち、`s_min_components` は `config/blowout/effective` のまま |
 | レガシー表層 ODE（gas-rich 試験時のみ） | **環境変数** `ALLOW_TL2003=true`、`surface.collision_solver=surface_ode` | `ALLOW_TL2003=true python -m marsdisk.run --config configs/base.yml --override surface.collision_solver=surface_ode` | `run_config.json` に `collision_solver: surface_ode`、質量誤差 ≤0.5%（gas-poor 既定では無効のまま） |
 | “wavy” PSD 感度 | `psd.wavy_strength>0` | `python -m marsdisk.run --config configs/base.yml --override psd.wavy_strength=0.2` | `series/run.parquet` に “wavy” の波形が残り、`summary.json` で `psd.wavy_strength` を確認 |
 | 高速ブローアウト解像 | `io.substep_fast_blowout=true`, `io.substep_max_ratio≈1`（必要に応じ補正 `io.correct_fast_blowout=true`） | `python -m marsdisk.run --config configs/base.yml --set io.substep_fast_blowout=true --set io.substep_max_ratio=1.0` | `series/run.parquet` の `n_substeps>1` と `fast_blowout_*` 列、積分値と累積損失の一致 |
@@ -61,7 +61,7 @@ io:
 - `out/run_config.json` → `head -n 8 out/run_config.json`
 
 5) 確認項目
-- `series/run.parquet` の列に `prod_subblow_area_rate`,`M_out_dot`,`mass_lost_by_blowout`,`mass_lost_by_sinks` に加え、`dt_over_t_blow`,`fast_blowout_factor`,`fast_blowout_flag_gt3`,`fast_blowout_flag_gt10`,`fast_blowout_corrected`,`a_blow_step`,`dSigma_dt_sublimation`,`mass_lost_sinks_step`,`mass_lost_sublimation_step`,`ds_dt_sublimation` が揃う。さらに温度ドライバ列 `T_M_used`,`rad_flux_Mars`,`Q_pr_at_smin`,`beta_at_smin`,`a_blow_at_smin` が出力されていること。供給が0のため `prod_subblow_area_rate` は機械誤差内で0に留まり、`mass_lost_by_sinks` が全行で0であれば HK シンク（`sinks.total_sink_timescale`）が `None` を返し損失項へ寄与していないことを示す。高速ブローアウト補正は既定で無効なので `fast_blowout_corrected` は `false`、閾値フラグは `dt_over_t_blow` の大小に一致する。これらは `collisions_smol` + Smol 解法で一貫して計算され、solver モードに依存せず列名・単位は不変。
+- `series/run.parquet` の列に `prod_subblow_area_rate`,`M_out_dot`,`mass_lost_by_blowout`,`mass_lost_by_sinks` に加え、`dt_over_t_blow`,`fast_blowout_factor`,`fast_blowout_flag_gt3`,`fast_blowout_flag_gt10`,`fast_blowout_corrected`,`a_blow_step`,`dSigma_dt_sublimation`,`mass_lost_sinks_step`,`mass_lost_sublimation_step`,`ds_dt_sublimation` が揃う。さらに温度ドライバ列 `T_M_used`,`rad_flux_Mars`,`Q_pr_at_smin`,`beta_at_smin`,`a_blow_at_smin` が出力されていること。供給が0かつ `sub_params.mass_conserving=true` のため `prod_subblow_area_rate` は機械誤差内で0に留まり、`mass_lost_by_sinks` はブローアウト跨ぎ以外では 0 となる（昇華は粒径のみ更新）。高速ブローアウト補正は既定で無効なので `fast_blowout_corrected` は `false`、閾値フラグは `dt_over_t_blow` の大小に一致する。これらは `collisions_smol` + Smol 解法で一貫して計算され、solver モードに依存せず列名・単位は不変。
 - LOS/鉛直 τ の列 `tau_los_mars`,`tau_vertical` が揃い、LOS 方向が長い設定では `tau_los_mars >= tau_vertical` となる。Σ_τ=1 は LOS 基準（Σ_tau1_los）で記録される。
 - `summary.json` で `case_status` が `beta_at_smin_config` と `beta_threshold` の比較に従い `blowout`（閾値以上）または `ok`（閾値未満）となっていること。加えて `orbits_completed`,`M_out_cum`,`M_sink_cum`，および `M_out_mean_per_orbit` などの公転ロールアップ指標が出力される。温度関連として `T_M_source`,`T_M_initial`,`T_M_final`,`T_M_min`,`T_M_median`,`T_M_max`,`temperature_driver` が記録され、`beta_at_smin_min`/`beta_at_smin_median`/`beta_at_smin_max` と `a_blow_min`/`a_blow_median`/`a_blow_max` が統計として付与されていることを確認する。
 - `summary.json` の β関連フィールドが `beta_at_smin_config` / `beta_at_smin_effective` に分かれていること（旧 `beta_at_smin` は出力されない）。
@@ -96,10 +96,10 @@ python -m marsdisk.run --config analysis/run-recipes/baseline_blowout_only.yml
   - `checks/mass_budget.csv` の `error_percent` が 0.5% 以下。[marsdisk/run.py:1330–1357]
 - YAMLを書き換えず同条件を試す場合は CLI で `--sinks none` を付与する（例：`python -m marsdisk.run --config configs/base.yml --sinks none`）。
 
-### 派生レシピ: 昇華シンクを有効にする
+### 派生レシピ: 昇華シンクを有効にする（質量減算モード）
 - 実行例
 ```bash
-python -m marsdisk.run --config analysis/run-recipes/baseline_blowout_only.yml --sinks sublimation
+python -m marsdisk.run --config analysis/run-recipes/baseline_blowout_only.yml --sinks sublimation --set sinks.sub_params.mass_conserving=false
 ```
 - 最小設定断片（`sub_params` は設定済み値を尊重）
 ```yaml
@@ -107,6 +107,7 @@ sinks:
   mode: "sublimation"
   enable_sublimation: true
   sub_params:
+    mass_conserving: false  # 質量を減算する場合のみ false にする
     mode: "hkl"
     psat_model: "clausius"    # "tabulated" に切り替えると CSV/JSON を参照
     alpha_evap: 0.007         # SiO over Si+SiO2 (Ferguson & Nuth 2012)
@@ -117,7 +118,7 @@ sinks:
     P_gas: 0.0
 ```
 - 確認ポイント
-  - `series/run.parquet` の `mass_lost_by_blowout` と `mass_lost_by_sinks` が別カラムで積算され、昇華オンのステップで `mass_lost_by_sinks` が増加する（HK シンクが有限 `t_sink` を返した証拠）。[marsdisk/physics/sinks.py:83–160][marsdisk/run.py:1654–1683][marsdisk/run.py:2120–2185]
+  - `series/run.parquet` の `mass_lost_by_blowout` と `mass_lost_by_sinks` が別カラムで積算され、`mass_conserving=false` の場合にだけ昇華由来の損失で `mass_lost_by_sinks` が増加する（HK シンクが有限 `t_sink` を返した証拠）。[marsdisk/physics/sinks.py:83–160][marsdisk/run.py:1654–1683][marsdisk/run.py:2120–2185]
   - `fast_blowout_factor` や `fast_blowout_flag_gt3/gt10` は昇華の有無に関係なく出力される。高速補正を有効化したい場合は YAML の `io.correct_fast_blowout: true` を追加し、補正適用時に `fast_blowout_corrected` が `true` へ切り替わることを確認する。
   - `summary.json` の `s_min_components` に昇華キーが存在せず（`config`,`blowout`,`effective` のみ）、`s_min_effective` が max(config, blowout) を保つこと。[marsdisk/run.py:1340–1434][marsdisk/run.py:2270–2387]
     昇華境界は `s_min_evolved` 列で追跡され、床粒径の決定には反映されない。

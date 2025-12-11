@@ -65,6 +65,8 @@ surface:
   use_tcoll: true
   freeze_sigma: false
   collision_solver: smol
+init_tau1:
+  enabled: true
 supply:
   mode: const
   const:
@@ -109,7 +111,7 @@ radiation:
   use_solar_rp: false
   freeze_kappa: false
   TM_K: 4000.0
-  qpr_table_path: data/qpr_table.csv
+  qpr_table_path: marsdisk/io/data/qpr_planck.csv
   Q_pr:
   mars_temperature_driver:
     enabled: true
@@ -132,10 +134,10 @@ radiation:
     enable: false
     tau_max: 1.0
 shielding:
-  mode: psitau
-  table_path:
+  mode: fixed_tau1
+  table_path: tables/phi_const_0p37.csv
   fixed_tau1_tau:
-  fixed_tau1_sigma:
+  fixed_tau1_sigma: 1.0e-2
 blowout:
   enabled: true
   target_phase: solid_only
