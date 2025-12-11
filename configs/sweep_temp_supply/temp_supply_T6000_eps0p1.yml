@@ -40,6 +40,7 @@ dynamics:
   rng_seed: 42
 psd:
   alpha: 1.83
+  alpha_mode: mass
   wavy_strength: 0.0
   floor:
     mode: fixed

@@ -37,9 +37,9 @@ fi
 # Base config to override per run
 BASE_CONFIG="configs/sweep_temp_supply/temp_supply_T4000_eps1.yml"
 
-# Parameter grids
-T_LIST=("2000" "4000" "6000")
-MU_LIST=("0.1" "0.5" "1.0")
+# Parameter grids (run hotter cases first)
+T_LIST=("6000" "4000" "2000")
+MU_LIST=("1.0" "0.5" "0.1")
 PHI_LIST=("20" "37" "60")  # maps to tables/phi_const_0pXX.csv
 
 # Progress bar: default ON when stdout is a TTY; OFF otherwise to avoid CR->LF spam.
@@ -138,7 +138,12 @@ series_cols = [
     "a_blow",
     "prod_subblow_area_rate",
     "Sigma_surf",
+    "Sigma_tau1",
     "outflux_surface",
+    "t_coll",
+    "t_blow_s",
+    "dt_over_t_blow",
+    "tau_vertical",
 ]
 
 summary = {}
@@ -153,6 +158,8 @@ n = len(df)
 step = max(n // 4000, 1)
 df = df.iloc[::step].copy()
 df["time_days"] = df["time"] / 86400.0
+df["t_coll_years"] = (df["t_coll"].clip(lower=1e-6)) / 31557600.0
+df["t_blow_hours"] = (df["t_blow_s"].clip(lower=1e-12)) / 3600.0
 
 fig, axes = plt.subplots(3, 1, figsize=(10, 12), sharex=True)
 axes[0].plot(df["time_days"], df["M_out_dot"], label="M_out_dot (blowout)", lw=1.2)
@@ -168,13 +175,14 @@ axes[1].set_ylabel("M_Mars")
 axes[1].legend(loc="upper left")
 axes[1].set_title("Cumulative losses")
 
-axes[2].plot(df["time_days"], df["s_min"], label="s_min", lw=1.0)
-axes[2].plot(df["time_days"], df["a_blow"], label="a_blow", lw=1.0, alpha=0.8)
-axes[2].set_ylabel("m")
-axes[2].set_xlabel("days")
+axes[2].plot(df["time_days"], df["t_coll_years"], label="t_coll (yr)", lw=1.0)
+axes[2].plot(df["time_days"], df["t_blow_hours"], label="t_blow (hr)", lw=1.0, alpha=0.8)
+axes[2].plot(df["time_days"], df["dt_over_t_blow"], label="dt / t_blow", lw=0.9, alpha=0.7)
 axes[2].set_yscale("log")
+axes[2].set_ylabel("timescales (log)")
+axes[2].set_xlabel("days")
 axes[2].legend(loc="upper right")
-axes[2].set_title("Minimum size vs blowout")
+axes[2].set_title("Timescales (collisional vs blowout)")
 
 mloss = summary.get("M_loss")
 mass_err = summary.get("mass_budget_max_error_percent")
@@ -188,17 +196,24 @@ fig.tight_layout(rect=(0, 0, 1, 0.96))
 fig.savefig(plots_dir / "overview.png", dpi=180)
 plt.close(fig)
 
-fig2, ax2 = plt.subplots(2, 1, figsize=(10, 8), sharex=True)
+fig2, ax2 = plt.subplots(3, 1, figsize=(10, 11), sharex=True)
 ax2[0].plot(df["time_days"], df["prod_subblow_area_rate"], label="prod_subblow_area_rate", color="tab:blue")
 ax2[0].set_ylabel("kg m^-2 s^-1")
 ax2[0].set_title("Sub-blow supply rate")
 
 ax2[1].plot(df["time_days"], df["Sigma_surf"], label="Sigma_surf", color="tab:green")
-ax2[1].plot(df["time_days"], df["outflux_surface"], label="outflux_surface (surface blowout)", color="tab:red", alpha=0.8)
-ax2[1].set_ylabel("kg m^-2 / M_Mars s^-1")
-ax2[1].set_xlabel("days")
+ax2[1].plot(df["time_days"], df["Sigma_tau1"], label="Sigma_tau1", color="tab:orange", alpha=0.8)
+ax2[1].set_ylabel("kg m^-2")
 ax2[1].legend(loc="upper right")
-ax2[1].set_title("Surface mass and outflux")
+ax2[1].set_title("Surface density vs tau=1 cap")
+
+ax2[2].plot(df["time_days"], df["outflux_surface"], label="outflux_surface (M_Mars/s)", color="tab:red", alpha=0.9)
+ax2[2].plot(df["time_days"], df["tau_vertical"], label="tau_vertical", color="tab:purple", alpha=0.7)
+ax2[2].set_yscale("symlog", linthresh=1e-20)
+ax2[2].set_ylabel("outflux / tau")
+ax2[2].set_xlabel("days")
+ax2[2].legend(loc="upper right")
+ax2[2].set_title("Surface outflux and optical depth")
 
 fig2.suptitle(run_dir.name)
 fig2.tight_layout(rect=(0, 0, 1, 0.95))
