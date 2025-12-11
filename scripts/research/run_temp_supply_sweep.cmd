@@ -16,8 +16,18 @@ set SKIP_PLOTS=
 set VENV_DIR=.venv
 set REQ_FILE=requirements.txt
 rem スクリプトの場所からリポジトリルートを解決（どこから実行しても同じになるように）
-pushd "%~dp0\..\.."
-set "REPO_ROOT=%CD%"
+rem %~dp0 は末尾に \ を含むので、直接 .. を2回適用
+set "SCRIPT_DIR=%~dp0"
+rem 末尾の \ を除去してから親ディレクトリへ移動
+for %%A in ("%SCRIPT_DIR:~0,-1%") do set "PARENT1=%%~dpA"
+for %%B in ("%PARENT1:~0,-1%") do set "REPO_ROOT=%%~dpB"
+rem 末尾の \ を除去
+if "%REPO_ROOT:~-1%"=="\" set "REPO_ROOT=%REPO_ROOT:~0,-1%"
+pushd "%REPO_ROOT%"
+if errorlevel 1 (
+  echo [error] Failed to change directory to %REPO_ROOT%
+  exit /b 1
+)
 set "CONFIG_DIR=%REPO_ROOT%\configs\sweep_temp_supply"
 set CONFIGS_LIST="%CONFIG_DIR%\temp_supply_T2000_eps1.yml" "%CONFIG_DIR%\temp_supply_T2000_eps0p1.yml" "%CONFIG_DIR%\temp_supply_T4000_eps1.yml" "%CONFIG_DIR%\temp_supply_T4000_eps0p1.yml" "%CONFIG_DIR%\temp_supply_T6000_eps1.yml" "%CONFIG_DIR%\temp_supply_T6000_eps0p1.yml"
 set "BATCH_BASE=%REPO_ROOT%\out\temp_supply_sweep"
@@ -148,16 +158,18 @@ goto :eof
 
 :ensure_dir
 set "TARGET=%~1"
-if exist "%TARGET%\NUL" (
-  exit /b 0
-) else if exist "%TARGET%" (
-  echo [error] %TARGET% exists as a file. Remove or rename it, then rerun.
-  exit /b 1
-) else (
-  mkdir "%TARGET%"
-  if errorlevel 1 (
-    echo [error] Failed to create %TARGET% (permission/lock?). >nul
-    exit /b 1
-  )
+if "%TARGET%"=="" exit /b 1
+rem ディレクトリ存在チェック（\NUL は新しい Windows で非推奨）
+if exist "%TARGET%\" (
   exit /b 0
 )
+if exist "%TARGET%" (
+  echo [error] %TARGET% exists as a file. Remove or rename it, then rerun.
+  exit /b 1
+)
+mkdir "%TARGET%" 2>nul
+if errorlevel 1 (
+  echo [error] Failed to create %TARGET% (permission/lock?).
+  exit /b 1
+)
+exit /b 0
