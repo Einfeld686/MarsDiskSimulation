@@ -15,7 +15,10 @@ set SKIP_PLOTS=
 
 set VENV_DIR=.venv
 set REQ_FILE=requirements.txt
-set CONFIG_DIR=configs\sweep_temp_supply
+rem スクリプトの場所からリポジトリルートを解決（どこから実行しても同じになるように）
+pushd "%~dp0\..\.."
+set "REPO_ROOT=%CD%"
+set "CONFIG_DIR=%REPO_ROOT%\configs\sweep_temp_supply"
 set CONFIGS=%CONFIG_DIR%\temp_supply_T2000_eps1.yml %CONFIG_DIR%\temp_supply_T2000_eps0p1.yml %CONFIG_DIR%\temp_supply_T4000_eps1.yml %CONFIG_DIR%\temp_supply_T4000_eps0p1.yml %CONFIG_DIR%\temp_supply_T6000_eps1.yml %CONFIG_DIR%\temp_supply_T6000_eps0p1.yml
 
 for /f %%i in ('powershell -NoLogo -NoProfile -Command "Get-Date -Format \"yyyyMMdd-HHmmss\""') do set RUN_TS=%%i
@@ -69,6 +72,10 @@ if defined STREAM_STEP_INTERVAL (
 )
 
 for %%C in (%CONFIGS%) do (
+  if not exist "%%~fC" (
+    echo [error] config not found: %%~fC
+    exit /b 1
+  )
   for /f %%s in ('python -c "import secrets; print(secrets.randbelow(2**31))"') do set SEED=%%s
   if not defined SEED set SEED=!RANDOM!
   set "TITLE=%%~nC"
@@ -76,7 +83,7 @@ for %%C in (%CONFIGS%) do (
   echo [run] %%C -> !OUTDIR! (batch=%BATCH_SEED%, seed=!SEED!)
 
   python -m marsdisk.run ^
-    --config "%%C" ^
+    --config "%%~fC" ^
     --quiet !PROGRESS_OPT! !STREAMING_OVERRIDES! ^
     --override numerics.dt_init=2 ^
     --override "io.outdir=!OUTDIR!" ^
