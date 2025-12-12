@@ -54,22 +54,24 @@ T_LIST=("6000" "4000" "2000")
 MU_LIST=("1.0" "0.5" "0.1")
 PHI_LIST=("20" "37" "60")  # maps to tables/phi_const_0pXX.csv
 
+# Evaluation toggle (0=skip, 1=run evaluate_tau_supply)
+EVAL="${EVAL:-0}"
+
 # Supply/shielding defaults (overridable via env)
 SUPPLY_MODE="${SUPPLY_MODE:-const}"
-# From Σ_{τ=1}≈462 kg/m^2 and t_fill≈0.1 yr → dotSigma_eff≈1.46e-4 kg/m^2/s;
-# this value is the raw rate before multiplying by epsilon_mix.
-SUPPLY_RATE="${SUPPLY_RATE:-1.46e-4}"  # kg m^-2 s^-1 before mixing
+# Raw const supply rate before mixing; default back to 3.0e-3 kg m^-2 s^-1.
+SUPPLY_RATE="${SUPPLY_RATE:-3.0e-3}"  # kg m^-2 s^-1 before mixing
 SHIELDING_MODE="${SHIELDING_MODE:-fixed_tau1}"
 SHIELDING_SIGMA="${SHIELDING_SIGMA:-auto}"
 SHIELDING_AUTO_MAX_MARGIN="${SHIELDING_AUTO_MAX_MARGIN:-0.05}"
 INIT_SCALE_TO_TAU1="${INIT_SCALE_TO_TAU1:-true}"
 
 # Supply reservoir / feedback / temperature coupling (off by default)
-SUPPLY_RESERVOIR_M="${SUPPLY_RESERVOIR_M:-}"             # Mars masses; empty=disabled
-SUPPLY_RESERVOIR_MODE="${SUPPLY_RESERVOIR_MODE:-hard_stop}"  # hard_stop|smooth
-SUPPLY_RESERVOIR_SMOOTH="${SUPPLY_RESERVOIR_SMOOTH:-0.1}"    # used when smooth
+SUPPLY_RESERVOIR_M="${SUPPLY_RESERVOIR_M:-}"                 # Mars masses; empty=disabled
+SUPPLY_RESERVOIR_MODE="${SUPPLY_RESERVOIR_MODE:-hard_stop}"  # hard_stop|taper
+SUPPLY_RESERVOIR_TAPER="${SUPPLY_RESERVOIR_TAPER:-0.05}"     # used when taper
 
-SUPPLY_FEEDBACK_ENABLED="${SUPPLY_FEEDBACK_ENABLED:-1}"
+SUPPLY_FEEDBACK_ENABLED="${SUPPLY_FEEDBACK_ENABLED:-0}"
 SUPPLY_FEEDBACK_TARGET="${SUPPLY_FEEDBACK_TARGET:-1.0}"
 SUPPLY_FEEDBACK_GAIN="${SUPPLY_FEEDBACK_GAIN:-1.0}"
 SUPPLY_FEEDBACK_RESPONSE_YR="${SUPPLY_FEEDBACK_RESPONSE_YR:-0.5}"
@@ -78,7 +80,7 @@ SUPPLY_FEEDBACK_MAX_SCALE="${SUPPLY_FEEDBACK_MAX_SCALE:-10.0}"
 SUPPLY_FEEDBACK_TAU_FIELD="${SUPPLY_FEEDBACK_TAU_FIELD:-tau_vertical}" # tau_vertical|tau_los
 SUPPLY_FEEDBACK_INITIAL="${SUPPLY_FEEDBACK_INITIAL:-1.0}"
 
-SUPPLY_TEMP_ENABLED="${SUPPLY_TEMP_ENABLED:-1}"
+SUPPLY_TEMP_ENABLED="${SUPPLY_TEMP_ENABLED:-0}"
 SUPPLY_TEMP_MODE="${SUPPLY_TEMP_MODE:-scale}"            # scale|table
 SUPPLY_TEMP_REF_K="${SUPPLY_TEMP_REF_K:-1800.0}"
 SUPPLY_TEMP_EXP="${SUPPLY_TEMP_EXP:-1.0}"
@@ -89,6 +91,10 @@ SUPPLY_TEMP_TABLE_PATH="${SUPPLY_TEMP_TABLE_PATH:-}"
 SUPPLY_TEMP_TABLE_VALUE_KIND="${SUPPLY_TEMP_TABLE_VALUE_KIND:-scale}" # scale|rate
 SUPPLY_TEMP_TABLE_COL_T="${SUPPLY_TEMP_TABLE_COL_T:-T_K}"
 SUPPLY_TEMP_TABLE_COL_VAL="${SUPPLY_TEMP_TABLE_COL_VAL:-value}"
+
+echo "[config] supply multipliers: temp_enabled=${SUPPLY_TEMP_ENABLED} (mode=${SUPPLY_TEMP_MODE}) feedback_enabled=${SUPPLY_FEEDBACK_ENABLED} reservoir=${SUPPLY_RESERVOIR_M:-off}"
+echo "[config] shielding: mode=${SHIELDING_MODE} fixed_tau1_sigma=${SHIELDING_SIGMA} auto_max_margin=${SHIELDING_AUTO_MAX_MARGIN} init_scale_to_tau1=${INIT_SCALE_TO_TAU1}"
+echo "[config] const supply before mixing: ${SUPPLY_RATE} kg m^-2 s^-1 (epsilon_mix swept per MU_LIST)"
 
 # Progress bar: default ON when stdout is a TTY; OFF otherwise to avoid CR->LF spam.
 PROGRESS_FLAG=()
@@ -117,10 +123,11 @@ fi
 
 SUPPLY_OVERRIDES=()
 if [[ -n "${SUPPLY_RESERVOIR_M}" ]]; then
+  SUPPLY_OVERRIDES+=(--override "supply.reservoir.enabled=true")
   SUPPLY_OVERRIDES+=(--override "supply.reservoir.mass_total_Mmars=${SUPPLY_RESERVOIR_M}")
   SUPPLY_OVERRIDES+=(--override "supply.reservoir.depletion_mode=${SUPPLY_RESERVOIR_MODE}")
-  SUPPLY_OVERRIDES+=(--override "supply.reservoir.smooth_fraction=${SUPPLY_RESERVOIR_SMOOTH}")
-  echo "[info] supply reservoir: M=${SUPPLY_RESERVOIR_M} M_Mars mode=${SUPPLY_RESERVOIR_MODE} smooth=${SUPPLY_RESERVOIR_SMOOTH}"
+  SUPPLY_OVERRIDES+=(--override "supply.reservoir.taper_fraction=${SUPPLY_RESERVOIR_TAPER}")
+  echo "[info] supply reservoir: M=${SUPPLY_RESERVOIR_M} M_Mars mode=${SUPPLY_RESERVOIR_MODE} taper_fraction=${SUPPLY_RESERVOIR_TAPER}"
 fi
 if [[ "${SUPPLY_FEEDBACK_ENABLED}" != "0" ]]; then
   SUPPLY_OVERRIDES+=(--override "supply.feedback.enabled=true")
@@ -164,6 +171,15 @@ PY
       TITLE="T${T}_mu${MU_TITLE}_phi${PHI}"
       OUTDIR="${BATCH_DIR}/${TITLE}"
       echo "[run] T=${T} mu=${MU} phi=${PHI} -> ${OUTDIR} (batch=${BATCH_SEED}, seed=${SEED})"
+      eff_rate=$(python - <<'PY'
+import sys
+rate = float(sys.argv[1])
+mu = float(sys.argv[2])
+print(f"{rate * mu:.3e}")
+PY
+"${SUPPLY_RATE}" "${MU}")
+      echo "[info] 実効スケール係数 epsilon_mix=${MU}; effective supply (const×epsilon_mix)=${eff_rate} kg m^-2 s^-1"
+      echo "[info] shielding: mode=${SHIELDING_MODE} fixed_tau1_sigma=${SHIELDING_SIGMA} auto_max_margin=${SHIELDING_AUTO_MAX_MARGIN}"
       if [[ "${MU}" == "0.1" ]]; then
         echo "[info] mu=0.1 is a low-supply extreme case; expect weak blowout/sinks"
       fi
@@ -198,6 +214,12 @@ PY
       if [[ "${SHIELDING_MODE}" == "fixed_tau1" ]]; then
         cmd+=(--override "shielding.fixed_tau1_sigma=${SHIELDING_SIGMA}")
         cmd+=(--override "shielding.auto_max_margin=${SHIELDING_AUTO_MAX_MARGIN}")
+      fi
+      if [[ "${SHIELDING_SIGMA}" == "auto_max" ]]; then
+        echo "[warn] fixed_tau1_sigma=auto_max is debug-only; exclude from production figures"
+      fi
+      if [[ "${INIT_SCALE_TO_TAU1}" != "true" && "${INIT_SCALE_TO_TAU1}" != "True" ]]; then
+        echo "[warn] init_tau1.scale_to_tau1 is not 'true'; supply may be clipped at Στ=1"
       fi
       set +e
       "${cmd[@]}"
@@ -241,6 +263,11 @@ series_cols = [
     "s_min",
     "a_blow",
     "prod_subblow_area_rate",
+    "supply_rate_nominal",
+    "supply_rate_scaled",
+    "supply_rate_applied",
+    "supply_headroom",
+    "supply_clip_factor",
     "Sigma_surf",
     "Sigma_tau1",
     "outflux_surface",
@@ -260,7 +287,14 @@ if summary_path.exists():
     except Exception:
         summary = {}
 
-df = pd.read_parquet(series_path, columns=series_cols)
+df_full = pd.read_parquet(series_path)
+missing_cols = [c for c in series_cols if c not in df_full.columns]
+if missing_cols:
+    print(f"[warn] missing columns in run.parquet: {missing_cols}")
+for col in series_cols:
+    if col not in df_full.columns:
+        df_full[col] = pd.NA
+df = df_full[series_cols].copy()
 n = len(df)
 step = max(n // 4000, 1)
 df = df.iloc[::step].copy()
@@ -302,6 +336,11 @@ if mass_err is not None:
 effective_prod = summary.get("effective_prod_rate_kg_m2_s")
 if effective_prod is not None:
     title_lines.append(f"prod_eff={effective_prod:.2e}")
+clip_frac = summary.get("supply_clip_time_fraction")
+if clip_frac is None:
+    clip_frac = summary.get("supply_clipping", {}).get("clip_time_fraction")
+if clip_frac is not None:
+    title_lines.append(f"clip_zero_frac={float(clip_frac):.2%}")
 title_lines.append(f"prod_mean={prod_mean:.3e}")
 fig.suptitle(" | ".join(title_lines))
 fig.tight_layout(rect=(0, 0, 1, 0.96))
@@ -309,12 +348,24 @@ fig.savefig(plots_dir / "overview.png", dpi=180)
 plt.close(fig)
 
 fig2, ax2 = plt.subplots(4, 1, figsize=(10, 14), sharex=True)
-ax2[0].plot(df["time_days"], df["prod_subblow_area_rate"], label="prod_subblow_area_rate", color="tab:blue")
+ax2[0].plot(df["time_days"], df["supply_rate_nominal"], label="nominal (raw×mix)", color="tab:gray", alpha=0.9)
+ax2[0].plot(df["time_days"], df["supply_rate_scaled"], label="scaled (temp/feedback/reservoir)", color="tab:blue")
+ax2[0].plot(df["time_days"], df["supply_rate_applied"], label="applied (after headroom)", color="tab:red", alpha=0.8)
+ax2[0].plot(
+    df["time_days"],
+    df["prod_subblow_area_rate"],
+    label="prod_subblow_area_rate (legacy)",
+    color="tab:purple",
+    linestyle="--",
+    alpha=0.5,
+)
 ax2[0].set_ylabel("kg m^-2 s^-1")
-ax2[0].set_title("Sub-blow supply rate")
+ax2[0].legend(loc="upper right")
+ax2[0].set_title("Supply rates (nominal → scaled → applied)")
 
 ax2[1].plot(df["time_days"], df["Sigma_surf"], label="Sigma_surf", color="tab:green")
 ax2[1].plot(df["time_days"], df["Sigma_tau1"], label="Sigma_tau1", color="tab:orange", alpha=0.8)
+ax2[1].plot(df["time_days"], df["supply_headroom"], label="headroom", color="tab:brown", alpha=0.7)
 ax2[1].set_ylabel("kg m^-2")
 ax2[1].legend(loc="upper right")
 ax2[1].set_title("Surface density vs tau=1 cap")
@@ -330,9 +381,10 @@ ax2[2].set_title("Surface outflux and optical depth")
 ax2[3].plot(df["time_days"], df["supply_feedback_scale"], label="feedback scale", color="tab:cyan")
 ax2[3].plot(df["time_days"], df["supply_temperature_scale"], label="temperature scale", color="tab:gray")
 ax2[3].plot(df["time_days"], df["supply_reservoir_remaining_Mmars"], label="reservoir M_Mars", color="tab:pink")
+ax2[3].plot(df["time_days"], df["supply_clip_factor"], label="clip factor", color="tab:olive", alpha=0.8)
 ax2[3].set_ylabel("scale / M_Mars")
 ax2[3].legend(loc="upper right")
-ax2[3].set_title("Supply diagnostics")
+ax2[3].set_title("Supply diagnostics (scales + clip factor)")
 
 fig2.suptitle(run_dir.name)
 fig2.tight_layout(rect=(0, 0, 1, 0.95))
@@ -340,6 +392,19 @@ fig2.savefig(plots_dir / "supply_surface.png", dpi=180)
 plt.close(fig2)
 print(f"[plot] saved plots to {plots_dir}")
 PY
+      if [[ "${EVAL}" != "0" ]]; then
+        eval_out="${final_dir}/checks/tau_supply_eval.json"
+        mkdir -p "$(dirname "${eval_out}")"
+        set +e
+        python scripts/research/evaluate_tau_supply.py --run-dir "${final_dir}" --window-spans "0.5-1.0" --min-duration-days 0.1 --threshold-factor 0.9 > "${eval_out}"
+        eval_rc=$?
+        set -e
+        if [[ ${eval_rc} -ne 0 ]]; then
+          echo "[warn] evaluate_tau_supply failed (rc=${eval_rc}) for ${final_dir}"
+        else
+          echo "[info] evaluate_tau_supply -> ${eval_out}"
+        fi
+      fi
     done
   done
 done

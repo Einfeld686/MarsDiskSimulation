@@ -22,7 +22,7 @@ sizes:
   apply_evolved_min_size: false
 initial:
   mass_total: 1.0e-5
-  s0_mode: mono
+  s0_mode: upper
 dynamics:
   e0: 0.5
   i0: 0.05
@@ -67,7 +67,8 @@ surface:
   freeze_sigma: false
   collision_solver: smol
 init_tau1:
-  enabled: false
+  enabled: true
+  scale_to_tau1: true
 supply:
   mode: const
   const:

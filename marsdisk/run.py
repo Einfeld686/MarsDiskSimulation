@@ -925,16 +925,9 @@ def _gather_git_info() -> Dict[str, Any]:
 def _configure_logging(level: int, suppress_warnings: bool = False) -> None:
     """Configure root logging and optionally silence Python warnings."""
 
-    class _NoWarningFilter(logging.Filter):
-        """Drop WARNING records from the console to keep noise down."""
-
-        def filter(self, record: logging.LogRecord) -> bool:
-            return record.levelno != logging.WARNING
-
     logging.basicConfig(level=level)
     root = logging.getLogger()
     root.setLevel(level)
-    root.addFilter(_NoWarningFilter())
     if suppress_warnings:
         warnings.filterwarnings("ignore")
     logging.captureWarnings(True)
@@ -1370,6 +1363,7 @@ def run_zero_d(
     sigma_tau1_mode_auto_max = (
         isinstance(sigma_tau1_fixed_cfg_raw, str) and sigma_tau1_fixed_cfg_raw.lower() == "auto_max"
     )
+    shielding_auto_max_active = bool(sigma_tau1_mode_auto_max)
     sigma_tau1_fixed_cfg: Optional[float] = None
     if cfg.shielding is not None:
         tau_fixed_cfg = getattr(cfg.shielding, "fixed_tau1_tau", None)
@@ -1487,6 +1481,11 @@ def run_zero_d(
     sigma_tau1_cap_init = None
     sigma_tau1_mode_label = "fixed" if sigma_tau1_fixed_cfg is not None else "none"
     if cfg.shielding is not None and (sigma_tau1_mode_auto or sigma_tau1_mode_auto_max):
+        if sigma_tau1_mode_auto_max:
+            logger.warning(
+                "shielding.fixed_tau1_sigma=auto_max is debug-only; use only for diagnostic runs (margin=%.3f)",
+                auto_max_margin,
+            )
         tau_eval_auto = tau_initial * los_factor
         kappa_eff0 = kappa_surf_initial
         if phi_tau_fn is not None:
@@ -1550,6 +1549,17 @@ def run_zero_d(
                 sigma_tau1_cap_init,
             )
     sigma_surf = float(sigma_surf_reference)
+    headroom_initial = None
+    if sigma_tau1_cap_init is not None and math.isfinite(sigma_tau1_cap_init):
+        headroom_initial = float(sigma_tau1_cap_init - sigma_surf)
+        log_level = logging.WARNING if headroom_initial <= 0.0 else logging.INFO
+        logger.log(
+            log_level,
+            "initial Sigma_surf=%.3e kg/m^2, Sigma_tau1=%.3e -> headroom=%.3e kg/m^2",
+            sigma_surf,
+            sigma_tau1_cap_init,
+            headroom_initial,
+        )
     tau_initial = float(kappa_surf_initial * sigma_surf_reference)
     M_loss_cum = 0.0
     M_sink_cum = 0.0
@@ -1637,9 +1647,17 @@ def run_zero_d(
     supply_const_rate = getattr(getattr(supply_spec, "const", None), "prod_area_rate_kg_m2_s", None)
     supply_const_tfill = getattr(getattr(supply_spec, "const", None), "auto_from_tau1_tfill_years", None)
     supply_effective_rate = None
-    supply_reservoir_mass_total = getattr(getattr(supply_spec, "reservoir", None), "mass_total_Mmars", None)
-    supply_reservoir_mode = getattr(getattr(supply_spec, "reservoir", None), "depletion_mode", None)
-    supply_reservoir_smooth_fraction = getattr(getattr(supply_spec, "reservoir", None), "smooth_fraction", None)
+    supply_reservoir_cfg = getattr(supply_spec, "reservoir", None)
+    supply_reservoir_enabled = bool(getattr(supply_reservoir_cfg, "enabled", False)) if supply_reservoir_cfg else False
+    supply_reservoir_mass_total = getattr(supply_reservoir_cfg, "mass_total_Mmars", None)
+    supply_reservoir_mode = getattr(supply_reservoir_cfg, "depletion_mode", None)
+    supply_reservoir_taper_fraction = None
+    if supply_reservoir_cfg is not None:
+        supply_reservoir_taper_fraction = getattr(
+            supply_reservoir_cfg,
+            "taper_fraction",
+            getattr(supply_reservoir_cfg, "smooth_fraction", None),
+        )
     supply_feedback_cfg = getattr(supply_spec, "feedback", None)
     supply_feedback_enabled = bool(getattr(supply_feedback_cfg, "enabled", False)) if supply_feedback_cfg else False
     supply_feedback_target = getattr(supply_feedback_cfg, "target_tau", None) if supply_feedback_cfg else None
@@ -1685,6 +1703,7 @@ def run_zero_d(
         supply_effective_rate = None
     supply_table_path = getattr(getattr(supply_spec, "table", None), "path", None)
     supply_state = supply.init_runtime_state(supply_spec, area, seconds_per_year=SECONDS_PER_YEAR)
+    supply_reservoir_enabled = bool(getattr(supply_state, "reservoir_enabled", supply_reservoir_enabled))
 
     t_end, dt_nominal, dt_initial_step, n_steps, time_grid_info = _resolve_time_grid(
         cfg.numerics,
@@ -1836,6 +1855,17 @@ def run_zero_d(
     supply_feedback_track: List[float] = []
     supply_temperature_scale_track: List[float] = []
     supply_reservoir_remaining_track: List[float] = []
+    supply_rate_nominal_track: List[float] = []
+    supply_rate_scaled_track: List[float] = []
+    supply_rate_applied_track: List[float] = []
+    supply_headroom_track: List[float] = []
+    supply_clip_factor_track: List[float] = []
+    supply_rate_scaled_initial: Optional[float] = None
+    supply_clip_time = 0.0
+    supply_clip_streak = 0
+    supply_clip_warn_threshold = 5
+    supply_clip_events: List[Dict[str, float]] = []
+    supply_reservoir_depleted_time: Optional[float] = None
     dt_over_t_blow_values: List[float] = []
     mass_budget_max_error = 0.0
     steps_since_flush = 0
@@ -1844,6 +1874,20 @@ def run_zero_d(
     phase_bulk_f_solid_last: Optional[float] = None
     phase_bulk_f_vapor_last: Optional[float] = None
     last_time_value = 0.0
+
+    def _mark_reservoir_depletion(current_time: float) -> None:
+        """Record the first time the finite reservoir is exhausted."""
+
+        nonlocal supply_reservoir_depleted_time
+        if supply_reservoir_depleted_time is not None:
+            return
+        if (
+            supply_state is not None
+            and supply_state.reservoir_enabled
+            and supply_state.reservoir_mass_remaining_kg is not None
+            and supply_state.reservoir_mass_remaining_kg <= 0.0
+        ):
+            supply_reservoir_depleted_time = current_time
 
     for step_no in range(n_steps):
         time_start = step_no * dt
@@ -1854,6 +1898,11 @@ def run_zero_d(
         gate_factor = 1.0
         t_solid_step = None
         mass_err_percent_step = None
+        supply_rate_nominal_current: Optional[float] = None
+        supply_rate_scaled_current: Optional[float] = None
+        supply_rate_applied_current: Optional[float] = None
+        headroom_current: Optional[float] = None
+        clip_factor_current: float = float("nan")
 
         if eval_requires_step or step_no == 0:
             Omega_step = grid.omega_kepler(r)
@@ -2212,8 +2261,13 @@ def run_zero_d(
                         temperature_K=T_use,
                     )
                     prod_rate = supply_res.rate
+                    supply_rate_nominal_current = supply_res.mixed_rate
+                    supply_rate_scaled_current = supply_res.rate
+                    if supply_rate_scaled_initial is None and math.isfinite(supply_res.rate):
+                        supply_rate_scaled_initial = float(supply_res.rate)
                     prod_rate_last = prod_rate
                     supply_diag_last = supply_res
+                    _mark_reservoir_depletion(time_sub)
                     total_prod_surface += prod_rate * dt_sub
                     sigma_tau1_active = (
                         sigma_tau1_limit
@@ -2314,8 +2368,13 @@ def run_zero_d(
                     temperature_K=T_use,
                 )
                 prod_rate = supply_res.rate
+                supply_rate_nominal_current = supply_res.mixed_rate
+                supply_rate_scaled_current = supply_res.rate
+                if supply_rate_scaled_initial is None and math.isfinite(supply_res.rate):
+                    supply_rate_scaled_initial = float(supply_res.rate)
                 prod_rate_last = prod_rate
                 supply_diag_last = supply_res
+                _mark_reservoir_depletion(time_start)
                 sigma_tau1_active = (
                     sigma_tau1_limit
                     if (blowout_layer_mode == "surface_tau_le_1" and collisions_active_step)
@@ -2701,6 +2760,59 @@ def run_zero_d(
         tau_eff_diag = None
         if kappa_eff is not None and math.isfinite(kappa_eff):
             tau_eff_diag = kappa_eff * sigma_diag
+        if sigma_tau1_limit is not None and math.isfinite(sigma_tau1_limit):
+            headroom_current = float(max(sigma_tau1_limit - min(sigma_diag, sigma_tau1_limit), 0.0))
+        else:
+            headroom_current = None
+        if supply_rate_scaled_current is None and supply_diag_last is not None:
+            supply_rate_scaled_current = supply_diag_last.rate
+        if supply_rate_nominal_current is None and supply_diag_last is not None:
+            supply_rate_nominal_current = supply_diag_last.mixed_rate
+        supply_rate_applied_current = _safe_float(prod_rate_last)
+        if (
+            supply_rate_applied_current is not None
+            and supply_rate_scaled_current is not None
+            and supply_rate_scaled_current > 0.0
+        ):
+            clip_factor_current = float(
+                max(supply_rate_applied_current, 0.0) / max(supply_rate_scaled_current, 1.0e-30)
+            )
+        supply_rate_nominal_track.append(_safe_float(supply_rate_nominal_current))
+        supply_rate_scaled_track.append(_safe_float(supply_rate_scaled_current))
+        supply_rate_applied_track.append(_safe_float(supply_rate_applied_current))
+        supply_headroom_track.append(_safe_float(headroom_current))
+        supply_clip_factor_track.append(_safe_float(clip_factor_current))
+        clip_blocked = (
+            supply_rate_scaled_current is not None
+            and supply_rate_scaled_current > 0.0
+            and (supply_rate_applied_current is None or supply_rate_applied_current <= 0.0)
+        )
+        if clip_blocked and dt > 0.0:
+            supply_clip_time += dt
+            supply_clip_streak += 1
+            if supply_clip_streak == supply_clip_warn_threshold:
+                def _clip_fmt(val: Optional[float]) -> float:
+                    try:
+                        v = float(val)
+                        return v if math.isfinite(v) else float("nan")
+                    except Exception:
+                        return float("nan")
+
+                temp_scale_warn = supply_diag_last.temperature_scale if supply_diag_last else None
+                feedback_scale_warn = supply_diag_last.feedback_scale if supply_diag_last else None
+                supply_clip_events.append(
+                    {
+                        "time": float(time),
+                        "Sigma_surf": _clip_fmt(sigma_diag),
+                        "Sigma_tau1": _clip_fmt(sigma_tau1_limit),
+                        "headroom": _clip_fmt(headroom_current),
+                        "supply_scaled": _clip_fmt(supply_rate_scaled_current),
+                        "temperature_scale": _clip_fmt(temp_scale_warn),
+                        "feedback_scale": _clip_fmt(feedback_scale_warn),
+                    }
+                )
+        else:
+            supply_clip_streak = 0
         t_coll_step = None
         if collisions_active_step and tau_vert_last is not None and tau_vert_last > TAU_MIN and Omega_step > 0.0:
             if collision_solver_mode == "smol":
@@ -2767,6 +2879,11 @@ def run_zero_d(
             "t_blow": t_blow_step,
             "prod_subblow_area_rate": prod_rate_last,
             "prod_subblow_area_rate_raw": supply_diag_last.raw_rate if supply_diag_last else None,
+            "supply_rate_nominal": _safe_float(supply_rate_nominal_current),
+            "supply_rate_scaled": _safe_float(supply_rate_scaled_current),
+            "supply_rate_applied": _safe_float(supply_rate_applied_current),
+            "supply_headroom": _safe_float(headroom_current),
+            "supply_clip_factor": _safe_float(clip_factor_current),
             "supply_temperature_scale": supply_diag_last.temperature_scale if supply_diag_last else None,
             "supply_temperature_value": supply_diag_last.temperature_value if supply_diag_last else None,
             "supply_temperature_value_kind": supply_diag_last.temperature_value_kind if supply_diag_last else None,
@@ -2933,6 +3050,11 @@ def run_zero_d(
             "area_m2": area,
             "prod_subblow_area_rate": prod_rate_last,
             "prod_subblow_area_rate_raw": supply_diag_last.raw_rate if supply_diag_last else None,
+            "supply_rate_nominal": _safe_float(supply_rate_nominal_current),
+            "supply_rate_scaled": _safe_float(supply_rate_scaled_current),
+            "supply_rate_applied": _safe_float(supply_rate_applied_current),
+            "supply_headroom": _safe_float(headroom_current),
+            "supply_clip_factor": _safe_float(clip_factor_current),
             "supply_temperature_scale": supply_diag_last.temperature_scale if supply_diag_last else None,
             "supply_temperature_value": supply_diag_last.temperature_value if supply_diag_last else None,
             "supply_temperature_value_kind": supply_diag_last.temperature_value_kind if supply_diag_last else None,
@@ -3131,6 +3253,27 @@ def run_zero_d(
     history.tau_gate_block_time = tau_gate_block_time
     history.total_time_elapsed = total_time_elapsed
 
+    if supply_clip_events:
+        clip_fraction_percent = (
+            (supply_clip_time / total_time_elapsed) * 100.0 if total_time_elapsed > 0.0 else float("nan")
+        )
+        example = supply_clip_events[0]
+        logger.warning(
+            "supply clipped to zero in %d streaks (threshold=%d steps); total_clip_time=%.3e s (%.2f%% of run). "
+            "example: t=%.3e s Sigma_surf=%.3e Sigma_tau1=%.3e headroom=%.3e supply_scaled=%.3e temp_scale=%.3f feedback_scale=%.3f",
+            len(supply_clip_events),
+            supply_clip_warn_threshold,
+            supply_clip_time,
+            clip_fraction_percent,
+            example.get("time", float("nan")),
+            example.get("Sigma_surf", float("nan")),
+            example.get("Sigma_tau1", float("nan")),
+            example.get("headroom", float("nan")),
+            example.get("supply_scaled", float("nan")),
+            example.get("temperature_scale", float("nan")),
+            example.get("feedback_scale", float("nan")),
+        )
+
     qpr_mean = qpr_mean_step
     a_blow = a_blow_step
     Omega = Omega_step
@@ -3178,6 +3321,16 @@ def run_zero_d(
             return nan, nan, nan
         return float(np.min(arr)), float(np.median(arr)), float(np.max(arr))
 
+    def _first_finite(values: List[Optional[float]]) -> Optional[float]:
+        for val in values:
+            try:
+                candidate = float(val)  # type: ignore[arg-type]
+            except Exception:
+                continue
+            if math.isfinite(candidate):
+                return candidate
+        return None
+
     T_min, T_median, T_max = _series_stats(temperature_track)
     beta_min, beta_median, beta_max = _series_stats(beta_track)
     ablow_min, ablow_median, ablow_max = _series_stats(ablow_track)
@@ -3186,6 +3339,19 @@ def run_zero_d(
     supply_feedback_min, supply_feedback_median, supply_feedback_max = _series_stats(supply_feedback_track)
     supply_temp_scale_min, supply_temp_scale_median, supply_temp_scale_max = _series_stats(supply_temperature_scale_track)
     supply_reservoir_min, supply_reservoir_median, supply_reservoir_max = _series_stats(supply_reservoir_remaining_track)
+    supply_headroom_min, supply_headroom_median, supply_headroom_max = _series_stats(supply_headroom_track)
+    supply_clip_factor_min, supply_clip_factor_median, supply_clip_factor_max = _series_stats(supply_clip_factor_track)
+    supply_clip_time_fraction = (
+        float(supply_clip_time / total_time_elapsed)
+        if total_time_elapsed > 0.0
+        else float("nan")
+    )
+    supply_rate_nominal_inferred = supply_effective_rate
+    if supply_rate_nominal_inferred is None:
+        supply_rate_nominal_inferred = _first_finite(supply_rate_nominal_track)
+    supply_rate_scaled_initial_final = supply_rate_scaled_initial
+    if supply_rate_scaled_initial_final is None:
+        supply_rate_scaled_initial_final = _first_finite(supply_rate_scaled_track)
     phase7_max_rate = float("nan")
     phase7_max_rate_time = None
     phase7_median_ts_ratio = float("nan")
@@ -3206,6 +3372,11 @@ def run_zero_d(
             ts_arr = ts_arr[np.isfinite(ts_arr)]
             if ts_arr.size:
                 phase7_median_ts_ratio = float(np.median(ts_arr))
+    reservoir_remaining_final = supply_state.reservoir_remaining_Mmars() if supply_state else None
+    reservoir_fraction_final = supply_state.reservoir_fraction() if supply_state else None
+    reservoir_mass_used = None
+    if supply_reservoir_mass_total is not None and reservoir_remaining_final is not None:
+        reservoir_mass_used = max(float(supply_reservoir_mass_total - reservoir_remaining_final), 0.0)
     process_overview = {
         "primary_process_cfg": primary_process_cfg,
         "primary_process_resolved": primary_process,
@@ -3222,11 +3393,19 @@ def run_zero_d(
         "blowout_active": blowout_enabled,
         "rp_blowout_enabled": rp_blowout_enabled,
         "collision_solver": collision_solver_mode,
+        "shielding_mode": shielding_mode,
+        "shielding_auto_max_active": shielding_auto_max_active,
         "supply_enabled": supply_enabled_cfg,
         "supply_mode": supply_mode_value,
+        "supply_reservoir_enabled": supply_reservoir_enabled,
         "supply_feedback_enabled": supply_feedback_enabled,
         "supply_reservoir_mode": supply_reservoir_mode,
         "supply_reservoir_mass_total_Mmars": supply_reservoir_mass_total,
+        "supply_reservoir_remaining_Mmars": reservoir_remaining_final,
+        "supply_reservoir_fraction_final": reservoir_fraction_final,
+        "supply_reservoir_mass_used_Mmars": reservoir_mass_used,
+        "supply_reservoir_depletion_time_s": supply_reservoir_depleted_time,
+        "supply_reservoir_taper_fraction": supply_reservoir_taper_fraction,
         "supply_temperature_enabled": supply_temperature_enabled,
         "supply_temperature_mode": supply_temperature_mode,
     }
@@ -3262,6 +3441,10 @@ def run_zero_d(
         "Assumes an optically thick inner surface with tau<=1 clipping; vertical/outer tenuous structure is not resolved.",
         "PSD uses a three-slope core with optional wavy correction and blow-out/sublimation floors; no self-consistent halo is evolved.",
     ]
+    if shielding_auto_max_active:
+        limitations_list.append(
+            "DEBUG: shielding.fixed_tau1_sigma=auto_max applied (headroom diagnostic; production use discouraged)."
+        )
     scope_limitations_base = {
         "scope": {
             "region": scope_region,
@@ -3377,6 +3560,9 @@ def run_zero_d(
         "r_source": r_source,
         "phi_table_path": str(phi_table_path_resolved) if phi_table_path_resolved is not None else None,
         "shielding_mode": shielding_mode,
+        "shielding_fixed_tau1_mode": sigma_tau1_mode_label,
+        "shielding_auto_max_active": shielding_auto_max_active,
+        "shielding_auto_max_margin": auto_max_margin,
         "mass_budget_max_error_percent": mass_budget_max_error,
         "dt_over_t_blow_median": dt_over_t_blow_median,
         "config_source_path": str(config_source_path) if config_source_path is not None else None,
@@ -3392,16 +3578,20 @@ def run_zero_d(
         "supply_feedback_scale_min": supply_feedback_min,
         "supply_feedback_scale_median": supply_feedback_median,
         "supply_feedback_scale_max": supply_feedback_max,
+        "supply_reservoir_enabled": supply_reservoir_enabled,
         "supply_reservoir_mass_total_Mmars": supply_reservoir_mass_total,
-        "supply_reservoir_remaining_Mmars": supply_state.reservoir_remaining_Mmars() if supply_state else None,
-        "supply_reservoir_fraction_final": supply_state.reservoir_fraction() if supply_state else None,
+        "supply_reservoir_remaining_Mmars": reservoir_remaining_final,
+        "supply_reservoir_mass_used_Mmars": reservoir_mass_used,
+        "supply_reservoir_fraction_final": reservoir_fraction_final,
         "supply_reservoir_remaining_stats_Mmars": {
             "min": supply_reservoir_min,
             "median": supply_reservoir_median,
             "max": supply_reservoir_max,
         },
         "supply_reservoir_mode": supply_reservoir_mode,
-        "supply_reservoir_smooth_fraction": supply_reservoir_smooth_fraction,
+        "supply_reservoir_taper_fraction": supply_reservoir_taper_fraction,
+        "supply_reservoir_smooth_fraction": supply_reservoir_taper_fraction,
+        "supply_reservoir_depletion_time_s": supply_reservoir_depleted_time,
         "supply_temperature_enabled": supply_temperature_enabled,
         "supply_temperature_mode": supply_temperature_mode,
         "supply_temperature_scale_min": supply_temp_scale_min,
@@ -3409,6 +3599,19 @@ def run_zero_d(
         "supply_temperature_scale_max": supply_temp_scale_max,
         "supply_temperature_value_kind": supply_temperature_value_kind,
         "supply_temperature_table_path": str(supply_temperature_table_path) if supply_temperature_table_path is not None else None,
+        "supply_rate_nominal_kg_m2_s": supply_rate_nominal_inferred,
+        "supply_rate_scaled_initial_kg_m2_s": supply_rate_scaled_initial_final,
+        "effective_prod_rate_kg_m2_s": supply_effective_rate,
+        "supply_clip_time_fraction": supply_clip_time_fraction,
+        "supply_clipping": {
+            "headroom_min": supply_headroom_min,
+            "headroom_median": supply_headroom_median,
+            "headroom_max": supply_headroom_max,
+            "clip_factor_min": supply_clip_factor_min,
+            "clip_factor_median": supply_clip_factor_median,
+            "clip_factor_max": supply_clip_factor_max,
+            "clip_time_fraction": supply_clip_time_fraction,
+        },
         "enforce_mass_budget": enforce_mass_budget,
         "physics_mode": physics_mode,
         "physics_mode_source": physics_mode_source,
@@ -3617,6 +3820,8 @@ def run_zero_d(
             "shielding_mode": shielding_mode,
             "shielding_tau_fixed": tau_fixed_cfg,
             "shielding_sigma_tau1_fixed": sigma_tau1_fixed_target,
+            "shielding_fixed_tau1_mode": sigma_tau1_mode_label,
+            "shielding_auto_max_active": shielding_auto_max_active,
             "shielding_auto_max_margin": auto_max_margin,
             "shielding_table_path": str(phi_table_path_resolved) if phi_table_path_resolved is not None else None,
             "psd_floor_mode": psd_floor_mode,
@@ -3667,9 +3872,27 @@ def run_zero_d(
         "const_prod_area_rate_kg_m2_s": supply_const_rate,
         "table_path": str(supply_table_path) if supply_table_path is not None else None,
         "effective_prod_rate_kg_m2_s": supply_effective_rate,
+        "supply_rate_nominal_kg_m2_s": supply_rate_nominal_inferred,
+        "supply_rate_scaled_initial_kg_m2_s": supply_rate_scaled_initial_final,
+        "supply_clip_time_fraction": supply_clip_time_fraction,
+        "clipping": {
+            "headroom_min": supply_headroom_min,
+            "headroom_median": supply_headroom_median,
+            "headroom_max": supply_headroom_max,
+            "clip_factor_min": supply_clip_factor_min,
+            "clip_factor_median": supply_clip_factor_median,
+            "clip_factor_max": supply_clip_factor_max,
+            "clip_time_fraction": supply_clip_time_fraction,
+        },
+        "reservoir_enabled": supply_reservoir_enabled,
         "reservoir_mass_total_Mmars": supply_reservoir_mass_total,
         "reservoir_mode": supply_reservoir_mode,
-        "reservoir_smooth_fraction": supply_reservoir_smooth_fraction,
+        "reservoir_taper_fraction": supply_reservoir_taper_fraction,
+        "reservoir_smooth_fraction": supply_reservoir_taper_fraction,
+        "reservoir_depletion_time_s": supply_reservoir_depleted_time,
+        "reservoir_remaining_Mmars_final": reservoir_remaining_final,
+        "reservoir_fraction_final": reservoir_fraction_final,
+        "reservoir_mass_used_Mmars": reservoir_mass_used,
         "feedback_enabled": supply_feedback_enabled,
         "feedback_target_tau": supply_feedback_target,
         "feedback_gain": supply_feedback_gain,

@@ -119,10 +119,11 @@ class SupplyEvalResult:
 class SupplyRuntimeState:
     """Mutable state for reservoir accounting and feedback control."""
 
+    reservoir_enabled: bool = False
     reservoir_mass_total_kg: Optional[float] = None
     reservoir_mass_remaining_kg: Optional[float] = None
     reservoir_mode: str = "none"
-    reservoir_smooth_fraction: float = 0.0
+    reservoir_taper_fraction: float = 0.0
     feedback_enabled: bool = False
     feedback_scale: float = 1.0
     feedback_target_tau: float = 1.0
@@ -191,12 +192,22 @@ def init_runtime_state(
 
     state = SupplyRuntimeState()
     reservoir_cfg = getattr(spec, "reservoir", None)
-    if reservoir_cfg is not None and getattr(reservoir_cfg, "mass_total_Mmars", None) is not None:
-        total_mass_kg = float(reservoir_cfg.mass_total_Mmars) * constants.M_MARS
-        state.reservoir_mass_total_kg = total_mass_kg
-        state.reservoir_mass_remaining_kg = total_mass_kg
-        state.reservoir_mode = str(getattr(reservoir_cfg, "depletion_mode", "hard_stop"))
-        state.reservoir_smooth_fraction = float(getattr(reservoir_cfg, "smooth_fraction", 0.0))
+    if reservoir_cfg is not None:
+        total_mass_mmars = getattr(reservoir_cfg, "mass_total_Mmars", None)
+        reservoir_enabled = bool(getattr(reservoir_cfg, "enabled", False)) or total_mass_mmars is not None
+        if reservoir_enabled:
+            state.reservoir_enabled = True
+            total_mass_kg = float(total_mass_mmars) * constants.M_MARS if total_mass_mmars is not None else 0.0
+            state.reservoir_mass_total_kg = total_mass_kg
+            state.reservoir_mass_remaining_kg = total_mass_kg
+            mode = str(getattr(reservoir_cfg, "depletion_mode", "hard_stop"))
+            if mode == "smooth":
+                mode = "taper"
+            state.reservoir_mode = mode
+            taper_fraction = float(
+                getattr(reservoir_cfg, "taper_fraction", getattr(reservoir_cfg, "smooth_fraction", 0.0))
+            )
+            state.reservoir_taper_fraction = taper_fraction
 
     feedback_cfg = getattr(spec, "feedback", None)
     if feedback_cfg is not None and getattr(feedback_cfg, "enabled", False):
@@ -312,6 +323,7 @@ def evaluate_supply(
     if (
         apply_reservoir
         and state is not None
+        and state.reservoir_enabled
         and state.reservoir_mass_remaining_kg is not None
         and dt > 0.0
         and area > 0.0
@@ -321,9 +333,10 @@ def evaluate_supply(
         fraction_remaining = None
         if total and total > 0.0:
             fraction_remaining = remaining / total
-        if state.reservoir_mode == "smooth" and fraction_remaining is not None:
-            if fraction_remaining < state.reservoir_smooth_fraction:
-                ramp = fraction_remaining / max(state.reservoir_smooth_fraction, _EPS)
+        if state.reservoir_mode in {"taper", "smooth"} and fraction_remaining is not None:
+            taper_fraction = max(state.reservoir_taper_fraction, 0.0)
+            if taper_fraction > 0.0 and fraction_remaining < taper_fraction:
+                ramp = fraction_remaining / max(taper_fraction, _EPS)
                 reservoir_scale = min(reservoir_scale, max(ramp, 0.0))
         max_rate = remaining / (area * dt)
         if max_rate < rate:

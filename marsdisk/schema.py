@@ -160,21 +160,46 @@ class SupplyMixing(BaseModel):
 
 
 class SupplyReservoir(BaseModel):
+    enabled: bool = Field(
+        False,
+        description="Enable finite reservoir accounting; false keeps the legacy infinite reservoir behaviour.",
+    )
     mass_total_Mmars: Optional[float] = Field(
         None,
         ge=0.0,
         description="Optional finite reservoir in Mars masses; None keeps the legacy infinite reservoir.",
     )
-    depletion_mode: Literal["hard_stop", "smooth"] = Field(
+    depletion_mode: Literal["hard_stop", "taper"] = Field(
         "hard_stop",
-        description="When 'smooth', linearly ramp the rate down once the remaining mass falls below smooth_fraction of the total.",
+        description="When 'taper', linearly ramp the rate down once the remaining mass falls below taper_fraction of the total.",
     )
-    smooth_fraction: float = Field(
-        0.1,
+    taper_fraction: float = Field(
+        0.05,
         ge=0.0,
         le=1.0,
-        description="Fraction of the reservoir at which the smooth ramp begins when depletion_mode='smooth'.",
+        description="Fraction of the reservoir at which the smooth ramp begins when depletion_mode='taper'.",
     )
+
+    @root_validator(pre=True)
+    def _normalise_aliases(cls, values: Dict[str, Any]) -> Dict[str, Any]:
+        """Backwards-compatible aliases for reservoir controls."""
+
+        if "smooth_fraction" in values and "taper_fraction" not in values:
+            values["taper_fraction"] = values["smooth_fraction"]
+        mode = values.get("depletion_mode")
+        if mode == "smooth":
+            values["depletion_mode"] = "taper"
+        if values.get("enabled") is None and values.get("mass_total_Mmars") is not None:
+            values["enabled"] = True
+        return values
+
+    @root_validator(skip_on_failure=True)
+    def _require_mass_when_enabled(cls, values: Dict[str, Any]) -> Dict[str, Any]:
+        """Ensure a finite mass is provided when the reservoir is enabled."""
+
+        if values.get("enabled") and values.get("mass_total_Mmars") is None:
+            raise ValueError("supply.reservoir.mass_total_Mmars must be set when reservoir.enabled=true")
+        return values
 
 
 class SupplyFeedback(BaseModel):
