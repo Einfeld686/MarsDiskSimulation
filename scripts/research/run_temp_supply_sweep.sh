@@ -16,7 +16,18 @@ import secrets
 print(secrets.randbelow(2**31))
 PY
 )
-BATCH_DIR="out/temp_supply_sweep/${RUN_TS}__${GIT_SHA}__seed${BATCH_SEED}"
+BATCH_ROOT_FALLBACK="out"
+BATCH_ROOT_DEFAULT_EXT="/Volumes/KIOXIA/marsdisk_out"
+if [[ -n "${OUT_ROOT:-}" ]]; then
+  BATCH_ROOT="${OUT_ROOT}"
+elif [[ -d "/Volumes/KIOXIA" && -w "/Volumes/KIOXIA" ]]; then
+  # Use external SSD by default when available.
+  BATCH_ROOT="${BATCH_ROOT_DEFAULT_EXT}"
+else
+  BATCH_ROOT="${BATCH_ROOT_FALLBACK}"
+fi
+BATCH_DIR="${BATCH_ROOT}/temp_supply_sweep/${RUN_TS}__${GIT_SHA}__seed${BATCH_SEED}"
+echo "[setup] Output root: ${BATCH_ROOT}"
 mkdir -p "${BATCH_DIR}"
 
 if [[ ! -x "${VENV_DIR}/bin/python" ]]; then
@@ -41,6 +52,12 @@ BASE_CONFIG="configs/sweep_temp_supply/temp_supply_T4000_eps1.yml"
 T_LIST=("6000" "4000" "2000")
 MU_LIST=("1.0" "0.5" "0.1")
 PHI_LIST=("20" "37" "60")  # maps to tables/phi_const_0pXX.csv
+
+# Supply/shielding defaults (overridable via env)
+SUPPLY_MODE="${SUPPLY_MODE:-const}"
+SUPPLY_RATE="${SUPPLY_RATE:-1.0e-10}"  # kg m^-2 s^-1 before mixing
+SHIELDING_MODE="${SHIELDING_MODE:-fixed_tau1}"
+SHIELDING_SIGMA="${SHIELDING_SIGMA:-1.0e-2}"
 
 # Progress bar: default ON when stdout is a TTY; OFF otherwise to avoid CR->LF spam.
 PROGRESS_FLAG=()
@@ -81,6 +98,9 @@ PY
       TITLE="T${T}_mu${MU_TITLE}_phi${PHI}"
       OUTDIR="${BATCH_DIR}/${TITLE}"
       echo "[run] T=${T} mu=${MU} phi=${PHI} -> ${OUTDIR} (batch=${BATCH_SEED}, seed=${SEED})"
+      if [[ "${MU}" == "0.1" ]]; then
+        echo "[info] mu=0.1 is a low-supply extreme case; expect weak blowout/sinks"
+      fi
       cmd=(
         python -m marsdisk.run
         --config "${BASE_CONFIG}"
@@ -96,11 +116,17 @@ PY
         --override "radiation.TM_K=${T}"
         --override "radiation.mars_temperature_driver.table.path=${T_TABLE}"
         --override "supply.mixing.mu=${MU}"
+        --override "supply.mode=${SUPPLY_MODE}"
+        --override "supply.const.prod_area_rate_kg_m2_s=${SUPPLY_RATE}"
       )
       if ((${#STREAMING_OVERRIDES[@]})); then
         cmd+=("${STREAMING_OVERRIDES[@]}")
       fi
       cmd+=(--override "shielding.table_path=tables/phi_const_0p${PHI}.csv")
+      cmd+=(--override "shielding.mode=${SHIELDING_MODE}")
+      if [[ "${SHIELDING_MODE}" == "fixed_tau1" ]]; then
+        cmd+=(--override "shielding.fixed_tau1_sigma=${SHIELDING_SIGMA}")
+      fi
       "${cmd[@]}"
 
       final_dir="${OUTDIR}"
@@ -160,6 +186,7 @@ df = df.iloc[::step].copy()
 df["time_days"] = df["time"] / 86400.0
 df["t_coll_years"] = (df["t_coll"].clip(lower=1e-6)) / 31557600.0
 df["t_blow_hours"] = (df["t_blow_s"].clip(lower=1e-12)) / 3600.0
+prod_mean = float(df["prod_subblow_area_rate"].mean()) if not df.empty else 0.0
 
 fig, axes = plt.subplots(3, 1, figsize=(10, 12), sharex=True)
 axes[0].plot(df["time_days"], df["M_out_dot"], label="M_out_dot (blowout)", lw=1.2)
@@ -191,6 +218,7 @@ if mloss is not None:
     title_lines.append(f"M_loss={mloss:.3e} M_Mars")
 if mass_err is not None:
     title_lines.append(f"mass budget err={mass_err:.3f}%")
+title_lines.append(f"prod_mean={prod_mean:.3e} kg m^-2 s^-1")
 fig.suptitle(" | ".join(title_lines))
 fig.tight_layout(rect=(0, 0, 1, 0.96))
 fig.savefig(plots_dir / "overview.png", dpi=180)
