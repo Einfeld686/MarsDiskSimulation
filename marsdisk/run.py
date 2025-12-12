@@ -76,6 +76,7 @@ MAX_STEPS = 50000000
 AUTO_MAX_MARGIN = 0.05
 TAU_MIN = 1e-12
 KAPPA_MIN = 1e-12
+_KAPPA_WARNED_LABELS: set[str] = set()
 DEFAULT_SEED = 12345
 MASS_BUDGET_TOLERANCE_PERCENT = 0.5
 SINK_REF_SIZE = 1e-6
@@ -92,12 +93,14 @@ def _ensure_finite_kappa(value: float, label: str = "kappa") -> float:
     """Return a finite, non-negative kappa value, clamping if needed."""
 
     if not math.isfinite(value) or value < 0.0:
-        logger.warning(
-            "%s is non-finite (%.3e); clamping to KAPPA_MIN=%.3e",
-            label,
-            value,
-            KAPPA_MIN,
-        )
+        if label not in _KAPPA_WARNED_LABELS:
+            logger.warning(
+                "%s is non-finite (%.3e); clamping to KAPPA_MIN=%.3e (further warnings suppressed)",
+                label,
+                value,
+                KAPPA_MIN,
+            )
+            _KAPPA_WARNED_LABELS.add(label)
         return KAPPA_MIN
     return float(value)
 
@@ -1407,6 +1410,18 @@ def run_zero_d(
         n_bins=cfg.sizes.n_bins,
         rho=rho_used,
     )
+    if getattr(cfg.initial, "s0_mode", "upper") == "mono":
+        # Force a mono-disperse initial PSD at 1.5 m (user-requested baseline).
+        n_bins = psd_state["sizes"].size
+        s_mono = 1.5
+        psd_state["sizes"] = np.full(n_bins, s_mono, dtype=float)
+        psd_state["s"] = psd_state["sizes"]
+        psd_state["widths"] = np.ones(n_bins, dtype=float)
+        psd_state["number"] = np.ones(n_bins, dtype=float)
+        psd_state["n"] = psd_state["number"]
+        psd_state["edges"] = np.linspace(0.0, float(n_bins), n_bins + 1)
+        psd_state["s_min"] = s_mono
+        psd_state["s_max"] = s_mono
     kappa_surf = _ensure_finite_kappa(psd.compute_kappa(psd_state), label="kappa_surf_initial")
     kappa_surf_initial = float(kappa_surf)
     qpr_at_smin_config = _lookup_qpr(s_min_config)
@@ -1620,6 +1635,7 @@ def run_zero_d(
     supply_epsilon_mix = getattr(getattr(supply_spec, "mixing", None), "epsilon_mix", None)
     supply_mu_cfg = getattr(getattr(supply_spec, "mixing", None), "mu", None)
     supply_const_rate = getattr(getattr(supply_spec, "const", None), "prod_area_rate_kg_m2_s", None)
+    supply_const_tfill = getattr(getattr(supply_spec, "const", None), "auto_from_tau1_tfill_years", None)
     supply_effective_rate = None
     supply_reservoir_mass_total = getattr(getattr(supply_spec, "reservoir", None), "mass_total_Mmars", None)
     supply_reservoir_mode = getattr(getattr(supply_spec, "reservoir", None), "depletion_mode", None)
@@ -1641,6 +1657,27 @@ def run_zero_d(
         else None
     )
     try:
+        # Optional: derive const rate from initial Sigma_tau1 and a target fill time.
+        if (
+            supply_enabled_cfg
+            and supply_mode_value == "const"
+            and supply_const_tfill is not None
+            and sigma_tau1_cap_init is not None
+            and math.isfinite(sigma_tau1_cap_init)
+            and supply_epsilon_mix is not None
+            and supply_epsilon_mix > 0.0
+        ):
+            supply_const_rate = float(sigma_tau1_cap_init) / (
+                float(supply_const_tfill) * SECONDS_PER_YEAR * float(supply_epsilon_mix)
+            )
+            logger.info(
+                "Derived supply.const.prod_area_rate_kg_m2_s=%.3e from Sigma_tau1=%.3e kg/m^2, "
+                "t_fill=%.3f yr, epsilon_mix=%.3f",
+                supply_const_rate,
+                sigma_tau1_cap_init,
+                supply_const_tfill,
+                supply_epsilon_mix,
+            )
         if supply_enabled_cfg and supply_mode_value == "const":
             if supply_const_rate is not None and supply_epsilon_mix is not None:
                 supply_effective_rate = float(supply_const_rate) * float(supply_epsilon_mix)

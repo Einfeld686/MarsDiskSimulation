@@ -1,12 +1,12 @@
 {
   "function_reference_rate": {
-    "numerator": 64,
+    "numerator": 69,
     "denominator": 79,
-    "rate": 0.810126582278481
+    "rate": 0.8734177215189873
   },
   "anchor_consistency_rate": {
-    "numerator": 162,
-    "denominator": 162,
+    "numerator": 563,
+    "denominator": 563,
     "rate": 1.0
   },
   "equation_unit_coverage": {
@@ -16,8 +16,8 @@
   },
   "sinks_callgraph_documented": true,
   "holes": [
-    "marsdisk/physics/psd.py#evolve_min_size",
     "marsdisk/physics/qstar.py#compute_q_d_star_array",
-    "marsdisk/physics/smol.py#number_density_to_psd_state"
+    "marsdisk/physics/supply.py#evaluate_supply",
+    "marsdisk/physics_step.py#compute_gate_factor"
   ]
 }

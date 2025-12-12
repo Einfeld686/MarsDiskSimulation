@@ -56,7 +56,9 @@ PHI_LIST=("20" "37" "60")  # maps to tables/phi_const_0pXX.csv
 
 # Supply/shielding defaults (overridable via env)
 SUPPLY_MODE="${SUPPLY_MODE:-const}"
-SUPPLY_RATE="${SUPPLY_RATE:-3.0e-3}"  # kg m^-2 s^-1 before mixing
+# From Σ_{τ=1}≈462 kg/m^2 and t_fill≈0.1 yr → dotSigma_eff≈1.46e-4 kg/m^2/s;
+# this value is the raw rate before multiplying by epsilon_mix.
+SUPPLY_RATE="${SUPPLY_RATE:-1.46e-4}"  # kg m^-2 s^-1 before mixing
 SHIELDING_MODE="${SHIELDING_MODE:-fixed_tau1}"
 SHIELDING_SIGMA="${SHIELDING_SIGMA:-auto}"
 SHIELDING_AUTO_MAX_MARGIN="${SHIELDING_AUTO_MAX_MARGIN:-0.05}"
