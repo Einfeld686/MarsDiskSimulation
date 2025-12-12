@@ -64,6 +64,7 @@ from .physics import (
     smol,
     dynamics,
     collide,
+    qstar,
     collisions_smol,
 )
 from .io import writer, tables
@@ -1114,6 +1115,18 @@ def run_zero_d(
         primary_scenario,
         " (state_tag=solid)" if state_tagging_enabled else "",
     )
+    qstar_cfg = getattr(cfg, "qstar", None)
+    qstar_coeff_units_used = getattr(qstar_cfg, "coeff_units", "ba99_cgs") if qstar_cfg is not None else "ba99_cgs"
+    qstar_coeff_units_source = "default"
+    if qstar_cfg is not None and "coeff_units" in getattr(qstar_cfg, "__fields_set__", set()):
+        qstar_coeff_units_source = "config"
+    qstar.reset_velocity_clamp_stats()
+    qstar.set_coeff_unit_system(qstar_coeff_units_used)
+    if qstar_coeff_units_source == "default":
+        logger.info(
+            "qstar.coeff_units not specified; defaulting to '%s' (BA99 cgs evaluation with cm,g/cm^3,erg/g).",
+            qstar_coeff_units_used,
+        )
     enforce_collisions_only = primary_scenario == "collisions_only"
     enforce_sublimation_only = primary_scenario == "sublimation_only"
     collisions_active = not enforce_sublimation_only
@@ -3835,6 +3848,23 @@ def run_zero_d(
             "radiation_use_mars_rp": mars_rp_enabled_cfg,
             "radiation_use_solar_rp": solar_rp_requested,
         },
+    }
+    qstar_coeff_table = {
+        f"{float(v):.1f}": {
+            "Qs": float(coeffs[0]),
+            "a_s": float(coeffs[1]),
+            "B": float(coeffs[2]),
+            "b_g": float(coeffs[3]),
+        }
+        for v, coeffs in sorted(qstar.get_coefficient_table().items(), key=lambda item: item[0])
+    }
+    run_config["qstar"] = {
+        "config": qstar_cfg.model_dump() if qstar_cfg is not None else None,
+        "coeff_units_used": qstar_coeff_units_used,
+        "coeff_units_source": qstar_coeff_units_source,
+        "reference_velocities_kms_active": [float(v) for v in sorted(qstar.get_coefficient_table().keys())],
+        "coeff_table_active": qstar_coeff_table,
+        "velocity_clamp_counts": qstar.get_velocity_clamp_stats(),
     }
     run_config["scope_limitations"] = scope_limitations_config
     run_config["physics_mode"] = physics_mode

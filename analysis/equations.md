@@ -685,6 +685,7 @@ with $\Sigma_{\tau=1}=1/\kappa_{\mathrm{eff}}$ when $\kappa_{\mathrm{eff}}>0$.
 速度点の線形補間というレシピ自体は実装側の選択であり、同一形の式を与える文献はない。
 
 補足: Benz & Asphaug (1999) の SPH では直径 $\sim$300 m の玄武岩ターゲットが最も脆弱で、3–5 km/s の衝突でも破片の重力再集積が $Q_D^*$ を押し上げるため、この速度点を補間基準として採用している [@BenzAsphaug1999_Icarus142_5]。
+既定の `coeff_units="ba99_cgs"` は Benz & Asphaug (1999) の cgs 前提を保持し、$s_{\rm cm}=100\,s$ [cm] と $\rho_{\rm g/cm^3}=\rho/1000$ を使って erg g$^{-1}$ で評価し、$1\times10^{-4}$ を掛けて J kg$^{-1}$ に戻す。`coeff_units="si"` を選ぶとメートル・kg・J 入力をそのまま用いるレガシー挙動になる。
 
 ```latex
 Q_{D}^{*}(s,\rho,v) = Q_{3}(s,\rho)\,w(v) + Q_{5}(s,\rho)\,\bigl(1-w(v)\bigr),
@@ -705,11 +706,12 @@ Q_{v}(s,\rho) = Q_{s}\,s^{-a_{s}} + B\,\rho\,s^{b_{g}}.
 |$\rho$|Bulk density|kg m$^{-3}$|Input `rho`, must be $>0$|
 |$v$|Impact velocity|km s$^{-1}$|Input `v_kms`; clamped to [3,5] km/s|
 |$Q_{s}, a_s, B, b_g$|Material coefficients|—|Taken from Leinhardt & Stewart (2012) for basalt|
+|`coeff_units`|Coefficient unit system|—|`\"ba99_cgs\"` (cm, g/cm$^3$, erg/g $\to$ J/kg; default) or `\"si\"`|
 
 **Numerics**
 - Rejects non-positive arguments via `MarsDiskError`.
-- Performs linear interpolation between the two reference velocities and clamps outside the tabulated range.
-- Helper `_q_d_star` carries out the power-law evaluation for readability. [marsdisk/physics/qstar.py#compute_q_d_star_F1 [L82–L124]]
+- Performs linear interpolation between the two reference velocities and clamps outside the tabulated range; clamp counts are stored for provenance (`run_config.qstar.velocity_clamp_counts`) and the first occurrence is logged.
+- Helper `_q_d_star` carries out the power-law evaluation with the active `coeff_units` applied; [marsdisk/physics/qstar.py#compute_q_d_star_F1 [L82–L124]]
 
 ### (E.027) marsdisk/physics/supply.py: get_prod_area_rate (lines 93–98)
 供給モードごとの基礎率に混合効率 $\epsilon_{\mathrm{mix}}$ を掛け、負値をクリップするシンプルな注入モデル [@Wyatt2008]。

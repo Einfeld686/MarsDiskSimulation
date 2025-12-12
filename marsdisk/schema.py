@@ -515,6 +515,10 @@ class QStar(BaseModel):
     B: float
     b_g: float
     v_ref_kms: List[float]
+    coeff_units: Literal["ba99_cgs", "si"] = Field(
+        "ba99_cgs",
+        description="Unit system for Qs/B coefficients: 'ba99_cgs' treats sizes in cm, rho in g/cm^3 and converts erg/g→J/kg; 'si' uses inputs as-is.",
+    )
 
 
 class PSD(BaseModel):

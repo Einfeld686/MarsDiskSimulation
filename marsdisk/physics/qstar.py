@@ -8,13 +8,22 @@ References
 - [@LeinhardtStewart2012_ApJ745_79] velocity interpolation between reference laws
 """
 
-from typing import Dict, Tuple
+import logging
+from typing import Dict, Tuple, Literal
 
 import numpy as np
 
 from ..errors import MarsDiskError
 
-__all__ = ["compute_q_d_star_F1", "compute_q_d_star_array"]
+__all__ = [
+    "compute_q_d_star_F1",
+    "compute_q_d_star_array",
+    "get_coeff_unit_system",
+    "get_coefficient_table",
+    "get_velocity_clamp_stats",
+    "reset_velocity_clamp_stats",
+    "set_coeff_unit_system",
+]
 
 # Coefficients from [@BenzAsphaug1999_Icarus142_5] evaluated at reference velocities in km/s.
 # Basalt-like material parameters follow [@LeinhardtStewart2012_ApJ745_79].
@@ -27,30 +36,95 @@ _COEFFS: Dict[float, Tuple[float, float, float, float]] = {
 _V_MIN = min(_COEFFS.keys())
 _V_MAX = max(_COEFFS.keys())
 
+CoeffUnits = Literal["ba99_cgs", "si"]
 
-def _q_d_star(s: float, rho: float, coeffs: Tuple[float, float, float, float]) -> float:
-    """Evaluate :math:`Q_D^*` using a single coefficient set."""
+logger = logging.getLogger(__name__)
+_COEFF_UNIT_CHOICES: set[CoeffUnits] = {"ba99_cgs", "si"}
+_COEFF_UNIT_SYSTEM: CoeffUnits = "ba99_cgs"
+_CM_PER_M = 1.0e2
+_RHO_GCM3_FROM_SI = 1.0e-3
+_ERG_PER_G_TO_J_PER_KG = 1.0e-4
+_VEL_CLAMP_COUNTS: dict[str, int] = {"below": 0, "above": 0}
+_VEL_CLAMP_WARNED = False
 
-    Qs, a_s, B, b_g = coeffs
-    s_ratio = s / 1.0  # metres; explicit for clarity
-    return Qs * s_ratio ** (-a_s) + B * rho * s_ratio ** b_g
+
+def set_coeff_unit_system(units: CoeffUnits) -> CoeffUnits:
+    """Set the coefficient unit system used during :math:`Q_D^*` evaluation."""
+
+    global _COEFF_UNIT_SYSTEM
+    if units not in _COEFF_UNIT_CHOICES:
+        raise MarsDiskError(f"unknown coeff_units={units!r}; expected one of {_COEFF_UNIT_CHOICES}")
+    _COEFF_UNIT_SYSTEM = units
+    return _COEFF_UNIT_SYSTEM
 
 
-def _q_d_star_array(
+def get_coeff_unit_system() -> CoeffUnits:
+    """Return the active coefficient unit system."""
+
+    return _COEFF_UNIT_SYSTEM
+
+
+def get_coefficient_table() -> Dict[float, Tuple[float, float, float, float]]:
+    """Return the coefficient lookup keyed by reference velocity [km/s]."""
+
+    return dict(_COEFFS)
+
+
+def reset_velocity_clamp_stats() -> None:
+    """Reset counters that track impact-velocity clamping events."""
+
+    global _VEL_CLAMP_COUNTS, _VEL_CLAMP_WARNED
+    _VEL_CLAMP_COUNTS = {"below": 0, "above": 0}
+    _VEL_CLAMP_WARNED = False
+
+
+def get_velocity_clamp_stats() -> Dict[str, int]:
+    """Return a copy of the clamp counters for diagnostics."""
+
+    return dict(_VEL_CLAMP_COUNTS)
+
+
+def _track_velocity_clamp(v_values: np.ndarray) -> None:
+    """Record and optionally warn when v_kms falls outside the tabulated range."""
+
+    global _VEL_CLAMP_WARNED
+    below = int(np.sum(v_values < _V_MIN))
+    above = int(np.sum(v_values > _V_MAX))
+    if below or above:
+        _VEL_CLAMP_COUNTS["below"] += below
+        _VEL_CLAMP_COUNTS["above"] += above
+        if not _VEL_CLAMP_WARNED:
+            logger.warning(
+                "Impact velocity outside [%.1f, %.1f] km/s; clamping to bounds (further warnings suppressed).",
+                _V_MIN,
+                _V_MAX,
+            )
+            _VEL_CLAMP_WARNED = True
+
+
+def _q_d_star(
     s: np.ndarray,
     rho: float,
     coeffs: Tuple[float, float, float, float],
+    coeff_units: CoeffUnits,
 ) -> np.ndarray:
-    """Vectorised :math:`Q_D^*` evaluation for array inputs."""
+    """Vectorised :math:`Q_D^*` evaluation for scalar or array inputs."""
 
     if rho <= 0.0:
         raise MarsDiskError("density must be positive")
     s_arr = np.asarray(s, dtype=float)
     if np.any(s_arr <= 0.0):
         raise MarsDiskError("size must be positive")
+
     Qs, a_s, B, b_g = coeffs
+    if coeff_units == "ba99_cgs":
+        s_ratio = s_arr * _CM_PER_M  # convert s[m] to s/1 cm
+        rho_use = rho * _RHO_GCM3_FROM_SI
+        q_val = Qs * np.power(s_ratio, -a_s) + B * rho_use * np.power(s_ratio, b_g)
+        return q_val * _ERG_PER_G_TO_J_PER_KG
     s_ratio = s_arr / 1.0
-    return Qs * np.power(s_ratio, -a_s) + B * rho * np.power(s_ratio, b_g)
+    rho_use = rho
+    return Qs * np.power(s_ratio, -a_s) + B * rho_use * np.power(s_ratio, b_g)
 
 
 def compute_q_d_star_array(s: np.ndarray, rho: float, v_kms: np.ndarray) -> np.ndarray:
@@ -69,10 +143,13 @@ def compute_q_d_star_array(s: np.ndarray, rho: float, v_kms: np.ndarray) -> np.n
     if np.any(v_arr <= 0.0):
         raise MarsDiskError("velocity must be positive")
 
+    _track_velocity_clamp(v_arr)
+
     coeff_lo = _COEFFS[_V_MIN]
     coeff_hi = _COEFFS[_V_MAX]
-    q_lo = _q_d_star_array(s_arr, rho, coeff_lo)
-    q_hi = _q_d_star_array(s_arr, rho, coeff_hi)
+    coeff_units = _COEFF_UNIT_SYSTEM
+    q_lo = _q_d_star(s_arr, rho, coeff_lo, coeff_units)
+    q_hi = _q_d_star(s_arr, rho, coeff_hi, coeff_units)
 
     weight = (v_arr - _V_MIN) / (_V_MAX - _V_MIN)
     weight = np.clip(weight, 0.0, 1.0)
@@ -109,10 +186,13 @@ def compute_q_d_star_F1(s: float, rho: float, v_kms: float) -> float:
     if v_kms <= 0.0:
         raise MarsDiskError("velocity must be positive")
 
+    _track_velocity_clamp(np.asarray([v_kms], dtype=float))
+
     coeff_lo = _COEFFS[_V_MIN]
     coeff_hi = _COEFFS[_V_MAX]
-    q_lo = _q_d_star(s, rho, coeff_lo)
-    q_hi = _q_d_star(s, rho, coeff_hi)
+    coeff_units = _COEFF_UNIT_SYSTEM
+    q_lo = _q_d_star(np.asarray(s, dtype=float), rho, coeff_lo, coeff_units)
+    q_hi = _q_d_star(np.asarray(s, dtype=float), rho, coeff_hi, coeff_units)
 
     if v_kms <= _V_MIN:
         return float(q_lo)
