@@ -15,6 +15,19 @@
 | “wavy” PSD 感度 | `psd.wavy_strength>0` | `python -m marsdisk.run --config configs/base.yml --override psd.wavy_strength=0.2` | `series/run.parquet` に “wavy” の波形が残り、`summary.json` で `psd.wavy_strength` を確認 |
 | 高速ブローアウト解像 | `io.substep_fast_blowout=true`, `io.substep_max_ratio≈1`（必要に応じ補正 `io.correct_fast_blowout=true`） | `python -m marsdisk.run --config configs/base.yml --set io.substep_fast_blowout=true --set io.substep_max_ratio=1.0` | `series/run.parquet` の `n_substeps>1` と `fast_blowout_*` 列、積分値と累積損失の一致 |
 
+## τ≈1＋供給維持の評価（temp_supply 系）
+- 判定基準（評価区間は後半 50% を推奨、warmup を除外する場合は window_fraction を調整）  
+  - τ条件: 評価区間の `tau_vertical`（なければ `tau`）の中央値が 0.5–2。  
+  - 供給条件: 評価区間で `prod_subblow_area_rate` が設定供給（`supply.const.prod_area_rate_kg_m2_s × epsilon_mix`）の 90%以上を連続して維持する区間が存在（長さは連続時間 Δt で 0.05 日以上を推奨）。  
+  - 成否: 上記 2 条件を同時に満たす連続区間があれば success。
+- 推奨ツール: `scripts/research/evaluate_tau_supply.py`  
+  - 例: `python scripts/research/evaluate_tau_supply.py --run-dir <OUTDIR> --window-fraction 0.5 --min-duration-days 0.05`  
+  - run_config に記録された `effective_prod_rate_kg_m2_s` を目標供給として参照し、JSON で success/tau_median/longest_supply_duration を返す。
+- 失敗パターンの目安  
+  - τ不足（tau_median<0.5）: 供給が弱すぎるか Στ=1 が小さすぎて headroom=0。  
+  - 供給不足（longest_supply_duration<Δt）: Στ=1 に初期 Σ が張り付き、prod_subblow がクリップされている可能性。`init_tau1.scale_to_tau1=true` や Στ=1 を再設定する。
+- 実行時の注意: `fixed_tau1_sigma=auto_max` はデバッグ専用。本番判定は `fixed_tau1_sigma=auto`＋`init_tau1.scale_to_tau1=true` を基準とする。
+
 ### DocSync + ドキュメントテスト（標準手順）
 - Codex や開発者が analysis/ を更新する場合は、`make analysis-sync`（DocSyncAgent）で反映した直後に `make analysis-doc-tests` を実行し、`pytest tests/test_analysis_* -q` を一括確認する。
 - CI でも同じターゲットをフックできるため、分析手順の追加・改稿時は必ずこの 2 コマンドをセットで記録する。
@@ -348,7 +361,7 @@ sinks:
 6) 根拠
 - `summary.json` の `M_loss` は `M_out_cum + M_sink_cum` を記録する。[marsdisk/run.py:2270–2387]
 - タイムシリーズ `M_loss_cum`,`mass_lost_by_blowout`,`mass_lost_by_sinks`,`mass_total_bins` の更新式。[marsdisk/run.py:2120–2185]
-- シンク無効設定は昇華・ガス抗力を停止させる。(configs/base.yml)[marsdisk/schema.py:204–204]
+- シンク無効設定は昇華・ガス抗力を停止させる。(configs/base.yml)[marsdisk/schema.py:205–205]
 
 ## E. トラブルシュート
 
@@ -388,7 +401,7 @@ supply:
 
 6) 根拠
 - Parquet書き出しが `pyarrow` 依存である。[marsdisk/io/writer.py:20–21]
-- 0D実行は `disk.geometry` 未指定時に例外を送出する。[marsdisk/run.py:468–468]
+- 0D実行は `disk.geometry` 未指定時に例外を送出する。[marsdisk/run.py:470–470]
 - 供給テーブル読込は `pd.read_csv` でパスが必要。[marsdisk/physics/supply.py:25–63]
 
 ## F. SiO psat auto-selector と HKLフラックスの最小検証
@@ -554,7 +567,7 @@ pytest tests/test_analysis_coverage_guard.py -q
 - 手順
   - `configs/*.yml` で `sizes` と `psd` セクションを調整する。`sizes.s_min/s_max/n_bins` がビン定義を、`psd.alpha` と `psd.wavy_strength` が三勾配＋“wavy”補正を決め、`psd.floor.mode` を `fixed`/`evolve_smin`/`none` から選ぶと床処理が切り替わる。[marsdisk/schema.py:148–151][marsdisk/schema.py:189–198]
   - 標準の `configs/base.yml` では力学系を平滑に保つため `psd.wavy_strength=0.0` を既定とし、wavy パターンを検証したい場合は CLI で `--override psd.wavy_strength=0.2` などと上書きする。
-  - 実行時は `run_zero_d` がブローアウト境界を評価したあと `psd.update_psd_state` を呼び出し、初期PSDを構築する。[marsdisk/run.py:589–590]
+  - 実行時は `run_zero_d` がブローアウト境界を評価したあと `psd.update_psd_state` を呼び出し、初期PSDを構築する。[marsdisk/run.py:591–591]
   - 完走後、`out/series/run.parquet` に `kappa`,`s_min`,`mass_total_bins` などが記録される。`psd.floor.mode="evolve_smin"` の場合は `s_min_evolved` 列で進化床を確認する。
 - 入出力
   - 入力は `s_min`,`s_max`,`alpha`,`wavy_strength`,`n_bins`,`rho`。不正なサイズ順やビン数は `MarsDiskError` で停止する。[marsdisk/physics/psd.py:30–118]

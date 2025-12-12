@@ -228,6 +228,8 @@ Case classification follows the configuration beta: `case_status = "blowout"` wh
 ```
 と定義する。`collisions_smol` が `prod_subblow_mass_rate`（ソース）と昇華/外部シンク（負の項）を束ねて $f_k$ を組み立て、Wyatt 型 $t_{\rm coll}\approx T_{\rm orb}/(4\pi\tau)$ スケール [@Wyatt2008] と Strubbe & Chiang (2006) の PR drag/衝突寿命整合を踏まえた $e,i,H$ を `compute_kernel_e_i_H` で評価したカーネル $K_{ij}(e,v_{\mathrm{rel}},H)$ を与える。[marsdisk/physics/collisions_smol.py:L1–L220][marsdisk/physics/collisions_smol.py#compute_kernel_e_i_H [L63–L116]]
 
+補足（ビン分解能）: coagulation/fragmentation 平衡の解析解に基づき、Birnstiel et al. (2011) は隣接粒径比 $a_{i+1}/a_i \lesssim 1.1$–1.2 を推奨しており、基準格子 $s_{\min}=1.0\times10^{-6}$ m, $s_{\max}=3$ m, $n_{\mathrm{bins}}=40$ では $(a_{i+1}/a_i)\approx1.26$ となるため、wavy 再現時はビン数を増やす感度試験を併用する [@Birnstiel2011_AA525_A11]。
+
 ```latex
 \begin{aligned}
  \Lambda_i &= \sum_j C_{ij}, & t_{\mathrm{coll},i} &= \frac{1}{\max(\Lambda_i, 10^{-30})},\\
@@ -482,7 +484,7 @@ P_{\mathrm{sat}}(T) =
 - Logistic branch guards against $dT\to0$ via `max(dT, 1.0)`.
 - Stores provenance in `run_config.json` under `sublimation_provenance`, capturing {`sublimation_formula`, `psat_model`, `A`, `B`, `mu`, `alpha_evap`, `P_gas`, `valid_K`, optional `psat_table_path`} for reproducibility.
 - Ambient vapour pressure $P_{\mathrm{gas}}$ (特に Si を含む蒸気分圧) は Ronnet et al. (2016) 同様に自由パラメータとして扱い、化学平衡は計算しない。既定は gas‑poor 前提で $P_{\mathrm{gas}}=0$ とし、感度試験では YAML `sinks.sub_params.P_gas` を明示調整すること（HKL フラックスの最大不確定要素）。[marsdisk/physics/sublimation.py:585–590], [marsdisk/schema.py:274–274]
-- `sub_params.mass_conserving=true` の場合、昇華由来の ds/dt は粒径のみを縮小し、1 ステップ内に $s<a_{\rm blow}$ を跨いだ分だけをブローアウト損失として処理する（質量シンクには入れない）。false で従来どおり昇華シンクとして質量減算。[marsdisk/physics/collisions_smol.py:305–486][marsdisk/run.py:1654–2185]
+- `sub_params.mass_conserving=true` の場合、昇華由来の ds/dt は粒径のみを縮小し、1 ステップ内に $s<a_{\rm blow}$ を跨いだ分だけをブローアウト損失として処理する（質量シンクには入れない）。false で従来どおり昇華シンクとして質量減算。[marsdisk/physics/collisions_smol.py:308–486][marsdisk/run.py:1654–2185]
 
 ### (E.019) marsdisk/physics/sublimation.py: sink_timescale (implemented by s_sink_from_timescale, lines 116-129)
 [@Ronnet2016_ApJ828_109]
@@ -1048,4 +1050,3 @@ TODO(REF:smol_source_injection_v1)
 |$S_k$|Sink rate (blow-out + sublimation)|s$^{-1}$|`_blowout_sink_vector` + `sublimation_sink_from_dsdt`|
 |$F_k$|Source rate|s$^{-1}$|`supply_mass_rate_to_number_source`|
 |$dt$|Time step|s|Caller determines|
-

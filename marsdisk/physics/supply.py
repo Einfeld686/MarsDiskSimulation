@@ -93,6 +93,8 @@ def _rate_basic(t: float, r: float, spec: Supply | SupplyPiece) -> float:
 def get_prod_area_rate(t: float, r: float, spec: Supply) -> float:
     """Return the mixed surface production rate in kg m⁻² s⁻¹."""
 
+    if not getattr(spec, "enabled", True):
+        return 0.0
     raw = _rate_basic(t, r, spec)
     rate = raw * spec.mixing.epsilon_mix
     return max(rate, 0.0)
