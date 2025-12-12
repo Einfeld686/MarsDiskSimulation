@@ -42,7 +42,7 @@ import weakref
 from collections import defaultdict
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Dict, List, Mapping, Optional, Sequence
+from typing import Any, Dict, List, Mapping, Optional, Sequence, cast
 
 import pandas as pd
 import numpy as np
@@ -73,6 +73,8 @@ from . import constants
 logger = logging.getLogger(__name__)
 SECONDS_PER_YEAR = 365.25 * 24 * 3600.0
 MAX_STEPS = 50000000
+AUTO_MAX_MARGIN = 0.05
+AUTO_MAX_MARGIN = 0.05
 TAU_MIN = 1e-12
 KAPPA_MIN = 1e-12
 DEFAULT_SEED = 12345
@@ -1337,10 +1339,18 @@ def run_zero_d(
     freeze_sigma = bool(getattr(cfg.surface, "freeze_sigma", False))
     shielding_mode = shielding_mode_resolved
     tau_fixed_cfg: Optional[float] = None
+    sigma_tau1_fixed_cfg_raw = getattr(cfg.shielding, "fixed_tau1_sigma", None)
+    sigma_tau1_mode_auto = (
+        isinstance(sigma_tau1_fixed_cfg_raw, str) and sigma_tau1_fixed_cfg_raw.lower() == "auto"
+    )
+    sigma_tau1_mode_auto_max = (
+        isinstance(sigma_tau1_fixed_cfg_raw, str) and sigma_tau1_fixed_cfg_raw.lower() == "auto_max"
+    )
     sigma_tau1_fixed_cfg: Optional[float] = None
     if cfg.shielding is not None:
         tau_fixed_cfg = getattr(cfg.shielding, "fixed_tau1_tau", None)
-        sigma_tau1_fixed_cfg = getattr(cfg.shielding, "fixed_tau1_sigma", None)
+        if not isinstance(sigma_tau1_fixed_cfg_raw, str):
+            sigma_tau1_fixed_cfg = cast(Optional[float], sigma_tau1_fixed_cfg_raw)
     psd_floor_mode = getattr(getattr(cfg.psd, "floor", None), "mode", "fixed")
     collision_solver_mode = str(getattr(cfg.surface, "collision_solver", "surface_ode") or "surface_ode")
     if collision_solver_mode not in {"surface_ode", "smol"}:
@@ -1434,16 +1444,77 @@ def run_zero_d(
         )
     else:
         sigma_surf = 0.0
-    sigma_surf_reference = float(sigma_surf)
+    sigma_surf_init_raw = float(sigma_surf)
+    tau_initial = float(kappa_surf_initial * sigma_surf_init_raw)
+    tau_fixed_target = float(tau_fixed_cfg) if tau_fixed_cfg is not None else tau_initial
+    sigma_tau1_fixed_target = float(sigma_tau1_fixed_cfg) if sigma_tau1_fixed_cfg is not None else None
+    sigma_tau1_cap_init = None
+    sigma_tau1_mode_label = "fixed" if sigma_tau1_fixed_cfg is not None else "none"
+    if cfg.shielding is not None and (sigma_tau1_mode_auto or sigma_tau1_mode_auto_max):
+        tau_eval_auto = tau_initial * los_factor
+        kappa_eff0 = kappa_surf_initial
+        if phi_tau_fn is not None:
+            kappa_eff0 = shielding.effective_kappa(kappa_surf_initial, tau_eval_auto, phi_tau_fn)
+        if kappa_eff0 > 0.0 and math.isfinite(kappa_eff0):
+            base_sigma_tau1 = 1.0 / kappa_eff0
+            if sigma_tau1_mode_auto:
+                sigma_tau1_mode_label = "auto"
+                sigma_tau1_fixed_target = base_sigma_tau1
+                logger.info(
+                    "shielding.fixed_tau1_sigma=auto -> Sigma_tau1=1/kappa_eff(t0)=%.3e (kappa_eff0=%.3e)",
+                    sigma_tau1_fixed_target,
+                    kappa_eff0,
+                )
+            else:
+                sigma_tau1_mode_label = "auto_max"
+                sigma_tau1_fixed_target = (
+                    max(base_sigma_tau1, sigma_surf_init_raw) * (1.0 + AUTO_MAX_MARGIN)
+                )
+                logger.info(
+                    "shielding.fixed_tau1_sigma=auto_max -> Sigma_tau1=%.3e (base=%.3e, sigma_init=%.3e, margin=%.2f)",
+                    sigma_tau1_fixed_target,
+                    base_sigma_tau1,
+                    sigma_surf_init_raw,
+                    AUTO_MAX_MARGIN,
+                )
+            sigma_tau1_cap_init = sigma_tau1_fixed_target
+        else:
+            logger.warning(
+                "shielding.fixed_tau1_sigma=%s requested but kappa_eff0<=0 or non-finite (%.3e); leaving Sigma_tau1 unset",
+                "auto_max" if sigma_tau1_mode_auto_max else "auto",
+                kappa_eff0,
+            )
+    if sigma_tau1_cap_init is None:
+        sigma_tau1_cap_init = sigma_tau1_fixed_target if sigma_tau1_fixed_target is not None else sigma_tau1_unity
+    sigma_surf_reference = sigma_surf_init_raw
+    initial_sigma_clipped = False
+    if (
+        init_tau1_enabled
+        and getattr(cfg.init_tau1, "scale_to_tau1", False)
+        and sigma_tau1_cap_init is not None
+        and math.isfinite(sigma_tau1_cap_init)
+    ):
+        cap_with_margin = sigma_tau1_cap_init * (1.0 - AUTO_MAX_MARGIN)
+        cap_with_margin = cap_with_margin if cap_with_margin > 0.0 else sigma_tau1_cap_init
+        if sigma_surf_reference > cap_with_margin:
+            logger.warning(
+                "init_tau1.scale_to_tau1: sigma_surf_init=%.3e clamped to %.3e (cap=%.3e)",
+                sigma_surf_reference,
+                cap_with_margin,
+                sigma_tau1_cap_init,
+            )
+            sigma_surf_reference = cap_with_margin
+            initial_sigma_clipped = True
+    elif sigma_tau1_cap_init is not None and math.isfinite(sigma_tau1_cap_init):
+        if sigma_surf_reference > sigma_tau1_cap_init:
+            initial_sigma_clipped = True
+            logger.warning(
+                "initial sigma_surf=%.3e exceeds Sigma_tau1=%.3e with scale_to_tau1 disabled; headroom may be zero",
+                sigma_surf_reference,
+                sigma_tau1_cap_init,
+            )
+    sigma_surf = float(sigma_surf_reference)
     tau_initial = float(kappa_surf_initial * sigma_surf_reference)
-    tau_fixed_target = (
-        float(tau_fixed_cfg) if tau_fixed_cfg is not None else tau_initial
-    )
-    sigma_tau1_fixed_target = (
-        float(sigma_tau1_fixed_cfg)
-        if sigma_tau1_fixed_cfg is not None
-        else None
-    )
     M_loss_cum = 0.0
     M_sink_cum = 0.0
     M_sublimation_cum = 0.0
@@ -1456,8 +1527,8 @@ def run_zero_d(
         area = math.pi * r**2
     mass_total_original = cfg.initial.mass_total
     mass_total_applied = mass_total_original
-    if init_tau1_enabled and sigma_override_applied is not None and area > 0.0:
-        mass_total_applied = float(sigma_override_applied * area / constants.M_MARS)
+    if (init_tau1_enabled or initial_sigma_clipped) and area > 0.0:
+        mass_total_applied = float(sigma_surf_reference * area / constants.M_MARS)
         cfg.initial.mass_total = mass_total_applied
     chi_config_raw = getattr(cfg, "chi_blow", 1.0)
     chi_config = chi_config_raw
@@ -1523,6 +1594,19 @@ def run_zero_d(
     sinks_active = bool(sublimation_active_flag or sink_timescale_active)
 
     supply_spec = cfg.supply
+    supply_enabled_cfg = bool(getattr(supply_spec, "enabled", True))
+    supply_mode_value = getattr(supply_spec, "mode", "const")
+    supply_epsilon_mix = getattr(getattr(supply_spec, "mixing", None), "epsilon_mix", None)
+    supply_mu_cfg = getattr(getattr(supply_spec, "mixing", None), "mu", None)
+    supply_const_rate = getattr(getattr(supply_spec, "const", None), "prod_area_rate_kg_m2_s", None)
+    supply_effective_rate = None
+    try:
+        if supply_enabled_cfg and supply_mode_value == "const":
+            if supply_const_rate is not None and supply_epsilon_mix is not None:
+                supply_effective_rate = float(supply_const_rate) * float(supply_epsilon_mix)
+    except Exception:
+        supply_effective_rate = None
+    supply_table_path = getattr(getattr(supply_spec, "table", None), "path", None)
 
     t_end, dt_nominal, dt_initial_step, n_steps, time_grid_info = _resolve_time_grid(
         cfg.numerics,
@@ -3004,6 +3088,8 @@ def run_zero_d(
         "blowout_active": blowout_enabled,
         "rp_blowout_enabled": rp_blowout_enabled,
         "collision_solver": collision_solver_mode,
+        "supply_enabled": supply_enabled_cfg,
+        "supply_mode": supply_mode_value,
     }
     wyatt_collisional_timescale_active = bool(
         collisions_active
@@ -3318,6 +3404,11 @@ def run_zero_d(
             "enabled": init_tau1_enabled,
             "sigma_tau1_target": sigma_tau1_unity,
             "sigma_surf_init_override_applied": sigma_override_applied,
+            "sigma_surf_init_raw": sigma_surf_init_raw,
+            "sigma_surf_init_applied": sigma_surf_reference,
+            "sigma_tau1_cap_init": sigma_tau1_cap_init,
+            "sigma_tau1_mode": sigma_tau1_mode_label,
+            "initial_sigma_clipped": initial_sigma_clipped,
             "mass_total_original_Mmars": mass_total_original,
             "mass_total_applied_Mmars": mass_total_applied,
         },
@@ -3359,12 +3450,12 @@ def run_zero_d(
             "blowout_layer": blowout_layer_mode,
             "blowout_gate_mode": blowout_gate_mode,
             "freeze_kappa": freeze_kappa,
-            "freeze_sigma": freeze_sigma,
-            "shielding_mode": shielding_mode,
-            "shielding_tau_fixed": tau_fixed_cfg,
-            "shielding_sigma_tau1_fixed": sigma_tau1_fixed_cfg,
-            "shielding_table_path": str(phi_table_path_resolved) if phi_table_path_resolved is not None else None,
-            "psd_floor_mode": psd_floor_mode,
+        "freeze_sigma": freeze_sigma,
+        "shielding_mode": shielding_mode,
+        "shielding_tau_fixed": tau_fixed_cfg,
+        "shielding_sigma_tau1_fixed": sigma_tau1_fixed_target,
+        "shielding_table_path": str(phi_table_path_resolved) if phi_table_path_resolved is not None else None,
+        "psd_floor_mode": psd_floor_mode,
             "phase_enabled": phase_controller.enabled,
             "phase_source": phase_controller.source,
             "phase_entrypoint": phase_controller.entrypoint,
@@ -3403,6 +3494,15 @@ def run_zero_d(
         "sink_timescale_active": sink_timescale_active,
         "blowout_active": blowout_enabled,
         "rp_blowout_enabled": rp_blowout_enabled,
+    }
+    run_config["supply"] = {
+        "enabled": supply_enabled_cfg,
+        "mode": supply_mode_value,
+        "epsilon_mix": supply_epsilon_mix,
+        "mu": supply_mu_cfg,
+        "const_prod_area_rate_kg_m2_s": supply_const_rate,
+        "table_path": str(supply_table_path) if supply_table_path is not None else None,
+        "effective_prod_rate_kg_m2_s": supply_effective_rate,
     }
     run_config["physics_mode_resolution"] = {
         "resolved_mode": physics_mode,

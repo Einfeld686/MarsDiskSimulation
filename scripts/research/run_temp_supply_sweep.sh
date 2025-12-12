@@ -115,7 +115,8 @@ PY
         --override "dynamics.rng_seed=${SEED}"
         --override "radiation.TM_K=${T}"
         --override "radiation.mars_temperature_driver.table.path=${T_TABLE}"
-        --override "supply.mixing.mu=${MU}"
+        --override "supply.enabled=true"
+        --override "supply.mixing.epsilon_mix=${MU}"
         --override "supply.mode=${SUPPLY_MODE}"
         --override "supply.const.prod_area_rate_kg_m2_s=${SUPPLY_RATE}"
       )

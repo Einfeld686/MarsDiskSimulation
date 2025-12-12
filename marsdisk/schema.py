@@ -172,6 +172,10 @@ class Supply(BaseModel):
                 path: "data/my_supply.csv"
     """
 
+    enabled: bool = Field(
+        True,
+        description="Master switch for external supply; false forces zero production.",
+    )
     mode: Literal["const", "table", "powerlaw", "piecewise"] = Field(
         "const",
         description="Supply mode: 'const' (default), 'table', 'powerlaw', or 'piecewise'",
@@ -387,6 +391,10 @@ class InitTau1(BaseModel):
     enabled: bool = Field(
         False,
         description="When true, set σ_surf (and derived mass_total) to the Σ_τ=1 value at start-up.",
+    )
+    scale_to_tau1: bool = Field(
+        False,
+        description="If true, clamp the initial surface density to the chosen Σ_τ=1 cap to avoid headroom=0.",
     )
 
 
@@ -856,9 +864,12 @@ class Shielding(BaseModel):
         None,
         description="When shielding.mode='fixed_tau1', enforce an optical depth τ independent of radius.",
     )
-    fixed_tau1_sigma: Optional[float] = Field(
+    fixed_tau1_sigma: Optional[Union[float, Literal["auto"]]] = Field(
         None,
-        description="Optional direct specification of Σ_{τ=1} when shielding.mode='fixed_tau1'.",
+        description=(
+            "Direct specification of Σ_{τ=1} when shielding.mode='fixed_tau1'. "
+            "Use 'auto' to set Σ_{τ=1}=1/κ_eff at t=0."
+        ),
     )
     los_geometry: LOSGeometry = LOSGeometry()
 
