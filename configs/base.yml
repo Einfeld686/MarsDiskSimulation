@@ -49,6 +49,7 @@ qstar:
   B: 0.3
   b_g: 1.36
   v_ref_kms: [3.0, 5.0]
+  coeff_units: ba99_cgs
 disk:
   geometry:
     r_in_RM: 1.0
