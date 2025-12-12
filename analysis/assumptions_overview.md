@@ -8,7 +8,7 @@
 ## 1. カバレッジ指標
 - equation_coverage: 38/41 = 0.927
 - function_reference_rate: 9/11 = 0.818
-- anchor_consistency_rate: 15/29 = 0.517
+- anchor_consistency_rate: 9/23 = 0.391
 
 ## 2. レコード一覧
 | id | scope | eq_ids | tags | config_keys | run_stage | provenance | status |
@@ -22,9 +22,5 @@
 | ops:gas_poor_default | project_default | - | ops:gas_poor_default, geometry:thin_disk | radiation.ALLOW_TL2003, radiation.use_mars_rp, sinks.enable_gas_drag | physics_controls | Hyodo2018_ApJ860_150 | draft |
 | radiative_cooling_tmars | module_default | E.042, E.043 | radiation:tmars_graybody, ops:gas_poor_default | radiation.TM_K, mars_temperature_driver.constant | physics_controls | Hyodo2018_ApJ860_150 | draft |
 | viscosity_c5_optional | toggle | - | diffusion_optional, C5 | viscosity.enabled | smol_kernel | CridaCharnoz2012_Science338_1196 | draft |
-| ops:qpr_table_generation | module_default | - | ops:qpr_table | radiation.qpr_table_path | prep | config | draft |
+| ops:qpr_table_generation | module_default | - | ops:qpr_table | radiation.qpr_table_path | prep | assumption:qpr_table_provenance | needs_ref |
 | equations_unmapped_stub | module_default | E.003, E.004, E.005, E.009, E.010, E.011, E.012, E.020, E.021, E.022, E.023, E.024, E.025, E.026, E.027, E.028, E.032, E.033, E.035, E.039 | placeholder | - | - | assumption:eq_unmapped_placeholder | needs_ref |
-| ops:gas_poor_default | project_default | - | ops:gas_poor_default, geometry:thin_disk | radiation.ALLOW_TL2003, radiation.use_mars_rp, sinks.enable_gas_drag | physics_controls | Hyodo2018_ApJ860_150 | draft |
-| radiative_cooling_tmars | module_default | E.042, E.043 | radiation:tmars_graybody, ops:gas_poor_default | radiation.TM_K, mars_temperature_driver.constant | physics_controls | Hyodo2018_ApJ860_150 | draft |
-| viscosity_c5_optional | toggle | - | diffusion_optional, C5 | viscosity.enabled | smol_kernel | CridaCharnoz2012_Science338_1196 | draft |
-| ops:qpr_table_generation | module_default | - | ops:qpr_table | radiation.qpr_table_path | prep | config | draft |

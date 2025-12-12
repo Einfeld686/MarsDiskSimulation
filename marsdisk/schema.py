@@ -142,6 +142,122 @@ class SupplyMixing(BaseModel):
             values["epsilon_mix"] = values["mu"]
         return values
 
+    @validator("epsilon_mix")
+    def _validate_epsilon_mix(cls, value: float) -> float:
+        """Restrict mixing efficiency to the physical interval [0, 1]."""
+
+        if value < 0.0 or value > 1.0:
+            raise ValueError("supply.mixing.epsilon_mix must lie within [0, 1]")
+        return value
+
+
+class SupplyReservoir(BaseModel):
+    mass_total_Mmars: Optional[float] = Field(
+        None,
+        ge=0.0,
+        description="Optional finite reservoir in Mars masses; None keeps the legacy infinite reservoir.",
+    )
+    depletion_mode: Literal["hard_stop", "smooth"] = Field(
+        "hard_stop",
+        description="When 'smooth', linearly ramp the rate down once the remaining mass falls below smooth_fraction of the total.",
+    )
+    smooth_fraction: float = Field(
+        0.1,
+        ge=0.0,
+        le=1.0,
+        description="Fraction of the reservoir at which the smooth ramp begins when depletion_mode='smooth'.",
+    )
+
+
+class SupplyFeedback(BaseModel):
+    enabled: bool = False
+    target_tau: float = Field(
+        1.0,
+        ge=0.0,
+        description="Target optical depth for proportional control.",
+    )
+    gain: float = Field(
+        1.0,
+        ge=0.0,
+        description="Dimensionless proportional gain applied to the normalised tau error.",
+    )
+    response_time_years: float = Field(
+        0.5,
+        gt=0.0,
+        description="Response time controlling how quickly the feedback scale reacts (years).",
+    )
+    min_scale: float = Field(
+        0.0,
+        ge=0.0,
+        description="Lower bound on the feedback multiplier.",
+    )
+    max_scale: float = Field(
+        10.0,
+        gt=0.0,
+        description="Upper bound on the feedback multiplier.",
+    )
+    tau_field: Literal["tau_vertical", "tau_los"] = Field(
+        "tau_vertical",
+        description="Optical-depth field to monitor for feedback control.",
+    )
+    initial_scale: float = Field(
+        1.0,
+        ge=0.0,
+        description="Initial multiplier applied before any feedback updates.",
+    )
+
+    @validator("max_scale")
+    def _validate_scale_bounds(cls, value: float, values: Dict[str, Any]) -> float:
+        min_scale = values.get("min_scale", 0.0)
+        if value <= 0.0:
+            raise ValueError("feedback.max_scale must be positive")
+        if value < min_scale:
+            raise ValueError("feedback.max_scale must be greater than or equal to min_scale")
+        return value
+
+
+class SupplyTemperatureTable(BaseModel):
+    path: Path = Path("data/supply_temperature_map.csv")
+    value_kind: Literal["scale", "rate"] = Field(
+        "scale",
+        description="Whether the table values represent a dimensionless scale or an absolute rate.",
+    )
+    column_temperature: str = "T_K"
+    column_value: str = "value"
+
+
+class SupplyTemperature(BaseModel):
+    enabled: bool = False
+    mode: Literal["scale", "table"] = Field(
+        "scale",
+        description="Temperature coupling mode: analytic scale or table-driven lookup.",
+    )
+    reference_K: float = Field(
+        1800.0,
+        gt=0.0,
+        description="Reference temperature for the analytic scaling mode.",
+    )
+    exponent: float = 1.0
+    scale_at_reference: float = Field(
+        1.0,
+        ge=0.0,
+        description="Multiplier applied at the reference temperature.",
+    )
+    floor: float = Field(
+        0.0,
+        ge=0.0,
+        description="Minimum temperature multiplier (scale mode) or applied after table lookup when value_kind='scale'.",
+    )
+    cap: float = Field(
+        10.0,
+        gt=0.0,
+        description="Maximum temperature multiplier (scale mode) or applied after table lookup when value_kind='scale'.",
+    )
+    table: SupplyTemperatureTable = Field(
+        default_factory=SupplyTemperatureTable,
+        description="Table configuration when mode='table'.",
+    )
+
 
 class SupplyPiece(BaseModel):
     t_start_s: float
@@ -195,6 +311,18 @@ class Supply(BaseModel):
     mixing: SupplyMixing = Field(
         default_factory=SupplyMixing,
         description="Mixing parameters (optional, applies to all modes)",
+    )
+    reservoir: SupplyReservoir = Field(
+        default_factory=SupplyReservoir,
+        description="Optional finite reservoir and depletion handling.",
+    )
+    feedback: SupplyFeedback = Field(
+        default_factory=SupplyFeedback,
+        description="Optional τ-based proportional feedback controller.",
+    )
+    temperature: SupplyTemperature = Field(
+        default_factory=SupplyTemperature,
+        description="Optional temperature-driven scaling of the supply rate.",
     )
     piecewise: list[SupplyPiece] = Field(
         default_factory=list,
@@ -864,12 +992,18 @@ class Shielding(BaseModel):
         None,
         description="When shielding.mode='fixed_tau1', enforce an optical depth τ independent of radius.",
     )
-    fixed_tau1_sigma: Optional[Union[float, Literal["auto"]]] = Field(
+    fixed_tau1_sigma: Optional[Union[float, Literal["auto", "auto_max"]]] = Field(
         None,
         description=(
             "Direct specification of Σ_{τ=1} when shielding.mode='fixed_tau1'. "
-            "Use 'auto' to set Σ_{τ=1}=1/κ_eff at t=0."
+            "Use 'auto' to set Σ_{τ=1}=1/κ_eff at t=0; 'auto_max' takes max(1/κ_eff, Σ_init)×(1+margin)."
         ),
+    )
+    auto_max_margin: float = Field(
+        0.05,
+        ge=0.0,
+        le=1.0,
+        description="Margin applied when shielding.fixed_tau1_sigma='auto_max' or init_tau1.scale_to_tau1 clamps the initial surface density.",
     )
     los_geometry: LOSGeometry = LOSGeometry()
 

@@ -74,7 +74,6 @@ logger = logging.getLogger(__name__)
 SECONDS_PER_YEAR = 365.25 * 24 * 3600.0
 MAX_STEPS = 50000000
 AUTO_MAX_MARGIN = 0.05
-AUTO_MAX_MARGIN = 0.05
 TAU_MIN = 1e-12
 KAPPA_MIN = 1e-12
 DEFAULT_SEED = 12345
@@ -87,6 +86,20 @@ PHASE7_SCHEMA_VERSION = "phase7-minimal-v1"
 MEMORY_RUN_ROW_BYTES = 2200.0
 MEMORY_PSD_ROW_BYTES = 320.0
 MEMORY_DIAG_ROW_BYTES = 1400.0
+
+
+def _ensure_finite_kappa(value: float, label: str = "kappa") -> float:
+    """Return a finite, non-negative kappa value, clamping if needed."""
+
+    if not math.isfinite(value) or value < 0.0:
+        logger.warning(
+            "%s is non-finite (%.3e); clamping to KAPPA_MIN=%.3e",
+            label,
+            value,
+            KAPPA_MIN,
+        )
+        return KAPPA_MIN
+    return float(value)
 
 
 def _resolve_los_factor(los_geom: Optional[object]) -> float:
@@ -1238,6 +1251,7 @@ def run_zero_d(
     phi_tau_fn = None
     phi_table_path_resolved: Optional[Path] = None
     shielding_mode_resolved = "psitau"
+    auto_max_margin = AUTO_MAX_MARGIN
     if cfg.shielding:
         shielding_mode_resolved = cfg.shielding.mode_resolved
         phi_table_path_resolved = cfg.shielding.table_path_resolved
@@ -1245,6 +1259,13 @@ def run_zero_d(
             phi_tau_fn = shielding.load_phi_table(phi_table_path_resolved)
         if shielding_mode_resolved == "off":
             phi_tau_fn = None
+        try:
+            margin_cfg = float(getattr(cfg.shielding, "auto_max_margin", AUTO_MAX_MARGIN))
+            if margin_cfg < 0.0:
+                raise ValueError("shielding.auto_max_margin must be non-negative")
+            auto_max_margin = margin_cfg
+        except Exception:
+            auto_max_margin = AUTO_MAX_MARGIN
     los_geom_cfg = getattr(cfg.shielding, "los_geometry", None) if cfg.shielding else None
     los_factor = _resolve_los_factor(los_geom_cfg)
 
@@ -1386,7 +1407,7 @@ def run_zero_d(
         n_bins=cfg.sizes.n_bins,
         rho=rho_used,
     )
-    kappa_surf = psd.compute_kappa(psd_state)
+    kappa_surf = _ensure_finite_kappa(psd.compute_kappa(psd_state), label="kappa_surf_initial")
     kappa_surf_initial = float(kappa_surf)
     qpr_at_smin_config = _lookup_qpr(s_min_config)
     qpr_mean = _lookup_qpr(s_min_effective)
@@ -1468,14 +1489,14 @@ def run_zero_d(
             else:
                 sigma_tau1_mode_label = "auto_max"
                 sigma_tau1_fixed_target = (
-                    max(base_sigma_tau1, sigma_surf_init_raw) * (1.0 + AUTO_MAX_MARGIN)
+                    max(base_sigma_tau1, sigma_surf_init_raw) * (1.0 + auto_max_margin)
                 )
                 logger.info(
                     "shielding.fixed_tau1_sigma=auto_max -> Sigma_tau1=%.3e (base=%.3e, sigma_init=%.3e, margin=%.2f)",
                     sigma_tau1_fixed_target,
                     base_sigma_tau1,
                     sigma_surf_init_raw,
-                    AUTO_MAX_MARGIN,
+                    auto_max_margin,
                 )
             sigma_tau1_cap_init = sigma_tau1_fixed_target
         else:
@@ -1494,7 +1515,7 @@ def run_zero_d(
         and sigma_tau1_cap_init is not None
         and math.isfinite(sigma_tau1_cap_init)
     ):
-        cap_with_margin = sigma_tau1_cap_init * (1.0 - AUTO_MAX_MARGIN)
+        cap_with_margin = sigma_tau1_cap_init * (1.0 - auto_max_margin)
         cap_with_margin = cap_with_margin if cap_with_margin > 0.0 else sigma_tau1_cap_init
         if sigma_surf_reference > cap_with_margin:
             logger.warning(
@@ -1600,6 +1621,25 @@ def run_zero_d(
     supply_mu_cfg = getattr(getattr(supply_spec, "mixing", None), "mu", None)
     supply_const_rate = getattr(getattr(supply_spec, "const", None), "prod_area_rate_kg_m2_s", None)
     supply_effective_rate = None
+    supply_reservoir_mass_total = getattr(getattr(supply_spec, "reservoir", None), "mass_total_Mmars", None)
+    supply_reservoir_mode = getattr(getattr(supply_spec, "reservoir", None), "depletion_mode", None)
+    supply_reservoir_smooth_fraction = getattr(getattr(supply_spec, "reservoir", None), "smooth_fraction", None)
+    supply_feedback_cfg = getattr(supply_spec, "feedback", None)
+    supply_feedback_enabled = bool(getattr(supply_feedback_cfg, "enabled", False)) if supply_feedback_cfg else False
+    supply_feedback_target = getattr(supply_feedback_cfg, "target_tau", None) if supply_feedback_cfg else None
+    supply_feedback_gain = getattr(supply_feedback_cfg, "gain", None) if supply_feedback_cfg else None
+    supply_feedback_response_yr = getattr(supply_feedback_cfg, "response_time_years", None) if supply_feedback_cfg else None
+    supply_temperature_cfg = getattr(supply_spec, "temperature", None)
+    supply_temperature_mode = getattr(supply_temperature_cfg, "mode", None) if supply_temperature_cfg else None
+    supply_temperature_enabled = bool(getattr(supply_temperature_cfg, "enabled", False)) if supply_temperature_cfg else False
+    supply_temperature_table_path = (
+        getattr(getattr(supply_temperature_cfg, "table", None), "path", None) if supply_temperature_cfg else None
+    )
+    supply_temperature_value_kind = (
+        getattr(getattr(supply_temperature_cfg, "table", None), "value_kind", None)
+        if supply_temperature_cfg
+        else None
+    )
     try:
         if supply_enabled_cfg and supply_mode_value == "const":
             if supply_const_rate is not None and supply_epsilon_mix is not None:
@@ -1607,6 +1647,7 @@ def run_zero_d(
     except Exception:
         supply_effective_rate = None
     supply_table_path = getattr(getattr(supply_spec, "table", None), "path", None)
+    supply_state = supply.init_runtime_state(supply_spec, area, seconds_per_year=SECONDS_PER_YEAR)
 
     t_end, dt_nominal, dt_initial_step, n_steps, time_grid_info = _resolve_time_grid(
         cfg.numerics,
@@ -1755,6 +1796,9 @@ def run_zero_d(
     phase7_total_rate_track = history.phase7_total_rate_track
     phase7_total_rate_time_track = history.phase7_total_rate_time_track
     phase7_ts_ratio_track = history.phase7_ts_ratio_track
+    supply_feedback_track: List[float] = []
+    supply_temperature_scale_track: List[float] = []
+    supply_reservoir_remaining_track: List[float] = []
     dt_over_t_blow_values: List[float] = []
     mass_budget_max_error = 0.0
     steps_since_flush = 0
@@ -1893,7 +1937,7 @@ def run_zero_d(
             floor=floor_for_step,
             sigma_surf=sigma_surf,
         )
-        kappa_surf = psd.compute_kappa(psd_state)
+        kappa_surf = _ensure_finite_kappa(psd.compute_kappa(psd_state), label="kappa_surf_step")
         if freeze_kappa:
             kappa_surf = kappa_surf_initial
         dSigma_dt_sublimation = delta_sigma_sub / dt if dt > 0.0 else 0.0
@@ -2042,6 +2086,7 @@ def run_zero_d(
         sigma_tau1_limit = None
         sigma_tau1_active_last = None
         prod_rate_last = 0.0
+        supply_diag_last = None
         outflux_surface = 0.0
         sink_flux_surface = 0.0
         time_sub = time_start
@@ -2118,8 +2163,20 @@ def run_zero_d(
                     tau_for_coll = None
                     if collisions_active_step and cfg.surface.use_tcoll and tau_vert > TAU_MIN:
                         tau_for_coll = tau_vert
-                    prod_rate = supply.get_prod_area_rate(time_sub, r, supply_spec)
+                    tau_for_feedback_val = tau_eval_los if supply_feedback_cfg and getattr(supply_feedback_cfg, "tau_field", "tau_vertical") == "tau_los" else tau_vert
+                    supply_res = supply.evaluate_supply(
+                        time_sub,
+                        r,
+                        dt_sub,
+                        supply_spec,
+                        area=area,
+                        state=supply_state,
+                        tau_for_feedback=tau_for_feedback_val,
+                        temperature_K=T_use,
+                    )
+                    prod_rate = supply_res.rate
                     prod_rate_last = prod_rate
+                    supply_diag_last = supply_res
                     total_prod_surface += prod_rate * dt_sub
                     sigma_tau1_active = (
                         sigma_tau1_limit
@@ -2208,8 +2265,20 @@ def run_zero_d(
                 tau_los_last = tau_eval_los
                 enable_blowout_sub = enable_blowout_step and collisions_active_step
                 t_sink_current = t_sink_step_effective if sink_timescale_active else None
-                prod_rate = supply.get_prod_area_rate(time_start, r, supply_spec)
+                tau_for_feedback_val = tau_eval_los if supply_feedback_cfg and getattr(supply_feedback_cfg, "tau_field", "tau_vertical") == "tau_los" else tau_vert
+                supply_res = supply.evaluate_supply(
+                    time_start,
+                    r,
+                    dt,
+                    supply_spec,
+                    area=area,
+                    state=supply_state,
+                    tau_for_feedback=tau_for_feedback_val,
+                    temperature_K=T_use,
+                )
+                prod_rate = supply_res.rate
                 prod_rate_last = prod_rate
+                supply_diag_last = supply_res
                 sigma_tau1_active = (
                     sigma_tau1_limit
                     if (blowout_layer_mode == "surface_tau_le_1" and collisions_active_step)
@@ -2660,6 +2729,15 @@ def run_zero_d(
             "sink_flux_surface": sink_flux_surface,
             "t_blow": t_blow_step,
             "prod_subblow_area_rate": prod_rate_last,
+            "prod_subblow_area_rate_raw": supply_diag_last.raw_rate if supply_diag_last else None,
+            "supply_temperature_scale": supply_diag_last.temperature_scale if supply_diag_last else None,
+            "supply_temperature_value": supply_diag_last.temperature_value if supply_diag_last else None,
+            "supply_temperature_value_kind": supply_diag_last.temperature_value_kind if supply_diag_last else None,
+            "supply_feedback_scale": supply_diag_last.feedback_scale if supply_diag_last else None,
+            "supply_feedback_error": supply_diag_last.feedback_error if supply_diag_last else None,
+            "supply_reservoir_remaining_Mmars": supply_diag_last.reservoir_remaining_Mmars if supply_diag_last else None,
+            "supply_reservoir_fraction": supply_diag_last.reservoir_fraction if supply_diag_last else None,
+            "supply_reservoir_clipped": bool(supply_diag_last.clipped_by_reservoir) if supply_diag_last else False,
             "M_out_dot": M_out_dot,
             "M_sink_dot": M_sink_dot,
             "dM_dt_surface_total": dM_dt_surface_total,
@@ -2741,6 +2819,13 @@ def run_zero_d(
                 phase7_ts_ratio_track.append(ts_ratio_value)
         if evolve_min_size_enabled:
             record["s_min_evolved"] = s_min_evolved_value
+        if supply_diag_last is not None:
+            if math.isfinite(supply_diag_last.feedback_scale):
+                supply_feedback_track.append(float(supply_diag_last.feedback_scale))
+            if math.isfinite(supply_diag_last.temperature_scale):
+                supply_temperature_scale_track.append(float(supply_diag_last.temperature_scale))
+            if supply_diag_last.reservoir_remaining_Mmars is not None:
+                supply_reservoir_remaining_track.append(float(supply_diag_last.reservoir_remaining_Mmars))
         records.append(record)
 
         try:
@@ -2810,6 +2895,15 @@ def run_zero_d(
             "s_peak": s_peak_value,
             "area_m2": area,
             "prod_subblow_area_rate": prod_rate_last,
+            "prod_subblow_area_rate_raw": supply_diag_last.raw_rate if supply_diag_last else None,
+            "supply_temperature_scale": supply_diag_last.temperature_scale if supply_diag_last else None,
+            "supply_temperature_value": supply_diag_last.temperature_value if supply_diag_last else None,
+            "supply_temperature_value_kind": supply_diag_last.temperature_value_kind if supply_diag_last else None,
+            "supply_feedback_scale": supply_diag_last.feedback_scale if supply_diag_last else None,
+            "supply_feedback_error": supply_diag_last.feedback_error if supply_diag_last else None,
+            "supply_reservoir_remaining_Mmars": supply_diag_last.reservoir_remaining_Mmars if supply_diag_last else None,
+            "supply_reservoir_fraction": supply_diag_last.reservoir_fraction if supply_diag_last else None,
+            "supply_reservoir_clipped": bool(supply_diag_last.clipped_by_reservoir) if supply_diag_last else False,
             "s_min_effective": s_min_effective,
             "qpr_mean": qpr_mean_step,
             "chi_blow_eff": chi_blow_eff,
@@ -3052,6 +3146,9 @@ def run_zero_d(
     ablow_min, ablow_median, ablow_max = _series_stats(ablow_track)
     gate_min, gate_median, gate_max = _series_stats(gate_factor_track)
     tsolid_min, tsolid_median, tsolid_max = _series_stats(t_solid_track)
+    supply_feedback_min, supply_feedback_median, supply_feedback_max = _series_stats(supply_feedback_track)
+    supply_temp_scale_min, supply_temp_scale_median, supply_temp_scale_max = _series_stats(supply_temperature_scale_track)
+    supply_reservoir_min, supply_reservoir_median, supply_reservoir_max = _series_stats(supply_reservoir_remaining_track)
     phase7_max_rate = float("nan")
     phase7_max_rate_time = None
     phase7_median_ts_ratio = float("nan")
@@ -3090,6 +3187,11 @@ def run_zero_d(
         "collision_solver": collision_solver_mode,
         "supply_enabled": supply_enabled_cfg,
         "supply_mode": supply_mode_value,
+        "supply_feedback_enabled": supply_feedback_enabled,
+        "supply_reservoir_mode": supply_reservoir_mode,
+        "supply_reservoir_mass_total_Mmars": supply_reservoir_mass_total,
+        "supply_temperature_enabled": supply_temperature_enabled,
+        "supply_temperature_mode": supply_temperature_mode,
     }
     wyatt_collisional_timescale_active = bool(
         collisions_active
@@ -3246,6 +3348,30 @@ def run_zero_d(
         "s_min_config": s_min_config,
         "s_min_effective_gt_config": s_min_effective > s_min_config,
         "s_min_components": s_min_components,
+        "supply_feedback_enabled": supply_feedback_enabled,
+        "supply_feedback_target_tau": supply_feedback_target,
+        "supply_feedback_gain": supply_feedback_gain,
+        "supply_feedback_response_time_years": supply_feedback_response_yr,
+        "supply_feedback_scale_min": supply_feedback_min,
+        "supply_feedback_scale_median": supply_feedback_median,
+        "supply_feedback_scale_max": supply_feedback_max,
+        "supply_reservoir_mass_total_Mmars": supply_reservoir_mass_total,
+        "supply_reservoir_remaining_Mmars": supply_state.reservoir_remaining_Mmars() if supply_state else None,
+        "supply_reservoir_fraction_final": supply_state.reservoir_fraction() if supply_state else None,
+        "supply_reservoir_remaining_stats_Mmars": {
+            "min": supply_reservoir_min,
+            "median": supply_reservoir_median,
+            "max": supply_reservoir_max,
+        },
+        "supply_reservoir_mode": supply_reservoir_mode,
+        "supply_reservoir_smooth_fraction": supply_reservoir_smooth_fraction,
+        "supply_temperature_enabled": supply_temperature_enabled,
+        "supply_temperature_mode": supply_temperature_mode,
+        "supply_temperature_scale_min": supply_temp_scale_min,
+        "supply_temperature_scale_median": supply_temp_scale_median,
+        "supply_temperature_scale_max": supply_temp_scale_max,
+        "supply_temperature_value_kind": supply_temperature_value_kind,
+        "supply_temperature_table_path": str(supply_temperature_table_path) if supply_temperature_table_path is not None else None,
         "enforce_mass_budget": enforce_mass_budget,
         "physics_mode": physics_mode,
         "physics_mode_source": physics_mode_source,
@@ -3450,12 +3576,13 @@ def run_zero_d(
             "blowout_layer": blowout_layer_mode,
             "blowout_gate_mode": blowout_gate_mode,
             "freeze_kappa": freeze_kappa,
-        "freeze_sigma": freeze_sigma,
-        "shielding_mode": shielding_mode,
-        "shielding_tau_fixed": tau_fixed_cfg,
-        "shielding_sigma_tau1_fixed": sigma_tau1_fixed_target,
-        "shielding_table_path": str(phi_table_path_resolved) if phi_table_path_resolved is not None else None,
-        "psd_floor_mode": psd_floor_mode,
+            "freeze_sigma": freeze_sigma,
+            "shielding_mode": shielding_mode,
+            "shielding_tau_fixed": tau_fixed_cfg,
+            "shielding_sigma_tau1_fixed": sigma_tau1_fixed_target,
+            "shielding_auto_max_margin": auto_max_margin,
+            "shielding_table_path": str(phi_table_path_resolved) if phi_table_path_resolved is not None else None,
+            "psd_floor_mode": psd_floor_mode,
             "phase_enabled": phase_controller.enabled,
             "phase_source": phase_controller.source,
             "phase_entrypoint": phase_controller.entrypoint,
@@ -3503,6 +3630,30 @@ def run_zero_d(
         "const_prod_area_rate_kg_m2_s": supply_const_rate,
         "table_path": str(supply_table_path) if supply_table_path is not None else None,
         "effective_prod_rate_kg_m2_s": supply_effective_rate,
+        "reservoir_mass_total_Mmars": supply_reservoir_mass_total,
+        "reservoir_mode": supply_reservoir_mode,
+        "reservoir_smooth_fraction": supply_reservoir_smooth_fraction,
+        "feedback_enabled": supply_feedback_enabled,
+        "feedback_target_tau": supply_feedback_target,
+        "feedback_gain": supply_feedback_gain,
+        "feedback_response_time_years": supply_feedback_response_yr,
+        "feedback_min_scale": getattr(supply_feedback_cfg, "min_scale", None) if supply_feedback_cfg else None,
+        "feedback_max_scale": getattr(supply_feedback_cfg, "max_scale", None) if supply_feedback_cfg else None,
+        "feedback_tau_field": getattr(supply_feedback_cfg, "tau_field", None) if supply_feedback_cfg else None,
+        "feedback_initial_scale": getattr(supply_feedback_cfg, "initial_scale", None) if supply_feedback_cfg else None,
+        "temperature_enabled": supply_temperature_enabled,
+        "temperature_mode": supply_temperature_mode,
+        "temperature_reference_K": getattr(supply_temperature_cfg, "reference_K", None)
+        if supply_temperature_cfg
+        else None,
+        "temperature_exponent": getattr(supply_temperature_cfg, "exponent", None) if supply_temperature_cfg else None,
+        "temperature_scale_at_reference": getattr(supply_temperature_cfg, "scale_at_reference", None)
+        if supply_temperature_cfg
+        else None,
+        "temperature_floor": getattr(supply_temperature_cfg, "floor", None) if supply_temperature_cfg else None,
+        "temperature_cap": getattr(supply_temperature_cfg, "cap", None) if supply_temperature_cfg else None,
+        "temperature_table_path": str(supply_temperature_table_path) if supply_temperature_table_path is not None else None,
+        "temperature_table_value_kind": supply_temperature_value_kind,
     }
     run_config["physics_mode_resolution"] = {
         "resolved_mode": physics_mode,

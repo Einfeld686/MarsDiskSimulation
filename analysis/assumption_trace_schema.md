@@ -15,7 +15,7 @@
 | `config_keys` | list[str] / 0件可 | スキャナ: `schema.Config` introspect + `config_utils` の label を note に格納 | Pydantic フィールドのドットパス（例: `physics.blowout.enabled`） |
 | `code_path` | list[str] / 0件可 | スキャナ: `analysis/source_map.json` / `analysis/inventory.json` を優先、無ければ `[file:line–line]` fallback | アンカー付きコード参照 |
 | `run_stage` | list[str] / 1件推奨 | Phase1: 人手（`init_ei`/`time_grid`/`physics_controls`/`surface_loop`/`smol_kernel` 初期マップ）。将来 decorator 等で自動化 | 実行段階の列挙 |
-| `provenance` | dict / 必須 | スキャナ（不足時は TODO slug） | `paper_key`（任意, references.registry.json），`unknown_slug`（任意, `assumption:` プレフィックス推奨），`source_kind`（必須: `equation`/`config`/`code_comment`/`test`），`note`（任意, config_utils label 等） |
+| `provenance` | dict / 必須 | スキャナ（不足時は TODO slug） | `paper_key`（任意, references.registry.json），`unknown_slug`（任意, `assumption:` プレフィックス推奨），`source_kind`（必須: `equation`/`config`/`code_comment`/`test`），`type`（任意: `literature`/`impl_choice`/`safety_cap`/`data_source` を推奨），`note`（任意, config_utils label 等） |
 | `tests` | list[str] / 0件可 | Phase1: 手入力のみ。将来 pytest メタから自動紐付け検討 | 関連 pytest 名 |
 | `outputs` | list[str] / 0件可 | 任意（registry 由来） | 生成・検証する主なカラム/メトリクス |
 | `status` | enum / 任意 | 手入力（`draft`/`needs_ref`/`ok` 等） | カバレッジ管理用ステータス |
@@ -37,3 +37,4 @@
   - `function_reference_rate = (source_map.json で equation 出典を持つ code_path のうち registry で参照された割合)`
   - `anchor_consistency_rate = (source_map.json と inventory.json の行範囲が scanner 推定と一致する割合, ±数行許容)`
 - make ターゲット `assumptions-autogen-check` で doc_sync → scan → render → analysis-doc-tests → evaluation_system を束ね、上記しきい値未達で FAIL（暫定: equation_coverage≥0.95）。
+- provenance.type は PROV-DM/FAIR の「実体/活動/責任主体」整理と整合させ、文献式（literature）と実装側の安全策・上限（impl_choice/safety_cap）、入力データ源（data_source）を区別して登録する。

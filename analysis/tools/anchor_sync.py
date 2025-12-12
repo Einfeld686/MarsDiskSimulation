@@ -359,7 +359,8 @@ class AnchorSync:
             )
             return match.group(0)
 
-        new_start, new_end = self._clamp_to_symbol(symbol, start, end)
+        # Normalize to the full symbol span for consistency checks.
+        new_start, new_end = symbol.start_line, symbol.end_line
         line_repr = self._format_line_range(new_start, new_end)
         return f"{rel_path}#{symbol.symbol} {line_repr}"
 
@@ -376,11 +377,8 @@ class AnchorSync:
                 )
             )
             return match.group(0)
-        req_start = match.group(3)
-        req_end = match.group(4)
-        start_val = int(req_start) if req_start else symbol.start_line
-        end_val = int(req_end) if req_end else (start_val if req_start else symbol.end_line)
-        new_start, new_end = self._clamp_to_symbol(symbol, start_val, end_val)
+        # Always use the symbol's full span to keep anchors in sync with inventory.json.
+        new_start, new_end = symbol.start_line, symbol.end_line
         line_repr = self._format_line_range(new_start, new_end)
         return f"{rel_path}#{symbol.symbol} {line_repr}"
 
