@@ -16,18 +16,17 @@
 | 高速ブローアウト解像 | `io.substep_fast_blowout=true`, `io.substep_max_ratio≈1`（必要に応じ補正 `io.correct_fast_blowout=true`） | `python -m marsdisk.run --config configs/base.yml --set io.substep_fast_blowout=true --set io.substep_max_ratio=1.0` | `series/run.parquet` の `n_substeps>1` と `fast_blowout_*` 列、積分値と累積損失の一致 |
 
 ## τ≈1＋供給維持の評価（temp_supply 系）
-- 判定基準（評価区間は後半 50% を推奨、warmup を除外する場合は window_fraction を調整）  
+- 判定基準（評価区間は後半 50% を既定、`--window-spans "0.5-1.0"`）  
   - τ条件: 評価区間の `tau_vertical`（なければ `tau`）の中央値が 0.5–2。  
-  - 供給条件: 評価区間で `prod_subblow_area_rate` が設定供給（`supply.const.prod_area_rate_kg_m2_s × epsilon_mix`）の 90%以上を連続して維持する区間が存在（長さは連続時間 Δt で 0.05 日以上を推奨）。  
-  - 成否: 上記 2 条件を同時に満たす連続区間があれば success。
-- 最新デフォルト（`scripts/research/run_temp_supply_sweep.sh`）: `SUPPLY_RATE=3.0e-3` kg m⁻² s⁻¹ を基準に `epsilon_mix∈{0.5,1.0,5.0}` を掃引し、τフィードバックと温度スケールを既定で有効化する（リザーバは未設定のまま）。`summary.json` には `supply_feedback_scale_*` とリザーバ統計、`series/run.parquet` には `supply_feedback_scale`/`supply_temperature_scale`/`supply_reservoir_remaining_Mmars` などの診断列が追加される。[scripts/research/run_temp_supply_sweep.sh:1–199][marsdisk/run.py#run_zero_d [L1047–L3783]][marsdisk/run.py#run_zero_d [L1047–L3783]]
-- 推奨ツール: `scripts/research/evaluate_tau_supply.py`  
-  - 例: `python scripts/research/evaluate_tau_supply.py --run-dir <OUTDIR> --window-fraction 0.5 --min-duration-days 0.05`  
-  - run_config に記録された `effective_prod_rate_kg_m2_s` を目標供給として参照し、JSON で success/tau_median/longest_supply_duration を返す。
+  - 供給条件: 評価区間で `prod_subblow_area_rate` が設定供給（`supply.const.prod_area_rate_kg_m2_s × epsilon_mix`）の 90%以上を連続して維持する区間が存在（連続 0.1 日以上）。  
+  - 成否: 上記 2 条件を同じ連続区間で満たせば success（`evaluate_tau_supply.py --window-spans "0.5-1.0" --min-duration-days 0.1 --threshold-factor 0.9` の `success_any=true` を採用）。[scripts/research/evaluate_tau_supply.py:130–141]
+- 最新デフォルト（`scripts/research/run_temp_supply_sweep.sh`）: `SUPPLY_RATE=3.0e-3` kg m⁻² s⁻¹ を基準に 実効スケール係数（epsilon_mix）∈{0.1,0.5,1.0} を掃引し、`shielding.fixed_tau1_sigma=auto`＋`init_tau1.scale_to_tau1=true` を全ケースに付与する。ログに実効供給（const×実効スケール係数）、遮蔽モードと `fixed_tau1_sigma` を出力し、`EVAL=1` なら各 run 後に `evaluate_tau_supply.py --window-spans "0.5-1.0" --min-duration-days 0.1 --threshold-factor 0.9` を実行して `checks/tau_supply_eval.json` を保存する。[scripts/research/run_temp_supply_sweep.sh:1–260][marsdisk/run.py#run_zero_d [L1047–L3783]]
+- 本番の供給経路は時間関数のみ（const/powerlaw/table/piecewise）。τフィードバックは control experiment 用スイッチとして残し（デフォルト Off）、本番判定には組み込まない。
+- 有限リザーバー: `supply.reservoir.enabled=true` と `mass_total_Mmars` を与えると供給総量を減算管理し、枯渇時刻や残量を `series/run.parquet`・`summary.json`・`run_config.json` に記録する。[marsdisk/physics/supply.py#init_runtime_state [L184–L229]][marsdisk/physics/supply.py#evaluate_supply [L261–L352]][marsdisk/run.py#run_zero_d [L1047–L3783]]
 - 失敗パターンの目安  
   - τ不足（tau_median<0.5）: 供給が弱すぎるか Στ=1 が小さすぎて headroom=0。  
   - 供給不足（longest_supply_duration<Δt）: Στ=1 に初期 Σ が張り付き、prod_subblow がクリップされている可能性。`init_tau1.scale_to_tau1=true` や Στ=1 を再設定する。
-- 実行時の注意: `fixed_tau1_sigma=auto_max` はデバッグ専用。本番判定は `fixed_tau1_sigma=auto`＋`init_tau1.scale_to_tau1=true` を基準とする。
+- 実行時の注意: `fixed_tau1_sigma=auto_max` はデバッグ専用で、`run_zero_d` は summary/run_config に debug フラグを残す（本番禁止）。[marsdisk/run.py#run_zero_d [L1047–L3783]]
 
 ### DocSync + ドキュメントテスト（標準手順）
 - Codex や開発者が analysis/ を更新する場合は、`make analysis-sync`（DocSyncAgent）で反映した直後に `make analysis-doc-tests` を実行し、`pytest tests/test_analysis_* -q` を一括確認する。

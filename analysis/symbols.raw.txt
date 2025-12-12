@@ -401,11 +401,11 @@ marsdisk/physics/supply.py:28:class _TableData
 marsdisk/physics/supply.py:70:class _TemperatureTable
 marsdisk/physics/supply.py:101:class SupplyEvalResult
 marsdisk/physics/supply.py:119:class SupplyRuntimeState
-marsdisk/physics/supply.py:160:def _rate_basic(t: float, r: float, spec: Supply | SupplyPiece) -> float
-marsdisk/physics/supply.py:184:def init_runtime_state(spec: Supply, area: float, *, seconds_per_year: float=SECONDS_PER_YEAR) -> SupplyRuntimeState
-marsdisk/physics/supply.py:232:def _temperature_factor(temperature_K: Optional[float], state: Optional[SupplyRuntimeState]) -> Tuple[float, Optional[float], str, Optional[float]]
-marsdisk/physics/supply.py:261:def evaluate_supply(t: float, r: float, dt: float, spec: Supply, *, area: float, state: Optional[SupplyRuntimeState]=None, tau_for_feedback: Optional[float]=None, temperature_K: Optional[float]=None, apply_reservoir: bool=True) -> SupplyEvalResult
-marsdisk/physics/supply.py:355:def get_prod_area_rate(t: float, r: float, spec: Supply) -> float
+marsdisk/physics/supply.py:161:def _rate_basic(t: float, r: float, spec: Supply | SupplyPiece) -> float
+marsdisk/physics/supply.py:185:def init_runtime_state(spec: Supply, area: float, *, seconds_per_year: float=SECONDS_PER_YEAR) -> SupplyRuntimeState
+marsdisk/physics/supply.py:243:def _temperature_factor(temperature_K: Optional[float], state: Optional[SupplyRuntimeState]) -> Tuple[float, Optional[float], str, Optional[float]]
+marsdisk/physics/supply.py:272:def evaluate_supply(t: float, r: float, dt: float, spec: Supply, *, area: float, state: Optional[SupplyRuntimeState]=None, tau_for_feedback: Optional[float]=None, temperature_K: Optional[float]=None, apply_reservoir: bool=True) -> SupplyEvalResult
+marsdisk/physics/supply.py:368:def get_prod_area_rate(t: float, r: float, spec: Supply) -> float
 marsdisk/physics/surface.py:47:def _safe_tcoll(Omega: float, tau: float | None) -> float | None
 marsdisk/physics/surface.py:65:def wyatt_tcoll_S1(tau: float, Omega: float) -> float
 marsdisk/physics/surface.py:80:class SurfaceStepResult
@@ -437,93 +437,93 @@ marsdisk/physics_step.py:322:def compute_sublimation(T_M: float, r: float, rho: 
 marsdisk/physics_step.py:383:def step_surface_layer(sigma_surf: float, prod_rate: float, dt: float, Omega: float, *, tau: Optional[float]=None, t_sink: Optional[float]=None, sigma_tau1: Optional[float]=None, enable_blowout: bool=True, chi_blow: float=1.0) -> SurfaceStepResult
 marsdisk/physics_step.py:465:def fast_blowout_correction_factor(ratio: float) -> float
 marsdisk/physics_step.py:489:def compute_gate_factor(t_blow: Optional[float], t_solid: Optional[float]) -> float
-marsdisk/run.py:91:def _ensure_finite_kappa(value: float, label: str='kappa') -> float
-marsdisk/run.py:105:def _resolve_los_factor(los_geom: Optional[object]) -> float
-marsdisk/run.py:121:class ProgressReporter
-marsdisk/run.py:229:def _parse_override_value(raw: str) -> Any
-marsdisk/run.py:256:def _apply_overrides_dict(payload: Dict[str, Any], overrides: Sequence[str]) -> Dict[str, Any]
-marsdisk/run.py:294:def _merge_physics_section(payload: Dict[str, Any]) -> Dict[str, Any]
-marsdisk/run.py:313:def _safe_float(value: Any) -> Optional[float]
-marsdisk/run.py:325:def _derive_seed_components(cfg: Config) -> str
-marsdisk/run.py:350:def _resolve_seed(cfg: Config) -> tuple[int, str, str]
-marsdisk/run.py:365:def _auto_chi_blow(beta: float, qpr: float) -> float
-marsdisk/run.py:380:def _fast_blowout_correction_factor(ratio: float) -> float
-marsdisk/run.py:400:def _compute_gate_factor(t_blow: Optional[float], t_solid: Optional[float]) -> float
-marsdisk/run.py:422:def _human_bytes(value: float) -> str
-marsdisk/run.py:434:def _memory_estimate(n_steps: int, n_bins: int, run_row_bytes: float=MEMORY_RUN_ROW_BYTES, psd_row_bytes: float=MEMORY_PSD_ROW_BYTES, *, smol_value_bytes: float=8.0) -> tuple[str, str]
-marsdisk/run.py:459:def _normalise_physics_mode(value: Any) -> str
-marsdisk/run.py:475:def _clone_config(cfg: Config) -> Config
-marsdisk/run.py:483:def _resolve_time_grid(numerics: Any, Omega: float, t_orb: float) -> tuple[float, float, float, int, Dict[str, Any]]
-marsdisk/run.py:548:class _Phase5VariantResult
-marsdisk/run.py:561:def _read_json(path: Path) -> Dict[str, Any]
-marsdisk/run.py:566:def _hash_payload(payload: Mapping[str, Any]) -> str
-marsdisk/run.py:571:def _prepare_phase5_variants(compare_cfg: Any) -> List[Dict[str, str]]
-marsdisk/run.py:604:class RunConfig
-marsdisk/run.py:621:class RunState
-marsdisk/run.py:631:class ZeroDHistory
-marsdisk/run.py:655:class StreamingState
-marsdisk/run.py:788:def step(config: RunConfig, state: RunState, dt: float) -> Dict[str, float]
-marsdisk/run.py:840:def run_n_steps(config: RunConfig, state: RunState, n: int, dt: float, out_dir: Path | None=None) -> pd.DataFrame
-marsdisk/run.py:870:def load_config(path: Path, overrides: Optional[Sequence[str]]=None) -> Config
-marsdisk/run.py:895:def _gather_git_info() -> Dict[str, Any]
-marsdisk/run.py:922:def _configure_logging(level: int, suppress_warnings: bool=False) -> None
-marsdisk/run.py:940:class MassBudgetViolationError(RuntimeError)
-marsdisk/run.py:944:def _write_zero_d_history(cfg: Config, df: pd.DataFrame, history: ZeroDHistory, *, step_diag_enabled: bool, step_diag_format: str, step_diag_path_cfg: Optional[Path], step_diag_path: Optional[Path], orbit_rollup_enabled: bool, phase7_enabled: bool) -> None
-marsdisk/run.py:1047:def run_zero_d(cfg: Config, *, enforce_mass_budget: bool=False, physics_mode_override: Optional[str]=None, physics_mode_source_override: Optional[str]=None) -> None
-marsdisk/run.py:3786:def _run_phase5_variant(base_cfg: Config, variant: str, mode: str, base_outdir: Path, duration_years: float, *, enforce_mass_budget: bool) -> _Phase5VariantResult
-marsdisk/run.py:3848:def _write_phase5_comparison_products(base_outdir: Path, duration_years: float, results: List[_Phase5VariantResult]) -> None
-marsdisk/run.py:3990:def run_phase5_comparison(cfg: Config, *, enforce_mass_budget: bool=False, variants_spec: Optional[List[Dict[str, str]]]=None) -> None
-marsdisk/run.py:4025:def main(argv: Optional[List[str]]=None) -> None
+marsdisk/run.py:92:def _ensure_finite_kappa(value: float, label: str='kappa') -> float
+marsdisk/run.py:108:def _resolve_los_factor(los_geom: Optional[object]) -> float
+marsdisk/run.py:124:class ProgressReporter
+marsdisk/run.py:232:def _parse_override_value(raw: str) -> Any
+marsdisk/run.py:259:def _apply_overrides_dict(payload: Dict[str, Any], overrides: Sequence[str]) -> Dict[str, Any]
+marsdisk/run.py:297:def _merge_physics_section(payload: Dict[str, Any]) -> Dict[str, Any]
+marsdisk/run.py:316:def _safe_float(value: Any) -> Optional[float]
+marsdisk/run.py:328:def _derive_seed_components(cfg: Config) -> str
+marsdisk/run.py:353:def _resolve_seed(cfg: Config) -> tuple[int, str, str]
+marsdisk/run.py:368:def _auto_chi_blow(beta: float, qpr: float) -> float
+marsdisk/run.py:383:def _fast_blowout_correction_factor(ratio: float) -> float
+marsdisk/run.py:403:def _compute_gate_factor(t_blow: Optional[float], t_solid: Optional[float]) -> float
+marsdisk/run.py:425:def _human_bytes(value: float) -> str
+marsdisk/run.py:437:def _memory_estimate(n_steps: int, n_bins: int, run_row_bytes: float=MEMORY_RUN_ROW_BYTES, psd_row_bytes: float=MEMORY_PSD_ROW_BYTES, *, smol_value_bytes: float=8.0) -> tuple[str, str]
+marsdisk/run.py:462:def _normalise_physics_mode(value: Any) -> str
+marsdisk/run.py:478:def _clone_config(cfg: Config) -> Config
+marsdisk/run.py:486:def _resolve_time_grid(numerics: Any, Omega: float, t_orb: float) -> tuple[float, float, float, int, Dict[str, Any]]
+marsdisk/run.py:551:class _Phase5VariantResult
+marsdisk/run.py:564:def _read_json(path: Path) -> Dict[str, Any]
+marsdisk/run.py:569:def _hash_payload(payload: Mapping[str, Any]) -> str
+marsdisk/run.py:574:def _prepare_phase5_variants(compare_cfg: Any) -> List[Dict[str, str]]
+marsdisk/run.py:607:class RunConfig
+marsdisk/run.py:624:class RunState
+marsdisk/run.py:634:class ZeroDHistory
+marsdisk/run.py:658:class StreamingState
+marsdisk/run.py:791:def step(config: RunConfig, state: RunState, dt: float) -> Dict[str, float]
+marsdisk/run.py:843:def run_n_steps(config: RunConfig, state: RunState, n: int, dt: float, out_dir: Path | None=None) -> pd.DataFrame
+marsdisk/run.py:873:def load_config(path: Path, overrides: Optional[Sequence[str]]=None) -> Config
+marsdisk/run.py:898:def _gather_git_info() -> Dict[str, Any]
+marsdisk/run.py:925:def _configure_logging(level: int, suppress_warnings: bool=False) -> None
+marsdisk/run.py:936:class MassBudgetViolationError(RuntimeError)
+marsdisk/run.py:940:def _write_zero_d_history(cfg: Config, df: pd.DataFrame, history: ZeroDHistory, *, step_diag_enabled: bool, step_diag_format: str, step_diag_path_cfg: Optional[Path], step_diag_path: Optional[Path], orbit_rollup_enabled: bool, phase7_enabled: bool) -> None
+marsdisk/run.py:1043:def run_zero_d(cfg: Config, *, enforce_mass_budget: bool=False, physics_mode_override: Optional[str]=None, physics_mode_source_override: Optional[str]=None) -> None
+marsdisk/run.py:4046:def _run_phase5_variant(base_cfg: Config, variant: str, mode: str, base_outdir: Path, duration_years: float, *, enforce_mass_budget: bool) -> _Phase5VariantResult
+marsdisk/run.py:4108:def _write_phase5_comparison_products(base_outdir: Path, duration_years: float, results: List[_Phase5VariantResult]) -> None
+marsdisk/run.py:4250:def run_phase5_comparison(cfg: Config, *, enforce_mass_budget: bool=False, variants_spec: Optional[List[Dict[str, str]]]=None) -> None
+marsdisk/run.py:4285:def main(argv: Optional[List[str]]=None) -> None
 marsdisk/schema.py:21:class Geometry(BaseModel)
 marsdisk/schema.py:42:class DiskGeometry(BaseModel)
 marsdisk/schema.py:72:class Disk(BaseModel)
 marsdisk/schema.py:81:class Scope(BaseModel)
 marsdisk/schema.py:95:class InnerDiskMass(BaseModel)
 marsdisk/schema.py:115:class SupplyConst(BaseModel)
-marsdisk/schema.py:119:class SupplyPowerLaw(BaseModel)
-marsdisk/schema.py:125:class SupplyTable(BaseModel)
-marsdisk/schema.py:130:class SupplyMixing(BaseModel)
-marsdisk/schema.py:154:class SupplyReservoir(BaseModel)
-marsdisk/schema.py:172:class SupplyFeedback(BaseModel)
-marsdisk/schema.py:219:class SupplyTemperatureTable(BaseModel)
-marsdisk/schema.py:229:class SupplyTemperature(BaseModel)
-marsdisk/schema.py:262:class SupplyPiece(BaseModel)
-marsdisk/schema.py:271:class Supply(BaseModel)
-marsdisk/schema.py:333:class Material(BaseModel)
-marsdisk/schema.py:348:class Temps(BaseModel)
-marsdisk/schema.py:375:class Sizes(BaseModel)
-marsdisk/schema.py:399:class Initial(BaseModel)
-marsdisk/schema.py:406:class Dynamics(BaseModel)
-marsdisk/schema.py:477:class QStar(BaseModel)
-marsdisk/schema.py:487:class PSD(BaseModel)
-marsdisk/schema.py:498:class Surface(BaseModel)
-marsdisk/schema.py:516:class InitTau1(BaseModel)
-marsdisk/schema.py:529:class SublimationParamsModel(BaseModel)
-marsdisk/schema.py:614:class RPBlowoutConfig(BaseModel)
-marsdisk/schema.py:620:class HydroEscapeConfig(BaseModel)
-marsdisk/schema.py:643:class Sinks(BaseModel)
-marsdisk/schema.py:667:class ProcessStateTagging(BaseModel)
-marsdisk/schema.py:676:class Process(BaseModel)
-marsdisk/schema.py:688:class Phase5CompareConfig(BaseModel)
-marsdisk/schema.py:718:class Phase5Config(BaseModel)
-marsdisk/schema.py:724:class PhaseThresholds(BaseModel)
-marsdisk/schema.py:748:class PhaseConfig(BaseModel)
-marsdisk/schema.py:800:class MarsTemperatureDriverConstant(BaseModel)
-marsdisk/schema.py:813:class MarsTemperatureDriverTable(BaseModel)
-marsdisk/schema.py:825:class MarsTemperatureAutogen(BaseModel)
-marsdisk/schema.py:854:class MarsTemperatureDriverConfig(BaseModel)
-marsdisk/schema.py:899:class RadiationTauGate(BaseModel)
-marsdisk/schema.py:906:class Radiation(BaseModel)
-marsdisk/schema.py:965:class Shielding(BaseModel)
-marsdisk/schema.py:1026:class Blowout(BaseModel)
-marsdisk/schema.py:1044:class Numerics(BaseModel)
-marsdisk/schema.py:1134:class StepDiagnostics(BaseModel)
-marsdisk/schema.py:1151:class Progress(BaseModel)
-marsdisk/schema.py:1165:class Streaming(BaseModel)
-marsdisk/schema.py:1208:class IO(BaseModel)
-marsdisk/schema.py:1239:class Phase7Diagnostics(BaseModel)
-marsdisk/schema.py:1252:class Diagnostics(BaseModel)
-marsdisk/schema.py:1258:class Config(BaseModel)
+marsdisk/schema.py:127:class SupplyPowerLaw(BaseModel)
+marsdisk/schema.py:133:class SupplyTable(BaseModel)
+marsdisk/schema.py:138:class SupplyMixing(BaseModel)
+marsdisk/schema.py:162:class SupplyReservoir(BaseModel)
+marsdisk/schema.py:205:class SupplyFeedback(BaseModel)
+marsdisk/schema.py:252:class SupplyTemperatureTable(BaseModel)
+marsdisk/schema.py:262:class SupplyTemperature(BaseModel)
+marsdisk/schema.py:295:class SupplyPiece(BaseModel)
+marsdisk/schema.py:304:class Supply(BaseModel)
+marsdisk/schema.py:366:class Material(BaseModel)
+marsdisk/schema.py:381:class Temps(BaseModel)
+marsdisk/schema.py:408:class Sizes(BaseModel)
+marsdisk/schema.py:432:class Initial(BaseModel)
+marsdisk/schema.py:439:class Dynamics(BaseModel)
+marsdisk/schema.py:510:class QStar(BaseModel)
+marsdisk/schema.py:520:class PSD(BaseModel)
+marsdisk/schema.py:531:class Surface(BaseModel)
+marsdisk/schema.py:549:class InitTau1(BaseModel)
+marsdisk/schema.py:562:class SublimationParamsModel(BaseModel)
+marsdisk/schema.py:647:class RPBlowoutConfig(BaseModel)
+marsdisk/schema.py:653:class HydroEscapeConfig(BaseModel)
+marsdisk/schema.py:676:class Sinks(BaseModel)
+marsdisk/schema.py:700:class ProcessStateTagging(BaseModel)
+marsdisk/schema.py:709:class Process(BaseModel)
+marsdisk/schema.py:721:class Phase5CompareConfig(BaseModel)
+marsdisk/schema.py:751:class Phase5Config(BaseModel)
+marsdisk/schema.py:757:class PhaseThresholds(BaseModel)
+marsdisk/schema.py:781:class PhaseConfig(BaseModel)
+marsdisk/schema.py:833:class MarsTemperatureDriverConstant(BaseModel)
+marsdisk/schema.py:846:class MarsTemperatureDriverTable(BaseModel)
+marsdisk/schema.py:858:class MarsTemperatureAutogen(BaseModel)
+marsdisk/schema.py:887:class MarsTemperatureDriverConfig(BaseModel)
+marsdisk/schema.py:932:class RadiationTauGate(BaseModel)
+marsdisk/schema.py:939:class Radiation(BaseModel)
+marsdisk/schema.py:998:class Shielding(BaseModel)
+marsdisk/schema.py:1059:class Blowout(BaseModel)
+marsdisk/schema.py:1077:class Numerics(BaseModel)
+marsdisk/schema.py:1167:class StepDiagnostics(BaseModel)
+marsdisk/schema.py:1184:class Progress(BaseModel)
+marsdisk/schema.py:1198:class Streaming(BaseModel)
+marsdisk/schema.py:1241:class IO(BaseModel)
+marsdisk/schema.py:1272:class Phase7Diagnostics(BaseModel)
+marsdisk/schema.py:1285:class Diagnostics(BaseModel)
+marsdisk/schema.py:1291:class Config(BaseModel)
 marsdisk/tests/test_core.py:11:def test_constants_values()
 marsdisk/tests/test_core.py:17:def test_grid_relations()
 marsdisk/tests/test_core.py:24:def test_writer_and_tables(tmp_path: Path)
@@ -898,7 +898,8 @@ tests/test_sublimation_sio.py:158:def test_run_config_records_psat_selection(tmp
 tests/test_sublimation_smol_sink.py:12:def test_smol_sublimation_sink_mass_budget(tmp_path: Path) -> None
 tests/test_summary_backcompat.py:9:def _write_summary(path: Path, payload: dict) -> None
 tests/test_summary_backcompat.py:13:def test_parse_summary_backwards_compatibility(tmp_path: Path) -> None
-tests/test_supply_positive.py:8:def test_supply_positive_with_wide_tau_cap(tmp_path: Path) -> None
+tests/test_supply_positive.py:10:def test_supply_positive_with_wide_tau_cap(tmp_path: Path) -> None
+tests/test_supply_positive.py:37:def test_reservoir_depletes_and_records_metadata(tmp_path: Path) -> None
 tests/test_surface_outflux_wavy.py:10:def test_blowout_driven_wavy_pattern_emerges() -> None
 tests/test_surface_supply_param.py:37:def test_const_mode()
 tests/test_surface_supply_param.py:47:def test_powerlaw_mode()
@@ -920,6 +921,8 @@ tests/test_temperature_selection.py:70:def test_temperature_selection_tracks_tem
 tests/test_zero_division_guards.py:11:def test_run_zero_d_tau_zero_no_error(tmp_path: Path)
 tests/test_zero_division_guards.py:40:def test_supply_powerlaw_t0_zero()
 tests/test_zero_division_guards.py:49:def test_run_zero_d_no_zerodivision(monkeypatch, tmp_path)
+tools/check_unknown_refs.py:13:def load_requests(path: Path) -> list[dict]
+tools/check_unknown_refs.py:24:def main() -> int
 tools/derive_supply_rate.py:48:class SupplyInputs
 tools/derive_supply_rate.py:55:def _parse_float_list(raw: str) -> List[float]
 tools/derive_supply_rate.py:59:def _radius_to_meters(r_value: float, unit: str) -> float

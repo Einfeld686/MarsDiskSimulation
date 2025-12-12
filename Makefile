@@ -57,5 +57,23 @@ assumptions-autogen-check:
 analysis-pipeline:
 	python tools/run_analysis_pipeline.py --outdir $(OUTDIR)
 
-analysis-update: analysis-pipeline
+# AGENTS.md: DocSync → doc-tests → evaluation_system
+analysis-update: analysis-sync
+	python analysis/tools/make_coverage.py
+	python -m tools.coverage_guard
+	python tools/run_analysis_doc_tests.py
+	@echo "[analysis-update] evaluation_system requires --outdir; run manually:"
+	@echo "  python -m tools.evaluation_system --outdir <run_dir>"
+
+# 任意: 参照レジストリとの差分検出（標準フローには含まない）
+analysis-refs:
+	python tools/reference_tracker.py --validate
+
+# 任意: 未解決参照リクエストの確認（warn-only, 標準フロー外）
+analysis-unknown-refs:
+	python tools/check_unknown_refs.py
+
+# --strict で CI fail-fast にする場合
+analysis-unknown-refs-strict:
+	python tools/check_unknown_refs.py --strict
 # ==========================

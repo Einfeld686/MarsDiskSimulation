@@ -1,7 +1,8 @@
 """互換性のための薄いラッパー。
 
-実体は ``scripts.doc_sync_agent`` に移動した。``python -m tools.doc_sync_agent``
-など既存の呼び出しからも引き続き利用できる。
+実体は ``marsdisk.ops.doc_sync_agent`` に移動済み。
+このファイルは tools/doc_sync_agent.py および AGENTS.md 標準手順
+(python -m tools.doc_sync_agent) からの呼び出しを維持するために残す。
 """
 
 from __future__ import annotations

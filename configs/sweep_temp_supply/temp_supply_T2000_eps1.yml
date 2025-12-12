@@ -67,7 +67,8 @@ surface:
   freeze_sigma: false
   collision_solver: smol
 init_tau1:
-  enabled: false
+  enabled: true
+  scale_to_tau1: true
 supply:
   mode: const
   const:
