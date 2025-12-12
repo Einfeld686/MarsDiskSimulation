@@ -114,6 +114,14 @@ class InnerDiskMass(BaseModel):
 
 class SupplyConst(BaseModel):
     prod_area_rate_kg_m2_s: float = 0.0
+    auto_from_tau1_tfill_years: Optional[float] = Field(
+        None,
+        gt=0.0,
+        description=(
+            "Optional fill time (years) to derive prod_area_rate_kg_m2_s from Σ_{τ=1}: "
+            "prod_rate = (Sigma_tau1 / t_fill) / epsilon_mix when provided."
+        ),
+    )
 
 
 class SupplyPowerLaw(BaseModel):
