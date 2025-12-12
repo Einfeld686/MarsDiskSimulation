@@ -4,6 +4,7 @@
 #   epsilon_mix = {0.1, 0.5, 1.0}
 #   shielding.table_path = {phi_const_0p20, phi_const_0p37, phi_const_0p60}
 # 出力は out/temp_supply_sweep/<ts>__<sha>__seed<batch>/T{T}_eps{eps}_phi{phi}/ に配置。
+# 供給は supply.* による外部源（温度・τフィードバック・有限リザーバ対応）。
 
 set -euo pipefail
 
@@ -55,9 +56,37 @@ PHI_LIST=("20" "37" "60")  # maps to tables/phi_const_0pXX.csv
 
 # Supply/shielding defaults (overridable via env)
 SUPPLY_MODE="${SUPPLY_MODE:-const}"
-SUPPLY_RATE="${SUPPLY_RATE:-1.0e-10}"  # kg m^-2 s^-1 before mixing
+SUPPLY_RATE="${SUPPLY_RATE:-3.0e-3}"  # kg m^-2 s^-1 before mixing
 SHIELDING_MODE="${SHIELDING_MODE:-fixed_tau1}"
-SHIELDING_SIGMA="${SHIELDING_SIGMA:-1.0e-2}"
+SHIELDING_SIGMA="${SHIELDING_SIGMA:-auto}"
+SHIELDING_AUTO_MAX_MARGIN="${SHIELDING_AUTO_MAX_MARGIN:-0.05}"
+INIT_SCALE_TO_TAU1="${INIT_SCALE_TO_TAU1:-true}"
+
+# Supply reservoir / feedback / temperature coupling (off by default)
+SUPPLY_RESERVOIR_M="${SUPPLY_RESERVOIR_M:-}"             # Mars masses; empty=disabled
+SUPPLY_RESERVOIR_MODE="${SUPPLY_RESERVOIR_MODE:-hard_stop}"  # hard_stop|smooth
+SUPPLY_RESERVOIR_SMOOTH="${SUPPLY_RESERVOIR_SMOOTH:-0.1}"    # used when smooth
+
+SUPPLY_FEEDBACK_ENABLED="${SUPPLY_FEEDBACK_ENABLED:-1}"
+SUPPLY_FEEDBACK_TARGET="${SUPPLY_FEEDBACK_TARGET:-1.0}"
+SUPPLY_FEEDBACK_GAIN="${SUPPLY_FEEDBACK_GAIN:-1.0}"
+SUPPLY_FEEDBACK_RESPONSE_YR="${SUPPLY_FEEDBACK_RESPONSE_YR:-0.5}"
+SUPPLY_FEEDBACK_MIN_SCALE="${SUPPLY_FEEDBACK_MIN_SCALE:-0.0}"
+SUPPLY_FEEDBACK_MAX_SCALE="${SUPPLY_FEEDBACK_MAX_SCALE:-10.0}"
+SUPPLY_FEEDBACK_TAU_FIELD="${SUPPLY_FEEDBACK_TAU_FIELD:-tau_vertical}" # tau_vertical|tau_los
+SUPPLY_FEEDBACK_INITIAL="${SUPPLY_FEEDBACK_INITIAL:-1.0}"
+
+SUPPLY_TEMP_ENABLED="${SUPPLY_TEMP_ENABLED:-1}"
+SUPPLY_TEMP_MODE="${SUPPLY_TEMP_MODE:-scale}"            # scale|table
+SUPPLY_TEMP_REF_K="${SUPPLY_TEMP_REF_K:-1800.0}"
+SUPPLY_TEMP_EXP="${SUPPLY_TEMP_EXP:-1.0}"
+SUPPLY_TEMP_SCALE_REF="${SUPPLY_TEMP_SCALE_REF:-1.0}"
+SUPPLY_TEMP_FLOOR="${SUPPLY_TEMP_FLOOR:-0.0}"
+SUPPLY_TEMP_CAP="${SUPPLY_TEMP_CAP:-10.0}"
+SUPPLY_TEMP_TABLE_PATH="${SUPPLY_TEMP_TABLE_PATH:-}"
+SUPPLY_TEMP_TABLE_VALUE_KIND="${SUPPLY_TEMP_TABLE_VALUE_KIND:-scale}" # scale|rate
+SUPPLY_TEMP_TABLE_COL_T="${SUPPLY_TEMP_TABLE_COL_T:-T_K}"
+SUPPLY_TEMP_TABLE_COL_VAL="${SUPPLY_TEMP_TABLE_COL_VAL:-value}"
 
 # Progress bar: default ON when stdout is a TTY; OFF otherwise to avoid CR->LF spam.
 PROGRESS_FLAG=()
@@ -82,6 +111,41 @@ fi
 if [[ -n "${STREAM_STEP_INTERVAL}" ]]; then
   STREAMING_OVERRIDES+=(--override "io.streaming.step_flush_interval=${STREAM_STEP_INTERVAL}")
   echo "[info] override io.streaming.step_flush_interval=${STREAM_STEP_INTERVAL}"
+fi
+
+SUPPLY_OVERRIDES=()
+if [[ -n "${SUPPLY_RESERVOIR_M}" ]]; then
+  SUPPLY_OVERRIDES+=(--override "supply.reservoir.mass_total_Mmars=${SUPPLY_RESERVOIR_M}")
+  SUPPLY_OVERRIDES+=(--override "supply.reservoir.depletion_mode=${SUPPLY_RESERVOIR_MODE}")
+  SUPPLY_OVERRIDES+=(--override "supply.reservoir.smooth_fraction=${SUPPLY_RESERVOIR_SMOOTH}")
+  echo "[info] supply reservoir: M=${SUPPLY_RESERVOIR_M} M_Mars mode=${SUPPLY_RESERVOIR_MODE} smooth=${SUPPLY_RESERVOIR_SMOOTH}"
+fi
+if [[ "${SUPPLY_FEEDBACK_ENABLED}" != "0" ]]; then
+  SUPPLY_OVERRIDES+=(--override "supply.feedback.enabled=true")
+  SUPPLY_OVERRIDES+=(--override "supply.feedback.target_tau=${SUPPLY_FEEDBACK_TARGET}")
+  SUPPLY_OVERRIDES+=(--override "supply.feedback.gain=${SUPPLY_FEEDBACK_GAIN}")
+  SUPPLY_OVERRIDES+=(--override "supply.feedback.response_time_years=${SUPPLY_FEEDBACK_RESPONSE_YR}")
+  SUPPLY_OVERRIDES+=(--override "supply.feedback.min_scale=${SUPPLY_FEEDBACK_MIN_SCALE}")
+  SUPPLY_OVERRIDES+=(--override "supply.feedback.max_scale=${SUPPLY_FEEDBACK_MAX_SCALE}")
+  SUPPLY_OVERRIDES+=(--override "supply.feedback.tau_field=${SUPPLY_FEEDBACK_TAU_FIELD}")
+  SUPPLY_OVERRIDES+=(--override "supply.feedback.initial_scale=${SUPPLY_FEEDBACK_INITIAL}")
+  echo "[info] supply feedback enabled: target_tau=${SUPPLY_FEEDBACK_TARGET}, gain=${SUPPLY_FEEDBACK_GAIN}, tau_field=${SUPPLY_FEEDBACK_TAU_FIELD}"
+fi
+if [[ "${SUPPLY_TEMP_ENABLED}" != "0" ]]; then
+  SUPPLY_OVERRIDES+=(--override "supply.temperature.enabled=true")
+  SUPPLY_OVERRIDES+=(--override "supply.temperature.mode=${SUPPLY_TEMP_MODE}")
+  SUPPLY_OVERRIDES+=(--override "supply.temperature.reference_K=${SUPPLY_TEMP_REF_K}")
+  SUPPLY_OVERRIDES+=(--override "supply.temperature.exponent=${SUPPLY_TEMP_EXP}")
+  SUPPLY_OVERRIDES+=(--override "supply.temperature.scale_at_reference=${SUPPLY_TEMP_SCALE_REF}")
+  SUPPLY_OVERRIDES+=(--override "supply.temperature.floor=${SUPPLY_TEMP_FLOOR}")
+  SUPPLY_OVERRIDES+=(--override "supply.temperature.cap=${SUPPLY_TEMP_CAP}")
+  if [[ -n "${SUPPLY_TEMP_TABLE_PATH}" ]]; then
+    SUPPLY_OVERRIDES+=(--override "supply.temperature.table.path=${SUPPLY_TEMP_TABLE_PATH}")
+    SUPPLY_OVERRIDES+=(--override "supply.temperature.table.value_kind=${SUPPLY_TEMP_TABLE_VALUE_KIND}")
+    SUPPLY_OVERRIDES+=(--override "supply.temperature.table.column_temperature=${SUPPLY_TEMP_TABLE_COL_T}")
+    SUPPLY_OVERRIDES+=(--override "supply.temperature.table.column_value=${SUPPLY_TEMP_TABLE_COL_VAL}")
+  fi
+  echo "[info] supply temperature coupling enabled: mode=${SUPPLY_TEMP_MODE}"
 fi
 
 for T in "${T_LIST[@]}"; do
@@ -119,7 +183,11 @@ PY
         --override "supply.mixing.epsilon_mix=${MU}"
         --override "supply.mode=${SUPPLY_MODE}"
         --override "supply.const.prod_area_rate_kg_m2_s=${SUPPLY_RATE}"
+        --override "init_tau1.scale_to_tau1=${INIT_SCALE_TO_TAU1}"
       )
+      if ((${#SUPPLY_OVERRIDES[@]})); then
+        cmd+=("${SUPPLY_OVERRIDES[@]}")
+      fi
       if ((${#STREAMING_OVERRIDES[@]})); then
         cmd+=("${STREAMING_OVERRIDES[@]}")
       fi
@@ -127,8 +195,15 @@ PY
       cmd+=(--override "shielding.mode=${SHIELDING_MODE}")
       if [[ "${SHIELDING_MODE}" == "fixed_tau1" ]]; then
         cmd+=(--override "shielding.fixed_tau1_sigma=${SHIELDING_SIGMA}")
+        cmd+=(--override "shielding.auto_max_margin=${SHIELDING_AUTO_MAX_MARGIN}")
       fi
+      set +e
       "${cmd[@]}"
+      rc=$?
+      set -e
+      if [[ ${rc} -ne 0 ]]; then
+        echo "[warn] run command exited with status ${rc}; attempting plots anyway"
+      fi
 
       final_dir="${OUTDIR}"
       mkdir -p "${final_dir}/series" "${final_dir}/checks"
@@ -171,6 +246,9 @@ series_cols = [
     "t_blow_s",
     "dt_over_t_blow",
     "tau_vertical",
+    "supply_feedback_scale",
+    "supply_temperature_scale",
+    "supply_reservoir_remaining_Mmars",
 ]
 
 summary = {}
@@ -219,13 +297,16 @@ if mloss is not None:
     title_lines.append(f"M_loss={mloss:.3e} M_Mars")
 if mass_err is not None:
     title_lines.append(f"mass budget err={mass_err:.3f}%")
-title_lines.append(f"prod_mean={prod_mean:.3e} kg m^-2 s^-1")
+effective_prod = summary.get("effective_prod_rate_kg_m2_s")
+if effective_prod is not None:
+    title_lines.append(f"prod_eff={effective_prod:.2e}")
+title_lines.append(f"prod_mean={prod_mean:.3e}")
 fig.suptitle(" | ".join(title_lines))
 fig.tight_layout(rect=(0, 0, 1, 0.96))
 fig.savefig(plots_dir / "overview.png", dpi=180)
 plt.close(fig)
 
-fig2, ax2 = plt.subplots(3, 1, figsize=(10, 11), sharex=True)
+fig2, ax2 = plt.subplots(4, 1, figsize=(10, 14), sharex=True)
 ax2[0].plot(df["time_days"], df["prod_subblow_area_rate"], label="prod_subblow_area_rate", color="tab:blue")
 ax2[0].set_ylabel("kg m^-2 s^-1")
 ax2[0].set_title("Sub-blow supply rate")
@@ -243,6 +324,13 @@ ax2[2].set_ylabel("outflux / tau")
 ax2[2].set_xlabel("days")
 ax2[2].legend(loc="upper right")
 ax2[2].set_title("Surface outflux and optical depth")
+
+ax2[3].plot(df["time_days"], df["supply_feedback_scale"], label="feedback scale", color="tab:cyan")
+ax2[3].plot(df["time_days"], df["supply_temperature_scale"], label="temperature scale", color="tab:gray")
+ax2[3].plot(df["time_days"], df["supply_reservoir_remaining_Mmars"], label="reservoir M_Mars", color="tab:pink")
+ax2[3].set_ylabel("scale / M_Mars")
+ax2[3].legend(loc="upper right")
+ax2[3].set_title("Supply diagnostics")
 
 fig2.suptitle(run_dir.name)
 fig2.tight_layout(rect=(0, 0, 1, 0.95))

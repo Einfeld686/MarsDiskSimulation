@@ -9,16 +9,19 @@ the configured mixing efficiency ``epsilon_mix`` and clipped to be
 non-negative.
 """
 
+import math
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, Optional
+from typing import Dict, Optional, Tuple
 
 import numpy as np
 import pandas as pd
 
+from .. import constants
 from ..schema import Supply, SupplyPiece
 
 _EPS = 1.0e-12
+SECONDS_PER_YEAR = 365.25 * 24 * 3600.0
 
 
 @dataclass
@@ -63,7 +66,95 @@ class _TableData:
         return float((1 - wt) * (1 - wr) * f00 + (1 - wt) * wr * f01 + wt * (1 - wr) * f10 + wt * wr * f11)
 
 
+@dataclass
+class _TemperatureTable:
+    """Holder for temperature→value lookup tables."""
+
+    temperature: np.ndarray
+    value: np.ndarray
+    column_temperature: str
+    column_value: str
+
+    @classmethod
+    def load(cls, path: Path, column_temperature: str, column_value: str) -> "_TemperatureTable":
+        df = pd.read_csv(path)
+        if column_temperature not in df.columns or column_value not in df.columns:
+            raise KeyError(f"temperature table {path} must contain '{column_temperature}' and '{column_value}' columns")
+        temp_sorted = df.sort_values(column_temperature)
+        temperature = temp_sorted[column_temperature].to_numpy(dtype=float)
+        value = temp_sorted[column_value].to_numpy(dtype=float)
+        return cls(temperature, value, column_temperature, column_value)
+
+    def interp(self, temperature_K: float) -> float:
+        return float(
+            np.interp(
+                temperature_K,
+                self.temperature,
+                self.value,
+                left=self.value[0],
+                right=self.value[-1],
+            )
+        )
+
+
+@dataclass
+class SupplyEvalResult:
+    """Evaluation output for a single timestep."""
+
+    rate: float
+    raw_rate: float
+    mixed_rate: float
+    temperature_scale: float
+    feedback_scale: float
+    reservoir_scale: float
+    reservoir_remaining_Mmars: Optional[float]
+    reservoir_fraction: Optional[float]
+    clipped_by_reservoir: bool
+    feedback_error: Optional[float]
+    temperature_value: Optional[float]
+    temperature_value_kind: str
+
+
+@dataclass
+class SupplyRuntimeState:
+    """Mutable state for reservoir accounting and feedback control."""
+
+    reservoir_mass_total_kg: Optional[float] = None
+    reservoir_mass_remaining_kg: Optional[float] = None
+    reservoir_mode: str = "none"
+    reservoir_smooth_fraction: float = 0.0
+    feedback_enabled: bool = False
+    feedback_scale: float = 1.0
+    feedback_target_tau: float = 1.0
+    feedback_gain: float = 1.0
+    feedback_response_time_s: float = 0.0
+    feedback_tau_field: str = "tau_vertical"
+    feedback_min_scale: float = 0.0
+    feedback_max_scale: float = 10.0
+    temperature_mode: str = "off"
+    temperature_reference_K: float = 1.0
+    temperature_exponent: float = 1.0
+    temperature_scale_at_reference: float = 1.0
+    temperature_floor: float = 0.0
+    temperature_cap: float = float("inf")
+    temperature_table: Optional[_TemperatureTable] = None
+    temperature_value_kind: str = "scale"
+
+    def reservoir_remaining_Mmars(self) -> Optional[float]:
+        if self.reservoir_mass_remaining_kg is None:
+            return None
+        return float(self.reservoir_mass_remaining_kg / constants.M_MARS)
+
+    def reservoir_fraction(self) -> Optional[float]:
+        if self.reservoir_mass_remaining_kg is None or not self.reservoir_mass_total_kg:
+            return None
+        if self.reservoir_mass_total_kg <= 0.0:
+            return None
+        return float(self.reservoir_mass_remaining_kg / self.reservoir_mass_total_kg)
+
+
 _TABLE_CACHE: Dict[Path, _TableData] = {}
+_TEMP_TABLE_CACHE: Dict[Path, _TemperatureTable] = {}
 
 
 def _rate_basic(t: float, r: float, spec: Supply | SupplyPiece) -> float:
@@ -90,14 +181,188 @@ def _rate_basic(t: float, r: float, spec: Supply | SupplyPiece) -> float:
     return 0.0
 
 
+def init_runtime_state(
+    spec: Supply,
+    area: float,
+    *,
+    seconds_per_year: float = SECONDS_PER_YEAR,
+) -> SupplyRuntimeState:
+    """Create a mutable state container for supply evaluation."""
+
+    state = SupplyRuntimeState()
+    reservoir_cfg = getattr(spec, "reservoir", None)
+    if reservoir_cfg is not None and getattr(reservoir_cfg, "mass_total_Mmars", None) is not None:
+        total_mass_kg = float(reservoir_cfg.mass_total_Mmars) * constants.M_MARS
+        state.reservoir_mass_total_kg = total_mass_kg
+        state.reservoir_mass_remaining_kg = total_mass_kg
+        state.reservoir_mode = str(getattr(reservoir_cfg, "depletion_mode", "hard_stop"))
+        state.reservoir_smooth_fraction = float(getattr(reservoir_cfg, "smooth_fraction", 0.0))
+
+    feedback_cfg = getattr(spec, "feedback", None)
+    if feedback_cfg is not None and getattr(feedback_cfg, "enabled", False):
+        state.feedback_enabled = True
+        state.feedback_scale = float(getattr(feedback_cfg, "initial_scale", 1.0))
+        state.feedback_target_tau = float(getattr(feedback_cfg, "target_tau", 1.0))
+        state.feedback_gain = float(getattr(feedback_cfg, "gain", 1.0))
+        state.feedback_response_time_s = float(getattr(feedback_cfg, "response_time_years", 0.0)) * seconds_per_year
+        state.feedback_tau_field = str(getattr(feedback_cfg, "tau_field", "tau_vertical"))
+        state.feedback_min_scale = float(getattr(feedback_cfg, "min_scale", 0.0))
+        state.feedback_max_scale = float(getattr(feedback_cfg, "max_scale", 10.0))
+
+    temp_cfg = getattr(spec, "temperature", None)
+    if temp_cfg is not None and getattr(temp_cfg, "enabled", False):
+        state.temperature_mode = str(getattr(temp_cfg, "mode", "scale"))
+        state.temperature_reference_K = float(getattr(temp_cfg, "reference_K", 1.0))
+        state.temperature_exponent = float(getattr(temp_cfg, "exponent", 1.0))
+        state.temperature_scale_at_reference = float(getattr(temp_cfg, "scale_at_reference", 1.0))
+        state.temperature_floor = float(getattr(temp_cfg, "floor", 0.0))
+        state.temperature_cap = float(getattr(temp_cfg, "cap", float("inf")))
+        table_cfg = getattr(temp_cfg, "table", None)
+        if state.temperature_mode == "table" and table_cfg is not None:
+            temp_path = table_cfg.path
+            table = _TEMP_TABLE_CACHE.get(temp_path)
+            if table is None:
+                table = _TemperatureTable.load(temp_path, table_cfg.column_temperature, table_cfg.column_value)
+                _TEMP_TABLE_CACHE[temp_path] = table
+            state.temperature_table = table
+            state.temperature_value_kind = str(getattr(table_cfg, "value_kind", "scale"))
+    return state
+
+
+def _temperature_factor(
+    temperature_K: Optional[float],
+    state: Optional[SupplyRuntimeState],
+) -> Tuple[float, Optional[float], str, Optional[float]]:
+    """Return (scale, override_rate, value_kind, raw_value)."""
+
+    if state is None or state.temperature_mode == "off" or temperature_K is None or not math.isfinite(temperature_K):
+        return 1.0, None, "scale", None
+
+    override_rate = None
+    raw_value = None
+    if state.temperature_mode == "scale":
+        ref = state.temperature_reference_K if state.temperature_reference_K > 0.0 else 1.0
+        scale = state.temperature_scale_at_reference * (temperature_K / ref) ** state.temperature_exponent
+        scale = float(np.clip(scale, state.temperature_floor, state.temperature_cap))
+        return scale, None, "scale", scale
+
+    if state.temperature_mode == "table" and state.temperature_table is not None:
+        raw_value = state.temperature_table.interp(temperature_K)
+        if state.temperature_value_kind == "rate":
+            override_rate = float(raw_value)
+            scale = 1.0
+        else:
+            scale = float(np.clip(raw_value, state.temperature_floor, state.temperature_cap))
+        return scale, override_rate, state.temperature_value_kind, raw_value
+
+    return 1.0, None, "scale", None
+
+
+def evaluate_supply(
+    t: float,
+    r: float,
+    dt: float,
+    spec: Supply,
+    *,
+    area: float,
+    state: Optional[SupplyRuntimeState] = None,
+    tau_for_feedback: Optional[float] = None,
+    temperature_K: Optional[float] = None,
+    apply_reservoir: bool = True,
+) -> SupplyEvalResult:
+    """Evaluate the surface production rate with optional feedback and reservoir tracking."""
+
+    if not getattr(spec, "enabled", True):
+        return SupplyEvalResult(
+            rate=0.0,
+            raw_rate=0.0,
+            mixed_rate=0.0,
+            temperature_scale=1.0,
+            feedback_scale=1.0,
+            reservoir_scale=1.0,
+            reservoir_remaining_Mmars=state.reservoir_remaining_Mmars() if state else None,
+            reservoir_fraction=state.reservoir_fraction() if state else None,
+            clipped_by_reservoir=False,
+            feedback_error=None,
+            temperature_value=None,
+            temperature_value_kind="scale",
+        )
+
+    raw = _rate_basic(t, r, spec)
+    mixed = raw * spec.mixing.epsilon_mix
+
+    temp_scale, temp_override, temp_value_kind, temp_value = _temperature_factor(temperature_K, state)
+    rate_pre_feedback = temp_override if temp_override is not None else mixed * temp_scale
+
+    feedback_scale = 1.0
+    feedback_error = None
+    if state is not None and state.feedback_enabled:
+        feedback_scale = state.feedback_scale
+        if tau_for_feedback is not None and math.isfinite(tau_for_feedback):
+            target_tau = max(state.feedback_target_tau, _EPS)
+            feedback_error = (state.feedback_target_tau - tau_for_feedback) / target_tau
+            step_gain = state.feedback_gain * (dt / max(state.feedback_response_time_s, _EPS))
+            feedback_scale = float(state.feedback_scale * (1.0 + step_gain * feedback_error))
+            feedback_scale = float(np.clip(feedback_scale, state.feedback_min_scale, state.feedback_max_scale))
+            state.feedback_scale = feedback_scale
+
+    rate = rate_pre_feedback * feedback_scale
+    reservoir_scale = 1.0
+    clipped = False
+    if (
+        apply_reservoir
+        and state is not None
+        and state.reservoir_mass_remaining_kg is not None
+        and dt > 0.0
+        and area > 0.0
+    ):
+        remaining = state.reservoir_mass_remaining_kg
+        total = state.reservoir_mass_total_kg if state.reservoir_mass_total_kg is not None else remaining
+        fraction_remaining = None
+        if total and total > 0.0:
+            fraction_remaining = remaining / total
+        if state.reservoir_mode == "smooth" and fraction_remaining is not None:
+            if fraction_remaining < state.reservoir_smooth_fraction:
+                ramp = fraction_remaining / max(state.reservoir_smooth_fraction, _EPS)
+                reservoir_scale = min(reservoir_scale, max(ramp, 0.0))
+        max_rate = remaining / (area * dt)
+        if max_rate < rate:
+            clipped = True
+            reservoir_scale = min(reservoir_scale, max_rate / max(rate, _EPS))
+        rate *= reservoir_scale
+        mass_draw = rate * area * dt
+        state.reservoir_mass_remaining_kg = max(remaining - mass_draw, 0.0)
+
+    reservoir_remaining = state.reservoir_remaining_Mmars() if state is not None else None
+    reservoir_fraction = state.reservoir_fraction() if state is not None else None
+
+    return SupplyEvalResult(
+        rate=max(rate, 0.0),
+        raw_rate=raw,
+        mixed_rate=max(mixed, 0.0),
+        temperature_scale=temp_scale,
+        feedback_scale=feedback_scale,
+        reservoir_scale=reservoir_scale,
+        reservoir_remaining_Mmars=reservoir_remaining,
+        reservoir_fraction=reservoir_fraction,
+        clipped_by_reservoir=clipped,
+        feedback_error=feedback_error,
+        temperature_value=temp_value,
+        temperature_value_kind=temp_value_kind,
+    )
+
+
 def get_prod_area_rate(t: float, r: float, spec: Supply) -> float:
     """Return the mixed surface production rate in kg m⁻² s⁻¹."""
 
-    if not getattr(spec, "enabled", True):
-        return 0.0
-    raw = _rate_basic(t, r, spec)
-    rate = raw * spec.mixing.epsilon_mix
-    return max(rate, 0.0)
+    result = evaluate_supply(t, r, dt=0.0, spec=spec, area=1.0, state=None, apply_reservoir=False)
+    return result.rate
 
 
-__all__ = ["get_prod_area_rate"]
+__all__ = [
+    "SupplyEvalResult",
+    "SupplyRuntimeState",
+    "evaluate_supply",
+    "get_prod_area_rate",
+    "init_runtime_state",
+]

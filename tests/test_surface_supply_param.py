@@ -27,6 +27,9 @@ from marsdisk.schema import (
     SupplyPowerLaw,
     SupplyTable,
     SupplyMixing,
+    SupplyReservoir,
+    SupplyFeedback,
+    SupplyTemperature,
     IO,
 )
 
@@ -57,6 +60,53 @@ def test_table_mode(tmp_path):
     cfg = Supply(mode="table", table=SupplyTable(path=path))
     rate = supply.get_prod_area_rate(5.0, 1.0, cfg)
     assert rate == pytest.approx(0.05 * 2.0)
+
+
+def test_reservoir_caps_rate_and_consumes_mass():
+    cfg = Supply(
+        mode="const",
+        const=SupplyConst(prod_area_rate_kg_m2_s=2.0),
+        mixing=SupplyMixing(epsilon_mix=1.0),
+        reservoir=SupplyReservoir(mass_total_Mmars=1e-23, depletion_mode="hard_stop"),
+    )
+    state = supply.init_runtime_state(cfg, area=1.0, seconds_per_year=1.0)
+    res1 = supply.evaluate_supply(0.0, 1.0, dt=1.0, spec=cfg, area=1.0, state=state, temperature_K=1800.0)
+    assert res1.rate == pytest.approx(2.0)
+    res2 = supply.evaluate_supply(1.0, 1.0, dt=10.0, spec=cfg, area=1.0, state=state, temperature_K=1800.0)
+    assert res2.clipped_by_reservoir
+    assert res2.rate < 2.0
+    assert state.reservoir_mass_remaining_kg == pytest.approx(0.0)
+
+
+def test_feedback_scales_supply_toward_target_tau():
+    cfg = Supply(
+        mode="const",
+        const=SupplyConst(prod_area_rate_kg_m2_s=1.0),
+        mixing=SupplyMixing(epsilon_mix=1.0),
+        feedback=SupplyFeedback(enabled=True, target_tau=1.0, gain=1.0, response_time_years=1.0),
+    )
+    state = supply.init_runtime_state(cfg, area=1.0, seconds_per_year=1.0)
+    res_low_tau = supply.evaluate_supply(
+        0.0, 1.0, dt=0.5, spec=cfg, area=1.0, state=state, tau_for_feedback=0.2, temperature_K=1800.0
+    )
+    assert res_low_tau.feedback_scale > 1.0
+    res_high_tau = supply.evaluate_supply(
+        0.5, 1.0, dt=0.5, spec=cfg, area=1.0, state=state, tau_for_feedback=2.0, temperature_K=1800.0
+    )
+    assert res_high_tau.feedback_scale < res_low_tau.feedback_scale
+
+
+def test_temperature_scaling_modulates_rate():
+    cfg = Supply(
+        mode="const",
+        const=SupplyConst(prod_area_rate_kg_m2_s=1.0),
+        mixing=SupplyMixing(epsilon_mix=1.0),
+        temperature=SupplyTemperature(enabled=True, mode="scale", reference_K=2000.0, exponent=1.0),
+    )
+    state = supply.init_runtime_state(cfg, area=1.0, seconds_per_year=1.0)
+    res_cool = supply.evaluate_supply(0.0, 1.0, dt=1.0, spec=cfg, area=1.0, state=state, temperature_K=1000.0)
+    res_hot = supply.evaluate_supply(1.0, 1.0, dt=1.0, spec=cfg, area=1.0, state=state, temperature_K=4000.0)
+    assert res_hot.rate > res_cool.rate
 
 
 MASS_TOL = 5e-3

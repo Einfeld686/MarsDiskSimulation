@@ -85,6 +85,7 @@ class Provenance:
     paper_key: Optional[str] = None
     unknown_slug: Optional[str] = None
     note: Optional[str] = None
+    type: Optional[str] = None
 
     @classmethod
     def from_dict(cls, data: object) -> "Provenance":
@@ -96,12 +97,18 @@ class Provenance:
         paper_key = data.get("paper_key")
         unknown_slug = data.get("unknown_slug")
         note = data.get("note")
+        prov_type = data.get("type")
         if source_kind not in ALLOWED_SOURCE_KIND:
             raise ValueError(f"provenance.source_kind must be one of {sorted(ALLOWED_SOURCE_KIND)}")
-        for field_name, field_value in (("paper_key", paper_key), ("unknown_slug", unknown_slug), ("note", note)):
+        for field_name, field_value in (
+            ("paper_key", paper_key),
+            ("unknown_slug", unknown_slug),
+            ("note", note),
+            ("type", prov_type),
+        ):
             if field_value is not None and not isinstance(field_value, str):
                 raise ValueError(f"provenance.{field_name} must be a string or null")
-        return cls(source_kind=source_kind, paper_key=paper_key, unknown_slug=unknown_slug, note=note)
+        return cls(source_kind=source_kind, paper_key=paper_key, unknown_slug=unknown_slug, note=note, type=prov_type)
 
     def to_dict(self) -> dict:
         return {
@@ -109,6 +116,7 @@ class Provenance:
             "paper_key": self.paper_key,
             "unknown_slug": self.unknown_slug,
             "note": self.note,
+            "type": self.type,
         }
 
 

@@ -1,5 +1,5 @@
 > **文書種別**: 手順（Diátaxis: How-to）
-<!-- sink_token_sync: `sinks.mode=sublimation` `sinks.mode=none` `sinks.mode="none"` `sinks.sub_params` `mass_lost_by_sinks=0` `mass_lost_by_sinks` `sink_flux_surface` `SinkOptions` `SinkOptions(enable_sublimation: bool = False, sub_params: SublimationParams = SublimationParams(), enable_gas_drag: bool = False, rho_g: float = 0.0)` `SinkTimescaleResult(t_sink=None, ...)` `SublimationParams(**cfg.sinks.sub_params.model_dump())` `SurfaceStepResult(sigma_surf: float, outflux: float, sink_flux: float)` `[marsdisk/physics/sinks.py#SinkOptions [L35–L45]]` `[marsdisk/physics/sinks.py#gas_drag_timescale [L70–L80]]` `[marsdisk/physics/sinks.py#total_sink_timescale [L83–L160]]` `[marsdisk/physics/sinks.py:35–45]` `[marsdisk/physics/sinks.py:70–80]` `[marsdisk/physics/sinks.py:83–160]` `adds the sink term only when` `integrates sublimation/drag sinks;` `loss += 1/t_sink` `sink_flux` `sink_flux = sigma_new / t_sink` `surface.step_surface(..., t_sink=t_sink_current, ...)` `step_surface(..., tau: float | None = None, t_sink: float | None = None, sigma_tau1: float | None = None) -> SurfaceStepResult` `step_surface_density_S1(..., t_sink: float | None = None, ...) -> SurfaceStepResult` `t_sink` `t_sink=None` `total_sink_timescale` `total_sink_timescale(T: float, rho_p: float, Omega: float, opts: SinkOptions, *, s_ref: float = 1e-6) -> SinkTimescaleResult` `が 0 を返し、タイムスケールは登録されず “no active sinks” ログとともに` `と SurfaceStepResult(sigma_surf: float, outflux: float, sink_flux: float) に対応し、` `を計算し、sinks.mode に応じて昇華/drag を integrates（sinks.mode=none なら adds the sink term only when に該当せず no active sinks で t_sink=None -> 0 を返す）。主要関数は` `を算出する（[marsdisk/physics/sinks.py:83–160], [marsdisk/run.py:1444–1487]）。` `を算出する（[marsdisk/physics/sinks.py:83–160], [marsdisk/run.py:1447–1463]）。` -->
+<!-- sink_token_sync: `sinks.mode=sublimation` `sinks.mode=none` `sinks.mode="none"` `sinks.sub_params` `mass_lost_by_sinks=0` `mass_lost_by_sinks` `M_sink_dot` `sink_flux_surface` `SinkOptions` `SinkOptions(enable_sublimation: bool = False, sub_params: SublimationParams = SublimationParams(), enable_gas_drag: bool = False, rho_g: float = 0.0)` `SinkTimescaleResult(t_sink=None, ...)` `SublimationParams(**cfg.sinks.sub_params.model_dump())` `SurfaceStepResult(sigma_surf: float, outflux: float, sink_flux: float)` `[marsdisk/physics/sinks.py#SinkOptions [L35–L45]]` `[marsdisk/physics/sinks.py#gas_drag_timescale [L70–L80]]` `[marsdisk/physics/sinks.py#total_sink_timescale [L83–L160]]` `[marsdisk/physics/sinks.py#SinkOptions [L35–L45]]` `[marsdisk/physics/sinks.py#gas_drag_timescale [L70–L80]]` `[marsdisk/physics/sinks.py#total_sink_timescale [L83–L160]]` `adds the sink term only when` `integrates sublimation/drag sinks;` `loss += 1/t_sink` `sink_flux` `sink_flux = sigma_new / t_sink` `surface.step_surface(..., t_sink=t_sink_current, ...)` `step_surface(..., tau: float | None = None, t_sink: float | None = None, sigma_tau1: float | None = None) -> SurfaceStepResult` `step_surface_density_S1(..., t_sink: float | None = None, ...) -> SurfaceStepResult` `t_sink` `t_sink=None` `total_sink_timescale` `total_sink_timescale(T: float, rho_p: float, Omega: float, opts: SinkOptions, *, s_ref: float = 1e-6) -> SinkTimescaleResult` `が 0 を返し、タイムスケールは登録されず “no active sinks” ログとともに` `と SurfaceStepResult(sigma_surf: float, outflux: float, sink_flux: float) に対応し、` `を計算し、sinks.mode に応じて昇華/drag を integrates（sinks.mode=none なら adds the sink term only when に該当せず no active sinks で t_sink=None -> 0 を返す）。主要関数は` `を算出する（[marsdisk/physics/sinks.py#total_sink_timescale [L83–L160]], [marsdisk/run.py#run_zero_d [L1047–L3783]]）。` `を算出する（[marsdisk/physics/sinks.py#total_sink_timescale [L83–L160]], [marsdisk/run.py#run_zero_d [L1047–L3783]]）。` -->
 
 # run-recipes
 > **注記（gas‑poor）**: 本解析は **ガスに乏しい衝突起源デブリ円盤**を前提とします。従って、**光学的に厚いガス円盤**を仮定する Takeuchi & Lin (2003) の表層塵アウトフロー式は**適用外**とし、既定では評価から外しています（必要時のみ明示的に有効化）。この判断は、衝突直後の円盤が溶融主体かつ蒸気≲数%で、初期周回で揮発が散逸しやすいこと、および小衛星を残すには低質量・低ガスの円盤条件が要ることに基づきます。参考: [@Hyodo2017a_ApJ845_125; @Hyodo2017b_ApJ851_122; @Hyodo2018_ApJ860_150; @CanupSalmon2018_SciAdv4_eaar6887]。
@@ -9,7 +9,7 @@
 
 | 目的 | 主要トグル / 設定 | 推奨コマンド | 出力確認 |
 | --- | --- | --- | --- |
-| ベースライン gas-poor（既定） | `surface.collision_solver=smol`, `sinks.mode=sublimation`, `sub_params.mass_conserving=true`, `sublimation_location=smol`, `psd.wavy_strength=0.0`, `shielding.mode=psitau` | `python -m marsdisk.run --config configs/base.yml` | `out/series/run.parquet` に `mass_lost_by_sinks≈0`（昇華は粒径のみ）、`summary.json` の `case_status` と β 統計、`checks/mass_budget.csv` 誤差 ≤0.5% |
+| ベースライン gas-poor（既定） | `surface.collision_solver=smol`, `sinks.mode=sublimation`, `sub_params.mass_conserving=true`, `sublimation_location=smol`, `psd.wavy_strength=0.0`, `shielding.mode=psitau` | `python -m marsdisk.run --config configs/base.yml` | `out/series/run.parquet` に `mass_lost_by_sinks=0`（昇華は粒径のみ）、`summary.json` の `case_status` と β 統計、`checks/mass_budget.csv` 誤差 ≤0.5% |
 | 昇華シンク ON（質量減算） | `sinks.mode=sublimation`, `enable_sublimation=true`, `sub_params.mass_conserving=false` | `python -m marsdisk.run --config configs/base_sublimation.yml` | `mass_lost_by_sinks` が増分を持ち、`s_min_components` は `config/blowout/effective` のまま |
 | レガシー表層 ODE（gas-rich 試験時のみ） | **環境変数** `ALLOW_TL2003=true`、`surface.collision_solver=surface_ode` | `ALLOW_TL2003=true python -m marsdisk.run --config configs/base.yml --override surface.collision_solver=surface_ode` | `run_config.json` に `collision_solver: surface_ode`、質量誤差 ≤0.5%（gas-poor 既定では無効のまま） |
 | “wavy” PSD 感度 | `psd.wavy_strength>0` | `python -m marsdisk.run --config configs/base.yml --override psd.wavy_strength=0.2` | `series/run.parquet` に “wavy” の波形が残り、`summary.json` で `psd.wavy_strength` を確認 |
@@ -20,6 +20,7 @@
   - τ条件: 評価区間の `tau_vertical`（なければ `tau`）の中央値が 0.5–2。  
   - 供給条件: 評価区間で `prod_subblow_area_rate` が設定供給（`supply.const.prod_area_rate_kg_m2_s × epsilon_mix`）の 90%以上を連続して維持する区間が存在（長さは連続時間 Δt で 0.05 日以上を推奨）。  
   - 成否: 上記 2 条件を同時に満たす連続区間があれば success。
+- 最新デフォルト（`scripts/research/run_temp_supply_sweep.sh`）: `SUPPLY_RATE=3.0e-3` kg m⁻² s⁻¹ を基準に `epsilon_mix∈{0.5,1.0,5.0}` を掃引し、τフィードバックと温度スケールを既定で有効化する（リザーバは未設定のまま）。`summary.json` には `supply_feedback_scale_*` とリザーバ統計、`series/run.parquet` には `supply_feedback_scale`/`supply_temperature_scale`/`supply_reservoir_remaining_Mmars` などの診断列が追加される。[scripts/research/run_temp_supply_sweep.sh:1–199][marsdisk/run.py#run_zero_d [L1047–L3783]][marsdisk/run.py#run_zero_d [L1047–L3783]]
 - 推奨ツール: `scripts/research/evaluate_tau_supply.py`  
   - 例: `python scripts/research/evaluate_tau_supply.py --run-dir <OUTDIR> --window-fraction 0.5 --min-duration-days 0.05`  
   - run_config に記録された `effective_prod_rate_kg_m2_s` を目標供給として参照し、JSON で success/tau_median/longest_supply_duration を返す。
@@ -78,7 +79,7 @@ io:
 - LOS/鉛直 τ の列 `tau_los_mars`,`tau_vertical` が揃い、LOS 方向が長い設定では `tau_los_mars >= tau_vertical` となる。Σ_τ=1 は LOS 基準（Σ_tau1_los）で記録される。
 - `summary.json` で `case_status` が `beta_at_smin_config` と `beta_threshold` の比較に従い `blowout`（閾値以上）または `ok`（閾値未満）となっていること。加えて `orbits_completed`,`M_out_cum`,`M_sink_cum`，および `M_out_mean_per_orbit` などの公転ロールアップ指標が出力される。温度関連として `T_M_source`,`T_M_initial`,`T_M_final`,`T_M_min`,`T_M_median`,`T_M_max`,`temperature_driver` が記録され、`beta_at_smin_min`/`beta_at_smin_median`/`beta_at_smin_max` と `a_blow_min`/`a_blow_median`/`a_blow_max` が統計として付与されていることを確認する。
 - `summary.json` の β関連フィールドが `beta_at_smin_config` / `beta_at_smin_effective` に分かれていること（旧 `beta_at_smin` は出力されない）。
-- `summary.json` の `s_min_components` に `config`,`blowout`,`effective` が揃い、`s_min_effective` が max(config, blowout) であること。昇華設定は床粒径へは反映されず、粒径侵食による欠損は `mass_lost_sublimation_step` と `dSigma_dt_sublimation` で診断する。[marsdisk/run.py:1340–1434][marsdisk/run.py:2270–2387][marsdisk/physics/psd.py:149–264]
+- `summary.json` の `s_min_components` に `config`,`blowout`,`effective` が揃い、`s_min_effective` が max(config, blowout) であること。昇華設定は床粒径へは反映されず、粒径侵食による欠損は `mass_lost_sublimation_step` と `dSigma_dt_sublimation` で診断する。[marsdisk/run.py#run_zero_d [L1047–L3783]][marsdisk/run.py#run_zero_d [L1047–L3783]][marsdisk/physics/psd.py#apply_uniform_size_drift [L149–L264]]
 - `orbit_rollup.csv` が生成され、各公転に対する `M_out_orbit`,`M_sink_orbit`,`M_loss_per_orbit` が累積されていること。
 - `chi_blow` を `1.0` のままにすると `chi_blow_eff=1.0` がサマリに記録され、`"auto"` に切り替えると β と ⟨Q_pr⟩ に連動した補正値（0.5–2.0）が `chi_blow_eff` に入る。
 - `checks/mass_budget.csv` の `error_percent` が全行で 0.5% 以下に収まり、最終行の `mass_remaining` と `mass_lost` が初期質量と合致する。
@@ -90,13 +91,13 @@ io:
 DocSync/テスト
 - DocSyncAgent → doc テストの順で回す。Smol/衝突経路周りを更新した場合も必ず `make analysis-update`（`make analysis-sync` + `make analysis-doc-tests` の短縮）と `make analysis-coverage-guard` を実行し、coverage ガードを維持する。
 
-- CLI は `python -m marsdisk.run --config …` を受け取り、0D実行を呼び出す。[marsdisk/run.py:1622–1654]
-- 0Dケースの軌道量は `omega` と `v_kepler` が `runtime_orbital_radius_m` から導出し、ブローアウト時間や周速度評価の基礎となる。[marsdisk/grid.py:90][marsdisk/grid.py:34]
-- 出力として `series/run.parquet`,`summary.json`,`checks/mass_budget.csv`,`run_config.json` を書き出す。[marsdisk/run.py:2120–2185][marsdisk/run.py:2270–2387][marsdisk/run.py:1330–1357][marsdisk/run.py:1477–1547]
-- タイムシリーズのレコード構造に上記カラムを追加し、損失項と高速ブローアウト診断を分離して記録する。[marsdisk/run.py:2120–2185][marsdisk/io/writer.py:24–162]
-- 供給が定数モード0のため生成率は0で、ミキシング後もクリップされる。(configs/base.yml)[marsdisk/physics/supply.py:69–90]
-- 質量収支許容値と違反時の処理を 0.5% で定義している。[marsdisk/run.py:74][marsdisk/run.py:1330–1357]
-- `run_config.json` に式と使用値を格納している。[marsdisk/run.py:1477–1547]
+- CLI は `python -m marsdisk.run --config …` を受け取り、0D実行を呼び出す。[marsdisk/run.py#run_zero_d [L1047–L3783]]
+- 0Dケースの軌道量は `omega` と `v_kepler` が `runtime_orbital_radius_m` から導出し、ブローアウト時間や周速度評価の基礎となる。[marsdisk/grid.py#omega [L90–L91]][marsdisk/grid.py#v_kepler [L34–L48]]
+- 出力として `series/run.parquet`,`summary.json`,`checks/mass_budget.csv`,`run_config.json` を書き出す。[marsdisk/run.py#run_zero_d [L1047–L3783]][marsdisk/run.py#run_zero_d [L1047–L3783]][marsdisk/run.py#run_zero_d [L1047–L3783]][marsdisk/run.py#run_zero_d [L1047–L3783]]
+- タイムシリーズのレコード構造に上記カラムを追加し、損失項と高速ブローアウト診断を分離して記録する。[marsdisk/run.py#run_zero_d [L1047–L3783]][marsdisk/io/writer.py#write_parquet [L24–L279]]
+- 供給が定数モード0のため生成率は0で、ミキシング後もクリップされる。(configs/base.yml)[marsdisk/physics/supply.py#_TemperatureTable [L70–L97]]
+- 質量収支許容値と違反時の処理を 0.5% で定義している。[marsdisk/run.py#SECONDS_PER_YEAR [L74]][marsdisk/run.py#run_zero_d [L1047–L3783]]
+- `run_config.json` に式と使用値を格納している。[marsdisk/run.py#run_zero_d [L1047–L3783]]
 
 ### 派生レシピ: `analysis/run-recipes/baseline_blowout_only.yml`
 - 実行例
@@ -104,9 +105,9 @@ DocSync/テスト
 python -m marsdisk.run --config analysis/run-recipes/baseline_blowout_only.yml
 ```
 - 確認ポイント
-  - `series/run.parquet` に `mass_lost_by_sinks` 列が存在し、総和が0（`sinks.mode: none` による HK シンク対照）。[marsdisk/run.py:1654–1683][marsdisk/run.py:2120–2185]（参考: `tests/test_sinks_none.py`）
+  - `series/run.parquet` に `mass_lost_by_sinks` 列が存在し、総和が0（`sinks.mode: none` による HK シンク対照）。[marsdisk/run.py#run_zero_d [L1047–L3783]][marsdisk/run.py#run_zero_d [L1047–L3783]]（参考: `tests/test_sinks_none.py`）
   - 列構成はベースラインと同じで、`dt_over_t_blow` や `fast_blowout_factor` も一致し、`fast_blowout_corrected` は常に `false`。`n_substeps` が 1 であることを確認し、サブステップ分割が無効であることを確かめる。
-  - `checks/mass_budget.csv` の `error_percent` が 0.5% 以下。[marsdisk/run.py:1330–1357]
+  - `checks/mass_budget.csv` の `error_percent` が 0.5% 以下。[marsdisk/run.py#run_zero_d [L1047–L3783]]
 - YAMLを書き換えず同条件を試す場合は CLI で `--sinks none` を付与する（例：`python -m marsdisk.run --config configs/base.yml --sinks none`）。
 
 ### 派生レシピ: 昇華シンクを有効にする（質量減算モード）
@@ -131,13 +132,13 @@ sinks:
     P_gas: 0.0
 ```
 - 確認ポイント
-  - `series/run.parquet` の `mass_lost_by_blowout` と `mass_lost_by_sinks` が別カラムで積算され、`mass_conserving=false` の場合にだけ昇華由来の損失で `mass_lost_by_sinks` が増加する（HK シンクが有限 `t_sink` を返した証拠）。[marsdisk/physics/sinks.py:83–160][marsdisk/run.py:1654–1683][marsdisk/run.py:2120–2185]
+  - `series/run.parquet` の `mass_lost_by_blowout` と `mass_lost_by_sinks` が別カラムで積算され、`mass_conserving=false` の場合にだけ昇華由来の損失で `mass_lost_by_sinks` が増加する（HK シンクが有限 `t_sink` を返した証拠）。[marsdisk/physics/sinks.py#total_sink_timescale [L83–L160]][marsdisk/run.py#run_zero_d [L1047–L3783]][marsdisk/run.py#run_zero_d [L1047–L3783]]
   - `fast_blowout_factor` や `fast_blowout_flag_gt3/gt10` は昇華の有無に関係なく出力される。高速補正を有効化したい場合は YAML の `io.correct_fast_blowout: true` を追加し、補正適用時に `fast_blowout_corrected` が `true` へ切り替わることを確認する。
-  - `summary.json` の `s_min_components` に昇華キーが存在せず（`config`,`blowout`,`effective` のみ）、`s_min_effective` が max(config, blowout) を保つこと。[marsdisk/run.py:1340–1434][marsdisk/run.py:2270–2387]
+  - `summary.json` の `s_min_components` に昇華キーが存在せず（`config`,`blowout`,`effective` のみ）、`s_min_effective` が max(config, blowout) を保つこと。[marsdisk/run.py#run_zero_d [L1047–L3783]][marsdisk/run.py#run_zero_d [L1047–L3783]]
     昇華境界は `s_min_evolved` 列で追跡され、床粒径の決定には反映されない。
 - `run_config.json` の `sublimation_provenance` に HKL 選択と SiO パラメータ、`psat_model`、`valid_K`、タブレット使用時のファイルパスがまとまり、実行半径・公転時間とともに再現条件が残る。
-- 実装メモ（`sinks_callgraph.md` 対応）: YAML `sinks` は `SinkOptions` へ集約され、`SublimationParams(**cfg.sinks.sub_params.model_dump())` を `total_sink_timescale(T: float, rho_p: float, Omega: float, opts: SinkOptions, *, s_ref: float = 1e-6)` に渡して `t_sink` を算出する（[marsdisk/physics/sinks.py:83–160], [marsdisk/run.py:1447–1463]）。`sinks.mode="none"` では `SinkTimescaleResult(t_sink=None, …)` が強制され “no active sinks” ログを出す。[marsdisk/run.py:1447–1455]
-- IMEX表層解法は `t_sink` が有限のときのみ損失項を加え、`sink_flux = sigma_new / t_sink` を返す。[marsdisk/physics/surface.py:81–95] `run_zero_d` はこれを `surface.step_surface(..., t_sink=t_sink_current, ...)` で呼び出し、`mass_lost_by_sinks` を累積しながら Parquet/summary に書き出す。[marsdisk/run.py:1654–1683][marsdisk/run.py:2120–2185]
+- 実装メモ（`sinks_callgraph.md` 対応）: YAML `sinks` は `SinkOptions` へ集約され、`SublimationParams(**cfg.sinks.sub_params.model_dump())` を `total_sink_timescale(T: float, rho_p: float, Omega: float, opts: SinkOptions, *, s_ref: float = 1e-6)` に渡して `t_sink` を算出する（[marsdisk/physics/sinks.py#total_sink_timescale [L83–L160]], [marsdisk/run.py#run_zero_d [L1047–L3783]]）。`sinks.mode="none"` では `SinkTimescaleResult(t_sink=None, …)` が強制され “no active sinks” ログを出す。[marsdisk/run.py#run_zero_d [L1047–L3783]]
+- IMEX表層解法は `t_sink` が有限のときのみ損失項を加え、`sink_flux = sigma_new / t_sink` を返す。[marsdisk/physics/surface.py#SurfaceStepResult [L80–L96]] `run_zero_d` はこれを `surface.step_surface(..., t_sink=t_sink_current, ...)` で呼び出し、`mass_lost_by_sinks` を累積しながら Parquet/summary に書き出す。[marsdisk/run.py#run_zero_d [L1047–L3783]][marsdisk/run.py#run_zero_d [L1047–L3783]]
 
 ### 派生レシピ: 表層 ODE を使う（Wyatt 近似のレガシー）
 - 実行例
@@ -198,15 +199,15 @@ python scripts/run_inner_disk_suite.py --config configs/base.yml --skip-existing
   - `runs/inner_disk_suite/phi_0p37/TM_2000/orbit_rollup_summary.csv` が派生する。
     公転ごとの集計列 `mass_blowout_Mmars` を確認し、吹き飛び質量の単位換算が期待どおりかをチェックする。
 - 確認ポイント
-  - `summary.json` の `phi_table_path` と `shielding_mode` が `shielding.table_path` と `mode=table` の正規化結果を保持する。[marsdisk/run.py:1430–1452]
-  - `psd_hist.parquet` 内の `bin_index` が昇順で、`s_bin_center` と `N_bin` が PNG/GIF のプロットと一致する。[marsdisk/run.py:1281–1297]
-  - GIF 生成ルーチンが `figs/frame_*.png` を束ね、Φ=0.37 の指定温度ではハイライト GIF をベースディレクトリへ複写する。[scripts/run_inner_disk_suite.py:187–203][scripts/run_inner_disk_suite.py:364–380]
-  - `orbit_rollup_summary.csv` は `orbit_rollup.csv` の `M_out_orbit` を引き継ぎ、注釈用に `time_s_end` を付与する。[scripts/run_inner_disk_suite.py:187–209]
+  - `summary.json` の `phi_table_path` と `shielding_mode` が `shielding.table_path` と `mode=table` の正規化結果を保持する。[marsdisk/run.py#run_zero_d [L1047–L3783]]
+  - `psd_hist.parquet` 内の `bin_index` が昇順で、`s_bin_center` と `N_bin` が PNG/GIF のプロットと一致する。[marsdisk/run.py#run_zero_d [L1047–L3783]]
+  - GIF 生成ルーチンが `figs/frame_*.png` を束ね、Φ=0.37 の指定温度ではハイライト GIF をベースディレクトリへ複写する。[scripts/run_inner_disk_suite.py#export_orbit_summary [L185–L211]][scripts/run_inner_disk_suite.py#main [L319–L383]]
+  - `orbit_rollup_summary.csv` は `orbit_rollup.csv` の `M_out_orbit` を引き継ぎ、注釈用に `time_s_end` を付与する。[scripts/run_inner_disk_suite.py#export_orbit_summary [L185–L211]]
     ここで `mass_blowout_Mmars` 列がマルス質量換算の再出力である点を確認する。
 - 根拠
-  - 公転周期・オーバーライドの構築は `build_cases` / `build_overrides` が担い、Φ定数テーブルを `tables/phi_const_*.csv` から解決する。[scripts/run_inner_disk_suite.py:78–79][scripts/run_inner_disk_suite.py:230–259]
-  - PSD 可視化と GIF 生成は `render_psd_frames` と `make_gif` が担当し、凡例テキストを固定で描画する。[scripts/run_inner_disk_suite.py:187–203]
-  - 公転集計は `export_orbit_summary` が整形し、ハイライト GIF の複写処理はメインループ終端で実行される。[scripts/run_inner_disk_suite.py:187–209][scripts/run_inner_disk_suite.py:364–380]
+  - 公転周期・オーバーライドの構築は `build_cases` / `build_overrides` が担い、Φ定数テーブルを `tables/phi_const_*.csv` から解決する。[scripts/run_inner_disk_suite.py#compute_orbit [L73–L79]][scripts/run_inner_disk_suite.py#build_cases [L228–L261]]
+  - PSD 可視化と GIF 生成は `render_psd_frames` と `make_gif` が担当し、凡例テキストを固定で描画する。[scripts/run_inner_disk_suite.py#export_orbit_summary [L185–L211]]
+  - 公転集計は `export_orbit_summary` が整形し、ハイライト GIF の複写処理はメインループ終端で実行される。[scripts/run_inner_disk_suite.py#export_orbit_summary [L185–L211]][scripts/run_inner_disk_suite.py#main [L319–L383]]
 
 ## B. スイープ
 
@@ -245,12 +246,11 @@ io:       { outdir: "sweeps/__will_be_overwritten__" }
 - `scripts/analyze_radius_trend.py` を実行した場合は `analysis/radius_sweep/radius_sweep_metrics.csv` に `Omega_s`,`t_orb_s`,`dt_over_t_blow`,`fast_blowout_factor`,`fast_blowout_flag_gt3/gt10` が追加され、警告ログに `dt/t_blow` の閾値超過ケースが列挙されること。
 
 6) 根拠
-- スイープCLI引数とベース設定のデフォルトを `DEFAULT_BASE_CONFIG` と `parse_args` が提供し、マップ仕様は `create_map_definition` で組み立てる。[scripts/sweep_heatmaps.py:47][scripts/sweep_heatmaps.py:246–402][scripts/sweep_heatmaps.py:445–548]
-- ケースごとに `disk.geometry.*`,`radiation.TM_K`,`io.outdir` を設定し、設定ファイルと出力先を準備して `run_case` へ渡す処理を `build_cases` と `run_case` が担う。[scripts/sweep_heatmaps.py:686–737][scripts/sweep_heatmaps.py:1143–1247]
-- 出力を読み込み `case_status` や `s_min_effective` を抽出する処理は `_get_beta_for_checks`,`extract_smin_from_series`,`populate_record_from_outputs` が担当する。[scripts/sweep_heatmaps.py:786–810][scripts/sweep_heatmaps.py:815–821][scripts/sweep_heatmaps.py:826–844][scripts/sweep_heatmaps.py:1029–1138]
-  事前の JSON 読み出しは `parse_summary` がまとめ、上記ヘルパーへ辞書を受け渡す。
-- 完了フラグ `case_completed.json` の生成と再実行判定は `mark_case_complete` と `case_is_completed` で実装される。[scripts/sweep_heatmaps.py:639–651][scripts/sweep_heatmaps.py:656–659]
-- 集約CSVの出力は `_results_dataframe` と `main` 内の集計ロジックで行い、`total_mass_lost_Mmars` などを整形して保存する。[scripts/sweep_heatmaps.py:1252–1256][scripts/sweep_heatmaps.py:1261–1522]
+- スイープCLI引数とベース設定のデフォルトを `DEFAULT_BASE_CONFIG` と `parse_args` が提供し、マップ仕様は `create_map_definition` で組み立てる。[scripts/sweep_heatmaps.py#DEFAULT_BASE_CONFIG [L47]][scripts/sweep_heatmaps.py#parse_args [L246–L402]][scripts/sweep_heatmaps.py#create_map_definition [L445–L548]]
+- ケースごとに `disk.geometry.*`,`radiation.TM_K`,`io.outdir` を設定し、設定ファイルと出力先を準備して `run_case` へ渡す処理を `build_cases` と `run_case` が担う。[scripts/sweep_heatmaps.py#build_cases [L684–L737]][scripts/sweep_heatmaps.py#run_case [L1141–L1247]]
+- 出力の JSON から `case_status` や `s_min_effective` を抽出する処理は `_get_beta_for_checks`,`extract_smin_from_series`,`populate_record_from_outputs` が担当する。[scripts/sweep_heatmaps.py#_get_beta_for_checks [L813–L821]][scripts/sweep_heatmaps.py#extract_smin_from_series [L824–L844]][scripts/sweep_heatmaps.py#populate_record_from_outputs [L1027–L1138]]
+- 完了フラグ `case_completed.json` の生成と再実行判定は `mark_case_complete` と `case_is_completed` で実装される。[scripts/sweep_heatmaps.py#mark_case_complete [L637–L651]][scripts/sweep_heatmaps.py#case_is_completed [L654–L659]]
+- 集約CSVの出力は `_results_dataframe` と `main` 内の集計ロジックで行い、`total_mass_lost_Mmars` などを整形して保存する。[scripts/sweep_heatmaps.py#_results_dataframe [L1250–L1256]][scripts/sweep_heatmaps.py#main [L1259–L1522]]
 
 ### 感度掃引（質量損失サンプラー連携）
 
@@ -275,23 +275,23 @@ Python から直接呼ぶ場合は `sample_mass_loss_one_orbit(..., sinks_mode="
 
 3) 最小設定断片  
 - ベース YAML（0D gas-poor）と Planck 平均 ⟨Q_pr⟩ テーブル。  
-- サンプラーのシンク切替は `sinks_mode`（例: `"sublimation"`, `"none"`, `"gas_drag"`）、`enable_sublimation`、`enable_gas_drag` の3引数で制御する。`enable_sublimation=None` の場合は `sinks_mode=="sublimation"` に合わせて自動化され、gas-rich 感度を取りたいときだけ `enable_gas_drag=True` を指定する。[marsdisk/analysis/massloss_sampler.py:77–78]  
-- `dt_over_t_blow_max` は 0.05–0.1 以内で指定し、`scripts/sweep_mass_loss_map.py` 側では `--dt-over-tblow-max` フラグから各サンプルに伝播する。[scripts/sweep_mass_loss_map.py:36–36][scripts/sweep_mass_loss_map.py:302–325]
+- サンプラーのシンク切替は `sinks_mode`（例: `"sublimation"`, `"none"`, `"gas_drag"`）、`enable_sublimation`、`enable_gas_drag` の3引数で制御する。`enable_sublimation=None` の場合は `sinks_mode=="sublimation"` に合わせて自動化され、gas-rich 感度を取りたいときだけ `enable_gas_drag=True` を指定する。[marsdisk/analysis/massloss_sampler.py#_percentile [L77–L87]]  
+- `dt_over_t_blow_max` は 0.05–0.1 以内で指定し、`scripts/sweep_mass_loss_map.py` 側では `--dt-over-tblow-max` フラグから各サンプルに伝播する。[scripts/sweep_mass_loss_map.py#DT_REQUIREMENT_THRESHOLD [L36]][scripts/sweep_mass_loss_map.py#main [L302–L364]]
 
 4) 期待される出力  
 - `map_massloss.csv`：各 (r_RM, T_M) 行に `M_out_cum`, `M_sink_cum`, `M_loss_cum`, `mass_loss_frac_per_orbit`, `dt_over_t_blow_{median,p90}`, `mass_budget_max_error_percent`, `beta_at_smin_{config,effective}`, `sinks_mode`, `qpr_table_path` が入る。`--include-sinks-none` を付けると `nosinks_mass_loss_frac_per_orbit` など接頭辞列が加わる。  
-- `logs/spec.json`：採用した格子、`dt_over_t_blow` の全体統計、`mass_loss_frac_{min,max,median}`、入力 YAML/テーブルパスを記録する。[scripts/sweep_mass_loss_map.py:197–235]  
+- `logs/spec.json`：採用した格子、`dt_over_t_blow` の全体統計、`mass_loss_frac_{min,max,median}`、入力 YAML/テーブルパスを記録する。[scripts/sweep_mass_loss_map.py#_write_spec [L197–L239]]  
 - 直接サンプル時は `dict` が返り、質量損失・dt統計・`mass_budget_max_error_percent`・`dt_over_t_blow_requirement_pass` をキーで参照できる。
 
 5) 確認項目  
-- `sample_mass_loss_one_orbit` は一時 outdir に `summary.json` と `series/run.parquet` を生成し、累積 `M_out_cum`,`M_sink_cum` が欠損した場合は最終行の `mass_lost_by_*` を読み出す。`checks/mass_budget.csv` の `|error_percent|` 最大値が 0.5% 未満であることを `mass_budget_max_error_percent` から確認する。[marsdisk/analysis/massloss_sampler.py:174–259]  
+- `sample_mass_loss_one_orbit` は一時 outdir に `summary.json` と `series/run.parquet` を生成し、累積 `M_out_cum`,`M_sink_cum` が欠損した場合は最終行の `mass_lost_by_*` を読み出す。`checks/mass_budget.csv` の `|error_percent|` 最大値が 0.5% 未満であることを `mass_budget_max_error_percent` から確認する。[marsdisk/analysis/massloss_sampler.py#sample_mass_loss_one_orbit [L110–L259]]  
 - `dt_over_t_blow_requirement_pass` が `True` でも、中央値・p90 が `--dt-over-tblow-max` を超えないか `map_massloss.csv` 側で再確認する。  
-- `--override` は `PATH=VALUE` をスペース区切りで並べる書式で、`PATH` は `radiation.TM_K` や `disk.geometry.r_in_RM` のようなドット区切り、`VALUE` は bool/数値/quoted string を自動解釈する。複数指定する場合は `--override ... --override ...` と繰り返すか、単一フラグに複数パラメータを与える。解析側では `_apply_overrides_dict` が YAML dict にマージするため、r/T の固定や追加のシンク係数を安全に上書きできる。[scripts/sweep_mass_loss_map.py:302–325][marsdisk/run.py:136–137]  
+- `--override` は `PATH=VALUE` をスペース区切りで並べる書式で、`PATH` は `radiation.TM_K` や `disk.geometry.r_in_RM` のようなドット区切り、`VALUE` は bool/数値/quoted string を自動解釈する。複数指定する場合は `--override ... --override ...` と繰り返すか、単一フラグに複数パラメータを与える。解析側では `_apply_overrides_dict` が YAML dict にマージするため、r/T の固定や追加のシンク係数を安全に上書きできる。[scripts/sweep_mass_loss_map.py#main [L302–L364]][marsdisk/run.py#ProgressReporter [L121–L226]]  
 - gas drag 感度を取る場合は Python サンプリングで `enable_gas_drag=True` を渡し、`result["sinks_mode"]` が意図どおり変わっているか `map_massloss.csv` もしくは辞書出力で確認する。  
 
 6) 根拠  
-- サンプラーはベース `Config` をディープコピーして r/T/⟨Q_pr⟩/シンク設定/`dt_over_t_blow_max` を上書きし、1公転のみ `run_zero_d` を回す。`summary.json` と `series/run.parquet` を読み直し、`M_out_cum`,`M_sink_cum`,`mass_loss_frac_per_orbit`,`beta_at_smin_config`,`beta_at_smin_effective`,`dt_over_t_blow_{median,p90}`、質量収支誤差をまとめた辞書を返す。[marsdisk/analysis/massloss_sampler.py:114–259]  
-- `scripts/sweep_mass_loss_map.py` は全格子に対して同サンプラーを呼び出し、必要に応じて `sinks.mode="none"` 比較も実行したうえで `map_massloss.csv` と `logs/spec.json` を生成する。dt 比や質量収支統計を `spec.json` に追記し、CLI フラグ (`--dt-over-tblow-max`,`--override`) を各呼び出しへ伝搬させる。[scripts/sweep_mass_loss_map.py:25–25]
+- サンプラーはベース `Config` をディープコピーして r/T/⟨Q_pr⟩/シンク設定/`dt_over_t_blow_max` を上書きし、1公転のみ `run_zero_d` を回す。`summary.json` と `series/run.parquet` を読み直し、`M_out_cum`,`M_sink_cum`,`mass_loss_frac_per_orbit`,`beta_at_smin_config`,`beta_at_smin_effective`,`dt_over_t_blow_{median,p90}`、質量収支誤差をまとめた辞書を返す。[marsdisk/analysis/massloss_sampler.py#sample_mass_loss_one_orbit [L110–L259]]  
+- `scripts/sweep_mass_loss_map.py` は全格子に対して同サンプラーを呼び出し、必要に応じて `sinks.mode="none"` 比較も実行したうえで `map_massloss.csv` と `logs/spec.json` を生成する。dt 比や質量収支統計を `spec.json` に追記し、CLI フラグ (`--dt-over-tblow-max`,`--override`) を各呼び出しへ伝搬させる。[scripts/sweep_mass_loss_map.py#ROOT [L25]]
 
 ## C. 再開・再実行
 
@@ -326,10 +326,10 @@ io:
 - `--enforce-mass-budget` を付与すると許容超過時に早期終了するため、再開前に質量収支を把握しておくこと。
 
 6) 根拠
-- ケース再利用時の `case_is_completed` 判定と `run_status` 更新ロジック。[scripts/sweep_heatmaps.py:656–659][scripts/sweep_heatmaps.py:1143–1247]
-- 完了フラグ削除後は再実行し、新たなフラグと出力を生成する。[scripts/sweep_heatmaps.py:639–651][scripts/sweep_heatmaps.py:1143–1247][scripts/sweep_heatmaps.py:1261–1522]
-- 単発実行は `io.outdir` に書き込み、既存内容を上書きする。[marsdisk/run.py:2120–2185][marsdisk/io/writer.py:24–193]
-- CLI フラグ `--enforce-mass-budget` で許容超過時に例外を送出する。[marsdisk/run.py:1323–1369]
+- ケース再利用時の `case_is_completed` 判定と `run_status` 更新ロジック。[scripts/sweep_heatmaps.py#case_is_completed [L654–L659]][scripts/sweep_heatmaps.py#run_case [L1141–L1247]]
+- 完了フラグ削除後は再実行し、新たなフラグと出力を生成する。[scripts/sweep_heatmaps.py#mark_case_complete [L637–L651]][scripts/sweep_heatmaps.py#run_case [L1141–L1247]][scripts/sweep_heatmaps.py#main [L1259–L1522]]
+- 単発実行は `io.outdir` に書き込み、既存内容を上書きする。[marsdisk/run.py#run_zero_d [L1047–L3783]][marsdisk/io/writer.py#write_parquet [L24–L279]]
+- CLI フラグ `--enforce-mass-budget` で許容超過時に例外を送出する。[marsdisk/run.py#run_zero_d [L1047–L3783]]
 
 ## D. 同定可能性チェック
 
@@ -359,9 +359,9 @@ sinks:
 - `mass_total_bins` 最終値が `initial.mass_total - M_loss` に一致すること。
 
 6) 根拠
-- `summary.json` の `M_loss` は `M_out_cum + M_sink_cum` を記録する。[marsdisk/run.py:2270–2387]
-- タイムシリーズ `M_loss_cum`,`mass_lost_by_blowout`,`mass_lost_by_sinks`,`mass_total_bins` の更新式。[marsdisk/run.py:2120–2185]
-- シンク無効設定は昇華・ガス抗力を停止させる。(configs/base.yml)[marsdisk/schema.py:205–205]
+- `summary.json` の `M_loss` は `M_out_cum + M_sink_cum` を記録する。[marsdisk/run.py#run_zero_d [L1047–L3783]]
+- タイムシリーズ `M_loss_cum`,`mass_lost_by_blowout`,`mass_lost_by_sinks`,`mass_total_bins` の更新式。[marsdisk/run.py#run_zero_d [L1047–L3783]]
+- シンク無効設定は昇華・ガス抗力を停止させる。(configs/base.yml)[marsdisk/schema.py#SupplyFeedback [L172–L216]]
 
 ## E. トラブルシュート
 
@@ -400,9 +400,9 @@ supply:
 - `s_min` が `s_max` を上回ると 0.9倍のクランプが入り、意図しない下限になる。設定値の整合を事前に確認する。
 
 6) 根拠
-- Parquet書き出しが `pyarrow` 依存である。[marsdisk/io/writer.py:20–21]
-- 0D実行は `disk.geometry` 未指定時に例外を送出する。[marsdisk/run.py:470–470]
-- 供給テーブル読込は `pd.read_csv` でパスが必要。[marsdisk/physics/supply.py:25–63]
+- Parquet書き出しが `pyarrow` 依存である。[marsdisk/io/writer.py#_ensure_parent [L20–L21]]
+- 0D実行は `disk.geometry` 未指定時に例外を送出する。[marsdisk/run.py#_normalise_physics_mode [L459–L472]]
+- 供給テーブル読込は `pd.read_csv` でパスが必要。[marsdisk/physics/supply.py#_TableData [L28–L66]]
 
 ## F. SiO psat auto-selector と HKLフラックスの最小検証
 
@@ -425,7 +425,7 @@ PYTHONPATH=. pytest -q tests/test_sublimation_sio.py -q
 
 3) 最小設定断片
 - 0D幾何と40ビンPSD、供給0。`sinks.sub_params.psat_model: "auto"`、`psat_table_path` はケースA/BでCSV指定、ケースCでは未指定。
-- SiO物性は (α=7×10⁻³, μ=4.40849×10⁻² kg mol⁻¹, A=13.613, B=17850, P_gas=0) を `SublimationParams` 既定値から流用する。[analysis/checks_psat_auto_01/inputs/case_A_tabulated.yml][marsdisk/physics/sublimation.py:134–135]
+- SiO物性は (α=7×10⁻³, μ=4.40849×10⁻² kg mol⁻¹, A=13.613, B=17850, P_gas=0) を `SublimationParams` 既定値から流用する。[analysis/checks_psat_auto_01/inputs/case_A_tabulated.yml][marsdisk/physics/sublimation.py#_is_hkl_active [L134–L155]]
 
 4) 期待される出力
 - `analysis/checks_psat_auto_01/runs/case_*/series/run.parquet` → `python -c "import pandas as pd; print(pd.read_parquet('analysis/checks_psat_auto_01/runs/case_A_tabulated/series/run.parquet').head())"`
@@ -435,16 +435,16 @@ PYTHONPATH=. pytest -q tests/test_sublimation_sio.py -q
 - `analysis/checks_psat_auto_01/logs/pytest_sio.log` が全テスト成功を示す。
 
 5) 確認項目
-- `run_config.json` の `valid_K_active` と `psat_table_range_K` がケースごとの温度に応じて更新されている。[marsdisk/physics/sublimation.py:525–531]
+- `run_config.json` の `valid_K_active` と `psat_table_range_K` がケースごとの温度に応じて更新されている。[marsdisk/physics/sublimation.py#choose_psat_backend [L429–L553]]
 - `case_B_localfit` の `run.log` で局所フィット適用メッセージ（`psat auto: requested temperature ... using local Clausius fit.`）が出力される。
 - `scan_hkl.py` が各ケースで91サンプルを出力し、最小／最大フラックスが ~1e-4–1e5 kg m⁻² s⁻¹ に収まる。
 - `tests/test_sublimation_sio.py` が pass し、HKL実装とauto-selector回帰が保たれている。
 
 6) 根拠
-- psatテーブルは Clausius式 `log10 P = A - B/T` から生成し、PCHIP補間にロードする。[analysis/checks_psat_auto_01/make_table.py][marsdisk/physics/sublimation.py:220–227]
-- auto-selector はタブレット範囲内で内挿、それ以外で局所最小二乗フィットまたは既定係数にフォールバックする。[marsdisk/physics/sublimation.py:487–494][marsdisk/physics/sublimation.py:327–334]
-- HKLフラックスは `mass_flux_hkl` が評価し、`scan_hkl.py` で同式を再計算して温度スキャンを行う。[marsdisk/physics/sublimation.py:585–585][analysis/checks_psat_auto_01/scan_hkl.py]
-- 出力ファイル群は既存の writer 実装に従って Parquet/JSON/CSV として保存される。[marsdisk/io/writer.py:24–162]
+- psatテーブルは Clausius式 `log10 P = A - B/T` から生成し、PCHIP補間にロードする。[analysis/checks_psat_auto_01/make_table.py][marsdisk/physics/sublimation.py#_load_psat_table [L204–L264]]
+- auto-selector はタブレット範囲内で内挿、それ以外で局所最小二乗フィットまたは既定係数にフォールバックする。[marsdisk/physics/sublimation.py#choose_psat_backend [L429–L553]][marsdisk/physics/sublimation.py#_local_clausius_fit_selection [L306–L372]]
+- HKLフラックスは `mass_flux_hkl` が評価し、`scan_hkl.py` で同式を再計算して温度スキャンを行う。[marsdisk/physics/sublimation.py#p_sat [L585–L591]][analysis/checks_psat_auto_01/scan_hkl.py]
+- 出力ファイル群は既存の writer 実装に従って Parquet/JSON/CSV として保存される。[marsdisk/io/writer.py#write_parquet [L24–L279]]
 
 ## G. 解析ユーティリティ（β・質量損失マップ）
 
@@ -480,7 +480,7 @@ PY
 - 0DベースYAML（`configs/base.yml`）と `data/qpr_table.csv`。  
 - `BetaSamplingConfig` に `jobs=1` 以上、`min_steps>=100` を渡す。  
 - `dt_over_t_blow_max` は既定 0.1 を推奨。
-- YAML は `marsdisk.run.load_config` などで `Config` に変換し、その写像を `_prepare_case_config` が各 (r,T) サンプル用に 0D 半径・温度・⟨Q_pr⟩テーブルへ上書きしつつ `geometry.s_min` を動かさず gas drag を強制無効化するため、元 YAML の物理スイッチが汚染されない。[marsdisk/analysis/beta_sampler.py:113–133][marsdisk/run.py:646–646]
+- YAML は `marsdisk.run.load_config` などで `Config` に変換し、その写像を `_prepare_case_config` が各 (r,T) サンプル用に 0D 半径・温度・⟨Q_pr⟩テーブルへ上書きしつつ `geometry.s_min` を動かさず gas drag を強制無効化するため、元 YAML の物理スイッチが汚染されない。[marsdisk/analysis/beta_sampler.py#_prepare_case_config [L113–L150]][marsdisk/run.py#ZeroDHistory [L631–L652]]
 
 4) 期待される出力  
 - `beta_cube.shape == (len(r_values), len(T_values), len(time_grid_fraction))`。  
@@ -493,10 +493,10 @@ PY
 - `dt_over_t_blow_median` と `dt_over_t_blow_p90` が 0.1 未満で IMEX 安定条件を満たす。
 
 6) 根拠  
-- βサンプラーは YAML→`Config` 変換後のオブジェクトを深いコピーし、`_prepare_case_config` が 0D 半径・温度・⟨Q_pr⟩テーブルを書き換えつつ gas drag を落とし、`geometry.s_min` を固定したまま `max(s_{\min,{\rm cfg}},a_{\rm blow})` のクランプに任せる。[marsdisk/analysis/beta_sampler.py:113–133][marsdisk/run.py:646–646]
-- `BetaSamplingConfig.jobs` と `min_steps` は `sample_beta_over_orbit` 内で `ProcessPoolExecutor(max_workers=jobs)` の並列度および各 `_run_single_case` の最小タイムステップ数を規制し、`dt_over_t_blow_max` の伝播もここで行う。[marsdisk/analysis/beta_sampler.py:239–256]
-- `diagnostics` には `time_grid_fraction`, `time_grid_s_reference`, `time_steps_per_orbit`, `t_orb_reference_s`, `t_orb_range_s`, `dt_over_t_blow_{median,p90,max_observed}`, `qpr_used_stats`, `example_run_config` が格納される。[marsdisk/analysis/beta_sampler.py:274–331]
-- 実行中に解決されたテーブルパスは `tables.get_qpr_table_path()` と `run_zero_d` が共有する。[marsdisk/io/tables.py:356–359][marsdisk/run.py:559–559]
+- βサンプラーは YAML→`Config` 変換後のオブジェクトを深いコピーし、`_prepare_case_config` が 0D 半径・温度・⟨Q_pr⟩テーブルを書き換えつつ gas drag を落とし、`geometry.s_min` を固定したまま `max(s_{\min,{\rm cfg}},a_{\rm blow})` のクランプに任せる。[marsdisk/analysis/beta_sampler.py#_prepare_case_config [L113–L150]][marsdisk/run.py#ZeroDHistory [L631–L652]]
+- `BetaSamplingConfig.jobs` と `min_steps` は `sample_beta_over_orbit` 内で `ProcessPoolExecutor(max_workers=jobs)` の並列度および各 `_run_single_case` の最小タイムステップ数を規制し、`dt_over_t_blow_max` の伝播もここで行う。[marsdisk/analysis/beta_sampler.py#sample_beta_over_orbit [L234–L348]]
+- `diagnostics` には `time_grid_fraction`, `time_grid_s_reference`, `time_steps_per_orbit`, `t_orb_reference_s`, `t_orb_range_s`, `dt_over_t_blow_{median,p90,max_observed}`, `qpr_used_stats`, `example_run_config` が格納される。[marsdisk/analysis/beta_sampler.py#sample_beta_over_orbit [L234–L348]]
+- 実行中に解決されたテーブルパスは `tables.get_qpr_table_path()` と `run_zero_d` が共有する。[marsdisk/io/tables.py#get_qpr_table_path [L356–L359]][marsdisk/run.py#_read_json [L561–L563]]
 
 ### レシピ: `sample_mass_loss_one_orbit` で単点質量損失を取得
 
@@ -539,9 +539,9 @@ PY
 - `beta_at_smin_config` と `case_status` の整合を `summary.json` と照合しておく。
 
 6) 根拠  
-- サンプラーは YAML を読み込んで 0D 設定を複製し、r/T・シンク制御・`dt_over_t_blow_max` を上書きしたうえで `run_zero_d` を 1 周期だけ回す。[marsdisk/analysis/massloss_sampler.py#sample_mass_loss_one_orbit [L114–180]]  
-- `summary.json` と `series/run.parquet` から累積損失や `dt_over_t_blow` 統計を再構成し、`mass_budget_max_error_percent` や `qpr_table_path` を転記する。[marsdisk/analysis/massloss_sampler.py#sample_mass_loss_one_orbit [L181–263]]  
-- `scripts/sweep_mass_loss_map.py` は格子ごとに本APIを呼び、比較モード（`sinks.mode="none"`）の追加列もこの辞書へ接頭辞付きで結合する。[scripts/sweep_mass_loss_map.py:197–209]
+- サンプラーは YAML を読み込んで 0D 設定を複製し、r/T・シンク制御・`dt_over_t_blow_max` を上書きしたうえで `run_zero_d` を 1 周期だけ回す。[marsdisk/analysis/massloss_sampler.py#sample_mass_loss_one_orbit [L110–L259]]  
+- `summary.json` と `series/run.parquet` から累積損失や `dt_over_t_blow` 統計を再構成し、`mass_budget_max_error_percent` や `qpr_table_path` を転記する。[marsdisk/analysis/massloss_sampler.py#sample_mass_loss_one_orbit [L110–L259]]  
+- `scripts/sweep_mass_loss_map.py` は格子ごとに本APIを呼び、比較モード（`sinks.mode="none"`）の追加列もこの辞書へ接頭辞付きで結合する。[scripts/sweep_mass_loss_map.py#_write_spec [L197–L239]]
 
 ## H. ドキュメント coverage ガード
 
@@ -558,46 +558,46 @@ pytest tests/test_analysis_coverage_guard.py -q
 
 3) 内容  
 - `make analysis-coverage-guard` は `python -m agent_test.ci_guard_analysis --coverage analysis/coverage/coverage.json --refs analysis/doc_refs.json --inventory analysis/inventory.json --fail-under 0.75 --require-clean-anchors` をラップし、関数参照率とアンカー整合性を同時に検証する。[Makefile:analysis-coverage-guard [L21–L24]][agent_test/ci_guard_analysis.py:1–224]
-- 同じコマンドを `tests/test_analysis_coverage_guard.py` が実行するため、`pytest` を回すだけで coverage 低下や未参照関数が検出される。[tests/test_analysis_coverage_guard.py:7–11]
-- 失敗時は標準出力で不足シンボル（例: `marsdisk/io/writer.py#write_orbit_rollup`）が列挙されるので、`analysis/overview.md` や `analysis/run-recipes.md` に参照を追加したうえで `python analysis/tools/make_coverage.py` を再実行し、`analysis/coverage/coverage.json` を更新する。[analysis/tools/make_coverage.py:1–210]
+- 同じコマンドを `tests/test_analysis_coverage_guard.py` が実行するため、`pytest` を回すだけで coverage 低下や未参照関数が検出される。[tests/test_analysis_coverage_guard.py#test_analysis_coverage_guard [L7–L11]]
+- 失敗時は標準出力で不足シンボル（例: `marsdisk/io/writer.py#write_orbit_rollup [L327–L335]`）が列挙されるので、`analysis/overview.md` や `analysis/run-recipes.md` に参照を追加したうえで `python analysis/tools/make_coverage.py` を再実行し、`analysis/coverage/coverage.json` を更新する。[analysis/tools/make_coverage.py:1–210]
 - DocSyncAgent から `analysis/doc_refs.json` を再生成する際は `python -m tools.doc_sync_agent --all --write` を併用し、coverage 作成前後で参照情報を整合させる。
 
 ### update_psd_state — PSD初期化の流れ
 
 - 手順
-  - `configs/*.yml` で `sizes` と `psd` セクションを調整する。`sizes.s_min/s_max/n_bins` がビン定義を、`psd.alpha` と `psd.wavy_strength` が三勾配＋“wavy”補正を決め、`psd.floor.mode` を `fixed`/`evolve_smin`/`none` から選ぶと床処理が切り替わる。[marsdisk/schema.py:148–151][marsdisk/schema.py:189–198]
+  - `configs/*.yml` で `sizes` と `psd` セクションを調整する。`sizes.s_min/s_max/n_bins` がビン定義を、`psd.alpha` と `psd.wavy_strength` が三勾配＋“wavy”補正を決め、`psd.floor.mode` を `fixed`/`evolve_smin`/`none` から選ぶと床処理が切り替わる。[marsdisk/schema.py#SupplyMixing [L130–L151]][marsdisk/schema.py#SupplyFeedback [L172–L216]]
   - 標準の `configs/base.yml` では力学系を平滑に保つため `psd.wavy_strength=0.0` を既定とし、wavy パターンを検証したい場合は CLI で `--override psd.wavy_strength=0.2` などと上書きする。
-  - 実行時は `run_zero_d` がブローアウト境界を評価したあと `psd.update_psd_state` を呼び出し、初期PSDを構築する。[marsdisk/run.py:591–591]
+  - 実行時は `run_zero_d` がブローアウト境界を評価したあと `psd.update_psd_state` を呼び出し、初期PSDを構築する。[marsdisk/run.py#_prepare_phase5_variants [L571–L595]]
   - 完走後、`out/series/run.parquet` に `kappa`,`s_min`,`mass_total_bins` などが記録される。`psd.floor.mode="evolve_smin"` の場合は `s_min_evolved` 列で進化床を確認する。
 - 入出力
-  - 入力は `s_min`,`s_max`,`alpha`,`wavy_strength`,`n_bins`,`rho`。不正なサイズ順やビン数は `MarsDiskError` で停止する。[marsdisk/physics/psd.py:30–118]
-  - 出力は PSD 状態辞書（`sizes`,`widths`,`number`,`edges`,`rho` など）で、`psd.compute_kappa` や `psd.apply_uniform_size_drift` がそのまま利用する。[marsdisk/physics/psd.py:30–118][marsdisk/run.py:600–602]
-- 参照: [marsdisk/physics/psd.py:30–118]
-- 根拠: wavy補正の波状パターンは `tests/test_surface_outflux_wavy.py` が、質量不透明度 κ の幾何計算は `tests/test_psd_kappa.py` が自動検証する。[tests/test_surface_outflux_wavy.py:10–37][tests/test_psd_kappa.py:29–48]
+  - 入力は `s_min`,`s_max`,`alpha`,`wavy_strength`,`n_bins`,`rho`。不正なサイズ順やビン数は `MarsDiskError` で停止する。[marsdisk/physics/psd.py#update_psd_state [L30–L118]]
+  - 出力は PSD 状態辞書（`sizes`,`widths`,`number`,`edges`,`rho` など）で、`psd.compute_kappa` や `psd.apply_uniform_size_drift` がそのまま利用する。[marsdisk/physics/psd.py#update_psd_state [L30–L118]][marsdisk/run.py#RunConfig [L604–L617]]
+- 参照: [marsdisk/physics/psd.py#update_psd_state [L30–L118]]
+- 根拠: wavy補正の波状パターンは `tests/test_surface_outflux_wavy.py` が、質量不透明度 κ の幾何計算は `tests/test_psd_kappa.py` が自動検証する。[tests/test_surface_outflux_wavy.py#test_blowout_driven_wavy_pattern_emerges [L10–L37]][tests/test_psd_kappa.py#test_compute_kappa_stays_finite_with_wavy_modulation [L29–L49]]
 
 ### qpr_lookup — ⟨Q_pr⟩ テーブルの運用
 
 - 手順
-  - `radiation.qpr_table_path`（または互換の `qpr_table`）に Planck平均表の CSV を指定するか、`radiation.Q_pr` で単一値を強制する。[marsdisk/schema.py:316–316]
-  - `python -m marsdisk.run --config ...` を起動すると、`run_zero_d` がテーブルをロードし `_lookup_qpr` 経由で `radiation.qpr_lookup` を呼び、ブローアウト解を反復評価する。[marsdisk/run.py:536–536]
+  - `radiation.qpr_table_path`（または互換の `qpr_table`）に Planck平均表の CSV を指定するか、`radiation.Q_pr` で単一値を強制する。[marsdisk/schema.py#Supply [L271–L330]]
+  - `python -m marsdisk.run --config ...` を起動すると、`run_zero_d` がテーブルをロードし `_lookup_qpr` 経由で `radiation.qpr_lookup` を呼び、ブローアウト解を反復評価する。[marsdisk/run.py#_resolve_time_grid [L483–L544]]
   - テーブル未指定で override も無い場合は実行開始時に `RuntimeError` で停止するため、CI で早期に検出できる。
 - 入出力
-  - `radiation.qpr_lookup(s, T_M, table=None)` は正の grain size と温度を要求し、既定でキャッシュ済み補間器を用いる。テーブルを渡すとその場で評価する。[marsdisk/physics/radiation.py:179–203]
-  - 戻り値は無次元の `⟨Q_pr⟩` で、後続の `radiation.beta` や `radiation.blowout_radius` に供給される。[marsdisk/physics/radiation.py:250–258]
-- 参照: [marsdisk/physics/radiation.py:179–203]
-- 根拠: テーブル補間とバリデーションは `tests/test_qpr_lookup.py` が確認し、β計算との整合も同テストで比較される。[tests/test_qpr_lookup.py:34–66]
+  - `radiation.qpr_lookup(s, T_M, table=None)` は正の grain size と温度を要求し、既定でキャッシュ済み補間器を用いる。テーブルを渡すとその場で評価する。[marsdisk/physics/radiation.py#qpr_lookup [L179–L233]]
+  - 戻り値は無次元の `⟨Q_pr⟩` で、後続の `radiation.beta` や `radiation.blowout_radius` に供給される。[marsdisk/physics/radiation.py#beta [L250–L271]]
+- 参照: [marsdisk/physics/radiation.py#qpr_lookup [L179–L233]]
+- 根拠: テーブル補間とバリデーションは `tests/test_qpr_lookup.py` が確認し、β計算との整合も同テストで比較される。[tests/test_qpr_lookup.py#test_qpr_lookup_interpolates_from_table [L34–L82]]
 
 ### beta — 放射圧比の確認ポイント
 
 - 手順
-- `material.rho` と `radiation.TM_K`（または `radiation.mars_temperature_driver`）を設定し、`radiation.qpr_table_path` もしくは `radiation.Q_pr` で `⟨Q_pr⟩` を定義する。[marsdisk/schema.py:109–109][marsdisk/schema.py:125–126][marsdisk/schema.py:316–316]
-- 実行中は `run_zero_d` が βを `s_min_config` と `s_min_effective` で評価し、`case_status` や `summary.json` の `beta_at_smin_config` / `beta_at_smin_effective` フィールドへ書き出す。[marsdisk/run.py:600–602][marsdisk/run.py:1236–1263]
+- `material.rho` と `radiation.TM_K`（または `radiation.mars_temperature_driver`）を設定し、`radiation.qpr_table_path` もしくは `radiation.Q_pr` で `⟨Q_pr⟩` を定義する。[marsdisk/schema.py#InnerDiskMass [L95–L112]][marsdisk/schema.py#SupplyTable [L125–L127]][marsdisk/schema.py#Supply [L271–L330]]
+- 実行中は `run_zero_d` が βを `s_min_config` と `s_min_effective` で評価し、`case_status` や `summary.json` の `beta_at_smin_config` / `beta_at_smin_effective` フィールドへ書き出す。[marsdisk/run.py#RunConfig [L604–L617]][marsdisk/run.py#run_zero_d [L1047–L3783]]
   - `out/series/run.parquet` で列 `beta_at_smin_config` / `beta_at_smin_effective` を確認し、閾値を超えた場合 `case_status="blowout"` が記録される。
 - 入出力
-- `radiation.beta(s, rho, T_M, Q_pr=None)` はサイズ・密度・温度・任意の Planck平均 `⟨Q_pr⟩` を受け取り、無次元のβを返す。引数が非正の場合は例外で停止する。[marsdisk/physics/radiation.py:236–241]
-- `run_config.json` には採用した Q_pr や β式が `beta_formula` として保存され、再現実行に利用できる。[marsdisk/run.py:1232–1260]
-- 参照: [marsdisk/physics/radiation.py:236–241]
-- 根拠: βの逆サイズ依存と Q_pr 上書きは `marsdisk/tests/test_radiation_shielding.py` が、要約出力との連動は `tests/test_summary_backcompat.py` などの統合テストが担保している。[marsdisk/tests/test_radiation_shielding.py:28–31][tests/test_summary_backcompat.py:9–10]
+- `radiation.beta(s, rho, T_M, Q_pr=None)` はサイズ・密度・温度・任意の Planck平均 `⟨Q_pr⟩` を受け取り、無次元のβを返す。引数が非正の場合は例外で停止する。[marsdisk/physics/radiation.py#planck_mean_qpr [L236–L247]]
+- `run_config.json` には採用した Q_pr や β式が `beta_formula` として保存され、再現実行に利用できる。[marsdisk/run.py#run_zero_d [L1047–L3783]]
+- 参照: [marsdisk/physics/radiation.py#planck_mean_qpr [L236–L247]]
+- 根拠: βの逆サイズ依存と Q_pr 上書きは `marsdisk/tests/test_radiation_shielding.py` が、要約出力との連動は `tests/test_summary_backcompat.py` などの統合テストが担保している。[marsdisk/tests/test_radiation_shielding.py#test_beta_respects_qpr_override [L28–L35]][tests/test_summary_backcompat.py#_write_summary [L9–L10]]
 
 @-- BEGIN:PROVENANCE_RUNREC --
 ## 出典と根拠（Provenance）
@@ -615,7 +615,7 @@ pytest tests/test_analysis_coverage_guard.py -q
 
 @-- BEGIN:PHYSCHECK_RUNREC --
 ## 物理チェック（自動）
-- `python -m marsdisk.ops.physcheck --config configs/base.yml` で質量保存・次元解析・極限テストをまとめて走らせ、ログを `reports/physcheck/` に残す。[marsdisk/ops/physcheck.py#main]
+- `python -m marsdisk.ops.physcheck --config configs/base.yml` で質量保存・次元解析・極限テストをまとめて走らせ、ログを `reports/physcheck/` に残す。[marsdisk/ops/physcheck.py#main [L206–L218]]
 - `make analysis-doc-tests` は `tests/test_ref_coverage.py` を含む doc 系 pytest を束ね、参照タグの欠落を早期に検知する。
 - WARN/FAIL が出た際は `analysis/provenance_report.md` へ反映し、DocSync の差分としてレビューする。
 @-- END:PHYSCHECK_RUNREC --

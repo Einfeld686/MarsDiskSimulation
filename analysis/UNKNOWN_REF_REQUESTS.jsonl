@@ -4,3 +4,4 @@
 {"slug": "tcoll_regime_switch_v1", "type": "assumption", "where": "analysis/assumption_trace.md:155-195", "assumptions": "WyattスケールとOhtsuki系のt_coll切替条件が未出典でSmolとの整合も未整理", "priority": "medium"}
 {"slug": "sublimation_gasdrag_scope_v1", "type": "assumption", "where": "analysis/assumption_trace.md:197-238", "assumptions": "gas-poor既定で昇華のみ有効とする根拠、TL2003/gas-dragの有効化条件が未出典", "priority": "medium"}
 {"slug": "radius_fix_0d_scope_v1", "type": "assumption", "where": "analysis/assumption_trace.md:240-272", "assumptions": "0Dでdisk.geometry固定とする方針の式出典が未整理で1D拡張時の前提が不明瞭", "priority": "medium"}
+{"slug": "smol_source_injection_v1", "type": "citation_needed", "where": "analysis/equations.md:1018-1035", "assumptions": "供給質量フラックスをビン別個数ソースへ変換する際の集中注入規則（s_min以上の最小ビンに注入）の出典が未確定", "priority": "low"}
