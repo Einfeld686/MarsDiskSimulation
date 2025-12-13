@@ -292,6 +292,118 @@ class SupplyTemperature(BaseModel):
     )
 
 
+class SupplyTransport(BaseModel):
+    """Routing of external supply between deep and surface reservoirs."""
+
+    mode: Literal["direct", "deep_mixing"] = Field(
+        "direct",
+        description="direct: legacy headroom-gated surface injection. deep_mixing: send supply into deep then mix up.",
+    )
+    t_mix_orbits: Optional[float] = Field(
+        None,
+        ge=0.0,
+        description="Mixing time from deep reservoir to surface (orbits). Required when mode='deep_mixing'.",
+    )
+    headroom_gate: Literal["hard", "soft"] = Field(
+        "hard",
+        description="Headroom limiter applied to deep→surface flux; 'soft' is reserved for future smoothing.",
+    )
+
+    @root_validator(skip_on_failure=True)
+    def _require_tmix_for_mixing(cls, values: Dict[str, Any]) -> Dict[str, Any]:
+        mode = values.get("mode", "direct")
+        t_mix = values.get("t_mix_orbits")
+        if mode == "deep_mixing":
+            if t_mix is None or t_mix <= 0.0 or not isinstance(t_mix, (int, float)):
+                raise ValueError("supply.transport.t_mix_orbits must be positive when mode='deep_mixing'")
+        return values
+
+
+class SupplyInjectionVelocity(BaseModel):
+    """Velocity/eccentricity controls dedicated to the incoming supply."""
+
+    mode: Literal["inherit", "fixed_ei", "factor"] = Field(
+        "inherit",
+        description="inherit: use kernel baseline. fixed_ei: override with e_inj/i_inj. factor: scale baseline v_rel.",
+    )
+    e_inj: Optional[float] = Field(
+        None,
+        ge=0.0,
+        description="Injection eccentricity when mode='fixed_ei'.",
+    )
+    i_inj: Optional[float] = Field(
+        None,
+        ge=0.0,
+        description="Injection inclination [rad] when mode='fixed_ei'.",
+    )
+    vrel_factor: Optional[float] = Field(
+        None,
+        ge=0.0,
+        description="Relative-velocity multiplier when mode='factor'; applied as a scale on e/i.",
+    )
+    blend_mode: Literal["rms", "linear"] = Field(
+        "rms",
+        description="Blend effective e/i via RMS or linear mixing.",
+    )
+    weight_mode: Literal["delta_sigma", "sigma_ratio"] = Field(
+        "delta_sigma",
+        description="delta_sigma: ΔΣ/(Σ+ΔΣ). sigma_ratio: ΔΣ/max(Σ,eps).",
+    )
+
+    @root_validator(skip_on_failure=True)
+    def _validate_velocity_params(cls, values: Dict[str, Any]) -> Dict[str, Any]:
+        mode = values.get("mode", "inherit")
+        if mode == "fixed_ei":
+            if values.get("e_inj") is None or values.get("i_inj") is None:
+                raise ValueError("supply.injection.velocity.mode='fixed_ei' requires e_inj and i_inj")
+        if mode == "factor":
+            vrel_factor = values.get("vrel_factor")
+            if vrel_factor is None:
+                raise ValueError("supply.injection.velocity.mode='factor' requires vrel_factor")
+        return values
+
+
+class SupplyInjection(BaseModel):
+    """Controls how external supply is injected into the PSD and surface layer."""
+
+    mode: Literal["min_bin", "powerlaw_bins"] = Field(
+        "min_bin",
+        description="Injection mapping: 'min_bin' targets the smallest valid bin; 'powerlaw_bins' spreads mass across a size range.",
+    )
+    s_inj_min: Optional[float] = Field(
+        None,
+        ge=0.0,
+        description="Lower bound of the injection size range [m]; defaults to the smallest available bin.",
+    )
+    s_inj_max: Optional[float] = Field(
+        None,
+        ge=0.0,
+        description="Upper bound of the injection size range [m]; defaults to the largest available bin.",
+    )
+    q: float = Field(
+        3.5,
+        gt=0.0,
+        description="Power-law exponent for dN/ds ∝ s^{-q} when mode='powerlaw_bins'.",
+    )
+    deep_reservoir_tmix_orbits: Optional[float] = Field(
+        None,
+        ge=0.0,
+        description="Optional mixing time from the deep reservoir to the surface in orbital periods; None/0 disables the deep buffer.",
+    )
+    velocity: SupplyInjectionVelocity = Field(
+        default_factory=SupplyInjectionVelocity,
+        description="Effective eccentricity/inclination settings applied to the injected supply.",
+    )
+
+    @root_validator(skip_on_failure=True)
+    def _check_range(cls, values: Dict[str, Any]) -> Dict[str, Any]:
+        s_min = values.get("s_inj_min")
+        s_max = values.get("s_inj_max")
+        if s_min is not None and s_max is not None and s_max <= s_min:
+            raise ValueError("supply.injection.s_inj_max must exceed s_inj_min when both are set")
+        return values
+
+
 class SupplyPiece(BaseModel):
     t_start_s: float
     t_end_s: float
@@ -357,10 +469,42 @@ class Supply(BaseModel):
         default_factory=SupplyTemperature,
         description="Optional temperature-driven scaling of the supply rate.",
     )
+    transport: SupplyTransport = Field(
+        default_factory=SupplyTransport,
+        description="Transport mode for routing supply to the surface or deep reservoir.",
+    )
+    injection: SupplyInjection = Field(
+        default_factory=SupplyInjection,
+        description="Mapping from external supply to PSD bins and optional deep-reservoir mixing.",
+    )
     piecewise: list[SupplyPiece] = Field(
         default_factory=list,
         description="Piecewise segments (only needed if mode='piecewise')",
     )
+
+    @root_validator(pre=True)
+    def _align_transport_aliases(cls, values: Dict[str, Any]) -> Dict[str, Any]:
+        """Normalise deep-buffer controls between injection and transport blocks."""
+
+        injection_cfg = values.get("injection") or {}
+        transport_cfg = values.get("transport") or {}
+        # Allow deep_reservoir_tmix_orbits (legacy) to populate transport.t_mix_orbits when unset.
+        deep_tmix_alias = None
+        if isinstance(injection_cfg, dict):
+            deep_tmix_alias = injection_cfg.get("deep_reservoir_tmix_orbits")
+        if transport_cfg is None:
+            transport_cfg = {}
+        if isinstance(transport_cfg, dict):
+            if transport_cfg.get("t_mix_orbits") is None and deep_tmix_alias is not None:
+                transport_cfg["t_mix_orbits"] = deep_tmix_alias
+            elif (
+                deep_tmix_alias is not None
+                and transport_cfg.get("t_mix_orbits") is not None
+                and transport_cfg.get("t_mix_orbits") != deep_tmix_alias
+            ):
+                raise ValueError("supply.transport.t_mix_orbits and injection.deep_reservoir_tmix_orbits conflict; set only one")
+            values["transport"] = transport_cfg
+        return values
 
 
 class Material(BaseModel):
@@ -433,7 +577,75 @@ class Initial(BaseModel):
     """Initial mass and PSD mode."""
 
     mass_total: float = Field(..., description="Total initial mass in Mars masses")
-    s0_mode: Literal["mono", "upper"] = Field("upper", description="Initial PSD mode")
+    s0_mode: Literal[
+        "mono",
+        "upper",
+        "melt_lognormal_mixture",
+        "melt_truncated_powerlaw",
+    ] = Field(
+        "upper",
+        description=(
+            "Initial PSD mode. 'upper' keeps the default cascade, 'mono' forces a mono-disperse bin, "
+            "and melt_* variants initialise solids with melt-derived grains while removing condensation dust."
+        ),
+    )
+    class MeltPSD(BaseModel):
+        mode: Literal["lognormal_mixture", "truncated_powerlaw"] = Field(
+            "lognormal_mixture",
+            description="Shape applied when s0_mode starts with melt_.",
+        )
+        f_fine: float = Field(
+            0.3,
+            ge=0.0,
+            le=1.0,
+            description="Mass fraction assigned to the ~100 µm component in the melt mixture.",
+        )
+        s_fine: float = Field(
+            1.0e-4,
+            gt=0.0,
+            description="Characteristic size of the fine (~100 µm) melt fragment [m].",
+        )
+        s_meter: float = Field(
+            1.5,
+            gt=0.0,
+            description="Characteristic size of the meter-scale melt droplets [m].",
+        )
+        width_dex: float = Field(
+            0.3,
+            gt=0.0,
+            description="Log10 width (dex) shared by both components in the melt mixture.",
+        )
+        s_cut_condensation: float = Field(
+            1.0e-6,
+            gt=0.0,
+            description="Sizes below this cut are treated as condensation dust and zeroed in the initial PSD [m].",
+        )
+        s_min_solid: float = Field(
+            1.0e-4,
+            gt=0.0,
+            description="Minimum size populated by the melt truncated power-law [m].",
+        )
+        s_max_solid: float = Field(
+            3.0,
+            gt=0.0,
+            description="Maximum size populated by the melt truncated power-law [m].",
+        )
+        alpha_solid: float = Field(
+            3.5,
+            description="Power-law slope dN/ds ∝ s^-alpha_solid for melt solids (Jutzi et al. 2010 motivated).",
+        )
+
+        @validator("s_max_solid")
+        def _check_s_range(cls, value: float, values: dict[str, float]) -> float:
+            s_min = values.get("s_min_solid", None)
+            if s_min is not None and value <= s_min:
+                raise ValueError("s_max_solid must exceed s_min_solid")
+            return value
+
+    melt_psd: MeltPSD = Field(
+        default_factory=MeltPSD,
+        description="Parameters controlling melt-solid initial PSD modes.",
+    )
 
 
 class Dynamics(BaseModel):

@@ -78,3 +78,26 @@ def test_smol_source_mass_budget_matches_supply() -> None:
     assert dt_eff == pytest.approx(dt)
     assert mass_err == pytest.approx(0.0)
     assert np.isclose(np.sum(m_bin * N_new), prod_rate * dt_eff)
+
+
+def test_powerlaw_injection_distributes_mass() -> None:
+    s_bin = np.array([1.0e-6, 2.0e-6, 4.0e-6])
+    widths = np.array([0.5e-6, 1.0e-6, 2.0e-6])
+    m_bin = np.array([1.0, 8.0, 64.0])
+    prod_rate = 3.0
+
+    source = collisions_smol.supply_mass_rate_to_number_source(
+        prod_rate,
+        s_bin,
+        m_bin,
+        s_min_eff=1.0e-6,
+        widths=widths,
+        mode="powerlaw_bins",
+        s_inj_min=1.0e-6,
+        s_inj_max=4.0e-6,
+        q=3.5,
+    )
+
+    assert np.count_nonzero(source) >= 2
+    assert np.isclose(np.sum(source * m_bin), prod_rate)
+    assert (source >= 0.0).all()

@@ -67,7 +67,7 @@ analysis-update: analysis-sync
 
 # 任意: 参照レジストリとの差分検出（標準フローには含まない）
 analysis-refs:
-	python tools/reference_tracker.py --validate
+	python tools/reference_tracker.py validate
 
 # 任意: 未解決参照リクエストの確認（warn-only, 標準フロー外）
 analysis-unknown-refs:

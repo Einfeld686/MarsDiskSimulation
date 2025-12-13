@@ -5,12 +5,16 @@ that can mimic the short-term, non-steady behaviour of a collisional cascade.
 An optional sinusoidal modulation adds the qualitative "wavy" pattern expected
 when grains just above the blow-out limit are removed efficiently.
 
-Two helper functions are exposed:
+Core helpers are exposed:
 
 ``update_psd_state``
     Construct a PSD state dictionary for a given size range.
 ``compute_kappa``
     Compute the mass opacity ``\kappa`` from a PSD state.
+``mass_weights_lognormal_mixture`` / ``mass_weights_truncated_powerlaw``
+    Build melt-solid initial mass weights with condensation cuts.
+``apply_mass_weights``
+    Map mass weights onto the PSD number array while preserving total mass.
 """
 from __future__ import annotations
 
@@ -25,6 +29,15 @@ from . import sizes as size_models
 from .sublimation import SublimationParams
 
 logger = logging.getLogger(__name__)
+
+__all__ = [
+    "update_psd_state",
+    "compute_kappa",
+    "mass_weights_lognormal_mixture",
+    "mass_weights_truncated_powerlaw",
+    "apply_mass_weights",
+    "apply_uniform_size_drift",
+]
 
 
 def update_psd_state(
@@ -144,6 +157,127 @@ def compute_kappa(psd_state: Dict[str, np.ndarray | float]) -> float:
     mass = np.sum((4.0 / 3.0) * np.pi * rho * sizes**3 * number * widths)
 
     return float(area / mass)
+
+
+def mass_weights_lognormal_mixture(
+    sizes: np.ndarray,
+    widths: np.ndarray,
+    *,
+    f_fine: float,
+    s_fine: float,
+    s_meter: float,
+    width_dex: float,
+    s_cut: float | None = None,
+) -> np.ndarray:
+    """Return per-bin mass weights for a two-component melt mixture.
+
+    Hyodo et al. (2017) report that post-impact solids are dominated by
+    metre-scale melt droplets with a collisionally produced tail toward
+    ~100 µm.  Condensation dust is sub-dominant (<5%), so bins below
+    ``s_cut`` are zeroed to enforce the melt-only initial condition.
+    """
+
+    sizes_arr = np.asarray(sizes, dtype=float)
+    widths_arr = np.asarray(widths, dtype=float)
+    weights = np.zeros_like(sizes_arr, dtype=float)
+    if sizes_arr.size == 0 or widths_arr.size != sizes_arr.size:
+        return weights
+    sigma_ln = max(float(width_dex), 0.0) * np.log(10.0)
+    if sigma_ln <= 0.0:
+        return weights
+
+    def _lognormal(center: float) -> np.ndarray:
+        if center <= 0.0 or not np.isfinite(center):
+            return np.zeros_like(sizes_arr)
+        log_ratio = np.log(sizes_arr / center)
+        return np.exp(-0.5 * (log_ratio / sigma_ln) ** 2)
+
+    f_fine_clipped = min(max(float(f_fine), 0.0), 1.0)
+    weights_fine = _lognormal(float(s_fine))
+    weights_meter = _lognormal(float(s_meter))
+    weights = (1.0 - f_fine_clipped) * weights_meter + f_fine_clipped * weights_fine
+    weights *= widths_arr
+    if s_cut is not None and np.isfinite(s_cut):
+        weights = np.where(sizes_arr >= float(s_cut), weights, 0.0)
+    return weights
+
+
+def mass_weights_truncated_powerlaw(
+    sizes: np.ndarray,
+    widths: np.ndarray,
+    *,
+    alpha_solid: float,
+    s_min_solid: float,
+    s_max_solid: float,
+    s_cut: float | None = None,
+) -> np.ndarray:
+    """Return per-bin mass weights for a truncated power-law melt PSD.
+
+    Jutzi et al. (2010) report cumulative slopes N(>D)∝D^a with a≈-2.2…-2.7,
+    implying dN/ds∝s^-alpha with alpha≈3.2–3.7.  The default alpha_solid=3.5
+    captures this range while zeroing any condensation-sized bins below
+    ``s_cut``.
+    """
+
+    sizes_arr = np.asarray(sizes, dtype=float)
+    widths_arr = np.asarray(widths, dtype=float)
+    weights = np.zeros_like(sizes_arr, dtype=float)
+    if sizes_arr.size == 0 or widths_arr.size != sizes_arr.size:
+        return weights
+
+    floor = max(float(s_min_solid), float(s_cut) if s_cut is not None else 0.0)
+    ceil = float(s_max_solid)
+    if ceil <= floor:
+        return weights
+    mask = (sizes_arr >= floor) & (sizes_arr <= ceil)
+    if not np.any(mask):
+        return weights
+    weights[mask] = np.power(sizes_arr[mask], 3.0 - float(alpha_solid)) * widths_arr[mask]
+    return weights
+
+
+def apply_mass_weights(
+    psd_state: Dict[str, np.ndarray | float],
+    mass_weights: np.ndarray,
+    *,
+    rho: float | None = None,
+) -> Dict[str, np.ndarray | float]:
+    """Map mass weights to the PSD's number array while preserving total mass."""
+
+    sizes_arr = np.asarray(psd_state.get("sizes"), dtype=float)
+    widths_arr = np.asarray(psd_state.get("widths"), dtype=float)
+    weights_arr = np.asarray(mass_weights, dtype=float)
+    if (
+        sizes_arr.size == 0
+        or widths_arr.size != sizes_arr.size
+        or weights_arr.size != sizes_arr.size
+    ):
+        return psd_state
+
+    rho_use = rho if rho is not None else psd_state.get("rho", None)
+    rho_use = float(rho_use) if rho_use is not None else 0.0
+    if rho_use <= 0.0:
+        return psd_state
+
+    weights_arr = np.where(np.isfinite(weights_arr) & (weights_arr > 0.0), weights_arr, 0.0)
+    weights_sum = float(np.sum(weights_arr))
+    if weights_sum <= 0.0:
+        logger.warning("apply_mass_weights: mass weights sum to zero; keeping existing PSD shape")
+        return psd_state
+    weights_arr /= weights_sum
+
+    m_bin = (4.0 / 3.0) * np.pi * rho_use * sizes_arr**3
+    denom = m_bin * widths_arr
+    mask = denom > 0.0
+    number_new = np.zeros_like(sizes_arr, dtype=float)
+    number_new[mask] = weights_arr[mask] / denom[mask]
+    if not np.any(number_new):
+        logger.warning("apply_mass_weights: derived zero number density; keeping existing PSD shape")
+        return psd_state
+
+    psd_state["number"] = number_new
+    psd_state["n"] = number_new
+    return psd_state
 
 
 def apply_uniform_size_drift(

@@ -1417,7 +1417,8 @@ def run_zero_d(
         n_bins=cfg.sizes.n_bins,
         rho=rho_used,
     )
-    if getattr(cfg.initial, "s0_mode", "upper") == "mono":
+    s0_mode_value = str(getattr(cfg.initial, "s0_mode", "upper") or "upper").lower()
+    if s0_mode_value == "mono":
         # Force a mono-disperse initial PSD at 1.5 m (user-requested baseline).
         n_bins = psd_state["sizes"].size
         s_mono = 1.5
@@ -1429,8 +1430,46 @@ def run_zero_d(
         psd_state["edges"] = np.linspace(0.0, float(n_bins), n_bins + 1)
         psd_state["s_min"] = s_mono
         psd_state["s_max"] = s_mono
+    elif s0_mode_value in {"melt_lognormal_mixture", "melt_truncated_powerlaw"}:
+        melt_cfg = getattr(cfg.initial, "melt_psd", None)
+        if melt_cfg is None:
+            raise ValueError("initial.melt_psd must be provided when using melt_* s0_mode")
+        melt_mode = str(getattr(melt_cfg, "mode", "lognormal_mixture") or "lognormal_mixture")
+        if s0_mode_value == "melt_lognormal_mixture":
+            mass_weights = psd.mass_weights_lognormal_mixture(
+                psd_state["sizes"],
+                psd_state["widths"],
+                f_fine=getattr(melt_cfg, "f_fine", 0.0),
+                s_fine=getattr(melt_cfg, "s_fine", 1.0e-4),
+                s_meter=getattr(melt_cfg, "s_meter", 1.5),
+                width_dex=getattr(melt_cfg, "width_dex", 0.3),
+                s_cut=getattr(melt_cfg, "s_cut_condensation", None),
+            )
+        else:
+            mass_weights = psd.mass_weights_truncated_powerlaw(
+                psd_state["sizes"],
+                psd_state["widths"],
+                alpha_solid=getattr(melt_cfg, "alpha_solid", 3.5),
+                s_min_solid=getattr(melt_cfg, "s_min_solid", s_min_effective),
+                s_max_solid=getattr(melt_cfg, "s_max_solid", cfg.sizes.s_max),
+                s_cut=getattr(melt_cfg, "s_cut_condensation", None),
+            )
+            melt_mode = "truncated_powerlaw"
+        if melt_mode != "lognormal_mixture" and s0_mode_value == "melt_lognormal_mixture":
+            logger.warning("s0_mode=%s but initial.melt_psd.mode=%s; using lognormal mixture from s0_mode", s0_mode_value, melt_mode)
+        if melt_mode != "truncated_powerlaw" and s0_mode_value == "melt_truncated_powerlaw":
+            logger.warning("s0_mode=%s but initial.melt_psd.mode=%s; using truncated power-law from s0_mode", s0_mode_value, melt_mode)
+        psd_state = psd.apply_mass_weights(
+            psd_state,
+            mass_weights,
+            rho=rho_used,
+        )
+        psd_state["s_min"] = s_min_effective
+    elif s0_mode_value != "upper":
+        raise ValueError(f"Unknown initial.s0_mode={s0_mode_value!r}")
     kappa_surf = _ensure_finite_kappa(psd.compute_kappa(psd_state), label="kappa_surf_initial")
     kappa_surf_initial = float(kappa_surf)
+    kappa_eff0 = kappa_surf_initial
     qpr_at_smin_config = _lookup_qpr(s_min_config)
     qpr_mean = _lookup_qpr(s_min_effective)
     beta_at_smin_config = radiation.beta(
@@ -1500,7 +1539,6 @@ def run_zero_d(
                 auto_max_margin,
             )
         tau_eval_auto = tau_initial * los_factor
-        kappa_eff0 = kappa_surf_initial
         if phi_tau_fn is not None:
             kappa_eff0 = shielding.effective_kappa(kappa_surf_initial, tau_eval_auto, phi_tau_fn)
         if kappa_eff0 > 0.0 and math.isfinite(kappa_eff0):
@@ -1562,6 +1600,7 @@ def run_zero_d(
                 sigma_tau1_cap_init,
             )
     sigma_surf = float(sigma_surf_reference)
+    sigma_deep = 0.0
     headroom_initial = None
     if sigma_tau1_cap_init is not None and math.isfinite(sigma_tau1_cap_init):
         headroom_initial = float(sigma_tau1_cap_init - sigma_surf)
@@ -1659,6 +1698,40 @@ def run_zero_d(
     supply_mu_cfg = getattr(getattr(supply_spec, "mixing", None), "mu", None)
     supply_const_rate = getattr(getattr(supply_spec, "const", None), "prod_area_rate_kg_m2_s", None)
     supply_const_tfill = getattr(getattr(supply_spec, "const", None), "auto_from_tau1_tfill_years", None)
+    supply_injection_cfg = getattr(supply_spec, "injection", None)
+    supply_injection_mode = getattr(supply_injection_cfg, "mode", "min_bin") if supply_injection_cfg else "min_bin"
+    supply_injection_s_min = getattr(supply_injection_cfg, "s_inj_min", None) if supply_injection_cfg else None
+    supply_injection_s_max = getattr(supply_injection_cfg, "s_inj_max", None) if supply_injection_cfg else None
+    supply_injection_q = float(getattr(supply_injection_cfg, "q", 3.5)) if supply_injection_cfg else 3.5
+    supply_velocity_cfg = getattr(supply_injection_cfg, "velocity", None) if supply_injection_cfg else None
+    supply_velocity_mode = getattr(supply_velocity_cfg, "mode", "inherit") if supply_velocity_cfg else "inherit"
+    supply_velocity_e_inj = getattr(supply_velocity_cfg, "e_inj", None) if supply_velocity_cfg else None
+    supply_velocity_i_inj = getattr(supply_velocity_cfg, "i_inj", None) if supply_velocity_cfg else None
+    supply_velocity_vrel_factor = getattr(supply_velocity_cfg, "vrel_factor", None) if supply_velocity_cfg else None
+    supply_velocity_blend_mode = getattr(supply_velocity_cfg, "blend_mode", "rms") if supply_velocity_cfg else "rms"
+    supply_velocity_weight_mode = getattr(supply_velocity_cfg, "weight_mode", "delta_sigma") if supply_velocity_cfg else "delta_sigma"
+    supply_transport_cfg = getattr(supply_spec, "transport", None)
+    supply_transport_mode = getattr(supply_transport_cfg, "mode", "direct") if supply_transport_cfg else "direct"
+    supply_transport_headroom_gate = (
+        getattr(supply_transport_cfg, "headroom_gate", "hard") if supply_transport_cfg else "hard"
+    )
+    supply_deep_tmix_orbits = (
+        getattr(supply_transport_cfg, "t_mix_orbits", None) if supply_transport_cfg else None
+    )
+    if supply_deep_tmix_orbits is None:
+        supply_deep_tmix_orbits = (
+            getattr(supply_injection_cfg, "deep_reservoir_tmix_orbits", None) if supply_injection_cfg else None
+        )
+    if supply_transport_mode == "deep_mixing" and supply_deep_tmix_orbits is None:
+        raise ValueError("supply.transport.t_mix_orbits must be set and positive when mode='deep_mixing'")
+    supply_deep_enabled = bool(
+        supply_transport_mode == "deep_mixing"
+        or (
+            supply_deep_tmix_orbits is not None
+            and math.isfinite(float(supply_deep_tmix_orbits))
+            and float(supply_deep_tmix_orbits) > 0.0
+        )
+    )
     supply_effective_rate = None
     supply_reservoir_cfg = getattr(supply_spec, "reservoir", None)
     supply_reservoir_enabled = bool(getattr(supply_reservoir_cfg, "enabled", False)) if supply_reservoir_cfg else False
@@ -1873,15 +1946,21 @@ def run_zero_d(
     supply_rate_applied_track: List[float] = []
     supply_headroom_track: List[float] = []
     supply_clip_factor_track: List[float] = []
+    supply_visibility_track: List[float] = []
+    supply_blocked_track: List[bool] = []
+    supply_mixing_block_track: List[bool] = []
     supply_rate_scaled_initial: Optional[float] = None
     supply_clip_time = 0.0
     supply_clip_streak = 0
-    supply_clip_warn_threshold = 5
+    supply_clip_warn_threshold = 1000
     supply_clip_events: List[Dict[str, float]] = []
     supply_reservoir_depleted_time: Optional[float] = None
+    supply_visibility_eps = 1.0e-30
+    supply_headroom_eps = 1.0e-18
     dt_over_t_blow_values: List[float] = []
     mass_budget_max_error = 0.0
     steps_since_flush = 0
+    t_mix_seconds_current: Optional[float] = None
     phase_bulk_state_last: Optional[str] = None
     phase_bulk_f_liquid_last: Optional[float] = None
     phase_bulk_f_solid_last: Optional[float] = None
@@ -1914,14 +1993,31 @@ def run_zero_d(
         supply_rate_nominal_current: Optional[float] = None
         supply_rate_scaled_current: Optional[float] = None
         supply_rate_applied_current: Optional[float] = None
+        prod_rate_raw_current: Optional[float] = None
+        prod_rate_diverted_current: float = 0.0
+        prod_rate_into_deep_current: float = 0.0
+        deep_to_surf_flux_attempt_current: float = 0.0
+        deep_to_surf_flux_current: float = 0.0
+        supply_visibility_factor_current: Optional[float] = None
+        supply_blocked_by_headroom_flag = False
+        supply_mixing_limited_flag = False
         headroom_current: Optional[float] = None
         clip_factor_current: float = float("nan")
+        diverted_mass_step = 0.0
+        deep_to_surf_mass_step = 0.0
+        deep_to_surf_attempt_mass_step = 0.0
+        prod_into_deep_mass_step = 0.0
+        sigma_deep_before = sigma_deep
 
         if eval_requires_step or step_no == 0:
             Omega_step = grid.omega_kepler(r)
             if Omega_step <= 0.0:
                 raise ValueError("Computed Keplerian frequency must be positive")
             t_orb_step = 2.0 * math.pi / Omega_step
+            if supply_deep_enabled:
+                t_mix_seconds_current = float(supply_deep_tmix_orbits) * t_orb_step
+            else:
+                t_mix_seconds_current = None
             setattr(sub_params, "runtime_t_orb_s", t_orb_step)
             setattr(sub_params, "runtime_Omega", Omega_step)
 
@@ -2198,6 +2294,11 @@ def run_zero_d(
         fast_factor_denom = 0.0
         e_kernel_step = None
         i_kernel_step = None
+        e_kernel_base_step = None
+        i_kernel_base_step = None
+        e_kernel_supply_step = None
+        i_kernel_supply_step = None
+        supply_velocity_weight_step = None
 
         tau_vert_last = None
         tau_los_last = None
@@ -2273,21 +2374,44 @@ def run_zero_d(
                         tau_for_feedback=tau_for_feedback_val,
                         temperature_K=T_use,
                     )
-                    prod_rate = supply_res.rate
+                    prod_rate_raw_current = supply_res.rate
                     supply_rate_nominal_current = supply_res.mixed_rate
                     supply_rate_scaled_current = supply_res.rate
                     if supply_rate_scaled_initial is None and math.isfinite(supply_res.rate):
                         supply_rate_scaled_initial = float(supply_res.rate)
-                    prod_rate_last = prod_rate
-                    supply_diag_last = supply_res
-                    _mark_reservoir_depletion(time_sub)
-                    total_prod_surface += prod_rate * dt_sub
                     sigma_tau1_active = (
                         sigma_tau1_limit
                         if (blowout_layer_mode == "surface_tau_le_1" and collisions_active_step)
                         else None
                     )
                     sigma_tau1_active_last = sigma_tau1_active
+                    split_res = supply.split_supply_with_deep_buffer(
+                        prod_rate_raw_current,
+                        dt_sub,
+                        sigma_surf,
+                        sigma_tau1_active,
+                        sigma_deep,
+                        t_mix=t_mix_seconds_current,
+                        deep_enabled=supply_deep_enabled,
+                        transport_mode=supply_transport_mode,
+                        headroom_gate=supply_transport_headroom_gate,
+                    )
+                    prod_rate = split_res.prod_rate_applied
+                    prod_rate_last = prod_rate
+                    prod_rate_diverted_current = split_res.prod_rate_diverted
+                    prod_rate_into_deep_current = split_res.prod_rate_into_deep
+                    deep_to_surf_flux_attempt_current = split_res.deep_to_surf_flux_attempt
+                    deep_to_surf_flux_current = split_res.deep_to_surf_rate
+                    sigma_deep = split_res.sigma_deep
+                    headroom_current = split_res.headroom
+                    supply_rate_applied_current = prod_rate
+                    supply_diag_last = supply_res
+                    _mark_reservoir_depletion(time_sub)
+                    diverted_mass_step += prod_rate_diverted_current * dt_sub
+                    prod_into_deep_mass_step += prod_rate_into_deep_current * dt_sub
+                    deep_to_surf_mass_step += deep_to_surf_flux_current * dt_sub
+                    deep_to_surf_attempt_mass_step += deep_to_surf_flux_attempt_current * dt_sub
+                    total_prod_surface += prod_rate * dt_sub
                     res = surface.step_surface(
                         sigma_surf,
                         prod_rate,
@@ -2380,20 +2504,43 @@ def run_zero_d(
                     tau_for_feedback=tau_for_feedback_val,
                     temperature_K=T_use,
                 )
-                prod_rate = supply_res.rate
+                prod_rate_raw_current = supply_res.rate
                 supply_rate_nominal_current = supply_res.mixed_rate
                 supply_rate_scaled_current = supply_res.rate
                 if supply_rate_scaled_initial is None and math.isfinite(supply_res.rate):
                     supply_rate_scaled_initial = float(supply_res.rate)
-                prod_rate_last = prod_rate
-                supply_diag_last = supply_res
-                _mark_reservoir_depletion(time_start)
                 sigma_tau1_active = (
                     sigma_tau1_limit
                     if (blowout_layer_mode == "surface_tau_le_1" and collisions_active_step)
                     else None
                 )
                 sigma_tau1_active_last = sigma_tau1_active
+                split_res = supply.split_supply_with_deep_buffer(
+                    prod_rate_raw_current,
+                    dt,
+                    sigma_surf,
+                    sigma_tau1_active,
+                    sigma_deep,
+                    t_mix=t_mix_seconds_current,
+                    deep_enabled=supply_deep_enabled,
+                    transport_mode=supply_transport_mode,
+                    headroom_gate=supply_transport_headroom_gate,
+                )
+                prod_rate = split_res.prod_rate_applied
+                prod_rate_last = prod_rate
+                prod_rate_diverted_current = split_res.prod_rate_diverted
+                prod_rate_into_deep_current = split_res.prod_rate_into_deep
+                deep_to_surf_flux_attempt_current = split_res.deep_to_surf_flux_attempt
+                deep_to_surf_flux_current = split_res.deep_to_surf_rate
+                sigma_deep = split_res.sigma_deep
+                headroom_current = split_res.headroom
+                supply_rate_applied_current = prod_rate
+                supply_diag_last = supply_res
+                _mark_reservoir_depletion(time_start)
+                diverted_mass_step += prod_rate_diverted_current * dt
+                prod_into_deep_mass_step += prod_rate_into_deep_current * dt
+                deep_to_surf_mass_step += deep_to_surf_flux_current * dt
+                deep_to_surf_attempt_mass_step += deep_to_surf_flux_attempt_current * dt
                 sigma_before_step = sigma_surf
                 if collisions_active_step:
                     smol_res = collisions_smol.step_collisions_smol_0d(
@@ -2416,12 +2563,22 @@ def run_zero_d(
                         tau_eff=tau_eval_los,
                         collisions_enabled=collisions_active_step,
                         mass_conserving_sublimation=mass_conserving_sublimation,
+                        supply_injection_mode=supply_injection_mode,
+                        supply_s_inj_min=supply_injection_s_min,
+                        supply_s_inj_max=supply_injection_s_max,
+                        supply_q=supply_injection_q,
+                        supply_velocity_cfg=supply_velocity_cfg,
                     )
                     psd_state = smol_res.psd_state
                     sigma_surf = smol_res.sigma_after
                     t_coll_kernel_last = smol_res.t_coll_kernel
                     e_kernel_step = smol_res.e_kernel_used
                     i_kernel_step = smol_res.i_kernel_used
+                    e_kernel_base_step = smol_res.e_kernel_base
+                    i_kernel_base_step = smol_res.i_kernel_base
+                    e_kernel_supply_step = smol_res.e_kernel_supply
+                    i_kernel_supply_step = smol_res.i_kernel_supply
+                    supply_velocity_weight_step = smol_res.supply_velocity_weight
                     sigma_loss_smol = max(sigma_loss_smol, 0.0) + max(smol_res.sigma_loss, 0.0)
                     prod_rate_last = smol_res.prod_mass_rate_effective
                     total_prod_surface = smol_res.prod_mass_rate_effective * dt
@@ -2487,6 +2644,11 @@ def run_zero_d(
             t_sink_step = None
 
         time = time_sub
+        if dt > 0.0:
+            prod_rate_diverted_current = diverted_mass_step / dt
+            deep_to_surf_flux_current = deep_to_surf_mass_step / dt
+            prod_rate_into_deep_current = prod_into_deep_mass_step / dt
+            deep_to_surf_flux_attempt_current = deep_to_surf_attempt_mass_step / dt
         if sublimation_smol_active_step and collision_solver_mode != "smol":
             # Sublimation-to-Smol path: gated by phase and sigma_surf>0 to avoid
             # changing the existing surface sink semantics.
@@ -2781,7 +2943,12 @@ def run_zero_d(
             supply_rate_scaled_current = supply_diag_last.rate
         if supply_rate_nominal_current is None and supply_diag_last is not None:
             supply_rate_nominal_current = supply_diag_last.mixed_rate
-        supply_rate_applied_current = _safe_float(prod_rate_last)
+        if supply_rate_applied_current is None:
+            supply_rate_applied_current = _safe_float(prod_rate_last)
+        else:
+            supply_rate_applied_current = _safe_float(supply_rate_applied_current)
+        if prod_rate_raw_current is None and supply_diag_last is not None:
+            prod_rate_raw_current = _safe_float(supply_diag_last.rate)
         if (
             supply_rate_applied_current is not None
             and supply_rate_scaled_current is not None
@@ -2790,16 +2957,36 @@ def run_zero_d(
             clip_factor_current = float(
                 max(supply_rate_applied_current, 0.0) / max(supply_rate_scaled_current, 1.0e-30)
             )
+        visibility_factor_current = None
+        if prod_rate_raw_current is not None:
+            visibility_factor_current = float(
+                max(supply_rate_applied_current if supply_rate_applied_current is not None else 0.0, 0.0)
+                / max(prod_rate_raw_current, supply_visibility_eps)
+            )
+        supply_blocked_by_headroom_flag = bool(
+            prod_rate_raw_current is not None
+            and prod_rate_raw_current > 0.0
+            and headroom_current is not None
+            and headroom_current <= supply_headroom_eps
+            and (supply_rate_applied_current is None or supply_rate_applied_current <= supply_visibility_eps)
+        )
+        supply_mixing_limited_flag = bool(
+            supply_transport_mode == "deep_mixing"
+            and prod_rate_raw_current is not None
+            and prod_rate_raw_current > 0.0
+            and not supply_blocked_by_headroom_flag
+            and (supply_rate_applied_current is None or supply_rate_applied_current <= supply_visibility_eps)
+        )
         supply_rate_nominal_track.append(_safe_float(supply_rate_nominal_current))
         supply_rate_scaled_track.append(_safe_float(supply_rate_scaled_current))
         supply_rate_applied_track.append(_safe_float(supply_rate_applied_current))
         supply_headroom_track.append(_safe_float(headroom_current))
         supply_clip_factor_track.append(_safe_float(clip_factor_current))
-        clip_blocked = (
-            supply_rate_scaled_current is not None
-            and supply_rate_scaled_current > 0.0
-            and (supply_rate_applied_current is None or supply_rate_applied_current <= 0.0)
-        )
+        supply_visibility_track.append(_safe_float(visibility_factor_current))
+        supply_blocked_track.append(bool(supply_blocked_by_headroom_flag))
+        supply_mixing_block_track.append(bool(supply_mixing_limited_flag))
+        clip_blocked = supply_blocked_by_headroom_flag or supply_mixing_limited_flag
+        clip_reason = "mixing" if supply_mixing_limited_flag and not supply_blocked_by_headroom_flag else "headroom"
         if clip_blocked and dt > 0.0:
             supply_clip_time += dt
             supply_clip_streak += 1
@@ -2820,8 +3007,19 @@ def run_zero_d(
                         "Sigma_tau1": _clip_fmt(sigma_tau1_limit),
                         "headroom": _clip_fmt(headroom_current),
                         "supply_scaled": _clip_fmt(supply_rate_scaled_current),
+                        "supply_visibility_factor": _clip_fmt(visibility_factor_current),
                         "temperature_scale": _clip_fmt(temp_scale_warn),
                         "feedback_scale": _clip_fmt(feedback_scale_warn),
+                        "sigma_deep": _clip_fmt(sigma_deep),
+                        "prod_rate_diverted": _clip_fmt(prod_rate_diverted_current),
+                        "prod_rate_raw": _clip_fmt(prod_rate_raw_current),
+                        "prod_rate_applied": _clip_fmt(supply_rate_applied_current),
+                        "prod_rate_into_deep": _clip_fmt(prod_rate_into_deep_current),
+                        "deep_to_surf_flux_attempt": _clip_fmt(deep_to_surf_flux_attempt_current),
+                        "deep_to_surf_flux_applied": _clip_fmt(deep_to_surf_flux_current),
+                        "sigma_deep_before": _clip_fmt(sigma_deep_before),
+                        "reason": clip_reason,
+                        "transport_mode": supply_transport_mode,
                     }
                 )
         else:
@@ -2881,10 +3079,15 @@ def run_zero_d(
             "Q_pr_at_smin": qpr_mean_step,
             "beta_at_smin_config": beta_at_smin_config,
             "beta_at_smin_effective": beta_at_smin_effective,
+            "beta_at_smin": beta_at_smin_effective,
             "beta_threshold": beta_threshold,
             "Sigma_surf": sigma_surf,
+            "sigma_surf": sigma_surf,
             "Sigma_tau1": sigma_tau1_limit,
             "Sigma_tau1_active": sigma_tau1_active_last,
+            "sigma_tau1": sigma_tau1_limit,
+            "sigma_deep": sigma_deep,
+            "headroom": _safe_float(headroom_current),
             "outflux_surface": outflux_surface,
             "t_solid_s": t_solid_step,
             "blowout_gate_factor": gate_factor,
@@ -2892,11 +3095,31 @@ def run_zero_d(
             "t_blow": t_blow_step,
             "prod_subblow_area_rate": prod_rate_last,
             "prod_subblow_area_rate_raw": supply_diag_last.raw_rate if supply_diag_last else None,
+            "prod_rate_raw": _safe_float(prod_rate_raw_current),
+            "prod_rate_applied_to_surf": _safe_float(supply_rate_applied_current),
+            "prod_rate_diverted_to_deep": _safe_float(prod_rate_diverted_current),
+            "prod_rate_into_deep": _safe_float(prod_rate_into_deep_current),
+            "deep_to_surf_flux_attempt": _safe_float(deep_to_surf_flux_attempt_current),
+            "deep_to_surf_flux": _safe_float(deep_to_surf_flux_current),
+            "deep_to_surf_flux_applied": _safe_float(deep_to_surf_flux_current),
             "supply_rate_nominal": _safe_float(supply_rate_nominal_current),
             "supply_rate_scaled": _safe_float(supply_rate_scaled_current),
             "supply_rate_applied": _safe_float(supply_rate_applied_current),
             "supply_headroom": _safe_float(headroom_current),
             "supply_clip_factor": _safe_float(clip_factor_current),
+            "supply_visibility_factor": _safe_float(visibility_factor_current),
+            "supply_blocked_by_headroom": bool(supply_blocked_by_headroom_flag),
+            "supply_mixing_limited": bool(supply_mixing_limited_flag),
+            "supply_transport_mode": supply_transport_mode,
+            "e_kernel_used": _safe_float(e_kernel_step),
+            "i_kernel_used": _safe_float(i_kernel_step),
+            "e_kernel_base": _safe_float(e_kernel_base_step),
+            "i_kernel_base": _safe_float(i_kernel_base_step),
+            "e_kernel_supply": _safe_float(e_kernel_supply_step),
+            "i_kernel_supply": _safe_float(i_kernel_supply_step),
+            "e_kernel_effective": _safe_float(e_kernel_step),
+            "i_kernel_effective": _safe_float(i_kernel_step),
+            "supply_velocity_weight_w": _safe_float(supply_velocity_weight_step),
             "supply_temperature_scale": supply_diag_last.temperature_scale if supply_diag_last else None,
             "supply_temperature_value": supply_diag_last.temperature_value if supply_diag_last else None,
             "supply_temperature_value_kind": supply_diag_last.temperature_value_kind if supply_diag_last else None,
@@ -2949,6 +3172,13 @@ def run_zero_d(
             "phi_effective": phi_effective_last,
             "e_kernel_used": _safe_float(e_kernel_step),
             "i_kernel_used": _safe_float(i_kernel_step),
+            "e_kernel_base": _safe_float(e_kernel_base_step),
+            "i_kernel_base": _safe_float(i_kernel_base_step),
+            "e_kernel_supply": _safe_float(e_kernel_supply_step),
+            "i_kernel_supply": _safe_float(i_kernel_supply_step),
+            "e_kernel_effective": _safe_float(e_kernel_step),
+            "i_kernel_effective": _safe_float(i_kernel_step),
+            "supply_velocity_weight_w": _safe_float(supply_velocity_weight_step),
             "phase_state": phase_state_last,
             "phase_f_vap": phase_f_vap_last,
             "phase_method": phase_method_last,
@@ -3053,11 +3283,13 @@ def run_zero_d(
             "phi_effective": phi_effective_diag,
             "psi_shield": phi_effective_diag,
             "sigma_surf": sigma_diag,
+            "sigma_deep": sigma_deep,
             "kappa_Planck": kappa_surf,
             "tau_eff": tau_eff_diag,
             "s_min": s_min_effective,
             "a_blow_at_smin": a_blow_step,
             "beta_at_smin_effective": beta_at_smin_effective,
+            "beta_at_smin": beta_at_smin_effective,
             "Q_pr_at_smin": qpr_mean_step,
             "s_peak": s_peak_value,
             "area_m2": area,
@@ -3068,6 +3300,18 @@ def run_zero_d(
             "supply_rate_applied": _safe_float(supply_rate_applied_current),
             "supply_headroom": _safe_float(headroom_current),
             "supply_clip_factor": _safe_float(clip_factor_current),
+            "headroom": _safe_float(headroom_current),
+            "prod_rate_raw": _safe_float(prod_rate_raw_current),
+            "prod_rate_applied_to_surf": _safe_float(supply_rate_applied_current),
+            "prod_rate_diverted_to_deep": _safe_float(prod_rate_diverted_current),
+            "prod_rate_into_deep": _safe_float(prod_rate_into_deep_current),
+            "deep_to_surf_flux_attempt": _safe_float(deep_to_surf_flux_attempt_current),
+            "deep_to_surf_flux": _safe_float(deep_to_surf_flux_current),
+            "deep_to_surf_flux_applied": _safe_float(deep_to_surf_flux_current),
+            "supply_visibility_factor": _safe_float(visibility_factor_current),
+            "supply_blocked_by_headroom": bool(supply_blocked_by_headroom_flag),
+            "supply_mixing_limited": bool(supply_mixing_limited_flag),
+            "supply_transport_mode": supply_transport_mode,
             "supply_temperature_scale": supply_diag_last.temperature_scale if supply_diag_last else None,
             "supply_temperature_value": supply_diag_last.temperature_value if supply_diag_last else None,
             "supply_temperature_value_kind": supply_diag_last.temperature_value_kind if supply_diag_last else None,
@@ -3271,11 +3515,16 @@ def run_zero_d(
             (supply_clip_time / total_time_elapsed) * 100.0 if total_time_elapsed > 0.0 else float("nan")
         )
         example = supply_clip_events[0]
+        example_reason = example.get("reason", "headroom")
+        example_mode = example.get("transport_mode", supply_transport_mode)
         logger.warning(
-            "supply clipped to zero in %d streaks (threshold=%d steps); total_clip_time=%.3e s (%.2f%% of run). "
-            "example: t=%.3e s Sigma_surf=%.3e Sigma_tau1=%.3e headroom=%.3e supply_scaled=%.3e temp_scale=%.3f feedback_scale=%.3f",
+            "supply visibility suppressed in %d streaks (threshold=%d steps, mode=%s, reason=%s); "
+            "total_clip_time=%.3e s (%.2f%% of run). "
+            "example: t=%.3e s Sigma_surf=%.3e Sigma_tau1=%.3e headroom=%.3e supply_scaled=%.3e temp_scale=%.3f feedback_scale=%.3f vis=%.3e",
             len(supply_clip_events),
             supply_clip_warn_threshold,
+            example_mode,
+            example_reason,
             supply_clip_time,
             clip_fraction_percent,
             example.get("time", float("nan")),
@@ -3285,6 +3534,7 @@ def run_zero_d(
             example.get("supply_scaled", float("nan")),
             example.get("temperature_scale", float("nan")),
             example.get("feedback_scale", float("nan")),
+            example.get("supply_visibility_factor", float("nan")),
         )
 
     qpr_mean = qpr_mean_step
@@ -3354,6 +3604,13 @@ def run_zero_d(
     supply_reservoir_min, supply_reservoir_median, supply_reservoir_max = _series_stats(supply_reservoir_remaining_track)
     supply_headroom_min, supply_headroom_median, supply_headroom_max = _series_stats(supply_headroom_track)
     supply_clip_factor_min, supply_clip_factor_median, supply_clip_factor_max = _series_stats(supply_clip_factor_track)
+    supply_visibility_min, supply_visibility_median, supply_visibility_max = _series_stats(supply_visibility_track)
+    supply_blocked_fraction = (
+        float(np.mean(np.asarray(supply_blocked_track, dtype=float))) if supply_blocked_track else float("nan")
+    )
+    supply_mixing_fraction = (
+        float(np.mean(np.asarray(supply_mixing_block_track, dtype=float))) if supply_mixing_block_track else float("nan")
+    )
     supply_clip_time_fraction = (
         float(supply_clip_time / total_time_elapsed)
         if total_time_elapsed > 0.0
@@ -3544,6 +3801,10 @@ def run_zero_d(
         "Q_pr_used": qpr_mean,
         "Q_pr_blow": qpr_blow_final,
         "qpr_table_path": str(qpr_table_path_resolved) if qpr_table_path_resolved is not None else None,
+        "kappa_surf_initial": kappa_surf_initial,
+        "kappa_eff_initial": kappa_eff0,
+        "Sigma_tau1_initial": sigma_tau1_cap_init,
+        "sigma_surf_initial": sigma_surf_init_raw,
         "T_M_used": T_use,
         "T_M_used[K]": T_use,
         "T_M_source": T_M_source,
@@ -3615,6 +3876,20 @@ def run_zero_d(
         "supply_rate_nominal_kg_m2_s": supply_rate_nominal_inferred,
         "supply_rate_scaled_initial_kg_m2_s": supply_rate_scaled_initial_final,
         "effective_prod_rate_kg_m2_s": supply_effective_rate,
+        "supply_transport_mode": supply_transport_mode,
+        "supply_transport_t_mix_orbits": supply_deep_tmix_orbits,
+        "supply_transport_headroom_gate": supply_transport_headroom_gate,
+        "supply_visibility_min": supply_visibility_min,
+        "supply_visibility_median": supply_visibility_median,
+        "supply_visibility_max": supply_visibility_max,
+        "supply_blocked_fraction": supply_blocked_fraction,
+        "supply_mixing_fraction": supply_mixing_fraction,
+        "supply_velocity_mode": supply_velocity_mode,
+        "supply_velocity_blend_mode": supply_velocity_blend_mode,
+        "supply_velocity_weight_mode": supply_velocity_weight_mode,
+        "supply_velocity_e_inj": supply_velocity_e_inj,
+        "supply_velocity_i_inj": supply_velocity_i_inj,
+        "supply_velocity_vrel_factor": supply_velocity_vrel_factor,
         "supply_clip_time_fraction": supply_clip_time_fraction,
         "supply_clipping": {
             "headroom_min": supply_headroom_min,
@@ -3624,6 +3899,11 @@ def run_zero_d(
             "clip_factor_median": supply_clip_factor_median,
             "clip_factor_max": supply_clip_factor_max,
             "clip_time_fraction": supply_clip_time_fraction,
+            "visibility_min": supply_visibility_min,
+            "visibility_median": supply_visibility_median,
+            "visibility_max": supply_visibility_max,
+            "blocked_fraction": supply_blocked_fraction,
+            "mixing_fraction": supply_mixing_fraction,
         },
         "enforce_mass_budget": enforce_mass_budget,
         "physics_mode": physics_mode,
@@ -3904,6 +4184,17 @@ def run_zero_d(
         "effective_prod_rate_kg_m2_s": supply_effective_rate,
         "supply_rate_nominal_kg_m2_s": supply_rate_nominal_inferred,
         "supply_rate_scaled_initial_kg_m2_s": supply_rate_scaled_initial_final,
+        "transport_mode": supply_transport_mode,
+        "transport_t_mix_orbits": supply_deep_tmix_orbits,
+        "transport_headroom_gate": supply_transport_headroom_gate,
+        "injection_velocity": {
+            "mode": supply_velocity_mode,
+            "e_inj": supply_velocity_e_inj,
+            "i_inj": supply_velocity_i_inj,
+            "vrel_factor": supply_velocity_vrel_factor,
+            "blend_mode": supply_velocity_blend_mode,
+            "weight_mode": supply_velocity_weight_mode,
+        },
         "supply_clip_time_fraction": supply_clip_time_fraction,
         "clipping": {
             "headroom_min": supply_headroom_min,
@@ -3913,6 +4204,11 @@ def run_zero_d(
             "clip_factor_median": supply_clip_factor_median,
             "clip_factor_max": supply_clip_factor_max,
             "clip_time_fraction": supply_clip_time_fraction,
+            "visibility_min": supply_visibility_min,
+            "visibility_median": supply_visibility_median,
+            "visibility_max": supply_visibility_max,
+            "blocked_fraction": supply_blocked_fraction,
+            "mixing_fraction": supply_mixing_fraction,
         },
         "reservoir_enabled": supply_reservoir_enabled,
         "reservoir_mass_total_Mmars": supply_reservoir_mass_total,
