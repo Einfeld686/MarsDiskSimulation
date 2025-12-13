@@ -46,8 +46,10 @@ else
   echo "[warn] ${REQ_FILE} not found; skipping dependency install."
 fi
 
-# Base config to override per run
-BASE_CONFIG="configs/sweep_temp_supply/temp_supply_T4000_eps1.yml"
+# Base config to override per run (melt-solid PSD w/ condensation cut)
+BASE_CONFIG="${BASE_CONFIG:-configs/sweep_temp_supply/temp_supply_T4000_eps1.yml}"
+# qstar unit system (ba99_cgs: cm/g/cm^3/erg/g → J/kg, si: legacy meter/kg)
+QSTAR_UNITS="${QSTAR_UNITS:-ba99_cgs}"
 
 # Parameter grids (run hotter cases first)
 T_LIST=("6000" "4000" "2000")
@@ -92,8 +94,25 @@ SUPPLY_TEMP_TABLE_VALUE_KIND="${SUPPLY_TEMP_TABLE_VALUE_KIND:-scale}" # scale|ra
 SUPPLY_TEMP_TABLE_COL_T="${SUPPLY_TEMP_TABLE_COL_T:-T_K}"
 SUPPLY_TEMP_TABLE_COL_VAL="${SUPPLY_TEMP_TABLE_COL_VAL:-value}"
 
+SUPPLY_INJECTION_MODE="${SUPPLY_INJECTION_MODE:-min_bin}"       # min_bin|powerlaw_bins
+SUPPLY_INJECTION_Q="${SUPPLY_INJECTION_Q:-3.5}"
+SUPPLY_INJECTION_SMIN="${SUPPLY_INJECTION_SMIN:-}"
+SUPPLY_INJECTION_SMAX="${SUPPLY_INJECTION_SMAX:-}"
+SUPPLY_DEEP_TMIX_ORBITS="${SUPPLY_DEEP_TMIX_ORBITS:-}"          # legacy alias for transport.t_mix_orbits
+SUPPLY_TRANSPORT_MODE="${SUPPLY_TRANSPORT_MODE:-deep_mixing}"   # direct|deep_mixing
+SUPPLY_TRANSPORT_TMIX_ORBITS="${SUPPLY_TRANSPORT_TMIX_ORBITS:-50}" # preferred knob when deep_mixing
+SUPPLY_TRANSPORT_HEADROOM="${SUPPLY_TRANSPORT_HEADROOM:-hard}"  # hard|soft (future)
+SUPPLY_VEL_MODE="${SUPPLY_VEL_MODE:-fixed_ei}"                  # inherit|fixed_ei|factor
+SUPPLY_VEL_E="${SUPPLY_VEL_E:-0.05}"
+SUPPLY_VEL_I="${SUPPLY_VEL_I:-0.025}"
+SUPPLY_VEL_FACTOR="${SUPPLY_VEL_FACTOR:-}"
+SUPPLY_VEL_BLEND="${SUPPLY_VEL_BLEND:-rms}"                     # rms|linear
+SUPPLY_VEL_WEIGHT="${SUPPLY_VEL_WEIGHT:-delta_sigma}"           # delta_sigma|sigma_ratio
+
 echo "[config] supply multipliers: temp_enabled=${SUPPLY_TEMP_ENABLED} (mode=${SUPPLY_TEMP_MODE}) feedback_enabled=${SUPPLY_FEEDBACK_ENABLED} reservoir=${SUPPLY_RESERVOIR_M:-off}"
 echo "[config] shielding: mode=${SHIELDING_MODE} fixed_tau1_sigma=${SHIELDING_SIGMA} auto_max_margin=${SHIELDING_AUTO_MAX_MARGIN} init_scale_to_tau1=${INIT_SCALE_TO_TAU1}"
+echo "[config] injection: mode=${SUPPLY_INJECTION_MODE} q=${SUPPLY_INJECTION_Q} s_inj_min=${SUPPLY_INJECTION_SMIN:-none} s_inj_max=${SUPPLY_INJECTION_SMAX:-none}"
+echo "[config] transport: mode=${SUPPLY_TRANSPORT_MODE} t_mix=${SUPPLY_TRANSPORT_TMIX_ORBITS:-${SUPPLY_DEEP_TMIX_ORBITS:-disabled}} headroom_gate=${SUPPLY_TRANSPORT_HEADROOM} velocity=${SUPPLY_VEL_MODE}"
 echo "[config] const supply before mixing: ${SUPPLY_RATE} kg m^-2 s^-1 (epsilon_mix swept per MU_LIST)"
 
 # Progress bar: default ON when stdout is a TTY; OFF otherwise to avoid CR->LF spam.
@@ -156,6 +175,40 @@ if [[ "${SUPPLY_TEMP_ENABLED}" != "0" ]]; then
   fi
   echo "[info] supply temperature coupling enabled: mode=${SUPPLY_TEMP_MODE}"
 fi
+SUPPLY_OVERRIDES+=(--override "supply.injection.mode=${SUPPLY_INJECTION_MODE}")
+SUPPLY_OVERRIDES+=(--override "supply.injection.q=${SUPPLY_INJECTION_Q}")
+if [[ -n "${SUPPLY_INJECTION_SMIN}" ]]; then
+  SUPPLY_OVERRIDES+=(--override "supply.injection.s_inj_min=${SUPPLY_INJECTION_SMIN}")
+fi
+if [[ -n "${SUPPLY_INJECTION_SMAX}" ]]; then
+  SUPPLY_OVERRIDES+=(--override "supply.injection.s_inj_max=${SUPPLY_INJECTION_SMAX}")
+fi
+if [[ -n "${SUPPLY_DEEP_TMIX_ORBITS}" ]]; then
+  SUPPLY_OVERRIDES+=(--override "supply.transport.t_mix_orbits=${SUPPLY_DEEP_TMIX_ORBITS}")
+  SUPPLY_OVERRIDES+=(--override "supply.transport.mode=deep_mixing")
+  echo "[info] deep reservoir enabled (legacy alias): t_mix=${SUPPLY_DEEP_TMIX_ORBITS} orbits"
+fi
+if [[ -n "${SUPPLY_TRANSPORT_TMIX_ORBITS}" ]]; then
+  SUPPLY_OVERRIDES+=(--override "supply.transport.t_mix_orbits=${SUPPLY_TRANSPORT_TMIX_ORBITS}")
+fi
+if [[ -n "${SUPPLY_TRANSPORT_MODE}" ]]; then
+  SUPPLY_OVERRIDES+=(--override "supply.transport.mode=${SUPPLY_TRANSPORT_MODE}")
+fi
+if [[ -n "${SUPPLY_TRANSPORT_HEADROOM}" ]]; then
+  SUPPLY_OVERRIDES+=(--override "supply.transport.headroom_gate=${SUPPLY_TRANSPORT_HEADROOM}")
+fi
+SUPPLY_OVERRIDES+=(--override "supply.injection.velocity.mode=${SUPPLY_VEL_MODE}")
+if [[ -n "${SUPPLY_VEL_E}" ]]; then
+  SUPPLY_OVERRIDES+=(--override "supply.injection.velocity.e_inj=${SUPPLY_VEL_E}")
+fi
+if [[ -n "${SUPPLY_VEL_I}" ]]; then
+  SUPPLY_OVERRIDES+=(--override "supply.injection.velocity.i_inj=${SUPPLY_VEL_I}")
+fi
+if [[ -n "${SUPPLY_VEL_FACTOR}" ]]; then
+  SUPPLY_OVERRIDES+=(--override "supply.injection.velocity.vrel_factor=${SUPPLY_VEL_FACTOR}")
+fi
+SUPPLY_OVERRIDES+=(--override "supply.injection.velocity.blend_mode=${SUPPLY_VEL_BLEND}")
+SUPPLY_OVERRIDES+=(--override "supply.injection.velocity.weight_mode=${SUPPLY_VEL_WEIGHT}")
 
 for T in "${T_LIST[@]}"; do
   T_TABLE="data/mars_temperature_T${T}p0K.csv"
@@ -171,13 +224,13 @@ PY
       TITLE="T${T}_mu${MU_TITLE}_phi${PHI}"
       OUTDIR="${BATCH_DIR}/${TITLE}"
       echo "[run] T=${T} mu=${MU} phi=${PHI} -> ${OUTDIR} (batch=${BATCH_SEED}, seed=${SEED})"
-      eff_rate=$(python - <<'PY'
+      eff_rate=$(python - "${SUPPLY_RATE}" "${MU}" <<'PY'
 import sys
 rate = float(sys.argv[1])
 mu = float(sys.argv[2])
 print(f"{rate * mu:.3e}")
 PY
-"${SUPPLY_RATE}" "${MU}")
+)
       echo "[info] 実効スケール係数 epsilon_mix=${MU}; effective supply (const×epsilon_mix)=${eff_rate} kg m^-2 s^-1"
       echo "[info] shielding: mode=${SHIELDING_MODE} fixed_tau1_sigma=${SHIELDING_SIGMA} auto_max_margin=${SHIELDING_AUTO_MAX_MARGIN}"
       if [[ "${MU}" == "0.1" ]]; then
@@ -196,6 +249,7 @@ PY
         --override "io.outdir=${OUTDIR}"
         --override "dynamics.rng_seed=${SEED}"
         --override "radiation.TM_K=${T}"
+        --override "qstar.coeff_units=${QSTAR_UNITS}"
         --override "radiation.mars_temperature_driver.table.path=${T_TABLE}"
         --override "supply.enabled=true"
         --override "supply.mixing.epsilon_mix=${MU}"
@@ -266,10 +320,18 @@ series_cols = [
     "supply_rate_nominal",
     "supply_rate_scaled",
     "supply_rate_applied",
+    "prod_rate_raw",
+    "prod_rate_applied_to_surf",
+    "prod_rate_diverted_to_deep",
+    "deep_to_surf_flux",
     "supply_headroom",
     "supply_clip_factor",
+    "headroom",
     "Sigma_surf",
+    "sigma_surf",
+    "sigma_deep",
     "Sigma_tau1",
+    "sigma_tau1",
     "outflux_surface",
     "t_coll",
     "t_blow_s",
@@ -347,10 +409,11 @@ fig.tight_layout(rect=(0, 0, 1, 0.96))
 fig.savefig(plots_dir / "overview.png", dpi=180)
 plt.close(fig)
 
-fig2, ax2 = plt.subplots(4, 1, figsize=(10, 14), sharex=True)
+fig2, ax2 = plt.subplots(5, 1, figsize=(10, 16), sharex=True)
 ax2[0].plot(df["time_days"], df["supply_rate_nominal"], label="nominal (raw×mix)", color="tab:gray", alpha=0.9)
 ax2[0].plot(df["time_days"], df["supply_rate_scaled"], label="scaled (temp/feedback/reservoir)", color="tab:blue")
 ax2[0].plot(df["time_days"], df["supply_rate_applied"], label="applied (after headroom)", color="tab:red", alpha=0.8)
+ax2[0].plot(df["time_days"], df["prod_rate_applied_to_surf"], label="applied (deep-mixed)", color="tab:orange", alpha=0.8, linestyle="--")
 ax2[0].plot(
     df["time_days"],
     df["prod_subblow_area_rate"],
@@ -363,28 +426,41 @@ ax2[0].set_ylabel("kg m^-2 s^-1")
 ax2[0].legend(loc="upper right")
 ax2[0].set_title("Supply rates (nominal → scaled → applied)")
 
-ax2[1].plot(df["time_days"], df["Sigma_surf"], label="Sigma_surf", color="tab:green")
-ax2[1].plot(df["time_days"], df["Sigma_tau1"], label="Sigma_tau1", color="tab:orange", alpha=0.8)
-ax2[1].plot(df["time_days"], df["supply_headroom"], label="headroom", color="tab:brown", alpha=0.7)
-ax2[1].set_ylabel("kg m^-2")
+ax2[1].plot(df["time_days"], df["prod_rate_diverted_to_deep"], label="diverted→deep", color="tab:brown", alpha=0.8)
+ax2[1].plot(df["time_days"], df["deep_to_surf_flux"], label="deep→surf flux", color="tab:olive", alpha=0.9)
+ax2[1].plot(df["time_days"], df["sigma_deep"], label="sigma_deep", color="tab:gray", alpha=0.7)
+ax2[1].set_ylabel("kg m^-2 / s")
 ax2[1].legend(loc="upper right")
-ax2[1].set_title("Surface density vs tau=1 cap")
+ax2[1].set_title("Deep reservoir routing")
 
-ax2[2].plot(df["time_days"], df["outflux_surface"], label="outflux_surface (M_Mars/s)", color="tab:red", alpha=0.9)
-ax2[2].plot(df["time_days"], df["tau_vertical"], label="tau_vertical", color="tab:purple", alpha=0.7)
-ax2[2].set_yscale("symlog", linthresh=1e-20)
-ax2[2].set_ylabel("outflux / tau")
-ax2[2].set_xlabel("days")
+ax2[2].plot(df["time_days"], df["Sigma_surf"], label="Sigma_surf", color="tab:green")
+ax2[2].plot(df["time_days"], df["Sigma_tau1"], label="Sigma_tau1", color="tab:orange", alpha=0.8)
+ax2[2].plot(df["time_days"], df["supply_headroom"], label="headroom (legacy)", color="tab:brown", alpha=0.7)
+ax2[2].plot(df["time_days"], df["headroom"], label="headroom (applied)", color="tab:blue", alpha=0.7, linestyle="--")
+ax2[2].set_ylabel("kg m^-2")
 ax2[2].legend(loc="upper right")
-ax2[2].set_title("Surface outflux and optical depth")
+ax2[2].set_title("Surface density vs tau=1 cap")
 
-ax2[3].plot(df["time_days"], df["supply_feedback_scale"], label="feedback scale", color="tab:cyan")
-ax2[3].plot(df["time_days"], df["supply_temperature_scale"], label="temperature scale", color="tab:gray")
-ax2[3].plot(df["time_days"], df["supply_reservoir_remaining_Mmars"], label="reservoir M_Mars", color="tab:pink")
-ax2[3].plot(df["time_days"], df["supply_clip_factor"], label="clip factor", color="tab:olive", alpha=0.8)
-ax2[3].set_ylabel("scale / M_Mars")
+ax2[3].plot(df["time_days"], df["outflux_surface"], label="outflux_surface (M_Mars/s)", color="tab:red", alpha=0.9)
+ax2[3].plot(df["time_days"], df["tau_vertical"], label="tau_vertical", color="tab:purple", alpha=0.7)
+ax2[3].axhline(1.0, color="gray", linestyle=":", alpha=0.6, label="τ=1 reference")
+ax2[3].set_yscale("symlog", linthresh=1e-20)
+ax2[3].set_ylabel("outflux / tau")
+ax2[3].set_xlabel("days")
 ax2[3].legend(loc="upper right")
-ax2[3].set_title("Supply diagnostics (scales + clip factor)")
+ax2[3].set_title("Surface outflux and optical depth")
+
+ax2[4].plot(df["time_days"], df["supply_feedback_scale"], label="feedback scale", color="tab:cyan")
+ax2[4].plot(df["time_days"], df["supply_temperature_scale"], label="temperature scale", color="tab:gray")
+ax2[4].plot(df["time_days"], df["supply_reservoir_remaining_Mmars"], label="reservoir M_Mars", color="tab:pink")
+ax2[4].plot(df["time_days"], df["supply_clip_factor"], label="clip factor", color="tab:olive", alpha=0.8)
+# Add headroom ratio (Sigma_tau1 - Sigma_surf) / Sigma_tau1 for clip context
+headroom_ratio = (df["Sigma_tau1"] - df["Sigma_surf"]).clip(lower=0) / df["Sigma_tau1"].clip(lower=1e-20)
+ax2[4].plot(df["time_days"], headroom_ratio, label="headroom ratio", color="tab:red", alpha=0.5, linestyle="--")
+ax2[4].axhline(0.0, color="gray", linestyle=":", alpha=0.4)
+ax2[4].set_ylabel("scale / ratio")
+ax2[4].legend(loc="upper right")
+ax2[4].set_title("Supply diagnostics (scales + clip factor + headroom ratio)")
 
 fig2.suptitle(run_dir.name)
 fig2.tight_layout(rect=(0, 0, 1, 0.95))

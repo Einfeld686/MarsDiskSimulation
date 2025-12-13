@@ -38,9 +38,10 @@ _USE_NUMBA = _NUMBA_AVAILABLE and not _NUMBA_DISABLED_ENV
 _NUMBA_FAILED = False
 
 if TYPE_CHECKING:
-    from ..schema import Dynamics
+    from ..schema import Dynamics, SupplyInjectionVelocity
 
 logger = logging.getLogger(__name__)
+_SUPPLY_EPS = 1.0e-30
 
 
 @dataclass
@@ -65,6 +66,24 @@ class Smol0DStepResult:
     t_coll_kernel: float | None = None
     e_kernel_used: float | None = None
     i_kernel_used: float | None = None
+    e_kernel_base: float | None = None
+    i_kernel_base: float | None = None
+    e_kernel_supply: float | None = None
+    i_kernel_supply: float | None = None
+    e_kernel_effective: float | None = None
+    i_kernel_effective: float | None = None
+    supply_velocity_weight: float | None = None
+
+
+@dataclass
+class KernelEIState:
+    """Baseline and effective eccentricity/inclination for the collision kernel."""
+
+    e_base: float
+    i_base: float
+    e_used: float
+    i_used: float
+    H_k: np.ndarray
 
 
 def supply_mass_rate_to_number_source(
@@ -72,29 +91,80 @@ def supply_mass_rate_to_number_source(
     s_bin_center: np.ndarray,
     m_bin: np.ndarray,
     s_min_eff: float,
+    *,
+    widths: np.ndarray | None = None,
+    mode: str = "min_bin",
+    s_inj_min: float | None = None,
+    s_inj_max: float | None = None,
+    q: float = 3.5,
 ) -> np.ndarray:
     """Convert a mass flux to a per-bin number source ``F_k`` (1/s).
 
-    The mapping injects all supplied mass into the smallest bin with
+    The default mapping injects all supplied mass into the smallest bin with
     ``s >= s_min_eff`` (falling back to the last bin) so that
     ``sum(m_k * F_k) == prod_subblow_mass_rate`` holds by construction.
-    Negative mass fluxes are treated as zero.
+    When ``mode='powerlaw_bins'`` the mass is distributed over bins in the
+    range ``[s_inj_min, s_inj_max]`` with ``dN/ds ∝ s^{-q}``, scaled to
+    preserve the total supplied mass.  Negative mass fluxes are treated as
+    zero.
     """
 
     prod_rate = max(float(prod_subblow_mass_rate), 0.0)
     s_arr = np.asarray(s_bin_center, dtype=float)
     m_arr = np.asarray(m_bin, dtype=float)
+    widths_arr = np.asarray(widths, dtype=float) if widths is not None else None
     if s_arr.shape != m_arr.shape:
         raise MarsDiskError("s_bin_center and m_bin must share the same shape")
+    if widths_arr is not None and widths_arr.shape != s_arr.shape:
+        raise MarsDiskError("widths must match the shape of s_bin_center")
     if prod_rate <= 0.0 or s_arr.size == 0:
         return np.zeros_like(m_arr)
 
-    candidates = np.nonzero(s_arr >= s_min_eff)[0]
-    k_inj = int(candidates[0]) if candidates.size else int(len(s_arr) - 1)
+    mode_normalised = str(mode or "min_bin")
+    inj_floor = float(max(s_min_eff, 0.0))
+    if s_inj_min is not None and math.isfinite(s_inj_min):
+        inj_floor = max(inj_floor, float(s_inj_min))
 
+    def _inject_min_bin(effective_floor: float) -> np.ndarray:
+        candidates = np.nonzero(s_arr >= effective_floor)[0]
+        k_inj = int(candidates[0]) if candidates.size else int(len(s_arr) - 1)
+        F_min = np.zeros_like(m_arr, dtype=float)
+        if m_arr[k_inj] > 0.0:
+            F_min[k_inj] = prod_rate / m_arr[k_inj]
+        return F_min
+
+    if mode_normalised != "powerlaw_bins":
+        return _inject_min_bin(inj_floor)
+
+    if widths_arr is None:
+        raise MarsDiskError("powerlaw_bins mode requires bin widths")
+
+    inj_ceiling = float(np.max(s_arr))
+    if s_inj_max is not None and math.isfinite(s_inj_max):
+        inj_ceiling = float(s_inj_max)
+    inj_ceiling = max(min(inj_ceiling, float(np.max(s_arr))), inj_floor)
+
+    left_edges = np.maximum(s_arr - 0.5 * widths_arr, 0.0)
+    right_edges = left_edges + widths_arr
+    overlap_left = np.maximum(left_edges, inj_floor)
+    overlap_right = np.minimum(right_edges, inj_ceiling)
+    mask = overlap_right > overlap_left
+    weights = np.zeros_like(s_arr, dtype=float)
+    if np.any(mask):
+        if math.isclose(q, 1.0):
+            weights[mask] = np.log(overlap_right[mask] / overlap_left[mask])
+        else:
+            power = 1.0 - float(q)
+            weights[mask] = (overlap_right[mask] ** power - overlap_left[mask] ** power) / power
+    weights = np.where(np.isfinite(weights) & (weights > 0.0), weights, 0.0)
+    weights_sum = float(np.sum(weights))
+    if weights_sum <= 0.0:
+        return _inject_min_bin(inj_floor)
+
+    mass_alloc = (weights / weights_sum) * prod_rate
     F = np.zeros_like(m_arr, dtype=float)
-    if m_arr[k_inj] > 0.0:
-        F[k_inj] = prod_rate / m_arr[k_inj]
+    positive = (mass_alloc > 0.0) & (m_arr > 0.0)
+    F[positive] = mass_alloc[positive] / m_arr[positive]
     return F
 
 
@@ -253,6 +323,106 @@ def kernel_minimum_tcoll(C_kernel: np.ndarray) -> float:
     return 1.0 / rate_max
 
 
+def _supply_velocity_weight(delta_sigma: float, sigma_prev: float, mode: str = "delta_sigma") -> float:
+    """Blend weight for supply velocities."""
+
+    delta_pos = max(float(delta_sigma), 0.0)
+    sigma_pos = max(float(sigma_prev), 0.0)
+    mode_norm = str(mode or "delta_sigma")
+    if mode_norm == "sigma_ratio":
+        return float(delta_pos / max(sigma_pos, _SUPPLY_EPS))
+    return float(delta_pos / (sigma_pos + delta_pos + _SUPPLY_EPS))
+
+
+def _resolve_supply_velocity(cfg: "SupplyInjectionVelocity | None", e_base: float, i_base: float) -> tuple[float, float]:
+    """Return (e_supply, i_supply) given the injection velocity settings."""
+
+    if cfg is None:
+        return e_base, i_base
+    mode = getattr(cfg, "mode", "inherit")
+    if mode == "fixed_ei":
+        e_sup = getattr(cfg, "e_inj", e_base)
+        i_sup = getattr(cfg, "i_inj", i_base)
+        return float(e_sup if e_sup is not None else e_base), float(i_sup if i_sup is not None else i_base)
+    if mode == "factor":
+        factor = getattr(cfg, "vrel_factor", 1.0) or 1.0
+        factor = float(factor) if math.isfinite(factor) else 1.0
+        return float(e_base * factor), float(i_base * factor)
+    return e_base, i_base
+
+
+def _blend_supply_velocity(
+    e_base: float,
+    i_base: float,
+    e_supply: float,
+    i_supply: float,
+    *,
+    weight: float,
+    mode: str = "rms",
+) -> tuple[float, float]:
+    """Blend baseline and supply e/i."""
+
+    w = float(np.clip(weight, 0.0, 1.0))
+    mode_norm = str(mode or "rms")
+    if mode_norm == "linear":
+        e_eff = (1.0 - w) * e_base + w * e_supply
+        i_eff = (1.0 - w) * i_base + w * i_supply
+        return e_eff, i_eff
+    e_eff = math.sqrt(max((1.0 - w) * e_base**2 + w * e_supply**2, 0.0))
+    i_eff = math.sqrt(max((1.0 - w) * i_base**2 + w * i_supply**2, 0.0))
+    return e_eff, i_eff
+
+
+def compute_kernel_ei_state(
+    dynamics_cfg: "Dynamics",
+    tau_eff: float,
+    a_orbit_m: float,
+    v_k: float,
+    sizes: np.ndarray,
+    *,
+    e_override: float | None = None,
+    i_override: float | None = None,
+) -> KernelEIState:
+    """Return baseline and effective e/i along with the scale height array."""
+
+    tau_eff = max(float(tau_eff), 0.0)
+    e_base = float(dynamics_cfg.e0)
+    i_base = float(dynamics_cfg.i0)
+    v_k_safe = max(float(v_k), 1.0e-12)
+
+    if dynamics_cfg.kernel_ei_mode == "wyatt_eq":
+        def _eps_model(_v: float) -> float:
+            return 0.5
+
+        try:
+            c_eq = dynamics.solve_c_eq(
+                tau_eff,
+                max(dynamics_cfg.e0, 1.0e-6),
+                _eps_model,
+                f_wake=float(dynamics_cfg.f_wake),
+            )
+        except Exception:
+            c_eq = max(dynamics_cfg.e0 * v_k_safe, 0.0)
+        e_base = max(c_eq / v_k_safe, 1.0e-8)
+        i_base = 0.5 * e_base
+
+    e_used = e_override if e_override is not None else e_base
+    i_used = i_override if i_override is not None else i_base
+
+    if dynamics_cfg.kernel_H_mode == "ia":
+        H_base = dynamics_cfg.H_factor * i_used * a_orbit_m
+    elif dynamics_cfg.kernel_H_mode == "fixed":
+        if dynamics_cfg.H_fixed_over_a is None:
+            raise MarsDiskError("kernel_H_mode='fixed' requires H_fixed_over_a")
+        H_base = dynamics_cfg.H_fixed_over_a * a_orbit_m
+    else:
+        raise MarsDiskError(f"Unknown kernel_H_mode={dynamics_cfg.kernel_H_mode}")
+
+    H_base = max(H_base, 1.0e-12)
+    H_k = np.full_like(np.asarray(sizes, dtype=float), H_base, dtype=float)
+    return KernelEIState(e_base=e_base, i_base=i_base, e_used=float(e_used), i_used=float(i_used), H_k=H_k)
+
+
 def compute_kernel_e_i_H(
     dynamics_cfg: "Dynamics",
     tau_eff: float,
@@ -270,39 +440,8 @@ def compute_kernel_e_i_H(
       ``'fixed'`` uses ``H_fixed_over_a * a`` if provided.
     """
 
-    tau_eff = max(float(tau_eff), 0.0)
-    e_kernel = float(dynamics_cfg.e0)
-    i_kernel = float(dynamics_cfg.i0)
-    v_k_safe = max(float(v_k), 1.0e-12)
-
-    if dynamics_cfg.kernel_ei_mode == "wyatt_eq":
-        def _eps_model(_v: float) -> float:
-            return 0.5
-
-        try:
-            c_eq = dynamics.solve_c_eq(
-                tau_eff,
-                max(dynamics_cfg.e0, 1.0e-6),
-                _eps_model,
-                f_wake=float(dynamics_cfg.f_wake),
-            )
-        except Exception:
-            c_eq = max(dynamics_cfg.e0 * v_k_safe, 0.0)
-        e_kernel = max(c_eq / v_k_safe, 1.0e-8)
-        i_kernel = 0.5 * e_kernel
-
-    if dynamics_cfg.kernel_H_mode == "ia":
-        H_base = dynamics_cfg.H_factor * i_kernel * a_orbit_m
-    elif dynamics_cfg.kernel_H_mode == "fixed":
-        if dynamics_cfg.H_fixed_over_a is None:
-            raise MarsDiskError("kernel_H_mode='fixed' requires H_fixed_over_a")
-        H_base = dynamics_cfg.H_fixed_over_a * a_orbit_m
-    else:
-        raise MarsDiskError(f"Unknown kernel_H_mode={dynamics_cfg.kernel_H_mode}")
-
-    H_base = max(H_base, 1.0e-12)
-    H_k = np.full_like(np.asarray(sizes, dtype=float), H_base, dtype=float)
-    return e_kernel, i_kernel, H_k
+    state = compute_kernel_ei_state(dynamics_cfg, tau_eff, a_orbit_m, v_k, sizes)
+    return state.e_used, state.i_used, state.H_k
 
 
 def step_collisions_smol_0d(
@@ -326,6 +465,11 @@ def step_collisions_smol_0d(
     tau_eff: float | None = None,
     collisions_enabled: bool = True,
     mass_conserving_sublimation: bool = False,
+    supply_injection_mode: str = "min_bin",
+    supply_s_inj_min: float | None = None,
+    supply_s_inj_max: float | None = None,
+    supply_q: float = 3.5,
+    supply_velocity_cfg: "SupplyInjectionVelocity | None" = None,
 ) -> Smol0DStepResult:
     """Advance collisions+fragmentation in 0D using the Smol solver."""
 
@@ -376,8 +520,9 @@ def step_collisions_smol_0d(
         )
 
     if collisions_enabled:
+        supply_weight = 0.0
         if dynamics_cfg is not None:
-            e_kernel, i_kernel, H_arr = compute_kernel_e_i_H(
+            kernel_state = compute_kernel_ei_state(
                 dynamics_cfg,
                 tau_eff if tau_eff is not None else 0.0,
                 a_orbit_m=r,
@@ -385,9 +530,54 @@ def step_collisions_smol_0d(
                 sizes=sizes_arr,
             )
         else:
-            e_kernel = e_value
-            i_kernel = i_value
-            H_arr = np.full_like(N_k, max(r * max(i_value, 1.0e-6), 1.0e-6))
+            H_arr_default = np.full_like(N_k, max(r * max(i_value, 1.0e-6), 1.0e-6))
+            kernel_state = KernelEIState(
+                e_base=float(e_value),
+                i_base=float(i_value),
+                e_used=float(e_value),
+                i_used=float(i_value),
+                H_k=H_arr_default,
+            )
+        e_supply = kernel_state.e_base
+        i_supply = kernel_state.i_base
+        if supply_velocity_cfg is not None:
+            delta_sigma_supply = max(prod_subblow_area_rate, 0.0) * dt
+            supply_weight = _supply_velocity_weight(
+                delta_sigma_supply,
+                sigma_before_step,
+                getattr(supply_velocity_cfg, "weight_mode", "delta_sigma"),
+            )
+            e_supply, i_supply = _resolve_supply_velocity(supply_velocity_cfg, kernel_state.e_base, kernel_state.i_base)
+            e_eff, i_eff = _blend_supply_velocity(
+                kernel_state.e_base,
+                kernel_state.i_base,
+                e_supply,
+                i_supply,
+                weight=supply_weight,
+                mode=getattr(supply_velocity_cfg, "blend_mode", "rms"),
+            )
+            if dynamics_cfg is not None:
+                kernel_state = compute_kernel_ei_state(
+                    dynamics_cfg,
+                    tau_eff if tau_eff is not None else 0.0,
+                    a_orbit_m=r,
+                    v_k=r * Omega,
+                    sizes=sizes_arr,
+                    e_override=e_eff,
+                    i_override=i_eff,
+                )
+            else:
+                H_arr_default = np.full_like(N_k, max(r * max(i_eff, 1.0e-6), 1.0e-6))
+                kernel_state = KernelEIState(
+                    e_base=kernel_state.e_base,
+                    i_base=kernel_state.i_base,
+                    e_used=float(e_eff),
+                    i_used=float(i_eff),
+                    H_k=H_arr_default,
+                )
+        e_kernel = kernel_state.e_used
+        i_kernel = kernel_state.i_used
+        H_arr = kernel_state.H_k
         v_rel_mode = getattr(dynamics_cfg, "v_rel_mode", "pericenter") if dynamics_cfg is not None else "pericenter"
         if v_rel_mode == "ohtsuki":
             warnings.warn(
@@ -407,6 +597,24 @@ def step_collisions_smol_0d(
         t_coll_kernel = float("inf")
         e_kernel = None
         i_kernel = None
+        e_supply = None
+        i_supply = None
+        supply_weight = 0.0
+        H_arr = np.full_like(N_k, max(r * max(i_value, 1.0e-6), 1.0e-6))
+
+    if collisions_enabled:
+        e_kernel_base_val = kernel_state.e_base
+        i_kernel_base_val = kernel_state.i_base
+        e_kernel_supply_val = e_supply if e_supply is not None else kernel_state.e_base
+        i_kernel_supply_val = i_supply if i_supply is not None else kernel_state.i_base
+    else:
+        e_kernel_base_val = float(e_value)
+        i_kernel_base_val = float(i_value)
+        e_kernel_supply_val = float(e_value)
+        i_kernel_supply_val = float(i_value)
+    e_kernel_effective_val = e_kernel
+    i_kernel_effective_val = i_kernel
+    supply_weight_val = supply_weight
 
     S_blow = _blowout_sink_vector(sizes_arr, a_blow, Omega, enable_blowout)
 
@@ -452,6 +660,11 @@ def step_collisions_smol_0d(
         sizes_arr,
         m_k,
         s_min_eff=s_min_effective if s_min_effective is not None else 0.0,
+        widths=widths_arr,
+        mode=supply_injection_mode,
+        s_inj_min=supply_s_inj_min,
+        s_inj_max=supply_s_inj_max,
+        q=supply_q,
     )
 
     N_new, dt_eff, mass_err = smol.step_imex_bdf1_C3(
@@ -500,4 +713,11 @@ def step_collisions_smol_0d(
         t_coll_kernel,
         e_kernel,
         i_kernel,
+        e_kernel_base=e_kernel_base_val,
+        i_kernel_base=i_kernel_base_val,
+        e_kernel_supply=e_kernel_supply_val,
+        i_kernel_supply=i_kernel_supply_val,
+        e_kernel_effective=e_kernel_effective_val,
+        i_kernel_effective=i_kernel_effective_val,
+        supply_velocity_weight=supply_weight_val,
     )

@@ -686,6 +686,7 @@ with $\Sigma_{\tau=1}=1/\kappa_{\mathrm{eff}}$ when $\kappa_{\mathrm{eff}}>0$.
 
 補足: Benz & Asphaug (1999) の SPH では直径 $\sim$300 m の玄武岩ターゲットが最も脆弱で、3–5 km/s の衝突でも破片の重力再集積が $Q_D^*$ を押し上げるため、この速度点を補間基準として採用している [@BenzAsphaug1999_Icarus142_5]。
 既定の `coeff_units="ba99_cgs"` は Benz & Asphaug (1999) の cgs 前提を保持し、$s_{\rm cm}=100\,s$ [cm] と $\rho_{\rm g/cm^3}=\rho/1000$ を使って erg g$^{-1}$ で評価し、$1\times10^{-4}$ を掛けて J kg$^{-1}$ に戻す。`coeff_units="si"` を選ぶとメートル・kg・J 入力をそのまま用いるレガシー挙動になる。
+※ この式の係数は BA99 の cgs 単位（cm, g/cm$^3$, erg/g）として解釈し、内部で J/kg に正規化している。設定 `coeff_units` を変えない限り常にこの解釈が適用される。
 
 ```latex
 Q_{D}^{*}(s,\rho,v) = Q_{3}(s,\rho)\,w(v) + Q_{5}(s,\rho)\,\bigl(1-w(v)\bigr),

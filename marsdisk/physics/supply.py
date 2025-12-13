@@ -116,6 +116,21 @@ class SupplyEvalResult:
 
 
 @dataclass
+class SupplySplitResult:
+    """Allocation of supply between surface and deep reservoir."""
+
+    prod_rate_applied: float
+    prod_rate_diverted: float
+    deep_to_surf_rate: float
+    sigma_deep: float
+    headroom: Optional[float] = None
+    prod_rate_into_deep: float = 0.0
+    deep_to_surf_flux_attempt: float = 0.0
+    deep_to_surf_flux_applied: float = 0.0
+    transport_mode: str = "direct"
+
+
+@dataclass
 class SupplyRuntimeState:
     """Mutable state for reservoir accounting and feedback control."""
 
@@ -365,6 +380,91 @@ def evaluate_supply(
     )
 
 
+def split_supply_with_deep_buffer(
+    prod_rate_raw: float,
+    dt: float,
+    sigma_surf: float,
+    sigma_tau1: Optional[float],
+    sigma_deep: float,
+    *,
+    t_mix: Optional[float],
+    deep_enabled: bool,
+    transport_mode: str = "direct",
+    headroom_gate: str = "hard",
+) -> SupplySplitResult:
+    """Route external supply between the surface and a deep reservoir."""
+
+    prod_rate = max(float(prod_rate_raw), 0.0)
+    if dt <= 0.0 or not math.isfinite(dt):
+        return SupplySplitResult(
+            prod_rate,
+            0.0,
+            0.0,
+            float(sigma_deep),
+            sigma_tau1,
+            prod_rate_into_deep=0.0,
+            deep_to_surf_flux_attempt=0.0,
+            deep_to_surf_flux_applied=0.0,
+            transport_mode=str(transport_mode or "direct"),
+        )
+
+    headroom = None
+    if sigma_tau1 is not None and math.isfinite(sigma_tau1):
+        sigma_cap = max(min(float(sigma_surf), float(sigma_tau1)), 0.0)
+        headroom = max(float(sigma_tau1) - sigma_cap, 0.0)
+
+    mode = str(transport_mode or "direct").lower()
+    gate_mode = str(headroom_gate or "hard").lower()
+    dSigma_in = prod_rate * dt
+    dSigma_to_surf_direct = dSigma_in
+    dSigma_into_deep = 0.0
+    sigma_deep_new = float(sigma_deep)
+    deep_to_surf_attempt = 0.0
+    deep_to_surf_applied = 0.0
+
+    if mode == "deep_mixing":
+        dSigma_into_deep = dSigma_in
+        sigma_deep_new += dSigma_into_deep
+        available_headroom = float("inf") if headroom is None else max(headroom, 0.0)
+        if deep_enabled and t_mix is not None and t_mix > 0.0:
+            deep_to_surf_attempt = sigma_deep_new * (dt / t_mix)
+            deep_to_surf_applied = deep_to_surf_attempt
+            if gate_mode == "hard" or gate_mode == "soft":
+                deep_to_surf_applied = min(available_headroom, deep_to_surf_applied, sigma_deep_new)
+            sigma_deep_new = max(sigma_deep_new - deep_to_surf_applied, 0.0)
+        dSigma_to_surf_direct = 0.0
+    else:
+        if headroom is not None:
+            dSigma_to_surf_direct = min(dSigma_in, headroom)
+            dSigma_into_deep = dSigma_in - dSigma_to_surf_direct
+        if deep_enabled:
+            sigma_deep_new += dSigma_into_deep
+            available_headroom = float("inf") if headroom is None else max(headroom - dSigma_to_surf_direct, 0.0)
+            if t_mix is not None and t_mix > 0.0:
+                deep_to_surf_attempt = sigma_deep_new * (dt / t_mix)
+                deep_to_surf_applied = min(available_headroom, deep_to_surf_attempt, sigma_deep_new)
+                sigma_deep_new = max(sigma_deep_new - deep_to_surf_applied, 0.0)
+
+    dSigma_to_surf = dSigma_to_surf_direct + deep_to_surf_applied
+    prod_rate_applied = dSigma_to_surf / dt
+    prod_rate_into_deep = dSigma_into_deep / dt if dSigma_into_deep > 0.0 else 0.0
+    prod_rate_diverted = max(dSigma_into_deep - deep_to_surf_applied, 0.0) / dt
+    deep_to_surf_rate = deep_to_surf_applied / dt if deep_to_surf_applied > 0.0 else 0.0
+    deep_to_surf_attempt_rate = deep_to_surf_attempt / dt if deep_to_surf_attempt > 0.0 else 0.0
+
+    return SupplySplitResult(
+        prod_rate_applied=prod_rate_applied,
+        prod_rate_diverted=prod_rate_diverted,
+        deep_to_surf_rate=deep_to_surf_rate,
+        sigma_deep=sigma_deep_new,
+        headroom=headroom,
+        prod_rate_into_deep=prod_rate_into_deep,
+        deep_to_surf_flux_attempt=deep_to_surf_attempt_rate,
+        deep_to_surf_flux_applied=deep_to_surf_rate,
+        transport_mode=mode,
+    )
+
+
 def get_prod_area_rate(t: float, r: float, spec: Supply) -> float:
     """Return the mixed surface production rate in kg m⁻² s⁻¹."""
 
@@ -375,7 +475,9 @@ def get_prod_area_rate(t: float, r: float, spec: Supply) -> float:
 __all__ = [
     "SupplyEvalResult",
     "SupplyRuntimeState",
+    "SupplySplitResult",
     "evaluate_supply",
+    "split_supply_with_deep_buffer",
     "get_prod_area_rate",
     "init_runtime_state",
 ]

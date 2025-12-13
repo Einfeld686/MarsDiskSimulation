@@ -22,7 +22,17 @@ sizes:
   apply_evolved_min_size: false
 initial:
   mass_total: 1.0e-5
-  s0_mode: upper
+  s0_mode: melt_lognormal_mixture
+  melt_psd:
+    mode: lognormal_mixture
+    f_fine: 0.25           # Hyodo+17 melt droplets dominate; fine tail (~100 µm) kept sub-dominant
+    s_fine: 1.0e-4
+    s_meter: 1.5
+    width_dex: 0.3
+    s_cut_condensation: 1.0e-6
+    s_min_solid: 1.0e-4
+    s_max_solid: 3.0
+    alpha_solid: 3.5
 dynamics:
   e0: 0.5
   i0: 0.05
@@ -63,7 +73,7 @@ inner_disk_mass:
   map_to_sigma: analytic
 surface:
   init_policy: clip_by_tau1
-  sigma_surf_init_override: 198.1466858302575  # ≈1/κ_eff for this PSD → τ≈1
+  sigma_surf_init_override: null  # rely on init_tau1.scale_to_tau1 + shielding.fixed_tau1_sigma=auto (melt PSD updates κ)
   use_tcoll: true
   freeze_sigma: false
   collision_solver: smol

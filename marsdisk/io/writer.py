@@ -148,6 +148,12 @@ def write_parquet(df: pd.DataFrame, path: Path, *, compression: str = "snappy") 
         "hydro_timescale_s": "s",
         "mass_loss_surface_solid_step": "M_Mars",
         "sublimation_blocked_by_phase": "bool",
+        "sigma_deep": "kg m^-2",
+        "headroom": "kg m^-2",
+        "prod_rate_raw": "kg m^-2 s^-1",
+        "prod_rate_applied_to_surf": "kg m^-2 s^-1",
+        "prod_rate_diverted_to_deep": "kg m^-2 s^-1",
+        "deep_to_surf_flux": "kg m^-2 s^-1",
     }
     definitions = {
         "time": "Cumulative elapsed time at the end of each step [s].",
@@ -265,6 +271,12 @@ def write_parquet(df: pd.DataFrame, path: Path, *, compression: str = "snappy") 
         "hydro_timescale_s": "Hydrodynamic escape timescale applied when the vapor branch is active [s].",
         "mass_loss_surface_solid_step": "Step-level mass removed from the Σ_{τ≤1} surface reservoir regardless of whether it is counted as a sink or as radiation loss (Mars masses).",
         "sublimation_blocked_by_phase": "True when the bulk phase is liquid-dominated and HKL sublimation drift is suppressed.",
+        "sigma_deep": "Mass surface density stored in the deep reservoir (kg m^-2).",
+        "headroom": "Headroom Σ_{τ=1}-Σ_surf used when routing supply into the surface (kg m^-2).",
+        "prod_rate_raw": "Supply rate before headroom/deep-buffer routing (kg m^-2 s^-1).",
+        "prod_rate_applied_to_surf": "Rate delivered to the surface after headroom and deep-reservoir mixing (kg m^-2 s^-1).",
+        "prod_rate_diverted_to_deep": "Portion of the raw supply diverted into the deep reservoir (kg m^-2 s^-1).",
+        "deep_to_surf_flux": "Flux returned from the deep reservoir to the surface layer (kg m^-2 s^-1).",
     }
     table = pa.Table.from_pandas(df, preserve_index=False)
     metadata = dict(table.schema.metadata or {})

@@ -31,7 +31,8 @@ def test_supply_positive_with_wide_tau_cap(tmp_path: Path) -> None:
     series_path = outdir / "series" / "run.parquet"
     assert series_path.exists()
     df = pd.read_parquet(series_path, columns=["prod_subblow_area_rate"])
-    assert (df["prod_subblow_area_rate"] > 0.0).all()
+    assert (df["prod_subblow_area_rate"] >= 0.0).all()
+    assert df["prod_subblow_area_rate"].max() > 0.0
 
 
 def test_reservoir_depletes_and_records_metadata(tmp_path: Path) -> None:

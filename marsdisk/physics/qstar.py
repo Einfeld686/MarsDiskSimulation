@@ -88,8 +88,9 @@ def _track_velocity_clamp(v_values: np.ndarray) -> None:
     """Record and optionally warn when v_kms falls outside the tabulated range."""
 
     global _VEL_CLAMP_WARNED
-    below = int(np.sum(v_values < _V_MIN))
-    above = int(np.sum(v_values > _V_MAX))
+    v_flat = np.asarray(v_values, dtype=float).ravel()
+    below = int(np.sum(v_flat < _V_MIN))
+    above = int(np.sum(v_flat > _V_MAX))
     if below or above:
         _VEL_CLAMP_COUNTS["below"] += below
         _VEL_CLAMP_COUNTS["above"] += above
@@ -131,7 +132,9 @@ def compute_q_d_star_array(s: np.ndarray, rho: float, v_kms: np.ndarray) -> np.n
     """Return :math:`Q_D^*` for array inputs with velocity interpolation."""
 
     s_arr = np.asarray(s, dtype=float)
-    v_arr = np.asarray(v_kms, dtype=float)
+    v_raw = np.asarray(v_kms, dtype=float)
+    _track_velocity_clamp(v_raw)
+    v_arr = np.asarray(v_raw, dtype=float)
     try:
         s_arr, v_arr = np.broadcast_arrays(s_arr, v_arr)
     except ValueError as exc:  # pragma: no cover - defensive guard
@@ -142,8 +145,6 @@ def compute_q_d_star_array(s: np.ndarray, rho: float, v_kms: np.ndarray) -> np.n
         raise MarsDiskError("density must be positive")
     if np.any(v_arr <= 0.0):
         raise MarsDiskError("velocity must be positive")
-
-    _track_velocity_clamp(v_arr)
 
     coeff_lo = _COEFFS[_V_MIN]
     coeff_hi = _COEFFS[_V_MAX]

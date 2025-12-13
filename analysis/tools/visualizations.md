@@ -20,6 +20,7 @@
 | `make_beta_movie.py` | β(r/R_M, T_M, t) の時系列ムービー作成。 | `beta_cube.zarr`, `map_spec.json`。 | PNG フレームと MP4。 |
 | `make_figs.py` | Map-1 のレジーム図、サイズ別寄与、質量収支タイムライン。 | `sweeps/*/map*/` の集計 CSV、`out/series/run.parquet` 等。 | 複数 PNG。 |
 | `make_massloss_map.py` | 総質量損失率ヒートマップとシンク分率等値線。 | `results/*.csv`（`sweep_mass_loss_map.py` 生成）。 | PNG (`fig_massloss_map.png`)。 |
+| `make_sweep_summary.py` | temp_supply_sweep バッチ全体のサマリー・ヒートマップ生成。 | sweep バッチディレクトリ（`T*_mu*_phi*` サブディレクトリ群）。 | CSV (`sweep_summary.csv`)、PNG (`fig_sweep_mloss.png`, `fig_sweep_clip.png`, `fig_sweep_sensitivity.png`)。 |
 | `plot_mass_loss_map.py` | 1 周期あたり質量損失率ヒートマップ。 | `scripts/sweep_mass_loss_map.py` が生成した CSV。 | PNG (`fig_massloss_heatmap.png`)。 |
 | `base.py` | プロット共通設定（フォント、スタイル、カラーマップ）。 | なし。 | 他スクリプトがインポートして使用。`configure_matplotlib()` 等を提供。 |
 
