@@ -178,8 +178,9 @@ for %%T in (%T_LIST%) do (
     set "MU_TITLE=!MU_TITLE:0.=0p!"
     set "MU_TITLE=!MU_TITLE:.=p!"
     for %%P in (%PHI_LIST%) do (
+      set "PHI=%%P"
       for /f %%S in ('python -c "import secrets; print(secrets.randbelow(2**31))"') do set "SEED=%%S"
-      set "TITLE=T%%T_mu!MU_TITLE!_phi%%P"
+      set "TITLE=T%%T_mu!MU_TITLE!_phi!PHI!"
       set "OUTDIR=%BATCH_DIR%\!TITLE!"
       echo.[run] T=%%T mu=%%M phi=%%P -^> !OUTDIR! (batch=%BATCH_SEED%, seed=!SEED!)
       rem Show supply rate info (skip Python calc to avoid cmd.exe delayed expansion issues)
@@ -230,7 +231,7 @@ for %%T in (%T_LIST%) do (
       set RUN_CMD=!RUN_CMD! --override "supply.mode=%SUPPLY_MODE%"
       set RUN_CMD=!RUN_CMD! --override "supply.const.prod_area_rate_kg_m2_s=%SUPPLY_RATE%"
       set RUN_CMD=!RUN_CMD! --override "init_tau1.scale_to_tau1=%INIT_SCALE_TO_TAU1%"
-      set RUN_CMD=!RUN_CMD! --override "shielding.table_path=tables/phi_const_0p%%P.csv"
+      set RUN_CMD=!RUN_CMD! --override "shielding.table_path=tables/phi_const_0p!PHI!.csv"
       set RUN_CMD=!RUN_CMD! --override "shielding.mode=%SHIELDING_MODE%"
       set RUN_CMD=!RUN_CMD! !SUPPLY_OVERRIDES!
       if defined STREAMING_OVERRIDES set RUN_CMD=!RUN_CMD! !STREAMING_OVERRIDES!
@@ -244,7 +245,8 @@ for %%T in (%T_LIST%) do (
 
       set "RUN_DIR=!OUTDIR!"
       set "PYSCRIPT=%TEMP%\run_temp_supply_plot_!RANDOM!.py"
-      > "!PYSCRIPT!" echo import os, json
+      > "!PYSCRIPT!" echo # -*- coding: utf-8 -*-
+      >>"!PYSCRIPT!" echo import os, json
       >>"!PYSCRIPT!" echo from pathlib import Path
       >>"!PYSCRIPT!" echo import matplotlib
       >>"!PYSCRIPT!" echo matplotlib.use("Agg")
