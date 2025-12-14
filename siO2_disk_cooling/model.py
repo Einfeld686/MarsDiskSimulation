@@ -18,7 +18,7 @@ class CoolingParams:
 
     R_mars: float = 3.3895e6
     sigma: float = 5.670374419e-8
-    q_abs_mean: float = 1.0  # Planck-mean absorption efficiency <Q_abs>
+    q_abs_mean: float = 0.4  # Planck-mean absorption efficiency <Q_abs>
     rho: float = 3000.0
     cp: float = 1000.0
     d_layer: float = 1.0e5
