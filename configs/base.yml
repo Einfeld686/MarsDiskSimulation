@@ -112,7 +112,7 @@ radiation:
   use_solar_rp: false
   freeze_kappa: false
   TM_K: 4000.0
-  qpr_table_path: "marsdisk/io/data/qpr_planck.csv"
+  qpr_table_path: "marsdisk/io/data/qpr_planck_sio2_abbas_calibrated_lowT.csv"
   Q_pr: null
   mars_temperature_driver:
     enabled: true

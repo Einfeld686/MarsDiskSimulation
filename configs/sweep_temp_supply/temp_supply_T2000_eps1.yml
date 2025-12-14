@@ -115,7 +115,7 @@ radiation:
   use_solar_rp: false
   freeze_kappa: false
   TM_K: 2000.0
-  qpr_table_path: marsdisk/io/data/qpr_planck.csv
+  qpr_table_path: marsdisk/io/data/qpr_planck_sio2_abbas_calibrated_lowT.csv
   Q_pr:
   mars_temperature_driver:
     enabled: true
@@ -147,7 +147,7 @@ blowout:
   target_phase: solid_only
   layer: surface_tau_le_1
 phase:
-  enabled: true
+  enabled: false
   source: threshold
   entrypoint: siO2_disk_cooling.siO2_cooling_map:lookup_phase_state
   extra_kwargs: {}

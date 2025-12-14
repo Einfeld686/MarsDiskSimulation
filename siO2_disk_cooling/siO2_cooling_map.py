@@ -56,14 +56,20 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--T_stop",
         type=float,
-        default=None,
-        help="If set, extend t_max_years so the Mars slab cools to this temperature [K] before stopping.",
+        default=1000.0,
+        help="Extend t_max_years so the Mars slab cools to this temperature [K] before stopping (default captures the ~55 yr drop from 4000→1000 K).",
     )
     parser.add_argument(
         "--span-margin-years",
         type=float,
         default=0.2,
         help="Extra padding added after reaching T_stop when --T_stop is provided [years].",
+    )
+    parser.add_argument(
+        "--plot-time-max-years",
+        type=float,
+        default=None,
+        help="Optional upper limit for the plot time axis [years]; defaults to the simulated span.",
     )
     return parser.parse_args()
 
@@ -231,6 +237,8 @@ def main() -> None:
             T0=args.T0,
             params=params,
             mode=args.plot_mode,
+            cooling_model=args.cooling_model,
+            time_axis_max_years=args.plot_time_max_years,
         )
     if not args.no_log:
         write_log(args.T0, r_over_Rmars, arrival_glass_s, arrival_liquidus_s, log_path)
