@@ -7,7 +7,7 @@ pushd "%~dp0\..\.."
 
 rem Optional dry-run for syntax tests (skip all heavy work)
 if /i "%~1"=="--dry-run" (
-  echo [dry-run] run_temp_supply_sweep.cmd syntax-only check; skipping execution.
+  echo.[dry-run] run_temp_supply_sweep.cmd syntax-only check; skipping execution.
   popd
   exit /b 0
 )
@@ -23,22 +23,22 @@ for /f %%A in ('python -c "import secrets; print(secrets.randbelow(2**31))"') do
 rem Force output root to out/ as requested
 set "BATCH_ROOT=out"
 set "BATCH_DIR=%BATCH_ROOT%\temp_supply_sweep\%RUN_TS%__%GIT_SHA%__seed%BATCH_SEED%"
-echo [setup] Output root: %BATCH_ROOT%
+echo.[setup] Output root: %BATCH_ROOT%
 if not exist "%BATCH_DIR%" mkdir "%BATCH_DIR%"
 
 if not exist "%VENV_DIR%\Scripts\python.exe" (
-  echo [setup] Creating virtual environment in %VENV_DIR%...
+  echo.[setup] Creating virtual environment in %VENV_DIR%...
   python -m venv "%VENV_DIR%"
 )
 
 call "%VENV_DIR%\Scripts\activate.bat"
 
 if exist "%REQ_FILE%" (
-  echo [setup] Installing/upgrading dependencies from %REQ_FILE% ...
+  echo.[setup] Installing/upgrading dependencies from %REQ_FILE% ...
   python -m pip install --upgrade pip
   pip install -r "%REQ_FILE%"
 ) else (
-  echo [warn] %REQ_FILE% not found; skipping dependency install.
+  echo.[warn] %REQ_FILE% not found; skipping dependency install.
 )
 
 rem ---------- defaults ----------
@@ -119,14 +119,14 @@ if defined COOL_TO_K (
   set "COOL_STATUS=dynamic horizon disabled (using numerics.t_end_* from config)"
 )
 
-echo [config] supply multipliers: temp_enabled=%SUPPLY_TEMP_ENABLED% (mode=%SUPPLY_TEMP_MODE%) feedback_enabled=%SUPPLY_FEEDBACK_ENABLED% reservoir=%SUPPLY_RESERVOIR_M%
-echo [config] shielding: mode=%SHIELDING_MODE% fixed_tau1_sigma=%SHIELDING_SIGMA% auto_max_margin=%SHIELDING_AUTO_MAX_MARGIN% init_scale_to_tau1=%INIT_SCALE_TO_TAU1%
-echo [config] injection: mode=%SUPPLY_INJECTION_MODE% q=%SUPPLY_INJECTION_Q% s_inj_min=%SUPPLY_INJECTION_SMIN% s_inj_max=%SUPPLY_INJECTION_SMAX%
-echo [config] transport: mode=%SUPPLY_TRANSPORT_MODE% t_mix=%SUPPLY_TRANSPORT_TMIX_ORBITS% headroom_gate=%SUPPLY_TRANSPORT_HEADROOM% velocity=%SUPPLY_VEL_MODE%
-echo [config] const supply before mixing: %SUPPLY_RATE% kg m^-2 s^-1 (epsilon_mix swept per MU_LIST)
-echo [config] fast blowout substep: enabled=%SUBSTEP_FAST_BLOWOUT% substep_max_ratio=%SUBSTEP_MAX_RATIO%
-echo [config] !COOL_STATUS!
-echo [config] cooling driver mode: %COOL_MODE% (slab: T^-3, hyodo: linear flux)
+echo.[config] supply multipliers: temp_enabled=%SUPPLY_TEMP_ENABLED% (mode=%SUPPLY_TEMP_MODE%) feedback_enabled=%SUPPLY_FEEDBACK_ENABLED% reservoir=%SUPPLY_RESERVOIR_M%
+echo.[config] shielding: mode=%SHIELDING_MODE% fixed_tau1_sigma=%SHIELDING_SIGMA% auto_max_margin=%SHIELDING_AUTO_MAX_MARGIN% init_scale_to_tau1=%INIT_SCALE_TO_TAU1%
+echo.[config] injection: mode=%SUPPLY_INJECTION_MODE% q=%SUPPLY_INJECTION_Q% s_inj_min=%SUPPLY_INJECTION_SMIN% s_inj_max=%SUPPLY_INJECTION_SMAX%
+echo.[config] transport: mode=%SUPPLY_TRANSPORT_MODE% t_mix=%SUPPLY_TRANSPORT_TMIX_ORBITS% headroom_gate=%SUPPLY_TRANSPORT_HEADROOM% velocity=%SUPPLY_VEL_MODE%
+echo.[config] const supply before mixing: %SUPPLY_RATE% kg m^-2 s^-1 (epsilon_mix swept per MU_LIST)
+echo.[config] fast blowout substep: enabled=%SUBSTEP_FAST_BLOWOUT% substep_max_ratio=%SUBSTEP_MAX_RATIO%
+echo.[config] !COOL_STATUS!
+echo.[config] cooling driver mode: %COOL_MODE% (slab: T^-3, hyodo: linear flux)
 
 set "PROGRESS_FLAG="
 if "%ENABLE_PROGRESS%"=="1" set "PROGRESS_FLAG=--progress"
@@ -135,31 +135,30 @@ rem Build streaming overrides (keep branching minimal to avoid cmd.exe parse qui
 set "STREAMING_OVERRIDES="
 if defined STREAM_MEM_GB set "STREAMING_OVERRIDES=!STREAMING_OVERRIDES! --override io.streaming.memory_limit_gb=%STREAM_MEM_GB%"
 if defined STREAM_STEP_INTERVAL set "STREAMING_OVERRIDES=!STREAMING_OVERRIDES! --override io.streaming.step_flush_interval=%STREAM_STEP_INTERVAL%"
-if defined STREAM_MEM_GB echo [info] override io.streaming.memory_limit_gb=%STREAM_MEM_GB%
-if defined STREAM_STEP_INTERVAL echo [info] override io.streaming.step_flush_interval=%STREAM_STEP_INTERVAL%
-
+if defined STREAM_MEM_GB echo.[info] override io.streaming.memory_limit_gb=%STREAM_MEM_GB%
+if defined STREAM_STEP_INTERVAL echo.[info] override io.streaming.step_flush_interval=%STREAM_STEP_INTERVAL%
 set "SUPPLY_OVERRIDES="
 if defined SUPPLY_RESERVOIR_M (
   set "SUPPLY_OVERRIDES=--override \"supply.reservoir.enabled=true\" --override \"supply.reservoir.mass_total_Mmars=%SUPPLY_RESERVOIR_M%\" --override \"supply.reservoir.depletion_mode=%SUPPLY_RESERVOIR_MODE%\" --override \"supply.reservoir.taper_fraction=%SUPPLY_RESERVOIR_TAPER%\""
-  echo [info] supply reservoir: M=%SUPPLY_RESERVOIR_M% M_Mars mode=%SUPPLY_RESERVOIR_MODE% taper_fraction=%SUPPLY_RESERVOIR_TAPER%
+  echo.[info] supply reservoir: M=%SUPPLY_RESERVOIR_M% M_Mars mode=%SUPPLY_RESERVOIR_MODE% taper_fraction=%SUPPLY_RESERVOIR_TAPER%
 )
 if "%SUPPLY_FEEDBACK_ENABLED%" NEQ "0" (
   set "SUPPLY_OVERRIDES=!SUPPLY_OVERRIDES! --override \"supply.feedback.enabled=true\" --override \"supply.feedback.target_tau=%SUPPLY_FEEDBACK_TARGET%\" --override \"supply.feedback.gain=%SUPPLY_FEEDBACK_GAIN%\" --override \"supply.feedback.response_time_years=%SUPPLY_FEEDBACK_RESPONSE_YR%\" --override \"supply.feedback.min_scale=%SUPPLY_FEEDBACK_MIN_SCALE%\" --override \"supply.feedback.max_scale=%SUPPLY_FEEDBACK_MAX_SCALE%\" --override \"supply.feedback.tau_field=%SUPPLY_FEEDBACK_TAU_FIELD%\" --override \"supply.feedback.initial_scale=%SUPPLY_FEEDBACK_INITIAL%\""
-  echo [info] supply feedback enabled: target_tau=%SUPPLY_FEEDBACK_TARGET%, gain=%SUPPLY_FEEDBACK_GAIN%, tau_field=%SUPPLY_FEEDBACK_TAU_FIELD%
+  echo.[info] supply feedback enabled: target_tau=%SUPPLY_FEEDBACK_TARGET%, gain=%SUPPLY_FEEDBACK_GAIN%, tau_field=%SUPPLY_FEEDBACK_TAU_FIELD%
 )
 if "%SUPPLY_TEMP_ENABLED%" NEQ "0" (
   set "SUPPLY_OVERRIDES=!SUPPLY_OVERRIDES! --override \"supply.temperature.enabled=true\" --override \"supply.temperature.mode=%SUPPLY_TEMP_MODE%\" --override \"supply.temperature.reference_K=%SUPPLY_TEMP_REF_K%\" --override \"supply.temperature.exponent=%SUPPLY_TEMP_EXP%\" --override \"supply.temperature.scale_at_reference=%SUPPLY_TEMP_SCALE_REF%\" --override \"supply.temperature.floor=%SUPPLY_TEMP_FLOOR%\" --override \"supply.temperature.cap=%SUPPLY_TEMP_CAP%\""
   if defined SUPPLY_TEMP_TABLE_PATH (
     set "SUPPLY_OVERRIDES=!SUPPLY_OVERRIDES! --override \"supply.temperature.table.path=%SUPPLY_TEMP_TABLE_PATH%\" --override \"supply.temperature.table.value_kind=%SUPPLY_TEMP_TABLE_VALUE_KIND%\" --override \"supply.temperature.table.column_temperature=%SUPPLY_TEMP_TABLE_COL_T%\" --override \"supply.temperature.table.column_value=%SUPPLY_TEMP_TABLE_COL_VAL%\""
   )
-  echo [info] supply temperature coupling enabled: mode=%SUPPLY_TEMP_MODE%
+  echo.[info] supply temperature coupling enabled: mode=%SUPPLY_TEMP_MODE%
 )
 set "SUPPLY_OVERRIDES=!SUPPLY_OVERRIDES! --override \"supply.injection.mode=%SUPPLY_INJECTION_MODE%\" --override \"supply.injection.q=%SUPPLY_INJECTION_Q%\""
 if defined SUPPLY_INJECTION_SMIN set "SUPPLY_OVERRIDES=!SUPPLY_OVERRIDES! --override \"supply.injection.s_inj_min=%SUPPLY_INJECTION_SMIN%\""
 if defined SUPPLY_INJECTION_SMAX set "SUPPLY_OVERRIDES=!SUPPLY_OVERRIDES! --override \"supply.injection.s_inj_max=%SUPPLY_INJECTION_SMAX%\""
   if defined SUPPLY_DEEP_TMIX_ORBITS (
     set "SUPPLY_OVERRIDES=!SUPPLY_OVERRIDES! --override \"supply.transport.t_mix_orbits=%SUPPLY_DEEP_TMIX_ORBITS%\" --override \"supply.transport.mode=deep_mixing\""
-    echo [info] deep reservoir enabled (legacy alias): t_mix=%SUPPLY_DEEP_TMIX_ORBITS% orbits
+    echo.[info] deep reservoir enabled (legacy alias): t_mix=%SUPPLY_DEEP_TMIX_ORBITS% orbits
   )
 if defined SUPPLY_TRANSPORT_TMIX_ORBITS set "SUPPLY_OVERRIDES=!SUPPLY_OVERRIDES! --override \"supply.transport.t_mix_orbits=%SUPPLY_TRANSPORT_TMIX_ORBITS%\""
 if defined SUPPLY_TRANSPORT_MODE set "SUPPLY_OVERRIDES=!SUPPLY_OVERRIDES! --override \"supply.transport.mode=%SUPPLY_TRANSPORT_MODE%\""
@@ -182,12 +181,12 @@ for %%T in (%T_LIST%) do (
       for /f %%S in ('python -c "import secrets; print(secrets.randbelow(2**31))"') do set "SEED=%%S"
       set "TITLE=T%%T_mu!MU_TITLE!_phi%%P"
       set "OUTDIR=%BATCH_DIR%\!TITLE!"
-      echo [run] T=%%T mu=%%M phi=%%P -^> !OUTDIR! (batch=%BATCH_SEED%, seed=!SEED!)
+      echo.[run] T=%%T mu=%%M phi=%%P -^> !OUTDIR! (batch=%BATCH_SEED%, seed=!SEED!)
       rem Compute effective supply rate via Python without any embedded single quotes to keep cmd.exe parsing simple
       for /f %%R in ('python -c "rate=%SUPPLY_RATE%; mu=%%M; print(rate*mu)"') do set "EFF_RATE=%%R"
-      echo [info] effective scale epsilon_mix=%%M; effective supply (const*epsilon_mix)=!EFF_RATE! kg m^-2 s^-1
-      echo [info] shielding: mode=%SHIELDING_MODE% fixed_tau1_sigma=%SHIELDING_SIGMA% auto_max_margin=%SHIELDING_AUTO_MAX_MARGIN%
-      if "%%M"=="0.1" echo [info] mu=0.1 is a low-supply extreme case; expect weak blowout/sinks
+      echo.[info] effective scale epsilon_mix=%%M; effective supply (const*epsilon_mix)=!EFF_RATE! kg m^-2 s^-1
+      echo.[info] shielding: mode=%SHIELDING_MODE% fixed_tau1_sigma=%SHIELDING_SIGMA% auto_max_margin=%SHIELDING_AUTO_MAX_MARGIN%
+      if "%%M"=="0.1" echo.[info] mu=0.1 is a low-supply extreme case; expect weak blowout/sinks
 
       if not exist "!OUTDIR!\series" mkdir "!OUTDIR!\series"
       if not exist "!OUTDIR!\checks" mkdir "!OUTDIR!\checks"
@@ -233,7 +232,7 @@ for %%T in (%T_LIST%) do (
       !RUN_CMD!
 
       if errorlevel 1 (
-        echo [warn] run command exited with status !errorlevel!; attempting plots anyway
+        echo.[warn] run command exited with status !errorlevel!; attempting plots anyway
       )
 
       set "RUN_DIR=!OUTDIR!"
