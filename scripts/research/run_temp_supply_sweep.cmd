@@ -96,18 +96,18 @@ set "PHI_LIST=20 37 60"
 set "COOL_SEARCH_DISPLAY=%COOL_SEARCH_YEARS%"
 if not defined COOL_SEARCH_DISPLAY set "COOL_SEARCH_DISPLAY=none"
 
-echo/[config] supply multipliers: temp_enabled=%SUPPLY_TEMP_ENABLED% (mode=%SUPPLY_TEMP_MODE%) feedback_enabled=%SUPPLY_FEEDBACK_ENABLED% reservoir=%SUPPLY_RESERVOIR_M%
-echo/[config] shielding: mode=%SHIELDING_MODE% fixed_tau1_sigma=%SHIELDING_SIGMA% auto_max_margin=%SHIELDING_AUTO_MAX_MARGIN% init_scale_to_tau1=%INIT_SCALE_TO_TAU1%
-echo/[config] injection: mode=%SUPPLY_INJECTION_MODE% q=%SUPPLY_INJECTION_Q% s_inj_min=%SUPPLY_INJECTION_SMIN% s_inj_max=%SUPPLY_INJECTION_SMAX%
-echo/[config] transport: mode=%SUPPLY_TRANSPORT_MODE% t_mix=%SUPPLY_TRANSPORT_TMIX_ORBITS% headroom_gate=%SUPPLY_TRANSPORT_HEADROOM% velocity=%SUPPLY_VEL_MODE%
-echo/[config] const supply before mixing: %SUPPLY_RATE% kg m^-2 s^-1 (epsilon_mix swept per MU_LIST)
-echo/[config] fast blowout substep: enabled=%SUBSTEP_FAST_BLOWOUT% substep_max_ratio=%SUBSTEP_MAX_RATIO%
+echo [config] supply multipliers: temp_enabled=%SUPPLY_TEMP_ENABLED% (mode=%SUPPLY_TEMP_MODE%) feedback_enabled=%SUPPLY_FEEDBACK_ENABLED% reservoir=%SUPPLY_RESERVOIR_M%
+echo [config] shielding: mode=%SHIELDING_MODE% fixed_tau1_sigma=%SHIELDING_SIGMA% auto_max_margin=%SHIELDING_AUTO_MAX_MARGIN% init_scale_to_tau1=%INIT_SCALE_TO_TAU1%
+echo [config] injection: mode=%SUPPLY_INJECTION_MODE% q=%SUPPLY_INJECTION_Q% s_inj_min=%SUPPLY_INJECTION_SMIN% s_inj_max=%SUPPLY_INJECTION_SMAX%
+echo [config] transport: mode=%SUPPLY_TRANSPORT_MODE% t_mix=%SUPPLY_TRANSPORT_TMIX_ORBITS% headroom_gate=%SUPPLY_TRANSPORT_HEADROOM% velocity=%SUPPLY_VEL_MODE%
+echo [config] const supply before mixing: %SUPPLY_RATE% kg m^-2 s^-1 (epsilon_mix swept per MU_LIST)
+echo [config] fast blowout substep: enabled=%SUBSTEP_FAST_BLOWOUT% substep_max_ratio=%SUBSTEP_MAX_RATIO%
 if defined COOL_TO_K (
-  echo/[config] dynamic horizon: stop when Mars T_M ^<= !COOL_TO_K! K (margin !COOL_MARGIN_YEARS! yr, search_cap=!COOL_SEARCH_DISPLAY!)
+  echo [config] dynamic horizon: stop when Mars T_M ^<= !COOL_TO_K! K ^(margin !COOL_MARGIN_YEARS! yr, search_cap=!COOL_SEARCH_DISPLAY!^)
 ) else (
-  echo/[config] dynamic horizon disabled (using numerics.t_end_* from config)
+  echo [config] dynamic horizon disabled ^(using numerics.t_end_* from config^)
 )
-echo/[config] cooling driver mode: %COOL_MODE% (slab: T^-3, hyodo: linear flux)
+echo [config] cooling driver mode: %COOL_MODE% ^(slab: T^-3, hyodo: linear flux^)
 
 set "PROGRESS_FLAG="
 if "%ENABLE_PROGRESS%"=="1" set "PROGRESS_FLAG=--progress"
