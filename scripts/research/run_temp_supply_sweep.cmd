@@ -38,10 +38,10 @@ rem ---------- defaults ----------
 if not defined BASE_CONFIG set "BASE_CONFIG=configs/sweep_temp_supply/temp_supply_T4000_eps1.yml"
 if not defined QSTAR_UNITS set "QSTAR_UNITS=ba99_cgs"
 rem Cooling defaults (stop when Mars T_M reaches 1000 K, slab law unless overridden)
-if not defined COOL_TO_K set "COOL_TO_K=1000"
+set "COOL_TO_K=1000"
 if not defined COOL_MARGIN_YEARS set "COOL_MARGIN_YEARS=0"
 if not defined COOL_SEARCH_YEARS set "COOL_SEARCH_YEARS="
-if not defined COOL_MODE set "COOL_MODE=slab"
+set "COOL_MODE=slab"
 if not defined EVAL set "EVAL=1"
 if not defined SUBSTEP_FAST_BLOWOUT set "SUBSTEP_FAST_BLOWOUT=0"
 if not defined SUBSTEP_MAX_RATIO set "SUBSTEP_MAX_RATIO="
