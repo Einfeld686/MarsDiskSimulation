@@ -45,12 +45,12 @@ if exist "%REQ_FILE%" (
   echo [warn] %REQ_FILE% not found; skipping dependency install.
 )
 
-rem Ensure base output directory exists and is not a file
-if exist "%OUTROOT%" (
-  if not exist "%OUTROOT%\NUL" (
-    echo [error] %OUTROOT% exists as a file. Remove or rename it before running.
-    exit /b 1
-  )
+rem Ensure base output directory exists and is not a file (avoid legacy \NUL checks)
+if exist "%OUTROOT%\" (
+  rem already a directory
+) else if exist "%OUTROOT%" (
+  echo [error] %OUTROOT% exists as a file. Remove or rename it before running.
+  exit /b 1
 ) else (
   mkdir "%OUTROOT%"
 )
@@ -69,12 +69,12 @@ for %%T in (4000 2000 6000) do (
     set "MU_LABEL=!MU_LABEL:.=p!"
     set "OUTDIR=%OUTROOT%\%RUN_TAG%_T%%T_eps!M_LABEL!_mu!MU_LABEL!"
 
-    rem Ensure OUTDIR is a directory and not an existing file
-    if exist "!OUTDIR!" (
-      if not exist "!OUTDIR!\NUL" (
-        echo [error] !OUTDIR! exists as a file. Remove or rename it before running.
-        exit /b 1
-      )
+    rem Ensure OUTDIR is a directory and not an existing file (avoid legacy \NUL checks)
+    if exist "!OUTDIR!\" (
+      rem already a directory
+    ) else if exist "!OUTDIR!" (
+      echo [error] !OUTDIR! exists as a file. Remove or rename it before running.
+      exit /b 1
     ) else (
       mkdir "!OUTDIR!"
     )
