@@ -144,9 +144,11 @@ blowout:
   target_phase: "solid_only"
   layer: "surface_tau_le_1"
 phase:
-  enabled: false
+  enabled: true
   source: "threshold"
   entrypoint: "siO2_disk_cooling.siO2_cooling_map:lookup_phase_state"
+  temperature_input: particle
+  q_abs_mean: 0.4
   extra_kwargs: {}
   thresholds:
     T_condense_K: 1700.0

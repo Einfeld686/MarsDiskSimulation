@@ -1,6 +1,6 @@
 {
-  "Q_pr_used": 1.1210826846044544,
-  "T_M_used": 3999.999999999998,
+  "Q_pr_used": 1.1210826625759818,
+  "T_M_used": 3999.9858827263483,
   "beta_formula": "beta = 3 \u03c3_SB T_M^4 R_M^2 Q_pr / (4 G M_M c \u03c1 s)",
   "constants": {
     "C": 299792458.0,
@@ -58,7 +58,7 @@
     "r_m_used": 6270575.0
   },
   "physics_controls": {
-    "blowout_enabled": true,
+    "blowout_enabled": false,
     "blowout_gate_mode": "none",
     "blowout_layer": "surface_tau_le_1",
     "blowout_target_phase": "solid_only",
@@ -86,26 +86,26 @@
     "tau_gate_enabled": false,
     "tau_gate_tau_max": null
   },
-  "physics_mode": "default",
+  "physics_mode": "sublimation_only",
   "physics_mode_resolution": {
     "inputs": {
       "cli": null,
-      "physics_mode_cfg": "default"
+      "physics_mode_cfg": "sublimation_only"
     },
-    "resolved_mode": "default",
+    "resolved_mode": "sublimation_only",
     "source": "config"
   },
   "physics_mode_source": "config",
   "process_controls": {
-    "blowout_active": true,
+    "blowout_active": false,
     "collision_solver": "smol",
-    "collisions_active": true,
-    "physics_mode": "default",
+    "collisions_active": false,
+    "physics_mode": "sublimation_only",
     "physics_mode_source": "config",
     "primary_field_explicit": true,
-    "primary_process": "combined",
-    "primary_process_cfg": "default",
-    "primary_scenario": "combined",
+    "primary_process": "sublimation_only",
+    "primary_process_cfg": "sublimation_only",
+    "primary_scenario": "sublimation_only",
     "rp_blowout_enabled": true,
     "sink_timescale_active": false,
     "sinks_active": true,
@@ -117,14 +117,14 @@
     "sublimation_location": "smol"
   },
   "process_overview": {
-    "blowout_active": true,
+    "blowout_active": false,
     "collision_solver": "smol",
-    "collisions_active": true,
+    "collisions_active": false,
     "gas_drag_sink_active": false,
     "primary_field_explicit": true,
-    "primary_process_cfg": "default",
-    "primary_process_resolved": "combined",
-    "primary_scenario": "combined",
+    "primary_process_cfg": "sublimation_only",
+    "primary_process_resolved": "sublimation_only",
+    "primary_scenario": "sublimation_only",
     "rp_blowout_enabled": true,
     "shielding_auto_max_active": false,
     "shielding_mode": "fixed_tau1",
@@ -183,11 +183,11 @@
     ],
     "velocity_clamp_counts": {
       "above": 0,
-      "below": 1600
+      "below": 0
     }
   },
   "radiation_provenance": {
-    "Q_pr_blow": 1.1210826846044544,
+    "Q_pr_blow": 1.1210826625759818,
     "Q_pr_override": null,
     "Q_pr_source": "table",
     "T_M_source": "mars_temperature_driver.table",
@@ -199,18 +199,18 @@
   },
   "rho_used": 3000.0,
   "run_inputs": {
-    "Q_pr_blow": 1.1210826846044544,
-    "Q_pr_used": 1.1210826846044544,
-    "T_M_final": 3999.999999999998,
+    "Q_pr_blow": 1.1210826625759818,
+    "Q_pr_used": 1.1210826625759818,
+    "T_M_final": 3999.9858827263483,
     "T_M_initial": 3999.999999999998,
     "T_M_source": "mars_temperature_driver.table",
-    "T_M_used": 3999.999999999998,
+    "T_M_used": 3999.9858827263483,
     "input_config_path": "/Users/daichi/marsshearingsheet/configs/base.yml",
     "phase_q_abs_mean": 0.4,
     "phase_temperature_formula": "T_p = T_M * q_abs_mean^0.25 * sqrt(R_M/(2 r))",
     "phase_temperature_input": "particle",
     "phi_table_path": "tables/phi_const_0p37.csv",
-    "physics_mode": "default",
+    "physics_mode": "sublimation_only",
     "physics_mode_source": "config",
     "qpr_table_path": "marsdisk/io/data/qpr_planck_sio2_abbas_calibrated_lowT.csv",
     "r_RM_used": 1.85,
@@ -233,14 +233,14 @@
         "sublimation"
       ],
       "blowout_enabled_cfg": true,
-      "collisions_active": true,
+      "collisions_active": false,
       "enforce_collisions_only": false,
-      "enforce_sublimation_only": false,
+      "enforce_sublimation_only": true,
       "freeze_kappa": false,
       "freeze_sigma": false,
-      "physics_mode": "default",
-      "primary_scenario": "combined",
-      "rp_blowout_active": true,
+      "physics_mode": "sublimation_only",
+      "primary_scenario": "sublimation_only",
+      "rp_blowout_active": false,
       "rp_blowout_enabled_cfg": true,
       "shielding_mode": "fixed_tau1",
       "sink_timescale_active": false,
@@ -289,13 +289,13 @@
       "time_grid_dt_mode": "explicit",
       "time_grid_summary": {
         "dt_mode": "explicit",
-        "dt_nominal_s": 50.0,
-        "dt_s": 15.07539336014622,
+        "dt_nominal_s": 10.0,
+        "dt_s": 9.726060232352399,
         "early_stop_reason": null,
         "early_stop_step": null,
-        "n_steps": 1,
-        "t_end_actual_s": 15.07539336014622,
-        "t_end_s": 15.07539336014622,
+        "n_steps": 31,
+        "t_end_actual_s": 301.5078672029244,
+        "t_end_s": 301.5078672029244,
         "t_start_s": 0.0,
         "terminated_early": false
       }
@@ -312,14 +312,14 @@
     "B": 25898.9,
     "B_liq": 25898.9,
     "P_gas": 0.0,
-    "P_sat_Pa": 5.605544352004499,
-    "T_req": 2079.5009796401446,
+    "P_sat_Pa": 5.604977034650976,
+    "T_req": 2079.493640419048,
     "allow_liquid_hkl": false,
     "alpha_evap": 0.007,
     "enable_liquid_branch": true,
     "eta_instant": 0.1,
     "local_fit_window_K": 300.0,
-    "log10P": 0.748617793129494,
+    "log10P": 0.7485738374939199,
     "log10P_tabulated": null,
     "min_points_local_fit": 3,
     "mode": "hkl",
@@ -358,18 +358,18 @@
   },
   "supply": {
     "clipping": {
-      "blocked_fraction": 1.0,
-      "clip_factor_max": 0.0,
-      "clip_factor_median": 0.0,
-      "clip_factor_min": 0.0,
-      "clip_time_fraction": 1.0,
-      "headroom_max": 0.0,
-      "headroom_median": 0.0,
-      "headroom_min": 0.0,
+      "blocked_fraction": 0.0,
+      "clip_factor_max": NaN,
+      "clip_factor_median": NaN,
+      "clip_factor_min": NaN,
+      "clip_time_fraction": 0.0,
+      "headroom_max": NaN,
+      "headroom_median": NaN,
+      "headroom_min": NaN,
       "mixing_fraction": 0.0,
-      "visibility_max": 0.0,
-      "visibility_median": 0.0,
-      "visibility_min": 0.0
+      "visibility_max": NaN,
+      "visibility_median": NaN,
+      "visibility_min": NaN
     },
     "const_prod_area_rate_kg_m2_s": 1e-10,
     "effective_prod_rate_kg_m2_s": 1e-10,
@@ -410,9 +410,9 @@
       "rate_median": 0.0,
       "rate_min": 0.0
     },
-    "supply_clip_time_fraction": 1.0,
+    "supply_clip_time_fraction": 0.0,
     "supply_rate_nominal_kg_m2_s": 1e-10,
-    "supply_rate_scaled_initial_kg_m2_s": 1e-10,
+    "supply_rate_scaled_initial_kg_m2_s": null,
     "table_path": "data/supply_rate.csv",
     "temperature_cap": 10.0,
     "temperature_enabled": false,
@@ -444,19 +444,19 @@
   },
   "time_grid": {
     "dt_capped_by_max_steps": false,
-    "dt_input": 50.0,
+    "dt_input": 10.0,
     "dt_mode": "explicit",
-    "dt_nominal_s": 50.0,
+    "dt_nominal_s": 10.0,
     "dt_sources_s": {
-      "explicit": 50.0
+      "explicit": 10.0
     },
-    "dt_step_s": 15.07539336014622,
+    "dt_step_s": 9.726060232352399,
     "max_steps": 50000000,
-    "n_steps": 1,
+    "n_steps": 31,
     "scheme": "fixed-step implicit-Euler (S1)",
     "t_blow_nominal_s": 2399.3233723220087,
     "t_end_basis": "t_end_orbits",
-    "t_end_input": 0.001,
-    "t_end_s": 15.07539336014622
+    "t_end_input": 0.02,
+    "t_end_s": 301.5078672029244
   }
 }

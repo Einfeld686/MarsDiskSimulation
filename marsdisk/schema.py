@@ -8,6 +8,8 @@ configuration files remain forward compatible.
 """
 from __future__ import annotations
 
+import logging
+import math
 from pathlib import Path
 from typing import Any, Dict, List, Literal, Optional, Tuple, Union
 
@@ -1040,6 +1042,17 @@ class PhaseConfig(BaseModel):
         False,
         description="Allow HKL sublimation when the bulk phase is liquid-dominated",
     )
+    temperature_input: Literal["mars_surface", "particle"] = Field(
+        "mars_surface",
+        description=(
+            "Select temperature passed into the phase map: 'mars_surface' keeps the Mars driver, "
+            "'particle' uses the grain equilibrium temperature."
+        ),
+    )
+    q_abs_mean: float = Field(
+        0.4,
+        description="Mean absorption efficiency ⟨Q_abs⟩ used for the particle-temperature phase input.",
+    )
 
     @validator("entrypoint")
     def _check_entrypoint_format(cls, value: str) -> str:
@@ -1048,6 +1061,17 @@ class PhaseConfig(BaseModel):
         if not module or sep == "" or not func:
             raise ValueError("phase.entrypoint must be of the form 'module.submodule:function'")
         return text
+
+    @validator("q_abs_mean")
+    def _check_q_abs_mean(cls, value: float) -> float:
+        val = float(value)
+        if not math.isfinite(val) or val <= 0.0:
+            raise ValueError("phase.q_abs_mean must be positive and finite")
+        if val > 1.0:
+            logging.getLogger(__name__).warning(
+                "phase.q_abs_mean=%.3g exceeds unity; ensure this is intentional for the scenario", val
+            )
+        return val
 
 
 class MarsTemperatureDriverConstant(BaseModel):

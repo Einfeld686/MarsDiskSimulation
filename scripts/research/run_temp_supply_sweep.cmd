@@ -60,7 +60,7 @@ if not defined SUBSTEP_FAST_BLOWOUT set "SUBSTEP_FAST_BLOWOUT=0"
 if not defined SUBSTEP_MAX_RATIO set "SUBSTEP_MAX_RATIO="
 if not defined SUPPLY_HEADROOM_POLICY set "SUPPLY_HEADROOM_POLICY=clip"
 if not defined SUPPLY_MODE set "SUPPLY_MODE=const"
-if not defined SUPPLY_RATE set "SUPPLY_RATE=3.0e-6"
+if not defined SUPPLY_RATE set "SUPPLY_RATE=1.0e-5"
 if not defined SHIELDING_MODE set "SHIELDING_MODE=psitau"
 if not defined SHIELDING_SIGMA set "SHIELDING_SIGMA=auto"
 if not defined SHIELDING_AUTO_MAX_MARGIN set "SHIELDING_AUTO_MAX_MARGIN=0.05"
@@ -252,27 +252,83 @@ for %%T in (%T_LIST%) do (
       >>"!PYSCRIPT!" echo matplotlib.use("Agg")
       >>"!PYSCRIPT!" echo import pandas as pd
       >>"!PYSCRIPT!" echo import matplotlib.pyplot as plt
+      >>"!PYSCRIPT!" echo SEC_PER_YEAR = 3.15576e7
       >>"!PYSCRIPT!" echo run_dir = Path(os.environ["RUN_DIR"])
-      >>"!PYSCRIPT!" echo series_path = run_dir / "series" / "run.parquet"
+      >>"!PYSCRIPT!" echo series_dir = run_dir / "series"
+      >>"!PYSCRIPT!" echo series_path = series_dir / "run.parquet"
       >>"!PYSCRIPT!" echo summary_path = run_dir / "summary.json"
       >>"!PYSCRIPT!" echo plots_dir = run_dir / "plots"
       >>"!PYSCRIPT!" echo plots_dir.mkdir(parents=True, exist_ok=True)
       >>"!PYSCRIPT!" echo
-      >>"!PYSCRIPT!" echo if not series_path.exists():
-      >>"!PYSCRIPT!" echo ^^^print(f"[warn] series not found: {series_path}, skip plotting")
-      >>"!PYSCRIPT!" echo ^^^raise SystemExit(0)
-      >>"!PYSCRIPT!" echo series_cols = ["time","dt","M_out_dot","M_sink_dot","mass_lost_by_blowout","mass_lost_by_sinks","prod_subblow_area_rate","Sigma_surf","tau","t_blow","dt_over_t_blow"]
-      >>"!PYSCRIPT!" echo df = pd.read_parquet(series_path, columns=[c for c in series_cols if c in pd.read_parquet(series_path).columns])
-      >>"!PYSCRIPT!" echo fig, ax = plt.subplots(2,1,figsize=(8,6),sharex=True)
-      >>"!PYSCRIPT!" echo if "M_out_dot" in df: ax[0].plot(df["time"]/3.15576e7, df["M_out_dot"], label="M_out_dot")
-      >>"!PYSCRIPT!" echo if "M_sink_dot" in df: ax[0].plot(df["time"]/3.15576e7, df["M_sink_dot"], label="M_sink_dot")
-      >>"!PYSCRIPT!" echo ax[0].set_ylabel("loss rate [M_Mars s^-1]"); ax[0].legend()
-      >>"!PYSCRIPT!" echo if "prod_subblow_area_rate" in df: ax[1].plot(df["time"]/3.15576e7, df["prod_subblow_area_rate"], label="prod_subblow_area_rate")
-      >>"!PYSCRIPT!" echo ax[1].set_xlabel("time [yr]"); ax[1].set_ylabel("prod_subblow [kg m^-2 s^-1]")
-      >>"!PYSCRIPT!" echo fig.tight_layout(); fig.savefig(plots_dir/"quicklook.png")
+      >>"!PYSCRIPT!" echo series_cols = [
+      >>"!PYSCRIPT!" echo     "time","dt","M_out_dot","M_sink_dot","mass_lost_by_blowout","mass_lost_by_sinks",
+      >>"!PYSCRIPT!" echo     "mass_total_bins","prod_subblow_area_rate","Sigma_surf","sigma_surf",
+      >>"!PYSCRIPT!" echo     "tau","tau_vertical","tau_eff","t_blow","dt_over_t_blow"
+      >>"!PYSCRIPT!" echo ]
+      >>"!PYSCRIPT!" echo def load_series():
+      >>"!PYSCRIPT!" echo     if series_path.exists():
+      >>"!PYSCRIPT!" echo         cols = [c for c in series_cols if c in pd.read_parquet(series_path).columns]
+      >>"!PYSCRIPT!" echo         return pd.read_parquet(series_path, columns=cols)
+      >>"!PYSCRIPT!" echo     chunk_paths = sorted(series_dir.glob("run_chunk_*.parquet"))
+      >>"!PYSCRIPT!" echo     if not chunk_paths:
+      >>"!PYSCRIPT!" echo         print(f"[warn] series not found: {series_dir}, skip plotting")
+      >>"!PYSCRIPT!" echo         return None
+      >>"!PYSCRIPT!" echo     first_cols = pd.read_parquet(chunk_paths[0]).columns
+      >>"!PYSCRIPT!" echo     cols = [c for c in series_cols if c in first_cols]
+      >>"!PYSCRIPT!" echo     frames = [pd.read_parquet(p, columns=cols) for p in chunk_paths]
+      >>"!PYSCRIPT!" echo     return pd.concat(frames, ignore_index=True)
+      >>"!PYSCRIPT!" echo
+      >>"!PYSCRIPT!" echo df = load_series()
+      >>"!PYSCRIPT!" echo if df is None:
+      >>"!PYSCRIPT!" echo     raise SystemExit(0)
+      >>"!PYSCRIPT!" echo if "time" in df.columns:
+      >>"!PYSCRIPT!" echo     df = df.sort_values("time")
+      >>"!PYSCRIPT!" echo     years = df["time"] / SEC_PER_YEAR
+      >>"!PYSCRIPT!" echo else:
+      >>"!PYSCRIPT!" echo     years = None
+      >>"!PYSCRIPT!" echo
+      >>"!PYSCRIPT!" echo fig, axes = plt.subplots(3,1,figsize=(10,8),sharex=True)
+      >>"!PYSCRIPT!" echo ax_rates, ax_cum, ax_tau = axes
+      >>"!PYSCRIPT!" echo
+      >>"!PYSCRIPT!" echo # loss rates
+      >>"!PYSCRIPT!" echo for col in ("M_out_dot","M_sink_dot"):
+      >>"!PYSCRIPT!" echo     if col in df:
+      >>"!PYSCRIPT!" echo         ax_rates.plot(years, df[col], label=col)
+      >>"!PYSCRIPT!" echo ax_rates.set_ylabel("loss rate [M_Mars s^-1]")
+      >>"!PYSCRIPT!" echo vals = pd.concat([df[c].dropna() for c in ("M_out_dot","M_sink_dot") if c in df])
+      >>"!PYSCRIPT!" echo if len(vals) and vals.min() > 0:
+      >>"!PYSCRIPT!" echo     ax_rates.set_yscale("log")
+      >>"!PYSCRIPT!" echo ax_rates.legend()
+      >>"!PYSCRIPT!" echo ax_rates.grid(True, alpha=0.3)
+      >>"!PYSCRIPT!" echo
+      >>"!PYSCRIPT!" echo # cumulative masses
+      >>"!PYSCRIPT!" echo for col in ("mass_lost_by_blowout","mass_lost_by_sinks","mass_total_bins"):
+      >>"!PYSCRIPT!" echo     if col in df:
+      >>"!PYSCRIPT!" echo         ax_cum.plot(years, df[col], label=col)
+      >>"!PYSCRIPT!" echo ax_cum.set_ylabel("mass [M_Mars]")
+      >>"!PYSCRIPT!" echo ax_cum.legend()
+      >>"!PYSCRIPT!" echo ax_cum.grid(True, alpha=0.3)
+      >>"!PYSCRIPT!" echo
+      >>"!PYSCRIPT!" echo # tau and supply
+      >>"!PYSCRIPT!" echo if "tau_vertical" in df:
+      >>"!PYSCRIPT!" echo     ax_tau.plot(years, df["tau_vertical"], label="tau_vertical", color="tab:blue")
+      >>"!PYSCRIPT!" echo if "tau_eff" in df:
+      >>"!PYSCRIPT!" echo     ax_tau.plot(years, df["tau_eff"], label="tau_eff", color="tab:cyan")
+      >>"!PYSCRIPT!" echo ax_tau.set_ylabel("tau")
+      >>"!PYSCRIPT!" echo ax_tau.grid(True, alpha=0.3)
+      >>"!PYSCRIPT!" echo ax_supply = ax_tau.twinx()
+      >>"!PYSCRIPT!" echo if "prod_subblow_area_rate" in df:
+      >>"!PYSCRIPT!" echo     ax_supply.plot(years, df["prod_subblow_area_rate"], label="prod_subblow_area_rate", color="tab:orange")
+      >>"!PYSCRIPT!" echo ax_supply.set_ylabel("prod_subblow [kg m^-2 s^-1]")
+      >>"!PYSCRIPT!" echo handles, labels = ax_tau.get_legend_handles_labels()
+      >>"!PYSCRIPT!" echo h2, l2 = ax_supply.get_legend_handles_labels()
+      >>"!PYSCRIPT!" echo ax_tau.legend(handles + h2, labels + l2, loc="upper right")
+      >>"!PYSCRIPT!" echo axes[-1].set_xlabel("time [yr]")
+      >>"!PYSCRIPT!" echo fig.tight_layout()
+      >>"!PYSCRIPT!" echo fig.savefig(plots_dir/"quicklook.png")
       >>"!PYSCRIPT!" echo if summary_path.exists():
-      >>"!PYSCRIPT!" echo ^^^with open(summary_path,"r",encoding="utf-8") as f: summary=json.load(f)
-      >>"!PYSCRIPT!" echo ^^^with open(plots_dir/"summary.txt","w",encoding="utf-8") as f: json.dump(summary,f,indent=2)
+      >>"!PYSCRIPT!" echo     with open(summary_path,"r",encoding="utf-8") as f: summary=json.load(f)
+      >>"!PYSCRIPT!" echo     with open(plots_dir/"summary.txt","w",encoding="utf-8") as f: json.dump(summary,f,indent=2)
       python "!PYSCRIPT!"
       del "!PYSCRIPT!"
     )
