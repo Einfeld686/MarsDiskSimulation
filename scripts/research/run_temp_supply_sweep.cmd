@@ -114,11 +114,15 @@ if "%ENABLE_PROGRESS%"=="1" set "PROGRESS_FLAG=--progress"
 
 set "STREAMING_OVERRIDES="
 if defined STREAM_MEM_GB (
-  set "STREAMING_OVERRIDES=--override \"io.streaming.memory_limit_gb=%STREAM_MEM_GB%\""
+  set "STREAMING_OVERRIDES=--override io.streaming.memory_limit_gb=%STREAM_MEM_GB%"
   echo [info] override io.streaming.memory_limit_gb=%STREAM_MEM_GB%
 )
 if defined STREAM_STEP_INTERVAL (
-  set "STREAMING_OVERRIDES=%STREAMING_OVERRIDES% --override \"io.streaming.step_flush_interval=%STREAM_STEP_INTERVAL%\""
+  if defined STREAMING_OVERRIDES (
+    set "STREAMING_OVERRIDES=!STREAMING_OVERRIDES! --override io.streaming.step_flush_interval=%STREAM_STEP_INTERVAL%"
+  ) else (
+    set "STREAMING_OVERRIDES=--override io.streaming.step_flush_interval=%STREAM_STEP_INTERVAL%"
+  )
   echo [info] override io.streaming.step_flush_interval=%STREAM_STEP_INTERVAL%
 )
 
@@ -211,7 +215,7 @@ for %%T in (%T_LIST%) do (
         --override "radiation.mars_temperature_driver.table.column_temperature=T_K" ^
         --override "radiation.mars_temperature_driver.extrapolation=hold" ^
         %SUPPLY_OVERRIDES% ^
-        %STREAMING_OVERRIDES% ^
+        !STREAMING_OVERRIDES! ^
         !CMD_EXTRA!
 
       if errorlevel 1 (
