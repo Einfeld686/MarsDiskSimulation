@@ -681,22 +681,30 @@ with $\Sigma_{\tau=1}=1/\kappa_{\mathrm{eff}}$ when $\kappa_{\mathrm{eff}}>0$.
 - When clipping is active, enforces non-negative densities. [marsdisk/physics/initfields.py#surf_sigma_init [L47–L79]]
 
 ### (E.026) marsdisk/physics/qstar.py: compute_q_d_star_F1 (lines 31–73)
-バザルトの破壊閾値 $Q_D^*$ を 3 km/s と 5 km/s の基準式から線形補間する。基準式は [@BenzAsphaug1999_Icarus142_5] のバザルト係数を用い、速度依存の補間則は [@LeinhardtStewart2012_ApJ745_79] に従う。
-速度点の線形補間というレシピ自体は実装側の選択であり、同一形の式を与える文献はない。
+バザルトの破壊閾値 $Q_D^*$ を 3 km/s と 5 km/s の基準式から線形補間し、基準範囲外では重力側の項だけを LS09 の $v^{-3\mu+2}$（既定 $\mu=0.45$）で外挿する。強度項は端点値のまま据え置き、重力項だけを速度依存で拡張することで、小粒子（強度支配）を過剰にスケールさせない。基準式は [@BenzAsphaug1999_Icarus142_5]、補間は [@LeinhardtStewart2012_ApJ745_79]、重力側外挿の根拠は [@StewartLeinhardt2009_ApJ691_L133] と Jutzi 2010（7–10 km/s 適用）に従う。
 
-補足: Benz & Asphaug (1999) の SPH では直径 $\sim$300 m の玄武岩ターゲットが最も脆弱で、3–5 km/s の衝突でも破片の重力再集積が $Q_D^*$ を押し上げるため、この速度点を補間基準として採用している [@BenzAsphaug1999_Icarus142_5]。
 既定の `coeff_units="ba99_cgs"` は Benz & Asphaug (1999) の cgs 前提を保持し、$s_{\rm cm}=100\,s$ [cm] と $\rho_{\rm g/cm^3}=\rho/1000$ を使って erg g$^{-1}$ で評価し、$1\times10^{-4}$ を掛けて J kg$^{-1}$ に戻す。`coeff_units="si"` を選ぶとメートル・kg・J 入力をそのまま用いるレガシー挙動になる。
 ※ この式の係数は BA99 の cgs 単位（cm, g/cm$^3$, erg/g）として解釈し、内部で J/kg に正規化している。設定 `coeff_units` を変えない限り常にこの解釈が適用される。
 
 ```latex
-Q_{D}^{*}(s,\rho,v) = Q_{3}(s,\rho)\,w(v) + Q_{5}(s,\rho)\,\bigl(1-w(v)\bigr),
+Q_{D}^{*}(s,\rho,v) = Q_{\mathrm{str}}(v) + Q_{\mathrm{grav}}(v)\,S(v),
 \qquad
-w(v) = \frac{v-3}{5-3}
+Q_{\mathrm{str}}(v) = (1-w)Q^{\mathrm{str}}_{3} + w Q^{\mathrm{str}}_{5},
+\qquad
+Q_{\mathrm{grav}}(v) = (1-w)Q^{\mathrm{grav}}_{3} + w Q^{\mathrm{grav}}_{5},
 ```
-where $Q_{3}$ and $Q_{5}$ evaluate the Benz & Asphaug (1999) law at 3 and 5 km/s:
+with $w(v) = \max\!\bigl(0,\min\bigl(1,\frac{v-3}{5-3}\bigr)\bigr)$ and
 ```latex
-Q_{v}(s,\rho) = Q_{s}\,s^{-a_{s}} + B\,\rho\,s^{b_{g}}.
+Q^{\mathrm{str}}_{v} = Q_{s}\,s^{-a_{s}},\qquad
+Q^{\mathrm{grav}}_{v} = B\,\rho\,s^{b_{g}},\qquad
+S(v) =
+\begin{cases}
+(v/3)^{-3\mu+2}, & v<3\ \mathrm{km/s},\\
+1, & 3\le v \le 5\ \mathrm{km/s},\\
+(v/5)^{-3\mu+2}, & v>5\ \mathrm{km/s},
+\end{cases}
 ```
+where $\mu$ follows LS09 (既定 0.45) and $Q_{s},a_s,B,b_g$ use the BA99 basalt coefficients tabulated at 3, 5 km/s.
 
 **Symbols**
 
@@ -705,14 +713,15 @@ Q_{v}(s,\rho) = Q_{s}\,s^{-a_{s}} + B\,\rho\,s^{b_{g}}.
 |$Q_{D}^{*}$|Catastrophic disruption threshold|J kg$^{-1}$|Return value|
 |$s$|Target size|m|Input `s`, must be $>0$|
 |$\rho$|Bulk density|kg m$^{-3}$|Input `rho`, must be $>0$|
-|$v$|Impact velocity|km s$^{-1}$|Input `v_kms`; clamped to [3,5] km/s|
+|$v$|Impact velocity|km s$^{-1}$|Input `v_kms`;係数は[3,5] km/s を用い、重力項だけ $v^{-3\mu+2}$ で外挿|
+|$\mu$|Gravity-regime velocity exponent|—|`qstar.mu_grav`（既定 0.45, LS09/Jutzi に基づく）|
 |$Q_{s}, a_s, B, b_g$|Material coefficients|—|Taken from Leinhardt & Stewart (2012) for basalt|
 |`coeff_units`|Coefficient unit system|—|`\"ba99_cgs\"` (cm, g/cm$^3$, erg/g $\to$ J/kg; default) or `\"si\"`|
 
 **Numerics**
 - Rejects non-positive arguments via `MarsDiskError`.
-- Performs linear interpolation between the two reference velocities and clamps outside the tabulated range; clamp counts are stored for provenance (`run_config.qstar.velocity_clamp_counts`) and the first occurrence is logged.
-- Helper `_q_d_star` carries out the power-law evaluation with the active `coeff_units` applied; [marsdisk/physics/qstar.py#compute_q_d_star_F1 [L82–L124]]
+- Performs linear interpolation between the two reference velocities for both terms; outside the range the coefficient lookup is clamped but only the gravity term is scaled by $v^{-3\mu+2}$. Clamp counts are stored for provenance (`run_config.qstar.velocity_clamp_counts`) and the first occurrence is logged.
+- Helper `_q_d_star` carries out the power-law evaluation with the active `coeff_units` applied; gravity scaling uses `_gravity_velocity_scale` with the configured `mu_grav`. [marsdisk/physics/qstar.py#compute_q_d_star_F1 [L82–L150]]
 
 ### (E.027) marsdisk/physics/supply.py: get_prod_area_rate (lines 93–98)
 供給モードごとの基礎率に混合効率 $\epsilon_{\mathrm{mix}}$ を掛け、負値をクリップするシンプルな注入モデル [@Wyatt2008]。

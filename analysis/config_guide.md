@@ -134,7 +134,7 @@ configs/<scenario>.yml
 | `blowout.gate_mode`, `blowout.layer`, `blowout.target_phase` | 衝突支配ディスクで表層（τ≲1）の小粒子を優先的に吹き飛ばす設定を基準とし、昇華・衝突で既に損失している場合にゲートで抑制 | [@StrubbeChiang2006_ApJ648_652; @WyattClarkeBooth2011_CeMDA111_1; @KrijtKama2014_AA566_L2] |
 | `sizes.n_bins`, `psd.alpha`, `psd.wavy_strength`, `psd.floor.*` | Dohnanyi 型カスケードの平衡傾き $q\simeq3.5$（α≈1.83）を基準に、blow-out 起源の “wavy” を感度パラメータ化しつつ、粒径比 $(a_{i+1}/a_i)\lesssim1.1$–1.3 を維持するビン分解能を採用 | [@Dohnanyi1969_JGR74_2531; @Birnstiel2011_AA525_A11; @Krivov2006_AA455_509; @ThebaultAugereau2007_AA472_169] |
 | `dynamics.f_wake`, `e0/i0`, `t_damp_orbits`, `kernel_ei_mode` | Ohtsuki 型の速度分散平衡 $c_{\rm eq}$ と高さスケール $H\simeq ia$ をベースに wake 係数で調整 | [@Ohtsuki2002_Icarus155_436] |
-| `qstar.*` (`Qs`, `a_s`, `B`, `b_g`, `v_ref_kms`, `coeff_units`) | バザルト衝突の $Q_D^*$ を Benz & Asphaug (1999) から採用し、速度依存は Stewart&Leinhardt (2009) と LS12 の補間。`coeff_units` で BA99 cgs/ SI を切替 | [@BenzAsphaug1999_Icarus142_5; @StewartLeinhardt2009_ApJ691_L133; @LeinhardtStewart2012_ApJ745_79] |
+| `qstar.*` (`Qs`, `a_s`, `B`, `b_g`, `v_ref_kms`, `coeff_units`, `mu_grav`) | バザルト衝突の $Q_D^*$ を Benz & Asphaug (1999) から採用し、速度依存は Stewart&Leinhardt (2009) と LS12 の補間＋LS09 型重力側外挿（$v^{-3\mu+2}$, `mu_grav` 既定0.45）。`coeff_units` で BA99 cgs/ SI を切替 | [@BenzAsphaug1999_Icarus142_5; @StewartLeinhardt2009_ApJ691_L133; @LeinhardtStewart2012_ApJ745_79] |
 | `supply.*`, `mixing.epsilon_mix` | 外部供給をサイズ別源項 S(a,r,t) として与え、バリスティック混合効率を ε_mix でパラメータ化 | [@WyattClarkeBooth2011_CeMDA111_1; @Wyatt2008; @EstradaDurisen2015_Icarus252_415; @CuzziEstrada1998_Icarus132_1] |
 | `shielding.mode`, `shielding.table_path`, `shielding.fixed_tau1_*` | Φ(τ,ω₀,g) テーブルを δ–Eddington/HG 近似から取得し、τ≳1 では Σ_{τ=1} でクリップ | [@Joseph1976_JAS33_2452; @HansenTravis1974_SSR16_527; @CogleyBergstrom1979_JQSRT22_267; @Chandrasekhar1960_RadiativeTransfer] |
 | `sinks.sub_params.*`, `sinks.T_sub`, `sinks.mu`, `sinks.alpha_evap` | SiO/SiO₂ の HKL 昇華係数と閾値を Hyodo18 の温度域・Pignatale18 の組成・Melosh/Bruning/Ojovan の相変化データに合わせる | [@Hyodo2018_ApJ860_150; @Pignatale2018_ApJ853_118; @Melosh2007_MPS42_2079; @Bruning2003_JNCS330_13; @Ojovan2021_Materials14_5235] |
@@ -305,10 +305,11 @@ Hertz-Knudsen-Langmuir (HKL) 理論に基づく昇華速度の詳細パラメー
 | `a_s` | float | 強度レジームのサイズべき指数。Q*_D ∝ s^(-a_s) で小粒子ほど強い | 0.38 |
 | `B` | float | 重力レジームの係数 [J/kg]。大粒子では自己重力が支配的 | 0.3 |
 | `b_g` | float | 重力レジームのサイズべき指数。Q*_D ∝ s^(b_g) で大粒子ほど強い | 1.36 |
-| `v_ref_kms` | list | 参照衝突速度 [km/s]。Q*_D の速度依存性補正に使用 | [1.0, 5.0] |
+| `v_ref_kms` | list | 参照衝突速度 [km/s]。Q*_D の速度依存性補正に使用 | [3.0, 5.0] |
+| `mu_grav` | float | 重力側の速度外挿指数 $\mu$（LS09）。$v^{-3\mu+2}$ で重力項のみを外挿 | 0.45 |
 | `coeff_units` | str | 係数の単位系。`\"ba99_cgs\"` で cm・g/cm^3 入力を erg/g で評価し J/kg に戻す、`\"si\"` はメートル・kg そのまま | `"ba99_cgs"` |
 
-BA99/LS12 由来の係数は cgs 前提のため `coeff_units: ba99_cgs` を標準とし、`run_config.qstar` に採用単位系と速度クランプ件数を保存する。`coeff_units: si` はレガシー互換用として残している。
+BA99/LS12 由来の係数は cgs 前提のため `coeff_units: ba99_cgs` を標準とし、`run_config.qstar` に採用単位系と速度クランプ件数・重力外挿指数を保存する。`coeff_units: si` はレガシー互換用として残している。
 
 #### 🧊 相状態 (`phase`)
 

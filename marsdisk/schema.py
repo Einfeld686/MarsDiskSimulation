@@ -737,6 +737,11 @@ class QStar(BaseModel):
         "ba99_cgs",
         description="Unit system for Qs/B coefficients: 'ba99_cgs' treats sizes in cm, rho in g/cm^3 and converts erg/g→J/kg; 'si' uses inputs as-is.",
     )
+    mu_grav: float = Field(
+        0.45,
+        gt=0.0,
+        description="Gravity-regime velocity exponent mu used for v^{-3mu+2} scaling applied to the gravity term when extrapolating Q_D^* beyond the tabulated velocities (LS09/Jutzi-style).",
+    )
 
 
 class PSD(BaseModel):

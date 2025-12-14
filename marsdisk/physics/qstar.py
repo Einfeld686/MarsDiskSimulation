@@ -19,10 +19,12 @@ __all__ = [
     "compute_q_d_star_F1",
     "compute_q_d_star_array",
     "get_coeff_unit_system",
+    "get_gravity_velocity_mu",
     "get_coefficient_table",
     "get_velocity_clamp_stats",
     "reset_velocity_clamp_stats",
     "set_coeff_unit_system",
+    "set_gravity_velocity_mu",
 ]
 
 # Coefficients from [@BenzAsphaug1999_Icarus142_5] evaluated at reference velocities in km/s.
@@ -46,6 +48,8 @@ _RHO_GCM3_FROM_SI = 1.0e-3
 _ERG_PER_G_TO_J_PER_KG = 1.0e-4
 _VEL_CLAMP_COUNTS: dict[str, int] = {"below": 0, "above": 0}
 _VEL_CLAMP_WARNED = False
+# Gravitational-regime velocity exponent μ from LS09; used as v^{-3μ+2} outside [v_min, v_max].
+_GRAVITY_VELOCITY_MU = 0.45
 
 
 def set_coeff_unit_system(units: CoeffUnits) -> CoeffUnits:
@@ -84,6 +88,22 @@ def get_velocity_clamp_stats() -> Dict[str, int]:
     return dict(_VEL_CLAMP_COUNTS)
 
 
+def set_gravity_velocity_mu(mu: float) -> float:
+    """Set the LS09 gravitational-regime exponent μ used for velocity scaling."""
+
+    global _GRAVITY_VELOCITY_MU
+    if mu <= 0.0:
+        raise MarsDiskError("gravity velocity exponent mu must be positive")
+    _GRAVITY_VELOCITY_MU = float(mu)
+    return _GRAVITY_VELOCITY_MU
+
+
+def get_gravity_velocity_mu() -> float:
+    """Return the active LS09 gravitational-regime exponent μ."""
+
+    return _GRAVITY_VELOCITY_MU
+
+
 def _track_velocity_clamp(v_values: np.ndarray) -> None:
     """Record and optionally warn when v_kms falls outside the tabulated range."""
 
@@ -96,7 +116,7 @@ def _track_velocity_clamp(v_values: np.ndarray) -> None:
         _VEL_CLAMP_COUNTS["above"] += above
         if not _VEL_CLAMP_WARNED:
             logger.warning(
-                "Impact velocity outside [%.1f, %.1f] km/s; clamping to bounds (further warnings suppressed).",
+                "Impact velocity outside [%.1f, %.1f] km/s; extrapolating gravity term with v^{-3mu+2} while clamping coefficient lookup to bounds (further warnings suppressed).",
                 _V_MIN,
                 _V_MAX,
             )
@@ -108,8 +128,8 @@ def _q_d_star(
     rho: float,
     coeffs: Tuple[float, float, float, float],
     coeff_units: CoeffUnits,
-) -> np.ndarray:
-    """Vectorised :math:`Q_D^*` evaluation for scalar or array inputs."""
+) -> Tuple[np.ndarray, np.ndarray]:
+    """Vectorised :math:`Q_D^*` split into strength and gravity terms."""
 
     if rho <= 0.0:
         raise MarsDiskError("density must be positive")
@@ -121,11 +141,25 @@ def _q_d_star(
     if coeff_units == "ba99_cgs":
         s_ratio = s_arr * _CM_PER_M  # convert s[m] to s/1 cm
         rho_use = rho * _RHO_GCM3_FROM_SI
-        q_val = Qs * np.power(s_ratio, -a_s) + B * rho_use * np.power(s_ratio, b_g)
-        return q_val * _ERG_PER_G_TO_J_PER_KG
+        q_strength = Qs * np.power(s_ratio, -a_s)
+        q_gravity = B * rho_use * np.power(s_ratio, b_g)
+        return q_strength * _ERG_PER_G_TO_J_PER_KG, q_gravity * _ERG_PER_G_TO_J_PER_KG
     s_ratio = s_arr / 1.0
     rho_use = rho
-    return Qs * np.power(s_ratio, -a_s) + B * rho_use * np.power(s_ratio, b_g)
+    q_strength = Qs * np.power(s_ratio, -a_s)
+    q_gravity = B * rho_use * np.power(s_ratio, b_g)
+    return q_strength, q_gravity
+
+
+def _gravity_velocity_scale(v_kms: np.ndarray) -> np.ndarray:
+    """Return multiplicative scaling for the gravity term outside [v_min, v_max]."""
+
+    exponent = -3.0 * _GRAVITY_VELOCITY_MU + 2.0
+    v_arr = np.asarray(v_kms, dtype=float)
+    scale = np.ones_like(v_arr, dtype=float)
+    scale = np.where(v_arr < _V_MIN, np.power(v_arr / _V_MIN, exponent), scale)
+    scale = np.where(v_arr > _V_MAX, np.power(v_arr / _V_MAX, exponent), scale)
+    return scale
 
 
 def compute_q_d_star_array(s: np.ndarray, rho: float, v_kms: np.ndarray) -> np.ndarray:
@@ -149,12 +183,15 @@ def compute_q_d_star_array(s: np.ndarray, rho: float, v_kms: np.ndarray) -> np.n
     coeff_lo = _COEFFS[_V_MIN]
     coeff_hi = _COEFFS[_V_MAX]
     coeff_units = _COEFF_UNIT_SYSTEM
-    q_lo = _q_d_star(s_arr, rho, coeff_lo, coeff_units)
-    q_hi = _q_d_star(s_arr, rho, coeff_hi, coeff_units)
+    strength_lo, gravity_lo = _q_d_star(s_arr, rho, coeff_lo, coeff_units)
+    strength_hi, gravity_hi = _q_d_star(s_arr, rho, coeff_hi, coeff_units)
 
     weight = (v_arr - _V_MIN) / (_V_MAX - _V_MIN)
     weight = np.clip(weight, 0.0, 1.0)
-    return q_lo * (1.0 - weight) + q_hi * weight
+    strength = strength_lo * (1.0 - weight) + strength_hi * weight
+    gravity = gravity_lo * (1.0 - weight) + gravity_hi * weight
+    gravity_scale = _gravity_velocity_scale(v_arr)
+    return strength + gravity * gravity_scale
 
 
 def compute_q_d_star_F1(s: float, rho: float, v_kms: float) -> float:
@@ -162,8 +199,10 @@ def compute_q_d_star_F1(s: float, rho: float, v_kms: float) -> float:
 
     The size-dependent law from [@BenzAsphaug1999_Icarus142_5] is evaluated and
     then linearly interpolated in velocity between the 3 and 5 km/s reference
-    values following [@LeinhardtStewart2012_ApJ745_79]. Velocities outside this
-    range adopt the nearest reference value.
+    values following [@LeinhardtStewart2012_ApJ745_79]. Outside this range the
+    strength term is held fixed at the nearest reference value, while the
+    gravity term is scaled by :math:`(v/v_{\\mathrm{ref}})^{-3\\mu+2}` with
+    :math:`\\mu` taken from LS09 and configurable via :func:`set_gravity_velocity_mu`.
 
     Parameters
     ----------
@@ -192,14 +231,19 @@ def compute_q_d_star_F1(s: float, rho: float, v_kms: float) -> float:
     coeff_lo = _COEFFS[_V_MIN]
     coeff_hi = _COEFFS[_V_MAX]
     coeff_units = _COEFF_UNIT_SYSTEM
-    q_lo = _q_d_star(np.asarray(s, dtype=float), rho, coeff_lo, coeff_units)
-    q_hi = _q_d_star(np.asarray(s, dtype=float), rho, coeff_hi, coeff_units)
+    strength_lo, gravity_lo = _q_d_star(np.asarray(s, dtype=float), rho, coeff_lo, coeff_units)
+    strength_hi, gravity_hi = _q_d_star(np.asarray(s, dtype=float), rho, coeff_hi, coeff_units)
 
     if v_kms <= _V_MIN:
-        return float(q_lo)
+        gravity_scale = _gravity_velocity_scale(np.asarray([v_kms], dtype=float))[0]
+        return float(strength_lo + gravity_lo * gravity_scale)
     if v_kms >= _V_MAX:
-        return float(q_hi)
+        gravity_scale = _gravity_velocity_scale(np.asarray([v_kms], dtype=float))[0]
+        return float(strength_hi + gravity_hi * gravity_scale)
 
     # linear interpolation between the two reference velocities
     weight = (v_kms - _V_MIN) / (_V_MAX - _V_MIN)
-    return float(q_lo * (1.0 - weight) + q_hi * weight)
+    strength = strength_lo * (1.0 - weight) + strength_hi * weight
+    gravity = gravity_lo * (1.0 - weight) + gravity_hi * weight
+    gravity_scale = _gravity_velocity_scale(np.asarray([v_kms], dtype=float))[0]
+    return float(strength + gravity * gravity_scale)
