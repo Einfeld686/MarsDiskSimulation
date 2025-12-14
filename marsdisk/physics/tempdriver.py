@@ -6,11 +6,19 @@ from pathlib import Path
 from typing import Any, Callable, Dict, Optional
 
 import logging
+import math
 
 import numpy as np
 import pandas as pd
 
-from siO2_disk_cooling.model import CoolingParams, YEAR_SECONDS, mars_temperature
+from siO2_disk_cooling.model import (
+    CoolingParams,
+    YEAR_SECONDS,
+    cooling_time_to_temperature,
+    hyodo_cooling_time,
+    hyodo_temperature,
+    mars_temperature,
+)
 
 from .. import constants
 from ..schema import (
@@ -26,6 +34,14 @@ SECONDS_PER_DAY = 86400.0
 SECONDS_PER_YEAR = 365.25 * SECONDS_PER_DAY
 
 T_MIN, T_MAX = 1000.0, 6500.0
+
+
+def _seconds_from_years(years: float) -> float:
+    return float(years) * SECONDS_PER_YEAR
+
+
+def _years_from_seconds(seconds: float) -> float:
+    return float(seconds) / SECONDS_PER_YEAR
 
 
 def _validate_temperature(value: float, *, context: str) -> float:
@@ -135,6 +151,25 @@ def _prepare_table_driver(
     return _interp, provenance
 
 
+def cooling_time_seconds(
+    T0: float,
+    T_target: float,
+    *,
+    margin_years: float = 0.0,
+    model: str = "slab",
+    params: Optional[CoolingParams] = None,
+) -> float:
+    """Analytic cooling time [s] from T0 to T_target plus optional margin."""
+
+    params_use = params if params is not None else CoolingParams()
+    model_norm = str(model or "slab").lower()
+    if model_norm == "hyodo":
+        base = hyodo_cooling_time(float(T0), float(T_target), params_use)
+    else:
+        base = cooling_time_to_temperature(float(T0), float(T_target), params_use)
+    return float(base + _seconds_from_years(max(float(margin_years), 0.0)))
+
+
 def _format_temperature_tag(T0: float) -> str:
     """Return a filesystem-friendly tag for the initial temperature."""
 
@@ -190,7 +225,11 @@ def _write_temperature_table(
     scale = _time_unit_scale(autogen_cfg.time_unit, t_orb)
     t_end_s = float(t_end_years) * YEAR_SECONDS
     time_s = np.arange(0.0, t_end_s + 0.5 * dt_s, dt_s, dtype=float)
-    temps = mars_temperature(time_s, float(T0), CoolingParams())
+    params = CoolingParams()
+    if autogen_cfg.model.lower() == "hyodo":
+        temps = hyodo_temperature(time_s, float(T0), params)
+    else:
+        temps = mars_temperature(time_s, float(T0), params)
     df = pd.DataFrame(
         {
             autogen_cfg.column_time: time_s / scale,
@@ -272,6 +311,74 @@ class TemperatureDriverRuntime:
         return _validate_temperature(value, context=f"Mars temperature driver ({self.mode})")
 
 
+def estimate_time_to_temperature(
+    driver: TemperatureDriverRuntime,
+    target_K: float,
+    *,
+    search_max_s: Optional[float] = None,
+    initial_dt_hours: float = 6.0,
+    max_iterations: int = 128,
+) -> Optional[float]:
+    """Find first time [s] when T_M <= target_K using exponential bracketing + bisection."""
+
+    T_target = float(target_K)
+    if T_target <= 0.0:
+        raise ValueError("target temperature must be positive")
+    if initial_dt_hours <= 0.0:
+        raise ValueError("initial_dt_hours must be positive")
+
+    T0 = driver.evaluate(0.0)
+    if T0 <= T_target:
+        return 0.0
+
+    dt = float(initial_dt_hours) * 3600.0
+    t_low = 0.0
+    t_high: Optional[float] = None
+    limit_s = float(search_max_s) if search_max_s is not None else None
+    if limit_s is None:
+        prov = getattr(driver, "provenance", {})
+        if isinstance(prov, dict) and "t_range_s" in prov:
+            try:
+                limit_s = float(prov["t_range_s"][1])
+            except Exception:
+                limit_s = None
+
+    # Exponential search to bracket the crossing.
+    for _ in range(max_iterations):
+        t_candidate = dt if t_high is None else t_low + dt
+        hit_limit = False
+        if limit_s is not None and t_candidate > limit_s:
+            t_candidate = limit_s
+            hit_limit = True
+        try:
+            T_val = driver.evaluate(t_candidate)
+        except Exception:
+            return None
+        if T_val <= T_target:
+            t_high = t_candidate
+            break
+        t_low = t_candidate
+        if hit_limit:
+            return None
+        dt *= 2.0
+    if t_high is None:
+        return None
+
+    # Bisection refinement
+    for _ in range(max_iterations):
+        mid = 0.5 * (t_low + t_high)
+        if limit_s is not None and mid > limit_s:
+            mid = limit_s
+        T_mid = driver.evaluate(mid)
+        if T_mid <= T_target:
+            t_high = mid
+        else:
+            t_low = mid
+        if abs(t_high - t_low) < 1.0e-6:
+            break
+    return float(t_high)
+
+
 def resolve_temperature_driver(
     radiation_cfg: Optional[Radiation],
     *,
@@ -306,6 +413,37 @@ def resolve_temperature_driver(
                 initial_value=value,
                 provenance=provenance,
                 _driver_fn=lambda _time: value,
+            )
+        if driver_cfg.mode == "hyodo":
+            hyodo_cfg = driver_cfg.hyodo or MarsTemperatureDriverHyodo()
+            params = CoolingParams(
+                d_layer=float(hyodo_cfg.d_layer_m),
+                rho=float(hyodo_cfg.rho),
+                cp=float(hyodo_cfg.cp),
+            )
+            T0 = float(radiation_cfg.TM_K) if radiation_cfg is not None and radiation_cfg.TM_K is not None else None
+            if T0 is None:
+                raise ValueError("radiation.TM_K must be set when using mars_temperature_driver.mode='hyodo'")
+            value = _validate_temperature(T0, context="mars_temperature_driver.hyodo")
+
+            def _hyodo(time_s: float) -> float:
+                return float(hyodo_temperature(np.asarray(time_s), value, params))
+
+            provenance = {
+                "source": "mars_temperature_driver.hyodo",
+                "mode": "hyodo",
+                "enabled": True,
+                "d_layer_m": float(hyodo_cfg.d_layer_m),
+                "rho": float(hyodo_cfg.rho),
+                "cp": float(hyodo_cfg.cp),
+            }
+            return TemperatureDriverRuntime(
+                source="mars_temperature_driver.hyodo",
+                mode="hyodo",
+                enabled=True,
+                initial_value=value,
+                provenance=provenance,
+                _driver_fn=_hyodo,
             )
         if driver_cfg.mode == "table":
             interp_fn, table_meta = _prepare_table_driver(driver_cfg, t_orb=t_orb)
@@ -421,3 +559,47 @@ def autogenerate_temperature_table_if_needed(
         table_info["generated"],
     )
     return table_info
+
+
+def estimate_autogen_horizon_years(
+    rad_cfg: Any,
+    *,
+    T_stop_K: Optional[float],
+    margin_years: float = 0.0,
+    fallback_years: float = 0.0,
+) -> Optional[float]:
+    """Estimate required span (years) to cool to ``T_stop_K`` using analytic slab cooling.
+
+    Returns None if inputs are insufficient; otherwise returns max(fallback_years, t_stop+margin).
+    """
+
+    if T_stop_K is None:
+        return None
+    T0 = None
+    if rad_cfg is None:
+        return None
+    if getattr(rad_cfg, "TM_K", None) is not None:
+        T0 = float(rad_cfg.TM_K)
+    elif (
+        getattr(rad_cfg, "mars_temperature_driver", None) is not None
+        and getattr(rad_cfg.mars_temperature_driver, "mode", None) == "constant"
+        and getattr(rad_cfg.mars_temperature_driver, "constant", None) is not None
+    ):
+        T0 = float(rad_cfg.mars_temperature_driver.constant.value_K)
+    if T0 is None:
+        return None
+    autogen_model = "slab"
+    auto_cfg = getattr(getattr(rad_cfg, "mars_temperature_driver", None), "autogenerate", None)
+    if auto_cfg is not None and getattr(auto_cfg, "model", None) is not None:
+        autogen_model = str(getattr(auto_cfg, "model"))
+    try:
+        t_stop_s = cooling_time_seconds(
+            T0,
+            float(T_stop_K),
+            margin_years=margin_years,
+            model=autogen_model,
+            params=CoolingParams(),
+        )
+    except Exception:
+        return None
+    return max(float(fallback_years), _years_from_seconds(t_stop_s))

@@ -1,0 +1,194 @@
+scope:
+  region: inner
+  analysis_years: 2.0
+physics_mode: default    # collisions + sublimation
+process:
+  state_tagging:
+    enabled: false
+phase5:
+  compare:
+    enable: false
+    duration_years: 2.0
+geometry:
+  mode: 0D
+chi_blow: auto
+material:
+  rho: 3000.0
+sizes:
+  s_min: 1.0e-7
+  s_max: 3.0
+  n_bins: 40
+  evolve_min_size: false
+  apply_evolved_min_size: false
+initial:
+  mass_total: 1.0e-5
+  s0_mode: melt_lognormal_mixture
+  melt_psd:
+    mode: lognormal_mixture
+    f_fine: 0.25
+    s_fine: 1.0e-4
+    s_meter: 1.5
+    width_dex: 0.3
+    s_cut_condensation: 1.0e-6
+    s_min_solid: 1.0e-4
+    s_max_solid: 3.0
+    alpha_solid: 3.5
+dynamics:
+  e0: 0.5
+  i0: 0.05
+  t_damp_orbits: 20.0
+  f_wake: 2.0
+  v_rel_mode: pericenter
+  kernel_ei_mode: config
+  kernel_H_mode: ia
+  H_factor: 1.0
+  e_mode: mars_clearance
+  dr_min_m: 7.5e5
+  dr_max_m: 4.1e6
+  dr_dist: uniform
+  i_mode: fixed
+  rng_seed: 42
+psd:
+  alpha: 1.83
+  alpha_mode: size
+  wavy_strength: 0.0
+  floor:
+    mode: none
+qstar:
+  Qs: 3.5e7
+  a_s: 0.38
+  B: 0.3
+  b_g: 1.36
+  v_ref_kms: [2.0, 5.0]
+  coeff_units: ba99_cgs
+disk:
+  geometry:
+    r_in_RM: 1.0
+    r_out_RM: 2.7
+    r_profile: uniform
+    p_index: 0.0
+inner_disk_mass:
+  use_Mmars_ratio: true
+  M_in_ratio: 3.0e-5
+  map_to_sigma: analytic
+surface:
+  init_policy: clip_by_tau1
+  sigma_surf_init_override: null
+  use_tcoll: true
+  freeze_sigma: false
+  collision_solver: smol
+init_tau1:
+  enabled: true
+  scale_to_tau1: true
+supply:
+  mode: const
+  headroom_policy: clip
+  const:
+    prod_area_rate_kg_m2_s: 1.0e-10
+  powerlaw:
+    A_kg_m2_s:
+    t0_s: 0.0
+    index: -1.0
+  table:
+    path: data/supply_rate.csv
+    interp: linear
+  mixing:
+    mu: 1.0   # μ=1 を固定
+sinks:
+  mode: sublimation
+  enable_sublimation: true
+  sublimation_location: smol
+  T_sub: 1300.0
+  sub_params:
+    mode: hkl
+    alpha_evap: 0.007
+    mu: 0.0440849
+    A: 13.613
+    B: 17850.0
+    enable_liquid_branch: true
+    psat_liquid_switch_K: 1900.0
+    A_liq: 13.203
+    B_liq: 25898.9
+    dT: 50.0
+    eta_instant: 0.1
+    P_gas: 0.0
+    mass_conserving: true
+  enable_gas_drag: false
+  rho_g: 0.0
+  rp_blowout:
+    enable: true
+  hydro_escape:
+    enable: false
+radiation:
+  source: mars
+  use_mars_rp: true
+  use_solar_rp: false
+  freeze_kappa: false
+  TM_K: 4000.0
+  qpr_table_path: marsdisk/io/data/qpr_planck.csv
+  Q_pr:
+  mars_temperature_driver:
+    enabled: true
+    mode: table        # slab モード (テーブル/解析式) を明示
+    table:
+      path: data/mars_temperature_T4000p0K.csv
+      time_unit: day
+      column_time: time_day
+      column_temperature: T_K
+    autogenerate:
+      enabled: true
+      output_dir: data
+      dt_hours: 1.0
+      min_years: 2.0
+      time_margin_years: 0.5
+      time_unit: day
+      column_time: time_day
+      column_temperature: T_K
+      model: slab
+  tau_gate:
+    enable: false
+    tau_max: 1.0
+shielding:
+  mode: psitau
+  table_path: tables/phi_const_0p37.csv  # phi=37 相当
+  fixed_tau1_tau:
+  fixed_tau1_sigma: auto
+blowout:
+  enabled: true
+  target_phase: solid_only
+  layer: surface_tau_le_1
+phase:
+  enabled: true
+  source: threshold
+  entrypoint: siO2_disk_cooling.siO2_cooling_map:lookup_phase_state
+  extra_kwargs: {}
+  thresholds:
+    T_condense_K: 1700.0
+    T_vaporize_K: 2000.0
+    P_ref_bar: 1.0
+    tau_ref: 1.0
+numerics:
+  t_end_years: 2.0
+  dt_init: 2.0
+  safety: 0.1
+  atol: 1.0e-10
+  rtol: 1.0e-6
+  eval_per_step: true
+  orbit_rollup: true
+  dt_over_t_blow_max: 0.1
+diagnostics:
+  phase7:
+    enable: false
+    schema_version: phase7-minimal-v1
+io:
+  outdir: out/temp_supply_grid/T4000_mu1_phi37_slab
+  debug_sinks: false
+  correct_fast_blowout: false
+  substep_fast_blowout: false
+  substep_max_ratio: 1.0
+  streaming:
+    enable: true
+    memory_limit_gb: 20.0
+    step_flush_interval: 10000
+    compression: snappy
+    merge_at_end: true

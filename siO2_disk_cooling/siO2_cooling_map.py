@@ -9,7 +9,7 @@ from typing import Any, Mapping, Optional
 import numpy as np
 
 from .io_utils import ensure_outputs_dir, write_csv, write_log
-from .model import CoolingParams, YEAR_SECONDS, compute_arrival_times
+from .model import CoolingParams, YEAR_SECONDS, compute_arrival_times, cooling_time_to_temperature
 from .plotting import plot_arrival_map
 
 
@@ -46,6 +46,24 @@ def _parse_args() -> argparse.Namespace:
         choices=["arrival", "phase"],
         default="arrival",
         help="Plot arrival times or solid/vapor fraction",
+    )
+    parser.add_argument(
+        "--cooling-model",
+        choices=["slab", "hyodo"],
+        default="slab",
+        help="Cooling model for Mars temperature (slab T^-3 or Hyodo linear flux).",
+    )
+    parser.add_argument(
+        "--T_stop",
+        type=float,
+        default=None,
+        help="If set, extend t_max_years so the Mars slab cools to this temperature [K] before stopping.",
+    )
+    parser.add_argument(
+        "--span-margin-years",
+        type=float,
+        default=0.2,
+        help="Extra padding added after reaching T_stop when --T_stop is provided [years].",
     )
     return parser.parse_args()
 
@@ -174,9 +192,17 @@ def main() -> None:
     params = CoolingParams()
     default_cfg = Path(__file__).resolve().parents[1] / "configs" / "base.yml"
     cfg_path = Path(args.marsdisk_config) if args.marsdisk_config else default_cfg
+    t_max_years = float(args.t_max_years)
+    if args.T_stop is not None:
+        try:
+            t_stop_s = cooling_time_to_temperature(float(args.T0), float(args.T_stop), params)
+            t_stop_years = t_stop_s / YEAR_SECONDS + max(float(args.span_margin_years), 0.0)
+            t_max_years = max(t_max_years, t_stop_years)
+        except Exception:
+            pass
     cell_width_auto = None if args.cell_width_Rmars is not None else _infer_cell_width_from_config(cfg_path)
     time_s, r_over_Rmars = _build_grids(
-        args.t_max_years,
+        t_max_years,
         args.dt_hours,
         args.r_min_Rmars,
         args.r_max_Rmars,
@@ -185,7 +211,7 @@ def main() -> None:
     )
 
     arrival_glass_s, arrival_liquidus_s = compute_arrival_times(
-        args.T0, params, r_over_Rmars, time_s
+        args.T0, params, r_over_Rmars, time_s, temperature_model=args.cooling_model
     )
 
     outdir = ensure_outputs_dir()

@@ -47,12 +47,24 @@ def main(run_dir: Path) -> int:
         "Sigma_surf",
         "outflux_surface",
     ]
+    spill_cols = [
+        "supply_tau_clip_spill_rate",
+        "mass_lost_tau_clip_spill_step",
+        "cum_mass_lost_tau_clip_spill",
+    ]
 
     summary: dict = {}
     if summary_path.exists():
         summary = json.loads(summary_path.read_text())
 
-    df = pd.read_parquet(series_path, columns=series_cols)
+    try:
+        df = pd.read_parquet(series_path, columns=series_cols + spill_cols)
+    except Exception as e:  # column missing or other read issue
+        df = pd.read_parquet(series_path, columns=series_cols)
+        missing = [c for c in spill_cols if c not in df.columns]
+        for c in missing:
+            df[c] = 0.0
+        print(f"[warn] spill columns missing ({missing}); filled with 0.0 [{e}]")
     n = len(df)
     step = max(n // 4000, 1)
     df = df.iloc[::step].copy()
@@ -131,6 +143,42 @@ def main(run_dir: Path) -> int:
     fig2.tight_layout(rect=(0, 0, 1, 0.95))
     fig2.savefig(plots_dir / "supply_surface.png", dpi=180)
     plt.close(fig2)
+
+    # Plot 3: Spill diagnostics (if available)
+    has_spill = df[spill_cols].abs().sum().sum() > 0.0
+    if has_spill:
+        fig3, ax3 = plt.subplots(2, 1, figsize=(10, 8), sharex=True)
+        ax3[0].plot(
+            df["time_days"],
+            df["supply_tau_clip_spill_rate"],
+            label="supply_tau_clip_spill_rate",
+            color="tab:orange",
+        )
+        ax3[0].set_ylabel("kg m^-2 s^-1")
+        ax3[0].set_title("Spill rate (tau clip)")
+
+        ax3[1].plot(
+            df["time_days"],
+            df["cum_mass_lost_tau_clip_spill"],
+            label="cum_mass_lost_tau_clip_spill",
+            color="tab:red",
+        )
+        ax3[1].plot(
+            df["time_days"],
+            df["mass_lost_tau_clip_spill_step"],
+            label="mass_lost_tau_clip_spill_step",
+            color="tab:purple",
+            alpha=0.8,
+        )
+        ax3[1].set_ylabel("M_Mars")
+        ax3[1].set_xlabel("days")
+        ax3[1].legend(loc="upper left")
+        ax3[1].set_title("Spill losses (model-external)")
+
+        fig3.suptitle(f"{run_dir.name} spill diagnostics")
+        fig3.tight_layout(rect=(0, 0, 1, 0.95))
+        fig3.savefig(plots_dir / "spill.png", dpi=180)
+        plt.close(fig3)
 
     print(f"[plot] saved plots to {plots_dir}")
     return 0

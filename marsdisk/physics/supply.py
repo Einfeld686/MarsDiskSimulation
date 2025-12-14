@@ -391,6 +391,8 @@ def split_supply_with_deep_buffer(
     deep_enabled: bool,
     transport_mode: str = "direct",
     headroom_gate: str = "hard",
+    headroom_policy: str = "clip",
+    t_blow: Optional[float] = None,
 ) -> SupplySplitResult:
     """Route external supply between the surface and a deep reservoir."""
 
@@ -408,6 +410,8 @@ def split_supply_with_deep_buffer(
             transport_mode=str(transport_mode or "direct"),
         )
 
+    policy = str(headroom_policy or "clip").lower()
+    spill_mode = policy == "spill"
     headroom = None
     if sigma_tau1 is not None and math.isfinite(sigma_tau1):
         sigma_cap = max(min(float(sigma_surf), float(sigma_tau1)), 0.0)
@@ -422,27 +426,51 @@ def split_supply_with_deep_buffer(
     deep_to_surf_attempt = 0.0
     deep_to_surf_applied = 0.0
 
+    dotSigma_max = float("inf")
+    if dt > 0.0:
+        dot_headroom = float("inf") if headroom is None else max(headroom / dt, 0.0)
+        dot_replenish = 0.0
+        if (
+            sigma_tau1 is not None
+            and math.isfinite(sigma_tau1)
+            and t_blow is not None
+            and t_blow > 0.0
+            and math.isfinite(t_blow)
+        ):
+            dot_replenish = max(float(sigma_tau1) / t_blow, 0.0)
+        dotSigma_max = dot_headroom + dot_replenish
+
+    limit_dSigma = dotSigma_max * dt if math.isfinite(dotSigma_max) else float("inf")
+
     if mode == "deep_mixing":
         dSigma_into_deep = dSigma_in
         sigma_deep_new += dSigma_into_deep
-        available_headroom = float("inf") if headroom is None else max(headroom, 0.0)
+        available_headroom = float("inf") if spill_mode or headroom is None else max(headroom, 0.0)
         if deep_enabled and t_mix is not None and t_mix > 0.0:
             deep_to_surf_attempt = sigma_deep_new * (dt / t_mix)
             deep_to_surf_applied = deep_to_surf_attempt
-            if gate_mode == "hard" or gate_mode == "soft":
+            if (gate_mode == "hard" or gate_mode == "soft") and not spill_mode:
                 deep_to_surf_applied = min(available_headroom, deep_to_surf_applied, sigma_deep_new)
+            cap_remaining = max(limit_dSigma, 0.0)
+            deep_to_surf_applied = min(deep_to_surf_applied, cap_remaining)
             sigma_deep_new = max(sigma_deep_new - deep_to_surf_applied, 0.0)
         dSigma_to_surf_direct = 0.0
     else:
-        if headroom is not None:
+        if headroom is not None and not spill_mode:
             dSigma_to_surf_direct = min(dSigma_in, headroom)
             dSigma_into_deep = dSigma_in - dSigma_to_surf_direct
+        # Apply global surface cap including replenishment term
+        dSigma_to_surf_direct = min(dSigma_to_surf_direct, limit_dSigma)
         if deep_enabled:
             sigma_deep_new += dSigma_into_deep
-            available_headroom = float("inf") if headroom is None else max(headroom - dSigma_to_surf_direct, 0.0)
+            available_headroom = float("inf") if spill_mode or headroom is None else max(headroom - dSigma_to_surf_direct, 0.0)
+            cap_remaining = max(limit_dSigma - dSigma_to_surf_direct, 0.0)
             if t_mix is not None and t_mix > 0.0:
                 deep_to_surf_attempt = sigma_deep_new * (dt / t_mix)
-                deep_to_surf_applied = min(available_headroom, deep_to_surf_attempt, sigma_deep_new)
+                if spill_mode:
+                    deep_to_surf_applied = min(deep_to_surf_attempt, sigma_deep_new, cap_remaining)
+                else:
+                    deep_to_surf_applied = min(available_headroom, deep_to_surf_attempt, sigma_deep_new, cap_remaining)
                 sigma_deep_new = max(sigma_deep_new - deep_to_surf_applied, 0.0)
 
     dSigma_to_surf = dSigma_to_surf_direct + deep_to_surf_applied
