@@ -35,6 +35,12 @@ if exist "%REQ_FILE%" (
 )
 
 rem ---------- defaults ----------
+rem Hard reset cooling params to avoid polluted values from previous shell commands
+set "COOL_MODE="
+set "COOL_TO_K="
+set "COOL_MARGIN_YEARS="
+set "COOL_SEARCH_YEARS="
+
 if not defined BASE_CONFIG set "BASE_CONFIG=configs/sweep_temp_supply/temp_supply_T4000_eps1.yml"
 if not defined QSTAR_UNITS set "QSTAR_UNITS=ba99_cgs"
 rem Cooling defaults (stop when Mars T_M reaches 1000 K, slab law unless overridden)
