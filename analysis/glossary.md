@@ -26,6 +26,10 @@
 | G.A05 | blow-out size s_blow | both | light | code:radiation.py | draft | A | β≃0.5 となる粒径で「吹き飛びサイズ」s_blow。これより小さいダストは放射圧で短時間に失われ、PSD の実効的最小サイズとして扱う。 | E.014 | Hyodo2018,StrubbeChiang2006 |
 | G.A06 | Planck-mean Q_pr | both | full | code:radiation.py | draft | A | 火星表面温度でプランク平均した放射圧効率 ⟨Q_pr⟩。放射圧パラメータ β や吹き飛びサイズ s_blow など放射依存の量は、このプランク平均 Q_pr を通じて評価する。 | E.004 | Hyodo2018,Ronnet2016 |
 | G.A07 | sub-blow-out particles | both | light | code+papers | draft | A | 吹き飛びサイズ s_blow より小さく、β が大きいため 1 公転以内に系外へ放出される小粒子群。内部破砕カスケードで供給され、円盤質量損失の主担い手となる「sub-blow-out 粒子」。 | E.035 | Hyodo2018,StrubbeChiang2006 |
+| G.A08 | deep_mixing transport | both | light | code:supply.py | draft | A | 外部供給を深部リザーバー経由で表層へ混合する輸送モード。`supply.transport.mode="deep_mixing"` で有効化し、`t_mix_orbits` で混合時間を指定する。τ>1 での供給過多を避けつつ質量を保存するための経路。 |  | code-internal |
+| G.A09 | slab cooling model | both | full | code:tempdriver.py | draft | A | Stefan-Boltzmann 放射冷却に基づき T(t) ∝ t^(-1/3) となる解析解。火星表面の時変温度ドライバ（`autogenerate.model="slab"`）で使用され、研究スクリプトの既定冷却モデル。 | E.042,E.043 | Hyodo2018 |
+| G.A10 | headroom | both | light | code:run.py | draft | A | Σ_{τ=1} - Σ_surf の余裕量。供給が表層に注入される際のクリップ判定に使用され、headroom ≤ 0 のとき供給がゼロにカットされる。`supply.headroom_policy` で挙動を制御。 |  | code-internal |
+| G.A11 | epsilon_mix | both | light | code:supply.py | draft | A | バリスティック混合効率を表す無次元係数（0–1）。外部供給に掛かる実効スケールで、MU_LIST として研究スイープで掃引される。`supply.mixing.epsilon_mix` で設定。 | E.027 | WyattClarkeBooth2011,EstradaDurisen2015 |
 
 ---
 

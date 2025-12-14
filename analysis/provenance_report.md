@@ -1,6 +1,6 @@
 # Provenance Report
 
-- **Equation coverage**: 7 / 38 headings in `analysis/equations.md` carry confirmed tags (≈18.4%). Key anchors include (E.006) for the Strubbe–Chiang surface lifetime and (E.042)/(E.043) for the Hyodo et al. cooling/greybody laws. [@StrubbeChiang2006_ApJ648_652; @Hyodo2018_ApJ860_150]
+- **Equation coverage**: 7 / 44 headings in `analysis/equations.md` carry confirmed tags (≈15.9%). Key anchors include (E.006) for the Strubbe–Chiang surface lifetime and (E.042)/(E.043) for the Hyodo et al. cooling/greybody laws. [@StrubbeChiang2006_ApJ648_652; @Hyodo2018_ApJ860_150]
 - **Code mappings**: 23 anchors in `analysis/source_map.json` link the registry keys across radiation, surface, sublimation, siO₂ cooling, and the gas-poor guidance in `analysis/overview.md` / `analysis/run-recipes.md`. All entries reference normalized keys from `analysis/references.registry.json`.
 - **Unknown packets**: 0（`tl2003_surface_flow_scope_v1`, `tmars_cooling_solution_v1`, `tp_radiative_equilibrium_v1`, `siO2_thresholds_v1` は文献登録済み: TL2002/2003/ Shadmehri gas-rich範囲、Hyodo17/18 + Lesher&Spera/Robertsonで冷却層物性、Bohren&Huffman/Blanco/Draine/Hocukで⟨Q_abs⟩、Bruning/Ojovan/Meloshで SiO₂ 閾値）。
 
@@ -8,9 +8,9 @@
 
 | Category | Count |
 | --- | --- |
-| Total equations (E.xxx) | 38 |
+| Total equations (E.xxx) | 44 |
 | Equations with `[@Key]` | 7 |
-| Equations with `TODO(REF:...)` | 31 |
+| Equations with `TODO(REF:...)` | 37 |
 | Code anchors in `source_map.json` | 23 |
 | Registry entries | 31 |
 

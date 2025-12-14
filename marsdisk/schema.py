@@ -784,6 +784,14 @@ class InitTau1(BaseModel):
         False,
         description="If true, clamp the initial surface density to the chosen Σ_τ=1 cap to avoid headroom=0.",
     )
+    tau_field: Literal["vertical", "los"] = Field(
+        "vertical",
+        description="Which optical-depth field to target when setting Σ_τ=1. Use 'los' to target Mars line-of-sight τ.",
+    )
+    target_tau: float = Field(
+        1.0,
+        description="Target optical depth for initialisation (usually 1.0). Applies to the selected tau_field.",
+    )
 
 
 class SublimationParamsModel(BaseModel):

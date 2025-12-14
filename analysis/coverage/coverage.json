@@ -1,12 +1,12 @@
 {
   "function_reference_rate": {
-    "numerator": 71,
-    "denominator": 79,
-    "rate": 0.8987341772151899
+    "numerator": 72,
+    "denominator": 93,
+    "rate": 0.7741935483870968
   },
   "anchor_consistency_rate": {
-    "numerator": 566,
-    "denominator": 566,
+    "numerator": 574,
+    "denominator": 574,
     "rate": 1.0
   },
   "equation_unit_coverage": {
@@ -16,8 +16,8 @@
   },
   "sinks_callgraph_documented": true,
   "holes": [
-    "marsdisk/physics_step.py#compute_gate_factor",
-    "marsdisk/physics_step.py#compute_radiation_parameters",
-    "marsdisk/physics_step.py#compute_shielding"
+    "marsdisk/physics/collisions_smol.py#compute_kernel_ei_state",
+    "marsdisk/physics/phase.py#particle_temperature_equilibrium",
+    "marsdisk/physics/psd.py#apply_mass_weights"
   ]
 }

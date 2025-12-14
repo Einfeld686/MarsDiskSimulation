@@ -2871,196 +2871,196 @@
   },
   {
     "file_path": "marsdisk/ops/doc_sync_agent.py",
-    "line_no": 676,
+    "line_no": 683,
     "symbol": "_legacy_main",
     "signature": "_legacy_main(argv: Optional[Sequence[str]]=None) -> int",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/ops/doc_sync_agent.py",
-    "line_no": 745,
+    "line_no": 752,
     "symbol": "_collect_inventory_records",
     "signature": "_collect_inventory_records(root: Path) -> List[InventoryRecord]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/ops/doc_sync_agent.py",
-    "line_no": 785,
+    "line_no": 792,
     "symbol": "_resolve_cli_path",
     "signature": "_resolve_cli_path(value: str) -> Path",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/ops/doc_sync_agent.py",
-    "line_no": 792,
+    "line_no": 799,
     "symbol": "_rel_to_repo",
     "signature": "_rel_to_repo(path: Path) -> str",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/ops/doc_sync_agent.py",
-    "line_no": 799,
+    "line_no": 806,
     "symbol": "_cmd_scan",
     "signature": "_cmd_scan(args: argparse.Namespace) -> int",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/ops/doc_sync_agent.py",
-    "line_no": 815,
+    "line_no": 822,
     "symbol": "_collect_doc_references",
     "signature": "_collect_doc_references(doc_paths: Sequence[Path]) -> Dict[str, Any]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/ops/doc_sync_agent.py",
-    "line_no": 941,
+    "line_no": 948,
     "symbol": "_cmd_refs",
     "signature": "_cmd_refs(args: argparse.Namespace) -> int",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/ops/doc_sync_agent.py",
-    "line_no": 964,
+    "line_no": 971,
     "symbol": "_load_inventory_records",
     "signature": "_load_inventory_records(path: Path) -> List[InventoryRecord]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/ops/doc_sync_agent.py",
-    "line_no": 1002,
+    "line_no": 1009,
     "symbol": "_match_symbol_by_span",
     "signature": "_match_symbol_by_span(symbols: Sequence[InventoryRecord], start: int, end: int) -> Optional[InventoryRecord]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/ops/doc_sync_agent.py",
-    "line_no": 1014,
+    "line_no": 1021,
     "symbol": "_compute_coverage",
     "signature": "_compute_coverage(inventory: Sequence[InventoryRecord], docs_payload: Dict[str, Any]) -> Dict[str, Any]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/ops/doc_sync_agent.py",
-    "line_no": 1161,
+    "line_no": 1168,
     "symbol": "_parse_gap_identifier",
     "signature": "_parse_gap_identifier(identifier: str) -> Optional[Tuple[str, str]]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/ops/doc_sync_agent.py",
-    "line_no": 1173,
+    "line_no": 1180,
     "symbol": "_collect_unreferenced_from_coverage",
     "signature": "_collect_unreferenced_from_coverage(coverage_data: Dict[str, Any]) -> List[Tuple[str, str]]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/ops/doc_sync_agent.py",
-    "line_no": 1198,
+    "line_no": 1205,
     "symbol": "_load_suggestions_index",
     "signature": "_load_suggestions_index(path: Path) -> Dict[Tuple[str, str], Dict[str, Any]]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/ops/doc_sync_agent.py",
-    "line_no": 1221,
+    "line_no": 1228,
     "symbol": "_format_code_anchor",
     "signature": "_format_code_anchor(record: InventoryRecord) -> str",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/ops/doc_sync_agent.py",
-    "line_no": 1228,
+    "line_no": 1235,
     "symbol": "_strip_line_anchor_annotations",
     "signature": "_strip_line_anchor_annotations(text: str) -> str",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/ops/doc_sync_agent.py",
-    "line_no": 1232,
+    "line_no": 1239,
     "symbol": "ensure_equation_ids",
     "signature": "ensure_equation_ids(equations_path: Path) -> None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/ops/doc_sync_agent.py",
-    "line_no": 1292,
+    "line_no": 1299,
     "symbol": "_render_coverage_markdown",
     "signature": "_render_coverage_markdown(data: Dict[str, Any]) -> str",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/ops/doc_sync_agent.py",
-    "line_no": 1349,
+    "line_no": 1356,
     "symbol": "_is_stub_already_present",
     "signature": "_is_stub_already_present(text: str, record: InventoryRecord) -> bool",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/ops/doc_sync_agent.py",
-    "line_no": 1354,
+    "line_no": 1361,
     "symbol": "_render_stub_block",
     "signature": "_render_stub_block(record: InventoryRecord, doc_kind: str) -> str",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/ops/doc_sync_agent.py",
-    "line_no": 1386,
+    "line_no": 1393,
     "symbol": "_append_to_section",
     "signature": "_append_to_section(text: str, heading_pattern: re.Pattern[str], stub: str) -> str",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/ops/doc_sync_agent.py",
-    "line_no": 1401,
+    "line_no": 1408,
     "symbol": "_append_to_end",
     "signature": "_append_to_end(text: str, stub: str) -> str",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/ops/doc_sync_agent.py",
-    "line_no": 1407,
+    "line_no": 1414,
     "symbol": "_determine_autostub_target",
     "signature": "_determine_autostub_target(record: InventoryRecord, suggestions: Dict[Tuple[str, str], Dict[str, Any]], overview_path: Path, equations_path: Path, run_recipes_path: Path) -> Tuple[Path, Optional[re.Pattern[str]], str]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/ops/doc_sync_agent.py",
-    "line_no": 1454,
+    "line_no": 1461,
     "symbol": "_cmd_coverage",
     "signature": "_cmd_coverage(args: argparse.Namespace) -> int",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/ops/doc_sync_agent.py",
-    "line_no": 1487,
+    "line_no": 1494,
     "symbol": "_cmd_autostub",
     "signature": "_cmd_autostub(args: argparse.Namespace) -> int",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/ops/doc_sync_agent.py",
-    "line_no": 1563,
+    "line_no": 1570,
     "symbol": "_cmd_update",
     "signature": "_cmd_update(args: argparse.Namespace) -> int",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/ops/doc_sync_agent.py",
-    "line_no": 1694,
+    "line_no": 1701,
     "symbol": "_run_new_cli",
     "signature": "_run_new_cli(argv: Sequence[str]) -> int",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/ops/doc_sync_agent.py",
-    "line_no": 1908,
+    "line_no": 1915,
     "symbol": "main",
     "signature": "main(argv: Optional[Sequence[str]]=None) -> int",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/ops/doc_sync_agent.py",
-    "line_no": 1916,
+    "line_no": 1923,
     "symbol": "_git_commit",
     "signature": "_git_commit(changes: Iterable[FileChange]) -> None",
     "brief_usage": "No description available."
@@ -3914,49 +3914,56 @@
   },
   {
     "file_path": "marsdisk/physics/psd.py",
-    "line_no": 43,
+    "line_no": 44,
     "symbol": "update_psd_state",
     "signature": "update_psd_state(*, s_min: float, s_max: float, alpha: float, wavy_strength: float, n_bins: int=40, rho: float=3000.0, wavy_decay: float=0.0, alpha_mode: str='size') -> Dict[str, np.ndarray | float]",
     "brief_usage": "Return a particle size distribution state."
   },
   {
     "file_path": "marsdisk/physics/psd.py",
-    "line_no": 134,
+    "line_no": 137,
+    "symbol": "sanitize_and_normalize_number",
+    "signature": "sanitize_and_normalize_number(psd_state: Dict[str, np.ndarray | float], clip_max: float=1e+200, *, normalize: bool=True) -> Dict[str, np.ndarray | float]",
+    "brief_usage": "Clamp non-finite/negative/huge number entries and optionally mass-normalize."
+  },
+  {
+    "file_path": "marsdisk/physics/psd.py",
+    "line_no": 174,
     "symbol": "compute_kappa",
     "signature": "compute_kappa(psd_state: Dict[str, np.ndarray | float]) -> float",
     "brief_usage": "Compute the mass opacity ``\\kappa`` from a PSD state (P1)."
   },
   {
     "file_path": "marsdisk/physics/psd.py",
-    "line_no": 162,
+    "line_no": 211,
     "symbol": "mass_weights_lognormal_mixture",
     "signature": "mass_weights_lognormal_mixture(sizes: np.ndarray, widths: np.ndarray, *, f_fine: float, s_fine: float, s_meter: float, width_dex: float, s_cut: float | None=None) -> np.ndarray",
     "brief_usage": "Return per-bin mass weights for a two-component melt mixture."
   },
   {
     "file_path": "marsdisk/physics/psd.py",
-    "line_no": 205,
+    "line_no": 254,
     "symbol": "mass_weights_truncated_powerlaw",
     "signature": "mass_weights_truncated_powerlaw(sizes: np.ndarray, widths: np.ndarray, *, alpha_solid: float, s_min_solid: float, s_max_solid: float, s_cut: float | None=None) -> np.ndarray",
     "brief_usage": "Return per-bin mass weights for a truncated power-law melt PSD."
   },
   {
     "file_path": "marsdisk/physics/psd.py",
-    "line_no": 239,
+    "line_no": 288,
     "symbol": "apply_mass_weights",
     "signature": "apply_mass_weights(psd_state: Dict[str, np.ndarray | float], mass_weights: np.ndarray, *, rho: float | None=None) -> Dict[str, np.ndarray | float]",
     "brief_usage": "Map mass weights to the PSD's number array while preserving total mass."
   },
   {
     "file_path": "marsdisk/physics/psd.py",
-    "line_no": 283,
+    "line_no": 333,
     "symbol": "apply_uniform_size_drift",
     "signature": "apply_uniform_size_drift(psd_state: Dict[str, np.ndarray | float], *, ds_dt: float, dt: float, floor: float, sigma_surf: float) -> tuple[float, float, Dict[str, float]]",
     "brief_usage": "Erode all PSD bins by a uniform ``ds/dt`` and update ``Sigma_surf``."
   },
   {
     "file_path": "marsdisk/physics/psd.py",
-    "line_no": 401,
+    "line_no": 466,
     "symbol": "evolve_min_size",
     "signature": "evolve_min_size(s_min_prev: float, *, dt: float, model: Optional[str]=None, params: Optional[Mapping[str, float]]=None, T: Optional[float]=None, rho: Optional[float]=None, s_floor: Optional[float]=None, sublimation_params: Optional[SublimationParams]=None) -> float",
     "brief_usage": "Return the evolved minimum grain size after a time step ``dt``."
@@ -5223,28 +5230,28 @@
   },
   {
     "file_path": "marsdisk/run.py",
-    "line_no": 4592,
+    "line_no": 4604,
     "symbol": "_run_phase5_variant",
     "signature": "_run_phase5_variant(base_cfg: Config, variant: str, mode: str, base_outdir: Path, duration_years: float, *, enforce_mass_budget: bool) -> _Phase5VariantResult",
     "brief_usage": "Execute a single-process variant run and capture its artifacts."
   },
   {
     "file_path": "marsdisk/run.py",
-    "line_no": 4654,
+    "line_no": 4666,
     "symbol": "_write_phase5_comparison_products",
     "signature": "_write_phase5_comparison_products(base_outdir: Path, duration_years: float, results: List[_Phase5VariantResult]) -> None",
     "brief_usage": "Aggregate per-variant artifacts into the comparison outputs."
   },
   {
     "file_path": "marsdisk/run.py",
-    "line_no": 4796,
+    "line_no": 4808,
     "symbol": "run_phase5_comparison",
     "signature": "run_phase5_comparison(cfg: Config, *, enforce_mass_budget: bool=False, variants_spec: Optional[List[Dict[str, str]]]=None) -> None",
     "brief_usage": "Run the Phase 5 dual single-process comparison workflow."
   },
   {
     "file_path": "marsdisk/run.py",
-    "line_no": 4831,
+    "line_no": 4843,
     "symbol": "main",
     "signature": "main(argv: Optional[List[str]]=None) -> None",
     "brief_usage": "Command line entry point."

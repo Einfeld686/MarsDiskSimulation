@@ -134,14 +134,18 @@ def update_psd_state(
     return psd_state
 
 
-def sanitize_and_normalize_number(psd_state: Dict[str, np.ndarray | float], clip_max: float = 1e200) -> Dict[str, np.ndarray | float]:
-    """Clamp non-finite/negative/huge number entries and mass-normalize.
+def sanitize_and_normalize_number(
+    psd_state: Dict[str, np.ndarray | float],
+    clip_max: float = 1e200,
+    *,
+    normalize: bool = True,
+) -> Dict[str, np.ndarray | float]:
+    """Clamp non-finite/negative/huge number entries and optionally mass-normalize.
 
     - 非有限/負の number は 0 へクリップ
     - clip_max より大きい値は clip_max へクリップ（浮動小数点オーバーフロー防止）
-    - 質量重み ``sum(number * s^3 * width)`` が有限かつ正なら 1 で正規化
-      （面積/質量比を計算する際のスケール暴走を抑止）
-    - 質量重みが 0/非有限なら、一様分布にリセットして正規化
+    - normalize=True の場合、質量重み ``sum(number * s^3 * width)`` が有限かつ正なら 1 で正規化
+      （面積/質量比を計算する際のスケール暴走を抑止）。0/非有限なら一様分布にリセットして正規化。
     """
 
     sizes = np.asarray(psd_state.get("sizes"), dtype=float)
@@ -154,14 +158,14 @@ def sanitize_and_normalize_number(psd_state: Dict[str, np.ndarray | float], clip
     if clip_max is not None and clip_max > 0.0:
         number = np.clip(number, 0.0, clip_max)
 
-    mass_weight = float(np.sum(number * (sizes**3) * widths))
-    if not np.isfinite(mass_weight) or mass_weight <= 0.0:
-        number = np.ones_like(number, dtype=float)
+    if normalize:
         mass_weight = float(np.sum(number * (sizes**3) * widths))
-        if mass_weight <= 0.0 or not np.isfinite(mass_weight):
-            mass_weight = 1.0
-
-    number /= mass_weight
+        if not np.isfinite(mass_weight) or mass_weight <= 0.0:
+            number = np.ones_like(number, dtype=float)
+            mass_weight = float(np.sum(number * (sizes**3) * widths))
+            if mass_weight <= 0.0 or not np.isfinite(mass_weight):
+                mass_weight = 1.0
+        number /= mass_weight
     psd_state["number"] = number
     psd_state["n"] = number
     return psd_state
@@ -187,6 +191,7 @@ def compute_kappa(psd_state: Dict[str, np.ndarray | float]) -> float:
     sizes = np.asarray(psd_state["sizes"], dtype=float)
     widths = np.asarray(psd_state["widths"], dtype=float)
     number = np.asarray(psd_state["number"], dtype=float)
+    number_orig = number.copy()
     rho = float(psd_state["rho"])
 
     if sizes.size == 0 or widths.size != sizes.size or number.size != sizes.size:
@@ -369,9 +374,12 @@ def apply_uniform_size_drift(
     if not np.isfinite(ds_dt) or ds_dt == 0.0:
         return sigma_surf, 0.0, {"ds_step": 0.0, "mass_ratio": 1.0}
 
+    sanitize_and_normalize_number(psd_state, normalize=False)
+
     sizes = np.asarray(psd_state["sizes"], dtype=float)
     widths = np.asarray(psd_state["widths"], dtype=float)
     number = np.asarray(psd_state["number"], dtype=float)
+    number_orig = number.copy()
     if sizes.size == 0:
         return sigma_surf, 0.0, {"ds_step": 0.0, "mass_ratio": 1.0}
 
@@ -411,6 +419,17 @@ def apply_uniform_size_drift(
     mask = new_number > 0.0
     new_sizes[mask] = accum_sizes[mask] / new_number[mask]
     new_sizes = np.maximum(new_sizes, floor_val)
+    # clip-only sanitize before mass_ratio計算（規模暴走を防ぎつつスケールは保持）
+    tmp_state = {"sizes": new_sizes, "widths": widths, "number": new_number}
+    sanitize_and_normalize_number(tmp_state, normalize=False)
+    new_number = np.asarray(tmp_state["number"], dtype=float)
+    # 完全にゼロ化・非有限化した場合は前ステップへロールバックし、質量正規化して止血
+    if not np.isfinite(new_number).all() or np.sum(new_number) == 0.0:
+        logger.warning("apply_uniform_size_drift: number became zero/non-finite; rolling back to previous PSD shape")
+        psd_state["number"] = number_orig
+        psd_state["n"] = number_orig
+        sanitize_and_normalize_number(psd_state, normalize=True)
+        return sigma_surf, 0.0, {"ds_step": ds_step, "mass_ratio": 1.0, "sigma_before": sigma_surf, "sigma_after": sigma_surf}
 
     # update aliases for downstream consumers
     psd_state["number"] = new_number

@@ -456,6 +456,32 @@ supply:
 
 Wyatt, Clarke & Booth (2011) が提示するサイズ別源・損失の解析式を一般化した形で、`mode` によって外部供給 $S(a,r,t)$ を任意の関数として与えられるようにしている [@WyattClarkeBooth2011_CeMDA111_1; @Wyatt2008]。`mixing.epsilon_mix` は、微小隕石供給をバリスティック輸送で拡げるリングモデル（Estrada & Durisen 2015）や Cuzzi & Estrada (1998) の混合係数の扱いに倣い、外部由来の粒子がどの程度空間的・サイズ的に均質化するかをパラメータ化する [@EstradaDurisen2015_Icarus252_415; @CuzziEstrada1998_Icarus132_1]。
 
+#### 📦 供給輸送経路 (`supply.transport`)
+
+供給を表層へ直接注入するか、深部リザーバー経由で混合するかを選択する。
+
+| キー | 型 | 説明 | 典型値 |
+|------|-----|------|--------|
+| `mode` | `"direct"` / `"deep_mixing"` | 輸送モード。`direct` は従来の headroom ゲート経由で表層へ直接注入。`deep_mixing` は一旦深部リザーバーへ蓄え、`t_mix_orbits` で表層へ混合する | `"direct"` |
+| `t_mix_orbits` | float | 深部→表層の混合時間スケール [軌道周期]。`mode="deep_mixing"` のとき必須（正値） | 50 |
+| `headroom_gate` | `"hard"` / `"soft"` | 深部→表層フラックスの headroom 制限。`hard` は Σ_{τ=1} を超過しないよう厳密にクリップ | `"hard"` |
+
+**例（deep_mixing モード）:**
+
+```yaml
+supply:
+  mode: "const"
+  const:
+    prod_area_rate_kg_m2_s: 1.0e-4
+  transport:
+    mode: "deep_mixing"
+    t_mix_orbits: 50
+    headroom_gate: "soft"
+```
+
+> [!TIP]
+> `deep_mixing` は供給過多時に表層 τ>1 を避けつつも供給質量を保存する用途に有効。研究スクリプト `run_temp_supply_sweep.sh` のデフォルトは `deep_mixing` + `t_mix_orbits=50` を採用。
+
 ### 3.5 `sinks.sub_params` — 昇華パラメータ（簡略化済み）
 
 モードに関連するパラメータのみ記述すれば OK。
@@ -540,16 +566,31 @@ radiation:
 | キー | 型 | 単位 | 説明 |
 |------|-----|------|------|
 | `enabled` | bool | - | 時変温度ドライバの有効化 |
-| `mode` | str | - | `"constant"` / `"table"` |
+| `mode` | str | - | `"constant"` / `"table"` / `"hyodo"` |
 | `table.path` | Path | - | 温度テーブルCSVのパス |
 | `table.time_unit` | str | - | 時間列の単位: `"s"` / `"day"` / `"yr"` / `"orbit"` |
 | `table.column_time` | str | - | 時間列名 |
 | `table.column_temperature` | str | - | 温度列名 |
+| `hyodo.d_layer_m` | float | m | 有効スラブ厚（Hyodo モード用） |
+| `hyodo.rho` | float | kg/m³ | バルク密度（Hyodo モード用） |
+| `hyodo.cp` | float | J/kg/K | 比熱（Hyodo モード用） |
 | `autogenerate.enabled` | bool | - | テーブル自動生成の有効化 |
 | `autogenerate.output_dir` | Path | - | 生成先ディレクトリ |
 | `autogenerate.dt_hours` | float | hours | 時間ステップ |
 | `autogenerate.min_years` | float | yr | 最小カバー期間 |
 | `autogenerate.time_margin_years` | float | yr | マージン |
+| `autogenerate.model` | str | - | 自動生成モデル: `"slab"` / `"hyodo"` |
+
+**冷却モデルの選択:**
+
+| モード | 説明 | 使用タイミング |
+|--------|------|----------------|
+| `table` | CSV テーブルから温度を補間（既定推奨） | 事前計算された冷却曲線を使用する場合 |
+| `hyodo` | 線形冷却近似 $dT/dt = -F/(d \cdot \rho \cdot c_p)$ で動的に計算 | 解析的な冷却曲線をランタイム生成する場合 |
+| `constant` | 固定温度（時間発展なし） | 温度を固定して感度テストする場合 |
+
+**slab 冷却モデル（自動生成）:**
+`autogenerate.model="slab"` を使用すると、Stefan-Boltzmann 放射冷却に基づく $T(t) \propto t^{-1/3}$ の解析解テーブルを自動生成する。これは研究スクリプト `run_temp_supply_sweep.sh` のデフォルト設定。
 
 **例（テーブルモード）:**
 
@@ -570,7 +611,25 @@ radiation:
       dt_hours: 1.0
       min_years: 2.0
       time_margin_years: 0.5
+      model: "slab"
 ```
+
+**例（hyodo モード - 動的冷却）:**
+
+```yaml
+radiation:
+  TM_K: 5000
+  mars_temperature_driver:
+    enabled: true
+    mode: "hyodo"
+    hyodo:
+      d_layer_m: 1.0e5
+      rho: 3000
+      cp: 1000
+```
+
+> [!TIP]
+> `slab` モード（テーブル自動生成）は $T^{-3}$ 解析解を使用し、`hyodo` モードはスラブパラメータから線形冷却フラックスを計算する。研究スクリプトでは `table` + `autogenerate.model="slab"` を推奨。
 
 ### 3.9 `shielding` — 自遮蔽
 

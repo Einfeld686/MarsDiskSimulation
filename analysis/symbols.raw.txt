@@ -264,34 +264,34 @@ marsdisk/ops/doc_sync_agent.py:104:class SymbolInfo
 marsdisk/ops/doc_sync_agent.py:118:class FileChange
 marsdisk/ops/doc_sync_agent.py:149:class InventoryRecord
 marsdisk/ops/doc_sync_agent.py:185:class DocSyncAgent
-marsdisk/ops/doc_sync_agent.py:676:def _legacy_main(argv: Optional[Sequence[str]]=None) -> int
-marsdisk/ops/doc_sync_agent.py:745:def _collect_inventory_records(root: Path) -> List[InventoryRecord]
-marsdisk/ops/doc_sync_agent.py:785:def _resolve_cli_path(value: str) -> Path
-marsdisk/ops/doc_sync_agent.py:792:def _rel_to_repo(path: Path) -> str
-marsdisk/ops/doc_sync_agent.py:799:def _cmd_scan(args: argparse.Namespace) -> int
-marsdisk/ops/doc_sync_agent.py:815:def _collect_doc_references(doc_paths: Sequence[Path]) -> Dict[str, Any]
-marsdisk/ops/doc_sync_agent.py:941:def _cmd_refs(args: argparse.Namespace) -> int
-marsdisk/ops/doc_sync_agent.py:964:def _load_inventory_records(path: Path) -> List[InventoryRecord]
-marsdisk/ops/doc_sync_agent.py:1002:def _match_symbol_by_span(symbols: Sequence[InventoryRecord], start: int, end: int) -> Optional[InventoryRecord]
-marsdisk/ops/doc_sync_agent.py:1014:def _compute_coverage(inventory: Sequence[InventoryRecord], docs_payload: Dict[str, Any]) -> Dict[str, Any]
-marsdisk/ops/doc_sync_agent.py:1161:def _parse_gap_identifier(identifier: str) -> Optional[Tuple[str, str]]
-marsdisk/ops/doc_sync_agent.py:1173:def _collect_unreferenced_from_coverage(coverage_data: Dict[str, Any]) -> List[Tuple[str, str]]
-marsdisk/ops/doc_sync_agent.py:1198:def _load_suggestions_index(path: Path) -> Dict[Tuple[str, str], Dict[str, Any]]
-marsdisk/ops/doc_sync_agent.py:1221:def _format_code_anchor(record: InventoryRecord) -> str
-marsdisk/ops/doc_sync_agent.py:1228:def _strip_line_anchor_annotations(text: str) -> str
-marsdisk/ops/doc_sync_agent.py:1232:def ensure_equation_ids(equations_path: Path) -> None
-marsdisk/ops/doc_sync_agent.py:1292:def _render_coverage_markdown(data: Dict[str, Any]) -> str
-marsdisk/ops/doc_sync_agent.py:1349:def _is_stub_already_present(text: str, record: InventoryRecord) -> bool
-marsdisk/ops/doc_sync_agent.py:1354:def _render_stub_block(record: InventoryRecord, doc_kind: str) -> str
-marsdisk/ops/doc_sync_agent.py:1386:def _append_to_section(text: str, heading_pattern: re.Pattern[str], stub: str) -> str
-marsdisk/ops/doc_sync_agent.py:1401:def _append_to_end(text: str, stub: str) -> str
-marsdisk/ops/doc_sync_agent.py:1407:def _determine_autostub_target(record: InventoryRecord, suggestions: Dict[Tuple[str, str], Dict[str, Any]], overview_path: Path, equations_path: Path, run_recipes_path: Path) -> Tuple[Path, Optional[re.Pattern[str]], str]
-marsdisk/ops/doc_sync_agent.py:1454:def _cmd_coverage(args: argparse.Namespace) -> int
-marsdisk/ops/doc_sync_agent.py:1487:def _cmd_autostub(args: argparse.Namespace) -> int
-marsdisk/ops/doc_sync_agent.py:1563:def _cmd_update(args: argparse.Namespace) -> int
-marsdisk/ops/doc_sync_agent.py:1694:def _run_new_cli(argv: Sequence[str]) -> int
-marsdisk/ops/doc_sync_agent.py:1908:def main(argv: Optional[Sequence[str]]=None) -> int
-marsdisk/ops/doc_sync_agent.py:1916:def _git_commit(changes: Iterable[FileChange]) -> None
+marsdisk/ops/doc_sync_agent.py:683:def _legacy_main(argv: Optional[Sequence[str]]=None) -> int
+marsdisk/ops/doc_sync_agent.py:752:def _collect_inventory_records(root: Path) -> List[InventoryRecord]
+marsdisk/ops/doc_sync_agent.py:792:def _resolve_cli_path(value: str) -> Path
+marsdisk/ops/doc_sync_agent.py:799:def _rel_to_repo(path: Path) -> str
+marsdisk/ops/doc_sync_agent.py:806:def _cmd_scan(args: argparse.Namespace) -> int
+marsdisk/ops/doc_sync_agent.py:822:def _collect_doc_references(doc_paths: Sequence[Path]) -> Dict[str, Any]
+marsdisk/ops/doc_sync_agent.py:948:def _cmd_refs(args: argparse.Namespace) -> int
+marsdisk/ops/doc_sync_agent.py:971:def _load_inventory_records(path: Path) -> List[InventoryRecord]
+marsdisk/ops/doc_sync_agent.py:1009:def _match_symbol_by_span(symbols: Sequence[InventoryRecord], start: int, end: int) -> Optional[InventoryRecord]
+marsdisk/ops/doc_sync_agent.py:1021:def _compute_coverage(inventory: Sequence[InventoryRecord], docs_payload: Dict[str, Any]) -> Dict[str, Any]
+marsdisk/ops/doc_sync_agent.py:1168:def _parse_gap_identifier(identifier: str) -> Optional[Tuple[str, str]]
+marsdisk/ops/doc_sync_agent.py:1180:def _collect_unreferenced_from_coverage(coverage_data: Dict[str, Any]) -> List[Tuple[str, str]]
+marsdisk/ops/doc_sync_agent.py:1205:def _load_suggestions_index(path: Path) -> Dict[Tuple[str, str], Dict[str, Any]]
+marsdisk/ops/doc_sync_agent.py:1228:def _format_code_anchor(record: InventoryRecord) -> str
+marsdisk/ops/doc_sync_agent.py:1235:def _strip_line_anchor_annotations(text: str) -> str
+marsdisk/ops/doc_sync_agent.py:1239:def ensure_equation_ids(equations_path: Path) -> None
+marsdisk/ops/doc_sync_agent.py:1299:def _render_coverage_markdown(data: Dict[str, Any]) -> str
+marsdisk/ops/doc_sync_agent.py:1356:def _is_stub_already_present(text: str, record: InventoryRecord) -> bool
+marsdisk/ops/doc_sync_agent.py:1361:def _render_stub_block(record: InventoryRecord, doc_kind: str) -> str
+marsdisk/ops/doc_sync_agent.py:1393:def _append_to_section(text: str, heading_pattern: re.Pattern[str], stub: str) -> str
+marsdisk/ops/doc_sync_agent.py:1408:def _append_to_end(text: str, stub: str) -> str
+marsdisk/ops/doc_sync_agent.py:1414:def _determine_autostub_target(record: InventoryRecord, suggestions: Dict[Tuple[str, str], Dict[str, Any]], overview_path: Path, equations_path: Path, run_recipes_path: Path) -> Tuple[Path, Optional[re.Pattern[str]], str]
+marsdisk/ops/doc_sync_agent.py:1461:def _cmd_coverage(args: argparse.Namespace) -> int
+marsdisk/ops/doc_sync_agent.py:1494:def _cmd_autostub(args: argparse.Namespace) -> int
+marsdisk/ops/doc_sync_agent.py:1570:def _cmd_update(args: argparse.Namespace) -> int
+marsdisk/ops/doc_sync_agent.py:1701:def _run_new_cli(argv: Sequence[str]) -> int
+marsdisk/ops/doc_sync_agent.py:1915:def main(argv: Optional[Sequence[str]]=None) -> int
+marsdisk/ops/doc_sync_agent.py:1923:def _git_commit(changes: Iterable[FileChange]) -> None
 marsdisk/ops/make_qpr_table.py:22:def _rayleigh_geometric_qpr(size_parameter: np.ndarray) -> np.ndarray
 marsdisk/ops/make_qpr_table.py:28:def _planck_lambda(wavelength_m: np.ndarray, temperature: float) -> np.ndarray
 marsdisk/ops/make_qpr_table.py:40:def compute_planck_mean_qpr(s_values: Sequence[float], temperatures: Sequence[float], wavelengths_um: Iterable[float] | None=None) -> np.ndarray
@@ -366,13 +366,14 @@ marsdisk/physics/phase.py:37:class BulkPhaseState
 marsdisk/physics/phase.py:53:def particle_temperature_equilibrium(T_mars_K: float, r_orbit_m: float, q_abs_mean: float) -> float
 marsdisk/physics/phase.py:81:class PhaseEvaluator
 marsdisk/physics/phase.py:593:def hydro_escape_timescale(cfg: Optional[HydroEscapeConfig], temperature_K: float, f_vap: float) -> Optional[float]
-marsdisk/physics/psd.py:43:def update_psd_state(*, s_min: float, s_max: float, alpha: float, wavy_strength: float, n_bins: int=40, rho: float=3000.0, wavy_decay: float=0.0, alpha_mode: str='size') -> Dict[str, np.ndarray | float]
-marsdisk/physics/psd.py:134:def compute_kappa(psd_state: Dict[str, np.ndarray | float]) -> float
-marsdisk/physics/psd.py:162:def mass_weights_lognormal_mixture(sizes: np.ndarray, widths: np.ndarray, *, f_fine: float, s_fine: float, s_meter: float, width_dex: float, s_cut: float | None=None) -> np.ndarray
-marsdisk/physics/psd.py:205:def mass_weights_truncated_powerlaw(sizes: np.ndarray, widths: np.ndarray, *, alpha_solid: float, s_min_solid: float, s_max_solid: float, s_cut: float | None=None) -> np.ndarray
-marsdisk/physics/psd.py:239:def apply_mass_weights(psd_state: Dict[str, np.ndarray | float], mass_weights: np.ndarray, *, rho: float | None=None) -> Dict[str, np.ndarray | float]
-marsdisk/physics/psd.py:283:def apply_uniform_size_drift(psd_state: Dict[str, np.ndarray | float], *, ds_dt: float, dt: float, floor: float, sigma_surf: float) -> tuple[float, float, Dict[str, float]]
-marsdisk/physics/psd.py:401:def evolve_min_size(s_min_prev: float, *, dt: float, model: Optional[str]=None, params: Optional[Mapping[str, float]]=None, T: Optional[float]=None, rho: Optional[float]=None, s_floor: Optional[float]=None, sublimation_params: Optional[SublimationParams]=None) -> float
+marsdisk/physics/psd.py:44:def update_psd_state(*, s_min: float, s_max: float, alpha: float, wavy_strength: float, n_bins: int=40, rho: float=3000.0, wavy_decay: float=0.0, alpha_mode: str='size') -> Dict[str, np.ndarray | float]
+marsdisk/physics/psd.py:137:def sanitize_and_normalize_number(psd_state: Dict[str, np.ndarray | float], clip_max: float=1e+200, *, normalize: bool=True) -> Dict[str, np.ndarray | float]
+marsdisk/physics/psd.py:174:def compute_kappa(psd_state: Dict[str, np.ndarray | float]) -> float
+marsdisk/physics/psd.py:211:def mass_weights_lognormal_mixture(sizes: np.ndarray, widths: np.ndarray, *, f_fine: float, s_fine: float, s_meter: float, width_dex: float, s_cut: float | None=None) -> np.ndarray
+marsdisk/physics/psd.py:254:def mass_weights_truncated_powerlaw(sizes: np.ndarray, widths: np.ndarray, *, alpha_solid: float, s_min_solid: float, s_max_solid: float, s_cut: float | None=None) -> np.ndarray
+marsdisk/physics/psd.py:288:def apply_mass_weights(psd_state: Dict[str, np.ndarray | float], mass_weights: np.ndarray, *, rho: float | None=None) -> Dict[str, np.ndarray | float]
+marsdisk/physics/psd.py:333:def apply_uniform_size_drift(psd_state: Dict[str, np.ndarray | float], *, ds_dt: float, dt: float, floor: float, sigma_surf: float) -> tuple[float, float, Dict[str, float]]
+marsdisk/physics/psd.py:466:def evolve_min_size(s_min_prev: float, *, dt: float, model: Optional[str]=None, params: Optional[Mapping[str, float]]=None, T: Optional[float]=None, rho: Optional[float]=None, s_floor: Optional[float]=None, sublimation_params: Optional[SublimationParams]=None) -> float
 marsdisk/physics/qstar.py:55:def set_coeff_unit_system(units: CoeffUnits) -> CoeffUnits
 marsdisk/physics/qstar.py:65:def get_coeff_unit_system() -> CoeffUnits
 marsdisk/physics/qstar.py:71:def get_coefficient_table() -> Dict[float, Tuple[float, float, float, float]]
@@ -508,10 +509,10 @@ marsdisk/run.py:963:def _configure_logging(level: int, suppress_warnings: bool=F
 marsdisk/run.py:974:class MassBudgetViolationError(RuntimeError)
 marsdisk/run.py:978:def _write_zero_d_history(cfg: Config, df: pd.DataFrame, history: ZeroDHistory, *, step_diag_enabled: bool, step_diag_format: str, step_diag_path_cfg: Optional[Path], step_diag_path: Optional[Path], orbit_rollup_enabled: bool, phase7_enabled: bool) -> None
 marsdisk/run.py:1081:def run_zero_d(cfg: Config, *, enforce_mass_budget: bool=False, physics_mode_override: Optional[str]=None, physics_mode_source_override: Optional[str]=None) -> None
-marsdisk/run.py:4592:def _run_phase5_variant(base_cfg: Config, variant: str, mode: str, base_outdir: Path, duration_years: float, *, enforce_mass_budget: bool) -> _Phase5VariantResult
-marsdisk/run.py:4654:def _write_phase5_comparison_products(base_outdir: Path, duration_years: float, results: List[_Phase5VariantResult]) -> None
-marsdisk/run.py:4796:def run_phase5_comparison(cfg: Config, *, enforce_mass_budget: bool=False, variants_spec: Optional[List[Dict[str, str]]]=None) -> None
-marsdisk/run.py:4831:def main(argv: Optional[List[str]]=None) -> None
+marsdisk/run.py:4604:def _run_phase5_variant(base_cfg: Config, variant: str, mode: str, base_outdir: Path, duration_years: float, *, enforce_mass_budget: bool) -> _Phase5VariantResult
+marsdisk/run.py:4666:def _write_phase5_comparison_products(base_outdir: Path, duration_years: float, results: List[_Phase5VariantResult]) -> None
+marsdisk/run.py:4808:def run_phase5_comparison(cfg: Config, *, enforce_mass_budget: bool=False, variants_spec: Optional[List[Dict[str, str]]]=None) -> None
+marsdisk/run.py:4843:def main(argv: Optional[List[str]]=None) -> None
 marsdisk/schema.py:23:class Geometry(BaseModel)
 marsdisk/schema.py:44:class DiskGeometry(BaseModel)
 marsdisk/schema.py:74:class Disk(BaseModel)

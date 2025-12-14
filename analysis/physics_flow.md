@@ -258,6 +258,43 @@ flowchart LR
     C --> D
 ```
 
+### 5.1 供給輸送モード (Transport)
+
+`supply.transport.mode` による表層／深部経路の分岐:
+
+```mermaid
+flowchart TB
+    subgraph INPUT["供給レート評価"]
+        A["R_base × ε_mix"]
+        B["温度/フィードバック/リザーバ倍率"]
+    end
+    
+    subgraph TRANSPORT["transport.mode"]
+        C{"mode?"}
+        D["direct: 表層直接注入"]
+        E["deep_mixing: 深部経由"]
+    end
+    
+    subgraph DIRECT["direct モード"]
+        D1["headroom = Σ_τ1 - Σ_surf"]
+        D2["clip by headroom"]
+        D3["prod_rate_applied"]
+    end
+    
+    subgraph DEEP["deep_mixing モード"]
+        E1["σ_deep リザーバ蓄積"]
+        E2["t_mix_orbits で混合"]
+        E3["deep→surf flux"]
+        E4["headroom_gate で制限"]
+    end
+    
+    A --> B --> C
+    C -->|"direct"| D --> D1 --> D2 --> D3
+    C -->|"deep_mixing"| E --> E1 --> E2 --> E3 --> E4
+    D3 --> F["表層 Σ_surf 更新"]
+    E4 --> F
+```
+
 ---
 
 ## 6. 表層進化ステップ (S1) の詳細
