@@ -13,22 +13,22 @@ for /f %%A in ('python -c "import secrets; print(secrets.randbelow(2**31))"') do
 rem Force output root to out/ as requested
 set "BATCH_ROOT=out"
 set "BATCH_DIR=%BATCH_ROOT%\temp_supply_sweep\%RUN_TS%__%GIT_SHA%__seed%BATCH_SEED%"
-echo [setup] Output root: %BATCH_ROOT%
+echo.[setup] Output root: %BATCH_ROOT%
 if not exist "%BATCH_DIR%" mkdir "%BATCH_DIR%"
 
 if not exist "%VENV_DIR%\Scripts\python.exe" (
-  echo [setup] Creating virtual environment in %VENV_DIR%...
+  echo.[setup] Creating virtual environment in %VENV_DIR%...
   python -m venv "%VENV_DIR%"
 )
 
 call "%VENV_DIR%\Scripts\activate.bat"
 
 if exist "%REQ_FILE%" (
-  echo [setup] Installing/upgrading dependencies from %REQ_FILE% ...
+  echo.[setup] Installing/upgrading dependencies from %REQ_FILE% ...
   python -m pip install --upgrade pip
   pip install -r "%REQ_FILE%"
 ) else (
-  echo [warn] %REQ_FILE% not found; skipping dependency install.
+  echo.[warn] %REQ_FILE% not found; skipping dependency install.
 )
 
 rem ---------- defaults ----------
@@ -96,18 +96,18 @@ set "PHI_LIST=20 37 60"
 set "COOL_SEARCH_DISPLAY=%COOL_SEARCH_YEARS%"
 if not defined COOL_SEARCH_DISPLAY set "COOL_SEARCH_DISPLAY=none"
 
-echo [config] supply multipliers: temp_enabled=%SUPPLY_TEMP_ENABLED% (mode=%SUPPLY_TEMP_MODE%) feedback_enabled=%SUPPLY_FEEDBACK_ENABLED% reservoir=%SUPPLY_RESERVOIR_M%
-echo [config] shielding: mode=%SHIELDING_MODE% fixed_tau1_sigma=%SHIELDING_SIGMA% auto_max_margin=%SHIELDING_AUTO_MAX_MARGIN% init_scale_to_tau1=%INIT_SCALE_TO_TAU1%
-echo [config] injection: mode=%SUPPLY_INJECTION_MODE% q=%SUPPLY_INJECTION_Q% s_inj_min=%SUPPLY_INJECTION_SMIN% s_inj_max=%SUPPLY_INJECTION_SMAX%
-echo [config] transport: mode=%SUPPLY_TRANSPORT_MODE% t_mix=%SUPPLY_TRANSPORT_TMIX_ORBITS% headroom_gate=%SUPPLY_TRANSPORT_HEADROOM% velocity=%SUPPLY_VEL_MODE%
-echo [config] const supply before mixing: %SUPPLY_RATE% kg m^-2 s^-1 (epsilon_mix swept per MU_LIST)
-echo [config] fast blowout substep: enabled=%SUBSTEP_FAST_BLOWOUT% substep_max_ratio=%SUBSTEP_MAX_RATIO%
+echo.[config] supply multipliers: temp_enabled=%SUPPLY_TEMP_ENABLED% (mode=%SUPPLY_TEMP_MODE%) feedback_enabled=%SUPPLY_FEEDBACK_ENABLED% reservoir=%SUPPLY_RESERVOIR_M%
+echo.[config] shielding: mode=%SHIELDING_MODE% fixed_tau1_sigma=%SHIELDING_SIGMA% auto_max_margin=%SHIELDING_AUTO_MAX_MARGIN% init_scale_to_tau1=%INIT_SCALE_TO_TAU1%
+echo.[config] injection: mode=%SUPPLY_INJECTION_MODE% q=%SUPPLY_INJECTION_Q% s_inj_min=%SUPPLY_INJECTION_SMIN% s_inj_max=%SUPPLY_INJECTION_SMAX%
+echo.[config] transport: mode=%SUPPLY_TRANSPORT_MODE% t_mix=%SUPPLY_TRANSPORT_TMIX_ORBITS% headroom_gate=%SUPPLY_TRANSPORT_HEADROOM% velocity=%SUPPLY_VEL_MODE%
+echo.[config] const supply before mixing: %SUPPLY_RATE% kg m^-2 s^-1 (epsilon_mix swept per MU_LIST)
+echo.[config] fast blowout substep: enabled=%SUBSTEP_FAST_BLOWOUT% substep_max_ratio=%SUBSTEP_MAX_RATIO%
 if defined COOL_TO_K (
-  echo [config] dynamic horizon: stop when Mars T_M ^<= !COOL_TO_K! K (margin !COOL_MARGIN_YEARS! yr, search_cap=!COOL_SEARCH_DISPLAY!)
+  echo.[config] dynamic horizon: stop when Mars T_M ^<= !COOL_TO_K! K (margin !COOL_MARGIN_YEARS! yr, search_cap=!COOL_SEARCH_DISPLAY!)
 ) else (
-  echo [config] dynamic horizon disabled (using numerics.t_end_* from config)
+  echo.[config] dynamic horizon disabled (using numerics.t_end_* from config)
 )
-echo [config] cooling driver mode: %COOL_MODE% (slab: T^-3, hyodo: linear flux)
+echo.[config] cooling driver mode: %COOL_MODE% (slab: T^-3, hyodo: linear flux)
 
 set "PROGRESS_FLAG="
 if "%ENABLE_PROGRESS%"=="1" set "PROGRESS_FLAG=--progress"
@@ -170,7 +170,7 @@ for %%T in (%T_LIST%) do (
       for /f %%S in ('python -c "import secrets; print(secrets.randbelow(2**31))"') do set "SEED=%%S"
       set "TITLE=T%%T_mu!MU_TITLE!_phi%%P"
       set "OUTDIR=%BATCH_DIR%\!TITLE!"
-      echo [run] T=%%T mu=%%M phi=%%P -> !OUTDIR! (batch=%BATCH_SEED%, seed=!SEED!)
+      echo.[run] T=%%T mu=%%M phi=%%P -^> !OUTDIR! (batch=%BATCH_SEED%, seed=!SEED!)
       for /f %%R in ('python -c "rate=float('%SUPPLY_RATE%'); mu=float('%%M'); print(f'{rate*mu:.3e}')"') do set "EFF_RATE=%%R"
       echo.[info] effective scale epsilon_mix=%%M; effective supply (const*epsilon_mix)=!EFF_RATE! kg m^-2 s^-1
       echo.[info] shielding: mode=%SHIELDING_MODE% fixed_tau1_sigma=%SHIELDING_SIGMA% auto_max_margin=%SHIELDING_AUTO_MAX_MARGIN%
@@ -219,7 +219,7 @@ for %%T in (%T_LIST%) do (
         !CMD_EXTRA!
 
       if errorlevel 1 (
-        echo [warn] run command exited with status !errorlevel!; attempting plots anyway
+        echo.[warn] run command exited with status !errorlevel!; attempting plots anyway
       )
 
       set "RUN_DIR=!OUTDIR!"
