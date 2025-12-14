@@ -9,9 +9,11 @@ def _reset_qstar_state():
     """Restore the qstar unit system and clamp counters after each test."""
 
     original_units = qstar.get_coeff_unit_system()
+    original_mu = qstar.get_gravity_velocity_mu()
     qstar.reset_velocity_clamp_stats()
     yield
     qstar.set_coeff_unit_system(original_units)
+    qstar.set_gravity_velocity_mu(original_mu)
     qstar.reset_velocity_clamp_stats()
 
 
@@ -39,21 +41,23 @@ def test_si_mode_preserves_legacy_magnitude_and_array_agrees():
 
 def test_velocity_clamping_counts_and_outputs():
     qstar.set_coeff_unit_system("ba99_cgs")
+    qstar.set_gravity_velocity_mu(0.45)
+    expected = np.array(
+        [
+            qstar.compute_q_d_star_F1(1.0, 3000.0, 1.0),
+            qstar.compute_q_d_star_F1(1.0, 3000.0, 10.0),
+        ]
+    )
     qstar.reset_velocity_clamp_stats()
-
     res = qstar.compute_q_d_star_array(
         np.array([1.0, 1.0]),
         3000.0,
         np.array([1.0, 10.0]),
-    )
-    expected = np.array(
-        [
-            qstar.compute_q_d_star_F1(1.0, 3000.0, 3.0),
-            qstar.compute_q_d_star_F1(1.0, 3000.0, 5.0),
-        ]
     )
 
     assert np.allclose(res, expected)
     stats = qstar.get_velocity_clamp_stats()
     assert stats["below"] == 1
     assert stats["above"] == 1
+    assert res[0] < qstar.compute_q_d_star_F1(1.0, 3000.0, 3.0)
+    assert res[1] > qstar.compute_q_d_star_F1(1.0, 3000.0, 5.0)

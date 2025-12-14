@@ -3963,133 +3963,161 @@
   },
   {
     "file_path": "marsdisk/physics/qstar.py",
-    "line_no": 31,
+    "line_no": 33,
     "symbol": "_COEFFS",
     "signature": "_COEFFS: Dict[float, Tuple[float, float, float, float]] = {3.0: (35000000.0, 0.38, 0.3, 1.36), 5.0: (70000000.0, 0.38, 0.5, 1.36)}",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/physics/qstar.py",
-    "line_no": 36,
+    "line_no": 38,
     "symbol": "_V_MIN",
     "signature": "_V_MIN = min(_COEFFS.keys())",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/physics/qstar.py",
-    "line_no": 37,
+    "line_no": 39,
     "symbol": "_V_MAX",
     "signature": "_V_MAX = max(_COEFFS.keys())",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/physics/qstar.py",
-    "line_no": 42,
+    "line_no": 44,
     "symbol": "_COEFF_UNIT_CHOICES",
     "signature": "_COEFF_UNIT_CHOICES: set[CoeffUnits] = {'ba99_cgs', 'si'}",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/physics/qstar.py",
-    "line_no": 43,
+    "line_no": 45,
     "symbol": "_COEFF_UNIT_SYSTEM",
     "signature": "_COEFF_UNIT_SYSTEM: CoeffUnits = 'ba99_cgs'",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/physics/qstar.py",
-    "line_no": 44,
+    "line_no": 46,
     "symbol": "_CM_PER_M",
     "signature": "_CM_PER_M = 100.0",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/physics/qstar.py",
-    "line_no": 45,
+    "line_no": 47,
     "symbol": "_RHO_GCM3_FROM_SI",
     "signature": "_RHO_GCM3_FROM_SI = 0.001",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/physics/qstar.py",
-    "line_no": 46,
+    "line_no": 48,
     "symbol": "_ERG_PER_G_TO_J_PER_KG",
     "signature": "_ERG_PER_G_TO_J_PER_KG = 0.0001",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/physics/qstar.py",
-    "line_no": 47,
+    "line_no": 49,
     "symbol": "_VEL_CLAMP_COUNTS",
     "signature": "_VEL_CLAMP_COUNTS: dict[str, int] = {'below': 0, 'above': 0}",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/physics/qstar.py",
-    "line_no": 48,
+    "line_no": 50,
     "symbol": "_VEL_CLAMP_WARNED",
     "signature": "_VEL_CLAMP_WARNED = False",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/physics/qstar.py",
-    "line_no": 51,
+    "line_no": 52,
+    "symbol": "_GRAVITY_VELOCITY_MU",
+    "signature": "_GRAVITY_VELOCITY_MU = 0.45",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "marsdisk/physics/qstar.py",
+    "line_no": 55,
     "symbol": "set_coeff_unit_system",
     "signature": "set_coeff_unit_system(units: CoeffUnits) -> CoeffUnits",
     "brief_usage": "Set the coefficient unit system used during :math:`Q_D^*` evaluation."
   },
   {
     "file_path": "marsdisk/physics/qstar.py",
-    "line_no": 61,
+    "line_no": 65,
     "symbol": "get_coeff_unit_system",
     "signature": "get_coeff_unit_system() -> CoeffUnits",
     "brief_usage": "Return the active coefficient unit system."
   },
   {
     "file_path": "marsdisk/physics/qstar.py",
-    "line_no": 67,
+    "line_no": 71,
     "symbol": "get_coefficient_table",
     "signature": "get_coefficient_table() -> Dict[float, Tuple[float, float, float, float]]",
     "brief_usage": "Return the coefficient lookup keyed by reference velocity [km/s]."
   },
   {
     "file_path": "marsdisk/physics/qstar.py",
-    "line_no": 73,
+    "line_no": 77,
     "symbol": "reset_velocity_clamp_stats",
     "signature": "reset_velocity_clamp_stats() -> None",
     "brief_usage": "Reset counters that track impact-velocity clamping events."
   },
   {
     "file_path": "marsdisk/physics/qstar.py",
-    "line_no": 81,
+    "line_no": 85,
     "symbol": "get_velocity_clamp_stats",
     "signature": "get_velocity_clamp_stats() -> Dict[str, int]",
     "brief_usage": "Return a copy of the clamp counters for diagnostics."
   },
   {
     "file_path": "marsdisk/physics/qstar.py",
-    "line_no": 87,
+    "line_no": 91,
+    "symbol": "set_gravity_velocity_mu",
+    "signature": "set_gravity_velocity_mu(mu: float) -> float",
+    "brief_usage": "Set the LS09 gravitational-regime exponent μ used for velocity scaling."
+  },
+  {
+    "file_path": "marsdisk/physics/qstar.py",
+    "line_no": 101,
+    "symbol": "get_gravity_velocity_mu",
+    "signature": "get_gravity_velocity_mu() -> float",
+    "brief_usage": "Return the active LS09 gravitational-regime exponent μ."
+  },
+  {
+    "file_path": "marsdisk/physics/qstar.py",
+    "line_no": 107,
     "symbol": "_track_velocity_clamp",
     "signature": "_track_velocity_clamp(v_values: np.ndarray) -> None",
     "brief_usage": "Record and optionally warn when v_kms falls outside the tabulated range."
   },
   {
     "file_path": "marsdisk/physics/qstar.py",
-    "line_no": 106,
+    "line_no": 126,
     "symbol": "_q_d_star",
-    "signature": "_q_d_star(s: np.ndarray, rho: float, coeffs: Tuple[float, float, float, float], coeff_units: CoeffUnits) -> np.ndarray",
-    "brief_usage": "Vectorised :math:`Q_D^*` evaluation for scalar or array inputs."
+    "signature": "_q_d_star(s: np.ndarray, rho: float, coeffs: Tuple[float, float, float, float], coeff_units: CoeffUnits) -> Tuple[np.ndarray, np.ndarray]",
+    "brief_usage": "Vectorised :math:`Q_D^*` split into strength and gravity terms."
   },
   {
     "file_path": "marsdisk/physics/qstar.py",
-    "line_no": 131,
+    "line_no": 154,
+    "symbol": "_gravity_velocity_scale",
+    "signature": "_gravity_velocity_scale(v_kms: np.ndarray) -> np.ndarray",
+    "brief_usage": "Return multiplicative scaling for the gravity term outside [v_min, v_max]."
+  },
+  {
+    "file_path": "marsdisk/physics/qstar.py",
+    "line_no": 165,
     "symbol": "compute_q_d_star_array",
     "signature": "compute_q_d_star_array(s: np.ndarray, rho: float, v_kms: np.ndarray) -> np.ndarray",
     "brief_usage": "Return :math:`Q_D^*` for array inputs with velocity interpolation."
   },
   {
     "file_path": "marsdisk/physics/qstar.py",
-    "line_no": 160,
+    "line_no": 197,
     "symbol": "compute_q_d_star_F1",
     "signature": "compute_q_d_star_F1(s: float, rho: float, v_kms: float) -> float",
     "brief_usage": "Return the catastrophic disruption threshold ``Q_D^*``."
@@ -5195,28 +5223,28 @@
   },
   {
     "file_path": "marsdisk/run.py",
-    "line_no": 4570,
+    "line_no": 4592,
     "symbol": "_run_phase5_variant",
     "signature": "_run_phase5_variant(base_cfg: Config, variant: str, mode: str, base_outdir: Path, duration_years: float, *, enforce_mass_budget: bool) -> _Phase5VariantResult",
     "brief_usage": "Execute a single-process variant run and capture its artifacts."
   },
   {
     "file_path": "marsdisk/run.py",
-    "line_no": 4632,
+    "line_no": 4654,
     "symbol": "_write_phase5_comparison_products",
     "signature": "_write_phase5_comparison_products(base_outdir: Path, duration_years: float, results: List[_Phase5VariantResult]) -> None",
     "brief_usage": "Aggregate per-variant artifacts into the comparison outputs."
   },
   {
     "file_path": "marsdisk/run.py",
-    "line_no": 4774,
+    "line_no": 4796,
     "symbol": "run_phase5_comparison",
     "signature": "run_phase5_comparison(cfg: Config, *, enforce_mass_budget: bool=False, variants_spec: Optional[List[Dict[str, str]]]=None) -> None",
     "brief_usage": "Run the Phase 5 dual single-process comparison workflow."
   },
   {
     "file_path": "marsdisk/run.py",
-    "line_no": 4809,
+    "line_no": 4831,
     "symbol": "main",
     "signature": "main(argv: Optional[List[str]]=None) -> None",
     "brief_usage": "Command line entry point."
@@ -5398,210 +5426,210 @@
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 742,
+    "line_no": 747,
     "symbol": "PSD",
     "signature": "class PSD(BaseModel)",
     "brief_usage": "Particle size distribution parameters."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 753,
+    "line_no": 758,
     "symbol": "Surface",
     "signature": "class Surface(BaseModel)",
     "brief_usage": "Surface layer evolution parameters."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 771,
+    "line_no": 776,
     "symbol": "InitTau1",
     "signature": "class InitTau1(BaseModel)",
     "brief_usage": "Optional toggle to initialise the surface at τ≈1."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 784,
+    "line_no": 789,
     "symbol": "SublimationParamsModel",
     "signature": "class SublimationParamsModel(BaseModel)",
     "brief_usage": "Nested parameters for sublimation models."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 869,
+    "line_no": 874,
     "symbol": "RPBlowoutConfig",
     "signature": "class RPBlowoutConfig(BaseModel)",
     "brief_usage": "Toggle for radiation-pressure blow-out sinks."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 875,
+    "line_no": 880,
     "symbol": "HydroEscapeConfig",
     "signature": "class HydroEscapeConfig(BaseModel)",
     "brief_usage": "Configuration for vapour-driven hydrodynamic escape sinks."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 898,
+    "line_no": 903,
     "symbol": "Sinks",
     "signature": "class Sinks(BaseModel)",
     "brief_usage": "Configuration of additional sink processes."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 922,
+    "line_no": 927,
     "symbol": "ProcessStateTagging",
     "signature": "class ProcessStateTagging(BaseModel)",
     "brief_usage": "Placeholder toggle for future solid/gas tagging."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 931,
+    "line_no": 936,
     "symbol": "Process",
     "signature": "class Process(BaseModel)",
     "brief_usage": "Companion switches for phase tagging."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 943,
+    "line_no": 948,
     "symbol": "Phase5CompareConfig",
     "signature": "class Phase5CompareConfig(BaseModel)",
     "brief_usage": "Phase 5 comparison study controls."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 973,
+    "line_no": 978,
     "symbol": "Phase5Config",
     "signature": "class Phase5Config(BaseModel)",
     "brief_usage": "Container for the Phase 5 specific options."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 979,
+    "line_no": 984,
     "symbol": "PhaseThresholds",
     "signature": "class PhaseThresholds(BaseModel)",
     "brief_usage": "Fallback thresholds used when no external phase map is available."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 1003,
+    "line_no": 1008,
     "symbol": "PhaseConfig",
     "signature": "class PhaseConfig(BaseModel)",
     "brief_usage": "Solid/vapour branching controls."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 1077,
+    "line_no": 1082,
     "symbol": "MarsTemperatureDriverConstant",
     "signature": "class MarsTemperatureDriverConstant(BaseModel)",
     "brief_usage": "Explicit constant value for the Mars temperature driver."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 1090,
+    "line_no": 1095,
     "symbol": "MarsTemperatureDriverTable",
     "signature": "class MarsTemperatureDriverTable(BaseModel)",
     "brief_usage": "Tabulated Mars temperature driver."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 1102,
+    "line_no": 1107,
     "symbol": "MarsTemperatureDriverHyodo",
     "signature": "class MarsTemperatureDriverHyodo(BaseModel)",
     "brief_usage": "Hyodo linear cooling approximation options."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 1110,
+    "line_no": 1115,
     "symbol": "MarsTemperatureAutogen",
     "signature": "class MarsTemperatureAutogen(BaseModel)",
     "brief_usage": "Options for auto-generating Mars temperature tables."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 1142,
+    "line_no": 1147,
     "symbol": "MarsTemperatureDriverConfig",
     "signature": "class MarsTemperatureDriverConfig(BaseModel)",
     "brief_usage": "Configuration container for the Mars temperature driver."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 1201,
+    "line_no": 1206,
     "symbol": "RadiationTauGate",
     "signature": "class RadiationTauGate(BaseModel)",
     "brief_usage": "Optical-depth gating options for radiation-pressure blow-out."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 1208,
+    "line_no": 1213,
     "symbol": "Radiation",
     "signature": "class Radiation(BaseModel)",
     "brief_usage": "Radiation pressure options and table paths."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 1267,
+    "line_no": 1272,
     "symbol": "Shielding",
     "signature": "class Shielding(BaseModel)",
     "brief_usage": "Self-shielding table configuration."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 1328,
+    "line_no": 1333,
     "symbol": "Blowout",
     "signature": "class Blowout(BaseModel)",
     "brief_usage": "Radiation blow-out control."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 1346,
+    "line_no": 1351,
     "symbol": "Numerics",
     "signature": "class Numerics(BaseModel)",
     "brief_usage": "Integrator control parameters."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 1455,
+    "line_no": 1460,
     "symbol": "StepDiagnostics",
     "signature": "class StepDiagnostics(BaseModel)",
     "brief_usage": "Per-step loss channel diagnostics output control."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 1472,
+    "line_no": 1477,
     "symbol": "Progress",
     "signature": "class Progress(BaseModel)",
     "brief_usage": "Console progress display controls."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 1486,
+    "line_no": 1491,
     "symbol": "Streaming",
     "signature": "class Streaming(BaseModel)",
     "brief_usage": "Streaming write controls for large zero-D runs."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 1529,
+    "line_no": 1534,
     "symbol": "IO",
     "signature": "class IO(BaseModel)",
     "brief_usage": "Output directories."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 1560,
+    "line_no": 1565,
     "symbol": "Phase7Diagnostics",
     "signature": "class Phase7Diagnostics(BaseModel)",
     "brief_usage": "Optional Phase7 diagnostics controls."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 1573,
+    "line_no": 1578,
     "symbol": "Diagnostics",
     "signature": "class Diagnostics(BaseModel)",
     "brief_usage": "Diagnostics toggles grouped by feature phase."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 1579,
+    "line_no": 1584,
     "symbol": "Config",
     "signature": "class Config(BaseModel)",
     "brief_usage": "Top-level configuration object."
@@ -7931,6 +7959,62 @@
     "brief_usage": "No description available."
   },
   {
+    "file_path": "tests/test_opacity_guardrails.py",
+    "line_no": 9,
+    "symbol": "test_phi_const_table_does_not_zero_opacity",
+    "signature": "test_phi_const_table_does_not_zero_opacity()",
+    "brief_usage": "Φ=const テーブル適用でも κ がゼロ付近に落ちないことを確認する簡易テスト."
+  },
+  {
+    "file_path": "tests/test_opacity_guardrails.py",
+    "line_no": 25,
+    "symbol": "test_phi_table_clamps_tau_but_keeps_positive_opacity",
+    "signature": "test_phi_table_clamps_tau_but_keeps_positive_opacity()",
+    "brief_usage": "テーブル範囲外の τ でも κ_eff が正のままクラップされることを確認."
+  },
+  {
+    "file_path": "tests/test_opacity_guardrails.py",
+    "line_no": 37,
+    "symbol": "test_sigma_tau1_extremely_large_when_kappa_tiny",
+    "signature": "test_sigma_tau1_extremely_large_when_kappa_tiny()",
+    "brief_usage": "κ が 1e-13 オーダーまで落ちると Σ_tau1 が 1e12 以上に跳ね上がることを明示的に再現."
+  },
+  {
+    "file_path": "tests/test_opacity_guardrails.py",
+    "line_no": 49,
+    "symbol": "_make_psd_state",
+    "signature": "_make_psd_state(s_min=1e-06, s_max=3.0, n_bins=40, q=3.5, rho=3000.0)",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/test_opacity_guardrails.py",
+    "line_no": 67,
+    "symbol": "test_kappa_within_spec_size_range_stays_far_above_floor",
+    "signature": "test_kappa_within_spec_size_range_stays_far_above_floor()",
+    "brief_usage": "公称サイズ範囲（1e-6–3 m）のPSDでは κ が床（1e-12）には落ちないことを確認。"
+  },
+  {
+    "file_path": "tests/test_opacity_guardrails.py",
+    "line_no": 77,
+    "symbol": "test_kappa_not_temperature_dependent_proxy",
+    "signature": "test_kappa_not_temperature_dependent_proxy()",
+    "brief_usage": "Planck Q_pr や温度に依存しない compute_kappa が一定になることを簡易確認。"
+  },
+  {
+    "file_path": "tests/test_opacity_guardrails.py",
+    "line_no": 89,
+    "symbol": "test_kappa_all_mass_in_largest_bin_still_above_floor",
+    "signature": "test_kappa_all_mass_in_largest_bin_still_above_floor()",
+    "brief_usage": "全質量が最大径3 mに集中しても κ は 1e-12 に達しないことを確認。"
+  },
+  {
+    "file_path": "tests/test_opacity_guardrails.py",
+    "line_no": 104,
+    "symbol": "test_huge_sigma_tau1_from_tiny_kappa_allows_tau_to_stay_small",
+    "signature": "test_huge_sigma_tau1_from_tiny_kappa_allows_tau_to_stay_small()",
+    "brief_usage": "κ が極小だと Σ_tau1 が膨張し、供給を積んでも τ が小さいままになるケースを再現。"
+  },
+  {
     "file_path": "tests/test_particle_temperature_equilibrium.py",
     "line_no": 14,
     "symbol": "test_particle_temperature_equilibrium_matches_expected_scaling",
@@ -8352,21 +8436,21 @@
   },
   {
     "file_path": "tests/test_qstar_units.py",
-    "line_no": 18,
+    "line_no": 20,
     "symbol": "test_ba99_cgs_conversion_matches_expected_values",
     "signature": "test_ba99_cgs_conversion_matches_expected_values()",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tests/test_qstar_units.py",
-    "line_no": 29,
+    "line_no": 31,
     "symbol": "test_si_mode_preserves_legacy_magnitude_and_array_agrees",
     "signature": "test_si_mode_preserves_legacy_magnitude_and_array_agrees()",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tests/test_qstar_units.py",
-    "line_no": 40,
+    "line_no": 42,
     "symbol": "test_velocity_clamping_counts_and_outputs",
     "signature": "test_velocity_clamping_counts_and_outputs()",
     "brief_usage": "No description available."

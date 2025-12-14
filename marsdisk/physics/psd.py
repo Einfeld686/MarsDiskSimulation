@@ -37,6 +37,7 @@ __all__ = [
     "mass_weights_truncated_powerlaw",
     "apply_mass_weights",
     "apply_uniform_size_drift",
+    "sanitize_and_normalize_number",
 ]
 
 
@@ -114,7 +115,7 @@ def update_psd_state(
         number *= 1.0 + wavy_strength * np.sin(2.0 * np.pi * phase / period)
 
     logger.info("PSD updated: s_min=%g m, s_max=%g m", s_min, s_max)
-    return {
+    psd_state = {
         "sizes": centres,
         "widths": widths,
         "number": number,
@@ -129,6 +130,41 @@ def update_psd_state(
         "n": number,
         "edges": edges,
     }
+    sanitize_and_normalize_number(psd_state)
+    return psd_state
+
+
+def sanitize_and_normalize_number(psd_state: Dict[str, np.ndarray | float], clip_max: float = 1e200) -> Dict[str, np.ndarray | float]:
+    """Clamp non-finite/negative/huge number entries and mass-normalize.
+
+    - 非有限/負の number は 0 へクリップ
+    - clip_max より大きい値は clip_max へクリップ（浮動小数点オーバーフロー防止）
+    - 質量重み ``sum(number * s^3 * width)`` が有限かつ正なら 1 で正規化
+      （面積/質量比を計算する際のスケール暴走を抑止）
+    - 質量重みが 0/非有限なら、一様分布にリセットして正規化
+    """
+
+    sizes = np.asarray(psd_state.get("sizes"), dtype=float)
+    widths = np.asarray(psd_state.get("widths"), dtype=float)
+    number = np.asarray(psd_state.get("number"), dtype=float)
+    if sizes.size == 0 or widths.size != sizes.size or number.size != sizes.size:
+        return psd_state
+
+    number = np.where(np.isfinite(number) & (number > 0.0), number, 0.0)
+    if clip_max is not None and clip_max > 0.0:
+        number = np.clip(number, 0.0, clip_max)
+
+    mass_weight = float(np.sum(number * (sizes**3) * widths))
+    if not np.isfinite(mass_weight) or mass_weight <= 0.0:
+        number = np.ones_like(number, dtype=float)
+        mass_weight = float(np.sum(number * (sizes**3) * widths))
+        if mass_weight <= 0.0 or not np.isfinite(mass_weight):
+            mass_weight = 1.0
+
+    number /= mass_weight
+    psd_state["number"] = number
+    psd_state["n"] = number
+    return psd_state
 
 
 def compute_kappa(psd_state: Dict[str, np.ndarray | float]) -> float:
@@ -153,9 +189,17 @@ def compute_kappa(psd_state: Dict[str, np.ndarray | float]) -> float:
     number = np.asarray(psd_state["number"], dtype=float)
     rho = float(psd_state["rho"])
 
+    if sizes.size == 0 or widths.size != sizes.size or number.size != sizes.size:
+        return 0.0
+
+    number = np.where(np.isfinite(number) & (number > 0.0), number, 0.0)
+    max_val = float(np.max(number)) if number.size else 0.0
+    if max_val > 0.0 and np.isfinite(max_val):
+        number = number / max_val
     area = np.sum(np.pi * sizes**2 * number * widths)
     mass = np.sum((4.0 / 3.0) * np.pi * rho * sizes**3 * number * widths)
-
+    if not np.isfinite(area) or not np.isfinite(mass) or mass <= 0.0:
+        return 0.0
     return float(area / mass)
 
 
@@ -277,6 +321,7 @@ def apply_mass_weights(
 
     psd_state["number"] = number_new
     psd_state["n"] = number_new
+    sanitize_and_normalize_number(psd_state)
     return psd_state
 
 
@@ -374,6 +419,7 @@ def apply_uniform_size_drift(
     psd_state["s"] = new_sizes
     psd_state["s_min"] = float(np.min(new_sizes))
     psd_state["edges"] = edges
+    sanitize_and_normalize_number(psd_state)
 
     # determine the relative change in solid mass represented by the PSD
     old_mass_weight = float(np.sum(number * (sizes**3) * widths))

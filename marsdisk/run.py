@@ -1157,8 +1157,13 @@ def run_zero_d(
     qstar_coeff_units_source = "default"
     if qstar_cfg is not None and "coeff_units" in getattr(qstar_cfg, "__fields_set__", set()):
         qstar_coeff_units_source = "config"
+    qstar_mu_gravity_used = getattr(qstar_cfg, "mu_grav", qstar.get_gravity_velocity_mu()) if qstar_cfg is not None else qstar.get_gravity_velocity_mu()
+    qstar_mu_gravity_source = "default"
+    if qstar_cfg is not None and "mu_grav" in getattr(qstar_cfg, "__fields_set__", set()):
+        qstar_mu_gravity_source = "config"
     qstar.reset_velocity_clamp_stats()
     qstar.set_coeff_unit_system(qstar_coeff_units_used)
+    qstar.set_gravity_velocity_mu(qstar_mu_gravity_used)
     if qstar_coeff_units_source == "default":
         logger.info(
             "qstar.coeff_units not specified; defaulting to '%s' (BA99 cgs evaluation with cm,g/cm^3,erg/g).",
@@ -3381,18 +3386,28 @@ def run_zero_d(
 
         try:
             sizes_arr = np.asarray(psd_state.get("sizes"), dtype=float)
+            widths_arr = np.asarray(psd_state.get("widths"), dtype=float)
             number_arr = np.asarray(psd_state.get("number"), dtype=float)
         except Exception:
             sizes_arr = np.empty(0, dtype=float)
+            widths_arr = np.empty(0, dtype=float)
             number_arr = np.empty(0, dtype=float)
-        if sizes_arr.size and number_arr.size == sizes_arr.size:
-            for idx, (size_val, number_val) in enumerate(zip(sizes_arr, number_arr)):
+        if sizes_arr.size and number_arr.size == sizes_arr.size and widths_arr.size == sizes_arr.size:
+            mass_weight_bins = number_arr * (sizes_arr ** 3) * widths_arr
+            mass_weight_total = float(np.sum(mass_weight_bins))
+            if not math.isfinite(mass_weight_total) or mass_weight_total <= 0.0:
+                mass_frac = np.zeros_like(mass_weight_bins)
+            else:
+                mass_frac = mass_weight_bins / mass_weight_total
+            for idx, (size_val, number_val, f_mass_val) in enumerate(zip(sizes_arr, number_arr, mass_frac)):
                 psd_hist_records.append(
                     {
                         "time": time,
                         "bin_index": int(idx),
                         "s_bin_center": float(size_val),
                         "N_bin": float(number_val),
+                        "Sigma_bin": float(f_mass_val * sigma_surf),
+                        "f_mass": float(f_mass_val),
                         "Sigma_surf": sigma_surf,
                     }
                 )
@@ -4346,6 +4361,9 @@ def run_zero_d(
         "config": qstar_cfg.model_dump() if qstar_cfg is not None else None,
         "coeff_units_used": qstar_coeff_units_used,
         "coeff_units_source": qstar_coeff_units_source,
+        "gravity_velocity_mu_used": qstar_mu_gravity_used,
+        "gravity_velocity_mu_source": qstar_mu_gravity_source,
+        "gravity_velocity_exponent_used": -3.0 * qstar_mu_gravity_used + 2.0,
         "reference_velocities_kms_active": [float(v) for v in sorted(qstar.get_coefficient_table().keys())],
         "coeff_table_active": qstar_coeff_table,
         "velocity_clamp_counts": qstar.get_velocity_clamp_stats(),

@@ -373,15 +373,18 @@ marsdisk/physics/psd.py:205:def mass_weights_truncated_powerlaw(sizes: np.ndarra
 marsdisk/physics/psd.py:239:def apply_mass_weights(psd_state: Dict[str, np.ndarray | float], mass_weights: np.ndarray, *, rho: float | None=None) -> Dict[str, np.ndarray | float]
 marsdisk/physics/psd.py:283:def apply_uniform_size_drift(psd_state: Dict[str, np.ndarray | float], *, ds_dt: float, dt: float, floor: float, sigma_surf: float) -> tuple[float, float, Dict[str, float]]
 marsdisk/physics/psd.py:401:def evolve_min_size(s_min_prev: float, *, dt: float, model: Optional[str]=None, params: Optional[Mapping[str, float]]=None, T: Optional[float]=None, rho: Optional[float]=None, s_floor: Optional[float]=None, sublimation_params: Optional[SublimationParams]=None) -> float
-marsdisk/physics/qstar.py:51:def set_coeff_unit_system(units: CoeffUnits) -> CoeffUnits
-marsdisk/physics/qstar.py:61:def get_coeff_unit_system() -> CoeffUnits
-marsdisk/physics/qstar.py:67:def get_coefficient_table() -> Dict[float, Tuple[float, float, float, float]]
-marsdisk/physics/qstar.py:73:def reset_velocity_clamp_stats() -> None
-marsdisk/physics/qstar.py:81:def get_velocity_clamp_stats() -> Dict[str, int]
-marsdisk/physics/qstar.py:87:def _track_velocity_clamp(v_values: np.ndarray) -> None
-marsdisk/physics/qstar.py:106:def _q_d_star(s: np.ndarray, rho: float, coeffs: Tuple[float, float, float, float], coeff_units: CoeffUnits) -> np.ndarray
-marsdisk/physics/qstar.py:131:def compute_q_d_star_array(s: np.ndarray, rho: float, v_kms: np.ndarray) -> np.ndarray
-marsdisk/physics/qstar.py:160:def compute_q_d_star_F1(s: float, rho: float, v_kms: float) -> float
+marsdisk/physics/qstar.py:55:def set_coeff_unit_system(units: CoeffUnits) -> CoeffUnits
+marsdisk/physics/qstar.py:65:def get_coeff_unit_system() -> CoeffUnits
+marsdisk/physics/qstar.py:71:def get_coefficient_table() -> Dict[float, Tuple[float, float, float, float]]
+marsdisk/physics/qstar.py:77:def reset_velocity_clamp_stats() -> None
+marsdisk/physics/qstar.py:85:def get_velocity_clamp_stats() -> Dict[str, int]
+marsdisk/physics/qstar.py:91:def set_gravity_velocity_mu(mu: float) -> float
+marsdisk/physics/qstar.py:101:def get_gravity_velocity_mu() -> float
+marsdisk/physics/qstar.py:107:def _track_velocity_clamp(v_values: np.ndarray) -> None
+marsdisk/physics/qstar.py:126:def _q_d_star(s: np.ndarray, rho: float, coeffs: Tuple[float, float, float, float], coeff_units: CoeffUnits) -> Tuple[np.ndarray, np.ndarray]
+marsdisk/physics/qstar.py:154:def _gravity_velocity_scale(v_kms: np.ndarray) -> np.ndarray
+marsdisk/physics/qstar.py:165:def compute_q_d_star_array(s: np.ndarray, rho: float, v_kms: np.ndarray) -> np.ndarray
+marsdisk/physics/qstar.py:197:def compute_q_d_star_F1(s: float, rho: float, v_kms: float) -> float
 marsdisk/physics/radiation.py:38:def _validate_size(value: float, *, name: str='s') -> float
 marsdisk/physics/radiation.py:48:def _validate_density(value: Optional[float]) -> float
 marsdisk/physics/radiation.py:61:def _validate_temperature(value: Optional[float]) -> float
@@ -505,10 +508,10 @@ marsdisk/run.py:963:def _configure_logging(level: int, suppress_warnings: bool=F
 marsdisk/run.py:974:class MassBudgetViolationError(RuntimeError)
 marsdisk/run.py:978:def _write_zero_d_history(cfg: Config, df: pd.DataFrame, history: ZeroDHistory, *, step_diag_enabled: bool, step_diag_format: str, step_diag_path_cfg: Optional[Path], step_diag_path: Optional[Path], orbit_rollup_enabled: bool, phase7_enabled: bool) -> None
 marsdisk/run.py:1081:def run_zero_d(cfg: Config, *, enforce_mass_budget: bool=False, physics_mode_override: Optional[str]=None, physics_mode_source_override: Optional[str]=None) -> None
-marsdisk/run.py:4570:def _run_phase5_variant(base_cfg: Config, variant: str, mode: str, base_outdir: Path, duration_years: float, *, enforce_mass_budget: bool) -> _Phase5VariantResult
-marsdisk/run.py:4632:def _write_phase5_comparison_products(base_outdir: Path, duration_years: float, results: List[_Phase5VariantResult]) -> None
-marsdisk/run.py:4774:def run_phase5_comparison(cfg: Config, *, enforce_mass_budget: bool=False, variants_spec: Optional[List[Dict[str, str]]]=None) -> None
-marsdisk/run.py:4809:def main(argv: Optional[List[str]]=None) -> None
+marsdisk/run.py:4592:def _run_phase5_variant(base_cfg: Config, variant: str, mode: str, base_outdir: Path, duration_years: float, *, enforce_mass_budget: bool) -> _Phase5VariantResult
+marsdisk/run.py:4654:def _write_phase5_comparison_products(base_outdir: Path, duration_years: float, results: List[_Phase5VariantResult]) -> None
+marsdisk/run.py:4796:def run_phase5_comparison(cfg: Config, *, enforce_mass_budget: bool=False, variants_spec: Optional[List[Dict[str, str]]]=None) -> None
+marsdisk/run.py:4831:def main(argv: Optional[List[str]]=None) -> None
 marsdisk/schema.py:23:class Geometry(BaseModel)
 marsdisk/schema.py:44:class DiskGeometry(BaseModel)
 marsdisk/schema.py:74:class Disk(BaseModel)
@@ -533,36 +536,36 @@ marsdisk/schema.py:558:class Sizes(BaseModel)
 marsdisk/schema.py:582:class Initial(BaseModel)
 marsdisk/schema.py:657:class Dynamics(BaseModel)
 marsdisk/schema.py:728:class QStar(BaseModel)
-marsdisk/schema.py:742:class PSD(BaseModel)
-marsdisk/schema.py:753:class Surface(BaseModel)
-marsdisk/schema.py:771:class InitTau1(BaseModel)
-marsdisk/schema.py:784:class SublimationParamsModel(BaseModel)
-marsdisk/schema.py:869:class RPBlowoutConfig(BaseModel)
-marsdisk/schema.py:875:class HydroEscapeConfig(BaseModel)
-marsdisk/schema.py:898:class Sinks(BaseModel)
-marsdisk/schema.py:922:class ProcessStateTagging(BaseModel)
-marsdisk/schema.py:931:class Process(BaseModel)
-marsdisk/schema.py:943:class Phase5CompareConfig(BaseModel)
-marsdisk/schema.py:973:class Phase5Config(BaseModel)
-marsdisk/schema.py:979:class PhaseThresholds(BaseModel)
-marsdisk/schema.py:1003:class PhaseConfig(BaseModel)
-marsdisk/schema.py:1077:class MarsTemperatureDriverConstant(BaseModel)
-marsdisk/schema.py:1090:class MarsTemperatureDriverTable(BaseModel)
-marsdisk/schema.py:1102:class MarsTemperatureDriverHyodo(BaseModel)
-marsdisk/schema.py:1110:class MarsTemperatureAutogen(BaseModel)
-marsdisk/schema.py:1142:class MarsTemperatureDriverConfig(BaseModel)
-marsdisk/schema.py:1201:class RadiationTauGate(BaseModel)
-marsdisk/schema.py:1208:class Radiation(BaseModel)
-marsdisk/schema.py:1267:class Shielding(BaseModel)
-marsdisk/schema.py:1328:class Blowout(BaseModel)
-marsdisk/schema.py:1346:class Numerics(BaseModel)
-marsdisk/schema.py:1455:class StepDiagnostics(BaseModel)
-marsdisk/schema.py:1472:class Progress(BaseModel)
-marsdisk/schema.py:1486:class Streaming(BaseModel)
-marsdisk/schema.py:1529:class IO(BaseModel)
-marsdisk/schema.py:1560:class Phase7Diagnostics(BaseModel)
-marsdisk/schema.py:1573:class Diagnostics(BaseModel)
-marsdisk/schema.py:1579:class Config(BaseModel)
+marsdisk/schema.py:747:class PSD(BaseModel)
+marsdisk/schema.py:758:class Surface(BaseModel)
+marsdisk/schema.py:776:class InitTau1(BaseModel)
+marsdisk/schema.py:789:class SublimationParamsModel(BaseModel)
+marsdisk/schema.py:874:class RPBlowoutConfig(BaseModel)
+marsdisk/schema.py:880:class HydroEscapeConfig(BaseModel)
+marsdisk/schema.py:903:class Sinks(BaseModel)
+marsdisk/schema.py:927:class ProcessStateTagging(BaseModel)
+marsdisk/schema.py:936:class Process(BaseModel)
+marsdisk/schema.py:948:class Phase5CompareConfig(BaseModel)
+marsdisk/schema.py:978:class Phase5Config(BaseModel)
+marsdisk/schema.py:984:class PhaseThresholds(BaseModel)
+marsdisk/schema.py:1008:class PhaseConfig(BaseModel)
+marsdisk/schema.py:1082:class MarsTemperatureDriverConstant(BaseModel)
+marsdisk/schema.py:1095:class MarsTemperatureDriverTable(BaseModel)
+marsdisk/schema.py:1107:class MarsTemperatureDriverHyodo(BaseModel)
+marsdisk/schema.py:1115:class MarsTemperatureAutogen(BaseModel)
+marsdisk/schema.py:1147:class MarsTemperatureDriverConfig(BaseModel)
+marsdisk/schema.py:1206:class RadiationTauGate(BaseModel)
+marsdisk/schema.py:1213:class Radiation(BaseModel)
+marsdisk/schema.py:1272:class Shielding(BaseModel)
+marsdisk/schema.py:1333:class Blowout(BaseModel)
+marsdisk/schema.py:1351:class Numerics(BaseModel)
+marsdisk/schema.py:1460:class StepDiagnostics(BaseModel)
+marsdisk/schema.py:1477:class Progress(BaseModel)
+marsdisk/schema.py:1491:class Streaming(BaseModel)
+marsdisk/schema.py:1534:class IO(BaseModel)
+marsdisk/schema.py:1565:class Phase7Diagnostics(BaseModel)
+marsdisk/schema.py:1578:class Diagnostics(BaseModel)
+marsdisk/schema.py:1584:class Config(BaseModel)
 marsdisk/tests/test_core.py:11:def test_constants_values()
 marsdisk/tests/test_core.py:17:def test_grid_relations()
 marsdisk/tests/test_core.py:24:def test_writer_and_tables(tmp_path: Path)
@@ -840,6 +843,14 @@ tests/test_min_size_evolution_hook.py:48:def test_s_min_evolved_column_records_c
 tests/test_min_size_evolution_hook.py:60:def test_s_min_evolved_monotonic_with_linear_decay(tmp_path: Path) -> None
 tests/test_modes_units.py:10:def _base_config(outdir: Path) -> schema.Config
 tests/test_modes_units.py:55:def test_mars_clearance_uses_meter_offsets(tmp_path: Path) -> None
+tests/test_opacity_guardrails.py:9:def test_phi_const_table_does_not_zero_opacity()
+tests/test_opacity_guardrails.py:25:def test_phi_table_clamps_tau_but_keeps_positive_opacity()
+tests/test_opacity_guardrails.py:37:def test_sigma_tau1_extremely_large_when_kappa_tiny()
+tests/test_opacity_guardrails.py:49:def _make_psd_state(s_min=1e-06, s_max=3.0, n_bins=40, q=3.5, rho=3000.0)
+tests/test_opacity_guardrails.py:67:def test_kappa_within_spec_size_range_stays_far_above_floor()
+tests/test_opacity_guardrails.py:77:def test_kappa_not_temperature_dependent_proxy()
+tests/test_opacity_guardrails.py:89:def test_kappa_all_mass_in_largest_bin_still_above_floor()
+tests/test_opacity_guardrails.py:104:def test_huge_sigma_tau1_from_tiny_kappa_allows_tau_to_stay_small()
 tests/test_particle_temperature_equilibrium.py:14:def test_particle_temperature_equilibrium_matches_expected_scaling() -> None
 tests/test_particle_temperature_equilibrium.py:23:def test_particle_temperature_equilibrium_rejects_nonpositive_radius() -> None
 tests/test_particle_temperature_equilibrium.py:28:def test_phase_temperature_input_particle_is_recorded(tmp_path: Path) -> None
@@ -897,9 +908,9 @@ tests/test_qpr_lookup.py:85:def test_qpr_lookup_requires_table(mock_qpr_table)
 tests/test_qstar_fragments.py:11:def test_qdstar_velocity_interpolation_monotonic()
 tests/test_qstar_fragments.py:20:def test_compute_s_min_bounds_and_monotonic()
 tests/test_qstar_units.py:8:def _reset_qstar_state()
-tests/test_qstar_units.py:18:def test_ba99_cgs_conversion_matches_expected_values()
-tests/test_qstar_units.py:29:def test_si_mode_preserves_legacy_magnitude_and_array_agrees()
-tests/test_qstar_units.py:40:def test_velocity_clamping_counts_and_outputs()
+tests/test_qstar_units.py:20:def test_ba99_cgs_conversion_matches_expected_values()
+tests/test_qstar_units.py:31:def test_si_mode_preserves_legacy_magnitude_and_array_agrees()
+tests/test_qstar_units.py:42:def test_velocity_clamping_counts_and_outputs()
 tests/test_radiation_shielding_logging.py:12:def restore_qpr_lookup()
 tests/test_radiation_shielding_logging.py:20:def test_beta_density_validation()
 tests/test_radiation_shielding_logging.py:28:def test_blowout_radius_density_validation()
