@@ -8,7 +8,7 @@ setlocal enabledelayedexpansion
 
 set CONFIG=configs\temp_supply_sweep.yml
 set OUTROOT=out\temp_supply_grid
-set SUPPLY_RATE=1.0e-10
+set SUPPLY_RATE=1.0e-5
 set STREAMING_ENABLE=true
 set STREAMING_MEMORY_GB=70.0
 set STREAMING_FLUSH_STEPS=10000

@@ -67,6 +67,10 @@ COOL_SEARCH_YEARS="${COOL_SEARCH_YEARS:-}"     # optional search cap (years)
 # Cooling driver mode: slab (T^-3 analytic slab) or hyodo (linear cooling)
 COOL_MODE="${COOL_MODE:-slab}"
 
+# Phase temperature input (Mars surface vs particle equilibrium)
+PHASE_TEMP_INPUT="${PHASE_TEMP_INPUT:-particle}"  # mars_surface|particle
+PHASE_QABS_MEAN="${PHASE_QABS_MEAN:-0.4}"
+
 # Evaluation toggle (0=skip, 1=run evaluate_tau_supply)
 EVAL="${EVAL:-1}"
 
@@ -74,8 +78,8 @@ EVAL="${EVAL:-1}"
 # Default is conservative clip + soft gate to avoid spill losses unless明示指定。
 SUPPLY_HEADROOM_POLICY="${SUPPLY_HEADROOM_POLICY:-clip}"
 SUPPLY_MODE="${SUPPLY_MODE:-const}"
-# Raw const supply rate before mixing; μ=1 で 3.0e-6 kg m^-2 s^-1 に設定。
-SUPPLY_RATE="${SUPPLY_RATE:-3.0e-6}"  # kg m^-2 s^-1 before mixing
+# Raw const supply rate before mixing; μ=1 で 3.0e-5 kg m^-2 s^-1 に設定。
+SUPPLY_RATE="${SUPPLY_RATE:-1.0e-4}"  # kg m^-2 s^-1 before mixing
 SHIELDING_MODE="${SHIELDING_MODE:-psitau}"
 SHIELDING_SIGMA="${SHIELDING_SIGMA:-auto}"
 SHIELDING_AUTO_MAX_MARGIN="${SHIELDING_AUTO_MAX_MARGIN:-0.05}"
@@ -129,6 +133,7 @@ echo "[config] injection: mode=${SUPPLY_INJECTION_MODE} q=${SUPPLY_INJECTION_Q} 
 echo "[config] transport: mode=${SUPPLY_TRANSPORT_MODE} t_mix=${SUPPLY_TRANSPORT_TMIX_ORBITS:-${SUPPLY_DEEP_TMIX_ORBITS:-disabled}} headroom_gate=${SUPPLY_TRANSPORT_HEADROOM} velocity=${SUPPLY_VEL_MODE}"
 echo "[config] const supply before mixing: ${SUPPLY_RATE} kg m^-2 s^-1 (epsilon_mix swept per MU_LIST)"
 echo "[config] fast blowout substep: enabled=${SUBSTEP_FAST_BLOWOUT} substep_max_ratio=${SUBSTEP_MAX_RATIO:-default}"
+echo "[config] phase temperature input: ${PHASE_TEMP_INPUT} (q_abs_mean=${PHASE_QABS_MEAN})"
 if [[ -n "${COOL_TO_K}" ]]; then
   echo "[config] dynamic horizon: stop when Mars T_M <= ${COOL_TO_K} K (margin ${COOL_MARGIN_YEARS} yr, search_cap=${COOL_SEARCH_YEARS:-none})"
 else
@@ -272,6 +277,8 @@ PY
         --override "io.outdir=${OUTDIR}"
         --override "dynamics.rng_seed=${SEED}"
         --override "phase.enabled=true"
+        --override "phase.temperature_input=${PHASE_TEMP_INPUT}"
+        --override "phase.q_abs_mean=${PHASE_QABS_MEAN}"
         --override "radiation.TM_K=${T}"
         --override "qstar.coeff_units=${QSTAR_UNITS}"
         --override "radiation.qpr_table_path=marsdisk/io/data/qpr_planck_sio2_abbas_calibrated_lowT.csv"
@@ -298,8 +305,12 @@ PY
         --override "init_tau1.scale_to_tau1=${INIT_SCALE_TO_TAU1}"
       )
       if [[ -n "${COOL_TO_K}" ]]; then
+        cmd+=(--override "numerics.t_end_years=null")
+        cmd+=(--override "numerics.t_end_orbits=null")
         cmd+=(--override "numerics.t_end_until_temperature_K=${COOL_TO_K}")
         cmd+=(--override "numerics.t_end_temperature_margin_years=${COOL_MARGIN_YEARS}")
+        cmd+=(--override "numerics.t_end_temperature_search_years=${COOL_SEARCH_YEARS:-null}")
+        cmd+=(--override "scope.analysis_years=10")
         if [[ -n "${COOL_SEARCH_YEARS}" ]]; then
           cmd+=(--override "numerics.t_end_temperature_search_years=${COOL_SEARCH_YEARS}")
         fi
@@ -389,7 +400,9 @@ series_cols = [
     "t_coll",
     "t_blow_s",
     "dt_over_t_blow",
+    "tau",
     "tau_vertical",
+    "tau_los_mars",
     "supply_feedback_scale",
     "supply_temperature_scale",
     "supply_reservoir_remaining_Mmars",
@@ -519,6 +532,29 @@ fig2.suptitle(run_dir.name)
 fig2.tight_layout(rect=(0, 0, 1, 0.95))
 fig2.savefig(plots_dir / "supply_surface.png", dpi=180)
 plt.close(fig2)
+
+# Optical depth quick-look (vertical, LOS, bulk tau)
+def _plot_if_available(ax, x, y, label, **kwargs):
+    if y.isna().all():
+        return
+    ax.plot(x, y, label=label, **kwargs)
+
+fig3, ax3 = plt.subplots(1, 1, figsize=(10, 4))
+_plot_if_available(ax3, df["time_days"], df["tau_vertical"], label="tau_vertical", color="tab:purple", alpha=0.9)
+_plot_if_available(ax3, df["time_days"], df["tau"], label="tau (bulk)", color="tab:blue", alpha=0.8, linestyle="--")
+if "tau_los_mars" in df.columns:
+    _plot_if_available(ax3, df["time_days"], df["tau_los_mars"], label="tau_los_mars", color="tab:red", alpha=0.8)
+headroom_ratio = (df["Sigma_tau1"] - df["Sigma_surf"]).clip(lower=0) / df["Sigma_tau1"].clip(lower=1e-20)
+ax3.plot(df["time_days"], headroom_ratio, label="headroom ratio", color="tab:orange", alpha=0.6, linestyle=":")
+ax3.axhline(1.0, color="gray", linestyle=":", alpha=0.5, label="τ=1 reference")
+ax3.set_yscale("symlog", linthresh=1e-12)
+ax3.set_ylabel("optical depth")
+ax3.set_xlabel("days")
+ax3.set_title("Optical depth evolution")
+ax3.legend(loc="upper right")
+fig3.tight_layout()
+fig3.savefig(plots_dir / "optical_depth.png", dpi=180)
+plt.close(fig3)
 print(f"[plot] saved plots to {plots_dir}")
 PY
       if [[ "${EVAL}" != "0" ]]; then

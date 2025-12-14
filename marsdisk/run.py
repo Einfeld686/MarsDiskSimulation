@@ -1334,6 +1334,21 @@ def run_zero_d(
 
     phase_cfg = getattr(cfg, "phase", None)
     phase_controller = phase_mod.PhaseEvaluator.from_config(phase_cfg, logger=logger)
+    phase_temperature_input_mode = "mars_surface"
+    phase_q_abs_mean = 0.4
+    phase_temperature_formula = "T_p = T_M * q_abs_mean^0.25 * sqrt(R_M/(2 r))"
+    if phase_cfg is not None:
+        phase_temperature_input_mode = str(getattr(phase_cfg, "temperature_input", phase_temperature_input_mode))
+        phase_q_abs_mean = float(getattr(phase_cfg, "q_abs_mean", phase_q_abs_mean))
+    if phase_temperature_input_mode:
+        phase_temperature_input_mode = phase_temperature_input_mode.strip().lower()
+    if phase_temperature_input_mode not in {"mars_surface", "particle"}:
+        logger.warning(
+            "Unknown phase.temperature_input=%s; defaulting to 'mars_surface'", phase_temperature_input_mode
+        )
+        phase_temperature_input_mode = "mars_surface"
+    if not math.isfinite(phase_q_abs_mean) or phase_q_abs_mean <= 0.0:
+        raise ValueError("phase.q_abs_mean must be positive and finite")
     allow_liquid_hkl = bool(getattr(phase_cfg, "allow_liquid_hkl", True)) if phase_cfg else True
     hydro_cfg = getattr(cfg.sinks, "hydro_escape", None)
     tau_gate_cfg = getattr(cfg.radiation, "tau_gate", None) if cfg.radiation else None
@@ -2044,6 +2059,14 @@ def run_zero_d(
         T_use = temp_runtime.evaluate(time)
         temperature_track.append(T_use)
         rad_flux_step = constants.SIGMA_SB * (T_use**4)
+        T_p_effective = phase_mod.particle_temperature_equilibrium(
+            T_use,
+            r,
+            phase_q_abs_mean,
+        )
+        temperature_for_phase = (
+            T_p_effective if phase_temperature_input_mode == "particle" else T_use
+        )
         gate_factor = 1.0
         t_solid_step = None
         mass_err_percent_step = None
@@ -2130,7 +2153,7 @@ def run_zero_d(
         sigma_for_tau_phase = sigma_surf_reference if freeze_sigma else sigma_surf
         tau_los_phase = kappa_surf * sigma_for_tau_phase
         phase_decision, phase_bulk_step = phase_controller.evaluate_with_bulk(
-            T_use,
+            temperature_for_phase,
             pressure_Pa=gas_pressure_pa,
             tau=tau_los_phase,
             radius_m=r,
@@ -2143,6 +2166,10 @@ def run_zero_d(
         phase_f_vap_step = phase_decision.f_vap
         phase_payload_step = dict(phase_decision.payload)
         phase_payload_step["tau_input_before_psd"] = tau_los_phase
+        phase_payload_step["phase_temperature_input"] = phase_temperature_input_mode
+        phase_payload_step["phase_temperature_used_K"] = temperature_for_phase
+        phase_payload_step["T_p_effective"] = T_p_effective
+        phase_payload_step["phase_temperature_formula"] = phase_temperature_formula
         phase_payload_step["phase_bulk_state"] = phase_bulk_step.state
         phase_payload_step["phase_bulk_f_liquid"] = phase_bulk_step.f_liquid
         phase_payload_step["phase_bulk_f_solid"] = phase_bulk_step.f_solid
@@ -2154,6 +2181,10 @@ def run_zero_d(
         liquid_block_collisions = phase_bulk_step.state == "liquid_dominated"
         collisions_active_step = bool(collisions_active and not liquid_block_collisions)
         phase_payload_step["collisions_blocked_by_phase"] = bool(liquid_block_collisions)
+        # Delay external supply by one global step and block it in liquid-dominated regions.
+        allow_supply_step = (
+            step_no > 0 and phase_state_step == "solid" and not liquid_block_collisions
+        )
 
         ds_dt_raw = 0.0
         ds_dt_val = 0.0
@@ -2448,8 +2479,12 @@ def run_zero_d(
                     tau_for_coll = None
                     if collisions_active_step and cfg.surface.use_tcoll and tau_vert > TAU_MIN:
                         tau_for_coll = tau_vert
-                    tau_for_feedback_val = tau_eval_los if supply_feedback_cfg and getattr(supply_feedback_cfg, "tau_field", "tau_vertical") == "tau_los" else tau_vert
-                    allow_supply = phase_bulk_step.state != "liquid_dominated"
+                    tau_for_feedback_val = (
+                        tau_eval_los
+                        if supply_feedback_cfg and getattr(supply_feedback_cfg, "tau_field", "tau_vertical") == "tau_los"
+                        else tau_vert
+                    )
+                    allow_supply = allow_supply_step
                     supply_res = supply.evaluate_supply(
                         time_sub,
                         r,
@@ -2459,6 +2494,7 @@ def run_zero_d(
                         state=supply_state,
                         tau_for_feedback=tau_for_feedback_val,
                         temperature_K=T_use,
+                        apply_reservoir=allow_supply_step,
                     )
                     prod_rate_raw_current = supply_res.rate if allow_supply else 0.0
                     supply_rate_nominal_current = supply_res.mixed_rate if allow_supply else 0.0
@@ -2581,8 +2617,12 @@ def run_zero_d(
                 tau_los_last = tau_eval_los
                 enable_blowout_sub = enable_blowout_step and collisions_active_step
                 t_sink_current = t_sink_step_effective if sink_timescale_active else None
-                tau_for_feedback_val = tau_eval_los if supply_feedback_cfg and getattr(supply_feedback_cfg, "tau_field", "tau_vertical") == "tau_los" else tau_vert
-                allow_supply = phase_bulk_step.state != "liquid_dominated"
+                tau_for_feedback_val = (
+                    tau_eval_los
+                    if supply_feedback_cfg and getattr(supply_feedback_cfg, "tau_field", "tau_vertical") == "tau_los"
+                    else tau_vert
+                )
+                allow_supply = allow_supply_step
                 supply_res = supply.evaluate_supply(
                     time_start,
                     r,
@@ -2592,6 +2632,7 @@ def run_zero_d(
                     state=supply_state,
                     tau_for_feedback=tau_for_feedback_val,
                     temperature_K=T_use,
+                    apply_reservoir=allow_supply_step,
                 )
                 prod_rate_raw_current = supply_res.rate if allow_supply else 0.0
                 supply_rate_nominal_current = supply_res.mixed_rate if allow_supply else 0.0
@@ -3168,9 +3209,12 @@ def run_zero_d(
             "ts_ratio": ts_ratio_value,
             "r_m": r,
             "r_RM": r_RM,
+            "r_orbit_RM": r_RM,
             "r_source": r_source,
             "T_M_used": T_use,
             "T_M_source": T_M_source,
+            "T_p_effective": T_p_effective,
+            "phase_temperature_input": phase_temperature_input_mode,
             "rad_flux_Mars": rad_flux_step,
             "dt_over_t_blow": dt_over_t_blow,
             "tau": tau_record,
@@ -3369,6 +3413,9 @@ def run_zero_d(
             "r_m_used": r,
             "r_RM_used": r_RM,
             "T_M_used": T_use,
+            "T_p_effective": T_p_effective,
+            "phase_temperature_input": phase_temperature_input_mode,
+            "phase_temperature_used_K": temperature_for_phase,
             "rad_flux_Mars": rad_flux_step,
             "F_abs_geom": F_abs_geom,
             "F_abs_geom_qpr": F_abs_qpr,
@@ -4111,6 +4158,9 @@ def run_zero_d(
         "enabled": phase_controller.enabled,
         "source": phase_controller.source,
         "entrypoint": phase_controller.entrypoint,
+        "temperature_input": phase_temperature_input_mode,
+        "q_abs_mean": phase_q_abs_mean,
+        "phase_temperature_formula": phase_temperature_formula,
         "phase_usage_time_s": {k: float(v) for k, v in phase_usage.items()},
         "phase_method_usage_time_s": {k: float(v) for k, v in phase_method_usage.items()},
         "sink_branch_usage_time_s": {k: float(v) for k, v in sink_branch_usage.items()},
@@ -4199,6 +4249,9 @@ def run_zero_d(
             "input_config_path": str(config_source_path) if config_source_path is not None else None,
             "physics_mode": physics_mode,
             "physics_mode_source": physics_mode_source,
+            "phase_temperature_input": phase_temperature_input_mode,
+            "phase_q_abs_mean": phase_q_abs_mean,
+            "phase_temperature_formula": phase_temperature_formula,
         },
         "init_tau1": {
             "enabled": init_tau1_enabled,
@@ -4262,6 +4315,9 @@ def run_zero_d(
             "phase_enabled": phase_controller.enabled,
             "phase_source": phase_controller.source,
             "phase_entrypoint": phase_controller.entrypoint,
+            "phase_temperature_input": phase_temperature_input_mode,
+            "phase_q_abs_mean": phase_q_abs_mean,
+            "phase_temperature_formula": phase_temperature_formula,
             "tau_gate_enabled": tau_gate_enabled,
             "tau_gate_tau_max": tau_gate_threshold if tau_gate_enabled else None,
             "hydro_escape_strength": getattr(hydro_cfg, "strength", None),
@@ -4269,6 +4325,13 @@ def run_zero_d(
             "radiation_use_mars_rp": mars_rp_enabled_cfg,
             "radiation_use_solar_rp": solar_rp_requested,
         },
+    }
+    run_config["phase_temperature"] = {
+        "mode": phase_temperature_input_mode,
+        "q_abs_mean": phase_q_abs_mean,
+        "formula": phase_temperature_formula,
+        "r_m_used": r,
+        "r_RM_used": r_RM,
     }
     qstar_coeff_table = {
         f"{float(v):.1f}": {

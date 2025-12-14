@@ -8,6 +8,7 @@ import logging
 import math
 from typing import Any, Callable, Dict, Literal, Optional, Tuple
 
+from .. import constants
 from ..schema import (
     DEFAULT_PHASE_ENTRYPOINT,
     HydroEscapeConfig,
@@ -47,6 +48,34 @@ class BulkPhaseState:
     temperature_K: Optional[float] = None
     pressure_Pa: Optional[float] = None
     tau: Optional[float] = None
+
+
+def particle_temperature_equilibrium(
+    T_mars_K: float,
+    r_orbit_m: float,
+    q_abs_mean: float,
+) -> float:
+    """Return the grain equilibrium temperature used for phase lookups.
+
+    Parameters
+    ----------
+    T_mars_K:
+        Mars-facing surface temperature [K].
+    r_orbit_m:
+        Orbital radius of the grain [m].
+    q_abs_mean:
+        Mean absorption efficiency ⟨Q_abs⟩ (dimensionless).
+    """
+
+    if not math.isfinite(T_mars_K) or T_mars_K <= 0.0:
+        raise ValueError("T_mars_K must be positive and finite")
+    if not math.isfinite(r_orbit_m) or r_orbit_m <= 0.0:
+        raise ValueError("r_orbit_m must be positive and finite")
+    if not math.isfinite(q_abs_mean) or q_abs_mean <= 0.0:
+        raise ValueError("q_abs_mean must be positive and finite")
+    return float(
+        T_mars_K * (q_abs_mean ** 0.25) * math.sqrt(constants.R_MARS / (2.0 * r_orbit_m))
+    )
 
 
 class PhaseEvaluator:
@@ -593,4 +622,10 @@ def hydro_escape_timescale(
     return 1.0 / rate
 
 
-__all__ = ["PhaseEvaluator", "PhaseDecision", "BulkPhaseState", "hydro_escape_timescale"]
+__all__ = [
+    "PhaseEvaluator",
+    "PhaseDecision",
+    "BulkPhaseState",
+    "hydro_escape_timescale",
+    "particle_temperature_equilibrium",
+]
