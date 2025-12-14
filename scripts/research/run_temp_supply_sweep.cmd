@@ -195,33 +195,33 @@ for %%T in (%T_LIST%) do (
         if defined SUBSTEP_MAX_RATIO set "CMD_EXTRA=!CMD_EXTRA! --override \"io.substep_max_ratio=%SUBSTEP_MAX_RATIO%\""
       )
 
-      rem Assemble the run command on a single line to avoid caret issues when optional pieces are empty
-      set "RUN_CMD=python -m marsdisk.run --config \"%BASE_CONFIG%\" --quiet"
-      if "%ENABLE_PROGRESS%"=="1" set "RUN_CMD=!RUN_CMD! --progress"
-      set "RUN_CMD=!RUN_CMD! --override numerics.dt_init=20"
-      set "RUN_CMD=!RUN_CMD! --override numerics.stop_on_blowout_below_smin=true"
-      set "RUN_CMD=!RUN_CMD! --override \"io.outdir=!OUTDIR!\""
-      set "RUN_CMD=!RUN_CMD! --override \"dynamics.rng_seed=!SEED!\""
-      set "RUN_CMD=!RUN_CMD! --override \"phase.enabled=false\""
-      set "RUN_CMD=!RUN_CMD! --override \"radiation.TM_K=%%T\""
-      set "RUN_CMD=!RUN_CMD! --override \"qstar.coeff_units=%QSTAR_UNITS%\""
-      set "RUN_CMD=!RUN_CMD! --override \"radiation.mars_temperature_driver.enabled=true\""
-      set "RUN_CMD=!RUN_CMD! --override \"supply.enabled=true\""
-      set "RUN_CMD=!RUN_CMD! --override \"supply.mixing.epsilon_mix=%%M\""
-      set "RUN_CMD=!RUN_CMD! --override \"supply.mode=%SUPPLY_MODE%\""
-      set "RUN_CMD=!RUN_CMD! --override \"supply.const.prod_area_rate_kg_m2_s=%SUPPLY_RATE%\""
-      set "RUN_CMD=!RUN_CMD! --override \"init_tau1.scale_to_tau1=%INIT_SCALE_TO_TAU1%\""
-      set "RUN_CMD=!RUN_CMD! --override \"shielding.table_path=tables/phi_const_0p%%P.csv\""
-      set "RUN_CMD=!RUN_CMD! --override \"shielding.mode=%SHIELDING_MODE%\""
-      set "RUN_CMD=!RUN_CMD! --override \"radiation.mars_temperature_driver.mode=%COOL_MODE%\""
-      set "RUN_CMD=!RUN_CMD! --override \"radiation.mars_temperature_driver.table.path=!T_TABLE!\""
-      set "RUN_CMD=!RUN_CMD! --override \"radiation.mars_temperature_driver.table.time_unit=day\""
-      set "RUN_CMD=!RUN_CMD! --override \"radiation.mars_temperature_driver.table.column_time=time_day\""
-      set "RUN_CMD=!RUN_CMD! --override \"radiation.mars_temperature_driver.table.column_temperature=T_K\""
-      set "RUN_CMD=!RUN_CMD! --override \"radiation.mars_temperature_driver.extrapolation=hold\""
-      set "RUN_CMD=!RUN_CMD! !SUPPLY_OVERRIDES!"
-      if defined STREAMING_OVERRIDES set "RUN_CMD=!RUN_CMD! !STREAMING_OVERRIDES!"
-      if defined CMD_EXTRA set "RUN_CMD=!RUN_CMD! !CMD_EXTRA!"
+      rem Assemble the run command on a single line (avoid carets in optional blocks)
+      set RUN_CMD=python -m marsdisk.run --config "%BASE_CONFIG%" --quiet
+      if "%ENABLE_PROGRESS%"=="1" set RUN_CMD=!RUN_CMD! --progress
+      set RUN_CMD=!RUN_CMD! --override numerics.dt_init=20
+      set RUN_CMD=!RUN_CMD! --override numerics.stop_on_blowout_below_smin=true
+      set RUN_CMD=!RUN_CMD! --override "io.outdir=!OUTDIR!"
+      set RUN_CMD=!RUN_CMD! --override "dynamics.rng_seed=!SEED!"
+      set RUN_CMD=!RUN_CMD! --override "phase.enabled=false"
+      set RUN_CMD=!RUN_CMD! --override "radiation.TM_K=%%T"
+      set RUN_CMD=!RUN_CMD! --override "qstar.coeff_units=%QSTAR_UNITS%"
+      set RUN_CMD=!RUN_CMD! --override "radiation.mars_temperature_driver.enabled=true"
+      set RUN_CMD=!RUN_CMD! --override "supply.enabled=true"
+      set RUN_CMD=!RUN_CMD! --override "supply.mixing.epsilon_mix=%%M"
+      set RUN_CMD=!RUN_CMD! --override "supply.mode=%SUPPLY_MODE%"
+      set RUN_CMD=!RUN_CMD! --override "supply.const.prod_area_rate_kg_m2_s=%SUPPLY_RATE%"
+      set RUN_CMD=!RUN_CMD! --override "init_tau1.scale_to_tau1=%INIT_SCALE_TO_TAU1%"
+      set RUN_CMD=!RUN_CMD! --override "shielding.table_path=tables/phi_const_0p%%P.csv"
+      set RUN_CMD=!RUN_CMD! --override "shielding.mode=%SHIELDING_MODE%"
+      set RUN_CMD=!RUN_CMD! --override "radiation.mars_temperature_driver.mode=%COOL_MODE%"
+      set RUN_CMD=!RUN_CMD! --override "radiation.mars_temperature_driver.table.path=!T_TABLE!"
+      set RUN_CMD=!RUN_CMD! --override "radiation.mars_temperature_driver.table.time_unit=day"
+      set RUN_CMD=!RUN_CMD! --override "radiation.mars_temperature_driver.table.column_time=time_day"
+      set RUN_CMD=!RUN_CMD! --override "radiation.mars_temperature_driver.table.column_temperature=T_K"
+      set RUN_CMD=!RUN_CMD! --override "radiation.mars_temperature_driver.extrapolation=hold"
+      set RUN_CMD=!RUN_CMD! !SUPPLY_OVERRIDES!
+      if defined STREAMING_OVERRIDES set RUN_CMD=!RUN_CMD! !STREAMING_OVERRIDES!
+      if defined CMD_EXTRA set RUN_CMD=!RUN_CMD! !CMD_EXTRA!
 
       !RUN_CMD!
 
