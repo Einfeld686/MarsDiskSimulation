@@ -52,18 +52,31 @@ BASE_CONFIG="${BASE_CONFIG:-configs/sweep_temp_supply/temp_supply_T4000_eps1.yml
 QSTAR_UNITS="${QSTAR_UNITS:-ba99_cgs}"
 
 # Parameter grids (run hotter cases first)
-T_LIST=("6000" "4000" "2000")
+T_LIST=("5000" "4000" "3000")
 MU_LIST=("1.0" "0.5" "0.1")
 PHI_LIST=("20" "37" "60")  # maps to tables/phi_const_0pXX.csv
 
+# Fast blow-out substeps (surface_ode path). 0=off, 1=on.
+SUBSTEP_FAST_BLOWOUT="${SUBSTEP_FAST_BLOWOUT:-0}"
+SUBSTEP_MAX_RATIO="${SUBSTEP_MAX_RATIO:-}"
+
+# Cooling stop condition (dynamic horizon based on Mars cooling time)
+COOL_TO_K="${COOL_TO_K:-1000}"                 # stop when Mars T_M reaches this [K]; empty to disable
+COOL_MARGIN_YEARS="${COOL_MARGIN_YEARS:-0}"    # padding after reaching COOL_TO_K
+COOL_SEARCH_YEARS="${COOL_SEARCH_YEARS:-}"     # optional search cap (years)
+# Cooling driver mode: slab (T^-3 analytic slab) or hyodo (linear cooling)
+COOL_MODE="${COOL_MODE:-slab}"
+
 # Evaluation toggle (0=skip, 1=run evaluate_tau_supply)
-EVAL="${EVAL:-0}"
+EVAL="${EVAL:-1}"
 
 # Supply/shielding defaults (overridable via env)
+# Default is conservative clip + soft gate to avoid spill losses unless明示指定。
+SUPPLY_HEADROOM_POLICY="${SUPPLY_HEADROOM_POLICY:-clip}"
 SUPPLY_MODE="${SUPPLY_MODE:-const}"
-# Raw const supply rate before mixing; default back to 3.0e-3 kg m^-2 s^-1.
-SUPPLY_RATE="${SUPPLY_RATE:-3.0e-3}"  # kg m^-2 s^-1 before mixing
-SHIELDING_MODE="${SHIELDING_MODE:-fixed_tau1}"
+# Raw const supply rate before mixing; μ=1 で 3.0e-6 kg m^-2 s^-1 に設定。
+SUPPLY_RATE="${SUPPLY_RATE:-3.0e-6}"  # kg m^-2 s^-1 before mixing
+SHIELDING_MODE="${SHIELDING_MODE:-psitau}"
 SHIELDING_SIGMA="${SHIELDING_SIGMA:-auto}"
 SHIELDING_AUTO_MAX_MARGIN="${SHIELDING_AUTO_MAX_MARGIN:-0.05}"
 INIT_SCALE_TO_TAU1="${INIT_SCALE_TO_TAU1:-true}"
@@ -94,15 +107,16 @@ SUPPLY_TEMP_TABLE_VALUE_KIND="${SUPPLY_TEMP_TABLE_VALUE_KIND:-scale}" # scale|ra
 SUPPLY_TEMP_TABLE_COL_T="${SUPPLY_TEMP_TABLE_COL_T:-T_K}"
 SUPPLY_TEMP_TABLE_COL_VAL="${SUPPLY_TEMP_TABLE_COL_VAL:-value}"
 
-SUPPLY_INJECTION_MODE="${SUPPLY_INJECTION_MODE:-min_bin}"       # min_bin|powerlaw_bins
-SUPPLY_INJECTION_Q="${SUPPLY_INJECTION_Q:-3.5}"
+SUPPLY_INJECTION_MODE="${SUPPLY_INJECTION_MODE:-powerlaw_bins}" # min_bin|powerlaw_bins
+SUPPLY_INJECTION_Q="${SUPPLY_INJECTION_Q:-3.5}"   # collisional cascade fragments
 SUPPLY_INJECTION_SMIN="${SUPPLY_INJECTION_SMIN:-}"
 SUPPLY_INJECTION_SMAX="${SUPPLY_INJECTION_SMAX:-}"
 SUPPLY_DEEP_TMIX_ORBITS="${SUPPLY_DEEP_TMIX_ORBITS:-}"          # legacy alias for transport.t_mix_orbits
+# Prefer buffering overflow in a deep reservoir with soft headroom gate.
 SUPPLY_TRANSPORT_MODE="${SUPPLY_TRANSPORT_MODE:-deep_mixing}"   # direct|deep_mixing
 SUPPLY_TRANSPORT_TMIX_ORBITS="${SUPPLY_TRANSPORT_TMIX_ORBITS:-50}" # preferred knob when deep_mixing
-SUPPLY_TRANSPORT_HEADROOM="${SUPPLY_TRANSPORT_HEADROOM:-hard}"  # hard|soft (future)
-SUPPLY_VEL_MODE="${SUPPLY_VEL_MODE:-fixed_ei}"                  # inherit|fixed_ei|factor
+SUPPLY_TRANSPORT_HEADROOM="${SUPPLY_TRANSPORT_HEADROOM:-soft}"  # hard|soft
+SUPPLY_VEL_MODE="${SUPPLY_VEL_MODE:-inherit}"                   # inherit|fixed_ei|factor
 SUPPLY_VEL_E="${SUPPLY_VEL_E:-0.05}"
 SUPPLY_VEL_I="${SUPPLY_VEL_I:-0.025}"
 SUPPLY_VEL_FACTOR="${SUPPLY_VEL_FACTOR:-}"
@@ -114,6 +128,13 @@ echo "[config] shielding: mode=${SHIELDING_MODE} fixed_tau1_sigma=${SHIELDING_SI
 echo "[config] injection: mode=${SUPPLY_INJECTION_MODE} q=${SUPPLY_INJECTION_Q} s_inj_min=${SUPPLY_INJECTION_SMIN:-none} s_inj_max=${SUPPLY_INJECTION_SMAX:-none}"
 echo "[config] transport: mode=${SUPPLY_TRANSPORT_MODE} t_mix=${SUPPLY_TRANSPORT_TMIX_ORBITS:-${SUPPLY_DEEP_TMIX_ORBITS:-disabled}} headroom_gate=${SUPPLY_TRANSPORT_HEADROOM} velocity=${SUPPLY_VEL_MODE}"
 echo "[config] const supply before mixing: ${SUPPLY_RATE} kg m^-2 s^-1 (epsilon_mix swept per MU_LIST)"
+echo "[config] fast blowout substep: enabled=${SUBSTEP_FAST_BLOWOUT} substep_max_ratio=${SUBSTEP_MAX_RATIO:-default}"
+if [[ -n "${COOL_TO_K}" ]]; then
+  echo "[config] dynamic horizon: stop when Mars T_M <= ${COOL_TO_K} K (margin ${COOL_MARGIN_YEARS} yr, search_cap=${COOL_SEARCH_YEARS:-none})"
+else
+  echo "[config] dynamic horizon disabled (using numerics.t_end_* from config)"
+fi
+echo "[config] cooling driver mode: ${COOL_MODE} (slab: T^-3, hyodo: linear flux)"
 
 # Progress bar: default ON when stdout is a TTY; OFF otherwise to avoid CR->LF spam.
 PROGRESS_FLAG=()
@@ -197,6 +218,7 @@ fi
 if [[ -n "${SUPPLY_TRANSPORT_HEADROOM}" ]]; then
   SUPPLY_OVERRIDES+=(--override "supply.transport.headroom_gate=${SUPPLY_TRANSPORT_HEADROOM}")
 fi
+SUPPLY_OVERRIDES+=(--override "supply.headroom_policy=${SUPPLY_HEADROOM_POLICY}")
 SUPPLY_OVERRIDES+=(--override "supply.injection.velocity.mode=${SUPPLY_VEL_MODE}")
 if [[ -n "${SUPPLY_VEL_E}" ]]; then
   SUPPLY_OVERRIDES+=(--override "supply.injection.velocity.e_inj=${SUPPLY_VEL_E}")
@@ -246,17 +268,46 @@ PY
       fi
       cmd+=(
         --override numerics.dt_init=20
+        --override numerics.stop_on_blowout_below_smin=true
         --override "io.outdir=${OUTDIR}"
         --override "dynamics.rng_seed=${SEED}"
         --override "radiation.TM_K=${T}"
         --override "qstar.coeff_units=${QSTAR_UNITS}"
-        --override "radiation.mars_temperature_driver.table.path=${T_TABLE}"
+        --override "radiation.mars_temperature_driver.enabled=true"
+      )
+      if [[ "${COOL_MODE}" == "hyodo" ]]; then
+        cmd+=(--override "radiation.mars_temperature_driver.mode=hyodo")
+        cmd+=(--override "radiation.mars_temperature_driver.hyodo.d_layer_m=1.0e5")
+        cmd+=(--override "radiation.mars_temperature_driver.hyodo.rho=3000")
+        cmd+=(--override "radiation.mars_temperature_driver.hyodo.cp=1000")
+      else
+        cmd+=(--override "radiation.mars_temperature_driver.mode=table")
+        cmd+=(--override "radiation.mars_temperature_driver.table.path=${T_TABLE}")
+        cmd+=(--override "radiation.mars_temperature_driver.table.time_unit=day")
+        cmd+=(--override "radiation.mars_temperature_driver.table.column_time=time_day")
+        cmd+=(--override "radiation.mars_temperature_driver.table.column_temperature=T_K")
+        cmd+=(--override "radiation.mars_temperature_driver.extrapolation=hold")
+      fi
+      cmd+=(
         --override "supply.enabled=true"
         --override "supply.mixing.epsilon_mix=${MU}"
         --override "supply.mode=${SUPPLY_MODE}"
         --override "supply.const.prod_area_rate_kg_m2_s=${SUPPLY_RATE}"
         --override "init_tau1.scale_to_tau1=${INIT_SCALE_TO_TAU1}"
       )
+      if [[ -n "${COOL_TO_K}" ]]; then
+        cmd+=(--override "numerics.t_end_until_temperature_K=${COOL_TO_K}")
+        cmd+=(--override "numerics.t_end_temperature_margin_years=${COOL_MARGIN_YEARS}")
+        if [[ -n "${COOL_SEARCH_YEARS}" ]]; then
+          cmd+=(--override "numerics.t_end_temperature_search_years=${COOL_SEARCH_YEARS}")
+        fi
+      fi
+      if [[ "${SUBSTEP_FAST_BLOWOUT}" != "0" ]]; then
+        cmd+=(--override "io.substep_fast_blowout=true")
+        if [[ -n "${SUBSTEP_MAX_RATIO}" ]]; then
+          cmd+=(--override "io.substep_max_ratio=${SUBSTEP_MAX_RATIO}")
+        fi
+      fi
       if ((${#SUPPLY_OVERRIDES[@]})); then
         cmd+=("${SUPPLY_OVERRIDES[@]}")
       fi

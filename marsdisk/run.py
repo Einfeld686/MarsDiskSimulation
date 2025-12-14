@@ -484,10 +484,42 @@ def _clone_config(cfg: Config) -> Config:
     return cfg.copy(deep=True)  # type: ignore[attr-defined]
 
 
-def _resolve_time_grid(numerics: Any, Omega: float, t_orb: float) -> tuple[float, float, float, int, Dict[str, Any]]:
+def _resolve_time_grid(
+    numerics: Any,
+    Omega: float,
+    t_orb: float,
+    *,
+    temp_runtime: Optional[tempdriver.TemperatureDriverRuntime] = None,
+) -> tuple[float, float, float, int, Dict[str, Any]]:
     """Return (t_end, dt_nominal, dt_step, n_steps, info) for the integrator."""
 
-    if numerics.t_end_orbits is not None:
+    t_end_basis = None
+    t_end_input = None
+    t_end = None
+    t_end_seconds_from_temperature = None
+    temp_stop = getattr(numerics, "t_end_until_temperature_K", None)
+    temp_pad_years = float(getattr(numerics, "t_end_temperature_margin_years", 0.0) or 0.0)
+    temp_search_years = getattr(numerics, "t_end_temperature_search_years", None)
+
+    if temp_stop is not None:
+        if temp_runtime is None:
+            raise ValueError("t_end_until_temperature_K requires a resolved Mars temperature driver")
+        search_max_s = (
+            float(temp_search_years) * SECONDS_PER_YEAR if temp_search_years is not None else None
+        )
+        t_stop_s = tempdriver.estimate_time_to_temperature(
+            temp_runtime,
+            float(temp_stop),
+            search_max_s=search_max_s,
+        )
+        if t_stop_s is not None:
+            t_end_seconds_from_temperature = t_stop_s + temp_pad_years * SECONDS_PER_YEAR
+            t_end_basis = "t_end_until_temperature_K"
+            t_end_input = float(temp_stop)
+
+    if t_end_seconds_from_temperature is not None:
+        t_end = t_end_seconds_from_temperature
+    elif numerics.t_end_orbits is not None:
         t_end = float(numerics.t_end_orbits) * t_orb
         t_end_basis = "t_end_orbits"
         t_end_input = float(numerics.t_end_orbits)
@@ -496,7 +528,9 @@ def _resolve_time_grid(numerics: Any, Omega: float, t_orb: float) -> tuple[float
         t_end_basis = "t_end_years"
         t_end_input = float(numerics.t_end_years)
     else:  # pragma: no cover - validated upstream, safeguard for runtime configs
-        raise ValueError("numerics must provide t_end_years or t_end_orbits")
+        raise ValueError(
+            "numerics must provide t_end_years, t_end_orbits, or t_end_until_temperature_K"
+        )
 
     if not math.isfinite(t_end) or t_end <= 0.0:
         raise ValueError("Resolved integration duration must be positive and finite")
@@ -544,6 +578,9 @@ def _resolve_time_grid(numerics: Any, Omega: float, t_orb: float) -> tuple[float
         "dt_step": dt_step,
         "t_blow_nominal": t_blow_nominal if math.isfinite(t_blow_nominal) else None,
         "n_steps": n_steps,
+        "temperature_stop_K": float(temp_stop) if temp_stop is not None else None,
+        "t_end_seconds_from_temperature": t_end_seconds_from_temperature,
+        "t_end_temperature_search_years": float(temp_search_years) if temp_search_years is not None else None,
     }
     return t_end, dt_nominal, dt_step, n_steps, info
 
@@ -1229,15 +1266,25 @@ def run_zero_d(
             "or place a table under marsdisk/io/data."
         )
     numerics_cfg = getattr(cfg, "numerics", None)
-    t_end_years_cfg = (
-        float(getattr(numerics_cfg, "t_end_years", 0.0) or 0.0)
-        if numerics_cfg is not None and getattr(numerics_cfg, "t_end_years", None) is not None
-        else (
-            float(getattr(numerics_cfg, "t_end_orbits", 0.0) or 0.0) * t_orb / SECONDS_PER_YEAR
-            if numerics_cfg is not None and getattr(numerics_cfg, "t_end_orbits", None) is not None
-            else 0.0
-        )
-    )
+    t_end_years_cfg = 0.0
+    if numerics_cfg is not None:
+        if getattr(numerics_cfg, "t_end_years", None) is not None:
+            t_end_years_cfg = float(getattr(numerics_cfg, "t_end_years", 0.0) or 0.0)
+        elif getattr(numerics_cfg, "t_end_orbits", None) is not None:
+            t_end_years_cfg = (
+                float(getattr(numerics_cfg, "t_end_orbits", 0.0) or 0.0) * t_orb / SECONDS_PER_YEAR
+            )
+        temp_stop_target = getattr(numerics_cfg, "t_end_until_temperature_K", None)
+        temp_pad_years = float(getattr(numerics_cfg, "t_end_temperature_margin_years", 0.0) or 0.0)
+        if temp_stop_target is not None:
+            span_years = tempdriver.estimate_autogen_horizon_years(
+                cfg.radiation,
+                T_stop_K=float(temp_stop_target),
+                margin_years=temp_pad_years,
+                fallback_years=t_end_years_cfg,
+            )
+            if span_years is not None:
+                t_end_years_cfg = max(t_end_years_cfg, float(span_years))
     temp_autogen_info = tempdriver.autogenerate_temperature_table_if_needed(
         cfg.radiation,
         t_end_years=t_end_years_cfg,
@@ -1615,6 +1662,7 @@ def run_zero_d(
     tau_initial = float(kappa_surf_initial * sigma_surf_reference)
     M_loss_cum = 0.0
     M_sink_cum = 0.0
+    M_spill_cum = 0.0
     M_sublimation_cum = 0.0
     M_hydro_cum = 0.0
     if cfg.disk is not None:
@@ -1694,6 +1742,7 @@ def run_zero_d(
     supply_spec = cfg.supply
     supply_enabled_cfg = bool(getattr(supply_spec, "enabled", True))
     supply_mode_value = getattr(supply_spec, "mode", "const")
+    supply_headroom_policy = getattr(supply_spec, "headroom_policy", "clip")
     supply_epsilon_mix = getattr(getattr(supply_spec, "mixing", None), "epsilon_mix", None)
     supply_mu_cfg = getattr(getattr(supply_spec, "mixing", None), "mu", None)
     supply_const_rate = getattr(getattr(supply_spec, "const", None), "prod_area_rate_kg_m2_s", None)
@@ -1795,6 +1844,7 @@ def run_zero_d(
         cfg.numerics,
         Omega,
         t_orb,
+        temp_runtime=temp_runtime,
     )
     dt = dt_initial_step
     if n_steps > MAX_STEPS:
@@ -1898,7 +1948,8 @@ def run_zero_d(
     debug_sinks_enabled = bool(getattr(cfg.io, "debug_sinks", False))
     correct_fast_blowout = bool(getattr(cfg.io, "correct_fast_blowout", False))
     substep_fast_enabled = bool(getattr(cfg.io, "substep_fast_blowout", False))
-    substep_max_ratio = float(getattr(cfg.io, "substep_max_ratio", 1.0))
+    substep_max_ratio_raw = getattr(cfg.io, "substep_max_ratio", None)
+    substep_max_ratio = 1.0 if substep_max_ratio_raw is None else float(substep_max_ratio_raw)
     if substep_max_ratio <= 0.0:
         raise ValueError("io.substep_max_ratio must be positive")
     debug_records = history.debug_records
@@ -1912,6 +1963,8 @@ def run_zero_d(
         else float("inf")
     )
     monitor_dt_ratio = math.isfinite(dt_over_t_blow_max) and dt_over_t_blow_max > 0.0
+    stop_on_blowout_below_smin = bool(getattr(cfg.numerics, "stop_on_blowout_below_smin", False))
+    blowout_stop_threshold = float(s_min_config)
 
     orbit_time_accum = 0.0
     orbit_loss_blow = 0.0
@@ -1949,6 +2002,7 @@ def run_zero_d(
     supply_visibility_track: List[float] = []
     supply_blocked_track: List[bool] = []
     supply_mixing_block_track: List[bool] = []
+    supply_spill_rate_track: List[float] = []
     supply_rate_scaled_initial: Optional[float] = None
     supply_clip_time = 0.0
     supply_clip_streak = 0
@@ -1966,6 +2020,9 @@ def run_zero_d(
     phase_bulk_f_solid_last: Optional[float] = None
     phase_bulk_f_vapor_last: Optional[float] = None
     last_time_value = 0.0
+    early_stop_reason: Optional[str] = None
+    early_stop_step: Optional[int] = None
+    early_stop_time_s: Optional[float] = None
 
     def _mark_reservoir_depletion(current_time: float) -> None:
         """Record the first time the finite reservoir is exhausted."""
@@ -1998,6 +2055,8 @@ def run_zero_d(
         prod_rate_into_deep_current: float = 0.0
         deep_to_surf_flux_attempt_current: float = 0.0
         deep_to_surf_flux_current: float = 0.0
+        spill_rate_current: float = 0.0
+        mass_loss_spill_step = 0.0
         supply_visibility_factor_current: Optional[float] = None
         supply_blocked_by_headroom_flag = False
         supply_mixing_limited_flag = False
@@ -2031,7 +2090,7 @@ def run_zero_d(
             else:
                 s_min_blow = max(s_min_config, a_blow_step)
             if psd_floor_mode == "none":
-                s_min_effective = float(s_min_config)
+                s_min_effective = float(psd_state.get("s_min", s_min_config))
             elif psd_floor_mode == "evolve_smin":
                 s_min_effective = max(s_min_blow, s_min_floor_dynamic)
             else:
@@ -2051,6 +2110,20 @@ def run_zero_d(
             beta_gate_active = beta_at_smin_effective >= beta_threshold
         beta_track.append(beta_at_smin_effective)
         ablow_track.append(a_blow_step)
+
+        if stop_on_blowout_below_smin and a_blow_step <= blowout_stop_threshold:
+            early_stop_reason = "a_blow_below_s_min_config"
+            early_stop_step = step_no
+            early_stop_time_s = time
+            total_time_elapsed = time
+            logger.info(
+                "Early stop triggered: a_blow=%.3e m dropped below s_min_config=%.3e m at t=%.3e s (step %d)",
+                a_blow_step,
+                blowout_stop_threshold,
+                time,
+                step_no,
+            )
+            break
 
         t_blow_step = chi_blow_eff / Omega_step if Omega_step > 0.0 else float("inf")
 
@@ -2084,6 +2157,7 @@ def run_zero_d(
 
         ds_dt_raw = 0.0
         ds_dt_val = 0.0
+        sigma_loss_sublimation_blow = 0.0
         T_grain = None
         sublimation_blocked_by_phase = False
         sublimation_active = sublimation_active_flag
@@ -2108,7 +2182,7 @@ def run_zero_d(
         )
         floor_for_step = s_min_effective
         if psd_floor_mode == "none":
-            floor_for_step = float(s_min_config)
+            floor_for_step = 0.0 if (mass_conserving_sublimation and ds_dt_val < 0.0) else float(s_min_config)
         elif psd_floor_mode == "evolve_smin":
             delta_floor = abs(ds_dt_val) * dt
             candidate = max(
@@ -2132,6 +2206,9 @@ def run_zero_d(
             floor=floor_for_step,
             sigma_surf=sigma_surf,
         )
+        if mass_conserving_sublimation and ds_dt_val < 0.0:
+            sigma_loss_sublimation_blow = delta_sigma_sub
+            delta_sigma_sub = 0.0
         kappa_surf = _ensure_finite_kappa(psd.compute_kappa(psd_state), label="kappa_surf_step")
         if freeze_kappa:
             kappa_surf = kappa_surf_initial
@@ -2235,6 +2312,8 @@ def run_zero_d(
         else:
             t_sink_step_effective = t_sink_surface_only
 
+        substep_active = False
+        substep_requested = False
         if blowout_enabled and t_blow_step > 0.0:
             fast_blowout_ratio = dt / t_blow_step
             if monitor_dt_ratio and fast_blowout_ratio > dt_over_t_blow_max:
@@ -2250,13 +2329,19 @@ def run_zero_d(
             )
             fast_blowout_flag = fast_blowout_ratio > FAST_BLOWOUT_RATIO_THRESHOLD
             fast_blowout_flag_strict = fast_blowout_ratio > FAST_BLOWOUT_RATIO_STRICT
-            substep_active = bool(
-                substep_fast_enabled and fast_blowout_ratio > substep_max_ratio
+            substep_requested = bool(
+                substep_fast_enabled
+                and collision_solver_mode == "surface_ode"
+                and fast_blowout_ratio > substep_max_ratio
             )
-            n_substeps = 1
-            if substep_active:
+            if substep_requested:
                 n_substeps = int(math.ceil(dt / (substep_max_ratio * t_blow_step)))
-            dt_sub = dt / n_substeps
+                dt_sub = dt / n_substeps
+                substep_active = True
+            else:
+                n_substeps = 1
+                dt_sub = dt
+                substep_active = False
             ratio_sub = dt_sub / t_blow_step
             fast_blowout_factor_sub = (
                 _fast_blowout_correction_factor(ratio_sub)
@@ -2269,7 +2354,6 @@ def run_zero_d(
             fast_blowout_factor_calc = 0.0
             fast_blowout_flag = False
             fast_blowout_flag_strict = False
-            substep_active = False
             n_substeps = 1
             dt_sub = dt
             ratio_sub = 0.0
@@ -2309,6 +2393,7 @@ def run_zero_d(
         sigma_loss_smol = 0.0
         t_coll_kernel_last = None
         surface_active = collisions_active_step or sink_timescale_active
+        sigma_before_step = sigma_surf
         if collision_solver_mode == "surface_ode":
             if surface_active:
                 for _sub_idx in range(n_substeps):
@@ -2364,6 +2449,7 @@ def run_zero_d(
                     if collisions_active_step and cfg.surface.use_tcoll and tau_vert > TAU_MIN:
                         tau_for_coll = tau_vert
                     tau_for_feedback_val = tau_eval_los if supply_feedback_cfg and getattr(supply_feedback_cfg, "tau_field", "tau_vertical") == "tau_los" else tau_vert
+                    allow_supply = phase_bulk_step.state != "liquid_dominated"
                     supply_res = supply.evaluate_supply(
                         time_sub,
                         r,
@@ -2374,9 +2460,9 @@ def run_zero_d(
                         tau_for_feedback=tau_for_feedback_val,
                         temperature_K=T_use,
                     )
-                    prod_rate_raw_current = supply_res.rate
-                    supply_rate_nominal_current = supply_res.mixed_rate
-                    supply_rate_scaled_current = supply_res.rate
+                    prod_rate_raw_current = supply_res.rate if allow_supply else 0.0
+                    supply_rate_nominal_current = supply_res.mixed_rate if allow_supply else 0.0
+                    supply_rate_scaled_current = supply_res.rate if allow_supply else 0.0
                     if supply_rate_scaled_initial is None and math.isfinite(supply_res.rate):
                         supply_rate_scaled_initial = float(supply_res.rate)
                     sigma_tau1_active = (
@@ -2395,6 +2481,8 @@ def run_zero_d(
                         deep_enabled=supply_deep_enabled,
                         transport_mode=supply_transport_mode,
                         headroom_gate=supply_transport_headroom_gate,
+                        headroom_policy=supply_headroom_policy,
+                        t_blow=t_blow_step,
                     )
                     prod_rate = split_res.prod_rate_applied
                     prod_rate_last = prod_rate
@@ -2494,6 +2582,7 @@ def run_zero_d(
                 enable_blowout_sub = enable_blowout_step and collisions_active_step
                 t_sink_current = t_sink_step_effective if sink_timescale_active else None
                 tau_for_feedback_val = tau_eval_los if supply_feedback_cfg and getattr(supply_feedback_cfg, "tau_field", "tau_vertical") == "tau_los" else tau_vert
+                allow_supply = phase_bulk_step.state != "liquid_dominated"
                 supply_res = supply.evaluate_supply(
                     time_start,
                     r,
@@ -2504,9 +2593,9 @@ def run_zero_d(
                     tau_for_feedback=tau_for_feedback_val,
                     temperature_K=T_use,
                 )
-                prod_rate_raw_current = supply_res.rate
-                supply_rate_nominal_current = supply_res.mixed_rate
-                supply_rate_scaled_current = supply_res.rate
+                prod_rate_raw_current = supply_res.rate if allow_supply else 0.0
+                supply_rate_nominal_current = supply_res.mixed_rate if allow_supply else 0.0
+                supply_rate_scaled_current = supply_res.rate if allow_supply else 0.0
                 if supply_rate_scaled_initial is None and math.isfinite(supply_res.rate):
                     supply_rate_scaled_initial = float(supply_res.rate)
                 sigma_tau1_active = (
@@ -2525,6 +2614,8 @@ def run_zero_d(
                     deep_enabled=supply_deep_enabled,
                     transport_mode=supply_transport_mode,
                     headroom_gate=supply_transport_headroom_gate,
+                    headroom_policy=supply_headroom_policy,
+                    t_blow=t_blow_step,
                 )
                 prod_rate = split_res.prod_rate_applied
                 prod_rate_last = prod_rate
@@ -2568,6 +2659,7 @@ def run_zero_d(
                         supply_s_inj_max=supply_injection_s_max,
                         supply_q=supply_injection_q,
                         supply_velocity_cfg=supply_velocity_cfg,
+                        headroom_policy=supply_headroom_policy,
                     )
                     psd_state = smol_res.psd_state
                     sigma_surf = smol_res.sigma_after
@@ -2581,20 +2673,27 @@ def run_zero_d(
                     supply_velocity_weight_step = smol_res.supply_velocity_weight
                     sigma_loss_smol = max(sigma_loss_smol, 0.0) + max(smol_res.sigma_loss, 0.0)
                     prod_rate_last = smol_res.prod_mass_rate_effective
+                    supply_rate_applied_current = prod_rate_last
                     total_prod_surface = smol_res.prod_mass_rate_effective * dt
                     outflux_surface = smol_res.dSigma_dt_blowout
+                    spill_rate_current = smol_res.mass_loss_rate_spill
+                    mass_loss_spill_step = (
+                        spill_rate_current * dt * area / constants.M_MARS if dt > 0.0 else 0.0
+                    )
                     if apply_correction:
                         outflux_surface *= fast_blowout_factor_sub
                         fast_blowout_applied = True
                     clip_rate = max(
                         smol_res.dSigma_dt_sinks
                         - smol_res.mass_loss_rate_sinks
-                        - smol_res.mass_loss_rate_sublimation,
+                        - smol_res.mass_loss_rate_sublimation
+                        - smol_res.mass_loss_rate_spill,
                         0.0,
                     )
                     sink_flux_surface = (
                         smol_res.mass_loss_rate_sinks
                         + smol_res.mass_loss_rate_sublimation
+                        + smol_res.mass_loss_rate_spill
                         + clip_rate
                     )
                     total_sink_surface = smol_res.dSigma_dt_sinks * dt
@@ -2733,6 +2832,11 @@ def run_zero_d(
             sink_surface_total = max(total_sink_surface, 0.0)
             blow_surface_total = 0.0
 
+        if sigma_loss_sublimation_blow > 0.0:
+            blow_surface_total += sigma_loss_sublimation_blow
+            if dt > 0.0:
+                outflux_surface += sigma_loss_sublimation_blow / dt
+
         if enable_blowout_step and gate_enabled:
             blow_surface_total *= gate_factor
             outflux_surface *= gate_factor
@@ -2750,10 +2854,11 @@ def run_zero_d(
         mass_loss_surface_solid_step = blow_mass_total
         if collisions_active_step:
             M_loss_cum += blow_mass_total
-        if sink_timescale_active:
-            M_sink_cum += sink_mass_total_effective
-            if sink_result.sublimation_fraction > 0.0:
-                M_sublimation_cum += sink_mass_total * sink_result.sublimation_fraction
+        M_sink_cum += sink_mass_total_effective
+        if mass_loss_spill_step > 0.0:
+            M_spill_cum += mass_loss_spill_step
+        if sink_timescale_active and sink_result.sublimation_fraction > 0.0:
+            M_sublimation_cum += sink_mass_total * sink_result.sublimation_fraction
         M_hydro_cum += hydro_mass_total
         if collision_solver_mode == "smol" and mass_loss_sublimation_smol_step > 0.0:
             M_sink_cum += mass_loss_sublimation_smol_step
@@ -2982,6 +3087,7 @@ def run_zero_d(
         supply_rate_applied_track.append(_safe_float(supply_rate_applied_current))
         supply_headroom_track.append(_safe_float(headroom_current))
         supply_clip_factor_track.append(_safe_float(clip_factor_current))
+        supply_spill_rate_track.append(_safe_float(spill_rate_current))
         supply_visibility_track.append(_safe_float(visibility_factor_current))
         supply_blocked_track.append(bool(supply_blocked_by_headroom_flag))
         supply_mixing_block_track.append(bool(supply_mixing_limited_flag))
@@ -3105,6 +3211,7 @@ def run_zero_d(
             "supply_rate_nominal": _safe_float(supply_rate_nominal_current),
             "supply_rate_scaled": _safe_float(supply_rate_scaled_current),
             "supply_rate_applied": _safe_float(supply_rate_applied_current),
+            "supply_tau_clip_spill_rate": _safe_float(spill_rate_current),
             "supply_headroom": _safe_float(headroom_current),
             "supply_clip_factor": _safe_float(clip_factor_current),
             "supply_visibility_factor": _safe_float(visibility_factor_current),
@@ -3146,6 +3253,8 @@ def run_zero_d(
             "mass_lost_sinks_step": mass_loss_sinks_step_total,
             "mass_lost_sublimation_step": mass_loss_sublimation_step_diag,
             "mass_lost_hydro_step": mass_loss_hydro_step,
+            "mass_lost_tau_clip_spill_step": mass_loss_spill_step,
+            "cum_mass_lost_tau_clip_spill": M_spill_cum,
             "mass_lost_surface_solid_marsRP_step": mass_loss_surface_solid_step,
             "M_loss_rp_mars": M_loss_cum,
             "M_loss_surface_solid_marsRP": M_loss_cum,
@@ -3156,6 +3265,7 @@ def run_zero_d(
             "fast_blowout_flag_gt10": fast_blowout_flag_strict,
             "fast_blowout_ratio": fast_blowout_ratio_alias,
             "n_substeps": int(n_substeps),
+            "substep_active": bool(substep_active),
             "chi_blow_eff": chi_blow_eff,
             "case_status": case_status,
             "s_blow_m": a_blow_step,
@@ -3298,6 +3408,7 @@ def run_zero_d(
             "supply_rate_nominal": _safe_float(supply_rate_nominal_current),
             "supply_rate_scaled": _safe_float(supply_rate_scaled_current),
             "supply_rate_applied": _safe_float(supply_rate_applied_current),
+            "supply_tau_clip_spill_rate": _safe_float(spill_rate_current),
             "supply_headroom": _safe_float(headroom_current),
             "supply_clip_factor": _safe_float(clip_factor_current),
             "headroom": _safe_float(headroom_current),
@@ -3328,6 +3439,7 @@ def run_zero_d(
             "M_out_cum": M_loss_cum,
             "M_sink_cum": M_sink_cum,
             "M_loss_cum": M_loss_cum + M_sink_cum,
+            "cum_mass_lost_tau_clip_spill": M_spill_cum,
             "M_loss_surface_solid_marsRP": M_loss_cum,
             "M_hydro_cum": M_hydro_cum,
             "phase_state": phase_state_last,
@@ -3377,6 +3489,7 @@ def run_zero_d(
             "mass_loss_rp_mars": M_loss_cum,
             "mass_loss_hydro_drag": M_hydro_cum,
             "mass_loss_surface_solid_marsRP": M_loss_cum,
+            "mass_loss_tau_clip_spill": M_spill_cum,
         }
         if phase7_enabled:
             channels_total = M_loss_cum + M_sink_cum
@@ -3605,11 +3718,17 @@ def run_zero_d(
     supply_headroom_min, supply_headroom_median, supply_headroom_max = _series_stats(supply_headroom_track)
     supply_clip_factor_min, supply_clip_factor_median, supply_clip_factor_max = _series_stats(supply_clip_factor_track)
     supply_visibility_min, supply_visibility_median, supply_visibility_max = _series_stats(supply_visibility_track)
+    supply_spill_rate_min, supply_spill_rate_median, supply_spill_rate_max = _series_stats(supply_spill_rate_track)
     supply_blocked_fraction = (
         float(np.mean(np.asarray(supply_blocked_track, dtype=float))) if supply_blocked_track else float("nan")
     )
     supply_mixing_fraction = (
         float(np.mean(np.asarray(supply_mixing_block_track, dtype=float))) if supply_mixing_block_track else float("nan")
+    )
+    supply_spill_active_fraction = (
+        float(np.mean(np.asarray(supply_spill_rate_track, dtype=float) > supply_visibility_eps))
+        if supply_spill_rate_track
+        else float("nan")
     )
     supply_clip_time_fraction = (
         float(supply_clip_time / total_time_elapsed)
@@ -3667,6 +3786,7 @@ def run_zero_d(
         "shielding_auto_max_active": shielding_auto_max_active,
         "supply_enabled": supply_enabled_cfg,
         "supply_mode": supply_mode_value,
+        "supply_headroom_policy": supply_headroom_policy,
         "supply_reservoir_enabled": supply_reservoir_enabled,
         "supply_feedback_enabled": supply_feedback_enabled,
         "supply_reservoir_mode": supply_reservoir_mode,
@@ -3698,11 +3818,15 @@ def run_zero_d(
     time_grid_summary = {
         "t_start_s": 0.0,
         "t_end_s": time_grid_info.get("t_end_seconds"),
+        "t_end_actual_s": total_time_elapsed,
         "dt_s": time_grid_info.get("dt_step", dt),
         "dt_nominal_s": time_grid_info.get("dt_nominal"),
         "n_steps": time_grid_info.get("n_steps"),
         "dt_mode": time_grid_info.get("dt_mode"),
     }
+    time_grid_summary["terminated_early"] = early_stop_reason is not None
+    time_grid_summary["early_stop_reason"] = early_stop_reason
+    time_grid_summary["early_stop_step"] = early_stop_step
     limitations_list = [
         "Inner-disk only; outer or highly eccentric debris is out of scope.",
         "Radiation pressure source is fixed to Mars; solar/other external sources are ignored even when requested.",
@@ -3783,6 +3907,7 @@ def run_zero_d(
         "M_loss": (M_loss_cum + M_sink_cum),
         "M_loss_from_sinks": M_sink_cum,
         "M_loss_from_sublimation": M_sublimation_cum,
+        "M_loss_tau_clip_spill": M_spill_cum,
         "M_loss_rp_mars": M_loss_cum,
         "M_loss_surface_solid_marsRP": M_loss_cum,
         "M_loss_hydro_escape": M_hydro_cum,
@@ -3813,6 +3938,9 @@ def run_zero_d(
         "T_M_min": T_min,
         "T_M_median": T_median,
         "T_M_max": T_max,
+        "early_stop_reason": early_stop_reason,
+        "early_stop_time_s": early_stop_time_s,
+        "analysis_window_years_actual": total_time_elapsed / SECONDS_PER_YEAR if total_time_elapsed is not None else None,
         "beta_at_smin_min": beta_min,
         "beta_at_smin_median": beta_median,
         "beta_at_smin_max": beta_max,
@@ -3879,6 +4007,7 @@ def run_zero_d(
         "supply_transport_mode": supply_transport_mode,
         "supply_transport_t_mix_orbits": supply_deep_tmix_orbits,
         "supply_transport_headroom_gate": supply_transport_headroom_gate,
+        "supply_headroom_policy": supply_headroom_policy,
         "supply_visibility_min": supply_visibility_min,
         "supply_visibility_median": supply_visibility_median,
         "supply_visibility_max": supply_visibility_max,
@@ -3905,6 +4034,13 @@ def run_zero_d(
             "blocked_fraction": supply_blocked_fraction,
             "mixing_fraction": supply_mixing_fraction,
         },
+        "supply_spill": {
+            "rate_min": supply_spill_rate_min,
+            "rate_median": supply_spill_rate_median,
+            "rate_max": supply_spill_rate_max,
+            "active_fraction": supply_spill_active_fraction,
+            "M_loss_cum": M_spill_cum,
+        },
         "enforce_mass_budget": enforce_mass_budget,
         "physics_mode": physics_mode,
         "physics_mode_source": physics_mode_source,
@@ -3915,6 +4051,7 @@ def run_zero_d(
             "basis": time_grid_info.get("t_end_basis"),
             "t_end_input": time_grid_info.get("t_end_input"),
             "t_end_s": time_grid_info.get("t_end_seconds"),
+            "t_end_actual_s": total_time_elapsed,
             "dt_mode": time_grid_info.get("dt_mode"),
             "dt_input": time_grid_info.get("dt_input"),
             "dt_nominal_s": time_grid_info.get("dt_nominal"),
@@ -3922,6 +4059,10 @@ def run_zero_d(
             "n_steps": time_grid_info.get("n_steps"),
             "dt_sources_s": time_grid_info.get("dt_sources"),
             "dt_capped_by_max_steps": time_grid_info.get("dt_capped_by_max_steps", False),
+            "terminated_early": early_stop_reason is not None,
+            "early_stop_reason": early_stop_reason,
+            "early_stop_step": early_stop_step,
+            "early_stop_time_s": early_stop_time_s,
         },
         "streaming": {
             "enabled": streaming_state.enabled,
@@ -4177,6 +4318,7 @@ def run_zero_d(
     run_config["supply"] = {
         "enabled": supply_enabled_cfg,
         "mode": supply_mode_value,
+        "headroom_policy": supply_headroom_policy,
         "epsilon_mix": supply_epsilon_mix,
         "mu": supply_mu_cfg,
         "const_prod_area_rate_kg_m2_s": supply_const_rate,
@@ -4209,6 +4351,13 @@ def run_zero_d(
             "visibility_max": supply_visibility_max,
             "blocked_fraction": supply_blocked_fraction,
             "mixing_fraction": supply_mixing_fraction,
+        },
+        "spill": {
+            "rate_min": supply_spill_rate_min,
+            "rate_median": supply_spill_rate_median,
+            "rate_max": supply_spill_rate_max,
+            "active_fraction": supply_spill_active_fraction,
+            "M_loss_cum": M_spill_cum,
         },
         "reservoir_enabled": supply_reservoir_enabled,
         "reservoir_mass_total_Mmars": supply_reservoir_mass_total,

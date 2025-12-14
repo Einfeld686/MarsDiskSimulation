@@ -43,8 +43,8 @@ dynamics:
   kernel_H_mode: ia
   H_factor: 1.0
   e_mode: mars_clearance
-  dr_min_m: 7.5e5     # ≈e=0.5 at r~2.45 R_M
-  dr_max_m: 3.3e6     # ≈e=0.2 at r~2.45 R_M
+  dr_min_m: 1.2e6     # ≈e~0.5 at r~2 R_M, avoids負のe
+  dr_max_m: 4.0e6     # ≈e~0.2 at r~2–2.7 R_M
   dr_dist: uniform
   i_mode: fixed
   rng_seed: 42
@@ -53,13 +53,13 @@ psd:
   alpha_mode: size
   wavy_strength: 0.0
   floor:
-    mode: fixed
+    mode: none
 qstar:
   Qs: 3.5e7
   a_s: 0.38
   B: 0.3
   b_g: 1.36
-  v_ref_kms: [3.0, 5.0]
+  v_ref_kms: [2.0, 5.0]
   coeff_units: ba99_cgs
 disk:
   geometry:
@@ -82,6 +82,7 @@ init_tau1:
   scale_to_tau1: true
 supply:
   mode: const
+  headroom_policy: clip
   const:
     prod_area_rate_kg_m2_s: 1.0e-10
   powerlaw:
@@ -156,7 +157,7 @@ blowout:
   target_phase: solid_only
   layer: surface_tau_le_1
 phase:
-  enabled: false
+  enabled: true
   source: threshold
   entrypoint: siO2_disk_cooling.siO2_cooling_map:lookup_phase_state
   extra_kwargs: {}
@@ -167,6 +168,8 @@ phase:
     tau_ref: 1.0
 numerics:
   t_end_years: 2.0
+  t_end_until_temperature_K: 1000.0   # 冷却到達（4000K→1000K）まで実行
+  t_end_temperature_margin_years: 0.0
   dt_init: 2.0
   safety: 0.1
   atol: 1.0e-10
@@ -179,7 +182,7 @@ diagnostics:
     enable: false
     schema_version: phase7-minimal-v1
 io:
-  outdir: out/temp_supply_grid/T4000_eps1_mu0p0440849
+  outdir: /Volumes/KIOXIA/marsdisk_out/temp_supply_grid/T4000_eps1_mu0p0440849
   debug_sinks: false
   correct_fast_blowout: false
   substep_fast_blowout: false

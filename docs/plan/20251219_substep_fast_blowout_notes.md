@@ -28,11 +28,14 @@
 | **dt/t_blow 比** | タイムステップ幅とブローアウト時間の比。大きいと数値誤差が増加 | — |
 | **サブステップ (substep)** | dt/t_blow が大きいとき、ブローアウト項のみを細分化して精度を保つ手法 | — |
 | `substep_fast_blowout` | サブステップ機能の有効化フラグ（`io` セクション） | [run.py](../../marsdisk/run.py) |
-| `substep_max_ratio` | サブステップ発動の閾値。dt/t_blow がこれを超えると細分化 | [run.py](../../marsdisk/run.py) |
+| `substep_max_ratio` | サブステップ発動の閾値。dt/t_blow がこれを超えると細分化。デフォルト 1.0（実質無効）、運用値 0.3–0.5 | [run.py](../../marsdisk/run.py) |
 | `fast_blowout_factor` | 高速ブローアウト補正係数。粗いステップでの誤差を補正 | — |
+| `fast_blowout_factor_avg` | サブステップ時の `dt_sub` 重み平均補正係数 | — |
 | **M_out_dot** | 瞬時の質量流出率（$\dot{M}_{\rm out}$）。ジグザグはサブステップで緩和可能 | — |
 | **Ω（ケプラー角速度）** | 軌道半径 r での軌道周期に対応する角速度 | (E.001) |
 | **headroom** | $\Sigma_{\tau=1} - \Sigma_{\rm surf}$。供給ゲートの開閉を決定 | (E.031) |
+| `collision_solver` | 衝突解法モード。`surface_ode`（表層ODE）または `smol`（Smoluchowski） | [schema.py](../../marsdisk/schema.py) |
+| `substep_active` | 当該ステップでサブステップが有効化されたかのフラグ（出力列） | — |
 
 ### ドキュメントの位置付け
 
@@ -41,6 +44,25 @@
 関連ドキュメント：
 - [20251219_tau_clip_gate_review.md](./20251219_tau_clip_gate_review.md) — τクリップと供給ゲートの現状整理
 - [20251216_temp_supply_sigma_tau1_headroom.md](./20251216_temp_supply_sigma_tau1_headroom.md) — 供給クリップ事象の報告
+- [20251220_supply_headroom_policy_spill.md](./20251220_supply_headroom_policy_spill.md) — headroom 超過時の spill モード提案
+
+---
+
+## 背景と問題点
+
+### 問題点
+大きなタイムステップ `dt` を使用すると、ブローアウト時間 `t_blow` に対して `dt/t_blow` が大きくなり、以下の問題が発生する：
+
+1. **数値誤差の増加**: ブローアウトが 1 ステップで完了するため、物理的な時間発展を正確に追跡できない
+2. **M_out_dot のギザギザ**: 質量流出率が不連続に見え、解析が困難
+3. **質量収支のずれ**: 急激な変化により質量保存の誤差が蓄積しやすい
+
+### 解決策：サブステップ導入
+`dt/t_blow > substep_max_ratio` のステップのみを細分化し、ブローアウト項を小さな `dt_sub` で反復計算する。これにより：
+
+- 全体の計算コストを抑えつつ、問題のあるステップのみ精度を向上
+- M_out_dot の滑らかさを改善
+- 質量誤差を許容範囲（< 0.5%）に維持
 
 ---
 
@@ -65,6 +87,37 @@
 - ジグザグ（M_out_dot, sigma_surf）の緩和：大きな dt でもブローアウトの速さを部分的に解像。
 - 質量収支: サブステップ導入で質量誤差が増えないこと（`checks/mass_budget.csv` |error|<0.5% 維持）。
 - 速度: 全ステップ細分化ではなく「dt/t_blow が閾値超えのステップだけ」細分化し、総計算時間の増加を抑える。
+
+## 実装反映メモ（サブステップ導入後）
+
+### 変更一覧
+
+| 変更箇所 | 内容 | ファイル |
+|----------|------|----------|
+| **サブステップ判定** | `collision_solver=surface_ode` かつ `dt/t_blow > substep_max_ratio` のみ有効化 | [run.py](../../marsdisk/run.py) |
+| **n_substeps 計算** | `ceil(dt / (substep_max_ratio * t_blow))` で分割数を決定 | [run.py](../../marsdisk/run.py) |
+| **サブステップ反復** | 遮蔽→供給→deep buffer→`surface.step_surface` を `dt_sub` で反復 | [run.py](../../marsdisk/run.py) |
+| **Smol 経路** | 常に `n_substeps=1`（サブステップ無効）。`fast_blowout_factor` は元の `dt/t_blow` 基準を維持 | [run.py](../../marsdisk/run.py) |
+| **新規出力列** | `substep_active` 列を追加 | [writer.py](../../marsdisk/io/writer.py) |
+| **平均化変更** | `fast_blowout_factor_avg` を `dt_sub` 重み平均に変更 | [run.py](../../marsdisk/run.py), [writer.py](../../marsdisk/io/writer.py) |
+| **スキーマ更新** | `io.substep_max_ratio` のデフォルト 1.0（実質無効）、運用値 0.3–0.5 を明示 | [schema.py](../../marsdisk/schema.py) |
+| **回帰テスト** | surface_ode でサブステップ有効、smol では無効、質量誤差≦0.5% を検証 | [test_fast_blowout.py](../../tests/test_fast_blowout.py) |
+
+### 出力カラム詳細
+
+| カラム名 | 型 | 単位 | 説明 |
+|----------|-----|------|------|
+| `fast_blowout_ratio` | float | 無次元 | `dt / t_blow` の値 |
+| `fast_blowout_factor` | float | 無次元 | 単一ステップでの補正係数 |
+| `fast_blowout_factor_avg` | float | 無次元 | サブステップ時の `dt_sub` 重み平均補正係数 |
+| `fast_blowout_flag_gt3` | bool | — | `dt/t_blow > 3` かどうか |
+| `fast_blowout_flag_gt10` | bool | — | `dt/t_blow > 10` かどうか |
+| `n_substeps` | int | — | 実行されたサブステップ数（通常 1） |
+| `substep_active` | bool | — | 当該ステップでサブステップが有効化されたか |
+
+### 互換性
+- 既存の `fast_blowout_factor`, `fast_blowout_ratio`, 瞬時 `M_out_dot` との互換性を保持
+- `substep_fast_blowout=false`（デフォルト）の場合、従来と完全に同一の挙動
 
 ## ChatGPT 等に依頼するときの指示サンプル
 - 入力: 上記設定ファイルと出力例、`run.py` のサブステップ判定箇所。

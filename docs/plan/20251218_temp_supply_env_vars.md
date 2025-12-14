@@ -19,6 +19,9 @@
 - `SHIELDING_SIGMA` … `fixed_tau1_sigma`（既定 `auto` を推奨）
 - `SHIELDING_AUTO_MAX_MARGIN` … `auto_max` 使用時の余裕率（既定 `0.05`）
 - `INIT_SCALE_TO_TAU1` … `init_tau1.scale_to_tau1` の ON/OFF（既定 `true`）
+- **fast blowout サブステップ**:
+  - `SUBSTEP_FAST_BLOWOUT` … 1 で `io.substep_fast_blowout=true` を付与（surface_ode 用）
+  - `SUBSTEP_MAX_RATIO` … `dt/t_blow` 閾値（空ならベース設定のデフォルト 1.0 を使用）
 
 ## リザーバ / フィードバック / 温度カップリング
 - `SUPPLY_RESERVOIR_M` … 有限リザーバ質量 [M_Mars]（空なら無効）

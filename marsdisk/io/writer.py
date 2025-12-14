@@ -76,6 +76,7 @@ def write_parquet(df: pd.DataFrame, path: Path, *, compression: str = "snappy") 
         "dSigma_dt_total": "kg m^-2 s^-1",
         "dSigma_dt_sublimation": "kg m^-2 s^-1",
         "n_substeps": "count",
+        "substep_active": "bool",
         "chi_blow_eff": "dimensionless",
         "mass_lost_by_blowout": "M_Mars",
         "mass_lost_by_sinks": "M_Mars",
@@ -154,6 +155,9 @@ def write_parquet(df: pd.DataFrame, path: Path, *, compression: str = "snappy") 
         "prod_rate_applied_to_surf": "kg m^-2 s^-1",
         "prod_rate_diverted_to_deep": "kg m^-2 s^-1",
         "deep_to_surf_flux": "kg m^-2 s^-1",
+        "supply_tau_clip_spill_rate": "kg m^-2 s^-1",
+        "mass_lost_tau_clip_spill_step": "M_Mars",
+        "cum_mass_lost_tau_clip_spill": "M_Mars",
     }
     definitions = {
         "time": "Cumulative elapsed time at the end of each step [s].",
@@ -199,6 +203,7 @@ def write_parquet(df: pd.DataFrame, path: Path, *, compression: str = "snappy") 
         "dSigma_dt_total": "Total surface mass-loss rate per unit area (blow-out plus sinks) in kg m^-2 s^-1.",
         "dSigma_dt_sublimation": "Per-area sublimation depletion rate inferred from the ds/dt erosion (kg m^-2 s^-1).",
         "n_substeps": "Number of sub-steps used to resolve the current interval (1 when substepping is inactive).",
+        "substep_active": "True when the current step was subdivided to resolve fast blow-out (surface_ode path only).",
         "chi_blow_eff": "Effective blow-out timescale multiplier used for the step (t_blow = chi_blow_eff / Omega).",
         "mass_lost_by_blowout": "Cumulative mass lost through blow-out removal (Mars masses).",
         "mass_lost_by_sinks": "Cumulative mass lost through additional sinks such as sublimation (Mars masses).",
@@ -277,6 +282,9 @@ def write_parquet(df: pd.DataFrame, path: Path, *, compression: str = "snappy") 
         "prod_rate_applied_to_surf": "Rate delivered to the surface after headroom and deep-reservoir mixing (kg m^-2 s^-1).",
         "prod_rate_diverted_to_deep": "Portion of the raw supply diverted into the deep reservoir (kg m^-2 s^-1).",
         "deep_to_surf_flux": "Flux returned from the deep reservoir to the surface layer (kg m^-2 s^-1).",
+        "supply_tau_clip_spill_rate": "Per-area spill rate removed after applying the τ≤1 cap when headroom_policy='spill' (kg m^-2 s^-1).",
+        "mass_lost_tau_clip_spill_step": "Mass removed from the surface by the spill policy during the step (M_Mars).",
+        "cum_mass_lost_tau_clip_spill": "Cumulative spill loss tracked by the τ clip spill policy (M_Mars).",
     }
     table = pa.Table.from_pandas(df, preserve_index=False)
     metadata = dict(table.schema.metadata or {})

@@ -15,6 +15,7 @@ def _build_fast_blowout_config(
     correct: bool,
     substep: bool = False,
     substep_ratio: float = 1.0,
+    collision_solver: str = "smol",
 ) -> schema.Config:
     cfg = schema.Config(
         geometry=schema.Geometry(mode="0D"),
@@ -48,6 +49,7 @@ def _build_fast_blowout_config(
         ),
     )
     cfg.sinks.mode = "none"
+    cfg.surface.collision_solver = collision_solver
     return cfg
 
 
@@ -70,3 +72,55 @@ def test_chi_blow_auto_range(tmp_path: Path) -> None:
     assert np.all(chi_series >= 0.5)
     assert np.all(chi_series <= 2.0)
     assert 0.5 <= float(summary["chi_blow_eff"]) <= 2.0
+
+
+def test_surface_ode_substeps_activate(tmp_path: Path) -> None:
+    cfg = _build_fast_blowout_config(
+        tmp_path / "surface_substeps",
+        correct=False,
+        substep=True,
+        substep_ratio=0.4,
+        collision_solver="surface_ode",
+    )
+    run.run_zero_d(cfg)
+
+    series = pd.read_parquet(Path(cfg.io.outdir) / "series" / "run.parquet")
+    n_substeps_max = int(series["n_substeps"].max())
+    assert n_substeps_max > 1
+    assert bool(series["substep_active"].any())
+    assert float(series["dt_over_t_blow"].max()) > cfg.io.substep_max_ratio
+
+    budget = pd.read_csv(Path(cfg.io.outdir) / "checks" / "mass_budget.csv")
+    assert float(budget["error_percent"].max()) <= 0.5
+
+
+def test_smol_ignores_substeps(tmp_path: Path) -> None:
+    cfg_base = _build_fast_blowout_config(
+        tmp_path / "smol_base",
+        correct=False,
+        substep=False,
+        substep_ratio=0.4,
+        collision_solver="smol",
+    )
+    cfg_sub = _build_fast_blowout_config(
+        tmp_path / "smol_sub",
+        correct=False,
+        substep=True,
+        substep_ratio=0.4,
+        collision_solver="smol",
+    )
+    run.run_zero_d(cfg_base)
+    run.run_zero_d(cfg_sub)
+
+    series_base = pd.read_parquet(Path(cfg_base.io.outdir) / "series" / "run.parquet")
+    series_sub = pd.read_parquet(Path(cfg_sub.io.outdir) / "series" / "run.parquet")
+
+    assert series_sub["n_substeps"].nunique() == 1
+    assert int(series_sub["n_substeps"].iloc[0]) == 1
+    assert not bool(series_sub["substep_active"].any())
+
+    pd.testing.assert_series_equal(series_base["M_out_dot"], series_sub["M_out_dot"], check_names=False)
+    pd.testing.assert_series_equal(series_base["M_out_dot_avg"], series_sub["M_out_dot_avg"], check_names=False)
+    pd.testing.assert_series_equal(
+        series_base["fast_blowout_factor_avg"], series_sub["fast_blowout_factor_avg"], check_names=False
+    )

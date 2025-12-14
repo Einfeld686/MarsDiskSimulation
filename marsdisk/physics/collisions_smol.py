@@ -63,6 +63,9 @@ class Smol0DStepResult:
     mass_loss_rate_blowout: float
     mass_loss_rate_sinks: float
     mass_loss_rate_sublimation: float
+    sigma_spill: float = 0.0
+    dSigma_dt_spill: float = 0.0
+    mass_loss_rate_spill: float = 0.0
     t_coll_kernel: float | None = None
     e_kernel_used: float | None = None
     i_kernel_used: float | None = None
@@ -470,18 +473,22 @@ def step_collisions_smol_0d(
     supply_s_inj_max: float | None = None,
     supply_q: float = 3.5,
     supply_velocity_cfg: "SupplyInjectionVelocity | None" = None,
+    headroom_policy: str = "clip",
 ) -> Smol0DStepResult:
     """Advance collisions+fragmentation in 0D using the Smol solver."""
 
+    policy = str(headroom_policy or "clip").lower()
+    spill_mode = policy == "spill"
     sigma_before_step = float(sigma_surf)
     sigma_clip_loss = 0.0
     sigma_for_step = sigma_before_step
     prod_requested = float(prod_subblow_area_rate)
     prod_subblow_area_rate = max(float(prod_subblow_area_rate), 0.0)
+    headroom = None
     if sigma_tau1 is not None and math.isfinite(sigma_tau1):
         sigma_for_step = float(min(sigma_for_step, sigma_tau1))
         headroom = max(sigma_tau1 - sigma_for_step, 0.0)
-        if dt > 0.0 and headroom >= 0.0:
+        if not spill_mode and dt > 0.0 and headroom >= 0.0:
             prod_cap = headroom / dt
             if prod_subblow_area_rate > prod_cap:
                 sigma_clip_loss = (prod_subblow_area_rate - prod_cap) * dt
@@ -654,6 +661,7 @@ def step_collisions_smol_0d(
 
     extra_mass_loss_rate = mass_loss_rate_blow + mass_loss_rate_sink + mass_loss_rate_sub
 
+    sigma_spill = 0.0
     prod_mass_rate_eff = prod_subblow_area_rate if dt > 0.0 else 0.0
     source_k = supply_mass_rate_to_number_source(
         prod_mass_rate_eff,
@@ -681,6 +689,14 @@ def step_collisions_smol_0d(
         extra_mass_loss_rate=extra_mass_loss_rate,
     )
 
+    if spill_mode and sigma_tau1 is not None and math.isfinite(sigma_tau1):
+        sigma_after_raw = float(np.sum(m_k * N_new))
+        if sigma_after_raw > sigma_tau1 and sigma_after_raw > 0.0:
+            spill_scale = float(sigma_tau1 / sigma_after_raw)
+            spill_scale = float(np.clip(spill_scale, 0.0, 1.0))
+            sigma_spill = max(sigma_after_raw - sigma_tau1, 0.0)
+            N_new = N_new * spill_scale
+
     psd_state, sigma_after, sigma_loss = smol.number_density_to_psd_state(
         N_new,
         psd_state,
@@ -692,27 +708,32 @@ def step_collisions_smol_0d(
 
     dSigma_dt_blowout = mass_loss_rate_blow
     dSigma_dt_sublimation = mass_loss_rate_sub
-    dSigma_dt_sinks = mass_loss_rate_sink + dSigma_dt_sublimation
+    dSigma_dt_spill = sigma_spill / dt if dt > 0.0 else 0.0
+    mass_loss_rate_spill = dSigma_dt_spill
+    dSigma_dt_sinks = mass_loss_rate_sink + dSigma_dt_sublimation + mass_loss_rate_spill
 
     return Smol0DStepResult(
-        psd_state,
-        sigma_before_step,
-        sigma_after,
-        sigma_loss,
-        sigma_for_step,
-        sigma_clip_loss,
-        dt_eff,
-        mass_err,
-        prod_mass_rate_eff,
-        dSigma_dt_blowout,
-        dSigma_dt_sinks,
-        dSigma_dt_sublimation,
-        mass_loss_rate_blow,
-        mass_loss_rate_sink,
-        mass_loss_rate_sub,
-        t_coll_kernel,
-        e_kernel,
-        i_kernel,
+        psd_state=psd_state,
+        sigma_before=sigma_before_step,
+        sigma_after=sigma_after,
+        sigma_loss=sigma_loss,
+        sigma_for_step=sigma_for_step,
+        sigma_clip_loss=sigma_clip_loss,
+        dt_eff=dt_eff,
+        mass_error=mass_err,
+        prod_mass_rate_effective=prod_mass_rate_eff,
+        dSigma_dt_blowout=dSigma_dt_blowout,
+        dSigma_dt_sinks=dSigma_dt_sinks,
+        dSigma_dt_sublimation=dSigma_dt_sublimation,
+        mass_loss_rate_blowout=mass_loss_rate_blow,
+        mass_loss_rate_sinks=mass_loss_rate_sink,
+        mass_loss_rate_sublimation=mass_loss_rate_sub,
+        sigma_spill=sigma_spill,
+        dSigma_dt_spill=dSigma_dt_spill,
+        mass_loss_rate_spill=mass_loss_rate_spill,
+        t_coll_kernel=t_coll_kernel,
+        e_kernel_used=e_kernel,
+        i_kernel_used=i_kernel,
         e_kernel_base=e_kernel_base_val,
         i_kernel_base=i_kernel_base_val,
         e_kernel_supply=e_kernel_supply_val,

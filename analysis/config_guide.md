@@ -177,7 +177,7 @@ configs/<scenario>.yml
 | `.autogenerate.output_dir` | Path | 自動生成テーブルの出力先 | `"data"` |
 | `.autogenerate.dt_hours` | float | 自動生成時の時間解像度 [hours] | 1.0 |
 | `.autogenerate.min_years` | float | 自動生成テーブルの最小期間 [years] | 2.0 |
-| `.autogenerate.time_margin_years` | float | シミュレーション終了後のマージン [years] | 0.2 |
+| `.autogenerate.time_margin_years` | float | シミュレーション終了後のマージン [years] | 0.0 |
 
 #### 💨 昇華・シンク関連 (`sinks`)
 

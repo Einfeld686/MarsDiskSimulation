@@ -457,6 +457,10 @@ class Supply(BaseModel):
         default_factory=SupplyMixing,
         description="Mixing parameters (optional, applies to all modes)",
     )
+    headroom_policy: Literal["clip", "spill"] = Field(
+        "clip",
+        description="clip: limit applied supply by Σ_tau1 headroom. spill: always apply supply then remove any τ>1 overflow.",
+    )
     reservoir: SupplyReservoir = Field(
         default_factory=SupplyReservoir,
         description="Optional finite reservoir and depletion handling.",
@@ -1071,6 +1075,14 @@ class MarsTemperatureDriverTable(BaseModel):
     column_temperature: str = Field("T_M", description="Name of the temperature column (Kelvin).")
 
 
+class MarsTemperatureDriverHyodo(BaseModel):
+    """Hyodo linear cooling approximation options."""
+
+    d_layer_m: float = Field(1.0e5, gt=0.0, description="Effective slab thickness [m].")
+    rho: float = Field(3000.0, gt=0.0, description="Bulk density [kg/m^3].")
+    cp: float = Field(1000.0, gt=0.0, description="Heat capacity [J/kg/K].")
+
+
 class MarsTemperatureAutogen(BaseModel):
     """Options for auto-generating Mars temperature tables."""
 
@@ -1081,7 +1093,7 @@ class MarsTemperatureAutogen(BaseModel):
         2.0, gt=0.0, description="Minimum coverage of the generated table [years]."
     )
     time_margin_years: float = Field(
-        0.2,
+        0.0,
         ge=0.0,
         description="Extra padding beyond the simulation horizon when generating tables [years].",
     )
@@ -1094,6 +1106,9 @@ class MarsTemperatureAutogen(BaseModel):
     )
     column_time: str = Field("time_day", description="Name of the generated time column.")
     column_temperature: str = Field("T_K", description="Name of the generated temperature column.")
+    model: Literal["slab", "hyodo"] = Field(
+        "slab", description="Cooling model used for auto-generated temperature tables."
+    )
     filename_template: str = Field(
         "mars_temperature_T{tag}K.csv",
         description="Filename template for generated tables. Uses `{tag}` placeholder for temperature.",
@@ -1104,9 +1119,9 @@ class MarsTemperatureDriverConfig(BaseModel):
     """Configuration container for the Mars temperature driver."""
 
     enabled: bool = Field(False, description="Toggle the Mars temperature driver.")
-    mode: Literal["constant", "table"] = Field(
+    mode: Literal["constant", "table", "hyodo"] = Field(
         "constant",
-        description="Driver mode: constant value or external table interpolation.",
+        description="Driver mode: constant value, external table interpolation, or Hyodo linear cooling.",
     )
     constant: Optional[MarsTemperatureDriverConstant] = Field(
         None,
@@ -1115,6 +1130,10 @@ class MarsTemperatureDriverConfig(BaseModel):
     table: Optional[MarsTemperatureDriverTable] = Field(
         None,
         description="Tabulated driver parameters.",
+    )
+    hyodo: Optional[MarsTemperatureDriverHyodo] = Field(
+        None,
+        description="Hyodo cooling driver parameters (used when mode='hyodo').",
     )
     extrapolation: Literal["hold", "error"] = Field(
         "hold",
@@ -1142,6 +1161,16 @@ class MarsTemperatureDriverConfig(BaseModel):
     ) -> Optional[MarsTemperatureDriverTable]:
         if values.get("mode") == "table" and value is None and values.get("enabled"):
             raise ValueError("radiation.mars_temperature_driver.table must be provided when mode='table'")
+        return value
+
+    @validator("hyodo", always=True)
+    def _check_hyodo_presence(
+        cls,
+        value: Optional[MarsTemperatureDriverHyodo],
+        values: Dict[str, Any],
+    ) -> Optional[MarsTemperatureDriverHyodo]:
+        if values.get("mode") == "hyodo" and value is None and values.get("enabled"):
+            return MarsTemperatureDriverHyodo()
         return value
 
 
@@ -1302,6 +1331,25 @@ class Numerics(BaseModel):
         None,
         gt=0.0,
         description="Simulation duration expressed in local orbital periods.",
+    )
+    t_end_until_temperature_K: Optional[float] = Field(
+        None,
+        gt=0.0,
+        description="Optional stop condition: first time Mars temperature falls to this threshold [K].",
+    )
+    t_end_temperature_margin_years: float = Field(
+        0.0,
+        ge=0.0,
+        description="Padding added after reaching t_end_until_temperature_K [years].",
+    )
+    stop_on_blowout_below_smin: bool = Field(
+        False,
+        description="Stop the run early if the blow-out grain size falls below the configured minimum size.",
+    )
+    t_end_temperature_search_years: Optional[float] = Field(
+        None,
+        gt=0.0,
+        description="Optional cap on the search horizon for the temperature stop condition [years].",
     )
     dt_init: Union[float, Literal["auto"]] = Field(
         60000.0,
@@ -1481,7 +1529,7 @@ class IO(BaseModel):
     substep_max_ratio: float = Field(
         1.0,
         gt=0.0,
-        description="Upper limit for dt/t_blow before a step is subdivided.",
+        description="Upper limit for dt/t_blow before a step is subdivided (1.0 is effectively disabled; typical 0.3-0.5).",
     )
 
 
