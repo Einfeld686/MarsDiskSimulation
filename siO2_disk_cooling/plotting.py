@@ -96,7 +96,9 @@ def plot_arrival_map(
             levels: list[float] = []
             if finite_vals.size > 0:
                 vmin, vmax = float(finite_vals.min()), float(finite_vals.max())
-                levels = np.linspace(vmin, vmax, num=min(6, max(2, finite_vals.size))).tolist()
+                # Require a positive span to avoid contour errors when all values coincide.
+                if vmax > vmin:
+                    levels = np.linspace(vmin, vmax, num=min(6, max(2, finite_vals.size))).tolist()
             if len(levels) > 0:
                 cs = ax.contour(
                     time_years,

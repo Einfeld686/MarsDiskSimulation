@@ -5,6 +5,13 @@ setlocal EnableExtensions EnableDelayedExpansion
 rem Keep paths stable even if launched from another directory (double-click or direct call)
 pushd "%~dp0\..\.."
 
+rem Optional dry-run for syntax tests (skip all heavy work)
+if /i "%~1"=="--dry-run" (
+  echo [dry-run] run_temp_supply_sweep.cmd syntax-only check; skipping execution.
+  popd
+  exit /b 0
+)
+
 rem ---------- setup ----------
 if not defined VENV_DIR set "VENV_DIR=.venv"
 if not defined REQ_FILE set "REQ_FILE=requirements.txt"
@@ -124,19 +131,12 @@ echo [config] cooling driver mode: %COOL_MODE% (slab: T^-3, hyodo: linear flux)
 set "PROGRESS_FLAG="
 if "%ENABLE_PROGRESS%"=="1" set "PROGRESS_FLAG=--progress"
 
+rem Build streaming overrides (keep branching minimal to avoid cmd.exe parse quirks)
 set "STREAMING_OVERRIDES="
-if defined STREAM_MEM_GB (
-  set "STREAMING_OVERRIDES=--override io.streaming.memory_limit_gb=%STREAM_MEM_GB%"
-  echo [info] override io.streaming.memory_limit_gb=%STREAM_MEM_GB%
-)
-if defined STREAM_STEP_INTERVAL (
-  if defined STREAMING_OVERRIDES (
-    set "STREAMING_OVERRIDES=!STREAMING_OVERRIDES! --override io.streaming.step_flush_interval=%STREAM_STEP_INTERVAL%"
-  ) else (
-    set "STREAMING_OVERRIDES=--override io.streaming.step_flush_interval=%STREAM_STEP_INTERVAL%"
-  )
-  echo [info] override io.streaming.step_flush_interval=%STREAM_STEP_INTERVAL%
-)
+if defined STREAM_MEM_GB set "STREAMING_OVERRIDES=!STREAMING_OVERRIDES! --override io.streaming.memory_limit_gb=%STREAM_MEM_GB%"
+if defined STREAM_STEP_INTERVAL set "STREAMING_OVERRIDES=!STREAMING_OVERRIDES! --override io.streaming.step_flush_interval=%STREAM_STEP_INTERVAL%"
+if defined STREAM_MEM_GB echo [info] override io.streaming.memory_limit_gb=%STREAM_MEM_GB%
+if defined STREAM_STEP_INTERVAL echo [info] override io.streaming.step_flush_interval=%STREAM_STEP_INTERVAL%
 
 set "SUPPLY_OVERRIDES="
 if defined SUPPLY_RESERVOIR_M (
