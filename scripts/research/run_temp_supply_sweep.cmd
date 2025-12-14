@@ -156,10 +156,10 @@ if "%SUPPLY_TEMP_ENABLED%" NEQ "0" (
 set "SUPPLY_OVERRIDES=!SUPPLY_OVERRIDES! --override \"supply.injection.mode=%SUPPLY_INJECTION_MODE%\" --override \"supply.injection.q=%SUPPLY_INJECTION_Q%\""
 if defined SUPPLY_INJECTION_SMIN set "SUPPLY_OVERRIDES=!SUPPLY_OVERRIDES! --override \"supply.injection.s_inj_min=%SUPPLY_INJECTION_SMIN%\""
 if defined SUPPLY_INJECTION_SMAX set "SUPPLY_OVERRIDES=!SUPPLY_OVERRIDES! --override \"supply.injection.s_inj_max=%SUPPLY_INJECTION_SMAX%\""
-  if defined SUPPLY_DEEP_TMIX_ORBITS (
-    set "SUPPLY_OVERRIDES=!SUPPLY_OVERRIDES! --override \"supply.transport.t_mix_orbits=%SUPPLY_DEEP_TMIX_ORBITS%\" --override \"supply.transport.mode=deep_mixing\""
-    echo.[info] deep reservoir enabled (legacy alias): t_mix=%SUPPLY_DEEP_TMIX_ORBITS% orbits
-  )
+if defined SUPPLY_DEEP_TMIX_ORBITS (
+  set "SUPPLY_OVERRIDES=!SUPPLY_OVERRIDES! --override \"supply.transport.t_mix_orbits=%SUPPLY_DEEP_TMIX_ORBITS%\" --override \"supply.transport.mode=deep_mixing\""
+  echo.[info] deep reservoir enabled (legacy alias): t_mix=%SUPPLY_DEEP_TMIX_ORBITS% orbits
+)
 if defined SUPPLY_TRANSPORT_TMIX_ORBITS set "SUPPLY_OVERRIDES=!SUPPLY_OVERRIDES! --override \"supply.transport.t_mix_orbits=%SUPPLY_TRANSPORT_TMIX_ORBITS%\""
 if defined SUPPLY_TRANSPORT_MODE set "SUPPLY_OVERRIDES=!SUPPLY_OVERRIDES! --override \"supply.transport.mode=%SUPPLY_TRANSPORT_MODE%\""
 if defined SUPPLY_TRANSPORT_HEADROOM set "SUPPLY_OVERRIDES=!SUPPLY_OVERRIDES! --override \"supply.transport.headroom_gate=%SUPPLY_TRANSPORT_HEADROOM%\""
