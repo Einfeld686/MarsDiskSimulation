@@ -1534,6 +1534,7 @@ def run_zero_d(
         psd_state["s_min"] = s_min_effective
     elif s0_mode_value != "upper":
         raise ValueError(f"Unknown initial.s0_mode={s0_mode_value!r}")
+    psd.sanitize_and_normalize_number(psd_state, normalize=False)
     kappa_surf = _ensure_finite_kappa(psd.compute_kappa(psd_state), label="kappa_surf_initial")
     kappa_surf_initial = float(kappa_surf)
     kappa_eff0 = kappa_surf_initial
@@ -1560,6 +1561,10 @@ def run_zero_d(
     init_tau1_enabled = bool(
         getattr(cfg, "init_tau1", None) is not None and getattr(cfg.init_tau1, "enabled", False)
     )
+    tau_field = getattr(cfg.init_tau1, "tau_field", "vertical") if init_tau1_enabled else "vertical"
+    target_tau_init = float(getattr(cfg.init_tau1, "target_tau", 1.0) if init_tau1_enabled else 1.0)
+    target_tau_init = target_tau_init if math.isfinite(target_tau_init) and target_tau_init > 0.0 else 1.0
+    los_scale = los_factor if tau_field == "los" else 1.0
     sigma_tau1_unity = None
     sigma_override_applied = cfg.surface.sigma_surf_init_override
 
@@ -1582,7 +1587,7 @@ def run_zero_d(
             tau_mid = kappa_surf * sigma_mid
             kappa_for_init = shielding.effective_kappa(kappa_surf, tau_mid, phi_tau_fn)
         if kappa_for_init > 0.0 and math.isfinite(kappa_for_init):
-            sigma_tau1_unity = 1.0 / kappa_for_init
+            sigma_tau1_unity = target_tau_init / (kappa_for_init * los_scale)
         if init_tau1_enabled and sigma_tau1_unity is not None and math.isfinite(sigma_tau1_unity):
             sigma_override_applied = sigma_tau1_unity
         sigma_surf = initfields.surf_sigma_init(
@@ -1609,7 +1614,7 @@ def run_zero_d(
         if phi_tau_fn is not None:
             kappa_eff0 = shielding.effective_kappa(kappa_surf_initial, tau_eval_auto, phi_tau_fn)
         if kappa_eff0 > 0.0 and math.isfinite(kappa_eff0):
-            base_sigma_tau1 = 1.0 / kappa_eff0
+            base_sigma_tau1 = target_tau_init / (kappa_eff0 * los_scale)
             if sigma_tau1_mode_auto:
                 sigma_tau1_mode_label = "auto"
                 sigma_tau1_fixed_target = base_sigma_tau1
@@ -1685,6 +1690,11 @@ def run_zero_d(
     M_spill_cum = 0.0
     M_sublimation_cum = 0.0
     M_hydro_cum = 0.0
+    sigma_tau1_limit_default = None
+    if sigma_tau1_cap_init is not None and math.isfinite(sigma_tau1_cap_init):
+        sigma_tau1_limit_default = float(sigma_tau1_cap_init)
+    elif sigma_tau1_unity is not None and math.isfinite(sigma_tau1_unity):
+        sigma_tau1_limit_default = float(sigma_tau1_unity)
     if cfg.disk is not None:
         r_in_d = cfg.disk.geometry.r_in_RM * constants.R_MARS
         r_out_d = cfg.disk.geometry.r_out_RM * constants.R_MARS
@@ -2242,6 +2252,7 @@ def run_zero_d(
             floor=floor_for_step,
             sigma_surf=sigma_surf,
         )
+        psd.sanitize_and_normalize_number(psd_state, normalize=False)
         if mass_conserving_sublimation and ds_dt_val < 0.0:
             sigma_loss_sublimation_blow = delta_sigma_sub
             delta_sigma_sub = 0.0
@@ -2397,83 +2408,83 @@ def run_zero_d(
             apply_correction = False
         fast_blowout_applied = False
 
-        kappa_eff = kappa_surf
-        sigma_tau1_limit = None
-        sigma_tau1_active_last = None
-        prod_rate_last = 0.0
-        supply_diag_last = None
-        outflux_surface = 0.0
-        sink_flux_surface = 0.0
-        time_sub = time_start
-        if freeze_sigma:
-            sigma_surf = sigma_surf_reference
-        sigma_before_step = sigma_surf
-        total_prod_surface = 0.0
-        total_sink_surface = 0.0
-        fast_factor_numer = 0.0
-        fast_factor_denom = 0.0
-        e_kernel_step = None
-        i_kernel_step = None
-        e_kernel_base_step = None
-        i_kernel_base_step = None
-        e_kernel_supply_step = None
-        i_kernel_supply_step = None
-        supply_velocity_weight_step = None
+    kappa_eff = kappa_surf
+    sigma_tau1_limit = sigma_tau1_limit_default
+    sigma_tau1_active_last = sigma_tau1_limit_default
+    prod_rate_last = 0.0
+    supply_diag_last = None
+    outflux_surface = 0.0
+    sink_flux_surface = 0.0
+    time_sub = time_start
+    if freeze_sigma:
+        sigma_surf = sigma_surf_reference
+    sigma_before_step = sigma_surf
+    total_prod_surface = 0.0
+    total_sink_surface = 0.0
+    fast_factor_numer = 0.0
+    fast_factor_denom = 0.0
+    e_kernel_step = None
+    i_kernel_step = None
+    e_kernel_base_step = None
+    i_kernel_base_step = None
+    e_kernel_supply_step = None
+    i_kernel_supply_step = None
+    supply_velocity_weight_step = None
 
-        tau_vert_last = None
-        tau_los_last = None
-        phi_effective_last = None
-        hydro_mass_total = 0.0
-        mass_loss_sublimation_smol_step = 0.0
-        mass_loss_rate_sublimation_smol = 0.0
-        sigma_loss_smol = 0.0
-        t_coll_kernel_last = None
-        surface_active = collisions_active_step or sink_timescale_active
-        sigma_before_step = sigma_surf
-        if collision_solver_mode == "surface_ode":
-            if surface_active:
-                for _sub_idx in range(n_substeps):
-                    if freeze_sigma:
-                        sigma_surf = sigma_surf_reference
-                    sigma_for_tau = sigma_surf
-                    tau_vert = kappa_surf * sigma_for_tau
-                    tau_los = tau_vert * los_factor
-                    tau_eval_los = tau_los
-                    phi_value = None
-                    if collisions_active_step:
-                        if shielding_mode == "off":
-                            kappa_eff = kappa_surf
-                            sigma_tau1_limit = float("inf")
-                        elif shielding_mode == "fixed_tau1":
-                            tau_target_vert = tau_fixed_target
-                            if not math.isfinite(tau_target_vert):
-                                tau_target_vert = tau_vert
-                            if sigma_tau1_fixed_target is not None:
-                                sigma_tau1_limit = float(sigma_tau1_fixed_target)
-                                if kappa_surf > 0.0 and not math.isfinite(tau_target_vert):
-                                    tau_target_vert = kappa_surf * sigma_tau1_limit
-                            tau_eval_los = tau_target_vert * los_factor
-                            if phi_tau_fn is not None:
-                                kappa_eff = shielding.effective_kappa(kappa_surf, tau_eval_los, phi_tau_fn)
-                            else:
-                                kappa_eff = kappa_surf
-                            if sigma_tau1_fixed_target is None:
-                                if kappa_eff <= 0.0:
-                                    sigma_tau1_limit = float("inf")
-                                else:
-                                    sigma_tau1_limit = float(tau_eval_los / max(kappa_eff, 1.0e-30))
-                        else:
-                            tau_eval_los = tau_los
-                            if phi_tau_fn is not None:
-                                kappa_eff = shielding.effective_kappa(kappa_surf, tau_eval_los, phi_tau_fn)
-                                sigma_tau1_limit = shielding.sigma_tau1(kappa_eff)
-                            else:
-                                kappa_eff, sigma_tau1_limit = shielding.apply_shielding(
-                                    kappa_surf, tau_eval_los, 0.0, 0.0
-                                )
-                    else:
+    tau_vert_last = None
+    tau_los_last = None
+    phi_effective_last = None
+    hydro_mass_total = 0.0
+    mass_loss_sublimation_smol_step = 0.0
+    mass_loss_rate_sublimation_smol = 0.0
+    sigma_loss_smol = 0.0
+    t_coll_kernel_last = None
+    surface_active = collisions_active_step or sink_timescale_active
+    sigma_before_step = sigma_surf
+    if collision_solver_mode == "surface_ode":
+        if surface_active:
+            for _sub_idx in range(n_substeps):
+                if freeze_sigma:
+                    sigma_surf = sigma_surf_reference
+                sigma_for_tau = sigma_surf
+                tau_vert = kappa_surf * sigma_for_tau
+                tau_los = tau_vert * los_factor
+                tau_eval_los = tau_los
+                phi_value = None
+                if collisions_active_step:
+                    if shielding_mode == "off":
                         kappa_eff = kappa_surf
-                        sigma_tau1_limit = None
+                        sigma_tau1_limit = float("inf")
+                    elif shielding_mode == "fixed_tau1":
+                        tau_target_vert = tau_fixed_target
+                        if not math.isfinite(tau_target_vert):
+                            tau_target_vert = tau_vert
+                        if sigma_tau1_fixed_target is not None:
+                            sigma_tau1_limit = float(sigma_tau1_fixed_target)
+                            if kappa_surf > 0.0 and not math.isfinite(tau_target_vert):
+                                tau_target_vert = kappa_surf * sigma_tau1_limit
+                        tau_eval_los = tau_target_vert * los_factor
+                        if phi_tau_fn is not None:
+                            kappa_eff = shielding.effective_kappa(kappa_surf, tau_eval_los, phi_tau_fn)
+                        else:
+                            kappa_eff = kappa_surf
+                        if sigma_tau1_fixed_target is None:
+                            if kappa_eff <= 0.0:
+                                sigma_tau1_limit = float("inf")
+                            else:
+                                sigma_tau1_limit = float(tau_eval_los / max(kappa_eff, 1.0e-30))
+                    else:
+                        tau_eval_los = tau_los
+                        if phi_tau_fn is not None:
+                            kappa_eff = shielding.effective_kappa(kappa_surf, tau_eval_los, phi_tau_fn)
+                            sigma_tau1_limit = shielding.sigma_tau1(kappa_eff)
+                        else:
+                            kappa_eff, sigma_tau1_limit = shielding.apply_shielding(
+                                kappa_surf, tau_eval_los, 0.0, 0.0
+                            )
+                else:
+                    kappa_eff = kappa_surf
+                    sigma_tau1_limit = sigma_tau1_limit_default
                     if kappa_surf > 0.0 and kappa_eff is not None:
                         phi_value = kappa_eff / kappa_surf
                     phi_effective_last = phi_value
@@ -2569,9 +2580,9 @@ def run_zero_d(
                 time_sub = time_start + dt
                 tau_vert_last = kappa_surf * sigma_surf
                 tau_los_last = tau_vert_last * los_factor
-                sigma_tau1_limit = None
+                sigma_tau1_limit = sigma_tau1_limit_default
                 kappa_eff = kappa_surf
-                sigma_tau1_active_last = None
+                sigma_tau1_active_last = sigma_tau1_limit_default
         else:
             if surface_active:
                 if freeze_sigma:
@@ -2614,7 +2625,7 @@ def run_zero_d(
                             )
                 else:
                     kappa_eff = kappa_surf
-                    sigma_tau1_limit = None
+                    sigma_tau1_limit = sigma_tau1_limit_default
                 if kappa_surf > 0.0 and kappa_eff is not None:
                     phi_value = kappa_eff / kappa_surf
                 phi_effective_last = phi_value
@@ -2779,9 +2790,9 @@ def run_zero_d(
                 time_sub = time_start + dt
                 tau_vert_last = kappa_surf * sigma_surf
                 tau_los_last = tau_vert_last * los_factor
-                sigma_tau1_limit = None
+                sigma_tau1_limit = sigma_tau1_limit_default
                 kappa_eff = kappa_surf
-                sigma_tau1_active_last = None
+                sigma_tau1_active_last = sigma_tau1_limit_default
 
         if sink_timescale_active:
             t_sink_step = t_sink_step_effective
@@ -3628,7 +3639,6 @@ def run_zero_d(
             )
             if enforce_mass_budget:
                 history.violation_triggered = True
-                break
 
         if not quiet_mode and not progress_enabled and logger.isEnabledFor(logging.INFO):
             logger.info(

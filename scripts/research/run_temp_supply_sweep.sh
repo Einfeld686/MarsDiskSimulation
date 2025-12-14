@@ -78,12 +78,17 @@ EVAL="${EVAL:-1}"
 # Default is conservative clip + soft gate to avoid spill losses unless明示指定。
 SUPPLY_HEADROOM_POLICY="${SUPPLY_HEADROOM_POLICY:-clip}"
 SUPPLY_MODE="${SUPPLY_MODE:-const}"
-# Raw const supply rate before mixing; μ=1 で 3.0e-5 kg m^-2 s^-1 に設定。
-SUPPLY_RATE="${SUPPLY_RATE:-1.0e-4}"  # kg m^-2 s^-1 before mixing
+# Raw const supply rate before mixing。τ~1 維持のため一桁まで大幅に下げた保守値。
+SUPPLY_RATE="${SUPPLY_RATE:-1.0}"  # kg m^-2 s^-1 before mixing
+# Pattern A: τ=1 キャップに任せるため、初期質量は形状用の最小限に抑える。
+INIT_MASS_TOTAL="${INIT_MASS_TOTAL:-1.0e-7}"
 SHIELDING_MODE="${SHIELDING_MODE:-psitau}"
 SHIELDING_SIGMA="${SHIELDING_SIGMA:-auto}"
 SHIELDING_AUTO_MAX_MARGIN="${SHIELDING_AUTO_MAX_MARGIN:-0.05}"
+INIT_TAU1_ENABLED="${INIT_TAU1_ENABLED:-true}"
 INIT_SCALE_TO_TAU1="${INIT_SCALE_TO_TAU1:-true}"
+INIT_TAU1_FIELD="${INIT_TAU1_FIELD:-los}"   # tau_field: vertical|los
+INIT_TAU1_TARGET="${INIT_TAU1_TARGET:-1.0}"
 
 # Supply reservoir / feedback / temperature coupling (off by default)
 SUPPLY_RESERVOIR_M="${SUPPLY_RESERVOIR_M:-}"                 # Mars masses; empty=disabled
@@ -157,14 +162,14 @@ fi
 STREAM_MEM_GB="${STREAM_MEM_GB:-}"
 STREAM_STEP_INTERVAL="${STREAM_STEP_INTERVAL:-}"
 STREAMING_OVERRIDES=()
-if [[ -n "${STREAM_MEM_GB}" ]]; then
-  STREAMING_OVERRIDES+=(--override "io.streaming.memory_limit_gb=${STREAM_MEM_GB}")
-  echo "[info] override io.streaming.memory_limit_gb=${STREAM_MEM_GB}"
-fi
-if [[ -n "${STREAM_STEP_INTERVAL}" ]]; then
-  STREAMING_OVERRIDES+=(--override "io.streaming.step_flush_interval=${STREAM_STEP_INTERVAL}")
-  echo "[info] override io.streaming.step_flush_interval=${STREAM_STEP_INTERVAL}"
-fi
+# Enable streaming by default for sweep; keep memory modest to avoid stalls.
+STREAMING_OVERRIDES+=(--override "io.streaming.enabled=true")
+STREAM_MEM_GB="${STREAM_MEM_GB:-10}"
+STREAMING_OVERRIDES+=(--override "io.streaming.memory_limit_gb=${STREAM_MEM_GB}")
+STREAM_STEP_INTERVAL="${STREAM_STEP_INTERVAL:-1000}"
+STREAMING_OVERRIDES+=(--override "io.streaming.step_flush_interval=${STREAM_STEP_INTERVAL}")
+STREAMING_OVERRIDES+=(--override "io.streaming.merge_at_end=false")
+echo "[info] streaming enabled: mem_limit_gb=${STREAM_MEM_GB} step_flush_interval=${STREAM_STEP_INTERVAL} merge_at_end=false"
 
 SUPPLY_OVERRIDES=()
 if [[ -n "${SUPPLY_RESERVOIR_M}" ]]; then
@@ -271,19 +276,20 @@ PY
       if ((${#PROGRESS_FLAG[@]})); then
         cmd+=("${PROGRESS_FLAG[@]}")
       fi
-      cmd+=(
-        --override numerics.dt_init=20
-        --override numerics.stop_on_blowout_below_smin=true
-        --override "io.outdir=${OUTDIR}"
-        --override "dynamics.rng_seed=${SEED}"
+        cmd+=(
+          --override numerics.dt_init=20
+          --override numerics.stop_on_blowout_below_smin=true
+          --override "io.outdir=${OUTDIR}"
+          --override "dynamics.rng_seed=${SEED}"
         --override "phase.enabled=true"
         --override "phase.temperature_input=${PHASE_TEMP_INPUT}"
         --override "phase.q_abs_mean=${PHASE_QABS_MEAN}"
         --override "radiation.TM_K=${T}"
-        --override "qstar.coeff_units=${QSTAR_UNITS}"
-        --override "radiation.qpr_table_path=marsdisk/io/data/qpr_planck_sio2_abbas_calibrated_lowT.csv"
-        --override "radiation.mars_temperature_driver.enabled=true"
-      )
+          --override "qstar.coeff_units=${QSTAR_UNITS}"
+          --override "radiation.qpr_table_path=marsdisk/io/data/qpr_planck_sio2_abbas_calibrated_lowT.csv"
+          --override "radiation.mars_temperature_driver.enabled=true"
+          --override "initial.mass_total=${INIT_MASS_TOTAL}"
+        )
       if [[ "${COOL_MODE}" == "hyodo" ]]; then
         cmd+=(--override "radiation.mars_temperature_driver.mode=hyodo")
         cmd+=(--override "radiation.mars_temperature_driver.hyodo.d_layer_m=1.0e5")
@@ -302,7 +308,10 @@ PY
         --override "supply.mixing.epsilon_mix=${MU}"
         --override "supply.mode=${SUPPLY_MODE}"
         --override "supply.const.prod_area_rate_kg_m2_s=${SUPPLY_RATE}"
+        --override "init_tau1.enabled=${INIT_TAU1_ENABLED}"
         --override "init_tau1.scale_to_tau1=${INIT_SCALE_TO_TAU1}"
+        --override "init_tau1.tau_field=${INIT_TAU1_FIELD}"
+        --override "init_tau1.target_tau=${INIT_TAU1_TARGET}"
       )
       if [[ -n "${COOL_TO_K}" ]]; then
         cmd+=(--override "numerics.t_end_years=null")

@@ -588,6 +588,11 @@ class DocSyncAgent:
     def _check_summary_fields(self, rel_path: str, text: str) -> None:
         if not self.summary_data:
             return
+        # Mode-conditional fields only present in certain run modes (e.g. deep_mixing)
+        mode_conditional_fields = {
+            "t_mix_orbits",
+            "supply_transport_mode",
+        }
         summary_keys = set(self.summary_data.keys())
         for line in text.splitlines():
             if "summary" not in line:
@@ -597,6 +602,8 @@ class DocSyncAgent:
                 if lowered.startswith("summary"):
                     continue
                 if token in summary_keys:
+                    continue
+                if token in mode_conditional_fields:
                     continue
                 if any(prefix in lowered for prefix in ("beta", "s_min", "t_m", "rho", "q_pr", "case_status", "m_loss")):
                     self.warnings.append(
