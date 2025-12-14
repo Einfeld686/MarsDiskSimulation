@@ -65,7 +65,7 @@ if not defined SHIELDING_MODE set "SHIELDING_MODE=psitau"
 if not defined SHIELDING_SIGMA set "SHIELDING_SIGMA=auto"
 if not defined SHIELDING_AUTO_MAX_MARGIN set "SHIELDING_AUTO_MAX_MARGIN=0.05"
 if not defined INIT_SCALE_TO_TAU1 set "INIT_SCALE_TO_TAU1=true"
-if not defined SUPPLY_RESERVOIR_M set "SUPPLY_RESERVOIR_M="
+rem SUPPLY_RESERVOIR_M intentionally left undefined by default
 if not defined SUPPLY_RESERVOIR_MODE set "SUPPLY_RESERVOIR_MODE=hard_stop"
 if not defined SUPPLY_RESERVOIR_TAPER set "SUPPLY_RESERVOIR_TAPER=0.05"
 if not defined SUPPLY_FEEDBACK_ENABLED set "SUPPLY_FEEDBACK_ENABLED=0"
@@ -83,26 +83,26 @@ if not defined SUPPLY_TEMP_EXP set "SUPPLY_TEMP_EXP=1.0"
 if not defined SUPPLY_TEMP_SCALE_REF set "SUPPLY_TEMP_SCALE_REF=1.0"
 if not defined SUPPLY_TEMP_FLOOR set "SUPPLY_TEMP_FLOOR=0.0"
 if not defined SUPPLY_TEMP_CAP set "SUPPLY_TEMP_CAP=10.0"
-if not defined SUPPLY_TEMP_TABLE_PATH set "SUPPLY_TEMP_TABLE_PATH="
+rem SUPPLY_TEMP_TABLE_PATH intentionally left undefined by default
 if not defined SUPPLY_TEMP_TABLE_VALUE_KIND set "SUPPLY_TEMP_TABLE_VALUE_KIND=scale"
 if not defined SUPPLY_TEMP_TABLE_COL_T set "SUPPLY_TEMP_TABLE_COL_T=T_K"
 if not defined SUPPLY_TEMP_TABLE_COL_VAL set "SUPPLY_TEMP_TABLE_COL_VAL=value"
 if not defined SUPPLY_INJECTION_MODE set "SUPPLY_INJECTION_MODE=powerlaw_bins"
 if not defined SUPPLY_INJECTION_Q set "SUPPLY_INJECTION_Q=3.5"
-if not defined SUPPLY_INJECTION_SMIN set "SUPPLY_INJECTION_SMIN="
-if not defined SUPPLY_INJECTION_SMAX set "SUPPLY_INJECTION_SMAX="
-if not defined SUPPLY_DEEP_TMIX_ORBITS set "SUPPLY_DEEP_TMIX_ORBITS="
+rem SUPPLY_INJECTION_SMIN intentionally left undefined by default
+rem SUPPLY_INJECTION_SMAX intentionally left undefined by default
+rem SUPPLY_DEEP_TMIX_ORBITS intentionally left undefined by default
 if not defined SUPPLY_TRANSPORT_MODE set "SUPPLY_TRANSPORT_MODE=deep_mixing"
 if not defined SUPPLY_TRANSPORT_TMIX_ORBITS set "SUPPLY_TRANSPORT_TMIX_ORBITS=50"
 if not defined SUPPLY_TRANSPORT_HEADROOM set "SUPPLY_TRANSPORT_HEADROOM=soft"
 if not defined SUPPLY_VEL_MODE set "SUPPLY_VEL_MODE=inherit"
 if not defined SUPPLY_VEL_E set "SUPPLY_VEL_E=0.05"
 if not defined SUPPLY_VEL_I set "SUPPLY_VEL_I=0.025"
-if not defined SUPPLY_VEL_FACTOR set "SUPPLY_VEL_FACTOR="
+rem SUPPLY_VEL_FACTOR intentionally left undefined by default
 if not defined SUPPLY_VEL_BLEND set "SUPPLY_VEL_BLEND=rms"
 if not defined SUPPLY_VEL_WEIGHT set "SUPPLY_VEL_WEIGHT=delta_sigma"
-if not defined STREAM_MEM_GB set "STREAM_MEM_GB="
-if not defined STREAM_STEP_INTERVAL set "STREAM_STEP_INTERVAL="
+rem STREAM_MEM_GB intentionally left undefined by default
+rem STREAM_STEP_INTERVAL intentionally left undefined by default
 if not defined ENABLE_PROGRESS set "ENABLE_PROGRESS=1"
 
 set "T_LIST=5000 4000 3000"
@@ -114,7 +114,7 @@ if not defined COOL_SEARCH_DISPLAY set "COOL_SEARCH_DISPLAY=none"
 
 set "COOL_STATUS="
 if defined COOL_TO_K (
-  set "COOL_STATUS=dynamic horizon: stop when Mars T_M <= !COOL_TO_K! K (margin !COOL_MARGIN_YEARS! yr, search_cap=!COOL_SEARCH_DISPLAY!)"
+  set "COOL_STATUS=dynamic horizon: stop when Mars T_M reaches !COOL_TO_K! K (margin !COOL_MARGIN_YEARS! yr, search_cap=!COOL_SEARCH_DISPLAY!)"
 ) else (
   set "COOL_STATUS=dynamic horizon disabled (using numerics.t_end_* from config)"
 )
