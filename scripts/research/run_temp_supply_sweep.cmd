@@ -115,7 +115,7 @@ if "%ENABLE_PROGRESS%"=="1" set "PROGRESS_FLAG=--progress"
 set "STREAMING_OVERRIDES="
 if defined STREAM_MEM_GB (
   set "STREAMING_OVERRIDES=--override io.streaming.memory_limit_gb=%STREAM_MEM_GB%"
-  echo [info] override io.streaming.memory_limit_gb=%STREAM_MEM_GB%
+  echo. [info] override io.streaming.memory_limit_gb=%STREAM_MEM_GB%
 )
 if defined STREAM_STEP_INTERVAL (
   if defined STREAMING_OVERRIDES (
@@ -123,7 +123,7 @@ if defined STREAM_STEP_INTERVAL (
   ) else (
     set "STREAMING_OVERRIDES=--override io.streaming.step_flush_interval=%STREAM_STEP_INTERVAL%"
   )
-  echo [info] override io.streaming.step_flush_interval=%STREAM_STEP_INTERVAL%
+  echo. [info] override io.streaming.step_flush_interval=%STREAM_STEP_INTERVAL%
 )
 
 set "SUPPLY_OVERRIDES="
