@@ -137,29 +137,30 @@ if defined STREAM_MEM_GB set "STREAMING_OVERRIDES=!STREAMING_OVERRIDES! --overri
 if defined STREAM_STEP_INTERVAL set "STREAMING_OVERRIDES=!STREAMING_OVERRIDES! --override io.streaming.step_flush_interval=%STREAM_STEP_INTERVAL%"
 if defined STREAM_MEM_GB echo.[info] override io.streaming.memory_limit_gb=%STREAM_MEM_GB%
 if defined STREAM_STEP_INTERVAL echo.[info] override io.streaming.step_flush_interval=%STREAM_STEP_INTERVAL%
+echo on
 set "SUPPLY_OVERRIDES="
-if defined SUPPLY_RESERVOIR_M (
-  set "SUPPLY_OVERRIDES=--override \"supply.reservoir.enabled=true\" --override \"supply.reservoir.mass_total_Mmars=%SUPPLY_RESERVOIR_M%\" --override \"supply.reservoir.depletion_mode=%SUPPLY_RESERVOIR_MODE%\" --override \"supply.reservoir.taper_fraction=%SUPPLY_RESERVOIR_TAPER%\""
-  echo.[info] supply reservoir: M=%SUPPLY_RESERVOIR_M% M_Mars mode=%SUPPLY_RESERVOIR_MODE% taper_fraction=%SUPPLY_RESERVOIR_TAPER%
-)
-if "%SUPPLY_FEEDBACK_ENABLED%" NEQ "0" (
-  set "SUPPLY_OVERRIDES=!SUPPLY_OVERRIDES! --override \"supply.feedback.enabled=true\" --override \"supply.feedback.target_tau=%SUPPLY_FEEDBACK_TARGET%\" --override \"supply.feedback.gain=%SUPPLY_FEEDBACK_GAIN%\" --override \"supply.feedback.response_time_years=%SUPPLY_FEEDBACK_RESPONSE_YR%\" --override \"supply.feedback.min_scale=%SUPPLY_FEEDBACK_MIN_SCALE%\" --override \"supply.feedback.max_scale=%SUPPLY_FEEDBACK_MAX_SCALE%\" --override \"supply.feedback.tau_field=%SUPPLY_FEEDBACK_TAU_FIELD%\" --override \"supply.feedback.initial_scale=%SUPPLY_FEEDBACK_INITIAL%\""
-  echo.[info] supply feedback enabled: target_tau=%SUPPLY_FEEDBACK_TARGET%, gain=%SUPPLY_FEEDBACK_GAIN%, tau_field=%SUPPLY_FEEDBACK_TAU_FIELD%
-)
-if "%SUPPLY_TEMP_ENABLED%" NEQ "0" (
-  set "SUPPLY_OVERRIDES=!SUPPLY_OVERRIDES! --override \"supply.temperature.enabled=true\" --override \"supply.temperature.mode=%SUPPLY_TEMP_MODE%\" --override \"supply.temperature.reference_K=%SUPPLY_TEMP_REF_K%\" --override \"supply.temperature.exponent=%SUPPLY_TEMP_EXP%\" --override \"supply.temperature.scale_at_reference=%SUPPLY_TEMP_SCALE_REF%\" --override \"supply.temperature.floor=%SUPPLY_TEMP_FLOOR%\" --override \"supply.temperature.cap=%SUPPLY_TEMP_CAP%\""
-  if defined SUPPLY_TEMP_TABLE_PATH (
-    set "SUPPLY_OVERRIDES=!SUPPLY_OVERRIDES! --override \"supply.temperature.table.path=%SUPPLY_TEMP_TABLE_PATH%\" --override \"supply.temperature.table.value_kind=%SUPPLY_TEMP_TABLE_VALUE_KIND%\" --override \"supply.temperature.table.column_temperature=%SUPPLY_TEMP_TABLE_COL_T%\" --override \"supply.temperature.table.column_value=%SUPPLY_TEMP_TABLE_COL_VAL%\""
-  )
-  echo.[info] supply temperature coupling enabled: mode=%SUPPLY_TEMP_MODE%
-)
+if not defined SUPPLY_RESERVOIR_M goto :skip_reservoir
+set "SUPPLY_OVERRIDES=--override \"supply.reservoir.enabled=true\" --override \"supply.reservoir.mass_total_Mmars=%SUPPLY_RESERVOIR_M%\" --override \"supply.reservoir.depletion_mode=%SUPPLY_RESERVOIR_MODE%\" --override \"supply.reservoir.taper_fraction=%SUPPLY_RESERVOIR_TAPER%\""
+echo.[info] supply reservoir: M=%SUPPLY_RESERVOIR_M% M_Mars mode=%SUPPLY_RESERVOIR_MODE% taper_fraction=%SUPPLY_RESERVOIR_TAPER%
+:skip_reservoir
+if "%SUPPLY_FEEDBACK_ENABLED%"=="0" goto :skip_feedback
+set "SUPPLY_OVERRIDES=!SUPPLY_OVERRIDES! --override \"supply.feedback.enabled=true\" --override \"supply.feedback.target_tau=%SUPPLY_FEEDBACK_TARGET%\" --override \"supply.feedback.gain=%SUPPLY_FEEDBACK_GAIN%\" --override \"supply.feedback.response_time_years=%SUPPLY_FEEDBACK_RESPONSE_YR%\" --override \"supply.feedback.min_scale=%SUPPLY_FEEDBACK_MIN_SCALE%\" --override \"supply.feedback.max_scale=%SUPPLY_FEEDBACK_MAX_SCALE%\" --override \"supply.feedback.tau_field=%SUPPLY_FEEDBACK_TAU_FIELD%\" --override \"supply.feedback.initial_scale=%SUPPLY_FEEDBACK_INITIAL%\""
+echo.[info] supply feedback enabled: target_tau=%SUPPLY_FEEDBACK_TARGET%, gain=%SUPPLY_FEEDBACK_GAIN%, tau_field=%SUPPLY_FEEDBACK_TAU_FIELD%
+:skip_feedback
+if "%SUPPLY_TEMP_ENABLED%"=="0" goto :skip_temp
+set "SUPPLY_OVERRIDES=!SUPPLY_OVERRIDES! --override \"supply.temperature.enabled=true\" --override \"supply.temperature.mode=%SUPPLY_TEMP_MODE%\" --override \"supply.temperature.reference_K=%SUPPLY_TEMP_REF_K%\" --override \"supply.temperature.exponent=%SUPPLY_TEMP_EXP%\" --override \"supply.temperature.scale_at_reference=%SUPPLY_TEMP_SCALE_REF%\" --override \"supply.temperature.floor=%SUPPLY_TEMP_FLOOR%\" --override \"supply.temperature.cap=%SUPPLY_TEMP_CAP%\""
+if not defined SUPPLY_TEMP_TABLE_PATH goto :skip_temp_table
+set "SUPPLY_OVERRIDES=!SUPPLY_OVERRIDES! --override \"supply.temperature.table.path=%SUPPLY_TEMP_TABLE_PATH%\" --override \"supply.temperature.table.value_kind=%SUPPLY_TEMP_TABLE_VALUE_KIND%\" --override \"supply.temperature.table.column_temperature=%SUPPLY_TEMP_TABLE_COL_T%\" --override \"supply.temperature.table.column_value=%SUPPLY_TEMP_TABLE_COL_VAL%\""
+:skip_temp_table
+echo.[info] supply temperature coupling enabled: mode=%SUPPLY_TEMP_MODE%
+:skip_temp
 set "SUPPLY_OVERRIDES=!SUPPLY_OVERRIDES! --override \"supply.injection.mode=%SUPPLY_INJECTION_MODE%\" --override \"supply.injection.q=%SUPPLY_INJECTION_Q%\""
 if defined SUPPLY_INJECTION_SMIN set "SUPPLY_OVERRIDES=!SUPPLY_OVERRIDES! --override \"supply.injection.s_inj_min=%SUPPLY_INJECTION_SMIN%\""
 if defined SUPPLY_INJECTION_SMAX set "SUPPLY_OVERRIDES=!SUPPLY_OVERRIDES! --override \"supply.injection.s_inj_max=%SUPPLY_INJECTION_SMAX%\""
-if defined SUPPLY_DEEP_TMIX_ORBITS (
-  set "SUPPLY_OVERRIDES=!SUPPLY_OVERRIDES! --override \"supply.transport.t_mix_orbits=%SUPPLY_DEEP_TMIX_ORBITS%\" --override \"supply.transport.mode=deep_mixing\""
-  echo.[info] deep reservoir enabled (legacy alias): t_mix=%SUPPLY_DEEP_TMIX_ORBITS% orbits
-)
+if not defined SUPPLY_DEEP_TMIX_ORBITS goto :skip_deep_tmix
+set "SUPPLY_OVERRIDES=!SUPPLY_OVERRIDES! --override \"supply.transport.t_mix_orbits=%SUPPLY_DEEP_TMIX_ORBITS%\" --override \"supply.transport.mode=deep_mixing\""
+echo.[info] deep reservoir enabled (legacy alias): t_mix=%SUPPLY_DEEP_TMIX_ORBITS% orbits
+:skip_deep_tmix
 if defined SUPPLY_TRANSPORT_TMIX_ORBITS set "SUPPLY_OVERRIDES=!SUPPLY_OVERRIDES! --override \"supply.transport.t_mix_orbits=%SUPPLY_TRANSPORT_TMIX_ORBITS%\""
 if defined SUPPLY_TRANSPORT_MODE set "SUPPLY_OVERRIDES=!SUPPLY_OVERRIDES! --override \"supply.transport.mode=%SUPPLY_TRANSPORT_MODE%\""
 if defined SUPPLY_TRANSPORT_HEADROOM set "SUPPLY_OVERRIDES=!SUPPLY_OVERRIDES! --override \"supply.transport.headroom_gate=%SUPPLY_TRANSPORT_HEADROOM%\""
