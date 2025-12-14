@@ -137,7 +137,6 @@ if defined STREAM_MEM_GB set "STREAMING_OVERRIDES=!STREAMING_OVERRIDES! --overri
 if defined STREAM_STEP_INTERVAL set "STREAMING_OVERRIDES=!STREAMING_OVERRIDES! --override io.streaming.step_flush_interval=%STREAM_STEP_INTERVAL%"
 if defined STREAM_MEM_GB echo.[info] override io.streaming.memory_limit_gb=%STREAM_MEM_GB%
 if defined STREAM_STEP_INTERVAL echo.[info] override io.streaming.step_flush_interval=%STREAM_STEP_INTERVAL%
-echo on
 set "SUPPLY_OVERRIDES="
 if not defined SUPPLY_RESERVOIR_M goto :skip_reservoir
 set "SUPPLY_OVERRIDES=--override \"supply.reservoir.enabled=true\" --override \"supply.reservoir.mass_total_Mmars=%SUPPLY_RESERVOIR_M%\" --override \"supply.reservoir.depletion_mode=%SUPPLY_RESERVOIR_MODE%\" --override \"supply.reservoir.taper_fraction=%SUPPLY_RESERVOIR_TAPER%\""
@@ -184,8 +183,9 @@ for %%T in (%T_LIST%) do (
       set "OUTDIR=%BATCH_DIR%\!TITLE!"
       echo.[run] T=%%T mu=%%M phi=%%P -^> !OUTDIR! (batch=%BATCH_SEED%, seed=!SEED!)
       rem Compute effective supply rate via Python without any embedded single quotes to keep cmd.exe parsing simple
-      for /f %%R in ('python -c "rate=%SUPPLY_RATE%; mu=%%M; print(rate*mu)"') do set "EFF_RATE=%%R"
-      echo.[info] effective scale epsilon_mix=%%M; effective supply (const*epsilon_mix)=!EFF_RATE! kg m^-2 s^-1
+      set "EFF_RATE=unknown"
+      for /f %%R in ('python -c "rate=%SUPPLY_RATE%; mu=!MU!; print(rate*mu)"') do set "EFF_RATE=%%R"
+      echo.[info] effective scale epsilon_mix=!MU!; effective supply (const*epsilon_mix)=!EFF_RATE! kg m^-2 s^-1
       echo.[info] shielding: mode=%SHIELDING_MODE% fixed_tau1_sigma=%SHIELDING_SIGMA% auto_max_margin=%SHIELDING_AUTO_MAX_MARGIN%
       if "%%M"=="0.1" echo.[info] mu=0.1 is a low-supply extreme case; expect weak blowout/sinks
 
@@ -209,10 +209,24 @@ for %%T in (%T_LIST%) do (
       set RUN_CMD=!RUN_CMD! --override numerics.stop_on_blowout_below_smin=true
       set RUN_CMD=!RUN_CMD! --override "io.outdir=!OUTDIR!"
       set RUN_CMD=!RUN_CMD! --override "dynamics.rng_seed=!SEED!"
-      set RUN_CMD=!RUN_CMD! --override "phase.enabled=false"
+      set RUN_CMD=!RUN_CMD! --override "phase.enabled=true"
       set RUN_CMD=!RUN_CMD! --override "radiation.TM_K=%%T"
       set RUN_CMD=!RUN_CMD! --override "qstar.coeff_units=%QSTAR_UNITS%"
+      set RUN_CMD=!RUN_CMD! --override "radiation.qpr_table_path=marsdisk/io/data/qpr_planck_sio2_abbas_calibrated_lowT.csv"
       set RUN_CMD=!RUN_CMD! --override "radiation.mars_temperature_driver.enabled=true"
+      if "%COOL_MODE%"=="hyodo" (
+        set RUN_CMD=!RUN_CMD! --override "radiation.mars_temperature_driver.mode=hyodo"
+        set RUN_CMD=!RUN_CMD! --override "radiation.mars_temperature_driver.hyodo.d_layer_m=1.0e5"
+        set RUN_CMD=!RUN_CMD! --override "radiation.mars_temperature_driver.hyodo.rho=3000"
+        set RUN_CMD=!RUN_CMD! --override "radiation.mars_temperature_driver.hyodo.cp=1000"
+      ) else (
+        set RUN_CMD=!RUN_CMD! --override "radiation.mars_temperature_driver.mode=table"
+        set RUN_CMD=!RUN_CMD! --override "radiation.mars_temperature_driver.table.path=!T_TABLE!"
+        set RUN_CMD=!RUN_CMD! --override "radiation.mars_temperature_driver.table.time_unit=day"
+        set RUN_CMD=!RUN_CMD! --override "radiation.mars_temperature_driver.table.column_time=time_day"
+        set RUN_CMD=!RUN_CMD! --override "radiation.mars_temperature_driver.table.column_temperature=T_K"
+        set RUN_CMD=!RUN_CMD! --override "radiation.mars_temperature_driver.extrapolation=hold"
+      )
       set RUN_CMD=!RUN_CMD! --override "supply.enabled=true"
       set RUN_CMD=!RUN_CMD! --override "supply.mixing.epsilon_mix=%%M"
       set RUN_CMD=!RUN_CMD! --override "supply.mode=%SUPPLY_MODE%"
@@ -220,12 +234,6 @@ for %%T in (%T_LIST%) do (
       set RUN_CMD=!RUN_CMD! --override "init_tau1.scale_to_tau1=%INIT_SCALE_TO_TAU1%"
       set RUN_CMD=!RUN_CMD! --override "shielding.table_path=tables/phi_const_0p%%P.csv"
       set RUN_CMD=!RUN_CMD! --override "shielding.mode=%SHIELDING_MODE%"
-      set RUN_CMD=!RUN_CMD! --override "radiation.mars_temperature_driver.mode=%COOL_MODE%"
-      set RUN_CMD=!RUN_CMD! --override "radiation.mars_temperature_driver.table.path=!T_TABLE!"
-      set RUN_CMD=!RUN_CMD! --override "radiation.mars_temperature_driver.table.time_unit=day"
-      set RUN_CMD=!RUN_CMD! --override "radiation.mars_temperature_driver.table.column_time=time_day"
-      set RUN_CMD=!RUN_CMD! --override "radiation.mars_temperature_driver.table.column_temperature=T_K"
-      set RUN_CMD=!RUN_CMD! --override "radiation.mars_temperature_driver.extrapolation=hold"
       set RUN_CMD=!RUN_CMD! !SUPPLY_OVERRIDES!
       if defined STREAMING_OVERRIDES set RUN_CMD=!RUN_CMD! !STREAMING_OVERRIDES!
       if defined CMD_EXTRA set RUN_CMD=!RUN_CMD! !CMD_EXTRA!
