@@ -129,25 +129,25 @@ if defined STREAM_STEP_INTERVAL (
 set "SUPPLY_OVERRIDES="
 if defined SUPPLY_RESERVOIR_M (
   set "SUPPLY_OVERRIDES=--override \"supply.reservoir.enabled=true\" --override \"supply.reservoir.mass_total_Mmars=%SUPPLY_RESERVOIR_M%\" --override \"supply.reservoir.depletion_mode=%SUPPLY_RESERVOIR_MODE%\" --override \"supply.reservoir.taper_fraction=%SUPPLY_RESERVOIR_TAPER%\""
-  echo [info] supply reservoir: M=%SUPPLY_RESERVOIR_M% M_Mars mode=%SUPPLY_RESERVOIR_MODE% taper_fraction=%SUPPLY_RESERVOIR_TAPER%
+  echo.[info] supply reservoir: M=%SUPPLY_RESERVOIR_M% M_Mars mode=%SUPPLY_RESERVOIR_MODE% taper_fraction=%SUPPLY_RESERVOIR_TAPER%
 )
 if "%SUPPLY_FEEDBACK_ENABLED%" NEQ "0" (
   set "SUPPLY_OVERRIDES=!SUPPLY_OVERRIDES! --override \"supply.feedback.enabled=true\" --override \"supply.feedback.target_tau=%SUPPLY_FEEDBACK_TARGET%\" --override \"supply.feedback.gain=%SUPPLY_FEEDBACK_GAIN%\" --override \"supply.feedback.response_time_years=%SUPPLY_FEEDBACK_RESPONSE_YR%\" --override \"supply.feedback.min_scale=%SUPPLY_FEEDBACK_MIN_SCALE%\" --override \"supply.feedback.max_scale=%SUPPLY_FEEDBACK_MAX_SCALE%\" --override \"supply.feedback.tau_field=%SUPPLY_FEEDBACK_TAU_FIELD%\" --override \"supply.feedback.initial_scale=%SUPPLY_FEEDBACK_INITIAL%\""
-  echo [info] supply feedback enabled: target_tau=%SUPPLY_FEEDBACK_TARGET%, gain=%SUPPLY_FEEDBACK_GAIN%, tau_field=%SUPPLY_FEEDBACK_TAU_FIELD%
+  echo.[info] supply feedback enabled: target_tau=%SUPPLY_FEEDBACK_TARGET%, gain=%SUPPLY_FEEDBACK_GAIN%, tau_field=%SUPPLY_FEEDBACK_TAU_FIELD%
 )
 if "%SUPPLY_TEMP_ENABLED%" NEQ "0" (
   set "SUPPLY_OVERRIDES=!SUPPLY_OVERRIDES! --override \"supply.temperature.enabled=true\" --override \"supply.temperature.mode=%SUPPLY_TEMP_MODE%\" --override \"supply.temperature.reference_K=%SUPPLY_TEMP_REF_K%\" --override \"supply.temperature.exponent=%SUPPLY_TEMP_EXP%\" --override \"supply.temperature.scale_at_reference=%SUPPLY_TEMP_SCALE_REF%\" --override \"supply.temperature.floor=%SUPPLY_TEMP_FLOOR%\" --override \"supply.temperature.cap=%SUPPLY_TEMP_CAP%\""
   if defined SUPPLY_TEMP_TABLE_PATH (
     set "SUPPLY_OVERRIDES=!SUPPLY_OVERRIDES! --override \"supply.temperature.table.path=%SUPPLY_TEMP_TABLE_PATH%\" --override \"supply.temperature.table.value_kind=%SUPPLY_TEMP_TABLE_VALUE_KIND%\" --override \"supply.temperature.table.column_temperature=%SUPPLY_TEMP_TABLE_COL_T%\" --override \"supply.temperature.table.column_value=%SUPPLY_TEMP_TABLE_COL_VAL%\""
   )
-  echo [info] supply temperature coupling enabled: mode=%SUPPLY_TEMP_MODE%
+  echo.[info] supply temperature coupling enabled: mode=%SUPPLY_TEMP_MODE%
 )
 set "SUPPLY_OVERRIDES=!SUPPLY_OVERRIDES! --override \"supply.injection.mode=%SUPPLY_INJECTION_MODE%\" --override \"supply.injection.q=%SUPPLY_INJECTION_Q%\""
 if defined SUPPLY_INJECTION_SMIN set "SUPPLY_OVERRIDES=!SUPPLY_OVERRIDES! --override \"supply.injection.s_inj_min=%SUPPLY_INJECTION_SMIN%\""
 if defined SUPPLY_INJECTION_SMAX set "SUPPLY_OVERRIDES=!SUPPLY_OVERRIDES! --override \"supply.injection.s_inj_max=%SUPPLY_INJECTION_SMAX%\""
 if defined SUPPLY_DEEP_TMIX_ORBITS (
   set "SUPPLY_OVERRIDES=!SUPPLY_OVERRIDES! --override \"supply.transport.t_mix_orbits=%SUPPLY_DEEP_TMIX_ORBITS%\" --override \"supply.transport.mode=deep_mixing\""
-  echo [info] deep reservoir enabled (legacy alias): t_mix=%SUPPLY_DEEP_TMIX_ORBITS% orbits
+  echo.[info] deep reservoir enabled (legacy alias): t_mix=%SUPPLY_DEEP_TMIX_ORBITS% orbits
 )
 if defined SUPPLY_TRANSPORT_TMIX_ORBITS set "SUPPLY_OVERRIDES=!SUPPLY_OVERRIDES! --override \"supply.transport.t_mix_orbits=%SUPPLY_TRANSPORT_TMIX_ORBITS%\""
 if defined SUPPLY_TRANSPORT_MODE set "SUPPLY_OVERRIDES=!SUPPLY_OVERRIDES! --override \"supply.transport.mode=%SUPPLY_TRANSPORT_MODE%\""
@@ -172,9 +172,9 @@ for %%T in (%T_LIST%) do (
       set "OUTDIR=%BATCH_DIR%\!TITLE!"
       echo [run] T=%%T mu=%%M phi=%%P -> !OUTDIR! (batch=%BATCH_SEED%, seed=!SEED!)
       for /f %%R in ('python -c "rate=float('%SUPPLY_RATE%'); mu=float('%%M'); print(f'{rate*mu:.3e}')"') do set "EFF_RATE=%%R"
-      echo [info] effective scale epsilon_mix=%%M; effective supply (const*epsilon_mix)=!EFF_RATE! kg m^-2 s^-1
-      echo [info] shielding: mode=%SHIELDING_MODE% fixed_tau1_sigma=%SHIELDING_SIGMA% auto_max_margin=%SHIELDING_AUTO_MAX_MARGIN%
-      if "%%M"=="0.1" echo [info] mu=0.1 is a low-supply extreme case; expect weak blowout/sinks
+      echo.[info] effective scale epsilon_mix=%%M; effective supply (const*epsilon_mix)=!EFF_RATE! kg m^-2 s^-1
+      echo.[info] shielding: mode=%SHIELDING_MODE% fixed_tau1_sigma=%SHIELDING_SIGMA% auto_max_margin=%SHIELDING_AUTO_MAX_MARGIN%
+      if "%%M"=="0.1" echo.[info] mu=0.1 is a low-supply extreme case; expect weak blowout/sinks
 
       if not exist "!OUTDIR!\series" mkdir "!OUTDIR!\series"
       if not exist "!OUTDIR!\checks" mkdir "!OUTDIR!\checks"
