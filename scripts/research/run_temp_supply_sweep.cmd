@@ -204,7 +204,7 @@ for %%T in (%T_LIST%) do (
       rem Assemble the run command on a single line (avoid carets in optional blocks)
       set RUN_CMD=python -m marsdisk.run --config "%BASE_CONFIG%" --quiet
       if "%ENABLE_PROGRESS%"=="1" set RUN_CMD=!RUN_CMD! --progress
-      set RUN_CMD=!RUN_CMD! --override numerics.dt_init=20
+      set RUN_CMD=!RUN_CMD! --override numerics.dt_init=2
       set RUN_CMD=!RUN_CMD! --override numerics.stop_on_blowout_below_smin=true
       set RUN_CMD=!RUN_CMD! --override "io.outdir=!OUTDIR!"
       set RUN_CMD=!RUN_CMD! --override "dynamics.rng_seed=!SEED!"
