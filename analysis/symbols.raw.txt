@@ -299,6 +299,12 @@ marsdisk/ops/make_qpr_table.py:81:def _parse_temperatures(raw: str) -> np.ndarra
 marsdisk/ops/make_qpr_table.py:95:def _build_size_grid(s_min: float, s_max: float, count: int) -> np.ndarray
 marsdisk/ops/make_qpr_table.py:106:def _write_hdf5(path: Path, qpr: np.ndarray, log10s: np.ndarray, temperatures: np.ndarray) -> None
 marsdisk/ops/make_qpr_table.py:120:def main(argv: Sequence[str] | None=None) -> None
+marsdisk/ops/make_qpr_table_sio2_csv.py:49:def _parse_temperatures(raw: str) -> np.ndarray
+marsdisk/ops/make_qpr_table_sio2_csv.py:59:def _build_size_grid(s_min: float, s_max: float, count: int) -> np.ndarray
+marsdisk/ops/make_qpr_table_sio2_csv.py:69:def _planck_lambda(wavelength_m: np.ndarray, temperature: float) -> np.ndarray
+marsdisk/ops/make_qpr_table_sio2_csv.py:75:def _qpr_lambda_bridge(size_parameter: np.ndarray, c_abs: float) -> np.ndarray
+marsdisk/ops/make_qpr_table_sio2_csv.py:84:def compute_planck_mean_qpr(s_values: Sequence[float], temperatures: Sequence[float], c_abs: float, wavelengths_um: Iterable[float] | None=None) -> np.ndarray
+marsdisk/ops/make_qpr_table_sio2_csv.py:112:def main(argv: Sequence[str] | None=None) -> None
 marsdisk/ops/physcheck.py:27:class CheckResult
 marsdisk/ops/physcheck.py:38:def _dimension_check(config_path: Path) -> CheckResult
 marsdisk/ops/physcheck.py:75:def _limit_check() -> CheckResult
@@ -490,10 +496,10 @@ marsdisk/run.py:963:def _configure_logging(level: int, suppress_warnings: bool=F
 marsdisk/run.py:974:class MassBudgetViolationError(RuntimeError)
 marsdisk/run.py:978:def _write_zero_d_history(cfg: Config, df: pd.DataFrame, history: ZeroDHistory, *, step_diag_enabled: bool, step_diag_format: str, step_diag_path_cfg: Optional[Path], step_diag_path: Optional[Path], orbit_rollup_enabled: bool, phase7_enabled: bool) -> None
 marsdisk/run.py:1081:def run_zero_d(cfg: Config, *, enforce_mass_budget: bool=False, physics_mode_override: Optional[str]=None, physics_mode_source_override: Optional[str]=None) -> None
-marsdisk/run.py:4490:def _run_phase5_variant(base_cfg: Config, variant: str, mode: str, base_outdir: Path, duration_years: float, *, enforce_mass_budget: bool) -> _Phase5VariantResult
-marsdisk/run.py:4552:def _write_phase5_comparison_products(base_outdir: Path, duration_years: float, results: List[_Phase5VariantResult]) -> None
-marsdisk/run.py:4694:def run_phase5_comparison(cfg: Config, *, enforce_mass_budget: bool=False, variants_spec: Optional[List[Dict[str, str]]]=None) -> None
-marsdisk/run.py:4729:def main(argv: Optional[List[str]]=None) -> None
+marsdisk/run.py:4521:def _run_phase5_variant(base_cfg: Config, variant: str, mode: str, base_outdir: Path, duration_years: float, *, enforce_mass_budget: bool) -> _Phase5VariantResult
+marsdisk/run.py:4583:def _write_phase5_comparison_products(base_outdir: Path, duration_years: float, results: List[_Phase5VariantResult]) -> None
+marsdisk/run.py:4725:def run_phase5_comparison(cfg: Config, *, enforce_mass_budget: bool=False, variants_spec: Optional[List[Dict[str, str]]]=None) -> None
+marsdisk/run.py:4760:def main(argv: Optional[List[str]]=None) -> None
 marsdisk/schema.py:21:class Geometry(BaseModel)
 marsdisk/schema.py:42:class DiskGeometry(BaseModel)
 marsdisk/schema.py:72:class Disk(BaseModel)
@@ -541,13 +547,13 @@ marsdisk/schema.py:1184:class Radiation(BaseModel)
 marsdisk/schema.py:1243:class Shielding(BaseModel)
 marsdisk/schema.py:1304:class Blowout(BaseModel)
 marsdisk/schema.py:1322:class Numerics(BaseModel)
-marsdisk/schema.py:1427:class StepDiagnostics(BaseModel)
-marsdisk/schema.py:1444:class Progress(BaseModel)
-marsdisk/schema.py:1458:class Streaming(BaseModel)
-marsdisk/schema.py:1501:class IO(BaseModel)
-marsdisk/schema.py:1532:class Phase7Diagnostics(BaseModel)
-marsdisk/schema.py:1545:class Diagnostics(BaseModel)
-marsdisk/schema.py:1551:class Config(BaseModel)
+marsdisk/schema.py:1431:class StepDiagnostics(BaseModel)
+marsdisk/schema.py:1448:class Progress(BaseModel)
+marsdisk/schema.py:1462:class Streaming(BaseModel)
+marsdisk/schema.py:1505:class IO(BaseModel)
+marsdisk/schema.py:1536:class Phase7Diagnostics(BaseModel)
+marsdisk/schema.py:1549:class Diagnostics(BaseModel)
+marsdisk/schema.py:1555:class Config(BaseModel)
 marsdisk/tests/test_core.py:11:def test_constants_values()
 marsdisk/tests/test_core.py:17:def test_grid_relations()
 marsdisk/tests/test_core.py:24:def test_writer_and_tables(tmp_path: Path)
@@ -613,6 +619,11 @@ scripts/plot_heatmaps.py:277:def sanitize_metric_name(metric: str) -> str
 scripts/plot_heatmaps.py:283:def metric_axis_label(metric: str) -> str
 scripts/plot_heatmaps.py:291:def maybe_plot_mass_per_r2_scatter(df: pd.DataFrame, map_stub: str, map_label: str) -> None
 scripts/plot_heatmaps.py:349:def main(argv: Iterable[str] | None=None) -> None
+scripts/plot_qpr_planck_sio2.py:25:def _load_table(path: Path) -> pd.DataFrame
+scripts/plot_qpr_planck_sio2.py:35:def _plot_curves(ax: plt.Axes, df: pd.DataFrame, temps: np.ndarray, cmap, norm: Normalize, marker_size: float, label_inset: bool=False) -> None
+scripts/plot_qpr_planck_sio2.py:60:def plot_qpr(df: pd.DataFrame, outdir: Path, basename: str) -> List[Path]
+scripts/plot_qpr_planck_sio2.py:134:def parse_args(argv: Iterable[str] | None=None) -> argparse.Namespace
+scripts/plot_qpr_planck_sio2.py:157:def main(argv: Iterable[str] | None=None) -> None
 scripts/render_figures_from_tasks.py:25:def load_json(path: Path) -> Any
 scripts/render_figures_from_tasks.py:30:def build_command(script: str, fig_id: str, run_paths: List[str], params: Dict[str, Any]) -> str
 scripts/render_figures_from_tasks.py:47:def main() -> None
@@ -744,13 +755,13 @@ siO2_disk_cooling/model.py:116:def dust_temperature(radius_m: float | np.ndarray
 siO2_disk_cooling/model.py:142:def arrival_time_for_threshold(radius_m: float, time_s: np.ndarray, T_dust: np.ndarray, threshold_K: float) -> float
 siO2_disk_cooling/model.py:159:def compute_arrival_times(T0: float, params: CoolingParams, r_over_Rmars: np.ndarray, time_s: np.ndarray, *, temperature_model: str='slab') -> Tuple[np.ndarray, np.ndarray]
 siO2_disk_cooling/plotting.py:13:def _arrival_field(time_s: np.ndarray, arrival_s: np.ndarray) -> np.ndarray
-siO2_disk_cooling/plotting.py:21:def plot_arrival_map(r_over_Rmars: np.ndarray, time_s: np.ndarray, arrival_glass_s: np.ndarray, arrival_liquidus_s: np.ndarray, output_path: Path, *, T0: float, params: CoolingParams, mode: Literal['arrival', 'phase']='arrival') -> None
+siO2_disk_cooling/plotting.py:21:def plot_arrival_map(r_over_Rmars: np.ndarray, time_s: np.ndarray, arrival_glass_s: np.ndarray, arrival_liquidus_s: np.ndarray, output_path: Path, *, T0: float, params: CoolingParams, mode: Literal['arrival', 'phase']='arrival', cooling_model: str | None=None, time_axis_max_years: float | None=None) -> None
 siO2_disk_cooling/siO2_cooling_map.py:16:def _parse_args() -> argparse.Namespace
-siO2_disk_cooling/siO2_cooling_map.py:71:def _build_grids(t_max_years: float, dt_hours: float, r_min: float, r_max: float, n_r: int, cell_width_Rmars: Optional[float]=None) -> tuple[np.ndarray, np.ndarray]
-siO2_disk_cooling/siO2_cooling_map.py:105:def _format_tag(T0: float) -> str
-siO2_disk_cooling/siO2_cooling_map.py:109:def _infer_cell_width_from_config(config_path: Path | None) -> Optional[float]
-siO2_disk_cooling/siO2_cooling_map.py:146:def lookup_phase_state(temperature_K: float, pressure_Pa: Optional[float]=None, tau: Optional[float]=None) -> Mapping[str, Any]
-siO2_disk_cooling/siO2_cooling_map.py:190:def main() -> None
+siO2_disk_cooling/siO2_cooling_map.py:77:def _build_grids(t_max_years: float, dt_hours: float, r_min: float, r_max: float, n_r: int, cell_width_Rmars: Optional[float]=None) -> tuple[np.ndarray, np.ndarray]
+siO2_disk_cooling/siO2_cooling_map.py:111:def _format_tag(T0: float) -> str
+siO2_disk_cooling/siO2_cooling_map.py:115:def _infer_cell_width_from_config(config_path: Path | None) -> Optional[float]
+siO2_disk_cooling/siO2_cooling_map.py:152:def lookup_phase_state(temperature_K: float, pressure_Pa: Optional[float]=None, tau: Optional[float]=None) -> Mapping[str, Any]
+siO2_disk_cooling/siO2_cooling_map.py:196:def main() -> None
 tests/phase_map_stub.py:7:def lookup_phase_state(temperature_K: float, pressure_Pa: Optional[float]=None, tau: Optional[float]=None) -> dict[str, float | str | None]
 tests/phase_map_stub.py:27:def lookup_unphysical_fraction(temperature_K: float, *_args, **_kwargs) -> dict[str, float | str]
 tests/phase_map_stub.py:34:def lookup_phase_liquid(*_args, **_kwargs) -> dict[str, float | str]

@@ -28,6 +28,8 @@ def plot_arrival_map(
     T0: float,
     params: CoolingParams,
     mode: Literal["arrival", "phase"] = "arrival",
+    cooling_model: str | None = None,
+    time_axis_max_years: float | None = None,
 ) -> None:
     """Render the arrival map or phase-fraction map to a PNG file.
 
@@ -39,8 +41,13 @@ def plot_arrival_map(
     time_arr = np.asarray(time_s, dtype=float)
     if mode not in ("arrival", "phase"):
         raise ValueError(f"Unsupported mode: {mode}")
+    model_label = (cooling_model or "slab").lower()
     time_years = time_arr / YEAR_SECONDS
-    fig, ax = plt.subplots(figsize=(7.5, 4.5))
+    time_min = float(time_years.min())
+    time_span_max = float(time_years.max())
+    if time_axis_max_years is not None and np.isfinite(time_axis_max_years):
+        time_span_max = min(time_span_max, max(float(time_axis_max_years), time_min))
+    fig, ax = plt.subplots(figsize=(8.0, 4.8))
 
     if mode == "phase":
         T_field = dust_temperature(r_arr * params.R_mars, time_arr, T0, params)
@@ -50,52 +57,77 @@ def plot_arrival_map(
         f_vap = np.clip(f_vap, 0.0, 1.0)
         f_solid = 1.0 - f_vap
         mesh = ax.pcolormesh(
-            r_arr,
             time_years,
-            f_solid,
+            r_arr,
+            f_solid.T,
             shading="auto",
-            cmap="bwr_r",
+            cmap="coolwarm",
             vmin=0.0,
             vmax=1.0,
         )
         cbar = fig.colorbar(mesh, ax=ax, label="Solid fraction (SiO2)")
-        ax.set_title(f"SiO2 phase map (T0={T0:g} K)")
+        ax.set_title(f"SiO2 phase map ({model_label}, T0={T0:g} K)")
     else:
         glass_field = _arrival_field(time_arr, arrival_glass_s)
+        glass_vals = glass_field[np.isfinite(glass_field)]
+        if glass_vals.size > 0:
+            glass_min = float(glass_vals.min())
+            glass_max = float(glass_vals.max())
+        else:
+            glass_min = time_min
+            glass_max = time_span_max
+        if glass_max <= glass_min:
+            glass_max = glass_min + 1e-6
         mesh = ax.pcolormesh(
-            r_arr,
             time_years,
-            glass_field,
+            r_arr,
+            glass_field.T,
             shading="auto",
-            cmap="viridis",
+            cmap="magma",
+            vmin=glass_min,
+            vmax=glass_max,
         )
         cbar = fig.colorbar(mesh, ax=ax, label="Arrival time to glass transition [years]")
         finite_liq = np.isfinite(arrival_liquidus_s)
         if np.any(finite_liq):
             liq_field = _arrival_field(time_arr, arrival_liquidus_s)
             finite_vals = (arrival_liquidus_s[finite_liq] / YEAR_SECONDS).astype(float)
-            vmin, vmax = float(finite_vals.min()), float(finite_vals.max())
-            levels: Iterable[float]
-            if vmin == vmax:
-                levels = [vmin]
-            else:
-                levels = np.linspace(vmin, vmax, num=min(5, max(2, finite_vals.size)))
-            cs = ax.contour(
-                r_arr,
-                time_years,
-                liq_field,
-                levels=levels,
-                colors="white",
-                linewidths=0.8,
-            )
-            ax.clabel(cs, fmt="Liquidus: %.2f yr", fontsize=8)
-        ax.set_title(f"SiO2 cooling map (T0={T0:g} K)")
+            finite_vals = finite_vals[np.isfinite(finite_vals) & (finite_vals <= time_span_max)]
+            levels: list[float] = []
+            if finite_vals.size > 0:
+                vmin, vmax = float(finite_vals.min()), float(finite_vals.max())
+                levels = np.linspace(vmin, vmax, num=min(6, max(2, finite_vals.size))).tolist()
+            if len(levels) > 0:
+                cs = ax.contour(
+                    time_years,
+                    r_arr,
+                    liq_field.T,
+                    levels=levels,
+                    colors="#f5f5f5",
+                    linewidths=1.0,
+                    linestyles="--",
+                )
+                ax.clabel(cs, fmt="Liquidus: %.1f yr", fontsize=8, colors="#f5f5f5", inline_spacing=4)
+        note = "Shade: arrival to glass; dashed: liquidus isochrons"
+        ax.text(
+            0.99,
+            0.02,
+            note,
+            transform=ax.transAxes,
+            ha="right",
+            va="bottom",
+            fontsize=8,
+            color="#161616",
+            bbox={"facecolor": "white", "alpha": 0.8, "boxstyle": "round,pad=0.25", "linewidth": 0.0},
+        )
+        ax.set_title(f"SiO2 cooling map ({model_label}, T0={T0:g} K)")
 
     cbar.ax.tick_params(labelsize=9)
 
-    ax.set_xlabel(r"$r / R_{\mathrm{Mars}}$")
-    ax.set_ylabel("Time [years]")
-    ax.set_ylim(time_years.min(), time_years.max())
+    ax.set_xlabel("Time since impact [years]")
+    ax.set_ylabel(r"$r / R_{\mathrm{Mars}}$")
+    ax.set_xlim(time_min, time_span_max)
+    ax.set_ylim(r_arr.min(), r_arr.max())
     output_path.parent.mkdir(parents=True, exist_ok=True)
     fig.tight_layout()
     fig.savefig(output_path, dpi=200)

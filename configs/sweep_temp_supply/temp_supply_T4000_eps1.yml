@@ -125,7 +125,7 @@ radiation:
   use_solar_rp: false
   freeze_kappa: false
   TM_K: 4000.0
-  qpr_table_path: marsdisk/io/data/qpr_planck.csv
+  qpr_table_path: marsdisk/io/data/qpr_planck_sio2_abbas_calibrated_lowT.csv
   Q_pr:
   mars_temperature_driver:
     enabled: true
@@ -148,16 +148,17 @@ radiation:
     enable: false
     tau_max: 1.0
 shielding:
-  mode: psitau
-  table_path: tables/phi_const_0p37.csv
-  fixed_tau1_tau:
+  # 初期τを確実に1へクリップするため、Φテーブルによるκの減衰を避けて固定τ=1に設定
+  mode: fixed_tau1
+  table_path:
+  fixed_tau1_tau: 1.0
   fixed_tau1_sigma: auto
 blowout:
   enabled: true
   target_phase: solid_only
   layer: surface_tau_le_1
 phase:
-  enabled: true
+  enabled: false
   source: threshold
   entrypoint: siO2_disk_cooling.siO2_cooling_map:lookup_phase_state
   extra_kwargs: {}
@@ -171,6 +172,7 @@ numerics:
   t_end_until_temperature_K: 1000.0   # 冷却到達（4000K→1000K）まで実行
   t_end_temperature_margin_years: 0.0
   dt_init: 2.0
+  stop_on_blowout_below_smin: true
   safety: 0.1
   atol: 1.0e-10
   rtol: 1.0e-6

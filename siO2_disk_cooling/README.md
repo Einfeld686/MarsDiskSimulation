@@ -17,7 +17,7 @@
 | $\rho$ | 3000 | kg m$^{-3}$ |
 | $c_p$ | 1000 | J kg$^{-1}$ K$^{-1}$ |
 | $D$ | $1.0\times10^5$ | m |
-| 時間グリッド | 0–2 年 (6 時間刻み) | - |
+| 時間グリッド | 0–55 年（6 時間刻み、既定の `--T_stop 1000` により 4000→1000 K を含める） | - |
 | 距離グリッド | $r/R_{\mathrm{Mars}}=1.0–2.4$ (300 分割) | - |
 > Hyodo17/18 の衝突後温度場を前提に、溶融シリケイトの代表値（$\rho\sim2.6–3.3\times10^3$ kg m$^{-3}$, $c_p\sim0.7–1.5\times10^3$ J kg$^{-1}$ K$^{-1}$, $k\sim0.6$ W m$^{-1}$ K$^{-1}$）を Lesher & Spera / Robertson から採用して $D=10^5$ m を設定しています。[@Hyodo2018_ApJ860_150; @Hyodo2017a_ApJ845_125; @LesherSpera2015_EncyclopediaVolcanoes; @Robertson1988_USGS_OFR88_441]
 
@@ -27,6 +27,8 @@
 python -m siO2_disk_cooling.siO2_cooling_map
 ```
 - `--plot-mode {arrival,phase}`: 既定は到達時間マップ、`phase` で固体分率マップ（青=固体優勢、赤=蒸気優勢）。
+- `--T_stop <K>`: 火星スラブがこの温度まで冷えるまで時間軸を自動延長する（既定 1000 K で約 55 年をカバー）。
+- `--plot-time-max-years <yr>`: 描画時の横軸上限を動的に調整する。計算済みの範囲内で切り詰めるときに便利。
 - `--cell-width-Rmars <Δr/R_Mars>`: marsdisk のセル幅に揃える場合に指定。未指定なら `--marsdisk-config` (既定 `configs/base.yml` が存在すればそれ) から `disk.geometry.r_in_RM`/`r_out_RM`/`n_cells` を読み取り自動推定する。
 - `--marsdisk-config <path>`: 上記のセル幅自動推定に使う marsdisk 設定パス。指定しない場合は隣接リポジトリの `configs/base.yml` を試し、見つからなければ均等分割（`--n_r`）にフォールバック。
 

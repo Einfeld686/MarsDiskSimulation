@@ -271,8 +271,10 @@ PY
         --override numerics.stop_on_blowout_below_smin=true
         --override "io.outdir=${OUTDIR}"
         --override "dynamics.rng_seed=${SEED}"
+        --override "phase.enabled=false"
         --override "radiation.TM_K=${T}"
         --override "qstar.coeff_units=${QSTAR_UNITS}"
+        --override "radiation.qpr_table_path=marsdisk/io/data/qpr_planck_sio2_abbas_calibrated_lowT.csv"
         --override "radiation.mars_temperature_driver.enabled=true"
       )
       if [[ "${COOL_MODE}" == "hyodo" ]]; then
