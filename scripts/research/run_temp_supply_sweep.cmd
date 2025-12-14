@@ -182,10 +182,8 @@ for %%T in (%T_LIST%) do (
       set "TITLE=T%%T_mu!MU_TITLE!_phi%%P"
       set "OUTDIR=%BATCH_DIR%\!TITLE!"
       echo.[run] T=%%T mu=%%M phi=%%P -^> !OUTDIR! (batch=%BATCH_SEED%, seed=!SEED!)
-      rem Compute effective supply rate via Python without any embedded single quotes to keep cmd.exe parsing simple
-      set "EFF_RATE=unknown"
-      for /f %%R in ('python -c "rate=%SUPPLY_RATE%; mu=!MU!; print(rate*mu)"') do set "EFF_RATE=%%R"
-      echo.[info] effective scale epsilon_mix=!MU!; effective supply (const*epsilon_mix)=!EFF_RATE! kg m^-2 s^-1
+      rem Show supply rate info (skip Python calc to avoid cmd.exe delayed expansion issues)
+      echo.[info] effective scale epsilon_mix=%%M; base supply rate=%SUPPLY_RATE% kg m^-2 s^-1
       echo.[info] shielding: mode=%SHIELDING_MODE% fixed_tau1_sigma=%SHIELDING_SIGMA% auto_max_margin=%SHIELDING_AUTO_MAX_MARGIN%
       if "%%M"=="0.1" echo.[info] mu=0.1 is a low-supply extreme case; expect weak blowout/sinks
 
