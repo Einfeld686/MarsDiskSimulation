@@ -171,7 +171,7 @@ STREAM_MEM_GB="${STREAM_MEM_GB:-}"
 STREAM_STEP_INTERVAL="${STREAM_STEP_INTERVAL:-}"
 STREAMING_OVERRIDES=()
 # Enable streaming by default for sweep; keep memory modest to avoid stalls.
-STREAMING_OVERRIDES+=(--override "io.streaming.enabled=true")
+STREAMING_OVERRIDES+=(--override "io.streaming.enable=true")
 STREAM_MEM_GB="${STREAM_MEM_GB:-10}"
 STREAMING_OVERRIDES+=(--override "io.streaming.memory_limit_gb=${STREAM_MEM_GB}")
 STREAM_STEP_INTERVAL="${STREAM_STEP_INTERVAL:-1000}"
