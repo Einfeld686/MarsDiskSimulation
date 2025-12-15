@@ -499,40 +499,41 @@ marsdisk/run.py:106:def _ensure_finite_kappa(value: float, label: str='kappa') -
 marsdisk/run.py:122:def _resolve_los_factor(los_geom: Optional[object]) -> float
 marsdisk/run.py:138:def compute_phase_tau_fields(kappa_surf: float, sigma_for_tau: float, los_factor: float, phase_tau_field: str) -> Tuple[float, float, float]
 marsdisk/run.py:154:class ProgressReporter
-marsdisk/run.py:262:def _parse_override_value(raw: str) -> Any
-marsdisk/run.py:289:def _apply_overrides_dict(payload: Dict[str, Any], overrides: Sequence[str]) -> Dict[str, Any]
-marsdisk/run.py:327:def _merge_physics_section(payload: Dict[str, Any]) -> Dict[str, Any]
-marsdisk/run.py:346:def _safe_float(value: Any) -> Optional[float]
-marsdisk/run.py:358:def _derive_seed_components(cfg: Config) -> str
-marsdisk/run.py:383:def _resolve_seed(cfg: Config) -> tuple[int, str, str]
-marsdisk/run.py:398:def _auto_chi_blow(beta: float, qpr: float) -> float
-marsdisk/run.py:413:def _fast_blowout_correction_factor(ratio: float) -> float
-marsdisk/run.py:433:def _compute_gate_factor(t_blow: Optional[float], t_solid: Optional[float]) -> float
-marsdisk/run.py:455:def _human_bytes(value: float) -> str
-marsdisk/run.py:467:def _memory_estimate(n_steps: int, n_bins: int, run_row_bytes: float=MEMORY_RUN_ROW_BYTES, psd_row_bytes: float=MEMORY_PSD_ROW_BYTES, *, smol_value_bytes: float=8.0) -> tuple[str, str]
-marsdisk/run.py:492:def _normalise_physics_mode(value: Any) -> str
-marsdisk/run.py:508:def _clone_config(cfg: Config) -> Config
-marsdisk/run.py:516:def _resolve_time_grid(numerics: Any, Omega: float, t_orb: float, *, temp_runtime: Optional[tempdriver.TemperatureDriverRuntime]=None) -> tuple[float, float, float, int, Dict[str, Any]]
-marsdisk/run.py:618:class _Phase5VariantResult
-marsdisk/run.py:631:def _read_json(path: Path) -> Dict[str, Any]
-marsdisk/run.py:636:def _hash_payload(payload: Mapping[str, Any]) -> str
-marsdisk/run.py:641:def _prepare_phase5_variants(compare_cfg: Any) -> List[Dict[str, str]]
-marsdisk/run.py:674:class RunConfig
-marsdisk/run.py:691:class RunState
-marsdisk/run.py:701:class ZeroDHistory
-marsdisk/run.py:725:class StreamingState
-marsdisk/run.py:858:def step(config: RunConfig, state: RunState, dt: float) -> Dict[str, float]
-marsdisk/run.py:910:def run_n_steps(config: RunConfig, state: RunState, n: int, dt: float, out_dir: Path | None=None) -> pd.DataFrame
-marsdisk/run.py:940:def load_config(path: Path, overrides: Optional[Sequence[str]]=None) -> Config
-marsdisk/run.py:965:def _gather_git_info() -> Dict[str, Any]
-marsdisk/run.py:992:def _configure_logging(level: int, suppress_warnings: bool=False) -> None
-marsdisk/run.py:1003:class MassBudgetViolationError(RuntimeError)
-marsdisk/run.py:1007:def _write_zero_d_history(cfg: Config, df: pd.DataFrame, history: ZeroDHistory, *, step_diag_enabled: bool, step_diag_format: str, step_diag_path_cfg: Optional[Path], step_diag_path: Optional[Path], orbit_rollup_enabled: bool, phase7_enabled: bool) -> None
-marsdisk/run.py:1110:def run_zero_d(cfg: Config, *, enforce_mass_budget: bool=False, physics_mode_override: Optional[str]=None, physics_mode_source_override: Optional[str]=None) -> None
-marsdisk/run.py:4815:def _run_phase5_variant(base_cfg: Config, variant: str, mode: str, base_outdir: Path, duration_years: float, *, enforce_mass_budget: bool) -> _Phase5VariantResult
-marsdisk/run.py:4877:def _write_phase5_comparison_products(base_outdir: Path, duration_years: float, results: List[_Phase5VariantResult]) -> None
-marsdisk/run.py:5019:def run_phase5_comparison(cfg: Config, *, enforce_mass_budget: bool=False, variants_spec: Optional[List[Dict[str, str]]]=None) -> None
-marsdisk/run.py:5054:def main(argv: Optional[List[str]]=None) -> None
+marsdisk/run.py:263:def _parse_override_value(raw: str) -> Any
+marsdisk/run.py:290:def _apply_overrides_dict(payload: Dict[str, Any], overrides: Sequence[str]) -> Dict[str, Any]
+marsdisk/run.py:328:def _merge_physics_section(payload: Dict[str, Any]) -> Dict[str, Any]
+marsdisk/run.py:347:def _safe_float(value: Any) -> Optional[float]
+marsdisk/run.py:359:def _resolve_feedback_tau_field(tau_field: Optional[str]) -> str
+marsdisk/run.py:372:def _derive_seed_components(cfg: Config) -> str
+marsdisk/run.py:397:def _resolve_seed(cfg: Config) -> tuple[int, str, str]
+marsdisk/run.py:412:def _auto_chi_blow(beta: float, qpr: float) -> float
+marsdisk/run.py:427:def _fast_blowout_correction_factor(ratio: float) -> float
+marsdisk/run.py:447:def _compute_gate_factor(t_blow: Optional[float], t_solid: Optional[float]) -> float
+marsdisk/run.py:469:def _human_bytes(value: float) -> str
+marsdisk/run.py:481:def _memory_estimate(n_steps: int, n_bins: int, run_row_bytes: float=MEMORY_RUN_ROW_BYTES, psd_row_bytes: float=MEMORY_PSD_ROW_BYTES, *, smol_value_bytes: float=8.0) -> tuple[str, str]
+marsdisk/run.py:506:def _normalise_physics_mode(value: Any) -> str
+marsdisk/run.py:522:def _clone_config(cfg: Config) -> Config
+marsdisk/run.py:530:def _resolve_time_grid(numerics: Any, Omega: float, t_orb: float, *, temp_runtime: Optional[tempdriver.TemperatureDriverRuntime]=None) -> tuple[float, float, float, int, Dict[str, Any]]
+marsdisk/run.py:632:class _Phase5VariantResult
+marsdisk/run.py:645:def _read_json(path: Path) -> Dict[str, Any]
+marsdisk/run.py:650:def _hash_payload(payload: Mapping[str, Any]) -> str
+marsdisk/run.py:655:def _prepare_phase5_variants(compare_cfg: Any) -> List[Dict[str, str]]
+marsdisk/run.py:688:class RunConfig
+marsdisk/run.py:705:class RunState
+marsdisk/run.py:715:class ZeroDHistory
+marsdisk/run.py:739:class StreamingState
+marsdisk/run.py:872:def step(config: RunConfig, state: RunState, dt: float) -> Dict[str, float]
+marsdisk/run.py:924:def run_n_steps(config: RunConfig, state: RunState, n: int, dt: float, out_dir: Path | None=None) -> pd.DataFrame
+marsdisk/run.py:954:def load_config(path: Path, overrides: Optional[Sequence[str]]=None) -> Config
+marsdisk/run.py:979:def _gather_git_info() -> Dict[str, Any]
+marsdisk/run.py:1006:def _configure_logging(level: int, suppress_warnings: bool=False) -> None
+marsdisk/run.py:1017:class MassBudgetViolationError(RuntimeError)
+marsdisk/run.py:1021:def _write_zero_d_history(cfg: Config, df: pd.DataFrame, history: ZeroDHistory, *, step_diag_enabled: bool, step_diag_format: str, step_diag_path_cfg: Optional[Path], step_diag_path: Optional[Path], orbit_rollup_enabled: bool, phase7_enabled: bool) -> None
+marsdisk/run.py:1124:def run_zero_d(cfg: Config, *, enforce_mass_budget: bool=False, physics_mode_override: Optional[str]=None, physics_mode_source_override: Optional[str]=None) -> None
+marsdisk/run.py:4878:def _run_phase5_variant(base_cfg: Config, variant: str, mode: str, base_outdir: Path, duration_years: float, *, enforce_mass_budget: bool) -> _Phase5VariantResult
+marsdisk/run.py:4940:def _write_phase5_comparison_products(base_outdir: Path, duration_years: float, results: List[_Phase5VariantResult]) -> None
+marsdisk/run.py:5082:def run_phase5_comparison(cfg: Config, *, enforce_mass_budget: bool=False, variants_spec: Optional[List[Dict[str, str]]]=None) -> None
+marsdisk/run.py:5117:def main(argv: Optional[List[str]]=None) -> None
 marsdisk/schema.py:23:class Geometry(BaseModel)
 marsdisk/schema.py:44:class DiskGeometry(BaseModel)
 marsdisk/schema.py:74:class Disk(BaseModel)
@@ -1012,6 +1013,8 @@ tests/test_supply_headroom_policy.py:12:def test_headroom_policy_spill_keeps_flu
 tests/test_supply_headroom_policy.py:58:def test_spill_policy_runs_without_supply_drop(tmp_path: Path) -> None
 tests/test_supply_positive.py:10:def test_supply_positive_with_wide_tau_cap(tmp_path: Path) -> None
 tests/test_supply_positive.py:38:def test_reservoir_depletes_and_records_metadata(tmp_path: Path) -> None
+tests/test_supply_positive.py:90:def test_supply_feedback_tau_los_updates_scale(tmp_path: Path) -> None
+tests/test_supply_positive.py:139:def test_run_config_written_before_runtime_failure(monkeypatch, tmp_path: Path) -> None
 tests/test_supply_split.py:8:def test_deep_buffer_accumulates_when_headroom_zero() -> None
 tests/test_supply_split.py:24:def test_deep_buffer_mixes_back_on_timescale() -> None
 tests/test_supply_transport_velocity.py:14:def test_supply_velocity_blend_and_weight() -> None
@@ -1038,6 +1041,23 @@ tests/test_temperature_selection.py:70:def test_temperature_selection_tracks_tem
 tests/test_zero_division_guards.py:11:def test_run_zero_d_tau_zero_no_error(tmp_path: Path)
 tests/test_zero_division_guards.py:40:def test_supply_powerlaw_t0_zero()
 tests/test_zero_division_guards.py:49:def test_run_zero_d_no_zerodivision(monkeypatch, tmp_path)
+tools/analyze_tau_los_feedback.py:38:def _coalesce(*values)
+tools/analyze_tau_los_feedback.py:83:def _load_json(path: Path) -> Dict
+tools/analyze_tau_los_feedback.py:90:def _resolve_diagnostics_paths(run_dir: Path, summary: Dict, max_chunks: Optional[int]) -> List[Path]
+tools/analyze_tau_los_feedback.py:106:def _collect_columns(arg_columns: Sequence[str]) -> List[str]
+tools/analyze_tau_los_feedback.py:118:def _load_diagnostics(paths: Sequence[Path], columns: Sequence[str]) -> pd.DataFrame
+tools/analyze_tau_los_feedback.py:136:def _to_numeric(series: pd.Series) -> pd.Series
+tools/analyze_tau_los_feedback.py:140:def _choose_series(df: pd.DataFrame, candidates: Iterable[str]) -> Tuple[Optional[pd.Series], Optional[str]]
+tools/analyze_tau_los_feedback.py:147:def _time_years(df: pd.DataFrame) -> pd.Series
+tools/analyze_tau_los_feedback.py:157:def _weights_dt(df: pd.DataFrame) -> pd.Series
+tools/analyze_tau_los_feedback.py:166:def _weighted_fraction(mask: pd.Series, weights: pd.Series) -> Optional[float]
+tools/analyze_tau_los_feedback.py:175:def _quantiles(series: pd.Series, qs: Sequence[float]) -> Dict[str, Optional[float]]
+tools/analyze_tau_los_feedback.py:182:def _nanmedian(series: pd.Series) -> Optional[float]
+tools/analyze_tau_los_feedback.py:189:def _infer_headroom(df: pd.DataFrame) -> Optional[pd.Series]
+tools/analyze_tau_los_feedback.py:202:def _render_placeholder(path: Path, title: str, message: str) -> None
+tools/analyze_tau_los_feedback.py:212:def analyze(args: argparse.Namespace) -> Dict
+tools/analyze_tau_los_feedback.py:421:def _rows_from_result(result: Dict) -> List[Dict[str, object]]
+tools/analyze_tau_los_feedback.py:457:def main() -> None
 tools/check_unknown_refs.py:13:def load_requests(path: Path) -> list[dict]
 tools/check_unknown_refs.py:24:def main() -> int
 tools/derive_supply_rate.py:48:class SupplyInputs

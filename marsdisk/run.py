@@ -230,10 +230,11 @@ class ProgressReporter:
             if is_last:
                 sys.stdout.write("\n")
         else:
-            percent_int = int(frac * 100)
-            if percent_int == self._last_percent_int and not is_last:
+            # Update every 0.1% (tenths of percent)
+            percent_tenth = int(frac * 1000)
+            if percent_tenth == self._last_percent_int and not is_last:
                 return
-            self._last_percent_int = percent_int
+            self._last_percent_int = percent_tenth
             sys.stdout.write(f"{line}\n")
         if is_last:
             self._finished = True

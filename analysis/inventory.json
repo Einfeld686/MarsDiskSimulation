@@ -5237,238 +5237,245 @@
   },
   {
     "file_path": "marsdisk/run.py",
-    "line_no": 262,
+    "line_no": 263,
     "symbol": "_parse_override_value",
     "signature": "_parse_override_value(raw: str) -> Any",
     "brief_usage": "Return a Python value parsed from a CLI override string."
   },
   {
     "file_path": "marsdisk/run.py",
-    "line_no": 289,
+    "line_no": 290,
     "symbol": "_apply_overrides_dict",
     "signature": "_apply_overrides_dict(payload: Dict[str, Any], overrides: Sequence[str]) -> Dict[str, Any]",
     "brief_usage": "Apply dotted-path overrides to a configuration dictionary."
   },
   {
     "file_path": "marsdisk/run.py",
-    "line_no": 327,
+    "line_no": 328,
     "symbol": "_merge_physics_section",
     "signature": "_merge_physics_section(payload: Dict[str, Any]) -> Dict[str, Any]",
     "brief_usage": "Inline the optional ``physics`` mapping into the root config tree."
   },
   {
     "file_path": "marsdisk/run.py",
-    "line_no": 346,
+    "line_no": 347,
     "symbol": "_safe_float",
     "signature": "_safe_float(value: Any) -> Optional[float]",
     "brief_usage": "Return ``value`` cast to float when finite, otherwise ``None``."
   },
   {
     "file_path": "marsdisk/run.py",
-    "line_no": 358,
+    "line_no": 359,
+    "symbol": "_resolve_feedback_tau_field",
+    "signature": "_resolve_feedback_tau_field(tau_field: Optional[str]) -> str",
+    "brief_usage": "Normalise feedback.tau_field and reject unknown values."
+  },
+  {
+    "file_path": "marsdisk/run.py",
+    "line_no": 372,
     "symbol": "_derive_seed_components",
     "signature": "_derive_seed_components(cfg: Config) -> str",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/run.py",
-    "line_no": 383,
+    "line_no": 397,
     "symbol": "_resolve_seed",
     "signature": "_resolve_seed(cfg: Config) -> tuple[int, str, str]",
     "brief_usage": "Return the RNG seed, seed expression description, and basis."
   },
   {
     "file_path": "marsdisk/run.py",
-    "line_no": 398,
+    "line_no": 412,
     "symbol": "_auto_chi_blow",
     "signature": "_auto_chi_blow(beta: float, qpr: float) -> float",
     "brief_usage": "Return an automatic chi_blow scaling based on β and ⟨Q_pr⟩."
   },
   {
     "file_path": "marsdisk/run.py",
-    "line_no": 413,
+    "line_no": 427,
     "symbol": "_fast_blowout_correction_factor",
     "signature": "_fast_blowout_correction_factor(ratio: float) -> float",
     "brief_usage": "Return the effective loss fraction ``f_fast = 1 - exp(-Δt/t_blow)``."
   },
   {
     "file_path": "marsdisk/run.py",
-    "line_no": 433,
+    "line_no": 447,
     "symbol": "_compute_gate_factor",
     "signature": "_compute_gate_factor(t_blow: Optional[float], t_solid: Optional[float]) -> float",
     "brief_usage": "Return gate coefficient f_gate=t_solid/(t_solid+t_blow) clipped to [0,1]."
   },
   {
     "file_path": "marsdisk/run.py",
-    "line_no": 455,
+    "line_no": 469,
     "symbol": "_human_bytes",
     "signature": "_human_bytes(value: float) -> str",
     "brief_usage": "Return a human-readable byte string."
   },
   {
     "file_path": "marsdisk/run.py",
-    "line_no": 467,
+    "line_no": 481,
     "symbol": "_memory_estimate",
     "signature": "_memory_estimate(n_steps: int, n_bins: int, run_row_bytes: float=MEMORY_RUN_ROW_BYTES, psd_row_bytes: float=MEMORY_PSD_ROW_BYTES, *, smol_value_bytes: float=8.0) -> tuple[str, str]",
     "brief_usage": "Return short and long memory hints estimated from steps and bins."
   },
   {
     "file_path": "marsdisk/run.py",
-    "line_no": 492,
+    "line_no": 506,
     "symbol": "_normalise_physics_mode",
     "signature": "_normalise_physics_mode(value: Any) -> str",
     "brief_usage": "Return the canonical physics.mode string."
   },
   {
     "file_path": "marsdisk/run.py",
-    "line_no": 508,
+    "line_no": 522,
     "symbol": "_clone_config",
     "signature": "_clone_config(cfg: Config) -> Config",
     "brief_usage": "Return a deep copy of a configuration object."
   },
   {
     "file_path": "marsdisk/run.py",
-    "line_no": 516,
+    "line_no": 530,
     "symbol": "_resolve_time_grid",
     "signature": "_resolve_time_grid(numerics: Any, Omega: float, t_orb: float, *, temp_runtime: Optional[tempdriver.TemperatureDriverRuntime]=None) -> tuple[float, float, float, int, Dict[str, Any]]",
     "brief_usage": "Return (t_end, dt_nominal, dt_step, n_steps, info) for the integrator."
   },
   {
     "file_path": "marsdisk/run.py",
-    "line_no": 618,
+    "line_no": 632,
     "symbol": "_Phase5VariantResult",
     "signature": "class _Phase5VariantResult",
     "brief_usage": "Artifacts recorded for a variant within the Phase 5 comparison."
   },
   {
     "file_path": "marsdisk/run.py",
-    "line_no": 631,
+    "line_no": 645,
     "symbol": "_read_json",
     "signature": "_read_json(path: Path) -> Dict[str, Any]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/run.py",
-    "line_no": 636,
+    "line_no": 650,
     "symbol": "_hash_payload",
     "signature": "_hash_payload(payload: Mapping[str, Any]) -> str",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/run.py",
-    "line_no": 641,
+    "line_no": 655,
     "symbol": "_prepare_phase5_variants",
     "signature": "_prepare_phase5_variants(compare_cfg: Any) -> List[Dict[str, str]]",
     "brief_usage": "Return normalized variant specifications or raise when insufficient."
   },
   {
     "file_path": "marsdisk/run.py",
-    "line_no": 674,
+    "line_no": 688,
     "symbol": "RunConfig",
     "signature": "class RunConfig",
     "brief_usage": "Configuration parameters for a zero-dimensional run."
   },
   {
     "file_path": "marsdisk/run.py",
-    "line_no": 691,
+    "line_no": 705,
     "symbol": "RunState",
     "signature": "class RunState",
     "brief_usage": "State variables evolved during the run."
   },
   {
     "file_path": "marsdisk/run.py",
-    "line_no": 701,
+    "line_no": 715,
     "symbol": "ZeroDHistory",
     "signature": "class ZeroDHistory",
     "brief_usage": "Per-step history bundle used by the full-feature zero-D driver."
   },
   {
     "file_path": "marsdisk/run.py",
-    "line_no": 725,
+    "line_no": 739,
     "symbol": "StreamingState",
     "signature": "class StreamingState",
     "brief_usage": "Manage streaming flush of large histories to Parquet/CSV chunks."
   },
   {
     "file_path": "marsdisk/run.py",
-    "line_no": 858,
+    "line_no": 872,
     "symbol": "step",
     "signature": "step(config: RunConfig, state: RunState, dt: float) -> Dict[str, float]",
     "brief_usage": "Advance the coupled S0/S1 system by one time-step."
   },
   {
     "file_path": "marsdisk/run.py",
-    "line_no": 910,
+    "line_no": 924,
     "symbol": "run_n_steps",
     "signature": "run_n_steps(config: RunConfig, state: RunState, n: int, dt: float, out_dir: Path | None=None) -> pd.DataFrame",
     "brief_usage": "Run ``n`` steps and optionally serialise results."
   },
   {
     "file_path": "marsdisk/run.py",
-    "line_no": 940,
+    "line_no": 954,
     "symbol": "load_config",
     "signature": "load_config(path: Path, overrides: Optional[Sequence[str]]=None) -> Config",
     "brief_usage": "Load a YAML configuration file into a :class:`Config` instance."
   },
   {
     "file_path": "marsdisk/run.py",
-    "line_no": 965,
+    "line_no": 979,
     "symbol": "_gather_git_info",
     "signature": "_gather_git_info() -> Dict[str, Any]",
     "brief_usage": "Return basic git metadata for provenance recording."
   },
   {
     "file_path": "marsdisk/run.py",
-    "line_no": 992,
+    "line_no": 1006,
     "symbol": "_configure_logging",
     "signature": "_configure_logging(level: int, suppress_warnings: bool=False) -> None",
     "brief_usage": "Configure root logging and optionally silence Python warnings."
   },
   {
     "file_path": "marsdisk/run.py",
-    "line_no": 1003,
+    "line_no": 1017,
     "symbol": "MassBudgetViolationError",
     "signature": "class MassBudgetViolationError(RuntimeError)",
     "brief_usage": "Raised when the mass budget tolerance is exceeded."
   },
   {
     "file_path": "marsdisk/run.py",
-    "line_no": 1007,
+    "line_no": 1021,
     "symbol": "_write_zero_d_history",
     "signature": "_write_zero_d_history(cfg: Config, df: pd.DataFrame, history: ZeroDHistory, *, step_diag_enabled: bool, step_diag_format: str, step_diag_path_cfg: Optional[Path], step_diag_path: Optional[Path], orbit_rollup_enabled: bool, phase7_enabled: bool) -> None",
     "brief_usage": "Persist time series, diagnostics, and rollups for a zero-D run."
   },
   {
     "file_path": "marsdisk/run.py",
-    "line_no": 1110,
+    "line_no": 1124,
     "symbol": "run_zero_d",
     "signature": "run_zero_d(cfg: Config, *, enforce_mass_budget: bool=False, physics_mode_override: Optional[str]=None, physics_mode_source_override: Optional[str]=None) -> None",
     "brief_usage": "Execute the full-feature zero-dimensional simulation."
   },
   {
     "file_path": "marsdisk/run.py",
-    "line_no": 4815,
+    "line_no": 4878,
     "symbol": "_run_phase5_variant",
     "signature": "_run_phase5_variant(base_cfg: Config, variant: str, mode: str, base_outdir: Path, duration_years: float, *, enforce_mass_budget: bool) -> _Phase5VariantResult",
     "brief_usage": "Execute a single-process variant run and capture its artifacts."
   },
   {
     "file_path": "marsdisk/run.py",
-    "line_no": 4877,
+    "line_no": 4940,
     "symbol": "_write_phase5_comparison_products",
     "signature": "_write_phase5_comparison_products(base_outdir: Path, duration_years: float, results: List[_Phase5VariantResult]) -> None",
     "brief_usage": "Aggregate per-variant artifacts into the comparison outputs."
   },
   {
     "file_path": "marsdisk/run.py",
-    "line_no": 5019,
+    "line_no": 5082,
     "symbol": "run_phase5_comparison",
     "signature": "run_phase5_comparison(cfg: Config, *, enforce_mass_budget: bool=False, variants_spec: Optional[List[Dict[str, str]]]=None) -> None",
     "brief_usage": "Run the Phase 5 dual single-process comparison workflow."
   },
   {
     "file_path": "marsdisk/run.py",
-    "line_no": 5054,
+    "line_no": 5117,
     "symbol": "main",
     "signature": "main(argv: Optional[List[str]]=None) -> None",
     "brief_usage": "Command line entry point."
@@ -9289,6 +9296,20 @@
     "brief_usage": "Finite reservoir runs dry and leaves depletion metadata in outputs."
   },
   {
+    "file_path": "tests/test_supply_positive.py",
+    "line_no": 90,
+    "symbol": "test_supply_feedback_tau_los_updates_scale",
+    "signature": "test_supply_feedback_tau_los_updates_scale(tmp_path: Path) -> None",
+    "brief_usage": "tau_los feedback produces finite errors and scales the supply multiplier."
+  },
+  {
+    "file_path": "tests/test_supply_positive.py",
+    "line_no": 139,
+    "symbol": "test_run_config_written_before_runtime_failure",
+    "signature": "test_run_config_written_before_runtime_failure(monkeypatch, tmp_path: Path) -> None",
+    "brief_usage": "Even when the run aborts early, the run_config snapshot is emitted."
+  },
+  {
     "file_path": "tests/test_supply_split.py",
     "line_no": 8,
     "symbol": "test_deep_buffer_accumulates_when_headroom_zero",
@@ -9482,6 +9503,139 @@
     "line_no": 49,
     "symbol": "test_run_zero_d_no_zerodivision",
     "signature": "test_run_zero_d_no_zerodivision(monkeypatch, tmp_path)",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tools/analyze_tau_los_feedback.py",
+    "line_no": 36,
+    "symbol": "SECONDS_PER_YEAR",
+    "signature": "SECONDS_PER_YEAR = 365.25 * 24 * 3600.0",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "tools/analyze_tau_los_feedback.py",
+    "line_no": 38,
+    "symbol": "_coalesce",
+    "signature": "_coalesce(*values)",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tools/analyze_tau_los_feedback.py",
+    "line_no": 45,
+    "symbol": "DEFAULT_COLUMNS",
+    "signature": "DEFAULT_COLUMNS = ['time', 'time_s', 'time_years', 'dt', 'dt_over_t_blow', 't_blow', 't_blow_s', 'tau_los', 'tau_los_mars', 'tau_mars_line_of_sight', 'tau_vertical', 'Sigma_surf', 'sigma_surf', 'Sigma_tau1', 'sigma_tau1', 'Sigma_tau1_last_finite', 'headroom', 'supply_headroom', 'supply_rate_base', 'supply_rate_nominal', 'supply_rate_scaled', 'supply_rate_applied', 'supply_feedback_scale', 'supply_feedback_error', 'supply_blocked_by_headroom', 'M_out_rate', 'M_sink_rate', 'M_loss_rate', 'mass_loss_surface_solid_step', 'mass_loss_sinks_step', 'mass_loss_sublimation_step', 'M_out_cum', 'M_sink_cum', 'M_loss_cum']",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "tools/analyze_tau_los_feedback.py",
+    "line_no": 83,
+    "symbol": "_load_json",
+    "signature": "_load_json(path: Path) -> Dict",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tools/analyze_tau_los_feedback.py",
+    "line_no": 90,
+    "symbol": "_resolve_diagnostics_paths",
+    "signature": "_resolve_diagnostics_paths(run_dir: Path, summary: Dict, max_chunks: Optional[int]) -> List[Path]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tools/analyze_tau_los_feedback.py",
+    "line_no": 106,
+    "symbol": "_collect_columns",
+    "signature": "_collect_columns(arg_columns: Sequence[str]) -> List[str]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tools/analyze_tau_los_feedback.py",
+    "line_no": 118,
+    "symbol": "_load_diagnostics",
+    "signature": "_load_diagnostics(paths: Sequence[Path], columns: Sequence[str]) -> pd.DataFrame",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tools/analyze_tau_los_feedback.py",
+    "line_no": 136,
+    "symbol": "_to_numeric",
+    "signature": "_to_numeric(series: pd.Series) -> pd.Series",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tools/analyze_tau_los_feedback.py",
+    "line_no": 140,
+    "symbol": "_choose_series",
+    "signature": "_choose_series(df: pd.DataFrame, candidates: Iterable[str]) -> Tuple[Optional[pd.Series], Optional[str]]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tools/analyze_tau_los_feedback.py",
+    "line_no": 147,
+    "symbol": "_time_years",
+    "signature": "_time_years(df: pd.DataFrame) -> pd.Series",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tools/analyze_tau_los_feedback.py",
+    "line_no": 157,
+    "symbol": "_weights_dt",
+    "signature": "_weights_dt(df: pd.DataFrame) -> pd.Series",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tools/analyze_tau_los_feedback.py",
+    "line_no": 166,
+    "symbol": "_weighted_fraction",
+    "signature": "_weighted_fraction(mask: pd.Series, weights: pd.Series) -> Optional[float]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tools/analyze_tau_los_feedback.py",
+    "line_no": 175,
+    "symbol": "_quantiles",
+    "signature": "_quantiles(series: pd.Series, qs: Sequence[float]) -> Dict[str, Optional[float]]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tools/analyze_tau_los_feedback.py",
+    "line_no": 182,
+    "symbol": "_nanmedian",
+    "signature": "_nanmedian(series: pd.Series) -> Optional[float]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tools/analyze_tau_los_feedback.py",
+    "line_no": 189,
+    "symbol": "_infer_headroom",
+    "signature": "_infer_headroom(df: pd.DataFrame) -> Optional[pd.Series]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tools/analyze_tau_los_feedback.py",
+    "line_no": 202,
+    "symbol": "_render_placeholder",
+    "signature": "_render_placeholder(path: Path, title: str, message: str) -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tools/analyze_tau_los_feedback.py",
+    "line_no": 212,
+    "symbol": "analyze",
+    "signature": "analyze(args: argparse.Namespace) -> Dict",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tools/analyze_tau_los_feedback.py",
+    "line_no": 421,
+    "symbol": "_rows_from_result",
+    "signature": "_rows_from_result(result: Dict) -> List[Dict[str, object]]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tools/analyze_tau_los_feedback.py",
+    "line_no": 457,
+    "symbol": "main",
+    "signature": "main() -> None",
     "brief_usage": "No description available."
   },
   {
