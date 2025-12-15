@@ -90,8 +90,8 @@ config_keys:
   - surface.freeze_sigma
 code_path:
   - [marsdisk/physics/shielding.py#apply_shielding [L133–L216]]
-  - [marsdisk/run.py#_write_zero_d_history [L944–L1044]]
-  - [marsdisk/run.py#run_zero_d [L1047–L3783]]
+  - [marsdisk/run.py#_write_zero_d_history [L1007–L1107]]
+  - [marsdisk/run.py#run_zero_d [L1110–L4812]]
 run_stage:
   - shielding application
   - surface loop (gate evaluation)
@@ -141,9 +141,9 @@ config_keys:
   - sizes.dsdt_model
   - sizes.apply_evolved_min_size
 code_path:
-  - [marsdisk/physics/psd.py#update_psd_state [L30–L118]]
-  - [marsdisk/physics/psd.py#apply_uniform_size_drift [L149–L264]]
-  - [marsdisk/run.py#run_zero_d [L1047–L3783]]
+  - [marsdisk/physics/psd.py#update_psd_state [L44–L134]]
+  - [marsdisk/physics/psd.py#apply_uniform_size_drift [L333–L463]]
+  - [marsdisk/run.py#run_zero_d [L1110–L4812]]
 run_stage:
   - PSD initialisation
   - PSD evolution hooks
@@ -195,7 +195,7 @@ config_keys:
   - numerics.dt_init
 code_path:
   - [marsdisk/physics/surface.py#step_surface_density_S1 [L99–L174]]
-  - [marsdisk/run.py#run_zero_d [L1047–L3783]]
+  - [marsdisk/run.py#run_zero_d [L1110–L4812]]
 run_stage:
   - surface loop
 inputs:
@@ -245,7 +245,7 @@ config_keys:
 code_path:
   - [marsdisk/physics/sinks.py#total_sink_timescale [L83–L160]]
   - [marsdisk/physics/sublimation.py#choose_psat_backend [L429–L553]]
-  - [marsdisk/run.py#run_zero_d [L1047–L3783]]
+  - [marsdisk/run.py#run_zero_d [L1110–L4812]]
 run_stage:
   - sink selection
   - surface loop
@@ -299,9 +299,9 @@ run_stage:
   - config loading
   - orbital grid initialisation
 code_path:
-  - [marsdisk/schema.py#DiskGeometry [L42–L69]]
+  - [marsdisk/schema.py#DiskGeometry [L44–L71]]
   - [marsdisk/grid.py#omega_kepler [L17–L31]]
-  - [marsdisk/run.py#_write_zero_d_history [L944–L1044]]
+  - [marsdisk/run.py#_write_zero_d_history [L1007–L1107]]
 inputs:
   - r_in_RM / r_out_RM  # runtime radius is derived from disk.geometry
 outputs:
