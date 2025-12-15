@@ -5266,216 +5266,223 @@
   {
     "file_path": "marsdisk/run.py",
     "line_no": 359,
+    "symbol": "_float_or_nan",
+    "signature": "_float_or_nan(value: Any) -> float",
+    "brief_usage": "Return a finite float or ``nan`` to stabilise Parquet schemas."
+  },
+  {
+    "file_path": "marsdisk/run.py",
+    "line_no": 371,
     "symbol": "_resolve_feedback_tau_field",
     "signature": "_resolve_feedback_tau_field(tau_field: Optional[str]) -> str",
     "brief_usage": "Normalise feedback.tau_field and reject unknown values."
   },
   {
     "file_path": "marsdisk/run.py",
-    "line_no": 372,
+    "line_no": 384,
     "symbol": "_derive_seed_components",
     "signature": "_derive_seed_components(cfg: Config) -> str",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/run.py",
-    "line_no": 397,
+    "line_no": 409,
     "symbol": "_resolve_seed",
     "signature": "_resolve_seed(cfg: Config) -> tuple[int, str, str]",
     "brief_usage": "Return the RNG seed, seed expression description, and basis."
   },
   {
     "file_path": "marsdisk/run.py",
-    "line_no": 412,
+    "line_no": 424,
     "symbol": "_auto_chi_blow",
     "signature": "_auto_chi_blow(beta: float, qpr: float) -> float",
     "brief_usage": "Return an automatic chi_blow scaling based on β and ⟨Q_pr⟩."
   },
   {
     "file_path": "marsdisk/run.py",
-    "line_no": 427,
+    "line_no": 439,
     "symbol": "_fast_blowout_correction_factor",
     "signature": "_fast_blowout_correction_factor(ratio: float) -> float",
     "brief_usage": "Return the effective loss fraction ``f_fast = 1 - exp(-Δt/t_blow)``."
   },
   {
     "file_path": "marsdisk/run.py",
-    "line_no": 447,
+    "line_no": 459,
     "symbol": "_compute_gate_factor",
     "signature": "_compute_gate_factor(t_blow: Optional[float], t_solid: Optional[float]) -> float",
     "brief_usage": "Return gate coefficient f_gate=t_solid/(t_solid+t_blow) clipped to [0,1]."
   },
   {
     "file_path": "marsdisk/run.py",
-    "line_no": 469,
+    "line_no": 481,
     "symbol": "_human_bytes",
     "signature": "_human_bytes(value: float) -> str",
     "brief_usage": "Return a human-readable byte string."
   },
   {
     "file_path": "marsdisk/run.py",
-    "line_no": 481,
+    "line_no": 493,
     "symbol": "_memory_estimate",
     "signature": "_memory_estimate(n_steps: int, n_bins: int, run_row_bytes: float=MEMORY_RUN_ROW_BYTES, psd_row_bytes: float=MEMORY_PSD_ROW_BYTES, *, smol_value_bytes: float=8.0) -> tuple[str, str]",
     "brief_usage": "Return short and long memory hints estimated from steps and bins."
   },
   {
     "file_path": "marsdisk/run.py",
-    "line_no": 506,
+    "line_no": 518,
     "symbol": "_normalise_physics_mode",
     "signature": "_normalise_physics_mode(value: Any) -> str",
     "brief_usage": "Return the canonical physics.mode string."
   },
   {
     "file_path": "marsdisk/run.py",
-    "line_no": 522,
+    "line_no": 534,
     "symbol": "_clone_config",
     "signature": "_clone_config(cfg: Config) -> Config",
     "brief_usage": "Return a deep copy of a configuration object."
   },
   {
     "file_path": "marsdisk/run.py",
-    "line_no": 530,
+    "line_no": 542,
     "symbol": "_resolve_time_grid",
     "signature": "_resolve_time_grid(numerics: Any, Omega: float, t_orb: float, *, temp_runtime: Optional[tempdriver.TemperatureDriverRuntime]=None) -> tuple[float, float, float, int, Dict[str, Any]]",
     "brief_usage": "Return (t_end, dt_nominal, dt_step, n_steps, info) for the integrator."
   },
   {
     "file_path": "marsdisk/run.py",
-    "line_no": 632,
+    "line_no": 644,
     "symbol": "_Phase5VariantResult",
     "signature": "class _Phase5VariantResult",
     "brief_usage": "Artifacts recorded for a variant within the Phase 5 comparison."
   },
   {
     "file_path": "marsdisk/run.py",
-    "line_no": 645,
+    "line_no": 657,
     "symbol": "_read_json",
     "signature": "_read_json(path: Path) -> Dict[str, Any]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/run.py",
-    "line_no": 650,
+    "line_no": 662,
     "symbol": "_hash_payload",
     "signature": "_hash_payload(payload: Mapping[str, Any]) -> str",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/run.py",
-    "line_no": 655,
+    "line_no": 667,
     "symbol": "_prepare_phase5_variants",
     "signature": "_prepare_phase5_variants(compare_cfg: Any) -> List[Dict[str, str]]",
     "brief_usage": "Return normalized variant specifications or raise when insufficient."
   },
   {
     "file_path": "marsdisk/run.py",
-    "line_no": 688,
+    "line_no": 700,
     "symbol": "RunConfig",
     "signature": "class RunConfig",
     "brief_usage": "Configuration parameters for a zero-dimensional run."
   },
   {
     "file_path": "marsdisk/run.py",
-    "line_no": 705,
+    "line_no": 717,
     "symbol": "RunState",
     "signature": "class RunState",
     "brief_usage": "State variables evolved during the run."
   },
   {
     "file_path": "marsdisk/run.py",
-    "line_no": 715,
+    "line_no": 727,
     "symbol": "ZeroDHistory",
     "signature": "class ZeroDHistory",
     "brief_usage": "Per-step history bundle used by the full-feature zero-D driver."
   },
   {
     "file_path": "marsdisk/run.py",
-    "line_no": 739,
+    "line_no": 751,
     "symbol": "StreamingState",
     "signature": "class StreamingState",
     "brief_usage": "Manage streaming flush of large histories to Parquet/CSV chunks."
   },
   {
     "file_path": "marsdisk/run.py",
-    "line_no": 872,
+    "line_no": 884,
     "symbol": "step",
     "signature": "step(config: RunConfig, state: RunState, dt: float) -> Dict[str, float]",
     "brief_usage": "Advance the coupled S0/S1 system by one time-step."
   },
   {
     "file_path": "marsdisk/run.py",
-    "line_no": 924,
+    "line_no": 936,
     "symbol": "run_n_steps",
     "signature": "run_n_steps(config: RunConfig, state: RunState, n: int, dt: float, out_dir: Path | None=None) -> pd.DataFrame",
     "brief_usage": "Run ``n`` steps and optionally serialise results."
   },
   {
     "file_path": "marsdisk/run.py",
-    "line_no": 954,
+    "line_no": 966,
     "symbol": "load_config",
     "signature": "load_config(path: Path, overrides: Optional[Sequence[str]]=None) -> Config",
     "brief_usage": "Load a YAML configuration file into a :class:`Config` instance."
   },
   {
     "file_path": "marsdisk/run.py",
-    "line_no": 979,
+    "line_no": 991,
     "symbol": "_gather_git_info",
     "signature": "_gather_git_info() -> Dict[str, Any]",
     "brief_usage": "Return basic git metadata for provenance recording."
   },
   {
     "file_path": "marsdisk/run.py",
-    "line_no": 1006,
+    "line_no": 1018,
     "symbol": "_configure_logging",
     "signature": "_configure_logging(level: int, suppress_warnings: bool=False) -> None",
     "brief_usage": "Configure root logging and optionally silence Python warnings."
   },
   {
     "file_path": "marsdisk/run.py",
-    "line_no": 1017,
+    "line_no": 1029,
     "symbol": "MassBudgetViolationError",
     "signature": "class MassBudgetViolationError(RuntimeError)",
     "brief_usage": "Raised when the mass budget tolerance is exceeded."
   },
   {
     "file_path": "marsdisk/run.py",
-    "line_no": 1021,
+    "line_no": 1033,
     "symbol": "_write_zero_d_history",
     "signature": "_write_zero_d_history(cfg: Config, df: pd.DataFrame, history: ZeroDHistory, *, step_diag_enabled: bool, step_diag_format: str, step_diag_path_cfg: Optional[Path], step_diag_path: Optional[Path], orbit_rollup_enabled: bool, phase7_enabled: bool) -> None",
     "brief_usage": "Persist time series, diagnostics, and rollups for a zero-D run."
   },
   {
     "file_path": "marsdisk/run.py",
-    "line_no": 1124,
+    "line_no": 1136,
     "symbol": "run_zero_d",
     "signature": "run_zero_d(cfg: Config, *, enforce_mass_budget: bool=False, physics_mode_override: Optional[str]=None, physics_mode_source_override: Optional[str]=None) -> None",
     "brief_usage": "Execute the full-feature zero-dimensional simulation."
   },
   {
     "file_path": "marsdisk/run.py",
-    "line_no": 4878,
+    "line_no": 5006,
     "symbol": "_run_phase5_variant",
     "signature": "_run_phase5_variant(base_cfg: Config, variant: str, mode: str, base_outdir: Path, duration_years: float, *, enforce_mass_budget: bool) -> _Phase5VariantResult",
     "brief_usage": "Execute a single-process variant run and capture its artifacts."
   },
   {
     "file_path": "marsdisk/run.py",
-    "line_no": 4940,
+    "line_no": 5068,
     "symbol": "_write_phase5_comparison_products",
     "signature": "_write_phase5_comparison_products(base_outdir: Path, duration_years: float, results: List[_Phase5VariantResult]) -> None",
     "brief_usage": "Aggregate per-variant artifacts into the comparison outputs."
   },
   {
     "file_path": "marsdisk/run.py",
-    "line_no": 5082,
+    "line_no": 5210,
     "symbol": "run_phase5_comparison",
     "signature": "run_phase5_comparison(cfg: Config, *, enforce_mass_budget: bool=False, variants_spec: Optional[List[Dict[str, str]]]=None) -> None",
     "brief_usage": "Run the Phase 5 dual single-process comparison workflow."
   },
   {
     "file_path": "marsdisk/run.py",
-    "line_no": 5117,
+    "line_no": 5245,
     "symbol": "main",
     "signature": "main(argv: Optional[List[str]]=None) -> None",
     "brief_usage": "Command line entry point."
