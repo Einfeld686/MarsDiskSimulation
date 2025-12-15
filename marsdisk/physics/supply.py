@@ -144,8 +144,8 @@ class SupplyRuntimeState:
     feedback_target_tau: float = 1.0
     feedback_gain: float = 1.0
     feedback_response_time_s: float = 0.0
-    feedback_tau_field: str = "tau_vertical"
-    feedback_min_scale: float = 0.0
+    feedback_tau_field: str = "tau_los"
+    feedback_min_scale: float = 1.0e-6
     feedback_max_scale: float = 10.0
     temperature_mode: str = "off"
     temperature_reference_K: float = 1.0
@@ -231,7 +231,7 @@ def init_runtime_state(
         state.feedback_target_tau = float(getattr(feedback_cfg, "target_tau", 1.0))
         state.feedback_gain = float(getattr(feedback_cfg, "gain", 1.0))
         state.feedback_response_time_s = float(getattr(feedback_cfg, "response_time_years", 0.0)) * seconds_per_year
-        state.feedback_tau_field = str(getattr(feedback_cfg, "tau_field", "tau_vertical"))
+        state.feedback_tau_field = str(getattr(feedback_cfg, "tau_field", "tau_los"))
         state.feedback_min_scale = float(getattr(feedback_cfg, "min_scale", 0.0))
         state.feedback_max_scale = float(getattr(feedback_cfg, "max_scale", 10.0))
 

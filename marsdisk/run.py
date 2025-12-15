@@ -355,6 +355,19 @@ def _safe_float(value: Any) -> Optional[float]:
     return result
 
 
+def _resolve_feedback_tau_field(tau_field: Optional[str]) -> str:
+    """Normalise feedback.tau_field and reject unknown values."""
+
+    if tau_field is None:
+        return "tau_vertical"
+    text = str(tau_field).strip().lower()
+    if text in {"tau_vertical", "vertical"}:
+        return "tau_vertical"
+    if text in {"tau_los", "los"}:
+        return "tau_los"
+    raise ValueError(f"Unknown supply.feedback.tau_field={tau_field!r}; expected 'tau_vertical' or 'tau_los'")
+
+
 def _derive_seed_components(cfg: Config) -> str:
     parts: list[str] = []
     try:
@@ -1134,6 +1147,7 @@ def run_zero_d(
             config_source_path = Path(config_source_path_raw).resolve()
         except Exception:
             config_source_path = None
+    outdir = Path(cfg.io.outdir)
 
     scope_cfg = getattr(cfg, "scope", None)
     process_cfg = getattr(cfg, "process", None)
@@ -1143,6 +1157,32 @@ def run_zero_d(
     physics_mode_source = "cli" if physics_mode_override is not None else "config"
     if physics_mode_source_override:
         physics_mode_source = physics_mode_source_override
+
+    run_config_path = outdir / "run_config.json"
+
+    def _write_run_config_snapshot(status: str, extra: Optional[Dict[str, Any]] = None) -> None:
+        payload: Dict[str, Any] = {
+            "status": status,
+            "physics_mode": physics_mode,
+            "physics_mode_source": physics_mode_source,
+            "config_source_path": str(config_source_path) if config_source_path else None,
+            "outdir": str(outdir),
+            "config": cfg.model_dump(mode="json"),
+        }
+        supply_feedback_snapshot = getattr(getattr(cfg, "supply", None), "feedback", None)
+        if supply_feedback_snapshot is not None:
+            try:
+                payload["supply_feedback"] = supply_feedback_snapshot.model_dump()
+            except Exception:
+                payload["supply_feedback"] = str(supply_feedback_snapshot)
+        if extra:
+            payload.update(extra)
+        try:
+            writer.write_run_config(payload, run_config_path)
+        except Exception as exc:  # pragma: no cover - best effort
+            logger.warning("Failed to write %s run_config snapshot to %s: %s", status, run_config_path, exc)
+
+    _write_run_config_snapshot("pre_run")
     primary_field_explicit = "physics_mode" in getattr(cfg, "__fields_set__", set())
     scope_region = getattr(scope_cfg, "region", "inner") if scope_cfg else "inner"
     analysis_window_years = float(getattr(scope_cfg, "analysis_years", 2.0)) if scope_cfg else 2.0
@@ -1372,7 +1412,7 @@ def run_zero_d(
     phase_controller = phase_mod.PhaseEvaluator.from_config(phase_cfg, logger=logger)
     phase_temperature_input_mode = "mars_surface"
     phase_q_abs_mean = 0.4
-    phase_tau_field = "vertical"
+    phase_tau_field = "los"
     phase_temperature_formula = "T_p = T_M * q_abs_mean^0.25 * sqrt(R_M/(2 r))"
     if phase_cfg is not None:
         phase_temperature_input_mode = str(getattr(phase_cfg, "temperature_input", phase_temperature_input_mode))
@@ -1387,8 +1427,8 @@ def run_zero_d(
         phase_temperature_input_mode = "mars_surface"
     phase_tau_field = phase_tau_field.strip().lower()
     if phase_tau_field not in {"vertical", "los"}:
-        logger.warning("Unknown phase.tau_field=%s; defaulting to 'vertical'", phase_tau_field)
-        phase_tau_field = "vertical"
+        logger.warning("Unknown phase.tau_field=%s; defaulting to 'los'", phase_tau_field)
+        phase_tau_field = "los"
     if not math.isfinite(phase_q_abs_mean) or phase_q_abs_mean <= 0.0:
         raise ValueError("phase.q_abs_mean must be positive and finite")
     allow_liquid_hkl = bool(getattr(phase_cfg, "allow_liquid_hkl", True)) if phase_cfg else True
@@ -1599,7 +1639,7 @@ def run_zero_d(
     init_tau1_enabled = bool(
         getattr(cfg, "init_tau1", None) is not None and getattr(cfg.init_tau1, "enabled", False)
     )
-    tau_field = getattr(cfg.init_tau1, "tau_field", "vertical") if init_tau1_enabled else "vertical"
+    tau_field = getattr(cfg.init_tau1, "tau_field", "los") if init_tau1_enabled else "los"
     target_tau_init = float(getattr(cfg.init_tau1, "target_tau", 1.0) if init_tau1_enabled else 1.0)
     target_tau_init = target_tau_init if math.isfinite(target_tau_init) and target_tau_init > 0.0 else 1.0
     los_scale = los_factor if tau_field == "los" else 1.0
@@ -1634,6 +1674,23 @@ def run_zero_d(
             cfg.surface.init_policy,
             sigma_override=sigma_override_applied,
         )
+    elif init_tau1_enabled:
+        # inner_disk_mass=null but init_tau1.enabled: compute sigma directly from kappa
+        # Use raw kappa_surf (not shielding-adjusted) since tau_initial at L1699 uses kappa_surf_initial
+        kappa_for_init = kappa_surf
+        if kappa_for_init > 0.0 and math.isfinite(kappa_for_init):
+            sigma_tau1_unity = target_tau_init / (kappa_for_init * los_scale)
+            sigma_surf = sigma_tau1_unity
+            logger.info(
+                "init_tau1 without inner_disk_mass: sigma_surf=%.3e (target_tau=%.2f, kappa=%.3e, los_scale=%.2f)",
+                sigma_surf,
+                target_tau_init,
+                kappa_for_init,
+                los_scale,
+            )
+        else:
+            sigma_surf = 0.0
+            logger.warning("init_tau1 without inner_disk_mass: kappa_for_init<=0, sigma_surf=0")
     else:
         sigma_surf = 0.0
     sigma_surf_init_raw = float(sigma_surf)
@@ -1858,9 +1915,21 @@ def run_zero_d(
         )
     supply_feedback_cfg = getattr(supply_spec, "feedback", None)
     supply_feedback_enabled = bool(getattr(supply_feedback_cfg, "enabled", False)) if supply_feedback_cfg else False
+    supply_feedback_tau_field = _resolve_feedback_tau_field(
+        getattr(supply_feedback_cfg, "tau_field", "tau_los") if supply_feedback_cfg else "tau_los"
+    )
+    use_tau_los_for_feedback = supply_feedback_tau_field == "tau_los"
     supply_feedback_target = getattr(supply_feedback_cfg, "target_tau", None) if supply_feedback_cfg else None
     supply_feedback_gain = getattr(supply_feedback_cfg, "gain", None) if supply_feedback_cfg else None
     supply_feedback_response_yr = getattr(supply_feedback_cfg, "response_time_years", None) if supply_feedback_cfg else None
+    if not supply_feedback_enabled and supply_feedback_cfg is not None:
+        fields_set = getattr(supply_feedback_cfg, "__fields_set__", set())
+        non_default_fields = {field for field in fields_set if field != "enabled"}
+        if non_default_fields:
+            logger.warning(
+                "supply.feedback.* provided (%s) but feedback.enabled is false; feedback loop will be inactive",
+                ", ".join(sorted(non_default_fields)),
+            )
     supply_temperature_cfg = getattr(supply_spec, "temperature", None)
     supply_temperature_mode = getattr(supply_temperature_cfg, "mode", None) if supply_temperature_cfg else None
     supply_temperature_enabled = bool(getattr(supply_temperature_cfg, "enabled", False)) if supply_temperature_cfg else False
@@ -1901,6 +1970,7 @@ def run_zero_d(
         supply_effective_rate = None
     supply_table_path = getattr(getattr(supply_spec, "table", None), "path", None)
     supply_state = supply.init_runtime_state(supply_spec, area, seconds_per_year=SECONDS_PER_YEAR)
+    supply_state.feedback_tau_field = supply_feedback_tau_field
     supply_reservoir_enabled = bool(getattr(supply_state, "reservoir_enabled", supply_reservoir_enabled))
     _log_stage("supply_ready", extra={"supply_mode": supply_mode_value, "epsilon_mix": supply_epsilon_mix})
 
@@ -2672,11 +2742,7 @@ def run_zero_d(
                     tau_for_coll = None
                     if collisions_active_step and cfg.surface.use_tcoll and tau_vert > TAU_MIN:
                         tau_for_coll = tau_vert
-                    tau_for_feedback_val = (
-                        tau_eval_los
-                        if supply_feedback_cfg and getattr(supply_feedback_cfg, "tau_field", "tau_vertical") == "tau_los"
-                        else tau_vert
-                    )
+                    tau_for_feedback_val = tau_eval_los if use_tau_los_for_feedback else tau_vert
                     allow_supply = allow_supply_step
                     supply_res = supply.evaluate_supply(
                         time_sub,
@@ -2811,11 +2877,7 @@ def run_zero_d(
                 tau_los_last = tau_eval_los
                 enable_blowout_sub = enable_blowout_step and collisions_active_step
                 t_sink_current = t_sink_step_effective if sink_timescale_active else None
-                tau_for_feedback_val = (
-                    tau_eval_los
-                    if supply_feedback_cfg and getattr(supply_feedback_cfg, "tau_field", "tau_vertical") == "tau_los"
-                    else tau_vert
-                )
+                tau_for_feedback_val = tau_eval_los if use_tau_los_for_feedback else tau_vert
                 allow_supply = allow_supply_step
                 supply_res = supply.evaluate_supply(
                     time_start,
@@ -4668,7 +4730,7 @@ def run_zero_d(
         "feedback_response_time_years": supply_feedback_response_yr,
         "feedback_min_scale": getattr(supply_feedback_cfg, "min_scale", None) if supply_feedback_cfg else None,
         "feedback_max_scale": getattr(supply_feedback_cfg, "max_scale", None) if supply_feedback_cfg else None,
-        "feedback_tau_field": getattr(supply_feedback_cfg, "tau_field", None) if supply_feedback_cfg else None,
+        "feedback_tau_field": supply_feedback_tau_field if supply_feedback_cfg else None,
         "feedback_initial_scale": getattr(supply_feedback_cfg, "initial_scale", None) if supply_feedback_cfg else None,
         "temperature_enabled": supply_temperature_enabled,
         "temperature_mode": supply_temperature_mode,

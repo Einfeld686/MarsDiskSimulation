@@ -67,7 +67,7 @@ SUBSTEP_FAST_BLOWOUT="${SUBSTEP_FAST_BLOWOUT:-0}"
 SUBSTEP_MAX_RATIO="${SUBSTEP_MAX_RATIO:-}"
 
 # Cooling stop condition (dynamic horizon based on Mars cooling time)
-COOL_TO_K="${COOL_TO_K:-}"                     # stop when Mars T_M reaches this [K]; empty uses fixed horizon
+COOL_TO_K="${COOL_TO_K:-2000}"                 # stop when Mars T_M reaches this [K]; default=2000 K
 T_END_YEARS="${T_END_YEARS:-2.0}"              # fixed integration horizon when COOL_TO_K is unset [yr]
 COOL_MARGIN_YEARS="${COOL_MARGIN_YEARS:-0}"    # padding after reaching COOL_TO_K
 COOL_SEARCH_YEARS="${COOL_SEARCH_YEARS:-}"     # optional search cap (years)
@@ -103,11 +103,11 @@ SUPPLY_RESERVOIR_M="${SUPPLY_RESERVOIR_M:-}"                 # Mars masses; empt
 SUPPLY_RESERVOIR_MODE="${SUPPLY_RESERVOIR_MODE:-hard_stop}"  # hard_stop|taper
 SUPPLY_RESERVOIR_TAPER="${SUPPLY_RESERVOIR_TAPER:-0.05}"     # used when taper
 
-SUPPLY_FEEDBACK_ENABLED="${SUPPLY_FEEDBACK_ENABLED:-0}"
-SUPPLY_FEEDBACK_TARGET="${SUPPLY_FEEDBACK_TARGET:-1.0}"
-SUPPLY_FEEDBACK_GAIN="${SUPPLY_FEEDBACK_GAIN:-1.0}"
-SUPPLY_FEEDBACK_RESPONSE_YR="${SUPPLY_FEEDBACK_RESPONSE_YR:-0.5}"
-SUPPLY_FEEDBACK_MIN_SCALE="${SUPPLY_FEEDBACK_MIN_SCALE:-0.0}"
+SUPPLY_FEEDBACK_ENABLED="${SUPPLY_FEEDBACK_ENABLED:-1}"
+SUPPLY_FEEDBACK_TARGET="${SUPPLY_FEEDBACK_TARGET:-0.9}"
+SUPPLY_FEEDBACK_GAIN="${SUPPLY_FEEDBACK_GAIN:-1.2}"
+SUPPLY_FEEDBACK_RESPONSE_YR="${SUPPLY_FEEDBACK_RESPONSE_YR:-0.4}"
+SUPPLY_FEEDBACK_MIN_SCALE="${SUPPLY_FEEDBACK_MIN_SCALE:-1.0e-6}"
 SUPPLY_FEEDBACK_MAX_SCALE="${SUPPLY_FEEDBACK_MAX_SCALE:-10.0}"
 SUPPLY_FEEDBACK_TAU_FIELD="${SUPPLY_FEEDBACK_TAU_FIELD:-tau_los}" # tau_vertical|tau_los
 SUPPLY_FEEDBACK_INITIAL="${SUPPLY_FEEDBACK_INITIAL:-1.0}"
@@ -335,6 +335,7 @@ PY
         --override "init_tau1.scale_to_tau1=${INIT_SCALE_TO_TAU1}"
         --override "init_tau1.tau_field=${INIT_TAU1_FIELD}"
         --override "init_tau1.target_tau=${INIT_TAU1_TARGET}"
+        --override "inner_disk_mass=null"
       )
       if [[ -n "${COOL_TO_K}" ]]; then
         cmd+=(--override "numerics.t_end_years=null")
@@ -477,6 +478,10 @@ axes[0].plot(df["time_days"], df["M_sink_dot"], label="M_sink_dot (sinks)", lw=1
 axes[0].set_ylabel("M_Mars / s")
 axes[0].legend(loc="upper right")
 axes[0].set_title("Mass loss rates")
+# Dynamic y-axis with log scale for small values
+max_rate = max(df["M_out_dot"].abs().max(), df["M_sink_dot"].abs().max(), 1e-30)
+if max_rate > 0:
+    axes[0].set_yscale("symlog", linthresh=max_rate * 1e-3)
 
 axes[1].plot(df["time_days"], df["M_loss_cum"], label="M_loss_cum (total)", lw=1.2)
 axes[1].plot(df["time_days"], df["mass_lost_by_blowout"], label="mass_lost_by_blowout", lw=1.0)
@@ -484,6 +489,10 @@ axes[1].plot(df["time_days"], df["mass_lost_by_sinks"], label="mass_lost_by_sink
 axes[1].set_ylabel("M_Mars")
 axes[1].legend(loc="upper left")
 axes[1].set_title("Cumulative losses")
+# Dynamic y-axis
+max_loss = max(df["M_loss_cum"].abs().max(), df["mass_lost_by_blowout"].abs().max(), 1e-30)
+if max_loss > 0:
+    axes[1].set_yscale("symlog", linthresh=max_loss * 1e-3)
 
 axes[2].plot(df["time_days"], df["t_coll_years"], label="t_coll (yr)", lw=1.0)
 axes[2].plot(df["time_days"], df["t_blow_hours"], label="t_blow (hr)", lw=1.0, alpha=0.8)
@@ -531,6 +540,9 @@ ax2[0].plot(
 ax2[0].set_ylabel("kg m^-2 s^-1")
 ax2[0].legend(loc="upper right")
 ax2[0].set_title("Supply rates (nominal → scaled → applied)")
+# Dynamic log scale for supply rates
+max_supply = max(df["supply_rate_nominal"].abs().max(), df["supply_rate_applied"].abs().max(), 1e-30)
+ax2[0].set_yscale("symlog", linthresh=max_supply * 1e-3)
 
 ax2[1].plot(df["time_days"], df["prod_rate_diverted_to_deep"], label="diverted→deep", color="tab:brown", alpha=0.8)
 ax2[1].plot(df["time_days"], df["deep_to_surf_flux"], label="deep→surf flux", color="tab:olive", alpha=0.9)
@@ -546,6 +558,11 @@ ax2[2].plot(df["time_days"], df["headroom"], label="headroom (applied)", color="
 ax2[2].set_ylabel("kg m^-2")
 ax2[2].legend(loc="upper right")
 ax2[2].set_title("Surface density vs tau=1 cap")
+# Dynamic y-axis with padding
+max_sigma = max(df["Sigma_surf"].max(), df["Sigma_tau1"].max()) if not df.empty else 1
+min_sigma = min(df["Sigma_surf"].min(), 0) if not df.empty else 0
+padding = (max_sigma - min_sigma) * 0.1 if max_sigma > min_sigma else max_sigma * 0.1
+ax2[2].set_ylim(min_sigma - padding, max_sigma + padding)
 
 ax2[3].plot(df["time_days"], df["outflux_surface"], label="outflux_surface (M_Mars/s)", color="tab:red", alpha=0.9)
 ax2[3].plot(df["time_days"], df["tau_vertical"], label="tau_vertical", color="tab:purple", alpha=0.7)

@@ -85,3 +85,75 @@ def test_reservoir_depletes_and_records_metadata(tmp_path: Path) -> None:
     assert supply_cfg["reservoir_remaining_Mmars_final"] == pytest.approx(0.0, abs=1e-18)
     assert supply_cfg["reservoir_depletion_time_s"] is not None
     assert supply_cfg["reservoir_mass_used_Mmars"] == pytest.approx(reservoir_mass, rel=0.2)
+
+
+def test_supply_feedback_tau_los_updates_scale(tmp_path: Path) -> None:
+    """tau_los feedback produces finite errors and scales the supply multiplier."""
+
+    outdir = tmp_path / "out_feedback_tau_los"
+    cfg = run.load_config(
+        Path("configs/sweep_temp_supply/temp_supply_T4000_eps1.yml"),
+        overrides=[
+            f"io.outdir={outdir}",
+            "numerics.t_end_years=1e-5",
+            "numerics.dt_init=10",
+            "shielding.los_geometry.h_over_r=0.1",
+            "shielding.los_geometry.path_multiplier=1.0",
+            "init_tau1.enabled=true",
+            "init_tau1.scale_to_tau1=true",
+            "init_tau1.tau_field=los",
+            "init_tau1.target_tau=2.0",
+            "supply.feedback.enabled=true",
+            "supply.feedback.target_tau=1.0",
+            "supply.feedback.gain=1.0",
+            "supply.feedback.response_time_years=1e-6",
+            "supply.feedback.min_scale=0.1",
+            "supply.feedback.max_scale=5.0",
+            "supply.feedback.tau_field=tau_los",
+        ],
+    )
+    run.run_zero_d(cfg)
+
+    series_path = outdir / "series" / "run.parquet"
+    assert series_path.exists()
+    df = pd.read_parquet(
+        series_path,
+        columns=[
+            "supply_feedback_error",
+            "supply_feedback_scale",
+            "tau_los_mars",
+            "tau_vertical",
+        ],
+    )
+    finite_err = df["supply_feedback_error"].dropna()
+    assert not finite_err.empty
+    first_idx = finite_err.index[0]
+    tau_los_val = df.loc[first_idx, "tau_los_mars"]
+    assert tau_los_val != pytest.approx(df.loc[first_idx, "tau_vertical"])
+    expected_err = (1.0 - tau_los_val) / 1.0
+    assert finite_err.iloc[0] == pytest.approx(expected_err)
+    scales = df["supply_feedback_scale"].dropna()
+    assert (scales - 1.0).abs().max() > 1e-6
+
+
+def test_run_config_written_before_runtime_failure(monkeypatch, tmp_path: Path) -> None:
+    """Even when the run aborts early, the run_config snapshot is emitted."""
+
+    outdir = tmp_path / "out_failure_config"
+    cfg = run.load_config(
+        Path("configs/sweep_temp_supply/temp_supply_T4000_eps1.yml"),
+        overrides=[
+            f"io.outdir={outdir}",
+            "numerics.t_end_years=1e-6",
+            "numerics.dt_init=1",
+        ],
+    )
+
+    def _boom(*args: object, **kwargs: object) -> None:
+        raise RuntimeError("forced failure for test")
+
+    monkeypatch.setattr(run.radiation, "load_qpr_table", _boom)
+    with pytest.raises(RuntimeError):
+        run.run_zero_d(cfg)
+
+    assert (outdir / "run_config.json").exists()
