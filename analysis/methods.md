@@ -6,6 +6,121 @@
 
 ---
 
+## シミュレーション全体像
+
+以下の図は、シミュレーションの主要コンポーネントと物理過程の関係を示します。
+
+```mermaid
+flowchart TB
+    subgraph INPUT["入力"]
+        CONFIG["YAML 設定ファイル"]
+        TABLES["テーブルデータ<br/>Qpr, Φ, 温度"]
+    end
+
+    subgraph INIT["初期化"]
+        PSD0["初期 PSD 生成"]
+        TEMP0["火星温度 T_M"]
+        TAU1["τ=1 スケーリング"]
+    end
+
+    subgraph LOOP["時間発展ループ"]
+        direction TB
+        DRIVER["温度ドライバ更新"]
+        RAD["放射圧評価<br/>β, a_blow"]
+        SUPPLY["外部供給<br/>フィードバック制御"]
+        SMOL["Smoluchowski 衝突積分<br/>IMEX-BDF(1)"]
+        SINK["シンク評価<br/>昇華, ブローアウト"]
+        SHIELD["遮蔽 Φ 適用<br/>τ=1 クリップ"]
+        CHECK["質量収支検査"]
+    end
+
+    subgraph OUTPUT["出力"]
+        SERIES["series/run.parquet"]
+        SUMMARY["summary.json"]
+        BUDGET["checks/mass_budget.csv"]
+        CKPT["checkpoint/"]
+    end
+
+    CONFIG --> INIT
+    TABLES --> INIT
+    INIT --> LOOP
+    DRIVER --> RAD --> SUPPLY --> SMOL --> SINK --> SHIELD --> CHECK
+    CHECK -->|"t < t_end"| DRIVER
+    CHECK -->|"t ≥ t_end or T_M ≤ T_stop"| OUTPUT
+```
+
+---
+
+## メインループ詳細フロー
+
+各タイムステップで実行される処理の詳細フローです。
+
+```mermaid
+flowchart LR
+    subgraph STEP["1ステップの処理"]
+        direction TB
+        
+        S1["1. 温度ドライバ更新<br/>T_M(t) → 冷却モデル"]
+        S2["2. 放射圧計算<br/>⟨Q_pr⟩ → β → a_blow"]
+        S3["3. 供給率決定<br/>フィードバック × 温度スケール"]
+        S4["4. Headroom Gate<br/>τ=1 超過抑制"]
+        S5["5. 深層ミキシング<br/>deep → surface 転送"]
+        S6["6. Smoluchowski 積分<br/>衝突 + 供給 + 損失"]
+        S7["7. シンク適用<br/>昇華 ds/dt, ブローアウト"]
+        S8["8. 遮蔽クリップ<br/>Σ_surf ≤ Σ_τ=1"]
+        S9["9. 質量収支検査<br/>|error| ≤ 0.5%"]
+        S10["10. 診断出力<br/>parquet 書き込み"]
+        
+        S1 --> S2 --> S3 --> S4 --> S5 --> S6 --> S7 --> S8 --> S9 --> S10
+    end
+```
+
+---
+
+## 物理過程の相互作用
+
+```mermaid
+graph LR
+    subgraph SURFACE["表層 (Surface)"]
+        PSD["粒径分布 n(s)"]
+        SIGMA["面密度 Σ_surf"]
+    end
+    
+    subgraph RADIATION["放射"]
+        TM["火星温度 T_M"]
+        BETA["軽さ指標 β"]
+        BLOW["ブローアウト a_blow"]
+    end
+    
+    subgraph COLLISIONS["衝突"]
+        KERNEL["衝突カーネル C_ij"]
+        QSTAR["破壊閾値 Q_D*"]
+        FRAG["破片分布"]
+    end
+    
+    subgraph SINKS["損失"]
+        BLOWOUT["ブローアウト流出"]
+        SUBL["昇華 ds/dt"]
+    end
+    
+    subgraph SUPPLY_BOX["供給"]
+        EXT["外部供給率"]
+        DEEP["深層リザーバ"]
+        FB["τフィードバック"]
+    end
+    
+    TM --> BETA --> BLOW
+    BLOW --> PSD
+    PSD --> KERNEL --> FRAG --> PSD
+    PSD --> SIGMA
+    SIGMA -->|"τ"| FB --> EXT --> DEEP --> SIGMA
+    PSD --> BLOWOUT
+    TM --> SUBL --> PSD
+    QSTAR --> KERNEL
+```
+
+---
+
 ## 関連ドキュメント
 
 | ドキュメント | 役割 | 参照時のユースケース |
