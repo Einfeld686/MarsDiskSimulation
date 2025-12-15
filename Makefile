@@ -31,7 +31,9 @@ clean:
 
 analysis-sync:
 	python -m analysis.tools.render_assumptions
+	python -m analysis.tools.make_run_sections --write
 	python -m tools.doc_sync_agent --all --write
+
 
 analysis-sync-commit:
 	python -m analysis.tools.render_assumptions

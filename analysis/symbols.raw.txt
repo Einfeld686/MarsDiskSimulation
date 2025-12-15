@@ -148,6 +148,16 @@ analysis/tools/make_coverage.py:365:def build_coverage_json(function_rate: Tuple
 analysis/tools/make_coverage.py:397:def write_text(path: Path, content: str) -> None
 analysis/tools/make_coverage.py:402:def write_json(path: Path, payload: dict) -> None
 analysis/tools/make_coverage.py:407:def main() -> int
+analysis/tools/make_run_sections.py:33:class SymbolInfo
+analysis/tools/make_run_sections.py:41:def load_inventory() -> Dict[str, List[SymbolInfo]]
+analysis/tools/make_run_sections.py:64:def get_run_py_symbols(inventory: Dict[str, List[SymbolInfo]]) -> List[SymbolInfo]
+analysis/tools/make_run_sections.py:70:def categorize_symbol(sym: SymbolInfo) -> str
+analysis/tools/make_run_sections.py:82:def build_sections_table(symbols: List[SymbolInfo]) -> str
+analysis/tools/make_run_sections.py:158:def build_exploration_guide(symbols: List[SymbolInfo]) -> str
+analysis/tools/make_run_sections.py:185:def build_full_document(symbols: List[SymbolInfo]) -> str
+analysis/tools/make_run_sections.py:222:def inject_autogen_block(original: str, block: str) -> str
+analysis/tools/make_run_sections.py:236:def parse_args(argv: Optional[Sequence[str]]) -> argparse.Namespace
+analysis/tools/make_run_sections.py:248:def main(argv: Optional[Sequence[str]]=None) -> int
 analysis/tools/make_sinks_callgraph.py:22:class SymbolKey
 analysis/tools/make_sinks_callgraph.py:27:def load_inventory() -> Dict[SymbolKey, dict]
 analysis/tools/make_sinks_callgraph.py:43:def ensure_symbols_present(inv: Dict[SymbolKey, dict], symbols: Iterable[SymbolKey]) -> None
@@ -268,38 +278,38 @@ marsdisk/ops/assumption_trace.py:264:def write_jsonl(records: Iterable[Assumptio
 marsdisk/ops/assumption_trace.py:273:def write_markdown(records: Iterable[AssumptionRecord], path: Path) -> None
 marsdisk/ops/assumption_trace.py:297:def _parse_args(argv: Optional[list[str]]=None) -> argparse.Namespace
 marsdisk/ops/assumption_trace.py:323:def main(argv: Optional[list[str]]=None) -> int
-marsdisk/ops/doc_sync_agent.py:104:class SymbolInfo
-marsdisk/ops/doc_sync_agent.py:118:class FileChange
-marsdisk/ops/doc_sync_agent.py:149:class InventoryRecord
-marsdisk/ops/doc_sync_agent.py:185:class DocSyncAgent
-marsdisk/ops/doc_sync_agent.py:683:def _legacy_main(argv: Optional[Sequence[str]]=None) -> int
-marsdisk/ops/doc_sync_agent.py:752:def _collect_inventory_records(root: Path) -> List[InventoryRecord]
-marsdisk/ops/doc_sync_agent.py:792:def _resolve_cli_path(value: str) -> Path
-marsdisk/ops/doc_sync_agent.py:799:def _rel_to_repo(path: Path) -> str
-marsdisk/ops/doc_sync_agent.py:806:def _cmd_scan(args: argparse.Namespace) -> int
-marsdisk/ops/doc_sync_agent.py:822:def _collect_doc_references(doc_paths: Sequence[Path]) -> Dict[str, Any]
-marsdisk/ops/doc_sync_agent.py:948:def _cmd_refs(args: argparse.Namespace) -> int
-marsdisk/ops/doc_sync_agent.py:971:def _load_inventory_records(path: Path) -> List[InventoryRecord]
-marsdisk/ops/doc_sync_agent.py:1009:def _match_symbol_by_span(symbols: Sequence[InventoryRecord], start: int, end: int) -> Optional[InventoryRecord]
-marsdisk/ops/doc_sync_agent.py:1021:def _compute_coverage(inventory: Sequence[InventoryRecord], docs_payload: Dict[str, Any]) -> Dict[str, Any]
-marsdisk/ops/doc_sync_agent.py:1168:def _parse_gap_identifier(identifier: str) -> Optional[Tuple[str, str]]
-marsdisk/ops/doc_sync_agent.py:1180:def _collect_unreferenced_from_coverage(coverage_data: Dict[str, Any]) -> List[Tuple[str, str]]
-marsdisk/ops/doc_sync_agent.py:1205:def _load_suggestions_index(path: Path) -> Dict[Tuple[str, str], Dict[str, Any]]
-marsdisk/ops/doc_sync_agent.py:1228:def _format_code_anchor(record: InventoryRecord) -> str
-marsdisk/ops/doc_sync_agent.py:1235:def _strip_line_anchor_annotations(text: str) -> str
-marsdisk/ops/doc_sync_agent.py:1239:def ensure_equation_ids(equations_path: Path) -> None
-marsdisk/ops/doc_sync_agent.py:1299:def _render_coverage_markdown(data: Dict[str, Any]) -> str
-marsdisk/ops/doc_sync_agent.py:1356:def _is_stub_already_present(text: str, record: InventoryRecord) -> bool
-marsdisk/ops/doc_sync_agent.py:1361:def _render_stub_block(record: InventoryRecord, doc_kind: str) -> str
-marsdisk/ops/doc_sync_agent.py:1393:def _append_to_section(text: str, heading_pattern: re.Pattern[str], stub: str) -> str
-marsdisk/ops/doc_sync_agent.py:1408:def _append_to_end(text: str, stub: str) -> str
-marsdisk/ops/doc_sync_agent.py:1414:def _determine_autostub_target(record: InventoryRecord, suggestions: Dict[Tuple[str, str], Dict[str, Any]], overview_path: Path, equations_path: Path, run_recipes_path: Path) -> Tuple[Path, Optional[re.Pattern[str]], str]
-marsdisk/ops/doc_sync_agent.py:1461:def _cmd_coverage(args: argparse.Namespace) -> int
-marsdisk/ops/doc_sync_agent.py:1494:def _cmd_autostub(args: argparse.Namespace) -> int
-marsdisk/ops/doc_sync_agent.py:1570:def _cmd_update(args: argparse.Namespace) -> int
-marsdisk/ops/doc_sync_agent.py:1701:def _run_new_cli(argv: Sequence[str]) -> int
-marsdisk/ops/doc_sync_agent.py:1915:def main(argv: Optional[Sequence[str]]=None) -> int
-marsdisk/ops/doc_sync_agent.py:1923:def _git_commit(changes: Iterable[FileChange]) -> None
+marsdisk/ops/doc_sync_agent.py:120:class SymbolInfo
+marsdisk/ops/doc_sync_agent.py:134:class FileChange
+marsdisk/ops/doc_sync_agent.py:165:class InventoryRecord
+marsdisk/ops/doc_sync_agent.py:201:class DocSyncAgent
+marsdisk/ops/doc_sync_agent.py:757:def _legacy_main(argv: Optional[Sequence[str]]=None) -> int
+marsdisk/ops/doc_sync_agent.py:831:def _collect_inventory_records(root: Path) -> List[InventoryRecord]
+marsdisk/ops/doc_sync_agent.py:871:def _resolve_cli_path(value: str) -> Path
+marsdisk/ops/doc_sync_agent.py:878:def _rel_to_repo(path: Path) -> str
+marsdisk/ops/doc_sync_agent.py:885:def _cmd_scan(args: argparse.Namespace) -> int
+marsdisk/ops/doc_sync_agent.py:901:def _collect_doc_references(doc_paths: Sequence[Path]) -> Dict[str, Any]
+marsdisk/ops/doc_sync_agent.py:1027:def _cmd_refs(args: argparse.Namespace) -> int
+marsdisk/ops/doc_sync_agent.py:1050:def _load_inventory_records(path: Path) -> List[InventoryRecord]
+marsdisk/ops/doc_sync_agent.py:1088:def _match_symbol_by_span(symbols: Sequence[InventoryRecord], start: int, end: int) -> Optional[InventoryRecord]
+marsdisk/ops/doc_sync_agent.py:1100:def _compute_coverage(inventory: Sequence[InventoryRecord], docs_payload: Dict[str, Any]) -> Dict[str, Any]
+marsdisk/ops/doc_sync_agent.py:1247:def _parse_gap_identifier(identifier: str) -> Optional[Tuple[str, str]]
+marsdisk/ops/doc_sync_agent.py:1259:def _collect_unreferenced_from_coverage(coverage_data: Dict[str, Any]) -> List[Tuple[str, str]]
+marsdisk/ops/doc_sync_agent.py:1284:def _load_suggestions_index(path: Path) -> Dict[Tuple[str, str], Dict[str, Any]]
+marsdisk/ops/doc_sync_agent.py:1307:def _format_code_anchor(record: InventoryRecord) -> str
+marsdisk/ops/doc_sync_agent.py:1314:def _strip_line_anchor_annotations(text: str) -> str
+marsdisk/ops/doc_sync_agent.py:1318:def ensure_equation_ids(equations_path: Path) -> None
+marsdisk/ops/doc_sync_agent.py:1378:def _render_coverage_markdown(data: Dict[str, Any]) -> str
+marsdisk/ops/doc_sync_agent.py:1435:def _is_stub_already_present(text: str, record: InventoryRecord) -> bool
+marsdisk/ops/doc_sync_agent.py:1440:def _render_stub_block(record: InventoryRecord, doc_kind: str) -> str
+marsdisk/ops/doc_sync_agent.py:1472:def _append_to_section(text: str, heading_pattern: re.Pattern[str], stub: str) -> str
+marsdisk/ops/doc_sync_agent.py:1487:def _append_to_end(text: str, stub: str) -> str
+marsdisk/ops/doc_sync_agent.py:1493:def _determine_autostub_target(record: InventoryRecord, suggestions: Dict[Tuple[str, str], Dict[str, Any]], overview_path: Path, equations_path: Path, run_recipes_path: Path) -> Tuple[Path, Optional[re.Pattern[str]], str]
+marsdisk/ops/doc_sync_agent.py:1540:def _cmd_coverage(args: argparse.Namespace) -> int
+marsdisk/ops/doc_sync_agent.py:1573:def _cmd_autostub(args: argparse.Namespace) -> int
+marsdisk/ops/doc_sync_agent.py:1649:def _cmd_update(args: argparse.Namespace) -> int
+marsdisk/ops/doc_sync_agent.py:1780:def _run_new_cli(argv: Sequence[str]) -> int
+marsdisk/ops/doc_sync_agent.py:1994:def main(argv: Optional[Sequence[str]]=None) -> int
+marsdisk/ops/doc_sync_agent.py:2002:def _git_commit(changes: Iterable[FileChange]) -> None
 marsdisk/ops/make_qpr_table.py:22:def _rayleigh_geometric_qpr(size_parameter: np.ndarray) -> np.ndarray
 marsdisk/ops/make_qpr_table.py:28:def _planck_lambda(wavelength_m: np.ndarray, temperature: float) -> np.ndarray
 marsdisk/ops/make_qpr_table.py:40:def compute_planck_mean_qpr(s_values: Sequence[float], temperatures: Sequence[float], wavelengths_um: Iterable[float] | None=None) -> np.ndarray

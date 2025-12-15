@@ -8,30 +8,50 @@ import re
 import subprocess
 import sys
 from collections import defaultdict
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional, Sequence, Tuple
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
+# ---------------------------------------------------------------------------
+# Single source for analysis markdown documents (DRY principle)
+# ---------------------------------------------------------------------------
+_ANALYSIS_MD_DOCS: list[str] = [
+    # Core documentation
+    "equations.md",
+    "overview.md",
+    "slides_outline.md",
+    "run_catalog.md",
+    "figures_catalog.md",
+    "glossary.md",
+    "literature_map.md",
+    "run-recipes.md",
+    "sinks_callgraph.md",
+    "AI_USAGE.md",
+    "CHANGELOG.md",
+    # Additional docs with code references requiring line number sync
+    "physics_flow.md",
+    "introduction.md",
+    "methods.md",
+    "bibliography.md",
+    "assumption_trace.md",
+    "config_guide.md",
+    "provenance_report.md",
+]
+
+# Non-markdown files to sync
+_ANALYSIS_DATA_FILES: list[str] = [
+    "inventory.json",
+    "symbols.raw.txt",
+    "symbols.rg.txt",
+]
+
 # Default markdown docs to keep in sync (slide-facing files intentionally carry no equations,
 # only anchors into analysis/equations.md and catalog IDs).
-DEFAULT_DOC_PATHS = [
-    "analysis/equations.md",
-    "analysis/overview.md",
-    "analysis/slides_outline.md",
-    "analysis/run_catalog.md",
-    "analysis/figures_catalog.md",
-    "analysis/glossary.md",
-    "analysis/literature_map.md",
-    "analysis/run-recipes.md",
-    "analysis/sinks_callgraph.md",
-    "analysis/AI_USAGE.md",
-    "analysis/CHANGELOG.md",
-    "analysis/inventory.json",
-    "analysis/symbols.raw.txt",
-    "analysis/symbols.rg.txt",
-]
+DEFAULT_DOC_PATHS: list[str] = [
+    f"analysis/{name}" for name in _ANALYSIS_MD_DOCS
+] + [f"analysis/{name}" for name in _ANALYSIS_DATA_FILES]
 
 RG_PATTERN = r"beta_at_smin|beta_threshold|s_min"
 SUMMARY_DEFAULT_PATHS = [
@@ -42,6 +62,11 @@ SUMMARY_DEFAULT_PATHS = [
 # Pattern matching inline references such as `marsdisk/run.py:123–145`
 REF_PATTERN = re.compile(
     r"((?:marsdisk|tests|configs|scripts)/[A-Za-z0-9_/\.-]+\.(?:py|yml|yaml)):(\d+)(?:([–-])(\d+))?"
+)
+
+# Pattern for hash-anchor with line numbers: `marsdisk/path.py#symbol [L123–L456]`
+HASH_ANCHOR_LINE_PATTERN = re.compile(
+    r"\[((?:marsdisk|tests|configs|scripts)/[A-Za-z0-9_/\.-]+\.(?:py|yml|yaml))#([A-Za-z0-9_]+)\s+\[L(\d+)(?:[–—-]L?(\d+))?\]\]"
 )
 
 SKIP_DIR_NAMES = {
@@ -81,19 +106,10 @@ SUGGESTIONS_DEFAULT_PATH = REPO_ROOT / "analysis" / "suggestions_index.json"
 EQUATIONS_PATH_DEFAULT = REPO_ROOT / "analysis" / "equations.md"
 OVERVIEW_PATH_DEFAULT = REPO_ROOT / "analysis" / "overview.md"
 RUN_RECIPES_PATH_DEFAULT = REPO_ROOT / "analysis" / "run-recipes.md"
-DEFAULT_DOCS_FOR_REFS = [
-    EQUATIONS_PATH_DEFAULT,
-    OVERVIEW_PATH_DEFAULT,
-    REPO_ROOT / "analysis" / "slides_outline.md",
-    REPO_ROOT / "analysis" / "run_catalog.md",
-    REPO_ROOT / "analysis" / "figures_catalog.md",
-    REPO_ROOT / "analysis" / "glossary.md",
-    REPO_ROOT / "analysis" / "literature_map.md",
-    RUN_RECIPES_PATH_DEFAULT,
-    REPO_ROOT / "analysis" / "sinks_callgraph.md",
-    REPO_ROOT / "analysis" / "AI_USAGE.md",
-    REPO_ROOT / "analysis" / "CHANGELOG.md",
-    REPO_ROOT / "analysis" / "AGENT.md",
+
+# Derive from _ANALYSIS_MD_DOCS to maintain single source of truth
+DEFAULT_DOCS_FOR_REFS: list[Path] = [
+    REPO_ROOT / "analysis" / name for name in _ANALYSIS_MD_DOCS
 ]
 
 EQUATION_HEADING_PATTERN = re.compile(r"^### (?:\((E\.\d{3})\)\s*)?(.*)$")
@@ -196,10 +212,14 @@ class DocSyncAgent:
         self.commit = commit
         self.requested_paths = set(self._normalise_paths(doc_paths) or DEFAULT_DOC_PATHS)
         self.doc_paths = [path for path in self.requested_paths if path.endswith(".md")]
-        self.warnings: List[str] = []
+        self.warnings: list[str] = []
         self.existing_inventory = self._load_existing_inventory()
-        self.symbols_by_file: Dict[str, List[SymbolInfo]] = {}
+        self.symbols_by_file: dict[str, list[SymbolInfo]] = {}
         self.summary_data = self._load_summary()
+        # File line count cache for performance (improvement #5)
+        self._file_line_cache: dict[str, int | None] = {}
+        # Check for missing documents at startup (improvement #3)
+        self._check_doc_existence()
 
     def run(self) -> Tuple[int, List[FileChange]]:
         symbols = self._collect_symbols()
@@ -508,7 +528,7 @@ class DocSyncAgent:
         return doc_changes
 
     def _rewrite_references(self, text: str) -> str:
-        def replace(match: re.Match[str]) -> str:
+        def replace_colon_ref(match: re.Match[str]) -> str:
             path_str = match.group(1)
             start = int(match.group(2))
             dash = match.group(3) or "–"
@@ -523,7 +543,39 @@ class DocSyncAgent:
                 return f"{path_str}:{new_start}{dash}{new_end}"
             return f"{path_str}:{new_start}"
 
-        return REF_PATTERN.sub(replace, text)
+        def replace_hash_anchor(match: re.Match[str]) -> str:
+            """Handle [path#symbol [L123–L456]] format (improvement #2)."""
+            path_str = match.group(1)
+            symbol_name = match.group(2)
+            old_start = int(match.group(3))
+            old_end_str = match.group(4)
+            old_end = int(old_end_str) if old_end_str else old_start
+
+            # Try to find the symbol in the file
+            symbols = self.symbols_by_file.get(path_str)
+            if symbols:
+                matching = [s for s in symbols if s.name == symbol_name]
+                if matching:
+                    sym = matching[0]
+                    new_start = sym.line_no
+                    new_end = sym.end_line or sym.line_no
+                    if new_start == new_end:
+                        return f"[{path_str}#{symbol_name} [L{new_start}]]"
+                    return f"[{path_str}#{symbol_name} [L{new_start}–L{new_end}]]"
+            
+            # Fallback: clamp to file bounds
+            new_start, new_end = self._clamp_to_file(path_str, old_start, old_end)
+            if new_start is None:
+                return match.group(0)
+            if new_start == new_end:
+                return f"[{path_str}#{symbol_name} [L{new_start}]]"
+            return f"[{path_str}#{symbol_name} [L{new_start}–L{new_end}]]"
+
+        # First pass: colon-style references (path:123–456)
+        text = REF_PATTERN.sub(replace_colon_ref, text)
+        # Second pass: hash-anchor with line numbers [path#symbol [L123–L456]]
+        text = HASH_ANCHOR_LINE_PATTERN.sub(replace_hash_anchor, text)
+        return text
 
     def _resolve_reference(
         self,
@@ -570,14 +622,24 @@ class DocSyncAgent:
         approx_start: int,
         approx_end: Optional[int],
     ) -> Tuple[Optional[int], Optional[int]]:
-        file_path = REPO_ROOT / rel_path
-        if not file_path.exists():
-            self.warnings.append(f"Referenced file missing: {rel_path}")
+        # Use cache for file line counts (improvement #5)
+        if rel_path not in self._file_line_cache:
+            file_path = REPO_ROOT / rel_path
+            if not file_path.exists():
+                self.warnings.append(f"Referenced file missing: {rel_path}")
+                self._file_line_cache[rel_path] = None
+            else:
+                try:
+                    self._file_line_cache[rel_path] = len(
+                        file_path.read_text(encoding="utf-8").splitlines()
+                    )
+                except UnicodeDecodeError:
+                    self._file_line_cache[rel_path] = None
+        
+        line_count = self._file_line_cache[rel_path]
+        if line_count is None:
             return None, None
-        try:
-            line_count = len(file_path.read_text(encoding="utf-8").splitlines())
-        except UnicodeDecodeError:
-            return None, None
+        
         start = max(1, min(approx_start, line_count))
         if approx_end is None:
             return start, start
@@ -641,8 +703,20 @@ class DocSyncAgent:
     # --------------------------------------------------------------------- #
     # Helpers
     # --------------------------------------------------------------------- #
-    def _normalise_paths(self, paths: Sequence[str]) -> List[str]:
-        normalised: List[str] = []
+    def _check_doc_existence(self) -> None:
+        """Check for missing documents at startup and log warnings (improvement #3)."""
+        missing: list[str] = []
+        for rel_str in sorted(self.doc_paths):
+            path = REPO_ROOT / rel_str
+            if not path.exists():
+                missing.append(rel_str)
+        if missing:
+            self.warnings.append(
+                f"Documents not found (will be skipped): {', '.join(missing)}"
+            )
+
+    def _normalise_paths(self, paths: Sequence[str]) -> list[str]:
+        normalised: list[str] = []
         for entry in paths:
             if "," in entry:
                 parts = [part.strip() for part in entry.split(",") if part.strip()]
@@ -732,7 +806,12 @@ def _legacy_main(argv: Optional[Sequence[str]] = None) -> int:
             change.write()
         if agent.commit and changes:
             _git_commit(changes)
-        print(f"DocSyncAgent: wrote {len(changes)} files.")
+        # Improvement #8: Show list of modified files
+        if changes:
+            changed_names = [change.path.name for change in changes]
+            print(f"DocSyncAgent: wrote {len(changes)} files: {', '.join(changed_names)}")
+        else:
+            print("DocSyncAgent: no changes detected.")
     else:
         if changes:
             for change in changes:
