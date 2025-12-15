@@ -55,13 +55,20 @@ QSTAR_UNITS="${QSTAR_UNITS:-ba99_cgs}"
 T_LIST=("5000" "4000" "3000")
 MU_LIST=("1.0" "0.5" "0.1")
 PHI_LIST=("20" "37" "60")  # maps to tables/phi_const_0pXX.csv
+T_END_YEARS="${T_END_YEARS:-2.0}"              # fixed integration horizon when COOL_TO_K is unset [yr]
+# 短縮テスト用に T_END_SHORT_YEARS=0.001 を指定すると強制上書き
+if [[ -n "${T_END_SHORT_YEARS:-}" ]]; then
+  T_END_YEARS="${T_END_SHORT_YEARS}"
+  echo "[info] short-run override: T_END_YEARS=${T_END_YEARS} yr"
+fi
 
 # Fast blow-out substeps (surface_ode path). 0=off, 1=on.
 SUBSTEP_FAST_BLOWOUT="${SUBSTEP_FAST_BLOWOUT:-0}"
 SUBSTEP_MAX_RATIO="${SUBSTEP_MAX_RATIO:-}"
 
 # Cooling stop condition (dynamic horizon based on Mars cooling time)
-COOL_TO_K="${COOL_TO_K:-1000}"                 # stop when Mars T_M reaches this [K]; empty to disable
+COOL_TO_K="${COOL_TO_K:-}"                     # stop when Mars T_M reaches this [K]; empty uses fixed horizon
+T_END_YEARS="${T_END_YEARS:-2.0}"              # fixed integration horizon when COOL_TO_K is unset [yr]
 COOL_MARGIN_YEARS="${COOL_MARGIN_YEARS:-0}"    # padding after reaching COOL_TO_K
 COOL_SEARCH_YEARS="${COOL_SEARCH_YEARS:-}"     # optional search cap (years)
 # Cooling driver mode: slab (T^-3 analytic slab) or hyodo (linear cooling)
@@ -70,6 +77,7 @@ COOL_MODE="${COOL_MODE:-slab}"
 # Phase temperature input (Mars surface vs particle equilibrium)
 PHASE_TEMP_INPUT="${PHASE_TEMP_INPUT:-particle}"  # mars_surface|particle
 PHASE_QABS_MEAN="${PHASE_QABS_MEAN:-0.4}"
+PHASE_TAU_FIELD="${PHASE_TAU_FIELD:-los}"         # vertical|los
 
 # Evaluation toggle (0=skip, 1=run evaluate_tau_supply)
 EVAL="${EVAL:-1}"
@@ -101,7 +109,7 @@ SUPPLY_FEEDBACK_GAIN="${SUPPLY_FEEDBACK_GAIN:-1.0}"
 SUPPLY_FEEDBACK_RESPONSE_YR="${SUPPLY_FEEDBACK_RESPONSE_YR:-0.5}"
 SUPPLY_FEEDBACK_MIN_SCALE="${SUPPLY_FEEDBACK_MIN_SCALE:-0.0}"
 SUPPLY_FEEDBACK_MAX_SCALE="${SUPPLY_FEEDBACK_MAX_SCALE:-10.0}"
-SUPPLY_FEEDBACK_TAU_FIELD="${SUPPLY_FEEDBACK_TAU_FIELD:-tau_vertical}" # tau_vertical|tau_los
+SUPPLY_FEEDBACK_TAU_FIELD="${SUPPLY_FEEDBACK_TAU_FIELD:-tau_los}" # tau_vertical|tau_los
 SUPPLY_FEEDBACK_INITIAL="${SUPPLY_FEEDBACK_INITIAL:-1.0}"
 
 SUPPLY_TEMP_ENABLED="${SUPPLY_TEMP_ENABLED:-0}"
@@ -138,11 +146,11 @@ echo "[config] injection: mode=${SUPPLY_INJECTION_MODE} q=${SUPPLY_INJECTION_Q} 
 echo "[config] transport: mode=${SUPPLY_TRANSPORT_MODE} t_mix=${SUPPLY_TRANSPORT_TMIX_ORBITS:-${SUPPLY_DEEP_TMIX_ORBITS:-disabled}} headroom_gate=${SUPPLY_TRANSPORT_HEADROOM} velocity=${SUPPLY_VEL_MODE}"
 echo "[config] const supply before mixing: ${SUPPLY_RATE} kg m^-2 s^-1 (epsilon_mix swept per MU_LIST)"
 echo "[config] fast blowout substep: enabled=${SUBSTEP_FAST_BLOWOUT} substep_max_ratio=${SUBSTEP_MAX_RATIO:-default}"
-echo "[config] phase temperature input: ${PHASE_TEMP_INPUT} (q_abs_mean=${PHASE_QABS_MEAN})"
+echo "[config] phase temperature input: ${PHASE_TEMP_INPUT} (q_abs_mean=${PHASE_QABS_MEAN}, tau_field=${PHASE_TAU_FIELD})"
 if [[ -n "${COOL_TO_K}" ]]; then
   echo "[config] dynamic horizon: stop when Mars T_M <= ${COOL_TO_K} K (margin ${COOL_MARGIN_YEARS} yr, search_cap=${COOL_SEARCH_YEARS:-none})"
 else
-  echo "[config] dynamic horizon disabled (using numerics.t_end_* from config)"
+  echo "[config] fixed horizon: t_end_years=${T_END_YEARS} (temperature stop disabled)"
 fi
 echo "[config] cooling driver mode: ${COOL_MODE} (slab: T^-3, hyodo: linear flux)"
 
@@ -168,8 +176,24 @@ STREAM_MEM_GB="${STREAM_MEM_GB:-10}"
 STREAMING_OVERRIDES+=(--override "io.streaming.memory_limit_gb=${STREAM_MEM_GB}")
 STREAM_STEP_INTERVAL="${STREAM_STEP_INTERVAL:-1000}"
 STREAMING_OVERRIDES+=(--override "io.streaming.step_flush_interval=${STREAM_STEP_INTERVAL}")
-STREAMING_OVERRIDES+=(--override "io.streaming.merge_at_end=false")
-echo "[info] streaming enabled: mem_limit_gb=${STREAM_MEM_GB} step_flush_interval=${STREAM_STEP_INTERVAL} merge_at_end=false"
+STREAMING_OVERRIDES+=(--override "io.streaming.merge_at_end=true")
+echo "[info] streaming enabled: mem_limit_gb=${STREAM_MEM_GB} step_flush_interval=${STREAM_STEP_INTERVAL} merge_at_end=true"
+
+# Checkpoint (segmented run) defaults
+CHECKPOINT_ENABLE="${CHECKPOINT_ENABLE:-1}"
+CHECKPOINT_INTERVAL_YEARS="${CHECKPOINT_INTERVAL_YEARS:-0.083}" # ~30 days
+CHECKPOINT_KEEP="${CHECKPOINT_KEEP:-3}"
+CHECKPOINT_FORMAT="${CHECKPOINT_FORMAT:-pickle}"
+CHECKPOINT_OVERRIDES=()
+if [[ "${CHECKPOINT_ENABLE}" != "0" ]]; then
+  CHECKPOINT_OVERRIDES+=(--override "numerics.checkpoint.enabled=true")
+  CHECKPOINT_OVERRIDES+=(--override "numerics.checkpoint.interval_years=${CHECKPOINT_INTERVAL_YEARS}")
+  CHECKPOINT_OVERRIDES+=(--override "numerics.checkpoint.keep_last_n=${CHECKPOINT_KEEP}")
+  CHECKPOINT_OVERRIDES+=(--override "numerics.checkpoint.format=${CHECKPOINT_FORMAT}")
+  echo "[info] checkpoint enabled: interval_years=${CHECKPOINT_INTERVAL_YEARS} keep_last_n=${CHECKPOINT_KEEP} format=${CHECKPOINT_FORMAT}"
+else
+  CHECKPOINT_OVERRIDES+=(--override "numerics.checkpoint.enabled=false")
+fi
 
 SUPPLY_OVERRIDES=()
 if [[ -n "${SUPPLY_RESERVOIR_M}" ]]; then
@@ -271,11 +295,9 @@ PY
       cmd=(
         python -m marsdisk.run
         --config "${BASE_CONFIG}"
-        --quiet
       )
-      if ((${#PROGRESS_FLAG[@]})); then
-        cmd+=("${PROGRESS_FLAG[@]}")
-      fi
+      # 強制的に progress を有効化しつつ、ログは静かめに
+      cmd+=(--progress --quiet)
         cmd+=(
           --override numerics.dt_init=20
           --override numerics.stop_on_blowout_below_smin=true
@@ -284,6 +306,7 @@ PY
         --override "phase.enabled=true"
         --override "phase.temperature_input=${PHASE_TEMP_INPUT}"
         --override "phase.q_abs_mean=${PHASE_QABS_MEAN}"
+        --override "phase.tau_field=${PHASE_TAU_FIELD}"
         --override "radiation.TM_K=${T}"
           --override "qstar.coeff_units=${QSTAR_UNITS}"
           --override "radiation.qpr_table_path=marsdisk/io/data/qpr_planck_sio2_abbas_calibrated_lowT.csv"
@@ -323,12 +346,20 @@ PY
         if [[ -n "${COOL_SEARCH_YEARS}" ]]; then
           cmd+=(--override "numerics.t_end_temperature_search_years=${COOL_SEARCH_YEARS}")
         fi
+      else
+        cmd+=(--override "numerics.t_end_years=${T_END_YEARS}")
+        cmd+=(--override "numerics.t_end_orbits=null")
+        cmd+=(--override "numerics.t_end_until_temperature_K=null")
+        cmd+=(--override "scope.analysis_years=${T_END_YEARS}")
       fi
       if [[ "${SUBSTEP_FAST_BLOWOUT}" != "0" ]]; then
         cmd+=(--override "io.substep_fast_blowout=true")
         if [[ -n "${SUBSTEP_MAX_RATIO}" ]]; then
           cmd+=(--override "io.substep_max_ratio=${SUBSTEP_MAX_RATIO}")
         fi
+      fi
+      if ((${#CHECKPOINT_OVERRIDES[@]})); then
+        cmd+=("${CHECKPOINT_OVERRIDES[@]}")
       fi
       if ((${#SUPPLY_OVERRIDES[@]})); then
         cmd+=("${SUPPLY_OVERRIDES[@]}")

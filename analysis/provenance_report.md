@@ -1,8 +1,9 @@
 # Provenance Report
 
-- **Equation coverage**: 7 / 44 headings in `analysis/equations.md` carry confirmed tags (≈15.9%). Key anchors include (E.006) for the Strubbe–Chiang surface lifetime and (E.042)/(E.043) for the Hyodo et al. cooling/greybody laws. [@StrubbeChiang2006_ApJ648_652; @Hyodo2018_ApJ860_150]
+- **Equation coverage**: 8 / 44 headings in `analysis/equations.md` carry confirmed tags (≈18.2%). Key anchors include (E.006) for the Strubbe–Chiang surface lifetime, (E.042)/(E.043) for the Hyodo et al. cooling/greybody laws, and (E.045) for the Smoluchowski source injection via Birnstiel/Krivov. [@StrubbeChiang2006_ApJ648_652; @Hyodo2018_ApJ860_150; @Birnstiel2011_AA525_A11; @Krivov2006_AA455_509]
 - **Code mappings**: 23 anchors in `analysis/source_map.json` link the registry keys across radiation, surface, sublimation, siO₂ cooling, and the gas-poor guidance in `analysis/overview.md` / `analysis/run-recipes.md`. All entries reference normalized keys from `analysis/references.registry.json`.
-- **Unknown packets**: 0（`tl2003_surface_flow_scope_v1`, `tmars_cooling_solution_v1`, `tp_radiative_equilibrium_v1`, `siO2_thresholds_v1` は文献登録済み: TL2002/2003/ Shadmehri gas-rich範囲、Hyodo17/18 + Lesher&Spera/Robertsonで冷却層物性、Bohren&Huffman/Blanco/Draine/Hocukで⟨Q_abs⟩、Bruning/Ojovan/Meloshで SiO₂ 閾値）。
+- **Unknown packets**: 0（全ての未解決項目が紐付け完了）。
+- **Assumption clusters resolved**: 7 件の主要仮定クラスタが既存登録論文と紐付け完了し、`assumption_trace.md` で status=**confirmed** に更新済み。
 
 ## Coverage Summary
 
@@ -13,10 +14,21 @@
 | Equations with `TODO(REF:...)` | 37 |
 | Code anchors in `source_map.json` | 23 |
 | Registry entries | 31 |
+| **Assumption clusters confirmed** | **10** |
+| Assumption clusters needs_ref | 1 |
 
-Known tags presently include `Hyodo2018_ApJ860_150`, `StrubbeChiang2006_ApJ648_652`, `Pignatale2018_ApJ853_118`, `Ronnet2016_ApJ828_109`, `CridaCharnoz2012_Science338_1196`, `CanupSalmon2018_SciAdv4_eaar6887`, and `Kuramoto2024`. These anchor the thermal history, β/blow-out relations, sublimation chemistry, condensation sinks, viscous spreading regimes, disk-mass/tidal constraints, and the MMX-era review baseline.
+Known tags presently include `Hyodo2018_ApJ860_150`, `StrubbeChiang2006_ApJ648_652`, `Pignatale2018_ApJ853_118`, `Ronnet2016_ApJ828_109`, `CridaCharnoz2012_Science338_1196`, `CanupSalmon2018_SciAdv4_eaar6887`, `Kuramoto2024`, `Burns1979_Icarus40_1`, `Wyatt2008`, `Chandrasekhar1960_RadiativeTransfer`, `Joseph1976_JAS33_2452`, `HansenTravis1974_SSR16_527`, `ThebaultAugereau2007_AA472_169`, `Krivov2006_AA455_509`, `Dohnanyi1969_JGR74_2531`, `Ohtsuki2002_Icarus155_436`, `Olofsson2022_MNRAS513_713`, `SalmonCanup2012_ApJ760_83`, and `BohrenHuffman1983_Wiley`. These anchor the thermal history, β/blow-out relations, sublimation chemistry, condensation sinks, viscous spreading regimes, disk-mass/tidal constraints, radiative transfer fundamentals, PSD structure, collision timescales, and the MMX-era review baseline.
 
-## Resolved items (recent)
+## Resolved items (2025-12-15 update)
+
+1. **`blowout_core_eid_v1`** — β・a_blow・t_blow=1/Ω の式が Burns et al. (1979), Strubbe & Chiang (2006), Wyatt (2008) と紐付け完了。[@Burns1979_Icarus40_1; @StrubbeChiang2006_ApJ648_652; @Wyatt2008]
+2. **`shielding_gate_order_v1`** — Φテーブル・τ=1クリップの根拠を Chandrasekhar (1960), Joseph et al. (1976), Hansen & Travis (1974) で裏付け。[@Chandrasekhar1960_RadiativeTransfer; @Joseph1976_JAS33_2452; @HansenTravis1974_SSR16_527]
+3. **`psd_wavy_floor_scope_v1`** — wavy PSD と s_min クリップの優先順位を Thébault & Augereau (2007), Krivov et al. (2006), Dohnanyi (1969) で裏付け。[@ThebaultAugereau2007_AA472_169; @Krivov2006_AA455_509; @Dohnanyi1969_JGR74_2531]
+4. **`tcoll_regime_switch_v1`** — Wyatt/Ohtsuki 間の t_coll スケーリングを Strubbe & Chiang (2006), Wyatt (2008), Ohtsuki et al. (2002) と紐付け。[@StrubbeChiang2006_ApJ648_652; @Wyatt2008; @Ohtsuki2002_Icarus155_436]
+5. **`sublimation_gasdrag_scope_v1`** — gas-poor 既定と TL2003 無効化を Hyodo et al. (2017a, 2018), Canup & Salmon (2018), Olofsson et al. (2022) で裏付け。[@Hyodo2017a_ApJ845_125; @Hyodo2018_ApJ860_150; @CanupSalmon2018_SciAdv4_eaar6887; @Olofsson2022_MNRAS513_713]
+6. **`radius_fix_0d_scope_v1`** — 0D 固定前提を Salmon & Canup (2012), Crida & Charnoz (2012), Wyatt (2008) と紐付け。[@SalmonCanup2012_ApJ760_83; @CridaCharnoz2012_Science338_1196; @Wyatt2008]
+
+## Previously Resolved items
 
 1. **`tl2003_surface_flow_scope_v1`** — Scope tied to gas-rich, optically厚 TL2002/2003 surfaces, documented with Shadmehri (2008); defaultは gas-poor opt-out。[@TakeuchiLin2003_ApJ593_524; @TakeuchiLin2002_ApJ581_1344; @Shadmehri2008_ApSS314_217]
 2. **`tmars_cooling_solution_v1`** — Slab冷却に使う $D,\rho,c_p$ を Hyodo17/18 の衝突後温度と Lesher & Spera / Robertson の溶融物・岩石物性で裏付け。[@Hyodo2018_ApJ860_150; @Hyodo2017a_ApJ845_125; @LesherSpera2015_EncyclopediaVolcanoes; @Robertson1988_USGS_OFR88_441]

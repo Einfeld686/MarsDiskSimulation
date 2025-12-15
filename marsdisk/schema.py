@@ -1062,6 +1062,13 @@ class PhaseConfig(BaseModel):
             "'particle' uses the grain equilibrium temperature."
         ),
     )
+    tau_field: Literal["vertical", "los"] = Field(
+        "vertical",
+        description=(
+            "Optical-depth field forwarded to phase evaluation. "
+            "'vertical' uses κΣ, 'los' multiplies by the line-of-sight factor."
+        ),
+    )
     q_abs_mean: float = Field(
         0.4,
         description="Mean absorption efficiency ⟨Q_abs⟩ used for the particle-temperature phase input.",
@@ -1356,6 +1363,46 @@ class Blowout(BaseModel):
     )
 
 
+class Checkpoint(BaseModel):
+    """Checkpointing and restart controls."""
+
+    enabled: bool = Field(
+        False,
+        description="Enable periodic checkpoints of the 0D state.",
+    )
+    interval_years: float = Field(
+        1.0,
+        gt=0.0,
+        description="Checkpoint interval in years.",
+    )
+    path: Optional[Path] = Field(
+        None,
+        description="Directory to store checkpoints (default: <outdir>/checkpoints).",
+    )
+    format: Literal["pickle", "json"] = Field(
+        "pickle",
+        description="Checkpoint serialisation format.",
+    )
+    keep_last_n: int = Field(
+        3,
+        ge=0,
+        description="Keep at most N recent checkpoints (0 disables pruning).",
+    )
+
+
+class Resume(BaseModel):
+    """Resume-from-checkpoint configuration."""
+
+    enabled: bool = Field(
+        False,
+        description="Resume a run from an existing checkpoint.",
+    )
+    from_path: Optional[Path] = Field(
+        None,
+        description="Explicit checkpoint file to resume from; if omitted, the latest in checkpoint.path is used.",
+    )
+
+
 class Numerics(BaseModel):
     """Integrator control parameters."""
 
@@ -1408,6 +1455,8 @@ class Numerics(BaseModel):
         gt=0.0,
         description="Optional warning threshold for dt/t_blow; disabled when null.",
     )
+    checkpoint: Checkpoint = Checkpoint()
+    resume: Resume = Resume()
 
     @validator("dt_init")
     def _check_dt_init(cls, value: Union[float, str]) -> Union[float, str]:
