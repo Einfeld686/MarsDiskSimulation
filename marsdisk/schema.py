@@ -222,9 +222,9 @@ class SupplyFeedback(BaseModel):
         description="Response time controlling how quickly the feedback scale reacts (years).",
     )
     min_scale: float = Field(
-        0.0,
+        1.0e-6,
         ge=0.0,
-        description="Lower bound on the feedback multiplier.",
+        description="Lower bound on the feedback multiplier (kept slightly above 0 to avoid locking the scale).",
     )
     max_scale: float = Field(
         10.0,
@@ -232,7 +232,7 @@ class SupplyFeedback(BaseModel):
         description="Upper bound on the feedback multiplier.",
     )
     tau_field: Literal["tau_vertical", "tau_los"] = Field(
-        "tau_vertical",
+        "tau_los",
         description="Optical-depth field to monitor for feedback control.",
     )
     initial_scale: float = Field(
@@ -785,7 +785,7 @@ class InitTau1(BaseModel):
         description="If true, clamp the initial surface density to the chosen Σ_τ=1 cap to avoid headroom=0.",
     )
     tau_field: Literal["vertical", "los"] = Field(
-        "vertical",
+        "los",
         description="Which optical-depth field to target when setting Σ_τ=1. Use 'los' to target Mars line-of-sight τ.",
     )
     target_tau: float = Field(
@@ -1063,7 +1063,7 @@ class PhaseConfig(BaseModel):
         ),
     )
     tau_field: Literal["vertical", "los"] = Field(
-        "vertical",
+        "los",
         description=(
             "Optical-depth field forwarded to phase evaluation. "
             "'vertical' uses κΣ, 'los' multiplies by the line-of-sight factor."

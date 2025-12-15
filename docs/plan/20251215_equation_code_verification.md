@@ -8,7 +8,7 @@
 
 ### 問題提起
 
-現在、`analysis/equations.md` には約45の数式定義 (E.001–E.045) が存在し、それぞれがコード参照（例: `[marsdisk/physics/surface.py#wyatt_tcoll_S1 [L65–L76]]`）を持っています。しかし、以下の問題があります：
+現在、`analysis/equations.md` には E.001–E.046 を含む 49 件の数式定義があり（派生サフィックス付きの E.037b などを含む）、それぞれがコード参照（例: `[marsdisk/physics/surface.py#wyatt_tcoll_S1 [L65–L76]]`）を持っています。しかし、以下の問題があります：
 
 1. **式の未実装検出**: `equations.md` に定義された式がコード内で実装されているか不明
 2. **コードの未定義計算**: コード内の計算がどの式 (E.xxx) に対応するか不明
@@ -86,10 +86,10 @@ t_{coll} = 1 / (Ω τ_⊥)
     {"file": "marsdisk/physics/radiation.py", "symbol": "some_function"}
   ],
   "stats": {
-    "total_equations": 45,
-    "mapped": 42,
-    "unmapped": 3,
-    "coverage_rate": 0.933
+    "total_equations": 49,
+    "mapped": 45,
+    "unmapped": 4,
+    "coverage_rate": 0.918
   }
 }
 ```
@@ -104,10 +104,10 @@ t_{coll} = 1 / (Ω τ_⊥)
 
 1. `parse_equations_md(path: Path) -> list[EquationEntry]`
    - `equations.md` をパースして式定義を抽出
-   - 正規表現で式番号、LaTeX、コード参照を抽出
+   - 正規表現で式番号、LaTeX、コード参照を抽出（E.001–E.999 に加えサフィックス a/b/c を許容）
 
 2. `extract_code_equation_refs(symbols: list[SymbolInfo]) -> dict[str, list[str]]`
-   - コード内の `@ref E.xxx` コメントを検出（新規フォーマット提案）
+   - コード内の `@ref E.xxx` コメントを検出（導入時はガイドライン・AI_USAGE.md を更新し、後方互換として既存アンカーのみでも警告止まりにする）
    - 既存のdocstringから式参照を抽出
 
 3. `compute_equation_coverage(equations, code_refs) -> EquationCoverage`
@@ -116,7 +116,8 @@ t_{coll} = 1 / (Ω τ_⊥)
 
 4. `_cmd_equations(args) -> int`
    - `python -m tools.doc_sync_agent equations` サブコマンド
-   - JSON レポートと Markdown レポートを生成
+   - JSON レポートと Markdown レポートを生成し、`analysis/provenance_report.md` の式カバレッジ節を更新
+   - `--write` 実行時は `python -m tools.doc_sync_agent --all --write` と同一バッチで回し、`make analysis-doc-tests` を続けて実行できるよう CLI で複合ターゲットを提供する（`make analysis-update` 互換）
 
 ---
 
@@ -135,7 +136,7 @@ t_{coll} = 1 / (Ω τ_⊥)
 ### 4.1 式パーサー
 
 ```python
-EQUATION_ID_PATTERN = re.compile(r"^### \(E\.(\d{3})\)")
+EQUATION_ID_PATTERN = re.compile(r"^### \(E\.(\d{3}[a-z]?)\)")
 CODE_REF_PATTERN = re.compile(
     r"\[(marsdisk/[^\]]+\.py)#([A-Za-z0-9_]+)\s+\[L(\d+)–L?(\d+)?\]\]"
 )
@@ -175,6 +176,12 @@ def verify_equation_code_mapping(
     "passed": true,
     "warnings": ["E.029: no code reference found"],
     "errors": []
+  },
+  "stats": {
+    "total_equations": 49,
+    "mapped": 45,
+    "unmapped": 4,
+    "coverage_rate": 0.918
   }
 }
 ```
@@ -186,13 +193,15 @@ def verify_equation_code_mapping(
 
 | Metric | Value |
 |--------|-------|
-| 定義済み式 | 45 |
-| 実装済み | 42 (93.3%) |
-| 未実装 | 3 |
+| 定義済み式 | 49 |
+| 実装済み | 45 (91.8%) |
+| 未実装 | 4 |
 
 ### 未実装の式
 - (E.029): placeholder — 実装待ち
 - (E.030): placeholder — 実装待ち
+- (E.037b): sublimation helper — サフィックス付きを検出したが未参照
+- (E.046): smol 0D step — 実装参照追加予定
 ```
 
 ## 5. 検証計画
@@ -222,6 +231,11 @@ pytest tests/test_doc_sync_agent.py -v -k equation
 ```bash
 # 式検証を実行
 python -m tools.doc_sync_agent equations --write
+# ドキュメント同期とアンカー整合性チェック（既定フローと同一バッチ）
+python -m tools.doc_sync_agent --all --write
+make analysis-doc-tests
+# 評価レポート（analysis-update 相当の手順に組み込み）
+python -m tools.evaluation_system --outdir out
 
 # 出力ファイルを確認
 cat analysis/equation_code_map.json | jq '.stats'
@@ -231,7 +245,7 @@ cat analysis/equation_code_map.json | jq '.stats'
 
 1. `analysis/equation_code_map.json` が生成されること
 2. JSON に `unmapped_equations` が正しく列挙されること
-3. `make analysis-update` が引き続き正常動作すること
+3. `make analysis-update`（doc_sync→docテスト→evaluation_system）の互換ターゲットで equations 検証も連動すること
 
 ## 6. 段階的導入
 
@@ -243,10 +257,10 @@ cat analysis/equation_code_map.json | jq '.stats'
 ### Phase 2: 検証とレポート（工数: 0.5日）
 - 未実装/未定義の検出
 - `provenance_report.md` への自動追記
-- CI統合（`make analysis-update` に追加）
+- CI統合（`make analysis-update` に equations ステップと evaluation_system を追加）
 
 ### Phase 3: コード側注釈（オプション、工数: 1日）
-- コード内 `# @ref E.xxx` 注釈の検出
+- コード内 `# @ref E.xxx` 注釈の検出（AI_USAGE.md に運用規約と例を追記し、CIでは警告レベルから開始）
 - 双方向マッピングの完成
 
 ## 7. リスクと緩和策
