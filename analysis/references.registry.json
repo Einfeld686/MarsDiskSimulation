@@ -148,6 +148,18 @@
       ]
     },
     {
+      "key": "PawellekKrivov2015_MNRAS454_3207",
+      "short": "Pawellek & Krivov (2015)",
+      "title": "The dust grain size\u2013stellar luminosity trend in debris discs",
+      "doi": "10.1093/mnras/stv2142",
+      "bibtex": "@article{PawellekKrivov2015_MNRAS454_3207, journal = {MNRAS}, volume = {454}, pages = {3207-3221}, year = {2015}}",
+      "adopted_scope": "Observationally calibrated blow-out sizes that apply the Burns beta expression with measured Q_pr and beta=0.5 as the bound/unbound threshold.",
+      "claims": [
+        "Implements the beta=0.5 blow-out size using Q_pr tables across stellar luminosities, matching the Burns (1979) formulation.",
+        "Demonstrates that debris-disc grain size trends follow the beta-based blow-out boundary, providing a concrete usage example for a_blow calculations."
+      ]
+    },
+    {
       "key": "TakeuchiLin2003_ApJ593_524",
       "short": "Takeuchi & Lin (2003)",
       "title": "Dust Outflows in Optically Thick Gas Disks",
@@ -198,9 +210,9 @@
     {
       "key": "Kuramoto2024",
       "short": "Kuramoto (2024)",
-      "title": "MMX-era review of Martian satellite origin scenarios",
-      "doi": null,
-      "bibtex": "@article{Kuramoto2024, journal = {Space Science Reviews}, status = {in press}}",
+      "title": "Origin of Phobos and Deimos Awaiting Direct Exploration",
+      "doi": "10.1146/annurev-earth-031621-064742",
+      "bibtex": "@article{Kuramoto2024, journal = {Annual Review of Earth and Planetary Sciences}, volume = {52}, pages = {495-519}, year = {2024}}",
       "adopted_scope": "Mission context for MMX and the comparative analysis of capture vs impact hypotheses.",
       "claims": [
         "Summarises observational requirements feeding \u03b2/mass-loss scans.",
@@ -598,6 +610,18 @@
       "claims": [
         "Quantifies equilibrium vapour pressures for molten silica consistent with MAGMA results.",
         "Supports using SiO-dominated vapour composition and Clausius-type fits in sublimation models."
+      ]
+    },
+    {
+      "key": "Markkanen2020_AA643_A16",
+      "short": "Markkanen & Agarwal (2020)",
+      "title": "Thermophysical model for icy cometary dust particles",
+      "doi": "10.1051/0004-6361/202039092",
+      "bibtex": "@article{Markkanen2020_AA643_A16, journal = {A&A}, volume = {643}, pages = {A16}, year = {2020}}",
+      "adopted_scope": "Hertz-Knudsen sublimation fluxes and dust thermophysics used as analogs for sublimation-driven mass loss in gas-poor disks.",
+      "claims": [
+        "Derives mass-loss rates and temperature evolution for icy/rocky grains using Hertz-Knudsen sublimation and latent-heat coupling.",
+        "Shows sublimation-driven erosion and fragmentation of mm-cm grains on short time-scales, supporting ds/dt floors when sublimation dominates."
       ]
     }
   ]

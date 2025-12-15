@@ -40,9 +40,10 @@ import time
 import warnings
 import weakref
 from collections import defaultdict
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, asdict
 from pathlib import Path
-from typing import Any, Dict, List, Mapping, Optional, Sequence, cast
+from typing import Any, Dict, List, Mapping, Optional, Sequence, Tuple, cast
+import os
 
 import pandas as pd
 import numpy as np
@@ -67,7 +68,7 @@ from .physics import (
     qstar,
     collisions_smol,
 )
-from .io import writer, tables
+from .io import writer, tables, checkpoint as checkpoint_io
 from .physics.sublimation import SublimationParams, p_sat, grain_temperature_graybody, sublimation_sink_from_dsdt
 from . import constants
 
@@ -78,6 +79,18 @@ AUTO_MAX_MARGIN = 0.05
 TAU_MIN = 1e-12
 KAPPA_MIN = 1e-12
 _KAPPA_WARNED_LABELS: set[str] = set()
+DEBUG_STAGE = bool(int(os.environ.get("MARSDISK_DEBUG_STAGE", "0")))
+
+
+def _log_stage(label: str, *, extra: Optional[Dict[str, Any]] = None) -> None:
+    """Emit coarse-grained progress markers for hang診断用."""
+
+    if not DEBUG_STAGE:
+        return
+    payload = {"stage": label}
+    if extra:
+        payload.update(extra)
+    logger.warning("[stage] %s", payload)
 DEFAULT_SEED = 12345
 MASS_BUDGET_TOLERANCE_PERCENT = 0.5
 SINK_REF_SIZE = 1e-6
@@ -120,6 +133,22 @@ def _resolve_los_factor(los_geom: Optional[object]) -> float:
         return 1.0
     factor = path_multiplier / h_over_r
     return float(factor if factor > 1.0 else 1.0)
+
+
+def compute_phase_tau_fields(
+    kappa_surf: float,
+    sigma_for_tau: float,
+    los_factor: float,
+    phase_tau_field: str,
+) -> Tuple[float, float, float]:
+    """Return (τ_used, τ_vertical, τ_los) for phase evaluation."""
+
+    tau_vertical = float(kappa_surf * sigma_for_tau)
+    tau_los = tau_vertical * los_factor
+    tau_los = float(tau_los) if math.isfinite(tau_los) else 0.0
+    tau_field_norm = "los" if phase_tau_field == "los" else "vertical"
+    tau_used = tau_los if tau_field_norm == "los" else tau_vertical
+    return tau_used, tau_vertical, tau_los
 
 
 class ProgressReporter:
@@ -1143,6 +1172,7 @@ def run_zero_d(
         logger.info("radiation: solar radiation toggle requested but disabled (gas-poor scope)")
     if cfg.numerics.t_end_years is None and cfg.numerics.t_end_orbits is None:
         cfg.numerics.t_end_years = analysis_window_years
+    _log_stage("config_resolved", extra={"physics_mode": physics_mode, "scope": scope_region})
     logger.info(
         "scope=%s, window=%.3f yr, radiation=%s, physics_mode=%s, scenario=%s%s",
         scope_region,
@@ -1300,6 +1330,7 @@ def run_zero_d(
     )
     T_use = temp_runtime.initial_value
     T_M_source = temp_runtime.source
+    _log_stage("temperature_driver_ready", extra={"T_init": T_use, "source": T_M_source})
     logger.info(
         "Mars temperature driver resolved: source=%s mode=%s enabled=%s T_init=%.2f K",
         temp_runtime.source,
@@ -1341,10 +1372,12 @@ def run_zero_d(
     phase_controller = phase_mod.PhaseEvaluator.from_config(phase_cfg, logger=logger)
     phase_temperature_input_mode = "mars_surface"
     phase_q_abs_mean = 0.4
+    phase_tau_field = "vertical"
     phase_temperature_formula = "T_p = T_M * q_abs_mean^0.25 * sqrt(R_M/(2 r))"
     if phase_cfg is not None:
         phase_temperature_input_mode = str(getattr(phase_cfg, "temperature_input", phase_temperature_input_mode))
         phase_q_abs_mean = float(getattr(phase_cfg, "q_abs_mean", phase_q_abs_mean))
+        phase_tau_field = str(getattr(phase_cfg, "tau_field", phase_tau_field))
     if phase_temperature_input_mode:
         phase_temperature_input_mode = phase_temperature_input_mode.strip().lower()
     if phase_temperature_input_mode not in {"mars_surface", "particle"}:
@@ -1352,6 +1385,10 @@ def run_zero_d(
             "Unknown phase.temperature_input=%s; defaulting to 'mars_surface'", phase_temperature_input_mode
         )
         phase_temperature_input_mode = "mars_surface"
+    phase_tau_field = phase_tau_field.strip().lower()
+    if phase_tau_field not in {"vertical", "los"}:
+        logger.warning("Unknown phase.tau_field=%s; defaulting to 'vertical'", phase_tau_field)
+        phase_tau_field = "vertical"
     if not math.isfinite(phase_q_abs_mean) or phase_q_abs_mean <= 0.0:
         raise ValueError("phase.q_abs_mean must be positive and finite")
     allow_liquid_hkl = bool(getattr(phase_cfg, "allow_liquid_hkl", True)) if phase_cfg else True
@@ -1557,6 +1594,7 @@ def run_zero_d(
         )
     if not blowout_enabled:
         case_status = "no_blowout"
+    _log_stage("psd_init", extra={"s_min_effective": s_min_effective, "kappa0": kappa_surf_initial})
 
     init_tau1_enabled = bool(
         getattr(cfg, "init_tau1", None) is not None and getattr(cfg.init_tau1, "enabled", False)
@@ -1690,11 +1728,6 @@ def run_zero_d(
     M_spill_cum = 0.0
     M_sublimation_cum = 0.0
     M_hydro_cum = 0.0
-    sigma_tau1_limit_default = None
-    if sigma_tau1_cap_init is not None and math.isfinite(sigma_tau1_cap_init):
-        sigma_tau1_limit_default = float(sigma_tau1_cap_init)
-    elif sigma_tau1_unity is not None and math.isfinite(sigma_tau1_unity):
-        sigma_tau1_limit_default = float(sigma_tau1_unity)
     if cfg.disk is not None:
         r_in_d = cfg.disk.geometry.r_in_RM * constants.R_MARS
         r_out_d = cfg.disk.geometry.r_out_RM * constants.R_MARS
@@ -1869,6 +1902,7 @@ def run_zero_d(
     supply_table_path = getattr(getattr(supply_spec, "table", None), "path", None)
     supply_state = supply.init_runtime_state(supply_spec, area, seconds_per_year=SECONDS_PER_YEAR)
     supply_reservoir_enabled = bool(getattr(supply_state, "reservoir_enabled", supply_reservoir_enabled))
+    _log_stage("supply_ready", extra={"supply_mode": supply_mode_value, "epsilon_mix": supply_epsilon_mix})
 
     t_end, dt_nominal, dt_initial_step, n_steps, time_grid_info = _resolve_time_grid(
         cfg.numerics,
@@ -1876,6 +1910,7 @@ def run_zero_d(
         t_orb,
         temp_runtime=temp_runtime,
     )
+    _log_stage("time_grid_ready", extra={"t_end": t_end, "dt": dt_initial_step, "n_steps": n_steps})
     dt = dt_initial_step
     if n_steps > MAX_STEPS:
         n_steps = MAX_STEPS
@@ -1883,6 +1918,24 @@ def run_zero_d(
         time_grid_info["n_steps"] = n_steps
         time_grid_info["dt_step"] = dt
         time_grid_info["dt_capped_by_max_steps"] = True
+
+    checkpoint_cfg = getattr(cfg.numerics, "checkpoint", None)
+    resume_cfg = getattr(cfg.numerics, "resume", None)
+    checkpoint_enabled = bool(checkpoint_cfg and getattr(checkpoint_cfg, "enabled", False))
+    checkpoint_interval_s = (
+        float(getattr(checkpoint_cfg, "interval_years", 1.0) or 1.0) * SECONDS_PER_YEAR
+        if checkpoint_enabled
+        else float("inf")
+    )
+    checkpoint_format = str(getattr(checkpoint_cfg, "format", "pickle") or "pickle")
+    checkpoint_keep_last = int(getattr(checkpoint_cfg, "keep_last_n", 3) or 0)
+    checkpoint_dir = (
+        Path(checkpoint_cfg.path) if checkpoint_cfg and getattr(checkpoint_cfg, "path", None) else Path(cfg.io.outdir) / "checkpoints"
+    )
+    resume_enabled = bool(resume_cfg and getattr(resume_cfg, "enabled", False))
+    resume_path = Path(resume_cfg.from_path) if resume_enabled and getattr(resume_cfg, "from_path", None) else None
+    start_step = 0
+    time_offset = 0.0
 
     quiet_mode = bool(getattr(cfg.io, "quiet", False))
     progress_cfg = getattr(cfg.io, "progress", None)
@@ -1906,9 +1959,75 @@ def run_zero_d(
         memory_header=memory_hint_header,
     )
     progress.emit_header()
+
+    resume_applied = False
+    checkpoint_next_time = checkpoint_interval_s
+    if resume_enabled:
+        resolved_resume = resume_path if resume_path is not None else checkpoint_io.find_latest_checkpoint(checkpoint_dir)
+        if resolved_resume is None:
+            logger.warning("resume.enabled=true but no checkpoint found under %s", checkpoint_dir)
+        else:
+            try:
+                state_ckpt = checkpoint_io.load_checkpoint(resolved_resume)
+                start_step = int(state_ckpt.step_no) + 1
+                checkpoint_next_time = float(state_ckpt.time_s) + checkpoint_interval_s
+                if not math.isclose(state_ckpt.dt_s, dt, rel_tol=1e-6, abs_tol=0.0):
+                    logger.warning(
+                        "Checkpoint dt=%.6e differs from current dt=%.6e; continuing with current dt",
+                        state_ckpt.dt_s,
+                        dt,
+                    )
+                time_offset = float(state_ckpt.time_s) - dt * start_step
+                sigma_surf = float(state_ckpt.sigma_surf)
+                sigma_deep = float(state_ckpt.sigma_deep)
+                s_min_effective = float(state_ckpt.s_min_effective)
+                s_min_floor_dynamic = float(state_ckpt.s_min_floor_dynamic)
+                s_min_evolved_value = float(state_ckpt.s_min_evolved_value)
+                psd_state = copy.deepcopy(state_ckpt.psd_state)
+                M_loss_cum = float(state_ckpt.M_loss_cum)
+                M_sink_cum = float(state_ckpt.M_sink_cum)
+                M_spill_cum = float(state_ckpt.M_spill_cum)
+                M_sublimation_cum = float(state_ckpt.M_sublimation_cum)
+                M_hydro_cum = float(state_ckpt.M_hydro_cum)
+                restored_supply_state = state_ckpt.supply_state_as_runtime()
+                if restored_supply_state is not None and supply_state is not None:
+                    for key, value in asdict(restored_supply_state).items():
+                        if hasattr(supply_state, key):
+                            setattr(supply_state, key, value)
+                try:
+                    np.random.set_state(state_ckpt.rng_state_numpy)
+                except Exception:
+                    logger.warning("Failed to restore numpy RNG state from checkpoint")
+                try:
+                    rng.bit_generator.state = state_ckpt.rng_state_generator
+                except Exception:
+                    logger.warning("Failed to restore default_rng state from checkpoint")
+                try:
+                    random.setstate(state_ckpt.rng_state_python)
+                except Exception:
+                    logger.warning("Failed to restore Python RNG state from checkpoint")
+                resume_applied = True
+                logger.info(
+                    "Resumed from checkpoint %s at step=%d time=%.3e s (offset=%.3e s)",
+                    resolved_resume,
+                    start_step,
+                    state_ckpt.time_s,
+                    time_offset,
+                )
+            except Exception as exc:
+                logger.error("Failed to load checkpoint %s: %s", resolved_resume, exc)
+    else:
+        checkpoint_next_time = checkpoint_interval_s
+
     if quiet_mode:
         warnings.filterwarnings("ignore")
         logging.getLogger().setLevel(logging.WARNING)
+    if resume_applied and progress_enabled:
+        progress.update(
+            max(start_step - 1, 0),
+            max(time_offset + (start_step - 1) * dt, 0.0),
+            force=True,
+        )
 
     step_diag_cfg = getattr(cfg.io, "step_diagnostics", None)
     step_diag_enabled = bool(getattr(step_diag_cfg, "enable", False)) if step_diag_cfg else False
@@ -1935,7 +2054,9 @@ def run_zero_d(
     streaming_memory_limit_gb = float(getattr(streaming_cfg, "memory_limit_gb", 80.0) or 80.0)
     streaming_step_interval = int(getattr(streaming_cfg, "step_flush_interval", 10000) or 0)
     streaming_compression = str(getattr(streaming_cfg, "compression", "snappy") or "snappy")
-    streaming_merge_at_end = bool(getattr(streaming_cfg, "merge_at_end", False))
+    streaming_merge_at_end = bool(
+        getattr(streaming_cfg, "merge_at_end", True if streaming_enabled else False)
+    )
     streaming_merge_completed: Optional[bool] = None
     streaming_state = StreamingState(
         enabled=streaming_enabled,
@@ -1949,8 +2070,40 @@ def run_zero_d(
         step_diag_format=step_diag_format,
     )
 
-    last_step_index = -1
+    if streaming_state.enabled:
+        streaming_state.chunk_start_step = start_step
+        if streaming_state.mass_budget_path.exists():
+            streaming_state.mass_budget_header_written = True
+
+    last_step_index = max(start_step - 1, -1)
     history = ZeroDHistory()
+
+    def _build_checkpoint_state(step_no: int, time_after_step: float) -> checkpoint_io.CheckpointState:
+        supply_payload: Dict[str, Any] = {}
+        if supply_state is not None:
+            supply_payload = asdict(supply_state)
+            supply_payload.pop("temperature_table", None)
+        return checkpoint_io.CheckpointState(
+            version=1,
+            step_no=step_no,
+            time_s=time_after_step,
+            dt_s=dt,
+            sigma_surf=float(sigma_surf),
+            sigma_deep=float(sigma_deep),
+            s_min_effective=float(s_min_effective),
+            s_min_floor_dynamic=float(s_min_floor_dynamic),
+            s_min_evolved_value=float(s_min_evolved_value),
+            M_loss_cum=float(M_loss_cum),
+            M_sink_cum=float(M_sink_cum),
+            M_spill_cum=float(M_spill_cum),
+            M_sublimation_cum=float(M_sublimation_cum),
+            M_hydro_cum=float(M_hydro_cum),
+            psd_state=copy.deepcopy(psd_state),
+            supply_state=supply_payload,
+            rng_state_numpy=np.random.get_state(),
+            rng_state_generator=copy.deepcopy(rng.bit_generator.state),
+            rng_state_python=random.getstate(),
+        )
 
     def _streaming_cleanup_on_exit() -> None:
         """Flush remaining streaming buffers and merge chunks on shutdown."""
@@ -2017,7 +2170,7 @@ def run_zero_d(
     gate_factor_track = history.gate_factor_track
     t_solid_track = history.t_solid_track
     tau_gate_block_time = history.tau_gate_block_time
-    total_time_elapsed = history.total_time_elapsed
+    total_time_elapsed = max(history.total_time_elapsed, time_offset)
     phase7_total_rate_track = history.phase7_total_rate_track
     phase7_total_rate_time_track = history.phase7_total_rate_time_track
     phase7_ts_ratio_track = history.phase7_ts_ratio_track
@@ -2045,11 +2198,12 @@ def run_zero_d(
     mass_budget_max_error = 0.0
     steps_since_flush = 0
     t_mix_seconds_current: Optional[float] = None
+    sigma_tau1_limit_last_finite: Optional[float] = None
     phase_bulk_state_last: Optional[str] = None
     phase_bulk_f_liquid_last: Optional[float] = None
     phase_bulk_f_solid_last: Optional[float] = None
     phase_bulk_f_vapor_last: Optional[float] = None
-    last_time_value = 0.0
+    last_time_value = time_offset + (start_step - 1) * dt if start_step > 0 else 0.0
     early_stop_reason: Optional[str] = None
     early_stop_step: Optional[int] = None
     early_stop_time_s: Optional[float] = None
@@ -2068,8 +2222,15 @@ def run_zero_d(
         ):
             supply_reservoir_depleted_time = current_time
 
-    for step_no in range(n_steps):
-        time_start = step_no * dt
+    def _update_sigma_tau1_last_finite(value: Optional[float]) -> None:
+        """Track the last finite Σ_τ=1 cap without changing runtime behaviour."""
+
+        nonlocal sigma_tau1_limit_last_finite
+        if value is not None and math.isfinite(value):
+            sigma_tau1_limit_last_finite = float(value)
+
+    for step_no in range(start_step, n_steps):
+        time_start = time_offset + step_no * dt
         time = time_start
         T_use = temp_runtime.evaluate(time)
         temperature_track.append(T_use)
@@ -2166,11 +2327,16 @@ def run_zero_d(
         t_blow_step = chi_blow_eff / Omega_step if Omega_step > 0.0 else float("inf")
 
         sigma_for_tau_phase = sigma_surf_reference if freeze_sigma else sigma_surf
-        tau_los_phase = kappa_surf * sigma_for_tau_phase
+        tau_phase_used, tau_phase_vertical, tau_phase_los = compute_phase_tau_fields(
+            kappa_surf,
+            sigma_for_tau_phase,
+            los_factor,
+            phase_tau_field,
+        )
         phase_decision, phase_bulk_step = phase_controller.evaluate_with_bulk(
             temperature_for_phase,
             pressure_Pa=gas_pressure_pa,
-            tau=tau_los_phase,
+            tau=tau_phase_used,
             radius_m=r,
             time_s=time,
             T0_K=temp_runtime.initial_value,
@@ -2180,7 +2346,11 @@ def run_zero_d(
         phase_reason_step = phase_decision.reason
         phase_f_vap_step = phase_decision.f_vap
         phase_payload_step = dict(phase_decision.payload)
-        phase_payload_step["tau_input_before_psd"] = tau_los_phase
+        phase_payload_step["tau_input_before_psd"] = tau_phase_used
+        phase_payload_step["tau_phase_vertical"] = tau_phase_vertical
+        phase_payload_step["tau_phase_los"] = tau_phase_los
+        phase_payload_step["tau_phase_used"] = tau_phase_used
+        phase_payload_step["phase_tau_field"] = phase_tau_field
         phase_payload_step["phase_temperature_input"] = phase_temperature_input_mode
         phase_payload_step["phase_temperature_used_K"] = temperature_for_phase
         phase_payload_step["T_p_effective"] = T_p_effective
@@ -2190,6 +2360,9 @@ def run_zero_d(
         phase_payload_step["phase_bulk_f_solid"] = phase_bulk_step.f_solid
         phase_payload_step["phase_bulk_f_vapor"] = phase_bulk_step.f_vapor
         phase_payload_step["allow_liquid_hkl"] = allow_liquid_hkl
+        tau_phase_vertical_last = tau_phase_vertical
+        tau_phase_los_last = tau_phase_los
+        tau_phase_used_last = tau_phase_used
         phase_usage[phase_state_step] += dt
         phase_method_usage[phase_method_step] += dt
 
@@ -2408,83 +2581,87 @@ def run_zero_d(
             apply_correction = False
         fast_blowout_applied = False
 
-    kappa_eff = kappa_surf
-    sigma_tau1_limit = sigma_tau1_limit_default
-    sigma_tau1_active_last = sigma_tau1_limit_default
-    prod_rate_last = 0.0
-    supply_diag_last = None
-    outflux_surface = 0.0
-    sink_flux_surface = 0.0
-    time_sub = time_start
-    if freeze_sigma:
-        sigma_surf = sigma_surf_reference
-    sigma_before_step = sigma_surf
-    total_prod_surface = 0.0
-    total_sink_surface = 0.0
-    fast_factor_numer = 0.0
-    fast_factor_denom = 0.0
-    e_kernel_step = None
-    i_kernel_step = None
-    e_kernel_base_step = None
-    i_kernel_base_step = None
-    e_kernel_supply_step = None
-    i_kernel_supply_step = None
-    supply_velocity_weight_step = None
+        kappa_eff = kappa_surf
+        sigma_tau1_limit = None
+        sigma_tau1_active_last = None
+        prod_rate_last = 0.0
+        supply_diag_last = None
+        outflux_surface = 0.0
+        sink_flux_surface = 0.0
+        time_sub = time_start
+        if freeze_sigma:
+            sigma_surf = sigma_surf_reference
+        sigma_before_step = sigma_surf
+        total_prod_surface = 0.0
+        total_sink_surface = 0.0
+        fast_factor_numer = 0.0
+        fast_factor_denom = 0.0
+        e_kernel_step = None
+        i_kernel_step = None
+        e_kernel_base_step = None
+        i_kernel_base_step = None
+        e_kernel_supply_step = None
+        i_kernel_supply_step = None
+        supply_velocity_weight_step = None
 
-    tau_vert_last = None
-    tau_los_last = None
-    phi_effective_last = None
-    hydro_mass_total = 0.0
-    mass_loss_sublimation_smol_step = 0.0
-    mass_loss_rate_sublimation_smol = 0.0
-    sigma_loss_smol = 0.0
-    t_coll_kernel_last = None
-    surface_active = collisions_active_step or sink_timescale_active
-    sigma_before_step = sigma_surf
-    if collision_solver_mode == "surface_ode":
-        if surface_active:
-            for _sub_idx in range(n_substeps):
-                if freeze_sigma:
-                    sigma_surf = sigma_surf_reference
-                sigma_for_tau = sigma_surf
-                tau_vert = kappa_surf * sigma_for_tau
-                tau_los = tau_vert * los_factor
-                tau_eval_los = tau_los
-                phi_value = None
-                if collisions_active_step:
-                    if shielding_mode == "off":
-                        kappa_eff = kappa_surf
-                        sigma_tau1_limit = float("inf")
-                    elif shielding_mode == "fixed_tau1":
-                        tau_target_vert = tau_fixed_target
-                        if not math.isfinite(tau_target_vert):
-                            tau_target_vert = tau_vert
-                        if sigma_tau1_fixed_target is not None:
-                            sigma_tau1_limit = float(sigma_tau1_fixed_target)
-                            if kappa_surf > 0.0 and not math.isfinite(tau_target_vert):
-                                tau_target_vert = kappa_surf * sigma_tau1_limit
-                        tau_eval_los = tau_target_vert * los_factor
-                        if phi_tau_fn is not None:
-                            kappa_eff = shielding.effective_kappa(kappa_surf, tau_eval_los, phi_tau_fn)
-                        else:
+        tau_vert_last = None
+        tau_los_last = None
+        tau_phase_vertical_last: Optional[float] = None
+        tau_phase_los_last: Optional[float] = None
+        tau_phase_used_last: Optional[float] = None
+        phi_effective_last = None
+        hydro_mass_total = 0.0
+        mass_loss_sublimation_smol_step = 0.0
+        mass_loss_rate_sublimation_smol = 0.0
+        sigma_loss_smol = 0.0
+        t_coll_kernel_last = None
+        surface_active = collisions_active_step or sink_timescale_active
+        sigma_before_step = sigma_surf
+        if collision_solver_mode == "surface_ode":
+            if surface_active:
+                for _sub_idx in range(n_substeps):
+                    if freeze_sigma:
+                        sigma_surf = sigma_surf_reference
+                    sigma_for_tau = sigma_surf
+                    tau_vert = kappa_surf * sigma_for_tau
+                    tau_los = tau_vert * los_factor
+                    tau_eval_los = tau_los
+                    phi_value = None
+                    if collisions_active_step:
+                        if shielding_mode == "off":
                             kappa_eff = kappa_surf
-                        if sigma_tau1_fixed_target is None:
-                            if kappa_eff <= 0.0:
-                                sigma_tau1_limit = float("inf")
+                            sigma_tau1_limit = float("inf")
+                        elif shielding_mode == "fixed_tau1":
+                            tau_target_vert = tau_fixed_target
+                            if not math.isfinite(tau_target_vert):
+                                tau_target_vert = tau_vert
+                            if sigma_tau1_fixed_target is not None:
+                                sigma_tau1_limit = float(sigma_tau1_fixed_target)
+                                if kappa_surf > 0.0 and not math.isfinite(tau_target_vert):
+                                    tau_target_vert = kappa_surf * sigma_tau1_limit
+                            tau_eval_los = tau_target_vert * los_factor
+                            if phi_tau_fn is not None:
+                                kappa_eff = shielding.effective_kappa(kappa_surf, tau_eval_los, phi_tau_fn)
                             else:
-                                sigma_tau1_limit = float(tau_eval_los / max(kappa_eff, 1.0e-30))
-                    else:
-                        tau_eval_los = tau_los
-                        if phi_tau_fn is not None:
-                            kappa_eff = shielding.effective_kappa(kappa_surf, tau_eval_los, phi_tau_fn)
-                            sigma_tau1_limit = shielding.sigma_tau1(kappa_eff)
+                                kappa_eff = kappa_surf
+                            if sigma_tau1_fixed_target is None:
+                                if kappa_eff <= 0.0:
+                                    sigma_tau1_limit = float("inf")
+                                else:
+                                    sigma_tau1_limit = float(tau_eval_los / max(kappa_eff, 1.0e-30))
                         else:
-                            kappa_eff, sigma_tau1_limit = shielding.apply_shielding(
-                                kappa_surf, tau_eval_los, 0.0, 0.0
-                            )
-                else:
-                    kappa_eff = kappa_surf
-                    sigma_tau1_limit = sigma_tau1_limit_default
+                            tau_eval_los = tau_los
+                            if phi_tau_fn is not None:
+                                kappa_eff = shielding.effective_kappa(kappa_surf, tau_eval_los, phi_tau_fn)
+                                sigma_tau1_limit = shielding.sigma_tau1(kappa_eff)
+                            else:
+                                kappa_eff, sigma_tau1_limit = shielding.apply_shielding(
+                                    kappa_surf, tau_eval_los, 0.0, 0.0
+                                )
+                    else:
+                        kappa_eff = kappa_surf
+                        sigma_tau1_limit = None
+                    _update_sigma_tau1_last_finite(sigma_tau1_limit)
                     if kappa_surf > 0.0 and kappa_eff is not None:
                         phi_value = kappa_eff / kappa_surf
                     phi_effective_last = phi_value
@@ -2580,9 +2757,9 @@ def run_zero_d(
                 time_sub = time_start + dt
                 tau_vert_last = kappa_surf * sigma_surf
                 tau_los_last = tau_vert_last * los_factor
-                sigma_tau1_limit = sigma_tau1_limit_default
+                sigma_tau1_limit = None
                 kappa_eff = kappa_surf
-                sigma_tau1_active_last = sigma_tau1_limit_default
+                sigma_tau1_active_last = None
         else:
             if surface_active:
                 if freeze_sigma:
@@ -2625,7 +2802,8 @@ def run_zero_d(
                             )
                 else:
                     kappa_eff = kappa_surf
-                    sigma_tau1_limit = sigma_tau1_limit_default
+                    sigma_tau1_limit = None
+                _update_sigma_tau1_last_finite(sigma_tau1_limit)
                 if kappa_surf > 0.0 and kappa_eff is not None:
                     phi_value = kappa_eff / kappa_surf
                 phi_effective_last = phi_value
@@ -2790,9 +2968,9 @@ def run_zero_d(
                 time_sub = time_start + dt
                 tau_vert_last = kappa_surf * sigma_surf
                 tau_los_last = tau_vert_last * los_factor
-                sigma_tau1_limit = sigma_tau1_limit_default
+                sigma_tau1_limit = None
                 kappa_eff = kappa_surf
-                sigma_tau1_active_last = sigma_tau1_limit_default
+                sigma_tau1_active_last = None
 
         if sink_timescale_active:
             t_sink_step = t_sink_step_effective
@@ -3207,12 +3385,14 @@ def run_zero_d(
             and math.isfinite(t_blow_step)
         ):
             ts_ratio_value = float(t_blow_step / t_coll_step)
-        tau_record = tau_los_last if tau_los_last is not None else tau_vert_last
+        tau_record = tau_los_last
         tau_vertical_record = tau_vert_last
+        if tau_record is None and tau_vert_last is not None:
+            tau_record = float(tau_vert_last * los_factor)
         if tau_record is None or tau_vertical_record is None:
             tau_fallback = kappa_surf * sigma_surf
             if tau_record is None:
-                tau_record = tau_fallback
+                tau_record = float(tau_fallback * los_factor)
             if tau_vertical_record is None:
                 tau_vertical_record = tau_fallback
         record = {
@@ -3252,6 +3432,11 @@ def run_zero_d(
             "Sigma_tau1": sigma_tau1_limit,
             "Sigma_tau1_active": sigma_tau1_active_last,
             "sigma_tau1": sigma_tau1_limit,
+            "Sigma_tau1_last_finite": sigma_tau1_limit_last_finite,
+            "tau_phase_vertical": tau_phase_vertical_last,
+            "tau_phase_los": tau_phase_los_last,
+            "tau_phase_used": tau_phase_used_last,
+            "phase_tau_field": phase_tau_field,
             "sigma_deep": sigma_deep,
             "headroom": _safe_float(headroom_current),
             "outflux_surface": outflux_surface,
@@ -3459,8 +3644,13 @@ def run_zero_d(
             "mass_loss_sublimation_step": mass_loss_sublimation_step_diag,
             "sigma_tau1": sigma_tau1_limit,
             "sigma_tau1_active": sigma_tau1_active_last,
+            "Sigma_tau1_last_finite": sigma_tau1_limit_last_finite,
             "tau_vertical": tau_vertical_diag,
             "tau_los_mars": tau_los_diag,
+            "tau_phase_vertical": tau_phase_vertical_last,
+            "tau_phase_los": tau_phase_los_last,
+            "tau_phase_used": tau_phase_used_last,
+            "phase_tau_field": phase_tau_field,
             "kappa_eff": kappa_eff,
             "kappa_surf": kappa_surf,
             "phi_effective": phi_effective_diag,
@@ -3613,6 +3803,18 @@ def run_zero_d(
         if tau_gate_block_last:
             tau_gate_block_time += dt
 
+        time_after_step = time + dt
+        if checkpoint_enabled and time_after_step >= checkpoint_next_time:
+            ckpt_ext = ".pkl" if checkpoint_format == "pickle" else ".json"
+            ckpt_path = checkpoint_dir / f"ckpt_step_{step_no:09d}{ckpt_ext}"
+            try:
+                state_ckpt = _build_checkpoint_state(step_no, time_after_step)
+                checkpoint_io.save_checkpoint(ckpt_path, state_ckpt, fmt=checkpoint_format)
+                checkpoint_io.prune_checkpoints(checkpoint_dir, checkpoint_keep_last)
+                checkpoint_next_time += checkpoint_interval_s
+            except Exception as exc:
+                logger.error("Failed to write checkpoint %s: %s", ckpt_path, exc)
+
         last_step_index = step_no
         last_time_value = time
         progress.update(step_no, time)
@@ -3639,6 +3841,7 @@ def run_zero_d(
             )
             if enforce_mass_budget:
                 history.violation_triggered = True
+                break
 
         if not quiet_mode and not progress_enabled and logger.isEnabledFor(logging.INFO):
             logger.info(

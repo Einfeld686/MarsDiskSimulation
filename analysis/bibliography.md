@@ -95,8 +95,9 @@
 
 ### Kuramoto (2024)
 - **Key**: `Kuramoto2024`
-- **Title**: MMX-era review of Martian satellite origin scenarios
-- **Journal**: Space Science Reviews (in press)
+- **Title**: Origin of Phobos and Deimos Awaiting Direct Exploration
+- **Journal**: Annual Review of Earth and Planetary Sciences, 52, 495–519
+- **DOI**: [10.1146/annurev-earth-031621-064742](https://doi.org/10.1146/annurev-earth-031621-064742)
 - **使用箇所**: 総説・シナリオ整理
 - **主張**:
   - 捕獲 vs 衝突仮説の観測要件整理
@@ -131,6 +132,16 @@
 - **主張**:
   - 放射圧/重力比 β の古典的定義
   - Q_pr と blow-out サイズの関係
+
+### Pawellek & Krivov (2015)
+- **Key**: `PawellekKrivov2015_MNRAS454_3207`
+- **Title**: The dust grain size–stellar luminosity trend in debris discs
+- **Journal**: MNRAS, 454, 3207–3221
+- **DOI**: [10.1093/mnras/stv2142](https://doi.org/10.1093/mnras/stv2142)
+- **使用箇所**: β=0.5 を用いた a_blow 計算と Q_pr テーブル適用の実装例
+- **主張**:
+  - Burns 式 (β=0.5) と Q_pr を用いた blow-out 粒径の評価を観測と付き合わせ、星光度と最小粒径の関係を示す
+  - デブリ円盤の下限粒径が β=0.5 境界で決まることを実装レベルで示した実例
 
 ### Wyatt (2008)
 - **Key**: `Wyatt2008`
@@ -302,8 +313,8 @@
   - 遅い拡散 → 複数衛星列
   - 速い拡散 → 単一主衛星
 
-### Salmon & Canup (2010)
-- **Key**: `SalmonCanup2010_Icarus209_771`
+### Salmon, Charnoz & Brahic (2010)
+- **Key**: `SalmonCharnozBrahic2010_Icarus209_771`
 - **Title**: Long-term and large-scale viscous evolution of dense planetary rings
 - **Journal**: Icarus, 209, 771–785
 - **DOI**: [10.1016/j.icarus.2010.05.030](https://doi.org/10.1016/j.icarus.2010.05.030)
@@ -354,6 +365,16 @@
 - **使用箇所**: ApJL 版の予備・閲覧用
 - **主張**:
   - ApJL 掲載版と同一内容のプレプリント
+
+### Markkanen & Agarwal (2020)
+- **Key**: `Markkanen2020_AA643_A16`
+- **Title**: Thermophysical model for icy cometary dust particles
+- **Journal**: A&A, 643, A16
+- **DOI**: [10.1051/0004-6361/202039092](https://doi.org/10.1051/0004-6361/202039092)
+- **使用箇所**: ヘルツ＝クヌーセン型昇華フラックスと昇華駆動の質量損失の例
+- **主張**:
+  - Hertz-Knudsen 式を熱収支と結合し、mm–cm 粒子の昇華・破砕時間を算出
+  - 昇華が支配的な場合の ds/dt 床や outflux 設定のアナログとして利用
 
 ---
 
@@ -440,10 +461,10 @@
   - Henyey-Greenstein 位相関数による多重散乱
 
 ### Cogley & Bergstrom (1979)
-- **Key**: `CogleyBergstrom1979_JQSRT22_267`
-- **Title**: Thermal scattering functions for diatomic molecules
-- **Journal**: J. Quant. Spectrosc. Radiat. Transf., 22, 267–276
-- **DOI**: [10.1016/0022-4073(79)90103-X](https://doi.org/10.1016/0022-4073(79)90103-X)
+- **Key**: `CogleyBergstrom1979_JQSRT21_265`
+- **Title**: Numerical results for the thermal scattering functions
+- **Journal**: J. Quant. Spectrosc. Radiat. Transf., 21, 265–276
+- **DOI**: [10.1016/0022-4073(79)90017-7](https://doi.org/10.1016/0022-4073(79)90017-7)
 - **使用箇所**: Φ(τ,ω₀,g) 数値テーブル
 - **主張**:
   - 高光学的厚さでの直達光透過飽和を定量化
@@ -612,6 +633,7 @@ python -m tools.reference_tracker export-bibtex -o paper/references.bib
 
 | 日付 | 内容 |
 |------|------|
+| 2025-12-15 | WEB検索に基づく精度向上: Kuramoto 2024 の掲載誌、Salmon 2010 の著者、Cogley 1979 の DOI を修正 |
 | 2025-12-11 | ISBN/DOI 情報の補完、重複行の削除、PDF との整合性確認 |
 | 2025-12-09 | 初版作成。references.registry.json の全49件を網羅 |
 

@@ -1028,13 +1028,15 @@ $C_{ij}$ が全てゼロまたは空の場合は $\infty$ を返す。`step_coll
 ---
 
 ### (E.045) marsdisk/physics/collisions_smol.py: supply_mass_rate_to_number_source (lines 67–95)
-TODO(REF:smol_source_injection_v1)
+[@Birnstiel2011_AA525_A11; @Krivov2006_AA455_509]
 
 質量フラックス $\dot{M}_{\rm supply}$ (kg s$^{-1}$) をビン別個数ソース $F_k$ (s$^{-1}$) に変換する。供給質量は $s \ge s_{\rm min,eff}$ を満たす最小ビンに集中注入され、質量保存条件
 ```latex
 \sum_{k} m_k F_k = \dot{M}_{\mathrm{supply}}
 ```
 が成り立つよう $F_{k_{\rm inj}} = \dot{M}_{\rm supply} / m_{k_{\rm inj}}$ とする。負のフラックスはゼロとして扱う。
+
+> **注記**: この最小ビン集中注入は Smoluchowski 方程式のセクショナル手法（size binning）で広く採用される質量保存条件であり、Birnstiel et al. (2011) のビン分割基準や Krivov et al. (2006) の nσv 衝突カスケードと整合する。
 
 **Symbols**
 

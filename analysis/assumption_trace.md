@@ -55,14 +55,14 @@ last_checked: YYYY-MM-DD
 
 - 文献で支えられる部分:
   - β 定義と Q_pr を含む放射圧/重力比の式は古典整理 [@Burns1979_Icarus40_1] に従う。
-  - β=0.5 をブローアウト境界とし、粒径・密度・Q_pr に依存する式を明示する例として Pawellek & Krivov (2015, Burns 式の写経) が使える。
+  - β=0.5 をブローアウト境界とし、粒径・密度・Q_pr に依存する式を明示する例として [@PawellekKrivov2015_MNRAS454_3207]（Burns 式の写経）が使える。
   - β>0.5 粒が公転時間オーダーで失われる近似は Wyatt の講義・レビュー [@Wyatt2008] と整合し、`t_blow=1/Ω` はその実装代表。
   - 火星放射を吹き飛び源とみなす前提は [@Hyodo2018_ApJ860_150] が揮発散逸の議論で採用している。
 - 文献で見つからなかった部分: `io.correct_fast_blowout` の補正式や適用条件、`use_solar_rp`/`radiation.source` の分岐仕様は先行研究に同型がなく、数値安定化の設計として明記する必要がある。
 - 文献で見つからなかった部分: Q_pr テーブルの作成条件（屈折率ソース、粒子形状、波長分割、ミー計算コード）を文献に一致する形で固定した例は確認できず、実装選択として来歴を埋める必要がある。`io.correct_fast_blowout` の補正式や適用条件、`use_solar_rp`/`radiation.source` の分岐仕様も先行研究に同型がない。
 - 欠落情報: β と a_blow の参照式 (E.xxx)、`fast_blowout` 補正式の根拠、`use_solar_rp` 無効時の取り扱い、Q_pr テーブルのデータ出典（屈折率・粒子形状・波長グリッド・Mie solver）。
 - 次に確認する資料: `assumption_trace_data_sources.md` のテーブル出典、`analysis/equations.md` の R1–R3 節、`analysis/UNKNOWN_REF_REQUESTS.jsonl`（未登録なら追加）。
-- 先行研究メモ: β>0.5 で非束縛となる基準とブローアウト径の決定は [@Burns1979_Icarus40_1] に拠り、軌道時間オーダーで除去される近似は [@StrubbeChiang2006_ApJ648_652; @Wyatt2008] と整合する。Pawellek & Krivov (2015) は β=0.5 境界の使い方をデブリ円盤で明示しており、ここを文献根拠とする。一方、`t_blow=1/Ω` を固定する実装方針や `io.correct_fast_blowout` の補正式、Q_pr テーブル生成条件に直接対応する文献は見当たらない。
+- 先行研究メモ: β>0.5 で非束縛となる基準とブローアウト径の決定は [@Burns1979_Icarus40_1] に拠り、軌道時間オーダーで除去される近似は [@StrubbeChiang2006_ApJ648_652; @Wyatt2008] と整合する。[@PawellekKrivov2015_MNRAS454_3207] は β=0.5 境界の使い方をデブリ円盤で明示しており、ここを文献根拠とする。一方、`t_blow=1/Ω` を固定する実装方針や `io.correct_fast_blowout` の補正式、Q_pr テーブル生成条件に直接対応する文献は見当たらない。
 
 ### 2.2 遮蔽・ゲート（Φ(τ, ω0, g), τ=1 クリップ, gate_mode） — assumption cluster "shielding_gate_order_v1"
 Φテーブルの補間と τ=1 クリップの適用順が `shielding.mode` と `blowout.gate_mode` の組み合わせに依存し、τゲート（`radiation.tau_gate.enable`）との重ねがけ順序がコード依存のまま。Φテーブル自体も two-stream / delta-Eddington など近似名を明示せずに置いており、ゲート係数 `f_gate` が衝突・昇華どちらと競合するかも明文化が不足している。
@@ -270,9 +270,9 @@ last_checked: YYYY-MM-DD
   - 放射圧とガス抗力の競合を含む dust-gas 運動は [@TakeuchiLin2002_ApJ581_1344] が代表で、表層アウトフローを gas-rich 条件で扱うのは [@TakeuchiLin2003_ApJ593_524]。
   - 火星衝突円盤が溶融主体で蒸気≲数%となり得るという gas-poor の見通しは [@Hyodo2017a_ApJ845_125] が示す。
   - 小衛星を残すには低質量円盤が要るという方向性は [@CanupSalmon2018_SciAdv4_eaar6887] が Science Advances で議論する。
-  - 放射圧を揮発散逸に組み込む前提は [@Hyodo2018_ApJ860_150] で扱われ、昇華速度はヘルツ＝クヌーセン式（例: Markkanen et al. 2020 の彗星ダスト熱物理モデル）が広く使われる。
+  - 放射圧を揮発散逸に組み込む前提は [@Hyodo2018_ApJ860_150] で扱われ、昇華速度はヘルツ＝クヌーセン式（例: [@Markkanen2020_AA643_A16] の彗星ダスト熱物理モデル）が広く使われる。
 - 文献で見つからなかった部分: TL2003 をいつ有効化するか、ガス抗力をどの密度でオンにするかといった閾値は先行研究に明示がなく、無次元比（放射圧加速と抗力減速の比較など）で仕様化する必要がある。`sinks.mode` や `rp_blowout.enable` の優先順位も設計判断。Pollack–Burns–Tauber (1979) はガス抗力側の参照であり、昇華の ds/dt 根拠に使う場合は出典ずれに注意する。
-- 欠落情報: 昇華式の (E.xxx) ひも付け、TL2003 無効の根拠引用位置、gas-rich 感度試験時の手順、昇華 ds/dt に紐付く参照（Markkanen 2020 など）を registry へ登録するかどうかの判断。
+- 欠落情報: 昇華式の (E.xxx) ひも付け、TL2003 無効の根拠引用位置、gas-rich 感度試験時の手順、昇華 ds/dt に紐付く参照（[@Markkanen2020_AA643_A16] など）を registry へ登録するかどうかの判断。
 - 次に確認する資料: `assumption_trace_data_sources.md` の設定パース手順、`analysis/equations.md` の昇華式、`analysis/UNKNOWN_REF_REQUESTS.jsonl` での TL2003 slug 登録。
 - 先行研究メモ: gas-poor を前提に放射圧と衝突・昇華を扱う枠組みはレビュー [@Krivov2006_AA455_509] で整理され、gas-drag を含む遷移円盤の解析は [@TakeuchiLin2002_ApJ581_1344; @TakeuchiLin2003_ApJ593_524]、drag が支配的になる密度域の例は [@PollackBurnsTauber1979_Icarus37_587; @Olofsson2022_MNRAS513_713] にみられる。TL2003/gas_drag フラグのオン/オフ条件を定量規定する文献は見当たらない。
 
