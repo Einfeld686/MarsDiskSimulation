@@ -356,6 +356,18 @@ def _safe_float(value: Any) -> Optional[float]:
     return result
 
 
+def _float_or_nan(value: Any) -> float:
+    """Return a finite float or ``nan`` to stabilise Parquet schemas."""
+
+    try:
+        result = float(value)
+    except (TypeError, ValueError):
+        return float("nan")
+    if not math.isfinite(result):
+        return float("nan")
+    return result
+
+
 def _resolve_feedback_tau_field(tau_field: Optional[str]) -> str:
     """Normalise feedback.tau_field and reject unknown values."""
 
@@ -3454,10 +3466,59 @@ def run_zero_d(
             tau_record = float(tau_vert_last * los_factor)
         if tau_record is None or tau_vertical_record is None:
             tau_fallback = kappa_surf * sigma_surf
-            if tau_record is None:
-                tau_record = float(tau_fallback * los_factor)
-            if tau_vertical_record is None:
-                tau_vertical_record = tau_fallback
+        if tau_record is None:
+            tau_record = float(tau_fallback * los_factor)
+        if tau_vertical_record is None:
+            tau_vertical_record = tau_fallback
+        # Force optional numeric/string fields to concrete types to stabilise streaming chunk schemas.
+        _series_optional_float_keys = {
+            "t_coll",
+            "ts_ratio",
+            "Sigma_tau1",
+            "Sigma_tau1_active",
+            "sigma_tau1",
+            "Sigma_tau1_last_finite",
+            "tau_phase_vertical",
+            "tau_phase_los",
+            "tau_phase_used",
+            "t_solid_s",
+            "prod_subblow_area_rate_raw",
+            "prod_rate_raw",
+            "supply_rate_nominal",
+            "supply_rate_scaled",
+            "supply_headroom",
+            "supply_clip_factor",
+            "supply_visibility_factor",
+            "supply_temperature_scale",
+            "supply_temperature_value",
+            "supply_feedback_scale",
+            "supply_feedback_error",
+            "supply_reservoir_remaining_Mmars",
+            "supply_reservoir_fraction",
+            "phi_effective",
+            "phase_f_vap",
+            "phase_bulk_f_liquid",
+            "phase_bulk_f_solid",
+            "phase_bulk_f_vapor",
+        }
+        _series_optional_string_keys = {
+            "phase_tau_field",
+            "phase_temperature_input",
+            "supply_transport_mode",
+            "tau_phase_used",
+            "case_status",
+            "T_M_source",
+            "T_source",
+            "phase_state",
+            "phase_method",
+            "phase_reason",
+            "phase_bulk_state",
+            "blowout_layer_mode",
+            "blowout_target_phase",
+            "sink_selected",
+            "supply_temperature_value_kind",
+        }
+
         record = {
             "time": time,
             "dt": dt,
@@ -3614,6 +3675,13 @@ def run_zero_d(
             "sink_selected": sink_selected_last,
             "sublimation_blocked_by_phase": bool(sublimation_blocked_by_phase),
         }
+        for key in _series_optional_float_keys:
+            if key in record:
+                record[key] = _float_or_nan(record.get(key))
+        for key in _series_optional_string_keys:
+            if key in record:
+                val = record.get(key)
+                record[key] = "" if val is None else str(val)
         if phase7_enabled:
             record.update(
                 {
@@ -3680,6 +3748,59 @@ def run_zero_d(
         F_abs_qpr = F_abs_geom * qpr_mean_step
         tau_vertical_diag = tau_vert_last if tau_vert_last is not None else kappa_surf * sigma_diag
         tau_los_diag = tau_los_last if tau_los_last is not None else tau_record
+        _diag_optional_float_keys = {
+            "sigma_tau1",
+            "sigma_tau1_active",
+            "Sigma_tau1_last_finite",
+            "tau_phase_vertical",
+            "tau_phase_los",
+            "tau_phase_used",
+            "t_sink_total_s",
+            "t_sink_surface_s",
+            "t_sink_sublimation_s",
+            "t_sink_gas_drag_s",
+            "prod_subblow_area_rate_raw",
+            "supply_rate_nominal",
+            "supply_rate_scaled",
+            "supply_tau_clip_spill_rate",
+            "supply_headroom",
+            "supply_clip_factor",
+            "prod_rate_raw",
+            "prod_rate_applied_to_surf",
+            "prod_rate_diverted_to_deep",
+            "prod_rate_into_deep",
+            "deep_to_surf_flux_attempt",
+            "deep_to_surf_flux",
+            "deep_to_surf_flux_applied",
+            "supply_temperature_scale",
+            "supply_temperature_value",
+            "supply_feedback_scale",
+            "supply_feedback_error",
+            "supply_reservoir_remaining_Mmars",
+            "supply_reservoir_fraction",
+            "s_min_effective",
+            "phi_effective",
+            "chi_blow_eff",
+            "ds_step_uniform",
+            "mass_ratio_uniform",
+            "hydro_timescale_s",
+            "mass_loss_surface_solid_step",
+            "ds_dt_sublimation",
+            "ds_dt_sublimation_raw",
+        }
+        _diag_optional_string_keys = {
+            "phase_tau_field",
+            "phase_temperature_input",
+            "tau_phase_used",
+            "supply_transport_mode",
+            "phase_state",
+            "phase_method",
+            "phase_reason",
+            "phase_bulk_state",
+            "supply_temperature_value_kind",
+            "phase_payload",
+        }
+
         diag_entry = {
             "time": time,
             "dt": dt,
@@ -3791,6 +3912,13 @@ def run_zero_d(
             "mass_loss_surface_solid_step": mass_loss_surface_solid_step,
             "blowout_gate_factor": gate_factor,
         }
+        for key in _diag_optional_float_keys:
+            if key in diag_entry:
+                diag_entry[key] = _float_or_nan(diag_entry.get(key))
+        for key in _diag_optional_string_keys:
+            if key in diag_entry:
+                val = diag_entry.get(key)
+                diag_entry[key] = "" if val is None else str(val)
         diagnostics.append(diag_entry)
 
         mass_initial = cfg.initial.mass_total

@@ -86,8 +86,8 @@ EVAL="${EVAL:-1}"
 # Default is conservative clip + soft gate to avoid spill losses unless明示指定。
 SUPPLY_HEADROOM_POLICY="${SUPPLY_HEADROOM_POLICY:-clip}"
 SUPPLY_MODE="${SUPPLY_MODE:-const}"
-# Raw const supply rate before mixing。τ~1 維持のため一桁まで大幅に下げた保守値。
-SUPPLY_RATE="${SUPPLY_RATE:-1.0}"  # kg m^-2 s^-1 before mixing
+# Raw const supply rate before mixing。τ~1 維持のため小さめの保守値。
+SUPPLY_RATE="${SUPPLY_RATE:-5e-3}"  # kg m^-2 s^-1 before mixing
 # Pattern A: τ=1 キャップに任せるため、初期質量は形状用の最小限に抑える。
 INIT_MASS_TOTAL="${INIT_MASS_TOTAL:-1.0e-7}"
 SHIELDING_MODE="${SHIELDING_MODE:-psitau}"
@@ -401,6 +401,7 @@ import matplotlib
 matplotlib.use("Agg")
 import pandas as pd
 import matplotlib.pyplot as plt
+import numpy as np
 
 run_dir = Path(os.environ["RUN_DIR"])
 series_path = run_dir / "series" / "run.parquet"
@@ -472,16 +473,44 @@ df["t_coll_years"] = (df["t_coll"].clip(lower=1e-6)) / 31557600.0
 df["t_blow_hours"] = (df["t_blow_s"].clip(lower=1e-12)) / 3600.0
 prod_mean = float(df["prod_subblow_area_rate"].mean()) if not df.empty else 0.0
 
+
+def _finite_array(series_list):
+    if not series_list:
+        return np.array([])
+    arr = np.concatenate([np.asarray(s.dropna().to_numpy(), dtype=float) for s in series_list])
+    arr = arr[np.isfinite(arr)]
+    return arr
+
+
+def _auto_scale_symlog(ax, series_list, log_ratio=50.0, min_linthresh=1e-18):
+    arr = _finite_array(series_list)
+    if arr.size == 0:
+        return
+    maxv, minv = float(arr.max()), float(arr.min())
+    if maxv == minv:
+        return
+    if minv >= 0.0:
+        pos = arr[arr > 0.0]
+        if pos.size and (pos.max() / max(pos.min(), min_linthresh) >= log_ratio):
+            ax.set_yscale("log")
+        return
+    if maxv <= 0.0:
+        neg = np.abs(arr[arr < 0.0])
+        if neg.size and (neg.max() / max(neg.min(), min_linthresh) >= log_ratio):
+            ax.set_yscale("log")
+        return
+    finite_abs = np.abs(arr[arr != 0.0])
+    linthresh = max(min_linthresh, np.percentile(finite_abs, 20) if finite_abs.size else min_linthresh)
+    ax.set_yscale("symlog", linthresh=linthresh)
+
+
 fig, axes = plt.subplots(3, 1, figsize=(10, 12), sharex=True)
 axes[0].plot(df["time_days"], df["M_out_dot"], label="M_out_dot (blowout)", lw=1.2)
 axes[0].plot(df["time_days"], df["M_sink_dot"], label="M_sink_dot (sinks)", lw=1.0, alpha=0.7)
 axes[0].set_ylabel("M_Mars / s")
 axes[0].legend(loc="upper right")
 axes[0].set_title("Mass loss rates")
-# Dynamic y-axis with log scale for small values
-max_rate = max(df["M_out_dot"].abs().max(), df["M_sink_dot"].abs().max(), 1e-30)
-if max_rate > 0:
-    axes[0].set_yscale("symlog", linthresh=max_rate * 1e-3)
+_auto_scale_symlog(axes[0], [df["M_out_dot"], df["M_sink_dot"]], log_ratio=20.0)
 
 axes[1].plot(df["time_days"], df["M_loss_cum"], label="M_loss_cum (total)", lw=1.2)
 axes[1].plot(df["time_days"], df["mass_lost_by_blowout"], label="mass_lost_by_blowout", lw=1.0)
@@ -489,10 +518,7 @@ axes[1].plot(df["time_days"], df["mass_lost_by_sinks"], label="mass_lost_by_sink
 axes[1].set_ylabel("M_Mars")
 axes[1].legend(loc="upper left")
 axes[1].set_title("Cumulative losses")
-# Dynamic y-axis
-max_loss = max(df["M_loss_cum"].abs().max(), df["mass_lost_by_blowout"].abs().max(), 1e-30)
-if max_loss > 0:
-    axes[1].set_yscale("symlog", linthresh=max_loss * 1e-3)
+_auto_scale_symlog(axes[1], [df["M_loss_cum"], df["mass_lost_by_blowout"], df["mass_lost_by_sinks"]], log_ratio=20.0)
 
 axes[2].plot(df["time_days"], df["t_coll_years"], label="t_coll (yr)", lw=1.0)
 axes[2].plot(df["time_days"], df["t_blow_hours"], label="t_blow (hr)", lw=1.0, alpha=0.8)
@@ -540,9 +566,18 @@ ax2[0].plot(
 ax2[0].set_ylabel("kg m^-2 s^-1")
 ax2[0].legend(loc="upper right")
 ax2[0].set_title("Supply rates (nominal → scaled → applied)")
-# Dynamic log scale for supply rates
-max_supply = max(df["supply_rate_nominal"].abs().max(), df["supply_rate_applied"].abs().max(), 1e-30)
-ax2[0].set_yscale("symlog", linthresh=max_supply * 1e-3)
+_auto_scale_symlog(
+    ax2[0],
+    [
+        df["supply_rate_nominal"],
+        df["supply_rate_scaled"],
+        df["supply_rate_applied"],
+        df["prod_rate_applied_to_surf"],
+        df["prod_subblow_area_rate"],
+    ],
+    log_ratio=20.0,
+    min_linthresh=1e-12,
+)
 
 ax2[1].plot(df["time_days"], df["prod_rate_diverted_to_deep"], label="diverted→deep", color="tab:brown", alpha=0.8)
 ax2[1].plot(df["time_days"], df["deep_to_surf_flux"], label="deep→surf flux", color="tab:olive", alpha=0.9)
@@ -550,6 +585,7 @@ ax2[1].plot(df["time_days"], df["sigma_deep"], label="sigma_deep", color="tab:gr
 ax2[1].set_ylabel("kg m^-2 / s")
 ax2[1].legend(loc="upper right")
 ax2[1].set_title("Deep reservoir routing")
+_auto_scale_symlog(ax2[1], [df["prod_rate_diverted_to_deep"], df["deep_to_surf_flux"], df["sigma_deep"]], log_ratio=20.0, min_linthresh=1e-12)
 
 ax2[2].plot(df["time_days"], df["Sigma_surf"], label="Sigma_surf", color="tab:green")
 ax2[2].plot(df["time_days"], df["Sigma_tau1"], label="Sigma_tau1", color="tab:orange", alpha=0.8)
@@ -558,20 +594,16 @@ ax2[2].plot(df["time_days"], df["headroom"], label="headroom (applied)", color="
 ax2[2].set_ylabel("kg m^-2")
 ax2[2].legend(loc="upper right")
 ax2[2].set_title("Surface density vs tau=1 cap")
-# Dynamic y-axis with padding
-max_sigma = max(df["Sigma_surf"].max(), df["Sigma_tau1"].max()) if not df.empty else 1
-min_sigma = min(df["Sigma_surf"].min(), 0) if not df.empty else 0
-padding = (max_sigma - min_sigma) * 0.1 if max_sigma > min_sigma else max_sigma * 0.1
-ax2[2].set_ylim(min_sigma - padding, max_sigma + padding)
+_auto_scale_symlog(ax2[2], [df["Sigma_surf"], df["Sigma_tau1"], df["headroom"], df["supply_headroom"]], log_ratio=20.0, min_linthresh=1e-12)
 
 ax2[3].plot(df["time_days"], df["outflux_surface"], label="outflux_surface (M_Mars/s)", color="tab:red", alpha=0.9)
 ax2[3].plot(df["time_days"], df["tau_vertical"], label="tau_vertical", color="tab:purple", alpha=0.7)
 ax2[3].axhline(1.0, color="gray", linestyle=":", alpha=0.6, label="τ=1 reference")
-ax2[3].set_yscale("symlog", linthresh=1e-20)
 ax2[3].set_ylabel("outflux / tau")
 ax2[3].set_xlabel("days")
 ax2[3].legend(loc="upper right")
 ax2[3].set_title("Surface outflux and optical depth")
+_auto_scale_symlog(ax2[3], [df["outflux_surface"], df["tau_vertical"], df["tau"]], log_ratio=20.0, min_linthresh=1e-20)
 
 ax2[4].plot(df["time_days"], df["supply_feedback_scale"], label="feedback scale", color="tab:cyan")
 ax2[4].plot(df["time_days"], df["supply_temperature_scale"], label="temperature scale", color="tab:gray")
@@ -604,11 +636,11 @@ if "tau_los_mars" in df.columns:
 headroom_ratio = (df["Sigma_tau1"] - df["Sigma_surf"]).clip(lower=0) / df["Sigma_tau1"].clip(lower=1e-20)
 ax3.plot(df["time_days"], headroom_ratio, label="headroom ratio", color="tab:orange", alpha=0.6, linestyle=":")
 ax3.axhline(1.0, color="gray", linestyle=":", alpha=0.5, label="τ=1 reference")
-ax3.set_yscale("symlog", linthresh=1e-12)
 ax3.set_ylabel("optical depth")
 ax3.set_xlabel("days")
 ax3.set_title("Optical depth evolution")
 ax3.legend(loc="upper right")
+_auto_scale_symlog(ax3, [df["tau_vertical"], df["tau"], df.get("tau_los_mars", pd.Series(dtype=float)), headroom_ratio], log_ratio=20.0, min_linthresh=1e-12)
 fig3.tight_layout()
 fig3.savefig(plots_dir / "optical_depth.png", dpi=180)
 plt.close(fig3)
