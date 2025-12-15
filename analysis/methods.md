@@ -133,9 +133,140 @@ SiO₂ 冷却マップまたは閾値から `solid`/`vapor` を判定し、シ�
 > **用語**: analysis/glossary.md G.A11 (epsilon_mix)  
 > **設定**: analysis/config_guide.md §3.7 "Supply"
 
+### 9.1 フィードバック制御 (Supply Feedback)
+
+`supply.feedback.enabled=true` で τ 目標に追従する比例制御を有効化。
+
+| 設定キー | 意味 | 既定値 |
+|----------|------|--------|
+| `supply.feedback.target_tau` | 目標光学的厚さ | 0.9 |
+| `supply.feedback.gain` | 比例ゲイン | 1.2 |
+| `supply.feedback.response_time_years` | 応答時定数 [yr] | 0.4 |
+| `supply.feedback.tau_field` | τ 評価フィールド (`tau_vertical` / `tau_los`) | `tau_los` |
+| `supply.feedback.min_scale` / `max_scale` | スケール係数の上下限 | 1e-6 / 10.0 |
+
+- `supply_feedback_scale` 列にステップごとのスケール係数を出力。
+- フィードバックは Headroom Gate の**上流**で適用されるため、`headroom_policy=clip` と組み合わせると τ~1 維持が堅牢になる。
+
+### 9.2 温度カップリング (Supply Temperature)
+
+`supply.temperature.enabled=true` で火星温度に連動した供給スケーリングを有効化。
+
+- `mode=scale`: べき乗スケーリング $(T/T_{\rm ref})^{\alpha}$
+- `mode=table`: 外部 CSV テーブルから補間
+
+| 設定キー | 意味 |
+|----------|------|
+| `supply.temperature.reference_K` | 基準温度 [K] |
+| `supply.temperature.exponent` | べき指数 α |
+| `supply.temperature.floor` / `cap` | スケール係数の下限・上限 |
+
+### 9.3 リザーバ (Supply Reservoir)
+
+`supply.reservoir.enabled=true` で有限質量リザーバを追跡。
+
+- `depletion_mode=hard_stop`: リザーバ枯渇で供給ゼロ
+- `depletion_mode=taper`: 残量に応じて漸減（`taper_fraction` で制御）
+
+### 9.4 深層リザーバ + ミキシング (Deep Mixing)
+
+`supply.transport.mode=deep_mixing` を選択すると、供給が一旦深層リザーバに蓄積され、ミキシング時間 `t_mix_orbits` 公転で表層へ放出される。Headroom Gate (`hard` / `soft`) を通過して τ=1 超過を抑制。
+
+- `supply_rate_nominal` → `supply_rate_scaled` → `supply_rate_applied` の経路を診断列で確認可能。
+- `prod_rate_diverted_to_deep` / `deep_to_surf_flux` 列で深層ルーティングを可視化。
+
+### 9.5 注入パラメータ
+
+| 設定キー | 意味 | 既定値 |
+|----------|------|--------|
+| `supply.injection.mode` | `min_bin` / `powerlaw_bins` | `powerlaw_bins` |
+| `supply.injection.q` | べき指数（衝突カスケード断片） | 3.5 |
+| `supply.injection.s_inj_min` / `s_inj_max` | 注入サイズ範囲 [m] | 自動 |
+| `supply.injection.velocity.mode` | `inherit` / `fixed_ei` / `factor` | `inherit` |
+
 ---
 
-## 10. 検証手順
+## 10. 動的終了条件と冷却ドライバ
+
+### 10.1 温度停止 (Temperature Stop)
+
+`numerics.t_end_until_temperature_K` を設定すると、火星表面温度が指定値以下になった時点でシミュレーションを終了する。
+
+```yaml
+numerics:
+  t_end_years: null
+  t_end_until_temperature_K: 2000
+  t_end_temperature_margin_years: 0
+  t_end_temperature_search_years: 10  # optional search cap
+```
+
+- `t_end_years` と排他。両方 `null` の場合はデフォルト 2 年。
+- `margin_years` で冷却達成後のマージン時間を追加可能。
+
+### 10.2 冷却ドライバモード
+
+| モード | 内容 | 設定参照 |
+|--------|------|----------|
+| `table` | 外部 CSV テーブル補間 | `radiation.mars_temperature_driver.table.*` |
+| `slab` | 解析的 T^{-3} 冷却 (Stefan–Boltzmann) | 内蔵式 |
+| `hyodo` | 線形熱流束に基づく冷却 | `radiation.mars_temperature_driver.hyodo.*` |
+
+> **詳細**: analysis/equations.md (E.042)–(E.043), analysis/physics_flow.md §3  
+> **設定**: analysis/config_guide.md §3.2 "mars_temperature_driver"
+
+---
+
+## 11. 初期τ=1スケーリング
+
+`init_tau1.enabled=true` で、初期 PSD を τ=1 になるようスケーリングする。
+
+| 設定キー | 意味 | 既定値 |
+|----------|------|--------|
+| `init_tau1.scale_to_tau1` | 有効化フラグ | `true` |
+| `init_tau1.tau_field` | `vertical` / `los` | `los` |
+| `init_tau1.target_tau` | 目標光学的厚さ | 1.0 |
+
+- `scale_to_tau1=false` の場合、`initial.mass_total` がそのまま適用されるが、供給が τ=1 キャップで即座にクリップされる可能性がある。
+
+---
+
+## 12. チェックポイント (Segmented Run)
+
+長時間実行をセグメント化し、中間状態を保存して再開可能にする。
+
+```yaml
+numerics:
+  checkpoint:
+    enabled: true
+    interval_years: 0.083   # ~30 days
+    keep_last_n: 3
+    format: pickle          # pickle | hdf5
+```
+
+- クラッシュ時に最新チェックポイントから `--resume` で再開。
+- `keep_last_n` でディスク使用量を制限。
+
+---
+
+## 13. 相判定 (Phase)
+
+SiO₂ 冷却マップまたは閾値から `solid`/`vapor` を判定し、シンク経路を自動選択。
+
+| 設定キー | 意味 | 既定値 |
+|----------|------|--------|
+| `phase.enabled` | 有効化フラグ | `true` |
+| `phase.temperature_input` | `mars_surface` / `particle` | `particle` |
+| `phase.q_abs_mean` | 平均吸収効率 | 0.4 |
+| `phase.tau_field` | τ 評価フィールド | `los` |
+
+- `particle` モードでは、火星放射と光学的厚さを用いて粒子平衡温度を推定。
+
+> **フロー図**: analysis/physics_flow.md §4 "相判定フロー"  
+> **設定**: analysis/config_guide.md §3.8 "Phase"
+
+---
+
+## 14. 検証手順
 
 ### ユニットテスト
 
@@ -162,7 +293,7 @@ python -m tools.evaluation_system --outdir <run_dir>  # Doc 更新後に直近�
 
 ---
 
-## 11. 実行例
+## 15. 実行例
 
 代表的な実行コマンドとシナリオは analysis/run-recipes.md に集約。
 
@@ -170,25 +301,52 @@ python -m tools.evaluation_system --outdir <run_dir>  # Doc 更新後に直近�
 # 標準シナリオ
 python -m marsdisk.run --config configs/scenarios/fiducial.yml
 
-# 感度スイープ（温度×供給率）
+# 温度×供給率×遮蔽スイープ（推奨）
+#   T_M = {3000, 4000, 5000} K
+#   epsilon_mix = {0.1, 0.5, 1.0}
+#   Φ = {0.20, 0.37, 0.60}
+scripts/research/run_temp_supply_sweep.sh
+
+# heatmapスイープ（旧形式）
 python scripts/sweep_heatmaps.py --map 1 --outdir sweeps/demo --jobs 4
 ```
 
+### run_temp_supply_sweep.sh の主要環境変数
+
+| 変数 | 意味 | 既定値 |
+|------|------|--------|
+| `COOL_TO_K` | 温度停止閾値 [K] | 2000 |
+| `COOL_MODE` | 冷却ドライバ (`slab` / `hyodo`) | `slab` |
+| `SUPPLY_FEEDBACK_ENABLED` | τフィードバック (0/1) | 1 |
+| `SUPPLY_TRANSPORT_MODE` | 供給トランスポート (`direct` / `deep_mixing`) | `deep_mixing` |
+| `SUBSTEP_FAST_BLOWOUT` | サブステップ分割 (0/1) | 0 |
+| `CHECKPOINT_ENABLE` | チェックポイント (0/1) | 1 |
+| `EVAL` | 評価スクリプト実行 (0/1) | 1 |
+
+> **スクリプト**: [run_temp_supply_sweep.sh](file:///Users/daichi/marsshearingsheet/scripts/research/run_temp_supply_sweep.sh)  
 > **レシピ詳細**: analysis/run-recipes.md §代表レシピ
 
 ---
 
-## 12. 設定→物理対応クイックリファレンス
+## 16. 設定→物理対応クイックリファレンス
 
 | 設定キー | 物理 | 詳細参照 |
 |----------|------|----------|
 | `radiation.TM_K` | 火星温度 | config_guide §3.2 |
+| `radiation.mars_temperature_driver.*` | 冷却ドライバ | config_guide §3.2 |
 | `shielding.mode` | 遮蔽 Φ | config_guide §3.4 |
 | `sinks.mode` | 昇華/ガス抗力 | config_guide §3.6 |
 | `blowout.enabled` | ブローアウト損失 | config_guide §3.9 |
 | `supply.mode` | 外部供給 | config_guide §3.7 |
-| `phase.mode` | 相判定 | config_guide §3.8 |
+| `supply.feedback.*` | τフィードバック制御 | config_guide §3.7 |
+| `supply.temperature.*` | 温度カップリング | config_guide §3.7 |
+| `supply.reservoir.*` | 有限質量リザーバ | config_guide §3.7 |
+| `supply.transport.*` | 深層ミキシング | config_guide §3.7 |
+| `init_tau1.*` | 初期τ=1スケーリング | config_guide §3.3 |
+| `phase.*` | 相判定 | config_guide §3.8 |
+| `numerics.checkpoint.*` | チェックポイント | config_guide §3.1 |
+| `numerics.t_end_until_temperature_K` | 温度停止条件 | config_guide §3.1 |
 | `ALLOW_TL2003` | gas-rich 表層 ODE トグル | config_guide §3.6, §3.9 |
-| `psd.wavy_strength` | “wavy”強度（0で無効） | config_guide §3.3 |
+| `psd.wavy_strength` | "wavy"強度（0で無効） | config_guide §3.3 |
 
 完全な設定キー一覧は analysis/config_guide.md を参照。
