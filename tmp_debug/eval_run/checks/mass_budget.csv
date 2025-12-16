@@ -1,2 +1,0 @@
-time,mass_initial,mass_remaining,mass_lost,mass_diff,error_percent,tolerance_percent,mass_loss_rp_mars,mass_loss_hydro_drag,mass_loss_surface_solid_marsRP,mass_loss_tau_clip_spill
-15.07539336014622,1.6600773633225787e-07,3.5507337882289165e-12,1.6600418559846964e-07,0.0,0.36565548953171667,0.5,1.6600418559846964e-07,0.0,1.6600418559846964e-07,0.0

@@ -9,7 +9,7 @@
 ## 0. 本資料の位置づけと参照先
 
 - 本書は背景・意図をまとめた「解説」レイヤーであり、数式やモジュール責務の正規形は `analysis/equations.md` と `analysis/overview.md` を唯一の仕様源とする。実行レシピは `analysis/run-recipes.md` と `analysis/AI_USAGE.md` を参照し、ここでは前提と文脈だけを示す。
-- 標準の0Dベースラインは `python -m marsdisk.run --config configs/base.yml` で起動し、`out/series/run.parquet`・`out/summary.json` と質量収支ログ `out/checks/mass_budget.csv` を生成する。質量誤差は (E.011) の許容 |error| ≤ 0.5% を `compute_mass_budget_error_C4` が検査し、`writer.write_*` が成果物にシリアライズする。[marsdisk/run.py:1136–4603][marsdisk/io/writer.py:24–305]
+- 標準の0Dベースラインは `python -m marsdisk.run --config configs/base.yml` で起動し、`out/series/run.parquet`・`out/summary.json` と質量収支ログ `out/checks/mass_budget.csv` を生成する。質量誤差は (E.011) の許容 |error| ≤ 0.5% を `compute_mass_budget_error_C4` が検査し、`writer.write_*` が成果物にシリアライズする。[marsdisk/run.py:1198–4603][marsdisk/io/writer.py:24–305]
 - スコープは gas-poor を既定とするロッシュ内0D円盤で、TL2003 型表層 ODE は `ALLOW_TL2003=false` のまま無効。gas-rich 感度を試す場合のみ環境変数を `true` にし、`surface.collision_solver=surface_ode` を使うレシピへ切り替える（詳細は `analysis/run-recipes.md`）。
 - 数値仕様の目安は対数サイズビン30–60（既定40, $s\in[10^{-6},3]$ m）、IMEX-BDF(1) で $\Delta t \le 0.1 \min t_{\rm coll}$ を保ったまま2年間を積分し、$t_{\rm blow}=1/\Omega$ を解像する（(E.006),(E.010)）。既定パラメータとスイッチは `configs/base.yml:1–173` に集約している。
 

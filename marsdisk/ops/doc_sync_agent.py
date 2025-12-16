@@ -144,6 +144,28 @@ class FileChange:
     original: str
     updated: str
 
+    def has_changes(self) -> bool:
+        return self.original != self.updated
+
+    def diff(self) -> str:
+        if not self.has_changes():
+            return ""
+        original_lines = self.original.splitlines(keepends=True)
+        updated_lines = self.updated.splitlines(keepends=True)
+        diff_iter = difflib.unified_diff(
+            original_lines,
+            updated_lines,
+            fromfile=f"a/{self.path.relative_to(REPO_ROOT)}",
+            tofile=f"b/{self.path.relative_to(REPO_ROOT)}",
+        )
+        return "".join(diff_iter)
+
+    def write(self) -> None:
+        if not self.has_changes():
+            return
+        self.path.parent.mkdir(parents=True, exist_ok=True)
+        self.path.write_text(self.updated, encoding="utf-8")
+
 
 @dataclass
 class CodeRef:
@@ -159,28 +181,6 @@ class EquationEntry:
     title: str
     code_refs: list[CodeRef] = field(default_factory=list)
     literature_refs: list[str] = field(default_factory=list)
-
-    def has_changes(self) -> bool:
-        return self.original != self.updated
-
-    def diff(self) -> str:
-        if not self.has_changes():
-            return ""
-        original_lines = self.original.splitlines(keepends=True)
-        updated_lines = self.updated.splitlines(keepends=True)
-        diff_iter = difflib.unified_diff(
-            original_lines,
-            updated_lines,
-            fromfile=f"a/{self.path}",
-            tofile=f"b/{self.path}",
-        )
-        return "".join(diff_iter)
-
-    def write(self) -> None:
-        if not self.has_changes():
-            return
-        self.path.parent.mkdir(parents=True, exist_ok=True)
-        self.path.write_text(self.updated, encoding="utf-8")
 
 
 @dataclass(frozen=True)

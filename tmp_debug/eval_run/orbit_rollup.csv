@@ -1,2 +1,0 @@
-orbit_index,time_s,time_s_end,t_orb_s,M_out_orbit,M_sink_orbit,M_loss_orbit,M_out_per_orbit,M_sink_per_orbit,M_loss_per_orbit,mass_loss_frac_per_orbit,M_out_cum,M_sink_cum,M_loss_cum,r_RM,T_M,slope_dlnM_dlnr
-1,15.07539336014622,15.07539336014622,15075.39336014622,1.6600418559846964e-07,0.0,1.6600418559846964e-07,1.1011598943568763e-11,0.0,1.1011598943568763e-11,0.9999786110342405,1.6600418559846964e-07,0.0,1.6600418559846964e-07,1.85,3999.999999999998,
