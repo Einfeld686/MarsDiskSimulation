@@ -38,57 +38,58 @@ AIエージェントがコード検索を効率化するためのマップを提
 | `_apply_overrides_dict` | L290 | ヘルパー | Apply dotted-path overrides to a configuration dic... |
 | `_merge_physics_section` | L328 | ヘルパー | Inline the optional ``physics`` mapping into the r... |
 | `_safe_float` | L347 | ヘルパー | Return ``value`` cast to float when finite, otherw... |
-| `_resolve_feedback_tau_field` | L359 | ヘルパー | Normalise feedback.tau_field and reject unknown va... |
-| `_derive_seed_components` | L372 | ヘルパー | No description available. |
-| `_resolve_seed` | L397 | ヘルパー | Return the RNG seed, seed expression description, ... |
-| `_auto_chi_blow` | L412 | ヘルパー | Return an automatic chi_blow scaling based on β an... |
-| `_fast_blowout_correction_factor` | L427 | ヘルパー | Return the effective loss fraction ``f_fast = 1 - ... |
-| `_compute_gate_factor` | L447 | ヘルパー | Return gate coefficient f_gate=t_solid/(t_solid+t_... |
-| `_human_bytes` | L469 | ヘルパー | Return a human-readable byte string. |
-| `_memory_estimate` | L481 | ヘルパー | Return short and long memory hints estimated from ... |
-| `_normalise_physics_mode` | L506 | ヘルパー | Return the canonical physics.mode string. |
-| `_clone_config` | L522 | ヘルパー | Return a deep copy of a configuration object. |
-| `_resolve_time_grid` | L530 | ヘルパー | Return (t_end, dt_nominal, dt_step, n_steps, info)... |
-| `_Phase5VariantResult` | L632 | ヘルパー | Artifacts recorded for a variant within the Phase ... |
-| `_read_json` | L645 | ヘルパー | No description available. |
-| `_hash_payload` | L650 | ヘルパー | No description available. |
-| `_prepare_phase5_variants` | L655 | ヘルパー | Return normalized variant specifications or raise ... |
-| `RunConfig` | L688 | クラス | Configuration parameters for a zero-dimensional ru... |
-| `RunState` | L705 | クラス | State variables evolved during the run. |
-| `ZeroDHistory` | L715 | クラス | Per-step history bundle used by the full-feature z... |
-| `StreamingState` | L739 | クラス | Manage streaming flush of large histories to Parqu... |
-| `step` | L872 | 関数 | Advance the coupled S0/S1 system by one time-step. |
-| `run_n_steps` | L924 | 関数 | Run ``n`` steps and optionally serialise results. |
-| `load_config` | L954 | 関数 | Load a YAML configuration file into a :class:`Conf... |
-| `_gather_git_info` | L979 | ヘルパー | Return basic git metadata for provenance recording... |
-| `_configure_logging` | L1006 | ヘルパー | Configure root logging and optionally silence Pyth... |
-| `MassBudgetViolationError` | L1017 | クラス | Raised when the mass budget tolerance is exceeded. |
-| `_write_zero_d_history` | L1021 | ヘルパー | Persist time series, diagnostics, and rollups for ... |
-| `run_zero_d` | L1124 | メイン | Execute the full-feature zero-dimensional simulati... |
-| `_run_phase5_variant` | L4878 | ヘルパー | Execute a single-process variant run and capture i... |
-| `_write_phase5_comparison_products` | L4940 | ヘルパー | Aggregate per-variant artifacts into the compariso... |
-| `run_phase5_comparison` | L5082 | 関数 | Run the Phase 5 dual single-process comparison wor... |
-| `main` | L5117 | 関数 | Command line entry point. |
+| `_float_or_nan` | L359 | ヘルパー | Return a finite float or ``nan`` to stabilise Parq... |
+| `_resolve_feedback_tau_field` | L371 | ヘルパー | Normalise feedback.tau_field and reject unknown va... |
+| `_derive_seed_components` | L384 | ヘルパー | No description available. |
+| `_resolve_seed` | L409 | ヘルパー | Return the RNG seed, seed expression description, ... |
+| `_auto_chi_blow` | L424 | ヘルパー | Return an automatic chi_blow scaling based on β an... |
+| `_fast_blowout_correction_factor` | L439 | ヘルパー | Return the effective loss fraction ``f_fast = 1 - ... |
+| `_compute_gate_factor` | L459 | ヘルパー | Return gate coefficient f_gate=t_solid/(t_solid+t_... |
+| `_human_bytes` | L481 | ヘルパー | Return a human-readable byte string. |
+| `_memory_estimate` | L493 | ヘルパー | Return short and long memory hints estimated from ... |
+| `_normalise_physics_mode` | L518 | ヘルパー | Return the canonical physics.mode string. |
+| `_clone_config` | L534 | ヘルパー | Return a deep copy of a configuration object. |
+| `_resolve_time_grid` | L542 | ヘルパー | Return (t_end, dt_nominal, dt_step, n_steps, info)... |
+| `_Phase5VariantResult` | L644 | ヘルパー | Artifacts recorded for a variant within the Phase ... |
+| `_read_json` | L657 | ヘルパー | No description available. |
+| `_hash_payload` | L662 | ヘルパー | No description available. |
+| `_prepare_phase5_variants` | L667 | ヘルパー | Return normalized variant specifications or raise ... |
+| `RunConfig` | L700 | クラス | Configuration parameters for a zero-dimensional ru... |
+| `RunState` | L717 | クラス | State variables evolved during the run. |
+| `ZeroDHistory` | L727 | クラス | Per-step history bundle used by the full-feature z... |
+| `StreamingState` | L751 | クラス | Manage streaming flush of large histories to Parqu... |
+| `step` | L884 | 関数 | Advance the coupled S0/S1 system by one time-step. |
+| `run_n_steps` | L936 | 関数 | Run ``n`` steps and optionally serialise results. |
+| `load_config` | L966 | 関数 | Load a YAML configuration file into a :class:`Conf... |
+| `_gather_git_info` | L991 | ヘルパー | Return basic git metadata for provenance recording... |
+| `_configure_logging` | L1018 | ヘルパー | Configure root logging and optionally silence Pyth... |
+| `MassBudgetViolationError` | L1029 | クラス | Raised when the mass budget tolerance is exceeded. |
+| `_write_zero_d_history` | L1033 | ヘルパー | Persist time series, diagnostics, and rollups for ... |
+| `run_zero_d` | L1136 | メイン | Execute the full-feature zero-dimensional simulati... |
+| `_run_phase5_variant` | L5006 | ヘルパー | Execute a single-process variant run and capture i... |
+| `_write_phase5_comparison_products` | L5068 | ヘルパー | Aggregate per-variant artifacts into the compariso... |
+| `run_phase5_comparison` | L5210 | 関数 | Run the Phase 5 dual single-process comparison wor... |
+| `main` | L5245 | 関数 | Command line entry point. |
 
 ## 3. 主要セクション（目安）
 
 > 以下の行範囲はコード変更により変動します。`inventory.json` を基に自動更新されます。
 
-- **`run_zero_d()`**: L1124–? (メイン実行ドライバ)
-- **`main()`**: L5117–? (CLI エントリポイント)
-- **`StreamingState`**: L739–? (ストリーミング出力管理)
-- **`ZeroDHistory`**: L715–? (ステップ履歴管理)
+- **`run_zero_d()`**: L1136–? (メイン実行ドライバ)
+- **`main()`**: L5245–? (CLI エントリポイント)
+- **`StreamingState`**: L751–? (ストリーミング出力管理)
+- **`ZeroDHistory`**: L727–? (ステップ履歴管理)
 ## 4. 探索ガイド
 
 | 調べたいこと | 参照シンボル | 備考 |
 |-------------|-------------|------|
-| 設定ロード | [`load_config`](L954) | YAML→Config変換 |
-| 時間グリッド | [`_resolve_time_grid`](L530) | dt, n_steps決定 |
-| シード解決 | [`_resolve_seed`](L397) | RNG初期化 |
-| 高速ブローアウト補正 | [`_fast_blowout_correction_factor`](L427) | dt/t_blow補正 |
+| 設定ロード | [`load_config`](L966) | YAML→Config変換 |
+| 時間グリッド | [`_resolve_time_grid`](L542) | dt, n_steps決定 |
+| シード解決 | [`_resolve_seed`](L409) | RNG初期化 |
+| 高速ブローアウト補正 | [`_fast_blowout_correction_factor`](L439) | dt/t_blow補正 |
 | 進捗表示 | [`ProgressReporter`](L154) | プログレスバー |
-| 履歴書き出し | [`_write_zero_d_history`](L1021) | Parquet/CSV出力 |
-| Phase5比較 | [`run_phase5_comparison`](L5082) | バリアント比較 |
+| 履歴書き出し | [`_write_zero_d_history`](L1033) | Parquet/CSV出力 |
+| Phase5比較 | [`run_phase5_comparison`](L5210) | バリアント比較 |
 
 ---
 

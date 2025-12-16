@@ -45,6 +45,8 @@ ls out/my_run/
 1. [概要：設定構造の全体像](#1-概要設定構造の全体像)
 2. [廃止予定・非推奨フィールド](#2-廃止予定非推奨フィールドの一覧)
 3. [設定グループ別解説](#3-設定グループ別解説)
+    - [パラメータ影響マップ](#30-パラメータ影響マップ)
+    - [物理パラメータ完全一覧](#31-物理パラメータ完全一覧)
 4. [最小構成の例](#4-最小構成の例)
 5. [移行ガイド](#5-移行ガイド)
 6. [シナリオ選択ガイド](#6-シナリオ選択ガイド)
@@ -118,7 +120,53 @@ configs/<scenario>.yml
 
 ## 3. 設定グループ別解説
 
-### 3.0 物理パラメータ完全一覧
+### 3.0 パラメータ影響マップ
+
+どの設定がどの物理プロセスを制御するか示す全体図：
+
+```mermaid
+graph LR
+    %% Config Groups
+    Rad[radiation]
+    Sinks[sinks]
+    Mat[material]
+    Sizes[sizes]
+    Dyn[dynamics]
+    
+    %% Intermediate Physical Quantities
+    Temp(Temperature T_M)
+    Beta(Beta β / s_blow)
+    Qd(Strength Q_D*)
+    
+    %% Core Engines
+    Smol{{Smoluchowski<br/>Solver}}
+    Blow{{Blowout<br/>Loss}}
+    Sub{{Sublimation<br/>Mass Loss}}
+    
+    %% Connections
+    Rad -->|TM_K / driver| Temp
+    Rad -->|Q_pr / source| Beta
+    Mat -->|rho| Beta
+    
+    Temp -->|beta func| Beta
+    Temp -->|HKL / logistic| Sinks
+    
+    Sinks -->|rate / location| Sub
+    Sub -->|ds/dt| Smol
+    
+    Beta -->|s_blow| Blow
+    Sizes -->|s_min...s_max| Smol
+    
+    Dyn -->|e0, i0, f_wake| Smol
+    Mat -->|rho| Qd
+    Qd -->|fragmentation| Smol
+    
+    style Smol fill:#ffecb3,stroke:#ff6f00,stroke-width:2px
+    style Blow fill:#bbdefb,stroke:#0d47a1,stroke-width:2px
+    style Sub fill:#ffccbc,stroke:#bf360c,stroke-width:2px
+```
+
+### 3.1 物理パラメータ完全一覧
 
 以下は**現行スキーマ**で有効な全パラメータの体系的一覧です。フィールド名は `marsdisk/schema.py` の定義に揃えています。
 

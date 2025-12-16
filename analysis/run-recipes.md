@@ -15,6 +15,37 @@
 | “wavy” PSD 感度 | `psd.wavy_strength>0` | `python -m marsdisk.run --config configs/base.yml --override psd.wavy_strength=0.2` | `series/run.parquet` に “wavy” の波形が残り、`summary.json` で `psd.wavy_strength` を確認 |
 | 高速ブローアウト解像 | `io.substep_fast_blowout=true`, `io.substep_max_ratio≈1`（必要に応じ補正 `io.correct_fast_blowout=true`） | `python -m marsdisk.run --config configs/base.yml --set io.substep_fast_blowout=true --set io.substep_max_ratio=1.0` | `series/run.parquet` の `n_substeps>1` と `fast_blowout_*` 列、積分値と累積損失の一致 |
 
+### レシピ選択デシジョンツリー
+
+```mermaid
+graph TD
+    Start{What is your goal?}
+    Start -->|Standard<br/>Physics| GasPoor{Gas Environ?}
+    Start -->|Legacy<br/>Comparison| Legacy[Legacy ODE<br/>(Section A, Recipe 3)]
+
+    GasPoor -->|Gas Poor (Default)| Sinks{Simulate<br/>Sublimation?}
+    GasPoor -->|Gas Rich| Legacy
+
+    Sinks -->|No<br/>(Blowout only)| BlowoutOnly[Baseline Blowout-Only<br/>(Section A, Recipe 1)]
+    Sinks -->|Yes| SubType{Conserve Mass?}
+
+    SubType -->|Yes (Default)| BaseSmol[Base Smol Mode<br/>(Section A, Recipe 1)]
+    SubType -->|No (Mass Loss)| SubLoss[Sublimation Sink<br/>(Section A, Recipe 2)]
+
+    BaseSmol --> Sensitivity{Analysis Type}
+    Sensitivity -->|Wavy PSD| Wavy[Wavy Overlay]
+    Sensitivity -->|Fast Blowout| FastB[High-Res Blowout]
+    Sensitivity -->|Standard| Run[Standard Run]
+
+    classDef default fill:#f9f9f9,stroke:#333,stroke-width:1px;
+    classDef decision fill:#e3f2fd,stroke:#1565c0,stroke-width:2px;
+    classDef endpoint fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px;
+
+    class Start,GasPoor,Sinks,SubType,Sensitivity decision;
+    class Legacy,BlowoutOnly,BaseSmol,SubLoss,Wavy,FastB,Run endpoint;
+```
+
+
 ## τ≈1＋供給維持の評価（temp_supply 系）
 - 判定基準（評価区間は後半 50% を既定、`--window-spans "0.5-1.0"`）  
   - τ条件: 評価区間の `tau_vertical`（なければ `tau`）の中央値が 0.5–2。  

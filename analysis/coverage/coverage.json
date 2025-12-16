@@ -1,12 +1,12 @@
 {
   "function_reference_rate": {
-    "numerator": 75,
+    "numerator": 98,
     "denominator": 98,
-    "rate": 0.7653061224489796
+    "rate": 1.0
   },
   "anchor_consistency_rate": {
-    "numerator": 577,
-    "denominator": 577,
+    "numerator": 676,
+    "denominator": 676,
     "rate": 1.0
   },
   "equation_unit_coverage": {
@@ -15,9 +15,5 @@
     "rate": 0.9428571428571428
   },
   "sinks_callgraph_documented": true,
-  "holes": [
-    "marsdisk/io/checkpoint.py#save_checkpoint",
-    "marsdisk/physics/collisions_smol.py#compute_kernel_ei_state",
-    "marsdisk/physics/phase.py#particle_temperature_equilibrium"
-  ]
+  "holes": []
 }

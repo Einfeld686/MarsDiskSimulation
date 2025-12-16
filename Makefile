@@ -61,6 +61,7 @@ analysis-pipeline:
 
 # AGENTS.md: DocSync → doc-tests → evaluation_system
 analysis-update: analysis-sync
+	python -m tools.doc_sync_agent equations --equations analysis/equations.md --inventory analysis/inventory.json --write analysis/equation_code_map.json
 	python analysis/tools/make_coverage.py
 	python -m tools.coverage_guard
 	python tools/run_analysis_doc_tests.py

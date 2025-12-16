@@ -131,6 +131,15 @@ t_{coll} = 1 / (Ω τ_⊥)
 <!-- primary_impl: marsdisk/physics/surface.py#wyatt_tcoll_S1 -->
 ```
 
+### 3.4 ML 補助（任意・軽量）
+
+scikit-learn レベルで、曖昧な対応付けのレビュー候補を提示する補助機能を追加（自動確定はしない）。
+
+- 特徴量: 式側は見出し+LaTeX先頭+Numericsのアンカー文字列、コード側は関数名+パス+docstring先頭+近傍コメント。前処理は lower / 非英数字除去。`TfidfVectorizer` の char 3–5 と word 1–2。
+- 推論: コサイン類似度で top-K 候補を生成。任意で LogisticRegression（特徴: 類似度、ファイルパス一致、トークン一致数）を追加し、低FPR閾値でフィルタ。`ml_suggested_refs` と `confidence` を JSON に追加し、`provenance_report.md` は警告欄として扱う（CIは fail させない）。
+- 運用: `--with-ml-suggest` フラグを DocSyncAgent equations サブコマンドに追加。キャッシュは `.cache/doc_sync/equation_matcher.pkl` に joblib 保存。AI_USAGE/AGENTS に「ML候補は警告・人レビュー必須」を追記（別途対応）。
+- テスト: fixtures で Precision@k / Recall@k / FPR を算出する軽量テストを追加し、デフォルト閾値の根拠とする。
+
 ## 4. 実装詳細
 
 ### 4.1 式パーサー
@@ -262,6 +271,11 @@ cat analysis/equation_code_map.json | jq '.stats'
 ### Phase 3: コード側注釈（オプション、工数: 1日）
 - コード内 `# @ref E.xxx` 注釈の検出（AI_USAGE.md に運用規約と例を追記し、CIでは警告レベルから開始）
 - 双方向マッピングの完成
+
+### Phase 4: ML候補提示（任意、工数: 0.5–1日）
+- Tfidf 類似度による top-K 提案を equations サブコマンドに統合
+- (任意) LogisticRegression で confidence を計算し、`ml_suggested_refs` に格納
+- joblib キャッシュと fixtures ベンチ（Precision@k/FPR）を追加し、ML出力は警告のみで CI を落とさないポリシーを設定
 
 ## 7. リスクと緩和策
 

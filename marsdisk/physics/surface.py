@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-"""Surface layer evolution and outflux (S1).
+r"""Surface layer evolution and outflux (S1).
 
 This module implements a minimal zero-dimensional model for the surface
 number/mass density of grains susceptible to radiation-pressure
@@ -63,7 +63,7 @@ __all__ = [
 
 
 def wyatt_tcoll_S1(tau: float, Omega: float) -> float:
-    """Return the collisional time-scale from [@StrubbeChiang2006_ApJ648_652].
+    r"""Return the collisional time-scale from [@StrubbeChiang2006_ApJ648_652].
 
     The expression ``t_{\mathrm{coll}} = 1/(\Omega\,\tau_{\perp})`` reduces to the
     same scaling highlighted by [@Wyatt2008] but cites the optically thin

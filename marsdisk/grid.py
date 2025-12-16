@@ -15,7 +15,7 @@ from . import constants
 
 
 def omega_kepler(r: float) -> float:
-    """Return the Keplerian angular frequency :math:`\Omega(r)`.
+    r"""Return the Keplerian angular frequency :math:`\Omega(r)`.
 
     Parameters
     ----------

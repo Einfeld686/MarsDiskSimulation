@@ -118,7 +118,7 @@ def _resolve_qpr(
 
 
 def grain_temperature_graybody(T_M: float, radius_m: float, *, q_abs: float = 1.0) -> float:
-    """Return the planetary IR equilibrium grain temperature ``T_d`` (E.043). [@Hyodo2018_ApJ860_150]
+    r"""Return the planetary IR equilibrium grain temperature ``T_d`` (E.043). [@Hyodo2018_ApJ860_150]
 
     The expression follows ``T_d = T_M \bar{Q}_{abs}^{1/4} \sqrt{R_M/(2 r)}`` for a
     Lambertian planet illuminating an optically thin, gas-poor disk.  The
