@@ -1,3 +1,0 @@
-python scripts/plot_from_runs.py --fig-id FIG_BETA_SERIES_01 --runs /Users/daichi/marsshearingsheet/out/01_inner1RM_blowout /Users/daichi/marsshearingsheet/out/02_inner1RM_sublimation --params-json '{"mode": "beta_timeseries"}'
-python scripts/plot_from_runs.py --fig-id FIG_MASS_BUDGET_01 --runs /Users/daichi/marsshearingsheet/out/01_inner1RM_blowout --params-json '{"mode": "mass_budget"}'
-python scripts/plot_from_runs.py --fig-id FIG_PSD_WAVY_01 --runs /Users/daichi/marsshearingsheet/out/20251022-0501_chi05_r1RM_dtOrb100__0fdd14772 --params-json '{"mode": "psd_wavy"}'

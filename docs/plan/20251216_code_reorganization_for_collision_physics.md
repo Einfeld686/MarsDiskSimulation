@@ -11,9 +11,9 @@
 
 ### 関連ドキュメント
 
-- [run_py_sections.md](file:///Users/daichi/marsshearingsheet/analysis/run_py_sections.md): `run.py` 内部構造マップ
-- [equations.md](file:///Users/daichi/marsshearingsheet/analysis/equations.md): 衝突関連式 (E.020–E.026)
-- [AGENTS.md](file:///Users/daichi/marsshearingsheet/AGENTS.md): 完了条件と DocSyncAgent 手順
+- [analysis/run_py_sections.md]: `run.py` 内部構造マップ
+- [analysis/equations.md]: 衝突関連式 (E.020–E.026)
+- [AGENTS.md]: 完了条件と DocSyncAgent 手順
 
 ---
 
@@ -65,30 +65,73 @@
 
 ### 2.1 【高優先度】`step_collisions_smol_0d` の引数整理
 
-**現状**:
-```python
-smol_res = collisions_smol.step_collisions_smol_0d(
-    psd_state=..., sigma_surf=..., dt=..., prod_subblow_area_rate=...,
-    r=..., Omega=..., v_rel=..., dynamics_cfg=..., a_blow=...,
-    enable_blowout=..., rho=..., alpha_frag=..., s_min_eff=...,
-    supply_mode=..., supply_s_inj_min=..., supply_s_inj_max=...,
-    supply_q=..., supply_velocity_cfg=..., headroom_policy=...,
-    # ... 約 25 引数
-)
-```
+**現状**: 27 個の引数が散在
 
-**提案**:
+**確定設計**: 5 グループに分類
+
 ```python
+from dataclasses import dataclass
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from marsdisk.schema import Dynamics, SupplyInjectionVelocity
+
 @dataclass
-class CollisionStepContext:
+class TimeOrbitParams:
+    """Group A: 時間・軌道パラメータ"""
     dt: float
     Omega: float
-    sigma_surf: float
-    dynamics_cfg: Dynamics
-    supply_cfg: SupplyConfig | None
-    shielding: ShieldingState
-    # ... グループ化
+    r: float  # 軌道半径 [m]
 
+@dataclass
+class MaterialParams:
+    """Group B: 物質パラメータ"""
+    rho: float              # 粒子密度 [kg/m^3]
+    a_blow: float           # ブローアウト半径 [m]
+    s_min_effective: float | None
+
+@dataclass
+class DynamicsParams:
+    """Group C: 力学パラメータ"""
+    e_value: float
+    i_value: float
+    dynamics_cfg: "Dynamics | None"
+    tau_eff: float | None
+
+@dataclass
+class SupplyParams:
+    """Group D: 供給パラメータ"""
+    prod_subblow_area_rate: float
+    supply_injection_mode: str
+    supply_s_inj_min: float | None
+    supply_s_inj_max: float | None
+    supply_q: float
+    supply_velocity_cfg: "SupplyInjectionVelocity | None"
+
+@dataclass
+class CollisionControlFlags:
+    """Group E: 制御フラグ"""
+    enable_blowout: bool
+    collisions_enabled: bool
+    mass_conserving_sublimation: bool
+    headroom_policy: str
+    sigma_tau1: float | None
+    t_sink: float | None
+    ds_dt_val: float | None
+
+@dataclass
+class CollisionStepContext:
+    """衝突ステップの統合コンテキスト"""
+    time_orbit: TimeOrbitParams
+    material: MaterialParams
+    dynamics: DynamicsParams
+    supply: SupplyParams
+    control: CollisionControlFlags
+    sigma_surf: float  # 現在の表層密度
+```
+
+**新しい呼び出し形式**:
+```python
 smol_res = collisions_smol.step_collisions(ctx, psd_state)
 ```
 
@@ -96,18 +139,35 @@ smol_res = collisions_smol.step_collisions(ctx, psd_state)
 
 ---
 
-### 2.2 【高優先度】`tmp_debug*/` のクリーンアップ
+### 2.2 【高優先度】`tmp_debug*/` の Git 外退避
 
 **現状**: 73 + 6 = 79 ファイルが未整理で残存
 
-**提案**:
-1. 内容を精査し、必要なものは `tests/archived/` へ移動
-2. 不要なものは削除
-3. `.gitignore` に `tmp_debug*/` を追加して再発防止
+**決定事項**: 全て Git 外退避とする（論文図表データは含まれていないことを確認済み）
 
-**リスク担保**:
-- 削除前に `git stash` または別ブランチでバックアップ
-- 研究に必要なファイルがないか確認するため、まず `ls -la` でリスト化
+**削除基準**（以下に該当するものは削除対象）:
+- 最終更新が **1 ヶ月** 以上前
+- ファイル名に日付がなく、目的が不明
+- 類似内容が `tests/` または `out/` に既存
+
+**実施手順**:
+```bash
+# 1. 内容リスト化（記録用）
+ls -laR tmp_debug/ > tmp_debug_inventory.txt
+ls -laR tmp_debug2/ >> tmp_debug_inventory.txt
+
+# 2. Git 外バックアップ（外部ストレージへ）
+tar czf tmp_debug_backup_$(date +%Y%m%d).tar.gz tmp_debug/ tmp_debug2/
+# → バックアップファイルを外部ストレージに移動
+
+# 3. ディレクトリ削除
+rm -rf tmp_debug/ tmp_debug2/
+
+# 4. 再発防止
+echo 'tmp_debug*/' >> .gitignore
+git add .gitignore
+git commit -m "chore: add tmp_debug to gitignore"
+```
 
 ---
 
@@ -120,12 +180,27 @@ run.py → marsdisk/io/streaming.py        (StreamingState)
 run.py → marsdisk/runtime/history.py     (ZeroDHistory)
 ```
 
-**ステップ 2（中リスク）**: Phase5 比較機能の分離
+**ステップ 2（中リスク）**: Phase5 比較機能の分離・削除
 ```
 run.py → marsdisk/run_phase5.py          (run_phase5_comparison 関連)
+→ 今後不必要のため削除候補としてマーク
 ```
 
-**ステップ 3（高リスク・将来）**: `run_zero_d` の内部関数分離
+**ステップ 3（中リスク）**: Phase7 のリネーム
+
+> [!IMPORTANT]
+> **Phase7 リネーム対象箇所**
+>
+> | ファイル | 箇所数 | 主な内容 |
+> |----------|--------|----------|
+> | `marsdisk/run.py` | 30+ | `PHASE7_SCHEMA_VERSION`, `phase7_enabled`, tracking変数, summary出力 |
+> | `marsdisk/schema.py` | 7 | `Phase7Diagnostics` クラス定義 |
+> | `marsdisk/io/writer.py` | 6 | カラム説明文 |
+> | `marsdisk/orchestrator.py` | 1 | 定数定義 |
+>
+> **名前変更案**: `phase7` → `extended_diagnostics` または `diag_v1`
+
+**ステップ 4（高リスク・将来）**: `run_zero_d` の内部関数分離
 - `_lookup_qpr`, `_resolve_blowout` → 独立ヘルパーへ
 - ループ本体のセクション化
 
@@ -161,6 +236,31 @@ tests/
     test_phase5.py
 ```
 
+> [!IMPORTANT]
+> **テスト名・パス変更時の必須手順**
+>
+> テストファイルのリネームや移動は `analysis/` 内のアンカー参照に影響する。
+> 以下の手順を **必ず** 実施すること：
+>
+> ```bash
+> # 1. 移動前にアンカー参照を確認
+> grep -r "test_phase3" analysis/
+>
+> # 2. ファイル移動（git mv 必須）
+> git mv tests/test_phase3_surface_blowout.py tests/legacy/
+>
+> # 3. アンカー参照を更新
+> # analysis/overview.md 等の [tests/test_phase3...] を [tests/legacy/test_phase3...] に修正
+>
+> # 4. DocSyncAgent 実行 + テスト
+> make analysis-update  # DocSync → doc-tests の順で実行
+>
+> # 5. カバレッジガード確認
+> python -m agent_test.ci_guard_analysis \
+>   --coverage analysis/coverage.json \
+>   --fail-under 0.75 --require-clean-anchors
+> ```
+
 ---
 
 ### 2.5 【低優先度】`marsdisk/tests/` の統合判断
@@ -183,15 +283,28 @@ tests/
 # 1. 全テスト通過を確認
 make test  # または pytest tests/ marsdisk/tests/
 
-# 2. カバレッジ基準を記録
+# 2. DocSyncAgent + ドキュメントテスト（AGENTS.md 必須手順）
+make analysis-update  # DocSync → doc-tests の順で実行
+# または個別実行:
 python -m tools.doc_sync_agent --all --write
+make analysis-doc-tests  # pytest tests/test_analysis_* を実行
+
+# 3. カバレッジ基準を記録
 cat analysis/coverage.json | jq '.function_reference_rate'
 # → 現在 1.0 を維持
 
-# 3. 研究スクリプトの基準出力を保存
-scripts/research/run_temp_supply_sweep.sh (短縮版)
+# 4. 研究スクリプトの基準出力を保存
+T_END_SHORT_YEARS=0.001 scripts/research/run_temp_supply_sweep.sh
 cp out/temp_supply_sweep/latest/summary.json tests/fixtures/baseline_summary.json
+
+# 5. 評価システム実行（シミュレーション後は必須）
+python -m tools.evaluation_system --outdir out/temp_supply_sweep/latest
 ```
+
+> [!WARNING]
+> AGENTS.md により、DocSyncAgent 実行後は **必ず** `make analysis-doc-tests` と
+> `python -m tools.evaluation_system --outdir <run_dir>` を実行すること。
+> これを忘れると CI で落ちる可能性がある。
 
 ### 3.2 段階的リファクタリング戦略
 
@@ -223,10 +336,38 @@ graph LR
 
 ### 3.4 ロールバック計画
 
+> [!CAUTION]
+> **`git reset --hard` は使用禁止**（AGENTS.md「既存変更の破壊禁止」に違反）
+>
+> リファクタリングに問題が発生した場合は、以下の **非破壊的手順** を使用すること。
+
+**方法 A: git revert（推奨）**
 ```bash
-# 万が一の場合のロールバック
-git reflog  # 変更前コミットを特定
-git reset --hard <commit-before-refactor>
+# リファクタコミットを特定
+git log --oneline -10
+
+# 問題のコミットを revert（履歴を保持したまま取り消し）
+git revert <commit-hash>
+# 複数コミットの場合:
+git revert --no-commit <oldest-commit>^..<newest-commit>
+git commit -m "revert: rollback refactor due to <reason>"
+```
+
+**方法 B: 退避ブランチからの復元**
+```bash
+# リファクタ前に必ず退避ブランチを作成しておく
+git checkout -b backup/before-refactor-20251216
+git checkout main
+
+# 問題発生時：退避ブランチの状態を新コミットとして適用
+git checkout backup/before-refactor-20251216 -- <問題のファイル>
+git commit -m "restore: revert <file> from backup branch"
+```
+
+**方法 C: cherry-pick で部分復元**
+```bash
+# 正常だったコミットの変更だけを取り出す
+git cherry-pick <good-commit-hash>
 ```
 
 ### 3.5 CI 統合（推奨）
@@ -257,45 +398,94 @@ git reset --hard <commit-before-refactor>
 
 ---
 
-## 5. 推奨実施順序
+## 5. 段階的実施計画（確定）
 
-| 順序 | タスク | 推定工数 | リスク |
-|------|--------|----------|--------|
-| 1 | `tmp_debug*/` クリーンアップ | 30 分 | 低 |
-| 2 | `ProgressReporter` 抽出 | 1 時間 | 低 |
-| 3 | `StreamingState` 抽出 | 1 時間 | 低 |
-| 4 | `ZeroDHistory` 抽出 | 1 時間 | 低 |
-| 5 | テストディレクトリ再構成 | 2 時間 | 中 |
-| 6 | `CollisionStepContext` 導入 | 2 時間 | 中 |
-| 7 | Phase5 関数分離 | 1 時間 | 中 |
-| 8 | `run_zero_d` 内部整理 | 4+ 時間 | 高 |
+### Phase 1: クリーンアップ（今すぐ、30分）
 
-**合計**: 約 12–15 時間（分割実施可能）
+| タスク | 工数 | 内容 |
+|--------|------|------|
+| `tmp_debug*/` Git 外退避 | 30 分 | tar.gz 作成 → 外部ストレージ → 削除 → gitignore 追加 |
+
+**完了基準**: `tmp_debug/` と `tmp_debug2/` が削除され、`.gitignore` に追加済み
 
 ---
 
-## 6. 今すぐ実施すべき最小限のアクション
+### Phase 2: 衝突物理追加の前提条件（3時間）
 
-衝突物理追加前に**必須**で実施すべきこと：
+| タスク | 工数 | 内容 |
+|--------|------|------|
+| `CollisionStepContext` 導入 | 2 時間 | 5グループに分類したdataclass実装 + 呼び出し元更新 |
+| 基準テスト出力の保存 | 15 分 | baseline_summary.json 作成 |
+| `marsdisk/tests/` 統合 | 45 分 | `tests/unit/` へ移動（選択肢 A 確定） |
 
-1. **`tmp_debug*/` の削除**（30 分）
-   - 混乱源の除去、検索ノイズ低減
+**完了基準**: 
+- `step_collisions_smol_0d` が `CollisionStepContext` を受け取るように変更
+- `tests/fixtures/baseline_summary.json` が存在
+- 全テスト通過
 
-2. **`CollisionStepContext` の導入**（2 時間）
-   - 衝突パラメータ追加の主経路を確立
+---
 
-3. **基準テスト出力の保存**（15 分）
-   - リファクタ前後の比較基準を確保
+### Phase 3: 衝突物理安定後のリファクタ（5–7時間）
+
+| タスク | 工数 | 内容 |
+|--------|------|------|
+| `ProgressReporter` 抽出 | 1 時間 | `marsdisk/runtime/progress.py` へ |
+| `StreamingState` 抽出 | 1 時間 | `marsdisk/io/streaming.py` へ |
+| `ZeroDHistory` 抽出 | 1 時間 | `marsdisk/runtime/history.py` へ |
+| テストディレクトリ再構成 | 2 時間 | `unit/`, `integration/`, `research/`, `legacy/` に分類 |
+| Phase5 削除 | 30 分 | `run_phase5_comparison` 関連コード削除 |
+| Phase7 リネーム | 1 時間 | `phase7` → `extended_diagnostics` (44箇所) |
+
+**完了基準**: 
+- `run.py` が 4,000 行以下
+- Phase 命名が解消
+- 全テスト通過 + カバレッジ維持
+
+---
+
+## 6. 実施タイムライン
+
+```mermaid
+gantt
+    title コード整備タイムライン
+    dateFormat  YYYY-MM-DD
+    section Phase 1
+    tmp_debug 退避           :p1, 2024-12-17, 1d
+    section Phase 2
+    CollisionStepContext     :p2a, after p1, 1d
+    基準テスト保存           :p2b, after p2a, 1d
+    tests統合                :p2c, after p2b, 1d
+    section 衝突物理追加
+    衝突物理実装・テスト     :coll, after p2c, 7d
+    section Phase 3
+    クラス抽出               :p3a, after coll, 2d
+    テスト再構成             :p3b, after p3a, 1d
+    Phase5/7 整理            :p3c, after p3b, 1d
+```
 
 ---
 
 ## 7. 完了条件
 
-- [ ] `tmp_debug*/` が削除または整理されている
+### Phase 1 完了条件
+- [x] `tmp_debug*/` が Git 外退避されている
+- [ ] `.gitignore` に `tmp_debug*/` が追加されている
+
+### Phase 2 完了条件
 - [ ] `CollisionStepContext` が導入され、`step_collisions_smol_0d` の呼び出しが簡素化
+- [ ] `tests/fixtures/baseline_summary.json` が作成されている
+- [ ] `marsdisk/tests/` が `tests/unit/` に統合されている
 - [ ] 全テストが通過（`pytest tests/ marsdisk/tests/` 成功）
+
+### Phase 3 完了条件
+- [ ] `ProgressReporter`, `StreamingState`, `ZeroDHistory` が抽出されている
+- [ ] テストディレクトリが `unit/`, `integration/`, `research/`, `legacy/` に分類されている
+- [ ] Phase5 関連コードが削除されている
+- [ ] Phase7 が `extended_diagnostics` にリネームされている
 - [ ] `analysis/coverage.json` の `function_reference_rate` が 0.75 以上を維持
-- [ ] 本ドキュメントの完了条件がすべてチェック済み
+
+### legacy テスト削除時期
+- **削除予定**: 衝突物理追加完了後、動作が安定したら `tests/legacy/` を削除
 
 ---
 
@@ -304,3 +494,5 @@ git reset --hard <commit-before-refactor>
 | 日付 | 変更内容 |
 |------|----------|
 | 2024-12-16 | 初版作成 |
+| 2024-12-16 | ユーザー決定反映: CollisionStepContext 詳細設計確定、tmp_debug Git外退避、段階的実施（Phase 1/2/3）、Phase7リネーム箇所追加、削除基準1ヶ月に変更 |
+

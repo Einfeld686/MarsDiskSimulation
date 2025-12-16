@@ -44,3 +44,4 @@ agent_test/**/*.py[cod]
 agent_test/**/.DS_Store
 agent_test/agent_runs/
 agent_test/tmp*/
+tmp_debug*/
