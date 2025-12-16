@@ -22,6 +22,34 @@
 
 ![Mars Disk Architecture (Dark)](assets/marsdisk_architecture_diagram_dark.png)
 
+```mermaid
+C4Component
+    title Mars Disk Simulation Structure
+
+    Container_Boundary(cli, "CLI Layer") {
+        Component(run, "runs.py", "Entry Point", "Main loop control & config injection")
+        Component(orch, "orchestrator.py", "Helper", "Time grid & Physics flags resolution")
+    }
+
+    Container_Boundary(physics, "Physics Logic") {
+        Component(phys_step, "physics_step.py", "Integrator", "One-step physics aggregation")
+        Component(modules, "Physics Modules", "Package", "radiation, shielding, surface, smol, etc.")
+    }
+
+    Container_Boundary(io, "I/O Layer") {
+        Component(writer, "io/writer.py", "Output", "Parquet/JSON serialization")
+        Component(tables, "io/tables.py", "Input", "Qpr/Phi table interpolation")
+    }
+
+    Rel(run, orch, "Resolves state")
+    Rel(run, phys_step, "Calls step()")
+    Rel(run, writer, "Writes results")
+    Rel(phys_step, modules, "Delegates logic")
+    Rel(modules, tables, "Reads data")
+
+    UpdateLayoutConfig($c4ShapeInRow="3", $c4BoundaryInRow="1")
+```
+
 | 層 | モジュール | 責務 |
 |----|-----------|------|
 | **オーケストレータ** | `orchestrator.py` | 設定解決・時間グリッド・ループ制御・進捗報告 |
@@ -32,6 +60,7 @@
 ```text
 ⟨Q_pr⟩ → β → a_blow → sublimation ds/dt → τ & Φ → surface sink fluxes
 ```
+
 
 ## 2. 全体アーキテクチャ
 - CLI層は`argparse`で`--config`を受け取ると同時に、オプションの`--override path=value`を複数解釈してYAML辞書にマージしたうえで`load_config`を通じて設定を生成する。[marsdisk/run.py#load_config [L966–L988]][marsdisk/run.py#main [L5245–L5348]]
@@ -57,16 +86,37 @@
 - 得られたフラックスと質量収支を逐次蓄積し、Parquet/JSON/CSVに書き出す際に `F_abs`,`sigma_surf`,`kappa_Planck`,`tau_eff`,`psi_shield`,`s_peak`,`M_out_cum` などの診断列を追加し、`dt_over_t_blow` や `fast_blowout_factor = 1 - \exp(-Δt/t_{\rm blow})`、昇華侵食項 `dSigma_dt_sublimation`／`mass_lost_sinks_step` を併記する。Summary には `mass_budget_max_error_percent` と `dt_over_t_blow_median` が追記され、`orbit_rollup.csv` は `mass_loss_frac_per_orbit` や累積損失も含めて更新される (`numerics.orbit_rollup=false` で抑制可)。`chi_blow` が `"auto"` の場合は β と ⟨Q_pr⟩ に基づく 0.5–2.0 の推定値 `chi_blow_eff` が出力され、`t_{\rm blow} = chi_blow_eff/Ω` として用いられる。[marsdisk/run.py#run_zero_d [L1136–L5003]][marsdisk/run.py#run_zero_d [L1136–L5003]][marsdisk/run.py#run_zero_d [L1136–L5003]][marsdisk/io/writer.py#write_parquet [L24–L309]]
 
 ## 4. 主要モジュール別の責務と依存
-- `marsdisk/run.py`はPSD、放射、破片、供給、遮蔽、シンク各モジュールをインポートし、`run_zero_d`内で順に呼び出して時間積分とファイル出力を実行する。[marsdisk/run.py#run_zero_d [L1136–L5003]]
-- `marsdisk/grid.py`は `omega` と `v_kepler` を公開し、指定半径からケプラー角速度と周速度を取得する共通ユーティリティとなる。[marsdisk/grid.py#omega [L90–L91]][marsdisk/grid.py#v_kepler [L34–L48]]
-- `marsdisk/physics/psd.py`は三勾配と“wavy”補正でPSD状態を構築し、不透明度`kappa`を計算して`run_zero_d`に供給する。標準の `configs/base.yml` は `wavy_strength=0.0` で平滑PSDを用い、wavy パターンは感度試験やテストで CLI 上書きして有効化する。[marsdisk/physics/psd.py#compute_kappa [L174–L208]]
-- `marsdisk/physics/radiation.py`は平均`Q_pr`や放射圧比`beta`、ブローアウト半径を算出し、テーブル読み込みを`io.tables`に委ねる。[marsdisk/physics/radiation.py#blowout_radius [L274–L288]]
-- `marsdisk/io/tables.py`はPlanck平均⟨Q_pr⟩を `interp_qpr` で補間し、感度試験では `load_qpr_table` が外部テーブルを読み込んで補間器を更新する。また、`interp_phi` は自遮蔽係数テーブルの補間を提供する。[marsdisk/io/tables.py#interp_qpr [L259–L270]][marsdisk/io/tables.py#load_qpr_table [L283–L295]][marsdisk/io/tables.py#interp_phi [L273–L280]]
-- `marsdisk/io/checkpoint.py`は長時間シミュレーションの途中再開を可能にするチェックポイント機構を提供する。`find_latest_checkpoint` がディレクトリ内の最新チェックポイントを探索し、`load_checkpoint` が pickle/JSON 形式で保存された `CheckpointState` を読み込み、`prune_checkpoints` が古いチェックポイントを削除してディスク容量を管理する。[marsdisk/io/checkpoint.py#find_latest_checkpoint [L118–L126]][marsdisk/io/checkpoint.py#load_checkpoint [L88–L115]][marsdisk/io/checkpoint.py#prune_checkpoints [L129–L143]]
-- `marsdisk/ops/make_qpr_table.py` は `compute_planck_mean_qpr` で Rayleigh–幾何ブリッジを介した Planck 平均⟨Q_pr⟩を計算し、CLI `main` が HDF5 テーブルに書き出して `radiation.qpr_table_path` が参照できるようにする。[marsdisk/ops/make_qpr_table.py#compute_planck_mean_qpr [L40–L78]][marsdisk/ops/make_qpr_table.py#main [L120–L141]]
-- `marsdisk/physics/shielding.py`はΦテーブルを解釈し有効不透明度と`Sigma_tau1`を返し、必要に応じて値をクリップする。[marsdisk/physics/shielding.py#apply_shielding [L133–L216]]
-- `marsdisk/physics/surface.py`はStrubbe–Chiang（Wyatt 2008 で紹介）スケーリングやシンク時間を取り込んだIMEXステップを提供し、外向流束とシンクを算出する。高速ブローアウト補正が有効化されている場合は表層流束が `fast_blowout_factor` でスケールされる。[\@StrubbeChiang2006_ApJ648_652; @Wyatt2008][marsdisk/physics/surface.py#step_surface [L189–L221]][marsdisk/run.py#run_zero_d [L1136–L5003]]
-- `marsdisk/run.py` は `run_config.json` に `physics_controls` を追加して `blowout.enabled`,`freeze_kappa`,`freeze_sigma`,`shielding.mode`,`psd.floor.mode` などの実行時トグルを記録し、従来通り `sublimation_provenance` で HKL 式や `psat_model`、SiO 既定値、実行半径・公転時間も保持してプロベナンスを残す。`sizes.evolve_min_size` や `io.correct_fast_blowout` の設定は `run_inputs` ブロックから確認できる。[marsdisk/run.py#run_zero_d [L1136–L5003]][marsdisk/run.py#run_zero_d [L1136–L5003]]
+- `marsdisk/run.py`はPSD、放射、破片、供給、遮蔽、シンク各モジュールをインポートし、`run_zero_d`内で順に呼び出して時間積分とファイル出力を実行する。主要関数として `load_config` が YAML を解析し、`main` が CLI エントリポイント、`step` が1ステップ処理、`run_n_steps` がループ制御を担う。`compute_phase_tau_fields` は相判定用のτフィールド、`run_phase5_comparison` は旧フェーズ5との比較検証を担当する。[marsdisk/run.py#run_zero_d [L1136–L5003]][marsdisk/run.py#load_config [L966–L988]][marsdisk/run.py#main [L5245–L5348]][marsdisk/run.py#step [L884–L933]][marsdisk/run.py#run_n_steps [L936–L958]][marsdisk/run.py#compute_phase_tau_fields [L138–L151]][marsdisk/run.py#run_phase5_comparison [L5210–L5242]]
+- `marsdisk/grid.py`は `omega_kepler` と `v_kepler` を公開し、指定半径からケプラー角速度と周速度を取得する共通ユーティリティとなる。[marsdisk/grid.py#omega_kepler [L17–L31]][marsdisk/grid.py#v_kepler [L34–L48]]
+- `marsdisk/config_utils.py` は設定解決のヘルパーを提供し、`ensure_disk_geometry` がジオメトリ検証、`resolve_reference_radius` が代表半径、`resolve_temperature_field` が温度フィールド解決を担う。[marsdisk/config_utils.py#ensure_disk_geometry [L37–L48]][marsdisk/config_utils.py#resolve_reference_radius [L11–L34]][marsdisk/config_utils.py#resolve_temperature_field [L51–L60]]
+- `marsdisk/config_validator.py` は設定の検証を担当し、`validate_config` がスキーマ検証、`load_and_validate` がロード＋検証の一括処理を提供する。[marsdisk/config_validator.py#validate_config [L71–L93]][marsdisk/config_validator.py#load_and_validate [L297–L318]][marsdisk/config_validator.py#main [L324–L375]]
+- `marsdisk/orchestrator.py` はオーケストレーション層のヘルパーを提供し、`resolve_time_grid` が時間グリッド、`resolve_orbital_radius` が軌道半径、`resolve_physics_flags` が物理スイッチを解決する。[marsdisk/orchestrator.py#resolve_time_grid [L206–L301]][marsdisk/orchestrator.py#resolve_orbital_radius [L308–L312]][marsdisk/orchestrator.py#resolve_physics_flags [L315–L400]]
+- `marsdisk/physics_step.py` は1ステップの物理計算を統合し、`compute_radiation_parameters` が放射パラメータ、`compute_shielding` が遮蔽、`compute_sublimation` が昇華、`step_surface_layer` が表層更新、`fast_blowout_correction_factor` が高速ブローアウト補正、`compute_gate_factor` がゲート係数を計算する。[marsdisk/physics_step.py#compute_radiation_parameters [L157–L212]][marsdisk/physics_step.py#compute_shielding [L219–L315]][marsdisk/physics_step.py#compute_sublimation [L322–L376]][marsdisk/physics_step.py#step_surface_layer [L383–L458]][marsdisk/physics_step.py#fast_blowout_correction_factor [L465–L486]][marsdisk/physics_step.py#compute_gate_factor [L489–L525]]
+- `marsdisk/physics/psd.py`は三勾配と"wavy"補正でPSD状態を構築し、不透明度`kappa`を計算して`run_zero_d`に供給する。`sanitize_and_normalize_number` が数密度正規化、`mass_weights_lognormal_mixture` と `mass_weights_truncated_powerlaw` が質量重み、`apply_mass_weights` が重み適用、`apply_uniform_size_drift` がサイズドリフト、`evolve_min_size` が最小サイズ進化を担う。[marsdisk/physics/psd.py#compute_kappa [L174–L208]][marsdisk/physics/psd.py#sanitize_and_normalize_number [L137–L171]][marsdisk/physics/psd.py#mass_weights_lognormal_mixture [L211–L251]][marsdisk/physics/psd.py#mass_weights_truncated_powerlaw [L254–L285]][marsdisk/physics/psd.py#apply_mass_weights [L288–L330]][marsdisk/physics/psd.py#apply_uniform_size_drift [L333–L463]][marsdisk/physics/psd.py#evolve_min_size [L466–L555]]
+- `marsdisk/physics/radiation.py`は平均`Q_pr`や放射圧比`beta`、ブローアウト半径を算出し、テーブル読み込みを`io.tables`に委ねる。`load_qpr_table` が⟨Q_pr⟩テーブル読込を担う。[marsdisk/physics/radiation.py#blowout_radius [L274–L288]][marsdisk/physics/radiation.py#beta [L250–L271]][marsdisk/physics/radiation.py#load_qpr_table [L149–L176]]
+- `marsdisk/physics/qstar.py` は破壊閾値 $Q_D^*$ の計算を提供し、`compute_q_d_star_F1` が単一値、`compute_q_d_star_array` が配列入力版、`get/set/reset_velocity_clamp_stats` が速度クランプ統計、`get/set_gravity_velocity_mu` が重力項μを管理し、`get/set_coeff_unit_system` が係数単位系（ba99_cgs/si）、`get_coefficient_table` が係数テーブル取得を担う。[marsdisk/physics/qstar.py#compute_q_d_star_F1 [L197–L249]][marsdisk/physics/qstar.py#compute_q_d_star_array [L165–L194]][marsdisk/physics/qstar.py#get_velocity_clamp_stats [L85–L88]][marsdisk/physics/qstar.py#set_gravity_velocity_mu [L91–L98]][marsdisk/physics/qstar.py#reset_velocity_clamp_stats [L77–L82]][marsdisk/physics/qstar.py#get_gravity_velocity_mu [L101–L104]][marsdisk/physics/qstar.py#get_coeff_unit_system [L65–L68]][marsdisk/physics/qstar.py#set_coeff_unit_system [L55–L62]][marsdisk/physics/qstar.py#get_coefficient_table [L71–L74]]
+- `marsdisk/physics/fragments.py` は衝突破片を計算し、`compute_largest_remnant_mass_fraction_F2` が最大残存率、`compute_s_min_F2` が最小径、`s_sub_boundary` が昇華境界を担う。[marsdisk/physics/fragments.py#compute_largest_remnant_mass_fraction_F2 [L110–L144]][marsdisk/physics/fragments.py#compute_s_min_F2 [L213–L244]][marsdisk/physics/fragments.py#s_sub_boundary [L147–L210]]
+- `marsdisk/physics/collisions_smol.py` は Smoluchowski 衝突積分を提供し、`step_collisions_smol_0d` がメイン積分、`supply_mass_rate_to_number_source` が供給→数密度変換、`kernel_minimum_tcoll` が最短衝突時間、`compute_kernel_ei_state` がカーネル状態、`compute_kernel_e_i_H` がe,i,Hパラメータを計算する。[marsdisk/physics/collisions_smol.py#step_collisions_smol_0d [L450–L744]][marsdisk/physics/collisions_smol.py#supply_mass_rate_to_number_source [L92–L171]][marsdisk/physics/collisions_smol.py#kernel_minimum_tcoll [L317–L326]][marsdisk/physics/collisions_smol.py#compute_kernel_ei_state [L379–L426]][marsdisk/physics/collisions_smol.py#compute_kernel_e_i_H [L429–L447]]
+- `marsdisk/physics/smol.py` は Smoluchowski IMEX-BDF(1) を実装し、`step_imex_bdf1_C3` が時刻更新、`compute_mass_budget_error_C4` が質量誤差評価を担う。[marsdisk/physics/smol.py#step_imex_bdf1_C3 [L146–L276]][marsdisk/physics/smol.py#compute_mass_budget_error_C4 [L279–L319]]
+- `marsdisk/physics/sublimation.py` は昇華計算を提供し、`p_sat` が飽和蒸気圧、`p_sat_clausius` が Clausius–Clapeyron、`p_sat_tabulated` がテーブル補間、`choose_psat_backend` がバックエンド選択、`s_sink_from_timescale` がシンクサイズ、`sublimation_sink_from_dsdt` が ds/dt からのシンク変換を担う。[marsdisk/physics/sublimation.py#p_sat [L585–L591]][marsdisk/physics/sublimation.py#p_sat_clausius [L183–L201]][marsdisk/physics/sublimation.py#p_sat_tabulated [L412–L426]][marsdisk/physics/sublimation.py#choose_psat_backend [L429–L553]][marsdisk/physics/sublimation.py#s_sink_from_timescale [L653–L669]][marsdisk/physics/sublimation.py#sublimation_sink_from_dsdt [L672–L708]]
+- `marsdisk/physics/supply.py` は外部供給を管理し、`init_runtime_state` がランタイム状態初期化、`evaluate_supply` が供給率評価、`split_supply_with_deep_buffer` が深層バッファ分割、`get_prod_area_rate` が面積率取得を担う。[marsdisk/physics/supply.py#init_runtime_state [L200–L255]][marsdisk/physics/supply.py#evaluate_supply [L287–L380]][marsdisk/physics/supply.py#split_supply_with_deep_buffer [L383–L493]][marsdisk/physics/supply.py#get_prod_area_rate [L496–L500]]
+- `marsdisk/physics/surface.py` は表層モデルを提供し、`wyatt_tcoll_S1` が Wyatt 衝突時間、`step_surface_density_S1` が表層密度更新、`compute_surface_outflux` が外向流束、`step_surface` が統合ステップを担う。[marsdisk/physics/surface.py#wyatt_tcoll_S1 [L65–L76]][marsdisk/physics/surface.py#step_surface_density_S1 [L99–L174]][marsdisk/physics/surface.py#compute_surface_outflux [L177–L186]][marsdisk/physics/surface.py#step_surface [L189–L221]]
+- `marsdisk/physics/sinks.py` はシンク計算を提供し、`gas_drag_timescale` がガス抗力時間、`total_sink_timescale` が合成シンク時間を担う。[marsdisk/physics/sinks.py#gas_drag_timescale [L70–L80]][marsdisk/physics/sinks.py#total_sink_timescale [L83–L160]]
+- `marsdisk/physics/shielding.py`はΦテーブルを解釈し有効不透明度と`Sigma_tau1`を返す。`apply_shielding` が遮蔽適用を担う。[marsdisk/physics/shielding.py#apply_shielding [L133–L216]]
+- `marsdisk/physics/sizes.py` は粒径計算のユーティリティを提供し、`eval_ds_dt_sublimation` が昇華による ds/dt を評価する。[marsdisk/physics/sizes.py#eval_ds_dt_sublimation [L10–L28]]
+- `marsdisk/physics/viscosity.py` は粘性拡散を提供し、`step_viscous_diffusion_C5` が C5 演算子分割ステップを担う。[marsdisk/physics/viscosity.py#step_viscous_diffusion_C5 [L51–L134]]
+- `marsdisk/physics/phase.py` は相判定を提供し、`particle_temperature_equilibrium` が粒子平衡温度、`hydro_escape_timescale` が水素流体逃亡時間を計算する。[marsdisk/physics/phase.py#particle_temperature_equilibrium [L53–L78]][marsdisk/physics/phase.py#hydro_escape_timescale [L593–L622]]
+- `marsdisk/physics/tempdriver.py` は温度ドライバを提供し、`resolve_temperature_driver` がドライバ解決、`ensure_temperature_table` がテーブル確保、`cooling_time_seconds` が冷却時間、`estimate_time_to_temperature` が温度到達時間推定、`autogenerate_temperature_table_if_needed` が自動生成、`estimate_autogen_horizon_years` が自動生成ホライズンを担う。[marsdisk/physics/tempdriver.py#resolve_temperature_driver [L382–L479]][marsdisk/physics/tempdriver.py#ensure_temperature_table [L243–L293]][marsdisk/physics/tempdriver.py#cooling_time_seconds [L154–L170]][marsdisk/physics/tempdriver.py#estimate_time_to_temperature [L314–L379]][marsdisk/physics/tempdriver.py#autogenerate_temperature_table_if_needed [L482–L561]][marsdisk/physics/tempdriver.py#estimate_autogen_horizon_years [L564–L605]]
+- `marsdisk/io/tables.py`はPlanck平均⟨Q_pr⟩を `interp_qpr` で補間し、感度試験では `load_qpr_table` が外部テーブルを読み込んで補間器を更新する。また、`interp_phi` は自遮蔽係数テーブルの補間、`get_qpr_table_path` がテーブルパス取得を提供する。[marsdisk/io/tables.py#interp_qpr [L259–L270]][marsdisk/io/tables.py#load_qpr_table [L283–L295]][marsdisk/io/tables.py#interp_phi [L273–L280]][marsdisk/io/tables.py#get_qpr_table_path [L356–L359]]
+- `marsdisk/io/checkpoint.py`は長時間シミュレーションの途中再開を可能にするチェックポイント機構を提供する。`save_checkpoint` がチェックポイント保存、`find_latest_checkpoint` が最新チェックポイント探索、`load_checkpoint` が読み込み、`prune_checkpoints` が古いチェックポイント削除を担う。[marsdisk/io/checkpoint.py#save_checkpoint [L64–L85]][marsdisk/io/checkpoint.py#find_latest_checkpoint [L118–L126]][marsdisk/io/checkpoint.py#load_checkpoint [L88–L115]][marsdisk/io/checkpoint.py#prune_checkpoints [L129–L143]]
+- `marsdisk/io/writer.py` は出力を担当し、`write_summary` が集計JSON、`write_run_config` が設定JSON、`write_mass_budget` が質量収支CSV、`append_csv` が追記、`write_orbit_rollup` が公転要約、`write_step_diagnostics` と `append_step_diagnostics` がステップ診断を担う。[marsdisk/io/writer.py#write_summary [L312–L320]][marsdisk/io/writer.py#write_run_config [L323–L328]][marsdisk/io/writer.py#write_mass_budget [L331–L335]][marsdisk/io/writer.py#append_csv [L338–L354]][marsdisk/io/writer.py#write_orbit_rollup [L357–L365]][marsdisk/io/writer.py#write_step_diagnostics [L368–L388]][marsdisk/io/writer.py#append_step_diagnostics [L391–L416]]
+- `marsdisk/ops/doc_sync_agent.py` はドキュメント同期を提供し、`ensure_equation_ids` が式番号管理、`main` が CLI エントリポイントを担う。[marsdisk/ops/doc_sync_agent.py#ensure_equation_ids [L1318–L1376]][marsdisk/ops/doc_sync_agent.py#main [L1994–L1999]]
+- `marsdisk/ops/make_qpr_table.py` は ⟨Q_pr⟩ テーブル生成を提供し、`compute_planck_mean_qpr` が計算、`main` が CLI を担う。また、SiO₂ キャリブレーション版は `marsdisk/ops/make_qpr_table_sio2_abbas_calibrated_lowT_csv.py` と `marsdisk/ops/make_qpr_table_sio2_csv.py` に格納される。[marsdisk/ops/make_qpr_table.py#compute_planck_mean_qpr [L40–L78]][marsdisk/ops/make_qpr_table.py#main [L120–L141]][marsdisk/ops/make_qpr_table_sio2_abbas_calibrated_lowT_csv.py#compute_planck_mean_qpr [L102–L123]][marsdisk/ops/make_qpr_table_sio2_abbas_calibrated_lowT_csv.py#main [L135–L178]][marsdisk/ops/make_qpr_table_sio2_csv.py#compute_planck_mean_qpr [L84–L109]][marsdisk/ops/make_qpr_table_sio2_csv.py#main [L112–L135]]
+- `marsdisk/ops/physcheck.py` は物理チェックを提供し、`run_checks` が検証実行、`main` が CLI を担う。[marsdisk/ops/physcheck.py#run_checks [L181–L189]][marsdisk/ops/physcheck.py#main [L206–L218]]
+- `marsdisk/ops/assumption_trace.py` は仮定トレースを提供し、`load_equation_index` が式インデックス読込、`parse_equations_md` がパース、`build_assumption_trace` がトレース構築、`write_jsonl` と `write_markdown` が出力、`main` が CLI を担う。[marsdisk/ops/assumption_trace.py#load_equation_index [L38–L53]][marsdisk/ops/assumption_trace.py#parse_equations_md [L222–L229]][marsdisk/ops/assumption_trace.py#build_assumption_trace [L232–L261]][marsdisk/ops/assumption_trace.py#write_jsonl [L264–L270]][marsdisk/ops/assumption_trace.py#write_markdown [L273–L294]][marsdisk/ops/assumption_trace.py#main [L323–L328]]
+- `marsdisk/analysis/beta_sampler.py` は β マップ生成を提供し、`sample_beta_over_orbit` が r×T グリッドを並列掃引する。[marsdisk/analysis/beta_sampler.py#sample_beta_over_orbit [L234–L348]]
+- `marsdisk/analysis/massloss_sampler.py` は質量損失サンプリングを提供し、`sample_mass_loss_one_orbit` が単一点の 0D 実行を包む。[marsdisk/analysis/massloss_sampler.py#sample_mass_loss_one_orbit [L110–L259]]
+- `marsdisk/analysis/inner_disk_runner.py` は内側ロッシュ円盤実行を提供し、`run_inner_disk_case` が単一ケース、`run_inner_disk_sweep` がスイープ、`save_massloss_table` がテーブル保存、`main` が CLI を担う。[marsdisk/analysis/inner_disk_runner.py#run_inner_disk_case [L244–L288]][marsdisk/analysis/inner_disk_runner.py#run_inner_disk_sweep [L291–L315]][marsdisk/analysis/inner_disk_runner.py#save_massloss_table [L318–L321]][marsdisk/analysis/inner_disk_runner.py#main [L368–L384]]
 
 ## 5. 設定スキーマ（主要キー）
 | キー | 型 | 既定値 | 許容範囲 or 選択肢 | 出典 |

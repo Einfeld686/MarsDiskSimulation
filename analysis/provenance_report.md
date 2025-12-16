@@ -2,8 +2,56 @@
 
 - **Equation coverage**: 8 / 44 headings in `analysis/equations.md` carry confirmed tags (≈18.2%). Key anchors include (E.006) for the Strubbe–Chiang surface lifetime, (E.042)/(E.043) for the Hyodo et al. cooling/greybody laws, and (E.045) for the Smoluchowski source injection via Birnstiel/Krivov. [@StrubbeChiang2006_ApJ648_652; @Hyodo2018_ApJ860_150; @Birnstiel2011_AA525_A11; @Krivov2006_AA455_509]
 - **Code mappings**: 23 anchors in `analysis/source_map.json` link the registry keys across radiation, surface, sublimation, siO₂ cooling, and the gas-poor guidance in `analysis/overview.md` / `analysis/run-recipes.md`. All entries reference normalized keys from `analysis/references.registry.json`.
-- **Unknown packets**: 0（全ての未解決項目が紐付け完了）。
 - **Assumption clusters resolved**: 7 件の主要仮定クラスタが既存登録論文と紐付け完了し、`assumption_trace.md` で status=**confirmed** に更新済み。
+
+## Traceability Graph
+
+主要な物理モデルの出典論文・式・実装コードの追跡図：
+
+```mermaid
+graph TD
+    %% 論文ノード
+    SC06[Strubbe & Chiang 2006<br/>ApJ 648]
+    Wyatt08[Wyatt 2008<br/>ARA&A 46]
+    Hyodo18[Hyodo et al. 2018<br/>ApJ 860]
+    Birn11[Birnstiel et al. 2011<br/>A&A 525]
+    Pignatale18[Pignatale et al. 2018]
+
+    %% 式/モデルノード
+    E006((E.006<br/>Surface Lifetime))
+    E042_043((E.042/043<br/>Cooling/Graybody))
+    E045((E.045<br/>Source Injection))
+    HKL((HKL Sink<br/>Sublimation))
+
+    %% コードノード
+    C_Surface[surface.py<br/>wyatt_tcoll_S1]
+    C_Temp[tempdriver.py<br/>resolve_temperature]
+    C_Smol[collisions_smol.py<br/>supply_source]
+    C_Sub[sublimation.py<br/>mass_flux_hkl]
+
+    %% 関係性
+    SC06 --> E006
+    Wyatt08 --> E006
+    E006 --> C_Surface
+
+    Hyodo18 --> E042_043
+    E042_043 --> C_Temp
+
+    Birn11 --> E045
+    E045 --> C_Smol
+
+    Pignatale18 --> HKL
+    HKL --> C_Sub
+
+    classDef paper fill:#e1f5fe,stroke:#01579b,stroke-width:2px;
+    classDef eq fill:#fff3e0,stroke:#e65100,stroke-width:2px;
+    classDef code fill:#f3e5f5,stroke:#4a148c,stroke-width:2px;
+
+    class SC06,Wyatt08,Hyodo18,Birn11,Pignatale18 paper;
+    class E006,E042_043,E045,HKL eq;
+    class C_Surface,C_Temp,C_Smol,C_Sub code;
+```
+
 
 ## Coverage Summary
 

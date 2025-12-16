@@ -7,6 +7,7 @@ import json
 import re
 import subprocess
 import sys
+import warnings
 from collections import defaultdict
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -103,6 +104,7 @@ HEADING_IO_PATTERN = re.compile(r"^## [^\n]*I/O[^\n]*$", re.MULTILINE)
 HEADING_RESPONSIBILITIES_PATTERN = re.compile(r"^## [^\n]*責務[^\n]*$", re.MULTILINE)
 
 SUGGESTIONS_DEFAULT_PATH = REPO_ROOT / "analysis" / "suggestions_index.json"
+ML_CACHE_PATH = REPO_ROOT / ".cache" / "doc_sync" / "equation_matcher.pkl"
 EQUATIONS_PATH_DEFAULT = REPO_ROOT / "analysis" / "equations.md"
 OVERVIEW_PATH_DEFAULT = REPO_ROOT / "analysis" / "overview.md"
 RUN_RECIPES_PATH_DEFAULT = REPO_ROOT / "analysis" / "run-recipes.md"
@@ -112,7 +114,11 @@ DEFAULT_DOCS_FOR_REFS: list[Path] = [
     REPO_ROOT / "analysis" / name for name in _ANALYSIS_MD_DOCS
 ]
 
-EQUATION_HEADING_PATTERN = re.compile(r"^### (?:\((E\.\d{3})\)\s*)?(.*)$")
+EQUATION_HEADING_PATTERN = re.compile(r"^### (?:\((E\.\d{3}[a-z]?)\)\s*)?(.*)$")
+EQUATION_ID_PATTERN = re.compile(r"^### \(E\.(\d{3}[a-z]?)\)\s*(.*)$")
+CODE_REF_PATTERN = re.compile(
+    r"\[(marsdisk/[^\]]+\.py)#([A-Za-z0-9_]+)\s+\[L(\d+)[–—-]L?(\d+)?\]\]"
+)
 LINE_ANCHOR_INLINE_PATTERN = re.compile(r"[（(]#L\d+(?:[–—-]L?\d+)?[）)]")
 
 
@@ -137,6 +143,22 @@ class FileChange:
     path: Path
     original: str
     updated: str
+
+
+@dataclass
+class CodeRef:
+    file_path: str
+    symbol: str
+    line_start: int
+    line_end: int
+
+
+@dataclass
+class EquationEntry:
+    eq_id: str
+    title: str
+    code_refs: list[CodeRef] = field(default_factory=list)
+    literature_refs: list[str] = field(default_factory=list)
 
     def has_changes(self) -> bool:
         return self.original != self.updated
@@ -1375,6 +1397,119 @@ def ensure_equation_ids(equations_path: Path) -> None:
     if updated_text != original_text:
         equations_path.write_text(updated_text, encoding="utf-8")
 
+
+def _parse_equations_md(path: Path) -> List[EquationEntry]:
+    if not path.exists():
+        raise SystemExit(f"equations file not found: {path}")
+    text = path.read_text(encoding="utf-8")
+    lines = text.splitlines()
+    entries: List[EquationEntry] = []
+    current_start = None
+    current_meta: Optional[Tuple[str, str]] = None
+
+    for idx, line in enumerate(lines):
+        match = EQUATION_ID_PATTERN.match(line)
+        if match:
+            if current_meta is not None and current_start is not None:
+                block = "\n".join(lines[current_start:idx])
+                entries.append(_build_equation_entry(current_meta, block))
+            eq_id, title = match.group(1), match.group(2).strip()
+            current_meta = (eq_id, title)
+            current_start = idx + 1
+    if current_meta is not None and current_start is not None:
+        block = "\n".join(lines[current_start:])
+        entries.append(_build_equation_entry(current_meta, block))
+    return entries
+
+
+def _build_equation_entry(meta: Tuple[str, str], block: str) -> EquationEntry:
+    eq_id, title = meta
+    code_refs: list[CodeRef] = []
+    for ref_match in CODE_REF_PATTERN.finditer(block):
+        file_path, symbol, start, end = ref_match.groups()
+        line_start = int(start)
+        line_end = int(end) if end else line_start
+        code_refs.append(
+            CodeRef(
+                file_path=file_path,
+                symbol=symbol,
+                line_start=line_start,
+                line_end=line_end,
+            )
+        )
+    literature_refs = re.findall(r"\[@([^\]]+)\]", block)
+    return EquationEntry(eq_id=eq_id, title=title, code_refs=code_refs, literature_refs=literature_refs)
+
+
+def _compute_equation_code_map(
+    equations: Sequence[EquationEntry],
+    inventory: Sequence[InventoryRecord],
+) -> Dict[str, Any]:
+    index = {
+        (record.file_path, record.symbol): record
+        for record in inventory
+        if record.kind in {"function", "async_function", "class", "method"}
+    }
+    referenced: set[Tuple[str, str]] = set()
+    equations_payload: list[Dict[str, Any]] = []
+    warnings: list[str] = []
+
+    for entry in equations:
+        refs_payload: list[Dict[str, Any]] = []
+        has_valid = False
+        for ref in entry.code_refs:
+            key = (ref.file_path, ref.symbol)
+            is_valid = key in index
+            if is_valid:
+                has_valid = True
+                referenced.add(key)
+            refs_payload.append(
+                {
+                    "file": ref.file_path,
+                    "symbol": ref.symbol,
+                    "line_start": ref.line_start,
+                    "line_end": ref.line_end,
+                    "valid": is_valid,
+                }
+            )
+        if not has_valid:
+            warnings.append(f"{entry.eq_id}: no valid code reference")
+        equations_payload.append(
+            {
+                "eq_id": entry.eq_id,
+                "title": entry.title,
+                "code_refs": refs_payload,
+                "literature_refs": entry.literature_refs,
+                "status": "implemented" if has_valid else "unmapped",
+            }
+        )
+
+    unmapped_equations = [item["eq_id"] for item in equations_payload if item["status"] == "unmapped"]
+    unmapped_code = [
+        {"file": record.file_path, "symbol": record.symbol}
+        for record in inventory
+        if record.kind in {"function", "async_function"}
+        and record.file_path.startswith("marsdisk/")
+        and (record.file_path, record.symbol) not in referenced
+    ]
+
+    total = len(equations_payload)
+    mapped = total - len(unmapped_equations)
+    coverage_rate = mapped / total if total else 1.0
+
+    return {
+        "equations": equations_payload,
+        "unmapped_equations": unmapped_equations,
+        "unmapped_code": unmapped_code,
+        "stats": {
+            "total_equations": total,
+            "mapped": mapped,
+            "unmapped": len(unmapped_equations),
+            "coverage_rate": coverage_rate,
+        },
+        "warnings": warnings,
+    }
+
 def _render_coverage_markdown(data: Dict[str, Any]) -> str:
     function_total = data["function_total"]
     function_referenced = data["function_referenced"]
@@ -1570,6 +1705,69 @@ def _cmd_coverage(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_equations(args: argparse.Namespace) -> int:
+    equations_path = _resolve_cli_path(args.equations)
+    inventory_path = _resolve_cli_path(args.inventory)
+    output_path = _resolve_cli_path(args.write)
+
+    if not equations_path.exists():
+        raise SystemExit(f"--equations path does not exist: {equations_path}")
+    if not inventory_path.exists():
+        raise SystemExit(f"--inventory path does not exist: {inventory_path}")
+
+    equations = _parse_equations_md(equations_path)
+    inventory_records = _load_inventory_records(inventory_path)
+    report = _compute_equation_code_map(equations, inventory_records)
+    report["generated_at"] = (
+        __import__("datetime").datetime.now().astimezone().isoformat(timespec="seconds")
+    )
+    report["ml_suggested_refs"] = []
+
+    if getattr(args, "with_ml_suggest", False):
+        try:
+            from .equation_matcher import load_or_train_matcher
+        except Exception as exc:
+            warnings.warn(f"equations: ML suggestion unavailable ({exc})")
+        else:
+            try:
+                matcher = load_or_train_matcher(
+                    equations,
+                    inventory_records,
+                    cache_path=ML_CACHE_PATH,
+                    use_classifier=not getattr(args, "ml_no_classifier", False),
+                )
+                ml_candidates = matcher.suggest(
+                    top_k=int(getattr(args, "ml_top", 3)),
+                    sim_threshold=float(getattr(args, "ml_threshold", 0.2)),
+                )
+                report["ml_suggested_refs"] = [
+                    {
+                        "eq_id": item.eq_id,
+                        "file": item.file_path,
+                        "symbol": item.symbol,
+                        "score": item.score,
+                        "confidence": item.confidence,
+                        "priority": item.priority,
+                    }
+                    for item in ml_candidates
+                ]
+            except Exception as exc:  # pragma: no cover - defensive
+                warnings.warn(f"equations: ML suggestion failed ({exc})")
+
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    output_path.write_text(
+        json.dumps(report, indent=2, ensure_ascii=False) + "\n",
+        encoding="utf-8",
+    )
+    print(
+        "equations: wrote "
+        f"{_rel_to_repo(output_path)} "
+        f"(coverage_rate={report['stats']['coverage_rate']:.3f}, "
+        f"unmapped={len(report['unmapped_equations'])})"
+    )
+    return 0
+
+
 def _cmd_autostub(args: argparse.Namespace) -> int:
     coverage_path = _resolve_cli_path(args.coverage)
     if not coverage_path.exists():
@@ -1656,6 +1854,7 @@ def _cmd_update(args: argparse.Namespace) -> int:
     equations_path = _resolve_cli_path(args.equations)
     run_recipes_path = _resolve_cli_path(args.run_recipes)
     suggestions_path = _resolve_cli_path(args.suggestions)
+    eq_map_path = _resolve_cli_path(args.equations_map)
 
     doc_paths: List[Path] = []
     for doc in args.docs:
@@ -1719,6 +1918,18 @@ def _cmd_update(args: argparse.Namespace) -> int:
 
     _cmd_refs(refs_args)
     _cmd_coverage(coverage_args)
+
+    if not args.skip_equations:
+        eq_args = argparse.Namespace(
+            equations=str(equations_path),
+            inventory=str(inventory_path),
+            write=str(eq_map_path),
+            with_ml_suggest=bool(args.with_ml_suggest),
+            ml_top=int(args.ml_top),
+            ml_threshold=float(args.ml_threshold),
+            ml_no_classifier=bool(args.ml_no_classifier),
+        )
+        _cmd_equations(eq_args)
 
     coverage_data = json.loads(coverage_json_path.read_text(encoding="utf-8"))
     function_rate = float(coverage_data.get("function_reference_rate", 0.0))
@@ -1844,6 +2055,49 @@ def _run_new_cli(argv: Sequence[str]) -> int:
     )
     coverage_parser.set_defaults(func=_cmd_coverage)
 
+    equations_parser = subparsers.add_parser(
+        "equations",
+        help="Parse equations.md and map equations to code symbols using inventory.",
+    )
+    equations_parser.add_argument(
+        "--equations",
+        default=str(EQUATIONS_PATH_DEFAULT.relative_to(REPO_ROOT)),
+        help="Path to equations markdown (default: analysis/equations.md).",
+    )
+    equations_parser.add_argument(
+        "--inventory",
+        default="analysis/inventory.json",
+        help="Path to inventory JSON produced by scan (default: analysis/inventory.json).",
+    )
+    equations_parser.add_argument(
+        "--write",
+        default="analysis/equation_code_map.json",
+        help="Output path for equation-code mapping JSON (default: analysis/equation_code_map.json).",
+    )
+    equations_parser.add_argument(
+        "--with-ml-suggest",
+        action="store_true",
+        help="Enable ML-based suggestion of equation↔code pairs (warn-only, no auto-apply).",
+    )
+    equations_parser.add_argument(
+        "--ml-top",
+        type=int,
+        default=3,
+        help="Top-K ML suggestions per equation (default: 3).",
+    )
+    equations_parser.add_argument(
+        "--ml-threshold",
+        type=float,
+        default=0.2,
+        help="Minimum cosine similarity to keep a suggestion (default: 0.2).",
+    )
+    equations_parser.add_argument(
+        "--ml-no-classifier",
+        action="store_true",
+        help="Skip training logistic regression; rely on similarity only.",
+    )
+    equations_parser.set_defaults(func=_cmd_equations)
+
     autostub_parser = subparsers.add_parser(
         "autostub",
         help="Insert skeleton documentation entries for unreferenced functions.",
@@ -1935,6 +2189,11 @@ def _run_new_cli(argv: Sequence[str]) -> int:
         help="Path to equations markdown (default: analysis/equations.md).",
     )
     update_parser.add_argument(
+        "--equations-map",
+        default="analysis/equation_code_map.json",
+        help="Output path for equation-code mapping JSON (default: analysis/equation_code_map.json).",
+    )
+    update_parser.add_argument(
         "--run-recipes",
         dest="run_recipes",
         default=str(RUN_RECIPES_PATH_DEFAULT.relative_to(REPO_ROOT)),
@@ -1950,6 +2209,33 @@ def _run_new_cli(argv: Sequence[str]) -> int:
         type=int,
         default=0,
         help="Limit for autostub insertions (default: 0 = unlimited).",
+    )
+    update_parser.add_argument(
+        "--skip-equations",
+        action="store_true",
+        help="Skip equations↔code mapping during update.",
+    )
+    update_parser.add_argument(
+        "--with-ml-suggest",
+        action="store_true",
+        help="Enable ML-based equation suggestions (warn-only, no auto-apply).",
+    )
+    update_parser.add_argument(
+        "--ml-top",
+        type=int,
+        default=3,
+        help="Top-K ML suggestions per equation when enabled (default: 3).",
+    )
+    update_parser.add_argument(
+        "--ml-threshold",
+        type=float,
+        default=0.2,
+        help="Cosine similarity threshold for ML suggestions (default: 0.2).",
+    )
+    update_parser.add_argument(
+        "--ml-no-classifier",
+        action="store_true",
+        help="Skip logistic regression and rely on similarity only.",
     )
     update_parser.add_argument(
         "--fail-under",
@@ -1994,7 +2280,7 @@ def _run_new_cli(argv: Sequence[str]) -> int:
 def main(argv: Optional[Sequence[str]] = None) -> int:
     if argv is None:
         argv = sys.argv[1:]
-    if argv and argv[0] in {"scan", "refs", "coverage", "autostub", "update"}:
+    if argv and argv[0] in {"scan", "refs", "coverage", "equations", "autostub", "update"}:
         return _run_new_cli(list(argv))
     return _legacy_main(argv)
 

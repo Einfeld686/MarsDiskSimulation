@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-"""Initial field mappings for surface density.
+r"""Initial field mappings for surface density.
 
 This module converts a total inner-disk mass into a radial surface density
 profile and applies the configured initial surface policy to obtain the
@@ -20,7 +20,7 @@ def sigma_from_Minner(
     r_out: float,
     p_index: float,
 ) -> Callable[[float], float]:
-    """Return ``Σ(r)`` for an inner disk of total mass ``M_in``.
+    r"""Return ``Σ(r)`` for an inner disk of total mass ``M_in``.
 
     The surface density is assumed either uniform or to follow a power-law
     ``Σ = C r^{-p}``.  The normalisation ``C`` is chosen such that
@@ -51,7 +51,7 @@ def surf_sigma_init(
     f_surf: float | None = None,
     sigma_override: float | None = None,
 ) -> float:
-    """Map mid-plane ``Σ`` to the initial surface density ``Σ_surf``.
+    r"""Map mid-plane ``Σ`` to the initial surface density ``Σ_surf``.
 
     Parameters
     ----------

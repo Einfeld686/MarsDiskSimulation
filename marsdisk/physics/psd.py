@@ -1,4 +1,4 @@
-"""Particle size distribution (P1) with optional wavy correction.
+r"""Particle size distribution (P1) with optional wavy correction.
 
 This module provides a minimal three-slope particle size distribution (PSD)
 that can mimic the short-term, non-steady behaviour of a collisional cascade.
@@ -172,7 +172,7 @@ def sanitize_and_normalize_number(
 
 
 def compute_kappa(psd_state: Dict[str, np.ndarray | float]) -> float:
-    """Compute the mass opacity ``\kappa`` from a PSD state (P1).
+    r"""Compute the mass opacity ``\kappa`` from a PSD state (P1).
 
     The opacity is defined as
 

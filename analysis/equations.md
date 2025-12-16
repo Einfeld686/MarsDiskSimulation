@@ -2,6 +2,48 @@
 
 > **注記（gas‑poor）**: 本解析は **ガスに乏しい衝突起源デブリ円盤**を前提とします。従って、**光学的に厚いガス円盤**を仮定する Takeuchi & Lin (2003) の表層塵アウトフロー式は**適用外**とし、既定では評価から外しています（必要時のみ明示的に有効化）。この判断は、衝突直後の円盤が溶融主体かつ蒸気≲数%で、初期周回で揮発が散逸しやすいこと、および小衛星を残すには低質量・低ガスの円盤条件が要ることに基づきます。参考: [@Hyodo2017a_ApJ845_125; @Hyodo2017b_ApJ851_122; @Hyodo2018_ApJ860_150; @CanupSalmon2018_SciAdv4_eaar6887]。
 
+## Equation Dependency Graph
+
+主要な数式・物理量の依存関係フロー図：
+
+```mermaid
+graph TD
+    %% Basic Inputs
+    TM(E.012<br/>Temp T_M) --> Beta(E.013<br/>Beta β)
+    TM --> HKL(E.018<br/>Sublimation J)
+    
+    %% Radiation Handling
+    Qpr(E.004<br/>Q_pr) --> Beta
+    Beta --> Ablow(E.014<br/>Blowout s_blow)
+    Ablow --> Smin(E.008<br/>s_min_eff)
+    
+    %% Surface Physics
+    Smin --> Phi(E.017<br/>Shielding Φ)
+    Tau(Optical Depth τ) --> Phi
+    Phi --> Kappa(E.015<br/>Effective κ)
+    Kappa --> Lim(E.016<br/>Limit Σ_tau1)
+    
+    %% Dynamics
+    Omega(E.002<br/>Omega Ω) --> Tblow(E.007<br/>t_blow)
+    Omega --> Out(E.009<br/>Outflux)
+    Omega --> Tcoll(E.006<br/>t_coll)
+    
+    %% Integrators
+    HKL --> Rate(E.019<br/>Sink Rate)
+    Rate --> Smol(E.010<br/>Smoluchowski)
+    Tcoll --> Smol
+    Lim --> Smol
+    
+    classDef input fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px;
+    classDef calc fill:#e3f2fd,stroke:#1565c0,stroke-width:2px;
+    classDef core fill:#fff3e0,stroke:#e65100,stroke-width:2px;
+    
+    class TM,Qpr,Omega,Tau input;
+    class Beta,Ablow,Smin,Phi,Kappa,Lim,Tblow,Out,Tcoll,HKL,Rate calc;
+    class Smol core;
+```
+
+
 ### (E.001) v_kepler — ケプラー速度 v_K(r)
 ケプラー運動の基本式に従い、教科書的な円軌道速度を評価する [@MurrayDermott1999_SSD]。
 
@@ -111,6 +153,7 @@ Type-A disks (collision dominated) inherit $\tau(r) \propto r^{-5/2}$, whereas t
 ### (E.007) marsdisk/physics/surface.py: step_surface_density_S1 (lines 96-163)
 Wyatt 型の $t_{\mathrm{coll}} = 1/(\Omega\tau_{\perp})$ 減衰を用いて表層面密度を直接更新する ODE[@Wyatt2008; @StrubbeChiang2006_ApJ648_652]。Smol のフル Smoluchowski 解法（C3/C4）に対する光学的に薄いレガシー簡略版で、Wyatt スケールとの整合確認や対照実験用に保持している。
 
+> [!IMPORTANT]
 > **適用範囲の注意（既定は Smol）**  
 > この ODE は `surface.collision_solver="surface_ode"` を明示した場合のみ使う。  
 > Takeuchi & Lin (2003) のガスリッチ表層アウトフロー式[@TakeuchiLin2003_ApJ593_524]を下敷きにしているため、gas‑poor を標準とする本プロジェクトでは `ALLOW_TL2003=false` を維持し、対照的な gas-rich 仮定を試すときだけ有効化する。

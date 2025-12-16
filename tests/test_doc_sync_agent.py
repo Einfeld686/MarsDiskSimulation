@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+import pytest
 
 from marsdisk.ops import doc_sync_agent
 
@@ -75,6 +76,64 @@ def test_refs_and_coverage_pipeline(tmp_path) -> None:
     assert coverage_data["anchor_consistency_rate"]["denominator"] >= 0
     assert coverage_data["invalid_anchor_count"] >= coverage_data["line_anchor_reversed_count"]
     assert coverage_md.read_text(encoding="utf-8").startswith("# Coverage Snapshot")
+
+
+def test_equations_mapping(tmp_path) -> None:
+    inv_path = tmp_path / "inventory.json"
+    eq_map_path = tmp_path / "equation_code_map.json"
+
+    assert doc_sync_agent.main(["scan", "--root", ".", "--write", str(inv_path)]) == 0
+    assert (
+        doc_sync_agent.main(
+            [
+                "equations",
+                "--equations",
+                "analysis/equations.md",
+                "--inventory",
+                str(inv_path),
+                "--write",
+                str(eq_map_path),
+            ]
+        )
+        == 0
+    )
+
+    payload = json.loads(eq_map_path.read_text(encoding="utf-8"))
+    assert payload["stats"]["total_equations"] >= 1
+    assert "equations" in payload and isinstance(payload["equations"], list)
+    assert "unmapped_equations" in payload and isinstance(payload["unmapped_equations"], list)
+
+
+def test_equations_mapping_with_ml(tmp_path) -> None:
+    pytest.importorskip("sklearn")
+    inv_path = tmp_path / "inventory.json"
+    eq_map_path = tmp_path / "equation_code_map.json"
+
+    assert doc_sync_agent.main(["scan", "--root", ".", "--write", str(inv_path)]) == 0
+    exit_code = doc_sync_agent.main(
+        [
+            "equations",
+            "--equations",
+            "analysis/equations.md",
+            "--inventory",
+            str(inv_path),
+            "--write",
+            str(eq_map_path),
+            "--with-ml-suggest",
+            "--ml-threshold",
+            "0.0",
+            "--ml-top",
+            "1",
+        ]
+    )
+    assert exit_code == 0
+    payload = json.loads(eq_map_path.read_text(encoding="utf-8"))
+    assert "ml_suggested_refs" in payload
+    assert isinstance(payload["ml_suggested_refs"], list)
+    if payload["ml_suggested_refs"]:
+        first = payload["ml_suggested_refs"][0]
+        assert "priority" in first
+        assert first["priority"] is None or isinstance(first["priority"], int)
 
 
 def test_autostub_inserts_stubs(tmp_path) -> None:

@@ -8,3 +8,4 @@ pydantic
 matplotlib
 numba
 xarray
+scikit-learn

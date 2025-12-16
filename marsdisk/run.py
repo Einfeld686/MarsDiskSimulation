@@ -33,6 +33,7 @@ import math
 import random
 import shutil
 import subprocess
+import textwrap
 import hashlib
 import json
 import sys
@@ -47,6 +48,7 @@ import os
 
 import pandas as pd
 import numpy as np
+import pyarrow as pa
 import pyarrow.parquet as pq
 
 from . import config_utils, grid
@@ -366,6 +368,17 @@ def _float_or_nan(value: Any) -> float:
     if not math.isfinite(result):
         return float("nan")
     return result
+
+
+def _format_exception_short(exc: Exception, *, width: int = 600) -> str:
+    """Collapse whitespace and truncate exception text for logging."""
+
+    try:
+        msg = str(exc)
+    except Exception:
+        msg = repr(exc)
+    msg_single = " ".join(msg.split())
+    return textwrap.shorten(msg_single, width=width, placeholder=" ...")
 
 
 def _resolve_feedback_tau_field(tau_field: Optional[str]) -> str:
@@ -865,17 +878,66 @@ class StreamingState:
             )
 
     def _merge_parquet_chunks(self, chunks: List[Path], destination: Path) -> None:
+        """Merge multiple Parquet chunk files into a single destination file.
+
+        This method handles schema mismatches between chunks by unifying schemas
+        and filling missing columns with nulls. This allows merging chunks written
+        by different code versions or across checkpoint restarts.
+        """
         if not chunks:
             return
         writer._ensure_parent(destination)
         sorted_chunks = sorted(chunks)
+
+        # Phase 1: Collect schemas from all chunks
+        schemas: List[pa.Schema] = []
+        valid_chunks: List[Path] = []
+        for path in sorted_chunks:
+            try:
+                schema = pq.read_schema(path)
+                schemas.append(schema)
+                valid_chunks.append(path)
+            except Exception as exc:
+                logger.warning("Failed to read schema from %s: %s", path, exc)
+
+        if not schemas:
+            logger.warning("No valid chunk schemas found, skipping merge for %s", destination)
+            return
+
+        # Phase 2: Unify schemas to create a superset of all columns
+        try:
+            unified_schema = pa.unify_schemas(schemas, promote_options="permissive")
+        except pa.ArrowInvalid as exc:
+            logger.warning(
+                "Schema unification failed for %s, falling back to first chunk schema: %s",
+                destination,
+                exc,
+            )
+            unified_schema = schemas[0]
+
+        # Phase 3: Write tables with unified schema, filling missing columns
         parquet_writer: Optional[pq.ParquetWriter] = None
         try:
-            for path in sorted_chunks:
+            for path in valid_chunks:
                 table = pq.read_table(path)
+                # Add missing columns as null arrays
+                for field in unified_schema:
+                    if field.name not in table.column_names:
+                        null_array = pa.nulls(len(table), type=field.type)
+                        table = table.append_column(field.name, null_array)
+                # Reorder columns to match unified schema and cast types if needed
+                try:
+                    table = table.select([f.name for f in unified_schema])
+                    table = table.cast(unified_schema)
+                except Exception as exc:
+                    logger.warning(
+                        "Column reordering/casting failed for %s: %s; writing with original order",
+                        path,
+                        exc,
+                    )
                 if parquet_writer is None:
                     parquet_writer = pq.ParquetWriter(
-                        destination, table.schema, compression=self.compression
+                        destination, unified_schema, compression=self.compression
                     )
                 parquet_writer.write_table(table)
         finally:
@@ -2199,7 +2261,13 @@ def run_zero_d(
             if streaming_state.merge_at_end:
                 streaming_state.merge_chunks()
         except Exception as exc:  # pragma: no cover - best-effort cleanup
-            logger.error("Streaming cleanup failed during shutdown: %s", exc)
+            short_msg = _format_exception_short(exc)
+            logger.error(
+                "Streaming cleanup failed during shutdown (%s): %s",
+                exc.__class__.__name__,
+                short_msg,
+            )
+            logger.debug("Streaming cleanup full exception", exc_info=exc)
 
     if streaming_state.enabled:
         weakref.finalize(history, _streaming_cleanup_on_exit)
@@ -3487,6 +3555,7 @@ def run_zero_d(
             "supply_rate_nominal",
             "supply_rate_scaled",
             "supply_headroom",
+            "headroom",
             "supply_clip_factor",
             "supply_visibility_factor",
             "supply_temperature_scale",
@@ -3500,6 +3569,16 @@ def run_zero_d(
             "phase_bulk_f_liquid",
             "phase_bulk_f_solid",
             "phase_bulk_f_vapor",
+            "M_sink_cum",
+            "e_kernel_used",
+            "i_kernel_used",
+            "e_kernel_base",
+            "i_kernel_base",
+            "e_kernel_supply",
+            "i_kernel_supply",
+            "e_kernel_effective",
+            "i_kernel_effective",
+            "supply_velocity_weight_w",
         }
         _series_optional_string_keys = {
             "phase_tau_field",
@@ -3619,6 +3698,7 @@ def run_zero_d(
             "mass_total_bins": cfg.initial.mass_total - (M_loss_cum + M_sink_cum),
             "mass_lost_by_blowout": M_loss_cum,
             "mass_lost_by_sinks": M_sink_cum,
+            "M_sink_cum": M_sink_cum,
             "mass_lost_sinks_step": mass_loss_sinks_step_total,
             "mass_lost_sublimation_step": mass_loss_sublimation_step_diag,
             "mass_lost_hydro_step": mass_loss_hydro_step,
@@ -3764,6 +3844,7 @@ def run_zero_d(
             "supply_rate_scaled",
             "supply_tau_clip_spill_rate",
             "supply_headroom",
+            "headroom",
             "supply_clip_factor",
             "prod_rate_raw",
             "prod_rate_applied_to_surf",
@@ -4146,7 +4227,14 @@ def run_zero_d(
         except Exception as exc:
             streaming_merge_completed = False
             merge_status_message = "streaming merge failed"
-            logger.error("Streaming merge failed for %s: %s", cfg.io.outdir, exc)
+            short_msg = _format_exception_short(exc)
+            logger.error(
+                "Streaming merge failed for %s (%s): %s",
+                cfg.io.outdir,
+                exc.__class__.__name__,
+                short_msg,
+            )
+            logger.debug("Streaming merge full exception for %s", cfg.io.outdir, exc_info=exc)
     outdir = Path(cfg.io.outdir)
     dt_over_t_blow_median = float("nan")
     if dt_over_t_blow_values:

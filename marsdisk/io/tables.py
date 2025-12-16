@@ -1,4 +1,4 @@
-"""Table I/O and interpolation utilities.
+r"""Table I/O and interpolation utilities.
 
 The production code expects pre-computed tables for the radiation pressure
 coefficient :math:`\langle Q_{\rm pr}\rangle` and for the self-shielding
