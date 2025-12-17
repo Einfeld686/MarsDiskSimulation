@@ -89,6 +89,71 @@ class KernelEIState:
     H_k: np.ndarray
 
 
+@dataclass
+class TimeOrbitParams:
+    """Group A: 時間・軌道パラメータ."""
+
+    dt: float
+    Omega: float
+    r: float
+
+
+@dataclass
+class MaterialParams:
+    """Group B: 物質パラメータ."""
+
+    rho: float
+    a_blow: float
+    s_min_effective: float | None
+
+
+@dataclass
+class DynamicsParams:
+    """Group C: 力学パラメータ."""
+
+    e_value: float
+    i_value: float
+    dynamics_cfg: "Dynamics | None"
+    tau_eff: float | None
+
+
+@dataclass
+class SupplyParams:
+    """Group D: 供給パラメータ."""
+
+    prod_subblow_area_rate: float
+    supply_injection_mode: str
+    supply_s_inj_min: float | None
+    supply_s_inj_max: float | None
+    supply_q: float
+    supply_velocity_cfg: "SupplyInjectionVelocity | None"
+
+
+@dataclass
+class CollisionControlFlags:
+    """Group E: 制御フラグ."""
+
+    enable_blowout: bool
+    collisions_enabled: bool
+    mass_conserving_sublimation: bool
+    headroom_policy: str
+    sigma_tau1: float | None
+    t_sink: float | None
+    ds_dt_val: float | None
+
+
+@dataclass
+class CollisionStepContext:
+    """衝突ステップの統合コンテキスト."""
+
+    time_orbit: TimeOrbitParams
+    material: MaterialParams
+    dynamics: DynamicsParams
+    supply: SupplyParams
+    control: CollisionControlFlags
+    sigma_surf: float
+
+
 def supply_mass_rate_to_number_source(
     prod_subblow_mass_rate: float,
     s_bin_center: np.ndarray,
@@ -445,6 +510,41 @@ def compute_kernel_e_i_H(
 
     state = compute_kernel_ei_state(dynamics_cfg, tau_eff, a_orbit_m, v_k, sizes)
     return state.e_used, state.i_used, state.H_k
+
+
+def step_collisions(
+    ctx: CollisionStepContext,
+    psd_state: MutableMapping[str, np.ndarray | float],
+) -> Smol0DStepResult:
+    """Structured wrapper for the Smol 0D collision step."""
+
+    return step_collisions_smol_0d(
+        psd_state,
+        ctx.sigma_surf,
+        dt=ctx.time_orbit.dt,
+        prod_subblow_area_rate=ctx.supply.prod_subblow_area_rate,
+        r=ctx.time_orbit.r,
+        Omega=ctx.time_orbit.Omega,
+        a_blow=ctx.material.a_blow,
+        rho=ctx.material.rho,
+        e_value=ctx.dynamics.e_value,
+        i_value=ctx.dynamics.i_value,
+        sigma_tau1=ctx.control.sigma_tau1,
+        enable_blowout=ctx.control.enable_blowout,
+        t_sink=ctx.control.t_sink,
+        ds_dt_val=ctx.control.ds_dt_val,
+        s_min_effective=ctx.material.s_min_effective,
+        dynamics_cfg=ctx.dynamics.dynamics_cfg,
+        tau_eff=ctx.dynamics.tau_eff,
+        collisions_enabled=ctx.control.collisions_enabled,
+        mass_conserving_sublimation=ctx.control.mass_conserving_sublimation,
+        supply_injection_mode=ctx.supply.supply_injection_mode,
+        supply_s_inj_min=ctx.supply.supply_s_inj_min,
+        supply_s_inj_max=ctx.supply.supply_s_inj_max,
+        supply_q=ctx.supply.supply_q,
+        supply_velocity_cfg=ctx.supply.supply_velocity_cfg,
+        headroom_policy=ctx.control.headroom_policy,
+    )
 
 
 def step_collisions_smol_0d(

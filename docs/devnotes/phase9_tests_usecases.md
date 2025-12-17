@@ -8,7 +8,7 @@
 - 対象は `scope.region="inner"` の 0D 内側円盤のみ。外側円盤や半径方向輸送は含まない。[marsdisk/run.py:575–695]
 - 時間窓は `scope.analysis_years`（既定 2 年）で、`numerics.t_end_*` 未指定ならこの値が時間軸に書き戻される。[marsdisk/run.py:575–695][marsdisk/run.py:2142–2189]
 - 放射圧は火星のみ。`use_solar_rp` は常に無効記録され、`summary` / `run_config` に Mars-only として残る。[marsdisk/run.py:664–920][marsdisk/run.py:2333–2345][marsdisk/run.py:2507–2515]
-- 衝突カスケード×昇華×ブローアウトの同時解はサポートせず、**経路A と経路B を別ランで比較する運用前提**（Phase5/7 の単一過程モードを流用）。[marsdisk/run.py:575–695][docs/devnotes/phase7_minimal_diagnostics.md]
+- 衝突カスケード×昇華×ブローアウトの同時解はサポートせず、**経路A と経路B を別ランで比較する運用前提**（`physics_mode` を切り替えた個別ラン＋extended_diagnostics でログ）。[marsdisk/run.py#run_zero_d][docs/devnotes/phase7_minimal_diagnostics.md]
 
 ## 仕様（What）
 ### フラグと有効/無効の整理（A1）

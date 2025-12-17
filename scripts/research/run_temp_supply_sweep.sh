@@ -51,10 +51,14 @@ BASE_CONFIG="${BASE_CONFIG:-configs/sweep_temp_supply/temp_supply_T4000_eps1.yml
 # qstar unit system (ba99_cgs: cm/g/cm^3/erg/g → J/kg, si: legacy meter/kg)
 QSTAR_UNITS="${QSTAR_UNITS:-ba99_cgs}"
 
-# Parameter grids (run hotter cases first)
-T_LIST=("5000" "4000" "3000")
-MU_LIST=("1.0" "0.5" "0.1")
-PHI_LIST=("20" "37" "60")  # maps to tables/phi_const_0pXX.csv
+# Parameter grids (run hotter cases first). Override via env:
+#   T_LIST_RAW="4000 3000", MU_LIST_RAW="1.0", PHI_LIST_RAW="37"
+T_LIST_RAW="${T_LIST_RAW:-5000 4000 3000}"
+MU_LIST_RAW="${MU_LIST_RAW:-1.0 0.5 0.1}"
+PHI_LIST_RAW="${PHI_LIST_RAW:-20 37 60}"  # maps to tables/phi_const_0pXX.csv
+read -r -a T_LIST <<<"${T_LIST_RAW}"
+read -r -a MU_LIST <<<"${MU_LIST_RAW}"
+read -r -a PHI_LIST <<<"${PHI_LIST_RAW}"
 T_END_YEARS="${T_END_YEARS:-2.0}"              # fixed integration horizon when COOL_TO_K is unset [yr]
 # 短縮テスト用に T_END_SHORT_YEARS=0.001 を指定すると強制上書き
 if [[ -n "${T_END_SHORT_YEARS:-}" ]]; then
@@ -67,7 +71,10 @@ SUBSTEP_FAST_BLOWOUT="${SUBSTEP_FAST_BLOWOUT:-0}"
 SUBSTEP_MAX_RATIO="${SUBSTEP_MAX_RATIO:-}"
 
 # Cooling stop condition (dynamic horizon based on Mars cooling time)
-COOL_TO_K="${COOL_TO_K:-2000}"                 # stop when Mars T_M reaches this [K]; default=2000 K
+COOL_TO_K="${COOL_TO_K-2000}"                  # stop when Mars T_M reaches this [K]; default=2000 K (set empty/none to disable)
+if [[ "${COOL_TO_K}" == "none" ]]; then
+  COOL_TO_K=""
+fi
 T_END_YEARS="${T_END_YEARS:-2.0}"              # fixed integration horizon when COOL_TO_K is unset [yr]
 COOL_MARGIN_YEARS="${COOL_MARGIN_YEARS:-0}"    # padding after reaching COOL_TO_K
 COOL_SEARCH_YEARS="${COOL_SEARCH_YEARS:-}"     # optional search cap (years)

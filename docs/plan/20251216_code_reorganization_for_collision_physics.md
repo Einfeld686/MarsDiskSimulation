@@ -42,8 +42,8 @@
 | Phase | テスト / コード | 現在の状態 |
 |-------|----------------|-----------|
 | Phase3 | `test_phase3_surface_blowout.py` | 表層 + blowout の初期実装残骸 |
-| Phase5 | `run_phase5_comparison()` | 2バリアント比較、約 240 行が `run.py` に残存 |
-| Phase7 | `PHASE7_SCHEMA_VERSION`, 診断トラック | 現在も使用中だが命名が不明瞭 |
+| Phase5（削除済み） | ― | 2バリアント比較ランナーは Phase3 で削除済み |
+| Phase7→extended | `EXTENDED_DIAGNOSTICS_VERSION`, 診断トラック | 現在も使用中だが命名が不明瞭 |
 | Phase9 | `test_phase9_usecases.py` | ユースケーステスト |
 
 ### 1.4 衝突物理の責務散在
@@ -193,7 +193,7 @@ run.py → marsdisk/run_phase5.py          (run_phase5_comparison 関連)
 >
 > | ファイル | 箇所数 | 主な内容 |
 > |----------|--------|----------|
-> | `marsdisk/run.py` | 30+ | `PHASE7_SCHEMA_VERSION`, `phase7_enabled`, tracking変数, summary出力 |
+> | `marsdisk/run.py` | 30+ | `EXTENDED_DIAGNOSTICS_VERSION`, `extended_diag_enabled`, tracking変数, summary出力 |
 > | `marsdisk/schema.py` | 7 | `Phase7Diagnostics` クラス定義 |
 > | `marsdisk/io/writer.py` | 6 | カラム説明文 |
 > | `marsdisk/orchestrator.py` | 1 | 定数定義 |
@@ -211,12 +211,20 @@ run.py → marsdisk/run_phase5.py          (run_phase5_comparison 関連)
 **現状**:
 ```
 tests/
-  test_phase3_surface_blowout.py
-  test_phase5.py
-  test_phase7_single_process.py
-  test_phase9_usecases.py
-  test_collision_solver_modes.py
-  ...
+  integration/
+    test_phase3_surface_blowout.py
+    test_phase7_single_process.py
+    test_run_regressions.py
+    ...
+  unit/
+    test_core.py
+    ...
+  research/
+    test_phase_integration_siO2.py
+    test_phase_sublimation_integration.py
+    test_siO2_cooling_model.py
+  legacy/
+    test_phase5.py
 ```
 
 **提案**:
@@ -469,20 +477,20 @@ gantt
 
 ### Phase 1 完了条件
 - [x] `tmp_debug*/` が Git 外退避されている
-- [ ] `.gitignore` に `tmp_debug*/` が追加されている
+- [x] `.gitignore` に `tmp_debug*/` が追加されている
 
 ### Phase 2 完了条件
-- [ ] `CollisionStepContext` が導入され、`step_collisions_smol_0d` の呼び出しが簡素化
-- [ ] `tests/fixtures/baseline_summary.json` が作成されている
-- [ ] `marsdisk/tests/` が `tests/unit/` に統合されている
-- [ ] 全テストが通過（`pytest tests/ marsdisk/tests/` 成功）
+- [x] `CollisionStepContext` が導入され、`step_collisions_smol_0d` の呼び出しが簡素化
+- [x] `tests/fixtures/baseline_summary.json` が作成されている
+- [x] `marsdisk/tests/` が `tests/unit/` に統合されている
+- [x] 全テストが通過（`pytest tests/ marsdisk/tests/` 成功）
 
 ### Phase 3 完了条件
-- [ ] `ProgressReporter`, `StreamingState`, `ZeroDHistory` が抽出されている
-- [ ] テストディレクトリが `unit/`, `integration/`, `research/`, `legacy/` に分類されている
-- [ ] Phase5 関連コードが削除されている
-- [ ] Phase7 が `extended_diagnostics` にリネームされている
-- [ ] `analysis/coverage.json` の `function_reference_rate` が 0.75 以上を維持
+- [x] `ProgressReporter`, `StreamingState`, `ZeroDHistory` が抽出されている
+- [x] テストディレクトリが `unit/`, `integration/`, `research/`, `legacy/` に分類されている
+- [x] Phase5 関連コードが削除されている
+- [x] Phase7 が `extended_diagnostics` にリネームされている
+- [x] `analysis/coverage.json` の `function_reference_rate` が 0.75 以上を維持
 
 ### legacy テスト削除時期
 - **削除予定**: 衝突物理追加完了後、動作が安定したら `tests/legacy/` を削除
@@ -495,4 +503,4 @@ gantt
 |------|----------|
 | 2024-12-16 | 初版作成 |
 | 2024-12-16 | ユーザー決定反映: CollisionStepContext 詳細設計確定、tmp_debug Git外退避、段階的実施（Phase 1/2/3）、Phase7リネーム箇所追加、削除基準1ヶ月に変更 |
-
+| 2025-12-17 | Phase2/3 完了: CollisionStepContext 導入・基準 fixture 追加・テスト統合、ProgressReporter/StreamingState/ZeroDHistory 抽出、Phase5 削除、Phase7→extended_diagnostics リネーム、coverage guard 0.99/anchors pass を確認 |

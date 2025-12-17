@@ -168,7 +168,7 @@ graph LR
 | `sizes.n_bins` | 40 | — |
 
 - `psd.floor.mode` は (E.008) の $s_{\min,\mathrm{eff}}$ を固定/動的に切り替え、`sizes.evolve_min_size` を使うと昇華由来の床上げを追跡する。
-- `wavy_strength>0` で blow-out 近傍の“wavy”構造を付加し、`tests/test_surface_outflux_wavy.py::test_blowout_driven_wavy_pattern_emerges` で定性的再現を確認する。
+- `wavy_strength>0` で blow-out 近傍の“wavy”構造を付加し、`tests/integration/test_surface_outflux_wavy.py::test_blowout_driven_wavy_pattern_emerges` で定性的再現を確認する。
 
 > **詳細**: analysis/config_guide.md §3.3 "Sizes"  
 > **用語**: analysis/glossary.md "s", "PSD"
@@ -391,9 +391,9 @@ pytest tests/ -q
 
 主要テストは analysis/run-recipes.md §検証チェックリスト を参照。特に以下でスケールと安定性を確認する。
 
-- Wyatt/Strubbe–Chiang 衝突寿命スケール: `pytest tests/test_scalings.py::test_strubbe_chiang_collisional_timescale_matches_orbit_scaling`
-- Blow-out 起因 “wavy” PSD の再現: `pytest tests/test_surface_outflux_wavy.py::test_blowout_driven_wavy_pattern_emerges`
-- IMEX-BDF(1) の Δt 制限と質量保存: `pytest tests/test_mass_conservation.py::test_imex_bdf1_limits_timestep_and_preserves_mass`
+- Wyatt/Strubbe–Chiang 衝突寿命スケール: `pytest tests/integration/test_scalings.py::test_strubbe_chiang_collisional_timescale_matches_orbit_scaling`
+- Blow-out 起因 “wavy” PSD の再現: `pytest tests/integration/test_surface_outflux_wavy.py::test_blowout_driven_wavy_pattern_emerges`
+- IMEX-BDF(1) の Δt 制限と質量保存: `pytest tests/integration/test_mass_conservation.py::test_imex_bdf1_limits_timestep_and_preserves_mass`
 - 質量収支ログ: `out/checks/mass_budget.csv` で |error|≤0.5% を確認（C4）
 
 ### ドキュメント整合性

@@ -153,9 +153,9 @@ numerics:
   orbit_rollup: true
   dt_over_t_blow_max: 0.1
 diagnostics:
-  phase7:
+  extended_diagnostics:
     enable: false
-    schema_version: "phase7-minimal-v1"
+    schema_version: "extended-minimal-v1"
 io:
   outdir: "out"
   debug_sinks: false

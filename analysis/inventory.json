@@ -2012,7 +2012,7 @@
     "file_path": "analysis/tools/scan_assumptions.py",
     "line_no": 50,
     "symbol": "TEST_HINTS",
-    "signature": "TEST_HINTS = {'blowout': ['tests/test_scalings.py', 'tests/test_fast_blowout.py'], 'shield': ['tests/test_radiation_shielding_logging.py', 'tests/test_blowout_gate.py'], 'psd': ['tests/test_psd_kappa.py', 'tests/test_surface_outflux_wavy.py'], 'tcoll': ['tests/test_scalings.py', 'tests/test_phase3_surface_blowout.py'], 'sublim': ['tests/test_sinks_none.py', 'tests/test_sublimation_phase_gate.py'], 'radius': ['tests/test_scope_limitations_metadata.py']}",
+    "signature": "TEST_HINTS = {'blowout': ['tests/integration/test_scalings.py', 'tests/integration/test_fast_blowout.py'], 'shield': ['tests/integration/test_radiation_shielding_logging.py', 'tests/integration/test_blowout_gate.py'], 'psd': ['tests/integration/test_psd_kappa.py', 'tests/integration/test_surface_outflux_wavy.py'], 'tcoll': ['tests/integration/test_scalings.py', 'tests/integration/test_phase3_surface_blowout.py'], 'sublim': ['tests/integration/test_sinks_none.py', 'tests/integration/test_sublimation_phase_gate.py'], 'radius': ['tests/integration/test_scope_limitations_metadata.py']}",
     "brief_usage": "Module constant"
   },
   {
@@ -2560,6 +2560,34 @@
     "symbol": "prune_checkpoints",
     "signature": "prune_checkpoints(dir_path: Path, keep_last_n: int) -> None",
     "brief_usage": "Remove older checkpoints, keeping only the most recent N."
+  },
+  {
+    "file_path": "marsdisk/io/streaming.py",
+    "line_no": 19,
+    "symbol": "MEMORY_RUN_ROW_BYTES",
+    "signature": "MEMORY_RUN_ROW_BYTES = 2200.0",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "marsdisk/io/streaming.py",
+    "line_no": 20,
+    "symbol": "MEMORY_PSD_ROW_BYTES",
+    "signature": "MEMORY_PSD_ROW_BYTES = 320.0",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "marsdisk/io/streaming.py",
+    "line_no": 21,
+    "symbol": "MEMORY_DIAG_ROW_BYTES",
+    "signature": "MEMORY_DIAG_ROW_BYTES = 1400.0",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "marsdisk/io/streaming.py",
+    "line_no": 24,
+    "symbol": "StreamingState",
+    "signature": "class StreamingState",
+    "brief_usage": "Manage streaming flush of large histories to Parquet/CSV chunks."
   },
   {
     "file_path": "marsdisk/io/tables.py",
@@ -3845,8 +3873,8 @@
   {
     "file_path": "marsdisk/orchestrator.py",
     "line_no": 71,
-    "symbol": "PHASE7_SCHEMA_VERSION",
-    "signature": "PHASE7_SCHEMA_VERSION = 'phase7-minimal-v1'",
+    "symbol": "EXTENDED_DIAGNOSTICS_VERSION",
+    "signature": "EXTENDED_DIAGNOSTICS_VERSION = 'extended-minimal-v1'",
     "brief_usage": "Module constant"
   },
   {
@@ -3998,84 +4026,133 @@
   },
   {
     "file_path": "marsdisk/physics/collisions_smol.py",
-    "line_no": 92,
+    "line_no": 93,
+    "symbol": "TimeOrbitParams",
+    "signature": "class TimeOrbitParams",
+    "brief_usage": "Group A: 時間・軌道パラメータ."
+  },
+  {
+    "file_path": "marsdisk/physics/collisions_smol.py",
+    "line_no": 102,
+    "symbol": "MaterialParams",
+    "signature": "class MaterialParams",
+    "brief_usage": "Group B: 物質パラメータ."
+  },
+  {
+    "file_path": "marsdisk/physics/collisions_smol.py",
+    "line_no": 111,
+    "symbol": "DynamicsParams",
+    "signature": "class DynamicsParams",
+    "brief_usage": "Group C: 力学パラメータ."
+  },
+  {
+    "file_path": "marsdisk/physics/collisions_smol.py",
+    "line_no": 121,
+    "symbol": "SupplyParams",
+    "signature": "class SupplyParams",
+    "brief_usage": "Group D: 供給パラメータ."
+  },
+  {
+    "file_path": "marsdisk/physics/collisions_smol.py",
+    "line_no": 133,
+    "symbol": "CollisionControlFlags",
+    "signature": "class CollisionControlFlags",
+    "brief_usage": "Group E: 制御フラグ."
+  },
+  {
+    "file_path": "marsdisk/physics/collisions_smol.py",
+    "line_no": 146,
+    "symbol": "CollisionStepContext",
+    "signature": "class CollisionStepContext",
+    "brief_usage": "衝突ステップの統合コンテキスト."
+  },
+  {
+    "file_path": "marsdisk/physics/collisions_smol.py",
+    "line_no": 157,
     "symbol": "supply_mass_rate_to_number_source",
     "signature": "supply_mass_rate_to_number_source(prod_subblow_mass_rate: float, s_bin_center: np.ndarray, m_bin: np.ndarray, s_min_eff: float, *, widths: np.ndarray | None=None, mode: str='min_bin', s_inj_min: float | None=None, s_inj_max: float | None=None, q: float=3.5) -> np.ndarray",
     "brief_usage": "Convert a mass flux to a per-bin number source ``F_k`` (1/s)."
   },
   {
     "file_path": "marsdisk/physics/collisions_smol.py",
-    "line_no": 174,
+    "line_no": 239,
     "symbol": "_FRAG_CACHE",
     "signature": "_FRAG_CACHE: dict[tuple, np.ndarray] = {}",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/physics/collisions_smol.py",
-    "line_no": 175,
+    "line_no": 240,
     "symbol": "_FRAG_CACHE_MAX",
     "signature": "_FRAG_CACHE_MAX = 8",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/physics/collisions_smol.py",
-    "line_no": 178,
+    "line_no": 243,
     "symbol": "_fragment_tensor",
     "signature": "_fragment_tensor(sizes: np.ndarray, masses: np.ndarray, v_rel: float | np.ndarray, rho: float, alpha_frag: float=3.5, *, use_numba: bool | None=None) -> np.ndarray",
     "brief_usage": "Return a mass-conserving fragment distribution ``Y[k, i, j]``."
   },
   {
     "file_path": "marsdisk/physics/collisions_smol.py",
-    "line_no": 301,
+    "line_no": 366,
     "symbol": "_blowout_sink_vector",
     "signature": "_blowout_sink_vector(sizes: np.ndarray, a_blow: float, Omega: float, enable_blowout: bool) -> np.ndarray",
     "brief_usage": "Return per-bin blow-out sink rates (1/s)."
   },
   {
     "file_path": "marsdisk/physics/collisions_smol.py",
-    "line_no": 317,
+    "line_no": 382,
     "symbol": "kernel_minimum_tcoll",
     "signature": "kernel_minimum_tcoll(C_kernel: np.ndarray) -> float",
     "brief_usage": "Return the minimum collisional time-scale implied by ``C``."
   },
   {
     "file_path": "marsdisk/physics/collisions_smol.py",
-    "line_no": 329,
+    "line_no": 394,
     "symbol": "_supply_velocity_weight",
     "signature": "_supply_velocity_weight(delta_sigma: float, sigma_prev: float, mode: str='delta_sigma') -> float",
     "brief_usage": "Blend weight for supply velocities."
   },
   {
     "file_path": "marsdisk/physics/collisions_smol.py",
-    "line_no": 340,
+    "line_no": 405,
     "symbol": "_resolve_supply_velocity",
     "signature": "_resolve_supply_velocity(cfg: 'SupplyInjectionVelocity | None', e_base: float, i_base: float) -> tuple[float, float]",
     "brief_usage": "Return (e_supply, i_supply) given the injection velocity settings."
   },
   {
     "file_path": "marsdisk/physics/collisions_smol.py",
-    "line_no": 357,
+    "line_no": 422,
     "symbol": "_blend_supply_velocity",
     "signature": "_blend_supply_velocity(e_base: float, i_base: float, e_supply: float, i_supply: float, *, weight: float, mode: str='rms') -> tuple[float, float]",
     "brief_usage": "Blend baseline and supply e/i."
   },
   {
     "file_path": "marsdisk/physics/collisions_smol.py",
-    "line_no": 379,
+    "line_no": 444,
     "symbol": "compute_kernel_ei_state",
     "signature": "compute_kernel_ei_state(dynamics_cfg: 'Dynamics', tau_eff: float, a_orbit_m: float, v_k: float, sizes: np.ndarray, *, e_override: float | None=None, i_override: float | None=None) -> KernelEIState",
     "brief_usage": "Return baseline and effective e/i along with the scale height array."
   },
   {
     "file_path": "marsdisk/physics/collisions_smol.py",
-    "line_no": 429,
+    "line_no": 494,
     "symbol": "compute_kernel_e_i_H",
     "signature": "compute_kernel_e_i_H(dynamics_cfg: 'Dynamics', tau_eff: float, a_orbit_m: float, v_k: float, sizes: np.ndarray) -> tuple[float, float, np.ndarray]",
     "brief_usage": "Return ``(e_kernel, i_kernel, H_k)`` for the Smol collision kernel."
   },
   {
     "file_path": "marsdisk/physics/collisions_smol.py",
-    "line_no": 450,
+    "line_no": 515,
+    "symbol": "step_collisions",
+    "signature": "step_collisions(ctx: CollisionStepContext, psd_state: MutableMapping[str, np.ndarray | float]) -> Smol0DStepResult",
+    "brief_usage": "Structured wrapper for the Smol 0D collision step."
+  },
+  {
+    "file_path": "marsdisk/physics/collisions_smol.py",
+    "line_no": 550,
     "symbol": "step_collisions_smol_0d",
     "signature": "step_collisions_smol_0d(psd_state: MutableMapping[str, np.ndarray | float], sigma_surf: float, *, dt: float, prod_subblow_area_rate: float, r: float, Omega: float, a_blow: float, rho: float, e_value: float, i_value: float, sigma_tau1: float | None, enable_blowout: bool, t_sink: float | None, ds_dt_val: float | None=None, s_min_effective: float | None=None, dynamics_cfg: 'Dynamics | None'=None, tau_eff: float | None=None, collisions_enabled: bool=True, mass_conserving_sublimation: bool=False, supply_injection_mode: str='min_bin', supply_s_inj_min: float | None=None, supply_s_inj_max: float | None=None, supply_q: float=3.5, supply_velocity_cfg: 'SupplyInjectionVelocity | None'=None, headroom_policy: str='clip') -> Smol0DStepResult",
     "brief_usage": "Advance collisions+fragmentation in 0D using the Smol solver."
@@ -4768,35 +4845,35 @@
   },
   {
     "file_path": "marsdisk/physics/sublimation.py",
-    "line_no": 556,
+    "line_no": 555,
     "symbol": "_store_psat_selection",
     "signature": "_store_psat_selection(params: SublimationParams, selection: PsatSelection, T_req: float, P_value: float) -> None",
     "brief_usage": "Persist selection metadata on ``params`` for provenance."
   },
   {
     "file_path": "marsdisk/physics/sublimation.py",
-    "line_no": 585,
+    "line_no": 584,
     "symbol": "p_sat",
     "signature": "p_sat(T: float, params: SublimationParams) -> float",
     "brief_usage": "Return the saturation vapour pressure according to the selected model."
   },
   {
     "file_path": "marsdisk/physics/sublimation.py",
-    "line_no": 594,
+    "line_no": 593,
     "symbol": "mass_flux_hkl",
     "signature": "mass_flux_hkl(T: float, params: SublimationParams) -> float",
     "brief_usage": "Return the sublimation mass flux ``J(T)`` in kg m^-2 s^-1. [@Pignatale2018_ApJ853_118]"
   },
   {
     "file_path": "marsdisk/physics/sublimation.py",
-    "line_no": 653,
+    "line_no": 652,
     "symbol": "s_sink_from_timescale",
     "signature": "s_sink_from_timescale(T: float, rho: float, t_ref: float, params: SublimationParams) -> float",
     "brief_usage": "Return the instantaneous-sink size :math:`s_{\\rm sink}`. [@Ronnet2016_ApJ828_109]"
   },
   {
     "file_path": "marsdisk/physics/sublimation.py",
-    "line_no": 672,
+    "line_no": 671,
     "symbol": "sublimation_sink_from_dsdt",
     "signature": "sublimation_sink_from_dsdt(s_grid_m: np.ndarray, N_k: np.ndarray, ds_dt_k: np.ndarray, m_k: np.ndarray) -> tuple[np.ndarray, float]",
     "brief_usage": "Return per-bin sublimation sinks and the associated mass loss rate."
@@ -5195,121 +5272,100 @@
   },
   {
     "file_path": "marsdisk/run.py",
-    "line_no": 78,
+    "line_no": 82,
     "symbol": "SECONDS_PER_YEAR",
     "signature": "SECONDS_PER_YEAR = 365.25 * 24 * 3600.0",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/run.py",
-    "line_no": 79,
+    "line_no": 83,
     "symbol": "MAX_STEPS",
     "signature": "MAX_STEPS = 50000000",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/run.py",
-    "line_no": 80,
+    "line_no": 84,
     "symbol": "AUTO_MAX_MARGIN",
     "signature": "AUTO_MAX_MARGIN = 0.05",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/run.py",
-    "line_no": 81,
+    "line_no": 85,
     "symbol": "TAU_MIN",
     "signature": "TAU_MIN = 1e-12",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/run.py",
-    "line_no": 82,
+    "line_no": 86,
     "symbol": "KAPPA_MIN",
     "signature": "KAPPA_MIN = 1e-12",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/run.py",
-    "line_no": 83,
+    "line_no": 87,
     "symbol": "_KAPPA_WARNED_LABELS",
     "signature": "_KAPPA_WARNED_LABELS: set[str] = set()",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/run.py",
-    "line_no": 84,
+    "line_no": 88,
     "symbol": "DEBUG_STAGE",
     "signature": "DEBUG_STAGE = bool(int(os.environ.get('MARSDISK_DEBUG_STAGE', '0')))",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/run.py",
-    "line_no": 87,
+    "line_no": 91,
     "symbol": "_log_stage",
     "signature": "_log_stage(label: str, *, extra: Optional[Dict[str, Any]]=None) -> None",
     "brief_usage": "Emit coarse-grained progress markers for hang診断用."
   },
   {
     "file_path": "marsdisk/run.py",
-    "line_no": 96,
+    "line_no": 100,
     "symbol": "DEFAULT_SEED",
     "signature": "DEFAULT_SEED = 12345",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/run.py",
-    "line_no": 97,
+    "line_no": 101,
     "symbol": "MASS_BUDGET_TOLERANCE_PERCENT",
     "signature": "MASS_BUDGET_TOLERANCE_PERCENT = 0.5",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/run.py",
-    "line_no": 98,
+    "line_no": 102,
     "symbol": "SINK_REF_SIZE",
     "signature": "SINK_REF_SIZE = 1e-06",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/run.py",
-    "line_no": 99,
+    "line_no": 103,
     "symbol": "FAST_BLOWOUT_RATIO_THRESHOLD",
     "signature": "FAST_BLOWOUT_RATIO_THRESHOLD = 3.0",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/run.py",
-    "line_no": 100,
+    "line_no": 104,
     "symbol": "FAST_BLOWOUT_RATIO_STRICT",
     "signature": "FAST_BLOWOUT_RATIO_STRICT = 10.0",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/run.py",
-    "line_no": 101,
-    "symbol": "PHASE7_SCHEMA_VERSION",
-    "signature": "PHASE7_SCHEMA_VERSION = 'phase7-minimal-v1'",
-    "brief_usage": "Module constant"
-  },
-  {
-    "file_path": "marsdisk/run.py",
-    "line_no": 103,
-    "symbol": "MEMORY_RUN_ROW_BYTES",
-    "signature": "MEMORY_RUN_ROW_BYTES = 2200.0",
-    "brief_usage": "Module constant"
-  },
-  {
-    "file_path": "marsdisk/run.py",
-    "line_no": 104,
-    "symbol": "MEMORY_PSD_ROW_BYTES",
-    "signature": "MEMORY_PSD_ROW_BYTES = 320.0",
-    "brief_usage": "Module constant"
-  },
-  {
-    "file_path": "marsdisk/run.py",
     "line_no": 105,
-    "symbol": "MEMORY_DIAG_ROW_BYTES",
-    "signature": "MEMORY_DIAG_ROW_BYTES = 1400.0",
+    "symbol": "EXTENDED_DIAGNOSTICS_VERSION",
+    "signature": "EXTENDED_DIAGNOSTICS_VERSION = 'extended-minimal-v1'",
     "brief_usage": "Module constant"
   },
   {
@@ -5335,269 +5391,220 @@
   },
   {
     "file_path": "marsdisk/run.py",
-    "line_no": 156,
-    "symbol": "ProgressReporter",
-    "signature": "class ProgressReporter",
-    "brief_usage": "Lightweight terminal progress bar with ETA feedback."
-  },
-  {
-    "file_path": "marsdisk/run.py",
-    "line_no": 265,
+    "line_no": 155,
     "symbol": "_parse_override_value",
     "signature": "_parse_override_value(raw: str) -> Any",
     "brief_usage": "Return a Python value parsed from a CLI override string."
   },
   {
     "file_path": "marsdisk/run.py",
-    "line_no": 292,
+    "line_no": 182,
     "symbol": "_apply_overrides_dict",
     "signature": "_apply_overrides_dict(payload: Dict[str, Any], overrides: Sequence[str]) -> Dict[str, Any]",
     "brief_usage": "Apply dotted-path overrides to a configuration dictionary."
   },
   {
     "file_path": "marsdisk/run.py",
-    "line_no": 330,
+    "line_no": 220,
     "symbol": "_merge_physics_section",
     "signature": "_merge_physics_section(payload: Dict[str, Any]) -> Dict[str, Any]",
     "brief_usage": "Inline the optional ``physics`` mapping into the root config tree."
   },
   {
     "file_path": "marsdisk/run.py",
-    "line_no": 349,
+    "line_no": 239,
     "symbol": "_safe_float",
     "signature": "_safe_float(value: Any) -> Optional[float]",
     "brief_usage": "Return ``value`` cast to float when finite, otherwise ``None``."
   },
   {
     "file_path": "marsdisk/run.py",
-    "line_no": 361,
+    "line_no": 251,
     "symbol": "_float_or_nan",
     "signature": "_float_or_nan(value: Any) -> float",
     "brief_usage": "Return a finite float or ``nan`` to stabilise Parquet schemas."
   },
   {
     "file_path": "marsdisk/run.py",
-    "line_no": 373,
+    "line_no": 263,
     "symbol": "_format_exception_short",
     "signature": "_format_exception_short(exc: Exception, *, width: int=600) -> str",
     "brief_usage": "Collapse whitespace and truncate exception text for logging."
   },
   {
     "file_path": "marsdisk/run.py",
-    "line_no": 384,
+    "line_no": 274,
     "symbol": "_resolve_feedback_tau_field",
     "signature": "_resolve_feedback_tau_field(tau_field: Optional[str]) -> str",
     "brief_usage": "Normalise feedback.tau_field and reject unknown values."
   },
   {
     "file_path": "marsdisk/run.py",
-    "line_no": 397,
+    "line_no": 287,
     "symbol": "_derive_seed_components",
     "signature": "_derive_seed_components(cfg: Config) -> str",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/run.py",
-    "line_no": 422,
+    "line_no": 312,
     "symbol": "_resolve_seed",
     "signature": "_resolve_seed(cfg: Config) -> tuple[int, str, str]",
     "brief_usage": "Return the RNG seed, seed expression description, and basis."
   },
   {
     "file_path": "marsdisk/run.py",
-    "line_no": 437,
+    "line_no": 327,
     "symbol": "_auto_chi_blow",
     "signature": "_auto_chi_blow(beta: float, qpr: float) -> float",
     "brief_usage": "Return an automatic chi_blow scaling based on β and ⟨Q_pr⟩."
   },
   {
     "file_path": "marsdisk/run.py",
-    "line_no": 452,
+    "line_no": 342,
     "symbol": "_fast_blowout_correction_factor",
     "signature": "_fast_blowout_correction_factor(ratio: float) -> float",
     "brief_usage": "Return the effective loss fraction ``f_fast = 1 - exp(-Δt/t_blow)``."
   },
   {
     "file_path": "marsdisk/run.py",
-    "line_no": 472,
+    "line_no": 362,
     "symbol": "_compute_gate_factor",
     "signature": "_compute_gate_factor(t_blow: Optional[float], t_solid: Optional[float]) -> float",
     "brief_usage": "Return gate coefficient f_gate=t_solid/(t_solid+t_blow) clipped to [0,1]."
   },
   {
     "file_path": "marsdisk/run.py",
-    "line_no": 494,
+    "line_no": 384,
     "symbol": "_human_bytes",
     "signature": "_human_bytes(value: float) -> str",
     "brief_usage": "Return a human-readable byte string."
   },
   {
     "file_path": "marsdisk/run.py",
-    "line_no": 506,
+    "line_no": 396,
     "symbol": "_memory_estimate",
     "signature": "_memory_estimate(n_steps: int, n_bins: int, run_row_bytes: float=MEMORY_RUN_ROW_BYTES, psd_row_bytes: float=MEMORY_PSD_ROW_BYTES, *, smol_value_bytes: float=8.0) -> tuple[str, str]",
     "brief_usage": "Return short and long memory hints estimated from steps and bins."
   },
   {
     "file_path": "marsdisk/run.py",
-    "line_no": 531,
+    "line_no": 421,
     "symbol": "_normalise_physics_mode",
     "signature": "_normalise_physics_mode(value: Any) -> str",
     "brief_usage": "Return the canonical physics.mode string."
   },
   {
     "file_path": "marsdisk/run.py",
-    "line_no": 547,
+    "line_no": 437,
     "symbol": "_clone_config",
     "signature": "_clone_config(cfg: Config) -> Config",
     "brief_usage": "Return a deep copy of a configuration object."
   },
   {
     "file_path": "marsdisk/run.py",
-    "line_no": 555,
+    "line_no": 445,
     "symbol": "_resolve_time_grid",
     "signature": "_resolve_time_grid(numerics: Any, Omega: float, t_orb: float, *, temp_runtime: Optional[tempdriver.TemperatureDriverRuntime]=None) -> tuple[float, float, float, int, Dict[str, Any]]",
     "brief_usage": "Return (t_end, dt_nominal, dt_step, n_steps, info) for the integrator."
   },
   {
     "file_path": "marsdisk/run.py",
-    "line_no": 657,
-    "symbol": "_Phase5VariantResult",
-    "signature": "class _Phase5VariantResult",
-    "brief_usage": "Artifacts recorded for a variant within the Phase 5 comparison."
-  },
-  {
-    "file_path": "marsdisk/run.py",
-    "line_no": 670,
-    "symbol": "_read_json",
-    "signature": "_read_json(path: Path) -> Dict[str, Any]",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "marsdisk/run.py",
-    "line_no": 675,
-    "symbol": "_hash_payload",
-    "signature": "_hash_payload(payload: Mapping[str, Any]) -> str",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "marsdisk/run.py",
-    "line_no": 680,
-    "symbol": "_prepare_phase5_variants",
-    "signature": "_prepare_phase5_variants(compare_cfg: Any) -> List[Dict[str, str]]",
-    "brief_usage": "Return normalized variant specifications or raise when insufficient."
-  },
-  {
-    "file_path": "marsdisk/run.py",
-    "line_no": 713,
+    "line_no": 552,
     "symbol": "RunConfig",
     "signature": "class RunConfig",
     "brief_usage": "Configuration parameters for a zero-dimensional run."
   },
   {
     "file_path": "marsdisk/run.py",
-    "line_no": 730,
+    "line_no": 569,
     "symbol": "RunState",
     "signature": "class RunState",
     "brief_usage": "State variables evolved during the run."
   },
   {
     "file_path": "marsdisk/run.py",
-    "line_no": 740,
-    "symbol": "ZeroDHistory",
-    "signature": "class ZeroDHistory",
-    "brief_usage": "Per-step history bundle used by the full-feature zero-D driver."
-  },
-  {
-    "file_path": "marsdisk/run.py",
-    "line_no": 764,
-    "symbol": "StreamingState",
-    "signature": "class StreamingState",
-    "brief_usage": "Manage streaming flush of large histories to Parquet/CSV chunks."
-  },
-  {
-    "file_path": "marsdisk/run.py",
-    "line_no": 946,
+    "line_no": 578,
     "symbol": "step",
     "signature": "step(config: RunConfig, state: RunState, dt: float) -> Dict[str, float]",
     "brief_usage": "Advance the coupled S0/S1 system by one time-step."
   },
   {
     "file_path": "marsdisk/run.py",
-    "line_no": 998,
+    "line_no": 630,
     "symbol": "run_n_steps",
     "signature": "run_n_steps(config: RunConfig, state: RunState, n: int, dt: float, out_dir: Path | None=None) -> pd.DataFrame",
     "brief_usage": "Run ``n`` steps and optionally serialise results."
   },
   {
     "file_path": "marsdisk/run.py",
-    "line_no": 1028,
+    "line_no": 660,
     "symbol": "load_config",
     "signature": "load_config(path: Path, overrides: Optional[Sequence[str]]=None) -> Config",
     "brief_usage": "Load a YAML configuration file into a :class:`Config` instance."
   },
   {
     "file_path": "marsdisk/run.py",
-    "line_no": 1053,
+    "line_no": 685,
     "symbol": "_gather_git_info",
     "signature": "_gather_git_info() -> Dict[str, Any]",
     "brief_usage": "Return basic git metadata for provenance recording."
   },
   {
     "file_path": "marsdisk/run.py",
-    "line_no": 1080,
+    "line_no": 712,
     "symbol": "_configure_logging",
     "signature": "_configure_logging(level: int, suppress_warnings: bool=False) -> None",
     "brief_usage": "Configure root logging and optionally silence Python warnings."
   },
   {
     "file_path": "marsdisk/run.py",
-    "line_no": 1091,
+    "line_no": 723,
     "symbol": "MassBudgetViolationError",
     "signature": "class MassBudgetViolationError(RuntimeError)",
     "brief_usage": "Raised when the mass budget tolerance is exceeded."
   },
   {
     "file_path": "marsdisk/run.py",
-    "line_no": 1095,
+    "line_no": 727,
     "symbol": "_write_zero_d_history",
-    "signature": "_write_zero_d_history(cfg: Config, df: pd.DataFrame, history: ZeroDHistory, *, step_diag_enabled: bool, step_diag_format: str, step_diag_path_cfg: Optional[Path], step_diag_path: Optional[Path], orbit_rollup_enabled: bool, phase7_enabled: bool) -> None",
+    "signature": "_write_zero_d_history(cfg: Config, df: pd.DataFrame, history: ZeroDHistory, *, step_diag_enabled: bool, step_diag_format: str, step_diag_path_cfg: Optional[Path], step_diag_path: Optional[Path], orbit_rollup_enabled: bool, extended_diag_enabled: bool) -> None",
     "brief_usage": "Persist time series, diagnostics, and rollups for a zero-D run."
   },
   {
     "file_path": "marsdisk/run.py",
-    "line_no": 1198,
+    "line_no": 830,
     "symbol": "run_zero_d",
     "signature": "run_zero_d(cfg: Config, *, enforce_mass_budget: bool=False, physics_mode_override: Optional[str]=None, physics_mode_source_override: Optional[str]=None) -> None",
     "brief_usage": "Execute the full-feature zero-dimensional simulation."
   },
   {
     "file_path": "marsdisk/run.py",
-    "line_no": 5094,
-    "symbol": "_run_phase5_variant",
-    "signature": "_run_phase5_variant(base_cfg: Config, variant: str, mode: str, base_outdir: Path, duration_years: float, *, enforce_mass_budget: bool) -> _Phase5VariantResult",
-    "brief_usage": "Execute a single-process variant run and capture its artifacts."
-  },
-  {
-    "file_path": "marsdisk/run.py",
-    "line_no": 5156,
-    "symbol": "_write_phase5_comparison_products",
-    "signature": "_write_phase5_comparison_products(base_outdir: Path, duration_years: float, results: List[_Phase5VariantResult]) -> None",
-    "brief_usage": "Aggregate per-variant artifacts into the comparison outputs."
-  },
-  {
-    "file_path": "marsdisk/run.py",
-    "line_no": 5298,
-    "symbol": "run_phase5_comparison",
-    "signature": "run_phase5_comparison(cfg: Config, *, enforce_mass_budget: bool=False, variants_spec: Optional[List[Dict[str, str]]]=None) -> None",
-    "brief_usage": "Run the Phase 5 dual single-process comparison workflow."
-  },
-  {
-    "file_path": "marsdisk/run.py",
-    "line_no": 5333,
+    "line_no": 4734,
     "symbol": "main",
     "signature": "main(argv: Optional[List[str]]=None) -> None",
     "brief_usage": "Command line entry point."
+  },
+  {
+    "file_path": "marsdisk/runtime/history.py",
+    "line_no": 10,
+    "symbol": "ZeroDHistory",
+    "signature": "class ZeroDHistory",
+    "brief_usage": "Per-step history bundle used by the full-feature zero-D driver."
+  },
+  {
+    "file_path": "marsdisk/runtime/progress.py",
+    "line_no": 10,
+    "symbol": "SECONDS_PER_YEAR",
+    "signature": "SECONDS_PER_YEAR = 365.25 * 24 * 3600.0",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "marsdisk/runtime/progress.py",
+    "line_no": 13,
+    "symbol": "ProgressReporter",
+    "signature": "class ProgressReporter",
+    "brief_usage": "Lightweight terminal progress bar with ETA feedback."
   },
   {
     "file_path": "marsdisk/schema.py",
@@ -5840,352 +5847,149 @@
   {
     "file_path": "marsdisk/schema.py",
     "line_no": 956,
-    "symbol": "Phase5CompareConfig",
-    "signature": "class Phase5CompareConfig(BaseModel)",
-    "brief_usage": "Phase 5 comparison study controls."
-  },
-  {
-    "file_path": "marsdisk/schema.py",
-    "line_no": 986,
-    "symbol": "Phase5Config",
-    "signature": "class Phase5Config(BaseModel)",
-    "brief_usage": "Container for the Phase 5 specific options."
-  },
-  {
-    "file_path": "marsdisk/schema.py",
-    "line_no": 992,
     "symbol": "PhaseThresholds",
     "signature": "class PhaseThresholds(BaseModel)",
     "brief_usage": "Fallback thresholds used when no external phase map is available."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 1016,
+    "line_no": 980,
     "symbol": "PhaseConfig",
     "signature": "class PhaseConfig(BaseModel)",
     "brief_usage": "Solid/vapour branching controls."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 1097,
+    "line_no": 1061,
     "symbol": "MarsTemperatureDriverConstant",
     "signature": "class MarsTemperatureDriverConstant(BaseModel)",
     "brief_usage": "Explicit constant value for the Mars temperature driver."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 1110,
+    "line_no": 1074,
     "symbol": "MarsTemperatureDriverTable",
     "signature": "class MarsTemperatureDriverTable(BaseModel)",
     "brief_usage": "Tabulated Mars temperature driver."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 1122,
+    "line_no": 1086,
     "symbol": "MarsTemperatureDriverHyodo",
     "signature": "class MarsTemperatureDriverHyodo(BaseModel)",
     "brief_usage": "Hyodo linear cooling approximation options."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 1130,
+    "line_no": 1094,
     "symbol": "MarsTemperatureAutogen",
     "signature": "class MarsTemperatureAutogen(BaseModel)",
     "brief_usage": "Options for auto-generating Mars temperature tables."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 1162,
+    "line_no": 1126,
     "symbol": "MarsTemperatureDriverConfig",
     "signature": "class MarsTemperatureDriverConfig(BaseModel)",
     "brief_usage": "Configuration container for the Mars temperature driver."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 1221,
+    "line_no": 1185,
     "symbol": "RadiationTauGate",
     "signature": "class RadiationTauGate(BaseModel)",
     "brief_usage": "Optical-depth gating options for radiation-pressure blow-out."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 1228,
+    "line_no": 1192,
     "symbol": "Radiation",
     "signature": "class Radiation(BaseModel)",
     "brief_usage": "Radiation pressure options and table paths."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 1287,
+    "line_no": 1251,
     "symbol": "Shielding",
     "signature": "class Shielding(BaseModel)",
     "brief_usage": "Self-shielding table configuration."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 1348,
+    "line_no": 1312,
     "symbol": "Blowout",
     "signature": "class Blowout(BaseModel)",
     "brief_usage": "Radiation blow-out control."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 1366,
+    "line_no": 1330,
     "symbol": "Checkpoint",
     "signature": "class Checkpoint(BaseModel)",
     "brief_usage": "Checkpointing and restart controls."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 1393,
+    "line_no": 1357,
     "symbol": "Resume",
     "signature": "class Resume(BaseModel)",
     "brief_usage": "Resume-from-checkpoint configuration."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 1406,
+    "line_no": 1370,
     "symbol": "Numerics",
     "signature": "class Numerics(BaseModel)",
     "brief_usage": "Integrator control parameters."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 1517,
+    "line_no": 1481,
     "symbol": "StepDiagnostics",
     "signature": "class StepDiagnostics(BaseModel)",
     "brief_usage": "Per-step loss channel diagnostics output control."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 1534,
+    "line_no": 1498,
     "symbol": "Progress",
     "signature": "class Progress(BaseModel)",
     "brief_usage": "Console progress display controls."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 1548,
+    "line_no": 1512,
     "symbol": "Streaming",
     "signature": "class Streaming(BaseModel)",
     "brief_usage": "Streaming write controls for large zero-D runs."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 1591,
+    "line_no": 1555,
     "symbol": "IO",
     "signature": "class IO(BaseModel)",
     "brief_usage": "Output directories."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 1622,
-    "symbol": "Phase7Diagnostics",
-    "signature": "class Phase7Diagnostics(BaseModel)",
-    "brief_usage": "Optional Phase7 diagnostics controls."
+    "line_no": 1586,
+    "symbol": "ExtendedDiagnostics",
+    "signature": "class ExtendedDiagnostics(BaseModel)",
+    "brief_usage": "Optional extended diagnostics controls."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 1635,
+    "line_no": 1599,
     "symbol": "Diagnostics",
     "signature": "class Diagnostics(BaseModel)",
     "brief_usage": "Diagnostics toggles grouped by feature phase."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 1641,
+    "line_no": 1605,
     "symbol": "Config",
     "signature": "class Config(BaseModel)",
     "brief_usage": "Top-level configuration object."
-  },
-  {
-    "file_path": "marsdisk/tests/test_core.py",
-    "line_no": 11,
-    "symbol": "test_constants_values",
-    "signature": "test_constants_values()",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "marsdisk/tests/test_core.py",
-    "line_no": 17,
-    "symbol": "test_grid_relations",
-    "signature": "test_grid_relations()",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "marsdisk/tests/test_core.py",
-    "line_no": 24,
-    "symbol": "test_writer_and_tables",
-    "signature": "test_writer_and_tables(tmp_path: Path)",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "marsdisk/tests/test_dynamics.py",
-    "line_no": 4,
-    "symbol": "const_eps",
-    "signature": "const_eps(v: float) -> float",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "marsdisk/tests/test_dynamics.py",
-    "line_no": 8,
-    "symbol": "test_v_ij_zero_limit",
-    "signature": "test_v_ij_zero_limit()",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "marsdisk/tests/test_dynamics.py",
-    "line_no": 13,
-    "symbol": "test_c_eq_monotonic_tau_fwake",
-    "signature": "test_c_eq_monotonic_tau_fwake()",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "marsdisk/tests/test_dynamics.py",
-    "line_no": 21,
-    "symbol": "test_update_e_relaxation",
-    "signature": "test_update_e_relaxation()",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "marsdisk/tests/test_dynamics_sampling.py",
-    "line_no": 8,
-    "symbol": "_make_config",
-    "signature": "_make_config(outdir)",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "marsdisk/tests/test_dynamics_sampling.py",
-    "line_no": 48,
-    "symbol": "test_stochastic_ei_sampling",
-    "signature": "test_stochastic_ei_sampling(tmp_path)",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "marsdisk/tests/test_radiation_shielding.py",
-    "line_no": 9,
-    "symbol": "test_blowout_radius_scales_with_temperature",
-    "signature": "test_blowout_radius_scales_with_temperature()",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "marsdisk/tests/test_radiation_shielding.py",
-    "line_no": 18,
-    "symbol": "test_beta_inverse_size_scaling",
-    "signature": "test_beta_inverse_size_scaling()",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "marsdisk/tests/test_radiation_shielding.py",
-    "line_no": 28,
-    "symbol": "test_beta_respects_qpr_override",
-    "signature": "test_beta_respects_qpr_override()",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "marsdisk/tests/test_radiation_shielding.py",
-    "line_no": 38,
-    "symbol": "test_planck_mean_qpr_uses_table",
-    "signature": "test_planck_mean_qpr_uses_table()",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "marsdisk/tests/test_radiation_shielding.py",
-    "line_no": 46,
-    "symbol": "test_clip_to_tau1_non_negative",
-    "signature": "test_clip_to_tau1_non_negative()",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "marsdisk/tests/test_sublimation.py",
-    "line_no": 8,
-    "symbol": "test_s_sink_from_timescale_logistic",
-    "signature": "test_s_sink_from_timescale_logistic()",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "marsdisk/tests/test_sublimation.py",
-    "line_no": 14,
-    "symbol": "test_s_sub_boundary_fallback_warning",
-    "signature": "test_s_sub_boundary_fallback_warning()",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "marsdisk/tests/test_sublimation.py",
-    "line_no": 20,
-    "symbol": "test_compute_s_min_F2_uses_max",
-    "signature": "test_compute_s_min_F2_uses_max()",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "marsdisk/tests/test_surface_outflux.py",
-    "line_no": 9,
-    "symbol": "_run",
-    "signature": "_run(prod_rate: float, Omega: float, Sigma_tau1: float, steps: int=200)",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "marsdisk/tests/test_surface_outflux.py",
-    "line_no": 25,
-    "symbol": "test_supply_limited_outflux",
-    "signature": "test_supply_limited_outflux()",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "marsdisk/tests/test_surface_outflux.py",
-    "line_no": 34,
-    "symbol": "test_saturation_limited_outflux",
-    "signature": "test_saturation_limited_outflux()",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "marsdisk/tests/test_surface_outflux.py",
-    "line_no": 43,
-    "symbol": "test_sink_increases_mass_loss",
-    "signature": "test_sink_increases_mass_loss()",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "marsdisk/tests/test_surface_outflux.py",
-    "line_no": 72,
-    "symbol": "test_los_factor_increases_tau_los",
-    "signature": "test_los_factor_increases_tau_los(tmp_path)",
-    "brief_usage": "LOS係数を伸ばすと tau_los_mars が鉛直 τ より大きくなる。"
-  },
-  {
-    "file_path": "marsdisk/tests/test_timegrid_and_budget.py",
-    "line_no": 13,
-    "symbol": "_tiny_config",
-    "signature": "_tiny_config(outdir: Path, dt_init: float, n_steps: int) -> schema.Config",
-    "brief_usage": "Return a minimal 0D configuration for rapid implicit-Euler runs."
-  },
-  {
-    "file_path": "marsdisk/tests/test_timegrid_and_budget.py",
-    "line_no": 63,
-    "symbol": "test_time_grid_and_mass_budget",
-    "signature": "test_time_grid_and_mass_budget(tmp_path)",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "marsdisk/tests/test_viscosity.py",
-    "line_no": 7,
-    "symbol": "_run",
-    "signature": "_run(N: int, dt: float)",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "marsdisk/tests/test_viscosity.py",
-    "line_no": 18,
-    "symbol": "test_viscous_diffusion_converges_and_conserves_mass",
-    "signature": "test_viscous_diffusion_converges_and_conserves_mass()",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "marsdisk/tests/test_wyatt_scaling.py",
-    "line_no": 6,
-    "symbol": "test_wyatt_scaling_inverse_tau",
-    "signature": "test_wyatt_scaling_inverse_tau()",
-    "brief_usage": "No description available."
   },
   {
     "file_path": "paper/pdf_extractor/main.py",
@@ -7854,6 +7658,1672 @@
     "brief_usage": "Module constant"
   },
   {
+    "file_path": "tests/integration/test_analysis_coverage_guard.py",
+    "line_no": 7,
+    "symbol": "test_analysis_coverage_guard",
+    "signature": "test_analysis_coverage_guard() -> None",
+    "brief_usage": "Run ci_guard_analysis via the coverage guard bridge."
+  },
+  {
+    "file_path": "tests/integration/test_analysis_massloss_sampler_doc.py",
+    "line_no": 6,
+    "symbol": "TARGET_HEADER",
+    "signature": "TARGET_HEADER = '### 感度掃引（質量損失サンプラー連携）'",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "tests/integration/test_analysis_massloss_sampler_doc.py",
+    "line_no": 7,
+    "symbol": "DOC_PATH",
+    "signature": "DOC_PATH = Path('analysis/run-recipes.md')",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "tests/integration/test_analysis_massloss_sampler_doc.py",
+    "line_no": 10,
+    "symbol": "_slice_section",
+    "signature": "_slice_section(text: str, header: str) -> str",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_analysis_massloss_sampler_doc.py",
+    "line_no": 19,
+    "symbol": "test_massloss_sampler_section_lists_key_requirements",
+    "signature": "test_massloss_sampler_section_lists_key_requirements() -> None",
+    "brief_usage": "Ensure the mass-loss sampler doc retains the agreed-upon content."
+  },
+  {
+    "file_path": "tests/integration/test_assumption_trace_phase2.py",
+    "line_no": 6,
+    "symbol": "test_build_assumption_trace_smoke",
+    "signature": "test_build_assumption_trace_smoke(tmp_path: Path) -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_assumptions_docs.py",
+    "line_no": 6,
+    "symbol": "test_render_assumptions_runs",
+    "signature": "test_render_assumptions_runs(tmp_path: Path) -> None",
+    "brief_usage": "Ensure the renderer runs even with empty inputs."
+  },
+  {
+    "file_path": "tests/integration/test_assumptions_docs.py",
+    "line_no": 21,
+    "symbol": "test_trace_entries_follow_schema",
+    "signature": "test_trace_entries_follow_schema() -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_assumptions_docs.py",
+    "line_no": 33,
+    "symbol": "test_gap_titles_appear_in_overview",
+    "signature": "test_gap_titles_appear_in_overview() -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_baseline_smol_pipeline.py",
+    "line_no": 12,
+    "symbol": "test_base_config_smol_mass_budget_and_eval",
+    "signature": "test_base_config_smol_mass_budget_and_eval(tmp_path: Path) -> None",
+    "brief_usage": "Run the base.yml in Smol mode and validate mass budget + evaluation system."
+  },
+  {
+    "file_path": "tests/integration/test_blowout_gate.py",
+    "line_no": 10,
+    "symbol": "test_compute_gate_factor_bounds",
+    "signature": "test_compute_gate_factor_bounds() -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_blowout_gate.py",
+    "line_no": 18,
+    "symbol": "_build_gate_config",
+    "signature": "_build_gate_config(outdir: Path, gate_mode: str) -> schema.Config",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_blowout_gate.py",
+    "line_no": 49,
+    "symbol": "test_gate_reduces_outflux_with_sublimation",
+    "signature": "test_gate_reduces_outflux_with_sublimation(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_blowout_gate.py",
+    "line_no": 75,
+    "symbol": "_build_collision_config",
+    "signature": "_build_collision_config(outdir: Path, gate_mode: str) -> schema.Config",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_blowout_gate.py",
+    "line_no": 108,
+    "symbol": "test_gate_reduces_outflux_with_collisions",
+    "signature": "test_gate_reduces_outflux_with_collisions(tmp_path: Path) -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_checkpoint_io.py",
+    "line_no": 10,
+    "symbol": "_sample_state",
+    "signature": "_sample_state() -> checkpoint.CheckpointState",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_checkpoint_io.py",
+    "line_no": 41,
+    "symbol": "test_checkpoint_pickle_roundtrip",
+    "signature": "test_checkpoint_pickle_roundtrip(tmp_path: Path) -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_checkpoint_io.py",
+    "line_no": 51,
+    "symbol": "test_checkpoint_json_roundtrip",
+    "signature": "test_checkpoint_json_roundtrip(tmp_path: Path) -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_ci_guard_analysis.py",
+    "line_no": 8,
+    "symbol": "_write_coverage",
+    "signature": "_write_coverage(tmp_path, **overrides)",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_ci_guard_analysis.py",
+    "line_no": 33,
+    "symbol": "test_ci_guard_analysis_pass",
+    "signature": "test_ci_guard_analysis_pass(tmp_path) -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_ci_guard_analysis.py",
+    "line_no": 41,
+    "symbol": "test_ci_guard_analysis_anchor_failure",
+    "signature": "test_ci_guard_analysis_anchor_failure(tmp_path) -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_collision_solver_modes.py",
+    "line_no": 15,
+    "symbol": "test_collision_solver_smol_mass_budget",
+    "signature": "test_collision_solver_smol_mass_budget(tmp_path: Path) -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_collision_solver_modes.py",
+    "line_no": 47,
+    "symbol": "test_surface_and_smol_series_columns_match",
+    "signature": "test_surface_and_smol_series_columns_match(tmp_path: Path) -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_derive_supply_rate.py",
+    "line_no": 15,
+    "symbol": "run_cli",
+    "signature": "run_cli(argv: list[str]) -> str",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_derive_supply_rate.py",
+    "line_no": 22,
+    "symbol": "test_compute_r_base_scalar",
+    "signature": "test_compute_r_base_scalar()",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_derive_supply_rate.py",
+    "line_no": 30,
+    "symbol": "test_cli_text_output",
+    "signature": "test_cli_text_output()",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_derive_supply_rate.py",
+    "line_no": 48,
+    "symbol": "test_csv_grid_output",
+    "signature": "test_csv_grid_output()",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_derive_supply_rate.py",
+    "line_no": 83,
+    "symbol": "test_config_defaults",
+    "signature": "test_config_defaults(tmp_path, monkeypatch)",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_derive_supply_rate.py",
+    "line_no": 111,
+    "symbol": "test_env_defaults",
+    "signature": "test_env_defaults(monkeypatch)",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_doc_sync_agent.py",
+    "line_no": 10,
+    "symbol": "test_scan_generates_inventory",
+    "signature": "test_scan_generates_inventory(tmp_path) -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_doc_sync_agent.py",
+    "line_no": 27,
+    "symbol": "test_refs_and_coverage_pipeline",
+    "signature": "test_refs_and_coverage_pipeline(tmp_path) -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_doc_sync_agent.py",
+    "line_no": 81,
+    "symbol": "test_equations_mapping",
+    "signature": "test_equations_mapping(tmp_path) -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_doc_sync_agent.py",
+    "line_no": 107,
+    "symbol": "test_equations_mapping_with_ml",
+    "signature": "test_equations_mapping_with_ml(tmp_path) -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_doc_sync_agent.py",
+    "line_no": 139,
+    "symbol": "test_autostub_inserts_stubs",
+    "signature": "test_autostub_inserts_stubs(tmp_path) -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_evaluation_system.py",
+    "line_no": 13,
+    "symbol": "_build_series_frame",
+    "signature": "_build_series_frame() -> pd.DataFrame",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_evaluation_system.py",
+    "line_no": 54,
+    "symbol": "_write_json",
+    "signature": "_write_json(path: Path, payload: dict) -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_evaluation_system.py",
+    "line_no": 58,
+    "symbol": "_prepare_outdir",
+    "signature": "_prepare_outdir(tmp_path: Path, *, drop_series_columns: Sequence[str] | None=None) -> Path",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_evaluation_system.py",
+    "line_no": 147,
+    "symbol": "test_evaluation_system_with_complete_outputs",
+    "signature": "test_evaluation_system_with_complete_outputs(tmp_path: Path) -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_evaluation_system.py",
+    "line_no": 156,
+    "symbol": "test_evaluation_system_detects_missing_series_columns",
+    "signature": "test_evaluation_system_detects_missing_series_columns(tmp_path: Path) -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_extended_diagnostics_single_process.py",
+    "line_no": 15,
+    "symbol": "_scenario_config",
+    "signature": "_scenario_config(outdir: Path) -> schema.Config",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_extended_diagnostics_single_process.py",
+    "line_no": 60,
+    "symbol": "_read_json",
+    "signature": "_read_json(path: Path) -> dict",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_extended_diagnostics_single_process.py",
+    "line_no": 65,
+    "symbol": "test_sublimation_only_disables_collisions_and_blowout",
+    "signature": "test_sublimation_only_disables_collisions_and_blowout(tmp_path: Path) -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_extended_diagnostics_single_process.py",
+    "line_no": 86,
+    "symbol": "test_collisions_only_disables_sinks",
+    "signature": "test_collisions_only_disables_sinks(tmp_path: Path) -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_extended_diagnostics_single_process.py",
+    "line_no": 108,
+    "symbol": "test_combined_mode_keeps_both_channels",
+    "signature": "test_combined_mode_keeps_both_channels(tmp_path: Path) -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_fast_blowout.py",
+    "line_no": 12,
+    "symbol": "_build_fast_blowout_config",
+    "signature": "_build_fast_blowout_config(outdir: Path, *, correct: bool, substep: bool=False, substep_ratio: float=1.0, collision_solver: str='smol') -> schema.Config",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_fast_blowout.py",
+    "line_no": 56,
+    "symbol": "test_fast_blowout_factor_samples",
+    "signature": "test_fast_blowout_factor_samples() -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_fast_blowout.py",
+    "line_no": 64,
+    "symbol": "test_chi_blow_auto_range",
+    "signature": "test_chi_blow_auto_range(tmp_path: Path) -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_fast_blowout.py",
+    "line_no": 77,
+    "symbol": "test_surface_ode_substeps_activate",
+    "signature": "test_surface_ode_substeps_activate(tmp_path: Path) -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_fast_blowout.py",
+    "line_no": 97,
+    "symbol": "test_smol_ignores_substeps",
+    "signature": "test_smol_ignores_substeps(tmp_path: Path) -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_fragment_tensor_numba.py",
+    "line_no": 7,
+    "symbol": "_sample_inputs",
+    "signature": "_sample_inputs()",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_fragment_tensor_numba.py",
+    "line_no": 19,
+    "symbol": "test_fragment_tensor_numba_matches_python",
+    "signature": "test_fragment_tensor_numba_matches_python()",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_fragment_tensor_numba.py",
+    "line_no": 42,
+    "symbol": "test_fragment_tensor_numba_failure_falls_back",
+    "signature": "test_fragment_tensor_numba_failure_falls_back(monkeypatch)",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_init_tau1_los_target.py",
+    "line_no": 10,
+    "symbol": "test_init_tau1_targets_los_tau",
+    "signature": "test_init_tau1_targets_los_tau(tmp_path) -> None",
+    "brief_usage": "init_tau1 should set Σ_tau1 so that LOS τ≈target at start."
+  },
+  {
+    "file_path": "tests/integration/test_initial_psd_modes.py",
+    "line_no": 10,
+    "symbol": "_mass_profile",
+    "signature": "_mass_profile(psd_state: dict) -> np.ndarray",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_initial_psd_modes.py",
+    "line_no": 19,
+    "symbol": "_mass_peak",
+    "signature": "_mass_peak(psd_state: dict) -> float",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_initial_psd_modes.py",
+    "line_no": 27,
+    "symbol": "test_melt_lognormal_mixture_mass_and_cut",
+    "signature": "test_melt_lognormal_mixture_mass_and_cut()",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_initial_psd_modes.py",
+    "line_no": 70,
+    "symbol": "test_melt_lognormal_extremes_follow_components",
+    "signature": "test_melt_lognormal_extremes_follow_components()",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_initial_psd_modes.py",
+    "line_no": 106,
+    "symbol": "test_truncated_powerlaw_respects_bounds",
+    "signature": "test_truncated_powerlaw_respects_bounds()",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_inner_disk_massloss.py",
+    "line_no": 12,
+    "symbol": "_build_config",
+    "signature": "_build_config(outdir: Path, *, sinks_mode: str, enable_sublimation: bool, enable_gas_drag: bool) -> schema.Config",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_inner_disk_massloss.py",
+    "line_no": 44,
+    "symbol": "_write_yaml",
+    "signature": "_write_yaml(cfg: schema.Config, path: Path) -> Path",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_inner_disk_massloss.py",
+    "line_no": 53,
+    "symbol": "test_inner_disk_sweep_runs_and_collects_massloss",
+    "signature": "test_inner_disk_sweep_runs_and_collects_massloss(tmp_path: Path) -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_make_qpr_table.py",
+    "line_no": 7,
+    "symbol": "test_small_grain_qpr_increases_with_temperature",
+    "signature": "test_small_grain_qpr_increases_with_temperature()",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_make_sweep_summary.py",
+    "line_no": 12,
+    "symbol": "mock_batch_dir",
+    "signature": "mock_batch_dir(tmp_path: Path) -> Path",
+    "brief_usage": "Create a mock batch directory with minimal sweep structure."
+  },
+  {
+    "file_path": "tests/integration/test_make_sweep_summary.py",
+    "line_no": 27,
+    "symbol": "test_parse_dir_name",
+    "signature": "test_parse_dir_name()",
+    "brief_usage": "Test directory name parsing for T, mu, phi extraction."
+  },
+  {
+    "file_path": "tests/integration/test_make_sweep_summary.py",
+    "line_no": 52,
+    "symbol": "test_discover_cases",
+    "signature": "test_discover_cases(mock_batch_dir: Path)",
+    "brief_usage": "Test case discovery from batch directory."
+  },
+  {
+    "file_path": "tests/integration/test_make_sweep_summary.py",
+    "line_no": 64,
+    "symbol": "test_cases_to_dataframe",
+    "signature": "test_cases_to_dataframe(mock_batch_dir: Path)",
+    "brief_usage": "Test conversion of cases to DataFrame."
+  },
+  {
+    "file_path": "tests/integration/test_make_sweep_summary.py",
+    "line_no": 79,
+    "symbol": "test_main_csv_output",
+    "signature": "test_main_csv_output(mock_batch_dir: Path)",
+    "brief_usage": "Test main function produces CSV output."
+  },
+  {
+    "file_path": "tests/integration/test_make_sweep_summary.py",
+    "line_no": 94,
+    "symbol": "test_empty_batch_dir",
+    "signature": "test_empty_batch_dir(tmp_path: Path)",
+    "brief_usage": "Test handling of empty batch directory."
+  },
+  {
+    "file_path": "tests/integration/test_make_sweep_summary.py",
+    "line_no": 103,
+    "symbol": "test_missing_summary_json",
+    "signature": "test_missing_summary_json(tmp_path: Path)",
+    "brief_usage": "Test handling of case directory without summary.json."
+  },
+  {
+    "file_path": "tests/integration/test_mass_budget_combined.py",
+    "line_no": 15,
+    "symbol": "test_mass_budget_closure_with_blowout_and_sinks",
+    "signature": "test_mass_budget_closure_with_blowout_and_sinks(tmp_path: Path) -> None",
+    "brief_usage": "Ensure combined (collisions+sinks) runs keep the mass budget closed."
+  },
+  {
+    "file_path": "tests/integration/test_mass_conservation.py",
+    "line_no": 10,
+    "symbol": "test_imex_bdf1_limits_timestep_and_preserves_mass",
+    "signature": "test_imex_bdf1_limits_timestep_and_preserves_mass() -> None",
+    "brief_usage": "The integrator should cap dt and keep the mass budget tight."
+  },
+  {
+    "file_path": "tests/integration/test_min_size_evolution_hook.py",
+    "line_no": 9,
+    "symbol": "_base_config",
+    "signature": "_base_config(outdir: Path) -> schema.Config",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_min_size_evolution_hook.py",
+    "line_no": 39,
+    "symbol": "test_s_min_evolved_column_absent_when_disabled",
+    "signature": "test_s_min_evolved_column_absent_when_disabled(tmp_path: Path) -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_min_size_evolution_hook.py",
+    "line_no": 48,
+    "symbol": "test_s_min_evolved_column_records_candidate_when_enabled",
+    "signature": "test_s_min_evolved_column_records_candidate_when_enabled(tmp_path: Path) -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_min_size_evolution_hook.py",
+    "line_no": 60,
+    "symbol": "test_s_min_evolved_monotonic_with_linear_decay",
+    "signature": "test_s_min_evolved_monotonic_with_linear_decay(tmp_path: Path) -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_modes_units.py",
+    "line_no": 10,
+    "symbol": "_base_config",
+    "signature": "_base_config(outdir: Path) -> schema.Config",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_modes_units.py",
+    "line_no": 55,
+    "symbol": "test_mars_clearance_uses_meter_offsets",
+    "signature": "test_mars_clearance_uses_meter_offsets(tmp_path: Path) -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_opacity_guardrails.py",
+    "line_no": 9,
+    "symbol": "test_phi_const_table_does_not_zero_opacity",
+    "signature": "test_phi_const_table_does_not_zero_opacity()",
+    "brief_usage": "Φ=const テーブル適用でも κ がゼロ付近に落ちないことを確認する簡易テスト."
+  },
+  {
+    "file_path": "tests/integration/test_opacity_guardrails.py",
+    "line_no": 25,
+    "symbol": "test_phi_table_clamps_tau_but_keeps_positive_opacity",
+    "signature": "test_phi_table_clamps_tau_but_keeps_positive_opacity()",
+    "brief_usage": "テーブル範囲外の τ でも κ_eff が正のままクラップされることを確認."
+  },
+  {
+    "file_path": "tests/integration/test_opacity_guardrails.py",
+    "line_no": 37,
+    "symbol": "test_sigma_tau1_extremely_large_when_kappa_tiny",
+    "signature": "test_sigma_tau1_extremely_large_when_kappa_tiny()",
+    "brief_usage": "κ が 1e-13 オーダーまで落ちると Σ_tau1 が 1e12 以上に跳ね上がることを明示的に再現."
+  },
+  {
+    "file_path": "tests/integration/test_opacity_guardrails.py",
+    "line_no": 49,
+    "symbol": "_make_psd_state",
+    "signature": "_make_psd_state(s_min=1e-06, s_max=3.0, n_bins=40, q=3.5, rho=3000.0)",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_opacity_guardrails.py",
+    "line_no": 67,
+    "symbol": "test_kappa_within_spec_size_range_stays_far_above_floor",
+    "signature": "test_kappa_within_spec_size_range_stays_far_above_floor()",
+    "brief_usage": "公称サイズ範囲（1e-6–3 m）のPSDでは κ が床（1e-12）には落ちないことを確認。"
+  },
+  {
+    "file_path": "tests/integration/test_opacity_guardrails.py",
+    "line_no": 77,
+    "symbol": "test_kappa_not_temperature_dependent_proxy",
+    "signature": "test_kappa_not_temperature_dependent_proxy()",
+    "brief_usage": "Planck Q_pr や温度に依存しない compute_kappa が一定になることを簡易確認。"
+  },
+  {
+    "file_path": "tests/integration/test_opacity_guardrails.py",
+    "line_no": 89,
+    "symbol": "test_kappa_all_mass_in_largest_bin_still_above_floor",
+    "signature": "test_kappa_all_mass_in_largest_bin_still_above_floor()",
+    "brief_usage": "全質量が最大径3 mに集中しても κ は 1e-12 に達しないことを確認。"
+  },
+  {
+    "file_path": "tests/integration/test_opacity_guardrails.py",
+    "line_no": 104,
+    "symbol": "test_huge_sigma_tau1_from_tiny_kappa_allows_tau_to_stay_small",
+    "signature": "test_huge_sigma_tau1_from_tiny_kappa_allows_tau_to_stay_small()",
+    "brief_usage": "κ が極小だと Σ_tau1 が膨張し、供給を積んでも τ が小さいままになるケースを再現。"
+  },
+  {
+    "file_path": "tests/integration/test_particle_temperature_equilibrium.py",
+    "line_no": 14,
+    "symbol": "test_particle_temperature_equilibrium_matches_expected_scaling",
+    "signature": "test_particle_temperature_equilibrium_matches_expected_scaling() -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_particle_temperature_equilibrium.py",
+    "line_no": 23,
+    "symbol": "test_particle_temperature_equilibrium_rejects_nonpositive_radius",
+    "signature": "test_particle_temperature_equilibrium_rejects_nonpositive_radius() -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_particle_temperature_equilibrium.py",
+    "line_no": 28,
+    "symbol": "test_phase_temperature_input_particle_is_recorded",
+    "signature": "test_phase_temperature_input_particle_is_recorded(tmp_path: Path) -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_phase3_surface_blowout.py",
+    "line_no": 10,
+    "symbol": "_base_surface_cfg",
+    "signature": "_base_surface_cfg(outdir: Path, *, s_min: float=1e-06, prod_rate: float=1e-09, t_end_years: float=0.0005, dt_init: float=400.0, T_M: float=2000.0) -> schema.Config",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_phase3_surface_blowout.py",
+    "line_no": 42,
+    "symbol": "test_blowout_inactive_when_smin_above_blowout",
+    "signature": "test_blowout_inactive_when_smin_above_blowout(tmp_path: Path) -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_phase3_surface_blowout.py",
+    "line_no": 52,
+    "symbol": "test_surface_layer_clipped_to_sigma_tau1",
+    "signature": "test_surface_layer_clipped_to_sigma_tau1(tmp_path: Path) -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_phase3_surface_blowout.py",
+    "line_no": 62,
+    "symbol": "test_blowout_disabled_in_vapor_state",
+    "signature": "test_blowout_disabled_in_vapor_state(tmp_path: Path) -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_phase3_surface_blowout.py",
+    "line_no": 76,
+    "symbol": "test_solar_toggle_forced_off",
+    "signature": "test_solar_toggle_forced_off(tmp_path: Path) -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_phase3_surface_blowout.py",
+    "line_no": 87,
+    "symbol": "test_mass_budget_and_fast_factor_stable",
+    "signature": "test_mass_budget_and_fast_factor_stable(tmp_path: Path) -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_phase3_surface_blowout.py",
+    "line_no": 99,
+    "symbol": "test_los_shielding_reduces_phi",
+    "signature": "test_los_shielding_reduces_phi(tmp_path: Path) -> None",
+    "brief_usage": "LOS経路を伸ばすと Φ が小さくなることを確認する。"
+  },
+  {
+    "file_path": "tests/integration/test_phase9_usecases.py",
+    "line_no": 15,
+    "symbol": "_phase9_config",
+    "signature": "_phase9_config(outdir: Path, *, analysis_years: float=2.0, t_end_years: float | None=1e-06, dt_init: float=1.0, prod_area_rate: float=0.001) -> schema.Config",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_phase9_usecases.py",
+    "line_no": 69,
+    "symbol": "_read_json",
+    "signature": "_read_json(path: Path) -> dict",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_phase9_usecases.py",
+    "line_no": 74,
+    "symbol": "test_sublimation_only_zeroes_blowout_flux_and_sets_metadata",
+    "signature": "test_sublimation_only_zeroes_blowout_flux_and_sets_metadata(tmp_path: Path) -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_phase9_usecases.py",
+    "line_no": 95,
+    "symbol": "test_collisions_only_enables_blowout_and_disables_sinks",
+    "signature": "test_collisions_only_enables_blowout_and_disables_sinks(tmp_path: Path) -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_phase9_usecases.py",
+    "line_no": 118,
+    "symbol": "test_scope_region_guard_rejects_outer_disk",
+    "signature": "test_scope_region_guard_rejects_outer_disk(tmp_path: Path) -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_phase9_usecases.py",
+    "line_no": 126,
+    "symbol": "test_analysis_window_defaults_to_scope_when_t_end_missing",
+    "signature": "test_analysis_window_defaults_to_scope_when_t_end_missing(tmp_path: Path) -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_phase9_usecases.py",
+    "line_no": 155,
+    "symbol": "test_mass_loss_is_comparable_between_solo_runs",
+    "signature": "test_mass_loss_is_comparable_between_solo_runs(tmp_path: Path) -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_phase_branching.py",
+    "line_no": 12,
+    "symbol": "test_phase_threshold_fallback_handles_tau_and_pressure",
+    "signature": "test_phase_threshold_fallback_handles_tau_and_pressure() -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_phase_branching.py",
+    "line_no": 28,
+    "symbol": "test_phase_map_entrypoint_and_hydro_timescale",
+    "signature": "test_phase_map_entrypoint_and_hydro_timescale() -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_phase_branching.py",
+    "line_no": 46,
+    "symbol": "test_phase_boundary_values_are_unique",
+    "signature": "test_phase_boundary_values_are_unique() -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_phase_branching.py",
+    "line_no": 67,
+    "symbol": "test_phase_map_fraction_clamped_to_physical_range",
+    "signature": "test_phase_map_fraction_clamped_to_physical_range() -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_phase_branching.py",
+    "line_no": 79,
+    "symbol": "test_radiation_source_accepts_only_mars_or_off",
+    "signature": "test_radiation_source_accepts_only_mars_or_off() -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_phase_branching_run.py",
+    "line_no": 10,
+    "symbol": "_build_phase_config",
+    "signature": "_build_phase_config(outdir: Path, *, T_M: float) -> schema.Config",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_phase_branching_run.py",
+    "line_no": 48,
+    "symbol": "_load_run",
+    "signature": "_load_run(outdir: Path) -> pd.DataFrame",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_phase_branching_run.py",
+    "line_no": 54,
+    "symbol": "test_sink_selection_is_mutually_exclusive",
+    "signature": "test_sink_selection_is_mutually_exclusive(tmp_path: Path) -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_phase_map_fallback.py",
+    "line_no": 11,
+    "symbol": "BASE_CONFIG",
+    "signature": "BASE_CONFIG = Path('configs/base.yml')",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "tests/integration/test_phase_map_fallback.py",
+    "line_no": 14,
+    "symbol": "test_phase_map_missing_entrypoint_falls_back_to_threshold",
+    "signature": "test_phase_map_missing_entrypoint_falls_back_to_threshold(tmp_path: Path) -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_phase_tau_field_selection.py",
+    "line_no": 8,
+    "symbol": "test_compute_phase_tau_fields_switches_between_vertical_and_los",
+    "signature": "test_compute_phase_tau_fields_switches_between_vertical_and_los() -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_phase_tau_field_selection.py",
+    "line_no": 30,
+    "symbol": "test_log_stage_extra_is_keyword_only",
+    "signature": "test_log_stage_extra_is_keyword_only() -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_phi_table.py",
+    "line_no": 12,
+    "symbol": "mock_phi_table",
+    "signature": "mock_phi_table(tmp_path)",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_phi_table.py",
+    "line_no": 24,
+    "symbol": "test_phi_table_monotonic_effects",
+    "signature": "test_phi_table_monotonic_effects(mock_phi_table)",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_psd_kappa.py",
+    "line_no": 11,
+    "symbol": "test_compute_kappa_single_bin_matches_geometry",
+    "signature": "test_compute_kappa_single_bin_matches_geometry() -> None",
+    "brief_usage": "Single-bin opacity should follow the analytic 3/(4 rho s) scaling."
+  },
+  {
+    "file_path": "tests/integration/test_psd_kappa.py",
+    "line_no": 29,
+    "symbol": "test_compute_kappa_stays_finite_with_wavy_modulation",
+    "signature": "test_compute_kappa_stays_finite_with_wavy_modulation() -> None",
+    "brief_usage": "Wavy PSD modulation should not produce non-physical opacity values."
+  },
+  {
+    "file_path": "tests/integration/test_qpr_loader_h5datasets.py",
+    "line_no": 18,
+    "symbol": "_write_three_dataset",
+    "signature": "_write_three_dataset(path, qpr, log10s, temperatures)",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_qpr_loader_h5datasets.py",
+    "line_no": 28,
+    "symbol": "test_load_qpr_table_from_h5datasets",
+    "signature": "test_load_qpr_table_from_h5datasets(tmp_path)",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_qpr_loader_h5datasets.py",
+    "line_no": 50,
+    "symbol": "test_h5datasets_shape_mismatch",
+    "signature": "test_h5datasets_shape_mismatch(tmp_path)",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_qpr_loader_h5datasets.py",
+    "line_no": 61,
+    "symbol": "test_h5datasets_requires_h5py",
+    "signature": "test_h5datasets_requires_h5py(monkeypatch, tmp_path)",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_qpr_lookup.py",
+    "line_no": 12,
+    "symbol": "mock_qpr_table",
+    "signature": "mock_qpr_table(tmp_path)",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_qpr_lookup.py",
+    "line_no": 34,
+    "symbol": "test_qpr_lookup_interpolates_from_table",
+    "signature": "test_qpr_lookup_interpolates_from_table(mock_qpr_table)",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_qpr_lookup.py",
+    "line_no": 85,
+    "symbol": "test_qpr_lookup_requires_table",
+    "signature": "test_qpr_lookup_requires_table(mock_qpr_table)",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_qstar_fragments.py",
+    "line_no": 11,
+    "symbol": "test_qdstar_velocity_interpolation_monotonic",
+    "signature": "test_qdstar_velocity_interpolation_monotonic()",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_qstar_fragments.py",
+    "line_no": 20,
+    "symbol": "test_compute_s_min_bounds_and_monotonic",
+    "signature": "test_compute_s_min_bounds_and_monotonic()",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_qstar_units.py",
+    "line_no": 8,
+    "symbol": "_reset_qstar_state",
+    "signature": "_reset_qstar_state()",
+    "brief_usage": "Restore the qstar unit system and clamp counters after each test."
+  },
+  {
+    "file_path": "tests/integration/test_qstar_units.py",
+    "line_no": 20,
+    "symbol": "test_ba99_cgs_conversion_matches_expected_values",
+    "signature": "test_ba99_cgs_conversion_matches_expected_values()",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_qstar_units.py",
+    "line_no": 31,
+    "symbol": "test_si_mode_preserves_legacy_magnitude_and_array_agrees",
+    "signature": "test_si_mode_preserves_legacy_magnitude_and_array_agrees()",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_qstar_units.py",
+    "line_no": 42,
+    "symbol": "test_velocity_clamping_counts_and_outputs",
+    "signature": "test_velocity_clamping_counts_and_outputs()",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_radiation_shielding_logging.py",
+    "line_no": 12,
+    "symbol": "restore_qpr_lookup",
+    "signature": "restore_qpr_lookup()",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_radiation_shielding_logging.py",
+    "line_no": 20,
+    "symbol": "test_beta_density_validation",
+    "signature": "test_beta_density_validation()",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_radiation_shielding_logging.py",
+    "line_no": 28,
+    "symbol": "test_blowout_radius_density_validation",
+    "signature": "test_blowout_radius_density_validation()",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_radiation_shielding_logging.py",
+    "line_no": 34,
+    "symbol": "test_load_phi_table_logs",
+    "signature": "test_load_phi_table_logs(tmp_path, caplog)",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_radiation_shielding_logging.py",
+    "line_no": 46,
+    "symbol": "test_apply_shielding_clamp_logs",
+    "signature": "test_apply_shielding_clamp_logs(caplog)",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_radiation_shielding_logging.py",
+    "line_no": 67,
+    "symbol": "test_effective_kappa_phi_clamp_logs",
+    "signature": "test_effective_kappa_phi_clamp_logs(caplog)",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_radiation_shielding_logging.py",
+    "line_no": 77,
+    "symbol": "test_clip_to_tau1_logging",
+    "signature": "test_clip_to_tau1_logging(caplog)",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_ref_coverage.py",
+    "line_no": 11,
+    "symbol": "REPO_ROOT",
+    "signature": "REPO_ROOT = Path(__file__).resolve().parents[2]",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "tests/integration/test_ref_coverage.py",
+    "line_no": 12,
+    "symbol": "REGISTRY_PATH",
+    "signature": "REGISTRY_PATH = REPO_ROOT / 'analysis' / 'references.registry.json'",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "tests/integration/test_ref_coverage.py",
+    "line_no": 13,
+    "symbol": "SOURCE_MAP_PATH",
+    "signature": "SOURCE_MAP_PATH = REPO_ROOT / 'analysis' / 'source_map.json'",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "tests/integration/test_ref_coverage.py",
+    "line_no": 14,
+    "symbol": "EQUATIONS_PATH",
+    "signature": "EQUATIONS_PATH = REPO_ROOT / 'analysis' / 'equations.md'",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "tests/integration/test_ref_coverage.py",
+    "line_no": 17,
+    "symbol": "_load_registry",
+    "signature": "_load_registry() -> Dict[str, Dict[str, object]]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_ref_coverage.py",
+    "line_no": 29,
+    "symbol": "test_source_map_links_known_keys",
+    "signature": "test_source_map_links_known_keys() -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_ref_coverage.py",
+    "line_no": 45,
+    "symbol": "test_equations_have_reference_or_todo",
+    "signature": "test_equations_have_reference_or_todo() -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_ref_coverage.py",
+    "line_no": 72,
+    "symbol": "_extract_equation_block",
+    "signature": "_extract_equation_block(label: str) -> str",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_ref_coverage.py",
+    "line_no": 84,
+    "symbol": "test_e043_references_hyodo",
+    "signature": "test_e043_references_hyodo() -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_ref_coverage.py",
+    "line_no": 89,
+    "symbol": "test_e042_references_hyodo",
+    "signature": "test_e042_references_hyodo() -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_ref_coverage.py",
+    "line_no": 94,
+    "symbol": "test_e006_references_strubbe_chiang",
+    "signature": "test_e006_references_strubbe_chiang() -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_reproducibility.py",
+    "line_no": 11,
+    "symbol": "_config",
+    "signature": "_config(outdir: Path) -> schema.Config",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_reproducibility.py",
+    "line_no": 47,
+    "symbol": "_run_once",
+    "signature": "_run_once(outdir: Path)",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_reproducibility.py",
+    "line_no": 57,
+    "symbol": "test_repeated_runs_match",
+    "signature": "test_repeated_runs_match(tmp_path: Path) -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_run_regressions.py",
+    "line_no": 15,
+    "symbol": "BASE_CONFIG",
+    "signature": "BASE_CONFIG = Path('configs/base.yml')",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "tests/integration/test_run_regressions.py",
+    "line_no": 16,
+    "symbol": "TOL_MLOSS_PERCENT",
+    "signature": "TOL_MLOSS_PERCENT = 0.5",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "tests/integration/test_run_regressions.py",
+    "line_no": 19,
+    "symbol": "_run_case",
+    "signature": "_run_case(overrides: list[str]) -> tuple[dict, pd.DataFrame]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_run_regressions.py",
+    "line_no": 33,
+    "symbol": "_run_case_with_series",
+    "signature": "_run_case_with_series(overrides: list[str]) -> tuple[dict, pd.DataFrame, pd.DataFrame]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_run_regressions.py",
+    "line_no": 48,
+    "symbol": "test_mass_budget_and_timestep_overrides",
+    "signature": "test_mass_budget_and_timestep_overrides() -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_run_regressions.py",
+    "line_no": 79,
+    "symbol": "test_sublimation_not_double_counted",
+    "signature": "test_sublimation_not_double_counted() -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_run_regressions.py",
+    "line_no": 102,
+    "symbol": "test_extended_diagnostics_toggle",
+    "signature": "test_extended_diagnostics_toggle() -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_run_regressions.py",
+    "line_no": 148,
+    "symbol": "test_tau_gate_blocks_blowout",
+    "signature": "test_tau_gate_blocks_blowout() -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_run_regressions.py",
+    "line_no": 166,
+    "symbol": "test_gate_factor_collision_competition_reduces_flux",
+    "signature": "test_gate_factor_collision_competition_reduces_flux() -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_run_regressions.py",
+    "line_no": 182,
+    "symbol": "_write_inline_combined_config",
+    "signature": "_write_inline_combined_config(config_path: Path, outdir: Path) -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_run_regressions.py",
+    "line_no": 246,
+    "symbol": "test_combined_mass_flux_balance",
+    "signature": "test_combined_mass_flux_balance(tmp_path: Path) -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_run_regressions.py",
+    "line_no": 273,
+    "symbol": "test_gate_factor_sublimation_competition_reduces_flux",
+    "signature": "test_gate_factor_sublimation_competition_reduces_flux() -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_scalings.py",
+    "line_no": 16,
+    "symbol": "test_strubbe_chiang_collisional_timescale_matches_orbit_scaling",
+    "signature": "test_strubbe_chiang_collisional_timescale_matches_orbit_scaling(tau: float) -> None",
+    "brief_usage": "Strubbe–Chiang scaling should match T_orb/(2π τ)."
+  },
+  {
+    "file_path": "tests/integration/test_scalings.py",
+    "line_no": 26,
+    "symbol": "_smol_to_wyatt_ratio",
+    "signature": "_smol_to_wyatt_ratio(kernel_mode: str, H_factor: float) -> float",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_scalings.py",
+    "line_no": 57,
+    "symbol": "test_smol_tcoll_matches_wyatt_config_mode",
+    "signature": "test_smol_tcoll_matches_wyatt_config_mode() -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_scalings.py",
+    "line_no": 62,
+    "symbol": "test_smol_tcoll_matches_wyatt_wyatt_eq_mode",
+    "signature": "test_smol_tcoll_matches_wyatt_wyatt_eq_mode() -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_scope_limitations_metadata.py",
+    "line_no": 14,
+    "symbol": "_base_config",
+    "signature": "_base_config(outdir: Path, *, window_years: float=1e-06) -> schema.Config",
+    "brief_usage": "Return a minimal config tuned for fast runs."
+  },
+  {
+    "file_path": "tests/integration/test_scope_limitations_metadata.py",
+    "line_no": 62,
+    "symbol": "_read_json",
+    "signature": "_read_json(path: Path) -> dict",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_scope_limitations_metadata.py",
+    "line_no": 67,
+    "symbol": "test_scope_limitations_present_and_populated",
+    "signature": "test_scope_limitations_present_and_populated(tmp_path: Path) -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_scope_limitations_metadata.py",
+    "line_no": 95,
+    "symbol": "test_single_process_flags_flow_into_scope_limitations",
+    "signature": "test_single_process_flags_flow_into_scope_limitations(tmp_path: Path) -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_scope_limitations_metadata.py",
+    "line_no": 122,
+    "symbol": "test_solar_radiation_request_is_recorded",
+    "signature": "test_solar_radiation_request_is_recorded(tmp_path: Path) -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_sinks_none.py",
+    "line_no": 15,
+    "symbol": "test_run_zero_d_with_sinks_disabled",
+    "signature": "test_run_zero_d_with_sinks_disabled(tmp_path: Path) -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_sinks_tracing.py",
+    "line_no": 9,
+    "symbol": "_build_config",
+    "signature": "_build_config(outdir: Path) -> schema.Config",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_sinks_tracing.py",
+    "line_no": 42,
+    "symbol": "test_debug_sinks_trace_outputs_jsonl",
+    "signature": "test_debug_sinks_trace_outputs_jsonl(tmp_path: Path) -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_smol_sublimation_consistency.py",
+    "line_no": 11,
+    "symbol": "test_smol_sublimation_matches_surface_drift",
+    "signature": "test_smol_sublimation_matches_surface_drift() -> None",
+    "brief_usage": "ヘルパー経由の昇華Smolが旧来の手動変換と一致することを確認する。"
+  },
+  {
+    "file_path": "tests/integration/test_smol_supply_source.py",
+    "line_no": 11,
+    "symbol": "test_supply_injected_into_first_valid_bin",
+    "signature": "test_supply_injected_into_first_valid_bin() -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_smol_supply_source.py",
+    "line_no": 27,
+    "symbol": "test_supply_zero_rate_returns_zero_vector",
+    "signature": "test_supply_zero_rate_returns_zero_vector() -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_smol_supply_source.py",
+    "line_no": 38,
+    "symbol": "test_supply_injects_into_last_bin_when_floor_above_max",
+    "signature": "test_supply_injects_into_last_bin_when_floor_above_max() -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_smol_supply_source.py",
+    "line_no": 52,
+    "symbol": "test_smol_source_mass_budget_matches_supply",
+    "signature": "test_smol_source_mass_budget_matches_supply() -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_smol_supply_source.py",
+    "line_no": 83,
+    "symbol": "test_powerlaw_injection_distributes_mass",
+    "signature": "test_powerlaw_injection_distributes_mass() -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_step_diagnostics.py",
+    "line_no": 12,
+    "symbol": "_build_config",
+    "signature": "_build_config(outdir: Path, fmt: str) -> schema.Config",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_step_diagnostics.py",
+    "line_no": 50,
+    "symbol": "test_step_diagnostics_file_and_mass_budget",
+    "signature": "test_step_diagnostics_file_and_mass_budget(tmp_path: Path, fmt: str) -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_streaming_merge.py",
+    "line_no": 8,
+    "symbol": "test_streaming_flush_and_merge",
+    "signature": "test_streaming_flush_and_merge(tmp_path)",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_streaming_merge.py",
+    "line_no": 40,
+    "symbol": "test_merge_with_schema_mismatch",
+    "signature": "test_merge_with_schema_mismatch(tmp_path)",
+    "brief_usage": "Test that merging chunks with different schemas works correctly."
+  },
+  {
+    "file_path": "tests/integration/test_sublimation_liquid_branch.py",
+    "line_no": 8,
+    "symbol": "test_p_sat_switches_to_liquid_branch",
+    "signature": "test_p_sat_switches_to_liquid_branch() -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_sublimation_mass_conserving.py",
+    "line_no": 9,
+    "symbol": "test_mass_conserving_sublimation_redirects_to_blowout",
+    "signature": "test_mass_conserving_sublimation_redirects_to_blowout() -> None",
+    "brief_usage": "ds/dt で blowout を跨いだ分が昇華シンクではなく blowout に振替される。"
+  },
+  {
+    "file_path": "tests/integration/test_sublimation_phase_gate.py",
+    "line_no": 11,
+    "symbol": "BASE_CONFIG",
+    "signature": "BASE_CONFIG = Path('configs/base.yml')",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "tests/integration/test_sublimation_phase_gate.py",
+    "line_no": 14,
+    "symbol": "_run_phase_case",
+    "signature": "_run_phase_case(tmp_path: Path, entrypoint: str, *, enable_step_diag: bool=True, extra_overrides: list[str] | None=None) -> tuple[pd.Series, pd.DataFrame | None]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_sublimation_phase_gate.py",
+    "line_no": 52,
+    "symbol": "test_liquid_phase_blocks_sublimation",
+    "signature": "test_liquid_phase_blocks_sublimation(tmp_path: Path) -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_sublimation_phase_gate.py",
+    "line_no": 74,
+    "symbol": "test_solid_phase_uses_raw_sublimation",
+    "signature": "test_solid_phase_uses_raw_sublimation(tmp_path: Path) -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_sublimation_phase_gate.py",
+    "line_no": 89,
+    "symbol": "test_liquid_phase_allows_hkl_when_enabled",
+    "signature": "test_liquid_phase_allows_hkl_when_enabled(tmp_path: Path) -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_sublimation_sio.py",
+    "line_no": 17,
+    "symbol": "sio_params",
+    "signature": "sio_params() -> SublimationParams",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_sublimation_sio.py",
+    "line_no": 30,
+    "symbol": "test_units_and_flux_dimension",
+    "signature": "test_units_and_flux_dimension(sio_params: SublimationParams) -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_sublimation_sio.py",
+    "line_no": 41,
+    "symbol": "test_negative_pressure_gap_clamped",
+    "signature": "test_negative_pressure_gap_clamped(sio_params: SublimationParams) -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_sublimation_sio.py",
+    "line_no": 55,
+    "symbol": "test_tabulated_psat_interp",
+    "signature": "test_tabulated_psat_interp(tmp_path) -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_sublimation_sio.py",
+    "line_no": 80,
+    "symbol": "test_auto_prefers_tabulated_within_range",
+    "signature": "test_auto_prefers_tabulated_within_range(tmp_path) -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_sublimation_sio.py",
+    "line_no": 106,
+    "symbol": "test_auto_switches_to_local_clausius_fit",
+    "signature": "test_auto_switches_to_local_clausius_fit(tmp_path) -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_sublimation_sio.py",
+    "line_no": 136,
+    "symbol": "test_auto_records_validity_when_out_of_range",
+    "signature": "test_auto_records_validity_when_out_of_range(caplog) -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_sublimation_sio.py",
+    "line_no": 159,
+    "symbol": "test_run_config_records_psat_selection",
+    "signature": "test_run_config_records_psat_selection(tmp_path) -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_sublimation_smol_sink.py",
+    "line_no": 12,
+    "symbol": "test_smol_sublimation_sink_mass_budget",
+    "signature": "test_smol_sublimation_sink_mass_budget(tmp_path: Path) -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_summary_backcompat.py",
+    "line_no": 9,
+    "symbol": "_write_summary",
+    "signature": "_write_summary(path: Path, payload: dict) -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_summary_backcompat.py",
+    "line_no": 13,
+    "symbol": "test_parse_summary_backwards_compatibility",
+    "signature": "test_parse_summary_backwards_compatibility(tmp_path: Path) -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_supply_headroom_policy.py",
+    "line_no": 12,
+    "symbol": "test_headroom_policy_spill_keeps_flux_nonzero",
+    "signature": "test_headroom_policy_spill_keeps_flux_nonzero() -> None",
+    "brief_usage": "spill policy keeps applying supply even when headroom is zero."
+  },
+  {
+    "file_path": "tests/integration/test_supply_headroom_policy.py",
+    "line_no": 60,
+    "symbol": "test_spill_policy_runs_without_supply_drop",
+    "signature": "test_spill_policy_runs_without_supply_drop(tmp_path: Path) -> None",
+    "brief_usage": "spill policy keeps supply_rate_applied>0 and reports spill diagnostics."
+  },
+  {
+    "file_path": "tests/integration/test_supply_positive.py",
+    "line_no": 10,
+    "symbol": "test_supply_positive_with_wide_tau_cap",
+    "signature": "test_supply_positive_with_wide_tau_cap(tmp_path: Path) -> None",
+    "brief_usage": "Const supply remains positive when Sigma_tau1 cap is generous."
+  },
+  {
+    "file_path": "tests/integration/test_supply_positive.py",
+    "line_no": 38,
+    "symbol": "test_reservoir_depletes_and_records_metadata",
+    "signature": "test_reservoir_depletes_and_records_metadata(tmp_path: Path) -> None",
+    "brief_usage": "Finite reservoir runs dry and leaves depletion metadata in outputs."
+  },
+  {
+    "file_path": "tests/integration/test_supply_positive.py",
+    "line_no": 90,
+    "symbol": "test_supply_feedback_tau_los_updates_scale",
+    "signature": "test_supply_feedback_tau_los_updates_scale(tmp_path: Path) -> None",
+    "brief_usage": "tau_los feedback produces finite errors and scales the supply multiplier."
+  },
+  {
+    "file_path": "tests/integration/test_supply_positive.py",
+    "line_no": 139,
+    "symbol": "test_run_config_written_before_runtime_failure",
+    "signature": "test_run_config_written_before_runtime_failure(monkeypatch, tmp_path: Path) -> None",
+    "brief_usage": "Even when the run aborts early, the run_config snapshot is emitted."
+  },
+  {
+    "file_path": "tests/integration/test_supply_split.py",
+    "line_no": 8,
+    "symbol": "test_deep_buffer_accumulates_when_headroom_zero",
+    "signature": "test_deep_buffer_accumulates_when_headroom_zero() -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_supply_split.py",
+    "line_no": 24,
+    "symbol": "test_deep_buffer_mixes_back_on_timescale",
+    "signature": "test_deep_buffer_mixes_back_on_timescale() -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_supply_transport_velocity.py",
+    "line_no": 14,
+    "symbol": "test_supply_velocity_blend_and_weight",
+    "signature": "test_supply_velocity_blend_and_weight() -> None",
+    "brief_usage": "Effective e/i follow the configured blend and weight modes."
+  },
+  {
+    "file_path": "tests/integration/test_supply_transport_velocity.py",
+    "line_no": 29,
+    "symbol": "test_deep_mixing_transport_routes_via_deep_buffer",
+    "signature": "test_deep_mixing_transport_routes_via_deep_buffer() -> None",
+    "brief_usage": "deep_mixing sends raw supply into deep and mixes back on t_mix."
+  },
+  {
+    "file_path": "tests/integration/test_supply_transport_velocity.py",
+    "line_no": 49,
+    "symbol": "test_run_outputs_supply_visibility_columns",
+    "signature": "test_run_outputs_supply_visibility_columns(tmp_path: Path) -> None",
+    "brief_usage": "run.parquet carries new supply diagnostics and kernel velocity columns."
+  },
+  {
+    "file_path": "tests/integration/test_surface_outflux_wavy.py",
+    "line_no": 10,
+    "symbol": "test_blowout_driven_wavy_pattern_emerges",
+    "signature": "test_blowout_driven_wavy_pattern_emerges() -> None",
+    "brief_usage": "Efficient blow-out should imprint a wavy modulation near s_min."
+  },
+  {
+    "file_path": "tests/integration/test_surface_supply_param.py",
+    "line_no": 37,
+    "symbol": "test_const_mode",
+    "signature": "test_const_mode()",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_surface_supply_param.py",
+    "line_no": 47,
+    "symbol": "test_powerlaw_mode",
+    "signature": "test_powerlaw_mode()",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_surface_supply_param.py",
+    "line_no": 57,
+    "symbol": "test_table_mode",
+    "signature": "test_table_mode(tmp_path)",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_surface_supply_param.py",
+    "line_no": 65,
+    "symbol": "test_reservoir_caps_rate_and_consumes_mass",
+    "signature": "test_reservoir_caps_rate_and_consumes_mass()",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_surface_supply_param.py",
+    "line_no": 81,
+    "symbol": "test_feedback_scales_supply_toward_target_tau",
+    "signature": "test_feedback_scales_supply_toward_target_tau()",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_surface_supply_param.py",
+    "line_no": 99,
+    "symbol": "test_temperature_scaling_modulates_rate",
+    "signature": "test_temperature_scaling_modulates_rate()",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_surface_supply_param.py",
+    "line_no": 112,
+    "symbol": "MASS_TOL",
+    "signature": "MASS_TOL = 0.005",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "tests/integration/test_surface_supply_param.py",
+    "line_no": 115,
+    "symbol": "test_smol_helper_respects_tau_clip_and_budget",
+    "signature": "test_smol_helper_respects_tau_clip_and_budget()",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_surface_supply_param.py",
+    "line_no": 153,
+    "symbol": "_smol_cfg",
+    "signature": "_smol_cfg(outdir: Path, *, supply_cfg: Supply) -> Config",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_surface_supply_param.py",
+    "line_no": 182,
+    "symbol": "test_supply_modes_preserve_columns_and_budget",
+    "signature": "test_supply_modes_preserve_columns_and_budget(tmp_path: Path) -> None",
+    "brief_usage": "Smolモードで各種供給モードの出力カラムと質量収支を確認する。"
+  },
+  {
+    "file_path": "tests/integration/test_temperature_driver.py",
+    "line_no": 13,
+    "symbol": "SECONDS_PER_DAY",
+    "signature": "SECONDS_PER_DAY = 86400.0",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "tests/integration/test_temperature_driver.py",
+    "line_no": 16,
+    "symbol": "test_temperature_driver_prefers_radiation_override",
+    "signature": "test_temperature_driver_prefers_radiation_override() -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_temperature_driver.py",
+    "line_no": 32,
+    "symbol": "test_temperature_driver_table_interpolates_sample",
+    "signature": "test_temperature_driver_table_interpolates_sample() -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_temperature_driver.py",
+    "line_no": 58,
+    "symbol": "test_temperature_autogen_generates_table",
+    "signature": "test_temperature_autogen_generates_table(tmp_path: Path) -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_temperature_driver.py",
+    "line_no": 88,
+    "symbol": "test_autogen_used_in_run",
+    "signature": "test_autogen_used_in_run(tmp_path: Path) -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_temperature_selection.py",
+    "line_no": 9,
+    "symbol": "_make_config",
+    "signature": "_make_config(outdir: Path, *, TM_K: float | None=None, driver_constant: float | None=None) -> schema.Config",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_temperature_selection.py",
+    "line_no": 47,
+    "symbol": "_run_and_load",
+    "signature": "_run_and_load(cfg: schema.Config) -> dict",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_temperature_selection.py",
+    "line_no": 55,
+    "symbol": "test_temperature_selection_prefers_radiation_override",
+    "signature": "test_temperature_selection_prefers_radiation_override(tmp_path: Path) -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_temperature_selection.py",
+    "line_no": 70,
+    "symbol": "test_temperature_selection_tracks_temps_when_no_override",
+    "signature": "test_temperature_selection_tracks_temps_when_no_override(tmp_path: Path) -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_zero_division_guards.py",
+    "line_no": 11,
+    "symbol": "test_run_zero_d_tau_zero_no_error",
+    "signature": "test_run_zero_d_tau_zero_no_error(tmp_path: Path)",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_zero_division_guards.py",
+    "line_no": 40,
+    "symbol": "test_supply_powerlaw_t0_zero",
+    "signature": "test_supply_powerlaw_t0_zero()",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_zero_division_guards.py",
+    "line_no": 49,
+    "symbol": "test_run_zero_d_no_zerodivision",
+    "signature": "test_run_zero_d_no_zerodivision(monkeypatch, tmp_path)",
+    "brief_usage": "No description available."
+  },
+  {
     "file_path": "tests/phase_map_stub.py",
     "line_no": 7,
     "symbol": "lookup_phase_state",
@@ -7882,1788 +9352,255 @@
     "brief_usage": "Return a solid-dominated bulk state for testing."
   },
   {
-    "file_path": "tests/test_analysis_coverage_guard.py",
-    "line_no": 7,
-    "symbol": "test_analysis_coverage_guard",
-    "signature": "test_analysis_coverage_guard() -> None",
-    "brief_usage": "Run ci_guard_analysis via the coverage guard bridge."
-  },
-  {
-    "file_path": "tests/test_analysis_massloss_sampler_doc.py",
-    "line_no": 6,
-    "symbol": "TARGET_HEADER",
-    "signature": "TARGET_HEADER = '### 感度掃引（質量損失サンプラー連携）'",
-    "brief_usage": "Module constant"
-  },
-  {
-    "file_path": "tests/test_analysis_massloss_sampler_doc.py",
-    "line_no": 7,
-    "symbol": "DOC_PATH",
-    "signature": "DOC_PATH = Path('analysis/run-recipes.md')",
-    "brief_usage": "Module constant"
-  },
-  {
-    "file_path": "tests/test_analysis_massloss_sampler_doc.py",
-    "line_no": 10,
-    "symbol": "_slice_section",
-    "signature": "_slice_section(text: str, header: str) -> str",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_analysis_massloss_sampler_doc.py",
-    "line_no": 19,
-    "symbol": "test_massloss_sampler_section_lists_key_requirements",
-    "signature": "test_massloss_sampler_section_lists_key_requirements() -> None",
-    "brief_usage": "Ensure the mass-loss sampler doc retains the agreed-upon content."
-  },
-  {
-    "file_path": "tests/test_assumption_trace_phase2.py",
-    "line_no": 6,
-    "symbol": "test_build_assumption_trace_smoke",
-    "signature": "test_build_assumption_trace_smoke(tmp_path: Path) -> None",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_assumptions_docs.py",
-    "line_no": 6,
-    "symbol": "test_render_assumptions_runs",
-    "signature": "test_render_assumptions_runs(tmp_path: Path) -> None",
-    "brief_usage": "Ensure the renderer runs even with empty inputs."
-  },
-  {
-    "file_path": "tests/test_assumptions_docs.py",
-    "line_no": 17,
-    "symbol": "test_trace_entries_follow_schema",
-    "signature": "test_trace_entries_follow_schema() -> None",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_assumptions_docs.py",
-    "line_no": 30,
-    "symbol": "test_gap_titles_appear_in_overview",
-    "signature": "test_gap_titles_appear_in_overview() -> None",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_baseline_smol_pipeline.py",
-    "line_no": 12,
-    "symbol": "test_base_config_smol_mass_budget_and_eval",
-    "signature": "test_base_config_smol_mass_budget_and_eval(tmp_path: Path) -> None",
-    "brief_usage": "Run the base.yml in Smol mode and validate mass budget + evaluation system."
-  },
-  {
-    "file_path": "tests/test_blowout_gate.py",
-    "line_no": 10,
-    "symbol": "test_compute_gate_factor_bounds",
-    "signature": "test_compute_gate_factor_bounds() -> None",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_blowout_gate.py",
-    "line_no": 18,
-    "symbol": "_build_gate_config",
-    "signature": "_build_gate_config(outdir: Path, gate_mode: str) -> schema.Config",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_blowout_gate.py",
-    "line_no": 49,
-    "symbol": "test_gate_reduces_outflux_with_sublimation",
-    "signature": "test_gate_reduces_outflux_with_sublimation(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_blowout_gate.py",
-    "line_no": 69,
-    "symbol": "_build_collision_config",
-    "signature": "_build_collision_config(outdir: Path, gate_mode: str) -> schema.Config",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_blowout_gate.py",
-    "line_no": 102,
-    "symbol": "test_gate_reduces_outflux_with_collisions",
-    "signature": "test_gate_reduces_outflux_with_collisions(tmp_path: Path) -> None",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_checkpoint_io.py",
-    "line_no": 10,
-    "symbol": "_sample_state",
-    "signature": "_sample_state() -> checkpoint.CheckpointState",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_checkpoint_io.py",
-    "line_no": 41,
-    "symbol": "test_checkpoint_pickle_roundtrip",
-    "signature": "test_checkpoint_pickle_roundtrip(tmp_path: Path) -> None",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_checkpoint_io.py",
-    "line_no": 51,
-    "symbol": "test_checkpoint_json_roundtrip",
-    "signature": "test_checkpoint_json_roundtrip(tmp_path: Path) -> None",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_ci_guard_analysis.py",
-    "line_no": 8,
-    "symbol": "_write_coverage",
-    "signature": "_write_coverage(tmp_path, **overrides)",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_ci_guard_analysis.py",
-    "line_no": 33,
-    "symbol": "test_ci_guard_analysis_pass",
-    "signature": "test_ci_guard_analysis_pass(tmp_path) -> None",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_ci_guard_analysis.py",
-    "line_no": 41,
-    "symbol": "test_ci_guard_analysis_anchor_failure",
-    "signature": "test_ci_guard_analysis_anchor_failure(tmp_path) -> None",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_collision_solver_modes.py",
-    "line_no": 15,
-    "symbol": "test_collision_solver_smol_mass_budget",
-    "signature": "test_collision_solver_smol_mass_budget(tmp_path: Path) -> None",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_collision_solver_modes.py",
-    "line_no": 47,
-    "symbol": "test_surface_and_smol_series_columns_match",
-    "signature": "test_surface_and_smol_series_columns_match(tmp_path: Path) -> None",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_derive_supply_rate.py",
-    "line_no": 15,
-    "symbol": "run_cli",
-    "signature": "run_cli(argv: list[str]) -> str",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_derive_supply_rate.py",
-    "line_no": 22,
-    "symbol": "test_compute_r_base_scalar",
-    "signature": "test_compute_r_base_scalar()",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_derive_supply_rate.py",
-    "line_no": 30,
-    "symbol": "test_cli_text_output",
-    "signature": "test_cli_text_output()",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_derive_supply_rate.py",
-    "line_no": 48,
-    "symbol": "test_csv_grid_output",
-    "signature": "test_csv_grid_output()",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_derive_supply_rate.py",
-    "line_no": 83,
-    "symbol": "test_config_defaults",
-    "signature": "test_config_defaults(tmp_path, monkeypatch)",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_derive_supply_rate.py",
-    "line_no": 111,
-    "symbol": "test_env_defaults",
-    "signature": "test_env_defaults(monkeypatch)",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_doc_sync_agent.py",
-    "line_no": 10,
-    "symbol": "test_scan_generates_inventory",
-    "signature": "test_scan_generates_inventory(tmp_path) -> None",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_doc_sync_agent.py",
-    "line_no": 27,
-    "symbol": "test_refs_and_coverage_pipeline",
-    "signature": "test_refs_and_coverage_pipeline(tmp_path) -> None",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_doc_sync_agent.py",
-    "line_no": 81,
-    "symbol": "test_equations_mapping",
-    "signature": "test_equations_mapping(tmp_path) -> None",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_doc_sync_agent.py",
-    "line_no": 107,
-    "symbol": "test_equations_mapping_with_ml",
-    "signature": "test_equations_mapping_with_ml(tmp_path) -> None",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_doc_sync_agent.py",
-    "line_no": 139,
-    "symbol": "test_autostub_inserts_stubs",
-    "signature": "test_autostub_inserts_stubs(tmp_path) -> None",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_evaluation_system.py",
-    "line_no": 13,
-    "symbol": "_build_series_frame",
-    "signature": "_build_series_frame() -> pd.DataFrame",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_evaluation_system.py",
-    "line_no": 53,
-    "symbol": "_write_json",
-    "signature": "_write_json(path: Path, payload: dict) -> None",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_evaluation_system.py",
-    "line_no": 57,
-    "symbol": "_prepare_outdir",
-    "signature": "_prepare_outdir(tmp_path: Path, *, drop_series_columns: Sequence[str] | None=None) -> Path",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_evaluation_system.py",
-    "line_no": 146,
-    "symbol": "test_evaluation_system_with_complete_outputs",
-    "signature": "test_evaluation_system_with_complete_outputs(tmp_path: Path) -> None",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_evaluation_system.py",
-    "line_no": 155,
-    "symbol": "test_evaluation_system_detects_missing_series_columns",
-    "signature": "test_evaluation_system_detects_missing_series_columns(tmp_path: Path) -> None",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_fast_blowout.py",
-    "line_no": 12,
-    "symbol": "_build_fast_blowout_config",
-    "signature": "_build_fast_blowout_config(outdir: Path, *, correct: bool, substep: bool=False, substep_ratio: float=1.0, collision_solver: str='smol') -> schema.Config",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_fast_blowout.py",
-    "line_no": 56,
-    "symbol": "test_fast_blowout_factor_samples",
-    "signature": "test_fast_blowout_factor_samples() -> None",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_fast_blowout.py",
-    "line_no": 64,
-    "symbol": "test_chi_blow_auto_range",
-    "signature": "test_chi_blow_auto_range(tmp_path: Path) -> None",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_fast_blowout.py",
-    "line_no": 77,
-    "symbol": "test_surface_ode_substeps_activate",
-    "signature": "test_surface_ode_substeps_activate(tmp_path: Path) -> None",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_fast_blowout.py",
-    "line_no": 97,
-    "symbol": "test_smol_ignores_substeps",
-    "signature": "test_smol_ignores_substeps(tmp_path: Path) -> None",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_fragment_tensor_numba.py",
-    "line_no": 7,
-    "symbol": "_sample_inputs",
-    "signature": "_sample_inputs()",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_fragment_tensor_numba.py",
-    "line_no": 19,
-    "symbol": "test_fragment_tensor_numba_matches_python",
-    "signature": "test_fragment_tensor_numba_matches_python()",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_fragment_tensor_numba.py",
-    "line_no": 42,
-    "symbol": "test_fragment_tensor_numba_failure_falls_back",
-    "signature": "test_fragment_tensor_numba_failure_falls_back(monkeypatch)",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_init_tau1_los_target.py",
-    "line_no": 10,
-    "symbol": "test_init_tau1_targets_los_tau",
-    "signature": "test_init_tau1_targets_los_tau(tmp_path) -> None",
-    "brief_usage": "init_tau1 should set Σ_tau1 so that LOS τ≈target at start."
-  },
-  {
-    "file_path": "tests/test_initial_psd_modes.py",
-    "line_no": 10,
-    "symbol": "_mass_profile",
-    "signature": "_mass_profile(psd_state: dict) -> np.ndarray",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_initial_psd_modes.py",
-    "line_no": 19,
-    "symbol": "_mass_peak",
-    "signature": "_mass_peak(psd_state: dict) -> float",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_initial_psd_modes.py",
-    "line_no": 27,
-    "symbol": "test_melt_lognormal_mixture_mass_and_cut",
-    "signature": "test_melt_lognormal_mixture_mass_and_cut()",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_initial_psd_modes.py",
-    "line_no": 69,
-    "symbol": "test_melt_lognormal_extremes_follow_components",
-    "signature": "test_melt_lognormal_extremes_follow_components()",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_initial_psd_modes.py",
-    "line_no": 105,
-    "symbol": "test_truncated_powerlaw_respects_bounds",
-    "signature": "test_truncated_powerlaw_respects_bounds()",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_inner_disk_massloss.py",
-    "line_no": 12,
-    "symbol": "_build_config",
-    "signature": "_build_config(outdir: Path, *, sinks_mode: str, enable_sublimation: bool, enable_gas_drag: bool) -> schema.Config",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_inner_disk_massloss.py",
-    "line_no": 44,
-    "symbol": "_write_yaml",
-    "signature": "_write_yaml(cfg: schema.Config, path: Path) -> Path",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_inner_disk_massloss.py",
-    "line_no": 53,
-    "symbol": "test_inner_disk_sweep_runs_and_collects_massloss",
-    "signature": "test_inner_disk_sweep_runs_and_collects_massloss(tmp_path: Path) -> None",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_make_qpr_table.py",
-    "line_no": 7,
-    "symbol": "test_small_grain_qpr_increases_with_temperature",
-    "signature": "test_small_grain_qpr_increases_with_temperature()",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_make_sweep_summary.py",
-    "line_no": 12,
-    "symbol": "mock_batch_dir",
-    "signature": "mock_batch_dir(tmp_path: Path) -> Path",
-    "brief_usage": "Create a mock batch directory with minimal sweep structure."
-  },
-  {
-    "file_path": "tests/test_make_sweep_summary.py",
-    "line_no": 27,
-    "symbol": "test_parse_dir_name",
-    "signature": "test_parse_dir_name()",
-    "brief_usage": "Test directory name parsing for T, mu, phi extraction."
-  },
-  {
-    "file_path": "tests/test_make_sweep_summary.py",
-    "line_no": 52,
-    "symbol": "test_discover_cases",
-    "signature": "test_discover_cases(mock_batch_dir: Path)",
-    "brief_usage": "Test case discovery from batch directory."
-  },
-  {
-    "file_path": "tests/test_make_sweep_summary.py",
-    "line_no": 64,
-    "symbol": "test_cases_to_dataframe",
-    "signature": "test_cases_to_dataframe(mock_batch_dir: Path)",
-    "brief_usage": "Test conversion of cases to DataFrame."
-  },
-  {
-    "file_path": "tests/test_make_sweep_summary.py",
-    "line_no": 79,
-    "symbol": "test_main_csv_output",
-    "signature": "test_main_csv_output(mock_batch_dir: Path)",
-    "brief_usage": "Test main function produces CSV output."
-  },
-  {
-    "file_path": "tests/test_make_sweep_summary.py",
-    "line_no": 94,
-    "symbol": "test_empty_batch_dir",
-    "signature": "test_empty_batch_dir(tmp_path: Path)",
-    "brief_usage": "Test handling of empty batch directory."
-  },
-  {
-    "file_path": "tests/test_make_sweep_summary.py",
-    "line_no": 103,
-    "symbol": "test_missing_summary_json",
-    "signature": "test_missing_summary_json(tmp_path: Path)",
-    "brief_usage": "Test handling of case directory without summary.json."
-  },
-  {
-    "file_path": "tests/test_mass_budget_combined.py",
-    "line_no": 14,
-    "symbol": "test_mass_budget_closure_with_blowout_and_sinks",
-    "signature": "test_mass_budget_closure_with_blowout_and_sinks(tmp_path: Path) -> None",
-    "brief_usage": "Ensure combined (collisions+sinks) runs keep the mass budget closed."
-  },
-  {
-    "file_path": "tests/test_mass_conservation.py",
-    "line_no": 10,
-    "symbol": "test_imex_bdf1_limits_timestep_and_preserves_mass",
-    "signature": "test_imex_bdf1_limits_timestep_and_preserves_mass() -> None",
-    "brief_usage": "The integrator should cap dt and keep the mass budget tight."
-  },
-  {
-    "file_path": "tests/test_min_size_evolution_hook.py",
-    "line_no": 9,
-    "symbol": "_base_config",
-    "signature": "_base_config(outdir: Path) -> schema.Config",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_min_size_evolution_hook.py",
-    "line_no": 39,
-    "symbol": "test_s_min_evolved_column_absent_when_disabled",
-    "signature": "test_s_min_evolved_column_absent_when_disabled(tmp_path: Path) -> None",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_min_size_evolution_hook.py",
-    "line_no": 48,
-    "symbol": "test_s_min_evolved_column_records_candidate_when_enabled",
-    "signature": "test_s_min_evolved_column_records_candidate_when_enabled(tmp_path: Path) -> None",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_min_size_evolution_hook.py",
-    "line_no": 60,
-    "symbol": "test_s_min_evolved_monotonic_with_linear_decay",
-    "signature": "test_s_min_evolved_monotonic_with_linear_decay(tmp_path: Path) -> None",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_modes_units.py",
-    "line_no": 10,
-    "symbol": "_base_config",
-    "signature": "_base_config(outdir: Path) -> schema.Config",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_modes_units.py",
-    "line_no": 55,
-    "symbol": "test_mars_clearance_uses_meter_offsets",
-    "signature": "test_mars_clearance_uses_meter_offsets(tmp_path: Path) -> None",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_opacity_guardrails.py",
-    "line_no": 9,
-    "symbol": "test_phi_const_table_does_not_zero_opacity",
-    "signature": "test_phi_const_table_does_not_zero_opacity()",
-    "brief_usage": "Φ=const テーブル適用でも κ がゼロ付近に落ちないことを確認する簡易テスト."
-  },
-  {
-    "file_path": "tests/test_opacity_guardrails.py",
-    "line_no": 25,
-    "symbol": "test_phi_table_clamps_tau_but_keeps_positive_opacity",
-    "signature": "test_phi_table_clamps_tau_but_keeps_positive_opacity()",
-    "brief_usage": "テーブル範囲外の τ でも κ_eff が正のままクラップされることを確認."
-  },
-  {
-    "file_path": "tests/test_opacity_guardrails.py",
-    "line_no": 37,
-    "symbol": "test_sigma_tau1_extremely_large_when_kappa_tiny",
-    "signature": "test_sigma_tau1_extremely_large_when_kappa_tiny()",
-    "brief_usage": "κ が 1e-13 オーダーまで落ちると Σ_tau1 が 1e12 以上に跳ね上がることを明示的に再現."
-  },
-  {
-    "file_path": "tests/test_opacity_guardrails.py",
-    "line_no": 49,
-    "symbol": "_make_psd_state",
-    "signature": "_make_psd_state(s_min=1e-06, s_max=3.0, n_bins=40, q=3.5, rho=3000.0)",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_opacity_guardrails.py",
-    "line_no": 67,
-    "symbol": "test_kappa_within_spec_size_range_stays_far_above_floor",
-    "signature": "test_kappa_within_spec_size_range_stays_far_above_floor()",
-    "brief_usage": "公称サイズ範囲（1e-6–3 m）のPSDでは κ が床（1e-12）には落ちないことを確認。"
-  },
-  {
-    "file_path": "tests/test_opacity_guardrails.py",
-    "line_no": 77,
-    "symbol": "test_kappa_not_temperature_dependent_proxy",
-    "signature": "test_kappa_not_temperature_dependent_proxy()",
-    "brief_usage": "Planck Q_pr や温度に依存しない compute_kappa が一定になることを簡易確認。"
-  },
-  {
-    "file_path": "tests/test_opacity_guardrails.py",
-    "line_no": 89,
-    "symbol": "test_kappa_all_mass_in_largest_bin_still_above_floor",
-    "signature": "test_kappa_all_mass_in_largest_bin_still_above_floor()",
-    "brief_usage": "全質量が最大径3 mに集中しても κ は 1e-12 に達しないことを確認。"
-  },
-  {
-    "file_path": "tests/test_opacity_guardrails.py",
-    "line_no": 104,
-    "symbol": "test_huge_sigma_tau1_from_tiny_kappa_allows_tau_to_stay_small",
-    "signature": "test_huge_sigma_tau1_from_tiny_kappa_allows_tau_to_stay_small()",
-    "brief_usage": "κ が極小だと Σ_tau1 が膨張し、供給を積んでも τ が小さいままになるケースを再現。"
-  },
-  {
-    "file_path": "tests/test_particle_temperature_equilibrium.py",
-    "line_no": 14,
-    "symbol": "test_particle_temperature_equilibrium_matches_expected_scaling",
-    "signature": "test_particle_temperature_equilibrium_matches_expected_scaling() -> None",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_particle_temperature_equilibrium.py",
-    "line_no": 23,
-    "symbol": "test_particle_temperature_equilibrium_rejects_nonpositive_radius",
-    "signature": "test_particle_temperature_equilibrium_rejects_nonpositive_radius() -> None",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_particle_temperature_equilibrium.py",
-    "line_no": 28,
-    "symbol": "test_phase_temperature_input_particle_is_recorded",
-    "signature": "test_phase_temperature_input_particle_is_recorded(tmp_path: Path) -> None",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_phase3_surface_blowout.py",
-    "line_no": 10,
-    "symbol": "_base_surface_cfg",
-    "signature": "_base_surface_cfg(outdir: Path, *, s_min: float=1e-06, prod_rate: float=1e-09, t_end_years: float=0.0005, dt_init: float=400.0, T_M: float=2000.0) -> schema.Config",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_phase3_surface_blowout.py",
-    "line_no": 42,
-    "symbol": "test_blowout_inactive_when_smin_above_blowout",
-    "signature": "test_blowout_inactive_when_smin_above_blowout(tmp_path: Path) -> None",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_phase3_surface_blowout.py",
-    "line_no": 52,
-    "symbol": "test_surface_layer_clipped_to_sigma_tau1",
-    "signature": "test_surface_layer_clipped_to_sigma_tau1(tmp_path: Path) -> None",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_phase3_surface_blowout.py",
-    "line_no": 63,
-    "symbol": "test_blowout_disabled_in_vapor_state",
-    "signature": "test_blowout_disabled_in_vapor_state(tmp_path: Path) -> None",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_phase3_surface_blowout.py",
-    "line_no": 77,
-    "symbol": "test_solar_toggle_forced_off",
-    "signature": "test_solar_toggle_forced_off(tmp_path: Path) -> None",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_phase3_surface_blowout.py",
-    "line_no": 88,
-    "symbol": "test_mass_budget_and_fast_factor_stable",
-    "signature": "test_mass_budget_and_fast_factor_stable(tmp_path: Path) -> None",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_phase3_surface_blowout.py",
-    "line_no": 100,
-    "symbol": "test_los_shielding_reduces_phi",
-    "signature": "test_los_shielding_reduces_phi(tmp_path: Path) -> None",
-    "brief_usage": "LOS経路を伸ばすと Φ が小さくなることを確認する。"
-  },
-  {
-    "file_path": "tests/test_phase5.py",
-    "line_no": 10,
-    "symbol": "_phase5_base_config",
-    "signature": "_phase5_base_config(outdir: Path) -> schema.Config",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_phase5.py",
-    "line_no": 57,
-    "symbol": "_read_summary",
-    "signature": "_read_summary(outdir: Path) -> dict",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_phase5.py",
-    "line_no": 62,
-    "symbol": "_read_run_config",
-    "signature": "_read_run_config(outdir: Path) -> dict",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_phase5.py",
-    "line_no": 69,
-    "symbol": "test_collisions_only_disables_sinks",
-    "signature": "test_collisions_only_disables_sinks(tmp_path: Path) -> None",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_phase5.py",
-    "line_no": 90,
-    "symbol": "test_phase5_comparison_outputs_combined_series",
-    "signature": "test_phase5_comparison_outputs_combined_series(tmp_path: Path) -> None",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_phase5.py",
-    "line_no": 120,
-    "symbol": "test_variant_column_absent_when_not_comparing",
-    "signature": "test_variant_column_absent_when_not_comparing(tmp_path: Path) -> None",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_phase5.py",
-    "line_no": 133,
-    "symbol": "test_physics_mode_config_applies",
-    "signature": "test_physics_mode_config_applies(tmp_path: Path) -> None",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_phase5.py",
-    "line_no": 153,
-    "symbol": "test_cli_override_wins_over_config",
-    "signature": "test_cli_override_wins_over_config(tmp_path: Path) -> None",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_phase7_single_process.py",
-    "line_no": 15,
-    "symbol": "_scenario_config",
-    "signature": "_scenario_config(outdir: Path) -> schema.Config",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_phase7_single_process.py",
-    "line_no": 60,
-    "symbol": "_read_json",
-    "signature": "_read_json(path: Path) -> dict",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_phase7_single_process.py",
-    "line_no": 65,
-    "symbol": "test_sublimation_only_disables_collisions_and_blowout",
-    "signature": "test_sublimation_only_disables_collisions_and_blowout(tmp_path: Path) -> None",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_phase7_single_process.py",
-    "line_no": 86,
-    "symbol": "test_collisions_only_disables_sinks",
-    "signature": "test_collisions_only_disables_sinks(tmp_path: Path) -> None",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_phase7_single_process.py",
-    "line_no": 109,
-    "symbol": "test_combined_mode_keeps_both_channels",
-    "signature": "test_combined_mode_keeps_both_channels(tmp_path: Path) -> None",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_phase9_usecases.py",
-    "line_no": 15,
-    "symbol": "_phase9_config",
-    "signature": "_phase9_config(outdir: Path, *, analysis_years: float=2.0, t_end_years: float | None=1e-06, dt_init: float=1.0, prod_area_rate: float=0.001) -> schema.Config",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_phase9_usecases.py",
-    "line_no": 69,
-    "symbol": "_read_json",
-    "signature": "_read_json(path: Path) -> dict",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_phase9_usecases.py",
-    "line_no": 74,
-    "symbol": "test_sublimation_only_zeroes_blowout_flux_and_sets_metadata",
-    "signature": "test_sublimation_only_zeroes_blowout_flux_and_sets_metadata(tmp_path: Path) -> None",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_phase9_usecases.py",
-    "line_no": 95,
-    "symbol": "test_collisions_only_enables_blowout_and_disables_sinks",
-    "signature": "test_collisions_only_enables_blowout_and_disables_sinks(tmp_path: Path) -> None",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_phase9_usecases.py",
-    "line_no": 118,
-    "symbol": "test_scope_region_guard_rejects_outer_disk",
-    "signature": "test_scope_region_guard_rejects_outer_disk(tmp_path: Path) -> None",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_phase9_usecases.py",
-    "line_no": 126,
-    "symbol": "test_analysis_window_defaults_to_scope_when_t_end_missing",
-    "signature": "test_analysis_window_defaults_to_scope_when_t_end_missing(tmp_path: Path) -> None",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_phase9_usecases.py",
-    "line_no": 155,
-    "symbol": "test_mass_loss_is_comparable_between_solo_runs",
-    "signature": "test_mass_loss_is_comparable_between_solo_runs(tmp_path: Path) -> None",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_phase_branching.py",
-    "line_no": 12,
-    "symbol": "test_phase_threshold_fallback_handles_tau_and_pressure",
-    "signature": "test_phase_threshold_fallback_handles_tau_and_pressure() -> None",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_phase_branching.py",
-    "line_no": 28,
-    "symbol": "test_phase_map_entrypoint_and_hydro_timescale",
-    "signature": "test_phase_map_entrypoint_and_hydro_timescale() -> None",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_phase_branching.py",
-    "line_no": 46,
-    "symbol": "test_phase_boundary_values_are_unique",
-    "signature": "test_phase_boundary_values_are_unique() -> None",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_phase_branching.py",
-    "line_no": 67,
-    "symbol": "test_phase_map_fraction_clamped_to_physical_range",
-    "signature": "test_phase_map_fraction_clamped_to_physical_range() -> None",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_phase_branching.py",
-    "line_no": 79,
-    "symbol": "test_radiation_source_accepts_only_mars_or_off",
-    "signature": "test_radiation_source_accepts_only_mars_or_off() -> None",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_phase_branching_run.py",
-    "line_no": 10,
-    "symbol": "_build_phase_config",
-    "signature": "_build_phase_config(outdir: Path, *, T_M: float) -> schema.Config",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_phase_branching_run.py",
-    "line_no": 48,
-    "symbol": "_load_run",
-    "signature": "_load_run(outdir: Path) -> pd.DataFrame",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_phase_branching_run.py",
-    "line_no": 54,
-    "symbol": "test_sink_selection_is_mutually_exclusive",
-    "signature": "test_sink_selection_is_mutually_exclusive(tmp_path: Path) -> None",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_phase_integration_siO2.py",
+    "file_path": "tests/research/test_phase_integration_siO2.py",
     "line_no": 11,
     "symbol": "siO2_evaluator",
     "signature": "siO2_evaluator() -> phase.PhaseEvaluator",
     "brief_usage": "No description available."
   },
   {
-    "file_path": "tests/test_phase_integration_siO2.py",
+    "file_path": "tests/research/test_phase_integration_siO2.py",
     "line_no": 16,
     "symbol": "test_siO2_map_solid_branch",
     "signature": "test_siO2_map_solid_branch(siO2_evaluator: phase.PhaseEvaluator) -> None",
     "brief_usage": "No description available."
   },
   {
-    "file_path": "tests/test_phase_map_fallback.py",
+    "file_path": "tests/research/test_phase_sublimation_integration.py",
     "line_no": 11,
     "symbol": "BASE_CONFIG",
     "signature": "BASE_CONFIG = Path('configs/base.yml')",
     "brief_usage": "Module constant"
   },
   {
-    "file_path": "tests/test_phase_map_fallback.py",
-    "line_no": 14,
-    "symbol": "test_phase_map_missing_entrypoint_falls_back_to_threshold",
-    "signature": "test_phase_map_missing_entrypoint_falls_back_to_threshold(tmp_path: Path) -> None",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_phase_sublimation_integration.py",
-    "line_no": 11,
-    "symbol": "BASE_CONFIG",
-    "signature": "BASE_CONFIG = Path('configs/base.yml')",
-    "brief_usage": "Module constant"
-  },
-  {
-    "file_path": "tests/test_phase_sublimation_integration.py",
+    "file_path": "tests/research/test_phase_sublimation_integration.py",
     "line_no": 12,
     "symbol": "DEFAULT_ENTRYPOINT",
     "signature": "DEFAULT_ENTRYPOINT = 'siO2_disk_cooling.siO2_cooling_map:lookup_phase_state'",
     "brief_usage": "Module constant"
   },
   {
-    "file_path": "tests/test_phase_sublimation_integration.py",
+    "file_path": "tests/research/test_phase_sublimation_integration.py",
     "line_no": 15,
     "symbol": "_run_case",
     "signature": "_run_case(tmp_path: Path, *, T_M: float, r_RM: float) -> tuple[pd.Series, pd.DataFrame]",
     "brief_usage": "No description available."
   },
   {
-    "file_path": "tests/test_phase_sublimation_integration.py",
+    "file_path": "tests/research/test_phase_sublimation_integration.py",
     "line_no": 42,
     "symbol": "test_solid_phase_allows_sublimation_with_siO2_map",
     "signature": "test_solid_phase_allows_sublimation_with_siO2_map(tmp_path: Path) -> None",
     "brief_usage": "No description available."
   },
   {
-    "file_path": "tests/test_phase_tau_field_selection.py",
-    "line_no": 8,
-    "symbol": "test_compute_phase_tau_fields_switches_between_vertical_and_los",
-    "signature": "test_compute_phase_tau_fields_switches_between_vertical_and_los() -> None",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_phase_tau_field_selection.py",
-    "line_no": 30,
-    "symbol": "test_log_stage_extra_is_keyword_only",
-    "signature": "test_log_stage_extra_is_keyword_only() -> None",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_phi_table.py",
-    "line_no": 12,
-    "symbol": "mock_phi_table",
-    "signature": "mock_phi_table(tmp_path)",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_phi_table.py",
-    "line_no": 24,
-    "symbol": "test_phi_table_monotonic_effects",
-    "signature": "test_phi_table_monotonic_effects(mock_phi_table)",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_psd_kappa.py",
-    "line_no": 11,
-    "symbol": "test_compute_kappa_single_bin_matches_geometry",
-    "signature": "test_compute_kappa_single_bin_matches_geometry() -> None",
-    "brief_usage": "Single-bin opacity should follow the analytic 3/(4 rho s) scaling."
-  },
-  {
-    "file_path": "tests/test_psd_kappa.py",
-    "line_no": 29,
-    "symbol": "test_compute_kappa_stays_finite_with_wavy_modulation",
-    "signature": "test_compute_kappa_stays_finite_with_wavy_modulation() -> None",
-    "brief_usage": "Wavy PSD modulation should not produce non-physical opacity values."
-  },
-  {
-    "file_path": "tests/test_qpr_loader_h5datasets.py",
-    "line_no": 18,
-    "symbol": "_write_three_dataset",
-    "signature": "_write_three_dataset(path, qpr, log10s, temperatures)",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_qpr_loader_h5datasets.py",
-    "line_no": 28,
-    "symbol": "test_load_qpr_table_from_h5datasets",
-    "signature": "test_load_qpr_table_from_h5datasets(tmp_path)",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_qpr_loader_h5datasets.py",
-    "line_no": 50,
-    "symbol": "test_h5datasets_shape_mismatch",
-    "signature": "test_h5datasets_shape_mismatch(tmp_path)",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_qpr_loader_h5datasets.py",
-    "line_no": 61,
-    "symbol": "test_h5datasets_requires_h5py",
-    "signature": "test_h5datasets_requires_h5py(monkeypatch, tmp_path)",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_qpr_lookup.py",
-    "line_no": 12,
-    "symbol": "mock_qpr_table",
-    "signature": "mock_qpr_table(tmp_path)",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_qpr_lookup.py",
-    "line_no": 34,
-    "symbol": "test_qpr_lookup_interpolates_from_table",
-    "signature": "test_qpr_lookup_interpolates_from_table(mock_qpr_table)",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_qpr_lookup.py",
-    "line_no": 85,
-    "symbol": "test_qpr_lookup_requires_table",
-    "signature": "test_qpr_lookup_requires_table(mock_qpr_table)",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_qstar_fragments.py",
-    "line_no": 11,
-    "symbol": "test_qdstar_velocity_interpolation_monotonic",
-    "signature": "test_qdstar_velocity_interpolation_monotonic()",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_qstar_fragments.py",
-    "line_no": 20,
-    "symbol": "test_compute_s_min_bounds_and_monotonic",
-    "signature": "test_compute_s_min_bounds_and_monotonic()",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_qstar_units.py",
-    "line_no": 8,
-    "symbol": "_reset_qstar_state",
-    "signature": "_reset_qstar_state()",
-    "brief_usage": "Restore the qstar unit system and clamp counters after each test."
-  },
-  {
-    "file_path": "tests/test_qstar_units.py",
-    "line_no": 20,
-    "symbol": "test_ba99_cgs_conversion_matches_expected_values",
-    "signature": "test_ba99_cgs_conversion_matches_expected_values()",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_qstar_units.py",
-    "line_no": 31,
-    "symbol": "test_si_mode_preserves_legacy_magnitude_and_array_agrees",
-    "signature": "test_si_mode_preserves_legacy_magnitude_and_array_agrees()",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_qstar_units.py",
-    "line_no": 42,
-    "symbol": "test_velocity_clamping_counts_and_outputs",
-    "signature": "test_velocity_clamping_counts_and_outputs()",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_radiation_shielding_logging.py",
-    "line_no": 12,
-    "symbol": "restore_qpr_lookup",
-    "signature": "restore_qpr_lookup()",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_radiation_shielding_logging.py",
-    "line_no": 20,
-    "symbol": "test_beta_density_validation",
-    "signature": "test_beta_density_validation()",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_radiation_shielding_logging.py",
-    "line_no": 28,
-    "symbol": "test_blowout_radius_density_validation",
-    "signature": "test_blowout_radius_density_validation()",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_radiation_shielding_logging.py",
-    "line_no": 34,
-    "symbol": "test_load_phi_table_logs",
-    "signature": "test_load_phi_table_logs(tmp_path, caplog)",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_radiation_shielding_logging.py",
-    "line_no": 46,
-    "symbol": "test_apply_shielding_clamp_logs",
-    "signature": "test_apply_shielding_clamp_logs(caplog)",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_radiation_shielding_logging.py",
-    "line_no": 67,
-    "symbol": "test_effective_kappa_phi_clamp_logs",
-    "signature": "test_effective_kappa_phi_clamp_logs(caplog)",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_radiation_shielding_logging.py",
-    "line_no": 77,
-    "symbol": "test_clip_to_tau1_logging",
-    "signature": "test_clip_to_tau1_logging(caplog)",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_ref_coverage.py",
-    "line_no": 11,
-    "symbol": "REPO_ROOT",
-    "signature": "REPO_ROOT = Path(__file__).resolve().parents[1]",
-    "brief_usage": "Module constant"
-  },
-  {
-    "file_path": "tests/test_ref_coverage.py",
-    "line_no": 12,
-    "symbol": "REGISTRY_PATH",
-    "signature": "REGISTRY_PATH = REPO_ROOT / 'analysis' / 'references.registry.json'",
-    "brief_usage": "Module constant"
-  },
-  {
-    "file_path": "tests/test_ref_coverage.py",
-    "line_no": 13,
-    "symbol": "SOURCE_MAP_PATH",
-    "signature": "SOURCE_MAP_PATH = REPO_ROOT / 'analysis' / 'source_map.json'",
-    "brief_usage": "Module constant"
-  },
-  {
-    "file_path": "tests/test_ref_coverage.py",
-    "line_no": 14,
-    "symbol": "EQUATIONS_PATH",
-    "signature": "EQUATIONS_PATH = REPO_ROOT / 'analysis' / 'equations.md'",
-    "brief_usage": "Module constant"
-  },
-  {
-    "file_path": "tests/test_ref_coverage.py",
-    "line_no": 17,
-    "symbol": "_load_registry",
-    "signature": "_load_registry() -> Dict[str, Dict[str, object]]",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_ref_coverage.py",
-    "line_no": 29,
-    "symbol": "test_source_map_links_known_keys",
-    "signature": "test_source_map_links_known_keys() -> None",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_ref_coverage.py",
-    "line_no": 45,
-    "symbol": "test_equations_have_reference_or_todo",
-    "signature": "test_equations_have_reference_or_todo() -> None",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_ref_coverage.py",
-    "line_no": 72,
-    "symbol": "_extract_equation_block",
-    "signature": "_extract_equation_block(label: str) -> str",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_ref_coverage.py",
-    "line_no": 84,
-    "symbol": "test_e043_references_hyodo",
-    "signature": "test_e043_references_hyodo() -> None",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_ref_coverage.py",
-    "line_no": 89,
-    "symbol": "test_e042_references_hyodo",
-    "signature": "test_e042_references_hyodo() -> None",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_ref_coverage.py",
-    "line_no": 94,
-    "symbol": "test_e006_references_strubbe_chiang",
-    "signature": "test_e006_references_strubbe_chiang() -> None",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_reproducibility.py",
-    "line_no": 11,
-    "symbol": "_config",
-    "signature": "_config(outdir: Path) -> schema.Config",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_reproducibility.py",
-    "line_no": 47,
-    "symbol": "_run_once",
-    "signature": "_run_once(outdir: Path)",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_reproducibility.py",
-    "line_no": 57,
-    "symbol": "test_repeated_runs_match",
-    "signature": "test_repeated_runs_match(tmp_path: Path) -> None",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_run_regressions.py",
-    "line_no": 15,
-    "symbol": "BASE_CONFIG",
-    "signature": "BASE_CONFIG = Path('configs/base.yml')",
-    "brief_usage": "Module constant"
-  },
-  {
-    "file_path": "tests/test_run_regressions.py",
-    "line_no": 16,
-    "symbol": "TOL_MLOSS_PERCENT",
-    "signature": "TOL_MLOSS_PERCENT = 0.5",
-    "brief_usage": "Module constant"
-  },
-  {
-    "file_path": "tests/test_run_regressions.py",
-    "line_no": 19,
-    "symbol": "_run_case",
-    "signature": "_run_case(overrides: list[str]) -> tuple[dict, pd.DataFrame]",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_run_regressions.py",
-    "line_no": 33,
-    "symbol": "_run_case_with_series",
-    "signature": "_run_case_with_series(overrides: list[str]) -> tuple[dict, pd.DataFrame, pd.DataFrame]",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_run_regressions.py",
-    "line_no": 48,
-    "symbol": "test_mass_budget_and_timestep_overrides",
-    "signature": "test_mass_budget_and_timestep_overrides() -> None",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_run_regressions.py",
-    "line_no": 76,
-    "symbol": "test_sublimation_not_double_counted",
-    "signature": "test_sublimation_not_double_counted() -> None",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_run_regressions.py",
-    "line_no": 98,
-    "symbol": "test_phase7_diagnostics_toggle",
-    "signature": "test_phase7_diagnostics_toggle() -> None",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_run_regressions.py",
-    "line_no": 144,
-    "symbol": "test_tau_gate_blocks_blowout",
-    "signature": "test_tau_gate_blocks_blowout() -> None",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_run_regressions.py",
-    "line_no": 162,
-    "symbol": "test_gate_factor_collision_competition_reduces_flux",
-    "signature": "test_gate_factor_collision_competition_reduces_flux() -> None",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_run_regressions.py",
-    "line_no": 178,
-    "symbol": "_write_inline_combined_config",
-    "signature": "_write_inline_combined_config(config_path: Path, outdir: Path) -> None",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_run_regressions.py",
-    "line_no": 242,
-    "symbol": "test_combined_mass_flux_balance",
-    "signature": "test_combined_mass_flux_balance(tmp_path: Path) -> None",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_run_regressions.py",
-    "line_no": 265,
-    "symbol": "test_gate_factor_sublimation_competition_reduces_flux",
-    "signature": "test_gate_factor_sublimation_competition_reduces_flux() -> None",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_scalings.py",
-    "line_no": 16,
-    "symbol": "test_strubbe_chiang_collisional_timescale_matches_orbit_scaling",
-    "signature": "test_strubbe_chiang_collisional_timescale_matches_orbit_scaling(tau: float) -> None",
-    "brief_usage": "Strubbe–Chiang scaling should match T_orb/(2π τ)."
-  },
-  {
-    "file_path": "tests/test_scalings.py",
-    "line_no": 26,
-    "symbol": "_smol_to_wyatt_ratio",
-    "signature": "_smol_to_wyatt_ratio(kernel_mode: str, H_factor: float) -> float",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_scalings.py",
-    "line_no": 57,
-    "symbol": "test_smol_tcoll_matches_wyatt_config_mode",
-    "signature": "test_smol_tcoll_matches_wyatt_config_mode() -> None",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_scalings.py",
-    "line_no": 62,
-    "symbol": "test_smol_tcoll_matches_wyatt_wyatt_eq_mode",
-    "signature": "test_smol_tcoll_matches_wyatt_wyatt_eq_mode() -> None",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_scope_limitations_metadata.py",
-    "line_no": 14,
-    "symbol": "_base_config",
-    "signature": "_base_config(outdir: Path, *, window_years: float=1e-06) -> schema.Config",
-    "brief_usage": "Return a minimal config tuned for fast runs."
-  },
-  {
-    "file_path": "tests/test_scope_limitations_metadata.py",
-    "line_no": 62,
-    "symbol": "_read_json",
-    "signature": "_read_json(path: Path) -> dict",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_scope_limitations_metadata.py",
-    "line_no": 67,
-    "symbol": "test_scope_limitations_present_and_populated",
-    "signature": "test_scope_limitations_present_and_populated(tmp_path: Path) -> None",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_scope_limitations_metadata.py",
-    "line_no": 95,
-    "symbol": "test_single_process_flags_flow_into_scope_limitations",
-    "signature": "test_single_process_flags_flow_into_scope_limitations(tmp_path: Path) -> None",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_scope_limitations_metadata.py",
-    "line_no": 122,
-    "symbol": "test_solar_radiation_request_is_recorded",
-    "signature": "test_solar_radiation_request_is_recorded(tmp_path: Path) -> None",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_siO2_cooling_model.py",
+    "file_path": "tests/research/test_siO2_cooling_model.py",
     "line_no": 14,
     "symbol": "test_mars_temperature_monotonic_decrease",
     "signature": "test_mars_temperature_monotonic_decrease() -> None",
     "brief_usage": "No description available."
   },
   {
-    "file_path": "tests/test_siO2_cooling_model.py",
+    "file_path": "tests/research/test_siO2_cooling_model.py",
     "line_no": 21,
     "symbol": "test_dust_temperature_monotonic_decrease_single_radius",
     "signature": "test_dust_temperature_monotonic_decrease_single_radius() -> None",
     "brief_usage": "No description available."
   },
   {
-    "file_path": "tests/test_siO2_cooling_model.py",
+    "file_path": "tests/research/test_siO2_cooling_model.py",
     "line_no": 29,
     "symbol": "test_arrival_time_for_threshold",
     "signature": "test_arrival_time_for_threshold() -> None",
     "brief_usage": "No description available."
   },
   {
-    "file_path": "tests/test_sinks_none.py",
-    "line_no": 15,
-    "symbol": "test_run_zero_d_with_sinks_disabled",
-    "signature": "test_run_zero_d_with_sinks_disabled(tmp_path: Path) -> None",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_sinks_tracing.py",
-    "line_no": 9,
-    "symbol": "_build_config",
-    "signature": "_build_config(outdir: Path) -> schema.Config",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_sinks_tracing.py",
-    "line_no": 42,
-    "symbol": "test_debug_sinks_trace_outputs_jsonl",
-    "signature": "test_debug_sinks_trace_outputs_jsonl(tmp_path: Path) -> None",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_smol_sublimation_consistency.py",
+    "file_path": "tests/unit/test_core.py",
     "line_no": 11,
-    "symbol": "test_smol_sublimation_matches_surface_drift",
-    "signature": "test_smol_sublimation_matches_surface_drift() -> None",
-    "brief_usage": "ヘルパー経由の昇華Smolが旧来の手動変換と一致することを確認する。"
-  },
-  {
-    "file_path": "tests/test_smol_supply_source.py",
-    "line_no": 11,
-    "symbol": "test_supply_injected_into_first_valid_bin",
-    "signature": "test_supply_injected_into_first_valid_bin() -> None",
+    "symbol": "test_constants_values",
+    "signature": "test_constants_values()",
     "brief_usage": "No description available."
   },
   {
-    "file_path": "tests/test_smol_supply_source.py",
-    "line_no": 27,
-    "symbol": "test_supply_zero_rate_returns_zero_vector",
-    "signature": "test_supply_zero_rate_returns_zero_vector() -> None",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_smol_supply_source.py",
-    "line_no": 38,
-    "symbol": "test_supply_injects_into_last_bin_when_floor_above_max",
-    "signature": "test_supply_injects_into_last_bin_when_floor_above_max() -> None",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_smol_supply_source.py",
-    "line_no": 52,
-    "symbol": "test_smol_source_mass_budget_matches_supply",
-    "signature": "test_smol_source_mass_budget_matches_supply() -> None",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_smol_supply_source.py",
-    "line_no": 83,
-    "symbol": "test_powerlaw_injection_distributes_mass",
-    "signature": "test_powerlaw_injection_distributes_mass() -> None",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_step_diagnostics.py",
-    "line_no": 12,
-    "symbol": "_build_config",
-    "signature": "_build_config(outdir: Path, fmt: str) -> schema.Config",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_step_diagnostics.py",
-    "line_no": 50,
-    "symbol": "test_step_diagnostics_file_and_mass_budget",
-    "signature": "test_step_diagnostics_file_and_mass_budget(tmp_path: Path, fmt: str) -> None",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_streaming_merge.py",
-    "line_no": 8,
-    "symbol": "test_streaming_flush_and_merge",
-    "signature": "test_streaming_flush_and_merge(tmp_path)",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_streaming_merge.py",
-    "line_no": 40,
-    "symbol": "test_merge_with_schema_mismatch",
-    "signature": "test_merge_with_schema_mismatch(tmp_path)",
-    "brief_usage": "Test that merging chunks with different schemas works correctly."
-  },
-  {
-    "file_path": "tests/test_sublimation_liquid_branch.py",
-    "line_no": 8,
-    "symbol": "test_p_sat_switches_to_liquid_branch",
-    "signature": "test_p_sat_switches_to_liquid_branch() -> None",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_sublimation_mass_conserving.py",
-    "line_no": 9,
-    "symbol": "test_mass_conserving_sublimation_redirects_to_blowout",
-    "signature": "test_mass_conserving_sublimation_redirects_to_blowout() -> None",
-    "brief_usage": "ds/dt で blowout を跨いだ分が昇華シンクではなく blowout に振替される。"
-  },
-  {
-    "file_path": "tests/test_sublimation_phase_gate.py",
-    "line_no": 11,
-    "symbol": "BASE_CONFIG",
-    "signature": "BASE_CONFIG = Path('configs/base.yml')",
-    "brief_usage": "Module constant"
-  },
-  {
-    "file_path": "tests/test_sublimation_phase_gate.py",
-    "line_no": 14,
-    "symbol": "_run_phase_case",
-    "signature": "_run_phase_case(tmp_path: Path, entrypoint: str, *, enable_step_diag: bool=True, extra_overrides: list[str] | None=None) -> tuple[pd.Series, pd.DataFrame | None]",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_sublimation_phase_gate.py",
-    "line_no": 52,
-    "symbol": "test_liquid_phase_blocks_sublimation",
-    "signature": "test_liquid_phase_blocks_sublimation(tmp_path: Path) -> None",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_sublimation_phase_gate.py",
-    "line_no": 74,
-    "symbol": "test_solid_phase_uses_raw_sublimation",
-    "signature": "test_solid_phase_uses_raw_sublimation(tmp_path: Path) -> None",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_sublimation_phase_gate.py",
-    "line_no": 89,
-    "symbol": "test_liquid_phase_allows_hkl_when_enabled",
-    "signature": "test_liquid_phase_allows_hkl_when_enabled(tmp_path: Path) -> None",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_sublimation_sio.py",
+    "file_path": "tests/unit/test_core.py",
     "line_no": 17,
-    "symbol": "sio_params",
-    "signature": "sio_params() -> SublimationParams",
+    "symbol": "test_grid_relations",
+    "signature": "test_grid_relations()",
     "brief_usage": "No description available."
   },
   {
-    "file_path": "tests/test_sublimation_sio.py",
-    "line_no": 30,
-    "symbol": "test_units_and_flux_dimension",
-    "signature": "test_units_and_flux_dimension(sio_params: SublimationParams) -> None",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_sublimation_sio.py",
-    "line_no": 41,
-    "symbol": "test_negative_pressure_gap_clamped",
-    "signature": "test_negative_pressure_gap_clamped(sio_params: SublimationParams) -> None",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_sublimation_sio.py",
-    "line_no": 55,
-    "symbol": "test_tabulated_psat_interp",
-    "signature": "test_tabulated_psat_interp(tmp_path) -> None",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_sublimation_sio.py",
-    "line_no": 80,
-    "symbol": "test_auto_prefers_tabulated_within_range",
-    "signature": "test_auto_prefers_tabulated_within_range(tmp_path) -> None",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_sublimation_sio.py",
-    "line_no": 106,
-    "symbol": "test_auto_switches_to_local_clausius_fit",
-    "signature": "test_auto_switches_to_local_clausius_fit(tmp_path) -> None",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_sublimation_sio.py",
-    "line_no": 136,
-    "symbol": "test_auto_records_validity_when_out_of_range",
-    "signature": "test_auto_records_validity_when_out_of_range(caplog) -> None",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_sublimation_sio.py",
-    "line_no": 158,
-    "symbol": "test_run_config_records_psat_selection",
-    "signature": "test_run_config_records_psat_selection(tmp_path) -> None",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_sublimation_smol_sink.py",
-    "line_no": 12,
-    "symbol": "test_smol_sublimation_sink_mass_budget",
-    "signature": "test_smol_sublimation_sink_mass_budget(tmp_path: Path) -> None",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_summary_backcompat.py",
-    "line_no": 9,
-    "symbol": "_write_summary",
-    "signature": "_write_summary(path: Path, payload: dict) -> None",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_summary_backcompat.py",
-    "line_no": 13,
-    "symbol": "test_parse_summary_backwards_compatibility",
-    "signature": "test_parse_summary_backwards_compatibility(tmp_path: Path) -> None",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_supply_headroom_policy.py",
-    "line_no": 12,
-    "symbol": "test_headroom_policy_spill_keeps_flux_nonzero",
-    "signature": "test_headroom_policy_spill_keeps_flux_nonzero() -> None",
-    "brief_usage": "spill policy keeps applying supply even when headroom is zero."
-  },
-  {
-    "file_path": "tests/test_supply_headroom_policy.py",
-    "line_no": 58,
-    "symbol": "test_spill_policy_runs_without_supply_drop",
-    "signature": "test_spill_policy_runs_without_supply_drop(tmp_path: Path) -> None",
-    "brief_usage": "spill policy keeps supply_rate_applied>0 and reports spill diagnostics."
-  },
-  {
-    "file_path": "tests/test_supply_positive.py",
-    "line_no": 10,
-    "symbol": "test_supply_positive_with_wide_tau_cap",
-    "signature": "test_supply_positive_with_wide_tau_cap(tmp_path: Path) -> None",
-    "brief_usage": "Const supply remains positive when Sigma_tau1 cap is generous."
-  },
-  {
-    "file_path": "tests/test_supply_positive.py",
-    "line_no": 38,
-    "symbol": "test_reservoir_depletes_and_records_metadata",
-    "signature": "test_reservoir_depletes_and_records_metadata(tmp_path: Path) -> None",
-    "brief_usage": "Finite reservoir runs dry and leaves depletion metadata in outputs."
-  },
-  {
-    "file_path": "tests/test_supply_positive.py",
-    "line_no": 90,
-    "symbol": "test_supply_feedback_tau_los_updates_scale",
-    "signature": "test_supply_feedback_tau_los_updates_scale(tmp_path: Path) -> None",
-    "brief_usage": "tau_los feedback produces finite errors and scales the supply multiplier."
-  },
-  {
-    "file_path": "tests/test_supply_positive.py",
-    "line_no": 139,
-    "symbol": "test_run_config_written_before_runtime_failure",
-    "signature": "test_run_config_written_before_runtime_failure(monkeypatch, tmp_path: Path) -> None",
-    "brief_usage": "Even when the run aborts early, the run_config snapshot is emitted."
-  },
-  {
-    "file_path": "tests/test_supply_split.py",
-    "line_no": 8,
-    "symbol": "test_deep_buffer_accumulates_when_headroom_zero",
-    "signature": "test_deep_buffer_accumulates_when_headroom_zero() -> None",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_supply_split.py",
+    "file_path": "tests/unit/test_core.py",
     "line_no": 24,
-    "symbol": "test_deep_buffer_mixes_back_on_timescale",
-    "signature": "test_deep_buffer_mixes_back_on_timescale() -> None",
+    "symbol": "test_writer_and_tables",
+    "signature": "test_writer_and_tables(tmp_path: Path)",
     "brief_usage": "No description available."
   },
   {
-    "file_path": "tests/test_supply_transport_velocity.py",
-    "line_no": 14,
-    "symbol": "test_supply_velocity_blend_and_weight",
-    "signature": "test_supply_velocity_blend_and_weight() -> None",
-    "brief_usage": "Effective e/i follow the configured blend and weight modes."
-  },
-  {
-    "file_path": "tests/test_supply_transport_velocity.py",
-    "line_no": 29,
-    "symbol": "test_deep_mixing_transport_routes_via_deep_buffer",
-    "signature": "test_deep_mixing_transport_routes_via_deep_buffer() -> None",
-    "brief_usage": "deep_mixing sends raw supply into deep and mixes back on t_mix."
-  },
-  {
-    "file_path": "tests/test_supply_transport_velocity.py",
-    "line_no": 49,
-    "symbol": "test_run_outputs_supply_visibility_columns",
-    "signature": "test_run_outputs_supply_visibility_columns(tmp_path: Path) -> None",
-    "brief_usage": "run.parquet carries new supply diagnostics and kernel velocity columns."
-  },
-  {
-    "file_path": "tests/test_surface_outflux_wavy.py",
-    "line_no": 10,
-    "symbol": "test_blowout_driven_wavy_pattern_emerges",
-    "signature": "test_blowout_driven_wavy_pattern_emerges() -> None",
-    "brief_usage": "Efficient blow-out should imprint a wavy modulation near s_min."
-  },
-  {
-    "file_path": "tests/test_surface_supply_param.py",
-    "line_no": 37,
-    "symbol": "test_const_mode",
-    "signature": "test_const_mode()",
+    "file_path": "tests/unit/test_dynamics.py",
+    "line_no": 4,
+    "symbol": "const_eps",
+    "signature": "const_eps(v: float) -> float",
     "brief_usage": "No description available."
   },
   {
-    "file_path": "tests/test_surface_supply_param.py",
-    "line_no": 47,
-    "symbol": "test_powerlaw_mode",
-    "signature": "test_powerlaw_mode()",
+    "file_path": "tests/unit/test_dynamics.py",
+    "line_no": 8,
+    "symbol": "test_v_ij_zero_limit",
+    "signature": "test_v_ij_zero_limit()",
     "brief_usage": "No description available."
   },
   {
-    "file_path": "tests/test_surface_supply_param.py",
-    "line_no": 57,
-    "symbol": "test_table_mode",
-    "signature": "test_table_mode(tmp_path)",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_surface_supply_param.py",
-    "line_no": 65,
-    "symbol": "test_reservoir_caps_rate_and_consumes_mass",
-    "signature": "test_reservoir_caps_rate_and_consumes_mass()",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_surface_supply_param.py",
-    "line_no": 81,
-    "symbol": "test_feedback_scales_supply_toward_target_tau",
-    "signature": "test_feedback_scales_supply_toward_target_tau()",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_surface_supply_param.py",
-    "line_no": 99,
-    "symbol": "test_temperature_scaling_modulates_rate",
-    "signature": "test_temperature_scaling_modulates_rate()",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_surface_supply_param.py",
-    "line_no": 112,
-    "symbol": "MASS_TOL",
-    "signature": "MASS_TOL = 0.005",
-    "brief_usage": "Module constant"
-  },
-  {
-    "file_path": "tests/test_surface_supply_param.py",
-    "line_no": 115,
-    "symbol": "test_smol_helper_respects_tau_clip_and_budget",
-    "signature": "test_smol_helper_respects_tau_clip_and_budget()",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_surface_supply_param.py",
-    "line_no": 153,
-    "symbol": "_smol_cfg",
-    "signature": "_smol_cfg(outdir: Path, *, supply_cfg: Supply) -> Config",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_surface_supply_param.py",
-    "line_no": 182,
-    "symbol": "test_supply_modes_preserve_columns_and_budget",
-    "signature": "test_supply_modes_preserve_columns_and_budget(tmp_path: Path) -> None",
-    "brief_usage": "Smolモードで各種供給モードの出力カラムと質量収支を確認する。"
-  },
-  {
-    "file_path": "tests/test_temperature_driver.py",
+    "file_path": "tests/unit/test_dynamics.py",
     "line_no": 13,
-    "symbol": "SECONDS_PER_DAY",
-    "signature": "SECONDS_PER_DAY = 86400.0",
-    "brief_usage": "Module constant"
-  },
-  {
-    "file_path": "tests/test_temperature_driver.py",
-    "line_no": 16,
-    "symbol": "test_temperature_driver_prefers_radiation_override",
-    "signature": "test_temperature_driver_prefers_radiation_override() -> None",
+    "symbol": "test_c_eq_monotonic_tau_fwake",
+    "signature": "test_c_eq_monotonic_tau_fwake()",
     "brief_usage": "No description available."
   },
   {
-    "file_path": "tests/test_temperature_driver.py",
-    "line_no": 51,
-    "symbol": "test_temperature_driver_table_interpolates_sample",
-    "signature": "test_temperature_driver_table_interpolates_sample() -> None",
+    "file_path": "tests/unit/test_dynamics.py",
+    "line_no": 21,
+    "symbol": "test_update_e_relaxation",
+    "signature": "test_update_e_relaxation()",
     "brief_usage": "No description available."
   },
   {
-    "file_path": "tests/test_temperature_driver.py",
-    "line_no": 77,
-    "symbol": "test_temperature_autogen_generates_table",
-    "signature": "test_temperature_autogen_generates_table(tmp_path: Path) -> None",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_temperature_driver.py",
-    "line_no": 107,
-    "symbol": "test_autogen_used_in_run",
-    "signature": "test_autogen_used_in_run(tmp_path: Path) -> None",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tests/test_temperature_selection.py",
-    "line_no": 9,
+    "file_path": "tests/unit/test_dynamics_sampling.py",
+    "line_no": 8,
     "symbol": "_make_config",
-    "signature": "_make_config(outdir: Path, *, TM_K: float | None=None, driver_constant: float | None=None) -> schema.Config",
+    "signature": "_make_config(outdir)",
     "brief_usage": "No description available."
   },
   {
-    "file_path": "tests/test_temperature_selection.py",
-    "line_no": 47,
-    "symbol": "_run_and_load",
-    "signature": "_run_and_load(cfg: schema.Config) -> dict",
+    "file_path": "tests/unit/test_dynamics_sampling.py",
+    "line_no": 48,
+    "symbol": "test_stochastic_ei_sampling",
+    "signature": "test_stochastic_ei_sampling(tmp_path)",
     "brief_usage": "No description available."
   },
   {
-    "file_path": "tests/test_temperature_selection.py",
-    "line_no": 55,
-    "symbol": "test_temperature_selection_prefers_radiation_override",
-    "signature": "test_temperature_selection_prefers_radiation_override(tmp_path: Path) -> None",
+    "file_path": "tests/unit/test_radiation_shielding.py",
+    "line_no": 9,
+    "symbol": "test_blowout_radius_scales_with_temperature",
+    "signature": "test_blowout_radius_scales_with_temperature()",
     "brief_usage": "No description available."
   },
   {
-    "file_path": "tests/test_temperature_selection.py",
-    "line_no": 70,
-    "symbol": "test_temperature_selection_tracks_temps_when_no_override",
-    "signature": "test_temperature_selection_tracks_temps_when_no_override(tmp_path: Path) -> None",
+    "file_path": "tests/unit/test_radiation_shielding.py",
+    "line_no": 18,
+    "symbol": "test_beta_inverse_size_scaling",
+    "signature": "test_beta_inverse_size_scaling()",
     "brief_usage": "No description available."
   },
   {
-    "file_path": "tests/test_zero_division_guards.py",
-    "line_no": 11,
-    "symbol": "test_run_zero_d_tau_zero_no_error",
-    "signature": "test_run_zero_d_tau_zero_no_error(tmp_path: Path)",
+    "file_path": "tests/unit/test_radiation_shielding.py",
+    "line_no": 28,
+    "symbol": "test_beta_respects_qpr_override",
+    "signature": "test_beta_respects_qpr_override()",
     "brief_usage": "No description available."
   },
   {
-    "file_path": "tests/test_zero_division_guards.py",
-    "line_no": 40,
-    "symbol": "test_supply_powerlaw_t0_zero",
-    "signature": "test_supply_powerlaw_t0_zero()",
+    "file_path": "tests/unit/test_radiation_shielding.py",
+    "line_no": 38,
+    "symbol": "test_planck_mean_qpr_uses_table",
+    "signature": "test_planck_mean_qpr_uses_table()",
     "brief_usage": "No description available."
   },
   {
-    "file_path": "tests/test_zero_division_guards.py",
-    "line_no": 49,
-    "symbol": "test_run_zero_d_no_zerodivision",
-    "signature": "test_run_zero_d_no_zerodivision(monkeypatch, tmp_path)",
+    "file_path": "tests/unit/test_radiation_shielding.py",
+    "line_no": 46,
+    "symbol": "test_clip_to_tau1_non_negative",
+    "signature": "test_clip_to_tau1_non_negative()",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/unit/test_sublimation.py",
+    "line_no": 8,
+    "symbol": "test_s_sink_from_timescale_logistic",
+    "signature": "test_s_sink_from_timescale_logistic()",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/unit/test_sublimation.py",
+    "line_no": 14,
+    "symbol": "test_s_sub_boundary_fallback_warning",
+    "signature": "test_s_sub_boundary_fallback_warning()",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/unit/test_sublimation.py",
+    "line_no": 20,
+    "symbol": "test_compute_s_min_F2_uses_max",
+    "signature": "test_compute_s_min_F2_uses_max()",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/unit/test_surface_outflux.py",
+    "line_no": 9,
+    "symbol": "_run",
+    "signature": "_run(prod_rate: float, Omega: float, Sigma_tau1: float, steps: int=200)",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/unit/test_surface_outflux.py",
+    "line_no": 25,
+    "symbol": "test_supply_limited_outflux",
+    "signature": "test_supply_limited_outflux()",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/unit/test_surface_outflux.py",
+    "line_no": 34,
+    "symbol": "test_saturation_limited_outflux",
+    "signature": "test_saturation_limited_outflux()",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/unit/test_surface_outflux.py",
+    "line_no": 43,
+    "symbol": "test_sink_increases_mass_loss",
+    "signature": "test_sink_increases_mass_loss()",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/unit/test_surface_outflux.py",
+    "line_no": 72,
+    "symbol": "test_los_factor_increases_tau_los",
+    "signature": "test_los_factor_increases_tau_los(tmp_path)",
+    "brief_usage": "LOS係数を伸ばすと tau_los_mars が鉛直 τ より大きくなる。"
+  },
+  {
+    "file_path": "tests/unit/test_timegrid_and_budget.py",
+    "line_no": 13,
+    "symbol": "_tiny_config",
+    "signature": "_tiny_config(outdir: Path, dt_init: float, n_steps: int) -> schema.Config",
+    "brief_usage": "Return a minimal 0D configuration for rapid implicit-Euler runs."
+  },
+  {
+    "file_path": "tests/unit/test_timegrid_and_budget.py",
+    "line_no": 63,
+    "symbol": "test_time_grid_and_mass_budget",
+    "signature": "test_time_grid_and_mass_budget(tmp_path)",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/unit/test_viscosity.py",
+    "line_no": 7,
+    "symbol": "_run",
+    "signature": "_run(N: int, dt: float)",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/unit/test_viscosity.py",
+    "line_no": 18,
+    "symbol": "test_viscous_diffusion_converges_and_conserves_mass",
+    "signature": "test_viscous_diffusion_converges_and_conserves_mass()",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/unit/test_wyatt_scaling.py",
+    "line_no": 6,
+    "symbol": "test_wyatt_scaling_inverse_tau",
+    "signature": "test_wyatt_scaling_inverse_tau()",
     "brief_usage": "No description available."
   },
   {
@@ -10447,7 +10384,7 @@
     "file_path": "tools/pipeline/run_analysis_doc_tests.py",
     "line_no": 11,
     "symbol": "DEFAULT_PATTERNS",
-    "signature": "DEFAULT_PATTERNS = ['tests/test_analysis_*', 'tests/test_ref_coverage.py']",
+    "signature": "DEFAULT_PATTERNS = ['tests/integration/test_analysis_*', 'tests/integration/test_ref_coverage.py']",
     "brief_usage": "Module constant"
   },
   {

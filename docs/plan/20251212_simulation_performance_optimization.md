@@ -232,7 +232,7 @@ numerics:
 
 3. 検証項目:
    - `checks/mass_budget.csv` の `error_percent` が 0.5% 以内か
-   - `tests/test_mass_conservation.py` が PASS するか
+   - `tests/integration/test_mass_conservation.py` が PASS するか
    - IMEX 収束テストが合格するか
 
 4. 結果を `docs/experiments/dt_relaxation_results.md` に記録

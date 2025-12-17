@@ -1,17 +1,17 @@
-# Phase 7 最小診断の拡張
+# 拡張診断（extended_diagnostics）の最小セット
 
 ## 目的
-2 年スケールの解析で必要な損失経路の可視化を、既存の物理・数値処理を変えずに補足する。後方互換を維持するため、新しい出力は `diagnostics.phase7.enable` を `true` にしたときだけ追加される。
+2 年スケールの解析で必要な損失経路の可視化を、既存の物理・数値処理を変えずに補足する。後方互換を維持するため、新しい出力は `diagnostics.extended_diagnostics.enable` を `true` にしたときだけ追加される。
 
 ## 追加出力（enable=true のときのみ）
 - `out/series/run.parquet` に新規カラムを追加する。`mloss_blowout_rate`（放射圧吹き飛びレート, M_Mars s^-1 with gate/Φ補正後）、`mloss_sink_rate`（昇華/ガス抗力/水素逃走など追加シンクの瞬時レート, M_Mars s^-1）、`mloss_total_rate`（両者の和）、`cum_mloss_blowout` / `cum_mloss_sink` / `cum_mloss_total`（累積損失, M_Mars）、`t_coll`（Wyatt 型 1/(Ωτ) で τ≤1 面を評価）、`ts_ratio=t_blow/t_coll`、`beta_eff`（`beta_at_smin_effective` の別名）、`kappa_eff` / `tau_eff`（遮蔽後の実効値）。ブローアウト時間 `t_blow` と `a_blow` は既存列をそのまま利用。
-- `summary.json` に `M_loss_blowout_total`、`M_loss_sink_total`、`M_loss_total`、`max_mloss_rate` と `max_mloss_rate_time`、`median_ts_ratio`、`phase7_diagnostics_version` を追加。
+- `summary.json` に `M_loss_blowout_total`、`M_loss_sink_total`、`M_loss_total`、`max_mloss_rate` と `max_mloss_rate_time`、`median_ts_ratio`、`extended_diagnostics_version` を追加。
 - `orbit_rollup.csv` に平均/ピークレート（`mloss_blowout_rate_mean/peak`, `mloss_sink_rate_mean/peak`, `mloss_total_rate_mean/peak`）と `ts_ratio_median` を追加。平均は既存の per-orbit 質量集計から、ピーク/中央値は区間にかかるステップのレート系列から取得する。
 - `checks/mass_budget.csv` に `delta_mloss_vs_channels`（総損失と blowout+sink の相対差 [%]）を追加。許容誤差 0.5% を維持。
 
 ## 互換性とフラグ
-- デフォルトは `diagnostics.phase7.enable=false` で、既存の I/O には一切カラムやキーが増えない。
-- `schema_version` の既定値は `phase7-minimal-v1`。summary に同じ値を `_version` として記録し、後段の処理系で判別できるようにする。
+- デフォルトは `diagnostics.extended_diagnostics.enable=false` で、既存の I/O には一切カラムやキーが増えない。
+- `schema_version` の既定値は `extended-minimal-v1`。summary に同じ値を `_version` として記録し、後段の処理系で判別できるようにする。
 - 追加カラムは既存の実効値のみを再利用し、再計算や新しい物理式は導入しない（遮蔽/ゲート後の outflux、t_coll, kappa_eff, tau_eff などその場の値を記録）。
 
 ## 確認ポイント
@@ -22,12 +22,12 @@
 ## 設定例（YAML断片）
 ```yaml
 diagnostics:
-  phase7:
+  extended_diagnostics:
     enable: true
-    schema_version: phase7-minimal-v1
+    schema_version: extended-minimal-v1
 ```
 
-## シングルプロセスシナリオ（Phase7 追加要件）
+## シングルプロセスシナリオ（拡張診断向けの追加要件）
 ### 目的
 内側ディスクの 2 年程度の解析窓で、昇華のみ・衝突のみの極端ケースを明示的に比較できるようにする。物理式は既存のまま、モード選択と可視化だけを強化する。
 

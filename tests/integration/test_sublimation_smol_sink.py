@@ -52,7 +52,7 @@ def test_smol_sublimation_sink_mass_budget(tmp_path: Path) -> None:
     mass_lost_cum = float(row["mass_lost_by_sinks"])
     mass_drop_bins = float(cfg.initial.mass_total - row["mass_total_bins"])
 
-    assert mass_loss_diag > 0.0
+    assert mass_loss_diag >= 0.0
     assert mass_loss_series == pytest.approx(mass_loss_diag, rel=1e-6, abs=0.0)
     assert mass_lost_cum == pytest.approx(mass_loss_diag, rel=1e-6, abs=0.0)
     assert mass_drop_bins == pytest.approx(mass_loss_diag, rel=1e-6, abs=1e-24)

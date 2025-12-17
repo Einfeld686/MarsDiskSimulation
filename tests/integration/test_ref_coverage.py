@@ -8,7 +8,7 @@ import warnings
 from pathlib import Path
 from typing import Dict, List
 
-REPO_ROOT = Path(__file__).resolve().parents[1]
+REPO_ROOT = Path(__file__).resolve().parents[2]
 REGISTRY_PATH = REPO_ROOT / "analysis" / "references.registry.json"
 SOURCE_MAP_PATH = REPO_ROOT / "analysis" / "source_map.json"
 EQUATIONS_PATH = REPO_ROOT / "analysis" / "equations.md"

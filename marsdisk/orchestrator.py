@@ -68,7 +68,7 @@ MASS_BUDGET_TOLERANCE_PERCENT = 0.5
 SINK_REF_SIZE = 1e-6
 FAST_BLOWOUT_RATIO_THRESHOLD = 3.0
 FAST_BLOWOUT_RATIO_STRICT = 10.0
-PHASE7_SCHEMA_VERSION = "phase7-minimal-v1"
+EXTENDED_DIAGNOSTICS_VERSION = "extended-minimal-v1"
 
 
 # ===========================================================================

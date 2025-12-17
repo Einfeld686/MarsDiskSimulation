@@ -8,7 +8,7 @@ from typing import Dict, List
 
 import pytest
 
-DEFAULT_PATTERNS = ["tests/test_analysis_*", "tests/test_ref_coverage.py"]
+DEFAULT_PATTERNS = ["tests/integration/test_analysis_*", "tests/integration/test_ref_coverage.py"]
 BAR_WIDTH = 24
 
 

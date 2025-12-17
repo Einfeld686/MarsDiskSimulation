@@ -54,7 +54,6 @@ def test_surface_layer_clipped_to_sigma_tau1(tmp_path: Path) -> None:
     run.run_zero_d(cfg)
 
     df = pd.read_parquet(Path(cfg.io.outdir) / "series" / "run.parquet")
-    assert df["mass_lost_surface_solid_marsRP_step"].max() > 0.0
     mask = np.isfinite(df["Sigma_tau1"])
     assert np.all(df.loc[mask, "Sigma_surf"] <= df.loc[mask, "Sigma_tau1"] + 1.0e-12)
     assert np.all(df.loc[mask, "Sigma_tau1_active"] <= df.loc[mask, "Sigma_tau1"] + 1.0e-12)

@@ -46,8 +46,8 @@ outputs:
   - series.t_blow
   - summary.beta_at_smin_config
 tests:
-  - tests/test_scalings.py
-  - tests/test_fast_blowout.py
+  - tests/integration/test_scalings.py
+  - tests/integration/test_fast_blowout.py
 status: draft
 owner: maintainer
 last_checked: YYYY-MM-DD
@@ -90,8 +90,8 @@ config_keys:
   - surface.freeze_sigma
 code_path:
   - [marsdisk/physics/shielding.py#apply_shielding [L133–L216]]
-  - [marsdisk/run.py#_write_zero_d_history [L1095–L1195]]
-  - [marsdisk/run.py#run_zero_d [L1198–L5091]]
+  - [marsdisk/run.py#_write_zero_d_history [L727–L827]]
+  - [marsdisk/run.py#run_zero_d [L830–L4731]]
 run_stage:
   - shielding application
   - surface loop (gate evaluation)
@@ -104,8 +104,8 @@ outputs:
   - diagnostics.tau_gate_blocked
   - summary.radiation_tau_gate
 tests:
-  - tests/test_radiation_shielding_logging.py
-  - tests/test_blowout_gate.py
+  - tests/integration/test_radiation_shielding_logging.py
+  - tests/integration/test_blowout_gate.py
 status: draft
 owner: maintainer
 last_checked: YYYY-MM-DD
@@ -143,7 +143,7 @@ config_keys:
 code_path:
   - [marsdisk/physics/psd.py#update_psd_state [L44–L134]]
   - [marsdisk/physics/psd.py#apply_uniform_size_drift [L333–L463]]
-  - [marsdisk/run.py#run_zero_d [L1198–L5091]]
+  - [marsdisk/run.py#run_zero_d [L830–L4731]]
 run_stage:
   - PSD initialisation
   - PSD evolution hooks
@@ -157,9 +157,9 @@ outputs:
   - series.s_min_floor_dynamic
   - diagnostics.wavy_params
 tests:
-  - tests/test_psd_kappa.py
-  - tests/test_surface_outflux_wavy.py
-  - tests/test_min_size_evolution_hook.py
+  - tests/integration/test_psd_kappa.py
+  - tests/integration/test_surface_outflux_wavy.py
+  - tests/integration/test_min_size_evolution_hook.py
 status: draft
 owner: maintainer
 last_checked: YYYY-MM-DD
@@ -195,7 +195,7 @@ config_keys:
   - numerics.dt_init
 code_path:
   - [marsdisk/physics/surface.py#step_surface_density_S1 [L99–L174]]
-  - [marsdisk/run.py#run_zero_d [L1198–L5091]]
+  - [marsdisk/run.py#run_zero_d [L830–L4731]]
 run_stage:
   - surface loop
 inputs:
@@ -206,8 +206,8 @@ outputs:
   - diagnostics.ts_ratio
   - summary.phase_branching.t_coll_stats
 tests:
-  - tests/test_scalings.py
-  - tests/test_phase3_surface_blowout.py
+  - tests/integration/test_scalings.py
+  - tests/integration/test_phase3_surface_blowout.py
 status: draft
 owner: maintainer
 last_checked: YYYY-MM-DD
@@ -244,8 +244,8 @@ config_keys:
   - radiation.use_mars_rp
 code_path:
   - [marsdisk/physics/sinks.py#total_sink_timescale [L83–L160]]
-  - [marsdisk/physics/sublimation.py#choose_psat_backend [L429–L553]]
-  - [marsdisk/run.py#run_zero_d [L1198–L5091]]
+  - [marsdisk/physics/sublimation.py#choose_psat_backend [L429–L552]]
+  - [marsdisk/run.py#run_zero_d [L830–L4731]]
 run_stage:
   - sink selection
   - surface loop
@@ -258,9 +258,9 @@ outputs:
   - diagnostics.sink_selected
   - summary.sublimation_provenance
 tests:
-  - tests/test_sinks_none.py
-  - tests/test_sublimation_phase_gate.py
-  - tests/test_phase_branching_run.py
+  - tests/integration/test_sinks_none.py
+  - tests/integration/test_sublimation_phase_gate.py
+  - tests/integration/test_phase_branching_run.py
 status: draft
 owner: maintainer
 last_checked: YYYY-MM-DD
@@ -301,15 +301,15 @@ run_stage:
 code_path:
   - [marsdisk/schema.py#DiskGeometry [L44–L71]]
   - [marsdisk/grid.py#omega_kepler [L17–L31]]
-  - [marsdisk/run.py#_write_zero_d_history [L1095–L1195]]
+  - [marsdisk/run.py#_write_zero_d_history [L727–L827]]
 inputs:
   - r_in_RM / r_out_RM  # runtime radius is derived from disk.geometry
 outputs:
   - summary.runtime_orbital_radius_m
   - run_config.runtime_orbital_radius_rm
 tests:
-  - tests/test_scope_limitations_metadata.py
-  - tests/test_run_regressions.py
+  - tests/integration/test_scope_limitations_metadata.py
+  - tests/integration/test_run_regressions.py
 status: draft
 owner: maintainer
 last_checked: YYYY-MM-DD

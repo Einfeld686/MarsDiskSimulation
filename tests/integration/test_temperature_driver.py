@@ -17,26 +17,7 @@ def test_temperature_driver_prefers_radiation_override() -> None:
     radiation = schema.Radiation(TM_K=2300.0)
 
     info = tempdriver.autogenerate_temperature_table_if_needed(
-        schema.Config(
-            geometry=schema.Geometry(mode="0D"),
-            disk=schema.Disk(
-                geometry=schema.DiskGeometry(
-                    r_in_RM=2.6,
-                    r_out_RM=2.6,
-                    r_profile="uniform",
-                    p_index=0.0,
-                )
-            ),
-            material=schema.Material(rho=3000.0),
-            radiation=radiation,
-            sizes=schema.Sizes(s_min=1.0e-8, s_max=1.0e-3, n_bins=8),
-            initial=schema.Initial(mass_total=1.0e-9, s0_mode="upper"),
-            dynamics=schema.Dynamics(e0=0.05, i0=0.01, t_damp_orbits=1.0, f_wake=1.0),
-            psd=schema.PSD(alpha=1.5, wavy_strength=0.0),
-            qstar=schema.QStar(Qs=1.0e5, a_s=0.1, B=0.3, b_g=1.36, v_ref_kms=[1.0, 2.0]),
-            numerics=schema.Numerics(t_end_years=0.01, dt_init=1.0),
-            io=schema.IO(outdir=Path("out_dummy")),
-        ),
+        radiation,
         t_end_years=0.01,
         t_orb=10.0,
     )
@@ -49,7 +30,7 @@ def test_temperature_driver_prefers_radiation_override() -> None:
 
 
 def test_temperature_driver_table_interpolates_sample() -> None:
-    table_path = Path(__file__).resolve().parents[1] / "data" / "mars_temperature_table_example.csv"
+    table_path = Path(__file__).resolve().parents[2] / "data" / "mars_temperature_table_example.csv"
     driver_cfg = schema.MarsTemperatureDriverConfig(
         enabled=True,
         mode="table",
