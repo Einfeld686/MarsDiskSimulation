@@ -1,12 +1,12 @@
 {
   "function_reference_rate": {
-    "numerator": 98,
+    "numerator": 96,
     "denominator": 98,
-    "rate": 1.0
+    "rate": 0.9795918367346939
   },
   "anchor_consistency_rate": {
-    "numerator": 676,
-    "denominator": 676,
+    "numerator": 674,
+    "denominator": 674,
     "rate": 1.0
   },
   "equation_unit_coverage": {
@@ -15,5 +15,8 @@
     "rate": 0.9428571428571428
   },
   "sinks_callgraph_documented": true,
-  "holes": []
+  "holes": [
+    "marsdisk/physics/collisions_smol.py#step_collisions",
+    "marsdisk/physics/radiation.py#grain_temperature_graybody"
+  ]
 }

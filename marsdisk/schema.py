@@ -953,42 +953,6 @@ class Process(BaseModel):
         return values
 
 
-class Phase5CompareConfig(BaseModel):
-    """Phase 5 comparison study controls."""
-
-    enable: bool = Field(
-        False,
-        description="Enable the sequential single-process comparison run.",
-    )
-    duration_years: float = Field(
-        2.0,
-        gt=0.0,
-        description="Override t_end_years when the comparison runner is active (years).",
-    )
-    mode_a: Optional[str] = Field(
-        None,
-        description="Single-process mode for variant A (e.g. collisions_only or sublimation_only).",
-    )
-    mode_b: Optional[str] = Field(
-        None,
-        description="Single-process mode for variant B.",
-    )
-    label_a: Optional[str] = Field(
-        None,
-        description="Human-readable label for variant A; defaults to mode_a when omitted.",
-    )
-    label_b: Optional[str] = Field(
-        None,
-        description="Human-readable label for variant B; defaults to mode_b when omitted.",
-    )
-
-
-class Phase5Config(BaseModel):
-    """Container for the Phase 5 specific options."""
-
-    compare: Phase5CompareConfig = Phase5CompareConfig()
-
-
 class PhaseThresholds(BaseModel):
     """Fallback thresholds used when no external phase map is available.
 
@@ -1619,23 +1583,23 @@ class IO(BaseModel):
     )
 
 
-class Phase7Diagnostics(BaseModel):
-    """Optional Phase7 diagnostics controls."""
+class ExtendedDiagnostics(BaseModel):
+    """Optional extended diagnostics controls."""
 
     enable: bool = Field(
         False,
-        description="Enable extended Phase7 diagnostics (additional series columns and rollup keys).",
+        description="Enable extended diagnostics (additional series columns and rollup keys).",
     )
     schema_version: str = Field(
-        "phase7-minimal-v1",
-        description="Schema identifier for the Phase7 diagnostics payload.",
+        "extended-minimal-v1",
+        description="Schema identifier for the extended diagnostics payload.",
     )
 
 
 class Diagnostics(BaseModel):
     """Diagnostics toggles grouped by feature phase."""
 
-    phase7: Phase7Diagnostics = Phase7Diagnostics()
+    extended_diagnostics: ExtendedDiagnostics = ExtendedDiagnostics()
 
 
 class Config(BaseModel):
@@ -1659,7 +1623,6 @@ class Config(BaseModel):
         ),
     )
     process: Process = Process()
-    phase5: Phase5Config = Phase5Config()
     chi_blow: Union[float, Literal["auto"]] = Field(
         1.0,
         description="Blow-out timescale multiplier (float) or 'auto' to estimate from β and Q_pr.",
@@ -1769,11 +1732,9 @@ __all__ = [
     "PhaseThresholds",
     "Sinks",
     "Diagnostics",
-    "Phase7Diagnostics",
+    "ExtendedDiagnostics",
     "ProcessStateTagging",
     "Process",
-    "Phase5Config",
-    "Phase5CompareConfig",
     "MarsTemperatureDriverConfig",
     "RadiationTauGate",
     "Radiation",

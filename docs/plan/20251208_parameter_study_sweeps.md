@@ -30,7 +30,7 @@
 リスクと緩和
 ------------
 - 計算量増大: supply×PSD×遮蔽の組み合わせ爆発を避け、1 軸ずつ実施。必要なら `io.streaming` を併用。
-- 数値不安定（dt/t_blow 大）: `dt_over_t_blow_max`/サブステップを併用し、Wyatt スケールとの整合を tests/test_scalings.py でスポット確認。
+- 数値不安定（dt/t_blow 大）: `dt_over_t_blow_max`/サブステップを併用し、Wyatt スケールとの整合を tests/integration/test_scalings.py でスポット確認。
 - テーブル欠損: Q_pr/Φ/温度テーブルが無い場合は実行前に配置し、なければテーブルを外して analytic フォールバックを明示。
 
 完了判定

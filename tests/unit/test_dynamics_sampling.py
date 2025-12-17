@@ -39,7 +39,7 @@ def _make_config(outdir):
         dynamics=dynamics,
         psd=schema.PSD(alpha=3.5, wavy_strength=0.0),
         qstar=schema.QStar(Qs=1000.0, a_s=1.0, B=1.0, b_g=1.0, v_ref_kms=[1.0]),
-        numerics=schema.Numerics(t_end_years=1e-6, dt_init=1e-6),
+        numerics=schema.Numerics(t_end_years=1e-4, dt_init=10.0),
         io=schema.IO(outdir=outdir),
         sinks=schema.Sinks(mode="none", enable_sublimation=False),
     )

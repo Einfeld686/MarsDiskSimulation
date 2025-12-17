@@ -29,7 +29,7 @@
 
 ## 5. テストの入口と実行時間目安
 - `tests/test_fast_blowout.py` が `_fast_blowout_correction_factor`・補正乗算・サブステップ挙動・診断カラムの整合を確認する。`tests/test_per_step_blowout.py` は eval_per_step と刻み差の影響、質量収支、orbit_rollup を比較する。
-- 質量保存は `tests/test_mass_conservation.py`・`tests/test_mass_flux_consistency.py` で `mass_budget.csv` と出力列の整合を検査。ブローアウト面のワビー挙動は `tests/test_surface_outflux_wavy.py` が PSD を評価する。
+- 質量保存は `tests/integration/test_mass_conservation.py`・`tests/test_mass_flux_consistency.py` で `mass_budget.csv` と出力列の整合を検査。ブローアウト面のワビー挙動は `tests/integration/test_surface_outflux_wavy.py` が PSD を評価する。
 - これらのテストはいずれも短尺（t_end ≲ 1e-3 年、dt ~1e3-1e4 s）で実行時間は CI レベル。年オーダー（〜2 年）長尺ケースの実行時間や安定性は自動テストに含まれておらず、非回帰確認には既存設定での手動/スモーク実行が必要。
 
 ## フック候補（最小差分）

@@ -1,4 +1,4 @@
 """I/O helper subpackage."""
-from . import tables, writer
+from . import tables, writer, streaming
 
-__all__ = ["tables", "writer"]
+__all__ = ["tables", "writer", "streaming"]

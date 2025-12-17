@@ -13,7 +13,7 @@ def test_base_config_smol_mass_budget_and_eval(tmp_path: Path) -> None:
     """Run the base.yml in Smol mode and validate mass budget + evaluation system."""
 
     outdir = tmp_path / "out"
-    repo_root = Path(__file__).resolve().parents[1]
+    repo_root = Path(__file__).resolve().parents[2]
     qpr_path = repo_root / "data" / "qpr_table.csv"
     overrides = [
         f"io.outdir={outdir}",

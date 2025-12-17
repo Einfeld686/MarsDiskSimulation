@@ -22,7 +22,7 @@ interfaces:
 # - 遮蔽は shielding.effective_kappa/sigma_tau1 をサブステップ直前に適用し、kappa_eff と sigma_tau1_limit を保持したまま step_surface へ渡し diagnostics にも流す。
 # - writer.write_parquet/write_orbit_rollup は DataFrame をそのままシリアライズし、units/definitions は writer.write_parquet 内で管理。summary/mass_budget は run_zero_d 終端で writer.write_summary/write_mass_budget が出力。
 # - blowout_gate_factor は _compute_gate_factor 由来で t_blow と t_solid（昇華 or 衝突競合）から計算され、tau_gate_blocked による強制遮断は enable_blowout_step を false にして outflux=0 とする。τゲートは radiation.tau_gate.enable でオン。
-# - docs/devnotes には phase3/phase5/phase6 のメモと phase7_minimal_diagnostics があり、命名・互換方針・テスト観点の参照先となっている。
+# - docs/devnotes には diagnostics/gate のメモがあり、命名・互換方針・テスト観点の参照先となっている。
 from __future__ import annotations
 
 import argparse
@@ -48,11 +48,9 @@ import os
 
 import pandas as pd
 import numpy as np
-import pyarrow as pa
-import pyarrow.parquet as pq
-
 from . import config_utils, grid
 from .schema import Config
+from .runtime import ProgressReporter, ZeroDHistory
 from .physics import (
     psd,
     surface,
@@ -71,6 +69,12 @@ from .physics import (
     collisions_smol,
 )
 from .io import writer, tables, checkpoint as checkpoint_io
+from .io.streaming import (
+    StreamingState,
+    MEMORY_RUN_ROW_BYTES,
+    MEMORY_PSD_ROW_BYTES,
+    MEMORY_DIAG_ROW_BYTES,
+)
 from .physics.sublimation import SublimationParams, p_sat, grain_temperature_graybody, sublimation_sink_from_dsdt
 from . import constants
 
@@ -98,11 +102,7 @@ MASS_BUDGET_TOLERANCE_PERCENT = 0.5
 SINK_REF_SIZE = 1e-6
 FAST_BLOWOUT_RATIO_THRESHOLD = 3.0
 FAST_BLOWOUT_RATIO_STRICT = 10.0
-PHASE7_SCHEMA_VERSION = "phase7-minimal-v1"
-# Conservative per-row byte guesses including Python dict/list overheads.
-MEMORY_RUN_ROW_BYTES = 2200.0
-MEMORY_PSD_ROW_BYTES = 320.0
-MEMORY_DIAG_ROW_BYTES = 1400.0
+EXTENDED_DIAGNOSTICS_VERSION = "extended-minimal-v1"
 
 
 def _ensure_finite_kappa(value: float, label: str = "kappa") -> float:
@@ -151,116 +151,6 @@ def compute_phase_tau_fields(
     tau_field_norm = "los" if phase_tau_field == "los" else "vertical"
     tau_used = tau_los if tau_field_norm == "los" else tau_vertical
     return tau_used, tau_vertical, tau_los
-
-
-class ProgressReporter:
-    """Lightweight terminal progress bar with ETA feedback."""
-
-    def __init__(
-        self,
-        total_steps: int,
-        total_time_s: float,
-        *,
-        refresh_seconds: float = 1.0,
-        enabled: bool = False,
-        memory_hint: Optional[str] = None,
-        memory_header: Optional[str] = None,
-    ) -> None:
-        self.enabled = bool(enabled and total_steps > 0)
-        self.total_steps = max(int(total_steps), 1)
-        self.total_time_s = max(float(total_time_s), 0.0)
-        self.refresh_seconds = max(float(refresh_seconds), 0.1)
-        self.start = time.monotonic()
-        self.last = self.start
-        self._finished = False
-        self.memory_hint = memory_hint
-        self.memory_header = memory_header
-        self._header_emitted = False
-        self._isatty = sys.stdout.isatty()
-        self._last_percent_int: int = -1
-
-    def emit_header(self) -> None:
-        """Print a one-line header (e.g., memory estimate) before the bar."""
-
-        if not self.enabled or self._header_emitted:
-            return
-        if self.memory_header:
-            sys.stdout.write(f"{self.memory_header}\n")
-            sys.stdout.flush()
-        self._header_emitted = True
-
-    def update(self, step_no: int, sim_time_s: float, *, force: bool = False) -> None:
-        """Render the progress bar if enabled and refresh interval elapsed."""
-
-        if not self.enabled or self._finished:
-            return
-        now = time.monotonic()
-        is_last = (step_no + 1) >= self.total_steps
-        if not force and not is_last and (now - self.last) < self.refresh_seconds:
-            return
-        self.last = now
-        frac = min(max((step_no + 1) / self.total_steps, 0.0), 1.0)
-        elapsed = now - self.start
-        bar_width = 28
-        filled = int(bar_width * frac)
-        bar = "#" * filled + "-" * (bar_width - filled)
-        sim_years = sim_time_s / SECONDS_PER_YEAR if math.isfinite(sim_time_s) else float("nan")
-        remaining_s = float("nan")
-        if math.isfinite(self.total_time_s) and math.isfinite(sim_time_s):
-            remaining_s = max(self.total_time_s - sim_time_s, 0.0)
-        remaining_years = remaining_s / SECONDS_PER_YEAR if math.isfinite(remaining_s) else float("nan")
-        rem_text = f"rem~{remaining_years:.3g} yr" if math.isfinite(remaining_years) else "rem~?"
-        eta_seconds = (elapsed / frac - elapsed) if frac > 0.0 else float("nan")
-
-        def _format_eta(seconds: float) -> str:
-            if not math.isfinite(seconds) or seconds < 0.0:
-                return "ETA ?"
-            if seconds >= 3600.0:
-                return f"ETA {seconds/3600.0:.1f}h"
-            if seconds >= 60.0:
-                return f"ETA {seconds/60.0:.1f}m"
-            return f"ETA {seconds:.0f}s"
-
-        eta_text = _format_eta(eta_seconds)
-        memory_text = f" mem~{self.memory_hint}" if self.memory_hint else ""
-        line = (
-            f"[{bar}] {frac * 100:5.1f}% step {step_no + 1}/{self.total_steps} "
-            f"t={sim_years:.3g} yr {rem_text} {eta_text}{memory_text}"
-        )
-        if self._isatty:
-            sys.stdout.write(f"\r\033[2K{line}")
-            if is_last:
-                sys.stdout.write("\n")
-        else:
-            # Update every 0.1% (tenths of percent)
-            percent_tenth = int(frac * 1000)
-            if percent_tenth == self._last_percent_int and not is_last:
-                return
-            self._last_percent_int = percent_tenth
-            sys.stdout.write(f"{line}\n")
-        if is_last:
-            self._finished = True
-        sys.stdout.flush()
-
-    def finish(self, step_no: int, sim_time_s: float) -> None:
-        """Force a final render to end the line cleanly."""
-
-        if not self.enabled:
-            return
-        self.update(step_no, sim_time_s, force=True)
-        if not self._finished:
-            sys.stdout.write("\n")
-            sys.stdout.flush()
-            self._finished = True
-
-    def _print(self, message: str) -> None:
-        """Emit a one-line message after the bar (used for final status)."""
-
-        if not self.enabled:
-            return
-        sys.stdout.write(f"{message}\n")
-        sys.stdout.flush()
-
 
 def _parse_override_value(raw: str) -> Any:
     """Return a Python value parsed from a CLI override string."""
@@ -653,57 +543,6 @@ def _resolve_time_grid(
     return t_end, dt_nominal, dt_step, n_steps, info
 
 
-@dataclass
-class _Phase5VariantResult:
-    """Artifacts recorded for a variant within the Phase 5 comparison."""
-
-    variant: str
-    mode: str
-    outdir: Path
-    summary: Dict[str, Any]
-    run_config: Dict[str, Any]
-    series_paths: Dict[str, Path]
-    mass_budget_path: Optional[Path]
-    orbit_rollup_path: Optional[Path]
-
-
-def _read_json(path: Path) -> Dict[str, Any]:
-    with path.open("r", encoding="utf-8") as fh:
-        return json.load(fh)
-
-
-def _hash_payload(payload: Mapping[str, Any]) -> str:
-    data = json.dumps(payload, sort_keys=True).encode("utf-8")
-    return hashlib.sha256(data).hexdigest()
-
-
-def _prepare_phase5_variants(compare_cfg: Any) -> List[Dict[str, str]]:
-    """Return normalized variant specifications or raise when insufficient."""
-
-    if compare_cfg is None:
-        raise ValueError("phase5.compare must be configured when requesting comparison runs")
-
-    def _normalize_label(label: Optional[str], mode: str) -> str:
-        return str(label) if label not in (None, "") else mode
-
-    mode_a_raw = getattr(compare_cfg, "mode_a", None)
-    mode_b_raw = getattr(compare_cfg, "mode_b", None)
-    if mode_a_raw is None or mode_b_raw is None:
-        raise ValueError("phase5.compare.mode_a and mode_b must be provided for comparison runs")
-
-    mode_a = _normalise_physics_mode(mode_a_raw)
-    mode_b = _normalise_physics_mode(mode_b_raw)
-    if mode_a == "default" or mode_b == "default":
-        raise ValueError("phase5.compare modes must specify explicit physics modes (not 'default')")
-
-    label_a = _normalize_label(getattr(compare_cfg, "label_a", None), mode_a)
-    label_b = _normalize_label(getattr(compare_cfg, "label_b", None), mode_b)
-    return [
-        {"mode": mode_a, "label": label_a},
-        {"mode": mode_b, "label": label_b},
-    ]
-
-
 # ---------------------------------------------------------------------------
 # Legacy helpers retained for backward compatibility
 # ---------------------------------------------------------------------------
@@ -736,213 +575,6 @@ class RunState:
     time: float = 0.0
 
 
-@dataclass
-class ZeroDHistory:
-    """Per-step history bundle used by the full-feature zero-D driver."""
-
-    records: List[Dict[str, Any]] = field(default_factory=list)
-    psd_hist_records: List[Dict[str, Any]] = field(default_factory=list)
-    diagnostics: List[Dict[str, Any]] = field(default_factory=list)
-    mass_budget: List[Dict[str, float]] = field(default_factory=list)
-    step_diag_records: List[Dict[str, Any]] = field(default_factory=list)
-    debug_records: List[Dict[str, Any]] = field(default_factory=list)
-    orbit_rollup_rows: List[Dict[str, float]] = field(default_factory=list)
-    temperature_track: List[float] = field(default_factory=list)
-    beta_track: List[float] = field(default_factory=list)
-    ablow_track: List[float] = field(default_factory=list)
-    gate_factor_track: List[float] = field(default_factory=list)
-    t_solid_track: List[float] = field(default_factory=list)
-    phase7_total_rate_track: List[float] = field(default_factory=list)
-    phase7_total_rate_time_track: List[float] = field(default_factory=list)
-    phase7_ts_ratio_track: List[float] = field(default_factory=list)
-    mass_budget_violation: Optional[Dict[str, float]] = None
-    violation_triggered: bool = False
-    tau_gate_block_time: float = 0.0
-    total_time_elapsed: float = 0.0
-
-
-class StreamingState:
-    """Manage streaming flush of large histories to Parquet/CSV chunks."""
-
-    def __init__(
-        self,
-        *,
-        enabled: bool,
-        outdir: Path,
-        compression: str = "snappy",
-        memory_limit_gb: float = 80.0,
-        step_flush_interval: int = 10000,
-        merge_at_end: bool = False,
-        step_diag_enabled: bool = False,
-        step_diag_path: Optional[Path] = None,
-        step_diag_format: str = "csv",
-    ) -> None:
-        self.enabled = bool(enabled)
-        self.outdir = Path(outdir)
-        self.compression = compression
-        self.memory_limit_bytes = float(memory_limit_gb) * (1024.0**3)
-        self.step_flush_interval = int(step_flush_interval) if step_flush_interval > 0 else 0
-        self.merge_at_end = bool(merge_at_end)
-        self.step_diag_enabled = bool(step_diag_enabled)
-        self.step_diag_path = step_diag_path if step_diag_enabled else None
-        self.step_diag_format = step_diag_format
-        self.chunk_index = 0
-        self.chunk_start_step = 0
-        self.run_chunks: List[Path] = []
-        self.psd_chunks: List[Path] = []
-        self.diag_chunks: List[Path] = []
-        self.mass_budget_path: Path = self.outdir / "checks" / "mass_budget.csv"
-        self.mass_budget_header_written = False
-        self.step_diag_header_written = False
-
-    def _estimate_bytes(self, history: ZeroDHistory) -> float:
-        run_bytes = len(history.records) * MEMORY_RUN_ROW_BYTES
-        psd_bytes = len(history.psd_hist_records) * MEMORY_PSD_ROW_BYTES
-        diag_bytes = len(history.diagnostics) * MEMORY_DIAG_ROW_BYTES
-        budget_bytes = len(history.mass_budget) * MEMORY_RUN_ROW_BYTES
-        step_diag_bytes = len(history.step_diag_records) * MEMORY_DIAG_ROW_BYTES
-        return run_bytes + psd_bytes + diag_bytes + budget_bytes + step_diag_bytes
-
-    def should_flush(self, history: ZeroDHistory, steps_since_flush: int) -> bool:
-        if not self.enabled:
-            return False
-        if self.memory_limit_bytes > 0 and self._estimate_bytes(history) >= self.memory_limit_bytes:
-            return True
-        if self.step_flush_interval > 0 and steps_since_flush >= self.step_flush_interval:
-            return True
-        return False
-
-    def _chunk_label(self, step_end: int) -> str:
-        step_end = max(step_end, self.chunk_start_step)
-        return f"{self.chunk_start_step:09d}_{step_end:09d}"
-
-    def flush(self, history: ZeroDHistory, step_end: int) -> None:
-        if not self.enabled:
-            return
-        label = self._chunk_label(step_end)
-        series_dir = self.outdir / "series"
-        wrote_any = False
-        if history.records:
-            path = series_dir / f"run_chunk_{label}.parquet"
-            writer.write_parquet(pd.DataFrame(history.records), path, compression=self.compression)
-            self.run_chunks.append(path)
-            history.records.clear()
-            wrote_any = True
-        if history.psd_hist_records:
-            path = series_dir / f"psd_hist_chunk_{label}.parquet"
-            writer.write_parquet(
-                pd.DataFrame(history.psd_hist_records), path, compression=self.compression
-            )
-            self.psd_chunks.append(path)
-            history.psd_hist_records.clear()
-            wrote_any = True
-        if history.diagnostics:
-            path = series_dir / f"diagnostics_chunk_{label}.parquet"
-            writer.write_parquet(
-                pd.DataFrame(history.diagnostics), path, compression=self.compression
-            )
-            self.diag_chunks.append(path)
-            history.diagnostics.clear()
-            wrote_any = True
-        if history.mass_budget:
-            header = not self.mass_budget_header_written
-            wrote = writer.append_csv(history.mass_budget, self.mass_budget_path, header=header)
-            self.mass_budget_header_written = self.mass_budget_header_written or wrote
-            history.mass_budget.clear()
-        if self.step_diag_enabled and history.step_diag_records and self.step_diag_path is not None:
-            header = not self.step_diag_header_written
-            wrote = writer.append_step_diagnostics(
-                history.step_diag_records,
-                self.step_diag_path,
-                fmt=self.step_diag_format,
-                header=header,
-            )
-            self.step_diag_header_written = self.step_diag_header_written or wrote
-            history.step_diag_records.clear()
-        if wrote_any:
-            self.chunk_index += 1
-            self.chunk_start_step = step_end + 1
-
-    def merge_chunks(self) -> None:
-        if not self.enabled or not self.merge_at_end:
-            return
-        if self.run_chunks:
-            self._merge_parquet_chunks(self.run_chunks, self.outdir / "series" / "run.parquet")
-        if self.psd_chunks:
-            self._merge_parquet_chunks(
-                self.psd_chunks, self.outdir / "series" / "psd_hist.parquet"
-            )
-        if self.diag_chunks:
-            self._merge_parquet_chunks(
-                self.diag_chunks, self.outdir / "series" / "diagnostics.parquet"
-            )
-
-    def _merge_parquet_chunks(self, chunks: List[Path], destination: Path) -> None:
-        """Merge multiple Parquet chunk files into a single destination file.
-
-        This method handles schema mismatches between chunks by unifying schemas
-        and filling missing columns with nulls. This allows merging chunks written
-        by different code versions or across checkpoint restarts.
-        """
-        if not chunks:
-            return
-        writer._ensure_parent(destination)
-        sorted_chunks = sorted(chunks)
-
-        # Phase 1: Collect schemas from all chunks
-        schemas: List[pa.Schema] = []
-        valid_chunks: List[Path] = []
-        for path in sorted_chunks:
-            try:
-                schema = pq.read_schema(path)
-                schemas.append(schema)
-                valid_chunks.append(path)
-            except Exception as exc:
-                logger.warning("Failed to read schema from %s: %s", path, exc)
-
-        if not schemas:
-            logger.warning("No valid chunk schemas found, skipping merge for %s", destination)
-            return
-
-        # Phase 2: Unify schemas to create a superset of all columns
-        try:
-            unified_schema = pa.unify_schemas(schemas, promote_options="permissive")
-        except pa.ArrowInvalid as exc:
-            logger.warning(
-                "Schema unification failed for %s, falling back to first chunk schema: %s",
-                destination,
-                exc,
-            )
-            unified_schema = schemas[0]
-
-        # Phase 3: Write tables with unified schema, filling missing columns
-        parquet_writer: Optional[pq.ParquetWriter] = None
-        try:
-            for path in valid_chunks:
-                table = pq.read_table(path)
-                # Add missing columns as null arrays
-                for field in unified_schema:
-                    if field.name not in table.column_names:
-                        null_array = pa.nulls(len(table), type=field.type)
-                        table = table.append_column(field.name, null_array)
-                # Reorder columns to match unified schema and cast types if needed
-                try:
-                    table = table.select([f.name for f in unified_schema])
-                    table = table.cast(unified_schema)
-                except Exception as exc:
-                    logger.warning(
-                        "Column reordering/casting failed for %s: %s; writing with original order",
-                        path,
-                        exc,
-                    )
-                if parquet_writer is None:
-                    parquet_writer = pq.ParquetWriter(
-                        destination, unified_schema, compression=self.compression
-                    )
-                parquet_writer.write_table(table)
-        finally:
-            if parquet_writer is not None:
-                parquet_writer.close()
 def step(config: RunConfig, state: RunState, dt: float) -> Dict[str, float]:
     """Advance the coupled S0/S1 system by one time-step.
 
@@ -1102,7 +734,7 @@ def _write_zero_d_history(
     step_diag_path_cfg: Optional[Path],
     step_diag_path: Optional[Path],
     orbit_rollup_enabled: bool,
-    phase7_enabled: bool,
+    extended_diag_enabled: bool,
 ) -> None:
     """Persist time series, diagnostics, and rollups for a zero-D run."""
 
@@ -1129,7 +761,7 @@ def _write_zero_d_history(
         )
     if orbit_rollup_enabled:
         rows_for_rollup = history.orbit_rollup_rows
-        required_phase7_cols = {
+        required_extended_cols = {
             "mloss_blowout_rate",
             "mloss_sink_rate",
             "mloss_total_rate",
@@ -1138,7 +770,7 @@ def _write_zero_d_history(
             "time",
             "blowout_gate_factor",
         }
-        if phase7_enabled and rows_for_rollup and not df.empty and required_phase7_cols.issubset(set(df.columns)):
+        if extended_diag_enabled and rows_for_rollup and not df.empty and required_extended_cols.issubset(set(df.columns)):
             df_end = df["time"].to_numpy()
             df_start = (df["time"] - df["dt"]).to_numpy()
             blow_rates = df["mloss_blowout_rate"].to_numpy()
@@ -1318,9 +950,11 @@ def run_zero_d(
     enforce_sublimation_only = primary_scenario == "sublimation_only"
     collisions_active = not enforce_sublimation_only
     diagnostics_cfg = getattr(cfg, "diagnostics", None)
-    phase7_cfg = getattr(diagnostics_cfg, "phase7", None)
-    phase7_enabled = bool(getattr(phase7_cfg, "enable", False))
-    phase7_schema_version = getattr(phase7_cfg, "schema_version", PHASE7_SCHEMA_VERSION)
+    extended_diag_cfg = getattr(diagnostics_cfg, "extended_diagnostics", None)
+    extended_diag_enabled = bool(getattr(extended_diag_cfg, "enable", False))
+    extended_diag_version = getattr(
+        extended_diag_cfg, "schema_version", EXTENDED_DIAGNOSTICS_VERSION
+    )
 
     seed, seed_expr, seed_basis = _resolve_seed(cfg)
     random.seed(seed)
@@ -2322,9 +1956,9 @@ def run_zero_d(
     t_solid_track = history.t_solid_track
     tau_gate_block_time = history.tau_gate_block_time
     total_time_elapsed = max(history.total_time_elapsed, time_offset)
-    phase7_total_rate_track = history.phase7_total_rate_track
-    phase7_total_rate_time_track = history.phase7_total_rate_time_track
-    phase7_ts_ratio_track = history.phase7_ts_ratio_track
+    extended_total_rate_track = history.extended_total_rate_track
+    extended_total_rate_time_track = history.extended_total_rate_time_track
+    extended_ts_ratio_track = history.extended_ts_ratio_track
     supply_feedback_track: List[float] = []
     supply_temperature_scale_track: List[float] = []
     supply_reservoir_remaining_track: List[float] = []
@@ -3012,33 +2646,39 @@ def run_zero_d(
                 deep_to_surf_attempt_mass_step += deep_to_surf_flux_attempt_current * dt
                 sigma_before_step = sigma_surf
                 if collisions_active_step:
-                    smol_res = collisions_smol.step_collisions_smol_0d(
-                        psd_state,
-                        sigma_surf,
-                        dt=dt,
-                        prod_subblow_area_rate=prod_rate,
-                        r=r,
-                        Omega=Omega_step,
-                        a_blow=a_blow_step,
-                        rho=rho_used,
-                        e_value=e0_effective,
-                        i_value=i0_effective,
-                        sigma_tau1=sigma_tau1_active,
-                        enable_blowout=enable_blowout_sub,
-                        t_sink=t_sink_current if sink_timescale_active else None,
-                        ds_dt_val=ds_dt_val if sublimation_smol_active_step else None,
-                        s_min_effective=s_min_effective,
-                        dynamics_cfg=cfg.dynamics,
-                        tau_eff=tau_eval_los,
-                        collisions_enabled=collisions_active_step,
-                        mass_conserving_sublimation=mass_conserving_sublimation,
-                        supply_injection_mode=supply_injection_mode,
-                        supply_s_inj_min=supply_injection_s_min,
-                        supply_s_inj_max=supply_injection_s_max,
-                        supply_q=supply_injection_q,
-                        supply_velocity_cfg=supply_velocity_cfg,
-                        headroom_policy=supply_headroom_policy,
+                    collision_ctx = collisions_smol.CollisionStepContext(
+                        time_orbit=collisions_smol.TimeOrbitParams(dt=dt, Omega=Omega_step, r=r),
+                        material=collisions_smol.MaterialParams(
+                            rho=rho_used,
+                            a_blow=a_blow_step,
+                            s_min_effective=s_min_effective,
+                        ),
+                        dynamics=collisions_smol.DynamicsParams(
+                            e_value=e0_effective,
+                            i_value=i0_effective,
+                            dynamics_cfg=cfg.dynamics,
+                            tau_eff=tau_eval_los,
+                        ),
+                        supply=collisions_smol.SupplyParams(
+                            prod_subblow_area_rate=prod_rate,
+                            supply_injection_mode=supply_injection_mode,
+                            supply_s_inj_min=supply_injection_s_min,
+                            supply_s_inj_max=supply_injection_s_max,
+                            supply_q=supply_injection_q,
+                            supply_velocity_cfg=supply_velocity_cfg,
+                        ),
+                        control=collisions_smol.CollisionControlFlags(
+                            enable_blowout=enable_blowout_sub,
+                            collisions_enabled=collisions_active_step,
+                            mass_conserving_sublimation=mass_conserving_sublimation,
+                            headroom_policy=supply_headroom_policy,
+                            sigma_tau1=sigma_tau1_active,
+                            t_sink=t_sink_current if sink_timescale_active else None,
+                            ds_dt_val=ds_dt_val if sublimation_smol_active_step else None,
+                        ),
+                        sigma_surf=sigma_surf,
                     )
+                    smol_res = collisions_smol.step_collisions(collision_ctx, psd_state)
                     psd_state = smol_res.psd_state
                     sigma_surf = smol_res.sigma_after
                     t_coll_kernel_last = smol_res.t_coll_kernel
@@ -3762,7 +3402,7 @@ def run_zero_d(
             if key in record:
                 val = record.get(key)
                 record[key] = "" if val is None else str(val)
-        if phase7_enabled:
+        if extended_diag_enabled:
             record.update(
                 {
                     "mloss_blowout_rate": M_out_dot,
@@ -3776,10 +3416,10 @@ def run_zero_d(
                     "tau_eff": tau_eff_diag,
                 }
             )
-            phase7_total_rate_track.append(dM_dt_surface_total)
-            phase7_total_rate_time_track.append(time)
+            extended_total_rate_track.append(dM_dt_surface_total)
+            extended_total_rate_time_track.append(time)
             if ts_ratio_value is not None and math.isfinite(ts_ratio_value):
-                phase7_ts_ratio_track.append(ts_ratio_value)
+                extended_ts_ratio_track.append(ts_ratio_value)
         if evolve_min_size_enabled:
             record["s_min_evolved"] = s_min_evolved_value
         if supply_diag_last is not None:
@@ -4026,7 +3666,7 @@ def run_zero_d(
             "mass_loss_surface_solid_marsRP": M_loss_cum,
             "mass_loss_tau_clip_spill": M_spill_cum,
         }
-        if phase7_enabled:
+        if extended_diag_enabled:
             channels_total = M_loss_cum + M_sink_cum
             denom = abs(channels_total) if abs(channels_total) > 0.0 else 1.0
             delta_channels = ((mass_lost - channels_total) / denom) * 100.0
@@ -4215,7 +3855,7 @@ def run_zero_d(
             step_diag_path_cfg=step_diag_path_cfg,
             step_diag_path=step_diag_path,
             orbit_rollup_enabled=orbit_rollup_enabled,
-            phase7_enabled=phase7_enabled,
+            extended_diag_enabled=extended_diag_enabled,
         )
     else:
         try:
@@ -4295,26 +3935,26 @@ def run_zero_d(
     supply_rate_scaled_initial_final = supply_rate_scaled_initial
     if supply_rate_scaled_initial_final is None:
         supply_rate_scaled_initial_final = _first_finite(supply_rate_scaled_track)
-    phase7_max_rate = float("nan")
-    phase7_max_rate_time = None
-    phase7_median_ts_ratio = float("nan")
+    extended_max_rate = float("nan")
+    extended_max_rate_time = None
+    extended_median_ts_ratio = float("nan")
     tau_gate_block_fraction = (
         float(tau_gate_block_time / total_time_elapsed)
         if total_time_elapsed > 0.0
         else float("nan")
     )
-    if phase7_enabled:
-        for rate_val, time_val in zip(phase7_total_rate_track, phase7_total_rate_time_track):
+    if extended_diag_enabled:
+        for rate_val, time_val in zip(extended_total_rate_track, extended_total_rate_time_track):
             if not math.isfinite(rate_val):
                 continue
-            if not math.isfinite(phase7_max_rate) or rate_val > phase7_max_rate:
-                phase7_max_rate = float(rate_val)
-                phase7_max_rate_time = float(time_val)
-        if phase7_ts_ratio_track:
-            ts_arr = np.asarray(phase7_ts_ratio_track, dtype=float)
+            if not math.isfinite(extended_max_rate) or rate_val > extended_max_rate:
+                extended_max_rate = float(rate_val)
+                extended_max_rate_time = float(time_val)
+        if extended_ts_ratio_track:
+            ts_arr = np.asarray(extended_ts_ratio_track, dtype=float)
             ts_arr = ts_arr[np.isfinite(ts_arr)]
             if ts_arr.size:
-                phase7_median_ts_ratio = float(np.median(ts_arr))
+                extended_median_ts_ratio = float(np.median(ts_arr))
     reservoir_remaining_final = supply_state.reservoir_remaining_Mmars() if supply_state else None
     reservoir_fraction_final = supply_state.reservoir_fraction() if supply_state else None
     reservoir_mass_used = None
@@ -4631,18 +4271,18 @@ def run_zero_d(
         },
     }
     summary["scope_limitations"] = scope_limitations_summary
-    if phase7_enabled:
+    if extended_diag_enabled:
         summary.update(
             {
                 "M_loss_blowout_total": M_loss_cum,
                 "M_loss_sink_total": M_sink_cum,
                 "M_loss_total": M_loss_cum + M_sink_cum,
-                "max_mloss_rate": phase7_max_rate,
-                "max_mloss_rate_time": phase7_max_rate_time,
-                "median_ts_ratio": phase7_median_ts_ratio,
+                "max_mloss_rate": extended_max_rate,
+                "max_mloss_rate_time": extended_max_rate_time,
+                "median_ts_ratio": extended_median_ts_ratio,
                 "median_gate_factor": gate_median,
                 "tau_gate_blocked_time_fraction": tau_gate_block_fraction,
-                "phase7_diagnostics_version": phase7_schema_version,
+                "extended_diagnostics_version": extended_diag_version,
             }
         )
     summary["inner_disk_scope"] = inner_scope_flag
@@ -5091,245 +4731,6 @@ def run_zero_d(
         )
 
 
-def _run_phase5_variant(
-    base_cfg: Config,
-    variant: str,
-    mode: str,
-    base_outdir: Path,
-    duration_years: float,
-    *,
-    enforce_mass_budget: bool,
-) -> _Phase5VariantResult:
-    """Execute a single-process variant run and capture its artifacts."""
-
-    variant_cfg = _clone_config(base_cfg)
-    if hasattr(variant_cfg, "phase5"):
-        variant_cfg.phase5.compare.enable = False
-    variant_cfg.physics_mode = mode
-    if duration_years > 0.0:
-        variant_cfg.numerics.t_end_years = duration_years
-        variant_cfg.numerics.t_end_orbits = None
-        if hasattr(variant_cfg, "scope") and variant_cfg.scope is not None:
-            variant_cfg.scope.analysis_years = duration_years
-    variant_dir = base_outdir / "variants" / f"variant={variant}"
-    variant_dir.mkdir(parents=True, exist_ok=True)
-    variant_cfg.io.outdir = str(variant_dir)
-    logger.info(
-        "Phase5 comparison: running variant=%s duration=%.3f yr outdir=%s",
-        variant,
-        duration_years,
-        variant_dir,
-    )
-    run_zero_d(
-        variant_cfg,
-        enforce_mass_budget=enforce_mass_budget,
-        physics_mode_override=None,
-        physics_mode_source_override="phase5_compare",
-    )
-    summary_path = variant_dir / "summary.json"
-    run_config_path = variant_dir / "run_config.json"
-    summary = _read_json(summary_path)
-    run_config_payload = _read_json(run_config_path)
-    series_paths: Dict[str, Path] = {}
-    for name in ("run.parquet", "diagnostics.parquet", "psd_hist.parquet"):
-        candidate = variant_dir / "series" / name
-        if candidate.exists():
-            series_paths[name] = candidate
-    mass_budget_path = variant_dir / "checks" / "mass_budget.csv"
-    if not mass_budget_path.exists():
-        mass_budget_path = None
-    orbit_rollup_path = variant_dir / "orbit_rollup.csv"
-    if not orbit_rollup_path.exists():
-        orbit_rollup_path = None
-    return _Phase5VariantResult(
-        variant=variant,
-        mode=mode,
-        outdir=variant_dir,
-        summary=summary,
-        run_config=run_config_payload,
-        series_paths=series_paths,
-        mass_budget_path=mass_budget_path,
-        orbit_rollup_path=orbit_rollup_path,
-    )
-
-
-def _write_phase5_comparison_products(
-    base_outdir: Path,
-    duration_years: float,
-    results: List[_Phase5VariantResult],
-) -> None:
-    """Aggregate per-variant artifacts into the comparison outputs."""
-
-    if not results:
-        raise RuntimeError("Phase5 comparison runner requires at least one variant result")
-    base_outdir.mkdir(parents=True, exist_ok=True)
-    series_names = ("run.parquet", "diagnostics.parquet", "psd_hist.parquet")
-    run_tables: Dict[str, pd.DataFrame] = {}
-    for name in series_names:
-        frames: List[pd.DataFrame] = []
-        for res in results:
-            path = res.series_paths.get(name)
-            if path is None or not path.exists():
-                continue
-            df = pd.read_parquet(path)
-            if name == "run.parquet":
-                run_tables[res.variant] = df
-            frames.append(df.assign(variant=res.variant, physics_mode=res.mode))
-        if frames:
-            combined = pd.concat(frames, ignore_index=True)
-            writer.write_parquet(combined, base_outdir / "series" / name)
-
-    budget_frames: List[pd.DataFrame] = []
-    for res in results:
-        path = res.mass_budget_path
-        if path is None or not path.exists():
-            continue
-        df = pd.read_csv(path)
-        df["variant"] = res.variant
-        df["physics_mode"] = res.mode
-        budget_frames.append(df)
-    if budget_frames:
-        checks_dir = base_outdir / "checks"
-        checks_dir.mkdir(parents=True, exist_ok=True)
-        pd.concat(budget_frames, ignore_index=True).to_csv(
-            checks_dir / "mass_budget.csv", index=False
-        )
-
-    anchor_res = results[0]
-    if anchor_res.orbit_rollup_path and anchor_res.orbit_rollup_path.exists():
-        destination = base_outdir / "orbit_rollup.csv"
-        destination.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copyfile(anchor_res.orbit_rollup_path, destination)
-
-    def _mean_from_df(df: Optional[pd.DataFrame], column: str) -> float:
-        if df is None or column not in df or df.empty:
-            return float("nan")
-        return float(df[column].mean())
-
-    def _final_value(df: Optional[pd.DataFrame], column: str) -> Optional[float]:
-        if df is None or column not in df or df.empty:
-            return None
-        series = df[column].dropna()
-        if series.empty:
-            return None
-        return float(series.iloc[-1])
-
-    comparison_rows: List[Dict[str, Any]] = []
-    for res in results:
-        df = run_tables.get(res.variant)
-        summary = res.summary
-        m_loss_sinks = float(summary.get("M_loss_from_sinks", 0.0) or 0.0)
-        m_loss_sub = float(summary.get("M_loss_from_sublimation", 0.0) or 0.0)
-        comparison_rows.append(
-            {
-                "variant": res.variant,
-                "physics_mode": res.mode,
-                "duration_yr": float(summary.get("analysis_window_years", duration_years)),
-                "M_loss_total": float(summary.get("M_loss", float("nan"))),
-                "M_loss_blowout": float(summary.get("M_loss_rp_mars", 0.0) or 0.0),
-                "M_loss_other_sinks": max(m_loss_sinks - m_loss_sub, 0.0),
-                "beta_mean": _mean_from_df(df, "beta_at_smin_effective"),
-                "a_blow_mean": _mean_from_df(df, "a_blow"),
-                "s_min_final": _final_value(df, "s_min"),
-                "tau1_area_final": _final_value(df, "Sigma_tau1"),
-                "notes": f"{res.variant} variant",
-            }
-        )
-    if comparison_rows:
-        series_dir = base_outdir / "series"
-        series_dir.mkdir(parents=True, exist_ok=True)
-        pd.DataFrame(comparison_rows).to_csv(
-            series_dir / "orbit_rollup_comparison.csv", index=False
-        )
-
-    combined_summary = copy.deepcopy(anchor_res.summary)
-    phase5_section = combined_summary.setdefault("phase5", {})
-    variant_payloads: List[Dict[str, Any]] = []
-    for res in results:
-        variant_summary = res.summary
-        config_hash = _hash_payload(res.run_config)
-        s_min_components = variant_summary.get("s_min_components", {})
-        variants_entry = {
-            "variant": res.variant,
-            "physics_mode": res.mode,
-            "outdir": str(res.outdir),
-            "summary_path": str(res.outdir / "summary.json"),
-            "run_config_path": str(res.outdir / "run_config.json"),
-            "config_hash_sha256": config_hash,
-            "analysis_years": variant_summary.get("analysis_window_years"),
-            "r_m_used": variant_summary.get("r_m_used"),
-            "s_min_initial": variant_summary.get("s_min_config", s_min_components.get("config")),
-            "M_loss": variant_summary.get("M_loss"),
-            "M_loss_blowout": variant_summary.get("M_loss_rp_mars"),
-            "M_loss_sinks": variant_summary.get("M_loss_from_sinks"),
-            "M_loss_sublimation": variant_summary.get("M_loss_from_sublimation"),
-        }
-        variant_payloads.append(variants_entry)
-    phase5_section["compare"] = {
-        "enabled": True,
-        "duration_years": duration_years,
-        "default_variant": anchor_res.variant,
-        "variants": variant_payloads,
-        "orbit_rollup_comparison_path": str(base_outdir / "series" / "orbit_rollup_comparison.csv"),
-    }
-    combined_summary["comparison_mode"] = "phase5_physics_modes"
-    combined_summary["comparison_variants"] = [res.variant for res in results]
-    writer.write_summary(combined_summary, base_outdir / "summary.json")
-
-    combined_run_config = copy.deepcopy(anchor_res.run_config)
-    combined_run_config["comparison_mode"] = "phase5_physics_modes"
-    combined_run_config["phase5_compare"] = {
-        "duration_years": duration_years,
-        "variants": [
-            {
-                "variant": res.variant,
-                "physics_mode": res.mode,
-                "outdir": str(res.outdir),
-                "summary_path": str(res.outdir / "summary.json"),
-                "run_config_path": str(res.outdir / "run_config.json"),
-                "config_hash_sha256": _hash_payload(res.run_config),
-            }
-            for res in results
-        ],
-    }
-    writer.write_run_config(combined_run_config, base_outdir / "run_config.json")
-
-
-def run_phase5_comparison(
-    cfg: Config,
-    *,
-    enforce_mass_budget: bool = False,
-    variants_spec: Optional[List[Dict[str, str]]] = None,
-) -> None:
-    """Run the Phase 5 dual single-process comparison workflow."""
-
-    compare_cfg = getattr(getattr(cfg, "phase5", None), "compare", None)
-    variants = variants_spec or _prepare_phase5_variants(compare_cfg)
-    duration_years = float(getattr(compare_cfg, "duration_years", 0.0) or 0.0)
-    if duration_years <= 0.0:
-        scope_cfg = getattr(cfg, "scope", None)
-        duration_years = float(getattr(scope_cfg, "analysis_years", 2.0) or 2.0)
-    base_outdir = Path(cfg.io.outdir)
-    logger.info(
-        "Phase5 comparison enabled: duration=%.3f yr base_outdir=%s",
-        duration_years,
-        base_outdir,
-    )
-    results: List[_Phase5VariantResult] = []
-    for spec in variants:
-        results.append(
-            _run_phase5_variant(
-                cfg,
-                spec["label"],
-                spec["mode"],
-                base_outdir,
-                duration_years,
-                enforce_mass_budget=enforce_mass_budget,
-            )
-        )
-    _write_phase5_comparison_products(base_outdir, duration_years, results)
-
-
 def main(argv: Optional[List[str]] = None) -> None:
     """Command line entry point."""
 
@@ -5362,18 +4763,6 @@ def main(argv: Optional[List[str]] = None) -> None:
         "--physics-mode",
         choices=["default", "sublimation_only", "collisions_only"],
         help="Override physics_mode from the CLI",
-    )
-    parser.add_argument(
-        "--compare-physics-modes",
-        dest="compare_physics_modes",
-        action="store_true",
-        help="Run both physics_mode variants sequentially for comparison output.",
-    )
-    parser.add_argument(
-        "--compare-single-processes",
-        dest="compare_physics_modes",
-        action="store_true",
-        help=argparse.SUPPRESS,
     )
     parser.add_argument(
         "--override",
@@ -5411,29 +4800,12 @@ def main(argv: Optional[List[str]] = None) -> None:
         cfg.sinks.mode = args.sinks
     if args.physics_mode is not None:
         cfg.physics_mode = args.physics_mode
-    compare_block = getattr(getattr(cfg, "phase5", None), "compare", None)
-    compare_config_enabled = bool(getattr(compare_block, "enable", False)) if compare_block else False
-    compare_requested = bool(args.compare_physics_modes or compare_config_enabled)
-    if compare_requested:
-        if compare_block is None:
-            raise ValueError(
-                "--compare-physics-modes requires phase5.compare to define mode_a/mode_b"
-            )
-        variants_spec = _prepare_phase5_variants(compare_block)
-        if args.compare_physics_modes:
-            compare_block.enable = True
-        run_phase5_comparison(
-            cfg,
-            enforce_mass_budget=args.enforce_mass_budget,
-            variants_spec=variants_spec,
-        )
-    else:
-        run_zero_d(
-            cfg,
-            enforce_mass_budget=args.enforce_mass_budget,
-            physics_mode_override=args.physics_mode,
-            physics_mode_source_override="cli" if args.physics_mode is not None else None,
-        )
+    run_zero_d(
+        cfg,
+        enforce_mass_budget=args.enforce_mass_budget,
+        physics_mode_override=args.physics_mode,
+        physics_mode_source_override="cli" if args.physics_mode is not None else None,
+    )
 
 __all__ = [
     "RunConfig",
@@ -5442,7 +4814,6 @@ __all__ = [
     "run_n_steps",
     "load_config",
     "run_zero_d",
-    "run_phase5_comparison",
     "main",
     "MassBudgetViolationError",
 ]

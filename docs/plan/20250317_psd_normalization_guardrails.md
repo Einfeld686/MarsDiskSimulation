@@ -84,6 +84,6 @@
 
 ### 関連テスト
 
-- [tests/test_psd_kappa.py](file:///Users/daichi/marsshearingsheet/tests/test_psd_kappa.py): `compute_kappa` の単体テスト
+- [tests/integration/test_psd_kappa.py](file:///Users/daichi/marsshearingsheet/tests/integration/test_psd_kappa.py): `compute_kappa` の単体テスト
 - [tests/test_opacity_guardrails.py](file:///Users/daichi/marsshearingsheet/tests/test_opacity_guardrails.py): 不透明度ガードレールのテスト
 

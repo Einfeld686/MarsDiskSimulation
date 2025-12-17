@@ -5,10 +5,6 @@ physics_mode: default    # collisions + sublimation
 process:
   state_tagging:
     enabled: false
-phase5:
-  compare:
-    enable: false
-    duration_years: 2.0
 geometry:
   mode: 0D
 chi_blow: auto
@@ -166,9 +162,9 @@ numerics:
   orbit_rollup: true
   dt_over_t_blow_max: 0.1
 diagnostics:
-  phase7:
+  extended_diagnostics:
     enable: false
-    schema_version: phase7-minimal-v1
+    schema_version: extended-minimal-v1
 io:
   outdir: out/temp_supply_grid/T6000_eps0p1_mu0p0440849
   debug_sinks: false

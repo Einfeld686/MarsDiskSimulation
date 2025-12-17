@@ -48,12 +48,12 @@ RUN_STAGE_HINTS = [
 
 # テスト自動補完のゆるいヒント（無ければ追加するだけで既存は保持）
 TEST_HINTS = {
-    "blowout": ["tests/test_scalings.py", "tests/test_fast_blowout.py"],
-    "shield": ["tests/test_radiation_shielding_logging.py", "tests/test_blowout_gate.py"],
-    "psd": ["tests/test_psd_kappa.py", "tests/test_surface_outflux_wavy.py"],
-    "tcoll": ["tests/test_scalings.py", "tests/test_phase3_surface_blowout.py"],
-    "sublim": ["tests/test_sinks_none.py", "tests/test_sublimation_phase_gate.py"],
-    "radius": ["tests/test_scope_limitations_metadata.py"],
+    "blowout": ["tests/integration/test_scalings.py", "tests/integration/test_fast_blowout.py"],
+    "shield": ["tests/integration/test_radiation_shielding_logging.py", "tests/integration/test_blowout_gate.py"],
+    "psd": ["tests/integration/test_psd_kappa.py", "tests/integration/test_surface_outflux_wavy.py"],
+    "tcoll": ["tests/integration/test_scalings.py", "tests/integration/test_phase3_surface_blowout.py"],
+    "sublim": ["tests/integration/test_sinks_none.py", "tests/integration/test_sublimation_phase_gate.py"],
+    "radius": ["tests/integration/test_scope_limitations_metadata.py"],
 }
 
 

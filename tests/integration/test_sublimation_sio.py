@@ -142,6 +142,7 @@ def test_auto_records_validity_when_out_of_range(caplog) -> None:
         A=13.613,
         B=17850.0,
         valid_K=(1270.0, 1600.0),
+        enable_liquid_branch=False,
     )
     with caplog.at_level("WARNING"):
         flux = mass_flux_hkl(3000.0, params)
@@ -168,10 +169,14 @@ def test_run_config_records_psat_selection(tmp_path) -> None:
     outdir = tmp_path / "out"
     config_path = tmp_path / "config.yml"
     yaml = YAML()
+    r_rm = 2.2
     config = {
-        "geometry": {"mode": "0D", "r": 2.2 * constants.R_MARS},
+        "geometry": {"mode": "0D"},
+        "disk": {
+            "geometry": {"r_in_RM": r_rm, "r_out_RM": r_rm, "r_profile": "uniform", "p_index": 0.0}
+        },
         "material": {"rho": 3000.0},
-        "temps": {"T_M": 1600.0},
+        "radiation": {"TM_K": 1600.0},
         "sizes": {"s_min": 1.0e-6, "s_max": 3.0, "n_bins": 20},
         "initial": {"mass_total": 1.0e-6, "s0_mode": "upper"},
         "dynamics": {
@@ -192,10 +197,10 @@ def test_run_config_records_psat_selection(tmp_path) -> None:
                 "psat_model": "auto",
                 "alpha_evap": 0.007,
                 "mu": 0.0440849,
-                    "A": 13.613,
-                    "B": 17850.0,
-                    "valid_K": [650.0, 900.0],
-        "psat_table_path": str(table_path),
+                "A": 13.613,
+                "B": 17850.0,
+                "valid_K": [650.0, 900.0],
+                "psat_table_path": str(table_path),
                 "eta_instant": 0.1,
                 "dT": 50.0,
                 "P_gas": 0.0,
@@ -231,5 +236,10 @@ def test_run_config_records_psat_selection(tmp_path) -> None:
     assert prov["B"] == pytest.approx(17850.0, rel=1e-6)
     assert prov["psat_table_buffer_K"] == pytest.approx(75.0, rel=1e-6)
     assert prov["T_req"] is not None
-    assert prov["psat_validity_status"] in {"within", "above", "below", "unknown"}
-    assert prov["psat_validity_delta_K"] is not None
+    status = prov["psat_validity_status"]
+    assert status in {"within", "above", "below", "unknown"}
+    delta = prov["psat_validity_delta_K"]
+    if status == "within":
+        assert delta is None
+    else:
+        assert delta is not None

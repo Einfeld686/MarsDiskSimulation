@@ -471,11 +471,11 @@ def choose_psat_backend(
 
                 return PsatSelection("tabulated", evaluator, metadata)
 
-                selection = _local_clausius_fit_selection(T_req, params, info)
-                if selection is not None:
-                    selection.metadata.setdefault(
-                        "selection_reason",
-                        "temperature outside tabulated range; applied local Clausius fit",
+            selection = _local_clausius_fit_selection(T_req, params, info)
+            if selection is not None:
+                selection.metadata.setdefault(
+                    "selection_reason",
+                    "temperature outside tabulated range; applied local Clausius fit",
                 )
                 fit_center = selection.metadata.get("fit_T_center", Tmin)
                 delta = abs(float(T_req) - float(fit_center))
@@ -499,7 +499,6 @@ def choose_psat_backend(
         return _baseline_clausius_selection(
             params,
             "auto fallback to Clausius baseline",
-            model_name="clausius",
             A_override=A_active,
             B_override=B_active,
             valid_override=valid_range,

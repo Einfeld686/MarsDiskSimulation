@@ -17,6 +17,7 @@ def _build_series_frame() -> pd.DataFrame:
         "T_M_used": [2500.0, 2490.0],
         "rad_flux_Mars": [1.0, 1.0],
         "tau": [0.01, 0.01],
+        "tau_los_mars": [0.01, 0.01],
         "a_blow": [1e-6, 1e-6],
         "a_blow_at_smin": [1e-6, 1.0e-6],
         "s_min": [1e-6, 1.1e-6],

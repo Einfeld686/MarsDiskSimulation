@@ -52,7 +52,8 @@ def test_melt_lognormal_mixture_mass_and_cut():
     )
     state = psd.apply_mass_weights(state, weights, rho=state["rho"])
     mass_profile = _mass_profile(state)
-    assert np.isclose(np.sum(mass_profile), 1.0, rtol=1e-10, atol=1e-12)
+    expected_mass_norm = (4.0 / 3.0) * math.pi * state["rho"]
+    assert np.isclose(np.sum(mass_profile), expected_mass_norm, rtol=1e-10, atol=1e-8)
     assert np.all(mass_profile[state["sizes"] < melt_cfg.s_cut_condensation] == 0.0)
 
     sigma_target = 12.5
@@ -129,7 +130,8 @@ def test_truncated_powerlaw_respects_bounds():
     state = psd.apply_mass_weights(state, weights, rho=state["rho"])
     mass_profile = _mass_profile(state)
     sizes = np.asarray(state["sizes"], dtype=float)
-    assert np.isclose(np.sum(mass_profile), 1.0, rtol=1e-10, atol=1e-12)
+    expected_mass_norm = (4.0 / 3.0) * math.pi * state["rho"]
+    assert np.isclose(np.sum(mass_profile), expected_mass_norm, rtol=1e-10, atol=1e-8)
     assert np.all(mass_profile[sizes < cfg.s_cut_condensation] == 0.0)
     assert np.all(mass_profile[sizes > cfg.s_max_solid] == 0.0)
     high_fraction = np.sum(mass_profile[sizes >= 0.3 * cfg.s_max_solid])

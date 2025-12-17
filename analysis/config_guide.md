@@ -81,7 +81,6 @@ configs/<scenario>.yml
 ├── shielding         # 自遮蔽
 ├── phase             # 相状態判定（entrypoint 統一済み）
 ├── blowout           # 表層ブローアウトの挙動
-├── phase5/process    # 追加診断・比較ラン用のトグル
 ├── numerics          # 数値パラメータ
 ├── diagnostics       # 追加ダイアグノスティクス
 └── io                # 入出力設定

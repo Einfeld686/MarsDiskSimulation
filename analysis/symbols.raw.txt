@@ -241,6 +241,7 @@ marsdisk/io/checkpoint.py:64:def save_checkpoint(path: Path, state: CheckpointSt
 marsdisk/io/checkpoint.py:88:def load_checkpoint(path: Path, fmt: CheckpointFormat=None) -> CheckpointState
 marsdisk/io/checkpoint.py:118:def find_latest_checkpoint(dir_path: Path) -> Optional[Path]
 marsdisk/io/checkpoint.py:129:def prune_checkpoints(dir_path: Path, keep_last_n: int) -> None
+marsdisk/io/streaming.py:24:class StreamingState
 marsdisk/io/tables.py:28:def _approx_phi(tau: float, w0: float, g: float) -> float
 marsdisk/io/tables.py:34:class QPrTable
 marsdisk/io/tables.py:98:class PhiTable
@@ -369,16 +370,23 @@ marsdisk/physics/collide.py:18:def compute_collision_kernel_C1(N: Iterable[float
 marsdisk/physics/collide.py:81:def compute_prod_subblow_area_rate_C2(C: np.ndarray, m_subblow: np.ndarray) -> float
 marsdisk/physics/collisions_smol.py:48:class Smol0DStepResult
 marsdisk/physics/collisions_smol.py:82:class KernelEIState
-marsdisk/physics/collisions_smol.py:92:def supply_mass_rate_to_number_source(prod_subblow_mass_rate: float, s_bin_center: np.ndarray, m_bin: np.ndarray, s_min_eff: float, *, widths: np.ndarray | None=None, mode: str='min_bin', s_inj_min: float | None=None, s_inj_max: float | None=None, q: float=3.5) -> np.ndarray
-marsdisk/physics/collisions_smol.py:178:def _fragment_tensor(sizes: np.ndarray, masses: np.ndarray, v_rel: float | np.ndarray, rho: float, alpha_frag: float=3.5, *, use_numba: bool | None=None) -> np.ndarray
-marsdisk/physics/collisions_smol.py:301:def _blowout_sink_vector(sizes: np.ndarray, a_blow: float, Omega: float, enable_blowout: bool) -> np.ndarray
-marsdisk/physics/collisions_smol.py:317:def kernel_minimum_tcoll(C_kernel: np.ndarray) -> float
-marsdisk/physics/collisions_smol.py:329:def _supply_velocity_weight(delta_sigma: float, sigma_prev: float, mode: str='delta_sigma') -> float
-marsdisk/physics/collisions_smol.py:340:def _resolve_supply_velocity(cfg: 'SupplyInjectionVelocity | None', e_base: float, i_base: float) -> tuple[float, float]
-marsdisk/physics/collisions_smol.py:357:def _blend_supply_velocity(e_base: float, i_base: float, e_supply: float, i_supply: float, *, weight: float, mode: str='rms') -> tuple[float, float]
-marsdisk/physics/collisions_smol.py:379:def compute_kernel_ei_state(dynamics_cfg: 'Dynamics', tau_eff: float, a_orbit_m: float, v_k: float, sizes: np.ndarray, *, e_override: float | None=None, i_override: float | None=None) -> KernelEIState
-marsdisk/physics/collisions_smol.py:429:def compute_kernel_e_i_H(dynamics_cfg: 'Dynamics', tau_eff: float, a_orbit_m: float, v_k: float, sizes: np.ndarray) -> tuple[float, float, np.ndarray]
-marsdisk/physics/collisions_smol.py:450:def step_collisions_smol_0d(psd_state: MutableMapping[str, np.ndarray | float], sigma_surf: float, *, dt: float, prod_subblow_area_rate: float, r: float, Omega: float, a_blow: float, rho: float, e_value: float, i_value: float, sigma_tau1: float | None, enable_blowout: bool, t_sink: float | None, ds_dt_val: float | None=None, s_min_effective: float | None=None, dynamics_cfg: 'Dynamics | None'=None, tau_eff: float | None=None, collisions_enabled: bool=True, mass_conserving_sublimation: bool=False, supply_injection_mode: str='min_bin', supply_s_inj_min: float | None=None, supply_s_inj_max: float | None=None, supply_q: float=3.5, supply_velocity_cfg: 'SupplyInjectionVelocity | None'=None, headroom_policy: str='clip') -> Smol0DStepResult
+marsdisk/physics/collisions_smol.py:93:class TimeOrbitParams
+marsdisk/physics/collisions_smol.py:102:class MaterialParams
+marsdisk/physics/collisions_smol.py:111:class DynamicsParams
+marsdisk/physics/collisions_smol.py:121:class SupplyParams
+marsdisk/physics/collisions_smol.py:133:class CollisionControlFlags
+marsdisk/physics/collisions_smol.py:146:class CollisionStepContext
+marsdisk/physics/collisions_smol.py:157:def supply_mass_rate_to_number_source(prod_subblow_mass_rate: float, s_bin_center: np.ndarray, m_bin: np.ndarray, s_min_eff: float, *, widths: np.ndarray | None=None, mode: str='min_bin', s_inj_min: float | None=None, s_inj_max: float | None=None, q: float=3.5) -> np.ndarray
+marsdisk/physics/collisions_smol.py:243:def _fragment_tensor(sizes: np.ndarray, masses: np.ndarray, v_rel: float | np.ndarray, rho: float, alpha_frag: float=3.5, *, use_numba: bool | None=None) -> np.ndarray
+marsdisk/physics/collisions_smol.py:366:def _blowout_sink_vector(sizes: np.ndarray, a_blow: float, Omega: float, enable_blowout: bool) -> np.ndarray
+marsdisk/physics/collisions_smol.py:382:def kernel_minimum_tcoll(C_kernel: np.ndarray) -> float
+marsdisk/physics/collisions_smol.py:394:def _supply_velocity_weight(delta_sigma: float, sigma_prev: float, mode: str='delta_sigma') -> float
+marsdisk/physics/collisions_smol.py:405:def _resolve_supply_velocity(cfg: 'SupplyInjectionVelocity | None', e_base: float, i_base: float) -> tuple[float, float]
+marsdisk/physics/collisions_smol.py:422:def _blend_supply_velocity(e_base: float, i_base: float, e_supply: float, i_supply: float, *, weight: float, mode: str='rms') -> tuple[float, float]
+marsdisk/physics/collisions_smol.py:444:def compute_kernel_ei_state(dynamics_cfg: 'Dynamics', tau_eff: float, a_orbit_m: float, v_k: float, sizes: np.ndarray, *, e_override: float | None=None, i_override: float | None=None) -> KernelEIState
+marsdisk/physics/collisions_smol.py:494:def compute_kernel_e_i_H(dynamics_cfg: 'Dynamics', tau_eff: float, a_orbit_m: float, v_k: float, sizes: np.ndarray) -> tuple[float, float, np.ndarray]
+marsdisk/physics/collisions_smol.py:515:def step_collisions(ctx: CollisionStepContext, psd_state: MutableMapping[str, np.ndarray | float]) -> Smol0DStepResult
+marsdisk/physics/collisions_smol.py:550:def step_collisions_smol_0d(psd_state: MutableMapping[str, np.ndarray | float], sigma_surf: float, *, dt: float, prod_subblow_area_rate: float, r: float, Omega: float, a_blow: float, rho: float, e_value: float, i_value: float, sigma_tau1: float | None, enable_blowout: bool, t_sink: float | None, ds_dt_val: float | None=None, s_min_effective: float | None=None, dynamics_cfg: 'Dynamics | None'=None, tau_eff: float | None=None, collisions_enabled: bool=True, mass_conserving_sublimation: bool=False, supply_injection_mode: str='min_bin', supply_s_inj_min: float | None=None, supply_s_inj_max: float | None=None, supply_q: float=3.5, supply_velocity_cfg: 'SupplyInjectionVelocity | None'=None, headroom_policy: str='clip') -> Smol0DStepResult
 marsdisk/physics/dynamics.py:18:def v_ij(e: float, i: float, v_k: float=1.0) -> float
 marsdisk/physics/dynamics.py:48:def v_rel_pericenter(e: float, v_k: float) -> float
 marsdisk/physics/dynamics.py:60:def solve_c_eq(tau: float, e: float, eps_model: Callable[[float], float], *, f_wake: float=1.0, max_iter: int=100, tol: float=1e-06) -> float
@@ -454,11 +462,11 @@ marsdisk/physics/sublimation.py:306:def _local_clausius_fit_selection(T_req: flo
 marsdisk/physics/sublimation.py:375:def _baseline_clausius_selection(params: SublimationParams, reason: str, *, model_name: str='clausius(baseline)', A_override: Optional[float]=None, B_override: Optional[float]=None, valid_override: Optional[Tuple[float, float]]=None, branch: Optional[str]=None) -> PsatSelection
 marsdisk/physics/sublimation.py:412:def p_sat_tabulated(T: float, params: SublimationParams) -> float
 marsdisk/physics/sublimation.py:429:def choose_psat_backend(T_req: float, params: SublimationParams, table_meta: Optional[Dict[str, Any]]=None) -> PsatSelection
-marsdisk/physics/sublimation.py:556:def _store_psat_selection(params: SublimationParams, selection: PsatSelection, T_req: float, P_value: float) -> None
-marsdisk/physics/sublimation.py:585:def p_sat(T: float, params: SublimationParams) -> float
-marsdisk/physics/sublimation.py:594:def mass_flux_hkl(T: float, params: SublimationParams) -> float
-marsdisk/physics/sublimation.py:653:def s_sink_from_timescale(T: float, rho: float, t_ref: float, params: SublimationParams) -> float
-marsdisk/physics/sublimation.py:672:def sublimation_sink_from_dsdt(s_grid_m: np.ndarray, N_k: np.ndarray, ds_dt_k: np.ndarray, m_k: np.ndarray) -> tuple[np.ndarray, float]
+marsdisk/physics/sublimation.py:555:def _store_psat_selection(params: SublimationParams, selection: PsatSelection, T_req: float, P_value: float) -> None
+marsdisk/physics/sublimation.py:584:def p_sat(T: float, params: SublimationParams) -> float
+marsdisk/physics/sublimation.py:593:def mass_flux_hkl(T: float, params: SublimationParams) -> float
+marsdisk/physics/sublimation.py:652:def s_sink_from_timescale(T: float, rho: float, t_ref: float, params: SublimationParams) -> float
+marsdisk/physics/sublimation.py:671:def sublimation_sink_from_dsdt(s_grid_m: np.ndarray, N_k: np.ndarray, ds_dt_k: np.ndarray, m_k: np.ndarray) -> tuple[np.ndarray, float]
 marsdisk/physics/supply.py:28:class _TableData
 marsdisk/physics/supply.py:70:class _TemperatureTable
 marsdisk/physics/supply.py:101:class SupplyEvalResult
@@ -506,48 +514,40 @@ marsdisk/physics_step.py:322:def compute_sublimation(T_M: float, r: float, rho: 
 marsdisk/physics_step.py:383:def step_surface_layer(sigma_surf: float, prod_rate: float, dt: float, Omega: float, *, tau: Optional[float]=None, t_sink: Optional[float]=None, sigma_tau1: Optional[float]=None, enable_blowout: bool=True, chi_blow: float=1.0) -> SurfaceStepResult
 marsdisk/physics_step.py:465:def fast_blowout_correction_factor(ratio: float) -> float
 marsdisk/physics_step.py:489:def compute_gate_factor(t_blow: Optional[float], t_solid: Optional[float]) -> float
-marsdisk/run.py:87:def _log_stage(label: str, *, extra: Optional[Dict[str, Any]]=None) -> None
+marsdisk/run.py:91:def _log_stage(label: str, *, extra: Optional[Dict[str, Any]]=None) -> None
 marsdisk/run.py:108:def _ensure_finite_kappa(value: float, label: str='kappa') -> float
 marsdisk/run.py:124:def _resolve_los_factor(los_geom: Optional[object]) -> float
 marsdisk/run.py:140:def compute_phase_tau_fields(kappa_surf: float, sigma_for_tau: float, los_factor: float, phase_tau_field: str) -> Tuple[float, float, float]
-marsdisk/run.py:156:class ProgressReporter
-marsdisk/run.py:265:def _parse_override_value(raw: str) -> Any
-marsdisk/run.py:292:def _apply_overrides_dict(payload: Dict[str, Any], overrides: Sequence[str]) -> Dict[str, Any]
-marsdisk/run.py:330:def _merge_physics_section(payload: Dict[str, Any]) -> Dict[str, Any]
-marsdisk/run.py:349:def _safe_float(value: Any) -> Optional[float]
-marsdisk/run.py:361:def _float_or_nan(value: Any) -> float
-marsdisk/run.py:373:def _format_exception_short(exc: Exception, *, width: int=600) -> str
-marsdisk/run.py:384:def _resolve_feedback_tau_field(tau_field: Optional[str]) -> str
-marsdisk/run.py:397:def _derive_seed_components(cfg: Config) -> str
-marsdisk/run.py:422:def _resolve_seed(cfg: Config) -> tuple[int, str, str]
-marsdisk/run.py:437:def _auto_chi_blow(beta: float, qpr: float) -> float
-marsdisk/run.py:452:def _fast_blowout_correction_factor(ratio: float) -> float
-marsdisk/run.py:472:def _compute_gate_factor(t_blow: Optional[float], t_solid: Optional[float]) -> float
-marsdisk/run.py:494:def _human_bytes(value: float) -> str
-marsdisk/run.py:506:def _memory_estimate(n_steps: int, n_bins: int, run_row_bytes: float=MEMORY_RUN_ROW_BYTES, psd_row_bytes: float=MEMORY_PSD_ROW_BYTES, *, smol_value_bytes: float=8.0) -> tuple[str, str]
-marsdisk/run.py:531:def _normalise_physics_mode(value: Any) -> str
-marsdisk/run.py:547:def _clone_config(cfg: Config) -> Config
-marsdisk/run.py:555:def _resolve_time_grid(numerics: Any, Omega: float, t_orb: float, *, temp_runtime: Optional[tempdriver.TemperatureDriverRuntime]=None) -> tuple[float, float, float, int, Dict[str, Any]]
-marsdisk/run.py:657:class _Phase5VariantResult
-marsdisk/run.py:670:def _read_json(path: Path) -> Dict[str, Any]
-marsdisk/run.py:675:def _hash_payload(payload: Mapping[str, Any]) -> str
-marsdisk/run.py:680:def _prepare_phase5_variants(compare_cfg: Any) -> List[Dict[str, str]]
-marsdisk/run.py:713:class RunConfig
-marsdisk/run.py:730:class RunState
-marsdisk/run.py:740:class ZeroDHistory
-marsdisk/run.py:764:class StreamingState
-marsdisk/run.py:946:def step(config: RunConfig, state: RunState, dt: float) -> Dict[str, float]
-marsdisk/run.py:998:def run_n_steps(config: RunConfig, state: RunState, n: int, dt: float, out_dir: Path | None=None) -> pd.DataFrame
-marsdisk/run.py:1028:def load_config(path: Path, overrides: Optional[Sequence[str]]=None) -> Config
-marsdisk/run.py:1053:def _gather_git_info() -> Dict[str, Any]
-marsdisk/run.py:1080:def _configure_logging(level: int, suppress_warnings: bool=False) -> None
-marsdisk/run.py:1091:class MassBudgetViolationError(RuntimeError)
-marsdisk/run.py:1095:def _write_zero_d_history(cfg: Config, df: pd.DataFrame, history: ZeroDHistory, *, step_diag_enabled: bool, step_diag_format: str, step_diag_path_cfg: Optional[Path], step_diag_path: Optional[Path], orbit_rollup_enabled: bool, phase7_enabled: bool) -> None
-marsdisk/run.py:1198:def run_zero_d(cfg: Config, *, enforce_mass_budget: bool=False, physics_mode_override: Optional[str]=None, physics_mode_source_override: Optional[str]=None) -> None
-marsdisk/run.py:5094:def _run_phase5_variant(base_cfg: Config, variant: str, mode: str, base_outdir: Path, duration_years: float, *, enforce_mass_budget: bool) -> _Phase5VariantResult
-marsdisk/run.py:5156:def _write_phase5_comparison_products(base_outdir: Path, duration_years: float, results: List[_Phase5VariantResult]) -> None
-marsdisk/run.py:5298:def run_phase5_comparison(cfg: Config, *, enforce_mass_budget: bool=False, variants_spec: Optional[List[Dict[str, str]]]=None) -> None
-marsdisk/run.py:5333:def main(argv: Optional[List[str]]=None) -> None
+marsdisk/run.py:155:def _parse_override_value(raw: str) -> Any
+marsdisk/run.py:182:def _apply_overrides_dict(payload: Dict[str, Any], overrides: Sequence[str]) -> Dict[str, Any]
+marsdisk/run.py:220:def _merge_physics_section(payload: Dict[str, Any]) -> Dict[str, Any]
+marsdisk/run.py:239:def _safe_float(value: Any) -> Optional[float]
+marsdisk/run.py:251:def _float_or_nan(value: Any) -> float
+marsdisk/run.py:263:def _format_exception_short(exc: Exception, *, width: int=600) -> str
+marsdisk/run.py:274:def _resolve_feedback_tau_field(tau_field: Optional[str]) -> str
+marsdisk/run.py:287:def _derive_seed_components(cfg: Config) -> str
+marsdisk/run.py:312:def _resolve_seed(cfg: Config) -> tuple[int, str, str]
+marsdisk/run.py:327:def _auto_chi_blow(beta: float, qpr: float) -> float
+marsdisk/run.py:342:def _fast_blowout_correction_factor(ratio: float) -> float
+marsdisk/run.py:362:def _compute_gate_factor(t_blow: Optional[float], t_solid: Optional[float]) -> float
+marsdisk/run.py:384:def _human_bytes(value: float) -> str
+marsdisk/run.py:396:def _memory_estimate(n_steps: int, n_bins: int, run_row_bytes: float=MEMORY_RUN_ROW_BYTES, psd_row_bytes: float=MEMORY_PSD_ROW_BYTES, *, smol_value_bytes: float=8.0) -> tuple[str, str]
+marsdisk/run.py:421:def _normalise_physics_mode(value: Any) -> str
+marsdisk/run.py:437:def _clone_config(cfg: Config) -> Config
+marsdisk/run.py:445:def _resolve_time_grid(numerics: Any, Omega: float, t_orb: float, *, temp_runtime: Optional[tempdriver.TemperatureDriverRuntime]=None) -> tuple[float, float, float, int, Dict[str, Any]]
+marsdisk/run.py:552:class RunConfig
+marsdisk/run.py:569:class RunState
+marsdisk/run.py:578:def step(config: RunConfig, state: RunState, dt: float) -> Dict[str, float]
+marsdisk/run.py:630:def run_n_steps(config: RunConfig, state: RunState, n: int, dt: float, out_dir: Path | None=None) -> pd.DataFrame
+marsdisk/run.py:660:def load_config(path: Path, overrides: Optional[Sequence[str]]=None) -> Config
+marsdisk/run.py:685:def _gather_git_info() -> Dict[str, Any]
+marsdisk/run.py:712:def _configure_logging(level: int, suppress_warnings: bool=False) -> None
+marsdisk/run.py:723:class MassBudgetViolationError(RuntimeError)
+marsdisk/run.py:727:def _write_zero_d_history(cfg: Config, df: pd.DataFrame, history: ZeroDHistory, *, step_diag_enabled: bool, step_diag_format: str, step_diag_path_cfg: Optional[Path], step_diag_path: Optional[Path], orbit_rollup_enabled: bool, extended_diag_enabled: bool) -> None
+marsdisk/run.py:830:def run_zero_d(cfg: Config, *, enforce_mass_budget: bool=False, physics_mode_override: Optional[str]=None, physics_mode_source_override: Optional[str]=None) -> None
+marsdisk/run.py:4734:def main(argv: Optional[List[str]]=None) -> None
+marsdisk/runtime/history.py:10:class ZeroDHistory
+marsdisk/runtime/progress.py:13:class ProgressReporter
 marsdisk/schema.py:23:class Geometry(BaseModel)
 marsdisk/schema.py:44:class DiskGeometry(BaseModel)
 marsdisk/schema.py:74:class Disk(BaseModel)
@@ -581,56 +581,27 @@ marsdisk/schema.py:888:class HydroEscapeConfig(BaseModel)
 marsdisk/schema.py:911:class Sinks(BaseModel)
 marsdisk/schema.py:935:class ProcessStateTagging(BaseModel)
 marsdisk/schema.py:944:class Process(BaseModel)
-marsdisk/schema.py:956:class Phase5CompareConfig(BaseModel)
-marsdisk/schema.py:986:class Phase5Config(BaseModel)
-marsdisk/schema.py:992:class PhaseThresholds(BaseModel)
-marsdisk/schema.py:1016:class PhaseConfig(BaseModel)
-marsdisk/schema.py:1097:class MarsTemperatureDriverConstant(BaseModel)
-marsdisk/schema.py:1110:class MarsTemperatureDriverTable(BaseModel)
-marsdisk/schema.py:1122:class MarsTemperatureDriverHyodo(BaseModel)
-marsdisk/schema.py:1130:class MarsTemperatureAutogen(BaseModel)
-marsdisk/schema.py:1162:class MarsTemperatureDriverConfig(BaseModel)
-marsdisk/schema.py:1221:class RadiationTauGate(BaseModel)
-marsdisk/schema.py:1228:class Radiation(BaseModel)
-marsdisk/schema.py:1287:class Shielding(BaseModel)
-marsdisk/schema.py:1348:class Blowout(BaseModel)
-marsdisk/schema.py:1366:class Checkpoint(BaseModel)
-marsdisk/schema.py:1393:class Resume(BaseModel)
-marsdisk/schema.py:1406:class Numerics(BaseModel)
-marsdisk/schema.py:1517:class StepDiagnostics(BaseModel)
-marsdisk/schema.py:1534:class Progress(BaseModel)
-marsdisk/schema.py:1548:class Streaming(BaseModel)
-marsdisk/schema.py:1591:class IO(BaseModel)
-marsdisk/schema.py:1622:class Phase7Diagnostics(BaseModel)
-marsdisk/schema.py:1635:class Diagnostics(BaseModel)
-marsdisk/schema.py:1641:class Config(BaseModel)
-marsdisk/tests/test_core.py:11:def test_constants_values()
-marsdisk/tests/test_core.py:17:def test_grid_relations()
-marsdisk/tests/test_core.py:24:def test_writer_and_tables(tmp_path: Path)
-marsdisk/tests/test_dynamics.py:4:def const_eps(v: float) -> float
-marsdisk/tests/test_dynamics.py:8:def test_v_ij_zero_limit()
-marsdisk/tests/test_dynamics.py:13:def test_c_eq_monotonic_tau_fwake()
-marsdisk/tests/test_dynamics.py:21:def test_update_e_relaxation()
-marsdisk/tests/test_dynamics_sampling.py:8:def _make_config(outdir)
-marsdisk/tests/test_dynamics_sampling.py:48:def test_stochastic_ei_sampling(tmp_path)
-marsdisk/tests/test_radiation_shielding.py:9:def test_blowout_radius_scales_with_temperature()
-marsdisk/tests/test_radiation_shielding.py:18:def test_beta_inverse_size_scaling()
-marsdisk/tests/test_radiation_shielding.py:28:def test_beta_respects_qpr_override()
-marsdisk/tests/test_radiation_shielding.py:38:def test_planck_mean_qpr_uses_table()
-marsdisk/tests/test_radiation_shielding.py:46:def test_clip_to_tau1_non_negative()
-marsdisk/tests/test_sublimation.py:8:def test_s_sink_from_timescale_logistic()
-marsdisk/tests/test_sublimation.py:14:def test_s_sub_boundary_fallback_warning()
-marsdisk/tests/test_sublimation.py:20:def test_compute_s_min_F2_uses_max()
-marsdisk/tests/test_surface_outflux.py:9:def _run(prod_rate: float, Omega: float, Sigma_tau1: float, steps: int=200)
-marsdisk/tests/test_surface_outflux.py:25:def test_supply_limited_outflux()
-marsdisk/tests/test_surface_outflux.py:34:def test_saturation_limited_outflux()
-marsdisk/tests/test_surface_outflux.py:43:def test_sink_increases_mass_loss()
-marsdisk/tests/test_surface_outflux.py:72:def test_los_factor_increases_tau_los(tmp_path)
-marsdisk/tests/test_timegrid_and_budget.py:13:def _tiny_config(outdir: Path, dt_init: float, n_steps: int) -> schema.Config
-marsdisk/tests/test_timegrid_and_budget.py:63:def test_time_grid_and_mass_budget(tmp_path)
-marsdisk/tests/test_viscosity.py:7:def _run(N: int, dt: float)
-marsdisk/tests/test_viscosity.py:18:def test_viscous_diffusion_converges_and_conserves_mass()
-marsdisk/tests/test_wyatt_scaling.py:6:def test_wyatt_scaling_inverse_tau()
+marsdisk/schema.py:956:class PhaseThresholds(BaseModel)
+marsdisk/schema.py:980:class PhaseConfig(BaseModel)
+marsdisk/schema.py:1061:class MarsTemperatureDriverConstant(BaseModel)
+marsdisk/schema.py:1074:class MarsTemperatureDriverTable(BaseModel)
+marsdisk/schema.py:1086:class MarsTemperatureDriverHyodo(BaseModel)
+marsdisk/schema.py:1094:class MarsTemperatureAutogen(BaseModel)
+marsdisk/schema.py:1126:class MarsTemperatureDriverConfig(BaseModel)
+marsdisk/schema.py:1185:class RadiationTauGate(BaseModel)
+marsdisk/schema.py:1192:class Radiation(BaseModel)
+marsdisk/schema.py:1251:class Shielding(BaseModel)
+marsdisk/schema.py:1312:class Blowout(BaseModel)
+marsdisk/schema.py:1330:class Checkpoint(BaseModel)
+marsdisk/schema.py:1357:class Resume(BaseModel)
+marsdisk/schema.py:1370:class Numerics(BaseModel)
+marsdisk/schema.py:1481:class StepDiagnostics(BaseModel)
+marsdisk/schema.py:1498:class Progress(BaseModel)
+marsdisk/schema.py:1512:class Streaming(BaseModel)
+marsdisk/schema.py:1555:class IO(BaseModel)
+marsdisk/schema.py:1586:class ExtendedDiagnostics(BaseModel)
+marsdisk/schema.py:1599:class Diagnostics(BaseModel)
+marsdisk/schema.py:1605:class Config(BaseModel)
 paper/pdf_extractor/main.py:7:def main()
 paper/pdf_extractor/main.py:76:def get_safe_path(path_str)
 paper/pdf_extractor/src/ai_handler.py:5:def configure_gemini()
@@ -816,251 +787,270 @@ siO2_disk_cooling/siO2_cooling_map.py:111:def _format_tag(T0: float) -> str
 siO2_disk_cooling/siO2_cooling_map.py:115:def _infer_cell_width_from_config(config_path: Path | None) -> Optional[float]
 siO2_disk_cooling/siO2_cooling_map.py:152:def lookup_phase_state(temperature_K: float, pressure_Pa: Optional[float]=None, tau: Optional[float]=None) -> Mapping[str, Any]
 siO2_disk_cooling/siO2_cooling_map.py:196:def main() -> None
+tests/integration/test_analysis_coverage_guard.py:7:def test_analysis_coverage_guard() -> None
+tests/integration/test_analysis_massloss_sampler_doc.py:10:def _slice_section(text: str, header: str) -> str
+tests/integration/test_analysis_massloss_sampler_doc.py:19:def test_massloss_sampler_section_lists_key_requirements() -> None
+tests/integration/test_assumption_trace_phase2.py:6:def test_build_assumption_trace_smoke(tmp_path: Path) -> None
+tests/integration/test_assumptions_docs.py:6:def test_render_assumptions_runs(tmp_path: Path) -> None
+tests/integration/test_assumptions_docs.py:21:def test_trace_entries_follow_schema() -> None
+tests/integration/test_assumptions_docs.py:33:def test_gap_titles_appear_in_overview() -> None
+tests/integration/test_baseline_smol_pipeline.py:12:def test_base_config_smol_mass_budget_and_eval(tmp_path: Path) -> None
+tests/integration/test_blowout_gate.py:10:def test_compute_gate_factor_bounds() -> None
+tests/integration/test_blowout_gate.py:18:def _build_gate_config(outdir: Path, gate_mode: str) -> schema.Config
+tests/integration/test_blowout_gate.py:49:def test_gate_reduces_outflux_with_sublimation(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None
+tests/integration/test_blowout_gate.py:75:def _build_collision_config(outdir: Path, gate_mode: str) -> schema.Config
+tests/integration/test_blowout_gate.py:108:def test_gate_reduces_outflux_with_collisions(tmp_path: Path) -> None
+tests/integration/test_checkpoint_io.py:10:def _sample_state() -> checkpoint.CheckpointState
+tests/integration/test_checkpoint_io.py:41:def test_checkpoint_pickle_roundtrip(tmp_path: Path) -> None
+tests/integration/test_checkpoint_io.py:51:def test_checkpoint_json_roundtrip(tmp_path: Path) -> None
+tests/integration/test_ci_guard_analysis.py:8:def _write_coverage(tmp_path, **overrides)
+tests/integration/test_ci_guard_analysis.py:33:def test_ci_guard_analysis_pass(tmp_path) -> None
+tests/integration/test_ci_guard_analysis.py:41:def test_ci_guard_analysis_anchor_failure(tmp_path) -> None
+tests/integration/test_collision_solver_modes.py:15:def test_collision_solver_smol_mass_budget(tmp_path: Path) -> None
+tests/integration/test_collision_solver_modes.py:47:def test_surface_and_smol_series_columns_match(tmp_path: Path) -> None
+tests/integration/test_derive_supply_rate.py:15:def run_cli(argv: list[str]) -> str
+tests/integration/test_derive_supply_rate.py:22:def test_compute_r_base_scalar()
+tests/integration/test_derive_supply_rate.py:30:def test_cli_text_output()
+tests/integration/test_derive_supply_rate.py:48:def test_csv_grid_output()
+tests/integration/test_derive_supply_rate.py:83:def test_config_defaults(tmp_path, monkeypatch)
+tests/integration/test_derive_supply_rate.py:111:def test_env_defaults(monkeypatch)
+tests/integration/test_doc_sync_agent.py:10:def test_scan_generates_inventory(tmp_path) -> None
+tests/integration/test_doc_sync_agent.py:27:def test_refs_and_coverage_pipeline(tmp_path) -> None
+tests/integration/test_doc_sync_agent.py:81:def test_equations_mapping(tmp_path) -> None
+tests/integration/test_doc_sync_agent.py:107:def test_equations_mapping_with_ml(tmp_path) -> None
+tests/integration/test_doc_sync_agent.py:139:def test_autostub_inserts_stubs(tmp_path) -> None
+tests/integration/test_evaluation_system.py:13:def _build_series_frame() -> pd.DataFrame
+tests/integration/test_evaluation_system.py:54:def _write_json(path: Path, payload: dict) -> None
+tests/integration/test_evaluation_system.py:58:def _prepare_outdir(tmp_path: Path, *, drop_series_columns: Sequence[str] | None=None) -> Path
+tests/integration/test_evaluation_system.py:147:def test_evaluation_system_with_complete_outputs(tmp_path: Path) -> None
+tests/integration/test_evaluation_system.py:156:def test_evaluation_system_detects_missing_series_columns(tmp_path: Path) -> None
+tests/integration/test_extended_diagnostics_single_process.py:15:def _scenario_config(outdir: Path) -> schema.Config
+tests/integration/test_extended_diagnostics_single_process.py:60:def _read_json(path: Path) -> dict
+tests/integration/test_extended_diagnostics_single_process.py:65:def test_sublimation_only_disables_collisions_and_blowout(tmp_path: Path) -> None
+tests/integration/test_extended_diagnostics_single_process.py:86:def test_collisions_only_disables_sinks(tmp_path: Path) -> None
+tests/integration/test_extended_diagnostics_single_process.py:108:def test_combined_mode_keeps_both_channels(tmp_path: Path) -> None
+tests/integration/test_fast_blowout.py:12:def _build_fast_blowout_config(outdir: Path, *, correct: bool, substep: bool=False, substep_ratio: float=1.0, collision_solver: str='smol') -> schema.Config
+tests/integration/test_fast_blowout.py:56:def test_fast_blowout_factor_samples() -> None
+tests/integration/test_fast_blowout.py:64:def test_chi_blow_auto_range(tmp_path: Path) -> None
+tests/integration/test_fast_blowout.py:77:def test_surface_ode_substeps_activate(tmp_path: Path) -> None
+tests/integration/test_fast_blowout.py:97:def test_smol_ignores_substeps(tmp_path: Path) -> None
+tests/integration/test_fragment_tensor_numba.py:7:def _sample_inputs()
+tests/integration/test_fragment_tensor_numba.py:19:def test_fragment_tensor_numba_matches_python()
+tests/integration/test_fragment_tensor_numba.py:42:def test_fragment_tensor_numba_failure_falls_back(monkeypatch)
+tests/integration/test_init_tau1_los_target.py:10:def test_init_tau1_targets_los_tau(tmp_path) -> None
+tests/integration/test_initial_psd_modes.py:10:def _mass_profile(psd_state: dict) -> np.ndarray
+tests/integration/test_initial_psd_modes.py:19:def _mass_peak(psd_state: dict) -> float
+tests/integration/test_initial_psd_modes.py:27:def test_melt_lognormal_mixture_mass_and_cut()
+tests/integration/test_initial_psd_modes.py:70:def test_melt_lognormal_extremes_follow_components()
+tests/integration/test_initial_psd_modes.py:106:def test_truncated_powerlaw_respects_bounds()
+tests/integration/test_inner_disk_massloss.py:12:def _build_config(outdir: Path, *, sinks_mode: str, enable_sublimation: bool, enable_gas_drag: bool) -> schema.Config
+tests/integration/test_inner_disk_massloss.py:44:def _write_yaml(cfg: schema.Config, path: Path) -> Path
+tests/integration/test_inner_disk_massloss.py:53:def test_inner_disk_sweep_runs_and_collects_massloss(tmp_path: Path) -> None
+tests/integration/test_make_qpr_table.py:7:def test_small_grain_qpr_increases_with_temperature()
+tests/integration/test_make_sweep_summary.py:12:def mock_batch_dir(tmp_path: Path) -> Path
+tests/integration/test_make_sweep_summary.py:27:def test_parse_dir_name()
+tests/integration/test_make_sweep_summary.py:52:def test_discover_cases(mock_batch_dir: Path)
+tests/integration/test_make_sweep_summary.py:64:def test_cases_to_dataframe(mock_batch_dir: Path)
+tests/integration/test_make_sweep_summary.py:79:def test_main_csv_output(mock_batch_dir: Path)
+tests/integration/test_make_sweep_summary.py:94:def test_empty_batch_dir(tmp_path: Path)
+tests/integration/test_make_sweep_summary.py:103:def test_missing_summary_json(tmp_path: Path)
+tests/integration/test_mass_budget_combined.py:15:def test_mass_budget_closure_with_blowout_and_sinks(tmp_path: Path) -> None
+tests/integration/test_mass_conservation.py:10:def test_imex_bdf1_limits_timestep_and_preserves_mass() -> None
+tests/integration/test_min_size_evolution_hook.py:9:def _base_config(outdir: Path) -> schema.Config
+tests/integration/test_min_size_evolution_hook.py:39:def test_s_min_evolved_column_absent_when_disabled(tmp_path: Path) -> None
+tests/integration/test_min_size_evolution_hook.py:48:def test_s_min_evolved_column_records_candidate_when_enabled(tmp_path: Path) -> None
+tests/integration/test_min_size_evolution_hook.py:60:def test_s_min_evolved_monotonic_with_linear_decay(tmp_path: Path) -> None
+tests/integration/test_modes_units.py:10:def _base_config(outdir: Path) -> schema.Config
+tests/integration/test_modes_units.py:55:def test_mars_clearance_uses_meter_offsets(tmp_path: Path) -> None
+tests/integration/test_opacity_guardrails.py:9:def test_phi_const_table_does_not_zero_opacity()
+tests/integration/test_opacity_guardrails.py:25:def test_phi_table_clamps_tau_but_keeps_positive_opacity()
+tests/integration/test_opacity_guardrails.py:37:def test_sigma_tau1_extremely_large_when_kappa_tiny()
+tests/integration/test_opacity_guardrails.py:49:def _make_psd_state(s_min=1e-06, s_max=3.0, n_bins=40, q=3.5, rho=3000.0)
+tests/integration/test_opacity_guardrails.py:67:def test_kappa_within_spec_size_range_stays_far_above_floor()
+tests/integration/test_opacity_guardrails.py:77:def test_kappa_not_temperature_dependent_proxy()
+tests/integration/test_opacity_guardrails.py:89:def test_kappa_all_mass_in_largest_bin_still_above_floor()
+tests/integration/test_opacity_guardrails.py:104:def test_huge_sigma_tau1_from_tiny_kappa_allows_tau_to_stay_small()
+tests/integration/test_particle_temperature_equilibrium.py:14:def test_particle_temperature_equilibrium_matches_expected_scaling() -> None
+tests/integration/test_particle_temperature_equilibrium.py:23:def test_particle_temperature_equilibrium_rejects_nonpositive_radius() -> None
+tests/integration/test_particle_temperature_equilibrium.py:28:def test_phase_temperature_input_particle_is_recorded(tmp_path: Path) -> None
+tests/integration/test_phase3_surface_blowout.py:10:def _base_surface_cfg(outdir: Path, *, s_min: float=1e-06, prod_rate: float=1e-09, t_end_years: float=0.0005, dt_init: float=400.0, T_M: float=2000.0) -> schema.Config
+tests/integration/test_phase3_surface_blowout.py:42:def test_blowout_inactive_when_smin_above_blowout(tmp_path: Path) -> None
+tests/integration/test_phase3_surface_blowout.py:52:def test_surface_layer_clipped_to_sigma_tau1(tmp_path: Path) -> None
+tests/integration/test_phase3_surface_blowout.py:62:def test_blowout_disabled_in_vapor_state(tmp_path: Path) -> None
+tests/integration/test_phase3_surface_blowout.py:76:def test_solar_toggle_forced_off(tmp_path: Path) -> None
+tests/integration/test_phase3_surface_blowout.py:87:def test_mass_budget_and_fast_factor_stable(tmp_path: Path) -> None
+tests/integration/test_phase3_surface_blowout.py:99:def test_los_shielding_reduces_phi(tmp_path: Path) -> None
+tests/integration/test_phase9_usecases.py:15:def _phase9_config(outdir: Path, *, analysis_years: float=2.0, t_end_years: float | None=1e-06, dt_init: float=1.0, prod_area_rate: float=0.001) -> schema.Config
+tests/integration/test_phase9_usecases.py:69:def _read_json(path: Path) -> dict
+tests/integration/test_phase9_usecases.py:74:def test_sublimation_only_zeroes_blowout_flux_and_sets_metadata(tmp_path: Path) -> None
+tests/integration/test_phase9_usecases.py:95:def test_collisions_only_enables_blowout_and_disables_sinks(tmp_path: Path) -> None
+tests/integration/test_phase9_usecases.py:118:def test_scope_region_guard_rejects_outer_disk(tmp_path: Path) -> None
+tests/integration/test_phase9_usecases.py:126:def test_analysis_window_defaults_to_scope_when_t_end_missing(tmp_path: Path) -> None
+tests/integration/test_phase9_usecases.py:155:def test_mass_loss_is_comparable_between_solo_runs(tmp_path: Path) -> None
+tests/integration/test_phase_branching.py:12:def test_phase_threshold_fallback_handles_tau_and_pressure() -> None
+tests/integration/test_phase_branching.py:28:def test_phase_map_entrypoint_and_hydro_timescale() -> None
+tests/integration/test_phase_branching.py:46:def test_phase_boundary_values_are_unique() -> None
+tests/integration/test_phase_branching.py:67:def test_phase_map_fraction_clamped_to_physical_range() -> None
+tests/integration/test_phase_branching.py:79:def test_radiation_source_accepts_only_mars_or_off() -> None
+tests/integration/test_phase_branching_run.py:10:def _build_phase_config(outdir: Path, *, T_M: float) -> schema.Config
+tests/integration/test_phase_branching_run.py:48:def _load_run(outdir: Path) -> pd.DataFrame
+tests/integration/test_phase_branching_run.py:54:def test_sink_selection_is_mutually_exclusive(tmp_path: Path) -> None
+tests/integration/test_phase_map_fallback.py:14:def test_phase_map_missing_entrypoint_falls_back_to_threshold(tmp_path: Path) -> None
+tests/integration/test_phase_tau_field_selection.py:8:def test_compute_phase_tau_fields_switches_between_vertical_and_los() -> None
+tests/integration/test_phase_tau_field_selection.py:30:def test_log_stage_extra_is_keyword_only() -> None
+tests/integration/test_phi_table.py:12:def mock_phi_table(tmp_path)
+tests/integration/test_phi_table.py:24:def test_phi_table_monotonic_effects(mock_phi_table)
+tests/integration/test_psd_kappa.py:11:def test_compute_kappa_single_bin_matches_geometry() -> None
+tests/integration/test_psd_kappa.py:29:def test_compute_kappa_stays_finite_with_wavy_modulation() -> None
+tests/integration/test_qpr_loader_h5datasets.py:18:def _write_three_dataset(path, qpr, log10s, temperatures)
+tests/integration/test_qpr_loader_h5datasets.py:28:def test_load_qpr_table_from_h5datasets(tmp_path)
+tests/integration/test_qpr_loader_h5datasets.py:50:def test_h5datasets_shape_mismatch(tmp_path)
+tests/integration/test_qpr_loader_h5datasets.py:61:def test_h5datasets_requires_h5py(monkeypatch, tmp_path)
+tests/integration/test_qpr_lookup.py:12:def mock_qpr_table(tmp_path)
+tests/integration/test_qpr_lookup.py:34:def test_qpr_lookup_interpolates_from_table(mock_qpr_table)
+tests/integration/test_qpr_lookup.py:85:def test_qpr_lookup_requires_table(mock_qpr_table)
+tests/integration/test_qstar_fragments.py:11:def test_qdstar_velocity_interpolation_monotonic()
+tests/integration/test_qstar_fragments.py:20:def test_compute_s_min_bounds_and_monotonic()
+tests/integration/test_qstar_units.py:8:def _reset_qstar_state()
+tests/integration/test_qstar_units.py:20:def test_ba99_cgs_conversion_matches_expected_values()
+tests/integration/test_qstar_units.py:31:def test_si_mode_preserves_legacy_magnitude_and_array_agrees()
+tests/integration/test_qstar_units.py:42:def test_velocity_clamping_counts_and_outputs()
+tests/integration/test_radiation_shielding_logging.py:12:def restore_qpr_lookup()
+tests/integration/test_radiation_shielding_logging.py:20:def test_beta_density_validation()
+tests/integration/test_radiation_shielding_logging.py:28:def test_blowout_radius_density_validation()
+tests/integration/test_radiation_shielding_logging.py:34:def test_load_phi_table_logs(tmp_path, caplog)
+tests/integration/test_radiation_shielding_logging.py:46:def test_apply_shielding_clamp_logs(caplog)
+tests/integration/test_radiation_shielding_logging.py:67:def test_effective_kappa_phi_clamp_logs(caplog)
+tests/integration/test_radiation_shielding_logging.py:77:def test_clip_to_tau1_logging(caplog)
+tests/integration/test_ref_coverage.py:17:def _load_registry() -> Dict[str, Dict[str, object]]
+tests/integration/test_ref_coverage.py:29:def test_source_map_links_known_keys() -> None
+tests/integration/test_ref_coverage.py:45:def test_equations_have_reference_or_todo() -> None
+tests/integration/test_ref_coverage.py:72:def _extract_equation_block(label: str) -> str
+tests/integration/test_ref_coverage.py:84:def test_e043_references_hyodo() -> None
+tests/integration/test_ref_coverage.py:89:def test_e042_references_hyodo() -> None
+tests/integration/test_ref_coverage.py:94:def test_e006_references_strubbe_chiang() -> None
+tests/integration/test_reproducibility.py:11:def _config(outdir: Path) -> schema.Config
+tests/integration/test_reproducibility.py:47:def _run_once(outdir: Path)
+tests/integration/test_reproducibility.py:57:def test_repeated_runs_match(tmp_path: Path) -> None
+tests/integration/test_run_regressions.py:19:def _run_case(overrides: list[str]) -> tuple[dict, pd.DataFrame]
+tests/integration/test_run_regressions.py:33:def _run_case_with_series(overrides: list[str]) -> tuple[dict, pd.DataFrame, pd.DataFrame]
+tests/integration/test_run_regressions.py:48:def test_mass_budget_and_timestep_overrides() -> None
+tests/integration/test_run_regressions.py:79:def test_sublimation_not_double_counted() -> None
+tests/integration/test_run_regressions.py:102:def test_extended_diagnostics_toggle() -> None
+tests/integration/test_run_regressions.py:148:def test_tau_gate_blocks_blowout() -> None
+tests/integration/test_run_regressions.py:166:def test_gate_factor_collision_competition_reduces_flux() -> None
+tests/integration/test_run_regressions.py:182:def _write_inline_combined_config(config_path: Path, outdir: Path) -> None
+tests/integration/test_run_regressions.py:246:def test_combined_mass_flux_balance(tmp_path: Path) -> None
+tests/integration/test_run_regressions.py:273:def test_gate_factor_sublimation_competition_reduces_flux() -> None
+tests/integration/test_scalings.py:16:def test_strubbe_chiang_collisional_timescale_matches_orbit_scaling(tau: float) -> None
+tests/integration/test_scalings.py:26:def _smol_to_wyatt_ratio(kernel_mode: str, H_factor: float) -> float
+tests/integration/test_scalings.py:57:def test_smol_tcoll_matches_wyatt_config_mode() -> None
+tests/integration/test_scalings.py:62:def test_smol_tcoll_matches_wyatt_wyatt_eq_mode() -> None
+tests/integration/test_scope_limitations_metadata.py:14:def _base_config(outdir: Path, *, window_years: float=1e-06) -> schema.Config
+tests/integration/test_scope_limitations_metadata.py:62:def _read_json(path: Path) -> dict
+tests/integration/test_scope_limitations_metadata.py:67:def test_scope_limitations_present_and_populated(tmp_path: Path) -> None
+tests/integration/test_scope_limitations_metadata.py:95:def test_single_process_flags_flow_into_scope_limitations(tmp_path: Path) -> None
+tests/integration/test_scope_limitations_metadata.py:122:def test_solar_radiation_request_is_recorded(tmp_path: Path) -> None
+tests/integration/test_sinks_none.py:15:def test_run_zero_d_with_sinks_disabled(tmp_path: Path) -> None
+tests/integration/test_sinks_tracing.py:9:def _build_config(outdir: Path) -> schema.Config
+tests/integration/test_sinks_tracing.py:42:def test_debug_sinks_trace_outputs_jsonl(tmp_path: Path) -> None
+tests/integration/test_smol_sublimation_consistency.py:11:def test_smol_sublimation_matches_surface_drift() -> None
+tests/integration/test_smol_supply_source.py:11:def test_supply_injected_into_first_valid_bin() -> None
+tests/integration/test_smol_supply_source.py:27:def test_supply_zero_rate_returns_zero_vector() -> None
+tests/integration/test_smol_supply_source.py:38:def test_supply_injects_into_last_bin_when_floor_above_max() -> None
+tests/integration/test_smol_supply_source.py:52:def test_smol_source_mass_budget_matches_supply() -> None
+tests/integration/test_smol_supply_source.py:83:def test_powerlaw_injection_distributes_mass() -> None
+tests/integration/test_step_diagnostics.py:12:def _build_config(outdir: Path, fmt: str) -> schema.Config
+tests/integration/test_step_diagnostics.py:50:def test_step_diagnostics_file_and_mass_budget(tmp_path: Path, fmt: str) -> None
+tests/integration/test_streaming_merge.py:8:def test_streaming_flush_and_merge(tmp_path)
+tests/integration/test_streaming_merge.py:40:def test_merge_with_schema_mismatch(tmp_path)
+tests/integration/test_sublimation_liquid_branch.py:8:def test_p_sat_switches_to_liquid_branch() -> None
+tests/integration/test_sublimation_mass_conserving.py:9:def test_mass_conserving_sublimation_redirects_to_blowout() -> None
+tests/integration/test_sublimation_phase_gate.py:14:def _run_phase_case(tmp_path: Path, entrypoint: str, *, enable_step_diag: bool=True, extra_overrides: list[str] | None=None) -> tuple[pd.Series, pd.DataFrame | None]
+tests/integration/test_sublimation_phase_gate.py:52:def test_liquid_phase_blocks_sublimation(tmp_path: Path) -> None
+tests/integration/test_sublimation_phase_gate.py:74:def test_solid_phase_uses_raw_sublimation(tmp_path: Path) -> None
+tests/integration/test_sublimation_phase_gate.py:89:def test_liquid_phase_allows_hkl_when_enabled(tmp_path: Path) -> None
+tests/integration/test_sublimation_sio.py:17:def sio_params() -> SublimationParams
+tests/integration/test_sublimation_sio.py:30:def test_units_and_flux_dimension(sio_params: SublimationParams) -> None
+tests/integration/test_sublimation_sio.py:41:def test_negative_pressure_gap_clamped(sio_params: SublimationParams) -> None
+tests/integration/test_sublimation_sio.py:55:def test_tabulated_psat_interp(tmp_path) -> None
+tests/integration/test_sublimation_sio.py:80:def test_auto_prefers_tabulated_within_range(tmp_path) -> None
+tests/integration/test_sublimation_sio.py:106:def test_auto_switches_to_local_clausius_fit(tmp_path) -> None
+tests/integration/test_sublimation_sio.py:136:def test_auto_records_validity_when_out_of_range(caplog) -> None
+tests/integration/test_sublimation_sio.py:159:def test_run_config_records_psat_selection(tmp_path) -> None
+tests/integration/test_sublimation_smol_sink.py:12:def test_smol_sublimation_sink_mass_budget(tmp_path: Path) -> None
+tests/integration/test_summary_backcompat.py:9:def _write_summary(path: Path, payload: dict) -> None
+tests/integration/test_summary_backcompat.py:13:def test_parse_summary_backwards_compatibility(tmp_path: Path) -> None
+tests/integration/test_supply_headroom_policy.py:12:def test_headroom_policy_spill_keeps_flux_nonzero() -> None
+tests/integration/test_supply_headroom_policy.py:60:def test_spill_policy_runs_without_supply_drop(tmp_path: Path) -> None
+tests/integration/test_supply_positive.py:10:def test_supply_positive_with_wide_tau_cap(tmp_path: Path) -> None
+tests/integration/test_supply_positive.py:38:def test_reservoir_depletes_and_records_metadata(tmp_path: Path) -> None
+tests/integration/test_supply_positive.py:90:def test_supply_feedback_tau_los_updates_scale(tmp_path: Path) -> None
+tests/integration/test_supply_positive.py:139:def test_run_config_written_before_runtime_failure(monkeypatch, tmp_path: Path) -> None
+tests/integration/test_supply_split.py:8:def test_deep_buffer_accumulates_when_headroom_zero() -> None
+tests/integration/test_supply_split.py:24:def test_deep_buffer_mixes_back_on_timescale() -> None
+tests/integration/test_supply_transport_velocity.py:14:def test_supply_velocity_blend_and_weight() -> None
+tests/integration/test_supply_transport_velocity.py:29:def test_deep_mixing_transport_routes_via_deep_buffer() -> None
+tests/integration/test_supply_transport_velocity.py:49:def test_run_outputs_supply_visibility_columns(tmp_path: Path) -> None
+tests/integration/test_surface_outflux_wavy.py:10:def test_blowout_driven_wavy_pattern_emerges() -> None
+tests/integration/test_surface_supply_param.py:37:def test_const_mode()
+tests/integration/test_surface_supply_param.py:47:def test_powerlaw_mode()
+tests/integration/test_surface_supply_param.py:57:def test_table_mode(tmp_path)
+tests/integration/test_surface_supply_param.py:65:def test_reservoir_caps_rate_and_consumes_mass()
+tests/integration/test_surface_supply_param.py:81:def test_feedback_scales_supply_toward_target_tau()
+tests/integration/test_surface_supply_param.py:99:def test_temperature_scaling_modulates_rate()
+tests/integration/test_surface_supply_param.py:115:def test_smol_helper_respects_tau_clip_and_budget()
+tests/integration/test_surface_supply_param.py:153:def _smol_cfg(outdir: Path, *, supply_cfg: Supply) -> Config
+tests/integration/test_surface_supply_param.py:182:def test_supply_modes_preserve_columns_and_budget(tmp_path: Path) -> None
+tests/integration/test_temperature_driver.py:16:def test_temperature_driver_prefers_radiation_override() -> None
+tests/integration/test_temperature_driver.py:32:def test_temperature_driver_table_interpolates_sample() -> None
+tests/integration/test_temperature_driver.py:58:def test_temperature_autogen_generates_table(tmp_path: Path) -> None
+tests/integration/test_temperature_driver.py:88:def test_autogen_used_in_run(tmp_path: Path) -> None
+tests/integration/test_temperature_selection.py:9:def _make_config(outdir: Path, *, TM_K: float | None=None, driver_constant: float | None=None) -> schema.Config
+tests/integration/test_temperature_selection.py:47:def _run_and_load(cfg: schema.Config) -> dict
+tests/integration/test_temperature_selection.py:55:def test_temperature_selection_prefers_radiation_override(tmp_path: Path) -> None
+tests/integration/test_temperature_selection.py:70:def test_temperature_selection_tracks_temps_when_no_override(tmp_path: Path) -> None
+tests/integration/test_zero_division_guards.py:11:def test_run_zero_d_tau_zero_no_error(tmp_path: Path)
+tests/integration/test_zero_division_guards.py:40:def test_supply_powerlaw_t0_zero()
+tests/integration/test_zero_division_guards.py:49:def test_run_zero_d_no_zerodivision(monkeypatch, tmp_path)
 tests/phase_map_stub.py:7:def lookup_phase_state(temperature_K: float, pressure_Pa: Optional[float]=None, tau: Optional[float]=None) -> dict[str, float | str | None]
 tests/phase_map_stub.py:27:def lookup_unphysical_fraction(temperature_K: float, *_args, **_kwargs) -> dict[str, float | str]
 tests/phase_map_stub.py:34:def lookup_phase_liquid(*_args, **_kwargs) -> dict[str, float | str]
 tests/phase_map_stub.py:40:def lookup_phase_solid(*_args, **_kwargs) -> dict[str, float | str]
-tests/test_analysis_coverage_guard.py:7:def test_analysis_coverage_guard() -> None
-tests/test_analysis_massloss_sampler_doc.py:10:def _slice_section(text: str, header: str) -> str
-tests/test_analysis_massloss_sampler_doc.py:19:def test_massloss_sampler_section_lists_key_requirements() -> None
-tests/test_assumption_trace_phase2.py:6:def test_build_assumption_trace_smoke(tmp_path: Path) -> None
-tests/test_assumptions_docs.py:6:def test_render_assumptions_runs(tmp_path: Path) -> None
-tests/test_assumptions_docs.py:17:def test_trace_entries_follow_schema() -> None
-tests/test_assumptions_docs.py:30:def test_gap_titles_appear_in_overview() -> None
-tests/test_baseline_smol_pipeline.py:12:def test_base_config_smol_mass_budget_and_eval(tmp_path: Path) -> None
-tests/test_blowout_gate.py:10:def test_compute_gate_factor_bounds() -> None
-tests/test_blowout_gate.py:18:def _build_gate_config(outdir: Path, gate_mode: str) -> schema.Config
-tests/test_blowout_gate.py:49:def test_gate_reduces_outflux_with_sublimation(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None
-tests/test_blowout_gate.py:69:def _build_collision_config(outdir: Path, gate_mode: str) -> schema.Config
-tests/test_blowout_gate.py:102:def test_gate_reduces_outflux_with_collisions(tmp_path: Path) -> None
-tests/test_checkpoint_io.py:10:def _sample_state() -> checkpoint.CheckpointState
-tests/test_checkpoint_io.py:41:def test_checkpoint_pickle_roundtrip(tmp_path: Path) -> None
-tests/test_checkpoint_io.py:51:def test_checkpoint_json_roundtrip(tmp_path: Path) -> None
-tests/test_ci_guard_analysis.py:8:def _write_coverage(tmp_path, **overrides)
-tests/test_ci_guard_analysis.py:33:def test_ci_guard_analysis_pass(tmp_path) -> None
-tests/test_ci_guard_analysis.py:41:def test_ci_guard_analysis_anchor_failure(tmp_path) -> None
-tests/test_collision_solver_modes.py:15:def test_collision_solver_smol_mass_budget(tmp_path: Path) -> None
-tests/test_collision_solver_modes.py:47:def test_surface_and_smol_series_columns_match(tmp_path: Path) -> None
-tests/test_derive_supply_rate.py:15:def run_cli(argv: list[str]) -> str
-tests/test_derive_supply_rate.py:22:def test_compute_r_base_scalar()
-tests/test_derive_supply_rate.py:30:def test_cli_text_output()
-tests/test_derive_supply_rate.py:48:def test_csv_grid_output()
-tests/test_derive_supply_rate.py:83:def test_config_defaults(tmp_path, monkeypatch)
-tests/test_derive_supply_rate.py:111:def test_env_defaults(monkeypatch)
-tests/test_doc_sync_agent.py:10:def test_scan_generates_inventory(tmp_path) -> None
-tests/test_doc_sync_agent.py:27:def test_refs_and_coverage_pipeline(tmp_path) -> None
-tests/test_doc_sync_agent.py:81:def test_equations_mapping(tmp_path) -> None
-tests/test_doc_sync_agent.py:107:def test_equations_mapping_with_ml(tmp_path) -> None
-tests/test_doc_sync_agent.py:139:def test_autostub_inserts_stubs(tmp_path) -> None
-tests/test_evaluation_system.py:13:def _build_series_frame() -> pd.DataFrame
-tests/test_evaluation_system.py:53:def _write_json(path: Path, payload: dict) -> None
-tests/test_evaluation_system.py:57:def _prepare_outdir(tmp_path: Path, *, drop_series_columns: Sequence[str] | None=None) -> Path
-tests/test_evaluation_system.py:146:def test_evaluation_system_with_complete_outputs(tmp_path: Path) -> None
-tests/test_evaluation_system.py:155:def test_evaluation_system_detects_missing_series_columns(tmp_path: Path) -> None
-tests/test_fast_blowout.py:12:def _build_fast_blowout_config(outdir: Path, *, correct: bool, substep: bool=False, substep_ratio: float=1.0, collision_solver: str='smol') -> schema.Config
-tests/test_fast_blowout.py:56:def test_fast_blowout_factor_samples() -> None
-tests/test_fast_blowout.py:64:def test_chi_blow_auto_range(tmp_path: Path) -> None
-tests/test_fast_blowout.py:77:def test_surface_ode_substeps_activate(tmp_path: Path) -> None
-tests/test_fast_blowout.py:97:def test_smol_ignores_substeps(tmp_path: Path) -> None
-tests/test_fragment_tensor_numba.py:7:def _sample_inputs()
-tests/test_fragment_tensor_numba.py:19:def test_fragment_tensor_numba_matches_python()
-tests/test_fragment_tensor_numba.py:42:def test_fragment_tensor_numba_failure_falls_back(monkeypatch)
-tests/test_init_tau1_los_target.py:10:def test_init_tau1_targets_los_tau(tmp_path) -> None
-tests/test_initial_psd_modes.py:10:def _mass_profile(psd_state: dict) -> np.ndarray
-tests/test_initial_psd_modes.py:19:def _mass_peak(psd_state: dict) -> float
-tests/test_initial_psd_modes.py:27:def test_melt_lognormal_mixture_mass_and_cut()
-tests/test_initial_psd_modes.py:69:def test_melt_lognormal_extremes_follow_components()
-tests/test_initial_psd_modes.py:105:def test_truncated_powerlaw_respects_bounds()
-tests/test_inner_disk_massloss.py:12:def _build_config(outdir: Path, *, sinks_mode: str, enable_sublimation: bool, enable_gas_drag: bool) -> schema.Config
-tests/test_inner_disk_massloss.py:44:def _write_yaml(cfg: schema.Config, path: Path) -> Path
-tests/test_inner_disk_massloss.py:53:def test_inner_disk_sweep_runs_and_collects_massloss(tmp_path: Path) -> None
-tests/test_make_qpr_table.py:7:def test_small_grain_qpr_increases_with_temperature()
-tests/test_make_sweep_summary.py:12:def mock_batch_dir(tmp_path: Path) -> Path
-tests/test_make_sweep_summary.py:27:def test_parse_dir_name()
-tests/test_make_sweep_summary.py:52:def test_discover_cases(mock_batch_dir: Path)
-tests/test_make_sweep_summary.py:64:def test_cases_to_dataframe(mock_batch_dir: Path)
-tests/test_make_sweep_summary.py:79:def test_main_csv_output(mock_batch_dir: Path)
-tests/test_make_sweep_summary.py:94:def test_empty_batch_dir(tmp_path: Path)
-tests/test_make_sweep_summary.py:103:def test_missing_summary_json(tmp_path: Path)
-tests/test_mass_budget_combined.py:14:def test_mass_budget_closure_with_blowout_and_sinks(tmp_path: Path) -> None
-tests/test_mass_conservation.py:10:def test_imex_bdf1_limits_timestep_and_preserves_mass() -> None
-tests/test_min_size_evolution_hook.py:9:def _base_config(outdir: Path) -> schema.Config
-tests/test_min_size_evolution_hook.py:39:def test_s_min_evolved_column_absent_when_disabled(tmp_path: Path) -> None
-tests/test_min_size_evolution_hook.py:48:def test_s_min_evolved_column_records_candidate_when_enabled(tmp_path: Path) -> None
-tests/test_min_size_evolution_hook.py:60:def test_s_min_evolved_monotonic_with_linear_decay(tmp_path: Path) -> None
-tests/test_modes_units.py:10:def _base_config(outdir: Path) -> schema.Config
-tests/test_modes_units.py:55:def test_mars_clearance_uses_meter_offsets(tmp_path: Path) -> None
-tests/test_opacity_guardrails.py:9:def test_phi_const_table_does_not_zero_opacity()
-tests/test_opacity_guardrails.py:25:def test_phi_table_clamps_tau_but_keeps_positive_opacity()
-tests/test_opacity_guardrails.py:37:def test_sigma_tau1_extremely_large_when_kappa_tiny()
-tests/test_opacity_guardrails.py:49:def _make_psd_state(s_min=1e-06, s_max=3.0, n_bins=40, q=3.5, rho=3000.0)
-tests/test_opacity_guardrails.py:67:def test_kappa_within_spec_size_range_stays_far_above_floor()
-tests/test_opacity_guardrails.py:77:def test_kappa_not_temperature_dependent_proxy()
-tests/test_opacity_guardrails.py:89:def test_kappa_all_mass_in_largest_bin_still_above_floor()
-tests/test_opacity_guardrails.py:104:def test_huge_sigma_tau1_from_tiny_kappa_allows_tau_to_stay_small()
-tests/test_particle_temperature_equilibrium.py:14:def test_particle_temperature_equilibrium_matches_expected_scaling() -> None
-tests/test_particle_temperature_equilibrium.py:23:def test_particle_temperature_equilibrium_rejects_nonpositive_radius() -> None
-tests/test_particle_temperature_equilibrium.py:28:def test_phase_temperature_input_particle_is_recorded(tmp_path: Path) -> None
-tests/test_phase3_surface_blowout.py:10:def _base_surface_cfg(outdir: Path, *, s_min: float=1e-06, prod_rate: float=1e-09, t_end_years: float=0.0005, dt_init: float=400.0, T_M: float=2000.0) -> schema.Config
-tests/test_phase3_surface_blowout.py:42:def test_blowout_inactive_when_smin_above_blowout(tmp_path: Path) -> None
-tests/test_phase3_surface_blowout.py:52:def test_surface_layer_clipped_to_sigma_tau1(tmp_path: Path) -> None
-tests/test_phase3_surface_blowout.py:63:def test_blowout_disabled_in_vapor_state(tmp_path: Path) -> None
-tests/test_phase3_surface_blowout.py:77:def test_solar_toggle_forced_off(tmp_path: Path) -> None
-tests/test_phase3_surface_blowout.py:88:def test_mass_budget_and_fast_factor_stable(tmp_path: Path) -> None
-tests/test_phase3_surface_blowout.py:100:def test_los_shielding_reduces_phi(tmp_path: Path) -> None
-tests/test_phase5.py:10:def _phase5_base_config(outdir: Path) -> schema.Config
-tests/test_phase5.py:57:def _read_summary(outdir: Path) -> dict
-tests/test_phase5.py:62:def _read_run_config(outdir: Path) -> dict
-tests/test_phase5.py:69:def test_collisions_only_disables_sinks(tmp_path: Path) -> None
-tests/test_phase5.py:90:def test_phase5_comparison_outputs_combined_series(tmp_path: Path) -> None
-tests/test_phase5.py:120:def test_variant_column_absent_when_not_comparing(tmp_path: Path) -> None
-tests/test_phase5.py:133:def test_physics_mode_config_applies(tmp_path: Path) -> None
-tests/test_phase5.py:153:def test_cli_override_wins_over_config(tmp_path: Path) -> None
-tests/test_phase7_single_process.py:15:def _scenario_config(outdir: Path) -> schema.Config
-tests/test_phase7_single_process.py:60:def _read_json(path: Path) -> dict
-tests/test_phase7_single_process.py:65:def test_sublimation_only_disables_collisions_and_blowout(tmp_path: Path) -> None
-tests/test_phase7_single_process.py:86:def test_collisions_only_disables_sinks(tmp_path: Path) -> None
-tests/test_phase7_single_process.py:109:def test_combined_mode_keeps_both_channels(tmp_path: Path) -> None
-tests/test_phase9_usecases.py:15:def _phase9_config(outdir: Path, *, analysis_years: float=2.0, t_end_years: float | None=1e-06, dt_init: float=1.0, prod_area_rate: float=0.001) -> schema.Config
-tests/test_phase9_usecases.py:69:def _read_json(path: Path) -> dict
-tests/test_phase9_usecases.py:74:def test_sublimation_only_zeroes_blowout_flux_and_sets_metadata(tmp_path: Path) -> None
-tests/test_phase9_usecases.py:95:def test_collisions_only_enables_blowout_and_disables_sinks(tmp_path: Path) -> None
-tests/test_phase9_usecases.py:118:def test_scope_region_guard_rejects_outer_disk(tmp_path: Path) -> None
-tests/test_phase9_usecases.py:126:def test_analysis_window_defaults_to_scope_when_t_end_missing(tmp_path: Path) -> None
-tests/test_phase9_usecases.py:155:def test_mass_loss_is_comparable_between_solo_runs(tmp_path: Path) -> None
-tests/test_phase_branching.py:12:def test_phase_threshold_fallback_handles_tau_and_pressure() -> None
-tests/test_phase_branching.py:28:def test_phase_map_entrypoint_and_hydro_timescale() -> None
-tests/test_phase_branching.py:46:def test_phase_boundary_values_are_unique() -> None
-tests/test_phase_branching.py:67:def test_phase_map_fraction_clamped_to_physical_range() -> None
-tests/test_phase_branching.py:79:def test_radiation_source_accepts_only_mars_or_off() -> None
-tests/test_phase_branching_run.py:10:def _build_phase_config(outdir: Path, *, T_M: float) -> schema.Config
-tests/test_phase_branching_run.py:48:def _load_run(outdir: Path) -> pd.DataFrame
-tests/test_phase_branching_run.py:54:def test_sink_selection_is_mutually_exclusive(tmp_path: Path) -> None
-tests/test_phase_integration_siO2.py:11:def siO2_evaluator() -> phase.PhaseEvaluator
-tests/test_phase_integration_siO2.py:16:def test_siO2_map_solid_branch(siO2_evaluator: phase.PhaseEvaluator) -> None
-tests/test_phase_map_fallback.py:14:def test_phase_map_missing_entrypoint_falls_back_to_threshold(tmp_path: Path) -> None
-tests/test_phase_sublimation_integration.py:15:def _run_case(tmp_path: Path, *, T_M: float, r_RM: float) -> tuple[pd.Series, pd.DataFrame]
-tests/test_phase_sublimation_integration.py:42:def test_solid_phase_allows_sublimation_with_siO2_map(tmp_path: Path) -> None
-tests/test_phase_tau_field_selection.py:8:def test_compute_phase_tau_fields_switches_between_vertical_and_los() -> None
-tests/test_phase_tau_field_selection.py:30:def test_log_stage_extra_is_keyword_only() -> None
-tests/test_phi_table.py:12:def mock_phi_table(tmp_path)
-tests/test_phi_table.py:24:def test_phi_table_monotonic_effects(mock_phi_table)
-tests/test_psd_kappa.py:11:def test_compute_kappa_single_bin_matches_geometry() -> None
-tests/test_psd_kappa.py:29:def test_compute_kappa_stays_finite_with_wavy_modulation() -> None
-tests/test_qpr_loader_h5datasets.py:18:def _write_three_dataset(path, qpr, log10s, temperatures)
-tests/test_qpr_loader_h5datasets.py:28:def test_load_qpr_table_from_h5datasets(tmp_path)
-tests/test_qpr_loader_h5datasets.py:50:def test_h5datasets_shape_mismatch(tmp_path)
-tests/test_qpr_loader_h5datasets.py:61:def test_h5datasets_requires_h5py(monkeypatch, tmp_path)
-tests/test_qpr_lookup.py:12:def mock_qpr_table(tmp_path)
-tests/test_qpr_lookup.py:34:def test_qpr_lookup_interpolates_from_table(mock_qpr_table)
-tests/test_qpr_lookup.py:85:def test_qpr_lookup_requires_table(mock_qpr_table)
-tests/test_qstar_fragments.py:11:def test_qdstar_velocity_interpolation_monotonic()
-tests/test_qstar_fragments.py:20:def test_compute_s_min_bounds_and_monotonic()
-tests/test_qstar_units.py:8:def _reset_qstar_state()
-tests/test_qstar_units.py:20:def test_ba99_cgs_conversion_matches_expected_values()
-tests/test_qstar_units.py:31:def test_si_mode_preserves_legacy_magnitude_and_array_agrees()
-tests/test_qstar_units.py:42:def test_velocity_clamping_counts_and_outputs()
-tests/test_radiation_shielding_logging.py:12:def restore_qpr_lookup()
-tests/test_radiation_shielding_logging.py:20:def test_beta_density_validation()
-tests/test_radiation_shielding_logging.py:28:def test_blowout_radius_density_validation()
-tests/test_radiation_shielding_logging.py:34:def test_load_phi_table_logs(tmp_path, caplog)
-tests/test_radiation_shielding_logging.py:46:def test_apply_shielding_clamp_logs(caplog)
-tests/test_radiation_shielding_logging.py:67:def test_effective_kappa_phi_clamp_logs(caplog)
-tests/test_radiation_shielding_logging.py:77:def test_clip_to_tau1_logging(caplog)
-tests/test_ref_coverage.py:17:def _load_registry() -> Dict[str, Dict[str, object]]
-tests/test_ref_coverage.py:29:def test_source_map_links_known_keys() -> None
-tests/test_ref_coverage.py:45:def test_equations_have_reference_or_todo() -> None
-tests/test_ref_coverage.py:72:def _extract_equation_block(label: str) -> str
-tests/test_ref_coverage.py:84:def test_e043_references_hyodo() -> None
-tests/test_ref_coverage.py:89:def test_e042_references_hyodo() -> None
-tests/test_ref_coverage.py:94:def test_e006_references_strubbe_chiang() -> None
-tests/test_reproducibility.py:11:def _config(outdir: Path) -> schema.Config
-tests/test_reproducibility.py:47:def _run_once(outdir: Path)
-tests/test_reproducibility.py:57:def test_repeated_runs_match(tmp_path: Path) -> None
-tests/test_run_regressions.py:19:def _run_case(overrides: list[str]) -> tuple[dict, pd.DataFrame]
-tests/test_run_regressions.py:33:def _run_case_with_series(overrides: list[str]) -> tuple[dict, pd.DataFrame, pd.DataFrame]
-tests/test_run_regressions.py:48:def test_mass_budget_and_timestep_overrides() -> None
-tests/test_run_regressions.py:76:def test_sublimation_not_double_counted() -> None
-tests/test_run_regressions.py:98:def test_phase7_diagnostics_toggle() -> None
-tests/test_run_regressions.py:144:def test_tau_gate_blocks_blowout() -> None
-tests/test_run_regressions.py:162:def test_gate_factor_collision_competition_reduces_flux() -> None
-tests/test_run_regressions.py:178:def _write_inline_combined_config(config_path: Path, outdir: Path) -> None
-tests/test_run_regressions.py:242:def test_combined_mass_flux_balance(tmp_path: Path) -> None
-tests/test_run_regressions.py:265:def test_gate_factor_sublimation_competition_reduces_flux() -> None
-tests/test_scalings.py:16:def test_strubbe_chiang_collisional_timescale_matches_orbit_scaling(tau: float) -> None
-tests/test_scalings.py:26:def _smol_to_wyatt_ratio(kernel_mode: str, H_factor: float) -> float
-tests/test_scalings.py:57:def test_smol_tcoll_matches_wyatt_config_mode() -> None
-tests/test_scalings.py:62:def test_smol_tcoll_matches_wyatt_wyatt_eq_mode() -> None
-tests/test_scope_limitations_metadata.py:14:def _base_config(outdir: Path, *, window_years: float=1e-06) -> schema.Config
-tests/test_scope_limitations_metadata.py:62:def _read_json(path: Path) -> dict
-tests/test_scope_limitations_metadata.py:67:def test_scope_limitations_present_and_populated(tmp_path: Path) -> None
-tests/test_scope_limitations_metadata.py:95:def test_single_process_flags_flow_into_scope_limitations(tmp_path: Path) -> None
-tests/test_scope_limitations_metadata.py:122:def test_solar_radiation_request_is_recorded(tmp_path: Path) -> None
-tests/test_siO2_cooling_model.py:14:def test_mars_temperature_monotonic_decrease() -> None
-tests/test_siO2_cooling_model.py:21:def test_dust_temperature_monotonic_decrease_single_radius() -> None
-tests/test_siO2_cooling_model.py:29:def test_arrival_time_for_threshold() -> None
-tests/test_sinks_none.py:15:def test_run_zero_d_with_sinks_disabled(tmp_path: Path) -> None
-tests/test_sinks_tracing.py:9:def _build_config(outdir: Path) -> schema.Config
-tests/test_sinks_tracing.py:42:def test_debug_sinks_trace_outputs_jsonl(tmp_path: Path) -> None
-tests/test_smol_sublimation_consistency.py:11:def test_smol_sublimation_matches_surface_drift() -> None
-tests/test_smol_supply_source.py:11:def test_supply_injected_into_first_valid_bin() -> None
-tests/test_smol_supply_source.py:27:def test_supply_zero_rate_returns_zero_vector() -> None
-tests/test_smol_supply_source.py:38:def test_supply_injects_into_last_bin_when_floor_above_max() -> None
-tests/test_smol_supply_source.py:52:def test_smol_source_mass_budget_matches_supply() -> None
-tests/test_smol_supply_source.py:83:def test_powerlaw_injection_distributes_mass() -> None
-tests/test_step_diagnostics.py:12:def _build_config(outdir: Path, fmt: str) -> schema.Config
-tests/test_step_diagnostics.py:50:def test_step_diagnostics_file_and_mass_budget(tmp_path: Path, fmt: str) -> None
-tests/test_streaming_merge.py:8:def test_streaming_flush_and_merge(tmp_path)
-tests/test_streaming_merge.py:40:def test_merge_with_schema_mismatch(tmp_path)
-tests/test_sublimation_liquid_branch.py:8:def test_p_sat_switches_to_liquid_branch() -> None
-tests/test_sublimation_mass_conserving.py:9:def test_mass_conserving_sublimation_redirects_to_blowout() -> None
-tests/test_sublimation_phase_gate.py:14:def _run_phase_case(tmp_path: Path, entrypoint: str, *, enable_step_diag: bool=True, extra_overrides: list[str] | None=None) -> tuple[pd.Series, pd.DataFrame | None]
-tests/test_sublimation_phase_gate.py:52:def test_liquid_phase_blocks_sublimation(tmp_path: Path) -> None
-tests/test_sublimation_phase_gate.py:74:def test_solid_phase_uses_raw_sublimation(tmp_path: Path) -> None
-tests/test_sublimation_phase_gate.py:89:def test_liquid_phase_allows_hkl_when_enabled(tmp_path: Path) -> None
-tests/test_sublimation_sio.py:17:def sio_params() -> SublimationParams
-tests/test_sublimation_sio.py:30:def test_units_and_flux_dimension(sio_params: SublimationParams) -> None
-tests/test_sublimation_sio.py:41:def test_negative_pressure_gap_clamped(sio_params: SublimationParams) -> None
-tests/test_sublimation_sio.py:55:def test_tabulated_psat_interp(tmp_path) -> None
-tests/test_sublimation_sio.py:80:def test_auto_prefers_tabulated_within_range(tmp_path) -> None
-tests/test_sublimation_sio.py:106:def test_auto_switches_to_local_clausius_fit(tmp_path) -> None
-tests/test_sublimation_sio.py:136:def test_auto_records_validity_when_out_of_range(caplog) -> None
-tests/test_sublimation_sio.py:158:def test_run_config_records_psat_selection(tmp_path) -> None
-tests/test_sublimation_smol_sink.py:12:def test_smol_sublimation_sink_mass_budget(tmp_path: Path) -> None
-tests/test_summary_backcompat.py:9:def _write_summary(path: Path, payload: dict) -> None
-tests/test_summary_backcompat.py:13:def test_parse_summary_backwards_compatibility(tmp_path: Path) -> None
-tests/test_supply_headroom_policy.py:12:def test_headroom_policy_spill_keeps_flux_nonzero() -> None
-tests/test_supply_headroom_policy.py:58:def test_spill_policy_runs_without_supply_drop(tmp_path: Path) -> None
-tests/test_supply_positive.py:10:def test_supply_positive_with_wide_tau_cap(tmp_path: Path) -> None
-tests/test_supply_positive.py:38:def test_reservoir_depletes_and_records_metadata(tmp_path: Path) -> None
-tests/test_supply_positive.py:90:def test_supply_feedback_tau_los_updates_scale(tmp_path: Path) -> None
-tests/test_supply_positive.py:139:def test_run_config_written_before_runtime_failure(monkeypatch, tmp_path: Path) -> None
-tests/test_supply_split.py:8:def test_deep_buffer_accumulates_when_headroom_zero() -> None
-tests/test_supply_split.py:24:def test_deep_buffer_mixes_back_on_timescale() -> None
-tests/test_supply_transport_velocity.py:14:def test_supply_velocity_blend_and_weight() -> None
-tests/test_supply_transport_velocity.py:29:def test_deep_mixing_transport_routes_via_deep_buffer() -> None
-tests/test_supply_transport_velocity.py:49:def test_run_outputs_supply_visibility_columns(tmp_path: Path) -> None
-tests/test_surface_outflux_wavy.py:10:def test_blowout_driven_wavy_pattern_emerges() -> None
-tests/test_surface_supply_param.py:37:def test_const_mode()
-tests/test_surface_supply_param.py:47:def test_powerlaw_mode()
-tests/test_surface_supply_param.py:57:def test_table_mode(tmp_path)
-tests/test_surface_supply_param.py:65:def test_reservoir_caps_rate_and_consumes_mass()
-tests/test_surface_supply_param.py:81:def test_feedback_scales_supply_toward_target_tau()
-tests/test_surface_supply_param.py:99:def test_temperature_scaling_modulates_rate()
-tests/test_surface_supply_param.py:115:def test_smol_helper_respects_tau_clip_and_budget()
-tests/test_surface_supply_param.py:153:def _smol_cfg(outdir: Path, *, supply_cfg: Supply) -> Config
-tests/test_surface_supply_param.py:182:def test_supply_modes_preserve_columns_and_budget(tmp_path: Path) -> None
-tests/test_temperature_driver.py:16:def test_temperature_driver_prefers_radiation_override() -> None
-tests/test_temperature_driver.py:51:def test_temperature_driver_table_interpolates_sample() -> None
-tests/test_temperature_driver.py:77:def test_temperature_autogen_generates_table(tmp_path: Path) -> None
-tests/test_temperature_driver.py:107:def test_autogen_used_in_run(tmp_path: Path) -> None
-tests/test_temperature_selection.py:9:def _make_config(outdir: Path, *, TM_K: float | None=None, driver_constant: float | None=None) -> schema.Config
-tests/test_temperature_selection.py:47:def _run_and_load(cfg: schema.Config) -> dict
-tests/test_temperature_selection.py:55:def test_temperature_selection_prefers_radiation_override(tmp_path: Path) -> None
-tests/test_temperature_selection.py:70:def test_temperature_selection_tracks_temps_when_no_override(tmp_path: Path) -> None
-tests/test_zero_division_guards.py:11:def test_run_zero_d_tau_zero_no_error(tmp_path: Path)
-tests/test_zero_division_guards.py:40:def test_supply_powerlaw_t0_zero()
-tests/test_zero_division_guards.py:49:def test_run_zero_d_no_zerodivision(monkeypatch, tmp_path)
+tests/research/test_phase_integration_siO2.py:11:def siO2_evaluator() -> phase.PhaseEvaluator
+tests/research/test_phase_integration_siO2.py:16:def test_siO2_map_solid_branch(siO2_evaluator: phase.PhaseEvaluator) -> None
+tests/research/test_phase_sublimation_integration.py:15:def _run_case(tmp_path: Path, *, T_M: float, r_RM: float) -> tuple[pd.Series, pd.DataFrame]
+tests/research/test_phase_sublimation_integration.py:42:def test_solid_phase_allows_sublimation_with_siO2_map(tmp_path: Path) -> None
+tests/research/test_siO2_cooling_model.py:14:def test_mars_temperature_monotonic_decrease() -> None
+tests/research/test_siO2_cooling_model.py:21:def test_dust_temperature_monotonic_decrease_single_radius() -> None
+tests/research/test_siO2_cooling_model.py:29:def test_arrival_time_for_threshold() -> None
+tests/unit/test_core.py:11:def test_constants_values()
+tests/unit/test_core.py:17:def test_grid_relations()
+tests/unit/test_core.py:24:def test_writer_and_tables(tmp_path: Path)
+tests/unit/test_dynamics.py:4:def const_eps(v: float) -> float
+tests/unit/test_dynamics.py:8:def test_v_ij_zero_limit()
+tests/unit/test_dynamics.py:13:def test_c_eq_monotonic_tau_fwake()
+tests/unit/test_dynamics.py:21:def test_update_e_relaxation()
+tests/unit/test_dynamics_sampling.py:8:def _make_config(outdir)
+tests/unit/test_dynamics_sampling.py:48:def test_stochastic_ei_sampling(tmp_path)
+tests/unit/test_radiation_shielding.py:9:def test_blowout_radius_scales_with_temperature()
+tests/unit/test_radiation_shielding.py:18:def test_beta_inverse_size_scaling()
+tests/unit/test_radiation_shielding.py:28:def test_beta_respects_qpr_override()
+tests/unit/test_radiation_shielding.py:38:def test_planck_mean_qpr_uses_table()
+tests/unit/test_radiation_shielding.py:46:def test_clip_to_tau1_non_negative()
+tests/unit/test_sublimation.py:8:def test_s_sink_from_timescale_logistic()
+tests/unit/test_sublimation.py:14:def test_s_sub_boundary_fallback_warning()
+tests/unit/test_sublimation.py:20:def test_compute_s_min_F2_uses_max()
+tests/unit/test_surface_outflux.py:9:def _run(prod_rate: float, Omega: float, Sigma_tau1: float, steps: int=200)
+tests/unit/test_surface_outflux.py:25:def test_supply_limited_outflux()
+tests/unit/test_surface_outflux.py:34:def test_saturation_limited_outflux()
+tests/unit/test_surface_outflux.py:43:def test_sink_increases_mass_loss()
+tests/unit/test_surface_outflux.py:72:def test_los_factor_increases_tau_los(tmp_path)
+tests/unit/test_timegrid_and_budget.py:13:def _tiny_config(outdir: Path, dt_init: float, n_steps: int) -> schema.Config
+tests/unit/test_timegrid_and_budget.py:63:def test_time_grid_and_mass_budget(tmp_path)
+tests/unit/test_viscosity.py:7:def _run(N: int, dt: float)
+tests/unit/test_viscosity.py:18:def test_viscous_diffusion_converges_and_conserves_mass()
+tests/unit/test_wyatt_scaling.py:6:def test_wyatt_scaling_inverse_tau()
 tools/analyze_tau_los_feedback.py:38:def _coalesce(*values)
 tools/analyze_tau_los_feedback.py:83:def _load_json(path: Path) -> Dict
 tools/analyze_tau_los_feedback.py:90:def _resolve_diagnostics_paths(run_dir: Path, summary: Dict, max_chunks: Optional[int]) -> List[Path]
