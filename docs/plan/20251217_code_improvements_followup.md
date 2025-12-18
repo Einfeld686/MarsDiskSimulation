@@ -18,6 +18,15 @@ Phase 1–3 のコード整備が完了し、以下が達成済み:
 
 ---
 
+## Open Questions（実施前に決定が必要）
+
+| # | 質問 | 選択肢 | 推奨 |
+|---|------|--------|------|
+| 1 | 関数外出しで新設するパッケージ | A: `marsdisk/utils/` を新設 / B: 既存 `config_utils.py` 等に統合 | B（既存活用） |
+| 2 | `make clean-tmp` でtarball/inventory を削除対象にするか | A: 含める / B: 成果物として保持 | B（保持） |
+
+---
+
 ## 1. 高優先度
 
 ### 1.1 coverage holes 解消
@@ -31,7 +40,23 @@ Phase 1–3 のコード整備が完了し、以下が達成済み:
 ]
 ```
 
-**対応**: `analysis/equations.md` または `analysis/overview.md` に参照アンカーを追加
+**実施手順**:
+```bash
+# 1. アンカー追加
+#    analysis/overview.md などの仕様ドキュメントに以下を追記
+#    - marsdisk/physics/collisions_smol.py:515–547
+#    - marsdisk/physics/radiation.py:120–147
+#      （E記号は equations.md ではなく参照のみ）
+
+# 2. DocSync + ドキュメントテスト + 評価システム（AGENTS.md 必須ワークフロー）
+python -m tools.doc_sync_agent --all --write
+make analysis-doc-tests
+python -m tools.evaluation_system --outdir out/<latest-run-dir>  # 直近の run 出力を指定
+
+# 3. カバレッジ確認
+cat analysis/coverage/coverage.json | jq '.holes'
+# → [] であること
+```
 
 **工数**: 15 分
 
@@ -51,18 +76,46 @@ Phase 1–3 のコード整備が完了し、以下が達成済み:
 
 ### 2.1 `run.py` の関数数削減
 
-**現状**: `run.py` に 43 関数、4,825 行（目標 4,000 行以下）
+**現状**: `run.py` に 29 関数、4,826 行（目標 4,000 行以下）
 
-**移動候補**:
+**パッケージ構成の現状** (新設ファイルは存在しない):
+```
+marsdisk/
+├── runtime/
+│   ├── __init__.py      # 既存: ProgressReporter, ZeroDHistory をexport
+│   ├── history.py       # 既存
+│   └── progress.py      # 既存
+├── config_utils.py      # 既存: 設定ロード関連
+└── utils/               # ← 未作成
+```
 
-| 関数群 | 移動先 | 行数 |
-|--------|--------|------|
-| `_resolve_time_grid`, `_resolve_seed`, `_derive_seed_components` | `marsdisk/runtime/config_helpers.py` | ~150 |
-| `_parse_override_value`, `_apply_overrides_dict`, `_merge_physics_section` | `marsdisk/config_utils.py`（既存） | ~100 |
-| `_human_bytes`, `_memory_estimate` | `marsdisk/utils/format.py` | ~50 |
-| `_ensure_finite_kappa`, `_safe_float`, `_float_or_nan` | `marsdisk/utils/numerics.py` | ~50 |
+**移動候補と配置オプション**:
 
-**工数**: 2 時間
+| 関数群 | オプション A（新設） | オプション B（既存活用） |
+|--------|---------------------|------------------------|
+| `_resolve_time_grid`, `_resolve_seed` | `runtime/config_helpers.py` | `config_utils.py` に追加 |
+| `_parse_override_value`, `_apply_overrides_dict` | `utils/cli.py` | `config_utils.py` に追加 |
+| `_human_bytes`, `_memory_estimate` | `utils/format.py` | `runtime/` に追加 |
+| `_ensure_finite_kappa`, `_safe_float` | `utils/numerics.py` | 移動せず（低優先） |
+
+> [!IMPORTANT]
+> **アンカー更新が必要**
+>
+> 関数を移動すると以下のファイルに影響:
+> - `analysis/run_py_sections.md`: 関数行番号参照
+> - `analysis/inventory.json`: 関数シンボル参照
+> - `analysis/overview.md`: 可能性あり
+>
+> **必須ポストワークフロー**:
+> ```bash
+> # 移動完了後
+> python -m analysis.tools.make_run_sections  # run_py_sections.md 再生成
+> python -m tools.doc_sync_agent --all --write
+> make analysis-doc-tests
+> python -m tools.evaluation_system --outdir out/temp_supply_sweep/latest
+> ```
+
+**工数**: 2–3 時間（アンカー更新含む）
 
 ---
 
@@ -70,11 +123,18 @@ Phase 1–3 のコード整備が完了し、以下が達成済み:
 
 **現状**: `collisions_smol.py` に `logger.debug()` が 1 箇所のみ
 
-**推奨追加**:
+**推奨追加**（`isEnabledFor` ガード付きで計算オーバーヘッドを回避）:
 ```python
 # step_collisions_smol_0d 内
-logger.debug("collision kernel: t_coll=%.3e, e=%.4f, i=%.4f", t_coll_kernel, e_kernel, i_kernel)
-logger.debug("fragment tensor: shape=%s, Y_max=%.3e", Y_tensor.shape, np.max(Y_tensor))
+if logger.isEnabledFor(logging.DEBUG):
+    logger.debug(
+        "collision kernel: t_coll=%.3e, e=%.4f, i=%.4f",
+        t_coll_kernel, e_kernel, i_kernel
+    )
+    logger.debug(
+        "fragment tensor: shape=%s, Y_max=%.3e",
+        Y_tensor.shape, float(np.max(Y_tensor))
+    )
 ```
 
 **工数**: 30 分
@@ -83,19 +143,31 @@ logger.debug("fragment tensor: shape=%s, Y_max=%.3e", Y_tensor.shape, np.max(Y_t
 
 ## 3. 低優先度
 
-### 3.1 新規 `tmp_debug_*` ディレクトリの管理
+### 3.1 一時ディレクトリ・ファイルの管理
 
-**現状**: 7 つの `tmp_debug_*` 類似ディレクトリが存在（Git 管理外）
+**現状**（2025-12-17 時点）:
 
-| ディレクトリ | 内容 |
-|-------------|------|
-| `tmp_debug_mass_budget`, `tmp_debug_mass_budget2` | 質量収支テスト |
-| `tmp_debug_sampling` | サンプリングテスト |
-| `tmp_debug_test_gate`, `_gate2`, `_gate3` | ゲート係数テスト |
-| `tmp_debug_test_psat` | 蒸気圧テスト |
-| `tmp_eval_fixture` | 評価フィクスチャ |
+| 種別 | パス | 扱い |
+|------|------|------|
+| **保持（成果物）** | `tmp_debug_backup_20251216.tar.gz` | Git外退避バックアップ、削除しない |
+| **保持（記録）** | `tmp_debug_inventory.txt` | 削除前のファイルリスト、参照用に保持 |
+| **削除可能** | `tmp_debug_mass_budget/`, `tmp_debug_mass_budget2/` | テスト完了後に削除 |
+| **削除可能** | `tmp_debug_sampling/` | テスト完了後に削除 |
+| **削除可能** | `tmp_debug_test_gate/`, `_gate2/`, `_gate3/` | テスト完了後に削除 |
+| **削除可能** | `tmp_debug_test_psat/` | テスト完了後に削除 |
+| **削除可能** | `tmp_eval_fixture/` | テスト完了後に削除 |
 
-**対応**: テスト完了後に手動削除を習慣化。必要に応じて `make clean-tmp` タスク追加
+**`make clean-tmp` タスク案**:
+```makefile
+clean-tmp:
+	@echo "Removing temporary debug directories (preserving backup tarball)..."
+	rm -rf tmp_debug_mass_budget tmp_debug_mass_budget2
+	rm -rf tmp_debug_sampling
+	rm -rf tmp_debug_test_gate tmp_debug_test_gate2 tmp_debug_test_gate3
+	rm -rf tmp_debug_test_psat
+	rm -rf tmp_eval_fixture
+	@echo "Preserved: tmp_debug_backup_*.tar.gz, tmp_debug_inventory.txt"
+```
 
 ---
 
@@ -117,10 +189,19 @@ logger.debug("fragment tensor: shape=%s, Y_max=%.3e", Y_tensor.shape, np.max(Y_t
 
 ## 完了条件
 
-- [ ] coverage holes が 0 件
-- [ ] `writer.py` の Phase7 コメントが更新されている
-- [ ] `run.py` が 4,000 行以下
-- [ ] 衝突物理モジュールに適切なログ出力が追加されている
+### 高優先度（必須）
+- [x] coverage holes が 0 件
+- [x] DocSync + doc-tests + evaluation_system が全てパス
+- [x] `writer.py` の Phase7 コメントが更新されている
+
+### 中優先度（推奨）
+- [x] `run.py` が 4,000 行以下
+- [x] `analysis/run_py_sections.md` がリファクタ後の構造を反映
+- [x] 衝突物理モジュールに `isEnabledFor` ガード付きログ出力が追加されている
+
+### 低優先度（任意）
+- [x] `make clean-tmp` タスクが追加されている
+- [x] Numba フォールバックテストが追加されている
 
 ---
 
@@ -129,3 +210,4 @@ logger.debug("fragment tensor: shape=%s, Y_max=%.3e", Y_tensor.shape, np.max(Y_t
 | 日付 | 変更内容 |
 |------|----------|
 | 2025-12-17 | 初版作成 |
+| 2025-12-17 | ユーザー指摘反映: Open Questions 追加、DocSync ワークフロー明記、パッケージ構成現状と選択肢を詳細化、ログにisEnabledForガード追加、tmp_debug リスト最新化と削除対象明確化 |

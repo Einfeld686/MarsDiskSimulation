@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import Optional
 
+from ..errors import PhysicsError
 from . import sublimation
 
 
@@ -21,7 +22,7 @@ def eval_ds_dt_sublimation(
     """
 
     if rho_bulk <= 0.0:
-        raise ValueError("rho_bulk must be positive")
+        raise PhysicsError("rho_bulk must be positive")
     J = sublimation.mass_flux_hkl(T, params)
     if J <= 0.0:
         return 0.0
@@ -29,4 +30,3 @@ def eval_ds_dt_sublimation(
 
 
 __all__ = ["eval_ds_dt_sublimation"]
-

@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import logging
 import math
+from collections import OrderedDict
 from numbers import Real
 from pathlib import Path
 from typing import Callable, Optional
@@ -20,11 +21,16 @@ import numpy as np
 
 from .. import constants
 from ..io import tables
+from ..errors import PhysicsError
 
 # type alias for a Q_pr interpolation function
 type_QPr = Callable[[float, float], float]
 
 _QPR_LOOKUP: type_QPr | None = tables.interp_qpr
+_QPR_CACHE_ENABLED: bool = True
+_QPR_CACHE_MAXSIZE: int = 256
+_QPR_CACHE_ROUND: Optional[float] = None
+_QPR_CACHE: "OrderedDict[tuple[float, float], float]" = OrderedDict()
 
 DEFAULT_Q_PR: float = 1.0
 DEFAULT_RHO: float = 3000.0
@@ -39,9 +45,9 @@ def _validate_size(value: float, *, name: str = "s") -> float:
     if not isinstance(value, Real):
         raise TypeError(f"grain size '{name}' must be a real number")
     if not np.isfinite(value):
-        raise ValueError(f"grain size '{name}' must be finite")
+        raise PhysicsError(f"grain size '{name}' must be finite")
     if value <= 0.0:
-        raise ValueError(f"grain size '{name}' must be greater than 0")
+        raise PhysicsError(f"grain size '{name}' must be greater than 0")
     return float(value)
 
 
@@ -52,9 +58,9 @@ def _validate_density(value: Optional[float]) -> float:
     if not isinstance(value, Real):
         raise TypeError("material density 'rho' must be a real number")
     if not np.isfinite(value):
-        raise ValueError("material density 'rho' must be finite")
+        raise PhysicsError("material density 'rho' must be finite")
     if value <= 0.0:
-        raise ValueError("material density 'rho' must be greater than 0")
+        raise PhysicsError("material density 'rho' must be greater than 0")
     return float(value)
 
 
@@ -65,10 +71,10 @@ def _validate_temperature(value: Optional[float]) -> float:
     if not isinstance(value, Real):
         raise TypeError("temperature 'T_M' must be a real number")
     if not np.isfinite(value):
-        raise ValueError("temperature 'T_M' must be finite")
+        raise PhysicsError("temperature 'T_M' must be finite")
     Tmin, Tmax = T_M_RANGE
     if not (Tmin <= value <= Tmax):
-        raise ValueError(f"temperature 'T_M' must lie within [{Tmin}, {Tmax}] K")
+        raise PhysicsError(f"temperature 'T_M' must lie within [{Tmin}, {Tmax}] K")
     return float(value)
 
 
@@ -78,9 +84,9 @@ def _validate_qpr(value: Optional[float]) -> Optional[float]:
     if not isinstance(value, Real):
         raise TypeError("Q_pr must be a real number if provided")
     if not np.isfinite(value):
-        raise ValueError("Q_pr must be finite if provided")
+        raise PhysicsError("Q_pr must be finite if provided")
     if value <= 0.0:
-        raise ValueError("Q_pr must be greater than 0 if provided")
+        raise PhysicsError("Q_pr must be greater than 0 if provided")
     return float(value)
 
 
@@ -117,6 +123,49 @@ def _resolve_qpr(
     )
 
 
+def _quantize(value: float, step: float | None) -> float:
+    if step is None or step <= 0.0:
+        return value
+    scaled = value / step
+    rounded = round(scaled)
+    return rounded * step
+
+
+def _qpr_cache_key(s: float, T_M: float) -> tuple[float, float]:
+    return (_quantize(s, _QPR_CACHE_ROUND), _quantize(T_M, _QPR_CACHE_ROUND))
+
+
+def _qpr_cache_get(s: float, T_M: float) -> float | None:
+    if not _QPR_CACHE_ENABLED or _QPR_CACHE_MAXSIZE <= 0:
+        return None
+    key = _qpr_cache_key(s, T_M)
+    cached = _QPR_CACHE.get(key)
+    if cached is None:
+        return None
+    _QPR_CACHE.move_to_end(key)
+    return cached
+
+
+def _qpr_cache_set(s: float, T_M: float, value: float) -> None:
+    if not _QPR_CACHE_ENABLED or _QPR_CACHE_MAXSIZE <= 0:
+        return
+    key = _qpr_cache_key(s, T_M)
+    _QPR_CACHE[key] = value
+    _QPR_CACHE.move_to_end(key)
+    while len(_QPR_CACHE) > _QPR_CACHE_MAXSIZE:
+        _QPR_CACHE.popitem(last=False)
+
+
+def configure_qpr_cache(*, enabled: bool, maxsize: int = 256, round_tol: float | None = None) -> None:
+    """Configure memoisation for ⟨Q_pr⟩ lookups."""
+
+    global _QPR_CACHE_ENABLED, _QPR_CACHE_MAXSIZE, _QPR_CACHE_ROUND
+    _QPR_CACHE_ENABLED = bool(enabled)
+    _QPR_CACHE_MAXSIZE = max(int(maxsize), 0)
+    _QPR_CACHE_ROUND = float(round_tol) if round_tol is not None and round_tol > 0.0 else None
+    _QPR_CACHE.clear()
+
+
 def grain_temperature_graybody(T_M: float, radius_m: float, *, q_abs: float = 1.0) -> float:
     r"""Return the planetary IR equilibrium grain temperature ``T_d`` (E.043). [@Hyodo2018_ApJ860_150]
 
@@ -129,17 +178,17 @@ def grain_temperature_graybody(T_M: float, radius_m: float, *, q_abs: float = 1.
     if not isinstance(radius_m, Real):
         raise TypeError("radius_m must be a real number")
     if not np.isfinite(radius_m):
-        raise ValueError("radius_m must be finite")
+        raise PhysicsError("radius_m must be finite")
     radius_val = float(radius_m)
     if radius_val <= 0.0:
-        raise ValueError("radius_m must be positive")
+        raise PhysicsError("radius_m must be positive")
 
     if not isinstance(q_abs, Real):
         raise TypeError("q_abs must be a real number")
     if not np.isfinite(q_abs):
-        raise ValueError("q_abs must be finite")
+        raise PhysicsError("q_abs must be finite")
     if q_abs <= 0.0:
-        raise ValueError("q_abs must be positive")
+        raise PhysicsError("q_abs must be positive")
 
     T_val = _validate_temperature(T_M)
     factor = (float(q_abs) ** 0.25) * math.sqrt(constants.R_MARS / (2.0 * radius_val))
@@ -150,6 +199,7 @@ def load_qpr_table(path: Path | str) -> type_QPr:
     """Load a table file and cache the interpolator. Planck averaged ⟨Q_pr⟩."""
 
     global _QPR_LOOKUP
+    _QPR_CACHE.clear()
     table_path = Path(path)
     _QPR_LOOKUP = tables.load_qpr_table(table_path)
 
@@ -184,16 +234,16 @@ def qpr_lookup(s: float, T_M: float, table: type_QPr | None = None) -> float:
     if not isinstance(T_M, Real):
         raise TypeError("temperature 'T_M' must be a real number for ⟨Q_pr⟩ lookup")
     if not np.isfinite(s):
-        raise ValueError("grain size 's' must be finite for ⟨Q_pr⟩ lookup")
+        raise PhysicsError("grain size 's' must be finite for ⟨Q_pr⟩ lookup")
     if not np.isfinite(T_M):
-        raise ValueError("temperature 'T_M' must be finite for ⟨Q_pr⟩ lookup")
+        raise PhysicsError("temperature 'T_M' must be finite for ⟨Q_pr⟩ lookup")
 
     s_val = float(s)
     T_val = float(T_M)
     if s_val <= 0.0:
-        raise ValueError("grain size 's' must be greater than 0 for ⟨Q_pr⟩ lookup")
+        raise PhysicsError("grain size 's' must be greater than 0 for ⟨Q_pr⟩ lookup")
     if T_val <= 0.0:
-        raise ValueError("temperature 'T_M' must be greater than 0 for ⟨Q_pr⟩ lookup")
+        raise PhysicsError("temperature 'T_M' must be greater than 0 for ⟨Q_pr⟩ lookup")
 
     func = table or _QPR_LOOKUP or tables.interp_qpr
     if not callable(func):
@@ -203,6 +253,11 @@ def qpr_lookup(s: float, T_M: float, table: type_QPr | None = None) -> float:
     table_obj = getattr(lookup, "__self__", None)
     if table_obj is None and lookup is tables.interp_qpr:
         table_obj = getattr(tables, "_QPR_TABLE", None)
+        if table is None and _QPR_LOOKUP is None and table_obj is None:
+            raise RuntimeError(
+                "⟨Q_pr⟩ lookup table not initialised. Provide radiation.qpr_table_path or call "
+                "marsdisk.io.tables.load_qpr_table before evaluating Q_pr."
+            )
 
     s_eval, T_eval = s_val, T_val
     clamp_msgs: list[str] = []
@@ -230,7 +285,13 @@ def qpr_lookup(s: float, T_M: float, table: type_QPr | None = None) -> float:
     if clamp_msgs:
         logger.info("⟨Q_pr⟩ lookup clamped: %s", ", ".join(clamp_msgs))
 
-    return float(lookup(s_eval, T_eval))
+    cached = _qpr_cache_get(s_eval, T_eval)
+    if cached is not None:
+        return float(cached)
+
+    value = float(lookup(s_eval, T_eval))
+    _qpr_cache_set(s_eval, T_eval, value)
+    return value
 
 
 def planck_mean_qpr(

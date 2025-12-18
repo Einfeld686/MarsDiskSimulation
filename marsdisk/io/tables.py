@@ -18,6 +18,7 @@ import numpy as np
 import pandas as pd
 
 from .. import constants
+from ..warnings import TableWarning
 
 PACKAGE_DATA_DIR = Path(__file__).resolve().parent / "data"
 REPO_DATA_DIR = Path(__file__).resolve().parents[2] / "data"
@@ -235,7 +236,7 @@ for candidate in _EXPECTED_QPR_LOCATIONS:
         _QPR_TABLE_PATH = candidate.resolve()
         break
     except Exception as exc:  # pragma: no cover - defensive logging
-        warnings.warn(f"Failed to load default Q_pr table from {candidate}: {exc}", RuntimeWarning)
+        warnings.warn(f"Failed to load default Q_pr table from {candidate}: {exc}", TableWarning)
         _QPR_TABLE = None
         _QPR_TABLE_PATH = None
 
@@ -250,9 +251,9 @@ try:
     phi_path = DATA_DIR / "phi.csv"
     _PHI_TABLE = PhiTable.from_frame(pd.read_csv(phi_path)) if phi_path.exists() else None
     if _PHI_TABLE is None:
-        warnings.warn("Phi table not found; using analytic approximation", RuntimeWarning)
+        warnings.warn("Phi table not found; using analytic approximation", TableWarning)
 except Exception as exc:  # pragma: no cover - defensive
-    warnings.warn(f"Failed to load Phi table: {exc}; using approximation", RuntimeWarning)
+    warnings.warn(f"Failed to load Phi table: {exc}; using approximation", TableWarning)
     _PHI_TABLE = None
 
 

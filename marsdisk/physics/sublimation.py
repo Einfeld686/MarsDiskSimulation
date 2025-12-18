@@ -22,6 +22,7 @@ import pandas as pd
 from scipy.interpolate import PchipInterpolator
 
 from .. import constants
+from ..errors import PhysicsError, TableLoadError
 from .radiation import grain_temperature_graybody
 
 logger = logging.getLogger(__name__)
@@ -114,6 +115,7 @@ class SublimationParams:
     psat_table_buffer_K: float = PSAT_TABLE_BUFFER_DEFAULT_K
     local_fit_window_K: float = PSAT_LOCAL_FIT_WINDOW_DEFAULT_K
     min_points_local_fit: int = PSAT_LOCAL_FIT_MIN_POINTS
+    psat_cache_tol_K: float = 0.0
     T_sub: float = 1300.0
     s_ref: float = 1e-6
     eta_instant: float = 0.1
@@ -129,6 +131,7 @@ class SublimationParams:
     _psat_last_selection: Optional[Dict[str, Any]] = field(default=None, init=False, repr=False)
     _psat_last_T: Optional[float] = field(default=None, init=False, repr=False)
     _psat_last_log10P: Optional[float] = field(default=None, init=False, repr=False)
+    _psat_last_P: Optional[float] = field(default=None, init=False, repr=False)
 
 
 def _is_hkl_active(params: SublimationParams) -> bool:
@@ -197,7 +200,7 @@ def p_sat_clausius(
     A = params.A if A_override is None else A_override
     B = params.B if B_override is None else B_override
     if A is None or B is None:
-        raise ValueError("Clausius–Clapeyron coefficients A and B must be provided")
+        raise PhysicsError("Clausius–Clapeyron coefficients A and B must be provided")
     return 10.0 ** (A - B / float(T))
 
 
@@ -205,7 +208,7 @@ def _load_psat_table(params: SublimationParams) -> Callable[[float], float]:
     """Return an interpolator for log10 P_sat based on a tabulated dataset."""
 
     if params.psat_table_path is None:
-        raise ValueError("psat_table_path must be provided when psat_model='tabulated'")
+        raise PhysicsError("psat_table_path must be provided when psat_model='tabulated'")
 
     path = Path(params.psat_table_path).expanduser()
     if not path.exists():
@@ -216,7 +219,7 @@ def _load_psat_table(params: SublimationParams) -> Callable[[float], float]:
     elif suffix in {".json"}:
         df = pd.read_json(path)
     else:
-        raise ValueError(f"Unsupported psat table format: '{suffix}'")
+        raise TableLoadError(f"Unsupported psat table format: '{suffix}'")
 
     rename_map = {"T[K]": "T", "log10P[Pa]": "log10P"}
     df = df.rename(columns=rename_map)
@@ -224,26 +227,26 @@ def _load_psat_table(params: SublimationParams) -> Callable[[float], float]:
     missing = required.difference(df.columns)
     if missing:
         names = ", ".join(sorted(missing))
-        raise ValueError(f"psat table missing required columns: {names}")
+        raise TableLoadError(f"psat table missing required columns: {names}")
 
     work = df[["T", "log10P"]].copy()
     work["T"] = pd.to_numeric(work["T"], errors="coerce")
     work["log10P"] = pd.to_numeric(work["log10P"], errors="coerce")
     if work.isna().any().any():
-        raise ValueError("psat table contains non-numeric entries")
+        raise TableLoadError("psat table contains non-numeric entries")
     if (work["T"] <= 0.0).any():
-        raise ValueError("psat table temperatures must be positive")
+        raise TableLoadError("psat table temperatures must be positive")
 
     work = work.drop_duplicates(subset="T").sort_values("T")
     if len(work) < 2:
-        raise ValueError("psat table requires at least two unique temperature samples")
+        raise TableLoadError("psat table requires at least two unique temperature samples")
 
     T_vals = work["T"].to_numpy(dtype=float)
     log_vals = work["log10P"].to_numpy(dtype=float)
     if not np.all(np.isfinite(log_vals)):
-        raise ValueError("psat table contains non-finite log10P values")
+        raise TableLoadError("psat table contains non-finite log10P values")
     if not np.all(np.diff(T_vals) > 0.0):
-        raise ValueError("psat table temperatures must be strictly increasing")
+        raise TableLoadError("psat table temperatures must be strictly increasing")
 
     params._psat_interp = PchipInterpolator(T_vals, log_vals, extrapolate=False)
     params._psat_table_T = T_vals.copy()
@@ -272,7 +275,7 @@ def _get_table_info(
     if params._psat_interp is None or params._psat_table_T is None:
         if params.psat_table_path is None:
             if raise_on_error:
-                raise ValueError("psat_table_path must be provided for tabulated model")
+                raise PhysicsError("psat_table_path must be provided for tabulated model")
             return None
         if raise_on_error:
             interp = _load_psat_table(params)
@@ -389,7 +392,7 @@ def _baseline_clausius_selection(
     valid_range = valid_override if valid_override is not None else params.valid_K
 
     if A_active is None or B_active is None:
-        raise ValueError(
+        raise PhysicsError(
             "Clausius coefficients (A, B) must be provided for baseline sublimation calculations"
         )
 
@@ -414,15 +417,15 @@ def p_sat_tabulated(T: float, params: SublimationParams) -> float:
 
     info = _get_table_info(params, raise_on_error=True)
     if info is None:
-        raise ValueError("psat table is required but not available")
+        raise PhysicsError("psat table is required but not available")
 
     interp = params._psat_interp
     if interp is None:
-        raise ValueError("psat table interpolator not initialised")
+        raise PhysicsError("psat table interpolator not initialised")
 
     log10P = float(interp(T))
     if not np.isfinite(log10P):
-        raise ValueError(f"P_sat interpolation failed at T={T} K")
+        raise PhysicsError(f"P_sat interpolation failed at T={T} K")
     return 10.0 ** log10P
 
 
@@ -508,7 +511,7 @@ def choose_psat_backend(
     if model == "tabulated":
         info = table_meta if table_meta is not None else _get_table_info(params, raise_on_error=True)
         if info is None or params._psat_interp is None:
-            raise ValueError("psat model 'tabulated' requires a valid dataset")
+            raise PhysicsError("psat model 'tabulated' requires a valid dataset")
         Tmin = float(info["T_vals"][0])
         Tmax = float(info["T_vals"][-1])
         monotonic = bool(info.get("monotonic", True))
@@ -549,7 +552,7 @@ def choose_psat_backend(
             branch=branch,
         )
 
-    raise ValueError(f"Unrecognised psat_model '{params.psat_model}'")
+    raise PhysicsError(f"Unrecognised psat_model '{params.psat_model}'")
 
 
 def _store_psat_selection(
@@ -579,10 +582,20 @@ def _store_psat_selection(
     params._psat_last_selection = metadata
     params._psat_last_T = float(T_req)
     params._psat_last_log10P = log10P
+    params._psat_last_P = float(P_value)
 
 
 def p_sat(T: float, params: SublimationParams) -> float:
     """Return the saturation vapour pressure according to the selected model."""
+
+    tol = max(float(getattr(params, "psat_cache_tol_K", 0.0) or 0.0), 0.0)
+    last_T = getattr(params, "_psat_last_T", None)
+    last_P = getattr(params, "_psat_last_P", None)
+    if last_T is not None and last_P is not None:
+        if (tol == 0.0 and float(T) == float(last_T)) or (
+            tol > 0.0 and abs(float(T) - float(last_T)) <= tol
+        ):
+            return float(last_P)
 
     selection = choose_psat_backend(T, params)
     P_value = selection.evaluator(T)
@@ -626,7 +639,7 @@ def mass_flux_hkl(T: float, params: SublimationParams) -> float:
         if P_ex <= 0.0:
             return 0.0
         if params.mu <= 0.0:
-            raise ValueError("molar mass mu must be positive")
+            raise PhysicsError("molar mass mu must be positive")
         # Hertz–Knudsen–Langmuir: P in Pa, T in K, μ in kg/mol, R_GAS in J mol^-1 K^-1.
         root = math.sqrt(params.mu / (2.0 * math.pi * constants.R_GAS * T))
         meta = getattr(params, "_psat_last_selection", None)
@@ -660,7 +673,7 @@ def s_sink_from_timescale(
     """
 
     if rho <= 0.0 or t_ref <= 0.0:
-        raise ValueError("rho and t_ref must be positive")
+        raise PhysicsError("rho and t_ref must be positive")
     J = mass_flux_hkl(T, params)
     if J <= 0.0:
         return 0.0
@@ -691,9 +704,9 @@ def sublimation_sink_from_dsdt(
     ds_dt_arr = np.asarray(ds_dt_k, dtype=float)
     m_arr = np.asarray(m_k, dtype=float)
     if not (s_arr.shape == N_arr.shape == ds_dt_arr.shape == m_arr.shape):
-        raise ValueError("s_grid_m, N_k, ds_dt_k and m_k must have identical shapes")
+        raise PhysicsError("s_grid_m, N_k, ds_dt_k and m_k must have identical shapes")
     if s_arr.ndim != 1:
-        raise ValueError("inputs must be one-dimensional")
+        raise PhysicsError("inputs must be one-dimensional")
 
     S_sub = np.zeros_like(s_arr, dtype=float)
     mask = (ds_dt_arr < 0.0) & np.isfinite(ds_dt_arr) & (s_arr > 0.0)

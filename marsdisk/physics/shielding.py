@@ -16,6 +16,7 @@ from typing import Callable, Optional, Tuple
 import numpy as np
 
 from ..io import tables
+from ..errors import PhysicsError
 
 # type alias for Φ interpolation function
 type_Phi = Callable[[float, float, float], float]
@@ -88,13 +89,13 @@ def effective_kappa(
     if not isinstance(kappa, Real):
         raise TypeError("surface opacity 'kappa' must be a real number for Φ application")
     if not np.isfinite(kappa):
-        raise ValueError("surface opacity 'kappa' must be finite for Φ application")
+        raise PhysicsError("surface opacity 'kappa' must be finite for Φ application")
     if kappa < 0.0:
-        raise ValueError("surface opacity 'kappa' must be greater or equal to 0 for Φ application")
+        raise PhysicsError("surface opacity 'kappa' must be greater or equal to 0 for Φ application")
     if not isinstance(tau, Real):
         raise TypeError("optical depth 'tau' must be a real number for Φ application")
     if not np.isfinite(tau):
-        raise ValueError("optical depth 'tau' must be finite for Φ application")
+        raise PhysicsError("optical depth 'tau' must be finite for Φ application")
 
     kappa_val = float(kappa)
     tau_val = float(tau)
@@ -106,7 +107,7 @@ def effective_kappa(
 
     phi_raw = float(phi_fn(tau_val))
     if not np.isfinite(phi_raw):
-        raise ValueError(
+        raise PhysicsError(
             f"Φ lookup returned non-finite value for tau={tau_val:.6e}"
         )
     phi = float(np.clip(phi_raw, 0.0, 1.0))
@@ -142,21 +143,21 @@ def apply_shielding(
     if not isinstance(kappa_surf, Real):
         raise TypeError("surface opacity 'kappa_surf' must be a real number for Φ lookup")
     if not np.isfinite(kappa_surf):
-        raise ValueError("surface opacity 'kappa_surf' must be finite for Φ lookup")
+        raise PhysicsError("surface opacity 'kappa_surf' must be finite for Φ lookup")
     if kappa_surf < 0.0:
-        raise ValueError("surface opacity 'kappa_surf' must be greater or equal to 0 for Φ lookup")
+        raise PhysicsError("surface opacity 'kappa_surf' must be greater or equal to 0 for Φ lookup")
     if not isinstance(tau, Real):
         raise TypeError("optical depth 'tau' must be a real number for Φ lookup")
     if not np.isfinite(tau):
-        raise ValueError("optical depth 'tau' must be finite for Φ lookup")
+        raise PhysicsError("optical depth 'tau' must be finite for Φ lookup")
     if not isinstance(w0, Real):
         raise TypeError("single-scattering albedo 'w0' must be a real number for Φ lookup")
     if not np.isfinite(w0):
-        raise ValueError("single-scattering albedo 'w0' must be finite for Φ lookup")
+        raise PhysicsError("single-scattering albedo 'w0' must be finite for Φ lookup")
     if not isinstance(g, Real):
         raise TypeError("asymmetry parameter 'g' must be a real number for Φ lookup")
     if not np.isfinite(g):
-        raise ValueError("asymmetry parameter 'g' must be finite for Φ lookup")
+        raise PhysicsError("asymmetry parameter 'g' must be finite for Φ lookup")
     if interp is not None and not callable(interp):
         raise TypeError("Φ interpolator 'interp' must be callable")
 
@@ -222,11 +223,11 @@ def clip_to_tau1(sigma_surf: float, kappa_eff: float) -> float:
     if not isinstance(sigma_surf, Real):
         raise TypeError("surface density 'sigma_surf' must be a real number for τ=1 clipping")
     if not np.isfinite(sigma_surf):
-        raise ValueError("surface density 'sigma_surf' must be finite for τ=1 clipping")
+        raise PhysicsError("surface density 'sigma_surf' must be finite for τ=1 clipping")
     if not isinstance(kappa_eff, Real):
         raise TypeError("effective opacity 'kappa_eff' must be a real number for τ=1 clipping")
     if not np.isfinite(kappa_eff):
-        raise ValueError("effective opacity 'kappa_eff' must be finite for τ=1 clipping")
+        raise PhysicsError("effective opacity 'kappa_eff' must be finite for τ=1 clipping")
 
     sigma_val = float(sigma_surf)
     kappa_val = float(kappa_eff)

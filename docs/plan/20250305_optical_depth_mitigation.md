@@ -74,7 +74,7 @@ init_tau1:
   scale_to_tau1: true
 ```
 
-**コード参照**: [marsdisk/run.py#L1599–L1700](../../marsdisk/run.py) — `init_tau1` 処理
+**コード参照**: [marsdisk/run_zero_d.py#L1599–L1700](../../marsdisk/run.py) — `init_tau1` 処理
 
 ### 2. 供給を絞る (`supply.const`)
 

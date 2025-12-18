@@ -13,7 +13,60 @@
 
 ---
 
-## 現状の最適化実装
+## プロファイル結果（実測）
+
+**測定条件**: `configs/base.yml`, `t_end_years=0.01`, `n_bins=40`  
+**総実行時間**: 98.4秒 (約158,000ステップ)
+
+### tottime（自己時間）上位
+
+| 順位 | 関数 | tottime (s) | 割合 | 備考 |
+|------|------|-------------|------|------|
+| 1 | `run.py:run_zero_d` | 16.2 | 16.5% | メインループのオーバーヘッド |
+| 2 | `numpy.ufunc.reduce` | 4.1 | 4.2% | 配列演算の集約 |
+| 3 | `tables.py:interp` | 3.5 | 3.6% | Q_pr テーブル補間 |
+| 4 | **`c_einsum`** | **3.4** | **3.5%** | `np.einsum` 本体 |
+| 5 | `radiation.py:qpr_lookup` | 3.4 | 3.5% | Planck Q_pr ルックアップ |
+| 6 | `fromnumeric.py:_wrapreduction` | 3.3 | 3.4% | NumPy reduce ラッパー |
+| 7 | `collisions_smol.py:step_collisions_smol_0d` | 2.4 | 2.4% | 衝突ステップ本体 |
+| 8 | `collide.py:compute_collision_kernel_C1` | 2.0 | 2.0% | 衝突カーネル構築 |
+| 9 | `smol.py:step_imex_bdf1_C3` | 1.6 | 1.6% | IMEX ソルバー |
+| 10 | `psd.py:compute_kappa` | 1.2 | 1.2% | κ 計算 |
+
+### cumtime（累積時間）上位
+
+| 順位 | 関数 | cumtime (s) | 割合 | 備考 |
+|------|------|-------------|------|------|
+| 1 | `run_zero_d` | 97.0 | 98.6% | シミュレーション全体 |
+| 2 | `step_collisions` | 24.4 | 24.8% | **最大ホットスポット** |
+| 3 | `_resolve_blowout` | 23.4 | 23.8% | Q_pr 呼び出し含む |
+| 4 | `qpr_lookup` | 21.3 | 21.7% | テーブル補間含む |
+| 5 | `tables.py:interp` | 9.4 | 9.6% | 2D 補間 |
+| 6 | `step_imex_bdf1_C3` | 7.7 | 7.8% | IMEX ソルバー |
+| 7 | `logging.info` | 6.4 | 6.5% | ロギング |
+| 8 | `compute_collision_kernel_C1` | 4.3 | 4.4% | 衝突カーネル |
+| 9 | `np.einsum` | 3.4 | 3.5% | gain 計算 |
+
+### 分析
+
+1. **最大ボトルネックは `qpr_lookup` (21.3s, 21.7%)**
+   - Q_pr テーブルの2D補間が毎ステップ1,262,314回呼ばれる
+   - 補間自体 (`tables.py:interp`) に 9.4s
+   - **推奨**: Q_pr 値をステップごとにキャッシュ（温度・サイズが変わらなければ再計算不要）
+
+2. **`step_collisions_smol_0d` (24.4s累積) が第2ホットスポット**
+   - 衝突カーネル構築 + IMEX ソルバー + einsum を含む
+
+3. **`np.einsum` は 3.4s (3.5%) で当初推定より影響小**
+   - 全体の 3.5% であり、JIT 化の効果は限定的
+   - 2〜5倍の推定は過大評価
+
+4. **ロギングオーバーヘッド 6.4s (6.5%)**
+   - `logger.info` が 315,582 回呼ばれる
+   - **推奨**: INFO → DEBUG に変更、またはガード追加
+
+---
+
 
 ### Numba JIT 適用状況
 
@@ -43,7 +96,7 @@ gain = 0.5 * np.einsum("ij,kij->k", C, Y)
 | 項目 | 内容 |
 |------|------|
 | **問題** | O(n³) 演算を純粋 NumPy で毎ステップ実行 |
-| **推定効果** | 2〜5倍（n_bins=40 の場合） |
+| **推定効果** | 2〜5倍（未測定、類似処理の JIT 化実績に基づく推定） |
 | **実装難易度** | 中 |
 | **提案** | Numba JIT カーネルに置換し、`prange` で並列化 |
 
@@ -60,9 +113,11 @@ kernel = N_outer / (1.0 + delta) * np.pi * (s_sum ** 2) * v_mat / (np.sqrt(2.0 *
 | 項目 | 内容 |
 |------|------|
 | **問題** | `np.outer`, `np.add.outer` が毎ステップ呼ばれる |
-| **推定効果** | 1.5〜2倍 |
-| **提案A** | Numba JIT 化 |
-| **提案B** | 入力が変わらない場合はキャッシュ |
+| **推定効果** | 1.5〜2倍（未測定、要プロファイリング） |
+| **提案** | Numba JIT 化 |
+
+> [!WARNING]
+> `N` と `H` はステップごとに更新されるため（[collisions_smol.py:640-735](file:///Users/daichi/marsshearingsheet/marsdisk/physics/collisions_smol.py#L640-735)）、カーネル全体のキャッシュは実質再利用不可。キャッシュ対象はサイズ配列 `s` や固定 `v_rel` に限定する必要がある。
 
 ---
 
@@ -109,8 +164,8 @@ while True:
 
 | 項目 | 内容 |
 |------|------|
-| **問題** | 初期 `dt` 推定が保守的すぎると反復回数が増加 |
-| **提案** | 適応的初期 `dt` 推定の改善 |
+| **問題** | 初期 `dt` が過大だと負値や質量誤差で弾かれ、反復回数が増加（[smol.py:244-275](file:///Users/daichi/marsshearingsheet/marsdisk/physics/smol.py#L244-275)） |
+| **提案** | 初期 `dt` 推定を `t_coll` ベースでより正確に設定 |
 
 ---
 

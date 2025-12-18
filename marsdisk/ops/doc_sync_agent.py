@@ -13,6 +13,8 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional, Sequence, Tuple
 
+from ..warnings import MarsDiskWarning
+
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
 # ---------------------------------------------------------------------------
@@ -1727,7 +1729,7 @@ def _cmd_equations(args: argparse.Namespace) -> int:
         try:
             from .equation_matcher import load_or_train_matcher
         except Exception as exc:
-            warnings.warn(f"equations: ML suggestion unavailable ({exc})")
+            warnings.warn(f"equations: ML suggestion unavailable ({exc})", MarsDiskWarning)
         else:
             try:
                 matcher = load_or_train_matcher(
@@ -1752,7 +1754,7 @@ def _cmd_equations(args: argparse.Namespace) -> int:
                     for item in ml_candidates
                 ]
             except Exception as exc:  # pragma: no cover - defensive
-                warnings.warn(f"equations: ML suggestion failed ({exc})")
+                warnings.warn(f"equations: ML suggestion failed ({exc})", MarsDiskWarning)
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_text(

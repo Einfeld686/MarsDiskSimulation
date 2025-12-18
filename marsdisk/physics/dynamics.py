@@ -41,7 +41,8 @@ def v_ij(e: float, i: float, v_k: float = 1.0) -> float:
     if v_k < 0.0:
         raise MarsDiskError("v_k must be non-negative")
     v_rel = np.sqrt(1.25 * e * e + i * i) * v_k
-    logger.info("v_ij: e=%f i=%f v_k=%f -> v_rel=%f", e, i, v_k, v_rel)
+    if logger.isEnabledFor(logging.DEBUG):
+        logger.debug("v_ij: e=%f i=%f v_k=%f -> v_rel=%f", e, i, v_k, v_rel)
     return float(v_rel)
 
 
@@ -53,7 +54,8 @@ def v_rel_pericenter(e: float, v_k: float) -> float:
     if e >= 1.0:
         raise MarsDiskError("eccentricity must be < 1 for pericenter velocity")
     v_rel = v_k / max((1.0 - e) ** 0.5, 1.0e-8)
-    logger.info("v_rel_pericenter: e=%f v_k=%f -> v_rel=%f", e, v_k, v_rel)
+    if logger.isEnabledFor(logging.DEBUG):
+        logger.debug("v_rel_pericenter: e=%f v_k=%f -> v_rel=%f", e, v_k, v_rel)
     return float(v_rel)
 
 
@@ -110,7 +112,8 @@ def solve_c_eq(
         eps = float(eps_model(c))
         eps = min(max(eps, 0.0), 1.0 - 1e-6)
         c_new = (f_wake * tau / max(1.0 - eps**2, 1e-12)) ** 0.5
-        logger.info("solve_c_eq iter=%d c=%.6e eps=%.3f c_new=%.6e", n, c, eps, c_new)
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug("solve_c_eq iter=%d c=%.6e eps=%.3f c_new=%.6e", n, c, eps, c_new)
         if abs(c_new - c) <= tol * max(c_new, 1.0):
             return float(c_new)
         c = 0.5 * (c + c_new)

@@ -9,6 +9,7 @@ References
 """
 
 import logging
+from collections import OrderedDict
 from typing import Dict, Tuple, Literal
 
 import numpy as np
@@ -50,6 +51,8 @@ _VEL_CLAMP_COUNTS: dict[str, int] = {"below": 0, "above": 0}
 _VEL_CLAMP_WARNED = False
 # Gravitational-regime velocity exponent μ from LS09; used as v^{-3μ+2} outside [v_min, v_max].
 _GRAVITY_VELOCITY_MU = 0.45
+_QDSTAR_CACHE_MAXSIZE = 8
+_QDSTAR_CACHE: "OrderedDict[tuple, np.ndarray]" = OrderedDict()
 
 
 def set_coeff_unit_system(units: CoeffUnits) -> CoeffUnits:
@@ -123,6 +126,33 @@ def _track_velocity_clamp(v_values: np.ndarray) -> None:
             _VEL_CLAMP_WARNED = True
 
 
+def _qdstar_cache_key(s: np.ndarray, rho: float, v_kms: float) -> tuple | None:
+    """Return an immutable cache key for scalar-velocity lookups."""
+
+    if s.ndim != 1:
+        return None
+    return ("scalar_v", float(rho), float(v_kms), tuple(np.asarray(s, dtype=float).tolist()))
+
+
+def _qdstar_cache_get(key: tuple | None) -> np.ndarray | None:
+    if key is None:
+        return None
+    cached = _QDSTAR_CACHE.get(key)
+    if cached is None:
+        return None
+    _QDSTAR_CACHE.move_to_end(key)
+    return np.array(cached, copy=True)
+
+
+def _qdstar_cache_put(key: tuple | None, value: np.ndarray) -> None:
+    if key is None:
+        return
+    _QDSTAR_CACHE[key] = np.array(value, copy=True)
+    _QDSTAR_CACHE.move_to_end(key)
+    while len(_QDSTAR_CACHE) > _QDSTAR_CACHE_MAXSIZE:
+        _QDSTAR_CACHE.popitem(last=False)
+
+
 def _q_d_star(
     s: np.ndarray,
     rho: float,
@@ -167,6 +197,12 @@ def compute_q_d_star_array(s: np.ndarray, rho: float, v_kms: np.ndarray) -> np.n
 
     s_arr = np.asarray(s, dtype=float)
     v_raw = np.asarray(v_kms, dtype=float)
+    cache_key = None
+    if v_raw.ndim == 0 or (v_raw.size == 1 and v_raw.shape == ()):
+        cache_key = _qdstar_cache_key(s_arr, rho, float(v_raw))
+        cached = _qdstar_cache_get(cache_key)
+        if cached is not None:
+            return cached
     _track_velocity_clamp(v_raw)
     v_arr = np.asarray(v_raw, dtype=float)
     try:
@@ -191,7 +227,9 @@ def compute_q_d_star_array(s: np.ndarray, rho: float, v_kms: np.ndarray) -> np.n
     strength = strength_lo * (1.0 - weight) + strength_hi * weight
     gravity = gravity_lo * (1.0 - weight) + gravity_hi * weight
     gravity_scale = _gravity_velocity_scale(v_arr)
-    return strength + gravity * gravity_scale
+    result = strength + gravity * gravity_scale
+    _qdstar_cache_put(cache_key, result)
+    return result
 
 
 def compute_q_d_star_F1(s: float, rho: float, v_kms: float) -> float:

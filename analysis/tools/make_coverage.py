@@ -290,7 +290,7 @@ def compute_sinks_callgraph_flag(doc_path: Path) -> bool:
     segments = [block] if block else []
     segments.append(text)
     anchors = {
-        "marsdisk/run.py#": False,
+        "marsdisk/run_zero_d.py#": False,
         "marsdisk/physics/surface.py#": False,
         "marsdisk/physics/sinks.py#": False,
         "marsdisk/physics/sublimation.py#": False,

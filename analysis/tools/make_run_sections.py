@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Generate run_py_sections.md from inventory.json.
 
-This script creates a section map of marsdisk/run.py to help AI agents
-navigate the large file (5000+ lines) efficiently. The output uses
+This script creates a section map of marsdisk/run_zero_d.py to help AI agents
+navigate the large file efficiently. The output uses
 AUTOGEN markers so that line numbers are updated automatically when
 DocSyncAgent runs.
 
@@ -23,7 +23,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 ANALYSIS_DIR = REPO_ROOT / "analysis"
 INVENTORY_PATH = ANALYSIS_DIR / "inventory.json"
 TARGET_DOC = ANALYSIS_DIR / "run_py_sections.md"
-RUN_PY_PATH = "marsdisk/run.py"
+RUN_PY_PATH = "marsdisk/run_zero_d.py"
 
 AUTOGEN_START = "<!-- AUTOGEN:RUN_SECTIONS START -->"
 AUTOGEN_END = "<!-- AUTOGEN:RUN_SECTIONS END -->"

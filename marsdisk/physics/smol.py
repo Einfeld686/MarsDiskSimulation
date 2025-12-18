@@ -2,13 +2,32 @@ from __future__ import annotations
 
 """Smoluchowski coagulation/fragmentation solver (C3--C4)."""
 
+import os
 import logging
+import warnings
 from typing import Iterable, MutableMapping
 
 import numpy as np
 
 from ..errors import MarsDiskError
+from ..warnings import NumericalWarning
 from .collide import compute_collision_kernel_C1, compute_prod_subblow_area_rate_C2
+try:
+    from ._numba_kernels import (
+        NUMBA_AVAILABLE,
+        gain_from_kernel_tensor_numba,
+        gain_tensor_fallback_numba,
+        loss_sum_numba,
+        mass_budget_error_numba,
+    )
+
+    _NUMBA_AVAILABLE = NUMBA_AVAILABLE()
+except ImportError:  # pragma: no cover - optional dependency
+    _NUMBA_AVAILABLE = False
+
+_NUMBA_DISABLED_ENV = os.environ.get("MARSDISK_DISABLE_NUMBA", "").lower() in {"1", "true", "yes", "on"}
+_USE_NUMBA = _NUMBA_AVAILABLE and not _NUMBA_DISABLED_ENV
+_NUMBA_FAILED = False
 
 __all__ = [
     "step_imex_bdf1_C3",
@@ -143,6 +162,33 @@ def number_density_to_psd_state(
     return psd_state, sigma_after, sigma_loss
 
 
+def _gain_tensor(C: np.ndarray, Y: np.ndarray) -> np.ndarray:
+    """Return gain term, preferring the Numba kernel when available."""
+
+    global _NUMBA_FAILED
+    if _USE_NUMBA and not _NUMBA_FAILED:
+        try:
+            return gain_from_kernel_tensor_numba(
+                np.asarray(C, dtype=np.float64), np.asarray(Y, dtype=np.float64)
+            )
+        except Exception as exc:  # pragma: no cover - exercised by fallback
+            warnings.warn(
+                f"gain_tensor numba kernel failed ({exc!r}); trying fallback kernel.",
+                NumericalWarning,
+            )
+            try:
+                return gain_tensor_fallback_numba(
+                    np.asarray(C, dtype=np.float64), np.asarray(Y, dtype=np.float64)
+                )
+            except Exception as exc2:  # pragma: no cover
+                _NUMBA_FAILED = True
+                warnings.warn(
+                    f"gain_tensor numba fallback failed ({exc2!r}); falling back to einsum.",
+                    NumericalWarning,
+                )
+    return 0.5 * np.einsum("ij,kij->k", C, Y)
+
+
 def step_imex_bdf1_C3(
     N: Iterable[float],
     C: np.ndarray,
@@ -214,6 +260,7 @@ def step_imex_bdf1_C3(
         mass conservation error as defined in (C4).
     """
 
+    global _NUMBA_FAILED
     N_arr = np.asarray(N, dtype=float)
     S_base = np.zeros_like(N_arr) if S is None else np.asarray(S, dtype=float)
     m_arr = np.asarray(m, dtype=float)
@@ -241,7 +288,16 @@ def step_imex_bdf1_C3(
     S_sub_arr = _optional_sink(S_sublimation_k, "S_sublimation_k")
     S_arr = S_base + S_external_arr + S_sub_arr
 
-    loss = np.sum(C, axis=1)
+    try_use_numba = _USE_NUMBA and not _NUMBA_FAILED
+    if try_use_numba:
+        try:
+            loss = loss_sum_numba(np.asarray(C, dtype=np.float64))
+        except Exception as exc:  # pragma: no cover - fallback
+            try_use_numba = False
+            _NUMBA_FAILED = True
+            warnings.warn(f"loss_sum_numba failed ({exc!r}); falling back to NumPy.", NumericalWarning)
+    if not try_use_numba:
+        loss = np.sum(C, axis=1)
     t_coll = 1.0 / np.maximum(loss, 1e-30)
     dt_max = safety * float(np.min(t_coll))
     dt_eff = min(float(dt), dt_max)
@@ -252,7 +308,7 @@ def step_imex_bdf1_C3(
     else:
         prod_mass_rate_budget = float(prod_subblow_mass_rate)
 
-    gain = 0.5 * np.einsum("ij,kij->k", C, Y)
+    gain = _gain_tensor(C, Y)
 
     while True:
         N_new = (N_arr + dt_eff * (gain + source_arr - S_arr * N_arr)) / (1.0 + dt_eff * loss)
@@ -293,19 +349,43 @@ def compute_mass_budget_error_C4(
     ``M_old + dt * prod_subblow_mass_rate = M_new + dt * extra_mass_loss_rate``.
     """
 
+    global _NUMBA_FAILED
     N_old_arr = np.asarray(N_old, dtype=float)
     N_new_arr = np.asarray(N_new, dtype=float)
     m_arr = np.asarray(m, dtype=float)
     if not (N_old_arr.shape == N_new_arr.shape == m_arr.shape):
         raise MarsDiskError("array shapes must match")
 
-    M_before = float(np.sum(m_arr * N_old_arr))
-    M_after = float(np.sum(m_arr * N_new_arr))
-    prod_term = dt * float(prod_subblow_mass_rate)
-    extra_term = dt * float(extra_mass_loss_rate)
-    diff = M_after + extra_term - (M_before + prod_term)
-    baseline = M_before if M_before > 0.0 else max(M_before + prod_term, 1.0e-30)
-    err = abs(diff) / baseline
+    if _USE_NUMBA and not _NUMBA_FAILED:
+        try:
+            err = float(
+                mass_budget_error_numba(
+                    m_arr * 0.0 + N_old_arr,  # ensure contiguous copies
+                    m_arr * 0.0 + N_new_arr,
+                    m_arr,
+                    float(prod_subblow_mass_rate),
+                    float(dt),
+                    float(extra_mass_loss_rate),
+                )
+            )
+        except Exception as exc:  # pragma: no cover - fallback
+            _NUMBA_FAILED = True
+            warnings.warn(
+                f"compute_mass_budget_error_C4: numba kernel failed ({exc!r}); falling back to NumPy.",
+                NumericalWarning,
+            )
+            err = None
+    else:
+        err = None
+
+    if err is None:
+        M_before = float(np.sum(m_arr * N_old_arr))
+        M_after = float(np.sum(m_arr * N_new_arr))
+        prod_term = dt * float(prod_subblow_mass_rate)
+        extra_term = dt * float(extra_mass_loss_rate)
+        diff = M_after + extra_term - (M_before + prod_term)
+        baseline = M_before if M_before > 0.0 else max(M_before + prod_term, 1.0e-30)
+        err = abs(diff) / baseline
     if logger.isEnabledFor(logging.DEBUG):
         logger.debug(
             "compute_mass_budget_error_C4: M_before=%e M_after=%e prod=%e extra=%e diff=%e err=%e",
