@@ -5,6 +5,7 @@ from __future__ import annotations
 import os
 import logging
 import warnings
+from dataclasses import dataclass
 from typing import Iterable
 
 import numpy as np
@@ -28,8 +29,36 @@ _NUMBA_DISABLED_ENV = os.environ.get("MARSDISK_DISABLE_NUMBA", "").lower() in {"
 _USE_NUMBA = _NUMBA_AVAILABLE and not _NUMBA_DISABLED_ENV
 _NUMBA_FAILED = False
 
-__all__ = ["compute_collision_kernel_C1", "compute_prod_subblow_area_rate_C2", "v_ij_D1"]
+__all__ = [
+    "CollisionKernelWorkspace",
+    "prepare_collision_kernel_workspace",
+    "compute_collision_kernel_C1",
+    "compute_prod_subblow_area_rate_C2",
+    "v_ij_D1",
+]
 __all__ += ["compute_collision_kernel_bookkeeping"]
+
+
+@dataclass
+class CollisionKernelWorkspace:
+    """Size-dependent precomputations reused across collision kernel calls."""
+
+    s_sum_sq: np.ndarray
+    delta: np.ndarray
+
+
+def prepare_collision_kernel_workspace(s: Iterable[float]) -> CollisionKernelWorkspace:
+    """Precompute size-only terms for :func:`compute_collision_kernel_C1`."""
+
+    s_arr = np.asarray(s, dtype=np.float64)
+    if s_arr.ndim != 1:
+        raise MarsDiskError("sizes must be one-dimensional")
+    if np.any(s_arr <= 0.0):
+        raise MarsDiskError("sizes must be positive")
+    s_sum_sq = np.add.outer(s_arr, s_arr)
+    s_sum_sq *= s_sum_sq
+    delta = np.eye(s_arr.size, dtype=np.float64)
+    return CollisionKernelWorkspace(s_sum_sq=s_sum_sq, delta=delta)
 
 logger = logging.getLogger(__name__)
 
@@ -39,6 +68,7 @@ def compute_collision_kernel_C1(
     s: Iterable[float],
     H: Iterable[float],
     v_rel: float | np.ndarray,
+    workspace: CollisionKernelWorkspace | None = None,
     *,
     use_numba: bool | None = None,
 ) -> np.ndarray:
@@ -56,6 +86,10 @@ def compute_collision_kernel_C1(
         Mutual relative velocity between bins.  A scalar applies the same
         velocity to all pairs while a matrix of shape ``(n, n)`` provides
         pair-specific values.
+    workspace:
+        Optional size-only precomputations from
+        :func:`prepare_collision_kernel_workspace`. When provided, ``s_sum``
+        and the identity matrix reuse these buffers across calls.
 
     Returns
     -------
@@ -76,6 +110,14 @@ def compute_collision_kernel_C1(
         raise MarsDiskError("invalid values in N, s or H")
 
     n = N_arr.size
+    if workspace is not None:
+        if workspace.s_sum_sq.shape != (n, n) or workspace.delta.shape != (n, n):
+            raise MarsDiskError("workspace has incompatible shape for collision kernel")
+        workspace_s_sum_sq = workspace.s_sum_sq
+        workspace_delta = workspace.delta
+    else:
+        workspace_s_sum_sq = None
+        workspace_delta = None
     use_matrix_velocity = False
     if np.isscalar(v_rel):
         v_scalar = float(v_rel)
@@ -105,14 +147,14 @@ def compute_collision_kernel_C1(
     if kernel is None:
         v_mat_full = np.full((n, n), float(v_scalar), dtype=np.float64) if not use_matrix_velocity else v_mat
         N_outer = np.outer(N_arr, N_arr)
-        s_sum = np.add.outer(s_arr, s_arr)
+        s_sum_sq = workspace_s_sum_sq if workspace_s_sum_sq is not None else np.add.outer(s_arr, s_arr) ** 2
+        delta = workspace_delta if workspace_delta is not None else np.eye(n)
         H_sq = np.add.outer(H_arr * H_arr, H_arr * H_arr)
         H_ij = np.sqrt(H_sq)
-        delta = np.eye(n)
         kernel = (
             N_outer / (1.0 + delta)
             * np.pi
-            * (s_sum ** 2)
+            * s_sum_sq
             * v_mat_full
             / (np.sqrt(2.0 * np.pi) * H_ij)
         )

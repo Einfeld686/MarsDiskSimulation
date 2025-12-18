@@ -102,3 +102,21 @@ def test_qpr_lookup_requires_table(mock_qpr_table):
         radiation.qpr_lookup(0.0, T)
     with pytest.raises(ValueError):
         radiation.qpr_lookup(s, 0.0)
+
+
+def test_qpr_lookup_array_matches_scalar(mock_qpr_table):
+    path = mock_qpr_table
+    lookup = tables.load_qpr_table(path)
+    radiation.load_qpr_table(path)
+
+    s_grid = np.array([1.1e-6, 5.0e-6, 8.0e-6, 1.2e-5])
+    T_val = 1234.0
+
+    array_vals = radiation.qpr_lookup_array(s_grid, T_val, table=lookup)
+    scalar_vals = np.array([radiation.qpr_lookup(s, T_val, table=lookup) for s in s_grid])
+    assert array_vals.shape == s_grid.shape
+    assert np.allclose(array_vals, scalar_vals, rtol=0.0, atol=1e-12)
+
+    # Support scalar T via numpy scalar input
+    T_scalar = np.array(1234.0)
+    assert np.allclose(radiation.qpr_lookup_array(s_grid, T_scalar, table=lookup), scalar_vals)

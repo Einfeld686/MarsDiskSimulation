@@ -4,10 +4,11 @@ Baseline thresholds: function reference rate ≥ 70%, anchor consistency rate = 
 
 | Metric | Value | Target |
 | --- | --- | --- |
-| Function reference rate | 100.0% (109/109) | ≥ 70% |
+| Function reference rate | 98.2% (109/111) | ≥ 70% |
 | Anchor consistency rate | 100.0% (690/690) | = 100% |
-| Equation unit coverage | 94.3% (33/35) | — |
+| Equation unit coverage | 94.4% (34/36) | — |
 | Sinks callgraph documented | Yes | run→surface→sinks→sublimation |
 
 ## Top Coverage Gaps
-- None (all tracked functions referenced)
+- marsdisk/physics/collide.py#prepare_collision_kernel_workspace
+- marsdisk/physics/radiation.py#qpr_lookup_array

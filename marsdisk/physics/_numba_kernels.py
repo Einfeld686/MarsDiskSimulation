@@ -61,7 +61,9 @@ __all__ = [
     "fragment_tensor_fallback_numba",
     "supply_mass_rate_powerlaw_numba",
     "blowout_sink_vector_numba",
+    "compute_kernel_e_i_H_numba",
     "kernel_minimum_tcoll_numba",
+    "size_drift_rebin_numba",
 ]
 
 
@@ -519,6 +521,79 @@ def blowout_sink_vector_numba(
 
 
 @njit(cache=True)
+def _solve_c_eq_constant_eps_numba(
+    tau: float,
+    e_guess: float,
+    f_wake: float,
+    max_iter: int = 100,
+    tol: float = 1e-6,
+) -> float:
+    """Fixed-point iteration with constant restitution (ε=0.5)."""
+
+    if tau < 0.0 or f_wake < 1.0:
+        return -1.0
+    c = e_guess if e_guess > 1.0e-6 else 1.0e-6
+    for _ in range(max_iter):
+        eps = 0.5
+        denom = 1.0 - eps * eps
+        if denom <= 0.0:
+            denom = 1.0e-12
+        c_new = (f_wake * tau / denom) ** 0.5
+        if abs(c_new - c) <= tol * max(c_new, 1.0):
+            return c_new
+        c = 0.5 * (c + c_new)
+    return -1.0
+
+
+@njit(cache=True)
+def compute_kernel_e_i_H_numba(
+    sizes: np.ndarray,
+    tau_eff: float,
+    a_orbit_m: float,
+    v_k: float,
+    e0: float,
+    i0: float,
+    H_factor: float,
+    H_fixed_over_a: float,
+    kernel_ei_mode_flag: int,
+    kernel_H_mode_flag: int,
+    f_wake: float,
+) -> tuple[float, float, np.ndarray]:
+    """Numba helper mirroring compute_kernel_e_i_H for simple configs."""
+
+    v_k_safe = v_k if v_k > 1.0e-12 else 1.0e-12
+    e_base = e0
+    i_base = i0
+    if kernel_ei_mode_flag == 1:
+        c_eq = _solve_c_eq_constant_eps_numba(
+            tau_eff if tau_eff > 0.0 else 0.0,
+            e0 if e0 > 1.0e-6 else 1.0e-6,
+            f_wake if f_wake > 1.0 else 1.0,
+        )
+        if c_eq > 0.0:
+            e_base = c_eq / v_k_safe
+            if e_base < 1.0e-8:
+                e_base = 1.0e-8
+            i_base = 0.5 * e_base
+        else:
+            e_base = e0 * v_k_safe
+            i_base = 0.5 * e_base
+
+    e_used = e_base
+    i_used = i_base
+
+    if kernel_H_mode_flag == 1:
+        H_base = H_fixed_over_a * a_orbit_m
+    else:
+        H_base = H_factor * i_used * a_orbit_m
+    if (not np.isfinite(H_base)) or H_base <= 0.0:
+        H_base = 1.0e-12
+
+    H_k = np.full_like(sizes, H_base, dtype=np.float64)
+    return float(e_used), float(i_used), H_k
+
+
+@njit(cache=True)
 def kernel_minimum_tcoll_numba(C_kernel: np.ndarray) -> float:
     """Minimum collisional timescale from kernel row sums."""
 
@@ -535,3 +610,35 @@ def kernel_minimum_tcoll_numba(C_kernel: np.ndarray) -> float:
     if rate_max <= 0.0:
         return np.inf
     return 1.0 / rate_max
+
+
+@njit(cache=True)
+def size_drift_rebin_numba(
+    sizes: np.ndarray,
+    number: np.ndarray,
+    edges: np.ndarray,
+    ds_step: float,
+    floor_val: float,
+) -> tuple[np.ndarray, np.ndarray]:
+    """Rebin number densities after a uniform size drift."""
+
+    n = sizes.shape[0]
+    new_number = np.zeros(n, dtype=np.float64)
+    accum_sizes = np.zeros(n, dtype=np.float64)
+    for idx in range(n):
+        n_val = number[idx]
+        if n_val <= 0.0 or not np.isfinite(n_val):
+            continue
+        s_new = sizes[idx] + ds_step
+        if not np.isfinite(s_new):
+            continue
+        if s_new < floor_val:
+            s_new = floor_val
+        target = np.searchsorted(edges, s_new, side="right") - 1
+        if target < 0:
+            target = 0
+        elif target >= n:
+            target = n - 1
+        new_number[target] += n_val
+        accum_sizes[target] += n_val * s_new
+    return new_number, accum_sizes

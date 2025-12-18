@@ -151,31 +151,31 @@ def step_surface_density_S1(...):
 
 | 順序 | タスク | リスク | 状態 |
 |------|--------|--------|------|
-| 1-1 | ADR-0002 作成 | なし | 未着手 |
-| 1-2 | README.md クイックスタート追記 | なし | 未着手 |
-| 1-3 | `physics/__init__.py` に `__all__` 追加 | なし | **✅ 完了済み** |
-| 1-4 | smoke test matrix 新規作成 | なし | 未着手 |
+| 1-1 | ADR-0002 作成 | なし | [ ] 未着手 |
+| 1-2 | README.md クイックスタート追記 | なし | [ ] 未着手 |
+| 1-3 | `physics/__init__.py` に `__all__` 追加 | なし | [x] 完了 |
+| 1-4 | smoke test matrix 新規作成 | なし | [ ] 未着手 |
 
 ### Phase 2: 互換性を維持したリファクタリング
 
-| 順序 | タスク | 完了条件 |
-|------|--------|---------|
-| 2-1 | run.py 分割 + 再エクスポート + DocSync | coverage ≥ 0.75, import 互換維持 |
-| 2-2 | surface_ode deprecation（対象限定） | 警告テスト追加 |
-| 2-3 | legacy alias deprecation | 警告出力確認 + pytest パス |
-| 2-4 | physics_controls ブロック導入 | 既存 config.yml 読込可能 |
+| 順序 | タスク | 完了条件 | 状態 |
+|------|--------|---------|------|
+| 2-1 | run.py 分割 + 再エクスポート + DocSync | coverage ≥ 0.75, import 互換維持 | [ ] 未着手 |
+| 2-2 | surface_ode deprecation（対象限定） | 警告テスト追加 | [x] 完了 |
+| 2-3 | legacy alias deprecation | 警告出力確認 + pytest パス | [ ] 未着手 |
+| 2-4 | physics_controls ブロック導入 | 既存 config.yml 読込可能 | [ ] 未着手 |
 
 ### Phase 3: 大規模変更（別 PR）
 
 > [!WARNING]
 > 以下は Phase 2 完了後、別途計画として分離
 
-| タスク | 備考 |
-|--------|------|
-| Pydantic v2 ネイティブ移行 | v1 互換デコレータ → v2 ネイティブ署名 |
-| テストディレクトリ再編成 | pytest.ini 更新と同時実施 |
-| Numba JIT 集約 | パフォーマンステスト追加後 |
-| physics_flow.md 自動生成 | DocSync 拡張と同時 |
+| タスク | 備考 | 状態 |
+|--------|------|------|
+| Pydantic v2 ネイティブ移行 | v1 互換デコレータ → v2 ネイティブ署名 | [x] 完了 |
+| テストディレクトリ再編成 | pytest.ini 更新と同時実施 | [ ] 未着手 |
+| Numba JIT 集約 | パフォーマンステスト追加後 | [ ] 未着手 |
+| physics_flow.md 自動生成 | DocSync 拡張と同時 | [ ] 未着手 |
 
 ---
 
@@ -336,10 +336,10 @@ def test_surface_ode_emits_deprecation_warning():
 - [ ] Phase 2 全タスク完了（Pydantic v2 必須化）
 - [ ] `pytest tests/` 全パス
 - [ ] 既存 `from marsdisk.run import ...` および `from marsdisk import run` パターンが全て動作
-- [ ] `make analysis-doc-tests` パス
+- [x] `make analysis-doc-tests` パス
 - [ ] `anchor_consistency_rate >= 0.98`
 - [ ] ADR-0002 レビュー済み
-- [ ] `pydantic>=2.0` を要件に追加済み
+- [x] `pydantic>=2.0` を要件に追加済み
 
 ---
 

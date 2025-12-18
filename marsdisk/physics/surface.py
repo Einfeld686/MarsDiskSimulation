@@ -34,6 +34,7 @@ required by the specification.
 from dataclasses import dataclass
 from typing import Optional
 import logging
+import warnings
 
 import numpy as np
 
@@ -59,7 +60,14 @@ __all__ = [
     "wyatt_tcoll_S1",
     "step_surface",
     "compute_surface_outflux",
+    "SURFACE_ODE_DEPRECATION_MSG",
 ]
+
+SURFACE_ODE_DEPRECATION_MSG = (
+    "surface_ode solver is deprecated and will be removed after 2026-06. "
+    "Use collision_solver='smol' (default) instead."
+)
+_SURFACE_ODE_WARNED = False
 
 
 def wyatt_tcoll_S1(tau: float, Omega: float) -> float:
@@ -138,6 +146,11 @@ def step_surface_density_S1(
     SurfaceStepResult
         dataclass holding the updated density and associated fluxes.
     """
+
+    global _SURFACE_ODE_WARNED
+    if not _SURFACE_ODE_WARNED:
+        warnings.warn(SURFACE_ODE_DEPRECATION_MSG, DeprecationWarning, stacklevel=2)
+        _SURFACE_ODE_WARNED = True
 
     if dt <= 0.0 or Omega <= 0.0:
         raise MarsDiskError("dt and Omega must be positive")

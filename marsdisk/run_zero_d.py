@@ -100,6 +100,20 @@ EXTENDED_DIAGNOSTICS_VERSION = "extended-minimal-v1"
 _compute_gate_factor = compute_gate_factor
 
 
+def _get_max_steps() -> int:
+    """Return MAX_STEPS, honoring overrides applied to the marsdisk.run shim."""
+
+    # Prefer an override applied to the shim module (used by tests via monkeypatch).
+    run_module = sys.modules.get("marsdisk.run")
+    candidate = getattr(run_module, "MAX_STEPS", None) if run_module is not None else None
+    if candidate is None:
+        candidate = globals().get("MAX_STEPS", MAX_STEPS)
+    try:
+        return int(candidate)
+    except Exception:
+        return MAX_STEPS
+
+
 def _log_stage(label: str, *, extra: Mapping[str, Any] | None = None) -> None:
     """Emit coarse progress markers for debugging long runs."""
 
@@ -306,7 +320,10 @@ def run_zero_d(
             logger.warning("Failed to write %s run_config snapshot to %s: %s", status, run_config_path, exc)
 
     _write_run_config_snapshot("pre_run")
-    primary_field_explicit = "physics_mode" in getattr(cfg, "__fields_set__", set())
+    fields_set = getattr(cfg, "model_fields_set", None)
+    if fields_set is None:
+        fields_set = getattr(cfg, "__fields_set__", set())
+    primary_field_explicit = "physics_mode" in fields_set
     scope_region = getattr(scope_cfg, "region", "inner") if scope_cfg else "inner"
     analysis_window_years = float(getattr(scope_cfg, "analysis_years", 2.0)) if scope_cfg else 2.0
     if scope_region != "inner":
@@ -352,11 +369,17 @@ def run_zero_d(
     qstar_cfg = getattr(cfg, "qstar", None)
     qstar_coeff_units_used = getattr(qstar_cfg, "coeff_units", "ba99_cgs") if qstar_cfg is not None else "ba99_cgs"
     qstar_coeff_units_source = "default"
-    if qstar_cfg is not None and "coeff_units" in getattr(qstar_cfg, "__fields_set__", set()):
+    if qstar_cfg is not None:
+        qstar_fields_set = getattr(qstar_cfg, "model_fields_set", None)
+        if qstar_fields_set is None:
+            qstar_fields_set = getattr(qstar_cfg, "__fields_set__", set())
+    else:
+        qstar_fields_set = set()
+    if qstar_cfg is not None and "coeff_units" in qstar_fields_set:
         qstar_coeff_units_source = "config"
     qstar_mu_gravity_used = getattr(qstar_cfg, "mu_grav", qstar.get_gravity_velocity_mu()) if qstar_cfg is not None else qstar.get_gravity_velocity_mu()
     qstar_mu_gravity_source = "default"
-    if qstar_cfg is not None and "mu_grav" in getattr(qstar_cfg, "__fields_set__", set()):
+    if qstar_cfg is not None and "mu_grav" in qstar_fields_set:
         qstar_mu_gravity_source = "config"
     qstar.reset_velocity_clamp_stats()
     qstar.set_coeff_unit_system(qstar_coeff_units_used)
@@ -582,12 +605,50 @@ def run_zero_d(
         float(getattr(tau_gate_cfg, "tau_max", 1.0)) if tau_gate_enabled else float("inf")
     )
 
+    qpr_cache_T = None
+    qpr_cache_sizes_id: int | None = None
+    qpr_cache_sizes: np.ndarray | None = None
+    qpr_cache_values: np.ndarray | None = None
+
+    def _refresh_qpr_cache() -> None:
+        """Precompute ⟨Q_pr⟩ for the current PSD sizes when T changes."""
+
+        nonlocal qpr_cache_T, qpr_cache_sizes_id, qpr_cache_sizes, qpr_cache_values
+        if qpr_override is not None:
+            qpr_cache_T = T_use
+            qpr_cache_sizes_id = id(psd_state.get("sizes"))
+            qpr_cache_sizes = None
+            qpr_cache_values = None
+            return
+
+        sizes_ref = psd_state.get("sizes")
+        if sizes_ref is None:
+            qpr_cache_sizes = None
+            qpr_cache_values = None
+            return
+        sizes_arr = np.asarray(sizes_ref, dtype=float)
+        if sizes_arr.size == 0:
+            qpr_cache_sizes = None
+            qpr_cache_values = None
+            return
+        if (qpr_cache_T != T_use) or (qpr_cache_sizes_id != id(sizes_ref)):
+            qpr_cache_T = T_use
+            qpr_cache_sizes_id = id(sizes_ref)
+            qpr_cache_sizes = sizes_arr
+            qpr_cache_values = radiation.qpr_lookup_array(sizes_arr, T_use)
+
     def _lookup_qpr(size: float) -> float:
         """Return ⟨Q_pr⟩ for the provided grain size using the active source."""
 
         size_eff = max(float(size), 1.0e-12)
         if qpr_override is not None:
             return float(qpr_override)
+        _refresh_qpr_cache()
+        if qpr_cache_sizes is not None and qpr_cache_values is not None and qpr_cache_T == T_use:
+            # Exact match against cached PSD sizes.
+            matches = np.nonzero(np.isclose(qpr_cache_sizes, size_eff, rtol=0.0, atol=1.0e-30))[0]
+            if matches.size:
+                return float(qpr_cache_values[int(matches[0])])
         return float(radiation.qpr_lookup(size_eff, T_use))
 
     def _resolve_blowout(
@@ -1095,8 +1156,10 @@ def run_zero_d(
     supply_feedback_gain = getattr(supply_feedback_cfg, "gain", None) if supply_feedback_cfg else None
     supply_feedback_response_yr = getattr(supply_feedback_cfg, "response_time_years", None) if supply_feedback_cfg else None
     if not supply_feedback_enabled and supply_feedback_cfg is not None:
-        fields_set = getattr(supply_feedback_cfg, "__fields_set__", set())
-        non_default_fields = {field for field in fields_set if field != "enabled"}
+        feedback_fields_set = getattr(supply_feedback_cfg, "model_fields_set", None)
+        if feedback_fields_set is None:
+            feedback_fields_set = getattr(supply_feedback_cfg, "__fields_set__", set())
+        non_default_fields = {field for field in feedback_fields_set if field != "enabled"}
         if non_default_fields:
             logger.warning(
                 "supply.feedback.* provided (%s) but feedback.enabled is false; feedback loop will be inactive",
@@ -1163,8 +1226,9 @@ def run_zero_d(
         n_steps,
     )
     dt = dt_initial_step
-    if n_steps > MAX_STEPS:
-        n_steps = MAX_STEPS
+    max_steps = _get_max_steps()
+    if n_steps > max_steps:
+        n_steps = max_steps
         dt = t_end / n_steps
         time_grid_info["n_steps"] = n_steps
         time_grid_info["dt_step"] = dt
@@ -1900,6 +1964,10 @@ def run_zero_d(
         e_kernel_supply_step = None
         i_kernel_supply_step = None
         supply_velocity_weight_step = None
+        e_state_next_step = None
+        i_state_next_step = None
+        e_damp_target_step = None
+        t_damp_applied_step = None
 
         tau_vert_last = None
         tau_los_last = None
@@ -2208,6 +2276,15 @@ def run_zero_d(
                     e_kernel_supply_step = smol_res.e_kernel_supply
                     i_kernel_supply_step = smol_res.i_kernel_supply
                     supply_velocity_weight_step = smol_res.supply_velocity_weight
+                    e_state_next_step = smol_res.e_next
+                    i_state_next_step = smol_res.i_next
+                    e_damp_target_step = smol_res.e_eq_target
+                    t_damp_applied_step = smol_res.t_damp_used
+                    if bool(getattr(cfg.dynamics, "enable_e_damping", False)) and smol_res.e_next is not None:
+                        e0_effective = float(smol_res.e_next)
+                        i0_effective = float(
+                            smol_res.i_next if smol_res.i_next is not None else i0_effective
+                        )
                     sigma_loss_smol = max(sigma_loss_smol, 0.0) + max(smol_res.sigma_loss, 0.0)
                     prod_rate_last = smol_res.prod_mass_rate_effective
                     supply_rate_applied_current = prod_rate_last
@@ -2809,6 +2886,10 @@ def run_zero_d(
             "e_kernel_effective",
             "i_kernel_effective",
             "supply_velocity_weight_w",
+            "e_state_next",
+            "i_state_next",
+            "t_damp_collisions",
+            "e_eq_target",
         }
         _series_optional_string_keys = {
             "phase_tau_field",
@@ -2904,6 +2985,10 @@ def run_zero_d(
             "i_kernel_supply": _safe_float(i_kernel_supply_step),
             "e_kernel_effective": _safe_float(e_kernel_step),
             "i_kernel_effective": _safe_float(i_kernel_step),
+            "e_state_next": _safe_float(e_state_next_step),
+            "i_state_next": _safe_float(i_state_next_step),
+            "t_damp_collisions": _safe_float(t_damp_applied_step),
+            "e_eq_target": _safe_float(e_damp_target_step),
             "supply_velocity_weight_w": _safe_float(supply_velocity_weight_step),
             "supply_temperature_scale": supply_diag_last.temperature_scale if supply_diag_last else None,
             "supply_temperature_value": supply_diag_last.temperature_value if supply_diag_last else None,
@@ -4128,7 +4213,7 @@ def run_zero_d(
             "t_end_basis": time_grid_info.get("t_end_basis"),
             "t_end_input": time_grid_info.get("t_end_input"),
             "n_steps": time_grid_info.get("n_steps"),
-            "max_steps": MAX_STEPS,
+            "max_steps": _get_max_steps(),
             "dt_sources_s": time_grid_info.get("dt_sources"),
             "t_blow_nominal_s": time_grid_info.get("t_blow_nominal"),
             "dt_capped_by_max_steps": time_grid_info.get("dt_capped_by_max_steps", False),
@@ -4504,8 +4589,16 @@ __all__ = [
     "TAU_MIN",
     "KAPPA_MIN",
     "MASS_BUDGET_TOLERANCE_PERCENT",
+    "FAST_BLOWOUT_RATIO_THRESHOLD",
+    "FAST_BLOWOUT_RATIO_STRICT",
     "_compute_gate_factor",
     "_surface_energy_floor",
+    "_fast_blowout_correction_factor",
+    "_log_stage",
+    "compute_phase_tau_fields",
+    "StreamingState",
+    "ZeroDHistory",
+    "ProgressReporter",
     "RunConfig",
     "RunState",
     "step",
@@ -4514,6 +4607,7 @@ __all__ = [
     "run_zero_d",
     "main",
     "MassBudgetViolationError",
+    "radiation",
     "sizes",
 ]
 

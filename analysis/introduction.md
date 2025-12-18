@@ -127,7 +127,46 @@ $$
 t_{\rm coll} = \frac{1}{\Omega\,\tau_{\perp}}
 $$
 
-**参考文献**: Krivov et al. (2006), Wyatt (2008)
+#### 衝突レジームの分類
+
+衝突は **最大残存率 $F_{LF}$**（Largest Remnant Fraction）に基づいて2つのレジームに分類されます：
+
+| レジーム | 条件 | 物理的意味 |
+|----------|------|------------|
+| **侵食（Cratering）** | $F_{LF} > 0.5$ | ターゲットが大部分残存し、クレーター形成と小破片のみ生成 |
+| **壊滅的破砕（Catastrophic Fragmentation）** | $F_{LF} \le 0.5$ | ターゲットが半分以上破壊され、多数の破片を生成 |
+
+**最大残存率** (Leinhardt & Stewart 2012):
+
+$$
+\frac{M_{LR}}{M_{tot}} \approx 0.5 \left(2 - \frac{Q_R}{Q_{RD}^*}\right)
+$$
+
+- $Q_R = \frac{1}{2}\frac{\mu v^2}{M_{tot}}$: 比衝突エネルギー（重心系）
+- $Q_{RD}^*$: 破壊閾値（Catastrophic Disruption Threshold）
+
+**破壊閾値 $Q_D^*$** (Benz & Asphaug 1999):
+
+$$
+Q_D^* = A_s\,s^{\,b_s} + A_g\,s^{\,b_g}
+$$
+
+- 第1項：強度項（小粒子を支配）
+- 第2項：重力項（大粒子を支配）
+- 速度依存性は 3–5 km/s の補間で評価
+
+#### エネルギー散逸
+
+衝突では運動エネルギーの一部が熱・音・新表面生成へ散逸します。散逸率は **非散逸率 $f_{ke}$** で定義されます：
+
+- **侵食時**: $f_{ke} \approx 0.1$（Thébault et al. 2003）
+- **壊滅的破砕時**: $f_{ke} \approx \varepsilon^2$（反発係数 $\varepsilon$ から推定）
+
+$$
+E_{diss} = (1 - f_{ke})\,E_{rel}, \quad E_{rel} = \frac{1}{2}\mu v^2
+$$
+
+**参考文献**: Krivov et al. (2006), Wyatt (2008), Leinhardt & Stewart (2012), Thébault et al. (2003), Benz & Asphaug (1999)
 
 ---
 

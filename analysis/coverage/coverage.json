@@ -1,8 +1,8 @@
 {
   "function_reference_rate": {
     "numerator": 109,
-    "denominator": 109,
-    "rate": 1.0
+    "denominator": 111,
+    "rate": 0.9819819819819819
   },
   "anchor_consistency_rate": {
     "numerator": 690,
@@ -10,10 +10,13 @@
     "rate": 1.0
   },
   "equation_unit_coverage": {
-    "numerator": 33,
-    "denominator": 35,
-    "rate": 0.9428571428571428
+    "numerator": 34,
+    "denominator": 36,
+    "rate": 0.9444444444444444
   },
   "sinks_callgraph_documented": true,
-  "holes": []
+  "holes": [
+    "marsdisk/physics/collide.py#prepare_collision_kernel_workspace",
+    "marsdisk/physics/radiation.py#qpr_lookup_array"
+  ]
 }

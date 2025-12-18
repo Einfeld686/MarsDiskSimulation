@@ -175,6 +175,10 @@ def write_parquet(df: pd.DataFrame, path: Path, *, compression: str = "snappy") 
         "frac_cratering": "dimensionless",
         "frac_fragmentation": "dimensionless",
         "f_ke_eps_mismatch": "dimensionless",
+        "e_state_next": "dimensionless",
+        "i_state_next": "dimensionless",
+        "t_damp_collisions": "s",
+        "e_eq_target": "dimensionless",
     }
     definitions = {
         "time": "Cumulative elapsed time at the end of each step [s].",
@@ -218,6 +222,10 @@ def write_parquet(df: pd.DataFrame, path: Path, *, compression: str = "snappy") 
         "M_sink_dot_avg": "Average sink mass-loss rate over the step in Mars masses per second.",
         "dM_dt_surface_total_avg": "Average total mass-loss rate (blow-out plus sinks) over the step in Mars masses per second.",
         "fast_blowout_factor_avg": "Time-averaged blow-out correction factor applied within the step (dimensionless).",
+        "e_state_next": "Post-step eccentricity state after applying collisional damping [dimensionless].",
+        "i_state_next": "Post-step inclination state after applying collisional damping [dimensionless].",
+        "t_damp_collisions": "Effective collisional damping time-scale used when updating e/i [s].",
+        "e_eq_target": "Equilibrium eccentricity target used for damping update (c_eq/v_K) [dimensionless].",
         "dSigma_dt_blowout": "Surface mass-loss rate per unit area contributed by blow-out (kg m^-2 s^-1).",
         "dSigma_dt_sinks": "Surface mass-loss rate per unit area contributed by additional sinks (kg m^-2 s^-1).",
         "dSigma_dt_total": "Total surface mass-loss rate per unit area (blow-out plus sinks) in kg m^-2 s^-1.",

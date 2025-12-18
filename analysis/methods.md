@@ -185,7 +185,46 @@ nσv 型カーネル (E.024) を用い、相対速度は Rayleigh 分布 (E.020)
 > **詳細**: analysis/equations.md (E.024), (E.026)  
 > **設定**: analysis/config_guide.md §3.5 "QStar"
 
----
+### 3.1 衝突レジーム分類
+
+衝突は **最大残存率 $F_{LF}$** に基づいて2つのレジームに分類されます：
+
+| レジーム | 条件 | 処理 |
+|----------|------|------|
+| **侵食（Cratering）** | $F_{LF} > 0.5$ | ターゲット残存、クレーター破片生成 |
+| **壊滅的破砕（Fragmentation）** | $F_{LF} \le 0.5$ | 完全破壊、破片分布 $g(m) \propto m^{-\eta}$ |
+
+- Thébault et al. (2003) に基づく侵食モデル
+- Krivov et al. (2006) に基づく壊滅的破砕モデル
+
+### 3.2 エネルギー簿記
+
+`diagnostics.energy_bookkeeping.enabled=true` で簿記モードを有効化し、`diagnostics.energy_bookkeeping.stream` が true かつ `FORCE_STREAMING_OFF` が未設定なら `series/energy.parquet`・`checks/energy_budget.csv` をストリーミングで書き出す（オフ時は最後にまとめて保存）。サマリには `energy_bookkeeping.{E_rel_total,E_dissipated_total,E_retained_total,f_ke_mean_last,f_ke_energy_last,frac_*_last}` が追加され、`run_card.md` にも同じ統計が残る。[marsdisk/run_zero_d.py:3996–4058]
+
+| 出力カラム | 意味 | 単位 |
+|-----------|------|------|
+| `E_rel_step` | 衝突の総相対運動エネルギー | J |
+| `E_dissipated_step` | 散逸エネルギー（熱化） | J |
+| `E_retained_step` | 残留運動エネルギー | J |
+| `n_cratering` | 侵食衝突の頻度 | — |
+| `n_fragmentation` | 破砕衝突の頻度 | — |
+| `frac_cratering` | 侵食衝突の割合 | — |
+| `frac_fragmentation` | 破砕衝突の割合 | — |
+
+**エネルギー散逸率**:
+
+$$ 
+E_{diss} = (1 - f_{ke})\,E_{rel}
+$$
+
+| 設定キー | 意味 | 既定値 |
+|----------|------|--------|
+| `dynamics.eps_restitution` | 反発係数（$f_{ke,\mathrm{frag}}$ のデフォルトに使用） | 0.5 |
+| `dynamics.f_ke_cratering` | 侵食時の非散逸率 | 0.1 |
+| `dynamics.f_ke_fragmentation` | 破砕時の非散逸率 | None（$\varepsilon^2$ 使用） |
+| `diagnostics.energy_bookkeeping.stream` | energy 系列/簿記をストリーム出力 | true（`FORCE_STREAMING_OFF` で無効化） |
+
+> **詳細**: docs/plan/collision_energy_conservation_requirements.md
 
 ## 4. 放射圧・ブローアウト
 

@@ -466,6 +466,42 @@ $$
 > **K_ij と C_ij の使い分け**  
 > (E.010) の $K_{ij}$ は文献表記どおり「幾何＋速度」だけの係数を指しますが、実装の (E.024) `compute_collision_kernel_C1` は $N_i N_j/(1+\delta_{ij})$ まで掛け込んだ $C_{ij}$ 行列を返します（`marsdisk/physics/collide.py:18-77`）。Smol ステップではこの $C_{ij}$ をそのまま損失・生成項に使い、数密度を重ねて乗じる操作は行いません（`marsdisk/physics/smol.py:244-275`）。
 
+#### 衝突レジームの分類
+
+衝突は **最大残存率 $F_{LF}$** に基づいて2つのレジームに分類されます：
+
+| レジーム | 条件 | 物理的意味 |
+|----------|------|------------|
+| **侵食（Cratering）** | $F_{LF} > 0.5$ | ターゲット残存、クレーター破片生成 |
+| **壊滅的破砕（Fragmentation）** | $F_{LF} \le 0.5$ | 完全破壊、多数の破片生成 |
+
+**最大残存率** (Leinhardt & Stewart 2012):
+
+$$\large
+\frac{M_{LR}}{M_{tot}} \approx 0.5 \left(2 - \frac{Q_R}{Q_{RD}^*}\right)
+$$
+
+**破壊閾値 $Q_D^*$** (Benz & Asphaug 1999):
+
+$$\large
+Q_D^* = A_s\,s^{\,b_s} + A_g\,s^{\,b_g}
+$$
+
+#### エネルギー簿記
+
+`dynamics.energy_bookkeeping_enabled=true` でエネルギー散逸を追跡：
+
+| パラメータ | 説明 | 既定値 |
+|-----------|------|--------|
+| `dynamics.eps_restitution` | 反発係数 | 0.5 |
+| `dynamics.f_ke_cratering` | 侵食時の非散逸率 | 0.1 |
+| `dynamics.f_ke_fragmentation` | 破砕時の非散逸率 | None（$\varepsilon^2$） |
+
+| 出力カラム | 意味 |
+|-----------|------|
+| `n_cratering` / `n_fragmentation` | 侵食/破砕衝突の頻度 |
+| `frac_cratering` / `frac_fragmentation` | 侵食/破砕衝突の割合 |
+
 #### 衝突の重要なパラメータ
 
 - `sizes.n_bins`: 粒径ビン数（30–60、デフォルト40）
