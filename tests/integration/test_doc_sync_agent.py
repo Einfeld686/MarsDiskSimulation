@@ -19,7 +19,7 @@ def test_scan_generates_inventory(tmp_path) -> None:
         assert entry["kind"] in {"function", "async_function", "class"}
         assert entry["line_no"] <= entry["end_line"]
     assert any(
-        entry["file_path"] == "marsdisk/run.py" and entry["symbol"] == "run_zero_d"
+        entry["file_path"] == "marsdisk/run_zero_d.py" and entry["symbol"] == "run_zero_d"
         for entry in data
     )
 

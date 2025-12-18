@@ -13,7 +13,7 @@ import math
 from pathlib import Path
 from typing import Any, Dict, List, Literal, Optional, Tuple, Union
 
-from pydantic import BaseModel, Field, validator, root_validator
+from pydantic import BaseModel, Field, ValidationInfo, field_validator, model_validator, root_validator, validator
 
 from . import constants
 from .errors import ConfigurationError
@@ -29,17 +29,19 @@ class Geometry(BaseModel):
     r_out: Optional[float] = Field(None, description="Outer radius for 1D runs [m]")
     Nr: Optional[int] = Field(None, description="Number of radial zones for 1D runs")
 
-    @root_validator(pre=True)
-    def _forbid_deprecated_radius(cls, values: Dict[str, Any]) -> Dict[str, Any]:
+    @model_validator(mode="before")
+    def _forbid_deprecated_radius(cls, data: Any) -> Any:
         """Disallow legacy radius keys that have been fully removed."""
 
-        if "r" in values and values.get("r") is not None:
+        if not isinstance(data, dict):
+            return data
+        if "r" in data and data.get("r") is not None:
             raise ConfigurationError("geometry.r is no longer supported; use disk.geometry.r_in_RM/r_out_RM instead.")
-        if "runtime_orbital_radius_rm" in values and values.get("runtime_orbital_radius_rm") is not None:
+        if "runtime_orbital_radius_rm" in data and data.get("runtime_orbital_radius_rm") is not None:
             raise ConfigurationError(
                 "geometry.runtime_orbital_radius_rm is no longer supported; use disk.geometry.r_in_RM/r_out_RM instead."
             )
-        return values
+        return data
 
 
 class DiskGeometry(BaseModel):
@@ -63,13 +65,13 @@ class DiskGeometry(BaseModel):
     )
     p_index: float = Field(0.0, description="Power-law index for surface density (Σ ∝ r^-p)")
 
-    @root_validator(skip_on_failure=True)
-    def _check_radius_order(cls, values: Dict[str, Any]) -> Dict[str, Any]:
-        r_in = values.get("r_in_RM")
-        r_out = values.get("r_out_RM")
+    @model_validator(mode="after")
+    def _check_radius_order(cls, model: "DiskGeometry") -> "DiskGeometry":
+        r_in = model.r_in_RM
+        r_out = model.r_out_RM
         if r_in is not None and r_out is not None and r_in > r_out:
             raise ConfigurationError(f"disk.geometry.r_in_RM ({r_in}) must be less than or equal to r_out_RM ({r_out})")
-        return values
+        return model
 
 
 class Disk(BaseModel):
@@ -106,13 +108,15 @@ class InnerDiskMass(BaseModel):
         description="Legacy alias for M_in_ratio retained for agent tasks.",
     )
 
-    @root_validator(pre=True)
-    def _alias_m_over_mmars(cls, values: Dict[str, object]) -> Dict[str, object]:
+    @model_validator(mode="before")
+    def _alias_m_over_mmars(cls, data: Any) -> Any:
         """Normalise M_over_Mmars to M_in_ratio."""
 
-        if "M_over_Mmars" in values and "M_in_ratio" not in values:
-            values["M_in_ratio"] = values["M_over_Mmars"]
-        return values
+        if not isinstance(data, dict):
+            return data
+        if "M_over_Mmars" in data and "M_in_ratio" not in data:
+            data["M_in_ratio"] = data["M_over_Mmars"]
+        return data
 
 
 class SupplyConst(BaseModel):
@@ -145,15 +149,17 @@ class SupplyMixing(BaseModel):
         description="Alias for epsilon_mix; if provided, overrides epsilon_mix.",
     )
 
-    @root_validator(pre=True)
-    def _alias_mu(cls, values: Dict[str, Any]) -> Dict[str, Any]:
+    @model_validator(mode="before")
+    def _alias_mu(cls, data: Any) -> Any:
         """Allow 'mu' as an alias for 'epsilon_mix'."""
 
-        if "mu" in values and "epsilon_mix" not in values:
-            values["epsilon_mix"] = values["mu"]
-        return values
+        if not isinstance(data, dict):
+            return data
+        if "mu" in data and "epsilon_mix" not in data:
+            data["epsilon_mix"] = data["mu"]
+        return data
 
-    @validator("epsilon_mix")
+    @field_validator("epsilon_mix")
     def _validate_epsilon_mix(cls, value: float) -> float:
         """Restrict mixing efficiency to the physical interval [0, 1]."""
 
@@ -183,26 +189,28 @@ class SupplyReservoir(BaseModel):
         description="Fraction of the reservoir at which the smooth ramp begins when depletion_mode='taper'.",
     )
 
-    @root_validator(pre=True)
-    def _normalise_aliases(cls, values: Dict[str, Any]) -> Dict[str, Any]:
+    @model_validator(mode="before")
+    def _normalise_aliases(cls, data: Any) -> Any:
         """Backwards-compatible aliases for reservoir controls."""
 
-        if "smooth_fraction" in values and "taper_fraction" not in values:
-            values["taper_fraction"] = values["smooth_fraction"]
-        mode = values.get("depletion_mode")
+        if not isinstance(data, dict):
+            return data
+        if "smooth_fraction" in data and "taper_fraction" not in data:
+            data["taper_fraction"] = data["smooth_fraction"]
+        mode = data.get("depletion_mode")
         if mode == "smooth":
-            values["depletion_mode"] = "taper"
-        if values.get("enabled") is None and values.get("mass_total_Mmars") is not None:
-            values["enabled"] = True
-        return values
+            data["depletion_mode"] = "taper"
+        if data.get("enabled") is None and data.get("mass_total_Mmars") is not None:
+            data["enabled"] = True
+        return data
 
-    @root_validator(skip_on_failure=True)
-    def _require_mass_when_enabled(cls, values: Dict[str, Any]) -> Dict[str, Any]:
+    @model_validator(mode="after")
+    def _require_mass_when_enabled(cls, model: "SupplyReservoir") -> "SupplyReservoir":
         """Ensure a finite mass is provided when the reservoir is enabled."""
 
-        if values.get("enabled") and values.get("mass_total_Mmars") is None:
+        if model.enabled and model.mass_total_Mmars is None:
             raise ConfigurationError("supply.reservoir.mass_total_Mmars must be set when reservoir.enabled=true")
-        return values
+        return model
 
 
 class SupplyFeedback(BaseModel):
@@ -242,9 +250,9 @@ class SupplyFeedback(BaseModel):
         description="Initial multiplier applied before any feedback updates.",
     )
 
-    @validator("max_scale")
-    def _validate_scale_bounds(cls, value: float, values: Dict[str, Any]) -> float:
-        min_scale = values.get("min_scale", 0.0)
+    @field_validator("max_scale")
+    def _validate_scale_bounds(cls, value: float, info: ValidationInfo) -> float:
+        min_scale = info.data.get("min_scale", 0.0)
         if value <= 0.0:
             raise ConfigurationError("feedback.max_scale must be positive")
         if value < min_scale:
@@ -312,14 +320,14 @@ class SupplyTransport(BaseModel):
         description="Headroom limiter applied to deep→surface flux; 'soft' is reserved for future smoothing.",
     )
 
-    @root_validator(skip_on_failure=True)
-    def _require_tmix_for_mixing(cls, values: Dict[str, Any]) -> Dict[str, Any]:
-        mode = values.get("mode", "direct")
-        t_mix = values.get("t_mix_orbits")
+    @model_validator(mode="after")
+    def _require_tmix_for_mixing(cls, model: "SupplyTransport") -> "SupplyTransport":
+        mode = model.mode
+        t_mix = model.t_mix_orbits
         if mode == "deep_mixing":
             if t_mix is None or t_mix <= 0.0 or not isinstance(t_mix, (int, float)):
                 raise ConfigurationError("supply.transport.t_mix_orbits must be positive when mode='deep_mixing'")
-        return values
+        return model
 
 
 class SupplyInjectionVelocity(BaseModel):
@@ -353,17 +361,16 @@ class SupplyInjectionVelocity(BaseModel):
         description="delta_sigma: ΔΣ/(Σ+ΔΣ). sigma_ratio: ΔΣ/max(Σ,eps).",
     )
 
-    @root_validator(skip_on_failure=True)
-    def _validate_velocity_params(cls, values: Dict[str, Any]) -> Dict[str, Any]:
-        mode = values.get("mode", "inherit")
+    @model_validator(mode="after")
+    def _validate_velocity_params(cls, model: "SupplyInjectionVelocity") -> "SupplyInjectionVelocity":
+        mode = model.mode
         if mode == "fixed_ei":
-            if values.get("e_inj") is None or values.get("i_inj") is None:
+            if model.e_inj is None or model.i_inj is None:
                 raise ConfigurationError("supply.injection.velocity.mode='fixed_ei' requires e_inj and i_inj")
         if mode == "factor":
-            vrel_factor = values.get("vrel_factor")
-            if vrel_factor is None:
+            if model.vrel_factor is None:
                 raise ConfigurationError("supply.injection.velocity.mode='factor' requires vrel_factor")
-        return values
+        return model
 
 
 class SupplyInjection(BaseModel):
@@ -398,13 +405,13 @@ class SupplyInjection(BaseModel):
         description="Effective eccentricity/inclination settings applied to the injected supply.",
     )
 
-    @root_validator(skip_on_failure=True)
-    def _check_range(cls, values: Dict[str, Any]) -> Dict[str, Any]:
-        s_min = values.get("s_inj_min")
-        s_max = values.get("s_inj_max")
+    @model_validator(mode="after")
+    def _check_range(cls, model: "SupplyInjection") -> "SupplyInjection":
+        s_min = model.s_inj_min
+        s_max = model.s_inj_max
         if s_min is not None and s_max is not None and s_max <= s_min:
             raise ConfigurationError("supply.injection.s_inj_max must exceed s_inj_min when both are set")
-        return values
+        return model
 
 
 class SupplyPiece(BaseModel):
@@ -489,12 +496,14 @@ class Supply(BaseModel):
         description="Piecewise segments (only needed if mode='piecewise')",
     )
 
-    @root_validator(pre=True)
-    def _align_transport_aliases(cls, values: Dict[str, Any]) -> Dict[str, Any]:
+    @model_validator(mode="before")
+    def _align_transport_aliases(cls, data: Any) -> Any:
         """Normalise deep-buffer controls between injection and transport blocks."""
 
-        injection_cfg = values.get("injection") or {}
-        transport_cfg = values.get("transport") or {}
+        if not isinstance(data, dict):
+            return data
+        injection_cfg = data.get("injection") or {}
+        transport_cfg = data.get("transport") or {}
         # Allow deep_reservoir_tmix_orbits (legacy) to populate transport.t_mix_orbits when unset.
         deep_tmix_alias = None
         if isinstance(injection_cfg, dict):
@@ -510,8 +519,8 @@ class Supply(BaseModel):
                 and transport_cfg.get("t_mix_orbits") != deep_tmix_alias
             ):
                 raise ConfigurationError("supply.transport.t_mix_orbits and injection.deep_reservoir_tmix_orbits conflict; set only one")
-            values["transport"] = transport_cfg
-        return values
+            data["transport"] = transport_cfg
+        return data
 
 
 class Material(BaseModel):
@@ -519,7 +528,7 @@ class Material(BaseModel):
 
     rho: float = Field(3000.0, gt=0.0, description="Bulk density [kg/m^3]")
 
-    @validator("rho")
+    @field_validator("rho")
     def _check_rho_range(cls, value: float) -> float:
         low, high = constants.RHO_RANGE
         if not (low <= value <= high):
@@ -542,7 +551,7 @@ class Temps(BaseModel):
 
     T_M: float = Field(2000.0, description="Surface temperature of Mars [K] (DEPRECATED: use radiation.TM_K)")
 
-    @validator("T_M")
+    @field_validator("T_M")
     def _check_temperature_range(cls, value: float) -> float:
         Tmin, Tmax = 1000.0, 6500.0
         if not (Tmin <= value <= Tmax):
@@ -642,9 +651,9 @@ class Initial(BaseModel):
             description="Power-law slope dN/ds ∝ s^-alpha_solid for melt solids (Jutzi et al. 2010 motivated).",
         )
 
-        @validator("s_max_solid")
-        def _check_s_range(cls, value: float, values: dict[str, float]) -> float:
-            s_min = values.get("s_min_solid", None)
+        @field_validator("s_max_solid")
+        def _check_s_range(cls, value: float, info: ValidationInfo) -> float:
+            s_min = info.data.get("s_min_solid", None)
             if s_min is not None and value <= s_min:
                 raise ConfigurationError("s_max_solid must exceed s_min_solid")
             return value
@@ -741,13 +750,13 @@ class Dynamics(BaseModel):
         description="Optional seed for eccentricity/inclination RNG sampling (dimensionless)",
     )
 
-    @root_validator(skip_on_failure=True)
-    def _check_kernel_H_params(cls, values: Dict[str, Any]) -> Dict[str, Any]:
-        if values.get("kernel_H_mode") == "fixed" and values.get("H_fixed_over_a") is None:
+    @model_validator(mode="after")
+    def _check_kernel_H_params(cls, model: "Dynamics") -> "Dynamics":
+        if model.kernel_H_mode == "fixed" and model.H_fixed_over_a is None:
             raise ConfigurationError("kernel_H_mode='fixed' requires H_fixed_over_a to be set")
-        return values
+        return model
 
-    @validator("f_ke_fragmentation")
+    @field_validator("f_ke_fragmentation")
     def _check_f_ke_fragmentation(cls, value: Optional[float]) -> Optional[float]:
         if value is None:
             return None
@@ -992,11 +1001,13 @@ class Process(BaseModel):
 
     state_tagging: ProcessStateTagging = ProcessStateTagging()
 
-    @root_validator(pre=True)
-    def _forbid_primary(cls, values: Dict[str, Any]) -> Dict[str, Any]:
-        if "primary" in values:
+    @model_validator(mode="before")
+    def _forbid_primary(cls, data: Any) -> Any:
+        if not isinstance(data, dict):
+            return data
+        if "primary" in data:
             raise ConfigurationError("process.primary has been removed; use physics_mode instead.")
-        return values
+        return data
 
 
 class PhaseThresholds(BaseModel):
@@ -1015,9 +1026,9 @@ class PhaseThresholds(BaseModel):
     P_ref_bar: float = Field(1.0, ge=0.0)
     tau_ref: float = Field(1.0, gt=0.0)
 
-    @validator("T_vaporize_K")
-    def _check_temperature_hierarchy(cls, value: float, values: Dict[str, Any]) -> float:
-        condense = values.get("T_condense_K", 0.0)
+    @field_validator("T_vaporize_K")
+    def _check_temperature_hierarchy(cls, value: float, info: ValidationInfo) -> float:
+        condense = info.data.get("T_condense_K", 0.0)
         if value <= condense:
             raise ConfigurationError("phase.thresholds.T_vaporize_K must exceed T_condense_K")
         return float(value)
@@ -1084,7 +1095,7 @@ class PhaseConfig(BaseModel):
         description="Mean absorption efficiency ⟨Q_abs⟩ used for the particle-temperature phase input.",
     )
 
-    @validator("entrypoint")
+    @field_validator("entrypoint")
     def _check_entrypoint_format(cls, value: str) -> str:
         text = str(value)
         module, sep, func = text.partition(":")
@@ -1092,7 +1103,7 @@ class PhaseConfig(BaseModel):
             raise ConfigurationError("phase.entrypoint must be of the form 'module.submodule:function'")
         return text
 
-    @validator("q_abs_mean")
+    @field_validator("q_abs_mean")
     def _check_q_abs_mean(cls, value: float) -> float:
         val = float(value)
         if not math.isfinite(val) or val <= 0.0:
@@ -1109,7 +1120,7 @@ class MarsTemperatureDriverConstant(BaseModel):
 
     value_K: float = Field(..., description="Constant Mars-facing temperature [K].")
 
-    @validator("value_K")
+    @field_validator("value_K")
     def _check_value(cls, value: float) -> float:
         Tmin, Tmax = 1000.0, 6500.0
         if not (Tmin <= float(value) <= Tmax):
@@ -1197,35 +1208,15 @@ class MarsTemperatureDriverConfig(BaseModel):
         None, description="Automatically generate a table from the SiO2 cooling model when needed."
     )
 
-    @validator("constant", always=True)
-    def _check_constant_presence(
-        cls,
-        value: Optional[MarsTemperatureDriverConstant],
-        values: Dict[str, Any],
-    ) -> Optional[MarsTemperatureDriverConstant]:
-        if values.get("mode") == "constant" and value is None and values.get("enabled"):
+    @model_validator(mode="after")
+    def _validate_mode_requirements(cls, model: "MarsTemperatureDriverConfig") -> "MarsTemperatureDriverConfig":
+        if model.mode == "constant" and model.enabled and model.constant is None:
             raise ConfigurationError("radiation.mars_temperature_driver.constant must be provided when mode='constant'")
-        return value
-
-    @validator("table", always=True)
-    def _check_table_presence(
-        cls,
-        value: Optional[MarsTemperatureDriverTable],
-        values: Dict[str, Any],
-    ) -> Optional[MarsTemperatureDriverTable]:
-        if values.get("mode") == "table" and value is None and values.get("enabled"):
+        if model.mode == "table" and model.enabled and model.table is None:
             raise ConfigurationError("radiation.mars_temperature_driver.table must be provided when mode='table'")
-        return value
-
-    @validator("hyodo", always=True)
-    def _check_hyodo_presence(
-        cls,
-        value: Optional[MarsTemperatureDriverHyodo],
-        values: Dict[str, Any],
-    ) -> Optional[MarsTemperatureDriverHyodo]:
-        if values.get("mode") == "hyodo" and value is None and values.get("enabled"):
-            return MarsTemperatureDriverHyodo()
-        return value
+        if model.mode == "hyodo" and model.enabled and model.hyodo is None:
+            model.hyodo = MarsTemperatureDriverHyodo()
+        return model
 
 
 class RadiationTauGate(BaseModel):
@@ -1283,7 +1274,7 @@ class Radiation(BaseModel):
     )
     tau_gate: RadiationTauGate = RadiationTauGate()
 
-    @validator("Q_pr")
+    @field_validator("Q_pr")
     def _validate_qpr(cls, value: Optional[float]) -> Optional[float]:
         if value is None:
             return value
@@ -1293,7 +1284,7 @@ class Radiation(BaseModel):
             raise ConfigurationError("Q_pr must lie within the sensitivity range 0.5–1.5")
         return value
 
-    @validator("source")
+    @field_validator("source")
     def _validate_source(cls, value: str) -> str:
         """Enforce that only Mars-sourced radiation is allowed."""
 
@@ -1485,7 +1476,7 @@ class Numerics(BaseModel):
     checkpoint: Checkpoint = Checkpoint()
     resume: Resume = Resume()
 
-    @validator("dt_init")
+    @field_validator("dt_init")
     def _check_dt_init(cls, value: Union[float, str]) -> Union[float, str]:
         if isinstance(value, str):
             if value.lower() != "auto":
@@ -1495,7 +1486,7 @@ class Numerics(BaseModel):
             raise ConfigurationError("dt_init must be positive")
         return float(value)
 
-    @validator("t_end_orbits")
+    @field_validator("t_end_orbits")
     def _check_t_end_orbits(cls, value: Optional[float]) -> Optional[float]:
         if value is None:
             return value
@@ -1503,7 +1494,7 @@ class Numerics(BaseModel):
             raise ConfigurationError("t_end_orbits must be positive when specified")
         return float(value)
 
-    @validator("t_end_years")
+    @field_validator("t_end_years")
     def _check_t_end_years(cls, value: Optional[float]) -> Optional[float]:
         if value is None:
             return value
@@ -1511,19 +1502,19 @@ class Numerics(BaseModel):
             raise ConfigurationError("t_end_years must be positive when specified")
         return float(value)
 
-    @validator("safety")
+    @field_validator("safety")
     def _check_safety(cls, value: float) -> float:
         if value <= 0.0:
             raise ConfigurationError("numerics.safety must be positive")
         return value
 
-    @validator("atol", "rtol")
+    @field_validator("atol", "rtol")
     def _check_tol(cls, value: float) -> float:
         if value <= 0.0:
             raise ConfigurationError("numerics tolerances must be positive")
         return value
 
-    @validator("dt_over_t_blow_max")
+    @field_validator("dt_over_t_blow_max")
     def _check_dt_over_t_blow(cls, value: Optional[float]) -> Optional[float]:
         if value is None:
             return value
@@ -1531,11 +1522,11 @@ class Numerics(BaseModel):
             raise ConfigurationError("dt_over_t_blow_max must be positive when specified")
         return float(value)
 
-    @validator("orbit_rollup")
+    @field_validator("orbit_rollup")
     def _check_orbit_rollup(cls, value: bool) -> bool:
         return bool(value)
 
-    @validator("eval_per_step")
+    @field_validator("eval_per_step")
     def _check_eval_per_step(cls, value: bool) -> bool:
         return bool(value)
 
@@ -1602,13 +1593,13 @@ class Streaming(BaseModel):
         description="Merge Parquet chunks into single files at the end of the run.",
     )
 
-    @validator("memory_limit_gb")
+    @field_validator("memory_limit_gb")
     def _check_memory_limit(cls, value: float) -> float:
         if value <= 0.0:
             raise ConfigurationError("io.streaming.memory_limit_gb must be positive")
         return float(value)
 
-    @validator("step_flush_interval")
+    @field_validator("step_flush_interval")
     def _check_step_interval(cls, value: int) -> int:
         if value < 0:
             raise ConfigurationError("io.streaming.step_flush_interval must be non-negative")
@@ -1726,9 +1717,12 @@ class Config(BaseModel):
     diagnostics: Diagnostics = Diagnostics()
     io: IO
 
-    @root_validator(pre=True)
-    def _forbid_deprecated_paths(cls, values: Dict[str, Any]) -> Dict[str, Any]:
+    @model_validator(mode="before")
+    def _forbid_deprecated_paths(cls, data: Any) -> Any:
         """Reject legacy configuration keys that have been removed."""
+
+        if not isinstance(data, dict):
+            return data
 
         forbidden: Dict[tuple[str, ...], str] = {
             ("geometry", "r"): "disk.geometry.r_in_RM / r_out_RM",
@@ -1755,10 +1749,10 @@ class Config(BaseModel):
                     )
                 _walk(val, new_path)
 
-        _walk(values, tuple())
-        return values
+        _walk(data, tuple())
+        return data
 
-    @validator("physics_mode")
+    @field_validator("physics_mode")
     def _normalise_physics_mode(cls, value: str) -> str:
         text = str(value).strip().lower() if value is not None else "default"
         if text in {"", "default", "off", "none", "full", "both"}:
@@ -1769,7 +1763,7 @@ class Config(BaseModel):
             return "collisions_only"
         raise ConfigurationError("physics_mode must be default, sublimation_only or collisions_only")
 
-    @validator("chi_blow")
+    @field_validator("chi_blow")
     def _validate_chi_blow(cls, value: Union[float, str]) -> Union[float, str]:  # type: ignore[override]
         if isinstance(value, str):
             if value.lower() != "auto":

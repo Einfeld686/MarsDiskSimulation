@@ -15,7 +15,7 @@ import math
 from collections import OrderedDict
 from numbers import Real
 from pathlib import Path
-from typing import Callable, Optional
+from typing import Callable, Iterable, Optional
 
 import numpy as np
 
@@ -292,6 +292,91 @@ def qpr_lookup(s: float, T_M: float, table: type_QPr | None = None) -> float:
     value = float(lookup(s_eval, T_eval))
     _qpr_cache_set(s_eval, T_eval, value)
     return value
+
+
+def qpr_lookup_array(
+    s: Iterable[float] | np.ndarray,
+    T_M: float | Iterable[float] | np.ndarray,
+    table: type_QPr | None = None,
+) -> np.ndarray:
+    """Vectorised ⟨Q_pr⟩ lookup for an array of grain sizes at a single temperature.
+
+    The fast path exploits the loaded :class:`~marsdisk.io.tables.QPrTable`
+    when available and treats ``T_M`` as a scalar; for other input shapes
+    it falls back to element-wise :func:`qpr_lookup`.
+    """
+
+    s_arr = np.asarray(s, dtype=float)
+    T_arr = np.asarray(T_M, dtype=float)
+    if s_arr.size == 0:
+        return np.zeros_like(s_arr, dtype=float)
+
+    scalar_T = T_arr.size == 1
+    if not scalar_T and T_arr.shape != s_arr.shape:
+        raise PhysicsError("T_M must be scalar or match the shape of 's' for ⟨Q_pr⟩ lookup")
+
+    s_flat = s_arr.reshape(-1)
+    if np.any(~np.isfinite(s_flat)) or np.any(s_flat <= 0.0):
+        raise PhysicsError("grain size array contains non-finite or non-positive entries")
+    if not np.isfinite(T_arr).all():
+        raise PhysicsError("temperature 'T_M' must be finite for ⟨Q_pr⟩ lookup")
+    if np.any(T_arr <= 0.0):
+        raise PhysicsError("temperature 'T_M' must be greater than 0 for ⟨Q_pr⟩ lookup")
+
+    func = table or _QPR_LOOKUP or tables.interp_qpr
+    if not callable(func):
+        raise TypeError("provided ⟨Q_pr⟩ interpolator must be callable")
+
+    lookup = func
+    table_obj = getattr(lookup, "__self__", None)
+    if table_obj is None and lookup is tables.interp_qpr:
+        table_obj = getattr(tables, "_QPR_TABLE", None)
+        if table is None and _QPR_LOOKUP is None and table_obj is None:
+            raise RuntimeError(
+                "⟨Q_pr⟩ lookup table not initialised. Provide radiation.qpr_table_path or call "
+                "marsdisk.io.tables.load_qpr_table before evaluating Q_pr."
+            )
+
+    # Fast bilinear interpolation path for scalar T_M using the table grid.
+    if table_obj is not None and hasattr(table_obj, "s_vals") and hasattr(table_obj, "T_vals") and scalar_T:
+        s_vals = np.asarray(table_obj.s_vals, dtype=float)
+        T_vals = np.asarray(table_obj.T_vals, dtype=float)
+        q_grid = np.asarray(getattr(table_obj, "q_vals", None), dtype=float)
+        if q_grid.shape != (T_vals.size, s_vals.size):
+            q_grid = None
+        if s_vals.size >= 2 and T_vals.size >= 2 and q_grid is not None and q_grid.size:
+            s_min = float(np.min(s_vals))
+            s_max = float(np.max(s_vals))
+            T_min = float(np.min(T_vals))
+            T_max = float(np.max(T_vals))
+            T_eval = float(np.clip(float(T_arr.flat[0]), T_min, T_max))
+            s_eval = np.clip(s_flat, s_min, s_max)
+            i = np.clip(np.searchsorted(s_vals, s_eval) - 1, 0, s_vals.size - 2)
+            j = int(np.clip(np.searchsorted(T_vals, T_eval) - 1, 0, T_vals.size - 2))
+            s1 = s_vals[i]
+            s2 = s_vals[i + 1]
+            T1 = T_vals[j]
+            T2 = T_vals[j + 1]
+            q11 = q_grid[j, i]
+            q12 = q_grid[j + 1, i]
+            q21 = q_grid[j, i + 1]
+            q22 = q_grid[j + 1, i + 1]
+            with np.errstate(divide="ignore", invalid="ignore"):
+                ws = np.where(s2 == s1, 0.0, (s_eval - s1) / (s2 - s1))
+                wT = 0.0 if T2 == T1 else (T_eval - T1) / (T2 - T1)
+            q1 = q11 * (1.0 - ws) + q21 * ws
+            q2 = q12 * (1.0 - ws) + q22 * ws
+            result = q1 * (1.0 - wT) + q2 * wT
+            result = result.reshape(s_arr.shape)
+            return result.astype(float, copy=False)
+
+    # Fallback: element-wise lookup (supports array T_M).
+    if scalar_T:
+        T_scalar = float(T_arr.flat[0])
+        values = [qpr_lookup(val, T_scalar, table=table) for val in s_flat]
+    else:
+        values = [qpr_lookup(val, float(T_val), table=table) for val, T_val in zip(s_flat, T_arr.reshape(-1))]
+    return np.asarray(values, dtype=float).reshape(s_arr.shape)
 
 
 def planck_mean_qpr(

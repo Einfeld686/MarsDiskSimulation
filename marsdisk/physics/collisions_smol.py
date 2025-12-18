@@ -26,6 +26,7 @@ try:
         blowout_sink_vector_numba,
         supply_mass_rate_powerlaw_numba,
         kernel_minimum_tcoll_numba,
+        compute_kernel_e_i_H_numba,
     )
     _NUMBA_AVAILABLE = NUMBA_AVAILABLE()
 except ImportError:
@@ -83,6 +84,10 @@ class Smol0DStepResult:
     supply_velocity_weight: float | None = None
     energy_stats: np.ndarray | None = None
     f_ke_eps_mismatch: float | None = None
+    e_next: float | None = None
+    i_next: float | None = None
+    e_eq_target: float | None = None
+    t_damp_used: float | None = None
 
 
 @dataclass
@@ -269,7 +274,7 @@ def supply_mass_rate_to_number_source(
 
 
 _FRAG_CACHE: dict[tuple, np.ndarray] = {}
-_FRAG_CACHE_MAX = 8
+_FRAG_CACHE_MAX = 32
 
 
 def _fragment_tensor(
@@ -369,7 +374,6 @@ def _fragment_tensor(
                 sizes_arr, valid_pair, f_lr_matrix, k_lr_matrix, float(alpha_frag)
             )
             Y[:] = Y_num
-            return Y
         except Exception as exc:  # pragma: no cover - exercised via fallback test
             _NUMBA_FAILED = True
             warnings.warn(
@@ -405,6 +409,7 @@ def _fragment_tensor(
     if use_cache and cache_key is not None:
         if len(_FRAG_CACHE) >= _FRAG_CACHE_MAX:
             _FRAG_CACHE.pop(next(iter(_FRAG_CACHE)))
+        Y.setflags(write=False)
         _FRAG_CACHE[cache_key] = Y
     return Y
 
@@ -559,6 +564,58 @@ def compute_kernel_ei_state(
     return KernelEIState(e_base=e_base, i_base=i_base, e_used=float(e_used), i_used=float(i_used), H_k=H_k)
 
 
+def _compute_ei_damping(
+    e_curr: float,
+    i_curr: float,
+    *,
+    dt: float,
+    tau_eff: float | None,
+    a_orbit_m: float,
+    v_k: float,
+    dynamics_cfg: "Dynamics | None",
+    t_coll_ref: float | None,
+    eps_restitution: float,
+) -> tuple[float | None, float | None, float | None, float | None]:
+    """Return (e_next, i_next, t_damp, e_eq_target) for post-collision damping."""
+
+    if dynamics_cfg is None:
+        return None, None, None, None
+    if t_coll_ref is None or not np.isfinite(t_coll_ref) or t_coll_ref <= 0.0 or dt <= 0.0:
+        return None, None, None, None
+
+    e_target = float(e_curr)
+    try:
+        def _eps_model(_v: float) -> float:
+            return float(eps_restitution)
+
+        tau_val = float(tau_eff) if tau_eff is not None and np.isfinite(tau_eff) else 0.0
+        c_eq = dynamics.solve_c_eq(
+            max(tau_val, 0.0),
+            max(e_curr, 1.0e-8),
+            _eps_model,
+            f_wake=float(getattr(dynamics_cfg, "f_wake", 1.0)),
+        )
+        e_target = max(c_eq / max(v_k, 1.0e-12), 0.0)
+    except Exception:
+        e_target = float(e_curr)
+
+    eps_sq = max(float(eps_restitution) * float(eps_restitution), 1.0e-12)
+    t_damp = float(t_coll_ref) / eps_sq
+    if not np.isfinite(t_damp) or t_damp <= 0.0:
+        return None, None, None, None
+
+    ratio_i = 0.5
+    if e_curr > 0.0:
+        ratio_i = max(i_curr, 0.0) / max(e_curr, 1.0e-12)
+    i_target = ratio_i * e_target
+
+    e_next = dynamics.update_e(float(e_curr), e_target, t_damp, dt)
+    i_next = dynamics.update_e(float(i_curr), i_target, t_damp, dt)
+    e_next = float(np.clip(e_next, 0.0, 0.999999))
+    i_next = float(max(i_next, 0.0))
+    return e_next, i_next, t_damp, e_target
+
+
 def compute_kernel_e_i_H(
     dynamics_cfg: "Dynamics",
     tau_eff: float,
@@ -576,7 +633,43 @@ def compute_kernel_e_i_H(
       ``'fixed'`` uses ``H_fixed_over_a * a`` if provided.
     """
 
-    state = compute_kernel_ei_state(dynamics_cfg, tau_eff, a_orbit_m, v_k, sizes)
+    global _NUMBA_FAILED
+
+    sizes_arr = np.asarray(sizes, dtype=float)
+    mode_ei = getattr(dynamics_cfg, "kernel_ei_mode", "config")
+    mode_H = getattr(dynamics_cfg, "kernel_H_mode", "ia")
+    if mode_ei not in {"config", "wyatt_eq"}:
+        raise MarsDiskError(f"Unknown kernel_ei_mode={mode_ei}")
+    if mode_H not in {"ia", "fixed"}:
+        raise MarsDiskError(f"Unknown kernel_H_mode={mode_H}")
+
+    if mode_H == "fixed" and getattr(dynamics_cfg, "H_fixed_over_a", None) is None:
+        raise MarsDiskError("kernel_H_mode='fixed' requires H_fixed_over_a")
+
+    if _USE_NUMBA and not _NUMBA_FAILED:
+        try:
+            e_kernel, i_kernel, H_k = compute_kernel_e_i_H_numba(
+                sizes_arr.astype(np.float64),
+                float(tau_eff),
+                float(a_orbit_m),
+                float(v_k),
+                float(dynamics_cfg.e0),
+                float(dynamics_cfg.i0),
+                float(dynamics_cfg.H_factor),
+                float(getattr(dynamics_cfg, "H_fixed_over_a", 0.0) or 0.0),
+                1 if mode_ei == "wyatt_eq" else 0,
+                1 if mode_H == "fixed" else 0,
+                float(getattr(dynamics_cfg, "f_wake", 1.0)),
+            )
+            return e_kernel, i_kernel, H_k
+        except Exception as exc:  # pragma: no cover - fallback path
+            _NUMBA_FAILED = True
+            warnings.warn(
+                f"compute_kernel_e_i_H: numba kernel failed ({exc!r}); falling back to Python.",
+                NumericalWarning,
+            )
+
+    state = compute_kernel_ei_state(dynamics_cfg, tau_eff, a_orbit_m, v_k, sizes_arr)
     return state.e_used, state.i_used, state.H_k
 
 
@@ -687,6 +780,10 @@ def step_collisions_smol_0d(
     )
     energy_stats = None
     f_ke_eps_mismatch = None
+    e_next_state = None
+    i_next_state = None
+    e_eq_target_state = None
+    t_damp_used = None
     if N_k.size == 0 or not np.isfinite(sigma_for_step):
         return Smol0DStepResult(
             psd_state,
@@ -706,7 +803,38 @@ def step_collisions_smol_0d(
             0.0,
             energy_stats=None,
             f_ke_eps_mismatch=None,
+            e_next=None,
+            i_next=None,
+            e_eq_target=None,
+            t_damp_used=None,
         )
+
+    kernel_workspace = None
+    kernel_workspace_sizes_id = getattr(step_collisions_smol_0d, "_kernel_ws_sizes_id", None)
+    kernel_workspace_cached = getattr(step_collisions_smol_0d, "_kernel_ws", None)
+    sizes_ref = psd_state.get("sizes", None)
+    sizes_ref_id = id(sizes_ref) if sizes_ref is not None else None
+    if sizes_ref_id is not None and sizes_ref_id == kernel_workspace_sizes_id:
+        kernel_workspace = kernel_workspace_cached
+    else:
+        try:
+            kernel_workspace = collide.prepare_collision_kernel_workspace(sizes_arr)
+            step_collisions_smol_0d._kernel_ws = kernel_workspace
+            step_collisions_smol_0d._kernel_ws_sizes_id = sizes_ref_id
+        except Exception:
+            kernel_workspace = None
+            step_collisions_smol_0d._kernel_ws = None
+            step_collisions_smol_0d._kernel_ws_sizes_id = None
+
+    imex_workspace = getattr(step_collisions_smol_0d, "_imex_ws", None)
+    imex_workspace_key = getattr(step_collisions_smol_0d, "_imex_ws_key", None)
+    if imex_workspace is None or imex_workspace_key != N_k.shape:
+        imex_workspace = smol.ImexWorkspace(
+            gain=np.zeros_like(N_k, dtype=float),
+            loss=np.zeros_like(N_k, dtype=float),
+        )
+        step_collisions_smol_0d._imex_ws = imex_workspace
+        step_collisions_smol_0d._imex_ws_key = N_k.shape
 
     if collisions_enabled:
         supply_weight = 0.0
@@ -717,6 +845,8 @@ def step_collisions_smol_0d(
                 a_orbit_m=r,
                 v_k=r * Omega,
                 sizes=sizes_arr,
+                e_override=e_value,
+                i_override=i_value,
             )
         else:
             H_arr_default = np.full_like(N_k, max(r * max(i_value, 1.0e-6), 1.0e-6))
@@ -816,7 +946,9 @@ def step_collisions_smol_0d(
                 F_lf_matrix,
             )
         else:
-            C_kernel = collide.compute_collision_kernel_C1(N_k, sizes_arr, H_arr, v_rel_scalar)
+            C_kernel = collide.compute_collision_kernel_C1(
+                N_k, sizes_arr, H_arr, v_rel_scalar, workspace=kernel_workspace
+            )
 
         t_coll_kernel = kernel_minimum_tcoll(C_kernel)
         Y_tensor = _fragment_tensor(sizes_arr, m_k, v_rel_scalar, rho)
@@ -844,6 +976,22 @@ def step_collisions_smol_0d(
         i_supply = None
         supply_weight = 0.0
         H_arr = np.full_like(N_k, max(r * max(i_value, 1.0e-6), 1.0e-6))
+
+    if collisions_enabled and enable_e_damping:
+        t_coll_reference = (
+            t_coll_for_damp if t_coll_for_damp is not None and np.isfinite(t_coll_for_damp) else t_coll_kernel
+        )
+        e_next_state, i_next_state, t_damp_used, e_eq_target_state = _compute_ei_damping(
+            e_value,
+            i_value,
+            dt=dt,
+            tau_eff=tau_eff,
+            a_orbit_m=r,
+            v_k=r * Omega,
+            dynamics_cfg=dynamics_cfg,
+            t_coll_ref=t_coll_reference,
+            eps_restitution=eps_restitution,
+        )
 
     if collisions_enabled:
         e_kernel_base_val = kernel_state.e_base
@@ -923,6 +1071,7 @@ def step_collisions_smol_0d(
         S_external_k=S_sink,
         S_sublimation_k=S_sub_k,
         extra_mass_loss_rate=extra_mass_loss_rate,
+        workspace=imex_workspace,
     )
 
     if spill_mode and sigma_tau1 is not None and math.isfinite(sigma_tau1):
@@ -979,4 +1128,8 @@ def step_collisions_smol_0d(
         supply_velocity_weight=supply_weight_val,
         energy_stats=energy_stats,
         f_ke_eps_mismatch=f_ke_eps_mismatch,
+        e_next=e_next_state,
+        i_next=i_next_state,
+        e_eq_target=e_eq_target_state,
+        t_damp_used=t_damp_used,
     )

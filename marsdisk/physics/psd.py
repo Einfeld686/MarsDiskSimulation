@@ -21,12 +21,28 @@ from __future__ import annotations
 from typing import Dict, Mapping, Optional
 
 import logging
+import os
 
 import numpy as np
 
 from ..errors import MarsDiskError
 from . import sizes as size_models
 from .sublimation import SublimationParams
+try:
+    from ._numba_kernels import NUMBA_AVAILABLE, size_drift_rebin_numba
+
+    _NUMBA_AVAILABLE = NUMBA_AVAILABLE()
+except ImportError:  # pragma: no cover - optional dependency
+    _NUMBA_AVAILABLE = False
+
+_NUMBA_DISABLED_ENV = os.environ.get("MARSDISK_DISABLE_NUMBA", "").lower() in {
+    "1",
+    "true",
+    "yes",
+    "on",
+}
+_USE_NUMBA = _NUMBA_AVAILABLE and not _NUMBA_DISABLED_ENV
+_NUMBA_FAILED = False
 
 logger = logging.getLogger(__name__)
 
@@ -330,6 +346,31 @@ def apply_mass_weights(
     return psd_state
 
 
+def _size_drift_rebin_numpy(
+    sizes: np.ndarray,
+    number: np.ndarray,
+    edges: np.ndarray,
+    ds_step: float,
+    floor_val: float,
+) -> tuple[np.ndarray, np.ndarray]:
+    """Vectorised rebinning helper for :func:`apply_uniform_size_drift`."""
+
+    s_new = sizes + ds_step
+    s_new = np.where(np.isfinite(s_new), s_new, np.nan)
+    s_new = np.where(s_new < floor_val, floor_val, s_new)
+    valid = (number > 0.0) & np.isfinite(number) & np.isfinite(s_new)
+    if not np.any(valid):
+        return np.zeros_like(number), np.zeros_like(number)
+
+    targets = np.searchsorted(edges, s_new[valid], side="right") - 1
+    targets = np.clip(targets, 0, number.size - 1)
+    new_number = np.zeros_like(number)
+    accum_sizes = np.zeros_like(number)
+    np.add.at(new_number, targets, number[valid])
+    np.add.at(accum_sizes, targets, number[valid] * s_new[valid])
+    return new_number, accum_sizes
+
+
 def apply_uniform_size_drift(
     psd_state: Dict[str, np.ndarray | float],
     *,
@@ -369,6 +410,8 @@ def apply_uniform_size_drift(
         shift ``ds_step`` and the mass ratio.
     """
 
+    global _NUMBA_FAILED
+
     if dt <= 0.0 or not np.isfinite(dt):
         return sigma_surf, 0.0, {"ds_step": 0.0, "mass_ratio": 1.0}
     if not np.isfinite(ds_dt) or ds_dt == 0.0:
@@ -391,25 +434,22 @@ def apply_uniform_size_drift(
         edges[-1] = sizes[-1] + 0.5 * widths[-1]
     floor_val = float(floor)
     ds_step = float(ds_dt * dt)
-
-    new_number = np.zeros_like(number)
-    accum_sizes = np.zeros_like(number)
-    for idx, n_val in enumerate(number):
-        if n_val <= 0.0:
-            continue
-        s_new = sizes[idx] + ds_step
-        if not np.isfinite(s_new):
-            continue
-        if s_new < floor_val:
-            s_new = floor_val
-        # locate the new bin
-        target = int(np.searchsorted(edges, s_new, side="right") - 1)
-        if target < 0:
-            target = 0
-        elif target >= new_number.size:
-            target = new_number.size - 1
-        new_number[target] += n_val
-        accum_sizes[target] += n_val * s_new
+    use_jit = _USE_NUMBA and not _NUMBA_FAILED
+    if use_jit:
+        try:
+            new_number, accum_sizes = size_drift_rebin_numba(
+                sizes.astype(np.float64),
+                number.astype(np.float64),
+                edges.astype(np.float64),
+                float(ds_step),
+                float(floor_val),
+            )
+        except Exception as exc:  # pragma: no cover - fallback
+            use_jit = False
+            _NUMBA_FAILED = True
+            logger.warning("size_drift_rebin_numba failed (%r); falling back to NumPy.", exc)
+    if not use_jit:
+        new_number, accum_sizes = _size_drift_rebin_numpy(sizes, number, edges, ds_step, floor_val)
 
     # fallback: if nothing moved due to numerical issues keep original arrays
     if np.allclose(new_number, 0.0):

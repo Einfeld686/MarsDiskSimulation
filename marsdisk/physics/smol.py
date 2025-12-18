@@ -5,6 +5,7 @@ from __future__ import annotations
 import os
 import logging
 import warnings
+from dataclasses import dataclass
 from typing import Iterable, MutableMapping
 
 import numpy as np
@@ -36,7 +37,16 @@ __all__ = [
     "compute_prod_subblow_area_rate_C2",
     "psd_state_to_number_density",
     "number_density_to_psd_state",
+    "ImexWorkspace",
 ]
+
+
+@dataclass
+class ImexWorkspace:
+    """Reusable buffers for :func:`step_imex_bdf1_C3`."""
+
+    gain: np.ndarray
+    loss: np.ndarray
 
 logger = logging.getLogger(__name__)
 
@@ -162,31 +172,46 @@ def number_density_to_psd_state(
     return psd_state, sigma_after, sigma_loss
 
 
-def _gain_tensor(C: np.ndarray, Y: np.ndarray) -> np.ndarray:
+def _gain_tensor(C: np.ndarray, Y: np.ndarray, out: np.ndarray | None = None) -> np.ndarray:
     """Return gain term, preferring the Numba kernel when available."""
 
     global _NUMBA_FAILED
     if _USE_NUMBA and not _NUMBA_FAILED:
         try:
-            return gain_from_kernel_tensor_numba(
+            gain_arr = gain_from_kernel_tensor_numba(
                 np.asarray(C, dtype=np.float64), np.asarray(Y, dtype=np.float64)
             )
+            if out is not None and out.shape == gain_arr.shape:
+                out[:] = gain_arr
+                return out
+            return gain_arr
         except Exception as exc:  # pragma: no cover - exercised by fallback
             warnings.warn(
                 f"gain_tensor numba kernel failed ({exc!r}); trying fallback kernel.",
                 NumericalWarning,
             )
             try:
-                return gain_tensor_fallback_numba(
+                gain_arr = gain_tensor_fallback_numba(
                     np.asarray(C, dtype=np.float64), np.asarray(Y, dtype=np.float64)
                 )
+                if out is not None and out.shape == gain_arr.shape:
+                    out[:] = gain_arr
+                    return out
+                return gain_arr
             except Exception as exc2:  # pragma: no cover
                 _NUMBA_FAILED = True
                 warnings.warn(
                     f"gain_tensor numba fallback failed ({exc2!r}); falling back to einsum.",
                     NumericalWarning,
                 )
-    return 0.5 * np.einsum("ij,kij->k", C, Y)
+    einsum_out = out if out is not None else None
+    result = np.einsum("ij,kij->k", C, Y, out=einsum_out)
+    if result is None and einsum_out is not None:
+        result = einsum_out
+    if out is None:
+        return 0.5 * result
+    out[:] = 0.5 * result
+    return out
 
 
 def step_imex_bdf1_C3(
@@ -204,6 +229,7 @@ def step_imex_bdf1_C3(
     extra_mass_loss_rate: float = 0.0,
     mass_tol: float = 5e-3,
     safety: float = 0.1,
+    workspace: ImexWorkspace | None = None,
 ) -> tuple[np.ndarray, float, float]:
     """Advance the Smoluchowski system by one time step.
 
@@ -252,6 +278,9 @@ def step_imex_bdf1_C3(
     safety:
         Safety factor controlling the maximum allowed step size relative to
         the minimum collision time.
+    workspace:
+        Optional reusable buffers for ``gain`` and ``loss`` vectors to reduce
+        allocations when calling the solver repeatedly.
 
     Returns
     -------
@@ -288,6 +317,16 @@ def step_imex_bdf1_C3(
     S_sub_arr = _optional_sink(S_sublimation_k, "S_sublimation_k")
     S_arr = S_base + S_external_arr + S_sub_arr
 
+    gain_out = None
+    loss_out = None
+    if workspace is not None:
+        gain_buf = getattr(workspace, "gain", None)
+        loss_buf = getattr(workspace, "loss", None)
+        if isinstance(gain_buf, np.ndarray) and gain_buf.shape == N_arr.shape:
+            gain_out = gain_buf
+        if isinstance(loss_buf, np.ndarray) and loss_buf.shape == N_arr.shape:
+            loss_out = loss_buf
+
     try_use_numba = _USE_NUMBA and not _NUMBA_FAILED
     if try_use_numba:
         try:
@@ -297,7 +336,11 @@ def step_imex_bdf1_C3(
             _NUMBA_FAILED = True
             warnings.warn(f"loss_sum_numba failed ({exc!r}); falling back to NumPy.", NumericalWarning)
     if not try_use_numba:
-        loss = np.sum(C, axis=1)
+        if loss_out is not None:
+            np.sum(C, axis=1, out=loss_out)
+            loss = loss_out
+        else:
+            loss = np.sum(C, axis=1)
     t_coll = 1.0 / np.maximum(loss, 1e-30)
     dt_max = safety * float(np.min(t_coll))
     dt_eff = min(float(dt), dt_max)
@@ -308,7 +351,7 @@ def step_imex_bdf1_C3(
     else:
         prod_mass_rate_budget = float(prod_subblow_mass_rate)
 
-    gain = _gain_tensor(C, Y)
+    gain = _gain_tensor(C, Y, out=gain_out)
 
     while True:
         N_new = (N_arr + dt_eff * (gain + source_arr - S_arr * N_arr)) / (1.0 + dt_eff * loss)
