@@ -18,6 +18,7 @@ import warnings
 import numpy as np
 
 from ..errors import MarsDiskError
+from ..warnings import PhysicsWarning
 from .sublimation import (
     SublimationParams,
     grain_temperature_graybody,
@@ -177,7 +178,8 @@ def s_sub_boundary(
     radius_m = getattr(params, "runtime_orbital_radius_m", None)
     if radius_m is None:
         warnings.warn(
-            "s_sub_boundary: runtime_orbital_radius_m not set on SublimationParams; reverting to planet temperature."
+            "s_sub_boundary: runtime_orbital_radius_m not set on SublimationParams; reverting to planet temperature.",
+            PhysicsWarning,
         )
         T_eval = T
     else:
@@ -185,7 +187,8 @@ def s_sub_boundary(
             T_eval = grain_temperature_graybody(T, radius_m)
         except ValueError as exc:
             warnings.warn(
-                f"s_sub_boundary: failed to evaluate grey-body temperature ({exc}); using planet temperature."
+                f"s_sub_boundary: failed to evaluate grey-body temperature ({exc}); using planet temperature.",
+                PhysicsWarning,
             )
             T_eval = T
     if T_eval < T_sub:
@@ -195,7 +198,8 @@ def s_sub_boundary(
             boundary = s_sink_from_timescale(T_eval, rho, t_ref, params)
         else:
             warnings.warn(
-                "s_sub_boundary: t_ref or rho not provided; using fixed s_sink=1e-3 m as a conservative fallback."
+                "s_sub_boundary: t_ref or rho not provided; using fixed s_sink=1e-3 m as a conservative fallback.",
+                PhysicsWarning,
             )
             boundary = 1e-3
     boundary = max(0.0, float(boundary))

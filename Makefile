@@ -56,6 +56,16 @@ assumptions-autogen-check:
 	python tools/run_analysis_doc_tests.py
 	python -m tools.evaluation_system --outdir $(OUTDIR)
 
+# Remove temporary debug artifacts while preserving archived backups
+clean-tmp:
+	@echo "Removing temporary debug directories (preserving backup tarball and inventory)..."
+	rm -rf tmp_debug_mass_budget tmp_debug_mass_budget2
+	rm -rf tmp_debug_sampling
+	rm -rf tmp_debug_test_gate tmp_debug_test_gate2 tmp_debug_test_gate3
+	rm -rf tmp_debug_test_psat
+	rm -rf tmp_eval_fixture
+	@echo "Preserved: tmp_debug_backup_*.tar.gz, tmp_debug_inventory.txt"
+
 analysis-pipeline:
 	python tools/run_analysis_pipeline.py --outdir $(OUTDIR)
 
@@ -79,4 +89,3 @@ analysis-unknown-refs:
 # --strict で CI fail-fast にする場合
 analysis-unknown-refs-strict:
 	python tools/check_unknown_refs.py --strict
-# ==========================

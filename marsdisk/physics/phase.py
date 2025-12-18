@@ -9,6 +9,7 @@ import math
 from typing import Any, Callable, Dict, Literal, Optional, Tuple
 
 from .. import constants
+from ..errors import PhysicsError
 from ..schema import (
     DEFAULT_PHASE_ENTRYPOINT,
     HydroEscapeConfig,
@@ -68,11 +69,11 @@ def particle_temperature_equilibrium(
     """
 
     if not math.isfinite(T_mars_K) or T_mars_K <= 0.0:
-        raise ValueError("T_mars_K must be positive and finite")
+        raise PhysicsError("T_mars_K must be positive and finite")
     if not math.isfinite(r_orbit_m) or r_orbit_m <= 0.0:
-        raise ValueError("r_orbit_m must be positive and finite")
+        raise PhysicsError("r_orbit_m must be positive and finite")
     if not math.isfinite(q_abs_mean) or q_abs_mean <= 0.0:
-        raise ValueError("q_abs_mean must be positive and finite")
+        raise PhysicsError("q_abs_mean must be positive and finite")
     return float(
         T_mars_K * (q_abs_mean ** 0.25) * math.sqrt(constants.R_MARS / (2.0 * r_orbit_m))
     )
@@ -354,7 +355,7 @@ class PhaseEvaluator:
         """
         T = float(temperature_K)
         if not math.isfinite(T) or T <= 0.0:
-            raise ValueError("temperature_K must be positive and finite for phase evaluation")
+            raise PhysicsError("temperature_K must be positive and finite for phase evaluation")
         thresh = self.thresholds
         T_cond = float(thresh.T_condense_K)
         T_vap = float(max(thresh.T_vaporize_K, T_cond + 1.0))

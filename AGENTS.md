@@ -15,6 +15,7 @@
     * Blow‑out即時消滅による**“wavy” PSDの定性的再現**
     * IMEX（loss陰・gain陽）で安定、$\Delta t\le 0.1\min t_{{\rm coll},k}$ で収束
 4. YAMLで物理スイッチ（昇華・ガス抗力・自遮蔽倍率・wake係数など）を外出し。
+5. I/O: `io.streaming` は既定で ON（`memory_limit_gb=10`, `step_flush_interval=10000`, `merge_at_end=true`）。CI/pytest 等の軽量ケースでは `FORCE_STREAMING_OFF=1` または `IO_STREAMING=off` を先にセットして明示的に OFF にし、出力は `checks/mass_budget.csv` を含めてストリーミング有無にかかわらず必ず生成させる。[marsdisk/schema.py:1536–1605][marsdisk/run.py:1846–1905][marsdisk/run.py:4389–4405]
 技術選定と依存
 * Python 3.11+, numpy, scipy, numba(任意), pydantic, ruamel.yaml, pandas, pyarrow, xarray(任意), matplotlib(検証用プロット)
 * Mie平均$\langle Q_{\rm pr}\rangle$はテーブル読み込みを基本（CSV/NPZ）。ライブラリ（例：miepython）があれば生成ユーティリティも用意。

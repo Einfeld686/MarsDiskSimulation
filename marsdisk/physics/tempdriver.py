@@ -21,6 +21,7 @@ from siO2_disk_cooling.model import (
 )
 
 from .. import constants
+from ..errors import PhysicsError
 from ..schema import (
     MarsTemperatureAutogen,
     MarsTemperatureDriverConfig,
@@ -46,9 +47,9 @@ def _years_from_seconds(seconds: float) -> float:
 
 def _validate_temperature(value: float, *, context: str) -> float:
     if not np.isfinite(value):
-        raise ValueError(f"{context} produced a non-finite Mars temperature ({value})")
+        raise PhysicsError(f"{context} produced a non-finite Mars temperature ({value})")
     if not (T_MIN <= value <= T_MAX):
-        raise ValueError(
+        raise PhysicsError(
             f"{context} produced an out-of-range Mars temperature {value:.3f} K "
             f"(expected within [{T_MIN}, {T_MAX}] K)"
         )
@@ -64,9 +65,9 @@ def _time_unit_scale(unit: str, t_orb: Optional[float]) -> float:
         return SECONDS_PER_YEAR
     if unit == "orbit":
         if t_orb is None or t_orb <= 0.0:
-            raise ValueError("time_unit='orbit' requires a positive orbital period")
+            raise PhysicsError("time_unit='orbit' requires a positive orbital period")
         return float(t_orb)
-    raise ValueError(f"Unsupported time unit '{unit}' for mars_temperature_driver")
+    raise PhysicsError(f"Unsupported time unit '{unit}' for mars_temperature_driver")
 
 
 def _load_table(path: Path) -> pd.DataFrame:
@@ -80,7 +81,7 @@ def _load_table(path: Path) -> pd.DataFrame:
     else:
         df = pd.read_csv(path)
     if df.empty:
-        raise ValueError(f"Mars temperature driver table '{path}' is empty")
+        raise PhysicsError(f"Mars temperature driver table '{path}' is empty")
     return df
 
 
@@ -90,23 +91,23 @@ def _prepare_table_driver(
     t_orb: float,
 ) -> tuple[Callable[[float], float], Dict[str, Any]]:
     if table_cfg.table is None:
-        raise ValueError("mars_temperature_driver.table must be provided for mode='table'")
+        raise PhysicsError("mars_temperature_driver.table must be provided for mode='table'")
     table = table_cfg.table
     df = _load_table(table.path)
     if table.column_time not in df.columns:
-        raise ValueError(
+        raise PhysicsError(
             f"Column '{table.column_time}' missing in Mars temperature table '{table.path}'"
         )
     if table.column_temperature not in df.columns:
-        raise ValueError(
+        raise PhysicsError(
             f"Column '{table.column_temperature}' missing in Mars temperature table '{table.path}'"
         )
     time_vals = pd.to_numeric(df[table.column_time], errors="coerce").to_numpy(dtype=float)
     temp_vals = pd.to_numeric(df[table.column_temperature], errors="coerce").to_numpy(dtype=float)
     if not np.all(np.isfinite(time_vals)):
-        raise ValueError(f"Mars temperature driver table '{table.path}' contains non-finite time values")
+        raise PhysicsError(f"Mars temperature driver table '{table.path}' contains non-finite time values")
     if not np.all(np.isfinite(temp_vals)):
-        raise ValueError(f"Mars temperature driver table '{table.path}' contains non-finite temperature values")
+        raise PhysicsError(f"Mars temperature driver table '{table.path}' contains non-finite temperature values")
     order = np.argsort(time_vals)
     time_sorted = np.asarray(time_vals[order], dtype=float)
     temp_sorted = np.asarray(temp_vals[order], dtype=float)
@@ -115,7 +116,7 @@ def _prepare_table_driver(
         time_sorted = time_sorted[mask]
         temp_sorted = temp_sorted[mask]
     if time_sorted.size < 2:
-        raise ValueError("Mars temperature table must contain at least two distinct time samples")
+        raise PhysicsError("Mars temperature table must contain at least two distinct time samples")
     scale = _time_unit_scale(table.time_unit, t_orb)
     time_seconds = np.asarray(time_sorted * scale, dtype=float)
     temp_sorted = np.asarray(temp_sorted, dtype=float)
@@ -127,13 +128,13 @@ def _prepare_table_driver(
         t_val = float(time_s)
         if t_val < t_min:
             if extrapolation == "error":
-                raise ValueError(
+                raise PhysicsError(
                     f"T(t) requested at t={t_val:.3e} s < table minimum {t_min:.3e} s (extrapolation=error)"
                 )
             return float(temp_sorted[0])
         if t_val > t_max:
             if extrapolation == "error":
-                raise ValueError(
+                raise PhysicsError(
                     f"T(t) requested at t={t_val:.3e} s > table maximum {t_max:.3e} s (extrapolation=error)"
                 )
             return float(temp_sorted[-1])
@@ -221,7 +222,7 @@ def _write_temperature_table(
     path.parent.mkdir(parents=True, exist_ok=True)
     dt_s = float(autogen_cfg.dt_hours) * 3600.0
     if dt_s <= 0.0:
-        raise ValueError("autogen.dt_hours must be positive")
+        raise PhysicsError("autogen.dt_hours must be positive")
     scale = _time_unit_scale(autogen_cfg.time_unit, t_orb)
     t_end_s = float(t_end_years) * YEAR_SECONDS
     time_s = np.arange(0.0, t_end_s + 0.5 * dt_s, dt_s, dtype=float)
@@ -323,9 +324,9 @@ def estimate_time_to_temperature(
 
     T_target = float(target_K)
     if T_target <= 0.0:
-        raise ValueError("target temperature must be positive")
+        raise PhysicsError("target temperature must be positive")
     if initial_dt_hours <= 0.0:
-        raise ValueError("initial_dt_hours must be positive")
+        raise PhysicsError("initial_dt_hours must be positive")
 
     T0 = driver.evaluate(0.0)
     if T0 <= T_target:
@@ -396,7 +397,7 @@ def resolve_temperature_driver(
     if driver_cfg is not None and driver_cfg.enabled:
         if driver_cfg.mode == "constant":
             if driver_cfg.constant is None:
-                raise ValueError("mars_temperature_driver.constant must be provided for mode='constant'")
+                raise PhysicsError("mars_temperature_driver.constant must be provided for mode='constant'")
             value = _validate_temperature(
                 float(driver_cfg.constant.value_K), context="mars_temperature_driver.constant"
             )
@@ -423,7 +424,7 @@ def resolve_temperature_driver(
             )
             T0 = float(radiation_cfg.TM_K) if radiation_cfg is not None and radiation_cfg.TM_K is not None else None
             if T0 is None:
-                raise ValueError("radiation.TM_K must be set when using mars_temperature_driver.mode='hyodo'")
+                raise PhysicsError("radiation.TM_K must be set when using mars_temperature_driver.mode='hyodo'")
             value = _validate_temperature(T0, context="mars_temperature_driver.hyodo")
 
             def _hyodo(time_s: float) -> float:
@@ -462,7 +463,7 @@ def resolve_temperature_driver(
                 provenance=provenance,
                 _driver_fn=interp_fn,
             )
-        raise ValueError(f"Unsupported mars_temperature_driver.mode='{driver_cfg.mode}'")
+        raise PhysicsError(f"Unsupported mars_temperature_driver.mode='{driver_cfg.mode}'")
 
     if tm_override is not None:
         value = _validate_temperature(float(tm_override), context="radiation.TM_K override")
@@ -476,7 +477,7 @@ def resolve_temperature_driver(
             _driver_fn=lambda _time: value,
         )
 
-    raise ValueError("Mars temperature is not specified: set radiation.TM_K or enable mars_temperature_driver")
+    raise PhysicsError("Mars temperature is not specified: set radiation.TM_K or enable mars_temperature_driver")
 
 
 def autogenerate_temperature_table_if_needed(
@@ -513,7 +514,7 @@ def autogenerate_temperature_table_if_needed(
     elif driver_cfg is not None and driver_cfg.mode == "constant" and driver_cfg.constant is not None:
         T0 = float(driver_cfg.constant.value_K)
     else:
-        raise ValueError("Temperature autogeneration enabled but no initial temperature specified")
+        raise PhysicsError("Temperature autogeneration enabled but no initial temperature specified")
 
     table_info = ensure_temperature_table(
         autogen_cfg,

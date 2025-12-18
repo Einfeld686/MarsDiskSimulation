@@ -11,6 +11,7 @@ from typing import MutableMapping, TYPE_CHECKING
 import numpy as np
 import logging
 from ..errors import MarsDiskError
+from ..warnings import NumericalWarning, PhysicsWarning
 from . import collide, dynamics, qstar, smol
 from .fragments import largest_remnant_fraction_array, q_r_array
 from .sublimation import sublimation_sink_from_dsdt
@@ -21,6 +22,10 @@ try:
         NUMBA_AVAILABLE,
         compute_weights_table_numba,
         fill_fragment_tensor_numba,
+        fragment_tensor_fallback_numba,
+        blowout_sink_vector_numba,
+        supply_mass_rate_powerlaw_numba,
+        kernel_minimum_tcoll_numba,
     )
     _NUMBA_AVAILABLE = NUMBA_AVAILABLE()
 except ImportError:
@@ -76,6 +81,8 @@ class Smol0DStepResult:
     e_kernel_effective: float | None = None
     i_kernel_effective: float | None = None
     supply_velocity_weight: float | None = None
+    energy_stats: np.ndarray | None = None
+    f_ke_eps_mismatch: float | None = None
 
 
 @dataclass
@@ -140,6 +147,10 @@ class CollisionControlFlags:
     sigma_tau1: float | None
     t_sink: float | None
     ds_dt_val: float | None
+    energy_bookkeeping_enabled: bool = False
+    eps_restitution: float = 0.5
+    f_ke_cratering: float = 0.1
+    f_ke_fragmentation: float | None = None
 
 
 @dataclass
@@ -152,6 +163,8 @@ class CollisionStepContext:
     supply: SupplyParams
     control: CollisionControlFlags
     sigma_surf: float
+    enable_e_damping: bool = False
+    t_coll_for_damp: float | None = None
 
 
 def supply_mass_rate_to_number_source(
@@ -177,6 +190,7 @@ def supply_mass_rate_to_number_source(
     zero.
     """
 
+    global _NUMBA_FAILED
     prod_rate = max(float(prod_subblow_mass_rate), 0.0)
     s_arr = np.asarray(s_bin_center, dtype=float)
     m_arr = np.asarray(m_bin, dtype=float)
@@ -211,6 +225,24 @@ def supply_mass_rate_to_number_source(
     if s_inj_max is not None and math.isfinite(s_inj_max):
         inj_ceiling = float(s_inj_max)
     inj_ceiling = max(min(inj_ceiling, float(np.max(s_arr))), inj_floor)
+
+    if _USE_NUMBA and not _NUMBA_FAILED:
+        try:
+            return supply_mass_rate_powerlaw_numba(
+                s_arr.astype(np.float64),
+                m_arr.astype(np.float64),
+                widths_arr.astype(np.float64),
+                float(prod_rate),
+                float(inj_floor),
+                float(inj_ceiling),
+                float(q),
+            )
+        except Exception as exc:  # pragma: no cover - fallback
+            _NUMBA_FAILED = True
+            warnings.warn(
+                f"supply_mass_rate_to_number_source: numba powerlaw kernel failed ({exc!r}); falling back to NumPy.",
+                NumericalWarning,
+            )
 
     left_edges = np.maximum(s_arr - 0.5 * widths_arr, 0.0)
     right_edges = left_edges + widths_arr
@@ -327,9 +359,23 @@ def _fragment_tensor(
             use_jit = False
             warnings.warn(
                 f"_fragment_tensor: numba kernel failed ({exc!r}); falling back to pure Python.",
-                RuntimeWarning,
+                NumericalWarning,
             )
             _NUMBA_FAILED = True
+
+    if (not use_jit) and _USE_NUMBA and not _NUMBA_FAILED:
+        try:
+            Y_num = fragment_tensor_fallback_numba(
+                sizes_arr, valid_pair, f_lr_matrix, k_lr_matrix, float(alpha_frag)
+            )
+            Y[:] = Y_num
+            return Y
+        except Exception as exc:  # pragma: no cover - exercised via fallback test
+            _NUMBA_FAILED = True
+            warnings.warn(
+                f"_fragment_tensor: numba fallback failed ({exc!r}); falling back to pure Python.",
+                NumericalWarning,
+            )
 
     if not use_jit:
         # Pure Python fallback (original implementation)
@@ -371,19 +417,41 @@ def _blowout_sink_vector(
 ) -> np.ndarray:
     """Return per-bin blow-out sink rates (1/s)."""
 
+    global _NUMBA_FAILED
     if not enable_blowout or Omega <= 0.0:
         return np.zeros_like(sizes)
-    mask = sizes <= a_blow
-    sink = np.zeros_like(sizes, dtype=float)
-    sink[mask] = Omega
-    return sink
+    if _USE_NUMBA and not _NUMBA_FAILED:
+        try:
+            return blowout_sink_vector_numba(
+                np.asarray(sizes, dtype=np.float64),
+                float(a_blow),
+                float(Omega),
+                bool(enable_blowout),
+            )
+        except Exception as exc:  # pragma: no cover - fallback
+            _NUMBA_FAILED = True
+            warnings.warn(
+                f"_blowout_sink_vector: numba kernel failed ({exc!r}); falling back to NumPy.",
+                NumericalWarning,
+            )
+    return np.where(np.asarray(sizes, dtype=float) <= a_blow, float(Omega), 0.0)
 
 
 def kernel_minimum_tcoll(C_kernel: np.ndarray) -> float:
     """Return the minimum collisional time-scale implied by ``C``."""
 
+    global _NUMBA_FAILED
     if C_kernel.size == 0:
         return math.inf
+    if _USE_NUMBA and not _NUMBA_FAILED:
+        try:
+            return float(kernel_minimum_tcoll_numba(np.asarray(C_kernel, dtype=np.float64)))
+        except Exception as exc:  # pragma: no cover - fallback
+            _NUMBA_FAILED = True
+            warnings.warn(
+                f"kernel_minimum_tcoll: numba kernel failed ({exc!r}); falling back to NumPy.",
+                NumericalWarning,
+            )
     rates = np.sum(C_kernel, axis=1)
     rate_max = float(np.max(rates))
     if rate_max <= 0.0:
@@ -544,6 +612,10 @@ def step_collisions(
         supply_q=ctx.supply.supply_q,
         supply_velocity_cfg=ctx.supply.supply_velocity_cfg,
         headroom_policy=ctx.control.headroom_policy,
+        energy_bookkeeping_enabled=ctx.control.energy_bookkeeping_enabled,
+        f_ke_fragmentation=ctx.control.f_ke_fragmentation,
+        f_ke_cratering=ctx.control.f_ke_cratering,
+        eps_restitution=ctx.control.eps_restitution,
     )
 
 
@@ -574,6 +646,12 @@ def step_collisions_smol_0d(
     supply_q: float = 3.5,
     supply_velocity_cfg: "SupplyInjectionVelocity | None" = None,
     headroom_policy: str = "clip",
+    energy_bookkeeping_enabled: bool = False,
+    f_ke_fragmentation: float | None = None,
+    f_ke_cratering: float = 0.1,
+    eps_restitution: float = 0.5,
+    enable_e_damping: bool = False,
+    t_coll_for_damp: float | None = None,
 ) -> Smol0DStepResult:
     """Advance collisions+fragmentation in 0D using the Smol solver."""
 
@@ -607,6 +685,8 @@ def step_collisions_smol_0d(
         sigma_for_step,
         rho_fallback=rho,
     )
+    energy_stats = None
+    f_ke_eps_mismatch = None
     if N_k.size == 0 or not np.isfinite(sigma_for_step):
         return Smol0DStepResult(
             psd_state,
@@ -624,6 +704,8 @@ def step_collisions_smol_0d(
             0.0,
             0.0,
             0.0,
+            energy_stats=None,
+            f_ke_eps_mismatch=None,
         )
 
     if collisions_enabled:
@@ -689,15 +771,69 @@ def step_collisions_smol_0d(
         if v_rel_mode == "ohtsuki":
             warnings.warn(
                 "v_rel_mode='ohtsuki' is deprecated for high-e discs; prefer 'pericenter'.",
-                RuntimeWarning,
+                PhysicsWarning,
             )
         if v_rel_mode == "pericenter":
             v_rel_scalar = dynamics.v_rel_pericenter(e_kernel, v_k=r * Omega)
         else:
             v_rel_scalar = dynamics.v_ij(e_kernel, i_kernel, v_k=r * Omega)
-        C_kernel = collide.compute_collision_kernel_C1(N_k, sizes_arr, H_arr, v_rel_scalar)
+
+        if enable_e_damping and t_coll_for_damp is not None and t_coll_for_damp > 0.0:
+            eps_sq = max(eps_restitution * eps_restitution, 0.0)
+            denom = max(1.0 - eps_sq, 1.0e-6)
+            t_damp = t_coll_for_damp / denom
+            decay = math.exp(-dt / max(t_damp, 1.0e-30))
+            e_kernel = e_value + (e_kernel - e_value) * decay
+            i_kernel = i_value + (i_kernel - i_value) * decay
+
+        energy_enabled = bool(energy_bookkeeping_enabled)
+        f_ke_eps_mismatch = None
+        energy_stats = None
+
+        if energy_enabled:
+            # Fragment/energy matrices
+            if np.isscalar(v_rel_scalar):
+                v_matrix = np.full((N_k.size, N_k.size), float(v_rel_scalar), dtype=float)
+            else:
+                v_matrix = np.asarray(v_rel_scalar, dtype=float)
+            size_ref = np.maximum.outer(sizes_arr, sizes_arr)
+            q_star_matrix = qstar.compute_q_d_star_array(size_ref, rho, v_matrix / 1.0e3)
+            q_r_matrix = q_r_array(m_k[:, None], m_k[None, :], v_matrix)
+            F_lf_matrix = np.clip(largest_remnant_fraction_array(q_r_matrix, q_star_matrix), 0.0, 1.0)
+
+            f_ke_frag = f_ke_fragmentation
+            eps_val = max(float(eps_restitution), 1.0e-12)
+            f_ke_frag_used = f_ke_frag if f_ke_frag is not None else eps_val * eps_val
+            f_ke_eps_mismatch = abs(f_ke_frag - eps_val * eps_val) if f_ke_frag is not None else 0.0
+            f_ke_matrix = np.where(F_lf_matrix > 0.5, float(f_ke_cratering), float(f_ke_frag_used))
+            C_kernel, energy_stats = collide.compute_collision_kernel_bookkeeping(
+                N_k,
+                sizes_arr,
+                H_arr,
+                m_k,
+                v_rel_scalar,
+                f_ke_matrix,
+                F_lf_matrix,
+            )
+        else:
+            C_kernel = collide.compute_collision_kernel_C1(N_k, sizes_arr, H_arr, v_rel_scalar)
+
         t_coll_kernel = kernel_minimum_tcoll(C_kernel)
         Y_tensor = _fragment_tensor(sizes_arr, m_k, v_rel_scalar, rho)
+        if logger.isEnabledFor(logging.DEBUG):
+            e_log = float(e_kernel) if e_kernel is not None else float("nan")
+            i_log = float(i_kernel) if i_kernel is not None else float("nan")
+            y_max = float(np.max(Y_tensor)) if Y_tensor.size else 0.0
+            logger.debug("collision kernel: t_coll=%.3e, e=%.4f, i=%.4f", t_coll_kernel, e_log, i_log)
+            logger.debug("fragment tensor: shape=%s, Y_max=%.3e", Y_tensor.shape, y_max)
+            logger.debug(
+                "supply velocity blend: weight=%.3f, e_supply=%.4f, i_supply=%.4f, e_eff=%.4f, i_eff=%.4f",
+                supply_weight,
+                float(e_supply) if e_supply is not None else float("nan"),
+                float(i_supply) if i_supply is not None else float("nan"),
+                float(e_kernel) if e_kernel is not None else float("nan"),
+                float(i_kernel) if i_kernel is not None else float("nan"),
+            )
     else:
         C_kernel = np.zeros((N_k.size, N_k.size))
         Y_tensor = np.zeros((N_k.size, N_k.size, N_k.size))
@@ -841,4 +977,6 @@ def step_collisions_smol_0d(
         e_kernel_effective=e_kernel_effective_val,
         i_kernel_effective=i_kernel_effective_val,
         supply_velocity_weight=supply_weight_val,
+        energy_stats=energy_stats,
+        f_ke_eps_mismatch=f_ke_eps_mismatch,
     )

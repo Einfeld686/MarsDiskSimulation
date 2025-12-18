@@ -56,10 +56,10 @@
 - `SupplyMixing._alias_mu` は「epsilon_mix が無ければ mu を入れる」実装のため、YAML に epsilon_mix=0 があると mu の override が効かず raw×0=0 になる（推測B）
 
 **コード調査ポイント**:
-1. [`marsdisk/run.py:1525`](file:///Users/daichi/marsshearingsheet/marsdisk/run.py#L1525): `supply_spec = cfg.supply` の取得
-2. [`marsdisk/run.py:2037`](file:///Users/daichi/marsshearingsheet/marsdisk/run.py#L2037): `supply.get_prod_area_rate(time_sub, r, supply_spec)` の呼び出し
-3. [`marsdisk/run.py:2991-3007`](file:///Users/daichi/marsshearingsheet/marsdisk/run.py#L2991-L3007): `process_overview` の構築（supply 有効/無効が含まれていない）
-4. [`marsdisk/run.py:3281-3415`](file:///Users/daichi/marsshearingsheet/marsdisk/run.py#L3281-L3415): `run_config` の構築（supply 情報が記録されていない可能性）
+1. [`marsdisk/run.py:1525`](file:///Users/daichi/marsshearingsheet/marsdisk/run_zero_d.py#L1525): `supply_spec = cfg.supply` の取得
+2. [`marsdisk/run.py:2037`](file:///Users/daichi/marsshearingsheet/marsdisk/run_zero_d.py#L2037): `supply.get_prod_area_rate(time_sub, r, supply_spec)` の呼び出し
+3. [`marsdisk/run.py:2991-3007`](file:///Users/daichi/marsshearingsheet/marsdisk/run_zero_d.py#L2991-L3007): `process_overview` の構築（supply 有効/無効が含まれていない）
+4. [`marsdisk/run.py:3281-3415`](file:///Users/daichi/marsshearingsheet/marsdisk/run_zero_d.py#L3281-L3415): `run_config` の構築（supply 情報が記録されていない可能性）
 
 ### 仮説2: τ 上限の設定ミス
 
@@ -83,14 +83,14 @@
 
 1. **Config ロードの確認**
    - [`marsdisk/schema.py:155-198`](file:///Users/daichi/marsshearingsheet/marsdisk/schema.py#L155-L198) の `Supply` クラス定義を確認
-    - CLI オーバーライド（`--override supply.mode=const` 等）が正しくパースされているか `_apply_overrides_dict`（[run.py:241-276](file:///Users/daichi/marsshearingsheet/marsdisk/run.py#L241-L276)）を確認
+    - CLI オーバーライド（`--override supply.mode=const` 等）が正しくパースされているか `_apply_overrides_dict`（[run.py:241-276](file:///Users/daichi/marsshearingsheet/marsdisk/run_zero_d.py#L241-L276)）を確認
    - YAML 側に `supply.enabled: false` や `supply.mixing.epsilon_mix: 0` が残っていないか確認し、override では `epsilon_mix` を直接指定する
 
 2. **`process_overview` への追加**
-    - [`run.py:2991-3007`](file:///Users/daichi/marsshearingsheet/marsdisk/run.py#L2991-L3007) に supply 有効/無効を明示するフィールド（`supply_enabled`, `supply_mode` など）を追加
+    - [`run.py:2991-3007`](file:///Users/daichi/marsshearingsheet/marsdisk/run_zero_d.py#L2991-L3007) に supply 有効/無効を明示するフィールド（`supply_enabled`, `supply_mode` など）を追加
 
 3. **`run_config` への記録**
-    - [`run.py:3281`](file:///Users/daichi/marsshearingsheet/marsdisk/run.py#L3281) 以降の `run_config` 構築に supply 設定を追加
+    - [`run.py:3281`](file:///Users/daichi/marsshearingsheet/marsdisk/run_zero_d.py#L3281) 以降の `run_config` 構築に supply 設定を追加
 
 4. **警告ログの追加**
    - `supply_spec` が None または const で rate=0 の場合に warning を出す

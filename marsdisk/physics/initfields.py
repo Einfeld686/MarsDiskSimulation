@@ -10,6 +10,8 @@ starting surface-layer density.
 from typing import Callable, Optional
 import math
 
+from ..errors import PhysicsError
+
 
 _DEF_EPS = 1.0e-12
 
@@ -28,7 +30,7 @@ def sigma_from_Minner(
     """
 
     if r_out <= r_in:
-        raise ValueError("r_out must be greater than r_in")
+        raise PhysicsError("r_out must be greater than r_in")
 
     if abs(p_index) < _DEF_EPS:
         sigma_const = M_in / (math.pi * (r_out**2 - r_in**2))

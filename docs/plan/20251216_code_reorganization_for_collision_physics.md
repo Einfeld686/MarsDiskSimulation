@@ -1,6 +1,6 @@
 # marsdisk コード整備計画：衝突物理追加に向けた準備
 
-> **作成日**: 2024-12-16  
+> **作成日**: 2025-12-16  
 > **目的**: 今後の衝突物理変更・追加を安全かつ効率的に行うために、`marsdisk/` の既存コード構成を整備しリスクを担保する計画
 
 ---
@@ -458,7 +458,7 @@ gantt
     title コード整備タイムライン
     dateFormat  YYYY-MM-DD
     section Phase 1
-    tmp_debug 退避           :p1, 2024-12-17, 1d
+    tmp_debug 退避           :p1, 2025-12-17, 1d
     section Phase 2
     CollisionStepContext     :p2a, after p1, 1d
     基準テスト保存           :p2b, after p2a, 1d
@@ -497,10 +497,72 @@ gantt
 
 ---
 
+## 8. 衝突エネルギー保存導入方針（追加計画）
+
+### 8.1 前提と適用範囲
+- 出典は `docs/plan/collision_energy_conservation_requirements.md`（Krivov2006 壊滅的破砕 / Thébault2003 侵食）。新規モデルは増やさず、gas-poor 既定と `ALLOW_TL2003=false` を維持する。
+- 式と記号は `analysis/equations.md` に移し、E.xxx アンカーで参照する。導入方針ファイルでは数式を再掲せず、UNKNOWN_REF_REQUESTS を増やさない。
+
+### 8.2 ドキュメント更新タスク
+- `analysis/equations.md` に相対運動エネルギー \(E_{\mathrm{rel}}\)、比衝突エネルギー \(Q_R\)、侵食の \(f_{\mathrm{ke}}\)（散逸率 1-f_ke）などを追記し、既存式番号を壊さずに欠番を補完する。
+- `analysis/overview.md` にエネルギー簿記のデータフロー（CollisionStepContext → smol step → writer）を追加し、出力カラムを記述する。
+- 更新後は必ず `make analysis-sync` → `make analysis-doc-tests` → `python -m tools.evaluation_system --outdir <run_dir>` を実行する。
+- 式番号の割り当て案（E.046 以降を使用）：(E.047) \(E_{\mathrm{rel}}\)、(E.048) \(Q_R\)、(E.049) \(f_{\mathrm{ke}}\) による散逸率、(E.050) 反発係数対応 \(f_{\mathrm{ke}}\approx\varepsilon^{2}\)、(E.051) e/i 減衰更新 \(t_{\mathrm{damp}}, e_{n+1}\)、(E.052) Krijt & Kama 表面エネルギー起源の \(s_{\min}\)。実際に追記する際は欠番がないか確認して確定する。
+
+### 8.3 実装スコープ（0D 優先）
+- `CollisionStepContext` にエネルギー簿記用フィールド（例: `E_rel`, `f_ke`, `dE_dissipated`, `dE_retained`）を追加し、smol ステップで算出・保持する。値の入力元は Krivov/Thébault の既存式に限定し、新しい係数は導入しない。
+- `marsdisk/physics/collisions_smol.py` で衝突前後の運動エネルギーと散逸分を評価し、`smol_res` に格納する。
+- 出力追加: `series/run.parquet` に `E_rel`, `E_dissipated`, `E_retained`, `E_error_percent`（質量誤差ログに準じた閾値 0.5%）を追加。`summary.json` に 2 年間の総散逸エネルギーと最大誤差を追加。
+- 質量保存ログ `checks/mass_budget.csv` にエネルギー列を並記し、閾値超過時は同様にアラートを出す。
+
+### 8.4 テストと検証
+- pytest: (1) `f_ke` による散逸上限が守られること（侵食ケース）。(2) 壊滅的破砕で `E_dissipated` が正で、`E_rel = E_dissipated + E_retained` となること。(3) IMEX 時間積分でエネルギー誤差が Δt 縮小とともに収束すること。既存の wavy PSD テストに影響しないことも確認。
+- 実行確認: `python -m marsdisk.run --config configs/base.yml` で `E_*` カラムが埋まり、`E_error_percent` が 0.5% 未満であることを目視確認。
+
+### 8.5 移行手順（短期作業順）
+1. `analysis/equations.md`/`overview.md` を更新し、DocSync + doc tests + evaluation を実行。
+2. `CollisionStepContext` 拡張と smol 内簿記の実装、出力カラム追加。
+3. pytest 追加（散逸率・収束・符号チェック）、CI ガードに組み込む。
+4. 基準 run（base.yml）を保存し、`out/<timestamp>_energy_bookkeeping__<sha>/run_card.md` に評価結果を記録。
+
+### 8.6 追加の具体化事項
+- 反発係数との整合: `f_ke_effective = min(1, max(0, eps_restitution**2))` をデフォルトの近似とし、設定で上書き可能にする。侵食では Thébault の \(f_{\mathrm{ke}}\) を優先し、壊滅的破砕では `f_ke_fragmentation`（既定 0.1 など）を導入するか、設定が無い場合は eps² でフォールバックする。
+- e/i 更新: `dynamics.update_e_i` に減衰タイムスケール \(t_{\mathrm{damp}}=t_{\mathrm{coll}}/\varepsilon^{2}\) を組み込み、散逸ログと同じ eps/f_ke を共有する。`CollisionStepContext` に `eps_restitution`（または `f_ke_effective`）を渡し、速度分散更新とエネルギー簿記が一致するようにする。
+- 表面エネルギー制約: Krijt & Kama (2014) による \(s_{\min}\) をオプションで計算し、`psd.floor` との min/ max で下限を決定するフックを追加する（デフォルト off）。採用した場合は `series/run.parquet` に `s_min_surface_energy` を出力。
+- 壊滅的破砕での熱化係数: §3.2/§6 の指摘に対応し、Krivov 2006 の破砕でも `f_ke_fragmentation` を明示的に適用し、`analysis/overview.md` にフローを記載する。
+- checks/energy_budget.csv カラム案（固定名）:
+  - `time`, `dt`
+  - `E_rel_step`（衝突総相対エネルギー）
+  - `E_dissipated_step`（散逸分）
+  - `E_retained_step`（残留運動エネルギー）
+  - `E_outflow_step`（系外搬出がある場合、なければ0）
+  - `E_error_percent`, `tolerance_percent`（質量保存ログと同閾値 0.5%）
+  - オプションで `f_ke_mean`, `eps_restitution`（診断用）
+- pytest 具体値:
+  - 侵食ケース: \(E_{\mathrm{rel}}=1\)（正規化）、`f_ke=0.1` で `E_dissipated≈0.9` を±1e-6 相対で確認。
+  - 壊滅的破砕: `f_ke_fragmentation=0.2` で `E_retained≈0.2`、符号が正であること。
+  - 収束テスト: `Δt` を `t_coll_min` の {0.1, 0.05, 0.025} 倍で走らせ、`E_error_percent` が一様縮小（少なくとも単調非増）することを確認。
+
+### 8.7 現時点で対応しないこと（混乱防止のため明記）
+- 新規衝突モデルの追加（Krivov 2006 / Thébault 2003 以外）は行わない。TL2003 は既定で無効のまま。
+- 1D 半径拡張へのエネルギー簿記適用は今回スコープ外（0D のみに限定）。
+- 放射圧・PRドラッグ等による運動エネルギー搬出の詳細モデル化は行わず、必要なら後続タスクで検討する。
+- 熱力学的温度計算や融解・蒸発のエネルギー連成は扱わず、運動エネルギー散逸の簿記に留める。
+- PSD 勾配や破片分布パラメータ（α 等）の変更は行わない。既存設定のままエネルギー簿記を追加するのみとする。
+
+---
+
 ## 変更履歴
 
 | 日付 | 変更内容 |
 |------|----------|
-| 2024-12-16 | 初版作成 |
-| 2024-12-16 | ユーザー決定反映: CollisionStepContext 詳細設計確定、tmp_debug Git外退避、段階的実施（Phase 1/2/3）、Phase7リネーム箇所追加、削除基準1ヶ月に変更 |
+| 2025-12-16 | 初版作成 |
+| 2025-12-16 | ユーザー決定反映: CollisionStepContext 詳細設計確定、tmp_debug Git外退避、段階的実施（Phase 1/2/3）、Phase7リネーム箇所追加、削除基準1ヶ月に変更 |
 | 2025-12-17 | Phase2/3 完了: CollisionStepContext 導入・基準 fixture 追加・テスト統合、ProgressReporter/StreamingState/ZeroDHistory 抽出、Phase5 削除、Phase7→extended_diagnostics リネーム、coverage guard 0.99/anchors pass を確認 |
+
+
+---
+
+## 関連ドキュメント
+
+- [ストリーミング既定 ON への移行](./20251217_streaming_default_on_migration.md): テスト時の明示 OFF 設定を含む
