@@ -33,6 +33,7 @@ analysis-sync:
 	python -m analysis.tools.render_assumptions
 	python -m analysis.tools.make_run_sections --write
 	python -m tools.doc_sync_agent --all --write
+	python tools/readme_sync.py --write
 
 
 analysis-sync-commit:
@@ -44,6 +45,12 @@ analysis-coverage-guard:
 
 analysis-doc-tests:
 	python tools/run_analysis_doc_tests.py
+
+readme-sync:
+	python tools/readme_sync.py --write
+
+readme-sync-check:
+	python tools/readme_sync.py --check
 
 analysis-assumptions:
 	python -m analysis.tools.render_assumptions

@@ -58,8 +58,8 @@
         {
           "file": "marsdisk/io/tables.py",
           "symbol": "interp_qpr",
-          "line_start": 260,
-          "line_end": 271,
+          "line_start": 289,
+          "line_end": 300,
           "valid": true
         }
       ],
@@ -75,8 +75,8 @@
         {
           "file": "marsdisk/io/tables.py",
           "symbol": "load_qpr_table",
-          "line_start": 284,
-          "line_end": 296,
+          "line_start": 313,
+          "line_end": 325,
           "valid": true
         }
       ],
@@ -118,7 +118,7 @@
           "file": "marsdisk/run_zero_d.py",
           "symbol": "run_zero_d",
           "line_start": 259,
-          "line_end": 4524,
+          "line_end": 4557,
           "valid": true
         },
         {
@@ -150,7 +150,7 @@
           "file": "marsdisk/run_zero_d.py",
           "symbol": "run_zero_d",
           "line_start": 259,
-          "line_end": 4524,
+          "line_end": 4557,
           "valid": true
         },
         {
@@ -171,154 +171,154 @@
           "file": "marsdisk/run_zero_d.py",
           "symbol": "run_zero_d",
           "line_start": 259,
-          "line_end": 4524,
+          "line_end": 4557,
           "valid": true
         },
         {
           "file": "marsdisk/run_zero_d.py",
           "symbol": "run_zero_d",
           "line_start": 259,
-          "line_end": 4524,
+          "line_end": 4557,
           "valid": true
         },
         {
           "file": "marsdisk/run_zero_d.py",
           "symbol": "run_zero_d",
           "line_start": 259,
-          "line_end": 4524,
+          "line_end": 4557,
           "valid": true
         },
         {
           "file": "marsdisk/run_zero_d.py",
           "symbol": "run_zero_d",
           "line_start": 259,
-          "line_end": 4524,
+          "line_end": 4557,
           "valid": true
         },
         {
           "file": "marsdisk/run_zero_d.py",
           "symbol": "run_zero_d",
           "line_start": 259,
-          "line_end": 4524,
+          "line_end": 4557,
           "valid": true
         },
         {
           "file": "marsdisk/run_zero_d.py",
           "symbol": "run_zero_d",
           "line_start": 259,
-          "line_end": 4524,
+          "line_end": 4557,
           "valid": true
         },
         {
           "file": "marsdisk/run_zero_d.py",
           "symbol": "run_zero_d",
           "line_start": 259,
-          "line_end": 4524,
+          "line_end": 4557,
           "valid": true
         },
         {
           "file": "marsdisk/run_zero_d.py",
           "symbol": "run_zero_d",
           "line_start": 259,
-          "line_end": 4524,
+          "line_end": 4557,
           "valid": true
         },
         {
           "file": "marsdisk/run_zero_d.py",
           "symbol": "run_zero_d",
           "line_start": 259,
-          "line_end": 4524,
+          "line_end": 4557,
           "valid": true
         },
         {
           "file": "marsdisk/run_zero_d.py",
           "symbol": "run_zero_d",
           "line_start": 259,
-          "line_end": 4524,
+          "line_end": 4557,
           "valid": true
         },
         {
           "file": "marsdisk/run_zero_d.py",
           "symbol": "run_zero_d",
           "line_start": 259,
-          "line_end": 4524,
+          "line_end": 4557,
           "valid": true
         },
         {
           "file": "marsdisk/run_zero_d.py",
           "symbol": "run_zero_d",
           "line_start": 259,
-          "line_end": 4524,
+          "line_end": 4557,
           "valid": true
         },
         {
           "file": "marsdisk/run_zero_d.py",
           "symbol": "run_zero_d",
           "line_start": 259,
-          "line_end": 4524,
+          "line_end": 4557,
           "valid": true
         },
         {
           "file": "marsdisk/run_zero_d.py",
           "symbol": "run_zero_d",
           "line_start": 259,
-          "line_end": 4524,
+          "line_end": 4557,
           "valid": true
         },
         {
           "file": "marsdisk/run_zero_d.py",
           "symbol": "run_zero_d",
           "line_start": 259,
-          "line_end": 4524,
+          "line_end": 4557,
           "valid": true
         },
         {
           "file": "marsdisk/run_zero_d.py",
           "symbol": "run_zero_d",
           "line_start": 259,
-          "line_end": 4524,
+          "line_end": 4557,
           "valid": true
         },
         {
           "file": "marsdisk/run_zero_d.py",
           "symbol": "run_zero_d",
           "line_start": 259,
-          "line_end": 4524,
+          "line_end": 4557,
           "valid": true
         },
         {
           "file": "marsdisk/run_zero_d.py",
           "symbol": "run_zero_d",
           "line_start": 259,
-          "line_end": 4524,
+          "line_end": 4557,
           "valid": true
         },
         {
           "file": "marsdisk/run_zero_d.py",
           "symbol": "run_zero_d",
           "line_start": 259,
-          "line_end": 4524,
+          "line_end": 4557,
           "valid": true
         },
         {
           "file": "marsdisk/run_zero_d.py",
           "symbol": "run_zero_d",
           "line_start": 259,
-          "line_end": 4524,
+          "line_end": 4557,
           "valid": true
         },
         {
           "file": "marsdisk/run_zero_d.py",
           "symbol": "run_zero_d",
           "line_start": 259,
-          "line_end": 4524,
+          "line_end": 4557,
           "valid": true
         },
         {
           "file": "marsdisk/run_zero_d.py",
           "symbol": "run_zero_d",
           "line_start": 259,
-          "line_end": 4524,
+          "line_end": 4557,
           "valid": true
         },
         {
@@ -332,35 +332,35 @@
           "file": "marsdisk/run_zero_d.py",
           "symbol": "run_zero_d",
           "line_start": 259,
-          "line_end": 4524,
+          "line_end": 4557,
           "valid": true
         },
         {
           "file": "marsdisk/run_zero_d.py",
           "symbol": "run_zero_d",
           "line_start": 259,
-          "line_end": 4524,
+          "line_end": 4557,
           "valid": true
         },
         {
           "file": "marsdisk/run_zero_d.py",
           "symbol": "run_zero_d",
           "line_start": 259,
-          "line_end": 4524,
+          "line_end": 4557,
           "valid": true
         },
         {
           "file": "marsdisk/run_zero_d.py",
           "symbol": "run_zero_d",
           "line_start": 259,
-          "line_end": 4524,
+          "line_end": 4557,
           "valid": true
         },
         {
           "file": "marsdisk/run_zero_d.py",
           "symbol": "run_zero_d",
           "line_start": 259,
-          "line_end": 4524,
+          "line_end": 4557,
           "valid": true
         },
         {
@@ -374,7 +374,7 @@
           "file": "marsdisk/run_zero_d.py",
           "symbol": "run_zero_d",
           "line_start": 259,
-          "line_end": 4524,
+          "line_end": 4557,
           "valid": true
         },
         {
@@ -388,7 +388,7 @@
           "file": "marsdisk/run_zero_d.py",
           "symbol": "run_zero_d",
           "line_start": 259,
-          "line_end": 4524,
+          "line_end": 4557,
           "valid": true
         },
         {
@@ -601,7 +601,7 @@
           "file": "marsdisk/run_zero_d.py",
           "symbol": "run_zero_d",
           "line_start": 259,
-          "line_end": 4524,
+          "line_end": 4557,
           "valid": true
         }
       ],
@@ -753,8 +753,8 @@
         {
           "file": "marsdisk/physics/qstar.py",
           "symbol": "compute_q_d_star_F1",
-          "line_start": 235,
-          "line_end": 287,
+          "line_start": 288,
+          "line_end": 340,
           "valid": true
         }
       ],
@@ -1101,7 +1101,7 @@
         {
           "file": "marsdisk/physics/fragments.py",
           "symbol": "compute_largest_remnant_mass_fraction_F2",
-          "line_start": 115,
+          "line_start": 111,
           "line_end": 145,
           "valid": true
         }
@@ -1119,7 +1119,7 @@
           "file": "marsdisk/run_zero_d.py",
           "symbol": "run_zero_d",
           "line_start": 259,
-          "line_end": 4524,
+          "line_end": 4557,
           "valid": true
         }
       ],
@@ -1373,6 +1373,14 @@
       "symbol": "omega_kepler"
     },
     {
+      "file": "marsdisk/io/_numba_tables.py",
+      "symbol": "NUMBA_AVAILABLE"
+    },
+    {
+      "file": "marsdisk/io/_numba_tables.py",
+      "symbol": "qpr_interp_scalar_numba"
+    },
+    {
       "file": "marsdisk/io/checkpoint.py",
       "symbol": "_b64_pack"
     },
@@ -1415,6 +1423,18 @@
     {
       "file": "marsdisk/io/streaming.py",
       "symbol": "MEMORY_DIAG_ROW_BYTES"
+    },
+    {
+      "file": "marsdisk/io/tables.py",
+      "symbol": "_NUMBA_DISABLED_ENV"
+    },
+    {
+      "file": "marsdisk/io/tables.py",
+      "symbol": "_USE_NUMBA"
+    },
+    {
+      "file": "marsdisk/io/tables.py",
+      "symbol": "_NUMBA_FAILED"
     },
     {
       "file": "marsdisk/io/tables.py",
@@ -2366,6 +2386,10 @@
     },
     {
       "file": "marsdisk/physics/qstar.py",
+      "symbol": "_DEFAULT_COEFFS"
+    },
+    {
+      "file": "marsdisk/physics/qstar.py",
       "symbol": "_COEFFS"
     },
     {
@@ -2427,6 +2451,18 @@
     {
       "file": "marsdisk/physics/qstar.py",
       "symbol": "get_coefficient_table"
+    },
+    {
+      "file": "marsdisk/physics/qstar.py",
+      "symbol": "_normalise_coeff_table"
+    },
+    {
+      "file": "marsdisk/physics/qstar.py",
+      "symbol": "set_coefficient_table"
+    },
+    {
+      "file": "marsdisk/physics/qstar.py",
+      "symbol": "reset_coefficient_table"
     },
     {
       "file": "marsdisk/physics/qstar.py",
@@ -2960,6 +2996,6 @@
     "045a: no valid code reference",
     "046: no valid code reference"
   ],
-  "generated_at": "2025-12-19T01:52:05+09:00",
+  "generated_at": "2025-12-19T16:19:59+09:00",
   "ml_suggested_refs": []
 }

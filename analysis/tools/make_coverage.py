@@ -4,6 +4,8 @@ from __future__ import annotations
 import json
 import re
 from dataclasses import dataclass
+import importlib.util
+import sys
 from pathlib import Path
 from typing import Dict, Iterable, List, Optional, Sequence, Tuple
 
@@ -15,6 +17,8 @@ INVENTORY_PATH = ANALYSIS_DIR / "inventory.json"
 SYMBOLS_RAW_PATH = ANALYSIS_DIR / "symbols.raw.txt"
 EQUATIONS_PATH = ANALYSIS_DIR / "equations.md"
 SINKS_DOC_PATH = ANALYSIS_DIR / "sinks_callgraph.md"
+README_PATH = REPO_ROOT / "README.md"
+README_SYNC_PATH = REPO_ROOT / "tools" / "readme_sync.py"
 
 ANCHOR_PATTERN = re.compile(
     r"((?:marsdisk|tests|configs|scripts)/[A-Za-z0-9_/\.-]+\.(?:py|yml|yaml))#([A-Za-z0-9_\.]+)"
@@ -30,6 +34,14 @@ AUTOGEN_END = "AUTOGEN-END -->"
 class SymbolRef:
     rel_path: str
     name: str
+
+
+@dataclass(frozen=True)
+class ReadmeSyncResult:
+    in_sync: bool
+    block_count: int
+    unknown_blocks: List[str]
+    detail: str
 
 
 def load_inventory() -> List[dict]:
@@ -304,6 +316,39 @@ def compute_sinks_callgraph_flag(doc_path: Path) -> bool:
     return all(anchors.values())
 
 
+def _load_readme_sync_module():
+    if not README_SYNC_PATH.exists():
+        return None
+    spec = importlib.util.spec_from_file_location("readme_sync", README_SYNC_PATH)
+    if spec is None or spec.loader is None:
+        return None
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = module
+    spec.loader.exec_module(module)
+    return module
+
+
+def compute_readme_sync_status() -> ReadmeSyncResult:
+    if not README_PATH.exists():
+        return ReadmeSyncResult(False, 0, [], "README.md missing")
+    module = _load_readme_sync_module()
+    if module is None or not hasattr(module, "render_readme"):
+        return ReadmeSyncResult(False, 0, [], "readme_sync module unavailable")
+    readme_text = README_PATH.read_text(encoding="utf-8")
+    try:
+        rendered, unknown, block_count = module.render_readme(readme_text)
+    except Exception as exc:  # pragma: no cover - defensive path for coverage tool
+        return ReadmeSyncResult(False, 0, [], f"readme_sync error: {exc}")
+    if block_count == 0:
+        return ReadmeSyncResult(False, block_count, [], "no AUTOGEN blocks")
+    if unknown:
+        unknown_sorted = sorted(set(unknown))
+        return ReadmeSyncResult(False, block_count, unknown_sorted, "unknown AUTOGEN blocks")
+    if rendered != readme_text:
+        return ReadmeSyncResult(False, block_count, [], "out of sync")
+    return ReadmeSyncResult(True, block_count, [], "in sync")
+
+
 def format_rate(numerator: int, denominator: int) -> float:
     if denominator == 0:
         return 0.0
@@ -319,6 +364,7 @@ def build_coverage_markdown(
     anchor_rate: Tuple[int, int],
     equation_rate: Tuple[int, int],
     sinks_flag: bool,
+    readme_sync: ReadmeSyncResult,
     holes: Sequence[SymbolRef],
 ) -> str:
     func_num, func_den = function_rate
@@ -341,6 +387,7 @@ def build_coverage_markdown(
         f"| Anchor consistency rate | {ratio_text(anchor_num, anchor_den, anchor_ratio)} | = 100% |",
         f"| Equation unit coverage | {ratio_text(eq_num, eq_den, eq_ratio)} | — |",
         f"| Sinks callgraph documented | {'Yes' if sinks_flag else 'No'} | run→surface→sinks→sublimation |",
+        f"| README sync status | {'In sync' if readme_sync.in_sync else 'Out of sync'} | sync required |",
     ]
 
     hole_lines = []
@@ -367,6 +414,7 @@ def build_coverage_json(
     anchor_rate: Tuple[int, int],
     equation_rate: Tuple[int, int],
     sinks_flag: bool,
+    readme_sync: ReadmeSyncResult,
     holes: Sequence[SymbolRef],
 ) -> dict:
     func_num, func_den = function_rate
@@ -390,6 +438,12 @@ def build_coverage_json(
             "rate": format_rate(eq_num, eq_den),
         },
         "sinks_callgraph_documented": bool(sinks_flag),
+        "readme_sync": {
+            "in_sync": bool(readme_sync.in_sync),
+            "block_count": int(readme_sync.block_count),
+            "unknown_blocks": list(readme_sync.unknown_blocks),
+            "detail": readme_sync.detail,
+        },
         "holes": [f"{ref.rel_path}#{ref.name}" for ref in holes[:3]],
     }
 
@@ -416,12 +470,14 @@ def main() -> int:
     anchor_resolved, anchor_total, unresolved = compute_anchor_consistency_rate(anchor_occurrences, all_symbols)
     eq_with_units, eq_sections = compute_equation_unit_rate(EQUATIONS_PATH)
     sinks_flag = compute_sinks_callgraph_flag(SINKS_DOC_PATH)
+    readme_sync = compute_readme_sync_status()
 
     coverage_md = build_coverage_markdown(
         (func_covered, func_total),
         (anchor_resolved, anchor_total),
         (eq_with_units, eq_sections),
         sinks_flag,
+        readme_sync,
         missing,
     )
     coverage_json = build_coverage_json(
@@ -429,6 +485,7 @@ def main() -> int:
         (anchor_resolved, anchor_total),
         (eq_with_units, eq_sections),
         sinks_flag,
+        readme_sync,
         missing,
     )
 

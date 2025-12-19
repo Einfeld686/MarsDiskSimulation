@@ -1,12 +1,12 @@
 {
   "function_reference_rate": {
-    "numerator": 109,
-    "denominator": 111,
-    "rate": 0.9819819819819819
+    "numerator": 111,
+    "denominator": 115,
+    "rate": 0.9652173913043478
   },
   "anchor_consistency_rate": {
-    "numerator": 690,
-    "denominator": 690,
+    "numerator": 707,
+    "denominator": 707,
     "rate": 1.0
   },
   "equation_unit_coverage": {
@@ -15,8 +15,15 @@
     "rate": 0.9534883720930233
   },
   "sinks_callgraph_documented": true,
+  "readme_sync": {
+    "in_sync": true,
+    "block_count": 6,
+    "unknown_blocks": [],
+    "detail": "in sync"
+  },
   "holes": [
-    "marsdisk/physics/collide.py#prepare_collision_kernel_workspace",
-    "marsdisk/physics/radiation.py#qpr_lookup_array"
+    "marsdisk/io/_numba_tables.py#NUMBA_AVAILABLE",
+    "marsdisk/io/_numba_tables.py#qpr_interp_scalar_numba",
+    "marsdisk/physics/qstar.py#reset_coefficient_table"
   ]
 }

@@ -97,6 +97,7 @@ INIT_TAU1_ENABLED="${INIT_TAU1_ENABLED:-true}"
 INIT_SCALE_TO_TAU1="${INIT_SCALE_TO_TAU1:-true}"
 INIT_TAU1_FIELD="${INIT_TAU1_FIELD:-los}"   # tau_field: vertical|los
 INIT_TAU1_TARGET="${INIT_TAU1_TARGET:-1.0}"
+STOP_ON_BLOWOUT_BELOW_SMIN="${STOP_ON_BLOWOUT_BELOW_SMIN:-true}"
 
 # Supply reservoir / feedback / temperature coupling (off by default)
 SUPPLY_RESERVOIR_M="${SUPPLY_RESERVOIR_M:-}"                 # Mars masses; empty=disabled
@@ -300,7 +301,7 @@ PY
       cmd+=(--progress --quiet)
         cmd+=(
           --override numerics.dt_init=20
-          --override numerics.stop_on_blowout_below_smin=true
+          --override "numerics.stop_on_blowout_below_smin=${STOP_ON_BLOWOUT_BELOW_SMIN}"
           --override "io.outdir=${OUTDIR}"
           --override "dynamics.rng_seed=${SEED}"
         --override "phase.enabled=true"

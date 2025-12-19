@@ -5,6 +5,7 @@ import pandas as pd
 import pytest
 
 from marsdisk.io import tables
+from marsdisk.io import _numba_tables
 from marsdisk.physics import radiation
 
 
@@ -120,3 +121,25 @@ def test_qpr_lookup_array_matches_scalar(mock_qpr_table):
     # Support scalar T via numpy scalar input
     T_scalar = np.array(1234.0)
     assert np.allclose(radiation.qpr_lookup_array(s_grid, T_scalar, table=lookup), scalar_vals)
+
+
+@pytest.mark.skipif(
+    not _numba_tables.NUMBA_AVAILABLE(),
+    reason="Numba unavailable; qpr interp numba path not applicable",
+)
+def test_qpr_lookup_numba_matches_numpy(mock_qpr_table, monkeypatch):
+    path = mock_qpr_table
+    lookup = tables.load_qpr_table(path)
+    table = lookup.__self__
+
+    s_val = 3.0e-6
+    T_val = 1275.0
+
+    monkeypatch.setattr(tables, "_NUMBA_FAILED", False, raising=False)
+    monkeypatch.setattr(tables, "_USE_NUMBA", True, raising=False)
+    numba_val = table.interp(s_val, T_val)
+
+    monkeypatch.setattr(tables, "_USE_NUMBA", False, raising=False)
+    numpy_val = table.interp(s_val, T_val)
+
+    assert np.isclose(numba_val, numpy_val, atol=1.0e-12)

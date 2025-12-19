@@ -90,6 +90,7 @@ marsdisk/
 - 式カバレッジ: `python -m tools.doc_sync_agent equations --equations analysis/equations.md --inventory analysis/inventory.json --write analysis/equation_code_map.json` を doc_sync バッチに追加し、`unmapped_equations` / `unmapped_code` は警告として確認する（CI非ブロック）。`--with-ml-suggest` は候補提示のみで自動確定しない。
 - 式カバレッジ: `python -m tools.doc_sync_agent equations --equations analysis/equations.md --inventory analysis/inventory.json --write analysis/equation_code_map.json` を doc_sync バッチに追加し、`unmapped_equations` / `unmapped_code` は警告として確認する（CI非ブロック）。`--with-ml-suggest` は候補提示のみで自動確定しない。
 - Makefile エイリアス: `make analysis-sync` / `make analysis-sync-commit`
+- README 同期: `python tools/readme_sync.py --write`（Makefile: `make readme-sync` / `make readme-sync-check`）。`make analysis-sync` は README 同期も含む。
 - Codex がコード／analysis を変更した場合は、DocSyncAgent 実行直後に `make analysis-doc-tests`（`tools/run_analysis_doc_tests.py` 経由で `pytest tests/integration/test_analysis_* -q` を束ね、ASCII バーで合格率を表示）を必ず走らせ、ドキュメント系テストをまとめて確認する。標準手順として同一バッチで実行し忘れを防ぐこと。
 - チャットで「analysisファイルを更新してください」と指示された場合は `make analysis-update`（DocSyncAgent → doc テストの順で実行する複合ターゲット）を走らせること。Codex 側で DocSync とテストを忘れずにセット実行するためのショートカットとする。
 - Codex が code/analysis をアップデートする際は、上記 `make analysis-update` を完走させた直後に **必ず** 自動評価 CLI `python -m tools.evaluation_system --outdir <run_dir>` を実行し、analysis 仕様に基づく検証レポートを取得・run_card に反映させること（`<run_dir>` は直近のシミュレーション出力パス、例: `out` や `out/20251022-0426_run4000K__0fdd14772`）。

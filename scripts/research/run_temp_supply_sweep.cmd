@@ -65,6 +65,7 @@ if not defined SHIELDING_MODE set "SHIELDING_MODE=psitau"
 if not defined SHIELDING_SIGMA set "SHIELDING_SIGMA=auto"
 if not defined SHIELDING_AUTO_MAX_MARGIN set "SHIELDING_AUTO_MAX_MARGIN=0.05"
 if not defined INIT_SCALE_TO_TAU1 set "INIT_SCALE_TO_TAU1=true"
+if not defined STOP_ON_BLOWOUT_BELOW_SMIN set "STOP_ON_BLOWOUT_BELOW_SMIN=true"
 rem SUPPLY_RESERVOIR_M intentionally left undefined by default
 if not defined SUPPLY_RESERVOIR_MODE set "SUPPLY_RESERVOIR_MODE=hard_stop"
 if not defined SUPPLY_RESERVOIR_TAPER set "SUPPLY_RESERVOIR_TAPER=0.05"
@@ -205,7 +206,7 @@ for %%T in (%T_LIST%) do (
       set RUN_CMD=python -m marsdisk.run --config "%BASE_CONFIG%" --quiet
       if "%ENABLE_PROGRESS%"=="1" set RUN_CMD=!RUN_CMD! --progress
       set RUN_CMD=!RUN_CMD! --override numerics.dt_init=2
-      set RUN_CMD=!RUN_CMD! --override numerics.stop_on_blowout_below_smin=true
+      set RUN_CMD=!RUN_CMD! --override "numerics.stop_on_blowout_below_smin=%STOP_ON_BLOWOUT_BELOW_SMIN%"
       set RUN_CMD=!RUN_CMD! --override "io.outdir=!OUTDIR!"
       set RUN_CMD=!RUN_CMD! --override "dynamics.rng_seed=!SEED!"
       set RUN_CMD=!RUN_CMD! --override "phase.enabled=true"

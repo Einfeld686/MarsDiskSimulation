@@ -386,6 +386,35 @@ def run_zero_d(
     qstar.reset_velocity_clamp_stats()
     qstar.set_coeff_unit_system(qstar_coeff_units_used)
     qstar.set_gravity_velocity_mu(qstar_mu_gravity_used)
+    qstar_coeff_override = bool(getattr(qstar_cfg, "override_coeffs", False)) if qstar_cfg is not None else False
+    qstar_coeff_scale = float(getattr(qstar_cfg, "coeff_scale", 1.0)) if qstar_cfg is not None else 1.0
+    qstar_coeff_table_source = "default"
+    qstar_coeff_scale_applied = False
+    if qstar_cfg is not None and qstar_coeff_override:
+        coeff_table_cfg = getattr(qstar_cfg, "coeff_table", None)
+        if coeff_table_cfg:
+            qstar.set_coefficient_table(coeff_table_cfg)
+            qstar_coeff_table_source = "config_table"
+        else:
+            v_refs = [float(v) for v in getattr(qstar_cfg, "v_ref_kms", []) or []]
+            if not v_refs:
+                raise ConfigurationError(
+                    "qstar.override_coeffs=true requires v_ref_kms or coeff_table"
+                )
+            qstar_coeff_table = {
+                float(v_ref): (
+                    float(qstar_cfg.Qs) * qstar_coeff_scale,
+                    float(qstar_cfg.a_s),
+                    float(qstar_cfg.B) * qstar_coeff_scale,
+                    float(qstar_cfg.b_g),
+                )
+                for v_ref in v_refs
+            }
+            qstar.set_coefficient_table(qstar_coeff_table)
+            qstar_coeff_table_source = "config_broadcast"
+            qstar_coeff_scale_applied = True
+    else:
+        qstar.reset_coefficient_table()
     if qstar_coeff_units_source == "default":
         logger.info(
             "qstar.coeff_units not specified; defaulting to '%s' (BA99 cgs evaluation with cm,g/cm^3,erg/g).",
@@ -4286,6 +4315,10 @@ def run_zero_d(
         "config": qstar_cfg.model_dump() if qstar_cfg is not None else None,
         "coeff_units_used": qstar_coeff_units_used,
         "coeff_units_source": qstar_coeff_units_source,
+        "coeff_override": qstar_coeff_override,
+        "coeff_scale": qstar_coeff_scale if qstar_coeff_override else None,
+        "coeff_scale_applied": qstar_coeff_scale_applied,
+        "coeff_table_source": qstar_coeff_table_source,
         "gravity_velocity_mu_used": qstar_mu_gravity_used,
         "gravity_velocity_mu_source": qstar_mu_gravity_source,
         "gravity_velocity_exponent_used": -3.0 * qstar_mu_gravity_used + 2.0,

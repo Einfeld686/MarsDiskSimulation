@@ -7,6 +7,7 @@ import os
 from typing import Iterable
 
 import numpy as np
+import pytest
 
 from marsdisk import constants, grid, schema
 
@@ -201,3 +202,52 @@ def test_compute_kernel_e_i_H_numba_matches_python(monkeypatch) -> None:
     np.testing.assert_allclose(e_numba, e_py)
     np.testing.assert_allclose(i_numba, i_py)
     np.testing.assert_allclose(H_numba, H_py)
+
+
+def test_qpr_interp_scalar_numba_matches_numpy(monkeypatch) -> None:
+    tables = _reload_with_env("marsdisk.io.tables", disable_numba=False)
+    numba_tables = _reload_with_env("marsdisk.io._numba_tables", disable_numba=False)
+    if not numba_tables.NUMBA_AVAILABLE():
+        pytest.skip("Numba unavailable; qpr interp numba path not applicable")
+
+    s_vals = np.array([1.0, 2.0], dtype=float)
+    T_vals = np.array([100.0, 200.0], dtype=float)
+    q_vals = np.array([[0.1, 0.2], [0.3, 0.4]], dtype=float)
+    s = 1.5
+    T = 150.0
+
+    table = tables.QPrTable(s_vals, T_vals, q_vals)
+    monkeypatch.setattr(tables, "_USE_NUMBA", False, raising=False)
+    monkeypatch.setattr(tables, "_NUMBA_FAILED", False, raising=False)
+    expected = table.interp(s, T)
+    got = numba_tables.qpr_interp_scalar_numba(s_vals, T_vals, q_vals, s, T)
+    assert np.isclose(got, expected)
+
+
+def test_qpr_interp_numba_fallback(monkeypatch) -> None:
+    tables = _reload_with_env("marsdisk.io.tables", disable_numba=False)
+    numba_tables = _reload_with_env("marsdisk.io._numba_tables", disable_numba=False)
+    if not numba_tables.NUMBA_AVAILABLE():
+        pytest.skip("Numba unavailable; qpr interp numba path not applicable")
+
+    s_vals = np.array([1.0, 2.0], dtype=float)
+    T_vals = np.array([100.0, 200.0], dtype=float)
+    q_vals = np.array([[0.1, 0.2], [0.3, 0.4]], dtype=float)
+    table = tables.QPrTable(s_vals, T_vals, q_vals)
+    s = 1.25
+    T = 175.0
+
+    monkeypatch.setattr(tables, "_USE_NUMBA", False, raising=False)
+    monkeypatch.setattr(tables, "_NUMBA_FAILED", False, raising=False)
+    expected = table.interp(s, T)
+
+    def _boom(*_args, **_kwargs):
+        raise RuntimeError("boom")
+
+    monkeypatch.setattr(tables, "_USE_NUMBA", True, raising=False)
+    monkeypatch.setattr(tables, "_NUMBA_FAILED", False, raising=False)
+    monkeypatch.setattr(tables, "qpr_interp_scalar_numba", _boom, raising=False)
+
+    got = table.interp(s, T)
+    assert np.isclose(got, expected)
+    assert tables._NUMBA_FAILED is True

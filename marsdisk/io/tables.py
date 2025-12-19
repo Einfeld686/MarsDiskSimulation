@@ -10,6 +10,7 @@ anchored to the vetted Mie calculations shipped with the repository.
 from __future__ import annotations
 
 from dataclasses import dataclass
+import os
 from pathlib import Path
 from typing import Iterable, Optional, Callable, Sequence
 import warnings
@@ -19,6 +20,16 @@ import pandas as pd
 
 from .. import constants
 from ..warnings import TableWarning
+try:
+    from ._numba_tables import NUMBA_AVAILABLE, qpr_interp_scalar_numba
+
+    _NUMBA_AVAILABLE = NUMBA_AVAILABLE()
+except ImportError:  # pragma: no cover - optional dependency
+    _NUMBA_AVAILABLE = False
+
+_NUMBA_DISABLED_ENV = os.environ.get("MARSDISK_DISABLE_NUMBA", "").lower() in {"1", "true", "yes", "on"}
+_USE_NUMBA = _NUMBA_AVAILABLE and not _NUMBA_DISABLED_ENV
+_NUMBA_FAILED = False
 
 PACKAGE_DATA_DIR = Path(__file__).resolve().parent / "data"
 REPO_DATA_DIR = Path(__file__).resolve().parents[2] / "data"
@@ -78,8 +89,26 @@ class QPrTable:
         return cls(s_vals=s_vals, T_vals=T_vals, q_vals=q_vals)
 
     def interp(self, s: float, T: float) -> float:
+        global _NUMBA_FAILED
         s_arr, T_arr = self.s_vals, self.T_vals
         q = self.q_vals
+        if _USE_NUMBA and not _NUMBA_FAILED:
+            try:
+                return float(
+                    qpr_interp_scalar_numba(
+                        np.asarray(s_arr, dtype=np.float64),
+                        np.asarray(T_arr, dtype=np.float64),
+                        np.asarray(q, dtype=np.float64),
+                        float(s),
+                        float(T),
+                    )
+                )
+            except Exception as exc:
+                _NUMBA_FAILED = True
+                warnings.warn(
+                    f"Q_pr numba interpolation failed ({exc!r}); falling back to NumPy.",
+                    TableWarning,
+                )
         i = np.clip(np.searchsorted(s_arr, s) - 1, 0, len(s_arr) - 2)
         j = np.clip(np.searchsorted(T_arr, T) - 1, 0, len(T_arr) - 2)
         s1, s2 = s_arr[i], s_arr[i + 1]
