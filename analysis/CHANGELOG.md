@@ -1,6 +1,26 @@
 # Changelog
 
-## [Unreleased]
+## [2025-12-19] Energy Bookkeeping & Collision Physics Refinement
+- **Energy Bookkeeping**: Implemented collision energy accounting (E.047–E.052) with outputs:
+  - `E_rel_step`, `E_dissipated_step`, `E_retained_step` in `series/run.parquet`
+  - `checks/energy_budget.csv` for step-by-step energy tracking
+  - `f_ke_cratering` / `f_ke_fragmentation` configuration for energy dissipation rates
+  - Numerical error validation with `E_numerical_error_relative` column
+- **Collision Regime Classification**: Added cratering vs. fragmentation split (E.051):
+  - $F_{LF} > 0.5$: Cratering mode with `f_ke_cratering` (default 0.1)
+  - $F_{LF} \le 0.5$: Fragmentation mode with `f_ke_fragmentation` (default $\varepsilon^2$)
+  - Diagnostics: `n_cratering`, `n_fragmentation`, `frac_cratering`, `frac_fragmentation`
+- **Surface Energy Floor**: Implemented Krijt & Kama (2014) constraint (E.053):
+  - New configuration `surface_energy.enabled`, `gamma_J_m2`, `eta`
+  - Output column `s_min_surface_energy` in `series/run.parquet`
+  - Integrated into `s_min_effective` candidate selection
+- **CollisionStepContext Refactoring**: Grouped 27+ collision step arguments into 5 dataclasses:
+  - `TimeOrbitParams`, `MaterialParams`, `DynamicsParams`, `SupplyParams`, `CollisionControlFlags`
+  - Simplified `step_collisions_smol_0d` call signature
+- **Provenance Report Update**: Extended Traceability Graph with Thébault (2003), Krivov (2006), Krijt & Kama (2014)
+- **Documentation**: Updated `analysis/equations.md` with E.047–E.053; updated `analysis/methods.md` §3.2
+
+## [2025-12-18] Physics Flow Document Upgrade
 - **Physics Flow Document Upgrade**: Expanded `analysis/physics_flow.md` with new Mermaid diagrams:
   - Temperature driver resolution flow (`tempdriver.py` → `TemperatureDriverRuntime`)
   - Phase evaluation flow (`PhaseEvaluator` → `PhaseDecision` / `BulkPhaseState`)
@@ -24,3 +44,4 @@
 - **Temperature Driver**: Introduced `mars_temperature_driver` to decouple T_M source logic; deprecated `temps.T_M` in favor of `radiation.TM_K` or driver tables.
 - **Phase Evaluation**: Centralized phase state logic into `PhaseEvaluator`. `checks_psat_auto_01` validates `psat_model="auto"` behavior (tabulated/local-fit/Clausius fallback).
 - **Visualization Docs**: Updated `analysis/tools/visualizations.md` to reflect `tools/plotting/` structure.
+

@@ -146,10 +146,10 @@
 
 ## チェックリスト（完了条件）
 
-- [ ] supply ブロックが `run_config.json` に出力され、`process_overview` で有効/無効が確認できる
-- [ ] const 供給ケースで `prod_subblow_area_rate > 0` が記録され、初期ステップで期待値（`prod_area_rate_kg_m2_s × epsilon_mix`）に近い
+- [x] supply ブロックが `run_config.json` に出力され、`process_overview` で有効/無効が確認できる
+- [x] const 供給ケースで `prod_subblow_area_rate > 0` が記録され、初期ステップで期待値（`prod_area_rate_kg_m2_s × epsilon_mix`）に近い
 - [ ] τ クリップを見直した設定で `tau_vertical ≈ 1` に到達するサンプル run を取得
-- [ ] Regression テスト（小型ケース）が追加され、pytest でカバーされる
+- [x] Regression テスト（小型ケース）が追加され、pytest でカバーされる
 - [ ] 影響するドキュメント（`analysis/` に式・設定を追記、必要なら `run-recipes.md` へのメモ）を更新する段取りを決める
 
 ---

@@ -42,6 +42,8 @@ _NUMBA_DISABLED_ENV = os.environ.get("MARSDISK_DISABLE_NUMBA", "").lower() in {
 _USE_NUMBA = _NUMBA_AVAILABLE and not _NUMBA_DISABLED_ENV
 # Set to True after a runtime failure to avoid repeatedly calling broken JIT kernels.
 _NUMBA_FAILED = False
+_F_KE_MISMATCH_WARNED = False
+_F_KE_MISMATCH_WARN_THRESHOLD = 0.1
 
 if TYPE_CHECKING:
     from ..schema import Dynamics, SupplyInjectionVelocity
@@ -646,20 +648,29 @@ def compute_kernel_e_i_H(
     if mode_H == "fixed" and getattr(dynamics_cfg, "H_fixed_over_a", None) is None:
         raise MarsDiskError("kernel_H_mode='fixed' requires H_fixed_over_a")
 
+    tau_val = float(tau_eff)
+    a_val = float(a_orbit_m)
+    v_k_val = float(v_k)
+    e0_val = float(dynamics_cfg.e0)
+    i0_val = float(dynamics_cfg.i0)
+    H_factor_val = float(dynamics_cfg.H_factor)
+    H_fixed_val = float(getattr(dynamics_cfg, "H_fixed_over_a", 0.0) or 0.0)
+    f_wake_val = float(getattr(dynamics_cfg, "f_wake", 1.0))
+
     if _USE_NUMBA and not _NUMBA_FAILED:
         try:
             e_kernel, i_kernel, H_k = compute_kernel_e_i_H_numba(
                 sizes_arr.astype(np.float64),
-                float(tau_eff),
-                float(a_orbit_m),
-                float(v_k),
-                float(dynamics_cfg.e0),
-                float(dynamics_cfg.i0),
-                float(dynamics_cfg.H_factor),
-                float(getattr(dynamics_cfg, "H_fixed_over_a", 0.0) or 0.0),
+                tau_val,
+                a_val,
+                v_k_val,
+                e0_val,
+                i0_val,
+                H_factor_val,
+                H_fixed_val,
                 1 if mode_ei == "wyatt_eq" else 0,
                 1 if mode_H == "fixed" else 0,
-                float(getattr(dynamics_cfg, "f_wake", 1.0)),
+                f_wake_val,
             )
             return e_kernel, i_kernel, H_k
         except Exception as exc:  # pragma: no cover - fallback path
@@ -747,6 +758,8 @@ def step_collisions_smol_0d(
     t_coll_for_damp: float | None = None,
 ) -> Smol0DStepResult:
     """Advance collisions+fragmentation in 0D using the Smol solver."""
+
+    global _F_KE_MISMATCH_WARNED
 
     policy = str(headroom_policy or "clip").lower()
     spill_mode = policy == "spill"
@@ -909,9 +922,8 @@ def step_collisions_smol_0d(
             v_rel_scalar = dynamics.v_ij(e_kernel, i_kernel, v_k=r * Omega)
 
         if enable_e_damping and t_coll_for_damp is not None and t_coll_for_damp > 0.0:
-            eps_sq = max(eps_restitution * eps_restitution, 0.0)
-            denom = max(1.0 - eps_sq, 1.0e-6)
-            t_damp = t_coll_for_damp / denom
+            eps_sq = max(eps_restitution * eps_restitution, 1.0e-12)
+            t_damp = t_coll_for_damp / eps_sq
             decay = math.exp(-dt / max(t_damp, 1.0e-30))
             e_kernel = e_value + (e_kernel - e_value) * decay
             i_kernel = i_value + (i_kernel - i_value) * decay
@@ -933,8 +945,22 @@ def step_collisions_smol_0d(
 
             f_ke_frag = f_ke_fragmentation
             eps_val = max(float(eps_restitution), 1.0e-12)
-            f_ke_frag_used = f_ke_frag if f_ke_frag is not None else eps_val * eps_val
-            f_ke_eps_mismatch = abs(f_ke_frag - eps_val * eps_val) if f_ke_frag is not None else 0.0
+            eps_sq = eps_val * eps_val
+            f_ke_frag_used = f_ke_frag if f_ke_frag is not None else eps_sq
+            f_ke_eps_mismatch = abs(f_ke_frag - eps_sq) if f_ke_frag is not None else 0.0
+            if (
+                f_ke_frag is not None
+                and f_ke_eps_mismatch > _F_KE_MISMATCH_WARN_THRESHOLD
+                and not _F_KE_MISMATCH_WARNED
+            ):
+                logger.warning(
+                    "f_ke_fragmentation (%.3f) differs from eps_restitution^2 (%.3f) by %.3f; "
+                    "consider aligning or rely on eps^2 by omitting f_ke_fragmentation.",
+                    f_ke_frag,
+                    eps_sq,
+                    f_ke_eps_mismatch,
+                )
+                _F_KE_MISMATCH_WARNED = True
             f_ke_matrix = np.where(F_lf_matrix > 0.5, float(f_ke_cratering), float(f_ke_frag_used))
             C_kernel, energy_stats = collide.compute_collision_kernel_bookkeeping(
                 N_k,

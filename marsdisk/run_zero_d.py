@@ -296,6 +296,8 @@ def run_zero_d(
 
     run_config_path = outdir / "run_config.json"
     energy_series_path = outdir / "series" / "energy.csv"
+    energy_budget_path = outdir / "checks" / "energy_budget.csv"
+    energy_parquet_path = outdir / "series" / "energy.parquet"
 
     def _write_run_config_snapshot(status: str, extra: Optional[Dict[str, Any]] = None) -> None:
         payload: Dict[str, Any] = {
@@ -744,6 +746,7 @@ def run_zero_d(
     s_min_floor_dynamic = float(s_min_effective)
     evolve_min_size_enabled = bool(getattr(cfg.sizes, "evolve_min_size", False))
     s_min_evolved_value = s_min_effective
+    s_min_surface_energy: float | None = 0.0
     s_min_components = {
         "config": float(s_min_config),
         "blowout": float(a_blow),
@@ -1416,6 +1419,9 @@ def run_zero_d(
         step_diag_format=step_diag_format,
     )
 
+    energy_streaming_cfg = getattr(getattr(cfg.diagnostics, "energy_bookkeeping", None), "stream", True)
+    energy_bookkeeping_enabled_cfg = bool(getattr(getattr(cfg.diagnostics, "energy_bookkeeping", None), "enabled", False))
+    energy_streaming_enabled = streaming_state.enabled and bool(energy_streaming_cfg) and energy_bookkeeping_enabled_cfg
     if streaming_state.enabled:
         streaming_state.chunk_start_step = start_step
         if streaming_state.mass_budget_path.exists():
@@ -1567,6 +1573,7 @@ def run_zero_d(
     energy_sum_ret = 0.0
     energy_last_row: Optional[Dict[str, float]] = None
     energy_count = 0
+    collisions_smol._F_KE_MISMATCH_WARNED = False
 
     def _mark_reservoir_depletion(current_time: float) -> None:
         """Record the first time the finite reservoir is exhausted."""
@@ -2586,7 +2593,7 @@ def run_zero_d(
                 "E_numerical_error_relative": float(E_err),
                 "error_flag": err_flag,
             }
-            if streaming_state.enabled:
+            if energy_streaming_enabled:
                 writer.append_csv(
                     [energy_row],
                     energy_series_path,
@@ -2886,6 +2893,7 @@ def run_zero_d(
             "e_kernel_effective",
             "i_kernel_effective",
             "supply_velocity_weight_w",
+            "s_min_surface_energy",
             "e_state_next",
             "i_state_next",
             "t_damp_collisions",
@@ -2934,6 +2942,7 @@ def run_zero_d(
             "a_blow": a_blow_step,
             "a_blow_at_smin": a_blow_step,
             "s_min": s_min_effective,
+            "s_min_surface_energy": s_min_surface_energy,
             "kappa": kappa_eff,
             "Qpr_mean": qpr_mean_step,
             "Q_pr_at_smin": qpr_mean_step,
@@ -3949,6 +3958,10 @@ def run_zero_d(
             "psd_chunks": [str(p) for p in streaming_state.psd_chunks],
             "diagnostics_chunks": [str(p) for p in streaming_state.diag_chunks],
             "mass_budget_path": str(streaming_state.mass_budget_path if streaming_state.enabled else outdir / "checks" / "mass_budget.csv"),
+            "energy_streaming_enabled": energy_streaming_enabled,
+            "energy_streaming_config": bool(energy_streaming_cfg),
+            "energy_series_path": str(energy_series_path),
+            "energy_parquet_path": str(energy_parquet_path),
         },
     }
     summary["scope_limitations"] = scope_limitations_summary
@@ -4029,18 +4042,10 @@ def run_zero_d(
     mass_budget_path = (
         streaming_state.mass_budget_path if streaming_state.enabled else outdir / "checks" / "mass_budget.csv"
     )
-    energy_budget_path = outdir / "checks" / "energy_budget.csv"
     if streaming_state.enabled:
         if mass_budget:
             writer.append_csv(mass_budget, mass_budget_path, header=not mass_budget_path.exists())
             mass_budget.clear()
-        if energy_series:
-            energy_path = outdir / "series" / "energy.parquet"
-            writer.write_parquet(pd.DataFrame(energy_series), energy_path)
-            energy_series.clear()
-        if energy_budget:
-            writer.append_csv(energy_budget, energy_budget_path, header=not energy_budget_path.exists())
-            energy_budget.clear()
         if not mass_budget_path.exists():
             if last_mass_budget_entry:
                 pd.DataFrame(columns=list(last_mass_budget_entry.keys())).to_csv(
@@ -4050,9 +4055,21 @@ def run_zero_d(
                 writer.write_mass_budget(mass_budget, mass_budget_path)
     else:
         writer.write_mass_budget(mass_budget, mass_budget_path)
+
+    # Energy bookkeeping outputs (independent of bulk streaming)
+    if energy_streaming_enabled:
+        if energy_series_path.exists():
+            try:
+                df_energy = pd.read_csv(energy_series_path)
+            except Exception as exc:  # pragma: no cover - best effort
+                logger.warning("Failed to read streamed energy CSV at %s: %s", energy_series_path, exc)
+                df_energy = None
+            if df_energy is not None and not df_energy.empty:
+                writer.write_parquet(df_energy, energy_parquet_path)
+        # Streaming path already wrote energy_budget incrementally.
+    else:
         if energy_series:
-            energy_path = outdir / "series" / "energy.parquet"
-            writer.write_parquet(pd.DataFrame(energy_series), energy_path)
+            writer.write_parquet(pd.DataFrame(energy_series), energy_parquet_path)
             energy_series.clear()
         if energy_budget:
             writer.write_mass_budget(energy_budget, energy_budget_path)

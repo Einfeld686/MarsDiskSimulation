@@ -8,6 +8,8 @@ from typing import Iterable
 
 import numpy as np
 
+from marsdisk import constants, grid, schema
+
 
 def _reload_with_env(module_name: str, disable_numba: bool = False):
     if disable_numba:
@@ -160,3 +162,42 @@ def test_supply_mass_rate_powerlaw_numba_matches_python(monkeypatch) -> None:
     )
 
     np.testing.assert_allclose(got, expected)
+
+
+def test_compute_kernel_e_i_H_numba_matches_python(monkeypatch) -> None:
+    collisions_smol = _reload_with_env("marsdisk.physics.collisions_smol", disable_numba=False)
+    dyn = schema.Dynamics(
+        e0=2.0e-4,
+        i0=1.0e-4,
+        t_damp_orbits=1.0e3,
+        f_wake=1.0,
+        kernel_ei_mode="wyatt_eq",
+        kernel_H_mode="ia",
+        H_factor=0.1,
+    )
+    r = constants.R_MARS
+    Omega = grid.omega_kepler(r)
+    v_k = r * Omega
+    sizes = np.array([1.0e-6, 2.0e-6], dtype=float)
+
+    monkeypatch.setattr(collisions_smol, "_NUMBA_FAILED", False, raising=False)
+    e_numba, i_numba, H_numba = collisions_smol.compute_kernel_e_i_H(
+        dyn,
+        tau_eff=1.0e-3,
+        a_orbit_m=r,
+        v_k=v_k,
+        sizes=sizes,
+    )
+
+    monkeypatch.setattr(collisions_smol, "_NUMBA_FAILED", True, raising=False)
+    e_py, i_py, H_py = collisions_smol.compute_kernel_e_i_H(
+        dyn,
+        tau_eff=1.0e-3,
+        a_orbit_m=r,
+        v_k=v_k,
+        sizes=sizes,
+    )
+
+    np.testing.assert_allclose(e_numba, e_py)
+    np.testing.assert_allclose(i_numba, i_py)
+    np.testing.assert_allclose(H_numba, H_py)

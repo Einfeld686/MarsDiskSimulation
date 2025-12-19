@@ -6,7 +6,7 @@
 数式本文は `analysis/equations.md` が唯一のソースであり、本書では eq_id とラベルだけを参照する。UNKNOWN_REF_REQUESTS の slug は TODO(REF:slug) として維持する。
 
 ## 1. カバレッジ指標
-- equation_coverage: 38/41 = 0.927
+- equation_coverage: 38/48 = 0.792
 - function_reference_rate: 9/11 = 0.818
 - anchor_consistency_rate: 9/23 = 0.391
 

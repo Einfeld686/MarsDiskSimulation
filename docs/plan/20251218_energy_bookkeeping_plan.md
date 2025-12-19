@@ -278,9 +278,9 @@ E.047–E.053 を追加（E.053: Krijt & Kama 式）。
 - [x] run_card への主要メタ（git ハッシュ・コマンド・seed・エネルギー合計等）記録
 - [x] 追加テスト（surface_energy ガード・energy_series streaming flush 等）
 
-### 未完・要フォロー
-- [ ] s_min_surface_energy を series/run.parquet に列追加
-- [ ] f_ke_fragmentation と eps_restitution^2 の不一致警告ログ出力（閾値判定）
-- [ ] energy_bookkeeping.stream フラグの適用と streaming=ON 時の energy.parquet 出力整合
-- [ ] e/i 減衰式を計画仕様（t_coll/eps^2）に合わせるか、採用式の差分を文書化
-- [ ] equations.md への E.047–E.053 追加とアンカー同期
+### 完了（フォロー分）
+- [x] s_min_surface_energy を series/run.parquet に列追加
+- [x] f_ke_fragmentation と eps_restitution^2 の不一致警告ログ出力（閾値判定）
+- [x] energy_bookkeeping.stream フラグの適用と streaming=ON 時の energy.parquet 出力整合
+- [x] e/i 減衰式を計画仕様（t_coll/eps^2）に合わせるか、採用式の差分を文書化
+- [x] equations.md への E.047–E.053 追加とアンカー同期
