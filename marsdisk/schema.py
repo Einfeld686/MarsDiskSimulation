@@ -777,11 +777,43 @@ class QStar(BaseModel):
         "ba99_cgs",
         description="Unit system for Qs/B coefficients: 'ba99_cgs' treats sizes in cm, rho in g/cm^3 and converts erg/g→J/kg; 'si' uses inputs as-is.",
     )
+    override_coeffs: bool = Field(
+        False,
+        description="Use Q_D* coefficient table from config instead of the built-in defaults.",
+    )
+    coeff_scale: float = Field(
+        1.0,
+        gt=0.0,
+        description="Scale factor applied to Qs and B when override_coeffs=true.",
+    )
+    coeff_table: Optional[Dict[float, List[float]]] = Field(
+        None,
+        description="Optional coefficient table mapping v_ref_kms to [Qs, a_s, B, b_g].",
+    )
     mu_grav: float = Field(
         0.45,
         gt=0.0,
         description="Gravity-regime velocity exponent mu used for v^{-3mu+2} scaling applied to the gravity term when extrapolating Q_D^* beyond the tabulated velocities (LS09/Jutzi-style).",
     )
+
+    @field_validator("coeff_table")
+    def _check_coeff_table(cls, value: Optional[Dict[float, List[float]]]) -> Optional[Dict[float, List[float]]]:
+        if value is None:
+            return None
+        if not value:
+            raise ConfigurationError("qstar.coeff_table must not be empty when provided")
+        for v_ref, coeffs in value.items():
+            try:
+                v_val = float(v_ref)
+            except (TypeError, ValueError) as exc:
+                raise ConfigurationError(f"qstar.coeff_table key {v_ref!r} is not a valid float") from exc
+            if v_val <= 0.0:
+                raise ConfigurationError("qstar.coeff_table velocity keys must be positive")
+            if not isinstance(coeffs, (list, tuple)) or len(coeffs) != 4:
+                raise ConfigurationError(
+                    "qstar.coeff_table values must be a 4-item list [Qs, a_s, B, b_g]"
+                )
+        return value
 
 
 class PSD(BaseModel):

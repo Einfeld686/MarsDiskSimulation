@@ -1,6 +1,7 @@
 # Mars Disk Simulation
 
 > **火星ロッシュ限界内ダスト円盤の衝突・放射圧・昇華過程シミュレーション**
+> **analysis/ を唯一の仕様源とし、README は抜粋と導線に徹します。**
 
 ---
 
@@ -36,9 +37,20 @@
 
 - 相状態・シンク選択ログ（`phase_state`, `sink_selected`）
 
+### 物理式サマリ（analysis/equations.md から自動同期）
+
+<!-- AUTOGEN:README_PHYSICS_SUMMARY START -->
+- 放射圧ブローアウト: β(E.013), a_blow(E.014), 表層流出 Ṁ_out(E.009)
+- 昇華シンク: HKL 質量フラックス(E.018) → シンク時間(E.019)
+- 光学的厚さ・遮蔽: κ_eff(E.015), Σ_τ=1(E.016), Φ(E.017)
+- 衝突・破砕供給: IMEX-BDF1 Smoluchowski (E.010), 有効最小粒径 s_min(E.008)
+<!-- AUTOGEN:README_PHYSICS_SUMMARY END -->
+
 ## 🔥 最新の0Dスモークテスト（2025-12-19）
 
+<!-- AUTOGEN:README_SMOKE_COMMAND START -->
 - コマンド: `python -m marsdisk.run --config configs/base.yml --override numerics.t_end_years=0.0001 numerics.dt_init=1000 io.streaming.enable=false --quiet`（run_card の再現用）
+<!-- AUTOGEN:README_SMOKE_COMMAND END -->
 - 出力: `out/summary.json`, `out/series/run.parquet`, `out/checks/mass_budget.csv`（質量誤差最大 0.45% < 0.5%、`case_status="blowout"`）
 - 主要指標: `M_loss=1.66e-7 M_Mars`, `a_blow≈7.28e-6 m`, `s_min_effective=7.28e-6 m`, `dt_over_t_blow_median=0.293`, `Sigma_tau1_initial=0.01`（実績積分窓 0.0001 yr）
 - メモ: 2年フルランは同じ config で override を外して実行。`io.streaming` は既定で ON（`memory_limit_gb=10`, `step_flush_interval=10000`, `merge_at_end=true`）。CI/pytest などの軽量ケースでは先に `FORCE_STREAMING_OFF=1` または `IO_STREAMING=off` をセットして明示的に OFF にしてください。
@@ -108,11 +120,13 @@ pip install -r requirements.txt
 
 ### 2. 最初の実行
 
+<!-- AUTOGEN:README_QUICKSTART START -->
 ```bash
 # 標準0D（gas-poor、衝突＋blow-out＋昇華、2年、io.streaming既定ON）
 python -m marsdisk.run --config configs/base.yml
 # 軽量/CIでは実行前に: export FORCE_STREAMING_OFF=1  # または IO_STREAMING=off
 ```
+<!-- AUTOGEN:README_QUICKSTART END -->
 
 ### 3. 結果確認
 
@@ -135,14 +149,18 @@ ls out/summary.json out/series/run.parquet out/checks/mass_budget.csv
 
 - 解析対象は **gas-poor** の火星ロッシュ内ダスト円盤
 - Takeuchi & Lin (2003) は既定で無効（`ALLOW_TL2003=false`）
+<!-- AUTOGEN:README_CLI_DRIVER_RULE START -->
 - CLI ドライバは `python -m marsdisk.run --config <yaml>`
+<!-- AUTOGEN:README_CLI_DRIVER_RULE END -->
 - ⟨Q_pr⟩ テーブルが必須（例: `data/qpr_table.csv`）
+- SiO2 用の生成テーブルは `marsdisk/io/data/qpr_planck_sio2_generated.csv`（`marsdisk/ops/make_qpr_table_sio2_csv.py`, c_abs=0.10）。再生成時は生成日・担当・パラメータを README/analysis に記録。
 - `io.streaming` は既定 ON（`memory_limit_gb=10`, `step_flush_interval=10000`, `merge_at_end=true`）。短時間/CI ランは `FORCE_STREAMING_OFF=1` または `IO_STREAMING=off` で明示的に OFF に切り替え可能。
 
 ---
 
 ## 🎛️ シナリオ別コマンド例
 
+<!-- AUTOGEN:README_CLI_EXAMPLES START -->
 | シナリオ | コマンド例 |
 | --- | --- |
 | 標準0D（2年, streaming ON既定） | `python -m marsdisk.run --config configs/base.yml` |
@@ -152,6 +170,7 @@ ls out/summary.json out/series/run.parquet out/checks/mass_budget.csv
 | 高温シナリオ | `python -m marsdisk.run --config configs/scenarios/high_temp.yml` |
 | 質量損失スイープベース | `python -m marsdisk.run --config _configs/05_massloss_base.yml` |
 | サブリメーション+冷却（Windows向け） | `scripts/run_sublim_cooling_win.cmd` / `scripts/run_sublim_cooling.cmd` ※ストリーミング出力ON（io.streaming.*, merge_at_end=true） |
+<!-- AUTOGEN:README_CLI_EXAMPLES END -->
 
 > 💡 設定の上書き: `--override radiation.TM_K=5000`
 
@@ -159,11 +178,13 @@ ls out/summary.json out/series/run.parquet out/checks/mass_budget.csv
 
 ## 📊 出力チェック
 
+<!-- AUTOGEN:README_OUTPUT_COLUMNS START -->
 | 出力ファイル | 確認項目 |
 |-------------|---------|
 | `series/run.parquet` | `time`, `dt`, `tau`, `a_blow`, `s_min`, `prod_subblow_area_rate`, `M_out_dot`, `mass_lost_by_blowout`, `mass_lost_by_sinks` |
 | `summary.json` | `M_loss`, `case_status`, `dt_over_t_blow_median`, `mass_budget_max_error_percent`（≤0.5%） |
 | `checks/mass_budget.csv` | `error_percent` が 0.5% 以内か、`mass_loss_rp_mars` など内訳のバランス |
+<!-- AUTOGEN:README_OUTPUT_COLUMNS END -->
 
 ---
 

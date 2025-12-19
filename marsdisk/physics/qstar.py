@@ -20,10 +20,12 @@ __all__ = [
     "compute_q_d_star_F1",
     "compute_q_d_star_array",
     "get_coeff_unit_system",
-    "get_gravity_velocity_mu",
     "get_coefficient_table",
+    "get_gravity_velocity_mu",
     "get_velocity_clamp_stats",
+    "reset_coefficient_table",
     "reset_velocity_clamp_stats",
+    "set_coefficient_table",
     "set_coeff_unit_system",
     "set_gravity_velocity_mu",
 ]
@@ -31,10 +33,12 @@ __all__ = [
 # Coefficients from [@BenzAsphaug1999_Icarus142_5] evaluated at reference velocities in km/s.
 # Basalt-like material parameters follow [@LeinhardtStewart2012_ApJ745_79].
 # The keys represent the impact velocity in km/s.
-_COEFFS: Dict[float, Tuple[float, float, float, float]] = {
+_DEFAULT_COEFFS: Dict[float, Tuple[float, float, float, float]] = {
     3.0: (3.5e7, 0.38, 0.3, 1.36),  # Qs, a_s, B, b_g at 3 km/s
     5.0: (7.0e7, 0.38, 0.5, 1.36),  # Qs, a_s, B, b_g at 5 km/s
 }
+
+_COEFFS: Dict[float, Tuple[float, float, float, float]] = dict(_DEFAULT_COEFFS)
 
 _V_MIN = min(_COEFFS.keys())
 _V_MAX = max(_COEFFS.keys())
@@ -75,6 +79,55 @@ def get_coefficient_table() -> Dict[float, Tuple[float, float, float, float]]:
     """Return the coefficient lookup keyed by reference velocity [km/s]."""
 
     return dict(_COEFFS)
+
+
+def _normalise_coeff_table(
+    table: Dict[float, Tuple[float, float, float, float]] | Dict[float, Tuple[float, ...]] | Dict[float, Dict[str, float]]
+) -> Dict[float, Tuple[float, float, float, float]]:
+    """Coerce coefficient table values to ``(Qs, a_s, B, b_g)`` tuples."""
+
+    if not table:
+        raise MarsDiskError("coefficient table must not be empty")
+    cleaned: Dict[float, Tuple[float, float, float, float]] = {}
+    for raw_v, raw_coeffs in table.items():
+        v_ref = float(raw_v)
+        if v_ref <= 0.0:
+            raise MarsDiskError("reference velocity must be positive")
+        if isinstance(raw_coeffs, dict):
+            Qs = float(raw_coeffs.get("Qs", float("nan")))
+            a_s = float(raw_coeffs.get("a_s", float("nan")))
+            B = float(raw_coeffs.get("B", float("nan")))
+            b_g = float(raw_coeffs.get("b_g", float("nan")))
+            coeffs = (Qs, a_s, B, b_g)
+        else:
+            coeffs = tuple(float(val) for val in raw_coeffs)
+        if len(coeffs) != 4:
+            raise MarsDiskError("coefficient table entries must have 4 values (Qs, a_s, B, b_g)")
+        Qs, a_s, B, b_g = coeffs
+        if Qs <= 0.0 or B <= 0.0:
+            raise MarsDiskError("Qs and B must be positive in the coefficient table")
+        cleaned[v_ref] = (float(Qs), float(a_s), float(B), float(b_g))
+    return cleaned
+
+
+def set_coefficient_table(
+    table: Dict[float, Tuple[float, float, float, float]] | Dict[float, Tuple[float, ...]] | Dict[float, Dict[str, float]],
+) -> Dict[float, Tuple[float, float, float, float]]:
+    """Replace the active coefficient table and return the normalised copy."""
+
+    global _COEFFS, _V_MIN, _V_MAX
+    cleaned = _normalise_coeff_table(table)
+    _COEFFS = dict(cleaned)
+    _V_MIN = min(_COEFFS.keys())
+    _V_MAX = max(_COEFFS.keys())
+    _QDSTAR_CACHE.clear()
+    return dict(_COEFFS)
+
+
+def reset_coefficient_table() -> Dict[float, Tuple[float, float, float, float]]:
+    """Restore the built-in basalt coefficient table."""
+
+    return set_coefficient_table(_DEFAULT_COEFFS)
 
 
 def reset_velocity_clamp_stats() -> None:

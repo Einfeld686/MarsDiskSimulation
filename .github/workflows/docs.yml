@@ -1,0 +1,20 @@
+name: doc-sync
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  doc-sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -r requirements.txt
+      - run: make analysis-sync
+      - run: git diff --exit-code
+      - run: test -z "$(git status --porcelain)"
+      - run: make readme-sync-check
+      - run: make analysis-doc-tests

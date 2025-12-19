@@ -1422,231 +1422,266 @@
   },
   {
     "file_path": "analysis/tools/make_coverage.py",
-    "line_no": 10,
+    "line_no": 12,
     "symbol": "REPO_ROOT",
     "signature": "REPO_ROOT = Path(__file__).resolve().parents[2]",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "analysis/tools/make_coverage.py",
-    "line_no": 11,
+    "line_no": 13,
     "symbol": "ANALYSIS_DIR",
     "signature": "ANALYSIS_DIR = REPO_ROOT / 'analysis'",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "analysis/tools/make_coverage.py",
-    "line_no": 12,
+    "line_no": 14,
     "symbol": "COVERAGE_DIR",
     "signature": "COVERAGE_DIR = ANALYSIS_DIR / 'coverage'",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "analysis/tools/make_coverage.py",
-    "line_no": 14,
+    "line_no": 16,
     "symbol": "INVENTORY_PATH",
     "signature": "INVENTORY_PATH = ANALYSIS_DIR / 'inventory.json'",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "analysis/tools/make_coverage.py",
-    "line_no": 15,
+    "line_no": 17,
     "symbol": "SYMBOLS_RAW_PATH",
     "signature": "SYMBOLS_RAW_PATH = ANALYSIS_DIR / 'symbols.raw.txt'",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "analysis/tools/make_coverage.py",
-    "line_no": 16,
+    "line_no": 18,
     "symbol": "EQUATIONS_PATH",
     "signature": "EQUATIONS_PATH = ANALYSIS_DIR / 'equations.md'",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "analysis/tools/make_coverage.py",
-    "line_no": 17,
+    "line_no": 19,
     "symbol": "SINKS_DOC_PATH",
     "signature": "SINKS_DOC_PATH = ANALYSIS_DIR / 'sinks_callgraph.md'",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "analysis/tools/make_coverage.py",
-    "line_no": 19,
+    "line_no": 20,
+    "symbol": "README_PATH",
+    "signature": "README_PATH = REPO_ROOT / 'README.md'",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "analysis/tools/make_coverage.py",
+    "line_no": 21,
+    "symbol": "README_SYNC_PATH",
+    "signature": "README_SYNC_PATH = REPO_ROOT / 'tools' / 'readme_sync.py'",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "analysis/tools/make_coverage.py",
+    "line_no": 23,
     "symbol": "ANCHOR_PATTERN",
     "signature": "ANCHOR_PATTERN = re.compile('((?:marsdisk|tests|configs|scripts)/[A-Za-z0-9_/\\\\.-]+\\\\.(?:py|yml|yaml))#([A-Za-z0-9_\\\\.]+)')",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "analysis/tools/make_coverage.py",
-    "line_no": 22,
+    "line_no": 26,
     "symbol": "UNIT_BRACKETS_PATTERN",
     "signature": "UNIT_BRACKETS_PATTERN = re.compile('\\\\[[^\\\\]]*[A-Za-z][^\\\\]]*\\\\]')",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "analysis/tools/make_coverage.py",
-    "line_no": 23,
+    "line_no": 27,
     "symbol": "SYMBOL_TABLE_HEADER_PATTERN",
     "signature": "SYMBOL_TABLE_HEADER_PATTERN = re.compile('\\\\|\\\\s*Symbol\\\\s*\\\\|.*\\\\|\\\\s*Units\\\\s*\\\\|', re.IGNORECASE)",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "analysis/tools/make_coverage.py",
-    "line_no": 25,
+    "line_no": 29,
     "symbol": "AUTOGEN_BEGIN",
     "signature": "AUTOGEN_BEGIN = '<!-- AUTOGEN'",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "analysis/tools/make_coverage.py",
-    "line_no": 26,
+    "line_no": 30,
     "symbol": "AUTOGEN_END",
     "signature": "AUTOGEN_END = 'AUTOGEN-END -->'",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "analysis/tools/make_coverage.py",
-    "line_no": 30,
+    "line_no": 34,
     "symbol": "SymbolRef",
     "signature": "class SymbolRef",
     "brief_usage": "No description available."
   },
   {
     "file_path": "analysis/tools/make_coverage.py",
-    "line_no": 35,
+    "line_no": 40,
+    "symbol": "ReadmeSyncResult",
+    "signature": "class ReadmeSyncResult",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "analysis/tools/make_coverage.py",
+    "line_no": 47,
     "symbol": "load_inventory",
     "signature": "load_inventory() -> List[dict]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "analysis/tools/make_coverage.py",
-    "line_no": 47,
+    "line_no": 59,
     "symbol": "load_symbol_kinds",
     "signature": "load_symbol_kinds() -> Dict[SymbolRef, str]",
     "brief_usage": "Map symbols to rough kinds using symbols.raw.txt lines."
   },
   {
     "file_path": "analysis/tools/make_coverage.py",
-    "line_no": 78,
+    "line_no": 90,
     "symbol": "discover_markdown_paths",
     "signature": "discover_markdown_paths() -> List[Path]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "analysis/tools/make_coverage.py",
-    "line_no": 89,
+    "line_no": 101,
     "symbol": "collect_anchor_occurrences",
     "signature": "collect_anchor_occurrences(paths: Sequence[Path]) -> List[Tuple[Path, SymbolRef]]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "analysis/tools/make_coverage.py",
-    "line_no": 100,
+    "line_no": 112,
     "symbol": "classify_symbols",
     "signature": "classify_symbols(inventory: Sequence[dict], symbol_kinds: Dict[SymbolRef, str]) -> Tuple[Dict[SymbolRef, dict], List[SymbolRef]]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "analysis/tools/make_coverage.py",
-    "line_no": 151,
+    "line_no": 163,
     "symbol": "compute_function_reference_rate",
     "signature": "compute_function_reference_rate(public_functions: Sequence[SymbolRef], occurrences: Sequence[Tuple[Path, SymbolRef]]) -> Tuple[int, int, List[SymbolRef]]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "analysis/tools/make_coverage.py",
-    "line_no": 167,
+    "line_no": 179,
     "symbol": "compute_anchor_consistency_rate",
     "signature": "compute_anchor_consistency_rate(occurrences: Sequence[Tuple[Path, SymbolRef]], known_symbols: Dict[SymbolRef, dict]) -> Tuple[int, int, List[Tuple[Path, SymbolRef]]]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "analysis/tools/make_coverage.py",
-    "line_no": 185,
+    "line_no": 197,
     "symbol": "extract_sections_with_equations",
     "signature": "extract_sections_with_equations(content: str) -> List[str]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "analysis/tools/make_coverage.py",
-    "line_no": 203,
+    "line_no": 215,
     "symbol": "extract_fenced_blocks",
     "signature": "extract_fenced_blocks(section: str) -> List[Tuple[str, str]]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "analysis/tools/make_coverage.py",
-    "line_no": 228,
+    "line_no": 240,
     "symbol": "_section_has_symbol_table",
     "signature": "_section_has_symbol_table(section: str) -> bool",
     "brief_usage": "No description available."
   },
   {
     "file_path": "analysis/tools/make_coverage.py",
-    "line_no": 237,
+    "line_no": 249,
     "symbol": "compute_equation_unit_rate",
     "signature": "compute_equation_unit_rate(equations_path: Path) -> Tuple[int, int]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "analysis/tools/make_coverage.py",
-    "line_no": 270,
+    "line_no": 282,
     "symbol": "extract_autogen_block",
     "signature": "extract_autogen_block(text: str) -> str",
     "brief_usage": "No description available."
   },
   {
     "file_path": "analysis/tools/make_coverage.py",
-    "line_no": 285,
+    "line_no": 297,
     "symbol": "compute_sinks_callgraph_flag",
     "signature": "compute_sinks_callgraph_flag(doc_path: Path) -> bool",
     "brief_usage": "No description available."
   },
   {
     "file_path": "analysis/tools/make_coverage.py",
-    "line_no": 307,
+    "line_no": 319,
+    "symbol": "_load_readme_sync_module",
+    "signature": "_load_readme_sync_module()",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "analysis/tools/make_coverage.py",
+    "line_no": 331,
+    "symbol": "compute_readme_sync_status",
+    "signature": "compute_readme_sync_status() -> ReadmeSyncResult",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "analysis/tools/make_coverage.py",
+    "line_no": 352,
     "symbol": "format_rate",
     "signature": "format_rate(numerator: int, denominator: int) -> float",
     "brief_usage": "No description available."
   },
   {
     "file_path": "analysis/tools/make_coverage.py",
-    "line_no": 313,
+    "line_no": 358,
     "symbol": "rate_to_percent",
     "signature": "rate_to_percent(rate: float) -> str",
     "brief_usage": "No description available."
   },
   {
     "file_path": "analysis/tools/make_coverage.py",
-    "line_no": 317,
+    "line_no": 362,
     "symbol": "build_coverage_markdown",
-    "signature": "build_coverage_markdown(function_rate: Tuple[int, int], anchor_rate: Tuple[int, int], equation_rate: Tuple[int, int], sinks_flag: bool, holes: Sequence[SymbolRef]) -> str",
+    "signature": "build_coverage_markdown(function_rate: Tuple[int, int], anchor_rate: Tuple[int, int], equation_rate: Tuple[int, int], sinks_flag: bool, readme_sync: ReadmeSyncResult, holes: Sequence[SymbolRef]) -> str",
     "brief_usage": "No description available."
   },
   {
     "file_path": "analysis/tools/make_coverage.py",
-    "line_no": 365,
+    "line_no": 412,
     "symbol": "build_coverage_json",
-    "signature": "build_coverage_json(function_rate: Tuple[int, int], anchor_rate: Tuple[int, int], equation_rate: Tuple[int, int], sinks_flag: bool, holes: Sequence[SymbolRef]) -> dict",
+    "signature": "build_coverage_json(function_rate: Tuple[int, int], anchor_rate: Tuple[int, int], equation_rate: Tuple[int, int], sinks_flag: bool, readme_sync: ReadmeSyncResult, holes: Sequence[SymbolRef]) -> dict",
     "brief_usage": "No description available."
   },
   {
     "file_path": "analysis/tools/make_coverage.py",
-    "line_no": 397,
+    "line_no": 451,
     "symbol": "write_text",
     "signature": "write_text(path: Path, content: str) -> None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "analysis/tools/make_coverage.py",
-    "line_no": 402,
+    "line_no": 456,
     "symbol": "write_json",
     "signature": "write_json(path: Path, payload: dict) -> None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "analysis/tools/make_coverage.py",
-    "line_no": 407,
+    "line_no": 461,
     "symbol": "main",
     "signature": "main() -> int",
     "brief_usage": "No description available."
@@ -2576,6 +2611,20 @@
     "brief_usage": "Function definition"
   },
   {
+    "file_path": "marsdisk/io/_numba_tables.py",
+    "line_no": 23,
+    "symbol": "NUMBA_AVAILABLE",
+    "signature": "NUMBA_AVAILABLE() -> bool",
+    "brief_usage": "Return True if Numba JIT compilation is available."
+  },
+  {
+    "file_path": "marsdisk/io/_numba_tables.py",
+    "line_no": 29,
+    "symbol": "qpr_interp_scalar_numba",
+    "signature": "qpr_interp_scalar_numba(s_vals: np.ndarray, T_vals: np.ndarray, q_vals: np.ndarray, s: float, T: float) -> float",
+    "brief_usage": "Bilinear interpolation for the Planck-mean Q_pr table."
+  },
+  {
     "file_path": "marsdisk/io/checkpoint.py",
     "line_no": 16,
     "symbol": "_b64_pack",
@@ -2675,133 +2724,154 @@
   },
   {
     "file_path": "marsdisk/io/tables.py",
-    "line_no": 23,
+    "line_no": 30,
+    "symbol": "_NUMBA_DISABLED_ENV",
+    "signature": "_NUMBA_DISABLED_ENV = os.environ.get('MARSDISK_DISABLE_NUMBA', '').lower() in {'1', 'true', 'yes', 'on'}",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "marsdisk/io/tables.py",
+    "line_no": 31,
+    "symbol": "_USE_NUMBA",
+    "signature": "_USE_NUMBA = _NUMBA_AVAILABLE and (not _NUMBA_DISABLED_ENV)",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "marsdisk/io/tables.py",
+    "line_no": 32,
+    "symbol": "_NUMBA_FAILED",
+    "signature": "_NUMBA_FAILED = False",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "marsdisk/io/tables.py",
+    "line_no": 34,
     "symbol": "PACKAGE_DATA_DIR",
     "signature": "PACKAGE_DATA_DIR = Path(__file__).resolve().parent / 'data'",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/io/tables.py",
-    "line_no": 24,
+    "line_no": 35,
     "symbol": "REPO_DATA_DIR",
     "signature": "REPO_DATA_DIR = Path(__file__).resolve().parents[2] / 'data'",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/io/tables.py",
-    "line_no": 26,
+    "line_no": 37,
     "symbol": "DATA_DIR",
     "signature": "DATA_DIR = PACKAGE_DATA_DIR",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/io/tables.py",
-    "line_no": 29,
+    "line_no": 40,
     "symbol": "_approx_phi",
     "signature": "_approx_phi(tau: float, w0: float, g: float) -> float",
     "brief_usage": "Function definition"
   },
   {
     "file_path": "marsdisk/io/tables.py",
-    "line_no": 35,
+    "line_no": 46,
     "symbol": "QPrTable",
     "signature": "class QPrTable",
     "brief_usage": "Class definition"
   },
   {
     "file_path": "marsdisk/io/tables.py",
-    "line_no": 99,
+    "line_no": 128,
     "symbol": "PhiTable",
     "signature": "class PhiTable",
     "brief_usage": "Class definition"
   },
   {
     "file_path": "marsdisk/io/tables.py",
-    "line_no": 146,
+    "line_no": 175,
     "symbol": "_read_qpr_frame_h5datasets",
     "signature": "_read_qpr_frame_h5datasets(path: Path) -> pd.DataFrame",
     "brief_usage": "HDF5 datasetsからQ_prテーブルを読み込む。Planck 平均⟨Q_pr⟩."
   },
   {
     "file_path": "marsdisk/io/tables.py",
-    "line_no": 200,
+    "line_no": 229,
     "symbol": "_read_qpr_frame",
     "signature": "_read_qpr_frame(path: Path) -> pd.DataFrame",
     "brief_usage": "Function definition"
   },
   {
     "file_path": "marsdisk/io/tables.py",
-    "line_no": 218,
+    "line_no": 247,
     "symbol": "_EXPECTED_QPR_LOCATIONS",
     "signature": "_EXPECTED_QPR_LOCATIONS: Sequence[Path] = (REPO_DATA_DIR / 'qpr_table.csv', PACKAGE_DATA_DIR / 'qpr_planck.h5', PACKAGE_DATA_DIR / 'qpr_planck.csv')",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/io/tables.py",
-    "line_no": 225,
+    "line_no": 254,
     "symbol": "_QPR_TABLE",
     "signature": "_QPR_TABLE: Optional[QPrTable]",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/io/tables.py",
-    "line_no": 226,
+    "line_no": 255,
     "symbol": "_QPR_TABLE_PATH",
     "signature": "_QPR_TABLE_PATH: Optional[Path]",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/io/tables.py",
-    "line_no": 227,
+    "line_no": 256,
     "symbol": "_PHI_TABLE",
     "signature": "_PHI_TABLE: Optional[PhiTable]",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/io/tables.py",
-    "line_no": 229,
+    "line_no": 258,
     "symbol": "_QPR_TABLE",
     "signature": "_QPR_TABLE = None",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/io/tables.py",
-    "line_no": 230,
+    "line_no": 259,
     "symbol": "_QPR_TABLE_PATH",
     "signature": "_QPR_TABLE_PATH = None",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/io/tables.py",
-    "line_no": 260,
+    "line_no": 289,
     "symbol": "interp_qpr",
     "signature": "interp_qpr(s: float, T_M: float) -> float",
     "brief_usage": "Interpolate the mean radiation pressure efficiency."
   },
   {
     "file_path": "marsdisk/io/tables.py",
-    "line_no": 274,
+    "line_no": 303,
     "symbol": "interp_phi",
     "signature": "interp_phi(tau: float, w0: float, g: float) -> float",
     "brief_usage": "Interpolate the self-shielding factor Φ."
   },
   {
     "file_path": "marsdisk/io/tables.py",
-    "line_no": 284,
+    "line_no": 313,
     "symbol": "load_qpr_table",
     "signature": "load_qpr_table(path: str | Path) -> Callable[[float, float], float]",
     "brief_usage": "Read a table file and build an interpolator. Planck averaged ⟨Q_pr⟩."
   },
   {
     "file_path": "marsdisk/io/tables.py",
-    "line_no": 299,
+    "line_no": 328,
     "symbol": "load_phi_table",
     "signature": "load_phi_table(path: str | Path) -> Callable[[float], float]",
     "brief_usage": "Create a clamped interpolator from a Φ(τ) CSV file. Self-shielding Φ."
   },
   {
     "file_path": "marsdisk/io/tables.py",
-    "line_no": 357,
+    "line_no": 386,
     "symbol": "get_qpr_table_path",
     "signature": "get_qpr_table_path() -> Optional[Path]",
     "brief_usage": "Return the resolved path of the active ⟨Q_pr⟩ table, if any."
@@ -4649,196 +4719,224 @@
   },
   {
     "file_path": "marsdisk/physics/qstar.py",
-    "line_no": 34,
-    "symbol": "_COEFFS",
-    "signature": "_COEFFS: Dict[float, Tuple[float, float, float, float]] = {3.0: (35000000.0, 0.38, 0.3, 1.36), 5.0: (70000000.0, 0.38, 0.5, 1.36)}",
+    "line_no": 36,
+    "symbol": "_DEFAULT_COEFFS",
+    "signature": "_DEFAULT_COEFFS: Dict[float, Tuple[float, float, float, float]] = {3.0: (35000000.0, 0.38, 0.3, 1.36), 5.0: (70000000.0, 0.38, 0.5, 1.36)}",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/physics/qstar.py",
-    "line_no": 39,
+    "line_no": 41,
+    "symbol": "_COEFFS",
+    "signature": "_COEFFS: Dict[float, Tuple[float, float, float, float]] = dict(_DEFAULT_COEFFS)",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "marsdisk/physics/qstar.py",
+    "line_no": 43,
     "symbol": "_V_MIN",
     "signature": "_V_MIN = min(_COEFFS.keys())",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/physics/qstar.py",
-    "line_no": 40,
+    "line_no": 44,
     "symbol": "_V_MAX",
     "signature": "_V_MAX = max(_COEFFS.keys())",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/physics/qstar.py",
-    "line_no": 45,
+    "line_no": 49,
     "symbol": "_COEFF_UNIT_CHOICES",
     "signature": "_COEFF_UNIT_CHOICES: set[CoeffUnits] = {'ba99_cgs', 'si'}",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/physics/qstar.py",
-    "line_no": 46,
+    "line_no": 50,
     "symbol": "_COEFF_UNIT_SYSTEM",
     "signature": "_COEFF_UNIT_SYSTEM: CoeffUnits = 'ba99_cgs'",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/physics/qstar.py",
-    "line_no": 47,
+    "line_no": 51,
     "symbol": "_CM_PER_M",
     "signature": "_CM_PER_M = 100.0",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/physics/qstar.py",
-    "line_no": 48,
+    "line_no": 52,
     "symbol": "_RHO_GCM3_FROM_SI",
     "signature": "_RHO_GCM3_FROM_SI = 0.001",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/physics/qstar.py",
-    "line_no": 49,
+    "line_no": 53,
     "symbol": "_ERG_PER_G_TO_J_PER_KG",
     "signature": "_ERG_PER_G_TO_J_PER_KG = 0.0001",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/physics/qstar.py",
-    "line_no": 50,
+    "line_no": 54,
     "symbol": "_VEL_CLAMP_COUNTS",
     "signature": "_VEL_CLAMP_COUNTS: dict[str, int] = {'below': 0, 'above': 0}",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/physics/qstar.py",
-    "line_no": 51,
+    "line_no": 55,
     "symbol": "_VEL_CLAMP_WARNED",
     "signature": "_VEL_CLAMP_WARNED = False",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/physics/qstar.py",
-    "line_no": 53,
+    "line_no": 57,
     "symbol": "_GRAVITY_VELOCITY_MU",
     "signature": "_GRAVITY_VELOCITY_MU = 0.45",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/physics/qstar.py",
-    "line_no": 54,
+    "line_no": 58,
     "symbol": "_QDSTAR_CACHE_MAXSIZE",
     "signature": "_QDSTAR_CACHE_MAXSIZE = 8",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/physics/qstar.py",
-    "line_no": 55,
+    "line_no": 59,
     "symbol": "_QDSTAR_CACHE",
     "signature": "_QDSTAR_CACHE: 'OrderedDict[tuple, np.ndarray]' = OrderedDict()",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/physics/qstar.py",
-    "line_no": 58,
+    "line_no": 62,
     "symbol": "set_coeff_unit_system",
     "signature": "set_coeff_unit_system(units: CoeffUnits) -> CoeffUnits",
     "brief_usage": "Set the coefficient unit system used during :math:`Q_D^*` evaluation."
   },
   {
     "file_path": "marsdisk/physics/qstar.py",
-    "line_no": 68,
+    "line_no": 72,
     "symbol": "get_coeff_unit_system",
     "signature": "get_coeff_unit_system() -> CoeffUnits",
     "brief_usage": "Return the active coefficient unit system."
   },
   {
     "file_path": "marsdisk/physics/qstar.py",
-    "line_no": 74,
+    "line_no": 78,
     "symbol": "get_coefficient_table",
     "signature": "get_coefficient_table() -> Dict[float, Tuple[float, float, float, float]]",
     "brief_usage": "Return the coefficient lookup keyed by reference velocity [km/s]."
   },
   {
     "file_path": "marsdisk/physics/qstar.py",
-    "line_no": 80,
+    "line_no": 84,
+    "symbol": "_normalise_coeff_table",
+    "signature": "_normalise_coeff_table(table: Dict[float, Tuple[float, float, float, float]] | Dict[float, Tuple[float, ...]] | Dict[float, Dict[str, float]]) -> Dict[float, Tuple[float, float, float, float]]",
+    "brief_usage": "Coerce coefficient table values to ``(Qs, a_s, B, b_g)`` tuples."
+  },
+  {
+    "file_path": "marsdisk/physics/qstar.py",
+    "line_no": 113,
+    "symbol": "set_coefficient_table",
+    "signature": "set_coefficient_table(table: Dict[float, Tuple[float, float, float, float]] | Dict[float, Tuple[float, ...]] | Dict[float, Dict[str, float]]) -> Dict[float, Tuple[float, float, float, float]]",
+    "brief_usage": "Replace the active coefficient table and return the normalised copy."
+  },
+  {
+    "file_path": "marsdisk/physics/qstar.py",
+    "line_no": 127,
+    "symbol": "reset_coefficient_table",
+    "signature": "reset_coefficient_table() -> Dict[float, Tuple[float, float, float, float]]",
+    "brief_usage": "Restore the built-in basalt coefficient table."
+  },
+  {
+    "file_path": "marsdisk/physics/qstar.py",
+    "line_no": 133,
     "symbol": "reset_velocity_clamp_stats",
     "signature": "reset_velocity_clamp_stats() -> None",
     "brief_usage": "Reset counters that track impact-velocity clamping events."
   },
   {
     "file_path": "marsdisk/physics/qstar.py",
-    "line_no": 88,
+    "line_no": 141,
     "symbol": "get_velocity_clamp_stats",
     "signature": "get_velocity_clamp_stats() -> Dict[str, int]",
     "brief_usage": "Return a copy of the clamp counters for diagnostics."
   },
   {
     "file_path": "marsdisk/physics/qstar.py",
-    "line_no": 94,
+    "line_no": 147,
     "symbol": "set_gravity_velocity_mu",
     "signature": "set_gravity_velocity_mu(mu: float) -> float",
     "brief_usage": "Set the LS09 gravitational-regime exponent μ used for velocity scaling."
   },
   {
     "file_path": "marsdisk/physics/qstar.py",
-    "line_no": 104,
+    "line_no": 157,
     "symbol": "get_gravity_velocity_mu",
     "signature": "get_gravity_velocity_mu() -> float",
     "brief_usage": "Return the active LS09 gravitational-regime exponent μ."
   },
   {
     "file_path": "marsdisk/physics/qstar.py",
-    "line_no": 110,
+    "line_no": 163,
     "symbol": "_track_velocity_clamp",
     "signature": "_track_velocity_clamp(v_values: np.ndarray) -> None",
     "brief_usage": "Record and optionally warn when v_kms falls outside the tabulated range."
   },
   {
     "file_path": "marsdisk/physics/qstar.py",
-    "line_no": 129,
+    "line_no": 182,
     "symbol": "_qdstar_cache_key",
     "signature": "_qdstar_cache_key(s: np.ndarray, rho: float, v_kms: float) -> tuple | None",
     "brief_usage": "Return an immutable cache key for scalar-velocity lookups."
   },
   {
     "file_path": "marsdisk/physics/qstar.py",
-    "line_no": 137,
+    "line_no": 190,
     "symbol": "_qdstar_cache_get",
     "signature": "_qdstar_cache_get(key: tuple | None) -> np.ndarray | None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/physics/qstar.py",
-    "line_no": 147,
+    "line_no": 200,
     "symbol": "_qdstar_cache_put",
     "signature": "_qdstar_cache_put(key: tuple | None, value: np.ndarray) -> None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/physics/qstar.py",
-    "line_no": 156,
+    "line_no": 209,
     "symbol": "_q_d_star",
     "signature": "_q_d_star(s: np.ndarray, rho: float, coeffs: Tuple[float, float, float, float], coeff_units: CoeffUnits) -> Tuple[np.ndarray, np.ndarray]",
     "brief_usage": "Vectorised :math:`Q_D^*` split into strength and gravity terms."
   },
   {
     "file_path": "marsdisk/physics/qstar.py",
-    "line_no": 184,
+    "line_no": 237,
     "symbol": "_gravity_velocity_scale",
     "signature": "_gravity_velocity_scale(v_kms: np.ndarray) -> np.ndarray",
     "brief_usage": "Return multiplicative scaling for the gravity term outside [v_min, v_max]."
   },
   {
     "file_path": "marsdisk/physics/qstar.py",
-    "line_no": 195,
+    "line_no": 248,
     "symbol": "compute_q_d_star_array",
     "signature": "compute_q_d_star_array(s: np.ndarray, rho: float, v_kms: np.ndarray) -> np.ndarray",
     "brief_usage": "Return :math:`Q_D^*` for array inputs with velocity interpolation."
   },
   {
     "file_path": "marsdisk/physics/qstar.py",
-    "line_no": 235,
+    "line_no": 288,
     "symbol": "compute_q_d_star_F1",
     "signature": "compute_q_d_star_F1(s: float, rho: float, v_kms: float) -> float",
     "brief_usage": "Return the catastrophic disruption threshold ``Q_D^*``."
@@ -5874,7 +5972,7 @@
   },
   {
     "file_path": "marsdisk/run_zero_d.py",
-    "line_no": 4527,
+    "line_no": 4560,
     "symbol": "main",
     "signature": "main(argv: Optional[List[str]]=None) -> None",
     "brief_usage": "Command line entry point."
@@ -6168,231 +6266,231 @@
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 787,
+    "line_no": 819,
     "symbol": "PSD",
     "signature": "class PSD(BaseModel)",
     "brief_usage": "Particle size distribution parameters."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 798,
+    "line_no": 830,
     "symbol": "SurfaceEnergy",
     "signature": "class SurfaceEnergy(BaseModel)",
     "brief_usage": "Energy-limited minimum size (Krijt & Kama 2014 inspired)."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 806,
+    "line_no": 838,
     "symbol": "Surface",
     "signature": "class Surface(BaseModel)",
     "brief_usage": "Surface layer evolution parameters."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 824,
+    "line_no": 856,
     "symbol": "InitTau1",
     "signature": "class InitTau1(BaseModel)",
     "brief_usage": "Optional toggle to initialise the surface at τ≈1."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 845,
+    "line_no": 877,
     "symbol": "SublimationParamsModel",
     "signature": "class SublimationParamsModel(BaseModel)",
     "brief_usage": "Nested parameters for sublimation models."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 937,
+    "line_no": 969,
     "symbol": "RPBlowoutConfig",
     "signature": "class RPBlowoutConfig(BaseModel)",
     "brief_usage": "Toggle for radiation-pressure blow-out sinks."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 943,
+    "line_no": 975,
     "symbol": "HydroEscapeConfig",
     "signature": "class HydroEscapeConfig(BaseModel)",
     "brief_usage": "Configuration for vapour-driven hydrodynamic escape sinks."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 966,
+    "line_no": 998,
     "symbol": "Sinks",
     "signature": "class Sinks(BaseModel)",
     "brief_usage": "Configuration of additional sink processes."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 990,
+    "line_no": 1022,
     "symbol": "ProcessStateTagging",
     "signature": "class ProcessStateTagging(BaseModel)",
     "brief_usage": "Placeholder toggle for future solid/gas tagging."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 999,
+    "line_no": 1031,
     "symbol": "Process",
     "signature": "class Process(BaseModel)",
     "brief_usage": "Companion switches for phase tagging."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 1013,
+    "line_no": 1045,
     "symbol": "PhaseThresholds",
     "signature": "class PhaseThresholds(BaseModel)",
     "brief_usage": "Fallback thresholds used when no external phase map is available."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 1037,
+    "line_no": 1069,
     "symbol": "PhaseConfig",
     "signature": "class PhaseConfig(BaseModel)",
     "brief_usage": "Solid/vapour branching controls."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 1118,
+    "line_no": 1150,
     "symbol": "MarsTemperatureDriverConstant",
     "signature": "class MarsTemperatureDriverConstant(BaseModel)",
     "brief_usage": "Explicit constant value for the Mars temperature driver."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 1131,
+    "line_no": 1163,
     "symbol": "MarsTemperatureDriverTable",
     "signature": "class MarsTemperatureDriverTable(BaseModel)",
     "brief_usage": "Tabulated Mars temperature driver."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 1143,
+    "line_no": 1175,
     "symbol": "MarsTemperatureDriverHyodo",
     "signature": "class MarsTemperatureDriverHyodo(BaseModel)",
     "brief_usage": "Hyodo linear cooling approximation options."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 1151,
+    "line_no": 1183,
     "symbol": "MarsTemperatureAutogen",
     "signature": "class MarsTemperatureAutogen(BaseModel)",
     "brief_usage": "Options for auto-generating Mars temperature tables."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 1183,
+    "line_no": 1215,
     "symbol": "MarsTemperatureDriverConfig",
     "signature": "class MarsTemperatureDriverConfig(BaseModel)",
     "brief_usage": "Configuration container for the Mars temperature driver."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 1222,
+    "line_no": 1254,
     "symbol": "RadiationTauGate",
     "signature": "class RadiationTauGate(BaseModel)",
     "brief_usage": "Optical-depth gating options for radiation-pressure blow-out."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 1229,
+    "line_no": 1261,
     "symbol": "QPrCache",
     "signature": "class QPrCache(BaseModel)",
     "brief_usage": "Cache controls for ⟨Q_pr⟩ lookups."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 1245,
+    "line_no": 1277,
     "symbol": "Radiation",
     "signature": "class Radiation(BaseModel)",
     "brief_usage": "Radiation pressure options and table paths."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 1305,
+    "line_no": 1337,
     "symbol": "Shielding",
     "signature": "class Shielding(BaseModel)",
     "brief_usage": "Self-shielding table configuration."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 1366,
+    "line_no": 1398,
     "symbol": "Blowout",
     "signature": "class Blowout(BaseModel)",
     "brief_usage": "Radiation blow-out control."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 1384,
+    "line_no": 1416,
     "symbol": "Checkpoint",
     "signature": "class Checkpoint(BaseModel)",
     "brief_usage": "Checkpointing and restart controls."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 1411,
+    "line_no": 1443,
     "symbol": "Resume",
     "signature": "class Resume(BaseModel)",
     "brief_usage": "Resume-from-checkpoint configuration."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 1424,
+    "line_no": 1456,
     "symbol": "Numerics",
     "signature": "class Numerics(BaseModel)",
     "brief_usage": "Integrator control parameters."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 1535,
+    "line_no": 1567,
     "symbol": "StepDiagnostics",
     "signature": "class StepDiagnostics(BaseModel)",
     "brief_usage": "Per-step loss channel diagnostics output control."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 1552,
+    "line_no": 1584,
     "symbol": "Progress",
     "signature": "class Progress(BaseModel)",
     "brief_usage": "Console progress display controls."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 1566,
+    "line_no": 1598,
     "symbol": "Streaming",
     "signature": "class Streaming(BaseModel)",
     "brief_usage": "Streaming write controls for large zero-D runs."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 1609,
+    "line_no": 1641,
     "symbol": "IO",
     "signature": "class IO(BaseModel)",
     "brief_usage": "Output directories."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 1640,
+    "line_no": 1672,
     "symbol": "ExtendedDiagnostics",
     "signature": "class ExtendedDiagnostics(BaseModel)",
     "brief_usage": "Optional extended diagnostics controls."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 1653,
+    "line_no": 1685,
     "symbol": "EnergyBookkeeping",
     "signature": "class EnergyBookkeeping(BaseModel)",
     "brief_usage": "Controls for collision energy bookkeeping outputs."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 1666,
+    "line_no": 1698,
     "symbol": "Diagnostics",
     "signature": "class Diagnostics(BaseModel)",
     "brief_usage": "Diagnostics toggles grouped by feature phase."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 1673,
+    "line_no": 1705,
     "symbol": "Config",
     "signature": "class Config(BaseModel)",
     "brief_usage": "Top-level configuration object."
@@ -6804,6 +6902,34 @@
     "brief_usage": "No description available."
   },
   {
+    "file_path": "scripts/plot_sblow_curve.py",
+    "line_no": 14,
+    "symbol": "ROOT",
+    "signature": "ROOT = Path(__file__).resolve().parents[1]",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "scripts/plot_sblow_curve.py",
+    "line_no": 22,
+    "symbol": "_load_temperatures",
+    "signature": "_load_temperatures(path: Path) -> np.ndarray",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/plot_sblow_curve.py",
+    "line_no": 30,
+    "symbol": "parse_args",
+    "signature": "parse_args(argv: Iterable[str] | None=None) -> argparse.Namespace",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/plot_sblow_curve.py",
+    "line_no": 59,
+    "symbol": "main",
+    "signature": "main(argv: Iterable[str] | None=None) -> None",
+    "brief_usage": "No description available."
+  },
+  {
     "file_path": "scripts/render_figures_from_tasks.py",
     "line_no": 25,
     "symbol": "load_json",
@@ -6871,6 +6997,48 @@
     "line_no": 128,
     "symbol": "main",
     "signature": "main()",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/research/run_qstar_scale_sweep.py",
+    "line_no": 14,
+    "symbol": "ROOT",
+    "signature": "ROOT = Path(__file__).resolve().parents[2]",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "scripts/research/run_qstar_scale_sweep.py",
+    "line_no": 19,
+    "symbol": "_format_scale",
+    "signature": "_format_scale(scale: float) -> str",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/research/run_qstar_scale_sweep.py",
+    "line_no": 24,
+    "symbol": "_run_case",
+    "signature": "_run_case(cmd_base: List[str], outdir: Path, scale: float, extra_overrides: List[str], dry_run: bool) -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/research/run_qstar_scale_sweep.py",
+    "line_no": 37,
+    "symbol": "_summarise_run",
+    "signature": "_summarise_run(outdir: Path) -> dict",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/research/run_qstar_scale_sweep.py",
+    "line_no": 79,
+    "symbol": "parse_args",
+    "signature": "parse_args(argv: Iterable[str] | None=None) -> argparse.Namespace",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/research/run_qstar_scale_sweep.py",
+    "line_no": 114,
+    "symbol": "main",
+    "signature": "main(argv: Iterable[str] | None=None) -> None",
     "brief_usage": "No description available."
   },
   {
@@ -8086,35 +8254,35 @@
   },
   {
     "file_path": "tests/conftest.py",
-    "line_no": 8,
+    "line_no": 10,
     "symbol": "ROOT",
     "signature": "ROOT = Path(__file__).resolve().parents[1]",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "tests/conftest.py",
-    "line_no": 12,
+    "line_no": 14,
     "symbol": "STREAMING_OVERRIDES",
     "signature": "STREAMING_OVERRIDES = {'io.streaming.enable': False}",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "tests/conftest.py",
-    "line_no": 15,
+    "line_no": 17,
     "symbol": "_env_flag",
     "signature": "_env_flag(value: str | None) -> bool | None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tests/conftest.py",
-    "line_no": 26,
+    "line_no": 28,
     "symbol": "pytest_addoption",
     "signature": "pytest_addoption(parser: pytest.Parser) -> None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tests/conftest.py",
-    "line_no": 36,
+    "line_no": 38,
     "symbol": "_force_streaming_off_by_default",
     "signature": "_force_streaming_off_by_default(monkeypatch: pytest.MonkeyPatch, request: pytest.FixtureRequest) -> None",
     "brief_usage": "Keep streaming disabled in tests unless explicitly opted in."
@@ -8982,42 +9150,49 @@
   },
   {
     "file_path": "tests/integration/test_qpr_lookup.py",
-    "line_no": 12,
+    "line_no": 13,
     "symbol": "mock_qpr_table",
     "signature": "mock_qpr_table(tmp_path)",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tests/integration/test_qpr_lookup.py",
-    "line_no": 34,
+    "line_no": 35,
     "symbol": "test_qpr_lookup_interpolates_from_table",
     "signature": "test_qpr_lookup_interpolates_from_table(mock_qpr_table)",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tests/integration/test_qpr_lookup.py",
-    "line_no": 85,
+    "line_no": 86,
     "symbol": "test_qpr_lookup_requires_table",
     "signature": "test_qpr_lookup_requires_table(mock_qpr_table)",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tests/integration/test_qpr_lookup.py",
-    "line_no": 107,
+    "line_no": 108,
     "symbol": "test_qpr_lookup_array_matches_scalar",
     "signature": "test_qpr_lookup_array_matches_scalar(mock_qpr_table)",
     "brief_usage": "No description available."
   },
   {
+    "file_path": "tests/integration/test_qpr_lookup.py",
+    "line_no": 130,
+    "symbol": "test_qpr_lookup_numba_matches_numpy",
+    "signature": "test_qpr_lookup_numba_matches_numpy(mock_qpr_table, monkeypatch)",
+    "brief_usage": "No description available."
+  },
+  {
     "file_path": "tests/integration/test_qstar_fragments.py",
-    "line_no": 11,
+    "line_no": 12,
     "symbol": "test_qdstar_velocity_interpolation_monotonic",
     "signature": "test_qdstar_velocity_interpolation_monotonic()",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tests/integration/test_qstar_fragments.py",
-    "line_no": 20,
+    "line_no": 21,
     "symbol": "test_compute_s_min_bounds_and_monotonic",
     "signature": "test_compute_s_min_bounds_and_monotonic()",
     "brief_usage": "No description available."
@@ -10032,79 +10207,93 @@
   },
   {
     "file_path": "tests/unit/test_numba_helpers.py",
-    "line_no": 14,
+    "line_no": 15,
     "symbol": "_reload_with_env",
     "signature": "_reload_with_env(module_name: str, disable_numba: bool=False)",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tests/unit/test_numba_helpers.py",
-    "line_no": 23,
+    "line_no": 24,
     "symbol": "_mass_budget_python",
     "signature": "_mass_budget_python(N_old: Iterable[float], N_new: Iterable[float], m: Iterable[float], prod: float, dt: float, extra: float) -> float",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tests/unit/test_numba_helpers.py",
-    "line_no": 36,
+    "line_no": 37,
     "symbol": "test_compute_prod_subblow_area_rate_numba_matches_numpy",
     "signature": "test_compute_prod_subblow_area_rate_numba_matches_numpy(monkeypatch) -> None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tests/unit/test_numba_helpers.py",
-    "line_no": 45,
+    "line_no": 46,
     "symbol": "test_loss_sum_numba_matches_numpy",
     "signature": "test_loss_sum_numba_matches_numpy(monkeypatch) -> None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tests/unit/test_numba_helpers.py",
-    "line_no": 53,
+    "line_no": 54,
     "symbol": "test_mass_budget_error_numba_matches_python",
     "signature": "test_mass_budget_error_numba_matches_python(monkeypatch) -> None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tests/unit/test_numba_helpers.py",
-    "line_no": 66,
+    "line_no": 67,
     "symbol": "test_gain_tensor_fallback_numba_matches_einsum",
     "signature": "test_gain_tensor_fallback_numba_matches_einsum(monkeypatch) -> None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tests/unit/test_numba_helpers.py",
-    "line_no": 78,
+    "line_no": 79,
     "symbol": "test_fragment_tensor_fallback_numba_simple_consistency",
     "signature": "test_fragment_tensor_fallback_numba_simple_consistency(monkeypatch) -> None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tests/unit/test_numba_helpers.py",
-    "line_no": 110,
+    "line_no": 111,
     "symbol": "test_blowout_sink_vector_numba_matches_numpy",
     "signature": "test_blowout_sink_vector_numba_matches_numpy(monkeypatch) -> None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tests/unit/test_numba_helpers.py",
-    "line_no": 118,
+    "line_no": 119,
     "symbol": "test_kernel_minimum_tcoll_numba_matches_numpy",
     "signature": "test_kernel_minimum_tcoll_numba_matches_numpy(monkeypatch) -> None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tests/unit/test_numba_helpers.py",
-    "line_no": 126,
+    "line_no": 127,
     "symbol": "test_supply_mass_rate_powerlaw_numba_matches_python",
     "signature": "test_supply_mass_rate_powerlaw_numba_matches_python(monkeypatch) -> None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tests/unit/test_numba_helpers.py",
-    "line_no": 167,
+    "line_no": 168,
     "symbol": "test_compute_kernel_e_i_H_numba_matches_python",
     "signature": "test_compute_kernel_e_i_H_numba_matches_python(monkeypatch) -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/unit/test_numba_helpers.py",
+    "line_no": 207,
+    "symbol": "test_qpr_interp_scalar_numba_matches_numpy",
+    "signature": "test_qpr_interp_scalar_numba_matches_numpy(monkeypatch) -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/unit/test_numba_helpers.py",
+    "line_no": 227,
+    "symbol": "test_qpr_interp_numba_fallback",
+    "signature": "test_qpr_interp_numba_fallback(monkeypatch) -> None",
     "brief_usage": "No description available."
   },
   {
@@ -11470,6 +11659,83 @@
     "line_no": 111,
     "symbol": "main",
     "signature": "main() -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tools/readme_sync.py",
+    "line_no": 12,
+    "symbol": "REPO_ROOT",
+    "signature": "REPO_ROOT = Path(__file__).resolve().parents[1]",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "tools/readme_sync.py",
+    "line_no": 13,
+    "symbol": "ANALYSIS_DIR",
+    "signature": "ANALYSIS_DIR = REPO_ROOT / 'analysis'",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "tools/readme_sync.py",
+    "line_no": 14,
+    "symbol": "README_PATH",
+    "signature": "README_PATH = REPO_ROOT / 'README.md'",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "tools/readme_sync.py",
+    "line_no": 16,
+    "symbol": "AUTOGEN_PATTERN",
+    "signature": "AUTOGEN_PATTERN = re.compile('(<!-- AUTOGEN:(?P<name>[A-Z0-9_]+) START -->)(?P<body>.*?)(<!-- AUTOGEN:(?P=name) END -->)', re.DOTALL)",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "tools/readme_sync.py",
+    "line_no": 23,
+    "symbol": "SourceSpec",
+    "signature": "class SourceSpec",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tools/readme_sync.py",
+    "line_no": 28,
+    "symbol": "SOURCES",
+    "signature": "SOURCES: dict[str, SourceSpec] = {'README_PHYSICS_SUMMARY': SourceSpec(ANALYSIS_DIR / 'equations.md', 'README_PHYSICS_SUMMARY'), 'README_QUICKSTART': SourceSpec(ANALYSIS_DIR / 'run-recipes.md', 'README_QUICKSTART'), 'README_CLI_DRIVER_RULE': SourceSpec(ANALYSIS_DIR / 'run-recipes.md', 'README_CLI_DRIVER_RULE'), 'README_SMOKE_COMMAND': SourceSpec(ANALYSIS_DIR / 'run-recipes.md', 'README_SMOKE_COMMAND'), 'README_CLI_EXAMPLES': SourceSpec(ANALYSIS_DIR / 'run-recipes.md', 'README_CLI_EXAMPLES'), 'README_OUTPUT_COLUMNS': SourceSpec(ANALYSIS_DIR / 'AI_USAGE.md', 'README_OUTPUT_COLUMNS')}",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "tools/readme_sync.py",
+    "line_no": 38,
+    "symbol": "extract_marked_block",
+    "signature": "extract_marked_block(text: str, marker: str, source: Path) -> str",
+    "brief_usage": "Extract a marker block from text."
+  },
+  {
+    "file_path": "tools/readme_sync.py",
+    "line_no": 56,
+    "symbol": "load_source",
+    "signature": "load_source(spec: SourceSpec) -> str",
+    "brief_usage": "Load content from a marker or full snippet file."
+  },
+  {
+    "file_path": "tools/readme_sync.py",
+    "line_no": 64,
+    "symbol": "render_readme",
+    "signature": "render_readme(text: str) -> tuple[str, list[str], int]",
+    "brief_usage": "Render README content by replacing AUTOGEN blocks."
+  },
+  {
+    "file_path": "tools/readme_sync.py",
+    "line_no": 84,
+    "symbol": "diff_lines",
+    "signature": "diff_lines(before: str, after: str) -> str",
+    "brief_usage": "Return a unified diff for display."
+  },
+  {
+    "file_path": "tools/readme_sync.py",
+    "line_no": 96,
+    "symbol": "main",
+    "signature": "main() -> int",
     "brief_usage": "No description available."
   },
   {

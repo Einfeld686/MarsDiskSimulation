@@ -1,4 +1,5 @@
 import numpy as np
+import pytest
 
 from marsdisk.physics.qstar import compute_q_d_star_F1
 from marsdisk.physics.fragments import (
@@ -22,8 +23,9 @@ def test_compute_s_min_bounds_and_monotonic():
     t_ref = 10.0
     rho = 3000.0
     T_vals = [1000.0, 1300.0, 1400.0, 1500.0]
-    s_vals = [
-        compute_s_min_F2(a_blow, T, t_ref=t_ref, rho=rho) for T in T_vals
-    ]
+    s_vals = []
+    for T in T_vals:
+        with pytest.warns(DeprecationWarning):
+            s_vals.append(compute_s_min_F2(a_blow, T, t_ref=t_ref, rho=rho))
     assert all(s >= a_blow for s in s_vals)
     assert s_vals == sorted(s_vals)
