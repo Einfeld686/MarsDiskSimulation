@@ -10,9 +10,9 @@
     "rate": 1.0
   },
   "equation_unit_coverage": {
-    "numerator": 34,
-    "denominator": 36,
-    "rate": 0.9444444444444444
+    "numerator": 41,
+    "denominator": 43,
+    "rate": 0.9534883720930233
   },
   "sinks_callgraph_documented": true,
   "holes": [

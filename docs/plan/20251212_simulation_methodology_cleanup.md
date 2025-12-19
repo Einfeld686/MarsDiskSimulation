@@ -335,10 +335,10 @@ def test_surface_ode_emits_deprecation_warning():
 - [ ] Phase 1 全タスク完了（1-3 は完了済み）
 - [ ] Phase 2 全タスク完了（Pydantic v2 必須化）
 - [ ] `pytest tests/` 全パス
-- [ ] 既存 `from marsdisk.run import ...` および `from marsdisk import run` パターンが全て動作
+- [x] 既存 `from marsdisk.run import ...` および `from marsdisk import run` パターンが全て動作
 - [x] `make analysis-doc-tests` パス
-- [ ] `anchor_consistency_rate >= 0.98`
-- [ ] ADR-0002 レビュー済み
+- [x] `anchor_consistency_rate >= 0.98`
+- [x] ADR-0002 レビュー済み
 - [x] `pydantic>=2.0` を要件に追加済み
 
 ---

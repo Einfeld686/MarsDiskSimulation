@@ -36,6 +36,13 @@
 
 - 相状態・シンク選択ログ（`phase_state`, `sink_selected`）
 
+## 🔥 最新の0Dスモークテスト（2025-12-19）
+
+- コマンド: `python -m marsdisk.run --config configs/base.yml --override numerics.t_end_years=0.0001 numerics.dt_init=1000 io.streaming.enable=false --quiet`（run_card の再現用）
+- 出力: `out/summary.json`, `out/series/run.parquet`, `out/checks/mass_budget.csv`（質量誤差最大 0.45% < 0.5%、`case_status="blowout"`）
+- 主要指標: `M_loss=1.66e-7 M_Mars`, `a_blow≈7.28e-6 m`, `s_min_effective=7.28e-6 m`, `dt_over_t_blow_median=0.293`, `Sigma_tau1_initial=0.01`（実績積分窓 0.0001 yr）
+- メモ: 2年フルランは同じ config で override を外して実行。`io.streaming` は既定で ON（`memory_limit_gb=10`, `step_flush_interval=10000`, `merge_at_end=true`）。CI/pytest などの軽量ケースでは先に `FORCE_STREAMING_OFF=1` または `IO_STREAMING=off` をセットして明示的に OFF にしてください。
+
 ---
 
 ## 📚 ドキュメントガイド
@@ -102,17 +109,18 @@ pip install -r requirements.txt
 ### 2. 最初の実行
 
 ```bash
-# 標準シナリオ（gas-poor、衝突＋blow-out＋昇華）
-python -m marsdisk.run --config configs/scenarios/fiducial.yml
+# 標準0D（gas-poor、衝突＋blow-out＋昇華、2年、io.streaming既定ON）
+python -m marsdisk.run --config configs/base.yml
+# 軽量/CIでは実行前に: export FORCE_STREAMING_OFF=1  # または IO_STREAMING=off
 ```
 
 ### 3. 結果確認
 
 ```bash
-ls out/fiducial/
-# series/run.parquet  - 時系列データ
-# summary.json        - 集計結果（M_loss など）
-# checks/             - 質量保存検証ログ
+ls out/summary.json out/series/run.parquet out/checks/mass_budget.csv
+# summary.json        - 集計結果（M_loss, case_status, dt_over_t_blow_median など）
+# series/run.parquet  - 時系列データ（time, dt, tau, a_blow, s_min, prod_subblow_area_rate, M_out_dot...）
+# checks/mass_budget.csv - 質量保存検証ログ（|error_percent| ≤ 0.5% を確認）
 ```
 
 > 💡 **詳細なクイックスタート**: `analysis/config_guide.md` の「🚀 クイックスタート」セクションを参照
@@ -129,6 +137,7 @@ ls out/fiducial/
 - Takeuchi & Lin (2003) は既定で無効（`ALLOW_TL2003=false`）
 - CLI ドライバは `python -m marsdisk.run --config <yaml>`
 - ⟨Q_pr⟩ テーブルが必須（例: `data/qpr_table.csv`）
+- `io.streaming` は既定 ON（`memory_limit_gb=10`, `step_flush_interval=10000`, `merge_at_end=true`）。短時間/CI ランは `FORCE_STREAMING_OFF=1` または `IO_STREAMING=off` で明示的に OFF に切り替え可能。
 
 ---
 
@@ -136,9 +145,10 @@ ls out/fiducial/
 
 | シナリオ | コマンド例 |
 | --- | --- |
-| ベースライン（昇華OFF） | `python -m marsdisk.run --config configs/base.yml` |
-| 昇華 ON | `python -m marsdisk.run --config configs/base_sublimation.yml` |
-| 標準シナリオ | `python -m marsdisk.run --config configs/scenarios/fiducial.yml` |
+| 標準0D（2年, streaming ON既定） | `python -m marsdisk.run --config configs/base.yml` |
+| 最新スモーク（0.0001 yr, streaming OFF） | `python -m marsdisk.run --config configs/base.yml --override numerics.t_end_years=0.0001 numerics.dt_init=1000 io.streaming.enable=false` |
+| 昇華強調シナリオ | `python -m marsdisk.run --config configs/base_sublimation.yml` |
+| 標準シナリオ（旧fiducial） | `python -m marsdisk.run --config configs/scenarios/fiducial.yml` |
 | 高温シナリオ | `python -m marsdisk.run --config configs/scenarios/high_temp.yml` |
 | 質量損失スイープベース | `python -m marsdisk.run --config _configs/05_massloss_base.yml` |
 | サブリメーション+冷却（Windows向け） | `scripts/run_sublim_cooling_win.cmd` / `scripts/run_sublim_cooling.cmd` ※ストリーミング出力ON（io.streaming.*, merge_at_end=true） |
@@ -151,9 +161,9 @@ ls out/fiducial/
 
 | 出力ファイル | 確認項目 |
 |-------------|---------|
-| `series/run.parquet` | `M_out_dot`, `mass_lost_by_blowout`, `mass_lost_by_sinks` |
-| `summary.json` | `case_status`, `mass_budget_max_error_percent`（≤0.5%） |
-| `checks/mass_budget.csv` | 質量収支の検証ログ |
+| `series/run.parquet` | `time`, `dt`, `tau`, `a_blow`, `s_min`, `prod_subblow_area_rate`, `M_out_dot`, `mass_lost_by_blowout`, `mass_lost_by_sinks` |
+| `summary.json` | `M_loss`, `case_status`, `dt_over_t_blow_median`, `mass_budget_max_error_percent`（≤0.5%） |
+| `checks/mass_budget.csv` | `error_percent` が 0.5% 以内か、`mass_loss_rp_mars` など内訳のバランス |
 
 ---
 
@@ -204,7 +214,23 @@ ls out/fiducial/
 | `supply.powerlaw.A_kg_m2_s` | べき乗則の振幅 | 1e-9 |
 | `supply.powerlaw.index` | べき指数 | -0.5 |
 | `supply.epsilon_mix` | 混合効率（0–1） | 1.0 |
-| `supply.table.path` | テーブルファイルのパス | `"data/supply_rate.csv"` |
+| `supply.table.path` | テーブルファイルのパス | `\"data/supply_rate.csv\"` |
+
+#### 供給ヘッドルームポリシー
+
+供給は表層密度が $\Sigma_{\tau=1}$ に達すると自動的にクリップされます（headroom = $\Sigma_{\tau=1} - \Sigma_{\rm surf} \le 0$ のとき供給停止）。
+
+| パラメータ | 説明 | 典型値 |
+|-----------|------|--------|
+| `shielding.fixed_tau1_sigma` | Σ_{τ=1}設定モード | `\"auto\"` |
+| `init_tau1.scale_to_tau1` | 初期Σをτ=1以下にクランプ | `false` |
+
+**fixed_tau1_sigma モード**:
+- `\"auto\"`: $1/\kappa_{\rm eff}(t_0)$ を固定値として採用（推奨）
+- `\"auto_max\"`: $\max(1/\kappa_{\rm eff}, \Sigma_{\rm init}) \times 1.05$ でデバッグ用余裕確保
+- 数値指定: 指定値をそのまま使用
+
+> ⚠️ `auto_max` はデバッグ専用。本番結果には使用しないでください。
 
 > 📖 **詳細**: `analysis/equations.md` の (E.035) サブブローアウト生成率
 
@@ -650,6 +676,12 @@ $$
 | `kappa_Planck` | Planck平均不透明度 | m² kg⁻¹ |
 | `phase_state` | 相状態（solid/vapor） | — |
 | `sink_selected` | 選択されたシンク | — |
+| `frac_cratering` | 侵食衝突率比 | — |
+| `frac_fragmentation` | 破砕衝突率比 | — |
+| `E_rel_step` | 総衝突相対エネルギー | J/m² |
+| `E_dissipated_step` | 散逸エネルギー | J/m² |
+| `supply_headroom` | 供給余裕 (Σ_{τ=1} - Σ_surf) | kg/m² |
+| `supply_clip_factor` | 供給クリップ係数 | — |
 
 > 📐 **詳細な式定義**: [`analysis/equations.md`](analysis/equations.md)  
 > 🔄 **計算フロー図**: [`analysis/physics_flow.md`](analysis/physics_flow.md)  

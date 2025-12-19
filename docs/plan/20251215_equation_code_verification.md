@@ -287,7 +287,7 @@ cat analysis/equation_code_map.json | jq '.stats'
 
 ## 8. 成功指標
 
-- [ ] `equation_code_map.json` が自動生成される
+- [x] `equation_code_map.json` が自動生成される
 - [ ] 未実装式が3件以下に減少
 - [ ] `make analysis-update` の実行時間増加が1秒以下
 - [ ] 全テストが合格

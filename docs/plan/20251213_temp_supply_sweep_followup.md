@@ -38,10 +38,10 @@
   実効供給（const×epsilon_mix）を echo する一行を入れ、run_config の `effective_prod_rate_kg_m2_s` と整合を確認しやすくする。
 
 ## TODO（実装タスク候補）
-- [ ] SHIELDING_SIGMA のデフォルトを `auto` に変更し、auto_max 用の分岐コメントを追加。
-- [ ] 追加 override に `init_tau1.scale_to_tau1=true` を組み込む。
-- [ ] EVAL フラグと `evaluate_tau_supply.py` 呼び出しのオプションを追加し、結果 JSON を格納するパスを決める。
-- [ ] ログ整備（実効供給、遮蔽モード、Sigma_tau1 モードの出力）。
+- [x] SHIELDING_SIGMA のデフォルトを `auto` に変更し、auto_max 用の分岐コメントを追加。
+- [x] 追加 override に `init_tau1.scale_to_tau1=true` を組み込む。
+- [x] EVAL フラグと `evaluate_tau_supply.py` 呼び出しのオプションを追加し、結果 JSON を格納するパスを決める。
+- [x] ログ整備（実効供給、遮蔽モード、Sigma_tau1 モードの出力）。
 - [ ] （任意）warmup 立ち上げモードを入れる場合は環境変数で切り替え、評価区間を warmup 後にシフトする。
 
 ---
@@ -109,16 +109,16 @@ python scripts/research/evaluate_tau_supply.py \
 ## 完了条件（チェックリスト）
 
 ### スクリプト修正
-- [ ] `SHIELDING_SIGMA` のデフォルトを `auto` に変更
-- [ ] `--override \"init_tau1.scale_to_tau1=true\"` を全ケースに追加
-- [ ] `EVAL=1` フラグで `evaluate_tau_supply.py` を呼び出すオプションを追加
-- [ ] 結果 JSON を `plots/` または `checks/` に格納
-- [ ] ログに実効供給・遮蔽モード・Στ=1 採用値を出力
+- [x] `SHIELDING_SIGMA` のデフォルトを `auto` に変更
+- [x] `--override \"init_tau1.scale_to_tau1=true\"` を全ケースに追加
+- [x] `EVAL=1` フラグで `evaluate_tau_supply.py` を呼び出すオプションを追加
+- [x] 結果 JSON を `plots/` または `checks/` に格納
+- [x] ログに実効供給・遮蔽モード・Στ=1 採用値を出力
 
 ### 検証
 - [ ] auto + scale_to_tau1 で headroom>0 となることを確認（prod_subblow>0）
 - [ ] 成功判定（τ中央値 0.5–2、供給維持≥90%）を満たすケースが存在
-- [ ] auto_max 使用時は「デバッグ専用」の警告ログが出力される
+- [x] auto_max 使用時は「デバッグ専用」の警告ログが出力される
 
 ### ドキュメント
 - [ ] 本ドキュメントの TODO 消化後、`analysis/run-recipes.md` に成功判定基準を追記

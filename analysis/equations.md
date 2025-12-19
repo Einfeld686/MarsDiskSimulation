@@ -194,7 +194,7 @@ Wyatt 型の $t_{\mathrm{coll}} = 1/(\Omega\tau_{\perp})$ 減衰を用いて表�
 - Returns outflux and sink flux after clipping; logs step parameters.
 - Indicator $I_{\mathrm{blow}}$ is 1 only when the runtime flag `enable_blowout` is true, ensuring both the $1/t_{\mathrm{blow}}$ termと外向流束が無効化される。[marsdisk/physics/surface.py#step_surface_density_S1 [L107–L187]]
 
-`surface.collision_solver="surface_ode"` を選んだ場合にのみ呼び出され、`t_{\mathrm{sink}}` が `None` または非正（`sinks.mode="none"` のときなど）ならシンク指標を落として吹き飛びと Wyatt/Strubbe–Chiang 型衝突寿命のみを損失項に残す。[marsdisk/run_zero_d.py#run_zero_d [L259–L4507]][marsdisk/physics/sinks.py#total_sink_timescale [L83–L160]][marsdisk/physics/surface.py#step_surface_density_S1 [L107–L187]] その構成では `sink_flux` は常に0となる。
+`surface.collision_solver="surface_ode"` を選んだ場合にのみ呼び出され、`t_{\mathrm{sink}}` が `None` または非正（`sinks.mode="none"` のときなど）ならシンク指標を落として吹き飛びと Wyatt/Strubbe–Chiang 型衝突寿命のみを損失項に残す。[marsdisk/run_zero_d.py#run_zero_d [L259–L4524]][marsdisk/physics/sinks.py#total_sink_timescale [L83–L160]][marsdisk/physics/surface.py#step_surface_density_S1 [L107–L187]] その構成では `sink_flux` は常に0となる。
 
 **参考**: [無効: gas‑poor 既定] Takeuchi & Lin (2003); Hyodo et al. (2017); Hyodo et al. (2018); Canup & Salmon (2018); Strubbe & Chiang (2006); Kuramoto (2024); Wyatt (2008)
 
@@ -207,7 +207,7 @@ Wyatt 型の $t_{\mathrm{coll}} = 1/(\Omega\tau_{\perp})$ 減衰を用いて表�
  s_{\min,\mathrm{eff}} = \max\!\left(s_{\min,\mathrm{cfg}},\, s_{\mathrm{blow}}\right)
 \end{equation}
 ```
-with the component sizes assembled as `s_min_components = {"config": s_{\min,\mathrm{cfg}}, "blowout": s_{\mathrm{blow}}, "effective": s_{\min,\mathrm{eff}}}` (`[marsdisk/run_zero_d.py#run_zero_d [L259–L4507]]`). The sublimation helper `fragments.s_sub_boundary` (`[marsdisk/physics/fragments.py#s_sub_boundary [L148–L214]]`) is now used exclusively for the grain-size evolution hook (``ds/dt``) and no longer raises the PSD floor.
+with the component sizes assembled as `s_min_components = {"config": s_{\min,\mathrm{cfg}}, "blowout": s_{\mathrm{blow}}, "effective": s_{\min,\mathrm{eff}}}` (`[marsdisk/run_zero_d.py#run_zero_d [L259–L4524]]`). The sublimation helper `fragments.s_sub_boundary` (`[marsdisk/physics/fragments.py#s_sub_boundary [L148–L214]]`) is now used exclusively for the grain-size evolution hook (``ds/dt``) and no longer raises the PSD floor.
 
 The reported beta diagnostics are computed in two places:
 ```latex
@@ -215,33 +215,33 @@ The reported beta diagnostics are computed in two places:
 \beta_{\mathrm{eff}} = \beta\!\left(s_{\min,\mathrm{eff}}\right),
 ```
 where `radiation.beta` implements the Stefan–Boltzmann expression and takes the Planck mean `⟨Q_{\mathrm{pr}}⟩` from the current run (`[marsdisk/physics/radiation.py#beta [L396–L417]]`).
-Both fields are written to the time series と `summary.json` に `beta_at_smin_config` / `beta_at_smin_effective` として保存される（`[marsdisk/run_zero_d.py#run_zero_d [L259–L4507]]`, `[marsdisk/run_zero_d.py#run_zero_d [L259–L4507]]`）。
-The blow-out threshold originates from the module constant `BLOWOUT_BETA_THRESHOLD` (`[marsdisk/physics/radiation.py#BLOWOUT_BETA_THRESHOLD [L39]]`), and the recorded key is `beta_threshold` (`[marsdisk/run_zero_d.py#run_zero_d [L259–L4507]]`, `[marsdisk/run_zero_d.py#run_zero_d [L259–L4507]]`).
-The closed-form expression for β is persisted verbatim in `run_config.json["beta_formula"]` as part of the provenance record (`[marsdisk/run_zero_d.py#run_zero_d [L259–L4507]]`).
+Both fields are written to the time series と `summary.json` に `beta_at_smin_config` / `beta_at_smin_effective` として保存される（`[marsdisk/run_zero_d.py#run_zero_d [L259–L4524]]`, `[marsdisk/run_zero_d.py#run_zero_d [L259–L4524]]`）。
+The blow-out threshold originates from the module constant `BLOWOUT_BETA_THRESHOLD` (`[marsdisk/physics/radiation.py#BLOWOUT_BETA_THRESHOLD [L39]]`), and the recorded key is `beta_threshold` (`[marsdisk/run_zero_d.py#run_zero_d [L259–L4524]]`, `[marsdisk/run_zero_d.py#run_zero_d [L259–L4524]]`).
+The closed-form expression for β is persisted verbatim in `run_config.json["beta_formula"]` as part of the provenance record (`[marsdisk/run_zero_d.py#run_zero_d [L259–L4524]]`).
 
-Case classification follows the configuration beta: `case_status = "blowout"` when `beta_at_smin_config >= beta_threshold`, otherwise `"ok"`; exceptional mass-budget failures are escalated separately (`[marsdisk/run_zero_d.py#run_zero_d [L259–L4507]]`). This logic matches the recorded summaries used by downstream validation.
+Case classification follows the configuration beta: `case_status = "blowout"` when `beta_at_smin_config >= beta_threshold`, otherwise `"ok"`; exceptional mass-budget failures are escalated separately (`[marsdisk/run_zero_d.py#run_zero_d [L259–L4524]]`). This logic matches the recorded summaries used by downstream validation.
 
 **Recorded quantities**
 
 | Quantity (units) | Summary key(s) | Provenance | Notes |
 | --- | --- | --- | --- |
-| Effective minimum grain size (m) | `s_min_effective`, `s_min_components["effective"]` | `[marsdisk/run_zero_d.py#run_zero_d [L259–L4507]]`, `[marsdisk/run_zero_d.py#run_zero_d [L259–L4507]]` | `\max(s_{\min,\mathrm{cfg}}, s_{\mathrm{blow}})` |
-| Configured minimum grain size (m) | `s_min_config`, `s_min_components["config"]` | `[marsdisk/run_zero_d.py#run_zero_d [L259–L4507]]`, `[marsdisk/run_zero_d.py#run_zero_d [L259–L4507]]` | YAML `sizes.s_min` from `schema.Sizes` |
-| Blow-out limit (m) | `s_blow_m`, `s_min_components["blowout"]` | `[marsdisk/run_zero_d.py#run_zero_d [L259–L4507]]`, `[marsdisk/run_zero_d.py#run_zero_d [L259–L4507]]` | Uses `radiation.blowout_radius` |
-| Beta at config size (dimensionless) | `beta_at_smin_config` | `[marsdisk/run_zero_d.py#run_zero_d [L259–L4507]]`, `[marsdisk/run_zero_d.py#run_zero_d [L259–L4507]]` | Evaluated with `radiation.beta` |
-| Beta at effective size (dimensionless) | `beta_at_smin_effective` | `[marsdisk/run_zero_d.py#run_zero_d [L259–L4507]]`, `[marsdisk/run_zero_d.py#run_zero_d [L259–L4507]]` | Uses same β function at `s_min_effective` |
-| Beta threshold (dimensionless) | `beta_threshold` | `[marsdisk/physics/radiation.py#BLOWOUT_BETA_THRESHOLD [L39]]`, `[marsdisk/run_zero_d.py#run_zero_d [L259–L4507]]` | Constant 0.5 defined in radiation module |
-| Blow-out loss cumulative (M_Mars) | `M_out_cum` | `[marsdisk/run_zero_d.py#run_zero_d [L259–L4507]]` | Equal to `mass_lost_by_blowout` final value |
-| Sink loss cumulative (M_Mars) | `M_sink_cum` | `[marsdisk/run_zero_d.py#run_zero_d [L259–L4507]]` | Includes HKL erosion and IMEX sink flux |
-| Mean blow-out per orbit (M_Mars) | `M_out_mean_per_orbit` | `[marsdisk/run_zero_d.py#run_zero_d [L259–L4507]]` | Reported when at least one orbit completes |
-| Mean sink per orbit (M_Mars) | `M_sink_mean_per_orbit` | `[marsdisk/run_zero_d.py#run_zero_d [L259–L4507]]` | Reported when at least one orbit completes |
-| Orbit counter (dimensionless) | `orbits_completed` | `[marsdisk/run_zero_d.py#run_zero_d [L259–L4507]]` | Number of completed orbital rollups |
-| Mars-facing temperature (K) | `T_M_used`, `T_M_source` | `[marsdisk/run_zero_d.py#load_config [L201–L223]]`, `[marsdisk/run_zero_d.py#run_zero_d [L259–L4507]]` | `radiation.TM_K` または温度ドライバから決定（legacy `temps.T_M` は廃止） |
-| Radiation efficiency (dimensionless) | `Q_pr_used` | `[marsdisk/run_zero_d.py#run_zero_d [L259–L4507]]`, `[marsdisk/run_zero_d.py#run_zero_d [L259–L4507]]` | Planck mean stored for reference |
-| Shielding Φ table path | `phi_table_path` | `[marsdisk/run_zero_d.py#run_zero_d [L259–L4507]]` | Summary retains the resolved τ-table for provenance |
-| PSD bin index (dimensionless) | `bin_index` | `[marsdisk/run_zero_d.py#run_zero_d [L259–L4507]][marsdisk/io/writer.py#write_parquet [L24–L341]]` | Time×bin identifier stored in `psd_hist.parquet` |
-| PSD bin centre (m) | `s_bin_center` | `[marsdisk/run_zero_d.py#run_zero_d [L259–L4507]][marsdisk/io/writer.py#write_parquet [L24–L341]]` | Logarithmic midpoint used for PSD plots |
-| PSD bin number density | `N_bin` | `[marsdisk/run_zero_d.py#run_zero_d [L259–L4507]][marsdisk/io/writer.py#write_parquet [L24–L341]]` | Relative number surface density per bin |
+| Effective minimum grain size (m) | `s_min_effective`, `s_min_components["effective"]` | `[marsdisk/run_zero_d.py#run_zero_d [L259–L4524]]`, `[marsdisk/run_zero_d.py#run_zero_d [L259–L4524]]` | `\max(s_{\min,\mathrm{cfg}}, s_{\mathrm{blow}})` |
+| Configured minimum grain size (m) | `s_min_config`, `s_min_components["config"]` | `[marsdisk/run_zero_d.py#run_zero_d [L259–L4524]]`, `[marsdisk/run_zero_d.py#run_zero_d [L259–L4524]]` | YAML `sizes.s_min` from `schema.Sizes` |
+| Blow-out limit (m) | `s_blow_m`, `s_min_components["blowout"]` | `[marsdisk/run_zero_d.py#run_zero_d [L259–L4524]]`, `[marsdisk/run_zero_d.py#run_zero_d [L259–L4524]]` | Uses `radiation.blowout_radius` |
+| Beta at config size (dimensionless) | `beta_at_smin_config` | `[marsdisk/run_zero_d.py#run_zero_d [L259–L4524]]`, `[marsdisk/run_zero_d.py#run_zero_d [L259–L4524]]` | Evaluated with `radiation.beta` |
+| Beta at effective size (dimensionless) | `beta_at_smin_effective` | `[marsdisk/run_zero_d.py#run_zero_d [L259–L4524]]`, `[marsdisk/run_zero_d.py#run_zero_d [L259–L4524]]` | Uses same β function at `s_min_effective` |
+| Beta threshold (dimensionless) | `beta_threshold` | `[marsdisk/physics/radiation.py#BLOWOUT_BETA_THRESHOLD [L39]]`, `[marsdisk/run_zero_d.py#run_zero_d [L259–L4524]]` | Constant 0.5 defined in radiation module |
+| Blow-out loss cumulative (M_Mars) | `M_out_cum` | `[marsdisk/run_zero_d.py#run_zero_d [L259–L4524]]` | Equal to `mass_lost_by_blowout` final value |
+| Sink loss cumulative (M_Mars) | `M_sink_cum` | `[marsdisk/run_zero_d.py#run_zero_d [L259–L4524]]` | Includes HKL erosion and IMEX sink flux |
+| Mean blow-out per orbit (M_Mars) | `M_out_mean_per_orbit` | `[marsdisk/run_zero_d.py#run_zero_d [L259–L4524]]` | Reported when at least one orbit completes |
+| Mean sink per orbit (M_Mars) | `M_sink_mean_per_orbit` | `[marsdisk/run_zero_d.py#run_zero_d [L259–L4524]]` | Reported when at least one orbit completes |
+| Orbit counter (dimensionless) | `orbits_completed` | `[marsdisk/run_zero_d.py#run_zero_d [L259–L4524]]` | Number of completed orbital rollups |
+| Mars-facing temperature (K) | `T_M_used`, `T_M_source` | `[marsdisk/run_zero_d.py#load_config [L201–L223]]`, `[marsdisk/run_zero_d.py#run_zero_d [L259–L4524]]` | `radiation.TM_K` または温度ドライバから決定（legacy `temps.T_M` は廃止） |
+| Radiation efficiency (dimensionless) | `Q_pr_used` | `[marsdisk/run_zero_d.py#run_zero_d [L259–L4524]]`, `[marsdisk/run_zero_d.py#run_zero_d [L259–L4524]]` | Planck mean stored for reference |
+| Shielding Φ table path | `phi_table_path` | `[marsdisk/run_zero_d.py#run_zero_d [L259–L4524]]` | Summary retains the resolved τ-table for provenance |
+| PSD bin index (dimensionless) | `bin_index` | `[marsdisk/run_zero_d.py#run_zero_d [L259–L4524]][marsdisk/io/writer.py#write_parquet [L24–L343]]` | Time×bin identifier stored in `psd_hist.parquet` |
+| PSD bin centre (m) | `s_bin_center` | `[marsdisk/run_zero_d.py#run_zero_d [L259–L4524]][marsdisk/io/writer.py#write_parquet [L24–L343]]` | Logarithmic midpoint used for PSD plots |
+| PSD bin number density | `N_bin` | `[marsdisk/run_zero_d.py#run_zero_d [L259–L4524]][marsdisk/io/writer.py#write_parquet [L24–L343]]` | Relative number surface density per bin |
 
 
 ### (E.009) marsdisk/physics/surface.py: compute_surface_outflux (lines 178–188)
@@ -269,7 +269,7 @@ Case classification follows the configuration beta: `case_status = "blowout"` wh
 ```latex
 \dot{N}_k = \tfrac{1}{2}\sum_{i,j} K_{ij}\,N_i N_j\,Y_{kij} - N_k\sum_j K_{kj}N_j + f_k,
 ```
-と定義する。`collisions_smol` が `prod_subblow_mass_rate`（ソース）と昇華/外部シンク（負の項）を束ねて $f_k$ を組み立て、Wyatt 型 $t_{\rm coll}\approx T_{\rm orb}/(4\pi\tau)$ スケール [@Wyatt2008] と Strubbe & Chiang (2006) の PR drag/衝突寿命整合を踏まえた $e,i,H$ を `compute_kernel_e_i_H` で評価したカーネル $K_{ij}(e,v_{\mathrm{rel}},H)$ を与える。[marsdisk/physics/collisions_smol.py:L1–L220][marsdisk/physics/collisions_smol.py#compute_kernel_e_i_H [L618–L636]]
+と定義する。`collisions_smol` が `prod_subblow_mass_rate`（ソース）と昇華/外部シンク（負の項）を束ねて $f_k$ を組み立て、Wyatt 型 $t_{\rm coll}\approx T_{\rm orb}/(4\pi\tau)$ スケール [@Wyatt2008] と Strubbe & Chiang (2006) の PR drag/衝突寿命整合を踏まえた $e,i,H$ を `compute_kernel_e_i_H` で評価したカーネル $K_{ij}(e,v_{\mathrm{rel}},H)$ を与える。[marsdisk/physics/collisions_smol.py:L1–L220][marsdisk/physics/collisions_smol.py#compute_kernel_e_i_H [L621–L684]]
 
 補足（ビン分解能）: coagulation/fragmentation 平衡の解析解に基づき、Birnstiel et al. (2011) は隣接粒径比 $a_{i+1}/a_i \lesssim 1.1$–1.2 を推奨しており、基準格子 $s_{\min}=1.0\times10^{-6}$ m, $s_{\max}=3$ m, $n_{\mathrm{bins}}=40$ では $(a_{i+1}/a_i)\approx1.26$ となるため、wavy 再現時はビン数を増やす感度試験を併用する [@Birnstiel2011_AA525_A11]。
 
@@ -332,7 +332,7 @@ IMEX 更新後の質量差分を測るための診断式。衝突カスケード
 
 **Numerics**
 - Validates matching shapes and positivity of $M^{n}$.
-- Absolute error used to avoid cancellation sign issues; logs diagnostic values.
+- Absolute error used to avoid cancellation sign issues; logs diagnostic values. [marsdisk/physics/smol.py#compute_mass_budget_error_C4 [L378–L442]]
 
 ### (E.012) marsdisk/physics/radiation.py: planck_mean_qpr (lines 207-218)
 放射圧効率の Planck 平均を表参照またはフォールバックで決める。β とブローアウトの定義は [@Burns1979_Icarus40_1] に従い、その入力として Q_pr を扱う。
@@ -357,7 +357,7 @@ IMEX 更新後の質量差分を測るための診断式。衝突カスケード
 
 **Numerics**
 - Checks size and temperature bounds; logs when defaults used.
-- Lookup arguments clamped to tabulated ranges within `qpr_lookup`; fallback to unity when no table available.
+- Lookup arguments clamped to tabulated ranges within `qpr_lookup`; fallback to unity when no table available. [marsdisk/physics/radiation.py#planck_mean_qpr [L382–L393]]
 
 ### (E.013) marsdisk/physics/radiation.py: beta (lines 221-242)
 [@StrubbeChiang2006_ApJ648_652]
@@ -383,7 +383,7 @@ IMEX 更新後の質量差分を測るための診断式。衝突カスケード
 
 **Numerics**
 - Relies on validation helpers; reuses planck-mean lookup with optional overrides.
-- No additional clamps beyond those in the helper routines.
+- No additional clamps beyond those in the helper routines. [marsdisk/physics/radiation.py#beta [L396–L417]]
 
 ### (E.014) marsdisk/physics/radiation.py: blowout_radius (lines 245-259)
 [@StrubbeChiang2006_ApJ648_652]
@@ -408,7 +408,7 @@ IMEX 更新後の質量差分を測るための診断式。衝突カスケード
 
 **Numerics**
 - Uses same validation and lookup as `beta`; clamps from table may apply through shared helper.
-- No iteration; direct algebraic evaluation for $\beta=0.5$ threshold.
+- No iteration; direct algebraic evaluation for $\beta=0.5$ threshold. [marsdisk/physics/radiation.py#blowout_radius [L420–L434]]
 
 ### (E.015) marsdisk/physics/shielding.py: effective_kappa (lines 81-120)
 光学的厚さに応じた自遮蔽係数 $\Phi$ を掛けて有効不透明度を下げる処理で、薄い塵層の吸収低減を近似する [@StrubbeChiang2006_ApJ648_652]。
@@ -429,7 +429,7 @@ IMEX 更新後の質量差分を測るための診断式。衝突カスケード
 
 **Numerics**
 - Validates inputs; requires finite values.
-- Clamps $\Phi$ to $[0,1]$ after lookup and logs when clipping occurs.
+- Clamps $\Phi$ to $[0,1]$ after lookup and logs when clipping occurs. [marsdisk/physics/shielding.py#effective_kappa [L82–L121]]
 
 ### (E.016) marsdisk/physics/shielding.py: sigma_tau1 (lines 123-130)
 有効不透明度から $\tau=1$ となる表層質量を算出するクリップ条件。放射遮蔽のしきい値を簡略化したもの [@StrubbeChiang2006_ApJ648_652]。
@@ -449,7 +449,7 @@ IMEX 更新後の質量差分を測るための診断式。衝突カスケード
 |$\kappa_{\mathrm{eff}}$|Effective opacity|m$^{2}$ kg$^{-1}$|Input|
 
 **Numerics**
-- Returns infinity when the opacity is non-positive to signal no optical-depth limit; type validation ensures real input.
+- Returns infinity when the opacity is non-positive to signal no optical-depth limit; type validation ensures real input. [marsdisk/physics/shielding.py#sigma_tau1 [L124–L131]]
 
 ### (E.017) marsdisk/physics/shielding.py: apply_shielding (lines 133-216)
 表層の光学的厚さに応じて $\Phi(\tau,w_0,g)$ を適用し、$\kappa_{\mathrm{eff}}$ と $\Sigma_{\tau=1}$ を計算する。光学的厚さ制御の枠組みは [@StrubbeChiang2006_ApJ648_652] を踏まえた実装。
@@ -479,7 +479,7 @@ IMEX 更新後の質量差分を測るための診断式。衝突カスケード
 
 **Numerics**
 - Validates and, when table metadata available, clamps $\tau$, $w_0$, and $g$ to tabulated ranges before evaluation, logging any adjustments.
-- Wraps the interpolator to reuse `effective_kappa` clamping of $\Phi$ to $[0,1]$.
+- Wraps the interpolator to reuse `effective_kappa` clamping of $\Phi$ to $[0,1]$. [marsdisk/physics/shielding.py#apply_shielding [L134–L217]]
 
 ### (E.018) marsdisk/physics/sublimation.py: mass_flux (implemented by mass_flux_hkl, lines 85-113)
 [@Pignatale2018_ApJ853_118]
@@ -527,7 +527,7 @@ P_{\mathrm{sat}}(T) =
 - Logistic branch guards against $dT\to0$ via `max(dT, 1.0)`.
 - Stores provenance in `run_config.json` under `sublimation_provenance`, capturing {`sublimation_formula`, `psat_model`, `A`, `B`, `mu`, `alpha_evap`, `P_gas`, `valid_K`, optional `psat_table_path`} for reproducibility.
 - Ambient vapour pressure $P_{\mathrm{gas}}$ (特に Si を含む蒸気分圧) は Ronnet et al. (2016) 同様に自由パラメータとして扱い、化学平衡は計算しない。既定は gas‑poor 前提で $P_{\mathrm{gas}}=0$ とし、感度試験では YAML `sinks.sub_params.P_gas` を明示調整すること（HKL フラックスの最大不確定要素）。[marsdisk/physics/sublimation.py#p_sat [L588–L603]], [marsdisk/schema.py#Supply [L426–L523]]
-- `sub_params.mass_conserving=true` の場合、昇華由来の ds/dt は粒径のみを縮小し、1 ステップ内に $s<a_{\rm blow}$ を跨いだ分だけをブローアウト損失として処理する（質量シンクには入れない）。false で従来どおり昇華シンクとして質量減算。[marsdisk/physics/collisions_smol.py#step_collisions_smol_0d [L678–L1098]][marsdisk/run_zero_d.py#run_zero_d [L259–L4507]]
+- `sub_params.mass_conserving=true` の場合、昇華由来の ds/dt は粒径のみを縮小し、1 ステップ内に $s<a_{\rm blow}$ を跨いだ分だけをブローアウト損失として処理する（質量シンクには入れない）。false で従来どおり昇華シンクとして質量減算。[marsdisk/physics/collisions_smol.py#step_collisions_smol_0d [L726–L1161]][marsdisk/run_zero_d.py#run_zero_d [L259–L4524]]
 
 ### (E.019) marsdisk/physics/sublimation.py: sink_timescale (implemented by s_sink_from_timescale, lines 116-129)
 [@Ronnet2016_ApJ828_109]
@@ -1142,7 +1142,7 @@ n_{\mathrm{frag}} = \sum_{F_{\mathrm{lf},ij}\le0.5} C_{ij},
 - **遮蔽 headroom**: $\Sigma_{\tau=1}$ を超える供給は `headroom_policy="clip"` でカットし、`"spill"` で過剰分を後縮尺する。
 - **速度ブレンド**: `supply_velocity_cfg` が指定されると、供給専用 $(e,i)$ を重量 $w=\mathrm{weight\_mode}(\Delta\Sigma)$ でカーネル $(e_{\rm kernel},i_{\rm kernel})$ と合成し、`e_kernel_supply/e_kernel_effective/supply_velocity_weight` を記録する。
 - **エネルギー簿記**: `energy_bookkeeping_enabled=true` なら (E.045a) を用いて $C_{ij}$ とエネルギー統計を同時計算し、侵食 ($F_{\rm lf}>0.5$) では `f_ke_cratering`、破砕では `f_ke_fragmentation`（未指定は $\varepsilon^2$）を適用する。統計は `energy_stats` として run/energy 系列・`checks/energy_budget.csv` に流れる。
-- **e/i 減衰**: `enable_e_damping` かつ衝突時刻が有限なら、$\dot{e}=-e/t_{\rm damp}$ を $\varepsilon$ 由来の $t_{\rm damp}=t_{\rm coll}/(1-\varepsilon^2)$ で緩和し、`e_next/i_next` へ反映する。
+- **e/i 減衰**: `enable_e_damping` かつ衝突時刻が有限なら、$\dot{e}=-e/t_{\rm damp}$ を $\varepsilon$ 由来の $t_{\rm damp}=t_{\rm coll}/\varepsilon^2$（ゼロ割防止に $\varepsilon^2\ge10^{-12}$）で緩和し、`e_next/i_next` へ反映する。
 
 **Symbols**
 
@@ -1158,3 +1158,172 @@ n_{\mathrm{frag}} = \sum_{F_{\mathrm{lf},ij}\le0.5} C_{ij},
 |$f_{\mathrm{ke}}$|Non-dissipated fraction|—|侵食/破砕で別設定|
 |$E_{\mathrm{rel}}$|Relative kinetic energy rate|J m$^{-2}$ s$^{-1}$|`energy_stats[0]`|
 |$dt$|Time step|s|Caller determines|
+
+---
+
+### (E.047) marsdisk/physics/collide.py: compute_collision_kernel_bookkeeping (lines 208–353)
+
+衝突ペア $(i,j)$ の相対運動エネルギーを[@Thebault2003_AA410_685; @Krivov2006_AA455_509]
+```latex
+E_{\mathrm{rel},ij} = \frac{1}{2}\,\mu_{ij}\,v_{ij}^2,\qquad
+\mu_{ij} = \frac{m_i m_j}{m_i + m_j}
+```
+で評価する。Reduced mass $\mu_{ij}$ と速度 $v_{ij}$ は上三角のみを用いて二重カウントを避ける。
+
+**Symbols**
+
+|Symbol|Meaning|Units|Defaults/Notes|
+|---|---|---|---|
+|$m_i, m_j$|Bin masses|kg|PSD stateから取得|
+|$v_{ij}$|Relative velocity|m s$^{-1}$|スカラーまたは行列入力|
+|$\mu_{ij}$|Reduced mass|kg|$m_i m_j/(m_i+m_j)$|
+|$E_{\mathrm{rel},ij}$|Pairwise relative kinetic energy|J|上三角のみ評価|
+
+**Numerics**
+- Uses upper-triangular summation to avoid double counting; [marsdisk/physics/collide.py#compute_collision_kernel_bookkeeping [L208–L353]]
+
+---
+
+### (E.048) marsdisk/physics/collide.py: compute_collision_kernel_bookkeeping (lines 208–353)
+
+相対エネルギーのステップ集計は上三角和[@Thebault2003_AA410_685; @Krivov2006_AA455_509]
+```latex
+E_{\mathrm{rel,step}} = \sum_{i\le j} C_{ij}\,E_{\mathrm{rel},ij}
+```
+で計算し、`E_rel_step` 列として記録する。$C_{ij}$ は (E.024) に準じる衝突レート（対称）を用いる。
+
+**Symbols**
+
+|Symbol|Meaning|Units|Defaults/Notes|
+|---|---|---|---|
+|$C_{ij}$|Collision kernel|s$^{-1}$|上三角のみ和を取る|
+|$E_{\mathrm{rel,step}}$|Rate-weighted relative energy|J m$^{-2}$ s$^{-1}$|`energy_stats[0]`|
+
+**Numerics**
+- Collision-rate weighted sum over upper triangle. [marsdisk/physics/collide.py#compute_collision_kernel_bookkeeping [L208–L353]]
+
+---
+
+### (E.049) marsdisk/physics/collide.py: compute_collision_kernel_bookkeeping (lines 208–353)
+
+非散逸率 $f_{\mathrm{ke},ij}$ に基づく残存／散逸エネルギーは[@Thebault2003_AA410_685; @Krivov2006_AA455_509]
+```latex
+E_{\mathrm{ret,step}} = \sum_{i\le j} C_{ij}\,f_{\mathrm{ke},ij}\,E_{\mathrm{rel},ij},\qquad
+E_{\mathrm{diss,step}} = E_{\mathrm{rel,step}} - E_{\mathrm{ret,step}}
+```
+として求め、`E_retained_step` と `E_dissipated_step` 列に対応する。$f_{\mathrm{ke},ij}$ は $F_{\mathrm{lf}}>0.5$ で `f_ke_cratering`、それ以外で `f_ke_fragmentation`（未指定時は $\varepsilon^2$）を適用する。
+
+**Symbols**
+
+|Symbol|Meaning|Units|Defaults/Notes|
+|---|---|---|---|
+|$f_{\mathrm{ke},ij}$|Non-dissipated kinetic-energy fraction|—|侵食/破砕で分岐|
+|$E_{\mathrm{ret,step}}$|Retained kinetic energy|J m$^{-2}$ s$^{-1}$|`energy_stats[2]`|
+|$E_{\mathrm{diss,step}}$|Dissipated energy|J m$^{-2}$ s$^{-1}$|`energy_stats[1]`|
+
+**Numerics**
+- Fractional energy dissipation depends on regime (cratering vs fragmentation). [marsdisk/physics/collide.py#compute_collision_kernel_bookkeeping [L208–L353]]
+
+---
+
+### (E.050) marsdisk/physics/collide.py: compute_collision_kernel_bookkeeping (lines 208–353)
+
+エネルギー平均と設定不一致の指標[@Thebault2003_AA410_685; @Krivov2006_AA455_509]:
+```latex
+\bar{f}_{\mathrm{ke}}^{(C)} = \frac{\sum_{i\le j} C_{ij} f_{\mathrm{ke},ij}}{\sum_{i\le j} C_{ij}},\quad
+\bar{f}_{\mathrm{ke}}^{(E)} = \frac{E_{\mathrm{ret,step}}}{E_{\mathrm{rel,step}}},\quad
+\Delta f_{\mathrm{ke},\varepsilon} = \left| f_{\mathrm{ke,frag}} - \varepsilon^2 \right|.
+```
+`f_ke_mean` は $\bar{f}_{\mathrm{ke}}^{(C)}$, `f_ke_energy` は $\bar{f}_{\mathrm{ke}}^{(E)}$ に対応する。$f_{\mathrm{ke,frag}}$ を明示すると $\Delta f_{\mathrm{ke},\varepsilon}>0.1$ で警告を出し、`f_ke_eps_mismatch` 列に差分を残す。
+
+**Symbols**
+
+|Symbol|Meaning|Units|Defaults/Notes|
+|---|---|---|---|
+|$\bar{f}_{\mathrm{ke}}^{(C)}$|Collision-rate weighted mean|—|`f_ke_mean`|
+|$\bar{f}_{\mathrm{ke}}^{(E)}$|Energy-weighted mean|—|`f_ke_energy`|
+|$f_{\mathrm{ke,frag}}$|Fragmentation-side $f_{\mathrm{ke}}$|—|未指定時は $\varepsilon^2$|
+|$\varepsilon$|Coefficient of restitution|—|`eps_restitution`|
+|$\Delta f_{\mathrm{ke},\varepsilon}$|Mismatch indicator|—|`f_ke_eps_mismatch`|
+
+**Numerics**
+- Weighted averages computed over collision kernel; mismatch flagged if > 0.1. [marsdisk/physics/collide.py#compute_collision_kernel_bookkeeping [L208–L353]]
+
+---
+
+### (E.051) marsdisk/physics/collide.py: compute_collision_kernel_bookkeeping (lines 208–353)
+
+最大残骸分率 $F_{\mathrm{lf}}$ に基づく分岐診断[@Thebault2003_AA410_685; @Krivov2006_AA455_509]:
+```latex
+F_{\mathrm{lf,mean}} = \frac{\sum_{i\le j} C_{ij} F_{\mathrm{lf},ij}}{\sum_{i\le j} C_{ij}},\qquad
+n_{\mathrm{crat}} = \sum_{F_{\mathrm{lf},ij}>0.5} C_{ij},\quad
+n_{\mathrm{frag}} = \sum_{F_{\mathrm{lf},ij}\le 0.5} C_{ij},
+```
+```latex
+f_{\mathrm{crat}} = \frac{n_{\mathrm{crat}}}{n_{\mathrm{crat}}+n_{\mathrm{frag}}},\qquad
+f_{\mathrm{frag}} = \frac{n_{\mathrm{frag}}}{n_{\mathrm{crat}}+n_{\mathrm{frag}}}.
+```
+これらは `F_lf_mean`, `n_cratering`, `n_fragmentation`, `frac_cratering`, `frac_fragmentation` 列として出力される。
+
+**Symbols**
+
+|Symbol|Meaning|Units|Defaults/Notes|
+|---|---|---|---|
+|$F_{\mathrm{lf}}$|Largest remnant fraction|—|`fragments.largest_remnant_fraction_array`|
+|$F_{\mathrm{lf,mean}}$|Rate-weighted mean of $F_{\mathrm{lf}}$|—|`F_lf_mean`|
+|$n_{\mathrm{crat}}$|Cratering-weighted collision rate|s$^{-1}$|$F_{\mathrm{lf}}>0.5$|
+|$n_{\mathrm{frag}}$|Fragmentation-weighted collision rate|s$^{-1}$|$F_{\mathrm{lf}}\le0.5$|
+|$f_{\mathrm{crat}}, f_{\mathrm{frag}}$|Rate fractions|—|`frac_*` 列|
+
+**Numerics**
+- Categorizes collision pairs by largest remnant fraction. [marsdisk/physics/collide.py#compute_collision_kernel_bookkeeping [L208–L353]][marsdisk/physics/fragments.py#compute_largest_remnant_mass_fraction_F2 [L115–L145]]
+
+---
+
+### (E.052) marsdisk/run_zero_d.py: energy bookkeeping consistency (lines 2558–2594)
+
+エネルギー簿記の内部整合性は[@Thebault2003_AA410_685]
+```latex
+E_{\mathrm{error}} = \frac{\left|E_{\mathrm{diss,step}} + E_{\mathrm{ret,step}} - E_{\mathrm{rel,step}}\right|}{\left|E_{\mathrm{rel,step}}\right|}
+```
+で判定し、$E_{\mathrm{error}}>10^{-6}$ で `error_flag="error"`、$10^{-12}<E_{\mathrm{error}}\le10^{-6}$ で `warning` とする。結果は `E_numerical_error_relative` として `checks/energy_budget.csv` に出力される。
+
+**Symbols**
+
+|Symbol|Meaning|Units|Defaults/Notes|
+|---|---|---|---|
+|$E_{\mathrm{error}}$|Relative consistency error|—|`E_numerical_error_relative`|
+|$E_{\mathrm{rel,step}}$|Relative kinetic energy|J m$^{-2}$ s$^{-1}$|(E.048)|
+|$E_{\mathrm{ret,step}}$|Retained energy|J m$^{-2}$ s$^{-1}$|(E.049)|
+|$E_{\mathrm{diss,step}}$|Dissipated energy|J m$^{-2}$ s$^{-1}$|(E.049)|
+|`error_flag`|Categorical flag|—|`ok`/`warning`/`error`|
+
+**Numerics**
+- Consistency check performed each step; thresholds at $10^{-12}$ (warning) and $10^{-6}$ (error). [marsdisk/run_zero_d.py#run_zero_d [L259–L4524]]
+
+---
+
+### (E.053) marsdisk/run_zero_d.py: _surface_energy_floor (lines 139–160)
+
+Krijt & Kama 型の表面エネルギー制約による最小粒径[@KrijtKama2014_AA566_L2]
+```latex
+s_{\min,\mathrm{surf}} = \left[ \frac{6\gamma(\alpha - 3)}{\eta\,\rho\,v_{\mathrm{rel}}^2} \right]^2 s_{\max}^{\alpha - 5},\qquad (\alpha \ne 5)
+```
+で評価し、$\alpha\le3$ や非物理入力では 0 とし、$s_{\min,\mathrm{surf}}>s_{\max}$ は $s_{\max}$ にクリップする。`s_min_surface_energy` として `series/run.parquet` に出力し、`s_min_effective` の候補に加える。
+
+**Symbols**
+
+|Symbol|Meaning|Units|Defaults/Notes|
+|---|---|---|---|
+|$\gamma$|Surface energy|J m$^{-2}$|`surface_energy.gamma_J_m2`|
+|$\eta$|KE→surface conversion efficiency|—|`surface_energy.eta`|
+|$\alpha$|PSD slope|—|`psd.alpha`|
+|$\rho$|Material density|kg m$^{-3}$|`material.rho`|
+|$v_{\mathrm{rel}}$|Relative velocity|m s$^{-1}$|`dynamics.v_rel_pericenter`|
+|$s_{\max}$|Maximum grain size|m|`sizes.s_max`|
+|$s_{\min,\mathrm{surf}}$|Surface-energy-limited minimum size|m|`s_min_surface_energy`|
+
+**Numerics**
+- Clamps result to $[0, s_{\max}]$; returns 0 for unphysical inputs. [marsdisk/run_zero_d.py#_surface_energy_floor [L139–L160]]
+
+---

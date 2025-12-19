@@ -81,8 +81,8 @@
 - 依存追加: 標準ライブラリ優先。新規ライブラリが必要な場合は最小限に限定し、事前合意を得る。
 
 ## 7. 直近の ToDo（作業順メモ）
-- [ ] フェーズ1: `assumption_trace_gap_list.md` / `assumption_trace_schema.md` / `assumption_trace_data_sources.md` / `overview.md` / `schema.py` / `config_utils.py` の現状確認と必須フィールド表の作成。
-- [ ] フェーズ2: スキーマ更新（2章フィールド、run_stage 列挙、provenance 構造）、UNKNOWN_REF slug 登録。
-- [ ] フェーズ3: `analysis/tools/scan_assumptions.py` を作成し、registry へ1件以上自動登録する PoC。source_map/inventory 優先の抽出方針を実装。
-- [ ] フェーズ4: `analysis/tools/render_assumptions.py` を拡張し、自動生成した docs を既存版と diff 確認。coverage 指標と equation_coverage を測り、`make analysis-doc-tests` で確認。
-- [ ] フェーズ5: `make assumptions-autogen-check` を追加し、doc_sync → scan → render → analysis-doc-tests → evaluation_system を束ねる。閾値未達時の FAIL 条件を設定。
+- [x] フェーズ1: `assumption_trace_gap_list.md` / `assumption_trace_schema.md` / `assumption_trace_data_sources.md` / `overview.md` / `schema.py` / `config_utils.py` の現状確認と必須フィールド表の作成。
+- [x] フェーズ2: スキーマ更新（2章フィールド、run_stage 列挙、provenance 構造）、UNKNOWN_REF slug 登録。
+- [x] フェーズ3: `analysis/tools/scan_assumptions.py` を作成し、registry へ1件以上自動登録する PoC。source_map/inventory 優先の抽出方針を実装。
+- [x] フェーズ4: `analysis/tools/render_assumptions.py` を拡張し、自動生成した docs を既存版と diff 確認。coverage 指標と equation_coverage を測り、`make analysis-doc-tests` で確認。
+- [x] フェーズ5: `make assumptions-autogen-check` を追加し、doc_sync → scan → render → analysis-doc-tests → evaluation_system を束ねる。閾値未達時の FAIL 条件を設定。

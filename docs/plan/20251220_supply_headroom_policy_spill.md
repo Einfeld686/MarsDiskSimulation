@@ -84,9 +84,9 @@ supply:
 新規テストファイル: `tests/test_supply_headroom_policy.py`
 
 検証項目：
-- [ ] spill モードで供給がゼロに貼り付かないこと
-- [ ] $\Sigma_{\rm surf} \le \Sigma_{\tau=1}$ が常に維持されること
-- [ ] spill 関連カラムが正値で記録されること
+- [x] spill モードで供給がゼロに貼り付かないこと
+- [x] $\Sigma_{\rm surf} \le \Sigma_{\tau=1}$ が常に維持されること
+- [x] spill 関連カラムが正値で記録されること
 - [ ] 質量収支が維持されること（spill 分を含めて誤差 < 0.5%）
 
 ---

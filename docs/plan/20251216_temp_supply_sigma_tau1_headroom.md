@@ -60,9 +60,9 @@
   - `Sigma_tau1` と `init_tau1.scale_to_tau1` の採用値を run_config かコンソールに明示。
 
 ## 直近タスク（提案）
-- [ ] `run_temp_supply_sweep.sh` のデフォルトを `SHIELDING_SIGMA=auto`, `INIT_SCALE_TO_TAU1=true` に戻す。
+- [x] `run_temp_supply_sweep.sh` のデフォルトを `SHIELDING_SIGMA=auto`, `INIT_SCALE_TO_TAU1=true` に戻す。
 - [ ] 温度・フィードバックをオフにするデモ用のプリセット（環境変数例示）を README に追記。
-- [ ] 供給クリップが起きた場合に警告を出す（`prod_subblow_area_rate_raw>0 && prod_subblow_area_rate==0` が一定連続したら warn）。
+- [x] 供給クリップが起きた場合に警告を出す（`prod_subblow_area_rate_raw>0 && prod_subblow_area_rate==0` が一定連続したら warn）。
 - [ ] 本事象の経緯を `docs/plan/README.md` から本メモにリンク。
 
 ## 今回の修正（2025-12-13）
