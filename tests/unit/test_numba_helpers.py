@@ -224,6 +224,43 @@ def test_qpr_interp_scalar_numba_matches_numpy(monkeypatch) -> None:
     assert np.isclose(got, expected)
 
 
+def test_qpr_interp_array_numba_matches_numpy(monkeypatch) -> None:
+    numba_tables = _reload_with_env("marsdisk.io._numba_tables", disable_numba=False)
+    if not numba_tables.NUMBA_AVAILABLE():
+        pytest.skip("Numba unavailable; qpr interp numba path not applicable")
+
+    s_vals = np.array([1.0, 2.0, 4.0], dtype=float)
+    T_vals = np.array([100.0, 200.0], dtype=float)
+    q_vals = np.array(
+        [
+            [0.1, 0.2, 0.4],
+            [0.3, 0.5, 0.8],
+        ],
+        dtype=float,
+    )
+    s_arr = np.array([1.2, 1.8, 3.1], dtype=float)
+    T = 150.0
+
+    i = np.clip(np.searchsorted(s_vals, s_arr) - 1, 0, len(s_vals) - 2)
+    j = int(np.clip(np.searchsorted(T_vals, T) - 1, 0, len(T_vals) - 2))
+    s1 = s_vals[i]
+    s2 = s_vals[i + 1]
+    T1 = T_vals[j]
+    T2 = T_vals[j + 1]
+    q11 = q_vals[j, i]
+    q12 = q_vals[j + 1, i]
+    q21 = q_vals[j, i + 1]
+    q22 = q_vals[j + 1, i + 1]
+    ws = np.where(s2 == s1, 0.0, (s_arr - s1) / (s2 - s1))
+    wT = 0.0 if T2 == T1 else (T - T1) / (T2 - T1)
+    q1 = q11 * (1.0 - ws) + q21 * ws
+    q2 = q12 * (1.0 - ws) + q22 * ws
+    expected = q1 * (1.0 - wT) + q2 * wT
+
+    got = numba_tables.qpr_interp_array_numba(s_vals, T_vals, q_vals, s_arr, T)
+    np.testing.assert_allclose(got, expected)
+
+
 def test_qpr_interp_numba_fallback(monkeypatch) -> None:
     tables = _reload_with_env("marsdisk.io.tables", disable_numba=False)
     numba_tables = _reload_with_env("marsdisk.io._numba_tables", disable_numba=False)
@@ -251,3 +288,56 @@ def test_qpr_interp_numba_fallback(monkeypatch) -> None:
     got = table.interp(s, T)
     assert np.isclose(got, expected)
     assert tables._NUMBA_FAILED is True
+
+
+def test_blowout_radius_numba_matches_numpy(monkeypatch) -> None:
+    radiation_numba = _reload_with_env("marsdisk.physics._numba_radiation", disable_numba=False)
+    if not radiation_numba.NUMBA_AVAILABLE():
+        pytest.skip("Numba unavailable; blowout radius numba path not applicable")
+
+    rho = 2500.0
+    T = 2000.0
+    qpr = 1.1
+    expected = (
+        3.0 * constants.SIGMA_SB * (T**4) * (constants.R_MARS**2) * qpr
+        / (2.0 * constants.G * constants.M_MARS * constants.C * rho)
+    )
+    got = radiation_numba.blowout_radius_numba(rho, T, qpr)
+    assert np.isclose(got, expected)
+
+
+def test_blowout_radius_numba_fallback(monkeypatch) -> None:
+    radiation = _reload_with_env("marsdisk.physics.radiation", disable_numba=False)
+
+    def _boom(*_args, **_kwargs):
+        raise RuntimeError("boom")
+
+    monkeypatch.setattr(radiation, "_USE_NUMBA_RADIATION", True, raising=False)
+    monkeypatch.setattr(radiation, "_NUMBA_FAILED", False, raising=False)
+    monkeypatch.setattr(radiation, "blowout_radius_numba", _boom, raising=False)
+
+    rho = 2500.0
+    T = 2000.0
+    qpr = 1.1
+    expected = (
+        3.0 * constants.SIGMA_SB * (T**4) * (constants.R_MARS**2) * qpr
+        / (2.0 * constants.G * constants.M_MARS * constants.C * rho)
+    )
+    got = radiation.blowout_radius(rho, T, Q_pr=qpr)
+    assert np.isclose(got, expected)
+    assert radiation._NUMBA_FAILED is True
+
+
+def test_blowout_radius_numba_env_disabled(monkeypatch) -> None:
+    radiation = _reload_with_env("marsdisk.physics.radiation", disable_numba=True)
+    assert radiation._USE_NUMBA_RADIATION is False
+
+    rho = 2500.0
+    T = 2000.0
+    qpr = 1.1
+    expected = (
+        3.0 * constants.SIGMA_SB * (T**4) * (constants.R_MARS**2) * qpr
+        / (2.0 * constants.G * constants.M_MARS * constants.C * rho)
+    )
+    got = radiation.blowout_radius(rho, T, Q_pr=qpr)
+    assert np.isclose(got, expected)

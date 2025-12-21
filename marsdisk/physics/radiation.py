@@ -12,6 +12,8 @@ from __future__ import annotations
 
 import logging
 import math
+import os
+import warnings
 from collections import OrderedDict
 from numbers import Real
 from pathlib import Path
@@ -22,6 +24,19 @@ import numpy as np
 from .. import constants
 from ..io import tables
 from ..errors import PhysicsError
+from ..warnings import NumericalWarning, TableWarning
+
+try:
+    from ..io._numba_tables import NUMBA_AVAILABLE as _NUMBA_TABLES_AVAILABLE, qpr_interp_array_numba
+    _NUMBA_TABLES_AVAILABLE = _NUMBA_TABLES_AVAILABLE()
+except ImportError:  # pragma: no cover - optional dependency
+    _NUMBA_TABLES_AVAILABLE = False
+
+try:
+    from ._numba_radiation import NUMBA_AVAILABLE as _NUMBA_RADIATION_AVAILABLE, blowout_radius_numba
+    _NUMBA_RADIATION_AVAILABLE = _NUMBA_RADIATION_AVAILABLE()
+except ImportError:  # pragma: no cover - optional dependency
+    _NUMBA_RADIATION_AVAILABLE = False
 
 # type alias for a Q_pr interpolation function
 type_QPr = Callable[[float, float], float]
@@ -39,6 +54,16 @@ T_M_RANGE: tuple[float, float] = (1000.0, 6500.0)
 BLOWOUT_BETA_THRESHOLD: float = 0.5  # [@StrubbeChiang2006_ApJ648_652]
 
 logger = logging.getLogger(__name__)
+
+_NUMBA_DISABLED_ENV = os.environ.get("MARSDISK_DISABLE_NUMBA", "").lower() in {
+    "1",
+    "true",
+    "yes",
+    "on",
+}
+_USE_NUMBA_TABLES = _NUMBA_TABLES_AVAILABLE and not _NUMBA_DISABLED_ENV
+_USE_NUMBA_RADIATION = _NUMBA_RADIATION_AVAILABLE and not _NUMBA_DISABLED_ENV
+_NUMBA_FAILED = False
 
 
 def _validate_size(value: float, *, name: str = "s") -> float:
@@ -305,6 +330,7 @@ def qpr_lookup_array(
     when available and treats ``T_M`` as a scalar; for other input shapes
     it falls back to element-wise :func:`qpr_lookup`.
     """
+    global _NUMBA_FAILED
 
     s_arr = np.asarray(s, dtype=float)
     T_arr = np.asarray(T_M, dtype=float)
@@ -351,6 +377,22 @@ def qpr_lookup_array(
             T_max = float(np.max(T_vals))
             T_eval = float(np.clip(float(T_arr.flat[0]), T_min, T_max))
             s_eval = np.clip(s_flat, s_min, s_max)
+            if _USE_NUMBA_TABLES and not _NUMBA_FAILED:
+                try:
+                    result = qpr_interp_array_numba(
+                        np.asarray(s_vals, dtype=np.float64),
+                        np.asarray(T_vals, dtype=np.float64),
+                        np.asarray(q_grid, dtype=np.float64),
+                        np.asarray(s_eval, dtype=np.float64),
+                        float(T_eval),
+                    )
+                    return result.reshape(s_arr.shape).astype(float, copy=False)
+                except Exception as exc:
+                    _NUMBA_FAILED = True
+                    warnings.warn(
+                        f"Q_pr numba array interpolation failed ({exc!r}); falling back to NumPy.",
+                        TableWarning,
+                    )
             i = np.clip(np.searchsorted(s_vals, s_eval) - 1, 0, s_vals.size - 2)
             j = int(np.clip(np.searchsorted(T_vals, T_eval) - 1, 0, T_vals.size - 2))
             s1 = s_vals[i]
@@ -426,9 +468,19 @@ def blowout_radius(
 ) -> float:
     """Return the blow-out grain size ``s_blow`` for ``β = 0.5`` (R3). [@StrubbeChiang2006_ApJ648_652]"""
 
+    global _NUMBA_FAILED
     rho_val = _validate_density(rho)
     T_val = _validate_temperature(T_M)
     qpr = _resolve_qpr(1.0, T_val, Q_pr, table, interp)
+    if _USE_NUMBA_RADIATION and not _NUMBA_FAILED:
+        try:
+            return float(blowout_radius_numba(rho_val, T_val, qpr))
+        except Exception as exc:
+            _NUMBA_FAILED = True
+            warnings.warn(
+                f"blowout radius numba kernel failed ({exc!r}); falling back to NumPy.",
+                NumericalWarning,
+            )
     numerator = 3.0 * constants.SIGMA_SB * (T_val**4) * (constants.R_MARS**2) * qpr
     denominator = 2.0 * constants.G * constants.M_MARS * constants.C * rho_val
     return float(numerator / denominator)
