@@ -449,12 +449,12 @@ marsdisk/physics/phase.py:594:def hydro_escape_timescale(cfg: Optional[HydroEsca
 marsdisk/physics/psd.py:60:def update_psd_state(*, s_min: float, s_max: float, alpha: float, wavy_strength: float, n_bins: int=40, rho: float=3000.0, wavy_decay: float=0.0, alpha_mode: str='size') -> Dict[str, np.ndarray | float]
 marsdisk/physics/psd.py:153:def sanitize_and_normalize_number(psd_state: Dict[str, np.ndarray | float], clip_max: float=1e+200, *, normalize: bool=True) -> Dict[str, np.ndarray | float]
 marsdisk/physics/psd.py:190:def compute_kappa(psd_state: Dict[str, np.ndarray | float]) -> float
-marsdisk/physics/psd.py:227:def mass_weights_lognormal_mixture(sizes: np.ndarray, widths: np.ndarray, *, f_fine: float, s_fine: float, s_meter: float, width_dex: float, s_cut: float | None=None) -> np.ndarray
-marsdisk/physics/psd.py:270:def mass_weights_truncated_powerlaw(sizes: np.ndarray, widths: np.ndarray, *, alpha_solid: float, s_min_solid: float, s_max_solid: float, s_cut: float | None=None) -> np.ndarray
-marsdisk/physics/psd.py:304:def apply_mass_weights(psd_state: Dict[str, np.ndarray | float], mass_weights: np.ndarray, *, rho: float | None=None) -> Dict[str, np.ndarray | float]
-marsdisk/physics/psd.py:349:def _size_drift_rebin_numpy(sizes: np.ndarray, number: np.ndarray, edges: np.ndarray, ds_step: float, floor_val: float) -> tuple[np.ndarray, np.ndarray]
-marsdisk/physics/psd.py:374:def apply_uniform_size_drift(psd_state: Dict[str, np.ndarray | float], *, ds_dt: float, dt: float, floor: float, sigma_surf: float) -> tuple[float, float, Dict[str, float]]
-marsdisk/physics/psd.py:506:def evolve_min_size(s_min_prev: float, *, dt: float, model: Optional[str]=None, params: Optional[Mapping[str, float]]=None, T: Optional[float]=None, rho: Optional[float]=None, s_floor: Optional[float]=None, sublimation_params: Optional[SublimationParams]=None) -> float
+marsdisk/physics/psd.py:226:def mass_weights_lognormal_mixture(sizes: np.ndarray, widths: np.ndarray, *, f_fine: float, s_fine: float, s_meter: float, width_dex: float, s_cut: float | None=None) -> np.ndarray
+marsdisk/physics/psd.py:269:def mass_weights_truncated_powerlaw(sizes: np.ndarray, widths: np.ndarray, *, alpha_solid: float, s_min_solid: float, s_max_solid: float, s_cut: float | None=None) -> np.ndarray
+marsdisk/physics/psd.py:303:def apply_mass_weights(psd_state: Dict[str, np.ndarray | float], mass_weights: np.ndarray, *, rho: float | None=None) -> Dict[str, np.ndarray | float]
+marsdisk/physics/psd.py:348:def _size_drift_rebin_numpy(sizes: np.ndarray, number: np.ndarray, edges: np.ndarray, ds_step: float, floor_val: float) -> tuple[np.ndarray, np.ndarray]
+marsdisk/physics/psd.py:373:def apply_uniform_size_drift(psd_state: Dict[str, np.ndarray | float], *, ds_dt: float, dt: float, floor: float, sigma_surf: float) -> tuple[float, float, Dict[str, float]]
+marsdisk/physics/psd.py:505:def evolve_min_size(s_min_prev: float, *, dt: float, model: Optional[str]=None, params: Optional[Mapping[str, float]]=None, T: Optional[float]=None, rho: Optional[float]=None, s_floor: Optional[float]=None, sublimation_params: Optional[SublimationParams]=None) -> float
 marsdisk/physics/qstar.py:62:def set_coeff_unit_system(units: CoeffUnits) -> CoeffUnits
 marsdisk/physics/qstar.py:72:def get_coeff_unit_system() -> CoeffUnits
 marsdisk/physics/qstar.py:78:def get_coefficient_table() -> Dict[float, Tuple[float, float, float, float]]
@@ -589,7 +589,7 @@ marsdisk/run_zero_d.py:212:def load_config(path: Path, overrides: Optional[Seque
 marsdisk/run_zero_d.py:237:def _gather_git_info() -> Dict[str, Any]
 marsdisk/run_zero_d.py:264:class MassBudgetViolationError(NumericalError)
 marsdisk/run_zero_d.py:270:def run_zero_d(cfg: Config, *, enforce_mass_budget: bool=False, physics_mode_override: Optional[str]=None, physics_mode_source_override: Optional[str]=None) -> None
-marsdisk/run_zero_d.py:4747:def main(argv: Optional[List[str]]=None) -> None
+marsdisk/run_zero_d.py:4795:def main(argv: Optional[List[str]]=None) -> None
 marsdisk/runtime/helpers.py:8:def compute_phase_tau_fields(kappa_surf: float, sigma_for_tau: float, los_factor: float, phase_tau_field: str) -> Tuple[float, float, float]
 marsdisk/runtime/helpers.py:24:def resolve_feedback_tau_field(tau_field: Optional[str]) -> str
 marsdisk/runtime/helpers.py:39:def compute_gate_factor(t_blow: Optional[float], t_solid: Optional[float]) -> float
@@ -657,11 +657,11 @@ marsdisk/schema.py:1489:class Numerics(BaseModel)
 marsdisk/schema.py:1615:class StepDiagnostics(BaseModel)
 marsdisk/schema.py:1632:class Progress(BaseModel)
 marsdisk/schema.py:1646:class Streaming(BaseModel)
-marsdisk/schema.py:1689:class IO(BaseModel)
-marsdisk/schema.py:1720:class ExtendedDiagnostics(BaseModel)
-marsdisk/schema.py:1733:class EnergyBookkeeping(BaseModel)
-marsdisk/schema.py:1746:class Diagnostics(BaseModel)
-marsdisk/schema.py:1753:class Config(BaseModel)
+marsdisk/schema.py:1693:class IO(BaseModel)
+marsdisk/schema.py:1733:class ExtendedDiagnostics(BaseModel)
+marsdisk/schema.py:1746:class EnergyBookkeeping(BaseModel)
+marsdisk/schema.py:1759:class Diagnostics(BaseModel)
+marsdisk/schema.py:1766:class Config(BaseModel)
 marsdisk/warnings.py:7:class MarsDiskWarning(UserWarning)
 marsdisk/warnings.py:11:class PhysicsWarning(MarsDiskWarning)
 marsdisk/warnings.py:15:class NumericalWarning(MarsDiskWarning)

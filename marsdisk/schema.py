@@ -1672,6 +1672,10 @@ class Streaming(BaseModel):
         True,
         description="Merge Parquet chunks into single files at the end of the run.",
     )
+    cleanup_chunks: bool = Field(
+        True,
+        description="Delete Parquet chunk files after a successful merge_at_end.",
+    )
 
     @field_validator("memory_limit_gb")
     def _check_memory_limit(cls, value: float) -> float:
@@ -1693,6 +1697,15 @@ class IO(BaseModel):
     step_diagnostics: StepDiagnostics = StepDiagnostics()
     progress: Progress = Progress()
     streaming: Streaming = Field(default_factory=Streaming)
+    psd_history: bool = Field(
+        True,
+        description="Write per-bin PSD history to series/psd_hist.parquet.",
+    )
+    psd_history_stride: int = Field(
+        1,
+        ge=1,
+        description="Stride for PSD history output (1 = every step).",
+    )
     quiet: bool = Field(
         False,
         description="Suppress INFO logging and Python warnings for cleaner CLI output.",

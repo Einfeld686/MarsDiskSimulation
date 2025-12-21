@@ -4705,42 +4705,42 @@
   },
   {
     "file_path": "marsdisk/physics/psd.py",
-    "line_no": 227,
+    "line_no": 226,
     "symbol": "mass_weights_lognormal_mixture",
     "signature": "mass_weights_lognormal_mixture(sizes: np.ndarray, widths: np.ndarray, *, f_fine: float, s_fine: float, s_meter: float, width_dex: float, s_cut: float | None=None) -> np.ndarray",
     "brief_usage": "Return per-bin mass weights for a two-component melt mixture."
   },
   {
     "file_path": "marsdisk/physics/psd.py",
-    "line_no": 270,
+    "line_no": 269,
     "symbol": "mass_weights_truncated_powerlaw",
     "signature": "mass_weights_truncated_powerlaw(sizes: np.ndarray, widths: np.ndarray, *, alpha_solid: float, s_min_solid: float, s_max_solid: float, s_cut: float | None=None) -> np.ndarray",
     "brief_usage": "Return per-bin mass weights for a truncated power-law melt PSD."
   },
   {
     "file_path": "marsdisk/physics/psd.py",
-    "line_no": 304,
+    "line_no": 303,
     "symbol": "apply_mass_weights",
     "signature": "apply_mass_weights(psd_state: Dict[str, np.ndarray | float], mass_weights: np.ndarray, *, rho: float | None=None) -> Dict[str, np.ndarray | float]",
     "brief_usage": "Map mass weights to the PSD's number array while preserving total mass."
   },
   {
     "file_path": "marsdisk/physics/psd.py",
-    "line_no": 349,
+    "line_no": 348,
     "symbol": "_size_drift_rebin_numpy",
     "signature": "_size_drift_rebin_numpy(sizes: np.ndarray, number: np.ndarray, edges: np.ndarray, ds_step: float, floor_val: float) -> tuple[np.ndarray, np.ndarray]",
     "brief_usage": "Vectorised rebinning helper for :func:`apply_uniform_size_drift`."
   },
   {
     "file_path": "marsdisk/physics/psd.py",
-    "line_no": 374,
+    "line_no": 373,
     "symbol": "apply_uniform_size_drift",
     "signature": "apply_uniform_size_drift(psd_state: Dict[str, np.ndarray | float], *, ds_dt: float, dt: float, floor: float, sigma_surf: float) -> tuple[float, float, Dict[str, float]]",
     "brief_usage": "Erode all PSD bins by a uniform ``ds/dt`` and update ``Sigma_surf``."
   },
   {
     "file_path": "marsdisk/physics/psd.py",
-    "line_no": 506,
+    "line_no": 505,
     "symbol": "evolve_min_size",
     "signature": "evolve_min_size(s_min_prev: float, *, dt: float, model: Optional[str]=None, params: Optional[Mapping[str, float]]=None, T: Optional[float]=None, rho: Optional[float]=None, s_floor: Optional[float]=None, sublimation_params: Optional[SublimationParams]=None) -> float",
     "brief_usage": "Return the evolved minimum grain size after a time step ``dt``."
@@ -6147,7 +6147,7 @@
   },
   {
     "file_path": "marsdisk/run_zero_d.py",
-    "line_no": 4747,
+    "line_no": 4795,
     "symbol": "main",
     "signature": "main(argv: Optional[List[str]]=None) -> None",
     "brief_usage": "Command line entry point."
@@ -6644,35 +6644,35 @@
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 1689,
+    "line_no": 1693,
     "symbol": "IO",
     "signature": "class IO(BaseModel)",
     "brief_usage": "Output directories."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 1720,
+    "line_no": 1733,
     "symbol": "ExtendedDiagnostics",
     "signature": "class ExtendedDiagnostics(BaseModel)",
     "brief_usage": "Optional extended diagnostics controls."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 1733,
+    "line_no": 1746,
     "symbol": "EnergyBookkeeping",
     "signature": "class EnergyBookkeeping(BaseModel)",
     "brief_usage": "Controls for collision energy bookkeeping outputs."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 1746,
+    "line_no": 1759,
     "symbol": "Diagnostics",
     "signature": "class Diagnostics(BaseModel)",
     "brief_usage": "Diagnostics toggles grouped by feature phase."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 1753,
+    "line_no": 1766,
     "symbol": "Config",
     "signature": "class Config(BaseModel)",
     "brief_usage": "Top-level configuration object."

@@ -393,9 +393,15 @@ def run_one_d(
         sigma_midplane = np.array([sigma_func(r) for r in r_vals], dtype=float)
         sigma_midplane_avg = float(np.sum(sigma_midplane * area_vals) / max(np.sum(area_vals), 1.0))
 
-    psd_states: List[Dict[str, np.ndarray | float]] = [
-        copy.deepcopy(psd_state_template) for _ in range(n_cells)
-    ]
+    psd_state_base = dict(psd_state_template)
+    number_template = np.asarray(psd_state_template.get("number"), dtype=float)
+    psd_states: List[Dict[str, np.ndarray | float]] = []
+    for _ in range(n_cells):
+        psd_state = dict(psd_state_base)
+        number_copy = number_template.copy()
+        psd_state["number"] = number_copy
+        psd_state["n"] = number_copy
+        psd_states.append(psd_state)
     kappa_surf_cells = np.full(n_cells, kappa_surf_initial, dtype=float)
     kappa_eff_cells = np.full(n_cells, kappa_eff0, dtype=float)
     tau_los_cells = np.full(n_cells, kappa_surf_initial * sigma_surf0_target * los_factor, dtype=float)
@@ -448,6 +454,7 @@ def run_one_d(
         if chi_blow_eff <= 0.0:
             raise ConfigurationError("chi_blow must be positive")
     chi_blow_eff = float(min(max(chi_blow_eff, 0.5), 2.0))
+    t_blow_vals = np.where(Omega_vals > 0.0, chi_blow_eff / Omega_vals, float("inf"))
 
     sub_params_base = SublimationParams(**cfg.sinks.sub_params.model_dump())
     sub_params_cells: List[SublimationParams] = []
@@ -584,6 +591,11 @@ def run_one_d(
     streaming_step_interval = int(getattr(streaming_cfg, "step_flush_interval", 10000) or 0)
     streaming_compression = str(getattr(streaming_cfg, "compression", "snappy") or "snappy")
     streaming_merge_at_end = bool(getattr(streaming_cfg, "merge_at_end", True))
+    streaming_cleanup_chunks = bool(getattr(streaming_cfg, "cleanup_chunks", True))
+    psd_history_enabled = bool(getattr(cfg.io, "psd_history", True))
+    psd_history_stride = int(getattr(cfg.io, "psd_history_stride", 1) or 1)
+    if psd_history_stride < 1:
+        psd_history_stride = 1
 
     history = ZeroDHistory()
     streaming_state = StreamingState(
@@ -593,6 +605,7 @@ def run_one_d(
         memory_limit_gb=streaming_memory_limit_gb,
         step_flush_interval=streaming_step_interval,
         merge_at_end=streaming_merge_at_end,
+        cleanup_chunks=streaming_cleanup_chunks,
     )
     steps_since_flush = 0
 
@@ -643,6 +656,9 @@ def run_one_d(
 
         t_coll_min = float("inf")
         step_records = []
+        step_out_mass = 0.0
+        step_sink_mass = 0.0
+        step_sublimation_mass = 0.0
 
         for idx in range(n_cells):
             r_val = float(r_vals[idx])
@@ -675,7 +691,7 @@ def run_one_d(
                     "r_RM": r_rm,
                     "Omega_s": Omega_val,
                     "t_orb_s": t_orb_val,
-                    "t_blow": chi_blow_eff / Omega_val if Omega_val > 0.0 else float("inf"),
+                    "t_blow": float(t_blow_vals[idx]),
                     "T_M_used": T_use,
                     "rad_flux_Mars": rad_flux_step,
                     "tau": float(tau_los_cells[idx]) if math.isfinite(tau_los_cells[idx]) else 0.0,
@@ -743,11 +759,6 @@ def run_one_d(
                 )
                 temperature_for_phase = T_p_effective
             else:
-                T_p_effective = phase_mod.particle_temperature_equilibrium(
-                    T_use,
-                    r_val,
-                    phase_q_abs_mean,
-                )
                 temperature_for_phase = T_use
 
             phase_decision, phase_bulk = phase_controller.evaluate_with_bulk(
@@ -918,7 +929,7 @@ def run_one_d(
             sigma_surf[idx] = sigma_val
             psd_states[idx] = psd_state
 
-            t_blow = chi_blow_eff / Omega_val if Omega_val > 0.0 else float("inf")
+            t_blow = float(t_blow_vals[idx])
             dt_over_t_blow = dt / t_blow if t_blow > 0.0 and math.isfinite(t_blow) else 0.0
 
             fast_blowout_factor = _fast_blowout_correction_factor(dt_over_t_blow) if dt_over_t_blow > 0.0 else 0.0
@@ -929,6 +940,9 @@ def run_one_d(
             M_sink_dot = sink_flux_surface * area_val / constants.M_MARS
             M_loss_cum[idx] += M_out_dot * dt
             M_sink_cum[idx] += M_sink_dot * dt
+            step_out_mass += M_out_dot * dt
+            step_sink_mass += M_sink_dot * dt
+            step_sublimation_mass += mass_loss_sublimation_step
 
             record = {
                 "time": time + dt,
@@ -985,31 +999,32 @@ def run_one_d(
             if not cell_active[idx] and frozen_records[idx] is None:
                 frozen_records[idx] = dict(record)
 
-            sizes_arr = np.asarray(psd_state.get("sizes"), dtype=float)
-            widths_arr = np.asarray(psd_state.get("widths"), dtype=float)
-            number_arr = np.asarray(psd_state.get("number"), dtype=float)
-            if sizes_arr.size and number_arr.size == sizes_arr.size and widths_arr.size == sizes_arr.size:
-                mass_weight_bins = number_arr * (sizes_arr ** 3) * widths_arr
-                mass_weight_total = float(np.sum(mass_weight_bins))
-                if not math.isfinite(mass_weight_total) or mass_weight_total <= 0.0:
-                    mass_frac = np.zeros_like(mass_weight_bins)
-                else:
-                    mass_frac = mass_weight_bins / mass_weight_total
-                for b_idx, (size_val, number_val, f_mass_val) in enumerate(zip(sizes_arr, number_arr, mass_frac)):
-                    history.psd_hist_records.append(
-                        {
-                            "time": time + dt,
-                            "cell_index": idx,
-                            "r_m": r_val,
-                            "r_RM": r_rm,
-                            "bin_index": int(b_idx),
-                            "s_bin_center": float(size_val),
-                            "N_bin": float(number_val),
-                            "Sigma_bin": float(f_mass_val * sigma_val),
-                            "f_mass": float(f_mass_val),
-                            "Sigma_surf": sigma_val,
-                        }
-                    )
+            if psd_history_enabled and (psd_history_stride <= 1 or step_no % psd_history_stride == 0):
+                sizes_arr = np.asarray(psd_state.get("sizes"), dtype=float)
+                widths_arr = np.asarray(psd_state.get("widths"), dtype=float)
+                number_arr = np.asarray(psd_state.get("number"), dtype=float)
+                if sizes_arr.size and number_arr.size == sizes_arr.size and widths_arr.size == sizes_arr.size:
+                    mass_weight_bins = number_arr * (sizes_arr ** 3) * widths_arr
+                    mass_weight_total = float(np.sum(mass_weight_bins))
+                    if not math.isfinite(mass_weight_total) or mass_weight_total <= 0.0:
+                        mass_frac = np.zeros_like(mass_weight_bins)
+                    else:
+                        mass_frac = mass_weight_bins / mass_weight_total
+                    for b_idx, (size_val, number_val, f_mass_val) in enumerate(zip(sizes_arr, number_arr, mass_frac)):
+                        history.psd_hist_records.append(
+                            {
+                                "time": time + dt,
+                                "cell_index": idx,
+                                "r_m": r_val,
+                                "r_RM": r_rm,
+                                "bin_index": int(b_idx),
+                                "s_bin_center": float(size_val),
+                                "N_bin": float(number_val),
+                                "Sigma_bin": float(f_mass_val * sigma_val),
+                                "f_mass": float(f_mass_val),
+                                "Sigma_surf": sigma_val,
+                            }
+                        )
 
             mass_lost_cell = M_loss_cum[idx] + M_sink_cum[idx]
             mass_remaining_cell = mass_initial_cell[idx] - mass_lost_cell
@@ -1038,19 +1053,6 @@ def run_one_d(
                 record["t_coll_kernel_min"] = t_coll_min_output
             history.records.extend(step_records)
 
-        step_out_mass = 0.0
-        step_sink_mass = 0.0
-        step_sublimation_mass = 0.0
-        if step_records:
-            step_out_mass = float(
-                sum(float(record.get("M_out_dot", 0.0)) for record in step_records) * dt
-            )
-            step_sink_mass = float(
-                sum(float(record.get("mass_lost_sinks_step", 0.0)) for record in step_records)
-            )
-            step_sublimation_mass = float(
-                sum(float(record.get("mass_lost_sublimation_step", 0.0)) for record in step_records)
-            )
         M_sublimation_cum += step_sublimation_mass
         if orbit_rollup_enabled and t_orb_ref > 0.0:
             orbit_time_accum += dt
@@ -1091,7 +1093,6 @@ def run_one_d(
                 orbit_loss_blow = max(orbit_loss_blow - M_orbit_blow, 0.0)
                 orbit_loss_sink = max(orbit_loss_sink - M_orbit_sink, 0.0)
 
-        mass_initial_total = float(np.sum(mass_initial_cell))
         mass_lost_total = float(np.sum(M_loss_cum + M_sink_cum))
         mass_remaining_total = mass_initial_total - mass_lost_total
         mass_diff_total = mass_initial_total - mass_remaining_total - mass_lost_total

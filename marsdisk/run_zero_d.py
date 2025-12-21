@@ -1344,9 +1344,49 @@ def run_zero_d(
                 deprecated_supply_messages.append("supply.const.prod_area_rate_kg_m2_s without mu_orbit10pct")
             else:
                 deprecated_supply_messages.append("supply.const.mu_orbit10pct not set")
+        if supply_orbit_fraction is not None and math.isfinite(float(supply_orbit_fraction)):
+            if abs(float(supply_orbit_fraction) - 0.10) > 1.0e-6:
+                deprecated_supply_messages.append(
+                    f"supply.const.orbit_fraction_at_mu1={float(supply_orbit_fraction):.3g}"
+                )
         supply_fields_set = _model_fields_set(supply_spec)
         if "headroom_policy" in supply_fields_set:
             deprecated_supply_messages.append(f"supply.headroom_policy='{supply_headroom_policy}'")
+        if supply_injection_cfg is not None:
+            default_injection = supply_injection_cfg.__class__()
+            injection_flags: List[str] = []
+            if supply_injection_mode != default_injection.mode:
+                injection_flags.append(f"mode='{supply_injection_mode}'")
+            if supply_injection_s_min is not None:
+                injection_flags.append(f"s_inj_min={float(supply_injection_s_min):.3g}")
+            if supply_injection_s_max is not None:
+                injection_flags.append(f"s_inj_max={float(supply_injection_s_max):.3g}")
+            if not math.isclose(float(supply_injection_q), float(default_injection.q), rel_tol=1e-9, abs_tol=0.0):
+                injection_flags.append(f"q={float(supply_injection_q):.3g}")
+            deep_tmix_cfg = getattr(supply_injection_cfg, "deep_reservoir_tmix_orbits", None)
+            if deep_tmix_cfg is not None and math.isfinite(float(deep_tmix_cfg)) and float(deep_tmix_cfg) > 0.0:
+                injection_flags.append(f"deep_reservoir_tmix_orbits={float(deep_tmix_cfg):.3g}")
+            if injection_flags:
+                deprecated_supply_messages.append(f"supply.injection ({', '.join(injection_flags)})")
+            default_velocity = getattr(default_injection, "velocity", None)
+            if supply_velocity_cfg is not None and default_velocity is not None:
+                velocity_flags: List[str] = []
+                if supply_velocity_mode != default_velocity.mode:
+                    velocity_flags.append(f"mode='{supply_velocity_mode}'")
+                if supply_velocity_e_inj is not None:
+                    velocity_flags.append(f"e_inj={float(supply_velocity_e_inj):.3g}")
+                if supply_velocity_i_inj is not None:
+                    velocity_flags.append(f"i_inj={float(supply_velocity_i_inj):.3g}")
+                if supply_velocity_vrel_factor is not None:
+                    velocity_flags.append(f"vrel_factor={float(supply_velocity_vrel_factor):.3g}")
+                if supply_velocity_blend_mode != default_velocity.blend_mode:
+                    velocity_flags.append(f"blend_mode='{supply_velocity_blend_mode}'")
+                if supply_velocity_weight_mode != default_velocity.weight_mode:
+                    velocity_flags.append(f"weight_mode='{supply_velocity_weight_mode}'")
+                if velocity_flags:
+                    deprecated_supply_messages.append(
+                        f"supply.injection.velocity ({', '.join(velocity_flags)})"
+                    )
         transport_flags: List[str] = []
         if supply_transport_mode != "direct":
             transport_flags.append(f"mode='{supply_transport_mode}'")
@@ -1581,6 +1621,11 @@ def run_zero_d(
     streaming_merge_at_end = bool(
         getattr(streaming_cfg, "merge_at_end", True)
     )
+    streaming_cleanup_chunks = bool(getattr(streaming_cfg, "cleanup_chunks", True))
+    psd_history_enabled = bool(getattr(cfg.io, "psd_history", True))
+    psd_history_stride = int(getattr(cfg.io, "psd_history_stride", 1) or 1)
+    if psd_history_stride < 1:
+        psd_history_stride = 1
     streaming_merge_completed: Optional[bool] = None
     streaming_state = StreamingState(
         enabled=streaming_enabled,
@@ -1589,6 +1634,7 @@ def run_zero_d(
         memory_limit_gb=streaming_memory_limit_gb,
         step_flush_interval=streaming_step_interval,
         merge_at_end=streaming_merge_at_end,
+        cleanup_chunks=streaming_cleanup_chunks,
         step_diag_enabled=step_diag_enabled,
         step_diag_path=step_diag_path,
         step_diag_format=step_diag_format,
@@ -3304,33 +3350,34 @@ def run_zero_d(
                 supply_reservoir_remaining_track.append(float(supply_diag_last.reservoir_remaining_Mmars))
         records.append(record)
 
-        try:
-            sizes_arr = np.asarray(psd_state.get("sizes"), dtype=float)
-            widths_arr = np.asarray(psd_state.get("widths"), dtype=float)
-            number_arr = np.asarray(psd_state.get("number"), dtype=float)
-        except Exception:
-            sizes_arr = np.empty(0, dtype=float)
-            widths_arr = np.empty(0, dtype=float)
-            number_arr = np.empty(0, dtype=float)
-        if sizes_arr.size and number_arr.size == sizes_arr.size and widths_arr.size == sizes_arr.size:
-            mass_weight_bins = number_arr * (sizes_arr ** 3) * widths_arr
-            mass_weight_total = float(np.sum(mass_weight_bins))
-            if not math.isfinite(mass_weight_total) or mass_weight_total <= 0.0:
-                mass_frac = np.zeros_like(mass_weight_bins)
-            else:
-                mass_frac = mass_weight_bins / mass_weight_total
-            for idx, (size_val, number_val, f_mass_val) in enumerate(zip(sizes_arr, number_arr, mass_frac)):
-                psd_hist_records.append(
-                    {
-                        "time": time,
-                        "bin_index": int(idx),
-                        "s_bin_center": float(size_val),
-                        "N_bin": float(number_val),
-                        "Sigma_bin": float(f_mass_val * sigma_surf),
-                        "f_mass": float(f_mass_val),
-                        "Sigma_surf": sigma_surf,
-                    }
-                )
+        if psd_history_enabled and (psd_history_stride <= 1 or step_no % psd_history_stride == 0):
+            try:
+                sizes_arr = np.asarray(psd_state.get("sizes"), dtype=float)
+                widths_arr = np.asarray(psd_state.get("widths"), dtype=float)
+                number_arr = np.asarray(psd_state.get("number"), dtype=float)
+            except Exception:
+                sizes_arr = np.empty(0, dtype=float)
+                widths_arr = np.empty(0, dtype=float)
+                number_arr = np.empty(0, dtype=float)
+            if sizes_arr.size and number_arr.size == sizes_arr.size and widths_arr.size == sizes_arr.size:
+                mass_weight_bins = number_arr * (sizes_arr ** 3) * widths_arr
+                mass_weight_total = float(np.sum(mass_weight_bins))
+                if not math.isfinite(mass_weight_total) or mass_weight_total <= 0.0:
+                    mass_frac = np.zeros_like(mass_weight_bins)
+                else:
+                    mass_frac = mass_weight_bins / mass_weight_total
+                for idx, (size_val, number_val, f_mass_val) in enumerate(zip(sizes_arr, number_arr, mass_frac)):
+                    psd_hist_records.append(
+                        {
+                            "time": time,
+                            "bin_index": int(idx),
+                            "s_bin_center": float(size_val),
+                            "N_bin": float(number_val),
+                            "Sigma_bin": float(f_mass_val * sigma_surf),
+                            "f_mass": float(f_mass_val),
+                            "Sigma_surf": sigma_surf,
+                        }
+                    )
 
         F_abs_geom = constants.SIGMA_SB * (T_use**4) * (constants.R_MARS / r) ** 2
         phi_effective_diag = phi_effective_last
@@ -4160,6 +4207,7 @@ def run_zero_d(
             "step_flush_interval": streaming_step_interval if streaming_state.enabled else None,
             "compression": streaming_compression if streaming_state.enabled else None,
             "merge_at_end": streaming_merge_at_end if streaming_state.enabled else False,
+            "cleanup_chunks": streaming_cleanup_chunks if streaming_state.enabled else None,
             "run_chunks": [str(p) for p in streaming_state.run_chunks],
             "psd_chunks": [str(p) for p in streaming_state.psd_chunks],
             "diagnostics_chunks": [str(p) for p in streaming_state.diag_chunks],

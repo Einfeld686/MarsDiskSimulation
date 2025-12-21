@@ -33,6 +33,7 @@ class StreamingState:
         memory_limit_gb: float = 10.0,
         step_flush_interval: int = 10000,
         merge_at_end: bool = True,
+        cleanup_chunks: bool = True,
         step_diag_enabled: bool = False,
         step_diag_path: Optional[Path] = None,
         step_diag_format: str = "csv",
@@ -43,6 +44,7 @@ class StreamingState:
         self.memory_limit_bytes = float(memory_limit_gb) * (1024.0**3)
         self.step_flush_interval = int(step_flush_interval) if step_flush_interval > 0 else 0
         self.merge_at_end = bool(merge_at_end)
+        self.cleanup_chunks = bool(cleanup_chunks)
         self.step_diag_enabled = bool(step_diag_enabled)
         self.step_diag_path = step_diag_path if step_diag_enabled else None
         self.step_diag_format = step_diag_format
@@ -138,18 +140,51 @@ class StreamingState:
     def merge_chunks(self) -> None:
         if not self.enabled or not self.merge_at_end:
             return
-        if self.run_chunks:
-            self._merge_parquet_chunks(self.run_chunks, self.outdir / "series" / "run.parquet")
-        if self.psd_chunks:
-            self._merge_parquet_chunks(
-                self.psd_chunks, self.outdir / "series" / "psd_hist.parquet"
+        run_chunks = self._existing_chunks(self.run_chunks)
+        if run_chunks:
+            merged = self._merge_parquet_chunks(run_chunks, self.outdir / "series" / "run.parquet")
+            if merged and self.cleanup_chunks:
+                removed = self._cleanup_chunk_files(run_chunks)
+                if removed:
+                    removed_set = set(removed)
+                    self.run_chunks = [p for p in self.run_chunks if p not in removed_set]
+        psd_chunks = self._existing_chunks(self.psd_chunks)
+        if psd_chunks:
+            merged = self._merge_parquet_chunks(
+                psd_chunks, self.outdir / "series" / "psd_hist.parquet"
             )
-        if self.diag_chunks:
-            self._merge_parquet_chunks(
-                self.diag_chunks, self.outdir / "series" / "diagnostics.parquet"
+            if merged and self.cleanup_chunks:
+                removed = self._cleanup_chunk_files(psd_chunks)
+                if removed:
+                    removed_set = set(removed)
+                    self.psd_chunks = [p for p in self.psd_chunks if p not in removed_set]
+        diag_chunks = self._existing_chunks(self.diag_chunks)
+        if diag_chunks:
+            merged = self._merge_parquet_chunks(
+                diag_chunks, self.outdir / "series" / "diagnostics.parquet"
             )
+            if merged and self.cleanup_chunks:
+                removed = self._cleanup_chunk_files(diag_chunks)
+                if removed:
+                    removed_set = set(removed)
+                    self.diag_chunks = [p for p in self.diag_chunks if p not in removed_set]
 
-    def _merge_parquet_chunks(self, chunks: List[Path], destination: Path) -> None:
+    def _existing_chunks(self, chunks: List[Path]) -> List[Path]:
+        return [path for path in chunks if path.exists()]
+
+    def _cleanup_chunk_files(self, chunks: List[Path]) -> List[Path]:
+        removed: List[Path] = []
+        for path in chunks:
+            try:
+                path.unlink()
+                removed.append(path)
+            except FileNotFoundError:
+                continue
+            except OSError as exc:
+                logger.warning("Failed to remove chunk %s: %s", path, exc)
+        return removed
+
+    def _merge_parquet_chunks(self, chunks: List[Path], destination: Path) -> bool:
         """Merge multiple Parquet chunk files into a single destination file.
 
         This method handles schema mismatches between chunks by unifying schemas
@@ -157,7 +192,7 @@ class StreamingState:
         by different code versions or across checkpoint restarts.
         """
         if not chunks:
-            return
+            return False
         writer._ensure_parent(destination)
         sorted_chunks = sorted(chunks)
 
@@ -174,7 +209,7 @@ class StreamingState:
 
         if not schemas:
             logger.warning("No valid chunk schemas found, skipping merge for %s", destination)
-            return
+            return False
 
         # Phase 2: Unify schemas to create a superset of all columns
         try:
@@ -215,6 +250,7 @@ class StreamingState:
         finally:
             if parquet_writer is not None:
                 parquet_writer.close()
+        return parquet_writer is not None and destination.exists()
 
 
 __all__ = [

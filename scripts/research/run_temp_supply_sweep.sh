@@ -20,6 +20,7 @@ PY
 )
 BATCH_ROOT_FALLBACK="out"
 BATCH_ROOT_DEFAULT_EXT="/Volumes/KIOXIA/marsdisk_out"
+SWEEP_TAG="${SWEEP_TAG:-temp_supply_sweep}"
 if [[ -n "${OUT_ROOT:-}" ]]; then
   BATCH_ROOT="${OUT_ROOT}"
 elif [[ -d "/Volumes/KIOXIA" && -w "/Volumes/KIOXIA" ]]; then
@@ -28,7 +29,7 @@ elif [[ -d "/Volumes/KIOXIA" && -w "/Volumes/KIOXIA" ]]; then
 else
   BATCH_ROOT="${BATCH_ROOT_FALLBACK}"
 fi
-BATCH_DIR="${BATCH_ROOT}/temp_supply_sweep/${RUN_TS}__${GIT_SHA}__seed${BATCH_SEED}"
+BATCH_DIR="${BATCH_ROOT}/${SWEEP_TAG}/${RUN_TS}__${GIT_SHA}__seed${BATCH_SEED}"
 echo "[setup] Output root: ${BATCH_ROOT}"
 mkdir -p "${BATCH_DIR}"
 
@@ -51,6 +52,10 @@ fi
 BASE_CONFIG="${BASE_CONFIG:-configs/sweep_temp_supply/temp_supply_T4000_eps1.yml}"
 # qstar unit system (ba99_cgs: cm/g/cm^3/erg/g → J/kg, si: legacy meter/kg)
 QSTAR_UNITS="${QSTAR_UNITS:-ba99_cgs}"
+GEOMETRY_MODE="${GEOMETRY_MODE:-0D}"
+GEOMETRY_NR="${GEOMETRY_NR:-32}"
+GEOMETRY_R_IN_M="${GEOMETRY_R_IN_M:-}"
+GEOMETRY_R_OUT_M="${GEOMETRY_R_OUT_M:-}"
 
 # Parameter grids (run hotter cases first). Override via env:
 #   T_LIST_RAW="4000 3000", EPS_LIST_RAW="1.0", PHI_LIST_RAW="37"
@@ -157,6 +162,7 @@ echo "[config] external supply: mu_orbit10pct=${SUPPLY_MU_ORBIT10PCT} orbit_frac
 echo "[config] optical_depth: tau0_target=${OPTICAL_TAU0_TARGET} tau_stop=${OPTICAL_TAU_STOP} tau_stop_tol=${OPTICAL_TAU_STOP_TOL}"
 echo "[config] fast blowout substep: enabled=${SUBSTEP_FAST_BLOWOUT} substep_max_ratio=${SUBSTEP_MAX_RATIO:-default}"
 echo "[config] phase temperature input: ${PHASE_TEMP_INPUT} (q_abs_mean=${PHASE_QABS_MEAN}, tau_field=${PHASE_TAU_FIELD})"
+echo "[config] geometry: mode=${GEOMETRY_MODE} Nr=${GEOMETRY_NR} r_in_m=${GEOMETRY_R_IN_M:-disk.geometry} r_out_m=${GEOMETRY_R_OUT_M:-disk.geometry}"
 if [[ -n "${COOL_TO_K}" ]]; then
   echo "[config] dynamic horizon: stop when Mars T_M <= ${COOL_TO_K} K (margin ${COOL_MARGIN_YEARS} yr, search_cap=${COOL_SEARCH_YEARS:-none})"
 else
@@ -301,21 +307,31 @@ PY
       )
       # 強制的に progress を有効化しつつ、ログは静かめに
       cmd+=(--progress --quiet)
-        cmd+=(
-          --override numerics.dt_init=20
-          --override "numerics.stop_on_blowout_below_smin=${STOP_ON_BLOWOUT_BELOW_SMIN}"
-          --override "io.outdir=${OUTDIR}"
-          --override "dynamics.rng_seed=${SEED}"
+      cmd+=(
+        --override numerics.dt_init=20
+        --override "numerics.stop_on_blowout_below_smin=${STOP_ON_BLOWOUT_BELOW_SMIN}"
+        --override "io.outdir=${OUTDIR}"
+        --override "dynamics.rng_seed=${SEED}"
         --override "phase.enabled=true"
         --override "phase.temperature_input=${PHASE_TEMP_INPUT}"
         --override "phase.q_abs_mean=${PHASE_QABS_MEAN}"
         --override "phase.tau_field=${PHASE_TAU_FIELD}"
         --override "radiation.TM_K=${T}"
-          --override "qstar.coeff_units=${QSTAR_UNITS}"
-          --override "radiation.qpr_table_path=marsdisk/io/data/qpr_planck_sio2_abbas_calibrated_lowT.csv"
-          --override "radiation.mars_temperature_driver.enabled=true"
-          --override "initial.mass_total=${INIT_MASS_TOTAL}"
-        )
+        --override "qstar.coeff_units=${QSTAR_UNITS}"
+        --override "radiation.qpr_table_path=marsdisk/io/data/qpr_planck_sio2_abbas_calibrated_lowT.csv"
+        --override "radiation.mars_temperature_driver.enabled=true"
+        --override "initial.mass_total=${INIT_MASS_TOTAL}"
+      )
+      if [[ "${GEOMETRY_MODE}" == "1D" ]]; then
+        cmd+=(--override "geometry.mode=1D")
+        cmd+=(--override "geometry.Nr=${GEOMETRY_NR}")
+        if [[ -n "${GEOMETRY_R_IN_M}" ]]; then
+          cmd+=(--override "geometry.r_in=${GEOMETRY_R_IN_M}")
+        fi
+        if [[ -n "${GEOMETRY_R_OUT_M}" ]]; then
+          cmd+=(--override "geometry.r_out=${GEOMETRY_R_OUT_M}")
+        fi
+      fi
       if [[ "${COOL_MODE}" == "hyodo" ]]; then
         cmd+=(--override "radiation.mars_temperature_driver.mode=hyodo")
         cmd+=(--override "radiation.mars_temperature_driver.hyodo.d_layer_m=1.0e5")
@@ -395,6 +411,7 @@ PY
       RUN_DIR="${final_dir}" python - <<'PY'
 import os
 import json
+import math
 from pathlib import Path
 import matplotlib
 
@@ -410,45 +427,242 @@ PLOT_BATCH_SIZE = int(os.environ.get("PLOT_BATCH_SIZE", "4096") or "4096")
 
 
 def load_downsampled_df(path: Path, columns, *, target_rows: int, batch_size: int):
-    """Load a column-limited, downsampled DataFrame without holding all rows."""
+    """Load a column-limited, downsampled DataFrame (0D or 1D aware)."""
 
     def _empty_df(cols):
         return pd.DataFrame({c: pd.Series(dtype=float) for c in cols})
 
+    def _compute_cell_weight_map(group_df: pd.DataFrame) -> dict[int, float] | None:
+        if "cell_index" not in group_df or "r_m" not in group_df:
+            return None
+        cells = (
+            group_df[["cell_index", "r_m"]]
+            .dropna()
+            .drop_duplicates()
+            .sort_values("cell_index")
+        )
+        if cells.empty:
+            return None
+        r_vals = cells["r_m"].to_numpy(dtype=float)
+        if r_vals.size == 1:
+            weights = np.array([1.0])
+        else:
+            edges = np.empty(r_vals.size + 1, dtype=float)
+            edges[1:-1] = 0.5 * (r_vals[1:] + r_vals[:-1])
+            edges[0] = r_vals[0] - (edges[1] - r_vals[0])
+            edges[-1] = r_vals[-1] + (r_vals[-1] - edges[-2])
+            edges = np.clip(edges, 0.0, None)
+            areas = np.pi * (edges[1:] ** 2 - edges[:-1] ** 2)
+            if not np.all(np.isfinite(areas)) or np.sum(areas) <= 0.0:
+                weights = np.full_like(r_vals, 1.0 / r_vals.size)
+            else:
+                weights = areas / np.sum(areas)
+        return {
+            int(cell): float(weight)
+            for cell, weight in zip(cells["cell_index"].astype(int), weights)
+        }
+
+    def _weighted_mean(series: pd.Series, weights: np.ndarray | None) -> float:
+        values = pd.to_numeric(series, errors="coerce").to_numpy(dtype=float)
+        mask = np.isfinite(values)
+        if not mask.any():
+            return float("nan")
+        if weights is None or not np.any(np.isfinite(weights)):
+            return float(np.nanmean(values))
+        w = weights[mask]
+        v = values[mask]
+        if np.sum(w) <= 0.0:
+            return float(np.nanmean(v))
+        return float(np.sum(w * v) / np.sum(w))
+
     pf = pq.ParquetFile(path)
     schema_names = set(pf.schema.names)
+    total_rows = pf.metadata.num_rows if pf.metadata is not None else 0
+    is_1d = "cell_index" in schema_names
+    alias_map: dict[str, str] = {}
+    if "t_blow_s" in columns and "t_blow" in schema_names:
+        alias_map["t_blow_s"] = "t_blow"
+    if "t_coll" in columns and "t_coll_kernel_min" in schema_names:
+        alias_map["t_coll"] = "t_coll_kernel_min"
+
     available_cols = [c for c in columns if c in schema_names]
-    missing_cols = [c for c in columns if c not in schema_names]
+    missing_cols = [c for c in columns if c not in schema_names and c not in alias_map]
     total_rows = pf.metadata.num_rows if pf.metadata is not None else 0
     if not available_cols or total_rows == 0:
         return _empty_df(columns), missing_cols, total_rows, 0.0
 
-    step = max(total_rows // target_rows, 1) if target_rows > 0 else 1
-    frames = []
-    row_offset = 0
+    if not is_1d:
+        step = max(total_rows // target_rows, 1) if target_rows > 0 else 1
+        frames = []
+        row_offset = 0
+        prod_sum = 0.0
+        prod_count = 0
+
+        for batch in pf.iter_batches(columns=available_cols, batch_size=batch_size, use_threads=True):
+            pdf = batch.to_pandas()
+            if "prod_subblow_area_rate" in pdf:
+                series = pd.to_numeric(pdf["prod_subblow_area_rate"], errors="coerce")
+                prod_sum += float(series.sum(skipna=True))
+                prod_count += int(series.notna().sum())
+
+            if step == 1:
+                frames.append(pdf)
+            else:
+                idx = np.arange(len(pdf)) + row_offset
+                mask = (idx % step) == 0
+                if mask.any():
+                    frames.append(pdf.loc[mask])
+            row_offset += len(pdf)
+
+        df = pd.concat(frames, ignore_index=True) if frames else _empty_df(available_cols)
+        for col in missing_cols:
+            df[col] = np.nan
+        df = df.reindex(columns=columns)
+        df.attrs["is_1d"] = False
+        prod_mean = (prod_sum / prod_count) if prod_count else 0.0
+        return df, missing_cols, total_rows, prod_mean
+
+    required_cols = list(available_cols)
+    for col in alias_map.values():
+        if col not in required_cols and col in schema_names:
+            required_cols.append(col)
+    for extra in ("time", "cell_index", "r_m", "dt"):
+        if extra in schema_names and extra not in required_cols:
+            required_cols.append(extra)
+
+    if not required_cols:
+        return _empty_df(columns), missing_cols, total_rows, 0.0
+
+    sum_cols = {
+        "M_out_dot",
+        "M_sink_dot",
+        "M_loss_cum",
+        "M_sink_cum",
+        "mass_lost_by_blowout",
+        "mass_lost_by_sinks",
+        "mass_total_bins",
+        "mass_lost_sinks_step",
+        "mass_lost_sublimation_step",
+    }
+    mean_cols = {
+        "Sigma_surf",
+        "sigma_surf",
+        "sigma_deep",
+        "Sigma_tau1",
+        "sigma_tau1",
+        "outflux_surface",
+        "prod_subblow_area_rate",
+        "supply_rate_nominal",
+        "supply_rate_scaled",
+        "supply_rate_applied",
+        "prod_rate_raw",
+        "prod_rate_applied_to_surf",
+        "prod_rate_diverted_to_deep",
+        "deep_to_surf_flux",
+        "supply_headroom",
+        "supply_clip_factor",
+        "headroom",
+        "tau",
+        "tau_vertical",
+        "tau_los_mars",
+        "dt_over_t_blow",
+        "t_blow_s",
+        "t_blow",
+        "t_coll",
+        "t_coll_kernel_min",
+    }
+
+    batch_iter = pf.iter_batches(columns=required_cols, batch_size=batch_size, use_threads=True)
+    first_batch = next(batch_iter, None)
+    if first_batch is None:
+        return _empty_df(columns), missing_cols, total_rows, 0.0
+    first_pdf = first_batch.to_pandas()
+    n_cells = int(first_pdf["cell_index"].nunique()) if "cell_index" in first_pdf else 0
+    total_steps = total_rows // max(n_cells, 1) if total_rows else 0
+    step = max(total_steps // target_rows, 1) if target_rows > 0 and total_steps > 0 else 1
+
+    aggregated_rows = []
+    current_time = None
+    buffer: list[pd.DataFrame] = []
+    time_index = 0
     prod_sum = 0.0
     prod_count = 0
+    weight_map: dict[int, float] | None = None
 
-    for batch in pf.iter_batches(columns=available_cols, batch_size=batch_size, use_threads=True):
-        pdf = batch.to_pandas()
-        if "prod_subblow_area_rate" in pdf:
-            series = pd.to_numeric(pdf["prod_subblow_area_rate"], errors="coerce")
-            prod_sum += float(series.sum(skipna=True))
-            prod_count += int(series.notna().sum())
+    def flush_group(group_df: pd.DataFrame) -> None:
+        nonlocal time_index, prod_sum, prod_count, weight_map
+        if group_df.empty:
+            return
+        keep = (step == 1) or (time_index % step == 0)
+        time_index += 1
+        if not keep:
+            return
+        if weight_map is None:
+            weight_map = _compute_cell_weight_map(group_df)
+        weights = None
+        if weight_map is not None and "cell_index" in group_df:
+            weights = (
+                group_df["cell_index"]
+                .map(weight_map)
+                .fillna(0.0)
+                .to_numpy(dtype=float)
+            )
 
-        if step == 1:
-            frames.append(pdf)
-        else:
-            idx = np.arange(len(pdf)) + row_offset
-            mask = (idx % step) == 0
-            if mask.any():
-                frames.append(pdf.loc[mask])
-        row_offset += len(pdf)
+        row: dict[str, float] = {}
+        for col in columns:
+            if col == "time":
+                row[col] = float(group_df["time"].iloc[0])
+                continue
+            if col == "dt" and "dt" in group_df:
+                row[col] = float(group_df["dt"].iloc[0])
+                continue
+            if col in sum_cols and col in group_df:
+                row[col] = float(pd.to_numeric(group_df[col], errors="coerce").sum(skipna=True))
+                continue
+            if col in mean_cols and col in group_df:
+                row[col] = _weighted_mean(group_df[col], weights)
+                continue
+            if col in group_df:
+                series = pd.to_numeric(group_df[col], errors="coerce").dropna()
+                row[col] = float(series.iloc[0]) if not series.empty else float("nan")
+            else:
+                row[col] = float("nan")
 
-    df = pd.concat(frames, ignore_index=True) if frames else _empty_df(available_cols)
-    for col in missing_cols:
-        df[col] = np.nan
+        for target, source in alias_map.items():
+            if target in columns and (target not in row or not math.isfinite(row[target])):
+                if source in group_df:
+                    row[target] = _weighted_mean(group_df[source], weights)
+
+        if "prod_subblow_area_rate" in row and math.isfinite(row["prod_subblow_area_rate"]):
+            prod_sum += float(row["prod_subblow_area_rate"])
+            prod_count += 1
+        aggregated_rows.append(row)
+
+    def process_pdf(pdf: pd.DataFrame) -> None:
+        nonlocal current_time, buffer
+        if pdf.empty:
+            return
+        for time_val, group in pdf.groupby("time", sort=False):
+            if current_time is None:
+                current_time = time_val
+            if time_val != current_time:
+                flush_group(pd.concat(buffer, ignore_index=True))
+                buffer = []
+                current_time = time_val
+            buffer.append(group)
+
+    process_pdf(first_pdf)
+    for batch in batch_iter:
+        process_pdf(batch.to_pandas())
+    if buffer:
+        flush_group(pd.concat(buffer, ignore_index=True))
+
+    df = pd.DataFrame(aggregated_rows) if aggregated_rows else _empty_df(columns)
+    for col in columns:
+        if col not in df:
+            df[col] = np.nan
     df = df.reindex(columns=columns)
+    df.attrs["is_1d"] = True
     prod_mean = (prod_sum / prod_count) if prod_count else 0.0
     return df, missing_cols, total_rows, prod_mean
 
@@ -519,8 +733,10 @@ if missing_cols:
 if total_rows > MAX_PLOT_ROWS:
     print(f"[info] downsampled series from {total_rows} rows to {len(df)} rows for plotting")
 df["time_days"] = df["time"] / 86400.0
-df["t_coll_years"] = (df["t_coll"].clip(lower=1e-6)) / 31557600.0
-df["t_blow_hours"] = (df["t_blow_s"].clip(lower=1e-12)) / 3600.0
+t_coll_series = df["t_coll"] if "t_coll" in df else pd.Series(np.nan, index=df.index)
+t_blow_series = df["t_blow_s"] if "t_blow_s" in df else pd.Series(np.nan, index=df.index)
+df["t_coll_years"] = (t_coll_series.clip(lower=1e-6)) / 31557600.0
+df["t_blow_hours"] = (t_blow_series.clip(lower=1e-12)) / 3600.0
 
 
 def _finite_array(series_list):
