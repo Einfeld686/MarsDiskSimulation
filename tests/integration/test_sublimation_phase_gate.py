@@ -8,7 +8,7 @@ import pytest
 from marsdisk import run
 
 
-BASE_CONFIG = Path("configs/base.yml")
+BASE_CONFIG = Path("configs/innerdisk_sublimation_only.yml")
 
 
 def _run_phase_case(
@@ -90,6 +90,8 @@ def test_liquid_phase_allows_hkl_when_enabled(tmp_path: Path) -> None:
     extra = [
         "sinks.sub_params.mode=hkl",
         "sinks.sub_params.psat_model=clausius",
+        "sinks.sub_params.A=13.613",
+        "sinks.sub_params.B=17850.0",
         "sinks.sub_params.enable_liquid_branch=true",
         "sinks.sub_params.psat_liquid_switch_K=1500.0",
         "phase.allow_liquid_hkl=true",

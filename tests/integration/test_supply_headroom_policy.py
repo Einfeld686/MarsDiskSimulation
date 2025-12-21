@@ -62,7 +62,7 @@ def test_tau_stop_triggers_without_clip(tmp_path: Path) -> None:
 
     outdir = tmp_path / "spill_run"
     cfg = run.load_config(
-        Path("configs/base.yml"),
+        Path("configs/mars_0d_supply_sweep.yaml"),
         overrides=[
             "supply.enabled=true",
             "supply.headroom_policy=spill",

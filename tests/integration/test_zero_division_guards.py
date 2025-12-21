@@ -47,7 +47,7 @@ def test_supply_powerlaw_t0_zero():
 
 
 def test_run_zero_d_no_zerodivision(monkeypatch, tmp_path):
-    cfg = run.load_config(Path("configs/base.yml"))
+    cfg = run.load_config(Path("configs/innerdisk_base.yml"))
     monkeypatch.setattr(run, "MAX_STEPS", 1)
     monkeypatch.setattr(cfg.io, "outdir", tmp_path)
     cfg.surface.collision_solver = "smol"

@@ -39,7 +39,7 @@ def test_phase_temperature_input_particle_is_recorded(tmp_path: Path) -> None:
         "disk.geometry.r_in_RM=1.5",
         "disk.geometry.r_out_RM=1.6",
     ]
-    cfg = run.load_config(Path("configs/base.yml"), overrides=overrides)
+    cfg = run.load_config(Path("configs/innerdisk_base.yml"), overrides=overrides)
     run.run_zero_d(cfg)
 
     series_path = tmp_path / "series" / "run.parquet"

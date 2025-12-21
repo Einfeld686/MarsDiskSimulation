@@ -8,7 +8,7 @@ import pytest
 from marsdisk import constants, run
 
 
-BASE_CONFIG = Path("configs/base.yml")
+BASE_CONFIG = Path("configs/innerdisk_sublimation_only.yml")
 DEFAULT_ENTRYPOINT = "siO2_disk_cooling.siO2_cooling_map:lookup_phase_state"
 
 

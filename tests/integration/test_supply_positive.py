@@ -144,7 +144,7 @@ def test_mu_orbit10pct_scales_supply(tmp_path: Path) -> None:
     mu_value = 2.0
     orbit_fraction = 0.10
     cfg = run.load_config(
-        Path("configs/base.yml"),
+        Path("configs/mars_0d_supply_sweep.yaml"),
         overrides=[
             f"io.outdir={outdir}",
             "io.streaming.enable=false",
