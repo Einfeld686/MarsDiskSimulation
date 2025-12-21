@@ -47,16 +47,18 @@ class ProgressReporter:
         self._header_emitted = True
 
     def update(self, step_no: int, sim_time_s: float, *, force: bool = False) -> None:
-        """Render the progress bar if enabled and refresh interval elapsed."""
+        """Render the progress bar when the percent changes by 0.1% or forced."""
 
         if not self.enabled or self._finished:
             return
         now = time.monotonic()
         is_last = (step_no + 1) >= self.total_steps
-        if not force and not is_last and (now - self.last) < self.refresh_seconds:
-            return
-        self.last = now
         frac = min(max((step_no + 1) / self.total_steps, 0.0), 1.0)
+        percent_tenth = int(frac * 1000)
+        if not force and not is_last and percent_tenth == self._last_percent_int:
+            return
+        self._last_percent_int = percent_tenth
+        self.last = now
         elapsed = now - self.start
         bar_width = 28
         filled = int(bar_width * frac)
@@ -89,11 +91,6 @@ class ProgressReporter:
             if is_last:
                 sys.stdout.write("\n")
         else:
-            # Update every 0.1% (tenths of percent)
-            percent_tenth = int(frac * 1000)
-            if percent_tenth == self._last_percent_int and not is_last:
-                return
-            self._last_percent_int = percent_tenth
             sys.stdout.write(f"{line}\n")
         if is_last:
             self._finished = True

@@ -207,7 +207,6 @@ def compute_kappa(psd_state: Dict[str, np.ndarray | float]) -> float:
     sizes = np.asarray(psd_state["sizes"], dtype=float)
     widths = np.asarray(psd_state["widths"], dtype=float)
     number = np.asarray(psd_state["number"], dtype=float)
-    number_orig = number.copy()
     rho = float(psd_state["rho"])
 
     if sizes.size == 0 or widths.size != sizes.size or number.size != sizes.size:
