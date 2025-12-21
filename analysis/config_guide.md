@@ -183,7 +183,7 @@ graph LR
 | `dynamics.f_wake`, `e0/i0`, `t_damp_orbits`, `kernel_ei_mode` | Ohtsuki 型の速度分散平衡 $c_{\rm eq}$ と高さスケール $H\simeq ia$ をベースに wake 係数で調整 | [@Ohtsuki2002_Icarus155_436] |
 | `qstar.*` (`Qs`, `a_s`, `B`, `b_g`, `v_ref_kms`, `coeff_units`, `mu_grav`) | バザルト衝突の $Q_D^*$ を Benz & Asphaug (1999) から採用し、速度依存は Stewart&Leinhardt (2009) と LS12 の補間＋LS09 型重力側外挿（$v^{-3\mu+2}$, `mu_grav` 既定0.45）。`coeff_units` で BA99 cgs/ SI を切替 | [@BenzAsphaug1999_Icarus142_5; @StewartLeinhardt2009_ApJ691_L133; @LeinhardtStewart2012_ApJ745_79] |
 | `supply.*`, `mixing.epsilon_mix` | 外部供給をサイズ別源項 S(a,r,t) として与え、バリスティック混合効率を ε_mix でパラメータ化 | [@WyattClarkeBooth2011_CeMDA111_1; @Wyatt2008; @EstradaDurisen2015_Icarus252_415; @CuzziEstrada1998_Icarus132_1] |
-| `shielding.mode`, `shielding.table_path`, `shielding.fixed_tau1_*` | Φ(τ,ω₀,g) テーブルを δ–Eddington/HG 近似から取得し、τ≳1 では Σ_{τ=1} でクリップ | [@Joseph1976_JAS33_2452; @HansenTravis1974_SSR16_527; @CogleyBergstrom1979_JQSRT22_267; @Chandrasekhar1960_RadiativeTransfer] |
+| `shielding.mode`, `shielding.table_path`, `shielding.fixed_tau1_*` | Φ(τ,ω₀,g) テーブルを δ–Eddington/HG 近似から取得し、Σ_{τ=1} は診断として記録（上限判定は `tau_stop` で停止） | [@Joseph1976_JAS33_2452; @HansenTravis1974_SSR16_527; @CogleyBergstrom1979_JQSRT22_267; @Chandrasekhar1960_RadiativeTransfer] |
 | `sinks.sub_params.*`, `sinks.T_sub`, `sinks.mu`, `sinks.alpha_evap` | SiO/SiO₂ の HKL 昇華係数と閾値を Hyodo18 の温度域・Pignatale18 の組成・Melosh/Bruning/Ojovan の相変化データに合わせる | [@Hyodo2018_ApJ860_150; @Pignatale2018_ApJ853_118; @Melosh2007_MPS42_2079; @Bruning2003_JNCS330_13; @Ojovan2021_Materials14_5235] |
 | `phase.thresholds.*`, `phase.entrypoint` | ガラス転移と液相線 1475/1986 K を閾値にした SiO₂ 状態判定 | [@Bruning2003_JNCS330_13; @Ojovan2021_Materials14_5235] |
 | `disk.geometry.r_in_RM`, `r_out_RM` | ロッシュ限界内の低質量リングを前提に 2.2–2.7 R_Mars を基準設定 | [@CridaCharnoz2012_Science338_1196; @CanupSalmon2018_SciAdv4_eaar6887] |
@@ -443,13 +443,13 @@ disk:
 
 選択したモードのパラメータのみ記述すれば OK。他はデフォルト値が使用されます。`mode` は `"const"` / `"table"` / `"powerlaw"` / `"piecewise"` から選択でき、全モードに共通で `mixing.epsilon_mix` を指定可能です。
 
-**μ から供給率を決める補助CLI（オプション）**
+**μ から供給率を決める補助CLI（legacy）**
 
-- 内部ディスク→表層の定常供給を無次元 μ で指定したい場合は、`tools/derive_supply_rate.py` を使って定数供給率 `supply.const.prod_area_rate_kg_m2_s` を生成できる。
+- 旧 μ (E.027a) から定数供給率 `supply.const.prod_area_rate_kg_m2_s` を導出する補助。新規の定常供給は `supply.const.mu_orbit10pct` と `orbit_fraction_at_mu1` で定義する。
 - 基本形:  
   `python -m tools.derive_supply_rate --mu 0.3 --sigma-tau1 1.0 --t-blow 1000 --epsilon-mix 1.0`
 - YAML 生成: `--format yaml` を付けると `supply: { mode: "const", const: { prod_area_rate_kg_m2_s: ... } }` を出力。
-- デフォルト源: `--config <yaml>` で設定ファイルから `supply.mixing.epsilon_mix` と `shielding.fixed_tau1_sigma` を読み込み、環境変数 `MARS_DISK_SIGMA_TAU1` / `MARS_DISK_EPSILON_MIX` もフォールバックとして利用する。通常は `--mu` と `--r`（または `--t-blow`）だけで済む運用を想定。Σ_{τ=1} は火星視線方向の τ_los で評価した Σ_tau1_los を指し、衝突・質量輸送で用いる鉛直 τ_vert とは役割を分ける。
+- デフォルト源: `--config <yaml>` で設定ファイルから `supply.mixing.epsilon_mix` と `shielding.fixed_tau1_sigma` を読み込み、環境変数 `MARS_DISK_SIGMA_TAU1` / `MARS_DISK_EPSILON_MIX` もフォールバックとして利用する。Σ_{τ=1} は LOS の `Sigma_tau1` 診断値を指し、衝突・質量輸送で用いる鉛直 τ_vert とは役割を分ける。
 - デフォルト値: `epsilon_mix` の標準値は 0.05（表層スキン分率のオーダー）に下げており、明示指定がない場合はこの値が掛かる点に注意。
 
 **例（const モード - 最小構成）:**
@@ -460,6 +460,20 @@ supply:
   const:
     prod_area_rate_kg_m2_s: 1.0e-10
 ```
+
+**例（mu_orbit10pct 指定）:**
+
+```yaml
+supply:
+  mode: "const"
+  const:
+    mu_orbit10pct: 1.0
+    orbit_fraction_at_mu1: 0.10
+  mixing:
+    epsilon_mix: 0.3
+```
+
+`mu_orbit10pct` の基準となる `Sigma_surf0` は `optical_depth.tau0_target` と遮蔽後 κ から定義される。表層が光学的に厚くなり `tau_stop` を超過した場合は停止判定に移行する。
 
 **例（table モード - 最小構成）:**
 
@@ -509,9 +523,9 @@ Wyatt, Clarke & Booth (2011) が提示するサイズ別源・損失の解析式
 
 | キー | 型 | 説明 | 典型値 |
 |------|-----|------|--------|
-| `mode` | `"direct"` / `"deep_mixing"` | 輸送モード。`direct` は従来の headroom ゲート経由で表層へ直接注入。`deep_mixing` は一旦深部リザーバーへ蓄え、`t_mix_orbits` で表層へ混合する | `"direct"` |
+| `mode` | `"direct"` / `"deep_mixing"` | 輸送モード。`direct` は表層へ直接注入（headroom クリップは legacy で、上限判定は `tau_stop` に移行）。`deep_mixing` は一旦深部リザーバーへ蓄え、`t_mix_orbits` で表層へ混合する | `"direct"` |
 | `t_mix_orbits` | float | 深部→表層の混合時間スケール [軌道周期]。`mode="deep_mixing"` のとき必須（正値） | 50 |
-| `headroom_gate` | `"hard"` / `"soft"` | 深部→表層フラックスの headroom 制限。`hard` は Σ_{τ=1} を超過しないよう厳密にクリップ | `"hard"` |
+| `headroom_gate` | `"hard"` / `"soft"` | 深部→表層フラックスの headroom 制限（legacy）。光学的厚さの上限は `tau_stop` で停止判定するため、現行フローでは診断用途に留める | `"hard"` |
 
 **例（deep_mixing モード）:**
 
@@ -687,7 +701,7 @@ radiation:
 | `fixed_tau1_tau` | float | `mode="fixed_tau1"` のときに使う光学的厚さ τ | `null` |
 | `fixed_tau1_sigma` | float | `mode="fixed_tau1"` で Σ_{τ=1} を直接与える場合 | `null` |
 
-Φ(τ,ω₀,g) の反射・透過は、δ–Eddington 近似や Henyey–Greenstein 位相関数に基づく平板多重散乱計算を Joseph et al. (1976), Hansen & Travis (1974) などの方法で事前計算したテーブルを読み込む形を基本とする [@Joseph1976_JAS33_2452; @HansenTravis1974_SSR16_527; @CogleyBergstrom1979_JQSRT22_267]。τ≳1 では一次光がほぼ減衰するため、実装上は τ を 1 でクリップし、Chandrasekhar (1960) の有効面(τ≈1)扱いに倣って Σ_{τ=1} を上限とする [@Chandrasekhar1960_RadiativeTransfer]。
+Φ(τ,ω₀,g) の反射・透過は、δ–Eddington 近似や Henyey–Greenstein 位相関数に基づく平板多重散乱計算を Joseph et al. (1976), Hansen & Travis (1974) などの方法で事前計算したテーブルを読み込む形を基本とする [@Joseph1976_JAS33_2452; @HansenTravis1974_SSR16_527; @CogleyBergstrom1979_JQSRT22_267]。τ≳1 では一次光がほぼ減衰するため、Σ_{τ=1} は診断用に記録し、表層が光学的に厚くなった場合は `tau_stop` 超過で停止判定する [@Chandrasekhar1960_RadiativeTransfer]。
 
 ---
 

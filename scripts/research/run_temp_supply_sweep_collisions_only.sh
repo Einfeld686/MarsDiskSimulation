@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
 # Run temp supply sweep (collisions only)
 # T_M = {2000, 4000, 6000}
-# mu  = {0.1, 0.5, 1.0}
+# epsilon_mix = {0.1, 0.5, 1.0}
+# mu_orbit10pct = 1.0 (1 orbit supplies 10% of Sigma_surf0; scaled by orbit_fraction_at_mu1)
 # phi = {0p20, 0p37, 0p60}
-# Outputs under: out/temp_supply_sweep/<ts>__<sha>__seed<BATCH>/T{T}_mu{mu}_phi{phi}_mode-collisions_only/
+# Outputs under: out/temp_supply_sweep/<ts>__<sha>__seed<BATCH>/T{T}_eps{eps}_phi{phi}_mode-collisions_only/
 
 set -euo pipefail
 
@@ -36,9 +37,11 @@ fi
 
 BASE_CONFIG="configs/sweep_temp_supply/temp_supply_T4000_eps1.yml"
 T_LIST=("2000" "4000" "6000")
-MU_LIST=("0.1" "0.5" "1.0")
+EPS_LIST=("0.1" "0.5" "1.0")
 PHI_LIST=("20" "37" "60")
 MODE="collisions_only"
+SUPPLY_MU_ORBIT10PCT="${SUPPLY_MU_ORBIT10PCT:-1.0}"
+SUPPLY_ORBIT_FRACTION="${SUPPLY_ORBIT_FRACTION:-0.10}"
 
 PROGRESS_FLAG=()
 if [[ -t 1 ]]; then
@@ -54,18 +57,18 @@ fi
 
 for T in "${T_LIST[@]}"; do
   T_TABLE="data/mars_temperature_T${T}p0K.csv"
-  for MU in "${MU_LIST[@]}"; do
-    MU_TITLE="${MU/0./0p}"
-    MU_TITLE="${MU_TITLE/./p}"
+  for EPS in "${EPS_LIST[@]}"; do
+    EPS_TITLE="${EPS/0./0p}"
+    EPS_TITLE="${EPS_TITLE/./p}"
     for PHI in "${PHI_LIST[@]}"; do
       SEED=$(python - <<'PY'
 import secrets
 print(secrets.randbelow(2**31))
 PY
 )
-      TITLE="T${T}_mu${MU_TITLE}_phi${PHI}_mode-${MODE}"
+      TITLE="T${T}_eps${EPS_TITLE}_phi${PHI}_mode-${MODE}"
       OUTDIR="${BATCH_DIR}/${TITLE}"
-      echo "[run] mode=${MODE} T=${T} mu=${MU} phi=${PHI} -> ${OUTDIR} (batch=${BATCH_SEED}, seed=${SEED})"
+      echo "[run] mode=${MODE} T=${T} eps=${EPS} phi=${PHI} -> ${OUTDIR} (batch=${BATCH_SEED}, seed=${SEED})"
       python -m marsdisk.run \
         --config "${BASE_CONFIG}" \
         --quiet \
@@ -75,7 +78,9 @@ PY
         --override "dynamics.rng_seed=${SEED}" \
         --override "radiation.TM_K=${T}" \
         --override "radiation.mars_temperature_driver.table.path=${T_TABLE}" \
-        --override "supply.mixing.mu=${MU}" \
+        --override "supply.mixing.epsilon_mix=${EPS}" \
+        --override "supply.const.mu_orbit10pct=${SUPPLY_MU_ORBIT10PCT}" \
+        --override "supply.const.orbit_fraction_at_mu1=${SUPPLY_ORBIT_FRACTION}" \
         --override "shielding.table_path=tables/phi_const_0p${PHI}.csv" \
         --override "physics_mode=${MODE}"
 

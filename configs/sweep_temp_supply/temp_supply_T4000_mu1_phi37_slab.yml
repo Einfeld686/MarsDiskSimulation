@@ -74,13 +74,20 @@ surface:
   freeze_sigma: false
   collision_solver: smol
 init_tau1:
-  enabled: true
-  scale_to_tau1: true
+  enabled: false
+  scale_to_tau1: false
+optical_depth:
+  tau0_target: 1.0
+  tau_stop: 2.302585092994046
+  tau_stop_tol: 1.0e-6
+  tau_field: tau_los
 supply:
   mode: const
   headroom_policy: clip
   const:
-    prod_area_rate_kg_m2_s: 1.0e-10
+    prod_area_rate_kg_m2_s: 0.0
+    mu_orbit10pct: 1.0
+    orbit_fraction_at_mu1: 0.10
   powerlaw:
     A_kg_m2_s:
     t0_s: 0.0
@@ -89,7 +96,7 @@ supply:
     path: data/supply_rate.csv
     interp: linear
   mixing:
-    mu: 1.0   # μ=1 を固定
+    epsilon_mix: 1.0   # μ=1 を固定
 sinks:
   mode: sublimation
   enable_sublimation: true

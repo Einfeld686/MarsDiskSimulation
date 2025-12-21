@@ -60,15 +60,22 @@ surface:
   freeze_sigma: false
   collision_solver: smol
 init_tau1:
-  enabled: true
-  scale_to_tau1: true
+  enabled: false
+  scale_to_tau1: false
+optical_depth:
+  tau0_target: 1.0
+  tau_stop: 2.302585092994046
+  tau_stop_tol: 1.0e-6
+  tau_field: tau_los
 supply:
   mode: const
   headroom_policy: clip
   const:
-    prod_area_rate_kg_m2_s: 1.0e-1   # 基準供給を下げ、scale≈1 付近を狙う
+    prod_area_rate_kg_m2_s: 0.0
+    mu_orbit10pct: 1.0
+    orbit_fraction_at_mu1: 0.10
   mixing:
-    mu: 1.0
+    epsilon_mix: 1.0
   feedback:
     enabled: true
     tau_field: tau_los

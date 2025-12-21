@@ -2,13 +2,17 @@
 rem 0D Mars disk sweep over Mars surface temperature (T_M) and supply mixing (epsilon_mix).
 rem Combines T_M in {2000, 4000, 6000} with epsilon_mix in {1.0, 0.1} for 6 runs.
 rem Uses configs\temp_supply_sweep.yml (sublimation ON, gas-poor, Smol collisions) and enables the Mars temperature driver for radiative cooling.
-rem Update SUPPLY_RATE below to set supply.const.prod_area_rate_kg_m2_s.
+rem External supply uses mu_orbit10pct (1 orbit supplies 10% of Sigma_surf0).
 
 setlocal enabledelayedexpansion
 
 set CONFIG=configs\temp_supply_sweep.yml
 set OUTROOT=out\temp_supply_grid
-set SUPPLY_RATE=1.0e-5
+set SUPPLY_MU_ORBIT10PCT=1.0
+set SUPPLY_ORBIT_FRACTION=0.10
+set OPTICAL_TAU0_TARGET=1.0
+set OPTICAL_TAU_STOP=1.0
+set OPTICAL_TAU_STOP_TOL=1.0e-2
 set STREAMING_ENABLE=true
 set STREAMING_MEMORY_GB=70.0
 set STREAMING_FLUSH_STEPS=10000
@@ -82,7 +86,11 @@ for %%T in (4000 2000 6000) do (
     echo [run] T_M=%%T K, epsilon_mix=%%M -> !OUTDIR!
     python -m marsdisk.run ^
       --config "%CONFIG%" ^
-      --override supply.const.prod_area_rate_kg_m2_s=%SUPPLY_RATE% ^
+      --override supply.const.mu_orbit10pct=%SUPPLY_MU_ORBIT10PCT% ^
+      --override supply.const.orbit_fraction_at_mu1=%SUPPLY_ORBIT_FRACTION% ^
+      --override optical_depth.tau0_target=%OPTICAL_TAU0_TARGET% ^
+      --override optical_depth.tau_stop=%OPTICAL_TAU_STOP% ^
+      --override optical_depth.tau_stop_tol=%OPTICAL_TAU_STOP_TOL% ^
       --override sinks.sub_params.mu=%MU_HKL% ^
       --override radiation.mars_temperature_driver.enabled=true ^
       --override radiation.mars_temperature_driver.mode=table ^

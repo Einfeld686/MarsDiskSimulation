@@ -2,6 +2,7 @@
 # Run temp supply parameter sweep:
 #   T_M = {2000, 4000, 6000} K
 #   epsilon_mix = {0.1, 0.5, 1.0}
+#   mu_orbit10pct = 1.0 (1 orbit supplies 10% of Sigma_surf0; scaled by orbit_fraction_at_mu1)
 #   shielding.table_path = {phi_const_0p20, phi_const_0p37, phi_const_0p60}
 # 出力は out/temp_supply_sweep/<ts>__<sha>__seed<batch>/T{T}_eps{eps}_phi{phi}/ に配置。
 # 供給は supply.* による外部源（温度・τフィードバック・有限リザーバ対応）。
@@ -53,7 +54,7 @@ QSTAR_UNITS="${QSTAR_UNITS:-ba99_cgs}"
 
 # Parameter grids (run hotter cases first)
 T_LIST=("5000" "4000" "3000")
-MU_LIST=("1.0" "0.5" "0.1")
+EPS_LIST=("1.0" "0.5" "0.1")
 PHI_LIST=("20" "37" "60")  # maps to tables/phi_const_0pXX.csv
 T_END_YEARS="${T_END_YEARS:-2.0}"              # fixed integration horizon when COOL_TO_K is unset [yr]
 # 短縮テスト用に T_END_SHORT_YEARS=0.001 を指定すると強制上書き
@@ -86,17 +87,17 @@ EVAL="${EVAL:-1}"
 # Default is conservative clip + soft gate to avoid spill losses unless明示指定。
 SUPPLY_HEADROOM_POLICY="${SUPPLY_HEADROOM_POLICY:-clip}"
 SUPPLY_MODE="${SUPPLY_MODE:-const}"
-# Raw const supply rate before mixing。τ~1 維持のため小さめの保守値。
-SUPPLY_RATE="${SUPPLY_RATE:-5e-4}"  # kg m^-2 s^-1 before mixing
+# External supply scaling (mu_orbit10pct=1.0 injects orbit_fraction_at_mu1 of Sigma_surf0 per orbit).
+SUPPLY_MU_ORBIT10PCT="${SUPPLY_MU_ORBIT10PCT:-1.0}"
+SUPPLY_ORBIT_FRACTION="${SUPPLY_ORBIT_FRACTION:-0.10}"
 # Pattern A: τ=1 キャップに任せるため、初期質量は形状用の最小限に抑える。
 INIT_MASS_TOTAL="${INIT_MASS_TOTAL:-1.0e-7}"
 SHIELDING_MODE="${SHIELDING_MODE:-psitau}"
 SHIELDING_SIGMA="${SHIELDING_SIGMA:-auto}"
 SHIELDING_AUTO_MAX_MARGIN="${SHIELDING_AUTO_MAX_MARGIN:-0.05}"
-INIT_TAU1_ENABLED="${INIT_TAU1_ENABLED:-true}"
-INIT_SCALE_TO_TAU1="${INIT_SCALE_TO_TAU1:-true}"
-INIT_TAU1_FIELD="${INIT_TAU1_FIELD:-los}"   # tau_field: vertical|los
-INIT_TAU1_TARGET="${INIT_TAU1_TARGET:-1.0}"
+OPTICAL_TAU0_TARGET="${OPTICAL_TAU0_TARGET:-1.0}"
+OPTICAL_TAU_STOP="${OPTICAL_TAU_STOP:-1.0}"
+OPTICAL_TAU_STOP_TOL="${OPTICAL_TAU_STOP_TOL:-1.0e-2}"
 STOP_ON_BLOWOUT_BELOW_SMIN="${STOP_ON_BLOWOUT_BELOW_SMIN:-true}"
 
 # Supply reservoir / feedback / temperature coupling (off by default)
@@ -142,10 +143,11 @@ SUPPLY_VEL_BLEND="${SUPPLY_VEL_BLEND:-rms}"                     # rms|linear
 SUPPLY_VEL_WEIGHT="${SUPPLY_VEL_WEIGHT:-delta_sigma}"           # delta_sigma|sigma_ratio
 
 echo "[config] supply multipliers: temp_enabled=${SUPPLY_TEMP_ENABLED} (mode=${SUPPLY_TEMP_MODE}) feedback_enabled=${SUPPLY_FEEDBACK_ENABLED} reservoir=${SUPPLY_RESERVOIR_M:-off}"
-echo "[config] shielding: mode=${SHIELDING_MODE} fixed_tau1_sigma=${SHIELDING_SIGMA} auto_max_margin=${SHIELDING_AUTO_MAX_MARGIN} init_scale_to_tau1=${INIT_SCALE_TO_TAU1}"
+echo "[config] shielding: mode=${SHIELDING_MODE} fixed_tau1_sigma=${SHIELDING_SIGMA} auto_max_margin=${SHIELDING_AUTO_MAX_MARGIN}"
 echo "[config] injection: mode=${SUPPLY_INJECTION_MODE} q=${SUPPLY_INJECTION_Q} s_inj_min=${SUPPLY_INJECTION_SMIN:-none} s_inj_max=${SUPPLY_INJECTION_SMAX:-none}"
 echo "[config] transport: mode=${SUPPLY_TRANSPORT_MODE} t_mix=${SUPPLY_TRANSPORT_TMIX_ORBITS:-${SUPPLY_DEEP_TMIX_ORBITS:-disabled}} headroom_gate=${SUPPLY_TRANSPORT_HEADROOM} velocity=${SUPPLY_VEL_MODE}"
-echo "[config] const supply before mixing: ${SUPPLY_RATE} kg m^-2 s^-1 (epsilon_mix swept per MU_LIST)"
+echo "[config] external supply: mu_orbit10pct=${SUPPLY_MU_ORBIT10PCT} orbit_fraction_at_mu1=${SUPPLY_ORBIT_FRACTION} (epsilon_mix swept per EPS_LIST)"
+echo "[config] optical_depth: tau0_target=${OPTICAL_TAU0_TARGET} tau_stop=${OPTICAL_TAU_STOP} tau_stop_tol=${OPTICAL_TAU_STOP_TOL}"
 echo "[config] fast blowout substep: enabled=${SUBSTEP_FAST_BLOWOUT} substep_max_ratio=${SUBSTEP_MAX_RATIO:-default}"
 echo "[config] phase temperature input: ${PHASE_TEMP_INPUT} (q_abs_mean=${PHASE_QABS_MEAN}, tau_field=${PHASE_TAU_FIELD})"
 if [[ -n "${COOL_TO_K}" ]]; then
@@ -269,29 +271,22 @@ SUPPLY_OVERRIDES+=(--override "supply.injection.velocity.weight_mode=${SUPPLY_VE
 
 for T in "${T_LIST[@]}"; do
   T_TABLE="data/mars_temperature_T${T}p0K.csv"
-  for MU in "${MU_LIST[@]}"; do
-    MU_TITLE="${MU/0./0p}"
-    MU_TITLE="${MU_TITLE/./p}"
+  for EPS in "${EPS_LIST[@]}"; do
+    EPS_TITLE="${EPS/0./0p}"
+    EPS_TITLE="${EPS_TITLE/./p}"
     for PHI in "${PHI_LIST[@]}"; do
       SEED=$(python - <<'PY'
 import secrets
 print(secrets.randbelow(2**31))
 PY
 )
-      TITLE="T${T}_mu${MU_TITLE}_phi${PHI}"
+      TITLE="T${T}_eps${EPS_TITLE}_phi${PHI}"
       OUTDIR="${BATCH_DIR}/${TITLE}"
-      echo "[run] T=${T} mu=${MU} phi=${PHI} -> ${OUTDIR} (batch=${BATCH_SEED}, seed=${SEED})"
-      eff_rate=$(python - "${SUPPLY_RATE}" "${MU}" <<'PY'
-import sys
-rate = float(sys.argv[1])
-mu = float(sys.argv[2])
-print(f"{rate * mu:.3e}")
-PY
-)
-      echo "[info] 実効スケール係数 epsilon_mix=${MU}; effective supply (const×epsilon_mix)=${eff_rate} kg m^-2 s^-1"
+      echo "[run] T=${T} eps=${EPS} phi=${PHI} -> ${OUTDIR} (batch=${BATCH_SEED}, seed=${SEED})"
+      echo "[info] epsilon_mix=${EPS}; mu_orbit10pct=${SUPPLY_MU_ORBIT10PCT} orbit_fraction_at_mu1=${SUPPLY_ORBIT_FRACTION}"
       echo "[info] shielding: mode=${SHIELDING_MODE} fixed_tau1_sigma=${SHIELDING_SIGMA} auto_max_margin=${SHIELDING_AUTO_MAX_MARGIN}"
-      if [[ "${MU}" == "0.1" ]]; then
-        echo "[info] mu=0.1 is a low-supply extreme case; expect weak blowout/sinks"
+      if [[ "${EPS}" == "0.1" ]]; then
+        echo "[info] epsilon_mix=0.1 is a low-supply extreme case; expect weak blowout/sinks"
       fi
       cmd=(
         python -m marsdisk.run
@@ -329,13 +324,13 @@ PY
       fi
       cmd+=(
         --override "supply.enabled=true"
-        --override "supply.mixing.epsilon_mix=${MU}"
+        --override "supply.mixing.epsilon_mix=${EPS}"
         --override "supply.mode=${SUPPLY_MODE}"
-        --override "supply.const.prod_area_rate_kg_m2_s=${SUPPLY_RATE}"
-        --override "init_tau1.enabled=${INIT_TAU1_ENABLED}"
-        --override "init_tau1.scale_to_tau1=${INIT_SCALE_TO_TAU1}"
-        --override "init_tau1.tau_field=${INIT_TAU1_FIELD}"
-        --override "init_tau1.target_tau=${INIT_TAU1_TARGET}"
+        --override "supply.const.mu_orbit10pct=${SUPPLY_MU_ORBIT10PCT}"
+        --override "supply.const.orbit_fraction_at_mu1=${SUPPLY_ORBIT_FRACTION}"
+        --override "optical_depth.tau0_target=${OPTICAL_TAU0_TARGET}"
+        --override "optical_depth.tau_stop=${OPTICAL_TAU_STOP}"
+        --override "optical_depth.tau_stop_tol=${OPTICAL_TAU_STOP_TOL}"
         --override "inner_disk_mass=null"
       )
       if [[ -n "${COOL_TO_K}" ]]; then
@@ -377,9 +372,6 @@ PY
       fi
       if [[ "${SHIELDING_SIGMA}" == "auto_max" ]]; then
         echo "[warn] fixed_tau1_sigma=auto_max is debug-only; exclude from production figures"
-      fi
-      if [[ "${INIT_SCALE_TO_TAU1}" != "true" && "${INIT_SCALE_TO_TAU1}" != "True" ]]; then
-        echo "[warn] init_tau1.scale_to_tau1 is not 'true'; supply may be clipped at Στ=1"
       fi
       set +e
       "${cmd[@]}"
