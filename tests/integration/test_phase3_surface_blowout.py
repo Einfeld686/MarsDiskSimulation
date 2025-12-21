@@ -49,14 +49,14 @@ def test_blowout_inactive_when_smin_above_blowout(tmp_path: Path) -> None:
     assert np.all(df["blowout_beta_gate"] == False)  # noqa: E712
 
 
-def test_surface_layer_clipped_to_sigma_tau1(tmp_path: Path) -> None:
+def test_surface_layer_stops_when_tau_exceeded(tmp_path: Path) -> None:
     cfg = _base_surface_cfg(tmp_path / "active", s_min=5.0e-8, prod_rate=2.5e-9, dt_init=200.0, T_M=3200.0)
+    cfg.optical_depth.tau_stop = 0.5
     run.run_zero_d(cfg)
 
-    df = pd.read_parquet(Path(cfg.io.outdir) / "series" / "run.parquet")
-    mask = np.isfinite(df["Sigma_tau1"])
-    assert np.all(df.loc[mask, "Sigma_surf"] <= df.loc[mask, "Sigma_tau1"] + 1.0e-12)
-    assert np.all(df.loc[mask, "Sigma_tau1_active"] <= df.loc[mask, "Sigma_tau1"] + 1.0e-12)
+    summary = json.loads((Path(cfg.io.outdir) / "summary.json").read_text())
+    assert summary["stop_reason"] == "tau_exceeded"
+    assert summary["stop_tau_los"] is not None
 
 
 def test_blowout_disabled_in_vapor_state(tmp_path: Path) -> None:

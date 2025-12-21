@@ -761,30 +761,10 @@ def step_collisions_smol_0d(
 
     global _F_KE_MISMATCH_WARNED
 
-    policy = str(headroom_policy or "clip").lower()
-    spill_mode = policy == "spill"
     sigma_before_step = float(sigma_surf)
     sigma_clip_loss = 0.0
     sigma_for_step = sigma_before_step
-    prod_requested = float(prod_subblow_area_rate)
     prod_subblow_area_rate = max(float(prod_subblow_area_rate), 0.0)
-    headroom = None
-    if sigma_tau1 is not None and math.isfinite(sigma_tau1):
-        sigma_for_step = float(min(sigma_for_step, sigma_tau1))
-        headroom = max(sigma_tau1 - sigma_for_step, 0.0)
-        if not spill_mode and dt > 0.0 and headroom >= 0.0:
-            prod_cap = headroom / dt
-            if prod_subblow_area_rate > prod_cap:
-                sigma_clip_loss = (prod_subblow_area_rate - prod_cap) * dt
-                prod_subblow_area_rate = prod_cap
-            # Guard against missing module logger in edge import contexts
-            _logger = logger if "logger" in globals() else logging.getLogger(__name__)
-            if prod_requested > 0.0 and prod_cap <= 0.0 and _logger.isEnabledFor(logging.DEBUG):
-                _logger.debug(
-                    "collisions_smol: supply headroom exhausted (sigma_tau1=%.3e, sigma=%.3e); prod clipped to zero",
-                    sigma_tau1,
-                    sigma_for_step,
-                )
 
     sizes_arr, widths_arr, m_k, N_k, scale_to_sigma = smol.psd_state_to_number_density(
         psd_state,
@@ -1099,14 +1079,6 @@ def step_collisions_smol_0d(
         extra_mass_loss_rate=extra_mass_loss_rate,
         workspace=imex_workspace,
     )
-
-    if spill_mode and sigma_tau1 is not None and math.isfinite(sigma_tau1):
-        sigma_after_raw = float(np.sum(m_k * N_new))
-        if sigma_after_raw > sigma_tau1 and sigma_after_raw > 0.0:
-            spill_scale = float(sigma_tau1 / sigma_after_raw)
-            spill_scale = float(np.clip(spill_scale, 0.0, 1.0))
-            sigma_spill = max(sigma_after_raw - sigma_tau1, 0.0)
-            N_new = N_new * spill_scale
 
     psd_state, sigma_after, sigma_loss = smol.number_density_to_psd_state(
         N_new,

@@ -26,9 +26,9 @@ as sublimation or gas drag are represented by a generic time-scale
 
 The function :func:`step_surface_density_S1` advances the surface density
 by a single implicit Euler step and returns the updated surface density
-along with the instantaneous outflux and sink rates.  The outflux is
-computed *after* the optical-depth clipping ``Σ_surf ≤ Σ_{τ=1}`` as
-required by the specification.
+along with the instantaneous outflux and sink rates.  The optical-depth
+cap ``Σ_{τ=1}`` is *not* applied here; exceeding τ=1 is handled upstream
+via a stop condition rather than a clip.
 """
 
 from dataclasses import dataclass
@@ -134,9 +134,8 @@ def step_surface_density_S1(
         Optional additional sink time-scale representing sublimation or
         gas drag.  ``None`` disables the term.
     sigma_tau1:
-        Optical-depth clipping ``Σ_{τ=1}``.  When provided the updated
-        density is limited to ``min(Σ_surf, Σ_{τ=1})`` before computing
-        fluxes.
+        Diagnostic Σ_{τ=1} value passed through for logging; no clipping
+        is applied in the surface ODE.
     enable_blowout:
         Toggle for the radiation-pressure loss term.  Disable to remove the
         ``1/t_blow`` contribution and force the returned outflux to zero.
@@ -166,9 +165,6 @@ def step_surface_density_S1(
 
     numerator = sigma_surf + dt * prod_subblow_area_rate
     sigma_new = numerator / (1.0 + dt * loss)
-
-    if sigma_tau1 is not None:
-        sigma_new = float(min(sigma_new, sigma_tau1))
 
     outflux = sigma_new * Omega if enable_blowout else 0.0
     sink_flux = sigma_new / t_sink if (t_sink is not None and t_sink > 0.0) else 0.0

@@ -112,7 +112,7 @@ def test_temperature_scaling_modulates_rate():
 MASS_TOL = 5e-3
 
 
-def test_smol_helper_respects_tau_clip_and_budget():
+def test_smol_helper_ignores_tau_clip_and_budget():
     r = constants.R_MARS
     Omega = grid.omega_kepler(r)
     psd_state = psd.update_psd_state(
@@ -126,10 +126,11 @@ def test_smol_helper_respects_tau_clip_and_budget():
     prod_rate = 5.0e-7
     dt = 25.0
     sigma_tau1 = 1.0e-4
+    sigma_surf = 1.0e-2
 
     res = collisions_smol.step_collisions_smol_0d(
         psd_state,
-        sigma_surf=0.0,
+        sigma_surf=sigma_surf,
         dt=dt,
         prod_subblow_area_rate=prod_rate,
         r=r,
@@ -144,7 +145,7 @@ def test_smol_helper_respects_tau_clip_and_budget():
         ds_dt_val=None,
     )
 
-    assert res.sigma_for_step <= sigma_tau1 + 1e-12
+    assert res.sigma_for_step == pytest.approx(sigma_surf)
     assert res.sigma_after > 0.0
     assert math.isfinite(res.mass_error)
     assert res.mass_error <= 5e-3
