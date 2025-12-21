@@ -104,6 +104,12 @@ def parse_args(argv: Iterable[str] | None = None) -> argparse.Namespace:
         help="Additional overrides passed to marsdisk.run (repeatable).",
     )
     parser.add_argument(
+        "--quiet",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help="Suppress marsdisk.run log output (default: enabled).",
+    )
+    parser.add_argument(
         "--dry-run",
         action="store_true",
         help="Print commands without running the simulation.",
@@ -122,6 +128,8 @@ def main(argv: Iterable[str] | None = None) -> None:
         "--config",
         str(args.config),
     ]
+    if args.quiet:
+        cmd_base.append("--quiet")
     results = []
     for scale in args.scales:
         case_dir = outdir / f"scale_{_format_scale(scale)}"

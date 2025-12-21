@@ -1,6 +1,6 @@
-physics_mode: "default"
+physics_mode: default
 geometry:
-  mode: "0D"
+  mode: 0D
 material:
   rho: 3000.0
 sizes:
@@ -9,7 +9,7 @@ sizes:
   n_bins: 40
 initial:
   mass_total: 1.0e-5
-  s0_mode: "upper"
+  s0_mode: upper
 dynamics:
   e0: 0.5
   i0: 0.05
@@ -29,36 +29,46 @@ disk:
   geometry:
     r_in_RM: 2.2
     r_out_RM: 2.7
-    r_profile: "uniform"
+    r_profile: uniform
     p_index: 0.0
 inner_disk_mass:
   use_Mmars_ratio: true
   M_in_ratio: 3.0e-5
-  map_to_sigma: "analytic"
+  map_to_sigma: analytic
 surface:
-  init_policy: "clip_by_tau1"
-  sigma_surf_init_override: null
+  init_policy: none
+  sigma_surf_init_override:
   use_tcoll: true
-  collision_solver: "smol"
+  collision_solver: smol
 supply:
-  mode: "const"
+  mode: const
   const:
     prod_area_rate_kg_m2_s: 0.0
+    mu_orbit10pct: 1.0
+    orbit_fraction_at_mu1: 0.1
   powerlaw:
-    A_kg_m2_s: null
+    A_kg_m2_s:
     t0_s: 0.0
     index: -1.0
   table:
-    path: "data/supply_rate.csv"
-    interp: "linear"
+    path: data/supply_rate.csv
+    interp: linear
   mixing:
     epsilon_mix: 1.0
+  feedback:
+    enabled: false
+  reservoir:
+    enabled: false
+  temperature:
+    enabled: false
+  transport:
+    mode: direct
 sinks:
-  mode: "sublimation"
+  mode: sublimation
   enable_sublimation: true
   T_sub: 1300.0
   sub_params:
-    mode: "hkl"
+    mode: hkl
     alpha_evap: 0.007
     mu: 0.0440849
     A: 13.613
@@ -70,31 +80,32 @@ sinks:
   rho_g: 0.0
 radiation:
   TM_K: 4000.0
-  qpr_table_path: "data/qpr_table.csv"
+  qpr_table_path: data/qpr_table.csv
   mars_temperature_driver:
     enabled: true
-    mode: "table"
+    mode: table
     table:
-      path: "data/mars_temperature_table_example.csv"
-      time_unit: "day"
-      column_time: "time_day"
-      column_temperature: "T_K"
+      path: data/mars_temperature_table_example.csv
+      time_unit: day
+      column_time: time_day
+      column_temperature: T_K
     autogenerate:
       enabled: true
-      output_dir: "data"
+      output_dir: data
       dt_hours: 1.0
       min_years: 2.0
       time_margin_years: 0.5
-      time_unit: "day"
-      column_time: "time_day"
-      column_temperature: "T_K"
-    extrapolation: "hold"
+      time_unit: day
+      column_time: time_day
+      column_temperature: T_K
+    extrapolation: hold
 shielding:
-  table_path: null
+  table_path: tables/phi_const_0p37.csv
+  mode: psitau
 phase:
   enabled: true
-  source: "threshold"
-  entrypoint: "siO2_disk_cooling.siO2_cooling_map:lookup_phase_state"
+  source: threshold
+  entrypoint: siO2_disk_cooling.siO2_cooling_map:lookup_phase_state
   extra_kwargs: {}
   thresholds:
     T_condense_K: 1700.0
@@ -103,11 +114,19 @@ phase:
     tau_ref: 1.0
 numerics:
   t_end_years: 2.0
-  dt_init: "auto"
+  dt_init: auto
   safety: 0.05
   atol: 1e-10
   rtol: 1e-6
 io:
-  outdir: "out"
+  outdir: out
   debug_sinks: true
   correct_fast_blowout: false
+init_tau1:
+  enabled: false
+  scale_to_tau1: false
+optical_depth:
+  tau0_target: 1.0
+  tau_stop: 2.302585092994046
+  tau_stop_tol: 1e-06
+  tau_field: tau_los

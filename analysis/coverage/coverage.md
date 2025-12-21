@@ -4,7 +4,7 @@ Baseline thresholds: function reference rate ≥ 70%, anchor consistency rate = 
 
 | Metric | Value | Target |
 | --- | --- | --- |
-| Function reference rate | 96.5% (111/115) | ≥ 70% |
+| Function reference rate | 92.5% (111/120) | ≥ 70% |
 | Anchor consistency rate | 100.0% (707/707) | = 100% |
 | Equation unit coverage | 95.3% (41/43) | — |
 | Sinks callgraph documented | Yes | run→surface→sinks→sublimation |
@@ -12,5 +12,5 @@ Baseline thresholds: function reference rate ≥ 70%, anchor consistency rate = 
 
 ## Top Coverage Gaps
 - marsdisk/io/_numba_tables.py#NUMBA_AVAILABLE
+- marsdisk/io/_numba_tables.py#qpr_interp_array_numba
 - marsdisk/io/_numba_tables.py#qpr_interp_scalar_numba
-- marsdisk/physics/qstar.py#reset_coefficient_table

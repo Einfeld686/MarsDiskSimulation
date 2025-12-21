@@ -411,9 +411,10 @@ def split_supply_with_deep_buffer(
         )
 
     policy = str(headroom_policy or "clip").lower()
+    headroom_disabled = policy in {"none", "off", "disabled"}
     spill_mode = policy == "spill"
     headroom = None
-    if sigma_tau1 is not None and math.isfinite(sigma_tau1):
+    if not headroom_disabled and sigma_tau1 is not None and math.isfinite(sigma_tau1):
         sigma_cap = max(min(float(sigma_surf), float(sigma_tau1)), 0.0)
         headroom = max(float(sigma_tau1) - sigma_cap, 0.0)
 

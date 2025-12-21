@@ -21,7 +21,7 @@ paper:
 runs:
   - run_id: RUN_MARS_GASPOOR_v01
     label: ガス希薄基準（既存0D出力）
-    outdir: "out/01_inner1RM_blowout"
+    outdir: out/01_inner1RM_blowout
     run_card: run_config.json
     summary: summary.json
     series:
@@ -33,7 +33,7 @@ runs:
 
   - run_id: RUN_SINKS_SUBLIM_v01
     label: 昇華オン基準
-    outdir: "out/02_inner1RM_sublimation"
+    outdir: out/02_inner1RM_sublimation
     run_card: run_config.json
     summary: summary.json
     series:
@@ -45,7 +45,7 @@ runs:
 
   - run_id: RUN_WAVY_PSD_v01
     label: PSD波状構造テスト
-    outdir: "out/20251022-0501_chi05_r1RM_dtOrb100__0fdd14772"
+    outdir: out/20251022-0501_chi05_r1RM_dtOrb100__0fdd14772
     run_card: run_config.json
     summary: summary.json
     series:
@@ -73,3 +73,32 @@ figures:
     runs: [RUN_WAVY_PSD_v01]
     params:
       mode: psd_wavy
+surface:
+  init_policy: none
+init_tau1:
+  enabled: false
+  scale_to_tau1: false
+optical_depth:
+  tau0_target: 1.0
+  tau_stop: 2.302585092994046
+  tau_stop_tol: 1e-06
+  tau_field: tau_los
+shielding:
+  mode: psitau
+  table_path: tables/phi_const_0p37.csv
+supply:
+  mode: const
+  const:
+    prod_area_rate_kg_m2_s: 0.0
+    mu_orbit10pct: 1.0
+    orbit_fraction_at_mu1: 0.1
+  mixing:
+    epsilon_mix: 1.0
+  feedback:
+    enabled: false
+  reservoir:
+    enabled: false
+  temperature:
+    enabled: false
+  transport:
+    mode: direct

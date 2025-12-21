@@ -48,6 +48,14 @@ def _load_target_rate(run_dir: Path, override: float | None) -> float | None:
     return rate
 
 
+def _safe_median(series: pd.Series) -> float:
+    values = pd.to_numeric(series, errors="coerce").to_numpy()
+    values = values[np.isfinite(values)]
+    if values.size == 0:
+        return float("nan")
+    return float(np.median(values))
+
+
 def evaluate_run(
     run_dir: Path,
     *,
@@ -109,11 +117,11 @@ def evaluate_run(
                 }
             )
             continue
-        tau_median = float(window[tau_col].median())
+        tau_median = _safe_median(window[tau_col])
         prod = window["prod_subblow_area_rate"]
-        dt_med = float(window["time"].diff().median())
+        dt_med = _safe_median(window["time"].diff())
         if not np.isfinite(dt_med) or dt_med <= 0.0:
-            dt_med = float(df["time"].diff().median())
+            dt_med = _safe_median(df["time"].diff())
         if not np.isfinite(dt_med) or dt_med <= 0.0:
             dt_med = 1.0
         threshold = target * threshold_factor if target is not None else None

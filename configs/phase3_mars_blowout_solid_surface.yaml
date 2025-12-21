@@ -1,6 +1,6 @@
-physics_mode: "default"
+physics_mode: default
 geometry:
-  mode: "0D"
+  mode: 0D
 material:
   rho: 3000.0
 sizes:
@@ -9,7 +9,7 @@ sizes:
   n_bins: 40
 initial:
   mass_total: 2.0e-5
-  s0_mode: "upper"
+  s0_mode: upper
 dynamics:
   e0: 0.4
   i0: 0.05
@@ -29,26 +29,36 @@ disk:
   geometry:
     r_in_RM: 2.2
     r_out_RM: 2.7
-    r_profile: "uniform"
+    r_profile: uniform
     p_index: 0.0
 inner_disk_mass:
   use_Mmars_ratio: true
   M_in_ratio: 2.0e-5
-  map_to_sigma: "analytic"
+  map_to_sigma: analytic
 surface:
-  init_policy: "clip_by_tau1"
+  init_policy: none
   use_tcoll: true
 supply:
-  mode: "const"
+  mode: const
   const:
-    prod_area_rate_kg_m2_s: 1.5e-9
+    prod_area_rate_kg_m2_s: 0.0
+    mu_orbit10pct: 1.0
+    orbit_fraction_at_mu1: 0.1
   mixing:
     epsilon_mix: 0.8
+  feedback:
+    enabled: false
+  reservoir:
+    enabled: false
+  temperature:
+    enabled: false
+  transport:
+    mode: direct
 sinks:
-  mode: "sublimation"
+  mode: sublimation
   enable_sublimation: false
   sub_params:
-    mode: "logistic"
+    mode: logistic
     alpha_evap: 1.0
     mu: 0.1
     dT: 50.0
@@ -58,16 +68,17 @@ radiation:
   use_mars_rp: true
   use_solar_rp: false
   TM_K: 2400.0
-  qpr_table_path: "data/qpr_table.csv"
+  qpr_table_path: data/qpr_table.csv
 shielding:
-  table_path: null
+  table_path: tables/phi_const_0p37.csv
+  mode: psitau
 blowout:
   enabled: true
-  target_phase: "solid_only"
-  layer: "surface_tau_le_1"
+  target_phase: solid_only
+  layer: surface_tau_le_1
 phase:
   enabled: true
-  source: "threshold"
+  source: threshold
   thresholds:
     T_condense_K: 1700.0
     T_vaporize_K: 2100.0
@@ -75,4 +86,12 @@ numerics:
   t_end_years: 0.2
   dt_init: 25.0
 io:
-  outdir: "out/phase3_mars_blowout_solid_surface"
+  outdir: out/phase3_mars_blowout_solid_surface
+init_tau1:
+  enabled: false
+  scale_to_tau1: false
+optical_depth:
+  tau0_target: 1.0
+  tau_stop: 2.302585092994046
+  tau_stop_tol: 1e-06
+  tau_field: tau_los

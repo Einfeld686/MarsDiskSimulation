@@ -120,6 +120,17 @@ def _log_stage(label: str, *, extra: Mapping[str, Any] | None = None) -> None:
     log_stage(logger, label, extra=extra)
 
 
+def _model_fields_set(model: Any) -> set[str]:
+    """Return explicitly-set fields for a Pydantic model (v1/v2 compatible)."""
+
+    if model is None:
+        return set()
+    fields_set = getattr(model, "model_fields_set", None)
+    if fields_set is None:
+        fields_set = getattr(model, "__fields_set__", set())
+    return set(fields_set or set())
+
+
 def _resolve_los_factor(los_geom: Optional[object]) -> float:
     """Return the multiplicative factor f_los scaling τ_vert to τ_los."""
 
@@ -1319,6 +1330,64 @@ def run_zero_d(
         supply_mode_value,
         supply_epsilon_mix,
     )
+    pending_deprecation_warnings: List[str] = []
+    deprecated_supply_messages: List[str] = []
+    if supply_enabled_cfg:
+        if not optical_depth_enabled:
+            deprecated_supply_messages.append("optical_depth disabled")
+        if supply_mode_value != "const":
+            deprecated_supply_messages.append(f"supply.mode='{supply_mode_value}'")
+        if supply_const_tfill is not None:
+            deprecated_supply_messages.append("supply.const.auto_from_tau1_tfill_years set")
+        if supply_mode_value == "const" and supply_mu_orbit_cfg is None:
+            if supply_const_rate is not None and abs(float(supply_const_rate)) > 0.0:
+                deprecated_supply_messages.append("supply.const.prod_area_rate_kg_m2_s without mu_orbit10pct")
+            else:
+                deprecated_supply_messages.append("supply.const.mu_orbit10pct not set")
+        supply_fields_set = _model_fields_set(supply_spec)
+        if "headroom_policy" in supply_fields_set:
+            deprecated_supply_messages.append(f"supply.headroom_policy='{supply_headroom_policy}'")
+        transport_flags: List[str] = []
+        if supply_transport_mode != "direct":
+            transport_flags.append(f"mode='{supply_transport_mode}'")
+        if supply_transport_headroom_gate != "hard":
+            transport_flags.append(f"headroom_gate='{supply_transport_headroom_gate}'")
+        if (
+            supply_deep_tmix_orbits is not None
+            and math.isfinite(float(supply_deep_tmix_orbits))
+            and float(supply_deep_tmix_orbits) > 0.0
+        ):
+            transport_flags.append(f"t_mix_orbits={float(supply_deep_tmix_orbits):.3g}")
+        if transport_flags:
+            deprecated_supply_messages.append(f"supply.transport ({', '.join(transport_flags)})")
+        feedback_fields_set = _model_fields_set(supply_feedback_cfg)
+        feedback_non_default = bool(feedback_fields_set - {"enabled"})
+        if supply_feedback_enabled or feedback_non_default:
+            deprecated_supply_messages.append("supply.feedback configured")
+        temperature_fields_set = _model_fields_set(supply_temperature_cfg)
+        temperature_non_default = bool(temperature_fields_set - {"enabled"})
+        if supply_temperature_enabled or temperature_non_default:
+            deprecated_supply_messages.append("supply.temperature configured")
+        reservoir_fields_set = _model_fields_set(supply_reservoir_cfg)
+        reservoir_non_default = bool(reservoir_fields_set - {"enabled"})
+        reservoir_mass = (
+            float(supply_reservoir_mass_total)
+            if supply_reservoir_mass_total is not None and math.isfinite(float(supply_reservoir_mass_total))
+            else None
+        )
+        if supply_reservoir_enabled or reservoir_non_default or (reservoir_mass is not None and reservoir_mass > 0.0):
+            deprecated_supply_messages.append("supply.reservoir configured")
+    if deprecated_supply_messages:
+        pending_deprecation_warnings.append(
+            "External supply configuration deviates from the default optical_depth + mu_orbit10pct scheme "
+            "(docs/plan/20251220_optical_depth_external_supply_impl_plan.md). "
+            f"Deprecated settings detected: {', '.join(deprecated_supply_messages)}."
+        )
+    if getattr(cfg.init_tau1, "scale_to_tau1", False):
+        pending_deprecation_warnings.append(
+            "init_tau1.scale_to_tau1 is deprecated; use optical_depth.tau0_target and tau_stop instead "
+            "(docs/plan/20251220_optical_depth_external_supply_impl_plan.md)."
+        )
 
     t_end, dt_nominal, dt_initial_step, n_steps, time_grid_info = _resolve_time_grid(
         cfg.numerics,
@@ -1444,6 +1513,8 @@ def run_zero_d(
     if quiet_mode:
         warnings.filterwarnings("ignore")
         logging.getLogger().setLevel(logging.WARNING)
+    for message in pending_deprecation_warnings:
+        warnings.warn(message, DeprecationWarning, stacklevel=2)
     if resume_applied and progress_enabled:
         progress.update(
             max(start_step - 1, 0),

@@ -103,8 +103,8 @@ SHIELDING_MODE="${SHIELDING_MODE:-psitau}"
 SHIELDING_SIGMA="${SHIELDING_SIGMA:-auto}"
 SHIELDING_AUTO_MAX_MARGIN="${SHIELDING_AUTO_MAX_MARGIN:-0.05}"
 OPTICAL_TAU0_TARGET="${OPTICAL_TAU0_TARGET:-1.0}"
-OPTICAL_TAU_STOP="${OPTICAL_TAU_STOP:-1.0}"
-OPTICAL_TAU_STOP_TOL="${OPTICAL_TAU_STOP_TOL:-1.0e-2}"
+OPTICAL_TAU_STOP="${OPTICAL_TAU_STOP:-2.302585092994046}"
+OPTICAL_TAU_STOP_TOL="${OPTICAL_TAU_STOP_TOL:-1.0e-6}"
 STOP_ON_BLOWOUT_BELOW_SMIN="${STOP_ON_BLOWOUT_BELOW_SMIN:-true}"
 
 # Supply reservoir / feedback / temperature coupling (off by default)
@@ -561,8 +561,8 @@ def _auto_scale(ax, series_list, *, log_ratio=20.0, linthresh_min=1e-12, pad_fra
         finite_abs = np.abs(arr[arr != 0.0])
         linthresh = max(linthresh_min, np.percentile(finite_abs, 20) if finite_abs.size else linthresh_min)
         ax.set_yscale("symlog", linthresh=linthresh)
-    else:
-        ratio = abs(vmax / min(vmin, -vmax) if vmin != 0 else np.inf) if vmin < 0 else (vmax / max(vmin, linthresh_min))
+    elif vmin > 0.0:
+        ratio = vmax / max(vmin, linthresh_min)
         if ratio >= log_ratio:
             ax.set_yscale("log")
 
@@ -573,7 +573,11 @@ def _auto_scale(ax, series_list, *, log_ratio=20.0, linthresh_min=1e-12, pad_fra
     ymax = vmax + pad
     # Avoid zero/negative lower bound on log-only axes
     if ax.get_yscale() == "log":
-        ymin = max(ymin, min(vmin, vmax, linthresh_min * 0.1))
+        positive = arr[arr > 0.0]
+        floor = linthresh_min
+        if positive.size:
+            floor = max(linthresh_min, float(positive.min()) * (1.0 - pad_frac))
+        ymin = max(ymin, floor)
     ax.set_ylim(ymin, ymax)
 
 

@@ -14,6 +14,7 @@ class ZeroDHistory:
     psd_hist_records: List[Dict[str, Any]] = field(default_factory=list)
     diagnostics: List[Dict[str, Any]] = field(default_factory=list)
     mass_budget: List[Dict[str, float]] = field(default_factory=list)
+    mass_budget_cells: List[Dict[str, float]] = field(default_factory=list)
     step_diag_records: List[Dict[str, Any]] = field(default_factory=list)
     debug_records: List[Dict[str, Any]] = field(default_factory=list)
     orbit_rollup_rows: List[Dict[str, float]] = field(default_factory=list)

@@ -1538,6 +1538,13 @@ class Numerics(BaseModel):
         gt=0.0,
         description="Optional warning threshold for dt/t_blow; disabled when null.",
     )
+    dt_min_tcoll_ratio: Optional[float] = Field(
+        0.5,
+        description=(
+            "Lower bound on the time step relative to the minimum Smol collision time-scale "
+            "(dt >= ratio * min t_coll); set null to disable in 1D runs."
+        ),
+    )
     checkpoint: Checkpoint = Checkpoint()
     resume: Resume = Resume()
 
@@ -1585,6 +1592,14 @@ class Numerics(BaseModel):
             return value
         if value <= 0.0:
             raise ConfigurationError("dt_over_t_blow_max must be positive when specified")
+        return float(value)
+
+    @field_validator("dt_min_tcoll_ratio")
+    def _check_dt_min_tcoll_ratio(cls, value: Optional[float]) -> Optional[float]:
+        if value is None:
+            return value
+        if value <= 0.0 or not math.isfinite(value):
+            raise ConfigurationError("numerics.dt_min_tcoll_ratio must be positive and finite when specified")
         return float(value)
 
     @field_validator("orbit_rollup")
