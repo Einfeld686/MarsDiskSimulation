@@ -143,3 +143,27 @@ def test_qpr_lookup_numba_matches_numpy(mock_qpr_table, monkeypatch):
     numpy_val = table.interp(s_val, T_val)
 
     assert np.isclose(numba_val, numpy_val, atol=1.0e-12)
+
+
+@pytest.mark.skipif(
+    not _numba_tables.NUMBA_AVAILABLE(),
+    reason="Numba unavailable; qpr interp numba path not applicable",
+)
+def test_qpr_lookup_array_numba_matches_numpy(mock_qpr_table, monkeypatch):
+    path = mock_qpr_table
+    lookup = tables.load_qpr_table(path)
+    radiation.load_qpr_table(path)
+
+    s_grid = np.array([1.1e-6, 5.0e-6, 8.0e-6, 1.2e-5])
+    T_val = 1234.0
+
+    monkeypatch.setattr(radiation, "_USE_NUMBA_TABLES", True, raising=False)
+    monkeypatch.setattr(radiation, "_NUMBA_FAILED", False, raising=False)
+    numba_vals = radiation.qpr_lookup_array(s_grid, T_val, table=lookup)
+    assert radiation._NUMBA_FAILED is False
+
+    monkeypatch.setattr(radiation, "_USE_NUMBA_TABLES", False, raising=False)
+    monkeypatch.setattr(radiation, "_NUMBA_FAILED", False, raising=False)
+    numpy_vals = radiation.qpr_lookup_array(s_grid, T_val, table=lookup)
+
+    assert np.allclose(numba_vals, numpy_vals, rtol=0.0, atol=1.0e-12)
