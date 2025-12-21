@@ -3,7 +3,7 @@
 
 デフォルトでは run.parquet の後半 50% を評価区間とし、以下をチェックする（本番用閾値）:
 - tau_vertical（なければ tau）の中央値が 0.5–2
-- prod_subblow_area_rate が設定供給（const×epsilon_mix）の 90%以上を連続して維持する期間が
+- prod_subblow_area_rate が設定供給（dotSigma_prod 目安）の 90%以上を連続して維持する期間が
   min_duration（既定 0.1 日）以上存在
 
 例:
@@ -32,7 +32,11 @@ def _load_target_rate(run_dir: Path, override: float | None) -> float | None:
     except Exception:
         return None
     supply_cfg = data.get("supply", {}) or {}
-    rate = supply_cfg.get("effective_prod_rate_kg_m2_s")
+    rate = supply_cfg.get("supply_rate_nominal_kg_m2_s")
+    if rate is None:
+        rate = supply_cfg.get("effective_prod_rate_kg_m2_s")
+    if rate is None:
+        rate = supply_cfg.get("supply_rate_scaled_initial_kg_m2_s")
     if rate is None:
         const_rate = supply_cfg.get("const_prod_area_rate_kg_m2_s")
         eps = supply_cfg.get("epsilon_mix")
@@ -55,8 +59,32 @@ def evaluate_run(
     run_path = run_dir / "series" / "run.parquet"
     if not run_path.exists():
         raise FileNotFoundError(f"run.parquet not found under {run_dir}")
-    df = pd.read_parquet(run_path, columns=["time", "prod_subblow_area_rate", "tau", "tau_vertical"])
+    df = pd.read_parquet(
+        run_path,
+        columns=[
+            "time",
+            "prod_subblow_area_rate",
+            "tau",
+            "tau_vertical",
+            "Sigma_surf0",
+            "t_orb_s",
+        ],
+    )
     target = _load_target_rate(run_dir, target_rate)
+    if target is None:
+        rc_path = run_dir / "run_config.json"
+        try:
+            data = json.loads(rc_path.read_text())
+        except Exception:
+            data = {}
+        supply_cfg = data.get("supply", {}) or {}
+        mu_orbit = supply_cfg.get("mu_orbit10pct")
+        orbit_fraction = supply_cfg.get("orbit_fraction_at_mu1", 0.10)
+        if mu_orbit is not None and "Sigma_surf0" in df.columns and "t_orb_s" in df.columns:
+            sigma0 = float(df["Sigma_surf0"].iloc[0])
+            t_orb = float(df["t_orb_s"].iloc[0])
+            if np.isfinite(sigma0) and sigma0 > 0.0 and np.isfinite(t_orb) and t_orb > 0.0:
+                target = float(mu_orbit) * float(orbit_fraction) * sigma0 / t_orb
     t_max = float(df["time"].max())
     tau_col = "tau_vertical" if "tau_vertical" in df.columns else "tau"
     per_span = []

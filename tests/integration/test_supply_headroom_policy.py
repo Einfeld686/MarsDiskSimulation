@@ -57,8 +57,8 @@ def test_headroom_policy_spill_keeps_flux_nonzero() -> None:
     assert res_spill_mixing.deep_to_surf_rate >= 0.0
 
 
-def test_spill_policy_runs_without_supply_drop(tmp_path: Path) -> None:
-    """spill policy keeps supply_rate_applied>0 and reports spill diagnostics."""
+def test_tau_stop_triggers_without_clip(tmp_path: Path) -> None:
+    """High supply should exceed tau_stop and terminate without Sigma_tau1 clipping."""
 
     outdir = tmp_path / "spill_run"
     cfg = run.load_config(
@@ -66,14 +66,12 @@ def test_spill_policy_runs_without_supply_drop(tmp_path: Path) -> None:
         overrides=[
             "supply.enabled=true",
             "supply.headroom_policy=spill",
-            "supply.const.prod_area_rate_kg_m2_s=10.0",
-            "init_tau1.enabled=true",
-            "init_tau1.scale_to_tau1=true",
-            "shielding.mode=fixed_tau1",
-            "shielding.fixed_tau1_sigma=1e-2",
+            "supply.const.mu_orbit10pct=50.0",
+            "supply.const.orbit_fraction_at_mu1=0.10",
+            "optical_depth.tau_stop=0.5",
             "sinks.mode=\"none\"",
             "blowout.enabled=false",
-            "numerics.t_end_years=1e-9",
+            "numerics.t_end_years=1e-6",
             "numerics.dt_init=0.01",
             "io.streaming.enable=false",
             f"io.outdir={outdir}",
@@ -85,16 +83,13 @@ def test_spill_policy_runs_without_supply_drop(tmp_path: Path) -> None:
     assert series_path.exists()
 
     cols = [
-        "supply_rate_scaled",
-        "supply_rate_applied",
-        "supply_tau_clip_spill_rate",
         "Sigma_surf",
         "Sigma_tau1",
-        "cum_mass_lost_tau_clip_spill",
+        "tau_los_mars",
     ]
     df = pd.read_parquet(series_path, columns=cols)
+    summary = pd.read_json(outdir / "summary.json", typ="series")
 
-    assert df["supply_rate_applied"].gt(0).any()
-    assert (df["Sigma_surf"] <= df["Sigma_tau1"] * 1.000001).all()
-    assert not df["supply_tau_clip_spill_rate"].isna().any()
-    assert df["cum_mass_lost_tau_clip_spill"].iloc[-1] >= 0
+    assert summary["stop_reason"] == "tau_exceeded"
+    mask = df["Sigma_tau1"].notna()
+    assert (df.loc[mask, "Sigma_surf"] > df.loc[mask, "Sigma_tau1"]).any()

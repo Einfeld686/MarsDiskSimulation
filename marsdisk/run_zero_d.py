@@ -874,6 +874,33 @@ def run_zero_d(
     kappa_surf = _ensure_finite_kappa(psd.compute_kappa(psd_state), label="kappa_surf_initial")
     kappa_surf_initial = float(kappa_surf)
     kappa_eff0 = kappa_surf_initial
+    optical_depth_cfg = getattr(cfg, "optical_depth", None)
+    optical_depth_enabled = optical_depth_cfg is not None
+    optical_tau0_target = None
+    optical_tau_stop = None
+    optical_tau_stop_tol = None
+    optical_tau_field = "tau_los"
+    sigma_surf0_target = None
+    if optical_depth_enabled:
+        optical_tau0_target = float(getattr(optical_depth_cfg, "tau0_target", 1.0))
+        optical_tau_stop = float(getattr(optical_depth_cfg, "tau_stop", 1.0))
+        optical_tau_stop_tol = float(getattr(optical_depth_cfg, "tau_stop_tol", 1.0e-6))
+        optical_tau_field = str(getattr(optical_depth_cfg, "tau_field", "tau_los"))
+        if optical_tau_field != "tau_los":
+            raise ConfigurationError("optical_depth.tau_field must be 'tau_los' in v1")
+        if optical_tau0_target <= 0.0 or not math.isfinite(optical_tau0_target):
+            raise ConfigurationError("optical_depth.tau0_target must be positive and finite")
+        if optical_tau_stop is None or optical_tau_stop <= 0.0 or not math.isfinite(optical_tau_stop):
+            raise ConfigurationError("optical_depth.tau_stop must be positive and finite")
+        if optical_tau_stop_tol is None or optical_tau_stop_tol < 0.0 or not math.isfinite(optical_tau_stop_tol):
+            raise ConfigurationError("optical_depth.tau_stop_tol must be non-negative and finite")
+        phi0 = float(phi_tau_fn(optical_tau0_target)) if phi_tau_fn is not None else 1.0
+        kappa_eff0 = float(phi0 * kappa_surf_initial)
+        if not math.isfinite(kappa_eff0) or kappa_eff0 <= 0.0:
+            raise ConfigurationError("optical_depth requires a positive finite kappa_eff0")
+        sigma_surf0_target = float(optical_tau0_target / (kappa_eff0 * los_factor))
+        if not math.isfinite(sigma_surf0_target) or sigma_surf0_target < 0.0:
+            raise ConfigurationError("optical_depth produced invalid Sigma_surf0")
     qpr_at_smin_config = _lookup_qpr(s_min_config)
     qpr_mean = _lookup_qpr(s_min_effective)
     beta_at_smin_config = radiation.beta(
@@ -902,12 +929,20 @@ def run_zero_d(
     init_tau1_enabled = bool(
         getattr(cfg, "init_tau1", None) is not None and getattr(cfg.init_tau1, "enabled", False)
     )
+    if optical_depth_enabled and init_tau1_enabled:
+        logger.warning("optical_depth enabled; init_tau1.enabled is ignored in favour of tau0_target")
+        init_tau1_enabled = False
     tau_field = getattr(cfg.init_tau1, "tau_field", "los") if init_tau1_enabled else "los"
     target_tau_init = float(getattr(cfg.init_tau1, "target_tau", 1.0) if init_tau1_enabled else 1.0)
     target_tau_init = target_tau_init if math.isfinite(target_tau_init) and target_tau_init > 0.0 else 1.0
     los_scale = los_factor if tau_field == "los" else 1.0
     sigma_tau1_unity = None
     sigma_override_applied = cfg.surface.sigma_surf_init_override
+    if optical_depth_enabled and sigma_surf0_target is not None:
+        sigma_override_applied = sigma_surf0_target
+        if cfg.surface.sigma_surf_init_override is not None:
+            logger.warning("surface.sigma_surf_init_override ignored because optical_depth is enabled")
+    optical_depth_override_active = optical_depth_enabled and sigma_surf0_target is not None
 
     if cfg.disk is not None and cfg.inner_disk_mass is not None:
         r_in_d = cfg.disk.geometry.r_in_RM * constants.R_MARS
@@ -955,7 +990,10 @@ def run_zero_d(
             sigma_surf = 0.0
             logger.warning("init_tau1 without inner_disk_mass: kappa_for_init<=0, sigma_surf=0")
     else:
-        sigma_surf = 0.0
+        if sigma_override_applied is not None:
+            sigma_surf = float(sigma_override_applied)
+        else:
+            sigma_surf = 0.0
     sigma_surf_init_raw = float(sigma_surf)
     tau_initial = float(kappa_surf_initial * sigma_surf_init_raw)
     tau_fixed_target = float(tau_fixed_cfg) if tau_fixed_cfg is not None else tau_initial
@@ -1056,7 +1094,7 @@ def run_zero_d(
         area = math.pi * r**2
     mass_total_original = cfg.initial.mass_total
     mass_total_applied = mass_total_original
-    if (init_tau1_enabled or initial_sigma_clipped) and area > 0.0:
+    if (init_tau1_enabled or initial_sigma_clipped or optical_depth_override_active) and area > 0.0:
         mass_total_applied = float(sigma_surf_reference * area / constants.M_MARS)
         cfg.initial.mass_total = mass_total_applied
     chi_config_raw = getattr(cfg, "chi_blow", 1.0)
@@ -1129,9 +1167,10 @@ def run_zero_d(
     supply_mode_value = getattr(supply_spec, "mode", "const")
     supply_headroom_policy = getattr(supply_spec, "headroom_policy", "clip")
     supply_epsilon_mix = getattr(getattr(supply_spec, "mixing", None), "epsilon_mix", None)
-    supply_mu_cfg = getattr(getattr(supply_spec, "mixing", None), "mu", None)
     supply_const_rate = getattr(getattr(supply_spec, "const", None), "prod_area_rate_kg_m2_s", None)
     supply_const_tfill = getattr(getattr(supply_spec, "const", None), "auto_from_tau1_tfill_years", None)
+    supply_mu_orbit_cfg = getattr(getattr(supply_spec, "const", None), "mu_orbit10pct", None)
+    supply_orbit_fraction = getattr(getattr(supply_spec, "const", None), "orbit_fraction_at_mu1", None)
     supply_injection_cfg = getattr(supply_spec, "injection", None)
     supply_injection_mode = getattr(supply_injection_cfg, "mode", "min_bin") if supply_injection_cfg else "min_bin"
     supply_injection_s_min = getattr(supply_injection_cfg, "s_inj_min", None) if supply_injection_cfg else None
@@ -1209,8 +1248,36 @@ def run_zero_d(
         else None
     )
     try:
-        # Optional: derive const rate from initial Sigma_tau1 and a target fill time.
+        # Optional: derive const rate from mu_orbit10pct and the initial surface density.
         if (
+            supply_enabled_cfg
+            and supply_mode_value == "const"
+            and supply_mu_orbit_cfg is not None
+        ):
+            if sigma_surf0_target is None or not math.isfinite(sigma_surf0_target):
+                raise ConfigurationError(
+                    "supply.const.mu_orbit10pct requires optical_depth to define Sigma_surf0"
+                )
+            if supply_epsilon_mix is None or supply_epsilon_mix <= 0.0:
+                raise ConfigurationError("supply.mixing.epsilon_mix must be positive when using mu_orbit10pct")
+            orbit_fraction = 0.10 if supply_orbit_fraction is None else float(supply_orbit_fraction)
+            if orbit_fraction <= 0.0 or not math.isfinite(orbit_fraction):
+                raise ConfigurationError("supply.const.orbit_fraction_at_mu1 must be positive and finite")
+            supply_orbit_fraction = orbit_fraction
+            epsilon_mix = float(supply_epsilon_mix)
+            dotSigma_target = float(supply_mu_orbit_cfg) * orbit_fraction * float(sigma_surf0_target) / float(t_orb)
+            supply_const_rate = dotSigma_target / epsilon_mix
+            logger.info(
+                "Derived supply.const.prod_area_rate_kg_m2_s=%.3e from mu_orbit10pct=%.3f, "
+                "orbit_fraction=%.3f, Sigma_surf0=%.3e kg/m^2, epsilon_mix=%.3f (dotSigma_prod=%.3e)",
+                supply_const_rate,
+                supply_mu_orbit_cfg,
+                orbit_fraction,
+                sigma_surf0_target,
+                epsilon_mix,
+                dotSigma_target,
+            )
+        elif (
             supply_enabled_cfg
             and supply_mode_value == "const"
             and supply_const_tfill is not None
@@ -1233,6 +1300,8 @@ def run_zero_d(
         if supply_enabled_cfg and supply_mode_value == "const":
             if supply_const_rate is not None and supply_epsilon_mix is not None:
                 supply_effective_rate = float(supply_const_rate) * float(supply_epsilon_mix)
+        if supply_const_rate is not None and hasattr(supply_spec, "const"):
+            setattr(supply_spec.const, "prod_area_rate_kg_m2_s", float(supply_const_rate))
     except Exception:
         supply_effective_rate = None
     supply_table_path = getattr(getattr(supply_spec, "table", None), "path", None)
@@ -1597,6 +1666,7 @@ def run_zero_d(
     early_stop_reason: Optional[str] = None
     early_stop_step: Optional[int] = None
     early_stop_time_s: Optional[float] = None
+    tau_stop_los_value: Optional[float] = None
     energy_sum_rel = 0.0
     energy_sum_diss = 0.0
     energy_sum_ret = 0.0
@@ -1662,6 +1732,7 @@ def run_zero_d(
         deep_to_surf_attempt_mass_step = 0.0
         prod_into_deep_mass_step = 0.0
         sigma_deep_before = sigma_deep
+        stop_after_record = False
 
         if eval_requires_step or step_no == 0:
             Omega_step = grid.omega_kepler(r)
@@ -2091,11 +2162,7 @@ def run_zero_d(
                     supply_rate_scaled_current = supply_res.rate if allow_supply else 0.0
                     if supply_rate_scaled_initial is None and math.isfinite(supply_res.rate):
                         supply_rate_scaled_initial = float(supply_res.rate)
-                    sigma_tau1_active = (
-                        sigma_tau1_limit
-                        if (blowout_layer_mode == "surface_tau_le_1" and collisions_active_step)
-                        else None
-                    )
+                    sigma_tau1_active = None
                     sigma_tau1_active_last = sigma_tau1_active
                     split_res = supply.split_supply_with_deep_buffer(
                         prod_rate_raw_current,
@@ -2226,11 +2293,7 @@ def run_zero_d(
                 supply_rate_scaled_current = supply_res.rate if allow_supply else 0.0
                 if supply_rate_scaled_initial is None and math.isfinite(supply_res.rate):
                     supply_rate_scaled_initial = float(supply_res.rate)
-                sigma_tau1_active = (
-                    sigma_tau1_limit
-                    if (blowout_layer_mode == "surface_tau_le_1" and collisions_active_step)
-                    else None
-                )
+                sigma_tau1_active = None
                 sigma_tau1_active_last = sigma_tau1_active
                 split_res = supply.split_supply_with_deep_buffer(
                     prod_rate_raw_current,
@@ -2761,6 +2824,14 @@ def run_zero_d(
         tau_eff_diag = None
         if kappa_eff is not None and math.isfinite(kappa_eff):
             tau_eff_diag = kappa_eff * sigma_diag
+        if optical_depth_enabled and optical_tau_stop is not None:
+            kappa_for_stop = kappa_eff if kappa_eff is not None and math.isfinite(kappa_eff) else kappa_surf
+            tau_stop_los_current = float(kappa_for_stop * sigma_surf * los_factor)
+            if math.isfinite(tau_stop_los_current) and tau_stop_los_current > optical_tau_stop * (
+                1.0 + float(optical_tau_stop_tol or 0.0)
+            ):
+                stop_after_record = True
+                tau_stop_los_value = tau_stop_los_current
         if sigma_tau1_limit is not None and math.isfinite(sigma_tau1_limit):
             headroom_current = float(max(sigma_tau1_limit - min(sigma_diag, sigma_tau1_limit), 0.0))
         else:
@@ -2885,6 +2956,7 @@ def run_zero_d(
         _series_optional_float_keys = {
             "t_coll",
             "ts_ratio",
+            "Sigma_surf0",
             "Sigma_tau1",
             "Sigma_tau1_active",
             "sigma_tau1",
@@ -2894,6 +2966,9 @@ def run_zero_d(
             "tau_phase_used",
             "t_solid_s",
             "prod_subblow_area_rate_raw",
+            "dotSigma_prod",
+            "mu_orbit10pct",
+            "epsilon_mix",
             "prod_rate_raw",
             "supply_rate_nominal",
             "supply_rate_scaled",
@@ -2908,6 +2983,9 @@ def run_zero_d(
             "supply_reservoir_remaining_Mmars",
             "supply_reservoir_fraction",
             "phi_effective",
+            "phi_used",
+            "kappa_eff",
+            "kappa_surf",
             "phase_f_vap",
             "phase_bulk_f_liquid",
             "phase_bulk_f_solid",
@@ -2973,6 +3051,8 @@ def run_zero_d(
             "s_min": s_min_effective,
             "s_min_surface_energy": s_min_surface_energy,
             "kappa": kappa_eff,
+            "kappa_eff": kappa_eff,
+            "kappa_surf": kappa_surf,
             "Qpr_mean": qpr_mean_step,
             "Q_pr_at_smin": qpr_mean_step,
             "beta_at_smin_config": beta_at_smin_config,
@@ -2981,6 +3061,7 @@ def run_zero_d(
             "beta_threshold": beta_threshold,
             "Sigma_surf": sigma_surf,
             "sigma_surf": sigma_surf,
+            "Sigma_surf0": sigma_surf0_target,
             "Sigma_tau1": sigma_tau1_limit,
             "Sigma_tau1_active": sigma_tau1_active_last,
             "sigma_tau1": sigma_tau1_limit,
@@ -2998,6 +3079,9 @@ def run_zero_d(
             "t_blow": t_blow_step,
             "prod_subblow_area_rate": prod_rate_last,
             "prod_subblow_area_rate_raw": supply_diag_last.raw_rate if supply_diag_last else None,
+            "dotSigma_prod": _safe_float(supply_rate_scaled_current),
+            "mu_orbit10pct": supply_mu_orbit_cfg,
+            "epsilon_mix": supply_epsilon_mix,
             "prod_rate_raw": _safe_float(prod_rate_raw_current),
             "prod_rate_applied_to_surf": _safe_float(supply_rate_applied_current),
             "prod_rate_diverted_to_deep": _safe_float(prod_rate_diverted_current),
@@ -3082,6 +3166,7 @@ def run_zero_d(
             "ds_dt_sublimation": ds_dt_val,
             "ds_dt_sublimation_raw": ds_dt_raw,
             "phi_effective": phi_effective_last,
+            "phi_used": phi_effective_last,
             "e_kernel_used": _safe_float(e_kernel_step),
             "i_kernel_used": _safe_float(i_kernel_step),
             "e_kernel_base": _safe_float(e_kernel_base_step),
@@ -3471,6 +3556,20 @@ def run_zero_d(
                 history.violation_triggered = True
                 break
 
+        if stop_after_record:
+            early_stop_reason = "tau_exceeded"
+            early_stop_step = step_no
+            early_stop_time_s = time + dt
+            total_time_elapsed = time + dt
+            logger.info(
+                "Early stop triggered: tau_los=%.3e exceeded tau_stop=%.3e at t=%.3e s (step %d)",
+                tau_stop_los_value if tau_stop_los_value is not None else float("nan"),
+                optical_tau_stop,
+                time + dt,
+                step_no,
+            )
+            break
+
         if not quiet_mode and not progress_enabled and logger.isEnabledFor(logging.INFO):
             logger.info(
                 "run: t=%e a_blow=%.3e kappa=%e t_blow=%e M_loss[M_Mars]=%e",
@@ -3850,6 +3949,8 @@ def run_zero_d(
         "T_M_max": T_max,
         "early_stop_reason": early_stop_reason,
         "early_stop_time_s": early_stop_time_s,
+        "stop_reason": "tau_exceeded" if early_stop_reason == "tau_exceeded" else None,
+        "stop_tau_los": tau_stop_los_value if early_stop_reason == "tau_exceeded" else None,
         "analysis_window_years_actual": total_time_elapsed / SECONDS_PER_YEAR if total_time_elapsed is not None else None,
         "beta_at_smin_min": beta_min,
         "beta_at_smin_median": beta_median,
@@ -3911,6 +4012,9 @@ def run_zero_d(
         "supply_temperature_scale_max": supply_temp_scale_max,
         "supply_temperature_value_kind": supply_temperature_value_kind,
         "supply_temperature_table_path": str(supply_temperature_table_path) if supply_temperature_table_path is not None else None,
+        "supply_mu_orbit10pct": supply_mu_orbit_cfg,
+        "supply_orbit_fraction_at_mu1": supply_orbit_fraction,
+        "Sigma_surf0": sigma_surf0_target,
         "supply_rate_nominal_kg_m2_s": supply_rate_nominal_inferred,
         "supply_rate_scaled_initial_kg_m2_s": supply_rate_scaled_initial_final,
         "effective_prod_rate_kg_m2_s": supply_effective_rate,
@@ -4234,6 +4338,15 @@ def run_zero_d(
             "mass_total_original_Mmars": mass_total_original,
             "mass_total_applied_Mmars": mass_total_applied,
         },
+        "optical_depth": {
+            "enabled": optical_depth_enabled,
+            "tau0_target": optical_tau0_target,
+            "tau_stop": optical_tau_stop,
+            "tau_stop_tol": optical_tau_stop_tol,
+            "tau_field": optical_tau_field,
+            "sigma_surf0": sigma_surf0_target,
+            "kappa_eff0": kappa_eff0,
+        },
         "init_ei": {
             "e_mode": cfg.dynamics.e_mode,
             "dr_min_m": cfg.dynamics.dr_min_m,
@@ -4359,7 +4472,8 @@ def run_zero_d(
         "mode": supply_mode_value,
         "headroom_policy": supply_headroom_policy,
         "epsilon_mix": supply_epsilon_mix,
-        "mu": supply_mu_cfg,
+        "mu_orbit10pct": supply_mu_orbit_cfg,
+        "orbit_fraction_at_mu1": supply_orbit_fraction,
         "const_prod_area_rate_kg_m2_s": supply_const_rate,
         "table_path": str(supply_table_path) if supply_table_path is not None else None,
         "effective_prod_rate_kg_m2_s": supply_effective_rate,
@@ -4569,8 +4683,12 @@ def main(argv: Optional[List[str]] = None) -> None:
     )
     parser.add_argument(
         "--quiet",
-        action="store_true",
-        help="Suppress INFO logs and Python warnings for a cleaner CLI.",
+        action=argparse.BooleanOptionalAction,
+        default=None,
+        help=(
+            "Suppress INFO logs and Python warnings for a cleaner CLI "
+            "(defaults to enabled when not set in config; use --no-quiet to show logs)."
+        ),
     )
     parser.add_argument(
         "--enforce-mass-budget",
@@ -4607,7 +4725,13 @@ def main(argv: Optional[List[str]] = None) -> None:
         for group in args.override:
             override_list.extend(group)
     cfg = load_config(args.config, overrides=override_list)
-    if args.quiet:
+    quiet_fields_set = set(getattr(cfg.io, "model_fields_set", ()))
+    if args.quiet is not None:
+        try:
+            cfg.io.quiet = bool(args.quiet)
+        except Exception:
+            pass
+    elif "quiet" not in quiet_fields_set:
         try:
             cfg.io.quiet = True
         except Exception:

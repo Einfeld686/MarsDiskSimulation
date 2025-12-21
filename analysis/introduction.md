@@ -190,13 +190,9 @@ $$
 
 ### 3.4 自遮蔽効果（Self-Shielding）
 
-光学的に厚い円盤では、表層のみが放射を受けます (E.015–E.017):
+光学的に厚い円盤では、表層のみが放射を受けます (E.015–E.017)。現行実装では $\Sigma_{\tau=1}=1/\kappa_{\rm eff}$ を診断として記録し、$\tau_{\rm los}>\tau_{\rm stop}$ に達した時点でシミュレーションを終了する（クリップは行わない）。
 
-$$
-\Sigma_{\rm surf,clip} = \min(\Sigma_{\rm surf}, \Sigma_{\tau=1})
-$$
-
-- $\Sigma_{\tau=1} = \kappa_{\rm eff}^{-1}$: τ=1 表層質量
+- $\Sigma_{\tau=1} = \kappa_{\rm eff}^{-1}$: τ=1 表層質量（診断用）
 - $\Phi(\tau)$: 自遮蔽係数（テーブル補間）
 
 ---

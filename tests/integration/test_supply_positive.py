@@ -21,10 +21,12 @@ def test_supply_positive_with_wide_tau_cap(tmp_path: Path) -> None:
             "radiation.mars_temperature_driver.table.path=data/mars_temperature_T6000p0K.csv",
             "supply.enabled=true",
             "supply.mode=const",
-            "supply.const.prod_area_rate_kg_m2_s=1.0e-10",
+            "supply.const.mu_orbit10pct=1.0",
+            "supply.const.orbit_fraction_at_mu1=0.10",
             "supply.mixing.epsilon_mix=1.0",
             "shielding.mode=fixed_tau1",
             "shielding.fixed_tau1_sigma=1000",
+            "optical_depth.tau_stop=1.0e6",
         ],
     )
     run.run_zero_d(cfg)
@@ -51,11 +53,13 @@ def test_reservoir_depletes_and_records_metadata(tmp_path: Path) -> None:
             "shielding.fixed_tau1_sigma=auto",
             "supply.enabled=true",
             "supply.mode=const",
-            "supply.const.prod_area_rate_kg_m2_s=1.0e-10",
+            "supply.const.mu_orbit10pct=1.0",
+            "supply.const.orbit_fraction_at_mu1=0.10",
             "supply.reservoir.enabled=true",
             f"supply.reservoir.mass_total_Mmars={reservoir_mass}",
             "supply.reservoir.depletion_mode=taper",
             "supply.reservoir.taper_fraction=0.5",
+            "optical_depth.tau_stop=1.0e6",
         ],
     )
     run.run_zero_d(cfg)
@@ -99,10 +103,7 @@ def test_supply_feedback_tau_los_updates_scale(tmp_path: Path) -> None:
             "numerics.dt_init=10",
             "shielding.los_geometry.h_over_r=0.1",
             "shielding.los_geometry.path_multiplier=1.0",
-            "init_tau1.enabled=true",
-            "init_tau1.scale_to_tau1=true",
-            "init_tau1.tau_field=los",
-            "init_tau1.target_tau=2.0",
+            "optical_depth.tau0_target=2.0",
             "supply.feedback.enabled=true",
             "supply.feedback.target_tau=1.0",
             "supply.feedback.gain=1.0",
@@ -134,6 +135,60 @@ def test_supply_feedback_tau_los_updates_scale(tmp_path: Path) -> None:
     assert finite_err.iloc[0] == pytest.approx(expected_err)
     scales = df["supply_feedback_scale"].dropna()
     assert (scales - 1.0).abs().max() > 1e-6
+
+
+def test_mu_orbit10pct_scales_supply(tmp_path: Path) -> None:
+    """mu_orbit10pct should map to a fixed dotSigma_prod independent of epsilon_mix."""
+
+    outdir = tmp_path / "out_mu_scale"
+    mu_value = 2.0
+    orbit_fraction = 0.10
+    cfg = run.load_config(
+        Path("configs/base.yml"),
+        overrides=[
+            f"io.outdir={outdir}",
+            "io.streaming.enable=false",
+            "numerics.t_end_orbits=1.0",
+            "numerics.dt_init=auto",
+            "supply.enabled=true",
+            "supply.mode=const",
+            f"supply.const.mu_orbit10pct={mu_value}",
+            f"supply.const.orbit_fraction_at_mu1={orbit_fraction}",
+            "supply.mixing.epsilon_mix=0.25",
+            "supply.feedback.enabled=false",
+            "supply.temperature.enabled=false",
+            "surface.collision_solver=smol",
+            "surface.use_tcoll=false",
+            "blowout.enabled=false",
+            "phase.enabled=false",
+            "optical_depth.tau_stop=1.0e6",
+            "sinks.mode=\"none\"",
+            "sinks.enable_sublimation=false",
+            "sinks.enable_gas_drag=false",
+        ],
+    )
+    run.run_zero_d(cfg)
+
+    df = pd.read_parquet(
+        outdir / "series" / "run.parquet",
+        columns=[
+            "Sigma_surf",
+            "Sigma_surf0",
+            "dotSigma_prod",
+            "dt",
+            "t_orb_s",
+        ],
+    )
+    sigma0 = float(df["Sigma_surf0"].iloc[0])
+    t_orb = float(df["t_orb_s"].iloc[0])
+    expected_dotSigma = mu_value * orbit_fraction * sigma0 / t_orb
+    active = df["dotSigma_prod"].fillna(0.0) > 0.0
+    assert active.any()
+    dotSigma_measured = float(df.loc[active, "dotSigma_prod"].median())
+    assert dotSigma_measured == pytest.approx(expected_dotSigma, rel=1e-3)
+
+    delta_sigma = float(df["Sigma_surf"].iloc[-1] - df["Sigma_surf"].iloc[0])
+    assert delta_sigma > 0.0
 
 
 def test_run_config_written_before_runtime_failure(monkeypatch, tmp_path: Path) -> None:

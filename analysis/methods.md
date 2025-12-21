@@ -20,7 +20,7 @@ flowchart TB
     subgraph INIT["初期化"]
         PSD0["初期 PSD 生成"]
         TEMP0["火星温度 T_M"]
-        TAU1["τ=1 スケーリング"]
+        TAU1["τ0=1 表層定義"]
     end
 
     subgraph LOOP["時間発展ループ"]
@@ -30,7 +30,7 @@ flowchart TB
         SUPPLY["外部供給<br/>フィードバック制御"]
         SMOL["Smoluchowski 衝突積分<br/>IMEX-BDF(1)"]
         SINK["シンク評価<br/>昇華, ブローアウト"]
-        SHIELD["遮蔽 Φ 適用<br/>τ=1 クリップ"]
+        SHIELD["遮蔽 Φ 適用<br/>τ_stop 判定"]
         CHECK["質量収支検査"]
     end
 
@@ -63,11 +63,11 @@ flowchart LR
         S1["1. 温度ドライバ更新<br/>T_M(t) → 冷却モデル"]
         S2["2. 放射圧計算<br/>⟨Q_pr⟩ → β → a_blow"]
         S3["3. 供給率決定<br/>フィードバック × 温度スケール"]
-        S4["4. Headroom Gate<br/>τ=1 超過抑制"]
+        S4["4. 供給ゲート<br/>相/step0/液相"]
         S5["5. 深層ミキシング<br/>deep → surface 転送"]
         S6["6. Smoluchowski 積分<br/>衝突 + 供給 + 損失"]
         S7["7. シンク適用<br/>昇華 ds/dt, ブローアウト"]
-        S8["8. 遮蔽クリップ<br/>Σ_surf ≤ Σ_τ=1"]
+        S8["8. τ_stop 判定<br/>超過で終了"]
         S9["9. 質量収支検査<br/>|error| ≤ 0.5%"]
         S10["10. 診断出力<br/>parquet 書き込み"]
         
@@ -240,7 +240,7 @@ $$
 
 ## 5. 遮蔽 (Shielding)
 
-$\Phi(\tau)$ テーブル補間で有効不透明度を評価し、$\Sigma_{\rm surf} \le \Sigma_{\tau=1}$ でクリップ。
+$\Phi(\tau)$ テーブル補間で有効不透明度を評価し、$\Sigma_{\tau=1}=1/\kappa_{\rm eff}$ を診断として記録する。表層が光学的に厚くなり $\tau_{\rm los}>\tau_{\rm stop}$ となった場合は停止し、クリップは行わない。
 
 > **詳細**: analysis/equations.md (E.015)–(E.017)  
 > **設定**: analysis/config_guide.md §3.4 "Shielding"
@@ -279,9 +279,9 @@ SiO₂ 冷却マップまたは閾値から `solid`/`vapor` を判定し、シ�
 
 ## 9. 外部供給 (Supply)
 
-`const` / `powerlaw` / `table` / `piecewise` モードで表層への供給率を指定。無次元パラメータ μ から rate を導出可能 (E.027a)。
+`const` / `powerlaw` / `table` / `piecewise` モードで表層への供給率を指定。`const` は `mu_orbit10pct` を基準に、1公転で初期表層の `orbit_fraction_at_mu1` を供給する定義に統一する。旧 μ (E.027a) は診断・ツール用の導出値としてのみ扱う。
 
-- `transport` に `direct` / `deep_mixing` を選べ、後者では headroom ゲートとミキシング時間で供給を制限する。診断列 `supply_visibility_factor` などは run.parquet/diagnostics.parquet を参照。
+- `transport` に `direct` / `deep_mixing` を選べ、後者ではミキシング時間で供給を遅延させる。τ=1 headroom ゲートは legacy とし、τ_stop で停止判定する。
 
 > **詳細**: analysis/equations.md (E.027), (E.027a)  
 > **用語**: analysis/glossary.md G.A11 (epsilon_mix)  
@@ -300,7 +300,7 @@ SiO₂ 冷却マップまたは閾値から `solid`/`vapor` を判定し、シ�
 | `supply.feedback.min_scale` / `max_scale` | スケール係数の上下限 | 1e-6 / 10.0 |
 
 - `supply_feedback_scale` 列にステップごとのスケール係数を出力。
-- フィードバックは Headroom Gate の**上流**で適用されるため、`headroom_policy=clip` と組み合わせると τ~1 維持が堅牢になる。
+- フィードバックは供給ゲートの**上流**で適用され、τ_stop 超過時は停止判定が優先される。
 
 ### 9.2 温度カップリング (Supply Temperature)
 
@@ -324,7 +324,7 @@ SiO₂ 冷却マップまたは閾値から `solid`/`vapor` を判定し、シ�
 
 ### 9.4 深層リザーバ + ミキシング (Deep Mixing)
 
-`supply.transport.mode=deep_mixing` を選択すると、供給が一旦深層リザーバに蓄積され、ミキシング時間 `t_mix_orbits` 公転で表層へ放出される。Headroom Gate (`hard` / `soft`) を通過して τ=1 超過を抑制。
+`supply.transport.mode=deep_mixing` を選択すると、供給が一旦深層リザーバに蓄積され、ミキシング時間 `t_mix_orbits` 公転で表層へ放出される。τ=1 超過は停止判定で扱う。
 
 - `supply_rate_nominal` → `supply_rate_scaled` → `supply_rate_applied` の経路を診断列で確認可能。
 - `prod_rate_diverted_to_deep` / `deep_to_surf_flux` 列で深層ルーティングを可視化。
@@ -376,11 +376,12 @@ numerics:
 
 | 設定キー | 意味 | 既定値 |
 |----------|------|--------|
-| `init_tau1.scale_to_tau1` | 有効化フラグ | `true` |
+| `init_tau1.scale_to_tau1` | 有効化フラグ | `false` |
 | `init_tau1.tau_field` | `vertical` / `los` | `los` |
 | `init_tau1.target_tau` | 目標光学的厚さ | 1.0 |
 
-- `scale_to_tau1=false` の場合、`initial.mass_total` がそのまま適用されるが、供給が τ=1 キャップで即座にクリップされる可能性がある。
+- `optical_depth` が有効な場合は `tau0_target` から `Sigma_surf0` を定義し、`init_tau1.scale_to_tau1` とは併用できない（旧方式を使う場合は `optical_depth: null` を明示）。
+- `scale_to_tau1=false` の場合は `initial.mass_total` がそのまま適用される。供給の上限クリップは行わず、`tau_stop` 超過で停止判定する。
 
 ---
 

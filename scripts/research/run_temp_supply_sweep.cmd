@@ -60,11 +60,14 @@ if not defined SUBSTEP_FAST_BLOWOUT set "SUBSTEP_FAST_BLOWOUT=0"
 if not defined SUBSTEP_MAX_RATIO set "SUBSTEP_MAX_RATIO="
 if not defined SUPPLY_HEADROOM_POLICY set "SUPPLY_HEADROOM_POLICY=clip"
 if not defined SUPPLY_MODE set "SUPPLY_MODE=const"
-if not defined SUPPLY_RATE set "SUPPLY_RATE=1.0e-5"
+if not defined SUPPLY_MU_ORBIT10PCT set "SUPPLY_MU_ORBIT10PCT=1.0"
+if not defined SUPPLY_ORBIT_FRACTION set "SUPPLY_ORBIT_FRACTION=0.10"
 if not defined SHIELDING_MODE set "SHIELDING_MODE=psitau"
 if not defined SHIELDING_SIGMA set "SHIELDING_SIGMA=auto"
 if not defined SHIELDING_AUTO_MAX_MARGIN set "SHIELDING_AUTO_MAX_MARGIN=0.05"
-if not defined INIT_SCALE_TO_TAU1 set "INIT_SCALE_TO_TAU1=true"
+if not defined OPTICAL_TAU0_TARGET set "OPTICAL_TAU0_TARGET=1.0"
+if not defined OPTICAL_TAU_STOP set "OPTICAL_TAU_STOP=1.0"
+if not defined OPTICAL_TAU_STOP_TOL set "OPTICAL_TAU_STOP_TOL=1.0e-2"
 if not defined STOP_ON_BLOWOUT_BELOW_SMIN set "STOP_ON_BLOWOUT_BELOW_SMIN=true"
 rem SUPPLY_RESERVOIR_M intentionally left undefined by default
 if not defined SUPPLY_RESERVOIR_MODE set "SUPPLY_RESERVOIR_MODE=hard_stop"
@@ -107,7 +110,7 @@ rem STREAM_STEP_INTERVAL intentionally left undefined by default
 if not defined ENABLE_PROGRESS set "ENABLE_PROGRESS=1"
 
 set "T_LIST=5000 4000 3000"
-set "MU_LIST=1.0 0.5 0.1"
+set "EPS_LIST=1.0 0.5 0.1"
 set "PHI_LIST=20 37 60"
 
 set "COOL_SEARCH_DISPLAY=%COOL_SEARCH_YEARS%"
@@ -121,10 +124,11 @@ if defined COOL_TO_K (
 )
 
 echo.[config] supply multipliers: temp_enabled=%SUPPLY_TEMP_ENABLED% (mode=%SUPPLY_TEMP_MODE%) feedback_enabled=%SUPPLY_FEEDBACK_ENABLED% reservoir=%SUPPLY_RESERVOIR_M%
-echo.[config] shielding: mode=%SHIELDING_MODE% fixed_tau1_sigma=%SHIELDING_SIGMA% auto_max_margin=%SHIELDING_AUTO_MAX_MARGIN% init_scale_to_tau1=%INIT_SCALE_TO_TAU1%
+echo.[config] shielding: mode=%SHIELDING_MODE% fixed_tau1_sigma=%SHIELDING_SIGMA% auto_max_margin=%SHIELDING_AUTO_MAX_MARGIN%
 echo.[config] injection: mode=%SUPPLY_INJECTION_MODE% q=%SUPPLY_INJECTION_Q% s_inj_min=%SUPPLY_INJECTION_SMIN% s_inj_max=%SUPPLY_INJECTION_SMAX%
 echo.[config] transport: mode=%SUPPLY_TRANSPORT_MODE% t_mix=%SUPPLY_TRANSPORT_TMIX_ORBITS% headroom_gate=%SUPPLY_TRANSPORT_HEADROOM% velocity=%SUPPLY_VEL_MODE%
-echo.[config] const supply before mixing: %SUPPLY_RATE% kg m^-2 s^-1 (epsilon_mix swept per MU_LIST)
+echo.[config] external supply: mu_orbit10pct=%SUPPLY_MU_ORBIT10PCT% orbit_fraction_at_mu1=%SUPPLY_ORBIT_FRACTION% (epsilon_mix swept per EPS_LIST)
+echo.[config] optical_depth: tau0_target=%OPTICAL_TAU0_TARGET% tau_stop=%OPTICAL_TAU_STOP% tau_stop_tol=%OPTICAL_TAU_STOP_TOL%
 echo.[config] fast blowout substep: enabled=%SUBSTEP_FAST_BLOWOUT% substep_max_ratio=%SUBSTEP_MAX_RATIO%
 echo.[config] !COOL_STATUS!
 echo.[config] cooling driver mode: %COOL_MODE% (slab: T^-3, hyodo: linear flux)
@@ -173,21 +177,21 @@ set "SUPPLY_OVERRIDES=!SUPPLY_OVERRIDES! --override \"supply.injection.velocity.
 rem ---------- main loops ----------
 for %%T in (%T_LIST%) do (
   set "T_TABLE=data/mars_temperature_T%%Tp0K.csv"
-  for %%M in (%MU_LIST%) do (
-    set "MU=%%M"
-    set "MU_TITLE=%%M"
-    set "MU_TITLE=!MU_TITLE:0.=0p!"
-    set "MU_TITLE=!MU_TITLE:.=p!"
+  for %%M in (%EPS_LIST%) do (
+    set "EPS=%%M"
+    set "EPS_TITLE=%%M"
+    set "EPS_TITLE=!EPS_TITLE:0.=0p!"
+    set "EPS_TITLE=!EPS_TITLE:.=p!"
     for %%P in (%PHI_LIST%) do (
       set "PHI=%%P"
       for /f %%S in ('python -c "import secrets; print(secrets.randbelow(2**31))"') do set "SEED=%%S"
-      set "TITLE=T%%T_mu!MU_TITLE!_phi!PHI!"
+      set "TITLE=T%%T_eps!EPS_TITLE!_phi!PHI!"
       set "OUTDIR=%BATCH_DIR%\!TITLE!"
-      echo.[run] T=%%T mu=%%M phi=%%P -^> !OUTDIR! (batch=%BATCH_SEED%, seed=!SEED!)
+      echo.[run] T=%%T eps=%%M phi=%%P -^> !OUTDIR! (batch=%BATCH_SEED%, seed=!SEED!)
       rem Show supply rate info (skip Python calc to avoid cmd.exe delayed expansion issues)
-      echo.[info] effective scale epsilon_mix=%%M; base supply rate=%SUPPLY_RATE% kg m^-2 s^-1
+      echo.[info] epsilon_mix=%%M; mu_orbit10pct=%SUPPLY_MU_ORBIT10PCT% orbit_fraction_at_mu1=%SUPPLY_ORBIT_FRACTION%
       echo.[info] shielding: mode=%SHIELDING_MODE% fixed_tau1_sigma=%SHIELDING_SIGMA% auto_max_margin=%SHIELDING_AUTO_MAX_MARGIN%
-      if "%%M"=="0.1" echo.[info] mu=0.1 is a low-supply extreme case; expect weak blowout/sinks
+      if "%%M"=="0.1" echo.[info] epsilon_mix=0.1 is a low-supply extreme case; expect weak blowout/sinks
 
       if not exist "!OUTDIR!\series" mkdir "!OUTDIR!\series"
       if not exist "!OUTDIR!\checks" mkdir "!OUTDIR!\checks"
@@ -230,8 +234,11 @@ for %%T in (%T_LIST%) do (
       set RUN_CMD=!RUN_CMD! --override "supply.enabled=true"
       set RUN_CMD=!RUN_CMD! --override "supply.mixing.epsilon_mix=%%M"
       set RUN_CMD=!RUN_CMD! --override "supply.mode=%SUPPLY_MODE%"
-      set RUN_CMD=!RUN_CMD! --override "supply.const.prod_area_rate_kg_m2_s=%SUPPLY_RATE%"
-      set RUN_CMD=!RUN_CMD! --override "init_tau1.scale_to_tau1=%INIT_SCALE_TO_TAU1%"
+      set RUN_CMD=!RUN_CMD! --override "supply.const.mu_orbit10pct=%SUPPLY_MU_ORBIT10PCT%"
+      set RUN_CMD=!RUN_CMD! --override "supply.const.orbit_fraction_at_mu1=%SUPPLY_ORBIT_FRACTION%"
+      set RUN_CMD=!RUN_CMD! --override "optical_depth.tau0_target=%OPTICAL_TAU0_TARGET%"
+      set RUN_CMD=!RUN_CMD! --override "optical_depth.tau_stop=%OPTICAL_TAU_STOP%"
+      set RUN_CMD=!RUN_CMD! --override "optical_depth.tau_stop_tol=%OPTICAL_TAU_STOP_TOL%"
       set RUN_CMD=!RUN_CMD! --override "shielding.table_path=tables/phi_const_0p!PHI!.csv"
       set RUN_CMD=!RUN_CMD! --override "shielding.mode=%SHIELDING_MODE%"
       set RUN_CMD=!RUN_CMD! !SUPPLY_OVERRIDES!

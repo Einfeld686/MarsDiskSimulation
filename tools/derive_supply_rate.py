@@ -1,15 +1,18 @@
-"""Utility to derive constant surface supply rates from μ, Σ_tau=1, and t_blow.
+"""Utility to derive constant surface supply rates from legacy μ, Σ_tau=1, and t_blow.
 
 This script computes the raw production rate ``R_base`` such that
 
     R_base = μ Σ_tau=1 / (ε_mix t_blow)
 
-where ``t_blow = 1 / Ω(r)`` when a radius is supplied.  Σ_tau=1 is前提として
-火星視線方向の τ≲1 層（Σ_tau1_los）で評価した値を用いることを想定する。
+where ``t_blow = 1 / Ω(r)`` when a radius is supplied.  Σ_tau=1 は
+火星視線方向の τ≲1 層（Sigma_tau1 診断値）で評価した値を用いることを想定する。
 The resulting value
 can be plugged into ``supply.const.prod_area_rate_kg_m2_s``; the mixing factor
 ``ε_mix`` is excluded here because :func:`marsdisk.physics.supply.get_prod_area_rate`
 applies it internally.
+
+Note: this μ corresponds to the legacy diagnostic definition (E.027a) and is
+distinct from the configuration parameter ``mu_orbit10pct``.
 
 Examples
 --------

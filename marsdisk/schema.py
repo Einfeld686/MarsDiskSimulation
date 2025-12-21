@@ -121,6 +121,19 @@ class InnerDiskMass(BaseModel):
 
 class SupplyConst(BaseModel):
     prod_area_rate_kg_m2_s: float = 0.0
+    mu_orbit10pct: Optional[float] = Field(
+        None,
+        ge=0.0,
+        description=(
+            "External supply scaling: mu_orbit10pct=1.0 injects orbit_fraction_at_mu1 of "
+            "the initial surface density per orbit (applied before epsilon_mix)."
+        ),
+    )
+    orbit_fraction_at_mu1: float = Field(
+        0.10,
+        gt=0.0,
+        description="Fraction of Sigma_surf0 supplied per orbit when mu_orbit10pct=1.0.",
+    )
     auto_from_tau1_tfill_years: Optional[float] = Field(
         None,
         gt=0.0,
@@ -144,19 +157,15 @@ class SupplyTable(BaseModel):
 
 class SupplyMixing(BaseModel):
     epsilon_mix: float = 0.05
-    mu: Optional[float] = Field(
-        None,
-        description="Alias for epsilon_mix; if provided, overrides epsilon_mix.",
-    )
 
     @model_validator(mode="before")
-    def _alias_mu(cls, data: Any) -> Any:
-        """Allow 'mu' as an alias for 'epsilon_mix'."""
+    def _reject_mu_alias(cls, data: Any) -> Any:
+        """Reject deprecated 'mu' alias to avoid ambiguity with supply μ."""
 
         if not isinstance(data, dict):
             return data
-        if "mu" in data and "epsilon_mix" not in data:
-            data["epsilon_mix"] = data["mu"]
+        if "mu" in data:
+            raise ConfigurationError("supply.mixing.mu is no longer supported; use supply.mixing.epsilon_mix")
         return data
 
     @field_validator("epsilon_mix")
@@ -871,6 +880,30 @@ class InitTau1(BaseModel):
     target_tau: float = Field(
         1.0,
         description="Target optical depth for initialisation (usually 1.0). Applies to the selected tau_field.",
+    )
+
+
+class OpticalDepth(BaseModel):
+    """Optical-depth controls for the surface model."""
+
+    tau0_target: float = Field(
+        1.0,
+        gt=0.0,
+        description="Target optical depth used to define the initial surface density.",
+    )
+    tau_stop: float = Field(
+        1.0,
+        gt=0.0,
+        description="Stop the simulation when tau exceeds this threshold (line of sight).",
+    )
+    tau_stop_tol: float = Field(
+        1.0e-6,
+        ge=0.0,
+        description="Tolerance applied to tau_stop (stop if tau > tau_stop * (1 + tol)).",
+    )
+    tau_field: Literal["tau_los"] = Field(
+        "tau_los",
+        description="Optical-depth field used for tau0_target and stop checks (v1 supports tau_los only).",
     )
 
 
@@ -1739,6 +1772,7 @@ class Config(BaseModel):
     phase: PhaseConfig = PhaseConfig()
     surface: Surface = Surface()
     init_tau1: InitTau1 = InitTau1()
+    optical_depth: Optional[OpticalDepth] = Field(default_factory=OpticalDepth)
     supply: Supply = Field(default_factory=lambda: Supply())
     sinks: Sinks = Sinks()
     radiation: Optional[Radiation] = None
@@ -1783,6 +1817,17 @@ class Config(BaseModel):
 
         _walk(data, tuple())
         return data
+
+    @model_validator(mode="after")
+    def _validate_optical_depth_init_tau1(cls, model: "Config") -> "Config":
+        """Ensure optical_depth does not conflict with init_tau1 scaling."""
+
+        optical = getattr(model, "optical_depth", None)
+        if optical is not None and getattr(model.init_tau1, "scale_to_tau1", False):
+            raise ConfigurationError(
+                "optical_depth cannot be combined with init_tau1.scale_to_tau1; disable one of them."
+            )
+        return model
 
     @field_validator("physics_mode")
     def _normalise_physics_mode(cls, value: str) -> str:
@@ -1830,6 +1875,7 @@ __all__ = [
     "PSD",
     "Surface",
     "InitTau1",
+    "OpticalDepth",
     "InnerDiskMass",
     "Supply",
     "PhaseConfig",
