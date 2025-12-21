@@ -2612,17 +2612,24 @@
   },
   {
     "file_path": "marsdisk/io/_numba_tables.py",
-    "line_no": 23,
+    "line_no": 24,
     "symbol": "NUMBA_AVAILABLE",
     "signature": "NUMBA_AVAILABLE() -> bool",
     "brief_usage": "Return True if Numba JIT compilation is available."
   },
   {
     "file_path": "marsdisk/io/_numba_tables.py",
-    "line_no": 29,
+    "line_no": 30,
     "symbol": "qpr_interp_scalar_numba",
     "signature": "qpr_interp_scalar_numba(s_vals: np.ndarray, T_vals: np.ndarray, q_vals: np.ndarray, s: float, T: float) -> float",
     "brief_usage": "Bilinear interpolation for the Planck-mean Q_pr table."
+  },
+  {
+    "file_path": "marsdisk/io/_numba_tables.py",
+    "line_no": 72,
+    "symbol": "qpr_interp_array_numba",
+    "signature": "qpr_interp_array_numba(s_vals: np.ndarray, T_vals: np.ndarray, q_vals: np.ndarray, s_arr: np.ndarray, T: float) -> np.ndarray",
+    "brief_usage": "Bilinear interpolation for the Planck-mean Q_pr table over an array of sizes."
   },
   {
     "file_path": "marsdisk/io/checkpoint.py",
@@ -2892,49 +2899,49 @@
   },
   {
     "file_path": "marsdisk/io/writer.py",
-    "line_no": 346,
+    "line_no": 356,
     "symbol": "write_summary",
     "signature": "write_summary(summary: Mapping[str, Any], path: Path) -> None",
     "brief_usage": "Write a summary dictionary to ``summary.json``."
   },
   {
     "file_path": "marsdisk/io/writer.py",
-    "line_no": 357,
+    "line_no": 367,
     "symbol": "write_run_config",
     "signature": "write_run_config(config: Mapping[str, Any], path: Path) -> None",
     "brief_usage": "Persist the deterministic run configuration metadata."
   },
   {
     "file_path": "marsdisk/io/writer.py",
-    "line_no": 365,
+    "line_no": 375,
     "symbol": "write_mass_budget",
     "signature": "write_mass_budget(records: Iterable[Mapping[str, Any]], path: Path) -> None",
     "brief_usage": "Write mass conservation diagnostics to a CSV file."
   },
   {
     "file_path": "marsdisk/io/writer.py",
-    "line_no": 372,
+    "line_no": 382,
     "symbol": "append_csv",
     "signature": "append_csv(records: Iterable[Mapping[str, Any]], path: Path, *, header: bool=True) -> bool",
     "brief_usage": "Append records to a CSV file, creating the file if needed."
   },
   {
     "file_path": "marsdisk/io/writer.py",
-    "line_no": 391,
+    "line_no": 401,
     "symbol": "write_orbit_rollup",
     "signature": "write_orbit_rollup(rows: Iterable[Mapping[str, Any]], path: Path) -> None",
     "brief_usage": "Serialise orbit-by-orbit loss diagnostics."
   },
   {
     "file_path": "marsdisk/io/writer.py",
-    "line_no": 402,
+    "line_no": 412,
     "symbol": "write_step_diagnostics",
     "signature": "write_step_diagnostics(rows: Iterable[Mapping[str, Any]], path: Path, *, fmt: Literal['csv', 'jsonl']='csv') -> None",
     "brief_usage": "Serialise per-step loss channel diagnostics."
   },
   {
     "file_path": "marsdisk/io/writer.py",
-    "line_no": 425,
+    "line_no": 435,
     "symbol": "append_step_diagnostics",
     "signature": "append_step_diagnostics(rows: Iterable[Mapping[str, Any]], path: Path, *, fmt: Literal['csv', 'jsonl']='csv', header: bool=True) -> bool",
     "brief_usage": "Append per-step diagnostics in CSV or JSONL format."
@@ -4249,6 +4256,27 @@
     "brief_usage": "Rebin number densities after a uniform size drift."
   },
   {
+    "file_path": "marsdisk/physics/_numba_radiation.py",
+    "line_no": 22,
+    "symbol": "_BLOWOUT_COEFF",
+    "signature": "_BLOWOUT_COEFF = float(3.0 * constants.SIGMA_SB * constants.R_MARS ** 2 / (2.0 * constants.G * constants.M_MARS * constants.C))",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "marsdisk/physics/_numba_radiation.py",
+    "line_no": 28,
+    "symbol": "NUMBA_AVAILABLE",
+    "signature": "NUMBA_AVAILABLE() -> bool",
+    "brief_usage": "Return True if Numba JIT compilation is available."
+  },
+  {
+    "file_path": "marsdisk/physics/_numba_radiation.py",
+    "line_no": 34,
+    "symbol": "blowout_radius_numba",
+    "signature": "blowout_radius_numba(rho: float, T_M: float, qpr: float) -> float",
+    "brief_usage": "Evaluate the blow-out grain size for beta=0.5 using R3."
+  },
+  {
     "file_path": "marsdisk/physics/collide.py",
     "line_no": 28,
     "symbol": "_NUMBA_DISABLED_ENV",
@@ -4943,189 +4971,217 @@
   },
   {
     "file_path": "marsdisk/physics/radiation.py",
-    "line_no": 29,
+    "line_no": 44,
     "symbol": "_QPR_LOOKUP",
     "signature": "_QPR_LOOKUP: type_QPr | None = tables.interp_qpr",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/physics/radiation.py",
-    "line_no": 30,
+    "line_no": 45,
     "symbol": "_QPR_CACHE_ENABLED",
     "signature": "_QPR_CACHE_ENABLED: bool = True",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/physics/radiation.py",
-    "line_no": 31,
+    "line_no": 46,
     "symbol": "_QPR_CACHE_MAXSIZE",
     "signature": "_QPR_CACHE_MAXSIZE: int = 256",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/physics/radiation.py",
-    "line_no": 32,
+    "line_no": 47,
     "symbol": "_QPR_CACHE_ROUND",
     "signature": "_QPR_CACHE_ROUND: Optional[float] = None",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/physics/radiation.py",
-    "line_no": 33,
+    "line_no": 48,
     "symbol": "_QPR_CACHE",
     "signature": "_QPR_CACHE: 'OrderedDict[tuple[float, float], float]' = OrderedDict()",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/physics/radiation.py",
-    "line_no": 35,
+    "line_no": 50,
     "symbol": "DEFAULT_Q_PR",
     "signature": "DEFAULT_Q_PR: float = 1.0",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/physics/radiation.py",
-    "line_no": 36,
+    "line_no": 51,
     "symbol": "DEFAULT_RHO",
     "signature": "DEFAULT_RHO: float = 3000.0",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/physics/radiation.py",
-    "line_no": 37,
+    "line_no": 52,
     "symbol": "DEFAULT_T_M",
     "signature": "DEFAULT_T_M: float = 2000.0",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/physics/radiation.py",
-    "line_no": 38,
+    "line_no": 53,
     "symbol": "T_M_RANGE",
     "signature": "T_M_RANGE: tuple[float, float] = (1000.0, 6500.0)",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/physics/radiation.py",
-    "line_no": 39,
+    "line_no": 54,
     "symbol": "BLOWOUT_BETA_THRESHOLD",
     "signature": "BLOWOUT_BETA_THRESHOLD: float = 0.5",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/physics/radiation.py",
-    "line_no": 44,
+    "line_no": 58,
+    "symbol": "_NUMBA_DISABLED_ENV",
+    "signature": "_NUMBA_DISABLED_ENV = os.environ.get('MARSDISK_DISABLE_NUMBA', '').lower() in {'1', 'true', 'yes', 'on'}",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "marsdisk/physics/radiation.py",
+    "line_no": 64,
+    "symbol": "_USE_NUMBA_TABLES",
+    "signature": "_USE_NUMBA_TABLES = _NUMBA_TABLES_AVAILABLE and (not _NUMBA_DISABLED_ENV)",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "marsdisk/physics/radiation.py",
+    "line_no": 65,
+    "symbol": "_USE_NUMBA_RADIATION",
+    "signature": "_USE_NUMBA_RADIATION = _NUMBA_RADIATION_AVAILABLE and (not _NUMBA_DISABLED_ENV)",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "marsdisk/physics/radiation.py",
+    "line_no": 66,
+    "symbol": "_NUMBA_FAILED",
+    "signature": "_NUMBA_FAILED = False",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "marsdisk/physics/radiation.py",
+    "line_no": 69,
     "symbol": "_validate_size",
     "signature": "_validate_size(value: float, *, name: str='s') -> float",
     "brief_usage": "Function definition"
   },
   {
     "file_path": "marsdisk/physics/radiation.py",
-    "line_no": 54,
+    "line_no": 79,
     "symbol": "_validate_density",
     "signature": "_validate_density(value: Optional[float]) -> float",
     "brief_usage": "Function definition"
   },
   {
     "file_path": "marsdisk/physics/radiation.py",
-    "line_no": 67,
+    "line_no": 92,
     "symbol": "_validate_temperature",
     "signature": "_validate_temperature(value: Optional[float]) -> float",
     "brief_usage": "Function definition"
   },
   {
     "file_path": "marsdisk/physics/radiation.py",
-    "line_no": 81,
+    "line_no": 106,
     "symbol": "_validate_qpr",
     "signature": "_validate_qpr(value: Optional[float]) -> Optional[float]",
     "brief_usage": "Function definition"
   },
   {
     "file_path": "marsdisk/physics/radiation.py",
-    "line_no": 93,
+    "line_no": 118,
     "symbol": "_resolve_qpr",
     "signature": "_resolve_qpr(s: float, T_M: float, Q_pr: Optional[float], table: type_QPr | None, interp: type_QPr | None) -> float",
     "brief_usage": "Function definition"
   },
   {
     "file_path": "marsdisk/physics/radiation.py",
-    "line_no": 126,
+    "line_no": 151,
     "symbol": "_quantize",
     "signature": "_quantize(value: float, step: float | None) -> float",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/physics/radiation.py",
-    "line_no": 134,
+    "line_no": 159,
     "symbol": "_qpr_cache_key",
     "signature": "_qpr_cache_key(s: float, T_M: float) -> tuple[float, float]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/physics/radiation.py",
-    "line_no": 138,
+    "line_no": 163,
     "symbol": "_qpr_cache_get",
     "signature": "_qpr_cache_get(s: float, T_M: float) -> float | None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/physics/radiation.py",
-    "line_no": 149,
+    "line_no": 174,
     "symbol": "_qpr_cache_set",
     "signature": "_qpr_cache_set(s: float, T_M: float, value: float) -> None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/physics/radiation.py",
-    "line_no": 159,
+    "line_no": 184,
     "symbol": "configure_qpr_cache",
     "signature": "configure_qpr_cache(*, enabled: bool, maxsize: int=256, round_tol: float | None=None) -> None",
     "brief_usage": "Configure memoisation for ⟨Q_pr⟩ lookups."
   },
   {
     "file_path": "marsdisk/physics/radiation.py",
-    "line_no": 169,
+    "line_no": 194,
     "symbol": "grain_temperature_graybody",
     "signature": "grain_temperature_graybody(T_M: float, radius_m: float, *, q_abs: float=1.0) -> float",
     "brief_usage": "Return the planetary IR equilibrium grain temperature ``T_d`` (E.043). [@Hyodo2018_ApJ860_150]"
   },
   {
     "file_path": "marsdisk/physics/radiation.py",
-    "line_no": 198,
+    "line_no": 223,
     "symbol": "load_qpr_table",
     "signature": "load_qpr_table(path: Path | str) -> type_QPr",
     "brief_usage": "Load a table file and cache the interpolator. Planck averaged ⟨Q_pr⟩."
   },
   {
     "file_path": "marsdisk/physics/radiation.py",
-    "line_no": 229,
+    "line_no": 254,
     "symbol": "qpr_lookup",
     "signature": "qpr_lookup(s: float, T_M: float, table: type_QPr | None=None) -> float",
     "brief_usage": "Return the efficiency for a grain size and temperature. Planck averaged ⟨Q_pr⟩."
   },
   {
     "file_path": "marsdisk/physics/radiation.py",
-    "line_no": 297,
+    "line_no": 322,
     "symbol": "qpr_lookup_array",
     "signature": "qpr_lookup_array(s: Iterable[float] | np.ndarray, T_M: float | Iterable[float] | np.ndarray, table: type_QPr | None=None) -> np.ndarray",
     "brief_usage": "Vectorised ⟨Q_pr⟩ lookup for an array of grain sizes at a single temperature."
   },
   {
     "file_path": "marsdisk/physics/radiation.py",
-    "line_no": 382,
+    "line_no": 424,
     "symbol": "planck_mean_qpr",
     "signature": "planck_mean_qpr(s: float, T_M: float, Q_pr: Optional[float]=None, table: type_QPr | None=None, interp: type_QPr | None=None) -> float",
     "brief_usage": "Return the effective grey-body ⟨Q_pr⟩ using the active lookup table."
   },
   {
     "file_path": "marsdisk/physics/radiation.py",
-    "line_no": 396,
+    "line_no": 438,
     "symbol": "beta",
     "signature": "beta(s: float, rho: Optional[float], T_M: Optional[float], Q_pr: Optional[float]=None, table: type_QPr | None=None, interp: type_QPr | None=None) -> float",
     "brief_usage": "Compute the ratio ``β`` of radiation pressure to gravity (R2). [@StrubbeChiang2006_ApJ648_652]"
   },
   {
     "file_path": "marsdisk/physics/radiation.py",
-    "line_no": 420,
+    "line_no": 462,
     "symbol": "blowout_radius",
     "signature": "blowout_radius(rho: Optional[float], T_M: Optional[float], Q_pr: Optional[float]=None, table: type_QPr | None=None, interp: type_QPr | None=None) -> float",
     "brief_usage": "Return the blow-out grain size ``s_blow`` for ``β = 0.5`` (R3). [@StrubbeChiang2006_ApJ648_652]"
@@ -5573,14 +5629,14 @@
   },
   {
     "file_path": "marsdisk/physics/surface.py",
-    "line_no": 190,
+    "line_no": 186,
     "symbol": "compute_surface_outflux",
     "signature": "compute_surface_outflux(sigma_surf: float, Omega: float) -> float",
     "brief_usage": "Return the instantaneous outflux ``Σ_surf Ω``."
   },
   {
     "file_path": "marsdisk/physics/surface.py",
-    "line_no": 202,
+    "line_no": 198,
     "symbol": "step_surface",
     "signature": "step_surface(sigma_surf: float, prod_subblow_area_rate: float, dt: float, Omega: float, *, tau: float | None=None, t_coll: float | None=None, t_sink: float | None=None, sigma_tau1: float | None=None, enable_blowout: bool=True) -> SurfaceStepResult",
     "brief_usage": "Alias for :func:`step_surface_density_S1` with optional Wyatt coupling."
@@ -5972,7 +6028,7 @@
   },
   {
     "file_path": "marsdisk/run_zero_d.py",
-    "line_no": 4560,
+    "line_no": 4674,
     "symbol": "main",
     "signature": "main(argv: Optional[List[str]]=None) -> None",
     "brief_usage": "Command line entry point."
@@ -6140,357 +6196,364 @@
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 134,
+    "line_no": 147,
     "symbol": "SupplyPowerLaw",
     "signature": "class SupplyPowerLaw(BaseModel)",
     "brief_usage": "Class definition"
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 140,
+    "line_no": 153,
     "symbol": "SupplyTable",
     "signature": "class SupplyTable(BaseModel)",
     "brief_usage": "Class definition"
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 145,
+    "line_no": 158,
     "symbol": "SupplyMixing",
     "signature": "class SupplyMixing(BaseModel)",
     "brief_usage": "Class definition"
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 171,
+    "line_no": 180,
     "symbol": "SupplyReservoir",
     "signature": "class SupplyReservoir(BaseModel)",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 216,
+    "line_no": 225,
     "symbol": "SupplyFeedback",
     "signature": "class SupplyFeedback(BaseModel)",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 263,
+    "line_no": 272,
     "symbol": "SupplyTemperatureTable",
     "signature": "class SupplyTemperatureTable(BaseModel)",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 273,
+    "line_no": 282,
     "symbol": "SupplyTemperature",
     "signature": "class SupplyTemperature(BaseModel)",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 306,
+    "line_no": 315,
     "symbol": "SupplyTransport",
     "signature": "class SupplyTransport(BaseModel)",
     "brief_usage": "Routing of external supply between deep and surface reservoirs."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 333,
+    "line_no": 342,
     "symbol": "SupplyInjectionVelocity",
     "signature": "class SupplyInjectionVelocity(BaseModel)",
     "brief_usage": "Velocity/eccentricity controls dedicated to the incoming supply."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 376,
+    "line_no": 385,
     "symbol": "SupplyInjection",
     "signature": "class SupplyInjection(BaseModel)",
     "brief_usage": "Controls how external supply is injected into the PSD and surface layer."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 417,
+    "line_no": 426,
     "symbol": "SupplyPiece",
     "signature": "class SupplyPiece(BaseModel)",
     "brief_usage": "Class definition"
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 426,
+    "line_no": 435,
     "symbol": "Supply",
     "signature": "class Supply(BaseModel)",
     "brief_usage": "Parameterisation of external surface supply."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 526,
+    "line_no": 535,
     "symbol": "Material",
     "signature": "class Material(BaseModel)",
     "brief_usage": "Material properties of the solids."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 541,
+    "line_no": 550,
     "symbol": "Temps",
     "signature": "class Temps(BaseModel)",
     "brief_usage": "Thermal parameters."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 568,
+    "line_no": 577,
     "symbol": "Sizes",
     "signature": "class Sizes(BaseModel)",
     "brief_usage": "Particle size grid specification."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 592,
+    "line_no": 601,
     "symbol": "Initial",
     "signature": "class Initial(BaseModel)",
     "brief_usage": "Initial mass and PSD mode."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 667,
+    "line_no": 676,
     "symbol": "Dynamics",
     "signature": "class Dynamics(BaseModel)",
     "brief_usage": "Parameters governing dynamical excitation."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 768,
+    "line_no": 777,
     "symbol": "QStar",
     "signature": "class QStar(BaseModel)",
     "brief_usage": "Strength law parameters for catastrophic disruption."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 819,
+    "line_no": 828,
     "symbol": "PSD",
     "signature": "class PSD(BaseModel)",
     "brief_usage": "Particle size distribution parameters."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 830,
+    "line_no": 839,
     "symbol": "SurfaceEnergy",
     "signature": "class SurfaceEnergy(BaseModel)",
     "brief_usage": "Energy-limited minimum size (Krijt & Kama 2014 inspired)."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 838,
+    "line_no": 847,
     "symbol": "Surface",
     "signature": "class Surface(BaseModel)",
     "brief_usage": "Surface layer evolution parameters."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 856,
+    "line_no": 865,
     "symbol": "InitTau1",
     "signature": "class InitTau1(BaseModel)",
     "brief_usage": "Optional toggle to initialise the surface at τ≈1."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 877,
+    "line_no": 886,
+    "symbol": "OpticalDepth",
+    "signature": "class OpticalDepth(BaseModel)",
+    "brief_usage": "Optical-depth controls for the surface model."
+  },
+  {
+    "file_path": "marsdisk/schema.py",
+    "line_no": 910,
     "symbol": "SublimationParamsModel",
     "signature": "class SublimationParamsModel(BaseModel)",
     "brief_usage": "Nested parameters for sublimation models."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 969,
+    "line_no": 1002,
     "symbol": "RPBlowoutConfig",
     "signature": "class RPBlowoutConfig(BaseModel)",
     "brief_usage": "Toggle for radiation-pressure blow-out sinks."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 975,
+    "line_no": 1008,
     "symbol": "HydroEscapeConfig",
     "signature": "class HydroEscapeConfig(BaseModel)",
     "brief_usage": "Configuration for vapour-driven hydrodynamic escape sinks."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 998,
+    "line_no": 1031,
     "symbol": "Sinks",
     "signature": "class Sinks(BaseModel)",
     "brief_usage": "Configuration of additional sink processes."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 1022,
+    "line_no": 1055,
     "symbol": "ProcessStateTagging",
     "signature": "class ProcessStateTagging(BaseModel)",
     "brief_usage": "Placeholder toggle for future solid/gas tagging."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 1031,
+    "line_no": 1064,
     "symbol": "Process",
     "signature": "class Process(BaseModel)",
     "brief_usage": "Companion switches for phase tagging."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 1045,
+    "line_no": 1078,
     "symbol": "PhaseThresholds",
     "signature": "class PhaseThresholds(BaseModel)",
     "brief_usage": "Fallback thresholds used when no external phase map is available."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 1069,
+    "line_no": 1102,
     "symbol": "PhaseConfig",
     "signature": "class PhaseConfig(BaseModel)",
     "brief_usage": "Solid/vapour branching controls."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 1150,
+    "line_no": 1183,
     "symbol": "MarsTemperatureDriverConstant",
     "signature": "class MarsTemperatureDriverConstant(BaseModel)",
     "brief_usage": "Explicit constant value for the Mars temperature driver."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 1163,
+    "line_no": 1196,
     "symbol": "MarsTemperatureDriverTable",
     "signature": "class MarsTemperatureDriverTable(BaseModel)",
     "brief_usage": "Tabulated Mars temperature driver."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 1175,
+    "line_no": 1208,
     "symbol": "MarsTemperatureDriverHyodo",
     "signature": "class MarsTemperatureDriverHyodo(BaseModel)",
     "brief_usage": "Hyodo linear cooling approximation options."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 1183,
+    "line_no": 1216,
     "symbol": "MarsTemperatureAutogen",
     "signature": "class MarsTemperatureAutogen(BaseModel)",
     "brief_usage": "Options for auto-generating Mars temperature tables."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 1215,
+    "line_no": 1248,
     "symbol": "MarsTemperatureDriverConfig",
     "signature": "class MarsTemperatureDriverConfig(BaseModel)",
     "brief_usage": "Configuration container for the Mars temperature driver."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 1254,
+    "line_no": 1287,
     "symbol": "RadiationTauGate",
     "signature": "class RadiationTauGate(BaseModel)",
     "brief_usage": "Optical-depth gating options for radiation-pressure blow-out."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 1261,
+    "line_no": 1294,
     "symbol": "QPrCache",
     "signature": "class QPrCache(BaseModel)",
     "brief_usage": "Cache controls for ⟨Q_pr⟩ lookups."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 1277,
+    "line_no": 1310,
     "symbol": "Radiation",
     "signature": "class Radiation(BaseModel)",
     "brief_usage": "Radiation pressure options and table paths."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 1337,
+    "line_no": 1370,
     "symbol": "Shielding",
     "signature": "class Shielding(BaseModel)",
     "brief_usage": "Self-shielding table configuration."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 1398,
+    "line_no": 1431,
     "symbol": "Blowout",
     "signature": "class Blowout(BaseModel)",
     "brief_usage": "Radiation blow-out control."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 1416,
+    "line_no": 1449,
     "symbol": "Checkpoint",
     "signature": "class Checkpoint(BaseModel)",
     "brief_usage": "Checkpointing and restart controls."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 1443,
+    "line_no": 1476,
     "symbol": "Resume",
     "signature": "class Resume(BaseModel)",
     "brief_usage": "Resume-from-checkpoint configuration."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 1456,
+    "line_no": 1489,
     "symbol": "Numerics",
     "signature": "class Numerics(BaseModel)",
     "brief_usage": "Integrator control parameters."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 1567,
+    "line_no": 1600,
     "symbol": "StepDiagnostics",
     "signature": "class StepDiagnostics(BaseModel)",
     "brief_usage": "Per-step loss channel diagnostics output control."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 1584,
+    "line_no": 1617,
     "symbol": "Progress",
     "signature": "class Progress(BaseModel)",
     "brief_usage": "Console progress display controls."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 1598,
+    "line_no": 1631,
     "symbol": "Streaming",
     "signature": "class Streaming(BaseModel)",
     "brief_usage": "Streaming write controls for large zero-D runs."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 1641,
+    "line_no": 1674,
     "symbol": "IO",
     "signature": "class IO(BaseModel)",
     "brief_usage": "Output directories."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 1672,
+    "line_no": 1705,
     "symbol": "ExtendedDiagnostics",
     "signature": "class ExtendedDiagnostics(BaseModel)",
     "brief_usage": "Optional extended diagnostics controls."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 1685,
+    "line_no": 1718,
     "symbol": "EnergyBookkeeping",
     "signature": "class EnergyBookkeeping(BaseModel)",
     "brief_usage": "Controls for collision energy bookkeeping outputs."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 1698,
+    "line_no": 1731,
     "symbol": "Diagnostics",
     "signature": "class Diagnostics(BaseModel)",
     "brief_usage": "Diagnostics toggles grouped by feature phase."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 1705,
+    "line_no": 1738,
     "symbol": "Config",
     "signature": "class Config(BaseModel)",
     "brief_usage": "Top-level configuration object."
@@ -6959,14 +7022,14 @@
   },
   {
     "file_path": "scripts/research/evaluate_tau_supply.py",
-    "line_no": 47,
+    "line_no": 51,
     "symbol": "evaluate_run",
     "signature": "evaluate_run(run_dir: Path, *, window_spans: Sequence[tuple[float, float]]=((0.5, 1.0),), min_duration_days: float=0.1, target_rate: float | None=None, threshold_factor: float=0.9) -> dict[str, object]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "scripts/research/evaluate_tau_supply.py",
-    "line_no": 130,
+    "line_no": 158,
     "symbol": "main",
     "signature": "main() -> None",
     "brief_usage": "No description available."
@@ -8660,10 +8723,10 @@
   },
   {
     "file_path": "tests/integration/test_init_tau1_los_target.py",
-    "line_no": 10,
-    "symbol": "test_init_tau1_targets_los_tau",
-    "signature": "test_init_tau1_targets_los_tau(tmp_path) -> None",
-    "brief_usage": "init_tau1 should set Σ_tau1 so that LOS τ≈target at start."
+    "line_no": 12,
+    "symbol": "test_optical_depth_targets_los_tau",
+    "signature": "test_optical_depth_targets_los_tau(tmp_path) -> None",
+    "brief_usage": "optical_depth should set Sigma_surf0 so that LOS τ≈tau0_target at start."
   },
   {
     "file_path": "tests/integration/test_initial_psd_modes.py",
@@ -8927,8 +8990,8 @@
   {
     "file_path": "tests/integration/test_phase3_surface_blowout.py",
     "line_no": 52,
-    "symbol": "test_surface_layer_clipped_to_sigma_tau1",
-    "signature": "test_surface_layer_clipped_to_sigma_tau1(tmp_path: Path) -> None",
+    "symbol": "test_surface_layer_stops_when_tau_exceeded",
+    "signature": "test_surface_layer_stops_when_tau_exceeded(tmp_path: Path) -> None",
     "brief_usage": "No description available."
   },
   {
@@ -9181,6 +9244,13 @@
     "line_no": 130,
     "symbol": "test_qpr_lookup_numba_matches_numpy",
     "signature": "test_qpr_lookup_numba_matches_numpy(mock_qpr_table, monkeypatch)",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_qpr_lookup.py",
+    "line_no": 152,
+    "symbol": "test_qpr_lookup_array_numba_matches_numpy",
+    "signature": "test_qpr_lookup_array_numba_matches_numpy(mock_qpr_table, monkeypatch)",
     "brief_usage": "No description available."
   },
   {
@@ -9746,9 +9816,9 @@
   {
     "file_path": "tests/integration/test_supply_headroom_policy.py",
     "line_no": 60,
-    "symbol": "test_spill_policy_runs_without_supply_drop",
-    "signature": "test_spill_policy_runs_without_supply_drop(tmp_path: Path) -> None",
-    "brief_usage": "spill policy keeps supply_rate_applied>0 and reports spill diagnostics."
+    "symbol": "test_tau_stop_triggers_without_clip",
+    "signature": "test_tau_stop_triggers_without_clip(tmp_path: Path) -> None",
+    "brief_usage": "High supply should exceed tau_stop and terminate without Sigma_tau1 clipping."
   },
   {
     "file_path": "tests/integration/test_supply_positive.py",
@@ -9759,21 +9829,28 @@
   },
   {
     "file_path": "tests/integration/test_supply_positive.py",
-    "line_no": 38,
+    "line_no": 40,
     "symbol": "test_reservoir_depletes_and_records_metadata",
     "signature": "test_reservoir_depletes_and_records_metadata(tmp_path: Path) -> None",
     "brief_usage": "Finite reservoir runs dry and leaves depletion metadata in outputs."
   },
   {
     "file_path": "tests/integration/test_supply_positive.py",
-    "line_no": 90,
+    "line_no": 94,
     "symbol": "test_supply_feedback_tau_los_updates_scale",
     "signature": "test_supply_feedback_tau_los_updates_scale(tmp_path: Path) -> None",
     "brief_usage": "tau_los feedback produces finite errors and scales the supply multiplier."
   },
   {
     "file_path": "tests/integration/test_supply_positive.py",
-    "line_no": 139,
+    "line_no": 140,
+    "symbol": "test_mu_orbit10pct_scales_supply",
+    "signature": "test_mu_orbit10pct_scales_supply(tmp_path: Path) -> None",
+    "brief_usage": "mu_orbit10pct should map to a fixed dotSigma_prod independent of epsilon_mix."
+  },
+  {
+    "file_path": "tests/integration/test_supply_positive.py",
+    "line_no": 194,
     "symbol": "test_run_config_written_before_runtime_failure",
     "signature": "test_run_config_written_before_runtime_failure(monkeypatch, tmp_path: Path) -> None",
     "brief_usage": "Even when the run aborts early, the run_config snapshot is emitted."
@@ -9872,20 +9949,20 @@
   {
     "file_path": "tests/integration/test_surface_supply_param.py",
     "line_no": 115,
-    "symbol": "test_smol_helper_respects_tau_clip_and_budget",
-    "signature": "test_smol_helper_respects_tau_clip_and_budget()",
+    "symbol": "test_smol_helper_ignores_tau_clip_and_budget",
+    "signature": "test_smol_helper_ignores_tau_clip_and_budget()",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tests/integration/test_surface_supply_param.py",
-    "line_no": 153,
+    "line_no": 154,
     "symbol": "_smol_cfg",
     "signature": "_smol_cfg(outdir: Path, *, supply_cfg: Supply) -> Config",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tests/integration/test_surface_supply_param.py",
-    "line_no": 182,
+    "line_no": 183,
     "symbol": "test_supply_modes_preserve_columns_and_budget",
     "signature": "test_supply_modes_preserve_columns_and_budget(tmp_path: Path) -> None",
     "brief_usage": "Smolモードで各種供給モードの出力カラムと質量収支を確認する。"
@@ -10292,8 +10369,36 @@
   {
     "file_path": "tests/unit/test_numba_helpers.py",
     "line_no": 227,
+    "symbol": "test_qpr_interp_array_numba_matches_numpy",
+    "signature": "test_qpr_interp_array_numba_matches_numpy(monkeypatch) -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/unit/test_numba_helpers.py",
+    "line_no": 264,
     "symbol": "test_qpr_interp_numba_fallback",
     "signature": "test_qpr_interp_numba_fallback(monkeypatch) -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/unit/test_numba_helpers.py",
+    "line_no": 293,
+    "symbol": "test_blowout_radius_numba_matches_numpy",
+    "signature": "test_blowout_radius_numba_matches_numpy(monkeypatch) -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/unit/test_numba_helpers.py",
+    "line_no": 309,
+    "symbol": "test_blowout_radius_numba_fallback",
+    "signature": "test_blowout_radius_numba_fallback(monkeypatch) -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/unit/test_numba_helpers.py",
+    "line_no": 331,
+    "symbol": "test_blowout_radius_numba_env_disabled",
+    "signature": "test_blowout_radius_numba_env_disabled(monkeypatch) -> None",
     "brief_usage": "No description available."
   },
   {
@@ -10356,7 +10461,7 @@
     "file_path": "tests/unit/test_surface_outflux.py",
     "line_no": 9,
     "symbol": "_run",
-    "signature": "_run(prod_rate: float, Omega: float, Sigma_tau1: float, steps: int=200)",
+    "signature": "_run(prod_rate: float, Omega: float, steps: int=200)",
     "brief_usage": "No description available."
   },
   {
@@ -10368,21 +10473,21 @@
   },
   {
     "file_path": "tests/unit/test_surface_outflux.py",
-    "line_no": 34,
+    "line_no": 33,
     "symbol": "test_saturation_limited_outflux",
     "signature": "test_saturation_limited_outflux()",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tests/unit/test_surface_outflux.py",
-    "line_no": 43,
+    "line_no": 41,
     "symbol": "test_sink_increases_mass_loss",
     "signature": "test_sink_increases_mass_loss()",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tests/unit/test_surface_outflux.py",
-    "line_no": 72,
+    "line_no": 69,
     "symbol": "test_los_factor_increases_tau_los",
     "signature": "test_los_factor_increases_tau_los(tmp_path)",
     "brief_usage": "LOS係数を伸ばすと tau_los_mars が鉛直 τ より大きくなる。"
@@ -10578,91 +10683,91 @@
   },
   {
     "file_path": "tools/derive_supply_rate.py",
-    "line_no": 44,
+    "line_no": 47,
     "symbol": "DEFAULT_R_UNIT",
     "signature": "DEFAULT_R_UNIT = 'RM'",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "tools/derive_supply_rate.py",
-    "line_no": 48,
+    "line_no": 51,
     "symbol": "SupplyInputs",
     "signature": "class SupplyInputs",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/derive_supply_rate.py",
-    "line_no": 55,
+    "line_no": 58,
     "symbol": "_parse_float_list",
     "signature": "_parse_float_list(raw: str) -> List[float]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/derive_supply_rate.py",
-    "line_no": 59,
+    "line_no": 62,
     "symbol": "_radius_to_meters",
     "signature": "_radius_to_meters(r_value: float, unit: str) -> float",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/derive_supply_rate.py",
-    "line_no": 68,
+    "line_no": 71,
     "symbol": "_t_blow_from_radius",
     "signature": "_t_blow_from_radius(r_m: float) -> float",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/derive_supply_rate.py",
-    "line_no": 75,
+    "line_no": 78,
     "symbol": "compute_r_base",
     "signature": "compute_r_base(inputs: SupplyInputs) -> float",
     "brief_usage": "Compute R_base = μ Σ_tau1 / (ε_mix t_blow) with validation."
   },
   {
     "file_path": "tools/derive_supply_rate.py",
-    "line_no": 88,
+    "line_no": 91,
     "symbol": "_format_yaml",
     "signature": "_format_yaml(rate: float) -> str",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/derive_supply_rate.py",
-    "line_no": 97,
+    "line_no": 100,
     "symbol": "_write_csv",
     "signature": "_write_csv(rows: Iterable[dict], fieldnames: List[str], stream) -> None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/derive_supply_rate.py",
-    "line_no": 108,
+    "line_no": 111,
     "symbol": "build_arg_parser",
     "signature": "build_arg_parser() -> argparse.ArgumentParser",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/derive_supply_rate.py",
-    "line_no": 125,
+    "line_no": 128,
     "symbol": "_resolve_t_blow",
     "signature": "_resolve_t_blow(args) -> float",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/derive_supply_rate.py",
-    "line_no": 134,
+    "line_no": 137,
     "symbol": "_load_config_defaults",
     "signature": "_load_config_defaults(config_path: Optional[str]) -> tuple[Optional[float], Optional[float]]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/derive_supply_rate.py",
-    "line_no": 157,
+    "line_no": 160,
     "symbol": "_single_output",
     "signature": "_single_output(args, rate: float) -> str",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/derive_supply_rate.py",
-    "line_no": 163,
+    "line_no": 166,
     "symbol": "main",
     "signature": "main(argv: list[str] | None=None) -> int",
     "brief_usage": "No description available."
