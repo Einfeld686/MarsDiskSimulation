@@ -34,7 +34,7 @@ config_keys:
   - io.correct_fast_blowout
   - numerics.dt_init
 code_path:
-  - [marsdisk/physics/radiation.py#qpr_lookup [L229–L294]]
+  - [marsdisk/physics/radiation.py#qpr_lookup [L254–L319]]
   - [marsdisk/grid.py#omega_kepler [L17–L31]]
 run_stage:
   - surface loop
@@ -91,7 +91,7 @@ config_keys:
 code_path:
   - [marsdisk/physics/shielding.py#apply_shielding [L134–L217]]
   - [marsdisk/io/diagnostics.py#write_zero_d_history [L28–L128]]
-  - [marsdisk/run_zero_d.py#run_zero_d [L259–L4557]]
+  - [marsdisk/run_zero_d.py#run_zero_d [L259–L4671]]
 run_stage:
   - shielding application
   - surface loop (gate evaluation)
@@ -143,7 +143,7 @@ config_keys:
 code_path:
   - [marsdisk/physics/psd.py#update_psd_state [L60–L150]]
   - [marsdisk/physics/psd.py#apply_uniform_size_drift [L374–L503]]
-  - [marsdisk/run_zero_d.py#run_zero_d [L259–L4557]]
+  - [marsdisk/run_zero_d.py#run_zero_d [L259–L4671]]
 run_stage:
   - PSD initialisation
   - PSD evolution hooks
@@ -194,8 +194,8 @@ config_keys:
   - dynamics.i0
   - numerics.dt_init
 code_path:
-  - [marsdisk/physics/surface.py#step_surface_density_S1 [L107–L187]]
-  - [marsdisk/run_zero_d.py#run_zero_d [L259–L4557]]
+  - [marsdisk/physics/surface.py#step_surface_density_S1 [L107–L183]]
+  - [marsdisk/run_zero_d.py#run_zero_d [L259–L4671]]
 run_stage:
   - surface loop
 inputs:
@@ -245,7 +245,7 @@ config_keys:
 code_path:
   - [marsdisk/physics/sinks.py#total_sink_timescale [L83–L160]]
   - [marsdisk/physics/sublimation.py#choose_psat_backend [L432–L555]]
-  - [marsdisk/run_zero_d.py#run_zero_d [L259–L4557]]
+  - [marsdisk/run_zero_d.py#run_zero_d [L259–L4671]]
 run_stage:
   - sink selection
   - surface loop
