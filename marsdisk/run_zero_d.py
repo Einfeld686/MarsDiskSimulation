@@ -1166,6 +1166,12 @@ def run_zero_d(
     supply_enabled_cfg = bool(getattr(supply_spec, "enabled", True))
     supply_mode_value = getattr(supply_spec, "mode", "const")
     supply_headroom_policy = getattr(supply_spec, "headroom_policy", "clip")
+    supply_headroom_policy = str(supply_headroom_policy or "clip").lower()
+    supply_headroom_enabled = supply_headroom_policy not in {"none", "off", "disabled"}
+    if optical_depth_enabled and supply_headroom_enabled:
+        logger.info("optical_depth enabled: disabling headroom policy '%s'", supply_headroom_policy)
+        supply_headroom_policy = "none"
+        supply_headroom_enabled = False
     supply_epsilon_mix = getattr(getattr(supply_spec, "mixing", None), "epsilon_mix", None)
     supply_const_rate = getattr(getattr(supply_spec, "const", None), "prod_area_rate_kg_m2_s", None)
     supply_const_tfill = getattr(getattr(supply_spec, "const", None), "auto_from_tau1_tfill_years", None)
@@ -2438,16 +2444,11 @@ def run_zero_d(
                 else:
                     prod_rate_last = prod_rate
                     total_prod_surface = prod_rate * dt
-                    sink_step = surface.step_surface(
+                    sink_step = surface.step_surface_sink_only(
                         sigma_surf,
                         prod_rate,
                         dt,
-                        Omega_step,
-                        tau=None,
-                        t_coll=None,
                         t_sink=t_sink_current,
-                        sigma_tau1=sigma_tau1_active,
-                        enable_blowout=False,
                     )
                     sigma_surf = sink_step.sigma_surf
                     outflux_surface = 0.0
@@ -2832,7 +2833,7 @@ def run_zero_d(
             ):
                 stop_after_record = True
                 tau_stop_los_value = tau_stop_los_current
-        if sigma_tau1_limit is not None and math.isfinite(sigma_tau1_limit):
+        if supply_headroom_enabled and sigma_tau1_limit is not None and math.isfinite(sigma_tau1_limit):
             headroom_current = float(max(sigma_tau1_limit - min(sigma_diag, sigma_tau1_limit), 0.0))
         else:
             headroom_current = None
@@ -2861,7 +2862,8 @@ def run_zero_d(
                 / max(prod_rate_raw_current, supply_visibility_eps)
             )
         supply_blocked_by_headroom_flag = bool(
-            prod_rate_raw_current is not None
+            supply_headroom_enabled
+            and prod_rate_raw_current is not None
             and prod_rate_raw_current > 0.0
             and headroom_current is not None
             and headroom_current <= supply_headroom_eps
@@ -4750,6 +4752,17 @@ def main(argv: Optional[List[str]] = None) -> None:
         cfg.sinks.mode = args.sinks
     if args.physics_mode is not None:
         cfg.physics_mode = args.physics_mode
+    geometry_mode = getattr(getattr(cfg, "geometry", None), "mode", "0D")
+    if geometry_mode == "1D":
+        from .run_one_d import run_one_d
+
+        run_one_d(
+            cfg,
+            enforce_mass_budget=args.enforce_mass_budget,
+            physics_mode_override=args.physics_mode,
+            physics_mode_source_override="cli" if args.physics_mode is not None else None,
+        )
+        return
     run_zero_d(
         cfg,
         enforce_mass_budget=args.enforce_mass_budget,

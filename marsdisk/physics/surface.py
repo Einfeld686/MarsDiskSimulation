@@ -57,6 +57,7 @@ def _safe_tcoll(Omega: float, tau: float | None) -> float | None:
 
 __all__ = [
     "step_surface_density_S1",
+    "step_surface_sink_only",
     "wyatt_tcoll_S1",
     "step_surface",
     "compute_surface_outflux",
@@ -181,6 +182,28 @@ def step_surface_density_S1(
             enable_blowout,
         )
     return SurfaceStepResult(sigma_new, outflux, sink_flux)
+
+
+def step_surface_sink_only(
+    sigma_surf: float,
+    prod_subblow_area_rate: float,
+    dt: float,
+    *,
+    t_sink: float | None = None,
+) -> SurfaceStepResult:
+    """Implicit sink-only update without triggering the surface_ode warning."""
+
+    if dt <= 0.0:
+        raise MarsDiskError("dt must be positive")
+
+    loss = 0.0
+    if t_sink is not None and t_sink > 0.0:
+        loss += 1.0 / t_sink
+
+    numerator = sigma_surf + dt * prod_subblow_area_rate
+    sigma_new = numerator / (1.0 + dt * loss)
+    sink_flux = sigma_new / t_sink if (t_sink is not None and t_sink > 0.0) else 0.0
+    return SurfaceStepResult(sigma_new, 0.0, sink_flux)
 
 
 def compute_surface_outflux(sigma_surf: float, Omega: float) -> float:
