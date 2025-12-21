@@ -75,6 +75,7 @@ supply:
   const:
     prod_area_rate_kg_m2_s: 0.0
     mu_orbit10pct: 1.0
+    mu_reference_tau: 1.0
     orbit_fraction_at_mu1: 0.1
   powerlaw:
     A_kg_m2_s:
@@ -147,8 +148,7 @@ radiation:
     enable: false
     tau_max: 1.0
 shielding:
-  mode: psitau
-  table_path: tables/phi_const_0p37.csv
+  mode: off
 blowout:
   enabled: true
   target_phase: solid_only

@@ -7,15 +7,17 @@
 ## ベース設定
 - `BASE_CONFIG` (既定: `configs/sweep_temp_supply/temp_supply_T4000_eps1.yml`)
 - `QSTAR_UNITS` (既定: `ba99_cgs`)
-- `T_LIST` / `MU_LIST` / `PHI_LIST` … 温度・混合効率・遮蔽テーブルのスイープ軸
+- `T_LIST` / `EPS_LIST` / `TAU_LIST` … 温度・混合効率・初期光学的厚さのスイープ軸
 - `BATCH_ROOT` / `OUT_ROOT` … 出力ルート（未指定なら `out/`、外付け SSD があれば `/Volumes/KIOXIA/marsdisk_out`）
 - `EVAL` … 1 なら各ケース後に評価スクリプトを呼ぶフック（0 でスキップ）
 
 ## 供給・遮蔽
 - `SUPPLY_MODE` … 供給モード（既定 `const`）
-- `SUPPLY_RATE` … mixing 前の基準供給レート [kg m^-2 s^-1]（既定 `3.0e-3`）
-- `MU_LIST` … epsilon_mix の掛け値（`supply.mixing.epsilon_mix` に代入）
-- `SHIELDING_MODE` … 遮蔽モード（既定 `fixed_tau1`）
+- `SUPPLY_MU_ORBIT10PCT` … 供給スケール（`mu_orbit10pct`）
+- `SUPPLY_ORBIT_FRACTION` … `orbit_fraction_at_mu1`
+- `EPS_LIST` … epsilon_mix の掛け値（`supply.mixing.epsilon_mix` に代入）
+- `TAU_LIST` … `optical_depth.tau0_target` の掃引値
+- `SHIELDING_MODE` … 遮蔽モード（既定 `off`）
 - `SHIELDING_SIGMA` … `fixed_tau1_sigma`（既定 `auto` を推奨）
 - `SHIELDING_AUTO_MAX_MARGIN` … `auto_max` 使用時の余裕率（既定 `0.05`）
 - `INIT_SCALE_TO_TAU1` … `init_tau1.scale_to_tau1` の ON/OFF（既定 `true`）

@@ -100,8 +100,7 @@ radiation:
       column_temperature: T_K
     extrapolation: hold
 shielding:
-  table_path: tables/phi_const_0p37.csv
-  mode: psitau
+  mode: off
 phase:
   enabled: true
   source: threshold

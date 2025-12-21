@@ -82,8 +82,7 @@ radiation:
   TM_K: 4000
   qpr_table_path: data/qpr_table.csv
 shielding:
-  table_path: tables/phi_const_0p37.csv
-  mode: psitau
+  mode: off
 phase:
   enabled: true
   source: threshold

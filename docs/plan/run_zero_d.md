@@ -196,14 +196,14 @@ optical_depth:
   tau_field: tau_los   # 放射圧の到達に使う方向
 
 shielding:
-  mode: psitau
-  table_path: tables/phi_const_0p37.csv
+  mode: off
 
 supply:
   mode: const
   const:
     # μ=1 → 1公転で初期表層の10%供給、という定義
     mu_orbit10pct: 1.0
+    mu_reference_tau: 1.0
     orbit_fraction_at_mu1: 0.10
   mixing:
     epsilon_mix: 0.3     # 混合効率（表記固定）

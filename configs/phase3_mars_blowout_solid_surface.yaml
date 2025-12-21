@@ -70,8 +70,7 @@ radiation:
   TM_K: 2400.0
   qpr_table_path: data/qpr_table.csv
 shielding:
-  table_path: tables/phi_const_0p37.csv
-  mode: psitau
+  mode: off
 blowout:
   enabled: true
   target_phase: solid_only

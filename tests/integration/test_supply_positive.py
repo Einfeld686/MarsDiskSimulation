@@ -138,7 +138,7 @@ def test_supply_feedback_tau_los_updates_scale(tmp_path: Path) -> None:
 
 
 def test_mu_orbit10pct_scales_supply(tmp_path: Path) -> None:
-    """mu_orbit10pct should map to a fixed dotSigma_prod independent of epsilon_mix."""
+    """mu_orbit10pct should map to a fixed dotSigma_prod using the reference tau."""
 
     outdir = tmp_path / "out_mu_scale"
     mu_value = 2.0
@@ -179,9 +179,10 @@ def test_mu_orbit10pct_scales_supply(tmp_path: Path) -> None:
             "t_orb_s",
         ],
     )
-    sigma0 = float(df["Sigma_surf0"].iloc[0])
+    run_config = json.loads((outdir / "run_config.json").read_text())
+    sigma_ref = float(run_config["sigma_surf_mu_reference"])
     t_orb = float(df["t_orb_s"].iloc[0])
-    expected_dotSigma = mu_value * orbit_fraction * sigma0 / t_orb
+    expected_dotSigma = mu_value * orbit_fraction * sigma_ref / t_orb
     active = df["dotSigma_prod"].fillna(0.0) > 0.0
     assert active.any()
     dotSigma_measured = float(df.loc[active, "dotSigma_prod"].median())

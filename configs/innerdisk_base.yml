@@ -79,9 +79,8 @@ radiation:
   Q_pr:
 
 shielding:
-  table_path: tables/phi_const_0p37.csv
 
-  mode: psitau
+  mode: off
 numerics:
   t_end_years:
   t_end_orbits: 1.0

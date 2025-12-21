@@ -589,7 +589,20 @@ marsdisk/run_zero_d.py:212:def load_config(path: Path, overrides: Optional[Seque
 marsdisk/run_zero_d.py:237:def _gather_git_info() -> Dict[str, Any]
 marsdisk/run_zero_d.py:264:class MassBudgetViolationError(NumericalError)
 marsdisk/run_zero_d.py:270:def run_zero_d(cfg: Config, *, enforce_mass_budget: bool=False, physics_mode_override: Optional[str]=None, physics_mode_source_override: Optional[str]=None) -> None
-marsdisk/run_zero_d.py:4795:def main(argv: Optional[List[str]]=None) -> None
+marsdisk/run_zero_d.py:4831:def main(argv: Optional[List[str]]=None) -> None
+marsdisk/runtime/autotune.py:22:class MachineState
+marsdisk/runtime/autotune.py:43:class AutoTuneDecision
+marsdisk/runtime/autotune.py:56:def _safe_int(value: Any, fallback: int) -> int
+marsdisk/runtime/autotune.py:64:def _sysctl_int(name: str) -> Optional[int]
+marsdisk/runtime/autotune.py:76:def _mac_core_score(state: MachineState) -> Optional[float]
+marsdisk/runtime/autotune.py:86:def _thread_core_budget(state: MachineState) -> int
+marsdisk/runtime/autotune.py:94:def _job_core_budget(state: MachineState, cores: int) -> int
+marsdisk/runtime/autotune.py:102:def detect_machine_state() -> MachineState
+marsdisk/runtime/autotune.py:155:def _resolve_profile(state: MachineState, requested: str) -> str
+marsdisk/runtime/autotune.py:194:def _profile_threads(profile: str, cores: int, platform_system: str) -> int
+marsdisk/runtime/autotune.py:216:def _suggest_sweep_jobs(cores: int, numba_threads: int) -> int
+marsdisk/runtime/autotune.py:222:def _apply_numba_threads(numba_threads: int) -> Dict[str, Any]
+marsdisk/runtime/autotune.py:237:def apply_auto_tune(*, profile: str='auto', env: Optional[Dict[str, str]]=None) -> Dict[str, Any]
 marsdisk/runtime/helpers.py:8:def compute_phase_tau_fields(kappa_surf: float, sigma_for_tau: float, los_factor: float, phase_tau_field: str) -> Tuple[float, float, float]
 marsdisk/runtime/helpers.py:24:def resolve_feedback_tau_field(tau_field: Optional[str]) -> str
 marsdisk/runtime/helpers.py:39:def compute_gate_factor(t_blow: Optional[float], t_solid: Optional[float]) -> float
@@ -610,58 +623,58 @@ marsdisk/schema.py:77:class Disk(BaseModel)
 marsdisk/schema.py:86:class Scope(BaseModel)
 marsdisk/schema.py:100:class InnerDiskMass(BaseModel)
 marsdisk/schema.py:122:class SupplyConst(BaseModel)
-marsdisk/schema.py:147:class SupplyPowerLaw(BaseModel)
-marsdisk/schema.py:153:class SupplyTable(BaseModel)
-marsdisk/schema.py:158:class SupplyMixing(BaseModel)
-marsdisk/schema.py:180:class SupplyReservoir(BaseModel)
-marsdisk/schema.py:225:class SupplyFeedback(BaseModel)
-marsdisk/schema.py:272:class SupplyTemperatureTable(BaseModel)
-marsdisk/schema.py:282:class SupplyTemperature(BaseModel)
-marsdisk/schema.py:315:class SupplyTransport(BaseModel)
-marsdisk/schema.py:342:class SupplyInjectionVelocity(BaseModel)
-marsdisk/schema.py:385:class SupplyInjection(BaseModel)
-marsdisk/schema.py:426:class SupplyPiece(BaseModel)
-marsdisk/schema.py:435:class Supply(BaseModel)
-marsdisk/schema.py:535:class Material(BaseModel)
-marsdisk/schema.py:550:class Temps(BaseModel)
-marsdisk/schema.py:577:class Sizes(BaseModel)
-marsdisk/schema.py:601:class Initial(BaseModel)
-marsdisk/schema.py:676:class Dynamics(BaseModel)
-marsdisk/schema.py:777:class QStar(BaseModel)
-marsdisk/schema.py:828:class PSD(BaseModel)
-marsdisk/schema.py:839:class SurfaceEnergy(BaseModel)
-marsdisk/schema.py:847:class Surface(BaseModel)
-marsdisk/schema.py:865:class InitTau1(BaseModel)
-marsdisk/schema.py:886:class OpticalDepth(BaseModel)
-marsdisk/schema.py:910:class SublimationParamsModel(BaseModel)
-marsdisk/schema.py:1002:class RPBlowoutConfig(BaseModel)
-marsdisk/schema.py:1008:class HydroEscapeConfig(BaseModel)
-marsdisk/schema.py:1031:class Sinks(BaseModel)
-marsdisk/schema.py:1055:class ProcessStateTagging(BaseModel)
-marsdisk/schema.py:1064:class Process(BaseModel)
-marsdisk/schema.py:1078:class PhaseThresholds(BaseModel)
-marsdisk/schema.py:1102:class PhaseConfig(BaseModel)
-marsdisk/schema.py:1183:class MarsTemperatureDriverConstant(BaseModel)
-marsdisk/schema.py:1196:class MarsTemperatureDriverTable(BaseModel)
-marsdisk/schema.py:1208:class MarsTemperatureDriverHyodo(BaseModel)
-marsdisk/schema.py:1216:class MarsTemperatureAutogen(BaseModel)
-marsdisk/schema.py:1248:class MarsTemperatureDriverConfig(BaseModel)
-marsdisk/schema.py:1287:class RadiationTauGate(BaseModel)
-marsdisk/schema.py:1294:class QPrCache(BaseModel)
-marsdisk/schema.py:1310:class Radiation(BaseModel)
-marsdisk/schema.py:1370:class Shielding(BaseModel)
-marsdisk/schema.py:1431:class Blowout(BaseModel)
-marsdisk/schema.py:1449:class Checkpoint(BaseModel)
-marsdisk/schema.py:1476:class Resume(BaseModel)
-marsdisk/schema.py:1489:class Numerics(BaseModel)
-marsdisk/schema.py:1615:class StepDiagnostics(BaseModel)
-marsdisk/schema.py:1632:class Progress(BaseModel)
-marsdisk/schema.py:1646:class Streaming(BaseModel)
-marsdisk/schema.py:1693:class IO(BaseModel)
-marsdisk/schema.py:1733:class ExtendedDiagnostics(BaseModel)
-marsdisk/schema.py:1746:class EnergyBookkeeping(BaseModel)
-marsdisk/schema.py:1759:class Diagnostics(BaseModel)
-marsdisk/schema.py:1766:class Config(BaseModel)
+marsdisk/schema.py:155:class SupplyPowerLaw(BaseModel)
+marsdisk/schema.py:161:class SupplyTable(BaseModel)
+marsdisk/schema.py:166:class SupplyMixing(BaseModel)
+marsdisk/schema.py:188:class SupplyReservoir(BaseModel)
+marsdisk/schema.py:233:class SupplyFeedback(BaseModel)
+marsdisk/schema.py:280:class SupplyTemperatureTable(BaseModel)
+marsdisk/schema.py:290:class SupplyTemperature(BaseModel)
+marsdisk/schema.py:323:class SupplyTransport(BaseModel)
+marsdisk/schema.py:350:class SupplyInjectionVelocity(BaseModel)
+marsdisk/schema.py:393:class SupplyInjection(BaseModel)
+marsdisk/schema.py:434:class SupplyPiece(BaseModel)
+marsdisk/schema.py:443:class Supply(BaseModel)
+marsdisk/schema.py:543:class Material(BaseModel)
+marsdisk/schema.py:558:class Temps(BaseModel)
+marsdisk/schema.py:585:class Sizes(BaseModel)
+marsdisk/schema.py:609:class Initial(BaseModel)
+marsdisk/schema.py:684:class Dynamics(BaseModel)
+marsdisk/schema.py:785:class QStar(BaseModel)
+marsdisk/schema.py:836:class PSD(BaseModel)
+marsdisk/schema.py:847:class SurfaceEnergy(BaseModel)
+marsdisk/schema.py:855:class Surface(BaseModel)
+marsdisk/schema.py:873:class InitTau1(BaseModel)
+marsdisk/schema.py:894:class OpticalDepth(BaseModel)
+marsdisk/schema.py:918:class SublimationParamsModel(BaseModel)
+marsdisk/schema.py:1010:class RPBlowoutConfig(BaseModel)
+marsdisk/schema.py:1016:class HydroEscapeConfig(BaseModel)
+marsdisk/schema.py:1039:class Sinks(BaseModel)
+marsdisk/schema.py:1063:class ProcessStateTagging(BaseModel)
+marsdisk/schema.py:1072:class Process(BaseModel)
+marsdisk/schema.py:1086:class PhaseThresholds(BaseModel)
+marsdisk/schema.py:1110:class PhaseConfig(BaseModel)
+marsdisk/schema.py:1191:class MarsTemperatureDriverConstant(BaseModel)
+marsdisk/schema.py:1204:class MarsTemperatureDriverTable(BaseModel)
+marsdisk/schema.py:1216:class MarsTemperatureDriverHyodo(BaseModel)
+marsdisk/schema.py:1224:class MarsTemperatureAutogen(BaseModel)
+marsdisk/schema.py:1256:class MarsTemperatureDriverConfig(BaseModel)
+marsdisk/schema.py:1295:class RadiationTauGate(BaseModel)
+marsdisk/schema.py:1302:class QPrCache(BaseModel)
+marsdisk/schema.py:1318:class Radiation(BaseModel)
+marsdisk/schema.py:1378:class Shielding(BaseModel)
+marsdisk/schema.py:1439:class Blowout(BaseModel)
+marsdisk/schema.py:1457:class Checkpoint(BaseModel)
+marsdisk/schema.py:1484:class Resume(BaseModel)
+marsdisk/schema.py:1497:class Numerics(BaseModel)
+marsdisk/schema.py:1623:class StepDiagnostics(BaseModel)
+marsdisk/schema.py:1640:class Progress(BaseModel)
+marsdisk/schema.py:1654:class Streaming(BaseModel)
+marsdisk/schema.py:1701:class IO(BaseModel)
+marsdisk/schema.py:1741:class ExtendedDiagnostics(BaseModel)
+marsdisk/schema.py:1754:class EnergyBookkeeping(BaseModel)
+marsdisk/schema.py:1767:class Diagnostics(BaseModel)
+marsdisk/schema.py:1774:class Config(BaseModel)
 marsdisk/warnings.py:7:class MarsDiskWarning(UserWarning)
 marsdisk/warnings.py:11:class PhysicsWarning(MarsDiskWarning)
 marsdisk/warnings.py:15:class NumericalWarning(MarsDiskWarning)
@@ -730,6 +743,7 @@ scripts/research/run_qstar_scale_sweep.py:24:def _run_case(cmd_base: List[str], 
 scripts/research/run_qstar_scale_sweep.py:37:def _summarise_run(outdir: Path) -> dict
 scripts/research/run_qstar_scale_sweep.py:79:def parse_args(argv: Iterable[str] | None=None) -> argparse.Namespace
 scripts/research/run_qstar_scale_sweep.py:120:def main(argv: Iterable[str] | None=None) -> None
+scripts/run_autotuned.py:10:def main() -> int
 scripts/run_axis_r_sweep.py:68:class CaseResult
 scripts/run_axis_r_sweep.py:97:def format_r_rm(value: float) -> str
 scripts/run_axis_r_sweep.py:102:def format_mass_tag(value: float) -> str

@@ -49,18 +49,19 @@
 ## 必須の前提・入力
 - **ベース設定**: `BASE_CONFIG`（既定 `configs/sweep_temp_supply/temp_supply_T4000_eps1.yml`）を基準に環境変数で上書きする。
 - **温度テーブル**: `data/mars_temperature_T{T}p0K.csv` が存在していること（T_LIST に合わせて 2000/4000/6000K を用意）。
-- **遮蔽テーブル**: `tables/phi_const_0pXX.csv`（phi=20/37/60 に対応）を参照するので、テーブルパスが正しいこと。
+- **遮蔽**: 既定は `shielding.mode=off`（Φ=1）。テーブルを使う場合のみ `shielding.table_path` を明示する。
 - **出力ルート**: `OUT_ROOT` 未指定なら `out/`、外付け SSD があれば `/Volumes/KIOXIA/marsdisk_out` を既定にする。書き込み権限を確認。
 - **仮想環境**: `.venv` が無ければ自動生成し、`requirements.txt` で依存を入れる前提。pyarrow 必須。
 
 ## 外部供給に関わる主要環境変数
 - **供給モード/強度**:  
   - `SUPPLY_MODE`（既定 `const`）  
-  - `SUPPLY_RATE`（mixing 前の基準レート、既定 `3.0e-3` kg m^-2 s^-1）  
-  - `MU_LIST` は epsilon_mix スイープ。実効レートは `SUPPLY_RATE × epsilon_mix` としてログに出る。
+  - `SUPPLY_MU_ORBIT10PCT`（`mu_orbit10pct`）  
+  - `SUPPLY_ORBIT_FRACTION`（`orbit_fraction_at_mu1`）  
+  - `EPS_LIST` は epsilon_mix スイープ。実効レートは `mu_orbit10pct`×`orbit_fraction_at_mu1`×Σ_refで決まる。
 - **遮蔽/初期化**:  
-  - `SHIELDING_MODE`（既定 `fixed_tau1`）、`SHIELDING_SIGMA`（既定 `auto` 推奨）、`SHIELDING_AUTO_MAX_MARGIN`（既定 0.05）  
-  - `INIT_SCALE_TO_TAU1`（既定 true）を false にすると供給が Στ=1 でクリップされやすいので注意。
+  - `SHIELDING_MODE`（既定 `off`）、`SHIELDING_SIGMA`（`fixed_tau1` 用）、`SHIELDING_AUTO_MAX_MARGIN`（既定 0.05）  
+  - `TAU_LIST` または `OPTICAL_TAU0_TARGET` で初期 τ を指定。
 - **リザーバ/フィードバック/温度スケール（オプション）**:  
   - `SUPPLY_RESERVOIR_M` 空で無効、指定時は `SUPPLY_RESERVOIR_MODE`（hard_stop/taper）、`SUPPLY_RESERVOIR_TAPER` を併用。  
   - `SUPPLY_FEEDBACK_ENABLED`=1 で τ フィードバック ON（target/gain/response/min/max/tau_field/initial を併せて設定）。  
@@ -77,14 +78,14 @@
 ## 実行フロー上の注意点
 - スクリプト内で必ず `--override supply.enabled=true` を付与するので、ベース設定が supply 無効でも外部供給が有効化される前提。  
 - `run_temp_supply_sweep.sh` は `numerics.dt_init=20` を固定で上書きする。dt/t_blow が粗いケースでブローアウト補正やサブステップを使う場合はベース設定側で設定する。  
-- deep_mixing を使うと headroom ゲート (`supply.transport.headroom_gate`) による遮断が起きやすい。`transport.t_mix_orbits` を必ず正に設定し、初期 Σ が τ=1 を超えないように `init_tau1.scale_to_tau1` を true のまま維持することを推奨。  
-- 温度テーブルや遮蔽テーブルのパスを変えた場合、`run_config.json` に記録された path を確認して再現性を確保する。  
-- 生成物は `out/temp_supply_sweep/<ts>__<sha>__seed<batch>/T{T}_mu{MU}_phi{PHI}/` 配下に `series/run.parquet`, `summary.json`, `checks/`（mass_budget, オプションで tau_supply_eval）, `plots/*.png` が出る。ディスク容量を事前確認すること。
+- deep_mixing を使うと headroom ゲート (`supply.transport.headroom_gate`) による遮断が起きやすい。`transport.t_mix_orbits` を必ず正に設定し、初期 τ は `optical_depth.tau0_target` で管理することを推奨。  
+- 温度テーブルや（必要な場合のみ）遮蔽テーブルのパスを変えた場合、`run_config.json` に記録された path を確認して再現性を確保する。  
+- 生成物は `out/temp_supply_sweep/<ts>__<sha>__seed<batch>/T{T}_eps{EPS}_tau{TAU}/` 配下に `series/run.parquet`, `summary.json`, `checks/`（mass_budget, オプションで tau_supply_eval）, `plots/*.png` が出る。ディスク容量を事前確認すること。
 
 ## 典型的な起動例
 ```bash
 OUT_ROOT=/Volumes/KIOXIA/marsdisk_out \
-SUPPLY_RATE=5e-3 SUPPLY_MODE=const \
+SUPPLY_MU_ORBIT10PCT=1.0 SUPPLY_MODE=const \
 SUPPLY_FEEDBACK_ENABLED=1 SUPPLY_FEEDBACK_TARGET=0.8 SUPPLY_FEEDBACK_GAIN=0.8 \
 SUPPLY_TEMP_ENABLED=1 SUPPLY_TEMP_MODE=scale SUPPLY_TEMP_REF_K=1800 SUPPLY_TEMP_EXP=1.5 \
 ENABLE_PROGRESS=1 EVAL=1 \
@@ -143,4 +144,3 @@ scripts/research/run_temp_supply_sweep.sh
 | parquet 書き出し失敗 | `pyarrow` 未インストール。`pip install pyarrow` を実行 |
 | プログレスバーが表示されない | TTY でない（リダイレクト先へ出力中）。`ENABLE_PROGRESS=1` でも無視される |
 | 大量のディスク消費 | 高解像度スイープ。完了後に不要なケースを削除するか `OUT_ROOT` を外付けへ |
-

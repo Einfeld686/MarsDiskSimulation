@@ -126,13 +126,21 @@ class SupplyConst(BaseModel):
         ge=0.0,
         description=(
             "External supply scaling: mu_orbit10pct=1.0 injects orbit_fraction_at_mu1 of "
-            "the initial surface density per orbit (applied before epsilon_mix)."
+            "the reference surface density per orbit (applied before epsilon_mix)."
+        ),
+    )
+    mu_reference_tau: float = Field(
+        1.0,
+        gt=0.0,
+        description=(
+            "Reference optical depth (tau_los) used to normalise mu_orbit10pct. "
+            "Sigma_ref is derived from kappa_eff(tau=mu_reference_tau)."
         ),
     )
     orbit_fraction_at_mu1: float = Field(
         0.10,
         gt=0.0,
-        description="Fraction of Sigma_surf0 supplied per orbit when mu_orbit10pct=1.0.",
+        description="Fraction of Sigma_ref supplied per orbit when mu_orbit10pct=1.0.",
     )
     auto_from_tau1_tfill_years: Optional[float] = Field(
         None,

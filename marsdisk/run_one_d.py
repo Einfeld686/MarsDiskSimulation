@@ -370,6 +370,19 @@ def run_one_d(
         if not math.isfinite(sigma_surf0_target) or sigma_surf0_target < 0.0:
             raise ConfigurationError("optical_depth produced invalid Sigma_surf0")
 
+    mu_reference_tau = None
+    sigma_surf_mu_ref = None
+    supply_const_cfg = getattr(getattr(cfg, "supply", None), "const", None)
+    if supply_const_cfg is not None:
+        mu_reference_tau = float(getattr(supply_const_cfg, "mu_reference_tau", 1.0))
+        if mu_reference_tau <= 0.0 or not math.isfinite(mu_reference_tau):
+            raise ConfigurationError("supply.const.mu_reference_tau must be positive and finite")
+        phi_ref = float(phi_tau_fn(mu_reference_tau)) if phi_tau_fn is not None else 1.0
+        kappa_eff_ref = float(phi_ref * kappa_surf_initial)
+        if not math.isfinite(kappa_eff_ref) or kappa_eff_ref <= 0.0:
+            raise ConfigurationError("mu_reference_tau requires a positive finite kappa_eff_ref")
+        sigma_surf_mu_ref = float(mu_reference_tau / (kappa_eff_ref * los_factor))
+
     if sigma_surf0_target is None:
         raise ConfigurationError("1D runs require optical_depth to set Sigma_surf0")
 
@@ -510,7 +523,9 @@ def run_one_d(
             orbit_fraction = 0.10 if supply_orbit_fraction is None else float(supply_orbit_fraction)
             if orbit_fraction <= 0.0 or not math.isfinite(orbit_fraction):
                 raise ConfigurationError("supply.const.orbit_fraction_at_mu1 must be positive and finite")
-            dotSigma_target = float(supply_mu_orbit_cfg) * orbit_fraction * sigma_surf0_avg / float(t_orb_vals[idx])
+            if sigma_surf_mu_ref is None or not math.isfinite(sigma_surf_mu_ref):
+                raise ConfigurationError("mu_orbit10pct requires a finite Sigma_ref from mu_reference_tau")
+            dotSigma_target = float(supply_mu_orbit_cfg) * orbit_fraction * sigma_surf_mu_ref / float(t_orb_vals[idx])
             supply_const_rate = dotSigma_target / float(supply_epsilon_mix)
             if hasattr(spec, "const"):
                 setattr(spec.const, "prod_area_rate_kg_m2_s", float(supply_const_rate))
@@ -559,6 +574,9 @@ def run_one_d(
         "physics_mode_source": physics_mode_source,
         "config": cfg.model_dump(mode="json"),
     }
+    auto_tune_info = getattr(cfg, "_auto_tune_info", None)
+    if auto_tune_info is not None:
+        run_config_snapshot["auto_tune"] = auto_tune_info
     writer.write_run_config(run_config_snapshot, run_config_path)
 
     streaming_cfg = getattr(cfg.io, "streaming", None)
@@ -1337,6 +1355,8 @@ def run_one_d(
         "sigma_surf0_avg": sigma_surf0_avg,
         "sigma_midplane_avg": sigma_midplane_avg_value,
         "supply_mu_orbit10pct": supply_mu_orbit_cfg,
+        "supply_mu_reference_tau": mu_reference_tau,
+        "sigma_surf_mu_reference": sigma_surf_mu_ref,
         "supply_orbit_fraction_at_mu1": supply_orbit_fraction,
         "epsilon_mix": supply_epsilon_mix,
         "qpr_table_path": str(qpr_table_path_resolved) if qpr_table_path_resolved is not None else None,
