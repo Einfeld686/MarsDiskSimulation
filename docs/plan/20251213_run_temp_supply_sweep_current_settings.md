@@ -5,23 +5,23 @@
 > **目的**: スクリプトを知らない人でも実行条件・出力・トグルを追えるようにする
 
 ## 役割と基本フロー
-- 0D 円盤で温度・混合効率・遮蔽テーブルを掃引し、各ケースを `python -m marsdisk.run` で 2 年間回すバッチランナー。base config は `configs/sweep_temp_supply/temp_supply_T4000_eps1.yml`。
+- 0D 円盤で温度・混合効率・初期光学的厚さを掃引し、各ケースを `python -m marsdisk.run` で 2 年間回すバッチランナー。base config は `configs/sweep_temp_supply/temp_supply_T4000_eps1.yml`。
 - 実行前に `.venv` が無ければ作成し、`requirements.txt` をインストール。完了後は外付け SSD（存在し書込可なら `/Volumes/KIOXIA/marsdisk_out`）を優先し、なければ `out/` へ保存。
-- 出力ルートは `OUT_ROOT`（未設定なら上記ルール）配下に `temp_supply_sweep/<YYYYMMDD-HHMMSS>__<gitsha>__seed<BATCH_SEED>/` を作成。各ケースは `T${T}_mu${MU_TITLE}_phi${PHI}` ディレクトリにまとまり、`series/`, `checks/`, `plots/`, `summary.json`, `run_config.json` を生成する。
+- 出力ルートは `OUT_ROOT`（未設定なら上記ルール）配下に `temp_supply_sweep/<YYYYMMDD-HHMMSS>__<gitsha>__seed<BATCH_SEED>/` を作成。各ケースは `T${T}_eps${EPS_TITLE}_tau${TAU_TITLE}` ディレクトリにまとまり、`series/`, `checks/`, `plots/`, `summary.json`, `run_config.json` を生成する。
 - 各 run 後に quick-look プロット（`plots/overview.png`, `plots/supply_surface.png`）を自動生成。`EVAL=1`（デフォルト）なら `scripts/research/evaluate_tau_supply.py` で τ・供給維持の簡易評価を行い、`checks/tau_supply_eval.json` に記録する。
 
 ## スイープ軸（固定グリッド）
 - 温度 `T_LIST`: 6000 / 4000 / 2000 K（高温順に実行）。各ケースで `radiation.TM_K` と `data/mars_temperature_T${T}p0K.csv` を適用。
-- 混合効率 `MU_LIST`: 1.0 / 0.5 / 0.1 → `supply.mixing.epsilon_mix` に代入（実効供給は const×epsilon_mix をログ表示）。
-- 遮蔽テーブル `PHI_LIST`: 20 / 37 / 60 → `shielding.table_path=tables/phi_const_0p${PHI}.csv` にマップ。
-- 出力ディレクトリは上記 3 軸の直積で 9 ケース作成。
+- 混合効率 `EPS_LIST`: 1.0 / 0.5 / 0.1 → `supply.mixing.epsilon_mix` に代入（実効供給は const×epsilon_mix をログ表示）。
+- 初期光学的厚さ `TAU_LIST`: 1.0 / 0.5 / 0.1 → `optical_depth.tau0_target` に代入。
+- 出力ディレクトリは上記 3 軸の直積で 27 ケース作成。
 
 ## ベース config（要点）
 - 幾何: 0D、`r_in=1.0 R_M`, `r_out=2.7 R_M`、`n_bins=40`、`s_min=1e-7 m`, `s_max=3 m`。
 - 初期質量: `mass_total=1e-5 M_Mars`、melt ログ正規混合（細粒率 0.25、`s_fine=1e-4 m`、`s_meter=1.5 m`）。
 - 衝突・PSD: `collision_solver=smol`, `e0=0.5`, `i0=0.05`, `wavy_strength=0`。`chi_blow=auto`、`blowout.layer=surface_tau_le_1`。
-- 供給: `supply.mode=const`、`const.prod_area_rate_kg_m2_s=1e-10`、`headroom_policy=clip`。`init_tau1.scale_to_tau1=true` と `shielding.fixed_tau1_sigma=auto` で初期 Σ を τ=1 へクリップ（スクリプト側でも維持）。
-- 遮蔽: `shielding.mode=psitau` が既定（Phi テーブルは環境で上書き）。`fixed_tau1_sigma=auto` により κ(t0) 由来の Στ=1 を固定。
+- 供給: `supply.mode=const`、`const.mu_orbit10pct=1.0`、`orbit_fraction_at_mu1=0.1`、`headroom_policy=clip`。`optical_depth.tau0_target` で初期 Σ を定義し、`init_tau1.scale_to_tau1` は optical_depth と排他のため使わない。
+- 遮蔽: `shielding.mode=off`（Φ=1）を既定とし、テーブルは使わない。
 - 放射: `use_mars_rp=true`, `use_solar_rp=false`, `qpr_table_path=marsdisk/io/data/qpr_planck.csv`。
 - シンク: `sinks.mode=sublimation`, `sublimation_location=smol`, `mass_conserving=true`（昇華で a_blow を跨ぐ分はブローアウト側に合算）。
 - 数値: `t_end_years=2`, `dt_init=2 s`, `dt_over_t_blow_max=0.1`, streaming snappy 有効（20 GB リミット, flush 10000 step）。
@@ -32,9 +32,9 @@
 - 乱数: `dynamics.rng_seed=<ケースごとに secrets.randbelow>`。
 - 温度: `radiation.TM_K=<T>`、`radiation.mars_temperature_driver.table.path=data/mars_temperature_T${T}p0K.csv`。
 - 衝突強度単位: `qstar.coeff_units=${QSTAR_UNITS}`（既定 `ba99_cgs`）。
-- 供給: `supply.enabled=true`、`supply.mode=${SUPPLY_MODE}`（既定 `const`）、`supply.const.prod_area_rate_kg_m2_s=${SUPPLY_RATE}`（既定 3.0e-6）、`supply.mixing.epsilon_mix=${MU}`、`supply.headroom_policy=${SUPPLY_HEADROOM_POLICY}`（既定 clip）。
-- 遮蔽: `shielding.table_path=tables/phi_const_0p${PHI}.csv`、`shielding.mode=${SHIELDING_MODE}`（既定 psitau）。`SHIELDING_MODE=fixed_tau1` のときは `shielding.fixed_tau1_sigma=${SHIELDING_SIGMA}`（既定 auto/auto_max 可）、`shielding.auto_max_margin=${SHIELDING_AUTO_MAX_MARGIN}` を付与。
-- 初期 τ 整合: `init_tau1.scale_to_tau1=${INIT_SCALE_TO_TAU1}`（既定 true、false の場合は headroom=0 で供給停止の可能性がある旨を警告ログ）。
+- 供給: `supply.enabled=true`、`supply.mode=${SUPPLY_MODE}`（既定 `const`）、`supply.const.mu_orbit10pct=${SUPPLY_MU_ORBIT10PCT}`、`supply.const.orbit_fraction_at_mu1=${SUPPLY_ORBIT_FRACTION}`、`supply.mixing.epsilon_mix=${EPS}`、`supply.headroom_policy=${SUPPLY_HEADROOM_POLICY}`（既定 clip）。
+- 初期 τ: `optical_depth.tau0_target=${TAU}` をケースごとに上書き。
+- 遮蔽: `shielding.mode=${SHIELDING_MODE}`（既定 off）。`SHIELDING_MODE=fixed_tau1` のときは `shielding.fixed_tau1_sigma=${SHIELDING_SIGMA}`（既定 auto/auto_max 可）、`shielding.auto_max_margin=${SHIELDING_AUTO_MAX_MARGIN}` を付与。
 - 高速ブローアウト補正: `SUBSTEP_FAST_BLOWOUT=1` の場合のみ `io.substep_fast_blowout=true`、`SUBSTEP_MAX_RATIO` が空でなければ `io.substep_max_ratio` を上書き（既定は base config の 1.0）。
 - ストリーミング: `STREAM_MEM_GB` / `STREAM_STEP_INTERVAL` を指定した場合、`io.streaming.memory_limit_gb` / `io.streaming.step_flush_interval` を追加。
 

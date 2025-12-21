@@ -2,9 +2,9 @@
 # Run temp supply parameter sweep:
 #   T_M = {2000, 4000, 6000} K
 #   epsilon_mix = {0.1, 0.5, 1.0}
-#   mu_orbit10pct = 1.0 (1 orbit supplies 10% of Sigma_surf0; scaled by orbit_fraction_at_mu1)
-#   shielding.table_path = {phi_const_0p20, phi_const_0p37, phi_const_0p60}
-# 出力は out/temp_supply_sweep/<ts>__<sha>__seed<batch>/T{T}_eps{eps}_phi{phi}/ に配置。
+#   mu_orbit10pct = 1.0 (1 orbit supplies 10% of Sigma_ref(tau=1); scaled by orbit_fraction_at_mu1)
+#   optical_depth.tau0_target = {1.0, 0.5, 0.1}
+# 出力は out/temp_supply_sweep/<ts>__<sha>__seed<batch>/T{T}_eps{eps}_tau{tau}/ に配置。
 # 供給は supply.* による外部源（温度・τフィードバック・有限リザーバ対応）。
 
 set -euo pipefail
@@ -58,13 +58,13 @@ GEOMETRY_R_IN_M="${GEOMETRY_R_IN_M:-}"
 GEOMETRY_R_OUT_M="${GEOMETRY_R_OUT_M:-}"
 
 # Parameter grids (run hotter cases first). Override via env:
-#   T_LIST_RAW="4000 3000", EPS_LIST_RAW="1.0", PHI_LIST_RAW="37"
+#   T_LIST_RAW="4000 3000", EPS_LIST_RAW="1.0", TAU_LIST_RAW="1.0 0.5"
 T_LIST_RAW="${T_LIST_RAW:-5000 4000 3000}"
 EPS_LIST_RAW="${EPS_LIST_RAW:-1.0 0.5 0.1}"
-PHI_LIST_RAW="${PHI_LIST_RAW:-20 37 60}"  # maps to tables/phi_const_0pXX.csv
+TAU_LIST_RAW="${TAU_LIST_RAW:-1.0 0.5 0.1}"
 read -r -a T_LIST <<<"${T_LIST_RAW}"
 read -r -a EPS_LIST <<<"${EPS_LIST_RAW}"
-read -r -a PHI_LIST <<<"${PHI_LIST_RAW}"
+read -r -a TAU_LIST <<<"${TAU_LIST_RAW}"
 T_END_YEARS="${T_END_YEARS:-2.0}"              # fixed integration horizon when COOL_TO_K is unset [yr]
 # 短縮テスト用に T_END_SHORT_YEARS=0.001 を指定すると強制上書き
 if [[ -n "${T_END_SHORT_YEARS:-}" ]]; then
@@ -104,7 +104,7 @@ SUPPLY_MU_ORBIT10PCT="${SUPPLY_MU_ORBIT10PCT:-1.0}"
 SUPPLY_ORBIT_FRACTION="${SUPPLY_ORBIT_FRACTION:-0.10}"
 # Pattern A: τ=1 キャップに任せるため、初期質量は形状用の最小限に抑える。
 INIT_MASS_TOTAL="${INIT_MASS_TOTAL:-1.0e-7}"
-SHIELDING_MODE="${SHIELDING_MODE:-psitau}"
+SHIELDING_MODE="${SHIELDING_MODE:-off}"
 SHIELDING_SIGMA="${SHIELDING_SIGMA:-auto}"
 SHIELDING_AUTO_MAX_MARGIN="${SHIELDING_AUTO_MAX_MARGIN:-0.05}"
 OPTICAL_TAU0_TARGET="${OPTICAL_TAU0_TARGET:-1.0}"
@@ -117,7 +117,7 @@ SUPPLY_RESERVOIR_M="${SUPPLY_RESERVOIR_M:-}"                 # Mars masses; empt
 SUPPLY_RESERVOIR_MODE="${SUPPLY_RESERVOIR_MODE:-hard_stop}"  # hard_stop|taper
 SUPPLY_RESERVOIR_TAPER="${SUPPLY_RESERVOIR_TAPER:-0.05}"     # used when taper
 
-SUPPLY_FEEDBACK_ENABLED="${SUPPLY_FEEDBACK_ENABLED:-1}"
+SUPPLY_FEEDBACK_ENABLED="${SUPPLY_FEEDBACK_ENABLED:-0}"
 SUPPLY_FEEDBACK_TARGET="${SUPPLY_FEEDBACK_TARGET:-0.9}"
 SUPPLY_FEEDBACK_GAIN="${SUPPLY_FEEDBACK_GAIN:-1.2}"
 SUPPLY_FEEDBACK_RESPONSE_YR="${SUPPLY_FEEDBACK_RESPONSE_YR:-0.4}"
@@ -287,15 +287,17 @@ for T in "${T_LIST[@]}"; do
   for EPS in "${EPS_LIST[@]}"; do
     EPS_TITLE="${EPS/0./0p}"
     EPS_TITLE="${EPS_TITLE/./p}"
-    for PHI in "${PHI_LIST[@]}"; do
+    for TAU in "${TAU_LIST[@]}"; do
+      TAU_TITLE="${TAU/0./0p}"
+      TAU_TITLE="${TAU_TITLE/./p}"
       SEED=$(python - <<'PY'
 import secrets
 print(secrets.randbelow(2**31))
 PY
 )
-      TITLE="T${T}_eps${EPS_TITLE}_phi${PHI}"
+      TITLE="T${T}_eps${EPS_TITLE}_tau${TAU_TITLE}"
       OUTDIR="${BATCH_DIR}/${TITLE}"
-      echo "[run] T=${T} eps=${EPS} phi=${PHI} -> ${OUTDIR} (batch=${BATCH_SEED}, seed=${SEED})"
+      echo "[run] T=${T} eps=${EPS} tau=${TAU} -> ${OUTDIR} (batch=${BATCH_SEED}, seed=${SEED})"
       echo "[info] epsilon_mix=${EPS}; mu_orbit10pct=${SUPPLY_MU_ORBIT10PCT} orbit_fraction_at_mu1=${SUPPLY_ORBIT_FRACTION}"
       echo "[info] shielding: mode=${SHIELDING_MODE} fixed_tau1_sigma=${SHIELDING_SIGMA} auto_max_margin=${SHIELDING_AUTO_MAX_MARGIN}"
       if [[ "${EPS}" == "0.1" ]]; then
@@ -351,7 +353,7 @@ PY
         --override "supply.mode=${SUPPLY_MODE}"
         --override "supply.const.mu_orbit10pct=${SUPPLY_MU_ORBIT10PCT}"
         --override "supply.const.orbit_fraction_at_mu1=${SUPPLY_ORBIT_FRACTION}"
-        --override "optical_depth.tau0_target=${OPTICAL_TAU0_TARGET}"
+        --override "optical_depth.tau0_target=${TAU}"
         --override "optical_depth.tau_stop=${OPTICAL_TAU_STOP}"
         --override "optical_depth.tau_stop_tol=${OPTICAL_TAU_STOP_TOL}"
         --override "inner_disk_mass=null"
@@ -387,7 +389,6 @@ PY
       if ((${#STREAMING_OVERRIDES[@]})); then
         cmd+=("${STREAMING_OVERRIDES[@]}")
       fi
-      cmd+=(--override "shielding.table_path=tables/phi_const_0p${PHI}.csv")
       cmd+=(--override "shielding.mode=${SHIELDING_MODE}")
       if [[ "${SHIELDING_MODE}" == "fixed_tau1" ]]; then
         cmd+=(--override "shielding.fixed_tau1_sigma=${SHIELDING_SIGMA}")

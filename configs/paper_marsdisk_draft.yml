@@ -84,8 +84,7 @@ optical_depth:
   tau_stop_tol: 1e-06
   tau_field: tau_los
 shielding:
-  mode: psitau
-  table_path: tables/phi_const_0p37.csv
+  mode: off
 supply:
   mode: const
   const:

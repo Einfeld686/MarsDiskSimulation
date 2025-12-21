@@ -62,7 +62,7 @@ if not defined SUPPLY_HEADROOM_POLICY set "SUPPLY_HEADROOM_POLICY=clip"
 if not defined SUPPLY_MODE set "SUPPLY_MODE=const"
 if not defined SUPPLY_MU_ORBIT10PCT set "SUPPLY_MU_ORBIT10PCT=1.0"
 if not defined SUPPLY_ORBIT_FRACTION set "SUPPLY_ORBIT_FRACTION=0.10"
-if not defined SHIELDING_MODE set "SHIELDING_MODE=psitau"
+if not defined SHIELDING_MODE set "SHIELDING_MODE=off"
 if not defined SHIELDING_SIGMA set "SHIELDING_SIGMA=auto"
 if not defined SHIELDING_AUTO_MAX_MARGIN set "SHIELDING_AUTO_MAX_MARGIN=0.05"
 if not defined OPTICAL_TAU0_TARGET set "OPTICAL_TAU0_TARGET=1.0"
@@ -111,7 +111,7 @@ if not defined ENABLE_PROGRESS set "ENABLE_PROGRESS=1"
 
 set "T_LIST=5000 4000 3000"
 set "EPS_LIST=1.0 0.5 0.1"
-set "PHI_LIST=20 37 60"
+set "TAU_LIST=1.0 0.5 0.1"
 
 set "COOL_SEARCH_DISPLAY=%COOL_SEARCH_YEARS%"
 if not defined COOL_SEARCH_DISPLAY set "COOL_SEARCH_DISPLAY=none"
@@ -182,12 +182,15 @@ for %%T in (%T_LIST%) do (
     set "EPS_TITLE=%%M"
     set "EPS_TITLE=!EPS_TITLE:0.=0p!"
     set "EPS_TITLE=!EPS_TITLE:.=p!"
-    for %%P in (%PHI_LIST%) do (
-      set "PHI=%%P"
+    for %%U in (%TAU_LIST%) do (
+      set "TAU=%%U"
+      set "TAU_TITLE=!TAU!"
+      set "TAU_TITLE=!TAU_TITLE:0.=0p!"
+      set "TAU_TITLE=!TAU_TITLE:.=p!"
       for /f %%S in ('python -c "import secrets; print(secrets.randbelow(2**31))"') do set "SEED=%%S"
-      set "TITLE=T%%T_eps!EPS_TITLE!_phi!PHI!"
+      set "TITLE=T%%T_eps!EPS_TITLE!_tau!TAU_TITLE!"
       set "OUTDIR=%BATCH_DIR%\!TITLE!"
-      echo.[run] T=%%T eps=%%M phi=%%P -^> !OUTDIR! (batch=%BATCH_SEED%, seed=!SEED!)
+      echo.[run] T=%%T eps=%%M tau=%%U -^> !OUTDIR! (batch=%BATCH_SEED%, seed=!SEED!)
       rem Show supply rate info (skip Python calc to avoid cmd.exe delayed expansion issues)
       echo.[info] epsilon_mix=%%M; mu_orbit10pct=%SUPPLY_MU_ORBIT10PCT% orbit_fraction_at_mu1=%SUPPLY_ORBIT_FRACTION%
       echo.[info] shielding: mode=%SHIELDING_MODE% fixed_tau1_sigma=%SHIELDING_SIGMA% auto_max_margin=%SHIELDING_AUTO_MAX_MARGIN%
@@ -236,10 +239,9 @@ for %%T in (%T_LIST%) do (
       set RUN_CMD=!RUN_CMD! --override "supply.mode=%SUPPLY_MODE%"
       set RUN_CMD=!RUN_CMD! --override "supply.const.mu_orbit10pct=%SUPPLY_MU_ORBIT10PCT%"
       set RUN_CMD=!RUN_CMD! --override "supply.const.orbit_fraction_at_mu1=%SUPPLY_ORBIT_FRACTION%"
-      set RUN_CMD=!RUN_CMD! --override "optical_depth.tau0_target=%OPTICAL_TAU0_TARGET%"
+      set RUN_CMD=!RUN_CMD! --override "optical_depth.tau0_target=!TAU!"
       set RUN_CMD=!RUN_CMD! --override "optical_depth.tau_stop=%OPTICAL_TAU_STOP%"
       set RUN_CMD=!RUN_CMD! --override "optical_depth.tau_stop_tol=%OPTICAL_TAU_STOP_TOL%"
-      set RUN_CMD=!RUN_CMD! --override "shielding.table_path=tables/phi_const_0p!PHI!.csv"
       set RUN_CMD=!RUN_CMD! --override "shielding.mode=%SHIELDING_MODE%"
       set RUN_CMD=!RUN_CMD! !SUPPLY_OVERRIDES!
       if defined STREAMING_OVERRIDES set RUN_CMD=!RUN_CMD! !STREAMING_OVERRIDES!

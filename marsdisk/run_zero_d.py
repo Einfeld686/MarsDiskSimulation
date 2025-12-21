@@ -319,6 +319,9 @@ def run_zero_d(
             "outdir": str(outdir),
             "config": cfg.model_dump(mode="json"),
         }
+        auto_tune_info = getattr(cfg, "_auto_tune_info", None)
+        if auto_tune_info is not None:
+            payload["auto_tune"] = auto_tune_info
         supply_feedback_snapshot = getattr(getattr(cfg, "supply", None), "feedback", None)
         if supply_feedback_snapshot is not None:
             try:
@@ -912,6 +915,19 @@ def run_zero_d(
         sigma_surf0_target = float(optical_tau0_target / (kappa_eff0 * los_factor))
         if not math.isfinite(sigma_surf0_target) or sigma_surf0_target < 0.0:
             raise ConfigurationError("optical_depth produced invalid Sigma_surf0")
+
+    mu_reference_tau = None
+    sigma_surf_mu_ref = None
+    supply_const_cfg = getattr(getattr(cfg, "supply", None), "const", None)
+    if supply_const_cfg is not None:
+        mu_reference_tau = float(getattr(supply_const_cfg, "mu_reference_tau", 1.0))
+        if mu_reference_tau <= 0.0 or not math.isfinite(mu_reference_tau):
+            raise ConfigurationError("supply.const.mu_reference_tau must be positive and finite")
+        phi_ref = float(phi_tau_fn(mu_reference_tau)) if phi_tau_fn is not None else 1.0
+        kappa_eff_ref = float(phi_ref * kappa_surf_initial)
+        if not math.isfinite(kappa_eff_ref) or kappa_eff_ref <= 0.0:
+            raise ConfigurationError("mu_reference_tau requires a positive finite kappa_eff_ref")
+        sigma_surf_mu_ref = float(mu_reference_tau / (kappa_eff_ref * los_factor))
     qpr_at_smin_config = _lookup_qpr(s_min_config)
     qpr_mean = _lookup_qpr(s_min_effective)
     beta_at_smin_config = radiation.beta(
@@ -1271,9 +1287,9 @@ def run_zero_d(
             and supply_mode_value == "const"
             and supply_mu_orbit_cfg is not None
         ):
-            if sigma_surf0_target is None or not math.isfinite(sigma_surf0_target):
+            if sigma_surf_mu_ref is None or not math.isfinite(sigma_surf_mu_ref):
                 raise ConfigurationError(
-                    "supply.const.mu_orbit10pct requires optical_depth to define Sigma_surf0"
+                    "supply.const.mu_orbit10pct requires a finite Sigma_ref from mu_reference_tau"
                 )
             if supply_epsilon_mix is None or supply_epsilon_mix <= 0.0:
                 raise ConfigurationError("supply.mixing.epsilon_mix must be positive when using mu_orbit10pct")
@@ -1282,15 +1298,16 @@ def run_zero_d(
                 raise ConfigurationError("supply.const.orbit_fraction_at_mu1 must be positive and finite")
             supply_orbit_fraction = orbit_fraction
             epsilon_mix = float(supply_epsilon_mix)
-            dotSigma_target = float(supply_mu_orbit_cfg) * orbit_fraction * float(sigma_surf0_target) / float(t_orb)
+            dotSigma_target = float(supply_mu_orbit_cfg) * orbit_fraction * float(sigma_surf_mu_ref) / float(t_orb)
             supply_const_rate = dotSigma_target / epsilon_mix
             logger.info(
                 "Derived supply.const.prod_area_rate_kg_m2_s=%.3e from mu_orbit10pct=%.3f, "
-                "orbit_fraction=%.3f, Sigma_surf0=%.3e kg/m^2, epsilon_mix=%.3f (dotSigma_prod=%.3e)",
+                "orbit_fraction=%.3f, Sigma_ref=%.3e kg/m^2 (tau_ref=%.3f), epsilon_mix=%.3f (dotSigma_prod=%.3e)",
                 supply_const_rate,
                 supply_mu_orbit_cfg,
                 orbit_fraction,
-                sigma_surf0_target,
+                sigma_surf_mu_ref,
+                mu_reference_tau,
                 epsilon_mix,
                 dotSigma_target,
             )
@@ -4133,6 +4150,8 @@ def run_zero_d(
         "supply_temperature_value_kind": supply_temperature_value_kind,
         "supply_temperature_table_path": str(supply_temperature_table_path) if supply_temperature_table_path is not None else None,
         "supply_mu_orbit10pct": supply_mu_orbit_cfg,
+        "supply_mu_reference_tau": mu_reference_tau,
+        "sigma_surf_mu_reference": sigma_surf_mu_ref,
         "supply_orbit_fraction_at_mu1": supply_orbit_fraction,
         "Sigma_surf0": sigma_surf0_target,
         "supply_rate_nominal_kg_m2_s": supply_rate_nominal_inferred,
@@ -4344,6 +4363,7 @@ def run_zero_d(
         rng_seed_resolved = getattr(cfg.initial, "rng_seed", None)
         numpy_version = np.__version__
         pandas_version = pd.__version__
+        auto_tune_info = getattr(cfg, "_auto_tune_info", None)
         lines = [
             "# MarsDisk run card",
             "",
@@ -4378,6 +4398,19 @@ def run_zero_d(
             f"- numpy: {numpy_version}",
             f"- pandas: {pandas_version}",
         ]
+        if auto_tune_info is not None:
+            decision = auto_tune_info.get("decision", {})
+            lines.extend(
+                [
+                    "",
+                    "## Auto-tune",
+                    f"- enabled: true",
+                    f"- profile: {decision.get('profile_resolved', 'unknown')}",
+                    f"- numba_threads: {decision.get('numba_threads', 'unknown')}",
+                    f"- numba_thread_source: {decision.get('numba_thread_source', 'unknown')}",
+                    f"- suggested_sweep_jobs: {decision.get('suggested_sweep_jobs', 'unknown')}",
+                ]
+            )
         run_card_path.write_text("\n".join(lines), encoding="utf-8")
     except Exception as exc:  # pragma: no cover - best effort
         logger.warning("Failed to write run_card.md: %s", exc)
@@ -4529,6 +4562,9 @@ def run_zero_d(
             "radiation_use_solar_rp": solar_rp_requested,
         },
     }
+    auto_tune_info = getattr(cfg, "_auto_tune_info", None)
+    if auto_tune_info is not None:
+        run_config["auto_tune"] = auto_tune_info
     run_config["phase_temperature"] = {
         "mode": phase_temperature_input_mode,
         "q_abs_mean": phase_q_abs_mean,
@@ -4839,13 +4875,34 @@ def main(argv: Optional[List[str]] = None) -> None:
             "--override physics.blowout.enabled=false"
         ),
     )
+    parser.add_argument(
+        "--auto-tune",
+        action="store_true",
+        help="Enable runtime auto-tuning of thread settings (default: off).",
+    )
+    parser.add_argument(
+        "--auto-tune-profile",
+        choices=["auto", "light", "balanced", "throughput"],
+        default="auto",
+        help="Select auto-tune profile when --auto-tune is enabled.",
+    )
     args = parser.parse_args(argv)
 
     override_list: List[str] = []
     if args.override:
         for group in args.override:
             override_list.extend(group)
+    auto_tune_info = None
+    if args.auto_tune:
+        from .runtime import autotune as autotune_mod
+
+        auto_tune_info = autotune_mod.apply_auto_tune(profile=args.auto_tune_profile)
     cfg = load_config(args.config, overrides=override_list)
+    if auto_tune_info is not None:
+        try:
+            setattr(cfg, "_auto_tune_info", auto_tune_info)
+        except Exception:
+            pass
     quiet_fields_set = set(getattr(cfg.io, "model_fields_set", ()))
     if args.quiet is not None:
         try:

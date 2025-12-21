@@ -78,9 +78,8 @@ radiation:
   qpr_table_path: data/qpr_table.csv
 
 shielding:
-  mode: psitau
+  mode: off
 
-  table_path: tables/phi_const_0p37.csv
 blowout:
   enabled: true
 

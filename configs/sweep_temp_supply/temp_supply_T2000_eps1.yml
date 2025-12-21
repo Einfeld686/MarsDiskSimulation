@@ -148,8 +148,7 @@ radiation:
     enable: false
     tau_max: 1.0
 shielding:
-  mode: psitau
-  table_path: tables/phi_const_0p37.csv
+  mode: off
 blowout:
   enabled: true
   target_phase: solid_only

@@ -111,7 +111,6 @@ supply:
   transport:
     mode: direct
 shielding:
-  table_path: tables/phi_const_0p37.csv
 
 # ===========================================================================
 # 相状態

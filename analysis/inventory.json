@@ -6147,10 +6147,108 @@
   },
   {
     "file_path": "marsdisk/run_zero_d.py",
-    "line_no": 4795,
+    "line_no": 4831,
     "symbol": "main",
     "signature": "main(argv: Optional[List[str]]=None) -> None",
     "brief_usage": "Command line entry point."
+  },
+  {
+    "file_path": "marsdisk/runtime/autotune.py",
+    "line_no": 18,
+    "symbol": "_PROFILE_CHOICES",
+    "signature": "_PROFILE_CHOICES = ('auto', 'light', 'balanced', 'throughput')",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "marsdisk/runtime/autotune.py",
+    "line_no": 22,
+    "symbol": "MachineState",
+    "signature": "class MachineState",
+    "brief_usage": "Lightweight snapshot of runtime machine state."
+  },
+  {
+    "file_path": "marsdisk/runtime/autotune.py",
+    "line_no": 43,
+    "symbol": "AutoTuneDecision",
+    "signature": "class AutoTuneDecision",
+    "brief_usage": "Auto-tune result for thread settings."
+  },
+  {
+    "file_path": "marsdisk/runtime/autotune.py",
+    "line_no": 56,
+    "symbol": "_safe_int",
+    "signature": "_safe_int(value: Any, fallback: int) -> int",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "marsdisk/runtime/autotune.py",
+    "line_no": 64,
+    "symbol": "_sysctl_int",
+    "signature": "_sysctl_int(name: str) -> Optional[int]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "marsdisk/runtime/autotune.py",
+    "line_no": 76,
+    "symbol": "_mac_core_score",
+    "signature": "_mac_core_score(state: MachineState) -> Optional[float]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "marsdisk/runtime/autotune.py",
+    "line_no": 86,
+    "symbol": "_thread_core_budget",
+    "signature": "_thread_core_budget(state: MachineState) -> int",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "marsdisk/runtime/autotune.py",
+    "line_no": 94,
+    "symbol": "_job_core_budget",
+    "signature": "_job_core_budget(state: MachineState, cores: int) -> int",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "marsdisk/runtime/autotune.py",
+    "line_no": 102,
+    "symbol": "detect_machine_state",
+    "signature": "detect_machine_state() -> MachineState",
+    "brief_usage": "Collect a minimal machine state snapshot using stdlib first."
+  },
+  {
+    "file_path": "marsdisk/runtime/autotune.py",
+    "line_no": 155,
+    "symbol": "_resolve_profile",
+    "signature": "_resolve_profile(state: MachineState, requested: str) -> str",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "marsdisk/runtime/autotune.py",
+    "line_no": 194,
+    "symbol": "_profile_threads",
+    "signature": "_profile_threads(profile: str, cores: int, platform_system: str) -> int",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "marsdisk/runtime/autotune.py",
+    "line_no": 216,
+    "symbol": "_suggest_sweep_jobs",
+    "signature": "_suggest_sweep_jobs(cores: int, numba_threads: int) -> int",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "marsdisk/runtime/autotune.py",
+    "line_no": 222,
+    "symbol": "_apply_numba_threads",
+    "signature": "_apply_numba_threads(numba_threads: int) -> Dict[str, Any]",
+    "brief_usage": "Attempt to apply Numba thread count at runtime."
+  },
+  {
+    "file_path": "marsdisk/runtime/autotune.py",
+    "line_no": 237,
+    "symbol": "apply_auto_tune",
+    "signature": "apply_auto_tune(*, profile: str='auto', env: Optional[Dict[str, str]]=None) -> Dict[str, Any]",
+    "brief_usage": "Apply auto-tuning decisions and return a structured report."
   },
   {
     "file_path": "marsdisk/runtime/helpers.py",
@@ -6315,364 +6413,364 @@
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 147,
+    "line_no": 155,
     "symbol": "SupplyPowerLaw",
     "signature": "class SupplyPowerLaw(BaseModel)",
     "brief_usage": "Class definition"
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 153,
+    "line_no": 161,
     "symbol": "SupplyTable",
     "signature": "class SupplyTable(BaseModel)",
     "brief_usage": "Class definition"
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 158,
+    "line_no": 166,
     "symbol": "SupplyMixing",
     "signature": "class SupplyMixing(BaseModel)",
     "brief_usage": "Class definition"
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 180,
+    "line_no": 188,
     "symbol": "SupplyReservoir",
     "signature": "class SupplyReservoir(BaseModel)",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 225,
+    "line_no": 233,
     "symbol": "SupplyFeedback",
     "signature": "class SupplyFeedback(BaseModel)",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 272,
+    "line_no": 280,
     "symbol": "SupplyTemperatureTable",
     "signature": "class SupplyTemperatureTable(BaseModel)",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 282,
+    "line_no": 290,
     "symbol": "SupplyTemperature",
     "signature": "class SupplyTemperature(BaseModel)",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 315,
+    "line_no": 323,
     "symbol": "SupplyTransport",
     "signature": "class SupplyTransport(BaseModel)",
     "brief_usage": "Routing of external supply between deep and surface reservoirs."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 342,
+    "line_no": 350,
     "symbol": "SupplyInjectionVelocity",
     "signature": "class SupplyInjectionVelocity(BaseModel)",
     "brief_usage": "Velocity/eccentricity controls dedicated to the incoming supply."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 385,
+    "line_no": 393,
     "symbol": "SupplyInjection",
     "signature": "class SupplyInjection(BaseModel)",
     "brief_usage": "Controls how external supply is injected into the PSD and surface layer."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 426,
+    "line_no": 434,
     "symbol": "SupplyPiece",
     "signature": "class SupplyPiece(BaseModel)",
     "brief_usage": "Class definition"
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 435,
+    "line_no": 443,
     "symbol": "Supply",
     "signature": "class Supply(BaseModel)",
     "brief_usage": "Parameterisation of external surface supply."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 535,
+    "line_no": 543,
     "symbol": "Material",
     "signature": "class Material(BaseModel)",
     "brief_usage": "Material properties of the solids."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 550,
+    "line_no": 558,
     "symbol": "Temps",
     "signature": "class Temps(BaseModel)",
     "brief_usage": "Thermal parameters."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 577,
+    "line_no": 585,
     "symbol": "Sizes",
     "signature": "class Sizes(BaseModel)",
     "brief_usage": "Particle size grid specification."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 601,
+    "line_no": 609,
     "symbol": "Initial",
     "signature": "class Initial(BaseModel)",
     "brief_usage": "Initial mass and PSD mode."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 676,
+    "line_no": 684,
     "symbol": "Dynamics",
     "signature": "class Dynamics(BaseModel)",
     "brief_usage": "Parameters governing dynamical excitation."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 777,
+    "line_no": 785,
     "symbol": "QStar",
     "signature": "class QStar(BaseModel)",
     "brief_usage": "Strength law parameters for catastrophic disruption."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 828,
+    "line_no": 836,
     "symbol": "PSD",
     "signature": "class PSD(BaseModel)",
     "brief_usage": "Particle size distribution parameters."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 839,
+    "line_no": 847,
     "symbol": "SurfaceEnergy",
     "signature": "class SurfaceEnergy(BaseModel)",
     "brief_usage": "Energy-limited minimum size (Krijt & Kama 2014 inspired)."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 847,
+    "line_no": 855,
     "symbol": "Surface",
     "signature": "class Surface(BaseModel)",
     "brief_usage": "Surface layer evolution parameters."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 865,
+    "line_no": 873,
     "symbol": "InitTau1",
     "signature": "class InitTau1(BaseModel)",
     "brief_usage": "Optional toggle to initialise the surface at τ≈1."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 886,
+    "line_no": 894,
     "symbol": "OpticalDepth",
     "signature": "class OpticalDepth(BaseModel)",
     "brief_usage": "Optical-depth controls for the surface model."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 910,
+    "line_no": 918,
     "symbol": "SublimationParamsModel",
     "signature": "class SublimationParamsModel(BaseModel)",
     "brief_usage": "Nested parameters for sublimation models."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 1002,
+    "line_no": 1010,
     "symbol": "RPBlowoutConfig",
     "signature": "class RPBlowoutConfig(BaseModel)",
     "brief_usage": "Toggle for radiation-pressure blow-out sinks."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 1008,
+    "line_no": 1016,
     "symbol": "HydroEscapeConfig",
     "signature": "class HydroEscapeConfig(BaseModel)",
     "brief_usage": "Configuration for vapour-driven hydrodynamic escape sinks."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 1031,
+    "line_no": 1039,
     "symbol": "Sinks",
     "signature": "class Sinks(BaseModel)",
     "brief_usage": "Configuration of additional sink processes."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 1055,
+    "line_no": 1063,
     "symbol": "ProcessStateTagging",
     "signature": "class ProcessStateTagging(BaseModel)",
     "brief_usage": "Placeholder toggle for future solid/gas tagging."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 1064,
+    "line_no": 1072,
     "symbol": "Process",
     "signature": "class Process(BaseModel)",
     "brief_usage": "Companion switches for phase tagging."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 1078,
+    "line_no": 1086,
     "symbol": "PhaseThresholds",
     "signature": "class PhaseThresholds(BaseModel)",
     "brief_usage": "Fallback thresholds used when no external phase map is available."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 1102,
+    "line_no": 1110,
     "symbol": "PhaseConfig",
     "signature": "class PhaseConfig(BaseModel)",
     "brief_usage": "Solid/vapour branching controls."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 1183,
+    "line_no": 1191,
     "symbol": "MarsTemperatureDriverConstant",
     "signature": "class MarsTemperatureDriverConstant(BaseModel)",
     "brief_usage": "Explicit constant value for the Mars temperature driver."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 1196,
+    "line_no": 1204,
     "symbol": "MarsTemperatureDriverTable",
     "signature": "class MarsTemperatureDriverTable(BaseModel)",
     "brief_usage": "Tabulated Mars temperature driver."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 1208,
+    "line_no": 1216,
     "symbol": "MarsTemperatureDriverHyodo",
     "signature": "class MarsTemperatureDriverHyodo(BaseModel)",
     "brief_usage": "Hyodo linear cooling approximation options."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 1216,
+    "line_no": 1224,
     "symbol": "MarsTemperatureAutogen",
     "signature": "class MarsTemperatureAutogen(BaseModel)",
     "brief_usage": "Options for auto-generating Mars temperature tables."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 1248,
+    "line_no": 1256,
     "symbol": "MarsTemperatureDriverConfig",
     "signature": "class MarsTemperatureDriverConfig(BaseModel)",
     "brief_usage": "Configuration container for the Mars temperature driver."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 1287,
+    "line_no": 1295,
     "symbol": "RadiationTauGate",
     "signature": "class RadiationTauGate(BaseModel)",
     "brief_usage": "Optical-depth gating options for radiation-pressure blow-out."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 1294,
+    "line_no": 1302,
     "symbol": "QPrCache",
     "signature": "class QPrCache(BaseModel)",
     "brief_usage": "Cache controls for ⟨Q_pr⟩ lookups."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 1310,
+    "line_no": 1318,
     "symbol": "Radiation",
     "signature": "class Radiation(BaseModel)",
     "brief_usage": "Radiation pressure options and table paths."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 1370,
+    "line_no": 1378,
     "symbol": "Shielding",
     "signature": "class Shielding(BaseModel)",
     "brief_usage": "Self-shielding table configuration."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 1431,
+    "line_no": 1439,
     "symbol": "Blowout",
     "signature": "class Blowout(BaseModel)",
     "brief_usage": "Radiation blow-out control."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 1449,
+    "line_no": 1457,
     "symbol": "Checkpoint",
     "signature": "class Checkpoint(BaseModel)",
     "brief_usage": "Checkpointing and restart controls."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 1476,
+    "line_no": 1484,
     "symbol": "Resume",
     "signature": "class Resume(BaseModel)",
     "brief_usage": "Resume-from-checkpoint configuration."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 1489,
+    "line_no": 1497,
     "symbol": "Numerics",
     "signature": "class Numerics(BaseModel)",
     "brief_usage": "Integrator control parameters."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 1615,
+    "line_no": 1623,
     "symbol": "StepDiagnostics",
     "signature": "class StepDiagnostics(BaseModel)",
     "brief_usage": "Per-step loss channel diagnostics output control."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 1632,
+    "line_no": 1640,
     "symbol": "Progress",
     "signature": "class Progress(BaseModel)",
     "brief_usage": "Console progress display controls."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 1646,
+    "line_no": 1654,
     "symbol": "Streaming",
     "signature": "class Streaming(BaseModel)",
     "brief_usage": "Streaming write controls for large zero-D runs."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 1693,
+    "line_no": 1701,
     "symbol": "IO",
     "signature": "class IO(BaseModel)",
     "brief_usage": "Output directories."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 1733,
+    "line_no": 1741,
     "symbol": "ExtendedDiagnostics",
     "signature": "class ExtendedDiagnostics(BaseModel)",
     "brief_usage": "Optional extended diagnostics controls."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 1746,
+    "line_no": 1754,
     "symbol": "EnergyBookkeeping",
     "signature": "class EnergyBookkeeping(BaseModel)",
     "brief_usage": "Controls for collision energy bookkeeping outputs."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 1759,
+    "line_no": 1767,
     "symbol": "Diagnostics",
     "signature": "class Diagnostics(BaseModel)",
     "brief_usage": "Diagnostics toggles grouped by feature phase."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 1766,
+    "line_no": 1774,
     "symbol": "Config",
     "signature": "class Config(BaseModel)",
     "brief_usage": "Top-level configuration object."
@@ -7249,6 +7347,13 @@
     "line_no": 120,
     "symbol": "main",
     "signature": "main(argv: Iterable[str] | None=None) -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/run_autotuned.py",
+    "line_no": 10,
+    "symbol": "main",
+    "signature": "main() -> int",
     "brief_usage": "No description available."
   },
   {

@@ -2,9 +2,9 @@
 # Run temp supply sweep (sublimation only)
 # T_M = {2000, 4000, 6000}
 # epsilon_mix = {0.1, 0.5, 1.0}
-# mu_orbit10pct = 1.0 (1 orbit supplies 10% of Sigma_surf0; scaled by orbit_fraction_at_mu1)
-# phi = {0p20, 0p37, 0p60}
-# Outputs under: out/temp_supply_sweep/<ts>__<sha>__seed<BATCH>/T{T}_eps{eps}_phi{phi}_mode-sublimation_only/
+# mu_orbit10pct = 1.0 (1 orbit supplies 10% of Sigma_ref(tau=1); scaled by orbit_fraction_at_mu1)
+# tau0_target = {1.0, 0.5, 0.1}
+# Outputs under: out/temp_supply_sweep/<ts>__<sha>__seed<BATCH>/T{T}_eps{eps}_tau{tau}_mode-sublimation_only/
 
 set -euo pipefail
 
@@ -38,7 +38,7 @@ fi
 BASE_CONFIG="configs/sweep_temp_supply/temp_supply_T4000_eps1.yml"
 T_LIST=("2000" "4000" "6000")
 EPS_LIST=("0.1" "0.5" "1.0")
-PHI_LIST=("20" "37" "60")
+TAU_LIST=("1.0" "0.5" "0.1")
 MODE="sublimation_only"
 SUPPLY_MU_ORBIT10PCT="${SUPPLY_MU_ORBIT10PCT:-1.0}"
 SUPPLY_ORBIT_FRACTION="${SUPPLY_ORBIT_FRACTION:-0.10}"
@@ -60,15 +60,17 @@ for T in "${T_LIST[@]}"; do
   for EPS in "${EPS_LIST[@]}"; do
     EPS_TITLE="${EPS/0./0p}"
     EPS_TITLE="${EPS_TITLE/./p}"
-    for PHI in "${PHI_LIST[@]}"; do
+    for TAU in "${TAU_LIST[@]}"; do
+      TAU_TITLE="${TAU/0./0p}"
+      TAU_TITLE="${TAU_TITLE/./p}"
       SEED=$(python - <<'PY'
 import secrets
 print(secrets.randbelow(2**31))
 PY
 )
-      TITLE="T${T}_eps${EPS_TITLE}_phi${PHI}_mode-${MODE}"
+      TITLE="T${T}_eps${EPS_TITLE}_tau${TAU_TITLE}_mode-${MODE}"
       OUTDIR="${BATCH_DIR}/${TITLE}"
-      echo "[run] mode=${MODE} T=${T} eps=${EPS} phi=${PHI} -> ${OUTDIR} (batch=${BATCH_SEED}, seed=${SEED})"
+      echo "[run] mode=${MODE} T=${T} eps=${EPS} tau=${TAU} -> ${OUTDIR} (batch=${BATCH_SEED}, seed=${SEED})"
       python -m marsdisk.run \
         --config "${BASE_CONFIG}" \
         --quiet \
@@ -81,7 +83,8 @@ PY
         --override "supply.mixing.epsilon_mix=${EPS}" \
         --override "supply.const.mu_orbit10pct=${SUPPLY_MU_ORBIT10PCT}" \
         --override "supply.const.orbit_fraction_at_mu1=${SUPPLY_ORBIT_FRACTION}" \
-        --override "shielding.table_path=tables/phi_const_0p${PHI}.csv" \
+        --override "optical_depth.tau0_target=${TAU}" \
+        --override "shielding.mode=off" \
         --override "physics_mode=${MODE}"
 
       RUN_DIR="${OUTDIR}" python - <<'PY'
