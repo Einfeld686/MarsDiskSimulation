@@ -8,7 +8,7 @@ import pandas as pd
 from marsdisk import run
 
 
-BASE_CONFIG = Path("configs/base.yml")
+BASE_CONFIG = Path("configs/innerdisk_collisions_only.yml")
 
 
 def test_phase_map_missing_entrypoint_falls_back_to_threshold(tmp_path: Path) -> None:

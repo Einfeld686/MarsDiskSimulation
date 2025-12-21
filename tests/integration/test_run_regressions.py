@@ -12,7 +12,7 @@ import pandas as pd
 from ruamel.yaml import YAML
 from marsdisk.run import load_config, run_zero_d
 
-BASE_CONFIG = Path("configs/base.yml")
+BASE_CONFIG = Path("configs/innerdisk_base.yml")
 TOL_MLOSS_PERCENT = 0.5
 
 
@@ -169,6 +169,7 @@ def test_gate_factor_collision_competition_reduces_flux() -> None:
         "blowout.gate_mode=collision_competition",
         "initial.mass_total=1e-1",
         "material.rho=1200.0",
+        "radiation.TM_K=4000.0",
         "numerics.t_end_orbits=0.1",
         "numerics.t_end_years=null",
         "numerics.dt_init=20.0",
