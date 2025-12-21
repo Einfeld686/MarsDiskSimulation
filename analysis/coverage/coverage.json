@@ -1,8 +1,8 @@
 {
   "function_reference_rate": {
     "numerator": 111,
-    "denominator": 115,
-    "rate": 0.9652173913043478
+    "denominator": 120,
+    "rate": 0.925
   },
   "anchor_consistency_rate": {
     "numerator": 707,
@@ -23,7 +23,7 @@
   },
   "holes": [
     "marsdisk/io/_numba_tables.py#NUMBA_AVAILABLE",
-    "marsdisk/io/_numba_tables.py#qpr_interp_scalar_numba",
-    "marsdisk/physics/qstar.py#reset_coefficient_table"
+    "marsdisk/io/_numba_tables.py#qpr_interp_array_numba",
+    "marsdisk/io/_numba_tables.py#qpr_interp_scalar_numba"
   ]
 }

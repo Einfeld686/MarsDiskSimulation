@@ -26,30 +26,31 @@ AIエージェントがコード検索を効率化するためのマップを提
 | `EXTENDED_DIAGNOSTICS_VERSION` | L97 | クラス | Module constant |
 | `_get_max_steps` | L103 | ヘルパー | Return MAX_STEPS, honoring overrides applied to th... |
 | `_log_stage` | L117 | ヘルパー | Emit coarse progress markers for debugging long ru... |
-| `_resolve_los_factor` | L123 | ヘルパー | Return the multiplicative factor f_los scaling τ_v... |
-| `_surface_energy_floor` | L139 | ヘルパー | Return surface-energy-limited minimum size (Krijt ... |
-| `_auto_chi_blow` | L163 | ヘルパー | Return an automatic chi_blow scaling based on β an... |
-| `_fast_blowout_correction_factor` | L178 | ヘルパー | Return the effective loss fraction ``f_fast = 1 - ... |
-| `load_config` | L201 | 関数 | Load a YAML configuration file into a :class:`Conf... |
-| `_gather_git_info` | L226 | ヘルパー | Return basic git metadata for provenance recording... |
-| `MassBudgetViolationError` | L253 | クラス | Raised when the mass budget tolerance is exceeded. |
-| `run_zero_d` | L259 | メイン | Execute the full-feature zero-dimensional simulati... |
-| `main` | L4674 | 関数 | Command line entry point. |
+| `_model_fields_set` | L123 | ヘルパー | Return explicitly-set fields for a Pydantic model ... |
+| `_resolve_los_factor` | L134 | ヘルパー | Return the multiplicative factor f_los scaling τ_v... |
+| `_surface_energy_floor` | L150 | ヘルパー | Return surface-energy-limited minimum size (Krijt ... |
+| `_auto_chi_blow` | L174 | ヘルパー | Return an automatic chi_blow scaling based on β an... |
+| `_fast_blowout_correction_factor` | L189 | ヘルパー | Return the effective loss fraction ``f_fast = 1 - ... |
+| `load_config` | L212 | 関数 | Load a YAML configuration file into a :class:`Conf... |
+| `_gather_git_info` | L237 | ヘルパー | Return basic git metadata for provenance recording... |
+| `MassBudgetViolationError` | L264 | クラス | Raised when the mass budget tolerance is exceeded. |
+| `run_zero_d` | L270 | メイン | Execute the full-feature zero-dimensional simulati... |
+| `main` | L4745 | 関数 | Command line entry point. |
 
 ## 3. 主要セクション（目安）
 
 > 以下の行範囲はコード変更により変動します。`inventory.json` を基に自動更新されます。
 
-- **`run_zero_d()`**: L259–? (メイン実行ドライバ)
-- **`main()`**: L4674–? (CLI エントリポイント)
+- **`run_zero_d()`**: L270–? (メイン実行ドライバ)
+- **`main()`**: L4745–? (CLI エントリポイント)
 ## 4. 探索ガイド
 
 | 調べたいこと | 参照シンボル | 備考 |
 |-------------|-------------|------|
-| 設定ロード | [`load_config`](L201) | YAML→Config変換 |
+| 設定ロード | [`load_config`](L212) | YAML→Config変換 |
 | 時間グリッド | `_resolve_time_grid` | dt, n_steps決定 (未検出) |
 | シード解決 | `_resolve_seed` | RNG初期化 (未検出) |
-| 高速ブローアウト補正 | [`_fast_blowout_correction_factor`](L178) | dt/t_blow補正 |
+| 高速ブローアウト補正 | [`_fast_blowout_correction_factor`](L189) | dt/t_blow補正 |
 | 進捗表示 | `ProgressReporter` | プログレスバー (未検出) |
 | 履歴書き出し | `_write_zero_d_history` | Parquet/CSV出力 (未検出) |
 | Phase5比較 | `run_phase5_comparison` | バリアント比較 (未検出) |

@@ -7,23 +7,23 @@
 # 用途: 衝突進化の基本挙動確認、コード検証
 
 _scenario:
-  name: "no_sinks"
-  description: "Pure collisional evolution (no sublimation, no gas drag)"
+  name: no_sinks
+  description: Pure collisional evolution (no sublimation, no gas drag)
   assumptions:
-    - "No sublimation"
-    - "No gas drag"
-    - "Collision cascade only"
+    - No sublimation
+    - No gas drag
+    - Collision cascade only
 
 # ===========================================================================
 # 物理モード（統一フィールド）
 # ===========================================================================
-physics_mode: "collisions_only"  # 純粋衝突進化
+physics_mode: collisions_only    # 純粋衝突進化
 
 # ===========================================================================
 # 空間・物質
 # ===========================================================================
 geometry:
-  mode: "0D"
+  mode: 0D
 
 material:
   rho: 3000.0  # kg/m³, 岩石質
@@ -31,7 +31,7 @@ material:
 # --- 温度設定 ---
 radiation:
   TM_K: 4000
-  qpr_table_path: "data/qpr_table.csv"
+  qpr_table_path: data/qpr_table.csv
 
 # --- サイズビン ---
 sizes:
@@ -42,7 +42,7 @@ sizes:
 # --- 初期条件 ---
 initial:
   mass_total: 1.0e-5
-  s0_mode: "upper"
+  s0_mode: upper
 
 # --- 速度分散 ---
 dynamics:
@@ -70,43 +70,56 @@ disk:
   geometry:
     r_in_RM: 2.2
     r_out_RM: 2.7
-    r_profile: "uniform"
+    r_profile: uniform
     p_index: 0.0
 
 inner_disk_mass:
   use_Mmars_ratio: true
   M_in_ratio: 3.0e-5
-  map_to_sigma: "analytic"
+  map_to_sigma: analytic
 
 # --- 表層モデル ---
 surface:
-  init_policy: "clip_by_tau1"
-  sigma_surf_init_override: null
+  init_policy: none
+  sigma_surf_init_override:
   use_tcoll: true
 
 # --- シンク設定（無効化）---
 sinks:
-  mode: "none"
+  mode: none
   enable_sublimation: false
   enable_gas_drag: false
   rho_g: 0.0
 
 # --- 供給 ---
 supply:
-  mode: "const"
+  mode: const
   const:
     prod_area_rate_kg_m2_s: 0.0
 
 # --- 自遮蔽 ---
+    mu_orbit10pct: 1.0
+    orbit_fraction_at_mu1: 0.1
+  mixing:
+    epsilon_mix: 1.0
+  feedback:
+    enabled: false
+  reservoir:
+    enabled: false
+  temperature:
+    enabled: false
+  transport:
+    mode: direct
 shielding:
-  table_path: null
+  table_path: tables/phi_const_0p37.csv
 
 # ===========================================================================
 # 相状態
 # ===========================================================================
+  mode: psitau
 phase:
   enabled: true
-  source: "threshold"
+  source: threshold
   thresholds:
     T_condense_K: 1700.0
     T_vaporize_K: 2000.0
@@ -121,4 +134,12 @@ numerics:
 
 # --- 出力 ---
 io:
-  outdir: "out/no_sinks"
+  outdir: out/no_sinks
+init_tau1:
+  enabled: false
+  scale_to_tau1: false
+optical_depth:
+  tau0_target: 1.0
+  tau_stop: 2.302585092994046
+  tau_stop_tol: 1e-06
+  tau_field: tau_los

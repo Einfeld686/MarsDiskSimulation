@@ -8,23 +8,23 @@
 # 用途: 初期高温環境での円盤進化
 
 _scenario:
-  name: "high_temp"
-  description: "High temperature disk with enhanced sublimation"
+  name: high_temp
+  description: High temperature disk with enhanced sublimation
   assumptions:
-    - "Elevated Mars infrared temperature"
-    - "Sublimation-dominated mass loss"
-    - "Earlier condensation threshold"
+    - Elevated Mars infrared temperature
+    - Sublimation-dominated mass loss
+    - Earlier condensation threshold
 
 # ===========================================================================
 # 物理モード（統一フィールド）
 # ===========================================================================
-physics_mode: "full"
+physics_mode: full
 
 # ===========================================================================
 # 空間・物質
 # ===========================================================================
 geometry:
-  mode: "0D"
+  mode: 0D
 
 material:
   rho: 3000.0  # kg/m³, 岩石質
@@ -32,7 +32,7 @@ material:
 # --- 温度設定（高温）---
 radiation:
   TM_K: 5000  # K, 高温
-  qpr_table_path: "data/qpr_table.csv"
+  qpr_table_path: data/qpr_table.csv
 
 # --- サイズビン ---
 sizes:
@@ -43,7 +43,7 @@ sizes:
 # --- 初期条件 ---
 initial:
   mass_total: 1.0e-5
-  s0_mode: "upper"
+  s0_mode: upper
 
 # --- 速度分散 ---
 dynamics:
@@ -71,29 +71,29 @@ disk:
   geometry:
     r_in_RM: 2.2
     r_out_RM: 2.7
-    r_profile: "uniform"
+    r_profile: uniform
     p_index: 0.0
 
 inner_disk_mass:
   use_Mmars_ratio: true
   M_in_ratio: 3.0e-5
-  map_to_sigma: "analytic"
+  map_to_sigma: analytic
 
 # --- 表層モデル ---
 surface:
-  init_policy: "clip_by_tau1"
-  sigma_surf_init_override: null
+  init_policy: none
+  sigma_surf_init_override:
   use_tcoll: true
 
 # ===========================================================================
 # シンク設定（昇華強化）
 # ===========================================================================
 sinks:
-  mode: "sublimation"
+  mode: sublimation
   enable_sublimation: true
   T_sub: 1100.0  # 低めの昇華開始温度
   sub_params:
-    mode: "logistic"
+    mode: logistic
     alpha_evap: 1.0
     dT: 30.0  # 急峻な遷移
   enable_gas_drag: false
@@ -101,20 +101,33 @@ sinks:
 
 # --- 供給 ---
 supply:
-  mode: "const"
+  mode: const
   const:
     prod_area_rate_kg_m2_s: 0.0
 
 # --- 自遮蔽 ---
+    mu_orbit10pct: 1.0
+    orbit_fraction_at_mu1: 0.1
+  mixing:
+    epsilon_mix: 1.0
+  feedback:
+    enabled: false
+  reservoir:
+    enabled: false
+  temperature:
+    enabled: false
+  transport:
+    mode: direct
 shielding:
-  table_path: null
+  table_path: tables/phi_const_0p37.csv
 
 # ===========================================================================
 # 相状態（高温閾値）
 # ===========================================================================
+  mode: psitau
 phase:
   enabled: true
-  source: "threshold"
+  source: threshold
   thresholds:
     T_condense_K: 2000.0  # 高め
     T_vaporize_K: 2500.0
@@ -129,4 +142,12 @@ numerics:
 
 # --- 出力 ---
 io:
-  outdir: "out/high_temp"
+  outdir: out/high_temp
+init_tau1:
+  enabled: false
+  scale_to_tau1: false
+optical_depth:
+  tau0_target: 1.0
+  tau_stop: 2.302585092994046
+  tau_stop_tol: 1e-06
+  tau_field: tau_los

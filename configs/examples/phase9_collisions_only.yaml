@@ -1,11 +1,11 @@
 scope:
-  region: "inner"
+  region: inner
   analysis_years: 2.0
 
-physics_mode: "collisions_only"
+physics_mode: collisions_only
 
 geometry:
-  mode: "0D"
+  mode: 0D
 
 material:
   rho: 3000.0
@@ -17,15 +17,15 @@ sizes:
 
 initial:
   mass_total: 1.0e-5
-  s0_mode: "upper"
+  s0_mode: upper
 
 dynamics:
   e0: 0.4
   i0: 0.05
   t_damp_orbits: 10.0
   f_wake: 2.0
-  e_mode: "fixed"
-  i_mode: "fixed"
+  e_mode: fixed
+  i_mode: fixed
 
 psd:
   alpha: 1.83
@@ -40,44 +40,63 @@ qstar:
   coeff_units: ba99_cgs
 
 surface:
-  init_policy: "clip_by_tau1"
+  init_policy: none
 disk:
   geometry:
     r_in_RM: 2.3602301224369375
     r_out_RM: 2.3602301224369375
-    r_profile: "uniform"
+    r_profile: uniform
     p_index: 0.0
 
 supply:
-  mode: "const"
+  mode: const
   const:
     prod_area_rate_kg_m2_s: 0.0
+    mu_orbit10pct: 1.0
+    orbit_fraction_at_mu1: 0.1
   mixing:
     epsilon_mix: 1.0
 
+  feedback:
+    enabled: false
+  reservoir:
+    enabled: false
+  temperature:
+    enabled: false
+  transport:
+    mode: direct
 sinks:
-  mode: "sublimation"
+  mode: sublimation
   enable_sublimation: true    # disabled by collisions_only
   enable_gas_drag: false
 
 radiation:
-  source: "mars"
+  source: mars
   use_mars_rp: true
   use_solar_rp: false
   TM_K: 2000.0
-  qpr_table_path: "data/qpr_table.csv"
+  qpr_table_path: data/qpr_table.csv
 
 shielding:
-  mode: "psitau"
+  mode: psitau
 
+  table_path: tables/phi_const_0p37.csv
 blowout:
   enabled: true
 
 numerics:
-  t_end_years: null        # fall back to scope.analysis_years=2 yr
-  dt_init: "auto"
+  t_end_years:             # fall back to scope.analysis_years=2 yr
+  dt_init: auto
   eval_per_step: true
   orbit_rollup: true
 
 io:
-  outdir: "out/examples/phase9_collisions_only"
+  outdir: out/examples/phase9_collisions_only
+init_tau1:
+  enabled: false
+  scale_to_tau1: false
+optical_depth:
+  tau0_target: 1.0
+  tau_stop: 2.302585092994046
+  tau_stop_tol: 1e-06
+  tau_field: tau_los

@@ -53,6 +53,8 @@ class StreamingState:
         self.diag_chunks: List[Path] = []
         self.mass_budget_path: Path = self.outdir / "checks" / "mass_budget.csv"
         self.mass_budget_header_written = False
+        self.mass_budget_cells_path: Path = self.outdir / "checks" / "mass_budget_cells.csv"
+        self.mass_budget_cells_header_written = False
         self.step_diag_header_written = False
 
     def _estimate_bytes(self, history: ZeroDHistory) -> float:
@@ -60,8 +62,9 @@ class StreamingState:
         psd_bytes = len(history.psd_hist_records) * MEMORY_PSD_ROW_BYTES
         diag_bytes = len(history.diagnostics) * MEMORY_DIAG_ROW_BYTES
         budget_bytes = len(history.mass_budget) * MEMORY_RUN_ROW_BYTES
+        budget_cells_bytes = len(history.mass_budget_cells) * MEMORY_RUN_ROW_BYTES
         step_diag_bytes = len(history.step_diag_records) * MEMORY_DIAG_ROW_BYTES
-        return run_bytes + psd_bytes + diag_bytes + budget_bytes + step_diag_bytes
+        return run_bytes + psd_bytes + diag_bytes + budget_bytes + budget_cells_bytes + step_diag_bytes
 
     def should_flush(self, history: ZeroDHistory, steps_since_flush: int) -> bool:
         if not self.enabled:
@@ -109,6 +112,15 @@ class StreamingState:
             wrote = writer.append_csv(history.mass_budget, self.mass_budget_path, header=header)
             self.mass_budget_header_written = self.mass_budget_header_written or wrote
             history.mass_budget.clear()
+        if history.mass_budget_cells:
+            header = not self.mass_budget_cells_header_written
+            wrote = writer.append_csv(
+                history.mass_budget_cells,
+                self.mass_budget_cells_path,
+                header=header,
+            )
+            self.mass_budget_cells_header_written = self.mass_budget_cells_header_written or wrote
+            history.mass_budget_cells.clear()
         if self.step_diag_enabled and history.step_diag_records and self.step_diag_path is not None:
             header = not self.step_diag_header_written
             wrote = writer.append_step_diagnostics(
