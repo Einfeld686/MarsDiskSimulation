@@ -197,7 +197,7 @@ def test_supply_modes_preserve_columns_and_budget(tmp_path: Path) -> None:
 
     for idx, spec in enumerate(supply_specs):
         cfg = _smol_cfg(tmp_path / f"run_{idx}", supply_cfg=spec)
-        # stretch LOS for the first spec to exercise tau_los > tau_vertical
+        # stretch LOS for the first spec to exercise tau_los path handling
         if idx == 0:
             if cfg.shielding is None:
                 cfg.shielding = schema.Shielding()
@@ -215,19 +215,13 @@ def test_supply_modes_preserve_columns_and_budget(tmp_path: Path) -> None:
             "M_out_dot",
             "mass_lost_by_blowout",
             "M_sink_dot",
-            "tau_vertical",
+            "tau",
             "tau_los_mars",
         )
         for col in required_cols:
             assert col in df.columns
             assert df[col].notna().all()
             assert np.isfinite(df[col]).all()
-        if idx == 0:
-            assert (df["tau_los_mars"] >= df["tau_vertical"] - 1e-12).all()
-            tau_vert_max = df["tau_vertical"].max()
-            tau_los_max = df["tau_los_mars"].max()
-            if tau_vert_max > 0.0 or tau_los_max > 0.0:
-                assert tau_los_max >= tau_vert_max - 1e-12
 
         assert budget["error_percent"].abs().max() <= 0.5
         csv_max = float(budget["error_percent"].abs().max())

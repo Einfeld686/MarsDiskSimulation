@@ -65,7 +65,7 @@
 | ゲイン          | 1.0          | `SUPPLY_FEEDBACK_GAIN`           |
 | 応答時間        | 0.5 年       | `SUPPLY_FEEDBACK_RESPONSE_YR`    |
 | スケール範囲    | [0.0, 10.0]  | `SUPPLY_FEEDBACK_MIN/MAX_SCALE`  |
-| τフィールド     | tau_vertical | `SUPPLY_FEEDBACK_TAU_FIELD`      |
+| τフィールド     | tau_los | `SUPPLY_FEEDBACK_TAU_FIELD`      |
 
 **温度カップリング**（デフォルト有効）:
 | 項目             | デフォルト値   | 環境変数                         |
@@ -103,4 +103,3 @@
 | [analysis/glossary.md](../../analysis/glossary.md) | 用語・記号の定義一覧 |
 | [analysis/AI_USAGE.md](../../analysis/AI_USAGE.md) | AI・自動化ツール向けの実行ガイド |
 | [analysis/run-recipes.md](../../analysis/run-recipes.md) | 代表的な実行レシピ集 |
-

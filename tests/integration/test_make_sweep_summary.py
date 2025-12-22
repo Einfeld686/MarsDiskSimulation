@@ -12,9 +12,9 @@ import pytest
 def mock_batch_dir(tmp_path: Path) -> Path:
     """Create a mock batch directory with minimal sweep structure."""
     cases = [
-        ("T6000_mu1p0_phi20", {"M_loss": 1.5e-10, "supply_clip_time_fraction": 0.05}),
-        ("T6000_mu0p5_phi20", {"M_loss": 0.8e-10, "supply_clip_time_fraction": 0.10}),
-        ("T4000_mu1p0_phi20", {"M_loss": 0.5e-10, "supply_clip_time_fraction": 0.02}),
+        ("T6000_eps1p0_tau1p0", {"M_loss": 1.5e-10, "supply_clip_time_fraction": 0.05}),
+        ("T6000_eps0p5_tau1p0", {"M_loss": 0.8e-10, "supply_clip_time_fraction": 0.10}),
+        ("T4000_eps1p0_tau1p0", {"M_loss": 0.5e-10, "supply_clip_time_fraction": 0.02}),
     ]
     for name, summary_data in cases:
         case_dir = tmp_path / name
@@ -25,24 +25,24 @@ def mock_batch_dir(tmp_path: Path) -> Path:
 
 
 def test_parse_dir_name():
-    """Test directory name parsing for T, mu, phi extraction."""
+    """Test directory name parsing for T, epsilon_mix, tau0 extraction."""
     from tools.plotting.make_sweep_summary import parse_dir_name
 
     # Standard format
-    result = parse_dir_name("T6000_mu1p0_phi20")
+    result = parse_dir_name("T6000_eps1p0_tau1p0")
     assert result is not None
-    T, mu, phi = result
+    T, eps, tau0 = result
     assert T == 6000.0
-    assert mu == 1.0
-    assert phi == 0.20
+    assert eps == 1.0
+    assert tau0 == 1.0
 
     # Decimal format
-    result = parse_dir_name("T4000_mu0p5_phi37")
+    result = parse_dir_name("T4000_eps0p5_tau0p5")
     assert result is not None
-    T, mu, phi = result
+    T, eps, tau0 = result
     assert T == 4000.0
-    assert mu == 0.5
-    assert phi == 0.37
+    assert eps == 0.5
+    assert tau0 == 0.5
 
     # Invalid format
     result = parse_dir_name("invalid_dir_name")
@@ -70,7 +70,7 @@ def test_cases_to_dataframe(mock_batch_dir: Path):
 
     assert "T_M" in df.columns
     assert "epsilon_mix" in df.columns
-    assert "phi" in df.columns
+    assert "tau0" in df.columns
     assert "M_loss" in df.columns
     assert "supply_clip_time_fraction" in df.columns
     assert len(df) == 3
@@ -105,7 +105,7 @@ def test_missing_summary_json(tmp_path: Path):
     from tools.plotting.make_sweep_summary import discover_cases
 
     # Create directory with valid name but no summary.json
-    case_dir = tmp_path / "T6000_mu1p0_phi20"
+    case_dir = tmp_path / "T6000_eps1p0_tau1p0"
     case_dir.mkdir()
 
     cases = discover_cases(tmp_path)

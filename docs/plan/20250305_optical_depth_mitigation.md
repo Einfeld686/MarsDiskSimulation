@@ -100,7 +100,7 @@ supply:
   feedback:
     enabled: true
     target_tau: 0.8
-    tau_field: "tau_vertical"  # or "tau_los"
+    tau_field: "tau_los"
     gain: 1.5
     response_time_years: 0.4
 ```

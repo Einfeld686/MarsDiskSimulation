@@ -20,7 +20,7 @@
 - Out: 1D拡張、温度スケール/τフィードバック/有限リザーバ、深部混合モデルの新規拡張
 
 ## デフォルト化と非推奨方針（重要）
-この文書の方式（optical_depth + mu_orbit10pct + τ停止判定）を**0Dのデフォルト**とする。これ以外の外部供給・頭打ち・補助モードは**非推奨**として扱い、互換性目的でのみ残す。
+この文書の方式（optical_depth + mu_orbit10pct + τ停止判定）を**0Dのデフォルト**とする。外部供給のデフォルト参照は `docs/plan/20251220_optical_depth_external_supply_impl_plan.md` と `~/.codex/plans/marsdisk-tau-sweep-phi-off.md` に限定し、それ以外の外部供給スイッチは**非推奨・削除候補**として扱い、互換性目的でのみ残す。
 
 ### デフォルトとして採用する挙動
 - `optical_depth` を有効化し、初期 `Sigma_surf0` を `tau0_target` と `kappa_eff0` から決める。
@@ -35,6 +35,7 @@
 - `supply.temperature.*`（温度スケール）
 - `supply.reservoir.*`（有限リザーバ）
 - `init_tau1.scale_to_tau1`（`optical_depth` と排他のため、既定では使わない）
+- `supply.mode` の非 `const` 設定、および `supply.injection` / `supply.injection.velocity` の**非デフォルト値**（現時点では完全廃止せず、非デフォルト使用時のみ警告）
 
 ### 移行の指針
 - 旧モードを使っている設定は、`optical_depth` + `mu_orbit10pct` に置き換える。
@@ -53,7 +54,7 @@
 - `tests/`
 
 ## スキーマ/APIの変更点
-- `optical_depth.tau0_target`, `tau_stop`, `tau_stop_tol`, `tau_field` を追加（既定は `tau_los` 固定、`tau_vertical` は v1 で扱わない）。
+- `optical_depth.tau0_target`, `tau_stop`, `tau_stop_tol`, `tau_field` を追加（既定は `tau_los` 固定）。
 - `supply.const.mu_orbit10pct`, `orbit_fraction_at_mu1` を追加（新しい供給パラメータはこの名称に限定）。
 - `supply.mixing.mu`（`epsilon_mix` エイリアス）は廃止し、設定キーとしては受け付けない。
 - 旧 μ（E.027a 相当）は診断・ツール側の導出値としてのみ保持し、設定に使わない。
@@ -116,9 +117,8 @@
 - 光学的厚さはスカラー診断で、停止判定もこのスカラーで行う。
 
 ### 光学的厚さの定義
-- 垂直方向（vertical）: `tau_vertical = kappa_surf * Sigma_surf`
 - LOS補正: `los_factor = max(path_multiplier / h_over_r, 1.0)`
-- 視線方向（LOS）: `tau_los = tau_vertical * los_factor`
+- 視線方向（LOS）: `tau_los = kappa_surf * Sigma_surf * los_factor`
 - 停止条件: `tau_los > tau_stop * (1 + tau_stop_tol)`
 - 停止判定で使う係数: `kappa_for_stop = kappa_eff (finiteなら) / kappa_surf (fallback)`
 

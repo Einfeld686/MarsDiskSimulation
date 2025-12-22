@@ -101,7 +101,7 @@ scripts/research/run_temp_supply_sweep.sh
 
 | ファイル | 内容 | 確認ポイント |
 |----------|------|--------------|
-| `series/run.parquet` | 全ステップの時系列データ | `supply_rate_applied`, `headroom`, `tau_vertical` |
+| `series/run.parquet` | 全ステップの時系列データ | `supply_rate_applied`, `headroom`, `tau_los_mars` |
 | `summary.json` | 実行結果の集約 | `M_loss`, `supply_clip_time_fraction`, `case_status` |
 | `run_config.json` | 実行時のパラメータ記録 | `physics_controls`, `supply` セクション |
 | `checks/mass_budget.csv` | 質量収支検査ログ | `error_percent < 0.5%` |
@@ -115,7 +115,7 @@ scripts/research/run_temp_supply_sweep.sh
 |------|------|------|
 | `M_loss` | 総質量損失（ブローアウト＋シンク） | M_Mars |
 | `supply_clip_time_fraction` | 供給がクリップされた時間割合 | 無次元 |
-| `tau_vertical` | 最終ステップの垂直光学深度 | 無次元 |
+| `stop_tau_los` | 早期停止時の τ_los | 無次元 |
 | `case_status` | 結果分類（`ok`, `blowout`, `no_blowout`） | 文字列 |
 | `effective_prod_rate_kg_m2_s` | 実効供給率の平均 | kg m⁻² s⁻¹ |
 
@@ -140,7 +140,7 @@ scripts/research/run_temp_supply_sweep.sh
 | 症状 | 原因と対処 |
 |------|------------|
 | `supply_clip_factor` が常に 0 | ヘッドルームがゼロ。初期 Σ が Σ_τ=1 を超えている可能性。`INIT_SCALE_TO_TAU1=true` を確認 |
-| `tau_vertical > 1` が継続 | 遮蔽テーブルパスが間違っている、または `shielding.mode` が正しくない |
+| `tau_los > 1` が継続 | 遮蔽テーブルパスが間違っている、または `shielding.mode` が正しくない |
 | parquet 書き出し失敗 | `pyarrow` 未インストール。`pip install pyarrow` を実行 |
 | プログレスバーが表示されない | TTY でない（リダイレクト先へ出力中）。`ENABLE_PROGRESS=1` でも無視される |
 | 大量のディスク消費 | 高解像度スイープ。完了後に不要なケースを削除するか `OUT_ROOT` を外付けへ |

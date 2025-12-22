@@ -44,6 +44,7 @@ class CheckpointState:
     rng_state_numpy: Any
     rng_state_generator: Any
     rng_state_python: Any
+    progress_state: Optional[Dict[str, Any]] = None
 
     def supply_state_as_runtime(self) -> Optional[supply.SupplyRuntimeState]:
         if not self.supply_state:

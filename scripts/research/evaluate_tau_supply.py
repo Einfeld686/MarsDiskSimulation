@@ -2,7 +2,7 @@
 """Evaluate tau≈1 と供給維持の成否を run 出力から判定する簡易スクリプト。
 
 デフォルトでは run.parquet の後半 50% を評価区間とし、以下をチェックする（本番用閾値）:
-- tau_vertical（なければ tau）の中央値が 0.5–2
+- tau_los_mars（なければ tau）の中央値が 0.5–2
 - prod_subblow_area_rate が設定供給（dotSigma_prod 目安）の 90%以上を連続して維持する期間が
   min_duration（既定 0.1 日）以上存在
 
@@ -19,6 +19,11 @@ from typing import Sequence
 
 import numpy as np
 import pandas as pd
+
+try:  # optional fast schema check for selective column reads
+    import pyarrow.parquet as pq
+except Exception:  # pragma: no cover - fallback when pyarrow missing
+    pq = None
 
 
 def _load_target_rate(run_dir: Path, override: float | None) -> float | None:
@@ -56,6 +61,34 @@ def _safe_median(series: pd.Series) -> float:
     return float(np.median(values))
 
 
+def _read_series(run_path: Path) -> pd.DataFrame:
+    desired = [
+        "time",
+        "prod_subblow_area_rate",
+        "tau",
+        "tau_los_mars",
+        "Sigma_surf0",
+        "t_orb_s",
+    ]
+    if pq is not None:
+        try:
+            schema = pq.read_schema(run_path)
+            available = [col for col in desired if col in schema.names]
+            if available:
+                df = pd.read_parquet(run_path, columns=available)
+            else:
+                df = pd.read_parquet(run_path)
+        except Exception:
+            df = pd.read_parquet(run_path)
+    else:
+        df = pd.read_parquet(run_path)
+    if "tau_los_mars" not in df.columns and "tau" in df.columns:
+        df["tau_los_mars"] = df["tau"]
+    if "tau" not in df.columns and "tau_los_mars" in df.columns:
+        df["tau"] = df["tau_los_mars"]
+    return df
+
+
 def evaluate_run(
     run_dir: Path,
     *,
@@ -67,17 +100,7 @@ def evaluate_run(
     run_path = run_dir / "series" / "run.parquet"
     if not run_path.exists():
         raise FileNotFoundError(f"run.parquet not found under {run_dir}")
-    df = pd.read_parquet(
-        run_path,
-        columns=[
-            "time",
-            "prod_subblow_area_rate",
-            "tau",
-            "tau_vertical",
-            "Sigma_surf0",
-            "t_orb_s",
-        ],
-    )
+    df = _read_series(run_path)
     target = _load_target_rate(run_dir, target_rate)
     if target is None:
         rc_path = run_dir / "run_config.json"
@@ -94,7 +117,7 @@ def evaluate_run(
             if np.isfinite(sigma0) and sigma0 > 0.0 and np.isfinite(t_orb) and t_orb > 0.0:
                 target = float(mu_orbit) * float(orbit_fraction) * sigma0 / t_orb
     t_max = float(df["time"].max())
-    tau_col = "tau_vertical" if "tau_vertical" in df.columns else "tau"
+    tau_col = "tau_los_mars" if "tau_los_mars" in df.columns else "tau"
     per_span = []
     any_success = False
     for span in window_spans:

@@ -90,6 +90,9 @@ def validate_config(config: "Config") -> ValidationResult:
     # --- 6. 物理モデル間の整合性 ---
     messages.extend(_check_physics_consistency(config))
 
+    # --- 7. 外部供給のデフォルト逸脱 ---
+    messages.extend(_check_external_supply_defaults(config))
+
     return ValidationResult(messages)
 
 
@@ -289,6 +292,135 @@ def _check_physics_consistency(config: "Config") -> List[ValidationMessage]:
             "PHYS002",
             f"wavy補正有効だが alpha ({alpha}) が Dohnanyi (1.83) から乖離",
             "wavy 構造は衝突平衡 PSD を前提としています"
+        ))
+
+    return msgs
+
+
+def _check_external_supply_defaults(config: "Config") -> List[ValidationMessage]:
+    """外部供給のデフォルト構成からの逸脱チェック"""
+    msgs: List[ValidationMessage] = []
+    supply = getattr(config, "supply", None)
+    if supply is None or not getattr(supply, "enabled", True):
+        return msgs
+
+    non_default: List[str] = []
+
+    if getattr(config, "optical_depth", None) is None:
+        non_default.append("optical_depth disabled")
+
+    supply_mode = getattr(supply, "mode", "const")
+    if supply_mode != "const":
+        non_default.append(f"supply.mode='{supply_mode}'")
+
+    const_cfg = getattr(supply, "const", None)
+    if const_cfg is not None:
+        if getattr(const_cfg, "auto_from_tau1_tfill_years", None) is not None:
+            non_default.append("supply.const.auto_from_tau1_tfill_years set")
+        mu_orbit = getattr(const_cfg, "mu_orbit10pct", None)
+        if supply_mode == "const" and mu_orbit is None:
+            prod_rate = float(getattr(const_cfg, "prod_area_rate_kg_m2_s", 0.0) or 0.0)
+            if abs(prod_rate) > 0.0:
+                non_default.append("supply.const.prod_area_rate_kg_m2_s without mu_orbit10pct")
+            else:
+                non_default.append("supply.const.mu_orbit10pct not set")
+        orbit_fraction = getattr(const_cfg, "orbit_fraction_at_mu1", None)
+        if orbit_fraction is not None and math.isfinite(float(orbit_fraction)):
+            if abs(float(orbit_fraction) - 0.10) > 1.0e-6:
+                non_default.append(f"supply.const.orbit_fraction_at_mu1={float(orbit_fraction):.3g}")
+        mu_reference_tau = getattr(const_cfg, "mu_reference_tau", None)
+        if mu_reference_tau is not None and math.isfinite(float(mu_reference_tau)):
+            if abs(float(mu_reference_tau) - 1.0) > 1.0e-6:
+                non_default.append(f"supply.const.mu_reference_tau={float(mu_reference_tau):.3g}")
+
+    headroom_policy = getattr(supply, "headroom_policy", "clip")
+    if headroom_policy != "clip":
+        non_default.append(f"supply.headroom_policy='{headroom_policy}'")
+
+    transport = getattr(supply, "transport", None)
+    if transport is not None:
+        default_transport = transport.__class__()
+        transport_flags: List[str] = []
+        if transport.mode != default_transport.mode:
+            transport_flags.append(f"mode='{transport.mode}'")
+        if transport.headroom_gate != default_transport.headroom_gate:
+            transport_flags.append(f"headroom_gate='{transport.headroom_gate}'")
+        t_mix = getattr(transport, "t_mix_orbits", None)
+        if t_mix is not None and math.isfinite(float(t_mix)) and float(t_mix) > 0.0:
+            transport_flags.append(f"t_mix_orbits={float(t_mix):.3g}")
+        if transport_flags:
+            non_default.append(f"supply.transport ({', '.join(transport_flags)})")
+
+    injection = getattr(supply, "injection", None)
+    if injection is not None:
+        default_injection = injection.__class__()
+        injection_flags: List[str] = []
+        if injection.mode != default_injection.mode:
+            injection_flags.append(f"mode='{injection.mode}'")
+        if injection.s_inj_min is not None:
+            injection_flags.append(f"s_inj_min={float(injection.s_inj_min):.3g}")
+        if injection.s_inj_max is not None:
+            injection_flags.append(f"s_inj_max={float(injection.s_inj_max):.3g}")
+        if not math.isclose(float(injection.q), float(default_injection.q), rel_tol=1e-9, abs_tol=0.0):
+            injection_flags.append(f"q={float(injection.q):.3g}")
+        deep_tmix = getattr(injection, "deep_reservoir_tmix_orbits", None)
+        if deep_tmix is not None and math.isfinite(float(deep_tmix)) and float(deep_tmix) > 0.0:
+            injection_flags.append(f"deep_reservoir_tmix_orbits={float(deep_tmix):.3g}")
+        if injection_flags:
+            non_default.append(f"supply.injection ({', '.join(injection_flags)})")
+
+        velocity = getattr(injection, "velocity", None)
+        if velocity is not None:
+            default_velocity = velocity.__class__()
+            velocity_flags: List[str] = []
+            if velocity.mode != default_velocity.mode:
+                velocity_flags.append(f"mode='{velocity.mode}'")
+            if velocity.e_inj is not None:
+                velocity_flags.append(f"e_inj={float(velocity.e_inj):.3g}")
+            if velocity.i_inj is not None:
+                velocity_flags.append(f"i_inj={float(velocity.i_inj):.3g}")
+            if velocity.vrel_factor is not None:
+                velocity_flags.append(f"vrel_factor={float(velocity.vrel_factor):.3g}")
+            if velocity.blend_mode != default_velocity.blend_mode:
+                velocity_flags.append(f"blend_mode='{velocity.blend_mode}'")
+            if velocity.weight_mode != default_velocity.weight_mode:
+                velocity_flags.append(f"weight_mode='{velocity.weight_mode}'")
+            if velocity_flags:
+                non_default.append(f"supply.injection.velocity ({', '.join(velocity_flags)})")
+
+    def _dump_model(model: object) -> dict:
+        if hasattr(model, "model_dump"):
+            return model.model_dump()
+        return model.dict()  # type: ignore[call-arg]
+
+    def _has_non_default(model: object) -> bool:
+        default_model = model.__class__()
+        current_data = _dump_model(model)
+        default_data = _dump_model(default_model)
+        for key, value in current_data.items():
+            if value != default_data.get(key):
+                return True
+        return False
+
+    feedback = getattr(supply, "feedback", None)
+    if feedback is not None and _has_non_default(feedback):
+        non_default.append("supply.feedback configured")
+
+    temperature = getattr(supply, "temperature", None)
+    if temperature is not None and _has_non_default(temperature):
+        non_default.append("supply.temperature configured")
+
+    reservoir = getattr(supply, "reservoir", None)
+    if reservoir is not None and _has_non_default(reservoir):
+        non_default.append("supply.reservoir configured")
+
+    if non_default:
+        msgs.append(ValidationMessage(
+            Severity.WARNING,
+            "SUPPLY001",
+            "外部供給設定がデフォルト構成から逸脱しています: " + ", ".join(non_default),
+            "docs/plan/20251220_optical_depth_external_supply_impl_plan.md と "
+            "~/.codex/plans/marsdisk-tau-sweep-phi-off.md を参照し、非推奨スイッチは感度試験に限定"
         ))
 
     return msgs

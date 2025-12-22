@@ -85,7 +85,7 @@ temp_supply_sweep/<timestamp>__<git_sha>__seed<N>/
 
 **Core quantities:**
 - `time`, `dt` — Time and timestep [s]
-- `tau`, `tau_vertical`, `tau_los_mars` — Optical depths
+- `tau`, `tau_los_mars` — Optical depths
 - `M_out_dot`, `M_sink_dot` — Mass loss rates [M_Mars/s]
 - `M_loss_cum`, `mass_lost_by_blowout`, `mass_lost_by_sinks` — Cumulative losses [M_Mars]
 - `s_min`, `a_blow` — Size limits [m]

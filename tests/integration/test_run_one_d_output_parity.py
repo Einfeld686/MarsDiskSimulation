@@ -14,6 +14,12 @@ from tools.pipeline.evaluation_system import (
     REQUIRED_SUMMARY_FIELDS,
     SERIES_COLUMN_ALIASES,
 )
+from marsdisk.output_schema import (
+    ZERO_D_SERIES_KEYS,
+    ZERO_D_DIAGNOSTIC_KEYS,
+    ONE_D_EXTRA_SERIES_KEYS,
+    ONE_D_EXTRA_DIAGNOSTIC_KEYS,
+)
 
 from one_d_helpers import run_one_d_case
 
@@ -34,6 +40,8 @@ def test_run_one_d_required_outputs(tmp_path: Path) -> None:
     assert all(name in run_df.columns for name in REQUIRED_SERIES_COLUMNS)
     for alias_group in SERIES_COLUMN_ALIASES:
         assert any(col in run_df.columns for col in alias_group)
+    assert all(name in run_df.columns for name in ZERO_D_SERIES_KEYS)
+    assert all(name in run_df.columns for name in ONE_D_EXTRA_SERIES_KEYS)
 
     assert all(name in summary for name in REQUIRED_SUMMARY_FIELDS)
 
@@ -42,3 +50,9 @@ def test_run_one_d_required_outputs(tmp_path: Path) -> None:
 
     rollup = pd.read_csv(outdir / "orbit_rollup.csv")
     assert all(name in rollup.columns for name in ORBIT_ROLLUP_COLUMNS)
+
+    diag_path = outdir / "series" / "diagnostics.parquet"
+    assert diag_path.exists()
+    diag_df = pd.read_parquet(diag_path)
+    assert all(name in diag_df.columns for name in ZERO_D_DIAGNOSTIC_KEYS)
+    assert all(name in diag_df.columns for name in ONE_D_EXTRA_DIAGNOSTIC_KEYS)

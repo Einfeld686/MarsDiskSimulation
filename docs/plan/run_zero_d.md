@@ -38,7 +38,7 @@
 
 ## 2.1 デフォルト/非推奨方針（全シミュレーション共通）
 
-本ドキュメントの外部供給方針を **0Dシミュレーションのデフォルト**とし、以後の全シミュレーションはこれを前提にする。
+本ドキュメントの外部供給方針を **0Dシミュレーションのデフォルト**とし、以後の全シミュレーションはこれを前提にする。外部供給のデフォルト参照は `docs/plan/20251220_optical_depth_external_supply_impl_plan.md` と `~/.codex/plans/marsdisk-tau-sweep-phi-off.md` に限定し、それ以外の外部供給スイッチは非推奨・削除候補として扱う。
 
 **デフォルトとして採用する挙動**
 - `optical_depth` を有効化し、初期表層を `tau0_target` で規定する。
@@ -53,6 +53,7 @@
 - `supply.temperature.*`（温度スケール）
 - `supply.reservoir.*`（有限リザーバ）
 - `init_tau1.scale_to_tau1`（`optical_depth` と排他のため既定では使わない）
+- `supply.mode` の非 `const` 設定、および `supply.injection` / `supply.injection.velocity` の**非デフォルト値**（現時点では完全廃止せず、非デフォルト使用時のみ警告）
 
 これらは感度試験・比較用としてのみ使用し、デフォルト系と混同しない。
 
