@@ -78,7 +78,7 @@ if not defined SUPPLY_FEEDBACK_GAIN set "SUPPLY_FEEDBACK_GAIN=1.0"
 if not defined SUPPLY_FEEDBACK_RESPONSE_YR set "SUPPLY_FEEDBACK_RESPONSE_YR=0.5"
 if not defined SUPPLY_FEEDBACK_MIN_SCALE set "SUPPLY_FEEDBACK_MIN_SCALE=0.0"
 if not defined SUPPLY_FEEDBACK_MAX_SCALE set "SUPPLY_FEEDBACK_MAX_SCALE=10.0"
-if not defined SUPPLY_FEEDBACK_TAU_FIELD set "SUPPLY_FEEDBACK_TAU_FIELD=tau_vertical"
+if not defined SUPPLY_FEEDBACK_TAU_FIELD set "SUPPLY_FEEDBACK_TAU_FIELD=tau_los"
 if not defined SUPPLY_FEEDBACK_INITIAL set "SUPPLY_FEEDBACK_INITIAL=1.0"
 if not defined SUPPLY_TEMP_ENABLED set "SUPPLY_TEMP_ENABLED=0"
 if not defined SUPPLY_TEMP_MODE set "SUPPLY_TEMP_MODE=scale"
@@ -128,7 +128,7 @@ echo.[config] shielding: mode=%SHIELDING_MODE% fixed_tau1_sigma=%SHIELDING_SIGMA
 echo.[config] injection: mode=%SUPPLY_INJECTION_MODE% q=%SUPPLY_INJECTION_Q% s_inj_min=%SUPPLY_INJECTION_SMIN% s_inj_max=%SUPPLY_INJECTION_SMAX%
 echo.[config] transport: mode=%SUPPLY_TRANSPORT_MODE% t_mix=%SUPPLY_TRANSPORT_TMIX_ORBITS% headroom_gate=%SUPPLY_TRANSPORT_HEADROOM% velocity=%SUPPLY_VEL_MODE%
 echo.[config] external supply: mu_orbit10pct=%SUPPLY_MU_ORBIT10PCT% orbit_fraction_at_mu1=%SUPPLY_ORBIT_FRACTION% (epsilon_mix swept per EPS_LIST)
-echo.[config] optical_depth: tau0_target=%OPTICAL_TAU0_TARGET% tau_stop=%OPTICAL_TAU_STOP% tau_stop_tol=%OPTICAL_TAU_STOP_TOL%
+echo.[config] optical_depth: tau0_target_list=%TAU_LIST% tau_stop=%OPTICAL_TAU_STOP% tau_stop_tol=%OPTICAL_TAU_STOP_TOL%
 echo.[config] fast blowout substep: enabled=%SUBSTEP_FAST_BLOWOUT% substep_max_ratio=%SUBSTEP_MAX_RATIO%
 echo.[config] !COOL_STATUS!
 echo.[config] cooling driver mode: %COOL_MODE% (slab: T^-3, hyodo: linear flux)
@@ -273,7 +273,7 @@ for %%T in (%T_LIST%) do (
       >>"!PYSCRIPT!" echo series_cols = [
       >>"!PYSCRIPT!" echo     "time","dt","M_out_dot","M_sink_dot","mass_lost_by_blowout","mass_lost_by_sinks",
       >>"!PYSCRIPT!" echo     "mass_total_bins","prod_subblow_area_rate","Sigma_surf","sigma_surf",
-      >>"!PYSCRIPT!" echo     "tau","tau_vertical","tau_eff","t_blow","dt_over_t_blow"
+      >>"!PYSCRIPT!" echo     "tau","tau_los_mars","tau_eff","t_blow","dt_over_t_blow"
       >>"!PYSCRIPT!" echo ]
       >>"!PYSCRIPT!" echo def load_series():
       >>"!PYSCRIPT!" echo     if series_path.exists():
@@ -320,8 +320,8 @@ for %%T in (%T_LIST%) do (
       >>"!PYSCRIPT!" echo ax_cum.grid(True, alpha=0.3)
       >>"!PYSCRIPT!" echo
       >>"!PYSCRIPT!" echo # tau and supply
-      >>"!PYSCRIPT!" echo if "tau_vertical" in df:
-      >>"!PYSCRIPT!" echo     ax_tau.plot(years, df["tau_vertical"], label="tau_vertical", color="tab:blue")
+      >>"!PYSCRIPT!" echo if "tau_los_mars" in df:
+      >>"!PYSCRIPT!" echo     ax_tau.plot(years, df["tau_los_mars"], label="tau_los_mars", color="tab:blue")
       >>"!PYSCRIPT!" echo if "tau_eff" in df:
       >>"!PYSCRIPT!" echo     ax_tau.plot(years, df["tau_eff"], label="tau_eff", color="tab:cyan")
       >>"!PYSCRIPT!" echo ax_tau.set_ylabel("tau")

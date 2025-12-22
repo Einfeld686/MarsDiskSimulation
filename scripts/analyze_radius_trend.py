@@ -131,8 +131,7 @@ def collect_metrics(case_dir: Path) -> dict[str, float | str]:
 
     summary = json.loads(summary_path.read_text())
 
-    tau_vertical = float(row.get("tau_vertical", row.get("tau", float("nan"))))
-    tau_los = float(row.get("tau_los_mars", tau_vertical))
+    tau_los = float(row.get("tau_los_mars", row.get("tau", float("nan"))))
     record = {
         "case_dir": str(case_dir),
         "time_final_s": float(row["time"]),
@@ -158,7 +157,6 @@ def collect_metrics(case_dir: Path) -> dict[str, float | str]:
         "fast_blowout_factor_avg": fast_factor_avg,
         "tau_final": tau_los,
         "tau_los_mars": tau_los,
-        "tau_vertical": tau_vertical,
         "s_min_series": float(row["s_min"]),
         "s_min_summary": float(summary.get("s_min_effective", row["s_min"])),
         "beta_at_smin_effective": float(summary.get("beta_at_smin_effective", float("nan"))),

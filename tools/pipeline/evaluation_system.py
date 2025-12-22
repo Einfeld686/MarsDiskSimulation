@@ -228,7 +228,6 @@ def _check_required_outputs(ctx: EvaluationContext) -> Tuple[bool, str]:
 SERIES_COLUMN_ALIASES = [
     ("tau_los_mars", "tau_mars_line_of_sight"),  # Either of these is acceptable
 ]
-OPTIONAL_SERIES_COLUMNS = ["tau_vertical"]  # Optional in legacy outputs
 
 
 def _check_series_columns(ctx: EvaluationContext) -> Tuple[bool, str]:

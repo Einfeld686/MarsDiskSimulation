@@ -8,6 +8,8 @@ import time
 
 # Keep a local constant to avoid depending on the orchestrator module.
 SECONDS_PER_YEAR = 365.25 * 24 * 3600.0
+ETA_EWMA_ALPHA = 0.1
+ETA_MIN_SAMPLES = 3
 
 
 class ProgressReporter:
@@ -35,6 +37,10 @@ class ProgressReporter:
         self._header_emitted = False
         self._isatty = sys.stdout.isatty()
         self._last_percent_int: int = -1
+        self._eta_ewma_s: float | None = None
+        self._eta_samples: int = 0
+        self._last_step_wall: float | None = None
+        self._last_step_no: int | None = None
 
     def emit_header(self) -> None:
         """Print a one-line header (e.g., memory estimate) before the bar."""
@@ -52,6 +58,7 @@ class ProgressReporter:
         if not self.enabled or self._finished:
             return
         now = time.monotonic()
+        self._update_eta(step_no, now)
         is_last = (step_no + 1) >= self.total_steps
         frac = min(max((step_no + 1) / self.total_steps, 0.0), 1.0)
         percent_tenth = int(frac * 1000)
@@ -59,7 +66,6 @@ class ProgressReporter:
             return
         self._last_percent_int = percent_tenth
         self.last = now
-        elapsed = now - self.start
         bar_width = 28
         filled = int(bar_width * frac)
         bar = "#" * filled + "-" * (bar_width - filled)
@@ -69,7 +75,14 @@ class ProgressReporter:
             remaining_s = max(self.total_time_s - sim_time_s, 0.0)
         remaining_years = remaining_s / SECONDS_PER_YEAR if math.isfinite(remaining_s) else float("nan")
         rem_text = f"rem~{remaining_years:.3g} yr" if math.isfinite(remaining_years) else "rem~?"
-        eta_seconds = (elapsed / frac - elapsed) if frac > 0.0 else float("nan")
+        remaining_steps = max(self.total_steps - (step_no + 1), 0)
+        eta_seconds = float("nan")
+        if (
+            self._eta_ewma_s is not None
+            and math.isfinite(self._eta_ewma_s)
+            and self._eta_samples >= ETA_MIN_SAMPLES
+        ):
+            eta_seconds = self._eta_ewma_s * remaining_steps
 
         def _format_eta(seconds: float) -> str:
             if not math.isfinite(seconds) or seconds < 0.0:
@@ -108,3 +121,49 @@ class ProgressReporter:
 
         sys.stdout.write(f"{message}\n")
         sys.stdout.flush()
+
+    def snapshot_state(self) -> dict[str, float | int | None] | None:
+        """Return a serialisable snapshot of ETA state for checkpoints."""
+
+        if not self.enabled:
+            return None
+        return {
+            "eta_ewma_s": float(self._eta_ewma_s) if self._eta_ewma_s is not None else None,
+            "eta_samples": int(self._eta_samples),
+        }
+
+    def restore_state(self, state: dict[str, float | int | None] | None) -> None:
+        """Restore ETA state from a checkpoint payload."""
+
+        if not state:
+            return
+        ewma_raw = state.get("eta_ewma_s")
+        samples_raw = state.get("eta_samples")
+        if ewma_raw is not None:
+            ewma_val = float(ewma_raw)
+            if math.isfinite(ewma_val) and ewma_val > 0.0:
+                self._eta_ewma_s = ewma_val
+        if samples_raw is not None:
+            try:
+                samples_val = int(samples_raw)
+            except (TypeError, ValueError):
+                samples_val = 0
+            self._eta_samples = max(samples_val, 0)
+
+    def _update_eta(self, step_no: int, now: float) -> None:
+        """Update the ETA EWMA using the latest step wall time."""
+
+        if self._last_step_wall is not None and self._last_step_no is not None:
+            step_delta = step_no - self._last_step_no
+            if step_delta > 0:
+                step_seconds = (now - self._last_step_wall) / step_delta
+                if math.isfinite(step_seconds) and step_seconds > 0.0:
+                    if self._eta_ewma_s is None:
+                        self._eta_ewma_s = step_seconds
+                    else:
+                        self._eta_ewma_s = (
+                            ETA_EWMA_ALPHA * step_seconds + (1.0 - ETA_EWMA_ALPHA) * self._eta_ewma_s
+                        )
+                    self._eta_samples += 1
+        self._last_step_wall = now
+        self._last_step_no = step_no

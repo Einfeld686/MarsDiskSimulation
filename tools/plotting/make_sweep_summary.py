@@ -7,7 +7,7 @@ Usage:
 
 Reads summary.json from each run subdirectory and produces:
 - sweep_summary.csv: Aggregated metrics for all cases
-- fig_sweep_mloss.png: M_loss heatmap (T × mu, phi panels)
+- fig_sweep_mloss.png: M_loss heatmap (T × eps, tau panels)
 - fig_sweep_clip.png: supply_clip_time_fraction heatmap
 """
 from __future__ import annotations
@@ -34,7 +34,7 @@ class SweepCase:
     run_dir: Path
     T_M: float
     epsilon_mix: float
-    phi: float
+    tau0: float
     M_loss: float = float("nan")
     M_out_cum: float = float("nan")
     M_sink_cum: float = float("nan")
@@ -42,27 +42,27 @@ class SweepCase:
     mass_budget_max_error_percent: float = float("nan")
     orbits_completed: float = float("nan")
     effective_prod_rate_kg_m2_s: float = float("nan")
-    tau_vertical_median: float = float("nan")
+    tau_los_median: float = float("nan")
     extra: Dict[str, Any] = field(default_factory=dict)
 
 
-# Pattern to extract T, mu (epsilon_mix), and phi from directory name
-# Examples: T6000_mu1p0_phi20, T4000_mu0p5_phi37
+# Pattern to extract T, epsilon_mix, and tau0 from directory name
+# Examples: T6000_eps1p0_tau1p0, T4000_eps0p5_tau0p5
 DIR_PATTERN = re.compile(
-    r"T(?P<T>\d+)_mu(?P<mu>[\d]+p[\d]+|\d+(?:\.\d+)?)_phi(?P<phi>\d+)"
+    r"T(?P<T>\d+)_eps(?P<eps>[\d]+p[\d]+|\d+(?:\.\d+)?)_tau(?P<tau>[\d]+p[\d]+|\d+(?:\.\d+)?)"
 )
 
 
 def parse_dir_name(name: str) -> Optional[tuple[float, float, float]]:
-    """Extract (T_M, epsilon_mix, phi) from directory name."""
+    """Extract (T_M, epsilon_mix, tau0) from directory name."""
     match = DIR_PATTERN.search(name)
     if not match:
         return None
     t_str = match.group("T")
-    mu_str = match.group("mu").replace("p", ".")
-    phi_str = match.group("phi")
+    eps_str = match.group("eps").replace("p", ".")
+    tau_str = match.group("tau").replace("p", ".")
     try:
-        return float(t_str), float(mu_str), float(phi_str) / 100.0
+        return float(t_str), float(eps_str), float(tau_str)
     except ValueError:
         return None
 
@@ -72,16 +72,16 @@ def load_case(run_dir: Path) -> Optional[SweepCase]:
     parsed = parse_dir_name(run_dir.name)
     if parsed is None:
         return None
-    T_M, epsilon_mix, phi = parsed
+    T_M, epsilon_mix, tau0 = parsed
 
     summary_path = run_dir / "summary.json"
     if not summary_path.exists():
-        return SweepCase(run_dir=run_dir, T_M=T_M, epsilon_mix=epsilon_mix, phi=phi)
+        return SweepCase(run_dir=run_dir, T_M=T_M, epsilon_mix=epsilon_mix, tau0=tau0)
 
     try:
         summary = json.loads(summary_path.read_text())
     except Exception:
-        return SweepCase(run_dir=run_dir, T_M=T_M, epsilon_mix=epsilon_mix, phi=phi)
+        return SweepCase(run_dir=run_dir, T_M=T_M, epsilon_mix=epsilon_mix, tau0=tau0)
 
     # Extract supply clipping info (may be nested)
     clip_frac = summary.get("supply_clip_time_fraction")
@@ -90,8 +90,8 @@ def load_case(run_dir: Path) -> Optional[SweepCase]:
         if isinstance(clip_info, dict):
             clip_frac = clip_info.get("clip_time_fraction")
 
-    # Extract tau_vertical_median if available
-    tau_median = summary.get("tau_vertical_median")
+    # Extract tau median if available
+    tau_median = summary.get("tau_los_median")
     if tau_median is None:
         tau_median = summary.get("tau_median")
 
@@ -99,7 +99,7 @@ def load_case(run_dir: Path) -> Optional[SweepCase]:
         run_dir=run_dir,
         T_M=T_M,
         epsilon_mix=epsilon_mix,
-        phi=phi,
+        tau0=tau0,
         M_loss=float(summary.get("M_loss", float("nan"))),
         M_out_cum=float(summary.get("M_out_cum", float("nan"))),
         M_sink_cum=float(summary.get("M_sink_cum", float("nan"))),
@@ -111,7 +111,7 @@ def load_case(run_dir: Path) -> Optional[SweepCase]:
         effective_prod_rate_kg_m2_s=float(
             summary.get("effective_prod_rate_kg_m2_s", float("nan"))
         ),
-        tau_vertical_median=float(tau_median) if tau_median is not None else float("nan"),
+        tau_los_median=float(tau_median) if tau_median is not None else float("nan"),
     )
 
 
@@ -136,7 +136,7 @@ def cases_to_dataframe(cases: Sequence[SweepCase]) -> pd.DataFrame:
                 "run_dir": str(c.run_dir),
                 "T_M": c.T_M,
                 "epsilon_mix": c.epsilon_mix,
-                "phi": c.phi,
+                "tau0": c.tau0,
                 "M_loss": c.M_loss,
                 "M_out_cum": c.M_out_cum,
                 "M_sink_cum": c.M_sink_cum,
@@ -144,13 +144,13 @@ def cases_to_dataframe(cases: Sequence[SweepCase]) -> pd.DataFrame:
                 "mass_budget_max_error_percent": c.mass_budget_max_error_percent,
                 "orbits_completed": c.orbits_completed,
                 "effective_prod_rate_kg_m2_s": c.effective_prod_rate_kg_m2_s,
-                "tau_vertical_median": c.tau_vertical_median,
+                "tau_los_median": c.tau_los_median,
             }
         )
     return pd.DataFrame(records)
 
 
-def plot_heatmap_by_phi(
+def plot_heatmap_by_tau(
     df: pd.DataFrame,
     value_col: str,
     out_path: Path,
@@ -159,9 +159,9 @@ def plot_heatmap_by_phi(
     vmin: Optional[float] = None,
     vmax: Optional[float] = None,
 ) -> None:
-    """Create faceted heatmap with phi as panel axis, T_M vs epsilon_mix."""
-    phi_values = sorted(df["phi"].unique())
-    n_panels = len(phi_values)
+    """Create faceted heatmap with tau0 as panel axis, T_M vs epsilon_mix."""
+    tau_values = sorted(df["tau0"].unique())
+    n_panels = len(tau_values)
     if n_panels == 0:
         return
 
@@ -173,9 +173,9 @@ def plot_heatmap_by_phi(
     T_unique = sorted(df["T_M"].unique())
     mu_unique = sorted(df["epsilon_mix"].unique())
 
-    for idx, phi_val in enumerate(phi_values):
+    for idx, tau_val in enumerate(tau_values):
         ax = axes[idx]
-        subset = df[df["phi"] == phi_val]
+        subset = df[df["tau0"] == tau_val]
 
         grid = np.full((len(T_unique), len(mu_unique)), np.nan)
         T_idx = {v: i for i, v in enumerate(T_unique)}
@@ -202,7 +202,7 @@ def plot_heatmap_by_phi(
             ],
         )
         ax.set_xlabel("epsilon_mix")
-        ax.set_title(f"phi = {phi_val:.2f}")
+        ax.set_title(f"tau0 = {tau_val:.2g}")
         if idx == 0:
             ax.set_ylabel("T_M [K]")
 
@@ -236,14 +236,14 @@ def plot_sensitivity_matrix(
     """Create a 3x3 sensitivity matrix showing M_loss across parameter combinations."""
     fig, axes = plt.subplots(3, 3, figsize=(12, 10))
 
-    # Row: fixed parameter (T, mu, phi)
+    # Row: fixed parameter (T, eps, tau0)
     # Col: metric (M_loss, supply_clip, tau_median)
     metrics = [
         ("M_loss", "M_loss [M_Mars]", "plasma"),
         ("supply_clip_time_fraction", "Supply Clip Fraction", "Reds"),
-        ("tau_vertical_median", "τ_vertical median", "Blues"),
+        ("tau_los_median", "τ_los median", "Blues"),
     ]
-    fixed_params = ["T_M", "epsilon_mix", "phi"]
+    fixed_params = ["T_M", "epsilon_mix", "tau0"]
 
     for row_idx, fixed in enumerate(fixed_params):
         other_params = [p for p in fixed_params if p != fixed]
@@ -300,7 +300,7 @@ def parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
         "--batch-dir",
         type=Path,
         required=True,
-        help="Path to temp_supply_sweep batch directory (contains T*_mu*_phi* subdirs).",
+        help="Path to temp_supply_sweep batch directory (contains T*_eps*_tau* subdirs).",
     )
     parser.add_argument(
         "--out-csv",
@@ -342,7 +342,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         return 0
 
     # Generate heatmaps
-    plot_heatmap_by_phi(
+    plot_heatmap_by_tau(
         df,
         "M_loss",
         batch_dir / "fig_sweep_mloss.png",
@@ -351,7 +351,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     )
     print(f"[info] Wrote M_loss heatmap: {batch_dir / 'fig_sweep_mloss.png'}")
 
-    plot_heatmap_by_phi(
+    plot_heatmap_by_tau(
         df,
         "supply_clip_time_fraction",
         batch_dir / "fig_sweep_clip.png",

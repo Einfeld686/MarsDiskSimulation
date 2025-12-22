@@ -637,8 +637,8 @@ def run_zero_d(
         )
         phase_temperature_input_mode = "mars_surface"
     phase_tau_field = phase_tau_field.strip().lower()
-    if phase_tau_field not in {"vertical", "los"}:
-        logger.warning("Unknown phase.tau_field=%s; defaulting to 'los'", phase_tau_field)
+    if phase_tau_field != "los":
+        logger.warning("phase.tau_field=%s ignored; LOS-only evaluation is enforced", phase_tau_field)
         phase_tau_field = "los"
     if not math.isfinite(phase_q_abs_mean) or phase_q_abs_mean <= 0.0:
         raise PhysicsError("phase.q_abs_mean must be positive and finite")
@@ -1255,7 +1255,6 @@ def run_zero_d(
     supply_feedback_tau_field = _resolve_feedback_tau_field(
         getattr(supply_feedback_cfg, "tau_field", "tau_los") if supply_feedback_cfg else "tau_los"
     )
-    use_tau_los_for_feedback = supply_feedback_tau_field == "tau_los"
     supply_feedback_target = getattr(supply_feedback_cfg, "target_tau", None) if supply_feedback_cfg else None
     supply_feedback_gain = getattr(supply_feedback_cfg, "gain", None) if supply_feedback_cfg else None
     supply_feedback_response_yr = getattr(supply_feedback_cfg, "response_time_years", None) if supply_feedback_cfg else None
@@ -1366,6 +1365,12 @@ def run_zero_d(
                 deprecated_supply_messages.append(
                     f"supply.const.orbit_fraction_at_mu1={float(supply_orbit_fraction):.3g}"
                 )
+        supply_mu_reference_tau = getattr(supply_const_cfg, "mu_reference_tau", None)
+        if supply_mu_reference_tau is not None and math.isfinite(float(supply_mu_reference_tau)):
+            if abs(float(supply_mu_reference_tau) - 1.0) > 1.0e-6:
+                deprecated_supply_messages.append(
+                    f"supply.const.mu_reference_tau={float(supply_mu_reference_tau):.3g}"
+                )
         supply_fields_set = _model_fields_set(supply_spec)
         if "headroom_policy" in supply_fields_set:
             deprecated_supply_messages.append(f"supply.headroom_policy='{supply_headroom_policy}'")
@@ -1437,8 +1442,10 @@ def run_zero_d(
     if deprecated_supply_messages:
         pending_deprecation_warnings.append(
             "External supply configuration deviates from the default optical_depth + mu_orbit10pct scheme "
-            "(docs/plan/20251220_optical_depth_external_supply_impl_plan.md). "
-            f"Deprecated settings detected: {', '.join(deprecated_supply_messages)}."
+            "(docs/plan/20251220_optical_depth_external_supply_impl_plan.md; "
+            "~/.codex/plans/marsdisk-tau-sweep-phi-off.md). "
+            "Non-default settings are deprecated removal candidates; use for sensitivity studies only. "
+            f"Detected: {', '.join(deprecated_supply_messages)}."
         )
     if getattr(cfg.init_tau1, "scale_to_tau1", False):
         pending_deprecation_warnings.append(
@@ -1484,6 +1491,7 @@ def run_zero_d(
     resume_path = Path(resume_cfg.from_path) if resume_enabled and getattr(resume_cfg, "from_path", None) else None
     start_step = 0
     time_offset = 0.0
+    progress_state_from_ckpt: Optional[Dict[str, Any]] = None
 
     quiet_mode = bool(getattr(cfg.io, "quiet", False))
     progress_cfg = getattr(cfg.io, "progress", None)
@@ -1554,6 +1562,7 @@ def run_zero_d(
                     random.setstate(state_ckpt.rng_state_python)
                 except Exception:
                     logger.warning("Failed to restore Python RNG state from checkpoint")
+                progress_state_from_ckpt = getattr(state_ckpt, "progress_state", None)
                 resume_applied = True
                 logger.info(
                     "Resumed from checkpoint %s at step=%d time=%.3e s (offset=%.3e s)",
@@ -1573,6 +1582,7 @@ def run_zero_d(
     for message in pending_deprecation_warnings:
         warnings.warn(message, DeprecationWarning, stacklevel=2)
     if resume_applied and progress_enabled:
+        progress.restore_state(progress_state_from_ckpt)
         progress.update(
             max(start_step - 1, 0),
             max(time_offset + (start_step - 1) * dt, 0.0),
@@ -1673,6 +1683,7 @@ def run_zero_d(
         if supply_state is not None:
             supply_payload = asdict(supply_state)
             supply_payload.pop("temperature_table", None)
+        progress_payload = progress.snapshot_state()
         return checkpoint_io.CheckpointState(
             version=1,
             step_no=step_no,
@@ -1693,6 +1704,7 @@ def run_zero_d(
             rng_state_numpy=np.random.get_state(),
             rng_state_generator=copy.deepcopy(rng.bit_generator.state),
             rng_state_python=random.getstate(),
+            progress_state=progress_payload,
         )
 
     def _streaming_cleanup_on_exit() -> None:
@@ -1934,7 +1946,7 @@ def run_zero_d(
         t_blow_step = chi_blow_eff / Omega_step if Omega_step > 0.0 else float("inf")
 
         sigma_for_tau_phase = sigma_surf_reference if freeze_sigma else sigma_surf
-        tau_phase_used, tau_phase_vertical, tau_phase_los = compute_phase_tau_fields(
+        tau_phase_used, tau_phase_los = compute_phase_tau_fields(
             kappa_surf,
             sigma_for_tau_phase,
             los_factor,
@@ -1954,7 +1966,6 @@ def run_zero_d(
         phase_f_vap_step = phase_decision.f_vap
         phase_payload_step = dict(phase_decision.payload)
         phase_payload_step["tau_input_before_psd"] = tau_phase_used
-        phase_payload_step["tau_phase_vertical"] = tau_phase_vertical
         phase_payload_step["tau_phase_los"] = tau_phase_los
         phase_payload_step["tau_phase_used"] = tau_phase_used
         phase_payload_step["phase_tau_field"] = phase_tau_field
@@ -1967,7 +1978,6 @@ def run_zero_d(
         phase_payload_step["phase_bulk_f_solid"] = phase_bulk_step.f_solid
         phase_payload_step["phase_bulk_f_vapor"] = phase_bulk_step.f_vapor
         phase_payload_step["allow_liquid_hkl"] = allow_liquid_hkl
-        tau_phase_vertical_last = tau_phase_vertical
         tau_phase_los_last = tau_phase_los
         tau_phase_used_last = tau_phase_used
         phase_usage[phase_state_step] += dt
@@ -2216,9 +2226,7 @@ def run_zero_d(
         e_damp_target_step = None
         t_damp_applied_step = None
 
-        tau_vert_last = None
         tau_los_last = None
-        tau_phase_vertical_last: Optional[float] = None
         tau_phase_los_last: Optional[float] = None
         tau_phase_used_last: Optional[float] = None
         phi_effective_last = None
@@ -2235,8 +2243,7 @@ def run_zero_d(
                     if freeze_sigma:
                         sigma_surf = sigma_surf_reference
                     sigma_for_tau = sigma_surf
-                    tau_vert = kappa_surf * sigma_for_tau
-                    tau_los = tau_vert * los_factor
+                    tau_los = kappa_surf * sigma_for_tau * los_factor
                     tau_eval_los = tau_los
                     phi_value = None
                     if collisions_active_step:
@@ -2244,14 +2251,14 @@ def run_zero_d(
                             kappa_eff = kappa_surf
                             sigma_tau1_limit = float("inf")
                         elif shielding_mode == "fixed_tau1":
-                            tau_target_vert = tau_fixed_target
-                            if not math.isfinite(tau_target_vert):
-                                tau_target_vert = tau_vert
+                            tau_target_los = tau_fixed_target
+                            if not math.isfinite(tau_target_los):
+                                tau_target_los = tau_los
                             if sigma_tau1_fixed_target is not None:
                                 sigma_tau1_limit = float(sigma_tau1_fixed_target)
-                                if kappa_surf > 0.0 and not math.isfinite(tau_target_vert):
-                                    tau_target_vert = kappa_surf * sigma_tau1_limit
-                            tau_eval_los = tau_target_vert * los_factor
+                                if kappa_surf > 0.0 and not math.isfinite(tau_target_los):
+                                    tau_target_los = kappa_surf * sigma_tau1_limit * los_factor
+                            tau_eval_los = tau_target_los
                             if phi_tau_fn is not None:
                                 kappa_eff = shielding.effective_kappa(kappa_surf, tau_eval_los, phi_tau_fn)
                             else:
@@ -2277,14 +2284,13 @@ def run_zero_d(
                     if kappa_surf > 0.0 and kappa_eff is not None:
                         phi_value = kappa_eff / kappa_surf
                     phi_effective_last = phi_value
-                    tau_vert_last = tau_vert
                     tau_los_last = tau_eval_los
                     enable_blowout_sub = enable_blowout_step and collisions_active_step
                     t_sink_current = t_sink_step_effective if sink_timescale_active else None
                     tau_for_coll = None
-                    if collisions_active_step and cfg.surface.use_tcoll and tau_vert > TAU_MIN:
-                        tau_for_coll = tau_vert
-                    tau_for_feedback_val = tau_eval_los if use_tau_los_for_feedback else tau_vert
+                    if collisions_active_step and cfg.surface.use_tcoll and tau_eval_los > TAU_MIN:
+                        tau_for_coll = tau_eval_los
+                    tau_for_feedback_val = tau_eval_los
                     allow_supply = allow_supply_step
                     supply_res = supply.evaluate_supply(
                         time_sub,
@@ -2359,8 +2365,7 @@ def run_zero_d(
                     time_sub += dt_sub
             else:
                 time_sub = time_start + dt
-                tau_vert_last = kappa_surf * sigma_surf
-                tau_los_last = tau_vert_last * los_factor
+                tau_los_last = kappa_surf * sigma_surf * los_factor
                 sigma_tau1_limit = None
                 kappa_eff = kappa_surf
                 sigma_tau1_active_last = None
@@ -2369,8 +2374,7 @@ def run_zero_d(
                 if freeze_sigma:
                     sigma_surf = sigma_surf_reference
                 sigma_for_tau = sigma_surf
-                tau_vert = kappa_surf * sigma_for_tau
-                tau_los = tau_vert * los_factor
+                tau_los = kappa_surf * sigma_for_tau * los_factor
                 tau_eval_los = tau_los
                 phi_value = None
                 if collisions_active_step:
@@ -2378,14 +2382,14 @@ def run_zero_d(
                         kappa_eff = kappa_surf
                         sigma_tau1_limit = float("inf")
                     elif shielding_mode == "fixed_tau1":
-                        tau_target_vert = tau_fixed_target
-                        if not math.isfinite(tau_target_vert):
-                            tau_target_vert = tau_vert
+                        tau_target_los = tau_fixed_target
+                        if not math.isfinite(tau_target_los):
+                            tau_target_los = tau_los
                         if sigma_tau1_fixed_target is not None:
                             sigma_tau1_limit = float(sigma_tau1_fixed_target)
-                            if kappa_surf > 0.0 and not math.isfinite(tau_target_vert):
-                                tau_target_vert = kappa_surf * sigma_tau1_limit
-                        tau_eval_los = tau_target_vert * los_factor
+                            if kappa_surf > 0.0 and not math.isfinite(tau_target_los):
+                                tau_target_los = kappa_surf * sigma_tau1_limit * los_factor
+                        tau_eval_los = tau_target_los
                         if phi_tau_fn is not None:
                             kappa_eff = shielding.effective_kappa(kappa_surf, tau_eval_los, phi_tau_fn)
                         else:
@@ -2411,11 +2415,10 @@ def run_zero_d(
                 if kappa_surf > 0.0 and kappa_eff is not None:
                     phi_value = kappa_eff / kappa_surf
                 phi_effective_last = phi_value
-                tau_vert_last = tau_vert
                 tau_los_last = tau_eval_los
                 enable_blowout_sub = enable_blowout_step and collisions_active_step
                 t_sink_current = t_sink_step_effective if sink_timescale_active else None
-                tau_for_feedback_val = tau_eval_los if use_tau_los_for_feedback else tau_vert
+                tau_for_feedback_val = tau_eval_los
                 allow_supply = allow_supply_step
                 supply_res = supply.evaluate_supply(
                     time_start,
@@ -2597,8 +2600,7 @@ def run_zero_d(
                 time_sub = time_start + dt
             else:
                 time_sub = time_start + dt
-                tau_vert_last = kappa_surf * sigma_surf
-                tau_los_last = tau_vert_last * los_factor
+                tau_los_last = kappa_surf * sigma_surf * los_factor
                 sigma_tau1_limit = None
                 kappa_eff = kappa_surf
                 sigma_tau1_active_last = None
@@ -2678,8 +2680,8 @@ def run_zero_d(
                 if candidate > 0.0 and math.isfinite(candidate):
                     t_solid_step = candidate
         elif blowout_gate_mode == "collision_competition":
-            if tau_vert_last is not None and tau_vert_last > TAU_MIN and Omega_step > 0.0:
-                candidate = 1.0 / (Omega_step * max(tau_vert_last, TAU_MIN))
+            if tau_los_last is not None and tau_los_last > TAU_MIN and Omega_step > 0.0:
+                candidate = 1.0 / (Omega_step * max(tau_los_last, TAU_MIN))
                 if candidate > 0.0 and math.isfinite(candidate):
                     t_solid_step = candidate
         if gate_enabled and enable_blowout_step:
@@ -2959,7 +2961,11 @@ def run_zero_d(
         tau_eff_diag = None
         if kappa_eff is not None and math.isfinite(kappa_eff):
             tau_eff_diag = kappa_eff * sigma_diag
-        if optical_depth_enabled and optical_tau_stop is not None:
+        if (
+            optical_depth_enabled
+            and optical_tau_stop is not None
+            and phase_state_last == "solid"
+        ):
             kappa_for_stop = kappa_eff if kappa_eff is not None and math.isfinite(kappa_eff) else kappa_surf
             tau_stop_los_current = float(kappa_for_stop * sigma_surf * los_factor)
             if math.isfinite(tau_stop_los_current) and tau_stop_los_current > optical_tau_stop * (
@@ -3059,12 +3065,12 @@ def run_zero_d(
         else:
             supply_clip_streak = 0
         t_coll_step = None
-        if collisions_active_step and tau_vert_last is not None and tau_vert_last > TAU_MIN and Omega_step > 0.0:
+        if collisions_active_step and tau_los_last is not None and tau_los_last > TAU_MIN and Omega_step > 0.0:
             if collision_solver_mode == "smol":
                 t_coll_candidate = t_coll_kernel_last
             else:
                 try:
-                    t_coll_candidate = surface.wyatt_tcoll_S1(float(tau_vert_last), Omega_step)
+                    t_coll_candidate = surface.wyatt_tcoll_S1(float(tau_los_last), Omega_step)
                 except Exception:
                     t_coll_candidate = None
             if t_coll_candidate is not None and math.isfinite(t_coll_candidate) and t_coll_candidate > 0.0:
@@ -3079,15 +3085,8 @@ def run_zero_d(
         ):
             ts_ratio_value = float(t_blow_step / t_coll_step)
         tau_record = tau_los_last
-        tau_vertical_record = tau_vert_last
-        if tau_record is None and tau_vert_last is not None:
-            tau_record = float(tau_vert_last * los_factor)
-        if tau_record is None or tau_vertical_record is None:
-            tau_fallback = kappa_surf * sigma_surf
         if tau_record is None:
-            tau_record = float(tau_fallback * los_factor)
-        if tau_vertical_record is None:
-            tau_vertical_record = tau_fallback
+            tau_record = float(kappa_surf * sigma_surf * los_factor)
         # Force optional numeric/string fields to concrete types to stabilise streaming chunk schemas.
         _series_optional_float_keys = {
             "t_coll",
@@ -3097,7 +3096,6 @@ def run_zero_d(
             "Sigma_tau1_active",
             "sigma_tau1",
             "Sigma_tau1_last_finite",
-            "tau_phase_vertical",
             "tau_phase_los",
             "tau_phase_used",
             "t_solid_s",
@@ -3180,7 +3178,6 @@ def run_zero_d(
             "dt_over_t_blow": dt_over_t_blow,
             "tau": tau_record,
             "tau_los_mars": tau_record,
-            "tau_vertical": tau_vertical_record,
             "a_blow_step": a_blow_step,
             "a_blow": a_blow_step,
             "a_blow_at_smin": a_blow_step,
@@ -3202,7 +3199,6 @@ def run_zero_d(
             "Sigma_tau1_active": sigma_tau1_active_last,
             "sigma_tau1": sigma_tau1_limit,
             "Sigma_tau1_last_finite": sigma_tau1_limit_last_finite,
-            "tau_phase_vertical": tau_phase_vertical_last,
             "tau_phase_los": tau_phase_los_last,
             "tau_phase_used": tau_phase_used_last,
             "phase_tau_field": phase_tau_field,
@@ -3403,13 +3399,11 @@ def run_zero_d(
 
         s_peak_value = _psd_mass_peak()
         F_abs_qpr = F_abs_geom * qpr_mean_step
-        tau_vertical_diag = tau_vert_last if tau_vert_last is not None else kappa_surf * sigma_diag
         tau_los_diag = tau_los_last if tau_los_last is not None else tau_record
         _diag_optional_float_keys = {
             "sigma_tau1",
             "sigma_tau1_active",
             "Sigma_tau1_last_finite",
-            "tau_phase_vertical",
             "tau_phase_los",
             "tau_phase_used",
             "t_sink_total_s",
@@ -3487,9 +3481,7 @@ def run_zero_d(
             "sigma_tau1": sigma_tau1_limit,
             "sigma_tau1_active": sigma_tau1_active_last,
             "Sigma_tau1_last_finite": sigma_tau1_limit_last_finite,
-            "tau_vertical": tau_vertical_diag,
             "tau_los_mars": tau_los_diag,
-            "tau_phase_vertical": tau_phase_vertical_last,
             "tau_phase_los": tau_phase_los_last,
             "tau_phase_used": tau_phase_used_last,
             "phase_tau_field": phase_tau_field,
@@ -3611,7 +3603,9 @@ def run_zero_d(
         last_mass_budget_entry = budget_entry
         mass_budget.append(budget_entry)
         if step_diag_enabled:
-            tau_surf_val = tau_vert_last if tau_vert_last is not None else kappa_surf * sigma_diag
+            tau_surf_val = (
+                tau_los_last if tau_los_last is not None else kappa_surf * sigma_diag * los_factor
+            )
             tau_surf_val = _safe_float(tau_surf_val)
             sink_sub_timescale = sink_result.components.get("sublimation")
             sink_drag_timescale = sink_result.components.get("gas_drag")
@@ -4501,6 +4495,10 @@ def run_zero_d(
             "sigma_surf0": sigma_surf0_target,
             "kappa_eff0": kappa_eff0,
         },
+        "supply_mu_orbit10pct": supply_mu_orbit_cfg,
+        "supply_mu_reference_tau": mu_reference_tau,
+        "sigma_surf_mu_reference": sigma_surf_mu_ref,
+        "supply_orbit_fraction_at_mu1": supply_orbit_fraction,
         "init_ei": {
             "e_mode": cfg.dynamics.e_mode,
             "dr_min_m": cfg.dynamics.dr_min_m,

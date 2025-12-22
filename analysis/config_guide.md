@@ -441,6 +441,8 @@ disk:
 
 ### 3.4 `supply` — 外部供給（簡略化済み）
 
+外部供給のデフォルト参照は `docs/plan/20251220_optical_depth_external_supply_impl_plan.md` と `~/.codex/plans/marsdisk-tau-sweep-phi-off.md` に限定し、それ以外の外部供給スイッチは非推奨・削除候補として扱います。`supply.mode` の非 `const` 設定や `supply.injection` / `supply.injection.velocity` の非デフォルト値は互換維持のため残していますが、**非デフォルト使用時のみ警告**（SUPPLY001）となります。
+
 選択したモードのパラメータのみ記述すれば OK。他はデフォルト値が使用されます。`mode` は `"const"` / `"table"` / `"powerlaw"` / `"piecewise"` から選択でき、全モードに共通で `mixing.epsilon_mix` を指定可能です。
 
 **μ から供給率を決める補助CLI（legacy）**
@@ -468,12 +470,13 @@ supply:
   mode: "const"
   const:
     mu_orbit10pct: 1.0
+    mu_reference_tau: 1.0
     orbit_fraction_at_mu1: 0.10
   mixing:
     epsilon_mix: 0.3
 ```
 
-`mu_orbit10pct` の基準となる `Sigma_surf0` は `optical_depth.tau0_target` と遮蔽後 κ から定義される。表層が光学的に厚くなり `tau_stop` を超過した場合は停止判定に移行する。
+`mu_orbit10pct` は `mu_reference_tau`（既定 1.0）で定義した参照光学的厚さに対応する `Sigma_ref` を基準とするため、`optical_depth.tau0_target` の掃引に依存せず同一 μ が同じ供給量を指す。表層が光学的に厚くなり `tau_stop` を超過した場合は停止判定に移行する。
 
 **例（table モード - 最小構成）:**
 
@@ -1005,6 +1008,16 @@ phase:
 
 **対処**: [移行ガイド](#5-移行ガイド) を参照
 
+#### SUPPLY001: 外部供給がデフォルト構成から逸脱
+
+```text
+[WARNING] SUPPLY001: 外部供給設定がデフォルト構成から逸脱しています
+```
+
+**意味**: `optical_depth + mu_orbit10pct` のデフォルト構成から外れた供給スイッチが有効
+
+**対処**: `docs/plan/20251220_optical_depth_external_supply_impl_plan.md` と `~/.codex/plans/marsdisk-tau-sweep-phi-off.md` を参照し、非推奨スイッチは感度試験・比較用に限定
+
 ### 7.2 よくある設定ミス
 
 | 症状 | 原因 | 解決策 |
@@ -1058,6 +1071,7 @@ python -m marsdisk.config_validator --quiet configs/scenarios/fiducial.yml
 | GAS001 | WARNING | gas_drag と rho_g の不整合 | 両方を一致させる |
 | DISK001 | WARNING | 内縁がロッシュ限界外 | r_in_RM を調整 |
 | MIGRATE001–006 | WARNING | 非推奨フィールド使用 | 新フィールドへ移行 |
+| SUPPLY001 | WARNING | 外部供給がデフォルト構成から逸脱 | デフォルト参照へ寄せる |
 
 ---
 

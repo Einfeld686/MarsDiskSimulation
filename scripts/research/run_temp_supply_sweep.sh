@@ -95,14 +95,15 @@ PHASE_TAU_FIELD="${PHASE_TAU_FIELD:-los}"         # vertical|los
 # Evaluation toggle (0=skip, 1=run evaluate_tau_supply)
 EVAL="${EVAL:-1}"
 
-# Supply/shielding defaults (overridable via env)
-# Default is conservative clip + soft gate to avoid spill losses unless明示指定。
-SUPPLY_HEADROOM_POLICY="${SUPPLY_HEADROOM_POLICY:-clip}"
+# Supply/shielding defaults (overridable via env).
+# Default is optical_depth + mu_orbit10pct; legacy knobs are opt-in only.
+SUPPLY_HEADROOM_POLICY="${SUPPLY_HEADROOM_POLICY:-}"
 SUPPLY_MODE="${SUPPLY_MODE:-const}"
 # External supply scaling (mu_orbit10pct=1.0 injects orbit_fraction_at_mu1 of Sigma_surf0 per orbit).
 SUPPLY_MU_ORBIT10PCT="${SUPPLY_MU_ORBIT10PCT:-1.0}"
+SUPPLY_MU_REFERENCE_TAU="${SUPPLY_MU_REFERENCE_TAU:-1.0}"
 SUPPLY_ORBIT_FRACTION="${SUPPLY_ORBIT_FRACTION:-0.10}"
-# Pattern A: τ=1 キャップに任せるため、初期質量は形状用の最小限に抑える。
+# optical_depth の Sigma_surf0 を使うため、初期質量は形状用の最小限に抑える。
 INIT_MASS_TOTAL="${INIT_MASS_TOTAL:-1.0e-7}"
 SHIELDING_MODE="${SHIELDING_MODE:-off}"
 SHIELDING_SIGMA="${SHIELDING_SIGMA:-auto}"
@@ -123,7 +124,7 @@ SUPPLY_FEEDBACK_GAIN="${SUPPLY_FEEDBACK_GAIN:-1.2}"
 SUPPLY_FEEDBACK_RESPONSE_YR="${SUPPLY_FEEDBACK_RESPONSE_YR:-0.4}"
 SUPPLY_FEEDBACK_MIN_SCALE="${SUPPLY_FEEDBACK_MIN_SCALE:-1.0e-6}"
 SUPPLY_FEEDBACK_MAX_SCALE="${SUPPLY_FEEDBACK_MAX_SCALE:-10.0}"
-SUPPLY_FEEDBACK_TAU_FIELD="${SUPPLY_FEEDBACK_TAU_FIELD:-tau_los}" # tau_vertical|tau_los
+SUPPLY_FEEDBACK_TAU_FIELD="${SUPPLY_FEEDBACK_TAU_FIELD:-tau_los}" # tau_los only
 SUPPLY_FEEDBACK_INITIAL="${SUPPLY_FEEDBACK_INITIAL:-1.0}"
 
 SUPPLY_TEMP_ENABLED="${SUPPLY_TEMP_ENABLED:-0}"
@@ -143,10 +144,10 @@ SUPPLY_INJECTION_Q="${SUPPLY_INJECTION_Q:-3.5}"   # collisional cascade fragment
 SUPPLY_INJECTION_SMIN="${SUPPLY_INJECTION_SMIN:-}"
 SUPPLY_INJECTION_SMAX="${SUPPLY_INJECTION_SMAX:-}"
 SUPPLY_DEEP_TMIX_ORBITS="${SUPPLY_DEEP_TMIX_ORBITS:-}"          # legacy alias for transport.t_mix_orbits
-# Prefer buffering overflow in a deep reservoir with soft headroom gate.
-SUPPLY_TRANSPORT_MODE="${SUPPLY_TRANSPORT_MODE:-deep_mixing}"   # direct|deep_mixing
-SUPPLY_TRANSPORT_TMIX_ORBITS="${SUPPLY_TRANSPORT_TMIX_ORBITS:-50}" # preferred knob when deep_mixing
-SUPPLY_TRANSPORT_HEADROOM="soft"  # hard|soft (固定: 表層優先で柔らかくクリップ)
+# Optional deep_mixing buffer (non-default); enable via env.
+SUPPLY_TRANSPORT_MODE="${SUPPLY_TRANSPORT_MODE:-direct}"        # direct|deep_mixing
+SUPPLY_TRANSPORT_TMIX_ORBITS="${SUPPLY_TRANSPORT_TMIX_ORBITS:-}" # preferred knob when deep_mixing
+SUPPLY_TRANSPORT_HEADROOM="${SUPPLY_TRANSPORT_HEADROOM:-hard}"  # hard|soft
 SUPPLY_VEL_MODE="${SUPPLY_VEL_MODE:-inherit}"                   # inherit|fixed_ei|factor
 SUPPLY_VEL_E="${SUPPLY_VEL_E:-0.05}"
 SUPPLY_VEL_I="${SUPPLY_VEL_I:-0.025}"
@@ -158,8 +159,8 @@ echo "[config] supply multipliers: temp_enabled=${SUPPLY_TEMP_ENABLED} (mode=${S
 echo "[config] shielding: mode=${SHIELDING_MODE} fixed_tau1_sigma=${SHIELDING_SIGMA} auto_max_margin=${SHIELDING_AUTO_MAX_MARGIN}"
 echo "[config] injection: mode=${SUPPLY_INJECTION_MODE} q=${SUPPLY_INJECTION_Q} s_inj_min=${SUPPLY_INJECTION_SMIN:-none} s_inj_max=${SUPPLY_INJECTION_SMAX:-none}"
 echo "[config] transport: mode=${SUPPLY_TRANSPORT_MODE} t_mix=${SUPPLY_TRANSPORT_TMIX_ORBITS:-${SUPPLY_DEEP_TMIX_ORBITS:-disabled}} headroom_gate=${SUPPLY_TRANSPORT_HEADROOM} velocity=${SUPPLY_VEL_MODE}"
-echo "[config] external supply: mu_orbit10pct=${SUPPLY_MU_ORBIT10PCT} orbit_fraction_at_mu1=${SUPPLY_ORBIT_FRACTION} (epsilon_mix swept per EPS_LIST)"
-echo "[config] optical_depth: tau0_target=${OPTICAL_TAU0_TARGET} tau_stop=${OPTICAL_TAU_STOP} tau_stop_tol=${OPTICAL_TAU_STOP_TOL}"
+echo "[config] external supply: mu_orbit10pct=${SUPPLY_MU_ORBIT10PCT} mu_reference_tau=${SUPPLY_MU_REFERENCE_TAU} orbit_fraction_at_mu1=${SUPPLY_ORBIT_FRACTION} (epsilon_mix swept per EPS_LIST)"
+echo "[config] optical_depth: tau0_target_list=${TAU_LIST_RAW} tau_stop=${OPTICAL_TAU_STOP} tau_stop_tol=${OPTICAL_TAU_STOP_TOL}"
 echo "[config] fast blowout substep: enabled=${SUBSTEP_FAST_BLOWOUT} substep_max_ratio=${SUBSTEP_MAX_RATIO:-default}"
 echo "[config] phase temperature input: ${PHASE_TEMP_INPUT} (q_abs_mean=${PHASE_QABS_MEAN}, tau_field=${PHASE_TAU_FIELD})"
 echo "[config] geometry: mode=${GEOMETRY_MODE} Nr=${GEOMETRY_NR} r_in_m=${GEOMETRY_R_IN_M:-disk.geometry} r_out_m=${GEOMETRY_R_OUT_M:-disk.geometry}"
@@ -268,7 +269,13 @@ fi
 if [[ -n "${SUPPLY_TRANSPORT_HEADROOM}" ]]; then
   SUPPLY_OVERRIDES+=(--override "supply.transport.headroom_gate=${SUPPLY_TRANSPORT_HEADROOM}")
 fi
-SUPPLY_OVERRIDES+=(--override "supply.headroom_policy=${SUPPLY_HEADROOM_POLICY}")
+if [[ -n "${SUPPLY_HEADROOM_POLICY}" ]]; then
+  if [[ "${SUPPLY_HEADROOM_POLICY}" == "none" || "${SUPPLY_HEADROOM_POLICY}" == "off" ]]; then
+    echo "[warn] SUPPLY_HEADROOM_POLICY=${SUPPLY_HEADROOM_POLICY} ignored; use clip/spill or leave unset"
+  else
+    SUPPLY_OVERRIDES+=(--override "supply.headroom_policy=${SUPPLY_HEADROOM_POLICY}")
+  fi
+fi
 SUPPLY_OVERRIDES+=(--override "supply.injection.velocity.mode=${SUPPLY_VEL_MODE}")
 if [[ -n "${SUPPLY_VEL_E}" ]]; then
   SUPPLY_OVERRIDES+=(--override "supply.injection.velocity.e_inj=${SUPPLY_VEL_E}")
@@ -352,6 +359,7 @@ PY
         --override "supply.mixing.epsilon_mix=${EPS}"
         --override "supply.mode=${SUPPLY_MODE}"
         --override "supply.const.mu_orbit10pct=${SUPPLY_MU_ORBIT10PCT}"
+        --override "supply.const.mu_reference_tau=${SUPPLY_MU_REFERENCE_TAU}"
         --override "supply.const.orbit_fraction_at_mu1=${SUPPLY_ORBIT_FRACTION}"
         --override "optical_depth.tau0_target=${TAU}"
         --override "optical_depth.tau_stop=${OPTICAL_TAU_STOP}"
@@ -564,7 +572,6 @@ def load_downsampled_df(path: Path, columns, *, target_rows: int, batch_size: in
         "supply_clip_factor",
         "headroom",
         "tau",
-        "tau_vertical",
         "tau_los_mars",
         "dt_over_t_blow",
         "t_blow_s",
@@ -709,7 +716,6 @@ series_cols = [
     "t_blow_s",
     "dt_over_t_blow",
     "tau",
-    "tau_vertical",
     "tau_los_mars",
     "supply_feedback_scale",
     "supply_temperature_scale",
@@ -738,6 +744,7 @@ t_coll_series = df["t_coll"] if "t_coll" in df else pd.Series(np.nan, index=df.i
 t_blow_series = df["t_blow_s"] if "t_blow_s" in df else pd.Series(np.nan, index=df.index)
 df["t_coll_years"] = (t_coll_series.clip(lower=1e-6)) / 31557600.0
 df["t_blow_hours"] = (t_blow_series.clip(lower=1e-12)) / 3600.0
+tau_los_series = df["tau_los_mars"].fillna(df["tau"])
 
 
 def _finite_array(series_list):
@@ -893,13 +900,13 @@ ax2[2].set_title("Surface density vs tau=1 cap")
 _auto_scale(ax2[2], [df["Sigma_surf"], df["Sigma_tau1"], df["headroom"], df["supply_headroom"]], log_ratio=10.0, linthresh_min=1e-12)
 
 ax2[3].plot(df["time_days"], df["outflux_surface"], label="outflux_surface (M_Mars/s)", color="tab:red", alpha=0.9)
-ax2[3].plot(df["time_days"], df["tau_vertical"], label="tau_vertical", color="tab:purple", alpha=0.7)
+ax2[3].plot(df["time_days"], tau_los_series, label="tau_los_mars", color="tab:purple", alpha=0.7)
 ax2[3].axhline(1.0, color="gray", linestyle=":", alpha=0.6, label="τ=1 reference")
 ax2[3].set_ylabel("outflux / tau")
 ax2[3].set_xlabel("days")
 ax2[3].legend(loc="upper right")
 ax2[3].set_title("Surface outflux and optical depth")
-_auto_scale(ax2[3], [df["outflux_surface"], df["tau_vertical"], df["tau"]], log_ratio=10.0, linthresh_min=1e-20)
+_auto_scale(ax2[3], [df["outflux_surface"], tau_los_series], log_ratio=10.0, linthresh_min=1e-20)
 
 ax2[4].plot(df["time_days"], df["supply_feedback_scale"], label="feedback scale", color="tab:cyan")
 ax2[4].plot(df["time_days"], df["supply_temperature_scale"], label="temperature scale", color="tab:gray")
@@ -918,17 +925,14 @@ fig2.tight_layout(rect=(0, 0, 1, 0.95))
 fig2.savefig(plots_dir / "supply_surface.png", dpi=180)
 plt.close(fig2)
 
-# Optical depth quick-look (vertical, LOS, bulk tau)
+# Optical depth quick-look (LOS tau)
 def _plot_if_available(ax, x, y, label, **kwargs):
     if y.isna().all():
         return
     ax.plot(x, y, label=label, **kwargs)
 
 fig3, ax3 = plt.subplots(1, 1, figsize=(10, 4))
-_plot_if_available(ax3, df["time_days"], df["tau_vertical"], label="tau_vertical", color="tab:purple", alpha=0.9)
-_plot_if_available(ax3, df["time_days"], df["tau"], label="tau (bulk)", color="tab:blue", alpha=0.8, linestyle="--")
-if "tau_los_mars" in df.columns:
-    _plot_if_available(ax3, df["time_days"], df["tau_los_mars"], label="tau_los_mars", color="tab:red", alpha=0.8)
+_plot_if_available(ax3, df["time_days"], tau_los_series, label="tau_los_mars", color="tab:red", alpha=0.8)
 headroom_ratio = (df["Sigma_tau1"] - df["Sigma_surf"]).clip(lower=0) / df["Sigma_tau1"].clip(lower=1e-20)
 ax3.plot(df["time_days"], headroom_ratio, label="headroom ratio", color="tab:orange", alpha=0.6, linestyle=":")
 ax3.axhline(1.0, color="gray", linestyle=":", alpha=0.5, label="τ=1 reference")
@@ -936,7 +940,7 @@ ax3.set_ylabel("optical depth")
 ax3.set_xlabel("days")
 ax3.set_title("Optical depth evolution")
 ax3.legend(loc="upper right")
-_auto_scale(ax3, [df["tau_vertical"], df["tau"], df.get("tau_los_mars", pd.Series(dtype=float)), headroom_ratio], log_ratio=10.0, linthresh_min=1e-12)
+_auto_scale(ax3, [tau_los_series, headroom_ratio], log_ratio=10.0, linthresh_min=1e-12)
 fig3.tight_layout()
 fig3.savefig(plots_dir / "optical_depth.png", dpi=180)
 plt.close(fig3)

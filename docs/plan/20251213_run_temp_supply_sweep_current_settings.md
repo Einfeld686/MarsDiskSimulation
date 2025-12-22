@@ -40,7 +40,7 @@
 
 ## オプション環境変数（既定は全て無効）
 - **リザーバ**: `SUPPLY_RESERVOIR_M`（質量 [M_Mars] を指定すると有効）、`SUPPLY_RESERVOIR_MODE`=`hard_stop|taper`、`SUPPLY_RESERVOIR_TAPER`（既定 0.05）。
-- **τ フィードバック**: `SUPPLY_FEEDBACK_ENABLED`=1 で有効化。`target_tau`（既定 1.0）、`gain`（1.0）、`response_time_years`（0.5）、`min/max_scale`（0/10）、`tau_field`（tau_vertical）、`initial_scale`（1.0）を override。
+- **τ フィードバック**: `SUPPLY_FEEDBACK_ENABLED`=1 で有効化。`target_tau`（既定 1.0）、`gain`（1.0）、`response_time_years`（0.5）、`min/max_scale`（0/10）、`tau_field`（tau_los）、`initial_scale`（1.0）を override。
 - **温度スケール**: `SUPPLY_TEMP_ENABLED`=1 で `supply.temperature.*` を一括設定（mode=scale/table、`reference_K`=1800、`exponent`=1、`floor`=0、`cap`=10 など）。表形式の場合は `SUPPLY_TEMP_TABLE_PATH` と列名を渡す。
 - **注入レンジ/速度**: `SUPPLY_INJECTION_MODE`（min_bin|powerlaw_bins, 既定 min_bin）、`SUPPLY_INJECTION_Q`（3.5）、`SUPPLY_INJECTION_SMIN/SMAX`、`SUPPLY_INJECTION_VEL_*`（mode=fixed_ei, e=0.05, i=0.025, blend=rms, weight=delta_sigma）。  
   transport 系は `SUPPLY_TRANSPORT_MODE`（既定 deep_mixing）、`SUPPLY_TRANSPORT_TMIX_ORBITS`（既定 50）、`SUPPLY_TRANSPORT_HEADROOM`（soft/hard, 既定 soft）、legacy `SUPPLY_DEEP_TMIX_ORBITS` も t_mix に転送。
@@ -50,5 +50,5 @@
 ## ポストプロセス・ログのポイント
 - プロットは `series/run.parquet` が無い場合スキップし、欠損列があっても NA で埋めて生成する安全策が入っている。
 - `summary.json` から `M_loss`、`mass_budget_max_error_percent`、`effective_prod_rate_kg_m2_s`、`supply_clip_time_fraction` などを拾ってグラフタイトルに出力。
-- `SHIELDING_SIGMA=auto_max` 指定時はデバッグ専用である旨を警告。`INIT_SCALE_TO_TAU1` を false にすると headroom=0 で供給クリップされる可能性をログ。
+- `SHIELDING_SIGMA=auto_max` 指定時はデバッグ専用である旨を警告。`optical_depth.tau0_target` が小さすぎると headroom が不足し、供給クリップが増える可能性をログ。
 - バッチ全体のシード `BATCH_SEED` と各 run の `dynamics.rng_seed` は別管理。ベース設定に対する上書き内容は各 run の `run_config.json` に残るため、再解析時はこれを参照すれば足りる。

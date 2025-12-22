@@ -4,7 +4,7 @@ Baseline thresholds: function reference rate ≥ 70%, anchor consistency rate = 
 
 | Metric | Value | Target |
 | --- | --- | --- |
-| Function reference rate | 91.0% (111/122) | ≥ 70% |
+| Function reference rate | 89.5% (111/124) | ≥ 70% |
 | Anchor consistency rate | 100.0% (707/707) | = 100% |
 | Equation unit coverage | 95.3% (41/43) | — |
 | Sinks callgraph documented | Yes | run→surface→sinks→sublimation |

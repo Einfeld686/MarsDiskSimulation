@@ -227,14 +227,15 @@ marsdisk/config_validator.py:22:class Severity(Enum)
 marsdisk/config_validator.py:30:class ValidationMessage
 marsdisk/config_validator.py:45:class ValidationResult
 marsdisk/config_validator.py:71:def validate_config(config: 'Config') -> ValidationResult
-marsdisk/config_validator.py:96:def _check_temperature_consistency(config: 'Config') -> List[ValidationMessage]
-marsdisk/config_validator.py:157:def _check_size_bins(config: 'Config') -> List[ValidationMessage]
-marsdisk/config_validator.py:190:def _check_gas_poor_assumptions(config: 'Config') -> List[ValidationMessage]
-marsdisk/config_validator.py:213:def _check_disk_geometry(config: 'Config') -> List[ValidationMessage]
-marsdisk/config_validator.py:245:def _check_numerical_stability(config: 'Config') -> List[ValidationMessage]
-marsdisk/config_validator.py:270:def _check_physics_consistency(config: 'Config') -> List[ValidationMessage]
-marsdisk/config_validator.py:297:def load_and_validate(config_path: str | Path) -> tuple['Config', ValidationResult]
-marsdisk/config_validator.py:324:def main() -> None
+marsdisk/config_validator.py:99:def _check_temperature_consistency(config: 'Config') -> List[ValidationMessage]
+marsdisk/config_validator.py:160:def _check_size_bins(config: 'Config') -> List[ValidationMessage]
+marsdisk/config_validator.py:193:def _check_gas_poor_assumptions(config: 'Config') -> List[ValidationMessage]
+marsdisk/config_validator.py:216:def _check_disk_geometry(config: 'Config') -> List[ValidationMessage]
+marsdisk/config_validator.py:248:def _check_numerical_stability(config: 'Config') -> List[ValidationMessage]
+marsdisk/config_validator.py:273:def _check_physics_consistency(config: 'Config') -> List[ValidationMessage]
+marsdisk/config_validator.py:300:def _check_external_supply_defaults(config: 'Config') -> List[ValidationMessage]
+marsdisk/config_validator.py:429:def load_and_validate(config_path: str | Path) -> tuple['Config', ValidationResult]
+marsdisk/config_validator.py:456:def main() -> None
 marsdisk/constants.py:36:class MarsConstants
 marsdisk/errors.py:5:class MarsDiskError(Exception)
 marsdisk/errors.py:9:class ConfigurationError(MarsDiskError, ValueError)
@@ -272,13 +273,13 @@ marsdisk/io/tables.py:328:def load_phi_table(path: str | Path) -> Callable[[floa
 marsdisk/io/tables.py:386:def get_qpr_table_path() -> Optional[Path]
 marsdisk/io/writer.py:20:def _ensure_parent(path: Path) -> None
 marsdisk/io/writer.py:24:def write_parquet(df: pd.DataFrame, path: Path, *, compression: str='snappy') -> None
-marsdisk/io/writer.py:372:def write_summary(summary: Mapping[str, Any], path: Path) -> None
-marsdisk/io/writer.py:383:def write_run_config(config: Mapping[str, Any], path: Path) -> None
-marsdisk/io/writer.py:391:def write_mass_budget(records: Iterable[Mapping[str, Any]], path: Path) -> None
-marsdisk/io/writer.py:398:def append_csv(records: Iterable[Mapping[str, Any]], path: Path, *, header: bool=True) -> bool
-marsdisk/io/writer.py:417:def write_orbit_rollup(rows: Iterable[Mapping[str, Any]], path: Path) -> None
-marsdisk/io/writer.py:428:def write_step_diagnostics(rows: Iterable[Mapping[str, Any]], path: Path, *, fmt: Literal['csv', 'jsonl']='csv') -> None
-marsdisk/io/writer.py:451:def append_step_diagnostics(rows: Iterable[Mapping[str, Any]], path: Path, *, fmt: Literal['csv', 'jsonl']='csv', header: bool=True) -> bool
+marsdisk/io/writer.py:370:def write_summary(summary: Mapping[str, Any], path: Path) -> None
+marsdisk/io/writer.py:381:def write_run_config(config: Mapping[str, Any], path: Path) -> None
+marsdisk/io/writer.py:389:def write_mass_budget(records: Iterable[Mapping[str, Any]], path: Path) -> None
+marsdisk/io/writer.py:396:def append_csv(records: Iterable[Mapping[str, Any]], path: Path, *, header: bool=True) -> bool
+marsdisk/io/writer.py:415:def write_orbit_rollup(rows: Iterable[Mapping[str, Any]], path: Path) -> None
+marsdisk/io/writer.py:426:def write_step_diagnostics(rows: Iterable[Mapping[str, Any]], path: Path, *, fmt: Literal['csv', 'jsonl']='csv') -> None
+marsdisk/io/writer.py:449:def append_step_diagnostics(rows: Iterable[Mapping[str, Any]], path: Path, *, fmt: Literal['csv', 'jsonl']='csv', header: bool=True) -> bool
 marsdisk/ops/assumption_trace.py:20:class AssumptionRecord
 marsdisk/ops/assumption_trace.py:38:def load_equation_index(path: Path) -> list[dict[str, Any]]
 marsdisk/ops/assumption_trace.py:56:def _iter_equation_blocks(lines: list[str]) -> Iterable[tuple[str, str, list[str]]]
@@ -385,6 +386,9 @@ marsdisk/orchestrator.py:466:def memory_estimate(n_steps: int, n_bins: int, run_
 marsdisk/orchestrator.py:490:def safe_float(value: Any) -> Optional[float]
 marsdisk/orchestrator.py:512:def human_bytes(value: float) -> str
 marsdisk/orchestrator.py:534:def series_stats(values: List[float]) -> tuple[float, float, float]
+marsdisk/output_schema.py:289:def _ensure_keys(record: Dict[str, object], keys: Iterable[str]) -> None
+marsdisk/output_schema.py:294:def ensure_series_keys(record: Dict[str, object], *, include_1d: bool=True) -> None
+marsdisk/output_schema.py:300:def ensure_diagnostic_keys(record: Dict[str, object], *, include_1d: bool=True) -> None
 marsdisk/physics/_numba_kernels.py:70:def NUMBA_AVAILABLE() -> bool
 marsdisk/physics/_numba_kernels.py:81:def compute_weights_table_numba(sizes: np.ndarray, alpha_frag: float) -> np.ndarray
 marsdisk/physics/_numba_kernels.py:125:def fill_fragment_tensor_numba(Y: np.ndarray, n: int, valid_pair: np.ndarray, f_lr_matrix: np.ndarray, k_lr_matrix: np.ndarray, weights_table: np.ndarray) -> None
@@ -572,12 +576,12 @@ marsdisk/physics_step.py:322:def compute_sublimation(T_M: float, r: float, rho: 
 marsdisk/physics_step.py:383:def step_surface_layer(sigma_surf: float, prod_rate: float, dt: float, Omega: float, *, tau: Optional[float]=None, t_sink: Optional[float]=None, sigma_tau1: Optional[float]=None, enable_blowout: bool=True, chi_blow: float=1.0) -> SurfaceStepResult
 marsdisk/physics_step.py:465:def fast_blowout_correction_factor(ratio: float) -> float
 marsdisk/physics_step.py:489:def compute_gate_factor(t_blow: Optional[float], t_solid: Optional[float]) -> float
-marsdisk/run_one_d.py:61:class MassBudgetViolationError(NumericalError)
-marsdisk/run_one_d.py:65:def _resolve_los_factor(los_geom: Optional[object]) -> float
-marsdisk/run_one_d.py:81:def _auto_chi_blow(beta: float, qpr: float) -> float
-marsdisk/run_one_d.py:96:def _fast_blowout_correction_factor(ratio: float) -> float
-marsdisk/run_one_d.py:109:def _env_flag(name: str) -> Optional[bool]
-marsdisk/run_one_d.py:121:def run_one_d(cfg: Config, *, enforce_mass_budget: bool=False, physics_mode_override: Optional[str]=None, physics_mode_source_override: Optional[str]=None) -> None
+marsdisk/run_one_d.py:65:class MassBudgetViolationError(NumericalError)
+marsdisk/run_one_d.py:69:def _resolve_los_factor(los_geom: Optional[object]) -> float
+marsdisk/run_one_d.py:85:def _auto_chi_blow(beta: float, qpr: float) -> float
+marsdisk/run_one_d.py:100:def _fast_blowout_correction_factor(ratio: float) -> float
+marsdisk/run_one_d.py:113:def _env_flag(name: str) -> Optional[bool]
+marsdisk/run_one_d.py:125:def run_one_d(cfg: Config, *, enforce_mass_budget: bool=False, physics_mode_override: Optional[str]=None, physics_mode_source_override: Optional[str]=None) -> None
 marsdisk/run_zero_d.py:103:def _get_max_steps() -> int
 marsdisk/run_zero_d.py:117:def _log_stage(label: str, *, extra: Mapping[str, Any] | None=None) -> None
 marsdisk/run_zero_d.py:123:def _model_fields_set(model: Any) -> set[str]
@@ -589,7 +593,7 @@ marsdisk/run_zero_d.py:212:def load_config(path: Path, overrides: Optional[Seque
 marsdisk/run_zero_d.py:237:def _gather_git_info() -> Dict[str, Any]
 marsdisk/run_zero_d.py:264:class MassBudgetViolationError(NumericalError)
 marsdisk/run_zero_d.py:270:def run_zero_d(cfg: Config, *, enforce_mass_budget: bool=False, physics_mode_override: Optional[str]=None, physics_mode_source_override: Optional[str]=None) -> None
-marsdisk/run_zero_d.py:4831:def main(argv: Optional[List[str]]=None) -> None
+marsdisk/run_zero_d.py:4824:def main(argv: Optional[List[str]]=None) -> None
 marsdisk/runtime/autotune.py:22:class MachineState
 marsdisk/runtime/autotune.py:43:class AutoTuneDecision
 marsdisk/runtime/autotune.py:56:def _safe_int(value: Any, fallback: int) -> int
@@ -603,19 +607,19 @@ marsdisk/runtime/autotune.py:194:def _profile_threads(profile: str, cores: int, 
 marsdisk/runtime/autotune.py:216:def _suggest_sweep_jobs(cores: int, numba_threads: int) -> int
 marsdisk/runtime/autotune.py:222:def _apply_numba_threads(numba_threads: int) -> Dict[str, Any]
 marsdisk/runtime/autotune.py:237:def apply_auto_tune(*, profile: str='auto', env: Optional[Dict[str, str]]=None) -> Dict[str, Any]
-marsdisk/runtime/helpers.py:8:def compute_phase_tau_fields(kappa_surf: float, sigma_for_tau: float, los_factor: float, phase_tau_field: str) -> Tuple[float, float, float]
-marsdisk/runtime/helpers.py:24:def resolve_feedback_tau_field(tau_field: Optional[str]) -> str
-marsdisk/runtime/helpers.py:39:def compute_gate_factor(t_blow: Optional[float], t_solid: Optional[float]) -> float
-marsdisk/runtime/helpers.py:61:def ensure_finite_kappa(kappa: Any, *, label: str | None=None) -> float
-marsdisk/runtime/helpers.py:74:def safe_float(value: Any, default: float=0.0) -> float
-marsdisk/runtime/helpers.py:86:def float_or_nan(value: Any) -> float
-marsdisk/runtime/helpers.py:96:def format_exception_short(exc: BaseException) -> str
-marsdisk/runtime/helpers.py:103:def log_stage(logger_obj, label: str, *, extra: dict | None=None) -> None
+marsdisk/runtime/helpers.py:8:def compute_phase_tau_fields(kappa_surf: float, sigma_for_tau: float, los_factor: float, phase_tau_field: str) -> Tuple[float, float]
+marsdisk/runtime/helpers.py:22:def resolve_feedback_tau_field(tau_field: Optional[str]) -> str
+marsdisk/runtime/helpers.py:35:def compute_gate_factor(t_blow: Optional[float], t_solid: Optional[float]) -> float
+marsdisk/runtime/helpers.py:57:def ensure_finite_kappa(kappa: Any, *, label: str | None=None) -> float
+marsdisk/runtime/helpers.py:70:def safe_float(value: Any, default: float=0.0) -> float
+marsdisk/runtime/helpers.py:82:def float_or_nan(value: Any) -> float
+marsdisk/runtime/helpers.py:92:def format_exception_short(exc: BaseException) -> str
+marsdisk/runtime/helpers.py:99:def log_stage(logger_obj, label: str, *, extra: dict | None=None) -> None
 marsdisk/runtime/history.py:10:class ZeroDHistory
 marsdisk/runtime/legacy_steps.py:22:class RunConfig
 marsdisk/runtime/legacy_steps.py:39:class RunState
 marsdisk/runtime/legacy_steps.py:48:def step(config: RunConfig, state: RunState, dt: float) -> Dict[str, float]
-marsdisk/runtime/legacy_steps.py:95:def run_n_steps(config: RunConfig, state: RunState, n: int, dt: float, out_dir: Path | None=None) -> pd.DataFrame
+marsdisk/runtime/legacy_steps.py:93:def run_n_steps(config: RunConfig, state: RunState, n: int, dt: float, out_dir: Path | None=None) -> pd.DataFrame
 marsdisk/runtime/progress.py:13:class ProgressReporter
 marsdisk/schema.py:24:class Geometry(BaseModel)
 marsdisk/schema.py:47:class DiskGeometry(BaseModel)
@@ -631,50 +635,50 @@ marsdisk/schema.py:233:class SupplyFeedback(BaseModel)
 marsdisk/schema.py:280:class SupplyTemperatureTable(BaseModel)
 marsdisk/schema.py:290:class SupplyTemperature(BaseModel)
 marsdisk/schema.py:323:class SupplyTransport(BaseModel)
-marsdisk/schema.py:350:class SupplyInjectionVelocity(BaseModel)
-marsdisk/schema.py:393:class SupplyInjection(BaseModel)
-marsdisk/schema.py:434:class SupplyPiece(BaseModel)
-marsdisk/schema.py:443:class Supply(BaseModel)
-marsdisk/schema.py:543:class Material(BaseModel)
-marsdisk/schema.py:558:class Temps(BaseModel)
-marsdisk/schema.py:585:class Sizes(BaseModel)
-marsdisk/schema.py:609:class Initial(BaseModel)
-marsdisk/schema.py:684:class Dynamics(BaseModel)
-marsdisk/schema.py:785:class QStar(BaseModel)
-marsdisk/schema.py:836:class PSD(BaseModel)
-marsdisk/schema.py:847:class SurfaceEnergy(BaseModel)
-marsdisk/schema.py:855:class Surface(BaseModel)
-marsdisk/schema.py:873:class InitTau1(BaseModel)
-marsdisk/schema.py:894:class OpticalDepth(BaseModel)
-marsdisk/schema.py:918:class SublimationParamsModel(BaseModel)
-marsdisk/schema.py:1010:class RPBlowoutConfig(BaseModel)
-marsdisk/schema.py:1016:class HydroEscapeConfig(BaseModel)
-marsdisk/schema.py:1039:class Sinks(BaseModel)
-marsdisk/schema.py:1063:class ProcessStateTagging(BaseModel)
-marsdisk/schema.py:1072:class Process(BaseModel)
-marsdisk/schema.py:1086:class PhaseThresholds(BaseModel)
-marsdisk/schema.py:1110:class PhaseConfig(BaseModel)
-marsdisk/schema.py:1191:class MarsTemperatureDriverConstant(BaseModel)
-marsdisk/schema.py:1204:class MarsTemperatureDriverTable(BaseModel)
-marsdisk/schema.py:1216:class MarsTemperatureDriverHyodo(BaseModel)
-marsdisk/schema.py:1224:class MarsTemperatureAutogen(BaseModel)
-marsdisk/schema.py:1256:class MarsTemperatureDriverConfig(BaseModel)
-marsdisk/schema.py:1295:class RadiationTauGate(BaseModel)
-marsdisk/schema.py:1302:class QPrCache(BaseModel)
-marsdisk/schema.py:1318:class Radiation(BaseModel)
-marsdisk/schema.py:1378:class Shielding(BaseModel)
-marsdisk/schema.py:1439:class Blowout(BaseModel)
-marsdisk/schema.py:1457:class Checkpoint(BaseModel)
-marsdisk/schema.py:1484:class Resume(BaseModel)
-marsdisk/schema.py:1497:class Numerics(BaseModel)
-marsdisk/schema.py:1623:class StepDiagnostics(BaseModel)
-marsdisk/schema.py:1640:class Progress(BaseModel)
-marsdisk/schema.py:1654:class Streaming(BaseModel)
-marsdisk/schema.py:1701:class IO(BaseModel)
-marsdisk/schema.py:1741:class ExtendedDiagnostics(BaseModel)
-marsdisk/schema.py:1754:class EnergyBookkeeping(BaseModel)
-marsdisk/schema.py:1767:class Diagnostics(BaseModel)
-marsdisk/schema.py:1774:class Config(BaseModel)
+marsdisk/schema.py:353:class SupplyInjectionVelocity(BaseModel)
+marsdisk/schema.py:396:class SupplyInjection(BaseModel)
+marsdisk/schema.py:437:class SupplyPiece(BaseModel)
+marsdisk/schema.py:446:class Supply(BaseModel)
+marsdisk/schema.py:555:class Material(BaseModel)
+marsdisk/schema.py:570:class Temps(BaseModel)
+marsdisk/schema.py:597:class Sizes(BaseModel)
+marsdisk/schema.py:621:class Initial(BaseModel)
+marsdisk/schema.py:696:class Dynamics(BaseModel)
+marsdisk/schema.py:797:class QStar(BaseModel)
+marsdisk/schema.py:848:class PSD(BaseModel)
+marsdisk/schema.py:859:class SurfaceEnergy(BaseModel)
+marsdisk/schema.py:867:class Surface(BaseModel)
+marsdisk/schema.py:885:class InitTau1(BaseModel)
+marsdisk/schema.py:906:class OpticalDepth(BaseModel)
+marsdisk/schema.py:930:class SublimationParamsModel(BaseModel)
+marsdisk/schema.py:1022:class RPBlowoutConfig(BaseModel)
+marsdisk/schema.py:1028:class HydroEscapeConfig(BaseModel)
+marsdisk/schema.py:1051:class Sinks(BaseModel)
+marsdisk/schema.py:1075:class ProcessStateTagging(BaseModel)
+marsdisk/schema.py:1084:class Process(BaseModel)
+marsdisk/schema.py:1098:class PhaseThresholds(BaseModel)
+marsdisk/schema.py:1122:class PhaseConfig(BaseModel)
+marsdisk/schema.py:1200:class MarsTemperatureDriverConstant(BaseModel)
+marsdisk/schema.py:1213:class MarsTemperatureDriverTable(BaseModel)
+marsdisk/schema.py:1225:class MarsTemperatureDriverHyodo(BaseModel)
+marsdisk/schema.py:1233:class MarsTemperatureAutogen(BaseModel)
+marsdisk/schema.py:1265:class MarsTemperatureDriverConfig(BaseModel)
+marsdisk/schema.py:1304:class RadiationTauGate(BaseModel)
+marsdisk/schema.py:1311:class QPrCache(BaseModel)
+marsdisk/schema.py:1327:class Radiation(BaseModel)
+marsdisk/schema.py:1387:class Shielding(BaseModel)
+marsdisk/schema.py:1448:class Blowout(BaseModel)
+marsdisk/schema.py:1466:class Checkpoint(BaseModel)
+marsdisk/schema.py:1493:class Resume(BaseModel)
+marsdisk/schema.py:1506:class Numerics(BaseModel)
+marsdisk/schema.py:1632:class StepDiagnostics(BaseModel)
+marsdisk/schema.py:1649:class Progress(BaseModel)
+marsdisk/schema.py:1663:class Streaming(BaseModel)
+marsdisk/schema.py:1710:class IO(BaseModel)
+marsdisk/schema.py:1750:class ExtendedDiagnostics(BaseModel)
+marsdisk/schema.py:1763:class EnergyBookkeeping(BaseModel)
+marsdisk/schema.py:1776:class Diagnostics(BaseModel)
+marsdisk/schema.py:1783:class Config(BaseModel)
 marsdisk/warnings.py:7:class MarsDiskWarning(UserWarning)
 marsdisk/warnings.py:11:class PhysicsWarning(MarsDiskWarning)
 marsdisk/warnings.py:15:class NumericalWarning(MarsDiskWarning)
@@ -696,7 +700,7 @@ scripts/analyze_radius_trend.py:73:def load_config(path: Path) -> dict
 scripts/analyze_radius_trend.py:81:def write_config(data: dict, path: Path) -> None
 scripts/analyze_radius_trend.py:87:def run_case(config_path: Path) -> None
 scripts/analyze_radius_trend.py:92:def collect_metrics(case_dir: Path) -> dict[str, float | str]
-scripts/analyze_radius_trend.py:171:def main(argv: Iterable[str] | None=None) -> None
+scripts/analyze_radius_trend.py:169:def main(argv: Iterable[str] | None=None) -> None
 scripts/collect_series.py:13:def _iter_series_paths(root: Path) -> Iterable[Path]
 scripts/collect_series.py:21:def collect_series(roots: List[Path], out_path: Path) -> None
 scripts/collect_series.py:39:def _parse_args() -> argparse.Namespace
@@ -730,10 +734,11 @@ scripts/plot_sblow_curve.py:59:def main(argv: Iterable[str] | None=None) -> None
 scripts/render_figures_from_tasks.py:25:def load_json(path: Path) -> Any
 scripts/render_figures_from_tasks.py:30:def build_command(script: str, fig_id: str, run_paths: List[str], params: Dict[str, Any]) -> str
 scripts/render_figures_from_tasks.py:47:def main() -> None
-scripts/research/evaluate_tau_supply.py:24:def _load_target_rate(run_dir: Path, override: float | None) -> float | None
-scripts/research/evaluate_tau_supply.py:51:def _safe_median(series: pd.Series) -> float
-scripts/research/evaluate_tau_supply.py:59:def evaluate_run(run_dir: Path, *, window_spans: Sequence[tuple[float, float]]=((0.5, 1.0),), min_duration_days: float=0.1, target_rate: float | None=None, threshold_factor: float=0.9) -> dict[str, object]
-scripts/research/evaluate_tau_supply.py:166:def main() -> None
+scripts/research/evaluate_tau_supply.py:29:def _load_target_rate(run_dir: Path, override: float | None) -> float | None
+scripts/research/evaluate_tau_supply.py:56:def _safe_median(series: pd.Series) -> float
+scripts/research/evaluate_tau_supply.py:64:def _read_series(run_path: Path) -> pd.DataFrame
+scripts/research/evaluate_tau_supply.py:92:def evaluate_run(run_dir: Path, *, window_spans: Sequence[tuple[float, float]]=((0.5, 1.0),), min_duration_days: float=0.1, target_rate: float | None=None, threshold_factor: float=0.9) -> dict[str, object]
+scripts/research/evaluate_tau_supply.py:189:def main() -> None
 scripts/research/plot_sweep_run.py:17:def main(run_dir: Path) -> int
 scripts/research/preflight_streaming_check.py:19:def check_streaming_chunks(run_dir: Path) -> int
 scripts/research/preflight_streaming_check.py:95:def check_required_columns(run_dir: Path) -> int
@@ -990,8 +995,8 @@ tests/integration/test_phase_branching_run.py:10:def _build_phase_config(outdir:
 tests/integration/test_phase_branching_run.py:48:def _load_run(outdir: Path) -> pd.DataFrame
 tests/integration/test_phase_branching_run.py:54:def test_sink_selection_is_mutually_exclusive(tmp_path: Path) -> None
 tests/integration/test_phase_map_fallback.py:14:def test_phase_map_missing_entrypoint_falls_back_to_threshold(tmp_path: Path) -> None
-tests/integration/test_phase_tau_field_selection.py:8:def test_compute_phase_tau_fields_switches_between_vertical_and_los() -> None
-tests/integration/test_phase_tau_field_selection.py:30:def test_log_stage_extra_is_keyword_only() -> None
+tests/integration/test_phase_tau_field_selection.py:8:def test_compute_phase_tau_fields_returns_los_only() -> None
+tests/integration/test_phase_tau_field_selection.py:19:def test_log_stage_extra_is_keyword_only() -> None
 tests/integration/test_phi_table.py:12:def mock_phi_table(tmp_path)
 tests/integration/test_phi_table.py:24:def test_phi_table_monotonic_effects(mock_phi_table)
 tests/integration/test_psd_kappa.py:11:def test_compute_kappa_single_bin_matches_geometry() -> None
@@ -1033,8 +1038,8 @@ tests/integration/test_run_one_d_consistency.py:12:def _interpolate(values: np.n
 tests/integration/test_run_one_d_consistency.py:18:def test_run_one_d_matches_zero_d(tmp_path: Path) -> None
 tests/integration/test_run_one_d_dt_floor.py:12:def test_dt_floor_uses_kernel_min(tmp_path: Path) -> None
 tests/integration/test_run_one_d_freeze.py:12:def test_run_one_d_tau_stop_freeze(tmp_path: Path) -> None
-tests/integration/test_run_one_d_output_parity.py:21:def test_run_one_d_required_outputs(tmp_path: Path) -> None
-tests/integration/test_run_one_d_streaming_schema.py:10:def test_run_one_d_streaming_schema_parity(tmp_path: Path, monkeypatch) -> None
+tests/integration/test_run_one_d_output_parity.py:27:def test_run_one_d_required_outputs(tmp_path: Path) -> None
+tests/integration/test_run_one_d_streaming_schema.py:12:def test_run_one_d_streaming_schema_parity(tmp_path: Path, monkeypatch) -> None
 tests/integration/test_run_regressions.py:19:def _run_case(overrides: list[str]) -> tuple[dict, pd.DataFrame]
 tests/integration/test_run_regressions.py:33:def _run_case_with_series(overrides: list[str]) -> tuple[dict, pd.DataFrame, pd.DataFrame]
 tests/integration/test_run_regressions.py:48:def test_mass_budget_and_timestep_overrides() -> None
@@ -1089,8 +1094,8 @@ tests/integration/test_supply_headroom_policy.py:60:def test_tau_stop_triggers_w
 tests/integration/test_supply_positive.py:10:def test_supply_positive_with_wide_tau_cap(tmp_path: Path) -> None
 tests/integration/test_supply_positive.py:40:def test_reservoir_depletes_and_records_metadata(tmp_path: Path) -> None
 tests/integration/test_supply_positive.py:94:def test_supply_feedback_tau_los_updates_scale(tmp_path: Path) -> None
-tests/integration/test_supply_positive.py:140:def test_mu_orbit10pct_scales_supply(tmp_path: Path) -> None
-tests/integration/test_supply_positive.py:194:def test_run_config_written_before_runtime_failure(monkeypatch, tmp_path: Path) -> None
+tests/integration/test_supply_positive.py:138:def test_mu_orbit10pct_scales_supply(tmp_path: Path) -> None
+tests/integration/test_supply_positive.py:193:def test_run_config_written_before_runtime_failure(monkeypatch, tmp_path: Path) -> None
 tests/integration/test_supply_split.py:8:def test_deep_buffer_accumulates_when_headroom_zero() -> None
 tests/integration/test_supply_split.py:24:def test_deep_buffer_mixes_back_on_timescale() -> None
 tests/integration/test_supply_transport_velocity.py:14:def test_supply_velocity_blend_and_weight() -> None
@@ -1184,22 +1189,22 @@ tests/unit/test_viscosity.py:7:def _run(N: int, dt: float)
 tests/unit/test_viscosity.py:18:def test_viscous_diffusion_converges_and_conserves_mass()
 tests/unit/test_wyatt_scaling.py:6:def test_wyatt_scaling_inverse_tau()
 tools/analyze_tau_los_feedback.py:38:def _coalesce(*values)
-tools/analyze_tau_los_feedback.py:83:def _load_json(path: Path) -> Dict
-tools/analyze_tau_los_feedback.py:90:def _resolve_diagnostics_paths(run_dir: Path, summary: Dict, max_chunks: Optional[int]) -> List[Path]
-tools/analyze_tau_los_feedback.py:106:def _collect_columns(arg_columns: Sequence[str]) -> List[str]
-tools/analyze_tau_los_feedback.py:118:def _load_diagnostics(paths: Sequence[Path], columns: Sequence[str]) -> pd.DataFrame
-tools/analyze_tau_los_feedback.py:136:def _to_numeric(series: pd.Series) -> pd.Series
-tools/analyze_tau_los_feedback.py:140:def _choose_series(df: pd.DataFrame, candidates: Iterable[str]) -> Tuple[Optional[pd.Series], Optional[str]]
-tools/analyze_tau_los_feedback.py:147:def _time_years(df: pd.DataFrame) -> pd.Series
-tools/analyze_tau_los_feedback.py:157:def _weights_dt(df: pd.DataFrame) -> pd.Series
-tools/analyze_tau_los_feedback.py:166:def _weighted_fraction(mask: pd.Series, weights: pd.Series) -> Optional[float]
-tools/analyze_tau_los_feedback.py:175:def _quantiles(series: pd.Series, qs: Sequence[float]) -> Dict[str, Optional[float]]
-tools/analyze_tau_los_feedback.py:182:def _nanmedian(series: pd.Series) -> Optional[float]
-tools/analyze_tau_los_feedback.py:189:def _infer_headroom(df: pd.DataFrame) -> Optional[pd.Series]
-tools/analyze_tau_los_feedback.py:202:def _render_placeholder(path: Path, title: str, message: str) -> None
-tools/analyze_tau_los_feedback.py:212:def analyze(args: argparse.Namespace) -> Dict
-tools/analyze_tau_los_feedback.py:421:def _rows_from_result(result: Dict) -> List[Dict[str, object]]
-tools/analyze_tau_los_feedback.py:457:def main() -> None
+tools/analyze_tau_los_feedback.py:82:def _load_json(path: Path) -> Dict
+tools/analyze_tau_los_feedback.py:89:def _resolve_diagnostics_paths(run_dir: Path, summary: Dict, max_chunks: Optional[int]) -> List[Path]
+tools/analyze_tau_los_feedback.py:105:def _collect_columns(arg_columns: Sequence[str]) -> List[str]
+tools/analyze_tau_los_feedback.py:117:def _load_diagnostics(paths: Sequence[Path], columns: Sequence[str]) -> pd.DataFrame
+tools/analyze_tau_los_feedback.py:135:def _to_numeric(series: pd.Series) -> pd.Series
+tools/analyze_tau_los_feedback.py:139:def _choose_series(df: pd.DataFrame, candidates: Iterable[str]) -> Tuple[Optional[pd.Series], Optional[str]]
+tools/analyze_tau_los_feedback.py:146:def _time_years(df: pd.DataFrame) -> pd.Series
+tools/analyze_tau_los_feedback.py:156:def _weights_dt(df: pd.DataFrame) -> pd.Series
+tools/analyze_tau_los_feedback.py:165:def _weighted_fraction(mask: pd.Series, weights: pd.Series) -> Optional[float]
+tools/analyze_tau_los_feedback.py:174:def _quantiles(series: pd.Series, qs: Sequence[float]) -> Dict[str, Optional[float]]
+tools/analyze_tau_los_feedback.py:181:def _nanmedian(series: pd.Series) -> Optional[float]
+tools/analyze_tau_los_feedback.py:188:def _infer_headroom(df: pd.DataFrame) -> Optional[pd.Series]
+tools/analyze_tau_los_feedback.py:201:def _render_placeholder(path: Path, title: str, message: str) -> None
+tools/analyze_tau_los_feedback.py:211:def analyze(args: argparse.Namespace) -> Dict
+tools/analyze_tau_los_feedback.py:423:def _rows_from_result(result: Dict) -> List[Dict[str, object]]
+tools/analyze_tau_los_feedback.py:459:def main() -> None
 tools/check_unknown_refs.py:13:def load_requests(path: Path) -> list[dict]
 tools/check_unknown_refs.py:24:def main() -> int
 tools/derive_supply_rate.py:51:class SupplyInputs
@@ -1258,17 +1263,17 @@ tools/pipeline/evaluation_system.py:115:class CheckResult
 tools/pipeline/evaluation_system.py:126:class EvaluationCheck
 tools/pipeline/evaluation_system.py:135:class EvaluationContext
 tools/pipeline/evaluation_system.py:210:def _check_required_outputs(ctx: EvaluationContext) -> Tuple[bool, str]
-tools/pipeline/evaluation_system.py:234:def _check_series_columns(ctx: EvaluationContext) -> Tuple[bool, str]
-tools/pipeline/evaluation_system.py:246:def _check_summary_fields(ctx: EvaluationContext) -> Tuple[bool, str]
-tools/pipeline/evaluation_system.py:254:def _check_case_status(ctx: EvaluationContext) -> Tuple[bool, str]
-tools/pipeline/evaluation_system.py:269:def _check_s_min_components(ctx: EvaluationContext) -> Tuple[bool, str]
-tools/pipeline/evaluation_system.py:292:def _check_mass_budget(ctx: EvaluationContext) -> Tuple[bool, str]
-tools/pipeline/evaluation_system.py:307:def _check_orbit_rollup(ctx: EvaluationContext) -> Tuple[bool, str]
-tools/pipeline/evaluation_system.py:317:def _check_run_config(ctx: EvaluationContext) -> Tuple[bool, str]
-tools/pipeline/evaluation_system.py:384:class EvaluationSystem
-tools/pipeline/evaluation_system.py:412:def _render_table(results: Iterable[CheckResult]) -> str
-tools/pipeline/evaluation_system.py:420:def _build_parser() -> argparse.ArgumentParser
-tools/pipeline/evaluation_system.py:436:def main(argv: Sequence[str] | None=None) -> int
+tools/pipeline/evaluation_system.py:233:def _check_series_columns(ctx: EvaluationContext) -> Tuple[bool, str]
+tools/pipeline/evaluation_system.py:245:def _check_summary_fields(ctx: EvaluationContext) -> Tuple[bool, str]
+tools/pipeline/evaluation_system.py:253:def _check_case_status(ctx: EvaluationContext) -> Tuple[bool, str]
+tools/pipeline/evaluation_system.py:268:def _check_s_min_components(ctx: EvaluationContext) -> Tuple[bool, str]
+tools/pipeline/evaluation_system.py:291:def _check_mass_budget(ctx: EvaluationContext) -> Tuple[bool, str]
+tools/pipeline/evaluation_system.py:306:def _check_orbit_rollup(ctx: EvaluationContext) -> Tuple[bool, str]
+tools/pipeline/evaluation_system.py:316:def _check_run_config(ctx: EvaluationContext) -> Tuple[bool, str]
+tools/pipeline/evaluation_system.py:383:class EvaluationSystem
+tools/pipeline/evaluation_system.py:411:def _render_table(results: Iterable[CheckResult]) -> str
+tools/pipeline/evaluation_system.py:419:def _build_parser() -> argparse.ArgumentParser
+tools/pipeline/evaluation_system.py:435:def main(argv: Sequence[str] | None=None) -> int
 tools/pipeline/run_analysis_doc_tests.py:15:class SummaryPlugin
 tools/pipeline/run_analysis_doc_tests.py:29:def _build_args(argv: List[str]) -> List[str]
 tools/pipeline/run_analysis_doc_tests.py:43:def _expand_globs(args: List[str]) -> List[str]
@@ -1317,7 +1322,7 @@ tools/plotting/make_sweep_summary.py:56:def parse_dir_name(name: str) -> Optiona
 tools/plotting/make_sweep_summary.py:70:def load_case(run_dir: Path) -> Optional[SweepCase]
 tools/plotting/make_sweep_summary.py:118:def discover_cases(batch_dir: Path) -> List[SweepCase]
 tools/plotting/make_sweep_summary.py:130:def cases_to_dataframe(cases: Sequence[SweepCase]) -> pd.DataFrame
-tools/plotting/make_sweep_summary.py:153:def plot_heatmap_by_phi(df: pd.DataFrame, value_col: str, out_path: Path, title: str, cmap: str='viridis', vmin: Optional[float]=None, vmax: Optional[float]=None) -> None
+tools/plotting/make_sweep_summary.py:153:def plot_heatmap_by_tau(df: pd.DataFrame, value_col: str, out_path: Path, title: str, cmap: str='viridis', vmin: Optional[float]=None, vmax: Optional[float]=None) -> None
 tools/plotting/make_sweep_summary.py:232:def plot_sensitivity_matrix(df: pd.DataFrame, out_path: Path) -> None
 tools/plotting/make_sweep_summary.py:297:def parse_args(argv: Optional[Sequence[str]]=None) -> argparse.Namespace
 tools/plotting/make_sweep_summary.py:319:def main(argv: Optional[Sequence[str]]=None) -> int

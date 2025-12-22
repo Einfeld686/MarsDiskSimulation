@@ -123,14 +123,12 @@ def test_supply_feedback_tau_los_updates_scale(tmp_path: Path) -> None:
             "supply_feedback_error",
             "supply_feedback_scale",
             "tau_los_mars",
-            "tau_vertical",
         ],
     )
     finite_err = df["supply_feedback_error"].dropna()
     assert not finite_err.empty
     first_idx = finite_err.index[0]
     tau_los_val = df.loc[first_idx, "tau_los_mars"]
-    assert tau_los_val != pytest.approx(df.loc[first_idx, "tau_vertical"])
     expected_err = (1.0 - tau_los_val) / 1.0
     assert finite_err.iloc[0] == pytest.approx(expected_err)
     scales = df["supply_feedback_scale"].dropna()

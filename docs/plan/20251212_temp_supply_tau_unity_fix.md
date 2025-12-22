@@ -18,7 +18,7 @@
 |----------|--------|------------------|
 | `prod_subblow_area_rate` | 全区間 **0** | `1e-10 × mu = 1e-10 kg m⁻² s⁻¹` |
 | `Sigma_surf` | `Sigma_tau1_active = 1.0e-2` に張り付き（ヒット率 100%） | τ=1 到達後にクリップされる |
-| `tau_vertical` | 中央値 **~9.6e-7** | ≈1.0 を目標としていたはず |
+| `tau_los_mars` | 中央値 **~9.6e-7** | ≈1.0 を目標としていたはず |
 | `t_coll` | 初期 0.46 日 → **~1.7×10⁷ 年** に伸長 | 衝突が継続するなら ~年オーダー |
 
 **問題点**: 衝突寄与が実質消滅しており、供給も記録されていないため円盤が枯渇状態。
@@ -67,7 +67,7 @@
 
 **計算式**（参考）:
 ```
-τ_vertical = κ_eff × Σ_surf
+τ_los = κ_eff × Σ_surf × los_factor
 Σ_τ=1 = 1 / κ_eff
 ```
 
@@ -135,7 +135,7 @@
 
 2. **検証ポイント**
    - `prod_subblow_area_rate > 0` が記録されるか
-   - `tau_vertical` がクリップ上限に達するまで増えるか
+   - `tau_los_mars` がクリップ上限に達するまで増えるか
    - `run_config.json` に supply ブロックが出力されるか
 
 3. **summary.json への記録追加**（なければ実装）
@@ -148,7 +148,7 @@
 
 - [x] supply ブロックが `run_config.json` に出力され、`process_overview` で有効/無効が確認できる
 - [x] const 供給ケースで `prod_subblow_area_rate > 0` が記録され、初期ステップで期待値（`prod_area_rate_kg_m2_s × epsilon_mix`）に近い
-- [ ] τ クリップを見直した設定で `tau_vertical ≈ 1` に到達するサンプル run を取得
+- [ ] τ クリップを見直した設定で `tau_los_mars ≈ 1` に到達するサンプル run を取得
 - [x] Regression テスト（小型ケース）が追加され、pytest でカバーされる
 - [ ] 影響するドキュメント（`analysis/` に式・設定を追記、必要なら `run-recipes.md` へのメモ）を更新する段取りを決める
 
@@ -179,7 +179,7 @@
 ### 論点と方針（追記）
 - **Sigma_tau1 の決め方**: まずは「run 開始時に κ_eff(t0) を測り、`Sigma_tau1=1/κ_eff(t0)` を固定値として使う」案を優先。後段で必要なら κ を平滑化しつつ追従するモードを検討する（τ≈1 を維持する目的と数値安定性のバランス）。
 - **回帰テスト方針**: τクリップの影響を避けるため、`fixed_tau1_sigma` を十分大きくした短時間 run で `prod_subblow_area_rate>0` を確認する最小ケースを pytest に追加する。
-- **τ≈1 成功判定の指標**: 代表半径 r=cfg.disk.geometry 中央での `tau_vertical` の時間中央値が 0.5–2 の範囲に収まる、など統計量と閾値を一文で定義しておく。
+- **τ≈1 成功判定の指標**: 代表半径 r=cfg.disk.geometry 中央での `tau_los_mars` の時間中央値が 0.5–2 の範囲に収まる、など統計量と閾値を一文で定義しておく。
 - **外部供給の位置づけ**: 現段階の供給は「未解像の輸送を置き換える仮定」であり、パラメータ依存（供給を弱める/ゼロにする）の感度確認をセットで示す。
 - **外部供給の流れ（実装側の確定事項）**: supply.enabled（既定 true）→ mode で const/powerlaw/table/piecewise を選択 → `_rate_basic` で raw 供給を計算 → `epsilon_mix` を乗算し 0 未満をクリップ → `prod_subblow_area_rate` として run.parquet に記録。supply 有効/モード/epsilon_mix/const rate は run_config/process_overview に残す。
 
@@ -219,12 +219,12 @@
 
 ## run-recipes で具体化すべき成功判定（提案）
 - 評価区間: ウォームアップ・初期過渡を除外し、例として後半 50% を評価対象にする（warmup_steps を使うならその区間も除外）。
-- τ条件: 評価区間での `tau_vertical` の中央値が 0.5–2。
+- τ条件: 評価区間での `tau_los_mars` の中央値が 0.5–2。
 - 供給維持条件: 評価区間で `prod_subblow_area_rate` が設定供給（`prod_area_rate_kg_m2_s × epsilon_mix`）の 90%以上。
 - 連続期間: 上記2条件を同時に満たす連続区間が存在すること（run.parquet の出力間隔に合わせて「連続 N 点」または物理時間で「連続 Δt」を定義）。
 
 - **成功判定の定義とドキュメント反映**  
-  - 成功基準: 代表半径での `tau_vertical` 時間中央値が 0.5–2、かつ `prod_subblow_area_rate` が設定値に対して >90% を維持する期間が連続して存在。  
+  - 成功基準: 代表半径での `tau_los_mars` 時間中央値が 0.5–2、かつ `prod_subblow_area_rate` が設定値に対して >90% を維持する期間が連続して存在。  
   - analysis/run-recipes へ上記基準を追記し、チェック手順を明文化。
 
 - **回帰テストの追加**  
@@ -237,7 +237,7 @@
 3. auto_max（デバッグ目的）と warmup モードを追加し、必要時のみ利用できるようスクリプト切替を用意。  
 4. テスト: test_supply_positive を拡張し、auto_max と初期警告なし条件を検証するケースを追加。  
 5. スイープスクリプト: auto/auto_max 切替と初期質量スケールのオプションを追加。  
-6. 短時間 run で再確認し、prod_subblow>0 と tau_vertical 指標が基準内に入ることを確認。
+6. 短時間 run で再確認し、prod_subblow>0 と tau_los_mars 指標が基準内に入ることを確認。
 
 ---
 

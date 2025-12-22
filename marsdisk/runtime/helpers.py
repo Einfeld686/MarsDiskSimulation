@@ -10,29 +10,25 @@ def compute_phase_tau_fields(
     sigma_for_tau: float,
     los_factor: float,
     phase_tau_field: str,
-) -> Tuple[float, float, float]:
-    """Return (τ_used, τ_vertical, τ_los) for phase evaluation."""
+) -> Tuple[float, float]:
+    """Return (τ_used, τ_los) for phase evaluation (LOS-only)."""
 
-    tau_vertical = float(kappa_surf * sigma_for_tau)
-    tau_los = tau_vertical * los_factor
+    tau_los = float(kappa_surf * sigma_for_tau * los_factor)
     tau_los = float(tau_los) if math.isfinite(tau_los) else 0.0
-    tau_field_norm = "los" if phase_tau_field == "los" else "vertical"
-    tau_used = tau_los if tau_field_norm == "los" else tau_vertical
-    return tau_used, tau_vertical, tau_los
+    tau_used = tau_los
+    return tau_used, tau_los
 
 
 def resolve_feedback_tau_field(tau_field: Optional[str]) -> str:
     """Normalise feedback.tau_field and reject unknown values."""
 
     if tau_field is None:
-        return "tau_vertical"
+        return "tau_los"
     text = str(tau_field).strip().lower()
-    if text in {"tau_vertical", "vertical"}:
-        return "tau_vertical"
     if text in {"tau_los", "los"}:
         return "tau_los"
     raise ValueError(
-        f"Unknown supply.feedback.tau_field={tau_field!r}; expected 'tau_vertical' or 'tau_los'"
+        f"Unknown supply.feedback.tau_field={tau_field!r}; expected 'tau_los'"
     )
 
 

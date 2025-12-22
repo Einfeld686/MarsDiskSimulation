@@ -53,7 +53,6 @@ DEFAULT_COLUMNS = [
     "tau_los",
     "tau_los_mars",
     "tau_mars_line_of_sight",
-    "tau_vertical",
     "Sigma_surf",
     "sigma_surf",
     "Sigma_tau1",
@@ -227,9 +226,12 @@ def analyze(args: argparse.Namespace) -> Dict:
 
     time_years = _time_years(df)
     weights = _weights_dt(df)
-    tau_series, tau_field_used = _choose_series(df, ["tau_los", "tau_los_mars", "tau_mars_line_of_sight", "tau_vertical"])
+    tau_series, tau_field_used = _choose_series(
+        df,
+        ["tau_los", "tau_los_mars", "tau_mars_line_of_sight"],
+    )
     if tau_series is None:
-        raise SystemExit("tau_los/tau_mars_line_of_sight/tau_vertical が見つかりませんでした。")
+        raise SystemExit("tau_los/tau_mars_line_of_sight が見つかりませんでした。")
     tau_series = _to_numeric(tau_series)
 
     target_tau = _coalesce(args.target_tau, summary.get("supply_feedback_target_tau"), run_config.get("supply_feedback_target_tau"), 1.0)

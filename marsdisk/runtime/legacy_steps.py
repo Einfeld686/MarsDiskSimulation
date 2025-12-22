@@ -49,9 +49,8 @@ def step(config: RunConfig, state: RunState, dt: float) -> Dict[str, float]:
     """Advance the coupled S0/S1 system by one time-step."""
 
     kappa_surf = psd.compute_kappa(state.psd_state)
-    tau_vert = kappa_surf * state.sigma_surf
     los_factor = config.los_factor if config.los_factor > 0.0 else 1.0
-    tau_los = tau_vert * los_factor
+    tau_los = kappa_surf * state.sigma_surf * los_factor
     kappa_eff, sigma_tau1 = shielding.apply_shielding(kappa_surf, tau_los, 0.0, 0.0)
     if kappa_eff <= KAPPA_MIN:
         sigma_tau1 = None
@@ -76,7 +75,6 @@ def step(config: RunConfig, state: RunState, dt: float) -> Dict[str, float]:
         "outflux_surface": res.outflux,
         "sink_flux_surface": res.sink_flux,
         "t_blow": t_blow,
-        "tau_vertical": tau_vert,
         "tau_los_mars": tau_los,
         "M_out_dot": M_out_dot,  # M_Mars/s
         "M_loss_cum": state.M_loss_cum,  # M_Mars

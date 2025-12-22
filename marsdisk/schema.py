@@ -257,9 +257,9 @@ class SupplyFeedback(BaseModel):
         gt=0.0,
         description="Upper bound on the feedback multiplier.",
     )
-    tau_field: Literal["tau_vertical", "tau_los"] = Field(
+    tau_field: Literal["tau_los"] = Field(
         "tau_los",
-        description="Optical-depth field to monitor for feedback control.",
+        description="Optical-depth field to monitor for feedback control (LOS only).",
     )
     initial_scale: float = Field(
         1.0,
@@ -325,7 +325,10 @@ class SupplyTransport(BaseModel):
 
     mode: Literal["direct", "deep_mixing"] = Field(
         "direct",
-        description="direct: legacy headroom-gated surface injection. deep_mixing: send supply into deep then mix up.",
+        description=(
+            "direct: legacy headroom-gated surface injection. deep_mixing: send supply into deep then mix up. "
+            "deep_mixing is non-default and a deprecated removal candidate."
+        ),
     )
     t_mix_orbits: Optional[float] = Field(
         None,
@@ -348,7 +351,7 @@ class SupplyTransport(BaseModel):
 
 
 class SupplyInjectionVelocity(BaseModel):
-    """Velocity/eccentricity controls dedicated to the incoming supply."""
+    """Velocity/eccentricity controls dedicated to the incoming supply (non-default values are deprecated)."""
 
     mode: Literal["inherit", "fixed_ei", "factor"] = Field(
         "inherit",
@@ -391,7 +394,7 @@ class SupplyInjectionVelocity(BaseModel):
 
 
 class SupplyInjection(BaseModel):
-    """Controls how external supply is injected into the PSD and surface layer."""
+    """Controls how external supply is injected into the PSD and surface layer (non-default values are deprecated)."""
 
     mode: Literal["min_bin", "powerlaw_bins"] = Field(
         "min_bin",
@@ -466,7 +469,10 @@ class Supply(BaseModel):
     )
     mode: Literal["const", "table", "powerlaw", "piecewise"] = Field(
         "const",
-        description="Supply mode: 'const' (default), 'table', 'powerlaw', or 'piecewise'",
+        description=(
+            "Supply mode: 'const' (default), 'table', 'powerlaw', or 'piecewise'. "
+            "Non-default modes are deprecated removal candidates."
+        ),
     )
     const: SupplyConst = Field(
         default_factory=SupplyConst,
@@ -486,27 +492,33 @@ class Supply(BaseModel):
     )
     headroom_policy: Literal["clip", "spill"] = Field(
         "clip",
-        description="clip: limit applied supply by Σ_tau1 headroom. spill: always apply supply then remove any τ>1 overflow.",
+        description=(
+            "clip: limit applied supply by Σ_tau1 headroom. spill: always apply supply then remove any τ>1 overflow. "
+            "Legacy knob; non-default use is deprecated."
+        ),
     )
     reservoir: SupplyReservoir = Field(
         default_factory=SupplyReservoir,
-        description="Optional finite reservoir and depletion handling.",
+        description="Optional finite reservoir and depletion handling (non-default is deprecated).",
     )
     feedback: SupplyFeedback = Field(
         default_factory=SupplyFeedback,
-        description="Optional τ-based proportional feedback controller.",
+        description="Optional τ-based proportional feedback controller (non-default is deprecated).",
     )
     temperature: SupplyTemperature = Field(
         default_factory=SupplyTemperature,
-        description="Optional temperature-driven scaling of the supply rate.",
+        description="Optional temperature-driven scaling of the supply rate (non-default is deprecated).",
     )
     transport: SupplyTransport = Field(
         default_factory=SupplyTransport,
-        description="Transport mode for routing supply to the surface or deep reservoir.",
+        description="Transport mode for routing supply to the surface or deep reservoir (non-default is deprecated).",
     )
     injection: SupplyInjection = Field(
         default_factory=SupplyInjection,
-        description="Mapping from external supply to PSD bins and optional deep-reservoir mixing.",
+        description=(
+            "Mapping from external supply to PSD bins and optional deep-reservoir mixing "
+            "(non-default injection/velocity settings are deprecated)."
+        ),
     )
     piecewise: list[SupplyPiece] = Field(
         default_factory=list,
@@ -881,9 +893,9 @@ class InitTau1(BaseModel):
         False,
         description="If true, clamp the initial surface density to the chosen Σ_τ=1 cap to avoid headroom=0.",
     )
-    tau_field: Literal["vertical", "los"] = Field(
+    tau_field: Literal["los"] = Field(
         "los",
-        description="Which optical-depth field to target when setting Σ_τ=1. Use 'los' to target Mars line-of-sight τ.",
+        description="Optical-depth field to target when setting Σ_τ=1 (LOS only).",
     )
     target_tau: float = Field(
         1.0,
@@ -1156,12 +1168,9 @@ class PhaseConfig(BaseModel):
             "'particle' uses the grain equilibrium temperature."
         ),
     )
-    tau_field: Literal["vertical", "los"] = Field(
+    tau_field: Literal["los"] = Field(
         "los",
-        description=(
-            "Optical-depth field forwarded to phase evaluation. "
-            "'vertical' uses κΣ, 'los' multiplies by the line-of-sight factor."
-        ),
+        description="Optical-depth field forwarded to phase evaluation (LOS only).",
     )
     q_abs_mean: float = Field(
         0.4,
