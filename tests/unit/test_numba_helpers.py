@@ -71,24 +71,40 @@ def test_gain_tensor_fallback_numba_matches_einsum(monkeypatch) -> None:
     Y[0, 0, 0] = 0.1
     Y[0, 0, 1] = 0.2
     Y[1, 1, 1] = 0.3
-    expected = 0.5 * np.einsum("ij,kij->k", C, Y)
-    got = kernels.gain_tensor_fallback_numba(C, Y)
+    m = np.array([1.0, 3.0], dtype=float)
+    m_sum = m[:, None] + m[None, :]
+    weighted = np.triu(C * m_sum)
+    expected = np.einsum("ij,kij->k", weighted, Y)
+    expected = np.where(m > 0.0, expected / m, 0.0)
+    got = kernels.gain_tensor_fallback_numba(C, Y, m)
     np.testing.assert_allclose(got, expected)
 
 
 def test_fragment_tensor_fallback_numba_simple_consistency(monkeypatch) -> None:
     kernels = _reload_with_env("marsdisk.physics._numba_kernels", disable_numba=False)
     sizes = np.array([1.0, 2.0], dtype=float)
+    widths = np.array([0.5, 1.5], dtype=float)
+    edges = np.empty(sizes.size + 1, dtype=float)
+    edges[:-1] = np.maximum(sizes - 0.5 * widths, 0.0)
+    edges[-1] = sizes[-1] + 0.5 * widths[-1]
     valid_pair = np.ones((2, 2), dtype=bool)
     f_lr_matrix = np.full((2, 2), 0.5, dtype=float)
     k_lr_matrix = np.zeros((2, 2), dtype=np.int64)
     alpha = 3.5
-    Y_numba = kernels.fragment_tensor_fallback_numba(sizes, valid_pair, f_lr_matrix, k_lr_matrix, alpha)
+    Y_numba = kernels.fragment_tensor_fallback_numba(
+        edges, valid_pair, f_lr_matrix, k_lr_matrix, alpha
+    )
 
     # Python reference using同一ロジック
     weights_table = np.zeros((2, 2), dtype=float)
     for k_lr in range(2):
-        weights = sizes[: k_lr + 1] ** (-alpha)
+        left = np.maximum(edges[: k_lr + 1], 1.0e-30)
+        right = np.maximum(edges[1 : k_lr + 2], left)
+        power = 1.0 - alpha
+        if abs(power) < 1.0e-12:
+            weights = np.log(right / left)
+        else:
+            weights = (right**power - left**power) / power
         s = float(np.sum(weights))
         if s > 0.0:
             weights_table[k_lr, : k_lr + 1] = weights / s

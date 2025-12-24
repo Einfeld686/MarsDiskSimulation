@@ -79,40 +79,41 @@ def NUMBA_AVAILABLE() -> bool:
 
 @njit(cache=True)
 def compute_weights_table_numba(
-    sizes: np.ndarray,
+    edges: np.ndarray,
     alpha_frag: float,
 ) -> np.ndarray:
     """Precompute normalised power-law weights for fragment distribution.
 
-    For each largest-remnant bin index ``k_lr``, the weights are:
-
-        w_k = s_k^{-alpha_frag} / Σ_{k'≤k_lr} s_{k'}^{-alpha_frag}
-
-    Parameters
-    ----------
-    sizes : ndarray
-        Array of particle sizes (bin centres) with shape ``(n,)``.
-    alpha_frag : float
-        Power-law exponent for the fragment size distribution.
-
-    Returns
-    -------
-    ndarray
-        Weights table with shape ``(n, n)`` where ``table[k_lr, k]`` gives
-        the normalised weight for bin ``k`` when the largest remnant falls
-        into bin ``k_lr``.
+    For each largest-remnant bin index ``k_lr``, the weights are based on
+    integrating ``dM/ds ∝ s^{-alpha_frag}`` over each bin.
     """
-    n = sizes.shape[0]
+    n = edges.shape[0] - 1
     table = np.zeros((n, n), dtype=np.float64)
+    bin_integrals = np.zeros(n, dtype=np.float64)
+    power = 1.0 - alpha_frag
+
+    for k in range(n):
+        left = edges[k]
+        right = edges[k + 1]
+        if left <= 0.0:
+            left = 1.0e-30
+        if right < left:
+            right = left
+        if abs(power) < 1.0e-12:
+            bin_integrals[k] = np.log(right / left)
+        else:
+            bin_integrals[k] = (right ** power - left ** power) / power
+        if not np.isfinite(bin_integrals[k]) or bin_integrals[k] < 0.0:
+            bin_integrals[k] = 0.0
 
     for k_lr in range(n):
         total = 0.0
         for k in range(k_lr + 1):
-            total += sizes[k] ** (-alpha_frag)
+            total += bin_integrals[k]
         if total > 0.0:
             inv_total = 1.0 / total
             for k in range(k_lr + 1):
-                table[k_lr, k] = (sizes[k] ** (-alpha_frag)) * inv_total
+                table[k_lr, k] = bin_integrals[k] * inv_total
     return table
 
 
@@ -178,17 +179,25 @@ def fill_fragment_tensor_numba(
 
 
 @njit(cache=True, parallel=True)
-def gain_from_kernel_tensor_numba(C: np.ndarray, Y: np.ndarray) -> np.ndarray:
-    """Return gain vector using a parallelised triple loop over C and Y."""
+def gain_from_kernel_tensor_numba(C: np.ndarray, Y: np.ndarray, m: np.ndarray) -> np.ndarray:
+    """Return gain vector using a parallelised triple loop over C and Y.
+
+    The gain maps mass fractions in Y to number-source terms via (m_i+m_j)/m_k
+    and sums only the upper-triangular collision pairs to avoid double counting.
+    """
 
     n = C.shape[0]
     out = np.zeros(n, dtype=np.float64)
     for k in prange(n):
         acc = 0.0
         for i in range(n):
-            for j in range(n):
-                acc += C[i, j] * Y[k, i, j]
-        out[k] = 0.5 * acc
+            m_i = m[i]
+            for j in range(i, n):
+                acc += C[i, j] * Y[k, i, j] * (m_i + m[j])
+        if m[k] > 0.0:
+            out[k] = acc / m[k]
+        else:
+            out[k] = 0.0
     return out
 
 
@@ -396,7 +405,7 @@ def mass_budget_error_numba(
 
 
 @njit(cache=True, parallel=True)
-def gain_tensor_fallback_numba(C: np.ndarray, Y: np.ndarray) -> np.ndarray:
+def gain_tensor_fallback_numba(C: np.ndarray, Y: np.ndarray, m: np.ndarray) -> np.ndarray:
     """Triple-loop gain term used when the main Numba kernel is unavailable."""
 
     n = C.shape[0]
@@ -404,15 +413,19 @@ def gain_tensor_fallback_numba(C: np.ndarray, Y: np.ndarray) -> np.ndarray:
     for k in prange(n):
         acc = 0.0
         for i in range(n):
-            for j in range(n):
-                acc += C[i, j] * Y[k, i, j]
-        out[k] = 0.5 * acc
+            m_i = m[i]
+            for j in range(i, n):
+                acc += C[i, j] * Y[k, i, j] * (m_i + m[j])
+        if m[k] > 0.0:
+            out[k] = acc / m[k]
+        else:
+            out[k] = 0.0
     return out
 
 
 @njit(cache=True)
 def fragment_tensor_fallback_numba(
-    sizes: np.ndarray,
+    edges: np.ndarray,
     valid_pair: np.ndarray,
     f_lr_matrix: np.ndarray,
     k_lr_matrix: np.ndarray,
@@ -420,18 +433,34 @@ def fragment_tensor_fallback_numba(
 ) -> np.ndarray:
     """Pure-Python fallback ported to Numba (weights + triple loop)."""
 
-    n = sizes.shape[0]
+    n = edges.shape[0] - 1
     Y = np.zeros((n, n, n), dtype=np.float64)
+    bin_integrals = np.zeros(n, dtype=np.float64)
+    power = 1.0 - alpha_frag
+
+    for k in range(n):
+        left = edges[k]
+        right = edges[k + 1]
+        if left <= 0.0:
+            left = 1.0e-30
+        if right < left:
+            right = left
+        if abs(power) < 1.0e-12:
+            bin_integrals[k] = np.log(right / left)
+        else:
+            bin_integrals[k] = (right ** power - left ** power) / power
+        if not np.isfinite(bin_integrals[k]) or bin_integrals[k] < 0.0:
+            bin_integrals[k] = 0.0
 
     weights_table = np.zeros((n, n), dtype=np.float64)
     for k_lr in range(n):
         total = 0.0
         for k in range(k_lr + 1):
-            total += sizes[k] ** (-alpha_frag)
+            total += bin_integrals[k]
         if total > 0.0:
             inv_total = 1.0 / total
             for k in range(k_lr + 1):
-                weights_table[k_lr, k] = (sizes[k] ** (-alpha_frag)) * inv_total
+                weights_table[k_lr, k] = bin_integrals[k] * inv_total
 
     for i in range(n):
         for j in range(n):

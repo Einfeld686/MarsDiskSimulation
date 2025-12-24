@@ -16,8 +16,14 @@ def test_fragment_tensor_fallback_with_numba_disabled(monkeypatch) -> None:
     assert collisions_smol._USE_NUMBA is False
 
     sizes = np.array([1.0e-4, 2.0e-4, 4.0e-4])
+    widths = np.array([0.5e-4, 1.0e-4, 2.0e-4])
+    edges = np.empty(sizes.size + 1, dtype=float)
+    edges[:-1] = np.maximum(sizes - 0.5 * widths, 0.0)
+    edges[-1] = sizes[-1] + 0.5 * widths[-1]
     masses = np.array([1.0e-9, 8.0e-9, 6.4e-8])
-    Y = collisions_smol._fragment_tensor(sizes, masses, v_rel=1.0, rho=3000.0)
+    Y = collisions_smol._fragment_tensor(
+        sizes, masses, edges, v_rel=1.0, rho=3000.0
+    )
 
     # フォールバック経路でも有限の非零テンソルが返ること
     assert Y.shape == (3, 3, 3)

@@ -16,7 +16,7 @@ def test_imex_bdf1_limits_timestep_and_preserves_mass() -> None:
     C = np.diag([0.5, 1.0, 2.0, 5.0])
     Y = np.zeros((n_bins, n_bins, n_bins))
     for i in range(n_bins):
-        Y[i, i, i] = 2.0  # redistributes mass back into the source bin
+        Y[i, i, i] = 1.0  # redistributes mass back into the source bin
     S = np.zeros(n_bins)
 
     dt_trial = 10.0
@@ -31,7 +31,8 @@ def test_imex_bdf1_limits_timestep_and_preserves_mass() -> None:
         safety=0.1,
     )
 
-    loss = np.sum(C, axis=1)
+    loss = np.sum(C, axis=1) + np.diag(C)
+    loss = loss / N
     t_coll_min = 1.0 / np.min(loss)
     dt_cap = 0.1 * t_coll_min
     assert dt_eff <= dt_cap + 1e-12
