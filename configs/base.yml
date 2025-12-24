@@ -6,7 +6,8 @@ process:
   state_tagging:
     enabled: false
 geometry:
-  mode: 0D
+  mode: 1D
+  Nr: 32
 chi_blow: auto
 material:
   rho: 3000.0
@@ -66,7 +67,7 @@ init_tau1:
   enabled: false
   scale_to_tau1: false
 optical_depth:
-  tau0_target: 1.0
+  tau0_target: &tau0_target 1.0
   tau_stop: 2.302585092994046
   tau_stop_tol: 1e-06
   tau_field: tau_los
@@ -75,7 +76,7 @@ supply:
   const:
     prod_area_rate_kg_m2_s: 0.0
     mu_orbit10pct: 1.0
-    mu_reference_tau: 1.0
+    mu_reference_tau: *tau0_target
     orbit_fraction_at_mu1: 0.1
   powerlaw:
     A_kg_m2_s:

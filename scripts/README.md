@@ -16,7 +16,7 @@
 | `make_qpr_table.py` | Planck 平均 $\langle Q_{\rm pr}\rangle$ テーブル生成 | `marsdisk.ops.make_qpr_table.main` を起動し、CSV/NPZ の Q_pr テーブルを作成します。 |
 | `plot_axis_r_sweep.py` | AXIS_r_sweep 結果の可視化 | `analysis/agent_runs/AXIS_r_sweep/summary.csv` を読み、温度ごとの $M_{\rm loss}$ vs r/R_M を PNG として保存します。 |
 | `plot_heatmaps.py` | パラメータマップの描画 | `results/map*.csv` をピボットしてヒートマップ化し、β 系指標や失敗セルのハッチングも表示します。 |
-| `plot_tau_timescales.py` | τ–timescale 図の生成 | `series/run.parquet` から `t_sub`/`t_coll`/`t_blow` を計算し、τとの散布図を `figures/` へ保存します。 |
+| `plot_tau_timescales.py` | τ–timescale 図の生成 | `series/run.parquet` から `t_sub`/`t_coll`/`t_blow` を計算し、τとの散布図を `figures/` へ保存します（`--color-by radius` で 1D 半径を色分け、`--with-inset` で半径–τの小図、`--clip-timescale-min` で下限クリップ）。 |
 | `plot_tau_timescales.cmd` | τ–timescale 図の Windows 実行 | `.venv` セットアップ後に `plot_tau_timescales.py` を呼び、CPU/メモリ検出ログを出力します。 |
 | `run_axis_r_sweep.py` | r–T–M グリッドの大量実行 | `analysis/agent_runs/AXIS_r_sweep` 以下に YAML／結果ディレクトリを生成し、`marsdisk.run` をケースごとに起動。`summary.json` 等を検証・集計します。 |
 | `run_inner_disk_suite.py` | Φ(1)×T_M スイート | Φ(1)={0.20,0.37,0.60} と温度掃引を組み合わせて 1 年積分し、`series/*.parquet`・PSD フレーム・GIF・`orbit_rollup.csv` を生成します。 |

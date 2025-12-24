@@ -2661,35 +2661,35 @@
   },
   {
     "file_path": "marsdisk/io/checkpoint.py",
-    "line_no": 60,
+    "line_no": 61,
     "symbol": "_ensure_parent",
     "signature": "_ensure_parent(path: Path) -> None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/io/checkpoint.py",
-    "line_no": 64,
+    "line_no": 65,
     "symbol": "save_checkpoint",
     "signature": "save_checkpoint(path: Path, state: CheckpointState, fmt: CheckpointFormat='pickle') -> Path",
     "brief_usage": "Serialise a checkpoint to disk."
   },
   {
     "file_path": "marsdisk/io/checkpoint.py",
-    "line_no": 88,
+    "line_no": 89,
     "symbol": "load_checkpoint",
     "signature": "load_checkpoint(path: Path, fmt: CheckpointFormat=None) -> CheckpointState",
     "brief_usage": "Load a checkpoint from disk."
   },
   {
     "file_path": "marsdisk/io/checkpoint.py",
-    "line_no": 118,
+    "line_no": 119,
     "symbol": "find_latest_checkpoint",
     "signature": "find_latest_checkpoint(dir_path: Path) -> Optional[Path]",
     "brief_usage": "Return the latest checkpoint path in a directory if any."
   },
   {
     "file_path": "marsdisk/io/checkpoint.py",
-    "line_no": 129,
+    "line_no": 130,
     "symbol": "prune_checkpoints",
     "signature": "prune_checkpoints(dir_path: Path, keep_last_n: int) -> None",
     "brief_usage": "Remove older checkpoints, keeping only the most recent N."
@@ -2906,49 +2906,49 @@
   },
   {
     "file_path": "marsdisk/io/writer.py",
-    "line_no": 370,
+    "line_no": 394,
     "symbol": "write_summary",
     "signature": "write_summary(summary: Mapping[str, Any], path: Path) -> None",
     "brief_usage": "Write a summary dictionary to ``summary.json``."
   },
   {
     "file_path": "marsdisk/io/writer.py",
-    "line_no": 381,
+    "line_no": 405,
     "symbol": "write_run_config",
     "signature": "write_run_config(config: Mapping[str, Any], path: Path) -> None",
     "brief_usage": "Persist the deterministic run configuration metadata."
   },
   {
     "file_path": "marsdisk/io/writer.py",
-    "line_no": 389,
+    "line_no": 413,
     "symbol": "write_mass_budget",
     "signature": "write_mass_budget(records: Iterable[Mapping[str, Any]], path: Path) -> None",
     "brief_usage": "Write mass conservation diagnostics to a CSV file."
   },
   {
     "file_path": "marsdisk/io/writer.py",
-    "line_no": 396,
+    "line_no": 420,
     "symbol": "append_csv",
     "signature": "append_csv(records: Iterable[Mapping[str, Any]], path: Path, *, header: bool=True) -> bool",
     "brief_usage": "Append records to a CSV file, creating the file if needed."
   },
   {
     "file_path": "marsdisk/io/writer.py",
-    "line_no": 415,
+    "line_no": 439,
     "symbol": "write_orbit_rollup",
     "signature": "write_orbit_rollup(rows: Iterable[Mapping[str, Any]], path: Path) -> None",
     "brief_usage": "Serialise orbit-by-orbit loss diagnostics."
   },
   {
     "file_path": "marsdisk/io/writer.py",
-    "line_no": 426,
+    "line_no": 450,
     "symbol": "write_step_diagnostics",
     "signature": "write_step_diagnostics(rows: Iterable[Mapping[str, Any]], path: Path, *, fmt: Literal['csv', 'jsonl']='csv') -> None",
     "brief_usage": "Serialise per-step loss channel diagnostics."
   },
   {
     "file_path": "marsdisk/io/writer.py",
-    "line_no": 449,
+    "line_no": 473,
     "symbol": "append_step_diagnostics",
     "signature": "append_step_diagnostics(rows: Iterable[Mapping[str, Any]], path: Path, *, fmt: Literal['csv', 'jsonl']='csv', header: bool=True) -> bool",
     "brief_usage": "Append per-step diagnostics in CSV or JSONL format."
@@ -4147,47 +4147,47 @@
     "file_path": "marsdisk/output_schema.py",
     "line_no": 7,
     "symbol": "ZERO_D_SERIES_KEYS",
-    "signature": "ZERO_D_SERIES_KEYS: list[str] = ['time', 'dt', 'Omega_s', 't_orb_s', 't_blow_s', 't_coll', 'ts_ratio', 'r_m', 'r_RM', 'r_orbit_RM', 'r_source', 'T_M_used', 'T_M_source', 'T_p_effective', 'phase_temperature_input', 'rad_flux_Mars', 'dt_over_t_blow', 'tau', 'tau_los_mars', 'a_blow_step', 'a_blow', 'a_blow_at_smin', 's_min', 's_min_surface_energy', 'kappa', 'kappa_eff', 'kappa_surf', 'Qpr_mean', 'Q_pr_at_smin', 'beta_at_smin_config', 'beta_at_smin_effective', 'beta_at_smin', 'beta_threshold', 'Sigma_surf', 'sigma_surf', 'Sigma_surf0', 'Sigma_tau1', 'Sigma_tau1_active', 'sigma_tau1', 'Sigma_tau1_last_finite', 'tau_phase_los', 'tau_phase_used', 'phase_tau_field', 'sigma_deep', 'headroom', 'outflux_surface', 't_solid_s', 'blowout_gate_factor', 'sink_flux_surface', 't_blow', 'prod_subblow_area_rate', 'prod_subblow_area_rate_raw', 'dotSigma_prod', 'mu_orbit10pct', 'epsilon_mix', 'prod_rate_raw', 'prod_rate_applied_to_surf', 'prod_rate_diverted_to_deep', 'prod_rate_into_deep', 'deep_to_surf_flux_attempt', 'deep_to_surf_flux', 'deep_to_surf_flux_applied', 'supply_rate_nominal', 'supply_rate_scaled', 'supply_rate_applied', 'supply_tau_clip_spill_rate', 'supply_headroom', 'supply_clip_factor', 'supply_visibility_factor', 'supply_blocked_by_headroom', 'supply_mixing_limited', 'supply_transport_mode', 'e_kernel_used', 'i_kernel_used', 'e_kernel_base', 'i_kernel_base', 'e_kernel_supply', 'i_kernel_supply', 'e_kernel_effective', 'i_kernel_effective', 'e_state_next', 'i_state_next', 't_damp_collisions', 'e_eq_target', 'supply_velocity_weight_w', 'supply_temperature_scale', 'supply_temperature_value', 'supply_temperature_value_kind', 'supply_feedback_scale', 'supply_feedback_error', 'supply_reservoir_remaining_Mmars', 'supply_reservoir_fraction', 'supply_reservoir_clipped', 'M_out_dot', 'M_sink_dot', 'dM_dt_surface_total', 'M_out_dot_avg', 'M_sink_dot_avg', 'dM_dt_surface_total_avg', 'fast_blowout_factor_avg', 'dSigma_dt_blowout', 'dSigma_dt_sinks', 'dSigma_dt_total', 'dSigma_dt_sublimation', 'M_loss_cum', 'mass_total_bins', 'mass_lost_by_blowout', 'mass_lost_by_sinks', 'M_sink_cum', 'mass_lost_sinks_step', 'mass_lost_sublimation_step', 'mass_lost_hydro_step', 'mass_lost_tau_clip_spill_step', 'cum_mass_lost_tau_clip_spill', 'mass_lost_surface_solid_marsRP_step', 'M_loss_rp_mars', 'M_loss_surface_solid_marsRP', 'M_loss_hydro', 'fast_blowout_factor', 'fast_blowout_corrected', 'fast_blowout_flag_gt3', 'fast_blowout_flag_gt10', 'fast_blowout_ratio', 'n_substeps', 'substep_active', 'chi_blow_eff', 'case_status', 's_blow_m', 'rho_used', 'Q_pr_used', 'Q_pr_blow', 's_min_effective', 's_min_config', 's_min_effective_gt_config', 'T_source', 'ds_dt_sublimation', 'ds_dt_sublimation_raw', 'phi_effective', 'phi_used', 'phase_state', 'phase_f_vap', 'phase_method', 'phase_reason', 'phase_bulk_state', 'phase_bulk_f_liquid', 'phase_bulk_f_solid', 'phase_bulk_f_vapor', 'tau_mars_line_of_sight', 'tau_gate_blocked', 'blowout_beta_gate', 'blowout_phase_allowed', 'blowout_layer_mode', 'blowout_target_phase', 'sink_selected', 'sublimation_blocked_by_phase']",
+    "signature": "ZERO_D_SERIES_KEYS: list[str] = ['time', 'dt', 'Omega_s', 't_orb_s', 't_blow_s', 't_coll', 'ts_ratio', 'r_m', 'r_RM', 'r_orbit_RM', 'r_source', 'T_M_used', 'T_M_source', 'T_p_effective', 'phase_temperature_input', 'rad_flux_Mars', 'dt_over_t_blow', 'tau', 'tau_los_mars', 'a_blow_step', 'a_blow', 'a_blow_at_smin', 's_min', 's_min_surface_energy', 'kappa', 'kappa_eff', 'kappa_surf', 'Qpr_mean', 'Q_pr_at_smin', 'beta_at_smin_config', 'beta_at_smin_effective', 'beta_at_smin', 'beta_threshold', 'Sigma_surf', 'sigma_surf', 'Sigma_surf0', 'Sigma_tau1', 'Sigma_tau1_active', 'sigma_tau1', 'Sigma_tau1_last_finite', 'tau_phase_los', 'tau_phase_used', 'phase_tau_field', 'sigma_deep', 'headroom', 'outflux_surface', 't_solid_s', 'blowout_gate_factor', 'sink_flux_surface', 't_blow', 'prod_subblow_area_rate', 'prod_subblow_area_rate_raw', 'dotSigma_prod', 'mu_orbit10pct', 'epsilon_mix', 'prod_rate_raw', 'prod_rate_applied_to_surf', 'prod_rate_diverted_to_deep', 'prod_rate_into_deep', 'deep_to_surf_flux_attempt', 'deep_to_surf_flux', 'deep_to_surf_flux_applied', 'supply_rate_nominal', 'supply_rate_scaled', 'supply_rate_applied', 'supply_tau_clip_spill_rate', 'supply_headroom', 'supply_clip_factor', 'supply_visibility_factor', 'supply_blocked_by_headroom', 'supply_mixing_limited', 'supply_transport_mode', 'e_kernel_used', 'i_kernel_used', 'e_kernel_base', 'i_kernel_base', 'e_kernel_supply', 'i_kernel_supply', 'e_kernel_effective', 'i_kernel_effective', 'e_state_next', 'i_state_next', 't_damp_collisions', 'e_eq_target', 'supply_velocity_weight_w', 'supply_temperature_scale', 'supply_temperature_value', 'supply_temperature_value_kind', 'supply_feedback_scale', 'supply_feedback_error', 'supply_reservoir_remaining_Mmars', 'supply_reservoir_fraction', 'supply_reservoir_clipped', 'M_out_dot', 'M_sink_dot', 'dM_dt_surface_total', 'M_out_dot_avg', 'M_sink_dot_avg', 'dM_dt_surface_total_avg', 'fast_blowout_factor_avg', 'dSigma_dt_blowout', 'dSigma_dt_sinks', 'dSigma_dt_total', 'dSigma_dt_sublimation', 'M_loss_cum', 'mass_total_bins', 'mass_lost_by_blowout', 'mass_lost_by_sinks', 'M_sink_cum', 'mass_lost_sinks_step', 'mass_lost_sublimation_step', 'mass_lost_hydro_step', 'mass_lost_tau_clip_spill_step', 'cum_mass_lost_tau_clip_spill', 'mass_lost_surface_solid_marsRP_step', 'smol_dt_eff', 'smol_sigma_before', 'smol_sigma_after', 'smol_sigma_loss', 'smol_prod_mass_rate', 'smol_extra_mass_loss_rate', 'smol_mass_budget_delta', 'smol_mass_error', 'smol_gain_mass_rate', 'smol_loss_mass_rate', 'smol_sink_mass_rate', 'smol_source_mass_rate', 'M_loss_rp_mars', 'M_loss_surface_solid_marsRP', 'M_loss_hydro', 'fast_blowout_factor', 'fast_blowout_corrected', 'fast_blowout_flag_gt3', 'fast_blowout_flag_gt10', 'fast_blowout_ratio', 'n_substeps', 'substep_active', 'chi_blow_eff', 'case_status', 's_blow_m', 'rho_used', 'Q_pr_used', 'Q_pr_blow', 's_min_effective', 's_min_config', 's_min_effective_gt_config', 'T_source', 'ds_dt_sublimation', 'ds_dt_sublimation_raw', 'phi_effective', 'phi_used', 'phase_state', 'phase_f_vap', 'phase_method', 'phase_reason', 'phase_bulk_state', 'phase_bulk_f_liquid', 'phase_bulk_f_solid', 'phase_bulk_f_vapor', 'tau_mars_line_of_sight', 'tau_gate_blocked', 'blowout_beta_gate', 'blowout_phase_allowed', 'blowout_layer_mode', 'blowout_target_phase', 'sink_selected', 'sublimation_blocked_by_phase']",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/output_schema.py",
-    "line_no": 165,
+    "line_no": 177,
     "symbol": "ZERO_D_DIAGNOSTIC_KEYS",
-    "signature": "ZERO_D_DIAGNOSTIC_KEYS: list[str] = ['time', 'dt', 'dt_over_t_blow', 'r_m_used', 'r_RM_used', 'T_M_used', 'T_p_effective', 'phase_temperature_input', 'phase_temperature_used_K', 'rad_flux_Mars', 'F_abs_geom', 'F_abs_geom_qpr', 'F_abs', 'Omega_s', 't_orb_s', 't_blow_s', 't_solid_s', 't_sink_total_s', 't_sink_surface_s', 't_sink_sublimation_s', 't_sink_gas_drag_s', 'mass_loss_sinks_step', 'mass_lost_by_sinks', 'mass_loss_sublimation_step', 'sigma_tau1', 'sigma_tau1_active', 'Sigma_tau1_last_finite', 'tau_los_mars', 'tau_phase_los', 'tau_phase_used', 'phase_tau_field', 'kappa_eff', 'kappa_surf', 'phi_effective', 'psi_shield', 'sigma_surf', 'sigma_deep', 'kappa_Planck', 'tau_eff', 's_min', 'a_blow_at_smin', 'beta_at_smin_effective', 'beta_at_smin', 'Q_pr_at_smin', 's_peak', 'area_m2', 'prod_subblow_area_rate', 'prod_subblow_area_rate_raw', 'supply_rate_nominal', 'supply_rate_scaled', 'supply_rate_applied', 'supply_tau_clip_spill_rate', 'supply_headroom', 'supply_clip_factor', 'headroom', 'prod_rate_raw', 'prod_rate_applied_to_surf', 'prod_rate_diverted_to_deep', 'prod_rate_into_deep', 'deep_to_surf_flux_attempt', 'deep_to_surf_flux', 'deep_to_surf_flux_applied', 'supply_visibility_factor', 'supply_blocked_by_headroom', 'supply_mixing_limited', 'supply_transport_mode', 'supply_temperature_scale', 'supply_temperature_value', 'supply_temperature_value_kind', 'supply_feedback_scale', 'supply_feedback_error', 'supply_reservoir_remaining_Mmars', 'supply_reservoir_fraction', 'supply_reservoir_clipped', 's_min_effective', 'qpr_mean', 'chi_blow_eff', 'ds_step_uniform', 'mass_ratio_uniform', 'M_out_cum', 'M_sink_cum', 'M_loss_cum', 'cum_mass_lost_tau_clip_spill', 'M_loss_surface_solid_marsRP', 'M_hydro_cum', 'phase_state', 'phase_method', 'phase_reason', 'phase_f_vap', 'phase_bulk_state', 'phase_bulk_f_liquid', 'phase_bulk_f_solid', 'phase_bulk_f_vapor', 'phase_payload', 'ds_dt_sublimation', 'ds_dt_sublimation_raw', 'sublimation_blocked_by_phase', 'tau_mars_line_of_sight', 'tau_gate_blocked', 'blowout_beta_gate', 'blowout_phase_allowed', 'blowout_layer_mode', 'blowout_target_phase', 'sink_selected', 'hydro_timescale_s', 'mass_loss_surface_solid_step', 'blowout_gate_factor']",
+    "signature": "ZERO_D_DIAGNOSTIC_KEYS: list[str] = ['time', 'dt', 'dt_over_t_blow', 'r_m_used', 'r_RM_used', 'T_M_used', 'T_p_effective', 'phase_temperature_input', 'phase_temperature_used_K', 'rad_flux_Mars', 'F_abs_geom', 'F_abs_geom_qpr', 'F_abs', 'Omega_s', 't_orb_s', 't_blow_s', 't_solid_s', 't_sink_total_s', 't_sink_surface_s', 't_sink_sublimation_s', 't_sink_gas_drag_s', 'mass_loss_sinks_step', 'mass_lost_by_sinks', 'mass_loss_sublimation_step', 'sigma_tau1', 'sigma_tau1_active', 'Sigma_tau1_last_finite', 'tau_los_mars', 'tau_phase_los', 'tau_phase_used', 'phase_tau_field', 'kappa_eff', 'kappa_surf', 'phi_effective', 'psi_shield', 'sigma_surf', 'sigma_deep', 'kappa_Planck', 'tau_eff', 's_min', 'a_blow_at_smin', 'beta_at_smin_effective', 'beta_at_smin', 'Q_pr_at_smin', 's_peak', 'area_m2', 'prod_subblow_area_rate', 'prod_subblow_area_rate_raw', 'supply_rate_nominal', 'supply_rate_scaled', 'supply_rate_applied', 'supply_tau_clip_spill_rate', 'supply_headroom', 'supply_clip_factor', 'headroom', 'prod_rate_raw', 'prod_rate_applied_to_surf', 'prod_rate_diverted_to_deep', 'prod_rate_into_deep', 'deep_to_surf_flux_attempt', 'deep_to_surf_flux', 'deep_to_surf_flux_applied', 'supply_visibility_factor', 'supply_blocked_by_headroom', 'supply_mixing_limited', 'supply_transport_mode', 'supply_temperature_scale', 'supply_temperature_value', 'supply_temperature_value_kind', 'supply_feedback_scale', 'supply_feedback_error', 'supply_reservoir_remaining_Mmars', 'supply_reservoir_fraction', 'supply_reservoir_clipped', 's_min_effective', 'qpr_mean', 'chi_blow_eff', 'ds_step_uniform', 'mass_ratio_uniform', 'M_out_cum', 'M_sink_cum', 'M_loss_cum', 'cum_mass_lost_tau_clip_spill', 'M_loss_surface_solid_marsRP', 'M_hydro_cum', 'phase_state', 'phase_method', 'phase_reason', 'phase_f_vap', 'phase_bulk_state', 'phase_bulk_f_liquid', 'phase_bulk_f_solid', 'phase_bulk_f_vapor', 'phase_payload', 'ds_dt_sublimation', 'ds_dt_sublimation_raw', 'sublimation_blocked_by_phase', 'tau_mars_line_of_sight', 'tau_gate_blocked', 'blowout_beta_gate', 'blowout_phase_allowed', 'blowout_layer_mode', 'blowout_target_phase', 'sink_selected', 'hydro_timescale_s', 'mass_loss_surface_solid_step', 'smol_dt_eff', 'smol_sigma_before', 'smol_sigma_after', 'smol_sigma_loss', 'smol_prod_mass_rate', 'smol_extra_mass_loss_rate', 'smol_mass_budget_delta', 'smol_mass_error', 'smol_gain_mass_rate', 'smol_loss_mass_rate', 'smol_sink_mass_rate', 'smol_source_mass_rate', 'blowout_gate_factor']",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/output_schema.py",
-    "line_no": 275,
+    "line_no": 299,
     "symbol": "ONE_D_EXTRA_SERIES_KEYS",
     "signature": "ONE_D_EXTRA_SERIES_KEYS: list[str] = ['cell_index', 'cell_active', 'active_mask', 'Sigma_midplane', 'cell_stop_reason', 'cell_stop_time', 'cell_stop_tau', 't_coll_kernel_min']",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/output_schema.py",
-    "line_no": 286,
+    "line_no": 310,
     "symbol": "ONE_D_EXTRA_DIAGNOSTIC_KEYS",
     "signature": "ONE_D_EXTRA_DIAGNOSTIC_KEYS: list[str] = ['cell_index']",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/output_schema.py",
-    "line_no": 289,
+    "line_no": 313,
     "symbol": "_ensure_keys",
     "signature": "_ensure_keys(record: Dict[str, object], keys: Iterable[str]) -> None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/output_schema.py",
-    "line_no": 294,
+    "line_no": 318,
     "symbol": "ensure_series_keys",
     "signature": "ensure_series_keys(record: Dict[str, object], *, include_1d: bool=True) -> None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/output_schema.py",
-    "line_no": 300,
+    "line_no": 324,
     "symbol": "ensure_diagnostic_keys",
     "signature": "ensure_diagnostic_keys(record: Dict[str, object], *, include_1d: bool=True) -> None",
     "brief_usage": "No description available."
@@ -4203,110 +4203,110 @@
     "file_path": "marsdisk/physics/_numba_kernels.py",
     "line_no": 81,
     "symbol": "compute_weights_table_numba",
-    "signature": "compute_weights_table_numba(sizes: np.ndarray, alpha_frag: float) -> np.ndarray",
+    "signature": "compute_weights_table_numba(edges: np.ndarray, alpha_frag: float) -> np.ndarray",
     "brief_usage": "Precompute normalised power-law weights for fragment distribution."
   },
   {
     "file_path": "marsdisk/physics/_numba_kernels.py",
-    "line_no": 125,
+    "line_no": 126,
     "symbol": "fill_fragment_tensor_numba",
     "signature": "fill_fragment_tensor_numba(Y: np.ndarray, n: int, valid_pair: np.ndarray, f_lr_matrix: np.ndarray, k_lr_matrix: np.ndarray, weights_table: np.ndarray) -> None",
     "brief_usage": "Fill the fragment distribution tensor in-place using parallel loops."
   },
   {
     "file_path": "marsdisk/physics/_numba_kernels.py",
-    "line_no": 181,
+    "line_no": 182,
     "symbol": "gain_from_kernel_tensor_numba",
-    "signature": "gain_from_kernel_tensor_numba(C: np.ndarray, Y: np.ndarray) -> np.ndarray",
+    "signature": "gain_from_kernel_tensor_numba(C: np.ndarray, Y: np.ndarray, m: np.ndarray) -> np.ndarray",
     "brief_usage": "Return gain vector using a parallelised triple loop over C and Y."
   },
   {
     "file_path": "marsdisk/physics/_numba_kernels.py",
-    "line_no": 196,
+    "line_no": 205,
     "symbol": "collision_kernel_numba",
     "signature": "collision_kernel_numba(N: np.ndarray, s: np.ndarray, H: np.ndarray, v_rel_scalar: float, v_rel_matrix: np.ndarray, use_matrix_velocity: bool) -> np.ndarray",
     "brief_usage": "Compute the collision kernel with optional pair-specific velocities."
   },
   {
     "file_path": "marsdisk/physics/_numba_kernels.py",
-    "line_no": 229,
+    "line_no": 238,
     "symbol": "collision_kernel_bookkeeping_numba",
     "signature": "collision_kernel_bookkeeping_numba(N: np.ndarray, s: np.ndarray, H: np.ndarray, m: np.ndarray, v_rel_scalar: float, v_rel_matrix: np.ndarray, use_matrix_velocity: bool, f_ke_matrix: np.ndarray, F_lf_matrix: np.ndarray) -> tuple[np.ndarray, np.ndarray]",
     "brief_usage": "Compute ``C`` together with energy bookkeeping statistics."
   },
   {
     "file_path": "marsdisk/physics/_numba_kernels.py",
-    "line_no": 345,
+    "line_no": 354,
     "symbol": "compute_prod_subblow_area_rate_C2_numba",
     "signature": "compute_prod_subblow_area_rate_C2_numba(C: np.ndarray, m_subblow: np.ndarray) -> float",
     "brief_usage": "Upper-triangular inner product for sub-blowout production (C2)."
   },
   {
     "file_path": "marsdisk/physics/_numba_kernels.py",
-    "line_no": 357,
+    "line_no": 366,
     "symbol": "loss_sum_numba",
     "signature": "loss_sum_numba(C: np.ndarray) -> np.ndarray",
     "brief_usage": "Row-wise sum of the collision kernel."
   },
   {
     "file_path": "marsdisk/physics/_numba_kernels.py",
-    "line_no": 371,
+    "line_no": 380,
     "symbol": "mass_budget_error_numba",
     "signature": "mass_budget_error_numba(N_old: np.ndarray, N_new: np.ndarray, m: np.ndarray, prod_subblow_mass_rate: float, dt: float, extra_mass_loss_rate: float) -> float",
     "brief_usage": "Mass budget error mirroring compute_mass_budget_error_C4."
   },
   {
     "file_path": "marsdisk/physics/_numba_kernels.py",
-    "line_no": 399,
+    "line_no": 408,
     "symbol": "gain_tensor_fallback_numba",
-    "signature": "gain_tensor_fallback_numba(C: np.ndarray, Y: np.ndarray) -> np.ndarray",
+    "signature": "gain_tensor_fallback_numba(C: np.ndarray, Y: np.ndarray, m: np.ndarray) -> np.ndarray",
     "brief_usage": "Triple-loop gain term used when the main Numba kernel is unavailable."
   },
   {
     "file_path": "marsdisk/physics/_numba_kernels.py",
-    "line_no": 414,
+    "line_no": 427,
     "symbol": "fragment_tensor_fallback_numba",
-    "signature": "fragment_tensor_fallback_numba(sizes: np.ndarray, valid_pair: np.ndarray, f_lr_matrix: np.ndarray, k_lr_matrix: np.ndarray, alpha_frag: float) -> np.ndarray",
+    "signature": "fragment_tensor_fallback_numba(edges: np.ndarray, valid_pair: np.ndarray, f_lr_matrix: np.ndarray, k_lr_matrix: np.ndarray, alpha_frag: float) -> np.ndarray",
     "brief_usage": "Pure-Python fallback ported to Numba (weights + triple loop)."
   },
   {
     "file_path": "marsdisk/physics/_numba_kernels.py",
-    "line_no": 454,
+    "line_no": 483,
     "symbol": "supply_mass_rate_powerlaw_numba",
     "signature": "supply_mass_rate_powerlaw_numba(s_arr: np.ndarray, m_arr: np.ndarray, widths_arr: np.ndarray, prod_rate: float, inj_floor: float, inj_ceiling: float, q: float) -> np.ndarray",
     "brief_usage": "Distribute supply over bins with dN/ds ∝ s^{-q} using bin overlaps."
   },
   {
     "file_path": "marsdisk/physics/_numba_kernels.py",
-    "line_no": 506,
+    "line_no": 535,
     "symbol": "blowout_sink_vector_numba",
     "signature": "blowout_sink_vector_numba(sizes: np.ndarray, a_blow: float, Omega: float, enable_blowout: bool) -> np.ndarray",
     "brief_usage": "Per-bin blow-out sink rates."
   },
   {
     "file_path": "marsdisk/physics/_numba_kernels.py",
-    "line_no": 524,
+    "line_no": 553,
     "symbol": "_solve_c_eq_constant_eps_numba",
     "signature": "_solve_c_eq_constant_eps_numba(tau: float, e_guess: float, f_wake: float, max_iter: int=100, tol: float=1e-06) -> float",
     "brief_usage": "Fixed-point iteration with constant restitution (ε=0.5)."
   },
   {
     "file_path": "marsdisk/physics/_numba_kernels.py",
-    "line_no": 549,
+    "line_no": 578,
     "symbol": "compute_kernel_e_i_H_numba",
     "signature": "compute_kernel_e_i_H_numba(sizes: np.ndarray, tau_eff: float, a_orbit_m: float, v_k: float, e0: float, i0: float, H_factor: float, H_fixed_over_a: float, kernel_ei_mode_flag: int, kernel_H_mode_flag: int, f_wake: float) -> tuple[float, float, np.ndarray]",
     "brief_usage": "Numba helper mirroring compute_kernel_e_i_H for simple configs."
   },
   {
     "file_path": "marsdisk/physics/_numba_kernels.py",
-    "line_no": 597,
+    "line_no": 626,
     "symbol": "kernel_minimum_tcoll_numba",
     "signature": "kernel_minimum_tcoll_numba(C_kernel: np.ndarray) -> float",
     "brief_usage": "Minimum collisional timescale from kernel row sums."
   },
   {
     "file_path": "marsdisk/physics/_numba_kernels.py",
-    "line_no": 616,
+    "line_no": 645,
     "symbol": "size_drift_rebin_numba",
     "signature": "size_drift_rebin_numba(sizes: np.ndarray, number: np.ndarray, edges: np.ndarray, ds_step: float, floor_val: float) -> tuple[np.ndarray, np.ndarray]",
     "brief_usage": "Rebin number densities after a uniform size drift."
@@ -4439,147 +4439,147 @@
   },
   {
     "file_path": "marsdisk/physics/collisions_smol.py",
-    "line_no": 96,
+    "line_no": 100,
     "symbol": "KernelEIState",
     "signature": "class KernelEIState",
     "brief_usage": "Baseline and effective eccentricity/inclination for the collision kernel."
   },
   {
     "file_path": "marsdisk/physics/collisions_smol.py",
-    "line_no": 107,
+    "line_no": 111,
     "symbol": "TimeOrbitParams",
     "signature": "class TimeOrbitParams",
     "brief_usage": "Group A: 時間・軌道パラメータ."
   },
   {
     "file_path": "marsdisk/physics/collisions_smol.py",
-    "line_no": 116,
+    "line_no": 120,
     "symbol": "MaterialParams",
     "signature": "class MaterialParams",
     "brief_usage": "Group B: 物質パラメータ."
   },
   {
     "file_path": "marsdisk/physics/collisions_smol.py",
-    "line_no": 125,
+    "line_no": 129,
     "symbol": "DynamicsParams",
     "signature": "class DynamicsParams",
     "brief_usage": "Group C: 力学パラメータ."
   },
   {
     "file_path": "marsdisk/physics/collisions_smol.py",
-    "line_no": 135,
+    "line_no": 139,
     "symbol": "SupplyParams",
     "signature": "class SupplyParams",
     "brief_usage": "Group D: 供給パラメータ."
   },
   {
     "file_path": "marsdisk/physics/collisions_smol.py",
-    "line_no": 147,
+    "line_no": 151,
     "symbol": "CollisionControlFlags",
     "signature": "class CollisionControlFlags",
     "brief_usage": "Group E: 制御フラグ."
   },
   {
     "file_path": "marsdisk/physics/collisions_smol.py",
-    "line_no": 164,
+    "line_no": 168,
     "symbol": "CollisionStepContext",
     "signature": "class CollisionStepContext",
     "brief_usage": "衝突ステップの統合コンテキスト."
   },
   {
     "file_path": "marsdisk/physics/collisions_smol.py",
-    "line_no": 177,
+    "line_no": 181,
     "symbol": "supply_mass_rate_to_number_source",
     "signature": "supply_mass_rate_to_number_source(prod_subblow_mass_rate: float, s_bin_center: np.ndarray, m_bin: np.ndarray, s_min_eff: float, *, widths: np.ndarray | None=None, mode: str='min_bin', s_inj_min: float | None=None, s_inj_max: float | None=None, q: float=3.5) -> np.ndarray",
     "brief_usage": "Convert a mass flux to a per-bin number source ``F_k`` (1/s)."
   },
   {
     "file_path": "marsdisk/physics/collisions_smol.py",
-    "line_no": 278,
+    "line_no": 282,
     "symbol": "_FRAG_CACHE",
     "signature": "_FRAG_CACHE: dict[tuple, np.ndarray] = {}",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/physics/collisions_smol.py",
-    "line_no": 279,
+    "line_no": 283,
     "symbol": "_FRAG_CACHE_MAX",
     "signature": "_FRAG_CACHE_MAX = 32",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/physics/collisions_smol.py",
-    "line_no": 282,
+    "line_no": 286,
     "symbol": "_fragment_tensor",
-    "signature": "_fragment_tensor(sizes: np.ndarray, masses: np.ndarray, v_rel: float | np.ndarray, rho: float, alpha_frag: float=3.5, *, use_numba: bool | None=None) -> np.ndarray",
+    "signature": "_fragment_tensor(sizes: np.ndarray, masses: np.ndarray, edges: np.ndarray, v_rel: float | np.ndarray, rho: float, alpha_frag: float=3.5, *, use_numba: bool | None=None) -> np.ndarray",
     "brief_usage": "Return a mass-conserving fragment distribution ``Y[k, i, j]``."
   },
   {
     "file_path": "marsdisk/physics/collisions_smol.py",
-    "line_no": 419,
+    "line_no": 438,
     "symbol": "_blowout_sink_vector",
     "signature": "_blowout_sink_vector(sizes: np.ndarray, a_blow: float, Omega: float, enable_blowout: bool) -> np.ndarray",
     "brief_usage": "Return per-bin blow-out sink rates (1/s)."
   },
   {
     "file_path": "marsdisk/physics/collisions_smol.py",
-    "line_no": 447,
+    "line_no": 466,
     "symbol": "kernel_minimum_tcoll",
-    "signature": "kernel_minimum_tcoll(C_kernel: np.ndarray) -> float",
+    "signature": "kernel_minimum_tcoll(C_kernel: np.ndarray, N: np.ndarray | None=None) -> float",
     "brief_usage": "Return the minimum collisional time-scale implied by ``C``."
   },
   {
     "file_path": "marsdisk/physics/collisions_smol.py",
-    "line_no": 469,
+    "line_no": 500,
     "symbol": "_supply_velocity_weight",
     "signature": "_supply_velocity_weight(delta_sigma: float, sigma_prev: float, mode: str='delta_sigma') -> float",
     "brief_usage": "Blend weight for supply velocities."
   },
   {
     "file_path": "marsdisk/physics/collisions_smol.py",
-    "line_no": 480,
+    "line_no": 511,
     "symbol": "_resolve_supply_velocity",
     "signature": "_resolve_supply_velocity(cfg: 'SupplyInjectionVelocity | None', e_base: float, i_base: float) -> tuple[float, float]",
     "brief_usage": "Return (e_supply, i_supply) given the injection velocity settings."
   },
   {
     "file_path": "marsdisk/physics/collisions_smol.py",
-    "line_no": 497,
+    "line_no": 528,
     "symbol": "_blend_supply_velocity",
     "signature": "_blend_supply_velocity(e_base: float, i_base: float, e_supply: float, i_supply: float, *, weight: float, mode: str='rms') -> tuple[float, float]",
     "brief_usage": "Blend baseline and supply e/i."
   },
   {
     "file_path": "marsdisk/physics/collisions_smol.py",
-    "line_no": 519,
+    "line_no": 550,
     "symbol": "compute_kernel_ei_state",
     "signature": "compute_kernel_ei_state(dynamics_cfg: 'Dynamics', tau_eff: float, a_orbit_m: float, v_k: float, sizes: np.ndarray, *, e_override: float | None=None, i_override: float | None=None) -> KernelEIState",
     "brief_usage": "Return baseline and effective e/i along with the scale height array."
   },
   {
     "file_path": "marsdisk/physics/collisions_smol.py",
-    "line_no": 569,
+    "line_no": 600,
     "symbol": "_compute_ei_damping",
     "signature": "_compute_ei_damping(e_curr: float, i_curr: float, *, dt: float, tau_eff: float | None, a_orbit_m: float, v_k: float, dynamics_cfg: 'Dynamics | None', t_coll_ref: float | None, eps_restitution: float) -> tuple[float | None, float | None, float | None, float | None]",
     "brief_usage": "Return (e_next, i_next, t_damp, e_eq_target) for post-collision damping."
   },
   {
     "file_path": "marsdisk/physics/collisions_smol.py",
-    "line_no": 621,
+    "line_no": 652,
     "symbol": "compute_kernel_e_i_H",
     "signature": "compute_kernel_e_i_H(dynamics_cfg: 'Dynamics', tau_eff: float, a_orbit_m: float, v_k: float, sizes: np.ndarray) -> tuple[float, float, np.ndarray]",
     "brief_usage": "Return ``(e_kernel, i_kernel, H_k)`` for the Smol collision kernel."
   },
   {
     "file_path": "marsdisk/physics/collisions_smol.py",
-    "line_no": 687,
+    "line_no": 718,
     "symbol": "step_collisions",
     "signature": "step_collisions(ctx: CollisionStepContext, psd_state: MutableMapping[str, np.ndarray | float]) -> Smol0DStepResult",
     "brief_usage": "Structured wrapper for the Smol 0D collision step."
   },
   {
     "file_path": "marsdisk/physics/collisions_smol.py",
-    "line_no": 726,
+    "line_no": 757,
     "symbol": "step_collisions_smol_0d",
     "signature": "step_collisions_smol_0d(psd_state: MutableMapping[str, np.ndarray | float], sigma_surf: float, *, dt: float, prod_subblow_area_rate: float, r: float, Omega: float, a_blow: float, rho: float, e_value: float, i_value: float, sigma_tau1: float | None, enable_blowout: bool, t_sink: float | None, ds_dt_val: float | None=None, s_min_effective: float | None=None, dynamics_cfg: 'Dynamics | None'=None, tau_eff: float | None=None, collisions_enabled: bool=True, mass_conserving_sublimation: bool=False, supply_injection_mode: str='min_bin', supply_s_inj_min: float | None=None, supply_s_inj_max: float | None=None, supply_q: float=3.5, supply_velocity_cfg: 'SupplyInjectionVelocity | None'=None, headroom_policy: str='clip', energy_bookkeeping_enabled: bool=False, f_ke_fragmentation: float | None=None, f_ke_cratering: float=0.1, eps_restitution: float=0.5, enable_e_damping: bool=False, t_coll_for_damp: float | None=None) -> Smol0DStepResult",
     "brief_usage": "Advance collisions+fragmentation in 0D using the Smol solver."
@@ -5372,19 +5372,19 @@
     "file_path": "marsdisk/physics/smol.py",
     "line_no": 175,
     "symbol": "_gain_tensor",
-    "signature": "_gain_tensor(C: np.ndarray, Y: np.ndarray, out: np.ndarray | None=None) -> np.ndarray",
+    "signature": "_gain_tensor(C: np.ndarray, Y: np.ndarray, m: np.ndarray, out: np.ndarray | None=None) -> np.ndarray",
     "brief_usage": "Return gain term, preferring the Numba kernel when available."
   },
   {
     "file_path": "marsdisk/physics/smol.py",
-    "line_no": 217,
+    "line_no": 232,
     "symbol": "step_imex_bdf1_C3",
-    "signature": "step_imex_bdf1_C3(N: Iterable[float], C: np.ndarray, Y: np.ndarray, S: Iterable[float] | None, m: Iterable[float], prod_subblow_mass_rate: float | None, dt: float, *, source_k: Iterable[float] | None=None, S_external_k: Iterable[float] | None=None, S_sublimation_k: Iterable[float] | None=None, extra_mass_loss_rate: float=0.0, mass_tol: float=0.005, safety: float=0.1, workspace: ImexWorkspace | None=None) -> tuple[np.ndarray, float, float]",
+    "signature": "step_imex_bdf1_C3(N: Iterable[float], C: np.ndarray, Y: np.ndarray, S: Iterable[float] | None, m: Iterable[float], prod_subblow_mass_rate: float | None, dt: float, *, source_k: Iterable[float] | None=None, S_external_k: Iterable[float] | None=None, S_sublimation_k: Iterable[float] | None=None, extra_mass_loss_rate: float=0.0, mass_tol: float=0.005, safety: float=0.1, diag_out: MutableMapping[str, float] | None=None, workspace: ImexWorkspace | None=None) -> tuple[np.ndarray, float, float]",
     "brief_usage": "Advance the Smoluchowski system by one time step."
   },
   {
     "file_path": "marsdisk/physics/smol.py",
-    "line_no": 378,
+    "line_no": 409,
     "symbol": "compute_mass_budget_error_C4",
     "signature": "compute_mass_budget_error_C4(N_old: Iterable[float], N_new: Iterable[float], m: Iterable[float], prod_subblow_mass_rate: float, dt: float, *, extra_mass_loss_rate: float=0.0) -> float",
     "brief_usage": "Return the relative mass budget error according to (C4)."
@@ -6203,7 +6203,7 @@
   },
   {
     "file_path": "marsdisk/run_zero_d.py",
-    "line_no": 4824,
+    "line_no": 4913,
     "symbol": "main",
     "signature": "main(argv: Optional[List[str]]=None) -> None",
     "brief_usage": "Command line entry point."
@@ -6413,7 +6413,21 @@
   },
   {
     "file_path": "marsdisk/runtime/progress.py",
-    "line_no": 13,
+    "line_no": 11,
+    "symbol": "ETA_EWMA_ALPHA",
+    "signature": "ETA_EWMA_ALPHA = 0.1",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "marsdisk/runtime/progress.py",
+    "line_no": 12,
+    "symbol": "ETA_MIN_SAMPLES",
+    "signature": "ETA_MIN_SAMPLES = 3",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "marsdisk/runtime/progress.py",
+    "line_no": 15,
     "symbol": "ProgressReporter",
     "signature": "class ProgressReporter",
     "brief_usage": "Lightweight terminal progress bar with ETA feedback."
@@ -6940,19 +6954,19 @@
     "file_path": "paper/plot_style.py",
     "line_no": 12,
     "symbol": "DEFAULT_STYLE",
-    "signature": "DEFAULT_STYLE: Dict[str, Any] = {'figure.figsize': (6.0, 3.5), 'figure.dpi': 150, 'axes.titlesize': 12, 'axes.labelsize': 11, 'axes.grid': True, 'grid.alpha': 0.3, 'grid.linestyle': '--', 'lines.linewidth': 1.6, 'lines.markersize': 5, 'legend.frameon': False, 'legend.fontsize': 10, 'font.family': 'DejaVu Sans'}",
+    "signature": "DEFAULT_STYLE: Dict[str, Any] = {'figure.figsize': (6.0, 3.5), 'figure.dpi': 150, 'axes.titlesize': 12, 'axes.labelsize': 11, 'axes.grid': True, 'grid.alpha': 0.3, 'grid.linestyle': '--', 'lines.linewidth': 1.6, 'lines.markersize': 5, 'legend.frameon': False, 'legend.fontsize': 10, 'font.family': 'sans-serif', 'font.sans-serif': ['Noto Sans JP', 'Hiragino Sans', 'Yu Gothic', 'DejaVu Sans']}",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "paper/plot_style.py",
-    "line_no": 28,
+    "line_no": 29,
     "symbol": "resolve_style",
     "signature": "resolve_style(overrides: Dict[str, Any] | None=None) -> Dict[str, Any]",
     "brief_usage": "Return merged rcParams style without applying it."
   },
   {
     "file_path": "paper/plot_style.py",
-    "line_no": 36,
+    "line_no": 37,
     "symbol": "apply_default_style",
     "signature": "apply_default_style(overrides: Dict[str, Any] | None=None) -> Dict[str, Any]",
     "brief_usage": "Apply style if matplotlib is available; always return the merged dict."
@@ -7284,6 +7298,258 @@
     "line_no": 59,
     "symbol": "main",
     "signature": "main(argv: Iterable[str] | None=None) -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/plot_smol_mass_error.py",
+    "line_no": 15,
+    "symbol": "REPO_ROOT",
+    "signature": "REPO_ROOT = Path(__file__).resolve().parent.parent",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "scripts/plot_smol_mass_error.py",
+    "line_no": 25,
+    "symbol": "_load_series",
+    "signature": "_load_series(run_dir: Path, columns: Iterable[str]) -> pd.DataFrame",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/plot_smol_mass_error.py",
+    "line_no": 41,
+    "symbol": "_parse_args",
+    "signature": "_parse_args() -> argparse.Namespace",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/plot_smol_mass_error.py",
+    "line_no": 55,
+    "symbol": "main",
+    "signature": "main() -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/plot_tau_reference_mismatch.py",
+    "line_no": 16,
+    "symbol": "REPO_ROOT",
+    "signature": "REPO_ROOT = Path(__file__).resolve().parent.parent",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "scripts/plot_tau_reference_mismatch.py",
+    "line_no": 24,
+    "symbol": "_build_parser",
+    "signature": "_build_parser() -> argparse.ArgumentParser",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/plot_tau_reference_mismatch.py",
+    "line_no": 88,
+    "symbol": "_phi_fn",
+    "signature": "_phi_fn(phi_table: str | None, w0: float, g: float)",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/plot_tau_reference_mismatch.py",
+    "line_no": 98,
+    "symbol": "_logspace",
+    "signature": "_logspace(min_val: float, max_val: float, n: int) -> np.ndarray",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/plot_tau_reference_mismatch.py",
+    "line_no": 104,
+    "symbol": "_compute_ratios",
+    "signature": "_compute_ratios(tau0_vals: np.ndarray, mu_vals: np.ndarray, phi_fn) -> tuple[np.ndarray, np.ndarray]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/plot_tau_reference_mismatch.py",
+    "line_no": 122,
+    "symbol": "_plot_heatmap",
+    "signature": "_plot_heatmap(ax, x_vals, y_vals, log_ratio, title, cmap='coolwarm')",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/plot_tau_reference_mismatch.py",
+    "line_no": 133,
+    "symbol": "main",
+    "signature": "main() -> int",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/plot_tau_timescales.py",
+    "line_no": 19,
+    "symbol": "REPO_ROOT",
+    "signature": "REPO_ROOT = Path(__file__).resolve().parent.parent",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "scripts/plot_tau_timescales.py",
+    "line_no": 27,
+    "symbol": "DEFAULT_COLUMNS",
+    "signature": "DEFAULT_COLUMNS = ('time', 'tau', 'tau_los_mars', 'tau_mars_line_of_sight', 't_coll', 't_blow_s', 't_blow', 's_min_effective', 's_min', 'ds_dt_sublimation', 'Omega_s', 'cell_index', 'cell_active', 'r_RM', 'r_orbit_RM', 'r_m')",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "scripts/plot_tau_timescales.py",
+    "line_no": 46,
+    "symbol": "ONE_D_SIGNATURE_FIELDS",
+    "signature": "ONE_D_SIGNATURE_FIELDS = ('cell_index', 'cell_active', 'active_mask')",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "scripts/plot_tau_timescales.py",
+    "line_no": 47,
+    "symbol": "RADIUS_FIELD_CANDIDATES",
+    "signature": "RADIUS_FIELD_CANDIDATES = ('r_RM', 'r_orbit_RM', 'r_m')",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "scripts/plot_tau_timescales.py",
+    "line_no": 48,
+    "symbol": "TAU_LABELS_JP",
+    "signature": "TAU_LABELS_JP = {'tau_los_mars': '光学的厚さ τ（火星視線）', 'tau_mars_line_of_sight': '光学的厚さ τ（火星視線）', 'tau': '光学的厚さ τ'}",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "scripts/plot_tau_timescales.py",
+    "line_no": 55,
+    "symbol": "_resolve_series_files",
+    "signature": "_resolve_series_files(run_dir: Path) -> tuple[Optional[Path], list[Path]]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/plot_tau_timescales.py",
+    "line_no": 64,
+    "symbol": "_available_columns_from_parquet",
+    "signature": "_available_columns_from_parquet(path: Path) -> list[str]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/plot_tau_timescales.py",
+    "line_no": 69,
+    "symbol": "_available_columns_from_dataset",
+    "signature": "_available_columns_from_dataset(files: list[Path]) -> list[str]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/plot_tau_timescales.py",
+    "line_no": 74,
+    "symbol": "_select_columns",
+    "signature": "_select_columns(available: Iterable[str], desired: Iterable[str]) -> list[str]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/plot_tau_timescales.py",
+    "line_no": 79,
+    "symbol": "_estimate_batch_size",
+    "signature": "_estimate_batch_size(memory_limit_gb: Optional[float]) -> int",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/plot_tau_timescales.py",
+    "line_no": 86,
+    "symbol": "_load_series_dataframe",
+    "signature": "_load_series_dataframe(run_dir: Path, columns: list[str], *, batch_size: Optional[int], memory_limit_gb: Optional[float]) -> pd.DataFrame",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/plot_tau_timescales.py",
+    "line_no": 115,
+    "symbol": "_pick_first_available",
+    "signature": "_pick_first_available(df: pd.DataFrame, candidates: list[str]) -> Optional[str]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/plot_tau_timescales.py",
+    "line_no": 122,
+    "symbol": "_pick_first_available_name",
+    "signature": "_pick_first_available_name(available: Iterable[str], candidates: list[str]) -> Optional[str]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/plot_tau_timescales.py",
+    "line_no": 130,
+    "symbol": "_is_one_d_columns",
+    "signature": "_is_one_d_columns(available: Iterable[str]) -> bool",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/plot_tau_timescales.py",
+    "line_no": 135,
+    "symbol": "_filter_active_cells",
+    "signature": "_filter_active_cells(df: pd.DataFrame) -> pd.DataFrame",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/plot_tau_timescales.py",
+    "line_no": 142,
+    "symbol": "_compute_t_coll_from_tau",
+    "signature": "_compute_t_coll_from_tau(tau: np.ndarray, omega: np.ndarray) -> np.ndarray",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/plot_tau_timescales.py",
+    "line_no": 152,
+    "symbol": "_compute_timescale_columns",
+    "signature": "_compute_timescale_columns(df: pd.DataFrame) -> tuple[pd.DataFrame, dict[str, Optional[str]]]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/plot_tau_timescales.py",
+    "line_no": 191,
+    "symbol": "_reduce_cells",
+    "signature": "_reduce_cells(df: pd.DataFrame, reduce_mode: str) -> pd.DataFrame",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/plot_tau_timescales.py",
+    "line_no": 200,
+    "symbol": "_tau_label_jp",
+    "signature": "_tau_label_jp(tau_columns: set[str]) -> str",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/plot_tau_timescales.py",
+    "line_no": 207,
+    "symbol": "_apply_timescale_clip",
+    "signature": "_apply_timescale_clip(values: np.ndarray, clip_min: Optional[float]) -> np.ndarray",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/plot_tau_timescales.py",
+    "line_no": 213,
+    "symbol": "_plot_cell_tracks",
+    "signature": "_plot_cell_tracks(ax: plt.Axes, df: pd.DataFrame, *, tau_scale: str, time_scale: str, clip_timescale_min: Optional[float]) -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/plot_tau_timescales.py",
+    "line_no": 254,
+    "symbol": "_plot_trend_lines",
+    "signature": "_plot_trend_lines(ax: plt.Axes, df: pd.DataFrame, *, tau_scale: str, time_scale: str, clip_timescale_min: Optional[float]) -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/plot_tau_timescales.py",
+    "line_no": 294,
+    "symbol": "_scatter_timescale",
+    "signature": "_scatter_timescale(ax: plt.Axes, *, x: np.ndarray, y: np.ndarray, label: str, color: Optional[str], marker: str, alpha: float, size: float, cmap: str, norm: Optional[colors.Normalize], color_values: Optional[np.ndarray]) -> Optional[PathCollection]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/plot_tau_timescales.py",
+    "line_no": 333,
+    "symbol": "_plot_run",
+    "signature": "_plot_run(ax: plt.Axes, df: pd.DataFrame, label_prefix: str, *, tau_scale: str, time_scale: str, alpha: float, size: float, color_by_time: bool, color_by_radius: bool, cmap: str, time_norm: Optional[colors.Normalize], radius_norm: Optional[colors.Normalize], radius_label: Optional[str], clip_timescale_min: Optional[float]) -> Optional[PathCollection]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/plot_tau_timescales.py",
+    "line_no": 400,
+    "symbol": "main",
+    "signature": "main() -> None",
     "brief_usage": "No description available."
   },
   {
@@ -8981,6 +9247,34 @@
     "brief_usage": "No description available."
   },
   {
+    "file_path": "tests/integration/test_external_supply_pipeline.py",
+    "line_no": 13,
+    "symbol": "_BASE_OVERRIDES",
+    "signature": "_BASE_OVERRIDES = ['numerics.t_end_orbits=0.1', 'numerics.t_end_years=null', 'io.streaming.enable=false', 'phase.enabled=false', 'surface.collision_solver=smol', 'sinks.mode=\"none\"', 'sinks.enable_sublimation=false', 'sinks.enable_gas_drag=false', 'blowout.enabled=false']",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "tests/integration/test_external_supply_pipeline.py",
+    "line_no": 26,
+    "symbol": "_run_case",
+    "signature": "_run_case(tmp_path: Path, name: str, overrides: list[str]) -> Path",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_external_supply_pipeline.py",
+    "line_no": 36,
+    "symbol": "test_default_supply_pipeline_smol",
+    "signature": "test_default_supply_pipeline_smol(tmp_path: Path) -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_external_supply_pipeline.py",
+    "line_no": 106,
+    "symbol": "test_supply_disabled_zeroes_rates",
+    "signature": "test_supply_disabled_zeroes_rates(tmp_path: Path) -> None",
+    "brief_usage": "No description available."
+  },
+  {
     "file_path": "tests/integration/test_fast_blowout.py",
     "line_no": 12,
     "symbol": "_build_fast_blowout_config",
@@ -9024,14 +9318,14 @@
   },
   {
     "file_path": "tests/integration/test_fragment_tensor_numba.py",
-    "line_no": 19,
+    "line_no": 23,
     "symbol": "test_fragment_tensor_numba_matches_python",
     "signature": "test_fragment_tensor_numba_matches_python()",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tests/integration/test_fragment_tensor_numba.py",
-    "line_no": 42,
+    "line_no": 46,
     "symbol": "test_fragment_tensor_numba_failure_falls_back",
     "signature": "test_fragment_tensor_numba_failure_falls_back(monkeypatch)",
     "brief_usage": "No description available."
@@ -9900,20 +10194,27 @@
   {
     "file_path": "tests/integration/test_scalings.py",
     "line_no": 26,
+    "symbol": "_expected_smol_to_wyatt_ratio",
+    "signature": "_expected_smol_to_wyatt_ratio(e_kernel: float, i_kernel: float, H_factor: float) -> float",
+    "brief_usage": "Return analytic ratio for the single-bin kernel geometry."
+  },
+  {
+    "file_path": "tests/integration/test_scalings.py",
+    "line_no": 35,
     "symbol": "_smol_to_wyatt_ratio",
-    "signature": "_smol_to_wyatt_ratio(kernel_mode: str, H_factor: float) -> float",
+    "signature": "_smol_to_wyatt_ratio(kernel_mode: str, H_factor: float) -> tuple[float, float, float]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tests/integration/test_scalings.py",
-    "line_no": 57,
+    "line_no": 66,
     "symbol": "test_smol_tcoll_matches_wyatt_config_mode",
     "signature": "test_smol_tcoll_matches_wyatt_config_mode() -> None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tests/integration/test_scalings.py",
-    "line_no": 62,
+    "line_no": 72,
     "symbol": "test_smol_tcoll_matches_wyatt_wyatt_eq_mode",
     "signature": "test_smol_tcoll_matches_wyatt_wyatt_eq_mode() -> None",
     "brief_usage": "No description available."
@@ -9972,6 +10273,27 @@
     "line_no": 42,
     "symbol": "test_debug_sinks_trace_outputs_jsonl",
     "signature": "test_debug_sinks_trace_outputs_jsonl(tmp_path: Path) -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_smol_consistency_checks.py",
+    "line_no": 11,
+    "symbol": "test_fragment_tensor_weights_include_widths",
+    "signature": "test_fragment_tensor_weights_include_widths(monkeypatch) -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_smol_consistency_checks.py",
+    "line_no": 44,
+    "symbol": "test_dt_eff_balance_matches_mass_rates",
+    "signature": "test_dt_eff_balance_matches_mass_rates() -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_smol_consistency_checks.py",
+    "line_no": 78,
+    "symbol": "test_source_mass_budget_no_double_count",
+    "signature": "test_source_mass_budget_no_double_count() -> None",
     "brief_usage": "No description available."
   },
   {
@@ -10690,79 +11012,100 @@
   },
   {
     "file_path": "tests/unit/test_numba_helpers.py",
-    "line_no": 79,
+    "line_no": 83,
     "symbol": "test_fragment_tensor_fallback_numba_simple_consistency",
     "signature": "test_fragment_tensor_fallback_numba_simple_consistency(monkeypatch) -> None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tests/unit/test_numba_helpers.py",
-    "line_no": 111,
+    "line_no": 127,
     "symbol": "test_blowout_sink_vector_numba_matches_numpy",
     "signature": "test_blowout_sink_vector_numba_matches_numpy(monkeypatch) -> None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tests/unit/test_numba_helpers.py",
-    "line_no": 119,
+    "line_no": 135,
     "symbol": "test_kernel_minimum_tcoll_numba_matches_numpy",
     "signature": "test_kernel_minimum_tcoll_numba_matches_numpy(monkeypatch) -> None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tests/unit/test_numba_helpers.py",
-    "line_no": 127,
+    "line_no": 143,
     "symbol": "test_supply_mass_rate_powerlaw_numba_matches_python",
     "signature": "test_supply_mass_rate_powerlaw_numba_matches_python(monkeypatch) -> None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tests/unit/test_numba_helpers.py",
-    "line_no": 168,
+    "line_no": 184,
     "symbol": "test_compute_kernel_e_i_H_numba_matches_python",
     "signature": "test_compute_kernel_e_i_H_numba_matches_python(monkeypatch) -> None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tests/unit/test_numba_helpers.py",
-    "line_no": 207,
+    "line_no": 223,
     "symbol": "test_qpr_interp_scalar_numba_matches_numpy",
     "signature": "test_qpr_interp_scalar_numba_matches_numpy(monkeypatch) -> None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tests/unit/test_numba_helpers.py",
-    "line_no": 227,
+    "line_no": 243,
     "symbol": "test_qpr_interp_array_numba_matches_numpy",
     "signature": "test_qpr_interp_array_numba_matches_numpy(monkeypatch) -> None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tests/unit/test_numba_helpers.py",
-    "line_no": 264,
+    "line_no": 280,
     "symbol": "test_qpr_interp_numba_fallback",
     "signature": "test_qpr_interp_numba_fallback(monkeypatch) -> None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tests/unit/test_numba_helpers.py",
-    "line_no": 293,
+    "line_no": 309,
     "symbol": "test_blowout_radius_numba_matches_numpy",
     "signature": "test_blowout_radius_numba_matches_numpy(monkeypatch) -> None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tests/unit/test_numba_helpers.py",
-    "line_no": 309,
+    "line_no": 325,
     "symbol": "test_blowout_radius_numba_fallback",
     "signature": "test_blowout_radius_numba_fallback(monkeypatch) -> None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tests/unit/test_numba_helpers.py",
-    "line_no": 331,
+    "line_no": 347,
     "symbol": "test_blowout_radius_numba_env_disabled",
     "signature": "test_blowout_radius_numba_env_disabled(monkeypatch) -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/unit/test_progress_eta.py",
+    "line_no": 8,
+    "symbol": "_fake_monotonic",
+    "signature": "_fake_monotonic(times)",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/unit/test_progress_eta.py",
+    "line_no": 17,
+    "symbol": "test_progress_eta_prefers_recent_steps",
+    "signature": "test_progress_eta_prefers_recent_steps(monkeypatch, capsys)",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/unit/test_progress_eta.py",
+    "line_no": 30,
+    "symbol": "test_progress_snapshot_restore",
+    "signature": "test_progress_snapshot_restore(monkeypatch)",
     "brief_usage": "No description available."
   },
   {

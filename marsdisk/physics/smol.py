@@ -172,14 +172,22 @@ def number_density_to_psd_state(
     return psd_state, sigma_after, sigma_loss
 
 
-def _gain_tensor(C: np.ndarray, Y: np.ndarray, out: np.ndarray | None = None) -> np.ndarray:
+def _gain_tensor(
+    C: np.ndarray,
+    Y: np.ndarray,
+    m: np.ndarray,
+    out: np.ndarray | None = None,
+) -> np.ndarray:
     """Return gain term, preferring the Numba kernel when available."""
 
     global _NUMBA_FAILED
+    m_arr = np.asarray(m, dtype=np.float64)
     if _USE_NUMBA and not _NUMBA_FAILED:
         try:
             gain_arr = gain_from_kernel_tensor_numba(
-                np.asarray(C, dtype=np.float64), np.asarray(Y, dtype=np.float64)
+                np.asarray(C, dtype=np.float64),
+                np.asarray(Y, dtype=np.float64),
+                m_arr,
             )
             if out is not None and out.shape == gain_arr.shape:
                 out[:] = gain_arr
@@ -192,7 +200,9 @@ def _gain_tensor(C: np.ndarray, Y: np.ndarray, out: np.ndarray | None = None) ->
             )
             try:
                 gain_arr = gain_tensor_fallback_numba(
-                    np.asarray(C, dtype=np.float64), np.asarray(Y, dtype=np.float64)
+                    np.asarray(C, dtype=np.float64),
+                    np.asarray(Y, dtype=np.float64),
+                    m_arr,
                 )
                 if out is not None and out.shape == gain_arr.shape:
                     out[:] = gain_arr
@@ -204,13 +214,18 @@ def _gain_tensor(C: np.ndarray, Y: np.ndarray, out: np.ndarray | None = None) ->
                     f"gain_tensor numba fallback failed ({exc2!r}); falling back to einsum.",
                     NumericalWarning,
                 )
-    einsum_out = out if out is not None else None
-    result = np.einsum("ij,kij->k", C, Y, out=einsum_out)
-    if result is None and einsum_out is not None:
-        result = einsum_out
+    m_sum = m_arr[:, None] + m_arr[None, :]
+    weighted_C = np.triu(np.asarray(C, dtype=np.float64) * m_sum)
+    denom = np.where(m_arr > 0.0, m_arr, 1.0)
+    result = np.einsum("ij,kij->k", weighted_C, Y, out=out)
+    if result is None and out is not None:
+        result = out
     if out is None:
-        return 0.5 * result
-    out[:] = 0.5 * result
+        gain_arr = result / denom
+        gain_arr = np.where(m_arr > 0.0, gain_arr, 0.0)
+        return gain_arr
+    out[:] = result / denom
+    out[:] = np.where(m_arr > 0.0, out, 0.0)
     return out
 
 
@@ -229,6 +244,7 @@ def step_imex_bdf1_C3(
     extra_mass_loss_rate: float = 0.0,
     mass_tol: float = 5e-3,
     safety: float = 0.1,
+    diag_out: MutableMapping[str, float] | None = None,
     workspace: ImexWorkspace | None = None,
 ) -> tuple[np.ndarray, float, float]:
     """Advance the Smoluchowski system by one time step.
@@ -278,6 +294,9 @@ def step_imex_bdf1_C3(
     safety:
         Safety factor controlling the maximum allowed step size relative to
         the minimum collision time.
+    diag_out:
+        Optional dictionary populated with diagnostic mass rates (gain, loss,
+        sink, source) after the step is accepted.
     workspace:
         Optional reusable buffers for ``gain`` and ``loss`` vectors to reduce
         allocations when calling the solver repeatedly.
@@ -341,6 +360,12 @@ def step_imex_bdf1_C3(
             loss = loss_out
         else:
             loss = np.sum(C, axis=1)
+    # C_ij already halves the diagonal, so add it back for the loss coefficient.
+    if C.size:
+        loss = loss + np.diagonal(C)
+    # Convert summed collision rate (includes N_i) to the loss coefficient.
+    safe_N = np.where(N_arr > 0.0, N_arr, 1.0)
+    loss = np.where(N_arr > 0.0, loss / safe_N, 0.0)
     t_coll = 1.0 / np.maximum(loss, 1e-30)
     dt_max = safety * float(np.min(t_coll))
     dt_eff = min(float(dt), dt_max)
@@ -351,7 +376,7 @@ def step_imex_bdf1_C3(
     else:
         prod_mass_rate_budget = float(prod_subblow_mass_rate)
 
-    gain = _gain_tensor(C, Y, out=gain_out)
+    gain = _gain_tensor(C, Y, m_arr, out=gain_out)
 
     while True:
         N_new = (N_arr + dt_eff * (gain + source_arr - S_arr * N_arr)) / (1.0 + dt_eff * loss)
@@ -371,6 +396,12 @@ def step_imex_bdf1_C3(
         if mass_err <= mass_tol:
             break
         dt_eff *= 0.5
+
+    if diag_out is not None:
+        diag_out["gain_mass_rate"] = float(np.sum(m_arr * gain))
+        diag_out["loss_mass_rate"] = float(np.sum(m_arr * loss * N_new))
+        diag_out["sink_mass_rate"] = float(np.sum(m_arr * S_arr * N_arr))
+        diag_out["source_mass_rate"] = float(np.sum(m_arr * source_arr))
 
     return N_new, dt_eff, mass_err
 

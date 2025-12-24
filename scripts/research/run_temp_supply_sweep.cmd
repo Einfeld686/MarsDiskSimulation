@@ -22,7 +22,8 @@ for /f %%A in ('python -c "import secrets; print(secrets.randbelow(2**31))"') do
 
 rem Force output root to out/ as requested
 set "BATCH_ROOT=out"
-set "BATCH_DIR=%BATCH_ROOT%\temp_supply_sweep\%RUN_TS%__%GIT_SHA%__seed%BATCH_SEED%"
+if not defined SWEEP_TAG set "SWEEP_TAG=temp_supply_sweep"
+set "BATCH_DIR=%BATCH_ROOT%\%SWEEP_TAG%\%RUN_TS%__%GIT_SHA%__seed%BATCH_SEED%"
 echo.[setup] Output root: %BATCH_ROOT%
 if not exist "%BATCH_DIR%" mkdir "%BATCH_DIR%"
 
@@ -50,6 +51,8 @@ set "COOL_SEARCH_YEARS="
 
 if not defined BASE_CONFIG set "BASE_CONFIG=configs/sweep_temp_supply/temp_supply_T4000_eps1.yml"
 if not defined QSTAR_UNITS set "QSTAR_UNITS=ba99_cgs"
+if not defined GEOMETRY_MODE set "GEOMETRY_MODE=0D"
+if not defined GEOMETRY_NR set "GEOMETRY_NR=32"
 rem Cooling defaults (stop when Mars T_M reaches 1000 K, slab law unless overridden)
 set "COOL_TO_K=1000"
 if not defined COOL_MARGIN_YEARS set "COOL_MARGIN_YEARS=0"
@@ -61,6 +64,7 @@ if not defined SUBSTEP_MAX_RATIO set "SUBSTEP_MAX_RATIO="
 if not defined SUPPLY_HEADROOM_POLICY set "SUPPLY_HEADROOM_POLICY=clip"
 if not defined SUPPLY_MODE set "SUPPLY_MODE=const"
 if not defined SUPPLY_MU_ORBIT10PCT set "SUPPLY_MU_ORBIT10PCT=1.0"
+if not defined SUPPLY_MU_REFERENCE_TAU set "SUPPLY_MU_REFERENCE_TAU=1.0"
 if not defined SUPPLY_ORBIT_FRACTION set "SUPPLY_ORBIT_FRACTION=0.10"
 if not defined SHIELDING_MODE set "SHIELDING_MODE=off"
 if not defined SHIELDING_SIGMA set "SHIELDING_SIGMA=auto"
@@ -109,6 +113,11 @@ rem STREAM_MEM_GB intentionally left undefined by default
 rem STREAM_STEP_INTERVAL intentionally left undefined by default
 if not defined ENABLE_PROGRESS set "ENABLE_PROGRESS=1"
 
+if /i "%SUPPLY_HEADROOM_POLICY%"=="none" set "SUPPLY_HEADROOM_POLICY="
+if /i "%SUPPLY_HEADROOM_POLICY%"=="off" set "SUPPLY_HEADROOM_POLICY="
+if /i "%SUPPLY_TRANSPORT_TMIX_ORBITS%"=="none" set "SUPPLY_TRANSPORT_TMIX_ORBITS="
+if /i "%SUPPLY_TRANSPORT_TMIX_ORBITS%"=="off" set "SUPPLY_TRANSPORT_TMIX_ORBITS="
+
 set "T_LIST=5000 4000 3000"
 set "EPS_LIST=1.0 0.5 0.1"
 set "TAU_LIST=1.0 0.5 0.1"
@@ -127,7 +136,8 @@ echo.[config] supply multipliers: temp_enabled=%SUPPLY_TEMP_ENABLED% (mode=%SUPP
 echo.[config] shielding: mode=%SHIELDING_MODE% fixed_tau1_sigma=%SHIELDING_SIGMA% auto_max_margin=%SHIELDING_AUTO_MAX_MARGIN%
 echo.[config] injection: mode=%SUPPLY_INJECTION_MODE% q=%SUPPLY_INJECTION_Q% s_inj_min=%SUPPLY_INJECTION_SMIN% s_inj_max=%SUPPLY_INJECTION_SMAX%
 echo.[config] transport: mode=%SUPPLY_TRANSPORT_MODE% t_mix=%SUPPLY_TRANSPORT_TMIX_ORBITS% headroom_gate=%SUPPLY_TRANSPORT_HEADROOM% velocity=%SUPPLY_VEL_MODE%
-echo.[config] external supply: mu_orbit10pct=%SUPPLY_MU_ORBIT10PCT% orbit_fraction_at_mu1=%SUPPLY_ORBIT_FRACTION% (epsilon_mix swept per EPS_LIST)
+echo.[config] geometry: mode=%GEOMETRY_MODE% Nr=%GEOMETRY_NR% r_in_m=%GEOMETRY_R_IN_M% r_out_m=%GEOMETRY_R_OUT_M%
+echo.[config] external supply: mu_orbit10pct=%SUPPLY_MU_ORBIT10PCT% mu_reference_tau=%SUPPLY_MU_REFERENCE_TAU% orbit_fraction_at_mu1=%SUPPLY_ORBIT_FRACTION% (epsilon_mix swept per EPS_LIST)
 echo.[config] optical_depth: tau0_target_list=%TAU_LIST% tau_stop=%OPTICAL_TAU_STOP% tau_stop_tol=%OPTICAL_TAU_STOP_TOL%
 echo.[config] fast blowout substep: enabled=%SUBSTEP_FAST_BLOWOUT% substep_max_ratio=%SUBSTEP_MAX_RATIO%
 echo.[config] !COOL_STATUS!
@@ -168,7 +178,8 @@ echo.[info] deep reservoir enabled (legacy alias): t_mix=%SUPPLY_DEEP_TMIX_ORBIT
 if defined SUPPLY_TRANSPORT_TMIX_ORBITS set "SUPPLY_OVERRIDES=!SUPPLY_OVERRIDES! --override \"supply.transport.t_mix_orbits=%SUPPLY_TRANSPORT_TMIX_ORBITS%\""
 if defined SUPPLY_TRANSPORT_MODE set "SUPPLY_OVERRIDES=!SUPPLY_OVERRIDES! --override \"supply.transport.mode=%SUPPLY_TRANSPORT_MODE%\""
 if defined SUPPLY_TRANSPORT_HEADROOM set "SUPPLY_OVERRIDES=!SUPPLY_OVERRIDES! --override \"supply.transport.headroom_gate=%SUPPLY_TRANSPORT_HEADROOM%\""
-set "SUPPLY_OVERRIDES=!SUPPLY_OVERRIDES! --override \"supply.headroom_policy=%SUPPLY_HEADROOM_POLICY%\" --override \"supply.injection.velocity.mode=%SUPPLY_VEL_MODE%\""
+if defined SUPPLY_HEADROOM_POLICY set "SUPPLY_OVERRIDES=!SUPPLY_OVERRIDES! --override \"supply.headroom_policy=%SUPPLY_HEADROOM_POLICY%\""
+set "SUPPLY_OVERRIDES=!SUPPLY_OVERRIDES! --override \"supply.injection.velocity.mode=%SUPPLY_VEL_MODE%\""
 if defined SUPPLY_VEL_E set "SUPPLY_OVERRIDES=!SUPPLY_OVERRIDES! --override \"supply.injection.velocity.e_inj=%SUPPLY_VEL_E%\""
 if defined SUPPLY_VEL_I set "SUPPLY_OVERRIDES=!SUPPLY_OVERRIDES! --override \"supply.injection.velocity.i_inj=%SUPPLY_VEL_I%\""
 if defined SUPPLY_VEL_FACTOR set "SUPPLY_OVERRIDES=!SUPPLY_OVERRIDES! --override \"supply.injection.velocity.vrel_factor=%SUPPLY_VEL_FACTOR%\""
@@ -217,6 +228,12 @@ for %%T in (%T_LIST%) do (
       set RUN_CMD=!RUN_CMD! --override "io.outdir=!OUTDIR!"
       set RUN_CMD=!RUN_CMD! --override "dynamics.rng_seed=!SEED!"
       set RUN_CMD=!RUN_CMD! --override "phase.enabled=true"
+      if /i "!GEOMETRY_MODE!"=="1D" (
+        set RUN_CMD=!RUN_CMD! --override "geometry.mode=1D"
+        set RUN_CMD=!RUN_CMD! --override "geometry.Nr=!GEOMETRY_NR!"
+        if defined GEOMETRY_R_IN_M set RUN_CMD=!RUN_CMD! --override "geometry.r_in=!GEOMETRY_R_IN_M!"
+        if defined GEOMETRY_R_OUT_M set RUN_CMD=!RUN_CMD! --override "geometry.r_out=!GEOMETRY_R_OUT_M!"
+      )
       set RUN_CMD=!RUN_CMD! --override "radiation.TM_K=%%T"
       set RUN_CMD=!RUN_CMD! --override "qstar.coeff_units=%QSTAR_UNITS%"
       set RUN_CMD=!RUN_CMD! --override "radiation.qpr_table_path=marsdisk/io/data/qpr_planck_sio2_abbas_calibrated_lowT.csv"
@@ -238,6 +255,7 @@ for %%T in (%T_LIST%) do (
       set RUN_CMD=!RUN_CMD! --override "supply.mixing.epsilon_mix=%%M"
       set RUN_CMD=!RUN_CMD! --override "supply.mode=%SUPPLY_MODE%"
       set RUN_CMD=!RUN_CMD! --override "supply.const.mu_orbit10pct=%SUPPLY_MU_ORBIT10PCT%"
+      set RUN_CMD=!RUN_CMD! --override "supply.const.mu_reference_tau=%SUPPLY_MU_REFERENCE_TAU%"
       set RUN_CMD=!RUN_CMD! --override "supply.const.orbit_fraction_at_mu1=%SUPPLY_ORBIT_FRACTION%"
       set RUN_CMD=!RUN_CMD! --override "optical_depth.tau0_target=!TAU!"
       set RUN_CMD=!RUN_CMD! --override "optical_depth.tau_stop=%OPTICAL_TAU_STOP%"

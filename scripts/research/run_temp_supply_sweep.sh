@@ -415,6 +415,30 @@ PY
 
       final_dir="${OUTDIR}"
       mkdir -p "${final_dir}/series" "${final_dir}/checks"
+      summary_path="${final_dir}/summary.json"
+      if [[ -f "${summary_path}" ]]; then
+        SUMMARY_PATH="${summary_path}" python - <<'PY'
+import json
+import os
+
+path = os.environ.get("SUMMARY_PATH", "")
+try:
+    with open(path, "r", encoding="utf-8") as handle:
+        summary = json.load(handle)
+except Exception as exc:
+    print(f"[stop] summary read failed: {exc}")
+else:
+    stop_reason = summary.get("stop_reason") or summary.get("early_stop_reason") or "t_end_reached"
+    cells_stopped = summary.get("cells_stopped")
+    cells_total = summary.get("cells_total")
+    extra = ""
+    if cells_stopped is not None and cells_total is not None:
+        extra = f" cells_stopped={cells_stopped}/{cells_total}"
+    print(f"[stop] reason={stop_reason}{extra}")
+PY
+      else
+        echo "[stop] summary.json not found; stop reason unavailable"
+      fi
 
       # Generate quick-look plots into <final_dir>/plots
       RUN_DIR="${final_dir}" python - <<'PY'

@@ -1117,6 +1117,13 @@ def run_zero_d(
         r_in_d = cfg.disk.geometry.r_in_RM * constants.R_MARS
         r_out_d = cfg.disk.geometry.r_out_RM * constants.R_MARS
         area = math.pi * (r_out_d**2 - r_in_d**2)
+        if area <= 0.0 or not math.isfinite(area):
+            logger.warning(
+                "Disk area is non-positive (r_in=%.3e m, r_out=%.3e m); falling back to π r^2 for 0D area.",
+                r_in_d,
+                r_out_d,
+            )
+            area = math.pi * r**2
     else:
         area = math.pi * r**2
     mass_total_original = cfg.initial.mass_total
@@ -1864,6 +1871,18 @@ def run_zero_d(
         gate_factor = 1.0
         t_solid_step = None
         mass_err_percent_step = None
+        smol_sigma_before = None
+        smol_sigma_after = None
+        smol_sigma_loss = None
+        smol_dt_eff = None
+        smol_mass_error = None
+        smol_prod_mass_rate = None
+        smol_extra_mass_loss_rate = None
+        smol_mass_budget_delta = None
+        smol_gain_mass_rate = None
+        smol_loss_mass_rate = None
+        smol_sink_mass_rate = None
+        smol_source_mass_rate = None
         supply_rate_nominal_current: Optional[float] = None
         supply_rate_scaled_current: Optional[float] = None
         supply_rate_applied_current: Optional[float] = None
@@ -2249,7 +2268,7 @@ def run_zero_d(
                     if collisions_active_step:
                         if shielding_mode == "off":
                             kappa_eff = kappa_surf
-                            sigma_tau1_limit = float("inf")
+                            sigma_tau1_limit = shielding.sigma_tau1(kappa_eff)
                         elif shielding_mode == "fixed_tau1":
                             tau_target_los = tau_fixed_target
                             if not math.isfinite(tau_target_los):
@@ -2380,7 +2399,7 @@ def run_zero_d(
                 if collisions_active_step:
                     if shielding_mode == "off":
                         kappa_eff = kappa_surf
-                        sigma_tau1_limit = float("inf")
+                        sigma_tau1_limit = shielding.sigma_tau1(kappa_eff)
                     elif shielding_mode == "fixed_tau1":
                         tau_target_los = tau_fixed_target
                         if not math.isfinite(tau_target_los):
@@ -2560,6 +2579,26 @@ def run_zero_d(
                     fast_factor_numer = fast_blowout_factor_sub * dt
                     fast_factor_denom = dt
                     mass_err_percent_step = smol_res.mass_error * 100.0
+                    smol_sigma_before = smol_res.sigma_before
+                    smol_sigma_after = smol_res.sigma_after
+                    smol_sigma_loss = smol_res.sigma_loss
+                    smol_dt_eff = smol_res.dt_eff
+                    smol_mass_error = smol_res.mass_error
+                    smol_prod_mass_rate = smol_res.prod_mass_rate_effective
+                    smol_extra_mass_loss_rate = (
+                        smol_res.mass_loss_rate_blowout
+                        + smol_res.mass_loss_rate_sinks
+                        + smol_res.mass_loss_rate_sublimation
+                    )
+                    smol_gain_mass_rate = smol_res.gain_mass_rate
+                    smol_loss_mass_rate = smol_res.loss_mass_rate
+                    smol_sink_mass_rate = smol_res.sink_mass_rate
+                    smol_source_mass_rate = smol_res.source_mass_rate
+                    budget_dt = smol_dt_eff if smol_dt_eff and smol_dt_eff > 0.0 else dt
+                    smol_mass_budget_delta = (
+                        smol_sigma_after + budget_dt * smol_extra_mass_loss_rate
+                        - (smol_sigma_before + budget_dt * smol_prod_mass_rate)
+                    )
                     energy_columns = {}
                     if smol_res.energy_stats is not None:
                         stats_vec = smol_res.energy_stats
@@ -2690,8 +2729,29 @@ def run_zero_d(
         if collisions_active_step:
             loss_total_surface = sigma_before_step + total_prod_surface - sigma_surf
             loss_total_surface = max(loss_total_surface, 0.0)
-            sink_surface_total = max(total_sink_surface, 0.0)
-            blow_surface_total = max(loss_total_surface - sink_surface_total, 0.0)
+            if (
+                collision_solver_mode == "smol"
+                and smol_dt_eff is not None
+                and smol_dt_eff > 0.0
+                and smol_dt_eff < dt
+            ):
+                dt_smol = smol_dt_eff
+                blow_surface_total = max(outflux_surface, 0.0) * dt_smol
+                sink_surface_total = max(sink_flux_surface, 0.0) * dt_smol
+                loss_total_surface = blow_surface_total + sink_surface_total
+            elif collision_solver_mode == "smol" and dt > 0.0:
+                sink_rate = max(total_sink_surface / dt, 0.0)
+                blow_rate = max(outflux_surface, 0.0)
+                rate_total = blow_rate + sink_rate
+                if rate_total > 0.0:
+                    blow_surface_total = loss_total_surface * (blow_rate / rate_total)
+                    sink_surface_total = loss_total_surface - blow_surface_total
+                else:
+                    sink_surface_total = max(total_sink_surface, 0.0)
+                    blow_surface_total = max(loss_total_surface - sink_surface_total, 0.0)
+            else:
+                sink_surface_total = max(total_sink_surface, 0.0)
+                blow_surface_total = max(loss_total_surface - sink_surface_total, 0.0)
             if not enable_blowout_step:
                 blow_surface_total = 0.0
         else:
@@ -3435,6 +3495,18 @@ def run_zero_d(
             "chi_blow_eff",
             "ds_step_uniform",
             "mass_ratio_uniform",
+            "smol_dt_eff",
+            "smol_sigma_before",
+            "smol_sigma_after",
+            "smol_sigma_loss",
+            "smol_prod_mass_rate",
+            "smol_extra_mass_loss_rate",
+            "smol_mass_budget_delta",
+            "smol_mass_error",
+            "smol_gain_mass_rate",
+            "smol_loss_mass_rate",
+            "smol_sink_mass_rate",
+            "smol_source_mass_rate",
             "hydro_timescale_s",
             "mass_loss_surface_solid_step",
             "ds_dt_sublimation",
@@ -3560,6 +3632,18 @@ def run_zero_d(
             "sink_selected": sink_selected_last,
             "hydro_timescale_s": _safe_float(hydro_timescale_last),
             "mass_loss_surface_solid_step": mass_loss_surface_solid_step,
+            "smol_dt_eff": smol_dt_eff,
+            "smol_sigma_before": smol_sigma_before,
+            "smol_sigma_after": smol_sigma_after,
+            "smol_sigma_loss": smol_sigma_loss,
+            "smol_prod_mass_rate": smol_prod_mass_rate,
+            "smol_extra_mass_loss_rate": smol_extra_mass_loss_rate,
+            "smol_mass_budget_delta": smol_mass_budget_delta,
+            "smol_mass_error": smol_mass_error,
+            "smol_gain_mass_rate": smol_gain_mass_rate,
+            "smol_loss_mass_rate": smol_loss_mass_rate,
+            "smol_sink_mass_rate": smol_sink_mass_rate,
+            "smol_source_mass_rate": smol_source_mass_rate,
             "blowout_gate_factor": gate_factor,
         }
         for key in _diag_optional_float_keys:

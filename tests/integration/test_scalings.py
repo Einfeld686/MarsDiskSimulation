@@ -23,7 +23,16 @@ def test_strubbe_chiang_collisional_timescale_matches_orbit_scaling(tau: float) 
     assert math.isclose(t_coll, expected, rel_tol=1e-12, abs_tol=0.0)
 
 
-def _smol_to_wyatt_ratio(kernel_mode: str, H_factor: float) -> float:
+def _expected_smol_to_wyatt_ratio(e_kernel: float, i_kernel: float, H_factor: float) -> float:
+    """Return analytic ratio for the single-bin kernel geometry."""
+
+    denom = math.sqrt(1.25 * e_kernel * e_kernel + i_kernel * i_kernel)
+    if denom <= 0.0:
+        return math.inf
+    return math.sqrt(math.pi) * H_factor * i_kernel / (2.0 * denom)
+
+
+def _smol_to_wyatt_ratio(kernel_mode: str, H_factor: float) -> tuple[float, float, float]:
     tau = 1.0e-3
     s = 0.1
     sizes = np.array([s])
@@ -49,16 +58,18 @@ def _smol_to_wyatt_ratio(kernel_mode: str, H_factor: float) -> float:
     N = tau / (np.pi * s * s)
     v_rel = dynamics.v_ij(e_kernel, i_kernel, v_k=v_k)
     C = collide.compute_collision_kernel_C1(np.array([N]), sizes, H_k, v_rel)
-    t_coll_smol = collisions_smol.kernel_minimum_tcoll(C)
+    t_coll_smol = collisions_smol.kernel_minimum_tcoll(C, np.array([N]))
     t_coll_wyatt = surface.wyatt_tcoll_S1(tau, Omega)
-    return t_coll_smol / t_coll_wyatt
+    return t_coll_smol / t_coll_wyatt, e_kernel, i_kernel
 
 
 def test_smol_tcoll_matches_wyatt_config_mode() -> None:
-    ratio = _smol_to_wyatt_ratio("config", H_factor=0.05)
-    assert 0.1 <= ratio <= 10.0
+    ratio, e_kernel, i_kernel = _smol_to_wyatt_ratio("config", H_factor=0.05)
+    expected = _expected_smol_to_wyatt_ratio(e_kernel, i_kernel, H_factor=0.05)
+    assert 0.5 * expected <= ratio <= 2.0 * expected
 
 
 def test_smol_tcoll_matches_wyatt_wyatt_eq_mode() -> None:
-    ratio = _smol_to_wyatt_ratio("wyatt_eq", H_factor=0.1)
-    assert 0.1 <= ratio <= 10.0
+    ratio, e_kernel, i_kernel = _smol_to_wyatt_ratio("wyatt_eq", H_factor=0.1)
+    expected = _expected_smol_to_wyatt_ratio(e_kernel, i_kernel, H_factor=0.1)
+    assert 0.5 * expected <= ratio <= 2.0 * expected

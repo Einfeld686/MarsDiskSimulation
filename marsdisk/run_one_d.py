@@ -474,6 +474,7 @@ def run_one_d(
     M_sink_cum = np.zeros(n_cells, dtype=float)
     M_spill_cum = np.zeros(n_cells, dtype=float)
     cell_active = np.ones(n_cells, dtype=bool)
+    cell_solid_state = np.zeros(n_cells, dtype=bool)
     cell_stop_reason: List[Optional[str]] = [None] * n_cells
     cell_stop_time = np.full(n_cells, float("nan"), dtype=float)
     cell_stop_tau = np.full(n_cells, np.nan)
@@ -643,8 +644,6 @@ def run_one_d(
     if phase_tau_field != "los":
         phase_tau_field = "los"
     allow_liquid_hkl = bool(getattr(phase_cfg, "allow_liquid_hkl", True)) if phase_cfg else True
-    all_cells_solid_prev = False
-
     dt_min_tcoll_ratio = getattr(cfg.numerics, "dt_min_tcoll_ratio", 0.5)
     if dt_min_tcoll_ratio is not None:
         dt_min_tcoll_ratio = float(dt_min_tcoll_ratio)
@@ -744,12 +743,15 @@ def run_one_d(
     step_no = 0
     mass_budget_max_error = 0.0
     early_stop_reason = None
+    loop_exit_reason: Optional[str] = None
 
     while time < t_end and step_no < max_steps:
         if dt <= 0.0 or not math.isfinite(dt):
+            loop_exit_reason = "dt_invalid"
             break
         dt = min(dt, t_end - time)
         if dt <= 0.0:
+            loop_exit_reason = "t_end_reached"
             break
 
         T_use = float(temp_runtime.evaluate(time))
@@ -793,8 +795,6 @@ def run_one_d(
         step_dt_over_t_blow_sum = 0.0
         step_supply_blocked_area_sum = 0.0
         step_supply_mixing_area_sum = 0.0
-        all_cells_solid_current = True
-
         for idx in range(n_cells):
             r_val = float(r_vals[idx])
             r_rm = float(r_rm_vals[idx])
@@ -1145,8 +1145,8 @@ def run_one_d(
             liquid_block_collisions = phase_bulk_state == "liquid_dominated"
             collisions_active_step = collisions_active and not liquid_block_collisions
             allow_supply_step = step_no > 0 and phase_state == "solid" and not liquid_block_collisions
-            if cell_active[idx] and phase_state != "solid":
-                all_cells_solid_current = False
+            cell_is_solid = phase_state == "solid"
+            cell_solid_state[idx] = bool(cell_is_solid)
             tau_gate_block_step = bool(
                 tau_gate_enabled
                 and tau_phase_los is not None
@@ -1435,15 +1435,11 @@ def run_one_d(
             if t_coll_step is not None and math.isfinite(t_coll_step):
                 t_coll_min = min(t_coll_min, float(t_coll_step))
 
-            if optical_depth_enabled and optical_tau_stop is not None:
-                if not all_cells_solid_prev:
-                    tau_stop_los_current = None
-                else:
-                    kappa_for_stop = kappa_eff if math.isfinite(kappa_eff) else kappa_surf
-                    tau_stop_los_current = float(kappa_for_stop * sigma_val * los_factor)
+            if optical_depth_enabled and optical_tau_stop is not None and cell_is_solid:
+                kappa_for_stop = kappa_eff if math.isfinite(kappa_eff) else kappa_surf
+                tau_stop_los_current = float(kappa_for_stop * sigma_val * los_factor)
                 if (
-                    tau_stop_los_current is not None
-                    and math.isfinite(tau_stop_los_current)
+                    math.isfinite(tau_stop_los_current)
                     and tau_stop_los_current
                     > optical_tau_stop * (1.0 + float(optical_tau_stop_tol or 0.0))
                 ):
@@ -1485,6 +1481,40 @@ def run_one_d(
             step_out_mass += M_out_dot * dt
             step_sink_mass += M_sink_dot * dt
             step_sublimation_mass += mass_loss_sublimation_step
+
+            smol_sigma_before = None
+            smol_sigma_after = None
+            smol_sigma_loss = None
+            smol_dt_eff = None
+            smol_mass_error = None
+            smol_prod_mass_rate = None
+            smol_extra_mass_loss_rate = None
+            smol_mass_budget_delta = None
+            smol_gain_mass_rate = None
+            smol_loss_mass_rate = None
+            smol_sink_mass_rate = None
+            smol_source_mass_rate = None
+            if smol_res is not None:
+                smol_sigma_before = smol_res.sigma_before
+                smol_sigma_after = smol_res.sigma_after
+                smol_sigma_loss = smol_res.sigma_loss
+                smol_dt_eff = smol_res.dt_eff
+                smol_mass_error = smol_res.mass_error
+                smol_prod_mass_rate = smol_res.prod_mass_rate_effective
+                smol_extra_mass_loss_rate = (
+                    smol_res.mass_loss_rate_blowout
+                    + smol_res.mass_loss_rate_sinks
+                    + smol_res.mass_loss_rate_sublimation
+                )
+                smol_gain_mass_rate = smol_res.gain_mass_rate
+                smol_loss_mass_rate = smol_res.loss_mass_rate
+                smol_sink_mass_rate = smol_res.sink_mass_rate
+                smol_source_mass_rate = smol_res.source_mass_rate
+                budget_dt = smol_dt_eff if smol_dt_eff and smol_dt_eff > 0.0 else dt
+                smol_mass_budget_delta = (
+                    smol_sigma_after + budget_dt * smol_extra_mass_loss_rate
+                    - (smol_sigma_before + budget_dt * smol_prod_mass_rate)
+                )
 
             record = {
                 "time": time + dt,
@@ -1610,6 +1640,18 @@ def run_one_d(
                 "M_loss_rp_mars": float(M_loss_cum[idx]),
                 "M_loss_surface_solid_marsRP": float(M_loss_cum[idx]),
                 "M_loss_hydro": 0.0,
+                "smol_dt_eff": smol_dt_eff,
+                "smol_sigma_before": smol_sigma_before,
+                "smol_sigma_after": smol_sigma_after,
+                "smol_sigma_loss": smol_sigma_loss,
+                "smol_prod_mass_rate": smol_prod_mass_rate,
+                "smol_extra_mass_loss_rate": smol_extra_mass_loss_rate,
+                "smol_mass_budget_delta": smol_mass_budget_delta,
+                "smol_mass_error": smol_mass_error,
+                "smol_gain_mass_rate": smol_gain_mass_rate,
+                "smol_loss_mass_rate": smol_loss_mass_rate,
+                "smol_sink_mass_rate": smol_sink_mass_rate,
+                "smol_source_mass_rate": smol_source_mass_rate,
                 "fast_blowout_factor": fast_blowout_factor_record,
                 "fast_blowout_corrected": False,
                 "fast_blowout_flag_gt3": fast_blowout_flag_gt3,
@@ -1767,6 +1809,18 @@ def run_one_d(
                 "sink_selected": sink_selected,
                 "hydro_timescale_s": None,
                 "mass_loss_surface_solid_step": M_out_dot * dt,
+                "smol_dt_eff": smol_dt_eff,
+                "smol_sigma_before": smol_sigma_before,
+                "smol_sigma_after": smol_sigma_after,
+                "smol_sigma_loss": smol_sigma_loss,
+                "smol_prod_mass_rate": smol_prod_mass_rate,
+                "smol_extra_mass_loss_rate": smol_extra_mass_loss_rate,
+                "smol_mass_budget_delta": smol_mass_budget_delta,
+                "smol_mass_error": smol_mass_error,
+                "smol_gain_mass_rate": smol_gain_mass_rate,
+                "smol_loss_mass_rate": smol_loss_mass_rate,
+                "smol_sink_mass_rate": smol_sink_mass_rate,
+                "smol_source_mass_rate": smol_source_mass_rate,
                 "blowout_gate_factor": gate_factor,
             }
             _ensure_diagnostic_keys(diag_entry)
@@ -1965,9 +2019,9 @@ def run_one_d(
             streaming_state.flush(history, step_no)
             steps_since_flush = 0
 
-        all_cells_solid_prev = all_cells_solid_current
+        all_cells_solid_state = bool(np.all(cell_solid_state))
 
-        if np.all(~cell_active):
+        if np.all(~cell_active) and all_cells_solid_state:
             early_stop_reason = "tau_exceeded_all_cells"
             break
 
@@ -2178,6 +2232,15 @@ def run_one_d(
         "blowout": float(a_blow_last),
         "effective": float(s_min_effective_last),
     }
+    stop_reason = early_stop_reason
+    if stop_reason is None:
+        if loop_exit_reason is not None:
+            stop_reason = loop_exit_reason
+        elif step_no >= max_steps:
+            stop_reason = "max_steps"
+        else:
+            stop_reason = "t_end_reached"
+
     summary = {
         "status": "complete",
         "geometry_mode": "1D",
@@ -2198,6 +2261,7 @@ def run_one_d(
         "mass_budget_max_error_percent": mass_budget_max_error,
         "dt_over_t_blow_median": dt_over_t_blow_median,
         "early_stop_reason": early_stop_reason,
+        "stop_reason": stop_reason,
         "cells_stopped": int(np.sum(~cell_active)),
         "cells_total": int(n_cells),
         "time_end_s": time,

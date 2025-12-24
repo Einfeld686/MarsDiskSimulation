@@ -71,6 +71,10 @@ class Smol0DStepResult:
     mass_loss_rate_blowout: float
     mass_loss_rate_sinks: float
     mass_loss_rate_sublimation: float
+    gain_mass_rate: float | None = None
+    loss_mass_rate: float | None = None
+    sink_mass_rate: float | None = None
+    source_mass_rate: float | None = None
     sigma_spill: float = 0.0
     dSigma_dt_spill: float = 0.0
     mass_loss_rate_spill: float = 0.0
@@ -282,6 +286,7 @@ _FRAG_CACHE_MAX = 32
 def _fragment_tensor(
     sizes: np.ndarray,
     masses: np.ndarray,
+    edges: np.ndarray,
     v_rel: float | np.ndarray,
     rho: float,
     alpha_frag: float = 3.5,
@@ -292,17 +297,22 @@ def _fragment_tensor(
 
     When Numba is available, the inner loops are JIT-compiled and parallelised
     for significant speedup on multi-core systems.
+    The fragment weights are computed by integrating a mass distribution
+    ``dM/ds ∝ s^{-alpha_frag}`` over the bin edges.
     """
     global _NUMBA_FAILED
 
     sizes_arr = np.asarray(sizes, dtype=np.float64)
     masses_arr = np.asarray(masses, dtype=np.float64)
+    edges_arr = np.asarray(edges, dtype=np.float64)
     if sizes_arr.shape != masses_arr.shape:
         raise MarsDiskError("sizes and masses must share the same shape")
 
     n = sizes_arr.size
     if n == 0:
         return np.zeros((0, 0, 0), dtype=np.float64)
+    if edges_arr.shape != (n + 1,):
+        raise MarsDiskError("edges must have length n_bins + 1")
     if rho <= 0.0:
         raise MarsDiskError("rho must be positive")
 
@@ -315,6 +325,7 @@ def _fragment_tensor(
             float(rho),
             tuple(sizes_arr.tolist()),
             tuple(masses_arr.tolist()),
+            tuple(edges_arr.tolist()),
             float(alpha_frag),
         )
         cached = _FRAG_CACHE.get(cache_key)
@@ -356,7 +367,7 @@ def _fragment_tensor(
     # Branch: Numba-accelerated or pure Python fallback
     if use_jit:
         try:
-            weights_table = compute_weights_table_numba(sizes_arr, float(alpha_frag))
+            weights_table = compute_weights_table_numba(edges_arr, float(alpha_frag))
             fill_fragment_tensor_numba(
                 Y, n, valid_pair, f_lr_matrix, k_lr_matrix, weights_table
             )
@@ -373,7 +384,7 @@ def _fragment_tensor(
     if (not use_jit) and _USE_NUMBA and not _NUMBA_FAILED:
         try:
             Y_num = fragment_tensor_fallback_numba(
-                sizes_arr, valid_pair, f_lr_matrix, k_lr_matrix, float(alpha_frag)
+                edges_arr, valid_pair, f_lr_matrix, k_lr_matrix, float(alpha_frag)
             )
             Y[:] = Y_num
         except Exception as exc:  # pragma: no cover - exercised via fallback test
@@ -385,9 +396,17 @@ def _fragment_tensor(
 
     if not use_jit:
         # Pure Python fallback (original implementation)
+        left_edges = np.maximum(edges_arr[:-1], 1.0e-30)
+        right_edges = np.maximum(edges_arr[1:], left_edges)
+        power = 1.0 - float(alpha_frag)
+        if abs(power) < 1.0e-12:
+            bin_integrals = np.log(right_edges / left_edges)
+        else:
+            bin_integrals = (right_edges**power - left_edges**power) / power
+        bin_integrals = np.where(np.isfinite(bin_integrals) & (bin_integrals > 0.0), bin_integrals, 0.0)
         weights_table = np.zeros((n, n), dtype=np.float64)
         for k_lr in range(n):
-            weights = np.power(sizes_arr[: k_lr + 1], -alpha_frag)
+            weights = bin_integrals[: k_lr + 1]
             weights_sum = float(np.sum(weights))
             if weights_sum > 0.0:
                 weights_table[k_lr, : k_lr + 1] = weights / weights_sum
@@ -444,13 +463,17 @@ def _blowout_sink_vector(
     return np.where(np.asarray(sizes, dtype=float) <= a_blow, float(Omega), 0.0)
 
 
-def kernel_minimum_tcoll(C_kernel: np.ndarray) -> float:
-    """Return the minimum collisional time-scale implied by ``C``."""
+def kernel_minimum_tcoll(C_kernel: np.ndarray, N: np.ndarray | None = None) -> float:
+    """Return the minimum collisional time-scale implied by ``C``.
+
+    When ``N`` is provided, the summed collision rate is converted to a
+    per-particle loss coefficient via ``sum_j C_ij / N_i``.
+    """
 
     global _NUMBA_FAILED
     if C_kernel.size == 0:
         return math.inf
-    if _USE_NUMBA and not _NUMBA_FAILED:
+    if _USE_NUMBA and not _NUMBA_FAILED and N is None:
         try:
             return float(kernel_minimum_tcoll_numba(np.asarray(C_kernel, dtype=np.float64)))
         except Exception as exc:  # pragma: no cover - fallback
@@ -460,6 +483,14 @@ def kernel_minimum_tcoll(C_kernel: np.ndarray) -> float:
                 NumericalWarning,
             )
     rates = np.sum(C_kernel, axis=1)
+    if C_kernel.size:
+        rates = rates + np.diagonal(C_kernel)
+    if N is not None:
+        N_arr = np.asarray(N, dtype=float)
+        if N_arr.shape != rates.shape:
+            raise MarsDiskError("N must have the same shape as the kernel diagonal")
+        with np.errstate(divide="ignore", invalid="ignore"):
+            rates = np.where(N_arr > 0.0, rates / N_arr, 0.0)
     rate_max = float(np.max(rates))
     if rate_max <= 0.0:
         return math.inf
@@ -794,6 +825,10 @@ def step_collisions_smol_0d(
             0.0,
             0.0,
             0.0,
+            gain_mass_rate=0.0,
+            loss_mass_rate=0.0,
+            sink_mass_rate=0.0,
+            source_mass_rate=0.0,
             energy_stats=None,
             f_ke_eps_mismatch=None,
             e_next=None,
@@ -956,8 +991,15 @@ def step_collisions_smol_0d(
                 N_k, sizes_arr, H_arr, v_rel_scalar, workspace=kernel_workspace
             )
 
-        t_coll_kernel = kernel_minimum_tcoll(C_kernel)
-        Y_tensor = _fragment_tensor(sizes_arr, m_k, v_rel_scalar, rho)
+        t_coll_kernel = kernel_minimum_tcoll(C_kernel, N_k)
+        edges_state = psd_state.get("edges")
+        edges_arr = np.asarray(edges_state, dtype=float) if edges_state is not None else None
+        if edges_arr is None or edges_arr.shape != (sizes_arr.size + 1,):
+            left_edges = np.maximum(sizes_arr - 0.5 * widths_arr, 0.0)
+            edges_arr = np.empty(sizes_arr.size + 1, dtype=float)
+            edges_arr[:-1] = left_edges
+            edges_arr[-1] = sizes_arr[-1] + 0.5 * widths_arr[-1]
+        Y_tensor = _fragment_tensor(sizes_arr, m_k, edges_arr, v_rel_scalar, rho)
         if logger.isEnabledFor(logging.DEBUG):
             e_log = float(e_kernel) if e_kernel is not None else float("nan")
             i_log = float(i_kernel) if i_kernel is not None else float("nan")
@@ -1013,7 +1055,14 @@ def step_collisions_smol_0d(
     i_kernel_effective_val = i_kernel
     supply_weight_val = supply_weight
 
-    S_blow = _blowout_sink_vector(sizes_arr, a_blow, Omega, enable_blowout)
+    size_for_blow = sizes_arr
+    edges_arr = psd_state.get("edges")
+    if edges_arr is not None:
+        edges_np = np.asarray(edges_arr, dtype=float)
+        if edges_np.size == sizes_arr.size + 1:
+            # Use bin lower edges so the threshold is applied even when s_min == a_blow.
+            size_for_blow = edges_np[:-1]
+    S_blow = _blowout_sink_vector(size_for_blow, a_blow, Omega, enable_blowout)
 
     S_sink = None
     mass_loss_rate_sink = 0.0
@@ -1065,6 +1114,7 @@ def step_collisions_smol_0d(
         q=supply_q,
     )
 
+    smol_diag: dict[str, float] = {}
     N_new, dt_eff, mass_err = smol.step_imex_bdf1_C3(
         N_k,
         C_kernel,
@@ -1077,6 +1127,7 @@ def step_collisions_smol_0d(
         S_external_k=S_sink,
         S_sublimation_k=S_sub_k,
         extra_mass_loss_rate=extra_mass_loss_rate,
+        diag_out=smol_diag,
         workspace=imex_workspace,
     )
 
@@ -1111,6 +1162,10 @@ def step_collisions_smol_0d(
         mass_loss_rate_blowout=mass_loss_rate_blow,
         mass_loss_rate_sinks=mass_loss_rate_sink,
         mass_loss_rate_sublimation=mass_loss_rate_sub,
+        gain_mass_rate=smol_diag.get("gain_mass_rate"),
+        loss_mass_rate=smol_diag.get("loss_mass_rate"),
+        sink_mass_rate=smol_diag.get("sink_mass_rate"),
+        source_mass_rate=smol_diag.get("source_mass_rate"),
         sigma_spill=sigma_spill,
         dSigma_dt_spill=dSigma_dt_spill,
         mass_loss_rate_spill=mass_loss_rate_spill,
