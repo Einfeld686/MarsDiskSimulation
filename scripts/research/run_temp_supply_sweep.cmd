@@ -11,19 +11,20 @@ if /i "%~1"=="--dry-run" (
   popd
   exit /b 0
 )
+if /i "%~1"=="--run-one" set "RUN_ONE_MODE=1"
 
 rem ---------- setup ----------
 if not defined VENV_DIR set "VENV_DIR=.venv"
 if not defined REQ_FILE set "REQ_FILE=requirements.txt"
-for /f %%A in ('powershell -NoProfile -Command "Get-Date -Format \"yyyyMMdd-HHmmss\""') do set "RUN_TS=%%A"
-for /f %%A in ('git rev-parse --short HEAD 2^>nul') do set "GIT_SHA=%%A"
+if not defined RUN_TS for /f %%A in ('powershell -NoProfile -Command "Get-Date -Format \"yyyyMMdd-HHmmss\""') do set "RUN_TS=%%A"
+if not defined GIT_SHA for /f %%A in ('git rev-parse --short HEAD 2^>nul') do set "GIT_SHA=%%A"
 if not defined GIT_SHA set "GIT_SHA=nogit"
-for /f %%A in ('python -c "import secrets; print(secrets.randbelow(2**31))"') do set "BATCH_SEED=%%A"
+if not defined BATCH_SEED for /f %%A in ('python -c "import secrets; print(secrets.randbelow(2**31))"') do set "BATCH_SEED=%%A"
 
 rem Force output root to out/ as requested
-set "BATCH_ROOT=out"
+if not defined BATCH_ROOT set "BATCH_ROOT=out"
 if not defined SWEEP_TAG set "SWEEP_TAG=temp_supply_sweep"
-set "BATCH_DIR=%BATCH_ROOT%\%SWEEP_TAG%\%RUN_TS%__%GIT_SHA%__seed%BATCH_SEED%"
+if not defined BATCH_DIR set "BATCH_DIR=%BATCH_ROOT%\%SWEEP_TAG%\%RUN_TS%__%GIT_SHA%__seed%BATCH_SEED%"
 echo.[setup] Output root: %BATCH_ROOT%
 if not exist "%BATCH_DIR%" mkdir "%BATCH_DIR%"
 
@@ -34,7 +35,9 @@ if not exist "%VENV_DIR%\Scripts\python.exe" (
 
 call "%VENV_DIR%\Scripts\activate.bat"
 
-if exist "%REQ_FILE%" (
+if "%SKIP_PIP%"=="1" (
+  echo.[setup] SKIP_PIP=1; skipping dependency install.
+) else if exist "%REQ_FILE%" (
   echo.[setup] Installing/upgrading dependencies from %REQ_FILE% ...
   python -m pip install --upgrade pip
   pip install -r "%REQ_FILE%"
@@ -112,6 +115,11 @@ if not defined SUPPLY_VEL_WEIGHT set "SUPPLY_VEL_WEIGHT=delta_sigma"
 rem STREAM_MEM_GB intentionally left undefined by default
 rem STREAM_STEP_INTERVAL intentionally left undefined by default
 if not defined ENABLE_PROGRESS set "ENABLE_PROGRESS=1"
+if not defined AUTO_JOBS set "AUTO_JOBS=0"
+if not defined PARALLEL_JOBS set "PARALLEL_JOBS="
+if not defined JOB_MEM_GB set "JOB_MEM_GB=10"
+if not defined MEM_RESERVE_GB set "MEM_RESERVE_GB=4"
+if not defined PARALLEL_SLEEP_SEC set "PARALLEL_SLEEP_SEC=2"
 
 if /i "%SUPPLY_HEADROOM_POLICY%"=="none" set "SUPPLY_HEADROOM_POLICY="
 if /i "%SUPPLY_HEADROOM_POLICY%"=="off" set "SUPPLY_HEADROOM_POLICY="
@@ -130,6 +138,25 @@ if defined COOL_TO_K (
   set "COOL_STATUS=dynamic horizon: stop when Mars T_M reaches !COOL_TO_K! K (margin !COOL_MARGIN_YEARS! yr, search_cap=!COOL_SEARCH_DISPLAY!)"
 ) else (
   set "COOL_STATUS=dynamic horizon disabled (using numerics.t_end_* from config)"
+)
+
+set "TOTAL_GB="
+set "CPU_LOGICAL="
+if "%AUTO_JOBS%"=="1" (
+  for /f %%A in ('powershell -NoProfile -Command "$mem=(Get-CimInstance Win32_ComputerSystem).TotalPhysicalMemory; [math]::Floor($mem/1GB)"') do set "TOTAL_GB=%%A"
+  for /f %%A in ('powershell -NoProfile -Command "(Get-CimInstance Win32_Processor | Measure-Object -Sum -Property NumberOfLogicalProcessors).Sum"') do set "CPU_LOGICAL=%%A"
+  if not defined CPU_LOGICAL for /f %%A in ('powershell -NoProfile -Command "[Environment]::ProcessorCount"') do set "CPU_LOGICAL=%%A"
+  if not defined PARALLEL_JOBS (
+    for /f %%A in ('powershell -NoProfile -Command "$total=[double]$env:TOTAL_GB; $reserve=[double]$env:MEM_RESERVE_GB; $job=[double]$env:JOB_MEM_GB; if (-not $job -or $job -le 0){$job=10}; if (-not $total -or $total -le 0){$total=0}; $avail=[math]::Max($total-$reserve,1); $memJobs=[math]::Max([math]::Floor($avail/$job),1); $cpu=[int]$env:CPU_LOGICAL; if ($cpu -lt 1){$cpu=[Environment]::ProcessorCount}; [int]([math]::Max([math]::Min($cpu,$memJobs),1))"') do set "PARALLEL_JOBS=%%A"
+  )
+  if not defined STREAM_MEM_GB set "STREAM_MEM_GB=%JOB_MEM_GB%"
+)
+if not defined PARALLEL_JOBS set "PARALLEL_JOBS=1"
+if "%PARALLEL_JOBS%"=="0" set "PARALLEL_JOBS=1"
+if "%AUTO_JOBS%"=="1" (
+  if not defined TOTAL_GB set "TOTAL_GB=unknown"
+  if not defined CPU_LOGICAL set "CPU_LOGICAL=unknown"
+  echo.[sys] mem_total_gb=%TOTAL_GB% cpu_logical=%CPU_LOGICAL% job_mem_gb=%JOB_MEM_GB% parallel_jobs=%PARALLEL_JOBS%
 )
 
 echo.[config] supply multipliers: temp_enabled=%SUPPLY_TEMP_ENABLED% (mode=%SUPPLY_TEMP_MODE%) feedback_enabled=%SUPPLY_FEEDBACK_ENABLED% reservoir=%SUPPLY_RESERVOIR_M%
@@ -185,6 +212,40 @@ if defined SUPPLY_VEL_I set "SUPPLY_OVERRIDES=!SUPPLY_OVERRIDES! --override \"su
 if defined SUPPLY_VEL_FACTOR set "SUPPLY_OVERRIDES=!SUPPLY_OVERRIDES! --override \"supply.injection.velocity.vrel_factor=%SUPPLY_VEL_FACTOR%\""
 set "SUPPLY_OVERRIDES=!SUPPLY_OVERRIDES! --override \"supply.injection.velocity.blend_mode=%SUPPLY_VEL_BLEND%\" --override \"supply.injection.velocity.weight_mode=%SUPPLY_VEL_WEIGHT%\""
 
+if defined RUN_ONE_MODE (
+  if not defined RUN_ONE_T (
+    echo.[error] RUN_ONE_T is required for --run-one
+    popd
+    exit /b 1
+  )
+  if not defined RUN_ONE_EPS (
+    echo.[error] RUN_ONE_EPS is required for --run-one
+    popd
+    exit /b 1
+  )
+  if not defined RUN_ONE_TAU (
+    echo.[error] RUN_ONE_TAU is required for --run-one
+    popd
+    exit /b 1
+  )
+  set "T_LIST=%RUN_ONE_T%"
+  set "EPS_LIST=%RUN_ONE_EPS%"
+  set "TAU_LIST=%RUN_ONE_TAU%"
+  if defined RUN_ONE_SEED set "SEED_OVERRIDE=%RUN_ONE_SEED%"
+  set "PARALLEL_JOBS=1"
+  set "AUTO_JOBS=0"
+  echo.[info] run-one mode: T=%RUN_ONE_T% eps=%RUN_ONE_EPS% tau=%RUN_ONE_TAU% seed=%RUN_ONE_SEED%
+)
+
+if %PARALLEL_JOBS% GTR 1 (
+  if not defined RUN_ONE_MODE (
+    call :run_parallel
+    popd
+    endlocal
+    exit /b 0
+  )
+)
+
 rem ---------- main loops ----------
 for %%T in (%T_LIST%) do (
   set "T_TABLE=data/mars_temperature_T%%Tp0K.csv"
@@ -198,7 +259,11 @@ for %%T in (%T_LIST%) do (
       set "TAU_TITLE=!TAU!"
       set "TAU_TITLE=!TAU_TITLE:0.=0p!"
       set "TAU_TITLE=!TAU_TITLE:.=p!"
-      for /f %%S in ('python -c "import secrets; print(secrets.randbelow(2**31))"') do set "SEED=%%S"
+      if defined SEED_OVERRIDE (
+        set "SEED=%SEED_OVERRIDE%"
+      ) else (
+        for /f %%S in ('python -c "import secrets; print(secrets.randbelow(2**31))"') do set "SEED=%%S"
+      )
       set "TITLE=T%%T_eps!EPS_TITLE!_tau!TAU_TITLE!"
       set "OUTDIR=%BATCH_DIR%\!TITLE!"
       echo.[run] T=%%T eps=%%M tau=%%U -^> !OUTDIR! (batch=%BATCH_SEED%, seed=!SEED!)
@@ -365,3 +430,63 @@ for %%T in (%T_LIST%) do (
 
 popd
 endlocal
+exit /b %errorlevel%
+
+:run_parallel
+set "JOB_PIDS="
+set "JOB_COUNT=0"
+set "LAUNCHER_PS=%TEMP%\marsdisk_launch_job_%RUN_TS%_%BATCH_SEED%.ps1"
+> "%LAUNCHER_PS%" echo $cmd = $env:JOB_CMD
+>>"%LAUNCHER_PS%" echo if (-not $cmd) { exit 2 }
+>>"%LAUNCHER_PS%" echo $p = Start-Process cmd.exe -ArgumentList '/c', $cmd -PassThru
+>>"%LAUNCHER_PS%" echo $p.Id
+echo.[info] parallel mode: jobs=%PARALLEL_JOBS% sleep=%PARALLEL_SLEEP_SEC%s
+
+for %%T in (%T_LIST%) do (
+  for %%M in (%EPS_LIST%) do (
+    for %%U in (%TAU_LIST%) do (
+      call :launch_job %%T %%M %%U
+    )
+  )
+)
+
+call :wait_all
+if exist "%LAUNCHER_PS%" del "%LAUNCHER_PS%"
+echo.[done] Parallel sweep completed (batch=%BATCH_SEED%, dir=%BATCH_DIR%).
+exit /b 0
+
+:launch_job
+set "JOB_T=%~1"
+set "JOB_EPS=%~2"
+set "JOB_TAU=%~3"
+for /f %%S in ('python -c "import secrets; print(secrets.randbelow(2**31))"') do set "JOB_SEED=%%S"
+call :wait_for_slot
+set "JOB_PID="
+set "JOB_CMD=set RUN_ONE_T=!JOB_T!&& set RUN_ONE_EPS=!JOB_EPS!&& set RUN_ONE_TAU=!JOB_TAU!&& set RUN_ONE_SEED=!JOB_SEED!&& set AUTO_JOBS=0&& set PARALLEL_JOBS=1&& set SKIP_PIP=1&& call \"%~f0\" --run-one"
+for /f "usebackq delims=" %%P in (`powershell -NoProfile -ExecutionPolicy Bypass -File "%LAUNCHER_PS%"`) do set "JOB_PID=%%P"
+if defined JOB_PID set "JOB_PIDS=!JOB_PIDS! !JOB_PID!"
+exit /b 0
+
+:wait_for_slot
+call :refresh_jobs
+if %JOB_COUNT% GEQ %PARALLEL_JOBS% (
+  timeout /t %PARALLEL_SLEEP_SEC% /nobreak >nul
+  goto :wait_for_slot
+)
+exit /b 0
+
+:refresh_jobs
+set "JOB_COUNT=0"
+if not defined JOB_PIDS exit /b 0
+for /f "usebackq tokens=1,2 delims=|" %%A in (`powershell -NoProfile -Command "$ids=$env:JOB_PIDS -split ' ' | Where-Object {$_}; $alive=@(); foreach($id in $ids){ if (Get-Process -Id $id -ErrorAction SilentlyContinue){$alive += $id}}; $list=($alive -join ' '); if (-not $list){$list='__NONE__'}; Write-Output ($list + '|' + $alive.Count)"`) do (
+  set "JOB_PIDS=%%A"
+  set "JOB_COUNT=%%B"
+)
+if "%JOB_PIDS%"=="__NONE__" set "JOB_PIDS="
+exit /b 0
+
+:wait_all
+call :refresh_jobs
+if "%JOB_COUNT%"=="0" exit /b 0
+timeout /t %PARALLEL_SLEEP_SEC% /nobreak >nul
+goto :wait_all
