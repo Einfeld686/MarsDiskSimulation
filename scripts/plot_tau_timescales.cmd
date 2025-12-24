@@ -58,7 +58,7 @@ echo.[sys] mem_total_gb=%TOTAL_GB% cpu_logical=%CPU_LOGICAL% stream_mem_gb=%STRE
 
 set "PLOT_ARGS=%*"
 if "%~1"=="" (
-  for /f "usebackq delims=" %%A in (`powershell -NoProfile -Command "$root=Join-Path $PWD 'out'; if (!(Test-Path $root)) { exit 2 }; $files=Get-ChildItem -Path $root -Recurse -File -Filter 'run.parquet' -ErrorAction SilentlyContinue; if (-not $files) { $files=Get-ChildItem -Path $root -Recurse -File -Filter 'run_chunk_*.parquet' -ErrorAction SilentlyContinue }; if (-not $files) { exit 3 }; $file=$files | Sort-Object LastWriteTime -Descending | Select-Object -First 1; $run=$file.Directory.Parent.FullName; Write-Output $run"`) do set "DEFAULT_RUN=%%A"
+  for /f "usebackq delims=" %%A in (`powershell -NoProfile -Command "$root=Join-Path $PWD 'out'; if (-not (Test-Path $root)) { exit 2 }; $files=Get-ChildItem -Path $root -Recurse -File -Filter 'run.parquet' -ErrorAction SilentlyContinue; if (-not $files) { $files=Get-ChildItem -Path $root -Recurse -File -Filter 'run_chunk_*.parquet' -ErrorAction SilentlyContinue }; if (-not $files) { exit 3 }; $file=$files | Sort-Object LastWriteTime -Descending | Select-Object -First 1; $run=$file.Directory.Parent.FullName; Write-Output $run"`) do set "DEFAULT_RUN=%%A"
   if not defined DEFAULT_RUN (
     echo.[error] No run outputs found under out\\ (need series\\run.parquet or run_chunk_*.parquet).
     popd

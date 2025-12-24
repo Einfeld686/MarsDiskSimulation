@@ -462,9 +462,10 @@ set "JOB_TAU=%~3"
 for /f %%S in ('python -c "import secrets; print(secrets.randbelow(2**31))"') do set "JOB_SEED=%%S"
 call :wait_for_slot
 set "JOB_PID="
-set "JOB_CMD=set RUN_ONE_T=!JOB_T!&& set RUN_ONE_EPS=!JOB_EPS!&& set RUN_ONE_TAU=!JOB_TAU!&& set RUN_ONE_SEED=!JOB_SEED!&& set AUTO_JOBS=0&& set PARALLEL_JOBS=1&& set SKIP_PIP=1&& call \"%~f0\" --run-one"
+set "JOB_CMD=set RUN_ONE_T=!JOB_T!&& set RUN_ONE_EPS=!JOB_EPS!&& set RUN_ONE_TAU=!JOB_TAU!&& set RUN_ONE_SEED=!JOB_SEED!&& set AUTO_JOBS=0&& set PARALLEL_JOBS=1&& set SKIP_PIP=1&& call ""%~f0"" --run-one"
 for /f "usebackq delims=" %%P in (`powershell -NoProfile -ExecutionPolicy Bypass -File "%LAUNCHER_PS%"`) do set "JOB_PID=%%P"
 if defined JOB_PID set "JOB_PIDS=!JOB_PIDS! !JOB_PID!"
+if not defined JOB_PID echo.[warn] failed to launch job for T=!JOB_T! eps=!JOB_EPS! tau=!JOB_TAU! (check PowerShell availability)
 exit /b 0
 
 :wait_for_slot
