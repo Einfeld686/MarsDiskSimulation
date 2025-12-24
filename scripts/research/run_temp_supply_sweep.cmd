@@ -120,6 +120,7 @@ if not defined PARALLEL_JOBS set "PARALLEL_JOBS="
 if not defined JOB_MEM_GB set "JOB_MEM_GB=10"
 if not defined MEM_RESERVE_GB set "MEM_RESERVE_GB=4"
 if not defined PARALLEL_SLEEP_SEC set "PARALLEL_SLEEP_SEC=2"
+if not defined PARALLEL_WINDOW_STYLE set "PARALLEL_WINDOW_STYLE=Hidden"
 
 if /i "%SUPPLY_HEADROOM_POLICY%"=="none" set "SUPPLY_HEADROOM_POLICY="
 if /i "%SUPPLY_HEADROOM_POLICY%"=="off" set "SUPPLY_HEADROOM_POLICY="
@@ -438,7 +439,14 @@ set "JOB_COUNT=0"
 set "LAUNCHER_PS=%TEMP%\marsdisk_launch_job_%RUN_TS%_%BATCH_SEED%.ps1"
 > "%LAUNCHER_PS%" echo $cmd = $env:JOB_CMD
 >>"%LAUNCHER_PS%" echo if (-not $cmd) { exit 2 }
->>"%LAUNCHER_PS%" echo $p = Start-Process cmd.exe -ArgumentList '/c', $cmd -PassThru
+>>"%LAUNCHER_PS%" echo $style = $env:PARALLEL_WINDOW_STYLE
+>>"%LAUNCHER_PS%" echo $valid = @('Normal','Hidden','Minimized','Maximized')
+>>"%LAUNCHER_PS%" echo if ($style -and -not ($valid -contains $style)) { $style = $null }
+>>"%LAUNCHER_PS%" echo if ($style) {
+>>"%LAUNCHER_PS%" echo   $p = Start-Process cmd.exe -ArgumentList '/c', $cmd -WindowStyle $style -PassThru
+>>"%LAUNCHER_PS%" echo } else {
+>>"%LAUNCHER_PS%" echo   $p = Start-Process cmd.exe -ArgumentList '/c', $cmd -PassThru
+>>"%LAUNCHER_PS%" echo }
 >>"%LAUNCHER_PS%" echo $p.Id
 echo.[info] parallel mode: jobs=%PARALLEL_JOBS% sleep=%PARALLEL_SLEEP_SEC%s
 
