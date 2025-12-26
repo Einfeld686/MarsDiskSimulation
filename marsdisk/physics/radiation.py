@@ -13,6 +13,7 @@ from __future__ import annotations
 import logging
 import math
 import os
+import threading
 import warnings
 from collections import OrderedDict
 from numbers import Real
@@ -46,6 +47,7 @@ _QPR_CACHE_ENABLED: bool = True
 _QPR_CACHE_MAXSIZE: int = 256
 _QPR_CACHE_ROUND: Optional[float] = None
 _QPR_CACHE: "OrderedDict[tuple[float, float], float]" = OrderedDict()
+_QPR_CACHE_LOCK = threading.Lock()
 
 DEFAULT_Q_PR: float = 1.0
 DEFAULT_RHO: float = 3000.0
@@ -164,31 +166,34 @@ def _qpr_cache_get(s: float, T_M: float) -> float | None:
     if not _QPR_CACHE_ENABLED or _QPR_CACHE_MAXSIZE <= 0:
         return None
     key = _qpr_cache_key(s, T_M)
-    cached = _QPR_CACHE.get(key)
-    if cached is None:
-        return None
-    _QPR_CACHE.move_to_end(key)
-    return cached
+    with _QPR_CACHE_LOCK:
+        cached = _QPR_CACHE.get(key)
+        if cached is None:
+            return None
+        _QPR_CACHE.move_to_end(key)
+        return cached
 
 
 def _qpr_cache_set(s: float, T_M: float, value: float) -> None:
     if not _QPR_CACHE_ENABLED or _QPR_CACHE_MAXSIZE <= 0:
         return
     key = _qpr_cache_key(s, T_M)
-    _QPR_CACHE[key] = value
-    _QPR_CACHE.move_to_end(key)
-    while len(_QPR_CACHE) > _QPR_CACHE_MAXSIZE:
-        _QPR_CACHE.popitem(last=False)
+    with _QPR_CACHE_LOCK:
+        _QPR_CACHE[key] = value
+        _QPR_CACHE.move_to_end(key)
+        while len(_QPR_CACHE) > _QPR_CACHE_MAXSIZE:
+            _QPR_CACHE.popitem(last=False)
 
 
 def configure_qpr_cache(*, enabled: bool, maxsize: int = 256, round_tol: float | None = None) -> None:
     """Configure memoisation for ⟨Q_pr⟩ lookups."""
 
     global _QPR_CACHE_ENABLED, _QPR_CACHE_MAXSIZE, _QPR_CACHE_ROUND
-    _QPR_CACHE_ENABLED = bool(enabled)
-    _QPR_CACHE_MAXSIZE = max(int(maxsize), 0)
-    _QPR_CACHE_ROUND = float(round_tol) if round_tol is not None and round_tol > 0.0 else None
-    _QPR_CACHE.clear()
+    with _QPR_CACHE_LOCK:
+        _QPR_CACHE_ENABLED = bool(enabled)
+        _QPR_CACHE_MAXSIZE = max(int(maxsize), 0)
+        _QPR_CACHE_ROUND = float(round_tol) if round_tol is not None and round_tol > 0.0 else None
+        _QPR_CACHE.clear()
 
 
 def grain_temperature_graybody(T_M: float, radius_m: float, *, q_abs: float = 1.0) -> float:
@@ -224,7 +229,8 @@ def load_qpr_table(path: Path | str) -> type_QPr:
     """Load a table file and cache the interpolator. Planck averaged ⟨Q_pr⟩."""
 
     global _QPR_LOOKUP
-    _QPR_CACHE.clear()
+    with _QPR_CACHE_LOCK:
+        _QPR_CACHE.clear()
     table_path = Path(path)
     _QPR_LOOKUP = tables.load_qpr_table(table_path)
 

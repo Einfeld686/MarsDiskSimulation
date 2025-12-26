@@ -9,6 +9,7 @@ References
 """
 
 import logging
+import threading
 from collections import OrderedDict
 from typing import Dict, Tuple, Literal
 
@@ -53,10 +54,12 @@ _RHO_GCM3_FROM_SI = 1.0e-3
 _ERG_PER_G_TO_J_PER_KG = 1.0e-4
 _VEL_CLAMP_COUNTS: dict[str, int] = {"below": 0, "above": 0}
 _VEL_CLAMP_WARNED = False
+_VEL_CLAMP_LOCK = threading.Lock()
 # Gravitational-regime velocity exponent μ from LS09; used as v^{-3μ+2} outside [v_min, v_max].
 _GRAVITY_VELOCITY_MU = 0.45
 _QDSTAR_CACHE_MAXSIZE = 8
 _QDSTAR_CACHE: "OrderedDict[tuple, np.ndarray]" = OrderedDict()
+_QDSTAR_CACHE_LOCK = threading.Lock()
 
 
 def set_coeff_unit_system(units: CoeffUnits) -> CoeffUnits:
@@ -120,7 +123,8 @@ def set_coefficient_table(
     _COEFFS = dict(cleaned)
     _V_MIN = min(_COEFFS.keys())
     _V_MAX = max(_COEFFS.keys())
-    _QDSTAR_CACHE.clear()
+    with _QDSTAR_CACHE_LOCK:
+        _QDSTAR_CACHE.clear()
     return dict(_COEFFS)
 
 
@@ -134,14 +138,16 @@ def reset_velocity_clamp_stats() -> None:
     """Reset counters that track impact-velocity clamping events."""
 
     global _VEL_CLAMP_COUNTS, _VEL_CLAMP_WARNED
-    _VEL_CLAMP_COUNTS = {"below": 0, "above": 0}
-    _VEL_CLAMP_WARNED = False
+    with _VEL_CLAMP_LOCK:
+        _VEL_CLAMP_COUNTS = {"below": 0, "above": 0}
+        _VEL_CLAMP_WARNED = False
 
 
 def get_velocity_clamp_stats() -> Dict[str, int]:
     """Return a copy of the clamp counters for diagnostics."""
 
-    return dict(_VEL_CLAMP_COUNTS)
+    with _VEL_CLAMP_LOCK:
+        return dict(_VEL_CLAMP_COUNTS)
 
 
 def set_gravity_velocity_mu(mu: float) -> float:
@@ -168,15 +174,16 @@ def _track_velocity_clamp(v_values: np.ndarray) -> None:
     below = int(np.sum(v_flat < _V_MIN))
     above = int(np.sum(v_flat > _V_MAX))
     if below or above:
-        _VEL_CLAMP_COUNTS["below"] += below
-        _VEL_CLAMP_COUNTS["above"] += above
-        if not _VEL_CLAMP_WARNED:
-            logger.warning(
-                "Impact velocity outside [%.1f, %.1f] km/s; extrapolating gravity term with v^{-3mu+2} while clamping coefficient lookup to bounds (further warnings suppressed).",
-                _V_MIN,
-                _V_MAX,
-            )
-            _VEL_CLAMP_WARNED = True
+        with _VEL_CLAMP_LOCK:
+            _VEL_CLAMP_COUNTS["below"] += below
+            _VEL_CLAMP_COUNTS["above"] += above
+            if not _VEL_CLAMP_WARNED:
+                logger.warning(
+                    "Impact velocity outside [%.1f, %.1f] km/s; extrapolating gravity term with v^{-3mu+2} while clamping coefficient lookup to bounds (further warnings suppressed).",
+                    _V_MIN,
+                    _V_MAX,
+                )
+                _VEL_CLAMP_WARNED = True
 
 
 def _qdstar_cache_key(s: np.ndarray, rho: float, v_kms: float) -> tuple | None:
@@ -190,20 +197,22 @@ def _qdstar_cache_key(s: np.ndarray, rho: float, v_kms: float) -> tuple | None:
 def _qdstar_cache_get(key: tuple | None) -> np.ndarray | None:
     if key is None:
         return None
-    cached = _QDSTAR_CACHE.get(key)
-    if cached is None:
-        return None
-    _QDSTAR_CACHE.move_to_end(key)
-    return np.array(cached, copy=True)
+    with _QDSTAR_CACHE_LOCK:
+        cached = _QDSTAR_CACHE.get(key)
+        if cached is None:
+            return None
+        _QDSTAR_CACHE.move_to_end(key)
+        return np.array(cached, copy=True)
 
 
 def _qdstar_cache_put(key: tuple | None, value: np.ndarray) -> None:
     if key is None:
         return
-    _QDSTAR_CACHE[key] = np.array(value, copy=True)
-    _QDSTAR_CACHE.move_to_end(key)
-    while len(_QDSTAR_CACHE) > _QDSTAR_CACHE_MAXSIZE:
-        _QDSTAR_CACHE.popitem(last=False)
+    with _QDSTAR_CACHE_LOCK:
+        _QDSTAR_CACHE[key] = np.array(value, copy=True)
+        _QDSTAR_CACHE.move_to_end(key)
+        while len(_QDSTAR_CACHE) > _QDSTAR_CACHE_MAXSIZE:
+            _QDSTAR_CACHE.popitem(last=False)
 
 
 def _q_d_star(

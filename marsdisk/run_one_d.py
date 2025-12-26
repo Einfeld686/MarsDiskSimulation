@@ -6,6 +6,7 @@ import logging
 import math
 import os
 import random
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
@@ -122,6 +123,16 @@ def _env_flag(name: str) -> Optional[bool]:
     return None
 
 
+def _env_int(name: str) -> Optional[int]:
+    raw = os.environ.get(name)
+    if raw is None:
+        return None
+    try:
+        return int(raw.strip())
+    except ValueError:
+        return None
+
+
 def run_one_d(
     cfg: Config,
     *,
@@ -179,6 +190,110 @@ def run_one_d(
     r_rm_mid = r_mid / constants.R_MARS
     Omega_ref = grid.omega_kepler(r_mid)
     t_orb_ref = 2.0 * math.pi / Omega_ref if Omega_ref > 0.0 else float("inf")
+
+    cell_parallel_requested = _env_flag("MARSDISK_CELL_PARALLEL") is True
+    cell_jobs_env = _env_int("MARSDISK_CELL_JOBS")
+    cell_min_cells_env = _env_int("MARSDISK_CELL_MIN_CELLS")
+    cell_chunk_size_env = _env_int("MARSDISK_CELL_CHUNK_SIZE")
+
+    cell_jobs_requested = cell_jobs_env if cell_jobs_env is not None else 1
+    if cell_jobs_requested < 1:
+        cell_jobs_requested = 1
+    cell_min_cells = cell_min_cells_env if cell_min_cells_env is not None else 4
+    if cell_min_cells < 1:
+        cell_min_cells = 1
+    cell_chunk_size_raw = cell_chunk_size_env if cell_chunk_size_env is not None else 0
+
+    cell_coupling_enabled = bool(
+        getattr(cfg.numerics, "enable_viscosity", False)
+        or getattr(cfg.numerics, "enable_radial_transport", False)
+    )
+    cell_parallel_reason = "enabled"
+    if not cell_parallel_requested:
+        cell_parallel_reason = "not_requested"
+    elif os.name != "nt":
+        cell_parallel_reason = "non_windows"
+    elif n_cells < cell_min_cells:
+        cell_parallel_reason = "too_few_cells"
+    elif cell_coupling_enabled:
+        cell_parallel_reason = "cell_coupling_enabled"
+    elif cell_jobs_requested <= 1:
+        cell_parallel_reason = "single_job"
+
+    cell_parallel_enabled = cell_parallel_reason == "enabled"
+    cell_jobs_effective = cell_jobs_requested
+    if cell_parallel_enabled:
+        cell_jobs_effective = max(1, min(cell_jobs_effective, n_cells))
+        if cell_jobs_effective <= 1:
+            cell_parallel_enabled = False
+            cell_parallel_reason = "single_job"
+            cell_jobs_effective = 1
+    else:
+        cell_jobs_effective = 1
+
+    cell_chunk_mode = "auto"
+    if cell_chunk_size_raw > 0:
+        cell_chunk_mode = "fixed"
+        cell_chunk_size_effective = cell_chunk_size_raw
+    else:
+        cell_chunk_size_effective = (
+            int(math.ceil(n_cells / cell_jobs_effective)) if cell_jobs_effective > 0 else n_cells
+        )
+    if cell_chunk_size_effective < 1:
+        cell_chunk_size_effective = 1
+    if cell_chunk_size_effective > n_cells:
+        cell_chunk_size_effective = n_cells
+
+    numba_threads_env = os.environ.get("NUMBA_NUM_THREADS")
+    if numba_threads_env is not None and not numba_threads_env.strip():
+        numba_threads_env = None
+    numba_threads_auto = None
+    numba_threads_effective = None
+    if cell_parallel_enabled and cell_jobs_effective > 1 and numba_threads_env is None:
+        cores = os.cpu_count() or 1
+        numba_threads_auto = max(1, cores // cell_jobs_effective)
+        os.environ["NUMBA_NUM_THREADS"] = str(numba_threads_auto)
+        try:
+            import numba  # type: ignore
+
+            numba.set_num_threads(numba_threads_auto)
+            numba_threads_effective = int(numba.get_num_threads())
+        except Exception:
+            numba_threads_effective = None
+
+    cell_parallel_info = {
+        "requested": cell_parallel_requested,
+        "enabled": cell_parallel_enabled,
+        "disabled_reason": None if cell_parallel_enabled else cell_parallel_reason,
+        "jobs_requested": int(cell_jobs_requested),
+        "jobs_effective": int(cell_jobs_effective),
+        "min_cells": int(cell_min_cells),
+        "chunk_size": int(cell_chunk_size_effective),
+        "chunk_mode": cell_chunk_mode,
+        "os": os.name,
+        "numba_threads_env": numba_threads_env,
+        "numba_threads_auto": numba_threads_auto,
+        "numba_threads_effective": numba_threads_effective,
+        "cell_coupling_enabled": cell_coupling_enabled,
+    }
+
+    if cell_parallel_requested:
+        logger.info(
+            "cell-parallel: enabled=%s jobs=%s chunk=%s reason=%s",
+            cell_parallel_enabled,
+            cell_jobs_effective,
+            cell_chunk_size_effective,
+            cell_parallel_reason,
+        )
+
+    cell_chunks = None
+    cell_executor = None
+    if cell_parallel_enabled:
+        cell_chunks = [
+            range(start, min(start + cell_chunk_size_effective, n_cells))
+            for start in range(0, n_cells, cell_chunk_size_effective)
+        ]
+        cell_executor = ThreadPoolExecutor(max_workers=cell_jobs_effective)
 
     scope_cfg = getattr(cfg, "scope", None)
     analysis_window_years = float(getattr(scope_cfg, "analysis_years", 2.0)) if scope_cfg else 2.0
@@ -673,6 +788,7 @@ def run_one_d(
         "physics_mode_source": physics_mode_source,
         "config": cfg.model_dump(mode="json"),
     }
+    run_config_snapshot["cell_parallel"] = cell_parallel_info
     auto_tune_info = getattr(cfg, "_auto_tune_info", None)
     if auto_tune_info is not None:
         run_config_snapshot["auto_tune"] = auto_tune_info
@@ -745,170 +861,838 @@ def run_one_d(
     early_stop_reason = None
     loop_exit_reason: Optional[str] = None
 
-    while time < t_end and step_no < max_steps:
-        if dt <= 0.0 or not math.isfinite(dt):
-            loop_exit_reason = "dt_invalid"
-            break
-        dt = min(dt, t_end - time)
-        if dt <= 0.0:
-            loop_exit_reason = "t_end_reached"
-            break
+    try:
+        while time < t_end and step_no < max_steps:
+            if dt <= 0.0 or not math.isfinite(dt):
+                loop_exit_reason = "dt_invalid"
+                break
+            dt = min(dt, t_end - time)
+            if dt <= 0.0:
+                loop_exit_reason = "t_end_reached"
+                break
 
-        T_use = float(temp_runtime.evaluate(time))
-        rad_flux_step = constants.SIGMA_SB * (T_use ** 4)
-        qpr_blow_step, a_blow_step = _resolve_blowout(s_min_config, T_use)
-        s_min_effective = float(max(s_min_config, a_blow_step))
-        qpr_mean_step = _lookup_qpr(s_min_effective, T_use)
-        beta_at_smin_effective = radiation.beta(
-            s_min_effective, rho_used, T_use, Q_pr=qpr_mean_step
-        )
-        beta_gate_active = beta_at_smin_effective >= beta_threshold
-        temperature_track.append(T_use)
-        beta_track.append(beta_at_smin_effective)
-        ablow_track.append(a_blow_step)
-        T_use_last = T_use
-        qpr_mean_last = qpr_mean_step
-        a_blow_last = a_blow_step
-        s_min_effective_last = s_min_effective
-        step_end_time = time + dt
-        if bool(getattr(cfg.numerics, "stop_on_blowout_below_smin", False)) and a_blow_step <= s_min_config:
-            early_stop_reason = "a_blow_below_s_min_config"
-            break
+            T_use = float(temp_runtime.evaluate(time))
+            rad_flux_step = constants.SIGMA_SB * (T_use ** 4)
+            qpr_blow_step, a_blow_step = _resolve_blowout(s_min_config, T_use)
+            s_min_effective = float(max(s_min_config, a_blow_step))
+            qpr_mean_step = _lookup_qpr(s_min_effective, T_use)
+            beta_at_smin_effective = radiation.beta(
+                s_min_effective, rho_used, T_use, Q_pr=qpr_mean_step
+            )
+            beta_gate_active = beta_at_smin_effective >= beta_threshold
+            temperature_track.append(T_use)
+            beta_track.append(beta_at_smin_effective)
+            ablow_track.append(a_blow_step)
+            T_use_last = T_use
+            qpr_mean_last = qpr_mean_step
+            a_blow_last = a_blow_step
+            s_min_effective_last = s_min_effective
+            step_end_time = time + dt
+            if bool(getattr(cfg.numerics, "stop_on_blowout_below_smin", False)) and a_blow_step <= s_min_config:
+                early_stop_reason = "a_blow_below_s_min_config"
+                break
 
-        t_coll_min = float("inf")
-        step_records = []
-        step_diagnostics = []
-        step_out_mass = 0.0
-        step_sink_mass = 0.0
-        step_sublimation_mass = 0.0
-        step_area_sum = 0.0
-        step_supply_rate_nominal_sum = 0.0
-        step_supply_rate_scaled_sum = 0.0
-        step_supply_rate_applied_sum = 0.0
-        step_supply_headroom_sum = 0.0
-        step_supply_clip_factor_sum = 0.0
-        step_supply_visibility_sum = 0.0
-        step_supply_spill_rate_sum = 0.0
-        step_supply_feedback_sum = 0.0
-        step_supply_temperature_sum = 0.0
-        step_supply_reservoir_remaining_sum = 0.0
-        step_dt_over_t_blow_sum = 0.0
-        step_supply_blocked_area_sum = 0.0
-        step_supply_mixing_area_sum = 0.0
-        for idx in range(n_cells):
-            r_val = float(r_vals[idx])
-            r_rm = float(r_rm_vals[idx])
-            Omega_val = float(Omega_vals[idx])
-            t_orb_val = float(t_orb_vals[idx])
-            area_val = float(area_vals[idx])
+            t_coll_min = float("inf")
+            step_records = []
+            step_diagnostics = []
+            step_out_mass = 0.0
+            step_sink_mass = 0.0
+            step_sublimation_mass = 0.0
+            step_area_sum = 0.0
+            step_supply_rate_nominal_sum = 0.0
+            step_supply_rate_scaled_sum = 0.0
+            step_supply_rate_applied_sum = 0.0
+            step_supply_headroom_sum = 0.0
+            step_supply_clip_factor_sum = 0.0
+            step_supply_visibility_sum = 0.0
+            step_supply_spill_rate_sum = 0.0
+            step_supply_feedback_sum = 0.0
+            step_supply_temperature_sum = 0.0
+            step_supply_reservoir_remaining_sum = 0.0
+            step_dt_over_t_blow_sum = 0.0
+            step_supply_blocked_area_sum = 0.0
+            step_supply_mixing_area_sum = 0.0
 
-            psd_state = psd_states[idx]
-            sigma_val = float(sigma_surf[idx])
-            sigma_mid = float(sigma_midplane[idx]) if math.isfinite(sigma_midplane[idx]) else None
-            sigma_deep_val = float(sigma_deep[idx])
-            t_mix_seconds = None
-            if supply_deep_enabled and supply_deep_tmix_orbits is not None:
-                try:
-                    t_mix_seconds = float(supply_deep_tmix_orbits) * t_orb_val
-                except Exception:
+            def _run_cell_indices(indices):
+                local_step_records = []
+                local_step_diagnostics = []
+                local_step_out_mass = 0.0
+                local_step_sink_mass = 0.0
+                local_step_sublimation_mass = 0.0
+                local_step_area_sum = 0.0
+                local_step_supply_rate_nominal_sum = 0.0
+                local_step_supply_rate_scaled_sum = 0.0
+                local_step_supply_rate_applied_sum = 0.0
+                local_step_supply_headroom_sum = 0.0
+                local_step_supply_clip_factor_sum = 0.0
+                local_step_supply_visibility_sum = 0.0
+                local_step_supply_spill_rate_sum = 0.0
+                local_step_supply_feedback_sum = 0.0
+                local_step_supply_temperature_sum = 0.0
+                local_step_supply_reservoir_remaining_sum = 0.0
+                local_step_dt_over_t_blow_sum = 0.0
+                local_step_supply_blocked_area_sum = 0.0
+                local_step_supply_mixing_area_sum = 0.0
+                local_psd_hist_records = []
+                local_mass_budget_cells = []
+                local_supply_rate_scaled_initial = None
+                local_t_coll_min = float('inf')
+                for idx in indices:
+                    r_val = float(r_vals[idx])
+                    r_rm = float(r_rm_vals[idx])
+                    Omega_val = float(Omega_vals[idx])
+                    t_orb_val = float(t_orb_vals[idx])
+                    area_val = float(area_vals[idx])
+
+                    psd_state = psd_states[idx]
+                    sigma_val = float(sigma_surf[idx])
+                    sigma_mid = float(sigma_midplane[idx]) if math.isfinite(sigma_midplane[idx]) else None
+                    sigma_deep_val = float(sigma_deep[idx])
                     t_mix_seconds = None
-            supply_diag = None
-            prod_rate_raw_current = 0.0
-            supply_rate_nominal_current = 0.0
-            supply_rate_scaled_current = 0.0
-            supply_rate_applied_current = 0.0
-            prod_rate_diverted_current = 0.0
-            prod_rate_into_deep_current = 0.0
-            deep_to_surf_flux_attempt_current = 0.0
-            deep_to_surf_flux_current = 0.0
-            headroom_current = None
-            clip_factor_current = None
-            visibility_factor_current = None
-            supply_blocked_by_headroom_flag = False
-            supply_mixing_limited_flag = False
-            spill_rate_current = 0.0
-            mass_loss_spill_step = 0.0
-            t_coll_step = None
-            ts_ratio_value = None
-            t_solid_step = None
-            gate_factor = 1.0
-            tau_gate_block_step = False
-            phase_allows_step = True
-            sink_selected = "none"
-            ds_dt_raw = None
-            ds_dt_val = 0.0
-            t_sink_total_value = None
-            t_sink_surface_only = None
-            t_sink_sublimation_value = None
-            t_sink_gas_drag_value = None
-            T_p_effective = None
-            temperature_for_phase = T_use
-            tau_phase_used = None
-            tau_phase_los = None
-            phase_state = None
-            phase_method = None
-            phase_reason = None
-            phase_payload = {}
-            phase_f_vap = None
-            phase_bulk_state = None
-            phase_bulk_f_liquid = None
-            phase_bulk_f_solid = None
-            phase_bulk_f_vapor = None
-            sublimation_blocked_by_phase = False
-            e_kernel_used = None
-            i_kernel_used = None
-            e_kernel_base = None
-            i_kernel_base = None
-            e_kernel_supply = None
-            i_kernel_supply = None
-            e_kernel_effective = None
-            i_kernel_effective = None
-            e_state_next = None
-            i_state_next = None
-            e_eq_target = None
-            t_damp_used = None
-            supply_velocity_weight = None
+                    if supply_deep_enabled and supply_deep_tmix_orbits is not None:
+                        try:
+                            t_mix_seconds = float(supply_deep_tmix_orbits) * t_orb_val
+                        except Exception:
+                            t_mix_seconds = None
+                    supply_diag = None
+                    prod_rate_raw_current = 0.0
+                    supply_rate_nominal_current = 0.0
+                    supply_rate_scaled_current = 0.0
+                    supply_rate_applied_current = 0.0
+                    prod_rate_diverted_current = 0.0
+                    prod_rate_into_deep_current = 0.0
+                    deep_to_surf_flux_attempt_current = 0.0
+                    deep_to_surf_flux_current = 0.0
+                    headroom_current = None
+                    clip_factor_current = None
+                    visibility_factor_current = None
+                    supply_blocked_by_headroom_flag = False
+                    supply_mixing_limited_flag = False
+                    spill_rate_current = 0.0
+                    mass_loss_spill_step = 0.0
+                    t_coll_step = None
+                    ts_ratio_value = None
+                    t_solid_step = None
+                    gate_factor = 1.0
+                    tau_gate_block_step = False
+                    phase_allows_step = True
+                    sink_selected = "none"
+                    ds_dt_raw = None
+                    ds_dt_val = 0.0
+                    t_sink_total_value = None
+                    t_sink_surface_only = None
+                    t_sink_sublimation_value = None
+                    t_sink_gas_drag_value = None
+                    T_p_effective = None
+                    temperature_for_phase = T_use
+                    tau_phase_used = None
+                    tau_phase_los = None
+                    phase_state = None
+                    phase_method = None
+                    phase_reason = None
+                    phase_payload = {}
+                    phase_f_vap = None
+                    phase_bulk_state = None
+                    phase_bulk_f_liquid = None
+                    phase_bulk_f_solid = None
+                    phase_bulk_f_vapor = None
+                    sublimation_blocked_by_phase = False
+                    e_kernel_used = None
+                    i_kernel_used = None
+                    e_kernel_base = None
+                    i_kernel_base = None
+                    e_kernel_supply = None
+                    i_kernel_supply = None
+                    e_kernel_effective = None
+                    i_kernel_effective = None
+                    e_state_next = None
+                    i_state_next = None
+                    e_eq_target = None
+                    t_damp_used = None
+                    supply_velocity_weight = None
 
-            if not cell_active[idx]:
-                frozen_record = frozen_records[idx]
-                if frozen_record is not None:
-                    record = dict(frozen_record)
-                    record["time"] = time + dt
-                    record["dt"] = dt
-                    record["cell_active"] = False
-                    record["active_mask"] = False
-                else:
-                    tau_los_inactive = (
-                        float(tau_los_cells[idx]) if math.isfinite(tau_los_cells[idx]) else 0.0
+                    if not cell_active[idx]:
+                        frozen_record = frozen_records[idx]
+                        if frozen_record is not None:
+                            record = dict(frozen_record)
+                            record["time"] = time + dt
+                            record["dt"] = dt
+                            record["cell_active"] = False
+                            record["active_mask"] = False
+                        else:
+                            tau_los_inactive = (
+                                float(tau_los_cells[idx]) if math.isfinite(tau_los_cells[idx]) else 0.0
+                            )
+                            record = {
+                                "time": time + dt,
+                                "dt": dt,
+                                "cell_index": idx,
+                                "cell_active": False,
+                                "active_mask": False,
+                                "r_m": r_val,
+                                "r_RM": r_rm,
+                                "r_orbit_RM": r_rm,
+                                "r_source": geometry_source,
+                                "Omega_s": Omega_val,
+                                "t_orb_s": t_orb_val,
+                                "t_blow_s": float(t_blow_vals[idx]),
+                                "t_blow": float(t_blow_vals[idx]),
+                                "T_M_used": T_use,
+                                "T_M_source": T_M_source,
+                                "T_p_effective": None,
+                                "phase_temperature_input": phase_temperature_input_mode,
+                                "rad_flux_Mars": rad_flux_step,
+                                "tau": tau_los_inactive,
+                                "tau_los_mars": tau_los_inactive,
+                                "a_blow": a_blow_step,
+                                "a_blow_step": a_blow_step,
+                                "a_blow_at_smin": a_blow_step,
+                                "s_min": s_min_effective,
+                                "kappa": float(kappa_eff_cells[idx]),
+                                "kappa_eff": float(kappa_eff_cells[idx]),
+                                "kappa_surf": float(kappa_surf_cells[idx]),
+                                "Qpr_mean": qpr_mean_step,
+                                "Q_pr_at_smin": qpr_mean_step,
+                                "beta_at_smin_config": beta_at_smin_config,
+                                "beta_at_smin_effective": beta_at_smin_effective,
+                                "beta_at_smin": beta_at_smin_effective,
+                                "beta_threshold": beta_threshold,
+                                "Sigma_surf": sigma_val,
+                                "sigma_surf": sigma_val,
+                                "Sigma_tau1": float(sigma_tau1_cells[idx]) if math.isfinite(sigma_tau1_cells[idx]) else None,
+                                "Sigma_tau1_active": float(sigma_tau1_cells[idx])
+                                if math.isfinite(sigma_tau1_cells[idx])
+                                else None,
+                                "sigma_tau1": float(sigma_tau1_cells[idx]) if math.isfinite(sigma_tau1_cells[idx]) else None,
+                                "Sigma_tau1_last_finite": float(sigma_tau1_cells[idx])
+                                if math.isfinite(sigma_tau1_cells[idx])
+                                else None,
+                                "Sigma_midplane": sigma_mid,
+                                "sigma_deep": sigma_deep_val,
+                                "headroom": None,
+                                "outflux_surface": 0.0,
+                                "sink_flux_surface": 0.0,
+                                "prod_subblow_area_rate": 0.0,
+                                "M_out_dot": 0.0,
+                                "M_sink_dot": 0.0,
+                                "dM_dt_surface_total": 0.0,
+                                "dSigma_dt_blowout": 0.0,
+                                "dSigma_dt_sinks": 0.0,
+                                "dSigma_dt_total": 0.0,
+                                "dSigma_dt_sublimation": 0.0,
+                                "M_loss_cum": float(M_loss_cum[idx] + M_sink_cum[idx]),
+                                "mass_total_bins": float(sigma_val * area_val / constants.M_MARS),
+                                "mass_lost_by_blowout": float(M_loss_cum[idx]),
+                                "mass_lost_by_sinks": float(M_sink_cum[idx]),
+                                "M_sink_cum": float(M_sink_cum[idx]),
+                                "dt_over_t_blow": 0.0,
+                                "fast_blowout_factor": 0.0,
+                                "fast_blowout_flag_gt3": False,
+                                "fast_blowout_flag_gt10": False,
+                                "fast_blowout_corrected": False,
+                                "dSigma_dt_sublimation": 0.0,
+                                "mass_lost_sinks_step": 0.0,
+                                "mass_lost_sublimation_step": 0.0,
+                                "mass_lost_tau_clip_spill_step": 0.0,
+                                "cum_mass_lost_tau_clip_spill": float(M_spill_cum[idx]),
+                                "mass_lost_surface_solid_marsRP_step": 0.0,
+                                "M_loss_rp_mars": float(M_loss_cum[idx]),
+                                "M_loss_surface_solid_marsRP": float(M_loss_cum[idx]),
+                                "M_loss_hydro": 0.0,
+                                "fast_blowout_ratio": 0.0,
+                                "n_substeps": 1,
+                                "substep_active": False,
+                                "chi_blow_eff": chi_blow_eff,
+                                "case_status": case_status,
+                                "s_blow_m": a_blow_step,
+                                "rho_used": rho_used,
+                                "Q_pr_used": qpr_mean_step,
+                                "Q_pr_blow": qpr_blow_step,
+                                "s_min_effective": s_min_effective,
+                                "s_min_config": s_min_config,
+                                "s_min_effective_gt_config": s_min_effective > s_min_config,
+                                "T_source": T_M_source,
+                                "ds_dt_sublimation": 0.0,
+                                "ds_dt_sublimation_raw": 0.0,
+                                "phi_effective": None,
+                                "phi_used": None,
+                                "phase_tau_field": phase_tau_field,
+                                "phase_state": None,
+                                "phase_f_vap": None,
+                                "phase_method": None,
+                                "phase_reason": None,
+                                "phase_bulk_state": None,
+                                "phase_bulk_f_liquid": None,
+                                "phase_bulk_f_solid": None,
+                                "phase_bulk_f_vapor": None,
+                                "tau_mars_line_of_sight": tau_los_inactive,
+                                "tau_gate_blocked": False,
+                                "blowout_beta_gate": beta_gate_active,
+                                "blowout_phase_allowed": True,
+                                "blowout_layer_mode": blowout_layer_mode,
+                                "blowout_target_phase": blowout_target_phase,
+                                "sink_selected": "none",
+                                "sublimation_blocked_by_phase": False,
+                                "Sigma_surf0": float(sigma_surf0[idx]),
+                                "cell_stop_reason": cell_stop_reason[idx],
+                                "cell_stop_time": float(cell_stop_time[idx]) if math.isfinite(cell_stop_time[idx]) else None,
+                                "cell_stop_tau": float(cell_stop_tau[idx]) if math.isfinite(cell_stop_tau[idx]) else None,
+                            }
+                        _ensure_series_keys(record)
+                        local_step_records.append(record)
+                        tau_los_inactive = record.get("tau_los_mars")
+                        diag_entry = {
+                            "time": record["time"],
+                            "dt": record["dt"],
+                            "cell_index": idx,
+                            "r_m_used": r_val,
+                            "r_RM_used": r_rm,
+                            "T_M_used": T_use,
+                            "rad_flux_Mars": rad_flux_step,
+                            "Omega_s": Omega_val,
+                            "t_orb_s": t_orb_val,
+                            "t_blow_s": float(t_blow_vals[idx]),
+                            "sigma_surf": sigma_val,
+                            "sigma_deep": sigma_deep_val,
+                            "sigma_tau1": record.get("sigma_tau1"),
+                            "sigma_tau1_active": record.get("Sigma_tau1_active"),
+                            "Sigma_tau1_last_finite": record.get("Sigma_tau1_last_finite"),
+                            "tau_los_mars": record.get("tau_los_mars"),
+                            "tau_phase_los": None,
+                            "tau_phase_used": None,
+                            "phase_tau_field": phase_tau_field,
+                            "kappa_eff": record.get("kappa_eff"),
+                            "kappa_surf": record.get("kappa_surf"),
+                            "phi_effective": None,
+                            "psi_shield": None,
+                            "kappa_Planck": record.get("kappa_surf"),
+                            "tau_eff": None,
+                            "s_min": s_min_effective,
+                            "a_blow_at_smin": a_blow_step,
+                            "beta_at_smin_effective": beta_at_smin_effective,
+                            "beta_at_smin": beta_at_smin_effective,
+                            "Q_pr_at_smin": qpr_mean_step,
+                            "s_peak": _psd_mass_peak(psd_state),
+                            "area_m2": area_val,
+                            "prod_subblow_area_rate": 0.0,
+                            "prod_subblow_area_rate_raw": 0.0,
+                            "supply_rate_nominal": 0.0,
+                            "supply_rate_scaled": 0.0,
+                            "supply_rate_applied": 0.0,
+                            "supply_tau_clip_spill_rate": 0.0,
+                            "supply_headroom": None,
+                            "supply_clip_factor": None,
+                            "headroom": None,
+                            "prod_rate_raw": 0.0,
+                            "prod_rate_applied_to_surf": 0.0,
+                            "prod_rate_diverted_to_deep": 0.0,
+                            "prod_rate_into_deep": 0.0,
+                            "deep_to_surf_flux_attempt": 0.0,
+                            "deep_to_surf_flux": 0.0,
+                            "deep_to_surf_flux_applied": 0.0,
+                            "supply_visibility_factor": None,
+                            "supply_blocked_by_headroom": False,
+                            "supply_mixing_limited": False,
+                            "supply_transport_mode": supply_transport_mode,
+                            "supply_temperature_scale": None,
+                            "supply_temperature_value": None,
+                            "supply_temperature_value_kind": None,
+                            "supply_feedback_scale": None,
+                            "supply_feedback_error": None,
+                            "supply_reservoir_remaining_Mmars": None,
+                            "supply_reservoir_fraction": None,
+                            "supply_reservoir_clipped": False,
+                            "s_min_effective": s_min_effective,
+                            "qpr_mean": qpr_mean_step,
+                            "chi_blow_eff": chi_blow_eff,
+                            "ds_step_uniform": None,
+                            "mass_ratio_uniform": None,
+                            "M_out_cum": float(M_loss_cum[idx]),
+                            "M_sink_cum": float(M_sink_cum[idx]),
+                            "M_loss_cum": float(M_loss_cum[idx] + M_sink_cum[idx]),
+                            "cum_mass_lost_tau_clip_spill": float(M_spill_cum[idx]),
+                            "M_loss_surface_solid_marsRP": float(M_loss_cum[idx]),
+                            "M_hydro_cum": 0.0,
+                            "phase_state": None,
+                            "phase_method": None,
+                            "phase_reason": None,
+                            "phase_f_vap": None,
+                            "phase_bulk_state": None,
+                            "phase_bulk_f_liquid": None,
+                            "phase_bulk_f_solid": None,
+                            "phase_bulk_f_vapor": None,
+                            "phase_payload": {},
+                            "ds_dt_sublimation": 0.0,
+                            "ds_dt_sublimation_raw": 0.0,
+                            "sublimation_blocked_by_phase": False,
+                            "tau_mars_line_of_sight": tau_los_inactive,
+                            "tau_gate_blocked": False,
+                            "blowout_beta_gate": beta_gate_active,
+                            "blowout_phase_allowed": True,
+                            "blowout_layer_mode": blowout_layer_mode,
+                            "blowout_target_phase": blowout_target_phase,
+                            "sink_selected": "none",
+                            "hydro_timescale_s": None,
+                            "mass_loss_surface_solid_step": 0.0,
+                            "blowout_gate_factor": 1.0,
+                        }
+                        _ensure_diagnostic_keys(diag_entry)
+                        local_step_diagnostics.append(diag_entry)
+                        local_step_area_sum += area_val
+                        local_step_dt_over_t_blow_sum += 0.0
+                        continue
+
+                    if not math.isfinite(sigma_val):
+                        sigma_val = 0.0
+
+                    psd_state["s_min"] = s_min_effective
+                    if getattr(cfg.radiation, "freeze_kappa", False):
+                        kappa_surf = kappa_surf_initial
+                    else:
+                        kappa_surf = ensure_finite_kappa(psd.compute_kappa(psd_state), label="kappa_surf_step")
+
+                    tau_phase_used, tau_phase_los = compute_phase_tau_fields(
+                        kappa_surf,
+                        sigma_val,
+                        los_factor,
+                        phase_tau_field,
                     )
+
+                    if phase_temperature_input_mode == "particle":
+                        T_p_effective = phase_mod.particle_temperature_equilibrium(
+                            T_use,
+                            r_val,
+                            phase_q_abs_mean,
+                        )
+                        temperature_for_phase = T_p_effective
+                    else:
+                        temperature_for_phase = T_use
+
+                    phase_decision, phase_bulk = phase_controller.evaluate_with_bulk(
+                        temperature_for_phase,
+                        tau=tau_phase_used,
+                        radius_m=r_val,
+                        time_s=time,
+                        T0_K=temp_runtime.initial_value,
+                    )
+                    phase_state = phase_decision.state
+                    phase_method = phase_decision.method
+                    phase_reason = phase_decision.reason
+                    phase_payload = dict(phase_decision.payload)
+                    phase_f_vap = phase_decision.f_vap
+                    phase_bulk_state = phase_bulk.state
+                    phase_bulk_f_liquid = phase_bulk.f_liquid
+                    phase_bulk_f_solid = phase_bulk.f_solid
+                    phase_bulk_f_vapor = phase_bulk.f_vapor
+                    liquid_block_collisions = phase_bulk_state == "liquid_dominated"
+                    collisions_active_step = collisions_active and not liquid_block_collisions
+                    allow_supply_step = step_no > 0 and phase_state == "solid" and not liquid_block_collisions
+                    cell_is_solid = phase_state == "solid"
+                    cell_solid_state[idx] = bool(cell_is_solid)
+                    tau_gate_block_step = bool(
+                        tau_gate_enabled
+                        and tau_phase_los is not None
+                        and math.isfinite(tau_phase_los)
+                        and tau_phase_los >= tau_gate_threshold
+                    )
+                    phase_allows_step = not (
+                        blowout_target_phase == "solid_only" and phase_state != "solid"
+                    )
+                    enable_blowout_step = bool(
+                        collisions_active_step
+                        and blowout_enabled
+                        and beta_gate_active
+                        and phase_allows_step
+                        and not tau_gate_block_step
+                    )
+                    sink_selected = "rp_blowout" if enable_blowout_step else "none"
+
+                    ds_dt_val = 0.0
+                    ds_dt_raw = 0.0
+                    if sinks_active and sublimation_enabled_cfg:
+                        sub_params = sub_params_cells[idx]
+                        T_grain = grain_temperature_graybody(T_use, r_val)
+                        try:
+                            ds_dt_raw = sizes.eval_ds_dt_sublimation(T_grain, rho_used, sub_params)
+                        except ValueError:
+                            ds_dt_raw = 0.0
+                        if phase_bulk_state == "liquid_dominated" and not allow_liquid_hkl and ds_dt_raw < 0.0:
+                            ds_dt_val = 0.0
+                            sublimation_blocked_by_phase = True
+                        else:
+                            ds_dt_val = ds_dt_raw
+
+                    t_sink_step = None
+                    sink_result = None
+                    if sinks_active and (sublimation_enabled_cfg or gas_drag_enabled_cfg):
+                        sub_params = sub_params_cells[idx]
+                        sink_opts_cell = sinks.SinkOptions(
+                            enable_sublimation=sublimation_enabled_cfg,
+                            sub_params=sub_params,
+                            enable_gas_drag=gas_drag_enabled_cfg,
+                            rho_g=cfg.sinks.rho_g if gas_drag_enabled_cfg else 0.0,
+                        )
+                        sink_result = sinks.total_sink_timescale(
+                            T_use,
+                            rho_used,
+                            Omega_val,
+                            sink_opts_cell,
+                            s_ref=SINK_REF_SIZE,
+                        )
+                        t_sink_total_value = sink_result.t_sink
+                        if sink_result.components:
+                            t_sink_sublimation_value = sink_result.components.get("sublimation")
+                            t_sink_gas_drag_value = sink_result.components.get("gas_drag")
+                            non_sub_times: List[float] = []
+                            for name, value in sink_result.components.items():
+                                if name == "sublimation":
+                                    continue
+                                val = _safe_float(value, default=float("nan"))
+                                if math.isfinite(val) and val > 0.0:
+                                    non_sub_times.append(val)
+                            t_sink_surface_only = min(non_sub_times) if non_sub_times else None
+                        t_sink_step = t_sink_total_value
+                        if sublimation_to_smol:
+                            t_sink_step = sink_result.components.get("gas_drag")
+
+                    kappa_eff = kappa_surf
+                    tau_los = tau_phase_los
+                    if shielding_mode == "off":
+                        kappa_eff = kappa_surf
+                    elif shielding_mode in {"psitau", "table"} and phi_tau_fn is not None:
+                        kappa_eff = shielding.effective_kappa(kappa_surf, tau_los, phi_tau_fn)
+                    if kappa_eff <= 0.0 or not math.isfinite(kappa_eff):
+                        kappa_eff = kappa_surf
+                    sigma_tau1_limit = shielding.sigma_tau1(kappa_eff) if kappa_eff > 0.0 else None
+
+                    prod_rate = 0.0
+                    if supply_enabled_cfg:
+                        spec = supply_specs[idx]
+                        supply_state = supply_states[idx]
+                        supply_diag = supply.evaluate_supply(
+                            time,
+                            r_val,
+                            dt,
+                            spec,
+                            area=area_val,
+                            state=supply_state,
+                            tau_for_feedback=tau_los,
+                            temperature_K=T_use,
+                            apply_reservoir=allow_supply_step,
+                        )
+                        prod_rate_raw_current = supply_diag.rate if allow_supply_step else 0.0
+                        supply_rate_nominal_current = supply_diag.mixed_rate if allow_supply_step else 0.0
+                        supply_rate_scaled_current = supply_diag.rate if allow_supply_step else 0.0
+                        if local_supply_rate_scaled_initial is None and math.isfinite(supply_diag.rate):
+                            local_supply_rate_scaled_initial = float(supply_diag.rate)
+                        split_res = supply.split_supply_with_deep_buffer(
+                            prod_rate_raw_current,
+                            dt,
+                            sigma_val,
+                            sigma_tau1_limit,
+                            sigma_deep_val,
+                            t_mix=t_mix_seconds,
+                            deep_enabled=supply_deep_enabled,
+                            transport_mode=supply_transport_mode,
+                            headroom_gate=supply_transport_headroom_gate,
+                            headroom_policy=supply_headroom_policy,
+                            t_blow=float(t_blow_vals[idx]),
+                        )
+                        prod_rate = split_res.prod_rate_applied
+                        supply_rate_applied_current = prod_rate
+                        prod_rate_diverted_current = split_res.prod_rate_diverted
+                        prod_rate_into_deep_current = split_res.prod_rate_into_deep
+                        deep_to_surf_flux_attempt_current = split_res.deep_to_surf_flux_attempt
+                        deep_to_surf_flux_current = split_res.deep_to_surf_rate
+                        headroom_current = split_res.headroom
+                        sigma_deep_val = split_res.sigma_deep
+                        sigma_deep[idx] = sigma_deep_val
+                    if (
+                        supply_rate_scaled_current is not None
+                        and math.isfinite(supply_rate_scaled_current)
+                        and supply_rate_scaled_current > 0.0
+                    ):
+                        clip_factor_current = float(
+                            max(supply_rate_applied_current, 0.0)
+                            / max(supply_rate_scaled_current, 1.0e-30)
+                        )
+                    if prod_rate_raw_current is not None:
+                        visibility_factor_current = float(
+                            max(supply_rate_applied_current, 0.0)
+                            / max(prod_rate_raw_current, supply_visibility_eps)
+                        )
+                    supply_blocked_by_headroom_flag = bool(
+                        supply_headroom_enabled
+                        and prod_rate_raw_current is not None
+                        and prod_rate_raw_current > 0.0
+                        and headroom_current is not None
+                        and headroom_current <= supply_headroom_eps
+                        and supply_rate_applied_current <= supply_visibility_eps
+                    )
+                    supply_mixing_limited_flag = bool(
+                        supply_transport_mode == "deep_mixing"
+                        and prod_rate_raw_current is not None
+                        and prod_rate_raw_current > 0.0
+                        and not supply_blocked_by_headroom_flag
+                        and supply_rate_applied_current <= supply_visibility_eps
+                    )
+
+                    if collisions_active_step and getattr(cfg.surface, "collision_solver", "smol") != "smol":
+                        raise ConfigurationError("1D runner supports collision_solver='smol' only")
+
+                    outflux_surface = 0.0
+                    sink_flux_surface = 0.0
+                    mass_loss_sublimation_step = 0.0
+                    smol_res = None
+                    if collisions_active_step:
+                        collision_ctx = collisions_smol.CollisionStepContext(
+                            time_orbit=collisions_smol.TimeOrbitParams(
+                                dt=dt,
+                                Omega=Omega_val,
+                                r=r_val,
+                                t_blow=float(t_blow_vals[idx]),
+                            ),
+                            material=collisions_smol.MaterialParams(
+                                rho=rho_used,
+                                a_blow=a_blow_step,
+                                s_min_effective=s_min_effective,
+                            ),
+                            dynamics=collisions_smol.DynamicsParams(
+                                e_value=float(getattr(cfg.dynamics, "e0", 0.5)),
+                                i_value=float(getattr(cfg.dynamics, "i0", 0.05)),
+                                dynamics_cfg=cfg.dynamics,
+                                tau_eff=tau_los,
+                            ),
+                            supply=collisions_smol.SupplyParams(
+                                prod_subblow_area_rate=prod_rate,
+                                supply_injection_mode=supply_injection_mode,
+                                supply_s_inj_min=supply_injection_s_min,
+                                supply_s_inj_max=supply_injection_s_max,
+                                supply_q=supply_injection_q,
+                                supply_velocity_cfg=supply_velocity_cfg,
+                            ),
+                            control=collisions_smol.CollisionControlFlags(
+                                enable_blowout=enable_blowout_step,
+                                collisions_enabled=collisions_active_step,
+                                mass_conserving_sublimation=bool(getattr(cfg.sinks.sub_params, "mass_conserving", False)),
+                                headroom_policy=supply_headroom_policy,
+                                sigma_tau1=sigma_tau1_limit,
+                                t_sink=t_sink_step,
+                                ds_dt_val=ds_dt_val if sublimation_to_smol else None,
+                                energy_bookkeeping_enabled=False,
+                                eps_restitution=float(getattr(cfg.dynamics, "eps_restitution", 0.5)),
+                                f_ke_cratering=float(getattr(cfg.dynamics, "f_ke_cratering", 0.1)),
+                                f_ke_fragmentation=getattr(cfg.dynamics, "f_ke_fragmentation", None),
+                            ),
+                            sigma_surf=sigma_val,
+                        )
+                        smol_res = collisions_smol.step_collisions(collision_ctx, psd_state)
+                        psd_state = smol_res.psd_state
+                        sigma_val = smol_res.sigma_after
+                        outflux_surface = smol_res.dSigma_dt_blowout
+                        sink_flux_surface = smol_res.dSigma_dt_sinks
+                        spill_rate_current = smol_res.mass_loss_rate_spill
+                        if spill_rate_current > 0.0 and dt > 0.0:
+                            mass_loss_spill_step = spill_rate_current * dt * area_val / constants.M_MARS
+                            M_spill_cum[idx] += mass_loss_spill_step
+                        if smol_res.mass_loss_rate_sublimation is not None:
+                            mass_loss_sublimation_step = smol_res.mass_loss_rate_sublimation * dt * area_val / constants.M_MARS
+                        e_kernel_used = smol_res.e_kernel_used
+                        i_kernel_used = smol_res.i_kernel_used
+                        e_kernel_base = smol_res.e_kernel_base
+                        i_kernel_base = smol_res.i_kernel_base
+                        e_kernel_supply = smol_res.e_kernel_supply
+                        i_kernel_supply = smol_res.i_kernel_supply
+                        e_kernel_effective = smol_res.e_kernel_effective
+                        i_kernel_effective = smol_res.i_kernel_effective
+                        supply_velocity_weight = smol_res.supply_velocity_weight
+                        e_state_next = smol_res.e_next
+                        i_state_next = smol_res.i_next
+                        e_eq_target = smol_res.e_eq_target
+                        t_damp_used = smol_res.t_damp_used
+                        if smol_res.t_coll_kernel is not None and math.isfinite(smol_res.t_coll_kernel):
+                            local_t_coll_min = min(local_t_coll_min, float(smol_res.t_coll_kernel))
+                    else:
+                        surface_step = surface.step_surface_sink_only(
+                            sigma_val,
+                            prod_rate,
+                            dt,
+                            t_sink=t_sink_step,
+                        )
+                        sigma_val = surface_step.sigma_surf
+                        outflux_surface = surface_step.outflux
+                        sink_flux_surface = surface_step.sink_flux
+
+                    if getattr(cfg.surface, "freeze_sigma", False):
+                        sigma_val = float(sigma_surf0[idx])
+
+                    if getattr(cfg.radiation, "freeze_kappa", False):
+                        kappa_surf = kappa_surf_initial
+                    else:
+                        kappa_surf = ensure_finite_kappa(psd.compute_kappa(psd_state), label="kappa_surf_update")
+                    tau_los = kappa_surf * sigma_val * los_factor
+                    if shielding_mode in {"psitau", "table"} and phi_tau_fn is not None:
+                        kappa_eff = shielding.effective_kappa(kappa_surf, tau_los, phi_tau_fn)
+                    else:
+                        kappa_eff = kappa_surf
+                    if not math.isfinite(kappa_eff) or kappa_eff <= 0.0:
+                        kappa_eff = kappa_surf
+                    sigma_tau1_limit = shielding.sigma_tau1(kappa_eff) if kappa_eff > 0.0 else None
+                    kappa_surf_cells[idx] = float(kappa_surf)
+                    kappa_eff_cells[idx] = float(kappa_eff)
+                    tau_los_cells[idx] = float(tau_los) if math.isfinite(tau_los) else 0.0
+                    sigma_tau1_cells[idx] = float(sigma_tau1_limit) if sigma_tau1_limit is not None else float("inf")
+                    phi_effective = None
+                    if kappa_surf > 0.0 and math.isfinite(kappa_surf):
+                        phi_effective = kappa_eff / kappa_surf
+
+                    t_blow = float(t_blow_vals[idx])
+                    if blowout_gate_mode == "sublimation_competition":
+                        if ds_dt_val < 0.0 and math.isfinite(ds_dt_val) and math.isfinite(s_min_effective):
+                            candidate = s_min_effective / abs(ds_dt_val)
+                            if candidate > 0.0 and math.isfinite(candidate):
+                                t_solid_step = candidate
+                    elif blowout_gate_mode == "collision_competition":
+                        if tau_los > TAU_MIN and Omega_val > 0.0:
+                            candidate = 1.0 / (Omega_val * max(tau_los, TAU_MIN))
+                            if candidate > 0.0 and math.isfinite(candidate):
+                                t_solid_step = candidate
+                    if gate_enabled and enable_blowout_step:
+                        gate_factor = compute_gate_factor(t_blow, t_solid_step)
+                        outflux_surface *= gate_factor
+
+                    if collisions_active_step and tau_los > TAU_MIN and Omega_val > 0.0:
+                        t_coll_candidate = None
+                        if smol_res is not None:
+                            t_coll_candidate = smol_res.t_coll_kernel
+                        if t_coll_candidate is None:
+                            try:
+                                t_coll_candidate = surface.wyatt_tcoll_S1(float(tau_los), Omega_val)
+                            except Exception:
+                                t_coll_candidate = None
+                        if t_coll_candidate is not None and math.isfinite(t_coll_candidate) and t_coll_candidate > 0.0:
+                            t_coll_step = float(t_coll_candidate)
+                    if (
+                        t_coll_step is not None
+                        and t_coll_step > 0.0
+                        and t_blow > 0.0
+                        and math.isfinite(t_blow)
+                    ):
+                        ts_ratio_value = float(t_blow / t_coll_step)
+                    if t_coll_step is not None and math.isfinite(t_coll_step):
+                        local_t_coll_min = min(local_t_coll_min, float(t_coll_step))
+
+                    if optical_depth_enabled and optical_tau_stop is not None and cell_is_solid:
+                        kappa_for_stop = kappa_eff if math.isfinite(kappa_eff) else kappa_surf
+                        tau_stop_los_current = float(kappa_for_stop * sigma_val * los_factor)
+                        if (
+                            math.isfinite(tau_stop_los_current)
+                            and tau_stop_los_current
+                            > optical_tau_stop * (1.0 + float(optical_tau_stop_tol or 0.0))
+                        ):
+                            cell_active[idx] = False
+                            cell_stop_tau[idx] = tau_stop_los_current
+                            cell_stop_time[idx] = time + dt
+                            cell_stop_reason[idx] = "tau_exceeded"
+
+                    sigma_surf[idx] = sigma_val
+                    psd_states[idx] = psd_state
+
+                    dt_over_t_blow = dt / t_blow if t_blow > 0.0 and math.isfinite(t_blow) else 0.0
+                    if not blowout_enabled:
+                        dt_over_t_blow = 0.0
+
+                    fast_blowout_factor_calc = (
+                        _fast_blowout_correction_factor(dt_over_t_blow) if dt_over_t_blow > 0.0 else 0.0
+                    )
+                    fast_blowout_flag_gt3 = bool(dt_over_t_blow > FAST_BLOWOUT_RATIO_THRESHOLD)
+                    fast_blowout_flag_gt10 = bool(dt_over_t_blow > FAST_BLOWOUT_RATIO_STRICT)
+                    fast_blowout_factor_record = (
+                        fast_blowout_factor_calc if case_status == "blowout" else 0.0
+                    )
+                    fast_blowout_ratio_alias = dt_over_t_blow if case_status == "blowout" else 0.0
+                    if not blowout_enabled:
+                        fast_blowout_factor_record = 0.0
+                        fast_blowout_ratio_alias = 0.0
+                        outflux_surface = 0.0
+
+                    M_out_dot = outflux_surface * area_val / constants.M_MARS
+                    M_sink_dot = sink_flux_surface * area_val / constants.M_MARS
+                    dM_dt_surface_total = M_out_dot + M_sink_dot
+                    dSigma_dt_blowout = outflux_surface
+                    dSigma_dt_sinks = sink_flux_surface
+                    dSigma_dt_sublimation = smol_res.dSigma_dt_sublimation if smol_res is not None else 0.0
+                    dSigma_dt_total = dSigma_dt_blowout + dSigma_dt_sinks
+                    M_loss_cum[idx] += M_out_dot * dt
+                    M_sink_cum[idx] += M_sink_dot * dt
+                    local_step_out_mass += M_out_dot * dt
+                    local_step_sink_mass += M_sink_dot * dt
+                    local_step_sublimation_mass += mass_loss_sublimation_step
+
+                    smol_sigma_before = None
+                    smol_sigma_after = None
+                    smol_sigma_loss = None
+                    smol_dt_eff = None
+                    smol_mass_error = None
+                    smol_prod_mass_rate = None
+                    smol_extra_mass_loss_rate = None
+                    smol_mass_budget_delta = None
+                    smol_gain_mass_rate = None
+                    smol_loss_mass_rate = None
+                    smol_sink_mass_rate = None
+                    smol_source_mass_rate = None
+                    if smol_res is not None:
+                        smol_sigma_before = smol_res.sigma_before
+                        smol_sigma_after = smol_res.sigma_after
+                        smol_sigma_loss = smol_res.sigma_loss
+                        smol_dt_eff = smol_res.dt_eff
+                        smol_mass_error = smol_res.mass_error
+                        smol_prod_mass_rate = smol_res.prod_mass_rate_effective
+                        smol_extra_mass_loss_rate = (
+                            smol_res.mass_loss_rate_blowout
+                            + smol_res.mass_loss_rate_sinks
+                            + smol_res.mass_loss_rate_sublimation
+                        )
+                        smol_gain_mass_rate = smol_res.gain_mass_rate
+                        smol_loss_mass_rate = smol_res.loss_mass_rate
+                        smol_sink_mass_rate = smol_res.sink_mass_rate
+                        smol_source_mass_rate = smol_res.source_mass_rate
+                        budget_dt = smol_dt_eff if smol_dt_eff and smol_dt_eff > 0.0 else dt
+                        smol_mass_budget_delta = (
+                            smol_sigma_after + budget_dt * smol_extra_mass_loss_rate
+                            - (smol_sigma_before + budget_dt * smol_prod_mass_rate)
+                        )
+
                     record = {
                         "time": time + dt,
                         "dt": dt,
                         "cell_index": idx,
-                        "cell_active": False,
-                        "active_mask": False,
+                        "cell_active": bool(cell_active[idx]),
+                        "active_mask": bool(cell_active[idx]),
                         "r_m": r_val,
                         "r_RM": r_rm,
                         "r_orbit_RM": r_rm,
                         "r_source": geometry_source,
                         "Omega_s": Omega_val,
                         "t_orb_s": t_orb_val,
-                        "t_blow_s": float(t_blow_vals[idx]),
-                        "t_blow": float(t_blow_vals[idx]),
+                        "t_blow_s": t_blow,
+                        "t_coll": t_coll_step,
+                        "ts_ratio": ts_ratio_value,
                         "T_M_used": T_use,
                         "T_M_source": T_M_source,
-                        "T_p_effective": None,
+                        "T_p_effective": T_p_effective,
                         "phase_temperature_input": phase_temperature_input_mode,
                         "rad_flux_Mars": rad_flux_step,
-                        "tau": tau_los_inactive,
-                        "tau_los_mars": tau_los_inactive,
+                        "dt_over_t_blow": dt_over_t_blow,
+                        "tau": tau_los,
+                        "tau_los_mars": tau_los,
                         "a_blow": a_blow_step,
                         "a_blow_step": a_blow_step,
                         "a_blow_at_smin": a_blow_step,
                         "s_min": s_min_effective,
-                        "kappa": float(kappa_eff_cells[idx]),
-                        "kappa_eff": float(kappa_eff_cells[idx]),
-                        "kappa_surf": float(kappa_surf_cells[idx]),
+                        "kappa": kappa_eff,
+                        "kappa_eff": kappa_eff,
+                        "kappa_surf": kappa_surf,
                         "Qpr_mean": qpr_mean_step,
                         "Q_pr_at_smin": qpr_mean_step,
                         "beta_at_smin_config": beta_at_smin_config,
@@ -917,47 +1701,109 @@ def run_one_d(
                         "beta_threshold": beta_threshold,
                         "Sigma_surf": sigma_val,
                         "sigma_surf": sigma_val,
-                        "Sigma_tau1": float(sigma_tau1_cells[idx]) if math.isfinite(sigma_tau1_cells[idx]) else None,
-                        "Sigma_tau1_active": float(sigma_tau1_cells[idx])
-                        if math.isfinite(sigma_tau1_cells[idx])
-                        else None,
-                        "sigma_tau1": float(sigma_tau1_cells[idx]) if math.isfinite(sigma_tau1_cells[idx]) else None,
+                        "Sigma_surf0": float(sigma_surf0[idx]),
+                        "Sigma_tau1": sigma_tau1_limit,
+                        "Sigma_tau1_active": sigma_tau1_limit,
+                        "sigma_tau1": sigma_tau1_limit,
                         "Sigma_tau1_last_finite": float(sigma_tau1_cells[idx])
                         if math.isfinite(sigma_tau1_cells[idx])
                         else None,
+                        "tau_phase_los": tau_phase_los,
+                        "tau_phase_used": tau_phase_used,
+                        "phase_tau_field": phase_tau_field,
                         "Sigma_midplane": sigma_mid,
                         "sigma_deep": sigma_deep_val,
-                        "headroom": None,
-                        "outflux_surface": 0.0,
-                        "sink_flux_surface": 0.0,
-                        "prod_subblow_area_rate": 0.0,
-                        "M_out_dot": 0.0,
-                        "M_sink_dot": 0.0,
-                        "dM_dt_surface_total": 0.0,
-                        "dSigma_dt_blowout": 0.0,
-                        "dSigma_dt_sinks": 0.0,
-                        "dSigma_dt_total": 0.0,
-                        "dSigma_dt_sublimation": 0.0,
+                        "headroom": headroom_current,
+                        "outflux_surface": outflux_surface,
+                        "t_solid_s": t_solid_step,
+                        "blowout_gate_factor": gate_factor,
+                        "sink_flux_surface": sink_flux_surface,
+                        "t_blow": t_blow,
+                        "prod_subblow_area_rate": prod_rate,
+                        "prod_subblow_area_rate_raw": supply_diag.raw_rate if supply_diag else None,
+                        "dotSigma_prod": _safe_float(supply_rate_scaled_current),
+                        "mu_orbit10pct": supply_mu_orbit_cfg,
+                        "epsilon_mix": supply_epsilon_mix,
+                        "prod_rate_raw": _safe_float(prod_rate_raw_current),
+                        "prod_rate_applied_to_surf": _safe_float(supply_rate_applied_current),
+                        "prod_rate_diverted_to_deep": _safe_float(prod_rate_diverted_current),
+                        "prod_rate_into_deep": _safe_float(prod_rate_into_deep_current),
+                        "deep_to_surf_flux_attempt": _safe_float(deep_to_surf_flux_attempt_current),
+                        "deep_to_surf_flux": _safe_float(deep_to_surf_flux_current),
+                        "deep_to_surf_flux_applied": _safe_float(deep_to_surf_flux_current),
+                        "supply_rate_nominal": _safe_float(supply_rate_nominal_current),
+                        "supply_rate_scaled": _safe_float(supply_rate_scaled_current),
+                        "supply_rate_applied": _safe_float(supply_rate_applied_current),
+                        "supply_tau_clip_spill_rate": _safe_float(spill_rate_current),
+                        "supply_headroom": _safe_float(headroom_current),
+                        "supply_clip_factor": _safe_float(clip_factor_current),
+                        "supply_visibility_factor": _safe_float(visibility_factor_current),
+                        "supply_blocked_by_headroom": bool(supply_blocked_by_headroom_flag),
+                        "supply_mixing_limited": bool(supply_mixing_limited_flag),
+                        "supply_transport_mode": supply_transport_mode,
+                        "e_kernel_used": _safe_float(e_kernel_used),
+                        "i_kernel_used": _safe_float(i_kernel_used),
+                        "e_kernel_base": _safe_float(e_kernel_base),
+                        "i_kernel_base": _safe_float(i_kernel_base),
+                        "e_kernel_supply": _safe_float(e_kernel_supply),
+                        "i_kernel_supply": _safe_float(i_kernel_supply),
+                        "e_kernel_effective": _safe_float(e_kernel_effective),
+                        "i_kernel_effective": _safe_float(i_kernel_effective),
+                        "e_state_next": _safe_float(e_state_next),
+                        "i_state_next": _safe_float(i_state_next),
+                        "t_damp_collisions": _safe_float(t_damp_used),
+                        "e_eq_target": _safe_float(e_eq_target),
+                        "supply_velocity_weight_w": _safe_float(supply_velocity_weight),
+                        "supply_temperature_scale": supply_diag.temperature_scale if supply_diag else None,
+                        "supply_temperature_value": supply_diag.temperature_value if supply_diag else None,
+                        "supply_temperature_value_kind": supply_diag.temperature_value_kind if supply_diag else None,
+                        "supply_feedback_scale": supply_diag.feedback_scale if supply_diag else None,
+                        "supply_feedback_error": supply_diag.feedback_error if supply_diag else None,
+                        "supply_reservoir_remaining_Mmars": supply_diag.reservoir_remaining_Mmars if supply_diag else None,
+                        "supply_reservoir_fraction": supply_diag.reservoir_fraction if supply_diag else None,
+                        "supply_reservoir_clipped": bool(supply_diag.clipped_by_reservoir) if supply_diag else False,
+                        "M_out_dot": M_out_dot,
+                        "M_sink_dot": M_sink_dot,
+                        "dM_dt_surface_total": dM_dt_surface_total,
+                        "M_out_dot_avg": M_out_dot,
+                        "M_sink_dot_avg": M_sink_dot,
+                        "dM_dt_surface_total_avg": dM_dt_surface_total,
+                        "fast_blowout_factor_avg": fast_blowout_factor_record,
+                        "dSigma_dt_blowout": dSigma_dt_blowout,
+                        "dSigma_dt_sinks": dSigma_dt_sinks,
+                        "dSigma_dt_total": dSigma_dt_total,
+                        "dSigma_dt_sublimation": dSigma_dt_sublimation,
                         "M_loss_cum": float(M_loss_cum[idx] + M_sink_cum[idx]),
                         "mass_total_bins": float(sigma_val * area_val / constants.M_MARS),
                         "mass_lost_by_blowout": float(M_loss_cum[idx]),
                         "mass_lost_by_sinks": float(M_sink_cum[idx]),
                         "M_sink_cum": float(M_sink_cum[idx]),
-                        "dt_over_t_blow": 0.0,
-                        "fast_blowout_factor": 0.0,
-                        "fast_blowout_flag_gt3": False,
-                        "fast_blowout_flag_gt10": False,
-                        "fast_blowout_corrected": False,
-                        "dSigma_dt_sublimation": 0.0,
-                        "mass_lost_sinks_step": 0.0,
-                        "mass_lost_sublimation_step": 0.0,
-                        "mass_lost_tau_clip_spill_step": 0.0,
+                        "mass_lost_sinks_step": M_sink_dot * dt,
+                        "mass_lost_sublimation_step": mass_loss_sublimation_step,
+                        "mass_lost_hydro_step": 0.0,
+                        "mass_lost_tau_clip_spill_step": mass_loss_spill_step,
                         "cum_mass_lost_tau_clip_spill": float(M_spill_cum[idx]),
-                        "mass_lost_surface_solid_marsRP_step": 0.0,
+                        "mass_lost_surface_solid_marsRP_step": M_out_dot * dt,
                         "M_loss_rp_mars": float(M_loss_cum[idx]),
                         "M_loss_surface_solid_marsRP": float(M_loss_cum[idx]),
                         "M_loss_hydro": 0.0,
-                        "fast_blowout_ratio": 0.0,
+                        "smol_dt_eff": smol_dt_eff,
+                        "smol_sigma_before": smol_sigma_before,
+                        "smol_sigma_after": smol_sigma_after,
+                        "smol_sigma_loss": smol_sigma_loss,
+                        "smol_prod_mass_rate": smol_prod_mass_rate,
+                        "smol_extra_mass_loss_rate": smol_extra_mass_loss_rate,
+                        "smol_mass_budget_delta": smol_mass_budget_delta,
+                        "smol_mass_error": smol_mass_error,
+                        "smol_gain_mass_rate": smol_gain_mass_rate,
+                        "smol_loss_mass_rate": smol_loss_mass_rate,
+                        "smol_sink_mass_rate": smol_sink_mass_rate,
+                        "smol_source_mass_rate": smol_source_mass_rate,
+                        "fast_blowout_factor": fast_blowout_factor_record,
+                        "fast_blowout_corrected": False,
+                        "fast_blowout_flag_gt3": fast_blowout_flag_gt3,
+                        "fast_blowout_flag_gt10": fast_blowout_flag_gt10,
+                        "fast_blowout_ratio": fast_blowout_ratio_alias,
                         "n_substeps": 1,
                         "substep_active": False,
                         "chi_blow_eff": chi_blow_eff,
@@ -970,1070 +1816,432 @@ def run_one_d(
                         "s_min_config": s_min_config,
                         "s_min_effective_gt_config": s_min_effective > s_min_config,
                         "T_source": T_M_source,
-                        "ds_dt_sublimation": 0.0,
-                        "ds_dt_sublimation_raw": 0.0,
-                        "phi_effective": None,
-                        "phi_used": None,
-                        "phase_tau_field": phase_tau_field,
-                        "phase_state": None,
-                        "phase_f_vap": None,
-                        "phase_method": None,
-                        "phase_reason": None,
-                        "phase_bulk_state": None,
-                        "phase_bulk_f_liquid": None,
-                        "phase_bulk_f_solid": None,
-                        "phase_bulk_f_vapor": None,
-                        "tau_mars_line_of_sight": tau_los_inactive,
-                        "tau_gate_blocked": False,
+                        "ds_dt_sublimation": ds_dt_val,
+                        "ds_dt_sublimation_raw": ds_dt_raw,
+                        "phi_effective": phi_effective,
+                        "phi_used": phi_effective,
+                        "phase_state": phase_state,
+                        "phase_f_vap": phase_f_vap,
+                        "phase_method": phase_method,
+                        "phase_reason": phase_reason,
+                        "phase_bulk_state": phase_bulk_state,
+                        "phase_bulk_f_liquid": phase_bulk_f_liquid,
+                        "phase_bulk_f_solid": phase_bulk_f_solid,
+                        "phase_bulk_f_vapor": phase_bulk_f_vapor,
+                        "tau_mars_line_of_sight": tau_los,
+                        "tau_gate_blocked": tau_gate_block_step,
                         "blowout_beta_gate": beta_gate_active,
-                        "blowout_phase_allowed": True,
+                        "blowout_phase_allowed": phase_allows_step,
                         "blowout_layer_mode": blowout_layer_mode,
                         "blowout_target_phase": blowout_target_phase,
-                        "sink_selected": "none",
-                        "sublimation_blocked_by_phase": False,
-                        "Sigma_surf0": float(sigma_surf0[idx]),
+                        "sink_selected": sink_selected,
+                        "sublimation_blocked_by_phase": sublimation_blocked_by_phase,
                         "cell_stop_reason": cell_stop_reason[idx],
                         "cell_stop_time": float(cell_stop_time[idx]) if math.isfinite(cell_stop_time[idx]) else None,
                         "cell_stop_tau": float(cell_stop_tau[idx]) if math.isfinite(cell_stop_tau[idx]) else None,
                     }
-                _ensure_series_keys(record)
-                step_records.append(record)
-                tau_los_inactive = record.get("tau_los_mars")
-                diag_entry = {
-                    "time": record["time"],
-                    "dt": record["dt"],
-                    "cell_index": idx,
-                    "r_m_used": r_val,
-                    "r_RM_used": r_rm,
-                    "T_M_used": T_use,
-                    "rad_flux_Mars": rad_flux_step,
-                    "Omega_s": Omega_val,
-                    "t_orb_s": t_orb_val,
-                    "t_blow_s": float(t_blow_vals[idx]),
-                    "sigma_surf": sigma_val,
-                    "sigma_deep": sigma_deep_val,
-                    "sigma_tau1": record.get("sigma_tau1"),
-                    "sigma_tau1_active": record.get("Sigma_tau1_active"),
-                    "Sigma_tau1_last_finite": record.get("Sigma_tau1_last_finite"),
-                    "tau_los_mars": record.get("tau_los_mars"),
-                    "tau_phase_los": None,
-                    "tau_phase_used": None,
-                    "phase_tau_field": phase_tau_field,
-                    "kappa_eff": record.get("kappa_eff"),
-                    "kappa_surf": record.get("kappa_surf"),
-                    "phi_effective": None,
-                    "psi_shield": None,
-                    "kappa_Planck": record.get("kappa_surf"),
-                    "tau_eff": None,
-                    "s_min": s_min_effective,
-                    "a_blow_at_smin": a_blow_step,
-                    "beta_at_smin_effective": beta_at_smin_effective,
-                    "beta_at_smin": beta_at_smin_effective,
-                    "Q_pr_at_smin": qpr_mean_step,
-                    "s_peak": _psd_mass_peak(psd_state),
-                    "area_m2": area_val,
-                    "prod_subblow_area_rate": 0.0,
-                    "prod_subblow_area_rate_raw": 0.0,
-                    "supply_rate_nominal": 0.0,
-                    "supply_rate_scaled": 0.0,
-                    "supply_rate_applied": 0.0,
-                    "supply_tau_clip_spill_rate": 0.0,
-                    "supply_headroom": None,
-                    "supply_clip_factor": None,
-                    "headroom": None,
-                    "prod_rate_raw": 0.0,
-                    "prod_rate_applied_to_surf": 0.0,
-                    "prod_rate_diverted_to_deep": 0.0,
-                    "prod_rate_into_deep": 0.0,
-                    "deep_to_surf_flux_attempt": 0.0,
-                    "deep_to_surf_flux": 0.0,
-                    "deep_to_surf_flux_applied": 0.0,
-                    "supply_visibility_factor": None,
-                    "supply_blocked_by_headroom": False,
-                    "supply_mixing_limited": False,
-                    "supply_transport_mode": supply_transport_mode,
-                    "supply_temperature_scale": None,
-                    "supply_temperature_value": None,
-                    "supply_temperature_value_kind": None,
-                    "supply_feedback_scale": None,
-                    "supply_feedback_error": None,
-                    "supply_reservoir_remaining_Mmars": None,
-                    "supply_reservoir_fraction": None,
-                    "supply_reservoir_clipped": False,
-                    "s_min_effective": s_min_effective,
-                    "qpr_mean": qpr_mean_step,
-                    "chi_blow_eff": chi_blow_eff,
-                    "ds_step_uniform": None,
-                    "mass_ratio_uniform": None,
-                    "M_out_cum": float(M_loss_cum[idx]),
-                    "M_sink_cum": float(M_sink_cum[idx]),
-                    "M_loss_cum": float(M_loss_cum[idx] + M_sink_cum[idx]),
-                    "cum_mass_lost_tau_clip_spill": float(M_spill_cum[idx]),
-                    "M_loss_surface_solid_marsRP": float(M_loss_cum[idx]),
-                    "M_hydro_cum": 0.0,
-                    "phase_state": None,
-                    "phase_method": None,
-                    "phase_reason": None,
-                    "phase_f_vap": None,
-                    "phase_bulk_state": None,
-                    "phase_bulk_f_liquid": None,
-                    "phase_bulk_f_solid": None,
-                    "phase_bulk_f_vapor": None,
-                    "phase_payload": {},
-                    "ds_dt_sublimation": 0.0,
-                    "ds_dt_sublimation_raw": 0.0,
-                    "sublimation_blocked_by_phase": False,
-                    "tau_mars_line_of_sight": tau_los_inactive,
-                    "tau_gate_blocked": False,
-                    "blowout_beta_gate": beta_gate_active,
-                    "blowout_phase_allowed": True,
-                    "blowout_layer_mode": blowout_layer_mode,
-                    "blowout_target_phase": blowout_target_phase,
-                    "sink_selected": "none",
-                    "hydro_timescale_s": None,
-                    "mass_loss_surface_solid_step": 0.0,
-                    "blowout_gate_factor": 1.0,
+                    _ensure_series_keys(record)
+                    local_step_records.append(record)
+                    F_abs_geom = rad_flux_step * (constants.R_MARS / r_val) ** 2
+                    F_abs_geom_qpr = F_abs_geom * qpr_mean_step
+                    tau_eff = kappa_eff * sigma_val if math.isfinite(kappa_eff) else None
+                    s_peak_value = _psd_mass_peak(psd_state)
+                    diag_entry = {
+                        "time": time + dt,
+                        "dt": dt,
+                        "cell_index": idx,
+                        "dt_over_t_blow": dt_over_t_blow,
+                        "r_m_used": r_val,
+                        "r_RM_used": r_rm,
+                        "T_M_used": T_use,
+                        "T_p_effective": T_p_effective,
+                        "phase_temperature_input": phase_temperature_input_mode,
+                        "phase_temperature_used_K": temperature_for_phase,
+                        "rad_flux_Mars": rad_flux_step,
+                        "F_abs_geom": F_abs_geom,
+                        "F_abs_geom_qpr": F_abs_geom_qpr,
+                        "F_abs": F_abs_geom_qpr,
+                        "Omega_s": Omega_val,
+                        "t_orb_s": t_orb_val,
+                        "t_blow_s": t_blow,
+                        "t_solid_s": t_solid_step,
+                        "t_sink_total_s": t_sink_total_value,
+                        "t_sink_surface_s": t_sink_surface_only,
+                        "t_sink_sublimation_s": t_sink_sublimation_value,
+                        "t_sink_gas_drag_s": t_sink_gas_drag_value,
+                        "mass_loss_sinks_step": M_sink_dot * dt,
+                        "mass_lost_by_sinks": float(M_sink_cum[idx]),
+                        "mass_loss_sublimation_step": mass_loss_sublimation_step,
+                        "sigma_tau1": sigma_tau1_limit,
+                        "sigma_tau1_active": sigma_tau1_limit,
+                        "Sigma_tau1_last_finite": float(sigma_tau1_cells[idx])
+                        if math.isfinite(sigma_tau1_cells[idx])
+                        else None,
+                        "tau_los_mars": tau_los,
+                        "tau_phase_los": tau_phase_los,
+                        "tau_phase_used": tau_phase_used,
+                        "phase_tau_field": phase_tau_field,
+                        "kappa_eff": kappa_eff,
+                        "kappa_surf": kappa_surf,
+                        "phi_effective": phi_effective,
+                        "psi_shield": phi_effective,
+                        "sigma_surf": sigma_val,
+                        "sigma_deep": sigma_deep_val,
+                        "kappa_Planck": kappa_surf,
+                        "tau_eff": tau_eff,
+                        "s_min": s_min_effective,
+                        "a_blow_at_smin": a_blow_step,
+                        "beta_at_smin_effective": beta_at_smin_effective,
+                        "beta_at_smin": beta_at_smin_effective,
+                        "Q_pr_at_smin": qpr_mean_step,
+                        "s_peak": s_peak_value,
+                        "area_m2": area_val,
+                        "prod_subblow_area_rate": prod_rate,
+                        "prod_subblow_area_rate_raw": supply_diag.raw_rate if supply_diag else None,
+                        "supply_rate_nominal": _safe_float(supply_rate_nominal_current),
+                        "supply_rate_scaled": _safe_float(supply_rate_scaled_current),
+                        "supply_rate_applied": _safe_float(supply_rate_applied_current),
+                        "supply_tau_clip_spill_rate": _safe_float(spill_rate_current),
+                        "supply_headroom": _safe_float(headroom_current),
+                        "supply_clip_factor": _safe_float(clip_factor_current),
+                        "headroom": _safe_float(headroom_current),
+                        "prod_rate_raw": _safe_float(prod_rate_raw_current),
+                        "prod_rate_applied_to_surf": _safe_float(supply_rate_applied_current),
+                        "prod_rate_diverted_to_deep": _safe_float(prod_rate_diverted_current),
+                        "prod_rate_into_deep": _safe_float(prod_rate_into_deep_current),
+                        "deep_to_surf_flux_attempt": _safe_float(deep_to_surf_flux_attempt_current),
+                        "deep_to_surf_flux": _safe_float(deep_to_surf_flux_current),
+                        "deep_to_surf_flux_applied": _safe_float(deep_to_surf_flux_current),
+                        "supply_visibility_factor": _safe_float(visibility_factor_current),
+                        "supply_blocked_by_headroom": bool(supply_blocked_by_headroom_flag),
+                        "supply_mixing_limited": bool(supply_mixing_limited_flag),
+                        "supply_transport_mode": supply_transport_mode,
+                        "supply_temperature_scale": supply_diag.temperature_scale if supply_diag else None,
+                        "supply_temperature_value": supply_diag.temperature_value if supply_diag else None,
+                        "supply_temperature_value_kind": supply_diag.temperature_value_kind if supply_diag else None,
+                        "supply_feedback_scale": supply_diag.feedback_scale if supply_diag else None,
+                        "supply_feedback_error": supply_diag.feedback_error if supply_diag else None,
+                        "supply_reservoir_remaining_Mmars": supply_diag.reservoir_remaining_Mmars if supply_diag else None,
+                        "supply_reservoir_fraction": supply_diag.reservoir_fraction if supply_diag else None,
+                        "supply_reservoir_clipped": bool(supply_diag.clipped_by_reservoir) if supply_diag else False,
+                        "s_min_effective": s_min_effective,
+                        "qpr_mean": qpr_mean_step,
+                        "chi_blow_eff": chi_blow_eff,
+                        "ds_step_uniform": None,
+                        "mass_ratio_uniform": None,
+                        "M_out_cum": float(M_loss_cum[idx]),
+                        "M_sink_cum": float(M_sink_cum[idx]),
+                        "M_loss_cum": float(M_loss_cum[idx] + M_sink_cum[idx]),
+                        "cum_mass_lost_tau_clip_spill": float(M_spill_cum[idx]),
+                        "M_loss_surface_solid_marsRP": float(M_loss_cum[idx]),
+                        "M_hydro_cum": 0.0,
+                        "phase_state": phase_state,
+                        "phase_method": phase_method,
+                        "phase_reason": phase_reason,
+                        "phase_f_vap": phase_f_vap,
+                        "phase_bulk_state": phase_bulk_state,
+                        "phase_bulk_f_liquid": phase_bulk_f_liquid,
+                        "phase_bulk_f_solid": phase_bulk_f_solid,
+                        "phase_bulk_f_vapor": phase_bulk_f_vapor,
+                        "phase_payload": phase_payload,
+                        "ds_dt_sublimation": ds_dt_val,
+                        "ds_dt_sublimation_raw": ds_dt_raw,
+                        "sublimation_blocked_by_phase": sublimation_blocked_by_phase,
+                        "tau_mars_line_of_sight": tau_los,
+                        "tau_gate_blocked": tau_gate_block_step,
+                        "blowout_beta_gate": beta_gate_active,
+                        "blowout_phase_allowed": phase_allows_step,
+                        "blowout_layer_mode": blowout_layer_mode,
+                        "blowout_target_phase": blowout_target_phase,
+                        "sink_selected": sink_selected,
+                        "hydro_timescale_s": None,
+                        "mass_loss_surface_solid_step": M_out_dot * dt,
+                        "smol_dt_eff": smol_dt_eff,
+                        "smol_sigma_before": smol_sigma_before,
+                        "smol_sigma_after": smol_sigma_after,
+                        "smol_sigma_loss": smol_sigma_loss,
+                        "smol_prod_mass_rate": smol_prod_mass_rate,
+                        "smol_extra_mass_loss_rate": smol_extra_mass_loss_rate,
+                        "smol_mass_budget_delta": smol_mass_budget_delta,
+                        "smol_mass_error": smol_mass_error,
+                        "smol_gain_mass_rate": smol_gain_mass_rate,
+                        "smol_loss_mass_rate": smol_loss_mass_rate,
+                        "smol_sink_mass_rate": smol_sink_mass_rate,
+                        "smol_source_mass_rate": smol_source_mass_rate,
+                        "blowout_gate_factor": gate_factor,
+                    }
+                    _ensure_diagnostic_keys(diag_entry)
+                    local_step_diagnostics.append(diag_entry)
+                    local_step_area_sum += area_val
+                    local_step_supply_rate_nominal_sum += _safe_float(supply_rate_nominal_current) * area_val
+                    local_step_supply_rate_scaled_sum += _safe_float(supply_rate_scaled_current) * area_val
+                    local_step_supply_rate_applied_sum += _safe_float(supply_rate_applied_current) * area_val
+                    local_step_supply_headroom_sum += _safe_float(headroom_current) * area_val
+                    local_step_supply_clip_factor_sum += _safe_float(clip_factor_current) * area_val
+                    local_step_supply_visibility_sum += _safe_float(visibility_factor_current) * area_val
+                    local_step_supply_spill_rate_sum += _safe_float(spill_rate_current) * area_val
+                    local_step_supply_feedback_sum += _safe_float(
+                        supply_diag.feedback_scale if supply_diag else None
+                    ) * area_val
+                    local_step_supply_temperature_sum += _safe_float(
+                        supply_diag.temperature_scale if supply_diag else None
+                    ) * area_val
+                    local_step_supply_reservoir_remaining_sum += _safe_float(
+                        supply_diag.reservoir_remaining_Mmars if supply_diag else None
+                    ) * area_val
+                    local_step_dt_over_t_blow_sum += _safe_float(dt_over_t_blow) * area_val
+                    if supply_blocked_by_headroom_flag:
+                        local_step_supply_blocked_area_sum += area_val
+                    if supply_mixing_limited_flag:
+                        local_step_supply_mixing_area_sum += area_val
+                    if not cell_active[idx] and frozen_records[idx] is None:
+                        frozen_records[idx] = dict(record)
+
+                    if psd_history_enabled and (psd_history_stride <= 1 or step_no % psd_history_stride == 0):
+                        sizes_arr = np.asarray(psd_state.get("sizes"), dtype=float)
+                        widths_arr = np.asarray(psd_state.get("widths"), dtype=float)
+                        number_arr = np.asarray(psd_state.get("number"), dtype=float)
+                        if sizes_arr.size and number_arr.size == sizes_arr.size and widths_arr.size == sizes_arr.size:
+                            mass_weight_bins = number_arr * (sizes_arr ** 3) * widths_arr
+                            mass_weight_total = float(np.sum(mass_weight_bins))
+                            if not math.isfinite(mass_weight_total) or mass_weight_total <= 0.0:
+                                mass_frac = np.zeros_like(mass_weight_bins)
+                            else:
+                                mass_frac = mass_weight_bins / mass_weight_total
+                            for b_idx, (size_val, number_val, f_mass_val) in enumerate(zip(sizes_arr, number_arr, mass_frac)):
+                                local_psd_hist_records.append(
+                                    {
+                                        "time": time + dt,
+                                        "cell_index": idx,
+                                        "r_m": r_val,
+                                        "r_RM": r_rm,
+                                        "bin_index": int(b_idx),
+                                        "s_bin_center": float(size_val),
+                                        "N_bin": float(number_val),
+                                        "Sigma_bin": float(f_mass_val * sigma_val),
+                                        "f_mass": float(f_mass_val),
+                                        "Sigma_surf": sigma_val,
+                                    }
+                                )
+
+                    mass_lost_cell = M_loss_cum[idx] + M_sink_cum[idx]
+                    mass_remaining_cell = mass_initial_cell[idx] - mass_lost_cell
+                    mass_diff_cell = mass_initial_cell[idx] - mass_remaining_cell - mass_lost_cell
+                    error_percent_cell = 0.0
+                    if mass_initial_cell[idx] > 0.0:
+                        error_percent_cell = abs(mass_diff_cell / mass_initial_cell[idx]) * 100.0
+                    local_mass_budget_cells.append(
+                        {
+                            "time": time + dt,
+                            "cell_index": idx,
+                            "r_RM": r_rm,
+                            "mass_initial": float(mass_initial_cell[idx]),
+                            "mass_remaining": float(mass_remaining_cell),
+                            "mass_lost": float(mass_lost_cell),
+                            "mass_diff": float(mass_diff_cell),
+                            "error_percent": float(error_percent_cell),
+                            "tolerance_percent": MASS_BUDGET_TOLERANCE_PERCENT,
+                            "cell_active": bool(cell_active[idx]),
+                        }
+                    )
+
+                return {
+                    'records': local_step_records,
+                    'diagnostics': local_step_diagnostics,
+                    'out_mass': local_step_out_mass,
+                    'sink_mass': local_step_sink_mass,
+                    'sublimation_mass': local_step_sublimation_mass,
+                    'area_sum': local_step_area_sum,
+                    'supply_rate_nominal_sum': local_step_supply_rate_nominal_sum,
+                    'supply_rate_scaled_sum': local_step_supply_rate_scaled_sum,
+                    'supply_rate_applied_sum': local_step_supply_rate_applied_sum,
+                    'supply_headroom_sum': local_step_supply_headroom_sum,
+                    'supply_clip_factor_sum': local_step_supply_clip_factor_sum,
+                    'supply_visibility_sum': local_step_supply_visibility_sum,
+                    'supply_spill_rate_sum': local_step_supply_spill_rate_sum,
+                    'supply_feedback_sum': local_step_supply_feedback_sum,
+                    'supply_temperature_sum': local_step_supply_temperature_sum,
+                    'supply_reservoir_remaining_sum': local_step_supply_reservoir_remaining_sum,
+                    'dt_over_t_blow_sum': local_step_dt_over_t_blow_sum,
+                    'supply_blocked_area_sum': local_step_supply_blocked_area_sum,
+                    'supply_mixing_area_sum': local_step_supply_mixing_area_sum,
+                    'psd_hist_records': local_psd_hist_records,
+                    'mass_budget_cells': local_mass_budget_cells,
+                    't_coll_min': local_t_coll_min,
+                    'supply_rate_scaled_initial': local_supply_rate_scaled_initial,
                 }
-                _ensure_diagnostic_keys(diag_entry)
-                step_diagnostics.append(diag_entry)
-                step_area_sum += area_val
-                step_dt_over_t_blow_sum += 0.0
-                continue
 
-            if not math.isfinite(sigma_val):
-                sigma_val = 0.0
-
-            psd_state["s_min"] = s_min_effective
-            if getattr(cfg.radiation, "freeze_kappa", False):
-                kappa_surf = kappa_surf_initial
+            step_payload_iter = None
+            if cell_parallel_enabled and cell_executor is not None and cell_chunks is not None:
+                step_payload_iter = cell_executor.map(_run_cell_indices, cell_chunks)
             else:
-                kappa_surf = ensure_finite_kappa(psd.compute_kappa(psd_state), label="kappa_surf_step")
+                step_payload_iter = (_run_cell_indices(range(n_cells)),)
+            for payload in step_payload_iter:
+                step_records.extend(payload['records'])
+                step_diagnostics.extend(payload['diagnostics'])
+                step_out_mass += payload['out_mass']
+                step_sink_mass += payload['sink_mass']
+                step_sublimation_mass += payload['sublimation_mass']
+                step_area_sum += payload['area_sum']
+                step_supply_rate_nominal_sum += payload['supply_rate_nominal_sum']
+                step_supply_rate_scaled_sum += payload['supply_rate_scaled_sum']
+                step_supply_rate_applied_sum += payload['supply_rate_applied_sum']
+                step_supply_headroom_sum += payload['supply_headroom_sum']
+                step_supply_clip_factor_sum += payload['supply_clip_factor_sum']
+                step_supply_visibility_sum += payload['supply_visibility_sum']
+                step_supply_spill_rate_sum += payload['supply_spill_rate_sum']
+                step_supply_feedback_sum += payload['supply_feedback_sum']
+                step_supply_temperature_sum += payload['supply_temperature_sum']
+                step_supply_reservoir_remaining_sum += payload['supply_reservoir_remaining_sum']
+                step_dt_over_t_blow_sum += payload['dt_over_t_blow_sum']
+                step_supply_blocked_area_sum += payload['supply_blocked_area_sum']
+                step_supply_mixing_area_sum += payload['supply_mixing_area_sum']
+                if payload['psd_hist_records']:
+                    history.psd_hist_records.extend(payload['psd_hist_records'])
+                if payload['mass_budget_cells']:
+                    history.mass_budget_cells.extend(payload['mass_budget_cells'])
+                if supply_rate_scaled_initial is None and payload['supply_rate_scaled_initial'] is not None:
+                    supply_rate_scaled_initial = payload['supply_rate_scaled_initial']
+                if payload['t_coll_min'] is not None and math.isfinite(payload['t_coll_min']):
+                    t_coll_min = min(t_coll_min, payload['t_coll_min'])
+            area_denom = step_area_sum if step_area_sum > 0.0 else total_area
+            if area_denom <= 0.0 or not math.isfinite(area_denom):
+                area_denom = 1.0
+            supply_rate_nominal_avg = step_supply_rate_nominal_sum / area_denom
+            supply_rate_scaled_avg = step_supply_rate_scaled_sum / area_denom
+            supply_rate_applied_avg = step_supply_rate_applied_sum / area_denom
+            supply_headroom_avg = step_supply_headroom_sum / area_denom
+            supply_clip_factor_avg = step_supply_clip_factor_sum / area_denom
+            supply_visibility_avg = step_supply_visibility_sum / area_denom
+            supply_spill_rate_avg = step_supply_spill_rate_sum / area_denom
+            supply_feedback_avg = step_supply_feedback_sum / area_denom
+            supply_temperature_avg = step_supply_temperature_sum / area_denom
+            supply_reservoir_remaining_avg = step_supply_reservoir_remaining_sum / area_denom
+            dt_over_t_blow_avg = step_dt_over_t_blow_sum / area_denom
+            supply_blocked_fraction = step_supply_blocked_area_sum / area_denom
+            supply_mixing_fraction = step_supply_mixing_area_sum / area_denom
 
-            tau_phase_used, tau_phase_los = compute_phase_tau_fields(
-                kappa_surf,
-                sigma_val,
-                los_factor,
-                phase_tau_field,
-            )
+            supply_rate_nominal_track.append(supply_rate_nominal_avg)
+            supply_rate_scaled_track.append(supply_rate_scaled_avg)
+            supply_rate_applied_track.append(supply_rate_applied_avg)
+            supply_headroom_track.append(supply_headroom_avg)
+            supply_clip_factor_track.append(supply_clip_factor_avg)
+            supply_visibility_track.append(supply_visibility_avg)
+            supply_spill_rate_track.append(supply_spill_rate_avg)
+            supply_feedback_track.append(supply_feedback_avg)
+            supply_temperature_track.append(supply_temperature_avg)
+            supply_reservoir_remaining_track.append(supply_reservoir_remaining_avg)
+            dt_over_t_blow_track.append(dt_over_t_blow_avg)
+            supply_blocked_track.append(supply_blocked_fraction)
+            supply_mixing_track.append(supply_mixing_fraction)
 
-            if phase_temperature_input_mode == "particle":
-                T_p_effective = phase_mod.particle_temperature_equilibrium(
-                    T_use,
-                    r_val,
-                    phase_q_abs_mean,
-                )
-                temperature_for_phase = T_p_effective
-            else:
-                temperature_for_phase = T_use
+            if dt > 0.0 and math.isfinite(dt):
+                supply_rate_nominal_time_sum += supply_rate_nominal_avg * dt
+                supply_rate_scaled_time_sum += supply_rate_scaled_avg * dt
+                supply_rate_applied_time_sum += supply_rate_applied_avg * dt
+                supply_headroom_time_sum += supply_headroom_avg * dt
+                supply_clip_factor_time_sum += supply_clip_factor_avg * dt
+                supply_visibility_time_sum += supply_visibility_avg * dt
+                supply_spill_rate_time_sum += supply_spill_rate_avg * dt
+                if supply_spill_rate_avg > 0.0:
+                    supply_spill_active_time_sum += dt
+                supply_blocked_time_sum += supply_blocked_fraction * dt
+                supply_mixing_time_sum += supply_mixing_fraction * dt
+                total_time_weight_sum += dt
 
-            phase_decision, phase_bulk = phase_controller.evaluate_with_bulk(
-                temperature_for_phase,
-                tau=tau_phase_used,
-                radius_m=r_val,
-                time_s=time,
-                T0_K=temp_runtime.initial_value,
-            )
-            phase_state = phase_decision.state
-            phase_method = phase_decision.method
-            phase_reason = phase_decision.reason
-            phase_payload = dict(phase_decision.payload)
-            phase_f_vap = phase_decision.f_vap
-            phase_bulk_state = phase_bulk.state
-            phase_bulk_f_liquid = phase_bulk.f_liquid
-            phase_bulk_f_solid = phase_bulk.f_solid
-            phase_bulk_f_vapor = phase_bulk.f_vapor
-            liquid_block_collisions = phase_bulk_state == "liquid_dominated"
-            collisions_active_step = collisions_active and not liquid_block_collisions
-            allow_supply_step = step_no > 0 and phase_state == "solid" and not liquid_block_collisions
-            cell_is_solid = phase_state == "solid"
-            cell_solid_state[idx] = bool(cell_is_solid)
-            tau_gate_block_step = bool(
-                tau_gate_enabled
-                and tau_phase_los is not None
-                and math.isfinite(tau_phase_los)
-                and tau_phase_los >= tau_gate_threshold
-            )
-            phase_allows_step = not (
-                blowout_target_phase == "solid_only" and phase_state != "solid"
-            )
-            enable_blowout_step = bool(
-                collisions_active_step
-                and blowout_enabled
-                and beta_gate_active
-                and phase_allows_step
-                and not tau_gate_block_step
-            )
-            sink_selected = "rp_blowout" if enable_blowout_step else "none"
+            t_coll_min_output = float(t_coll_min) if math.isfinite(t_coll_min) else None
+            if step_records:
+                for record in step_records:
+                    record["t_coll_kernel_min"] = t_coll_min_output
+                history.records.extend(step_records)
+            if step_diagnostics:
+                history.diagnostics.extend(step_diagnostics)
 
-            ds_dt_val = 0.0
-            ds_dt_raw = 0.0
-            if sinks_active and sublimation_enabled_cfg:
-                sub_params = sub_params_cells[idx]
-                T_grain = grain_temperature_graybody(T_use, r_val)
-                try:
-                    ds_dt_raw = sizes.eval_ds_dt_sublimation(T_grain, rho_used, sub_params)
-                except ValueError:
-                    ds_dt_raw = 0.0
-                if phase_bulk_state == "liquid_dominated" and not allow_liquid_hkl and ds_dt_raw < 0.0:
-                    ds_dt_val = 0.0
-                    sublimation_blocked_by_phase = True
-                else:
-                    ds_dt_val = ds_dt_raw
+            M_sublimation_cum += step_sublimation_mass
+            if orbit_rollup_enabled and t_orb_ref > 0.0:
+                orbit_time_accum += dt
+                orbit_loss_blow += step_out_mass
+                orbit_loss_sink += step_sink_mass
+                while orbit_time_accum >= t_orb_ref and orbit_time_accum > 0.0:
+                    orbit_time_accum_before = orbit_time_accum
+                    fraction = t_orb_ref / orbit_time_accum_before
+                    M_orbit_blow = orbit_loss_blow * fraction
+                    M_orbit_sink = orbit_loss_sink * fraction
+                    orbits_completed += 1
+                    mass_loss_frac = float("nan")
+                    if mass_initial_total > 0.0:
+                        mass_loss_frac = (M_orbit_blow + M_orbit_sink) / mass_initial_total
+                    time_s_end = step_end_time - max(orbit_time_accum_before - t_orb_ref, 0.0)
+                    orbit_rollup_rows.append(
+                        {
+                            "orbit_index": orbits_completed,
+                            "time_s": step_end_time,
+                            "time_s_end": time_s_end,
+                            "t_orb_s": t_orb_ref,
+                            "M_out_orbit": M_orbit_blow,
+                            "M_sink_orbit": M_orbit_sink,
+                            "M_loss_orbit": M_orbit_blow + M_orbit_sink,
+                            "M_out_per_orbit": M_orbit_blow / t_orb_ref,
+                            "M_sink_per_orbit": M_orbit_sink / t_orb_ref,
+                            "M_loss_per_orbit": (M_orbit_blow + M_orbit_sink) / t_orb_ref,
+                            "mass_loss_frac_per_orbit": mass_loss_frac,
+                            "M_out_cum": float(np.sum(M_loss_cum)),
+                            "M_sink_cum": float(np.sum(M_sink_cum)),
+                            "M_loss_cum": float(np.sum(M_loss_cum + M_sink_cum)),
+                            "r_RM": r_rm_mid,
+                            "T_M": T_use,
+                            "slope_dlnM_dlnr": None,
+                        }
+                    )
+                    orbit_time_accum -= t_orb_ref
+                    orbit_loss_blow = max(orbit_loss_blow - M_orbit_blow, 0.0)
+                    orbit_loss_sink = max(orbit_loss_sink - M_orbit_sink, 0.0)
 
-            t_sink_step = None
-            sink_result = None
-            if sinks_active and (sublimation_enabled_cfg or gas_drag_enabled_cfg):
-                sub_params = sub_params_cells[idx]
-                sink_opts_cell = sinks.SinkOptions(
-                    enable_sublimation=sublimation_enabled_cfg,
-                    sub_params=sub_params,
-                    enable_gas_drag=gas_drag_enabled_cfg,
-                    rho_g=cfg.sinks.rho_g if gas_drag_enabled_cfg else 0.0,
-                )
-                sink_result = sinks.total_sink_timescale(
-                    T_use,
-                    rho_used,
-                    Omega_val,
-                    sink_opts_cell,
-                    s_ref=SINK_REF_SIZE,
-                )
-                t_sink_total_value = sink_result.t_sink
-                if sink_result.components:
-                    t_sink_sublimation_value = sink_result.components.get("sublimation")
-                    t_sink_gas_drag_value = sink_result.components.get("gas_drag")
-                    non_sub_times: List[float] = []
-                    for name, value in sink_result.components.items():
-                        if name == "sublimation":
-                            continue
-                        val = _safe_float(value, default=float("nan"))
-                        if math.isfinite(val) and val > 0.0:
-                            non_sub_times.append(val)
-                    t_sink_surface_only = min(non_sub_times) if non_sub_times else None
-                t_sink_step = t_sink_total_value
-                if sublimation_to_smol:
-                    t_sink_step = sink_result.components.get("gas_drag")
-
-            kappa_eff = kappa_surf
-            tau_los = tau_phase_los
-            if shielding_mode == "off":
-                kappa_eff = kappa_surf
-            elif shielding_mode in {"psitau", "table"} and phi_tau_fn is not None:
-                kappa_eff = shielding.effective_kappa(kappa_surf, tau_los, phi_tau_fn)
-            if kappa_eff <= 0.0 or not math.isfinite(kappa_eff):
-                kappa_eff = kappa_surf
-            sigma_tau1_limit = shielding.sigma_tau1(kappa_eff) if kappa_eff > 0.0 else None
-
-            prod_rate = 0.0
-            if supply_enabled_cfg:
-                spec = supply_specs[idx]
-                supply_state = supply_states[idx]
-                supply_diag = supply.evaluate_supply(
-                    time,
-                    r_val,
-                    dt,
-                    spec,
-                    area=area_val,
-                    state=supply_state,
-                    tau_for_feedback=tau_los,
-                    temperature_K=T_use,
-                    apply_reservoir=allow_supply_step,
-                )
-                prod_rate_raw_current = supply_diag.rate if allow_supply_step else 0.0
-                supply_rate_nominal_current = supply_diag.mixed_rate if allow_supply_step else 0.0
-                supply_rate_scaled_current = supply_diag.rate if allow_supply_step else 0.0
-                if supply_rate_scaled_initial is None and math.isfinite(supply_diag.rate):
-                    supply_rate_scaled_initial = float(supply_diag.rate)
-                split_res = supply.split_supply_with_deep_buffer(
-                    prod_rate_raw_current,
-                    dt,
-                    sigma_val,
-                    sigma_tau1_limit,
-                    sigma_deep_val,
-                    t_mix=t_mix_seconds,
-                    deep_enabled=supply_deep_enabled,
-                    transport_mode=supply_transport_mode,
-                    headroom_gate=supply_transport_headroom_gate,
-                    headroom_policy=supply_headroom_policy,
-                    t_blow=float(t_blow_vals[idx]),
-                )
-                prod_rate = split_res.prod_rate_applied
-                supply_rate_applied_current = prod_rate
-                prod_rate_diverted_current = split_res.prod_rate_diverted
-                prod_rate_into_deep_current = split_res.prod_rate_into_deep
-                deep_to_surf_flux_attempt_current = split_res.deep_to_surf_flux_attempt
-                deep_to_surf_flux_current = split_res.deep_to_surf_rate
-                headroom_current = split_res.headroom
-                sigma_deep_val = split_res.sigma_deep
-                sigma_deep[idx] = sigma_deep_val
-            if (
-                supply_rate_scaled_current is not None
-                and math.isfinite(supply_rate_scaled_current)
-                and supply_rate_scaled_current > 0.0
-            ):
-                clip_factor_current = float(
-                    max(supply_rate_applied_current, 0.0)
-                    / max(supply_rate_scaled_current, 1.0e-30)
-                )
-            if prod_rate_raw_current is not None:
-                visibility_factor_current = float(
-                    max(supply_rate_applied_current, 0.0)
-                    / max(prod_rate_raw_current, supply_visibility_eps)
-                )
-            supply_blocked_by_headroom_flag = bool(
-                supply_headroom_enabled
-                and prod_rate_raw_current is not None
-                and prod_rate_raw_current > 0.0
-                and headroom_current is not None
-                and headroom_current <= supply_headroom_eps
-                and supply_rate_applied_current <= supply_visibility_eps
-            )
-            supply_mixing_limited_flag = bool(
-                supply_transport_mode == "deep_mixing"
-                and prod_rate_raw_current is not None
-                and prod_rate_raw_current > 0.0
-                and not supply_blocked_by_headroom_flag
-                and supply_rate_applied_current <= supply_visibility_eps
-            )
-
-            if collisions_active_step and getattr(cfg.surface, "collision_solver", "smol") != "smol":
-                raise ConfigurationError("1D runner supports collision_solver='smol' only")
-
-            outflux_surface = 0.0
-            sink_flux_surface = 0.0
-            mass_loss_sublimation_step = 0.0
-            smol_res = None
-            if collisions_active_step:
-                collision_ctx = collisions_smol.CollisionStepContext(
-                    time_orbit=collisions_smol.TimeOrbitParams(dt=dt, Omega=Omega_val, r=r_val),
-                    material=collisions_smol.MaterialParams(
-                        rho=rho_used,
-                        a_blow=a_blow_step,
-                        s_min_effective=s_min_effective,
-                    ),
-                    dynamics=collisions_smol.DynamicsParams(
-                        e_value=float(getattr(cfg.dynamics, "e0", 0.5)),
-                        i_value=float(getattr(cfg.dynamics, "i0", 0.05)),
-                        dynamics_cfg=cfg.dynamics,
-                        tau_eff=tau_los,
-                    ),
-                    supply=collisions_smol.SupplyParams(
-                        prod_subblow_area_rate=prod_rate,
-                        supply_injection_mode=supply_injection_mode,
-                        supply_s_inj_min=supply_injection_s_min,
-                        supply_s_inj_max=supply_injection_s_max,
-                        supply_q=supply_injection_q,
-                        supply_velocity_cfg=supply_velocity_cfg,
-                    ),
-                    control=collisions_smol.CollisionControlFlags(
-                        enable_blowout=enable_blowout_step,
-                        collisions_enabled=collisions_active_step,
-                        mass_conserving_sublimation=bool(getattr(cfg.sinks.sub_params, "mass_conserving", False)),
-                        headroom_policy=supply_headroom_policy,
-                        sigma_tau1=sigma_tau1_limit,
-                        t_sink=t_sink_step,
-                        ds_dt_val=ds_dt_val if sublimation_to_smol else None,
-                        energy_bookkeeping_enabled=False,
-                        eps_restitution=float(getattr(cfg.dynamics, "eps_restitution", 0.5)),
-                        f_ke_cratering=float(getattr(cfg.dynamics, "f_ke_cratering", 0.1)),
-                        f_ke_fragmentation=getattr(cfg.dynamics, "f_ke_fragmentation", None),
-                    ),
-                    sigma_surf=sigma_val,
-                )
-                smol_res = collisions_smol.step_collisions(collision_ctx, psd_state)
-                psd_state = smol_res.psd_state
-                sigma_val = smol_res.sigma_after
-                outflux_surface = smol_res.dSigma_dt_blowout
-                sink_flux_surface = smol_res.dSigma_dt_sinks
-                spill_rate_current = smol_res.mass_loss_rate_spill
-                if spill_rate_current > 0.0 and dt > 0.0:
-                    mass_loss_spill_step = spill_rate_current * dt * area_val / constants.M_MARS
-                    M_spill_cum[idx] += mass_loss_spill_step
-                if smol_res.mass_loss_rate_sublimation is not None:
-                    mass_loss_sublimation_step = smol_res.mass_loss_rate_sublimation * dt * area_val / constants.M_MARS
-                e_kernel_used = smol_res.e_kernel_used
-                i_kernel_used = smol_res.i_kernel_used
-                e_kernel_base = smol_res.e_kernel_base
-                i_kernel_base = smol_res.i_kernel_base
-                e_kernel_supply = smol_res.e_kernel_supply
-                i_kernel_supply = smol_res.i_kernel_supply
-                e_kernel_effective = smol_res.e_kernel_effective
-                i_kernel_effective = smol_res.i_kernel_effective
-                supply_velocity_weight = smol_res.supply_velocity_weight
-                e_state_next = smol_res.e_next
-                i_state_next = smol_res.i_next
-                e_eq_target = smol_res.e_eq_target
-                t_damp_used = smol_res.t_damp_used
-                if smol_res.t_coll_kernel is not None and math.isfinite(smol_res.t_coll_kernel):
-                    t_coll_min = min(t_coll_min, float(smol_res.t_coll_kernel))
-            else:
-                surface_step = surface.step_surface_sink_only(
-                    sigma_val,
-                    prod_rate,
-                    dt,
-                    t_sink=t_sink_step,
-                )
-                sigma_val = surface_step.sigma_surf
-                outflux_surface = surface_step.outflux
-                sink_flux_surface = surface_step.sink_flux
-
-            if getattr(cfg.surface, "freeze_sigma", False):
-                sigma_val = float(sigma_surf0[idx])
-
-            if getattr(cfg.radiation, "freeze_kappa", False):
-                kappa_surf = kappa_surf_initial
-            else:
-                kappa_surf = ensure_finite_kappa(psd.compute_kappa(psd_state), label="kappa_surf_update")
-            tau_los = kappa_surf * sigma_val * los_factor
-            if shielding_mode in {"psitau", "table"} and phi_tau_fn is not None:
-                kappa_eff = shielding.effective_kappa(kappa_surf, tau_los, phi_tau_fn)
-            else:
-                kappa_eff = kappa_surf
-            if not math.isfinite(kappa_eff) or kappa_eff <= 0.0:
-                kappa_eff = kappa_surf
-            sigma_tau1_limit = shielding.sigma_tau1(kappa_eff) if kappa_eff > 0.0 else None
-            kappa_surf_cells[idx] = float(kappa_surf)
-            kappa_eff_cells[idx] = float(kappa_eff)
-            tau_los_cells[idx] = float(tau_los) if math.isfinite(tau_los) else 0.0
-            sigma_tau1_cells[idx] = float(sigma_tau1_limit) if sigma_tau1_limit is not None else float("inf")
-            phi_effective = None
-            if kappa_surf > 0.0 and math.isfinite(kappa_surf):
-                phi_effective = kappa_eff / kappa_surf
-
-            t_blow = float(t_blow_vals[idx])
-            if blowout_gate_mode == "sublimation_competition":
-                if ds_dt_val < 0.0 and math.isfinite(ds_dt_val) and math.isfinite(s_min_effective):
-                    candidate = s_min_effective / abs(ds_dt_val)
-                    if candidate > 0.0 and math.isfinite(candidate):
-                        t_solid_step = candidate
-            elif blowout_gate_mode == "collision_competition":
-                if tau_los > TAU_MIN and Omega_val > 0.0:
-                    candidate = 1.0 / (Omega_val * max(tau_los, TAU_MIN))
-                    if candidate > 0.0 and math.isfinite(candidate):
-                        t_solid_step = candidate
-            if gate_enabled and enable_blowout_step:
-                gate_factor = compute_gate_factor(t_blow, t_solid_step)
-                outflux_surface *= gate_factor
-
-            if collisions_active_step and tau_los > TAU_MIN and Omega_val > 0.0:
-                t_coll_candidate = None
-                if smol_res is not None:
-                    t_coll_candidate = smol_res.t_coll_kernel
-                if t_coll_candidate is None:
-                    try:
-                        t_coll_candidate = surface.wyatt_tcoll_S1(float(tau_los), Omega_val)
-                    except Exception:
-                        t_coll_candidate = None
-                if t_coll_candidate is not None and math.isfinite(t_coll_candidate) and t_coll_candidate > 0.0:
-                    t_coll_step = float(t_coll_candidate)
-            if (
-                t_coll_step is not None
-                and t_coll_step > 0.0
-                and t_blow > 0.0
-                and math.isfinite(t_blow)
-            ):
-                ts_ratio_value = float(t_blow / t_coll_step)
-            if t_coll_step is not None and math.isfinite(t_coll_step):
-                t_coll_min = min(t_coll_min, float(t_coll_step))
-
-            if optical_depth_enabled and optical_tau_stop is not None and cell_is_solid:
-                kappa_for_stop = kappa_eff if math.isfinite(kappa_eff) else kappa_surf
-                tau_stop_los_current = float(kappa_for_stop * sigma_val * los_factor)
-                if (
-                    math.isfinite(tau_stop_los_current)
-                    and tau_stop_los_current
-                    > optical_tau_stop * (1.0 + float(optical_tau_stop_tol or 0.0))
-                ):
-                    cell_active[idx] = False
-                    cell_stop_tau[idx] = tau_stop_los_current
-                    cell_stop_time[idx] = time + dt
-                    cell_stop_reason[idx] = "tau_exceeded"
-
-            sigma_surf[idx] = sigma_val
-            psd_states[idx] = psd_state
-
-            dt_over_t_blow = dt / t_blow if t_blow > 0.0 and math.isfinite(t_blow) else 0.0
-            if not blowout_enabled:
-                dt_over_t_blow = 0.0
-
-            fast_blowout_factor_calc = (
-                _fast_blowout_correction_factor(dt_over_t_blow) if dt_over_t_blow > 0.0 else 0.0
-            )
-            fast_blowout_flag_gt3 = bool(dt_over_t_blow > FAST_BLOWOUT_RATIO_THRESHOLD)
-            fast_blowout_flag_gt10 = bool(dt_over_t_blow > FAST_BLOWOUT_RATIO_STRICT)
-            fast_blowout_factor_record = (
-                fast_blowout_factor_calc if case_status == "blowout" else 0.0
-            )
-            fast_blowout_ratio_alias = dt_over_t_blow if case_status == "blowout" else 0.0
-            if not blowout_enabled:
-                fast_blowout_factor_record = 0.0
-                fast_blowout_ratio_alias = 0.0
-                outflux_surface = 0.0
-
-            M_out_dot = outflux_surface * area_val / constants.M_MARS
-            M_sink_dot = sink_flux_surface * area_val / constants.M_MARS
-            dM_dt_surface_total = M_out_dot + M_sink_dot
-            dSigma_dt_blowout = outflux_surface
-            dSigma_dt_sinks = sink_flux_surface
-            dSigma_dt_sublimation = smol_res.dSigma_dt_sublimation if smol_res is not None else 0.0
-            dSigma_dt_total = dSigma_dt_blowout + dSigma_dt_sinks
-            M_loss_cum[idx] += M_out_dot * dt
-            M_sink_cum[idx] += M_sink_dot * dt
-            step_out_mass += M_out_dot * dt
-            step_sink_mass += M_sink_dot * dt
-            step_sublimation_mass += mass_loss_sublimation_step
-
-            smol_sigma_before = None
-            smol_sigma_after = None
-            smol_sigma_loss = None
-            smol_dt_eff = None
-            smol_mass_error = None
-            smol_prod_mass_rate = None
-            smol_extra_mass_loss_rate = None
-            smol_mass_budget_delta = None
-            smol_gain_mass_rate = None
-            smol_loss_mass_rate = None
-            smol_sink_mass_rate = None
-            smol_source_mass_rate = None
-            if smol_res is not None:
-                smol_sigma_before = smol_res.sigma_before
-                smol_sigma_after = smol_res.sigma_after
-                smol_sigma_loss = smol_res.sigma_loss
-                smol_dt_eff = smol_res.dt_eff
-                smol_mass_error = smol_res.mass_error
-                smol_prod_mass_rate = smol_res.prod_mass_rate_effective
-                smol_extra_mass_loss_rate = (
-                    smol_res.mass_loss_rate_blowout
-                    + smol_res.mass_loss_rate_sinks
-                    + smol_res.mass_loss_rate_sublimation
-                )
-                smol_gain_mass_rate = smol_res.gain_mass_rate
-                smol_loss_mass_rate = smol_res.loss_mass_rate
-                smol_sink_mass_rate = smol_res.sink_mass_rate
-                smol_source_mass_rate = smol_res.source_mass_rate
-                budget_dt = smol_dt_eff if smol_dt_eff and smol_dt_eff > 0.0 else dt
-                smol_mass_budget_delta = (
-                    smol_sigma_after + budget_dt * smol_extra_mass_loss_rate
-                    - (smol_sigma_before + budget_dt * smol_prod_mass_rate)
-                )
-
-            record = {
-                "time": time + dt,
-                "dt": dt,
-                "cell_index": idx,
-                "cell_active": bool(cell_active[idx]),
-                "active_mask": bool(cell_active[idx]),
-                "r_m": r_val,
-                "r_RM": r_rm,
-                "r_orbit_RM": r_rm,
-                "r_source": geometry_source,
-                "Omega_s": Omega_val,
-                "t_orb_s": t_orb_val,
-                "t_blow_s": t_blow,
-                "t_coll": t_coll_step,
-                "ts_ratio": ts_ratio_value,
-                "T_M_used": T_use,
-                "T_M_source": T_M_source,
-                "T_p_effective": T_p_effective,
-                "phase_temperature_input": phase_temperature_input_mode,
-                "rad_flux_Mars": rad_flux_step,
-                "dt_over_t_blow": dt_over_t_blow,
-                "tau": tau_los,
-                "tau_los_mars": tau_los,
-                "a_blow": a_blow_step,
-                "a_blow_step": a_blow_step,
-                "a_blow_at_smin": a_blow_step,
-                "s_min": s_min_effective,
-                "kappa": kappa_eff,
-                "kappa_eff": kappa_eff,
-                "kappa_surf": kappa_surf,
-                "Qpr_mean": qpr_mean_step,
-                "Q_pr_at_smin": qpr_mean_step,
-                "beta_at_smin_config": beta_at_smin_config,
-                "beta_at_smin_effective": beta_at_smin_effective,
-                "beta_at_smin": beta_at_smin_effective,
-                "beta_threshold": beta_threshold,
-                "Sigma_surf": sigma_val,
-                "sigma_surf": sigma_val,
-                "Sigma_surf0": float(sigma_surf0[idx]),
-                "Sigma_tau1": sigma_tau1_limit,
-                "Sigma_tau1_active": sigma_tau1_limit,
-                "sigma_tau1": sigma_tau1_limit,
-                "Sigma_tau1_last_finite": float(sigma_tau1_cells[idx])
-                if math.isfinite(sigma_tau1_cells[idx])
-                else None,
-                "tau_phase_los": tau_phase_los,
-                "tau_phase_used": tau_phase_used,
-                "phase_tau_field": phase_tau_field,
-                "Sigma_midplane": sigma_mid,
-                "sigma_deep": sigma_deep_val,
-                "headroom": headroom_current,
-                "outflux_surface": outflux_surface,
-                "t_solid_s": t_solid_step,
-                "blowout_gate_factor": gate_factor,
-                "sink_flux_surface": sink_flux_surface,
-                "t_blow": t_blow,
-                "prod_subblow_area_rate": prod_rate,
-                "prod_subblow_area_rate_raw": supply_diag.raw_rate if supply_diag else None,
-                "dotSigma_prod": _safe_float(supply_rate_scaled_current),
-                "mu_orbit10pct": supply_mu_orbit_cfg,
-                "epsilon_mix": supply_epsilon_mix,
-                "prod_rate_raw": _safe_float(prod_rate_raw_current),
-                "prod_rate_applied_to_surf": _safe_float(supply_rate_applied_current),
-                "prod_rate_diverted_to_deep": _safe_float(prod_rate_diverted_current),
-                "prod_rate_into_deep": _safe_float(prod_rate_into_deep_current),
-                "deep_to_surf_flux_attempt": _safe_float(deep_to_surf_flux_attempt_current),
-                "deep_to_surf_flux": _safe_float(deep_to_surf_flux_current),
-                "deep_to_surf_flux_applied": _safe_float(deep_to_surf_flux_current),
-                "supply_rate_nominal": _safe_float(supply_rate_nominal_current),
-                "supply_rate_scaled": _safe_float(supply_rate_scaled_current),
-                "supply_rate_applied": _safe_float(supply_rate_applied_current),
-                "supply_tau_clip_spill_rate": _safe_float(spill_rate_current),
-                "supply_headroom": _safe_float(headroom_current),
-                "supply_clip_factor": _safe_float(clip_factor_current),
-                "supply_visibility_factor": _safe_float(visibility_factor_current),
-                "supply_blocked_by_headroom": bool(supply_blocked_by_headroom_flag),
-                "supply_mixing_limited": bool(supply_mixing_limited_flag),
-                "supply_transport_mode": supply_transport_mode,
-                "e_kernel_used": _safe_float(e_kernel_used),
-                "i_kernel_used": _safe_float(i_kernel_used),
-                "e_kernel_base": _safe_float(e_kernel_base),
-                "i_kernel_base": _safe_float(i_kernel_base),
-                "e_kernel_supply": _safe_float(e_kernel_supply),
-                "i_kernel_supply": _safe_float(i_kernel_supply),
-                "e_kernel_effective": _safe_float(e_kernel_effective),
-                "i_kernel_effective": _safe_float(i_kernel_effective),
-                "e_state_next": _safe_float(e_state_next),
-                "i_state_next": _safe_float(i_state_next),
-                "t_damp_collisions": _safe_float(t_damp_used),
-                "e_eq_target": _safe_float(e_eq_target),
-                "supply_velocity_weight_w": _safe_float(supply_velocity_weight),
-                "supply_temperature_scale": supply_diag.temperature_scale if supply_diag else None,
-                "supply_temperature_value": supply_diag.temperature_value if supply_diag else None,
-                "supply_temperature_value_kind": supply_diag.temperature_value_kind if supply_diag else None,
-                "supply_feedback_scale": supply_diag.feedback_scale if supply_diag else None,
-                "supply_feedback_error": supply_diag.feedback_error if supply_diag else None,
-                "supply_reservoir_remaining_Mmars": supply_diag.reservoir_remaining_Mmars if supply_diag else None,
-                "supply_reservoir_fraction": supply_diag.reservoir_fraction if supply_diag else None,
-                "supply_reservoir_clipped": bool(supply_diag.clipped_by_reservoir) if supply_diag else False,
-                "M_out_dot": M_out_dot,
-                "M_sink_dot": M_sink_dot,
-                "dM_dt_surface_total": dM_dt_surface_total,
-                "M_out_dot_avg": M_out_dot,
-                "M_sink_dot_avg": M_sink_dot,
-                "dM_dt_surface_total_avg": dM_dt_surface_total,
-                "fast_blowout_factor_avg": fast_blowout_factor_record,
-                "dSigma_dt_blowout": dSigma_dt_blowout,
-                "dSigma_dt_sinks": dSigma_dt_sinks,
-                "dSigma_dt_total": dSigma_dt_total,
-                "dSigma_dt_sublimation": dSigma_dt_sublimation,
-                "M_loss_cum": float(M_loss_cum[idx] + M_sink_cum[idx]),
-                "mass_total_bins": float(sigma_val * area_val / constants.M_MARS),
-                "mass_lost_by_blowout": float(M_loss_cum[idx]),
-                "mass_lost_by_sinks": float(M_sink_cum[idx]),
-                "M_sink_cum": float(M_sink_cum[idx]),
-                "mass_lost_sinks_step": M_sink_dot * dt,
-                "mass_lost_sublimation_step": mass_loss_sublimation_step,
-                "mass_lost_hydro_step": 0.0,
-                "mass_lost_tau_clip_spill_step": mass_loss_spill_step,
-                "cum_mass_lost_tau_clip_spill": float(M_spill_cum[idx]),
-                "mass_lost_surface_solid_marsRP_step": M_out_dot * dt,
-                "M_loss_rp_mars": float(M_loss_cum[idx]),
-                "M_loss_surface_solid_marsRP": float(M_loss_cum[idx]),
-                "M_loss_hydro": 0.0,
-                "smol_dt_eff": smol_dt_eff,
-                "smol_sigma_before": smol_sigma_before,
-                "smol_sigma_after": smol_sigma_after,
-                "smol_sigma_loss": smol_sigma_loss,
-                "smol_prod_mass_rate": smol_prod_mass_rate,
-                "smol_extra_mass_loss_rate": smol_extra_mass_loss_rate,
-                "smol_mass_budget_delta": smol_mass_budget_delta,
-                "smol_mass_error": smol_mass_error,
-                "smol_gain_mass_rate": smol_gain_mass_rate,
-                "smol_loss_mass_rate": smol_loss_mass_rate,
-                "smol_sink_mass_rate": smol_sink_mass_rate,
-                "smol_source_mass_rate": smol_source_mass_rate,
-                "fast_blowout_factor": fast_blowout_factor_record,
-                "fast_blowout_corrected": False,
-                "fast_blowout_flag_gt3": fast_blowout_flag_gt3,
-                "fast_blowout_flag_gt10": fast_blowout_flag_gt10,
-                "fast_blowout_ratio": fast_blowout_ratio_alias,
-                "n_substeps": 1,
-                "substep_active": False,
-                "chi_blow_eff": chi_blow_eff,
-                "case_status": case_status,
-                "s_blow_m": a_blow_step,
-                "rho_used": rho_used,
-                "Q_pr_used": qpr_mean_step,
-                "Q_pr_blow": qpr_blow_step,
-                "s_min_effective": s_min_effective,
-                "s_min_config": s_min_config,
-                "s_min_effective_gt_config": s_min_effective > s_min_config,
-                "T_source": T_M_source,
-                "ds_dt_sublimation": ds_dt_val,
-                "ds_dt_sublimation_raw": ds_dt_raw,
-                "phi_effective": phi_effective,
-                "phi_used": phi_effective,
-                "phase_state": phase_state,
-                "phase_f_vap": phase_f_vap,
-                "phase_method": phase_method,
-                "phase_reason": phase_reason,
-                "phase_bulk_state": phase_bulk_state,
-                "phase_bulk_f_liquid": phase_bulk_f_liquid,
-                "phase_bulk_f_solid": phase_bulk_f_solid,
-                "phase_bulk_f_vapor": phase_bulk_f_vapor,
-                "tau_mars_line_of_sight": tau_los,
-                "tau_gate_blocked": tau_gate_block_step,
-                "blowout_beta_gate": beta_gate_active,
-                "blowout_phase_allowed": phase_allows_step,
-                "blowout_layer_mode": blowout_layer_mode,
-                "blowout_target_phase": blowout_target_phase,
-                "sink_selected": sink_selected,
-                "sublimation_blocked_by_phase": sublimation_blocked_by_phase,
-                "cell_stop_reason": cell_stop_reason[idx],
-                "cell_stop_time": float(cell_stop_time[idx]) if math.isfinite(cell_stop_time[idx]) else None,
-                "cell_stop_tau": float(cell_stop_tau[idx]) if math.isfinite(cell_stop_tau[idx]) else None,
-            }
-            _ensure_series_keys(record)
-            step_records.append(record)
-            F_abs_geom = rad_flux_step * (constants.R_MARS / r_val) ** 2
-            F_abs_geom_qpr = F_abs_geom * qpr_mean_step
-            tau_eff = kappa_eff * sigma_val if math.isfinite(kappa_eff) else None
-            s_peak_value = _psd_mass_peak(psd_state)
-            diag_entry = {
-                "time": time + dt,
-                "dt": dt,
-                "cell_index": idx,
-                "dt_over_t_blow": dt_over_t_blow,
-                "r_m_used": r_val,
-                "r_RM_used": r_rm,
-                "T_M_used": T_use,
-                "T_p_effective": T_p_effective,
-                "phase_temperature_input": phase_temperature_input_mode,
-                "phase_temperature_used_K": temperature_for_phase,
-                "rad_flux_Mars": rad_flux_step,
-                "F_abs_geom": F_abs_geom,
-                "F_abs_geom_qpr": F_abs_geom_qpr,
-                "F_abs": F_abs_geom_qpr,
-                "Omega_s": Omega_val,
-                "t_orb_s": t_orb_val,
-                "t_blow_s": t_blow,
-                "t_solid_s": t_solid_step,
-                "t_sink_total_s": t_sink_total_value,
-                "t_sink_surface_s": t_sink_surface_only,
-                "t_sink_sublimation_s": t_sink_sublimation_value,
-                "t_sink_gas_drag_s": t_sink_gas_drag_value,
-                "mass_loss_sinks_step": M_sink_dot * dt,
-                "mass_lost_by_sinks": float(M_sink_cum[idx]),
-                "mass_loss_sublimation_step": mass_loss_sublimation_step,
-                "sigma_tau1": sigma_tau1_limit,
-                "sigma_tau1_active": sigma_tau1_limit,
-                "Sigma_tau1_last_finite": float(sigma_tau1_cells[idx])
-                if math.isfinite(sigma_tau1_cells[idx])
-                else None,
-                "tau_los_mars": tau_los,
-                "tau_phase_los": tau_phase_los,
-                "tau_phase_used": tau_phase_used,
-                "phase_tau_field": phase_tau_field,
-                "kappa_eff": kappa_eff,
-                "kappa_surf": kappa_surf,
-                "phi_effective": phi_effective,
-                "psi_shield": phi_effective,
-                "sigma_surf": sigma_val,
-                "sigma_deep": sigma_deep_val,
-                "kappa_Planck": kappa_surf,
-                "tau_eff": tau_eff,
-                "s_min": s_min_effective,
-                "a_blow_at_smin": a_blow_step,
-                "beta_at_smin_effective": beta_at_smin_effective,
-                "beta_at_smin": beta_at_smin_effective,
-                "Q_pr_at_smin": qpr_mean_step,
-                "s_peak": s_peak_value,
-                "area_m2": area_val,
-                "prod_subblow_area_rate": prod_rate,
-                "prod_subblow_area_rate_raw": supply_diag.raw_rate if supply_diag else None,
-                "supply_rate_nominal": _safe_float(supply_rate_nominal_current),
-                "supply_rate_scaled": _safe_float(supply_rate_scaled_current),
-                "supply_rate_applied": _safe_float(supply_rate_applied_current),
-                "supply_tau_clip_spill_rate": _safe_float(spill_rate_current),
-                "supply_headroom": _safe_float(headroom_current),
-                "supply_clip_factor": _safe_float(clip_factor_current),
-                "headroom": _safe_float(headroom_current),
-                "prod_rate_raw": _safe_float(prod_rate_raw_current),
-                "prod_rate_applied_to_surf": _safe_float(supply_rate_applied_current),
-                "prod_rate_diverted_to_deep": _safe_float(prod_rate_diverted_current),
-                "prod_rate_into_deep": _safe_float(prod_rate_into_deep_current),
-                "deep_to_surf_flux_attempt": _safe_float(deep_to_surf_flux_attempt_current),
-                "deep_to_surf_flux": _safe_float(deep_to_surf_flux_current),
-                "deep_to_surf_flux_applied": _safe_float(deep_to_surf_flux_current),
-                "supply_visibility_factor": _safe_float(visibility_factor_current),
-                "supply_blocked_by_headroom": bool(supply_blocked_by_headroom_flag),
-                "supply_mixing_limited": bool(supply_mixing_limited_flag),
-                "supply_transport_mode": supply_transport_mode,
-                "supply_temperature_scale": supply_diag.temperature_scale if supply_diag else None,
-                "supply_temperature_value": supply_diag.temperature_value if supply_diag else None,
-                "supply_temperature_value_kind": supply_diag.temperature_value_kind if supply_diag else None,
-                "supply_feedback_scale": supply_diag.feedback_scale if supply_diag else None,
-                "supply_feedback_error": supply_diag.feedback_error if supply_diag else None,
-                "supply_reservoir_remaining_Mmars": supply_diag.reservoir_remaining_Mmars if supply_diag else None,
-                "supply_reservoir_fraction": supply_diag.reservoir_fraction if supply_diag else None,
-                "supply_reservoir_clipped": bool(supply_diag.clipped_by_reservoir) if supply_diag else False,
-                "s_min_effective": s_min_effective,
-                "qpr_mean": qpr_mean_step,
-                "chi_blow_eff": chi_blow_eff,
-                "ds_step_uniform": None,
-                "mass_ratio_uniform": None,
-                "M_out_cum": float(M_loss_cum[idx]),
-                "M_sink_cum": float(M_sink_cum[idx]),
-                "M_loss_cum": float(M_loss_cum[idx] + M_sink_cum[idx]),
-                "cum_mass_lost_tau_clip_spill": float(M_spill_cum[idx]),
-                "M_loss_surface_solid_marsRP": float(M_loss_cum[idx]),
-                "M_hydro_cum": 0.0,
-                "phase_state": phase_state,
-                "phase_method": phase_method,
-                "phase_reason": phase_reason,
-                "phase_f_vap": phase_f_vap,
-                "phase_bulk_state": phase_bulk_state,
-                "phase_bulk_f_liquid": phase_bulk_f_liquid,
-                "phase_bulk_f_solid": phase_bulk_f_solid,
-                "phase_bulk_f_vapor": phase_bulk_f_vapor,
-                "phase_payload": phase_payload,
-                "ds_dt_sublimation": ds_dt_val,
-                "ds_dt_sublimation_raw": ds_dt_raw,
-                "sublimation_blocked_by_phase": sublimation_blocked_by_phase,
-                "tau_mars_line_of_sight": tau_los,
-                "tau_gate_blocked": tau_gate_block_step,
-                "blowout_beta_gate": beta_gate_active,
-                "blowout_phase_allowed": phase_allows_step,
-                "blowout_layer_mode": blowout_layer_mode,
-                "blowout_target_phase": blowout_target_phase,
-                "sink_selected": sink_selected,
-                "hydro_timescale_s": None,
-                "mass_loss_surface_solid_step": M_out_dot * dt,
-                "smol_dt_eff": smol_dt_eff,
-                "smol_sigma_before": smol_sigma_before,
-                "smol_sigma_after": smol_sigma_after,
-                "smol_sigma_loss": smol_sigma_loss,
-                "smol_prod_mass_rate": smol_prod_mass_rate,
-                "smol_extra_mass_loss_rate": smol_extra_mass_loss_rate,
-                "smol_mass_budget_delta": smol_mass_budget_delta,
-                "smol_mass_error": smol_mass_error,
-                "smol_gain_mass_rate": smol_gain_mass_rate,
-                "smol_loss_mass_rate": smol_loss_mass_rate,
-                "smol_sink_mass_rate": smol_sink_mass_rate,
-                "smol_source_mass_rate": smol_source_mass_rate,
-                "blowout_gate_factor": gate_factor,
-            }
-            _ensure_diagnostic_keys(diag_entry)
-            step_diagnostics.append(diag_entry)
-            step_area_sum += area_val
-            step_supply_rate_nominal_sum += _safe_float(supply_rate_nominal_current) * area_val
-            step_supply_rate_scaled_sum += _safe_float(supply_rate_scaled_current) * area_val
-            step_supply_rate_applied_sum += _safe_float(supply_rate_applied_current) * area_val
-            step_supply_headroom_sum += _safe_float(headroom_current) * area_val
-            step_supply_clip_factor_sum += _safe_float(clip_factor_current) * area_val
-            step_supply_visibility_sum += _safe_float(visibility_factor_current) * area_val
-            step_supply_spill_rate_sum += _safe_float(spill_rate_current) * area_val
-            step_supply_feedback_sum += _safe_float(
-                supply_diag.feedback_scale if supply_diag else None
-            ) * area_val
-            step_supply_temperature_sum += _safe_float(
-                supply_diag.temperature_scale if supply_diag else None
-            ) * area_val
-            step_supply_reservoir_remaining_sum += _safe_float(
-                supply_diag.reservoir_remaining_Mmars if supply_diag else None
-            ) * area_val
-            step_dt_over_t_blow_sum += _safe_float(dt_over_t_blow) * area_val
-            if supply_blocked_by_headroom_flag:
-                step_supply_blocked_area_sum += area_val
-            if supply_mixing_limited_flag:
-                step_supply_mixing_area_sum += area_val
-            if not cell_active[idx] and frozen_records[idx] is None:
-                frozen_records[idx] = dict(record)
-
-            if psd_history_enabled and (psd_history_stride <= 1 or step_no % psd_history_stride == 0):
-                sizes_arr = np.asarray(psd_state.get("sizes"), dtype=float)
-                widths_arr = np.asarray(psd_state.get("widths"), dtype=float)
-                number_arr = np.asarray(psd_state.get("number"), dtype=float)
-                if sizes_arr.size and number_arr.size == sizes_arr.size and widths_arr.size == sizes_arr.size:
-                    mass_weight_bins = number_arr * (sizes_arr ** 3) * widths_arr
-                    mass_weight_total = float(np.sum(mass_weight_bins))
-                    if not math.isfinite(mass_weight_total) or mass_weight_total <= 0.0:
-                        mass_frac = np.zeros_like(mass_weight_bins)
-                    else:
-                        mass_frac = mass_weight_bins / mass_weight_total
-                    for b_idx, (size_val, number_val, f_mass_val) in enumerate(zip(sizes_arr, number_arr, mass_frac)):
-                        history.psd_hist_records.append(
-                            {
-                                "time": time + dt,
-                                "cell_index": idx,
-                                "r_m": r_val,
-                                "r_RM": r_rm,
-                                "bin_index": int(b_idx),
-                                "s_bin_center": float(size_val),
-                                "N_bin": float(number_val),
-                                "Sigma_bin": float(f_mass_val * sigma_val),
-                                "f_mass": float(f_mass_val),
-                                "Sigma_surf": sigma_val,
-                            }
-                        )
-
-            mass_lost_cell = M_loss_cum[idx] + M_sink_cum[idx]
-            mass_remaining_cell = mass_initial_cell[idx] - mass_lost_cell
-            mass_diff_cell = mass_initial_cell[idx] - mass_remaining_cell - mass_lost_cell
-            error_percent_cell = 0.0
-            if mass_initial_cell[idx] > 0.0:
-                error_percent_cell = abs(mass_diff_cell / mass_initial_cell[idx]) * 100.0
-            history.mass_budget_cells.append(
+            mass_lost_total = float(np.sum(M_loss_cum + M_sink_cum))
+            mass_remaining_total = mass_initial_total - mass_lost_total
+            mass_diff_total = mass_initial_total - mass_remaining_total - mass_lost_total
+            error_percent_total = 0.0
+            if mass_initial_total > 0.0:
+                error_percent_total = abs(mass_diff_total / mass_initial_total) * 100.0
+            mass_budget_max_error = max(mass_budget_max_error, error_percent_total)
+            history.mass_budget.append(
                 {
                     "time": time + dt,
-                    "cell_index": idx,
-                    "r_RM": r_rm,
-                    "mass_initial": float(mass_initial_cell[idx]),
-                    "mass_remaining": float(mass_remaining_cell),
-                    "mass_lost": float(mass_lost_cell),
-                    "mass_diff": float(mass_diff_cell),
-                    "error_percent": float(error_percent_cell),
+                    "mass_initial": mass_initial_total,
+                    "mass_remaining": mass_remaining_total,
+                    "mass_lost": mass_lost_total,
+                    "mass_diff": mass_diff_total,
+                    "error_percent": error_percent_total,
                     "tolerance_percent": MASS_BUDGET_TOLERANCE_PERCENT,
-                    "cell_active": bool(cell_active[idx]),
                 }
             )
 
-        area_denom = step_area_sum if step_area_sum > 0.0 else total_area
-        if area_denom <= 0.0 or not math.isfinite(area_denom):
-            area_denom = 1.0
-        supply_rate_nominal_avg = step_supply_rate_nominal_sum / area_denom
-        supply_rate_scaled_avg = step_supply_rate_scaled_sum / area_denom
-        supply_rate_applied_avg = step_supply_rate_applied_sum / area_denom
-        supply_headroom_avg = step_supply_headroom_sum / area_denom
-        supply_clip_factor_avg = step_supply_clip_factor_sum / area_denom
-        supply_visibility_avg = step_supply_visibility_sum / area_denom
-        supply_spill_rate_avg = step_supply_spill_rate_sum / area_denom
-        supply_feedback_avg = step_supply_feedback_sum / area_denom
-        supply_temperature_avg = step_supply_temperature_sum / area_denom
-        supply_reservoir_remaining_avg = step_supply_reservoir_remaining_sum / area_denom
-        dt_over_t_blow_avg = step_dt_over_t_blow_sum / area_denom
-        supply_blocked_fraction = step_supply_blocked_area_sum / area_denom
-        supply_mixing_fraction = step_supply_mixing_area_sum / area_denom
+            time += dt
+            step_no += 1
+            steps_since_flush += 1
+            progress.update(step_no, time)
 
-        supply_rate_nominal_track.append(supply_rate_nominal_avg)
-        supply_rate_scaled_track.append(supply_rate_scaled_avg)
-        supply_rate_applied_track.append(supply_rate_applied_avg)
-        supply_headroom_track.append(supply_headroom_avg)
-        supply_clip_factor_track.append(supply_clip_factor_avg)
-        supply_visibility_track.append(supply_visibility_avg)
-        supply_spill_rate_track.append(supply_spill_rate_avg)
-        supply_feedback_track.append(supply_feedback_avg)
-        supply_temperature_track.append(supply_temperature_avg)
-        supply_reservoir_remaining_track.append(supply_reservoir_remaining_avg)
-        dt_over_t_blow_track.append(dt_over_t_blow_avg)
-        supply_blocked_track.append(supply_blocked_fraction)
-        supply_mixing_track.append(supply_mixing_fraction)
+            if streaming_state.should_flush(history, steps_since_flush):
+                streaming_state.flush(history, step_no)
+                steps_since_flush = 0
 
-        if dt > 0.0 and math.isfinite(dt):
-            supply_rate_nominal_time_sum += supply_rate_nominal_avg * dt
-            supply_rate_scaled_time_sum += supply_rate_scaled_avg * dt
-            supply_rate_applied_time_sum += supply_rate_applied_avg * dt
-            supply_headroom_time_sum += supply_headroom_avg * dt
-            supply_clip_factor_time_sum += supply_clip_factor_avg * dt
-            supply_visibility_time_sum += supply_visibility_avg * dt
-            supply_spill_rate_time_sum += supply_spill_rate_avg * dt
-            if supply_spill_rate_avg > 0.0:
-                supply_spill_active_time_sum += dt
-            supply_blocked_time_sum += supply_blocked_fraction * dt
-            supply_mixing_time_sum += supply_mixing_fraction * dt
-            total_time_weight_sum += dt
+            all_cells_solid_state = bool(np.all(cell_solid_state))
 
-        t_coll_min_output = float(t_coll_min) if math.isfinite(t_coll_min) else None
-        if step_records:
-            for record in step_records:
-                record["t_coll_kernel_min"] = t_coll_min_output
-            history.records.extend(step_records)
-        if step_diagnostics:
-            history.diagnostics.extend(step_diagnostics)
+            if np.all(~cell_active) and all_cells_solid_state:
+                early_stop_reason = "tau_exceeded_all_cells"
+                break
 
-        M_sublimation_cum += step_sublimation_mass
-        if orbit_rollup_enabled and t_orb_ref > 0.0:
-            orbit_time_accum += dt
-            orbit_loss_blow += step_out_mass
-            orbit_loss_sink += step_sink_mass
-            while orbit_time_accum >= t_orb_ref and orbit_time_accum > 0.0:
-                orbit_time_accum_before = orbit_time_accum
-                fraction = t_orb_ref / orbit_time_accum_before
-                M_orbit_blow = orbit_loss_blow * fraction
-                M_orbit_sink = orbit_loss_sink * fraction
-                orbits_completed += 1
-                mass_loss_frac = float("nan")
-                if mass_initial_total > 0.0:
-                    mass_loss_frac = (M_orbit_blow + M_orbit_sink) / mass_initial_total
-                time_s_end = step_end_time - max(orbit_time_accum_before - t_orb_ref, 0.0)
-                orbit_rollup_rows.append(
-                    {
-                        "orbit_index": orbits_completed,
-                        "time_s": step_end_time,
-                        "time_s_end": time_s_end,
-                        "t_orb_s": t_orb_ref,
-                        "M_out_orbit": M_orbit_blow,
-                        "M_sink_orbit": M_orbit_sink,
-                        "M_loss_orbit": M_orbit_blow + M_orbit_sink,
-                        "M_out_per_orbit": M_orbit_blow / t_orb_ref,
-                        "M_sink_per_orbit": M_orbit_sink / t_orb_ref,
-                        "M_loss_per_orbit": (M_orbit_blow + M_orbit_sink) / t_orb_ref,
-                        "mass_loss_frac_per_orbit": mass_loss_frac,
-                        "M_out_cum": float(np.sum(M_loss_cum)),
-                        "M_sink_cum": float(np.sum(M_sink_cum)),
-                        "M_loss_cum": float(np.sum(M_loss_cum + M_sink_cum)),
-                        "r_RM": r_rm_mid,
-                        "T_M": T_use,
-                        "slope_dlnM_dlnr": None,
-                    }
-                )
-                orbit_time_accum -= t_orb_ref
-                orbit_loss_blow = max(orbit_loss_blow - M_orbit_blow, 0.0)
-                orbit_loss_sink = max(orbit_loss_sink - M_orbit_sink, 0.0)
-
-        mass_lost_total = float(np.sum(M_loss_cum + M_sink_cum))
-        mass_remaining_total = mass_initial_total - mass_lost_total
-        mass_diff_total = mass_initial_total - mass_remaining_total - mass_lost_total
-        error_percent_total = 0.0
-        if mass_initial_total > 0.0:
-            error_percent_total = abs(mass_diff_total / mass_initial_total) * 100.0
-        mass_budget_max_error = max(mass_budget_max_error, error_percent_total)
-        history.mass_budget.append(
-            {
-                "time": time + dt,
-                "mass_initial": mass_initial_total,
-                "mass_remaining": mass_remaining_total,
-                "mass_lost": mass_lost_total,
-                "mass_diff": mass_diff_total,
-                "error_percent": error_percent_total,
-                "tolerance_percent": MASS_BUDGET_TOLERANCE_PERCENT,
-            }
-        )
-
-        time += dt
-        step_no += 1
-        steps_since_flush += 1
-        progress.update(step_no, time)
-
-        if streaming_state.should_flush(history, steps_since_flush):
-            streaming_state.flush(history, step_no)
-            steps_since_flush = 0
-
-        all_cells_solid_state = bool(np.all(cell_solid_state))
-
-        if np.all(~cell_active) and all_cells_solid_state:
-            early_stop_reason = "tau_exceeded_all_cells"
-            break
-
-        if dt_min_tcoll_ratio is not None and math.isfinite(t_coll_min):
-            dt_floor = dt_min_tcoll_ratio * t_coll_min
-            if math.isfinite(dt_floor) and dt_floor > 0.0:
-                dt = max(dt_nominal, dt_floor)
+            if dt_min_tcoll_ratio is not None and math.isfinite(t_coll_min):
+                dt_floor = dt_min_tcoll_ratio * t_coll_min
+                if math.isfinite(dt_floor) and dt_floor > 0.0:
+                    dt = max(dt_nominal, dt_floor)
+                else:
+                    dt = dt_nominal
             else:
                 dt = dt_nominal
-        else:
-            dt = dt_nominal
-
+    finally:
+        if cell_executor is not None:
+            cell_executor.shutdown(wait=True)
     progress.finish(step_no, time)
 
     if streaming_state.enabled:
@@ -2393,6 +2601,7 @@ def run_one_d(
         "solar_radiation": solar_radiation,
         "sublimation_provenance": sublimation_provenance,
     }
+    run_config_snapshot["cell_parallel"] = cell_parallel_info
     if auto_tune_info is not None:
         run_config_snapshot["auto_tune"] = auto_tune_info
     writer.write_run_config(run_config_snapshot, run_config_path)

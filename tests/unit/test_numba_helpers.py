@@ -151,22 +151,19 @@ def test_supply_mass_rate_powerlaw_numba_matches_python(monkeypatch) -> None:
     q = 3.0
 
     # NumPy reference from powerlaw branch in supply_mass_rate_to_number_source
-    left_edges = np.maximum(sizes - 0.5 * widths, 0.0)
-    right_edges = left_edges + widths
-    overlap_left = np.maximum(left_edges, inj_floor)
-    overlap_right = np.minimum(right_edges, inj_ceiling)
-    mask = overlap_right > overlap_left
-    weights = np.zeros_like(sizes, dtype=float)
-    if np.any(mask):
-        power = 1.0 - q
-        weights[mask] = (overlap_right[mask] ** power - overlap_left[mask] ** power) / power
-    weights = np.where(np.isfinite(weights) & (weights > 0.0), weights, 0.0)
-    weights_sum = float(np.sum(weights))
-    expected = np.zeros_like(sizes, dtype=float)
-    if weights_sum > 0.0:
-        mass_alloc = (weights / weights_sum) * prod
-        positive = (mass_alloc > 0.0) & (masses > 0.0)
-        expected[positive] = mass_alloc[positive] / masses[positive]
+    monkeypatch.setattr(collisions_smol, "_USE_NUMBA", False, raising=False)
+    collisions_smol._NUMBA_FAILED = False
+    expected = collisions_smol.supply_mass_rate_to_number_source(
+        prod,
+        sizes,
+        masses,
+        s_min_eff=0.0,
+        widths=widths,
+        mode="powerlaw_bins",
+        s_inj_min=inj_floor,
+        s_inj_max=inj_ceiling,
+        q=q,
+    )
 
     got = collisions_smol.supply_mass_rate_powerlaw_numba(
         sizes.astype(np.float64),

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import math
 import os
+import threading
 import warnings
 from dataclasses import dataclass
 from typing import MutableMapping, TYPE_CHECKING
@@ -42,8 +43,10 @@ _NUMBA_DISABLED_ENV = os.environ.get("MARSDISK_DISABLE_NUMBA", "").lower() in {
 _USE_NUMBA = _NUMBA_AVAILABLE and not _NUMBA_DISABLED_ENV
 # Set to True after a runtime failure to avoid repeatedly calling broken JIT kernels.
 _NUMBA_FAILED = False
+_THREAD_LOCAL = threading.local()
 _F_KE_MISMATCH_WARNED = False
 _F_KE_MISMATCH_WARN_THRESHOLD = 0.1
+H_OVER_A_WARN_THRESHOLD = 1.0e-8
 
 if TYPE_CHECKING:
     from ..schema import Dynamics, SupplyInjectionVelocity
@@ -114,6 +117,7 @@ class TimeOrbitParams:
     dt: float
     Omega: float
     r: float
+    t_blow: float | None = None
 
 
 @dataclass
@@ -268,19 +272,20 @@ def supply_mass_rate_to_number_source(
             power = 1.0 - float(q)
             weights[mask] = (overlap_right[mask] ** power - overlap_left[mask] ** power) / power
     weights = np.where(np.isfinite(weights) & (weights > 0.0), weights, 0.0)
-    weights_sum = float(np.sum(weights))
-    if weights_sum <= 0.0:
+    mass_sum = float(np.sum(weights * m_arr))
+    if mass_sum <= 0.0:
         return _inject_min_bin(inj_floor)
 
-    mass_alloc = (weights / weights_sum) * prod_rate
     F = np.zeros_like(m_arr, dtype=float)
-    positive = (mass_alloc > 0.0) & (m_arr > 0.0)
-    F[positive] = mass_alloc[positive] / m_arr[positive]
+    positive = (weights > 0.0) & (m_arr > 0.0)
+    if np.any(positive):
+        F[positive] = weights[positive] * prod_rate / mass_sum
     return F
 
 
 _FRAG_CACHE: dict[tuple, np.ndarray] = {}
 _FRAG_CACHE_MAX = 32
+_FRAG_CACHE_LOCK = threading.Lock()
 
 
 def _fragment_tensor(
@@ -328,7 +333,8 @@ def _fragment_tensor(
             tuple(edges_arr.tolist()),
             float(alpha_frag),
         )
-        cached = _FRAG_CACHE.get(cache_key)
+        with _FRAG_CACHE_LOCK:
+            cached = _FRAG_CACHE.get(cache_key)
         if cached is not None:
             return cached
 
@@ -381,12 +387,14 @@ def _fragment_tensor(
             )
             _NUMBA_FAILED = True
 
-    if (not use_jit) and _USE_NUMBA and not _NUMBA_FAILED:
+    used_fallback = False
+    if (not use_jit) and _USE_NUMBA and not _NUMBA_FAILED and use_numba is not False:
         try:
             Y_num = fragment_tensor_fallback_numba(
                 edges_arr, valid_pair, f_lr_matrix, k_lr_matrix, float(alpha_frag)
             )
             Y[:] = Y_num
+            used_fallback = True
         except Exception as exc:  # pragma: no cover - exercised via fallback test
             _NUMBA_FAILED = True
             warnings.warn(
@@ -394,7 +402,7 @@ def _fragment_tensor(
                 NumericalWarning,
             )
 
-    if not use_jit:
+    if not use_jit and not used_fallback:
         # Pure Python fallback (original implementation)
         left_edges = np.maximum(edges_arr[:-1], 1.0e-30)
         right_edges = np.maximum(edges_arr[1:], left_edges)
@@ -428,30 +436,33 @@ def _fragment_tensor(
                 Y[: k_lr + 1, i, j] += remainder_frac * weights
 
     if use_cache and cache_key is not None:
-        if len(_FRAG_CACHE) >= _FRAG_CACHE_MAX:
-            _FRAG_CACHE.pop(next(iter(_FRAG_CACHE)))
-        Y.setflags(write=False)
-        _FRAG_CACHE[cache_key] = Y
+        with _FRAG_CACHE_LOCK:
+            if len(_FRAG_CACHE) >= _FRAG_CACHE_MAX:
+                _FRAG_CACHE.pop(next(iter(_FRAG_CACHE)))
+            Y.setflags(write=False)
+            _FRAG_CACHE[cache_key] = Y
     return Y
 
 
 def _blowout_sink_vector(
     sizes: np.ndarray,
     a_blow: float,
-    Omega: float,
+    t_blow: float,
     enable_blowout: bool,
 ) -> np.ndarray:
     """Return per-bin blow-out sink rates (1/s)."""
 
     global _NUMBA_FAILED
-    if not enable_blowout or Omega <= 0.0:
+    if not enable_blowout or not np.isfinite(t_blow) or t_blow <= 0.0:
         return np.zeros_like(sizes)
+    rate = 1.0 / float(t_blow)
+    threshold = float(a_blow) * (1.0 + 1.0e-12)
     if _USE_NUMBA and not _NUMBA_FAILED:
         try:
             return blowout_sink_vector_numba(
                 np.asarray(sizes, dtype=np.float64),
-                float(a_blow),
-                float(Omega),
+                float(threshold),
+                float(rate),
                 bool(enable_blowout),
             )
         except Exception as exc:  # pragma: no cover - fallback
@@ -460,7 +471,7 @@ def _blowout_sink_vector(
                 f"_blowout_sink_vector: numba kernel failed ({exc!r}); falling back to NumPy.",
                 NumericalWarning,
             )
-    return np.where(np.asarray(sizes, dtype=float) <= a_blow, float(Omega), 0.0)
+    return np.where(np.asarray(sizes, dtype=float) <= threshold, rate, 0.0)
 
 
 def kernel_minimum_tcoll(C_kernel: np.ndarray, N: np.ndarray | None = None) -> float:
@@ -703,6 +714,13 @@ def compute_kernel_e_i_H(
                 1 if mode_H == "fixed" else 0,
                 f_wake_val,
             )
+            if a_val > 0.0 and H_k.size:
+                ratio = float(np.min(H_k)) / a_val
+                if np.isfinite(ratio) and ratio < H_OVER_A_WARN_THRESHOLD:
+                    warnings.warn(
+                        f"Kernel scale height H/a={ratio:.3e} below threshold; dt may collapse.",
+                        NumericalWarning,
+                    )
             return e_kernel, i_kernel, H_k
         except Exception as exc:  # pragma: no cover - fallback path
             _NUMBA_FAILED = True
@@ -712,6 +730,13 @@ def compute_kernel_e_i_H(
             )
 
     state = compute_kernel_ei_state(dynamics_cfg, tau_eff, a_orbit_m, v_k, sizes_arr)
+    if a_orbit_m > 0.0 and state.H_k.size:
+        ratio = float(np.min(state.H_k)) / float(a_orbit_m)
+        if np.isfinite(ratio) and ratio < H_OVER_A_WARN_THRESHOLD:
+            warnings.warn(
+                f"Kernel scale height H/a={ratio:.3e} below threshold; dt may collapse.",
+                NumericalWarning,
+            )
     return state.e_used, state.i_used, state.H_k
 
 
@@ -728,6 +753,7 @@ def step_collisions(
         prod_subblow_area_rate=ctx.supply.prod_subblow_area_rate,
         r=ctx.time_orbit.r,
         Omega=ctx.time_orbit.Omega,
+        t_blow=ctx.time_orbit.t_blow,
         a_blow=ctx.material.a_blow,
         rho=ctx.material.rho,
         e_value=ctx.dynamics.e_value,
@@ -762,6 +788,7 @@ def step_collisions_smol_0d(
     prod_subblow_area_rate: float,
     r: float,
     Omega: float,
+    t_blow: float | None = None,
     a_blow: float,
     rho: float,
     e_value: float,
@@ -838,8 +865,8 @@ def step_collisions_smol_0d(
         )
 
     kernel_workspace = None
-    kernel_workspace_sizes_id = getattr(step_collisions_smol_0d, "_kernel_ws_sizes_id", None)
-    kernel_workspace_cached = getattr(step_collisions_smol_0d, "_kernel_ws", None)
+    kernel_workspace_sizes_id = getattr(_THREAD_LOCAL, "kernel_ws_sizes_id", None)
+    kernel_workspace_cached = getattr(_THREAD_LOCAL, "kernel_ws", None)
     sizes_ref = psd_state.get("sizes", None)
     sizes_ref_id = id(sizes_ref) if sizes_ref is not None else None
     if sizes_ref_id is not None and sizes_ref_id == kernel_workspace_sizes_id:
@@ -847,22 +874,22 @@ def step_collisions_smol_0d(
     else:
         try:
             kernel_workspace = collide.prepare_collision_kernel_workspace(sizes_arr)
-            step_collisions_smol_0d._kernel_ws = kernel_workspace
-            step_collisions_smol_0d._kernel_ws_sizes_id = sizes_ref_id
+            _THREAD_LOCAL.kernel_ws = kernel_workspace
+            _THREAD_LOCAL.kernel_ws_sizes_id = sizes_ref_id
         except Exception:
             kernel_workspace = None
-            step_collisions_smol_0d._kernel_ws = None
-            step_collisions_smol_0d._kernel_ws_sizes_id = None
+            _THREAD_LOCAL.kernel_ws = None
+            _THREAD_LOCAL.kernel_ws_sizes_id = None
 
-    imex_workspace = getattr(step_collisions_smol_0d, "_imex_ws", None)
-    imex_workspace_key = getattr(step_collisions_smol_0d, "_imex_ws_key", None)
+    imex_workspace = getattr(_THREAD_LOCAL, "imex_ws", None)
+    imex_workspace_key = getattr(_THREAD_LOCAL, "imex_ws_key", None)
     if imex_workspace is None or imex_workspace_key != N_k.shape:
         imex_workspace = smol.ImexWorkspace(
             gain=np.zeros_like(N_k, dtype=float),
             loss=np.zeros_like(N_k, dtype=float),
         )
-        step_collisions_smol_0d._imex_ws = imex_workspace
-        step_collisions_smol_0d._imex_ws_key = N_k.shape
+        _THREAD_LOCAL.imex_ws = imex_workspace
+        _THREAD_LOCAL.imex_ws_key = N_k.shape
 
     if collisions_enabled:
         supply_weight = 0.0
@@ -1055,6 +1082,11 @@ def step_collisions_smol_0d(
     i_kernel_effective_val = i_kernel
     supply_weight_val = supply_weight
 
+    t_blow_use = (
+        float(t_blow)
+        if t_blow is not None and np.isfinite(t_blow)
+        else (1.0 / Omega if Omega > 0.0 else float("inf"))
+    )
     size_for_blow = sizes_arr
     edges_arr = psd_state.get("edges")
     if edges_arr is not None:
@@ -1062,7 +1094,7 @@ def step_collisions_smol_0d(
         if edges_np.size == sizes_arr.size + 1:
             # Use bin lower edges so the threshold is applied even when s_min == a_blow.
             size_for_blow = edges_np[:-1]
-    S_blow = _blowout_sink_vector(size_for_blow, a_blow, Omega, enable_blowout)
+    S_blow = _blowout_sink_vector(size_for_blow, a_blow, t_blow_use, enable_blowout)
 
     S_sink = None
     mass_loss_rate_sink = 0.0

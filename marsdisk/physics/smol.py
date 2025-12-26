@@ -391,6 +391,8 @@ def step_imex_bdf1_C3(
             dt_eff,
             extra_mass_loss_rate=float(extra_mass_loss_rate),
         )
+        if not np.isfinite(mass_err):
+            raise MarsDiskError("mass budget error is non-finite; check PSD or kernel inputs")
         if logger.isEnabledFor(logging.DEBUG):
             logger.debug("step_imex_bdf1_C3: dt=%e mass_err=%e", dt_eff, mass_err)
         if mass_err <= mass_tol:

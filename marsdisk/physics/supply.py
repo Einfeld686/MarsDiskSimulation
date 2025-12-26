@@ -18,6 +18,7 @@ import numpy as np
 import pandas as pd
 
 from .. import constants
+from ..errors import MarsDiskError
 from ..schema import Supply, SupplyPiece
 
 _EPS = 1.0e-12
@@ -83,6 +84,14 @@ class _TemperatureTable:
         temp_sorted = df.sort_values(column_temperature)
         temperature = temp_sorted[column_temperature].to_numpy(dtype=float)
         value = temp_sorted[column_value].to_numpy(dtype=float)
+        if temperature.size == 0 or value.size == 0:
+            raise ValueError(f"temperature table {path} must contain at least one row")
+        if not np.all(np.isfinite(temperature)):
+            raise ValueError(f"temperature table {path} contains non-finite temperature values")
+        if np.any(temperature <= 0.0):
+            raise ValueError(f"temperature table {path} requires positive temperatures")
+        if not np.all(np.isfinite(value)):
+            raise ValueError(f"temperature table {path} contains non-finite values")
         return cls(temperature, value, column_temperature, column_value)
 
     def interp(self, temperature_K: float) -> float:
@@ -182,6 +191,8 @@ def _rate_basic(t: float, r: float, spec: Supply | SupplyPiece) -> float:
         if A is None:
             return 0.0
         t0 = spec.powerlaw.t0_s if spec.powerlaw.t0_s > 0.0 else 0.0
+        if t < t0:
+            return 0.0
         return A * ((t - t0) + _EPS) ** spec.powerlaw.index
     if mode == "table":
         data = _TABLE_CACHE.get(spec.table.path)
@@ -261,8 +272,12 @@ def _temperature_factor(
 ) -> Tuple[float, Optional[float], str, Optional[float]]:
     """Return (scale, override_rate, value_kind, raw_value)."""
 
-    if state is None or state.temperature_mode == "off" or temperature_K is None or not math.isfinite(temperature_K):
+    if state is None or state.temperature_mode == "off":
         return 1.0, None, "scale", None
+    if temperature_K is None:
+        return 1.0, None, "scale", None
+    if not math.isfinite(temperature_K) or temperature_K <= 0.0:
+        raise MarsDiskError("temperature_K must be positive and finite for supply temperature scaling")
 
     override_rate = None
     raw_value = None
