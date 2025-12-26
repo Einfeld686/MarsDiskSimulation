@@ -35,14 +35,14 @@ AIエージェントがコード検索を効率化するためのマップを提
 | `_gather_git_info` | L237 | ヘルパー | Return basic git metadata for provenance recording... |
 | `MassBudgetViolationError` | L264 | クラス | Raised when the mass budget tolerance is exceeded. |
 | `run_zero_d` | L270 | メイン | Execute the full-feature zero-dimensional simulati... |
-| `main` | L4885 | 関数 | Command line entry point. |
+| `main` | L4913 | 関数 | Command line entry point. |
 
 ## 3. 主要セクション（目安）
 
 > 以下の行範囲はコード変更により変動します。`inventory.json` を基に自動更新されます。
 
 - **`run_zero_d()`**: L270–? (メイン実行ドライバ)
-- **`main()`**: L4885–? (CLI エントリポイント)
+- **`main()`**: L4913–? (CLI エントリポイント)
 ## 4. 探索ガイド
 
 | 調べたいこと | 参照シンボル | 備考 |

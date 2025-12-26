@@ -617,6 +617,18 @@ class Sizes(BaseModel):
         description="If true, the evolved minimum size participates in s_min_effective.",
     )
 
+    @field_validator("s_min", "s_max")
+    def _check_positive_sizes(cls, value: float, info: ValidationInfo) -> float:
+        if value <= 0.0 or not math.isfinite(value):
+            raise ConfigurationError(f"sizes.{info.field_name} must be positive and finite")
+        return float(value)
+
+    @model_validator(mode="after")
+    def _check_size_bounds(cls, model: "Sizes") -> "Sizes":
+        if model.s_min >= model.s_max:
+            raise ConfigurationError("sizes.s_max must be greater than sizes.s_min")
+        return model
+
 
 class Initial(BaseModel):
     """Initial mass and PSD mode."""

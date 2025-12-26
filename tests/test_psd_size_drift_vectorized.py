@@ -17,13 +17,14 @@ def _reference_apply(psd_state, *, ds_dt, dt, floor, sigma_surf):
     number = np.asarray(psd_state["number"], dtype=float)
     number_orig = number.copy()
     edges = np.asarray(psd_state["edges"], dtype=float)
+    counts = number * widths
 
     floor_val = float(floor)
     ds_step = float(ds_dt * dt)
 
-    new_number = np.zeros_like(number)
-    accum_sizes = np.zeros_like(number)
-    for idx, n_val in enumerate(number):
+    new_counts = np.zeros_like(counts)
+    accum_sizes = np.zeros_like(counts)
+    for idx, n_val in enumerate(counts):
         if n_val <= 0.0:
             continue
         s_new = sizes[idx] + ds_step
@@ -32,17 +33,19 @@ def _reference_apply(psd_state, *, ds_dt, dt, floor, sigma_surf):
         if s_new < floor_val:
             s_new = floor_val
         target = int(np.searchsorted(edges, s_new, side="right") - 1)
-        target = max(0, min(target, new_number.size - 1))
-        new_number[target] += n_val
+        target = max(0, min(target, new_counts.size - 1))
+        new_counts[target] += n_val
         accum_sizes[target] += n_val * s_new
 
-    if np.allclose(new_number, 0.0):
+    if np.allclose(new_counts, 0.0):
         return sigma_surf, 0.0, {"ds_step": 0.0, "mass_ratio": 1.0}, psd_state
 
     new_sizes = sizes.copy()
-    mask = new_number > 0.0
-    new_sizes[mask] = accum_sizes[mask] / new_number[mask]
+    mask = new_counts > 0.0
+    new_sizes[mask] = accum_sizes[mask] / new_counts[mask]
     new_sizes = np.maximum(new_sizes, floor_val)
+    new_number = np.zeros_like(number)
+    new_number[mask] = new_counts[mask] / widths[mask]
     tmp_state = {"sizes": new_sizes, "widths": widths, "number": new_number}
     psd.sanitize_and_normalize_number(tmp_state, normalize=False)
     new_number = np.asarray(tmp_state["number"], dtype=float)

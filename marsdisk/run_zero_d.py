@@ -2489,7 +2489,12 @@ def run_zero_d(
                 if collisions_active_step:
                     t_coll_step = t_coll_kernel_last
                     collision_ctx = collisions_smol.CollisionStepContext(
-                        time_orbit=collisions_smol.TimeOrbitParams(dt=dt, Omega=Omega_step, r=r),
+                        time_orbit=collisions_smol.TimeOrbitParams(
+                            dt=dt,
+                            Omega=Omega_step,
+                            r=r,
+                            t_blow=t_blow_step,
+                        ),
                         material=collisions_smol.MaterialParams(
                             rho=rho_used,
                             a_blow=a_blow_step,

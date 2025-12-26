@@ -22,10 +22,12 @@ from typing import Dict, Mapping, Optional
 
 import logging
 import os
+import warnings
 
 import numpy as np
 
 from ..errors import MarsDiskError
+from ..warnings import NumericalWarning
 from . import sizes as size_models
 from .sublimation import SublimationParams
 try:
@@ -176,11 +178,20 @@ def sanitize_and_normalize_number(
 
     if normalize:
         mass_weight = float(np.sum(number * (sizes**3) * widths))
+        reset_applied = False
         if not np.isfinite(mass_weight) or mass_weight <= 0.0:
             number = np.ones_like(number, dtype=float)
             mass_weight = float(np.sum(number * (sizes**3) * widths))
+            reset_applied = True
             if mass_weight <= 0.0 or not np.isfinite(mass_weight):
                 mass_weight = 1.0
+                reset_applied = True
+        if reset_applied:
+            psd_state["sanitize_reset_count"] = int(psd_state.get("sanitize_reset_count", 0)) + 1
+            warnings.warn(
+                "PSD normalization reset due to invalid mass weight; check PSD inputs.",
+                NumericalWarning,
+            )
         number /= mass_weight
     psd_state["number"] = number
     psd_state["n"] = number
@@ -422,6 +433,7 @@ def apply_uniform_size_drift(
     widths = np.asarray(psd_state["widths"], dtype=float)
     number = np.asarray(psd_state["number"], dtype=float)
     number_orig = number.copy()
+    counts = number * widths
     if sizes.size == 0:
         return sigma_surf, 0.0, {"ds_step": 0.0, "mass_ratio": 1.0}
 
@@ -436,9 +448,9 @@ def apply_uniform_size_drift(
     use_jit = _USE_NUMBA and not _NUMBA_FAILED
     if use_jit:
         try:
-            new_number, accum_sizes = size_drift_rebin_numba(
+            new_counts, accum_sizes = size_drift_rebin_numba(
                 sizes.astype(np.float64),
-                number.astype(np.float64),
+                counts.astype(np.float64),
                 edges.astype(np.float64),
                 float(ds_step),
                 float(floor_val),
@@ -448,16 +460,19 @@ def apply_uniform_size_drift(
             _NUMBA_FAILED = True
             logger.warning("size_drift_rebin_numba failed (%r); falling back to NumPy.", exc)
     if not use_jit:
-        new_number, accum_sizes = _size_drift_rebin_numpy(sizes, number, edges, ds_step, floor_val)
+        new_counts, accum_sizes = _size_drift_rebin_numpy(sizes, counts, edges, ds_step, floor_val)
 
     # fallback: if nothing moved due to numerical issues keep original arrays
-    if np.allclose(new_number, 0.0):
+    if np.allclose(new_counts, 0.0):
         return sigma_surf, 0.0, {"ds_step": 0.0, "mass_ratio": 1.0}
 
     new_sizes = sizes.copy()
-    mask = new_number > 0.0
-    new_sizes[mask] = accum_sizes[mask] / new_number[mask]
+    mask = new_counts > 0.0
+    new_sizes[mask] = accum_sizes[mask] / new_counts[mask]
     new_sizes = np.maximum(new_sizes, floor_val)
+    new_number = np.zeros_like(number)
+    width_mask = mask & (widths > 0.0)
+    new_number[width_mask] = new_counts[width_mask] / widths[width_mask]
     # clip-only sanitize before mass_ratio計算（規模暴走を防ぎつつスケールは保持）
     tmp_state = {"sizes": new_sizes, "widths": widths, "number": new_number}
     sanitize_and_normalize_number(tmp_state, normalize=False)

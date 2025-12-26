@@ -20,6 +20,10 @@
 | `plot_tau_timescales.cmd` | τ–timescale 図の Windows 実行 | `.venv` セットアップ後に `plot_tau_timescales.py` を呼び、CPU/メモリ検出ログを出力します。 |
 | `run_axis_r_sweep.py` | r–T–M グリッドの大量実行 | `analysis/agent_runs/AXIS_r_sweep` 以下に YAML／結果ディレクトリを生成し、`marsdisk.run` をケースごとに起動。`summary.json` 等を検証・集計します。 |
 | `run_inner_disk_suite.py` | Φ(1)×T_M スイート | Φ(1)={0.20,0.37,0.60} と温度掃引を組み合わせて 1 年積分し、`series/*.parquet`・PSD フレーム・GIF・`orbit_rollup.csv` を生成します。 |
+| `debug_psd_drift.py` | PSD サイズドリフトの再ビン比較 | 実装と参照リビンの差分を CSV/JSON に出力し、bin ごとの差分を確認します。 |
+| `debug_supply_powerlaw_slope.py` | powerlaw 供給の傾き診断 | 供給注入の `dN/ds` 傾きと質量整合を CSV/JSON に記録します。 |
+| `debug_fragment_tensor_lr.py` | 破片テンソルの LR 配分診断 | `Y[k_lr,i,j]` と `f_lr` の差、総和のズレを CSV/JSON に記録します。 |
+| `debug_blowout_chi_scaling.py` | chi_blow スケーリング診断 | `a_blow` と bin 端点の関係、および `dSigma_dt_blowout` の時系列を出力します。 |
 | `sweep_beta_map.py` | β(r/R_M, T_M, t) 立方体生成 | `marsdisk.analysis.sample_beta_over_orbit` を用いて 1 軌道分の β 時系列をサンプリングし、Zarr 立方体＋ `map_spec.json` を出力します。 |
 | `sweep_heatmaps.py` | 汎用 2D パラメータスイープ | マップ定義とバリアント指定を展開し、並列で `marsdisk.run` を実行。`results/map*.csv` と検証 JSON を保存します。 |
 | `sweep_mass_loss_map.py` | 1 軌道あたり質量損失マップ（高速版） | `marsdisk.analysis.massloss_sampler.sample_mass_loss_one_orbit` を呼び、`map_massloss.csv` とメタデータ `logs/spec.json` を作成します。必要に応じて `sinks.mode='none'` 比較も併記。 |

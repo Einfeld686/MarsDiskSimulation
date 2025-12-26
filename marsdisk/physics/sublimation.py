@@ -199,6 +199,8 @@ def p_sat_clausius(
 
     A = params.A if A_override is None else A_override
     B = params.B if B_override is None else B_override
+    if not np.isfinite(T) or T <= 0.0:
+        raise PhysicsError("temperature must be positive for Clausius P_sat")
     if A is None or B is None:
         raise PhysicsError("Clausius–Clapeyron coefficients A and B must be provided")
     return 10.0 ** (A - B / float(T))
@@ -616,6 +618,8 @@ def mass_flux_hkl(T: float, params: SublimationParams) -> float:
     testing.
     """
 
+    if not np.isfinite(T) or T <= 0.0:
+        raise PhysicsError("temperature must be positive for sublimation flux")
     use_hkl = _is_hkl_active(params)
     branch, A_active, B_active, valid_range = _resolve_clausius_branch(T, params)
     validity_status: Optional[str] = None

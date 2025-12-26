@@ -517,17 +517,16 @@ def supply_mass_rate_powerlaw_numba(
         if np.isfinite(val) and val > 0.0:
             weights[k] = val
 
-    weights_sum = 0.0
+    mass_sum = 0.0
     for k in range(n):
-        weights_sum += weights[k]
-    if weights_sum <= 0.0:
+        mass_sum += weights[k] * m_arr[k]
+    if mass_sum <= 0.0:
         return out
 
     for k in range(n):
         if weights[k] <= 0.0 or m_arr[k] <= 0.0:
             continue
-        mass_alloc = (weights[k] / weights_sum) * prod_rate
-        out[k] = mass_alloc / m_arr[k]
+        out[k] = weights[k] * prod_rate / mass_sum
     return out
 
 
@@ -535,17 +534,17 @@ def supply_mass_rate_powerlaw_numba(
 def blowout_sink_vector_numba(
     sizes: np.ndarray,
     a_blow: float,
-    Omega: float,
+    rate: float,
     enable_blowout: bool,
 ) -> np.ndarray:
     """Per-bin blow-out sink rates."""
 
     n = sizes.shape[0]
     out = np.zeros(n, dtype=np.float64)
-    if (not enable_blowout) or Omega <= 0.0:
+    if (not enable_blowout) or rate <= 0.0:
         return out
     for k in range(n):
-        out[k] = Omega if sizes[k] <= a_blow else 0.0
+        out[k] = rate if sizes[k] <= a_blow else 0.0
     return out
 
 
