@@ -12,10 +12,18 @@ from marsdisk.run import load_config, run_zero_d
 from marsdisk.run_one_d import run_one_d
 
 BASE_CONFIG = Path("configs/base.yml")
+DEFAULT_OVERRIDES = ["dynamics.e_profile.mode=off"]
+
+
+def _merge_overrides(overrides: list[str]) -> list[str]:
+    merged = list(overrides)
+    if not any(item.startswith("dynamics.e_profile.") for item in merged):
+        merged.extend(DEFAULT_OVERRIDES)
+    return merged
 
 
 def run_one_d_case(tmp_path: Path, overrides: list[str]) -> tuple[dict[str, Any], pd.DataFrame, Path]:
-    cfg = load_config(BASE_CONFIG, overrides=overrides)
+    cfg = load_config(BASE_CONFIG, overrides=_merge_overrides(overrides))
     cfg.io.outdir = tmp_path
     cfg.io.debug_sinks = False
     run_one_d(cfg)
@@ -25,7 +33,7 @@ def run_one_d_case(tmp_path: Path, overrides: list[str]) -> tuple[dict[str, Any]
 
 
 def run_zero_d_case(tmp_path: Path, overrides: list[str]) -> tuple[dict[str, Any], pd.DataFrame, Path]:
-    cfg = load_config(BASE_CONFIG, overrides=overrides)
+    cfg = load_config(BASE_CONFIG, overrides=_merge_overrides(overrides))
     cfg.io.outdir = tmp_path
     cfg.io.debug_sinks = False
     run_zero_d(cfg)

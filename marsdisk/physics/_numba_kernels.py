@@ -598,13 +598,16 @@ def compute_kernel_e_i_H_numba(
             e0 if e0 > 1.0e-6 else 1.0e-6,
             f_wake if f_wake > 1.0 else 1.0,
         )
-        if c_eq > 0.0:
+        if c_eq >= 0.0:
+            c_eq *= v_k_safe
             e_base = c_eq / v_k_safe
             if e_base < 1.0e-8:
                 e_base = 1.0e-8
             i_base = 0.5 * e_base
         else:
-            e_base = e0 * v_k_safe
+            e_base = e0
+            if e_base < 1.0e-8:
+                e_base = 1.0e-8
             i_base = 0.5 * e_base
 
     e_used = e_base

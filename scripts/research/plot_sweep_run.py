@@ -243,8 +243,6 @@ def main(run_dir: Path) -> int:
         return 1
     matplotlib.use("Agg")
 
-    plots_dir = run_dir / "plots"
-    plots_dir.mkdir(parents=True, exist_ok=True)
     summary = _load_summary(run_dir)
 
     plot_cols = [
@@ -291,6 +289,8 @@ def main(run_dir: Path) -> int:
         return 0
     df = df.sort_values("time") if "time" in df.columns else df
     is_1d = "cell_index" in df.columns
+    out_dir = run_dir / ("figures" if is_1d else "plots")
+    out_dir.mkdir(parents=True, exist_ok=True)
     if is_1d:
         rows = _aggregate_1d(df, plot_cols)
         import pandas as pd
@@ -346,7 +346,7 @@ def main(run_dir: Path) -> int:
         title_lines.append(f"mass budget err={mass_err:.3f} pct")
     fig.suptitle(" / ".join(title_lines))
     fig.tight_layout(rect=(0, 0, 1, 0.96))
-    fig.savefig(plots_dir / "overview.png", dpi=180)
+    fig.savefig(out_dir / "overview.png", dpi=180)
     plt.close(fig)
 
     fig2, ax2 = plt.subplots(2, 1, figsize=(10, 8), sharex=True)
@@ -377,7 +377,7 @@ def main(run_dir: Path) -> int:
 
     fig2.suptitle(run_dir.name)
     fig2.tight_layout(rect=(0, 0, 1, 0.95))
-    fig2.savefig(plots_dir / "supply_surface.png", dpi=180)
+    fig2.savefig(out_dir / "supply_surface.png", dpi=180)
     plt.close(fig2)
 
     fig3, ax3 = plt.subplots(1, 1, figsize=(10, 4))
@@ -392,12 +392,12 @@ def main(run_dir: Path) -> int:
     ax3.set_title("Optical depth evolution")
     ax3.legend(loc="upper right")
     fig3.tight_layout()
-    fig3.savefig(plots_dir / "optical_depth.png", dpi=180)
+    fig3.savefig(out_dir / "optical_depth.png", dpi=180)
     plt.close(fig3)
 
-    _plot_quicklook(df, plots_dir)
+    _plot_quicklook(df, out_dir)
 
-    print(f"[plot] saved plots to {plots_dir}")
+    print(f"[plot] saved plots to {out_dir}")
     return 0
 
 

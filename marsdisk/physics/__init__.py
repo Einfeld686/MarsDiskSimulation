@@ -16,6 +16,7 @@ from . import (
     supply,
     initfields,
     phase,
+    eccentricity,
 )
 
 __all__ = [
@@ -35,4 +36,5 @@ __all__ = [
     "supply",
     "initfields",
     "phase",
+    "eccentricity",
 ]

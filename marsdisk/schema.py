@@ -705,6 +705,43 @@ class Initial(BaseModel):
     )
 
 
+class DynamicsEccentricityProfile(BaseModel):
+    """Radial eccentricity profile configuration for e(r)."""
+
+    mode: Literal["off", "table", "mars_pericenter"] = Field(
+        "mars_pericenter",
+        description="Eccentricity profile mode; default uses e=1-R_Mars/r.",
+    )
+    table_path: Optional[Path] = Field(
+        None,
+        description="CSV path for e(r) profile when mode='table' (columns: r_RM or r_m, e).",
+    )
+    r_kind: Literal["r_RM", "r_m"] = Field(
+        "r_RM",
+        description="Radial coordinate used by the table: r_RM (=r/R_Mars) or r_m (meters).",
+    )
+    clip_min: float = Field(
+        0.0,
+        ge=0.0,
+        description="Lower bound applied after evaluating the profile.",
+    )
+    clip_max: float = Field(
+        0.999999,
+        gt=0.0,
+        lt=1.0,
+        description="Upper bound applied after evaluating the profile.",
+    )
+
+    @model_validator(mode="after")
+    def _validate_profile(cls, model: "DynamicsEccentricityProfile") -> "DynamicsEccentricityProfile":
+        mode = str(model.mode).lower()
+        if mode == "table" and model.table_path is None:
+            raise ConfigurationError("dynamics.e_profile.mode='table' requires table_path")
+        if model.clip_min > model.clip_max:
+            raise ConfigurationError("dynamics.e_profile.clip_min must be <= clip_max")
+        return model
+
+
 class Dynamics(BaseModel):
     """Parameters governing dynamical excitation."""
 
@@ -712,6 +749,10 @@ class Dynamics(BaseModel):
     i0: float
     t_damp_orbits: float
     f_wake: float = 1.0
+    e_profile: DynamicsEccentricityProfile = Field(
+        default_factory=DynamicsEccentricityProfile,
+        description="Radial eccentricity profile configuration.",
+    )
     eps_restitution: float = Field(
         0.5,
         gt=0.0,
@@ -742,7 +783,7 @@ class Dynamics(BaseModel):
         "pericenter",
         description=(
             "Relative speed prescription for collision kernels. "
-            "'pericenter' (default) uses v_rel=v_K/√(1-e) near periapsis and is recommended for high-e discs; "
+            "'pericenter' (default) uses v_rel=v_K*sqrt((1+e)/(1-e)) near periapsis and is recommended for high-e discs; "
             "'ohtsuki' (legacy, discouraged for e≳0.1) uses v_rel=v_K*sqrt(1.25 e^2+i^2)."
         ),
     )
@@ -806,6 +847,19 @@ class Dynamics(BaseModel):
         if value < 0.0:
             raise ConfigurationError("dynamics.i0 must be non-negative")
         return value
+
+    @model_validator(mode="after")
+    def _validate_e_profile_mode(cls, model: "Dynamics") -> "Dynamics":
+        profile = getattr(model, "e_profile", None)
+        if profile is None:
+            return model
+        mode = str(getattr(profile, "mode", "off")).lower()
+        if mode != "off" and model.e_mode == "mars_clearance":
+            raise ConfigurationError(
+                "dynamics.e_mode='mars_clearance' is incompatible with dynamics.e_profile; "
+                "set dynamics.e_profile.mode='off' to use mars_clearance."
+            )
+        return model
 
     @model_validator(mode="after")
     def _check_kernel_H_params(cls, model: "Dynamics") -> "Dynamics":
@@ -890,6 +944,17 @@ class SurfaceEnergy(BaseModel):
     enabled: bool = False
     gamma_J_m2: float = Field(1.0, gt=0.0, description="Surface energy [J/m^2].")
     eta: float = Field(0.1, gt=0.0, le=1.0, description="Conversion efficiency from KE to surface energy.")
+    collider_size_m: Optional[float] = Field(
+        None,
+        gt=0.0,
+        description="Optional collider size s0 used for the surface-energy floor [m]. Defaults to sizes.s_max.",
+    )
+    largest_fragment_mass_fraction: float = Field(
+        0.5,
+        gt=0.0,
+        le=1.0,
+        description="Mass fraction of the largest fragment used to map s0 to s_max (default 0.5).",
+    )
 
 
 class Surface(BaseModel):
@@ -1374,7 +1439,14 @@ class Radiation(BaseModel):
     freeze_kappa: bool = False
     qpr_table_path: Optional[Path] = Field(
         None,
-        description="Path to the Planck-averaged ⟨Q_pr⟩ lookup table. When omitted the analytic fallback is used.",
+        description=(
+            "Path to the Planck-averaged ⟨Q_pr⟩ lookup table. "
+            "When omitted, DEFAULT_Q_PR=1 is used unless qpr_strict=true."
+        ),
+    )
+    qpr_strict: bool = Field(
+        False,
+        description="Require a ⟨Q_pr⟩ table or explicit Q_pr override; otherwise DEFAULT_Q_PR=1 is allowed.",
     )
     Q_pr: Optional[float] = Field(None, description="Grey-body radiation pressure efficiency")
     qpr_cache: QPrCache = QPrCache()

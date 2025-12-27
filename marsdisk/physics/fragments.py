@@ -36,6 +36,10 @@ __all__ = [
     "compute_s_min_F2",
 ]
 
+LR_PHI_TRANSITION = 1.8
+LR_SUPERCAT_FRACTION = 0.1
+LR_SUPERCAT_ETA = -1.5
+
 
 def q_r_array(m1: np.ndarray, m2: np.ndarray, v: np.ndarray) -> np.ndarray:
     """Vectorised reduced specific kinetic energy ``Q_R``."""
@@ -70,9 +74,12 @@ def largest_remnant_fraction_array(q_r: np.ndarray, q_rd_star: np.ndarray) -> np
     if not np.any(valid):
         return frac
     with np.errstate(divide="ignore", invalid="ignore"):
-        raw = 0.5 * (2.0 - q_r_arr / q_star_arr)
-    frac_valid = np.clip(raw, 0.0, 1.0, out=np.zeros_like(raw), where=valid)
-    frac[valid] = frac_valid[valid]
+        phi = np.where(valid, q_r_arr / q_star_arr, 0.0)
+    low_mask = valid & (phi < LR_PHI_TRANSITION)
+    high_mask = valid & ~low_mask
+    frac[low_mask] = 1.0 - 0.5 * phi[low_mask]
+    frac[high_mask] = LR_SUPERCAT_FRACTION * (phi[high_mask] / LR_PHI_TRANSITION) ** LR_SUPERCAT_ETA
+    np.clip(frac, 0.0, 1.0, out=frac)
     return frac
 
 
@@ -115,7 +122,8 @@ def compute_largest_remnant_mass_fraction_F2(
 
     The approximation from [@LeinhardtStewart2012_ApJ745_79] is used:
 
-    ``M_LR/M_tot ≈ 0.5 * (2 - Q_R / Q_RD_star)``.
+    ``M_LR/M_tot = 1 - 0.5 φ`` for ``φ < 1.8`` and
+    ``M_LR/M_tot = 0.1 * (φ/1.8)**η`` for ``φ ≥ 1.8`` with ``η=-1.5``.
 
     Values are clipped to the physical range [0, 1].
 
@@ -132,7 +140,11 @@ def compute_largest_remnant_mass_fraction_F2(
     if q_rd_star <= 0.0:
         raise MarsDiskError("q_rd_star must be positive")
     q_r = compute_q_r_F2(m1, m2, v)
-    frac = 0.5 * (2.0 - q_r / q_rd_star)
+    phi = q_r / q_rd_star
+    if phi < LR_PHI_TRANSITION:
+        frac = 1.0 - 0.5 * phi
+    else:
+        frac = LR_SUPERCAT_FRACTION * (phi / LR_PHI_TRANSITION) ** LR_SUPERCAT_ETA
     frac = max(0.0, min(1.0, frac))
     logger.debug(
         "compute_largest_remnant_mass_fraction_F2: m1=%e m2=%e v=%e q_rd_star=%e -> frac=%f",

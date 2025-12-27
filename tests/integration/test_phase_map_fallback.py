@@ -14,6 +14,7 @@ BASE_CONFIG = Path("configs/innerdisk_collisions_only.yml")
 def test_phase_map_missing_entrypoint_falls_back_to_threshold(tmp_path: Path) -> None:
     overrides = [
         f"io.outdir={tmp_path}",
+        "dynamics.e_profile.mode=off",
         "phase.enabled=true",
         "phase.source=map",
         "phase.entrypoint=nonexistent.module:func",

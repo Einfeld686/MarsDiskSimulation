@@ -23,6 +23,7 @@ BASE_OVERRIDES = [
     "numerics.t_end_orbits=0.02",
     "numerics.t_end_years=null",
     "numerics.dt_init=50.0",
+    "dynamics.e_profile.mode=off",
     "phase.enabled=false",
     "radiation.TM_K=2000.0",
     "supply.enabled=false",

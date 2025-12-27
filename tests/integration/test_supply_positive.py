@@ -17,6 +17,7 @@ def test_supply_positive_with_wide_tau_cap(tmp_path: Path) -> None:
             "numerics.t_end_years=1e-6",
             "numerics.dt_init=1",
             f"io.outdir={outdir}",
+            "dynamics.e_profile.mode=off",
             "radiation.TM_K=6000",
             "radiation.mars_temperature_driver.table.path=data/mars_temperature_T6000p0K.csv",
             "supply.enabled=true",
@@ -48,6 +49,7 @@ def test_reservoir_depletes_and_records_metadata(tmp_path: Path) -> None:
             "numerics.t_end_years=1e-6",
             "numerics.dt_init=1",
             f"io.outdir={outdir}",
+            "dynamics.e_profile.mode=off",
             "radiation.TM_K=4000",
             "shielding.mode=fixed_tau1",
             "shielding.fixed_tau1_sigma=auto",
@@ -99,6 +101,7 @@ def test_supply_feedback_tau_los_updates_scale(tmp_path: Path) -> None:
         Path("configs/sweep_temp_supply/temp_supply_T4000_eps1.yml"),
         overrides=[
             f"io.outdir={outdir}",
+            "dynamics.e_profile.mode=off",
             "numerics.t_end_years=1e-5",
             "numerics.dt_init=10",
             "shielding.los_geometry.h_over_r=0.1",
@@ -145,6 +148,7 @@ def test_mu_orbit10pct_scales_supply(tmp_path: Path) -> None:
         Path("configs/mars_0d_supply_sweep.yaml"),
         overrides=[
             f"io.outdir={outdir}",
+            "dynamics.e_profile.mode=off",
             "io.streaming.enable=false",
             "numerics.t_end_orbits=1.0",
             "numerics.dt_init=auto",
@@ -198,6 +202,7 @@ def test_run_config_written_before_runtime_failure(monkeypatch, tmp_path: Path) 
         Path("configs/sweep_temp_supply/temp_supply_T4000_eps1.yml"),
         overrides=[
             f"io.outdir={outdir}",
+            "dynamics.e_profile.mode=off",
             "numerics.t_end_years=1e-6",
             "numerics.dt_init=1",
         ],

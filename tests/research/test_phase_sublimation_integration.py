@@ -16,6 +16,7 @@ def _run_case(tmp_path: Path, *, T_M: float, r_RM: float) -> tuple[pd.Series, pd
     outdir = tmp_path
     overrides = [
         f"io.outdir={outdir}",
+        "dynamics.e_profile.mode=off",
         "sinks.mode=sublimation",
         "sinks.enable_sublimation=true",
         "sinks.sub_params.mode=logistic",

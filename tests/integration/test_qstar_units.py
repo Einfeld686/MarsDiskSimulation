@@ -44,7 +44,7 @@ def test_velocity_clamping_counts_and_outputs():
     qstar.set_gravity_velocity_mu(0.45)
     expected = np.array(
         [
-            qstar.compute_q_d_star_F1(1.0, 3000.0, 1.0),
+            qstar.compute_q_d_star_F1(1.0, 3000.0, 0.5),
             qstar.compute_q_d_star_F1(1.0, 3000.0, 10.0),
         ]
     )
@@ -52,7 +52,7 @@ def test_velocity_clamping_counts_and_outputs():
     res = qstar.compute_q_d_star_array(
         np.array([1.0, 1.0]),
         3000.0,
-        np.array([1.0, 10.0]),
+        np.array([0.5, 10.0]),
     )
 
     assert np.allclose(res, expected)

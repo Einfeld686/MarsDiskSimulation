@@ -40,6 +40,7 @@ def _phase9_config(
             i0=0.01,
             t_damp_orbits=5.0,
             f_wake=1.0,
+            e_profile=schema.DynamicsEccentricityProfile(mode="off"),
             rng_seed=2025,
             e_mode="fixed",
             i_mode="fixed",

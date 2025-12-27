@@ -39,18 +39,18 @@ dynamics:
   kernel_ei_mode: config
   kernel_H_mode: ia
   H_factor: 1.0
-  e_mode: mars_clearance
-  dr_min_m: 1.2e6     # ≈e~0.5 at r~2 R_M, avoids negative e
-  dr_max_m: 4.0e6     # ≈e~0.2 at r~2–2.7 R_M
-  dr_dist: uniform
+  e_mode: fixed
+  e_profile:
+    mode: mars_pericenter
   i_mode: fixed
-  rng_seed: 42
 psd:
   alpha: 1.83
   wavy_strength: 0.0
   floor:
-    mode: none
+    mode: fixed
 qstar:
+  # Default uses the built-in 1–7 km/s fixed table in marsdisk/physics/qstar.py.
+  # v_ref_kms is only read when override_coeffs: true (or coeff_table provided).
   Qs: 3.5e7
   a_s: 0.38
   B: 0.3
@@ -195,3 +195,15 @@ diagnostics:
   extended_diagnostics:
     enable: false
     schema_version: extended-minimal-v1
+io:
+  outdir: out
+  debug_sinks: false
+  correct_fast_blowout: false
+  substep_fast_blowout: false
+  substep_max_ratio: 1.0
+  streaming:
+    enable: true
+    memory_limit_gb: 10.0
+    step_flush_interval: 10000
+    merge_at_end: true
+    cleanup_chunks: true

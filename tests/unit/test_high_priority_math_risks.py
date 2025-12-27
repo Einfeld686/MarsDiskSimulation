@@ -149,6 +149,7 @@ def _surface_ode_config(
         f_wake=1.0,
         e_mode="fixed",
         i_mode="fixed",
+        e_profile=schema.DynamicsEccentricityProfile(mode="off"),
     )
     psd_cfg = schema.PSD(alpha=3.5, wavy_strength=0.0)
     qstar_cfg = schema.QStar(Qs=1e3, a_s=1.0, B=1.0, b_g=1.0, v_ref_kms=[1.0])

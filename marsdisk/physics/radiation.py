@@ -48,6 +48,8 @@ _QPR_CACHE_MAXSIZE: int = 256
 _QPR_CACHE_ROUND: Optional[float] = None
 _QPR_CACHE: "OrderedDict[tuple[float, float], float]" = OrderedDict()
 _QPR_CACHE_LOCK = threading.Lock()
+_QPR_STRICT: bool = False
+_QPR_FALLBACK_WARNED: bool = False
 
 DEFAULT_Q_PR: float = 1.0
 DEFAULT_RHO: float = 3000.0
@@ -141,13 +143,7 @@ def _resolve_qpr(
             table_obj = getattr(tables, "_QPR_TABLE", None)
         if table_obj is not None:
             return qpr_lookup(s, T_M, lookup)
-
-    table_path = tables.get_qpr_table_path()
-    location_hint = f" (active table: {table_path})" if table_path is not None else ""
-    raise RuntimeError(
-        "No ⟨Q_pr⟩ lookup table initialised; set radiation.qpr_table_path or call "
-        f"marsdisk.io.tables.load_qpr_table before evaluating radiation terms{location_hint}."
-    )
+    return _fallback_qpr()
 
 
 def _quantize(value: float, step: float | None) -> float:
@@ -194,6 +190,30 @@ def configure_qpr_cache(*, enabled: bool, maxsize: int = 256, round_tol: float |
         _QPR_CACHE_MAXSIZE = max(int(maxsize), 0)
         _QPR_CACHE_ROUND = float(round_tol) if round_tol is not None and round_tol > 0.0 else None
         _QPR_CACHE.clear()
+
+
+def configure_qpr_fallback(*, strict: bool = False) -> None:
+    """Configure how missing ⟨Q_pr⟩ tables are handled."""
+
+    global _QPR_STRICT, _QPR_FALLBACK_WARNED
+    _QPR_STRICT = bool(strict)
+    _QPR_FALLBACK_WARNED = False
+
+
+def _fallback_qpr() -> float:
+    global _QPR_FALLBACK_WARNED
+    if _QPR_STRICT:
+        raise RuntimeError(
+            "⟨Q_pr⟩ lookup table not initialised and radiation.qpr_strict=true. "
+            "Provide radiation.qpr_table_path or radiation.Q_pr."
+        )
+    if not _QPR_FALLBACK_WARNED:
+        warnings.warn(
+            f"Q_pr table not found; using DEFAULT_Q_PR={DEFAULT_Q_PR:.1f}.",
+            TableWarning,
+        )
+        _QPR_FALLBACK_WARNED = True
+    return DEFAULT_Q_PR
 
 
 def grain_temperature_graybody(T_M: float, radius_m: float, *, q_abs: float = 1.0) -> float:
@@ -285,10 +305,7 @@ def qpr_lookup(s: float, T_M: float, table: type_QPr | None = None) -> float:
     if table_obj is None and lookup is tables.interp_qpr:
         table_obj = getattr(tables, "_QPR_TABLE", None)
         if table is None and _QPR_LOOKUP is None and table_obj is None:
-            raise RuntimeError(
-                "⟨Q_pr⟩ lookup table not initialised. Provide radiation.qpr_table_path or call "
-                "marsdisk.io.tables.load_qpr_table before evaluating Q_pr."
-            )
+            return _fallback_qpr()
 
     s_eval, T_eval = s_val, T_val
     clamp_msgs: list[str] = []
@@ -364,10 +381,7 @@ def qpr_lookup_array(
     if table_obj is None and lookup is tables.interp_qpr:
         table_obj = getattr(tables, "_QPR_TABLE", None)
         if table is None and _QPR_LOOKUP is None and table_obj is None:
-            raise RuntimeError(
-                "⟨Q_pr⟩ lookup table not initialised. Provide radiation.qpr_table_path or call "
-                "marsdisk.io.tables.load_qpr_table before evaluating Q_pr."
-            )
+            return np.full_like(s_arr, _fallback_qpr(), dtype=float)
 
     # Fast bilinear interpolation path for scalar T_M using the table grid.
     if table_obj is not None and hasattr(table_obj, "s_vals") and hasattr(table_obj, "T_vals") and scalar_T:

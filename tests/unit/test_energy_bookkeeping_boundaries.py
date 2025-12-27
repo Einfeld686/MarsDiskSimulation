@@ -73,8 +73,8 @@ def test_energy_bookkeeping_alpha_guard_and_streaming_match(tmp_path):
     from marsdisk.io import writer
 
     # Alpha guard and cap at s_max
-    assert _surface_energy_floor(1.0, 0.1, 3.0, 3000.0, 100.0, 1.0) == 0.0
-    s_floor = _surface_energy_floor(1.0, 0.1, 4.0, 3000.0, 100.0, 0.01)
+    assert _surface_energy_floor(1.0, 0.1, 3.0, 3000.0, 100.0, 1.0, 0.1) == 0.0
+    s_floor = _surface_energy_floor(1.0, 0.1, 4.0, 3000.0, 100.0, 1.0, 0.01)
     assert s_floor <= 0.01
 
     # Streaming ON/OFF: mimic by writing same records twice and comparing

@@ -1,6 +1,5 @@
 scope:
   region: inner
-  analysis_years: 2.0
 physics_mode: default    # collisions + sublimation
 process:
   state_tagging:
@@ -39,12 +38,10 @@ dynamics:
   kernel_ei_mode: config
   kernel_H_mode: ia
   H_factor: 1.0
-  e_mode: mars_clearance
-  dr_min_m: 1.2e6     # ≈e~0.5 at r~2 R_M, avoids negative e
-  dr_max_m: 4.0e6     # ≈e~0.2 at r~2–2.7 R_M
-  dr_dist: uniform
+  e_mode: fixed
+  e_profile:
+    mode: mars_pericenter
   i_mode: fixed
-  rng_seed: 42
 psd:
   alpha: 1.83
   wavy_strength: 0.0
@@ -86,7 +83,7 @@ supply:
   const:
     prod_area_rate_kg_m2_s: 0.0
     mu_orbit10pct: 1.0
-    mu_reference_tau: *tau0_target
+    mu_reference_tau: 1.0
     orbit_fraction_at_mu1: 0.1
   powerlaw:
     A_kg_m2_s:
@@ -182,7 +179,11 @@ phase:
     P_ref_bar: 1.0
     tau_ref: 1.0
 numerics:
-  t_end_years: 2.0
+  t_end_years:
+  t_end_orbits:
+  t_end_until_temperature_K: 2000.0
+  t_end_temperature_margin_years: 0.0
+  t_end_temperature_search_years:
   dt_init: auto
   stop_on_blowout_below_smin: true
   safety: 0.1

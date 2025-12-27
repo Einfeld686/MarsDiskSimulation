@@ -592,6 +592,7 @@ def compute_kernel_ei_state(
                 _eps_model,
                 f_wake=float(dynamics_cfg.f_wake),
             )
+            c_eq *= v_k_safe
         except Exception:
             c_eq = max(dynamics_cfg.e0 * v_k_safe, 0.0)
         e_base = max(c_eq / v_k_safe, 1.0e-8)
@@ -645,6 +646,7 @@ def _compute_ei_damping(
             _eps_model,
             f_wake=float(getattr(dynamics_cfg, "f_wake", 1.0)),
         )
+        c_eq *= max(v_k, 1.0e-12)
         e_target = max(c_eq / max(v_k, 1.0e-12), 0.0)
     except Exception:
         e_target = float(e_curr)

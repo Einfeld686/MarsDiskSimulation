@@ -34,6 +34,7 @@ def _tiny_config(outdir: Path, dt_init: float, n_steps: int) -> schema.Config:
         f_wake=1.0,
         e_mode="fixed",
         i_mode="fixed",
+        e_profile=schema.DynamicsEccentricityProfile(mode="off"),
     )
     psd = schema.PSD(alpha=3.5, wavy_strength=0.0)
     qstar = schema.QStar(Qs=1e3, a_s=1.0, B=1.0, b_g=1.0, v_ref_kms=[1.0])

@@ -17,7 +17,7 @@
 
 ## ベース設定の要点（短いまとめ）
 
-- 1D（半径分解）で 2 年を積分する設定。
+- 1D（半径分解）で、火星温度が 2000 K まで冷えるまで積分（温度停止条件）。
 - 外部供給は `mode=const` かつ `prod_area_rate_kg_m2_s=0.0` のため **実質ゼロ供給**。
 - 昇華は ON（HKL モデル）、放射圧ブローアウトは ON。
 - 遮蔽は OFF、相は **閾値（threshold）** モード。
@@ -45,8 +45,9 @@
 | `geometry.Nr` | `32` | 1D のセル数（`mode=1D` のとき必須） |
 | `disk.geometry.r_in_RM` | `1.0` | 内縁（火星半径単位） |
 | `disk.geometry.r_out_RM` | `2.7` | 外縁（火星半径単位） |
-| `scope.analysis_years` | `2.0` | 解析期間（年） |
-| `numerics.t_end_years` | `2.0` | 積分終了時刻（年） |
+| `numerics.t_end_until_temperature_K` | `2000.0` | 火星温度がこの値以下で終了 |
+| `numerics.t_end_years` | `null` | 温度停止を使うため無効化 |
+| `numerics.t_end_orbits` | `null` | 温度停止を使うため無効化 |
 | `numerics.dt_init` | `auto` | 初期刻み（秒）。数値指定も可 |
 | `numerics.dt_over_t_blow_max` | `0.1` | `dt/t_blow` の警告閾値 |
 
@@ -72,8 +73,8 @@
 | `dynamics.v_rel_mode` | `pericenter` | 高 e 向き。`ohtsuki` は低 e 向き |
 | `dynamics.kernel_ei_mode` | `config` | `wyatt_eq` で平衡 c_eq を解く |
 | `dynamics.kernel_H_mode` | `ia` | `fixed` の場合は `H_fixed_over_a` が必要 |
-| `dynamics.e_mode` | `mars_clearance` | `fixed` で e0 固定 |
-| `dynamics.dr_min_m` / `dr_max_m` | `1.2e6` / `4.0e6` | `mars_clearance` の Δr 範囲 [m] |
+| `dynamics.e_mode` | `fixed` | `e0` を固定値として使う |
+| `dynamics.e_profile.mode` | `mars_pericenter` | `e=1-R_MARS/r` を評価（既定） |
 
 ### 破砕強度（Q*）
 
@@ -92,6 +93,7 @@
 |---|---|---|
 | `supply.enabled` | `true`（未指定） | 供給のマスタースイッチ |
 | `supply.const.prod_area_rate_kg_m2_s` | `0.0` | 面積あたり供給率 |
+| `supply.const.mu_reference_tau` | `1.0` | 供給スケールの参照 τ（スイープ既定に合わせて固定） |
 | `supply.mixing.epsilon_mix` | `1.0` | 混合効率（0〜1） |
 | `supply.transport.mode` | `direct` | `deep_mixing` は深部リザーバ経由 |
 | `supply.injection.mode` | `powerlaw_bins` | `min_bin` も可 |
@@ -127,10 +129,11 @@
 
 - **scope**
   - 役割: 解析対象と期間を定義。
-  - 推奨値: `region=inner`, `analysis_years=2.0`
+  - 推奨値: `region=inner`
   - 選択肢:
     - `region=inner`: 内側ディスクのみ（現状はこの選択のみ）
-    - `analysis_years>0`: 解析期間（年）
+    - `analysis_years>0`: 解析期間（年、フォールバック用途）
+  - **非推奨**: `scope.analysis_years` は base.yml では指定しない方針。終了条件は `numerics.*` で明示する。
 - **physics_mode**
   - 役割: 物理モードの大枠を切り替える。
   - 推奨値: `default`
@@ -206,8 +209,8 @@
   - `e0=0.5`, `i0=0.05`, `t_damp_orbits=20.0`, `f_wake=2.0`
   - `v_rel_mode=pericenter`
   - `kernel_ei_mode=config`, `kernel_H_mode=ia`, `H_factor=1.0`
-  - `e_mode=mars_clearance`, `dr_min_m=1.2e6`, `dr_max_m=4.0e6`, `dr_dist=uniform`
-  - `i_mode=fixed`, `rng_seed=42`
+  - `e_mode=fixed`, `e_profile.mode=mars_pericenter`
+  - `i_mode=fixed`
 - 選択肢と意味:
   - `v_rel_mode`:
     - `pericenter`: 高 e での相対速度を強めに評価（推奨）
@@ -220,7 +223,11 @@
     - `fixed`: `H_fixed_over_a` を明示
   - `e_mode`:
     - `fixed`: `e0` を固定値として使う
-    - `mars_clearance`: Δr をサンプルして e を導出（`dr_min_m`/`dr_max_m`）
+    - `mars_clearance`: Δr をサンプルして e を導出（`dr_min_m`/`dr_max_m`、`e_profile.mode=off` が必須）
+  - `e_profile.mode`:
+    - `mars_pericenter`: `e=1-R_MARS/r` を評価（既定）
+    - `off`: `e0` を固定値として使う（レガシー）
+    - `table`: CSV から e(r) を補間（レガシー）
   - `dr_dist`:
     - `uniform`: Δr を一様分布でサンプル
     - `loguniform`: 対数一様でサンプル
@@ -412,13 +419,15 @@
 - **numerics**
   - 役割: 積分条件と停止条件。
   - 推奨値:
-    - `t_end_years=2.0`, `dt_init=auto`, `safety=0.1`
+    - `t_end_until_temperature_K=2000.0`, `t_end_years=null`, `t_end_orbits=null`
+    - `t_end_temperature_margin_years=0.0`
+    - `dt_init=auto`, `safety=0.1`
     - `atol=1.0e-10`, `rtol=1.0e-6`
     - `stop_on_blowout_below_smin=true`
     - `eval_per_step=true`, `orbit_rollup=true`, `dt_over_t_blow_max=0.1`
     - `dt_min_tcoll_ratio` は未指定（既定 `0.5`）
   - 選択肢:
-    - `t_end_years` / `t_end_orbits`: どちらか一方で終了時刻を指定
+    - `t_end_years` / `t_end_orbits`: 温度停止を使わない場合の終了時刻
     - `t_end_until_temperature_K`: 温度が下がるまで継続
     - `dt_init`: 数値指定（秒）または `auto`
     - `dt_over_t_blow_max`: `dt/t_blow` の警告閾値（未指定で無効）

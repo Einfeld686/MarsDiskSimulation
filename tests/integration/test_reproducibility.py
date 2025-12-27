@@ -28,6 +28,7 @@ def _config(outdir: Path) -> schema.Config:
             i0=0.02,
             t_damp_orbits=5.0,
             f_wake=1.0,
+            e_profile=schema.DynamicsEccentricityProfile(mode="off"),
             rng_seed=None,
         ),
         psd=schema.PSD(alpha=1.6, wavy_strength=0.1),

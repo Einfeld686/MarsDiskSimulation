@@ -21,6 +21,7 @@ def test_deep_mixing_mass_budget_with_supply(tmp_path: Path) -> None:
         "numerics.t_end_orbits=0.02",
         "numerics.t_end_years=null",
         "numerics.dt_init=50.0",
+        "dynamics.e_profile.mode=off",
         "phase.enabled=false",
         "radiation.TM_K=2000.0",
         "supply.enabled=true",

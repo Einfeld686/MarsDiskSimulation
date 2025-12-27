@@ -21,6 +21,7 @@ def test_base_config_smol_mass_budget_and_eval(tmp_path: Path) -> None:
         "numerics.t_end_years=null",
         "numerics.dt_init=100.0",
         "numerics.dt_over_t_blow_max=null",
+        "dynamics.e_profile.mode=off",
     ]
 
     cfg = run.load_config(repo_root / "configs" / "base.yml", overrides=overrides)

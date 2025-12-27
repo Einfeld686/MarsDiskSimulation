@@ -1,11 +1,11 @@
 r"""Table I/O and interpolation utilities.
 
-The production code expects pre-computed tables for the radiation pressure
+The production code prefers pre-computed tables for the radiation pressure
 coefficient :math:`\langle Q_{\rm pr}\rangle` and for the self-shielding
-factor :math:`\Phi`.  The ⟨Q_pr⟩ table is mandatory—if it cannot be loaded
-the caller must supply a valid file via ``radiation.qpr_table_path``.  An
-analytic fallback is intentionally not provided so that all runs stay
-anchored to the vetted Mie calculations shipped with the repository.
+factor :math:`\Phi`.  The ⟨Q_pr⟩ table remains the default data source,
+while the radiation module can fall back to ``DEFAULT_Q_PR=1`` unless
+``radiation.qpr_strict=true`` is requested.  The low-level interpolator
+defined here still requires a valid table.
 """
 from __future__ import annotations
 
@@ -182,6 +182,73 @@ class PhiTable:
         return float(c0 * (1 - zd) + c1 * zd)
 
 
+@dataclass
+class EccentricityProfileTable:
+    r_vals: np.ndarray
+    e_vals: np.ndarray
+
+    @classmethod
+    def from_frame(cls, df: pd.DataFrame, *, r_column: str) -> "EccentricityProfileTable":
+        if r_column not in df.columns or "e" not in df.columns:
+            missing = {"e", r_column}.difference(df.columns)
+            names = ", ".join(sorted(missing))
+            raise ValueError(f"Eccentricity profile table is missing required columns: {names}")
+
+        work = df.loc[:, [r_column, "e"]].copy()
+        work[r_column] = pd.to_numeric(work[r_column], errors="coerce")
+        work["e"] = pd.to_numeric(work["e"], errors="coerce")
+        if work[[r_column, "e"]].isna().any().any():
+            raise ValueError("Eccentricity profile table contains non-numeric or missing values")
+
+        if (work[r_column] <= 0).any():
+            raise ValueError("Eccentricity profile requires positive r values")
+        if work.duplicated(subset=[r_column]).any():
+            raise ValueError("Eccentricity profile table has duplicate radius entries")
+
+        work = work.sort_values(r_column)
+        r_vals = work[r_column].to_numpy(dtype=float)
+        if np.any(np.diff(r_vals) <= 0):
+            raise ValueError("Eccentricity profile radius values must be strictly increasing")
+        e_vals = work["e"].to_numpy(dtype=float)
+        if not np.all(np.isfinite(e_vals)):
+            raise ValueError("Eccentricity profile table contains non-finite e values")
+
+        return cls(r_vals=r_vals, e_vals=e_vals)
+
+    def interp(self, r: float) -> float:
+        r_arr = np.asarray(r, dtype=float)
+        vals = np.interp(r_arr, self.r_vals, self.e_vals, left=self.e_vals[0], right=self.e_vals[-1])
+        return float(np.asarray(vals).item())
+
+    def interp_array(self, r: np.ndarray) -> np.ndarray:
+        r_arr = np.asarray(r, dtype=float)
+        return np.interp(r_arr, self.r_vals, self.e_vals, left=self.e_vals[0], right=self.e_vals[-1])
+
+
+_E_PROFILE_TABLE_CACHE: dict[Path, EccentricityProfileTable] = {}
+
+
+def load_e_profile_table(path: str | Path, *, r_column: str) -> EccentricityProfileTable:
+    """Read a CSV table and return the eccentricity profile interpolator."""
+
+    table_path = Path(path)
+    if not table_path.exists():
+        raise ValueError(f"Eccentricity profile table does not exist: {table_path}")
+
+    resolved = table_path.resolve()
+    cached = _E_PROFILE_TABLE_CACHE.get(resolved)
+    if cached is not None:
+        return cached
+
+    try:
+        df = pd.read_csv(resolved)
+    except Exception as exc:  # pragma: no cover - pandas already tested
+        raise ValueError(f"Failed to read eccentricity profile table from {resolved}: {exc}") from exc
+
+    table = EccentricityProfileTable.from_frame(df, r_column=r_column)
+    _E_PROFILE_TABLE_CACHE[resolved] = table
+    return table
+
 def _read_qpr_frame_h5datasets(path: Path) -> pd.DataFrame:
     """HDF5 datasetsからQ_prテーブルを読み込む。Planck 平均⟨Q_pr⟩."""
 
@@ -347,13 +414,34 @@ def load_phi_table(path: str | Path) -> Callable[[float], float]:
     except Exception as exc:  # pragma: no cover - pandas already tested
         raise ValueError(f"Failed to read Phi table from {table_path}: {exc}") from exc
 
-    required = {"tau", "phi"}
-    missing = required.difference(df.columns)
-    if missing:
+    if "phi" in df.columns:
+        work = df.loc[:, ["tau", "phi"]].copy()
+    elif "Phi" in df.columns:
+        work = df.copy()
+        if {"w0", "g"}.issubset(work.columns):
+            w0_vals = np.asarray(sorted(work["w0"].dropna().unique()), dtype=float)
+            g_vals = np.asarray(sorted(work["g"].dropna().unique()), dtype=float)
+            if w0_vals.size == 0 or g_vals.size == 0:
+                raise ValueError("Phi table contains empty w0/g values")
+            w0_target = 0.0 if np.isclose(w0_vals, 0.0).any() else float(np.min(w0_vals))
+            g_target = 0.0 if np.isclose(g_vals, 0.0).any() else float(np.min(g_vals))
+            mask = np.isclose(work["w0"], w0_target) & np.isclose(work["g"], g_target)
+            work = work.loc[mask, ["tau", "Phi"]].copy()
+            if work.empty:
+                raise ValueError("Phi table slice for w0/g is empty")
+            warnings.warn(
+                f"Phi table includes w0/g grid; using slice w0={w0_target} g={g_target} "
+                "to build Φ(τ) lookup.",
+                TableWarning,
+            )
+        else:
+            work = work.loc[:, ["tau", "Phi"]].copy()
+        work = work.rename(columns={"Phi": "phi"})
+    else:
+        missing = {"tau", "phi"}.difference(df.columns)
         names = ", ".join(sorted(missing))
         raise ValueError(f"Phi table is missing required columns: {names}")
 
-    work = df.copy()
     work["tau"] = pd.to_numeric(work["tau"], errors="coerce")
     work["phi"] = pd.to_numeric(work["phi"], errors="coerce")
     if work[["tau", "phi"]].isna().any().any():

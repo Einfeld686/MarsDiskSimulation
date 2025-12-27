@@ -89,7 +89,7 @@ def test_qdstar_cache_thread_safety():
 def test_velocity_clamp_stats_thread_safety():
     s_arr = np.array([1.0e-3, 2.0e-3], dtype=float)
     rho = 3000.0
-    v_kms = np.array([1.0, 10.0], dtype=float)
+    v_kms = np.array([0.5, 10.0], dtype=float)
     n_calls = 32
 
     qstar.reset_velocity_clamp_stats()

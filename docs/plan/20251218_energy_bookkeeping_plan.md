@@ -56,9 +56,11 @@ $i$ も同形。
 
 ### 2.5 表面エネルギー制約（要件メモ §4.4, Krijt & Kama 2014）
 
-**計算式**:
+**計算式** (Krijt & Kama Eq.4, \(\alpha=3.5\)):
 $$
-s_{\min,\mathrm{surf}} = \left[ \frac{6\gamma(\alpha - 3)}{\eta \rho v_{\mathrm{rel}}^2} \right]^2 s_{\max}^{\alpha - 5} \quad (\alpha \ne 5)
+s_{\min,\mathrm{surf}} =
+\left(\frac{24\gamma s_0}{\eta\rho s_0 v_{\mathrm{rel}}^2 + 24\gamma}\right)^2
+s_{\max}^{-1}
 $$
 
 **入力パラメータ**:
@@ -68,8 +70,10 @@ $$
 | $\gamma$ | 表面エネルギー [J/m²] | `surface_energy.gamma_J_m2`（既定 1.0） |
 | $\eta$ | KE→表面変換効率 | `surface_energy.eta`（既定 0.1） |
 | $\rho$ | 材料密度 [kg/m³] | `material.rho` |
-| $\alpha$ | PSD 勾配 | `psd.alpha` |
-| $s_{\max}$ | 最大粒径 [m] | `sizes.s_max` |
+| $\alpha$ | PSD 勾配 | `psd.alpha`（式は \(\alpha=3.5\) 前提） |
+| $s_0$ | コライダサイズ [m] | `surface_energy.collider_size_m`（未指定時は `sizes.s_max`） |
+| $f_{\mathrm{lf}}$ | 最大破片質量比 | `surface_energy.largest_fragment_mass_fraction`（既定 0.5） |
+| $s_{\max}$ | 最大破片サイズ [m] | $s_0 f_{\mathrm{lf}}^{1/3}$ |
 | $v_{\mathrm{rel}}$ | 衝突相対速度 [m/s] | ステップ中の `v_rel_kernel` |
 
 **スキーマ追加**:

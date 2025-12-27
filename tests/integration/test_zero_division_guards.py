@@ -23,7 +23,13 @@ def test_run_zero_d_tau_zero_no_error(tmp_path: Path):
         radiation=schema.Radiation(TM_K=2000.0),
         sizes=schema.Sizes(s_min=1.0e-6, s_max=1.0e-3, n_bins=4),
         initial=schema.Initial(mass_total=1.0e-12, s0_mode="upper"),
-        dynamics=schema.Dynamics(e0=1e-4, i0=1e-4, t_damp_orbits=1.0, f_wake=1.0),
+        dynamics=schema.Dynamics(
+            e0=1e-4,
+            i0=1e-4,
+            t_damp_orbits=1.0,
+            f_wake=1.0,
+            e_profile=schema.DynamicsEccentricityProfile(mode="off"),
+        ),
         psd=schema.PSD(alpha=1.5, wavy_strength=0.0),
         qstar=schema.QStar(Qs=1.0e5, a_s=0.1, B=0.3, b_g=1.36, v_ref_kms=[1.0, 2.0]),
         numerics=schema.Numerics(t_end_years=1.0e-10, dt_init=1.0),
@@ -47,7 +53,9 @@ def test_supply_powerlaw_t0_zero():
 
 
 def test_run_zero_d_no_zerodivision(monkeypatch, tmp_path):
-    cfg = run.load_config(Path("configs/innerdisk_base.yml"))
+    cfg = run.load_config(
+        Path("configs/innerdisk_base.yml"), overrides=["dynamics.e_profile.mode=off"]
+    )
     monkeypatch.setattr(run, "MAX_STEPS", 1)
     monkeypatch.setattr(cfg.io, "outdir", tmp_path)
     cfg.surface.collision_solver = "smol"
