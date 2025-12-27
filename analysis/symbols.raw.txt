@@ -214,6 +214,11 @@ marsdisk/analysis/massloss_sampler.py:90:def _median_dt_ratio(series: pd.Series)
 marsdisk/analysis/massloss_sampler.py:96:def _p90_dt_ratio(series: pd.Series) -> float
 marsdisk/analysis/massloss_sampler.py:102:def _float_or_nan(payload: Dict[str, Any], key: str) -> float
 marsdisk/analysis/massloss_sampler.py:110:def sample_mass_loss_one_orbit(r_RM: float, T_M: float, base_yaml: Path | str, qpr_table: Path | str, *, dt_over_t_blow_max: float=0.1, sinks_mode: str='sublimation', enable_sublimation: Optional[bool]=None, enable_gas_drag: bool=False, overrides: Optional[Sequence[str]]=None) -> Dict[str, Any]
+marsdisk/archive.py:14:def _env_flag(name: str) -> Optional[bool]
+marsdisk/archive.py:26:def _load_run_config(run_dir: Path) -> Dict[str, Any]
+marsdisk/archive.py:33:def _extract_archive_payload(payload: Dict[str, Any]) -> Dict[str, Any]
+marsdisk/archive.py:44:def _build_settings(archive_payload: Dict[str, Any], *, overrides: Dict[str, Any]) -> archive_mod.ArchiveSettings
+marsdisk/archive.py:64:def main(argv: Optional[list[str]]=None) -> int
 marsdisk/config_utils.py:18:def resolve_reference_radius(cfg: Config) -> Tuple[float, float, str]
 marsdisk/config_utils.py:44:def ensure_disk_geometry(cfg: Config, r_rm: float) -> None
 marsdisk/config_utils.py:58:def resolve_temperature_field(cfg: Config) -> Tuple[float, str]
@@ -250,6 +255,28 @@ marsdisk/grid.py:97:def v_keplerian(r: float) -> float
 marsdisk/io/_numba_tables.py:24:def NUMBA_AVAILABLE() -> bool
 marsdisk/io/_numba_tables.py:30:def qpr_interp_scalar_numba(s_vals: np.ndarray, T_vals: np.ndarray, q_vals: np.ndarray, s: float, T: float) -> float
 marsdisk/io/_numba_tables.py:72:def qpr_interp_array_numba(s_vals: np.ndarray, T_vals: np.ndarray, q_vals: np.ndarray, s_arr: np.ndarray, T: float) -> np.ndarray
+marsdisk/io/archive.py:42:class ArchiveSettings
+marsdisk/io/archive.py:55:class ArchiveResult
+marsdisk/io/archive.py:62:def resolve_archive_dest(archive_root: Path, run_dir: Path) -> Path
+marsdisk/io/archive.py:66:def _human_bytes(value: float) -> str
+marsdisk/io/archive.py:76:def _hash_file(path: Path) -> str
+marsdisk/io/archive.py:84:def _hash_dataframe(df: pd.DataFrame) -> str
+marsdisk/io/archive.py:89:def _parquet_metadata(path: Path) -> Dict[str, int | str]
+marsdisk/io/archive.py:99:def _parquet_row_group_checksum(path: Path, group_index: int) -> Optional[str]
+marsdisk/io/archive.py:109:def _sum_chunk_rows(paths: Sequence[Path]) -> int
+marsdisk/io/archive.py:121:def _is_chunk(rel_path: Path) -> bool
+marsdisk/io/archive.py:128:def _is_metadata(rel_path: Path) -> bool
+marsdisk/io/archive.py:136:def _collect_copy_files(run_dir: Path) -> List[Path]
+marsdisk/io/archive.py:148:def _collect_hash_targets(run_dir: Path) -> List[Path]
+marsdisk/io/archive.py:163:def _write_marker(path: Path, message: str) -> None
+marsdisk/io/archive.py:170:def _update_run_card(run_card: Path, archive_path: Path, manifest_path: Optional[Path], level: str) -> None
+marsdisk/io/archive.py:184:def _check_writable(path: Path) -> bool
+marsdisk/io/archive.py:192:def _verify_level_settings(level: str) -> str
+marsdisk/io/archive.py:199:def archive_run(run_dir: Path, *, archive_root: Path, settings: ArchiveSettings) -> ArchiveResult
+marsdisk/io/archive.py:287:def _build_manifest(root: Path) -> Dict[str, object]
+marsdisk/io/archive.py:308:def _verify_archive(*, run_dir: Path, dest_dir: Path, verify_level: str) -> List[str]
+marsdisk/io/archive.py:358:def _verify_parquet_sets(run_dir: Path, dest_dir: Path, errors: List[str], level: str) -> None
+marsdisk/io/archive.py:414:def _cleanup_local(run_dir: Path, keep_local: str) -> None
 marsdisk/io/checkpoint.py:16:def _b64_pack(payload: Any) -> str
 marsdisk/io/checkpoint.py:20:def _b64_unpack(payload: str) -> Any
 marsdisk/io/checkpoint.py:25:class CheckpointState
@@ -421,20 +448,20 @@ marsdisk/physics/collisions_smol.py:114:class TimeOrbitParams
 marsdisk/physics/collisions_smol.py:124:class MaterialParams
 marsdisk/physics/collisions_smol.py:133:class DynamicsParams
 marsdisk/physics/collisions_smol.py:143:class SupplyParams
-marsdisk/physics/collisions_smol.py:155:class CollisionControlFlags
-marsdisk/physics/collisions_smol.py:172:class CollisionStepContext
-marsdisk/physics/collisions_smol.py:185:def supply_mass_rate_to_number_source(prod_subblow_mass_rate: float, s_bin_center: np.ndarray, m_bin: np.ndarray, s_min_eff: float, *, widths: np.ndarray | None=None, mode: str='min_bin', s_inj_min: float | None=None, s_inj_max: float | None=None, q: float=3.5) -> np.ndarray
-marsdisk/physics/collisions_smol.py:291:def _fragment_tensor(sizes: np.ndarray, masses: np.ndarray, edges: np.ndarray, v_rel: float | np.ndarray, rho: float, alpha_frag: float=3.5, *, use_numba: bool | None=None) -> np.ndarray
-marsdisk/physics/collisions_smol.py:453:def _blowout_sink_vector(sizes: np.ndarray, a_blow: float, t_blow: float, enable_blowout: bool) -> np.ndarray
-marsdisk/physics/collisions_smol.py:483:def kernel_minimum_tcoll(C_kernel: np.ndarray, N: np.ndarray | None=None) -> float
-marsdisk/physics/collisions_smol.py:517:def _supply_velocity_weight(delta_sigma: float, sigma_prev: float, mode: str='delta_sigma') -> float
-marsdisk/physics/collisions_smol.py:528:def _resolve_supply_velocity(cfg: 'SupplyInjectionVelocity | None', e_base: float, i_base: float) -> tuple[float, float]
-marsdisk/physics/collisions_smol.py:545:def _blend_supply_velocity(e_base: float, i_base: float, e_supply: float, i_supply: float, *, weight: float, mode: str='rms') -> tuple[float, float]
-marsdisk/physics/collisions_smol.py:567:def compute_kernel_ei_state(dynamics_cfg: 'Dynamics', tau_eff: float, a_orbit_m: float, v_k: float, sizes: np.ndarray, *, e_override: float | None=None, i_override: float | None=None) -> KernelEIState
-marsdisk/physics/collisions_smol.py:618:def _compute_ei_damping(e_curr: float, i_curr: float, *, dt: float, tau_eff: float | None, a_orbit_m: float, v_k: float, dynamics_cfg: 'Dynamics | None', t_coll_ref: float | None, eps_restitution: float) -> tuple[float | None, float | None, float | None, float | None]
-marsdisk/physics/collisions_smol.py:671:def compute_kernel_e_i_H(dynamics_cfg: 'Dynamics', tau_eff: float, a_orbit_m: float, v_k: float, sizes: np.ndarray) -> tuple[float, float, np.ndarray]
-marsdisk/physics/collisions_smol.py:751:def step_collisions(ctx: CollisionStepContext, psd_state: MutableMapping[str, np.ndarray | float]) -> Smol0DStepResult
-marsdisk/physics/collisions_smol.py:791:def step_collisions_smol_0d(psd_state: MutableMapping[str, np.ndarray | float], sigma_surf: float, *, dt: float, prod_subblow_area_rate: float, r: float, Omega: float, t_blow: float | None=None, a_blow: float, rho: float, e_value: float, i_value: float, sigma_tau1: float | None, enable_blowout: bool, t_sink: float | None, ds_dt_val: float | None=None, s_min_effective: float | None=None, dynamics_cfg: 'Dynamics | None'=None, tau_eff: float | None=None, collisions_enabled: bool=True, mass_conserving_sublimation: bool=False, supply_injection_mode: str='min_bin', supply_s_inj_min: float | None=None, supply_s_inj_max: float | None=None, supply_q: float=3.5, supply_velocity_cfg: 'SupplyInjectionVelocity | None'=None, headroom_policy: str='clip', energy_bookkeeping_enabled: bool=False, f_ke_fragmentation: float | None=None, f_ke_cratering: float=0.1, eps_restitution: float=0.5, enable_e_damping: bool=False, t_coll_for_damp: float | None=None) -> Smol0DStepResult
+marsdisk/physics/collisions_smol.py:156:class CollisionControlFlags
+marsdisk/physics/collisions_smol.py:173:class CollisionStepContext
+marsdisk/physics/collisions_smol.py:186:def supply_mass_rate_to_number_source(prod_subblow_mass_rate: float, s_bin_center: np.ndarray, m_bin: np.ndarray, s_min_eff: float, *, widths: np.ndarray | None=None, mass_weights: np.ndarray | None=None, mode: str='min_bin', s_inj_min: float | None=None, s_inj_max: float | None=None, q: float=3.5) -> np.ndarray
+marsdisk/physics/collisions_smol.py:311:def _fragment_tensor(sizes: np.ndarray, masses: np.ndarray, edges: np.ndarray, v_rel: float | np.ndarray, rho: float, alpha_frag: float=3.5, *, use_numba: bool | None=None) -> np.ndarray
+marsdisk/physics/collisions_smol.py:473:def _blowout_sink_vector(sizes: np.ndarray, a_blow: float, t_blow: float, enable_blowout: bool) -> np.ndarray
+marsdisk/physics/collisions_smol.py:503:def kernel_minimum_tcoll(C_kernel: np.ndarray, N: np.ndarray | None=None) -> float
+marsdisk/physics/collisions_smol.py:537:def _supply_velocity_weight(delta_sigma: float, sigma_prev: float, mode: str='delta_sigma') -> float
+marsdisk/physics/collisions_smol.py:548:def _resolve_supply_velocity(cfg: 'SupplyInjectionVelocity | None', e_base: float, i_base: float) -> tuple[float, float]
+marsdisk/physics/collisions_smol.py:565:def _blend_supply_velocity(e_base: float, i_base: float, e_supply: float, i_supply: float, *, weight: float, mode: str='rms') -> tuple[float, float]
+marsdisk/physics/collisions_smol.py:587:def compute_kernel_ei_state(dynamics_cfg: 'Dynamics', tau_eff: float, a_orbit_m: float, v_k: float, sizes: np.ndarray, *, e_override: float | None=None, i_override: float | None=None) -> KernelEIState
+marsdisk/physics/collisions_smol.py:638:def _compute_ei_damping(e_curr: float, i_curr: float, *, dt: float, tau_eff: float | None, a_orbit_m: float, v_k: float, dynamics_cfg: 'Dynamics | None', t_coll_ref: float | None, eps_restitution: float) -> tuple[float | None, float | None, float | None, float | None]
+marsdisk/physics/collisions_smol.py:691:def compute_kernel_e_i_H(dynamics_cfg: 'Dynamics', tau_eff: float, a_orbit_m: float, v_k: float, sizes: np.ndarray) -> tuple[float, float, np.ndarray]
+marsdisk/physics/collisions_smol.py:771:def step_collisions(ctx: CollisionStepContext, psd_state: MutableMapping[str, np.ndarray | float]) -> Smol0DStepResult
+marsdisk/physics/collisions_smol.py:812:def step_collisions_smol_0d(psd_state: MutableMapping[str, np.ndarray | float], sigma_surf: float, *, dt: float, prod_subblow_area_rate: float, r: float, Omega: float, t_blow: float | None=None, a_blow: float, rho: float, e_value: float, i_value: float, sigma_tau1: float | None, enable_blowout: bool, t_sink: float | None, ds_dt_val: float | None=None, s_min_effective: float | None=None, dynamics_cfg: 'Dynamics | None'=None, tau_eff: float | None=None, collisions_enabled: bool=True, mass_conserving_sublimation: bool=False, supply_injection_mode: str='min_bin', supply_s_inj_min: float | None=None, supply_s_inj_max: float | None=None, supply_q: float=3.5, supply_mass_weights: np.ndarray | None=None, supply_velocity_cfg: 'SupplyInjectionVelocity | None'=None, headroom_policy: str='clip', energy_bookkeeping_enabled: bool=False, f_ke_fragmentation: float | None=None, f_ke_cratering: float=0.1, eps_restitution: float=0.5, enable_e_damping: bool=False, t_coll_for_damp: float | None=None) -> Smol0DStepResult
 marsdisk/physics/dynamics.py:18:def v_ij(e: float, i: float, v_k: float=1.0) -> float
 marsdisk/physics/dynamics.py:49:def v_rel_pericenter(e: float, v_k: float) -> float
 marsdisk/physics/dynamics.py:64:def solve_c_eq(tau: float, e: float, eps_model: Callable[[float], float], *, f_wake: float=1.0, max_iter: int=100, tol: float=1e-06) -> float
@@ -601,7 +628,7 @@ marsdisk/run_zero_d.py:228:def load_config(path: Path, overrides: Optional[Seque
 marsdisk/run_zero_d.py:253:def _gather_git_info() -> Dict[str, Any]
 marsdisk/run_zero_d.py:280:class MassBudgetViolationError(NumericalError)
 marsdisk/run_zero_d.py:286:def run_zero_d(cfg: Config, *, enforce_mass_budget: bool=False, physics_mode_override: Optional[str]=None, physics_mode_source_override: Optional[str]=None) -> None
-marsdisk/run_zero_d.py:4987:def main(argv: Optional[List[str]]=None) -> None
+marsdisk/run_zero_d.py:5110:def main(argv: Optional[List[str]]=None) -> None
 marsdisk/runtime/autotune.py:22:class MachineState
 marsdisk/runtime/autotune.py:43:class AutoTuneDecision
 marsdisk/runtime/autotune.py:56:def _safe_int(value: Any, fallback: int) -> int
@@ -645,49 +672,50 @@ marsdisk/schema.py:290:class SupplyTemperature(BaseModel)
 marsdisk/schema.py:323:class SupplyTransport(BaseModel)
 marsdisk/schema.py:353:class SupplyInjectionVelocity(BaseModel)
 marsdisk/schema.py:396:class SupplyInjection(BaseModel)
-marsdisk/schema.py:437:class SupplyPiece(BaseModel)
-marsdisk/schema.py:446:class Supply(BaseModel)
-marsdisk/schema.py:555:class Material(BaseModel)
-marsdisk/schema.py:570:class Temps(BaseModel)
-marsdisk/schema.py:597:class Sizes(BaseModel)
-marsdisk/schema.py:633:class Initial(BaseModel)
-marsdisk/schema.py:708:class DynamicsEccentricityProfile(BaseModel)
-marsdisk/schema.py:745:class Dynamics(BaseModel)
-marsdisk/schema.py:879:class QStar(BaseModel)
-marsdisk/schema.py:930:class PSD(BaseModel)
-marsdisk/schema.py:941:class SurfaceEnergy(BaseModel)
-marsdisk/schema.py:960:class Surface(BaseModel)
-marsdisk/schema.py:978:class InitTau1(BaseModel)
-marsdisk/schema.py:999:class OpticalDepth(BaseModel)
-marsdisk/schema.py:1023:class SublimationParamsModel(BaseModel)
-marsdisk/schema.py:1115:class RPBlowoutConfig(BaseModel)
-marsdisk/schema.py:1121:class HydroEscapeConfig(BaseModel)
-marsdisk/schema.py:1144:class Sinks(BaseModel)
-marsdisk/schema.py:1168:class ProcessStateTagging(BaseModel)
-marsdisk/schema.py:1177:class Process(BaseModel)
-marsdisk/schema.py:1191:class PhaseThresholds(BaseModel)
-marsdisk/schema.py:1215:class PhaseConfig(BaseModel)
-marsdisk/schema.py:1293:class MarsTemperatureDriverConstant(BaseModel)
-marsdisk/schema.py:1306:class MarsTemperatureDriverTable(BaseModel)
-marsdisk/schema.py:1318:class MarsTemperatureDriverHyodo(BaseModel)
-marsdisk/schema.py:1326:class MarsTemperatureAutogen(BaseModel)
-marsdisk/schema.py:1358:class MarsTemperatureDriverConfig(BaseModel)
-marsdisk/schema.py:1397:class RadiationTauGate(BaseModel)
-marsdisk/schema.py:1404:class QPrCache(BaseModel)
-marsdisk/schema.py:1420:class Radiation(BaseModel)
-marsdisk/schema.py:1487:class Shielding(BaseModel)
-marsdisk/schema.py:1548:class Blowout(BaseModel)
-marsdisk/schema.py:1566:class Checkpoint(BaseModel)
-marsdisk/schema.py:1593:class Resume(BaseModel)
-marsdisk/schema.py:1606:class Numerics(BaseModel)
-marsdisk/schema.py:1732:class StepDiagnostics(BaseModel)
-marsdisk/schema.py:1749:class Progress(BaseModel)
-marsdisk/schema.py:1763:class Streaming(BaseModel)
-marsdisk/schema.py:1810:class IO(BaseModel)
-marsdisk/schema.py:1850:class ExtendedDiagnostics(BaseModel)
-marsdisk/schema.py:1863:class EnergyBookkeeping(BaseModel)
-marsdisk/schema.py:1876:class Diagnostics(BaseModel)
-marsdisk/schema.py:1883:class Config(BaseModel)
+marsdisk/schema.py:441:class SupplyPiece(BaseModel)
+marsdisk/schema.py:450:class Supply(BaseModel)
+marsdisk/schema.py:559:class Material(BaseModel)
+marsdisk/schema.py:574:class Temps(BaseModel)
+marsdisk/schema.py:601:class Sizes(BaseModel)
+marsdisk/schema.py:637:class Initial(BaseModel)
+marsdisk/schema.py:712:class DynamicsEccentricityProfile(BaseModel)
+marsdisk/schema.py:749:class Dynamics(BaseModel)
+marsdisk/schema.py:883:class QStar(BaseModel)
+marsdisk/schema.py:934:class PSD(BaseModel)
+marsdisk/schema.py:945:class SurfaceEnergy(BaseModel)
+marsdisk/schema.py:964:class Surface(BaseModel)
+marsdisk/schema.py:982:class InitTau1(BaseModel)
+marsdisk/schema.py:1003:class OpticalDepth(BaseModel)
+marsdisk/schema.py:1027:class SublimationParamsModel(BaseModel)
+marsdisk/schema.py:1119:class RPBlowoutConfig(BaseModel)
+marsdisk/schema.py:1125:class HydroEscapeConfig(BaseModel)
+marsdisk/schema.py:1148:class Sinks(BaseModel)
+marsdisk/schema.py:1172:class ProcessStateTagging(BaseModel)
+marsdisk/schema.py:1181:class Process(BaseModel)
+marsdisk/schema.py:1195:class PhaseThresholds(BaseModel)
+marsdisk/schema.py:1219:class PhaseConfig(BaseModel)
+marsdisk/schema.py:1297:class MarsTemperatureDriverConstant(BaseModel)
+marsdisk/schema.py:1310:class MarsTemperatureDriverTable(BaseModel)
+marsdisk/schema.py:1322:class MarsTemperatureDriverHyodo(BaseModel)
+marsdisk/schema.py:1330:class MarsTemperatureAutogen(BaseModel)
+marsdisk/schema.py:1362:class MarsTemperatureDriverConfig(BaseModel)
+marsdisk/schema.py:1401:class RadiationTauGate(BaseModel)
+marsdisk/schema.py:1408:class QPrCache(BaseModel)
+marsdisk/schema.py:1424:class Radiation(BaseModel)
+marsdisk/schema.py:1491:class Shielding(BaseModel)
+marsdisk/schema.py:1552:class Blowout(BaseModel)
+marsdisk/schema.py:1570:class Checkpoint(BaseModel)
+marsdisk/schema.py:1597:class Resume(BaseModel)
+marsdisk/schema.py:1610:class Numerics(BaseModel)
+marsdisk/schema.py:1736:class StepDiagnostics(BaseModel)
+marsdisk/schema.py:1753:class Progress(BaseModel)
+marsdisk/schema.py:1767:class Streaming(BaseModel)
+marsdisk/schema.py:1814:class Archive(BaseModel)
+marsdisk/schema.py:1882:class IO(BaseModel)
+marsdisk/schema.py:1923:class ExtendedDiagnostics(BaseModel)
+marsdisk/schema.py:1936:class EnergyBookkeeping(BaseModel)
+marsdisk/schema.py:1949:class Diagnostics(BaseModel)
+marsdisk/schema.py:1956:class Config(BaseModel)
 marsdisk/warnings.py:7:class MarsDiskWarning(UserWarning)
 marsdisk/warnings.py:11:class PhysicsWarning(MarsDiskWarning)
 marsdisk/warnings.py:15:class NumericalWarning(MarsDiskWarning)
@@ -858,6 +886,8 @@ scripts/runs/run_inner_disk_suite.py:319:def main(argv: Sequence[str] | None=Non
 scripts/runsets/common/build_overrides.py:13:def _iter_pairs(paths: Iterable[Path]) -> Iterator[tuple[str, str]]
 scripts/runsets/common/build_overrides.py:29:def _merge_pairs(pairs: Iterable[tuple[str, str]]) -> tuple[list[str], dict[str, str]]
 scripts/runsets/common/build_overrides.py:43:def main() -> None
+scripts/runsets/common/hooks/archive_run.py:12:def _repo_root() -> Path
+scripts/runsets/common/hooks/archive_run.py:16:def main() -> int
 scripts/runsets/common/hooks/evaluate_tau_supply.py:13:def _repo_root() -> Path
 scripts/runsets/common/hooks/evaluate_tau_supply.py:17:def _env_or_default(name: str, default: str | None) -> str | None
 scripts/runsets/common/hooks/evaluate_tau_supply.py:24:def main() -> int
@@ -1281,14 +1311,18 @@ tests/unit/test_fragments_largest_remnant.py:7:def test_largest_remnant_fraction
 tests/unit/test_fragments_largest_remnant.py:16:def test_largest_remnant_fraction_continuity() -> None
 tests/unit/test_fragments_largest_remnant.py:24:def test_largest_remnant_fraction_monotonic() -> None
 tests/unit/test_fragments_largest_remnant.py:32:def test_largest_remnant_fraction_scalar_matches_piecewise() -> None
-tests/unit/test_high_priority_math_risks.py:14:def _reference_rebin_dnds(psd_state: dict[str, np.ndarray | float], *, ds_dt: float, dt: float, floor: float) -> tuple[np.ndarray, np.ndarray]
-tests/unit/test_high_priority_math_risks.py:55:def test_apply_uniform_size_drift_dnds_rebin_matches_reference(monkeypatch: pytest.MonkeyPatch) -> None
-tests/unit/test_high_priority_math_risks.py:83:def _self_consistent_blowout(rho: float, T_M: float, qpr_func: callable, *, n_iter: int=20) -> float
-tests/unit/test_high_priority_math_risks.py:97:def test_blowout_radius_size_dependent_qpr_consistent() -> None
-tests/unit/test_high_priority_math_risks.py:109:def test_surface_ode_respects_t_blow() -> None
-tests/unit/test_high_priority_math_risks.py:124:def _surface_ode_config(outdir: Path, dt_init: float, n_steps: int, *, h_over_r: float) -> schema.Config
-tests/unit/test_high_priority_math_risks.py:189:def test_tcoll_uses_vertical_tau(tmp_path: Path) -> None
-tests/unit/test_high_priority_math_risks.py:219:def test_fragment_tensor_largest_remnant_bin_matches_size(monkeypatch: pytest.MonkeyPatch) -> None
+tests/unit/test_high_priority_math_risks.py:15:def _reference_rebin_dnds(psd_state: dict[str, np.ndarray | float], *, ds_dt: float, dt: float, floor: float) -> tuple[np.ndarray, np.ndarray]
+tests/unit/test_high_priority_math_risks.py:56:def test_apply_uniform_size_drift_dnds_rebin_matches_reference(monkeypatch: pytest.MonkeyPatch) -> None
+tests/unit/test_high_priority_math_risks.py:84:def _self_consistent_blowout(rho: float, T_M: float, qpr_func: callable, *, n_iter: int=20) -> float
+tests/unit/test_high_priority_math_risks.py:98:def test_blowout_radius_size_dependent_qpr_consistent() -> None
+tests/unit/test_high_priority_math_risks.py:110:def test_surface_ode_respects_t_blow() -> None
+tests/unit/test_high_priority_math_risks.py:125:def _surface_ode_config(outdir: Path, dt_init: float, n_steps: int, *, h_over_r: float) -> schema.Config
+tests/unit/test_high_priority_math_risks.py:190:def _blowout_record_config(outdir: Path, *, s_min: float) -> schema.Config
+tests/unit/test_high_priority_math_risks.py:243:def test_tcoll_uses_vertical_tau(tmp_path: Path) -> None
+tests/unit/test_high_priority_math_risks.py:273:def test_fragment_tensor_largest_remnant_bin_matches_size(monkeypatch: pytest.MonkeyPatch) -> None
+tests/unit/test_high_priority_math_risks.py:312:def test_blowout_recorded_matches_physical_radius(tmp_path: Path) -> None
+tests/unit/test_high_priority_math_risks.py:331:def test_sublimation_sink_reference_timescale_uses_inverse_omega(monkeypatch: pytest.MonkeyPatch) -> None
+tests/unit/test_high_priority_math_risks.py:349:def test_powerlaw_injection_matches_exact_log_edges_within_tolerance() -> None
 tests/unit/test_numba_helpers.py:15:def _reload_with_env(module_name: str, disable_numba: bool=False)
 tests/unit/test_numba_helpers.py:24:def _mass_budget_python(N_old: Iterable[float], N_new: Iterable[float], m: Iterable[float], prod: float, dt: float, extra: float) -> float
 tests/unit/test_numba_helpers.py:37:def test_compute_prod_subblow_area_rate_numba_matches_numpy(monkeypatch) -> None

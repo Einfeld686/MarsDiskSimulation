@@ -29,6 +29,7 @@ class StreamingState:
         *,
         enabled: bool,
         outdir: Path,
+        merge_outdir: Optional[Path] = None,
         compression: str = "snappy",
         memory_limit_gb: float = 10.0,
         step_flush_interval: int = 10000,
@@ -40,6 +41,7 @@ class StreamingState:
     ) -> None:
         self.enabled = bool(enabled)
         self.outdir = Path(outdir)
+        self.merge_outdir = Path(merge_outdir) if merge_outdir is not None else self.outdir
         self.compression = compression
         self.memory_limit_bytes = float(memory_limit_gb) * (1024.0**3)
         self.step_flush_interval = int(step_flush_interval) if step_flush_interval > 0 else 0
@@ -140,9 +142,10 @@ class StreamingState:
     def merge_chunks(self) -> None:
         if not self.enabled or not self.merge_at_end:
             return
+        merge_root = self.merge_outdir if self.merge_outdir is not None else self.outdir
         run_chunks = self._existing_chunks(self.run_chunks)
         if run_chunks:
-            merged = self._merge_parquet_chunks(run_chunks, self.outdir / "series" / "run.parquet")
+            merged = self._merge_parquet_chunks(run_chunks, merge_root / "series" / "run.parquet")
             if merged and self.cleanup_chunks:
                 removed = self._cleanup_chunk_files(run_chunks)
                 if removed:
@@ -151,7 +154,7 @@ class StreamingState:
         psd_chunks = self._existing_chunks(self.psd_chunks)
         if psd_chunks:
             merged = self._merge_parquet_chunks(
-                psd_chunks, self.outdir / "series" / "psd_hist.parquet"
+                psd_chunks, merge_root / "series" / "psd_hist.parquet"
             )
             if merged and self.cleanup_chunks:
                 removed = self._cleanup_chunk_files(psd_chunks)
@@ -161,7 +164,7 @@ class StreamingState:
         diag_chunks = self._existing_chunks(self.diag_chunks)
         if diag_chunks:
             merged = self._merge_parquet_chunks(
-                diag_chunks, self.outdir / "series" / "diagnostics.parquet"
+                diag_chunks, merge_root / "series" / "diagnostics.parquet"
             )
             if merged and self.cleanup_chunks:
                 removed = self._cleanup_chunk_files(diag_chunks)

@@ -148,6 +148,7 @@ class SupplyParams:
     supply_s_inj_min: float | None
     supply_s_inj_max: float | None
     supply_q: float
+    supply_mass_weights: np.ndarray | None
     supply_velocity_cfg: "SupplyInjectionVelocity | None"
 
 
@@ -189,6 +190,7 @@ def supply_mass_rate_to_number_source(
     s_min_eff: float,
     *,
     widths: np.ndarray | None = None,
+    mass_weights: np.ndarray | None = None,
     mode: str = "min_bin",
     s_inj_min: float | None = None,
     s_inj_max: float | None = None,
@@ -201,8 +203,9 @@ def supply_mass_rate_to_number_source(
     ``sum(m_k * F_k) == prod_subblow_mass_rate`` holds by construction.
     When ``mode='powerlaw_bins'`` the mass is distributed over bins in the
     range ``[s_inj_min, s_inj_max]`` with ``dN/ds ∝ s^{-q}``, scaled to
-    preserve the total supplied mass.  Negative mass fluxes are treated as
-    zero.
+    preserve the total supplied mass. When ``mode='initial_psd'`` the supplied
+    mass follows the provided per-bin mass weights. Negative mass fluxes are
+    treated as zero.
     """
 
     global _NUMBA_FAILED
@@ -218,6 +221,23 @@ def supply_mass_rate_to_number_source(
         return np.zeros_like(m_arr)
 
     mode_normalised = str(mode or "min_bin")
+    if mode_normalised == "initial_psd":
+        if mass_weights is None:
+            raise MarsDiskError("initial_psd mode requires mass_weights")
+        weights_arr = np.asarray(mass_weights, dtype=float)
+        if weights_arr.shape != s_arr.shape:
+            raise MarsDiskError("mass_weights must match the shape of s_bin_center")
+        weights_arr = np.where(np.isfinite(weights_arr) & (weights_arr > 0.0), weights_arr, 0.0)
+        weights_sum = float(np.sum(weights_arr))
+        if weights_sum <= 0.0:
+            raise MarsDiskError("initial_psd mass_weights must sum to a positive value")
+        weights_arr = weights_arr / weights_sum
+        F_weights = np.zeros_like(m_arr, dtype=float)
+        positive = (weights_arr > 0.0) & (m_arr > 0.0)
+        if np.any(positive):
+            F_weights[positive] = prod_rate * weights_arr[positive] / m_arr[positive]
+        return F_weights
+
     inj_floor = float(max(s_min_eff, 0.0))
     if s_inj_min is not None and math.isfinite(s_inj_min):
         inj_floor = max(inj_floor, float(s_inj_min))
@@ -779,6 +799,7 @@ def step_collisions(
         supply_s_inj_min=ctx.supply.supply_s_inj_min,
         supply_s_inj_max=ctx.supply.supply_s_inj_max,
         supply_q=ctx.supply.supply_q,
+        supply_mass_weights=ctx.supply.supply_mass_weights,
         supply_velocity_cfg=ctx.supply.supply_velocity_cfg,
         headroom_policy=ctx.control.headroom_policy,
         energy_bookkeeping_enabled=ctx.control.energy_bookkeeping_enabled,
@@ -814,6 +835,7 @@ def step_collisions_smol_0d(
     supply_s_inj_min: float | None = None,
     supply_s_inj_max: float | None = None,
     supply_q: float = 3.5,
+    supply_mass_weights: np.ndarray | None = None,
     supply_velocity_cfg: "SupplyInjectionVelocity | None" = None,
     headroom_policy: str = "clip",
     energy_bookkeeping_enabled: bool = False,
@@ -1155,6 +1177,7 @@ def step_collisions_smol_0d(
         m_k,
         s_min_eff=s_min_effective if s_min_effective is not None else 0.0,
         widths=widths_arr,
+        mass_weights=supply_mass_weights,
         mode=supply_injection_mode,
         s_inj_min=supply_s_inj_min,
         s_inj_max=supply_s_inj_max,

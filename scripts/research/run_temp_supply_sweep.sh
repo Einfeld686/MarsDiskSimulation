@@ -616,6 +616,12 @@ PY
               hook_rc=$?
               set -e
               ;;
+            archive)
+              set +e
+              python scripts/runsets/common/hooks/archive_run.py --run-dir "${final_dir}"
+              hook_rc=$?
+              set -e
+              ;;
             *)
               echo "[warn] unknown hook: ${hook}"
               hook_rc=0

@@ -595,6 +595,10 @@ if /i "%HOOK%"=="eval" (
   python scripts\\runsets\\common\\hooks\\evaluate_tau_supply.py --run-dir "%RUN_DIR%"
   exit /b %errorlevel%
 )
+if /i "%HOOK%"=="archive" (
+  python scripts\\runsets\\common\\hooks\\archive_run.py --run-dir "%RUN_DIR%"
+  exit /b %errorlevel%
+)
 echo.[warn] unknown hook: %HOOK%
 exit /b 0
 

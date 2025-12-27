@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+import json
 import math
 
 import numpy as np
@@ -8,7 +9,7 @@ import pandas as pd
 import pytest
 
 from marsdisk import constants, grid, run as run_module, schema
-from marsdisk.physics import collisions_smol, psd, radiation, surface
+from marsdisk.physics import collisions_smol, psd, radiation, sinks, surface
 
 
 def _reference_rebin_dnds(
@@ -186,6 +187,59 @@ def _surface_ode_config(
     )
 
 
+def _blowout_record_config(outdir: Path, *, s_min: float) -> schema.Config:
+    t_end_s = 200.0
+    geometry = schema.Geometry(mode="0D")
+    material = schema.Material(rho=3000.0)
+    disk = schema.Disk(
+        geometry=schema.DiskGeometry(
+            r_in_RM=4.13,
+            r_out_RM=4.13,
+            r_profile="uniform",
+            p_index=0.0,
+        )
+    )
+    radiation_cfg = schema.Radiation(TM_K=2000.0, Q_pr=1.0)
+    sizes = schema.Sizes(s_min=s_min, s_max=1.0e-3, n_bins=16)
+    initial = schema.Initial(mass_total=1.0e-12, s0_mode="upper")
+    dynamics = schema.Dynamics(
+        e0=0.01,
+        i0=0.01,
+        t_damp_orbits=100.0,
+        f_wake=1.0,
+        e_mode="fixed",
+        i_mode="fixed",
+        e_profile=schema.DynamicsEccentricityProfile(mode="off"),
+    )
+    psd_cfg = schema.PSD(alpha=3.5, wavy_strength=0.0)
+    qstar_cfg = schema.QStar(Qs=1e3, a_s=1.0, B=1.0, b_g=1.0, v_ref_kms=[1.0])
+    numerics = schema.Numerics(
+        t_end_years=t_end_s / run_module.SECONDS_PER_YEAR,
+        dt_init=t_end_s / 2.0,
+    )
+    io = schema.IO(outdir=outdir)
+    sinks_cfg = schema.Sinks(mode="none", enable_sublimation=False)
+    shielding = schema.Shielding(mode="off")
+    surface_cfg = schema.Surface(collision_solver="surface_ode", use_tcoll=False)
+
+    return schema.Config(
+        geometry=geometry,
+        disk=disk,
+        material=material,
+        radiation=radiation_cfg,
+        sizes=sizes,
+        initial=initial,
+        dynamics=dynamics,
+        psd=psd_cfg,
+        qstar=qstar_cfg,
+        numerics=numerics,
+        io=io,
+        sinks=sinks_cfg,
+        shielding=shielding,
+        surface=surface_cfg,
+    )
+
+
 def test_tcoll_uses_vertical_tau(tmp_path: Path) -> None:
     outdir = tmp_path / "surface_ode"
     dt_init = 200.0
@@ -253,3 +307,90 @@ def test_fragment_tensor_largest_remnant_bin_matches_size(monkeypatch: pytest.Mo
 
     assert np.isclose(Y[k_expected, i, j], expected_y, rtol=1.0e-6, atol=0.0)
     assert Y[k_lr, i, j] == pytest.approx(0.0, abs=1.0e-12)
+
+
+def test_blowout_recorded_matches_physical_radius(tmp_path: Path) -> None:
+    s_min_config = 1.0e-5
+    outdir = tmp_path / "blowout_record"
+    cfg = _blowout_record_config(outdir, s_min=s_min_config)
+
+    run_module.run_zero_d(cfg)
+
+    summary = json.loads((outdir / "summary.json").read_text())
+    s_blow_recorded = float(summary["s_blow_m"])
+    s_blow_physical = radiation.blowout_radius(
+        cfg.material.rho,
+        cfg.radiation.TM_K,
+        Q_pr=cfg.radiation.Q_pr,
+    )
+
+    assert s_blow_physical < s_min_config
+    assert s_blow_recorded == pytest.approx(s_blow_physical, rel=1.0e-3, abs=0.0)
+
+
+def test_sublimation_sink_reference_timescale_uses_inverse_omega(monkeypatch: pytest.MonkeyPatch) -> None:
+    seen: dict[str, float] = {}
+
+    def _fake_s_sink(T: float, rho: float, t_ref: float, params: object) -> float:
+        seen["t_ref"] = float(t_ref)
+        return 1.0
+
+    monkeypatch.setattr(sinks, "s_sink_from_timescale", _fake_s_sink)
+    opts = sinks.SinkOptions(enable_sublimation=True)
+    Omega = 2.5
+
+    sinks.total_sink_timescale(1500.0, 3000.0, Omega, opts, s_ref=1.0e-6)
+
+    assert "t_ref" in seen
+    expected = 1.0 / Omega
+    assert math.isclose(seen["t_ref"], expected, rel_tol=1.0e-12, abs_tol=0.0)
+
+
+def test_powerlaw_injection_matches_exact_log_edges_within_tolerance() -> None:
+    s_min = 1.0e-6
+    s_max = 3.0
+    n_bins = 40
+    psd_state = psd.update_psd_state(
+        s_min=s_min,
+        s_max=s_max,
+        alpha=1.5,
+        wavy_strength=0.0,
+        n_bins=n_bins,
+        rho=3000.0,
+    )
+
+    sizes = np.asarray(psd_state["sizes"], dtype=float)
+    widths = np.asarray(psd_state["widths"], dtype=float)
+    edges = np.asarray(psd_state["edges"], dtype=float)
+    rho = 3000.0
+    m_k = (4.0 / 3.0) * np.pi * rho * sizes**3
+    prod_rate = 1.0e-9
+    q = 3.5
+
+    F_code = collisions_smol.supply_mass_rate_to_number_source(
+        prod_rate,
+        sizes,
+        m_k,
+        s_min_eff=s_min,
+        widths=widths,
+        mode="powerlaw_bins",
+        q=q,
+    )
+
+    left_edges = np.maximum(edges[:-1], s_min)
+    right_edges = np.minimum(edges[1:], float(np.max(sizes)))
+    mask = right_edges > left_edges
+    weights = np.zeros_like(sizes, dtype=float)
+    power = 1.0 - q
+    if np.any(mask):
+        weights[mask] = (right_edges[mask] ** power - left_edges[mask] ** power) / power
+    weights = np.where(np.isfinite(weights) & (weights > 0.0), weights, 0.0)
+    mass_sum = float(np.sum(weights * m_k))
+    F_exact = np.zeros_like(sizes, dtype=float)
+    positive = (weights > 0.0) & (m_k > 0.0)
+    if mass_sum > 0.0 and np.any(positive):
+        F_exact[positive] = weights[positive] * prod_rate / mass_sum
+
+    assert np.isclose(np.sum(m_k * F_code), prod_rate, rtol=1.0e-6, atol=0.0)
+    rel = np.abs((F_code[F_exact > 0.0] - F_exact[F_exact > 0.0]) / F_exact[F_exact > 0.0])
+    assert float(np.max(rel)) <= 0.1
