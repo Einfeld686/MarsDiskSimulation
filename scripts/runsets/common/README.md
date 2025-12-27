@@ -96,8 +96,9 @@
 | `supply.const.mu_reference_tau` | `1.0` | 供給スケールの参照 τ（スイープ既定に合わせて固定） |
 | `supply.mixing.epsilon_mix` | `1.0` | 混合効率（0〜1） |
 | `supply.transport.mode` | `direct` | `deep_mixing` は深部リザーバ経由 |
-| `supply.injection.mode` | `powerlaw_bins` | `min_bin` も可 |
-| `supply.injection.q` | `3.5` | 供給 PSD の指数 |
+| `supply.injection.mode` | `initial_psd` | `powerlaw_bins` / `min_bin` も可 |
+| `supply.injection.q` | `3.5` | `powerlaw_bins` 用の供給 PSD 指数 |
+| `supply.injection.velocity.mode` | `inherit` | 供給粒子の e/i は dynamics（e_profile 反映後）を継承 |
 | `supply.table.path` | `data/supply_rate.csv` | `mode=table` のとき使用 |
 
 ### 昇華・シンク
@@ -287,7 +288,7 @@
   - `enabled=true`（未指定だが既定）
   - `mode=const`, `const.prod_area_rate_kg_m2_s=0.0`（実質供給ゼロ）
   - `mixing.epsilon_mix=1.0`, `feedback/reservoir/temperature.enabled=false`
-  - `transport.mode=direct`, `injection.mode=powerlaw_bins`, `injection.q=3.5`
+  - `transport.mode=direct`, `injection.mode=initial_psd`
   - `table.path=data/supply_rate.csv`, `table.interp=linear`（`mode=table` 用の予備設定）
 - 選択肢と意味:
   - `enabled`:
@@ -313,8 +314,9 @@
     - `hard`: τ=1 の余裕が無い場合は強制的にゼロ供給
     - `soft`: 余裕に応じて滑らかに抑制（将来拡張向け）
   - `injection.mode`:
+    - `initial_psd`: 初期 PSD の質量比で供給（推奨）
     - `min_bin`: 最小ビンに集中
-    - `powerlaw_bins`: サイズ範囲に分配（推奨）
+    - `powerlaw_bins`: サイズ範囲に分配（`q` を使用）
   - `injection.velocity.mode`（未指定なら既定 `inherit`）:
     - `inherit`: ベースの e/i を継承
     - `fixed_ei`: `e_inj`/`i_inj` を固定指定

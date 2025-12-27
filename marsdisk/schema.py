@@ -396,9 +396,13 @@ class SupplyInjectionVelocity(BaseModel):
 class SupplyInjection(BaseModel):
     """Controls how external supply is injected into the PSD and surface layer (non-default values are deprecated)."""
 
-    mode: Literal["min_bin", "powerlaw_bins"] = Field(
+    mode: Literal["min_bin", "powerlaw_bins", "initial_psd"] = Field(
         "min_bin",
-        description="Injection mapping: 'min_bin' targets the smallest valid bin; 'powerlaw_bins' spreads mass across a size range.",
+        description=(
+            "Injection mapping: 'min_bin' targets the smallest valid bin; "
+            "'powerlaw_bins' spreads mass across a size range; "
+            "'initial_psd' matches the initial PSD mass weights."
+        ),
     )
     s_inj_min: Optional[float] = Field(
         None,
@@ -1807,6 +1811,100 @@ class Streaming(BaseModel):
         return int(value)
 
 
+class Archive(BaseModel):
+    """Archive controls for offloading completed runs to external storage."""
+
+    enabled: bool = Field(
+        False,
+        description="Enable post-run archiving to external storage.",
+    )
+    dir: Optional[Path] = Field(
+        None,
+        description="Archive root directory (required when enabled).",
+    )
+    mode: Literal["copy", "move"] = Field(
+        "copy",
+        description="Archive transfer mode (copy or move).",
+    )
+    trigger: Literal["post_finalize", "post_merge"] = Field(
+        "post_finalize",
+        description="Archive trigger timing.",
+    )
+    merge_target: Literal["local", "external"] = Field(
+        "external",
+        description="Target location for merged Parquet outputs.",
+    )
+    verify: bool = Field(
+        True,
+        description="Enable archive verification checks.",
+    )
+    verify_level: Literal["standard", "standard_plus", "strict"] = Field(
+        "standard_plus",
+        description="Verification strictness level.",
+    )
+    keep_local: Literal["none", "metadata", "all"] = Field(
+        "metadata",
+        description="What to keep in the local run directory after archiving.",
+    )
+    record_volume_info: bool = Field(
+        True,
+        description="Record archive volume identifiers in run_card.md when available.",
+    )
+    warn_slow_mb_s: Optional[float] = Field(
+        40.0,
+        description="Warn if archive throughput falls below this MB/s threshold.",
+    )
+    warn_slow_min_gb: float = Field(
+        5.0,
+        description="Minimum transfer size (GB) to evaluate slow-device warnings.",
+    )
+    min_free_gb: Optional[float] = Field(
+        None,
+        description="Optional minimum free space threshold in gigabytes.",
+    )
+
+    @field_validator("dir")
+    def _coerce_dir(cls, value: Optional[Path]) -> Optional[Path]:
+        if value is None:
+            return None
+        try:
+            text = str(value).strip()
+        except Exception:
+            return value
+        if text == "":
+            return None
+        return Path(text)
+
+    @field_validator("min_free_gb")
+    def _check_min_free_gb(cls, value: Optional[float]) -> Optional[float]:
+        if value is None:
+            return value
+        if value <= 0.0 or not math.isfinite(value):
+            raise ConfigurationError("io.archive.min_free_gb must be positive when specified")
+        return float(value)
+
+    @field_validator("warn_slow_mb_s")
+    def _check_warn_slow_mb_s(cls, value: Optional[float]) -> Optional[float]:
+        if value is None:
+            return value
+        if value <= 0.0 or not math.isfinite(value):
+            raise ConfigurationError("io.archive.warn_slow_mb_s must be positive when specified")
+        return float(value)
+
+    @field_validator("warn_slow_min_gb")
+    def _check_warn_slow_min_gb(cls, value: float) -> float:
+        if value <= 0.0 or not math.isfinite(value):
+            raise ConfigurationError("io.archive.warn_slow_min_gb must be positive")
+        return float(value)
+
+    @model_validator(mode="after")
+    def _check_archive_dir(self) -> "Archive":
+        if self.enabled:
+            if self.dir is None or str(self.dir).strip() == "":
+                raise ConfigurationError("io.archive.dir must be set when io.archive.enabled=true")
+        return self
+
+
 class IO(BaseModel):
     """Output directories."""
 
@@ -1814,6 +1912,7 @@ class IO(BaseModel):
     step_diagnostics: StepDiagnostics = StepDiagnostics()
     progress: Progress = Progress()
     streaming: Streaming = Field(default_factory=Streaming)
+    archive: Archive = Field(default_factory=Archive)
     psd_history: bool = Field(
         True,
         description="Write per-bin PSD history to series/psd_hist.parquet.",

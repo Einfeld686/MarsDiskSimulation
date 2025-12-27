@@ -103,8 +103,10 @@ supply:
   transport:
     mode: direct
   injection:
-    mode: powerlaw_bins
+    mode: initial_psd
     q: 3.5
+    velocity:
+      mode: inherit
 sinks:
   mode: sublimation
   enable_sublimation: true

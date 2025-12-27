@@ -40,52 +40,52 @@
 ## 6. 監査チェックリスト
 
 ### 6.1 放射圧・ブローアウト（E.005, E.008, E.012–E.014）
-- [ ] E.005: Q_pr テーブル読み込みの仕様と `marsdisk/io/tables.py` の一致を確認
-- [ ] E.012: Q_pr の平均化式・フォールバック挙動が `marsdisk/physics/radiation.py` と一致
-- [ ] E.013: β 定義の式とコードが一致
-- [ ] E.014: a_blow 定義の式とコードが一致
-- [ ] E.008: s_min の決定ロジック（blowout/床/診断）の整合確認
-- [ ] 状態更新: 「一致」/「不一致」を表に反映
+- [x] E.005: Q_pr テーブル読み込みの仕様と `marsdisk/io/tables.py` の一致を確認
+- [x] E.012: Q_pr の平均化式・フォールバック挙動が `marsdisk/physics/radiation.py` と一致
+- [x] E.013: β 定義の式とコードが一致
+- [x] E.014: a_blow 定義の式とコードが一致
+- [x] E.008: s_min の決定ロジック（blowout/床/診断）の整合確認
+- [x] 状態更新: 「一致」/「不一致」を表に反映
 
 ### 6.2 表層 ODE・アウトフロー（E.006–E.009）
-- [ ] E.006: t_coll の定義が `marsdisk/physics/surface.py` と一致
-- [ ] E.007: 表層 ODE の式と符号が一致
-- [ ] E.009: outflux の式と単位が一致
-- [ ] TL2003 分岐（ALLOW_TL2003）の適用条件が仕様と一致
-- [ ] 状態更新: 「一致」/「不一致」を表に反映
+- [x] E.006: t_coll の定義が `marsdisk/physics/surface.py` と一致
+- [x] E.007: 表層 ODE の式と符号が一致
+- [x] E.009: outflux の式と単位が一致
+- [x] TL2003 分岐（ALLOW_TL2003）の適用条件が仕様と一致
+- [x] 状態更新: 「一致」/「不一致」を表に反映
 
 ### 6.3 衝突カーネル（E.024）
-- [ ] C_ij の定義（1+δ_ij の扱い）を `marsdisk/physics/collide.py` と一致確認
-- [ ] カーネルの単位・幾何補正（H_ij）を確認
-- [ ] 状態更新: 「一致」/「不一致」を表に反映
+- [x] C_ij の定義（1+δ_ij の扱い）を `marsdisk/physics/collide.py` と一致確認
+- [x] カーネルの単位・幾何補正（H_ij）を確認
+- [x] 状態更新: 「一致」/「不一致」を表に反映
 
 ### 6.4 破砕・残骸分率（E.026, E.032–E.033）
-- [ ] E.026: Q_D* の補間/外挿と文献の整合確認（`marsdisk/physics/qstar.py`）
-- [ ] E.032: Q_R の定義と実装一致確認
-- [ ] E.033: 最大残骸分率の式と `marsdisk/physics/fragments.py` の一致確認
-- [ ] 状態更新: 「一致」/「不一致」を表に反映
+- [x] E.026: Q_D* の補間/外挿と文献の整合確認（`marsdisk/physics/qstar.py`）
+- [x] E.032: Q_R の定義と実装一致確認
+- [x] E.033: 最大残骸分率の式と `marsdisk/physics/fragments.py` の一致確認
+- [x] 状態更新: 「一致」/「不一致」を表に反映
 
 ### 6.5 PSD 形状・最小粒径（E.008, E.053）
-- [ ] E.008: s_min 判定が `marsdisk/run_zero_d.py` と一致
-- [ ] E.053: surface-energy floor の一般式が `marsdisk/run_zero_d.py` と一致
-- [ ] wavy PSD 補正の仕様記述と `marsdisk/physics/psd.py` の一致確認
-- [ ] 状態更新: 「一致」/「不一致」を表に反映
+- [x] E.008: s_min 判定が `marsdisk/run_zero_d.py` と一致
+- [x] E.053: surface-energy floor の一般式が `marsdisk/run_zero_d.py` と一致
+- [x] wavy PSD 補正の仕様記述と `marsdisk/physics/psd.py` の一致確認
+- [x] 状態更新: 「一致」/「不一致」を表に反映
 
 ### 6.6 速度分散・相対速度（E.020–E.021）
-- [ ] E.020: v_ij の式と `marsdisk/physics/dynamics.py` の一致確認
-- [ ] E.021: c_eq の定義・単位・NumPy/Numba の一致確認
-- [ ] 状態更新: 「一致」/「不一致」を表に反映
+- [x] E.020: v_ij の式と `marsdisk/physics/dynamics.py` の一致確認
+- [x] E.021: c_eq の定義・単位・NumPy/Numba の一致確認
+- [x] 状態更新: 「一致」/「不一致」を表に反映
 
 ### 6.7 0D 統合ループ（analysis/run-recipes.md ↔ run_zero_d）
-- [ ] 出力列（series/summary/checks）が仕様どおりに生成されているか確認
-- [ ] 質量収支ログ（C4）と `mass_budget.csv` の項目整合確認
-- [ ] ストリーミング ON/OFF の動作仕様が一致しているか確認
-- [ ] 状態更新: 「一致」/「不一致」を表に反映
+- [x] 出力列（series/summary/checks）が仕様どおりに生成されているか確認
+- [x] 質量収支ログ（C4）と `mass_budget.csv` の項目整合確認
+- [x] ストリーミング ON/OFF の動作仕様が一致しているか確認
+- [x] 状態更新: 「一致」/「不一致」を表に反映
 
 ---
 
 ## 7. 不一致発見時の対応（実装タスク）
-- [ ] `20251227_spec_impl_literature_map.md` の「問題点・ギャップ」へ記録
+- [x] `20251227_spec_impl_literature_map.md` の「問題点・ギャップ」へ記録
 - [ ] 仕様修正 or 実装修正の方針を明記し、該当箇所を修正
 - [ ] 必要なテストを追加/更新
 - [ ] `analysis/` 更新時は DocSyncAgent → analysis-doc-tests → evaluation_system を実行

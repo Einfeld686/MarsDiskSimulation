@@ -105,7 +105,7 @@ def total_sink_timescale(
 
     components: dict[str, Optional[float]] = {"sublimation": None, "gas_drag": None}
     entries: list[tuple[str, float]] = []
-    t_orb = 2.0 * math.pi / Omega
+    t_ref = 1.0 / Omega
     params = opts.sub_params
     radius_m = getattr(params, "runtime_orbital_radius_m", None)
     if radius_m is not None:
@@ -122,9 +122,9 @@ def total_sink_timescale(
         T_eval = T_use
 
     if opts.enable_sublimation:
-        s_sink = s_sink_from_timescale(T_eval, rho_p, t_orb, params)
+        s_sink = s_sink_from_timescale(T_eval, rho_p, t_ref, params)
         if s_sink > 0.0:
-            sub_timescale = t_orb * s_ref / s_sink
+            sub_timescale = t_ref * s_ref / s_sink
             components["sublimation"] = sub_timescale
             entries.append(("sublimation", sub_timescale))
 
@@ -144,10 +144,10 @@ def total_sink_timescale(
         )
     dominant_sink, t_min = min(entries, key=lambda item: item[1])
     logger.info(
-        "total_sink_timescale: T_use=%f T_eval=%f t_orb=%e -> t_sink=%e (dominant=%s)",
+        "total_sink_timescale: T_use=%f T_eval=%f t_ref=%e -> t_sink=%e (dominant=%s)",
         T_use,
         T_eval,
-        t_orb,
+        t_ref,
         t_min,
         dominant_sink,
     )

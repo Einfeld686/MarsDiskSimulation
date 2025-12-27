@@ -15,7 +15,7 @@ import pandas as pd
 
 from . import config_utils, constants, grid
 from .errors import ConfigurationError, NumericalError, PhysicsError
-from .io import tables, writer
+from .io import tables, writer, archive as archive_mod
 from .io.streaming import StreamingState
 from .orchestrator import (
     resolve_time_grid as _resolve_time_grid,
@@ -552,6 +552,27 @@ def run_one_d(
         )
         psd_state_template["s_min"] = s_min_effective
     psd.sanitize_and_normalize_number(psd_state_template, normalize=False)
+    supply_injection_weights = None
+    if supply_injection_mode == "initial_psd":
+        sizes_arr = np.asarray(psd_state_template.get("sizes"), dtype=float)
+        widths_arr = np.asarray(psd_state_template.get("widths"), dtype=float)
+        number_raw = psd_state_template.get("number")
+        if number_raw is None:
+            number_raw = psd_state_template.get("n")
+        if number_raw is None:
+            raise ConfigurationError("initial_psd supply injection requires PSD number densities")
+        number_arr = np.asarray(number_raw, dtype=float)
+        if (
+            sizes_arr.shape != widths_arr.shape
+            or sizes_arr.shape != number_arr.shape
+            or sizes_arr.size == 0
+        ):
+            raise ConfigurationError("initial_psd supply injection requires sizes/widths/number arrays with matching shapes")
+        weights = sizes_arr**3 * widths_arr * number_arr
+        weights = np.where(np.isfinite(weights) & (weights > 0.0), weights, 0.0)
+        if float(np.sum(weights)) <= 0.0:
+            raise ConfigurationError("initial_psd supply injection requires positive mass weights from the initial PSD")
+        supply_injection_weights = weights
 
     kappa_surf_initial = ensure_finite_kappa(psd.compute_kappa(psd_state_template), label="kappa_surf_initial")
     kappa_eff0 = kappa_surf_initial
@@ -875,6 +896,46 @@ def run_one_d(
     streaming_compression = str(getattr(streaming_cfg, "compression", "snappy") or "snappy")
     streaming_merge_at_end = bool(getattr(streaming_cfg, "merge_at_end", True))
     streaming_cleanup_chunks = bool(getattr(streaming_cfg, "cleanup_chunks", True))
+
+    archive_cfg = getattr(cfg.io, "archive", None)
+    archive_enabled_cfg = bool(archive_cfg and getattr(archive_cfg, "enabled", False))
+    archive_enabled = archive_enabled_cfg
+    archive_forced_off = False
+    archive_forced_on = False
+    io_archive_flag = _env_flag("IO_ARCHIVE")
+    if io_archive_flag is False:
+        archive_enabled = False
+        archive_forced_off = True
+    elif io_archive_flag is True:
+        archive_enabled = True
+        archive_forced_on = True
+    archive_dir_raw = getattr(archive_cfg, "dir", None) if archive_cfg else None
+    archive_dir = Path(archive_dir_raw).expanduser() if archive_dir_raw else None
+    archive_trigger = str(getattr(archive_cfg, "trigger", "post_finalize") or "post_finalize").lower()
+    archive_merge_target = str(getattr(archive_cfg, "merge_target", "external") or "external").lower()
+    archive_verify = bool(getattr(archive_cfg, "verify", True)) if archive_cfg else True
+    archive_verify_level = str(getattr(archive_cfg, "verify_level", "standard_plus") or "standard_plus")
+    archive_keep_local = str(getattr(archive_cfg, "keep_local", "metadata") or "metadata").lower()
+    archive_mode = str(getattr(archive_cfg, "mode", "copy") or "copy").lower()
+    archive_record_volume_info = bool(getattr(archive_cfg, "record_volume_info", True)) if archive_cfg else True
+    archive_warn_slow_mb_s = getattr(archive_cfg, "warn_slow_mb_s", 40.0) if archive_cfg else 40.0
+    archive_warn_slow_min_gb = getattr(archive_cfg, "warn_slow_min_gb", 5.0) if archive_cfg else 5.0
+    archive_min_free_gb = getattr(archive_cfg, "min_free_gb", None) if archive_cfg else None
+    archive_root_resolved: Optional[Path] = None
+    archive_dest_dir: Optional[Path] = None
+    if archive_dir is not None:
+        try:
+            archive_root_resolved = archive_dir.resolve()
+            archive_dest_dir = archive_mod.resolve_archive_dest(archive_root_resolved, outdir)
+        except Exception:
+            archive_root_resolved = None
+            archive_dest_dir = None
+
+    streaming_merge_outdir: Optional[Path] = None
+    if archive_enabled and archive_merge_target == "external" and archive_dest_dir is not None:
+        streaming_merge_outdir = archive_dest_dir
+        if archive_trigger == "post_finalize":
+            streaming_cleanup_chunks = False
     psd_history_enabled = bool(getattr(cfg.io, "psd_history", True))
     psd_history_stride = int(getattr(cfg.io, "psd_history_stride", 1) or 1)
     if psd_history_stride < 1:
@@ -884,6 +945,7 @@ def run_one_d(
     streaming_state = StreamingState(
         enabled=streaming_enabled,
         outdir=Path(cfg.io.outdir),
+        merge_outdir=streaming_merge_outdir,
         compression=streaming_compression,
         memory_limit_gb=streaming_memory_limit_gb,
         step_flush_interval=streaming_step_interval,
@@ -1521,6 +1583,7 @@ def run_one_d(
                                 supply_s_inj_min=supply_injection_s_min,
                                 supply_s_inj_max=supply_injection_s_max,
                                 supply_q=supply_injection_q,
+                                supply_mass_weights=supply_injection_weights,
                                 supply_velocity_cfg=supply_velocity_cfg,
                             ),
                             control=collisions_smol.CollisionControlFlags(
@@ -2667,10 +2730,65 @@ def run_one_d(
         "solar_radiation": solar_radiation,
         "sublimation_provenance": sublimation_provenance,
     }
+    run_config_snapshot["io"] = {
+        "outdir": str(outdir),
+        "streaming": {
+            "enabled": streaming_state.enabled,
+            "merge_at_end": streaming_merge_at_end if streaming_state.enabled else False,
+            "cleanup_chunks": streaming_cleanup_chunks if streaming_state.enabled else None,
+            "merge_outdir": str(streaming_state.merge_outdir) if streaming_state.enabled else None,
+        },
+        "archive": {
+            "enabled": archive_enabled,
+            "enabled_config": archive_enabled_cfg,
+            "forced_off_env": archive_forced_off,
+            "forced_on_env": archive_forced_on,
+            "dir": str(archive_dir) if archive_dir is not None else None,
+            "dir_resolved": str(archive_root_resolved) if archive_root_resolved is not None else None,
+            "trigger": archive_trigger,
+            "merge_target": archive_merge_target,
+            "verify": archive_verify,
+            "verify_level": archive_verify_level,
+            "mode": archive_mode,
+            "keep_local": archive_keep_local,
+            "record_volume_info": archive_record_volume_info,
+            "warn_slow_mb_s": archive_warn_slow_mb_s,
+            "warn_slow_min_gb": archive_warn_slow_min_gb,
+            "min_free_gb": archive_min_free_gb,
+        },
+    }
     run_config_snapshot["cell_parallel"] = cell_parallel_info
     if auto_tune_info is not None:
         run_config_snapshot["auto_tune"] = auto_tune_info
     writer.write_run_config(run_config_snapshot, run_config_path)
+
+    if archive_enabled and archive_trigger == "post_merge":
+        if archive_root_resolved is None and archive_dir is None:
+            logger.warning("Archive enabled but io.archive.dir is not set; skipping archive.")
+        else:
+            archive_settings = archive_mod.ArchiveSettings(
+                enabled=archive_enabled,
+                dir=archive_dir,
+                mode=archive_mode,
+                trigger=archive_trigger,
+                merge_target=archive_merge_target,
+                verify=archive_verify,
+                verify_level=archive_verify_level,
+                keep_local=archive_keep_local,
+                record_volume_info=archive_record_volume_info,
+                warn_slow_mb_s=archive_warn_slow_mb_s,
+                warn_slow_min_gb=archive_warn_slow_min_gb,
+                min_free_gb=archive_min_free_gb,
+            )
+            archive_root = archive_root_resolved or archive_dir
+            if archive_root is not None:
+                result = archive_mod.archive_run(
+                    outdir,
+                    archive_root=archive_root,
+                    settings=archive_settings,
+                )
+                if not result.success:
+                    logger.warning("Archive failed for %s: %s", outdir, "; ".join(result.errors))
 
     if mass_budget_max_error > MASS_BUDGET_TOLERANCE_PERCENT and enforce_mass_budget:
         raise MassBudgetViolationError(
