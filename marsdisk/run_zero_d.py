@@ -70,6 +70,7 @@ from .physics import (
     collide,
     qstar,
     collisions_smol,
+    eccentricity,
 )
 from .io import writer, tables, checkpoint as checkpoint_io
 from .io.diagnostics import write_zero_d_history as _write_zero_d_history, safe_float as _safe_float
@@ -153,19 +154,34 @@ def _surface_energy_floor(
     alpha: float,
     rho: float,
     v_rel: float,
+    s0: float,
     s_max: float,
 ) -> float:
-    """Return surface-energy-limited minimum size (Krijt & Kama inspired).
+    """Return surface-energy-limited minimum size (Krijt & Kama general form).
 
     Guards on invalid inputs and caps at s_max.
     """
 
-    if alpha <= 3.0 or gamma_J_m2 <= 0.0 or eta <= 0.0 or rho <= 0.0 or v_rel <= 0.0:
+    if (
+        alpha <= 3.0
+        or alpha >= 4.0
+        or gamma_J_m2 <= 0.0
+        or eta <= 0.0
+        or rho <= 0.0
+        or v_rel <= 0.0
+        or s0 <= 0.0
+        or s_max <= 0.0
+    ):
         return 0.0
-    term = (6.0 * gamma_J_m2 * (alpha - 3.0)) / (eta * rho * v_rel * v_rel)
-    if term <= 0.0:
+    factor = (1.0 / s0) + (eta * rho * v_rel * v_rel) / (24.0 * gamma_J_m2)
+    prefactor = (alpha - 3.0) / (4.0 - alpha)
+    rhs = prefactor * factor * (s_max ** (4.0 - alpha))
+    if rhs <= 0.0 or not math.isfinite(rhs):
         return 0.0
-    s_floor = (term ** 2) * (s_max ** (alpha - 5.0))
+    exponent = 1.0 / (3.0 - alpha)
+    s_floor = rhs ** exponent
+    if not math.isfinite(s_floor):
+        return 0.0
     if s_floor > s_max:
         return float(s_max)
     return float(max(s_floor, 0.0))
@@ -442,8 +458,12 @@ def run_zero_d(
             maxsize=int(getattr(qpr_cache_cfg, "maxsize", 256)) if qpr_cache_cfg is not None else 256,
             round_tol=float(round_tol_cfg) if round_tol_cfg is not None and float(round_tol_cfg) > 0.0 else None,
         )
+        radiation.configure_qpr_fallback(
+            strict=bool(getattr(radiation_cfg, "qpr_strict", False)),
+        )
     else:
         radiation.configure_qpr_cache(enabled=False, maxsize=0)
+        radiation.configure_qpr_fallback(strict=False)
     enforce_collisions_only = primary_scenario == "collisions_only"
     enforce_sublimation_only = primary_scenario == "sublimation_only"
     collisions_active = not enforce_sublimation_only
@@ -465,7 +485,17 @@ def run_zero_d(
         raise PhysicsError("Computed Keplerian frequency must be positive")
     t_orb = 2.0 * math.pi / Omega
 
-    e0_effective = cfg.dynamics.e0
+    e_profile_value, e_profile_meta = eccentricity.evaluate_e_profile(
+        getattr(cfg.dynamics, "e_profile", None),
+        r_m=r,
+        r_RM=r_RM,
+        log=logger,
+    )
+    if e_profile_value is not None:
+        e0_effective = float(e_profile_value)
+        cfg.dynamics.e0 = e0_effective
+    else:
+        e0_effective = cfg.dynamics.e0
     i0_effective = cfg.dynamics.i0
     delta_r_sample = None
 
@@ -533,20 +563,24 @@ def run_zero_d(
 
     qpr_override = None
     qpr_table_path_resolved: Optional[Path] = None
+    qpr_strict = False
     if cfg.radiation:
         qpr_table_path_resolved = cfg.radiation.qpr_table_resolved
         if qpr_table_path_resolved is not None:
             radiation.load_qpr_table(qpr_table_path_resolved)
         if cfg.radiation.Q_pr is not None:
             qpr_override = cfg.radiation.Q_pr
+        qpr_strict = bool(getattr(cfg.radiation, "qpr_strict", False))
     active_qpr_table = tables.get_qpr_table_path()
     if qpr_table_path_resolved is None and active_qpr_table is not None:
         qpr_table_path_resolved = active_qpr_table
     if qpr_override is None and qpr_table_path_resolved is None:
-        raise RuntimeError(
-            "⟨Q_pr⟩ lookup table not initialised. Provide radiation.qpr_table_path "
-            "or place a table under marsdisk/io/data."
-        )
+        if qpr_strict:
+            raise RuntimeError(
+                "⟨Q_pr⟩ lookup table not initialised and radiation.qpr_strict=true. "
+                "Provide radiation.qpr_table_path or radiation.Q_pr."
+            )
+        logger.warning("⟨Q_pr⟩ lookup table not initialised; using DEFAULT_Q_PR=1.")
     numerics_cfg = getattr(cfg, "numerics", None)
     t_end_years_cfg = 0.0
     if numerics_cfg is not None:
@@ -802,6 +836,12 @@ def run_zero_d(
         eta_se = float(getattr(cfg.surface_energy, "eta", 0.1))
         alpha_se = float(getattr(cfg.psd, "alpha", 3.5))
         s_max_se = float(getattr(cfg.sizes, "s_max", 1.0))
+        s0_override = getattr(cfg.surface_energy, "collider_size_m", None)
+        s0_se = float(s0_override) if s0_override is not None else s_max_se
+        f_lf_se = float(getattr(cfg.surface_energy, "largest_fragment_mass_fraction", 0.5))
+        if not (0.0 < f_lf_se <= 1.0):
+            raise ConfigurationError("surface_energy.largest_fragment_mass_fraction must be in (0, 1]")
+        s_max_frag = s0_se * (f_lf_se ** (1.0 / 3.0))
         v_rel_floor = dynamics.v_rel_pericenter(e0_effective, v_k=r * Omega)
         s_min_surface_energy = _surface_energy_floor(
             gamma_J_m2=gamma_se,
@@ -809,7 +849,8 @@ def run_zero_d(
             alpha=alpha_se,
             rho=rho_used,
             v_rel=v_rel_floor,
-            s_max=s_max_se,
+            s0=s0_se,
+            s_max=s_max_frag,
         )
         if s_min_surface_energy > s_max_se:
             logger.warning(
@@ -4427,6 +4468,8 @@ def run_zero_d(
                 writer.write_mass_budget(mass_budget, mass_budget_path)
     else:
         writer.write_mass_budget(mass_budget, mass_budget_path)
+    if orbit_rollup_enabled and streaming_state.enabled:
+        writer.write_orbit_rollup(history.orbit_rollup_rows, outdir / "orbit_rollup.csv")
 
     # Energy bookkeeping outputs (independent of bulk streaming)
     if energy_streaming_enabled:
@@ -4611,6 +4654,11 @@ def run_zero_d(
             "dr_dist": cfg.dynamics.dr_dist,
             "delta_r_sample_m": delta_r_sample,
             "e0_applied": e0_effective,
+            "e_profile_mode": e_profile_meta.get("mode") if isinstance(e_profile_meta, dict) else None,
+            "e_profile_r_kind": e_profile_meta.get("r_kind") if isinstance(e_profile_meta, dict) else None,
+            "e_profile_table_path": e_profile_meta.get("table_path") if isinstance(e_profile_meta, dict) else None,
+            "e_profile_formula": e_profile_meta.get("formula") if isinstance(e_profile_meta, dict) else None,
+            "e_profile_applied": bool(e_profile_meta.get("applied")) if isinstance(e_profile_meta, dict) else False,
             "i_mode": cfg.dynamics.i_mode,
             "obs_tilt_deg": cfg.dynamics.obs_tilt_deg,
             "i_spread_deg": cfg.dynamics.i_spread_deg,
@@ -4839,7 +4887,12 @@ def run_zero_d(
     run_config["T_M_used"] = float(T_use)
     run_config["rho_used"] = float(rho_used)
     run_config["Q_pr_used"] = float(qpr_mean)
-    qpr_source = "override" if qpr_override is not None else "table"
+    if qpr_override is not None:
+        qpr_source = "override"
+    elif qpr_table_path_resolved is not None:
+        qpr_source = "table"
+    else:
+        qpr_source = "fallback"
     run_config["radiation_provenance"] = {
         "qpr_table_path": str(qpr_table_path_resolved) if qpr_table_path_resolved is not None else None,
         "Q_pr_override": qpr_override,

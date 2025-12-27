@@ -14,6 +14,7 @@ _BASE_OVERRIDES = [
     "numerics.t_end_orbits=0.1",
     "numerics.t_end_years=null",
     "io.streaming.enable=false",
+    "dynamics.e_profile.mode=off",
     "phase.enabled=false",
     "surface.collision_solver=smol",
     "sinks.mode=\"none\"",
@@ -126,4 +127,3 @@ def test_supply_disabled_zeroes_rates(tmp_path: Path) -> None:
     assert np.isfinite(df[cols]).all().all()
     values = df[cols].fillna(0.0).to_numpy()
     assert np.all(np.abs(values) <= 1e-18)
-

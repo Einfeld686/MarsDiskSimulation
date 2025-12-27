@@ -17,6 +17,7 @@ def test_optical_depth_targets_los_tau(tmp_path) -> None:
         "configs/sweep_temp_supply/temp_supply_T4000_eps1.yml",
         overrides=[
             f"io.outdir={outdir}",
+            "dynamics.e_profile.mode=off",
             "optical_depth.tau0_target=1.0",
             "supply.enabled=false",
             "numerics.t_end_years=1e-9",

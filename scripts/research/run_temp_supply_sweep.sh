@@ -890,9 +890,25 @@ def load_downsampled_df(path: Path, columns, *, target_rows: int, batch_size: in
 
 
 run_dir = Path(os.environ["RUN_DIR"])
-series_path = run_dir / "series" / "run.parquet"
+series_dir = run_dir / "series"
+series_path = series_dir / "run.parquet"
 summary_path = run_dir / "summary.json"
-plots_dir = run_dir / "plots"
+
+def _is_one_d(series_dir: Path, series_path: Path) -> bool:
+    if series_path.exists():
+        try:
+            return "cell_index" in set(pq.read_schema(series_path).names)
+        except Exception:
+            return False
+    chunk_files = sorted(series_dir.glob("run_chunk_*.parquet"))
+    if not chunk_files:
+        return False
+    try:
+        return "cell_index" in set(pq.read_schema(chunk_files[0]).names)
+    except Exception:
+        return False
+
+plots_dir = run_dir / ("figures" if _is_one_d(series_dir, series_path) else "plots")
 plots_dir.mkdir(parents=True, exist_ok=True)
 
 if not series_path.exists():

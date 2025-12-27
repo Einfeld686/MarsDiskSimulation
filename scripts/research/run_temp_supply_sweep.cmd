@@ -456,12 +456,26 @@ for %%T in (%T_LIST%) do (
       >>"!PYSCRIPT!" echo matplotlib.use("Agg")
       >>"!PYSCRIPT!" echo import pandas as pd
       >>"!PYSCRIPT!" echo import matplotlib.pyplot as plt
+      >>"!PYSCRIPT!" echo import pyarrow.parquet as pq
       >>"!PYSCRIPT!" echo SEC_PER_YEAR = 3.15576e7
       >>"!PYSCRIPT!" echo run_dir = Path(os.environ["RUN_DIR"])
       >>"!PYSCRIPT!" echo series_dir = run_dir / "series"
       >>"!PYSCRIPT!" echo series_path = series_dir / "run.parquet"
       >>"!PYSCRIPT!" echo summary_path = run_dir / "summary.json"
-      >>"!PYSCRIPT!" echo plots_dir = run_dir / "plots"
+      >>"!PYSCRIPT!" echo def _is_one_d(series_dir, series_path):
+      >>"!PYSCRIPT!" echo     if series_path.exists():
+      >>"!PYSCRIPT!" echo         try:
+      >>"!PYSCRIPT!" echo             return "cell_index" in set(pq.read_schema(series_path).names)
+      >>"!PYSCRIPT!" echo         except Exception:
+      >>"!PYSCRIPT!" echo             return False
+      >>"!PYSCRIPT!" echo     chunk_paths = sorted(series_dir.glob("run_chunk_*.parquet"))
+      >>"!PYSCRIPT!" echo     if not chunk_paths:
+      >>"!PYSCRIPT!" echo         return False
+      >>"!PYSCRIPT!" echo     try:
+      >>"!PYSCRIPT!" echo         return "cell_index" in set(pq.read_schema(chunk_paths[0]).names)
+      >>"!PYSCRIPT!" echo     except Exception:
+      >>"!PYSCRIPT!" echo         return False
+      >>"!PYSCRIPT!" echo plots_dir = run_dir / ("figures" if _is_one_d(series_dir, series_path) else "plots")
       >>"!PYSCRIPT!" echo plots_dir.mkdir(parents=True, exist_ok=True)
       >>"!PYSCRIPT!" echo
       >>"!PYSCRIPT!" echo series_cols = [

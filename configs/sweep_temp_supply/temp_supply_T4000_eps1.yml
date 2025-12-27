@@ -39,6 +39,8 @@ dynamics:
   kernel_H_mode: ia
   H_factor: 1.0
   e_mode: mars_clearance
+  e_profile:
+    mode: off
   dr_min_m: 1.2e6     # ≈e~0.5 at r~2 R_M, avoids負のe
   dr_max_m: 4.0e6     # ≈e~0.2 at r~2–2.7 R_M
   dr_dist: uniform

@@ -31,18 +31,43 @@ __all__ = [
     "set_gravity_velocity_mu",
 ]
 
-# Coefficients from [@BenzAsphaug1999_Icarus142_5] evaluated at reference velocities in km/s.
-# Basalt-like material parameters follow [@LeinhardtStewart2012_ApJ745_79].
+# Coefficients derived from the basalt-like reference values used in this module.
+#
+# Notes on the built-in 1–7 km/s table
+# -----------------------------------
+# The original default table in this module consisted of only two reference
+# velocities (3 and 5 km/s). For velocities outside that range, the module
+# behaviour was:
+#   - clamp the *strength* term to the nearest reference velocity, and
+#   - scale the *gravity* term by (v/v_ref)^(-3μ+2), where μ is configurable.
+#
+# For Stage B we "bake in" that same behaviour to provide an explicit
+# 1–7 km/s coefficient table so that:
+#   - velocities in [1, 7] km/s no longer trigger clamp warnings, and
+#   - clamp warnings are reserved for v < 1 or v > 7 km/s.
+#
+# Concretely:
+#   - (Qs, a_s, b_g) are extended by clamping (v<=3 uses 3 km/s, v>=5 uses 5 km/s)
+#   - B is extended using the same exponent (-3μ+2) with μ=0.45 that the module
+#     uses by default for out-of-range scaling.
+#
 # The keys represent the impact velocity in km/s.
 _DEFAULT_COEFFS: Dict[float, Tuple[float, float, float, float]] = {
-    3.0: (3.5e7, 0.38, 0.3, 1.36),  # Qs, a_s, B, b_g at 3 km/s
-    5.0: (7.0e7, 0.38, 0.5, 1.36),  # Qs, a_s, B, b_g at 5 km/s
+    1.0: (3.5e7, 0.38, 0.14689007046000738, 1.36),  # derived from 3 km/s gravity scaling
+    2.0: (3.5e7, 0.38, 0.23049522684371007, 1.36),  # derived from 3 km/s gravity scaling
+    3.0: (3.5e7, 0.38, 0.3, 1.36),                  # anchor (existing default)
+    4.0: (5.25e7, 0.38, 0.4, 1.36),                 # linear interp between 3 and 5 km/s
+    5.0: (7.0e7, 0.38, 0.5, 1.36),                  # anchor (existing default)
+    6.0: (7.0e7, 0.38, 0.5629085099123813, 1.36),   # derived from 5 km/s gravity scaling
+    7.0: (7.0e7, 0.38, 0.6222332685311813, 1.36),   # derived from 5 km/s gravity scaling
 }
 
 _COEFFS: Dict[float, Tuple[float, float, float, float]] = dict(_DEFAULT_COEFFS)
 
-_V_MIN = min(_COEFFS.keys())
-_V_MAX = max(_COEFFS.keys())
+# Sorted list of reference velocities used for bracketing/interpolation.
+_V_KEYS = tuple(sorted(_COEFFS.keys()))
+_V_MIN = _V_KEYS[0]
+_V_MAX = _V_KEYS[-1]
 
 CoeffUnits = Literal["ba99_cgs", "si"]
 
@@ -69,6 +94,8 @@ def set_coeff_unit_system(units: CoeffUnits) -> CoeffUnits:
     if units not in _COEFF_UNIT_CHOICES:
         raise MarsDiskError(f"unknown coeff_units={units!r}; expected one of {_COEFF_UNIT_CHOICES}")
     _COEFF_UNIT_SYSTEM = units
+    with _QDSTAR_CACHE_LOCK:
+        _QDSTAR_CACHE.clear()
     return _COEFF_UNIT_SYSTEM
 
 
@@ -118,11 +145,12 @@ def set_coefficient_table(
 ) -> Dict[float, Tuple[float, float, float, float]]:
     """Replace the active coefficient table and return the normalised copy."""
 
-    global _COEFFS, _V_MIN, _V_MAX
+    global _COEFFS, _V_KEYS, _V_MIN, _V_MAX
     cleaned = _normalise_coeff_table(table)
     _COEFFS = dict(cleaned)
-    _V_MIN = min(_COEFFS.keys())
-    _V_MAX = max(_COEFFS.keys())
+    _V_KEYS = tuple(sorted(_COEFFS.keys()))
+    _V_MIN = _V_KEYS[0]
+    _V_MAX = _V_KEYS[-1]
     with _QDSTAR_CACHE_LOCK:
         _QDSTAR_CACHE.clear()
     return dict(_COEFFS)
@@ -157,6 +185,8 @@ def set_gravity_velocity_mu(mu: float) -> float:
     if mu <= 0.0:
         raise MarsDiskError("gravity velocity exponent mu must be positive")
     _GRAVITY_VELOCITY_MU = float(mu)
+    with _QDSTAR_CACHE_LOCK:
+        _QDSTAR_CACHE.clear()
     return _GRAVITY_VELOCITY_MU
 
 
@@ -265,12 +295,14 @@ def compute_q_d_star_array(s: np.ndarray, rho: float, v_kms: np.ndarray) -> np.n
         cached = _qdstar_cache_get(cache_key)
         if cached is not None:
             return cached
+
     _track_velocity_clamp(v_raw)
     v_arr = np.asarray(v_raw, dtype=float)
     try:
         s_arr, v_arr = np.broadcast_arrays(s_arr, v_arr)
     except ValueError as exc:  # pragma: no cover - defensive guard
         raise MarsDiskError(f"cannot broadcast s and v_kms: {exc}") from exc
+
     if np.any(s_arr <= 0.0):
         raise MarsDiskError("size must be positive")
     if rho <= 0.0:
@@ -278,18 +310,76 @@ def compute_q_d_star_array(s: np.ndarray, rho: float, v_kms: np.ndarray) -> np.n
     if np.any(v_arr <= 0.0):
         raise MarsDiskError("velocity must be positive")
 
-    coeff_lo = _COEFFS[_V_MIN]
-    coeff_hi = _COEFFS[_V_MAX]
     coeff_units = _COEFF_UNIT_SYSTEM
-    strength_lo, gravity_lo = _q_d_star(s_arr, rho, coeff_lo, coeff_units)
-    strength_hi, gravity_hi = _q_d_star(s_arr, rho, coeff_hi, coeff_units)
+    v_keys = np.asarray(_V_KEYS, dtype=float)
+    if v_keys.size == 0:
+        raise MarsDiskError("coefficient table must not be empty")  # defensive
+    if v_keys.size == 1:
+        # Degenerate case: single reference velocity; treat as clamped everywhere.
+        coeff = _COEFFS[float(v_keys[0])]
+        strength, gravity = _q_d_star(s_arr, rho, coeff, coeff_units)
+        result = strength + gravity * _gravity_velocity_scale(v_arr)
+        _qdstar_cache_put(cache_key, result)
+        return result
 
-    weight = (v_arr - _V_MIN) / (_V_MAX - _V_MIN)
-    weight = np.clip(weight, 0.0, 1.0)
-    strength = strength_lo * (1.0 - weight) + strength_hi * weight
-    gravity = gravity_lo * (1.0 - weight) + gravity_hi * weight
-    gravity_scale = _gravity_velocity_scale(v_arr)
-    result = strength + gravity * gravity_scale
+    v_min = float(v_keys[0])
+    v_max = float(v_keys[-1])
+
+    # Prepare output
+    result = np.empty_like(s_arr, dtype=float)
+
+    mask_below = v_arr < v_min
+    mask_above = v_arr > v_max
+    mask_in = ~(mask_below | mask_above)
+
+    # Out-of-range: clamp coefficients at bounds but keep velocity scaling for gravity term.
+    if np.any(mask_below):
+        coeff = _COEFFS[v_min]
+        strength_base, gravity_base = _q_d_star(s_arr[mask_below], rho, coeff, coeff_units)
+        gravity_scale = _gravity_velocity_scale(v_arr[mask_below])
+        result[mask_below] = strength_base + gravity_base * gravity_scale
+
+    if np.any(mask_above):
+        coeff = _COEFFS[v_max]
+        strength_base, gravity_base = _q_d_star(s_arr[mask_above], rho, coeff, coeff_units)
+        gravity_scale = _gravity_velocity_scale(v_arr[mask_above])
+        result[mask_above] = strength_base + gravity_base * gravity_scale
+
+    # In-range: bracket to the adjacent reference velocities and interpolate piecewise.
+    if np.any(mask_in):
+        v_in = v_arr[mask_in]
+        s_in = s_arr[mask_in]
+
+        # idx is the left bracket index: v_keys[idx] <= v < v_keys[idx+1]
+        idx = np.searchsorted(v_keys, v_in, side="right") - 1
+        idx = np.clip(idx, 0, v_keys.size - 2)
+        v_lo = v_keys[idx]
+        v_hi = v_keys[idx + 1]
+        weight = (v_in - v_lo) / (v_hi - v_lo)
+
+        strength_in = np.empty_like(v_in, dtype=float)
+        gravity_in = np.empty_like(v_in, dtype=float)
+
+        for i in range(v_keys.size - 1):
+            mask_i = idx == i
+            if not np.any(mask_i):
+                continue
+
+            coeff_lo = _COEFFS[float(v_keys[i])]
+            coeff_hi = _COEFFS[float(v_keys[i + 1])]
+
+            s_sub = s_in[mask_i]
+            strength_lo, gravity_lo = _q_d_star(s_sub, rho, coeff_lo, coeff_units)
+            strength_hi, gravity_hi = _q_d_star(s_sub, rho, coeff_hi, coeff_units)
+
+            w = weight[mask_i]
+            strength_in[mask_i] = strength_lo * (1.0 - w) + strength_hi * w
+            gravity_in[mask_i] = gravity_lo * (1.0 - w) + gravity_hi * w
+
+        # Gravity scale is 1.0 within [v_min, v_max], but we keep the expression explicit.
+        gravity_scale = _gravity_velocity_scale(v_in)
+        result[mask_in] = strength_in + gravity_in * gravity_scale
+
     _qdstar_cache_put(cache_key, result)
     return result
 
@@ -298,11 +388,11 @@ def compute_q_d_star_F1(s: float, rho: float, v_kms: float) -> float:
     """Return the catastrophic disruption threshold ``Q_D^*``.
 
     The size-dependent law from [@BenzAsphaug1999_Icarus142_5] is evaluated and
-    then linearly interpolated in velocity between the 3 and 5 km/s reference
-    values following [@LeinhardtStewart2012_ApJ745_79]. Outside this range the
-    strength term is held fixed at the nearest reference value, while the
-    gravity term is scaled by :math:`(v/v_{\\mathrm{ref}})^{-3\\mu+2}` with
-    :math:`\\mu` taken from LS09 and configurable via :func:`set_gravity_velocity_mu`.
+    then interpolated in velocity between the tabulated reference velocities.
+    Outside the tabulated range the strength term is held fixed at the nearest
+    reference value, while the gravity term is scaled by
+    :math:`(v/v_{\\mathrm{ref}})^{-3\\mu+2}` with :math:`\\mu` configurable via
+    :func:`set_gravity_velocity_mu`.
 
     Parameters
     ----------
@@ -328,21 +418,43 @@ def compute_q_d_star_F1(s: float, rho: float, v_kms: float) -> float:
 
     _track_velocity_clamp(np.asarray([v_kms], dtype=float))
 
-    coeff_lo = _COEFFS[_V_MIN]
-    coeff_hi = _COEFFS[_V_MAX]
     coeff_units = _COEFF_UNIT_SYSTEM
+    v_keys = np.asarray(_V_KEYS, dtype=float)
+    if v_keys.size == 0:
+        raise MarsDiskError("coefficient table must not be empty")  # defensive
+
+    v_min = float(v_keys[0])
+    v_max = float(v_keys[-1])
+
+    if v_kms <= v_min:
+        coeff = _COEFFS[v_min]
+        strength, gravity = _q_d_star(np.asarray(s, dtype=float), rho, coeff, coeff_units)
+        gravity_scale = _gravity_velocity_scale(np.asarray([v_kms], dtype=float))[0]
+        return float(strength + gravity * gravity_scale)
+
+    if v_kms >= v_max:
+        coeff = _COEFFS[v_max]
+        strength, gravity = _q_d_star(np.asarray(s, dtype=float), rho, coeff, coeff_units)
+        gravity_scale = _gravity_velocity_scale(np.asarray([v_kms], dtype=float))[0]
+        return float(strength + gravity * gravity_scale)
+
+    if v_keys.size == 1:
+        # unreachable due to checks above, but keep behaviour symmetric with array API
+        coeff = _COEFFS[v_min]
+        strength, gravity = _q_d_star(np.asarray(s, dtype=float), rho, coeff, coeff_units)
+        return float(strength + gravity)
+
+    idx = int(np.searchsorted(v_keys, v_kms, side="right") - 1)
+    idx = max(0, min(idx, int(v_keys.size - 2)))
+    v_lo = float(v_keys[idx])
+    v_hi = float(v_keys[idx + 1])
+    weight = (v_kms - v_lo) / (v_hi - v_lo)
+
+    coeff_lo = _COEFFS[v_lo]
+    coeff_hi = _COEFFS[v_hi]
     strength_lo, gravity_lo = _q_d_star(np.asarray(s, dtype=float), rho, coeff_lo, coeff_units)
     strength_hi, gravity_hi = _q_d_star(np.asarray(s, dtype=float), rho, coeff_hi, coeff_units)
 
-    if v_kms <= _V_MIN:
-        gravity_scale = _gravity_velocity_scale(np.asarray([v_kms], dtype=float))[0]
-        return float(strength_lo + gravity_lo * gravity_scale)
-    if v_kms >= _V_MAX:
-        gravity_scale = _gravity_velocity_scale(np.asarray([v_kms], dtype=float))[0]
-        return float(strength_hi + gravity_hi * gravity_scale)
-
-    # linear interpolation between the two reference velocities
-    weight = (v_kms - _V_MIN) / (_V_MAX - _V_MIN)
     strength = strength_lo * (1.0 - weight) + strength_hi * weight
     gravity = gravity_lo * (1.0 - weight) + gravity_hi * weight
     gravity_scale = _gravity_velocity_scale(np.asarray([v_kms], dtype=float))[0]

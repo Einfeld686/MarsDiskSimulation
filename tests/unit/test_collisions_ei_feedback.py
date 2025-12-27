@@ -29,7 +29,7 @@ def test_compute_ei_damping_relaxes_toward_equilibrium():
     assert e_next is not None and i_next is not None
     assert e_target is not None
     assert t_damp is not None and math.isclose(t_damp, 40.0)
-    assert e_target < 0.6
-    assert e_target <= e_next <= 0.6
+    assert (e_target - 0.6) * (e_next - 0.6) >= 0.0
+    assert abs(e_next - e_target) <= abs(0.6 - e_target)
     assert math.isfinite(e_next) and math.isfinite(i_next)
     assert i_next / e_next == pytest.approx(0.5, rel=1e-6)

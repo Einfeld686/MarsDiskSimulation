@@ -64,6 +64,7 @@ def test_tau_stop_triggers_without_clip(tmp_path: Path) -> None:
     cfg = run.load_config(
         Path("configs/mars_0d_supply_sweep.yaml"),
         overrides=[
+            "dynamics.e_profile.mode=off",
             "supply.enabled=true",
             "supply.headroom_policy=spill",
             "supply.const.mu_orbit10pct=50.0",

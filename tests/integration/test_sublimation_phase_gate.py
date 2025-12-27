@@ -17,6 +17,7 @@ def _run_phase_case(
     outdir = tmp_path
     overrides = [
         f"io.outdir={outdir}",
+        "dynamics.e_profile.mode=off",
         "sinks.mode=sublimation",
         "sinks.enable_sublimation=true",
         "sinks.sub_params.mode=logistic",

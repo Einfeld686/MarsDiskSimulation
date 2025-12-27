@@ -47,6 +47,7 @@ from .physics import (
     phase as phase_mod,
     qstar,
     collisions_smol,
+    eccentricity,
 )
 from .physics.sublimation import SublimationParams, grain_temperature_graybody
 
@@ -204,6 +205,33 @@ def run_one_d(
     r_rm_mid = r_mid / constants.R_MARS
     Omega_ref = grid.omega_kepler(r_mid)
     t_orb_ref = 2.0 * math.pi / Omega_ref if Omega_ref > 0.0 else float("inf")
+
+    e_profile_values, e_profile_meta = eccentricity.evaluate_e_profile(
+        getattr(cfg.dynamics, "e_profile", None),
+        r_m=r_vals,
+        r_RM=r_rm_vals,
+        log=logger,
+    )
+    if e_profile_values is None:
+        e_cells = np.full_like(r_vals, float(cfg.dynamics.e0))
+        dynamics_cfg_cells = None
+    else:
+        e_cells = np.asarray(e_profile_values, dtype=float)
+        if e_cells.shape != r_vals.shape:
+            raise ConfigurationError("e_profile evaluation returned unexpected shape for 1D grid")
+        dynamics_cfg_cells = [
+            cfg.dynamics.model_copy(update={"e0": float(e_val)}) for e_val in e_cells
+        ]
+    init_ei_snapshot = {
+        "e_mode": cfg.dynamics.e_mode,
+        "e0_config": float(cfg.dynamics.e0),
+        "i0_config_rad": float(cfg.dynamics.i0),
+        "e_profile_mode": e_profile_meta.get("mode") if isinstance(e_profile_meta, dict) else None,
+        "e_profile_r_kind": e_profile_meta.get("r_kind") if isinstance(e_profile_meta, dict) else None,
+        "e_profile_table_path": e_profile_meta.get("table_path") if isinstance(e_profile_meta, dict) else None,
+        "e_profile_formula": e_profile_meta.get("formula") if isinstance(e_profile_meta, dict) else None,
+        "e_profile_applied": bool(e_profile_meta.get("applied")) if isinstance(e_profile_meta, dict) else False,
+    }
 
     cell_parallel_requested = _env_flag("MARSDISK_CELL_PARALLEL") is True
     cell_jobs_env = _env_int("MARSDISK_CELL_JOBS")
@@ -371,8 +399,12 @@ def run_one_d(
     radiation_field = str(getattr(radiation_cfg, "source", "mars")) if radiation_cfg else "mars"
     solar_rp_requested = bool(getattr(radiation_cfg, "use_solar_rp", False)) if radiation_cfg else False
     mars_rp_enabled_cfg = bool(getattr(radiation_cfg, "use_mars_rp", True)) if radiation_cfg else True
+    radiation.configure_qpr_fallback(
+        strict=bool(getattr(radiation_cfg, "qpr_strict", False)) if radiation_cfg else False,
+    )
     qpr_override = None
     qpr_table_path_resolved: Optional[Path] = None
+    qpr_strict = bool(getattr(radiation_cfg, "qpr_strict", False)) if radiation_cfg else False
     if radiation_cfg is not None:
         qpr_table_path_resolved = getattr(radiation_cfg, "qpr_table_resolved", None)
         if qpr_table_path_resolved is not None:
@@ -383,9 +415,12 @@ def run_one_d(
     if qpr_table_path_resolved is None and active_qpr_table is not None:
         qpr_table_path_resolved = active_qpr_table
     if qpr_override is None and qpr_table_path_resolved is None:
-        raise ConfigurationError(
-            "⟨Q_pr⟩ lookup table not initialised. Provide radiation.qpr_table_path or radiation.Q_pr."
-        )
+        if qpr_strict:
+            raise ConfigurationError(
+                "⟨Q_pr⟩ lookup table not initialised and radiation.qpr_strict=true. "
+                "Provide radiation.qpr_table_path or radiation.Q_pr."
+            )
+        logger.warning("⟨Q_pr⟩ lookup table not initialised; using DEFAULT_Q_PR=1.")
 
     temp_runtime = tempdriver.resolve_temperature_driver(
         radiation_cfg,
@@ -801,6 +836,7 @@ def run_one_d(
         "physics_mode": physics_mode,
         "physics_mode_source": physics_mode_source,
         "config": cfg.model_dump(mode="json"),
+        "init_ei": init_ei_snapshot,
     }
     run_config_snapshot["cell_parallel"] = cell_parallel_info
     auto_tune_info = getattr(cfg, "_auto_tune_info", None)
@@ -1472,9 +1508,11 @@ def run_one_d(
                                 s_min_effective=s_min_effective,
                             ),
                             dynamics=collisions_smol.DynamicsParams(
-                                e_value=float(getattr(cfg.dynamics, "e0", 0.5)),
+                                e_value=float(e_cells[idx]),
                                 i_value=float(getattr(cfg.dynamics, "i0", 0.05)),
-                                dynamics_cfg=cfg.dynamics,
+                                dynamics_cfg=(
+                                    dynamics_cfg_cells[idx] if dynamics_cfg_cells is not None else cfg.dynamics
+                                ),
                                 tau_eff=tau_los,
                             ),
                             supply=collisions_smol.SupplyParams(
@@ -1767,6 +1805,7 @@ def run_one_d(
                         "supply_blocked_by_headroom": bool(supply_blocked_by_headroom_flag),
                         "supply_mixing_limited": bool(supply_mixing_limited_flag),
                         "supply_transport_mode": supply_transport_mode,
+                        "e_value": float(e_cells[idx]),
                         "e_kernel_used": _safe_float(e_kernel_used),
                         "i_kernel_used": _safe_float(i_kernel_used),
                         "e_kernel_base": _safe_float(e_kernel_base),
@@ -2610,6 +2649,7 @@ def run_one_d(
         "physics_mode": physics_mode,
         "physics_mode_source": physics_mode_source,
         "config": cfg.model_dump(mode="json"),
+        "init_ei": init_ei_snapshot,
         "sigma_surf0_target": sigma_surf0_target,
         "sigma_surf0_avg": sigma_surf0_avg,
         "sigma_midplane_avg": sigma_midplane_avg_value,

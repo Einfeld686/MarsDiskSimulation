@@ -56,6 +56,7 @@ def test_run_outputs_supply_visibility_columns(tmp_path: Path) -> None:
             "numerics.t_end_years=1e-6",
             "numerics.dt_init=1",
             f"io.outdir={outdir}",
+            "dynamics.e_profile.mode=off",
             "radiation.TM_K=4000",
             "shielding.mode=fixed_tau1",
             "shielding.fixed_tau1_sigma=auto",

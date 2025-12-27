@@ -31,6 +31,7 @@ def test_phase_temperature_input_particle_is_recorded(tmp_path: Path) -> None:
         "numerics.t_end_orbits=1.0e-4",
         "numerics.t_end_years=null",
         "numerics.dt_init=10.0",
+        "dynamics.e_profile.mode=off",
         "phase.enabled=true",
         "phase.temperature_input=particle",
         "phase.q_abs_mean=0.4",

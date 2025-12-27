@@ -16,8 +16,15 @@ BASE_CONFIG = Path("configs/innerdisk_base.yml")
 TOL_MLOSS_PERCENT = 0.5
 
 
+def _merge_overrides(overrides: list[str]) -> list[str]:
+    merged = list(overrides)
+    if not any(item.startswith("dynamics.e_profile.") for item in merged):
+        merged.append("dynamics.e_profile.mode=off")
+    return merged
+
+
 def _run_case(overrides: list[str]) -> tuple[dict, pd.DataFrame]:
-    cfg = load_config(BASE_CONFIG, overrides=overrides)
+    cfg = load_config(BASE_CONFIG, overrides=_merge_overrides(overrides))
     cfg.io.debug_sinks = False
     with TemporaryDirectory() as tmp:
         outdir = Path(tmp)
@@ -31,7 +38,7 @@ def _run_case(overrides: list[str]) -> tuple[dict, pd.DataFrame]:
 
 
 def _run_case_with_series(overrides: list[str]) -> tuple[dict, pd.DataFrame, pd.DataFrame]:
-    cfg = load_config(BASE_CONFIG, overrides=overrides)
+    cfg = load_config(BASE_CONFIG, overrides=_merge_overrides(overrides))
     cfg.io.debug_sinks = False
     with TemporaryDirectory() as tmp:
         outdir = Path(tmp)

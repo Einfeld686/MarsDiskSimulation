@@ -13,6 +13,7 @@ def _make_config(outdir):
         i0=0.05,
         t_damp_orbits=100.0,
         f_wake=1.0,
+        e_profile=schema.DynamicsEccentricityProfile(mode="off"),
         e_mode="mars_clearance",
         dr_min_m=1.0,
         dr_max_m=10.0,

@@ -47,13 +47,15 @@ def v_ij(e: float, i: float, v_k: float = 1.0) -> float:
 
 
 def v_rel_pericenter(e: float, v_k: float) -> float:
-    """Return periapsis Kepler speed ``v_K(a)/sqrt(1-e)`` for encounters near periapsis."""
+    """Return periapsis Kepler speed ``v_K(a)*sqrt((1+e)/(1-e))`` for encounters near periapsis."""
 
     if v_k < 0.0:
         raise MarsDiskError("v_k must be non-negative")
     if e >= 1.0:
         raise MarsDiskError("eccentricity must be < 1 for pericenter velocity")
-    v_rel = v_k / max((1.0 - e) ** 0.5, 1.0e-8)
+    denom = max(1.0 - e, 1.0e-8)
+    numer = max(1.0 + e, 0.0)
+    v_rel = v_k * (numer / denom) ** 0.5
     if logger.isEnabledFor(logging.DEBUG):
         logger.debug("v_rel_pericenter: e=%f v_k=%f -> v_rel=%f", e, v_k, v_rel)
     return float(v_rel)

@@ -96,8 +96,10 @@ def test_qpr_lookup_requires_table(mock_qpr_table):
     tables._QPR_TABLE = None
     tables._QPR_TABLE_PATH = None
     radiation._QPR_LOOKUP = None
+    radiation.configure_qpr_fallback(strict=True)
     with pytest.raises(RuntimeError):
         radiation.qpr_lookup(s, T)
+    radiation.configure_qpr_fallback(strict=False)
 
     with pytest.raises(ValueError):
         radiation.qpr_lookup(0.0, T)

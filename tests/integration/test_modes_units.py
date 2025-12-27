@@ -27,6 +27,7 @@ def _base_config(outdir: Path) -> schema.Config:
             i0=0.01,
             t_damp_orbits=10.0,
             f_wake=1.0,
+            e_profile=schema.DynamicsEccentricityProfile(mode="off"),
             rng_seed=98765,
             e_mode="mars_clearance",
             dr_min_m=1.0e4,

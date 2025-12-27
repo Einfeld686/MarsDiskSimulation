@@ -681,8 +681,7 @@ def s_sink_from_timescale(
     J = mass_flux_hkl(T, params)
     if J <= 0.0:
         return 0.0
-    eta = 1.0 if _is_hkl_active(params) else params.eta_instant
-    return eta * t_ref * J / rho
+    return params.eta_instant * t_ref * J / rho
 
 
 def sublimation_sink_from_dsdt(
