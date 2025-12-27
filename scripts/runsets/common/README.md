@@ -23,6 +23,104 @@
 - 遮蔽は OFF、相は **閾値（threshold）** モード。
 - 放射は火星起源、温度はテーブル入力（自動生成も有効）。
 
+## 主要パラメータ早見表（base.yml 既定）
+
+### 基本スイッチ
+
+| 設定キー | 推奨値 | 意味/選択肢 |
+|---|---|---|
+| `physics_mode` | `default` | 衝突+シンク併用。`sublimation_only` / `collisions_only` も選択可 |
+| `supply.mode` | `const` | 供給方式。`table` / `powerlaw` / `piecewise` も選択可 |
+| `sinks.mode` | `sublimation` | 昇華シンク有効。`none` で停止 |
+| `blowout.enabled` | `true` | 放射圧ブローアウト有効/無効 |
+| `shielding.mode` | `off` | `psitau` / `fixed_tau1` / `table` で遮蔽を有効化 |
+| `phase.enabled` | `true` | 固体/蒸気の相分岐を有効化 |
+| `radiation.source` | `mars` | `off` で放射圧無効化 |
+
+### 幾何と時間
+
+| 設定キー | 推奨値 | 意味/備考 |
+|---|---|---|
+| `geometry.mode` | `1D` | `0D` は半径平均、`1D` は分解 |
+| `geometry.Nr` | `32` | 1D のセル数（`mode=1D` のとき必須） |
+| `disk.geometry.r_in_RM` | `1.0` | 内縁（火星半径単位） |
+| `disk.geometry.r_out_RM` | `2.7` | 外縁（火星半径単位） |
+| `scope.analysis_years` | `2.0` | 解析期間（年） |
+| `numerics.t_end_years` | `2.0` | 積分終了時刻（年） |
+| `numerics.dt_init` | `auto` | 初期刻み（秒）。数値指定も可 |
+| `numerics.dt_over_t_blow_max` | `0.1` | `dt/t_blow` の警告閾値 |
+
+### サイズ・PSD・初期条件
+
+| 設定キー | 推奨値 | 意味/備考 |
+|---|---|---|
+| `sizes.s_min` | `1.0e-7` | 最小粒径 [m] |
+| `sizes.s_max` | `3.0` | 最大粒径 [m] |
+| `sizes.n_bins` | `40` | サイズビン数 |
+| `psd.alpha` | `1.83` | PSD 傾き |
+| `psd.wavy_strength` | `0.0` | “wavy”補正の強さ（0 で無効） |
+| `psd.floor.mode` | `none` | `fixed` / `evolve_smin` も可 |
+| `initial.mass_total` | `1.0e-7` | 初期質量（火星質量比） |
+| `initial.s0_mode` | `melt_lognormal_mixture` | `upper` / `mono` / `melt_truncated_powerlaw` も可 |
+
+### 動力学（励起・速度）
+
+| 設定キー | 推奨値 | 意味/備考 |
+|---|---|---|
+| `dynamics.e0` | `0.5` | 初期離心率 |
+| `dynamics.i0` | `0.05` | 初期傾斜角（ラジアン） |
+| `dynamics.v_rel_mode` | `pericenter` | 高 e 向き。`ohtsuki` は低 e 向き |
+| `dynamics.kernel_ei_mode` | `config` | `wyatt_eq` で平衡 c_eq を解く |
+| `dynamics.kernel_H_mode` | `ia` | `fixed` の場合は `H_fixed_over_a` が必要 |
+| `dynamics.e_mode` | `mars_clearance` | `fixed` で e0 固定 |
+| `dynamics.dr_min_m` / `dr_max_m` | `1.2e6` / `4.0e6` | `mars_clearance` の Δr 範囲 [m] |
+
+### 破砕強度（Q*）
+
+| 設定キー | 推奨値 | 意味/備考 |
+|---|---|---|
+| `qstar.Qs` | `3.5e7` | 強度項係数 |
+| `qstar.a_s` | `0.38` | 強度項のサイズ指数 |
+| `qstar.B` | `0.3` | 重力項係数 |
+| `qstar.b_g` | `1.36` | 重力項のサイズ指数 |
+| `qstar.v_ref_kms` | `[1.5, 7.0]` | 参照衝突速度 [km/s] |
+| `qstar.coeff_units` | `ba99_cgs` | `si` も可（単位系が変わる） |
+
+### 供給（surface 生成率）
+
+| 設定キー | 推奨値 | 意味/備考 |
+|---|---|---|
+| `supply.enabled` | `true`（未指定） | 供給のマスタースイッチ |
+| `supply.const.prod_area_rate_kg_m2_s` | `0.0` | 面積あたり供給率 |
+| `supply.mixing.epsilon_mix` | `1.0` | 混合効率（0〜1） |
+| `supply.transport.mode` | `direct` | `deep_mixing` は深部リザーバ経由 |
+| `supply.injection.mode` | `powerlaw_bins` | `min_bin` も可 |
+| `supply.injection.q` | `3.5` | 供給 PSD の指数 |
+| `supply.table.path` | `data/supply_rate.csv` | `mode=table` のとき使用 |
+
+### 昇華・シンク
+
+| 設定キー | 推奨値 | 意味/備考 |
+|---|---|---|
+| `sinks.sub_params.mode` | `hkl` | `logistic` / `hkl_timescale` も可 |
+| `sinks.T_sub` | `1300.0` | 昇華判定温度 [K] |
+| `sinks.sub_params.alpha_evap` | `0.007` | HKL 蒸発係数 |
+| `sinks.sub_params.mu` | `0.0440849` | 分子量 [kg/mol] |
+| `sinks.enable_gas_drag` | `false` | gas-poor 既定では無効 |
+| `sinks.rp_blowout.enable` | `true` | 放射圧ブローアウトをシンクとして有効 |
+| `sinks.hydro_escape.enable` | `false` | 熱的脱出シンクの有効化 |
+
+### 放射・温度ドライバ
+
+| 設定キー | 推奨値 | 意味/備考 |
+|---|---|---|
+| `radiation.TM_K` | `4000.0` | 火星赤外温度 [K] |
+| `radiation.qpr_table_path` | `marsdisk/io/data/qpr_planck_sio2_abbas_calibrated_lowT.csv` | ⟨Q_pr⟩ テーブル |
+| `radiation.Q_pr` | 未指定 | 未指定の場合はテーブル優先 |
+| `mars_temperature_driver.mode` | `table` | `constant` / `hyodo` も可 |
+| `mars_temperature_driver.table.path` | `data/mars_temperature_T4000p0K.csv` | 温度テーブル |
+| `mars_temperature_driver.autogenerate.enabled` | `true` | テーブル自動生成を許可 |
+
 ## セクション詳細
 
 ### scope / physics_mode / process

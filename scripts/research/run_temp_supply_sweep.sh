@@ -10,6 +10,7 @@
 set -euo pipefail
 
 DRY_RUN="${DRY_RUN:-0}"
+SKIP_SETUP="${SKIP_SETUP:-0}"
 RUN_ONE_MODE=0
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -49,19 +50,23 @@ else
 fi
 echo "[setup] Output root: ${BATCH_ROOT}"
 
-if [[ ! -x "${VENV_DIR}/bin/python" ]]; then
-  echo "[setup] Creating virtual environment in ${VENV_DIR}..."
-  python3 -m venv "${VENV_DIR}"
-fi
-
-source "${VENV_DIR}/bin/activate"
-
-if [[ -f "${REQ_FILE}" ]]; then
-  echo "[setup] Installing/upgrading dependencies from ${REQ_FILE} ..."
-  python -m pip install --upgrade pip
-  pip install -r "${REQ_FILE}"
+if [[ "${SKIP_SETUP}" == "1" || "${SKIP_SETUP}" == "true" ]]; then
+  echo "[setup] SKIP_SETUP=1; skipping venv setup and dependency install."
 else
-  echo "[warn] ${REQ_FILE} not found; skipping dependency install."
+  if [[ ! -x "${VENV_DIR}/bin/python" ]]; then
+    echo "[setup] Creating virtual environment in ${VENV_DIR}..."
+    python3 -m venv "${VENV_DIR}"
+  fi
+
+  source "${VENV_DIR}/bin/activate"
+
+  if [[ -f "${REQ_FILE}" ]]; then
+    echo "[setup] Installing/upgrading dependencies from ${REQ_FILE} ..."
+    python -m pip install --upgrade pip
+    pip install -r "${REQ_FILE}"
+  else
+    echo "[warn] ${REQ_FILE} not found; skipping dependency install."
+  fi
 fi
 
 # Base config to override per run (melt-solid PSD w/ condensation cut)
