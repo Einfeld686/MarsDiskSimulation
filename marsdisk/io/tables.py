@@ -135,11 +135,21 @@ class PhiTable:
     def from_frame(cls, df: pd.DataFrame) -> "PhiTable":
         # Expect a three-dimensional table; reshape using MultiIndex
         pivot = df.pivot_table(index=["tau", "w0"], columns="g", values="Phi")
+        if pivot.empty:
+            raise ValueError("Phi table must contain at least one row")
+        if pivot.isna().any().any():
+            raise ValueError("Phi table grid has missing values")
         idx = pivot.index
         tau_vals = np.sort(idx.get_level_values("tau").unique().astype(float))
         w0_vals = np.sort(idx.get_level_values("w0").unique().astype(float))
         g_vals = pivot.columns.to_numpy(dtype=float)
+        if tau_vals.size < 2 or w0_vals.size < 2 or g_vals.size < 2:
+            raise ValueError("Phi table must contain at least two unique tau, w0, and g values")
+        if not np.all(np.isfinite(tau_vals)) or not np.all(np.isfinite(w0_vals)) or not np.all(np.isfinite(g_vals)):
+            raise ValueError("Phi table contains non-finite tau/w0/g values")
         phi_vals = pivot.to_numpy(dtype=float).reshape(len(tau_vals), len(w0_vals), len(g_vals))
+        if not np.all(np.isfinite(phi_vals)):
+            raise ValueError("Phi table contains non-finite Phi values")
         return cls(tau_vals=tau_vals, w0_vals=w0_vals, g_vals=g_vals, phi_vals=phi_vals)
 
     def interp(self, tau: float, w0: float, g: float) -> float:

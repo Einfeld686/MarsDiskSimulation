@@ -1118,12 +1118,19 @@ def run_zero_d(
         r_out_d = cfg.disk.geometry.r_out_RM * constants.R_MARS
         area = math.pi * (r_out_d**2 - r_in_d**2)
         if area <= 0.0 or not math.isfinite(area):
-            logger.warning(
-                "Disk area is non-positive (r_in=%.3e m, r_out=%.3e m); falling back to π r^2 for 0D area.",
-                r_in_d,
-                r_out_d,
-            )
-            area = math.pi * r**2
+            if (
+                math.isfinite(r_in_d)
+                and math.isfinite(r_out_d)
+                and math.isclose(r_in_d, r_out_d, rel_tol=1.0e-12, abs_tol=0.0)
+            ):
+                area = math.pi * r**2
+            else:
+                logger.warning(
+                    "Disk area is non-positive (r_in=%.3e m, r_out=%.3e m); falling back to π r^2 for 0D area.",
+                    r_in_d,
+                    r_out_d,
+                )
+                area = math.pi * r**2
     else:
         area = math.pi * r**2
     mass_total_original = cfg.initial.mass_total
@@ -2308,7 +2315,9 @@ def run_zero_d(
                     t_sink_current = t_sink_step_effective if sink_timescale_active else None
                     tau_for_coll = None
                     if collisions_active_step and cfg.surface.use_tcoll and tau_eval_los > TAU_MIN:
-                        tau_for_coll = tau_eval_los
+                        tau_candidate = tau_eval_los / max(los_factor, 1.0)
+                        if tau_candidate > TAU_MIN:
+                            tau_for_coll = tau_candidate
                     tau_for_feedback_val = tau_eval_los
                     allow_supply = allow_supply_step
                     supply_res = supply.evaluate_supply(
@@ -2364,6 +2373,7 @@ def run_zero_d(
                         dt_sub,
                         Omega_step,
                         tau=tau_for_coll,
+                        t_blow=t_blow_step,
                         t_sink=t_sink_current,
                         sigma_tau1=sigma_tau1_active,
                         enable_blowout=enable_blowout_sub,
@@ -2725,9 +2735,11 @@ def run_zero_d(
                     t_solid_step = candidate
         elif blowout_gate_mode == "collision_competition":
             if tau_los_last is not None and tau_los_last > TAU_MIN and Omega_step > 0.0:
-                candidate = 1.0 / (Omega_step * max(tau_los_last, TAU_MIN))
-                if candidate > 0.0 and math.isfinite(candidate):
-                    t_solid_step = candidate
+                tau_vert = float(tau_los_last) / max(los_factor, 1.0)
+                if tau_vert > TAU_MIN:
+                    candidate = 1.0 / (Omega_step * tau_vert)
+                    if candidate > 0.0 and math.isfinite(candidate):
+                        t_solid_step = candidate
         if gate_enabled and enable_blowout_step:
             gate_factor = _compute_gate_factor(t_blow_step, t_solid_step)
 
@@ -3135,7 +3147,11 @@ def run_zero_d(
                 t_coll_candidate = t_coll_kernel_last
             else:
                 try:
-                    t_coll_candidate = surface.wyatt_tcoll_S1(float(tau_los_last), Omega_step)
+                    tau_vert = float(tau_los_last) / max(los_factor, 1.0)
+                    if tau_vert > TAU_MIN:
+                        t_coll_candidate = surface.wyatt_tcoll_S1(tau_vert, Omega_step)
+                    else:
+                        t_coll_candidate = None
                 except Exception:
                     t_coll_candidate = None
             if t_coll_candidate is not None and math.isfinite(t_coll_candidate) and t_coll_candidate > 0.0:

@@ -30,7 +30,7 @@ echo "Verified marsdisk import."
 
 BLOWOUT_CONFIG="simulation_results/_configs/01_inner_r1_to_r3_blowout.yml"
 SUBLIMATION_CONFIG="simulation_results/_configs/02_inner_r1_to_r3_sublimation_no_floor.yml"
-SWEEP_SCRIPT="scripts/sweep_heatmaps.py"
+SWEEP_SCRIPT="scripts/sweeps/sweep_heatmaps.py"
 FIG_SCRIPT="tools/plotting/make_figs.py"
 
 for required in "$BLOWOUT_CONFIG" "$SUBLIMATION_CONFIG" "$SWEEP_SCRIPT" "$FIG_SCRIPT"; do
@@ -74,7 +74,7 @@ for radius in $RADII_LIST; do
 done
 
 echo "Running sweep heatmap map=1"
-"$PYTHON_BIN" "scripts/sweep_heatmaps.py" \
+"$PYTHON_BIN" "scripts/sweeps/sweep_heatmaps.py" \
   --map "1" \
   --rmin_rm "1.0" \
   --rmax_rm "3.0" \

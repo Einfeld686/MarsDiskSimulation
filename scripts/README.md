@@ -5,33 +5,63 @@
 - 本ディレクトリは、その要件を満たすための公式 CLI／自動化スクリプト群をまとめた場所であり、すべて `python -m marsdisk.run` もしくは `marsdisk` 内部 API を呼び出して **AGENTS で規定された 0D モデルを再利用**します。
 - `tools/` 以下の旧ラッパーは互換目的で残置されていますが、順次削除予定です。以降の運用・機能拡張は本 `scripts/` 配下を参照してください。
 
+## runsets（OS 別の実行ラッパ）
+- `scripts/runsets/<os>/run_one.{sh,cmd}`: 単発実行（1D 既定、0D は `--0d` で明示）
+- `scripts/runsets/<os>/run_sweep.{sh,cmd}`: パラメータスタディ（1D 既定）
+- `scripts/runsets/common/base.yml`: `configs/base.yml` と同期（runsets の共通コア）
+- `scripts/runsets/<os>/overrides.txt`: I/O・数値設定のみ（物理設定は base/study に固定）
+- `scripts/runsets/common/hooks/*`: plot/eval/preflight の共通ラッパ
+- `scripts/runsets/<os>/legacy/*`: 旧来の OS 依存ランナー（互換目的で残置）
+- chunk 出力の整合確認は `scripts/runsets/common/hooks/preflight_streaming.py`、merge は `tools/merge_streaming_chunks.py` を使用
+
+例:
+```
+scripts/runsets/mac/run_sweep.sh --study scripts/runsets/common/study_temp_supply.yml
+scripts/runsets/mac/run_one.sh --t 4000 --eps 1.0 --tau 1.0
+```
+
+## 役割別ディレクトリ
+- `scripts/admin/`: DocSync/テーブル生成/収集ユーティリティ
+- `scripts/debug/`: 実装検証・診断系
+- `scripts/plots/`: 可視化（Windows 用 `.cmd` は `scripts/plots/windows/`）
+- `scripts/runs/`: 大量実行・スイート系ランナー
+- `scripts/sweeps/`: パラメータスイープ/マップ生成
+- `scripts/research/`: 研究用の共通ランナー/評価スクリプト（runsets から呼び出し）
+
 ## ファイル別サマリー
 | ファイル | 主目的 | 主な入出力・備考 |
 | --- | --- | --- |
-| `__init__.py` | 空モジュール | `scripts` を Python パッケージとして認識させるためのプレースホルダーです。 |
-| `analysis_sync.py` | DocSyncAgent の CLI（引数転送対応） | `python scripts/analysis_sync.py --all --write` などで `marsdisk.ops.doc_sync_agent.main` を起動し、analysis/ 以下の仕様同期を実行します。 |
-| `analyze_radius_trend.py` | 半径スイープ診断ランナー | 与えた半径リストごとに `marsdisk.run` を呼び、`series/run.parquet` と `summary.json` から Ω, $t_{\rm blow}$, $\dot{M}_{\rm out}$ などを抽出して `radius_sweep_metrics.csv` を生成します。 |
-| `collect_series.py` | 時系列 Parquet の一括収集 | `*/run_id/series/run.parquet` を走査して 1 つの Parquet に結合し、ケース ID と出力先を付与します。 |
-| `doc_sync_agent.py` | DocSyncAgent 互換ラッパー | 引数なしで `marsdisk.ops.doc_sync_agent.main()` を呼び出します。旧コマンド (`python scripts/doc_sync_agent.py`) 互換用途です。 |
-| `make_qpr_table.py` | Planck 平均 $\langle Q_{\rm pr}\rangle$ テーブル生成 | `marsdisk.ops.make_qpr_table.main` を起動し、CSV/NPZ の Q_pr テーブルを作成します。 |
-| `plot_axis_r_sweep.py` | AXIS_r_sweep 結果の可視化 | `analysis/agent_runs/AXIS_r_sweep/summary.csv` を読み、温度ごとの $M_{\rm loss}$ vs r/R_M を PNG として保存します。 |
-| `plot_heatmaps.py` | パラメータマップの描画 | `results/map*.csv` をピボットしてヒートマップ化し、β 系指標や失敗セルのハッチングも表示します。 |
-| `plot_tau_timescales.py` | τ–timescale 図の生成 | `series/run.parquet` から `t_sub`/`t_coll`/`t_blow` を計算し、τとの散布図を `figures/` へ保存します（`--color-by radius` で 1D 半径を色分け、`--with-inset` で半径–τの小図、`--clip-timescale-min` で下限クリップ）。 |
-| `plot_tau_timescales.cmd` | τ–timescale 図の Windows 実行 | `.venv` セットアップ後に `plot_tau_timescales.py` を呼び、CPU/メモリ検出ログを出力します。 |
-| `run_axis_r_sweep.py` | r–T–M グリッドの大量実行 | `analysis/agent_runs/AXIS_r_sweep` 以下に YAML／結果ディレクトリを生成し、`marsdisk.run` をケースごとに起動。`summary.json` 等を検証・集計します。 |
-| `run_inner_disk_suite.py` | Φ(1)×T_M スイート | Φ(1)={0.20,0.37,0.60} と温度掃引を組み合わせて 1 年積分し、`series/*.parquet`・PSD フレーム・GIF・`orbit_rollup.csv` を生成します。 |
-| `debug_psd_drift.py` | PSD サイズドリフトの再ビン比較 | 実装と参照リビンの差分を CSV/JSON に出力し、bin ごとの差分を確認します。 |
-| `debug_supply_powerlaw_slope.py` | powerlaw 供給の傾き診断 | 供給注入の `dN/ds` 傾きと質量整合を CSV/JSON に記録します。 |
-| `debug_fragment_tensor_lr.py` | 破片テンソルの LR 配分診断 | `Y[k_lr,i,j]` と `f_lr` の差、総和のズレを CSV/JSON に記録します。 |
-| `debug_blowout_chi_scaling.py` | chi_blow スケーリング診断 | `a_blow` と bin 端点の関係、および `dSigma_dt_blowout` の時系列を出力します。 |
-| `sweep_beta_map.py` | β(r/R_M, T_M, t) 立方体生成 | `marsdisk.analysis.sample_beta_over_orbit` を用いて 1 軌道分の β 時系列をサンプリングし、Zarr 立方体＋ `map_spec.json` を出力します。 |
-| `sweep_heatmaps.py` | 汎用 2D パラメータスイープ | マップ定義とバリアント指定を展開し、並列で `marsdisk.run` を実行。`results/map*.csv` と検証 JSON を保存します。 |
-| `sweep_mass_loss_map.py` | 1 軌道あたり質量損失マップ（高速版） | `marsdisk.analysis.massloss_sampler.sample_mass_loss_one_orbit` を呼び、`map_massloss.csv` とメタデータ `logs/spec.json` を作成します。必要に応じて `sinks.mode='none'` 比較も併記。 |
-| `sweep_massloss_heatmap_gif.py` | Φ テーブル別の質量損失ヒートマップ＋GIF | Φ テーブルごとに 1 年積分を行い、`orbit_rollup.csv` から per-orbit 指標を抽出。PNG ヒートマップとアニメーション GIF を `out/phi*/` に保存します。 |
-| `sweep_massloss_map.py` | `_configs/05_massloss_base.yml` ベースの Map-1 ドライバ | (r/T) グリッドの YAML を生成して `marsdisk.run` を実行し、`map1/` 以下に `summary.json`・`series/run.parquet`・質量収支ログと検証結果をまとめます。 |
+| `scripts/__init__.py` | 空モジュール | `scripts` を Python パッケージとして認識させるためのプレースホルダーです。 |
+| `scripts/admin/analysis_sync.py` | DocSyncAgent の CLI（引数転送対応） | `python scripts/admin/analysis_sync.py --all --write` などで `marsdisk.ops.doc_sync_agent.main` を起動します。 |
+| `scripts/admin/doc_sync_agent.py` | DocSyncAgent 互換ラッパー | 引数なしで `marsdisk.ops.doc_sync_agent.main()` を呼び出します。旧コマンド互換用途です。 |
+| `scripts/admin/make_qpr_table.py` | Planck 平均 $\langle Q_{\rm pr}\rangle$ テーブル生成 | `marsdisk.ops.make_qpr_table.main` を起動し、CSV/NPZ の Q_pr テーブルを作成します。 |
+| `scripts/admin/analyze_radius_trend.py` | 半径スイープ診断ランナー | `series/run.parquet` と `summary.json` から Ω, $t_{\rm blow}$, $\dot{M}_{\rm out}$ などを抽出して `radius_sweep_metrics.csv` を生成します。 |
+| `scripts/admin/collect_series.py` | 時系列 Parquet の一括収集 | `*/run_id/series/run.parquet` を走査して 1 つの Parquet に結合します。 |
+| `scripts/plots/plot_axis_r_sweep.py` | AXIS_r_sweep 結果の可視化 | `analysis/agent_runs/AXIS_r_sweep/summary.csv` を読み、温度ごとの $M_{\rm loss}$ vs r/R_M を PNG として保存します。 |
+| `scripts/plots/plot_from_runs.py` | 図生成の簡易ユーティリティ | beta/mass_budget/PSD などの定型図を生成します。 |
+| `scripts/plots/plot_heatmaps.py` | パラメータマップの描画 | `results/map*.csv` をピボットしてヒートマップ化し、β 系指標や失敗セルのハッチングも表示します。 |
+| `scripts/plots/plot_qpr_planck_sio2.py` | Q_pr 可視化 | テーブルを読み込み、温度ごとの曲線を描画します。 |
+| `scripts/plots/plot_sblow_curve.py` | blow-out 曲線の描画 | 温度依存の $a_{\\rm blow}$ を可視化します。 |
+| `scripts/plots/plot_smol_mass_error.py` | 質量保存の可視化 | `mass_budget.csv` を読み、誤差推移をプロットします。 |
+| `scripts/plots/plot_tau_reference_mismatch.py` | τ 参照系の比較 | LOS 参照と指定テーブルの差分をヒートマップ化します。 |
+| `scripts/plots/plot_tau_timescales.py` | τ–timescale 図の生成 | `series/run.parquet` から `t_sub`/`t_coll`/`t_blow` を計算し、τとの散布図を保存します。 |
+| `scripts/plots/windows/plot_tau_timescales.cmd` | τ–timescale 図の Windows 実行 | `.venv` セットアップ後に `plot_tau_timescales.py` を呼びます。 |
+| `scripts/plots/render_figures_from_tasks.py` | 図タスクの一括生成 | 解析タスク定義から `plot_from_runs.py` を呼び出して図を生成します。 |
+| `scripts/runs/run_autotuned.py` | auto-tune 既定のランナー | `python -m marsdisk.run` に `--auto-tune` を付与します。 |
+| `scripts/runs/run_axis_r_sweep.py` | r–T–M グリッドの大量実行 | `analysis/agent_runs/AXIS_r_sweep` に YAML／結果を生成し、ケースを実行します。 |
+| `scripts/runs/run_inner_disk_suite.py` | Φ(1)×T_M スイート | Φ(1)={0.20,0.37,0.60} と温度掃引を組み合わせて 1 年積分します。 |
+| `scripts/debug/debug_psd_drift.py` | PSD サイズドリフトの再ビン比較 | 実装と参照リビンの差分を CSV/JSON に出力します。 |
+| `scripts/debug/debug_supply_powerlaw_slope.py` | powerlaw 供給の傾き診断 | 供給注入の `dN/ds` 傾きと質量整合を CSV/JSON に記録します。 |
+| `scripts/debug/debug_fragment_tensor_lr.py` | 破片テンソルの LR 配分診断 | `Y[k_lr,i,j]` と `f_lr` の差、総和のズレを CSV/JSON に記録します。 |
+| `scripts/debug/debug_blowout_chi_scaling.py` | chi_blow スケーリング診断 | `a_blow` と bin 端点の関係、および `dSigma_dt_blowout` の時系列を出力します。 |
+| `scripts/sweeps/sweep_beta_map.py` | β(r/R_M, T_M, t) 立方体生成 | 1 軌道分の β 時系列をサンプリングし、Zarr 立方体＋ `map_spec.json` を出力します。 |
+| `scripts/sweeps/sweep_heatmaps.py` | 汎用 2D パラメータスイープ | マップ定義とバリアント指定を展開し、並列で `marsdisk.run` を実行します。 |
+| `scripts/sweeps/sweep_mass_loss_map.py` | 1 軌道あたり質量損失マップ | `sample_mass_loss_one_orbit` を呼び、`map_massloss.csv` と `logs/spec.json` を作成します。 |
+| `scripts/sweeps/sweep_massloss_heatmap_gif.py` | Φ テーブル別の質量損失ヒートマップ＋GIF | 温度掃引と GIF 生成をまとめて実行します。 |
+| `scripts/sweeps/sweep_massloss_map.py` | `_configs/05_massloss_base.yml` ベースの Map-1 ドライバ | (r/T) グリッドの YAML を生成し `map1/` 以下に出力します。 |
 
 ## 運用メモ
-- すべてのスクリプトは `python scripts/<name>.py [options]` で単独起動できます。CI・エージェントから呼び出す場合もこのパスを基準にしてください。
+- すべてのスクリプトは `python scripts/<category>/<name>.py [options]` で単独起動できます。CI・エージェントから呼び出す場合もこのパスを基準にしてください。
 - 分析用ユーティリティが必要になった場合は、`tools/` ではなく本ディレクトリに追加し、本 README の表へ追記する運用に統一します。
 - 既存の `tools/` には互換ラッパーが一時的に残っていますが、将来的に削除されても本 README に列挙した機能は維持される想定です。
-- 新しいシミュレーションランナーを Windows 向けに用意する場合は、本ディレクトリ直下に `.cmd` 形式で追加します。`run_sublim_windows.cmd` を雛形に、(1) `.venv` が無ければ作成し `requirements.txt` から依存を取得、(2) `OUTDIR` を標準の保存規則（例: `out/<YYYYMMDD-HHMM>_<short-title>__<shortsha>__seed<n>/`）に従って設定し、必要なら `if not exist "%OUTDIR%" mkdir "%OUTDIR%"` で生成、(3) `python -m marsdisk.run` を既存スクリプトと同じフローで起動して結果を書き込む、を必須手順とします。追加した `.cmd` はこの README の表にも用途を一行で追記してください。
+- 新しい Windows 向け `.cmd` ランナーは `scripts/runsets/windows/` か `scripts/runsets/windows/legacy/` に追加します。`scripts/runsets/windows/legacy/run_sublim_windows.cmd` を雛形に、(1) `.venv` が無ければ作成し `requirements.txt` から依存を取得、(2) `OUTDIR` を標準の保存規則（例: `out/<YYYYMMDD-HHMM>_<short-title>__<shortsha>__seed<n>/`）に従って設定し、必要なら `if not exist "%OUTDIR%" mkdir "%OUTDIR%"` で生成、(3) `python -m marsdisk.run` を既存スクリプトと同じフローで起動して結果を書き込む、を必須手順とします。追加した `.cmd` はこの README の表にも用途を一行で追記してください。

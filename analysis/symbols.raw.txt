@@ -243,10 +243,10 @@ marsdisk/errors.py:13:class PhysicsError(MarsDiskError, ValueError)
 marsdisk/errors.py:17:class NumericalError(MarsDiskError, RuntimeError)
 marsdisk/errors.py:21:class TableLoadError(MarsDiskError, RuntimeError)
 marsdisk/grid.py:17:def omega_kepler(r: float) -> float
-marsdisk/grid.py:34:def v_kepler(r: float) -> float
-marsdisk/grid.py:52:class RadialGrid
-marsdisk/grid.py:90:def omega(r: float) -> float
-marsdisk/grid.py:93:def v_keplerian(r: float) -> float
+marsdisk/grid.py:36:def v_kepler(r: float) -> float
+marsdisk/grid.py:56:class RadialGrid
+marsdisk/grid.py:94:def omega(r: float) -> float
+marsdisk/grid.py:97:def v_keplerian(r: float) -> float
 marsdisk/io/_numba_tables.py:24:def NUMBA_AVAILABLE() -> bool
 marsdisk/io/_numba_tables.py:30:def qpr_interp_scalar_numba(s_vals: np.ndarray, T_vals: np.ndarray, q_vals: np.ndarray, s: float, T: float) -> float
 marsdisk/io/_numba_tables.py:72:def qpr_interp_array_numba(s_vals: np.ndarray, T_vals: np.ndarray, q_vals: np.ndarray, s_arr: np.ndarray, T: float) -> np.ndarray
@@ -264,13 +264,13 @@ marsdisk/io/streaming.py:24:class StreamingState
 marsdisk/io/tables.py:40:def _approx_phi(tau: float, w0: float, g: float) -> float
 marsdisk/io/tables.py:46:class QPrTable
 marsdisk/io/tables.py:128:class PhiTable
-marsdisk/io/tables.py:175:def _read_qpr_frame_h5datasets(path: Path) -> pd.DataFrame
-marsdisk/io/tables.py:229:def _read_qpr_frame(path: Path) -> pd.DataFrame
-marsdisk/io/tables.py:289:def interp_qpr(s: float, T_M: float) -> float
-marsdisk/io/tables.py:303:def interp_phi(tau: float, w0: float, g: float) -> float
-marsdisk/io/tables.py:313:def load_qpr_table(path: str | Path) -> Callable[[float, float], float]
-marsdisk/io/tables.py:328:def load_phi_table(path: str | Path) -> Callable[[float], float]
-marsdisk/io/tables.py:386:def get_qpr_table_path() -> Optional[Path]
+marsdisk/io/tables.py:185:def _read_qpr_frame_h5datasets(path: Path) -> pd.DataFrame
+marsdisk/io/tables.py:239:def _read_qpr_frame(path: Path) -> pd.DataFrame
+marsdisk/io/tables.py:299:def interp_qpr(s: float, T_M: float) -> float
+marsdisk/io/tables.py:313:def interp_phi(tau: float, w0: float, g: float) -> float
+marsdisk/io/tables.py:323:def load_qpr_table(path: str | Path) -> Callable[[float, float], float]
+marsdisk/io/tables.py:338:def load_phi_table(path: str | Path) -> Callable[[float], float]
+marsdisk/io/tables.py:396:def get_qpr_table_path() -> Optional[Path]
 marsdisk/io/writer.py:20:def _ensure_parent(path: Path) -> None
 marsdisk/io/writer.py:24:def write_parquet(df: pd.DataFrame, path: Path, *, compression: str='snappy') -> None
 marsdisk/io/writer.py:394:def write_summary(summary: Mapping[str, Any], path: Path) -> None
@@ -411,32 +411,32 @@ marsdisk/physics/_numba_radiation.py:34:def blowout_radius_numba(rho: float, T_M
 marsdisk/physics/collide.py:43:class CollisionKernelWorkspace
 marsdisk/physics/collide.py:50:def prepare_collision_kernel_workspace(s: Iterable[float]) -> CollisionKernelWorkspace
 marsdisk/physics/collide.py:66:def compute_collision_kernel_C1(N: Iterable[float], s: Iterable[float], H: Iterable[float], v_rel: float | np.ndarray, workspace: CollisionKernelWorkspace | None=None, *, use_numba: bool | None=None) -> np.ndarray
-marsdisk/physics/collide.py:166:def compute_prod_subblow_area_rate_C2(C: np.ndarray, m_subblow: np.ndarray) -> float
-marsdisk/physics/collide.py:208:def compute_collision_kernel_bookkeeping(N: Iterable[float], s: Iterable[float], H: Iterable[float], m: Iterable[float], v_rel: float | np.ndarray, f_ke_matrix: np.ndarray, F_lf_matrix: np.ndarray, *, use_numba: bool | None=None) -> tuple[np.ndarray, np.ndarray]
-marsdisk/physics/collisions_smol.py:58:class Smol0DStepResult
-marsdisk/physics/collisions_smol.py:102:class KernelEIState
-marsdisk/physics/collisions_smol.py:113:class TimeOrbitParams
-marsdisk/physics/collisions_smol.py:123:class MaterialParams
-marsdisk/physics/collisions_smol.py:132:class DynamicsParams
-marsdisk/physics/collisions_smol.py:142:class SupplyParams
-marsdisk/physics/collisions_smol.py:154:class CollisionControlFlags
-marsdisk/physics/collisions_smol.py:171:class CollisionStepContext
-marsdisk/physics/collisions_smol.py:184:def supply_mass_rate_to_number_source(prod_subblow_mass_rate: float, s_bin_center: np.ndarray, m_bin: np.ndarray, s_min_eff: float, *, widths: np.ndarray | None=None, mode: str='min_bin', s_inj_min: float | None=None, s_inj_max: float | None=None, q: float=3.5) -> np.ndarray
-marsdisk/physics/collisions_smol.py:290:def _fragment_tensor(sizes: np.ndarray, masses: np.ndarray, edges: np.ndarray, v_rel: float | np.ndarray, rho: float, alpha_frag: float=3.5, *, use_numba: bool | None=None) -> np.ndarray
-marsdisk/physics/collisions_smol.py:446:def _blowout_sink_vector(sizes: np.ndarray, a_blow: float, t_blow: float, enable_blowout: bool) -> np.ndarray
-marsdisk/physics/collisions_smol.py:476:def kernel_minimum_tcoll(C_kernel: np.ndarray, N: np.ndarray | None=None) -> float
-marsdisk/physics/collisions_smol.py:510:def _supply_velocity_weight(delta_sigma: float, sigma_prev: float, mode: str='delta_sigma') -> float
-marsdisk/physics/collisions_smol.py:521:def _resolve_supply_velocity(cfg: 'SupplyInjectionVelocity | None', e_base: float, i_base: float) -> tuple[float, float]
-marsdisk/physics/collisions_smol.py:538:def _blend_supply_velocity(e_base: float, i_base: float, e_supply: float, i_supply: float, *, weight: float, mode: str='rms') -> tuple[float, float]
-marsdisk/physics/collisions_smol.py:560:def compute_kernel_ei_state(dynamics_cfg: 'Dynamics', tau_eff: float, a_orbit_m: float, v_k: float, sizes: np.ndarray, *, e_override: float | None=None, i_override: float | None=None) -> KernelEIState
-marsdisk/physics/collisions_smol.py:610:def _compute_ei_damping(e_curr: float, i_curr: float, *, dt: float, tau_eff: float | None, a_orbit_m: float, v_k: float, dynamics_cfg: 'Dynamics | None', t_coll_ref: float | None, eps_restitution: float) -> tuple[float | None, float | None, float | None, float | None]
-marsdisk/physics/collisions_smol.py:662:def compute_kernel_e_i_H(dynamics_cfg: 'Dynamics', tau_eff: float, a_orbit_m: float, v_k: float, sizes: np.ndarray) -> tuple[float, float, np.ndarray]
-marsdisk/physics/collisions_smol.py:728:def step_collisions(ctx: CollisionStepContext, psd_state: MutableMapping[str, np.ndarray | float]) -> Smol0DStepResult
-marsdisk/physics/collisions_smol.py:768:def step_collisions_smol_0d(psd_state: MutableMapping[str, np.ndarray | float], sigma_surf: float, *, dt: float, prod_subblow_area_rate: float, r: float, Omega: float, t_blow: float | None=None, a_blow: float, rho: float, e_value: float, i_value: float, sigma_tau1: float | None, enable_blowout: bool, t_sink: float | None, ds_dt_val: float | None=None, s_min_effective: float | None=None, dynamics_cfg: 'Dynamics | None'=None, tau_eff: float | None=None, collisions_enabled: bool=True, mass_conserving_sublimation: bool=False, supply_injection_mode: str='min_bin', supply_s_inj_min: float | None=None, supply_s_inj_max: float | None=None, supply_q: float=3.5, supply_velocity_cfg: 'SupplyInjectionVelocity | None'=None, headroom_policy: str='clip', energy_bookkeeping_enabled: bool=False, f_ke_fragmentation: float | None=None, f_ke_cratering: float=0.1, eps_restitution: float=0.5, enable_e_damping: bool=False, t_coll_for_damp: float | None=None) -> Smol0DStepResult
+marsdisk/physics/collide.py:170:def compute_prod_subblow_area_rate_C2(C: np.ndarray, m_subblow: np.ndarray) -> float
+marsdisk/physics/collide.py:212:def compute_collision_kernel_bookkeeping(N: Iterable[float], s: Iterable[float], H: Iterable[float], m: Iterable[float], v_rel: float | np.ndarray, f_ke_matrix: np.ndarray, F_lf_matrix: np.ndarray, *, use_numba: bool | None=None) -> tuple[np.ndarray, np.ndarray]
+marsdisk/physics/collisions_smol.py:59:class Smol0DStepResult
+marsdisk/physics/collisions_smol.py:103:class KernelEIState
+marsdisk/physics/collisions_smol.py:114:class TimeOrbitParams
+marsdisk/physics/collisions_smol.py:124:class MaterialParams
+marsdisk/physics/collisions_smol.py:133:class DynamicsParams
+marsdisk/physics/collisions_smol.py:143:class SupplyParams
+marsdisk/physics/collisions_smol.py:155:class CollisionControlFlags
+marsdisk/physics/collisions_smol.py:172:class CollisionStepContext
+marsdisk/physics/collisions_smol.py:185:def supply_mass_rate_to_number_source(prod_subblow_mass_rate: float, s_bin_center: np.ndarray, m_bin: np.ndarray, s_min_eff: float, *, widths: np.ndarray | None=None, mode: str='min_bin', s_inj_min: float | None=None, s_inj_max: float | None=None, q: float=3.5) -> np.ndarray
+marsdisk/physics/collisions_smol.py:291:def _fragment_tensor(sizes: np.ndarray, masses: np.ndarray, edges: np.ndarray, v_rel: float | np.ndarray, rho: float, alpha_frag: float=3.5, *, use_numba: bool | None=None) -> np.ndarray
+marsdisk/physics/collisions_smol.py:453:def _blowout_sink_vector(sizes: np.ndarray, a_blow: float, t_blow: float, enable_blowout: bool) -> np.ndarray
+marsdisk/physics/collisions_smol.py:483:def kernel_minimum_tcoll(C_kernel: np.ndarray, N: np.ndarray | None=None) -> float
+marsdisk/physics/collisions_smol.py:517:def _supply_velocity_weight(delta_sigma: float, sigma_prev: float, mode: str='delta_sigma') -> float
+marsdisk/physics/collisions_smol.py:528:def _resolve_supply_velocity(cfg: 'SupplyInjectionVelocity | None', e_base: float, i_base: float) -> tuple[float, float]
+marsdisk/physics/collisions_smol.py:545:def _blend_supply_velocity(e_base: float, i_base: float, e_supply: float, i_supply: float, *, weight: float, mode: str='rms') -> tuple[float, float]
+marsdisk/physics/collisions_smol.py:567:def compute_kernel_ei_state(dynamics_cfg: 'Dynamics', tau_eff: float, a_orbit_m: float, v_k: float, sizes: np.ndarray, *, e_override: float | None=None, i_override: float | None=None) -> KernelEIState
+marsdisk/physics/collisions_smol.py:617:def _compute_ei_damping(e_curr: float, i_curr: float, *, dt: float, tau_eff: float | None, a_orbit_m: float, v_k: float, dynamics_cfg: 'Dynamics | None', t_coll_ref: float | None, eps_restitution: float) -> tuple[float | None, float | None, float | None, float | None]
+marsdisk/physics/collisions_smol.py:669:def compute_kernel_e_i_H(dynamics_cfg: 'Dynamics', tau_eff: float, a_orbit_m: float, v_k: float, sizes: np.ndarray) -> tuple[float, float, np.ndarray]
+marsdisk/physics/collisions_smol.py:749:def step_collisions(ctx: CollisionStepContext, psd_state: MutableMapping[str, np.ndarray | float]) -> Smol0DStepResult
+marsdisk/physics/collisions_smol.py:789:def step_collisions_smol_0d(psd_state: MutableMapping[str, np.ndarray | float], sigma_surf: float, *, dt: float, prod_subblow_area_rate: float, r: float, Omega: float, t_blow: float | None=None, a_blow: float, rho: float, e_value: float, i_value: float, sigma_tau1: float | None, enable_blowout: bool, t_sink: float | None, ds_dt_val: float | None=None, s_min_effective: float | None=None, dynamics_cfg: 'Dynamics | None'=None, tau_eff: float | None=None, collisions_enabled: bool=True, mass_conserving_sublimation: bool=False, supply_injection_mode: str='min_bin', supply_s_inj_min: float | None=None, supply_s_inj_max: float | None=None, supply_q: float=3.5, supply_velocity_cfg: 'SupplyInjectionVelocity | None'=None, headroom_policy: str='clip', energy_bookkeeping_enabled: bool=False, f_ke_fragmentation: float | None=None, f_ke_cratering: float=0.1, eps_restitution: float=0.5, enable_e_damping: bool=False, t_coll_for_damp: float | None=None) -> Smol0DStepResult
 marsdisk/physics/dynamics.py:18:def v_ij(e: float, i: float, v_k: float=1.0) -> float
 marsdisk/physics/dynamics.py:49:def v_rel_pericenter(e: float, v_k: float) -> float
 marsdisk/physics/dynamics.py:62:def solve_c_eq(tau: float, e: float, eps_model: Callable[[float], float], *, f_wake: float=1.0, max_iter: int=100, tol: float=1e-06) -> float
-marsdisk/physics/dynamics.py:124:def update_e(e: float, e_eq: float, t_damp: float, dt: float) -> float
+marsdisk/physics/dynamics.py:128:def update_e(e: float, e_eq: float, t_damp: float, dt: float) -> float
 marsdisk/physics/fragments.py:40:def q_r_array(m1: np.ndarray, m2: np.ndarray, v: np.ndarray) -> np.ndarray
 marsdisk/physics/fragments.py:61:def largest_remnant_fraction_array(q_r: np.ndarray, q_rd_star: np.ndarray) -> np.ndarray
 marsdisk/physics/fragments.py:79:def compute_q_r_F2(m1: float, m2: float, v: float) -> float
@@ -444,21 +444,21 @@ marsdisk/physics/fragments.py:111:def compute_largest_remnant_mass_fraction_F2(m
 marsdisk/physics/fragments.py:148:def s_sub_boundary(T: float, T_sub: float=1300.0, *, t_ref: float | None=None, rho: float | None=None, sub_params: SublimationParams | None=None) -> float
 marsdisk/physics/fragments.py:217:def compute_s_min_F2(a_blow: float, T: float, T_sub: float=1300.0, *, t_ref: float | None=None, rho: float | None=None, sub_params: SublimationParams | None=None) -> float
 marsdisk/physics/initfields.py:19:def sigma_from_Minner(M_in: float, r_in: float, r_out: float, p_index: float) -> Callable[[float], float]
-marsdisk/physics/initfields.py:49:def surf_sigma_init(sigma: float, kappa_eff: Optional[float], policy: str, f_surf: float | None=None, sigma_override: float | None=None) -> float
+marsdisk/physics/initfields.py:52:def surf_sigma_init(sigma: float, kappa_eff: Optional[float], policy: str, f_surf: float | None=None, sigma_override: float | None=None) -> float
 marsdisk/physics/phase.py:26:class PhaseDecision
 marsdisk/physics/phase.py:38:class BulkPhaseState
 marsdisk/physics/phase.py:54:def particle_temperature_equilibrium(T_mars_K: float, r_orbit_m: float, q_abs_mean: float) -> float
 marsdisk/physics/phase.py:82:class PhaseEvaluator
 marsdisk/physics/phase.py:594:def hydro_escape_timescale(cfg: Optional[HydroEscapeConfig], temperature_K: float, f_vap: float) -> Optional[float]
-marsdisk/physics/psd.py:60:def update_psd_state(*, s_min: float, s_max: float, alpha: float, wavy_strength: float, n_bins: int=40, rho: float=3000.0, wavy_decay: float=0.0, alpha_mode: str='size') -> Dict[str, np.ndarray | float]
-marsdisk/physics/psd.py:153:def sanitize_and_normalize_number(psd_state: Dict[str, np.ndarray | float], clip_max: float=1e+200, *, normalize: bool=True) -> Dict[str, np.ndarray | float]
-marsdisk/physics/psd.py:190:def compute_kappa(psd_state: Dict[str, np.ndarray | float]) -> float
-marsdisk/physics/psd.py:226:def mass_weights_lognormal_mixture(sizes: np.ndarray, widths: np.ndarray, *, f_fine: float, s_fine: float, s_meter: float, width_dex: float, s_cut: float | None=None) -> np.ndarray
-marsdisk/physics/psd.py:269:def mass_weights_truncated_powerlaw(sizes: np.ndarray, widths: np.ndarray, *, alpha_solid: float, s_min_solid: float, s_max_solid: float, s_cut: float | None=None) -> np.ndarray
-marsdisk/physics/psd.py:303:def apply_mass_weights(psd_state: Dict[str, np.ndarray | float], mass_weights: np.ndarray, *, rho: float | None=None) -> Dict[str, np.ndarray | float]
-marsdisk/physics/psd.py:348:def _size_drift_rebin_numpy(sizes: np.ndarray, number: np.ndarray, edges: np.ndarray, ds_step: float, floor_val: float) -> tuple[np.ndarray, np.ndarray]
-marsdisk/physics/psd.py:373:def apply_uniform_size_drift(psd_state: Dict[str, np.ndarray | float], *, ds_dt: float, dt: float, floor: float, sigma_surf: float) -> tuple[float, float, Dict[str, float]]
-marsdisk/physics/psd.py:505:def evolve_min_size(s_min_prev: float, *, dt: float, model: Optional[str]=None, params: Optional[Mapping[str, float]]=None, T: Optional[float]=None, rho: Optional[float]=None, s_floor: Optional[float]=None, sublimation_params: Optional[SublimationParams]=None) -> float
+marsdisk/physics/psd.py:62:def update_psd_state(*, s_min: float, s_max: float, alpha: float, wavy_strength: float, n_bins: int=40, rho: float=3000.0, wavy_decay: float=0.0, alpha_mode: str='size') -> Dict[str, np.ndarray | float]
+marsdisk/physics/psd.py:155:def sanitize_and_normalize_number(psd_state: Dict[str, np.ndarray | float], clip_max: float=1e+200, *, normalize: bool=True) -> Dict[str, np.ndarray | float]
+marsdisk/physics/psd.py:201:def compute_kappa(psd_state: Dict[str, np.ndarray | float]) -> float
+marsdisk/physics/psd.py:237:def mass_weights_lognormal_mixture(sizes: np.ndarray, widths: np.ndarray, *, f_fine: float, s_fine: float, s_meter: float, width_dex: float, s_cut: float | None=None) -> np.ndarray
+marsdisk/physics/psd.py:280:def mass_weights_truncated_powerlaw(sizes: np.ndarray, widths: np.ndarray, *, alpha_solid: float, s_min_solid: float, s_max_solid: float, s_cut: float | None=None) -> np.ndarray
+marsdisk/physics/psd.py:314:def apply_mass_weights(psd_state: Dict[str, np.ndarray | float], mass_weights: np.ndarray, *, rho: float | None=None) -> Dict[str, np.ndarray | float]
+marsdisk/physics/psd.py:359:def _size_drift_rebin_numpy(sizes: np.ndarray, number: np.ndarray, edges: np.ndarray, ds_step: float, floor_val: float) -> tuple[np.ndarray, np.ndarray]
+marsdisk/physics/psd.py:384:def apply_uniform_size_drift(psd_state: Dict[str, np.ndarray | float], *, ds_dt: float, dt: float, floor: float, sigma_surf: float) -> tuple[float, float, Dict[str, float]]
+marsdisk/physics/psd.py:524:def evolve_min_size(s_min_prev: float, *, dt: float, model: Optional[str]=None, params: Optional[Mapping[str, float]]=None, T: Optional[float]=None, rho: Optional[float]=None, s_floor: Optional[float]=None, sublimation_params: Optional[SublimationParams]=None) -> float
 marsdisk/physics/qstar.py:65:def set_coeff_unit_system(units: CoeffUnits) -> CoeffUnits
 marsdisk/physics/qstar.py:75:def get_coeff_unit_system() -> CoeffUnits
 marsdisk/physics/qstar.py:81:def get_coefficient_table() -> Dict[float, Tuple[float, float, float, float]]
@@ -508,44 +508,44 @@ marsdisk/physics/sinks.py:83:def total_sink_timescale(T_use: float, rho_p: float
 marsdisk/physics/sizes.py:11:def eval_ds_dt_sublimation(T: float, rho_bulk: float, params: sublimation.SublimationParams) -> float
 marsdisk/physics/smol.py:45:class ImexWorkspace
 marsdisk/physics/smol.py:54:def psd_state_to_number_density(psd_state: MutableMapping[str, np.ndarray | float], sigma_surf: float, *, rho_fallback: float | None=None) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, float]
-marsdisk/physics/smol.py:120:def number_density_to_psd_state(N_new: np.ndarray, psd_state: MutableMapping[str, np.ndarray | float], sigma_before: float, *, widths: np.ndarray, m: np.ndarray, scale_to_sigma: float) -> tuple[MutableMapping[str, np.ndarray | float], float, float]
-marsdisk/physics/smol.py:175:def _gain_tensor(C: np.ndarray, Y: np.ndarray, m: np.ndarray, out: np.ndarray | None=None) -> np.ndarray
-marsdisk/physics/smol.py:232:def step_imex_bdf1_C3(N: Iterable[float], C: np.ndarray, Y: np.ndarray, S: Iterable[float] | None, m: Iterable[float], prod_subblow_mass_rate: float | None, dt: float, *, source_k: Iterable[float] | None=None, S_external_k: Iterable[float] | None=None, S_sublimation_k: Iterable[float] | None=None, extra_mass_loss_rate: float=0.0, mass_tol: float=0.005, safety: float=0.1, diag_out: MutableMapping[str, float] | None=None, workspace: ImexWorkspace | None=None) -> tuple[np.ndarray, float, float]
-marsdisk/physics/smol.py:409:def compute_mass_budget_error_C4(N_old: Iterable[float], N_new: Iterable[float], m: Iterable[float], prod_subblow_mass_rate: float, dt: float, *, extra_mass_loss_rate: float=0.0) -> float
+marsdisk/physics/smol.py:125:def number_density_to_psd_state(N_new: np.ndarray, psd_state: MutableMapping[str, np.ndarray | float], sigma_before: float, *, widths: np.ndarray, m: np.ndarray, scale_to_sigma: float) -> tuple[MutableMapping[str, np.ndarray | float], float, float]
+marsdisk/physics/smol.py:180:def _gain_tensor(C: np.ndarray, Y: np.ndarray, m: np.ndarray, out: np.ndarray | None=None) -> np.ndarray
+marsdisk/physics/smol.py:237:def step_imex_bdf1_C3(N: Iterable[float], C: np.ndarray, Y: np.ndarray, S: Iterable[float] | None, m: Iterable[float], prod_subblow_mass_rate: float | None, dt: float, *, source_k: Iterable[float] | None=None, S_external_k: Iterable[float] | None=None, S_sublimation_k: Iterable[float] | None=None, extra_mass_loss_rate: float=0.0, mass_tol: float=0.005, safety: float=0.1, diag_out: MutableMapping[str, float] | None=None, workspace: ImexWorkspace | None=None) -> tuple[np.ndarray, float, float]
+marsdisk/physics/smol.py:416:def compute_mass_budget_error_C4(N_old: Iterable[float], N_new: Iterable[float], m: Iterable[float], prod_subblow_mass_rate: float, dt: float, *, extra_mass_loss_rate: float=0.0) -> float
 marsdisk/physics/sublimation.py:48:class PsatSelection(NamedTuple)
 marsdisk/physics/sublimation.py:55:class SublimationParams
 marsdisk/physics/sublimation.py:137:def _is_hkl_active(params: SublimationParams) -> bool
 marsdisk/physics/sublimation.py:161:def _resolve_clausius_branch(T: float, params: SublimationParams) -> Tuple[str, Optional[float], Optional[float], Optional[Tuple[float, float]]]
 marsdisk/physics/sublimation.py:186:def p_sat_clausius(T: float, params: SublimationParams, *, A_override: Optional[float]=None, B_override: Optional[float]=None) -> float
-marsdisk/physics/sublimation.py:207:def _load_psat_table(params: SublimationParams) -> Callable[[float], float]
-marsdisk/physics/sublimation.py:270:def _get_table_info(params: SublimationParams, *, raise_on_error: bool) -> Optional[Dict[str, Any]]
-marsdisk/physics/sublimation.py:309:def _local_clausius_fit_selection(T_req: float, params: SublimationParams, table_info: Dict[str, Any]) -> Optional[PsatSelection]
-marsdisk/physics/sublimation.py:378:def _baseline_clausius_selection(params: SublimationParams, reason: str, *, model_name: str='clausius(baseline)', A_override: Optional[float]=None, B_override: Optional[float]=None, valid_override: Optional[Tuple[float, float]]=None, branch: Optional[str]=None) -> PsatSelection
-marsdisk/physics/sublimation.py:415:def p_sat_tabulated(T: float, params: SublimationParams) -> float
-marsdisk/physics/sublimation.py:432:def choose_psat_backend(T_req: float, params: SublimationParams, table_meta: Optional[Dict[str, Any]]=None) -> PsatSelection
-marsdisk/physics/sublimation.py:558:def _store_psat_selection(params: SublimationParams, selection: PsatSelection, T_req: float, P_value: float) -> None
-marsdisk/physics/sublimation.py:588:def p_sat(T: float, params: SublimationParams) -> float
-marsdisk/physics/sublimation.py:606:def mass_flux_hkl(T: float, params: SublimationParams) -> float
-marsdisk/physics/sublimation.py:665:def s_sink_from_timescale(T: float, rho: float, t_ref: float, params: SublimationParams) -> float
-marsdisk/physics/sublimation.py:684:def sublimation_sink_from_dsdt(s_grid_m: np.ndarray, N_k: np.ndarray, ds_dt_k: np.ndarray, m_k: np.ndarray) -> tuple[np.ndarray, float]
-marsdisk/physics/supply.py:28:class _TableData
-marsdisk/physics/supply.py:70:class _TemperatureTable
-marsdisk/physics/supply.py:101:class SupplyEvalResult
-marsdisk/physics/supply.py:119:class SupplySplitResult
-marsdisk/physics/supply.py:134:class SupplyRuntimeState
-marsdisk/physics/supply.py:176:def _rate_basic(t: float, r: float, spec: Supply | SupplyPiece) -> float
-marsdisk/physics/supply.py:200:def init_runtime_state(spec: Supply, area: float, *, seconds_per_year: float=SECONDS_PER_YEAR) -> SupplyRuntimeState
-marsdisk/physics/supply.py:258:def _temperature_factor(temperature_K: Optional[float], state: Optional[SupplyRuntimeState]) -> Tuple[float, Optional[float], str, Optional[float]]
-marsdisk/physics/supply.py:287:def evaluate_supply(t: float, r: float, dt: float, spec: Supply, *, area: float, state: Optional[SupplyRuntimeState]=None, tau_for_feedback: Optional[float]=None, temperature_K: Optional[float]=None, apply_reservoir: bool=True) -> SupplyEvalResult
-marsdisk/physics/supply.py:383:def split_supply_with_deep_buffer(prod_rate_raw: float, dt: float, sigma_surf: float, sigma_tau1: Optional[float], sigma_deep: float, *, t_mix: Optional[float], deep_enabled: bool, transport_mode: str='direct', headroom_gate: str='hard', headroom_policy: str='clip', t_blow: Optional[float]=None) -> SupplySplitResult
-marsdisk/physics/supply.py:497:def get_prod_area_rate(t: float, r: float, spec: Supply) -> float
+marsdisk/physics/sublimation.py:209:def _load_psat_table(params: SublimationParams) -> Callable[[float], float]
+marsdisk/physics/sublimation.py:272:def _get_table_info(params: SublimationParams, *, raise_on_error: bool) -> Optional[Dict[str, Any]]
+marsdisk/physics/sublimation.py:311:def _local_clausius_fit_selection(T_req: float, params: SublimationParams, table_info: Dict[str, Any]) -> Optional[PsatSelection]
+marsdisk/physics/sublimation.py:380:def _baseline_clausius_selection(params: SublimationParams, reason: str, *, model_name: str='clausius(baseline)', A_override: Optional[float]=None, B_override: Optional[float]=None, valid_override: Optional[Tuple[float, float]]=None, branch: Optional[str]=None) -> PsatSelection
+marsdisk/physics/sublimation.py:417:def p_sat_tabulated(T: float, params: SublimationParams) -> float
+marsdisk/physics/sublimation.py:434:def choose_psat_backend(T_req: float, params: SublimationParams, table_meta: Optional[Dict[str, Any]]=None) -> PsatSelection
+marsdisk/physics/sublimation.py:560:def _store_psat_selection(params: SublimationParams, selection: PsatSelection, T_req: float, P_value: float) -> None
+marsdisk/physics/sublimation.py:590:def p_sat(T: float, params: SublimationParams) -> float
+marsdisk/physics/sublimation.py:608:def mass_flux_hkl(T: float, params: SublimationParams) -> float
+marsdisk/physics/sublimation.py:669:def s_sink_from_timescale(T: float, rho: float, t_ref: float, params: SublimationParams) -> float
+marsdisk/physics/sublimation.py:688:def sublimation_sink_from_dsdt(s_grid_m: np.ndarray, N_k: np.ndarray, ds_dt_k: np.ndarray, m_k: np.ndarray) -> tuple[np.ndarray, float]
+marsdisk/physics/supply.py:29:class _TableData
+marsdisk/physics/supply.py:79:class _TemperatureTable
+marsdisk/physics/supply.py:118:class SupplyEvalResult
+marsdisk/physics/supply.py:136:class SupplySplitResult
+marsdisk/physics/supply.py:151:class SupplyRuntimeState
+marsdisk/physics/supply.py:193:def _rate_basic(t: float, r: float, spec: Supply | SupplyPiece) -> float
+marsdisk/physics/supply.py:219:def init_runtime_state(spec: Supply, area: float, *, seconds_per_year: float=SECONDS_PER_YEAR) -> SupplyRuntimeState
+marsdisk/physics/supply.py:277:def _temperature_factor(temperature_K: Optional[float], state: Optional[SupplyRuntimeState]) -> Tuple[float, Optional[float], str, Optional[float]]
+marsdisk/physics/supply.py:310:def evaluate_supply(t: float, r: float, dt: float, spec: Supply, *, area: float, state: Optional[SupplyRuntimeState]=None, tau_for_feedback: Optional[float]=None, temperature_K: Optional[float]=None, apply_reservoir: bool=True) -> SupplyEvalResult
+marsdisk/physics/supply.py:406:def split_supply_with_deep_buffer(prod_rate_raw: float, dt: float, sigma_surf: float, sigma_tau1: Optional[float], sigma_deep: float, *, t_mix: Optional[float], deep_enabled: bool, transport_mode: str='direct', headroom_gate: str='hard', headroom_policy: str='clip', t_blow: Optional[float]=None) -> SupplySplitResult
+marsdisk/physics/supply.py:520:def get_prod_area_rate(t: float, r: float, spec: Supply) -> float
 marsdisk/physics/surface.py:48:def _safe_tcoll(Omega: float, tau: float | None) -> float | None
-marsdisk/physics/surface.py:74:def wyatt_tcoll_S1(tau: float, Omega: float) -> float
-marsdisk/physics/surface.py:89:class SurfaceStepResult
-marsdisk/physics/surface.py:108:def step_surface_density_S1(sigma_surf: float, prod_subblow_area_rate: float, dt: float, Omega: float, *, t_coll: float | None=None, t_sink: float | None=None, sigma_tau1: float | None=None, enable_blowout: bool=True) -> SurfaceStepResult
-marsdisk/physics/surface.py:187:def step_surface_sink_only(sigma_surf: float, prod_subblow_area_rate: float, dt: float, *, t_sink: float | None=None) -> SurfaceStepResult
-marsdisk/physics/surface.py:209:def compute_surface_outflux(sigma_surf: float, Omega: float) -> float
-marsdisk/physics/surface.py:221:def step_surface(sigma_surf: float, prod_subblow_area_rate: float, dt: float, Omega: float, *, tau: float | None=None, t_coll: float | None=None, t_sink: float | None=None, sigma_tau1: float | None=None, enable_blowout: bool=True) -> SurfaceStepResult
+marsdisk/physics/surface.py:76:def wyatt_tcoll_S1(tau: float, Omega: float) -> float
+marsdisk/physics/surface.py:91:class SurfaceStepResult
+marsdisk/physics/surface.py:110:def step_surface_density_S1(sigma_surf: float, prod_subblow_area_rate: float, dt: float, Omega: float, *, t_blow: float | None=None, t_coll: float | None=None, t_sink: float | None=None, sigma_tau1: float | None=None, enable_blowout: bool=True) -> SurfaceStepResult
+marsdisk/physics/surface.py:195:def step_surface_sink_only(sigma_surf: float, prod_subblow_area_rate: float, dt: float, *, t_sink: float | None=None) -> SurfaceStepResult
+marsdisk/physics/surface.py:217:def compute_surface_outflux(sigma_surf: float, Omega: float) -> float
+marsdisk/physics/surface.py:229:def step_surface(sigma_surf: float, prod_subblow_area_rate: float, dt: float, Omega: float, *, tau: float | None=None, t_blow: float | None=None, t_coll: float | None=None, t_sink: float | None=None, sigma_tau1: float | None=None, enable_blowout: bool=True) -> SurfaceStepResult
 marsdisk/physics/tempdriver.py:40:def _seconds_from_years(years: float) -> float
 marsdisk/physics/tempdriver.py:44:def _years_from_seconds(seconds: float) -> float
 marsdisk/physics/tempdriver.py:48:def _validate_temperature(value: float, *, context: str) -> float
@@ -563,8 +563,8 @@ marsdisk/physics/tempdriver.py:315:def estimate_time_to_temperature(driver: Temp
 marsdisk/physics/tempdriver.py:383:def resolve_temperature_driver(radiation_cfg: Optional[Radiation], *, t_orb: float, prefer_driver: bool=False) -> TemperatureDriverRuntime
 marsdisk/physics/tempdriver.py:483:def autogenerate_temperature_table_if_needed(rad_cfg: Any, *, t_end_years: float, t_orb: float) -> Optional[Dict[str, Any]]
 marsdisk/physics/tempdriver.py:565:def estimate_autogen_horizon_years(rad_cfg: Any, *, T_stop_K: Optional[float], margin_years: float=0.0, fallback_years: float=0.0) -> Optional[float]
-marsdisk/physics/viscosity.py:18:def _solve_tridiagonal(a: np.ndarray, b: np.ndarray, c: np.ndarray, d: np.ndarray) -> np.ndarray
-marsdisk/physics/viscosity.py:51:def step_viscous_diffusion_C5(sigma: Iterable[float], nu: Iterable[float], grid: RadialGrid, dt: float, *, theta: float=0.5) -> np.ndarray
+marsdisk/physics/viscosity.py:19:def _solve_tridiagonal(a: np.ndarray, b: np.ndarray, c: np.ndarray, d: np.ndarray) -> np.ndarray
+marsdisk/physics/viscosity.py:58:def step_viscous_diffusion_C5(sigma: Iterable[float], nu: Iterable[float], grid: RadialGrid, dt: float, *, theta: float=0.5) -> np.ndarray
 marsdisk/physics_step.py:41:class RadiationResult
 marsdisk/physics_step.py:62:class ShieldingResult
 marsdisk/physics_step.py:83:class SublimationResult
@@ -574,15 +574,16 @@ marsdisk/physics_step.py:157:def compute_radiation_parameters(s_min: float, rho:
 marsdisk/physics_step.py:219:def compute_shielding(kappa_surf: float, sigma_surf: float, *, mode: str='psitau', phi_tau_fn: Any=None, tau_fixed: Optional[float]=None, sigma_tau1_fixed: Optional[float]=None, los_factor: float=1.0) -> ShieldingResult
 marsdisk/physics_step.py:322:def compute_sublimation(T_M: float, r: float, rho: float, sub_params: Any, *, phase_state: str='solid', enabled: bool=True) -> SublimationResult
 marsdisk/physics_step.py:383:def step_surface_layer(sigma_surf: float, prod_rate: float, dt: float, Omega: float, *, tau: Optional[float]=None, t_sink: Optional[float]=None, sigma_tau1: Optional[float]=None, enable_blowout: bool=True, chi_blow: float=1.0) -> SurfaceStepResult
-marsdisk/physics_step.py:465:def fast_blowout_correction_factor(ratio: float) -> float
-marsdisk/physics_step.py:489:def compute_gate_factor(t_blow: Optional[float], t_solid: Optional[float]) -> float
+marsdisk/physics_step.py:466:def fast_blowout_correction_factor(ratio: float) -> float
+marsdisk/physics_step.py:490:def compute_gate_factor(t_blow: Optional[float], t_solid: Optional[float]) -> float
 marsdisk/run_one_d.py:66:class MassBudgetViolationError(NumericalError)
 marsdisk/run_one_d.py:70:def _resolve_los_factor(los_geom: Optional[object]) -> float
-marsdisk/run_one_d.py:86:def _auto_chi_blow(beta: float, qpr: float) -> float
-marsdisk/run_one_d.py:101:def _fast_blowout_correction_factor(ratio: float) -> float
-marsdisk/run_one_d.py:114:def _env_flag(name: str) -> Optional[bool]
-marsdisk/run_one_d.py:126:def _env_int(name: str) -> Optional[int]
-marsdisk/run_one_d.py:136:def run_one_d(cfg: Config, *, enforce_mass_budget: bool=False, physics_mode_override: Optional[str]=None, physics_mode_source_override: Optional[str]=None) -> None
+marsdisk/run_one_d.py:86:def _clamp_sigma_surf(value: float, *, label: str='sigma_surf') -> float
+marsdisk/run_one_d.py:100:def _auto_chi_blow(beta: float, qpr: float) -> float
+marsdisk/run_one_d.py:115:def _fast_blowout_correction_factor(ratio: float) -> float
+marsdisk/run_one_d.py:128:def _env_flag(name: str) -> Optional[bool]
+marsdisk/run_one_d.py:140:def _env_int(name: str) -> Optional[int]
+marsdisk/run_one_d.py:150:def run_one_d(cfg: Config, *, enforce_mass_budget: bool=False, physics_mode_override: Optional[str]=None, physics_mode_source_override: Optional[str]=None) -> None
 marsdisk/run_zero_d.py:103:def _get_max_steps() -> int
 marsdisk/run_zero_d.py:117:def _log_stage(label: str, *, extra: Mapping[str, Any] | None=None) -> None
 marsdisk/run_zero_d.py:123:def _model_fields_set(model: Any) -> set[str]
@@ -594,7 +595,7 @@ marsdisk/run_zero_d.py:212:def load_config(path: Path, overrides: Optional[Seque
 marsdisk/run_zero_d.py:237:def _gather_git_info() -> Dict[str, Any]
 marsdisk/run_zero_d.py:264:class MassBudgetViolationError(NumericalError)
 marsdisk/run_zero_d.py:270:def run_zero_d(cfg: Config, *, enforce_mass_budget: bool=False, physics_mode_override: Optional[str]=None, physics_mode_source_override: Optional[str]=None) -> None
-marsdisk/run_zero_d.py:4918:def main(argv: Optional[List[str]]=None) -> None
+marsdisk/run_zero_d.py:4934:def main(argv: Optional[List[str]]=None) -> None
 marsdisk/runtime/autotune.py:22:class MachineState
 marsdisk/runtime/autotune.py:43:class AutoTuneDecision
 marsdisk/runtime/autotune.py:56:def _safe_int(value: Any, fallback: int) -> int
@@ -643,43 +644,43 @@ marsdisk/schema.py:446:class Supply(BaseModel)
 marsdisk/schema.py:555:class Material(BaseModel)
 marsdisk/schema.py:570:class Temps(BaseModel)
 marsdisk/schema.py:597:class Sizes(BaseModel)
-marsdisk/schema.py:621:class Initial(BaseModel)
-marsdisk/schema.py:696:class Dynamics(BaseModel)
-marsdisk/schema.py:797:class QStar(BaseModel)
-marsdisk/schema.py:848:class PSD(BaseModel)
-marsdisk/schema.py:859:class SurfaceEnergy(BaseModel)
-marsdisk/schema.py:867:class Surface(BaseModel)
-marsdisk/schema.py:885:class InitTau1(BaseModel)
-marsdisk/schema.py:906:class OpticalDepth(BaseModel)
-marsdisk/schema.py:930:class SublimationParamsModel(BaseModel)
-marsdisk/schema.py:1022:class RPBlowoutConfig(BaseModel)
-marsdisk/schema.py:1028:class HydroEscapeConfig(BaseModel)
-marsdisk/schema.py:1051:class Sinks(BaseModel)
-marsdisk/schema.py:1075:class ProcessStateTagging(BaseModel)
-marsdisk/schema.py:1084:class Process(BaseModel)
-marsdisk/schema.py:1098:class PhaseThresholds(BaseModel)
-marsdisk/schema.py:1122:class PhaseConfig(BaseModel)
-marsdisk/schema.py:1200:class MarsTemperatureDriverConstant(BaseModel)
-marsdisk/schema.py:1213:class MarsTemperatureDriverTable(BaseModel)
-marsdisk/schema.py:1225:class MarsTemperatureDriverHyodo(BaseModel)
-marsdisk/schema.py:1233:class MarsTemperatureAutogen(BaseModel)
-marsdisk/schema.py:1265:class MarsTemperatureDriverConfig(BaseModel)
-marsdisk/schema.py:1304:class RadiationTauGate(BaseModel)
-marsdisk/schema.py:1311:class QPrCache(BaseModel)
-marsdisk/schema.py:1327:class Radiation(BaseModel)
-marsdisk/schema.py:1387:class Shielding(BaseModel)
-marsdisk/schema.py:1448:class Blowout(BaseModel)
-marsdisk/schema.py:1466:class Checkpoint(BaseModel)
-marsdisk/schema.py:1493:class Resume(BaseModel)
-marsdisk/schema.py:1506:class Numerics(BaseModel)
-marsdisk/schema.py:1632:class StepDiagnostics(BaseModel)
-marsdisk/schema.py:1649:class Progress(BaseModel)
-marsdisk/schema.py:1663:class Streaming(BaseModel)
-marsdisk/schema.py:1710:class IO(BaseModel)
-marsdisk/schema.py:1750:class ExtendedDiagnostics(BaseModel)
-marsdisk/schema.py:1763:class EnergyBookkeeping(BaseModel)
-marsdisk/schema.py:1776:class Diagnostics(BaseModel)
-marsdisk/schema.py:1783:class Config(BaseModel)
+marsdisk/schema.py:633:class Initial(BaseModel)
+marsdisk/schema.py:708:class Dynamics(BaseModel)
+marsdisk/schema.py:825:class QStar(BaseModel)
+marsdisk/schema.py:876:class PSD(BaseModel)
+marsdisk/schema.py:887:class SurfaceEnergy(BaseModel)
+marsdisk/schema.py:895:class Surface(BaseModel)
+marsdisk/schema.py:913:class InitTau1(BaseModel)
+marsdisk/schema.py:934:class OpticalDepth(BaseModel)
+marsdisk/schema.py:958:class SublimationParamsModel(BaseModel)
+marsdisk/schema.py:1050:class RPBlowoutConfig(BaseModel)
+marsdisk/schema.py:1056:class HydroEscapeConfig(BaseModel)
+marsdisk/schema.py:1079:class Sinks(BaseModel)
+marsdisk/schema.py:1103:class ProcessStateTagging(BaseModel)
+marsdisk/schema.py:1112:class Process(BaseModel)
+marsdisk/schema.py:1126:class PhaseThresholds(BaseModel)
+marsdisk/schema.py:1150:class PhaseConfig(BaseModel)
+marsdisk/schema.py:1228:class MarsTemperatureDriverConstant(BaseModel)
+marsdisk/schema.py:1241:class MarsTemperatureDriverTable(BaseModel)
+marsdisk/schema.py:1253:class MarsTemperatureDriverHyodo(BaseModel)
+marsdisk/schema.py:1261:class MarsTemperatureAutogen(BaseModel)
+marsdisk/schema.py:1293:class MarsTemperatureDriverConfig(BaseModel)
+marsdisk/schema.py:1332:class RadiationTauGate(BaseModel)
+marsdisk/schema.py:1339:class QPrCache(BaseModel)
+marsdisk/schema.py:1355:class Radiation(BaseModel)
+marsdisk/schema.py:1415:class Shielding(BaseModel)
+marsdisk/schema.py:1476:class Blowout(BaseModel)
+marsdisk/schema.py:1494:class Checkpoint(BaseModel)
+marsdisk/schema.py:1521:class Resume(BaseModel)
+marsdisk/schema.py:1534:class Numerics(BaseModel)
+marsdisk/schema.py:1660:class StepDiagnostics(BaseModel)
+marsdisk/schema.py:1677:class Progress(BaseModel)
+marsdisk/schema.py:1691:class Streaming(BaseModel)
+marsdisk/schema.py:1738:class IO(BaseModel)
+marsdisk/schema.py:1778:class ExtendedDiagnostics(BaseModel)
+marsdisk/schema.py:1791:class EnergyBookkeeping(BaseModel)
+marsdisk/schema.py:1804:class Diagnostics(BaseModel)
+marsdisk/schema.py:1811:class Config(BaseModel)
 marsdisk/warnings.py:7:class MarsDiskWarning(UserWarning)
 marsdisk/warnings.py:11:class PhysicsWarning(MarsDiskWarning)
 marsdisk/warnings.py:15:class NumericalWarning(MarsDiskWarning)
@@ -696,87 +697,97 @@ paper/pdf_extractor/src/extractor.py:6:def extract_content_hybrid(doc, output_di
 paper/pdf_extractor/src/extractor.py:67:def process_pdf(pdf_path, output_base_dir='outputs', force_ocr=False)
 paper/plot_style.py:29:def resolve_style(overrides: Dict[str, Any] | None=None) -> Dict[str, Any]
 paper/plot_style.py:37:def apply_default_style(overrides: Dict[str, Any] | None=None) -> Dict[str, Any]
-scripts/analyze_radius_trend.py:44:def parse_args(argv: Iterable[str] | None=None) -> argparse.Namespace
-scripts/analyze_radius_trend.py:73:def load_config(path: Path) -> dict
-scripts/analyze_radius_trend.py:81:def write_config(data: dict, path: Path) -> None
-scripts/analyze_radius_trend.py:87:def run_case(config_path: Path) -> None
-scripts/analyze_radius_trend.py:92:def collect_metrics(case_dir: Path) -> dict[str, float | str]
-scripts/analyze_radius_trend.py:169:def main(argv: Iterable[str] | None=None) -> None
-scripts/collect_series.py:13:def _iter_series_paths(root: Path) -> Iterable[Path]
-scripts/collect_series.py:21:def collect_series(roots: List[Path], out_path: Path) -> None
-scripts/collect_series.py:39:def _parse_args() -> argparse.Namespace
-scripts/collect_series.py:55:def main() -> None
-scripts/debug_blowout_chi_scaling.py:14:def _build_config(outdir: Path, *, chi_blow: float, tm_k: float, q_pr: float, s_min: float, s_max: float, n_bins: int) -> schema.Config
-scripts/debug_blowout_chi_scaling.py:46:def _first_positive(series: pd.Series) -> float
-scripts/debug_blowout_chi_scaling.py:54:def main(argv: list[str] | None=None) -> int
-scripts/debug_fragment_tensor_lr.py:13:def main(argv: list[str] | None=None) -> int
-scripts/debug_psd_drift.py:13:def _reference_rebin_dnds(psd_state: dict[str, np.ndarray | float], *, ds_dt: float, dt: float, floor: float) -> tuple[np.ndarray, np.ndarray]
-scripts/debug_psd_drift.py:54:def main(argv: list[str] | None=None) -> int
-scripts/debug_supply_powerlaw_slope.py:13:def main(argv: list[str] | None=None) -> int
-scripts/plot_axis_r_sweep.py:11:def parse_args() -> argparse.Namespace
-scripts/plot_axis_r_sweep.py:30:def main() -> None
-scripts/plot_from_runs.py:31:def plot_beta_timeseries(runs: List[Path], params: Dict[str, Any], output_dir: Path, fig_id: str) -> Path
-scripts/plot_from_runs.py:54:def plot_mass_budget(runs: List[Path], params: Dict[str, Any], output_dir: Path, fig_id: str) -> Path
-scripts/plot_from_runs.py:77:def plot_psd_wavy(runs: List[Path], params: Dict[str, Any], output_dir: Path, fig_id: str) -> Path
-scripts/plot_from_runs.py:100:def main() -> None
-scripts/plot_heatmaps.py:25:def parse_args(argv: Sequence[str] | None=None) -> argparse.Namespace
-scripts/plot_heatmaps.py:46:def ensure_directory(path: Path) -> None
-scripts/plot_heatmaps.py:52:def _normalise_map_key(map_arg: str) -> Tuple[str, str]
-scripts/plot_heatmaps.py:65:def load_csv(map_stub: str) -> pd.DataFrame
-scripts/plot_heatmaps.py:86:def format_tick_label(value: object) -> str
-scripts/plot_heatmaps.py:96:def prepare_pivot(df: pd.DataFrame, metric: str) -> Tuple[pd.DataFrame, pd.DataFrame | None, List[object], List[object], str, str]
-scripts/plot_heatmaps.py:152:def compute_log_values(pivot: pd.DataFrame) -> Tuple[np.ndarray, np.ndarray, float, float]
-scripts/plot_heatmaps.py:168:def plot_heatmap(map_label: str, metric: str, pivot: pd.DataFrame, failure_pivot: pd.DataFrame | None, x_values: List[object], y_values: List[object], x_label: str, y_label: str, output_path: Path) -> Tuple[float, float]
-scripts/plot_heatmaps.py:277:def sanitize_metric_name(metric: str) -> str
-scripts/plot_heatmaps.py:283:def metric_axis_label(metric: str) -> str
-scripts/plot_heatmaps.py:291:def maybe_plot_mass_per_r2_scatter(df: pd.DataFrame, map_stub: str, map_label: str) -> None
-scripts/plot_heatmaps.py:349:def main(argv: Iterable[str] | None=None) -> None
-scripts/plot_qpr_planck_sio2.py:25:def _load_table(path: Path) -> pd.DataFrame
-scripts/plot_qpr_planck_sio2.py:35:def _plot_curves(ax: plt.Axes, df: pd.DataFrame, temps: np.ndarray, cmap, norm: Normalize, marker_size: float, label_inset: bool=False) -> None
-scripts/plot_qpr_planck_sio2.py:60:def plot_qpr(df: pd.DataFrame, outdir: Path, basename: str) -> List[Path]
-scripts/plot_qpr_planck_sio2.py:134:def parse_args(argv: Iterable[str] | None=None) -> argparse.Namespace
-scripts/plot_qpr_planck_sio2.py:157:def main(argv: Iterable[str] | None=None) -> None
-scripts/plot_sblow_curve.py:22:def _load_temperatures(path: Path) -> np.ndarray
-scripts/plot_sblow_curve.py:30:def parse_args(argv: Iterable[str] | None=None) -> argparse.Namespace
-scripts/plot_sblow_curve.py:59:def main(argv: Iterable[str] | None=None) -> None
-scripts/plot_smol_mass_error.py:25:def _load_series(run_dir: Path, columns: Iterable[str]) -> pd.DataFrame
-scripts/plot_smol_mass_error.py:41:def _parse_args() -> argparse.Namespace
-scripts/plot_smol_mass_error.py:55:def main() -> None
-scripts/plot_tau_reference_mismatch.py:24:def _build_parser() -> argparse.ArgumentParser
-scripts/plot_tau_reference_mismatch.py:88:def _phi_fn(phi_table: str | None, w0: float, g: float)
-scripts/plot_tau_reference_mismatch.py:98:def _logspace(min_val: float, max_val: float, n: int) -> np.ndarray
-scripts/plot_tau_reference_mismatch.py:104:def _compute_ratios(tau0_vals: np.ndarray, mu_vals: np.ndarray, phi_fn) -> tuple[np.ndarray, np.ndarray]
-scripts/plot_tau_reference_mismatch.py:122:def _plot_heatmap(ax, x_vals, y_vals, log_ratio, title, cmap='coolwarm')
-scripts/plot_tau_reference_mismatch.py:133:def main() -> int
-scripts/plot_tau_timescales.py:55:def _resolve_series_files(run_dir: Path) -> tuple[Optional[Path], list[Path]]
-scripts/plot_tau_timescales.py:64:def _available_columns_from_parquet(path: Path) -> list[str]
-scripts/plot_tau_timescales.py:69:def _available_columns_from_dataset(files: list[Path]) -> list[str]
-scripts/plot_tau_timescales.py:74:def _select_columns(available: Iterable[str], desired: Iterable[str]) -> list[str]
-scripts/plot_tau_timescales.py:79:def _estimate_batch_size(memory_limit_gb: Optional[float]) -> int
-scripts/plot_tau_timescales.py:86:def _load_series_dataframe(run_dir: Path, columns: list[str], *, batch_size: Optional[int], memory_limit_gb: Optional[float]) -> pd.DataFrame
-scripts/plot_tau_timescales.py:115:def _pick_first_available(df: pd.DataFrame, candidates: list[str]) -> Optional[str]
-scripts/plot_tau_timescales.py:122:def _pick_first_available_name(available: Iterable[str], candidates: list[str]) -> Optional[str]
-scripts/plot_tau_timescales.py:130:def _is_one_d_columns(available: Iterable[str]) -> bool
-scripts/plot_tau_timescales.py:135:def _filter_active_cells(df: pd.DataFrame) -> pd.DataFrame
-scripts/plot_tau_timescales.py:142:def _compute_t_coll_from_tau(tau: np.ndarray, omega: np.ndarray) -> np.ndarray
-scripts/plot_tau_timescales.py:152:def _compute_timescale_columns(df: pd.DataFrame) -> tuple[pd.DataFrame, dict[str, Optional[str]]]
-scripts/plot_tau_timescales.py:191:def _reduce_cells(df: pd.DataFrame, reduce_mode: str) -> pd.DataFrame
-scripts/plot_tau_timescales.py:200:def _tau_label_jp(tau_columns: set[str]) -> str
-scripts/plot_tau_timescales.py:207:def _apply_timescale_clip(values: np.ndarray, clip_min: Optional[float]) -> np.ndarray
-scripts/plot_tau_timescales.py:213:def _plot_cell_tracks(ax: plt.Axes, df: pd.DataFrame, *, tau_scale: str, time_scale: str, clip_timescale_min: Optional[float]) -> None
-scripts/plot_tau_timescales.py:254:def _plot_trend_lines(ax: plt.Axes, df: pd.DataFrame, *, tau_scale: str, time_scale: str, clip_timescale_min: Optional[float]) -> None
-scripts/plot_tau_timescales.py:294:def _scatter_timescale(ax: plt.Axes, *, x: np.ndarray, y: np.ndarray, label: str, color: Optional[str], marker: str, alpha: float, size: float, cmap: str, norm: Optional[colors.Normalize], color_values: Optional[np.ndarray]) -> Optional[PathCollection]
-scripts/plot_tau_timescales.py:333:def _plot_run(ax: plt.Axes, df: pd.DataFrame, label_prefix: str, *, tau_scale: str, time_scale: str, alpha: float, size: float, color_by_time: bool, color_by_radius: bool, cmap: str, time_norm: Optional[colors.Normalize], radius_norm: Optional[colors.Normalize], radius_label: Optional[str], clip_timescale_min: Optional[float]) -> Optional[PathCollection]
-scripts/plot_tau_timescales.py:400:def main() -> None
-scripts/render_figures_from_tasks.py:25:def load_json(path: Path) -> Any
-scripts/render_figures_from_tasks.py:30:def build_command(script: str, fig_id: str, run_paths: List[str], params: Dict[str, Any]) -> str
-scripts/render_figures_from_tasks.py:47:def main() -> None
+scripts/admin/analyze_radius_trend.py:44:def parse_args(argv: Iterable[str] | None=None) -> argparse.Namespace
+scripts/admin/analyze_radius_trend.py:73:def load_config(path: Path) -> dict
+scripts/admin/analyze_radius_trend.py:81:def write_config(data: dict, path: Path) -> None
+scripts/admin/analyze_radius_trend.py:87:def run_case(config_path: Path) -> None
+scripts/admin/analyze_radius_trend.py:92:def collect_metrics(case_dir: Path) -> dict[str, float | str]
+scripts/admin/analyze_radius_trend.py:169:def main(argv: Iterable[str] | None=None) -> None
+scripts/admin/collect_series.py:13:def _iter_series_paths(root: Path) -> Iterable[Path]
+scripts/admin/collect_series.py:21:def collect_series(roots: List[Path], out_path: Path) -> None
+scripts/admin/collect_series.py:39:def _parse_args() -> argparse.Namespace
+scripts/admin/collect_series.py:55:def main() -> None
+scripts/debug/debug_blowout_chi_scaling.py:14:def _build_config(outdir: Path, *, chi_blow: float, tm_k: float, q_pr: float, s_min: float, s_max: float, n_bins: int) -> schema.Config
+scripts/debug/debug_blowout_chi_scaling.py:46:def _first_positive(series: pd.Series) -> float
+scripts/debug/debug_blowout_chi_scaling.py:54:def main(argv: list[str] | None=None) -> int
+scripts/debug/debug_fragment_tensor_lr.py:13:def main(argv: list[str] | None=None) -> int
+scripts/debug/debug_psd_drift.py:13:def _reference_rebin_dnds(psd_state: dict[str, np.ndarray | float], *, ds_dt: float, dt: float, floor: float) -> tuple[np.ndarray, np.ndarray]
+scripts/debug/debug_psd_drift.py:54:def main(argv: list[str] | None=None) -> int
+scripts/debug/debug_supply_powerlaw_slope.py:13:def main(argv: list[str] | None=None) -> int
+scripts/plots/plot_axis_r_sweep.py:11:def parse_args() -> argparse.Namespace
+scripts/plots/plot_axis_r_sweep.py:30:def main() -> None
+scripts/plots/plot_from_runs.py:31:def plot_beta_timeseries(runs: List[Path], params: Dict[str, Any], output_dir: Path, fig_id: str) -> Path
+scripts/plots/plot_from_runs.py:54:def plot_mass_budget(runs: List[Path], params: Dict[str, Any], output_dir: Path, fig_id: str) -> Path
+scripts/plots/plot_from_runs.py:77:def plot_psd_wavy(runs: List[Path], params: Dict[str, Any], output_dir: Path, fig_id: str) -> Path
+scripts/plots/plot_from_runs.py:100:def main() -> None
+scripts/plots/plot_heatmaps.py:25:def parse_args(argv: Sequence[str] | None=None) -> argparse.Namespace
+scripts/plots/plot_heatmaps.py:46:def ensure_directory(path: Path) -> None
+scripts/plots/plot_heatmaps.py:52:def _normalise_map_key(map_arg: str) -> Tuple[str, str]
+scripts/plots/plot_heatmaps.py:65:def load_csv(map_stub: str) -> pd.DataFrame
+scripts/plots/plot_heatmaps.py:86:def format_tick_label(value: object) -> str
+scripts/plots/plot_heatmaps.py:96:def prepare_pivot(df: pd.DataFrame, metric: str) -> Tuple[pd.DataFrame, pd.DataFrame | None, List[object], List[object], str, str]
+scripts/plots/plot_heatmaps.py:152:def compute_log_values(pivot: pd.DataFrame) -> Tuple[np.ndarray, np.ndarray, float, float]
+scripts/plots/plot_heatmaps.py:168:def plot_heatmap(map_label: str, metric: str, pivot: pd.DataFrame, failure_pivot: pd.DataFrame | None, x_values: List[object], y_values: List[object], x_label: str, y_label: str, output_path: Path) -> Tuple[float, float]
+scripts/plots/plot_heatmaps.py:277:def sanitize_metric_name(metric: str) -> str
+scripts/plots/plot_heatmaps.py:283:def metric_axis_label(metric: str) -> str
+scripts/plots/plot_heatmaps.py:291:def maybe_plot_mass_per_r2_scatter(df: pd.DataFrame, map_stub: str, map_label: str) -> None
+scripts/plots/plot_heatmaps.py:349:def main(argv: Iterable[str] | None=None) -> None
+scripts/plots/plot_qpr_planck_sio2.py:25:def _load_table(path: Path) -> pd.DataFrame
+scripts/plots/plot_qpr_planck_sio2.py:35:def _plot_curves(ax: plt.Axes, df: pd.DataFrame, temps: np.ndarray, cmap, norm: Normalize, marker_size: float, label_inset: bool=False) -> None
+scripts/plots/plot_qpr_planck_sio2.py:60:def plot_qpr(df: pd.DataFrame, outdir: Path, basename: str) -> List[Path]
+scripts/plots/plot_qpr_planck_sio2.py:134:def parse_args(argv: Iterable[str] | None=None) -> argparse.Namespace
+scripts/plots/plot_qpr_planck_sio2.py:157:def main(argv: Iterable[str] | None=None) -> None
+scripts/plots/plot_sblow_curve.py:22:def _load_temperatures(path: Path) -> np.ndarray
+scripts/plots/plot_sblow_curve.py:30:def parse_args(argv: Iterable[str] | None=None) -> argparse.Namespace
+scripts/plots/plot_sblow_curve.py:59:def main(argv: Iterable[str] | None=None) -> None
+scripts/plots/plot_smol_mass_error.py:25:def _load_series(run_dir: Path, columns: Iterable[str]) -> pd.DataFrame
+scripts/plots/plot_smol_mass_error.py:41:def _parse_args() -> argparse.Namespace
+scripts/plots/plot_smol_mass_error.py:55:def main() -> None
+scripts/plots/plot_tau_reference_mismatch.py:24:def _build_parser() -> argparse.ArgumentParser
+scripts/plots/plot_tau_reference_mismatch.py:88:def _phi_fn(phi_table: str | None, w0: float, g: float)
+scripts/plots/plot_tau_reference_mismatch.py:98:def _logspace(min_val: float, max_val: float, n: int) -> np.ndarray
+scripts/plots/plot_tau_reference_mismatch.py:104:def _compute_ratios(tau0_vals: np.ndarray, mu_vals: np.ndarray, phi_fn) -> tuple[np.ndarray, np.ndarray]
+scripts/plots/plot_tau_reference_mismatch.py:122:def _plot_heatmap(ax, x_vals, y_vals, log_ratio, title, cmap='coolwarm')
+scripts/plots/plot_tau_reference_mismatch.py:133:def main() -> int
+scripts/plots/plot_tau_timescales.py:55:def _resolve_series_files(run_dir: Path) -> tuple[Optional[Path], list[Path]]
+scripts/plots/plot_tau_timescales.py:64:def _available_columns_from_parquet(path: Path) -> list[str]
+scripts/plots/plot_tau_timescales.py:69:def _available_columns_from_dataset(files: list[Path]) -> list[str]
+scripts/plots/plot_tau_timescales.py:74:def _select_columns(available: Iterable[str], desired: Iterable[str]) -> list[str]
+scripts/plots/plot_tau_timescales.py:79:def _estimate_batch_size(memory_limit_gb: Optional[float]) -> int
+scripts/plots/plot_tau_timescales.py:86:def _load_series_dataframe(run_dir: Path, columns: list[str], *, batch_size: Optional[int], memory_limit_gb: Optional[float]) -> pd.DataFrame
+scripts/plots/plot_tau_timescales.py:115:def _pick_first_available(df: pd.DataFrame, candidates: list[str]) -> Optional[str]
+scripts/plots/plot_tau_timescales.py:122:def _pick_first_available_name(available: Iterable[str], candidates: list[str]) -> Optional[str]
+scripts/plots/plot_tau_timescales.py:130:def _is_one_d_columns(available: Iterable[str]) -> bool
+scripts/plots/plot_tau_timescales.py:135:def _filter_active_cells(df: pd.DataFrame) -> pd.DataFrame
+scripts/plots/plot_tau_timescales.py:142:def _compute_t_coll_from_tau(tau: np.ndarray, omega: np.ndarray) -> np.ndarray
+scripts/plots/plot_tau_timescales.py:152:def _compute_timescale_columns(df: pd.DataFrame) -> tuple[pd.DataFrame, dict[str, Optional[str]]]
+scripts/plots/plot_tau_timescales.py:191:def _reduce_cells(df: pd.DataFrame, reduce_mode: str) -> pd.DataFrame
+scripts/plots/plot_tau_timescales.py:200:def _tau_label_jp(tau_columns: set[str]) -> str
+scripts/plots/plot_tau_timescales.py:207:def _apply_timescale_clip(values: np.ndarray, clip_min: Optional[float]) -> np.ndarray
+scripts/plots/plot_tau_timescales.py:213:def _plot_cell_tracks(ax: plt.Axes, df: pd.DataFrame, *, tau_scale: str, time_scale: str, clip_timescale_min: Optional[float]) -> None
+scripts/plots/plot_tau_timescales.py:254:def _plot_trend_lines(ax: plt.Axes, df: pd.DataFrame, *, tau_scale: str, time_scale: str, clip_timescale_min: Optional[float]) -> None
+scripts/plots/plot_tau_timescales.py:294:def _scatter_timescale(ax: plt.Axes, *, x: np.ndarray, y: np.ndarray, label: str, color: Optional[str], marker: str, alpha: float, size: float, cmap: str, norm: Optional[colors.Normalize], color_values: Optional[np.ndarray]) -> Optional[PathCollection]
+scripts/plots/plot_tau_timescales.py:333:def _plot_run(ax: plt.Axes, df: pd.DataFrame, label_prefix: str, *, tau_scale: str, time_scale: str, alpha: float, size: float, color_by_time: bool, color_by_radius: bool, cmap: str, time_norm: Optional[colors.Normalize], radius_norm: Optional[colors.Normalize], radius_label: Optional[str], clip_timescale_min: Optional[float]) -> Optional[PathCollection]
+scripts/plots/plot_tau_timescales.py:400:def main() -> None
+scripts/plots/render_figures_from_tasks.py:25:def load_json(path: Path) -> Any
+scripts/plots/render_figures_from_tasks.py:30:def build_command(script: str, fig_id: str, run_paths: List[str], params: Dict[str, Any]) -> str
+scripts/plots/render_figures_from_tasks.py:47:def main() -> None
 scripts/research/evaluate_tau_supply.py:29:def _load_target_rate(run_dir: Path, override: float | None) -> float | None
 scripts/research/evaluate_tau_supply.py:56:def _safe_median(series: pd.Series) -> float
 scripts/research/evaluate_tau_supply.py:64:def _read_series(run_path: Path) -> pd.DataFrame
 scripts/research/evaluate_tau_supply.py:92:def evaluate_run(run_dir: Path, *, window_spans: Sequence[tuple[float, float]]=((0.5, 1.0),), min_duration_days: float=0.1, target_rate: float | None=None, threshold_factor: float=0.9) -> dict[str, object]
 scripts/research/evaluate_tau_supply.py:189:def main() -> None
-scripts/research/plot_sweep_run.py:17:def main(run_dir: Path) -> int
+scripts/research/plot_sweep_run.py:15:def _load_summary(run_dir: Path) -> dict
+scripts/research/plot_sweep_run.py:25:def _compute_cell_weights(df)
+scripts/research/plot_sweep_run.py:61:def _weighted_mean(values, weights)
+scripts/research/plot_sweep_run.py:77:def _aggregate_1d(df, columns)
+scripts/research/plot_sweep_run.py:139:def _load_series(run_dir: Path, columns)
+scripts/research/plot_sweep_run.py:153:def _concat_frames(frames)
+scripts/research/plot_sweep_run.py:160:def _pd_concat(frames)
+scripts/research/plot_sweep_run.py:166:def _read_parquet(path: Path, columns)
+scripts/research/plot_sweep_run.py:185:def _downsample(df, max_rows)
+scripts/research/plot_sweep_run.py:194:def _plot_quicklook(df, plots_dir: Path)
+scripts/research/plot_sweep_run.py:237:def main(run_dir: Path) -> int
 scripts/research/preflight_streaming_check.py:19:def check_streaming_chunks(run_dir: Path) -> int
 scripts/research/preflight_streaming_check.py:95:def check_required_columns(run_dir: Path) -> int
 scripts/research/preflight_streaming_check.py:128:def main()
@@ -785,118 +796,133 @@ scripts/research/run_qstar_scale_sweep.py:24:def _run_case(cmd_base: List[str], 
 scripts/research/run_qstar_scale_sweep.py:37:def _summarise_run(outdir: Path) -> dict
 scripts/research/run_qstar_scale_sweep.py:79:def parse_args(argv: Iterable[str] | None=None) -> argparse.Namespace
 scripts/research/run_qstar_scale_sweep.py:120:def main(argv: Iterable[str] | None=None) -> None
-scripts/run_autotuned.py:10:def main() -> int
-scripts/run_axis_r_sweep.py:68:class CaseResult
-scripts/run_axis_r_sweep.py:97:def format_r_rm(value: float) -> str
-scripts/run_axis_r_sweep.py:102:def format_mass_tag(value: float) -> str
-scripts/run_axis_r_sweep.py:115:def format_float(value: float) -> str
-scripts/run_axis_r_sweep.py:131:def compute_seed(r_m: float, temperature_k: float, mass_mmars: float) -> int
-scripts/run_axis_r_sweep.py:138:def render_config_yaml(*, r_m: float, r_rm: float, temperature_k: float, mass_mmars: float, outdir: Path, seed: int) -> str
-scripts/run_axis_r_sweep.py:221:def ensure_directories() -> None
-scripts/run_axis_r_sweep.py:228:def build_cases(root: Path) -> List[CaseResult]
-scripts/run_axis_r_sweep.py:257:def write_configs(cases: Iterable[CaseResult], root: Path) -> None
-scripts/run_axis_r_sweep.py:273:def run_case(case: CaseResult, root: Path) -> None
-scripts/run_axis_r_sweep.py:292:def collect_outputs(case: CaseResult) -> None
-scripts/run_axis_r_sweep.py:315:def write_summary_csv(cases: Iterable[CaseResult], output_path: Path) -> None
-scripts/run_axis_r_sweep.py:368:def main(argv: Optional[List[str]]=None) -> int
-scripts/run_inner_disk_suite.py:55:class CaseSpec
-scripts/run_inner_disk_suite.py:67:def format_phi_tag(value: float) -> str
-scripts/run_inner_disk_suite.py:73:def compute_orbit(r_rm: float) -> Tuple[float, float]
-scripts/run_inner_disk_suite.py:82:def build_overrides(spec: CaseSpec) -> List[str]
-scripts/run_inner_disk_suite.py:105:def ensure_required_outputs(case: CaseSpec) -> None
-scripts/run_inner_disk_suite.py:118:def load_series_tables(case: CaseSpec) -> Tuple[pd.DataFrame, pd.DataFrame]
-scripts/run_inner_disk_suite.py:126:def render_psd_frames(case: CaseSpec, run_df: pd.DataFrame, hist_df: pd.DataFrame) -> List[Path]
-scripts/run_inner_disk_suite.py:175:def make_gif(frame_paths: Sequence[Path], gif_path: Path) -> None
-scripts/run_inner_disk_suite.py:185:def export_orbit_summary(case: CaseSpec) -> Path
-scripts/run_inner_disk_suite.py:214:def write_command_metadata(case: CaseSpec, command: Sequence[str], result: subprocess.CompletedProcess[str]) -> None
-scripts/run_inner_disk_suite.py:228:def build_cases(*, phi_values: Iterable[float], r_rm: float, temperature_min: float, temperature_max: float, temperature_step: float, out_root: Path, phi_table_root: Path) -> List[CaseSpec]
-scripts/run_inner_disk_suite.py:264:def parse_args(argv: Sequence[str] | None=None) -> argparse.Namespace
-scripts/run_inner_disk_suite.py:319:def main(argv: Sequence[str] | None=None) -> None
-scripts/sweep_beta_map.py:30:def _parse_grid(start: float, stop: float, count: int, label: str) -> np.ndarray
-scripts/sweep_beta_map.py:39:def _load_config(path: Path) -> Config
-scripts/sweep_beta_map.py:50:def _write_json(path: Path, payload: dict) -> None
-scripts/sweep_beta_map.py:56:def _write_zarr_array(path: Path, data: np.ndarray, *, axes: Sequence[str]) -> None
-scripts/sweep_beta_map.py:82:def parse_args() -> argparse.Namespace
-scripts/sweep_beta_map.py:119:def main() -> None
-scripts/sweep_heatmaps.py:51:class ParamSpec
-scripts/sweep_heatmaps.py:70:class MapDefinition
-scripts/sweep_heatmaps.py:81:class VariantSpec
-scripts/sweep_heatmaps.py:90:class CaseSpec
-scripts/sweep_heatmaps.py:108:def build_variant_grid(*, s_min_values: Optional[List[Tuple[str, float, float]]]=None, chi_values: Optional[List[Tuple[str, float]]]=None, sink_values: Optional[List[Tuple[str, Dict[str, Any], str]]]=None) -> List[VariantSpec]
-scripts/sweep_heatmaps.py:170:def build_variant_grid_from_spec(spec: str) -> List[VariantSpec]
-scripts/sweep_heatmaps.py:246:def parse_args(argv: Optional[Iterable[str]]=None) -> argparse.Namespace
-scripts/sweep_heatmaps.py:405:def _float_grid(start: float, stop: float, step: float) -> List[float]
-scripts/sweep_heatmaps.py:432:def _normalise_map_key(map_arg: str) -> str
-scripts/sweep_heatmaps.py:445:def create_map_definition(map_arg: str, overrides: Optional[Dict[str, float]]=None) -> MapDefinition
-scripts/sweep_heatmaps.py:551:def format_param_value(value: float) -> str
-scripts/sweep_heatmaps.py:567:def build_case_id(param_x: ParamSpec, x_value: float, param_y: ParamSpec, y_value: float) -> str
-scripts/sweep_heatmaps.py:575:def set_nested(data: Dict[str, Any], path: str, value: Any) -> None
-scripts/sweep_heatmaps.py:587:def get_nested(data: Dict[str, Any], path: str) -> Any
-scripts/sweep_heatmaps.py:602:def ensure_directory(path: Path) -> None
-scripts/sweep_heatmaps.py:608:def partition_param_values(param: ParamSpec, num_parts: int) -> List[np.ndarray]
-scripts/sweep_heatmaps.py:631:def completion_flag_path(case: CaseSpec) -> Path
-scripts/sweep_heatmaps.py:637:def mark_case_complete(case: CaseSpec, summary_path: Path, series_path: Path) -> None
-scripts/sweep_heatmaps.py:654:def case_is_completed(case: CaseSpec) -> bool
-scripts/sweep_heatmaps.py:662:def load_base_config(base_path: Path) -> Dict[str, Any]
-scripts/sweep_heatmaps.py:675:def write_config(config: Dict[str, Any], path: Path) -> None
-scripts/sweep_heatmaps.py:684:def build_cases(map_def: MapDefinition, out_root: Path, y_index_filter: Optional[Iterable[int]]=None, *, partition_index: int=1, partition_count: int=1, variants: Optional[List[VariantSpec]]=None) -> List[CaseSpec]
-scripts/sweep_heatmaps.py:740:def compute_area_from_config(config: Dict[str, Any]) -> Optional[float]
-scripts/sweep_heatmaps.py:766:def search_numeric_value(data: Any, key_pred: Callable[[str], bool]) -> Optional[float]
-scripts/sweep_heatmaps.py:784:def parse_summary(summary_path: Path) -> Tuple[Optional[float], Optional[float], Optional[Dict[str, Any]]]
-scripts/sweep_heatmaps.py:813:def _get_beta_for_checks(summary: Optional[Dict[str, Any]]) -> float
-scripts/sweep_heatmaps.py:824:def extract_smin_from_series(df: pd.DataFrame) -> Optional[float]
-scripts/sweep_heatmaps.py:847:def _build_time_array(df: pd.DataFrame) -> Optional[np.ndarray]
-scripts/sweep_heatmaps.py:858:def integrate_outflux(df: pd.DataFrame, config: Dict[str, Any], case_id: str) -> Tuple[float, Optional[str]]
-scripts/sweep_heatmaps.py:906:def _to_float(value: Any) -> float
-scripts/sweep_heatmaps.py:915:def validate_map1_results(df: pd.DataFrame, tolerance: float=DEFAULT_TOL_MASS_PER_R2) -> Dict[str, Any]
-scripts/sweep_heatmaps.py:1027:def populate_record_from_outputs(record: Dict[str, Any], case: CaseSpec, config_data: Dict[str, Any]) -> Optional[str]
-scripts/sweep_heatmaps.py:1141:def run_case(case: CaseSpec, base_config: Dict[str, Any], root_dir: Path, python_executable: str, qpr_table_path: Optional[str]=None) -> Dict[str, Any]
-scripts/sweep_heatmaps.py:1250:def _results_dataframe(results: List[Dict[str, Any]]) -> pd.DataFrame
-scripts/sweep_heatmaps.py:1259:def main(argv: Optional[Iterable[str]]=None) -> None
-scripts/sweep_mass_loss_map.py:46:def _parse_grid(spec: Sequence[float], label: str) -> np.ndarray
-scripts/sweep_mass_loss_map.py:60:def _iter_grid(r_values: Iterable[float], T_values: Iterable[float]) -> List[Tuple[float, float]]
-scripts/sweep_mass_loss_map.py:64:def _format_case_index(idx: int, total: int, r_rm: float, T_m: float) -> str
-scripts/sweep_mass_loss_map.py:68:def _execute_case(r_rm: float, T_m: float, *, base_config: Path, qpr_table: Path, dt_over_t_blow_max: float, include_sinks_none: bool, overrides: Optional[List[str]]=None) -> Dict[str, float]
-scripts/sweep_mass_loss_map.py:107:def _run_sequential(grid: List[Tuple[float, float]], *, base_config: Path, qpr_table: Path, dt_ratio_max: float, include_sinks_none: bool, overrides: Optional[List[str]]) -> List[Dict[str, float]]
-scripts/sweep_mass_loss_map.py:134:def _run_parallel(grid: List[Tuple[float, float]], *, base_config: Path, qpr_table: Path, dt_ratio_max: float, include_sinks_none: bool, jobs: int, overrides: Optional[List[str]]) -> List[Dict[str, float]]
-scripts/sweep_mass_loss_map.py:167:def _collect_stats(df: pd.DataFrame) -> Dict[str, float | int | List[str]]
-scripts/sweep_mass_loss_map.py:197:def _write_spec(*, outdir: Path, df: pd.DataFrame, r_values: np.ndarray, T_values: np.ndarray, base_config: Path, qpr_table: Path, jobs: int) -> None
-scripts/sweep_mass_loss_map.py:242:def parse_args() -> argparse.Namespace
-scripts/sweep_mass_loss_map.py:302:def main() -> None
-scripts/sweep_massloss_heatmap_gif.py:66:class SimulationFailure(RuntimeError)
-scripts/sweep_massloss_heatmap_gif.py:70:def _build_temperature_grid(T_min: float, T_max: float, spacing: float) -> np.ndarray
-scripts/sweep_massloss_heatmap_gif.py:80:def _build_radius_grid(r_min: float, r_max: float, count: int) -> np.ndarray
-scripts/sweep_massloss_heatmap_gif.py:88:def _prepare_case_config(base_cfg: Config, *, r_rm: float, T_M: float, phi_table: Path, outdir: Path) -> Config
-scripts/sweep_massloss_heatmap_gif.py:129:def _validate_summary(summary: Dict[str, object], *, phi_label: str, r_rm: float, T_M: float) -> None
-scripts/sweep_massloss_heatmap_gif.py:155:def _run_single_case(base_cfg: Config, *, r_rm: float, T_M: float, phi_table: Path, phi_label: str) -> Tuple[Dict[str, object], pd.DataFrame]
-scripts/sweep_massloss_heatmap_gif.py:268:def _gif_backend() -> str
-scripts/sweep_massloss_heatmap_gif.py:278:def _save_gif(frame_paths: Iterable[Path], output_path: Path, duration_ms: int) -> None
-scripts/sweep_massloss_heatmap_gif.py:299:def _plot_heatmap(data: np.ndarray, *, r_values: np.ndarray, T_values: np.ndarray, phi_label: str, frame_index: int, total_frames: int, output_path: Path, colour_range: Tuple[float, float]) -> None
-scripts/sweep_massloss_heatmap_gif.py:334:def run_sweep(*, base_config_path: Path, outdir: Path, phi_tables: Dict[str, Path], T_values: np.ndarray, r_values: np.ndarray, frame_duration_ms: int, max_frames: int | None) -> None
-scripts/sweep_massloss_heatmap_gif.py:470:def parse_args(argv: Iterable[str] | None=None) -> argparse.Namespace
-scripts/sweep_massloss_heatmap_gif.py:537:def main(argv: Iterable[str] | None=None) -> None
-scripts/sweep_massloss_map.py:26:def _apply_thread_guard() -> None
-scripts/sweep_massloss_map.py:70:class CaseSpec
-scripts/sweep_massloss_map.py:82:def _parse_grid(spec: Sequence[float], label: str) -> np.ndarray
-scripts/sweep_massloss_map.py:96:def _load_base_config(path: Path) -> Dict[str, Any]
-scripts/sweep_massloss_map.py:107:def _write_yaml(path: Path, payload: Dict[str, Any]) -> None
-scripts/sweep_massloss_map.py:114:def _compute_dt_controls(r_rm: float, steps_per_orbit: int, dt_ratio_cap: float) -> Tuple[float, int, float]
-scripts/sweep_massloss_map.py:133:def _case_identifier(r_rm: float, T_M: float) -> str
-scripts/sweep_massloss_map.py:137:def _prepare_case_spec(r_rm: float, T_M: float, *, base_outdir: Path, logs_dir: Path, steps_per_orbit: int, dt_ratio_cap: float) -> CaseSpec
-scripts/sweep_massloss_map.py:161:def _inject_case_parameters(base_cfg: Dict[str, Any], *, spec: CaseSpec, qpr_table: Path) -> Dict[str, Any]
-scripts/sweep_massloss_map.py:219:def _read_summary(path: Path) -> Dict[str, Any]
-scripts/sweep_massloss_map.py:226:def _read_series(path: Path) -> pd.DataFrame
-scripts/sweep_massloss_map.py:232:def _read_mass_budget(path: Path) -> Dict[str, float]
-scripts/sweep_massloss_map.py:245:def _median_ratio(numerator: pd.Series, denominator: pd.Series) -> float
-scripts/sweep_massloss_map.py:258:def _median_finite(series: pd.Series) -> float
-scripts/sweep_massloss_map.py:266:def _run_case(spec: CaseSpec, *, base_cfg: Dict[str, Any], qpr_table: Path) -> Dict[str, Any]
-scripts/sweep_massloss_map.py:351:def _iter_specs(r_values: Iterable[float], T_values: Iterable[float], *, base_outdir: Path, logs_dir: Path, steps_per_orbit: int, dt_ratio_cap: float) -> List[CaseSpec]
-scripts/sweep_massloss_map.py:376:def _run_sequential(specs: Sequence[CaseSpec], *, base_cfg: Dict[str, Any], qpr_table: Path) -> List[Dict[str, Any]]
-scripts/sweep_massloss_map.py:390:def _run_parallel(specs: Sequence[CaseSpec], *, base_cfg: Dict[str, Any], qpr_table: Path, jobs: int) -> List[Dict[str, Any]]
-scripts/sweep_massloss_map.py:421:def _write_json(path: Path, payload: Dict[str, Any]) -> None
-scripts/sweep_massloss_map.py:427:def _collect_validation(records: Sequence[Dict[str, Any]], *, tolerance: float) -> Dict[str, Any]
-scripts/sweep_massloss_map.py:455:def parse_args() -> argparse.Namespace
-scripts/sweep_massloss_map.py:503:def main() -> None
+scripts/runs/run_autotuned.py:10:def main() -> int
+scripts/runs/run_axis_r_sweep.py:68:class CaseResult
+scripts/runs/run_axis_r_sweep.py:97:def format_r_rm(value: float) -> str
+scripts/runs/run_axis_r_sweep.py:102:def format_mass_tag(value: float) -> str
+scripts/runs/run_axis_r_sweep.py:115:def format_float(value: float) -> str
+scripts/runs/run_axis_r_sweep.py:131:def compute_seed(r_m: float, temperature_k: float, mass_mmars: float) -> int
+scripts/runs/run_axis_r_sweep.py:138:def render_config_yaml(*, r_m: float, r_rm: float, temperature_k: float, mass_mmars: float, outdir: Path, seed: int) -> str
+scripts/runs/run_axis_r_sweep.py:221:def ensure_directories() -> None
+scripts/runs/run_axis_r_sweep.py:228:def build_cases(root: Path) -> List[CaseResult]
+scripts/runs/run_axis_r_sweep.py:257:def write_configs(cases: Iterable[CaseResult], root: Path) -> None
+scripts/runs/run_axis_r_sweep.py:273:def run_case(case: CaseResult, root: Path) -> None
+scripts/runs/run_axis_r_sweep.py:292:def collect_outputs(case: CaseResult) -> None
+scripts/runs/run_axis_r_sweep.py:315:def write_summary_csv(cases: Iterable[CaseResult], output_path: Path) -> None
+scripts/runs/run_axis_r_sweep.py:368:def main(argv: Optional[List[str]]=None) -> int
+scripts/runs/run_inner_disk_suite.py:55:class CaseSpec
+scripts/runs/run_inner_disk_suite.py:67:def format_phi_tag(value: float) -> str
+scripts/runs/run_inner_disk_suite.py:73:def compute_orbit(r_rm: float) -> Tuple[float, float]
+scripts/runs/run_inner_disk_suite.py:82:def build_overrides(spec: CaseSpec) -> List[str]
+scripts/runs/run_inner_disk_suite.py:105:def ensure_required_outputs(case: CaseSpec) -> None
+scripts/runs/run_inner_disk_suite.py:118:def load_series_tables(case: CaseSpec) -> Tuple[pd.DataFrame, pd.DataFrame]
+scripts/runs/run_inner_disk_suite.py:126:def render_psd_frames(case: CaseSpec, run_df: pd.DataFrame, hist_df: pd.DataFrame) -> List[Path]
+scripts/runs/run_inner_disk_suite.py:175:def make_gif(frame_paths: Sequence[Path], gif_path: Path) -> None
+scripts/runs/run_inner_disk_suite.py:185:def export_orbit_summary(case: CaseSpec) -> Path
+scripts/runs/run_inner_disk_suite.py:214:def write_command_metadata(case: CaseSpec, command: Sequence[str], result: subprocess.CompletedProcess[str]) -> None
+scripts/runs/run_inner_disk_suite.py:228:def build_cases(*, phi_values: Iterable[float], r_rm: float, temperature_min: float, temperature_max: float, temperature_step: float, out_root: Path, phi_table_root: Path) -> List[CaseSpec]
+scripts/runs/run_inner_disk_suite.py:264:def parse_args(argv: Sequence[str] | None=None) -> argparse.Namespace
+scripts/runs/run_inner_disk_suite.py:319:def main(argv: Sequence[str] | None=None) -> None
+scripts/runsets/common/build_overrides.py:13:def _iter_pairs(paths: Iterable[Path]) -> Iterator[tuple[str, str]]
+scripts/runsets/common/build_overrides.py:29:def _merge_pairs(pairs: Iterable[tuple[str, str]]) -> tuple[list[str], dict[str, str]]
+scripts/runsets/common/build_overrides.py:43:def main() -> None
+scripts/runsets/common/hooks/evaluate_tau_supply.py:13:def _repo_root() -> Path
+scripts/runsets/common/hooks/evaluate_tau_supply.py:17:def _env_or_default(name: str, default: str | None) -> str | None
+scripts/runsets/common/hooks/evaluate_tau_supply.py:24:def main() -> int
+scripts/runsets/common/hooks/plot_sweep_run.py:12:def _repo_root() -> Path
+scripts/runsets/common/hooks/plot_sweep_run.py:16:def main() -> int
+scripts/runsets/common/hooks/preflight_streaming.py:12:def _repo_root() -> Path
+scripts/runsets/common/hooks/preflight_streaming.py:16:def main() -> int
+scripts/runsets/common/merge_config.py:12:def _deep_update(base: dict[str, Any], other: dict[str, Any]) -> dict[str, Any]
+scripts/runsets/common/merge_config.py:21:def _parse_scalar(value: str) -> Any
+scripts/runsets/common/merge_config.py:26:def _set_path(cfg: dict[str, Any], path: str, value: Any) -> None
+scripts/runsets/common/merge_config.py:36:def _load_overrides(path: Path) -> list[tuple[str, Any]]
+scripts/runsets/common/merge_config.py:49:def main() -> None
+scripts/sweeps/sweep_beta_map.py:30:def _parse_grid(start: float, stop: float, count: int, label: str) -> np.ndarray
+scripts/sweeps/sweep_beta_map.py:39:def _load_config(path: Path) -> Config
+scripts/sweeps/sweep_beta_map.py:50:def _write_json(path: Path, payload: dict) -> None
+scripts/sweeps/sweep_beta_map.py:56:def _write_zarr_array(path: Path, data: np.ndarray, *, axes: Sequence[str]) -> None
+scripts/sweeps/sweep_beta_map.py:82:def parse_args() -> argparse.Namespace
+scripts/sweeps/sweep_beta_map.py:119:def main() -> None
+scripts/sweeps/sweep_heatmaps.py:51:class ParamSpec
+scripts/sweeps/sweep_heatmaps.py:70:class MapDefinition
+scripts/sweeps/sweep_heatmaps.py:81:class VariantSpec
+scripts/sweeps/sweep_heatmaps.py:90:class CaseSpec
+scripts/sweeps/sweep_heatmaps.py:108:def build_variant_grid(*, s_min_values: Optional[List[Tuple[str, float, float]]]=None, chi_values: Optional[List[Tuple[str, float]]]=None, sink_values: Optional[List[Tuple[str, Dict[str, Any], str]]]=None) -> List[VariantSpec]
+scripts/sweeps/sweep_heatmaps.py:170:def build_variant_grid_from_spec(spec: str) -> List[VariantSpec]
+scripts/sweeps/sweep_heatmaps.py:246:def parse_args(argv: Optional[Iterable[str]]=None) -> argparse.Namespace
+scripts/sweeps/sweep_heatmaps.py:405:def _float_grid(start: float, stop: float, step: float) -> List[float]
+scripts/sweeps/sweep_heatmaps.py:432:def _normalise_map_key(map_arg: str) -> str
+scripts/sweeps/sweep_heatmaps.py:445:def create_map_definition(map_arg: str, overrides: Optional[Dict[str, float]]=None) -> MapDefinition
+scripts/sweeps/sweep_heatmaps.py:551:def format_param_value(value: float) -> str
+scripts/sweeps/sweep_heatmaps.py:567:def build_case_id(param_x: ParamSpec, x_value: float, param_y: ParamSpec, y_value: float) -> str
+scripts/sweeps/sweep_heatmaps.py:575:def set_nested(data: Dict[str, Any], path: str, value: Any) -> None
+scripts/sweeps/sweep_heatmaps.py:587:def get_nested(data: Dict[str, Any], path: str) -> Any
+scripts/sweeps/sweep_heatmaps.py:602:def ensure_directory(path: Path) -> None
+scripts/sweeps/sweep_heatmaps.py:608:def partition_param_values(param: ParamSpec, num_parts: int) -> List[np.ndarray]
+scripts/sweeps/sweep_heatmaps.py:631:def completion_flag_path(case: CaseSpec) -> Path
+scripts/sweeps/sweep_heatmaps.py:637:def mark_case_complete(case: CaseSpec, summary_path: Path, series_path: Path) -> None
+scripts/sweeps/sweep_heatmaps.py:654:def case_is_completed(case: CaseSpec) -> bool
+scripts/sweeps/sweep_heatmaps.py:662:def load_base_config(base_path: Path) -> Dict[str, Any]
+scripts/sweeps/sweep_heatmaps.py:675:def write_config(config: Dict[str, Any], path: Path) -> None
+scripts/sweeps/sweep_heatmaps.py:684:def build_cases(map_def: MapDefinition, out_root: Path, y_index_filter: Optional[Iterable[int]]=None, *, partition_index: int=1, partition_count: int=1, variants: Optional[List[VariantSpec]]=None) -> List[CaseSpec]
+scripts/sweeps/sweep_heatmaps.py:740:def compute_area_from_config(config: Dict[str, Any]) -> Optional[float]
+scripts/sweeps/sweep_heatmaps.py:766:def search_numeric_value(data: Any, key_pred: Callable[[str], bool]) -> Optional[float]
+scripts/sweeps/sweep_heatmaps.py:784:def parse_summary(summary_path: Path) -> Tuple[Optional[float], Optional[float], Optional[Dict[str, Any]]]
+scripts/sweeps/sweep_heatmaps.py:813:def _get_beta_for_checks(summary: Optional[Dict[str, Any]]) -> float
+scripts/sweeps/sweep_heatmaps.py:824:def extract_smin_from_series(df: pd.DataFrame) -> Optional[float]
+scripts/sweeps/sweep_heatmaps.py:847:def _build_time_array(df: pd.DataFrame) -> Optional[np.ndarray]
+scripts/sweeps/sweep_heatmaps.py:858:def integrate_outflux(df: pd.DataFrame, config: Dict[str, Any], case_id: str) -> Tuple[float, Optional[str]]
+scripts/sweeps/sweep_heatmaps.py:906:def _to_float(value: Any) -> float
+scripts/sweeps/sweep_heatmaps.py:915:def validate_map1_results(df: pd.DataFrame, tolerance: float=DEFAULT_TOL_MASS_PER_R2) -> Dict[str, Any]
+scripts/sweeps/sweep_heatmaps.py:1027:def populate_record_from_outputs(record: Dict[str, Any], case: CaseSpec, config_data: Dict[str, Any]) -> Optional[str]
+scripts/sweeps/sweep_heatmaps.py:1141:def run_case(case: CaseSpec, base_config: Dict[str, Any], root_dir: Path, python_executable: str, qpr_table_path: Optional[str]=None) -> Dict[str, Any]
+scripts/sweeps/sweep_heatmaps.py:1250:def _results_dataframe(results: List[Dict[str, Any]]) -> pd.DataFrame
+scripts/sweeps/sweep_heatmaps.py:1259:def main(argv: Optional[Iterable[str]]=None) -> None
+scripts/sweeps/sweep_mass_loss_map.py:46:def _parse_grid(spec: Sequence[float], label: str) -> np.ndarray
+scripts/sweeps/sweep_mass_loss_map.py:60:def _iter_grid(r_values: Iterable[float], T_values: Iterable[float]) -> List[Tuple[float, float]]
+scripts/sweeps/sweep_mass_loss_map.py:64:def _format_case_index(idx: int, total: int, r_rm: float, T_m: float) -> str
+scripts/sweeps/sweep_mass_loss_map.py:68:def _execute_case(r_rm: float, T_m: float, *, base_config: Path, qpr_table: Path, dt_over_t_blow_max: float, include_sinks_none: bool, overrides: Optional[List[str]]=None) -> Dict[str, float]
+scripts/sweeps/sweep_mass_loss_map.py:107:def _run_sequential(grid: List[Tuple[float, float]], *, base_config: Path, qpr_table: Path, dt_ratio_max: float, include_sinks_none: bool, overrides: Optional[List[str]]) -> List[Dict[str, float]]
+scripts/sweeps/sweep_mass_loss_map.py:134:def _run_parallel(grid: List[Tuple[float, float]], *, base_config: Path, qpr_table: Path, dt_ratio_max: float, include_sinks_none: bool, jobs: int, overrides: Optional[List[str]]) -> List[Dict[str, float]]
+scripts/sweeps/sweep_mass_loss_map.py:167:def _collect_stats(df: pd.DataFrame) -> Dict[str, float | int | List[str]]
+scripts/sweeps/sweep_mass_loss_map.py:197:def _write_spec(*, outdir: Path, df: pd.DataFrame, r_values: np.ndarray, T_values: np.ndarray, base_config: Path, qpr_table: Path, jobs: int) -> None
+scripts/sweeps/sweep_mass_loss_map.py:242:def parse_args() -> argparse.Namespace
+scripts/sweeps/sweep_mass_loss_map.py:302:def main() -> None
+scripts/sweeps/sweep_massloss_heatmap_gif.py:66:class SimulationFailure(RuntimeError)
+scripts/sweeps/sweep_massloss_heatmap_gif.py:70:def _build_temperature_grid(T_min: float, T_max: float, spacing: float) -> np.ndarray
+scripts/sweeps/sweep_massloss_heatmap_gif.py:80:def _build_radius_grid(r_min: float, r_max: float, count: int) -> np.ndarray
+scripts/sweeps/sweep_massloss_heatmap_gif.py:88:def _prepare_case_config(base_cfg: Config, *, r_rm: float, T_M: float, phi_table: Path, outdir: Path) -> Config
+scripts/sweeps/sweep_massloss_heatmap_gif.py:129:def _validate_summary(summary: Dict[str, object], *, phi_label: str, r_rm: float, T_M: float) -> None
+scripts/sweeps/sweep_massloss_heatmap_gif.py:155:def _run_single_case(base_cfg: Config, *, r_rm: float, T_M: float, phi_table: Path, phi_label: str) -> Tuple[Dict[str, object], pd.DataFrame]
+scripts/sweeps/sweep_massloss_heatmap_gif.py:268:def _gif_backend() -> str
+scripts/sweeps/sweep_massloss_heatmap_gif.py:278:def _save_gif(frame_paths: Iterable[Path], output_path: Path, duration_ms: int) -> None
+scripts/sweeps/sweep_massloss_heatmap_gif.py:299:def _plot_heatmap(data: np.ndarray, *, r_values: np.ndarray, T_values: np.ndarray, phi_label: str, frame_index: int, total_frames: int, output_path: Path, colour_range: Tuple[float, float]) -> None
+scripts/sweeps/sweep_massloss_heatmap_gif.py:334:def run_sweep(*, base_config_path: Path, outdir: Path, phi_tables: Dict[str, Path], T_values: np.ndarray, r_values: np.ndarray, frame_duration_ms: int, max_frames: int | None) -> None
+scripts/sweeps/sweep_massloss_heatmap_gif.py:470:def parse_args(argv: Iterable[str] | None=None) -> argparse.Namespace
+scripts/sweeps/sweep_massloss_heatmap_gif.py:537:def main(argv: Iterable[str] | None=None) -> None
+scripts/sweeps/sweep_massloss_map.py:26:def _apply_thread_guard() -> None
+scripts/sweeps/sweep_massloss_map.py:70:class CaseSpec
+scripts/sweeps/sweep_massloss_map.py:82:def _parse_grid(spec: Sequence[float], label: str) -> np.ndarray
+scripts/sweeps/sweep_massloss_map.py:96:def _load_base_config(path: Path) -> Dict[str, Any]
+scripts/sweeps/sweep_massloss_map.py:107:def _write_yaml(path: Path, payload: Dict[str, Any]) -> None
+scripts/sweeps/sweep_massloss_map.py:114:def _compute_dt_controls(r_rm: float, steps_per_orbit: int, dt_ratio_cap: float) -> Tuple[float, int, float]
+scripts/sweeps/sweep_massloss_map.py:133:def _case_identifier(r_rm: float, T_M: float) -> str
+scripts/sweeps/sweep_massloss_map.py:137:def _prepare_case_spec(r_rm: float, T_M: float, *, base_outdir: Path, logs_dir: Path, steps_per_orbit: int, dt_ratio_cap: float) -> CaseSpec
+scripts/sweeps/sweep_massloss_map.py:161:def _inject_case_parameters(base_cfg: Dict[str, Any], *, spec: CaseSpec, qpr_table: Path) -> Dict[str, Any]
+scripts/sweeps/sweep_massloss_map.py:219:def _read_summary(path: Path) -> Dict[str, Any]
+scripts/sweeps/sweep_massloss_map.py:226:def _read_series(path: Path) -> pd.DataFrame
+scripts/sweeps/sweep_massloss_map.py:232:def _read_mass_budget(path: Path) -> Dict[str, float]
+scripts/sweeps/sweep_massloss_map.py:245:def _median_ratio(numerator: pd.Series, denominator: pd.Series) -> float
+scripts/sweeps/sweep_massloss_map.py:258:def _median_finite(series: pd.Series) -> float
+scripts/sweeps/sweep_massloss_map.py:266:def _run_case(spec: CaseSpec, *, base_cfg: Dict[str, Any], qpr_table: Path) -> Dict[str, Any]
+scripts/sweeps/sweep_massloss_map.py:351:def _iter_specs(r_values: Iterable[float], T_values: Iterable[float], *, base_outdir: Path, logs_dir: Path, steps_per_orbit: int, dt_ratio_cap: float) -> List[CaseSpec]
+scripts/sweeps/sweep_massloss_map.py:376:def _run_sequential(specs: Sequence[CaseSpec], *, base_cfg: Dict[str, Any], qpr_table: Path) -> List[Dict[str, Any]]
+scripts/sweeps/sweep_massloss_map.py:390:def _run_parallel(specs: Sequence[CaseSpec], *, base_cfg: Dict[str, Any], qpr_table: Path, jobs: int) -> List[Dict[str, Any]]
+scripts/sweeps/sweep_massloss_map.py:421:def _write_json(path: Path, payload: Dict[str, Any]) -> None
+scripts/sweeps/sweep_massloss_map.py:427:def _collect_validation(records: Sequence[Dict[str, Any]], *, tolerance: float) -> Dict[str, Any]
+scripts/sweeps/sweep_massloss_map.py:455:def parse_args() -> argparse.Namespace
+scripts/sweeps/sweep_massloss_map.py:503:def main() -> None
 siO2_disk_cooling/io_utils.py:13:def ensure_outputs_dir() -> Path
 siO2_disk_cooling/io_utils.py:21:def write_csv(r_over_Rmars: np.ndarray, arrival_glass_s: np.ndarray, arrival_liquidus_s: np.ndarray, path: Path) -> None
 siO2_disk_cooling/io_utils.py:40:def _format_stat(values: Iterable[float]) -> str
@@ -946,6 +972,7 @@ tests/integration/test_ci_guard_analysis.py:41:def test_ci_guard_analysis_anchor
 tests/integration/test_collision_solver_modes.py:18:def test_collision_solver_smol_mass_budget(tmp_path: Path) -> None
 tests/integration/test_collision_solver_modes.py:51:def test_surface_and_smol_series_columns_match(tmp_path: Path) -> None
 tests/integration/test_collision_solver_modes.py:101:def test_surface_ode_emits_deprecation_warning(tmp_path: Path) -> None
+tests/integration/test_deep_mixing_mass_budget.py:17:def test_deep_mixing_mass_budget_with_supply(tmp_path: Path) -> None
 tests/integration/test_derive_supply_rate.py:15:def run_cli(argv: list[str]) -> str
 tests/integration/test_derive_supply_rate.py:22:def test_compute_r_base_scalar()
 tests/integration/test_derive_supply_rate.py:30:def test_cli_text_output()
@@ -1113,8 +1140,8 @@ tests/integration/test_sinks_none.py:15:def test_run_zero_d_with_sinks_disabled(
 tests/integration/test_sinks_tracing.py:9:def _build_config(outdir: Path) -> schema.Config
 tests/integration/test_sinks_tracing.py:42:def test_debug_sinks_trace_outputs_jsonl(tmp_path: Path) -> None
 tests/integration/test_smol_consistency_checks.py:11:def test_fragment_tensor_weights_include_widths(monkeypatch) -> None
-tests/integration/test_smol_consistency_checks.py:44:def test_dt_eff_balance_matches_mass_rates() -> None
-tests/integration/test_smol_consistency_checks.py:78:def test_source_mass_budget_no_double_count() -> None
+tests/integration/test_smol_consistency_checks.py:48:def test_dt_eff_balance_matches_mass_rates() -> None
+tests/integration/test_smol_consistency_checks.py:82:def test_source_mass_budget_no_double_count() -> None
 tests/integration/test_smol_sublimation_consistency.py:11:def test_smol_sublimation_matches_surface_drift() -> None
 tests/integration/test_smol_supply_source.py:11:def test_supply_injected_into_first_valid_bin() -> None
 tests/integration/test_smol_supply_source.py:27:def test_supply_zero_rate_returns_zero_vector() -> None
@@ -1187,8 +1214,8 @@ tests/research/test_siO2_cooling_model.py:14:def test_mars_temperature_monotonic
 tests/research/test_siO2_cooling_model.py:21:def test_dust_temperature_monotonic_decrease_single_radius() -> None
 tests/research/test_siO2_cooling_model.py:29:def test_arrival_time_for_threshold() -> None
 tests/test_psd_size_drift_vectorized.py:12:def _reference_apply(psd_state, *, ds_dt, dt, floor, sigma_surf)
-tests/test_psd_size_drift_vectorized.py:90:def _base_state()
-tests/test_psd_size_drift_vectorized.py:107:def test_apply_uniform_size_drift_matches_reference(ds_dt, monkeypatch)
+tests/test_psd_size_drift_vectorized.py:93:def _base_state()
+tests/test_psd_size_drift_vectorized.py:110:def test_apply_uniform_size_drift_matches_reference(ds_dt, monkeypatch)
 tests/unit/test_cache_thread_safety.py:16:def mock_qpr_table(tmp_path)
 tests/unit/test_cache_thread_safety.py:44:def test_qpr_cache_thread_safety(mock_qpr_table)
 tests/unit/test_cache_thread_safety.py:64:def test_qdstar_cache_thread_safety()
@@ -1212,6 +1239,14 @@ tests/unit/test_energy_bookkeeping_boundaries.py:72:def test_energy_bookkeeping_
 tests/unit/test_fragment_tensor_fallback.py:9:def test_fragment_tensor_fallback_with_numba_disabled(monkeypatch) -> None
 tests/unit/test_fragment_tensor_lr_mass.py:9:def _find_midrange_pair(f_lr: np.ndarray, low: float=0.1, high: float=0.9) -> tuple[int, int] | None
 tests/unit/test_fragment_tensor_lr_mass.py:20:def test_fragment_tensor_lr_bin_preserves_mass(monkeypatch: pytest.MonkeyPatch) -> None
+tests/unit/test_high_priority_math_risks.py:14:def _reference_rebin_dnds(psd_state: dict[str, np.ndarray | float], *, ds_dt: float, dt: float, floor: float) -> tuple[np.ndarray, np.ndarray]
+tests/unit/test_high_priority_math_risks.py:55:def test_apply_uniform_size_drift_dnds_rebin_matches_reference(monkeypatch: pytest.MonkeyPatch) -> None
+tests/unit/test_high_priority_math_risks.py:83:def _self_consistent_blowout(rho: float, T_M: float, qpr_func: callable, *, n_iter: int=20) -> float
+tests/unit/test_high_priority_math_risks.py:97:def test_blowout_radius_size_dependent_qpr_consistent() -> None
+tests/unit/test_high_priority_math_risks.py:109:def test_surface_ode_respects_t_blow() -> None
+tests/unit/test_high_priority_math_risks.py:124:def _surface_ode_config(outdir: Path, dt_init: float, n_steps: int, *, h_over_r: float) -> schema.Config
+tests/unit/test_high_priority_math_risks.py:188:def test_tcoll_uses_vertical_tau(tmp_path: Path) -> None
+tests/unit/test_high_priority_math_risks.py:218:def test_fragment_tensor_largest_remnant_bin_matches_size(monkeypatch: pytest.MonkeyPatch) -> None
 tests/unit/test_numba_helpers.py:15:def _reload_with_env(module_name: str, disable_numba: bool=False)
 tests/unit/test_numba_helpers.py:24:def _mass_budget_python(N_old: Iterable[float], N_new: Iterable[float], m: Iterable[float], prod: float, dt: float, extra: float) -> float
 tests/unit/test_numba_helpers.py:37:def test_compute_prod_subblow_area_rate_numba_matches_numpy(monkeypatch) -> None
@@ -1222,23 +1257,55 @@ tests/unit/test_numba_helpers.py:83:def test_fragment_tensor_fallback_numba_simp
 tests/unit/test_numba_helpers.py:127:def test_blowout_sink_vector_numba_matches_numpy(monkeypatch) -> None
 tests/unit/test_numba_helpers.py:135:def test_kernel_minimum_tcoll_numba_matches_numpy(monkeypatch) -> None
 tests/unit/test_numba_helpers.py:143:def test_supply_mass_rate_powerlaw_numba_matches_python(monkeypatch) -> None
-tests/unit/test_numba_helpers.py:184:def test_compute_kernel_e_i_H_numba_matches_python(monkeypatch) -> None
-tests/unit/test_numba_helpers.py:223:def test_qpr_interp_scalar_numba_matches_numpy(monkeypatch) -> None
-tests/unit/test_numba_helpers.py:243:def test_qpr_interp_array_numba_matches_numpy(monkeypatch) -> None
-tests/unit/test_numba_helpers.py:280:def test_qpr_interp_numba_fallback(monkeypatch) -> None
-tests/unit/test_numba_helpers.py:309:def test_blowout_radius_numba_matches_numpy(monkeypatch) -> None
-tests/unit/test_numba_helpers.py:325:def test_blowout_radius_numba_fallback(monkeypatch) -> None
-tests/unit/test_numba_helpers.py:347:def test_blowout_radius_numba_env_disabled(monkeypatch) -> None
+tests/unit/test_numba_helpers.py:181:def test_compute_kernel_e_i_H_numba_matches_python(monkeypatch) -> None
+tests/unit/test_numba_helpers.py:220:def test_qpr_interp_scalar_numba_matches_numpy(monkeypatch) -> None
+tests/unit/test_numba_helpers.py:240:def test_qpr_interp_array_numba_matches_numpy(monkeypatch) -> None
+tests/unit/test_numba_helpers.py:277:def test_qpr_interp_numba_fallback(monkeypatch) -> None
+tests/unit/test_numba_helpers.py:306:def test_blowout_radius_numba_matches_numpy(monkeypatch) -> None
+tests/unit/test_numba_helpers.py:322:def test_blowout_radius_numba_fallback(monkeypatch) -> None
+tests/unit/test_numba_helpers.py:344:def test_blowout_radius_numba_env_disabled(monkeypatch) -> None
+tests/unit/test_numerical_anomaly_watchlist_additional.py:35:def test_imex_mass_error_nonfinite_raises(monkeypatch) -> None
+tests/unit/test_numerical_anomaly_watchlist_additional.py:59:def test_sizes_validation_rejects_nonpositive() -> None
+tests/unit/test_numerical_anomaly_watchlist_additional.py:68:def test_psd_sanitize_reset_warns() -> None
+tests/unit/test_numerical_anomaly_watchlist_additional.py:80:def test_kernel_scale_height_warns_on_small_H_over_a(monkeypatch) -> None
+tests/unit/test_numerical_anomaly_watchlist_additional.py:101:def test_psat_temperature_guard() -> None
+tests/unit/test_numerical_anomaly_watchlist_additional.py:113:def test_qpr_numba_failure_falls_back(monkeypatch) -> None
+tests/unit/test_numerical_anomaly_watchlist_additional.py:140:def test_supply_powerlaw_t_before_t0_returns_zero() -> None
+tests/unit/test_numerical_anomaly_watchlist_additional.py:167:def test_temperature_table_rejects_invalid_values(tmp_path: Path, temps: list[float], values: list[float]) -> None
+tests/unit/test_numerical_anomaly_watchlist_additional.py:175:def test_supply_temperature_negative_raises() -> None
+tests/unit/test_numerical_anomaly_watchlist_additional.py:193:def test_solve_c_eq_rejects_nan_eps() -> None
+tests/unit/test_numerical_anomaly_watchlist_additional.py:198:def test_collision_kernel_rejects_negative_vrel() -> None
+tests/unit/test_numerical_anomaly_watchlist_additional.py:208:def test_uniform_size_drift_warns_on_all_zero_rebin() -> None
+tests/unit/test_numerical_anomaly_watchlist_additional.py:228:def test_psd_state_to_number_density_warns_on_zero_mass() -> None
+tests/unit/test_numerical_anomaly_watchlist_additional.py:241:def test_sigma_from_Minner_rejects_singular() -> None
+tests/unit/test_numerical_anomaly_watchlist_additional.py:246:def test_orbital_frequency_rejects_nonpositive_r() -> None
+tests/unit/test_numerical_anomaly_watchlist_additional.py:253:def test_tridiagonal_solver_rejects_zero_diag() -> None
+tests/unit/test_numerical_anomaly_watchlist_additional.py:262:def test_safe_tcoll_rejects_nan_tau() -> None
+tests/unit/test_numerical_anomaly_watchlist_additional.py:267:def test_supply_table_rejects_missing_grid(tmp_path: Path) -> None
+tests/unit/test_numerical_anomaly_watchlist_additional.py:281:def test_phi_table_rejects_incomplete_grid() -> None
+tests/unit/test_numerical_anomaly_watchlist_additional.py:294:def test_dynamics_rejects_invalid_e0_i0() -> None
+tests/unit/test_numerical_anomaly_watchlist_additional.py:303:def test_evolve_min_size_requires_temperature() -> None
+tests/unit/test_numerical_anomaly_watchlist_additional.py:316:def test_clamp_sigma_surf_returns_zero_for_invalid() -> None
 tests/unit/test_progress_eta.py:8:def _fake_monotonic(times)
 tests/unit/test_progress_eta.py:17:def test_progress_eta_prefers_recent_steps(monkeypatch, capsys)
 tests/unit/test_progress_eta.py:30:def test_progress_snapshot_restore(monkeypatch)
 tests/unit/test_psd_size_drift_consistency.py:9:def _reference_rebin_counts(psd_state: dict[str, np.ndarray | float], *, ds_dt: float, dt: float, floor: float) -> tuple[np.ndarray, np.ndarray]
-tests/unit/test_psd_size_drift_consistency.py:49:def test_apply_uniform_size_drift_preserves_bin_counts(monkeypatch: pytest.MonkeyPatch) -> None
+tests/unit/test_psd_size_drift_consistency.py:50:def test_apply_uniform_size_drift_preserves_bin_counts(monkeypatch: pytest.MonkeyPatch) -> None
 tests/unit/test_radiation_shielding.py:9:def test_blowout_radius_scales_with_temperature()
 tests/unit/test_radiation_shielding.py:18:def test_beta_inverse_size_scaling()
 tests/unit/test_radiation_shielding.py:28:def test_beta_respects_qpr_override()
 tests/unit/test_radiation_shielding.py:38:def test_planck_mean_qpr_uses_table()
 tests/unit/test_radiation_shielding.py:46:def test_clip_to_tau1_non_negative()
+tests/unit/test_runsets_hooks.py:11:def _load_module(path: Path)
+tests/unit/test_runsets_hooks.py:20:def test_plot_sweep_run_hook_invokes_research_script(tmp_path: Path, monkeypatch) -> None
+tests/unit/test_runsets_hooks.py:43:def test_preflight_streaming_hook_invokes_research_script(tmp_path: Path, monkeypatch) -> None
+tests/unit/test_runsets_hooks.py:66:def test_evaluate_tau_supply_hook_writes_json(tmp_path: Path, monkeypatch) -> None
+tests/unit/test_scripts_layout.py:6:def _read_text(rel_path: str) -> str
+tests/unit/test_scripts_layout.py:10:def test_new_paths_exist() -> None
+tests/unit/test_scripts_layout.py:28:def test_old_paths_absent() -> None
+tests/unit/test_scripts_layout.py:44:def test_runsets_mac_wrappers_reference_common_paths() -> None
+tests/unit/test_scripts_layout.py:58:def test_plot_tau_timescales_cmd_points_to_new_location() -> None
+tests/unit/test_scripts_layout.py:64:def test_windows_legacy_run_scripts_set_repo_root() -> None
 tests/unit/test_sublimation.py:8:def test_s_sink_from_timescale_logistic()
 tests/unit/test_sublimation.py:14:def test_s_sub_boundary_fallback_warning()
 tests/unit/test_sublimation.py:20:def test_compute_s_min_F2_uses_max()

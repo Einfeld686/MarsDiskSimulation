@@ -9,7 +9,7 @@ radiation.load_qpr_table("data/qpr_table.csv")
 def test_blowout_radius_scales_with_temperature():
     rho = 3000.0
     temps = [1500.0, 3000.0, 5000.0]
-    vals = [radiation.blowout_radius(rho, T) for T in temps]
+    vals = [radiation.blowout_radius(rho, T, Q_pr=1.0) for T in temps]
     assert vals[0] < vals[1] < vals[2]
     expected = vals[0] * (temps[2] / temps[0]) ** 4
     assert vals[2] == pytest.approx(expected)

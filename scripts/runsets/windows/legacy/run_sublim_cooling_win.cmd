@@ -5,7 +5,7 @@ rem no matter where this script is invoked from.
 
 setlocal enabledelayedexpansion
 
-set REPO=%~dp0..
+set REPO=%~dp0..\..\..\..
 pushd "%REPO%"
 
 set OUTDIR=out\run_sublim_smol_phase_cooling

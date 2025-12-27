@@ -1,0 +1,4 @@
+SWEEP_TAG: temp_supply_sweep_1d
+T_LIST: [5000, 4000, 3000]
+EPS_LIST: [1.0, 0.5, 0.1]
+TAU_LIST: [1.0, 0.5, 0.1]

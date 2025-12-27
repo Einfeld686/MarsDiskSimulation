@@ -13,6 +13,7 @@ from ..grid import RadialGrid
 __all__ = ["step_viscous_diffusion_C5"]
 
 logger = logging.getLogger(__name__)
+_TRIDIAG_EPS = 1.0e-30
 
 
 def _solve_tridiagonal(a: np.ndarray, b: np.ndarray, c: np.ndarray, d: np.ndarray) -> np.ndarray:
@@ -38,12 +39,18 @@ def _solve_tridiagonal(a: np.ndarray, b: np.ndarray, c: np.ndarray, d: np.ndarra
     cc = c.copy()
     dc = d.copy()
     for i in range(1, n):
+        if not np.isfinite(bc[i - 1]) or abs(bc[i - 1]) < _TRIDIAG_EPS:
+            raise MarsDiskError("tridiagonal solver encountered zero/invalid diagonal entry")
         w = ac[i - 1] / bc[i - 1]
         bc[i] -= w * cc[i - 1]
         dc[i] -= w * dc[i - 1]
     x = np.empty(n, dtype=float)
+    if not np.isfinite(bc[-1]) or abs(bc[-1]) < _TRIDIAG_EPS:
+        raise MarsDiskError("tridiagonal solver encountered zero/invalid diagonal entry")
     x[-1] = dc[-1] / bc[-1]
     for i in range(n - 2, -1, -1):
+        if not np.isfinite(bc[i]) or abs(bc[i]) < _TRIDIAG_EPS:
+            raise MarsDiskError("tridiagonal solver encountered zero/invalid diagonal entry")
         x[i] = (dc[i] - cc[i] * x[i + 1]) / bc[i]
     return x
 

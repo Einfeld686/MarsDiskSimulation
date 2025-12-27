@@ -24,7 +24,7 @@
 ## 3. 図表生成ステップ（再現性付き）
 - `analysis/figures_catalog.md` の FIG_ID をキーに、対応する run と生成手順をマッピングする。複数 run 比較図も扱えるよう、`FIG_010: {runs: [RUN_A, RUN_B], script: ...}` のような構造を想定する。
 - Parquet 集計から直接生成する図は、軸・単位・凡例のテンプレートを固定し、スタイルは共通の matplotlib スタイルファイルまたは `plot_style.py`（実装済: `paper/plot_style.py`）に集約する。`paper_manifest.py --emit-figure-tasks` で `figure_tasks.json` を出力し、後続の描画スクリプトの入力に使う。
-- `scripts/render_figures_from_tasks.py --tasks <figure_tasks.json> --resolved-manifest <resolved_manifest.json>` で run_id→outdir を解決した推奨コマンド（figure_commands.txt）を生成し、手元の CLI に合わせて実行する。共通描画ユーティリティとして `scripts/plot_from_runs.py` を用意（mode: beta_timeseries / mass_budget / psd_wavy）。
+- `scripts/plots/render_figures_from_tasks.py --tasks <figure_tasks.json> --resolved-manifest <resolved_manifest.json>` で run_id→outdir を解決した推奨コマンド（figure_commands.txt）を生成し、手元の CLI に合わせて実行する。共通描画ユーティリティとして `scripts/plots/plot_from_runs.py` を用意（mode: beta_timeseries / mass_budget / psd_wavy）。
 - 乱数を使う図は run_card の seed を読み、再現性を保証する。
 - 表（例: 感度掃引のまとめ）は `pandas.DataFrame.to_markdown()` 等で Markdown/LaTeX 両対応のフォーマットを出力する。
 
@@ -54,7 +54,7 @@
 ## 現状のスケルトンと成果物
 - マニフェスト例: `configs/paper_marsdisk_draft.yml`（RUN/FIG の束ね方としきい値を定義、既存 out/ ディレクトリに紐付け済）
 - 解決スクリプト: `tools/paper_manifest.py`（resolved_manifest.json, paper_checks.json, figure_tasks.json を生成）
-- 図生成: `scripts/plot_from_runs.py`（figure_tasks.json の mode に応じた簡易図を生成）
-- 図コマンド生成: `scripts/render_figures_from_tasks.py`（figure_tasks.json から figure_commands.txt を生成）
+- 図生成: `scripts/plots/plot_from_runs.py`（figure_tasks.json の mode に応じた簡易図を生成）
+- 図コマンド生成: `scripts/plots/render_figures_from_tasks.py`（figure_tasks.json から figure_commands.txt を生成）
 - 図スタイル: `paper/plot_style.py`（rcParams の統一適用ユーティリティ）
 - 手書き枠: `paper/manual/discussion.md`, `paper/manual/conclusion.md`（自動生成が上書きしない考察・結論用プレースホルダ）

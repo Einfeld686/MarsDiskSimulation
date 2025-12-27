@@ -45,7 +45,7 @@
 
 実装方針
 --------
-- 追加スクリプト: `scripts/plot_tau_timescales.py`（既存 `plot_from_runs.py` と同様の構成）。
+- 追加スクリプト: `scripts/plots/plot_tau_timescales.py`（既存 `plot_from_runs.py` と同様の構成）。
 - 入力: `--run out/<run_dir>`、複数 run の重ね描きにも対応可能にする。
 - streaming 対応:
   - `run.parquet` が無い場合は `run_chunk_*.parquet` を `pyarrow.dataset` で読み込む。
@@ -53,7 +53,7 @@
 - 1D 集約:
   - `--reduce cell_median` / `cell_mean` のオプションを用意し、`cell_active` をフィルタ可能にする。
 - Windows 実行:
-  - `scripts/plot_tau_timescales.cmd` を新設し、`.venv` 作成・依存導入・実行までを一括化。
+  - `scripts/plots/windows/plot_tau_timescales.cmd` を新設し、`.venv` 作成・依存導入・実行までを一括化。
   - PowerShell 経由で論理 CPU 数と搭載メモリを取得し、`STREAM_MEM_GB`（または plot 用メモリ上限）を自動設定する。
   - 引数なし実行時は `out/` 配下の最新 run を自動選択して可視化を実行する。
   - 既存の `.cmd` 運用ルール（`scripts/README.md`）に従ってパスと `OUTDIR` を扱う。
@@ -66,8 +66,8 @@
 - [x] 1D 集約: `cell_active` フィルタ + 時刻ごと集約を選択可能にする（推奨: `cell_active==True` を既定、集約は `cell_median` をデフォルト）。
 - [x] プロット実装: matplotlib で `tau` vs timescale を描画、軸スケールと凡例を整理（推奨: x=log, y=log, `alpha=0.25`, `s=6`, `figsize=(7,4)`, `dpi=150`）。
 - [x] 出力: `out/<run>/figures/tau_timescales.png`（または `--output-dir` 指定）（推奨: 既定出力先は `out/<run>/figures`、ファイル名は `tau_timescales.png` 固定）。
-- [x] Windows .cmd: `scripts/plot_tau_timescales.cmd` を作成し、CPU/メモリ自動検出を組み込む（推奨: PowerShell で `TotalPhysicalMemory` と `NumberOfLogicalProcessors` を取得し、`MEM_GB=min(max(8, total_gb*0.6), total_gb-4)` を `STREAM_MEM_GB` に設定、`total_gb`/`logical_processors`/`MEM_GB` をログ出力）。
-- [x] `scripts/README.md` の表に新しい .cmd の用途を追記（推奨: "tau timescale plot (Windows) / scripts/plot_tau_timescales.cmd" の 1 行追加）。
+- [x] Windows .cmd: `scripts/plots/windows/plot_tau_timescales.cmd` を作成し、CPU/メモリ自動検出を組み込む（推奨: PowerShell で `TotalPhysicalMemory` と `NumberOfLogicalProcessors` を取得し、`MEM_GB=min(max(8, total_gb*0.6), total_gb-4)` を `STREAM_MEM_GB` に設定、`total_gb`/`logical_processors`/`MEM_GB` をログ出力）。
+- [x] `scripts/README.md` の表に新しい .cmd の用途を追記（推奨: "tau timescale plot (Windows) / scripts/plots/windows/plot_tau_timescales.cmd" の 1 行追加）。
 
 確認ポイント
 ------------

@@ -1,35 +1,59 @@
 # 目的
-`marsdisk/physics/qstar.py` は Benz & Asphaug (1999) / Leinhardt & Stewart (2012) 由来の係数を **3 km/s と 5 km/s の2点**で持ち、外れた衝突速度を端値にクランプしている。これを **1–7 km/s** 程度に拡張する際、ChatGPT に追加調査を依頼するための論点と収集項目を整理する。
+`marsdisk/physics/qstar.py` の Q_D* 係数テーブルを **1–7 km/s** まで拡張し、速度クランプ警告を実態に合わせる。文献根拠の明確化、テーブル形式、実装手順、テスト計画まで含めて整理する。
 
-# 現状の前提（実装メモ）
-- 参照速度: `_COEFFS={3.0, 5.0}` km/s、線形補間、端値クランプ（warning）。[`marsdisk/physics/qstar.py:26–116`]
-- 係数の出典: Benz & Asphaug (1999) の basalt、Leinhardt & Stewart (2012) の補間指針。
-- 単位系: `coeff_units` は `ba99_cgs`（cm / g / erg/g → J/kg）と `si` をサポート、デフォルトは `ba99_cgs`。
-- 密度パラメータは外部から渡され、ここでは係数のみを速度で補間。
+# 背景 / 現状整理
+- 既定テーブルは `_DEFAULT_COEFFS={3.0, 5.0}` km/s の2点のみで、範囲外は端値クランプ＋警告（`marsdisk/physics/qstar.py`）。
+- `qstar.v_ref_kms` は **`override_coeffs=true` か `coeff_table` 指定時のみ**テーブルに反映される。既定では無視される（`marsdisk/run_zero_d.py`）。
+- 一部 config に 1.5–7.0 km/s が書かれているが、`override_coeffs` が無いため **実際には反映されていない**。
+- Q_pr テーブル（`marsdisk/io/data/qpr_planck_*.csv`）と Q_D* テーブルは別物であり、混同しやすい。
 
-# 調査で ChatGPT に聞きたいこと（最低限集めたい情報）
-- 1–7 km/s における catastrophic disruption threshold `Q_D*` の代表値（basalt 近似）。可能なら 1, 2, 3, 5, 7 km/s での (Qs, a_s, B, b_g) または `Q_D*` の数表。
-- 低速域（<3 km/s）と高速域（>5 km/s）での補間・外挿の推奨手法：
-  - 線形 vs 対数スケール補間の根拠
-  - 塑性支配／重力支配の遷移点に応じた分割必要性
-- 材料依存性:
-  - basalt（既定）以外に ice / porous basalt の係数が得られるか
-  - ρ スケーリングをどう扱うか（BA99 の形を維持するか）
-- 実験・数値の主要出典（論文名・表/図番号）とそこに載る速度範囲：
-  - 例: Benz & Asphaug 1999, Leinhardt & Stewart 2012, Housen & Holsapple 1990/2011 など
-  - 速度レンジの明示有無、係数の再利用可否
-- 実装方針案:
-  - `_COEFFS` を増やす場合の推奨離散点（1, 2, 3, 5, 7 km/s など）
-  - 速度レンジ外の警告・クランプをどう扱うか（更新レンジを [1,7] に広げる等）
-  - 既存単位系 `ba99_cgs`/`si` を変えずに追加できるか
+# 目標 (Definition of Done)
+1. **1–7 km/s をカバーする Q_D* 係数テーブル**が repo に存在し、出典を追跡できる。
+2. `qstar` がそのテーブルを**標準で参照**し、`v<1` / `v>7` のみ警告・クランプになる。
+3. `run_config.qstar` に採用テーブルの由来（source/path/coeff_units）が記録される。
+4. 既存テスト＋必要な追加テストが通る。
 
-# 依頼時の質問テンプレ（案）
-1. 1–7 km/s の basalt 体衝突について、`Q_D*` の代表値または (Qs, a_s, B, b_g) を示す表・図がある文献を教えてください。表や図があれば速度レンジと単位系も教えてください。
-2. 3–5 km/s 間の線形補間を 1–7 km/s に拡張する場合、低速/高速で別の補間（対数など）を推奨するか、文献に根拠はありますか。
-3. 密度スケーリングや材料（basalt, porous, ice）で係数が変わる場合、どの文献のどの式を参照すべきですか。
-4. 警告レンジの更新案（例: [1,7] km/s に広げ、外側はクランプ+warning）に問題がないか、代替案はありますか。
+# 調査・収集タスク
+- **テーブル実在性の確認**: 外部アーカイブ内に 1–7 km/s の係数表があるなら、ファイル名と列定義を確定する。
+- **文献根拠の整理**: Benz & Asphaug (1999), Leinhardt & Stewart (2012) に加え、1–2 km/s / 7 km/s の係数（または Q_D* 曲線）を示す文献を特定する。
+- **材料差の扱い**: basalt 以外（ice/porous basalt）が必要なら別テーブルとして切り分ける。
 
-# 期待するアウトプット形
-- 文献名 + 速度レンジ + 取得できる係数/`Q_D*` の表または図番号
-- 可能なら数表化（1,2,3,5,7 km/s の `Q_D*` [J/kg] または (Qs, a_s, B, b_g)）と単位系の明記
-- 補間手法の推奨（その根拠）と、コードに反映すべきレンジ（例: `_COEFFS` を 1,3,5,7 に拡張）
+# データ仕様 (案)
+テーブルを CSV 化する場合の最小仕様:
+- `v_ref_kms, Qs, a_s, B, b_g, coeff_units`
+- 例: `1.0, 2.5e7, 0.38, 0.22, 1.36, ba99_cgs`
+- 速度キーは km/s、係数は BA99 cgs または SI のいずれかで統一する。
+
+YAML 直書きの場合（既存実装で対応可能）:
+```yaml
+qstar:
+  override_coeffs: true
+  coeff_units: ba99_cgs
+  coeff_table:
+    1.0: [Qs, a_s, B, b_g]
+    2.0: [Qs, a_s, B, b_g]
+    3.0: [Qs, a_s, B, b_g]
+    5.0: [Qs, a_s, B, b_g]
+    7.0: [Qs, a_s, B, b_g]
+```
+
+# 実装方針（選択肢）
+1. **既定テーブル差し替え**: `qstar.py` の `_DEFAULT_COEFFS` を 1–7 km/s へ拡張（最も単純）。
+2. **テーブル外部化**: `coeff_table_path` を追加し、CSV を読み込む（実装コストは増えるが運用しやすい）。
+3. **config 注入のみ**: base.yml などで `override_coeffs=true` と `coeff_table` を明示（コード改変は最小）。
+
+# 検証・テスト
+- `tests/integration/test_qstar_units.py`: 速度クランプ件数と補間の単調性を確認。
+- `tests/integration/test_qstar_fragments.py`: Q_D* の速度補間が破片モデルの境界条件を壊さないこと。
+- 0D/1D の短時間ランで `run_config.qstar.velocity_clamp_counts` がゼロになることを確認。
+
+# 依頼時の質問テンプレ（更新版）
+1. 1–7 km/s の basalt 衝突で、`Q_D*` か (Qs, a_s, B, b_g) を直接示す表/図がある文献を教えてください（図番号と単位系も）。
+2. 1–2 km/s および 7 km/s の係数を得る際、LS12 の補間で十分か、別の速度依存補正が必要かを示す文献はありますか。
+3. 係数が直接得られない場合、Q_D* 曲線から (Qs, a_s, B, b_g) を復元する妥当な手順（フィット条件）を教えてください。
+4. 1–7 km/s を既定レンジにした場合の注意点（クランプ運用、警告閾値、材料差の扱い）はありますか。
+
+# 期待アウトプット
+- 文献名 + 速度レンジ + 表/図番号 + 単位系
+- 1,2,3,5,7 km/s の係数または Q_D* の数表（最低限 3,5 を含む）
+- 採用テーブルの形式（YAML 直書き or CSV）と推奨実装パス

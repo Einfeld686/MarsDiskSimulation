@@ -2,7 +2,7 @@
 rem Windows runner for tau-timescale visualization (plot_tau_timescales.py)
 setlocal EnableExtensions EnableDelayedExpansion
 
-set "REPO=%~dp0.."
+set "REPO=%~dp0..\..\.."
 pushd "%REPO%"
 
 if not defined VENV_DIR set "VENV_DIR=.venv"
@@ -68,7 +68,7 @@ if "%~1"=="" (
   set "PLOT_ARGS=--run \"!DEFAULT_RUN!\""
 )
 
-python scripts\plot_tau_timescales.py !PLOT_ARGS!
+python scripts\plots\plot_tau_timescales.py !PLOT_ARGS!
 set EXITCODE=%errorlevel%
 if %EXITCODE% neq 0 (
   echo.[error] Plot failed with exit code %EXITCODE%.

@@ -464,7 +464,11 @@ def apply_uniform_size_drift(
 
     # fallback: if nothing moved due to numerical issues keep original arrays
     if np.allclose(new_counts, 0.0):
-        return sigma_surf, 0.0, {"ds_step": 0.0, "mass_ratio": 1.0}
+        warnings.warn(
+            "apply_uniform_size_drift: rebin produced all-zero distribution; keeping previous PSD.",
+            NumericalWarning,
+        )
+        return sigma_surf, 0.0, {"ds_step": ds_step, "mass_ratio": 1.0, "rebin_zeroed": True}
 
     new_sizes = sizes.copy()
     mask = new_counts > 0.0
@@ -592,11 +596,14 @@ def evolve_min_size(
     if model == "sublimation_min":
         if sublimation_params is None:
             logger.warning("sublimation_min requested without SublimationParams; skipping evolution")
-            return s_min_prev
+            return max(s_min_prev, floor)
         if rho is None or rho <= 0.0:
             logger.warning("sublimation_min requires positive material density; skipping evolution")
-            return s_min_prev
-        ds_dt = size_models.eval_ds_dt_sublimation(T or 0.0, rho, sublimation_params)
+            return max(s_min_prev, floor)
+        if T is None or not np.isfinite(T) or T <= 0.0:
+            logger.warning("sublimation_min requires positive temperature; skipping evolution")
+            return max(s_min_prev, floor)
+        ds_dt = size_models.eval_ds_dt_sublimation(float(T), rho, sublimation_params)
         ds = ds_dt * dt
         s_next = max(s_min_prev + ds, floor)
         if s_next < s_min_prev:

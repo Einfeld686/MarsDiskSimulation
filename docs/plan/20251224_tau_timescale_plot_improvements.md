@@ -2,7 +2,7 @@
 
 ## 目的
 - 1D 出力の可視化で「半径依存」「時間推移」「τ 定義」を読み取りやすくする。
-- 既存の `scripts/plot_tau_timescales.py` を拡張し、最小限のオプション追加で比較性を高める。
+- 既存の `scripts/plots/plot_tau_timescales.py` を拡張し、最小限のオプション追加で比較性を高める。
 
 ## 背景・現状
 - 現行の散布図は τ と timescale の相関は把握できるが、1D の半径依存が色以外に表現されず読み取りづらい。
@@ -35,12 +35,12 @@
    - これはオプション `--with-inset` で有効化。
 
 ## 実装タスク
-- [x] `scripts/plot_tau_timescales.py`: y 軸ラベルに `used['tau']` を反映。
-- [x] `scripts/plot_tau_timescales.py`: `--reduce none` の場合にセル別トラック描画を追加。
-- [x] `scripts/plot_tau_timescales.py`: `--reduce cell_median` の場合は中央値トレンド線を追加。
-- [x] `scripts/plot_tau_timescales.py`: `--color-by time` のとき開始/終了時刻の注記を追加。
-- [x] `scripts/plot_tau_timescales.py`: `--clip-timescale-min` を追加（log スケール時の下限クリップ）。
-- [x] `scripts/plot_tau_timescales.py`: `--with-inset` を追加（`r/R_M` vs `tau` インセット）。
+- [x] `scripts/plots/plot_tau_timescales.py`: y 軸ラベルに `used['tau']` を反映。
+- [x] `scripts/plots/plot_tau_timescales.py`: `--reduce none` の場合にセル別トラック描画を追加。
+- [x] `scripts/plots/plot_tau_timescales.py`: `--reduce cell_median` の場合は中央値トレンド線を追加。
+- [x] `scripts/plots/plot_tau_timescales.py`: `--color-by time` のとき開始/終了時刻の注記を追加。
+- [x] `scripts/plots/plot_tau_timescales.py`: `--clip-timescale-min` を追加（log スケール時の下限クリップ）。
+- [x] `scripts/plots/plot_tau_timescales.py`: `--with-inset` を追加（`r/R_M` vs `tau` インセット）。
 - [x] `scripts/README.md`: 新オプションの使い方を追記。
 
 ## 受入基準

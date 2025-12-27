@@ -50,7 +50,7 @@
 # 追加考慮点（周辺影響）
 - **単一ファイル前提の解析**: streaming 有効時は `series/run.parquet` が生成されないため、既存の分析スクリプトやテストが単一ファイルを前提にしている場合は `merge_at_end=true` を使うか、チャンクディレクトリ読み込みに対応する変更が必要。
 - **ドキュメント更新**: `analysis/config_guide.md` や README/run-recipes に `io.streaming.*` キーとチャンク運用（mass_budget が追記型になる点、チャンク名パターン）を追記する必要あり。
-- **スクリプト適用範囲**: `scripts/run_sublim_cooling.cmd` は override 済み。類似スクリプト（例: `scripts/run_sublim_windows_cooling.cmd`）で同様の挙動を望む場合は明示的に override を追加するかデフォルトを見直す。
+- **スクリプト適用範囲**: `scripts/runsets/windows/legacy/run_sublim_cooling.cmd` は override 済み。類似スクリプト（例: `scripts/run_sublim_windows_cooling.cmd`）で同様の挙動を望む場合は明示的に override を追加するかデフォルトを見直す。
 - **テスト強化**: streaming 無効時の回帰は従来通り。有効ケースで小規模ランの簡易テスト（チャンク出力と summary.streaming ブロックの検証）を追加すると安全。
 - **mass_budget 依存**: mass_budget がチャンク追記になるため、後処理ツールが単一CSVを期待していないか確認し、必要に応じて連結手順をドキュメント化する。
 

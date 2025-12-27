@@ -358,9 +358,15 @@ def _fragment_tensor(
     f_lr_matrix = np.clip(
         largest_remnant_fraction_array(q_r_matrix, q_star_matrix), 0.0, 1.0
     ).astype(np.float64)
-    k_lr_matrix = np.maximum.outer(
-        np.arange(n, dtype=np.int64), np.arange(n, dtype=np.int64)
-    )
+    m_lr_matrix = f_lr_matrix * m_tot
+    with np.errstate(invalid="ignore"):
+        s_lr_matrix = np.where(
+            valid_pair,
+            (3.0 * m_lr_matrix / (4.0 * np.pi * float(rho))) ** (1.0 / 3.0),
+            0.0,
+        )
+    k_lr_matrix = np.searchsorted(edges_arr, s_lr_matrix, side="right") - 1
+    k_lr_matrix = np.clip(k_lr_matrix, 0, n - 1).astype(np.int64)
 
     # Output tensor
     Y = np.zeros((n, n, n), dtype=np.float64)
@@ -871,7 +877,14 @@ def step_collisions_smol_0d(
     sizes_ref_id = id(sizes_ref) if sizes_ref is not None else None
     if sizes_ref_id is not None and sizes_ref_id == kernel_workspace_sizes_id:
         kernel_workspace = kernel_workspace_cached
-    else:
+        if kernel_workspace is not None:
+            expected_shape = (sizes_arr.size, sizes_arr.size)
+            if (
+                kernel_workspace.s_sum_sq.shape != expected_shape
+                or kernel_workspace.delta.shape != expected_shape
+            ):
+                kernel_workspace = None
+    if kernel_workspace is None:
         try:
             kernel_workspace = collide.prepare_collision_kernel_workspace(sizes_arr)
             _THREAD_LOCAL.kernel_ws = kernel_workspace

@@ -169,7 +169,7 @@ ls out/summary.json out/series/run.parquet out/checks/mass_budget.csv
 | 標準シナリオ（旧fiducial） | `python -m marsdisk.run --config configs/scenarios/fiducial.yml` |
 | 高温シナリオ | `python -m marsdisk.run --config configs/scenarios/high_temp.yml` |
 | 質量損失スイープベース | `python -m marsdisk.run --config _configs/05_massloss_base.yml` |
-| サブリメーション+冷却（Windows向け） | `scripts/run_sublim_cooling_win.cmd` / `scripts/run_sublim_cooling.cmd` ※ストリーミング出力ON（io.streaming.*, merge_at_end=true） |
+| サブリメーション+冷却（Windows向け） | `scripts/runsets/windows/legacy/run_sublim_cooling_win.cmd` / `scripts/runsets/windows/legacy/run_sublim_cooling.cmd` ※ストリーミング出力ON（io.streaming.*, merge_at_end=true） |
 <!-- AUTOGEN:README_CLI_EXAMPLES END -->
 
 > 💡 設定の上書き: `--override radiation.TM_K=5000`

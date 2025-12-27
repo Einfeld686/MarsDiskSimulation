@@ -37,12 +37,15 @@ def sigma_from_Minner(
         return lambda r: float(sigma_const)
 
     if abs(p_index - 2.0) < _DEF_EPS:
-        C = M_in / (2.0 * math.pi * math.log(r_out / r_in))
+        denom = math.log(r_out / r_in)
+        if not math.isfinite(denom) or abs(denom) < _DEF_EPS:
+            raise PhysicsError("r_out/r_in is too close to unity for p_index≈2 normalisation")
+        C = M_in / (2.0 * math.pi * denom)
     else:
-        C = (
-            M_in * (2.0 - p_index)
-            / (2.0 * math.pi * (r_out ** (2.0 - p_index) - r_in ** (2.0 - p_index)))
-        )
+        denom = r_out ** (2.0 - p_index) - r_in ** (2.0 - p_index)
+        if not math.isfinite(denom) or abs(denom) < _DEF_EPS:
+            raise PhysicsError("r_out/r_in is too close to unity for power-law normalisation")
+        C = M_in * (2.0 - p_index) / (2.0 * math.pi * denom)
     return lambda r: float(C * r ** (-p_index))
 
 

@@ -130,6 +130,31 @@
    - 懸念: `tau=np.nan` で `t_coll` が NaN となり衝突項が無言で無効化される可能性。
    - 方針: `tau` の有限性を検査し、非有限時は警告/例外とする。
 
+24. **供給テーブルの欠損セルが NaN を伝播**
+   - 対象: `marsdisk/physics/supply.py` の `_TableData.load`
+   - 懸念: t×r グリッドに欠損があると補間値が NaN になり供給率が破綻する。
+   - 方針: グリッドの完全性（欠損・非有限）をロード時に検査し、異常は例外。
+
+25. **Φ(τ,ω0,g) テーブルの未検証入力**
+   - 対象: `marsdisk/io/tables.py` の `PhiTable.from_frame`
+   - 懸念: 欠損・非有限・次元不足の Φ テーブルで補間が NaN 化する恐れ。
+   - 方針: テーブルの完全性・次元数（各軸>=2）を検査し、異常は例外。
+
+26. **e0/i0 の非有限・不正値**
+   - 対象: `marsdisk/schema.py` の `Dynamics`
+   - 懸念: `e0>=1` や `i0<0` が混入すると `v_rel` 計算が例外化・破綻する。
+   - 方針: スキーマで e0/i0 の範囲・有限性を検証し、構成時に失敗させる。
+
+27. **sublimation_min で温度未指定**
+   - 対象: `marsdisk/physics/psd.py` の `evolve_min_size`
+   - 懸念: `T=None` で `mass_flux_hkl` のガードにより例外化する可能性。
+   - 方針: T 未指定はスキップ扱いとして警告し、診断値を保持する。
+
+28. **負の Σ_surf による τ の負値化**
+   - 対象: `marsdisk/run_one_d.py` の τ 計算ブロック
+   - 懸念: `sigma_val<0` で `tau_los` が負になり、衝突・ゲート判定が崩れる。
+   - 方針: 非有限/負の Σ_surf は 0 へクランプし、警告を出す。
+
 ---
 
 ## テスト設計案（異常検知）
@@ -265,6 +290,31 @@
 - **案**:
   - `_safe_tcoll(Omega, np.nan)` で警告/例外が出ることを確認。
 
+### 24) 供給テーブル欠損セル検出（ユニット）
+- **目的**: t×r 欠損が NaN 伝播しないことの確認
+- **案**:
+  - 欠損を含む `t,r,rate` テーブルを読み込み、例外を確認。
+
+### 25) Φ テーブルの完全性検証（ユニット）
+- **目的**: 欠損・次元不足の Φ テーブルを拒否することを確認
+- **案**:
+  - 不完全な `(tau,w0,g,Phi)` を `PhiTable.from_frame` に渡し、例外を確認。
+
+### 26) e0/i0 の範囲検証（ユニット）
+- **目的**: e0/i0 の不正値が構成時に弾かれることを確認
+- **案**:
+  - `e0>=1` / `e0<0` / `i0<0` の `Dynamics` を生成し、`ValidationError` を確認。
+
+### 27) sublimation_min の温度未指定ガード（ユニット）
+- **目的**: `T=None` が例外化せず安全にスキップされることを確認
+- **案**:
+  - `evolve_min_size(..., model="sublimation_min", T=None)` で元値が返ることを確認。
+
+### 28) Σ_surf クランプ動作（ユニット）
+- **目的**: 非有限・負の Σ_surf が 0 にクランプされることを確認
+- **案**:
+  - 内部ヘルパを直接呼び出し、負値/NaN が 0 になることを確認。
+
 ---
 
 ## 追記メモ
@@ -281,6 +331,18 @@
 - **コマンド**: `pytest tests/unit/test_numerical_anomaly_watchlist_additional.py tests/integration/test_deep_mixing_mass_budget.py`
 - **結果**: 7 passed, 1 warning
 - **警告**: `TableWarning`（numba 補間失敗 → NumPy フォールバック）を 1 件確認
+- **実行日**: 2025-12-24
+- **コマンド**: `pytest tests/unit/test_numerical_anomaly_watchlist_additional.py`
+- **結果**: 19 passed
+- **警告**: なし
+- **実行日**: 2025-12-24
+- **コマンド**: `pytest tests/unit/test_numerical_anomaly_watchlist_additional.py`
+- **結果**: 24 passed
+- **警告**: なし
+- **実行日**: 2025-12-24
+- **コマンド**: `pytest tests/integration`
+- **結果**: 199 passed, 3 skipped, 62 warnings
+- **警告**: DeprecationWarning（供給設定の非デフォルトに関する既知警告）
 
 ---
 
@@ -302,5 +364,9 @@
 - [x] `_NUMBA_FAILED` グローバル影響テストを実装する
 - [ ] Windows/.cmd 実行での再現性テストを実行し記録する
 - [ ] `summary.json` と質量保存ログの差分を確認し、許容範囲内であることを確認する
-- [ ] 追加リスク（14–23）の方針を確定する
-- [ ] 追加リスク（14–23）のテスト設計を確定する
+- [x] 追加リスク（14–23）の方針を確定する
+- [x] 追加リスク（14–23）のテスト設計を確定する
+- [x] 追加リスク（24–28）の方針を確定する
+- [x] 追加リスク（24–28）のテスト設計を確定する
+- [x] 追加リスク（24–28）のガード実装を行う
+- [x] 追加リスク（24–28）のテスト実装を行う

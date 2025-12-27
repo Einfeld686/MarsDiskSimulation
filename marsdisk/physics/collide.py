@@ -121,11 +121,15 @@ def compute_collision_kernel_C1(
     use_matrix_velocity = False
     if np.isscalar(v_rel):
         v_scalar = float(v_rel)
+        if not np.isfinite(v_scalar) or v_scalar < 0.0:
+            raise MarsDiskError("v_rel must be finite and non-negative")
         v_mat = np.zeros((n, n), dtype=np.float64)
     else:
         v_mat = np.asarray(v_rel, dtype=np.float64)
         if v_mat.shape != (n, n):
             raise MarsDiskError("v_rel has wrong shape")
+        if not np.all(np.isfinite(v_mat)) or np.any(v_mat < 0.0):
+            raise MarsDiskError("v_rel matrix must be finite and non-negative")
         use_matrix_velocity = True
         v_scalar = 0.0
 

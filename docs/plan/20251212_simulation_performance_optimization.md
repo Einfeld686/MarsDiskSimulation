@@ -70,7 +70,7 @@ sizes:
 **効果**: コア数に比例（4〜16倍）
 
 > [!NOTE]
-> 現行の `sweep_heatmaps.py` は `ThreadPoolExecutor` を使用しているが、各ケースは `subprocess.run([python, -m, marsdisk.run, ...])` で別プロセスを起動するため（[sweep_heatmaps.py:1222-1228](file:///Users/daichi/marsshearingsheet/scripts/sweep_heatmaps.py#L1222-1228)）、**実計算は既に GIL の影響外で並列化されている**。`ProcessPoolExecutor` への変更は pickling オーバーヘッドを増やすだけで効果がない。
+> 現行の `sweep_heatmaps.py` は `ThreadPoolExecutor` を使用しているが、各ケースは `subprocess.run([python, -m, marsdisk.run, ...])` で別プロセスを起動するため（[sweep_heatmaps.py:1222-1228](file:///Users/daichi/marsshearingsheet/scripts/sweeps/sweep_heatmaps.py#L1222-1228)）、**実計算は既に GIL の影響外で並列化されている**。`ProcessPoolExecutor` への変更は pickling オーバーヘッドを増やすだけで効果がない。
 >
 > 並列度向上には `--jobs N` の増加と、より多くのコアを持つ実行環境（Codespaces 等）の活用が有効。
 
@@ -90,7 +90,7 @@ GitHub Education 加入者は大型インスタンス（16-32コア）を無料�
 
 実行例:
 ```bash
-python scripts/sweep_heatmaps.py --map 1 --jobs 16 --outdir sweeps/map1_fast
+python scripts/sweeps/sweep_heatmaps.py --map 1 --jobs 16 --outdir sweeps/map1_fast
 ```
 
 #### 2c. GitHub Actions マトリクスジョブ
@@ -105,7 +105,7 @@ jobs:
         part: [1, 2, 3, 4]
     runs-on: ubuntu-latest
     steps:
-      - run: python scripts/sweep_heatmaps.py --map 3 --num-parts 4 --part-index ${{ matrix.part }}
+      - run: python scripts/sweeps/sweep_heatmaps.py --map 3 --num-parts 4 --part-index ${{ matrix.part }}
 ```
 
 ---
@@ -286,6 +286,6 @@ time python -m marsdisk.run --config configs/base.yml
 ## 関連ドキュメント
 
 - [analysis/run-recipes.md](file:///Users/daichi/marsshearingsheet/analysis/run-recipes.md) — 実行レシピ（dt 推奨値の根拠）
-- [scripts/sweep_heatmaps.py](file:///Users/daichi/marsshearingsheet/scripts/sweep_heatmaps.py) — スイープスクリプト
+- [scripts/sweeps/sweep_heatmaps.py](file:///Users/daichi/marsshearingsheet/scripts/sweeps/sweep_heatmaps.py) — スイープスクリプト
 - [marsdisk/physics/_numba_kernels.py](file:///Users/daichi/marsshearingsheet/marsdisk/physics/_numba_kernels.py) — Numba カーネル
 - [marsdisk/physics/collide.py](file:///Users/daichi/marsshearingsheet/marsdisk/physics/collide.py) — 既存衝突カーネル実装（v_rel 行列対応）

@@ -112,6 +112,11 @@ def psd_state_to_number_density(
 
     base_counts = number_arr * widths_arr
     mass_density_raw = float(np.sum(m_k * base_counts))
+    if not np.isfinite(mass_density_raw) or mass_density_raw <= 0.0:
+        warnings.warn(
+            "psd_state_to_number_density: mass density is non-finite or non-positive; returning zero counts.",
+            NumericalWarning,
+        )
     scale_to_sigma = sigma_surf / mass_density_raw if mass_density_raw > 0.0 else 0.0
     N_k = base_counts * scale_to_sigma if scale_to_sigma > 0.0 else np.zeros_like(base_counts)
     return sizes_arr, widths_arr, m_k, N_k, scale_to_sigma

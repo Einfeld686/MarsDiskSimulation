@@ -83,6 +83,20 @@ def _resolve_los_factor(los_geom: Optional[object]) -> float:
     return float(factor if factor > 1.0 else 1.0)
 
 
+def _clamp_sigma_surf(value: float, *, label: str = "sigma_surf") -> float:
+    """Return a non-negative finite surface density (clamped to 0 on invalid)."""
+
+    try:
+        sigma_val = float(value)
+    except Exception:
+        logger.warning("%s is not a valid float; clamping to 0", label)
+        return 0.0
+    if not math.isfinite(sigma_val) or sigma_val < 0.0:
+        logger.warning("%s is non-finite or negative; clamping to 0", label)
+        return 0.0
+    return sigma_val
+
+
 def _auto_chi_blow(beta: float, qpr: float) -> float:
     """Return an automatic chi_blow scaling based on β and ⟨Q_pr⟩."""
 
@@ -1526,6 +1540,8 @@ def run_one_d(
                     if getattr(cfg.surface, "freeze_sigma", False):
                         sigma_val = float(sigma_surf0[idx])
 
+                    sigma_val = _clamp_sigma_surf(sigma_val)
+
                     if getattr(cfg.radiation, "freeze_kappa", False):
                         kappa_surf = kappa_surf_initial
                     else:
@@ -1554,33 +1570,43 @@ def run_one_d(
                                 t_solid_step = candidate
                     elif blowout_gate_mode == "collision_competition":
                         if tau_los > TAU_MIN and Omega_val > 0.0:
-                            candidate = 1.0 / (Omega_val * max(tau_los, TAU_MIN))
-                            if candidate > 0.0 and math.isfinite(candidate):
-                                t_solid_step = candidate
+                            tau_vert = float(tau_los) / max(los_factor, 1.0)
+                            if tau_vert > TAU_MIN:
+                                candidate = 1.0 / (Omega_val * tau_vert)
+                                if candidate > 0.0 and math.isfinite(candidate):
+                                    t_solid_step = candidate
+                        t_coll_candidate = None
+                        if collisions_active_step and tau_los > TAU_MIN and Omega_val > 0.0:
+                            if smol_res is not None:
+                                t_coll_candidate = smol_res.t_coll_kernel
+                        if t_coll_candidate is None:
+                            try:
+                                tau_vert = float(tau_los) / max(los_factor, 1.0)
+                                if tau_vert > TAU_MIN:
+                                    t_coll_candidate = surface.wyatt_tcoll_S1(tau_vert, Omega_val)
+                                else:
+                                    t_coll_candidate = None
+                            except Exception:
+                                t_coll_candidate = None
+                            if (
+                                t_coll_candidate is not None
+                                and math.isfinite(t_coll_candidate)
+                                and t_coll_candidate > 0.0
+                            ):
+                                t_coll_step = float(t_coll_candidate)
+                        if (
+                            t_coll_step is not None
+                            and t_coll_step > 0.0
+                            and t_blow > 0.0
+                            and math.isfinite(t_blow)
+                        ):
+                            ts_ratio_value = float(t_blow / t_coll_step)
+                        if t_coll_step is not None and math.isfinite(t_coll_step):
+                            local_t_coll_min = min(local_t_coll_min, float(t_coll_step))
+
                     if gate_enabled and enable_blowout_step:
                         gate_factor = compute_gate_factor(t_blow, t_solid_step)
                         outflux_surface *= gate_factor
-
-                    if collisions_active_step and tau_los > TAU_MIN and Omega_val > 0.0:
-                        t_coll_candidate = None
-                        if smol_res is not None:
-                            t_coll_candidate = smol_res.t_coll_kernel
-                        if t_coll_candidate is None:
-                            try:
-                                t_coll_candidate = surface.wyatt_tcoll_S1(float(tau_los), Omega_val)
-                            except Exception:
-                                t_coll_candidate = None
-                        if t_coll_candidate is not None and math.isfinite(t_coll_candidate) and t_coll_candidate > 0.0:
-                            t_coll_step = float(t_coll_candidate)
-                    if (
-                        t_coll_step is not None
-                        and t_coll_step > 0.0
-                        and t_blow > 0.0
-                        and math.isfinite(t_blow)
-                    ):
-                        ts_ratio_value = float(t_blow / t_coll_step)
-                    if t_coll_step is not None and math.isfinite(t_coll_step):
-                        local_t_coll_min = min(local_t_coll_min, float(t_coll_step))
 
                     if optical_depth_enabled and optical_tau_stop is not None and cell_is_solid:
                         kappa_for_stop = kappa_eff if math.isfinite(kappa_eff) else kappa_surf

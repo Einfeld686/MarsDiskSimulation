@@ -465,7 +465,7 @@ python -m marsdisk.run --config configs/scenarios/fiducial.yml
 scripts/research/run_temp_supply_sweep.sh
 
 # heatmapスイープ（旧形式）
-python scripts/sweep_heatmaps.py --map 1 --outdir sweeps/demo --jobs 4
+python scripts/sweeps/sweep_heatmaps.py --map 1 --outdir sweeps/demo --jobs 4
 ```
 
 ### run_temp_supply_sweep.sh の主要環境変数
