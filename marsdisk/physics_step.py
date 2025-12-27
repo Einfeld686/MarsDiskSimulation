@@ -444,6 +444,7 @@ def step_surface_layer(
         dt,
         Omega,
         tau=tau,
+        t_blow=t_blow,
         t_sink=t_sink,
         sigma_tau1=sigma_tau1,
         enable_blowout=enable_blowout,

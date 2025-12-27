@@ -44,6 +44,14 @@ class _TableData:
                 .reindex(index=t_vals, columns=r_vals)
                 .to_numpy(dtype=float)
             )
+            if t_vals.size < 2 or r_vals.size < 2:
+                raise ValueError("supply table requires at least two unique t and r values")
+            if not np.all(np.isfinite(t_vals)) or not np.all(np.isfinite(r_vals)):
+                raise ValueError("supply table contains non-finite t or r values")
+            if grid.size == 0:
+                raise ValueError("supply table must contain at least one data point")
+            if not np.all(np.isfinite(grid)):
+                raise ValueError("supply table contains missing or non-finite grid values")
             return cls(t_vals, r_vals, grid)
         t = df.iloc[:, 0].to_numpy(dtype=float)
         rate = df.iloc[:, -1].to_numpy(dtype=float)

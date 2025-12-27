@@ -1,13 +1,15 @@
 @echo off
 rem Mars disk sublimation+smol+phase runner with enforced Mars-surface cooling (cmd.exe).
-rem Variant: fixes simulation duration to 2 years via override.
 rem - Creates .venv if missing, installs requirements, then runs with radiative cooling table/autogen enabled.
 rem - OUTDIR/TMK/TABLE can be adjusted below. Avoid ':' or other illegal path chars.
 rem - Requires Python on PATH; replace "python" with a full path if needed.
 
 setlocal enabledelayedexpansion
 
-set OUTDIR=out\run_sublim_smol_phase_cooling_2yr
+set REPO=%~dp0..\..\..\..
+pushd "%REPO%"
+
+set OUTDIR=out\run_sublim_smol_phase_cooling
 set TMK=4000.0
 set TEMP_TABLE=data\mars_temperature_T4000p0K.csv
 rem Use a schema-compliant config (temps.* is no longer supported)
@@ -46,9 +48,13 @@ python -m marsdisk.run ^
   --config "%CONFIG%" ^
   --quiet ^
   --progress ^
-  --override numerics.dt_init=auto ^
-  --override numerics.safety=0.005 ^
-  --override numerics.t_end_years=2.0 ^
+  --override io.streaming.enable=true ^
+  --override io.streaming.memory_limit_gb=80.0 ^
+  --override io.streaming.step_flush_interval=10000 ^
+  --override io.streaming.compression=snappy ^
+  --override io.streaming.merge_at_end=true ^
+  --override numerics.dt_init=2.0 ^
+  --override numerics.safety=0.05 ^
   --override io.outdir=%OUTDIR% ^
   --override radiation.source=mars ^
   --override radiation.TM_K=%TMK% ^
@@ -66,6 +72,7 @@ python -m marsdisk.run ^
   --override radiation.mars_temperature_driver.autogenerate.time_unit=day ^
   --override radiation.mars_temperature_driver.autogenerate.column_time=time_day ^
   --override radiation.mars_temperature_driver.autogenerate.column_temperature=T_K ^
+  --override psd.wavy_strength=0.0 ^
   --override sinks.sub_params.mode=hkl ^
   --override sinks.sub_params.alpha_evap=0.007 ^
   --override sinks.sub_params.mu=0.0440849 ^
@@ -74,7 +81,9 @@ python -m marsdisk.run ^
 
 if %errorlevel% neq 0 (
   echo [error] Run failed with exit code %errorlevel%.
+  popd
   exit /b %errorlevel%
 )
 
 echo [done] Run finished. Output: %OUTDIR%
+popd

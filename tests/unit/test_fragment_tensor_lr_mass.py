@@ -53,12 +53,15 @@ def test_fragment_tensor_lr_bin_preserves_mass(monkeypatch: pytest.MonkeyPatch) 
     Y = collisions_smol._fragment_tensor(
         sizes, masses, edges, float(v_rel_use), rho, alpha_frag=3.5, use_numba=False
     )
-    k_lr = max(i, j)
+    m_tot = masses[i] + masses[j]
+    f_lr_val = float(f_lr_use[i, j])
+    s_lr = (3.0 * f_lr_val * m_tot / (4.0 * np.pi * rho)) ** (1.0 / 3.0)
+    k_lr = int(np.searchsorted(edges, s_lr, side="right") - 1)
+    k_lr = max(0, min(k_lr, sizes.size - 1))
     assert v_matrix_use is not None
     assert f_lr_use is not None
     y_lr = float(Y[k_lr, i, j])
     y_sum = float(np.sum(Y[:, i, j]))
-    f_lr_val = float(f_lr_use[i, j])
 
     assert y_sum == pytest.approx(1.0, rel=1e-6, abs=1e-12)
     assert y_lr >= f_lr_val - 1.0e-12

@@ -27,6 +27,8 @@ def omega_kepler(r: float) -> float:
     float
         Angular frequency in radians per second.
     """
+    if not np.isfinite(r) or r <= 0.0:
+        raise ValueError("r must be positive and finite")
     mu = constants.G * constants.M_MARS
     return float(np.sqrt(mu / r**3))
 
@@ -44,6 +46,8 @@ def v_kepler(r: float) -> float:
     float
         Orbital speed in metres per second.
     """
+    if not np.isfinite(r) or r <= 0.0:
+        raise ValueError("r must be positive and finite")
     mu = constants.G * constants.M_MARS
     return float(np.sqrt(mu / r))
 

@@ -53,6 +53,8 @@ def _safe_tcoll(Omega: float, tau: float | None) -> float | None:
             "safe_tcoll: tau=%e <= TAU_MIN=%e; collisions disabled", tau, TAU_MIN
         )
         return None
+    if not np.isfinite(tau):
+        raise MarsDiskError("tau must be finite for collisional time-scale")
     return 1.0 / (Omega * max(tau, TAU_MIN))
 
 __all__ = [
@@ -111,6 +113,7 @@ def step_surface_density_S1(
     dt: float,
     Omega: float,
     *,
+    t_blow: float | None = None,
     t_coll: float | None = None,
     t_sink: float | None = None,
     sigma_tau1: float | None = None,
@@ -128,6 +131,8 @@ def step_surface_density_S1(
         Time step.
     Omega:
         Keplerian angular frequency; sets ``t_blow = 1/Ω``.
+    t_blow:
+        Optional blow-out time-scale. When provided this overrides ``1/Ω``.
     t_coll:
         Optional collisional time-scale ``t_coll``.  When provided the
         loss term ``Σ_surf/t_coll`` is treated implicitly.
@@ -155,7 +160,10 @@ def step_surface_density_S1(
     if dt <= 0.0 or Omega <= 0.0:
         raise MarsDiskError("dt and Omega must be positive")
 
-    t_blow = 1.0 / Omega
+    if t_blow is None:
+        t_blow = 1.0 / Omega
+    elif t_blow <= 0.0 or not np.isfinite(t_blow):
+        raise MarsDiskError("t_blow must be positive and finite")
     loss = 0.0
     if enable_blowout:
         loss += 1.0 / t_blow
@@ -167,7 +175,7 @@ def step_surface_density_S1(
     numerator = sigma_surf + dt * prod_subblow_area_rate
     sigma_new = numerator / (1.0 + dt * loss)
 
-    outflux = sigma_new * Omega if enable_blowout else 0.0
+    outflux = sigma_new / t_blow if enable_blowout else 0.0
     sink_flux = sigma_new / t_sink if (t_sink is not None and t_sink > 0.0) else 0.0
     if logger.isEnabledFor(logging.DEBUG):
         logger.debug(
@@ -225,6 +233,7 @@ def step_surface(
     Omega: float,
     *,
     tau: float | None = None,
+    t_blow: float | None = None,
     t_coll: float | None = None,
     t_sink: float | None = None,
     sigma_tau1: float | None = None,
@@ -246,6 +255,7 @@ def step_surface(
         prod_subblow_area_rate,
         dt,
         Omega,
+        t_blow=t_blow,
         t_coll=t_coll,
         t_sink=t_sink,
         sigma_tau1=sigma_tau1,

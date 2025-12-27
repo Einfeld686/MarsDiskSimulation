@@ -791,6 +791,22 @@ class Dynamics(BaseModel):
         description="Optional seed for eccentricity/inclination RNG sampling (dimensionless)",
     )
 
+    @field_validator("e0")
+    def _validate_e0(cls, value: float) -> float:
+        if not math.isfinite(value):
+            raise ConfigurationError("dynamics.e0 must be finite")
+        if value < 0.0 or value >= 1.0:
+            raise ConfigurationError("dynamics.e0 must lie within [0, 1)")
+        return value
+
+    @field_validator("i0")
+    def _validate_i0(cls, value: float) -> float:
+        if not math.isfinite(value):
+            raise ConfigurationError("dynamics.i0 must be finite")
+        if value < 0.0:
+            raise ConfigurationError("dynamics.i0 must be non-negative")
+        return value
+
     @model_validator(mode="after")
     def _check_kernel_H_params(cls, model: "Dynamics") -> "Dynamics":
         if model.kernel_H_mode == "fixed" and model.H_fixed_over_a is None:

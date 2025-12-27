@@ -186,7 +186,7 @@ graph LR
 | `shielding.mode`, `shielding.table_path`, `shielding.fixed_tau1_*` | Φ(τ,ω₀,g) テーブルを δ–Eddington/HG 近似から取得し、Σ_{τ=1} は診断として記録（上限判定は `tau_stop` で停止） | [@Joseph1976_JAS33_2452; @HansenTravis1974_SSR16_527; @CogleyBergstrom1979_JQSRT22_267; @Chandrasekhar1960_RadiativeTransfer] |
 | `sinks.sub_params.*`, `sinks.T_sub`, `sinks.mu`, `sinks.alpha_evap` | SiO/SiO₂ の HKL 昇華係数と閾値を Hyodo18 の温度域・Pignatale18 の組成・Melosh/Bruning/Ojovan の相変化データに合わせる | [@Hyodo2018_ApJ860_150; @Pignatale2018_ApJ853_118; @Melosh2007_MPS42_2079; @Bruning2003_JNCS330_13; @Ojovan2021_Materials14_5235] |
 | `phase.thresholds.*`, `phase.entrypoint` | ガラス転移と液相線 1475/1986 K を閾値にした SiO₂ 状態判定 | [@Bruning2003_JNCS330_13; @Ojovan2021_Materials14_5235] |
-| `disk.geometry.r_in_RM`, `r_out_RM` | ロッシュ限界内の低質量リングを前提に 2.2–2.7 R_Mars を基準設定 | [@CridaCharnoz2012_Science338_1196; @CanupSalmon2018_SciAdv4_eaar6887] |
+| `disk.geometry.r_in_RM`, `r_out_RM` | base.yml 既定は 1.0–2.5 R_Mars。ロッシュ限界内の低質量リング想定では 2.2–2.7 R_Mars を採用 | [@CridaCharnoz2012_Science338_1196; @CanupSalmon2018_SciAdv4_eaar6887] |
 | `inner_disk_mass.use_Mmars_ratio`, `inner_disk_mass.map_to_sigma` | ロッシュ内リングの質量を M_disk/M_Mars から Σ(r) へ写像する簡略モデル | [@CridaCharnoz2012_Science338_1196; @SalmonCanup2010_Icarus208_33; @SalmonCanup2012_ApJ760_83; @Kuramoto2024] |
 | `sinks.enable_gas_drag`, `ALLOW_TL2003` | gas-poor を既定とし、gas-rich 感度試験時のみ TL2003 表層流出や drag を検討 | [@Hyodo2018_ApJ860_150; @CanupSalmon2018_SciAdv4_eaar6887; @TakeuchiLin2003_ApJ593_524; @PollackBurnsTauber1979_Icarus37_587; @Hunten1979_Icarus37_113; @Olofsson2022_MNRAS513_713] |
 
@@ -274,12 +274,12 @@ Hertz-Knudsen-Langmuir (HKL) 理論に基づく昇華速度の詳細パラメー
 
 #### 🔵 円盤ジオメトリ (`disk.geometry`)
 
-ダスト円盤の空間的範囲を火星半径単位で指定。ロッシュ限界（~2.4 R_Mars）付近が対象。0D 実行では `disk.geometry` の指定が必須。
+ダスト円盤の空間的範囲を火星半径単位で指定。0D 実行では `disk.geometry` の指定が必須。base.yml では 1.0–2.5 R_Mars を採用する。
 
 | パラメータ | 型 | 物理的意味 | 典型値 |
 |-----------|-----|-----------|--------|
-| `r_in_RM` | float | 円盤内縁の軌道半径 [Mars半径]。火星表面に近いほど高温・短周期 | 2.2 |
-| `r_out_RM` | float | 円盤外縁の軌道半径 [Mars半径]。ロッシュ限界を超えると衛星形成領域 | 2.7 |
+| `r_in_RM` | float | 円盤内縁の軌道半径 [Mars半径]。火星表面に近いほど高温・短周期 | 1.0 |
+| `r_out_RM` | float | 円盤外縁の軌道半径 [Mars半径]。ロッシュ限界を超えると衛星形成領域 | 2.5 |
 | `r_profile` | str | 表面密度の半径依存性。`"uniform"` は一様、`"powerlaw"` は Σ ∝ r^(-p) | `"uniform"` |
 | `p_index` | float | べき乗則の指数 p。p=0 で一様、p>0 で内側が高密度 | 0.0 |
 
@@ -435,8 +435,8 @@ physics_mode: "default"  # または "sublimation_only" / "collisions_only"
 ```yaml
 disk:
   geometry:
-    r_in_RM: 2.2
-    r_out_RM: 2.7
+    r_in_RM: 1.0
+    r_out_RM: 2.5
 ```
 
 ### 3.4 `supply` — 外部供給（簡略化済み）
@@ -753,8 +753,8 @@ qstar:
 
 disk:
   geometry:
-    r_in_RM: 2.2
-    r_out_RM: 2.7
+    r_in_RM: 1.0
+    r_out_RM: 2.5
 
 inner_disk_mass:
   use_Mmars_ratio: true
@@ -825,9 +825,9 @@ radiation:
 
 ```yaml
 geometry:
-  r: 7.5e6  # [m]
+  r: 5.9e6  # [m]
   # または
-  runtime_orbital_radius_rm: 2.2
+  runtime_orbital_radius_rm: 1.75
 ```
 
 **After:**
@@ -835,8 +835,8 @@ geometry:
 ```yaml
 disk:
   geometry:
-    r_in_RM: 2.2
-    r_out_RM: 2.7
+    r_in_RM: 1.0
+    r_out_RM: 2.5
 ```
 
 ### 5.4 phase.map.entrypoint の移行

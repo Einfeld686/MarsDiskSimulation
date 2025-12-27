@@ -1,0 +1,11 @@
+# Windows runset overrides (I/O + numerics only)
+io.streaming.enable=true
+io.streaming.memory_limit_gb=10
+io.streaming.step_flush_interval=10000
+io.streaming.merge_at_end=true
+io.streaming.cleanup_chunks=true
+numerics.dt_init=2
+numerics.checkpoint.enabled=true
+numerics.checkpoint.interval_years=0.083
+numerics.checkpoint.keep_last_n=3
+numerics.checkpoint.format=pickle

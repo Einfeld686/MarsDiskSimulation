@@ -106,20 +106,19 @@ def test_blowout_radius_size_dependent_qpr_consistent() -> None:
     assert s_direct == pytest.approx(s_self, rel=1.0e-3)
 
 
-def test_surface_ode_chi_blow_ignored() -> None:
+def test_surface_ode_respects_t_blow() -> None:
     sigma = 1.0
     prod = 0.0
     Omega = 2.0
     dt = 0.1
 
-    res = surface.step_surface_density_S1(sigma, prod, dt, Omega)
-
     chi_blow = 2.0
     t_blow_expected = chi_blow / Omega
+    res = surface.step_surface_density_S1(sigma, prod, dt, Omega, t_blow=t_blow_expected)
     sigma_expected = (sigma + dt * prod) / (1.0 + dt / t_blow_expected)
     outflux_expected = sigma_expected / t_blow_expected
 
-    assert abs(res.outflux - outflux_expected) / outflux_expected > 0.2
+    assert res.outflux == pytest.approx(outflux_expected, rel=1.0e-6)
 
 
 def _surface_ode_config(
@@ -186,7 +185,7 @@ def _surface_ode_config(
     )
 
 
-def test_tcoll_uses_tau_los_factor(tmp_path: Path) -> None:
+def test_tcoll_uses_vertical_tau(tmp_path: Path) -> None:
     outdir = tmp_path / "surface_ode"
     dt_init = 200.0
     cfg = _surface_ode_config(outdir, dt_init, n_steps=2, h_over_r=0.1)
@@ -206,16 +205,17 @@ def test_tcoll_uses_tau_los_factor(tmp_path: Path) -> None:
     if los_factor < 1.0:
         los_factor = 1.0
 
+    tau_vert = tau_los / los_factor
     t_coll_los = 1.0 / (Omega * tau_los)
-    t_coll_vert = 1.0 / (Omega * (tau_los / los_factor))
+    t_coll_vert = 1.0 / (Omega * tau_vert)
 
     assert math.isfinite(t_coll) and t_coll > 0.0
     assert math.isfinite(tau_los) and tau_los > 0.0
-    assert math.isclose(t_coll, t_coll_los, rel_tol=1.0e-3)
-    assert math.isclose(t_coll_vert / t_coll, los_factor, rel_tol=1.0e-3)
+    assert math.isclose(t_coll, t_coll_vert, rel_tol=1.0e-3)
+    assert math.isclose(t_coll / t_coll_los, los_factor, rel_tol=1.0e-3)
 
 
-def test_fragment_tensor_largest_remnant_bin_mismatch(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_fragment_tensor_largest_remnant_bin_matches_size(monkeypatch: pytest.MonkeyPatch) -> None:
     sizes = np.array([1.0, 10.0, 100.0], dtype=float)
     widths = np.array([1.0, 10.0, 100.0], dtype=float)
     edges = np.array([0.5, 5.5, 55.0, 155.0], dtype=float)
@@ -246,8 +246,9 @@ def test_fragment_tensor_largest_remnant_bin_mismatch(monkeypatch: pytest.Monkey
     right_edges = np.maximum(edges[1:], left_edges)
     power = 1.0 - 3.5
     bin_integrals = (right_edges**power - left_edges**power) / power
-    weights = bin_integrals[: k_lr + 1]
+    weights = bin_integrals[: k_expected + 1]
     weights /= np.sum(weights)
-    expected_y = f_lr_val + (1.0 - f_lr_val) * weights[k_lr]
+    expected_y = f_lr_val + (1.0 - f_lr_val) * weights[k_expected]
 
-    assert np.isclose(Y[k_lr, i, j], expected_y, rtol=1.0e-6, atol=0.0)
+    assert np.isclose(Y[k_expected, i, j], expected_y, rtol=1.0e-6, atol=0.0)
+    assert Y[k_lr, i, j] == pytest.approx(0.0, abs=1.0e-12)

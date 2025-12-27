@@ -9,6 +9,24 @@
 
 set -euo pipefail
 
+DRY_RUN="${DRY_RUN:-0}"
+RUN_ONE_MODE=0
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --dry-run)
+      DRY_RUN=1
+      shift
+      ;;
+    --run-one)
+      RUN_ONE_MODE=1
+      shift
+      ;;
+    *)
+      break
+      ;;
+  esac
+done
+
 VENV_DIR=".venv"
 REQ_FILE="requirements.txt"
 RUN_TS="$(date +%Y%m%d-%H%M%S)"
@@ -29,9 +47,7 @@ elif [[ -d "/Volumes/KIOXIA" && -w "/Volumes/KIOXIA" ]]; then
 else
   BATCH_ROOT="${BATCH_ROOT_FALLBACK}"
 fi
-BATCH_DIR="${BATCH_ROOT}/${SWEEP_TAG}/${RUN_TS}__${GIT_SHA}__seed${BATCH_SEED}"
 echo "[setup] Output root: ${BATCH_ROOT}"
-mkdir -p "${BATCH_DIR}"
 
 if [[ ! -x "${VENV_DIR}/bin/python" ]]; then
   echo "[setup] Creating virtual environment in ${VENV_DIR}..."
@@ -57,11 +73,86 @@ GEOMETRY_NR="${GEOMETRY_NR:-32}"
 GEOMETRY_R_IN_M="${GEOMETRY_R_IN_M:-}"
 GEOMETRY_R_OUT_M="${GEOMETRY_R_OUT_M:-}"
 
+# Optional study file (YAML) to override sweep lists and tags.
+if [[ -n "${STUDY_FILE:-}" ]]; then
+  if [[ -f "${STUDY_FILE}" ]]; then
+    set +e
+    study_exports="$(
+      python - <<'PY'
+import os
+import shlex
+try:
+    from ruamel.yaml import YAML
+except Exception:
+    YAML = None
+
+path = os.environ.get("STUDY_FILE")
+if not path:
+    raise SystemExit(0)
+if YAML is None:
+    raise SystemExit(1)
+yaml = YAML(typ="safe")
+data = yaml.load(open(path, "r", encoding="utf-8")) or {}
+
+def _join_list(value):
+    if isinstance(value, (list, tuple)):
+        return " ".join(str(v) for v in value)
+    return str(value)
+
+def emit(key, value):
+    if value is None:
+        return
+    print(f"{key}={shlex.quote(_join_list(value))}")
+
+emit("T_LIST_RAW", data.get("T_LIST_RAW", data.get("T_LIST")))
+emit("EPS_LIST_RAW", data.get("EPS_LIST_RAW", data.get("EPS_LIST")))
+emit("TAU_LIST_RAW", data.get("TAU_LIST_RAW", data.get("TAU_LIST")))
+emit("SWEEP_TAG", data.get("SWEEP_TAG"))
+emit("COOL_TO_K", data.get("COOL_TO_K"))
+emit("COOL_MARGIN_YEARS", data.get("COOL_MARGIN_YEARS"))
+emit("COOL_SEARCH_YEARS", data.get("COOL_SEARCH_YEARS"))
+emit("COOL_MODE", data.get("COOL_MODE"))
+emit("T_END_YEARS", data.get("T_END_YEARS"))
+emit("T_END_SHORT_YEARS", data.get("T_END_SHORT_YEARS"))
+PY
+    )"
+    study_rc=$?
+    set -e
+    if [[ ${study_rc} -eq 0 && -n "${study_exports}" ]]; then
+      eval "${study_exports}"
+      echo "[info] loaded study overrides from ${STUDY_FILE}"
+    else
+      echo "[warn] failed to parse STUDY_FILE=${STUDY_FILE}"
+    fi
+  else
+    echo "[warn] STUDY_FILE not found: ${STUDY_FILE}"
+  fi
+fi
+
 # Parameter grids (run hotter cases first). Override via env:
 #   T_LIST_RAW="4000 3000", EPS_LIST_RAW="1.0", TAU_LIST_RAW="1.0 0.5"
 T_LIST_RAW="${T_LIST_RAW:-5000 4000 3000}"
 EPS_LIST_RAW="${EPS_LIST_RAW:-1.0 0.5 0.1}"
 TAU_LIST_RAW="${TAU_LIST_RAW:-1.0 0.5 0.1}"
+SEED_OVERRIDE=""
+if [[ "${RUN_ONE_MODE}" == "1" || -n "${RUN_ONE_T:-}" || -n "${RUN_ONE_EPS:-}" || -n "${RUN_ONE_TAU:-}" ]]; then
+  if [[ -z "${RUN_ONE_T:-}" || -z "${RUN_ONE_EPS:-}" || -z "${RUN_ONE_TAU:-}" ]]; then
+    echo "[error] RUN_ONE_T/RUN_ONE_EPS/RUN_ONE_TAU are required for run-one mode" >&2
+    exit 1
+  fi
+  T_LIST_RAW="${RUN_ONE_T}"
+  EPS_LIST_RAW="${RUN_ONE_EPS}"
+  TAU_LIST_RAW="${RUN_ONE_TAU}"
+  if [[ -z "${SWEEP_TAG:-}" ]]; then
+    SWEEP_TAG="run_one"
+  fi
+  if [[ -n "${RUN_ONE_SEED:-}" ]]; then
+    SEED_OVERRIDE="${RUN_ONE_SEED}"
+  fi
+  echo "[info] run-one mode: T=${RUN_ONE_T} eps=${RUN_ONE_EPS} tau=${RUN_ONE_TAU} seed=${RUN_ONE_SEED:-auto}"
+fi
+BATCH_DIR="${BATCH_ROOT}/${SWEEP_TAG}/${RUN_TS}__${GIT_SHA}__seed${BATCH_SEED}"
+mkdir -p "${BATCH_DIR}"
 read -r -a T_LIST <<<"${T_LIST_RAW}"
 read -r -a EPS_LIST <<<"${EPS_LIST_RAW}"
 read -r -a TAU_LIST <<<"${TAU_LIST_RAW}"
@@ -94,6 +185,32 @@ PHASE_TAU_FIELD="${PHASE_TAU_FIELD:-los}"         # vertical|los
 
 # Evaluation toggle (0=skip, 1=run evaluate_tau_supply)
 EVAL="${EVAL:-1}"
+# Plot toggle (0=skip quick-look plots)
+PLOT_ENABLE="${PLOT_ENABLE:-1}"
+HOOKS_ENABLE="${HOOKS_ENABLE:-}"
+HOOKS_STRICT="${HOOKS_STRICT:-0}"
+
+OVERRIDE_BUILDER="scripts/runsets/common/build_overrides.py"
+OVERRIDE_TMP_DIR="$(mktemp -d "${TMPDIR:-/tmp}/marsdisk_overrides_XXXXXX")"
+trap 'rm -rf "${OVERRIDE_TMP_DIR}"' EXIT
+BASE_OVERRIDES_FILE="${OVERRIDE_TMP_DIR}/base_overrides.txt"
+CASE_OVERRIDES_FILE="${OVERRIDE_TMP_DIR}/case_overrides.txt"
+MERGED_OVERRIDES_FILE="${OVERRIDE_TMP_DIR}/merged_overrides.txt"
+EXTRA_OVERRIDE_FILE_ARGS=()
+if [[ -n "${EXTRA_OVERRIDES_FILE:-}" ]]; then
+  if [[ -f "${EXTRA_OVERRIDES_FILE}" ]]; then
+    EXTRA_OVERRIDE_FILE_ARGS=(--file "${EXTRA_OVERRIDES_FILE}")
+  else
+    echo "[warn] EXTRA_OVERRIDES_FILE not found: ${EXTRA_OVERRIDES_FILE}"
+  fi
+fi
+
+append_override() {
+  local file="$1"
+  local key="$2"
+  local value="$3"
+  printf '%s=%s\n' "${key}" "${value}" >> "${file}"
+}
 
 # Supply/shielding defaults (overridable via env).
 # Default is optical_depth + mu_orbit10pct; legacy knobs are opt-in only.
@@ -186,108 +303,166 @@ fi
 
 STREAM_MEM_GB="${STREAM_MEM_GB:-}"
 STREAM_STEP_INTERVAL="${STREAM_STEP_INTERVAL:-}"
-STREAMING_OVERRIDES=()
 # Enable streaming by default for sweep; keep memory modest to avoid stalls.
-STREAMING_OVERRIDES+=(--override "io.streaming.enable=true")
-STREAM_MEM_GB="${STREAM_MEM_GB:-10}"
-STREAMING_OVERRIDES+=(--override "io.streaming.memory_limit_gb=${STREAM_MEM_GB}")
-STREAM_STEP_INTERVAL="${STREAM_STEP_INTERVAL:-1000}"
-STREAMING_OVERRIDES+=(--override "io.streaming.step_flush_interval=${STREAM_STEP_INTERVAL}")
-STREAMING_OVERRIDES+=(--override "io.streaming.merge_at_end=true")
-echo "[info] streaming enabled: mem_limit_gb=${STREAM_MEM_GB} step_flush_interval=${STREAM_STEP_INTERVAL} merge_at_end=true"
+stream_enable="true"
+stream_mem="${STREAM_MEM_GB:-10}"
+stream_step="${STREAM_STEP_INTERVAL:-1000}"
+stream_merge="true"
+if ((${#EXTRA_OVERRIDE_FILE_ARGS[@]})); then
+  echo "[info] streaming: enable=${stream_enable} mem_limit_gb=${stream_mem} step_flush_interval=${stream_step} merge_at_end=${stream_merge} (EXTRA_OVERRIDES_FILE may override)"
+else
+  echo "[info] streaming: enable=${stream_enable} mem_limit_gb=${stream_mem} step_flush_interval=${stream_step} merge_at_end=${stream_merge}"
+fi
 
 # Checkpoint (segmented run) defaults
 CHECKPOINT_ENABLE="${CHECKPOINT_ENABLE:-1}"
 CHECKPOINT_INTERVAL_YEARS="${CHECKPOINT_INTERVAL_YEARS:-0.083}" # ~30 days
 CHECKPOINT_KEEP="${CHECKPOINT_KEEP:-3}"
 CHECKPOINT_FORMAT="${CHECKPOINT_FORMAT:-pickle}"
-CHECKPOINT_OVERRIDES=()
 if [[ "${CHECKPOINT_ENABLE}" != "0" ]]; then
-  CHECKPOINT_OVERRIDES+=(--override "numerics.checkpoint.enabled=true")
-  CHECKPOINT_OVERRIDES+=(--override "numerics.checkpoint.interval_years=${CHECKPOINT_INTERVAL_YEARS}")
-  CHECKPOINT_OVERRIDES+=(--override "numerics.checkpoint.keep_last_n=${CHECKPOINT_KEEP}")
-  CHECKPOINT_OVERRIDES+=(--override "numerics.checkpoint.format=${CHECKPOINT_FORMAT}")
   echo "[info] checkpoint enabled: interval_years=${CHECKPOINT_INTERVAL_YEARS} keep_last_n=${CHECKPOINT_KEEP} format=${CHECKPOINT_FORMAT}"
-else
-  CHECKPOINT_OVERRIDES+=(--override "numerics.checkpoint.enabled=false")
 fi
 
-SUPPLY_OVERRIDES=()
+: > "${BASE_OVERRIDES_FILE}"
+
+# Core overrides shared by all cases.
+append_override "${BASE_OVERRIDES_FILE}" "numerics.dt_init" "20"
+append_override "${BASE_OVERRIDES_FILE}" "numerics.stop_on_blowout_below_smin" "${STOP_ON_BLOWOUT_BELOW_SMIN}"
+append_override "${BASE_OVERRIDES_FILE}" "phase.enabled" "true"
+append_override "${BASE_OVERRIDES_FILE}" "phase.temperature_input" "${PHASE_TEMP_INPUT}"
+append_override "${BASE_OVERRIDES_FILE}" "phase.q_abs_mean" "${PHASE_QABS_MEAN}"
+append_override "${BASE_OVERRIDES_FILE}" "phase.tau_field" "${PHASE_TAU_FIELD}"
+append_override "${BASE_OVERRIDES_FILE}" "qstar.coeff_units" "${QSTAR_UNITS}"
+append_override "${BASE_OVERRIDES_FILE}" "radiation.qpr_table_path" "marsdisk/io/data/qpr_planck_sio2_abbas_calibrated_lowT.csv"
+append_override "${BASE_OVERRIDES_FILE}" "radiation.mars_temperature_driver.enabled" "true"
+append_override "${BASE_OVERRIDES_FILE}" "initial.mass_total" "${INIT_MASS_TOTAL}"
+append_override "${BASE_OVERRIDES_FILE}" "supply.enabled" "true"
+append_override "${BASE_OVERRIDES_FILE}" "supply.mode" "${SUPPLY_MODE}"
+append_override "${BASE_OVERRIDES_FILE}" "supply.const.mu_orbit10pct" "${SUPPLY_MU_ORBIT10PCT}"
+append_override "${BASE_OVERRIDES_FILE}" "supply.const.mu_reference_tau" "${SUPPLY_MU_REFERENCE_TAU}"
+append_override "${BASE_OVERRIDES_FILE}" "supply.const.orbit_fraction_at_mu1" "${SUPPLY_ORBIT_FRACTION}"
+append_override "${BASE_OVERRIDES_FILE}" "optical_depth.tau_stop" "${OPTICAL_TAU_STOP}"
+append_override "${BASE_OVERRIDES_FILE}" "optical_depth.tau_stop_tol" "${OPTICAL_TAU_STOP_TOL}"
+append_override "${BASE_OVERRIDES_FILE}" "inner_disk_mass" "null"
+
+if [[ "${GEOMETRY_MODE}" == "1D" ]]; then
+  append_override "${BASE_OVERRIDES_FILE}" "geometry.mode" "1D"
+  append_override "${BASE_OVERRIDES_FILE}" "geometry.Nr" "${GEOMETRY_NR}"
+  if [[ -n "${GEOMETRY_R_IN_M}" ]]; then
+    append_override "${BASE_OVERRIDES_FILE}" "geometry.r_in" "${GEOMETRY_R_IN_M}"
+  fi
+  if [[ -n "${GEOMETRY_R_OUT_M}" ]]; then
+    append_override "${BASE_OVERRIDES_FILE}" "geometry.r_out" "${GEOMETRY_R_OUT_M}"
+  fi
+fi
+
+if [[ "${COOL_MODE}" == "hyodo" ]]; then
+  append_override "${BASE_OVERRIDES_FILE}" "radiation.mars_temperature_driver.mode" "hyodo"
+  append_override "${BASE_OVERRIDES_FILE}" "radiation.mars_temperature_driver.hyodo.d_layer_m" "1.0e5"
+  append_override "${BASE_OVERRIDES_FILE}" "radiation.mars_temperature_driver.hyodo.rho" "3000"
+  append_override "${BASE_OVERRIDES_FILE}" "radiation.mars_temperature_driver.hyodo.cp" "1000"
+else
+  append_override "${BASE_OVERRIDES_FILE}" "radiation.mars_temperature_driver.mode" "table"
+  append_override "${BASE_OVERRIDES_FILE}" "radiation.mars_temperature_driver.table.time_unit" "day"
+  append_override "${BASE_OVERRIDES_FILE}" "radiation.mars_temperature_driver.table.column_time" "time_day"
+  append_override "${BASE_OVERRIDES_FILE}" "radiation.mars_temperature_driver.table.column_temperature" "T_K"
+  append_override "${BASE_OVERRIDES_FILE}" "radiation.mars_temperature_driver.extrapolation" "hold"
+fi
+
+append_override "${BASE_OVERRIDES_FILE}" "io.streaming.enable" "${stream_enable}"
+append_override "${BASE_OVERRIDES_FILE}" "io.streaming.memory_limit_gb" "${stream_mem}"
+append_override "${BASE_OVERRIDES_FILE}" "io.streaming.step_flush_interval" "${stream_step}"
+append_override "${BASE_OVERRIDES_FILE}" "io.streaming.merge_at_end" "${stream_merge}"
+
+if [[ "${CHECKPOINT_ENABLE}" != "0" ]]; then
+  append_override "${BASE_OVERRIDES_FILE}" "numerics.checkpoint.enabled" "true"
+  append_override "${BASE_OVERRIDES_FILE}" "numerics.checkpoint.interval_years" "${CHECKPOINT_INTERVAL_YEARS}"
+  append_override "${BASE_OVERRIDES_FILE}" "numerics.checkpoint.keep_last_n" "${CHECKPOINT_KEEP}"
+  append_override "${BASE_OVERRIDES_FILE}" "numerics.checkpoint.format" "${CHECKPOINT_FORMAT}"
+else
+  append_override "${BASE_OVERRIDES_FILE}" "numerics.checkpoint.enabled" "false"
+fi
+
+# Supply/shielding defaults (overridable via env).
 if [[ -n "${SUPPLY_RESERVOIR_M}" ]]; then
-  SUPPLY_OVERRIDES+=(--override "supply.reservoir.enabled=true")
-  SUPPLY_OVERRIDES+=(--override "supply.reservoir.mass_total_Mmars=${SUPPLY_RESERVOIR_M}")
-  SUPPLY_OVERRIDES+=(--override "supply.reservoir.depletion_mode=${SUPPLY_RESERVOIR_MODE}")
-  SUPPLY_OVERRIDES+=(--override "supply.reservoir.taper_fraction=${SUPPLY_RESERVOIR_TAPER}")
+  append_override "${BASE_OVERRIDES_FILE}" "supply.reservoir.enabled" "true"
+  append_override "${BASE_OVERRIDES_FILE}" "supply.reservoir.mass_total_Mmars" "${SUPPLY_RESERVOIR_M}"
+  append_override "${BASE_OVERRIDES_FILE}" "supply.reservoir.depletion_mode" "${SUPPLY_RESERVOIR_MODE}"
+  append_override "${BASE_OVERRIDES_FILE}" "supply.reservoir.taper_fraction" "${SUPPLY_RESERVOIR_TAPER}"
   echo "[info] supply reservoir: M=${SUPPLY_RESERVOIR_M} M_Mars mode=${SUPPLY_RESERVOIR_MODE} taper_fraction=${SUPPLY_RESERVOIR_TAPER}"
 fi
 if [[ "${SUPPLY_FEEDBACK_ENABLED}" != "0" ]]; then
-  SUPPLY_OVERRIDES+=(--override "supply.feedback.enabled=true")
-  SUPPLY_OVERRIDES+=(--override "supply.feedback.target_tau=${SUPPLY_FEEDBACK_TARGET}")
-  SUPPLY_OVERRIDES+=(--override "supply.feedback.gain=${SUPPLY_FEEDBACK_GAIN}")
-  SUPPLY_OVERRIDES+=(--override "supply.feedback.response_time_years=${SUPPLY_FEEDBACK_RESPONSE_YR}")
-  SUPPLY_OVERRIDES+=(--override "supply.feedback.min_scale=${SUPPLY_FEEDBACK_MIN_SCALE}")
-  SUPPLY_OVERRIDES+=(--override "supply.feedback.max_scale=${SUPPLY_FEEDBACK_MAX_SCALE}")
-  SUPPLY_OVERRIDES+=(--override "supply.feedback.tau_field=${SUPPLY_FEEDBACK_TAU_FIELD}")
-  SUPPLY_OVERRIDES+=(--override "supply.feedback.initial_scale=${SUPPLY_FEEDBACK_INITIAL}")
+  append_override "${BASE_OVERRIDES_FILE}" "supply.feedback.enabled" "true"
+  append_override "${BASE_OVERRIDES_FILE}" "supply.feedback.target_tau" "${SUPPLY_FEEDBACK_TARGET}"
+  append_override "${BASE_OVERRIDES_FILE}" "supply.feedback.gain" "${SUPPLY_FEEDBACK_GAIN}"
+  append_override "${BASE_OVERRIDES_FILE}" "supply.feedback.response_time_years" "${SUPPLY_FEEDBACK_RESPONSE_YR}"
+  append_override "${BASE_OVERRIDES_FILE}" "supply.feedback.min_scale" "${SUPPLY_FEEDBACK_MIN_SCALE}"
+  append_override "${BASE_OVERRIDES_FILE}" "supply.feedback.max_scale" "${SUPPLY_FEEDBACK_MAX_SCALE}"
+  append_override "${BASE_OVERRIDES_FILE}" "supply.feedback.tau_field" "${SUPPLY_FEEDBACK_TAU_FIELD}"
+  append_override "${BASE_OVERRIDES_FILE}" "supply.feedback.initial_scale" "${SUPPLY_FEEDBACK_INITIAL}"
   echo "[info] supply feedback enabled: target_tau=${SUPPLY_FEEDBACK_TARGET}, gain=${SUPPLY_FEEDBACK_GAIN}, tau_field=${SUPPLY_FEEDBACK_TAU_FIELD}"
 fi
 if [[ "${SUPPLY_TEMP_ENABLED}" != "0" ]]; then
-  SUPPLY_OVERRIDES+=(--override "supply.temperature.enabled=true")
-  SUPPLY_OVERRIDES+=(--override "supply.temperature.mode=${SUPPLY_TEMP_MODE}")
-  SUPPLY_OVERRIDES+=(--override "supply.temperature.reference_K=${SUPPLY_TEMP_REF_K}")
-  SUPPLY_OVERRIDES+=(--override "supply.temperature.exponent=${SUPPLY_TEMP_EXP}")
-  SUPPLY_OVERRIDES+=(--override "supply.temperature.scale_at_reference=${SUPPLY_TEMP_SCALE_REF}")
-  SUPPLY_OVERRIDES+=(--override "supply.temperature.floor=${SUPPLY_TEMP_FLOOR}")
-  SUPPLY_OVERRIDES+=(--override "supply.temperature.cap=${SUPPLY_TEMP_CAP}")
+  append_override "${BASE_OVERRIDES_FILE}" "supply.temperature.enabled" "true"
+  append_override "${BASE_OVERRIDES_FILE}" "supply.temperature.mode" "${SUPPLY_TEMP_MODE}"
+  append_override "${BASE_OVERRIDES_FILE}" "supply.temperature.reference_K" "${SUPPLY_TEMP_REF_K}"
+  append_override "${BASE_OVERRIDES_FILE}" "supply.temperature.exponent" "${SUPPLY_TEMP_EXP}"
+  append_override "${BASE_OVERRIDES_FILE}" "supply.temperature.scale_at_reference" "${SUPPLY_TEMP_SCALE_REF}"
+  append_override "${BASE_OVERRIDES_FILE}" "supply.temperature.floor" "${SUPPLY_TEMP_FLOOR}"
+  append_override "${BASE_OVERRIDES_FILE}" "supply.temperature.cap" "${SUPPLY_TEMP_CAP}"
   if [[ -n "${SUPPLY_TEMP_TABLE_PATH}" ]]; then
-    SUPPLY_OVERRIDES+=(--override "supply.temperature.table.path=${SUPPLY_TEMP_TABLE_PATH}")
-    SUPPLY_OVERRIDES+=(--override "supply.temperature.table.value_kind=${SUPPLY_TEMP_TABLE_VALUE_KIND}")
-    SUPPLY_OVERRIDES+=(--override "supply.temperature.table.column_temperature=${SUPPLY_TEMP_TABLE_COL_T}")
-    SUPPLY_OVERRIDES+=(--override "supply.temperature.table.column_value=${SUPPLY_TEMP_TABLE_COL_VAL}")
+    append_override "${BASE_OVERRIDES_FILE}" "supply.temperature.table.path" "${SUPPLY_TEMP_TABLE_PATH}"
+    append_override "${BASE_OVERRIDES_FILE}" "supply.temperature.table.value_kind" "${SUPPLY_TEMP_TABLE_VALUE_KIND}"
+    append_override "${BASE_OVERRIDES_FILE}" "supply.temperature.table.column_temperature" "${SUPPLY_TEMP_TABLE_COL_T}"
+    append_override "${BASE_OVERRIDES_FILE}" "supply.temperature.table.column_value" "${SUPPLY_TEMP_TABLE_COL_VAL}"
   fi
   echo "[info] supply temperature coupling enabled: mode=${SUPPLY_TEMP_MODE}"
 fi
-SUPPLY_OVERRIDES+=(--override "supply.injection.mode=${SUPPLY_INJECTION_MODE}")
-SUPPLY_OVERRIDES+=(--override "supply.injection.q=${SUPPLY_INJECTION_Q}")
+append_override "${BASE_OVERRIDES_FILE}" "supply.injection.mode" "${SUPPLY_INJECTION_MODE}"
+append_override "${BASE_OVERRIDES_FILE}" "supply.injection.q" "${SUPPLY_INJECTION_Q}"
 if [[ -n "${SUPPLY_INJECTION_SMIN}" ]]; then
-  SUPPLY_OVERRIDES+=(--override "supply.injection.s_inj_min=${SUPPLY_INJECTION_SMIN}")
+  append_override "${BASE_OVERRIDES_FILE}" "supply.injection.s_inj_min" "${SUPPLY_INJECTION_SMIN}"
 fi
 if [[ -n "${SUPPLY_INJECTION_SMAX}" ]]; then
-  SUPPLY_OVERRIDES+=(--override "supply.injection.s_inj_max=${SUPPLY_INJECTION_SMAX}")
+  append_override "${BASE_OVERRIDES_FILE}" "supply.injection.s_inj_max" "${SUPPLY_INJECTION_SMAX}"
 fi
 if [[ -n "${SUPPLY_DEEP_TMIX_ORBITS}" ]]; then
-  SUPPLY_OVERRIDES+=(--override "supply.transport.t_mix_orbits=${SUPPLY_DEEP_TMIX_ORBITS}")
-  SUPPLY_OVERRIDES+=(--override "supply.transport.mode=deep_mixing")
+  append_override "${BASE_OVERRIDES_FILE}" "supply.transport.t_mix_orbits" "${SUPPLY_DEEP_TMIX_ORBITS}"
+  append_override "${BASE_OVERRIDES_FILE}" "supply.transport.mode" "deep_mixing"
   echo "[info] deep reservoir enabled (legacy alias): t_mix=${SUPPLY_DEEP_TMIX_ORBITS} orbits"
 fi
 if [[ -n "${SUPPLY_TRANSPORT_TMIX_ORBITS}" ]]; then
-  SUPPLY_OVERRIDES+=(--override "supply.transport.t_mix_orbits=${SUPPLY_TRANSPORT_TMIX_ORBITS}")
+  append_override "${BASE_OVERRIDES_FILE}" "supply.transport.t_mix_orbits" "${SUPPLY_TRANSPORT_TMIX_ORBITS}"
 fi
 if [[ -n "${SUPPLY_TRANSPORT_MODE}" ]]; then
-  SUPPLY_OVERRIDES+=(--override "supply.transport.mode=${SUPPLY_TRANSPORT_MODE}")
+  append_override "${BASE_OVERRIDES_FILE}" "supply.transport.mode" "${SUPPLY_TRANSPORT_MODE}"
 fi
 if [[ -n "${SUPPLY_TRANSPORT_HEADROOM}" ]]; then
-  SUPPLY_OVERRIDES+=(--override "supply.transport.headroom_gate=${SUPPLY_TRANSPORT_HEADROOM}")
+  append_override "${BASE_OVERRIDES_FILE}" "supply.transport.headroom_gate" "${SUPPLY_TRANSPORT_HEADROOM}"
 fi
 if [[ -n "${SUPPLY_HEADROOM_POLICY}" ]]; then
   if [[ "${SUPPLY_HEADROOM_POLICY}" == "none" || "${SUPPLY_HEADROOM_POLICY}" == "off" ]]; then
     echo "[warn] SUPPLY_HEADROOM_POLICY=${SUPPLY_HEADROOM_POLICY} ignored; use clip/spill or leave unset"
   else
-    SUPPLY_OVERRIDES+=(--override "supply.headroom_policy=${SUPPLY_HEADROOM_POLICY}")
+    append_override "${BASE_OVERRIDES_FILE}" "supply.headroom_policy" "${SUPPLY_HEADROOM_POLICY}"
   fi
 fi
-SUPPLY_OVERRIDES+=(--override "supply.injection.velocity.mode=${SUPPLY_VEL_MODE}")
+append_override "${BASE_OVERRIDES_FILE}" "supply.injection.velocity.mode" "${SUPPLY_VEL_MODE}"
 if [[ -n "${SUPPLY_VEL_E}" ]]; then
-  SUPPLY_OVERRIDES+=(--override "supply.injection.velocity.e_inj=${SUPPLY_VEL_E}")
+  append_override "${BASE_OVERRIDES_FILE}" "supply.injection.velocity.e_inj" "${SUPPLY_VEL_E}"
 fi
 if [[ -n "${SUPPLY_VEL_I}" ]]; then
-  SUPPLY_OVERRIDES+=(--override "supply.injection.velocity.i_inj=${SUPPLY_VEL_I}")
+  append_override "${BASE_OVERRIDES_FILE}" "supply.injection.velocity.i_inj" "${SUPPLY_VEL_I}"
 fi
 if [[ -n "${SUPPLY_VEL_FACTOR}" ]]; then
-  SUPPLY_OVERRIDES+=(--override "supply.injection.velocity.vrel_factor=${SUPPLY_VEL_FACTOR}")
+  append_override "${BASE_OVERRIDES_FILE}" "supply.injection.velocity.vrel_factor" "${SUPPLY_VEL_FACTOR}"
 fi
-SUPPLY_OVERRIDES+=(--override "supply.injection.velocity.blend_mode=${SUPPLY_VEL_BLEND}")
-SUPPLY_OVERRIDES+=(--override "supply.injection.velocity.weight_mode=${SUPPLY_VEL_WEIGHT}")
+append_override "${BASE_OVERRIDES_FILE}" "supply.injection.velocity.blend_mode" "${SUPPLY_VEL_BLEND}"
+append_override "${BASE_OVERRIDES_FILE}" "supply.injection.velocity.weight_mode" "${SUPPLY_VEL_WEIGHT}"
+
+if [[ "${SHIELDING_SIGMA}" == "auto_max" ]]; then
+  echo "[warn] fixed_tau1_sigma=auto_max is debug-only; exclude from production figures"
+fi
 
 for T in "${T_LIST[@]}"; do
   T_TABLE="data/mars_temperature_T${T}p0K.csv"
@@ -297,11 +472,15 @@ for T in "${T_LIST[@]}"; do
     for TAU in "${TAU_LIST[@]}"; do
       TAU_TITLE="${TAU/0./0p}"
       TAU_TITLE="${TAU_TITLE/./p}"
-      SEED=$(python - <<'PY'
+      if [[ -n "${SEED_OVERRIDE}" ]]; then
+        SEED="${SEED_OVERRIDE}"
+      else
+        SEED=$(python - <<'PY'
 import secrets
 print(secrets.randbelow(2**31))
 PY
 )
+      fi
       TITLE="T${T}_eps${EPS_TITLE}_tau${TAU_TITLE}"
       OUTDIR="${BATCH_DIR}/${TITLE}"
       echo "[run] T=${T} eps=${EPS} tau=${TAU} -> ${OUTDIR} (batch=${BATCH_SEED}, seed=${SEED})"
@@ -310,100 +489,66 @@ PY
       if [[ "${EPS}" == "0.1" ]]; then
         echo "[info] epsilon_mix=0.1 is a low-supply extreme case; expect weak blowout/sinks"
       fi
+      : > "${CASE_OVERRIDES_FILE}"
+      append_override "${CASE_OVERRIDES_FILE}" "io.outdir" "${OUTDIR}"
+      append_override "${CASE_OVERRIDES_FILE}" "dynamics.rng_seed" "${SEED}"
+      append_override "${CASE_OVERRIDES_FILE}" "radiation.TM_K" "${T}"
+      append_override "${CASE_OVERRIDES_FILE}" "supply.mixing.epsilon_mix" "${EPS}"
+      append_override "${CASE_OVERRIDES_FILE}" "optical_depth.tau0_target" "${TAU}"
+      if [[ "${COOL_MODE}" != "hyodo" ]]; then
+        append_override "${CASE_OVERRIDES_FILE}" "radiation.mars_temperature_driver.table.path" "${T_TABLE}"
+      fi
+      append_override "${CASE_OVERRIDES_FILE}" "shielding.mode" "${SHIELDING_MODE}"
+      if [[ "${SHIELDING_MODE}" == "fixed_tau1" ]]; then
+        append_override "${CASE_OVERRIDES_FILE}" "shielding.fixed_tau1_sigma" "${SHIELDING_SIGMA}"
+        append_override "${CASE_OVERRIDES_FILE}" "shielding.auto_max_margin" "${SHIELDING_AUTO_MAX_MARGIN}"
+      fi
+      if [[ -n "${COOL_TO_K}" ]]; then
+        append_override "${CASE_OVERRIDES_FILE}" "numerics.t_end_years" "null"
+        append_override "${CASE_OVERRIDES_FILE}" "numerics.t_end_orbits" "null"
+        append_override "${CASE_OVERRIDES_FILE}" "numerics.t_end_until_temperature_K" "${COOL_TO_K}"
+        append_override "${CASE_OVERRIDES_FILE}" "numerics.t_end_temperature_margin_years" "${COOL_MARGIN_YEARS}"
+        if [[ -n "${COOL_SEARCH_YEARS}" ]]; then
+          append_override "${CASE_OVERRIDES_FILE}" "numerics.t_end_temperature_search_years" "${COOL_SEARCH_YEARS}"
+        else
+          append_override "${CASE_OVERRIDES_FILE}" "numerics.t_end_temperature_search_years" "null"
+        fi
+        append_override "${CASE_OVERRIDES_FILE}" "scope.analysis_years" "10"
+      else
+        append_override "${CASE_OVERRIDES_FILE}" "numerics.t_end_years" "${T_END_YEARS}"
+        append_override "${CASE_OVERRIDES_FILE}" "numerics.t_end_orbits" "null"
+        append_override "${CASE_OVERRIDES_FILE}" "numerics.t_end_until_temperature_K" "null"
+        append_override "${CASE_OVERRIDES_FILE}" "scope.analysis_years" "${T_END_YEARS}"
+      fi
+      if [[ "${SUBSTEP_FAST_BLOWOUT}" != "0" ]]; then
+        append_override "${CASE_OVERRIDES_FILE}" "io.substep_fast_blowout" "true"
+        if [[ -n "${SUBSTEP_MAX_RATIO}" ]]; then
+          append_override "${CASE_OVERRIDES_FILE}" "io.substep_max_ratio" "${SUBSTEP_MAX_RATIO}"
+        fi
+      fi
+
+      # Override priority: base defaults < EXTRA_OVERRIDES_FILE < per-case overrides.
+      python "${OVERRIDE_BUILDER}" \
+        --file "${BASE_OVERRIDES_FILE}" \
+        "${EXTRA_OVERRIDE_FILE_ARGS[@]}" \
+        --file "${CASE_OVERRIDES_FILE}" > "${MERGED_OVERRIDES_FILE}"
+
       cmd=(
         python -m marsdisk.run
         --config "${BASE_CONFIG}"
       )
       # 強制的に progress を有効化しつつ、ログは静かめに
       cmd+=(--progress --quiet)
-      cmd+=(
-        --override numerics.dt_init=20
-        --override "numerics.stop_on_blowout_below_smin=${STOP_ON_BLOWOUT_BELOW_SMIN}"
-        --override "io.outdir=${OUTDIR}"
-        --override "dynamics.rng_seed=${SEED}"
-        --override "phase.enabled=true"
-        --override "phase.temperature_input=${PHASE_TEMP_INPUT}"
-        --override "phase.q_abs_mean=${PHASE_QABS_MEAN}"
-        --override "phase.tau_field=${PHASE_TAU_FIELD}"
-        --override "radiation.TM_K=${T}"
-        --override "qstar.coeff_units=${QSTAR_UNITS}"
-        --override "radiation.qpr_table_path=marsdisk/io/data/qpr_planck_sio2_abbas_calibrated_lowT.csv"
-        --override "radiation.mars_temperature_driver.enabled=true"
-        --override "initial.mass_total=${INIT_MASS_TOTAL}"
-      )
-      if [[ "${GEOMETRY_MODE}" == "1D" ]]; then
-        cmd+=(--override "geometry.mode=1D")
-        cmd+=(--override "geometry.Nr=${GEOMETRY_NR}")
-        if [[ -n "${GEOMETRY_R_IN_M}" ]]; then
-          cmd+=(--override "geometry.r_in=${GEOMETRY_R_IN_M}")
+      while IFS= read -r line; do
+        if [[ -n "${line}" ]]; then
+          cmd+=(--override "${line}")
         fi
-        if [[ -n "${GEOMETRY_R_OUT_M}" ]]; then
-          cmd+=(--override "geometry.r_out=${GEOMETRY_R_OUT_M}")
-        fi
-      fi
-      if [[ "${COOL_MODE}" == "hyodo" ]]; then
-        cmd+=(--override "radiation.mars_temperature_driver.mode=hyodo")
-        cmd+=(--override "radiation.mars_temperature_driver.hyodo.d_layer_m=1.0e5")
-        cmd+=(--override "radiation.mars_temperature_driver.hyodo.rho=3000")
-        cmd+=(--override "radiation.mars_temperature_driver.hyodo.cp=1000")
-      else
-        cmd+=(--override "radiation.mars_temperature_driver.mode=table")
-        cmd+=(--override "radiation.mars_temperature_driver.table.path=${T_TABLE}")
-        cmd+=(--override "radiation.mars_temperature_driver.table.time_unit=day")
-        cmd+=(--override "radiation.mars_temperature_driver.table.column_time=time_day")
-        cmd+=(--override "radiation.mars_temperature_driver.table.column_temperature=T_K")
-        cmd+=(--override "radiation.mars_temperature_driver.extrapolation=hold")
-      fi
-      cmd+=(
-        --override "supply.enabled=true"
-        --override "supply.mixing.epsilon_mix=${EPS}"
-        --override "supply.mode=${SUPPLY_MODE}"
-        --override "supply.const.mu_orbit10pct=${SUPPLY_MU_ORBIT10PCT}"
-        --override "supply.const.mu_reference_tau=${SUPPLY_MU_REFERENCE_TAU}"
-        --override "supply.const.orbit_fraction_at_mu1=${SUPPLY_ORBIT_FRACTION}"
-        --override "optical_depth.tau0_target=${TAU}"
-        --override "optical_depth.tau_stop=${OPTICAL_TAU_STOP}"
-        --override "optical_depth.tau_stop_tol=${OPTICAL_TAU_STOP_TOL}"
-        --override "inner_disk_mass=null"
-      )
-      if [[ -n "${COOL_TO_K}" ]]; then
-        cmd+=(--override "numerics.t_end_years=null")
-        cmd+=(--override "numerics.t_end_orbits=null")
-        cmd+=(--override "numerics.t_end_until_temperature_K=${COOL_TO_K}")
-        cmd+=(--override "numerics.t_end_temperature_margin_years=${COOL_MARGIN_YEARS}")
-        cmd+=(--override "numerics.t_end_temperature_search_years=${COOL_SEARCH_YEARS:-null}")
-        cmd+=(--override "scope.analysis_years=10")
-        if [[ -n "${COOL_SEARCH_YEARS}" ]]; then
-          cmd+=(--override "numerics.t_end_temperature_search_years=${COOL_SEARCH_YEARS}")
-        fi
-      else
-        cmd+=(--override "numerics.t_end_years=${T_END_YEARS}")
-        cmd+=(--override "numerics.t_end_orbits=null")
-        cmd+=(--override "numerics.t_end_until_temperature_K=null")
-        cmd+=(--override "scope.analysis_years=${T_END_YEARS}")
-      fi
-      if [[ "${SUBSTEP_FAST_BLOWOUT}" != "0" ]]; then
-        cmd+=(--override "io.substep_fast_blowout=true")
-        if [[ -n "${SUBSTEP_MAX_RATIO}" ]]; then
-          cmd+=(--override "io.substep_max_ratio=${SUBSTEP_MAX_RATIO}")
-        fi
-      fi
-      if ((${#CHECKPOINT_OVERRIDES[@]})); then
-        cmd+=("${CHECKPOINT_OVERRIDES[@]}")
-      fi
-      if ((${#SUPPLY_OVERRIDES[@]})); then
-        cmd+=("${SUPPLY_OVERRIDES[@]}")
-      fi
-      if ((${#STREAMING_OVERRIDES[@]})); then
-        cmd+=("${STREAMING_OVERRIDES[@]}")
-      fi
-      cmd+=(--override "shielding.mode=${SHIELDING_MODE}")
-      if [[ "${SHIELDING_MODE}" == "fixed_tau1" ]]; then
-        cmd+=(--override "shielding.fixed_tau1_sigma=${SHIELDING_SIGMA}")
-        cmd+=(--override "shielding.auto_max_margin=${SHIELDING_AUTO_MAX_MARGIN}")
-      fi
-      if [[ "${SHIELDING_SIGMA}" == "auto_max" ]]; then
-        echo "[warn] fixed_tau1_sigma=auto_max is debug-only; exclude from production figures"
+      done < "${MERGED_OVERRIDES_FILE}"
+      if [[ "${DRY_RUN}" == "1" ]]; then
+        printf '[dry-run]'
+        printf ' %q' "${cmd[@]}"
+        echo
+        continue
       fi
       set +e
       "${cmd[@]}"
@@ -440,7 +585,47 @@ PY
         echo "[stop] summary.json not found; stop reason unavailable"
       fi
 
-      # Generate quick-look plots into <final_dir>/plots
+      if [[ -n "${HOOKS_ENABLE}" ]]; then
+        IFS=',' read -r -a hook_list <<< "${HOOKS_ENABLE}"
+        for hook in "${hook_list[@]}"; do
+          hook="$(echo "${hook}" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
+          hook="$(echo "${hook}" | tr '[:upper:]' '[:lower:]')"
+          [[ -z "${hook}" ]] && continue
+          hook_rc=0
+          case "${hook}" in
+            preflight)
+              set +e
+              python scripts/runsets/common/hooks/preflight_streaming.py --run-dir "${final_dir}"
+              hook_rc=$?
+              set -e
+              ;;
+            plot)
+              set +e
+              python scripts/runsets/common/hooks/plot_sweep_run.py --run-dir "${final_dir}"
+              hook_rc=$?
+              set -e
+              ;;
+            eval)
+              set +e
+              python scripts/runsets/common/hooks/evaluate_tau_supply.py --run-dir "${final_dir}"
+              hook_rc=$?
+              set -e
+              ;;
+            *)
+              echo "[warn] unknown hook: ${hook}"
+              hook_rc=0
+              ;;
+          esac
+          if [[ ${hook_rc} -ne 0 ]]; then
+            echo "[warn] hook ${hook} failed (rc=${hook_rc}) for ${final_dir}"
+            if [[ "${HOOKS_STRICT}" == "1" ]]; then
+              exit ${hook_rc}
+            fi
+          fi
+        done
+      else
+        # Generate quick-look plots into <final_dir>/plots
+        if [[ "${PLOT_ENABLE}" != "0" ]]; then
       RUN_DIR="${final_dir}" python - <<'PY'
 import os
 import json
@@ -970,17 +1155,19 @@ fig3.savefig(plots_dir / "optical_depth.png", dpi=180)
 plt.close(fig3)
 print(f"[plot] saved plots to {plots_dir}")
 PY
-      if [[ "${EVAL}" != "0" ]]; then
-        eval_out="${final_dir}/checks/tau_supply_eval.json"
-        mkdir -p "$(dirname "${eval_out}")"
-        set +e
-        python scripts/research/evaluate_tau_supply.py --run-dir "${final_dir}" --window-spans "0.5-1.0" --min-duration-days 0.1 --threshold-factor 0.9 > "${eval_out}"
-        eval_rc=$?
-        set -e
-        if [[ ${eval_rc} -ne 0 ]]; then
-          echo "[warn] evaluate_tau_supply failed (rc=${eval_rc}) for ${final_dir}"
-        else
-          echo "[info] evaluate_tau_supply -> ${eval_out}"
+        fi
+        if [[ "${EVAL}" != "0" ]]; then
+          eval_out="${final_dir}/checks/tau_supply_eval.json"
+          mkdir -p "$(dirname "${eval_out}")"
+          set +e
+          python scripts/research/evaluate_tau_supply.py --run-dir "${final_dir}" --window-spans "0.5-1.0" --min-duration-days 0.1 --threshold-factor 0.9 > "${eval_out}"
+          eval_rc=$?
+          set -e
+          if [[ ${eval_rc} -ne 0 ]]; then
+            echo "[warn] evaluate_tau_supply failed (rc=${eval_rc}) for ${final_dir}"
+          else
+            echo "[info] evaluate_tau_supply -> ${eval_out}"
+          fi
         fi
       fi
     done

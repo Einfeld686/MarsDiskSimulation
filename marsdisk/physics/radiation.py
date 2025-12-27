@@ -477,16 +477,36 @@ def blowout_radius(
     global _NUMBA_FAILED
     rho_val = _validate_density(rho)
     T_val = _validate_temperature(T_M)
-    qpr = _resolve_qpr(1.0, T_val, Q_pr, table, interp)
-    if _USE_NUMBA_RADIATION and not _NUMBA_FAILED:
-        try:
-            return float(blowout_radius_numba(rho_val, T_val, qpr))
-        except Exception as exc:
-            _NUMBA_FAILED = True
-            warnings.warn(
-                f"blowout radius numba kernel failed ({exc!r}); falling back to NumPy.",
-                NumericalWarning,
-            )
-    numerator = 3.0 * constants.SIGMA_SB * (T_val**4) * (constants.R_MARS**2) * qpr
-    denominator = 2.0 * constants.G * constants.M_MARS * constants.C * rho_val
-    return float(numerator / denominator)
+    if Q_pr is not None:
+        qpr = _resolve_qpr(1.0, T_val, Q_pr, table, interp)
+        if _USE_NUMBA_RADIATION and not _NUMBA_FAILED:
+            try:
+                return float(blowout_radius_numba(rho_val, T_val, qpr))
+            except Exception as exc:
+                _NUMBA_FAILED = True
+                warnings.warn(
+                    f"blowout radius numba kernel failed ({exc!r}); falling back to NumPy.",
+                    NumericalWarning,
+                )
+        numerator = 3.0 * constants.SIGMA_SB * (T_val**4) * (constants.R_MARS**2) * qpr
+        denominator = 2.0 * constants.G * constants.M_MARS * constants.C * rho_val
+        return float(numerator / denominator)
+
+    coef = (
+        3.0
+        * constants.SIGMA_SB
+        * (T_val**4)
+        * (constants.R_MARS**2)
+        / (2.0 * constants.G * constants.M_MARS * constants.C * rho_val)
+    )
+    s_val = coef * _resolve_qpr(1.0, T_val, None, table, interp)
+    for _ in range(8):
+        qpr_val = _resolve_qpr(s_val, T_val, None, table, interp)
+        s_new = coef * qpr_val
+        if not np.isfinite(s_new) or s_new <= 0.0:
+            break
+        if abs(s_new - s_val) <= 1.0e-6 * max(s_new, 1.0e-30):
+            s_val = s_new
+            break
+        s_val = s_new
+    return float(s_val)

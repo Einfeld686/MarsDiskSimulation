@@ -110,8 +110,12 @@ def solve_c_eq(
     c = max(e, 1e-6)
     for n in range(max_iter):
         eps = float(eps_model(c))
+        if not np.isfinite(eps):
+            raise MarsDiskError("eps_model returned non-finite restitution coefficient")
         eps = min(max(eps, 0.0), 1.0 - 1e-6)
         c_new = (f_wake * tau / max(1.0 - eps**2, 1e-12)) ** 0.5
+        if not np.isfinite(c_new):
+            raise MarsDiskError("solve_c_eq produced non-finite velocity dispersion")
         if logger.isEnabledFor(logging.DEBUG):
             logger.debug("solve_c_eq iter=%d c=%.6e eps=%.3f c_new=%.6e", n, c, eps, c_new)
         if abs(c_new - c) <= tol * max(c_new, 1.0):

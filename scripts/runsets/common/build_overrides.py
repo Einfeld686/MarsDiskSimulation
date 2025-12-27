@@ -1,0 +1,61 @@
+#!/usr/bin/env python3
+"""Merge override lines from multiple files.
+
+Priority follows input order: later files win. Output is one key=value per line.
+"""
+from __future__ import annotations
+
+import argparse
+from pathlib import Path
+from typing import Iterable, Iterator
+
+
+def _iter_pairs(paths: Iterable[Path]) -> Iterator[tuple[str, str]]:
+    for path in paths:
+        for line in path.read_text(encoding="utf-8").splitlines():
+            raw = line.strip()
+            if not raw or raw.startswith("#"):
+                continue
+            if "=" not in raw:
+                continue
+            key, value = raw.split("=", 1)
+            key = key.strip()
+            value = value.strip()
+            if not key:
+                continue
+            yield key, value
+
+
+def _merge_pairs(pairs: Iterable[tuple[str, str]]) -> tuple[list[str], dict[str, str]]:
+    order: list[str] = []
+    values: dict[str, str] = {}
+    for key, value in pairs:
+        if key in values:
+            try:
+                order.remove(key)
+            except ValueError:
+                pass
+        order.append(key)
+        values[key] = value
+    return order, values
+
+
+def main() -> None:
+    ap = argparse.ArgumentParser(description=__doc__)
+    ap.add_argument(
+        "--file",
+        action="append",
+        type=Path,
+        required=True,
+        dest="files",
+        help="Override file (key=value per line). Later files win.",
+    )
+    args = ap.parse_args()
+
+    order, values = _merge_pairs(_iter_pairs(args.files))
+    for key in order:
+        print(f"{key}={values[key]}")
+
+
+if __name__ == "__main__":
+    main()

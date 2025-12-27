@@ -6,6 +6,9 @@ rem - Requires Python on PATH; replace "python" below if必要ならフルパス
 
 setlocal enabledelayedexpansion
 
+set REPO=%~dp0..\..\..\..
+pushd "%REPO%"
+
 set OUTDIR=out\run_sublim_smol_phase_MAX50M
 set VENV_DIR=.venv
 set REQ_FILE=requirements.txt
@@ -55,7 +58,9 @@ python -m marsdisk.run ^
 
 if %errorlevel% neq 0 (
   echo [error] Run failed with exit code %errorlevel%.
+  popd
   exit /b %errorlevel%
 )
 
 echo [done] Run finished. Output: %OUTDIR%
+popd

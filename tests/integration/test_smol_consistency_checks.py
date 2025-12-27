@@ -31,7 +31,11 @@ def test_fragment_tensor_weights_include_widths(monkeypatch) -> None:
     )
 
     i, j = 0, 2
-    k_lr = max(i, j)
+    m_tot = masses[i] + masses[j]
+    f_lr_val = float(f_lr[i, j])
+    s_lr = (3.0 * f_lr_val * m_tot / (4.0 * np.pi * rho)) ** (1.0 / 3.0)
+    k_lr = int(np.searchsorted(edges, s_lr, side="right") - 1)
+    k_lr = max(0, min(k_lr, sizes.size - 1))
     left = np.maximum(edges[: k_lr + 1], 1.0e-30)
     right = np.maximum(edges[1 : k_lr + 2], left)
     power = 1.0 - 3.5

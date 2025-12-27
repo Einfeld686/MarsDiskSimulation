@@ -48,7 +48,7 @@ def parse_args() -> argparse.Namespace:
         "--csv",
         type=Path,
         required=True,
-        help="Input CSV produced by scripts/sweep_mass_loss_map.py.",
+        help="Input CSV produced by scripts/sweeps/sweep_mass_loss_map.py.",
     )
     parser.add_argument(
         "--out",
