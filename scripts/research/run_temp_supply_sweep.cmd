@@ -348,7 +348,10 @@ if not "%PARALLEL_JOBS%"=="1" (
 
 rem ---------- main loops ----------
 call :trace "entering main loops"
-for %%T in (!T_LIST!) do (
+setlocal DisableDelayedExpansion
+for %%T in (%T_LIST%) do (
+  setlocal EnableDelayedExpansion
+  call :trace "loop T=%%T"
   set "T_TABLE=data/mars_temperature_T%%Tp0K.csv"
   for %%M in (!EPS_LIST!) do (
     set "EPS=%%M"
@@ -367,6 +370,7 @@ for %%T in (!T_LIST!) do (
       )
       set "TITLE=T%%T_eps!EPS_TITLE!_tau!TAU_TITLE!"
       set "OUTDIR=%BATCH_DIR%\!TITLE!"
+      call :trace "case start T=%%T EPS=%%M TAU=%%U"
       echo.[run] T=%%T eps=%%M tau=%%U -^> !OUTDIR! (batch=%BATCH_SEED%, seed=!SEED!)
       rem Show supply rate info (skip Python calc to avoid cmd.exe delayed expansion issues)
       echo.[info] epsilon_mix=%%M; mu_orbit10pct=%SUPPLY_MU_ORBIT10PCT% orbit_fraction_at_mu1=%SUPPLY_ORBIT_FRACTION%
@@ -535,7 +539,9 @@ for %%T in (!T_LIST!) do (
       )
     )
   )
+  endlocal
 )
+endlocal
 
 popd
 call :trace "done"
