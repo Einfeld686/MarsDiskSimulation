@@ -179,13 +179,23 @@ if not defined SWEEP_PARALLEL set "SWEEP_PARALLEL=0"
 if not defined MARSDISK_CELL_PARALLEL set "MARSDISK_CELL_PARALLEL=1"
 if not defined MARSDISK_CELL_MIN_CELLS set "MARSDISK_CELL_MIN_CELLS=4"
 if not defined MARSDISK_CELL_CHUNK_SIZE set "MARSDISK_CELL_CHUNK_SIZE=0"
-if not defined MARSDISK_CELL_JOBS (
-  if defined NUMBER_OF_PROCESSORS (
-    set "MARSDISK_CELL_JOBS=%NUMBER_OF_PROCESSORS%"
-  ) else (
-    set "MARSDISK_CELL_JOBS=1"
-  )
+if not defined MARSDISK_CELL_JOBS set "MARSDISK_CELL_JOBS=auto"
+set "CELL_JOBS_RAW=%MARSDISK_CELL_JOBS%"
+if /i "%MARSDISK_CELL_JOBS%"=="auto" (
+  set "CELL_CPU_LOGICAL="
+  for /f %%A in ('powershell -NoProfile -Command "(Get-CimInstance Win32_Processor | Measure-Object -Sum -Property NumberOfLogicalProcessors).Sum"') do set "CELL_CPU_LOGICAL=%%A"
+  if not defined CELL_CPU_LOGICAL for /f %%A in ('powershell -NoProfile -Command "[Environment]::ProcessorCount"') do set "CELL_CPU_LOGICAL=%%A"
+  if not defined CELL_CPU_LOGICAL if defined NUMBER_OF_PROCESSORS set "CELL_CPU_LOGICAL=%NUMBER_OF_PROCESSORS%"
+  if not defined CELL_CPU_LOGICAL set "CELL_CPU_LOGICAL=1"
+  set "MARSDISK_CELL_JOBS=%CELL_CPU_LOGICAL%"
 )
+set "CELL_JOBS_OK=1"
+for /f "delims=0123456789" %%A in ("%MARSDISK_CELL_JOBS%") do set "CELL_JOBS_OK=0"
+if "%CELL_JOBS_OK%"=="0" (
+  if defined CELL_JOBS_RAW echo.[warn] MARSDISK_CELL_JOBS invalid: "%CELL_JOBS_RAW%" -> 1
+  set "MARSDISK_CELL_JOBS=1"
+)
+if "%MARSDISK_CELL_JOBS%"=="0" set "MARSDISK_CELL_JOBS=1"
 if not defined JOB_MEM_GB set "JOB_MEM_GB=10"
 if not defined MEM_RESERVE_GB set "MEM_RESERVE_GB=4"
 if not defined PARALLEL_SLEEP_SEC set "PARALLEL_SLEEP_SEC=2"
