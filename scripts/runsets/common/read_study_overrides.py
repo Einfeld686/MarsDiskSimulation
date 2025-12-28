@@ -1,0 +1,54 @@
+#!/usr/bin/env python3
+"""Emit CMD-friendly SET lines from a study YAML file."""
+from __future__ import annotations
+
+import argparse
+from pathlib import Path
+from typing import Any
+
+
+def _join_list(value: Any) -> str:
+    if isinstance(value, (list, tuple)):
+        return " ".join(str(v) for v in value)
+    return str(value)
+
+
+def _emit(key: str, value: Any) -> None:
+    if value is None:
+        return
+    val = _join_list(value).replace('"', "")
+    print(f'set "{key}={val}"')
+
+
+def main() -> int:
+    ap = argparse.ArgumentParser(description=__doc__)
+    ap.add_argument("--study", required=True, help="Path to study YAML.")
+    args = ap.parse_args()
+
+    try:
+        from ruamel.yaml import YAML  # type: ignore
+    except Exception:
+        return 0
+
+    path = Path(args.study)
+    if not path.exists():
+        return 0
+
+    yaml = YAML(typ="safe")
+    data = yaml.load(path.read_text(encoding="utf-8")) or {}
+
+    _emit("T_LIST", data.get("T_LIST_RAW", data.get("T_LIST")))
+    _emit("EPS_LIST", data.get("EPS_LIST_RAW", data.get("EPS_LIST")))
+    _emit("TAU_LIST", data.get("TAU_LIST_RAW", data.get("TAU_LIST")))
+    _emit("SWEEP_TAG", data.get("SWEEP_TAG"))
+    _emit("COOL_TO_K", data.get("COOL_TO_K"))
+    _emit("COOL_MARGIN_YEARS", data.get("COOL_MARGIN_YEARS"))
+    _emit("COOL_SEARCH_YEARS", data.get("COOL_SEARCH_YEARS"))
+    _emit("COOL_MODE", data.get("COOL_MODE"))
+    _emit("T_END_YEARS", data.get("T_END_YEARS"))
+    _emit("T_END_SHORT_YEARS", data.get("T_END_SHORT_YEARS"))
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

@@ -139,7 +139,7 @@ set "TAU_LIST=1.0 0.5 0.1"
 if defined STUDY_FILE (
   if exist "%STUDY_FILE%" (
     set "STUDY_SET=%TEMP%\\marsdisk_study_%RUN_TS%_%BATCH_SEED%.cmd"
-    python -c "import os, importlib.util as iutil; path=os.environ.get('STUDY_FILE'); if (not path) or (iutil.find_spec('ruamel.yaml') is None): raise SystemExit(0); from ruamel.yaml import YAML; yaml=YAML(typ='safe'); data=yaml.load(open(path, 'r', encoding='utf-8')) or {}; join_list=lambda v: ' '.join(str(x) for x in v) if isinstance(v, (list, tuple)) else str(v); quote=chr(34); emit=lambda k, v: None if v is None else print(f'set {quote}{k}={join_list(v).replace(chr(34), '')}{quote}'); emit('T_LIST', data.get('T_LIST_RAW', data.get('T_LIST'))); emit('EPS_LIST', data.get('EPS_LIST_RAW', data.get('EPS_LIST'))); emit('TAU_LIST', data.get('TAU_LIST_RAW', data.get('TAU_LIST'))); emit('SWEEP_TAG', data.get('SWEEP_TAG')); emit('COOL_TO_K', data.get('COOL_TO_K')); emit('COOL_MARGIN_YEARS', data.get('COOL_MARGIN_YEARS')); emit('COOL_SEARCH_YEARS', data.get('COOL_SEARCH_YEARS')); emit('COOL_MODE', data.get('COOL_MODE')); emit('T_END_YEARS', data.get('T_END_YEARS')); emit('T_END_SHORT_YEARS', data.get('T_END_SHORT_YEARS'))" > "%STUDY_SET%"
+    python scripts\\runsets\\common\\read_study_overrides.py --study "%STUDY_FILE%" > "%STUDY_SET%"
     if exist "%STUDY_SET%" call "%STUDY_SET%"
     if exist "%STUDY_SET%" del "%STUDY_SET%"
     echo.[info] loaded study overrides from %STUDY_FILE%
@@ -173,6 +173,7 @@ if "%AUTO_JOBS%"=="1" (
   if not defined STREAM_MEM_GB set "STREAM_MEM_GB=%JOB_MEM_GB%"
 )
 if not defined PARALLEL_JOBS set "PARALLEL_JOBS=1"
+if "%PARALLEL_JOBS%"=="" set "PARALLEL_JOBS=1"
 if "%PARALLEL_JOBS%"=="0" set "PARALLEL_JOBS=1"
 if "%AUTO_JOBS%"=="1" (
   if not defined TOTAL_GB set "TOTAL_GB=unknown"
