@@ -33,6 +33,19 @@ python -m marsdisk.run --config analysis/run-recipes/baseline_blowout_only.yml
 - `analysis/glossary.md`: 用語・記法のテーブル。対象読者や数学レベルのタグ付きで、AIが表記ゆれを避けるための辞書として扱う。
 - `analysis/literature_map.md`: Hyodo+, Ronnet+, Kuramoto 2024 など主要論文とステータス（replicated/planned/reference_only）をまとめた表。AIは引用や位置づけ確認にのみ使用し、式を再掲しない。
 
+## Windows CMD スクリプトの事前検証（必須）
+Windows 向け `.cmd` を新規作成/更新した場合は、**実行前に `preflight_checks.py` を必ず通す**。Mac 等の非Windows環境でも Windows 由来の失敗を検出できるよう `--simulate-windows` を付与する。
+
+```bash
+python scripts/runsets/windows/preflight_checks.py \
+  --repo-root <repo_root> \
+  --config <config_path> \
+  --overrides <overrides_path> \
+  --simulate-windows
+```
+
+Windows 実機では必要に応じて `--require-powershell` を追加し、警告が出た場合は `.cmd` と `overrides` の双方を修正してから実行する。
+
 ## ラベルとアンカーの補足規約
 - 数式のアンカー(E.xxx)は `analysis/equations.md` のみで定義し、他のドキュメントは参照に徹する。新しい E.xxx を他所に作らない。
 - スライドID(Sxx_*), run ID(RUN.*), 図ID(FIG.*)はリポジトリ全体で一意に保つ。存在しない ID を AI が使いたい場合は、`UNKNOWN_REF_REQUESTS` に従い相談または TODO(REF:slug) として記録し、捏造しない。

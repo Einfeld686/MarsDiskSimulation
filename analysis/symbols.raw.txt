@@ -910,9 +910,33 @@ scripts/runsets/common/merge_config.py:21:def _parse_scalar(value: str) -> Any
 scripts/runsets/common/merge_config.py:26:def _set_path(cfg: dict[str, Any], path: str, value: Any) -> None
 scripts/runsets/common/merge_config.py:36:def _load_overrides(path: Path) -> list[tuple[str, Any]]
 scripts/runsets/common/merge_config.py:49:def main() -> None
+scripts/runsets/common/next_seed.py:8:def main() -> int
+scripts/runsets/common/read_overrides_cmd.py:18:def _load_overrides(path: Path) -> dict[str, str]
+scripts/runsets/common/read_overrides_cmd.py:33:def main() -> int
 scripts/runsets/common/read_study_overrides.py:10:def _join_list(value: Any) -> str
 scripts/runsets/common/read_study_overrides.py:16:def _emit(key: str, value: Any) -> None
 scripts/runsets/common/read_study_overrides.py:23:def main() -> int
+scripts/runsets/common/write_base_overrides.py:10:def env(name: str, default: str | None=None) -> str | None
+scripts/runsets/common/write_base_overrides.py:14:def is_defined(name: str) -> bool
+scripts/runsets/common/write_base_overrides.py:18:def not_zero(name: str) -> bool
+scripts/runsets/common/write_base_overrides.py:22:def append(lines: list[str], key: str, value: str | None) -> None
+scripts/runsets/common/write_base_overrides.py:28:def append_literal(lines: list[str], literal: str) -> None
+scripts/runsets/common/write_base_overrides.py:32:def main() -> int
+scripts/runsets/common/write_sweep_list.py:11:def _parse_list(raw: str) -> list[str]
+scripts/runsets/common/write_sweep_list.py:25:def main() -> int
+scripts/runsets/windows/preflight_checks.py:27:def _load_overrides(path: Path) -> tuple[dict[str, str], list[str]]
+scripts/runsets/windows/preflight_checks.py:46:def _contains_non_ascii(text: str) -> bool
+scripts/runsets/windows/preflight_checks.py:50:def _contains_cmd_unsafe(text: str) -> bool
+scripts/runsets/windows/preflight_checks.py:54:def _is_windows_abs(path_str: str) -> bool
+scripts/runsets/windows/preflight_checks.py:61:def _normalize_windows(path_str: str) -> str
+scripts/runsets/windows/preflight_checks.py:65:def _is_windows() -> bool
+scripts/runsets/windows/preflight_checks.py:69:def _check_cmd(name: str, errors: list[str]) -> None
+scripts/runsets/windows/preflight_checks.py:74:def _check_powershell(errors: list[str], warnings: list[str]) -> None
+scripts/runsets/windows/preflight_checks.py:95:def _check_temp_dir(temp_dir: str | None, errors: list[str], warnings: list[str]) -> None
+scripts/runsets/windows/preflight_checks.py:113:def _check_env_paths(errors: list[str], warnings: list[str]) -> None
+scripts/runsets/windows/preflight_checks.py:128:def _check_path_value(label: str, value: str, errors: list[str], warnings: list[str]) -> None
+scripts/runsets/windows/preflight_checks.py:145:def _has_invalid_windows_chars(value: str) -> bool
+scripts/runsets/windows/preflight_checks.py:160:def main() -> int
 scripts/sweeps/sweep_beta_map.py:30:def _parse_grid(start: float, stop: float, count: int, label: str) -> np.ndarray
 scripts/sweeps/sweep_beta_map.py:39:def _load_config(path: Path) -> Config
 scripts/sweeps/sweep_beta_map.py:50:def _write_json(path: Path, payload: dict) -> None
@@ -998,9 +1022,12 @@ scripts/sweeps/sweep_massloss_map.py:421:def _write_json(path: Path, payload: Di
 scripts/sweeps/sweep_massloss_map.py:427:def _collect_validation(records: Sequence[Dict[str, Any]], *, tolerance: float) -> Dict[str, Any]
 scripts/sweeps/sweep_massloss_map.py:455:def parse_args() -> argparse.Namespace
 scripts/sweeps/sweep_massloss_map.py:503:def main() -> None
-scripts/tests/overparallel_benchmark.py:12:def _run_scenario(*, label: str, cmd_base: list[str], out_root: Path, parallel_jobs: int, env_overrides: dict[str, str]) -> tuple[int, float, list[Path]]
-scripts/tests/overparallel_benchmark.py:37:def _load_cell_parallel(outdir: Path) -> dict
-scripts/tests/overparallel_benchmark.py:47:def main() -> int
+scripts/tests/overparallel_benchmark.py:32:def _utc_now() -> str
+scripts/tests/overparallel_benchmark.py:36:def _env_snapshot(env: dict[str, str]) -> dict[str, str | None]
+scripts/tests/overparallel_benchmark.py:40:def _write_json(path: Path, payload: dict[str, Any]) -> None
+scripts/tests/overparallel_benchmark.py:45:def _run_scenario(*, label: str, cmd_base: list[str], out_root: Path, parallel_jobs: int, env_overrides: dict[str, str]) -> tuple[int, float, list[Path], list[dict[str, Any]]]
+scripts/tests/overparallel_benchmark.py:150:def _load_cell_parallel(outdir: Path) -> dict
+scripts/tests/overparallel_benchmark.py:160:def main() -> int
 siO2_disk_cooling/io_utils.py:13:def ensure_outputs_dir() -> Path
 siO2_disk_cooling/io_utils.py:21:def write_csv(r_over_Rmars: np.ndarray, arrival_glass_s: np.ndarray, arrival_liquidus_s: np.ndarray, path: Path) -> None
 siO2_disk_cooling/io_utils.py:40:def _format_stat(values: Iterable[float]) -> str

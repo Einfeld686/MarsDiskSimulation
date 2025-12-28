@@ -8876,6 +8876,34 @@
     "brief_usage": "No description available."
   },
   {
+    "file_path": "scripts/runsets/common/next_seed.py",
+    "line_no": 8,
+    "symbol": "main",
+    "signature": "main() -> int",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/runsets/common/read_overrides_cmd.py",
+    "line_no": 9,
+    "symbol": "KEY_MAP",
+    "signature": "KEY_MAP = {'io.archive.enabled': 'ARCHIVE_ENABLED_EXPECTED', 'io.archive.dir': 'ARCHIVE_DIR_EXPECTED', 'io.archive.merge_target': 'ARCHIVE_MERGE_TARGET', 'io.archive.verify_level': 'ARCHIVE_VERIFY_LEVEL', 'io.archive.keep_local': 'ARCHIVE_KEEP_LOCAL'}",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "scripts/runsets/common/read_overrides_cmd.py",
+    "line_no": 18,
+    "symbol": "_load_overrides",
+    "signature": "_load_overrides(path: Path) -> dict[str, str]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/runsets/common/read_overrides_cmd.py",
+    "line_no": 33,
+    "symbol": "main",
+    "signature": "main() -> int",
+    "brief_usage": "No description available."
+  },
+  {
     "file_path": "scripts/runsets/common/read_study_overrides.py",
     "line_no": 10,
     "symbol": "_join_list",
@@ -8892,6 +8920,188 @@
   {
     "file_path": "scripts/runsets/common/read_study_overrides.py",
     "line_no": 23,
+    "symbol": "main",
+    "signature": "main() -> int",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/runsets/common/write_base_overrides.py",
+    "line_no": 10,
+    "symbol": "env",
+    "signature": "env(name: str, default: str | None=None) -> str | None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/runsets/common/write_base_overrides.py",
+    "line_no": 14,
+    "symbol": "is_defined",
+    "signature": "is_defined(name: str) -> bool",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/runsets/common/write_base_overrides.py",
+    "line_no": 18,
+    "symbol": "not_zero",
+    "signature": "not_zero(name: str) -> bool",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/runsets/common/write_base_overrides.py",
+    "line_no": 22,
+    "symbol": "append",
+    "signature": "append(lines: list[str], key: str, value: str | None) -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/runsets/common/write_base_overrides.py",
+    "line_no": 28,
+    "symbol": "append_literal",
+    "signature": "append_literal(lines: list[str], literal: str) -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/runsets/common/write_base_overrides.py",
+    "line_no": 32,
+    "symbol": "main",
+    "signature": "main() -> int",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/runsets/common/write_sweep_list.py",
+    "line_no": 11,
+    "symbol": "_parse_list",
+    "signature": "_parse_list(raw: str) -> list[str]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/runsets/common/write_sweep_list.py",
+    "line_no": 25,
+    "symbol": "main",
+    "signature": "main() -> int",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/runsets/windows/preflight_checks.py",
+    "line_no": 13,
+    "symbol": "REQUIRED_ARCHIVE_KEYS",
+    "signature": "REQUIRED_ARCHIVE_KEYS = {'io.archive.enabled': 'true', 'io.archive.dir': None, 'io.archive.merge_target': 'external', 'io.archive.verify_level': 'standard_plus', 'io.archive.keep_local': 'metadata'}",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "scripts/runsets/windows/preflight_checks.py",
+    "line_no": 21,
+    "symbol": "PATH_ENV_VARS",
+    "signature": "PATH_ENV_VARS = ('TEMP', 'TMP', 'USERPROFILE', 'HOMEDRIVE', 'HOMEPATH', 'COMSPEC')",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "scripts/runsets/windows/preflight_checks.py",
+    "line_no": 22,
+    "symbol": "MAX_WARN_PATH_LEN",
+    "signature": "MAX_WARN_PATH_LEN = 240",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "scripts/runsets/windows/preflight_checks.py",
+    "line_no": 23,
+    "symbol": "WINDOWS_PATH_INVALID_CHARS",
+    "signature": "WINDOWS_PATH_INVALID_CHARS = set('<>:\"|?*')",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "scripts/runsets/windows/preflight_checks.py",
+    "line_no": 24,
+    "symbol": "CMD_UNSAFE_CHARS",
+    "signature": "CMD_UNSAFE_CHARS = '!'",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "scripts/runsets/windows/preflight_checks.py",
+    "line_no": 27,
+    "symbol": "_load_overrides",
+    "signature": "_load_overrides(path: Path) -> tuple[dict[str, str], list[str]]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/runsets/windows/preflight_checks.py",
+    "line_no": 46,
+    "symbol": "_contains_non_ascii",
+    "signature": "_contains_non_ascii(text: str) -> bool",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/runsets/windows/preflight_checks.py",
+    "line_no": 50,
+    "symbol": "_contains_cmd_unsafe",
+    "signature": "_contains_cmd_unsafe(text: str) -> bool",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/runsets/windows/preflight_checks.py",
+    "line_no": 54,
+    "symbol": "_is_windows_abs",
+    "signature": "_is_windows_abs(path_str: str) -> bool",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/runsets/windows/preflight_checks.py",
+    "line_no": 61,
+    "symbol": "_normalize_windows",
+    "signature": "_normalize_windows(path_str: str) -> str",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/runsets/windows/preflight_checks.py",
+    "line_no": 65,
+    "symbol": "_is_windows",
+    "signature": "_is_windows() -> bool",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/runsets/windows/preflight_checks.py",
+    "line_no": 69,
+    "symbol": "_check_cmd",
+    "signature": "_check_cmd(name: str, errors: list[str]) -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/runsets/windows/preflight_checks.py",
+    "line_no": 74,
+    "symbol": "_check_powershell",
+    "signature": "_check_powershell(errors: list[str], warnings: list[str]) -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/runsets/windows/preflight_checks.py",
+    "line_no": 95,
+    "symbol": "_check_temp_dir",
+    "signature": "_check_temp_dir(temp_dir: str | None, errors: list[str], warnings: list[str]) -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/runsets/windows/preflight_checks.py",
+    "line_no": 113,
+    "symbol": "_check_env_paths",
+    "signature": "_check_env_paths(errors: list[str], warnings: list[str]) -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/runsets/windows/preflight_checks.py",
+    "line_no": 128,
+    "symbol": "_check_path_value",
+    "signature": "_check_path_value(label: str, value: str, errors: list[str], warnings: list[str]) -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/runsets/windows/preflight_checks.py",
+    "line_no": 145,
+    "symbol": "_has_invalid_windows_chars",
+    "signature": "_has_invalid_windows_chars(value: str) -> bool",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/runsets/windows/preflight_checks.py",
+    "line_no": 160,
     "symbol": "main",
     "signature": "main() -> int",
     "brief_usage": "No description available."
@@ -9696,21 +9906,49 @@
   },
   {
     "file_path": "scripts/tests/overparallel_benchmark.py",
-    "line_no": 12,
-    "symbol": "_run_scenario",
-    "signature": "_run_scenario(*, label: str, cmd_base: list[str], out_root: Path, parallel_jobs: int, env_overrides: dict[str, str]) -> tuple[int, float, list[Path]]",
+    "line_no": 18,
+    "symbol": "_ENV_SNAPSHOT_KEYS",
+    "signature": "_ENV_SNAPSHOT_KEYS = ('FORCE_STREAMING_OFF', 'IO_STREAMING', 'MARSDISK_CELL_PARALLEL', 'MARSDISK_CELL_JOBS', 'MARSDISK_CELL_MIN_CELLS', 'NUMBA_NUM_THREADS', 'OMP_NUM_THREADS', 'MKL_NUM_THREADS', 'OPENBLAS_NUM_THREADS', 'NUMEXPR_NUM_THREADS')",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "scripts/tests/overparallel_benchmark.py",
+    "line_no": 32,
+    "symbol": "_utc_now",
+    "signature": "_utc_now() -> str",
     "brief_usage": "No description available."
   },
   {
     "file_path": "scripts/tests/overparallel_benchmark.py",
-    "line_no": 37,
+    "line_no": 36,
+    "symbol": "_env_snapshot",
+    "signature": "_env_snapshot(env: dict[str, str]) -> dict[str, str | None]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/tests/overparallel_benchmark.py",
+    "line_no": 40,
+    "symbol": "_write_json",
+    "signature": "_write_json(path: Path, payload: dict[str, Any]) -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/tests/overparallel_benchmark.py",
+    "line_no": 45,
+    "symbol": "_run_scenario",
+    "signature": "_run_scenario(*, label: str, cmd_base: list[str], out_root: Path, parallel_jobs: int, env_overrides: dict[str, str]) -> tuple[int, float, list[Path], list[dict[str, Any]]]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/tests/overparallel_benchmark.py",
+    "line_no": 150,
     "symbol": "_load_cell_parallel",
     "signature": "_load_cell_parallel(outdir: Path) -> dict",
     "brief_usage": "No description available."
   },
   {
     "file_path": "scripts/tests/overparallel_benchmark.py",
-    "line_no": 47,
+    "line_no": 160,
     "symbol": "main",
     "signature": "main() -> int",
     "brief_usage": "No description available."

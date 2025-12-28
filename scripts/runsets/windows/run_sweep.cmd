@@ -222,7 +222,6 @@ if "%DEBUG%"=="1" echo.[info] archive check keep_local ok
 if /i "%BATCH_ROOT%"=="%ARCHIVE_DIR_EXPECTED%" goto :archive_fail_batch_root
 echo.[info] overrides validated
 echo.[info] preflight ok; preparing temp_root
-goto :archive_checks_done
 
 set "RUN_TS_SOURCE=pre"
 if defined RUN_TS (
@@ -295,8 +294,6 @@ exit /b 1
 :archive_fail_batch_root
 echo.[error] BATCH_ROOT must be internal; it matches io.archive.dir (%ARCHIVE_DIR_EXPECTED%)
 exit /b 1
-
-:archive_checks_done
 
 :ensure_abs
 set "VAR_NAME=%~1"
