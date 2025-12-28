@@ -201,6 +201,7 @@ if /i "%BATCH_ROOT%"=="%ARCHIVE_DIR_EXPECTED%" (
   exit /b 1
 )
 echo.[info] overrides validated
+echo.[info] preflight ok; preparing temp_root
 
 set "RUN_TS_SOURCE=pre"
 if defined RUN_TS (
@@ -211,6 +212,7 @@ if defined RUN_TS (
 )
 set "TEMP_ROOT=%TEMP%"
 set "TEMP_SOURCE=TEMP"
+echo.[info] temp_root candidate="%TEMP_ROOT%"
 if "%TEMP_ROOT%"=="" (
   set "TEMP_ROOT=%REPO_ROOT%\\tmp"
   set "TEMP_SOURCE=fallback"
