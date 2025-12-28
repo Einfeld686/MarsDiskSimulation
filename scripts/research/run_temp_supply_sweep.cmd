@@ -139,43 +139,7 @@ set "TAU_LIST=1.0 0.5 0.1"
 if defined STUDY_FILE (
   if exist "%STUDY_FILE%" (
     set "STUDY_SET=%TEMP%\\marsdisk_study_%RUN_TS%_%BATCH_SEED%.cmd"
-    set "STUDY_GEN=%TEMP%\\marsdisk_study_%RUN_TS%_%BATCH_SEED%.py"
-    > "%STUDY_GEN%" echo(import os
-    >> "%STUDY_GEN%" echo(try:
-    >> "%STUDY_GEN%" echo(    from ruamel.yaml import YAML
-    >> "%STUDY_GEN%" echo(except Exception:
-    >> "%STUDY_GEN%" echo(    YAML = None
-    >> "%STUDY_GEN%" echo(
-    >> "%STUDY_GEN%" echo(path = os.environ.get('STUDY_FILE')
-    >> "%STUDY_GEN%" echo(if not path or YAML is None:
-    >> "%STUDY_GEN%" echo(    raise SystemExit(0)
-    >> "%STUDY_GEN%" echo(yaml = YAML(typ='safe')
-    >> "%STUDY_GEN%" echo(data = yaml.load(open(path, 'r', encoding='utf-8')) or {})
-    >> "%STUDY_GEN%" echo(
-    >> "%STUDY_GEN%" echo(def _join_list(value):
-    >> "%STUDY_GEN%" echo(    if isinstance(value, (list, tuple)):
-    >> "%STUDY_GEN%" echo(        return ' '.join(str(v) for v in value)
-    >> "%STUDY_GEN%" echo(    return str(value)
-    >> "%STUDY_GEN%" echo(
-    >> "%STUDY_GEN%" echo(def emit(key, value):
-    >> "%STUDY_GEN%" echo(    if value is None:
-    >> "%STUDY_GEN%" echo(        return
-    >> "%STUDY_GEN%" echo(    val = _join_list(value).replace(chr(34), '')
-    >> "%STUDY_GEN%" echo(    quote = chr(34)
-    >> "%STUDY_GEN%" echo(    print(f'set {quote}{key}={val}{quote}')
-    >> "%STUDY_GEN%" echo(
-    >> "%STUDY_GEN%" echo(emit('T_LIST', data.get('T_LIST_RAW', data.get('T_LIST')))
-    >> "%STUDY_GEN%" echo(emit('EPS_LIST', data.get('EPS_LIST_RAW', data.get('EPS_LIST')))
-    >> "%STUDY_GEN%" echo(emit('TAU_LIST', data.get('TAU_LIST_RAW', data.get('TAU_LIST')))
-    >> "%STUDY_GEN%" echo(emit('SWEEP_TAG', data.get('SWEEP_TAG'))
-    >> "%STUDY_GEN%" echo(emit('COOL_TO_K', data.get('COOL_TO_K'))
-    >> "%STUDY_GEN%" echo(emit('COOL_MARGIN_YEARS', data.get('COOL_MARGIN_YEARS'))
-    >> "%STUDY_GEN%" echo(emit('COOL_SEARCH_YEARS', data.get('COOL_SEARCH_YEARS'))
-    >> "%STUDY_GEN%" echo(emit('COOL_MODE', data.get('COOL_MODE'))
-    >> "%STUDY_GEN%" echo(emit('T_END_YEARS', data.get('T_END_YEARS'))
-    >> "%STUDY_GEN%" echo(emit('T_END_SHORT_YEARS', data.get('T_END_SHORT_YEARS'))
-    python "%STUDY_GEN%" > "%STUDY_SET%"
-    if exist "%STUDY_GEN%" del "%STUDY_GEN%"
+    python -c "import os, importlib.util as iutil; path=os.environ.get('STUDY_FILE'); if (not path) or (iutil.find_spec('ruamel.yaml') is None): raise SystemExit(0); from ruamel.yaml import YAML; yaml=YAML(typ='safe'); data=yaml.load(open(path, 'r', encoding='utf-8')) or {}; join_list=lambda v: ' '.join(str(x) for x in v) if isinstance(v, (list, tuple)) else str(v); quote=chr(34); emit=lambda k, v: None if v is None else print(f'set {quote}{k}={join_list(v).replace(chr(34), '')}{quote}'); emit('T_LIST', data.get('T_LIST_RAW', data.get('T_LIST'))); emit('EPS_LIST', data.get('EPS_LIST_RAW', data.get('EPS_LIST'))); emit('TAU_LIST', data.get('TAU_LIST_RAW', data.get('TAU_LIST'))); emit('SWEEP_TAG', data.get('SWEEP_TAG')); emit('COOL_TO_K', data.get('COOL_TO_K')); emit('COOL_MARGIN_YEARS', data.get('COOL_MARGIN_YEARS')); emit('COOL_SEARCH_YEARS', data.get('COOL_SEARCH_YEARS')); emit('COOL_MODE', data.get('COOL_MODE')); emit('T_END_YEARS', data.get('T_END_YEARS')); emit('T_END_SHORT_YEARS', data.get('T_END_SHORT_YEARS'))" > "%STUDY_SET%"
     if exist "%STUDY_SET%" call "%STUDY_SET%"
     if exist "%STUDY_SET%" del "%STUDY_SET%"
     echo.[info] loaded study overrides from %STUDY_FILE%
