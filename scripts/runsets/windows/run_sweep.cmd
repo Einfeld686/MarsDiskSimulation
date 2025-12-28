@@ -152,8 +152,10 @@ if not exist "%OVERRIDES_PATH%" (
   echo.[error] overrides file not found: "%OVERRIDES_PATH%"
   exit /b 1
 )
-set "ARCHIVE_SET=%TEMP%\\marsdisk_archive_overrides_%RANDOM%.cmd"
-python "%REPO_ROOT%\\scripts\\runsets\\common\\read_overrides_cmd.py" --file "%OVERRIDES_PATH%" > "%ARCHIVE_SET%"
+set "ARCHIVE_TMP=%REPO_ROOT%\\tmp"
+if not exist "%ARCHIVE_TMP%" mkdir "%ARCHIVE_TMP%" >nul 2>&1
+set "ARCHIVE_SET=%ARCHIVE_TMP%\\marsdisk_archive_overrides_%RANDOM%.cmd"
+powershell -NoProfile -Command "$path=$env:OVERRIDES_PATH; if (-not (Test-Path -LiteralPath $path)){exit 2}; $pairs=@{}; foreach($raw in Get-Content -LiteralPath $path -ErrorAction Stop){ $line=$raw.Trim(); if (-not $line -or $line.StartsWith('#')){continue}; if ($line -match '#'){ $line=$line.Split('#')[0].Trim() }; if ($line -notmatch '='){continue}; $parts=$line.Split('=',2); $key=$parts[0].Trim(); $val=$parts[1].Trim(); if ($key){$pairs[$key]=$val} }; $map=@{'io.archive.enabled'='ARCHIVE_ENABLED_EXPECTED';'io.archive.dir'='ARCHIVE_DIR_EXPECTED';'io.archive.merge_target'='ARCHIVE_MERGE_TARGET';'io.archive.verify_level'='ARCHIVE_VERIFY_LEVEL';'io.archive.keep_local'='ARCHIVE_KEEP_LOCAL'}; foreach($k in $map.Keys){ if ($pairs.ContainsKey($k)){ $v=$pairs[$k].Replace('\"',''); Write-Output (\"set `\"$($map[$k])=$v`\"\") } }" > "%ARCHIVE_SET%"
 if errorlevel 1 (
   echo.[error] failed to parse overrides: "%OVERRIDES_PATH%"
   exit /b 1
