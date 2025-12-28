@@ -41,6 +41,8 @@ class ProgressReporter:
         self._eta_samples: int = 0
         self._last_step_wall: float | None = None
         self._last_step_no: int | None = None
+        self._last_sim_time_s: float | None = None
+        self._last_sim_step_no: int | None = None
 
     def emit_header(self) -> None:
         """Print a one-line header (e.g., memory estimate) before the bar."""
@@ -58,6 +60,9 @@ class ProgressReporter:
         if not self.enabled or self._finished:
             return
         now = time.monotonic()
+        dt_est = self._estimate_dt(step_no, sim_time_s)
+        self._last_sim_time_s = sim_time_s
+        self._last_sim_step_no = step_no
         self._update_eta(step_no, now)
         is_last = (step_no + 1) >= self.total_steps
         frac = min(max((step_no + 1) / self.total_steps, 0.0), 1.0)
@@ -76,6 +81,8 @@ class ProgressReporter:
         remaining_years = remaining_s / SECONDS_PER_YEAR if math.isfinite(remaining_s) else float("nan")
         rem_text = f"rem~{remaining_years:.3g} yr" if math.isfinite(remaining_years) else "rem~?"
         remaining_steps = max(self.total_steps - (step_no + 1), 0)
+        if dt_est is not None and math.isfinite(remaining_s):
+            remaining_steps = max(int(math.ceil(remaining_s / dt_est)), 0)
         eta_seconds = float("nan")
         if (
             self._eta_ewma_s is not None
@@ -167,3 +174,19 @@ class ProgressReporter:
                     self._eta_samples += 1
         self._last_step_wall = now
         self._last_step_no = step_no
+
+    def _estimate_dt(self, step_no: int, sim_time_s: float) -> float | None:
+        """Estimate the current simulation dt from successive progress updates."""
+
+        if self._last_sim_time_s is None or self._last_sim_step_no is None:
+            return None
+        step_delta = step_no - self._last_sim_step_no
+        if step_delta <= 0:
+            return None
+        sim_delta = sim_time_s - self._last_sim_time_s
+        if not math.isfinite(sim_delta) or sim_delta <= 0.0:
+            return None
+        dt_est = sim_delta / step_delta
+        if not math.isfinite(dt_est) or dt_est <= 0.0:
+            return None
+        return dt_est
