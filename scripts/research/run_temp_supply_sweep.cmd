@@ -488,6 +488,9 @@ for /f "usebackq tokens=1-3 delims= " %%A in ("%SWEEP_LIST_FILE%") do (
           >>"%CASE_OVERRIDES_FILE%" echo io.substep_max_ratio=%SUBSTEP_MAX_RATIO%
         )
       )
+      if defined STREAM_MEM_GB (
+        >>"%CASE_OVERRIDES_FILE%" echo io.streaming.memory_limit_gb=%STREAM_MEM_GB%
+      )
 
       rem Override priority: base defaults ^< overrides file ^< per-case overrides.
       if "%EXTRA_OVERRIDES_EXISTS%"=="1" (
@@ -588,18 +591,6 @@ exit /b 0
 call :trace "run_parallel: enter"
 set "JOB_PIDS="
 set "JOB_COUNT=0"
-set "LAUNCHER_PS=%TMP_ROOT%\marsdisk_launch_job_%RUN_TS%_%BATCH_SEED%.ps1"
-> "%LAUNCHER_PS%" echo $cmd = $env:JOB_CMD
->>"%LAUNCHER_PS%" echo if (-not $cmd) { exit 2 }
->>"%LAUNCHER_PS%" echo $style = $env:PARALLEL_WINDOW_STYLE
->>"%LAUNCHER_PS%" echo $valid = @('Normal','Hidden','Minimized','Maximized')
->>"%LAUNCHER_PS%" echo if ($style -and -not ($valid -contains $style)) { $style = $null }
->>"%LAUNCHER_PS%" echo if ($style) {
->>"%LAUNCHER_PS%" echo   $p = Start-Process cmd.exe -ArgumentList '/c', $cmd -WindowStyle $style -PassThru
->>"%LAUNCHER_PS%" echo } else {
->>"%LAUNCHER_PS%" echo   $p = Start-Process cmd.exe -ArgumentList '/c', $cmd -PassThru
->>"%LAUNCHER_PS%" echo }
->>"%LAUNCHER_PS%" echo $p.Id
 echo.[info] parallel mode: jobs=%PARALLEL_JOBS% sleep=%PARALLEL_SLEEP_SEC%s
 
 if not defined SWEEP_LIST_FILE (
@@ -615,7 +606,6 @@ for /f "usebackq tokens=1-3 delims= " %%A in ("%SWEEP_LIST_FILE%") do (
 )
 
 call :wait_all
-if exist "%LAUNCHER_PS%" del "%LAUNCHER_PS%"
 echo.[done] Parallel sweep completed (batch=%BATCH_SEED%, dir=%BATCH_DIR%).
 exit /b 0
 
@@ -627,9 +617,9 @@ for /f %%S in ('python scripts\\runsets\\common\\next_seed.py') do set "JOB_SEED
 call :wait_for_slot
 set "JOB_PID="
 set "JOB_CMD=set RUN_ONE_T=!JOB_T!&& set RUN_ONE_EPS=!JOB_EPS!&& set RUN_ONE_TAU=!JOB_TAU!&& set RUN_ONE_SEED=!JOB_SEED!&& set AUTO_JOBS=0&& set PARALLEL_JOBS=1&& set SKIP_PIP=1&& call ""%~f0"" --run-one"
-for /f "usebackq delims=" %%P in (`powershell -NoProfile -ExecutionPolicy Bypass -File "%LAUNCHER_PS%"`) do set "JOB_PID=%%P"
+for /f "usebackq delims=" %%P in (`python scripts\\runsets\\common\\win_process.py launch --window-style "%PARALLEL_WINDOW_STYLE%"`) do set "JOB_PID=%%P"
 if defined JOB_PID set "JOB_PIDS=!JOB_PIDS! !JOB_PID!"
-if not defined JOB_PID echo.[warn] failed to launch job for T=!JOB_T! eps=!JOB_EPS! tau=!JOB_TAU! (check PowerShell availability)
+if not defined JOB_PID echo.[warn] failed to launch job for T=!JOB_T! eps=!JOB_EPS! tau=!JOB_TAU! (check Python availability)
 exit /b 0
 
 :wait_for_slot
@@ -643,7 +633,7 @@ exit /b 0
 :refresh_jobs
 set "JOB_COUNT=0"
 if not defined JOB_PIDS exit /b 0
-for /f "usebackq tokens=1,2 delims=|" %%A in (`powershell -NoProfile -Command "$ids=$env:JOB_PIDS -split ' ' | Where-Object {$_}; $alive=@(); foreach($id in $ids){ if (Get-Process -Id $id -ErrorAction SilentlyContinue){$alive += $id}}; $list=($alive -join ' '); if (-not $list){$list='__NONE__'}; Write-Output ($list + '|' + $alive.Count)"`) do (
+for /f "usebackq tokens=1,2 delims=|" %%A in (`python scripts\\runsets\\common\\win_process.py alive`) do (
   set "JOB_PIDS=%%A"
   set "JOB_COUNT=%%B"
 )

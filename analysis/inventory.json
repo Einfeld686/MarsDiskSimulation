@@ -8834,6 +8834,34 @@
     "brief_usage": "No description available."
   },
   {
+    "file_path": "scripts/runsets/common/calc_thread_limit.py",
+    "line_no": 9,
+    "symbol": "_parse_fraction",
+    "signature": "_parse_fraction(value: str | None, default: float) -> float",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/runsets/common/calc_thread_limit.py",
+    "line_no": 19,
+    "symbol": "_parse_int",
+    "signature": "_parse_int(value: str | None, default: int) -> int",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/runsets/common/calc_thread_limit.py",
+    "line_no": 29,
+    "symbol": "_get_cpu_logical",
+    "signature": "_get_cpu_logical() -> int",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/runsets/common/calc_thread_limit.py",
+    "line_no": 39,
+    "symbol": "main",
+    "signature": "main() -> int",
+    "brief_usage": "No description available."
+  },
+  {
     "file_path": "scripts/runsets/common/hooks/archive_run.py",
     "line_no": 12,
     "symbol": "_repo_root",
@@ -8983,6 +9011,48 @@
   {
     "file_path": "scripts/runsets/common/timestamp.py",
     "line_no": 9,
+    "symbol": "main",
+    "signature": "main() -> int",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/runsets/common/win_process.py",
+    "line_no": 12,
+    "symbol": "WINDOW_STYLES",
+    "signature": "WINDOW_STYLES = {'hidden': 0, 'normal': 1, 'minimized': 2, 'maximized': 3}",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "scripts/runsets/common/win_process.py",
+    "line_no": 20,
+    "symbol": "_parse_pids",
+    "signature": "_parse_pids(raw: str) -> list[int]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/runsets/common/win_process.py",
+    "line_no": 32,
+    "symbol": "_tasklist_has_pid",
+    "signature": "_tasklist_has_pid(pid: int) -> bool",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/runsets/common/win_process.py",
+    "line_no": 47,
+    "symbol": "_alive_pids",
+    "signature": "_alive_pids(pids: Iterable[int]) -> list[int]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/runsets/common/win_process.py",
+    "line_no": 63,
+    "symbol": "_launch",
+    "signature": "_launch(cmd: str, window_style: str | None) -> int",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/runsets/common/win_process.py",
+    "line_no": 93,
     "symbol": "main",
     "signature": "main() -> int",
     "brief_usage": "No description available."

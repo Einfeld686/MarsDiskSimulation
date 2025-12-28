@@ -904,6 +904,10 @@ scripts/runsets/common/calc_parallel_jobs.py:10:def _get_cpu_logical() -> int
 scripts/runsets/common/calc_parallel_jobs.py:23:def _get_mem_total_gb() -> int
 scripts/runsets/common/calc_parallel_jobs.py:46:def _parse_positive_float(name: str, default: float) -> float
 scripts/runsets/common/calc_parallel_jobs.py:57:def main() -> int
+scripts/runsets/common/calc_thread_limit.py:9:def _parse_fraction(value: str | None, default: float) -> float
+scripts/runsets/common/calc_thread_limit.py:19:def _parse_int(value: str | None, default: int) -> int
+scripts/runsets/common/calc_thread_limit.py:29:def _get_cpu_logical() -> int
+scripts/runsets/common/calc_thread_limit.py:39:def main() -> int
 scripts/runsets/common/hooks/archive_run.py:12:def _repo_root() -> Path
 scripts/runsets/common/hooks/archive_run.py:16:def main() -> int
 scripts/runsets/common/hooks/evaluate_tau_supply.py:13:def _repo_root() -> Path
@@ -925,6 +929,11 @@ scripts/runsets/common/read_study_overrides.py:10:def _join_list(value: Any) -> 
 scripts/runsets/common/read_study_overrides.py:16:def _emit(key: str, value: Any) -> None
 scripts/runsets/common/read_study_overrides.py:23:def main() -> int
 scripts/runsets/common/timestamp.py:9:def main() -> int
+scripts/runsets/common/win_process.py:20:def _parse_pids(raw: str) -> list[int]
+scripts/runsets/common/win_process.py:32:def _tasklist_has_pid(pid: int) -> bool
+scripts/runsets/common/win_process.py:47:def _alive_pids(pids: Iterable[int]) -> list[int]
+scripts/runsets/common/win_process.py:63:def _launch(cmd: str, window_style: str | None) -> int
+scripts/runsets/common/win_process.py:93:def main() -> int
 scripts/runsets/common/write_base_overrides.py:10:def env(name: str, default: str | None=None) -> str | None
 scripts/runsets/common/write_base_overrides.py:14:def is_defined(name: str) -> bool
 scripts/runsets/common/write_base_overrides.py:18:def not_zero(name: str) -> bool

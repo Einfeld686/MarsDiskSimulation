@@ -41,6 +41,8 @@ python scripts/runsets/windows/preflight_checks.py \
   --repo-root <repo_root> \
   --config <config_path> \
   --overrides <overrides_path> \
+  --cmd-root scripts/runsets/windows \
+  --cmd scripts/research/run_temp_supply_sweep.cmd \
   --simulate-windows
 ```
 

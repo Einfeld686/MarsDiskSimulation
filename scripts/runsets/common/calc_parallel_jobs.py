@@ -54,12 +54,28 @@ def _parse_positive_float(name: str, default: float) -> float:
     return value
 
 
+def _get_mem_fraction(default: float) -> float:
+    for name in ("PARALLEL_MEM_FRACTION", "CELL_MEM_FRACTION"):
+        raw = os.environ.get(name, "")
+        if not raw:
+            continue
+        try:
+            value = float(raw)
+        except (TypeError, ValueError):
+            continue
+        if 0 < value <= 1:
+            return value
+    return default
+
+
 def main() -> int:
     total_gb = _get_mem_total_gb()
     cpu_logical = _get_cpu_logical()
     reserve_gb = _parse_positive_float("MEM_RESERVE_GB", 4.0)
     job_mem_gb = _parse_positive_float("JOB_MEM_GB", 10.0)
-    avail_gb = max(total_gb - reserve_gb, 1.0)
+    mem_fraction = _get_mem_fraction(0.7)
+    base_gb = max(total_gb - reserve_gb, 0.0)
+    avail_gb = max(base_gb * mem_fraction, 1.0)
     mem_jobs = max(int(math.floor(avail_gb / job_mem_gb)), 1)
     parallel_jobs = max(min(cpu_logical, mem_jobs), 1)
     print(f"{total_gb}|{cpu_logical}|{parallel_jobs}")

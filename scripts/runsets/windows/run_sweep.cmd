@@ -167,7 +167,7 @@ if not "%NO_PREFLIGHT%"=="1" (
   echo.[info] preflight checks
   set "PREFLIGHT_STRICT_FLAG="
   if "%PREFLIGHT_STRICT%"=="1" set "PREFLIGHT_STRICT_FLAG=--strict"
-  python "%REPO_ROOT%\\scripts\\runsets\\windows\\preflight_checks.py" --repo-root "%REPO_ROOT%" --config "%CONFIG_PATH%" --overrides "%OVERRIDES_PATH%" --out-root "%OUT_ROOT%" --require-git %PREFLIGHT_STRICT_FLAG%
+  python "%REPO_ROOT%\\scripts\\runsets\\windows\\preflight_checks.py" --repo-root "%REPO_ROOT%" --config "%CONFIG_PATH%" --overrides "%OVERRIDES_PATH%" --out-root "%OUT_ROOT%" --require-git --cmd "%REPO_ROOT%\\scripts\\research\\run_temp_supply_sweep.cmd" --cmd-root "%REPO_ROOT%\\scripts\\runsets\\windows" %PREFLIGHT_STRICT_FLAG%
   if errorlevel 1 (
     echo.[error] preflight failed
     exit /b 1
