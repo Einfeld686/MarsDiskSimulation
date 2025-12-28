@@ -662,9 +662,9 @@ set "LAUNCHER_PS=%TMP_ROOT%\marsdisk_launch_job_%RUN_TS%_%BATCH_SEED%.ps1"
 >>"%LAUNCHER_PS%" echo $p.Id
 echo.[info] parallel mode: jobs=%PARALLEL_JOBS% sleep=%PARALLEL_SLEEP_SEC%s
 
-for %%T in (%T_LIST%) do (
-  for %%M in (%EPS_LIST%) do (
-    for %%U in (%TAU_LIST%) do (
+for %%T in (!T_LIST!) do (
+  for %%M in (!EPS_LIST!) do (
+    for %%U in (!TAU_LIST!) do (
       call :launch_job %%T %%M %%U
     )
   )
@@ -715,19 +715,24 @@ goto :wait_all
 :sanitize_list
 set "LIST_RAW=!%~1!"
 if not defined LIST_RAW exit /b 0
-set "LIST_SAN=!LIST_RAW:"=!"
-set "LIST_SAN=!LIST_SAN:,= !"
-set "LIST_SAN=!LIST_SAN:;= !"
-set "LIST_SAN=!LIST_SAN:[=!"
-set "LIST_SAN=!LIST_SAN:]=!"
-set "LIST_SAN=!LIST_SAN:(= !"
-set "LIST_SAN=!LIST_SAN:)= !"
-set "LIST_SAN=!LIST_SAN:^^= !"
-set "LIST_SAN=!LIST_SAN:|= !"
-set "LIST_SAN=!LIST_SAN:&= !"
-set "LIST_SAN=!LIST_SAN:<= !"
-set "LIST_SAN=!LIST_SAN:>= !"
-set "LIST_SAN=!LIST_SAN::= !"
-if not "!LIST_SAN!"=="!LIST_RAW!" echo.[warn] %~1 sanitized: "!LIST_RAW!" -> "!LIST_SAN!"
-set "%~1=!LIST_SAN!"
+set "LIST_OUT="
+for %%A in (!LIST_RAW!) do (
+  set "TOKEN=%%~A"
+  set "TOKEN=!TOKEN:"=!"
+  set "TOKEN=!TOKEN:,=!"
+  set "TOKEN=!TOKEN:;=!"
+  set "TOKEN=!TOKEN:[=!"
+  set "TOKEN=!TOKEN:]=!"
+  set "TOKEN=!TOKEN:(=!"
+  set "TOKEN=!TOKEN:)=!"
+  set "TOKEN=!TOKEN::=!"
+  if not "!TOKEN!"=="" set "LIST_OUT=!LIST_OUT! !TOKEN!"
+)
+if defined LIST_OUT (
+  set "LIST_OUT=!LIST_OUT:~1!"
+  if not "!LIST_OUT!"=="!LIST_RAW!" echo.[warn] %~1 sanitized: "!LIST_RAW!" -> "!LIST_OUT!"
+  set "%~1=!LIST_OUT!"
+) else (
+  set "%~1="
+)
 exit /b 0
