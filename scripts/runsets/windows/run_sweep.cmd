@@ -174,6 +174,8 @@ if not exist "%ARCHIVE_SET%" (
 call "%ARCHIVE_SET%"
 del "%ARCHIVE_SET%"
 echo.[info] overrides parsed
+echo.[info] archive checks start
+if "%DEBUG%"=="1" echo.[info] archive expected: enabled="!ARCHIVE_ENABLED_EXPECTED!" dir="!ARCHIVE_DIR_EXPECTED!" merge="!ARCHIVE_MERGE_TARGET!" verify="!ARCHIVE_VERIFY_LEVEL!" keep="!ARCHIVE_KEEP_LOCAL!"
 if /i not "%ARCHIVE_ENABLED_EXPECTED%"=="true" (
   echo.[error] io.archive.enabled=true is required in %OVERRIDES_PATH%
   exit /b 1
