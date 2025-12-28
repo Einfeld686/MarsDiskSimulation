@@ -6,7 +6,7 @@ io.streaming.merge_at_end=true
 io.streaming.cleanup_chunks=true
 # Archive (Windows production defaults)
 io.archive.enabled=true
-io.archive.dir=D:\marsdisk_runs
+io.archive.dir=E:\marsdisk_runs
 io.archive.merge_target=external
 io.archive.verify_level=standard_plus
 io.archive.keep_local=metadata

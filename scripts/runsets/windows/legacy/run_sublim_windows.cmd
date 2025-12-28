@@ -10,7 +10,7 @@ set REPO=%~dp0..\..\..\..
 pushd "%REPO%"
 
 set OUTDIR=out\run_sublim_smol_phase_MAX50M
-set ARCHIVE_DIR=D:\marsdisk_runs
+set ARCHIVE_DIR=E:\marsdisk_runs
 set VENV_DIR=.venv
 set REQ_FILE=requirements.txt
 
