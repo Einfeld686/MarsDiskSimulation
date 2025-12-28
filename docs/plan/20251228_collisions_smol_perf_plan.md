@@ -139,6 +139,15 @@
 - 既存: `pytest tests/integration/test_scalings.py`
 - 新規: キャッシュ有/無での数値一致テスト（小規模、固定乱数）
 - 0D cProfile 再測定（`t_end_years=0.01`）
+- **安全実装チェックリスト**
+  - 不変条件の明文化（`sizes_version`, `edges_version`, `rho`, `s_min_eff`, `qstar` 係数/μ/単位系, `alpha_frag`, `v_rel`）
+  - run-local / thread-local に限定（run 跨ぎ再利用は禁止）
+  - キャッシュ配列の read-only 化と必要時のみコピー
+  - PSD 更新時の version インクリメント（in-place 変更検知）
+  - キャッシュ有/無の数値一致テスト（誤差 < 1e-10）
+  - 0D cProfile の再測定で改善確認
+  - キャッシュ上限の明記（サイズ/エントリ数）
+  - キャッシュヒット率・無効化理由の DEBUG ログ（必要なら）
 
 ---
 
