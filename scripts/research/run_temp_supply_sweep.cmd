@@ -192,6 +192,10 @@ if defined STUDY_FILE (
   )
 )
 
+call :sanitize_list T_LIST
+call :sanitize_list EPS_LIST
+call :sanitize_list TAU_LIST
+
 if defined SWEEP_TAG (
   set "SWEEP_TAG_RAW=!SWEEP_TAG!"
   set "SWEEP_TAG=!SWEEP_TAG::=!"
@@ -412,14 +416,14 @@ if not "%PARALLEL_JOBS%"=="1" (
 )
 
 rem ---------- main loops ----------
-for %%T in (%T_LIST%) do (
+for %%T in (!T_LIST!) do (
   set "T_TABLE=data/mars_temperature_T%%Tp0K.csv"
-  for %%M in (%EPS_LIST%) do (
+  for %%M in (!EPS_LIST!) do (
     set "EPS=%%M"
     set "EPS_TITLE=%%M"
     set "EPS_TITLE=!EPS_TITLE:0.=0p!"
     set "EPS_TITLE=!EPS_TITLE:.=p!"
-    for %%U in (%TAU_LIST%) do (
+    for %%U in (!TAU_LIST!) do (
       set "TAU=%%U"
       set "TAU_TITLE=!TAU!"
       set "TAU_TITLE=!TAU_TITLE:0.=0p!"
@@ -707,3 +711,23 @@ call :refresh_jobs
 if "%JOB_COUNT%"=="0" exit /b 0
 timeout /t %PARALLEL_SLEEP_SEC% /nobreak >nul
 goto :wait_all
+
+:sanitize_list
+set "LIST_RAW=!%~1!"
+if not defined LIST_RAW exit /b 0
+set "LIST_SAN=!LIST_RAW:"=!"
+set "LIST_SAN=!LIST_SAN:,= !"
+set "LIST_SAN=!LIST_SAN:;= !"
+set "LIST_SAN=!LIST_SAN:[=!"
+set "LIST_SAN=!LIST_SAN:]=!"
+set "LIST_SAN=!LIST_SAN:(= !"
+set "LIST_SAN=!LIST_SAN:)= !"
+set "LIST_SAN=!LIST_SAN:^^= !"
+set "LIST_SAN=!LIST_SAN:|= !"
+set "LIST_SAN=!LIST_SAN:&= !"
+set "LIST_SAN=!LIST_SAN:<= !"
+set "LIST_SAN=!LIST_SAN:>= !"
+set "LIST_SAN=!LIST_SAN::= !"
+if not "!LIST_SAN!"=="!LIST_RAW!" echo.[warn] %~1 sanitized: "!LIST_RAW!" -> "!LIST_SAN!"
+set "%~1=!LIST_SAN!"
+exit /b 0
