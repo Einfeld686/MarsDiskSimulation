@@ -24,6 +24,24 @@ if defined RUN_TS (
   set "RUN_TS=!RUN_TS:/=-!"
   set "RUN_TS=!RUN_TS:\=-!"
 )
+set "TMP_ROOT=%TEMP%"
+set "TMP_SOURCE=TEMP"
+if "%TMP_ROOT%"=="" (
+  set "TMP_ROOT=%CD%\tmp"
+  set "TMP_SOURCE=fallback"
+)
+if not exist "%TMP_ROOT%" mkdir "%TMP_ROOT%" >nul 2>&1
+if not exist "%TMP_ROOT%" (
+  set "TMP_ROOT=%CD%\tmp"
+  set "TMP_SOURCE=fallback"
+  if not exist "%TMP_ROOT%" mkdir "%TMP_ROOT%" >nul 2>&1
+)
+if not exist "%TMP_ROOT%" (
+  echo.[error] temp_root unavailable: "%TMP_ROOT%"
+  popd
+  exit /b 1
+)
+echo.[setup] temp_root=%TMP_ROOT% (source=%TMP_SOURCE%)
 if not defined GIT_SHA for /f %%A in ('git rev-parse --short HEAD 2^>nul') do set "GIT_SHA=%%A"
 if not defined GIT_SHA set "GIT_SHA=nogit"
 if not defined BATCH_SEED for /f %%A in ('python -c "import secrets; print(secrets.randbelow(2**31))"') do set "BATCH_SEED=%%A"
@@ -145,11 +163,16 @@ set "TAU_LIST=1.0 0.5 0.1"
 
 if defined STUDY_FILE (
   if exist "%STUDY_FILE%" (
-    set "STUDY_SET=%TEMP%\\marsdisk_study_%RUN_TS%_%BATCH_SEED%.cmd"
+    set "STUDY_SET=%TMP_ROOT%\\marsdisk_study_%RUN_TS%_%BATCH_SEED%.cmd"
     python scripts\\runsets\\common\\read_study_overrides.py --study "%STUDY_FILE%" > "%STUDY_SET%"
-    if exist "%STUDY_SET%" call "%STUDY_SET%"
-    if exist "%STUDY_SET%" del "%STUDY_SET%"
-    echo.[info] loaded study overrides from %STUDY_FILE%
+    if not exist "%STUDY_SET%" (
+      echo.[error] failed to write study overrides: "%STUDY_SET%"
+      echo.[error] temp_root=%TMP_ROOT% study_file=%STUDY_FILE%
+    ) else (
+      call "%STUDY_SET%"
+      del "%STUDY_SET%"
+      echo.[info] loaded study overrides from %STUDY_FILE%
+    )
   ) else (
     echo.[warn] STUDY_FILE not found: %STUDY_FILE%
   )
@@ -206,9 +229,9 @@ set "PROGRESS_FLAG="
 if "%ENABLE_PROGRESS%"=="1" set "PROGRESS_FLAG=--progress"
 
 set "OVERRIDE_BUILDER=scripts\\runsets\\common\\build_overrides.py"
-set "BASE_OVERRIDES_FILE=%TEMP%\\marsdisk_overrides_base_%RUN_TS%_%BATCH_SEED%.txt"
-set "CASE_OVERRIDES_FILE=%TEMP%\\marsdisk_overrides_case_%RUN_TS%_%BATCH_SEED%.txt"
-set "MERGED_OVERRIDES_FILE=%TEMP%\\marsdisk_overrides_merged_%RUN_TS%_%BATCH_SEED%.txt"
+set "BASE_OVERRIDES_FILE=%TMP_ROOT%\\marsdisk_overrides_base_%RUN_TS%_%BATCH_SEED%.txt"
+set "CASE_OVERRIDES_FILE=%TMP_ROOT%\\marsdisk_overrides_case_%RUN_TS%_%BATCH_SEED%.txt"
+set "MERGED_OVERRIDES_FILE=%TMP_ROOT%\\marsdisk_overrides_merged_%RUN_TS%_%BATCH_SEED%.txt"
 
 set "EXTRA_OVERRIDES_EXISTS=0"
 if defined EXTRA_OVERRIDES_FILE (
@@ -220,6 +243,12 @@ if defined EXTRA_OVERRIDES_FILE (
 )
 
 > "%BASE_OVERRIDES_FILE%" echo numerics.dt_init=2
+if not exist "%BASE_OVERRIDES_FILE%" (
+  echo.[error] failed to create temp overrides file: "%BASE_OVERRIDES_FILE%"
+  echo.[error] temp_root=%TMP_ROOT%
+  popd
+  exit /b 1
+)
 >>"%BASE_OVERRIDES_FILE%" echo numerics.stop_on_blowout_below_smin=%STOP_ON_BLOWOUT_BELOW_SMIN%
 >>"%BASE_OVERRIDES_FILE%" echo phase.enabled=true
 if /i "%GEOMETRY_MODE%"=="1D" (
@@ -425,7 +454,7 @@ for %%T in (%T_LIST%) do (
         echo.[info] PLOT_ENABLE=0; skipping quicklook
       ) else (
       set "RUN_DIR=!OUTDIR!"
-      set "PYSCRIPT=%TEMP%\run_temp_supply_plot_!RANDOM!.py"
+      set "PYSCRIPT=%TMP_ROOT%\run_temp_supply_plot_!RANDOM!.py"
       > "!PYSCRIPT!" echo # -*- coding: utf-8 -*-
       >>"!PYSCRIPT!" echo import os, json
       >>"!PYSCRIPT!" echo from pathlib import Path
@@ -582,7 +611,7 @@ exit /b 0
 :run_parallel
 set "JOB_PIDS="
 set "JOB_COUNT=0"
-set "LAUNCHER_PS=%TEMP%\marsdisk_launch_job_%RUN_TS%_%BATCH_SEED%.ps1"
+set "LAUNCHER_PS=%TMP_ROOT%\marsdisk_launch_job_%RUN_TS%_%BATCH_SEED%.ps1"
 > "%LAUNCHER_PS%" echo $cmd = $env:JOB_CMD
 >>"%LAUNCHER_PS%" echo if (-not $cmd) { exit 2 }
 >>"%LAUNCHER_PS%" echo $style = $env:PARALLEL_WINDOW_STYLE
