@@ -362,7 +362,9 @@ if not "%PARALLEL_JOBS%"=="1" (
 
 rem ---------- main loops ----------
 call :trace "entering main loops"
+set "HAS_CASE=0"
 for /f "usebackq tokens=1-3 delims= " %%A in ("%SWEEP_LIST_FILE%") do (
+  set "HAS_CASE=1"
   set "T=%%A"
   set "EPS=%%B"
   set "TAU=%%C"
@@ -436,108 +438,12 @@ for /f "usebackq tokens=1-3 delims= " %%A in ("%SWEEP_LIST_FILE%") do (
       if "%PLOT_ENABLE%"=="0" (
         echo.[info] PLOT_ENABLE=0; skipping quicklook
       ) else (
-      set "RUN_DIR=!OUTDIR!"
-      set "PYSCRIPT=%TMP_ROOT%\run_temp_supply_plot_!RANDOM!.py"
-      > "!PYSCRIPT!" echo # -*- coding: utf-8 -*-
-      >>"!PYSCRIPT!" echo import os, json
-      >>"!PYSCRIPT!" echo from pathlib import Path
-      >>"!PYSCRIPT!" echo import matplotlib
-      >>"!PYSCRIPT!" echo matplotlib.use("Agg")
-      >>"!PYSCRIPT!" echo import pandas as pd
-      >>"!PYSCRIPT!" echo import matplotlib.pyplot as plt
-      >>"!PYSCRIPT!" echo import pyarrow.parquet as pq
-      >>"!PYSCRIPT!" echo SEC_PER_YEAR = 3.15576e7
-      >>"!PYSCRIPT!" echo run_dir = Path(os.environ["RUN_DIR"])
-      >>"!PYSCRIPT!" echo series_dir = run_dir / "series"
-      >>"!PYSCRIPT!" echo series_path = series_dir / "run.parquet"
-      >>"!PYSCRIPT!" echo summary_path = run_dir / "summary.json"
-      >>"!PYSCRIPT!" echo def _is_one_d(series_dir, series_path):
-      >>"!PYSCRIPT!" echo     if series_path.exists():
-      >>"!PYSCRIPT!" echo         try:
-      >>"!PYSCRIPT!" echo             return "cell_index" in set(pq.read_schema(series_path).names)
-      >>"!PYSCRIPT!" echo         except Exception:
-      >>"!PYSCRIPT!" echo             return False
-      >>"!PYSCRIPT!" echo     chunk_paths = sorted(series_dir.glob("run_chunk_*.parquet"))
-      >>"!PYSCRIPT!" echo     if not chunk_paths:
-      >>"!PYSCRIPT!" echo         return False
-      >>"!PYSCRIPT!" echo     try:
-      >>"!PYSCRIPT!" echo         return "cell_index" in set(pq.read_schema(chunk_paths[0]).names)
-      >>"!PYSCRIPT!" echo     except Exception:
-      >>"!PYSCRIPT!" echo         return False
-      >>"!PYSCRIPT!" echo plots_dir = run_dir / ("figures" if _is_one_d(series_dir, series_path) else "plots")
-      >>"!PYSCRIPT!" echo plots_dir.mkdir(parents=True, exist_ok=True)
-      >>"!PYSCRIPT!" echo
-      >>"!PYSCRIPT!" echo series_cols = [
-      >>"!PYSCRIPT!" echo     "time","dt","M_out_dot","M_sink_dot","mass_lost_by_blowout","mass_lost_by_sinks",
-      >>"!PYSCRIPT!" echo     "mass_total_bins","prod_subblow_area_rate","Sigma_surf","sigma_surf",
-      >>"!PYSCRIPT!" echo     "tau","tau_los_mars","tau_eff","t_blow","dt_over_t_blow"
-      >>"!PYSCRIPT!" echo ]
-      >>"!PYSCRIPT!" echo def load_series():
-      >>"!PYSCRIPT!" echo     if series_path.exists():
-      >>"!PYSCRIPT!" echo         cols = [c for c in series_cols if c in pd.read_parquet(series_path).columns]
-      >>"!PYSCRIPT!" echo         return pd.read_parquet(series_path, columns=cols)
-      >>"!PYSCRIPT!" echo     chunk_paths = sorted(series_dir.glob("run_chunk_*.parquet"))
-      >>"!PYSCRIPT!" echo     if not chunk_paths:
-      >>"!PYSCRIPT!" echo         print(f"[warn] series not found: {series_dir}, skip plotting")
-      >>"!PYSCRIPT!" echo         return None
-      >>"!PYSCRIPT!" echo     first_cols = pd.read_parquet(chunk_paths[0]).columns
-      >>"!PYSCRIPT!" echo     cols = [c for c in series_cols if c in first_cols]
-      >>"!PYSCRIPT!" echo     frames = [pd.read_parquet(p, columns=cols) for p in chunk_paths]
-      >>"!PYSCRIPT!" echo     return pd.concat(frames, ignore_index=True)
-      >>"!PYSCRIPT!" echo
-      >>"!PYSCRIPT!" echo df = load_series()
-      >>"!PYSCRIPT!" echo if df is None:
-      >>"!PYSCRIPT!" echo     raise SystemExit(0)
-      >>"!PYSCRIPT!" echo if "time" in df.columns:
-      >>"!PYSCRIPT!" echo     df = df.sort_values("time")
-      >>"!PYSCRIPT!" echo     years = df["time"] / SEC_PER_YEAR
-      >>"!PYSCRIPT!" echo else:
-      >>"!PYSCRIPT!" echo     years = None
-      >>"!PYSCRIPT!" echo
-      >>"!PYSCRIPT!" echo fig, axes = plt.subplots(3,1,figsize=(10,8),sharex=True)
-      >>"!PYSCRIPT!" echo ax_rates, ax_cum, ax_tau = axes
-      >>"!PYSCRIPT!" echo
-      >>"!PYSCRIPT!" echo # loss rates
-      >>"!PYSCRIPT!" echo for col in ("M_out_dot","M_sink_dot"):
-      >>"!PYSCRIPT!" echo     if col in df:
-      >>"!PYSCRIPT!" echo         ax_rates.plot(years, df[col], label=col)
-      >>"!PYSCRIPT!" echo ax_rates.set_ylabel("loss rate [M_Mars s^-1]")
-      >>"!PYSCRIPT!" echo vals = pd.concat([df[c].dropna() for c in ("M_out_dot","M_sink_dot") if c in df])
-      >>"!PYSCRIPT!" echo if len(vals) and vals.min() > 0:
-      >>"!PYSCRIPT!" echo     ax_rates.set_yscale("log")
-      >>"!PYSCRIPT!" echo ax_rates.legend()
-      >>"!PYSCRIPT!" echo ax_rates.grid(True, alpha=0.3)
-      >>"!PYSCRIPT!" echo
-      >>"!PYSCRIPT!" echo # cumulative masses
-      >>"!PYSCRIPT!" echo for col in ("mass_lost_by_blowout","mass_lost_by_sinks","mass_total_bins"):
-      >>"!PYSCRIPT!" echo     if col in df:
-      >>"!PYSCRIPT!" echo         ax_cum.plot(years, df[col], label=col)
-      >>"!PYSCRIPT!" echo ax_cum.set_ylabel("mass [M_Mars]")
-      >>"!PYSCRIPT!" echo ax_cum.legend()
-      >>"!PYSCRIPT!" echo ax_cum.grid(True, alpha=0.3)
-      >>"!PYSCRIPT!" echo
-      >>"!PYSCRIPT!" echo # tau and supply
-      >>"!PYSCRIPT!" echo if "tau_los_mars" in df:
-      >>"!PYSCRIPT!" echo     ax_tau.plot(years, df["tau_los_mars"], label="tau_los_mars", color="tab:blue")
-      >>"!PYSCRIPT!" echo if "tau_eff" in df:
-      >>"!PYSCRIPT!" echo     ax_tau.plot(years, df["tau_eff"], label="tau_eff", color="tab:cyan")
-      >>"!PYSCRIPT!" echo ax_tau.set_ylabel("tau")
-      >>"!PYSCRIPT!" echo ax_tau.grid(True, alpha=0.3)
-      >>"!PYSCRIPT!" echo ax_supply = ax_tau.twinx()
-      >>"!PYSCRIPT!" echo if "prod_subblow_area_rate" in df:
-      >>"!PYSCRIPT!" echo     ax_supply.plot(years, df["prod_subblow_area_rate"], label="prod_subblow_area_rate", color="tab:orange")
-      >>"!PYSCRIPT!" echo ax_supply.set_ylabel("prod_subblow [kg m^-2 s^-1]")
-      >>"!PYSCRIPT!" echo handles, labels = ax_tau.get_legend_handles_labels()
-      >>"!PYSCRIPT!" echo h2, l2 = ax_supply.get_legend_handles_labels()
-      >>"!PYSCRIPT!" echo ax_tau.legend(handles + h2, labels + l2, loc="upper right")
-      >>"!PYSCRIPT!" echo axes[-1].set_xlabel("time [yr]")
-      >>"!PYSCRIPT!" echo fig.tight_layout()
-      >>"!PYSCRIPT!" echo fig.savefig(plots_dir/"quicklook.png")
-      >>"!PYSCRIPT!" echo if summary_path.exists():
-      >>"!PYSCRIPT!" echo     with open(summary_path,"r",encoding="utf-8") as f: summary=json.load(f)
-      >>"!PYSCRIPT!" echo     with open(plots_dir/"summary.txt","w",encoding="utf-8") as f: json.dump(summary,f,indent=2)
-      python "!PYSCRIPT!"
-      del "!PYSCRIPT!"
+        set "RUN_DIR=!OUTDIR!"
+        call :trace "quicklook: start"
+        python scripts\\runsets\\common\\hooks\\plot_sweep_run.py --run-dir "!RUN_DIR!"
+        if errorlevel 1 (
+          echo.[warn] quicklook failed (rc=!errorlevel!)
+        )
       )
 
       if defined HOOKS_ENABLE (
@@ -547,6 +453,13 @@ for /f "usebackq tokens=1-3 delims= " %%A in ("%SWEEP_LIST_FILE%") do (
           if errorlevel 1 exit /b !errorlevel!
         )
       )
+)
+
+if "%HAS_CASE%"=="0" (
+  echo.[error] sweep list had no cases: "%SWEEP_LIST_FILE%"
+  popd
+  endlocal
+  exit /b 1
 )
 
 popd
@@ -608,12 +521,16 @@ set "LAUNCHER_PS=%TMP_ROOT%\marsdisk_launch_job_%RUN_TS%_%BATCH_SEED%.ps1"
 >>"%LAUNCHER_PS%" echo $p.Id
 echo.[info] parallel mode: jobs=%PARALLEL_JOBS% sleep=%PARALLEL_SLEEP_SEC%s
 
-for %%T in (!T_LIST!) do (
-  for %%M in (!EPS_LIST!) do (
-    for %%U in (!TAU_LIST!) do (
-      call :launch_job %%T %%M %%U
-    )
-  )
+if not defined SWEEP_LIST_FILE (
+  echo.[error] sweep list file not set for parallel run
+  exit /b 1
+)
+if not exist "%SWEEP_LIST_FILE%" (
+  echo.[error] sweep list missing: "%SWEEP_LIST_FILE%"
+  exit /b 1
+)
+for /f "usebackq tokens=1-3 delims= " %%A in ("%SWEEP_LIST_FILE%") do (
+  call :launch_job %%A %%B %%C
 )
 
 call :wait_all
