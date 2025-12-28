@@ -191,7 +191,7 @@ if /i "%MARSDISK_CELL_JOBS%"=="auto" (
   set "CELL_MEM_TOTAL_GB="
   set "CELL_MEM_FRACTION_USED="
   set "CELL_CPU_FRACTION_USED="
-  for /f "usebackq tokens=1-5 delims=|" %%A in (`powershell -NoProfile -Command "$mem_fraction=[double]$env:CELL_MEM_FRACTION; if ($mem_fraction -le 0 -or $mem_fraction -gt 1){$mem_fraction=0.7}; $cpu_fraction=[double]$env:CELL_CPU_FRACTION; if ($cpu_fraction -le 0 -or $cpu_fraction -gt 1){$cpu_fraction=0.7}; $mem=(Get-CimInstance Win32_ComputerSystem).TotalPhysicalMemory; $total=[math]::Floor($mem/1GB); $cpu=(Get-CimInstance Win32_Processor | Measure-Object -Sum -Property NumberOfLogicalProcessors).Sum; if (-not $cpu -or $cpu -lt 1){$cpu=[Environment]::ProcessorCount}; if ($cpu -lt 1){$cpu=1}; $jobs=[int]([math]::Max([math]::Floor($cpu*$cpu_fraction),1)); Write-Output (\"$total|$cpu|$mem_fraction|$cpu_fraction|$jobs\")"`) do (
+  for /f "usebackq tokens=1-5 delims=|" %%A in (`python scripts\\runsets\\common\\calc_cell_jobs.py`) do (
     set "CELL_MEM_TOTAL_GB=%%A"
     set "CELL_CPU_LOGICAL=%%B"
     set "CELL_MEM_FRACTION_USED=%%C"
