@@ -2,6 +2,10 @@
 rem Windows CMD version of run_temp_supply_sweep.sh (logic preserved, output rooted under out/)
 setlocal EnableExtensions EnableDelayedExpansion
 
+if not defined TRACE_ENABLED set "TRACE_ENABLED=1"
+if not defined TRACE_ECHO set "TRACE_ECHO=0"
+set "SCRIPT_REV=run_temp_supply_sweep_cmd_trace_v2"
+
 rem Keep paths stable even if launched from another directory (double-click or direct call)
 pushd "%~dp0\..\.."
 
@@ -50,6 +54,16 @@ if not defined GIT_SHA for /f %%A in ('git rev-parse --short HEAD 2^>nul') do se
 if not defined GIT_SHA set "GIT_SHA=nogit"
 if not defined BATCH_SEED for /f %%A in ('python -c "import secrets; print(secrets.randbelow(2**31))"') do set "BATCH_SEED=%%A"
 if "%BATCH_SEED%"=="" set "BATCH_SEED=0"
+if "%TRACE_ENABLED%"=="1" (
+  if not defined TRACE_LOG set "TRACE_LOG=%TMP_ROOT%\\marsdisk_trace_%RUN_TS%_%BATCH_SEED%.log"
+  > "%TRACE_LOG%" echo.[trace] start script=%~f0 rev=%SCRIPT_REV%
+  echo.[trace] log=%TRACE_LOG%
+)
+if "%TRACE_ECHO%"=="1" (
+  echo.[trace] echo-on enabled
+  echo on
+)
+call :trace "setup: env ready"
 set "TMP_TEST=%TMP_ROOT%\\marsdisk_tmp_test_%RUN_TS%_%BATCH_SEED%.txt"
 > "%TMP_TEST%" echo ok
 if not exist "%TMP_TEST%" (
@@ -186,6 +200,7 @@ if defined STUDY_FILE (
       call "!STUDY_SET!"
       del "!STUDY_SET!"
       echo.[info] loaded study overrides from !STUDY_FILE!
+      call :trace "study overrides loaded"
     )
   ) else (
     echo.[warn] STUDY_FILE not found: !STUDY_FILE!
@@ -261,6 +276,7 @@ echo.[config] optical_depth: tau0_target_list=%TAU_LIST% tau_stop=%OPTICAL_TAU_S
 echo.[config] fast blowout substep: enabled=%SUBSTEP_FAST_BLOWOUT% substep_max_ratio=%SUBSTEP_MAX_RATIO%
 echo.[config] !COOL_STATUS!
 echo.[config] cooling driver mode: %COOL_MODE% (slab: T^-3, hyodo: linear flux)
+call :trace "config printed"
 
 set "PROGRESS_FLAG="
 if "%ENABLE_PROGRESS%"=="1" set "PROGRESS_FLAG=--progress"
@@ -406,8 +422,10 @@ if defined RUN_ONE_MODE (
   echo.[info] run-one mode: T=%RUN_ONE_T% eps=%RUN_ONE_EPS% tau=%RUN_ONE_TAU% seed=%RUN_ONE_SEED%
 )
 
+call :trace "parallel check"
 if not "%PARALLEL_JOBS%"=="1" (
   if not defined RUN_ONE_MODE (
+    call :trace "dispatch parallel"
     call :run_parallel
     popd
     endlocal
@@ -416,6 +434,7 @@ if not "%PARALLEL_JOBS%"=="1" (
 )
 
 rem ---------- main loops ----------
+call :trace "entering main loops"
 for %%T in (!T_LIST!) do (
   set "T_TABLE=data/mars_temperature_T%%Tp0K.csv"
   for %%M in (!EPS_LIST!) do (
@@ -606,6 +625,7 @@ for %%T in (!T_LIST!) do (
 )
 
 popd
+call :trace "done"
 endlocal
 exit /b %errorlevel%
 
@@ -646,6 +666,7 @@ echo.[warn] unknown hook: %HOOK%
 exit /b 0
 
 :run_parallel
+call :trace "run_parallel: enter"
 set "JOB_PIDS="
 set "JOB_COUNT=0"
 set "LAUNCHER_PS=%TMP_ROOT%\marsdisk_launch_job_%RUN_TS%_%BATCH_SEED%.ps1"
@@ -734,5 +755,15 @@ if defined LIST_OUT (
   set "%~1=!LIST_OUT!"
 ) else (
   set "%~1="
+)
+exit /b 0
+
+:trace
+if "%TRACE_ENABLED%"=="0" exit /b 0
+set "TRACE_MSG=%~1"
+if "%TRACE_MSG%"=="" set "TRACE_MSG=trace"
+echo.[trace] %TRACE_MSG%
+if defined TRACE_LOG (
+  >>"%TRACE_LOG%" echo.[trace] %DATE% %TIME% %TRACE_MSG%
 )
 exit /b 0
