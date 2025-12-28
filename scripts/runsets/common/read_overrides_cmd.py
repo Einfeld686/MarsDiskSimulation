@@ -33,16 +33,24 @@ def _load_overrides(path: Path) -> dict[str, str]:
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--file", required=True, type=Path, help="Overrides file path.")
+    ap.add_argument("--out", type=Path, default=None, help="Output cmd file path.")
     args = ap.parse_args()
 
     if not args.file.exists():
         return 2
 
     data = _load_overrides(args.file)
+    lines = []
     for key, var in KEY_MAP.items():
         if key in data:
             value = data[key].replace('"', "")
-            print(f'set "{var}={value}"')
+            lines.append(f'set "{var}={value}"')
+    if args.out is None:
+        for line in lines:
+            print(line)
+    else:
+        args.out.parent.mkdir(parents=True, exist_ok=True)
+        args.out.write_text("\n".join(lines) + "\n", encoding="utf-8")
     return 0
 
 
