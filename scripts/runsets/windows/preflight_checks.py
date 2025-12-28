@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -22,6 +23,31 @@ PATH_ENV_VARS = ("TEMP", "TMP", "USERPROFILE", "HOMEDRIVE", "HOMEPATH", "COMSPEC
 MAX_WARN_PATH_LEN = 240
 WINDOWS_PATH_INVALID_CHARS = set('<>:"|?*')
 CMD_UNSAFE_CHARS = "!"
+POSIX_PATH_MARKERS = ("/Users/", "/Volumes/", "/home/", "~/")
+RESERVED_DEVICE_NAMES = {
+    "CON",
+    "PRN",
+    "AUX",
+    "NUL",
+    "COM1",
+    "COM2",
+    "COM3",
+    "COM4",
+    "COM5",
+    "COM6",
+    "COM7",
+    "COM8",
+    "COM9",
+    "LPT1",
+    "LPT2",
+    "LPT3",
+    "LPT4",
+    "LPT5",
+    "LPT6",
+    "LPT7",
+    "LPT8",
+    "LPT9",
+}
 
 
 def _load_overrides(path: Path) -> tuple[dict[str, str], list[str]]:
@@ -64,6 +90,29 @@ def _normalize_windows(path_str: str) -> str:
 
 def _is_windows() -> bool:
     return os.name == "nt"
+
+
+def _contains_posix_path(text: str) -> bool:
+    return any(marker in text for marker in POSIX_PATH_MARKERS)
+
+
+def _looks_like_windows_path(value: str) -> bool:
+    if re.match(r"^[A-Za-z]:[\\/]", value):
+        return True
+    return value.startswith("\\\\")
+
+
+def _has_reserved_windows_name(value: str) -> bool:
+    if "%" in value:
+        return False
+    parts = re.split(r"[\\/]+", value)
+    for part in parts:
+        if not part:
+            continue
+        base = part.split(".", 1)[0].upper()
+        if base in RESERVED_DEVICE_NAMES:
+            return True
+    return False
 
 
 def _check_cmd(name: str, errors: list[str]) -> None:
@@ -140,6 +189,8 @@ def _check_path_value(label: str, value: str, errors: list[str], warnings: list[
         warnings.append(f"{label} ends with space/dot: {value}")
     if value.startswith("\\\\") and label != "io.archive.dir":
         warnings.append(f"{label} is a UNC path: {value}")
+    if _looks_like_windows_path(value) and _has_reserved_windows_name(value):
+        errors.append(f"{label} contains reserved device name: {value}")
 
 
 def _has_invalid_windows_chars(value: str) -> bool:
@@ -157,6 +208,65 @@ def _has_invalid_windows_chars(value: str) -> bool:
     return False
 
 
+def _parse_set_value(line: str) -> str | None:
+    rest = line[3:].lstrip()
+    if not rest:
+        return None
+    if rest.startswith('"') and rest.endswith('"') and "=" in rest:
+        content = rest.strip('"')
+        _, value = content.split("=", 1)
+        return value
+    if "=" in rest:
+        _, value = rest.split("=", 1)
+        return value.strip()
+    return None
+
+
+def _scan_cmd_file(path: Path, errors: list[str], warnings: list[str]) -> None:
+    try:
+        data = path.read_bytes()
+    except OSError as exc:
+        errors.append(f"cmd read failed: {path} ({exc})")
+        return
+
+    if data.startswith(b"\xef\xbb\xbf"):
+        warnings.append(f"cmd has UTF-8 BOM: {path}")
+
+    has_crlf = b"\r\n" in data
+    has_lf = b"\n" in data
+    if has_lf and not has_crlf:
+        warnings.append(f"cmd uses LF-only line endings: {path}")
+    if has_crlf:
+        if b"\n" in data.replace(b"\r\n", b""):
+            warnings.append(f"cmd has mixed line endings: {path}")
+
+    if any(byte >= 0x80 for byte in data):
+        warnings.append(f"cmd contains non-ASCII characters: {path}")
+
+    text = data.decode("utf-8", errors="replace")
+    if "EnableDelayedExpansion" in text and "!" in text:
+        warnings.append(f"cmd uses delayed expansion; avoid '!' in paths: {path}")
+
+    for line_no, line in enumerate(text.splitlines(), 1):
+        stripped = line.strip()
+        if not stripped:
+            continue
+        lower = stripped.lower()
+        if lower.startswith("rem ") or lower.startswith("::"):
+            continue
+        if _contains_posix_path(stripped):
+            errors.append(f"cmd contains POSIX-style path at {path}:{line_no}")
+            continue
+        if lower.startswith("set "):
+            value = _parse_set_value(stripped)
+            if not value:
+                continue
+            if _contains_posix_path(value):
+                errors.append(f"cmd set uses POSIX path at {path}:{line_no}")
+            if ("\\" in value or "/" in value) and not _contains_posix_path(value):
+                _check_path_value(f"{path}:{line_no}", value, errors, warnings)
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--repo-root", required=True, type=Path)
@@ -169,6 +279,23 @@ def main() -> int:
         "--simulate-windows",
         action="store_true",
         help="Run Windows-style checks even on non-Windows hosts.",
+    )
+    ap.add_argument(
+        "--cmd",
+        action="append",
+        default=[],
+        help="CMD file to lint (repeatable).",
+    )
+    ap.add_argument(
+        "--cmd-root",
+        action="append",
+        default=[],
+        help="Directory to scan for .cmd files (repeatable).",
+    )
+    ap.add_argument(
+        "--skip-env",
+        action="store_true",
+        help="Skip host environment path checks.",
     )
     ap.add_argument("--strict", action="store_true")
     args = ap.parse_args()
@@ -241,9 +368,31 @@ def main() -> int:
             else:
                 warnings.append("non-Windows host; drive availability not checked")
 
-    temp_dir = os.environ.get("TEMP") or os.environ.get("TMP")
-    _check_temp_dir(temp_dir, errors, warnings)
-    _check_env_paths(errors, warnings)
+    skip_env = args.skip_env
+    if args.simulate_windows and not is_windows_host:
+        skip_env = True
+        warnings.append("host env checks skipped on non-Windows (simulate-windows)")
+    if not skip_env:
+        temp_dir = os.environ.get("TEMP") or os.environ.get("TMP")
+        _check_temp_dir(temp_dir, errors, warnings)
+        _check_env_paths(errors, warnings)
+
+    cmd_paths: list[Path] = []
+    for cmd in args.cmd:
+        cmd_path = Path(cmd)
+        if not cmd_path.exists():
+            errors.append(f"cmd missing: {cmd_path}")
+            continue
+        cmd_paths.append(cmd_path)
+    for root in args.cmd_root:
+        root_path = Path(root)
+        if not root_path.exists():
+            errors.append(f"cmd root missing: {root_path}")
+            continue
+        cmd_paths.extend(sorted(root_path.rglob("*.cmd")))
+    if cmd_paths:
+        for cmd_path in sorted(set(cmd_paths)):
+            _scan_cmd_file(cmd_path, errors, warnings)
 
     if errors:
         print("[preflight] failed")

@@ -24,7 +24,7 @@ echo.[setup] cwd=%CD%
 rem ---------- setup ----------
 if not defined VENV_DIR set "VENV_DIR=.venv"
 if not defined REQ_FILE set "REQ_FILE=requirements.txt"
-if not defined RUN_TS for /f %%A in ('powershell -NoProfile -Command "Get-Date -Format \"yyyyMMdd-HHmmss\""') do set "RUN_TS=%%A"
+if not defined RUN_TS for /f %%A in ('python scripts\\runsets\\common\\timestamp.py') do set "RUN_TS=%%A"
 if defined RUN_TS (
   set "RUN_TS_RAW=!RUN_TS!"
   rem Normalize to a filename-safe token in case a pre-set RUN_TS includes separators.
@@ -191,21 +191,23 @@ if /i "%MARSDISK_CELL_JOBS%"=="auto" (
   set "CELL_MEM_TOTAL_GB="
   set "CELL_MEM_FRACTION_USED="
   set "CELL_CPU_FRACTION_USED="
-  for /f "usebackq tokens=1-5 delims=|" %%A in (`python scripts\\runsets\\common\\calc_cell_jobs.py`) do (
+  set "CELL_STREAM_MEM_GB="
+  set "CELL_THREAD_LIMIT_AUTO="
+  for /f "usebackq tokens=1-7 delims=|" %%A in (`python scripts\\runsets\\common\\calc_cell_jobs.py`) do (
     set "CELL_MEM_TOTAL_GB=%%A"
     set "CELL_CPU_LOGICAL=%%B"
     set "CELL_MEM_FRACTION_USED=%%C"
     set "CELL_CPU_FRACTION_USED=%%D"
     set "MARSDISK_CELL_JOBS=%%E"
+    set "CELL_STREAM_MEM_GB=%%F"
+    set "CELL_THREAD_LIMIT_AUTO=%%G"
   )
   if not defined MARSDISK_CELL_JOBS set "MARSDISK_CELL_JOBS=1"
   if not defined CELL_MEM_FRACTION_USED set "CELL_MEM_FRACTION_USED=%CELL_MEM_FRACTION%"
   if not defined CELL_CPU_FRACTION_USED set "CELL_CPU_FRACTION_USED=%CELL_CPU_FRACTION%"
   if not defined STREAM_MEM_GB (
-    if defined CELL_MEM_TOTAL_GB (
-      if not "!CELL_MEM_TOTAL_GB!"=="0" (
-        for /f %%A in ('powershell -NoProfile -Command "$total=[double]$env:CELL_MEM_TOTAL_GB; $fraction=[double]$env:CELL_MEM_FRACTION_USED; if ($fraction -le 0 -or $fraction -gt 1){$fraction=0.7}; [math]::Max([math]::Floor($total*$fraction),1)"') do set "STREAM_MEM_GB=%%A"
-      )
+    if defined CELL_STREAM_MEM_GB (
+      if not "!CELL_STREAM_MEM_GB!"=="0" set "STREAM_MEM_GB=!CELL_STREAM_MEM_GB!"
     )
   )
   echo.[sys] cell_parallel auto: mem_total_gb=!CELL_MEM_TOTAL_GB! mem_fraction=!CELL_MEM_FRACTION_USED! cpu_logical=!CELL_CPU_LOGICAL! cpu_fraction=!CELL_CPU_FRACTION_USED! cell_jobs=!MARSDISK_CELL_JOBS!
@@ -221,8 +223,11 @@ if "%MARSDISK_CELL_JOBS%"=="0" set "MARSDISK_CELL_JOBS=1"
 if not defined CELL_THREAD_LIMIT set "CELL_THREAD_LIMIT=auto"
 set "CELL_THREAD_LIMIT_RAW=%CELL_THREAD_LIMIT%"
 if /i "%CELL_THREAD_LIMIT%"=="auto" (
-  set "CELL_THREAD_LIMIT="
-  for /f %%A in ('powershell -NoProfile -Command "$cpu=[double]$env:CELL_CPU_LOGICAL; if (-not $cpu -or $cpu -lt 1){$cpu=[Environment]::ProcessorCount}; if ($cpu -lt 1){$cpu=1}; $jobs=[double]$env:MARSDISK_CELL_JOBS; if ($jobs -lt 1){$jobs=1}; $fraction=[double]$env:CELL_CPU_FRACTION_USED; if ($fraction -le 0 -or $fraction -gt 1){$fraction=0.7}; $limit=[math]::Max([math]::Floor($cpu*$fraction/$jobs),1); Write-Output $limit"') do set "CELL_THREAD_LIMIT=%%A"
+  if defined CELL_THREAD_LIMIT_AUTO (
+    set "CELL_THREAD_LIMIT=%CELL_THREAD_LIMIT_AUTO%"
+  ) else (
+    for /f %%A in ('python scripts\\runsets\\common\\calc_thread_limit.py') do set "CELL_THREAD_LIMIT=%%A"
+  )
 )
 if not defined CELL_THREAD_LIMIT set "CELL_THREAD_LIMIT=1"
 set "CELL_THREAD_OK=1"
@@ -304,11 +309,10 @@ if defined COOL_TO_K (
 set "TOTAL_GB="
 set "CPU_LOGICAL="
 if "%AUTO_JOBS%"=="1" (
-  for /f %%A in ('powershell -NoProfile -Command "$mem=(Get-CimInstance Win32_ComputerSystem).TotalPhysicalMemory; [math]::Floor($mem/1GB)"') do set "TOTAL_GB=%%A"
-  for /f %%A in ('powershell -NoProfile -Command "(Get-CimInstance Win32_Processor | Measure-Object -Sum -Property NumberOfLogicalProcessors).Sum"') do set "CPU_LOGICAL=%%A"
-  if not defined CPU_LOGICAL for /f %%A in ('powershell -NoProfile -Command "[Environment]::ProcessorCount"') do set "CPU_LOGICAL=%%A"
-  if not defined PARALLEL_JOBS (
-    for /f %%A in ('powershell -NoProfile -Command "$total=[double]$env:TOTAL_GB; $reserve=[double]$env:MEM_RESERVE_GB; $job=[double]$env:JOB_MEM_GB; if (-not $job -or $job -le 0){$job=10}; if (-not $total -or $total -le 0){$total=0}; $avail=[math]::Max($total-$reserve,1); $memJobs=[math]::Max([math]::Floor($avail/$job),1); $cpu=[int]$env:CPU_LOGICAL; if ($cpu -lt 1){$cpu=[Environment]::ProcessorCount}; [int]([math]::Max([math]::Min($cpu,$memJobs),1))"') do set "PARALLEL_JOBS=%%A"
+  for /f "usebackq tokens=1-3 delims=|" %%A in (`python scripts\\runsets\\common\\calc_parallel_jobs.py`) do (
+    set "TOTAL_GB=%%A"
+    set "CPU_LOGICAL=%%B"
+    set "PARALLEL_JOBS=%%C"
   )
   if not defined STREAM_MEM_GB set "STREAM_MEM_GB=%JOB_MEM_GB%"
 )

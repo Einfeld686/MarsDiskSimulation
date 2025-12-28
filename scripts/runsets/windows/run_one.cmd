@@ -186,7 +186,7 @@ if not "%NO_PREFLIGHT%"=="1" (
     exit /b 1
   )
   echo.[info] preflight checks
-  python "scripts\\runsets\\windows\\preflight_checks.py" --repo-root "%REPO_ROOT%" --config "%CONFIG_PATH%" --overrides "%OVERRIDES_PATH%" --out-root "%OUT_ROOT%" --require-git --require-powershell
+  python "scripts\\runsets\\windows\\preflight_checks.py" --repo-root "%REPO_ROOT%" --config "%CONFIG_PATH%" --overrides "%OVERRIDES_PATH%" --out-root "%OUT_ROOT%" --require-git
   if errorlevel 1 (
     echo.[error] preflight failed
     popd

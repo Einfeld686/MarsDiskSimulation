@@ -896,6 +896,14 @@ scripts/runs/run_inner_disk_suite.py:319:def main(argv: Sequence[str] | None=Non
 scripts/runsets/common/build_overrides.py:13:def _iter_pairs(paths: Iterable[Path]) -> Iterator[tuple[str, str]]
 scripts/runsets/common/build_overrides.py:29:def _merge_pairs(pairs: Iterable[tuple[str, str]]) -> tuple[list[str], dict[str, str]]
 scripts/runsets/common/build_overrides.py:43:def main() -> None
+scripts/runsets/common/calc_cell_jobs.py:11:def _parse_fraction(name: str, default: float) -> float
+scripts/runsets/common/calc_cell_jobs.py:22:def _get_cpu_logical() -> int
+scripts/runsets/common/calc_cell_jobs.py:35:def _get_mem_total_gb() -> int
+scripts/runsets/common/calc_cell_jobs.py:58:def main() -> int
+scripts/runsets/common/calc_parallel_jobs.py:10:def _get_cpu_logical() -> int
+scripts/runsets/common/calc_parallel_jobs.py:23:def _get_mem_total_gb() -> int
+scripts/runsets/common/calc_parallel_jobs.py:46:def _parse_positive_float(name: str, default: float) -> float
+scripts/runsets/common/calc_parallel_jobs.py:57:def main() -> int
 scripts/runsets/common/hooks/archive_run.py:12:def _repo_root() -> Path
 scripts/runsets/common/hooks/archive_run.py:16:def main() -> int
 scripts/runsets/common/hooks/evaluate_tau_supply.py:13:def _repo_root() -> Path
@@ -916,6 +924,7 @@ scripts/runsets/common/read_overrides_cmd.py:33:def main() -> int
 scripts/runsets/common/read_study_overrides.py:10:def _join_list(value: Any) -> str
 scripts/runsets/common/read_study_overrides.py:16:def _emit(key: str, value: Any) -> None
 scripts/runsets/common/read_study_overrides.py:23:def main() -> int
+scripts/runsets/common/timestamp.py:9:def main() -> int
 scripts/runsets/common/write_base_overrides.py:10:def env(name: str, default: str | None=None) -> str | None
 scripts/runsets/common/write_base_overrides.py:14:def is_defined(name: str) -> bool
 scripts/runsets/common/write_base_overrides.py:18:def not_zero(name: str) -> bool
@@ -924,19 +933,24 @@ scripts/runsets/common/write_base_overrides.py:28:def append_literal(lines: list
 scripts/runsets/common/write_base_overrides.py:32:def main() -> int
 scripts/runsets/common/write_sweep_list.py:11:def _parse_list(raw: str) -> list[str]
 scripts/runsets/common/write_sweep_list.py:25:def main() -> int
-scripts/runsets/windows/preflight_checks.py:27:def _load_overrides(path: Path) -> tuple[dict[str, str], list[str]]
-scripts/runsets/windows/preflight_checks.py:46:def _contains_non_ascii(text: str) -> bool
-scripts/runsets/windows/preflight_checks.py:50:def _contains_cmd_unsafe(text: str) -> bool
-scripts/runsets/windows/preflight_checks.py:54:def _is_windows_abs(path_str: str) -> bool
-scripts/runsets/windows/preflight_checks.py:61:def _normalize_windows(path_str: str) -> str
-scripts/runsets/windows/preflight_checks.py:65:def _is_windows() -> bool
-scripts/runsets/windows/preflight_checks.py:69:def _check_cmd(name: str, errors: list[str]) -> None
-scripts/runsets/windows/preflight_checks.py:74:def _check_powershell(errors: list[str], warnings: list[str]) -> None
-scripts/runsets/windows/preflight_checks.py:95:def _check_temp_dir(temp_dir: str | None, errors: list[str], warnings: list[str]) -> None
-scripts/runsets/windows/preflight_checks.py:113:def _check_env_paths(errors: list[str], warnings: list[str]) -> None
-scripts/runsets/windows/preflight_checks.py:128:def _check_path_value(label: str, value: str, errors: list[str], warnings: list[str]) -> None
-scripts/runsets/windows/preflight_checks.py:145:def _has_invalid_windows_chars(value: str) -> bool
-scripts/runsets/windows/preflight_checks.py:160:def main() -> int
+scripts/runsets/windows/preflight_checks.py:53:def _load_overrides(path: Path) -> tuple[dict[str, str], list[str]]
+scripts/runsets/windows/preflight_checks.py:72:def _contains_non_ascii(text: str) -> bool
+scripts/runsets/windows/preflight_checks.py:76:def _contains_cmd_unsafe(text: str) -> bool
+scripts/runsets/windows/preflight_checks.py:80:def _is_windows_abs(path_str: str) -> bool
+scripts/runsets/windows/preflight_checks.py:87:def _normalize_windows(path_str: str) -> str
+scripts/runsets/windows/preflight_checks.py:91:def _is_windows() -> bool
+scripts/runsets/windows/preflight_checks.py:95:def _contains_posix_path(text: str) -> bool
+scripts/runsets/windows/preflight_checks.py:99:def _looks_like_windows_path(value: str) -> bool
+scripts/runsets/windows/preflight_checks.py:105:def _has_reserved_windows_name(value: str) -> bool
+scripts/runsets/windows/preflight_checks.py:118:def _check_cmd(name: str, errors: list[str]) -> None
+scripts/runsets/windows/preflight_checks.py:123:def _check_powershell(errors: list[str], warnings: list[str]) -> None
+scripts/runsets/windows/preflight_checks.py:144:def _check_temp_dir(temp_dir: str | None, errors: list[str], warnings: list[str]) -> None
+scripts/runsets/windows/preflight_checks.py:162:def _check_env_paths(errors: list[str], warnings: list[str]) -> None
+scripts/runsets/windows/preflight_checks.py:177:def _check_path_value(label: str, value: str, errors: list[str], warnings: list[str]) -> None
+scripts/runsets/windows/preflight_checks.py:196:def _has_invalid_windows_chars(value: str) -> bool
+scripts/runsets/windows/preflight_checks.py:211:def _parse_set_value(line: str) -> str | None
+scripts/runsets/windows/preflight_checks.py:225:def _scan_cmd_file(path: Path, errors: list[str], warnings: list[str]) -> None
+scripts/runsets/windows/preflight_checks.py:270:def main() -> int
 scripts/sweeps/sweep_beta_map.py:30:def _parse_grid(start: float, stop: float, count: int, label: str) -> np.ndarray
 scripts/sweeps/sweep_beta_map.py:39:def _load_config(path: Path) -> Config
 scripts/sweeps/sweep_beta_map.py:50:def _write_json(path: Path, payload: dict) -> None

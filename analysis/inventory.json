@@ -8778,6 +8778,62 @@
     "brief_usage": "No description available."
   },
   {
+    "file_path": "scripts/runsets/common/calc_cell_jobs.py",
+    "line_no": 11,
+    "symbol": "_parse_fraction",
+    "signature": "_parse_fraction(name: str, default: float) -> float",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/runsets/common/calc_cell_jobs.py",
+    "line_no": 22,
+    "symbol": "_get_cpu_logical",
+    "signature": "_get_cpu_logical() -> int",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/runsets/common/calc_cell_jobs.py",
+    "line_no": 35,
+    "symbol": "_get_mem_total_gb",
+    "signature": "_get_mem_total_gb() -> int",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/runsets/common/calc_cell_jobs.py",
+    "line_no": 58,
+    "symbol": "main",
+    "signature": "main() -> int",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/runsets/common/calc_parallel_jobs.py",
+    "line_no": 10,
+    "symbol": "_get_cpu_logical",
+    "signature": "_get_cpu_logical() -> int",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/runsets/common/calc_parallel_jobs.py",
+    "line_no": 23,
+    "symbol": "_get_mem_total_gb",
+    "signature": "_get_mem_total_gb() -> int",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/runsets/common/calc_parallel_jobs.py",
+    "line_no": 46,
+    "symbol": "_parse_positive_float",
+    "signature": "_parse_positive_float(name: str, default: float) -> float",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/runsets/common/calc_parallel_jobs.py",
+    "line_no": 57,
+    "symbol": "main",
+    "signature": "main() -> int",
+    "brief_usage": "No description available."
+  },
+  {
     "file_path": "scripts/runsets/common/hooks/archive_run.py",
     "line_no": 12,
     "symbol": "_repo_root",
@@ -8925,6 +8981,13 @@
     "brief_usage": "No description available."
   },
   {
+    "file_path": "scripts/runsets/common/timestamp.py",
+    "line_no": 9,
+    "symbol": "main",
+    "signature": "main() -> int",
+    "brief_usage": "No description available."
+  },
+  {
     "file_path": "scripts/runsets/common/write_base_overrides.py",
     "line_no": 10,
     "symbol": "env",
@@ -8982,126 +9045,175 @@
   },
   {
     "file_path": "scripts/runsets/windows/preflight_checks.py",
-    "line_no": 13,
+    "line_no": 14,
     "symbol": "REQUIRED_ARCHIVE_KEYS",
     "signature": "REQUIRED_ARCHIVE_KEYS = {'io.archive.enabled': 'true', 'io.archive.dir': None, 'io.archive.merge_target': 'external', 'io.archive.verify_level': 'standard_plus', 'io.archive.keep_local': 'metadata'}",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "scripts/runsets/windows/preflight_checks.py",
-    "line_no": 21,
+    "line_no": 22,
     "symbol": "PATH_ENV_VARS",
     "signature": "PATH_ENV_VARS = ('TEMP', 'TMP', 'USERPROFILE', 'HOMEDRIVE', 'HOMEPATH', 'COMSPEC')",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "scripts/runsets/windows/preflight_checks.py",
-    "line_no": 22,
+    "line_no": 23,
     "symbol": "MAX_WARN_PATH_LEN",
     "signature": "MAX_WARN_PATH_LEN = 240",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "scripts/runsets/windows/preflight_checks.py",
-    "line_no": 23,
+    "line_no": 24,
     "symbol": "WINDOWS_PATH_INVALID_CHARS",
     "signature": "WINDOWS_PATH_INVALID_CHARS = set('<>:\"|?*')",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "scripts/runsets/windows/preflight_checks.py",
-    "line_no": 24,
+    "line_no": 25,
     "symbol": "CMD_UNSAFE_CHARS",
     "signature": "CMD_UNSAFE_CHARS = '!'",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "scripts/runsets/windows/preflight_checks.py",
+    "line_no": 26,
+    "symbol": "POSIX_PATH_MARKERS",
+    "signature": "POSIX_PATH_MARKERS = ('/Users/', '/Volumes/', '/home/', '~/')",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "scripts/runsets/windows/preflight_checks.py",
     "line_no": 27,
+    "symbol": "RESERVED_DEVICE_NAMES",
+    "signature": "RESERVED_DEVICE_NAMES = {'CON', 'PRN', 'AUX', 'NUL', 'COM1', 'COM2', 'COM3', 'COM4', 'COM5', 'COM6', 'COM7', 'COM8', 'COM9', 'LPT1', 'LPT2', 'LPT3', 'LPT4', 'LPT5', 'LPT6', 'LPT7', 'LPT8', 'LPT9'}",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "scripts/runsets/windows/preflight_checks.py",
+    "line_no": 53,
     "symbol": "_load_overrides",
     "signature": "_load_overrides(path: Path) -> tuple[dict[str, str], list[str]]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "scripts/runsets/windows/preflight_checks.py",
-    "line_no": 46,
+    "line_no": 72,
     "symbol": "_contains_non_ascii",
     "signature": "_contains_non_ascii(text: str) -> bool",
     "brief_usage": "No description available."
   },
   {
     "file_path": "scripts/runsets/windows/preflight_checks.py",
-    "line_no": 50,
+    "line_no": 76,
     "symbol": "_contains_cmd_unsafe",
     "signature": "_contains_cmd_unsafe(text: str) -> bool",
     "brief_usage": "No description available."
   },
   {
     "file_path": "scripts/runsets/windows/preflight_checks.py",
-    "line_no": 54,
+    "line_no": 80,
     "symbol": "_is_windows_abs",
     "signature": "_is_windows_abs(path_str: str) -> bool",
     "brief_usage": "No description available."
   },
   {
     "file_path": "scripts/runsets/windows/preflight_checks.py",
-    "line_no": 61,
+    "line_no": 87,
     "symbol": "_normalize_windows",
     "signature": "_normalize_windows(path_str: str) -> str",
     "brief_usage": "No description available."
   },
   {
     "file_path": "scripts/runsets/windows/preflight_checks.py",
-    "line_no": 65,
+    "line_no": 91,
     "symbol": "_is_windows",
     "signature": "_is_windows() -> bool",
     "brief_usage": "No description available."
   },
   {
     "file_path": "scripts/runsets/windows/preflight_checks.py",
-    "line_no": 69,
+    "line_no": 95,
+    "symbol": "_contains_posix_path",
+    "signature": "_contains_posix_path(text: str) -> bool",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/runsets/windows/preflight_checks.py",
+    "line_no": 99,
+    "symbol": "_looks_like_windows_path",
+    "signature": "_looks_like_windows_path(value: str) -> bool",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/runsets/windows/preflight_checks.py",
+    "line_no": 105,
+    "symbol": "_has_reserved_windows_name",
+    "signature": "_has_reserved_windows_name(value: str) -> bool",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/runsets/windows/preflight_checks.py",
+    "line_no": 118,
     "symbol": "_check_cmd",
     "signature": "_check_cmd(name: str, errors: list[str]) -> None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "scripts/runsets/windows/preflight_checks.py",
-    "line_no": 74,
+    "line_no": 123,
     "symbol": "_check_powershell",
     "signature": "_check_powershell(errors: list[str], warnings: list[str]) -> None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "scripts/runsets/windows/preflight_checks.py",
-    "line_no": 95,
+    "line_no": 144,
     "symbol": "_check_temp_dir",
     "signature": "_check_temp_dir(temp_dir: str | None, errors: list[str], warnings: list[str]) -> None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "scripts/runsets/windows/preflight_checks.py",
-    "line_no": 113,
+    "line_no": 162,
     "symbol": "_check_env_paths",
     "signature": "_check_env_paths(errors: list[str], warnings: list[str]) -> None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "scripts/runsets/windows/preflight_checks.py",
-    "line_no": 128,
+    "line_no": 177,
     "symbol": "_check_path_value",
     "signature": "_check_path_value(label: str, value: str, errors: list[str], warnings: list[str]) -> None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "scripts/runsets/windows/preflight_checks.py",
-    "line_no": 145,
+    "line_no": 196,
     "symbol": "_has_invalid_windows_chars",
     "signature": "_has_invalid_windows_chars(value: str) -> bool",
     "brief_usage": "No description available."
   },
   {
     "file_path": "scripts/runsets/windows/preflight_checks.py",
-    "line_no": 160,
+    "line_no": 211,
+    "symbol": "_parse_set_value",
+    "signature": "_parse_set_value(line: str) -> str | None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/runsets/windows/preflight_checks.py",
+    "line_no": 225,
+    "symbol": "_scan_cmd_file",
+    "signature": "_scan_cmd_file(path: Path, errors: list[str], warnings: list[str]) -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/runsets/windows/preflight_checks.py",
+    "line_no": 270,
     "symbol": "main",
     "signature": "main() -> int",
     "brief_usage": "No description available."

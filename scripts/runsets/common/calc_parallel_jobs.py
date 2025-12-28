@@ -1,26 +1,14 @@
 #!/usr/bin/env python3
-"""Compute cell-parallel defaults for cmd runsets."""
+"""Compute sweep-parallel defaults for cmd runsets."""
 from __future__ import annotations
 
 import ctypes
 import math
 import os
-import sys
-
-
-def _parse_fraction(name: str, default: float) -> float:
-    raw = os.environ.get(name, "")
-    try:
-        value = float(raw)
-    except (TypeError, ValueError):
-        return default
-    if value <= 0 or value > 1:
-        return default
-    return value
 
 
 def _get_cpu_logical() -> int:
-    env_val = os.environ.get("NUMBER_OF_PROCESSORS", "")
+    env_val = os.environ.get("CPU_LOGICAL", "")
     try:
         count = int(env_val)
     except (TypeError, ValueError):
@@ -55,20 +43,26 @@ def _get_mem_total_gb() -> int:
     return int(status.ullTotalPhys // (1024**3))
 
 
+def _parse_positive_float(name: str, default: float) -> float:
+    raw = os.environ.get(name, "")
+    try:
+        value = float(raw)
+    except (TypeError, ValueError):
+        return default
+    if value <= 0:
+        return default
+    return value
+
+
 def main() -> int:
-    mem_fraction = _parse_fraction("CELL_MEM_FRACTION", 0.7)
-    cpu_fraction = _parse_fraction("CELL_CPU_FRACTION", 0.7)
-    mem_total_gb = _get_mem_total_gb()
+    total_gb = _get_mem_total_gb()
     cpu_logical = _get_cpu_logical()
-    jobs = max(int(math.floor(cpu_logical * cpu_fraction)), 1)
-    stream_mem_gb = 0
-    if mem_total_gb > 0:
-        stream_mem_gb = max(int(math.floor(mem_total_gb * mem_fraction)), 1)
-    thread_limit = max(int(math.floor(cpu_logical * cpu_fraction / jobs)), 1)
-    print(
-        f"{mem_total_gb}|{cpu_logical}|{mem_fraction}|{cpu_fraction}|{jobs}|"
-        f"{stream_mem_gb}|{thread_limit}"
-    )
+    reserve_gb = _parse_positive_float("MEM_RESERVE_GB", 4.0)
+    job_mem_gb = _parse_positive_float("JOB_MEM_GB", 10.0)
+    avail_gb = max(total_gb - reserve_gb, 1.0)
+    mem_jobs = max(int(math.floor(avail_gb / job_mem_gb)), 1)
+    parallel_jobs = max(min(cpu_logical, mem_jobs), 1)
+    print(f"{total_gb}|{cpu_logical}|{parallel_jobs}")
     return 0
 
 
