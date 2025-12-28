@@ -20,11 +20,13 @@ if not defined VENV_DIR set "VENV_DIR=.venv"
 if not defined REQ_FILE set "REQ_FILE=requirements.txt"
 if not defined RUN_TS for /f %%A in ('powershell -NoProfile -Command "Get-Date -Format \"yyyyMMdd-HHmmss\""') do set "RUN_TS=%%A"
 if defined RUN_TS (
+  set "RUN_TS_RAW=!RUN_TS!"
   rem Normalize to a filename-safe token in case a pre-set RUN_TS includes separators.
   set "RUN_TS=!RUN_TS::=!"
   set "RUN_TS=!RUN_TS: =_!"
   set "RUN_TS=!RUN_TS:/=-!"
   set "RUN_TS=!RUN_TS:\=-!"
+  if not "!RUN_TS!"=="!RUN_TS_RAW!" echo.[warn] RUN_TS sanitized: "!RUN_TS_RAW!" -> "!RUN_TS!"
 )
 set "TMP_ROOT=%TEMP%"
 set "TMP_SOURCE=TEMP"
@@ -190,8 +192,22 @@ if defined STUDY_FILE (
   )
 )
 
+if defined SWEEP_TAG (
+  set "SWEEP_TAG_RAW=!SWEEP_TAG!"
+  set "SWEEP_TAG=!SWEEP_TAG::=!"
+  set "SWEEP_TAG=!SWEEP_TAG: =_!"
+  set "SWEEP_TAG=!SWEEP_TAG:/=-!"
+  set "SWEEP_TAG=!SWEEP_TAG:\=-!"
+  if not "!SWEEP_TAG!"=="!SWEEP_TAG_RAW!" echo.[warn] SWEEP_TAG sanitized: "!SWEEP_TAG_RAW!" -> "!SWEEP_TAG!"
+)
+
 set "BATCH_DIR=%BATCH_ROOT%\\%SWEEP_TAG%\\%RUN_TS%__%GIT_SHA%__seed%BATCH_SEED%"
-if not exist "%BATCH_DIR%" mkdir "%BATCH_DIR%"
+if not exist "%BATCH_DIR%" mkdir "%BATCH_DIR%" >nul 2>&1
+if not exist "%BATCH_DIR%" (
+  echo.[error] failed to create output dir: "%BATCH_DIR%"
+  popd
+  exit /b 1
+)
 
 set "COOL_SEARCH_DISPLAY=%COOL_SEARCH_YEARS%"
 if not defined COOL_SEARCH_DISPLAY set "COOL_SEARCH_DISPLAY=none"
@@ -214,11 +230,16 @@ if "%AUTO_JOBS%"=="1" (
   )
   if not defined STREAM_MEM_GB set "STREAM_MEM_GB=%JOB_MEM_GB%"
 )
+set "PARALLEL_JOBS_RAW=%PARALLEL_JOBS%"
+set "PARALLEL_JOBS=%PARALLEL_JOBS:"=%"
 if not defined PARALLEL_JOBS set "PARALLEL_JOBS=1"
 if "%PARALLEL_JOBS%"=="" set "PARALLEL_JOBS=1"
 set "PARALLEL_JOBS_OK=1"
 for /f "delims=0123456789" %%A in ("%PARALLEL_JOBS%") do set "PARALLEL_JOBS_OK=0"
-if "%PARALLEL_JOBS_OK%"=="0" set "PARALLEL_JOBS=1"
+if "%PARALLEL_JOBS_OK%"=="0" (
+  if defined PARALLEL_JOBS_RAW echo.[warn] PARALLEL_JOBS invalid: "%PARALLEL_JOBS_RAW%" -> 1
+  set "PARALLEL_JOBS=1"
+)
 if "%PARALLEL_JOBS%"=="0" set "PARALLEL_JOBS=1"
 if "%AUTO_JOBS%"=="1" (
   if not defined TOTAL_GB set "TOTAL_GB=unknown"
@@ -381,7 +402,7 @@ if defined RUN_ONE_MODE (
   echo.[info] run-one mode: T=%RUN_ONE_T% eps=%RUN_ONE_EPS% tau=%RUN_ONE_TAU% seed=%RUN_ONE_SEED%
 )
 
-if %PARALLEL_JOBS% GTR 1 (
+if not "%PARALLEL_JOBS%"=="1" (
   if not defined RUN_ONE_MODE (
     call :run_parallel
     popd
