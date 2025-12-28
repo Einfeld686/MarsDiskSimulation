@@ -75,6 +75,12 @@ exit /b 1
 
 :args_done
 
+set "REPO_ROOT=%~dp0..\..\.."
+for %%I in ("%REPO_ROOT%") do set "REPO_ROOT=%%~fI"
+call :ensure_abs CONFIG_PATH
+call :ensure_abs OVERRIDES_PATH
+if defined STUDY_PATH call :ensure_abs STUDY_PATH
+
 if not defined HOOKS_ENABLE set "HOOKS_ENABLE=plot,eval,archive"
 if not defined HOOKS_STRICT set "HOOKS_STRICT=0"
 if not defined PLOT_ENABLE set "PLOT_ENABLE=1"
@@ -141,6 +147,10 @@ set "ARCHIVE_DIR_EXPECTED="
 set "ARCHIVE_MERGE_TARGET="
 set "ARCHIVE_VERIFY_LEVEL="
 set "ARCHIVE_KEEP_LOCAL="
+if not exist "%OVERRIDES_PATH%" (
+  echo.[error] overrides file not found: "%OVERRIDES_PATH%"
+  exit /b 1
+)
 if exist "%OVERRIDES_PATH%" (
   for /f "usebackq tokens=1,* delims==" %%A in (`findstr /i /r "^io\\.archive\\.enabled=" "%OVERRIDES_PATH%"`) do set "ARCHIVE_ENABLED_EXPECTED=%%B"
   for /f "usebackq tokens=1,* delims==" %%A in (`findstr /i /r "^io\\.archive\\.dir=" "%OVERRIDES_PATH%"`) do set "ARCHIVE_DIR_EXPECTED=%%B"
@@ -173,7 +183,6 @@ if /i "%BATCH_ROOT%"=="%ARCHIVE_DIR_EXPECTED%" (
   exit /b 1
 )
 
-set "REPO_ROOT=%~dp0..\..\.."
 set "RUN_TS_SOURCE=pre"
 if defined RUN_TS (
   set "RUN_TS=!RUN_TS::=!"
@@ -217,3 +226,12 @@ set "RUN_RC=%errorlevel%"
 
 popd
 exit /b %RUN_RC%
+
+:ensure_abs
+set "VAR_NAME=%~1"
+set "VAR_VAL=!%VAR_NAME%!"
+if not defined VAR_VAL exit /b 0
+if "!VAR_VAL:~1,1!"==":" exit /b 0
+if "!VAR_VAL:~0,1!"=="\\" exit /b 0
+set "%VAR_NAME%=%REPO_ROOT%\\!VAR_VAL!"
+exit /b 0
