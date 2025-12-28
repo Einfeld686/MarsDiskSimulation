@@ -9,6 +9,7 @@ set REPO=%~dp0..\..\..\..
 pushd "%REPO%"
 
 set OUTDIR=out\run_sublim_smol_phase_cooling
+set ARCHIVE_DIR=D:\marsdisk_runs
 set TMK=4000.0
 set TEMP_TABLE=data\mars_temperature_T4000p0K.csv
 set CONFIG=out\run_template_sublim_smol_phase_MAX50M\config_base_sublimation.yml
@@ -54,6 +55,15 @@ python -m marsdisk.run ^
   --override io.streaming.step_flush_interval=10000 ^
   --override io.streaming.compression=snappy ^
   --override io.streaming.merge_at_end=true ^
+  --override io.archive.enabled=true ^
+  --override io.archive.dir=%ARCHIVE_DIR% ^
+  --override io.archive.trigger=post_merge ^
+  --override io.archive.merge_target=external ^
+  --override io.archive.verify_level=standard_plus ^
+  --override io.archive.keep_local=metadata ^
+  --override io.archive.record_volume_info=true ^
+  --override io.archive.warn_slow_mb_s=40.0 ^
+  --override io.archive.warn_slow_min_gb=5.0 ^
   --override io.outdir=%OUTDIR% ^
   --override radiation.source=mars ^
   --override radiation.TM_K=%TMK% ^

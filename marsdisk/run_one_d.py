@@ -6,6 +6,7 @@ import logging
 import math
 import os
 import random
+import warnings
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from typing import Any, Dict, List, Optional
@@ -468,6 +469,7 @@ def run_one_d(
     alpha = float(getattr(cfg.psd, "alpha", 1.83))
     wavy_strength = float(getattr(cfg.psd, "wavy_strength", 0.0))
     alpha_mode = str(getattr(cfg.psd, "alpha_mode", "size"))
+    psd_floor_mode = str(getattr(getattr(cfg.psd, "floor", None), "mode", "fixed"))
     rho_used = float(getattr(cfg.material, "rho", 3000.0))
 
     T_init = float(temp_runtime.initial_value)
@@ -478,19 +480,21 @@ def run_one_d(
             return float(qpr_override)
         return float(radiation.qpr_lookup(size_eff, T_use))
 
-    def _resolve_blowout(size_floor: float, T_use: float) -> tuple[float, float]:
+    def _resolve_blowout(size_floor: float, T_use: float) -> tuple[float, float, float]:
         if qpr_override is not None:
             qpr_val = float(qpr_override)
             s_blow_val = radiation.blowout_radius(rho_used, T_use, Q_pr=qpr_val)
-            return qpr_val, float(max(size_floor, s_blow_val))
+            s_blow_raw = float(max(s_blow_val, 1.0e-12))
+            return qpr_val, s_blow_raw, float(max(size_floor, s_blow_raw))
         s_eval = float(max(size_floor, 1.0e-12))
         for _ in range(6):
             qpr_val = float(radiation.qpr_lookup(s_eval, T_use))
             s_blow_val = float(radiation.blowout_radius(rho_used, T_use, Q_pr=qpr_val))
-            s_eval = float(max(size_floor, s_blow_val, 1.0e-12))
+            s_eval = float(max(s_blow_val, 1.0e-12))
         qpr_final = float(radiation.qpr_lookup(s_eval, T_use))
         s_blow_final = float(radiation.blowout_radius(rho_used, T_use, Q_pr=qpr_final))
-        return qpr_final, float(max(size_floor, s_blow_final))
+        s_blow_raw = float(max(s_blow_final, 1.0e-12))
+        return qpr_final, s_blow_raw, float(max(size_floor, s_blow_raw))
 
     def _psd_mass_peak(psd_state: Dict[str, np.ndarray | float]) -> float:
         try:
@@ -508,8 +512,8 @@ def run_one_d(
             return float("nan")
         return float(sizes_arr[idx])
 
-    qpr_blow_init, a_blow_init = _resolve_blowout(s_min_config, T_init)
-    s_min_effective = float(max(s_min_config, a_blow_init))
+    qpr_blow_init, a_blow_init, a_blow_effective_init = _resolve_blowout(s_min_config, T_init)
+    s_min_effective = float(max(s_min_config, a_blow_effective_init))
     psd_state_template = psd.update_psd_state(
         s_min=s_min_effective,
         s_max=s_max_config,
@@ -552,27 +556,6 @@ def run_one_d(
         )
         psd_state_template["s_min"] = s_min_effective
     psd.sanitize_and_normalize_number(psd_state_template, normalize=False)
-    supply_injection_weights = None
-    if supply_injection_mode == "initial_psd":
-        sizes_arr = np.asarray(psd_state_template.get("sizes"), dtype=float)
-        widths_arr = np.asarray(psd_state_template.get("widths"), dtype=float)
-        number_raw = psd_state_template.get("number")
-        if number_raw is None:
-            number_raw = psd_state_template.get("n")
-        if number_raw is None:
-            raise ConfigurationError("initial_psd supply injection requires PSD number densities")
-        number_arr = np.asarray(number_raw, dtype=float)
-        if (
-            sizes_arr.shape != widths_arr.shape
-            or sizes_arr.shape != number_arr.shape
-            or sizes_arr.size == 0
-        ):
-            raise ConfigurationError("initial_psd supply injection requires sizes/widths/number arrays with matching shapes")
-        weights = sizes_arr**3 * widths_arr * number_arr
-        weights = np.where(np.isfinite(weights) & (weights > 0.0), weights, 0.0)
-        if float(np.sum(weights)) <= 0.0:
-            raise ConfigurationError("initial_psd supply injection requires positive mass weights from the initial PSD")
-        supply_injection_weights = weights
 
     kappa_surf_initial = ensure_finite_kappa(psd.compute_kappa(psd_state_template), label="kappa_surf_initial")
     kappa_eff0 = kappa_surf_initial
@@ -667,6 +650,7 @@ def run_one_d(
     temperature_track: List[float] = []
     beta_track: List[float] = []
     ablow_track: List[float] = []
+    blowout_effective_warned = False
     supply_rate_nominal_track: List[float] = []
     supply_rate_scaled_track: List[float] = []
     supply_rate_applied_track: List[float] = []
@@ -768,6 +752,29 @@ def run_one_d(
     supply_injection_s_max = getattr(supply_injection_cfg, "s_inj_max", None) if supply_injection_cfg else None
     supply_injection_q = float(getattr(supply_injection_cfg, "q", 3.5)) if supply_injection_cfg else 3.5
     supply_velocity_cfg = getattr(supply_injection_cfg, "velocity", None) if supply_injection_cfg else None
+    supply_injection_weights = None
+    if supply_injection_mode == "initial_psd":
+        sizes_arr = np.asarray(psd_state_template.get("sizes"), dtype=float)
+        widths_arr = np.asarray(psd_state_template.get("widths"), dtype=float)
+        number_raw = psd_state_template.get("number")
+        if number_raw is None:
+            number_raw = psd_state_template.get("n")
+        if number_raw is None:
+            raise ConfigurationError("initial_psd supply injection requires PSD number densities")
+        number_arr = np.asarray(number_raw, dtype=float)
+        if (
+            sizes_arr.shape != widths_arr.shape
+            or sizes_arr.shape != number_arr.shape
+            or sizes_arr.size == 0
+        ):
+            raise ConfigurationError(
+                "initial_psd supply injection requires sizes/widths/number arrays with matching shapes"
+            )
+        weights = sizes_arr**3 * widths_arr * number_arr
+        weights = np.where(np.isfinite(weights) & (weights > 0.0), weights, 0.0)
+        if float(np.sum(weights)) <= 0.0:
+            raise ConfigurationError("initial_psd supply injection requires positive mass weights from the initial PSD")
+        supply_injection_weights = weights
 
     supply_headroom_policy = str(getattr(supply_spec_base, "headroom_policy", "clip") or "clip").lower()
     supply_headroom_enabled = supply_headroom_policy not in {"none", "off", "disabled"}
@@ -985,8 +992,19 @@ def run_one_d(
 
             T_use = float(temp_runtime.evaluate(time))
             rad_flux_step = constants.SIGMA_SB * (T_use ** 4)
-            qpr_blow_step, a_blow_step = _resolve_blowout(s_min_config, T_use)
-            s_min_effective = float(max(s_min_config, a_blow_step))
+            qpr_blow_step, a_blow_step, a_blow_effective_step = _resolve_blowout(s_min_config, T_use)
+            if (
+                not blowout_effective_warned
+                and a_blow_effective_step > a_blow_step * (1.0 + 1.0e-12)
+            ):
+                warnings.warn(
+                    "s_blow_m now records the raw blow-out radius; use s_blow_m_effective for the "
+                    "size-floor-clipped value.",
+                    DeprecationWarning,
+                    stacklevel=2,
+                )
+                blowout_effective_warned = True
+            s_min_effective = float(max(s_min_config, a_blow_effective_step))
             qpr_mean_step = _lookup_qpr(s_min_effective, T_use)
             beta_at_smin_effective = radiation.beta(
                 s_min_effective, rho_used, T_use, Q_pr=qpr_mean_step
@@ -1217,6 +1235,7 @@ def run_one_d(
                                 "chi_blow_eff": chi_blow_eff,
                                 "case_status": case_status,
                                 "s_blow_m": a_blow_step,
+                                "s_blow_m_effective": a_blow_effective_step,
                                 "rho_used": rho_used,
                                 "Q_pr_used": qpr_mean_step,
                                 "Q_pr_blow": qpr_blow_step,
@@ -1937,6 +1956,7 @@ def run_one_d(
                         "chi_blow_eff": chi_blow_eff,
                         "case_status": case_status,
                         "s_blow_m": a_blow_step,
+                        "s_blow_m_effective": a_blow_effective_step,
                         "rho_used": rho_used,
                         "Q_pr_used": qpr_mean_step,
                         "Q_pr_blow": qpr_blow_step,
@@ -2563,9 +2583,12 @@ def run_one_d(
             else "Radiation disabled via radiation.source='off'"
         ),
     }
+    a_blow_effective_last = max(s_min_config, a_blow_last)
     s_min_components = {
         "config": float(s_min_config),
         "blowout": float(a_blow_last),
+        "blowout_raw": float(a_blow_last),
+        "blowout_effective": float(a_blow_effective_last),
         "effective": float(s_min_effective_last),
     }
     stop_reason = early_stop_reason
@@ -2614,6 +2637,8 @@ def run_one_d(
         "beta_at_smin_median": beta_median,
         "beta_at_smin_max": beta_max,
         "beta_threshold": beta_threshold,
+        "s_blow_m": float(a_blow_last),
+        "s_blow_m_effective": float(a_blow_effective_last),
         "a_blow_final": float(a_blow_last),
         "a_blow_min": ablow_min,
         "a_blow_median": ablow_median,
@@ -2726,6 +2751,12 @@ def run_one_d(
         "T_M_used": T_use_last,
         "rho_used": rho_used,
         "Q_pr_used": qpr_mean_last,
+        "blowout_provenance": {
+            "s_blow_raw_m": float(a_blow_last),
+            "s_blow_effective_m": float(a_blow_effective_last),
+            "s_min_config_m": float(s_min_config),
+            "psd_floor_mode": str(psd_floor_mode),
+        },
         "temperature_driver": temp_prov,
         "solar_radiation": solar_radiation,
         "sublimation_provenance": sublimation_provenance,

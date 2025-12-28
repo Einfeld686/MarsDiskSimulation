@@ -1052,7 +1052,12 @@ def populate_record_from_outputs(
         if tm_source is not None:
             record["T_M_source"] = str(tm_source)
         record["beta_threshold"] = _to_float(summary_dict.get("beta_threshold"))
-        record["s_blow_m"] = _to_float(summary_dict.get("s_blow_m"))
+        s_blow_raw = summary_dict.get("s_blow_m")
+        s_blow_effective = summary_dict.get("s_blow_m_effective")
+        if s_blow_effective is None and s_blow_raw is not None:
+            s_blow_effective = s_blow_raw
+        record["s_blow_m"] = _to_float(s_blow_raw)
+        record["s_blow_m_effective"] = _to_float(s_blow_effective)
         record["rho_used"] = _to_float(summary_dict.get("rho_used"))
         record["Q_pr_used"] = _to_float(summary_dict.get("Q_pr_used"))
         record["Q_pr_blow"] = _to_float(summary_dict.get("Q_pr_blow"))
@@ -1169,6 +1174,7 @@ def run_case(
         "beta_at_smin": math.nan,
         "beta_threshold": math.nan,
         "s_blow_m": math.nan,
+        "s_blow_m_effective": math.nan,
         "rho_used": math.nan,
         "Q_pr_used": math.nan,
         "T_M_used": math.nan,
@@ -1484,6 +1490,7 @@ def main(argv: Optional[Iterable[str]] = None) -> None:
         "beta_threshold",
         "beta_ratio",
         "s_blow_m",
+        "s_blow_m_effective",
         "rho_used",
         "Q_pr_used",
         "Q_pr_blow",

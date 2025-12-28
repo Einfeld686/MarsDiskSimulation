@@ -74,7 +74,7 @@
 5. [x] **二重持ち回避オプション**: `merge_target=external` を実装し、統合Parquetの出力先を外部HDDに切り替えられるようにする。図生成の参照先も連動させる。
 6. [x] **失敗時フォールバック**: 外部HDD未接続・空き不足・コピー失敗時はローカル保持に戻し、次回再試行できる状態を残す。
 7. [ ] **ドキュメント更新**: README/run-recipes/analysis に運用手順と注意点（外部HDD未接続時の挙動、再試行方法）を追記。
-8. [ ] **Windows runset 対応**: `scripts/runsets/windows/overrides.txt` へ `io.archive.*` を明示追記し、`--out-root` と同様に絶対パス運用を徹底する。
+8. [x] **Windows runset 対応**: `scripts/runsets/windows/overrides.txt` へ `io.archive.*` を明示追記し、`--out-root` と同様に絶対パス運用を徹底する。
 
 # 設定キー案（実装対象）
 - [x] `io.archive.enabled` (bool, default false): アーカイブ有効化。

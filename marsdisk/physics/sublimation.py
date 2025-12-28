@@ -687,7 +687,7 @@ def s_sink_from_timescale(
 def sublimation_sink_from_dsdt(
     s_grid_m: np.ndarray,
     N_k: np.ndarray,
-    ds_dt_k: np.ndarray,
+    ds_dt_k: np.ndarray | float,
     m_k: np.ndarray,
 ) -> tuple[np.ndarray, float]:
     r"""Return per-bin sublimation sinks and the associated mass loss rate.
@@ -704,20 +704,32 @@ def sublimation_sink_from_dsdt(
 
     s_arr = np.asarray(s_grid_m, dtype=float)
     N_arr = np.asarray(N_k, dtype=float)
-    ds_dt_arr = np.asarray(ds_dt_k, dtype=float)
     m_arr = np.asarray(m_k, dtype=float)
-    if not (s_arr.shape == N_arr.shape == ds_dt_arr.shape == m_arr.shape):
-        raise PhysicsError("s_grid_m, N_k, ds_dt_k and m_k must have identical shapes")
+    if not (s_arr.shape == N_arr.shape == m_arr.shape):
+        raise PhysicsError("s_grid_m, N_k and m_k must have identical shapes")
     if s_arr.ndim != 1:
         raise PhysicsError("inputs must be one-dimensional")
 
     S_sub = np.zeros_like(s_arr, dtype=float)
-    mask = (ds_dt_arr < 0.0) & np.isfinite(ds_dt_arr) & (s_arr > 0.0)
-    if np.any(mask):
-        with np.errstate(divide="ignore", invalid="ignore"):
-            t_sub = np.where(mask, s_arr / np.abs(ds_dt_arr), np.inf)
-            valid = np.isfinite(t_sub) & (t_sub > 0.0)
-            S_sub = np.where(valid, 1.0 / t_sub, 0.0)
+    if np.isscalar(ds_dt_k):
+        ds_dt_val = float(ds_dt_k)
+        if np.isfinite(ds_dt_val) and ds_dt_val < 0.0:
+            mask = s_arr > 0.0
+            if np.any(mask):
+                with np.errstate(divide="ignore", invalid="ignore"):
+                    t_sub = np.where(mask, s_arr / abs(ds_dt_val), np.inf)
+                    valid = np.isfinite(t_sub) & (t_sub > 0.0)
+                    S_sub = np.where(valid, 1.0 / t_sub, 0.0)
+    else:
+        ds_dt_arr = np.asarray(ds_dt_k, dtype=float)
+        if ds_dt_arr.shape != s_arr.shape:
+            raise PhysicsError("ds_dt_k must have the same shape as s_grid_m")
+        mask = (ds_dt_arr < 0.0) & np.isfinite(ds_dt_arr) & (s_arr > 0.0)
+        if np.any(mask):
+            with np.errstate(divide="ignore", invalid="ignore"):
+                t_sub = np.where(mask, s_arr / np.abs(ds_dt_arr), np.inf)
+                valid = np.isfinite(t_sub) & (t_sub > 0.0)
+                S_sub = np.where(valid, 1.0 / t_sub, 0.0)
 
     mass_loss_rate = float(np.sum(m_arr * S_sub * N_arr))
     return S_sub, mass_loss_rate

@@ -51,6 +51,14 @@ class ImexWorkspace:
 logger = logging.getLogger(__name__)
 
 
+def _sizes_fingerprint(sizes: np.ndarray) -> tuple[int, float, float]:
+    if sizes.size == 0:
+        return (0, 0.0, 0.0)
+    sum1 = float(np.sum(sizes))
+    sum2 = float(np.sum(sizes * sizes))
+    return (int(sizes.size), sum1, sum2)
+
+
 def psd_state_to_number_density(
     psd_state: MutableMapping[str, np.ndarray | float],
     sigma_surf: float,
@@ -105,7 +113,23 @@ def psd_state_to_number_density(
         )
 
     rho_psd = float(psd_state.get("rho", rho_fallback if rho_fallback is not None else 0.0))
-    m_k = (4.0 / 3.0) * np.pi * rho_psd * sizes_arr**3
+    sizes_version = psd_state.get("sizes_version")
+    if sizes_version is not None:
+        cache_key = ("v", int(sizes_version), float(rho_psd))
+    else:
+        cache_key = ("h",) + _sizes_fingerprint(sizes_arr) + (float(rho_psd),)
+    cached_key = psd_state.get("_mk_cache_key")
+    cached_mk = psd_state.get("_mk_cache")
+    if (
+        cached_key == cache_key
+        and isinstance(cached_mk, np.ndarray)
+        and cached_mk.shape == sizes_arr.shape
+    ):
+        m_k = cached_mk
+    else:
+        m_k = (4.0 / 3.0) * np.pi * rho_psd * sizes_arr**3
+        psd_state["_mk_cache_key"] = cache_key
+        psd_state["_mk_cache"] = m_k
 
     if sigma_surf <= 0.0 or not np.isfinite(sigma_surf):
         return sizes_arr, widths_arr, m_k, np.zeros_like(sizes_arr), 0.0

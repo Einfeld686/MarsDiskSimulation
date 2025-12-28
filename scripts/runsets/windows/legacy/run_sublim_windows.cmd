@@ -10,6 +10,7 @@ set REPO=%~dp0..\..\..\..
 pushd "%REPO%"
 
 set OUTDIR=out\run_sublim_smol_phase_MAX50M
+set ARCHIVE_DIR=D:\marsdisk_runs
 set VENV_DIR=.venv
 set REQ_FILE=requirements.txt
 
@@ -49,6 +50,15 @@ python -m marsdisk.run ^
   --override io.streaming.step_flush_interval=10000 ^
   --override io.streaming.compression=snappy ^
   --override io.streaming.merge_at_end=true ^
+  --override io.archive.enabled=true ^
+  --override io.archive.dir=%ARCHIVE_DIR% ^
+  --override io.archive.trigger=post_merge ^
+  --override io.archive.merge_target=external ^
+  --override io.archive.verify_level=standard_plus ^
+  --override io.archive.keep_local=metadata ^
+  --override io.archive.record_volume_info=true ^
+  --override io.archive.warn_slow_mb_s=40.0 ^
+  --override io.archive.warn_slow_min_gb=5.0 ^
   --override io.outdir=%OUTDIR% ^
   --override sinks.sub_params.mode=hkl ^
   --override sinks.sub_params.alpha_evap=0.007 ^

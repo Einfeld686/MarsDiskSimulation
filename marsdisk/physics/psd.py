@@ -140,6 +140,7 @@ def update_psd_state(
         "rho": rho,
         "s_min": s_min,
         "s_max": s_max,
+        "sizes_version": 0,
         "wavy_decay": wavy_decay,
         "alpha": alpha,
         "alpha_mode": alpha_mode,
@@ -494,6 +495,7 @@ def apply_uniform_size_drift(
     psd_state["n"] = new_number
     psd_state["sizes"] = new_sizes
     psd_state["s"] = new_sizes
+    psd_state["sizes_version"] = int(psd_state.get("sizes_version", 0)) + 1
     psd_state["s_min"] = float(np.min(new_sizes))
     psd_state["edges"] = edges
     sanitize_and_normalize_number(psd_state)

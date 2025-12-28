@@ -2360,7 +2360,7 @@
   },
   {
     "file_path": "marsdisk/archive.py",
-    "line_no": 64,
+    "line_no": 69,
     "symbol": "main",
     "signature": "main(argv: Optional[list[str]]=None) -> int",
     "brief_usage": "No description available."
@@ -2675,175 +2675,217 @@
   },
   {
     "file_path": "marsdisk/io/archive.py",
-    "line_no": 19,
+    "line_no": 22,
     "symbol": "CHUNK_GLOBS",
     "signature": "CHUNK_GLOBS = ('series/run_chunk_*.parquet', 'series/psd_hist_chunk_*.parquet', 'series/diagnostics_chunk_*.parquet')",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/io/archive.py",
-    "line_no": 25,
+    "line_no": 28,
     "symbol": "SERIES_MERGED",
     "signature": "SERIES_MERGED = {'run': ('series/run.parquet', 'series/run_chunk_*.parquet'), 'psd_hist': ('series/psd_hist.parquet', 'series/psd_hist_chunk_*.parquet'), 'diagnostics': ('series/diagnostics.parquet', 'series/diagnostics_chunk_*.parquet')}",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/io/archive.py",
-    "line_no": 31,
+    "line_no": 34,
     "symbol": "METADATA_KEEP",
     "signature": "METADATA_KEEP = {'summary.json', 'run_config.json', 'run_card.md', 'ARCHIVE_DONE', 'ARCHIVE_SKIPPED', 'INCOMPLETE'}",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/io/archive.py",
-    "line_no": 42,
+    "line_no": 45,
     "symbol": "ArchiveSettings",
     "signature": "class ArchiveSettings",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/io/archive.py",
-    "line_no": 55,
+    "line_no": 61,
     "symbol": "ArchiveResult",
     "signature": "class ArchiveResult",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/io/archive.py",
-    "line_no": 62,
+    "line_no": 68,
     "symbol": "resolve_archive_dest",
     "signature": "resolve_archive_dest(archive_root: Path, run_dir: Path) -> Path",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/io/archive.py",
-    "line_no": 66,
+    "line_no": 72,
     "symbol": "_human_bytes",
     "signature": "_human_bytes(value: float) -> str",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/io/archive.py",
-    "line_no": 76,
+    "line_no": 82,
     "symbol": "_hash_file",
     "signature": "_hash_file(path: Path) -> str",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/io/archive.py",
-    "line_no": 84,
+    "line_no": 90,
     "symbol": "_hash_dataframe",
     "signature": "_hash_dataframe(df: pd.DataFrame) -> str",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/io/archive.py",
-    "line_no": 89,
+    "line_no": 95,
     "symbol": "_parquet_metadata",
     "signature": "_parquet_metadata(path: Path) -> Dict[str, int | str]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/io/archive.py",
-    "line_no": 99,
+    "line_no": 105,
     "symbol": "_parquet_row_group_checksum",
     "signature": "_parquet_row_group_checksum(path: Path, group_index: int) -> Optional[str]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/io/archive.py",
-    "line_no": 109,
+    "line_no": 115,
     "symbol": "_sum_chunk_rows",
     "signature": "_sum_chunk_rows(paths: Sequence[Path]) -> int",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/io/archive.py",
-    "line_no": 121,
+    "line_no": 127,
     "symbol": "_is_chunk",
     "signature": "_is_chunk(rel_path: Path) -> bool",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/io/archive.py",
-    "line_no": 128,
+    "line_no": 134,
     "symbol": "_is_metadata",
     "signature": "_is_metadata(rel_path: Path) -> bool",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/io/archive.py",
-    "line_no": 136,
+    "line_no": 142,
     "symbol": "_collect_copy_files",
     "signature": "_collect_copy_files(run_dir: Path) -> List[Path]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/io/archive.py",
-    "line_no": 148,
+    "line_no": 154,
     "symbol": "_collect_hash_targets",
     "signature": "_collect_hash_targets(run_dir: Path) -> List[Path]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/io/archive.py",
-    "line_no": 163,
+    "line_no": 169,
     "symbol": "_write_marker",
     "signature": "_write_marker(path: Path, message: str) -> None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/io/archive.py",
-    "line_no": 170,
+    "line_no": 176,
     "symbol": "_update_run_card",
-    "signature": "_update_run_card(run_card: Path, archive_path: Path, manifest_path: Optional[Path], level: str) -> None",
+    "signature": "_update_run_card(run_card: Path, archive_path: Path, manifest_path: Optional[Path], manifest_hash: Optional[str], level: str, *, volume_info: Optional[Mapping[str, Optional[str]]]=None, copy_stats: Optional[Mapping[str, float]]=None, slow_warning: Optional[str]=None) -> None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/io/archive.py",
-    "line_no": 184,
+    "line_no": 227,
     "symbol": "_check_writable",
     "signature": "_check_writable(path: Path) -> bool",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/io/archive.py",
-    "line_no": 192,
+    "line_no": 235,
     "symbol": "_verify_level_settings",
     "signature": "_verify_level_settings(level: str) -> str",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/io/archive.py",
-    "line_no": 199,
+    "line_no": 242,
+    "symbol": "_resolve_mount_point",
+    "signature": "_resolve_mount_point(path: Path) -> Path",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "marsdisk/io/archive.py",
+    "line_no": 261,
+    "symbol": "_windows_volume_info",
+    "signature": "_windows_volume_info(mount_point: Path) -> Dict[str, Optional[str]]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "marsdisk/io/archive.py",
+    "line_no": 304,
+    "symbol": "_mac_volume_info",
+    "signature": "_mac_volume_info(path: Path) -> Dict[str, Optional[str]]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "marsdisk/io/archive.py",
+    "line_no": 331,
+    "symbol": "_linux_volume_info",
+    "signature": "_linux_volume_info(mount_point: Path) -> Dict[str, Optional[str]]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "marsdisk/io/archive.py",
+    "line_no": 371,
+    "symbol": "_resolve_volume_info",
+    "signature": "_resolve_volume_info(path: Path) -> Dict[str, Optional[str]]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "marsdisk/io/archive.py",
+    "line_no": 383,
     "symbol": "archive_run",
     "signature": "archive_run(run_dir: Path, *, archive_root: Path, settings: ArchiveSettings) -> ArchiveResult",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/io/archive.py",
-    "line_no": 287,
+    "line_no": 512,
     "symbol": "_build_manifest",
-    "signature": "_build_manifest(root: Path) -> Dict[str, object]",
+    "signature": "_build_manifest(root: Path, *, exclude: Optional[set[str]]=None) -> Dict[str, object]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/io/archive.py",
-    "line_no": 308,
+    "line_no": 536,
+    "symbol": "_hash_manifest",
+    "signature": "_hash_manifest(manifest: Mapping[str, object]) -> str",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "marsdisk/io/archive.py",
+    "line_no": 541,
     "symbol": "_verify_archive",
     "signature": "_verify_archive(*, run_dir: Path, dest_dir: Path, verify_level: str) -> List[str]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/io/archive.py",
-    "line_no": 358,
+    "line_no": 591,
     "symbol": "_verify_parquet_sets",
     "signature": "_verify_parquet_sets(run_dir: Path, dest_dir: Path, errors: List[str], level: str) -> None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/io/archive.py",
-    "line_no": 414,
+    "line_no": 647,
     "symbol": "_cleanup_local",
     "signature": "_cleanup_local(run_dir: Path, keep_local: str) -> None",
     "brief_usage": "No description available."
@@ -3137,49 +3179,49 @@
   },
   {
     "file_path": "marsdisk/io/writer.py",
-    "line_no": 394,
+    "line_no": 398,
     "symbol": "write_summary",
     "signature": "write_summary(summary: Mapping[str, Any], path: Path) -> None",
     "brief_usage": "Write a summary dictionary to ``summary.json``."
   },
   {
     "file_path": "marsdisk/io/writer.py",
-    "line_no": 405,
+    "line_no": 409,
     "symbol": "write_run_config",
     "signature": "write_run_config(config: Mapping[str, Any], path: Path) -> None",
     "brief_usage": "Persist the deterministic run configuration metadata."
   },
   {
     "file_path": "marsdisk/io/writer.py",
-    "line_no": 413,
+    "line_no": 417,
     "symbol": "write_mass_budget",
     "signature": "write_mass_budget(records: Iterable[Mapping[str, Any]], path: Path) -> None",
     "brief_usage": "Write mass conservation diagnostics to a CSV file."
   },
   {
     "file_path": "marsdisk/io/writer.py",
-    "line_no": 420,
+    "line_no": 424,
     "symbol": "append_csv",
     "signature": "append_csv(records: Iterable[Mapping[str, Any]], path: Path, *, header: bool=True) -> bool",
     "brief_usage": "Append records to a CSV file, creating the file if needed."
   },
   {
     "file_path": "marsdisk/io/writer.py",
-    "line_no": 439,
+    "line_no": 443,
     "symbol": "write_orbit_rollup",
     "signature": "write_orbit_rollup(rows: Iterable[Mapping[str, Any]], path: Path) -> None",
     "brief_usage": "Serialise orbit-by-orbit loss diagnostics."
   },
   {
     "file_path": "marsdisk/io/writer.py",
-    "line_no": 450,
+    "line_no": 454,
     "symbol": "write_step_diagnostics",
     "signature": "write_step_diagnostics(rows: Iterable[Mapping[str, Any]], path: Path, *, fmt: Literal['csv', 'jsonl']='csv') -> None",
     "brief_usage": "Serialise per-step loss channel diagnostics."
   },
   {
     "file_path": "marsdisk/io/writer.py",
-    "line_no": 473,
+    "line_no": 477,
     "symbol": "append_step_diagnostics",
     "signature": "append_step_diagnostics(rows: Iterable[Mapping[str, Any]], path: Path, *, fmt: Literal['csv', 'jsonl']='csv', header: bool=True) -> bool",
     "brief_usage": "Append per-step diagnostics in CSV or JSONL format."
@@ -4378,47 +4420,47 @@
     "file_path": "marsdisk/output_schema.py",
     "line_no": 7,
     "symbol": "ZERO_D_SERIES_KEYS",
-    "signature": "ZERO_D_SERIES_KEYS: list[str] = ['time', 'dt', 'Omega_s', 't_orb_s', 't_blow_s', 't_coll', 'ts_ratio', 'r_m', 'r_RM', 'r_orbit_RM', 'r_source', 'T_M_used', 'T_M_source', 'T_p_effective', 'phase_temperature_input', 'rad_flux_Mars', 'dt_over_t_blow', 'tau', 'tau_los_mars', 'a_blow_step', 'a_blow', 'a_blow_at_smin', 's_min', 's_min_surface_energy', 'kappa', 'kappa_eff', 'kappa_surf', 'Qpr_mean', 'Q_pr_at_smin', 'beta_at_smin_config', 'beta_at_smin_effective', 'beta_at_smin', 'beta_threshold', 'Sigma_surf', 'sigma_surf', 'Sigma_surf0', 'Sigma_tau1', 'Sigma_tau1_active', 'sigma_tau1', 'Sigma_tau1_last_finite', 'tau_phase_los', 'tau_phase_used', 'phase_tau_field', 'sigma_deep', 'headroom', 'outflux_surface', 't_solid_s', 'blowout_gate_factor', 'sink_flux_surface', 't_blow', 'prod_subblow_area_rate', 'prod_subblow_area_rate_raw', 'dotSigma_prod', 'mu_orbit10pct', 'epsilon_mix', 'prod_rate_raw', 'prod_rate_applied_to_surf', 'prod_rate_diverted_to_deep', 'prod_rate_into_deep', 'deep_to_surf_flux_attempt', 'deep_to_surf_flux', 'deep_to_surf_flux_applied', 'supply_rate_nominal', 'supply_rate_scaled', 'supply_rate_applied', 'supply_tau_clip_spill_rate', 'supply_headroom', 'supply_clip_factor', 'supply_visibility_factor', 'supply_blocked_by_headroom', 'supply_mixing_limited', 'supply_transport_mode', 'e_kernel_used', 'i_kernel_used', 'e_kernel_base', 'i_kernel_base', 'e_kernel_supply', 'i_kernel_supply', 'e_kernel_effective', 'i_kernel_effective', 'e_state_next', 'i_state_next', 't_damp_collisions', 'e_eq_target', 'supply_velocity_weight_w', 'supply_temperature_scale', 'supply_temperature_value', 'supply_temperature_value_kind', 'supply_feedback_scale', 'supply_feedback_error', 'supply_reservoir_remaining_Mmars', 'supply_reservoir_fraction', 'supply_reservoir_clipped', 'M_out_dot', 'M_sink_dot', 'dM_dt_surface_total', 'M_out_dot_avg', 'M_sink_dot_avg', 'dM_dt_surface_total_avg', 'fast_blowout_factor_avg', 'dSigma_dt_blowout', 'dSigma_dt_sinks', 'dSigma_dt_total', 'dSigma_dt_sublimation', 'M_loss_cum', 'mass_total_bins', 'mass_lost_by_blowout', 'mass_lost_by_sinks', 'M_sink_cum', 'mass_lost_sinks_step', 'mass_lost_sublimation_step', 'mass_lost_hydro_step', 'mass_lost_tau_clip_spill_step', 'cum_mass_lost_tau_clip_spill', 'mass_lost_surface_solid_marsRP_step', 'smol_dt_eff', 'smol_sigma_before', 'smol_sigma_after', 'smol_sigma_loss', 'smol_prod_mass_rate', 'smol_extra_mass_loss_rate', 'smol_mass_budget_delta', 'smol_mass_error', 'smol_gain_mass_rate', 'smol_loss_mass_rate', 'smol_sink_mass_rate', 'smol_source_mass_rate', 'M_loss_rp_mars', 'M_loss_surface_solid_marsRP', 'M_loss_hydro', 'fast_blowout_factor', 'fast_blowout_corrected', 'fast_blowout_flag_gt3', 'fast_blowout_flag_gt10', 'fast_blowout_ratio', 'n_substeps', 'substep_active', 'chi_blow_eff', 'case_status', 's_blow_m', 'rho_used', 'Q_pr_used', 'Q_pr_blow', 's_min_effective', 's_min_config', 's_min_effective_gt_config', 'T_source', 'ds_dt_sublimation', 'ds_dt_sublimation_raw', 'phi_effective', 'phi_used', 'phase_state', 'phase_f_vap', 'phase_method', 'phase_reason', 'phase_bulk_state', 'phase_bulk_f_liquid', 'phase_bulk_f_solid', 'phase_bulk_f_vapor', 'tau_mars_line_of_sight', 'tau_gate_blocked', 'blowout_beta_gate', 'blowout_phase_allowed', 'blowout_layer_mode', 'blowout_target_phase', 'sink_selected', 'sublimation_blocked_by_phase']",
+    "signature": "ZERO_D_SERIES_KEYS: list[str] = ['time', 'dt', 'Omega_s', 't_orb_s', 't_blow_s', 't_coll', 'ts_ratio', 'r_m', 'r_RM', 'r_orbit_RM', 'r_source', 'T_M_used', 'T_M_source', 'T_p_effective', 'phase_temperature_input', 'rad_flux_Mars', 'dt_over_t_blow', 'tau', 'tau_los_mars', 'a_blow_step', 'a_blow', 'a_blow_at_smin', 's_min', 's_min_surface_energy', 'kappa', 'kappa_eff', 'kappa_surf', 'Qpr_mean', 'Q_pr_at_smin', 'beta_at_smin_config', 'beta_at_smin_effective', 'beta_at_smin', 'beta_threshold', 'Sigma_surf', 'sigma_surf', 'Sigma_surf0', 'Sigma_tau1', 'Sigma_tau1_active', 'sigma_tau1', 'Sigma_tau1_last_finite', 'tau_phase_los', 'tau_phase_used', 'phase_tau_field', 'sigma_deep', 'headroom', 'outflux_surface', 't_solid_s', 'blowout_gate_factor', 'sink_flux_surface', 't_blow', 'prod_subblow_area_rate', 'prod_subblow_area_rate_raw', 'dotSigma_prod', 'mu_orbit10pct', 'epsilon_mix', 'prod_rate_raw', 'prod_rate_applied_to_surf', 'prod_rate_diverted_to_deep', 'prod_rate_into_deep', 'deep_to_surf_flux_attempt', 'deep_to_surf_flux', 'deep_to_surf_flux_applied', 'supply_rate_nominal', 'supply_rate_scaled', 'supply_rate_applied', 'supply_tau_clip_spill_rate', 'supply_headroom', 'supply_clip_factor', 'supply_visibility_factor', 'supply_blocked_by_headroom', 'supply_mixing_limited', 'supply_transport_mode', 'e_kernel_used', 'i_kernel_used', 'e_kernel_base', 'i_kernel_base', 'e_kernel_supply', 'i_kernel_supply', 'e_kernel_effective', 'i_kernel_effective', 'e_state_next', 'i_state_next', 't_damp_collisions', 'e_eq_target', 'supply_velocity_weight_w', 'supply_temperature_scale', 'supply_temperature_value', 'supply_temperature_value_kind', 'supply_feedback_scale', 'supply_feedback_error', 'supply_reservoir_remaining_Mmars', 'supply_reservoir_fraction', 'supply_reservoir_clipped', 'M_out_dot', 'M_sink_dot', 'dM_dt_surface_total', 'M_out_dot_avg', 'M_sink_dot_avg', 'dM_dt_surface_total_avg', 'fast_blowout_factor_avg', 'dSigma_dt_blowout', 'dSigma_dt_sinks', 'dSigma_dt_total', 'dSigma_dt_sublimation', 'M_loss_cum', 'mass_total_bins', 'mass_lost_by_blowout', 'mass_lost_by_sinks', 'M_sink_cum', 'mass_lost_sinks_step', 'mass_lost_sublimation_step', 'mass_lost_hydro_step', 'mass_lost_tau_clip_spill_step', 'cum_mass_lost_tau_clip_spill', 'mass_lost_surface_solid_marsRP_step', 'smol_dt_eff', 'smol_sigma_before', 'smol_sigma_after', 'smol_sigma_loss', 'smol_prod_mass_rate', 'smol_extra_mass_loss_rate', 'smol_mass_budget_delta', 'smol_mass_error', 'smol_gain_mass_rate', 'smol_loss_mass_rate', 'smol_sink_mass_rate', 'smol_source_mass_rate', 'M_loss_rp_mars', 'M_loss_surface_solid_marsRP', 'M_loss_hydro', 'fast_blowout_factor', 'fast_blowout_corrected', 'fast_blowout_flag_gt3', 'fast_blowout_flag_gt10', 'fast_blowout_ratio', 'n_substeps', 'substep_active', 'chi_blow_eff', 'case_status', 's_blow_m', 's_blow_m_effective', 'rho_used', 'Q_pr_used', 'Q_pr_blow', 's_min_effective', 's_min_config', 's_min_effective_gt_config', 'T_source', 'ds_dt_sublimation', 'ds_dt_sublimation_raw', 'phi_effective', 'phi_used', 'phase_state', 'phase_f_vap', 'phase_method', 'phase_reason', 'phase_bulk_state', 'phase_bulk_f_liquid', 'phase_bulk_f_solid', 'phase_bulk_f_vapor', 'tau_mars_line_of_sight', 'tau_gate_blocked', 'blowout_beta_gate', 'blowout_phase_allowed', 'blowout_layer_mode', 'blowout_target_phase', 'sink_selected', 'sublimation_blocked_by_phase']",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/output_schema.py",
-    "line_no": 177,
+    "line_no": 178,
     "symbol": "ZERO_D_DIAGNOSTIC_KEYS",
     "signature": "ZERO_D_DIAGNOSTIC_KEYS: list[str] = ['time', 'dt', 'dt_over_t_blow', 'r_m_used', 'r_RM_used', 'T_M_used', 'T_p_effective', 'phase_temperature_input', 'phase_temperature_used_K', 'rad_flux_Mars', 'F_abs_geom', 'F_abs_geom_qpr', 'F_abs', 'Omega_s', 't_orb_s', 't_blow_s', 't_solid_s', 't_sink_total_s', 't_sink_surface_s', 't_sink_sublimation_s', 't_sink_gas_drag_s', 'mass_loss_sinks_step', 'mass_lost_by_sinks', 'mass_loss_sublimation_step', 'sigma_tau1', 'sigma_tau1_active', 'Sigma_tau1_last_finite', 'tau_los_mars', 'tau_phase_los', 'tau_phase_used', 'phase_tau_field', 'kappa_eff', 'kappa_surf', 'phi_effective', 'psi_shield', 'sigma_surf', 'sigma_deep', 'kappa_Planck', 'tau_eff', 's_min', 'a_blow_at_smin', 'beta_at_smin_effective', 'beta_at_smin', 'Q_pr_at_smin', 's_peak', 'area_m2', 'prod_subblow_area_rate', 'prod_subblow_area_rate_raw', 'supply_rate_nominal', 'supply_rate_scaled', 'supply_rate_applied', 'supply_tau_clip_spill_rate', 'supply_headroom', 'supply_clip_factor', 'headroom', 'prod_rate_raw', 'prod_rate_applied_to_surf', 'prod_rate_diverted_to_deep', 'prod_rate_into_deep', 'deep_to_surf_flux_attempt', 'deep_to_surf_flux', 'deep_to_surf_flux_applied', 'supply_visibility_factor', 'supply_blocked_by_headroom', 'supply_mixing_limited', 'supply_transport_mode', 'supply_temperature_scale', 'supply_temperature_value', 'supply_temperature_value_kind', 'supply_feedback_scale', 'supply_feedback_error', 'supply_reservoir_remaining_Mmars', 'supply_reservoir_fraction', 'supply_reservoir_clipped', 's_min_effective', 'qpr_mean', 'chi_blow_eff', 'ds_step_uniform', 'mass_ratio_uniform', 'M_out_cum', 'M_sink_cum', 'M_loss_cum', 'cum_mass_lost_tau_clip_spill', 'M_loss_surface_solid_marsRP', 'M_hydro_cum', 'phase_state', 'phase_method', 'phase_reason', 'phase_f_vap', 'phase_bulk_state', 'phase_bulk_f_liquid', 'phase_bulk_f_solid', 'phase_bulk_f_vapor', 'phase_payload', 'ds_dt_sublimation', 'ds_dt_sublimation_raw', 'sublimation_blocked_by_phase', 'tau_mars_line_of_sight', 'tau_gate_blocked', 'blowout_beta_gate', 'blowout_phase_allowed', 'blowout_layer_mode', 'blowout_target_phase', 'sink_selected', 'hydro_timescale_s', 'mass_loss_surface_solid_step', 'smol_dt_eff', 'smol_sigma_before', 'smol_sigma_after', 'smol_sigma_loss', 'smol_prod_mass_rate', 'smol_extra_mass_loss_rate', 'smol_mass_budget_delta', 'smol_mass_error', 'smol_gain_mass_rate', 'smol_loss_mass_rate', 'smol_sink_mass_rate', 'smol_source_mass_rate', 'blowout_gate_factor']",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/output_schema.py",
-    "line_no": 299,
+    "line_no": 300,
     "symbol": "ONE_D_EXTRA_SERIES_KEYS",
     "signature": "ONE_D_EXTRA_SERIES_KEYS: list[str] = ['cell_index', 'cell_active', 'active_mask', 'Sigma_midplane', 'cell_stop_reason', 'cell_stop_time', 'cell_stop_tau', 't_coll_kernel_min']",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/output_schema.py",
-    "line_no": 310,
+    "line_no": 311,
     "symbol": "ONE_D_EXTRA_DIAGNOSTIC_KEYS",
     "signature": "ONE_D_EXTRA_DIAGNOSTIC_KEYS: list[str] = ['cell_index']",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/output_schema.py",
-    "line_no": 313,
+    "line_no": 314,
     "symbol": "_ensure_keys",
     "signature": "_ensure_keys(record: Dict[str, object], keys: Iterable[str]) -> None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/output_schema.py",
-    "line_no": 318,
+    "line_no": 319,
     "symbol": "ensure_series_keys",
     "signature": "ensure_series_keys(record: Dict[str, object], *, include_1d: bool=True) -> None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/output_schema.py",
-    "line_no": 324,
+    "line_no": 325,
     "symbol": "ensure_diagnostic_keys",
     "signature": "ensure_diagnostic_keys(record: Dict[str, object], *, include_1d: bool=True) -> None",
     "brief_usage": "No description available."
@@ -6301,119 +6343,119 @@
   },
   {
     "file_path": "marsdisk/run_one_d.py",
-    "line_no": 56,
+    "line_no": 57,
     "symbol": "SECONDS_PER_YEAR",
     "signature": "SECONDS_PER_YEAR = 365.25 * 24 * 3600.0",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/run_one_d.py",
-    "line_no": 57,
+    "line_no": 58,
     "symbol": "MAX_STEPS",
     "signature": "MAX_STEPS = 50000000",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/run_one_d.py",
-    "line_no": 58,
+    "line_no": 59,
     "symbol": "TAU_MIN",
     "signature": "TAU_MIN = 1e-12",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/run_one_d.py",
-    "line_no": 59,
+    "line_no": 60,
     "symbol": "KAPPA_MIN",
     "signature": "KAPPA_MIN = 1e-12",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/run_one_d.py",
-    "line_no": 60,
+    "line_no": 61,
     "symbol": "DEFAULT_SEED",
     "signature": "DEFAULT_SEED = 12345",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/run_one_d.py",
-    "line_no": 61,
+    "line_no": 62,
     "symbol": "MASS_BUDGET_TOLERANCE_PERCENT",
     "signature": "MASS_BUDGET_TOLERANCE_PERCENT = 0.5",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/run_one_d.py",
-    "line_no": 62,
+    "line_no": 63,
     "symbol": "SINK_REF_SIZE",
     "signature": "SINK_REF_SIZE = 1e-06",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/run_one_d.py",
-    "line_no": 63,
+    "line_no": 64,
     "symbol": "FAST_BLOWOUT_RATIO_THRESHOLD",
     "signature": "FAST_BLOWOUT_RATIO_THRESHOLD = 3.0",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/run_one_d.py",
-    "line_no": 64,
+    "line_no": 65,
     "symbol": "FAST_BLOWOUT_RATIO_STRICT",
     "signature": "FAST_BLOWOUT_RATIO_STRICT = 10.0",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/run_one_d.py",
-    "line_no": 67,
+    "line_no": 68,
     "symbol": "MassBudgetViolationError",
     "signature": "class MassBudgetViolationError(NumericalError)",
     "brief_usage": "Raised when the mass budget tolerance is exceeded."
   },
   {
     "file_path": "marsdisk/run_one_d.py",
-    "line_no": 71,
+    "line_no": 72,
     "symbol": "_resolve_los_factor",
     "signature": "_resolve_los_factor(los_geom: Optional[object]) -> float",
     "brief_usage": "Return the multiplicative factor f_los scaling τ_vert to τ_los."
   },
   {
     "file_path": "marsdisk/run_one_d.py",
-    "line_no": 87,
+    "line_no": 88,
     "symbol": "_clamp_sigma_surf",
     "signature": "_clamp_sigma_surf(value: float, *, label: str='sigma_surf') -> float",
     "brief_usage": "Return a non-negative finite surface density (clamped to 0 on invalid)."
   },
   {
     "file_path": "marsdisk/run_one_d.py",
-    "line_no": 101,
+    "line_no": 102,
     "symbol": "_auto_chi_blow",
     "signature": "_auto_chi_blow(beta: float, qpr: float) -> float",
     "brief_usage": "Return an automatic chi_blow scaling based on β and ⟨Q_pr⟩."
   },
   {
     "file_path": "marsdisk/run_one_d.py",
-    "line_no": 116,
+    "line_no": 117,
     "symbol": "_fast_blowout_correction_factor",
     "signature": "_fast_blowout_correction_factor(ratio: float) -> float",
     "brief_usage": "Return the effective loss fraction ``f_fast = 1 - exp(-Δt/t_blow)``."
   },
   {
     "file_path": "marsdisk/run_one_d.py",
-    "line_no": 129,
+    "line_no": 130,
     "symbol": "_env_flag",
     "signature": "_env_flag(name: str) -> Optional[bool]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/run_one_d.py",
-    "line_no": 141,
+    "line_no": 142,
     "symbol": "_env_int",
     "signature": "_env_int(name: str) -> Optional[int]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/run_one_d.py",
-    "line_no": 151,
+    "line_no": 152,
     "symbol": "run_one_d",
     "signature": "run_one_d(cfg: Config, *, enforce_mass_budget: bool=False, physics_mode_override: Optional[str]=None, physics_mode_source_override: Optional[str]=None) -> None",
     "brief_usage": "Execute the 1D radial Mars disk simulation."
@@ -6574,7 +6616,7 @@
   },
   {
     "file_path": "marsdisk/run_zero_d.py",
-    "line_no": 5110,
+    "line_no": 5152,
     "symbol": "main",
     "signature": "main(argv: Optional[List[str]]=None) -> None",
     "brief_usage": "Command line entry point."
@@ -7197,35 +7239,35 @@
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 1882,
+    "line_no": 1908,
     "symbol": "IO",
     "signature": "class IO(BaseModel)",
     "brief_usage": "Output directories."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 1923,
+    "line_no": 1949,
     "symbol": "ExtendedDiagnostics",
     "signature": "class ExtendedDiagnostics(BaseModel)",
     "brief_usage": "Optional extended diagnostics controls."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 1936,
+    "line_no": 1962,
     "symbol": "EnergyBookkeeping",
     "signature": "class EnergyBookkeeping(BaseModel)",
     "brief_usage": "Controls for collision energy bookkeeping outputs."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 1949,
+    "line_no": 1975,
     "symbol": "Diagnostics",
     "signature": "class Diagnostics(BaseModel)",
     "brief_usage": "Diagnostics toggles grouped by feature phase."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 1956,
+    "line_no": 1982,
     "symbol": "Config",
     "signature": "class Config(BaseModel)",
     "brief_usage": "Top-level configuration object."
@@ -8562,7 +8604,7 @@
   },
   {
     "file_path": "scripts/runs/run_axis_r_sweep.py",
-    "line_no": 368,
+    "line_no": 370,
     "symbol": "main",
     "signature": "main(argv: Optional[List[str]]=None) -> int",
     "brief_usage": "No description available."
@@ -9122,21 +9164,21 @@
   },
   {
     "file_path": "scripts/sweeps/sweep_heatmaps.py",
-    "line_no": 1141,
+    "line_no": 1146,
     "symbol": "run_case",
     "signature": "run_case(case: CaseSpec, base_config: Dict[str, Any], root_dir: Path, python_executable: str, qpr_table_path: Optional[str]=None) -> Dict[str, Any]",
     "brief_usage": "Execute a single sweep case and collect results."
   },
   {
     "file_path": "scripts/sweeps/sweep_heatmaps.py",
-    "line_no": 1250,
+    "line_no": 1256,
     "symbol": "_results_dataframe",
     "signature": "_results_dataframe(results: List[Dict[str, Any]]) -> pd.DataFrame",
     "brief_usage": "No description available."
   },
   {
     "file_path": "scripts/sweeps/sweep_heatmaps.py",
-    "line_no": 1259,
+    "line_no": 1265,
     "symbol": "main",
     "signature": "main(argv: Optional[Iterable[str]]=None) -> None",
     "brief_usage": "No description available."
@@ -11830,6 +11872,27 @@
     "brief_usage": "No description available."
   },
   {
+    "file_path": "tests/test_archive_config.py",
+    "line_no": 10,
+    "symbol": "_base_config_path",
+    "signature": "_base_config_path() -> Path",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/test_archive_config.py",
+    "line_no": 14,
+    "symbol": "test_archive_requires_dir_when_enabled",
+    "signature": "test_archive_requires_dir_when_enabled() -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/test_archive_config.py",
+    "line_no": 20,
+    "symbol": "test_archive_accepts_dir_when_enabled",
+    "signature": "test_archive_accepts_dir_when_enabled(tmp_path: Path) -> None",
+    "brief_usage": "No description available."
+  },
+  {
     "file_path": "tests/test_psd_size_drift_vectorized.py",
     "line_no": 12,
     "symbol": "_reference_apply",
@@ -12111,14 +12174,21 @@
   },
   {
     "file_path": "tests/unit/test_high_priority_math_risks.py",
-    "line_no": 331,
+    "line_no": 333,
+    "symbol": "test_blowout_components_expose_raw_and_effective",
+    "signature": "test_blowout_components_expose_raw_and_effective(tmp_path: Path) -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/unit/test_high_priority_math_risks.py",
+    "line_no": 347,
     "symbol": "test_sublimation_sink_reference_timescale_uses_inverse_omega",
     "signature": "test_sublimation_sink_reference_timescale_uses_inverse_omega(monkeypatch: pytest.MonkeyPatch) -> None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tests/unit/test_high_priority_math_risks.py",
-    "line_no": 349,
+    "line_no": 365,
     "symbol": "test_powerlaw_injection_matches_exact_log_edges_within_tolerance",
     "signature": "test_powerlaw_injection_matches_exact_log_edges_within_tolerance() -> None",
     "brief_usage": "No description available."

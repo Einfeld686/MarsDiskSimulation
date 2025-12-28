@@ -69,7 +69,7 @@ exit /b 1
 
 :args_done
 
-if not defined HOOKS_ENABLE set "HOOKS_ENABLE=plot,eval"
+if not defined HOOKS_ENABLE set "HOOKS_ENABLE=plot,eval,archive"
 if not defined HOOKS_STRICT set "HOOKS_STRICT=0"
 if not defined PLOT_ENABLE set "PLOT_ENABLE=1"
 

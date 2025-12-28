@@ -4,7 +4,9 @@ io.streaming.memory_limit_gb=10
 io.streaming.step_flush_interval=10000
 io.streaming.merge_at_end=true
 io.streaming.cleanup_chunks=true
-# Archive is opt-in: set io.archive.enabled=true and io.archive.dir explicitly per host.
+# Archive (Windows production defaults)
+io.archive.enabled=true
+io.archive.dir=D:\marsdisk_runs
 io.archive.merge_target=external
 io.archive.verify_level=standard_plus
 io.archive.keep_local=metadata

@@ -17,7 +17,7 @@ import time
 import warnings
 import weakref
 from collections import defaultdict
-from dataclasses import asdict
+from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any, Dict, List, Mapping, Optional, Sequence, Tuple, cast
 import os
@@ -99,6 +99,36 @@ EXTENDED_DIAGNOSTICS_VERSION = "extended-minimal-v1"
 
 # Legacy aliases preserved for external callers/tests
 _compute_gate_factor = compute_gate_factor
+
+
+@dataclass
+class SmolSinkWorkspace:
+    n_bins: int
+    zeros_kernel: np.ndarray
+    zeros_frag: np.ndarray
+    zeros_source: np.ndarray
+    ds_dt_buf: np.ndarray
+    imex: smol.ImexWorkspace
+
+
+def _get_smol_sink_workspace(
+    workspace: SmolSinkWorkspace | None,
+    n_bins: int,
+) -> SmolSinkWorkspace:
+    if workspace is None or workspace.n_bins != n_bins:
+        return SmolSinkWorkspace(
+            n_bins=n_bins,
+            zeros_kernel=np.zeros((n_bins, n_bins), dtype=float),
+            zeros_frag=np.zeros((n_bins, n_bins, n_bins), dtype=float),
+            zeros_source=np.zeros(n_bins, dtype=float),
+            ds_dt_buf=np.zeros(n_bins, dtype=float),
+            imex=smol.ImexWorkspace(
+                gain=np.zeros(n_bins, dtype=float),
+                loss=np.zeros(n_bins, dtype=float),
+            ),
+        )
+    workspace.zeros_source.fill(0.0)
+    return workspace
 
 
 def _get_max_steps() -> int:
@@ -733,23 +763,25 @@ def run_zero_d(
     def _resolve_blowout(
         size_floor: float,
         initial: Optional[float] = None,
-    ) -> tuple[float, float]:
-        """Return (⟨Q_pr⟩, s_blow) respecting the supplied minimum size."""
+    ) -> tuple[float, float, float]:
+        """Return (⟨Q_pr⟩, s_blow_raw, s_blow_effective) using size_floor as the initial guess."""
 
         if qpr_override is not None:
             qpr_val = float(qpr_override)
             s_blow_val = radiation.blowout_radius(rho_used, T_use, Q_pr=qpr_val)
-            return qpr_val, float(max(size_floor, s_blow_val))
+            s_blow_raw = float(max(s_blow_val, 1.0e-12))
+            return qpr_val, s_blow_raw, float(max(size_floor, s_blow_raw))
 
         s_eval = float(initial if initial is not None else size_floor)
-        s_eval = float(max(size_floor, s_eval, 1.0e-12))
+        s_eval = float(max(s_eval, 1.0e-12))
         for _ in range(6):
             qpr_val = float(radiation.qpr_lookup(s_eval, T_use))
             s_blow_val = float(radiation.blowout_radius(rho_used, T_use, Q_pr=qpr_val))
-            s_eval = float(max(size_floor, s_blow_val, 1.0e-12))
+            s_eval = float(max(s_blow_val, 1.0e-12))
         qpr_final = float(radiation.qpr_lookup(s_eval, T_use))
         s_blow_final = float(radiation.blowout_radius(rho_used, T_use, Q_pr=qpr_final))
-        return qpr_final, float(max(size_floor, s_blow_final))
+        s_blow_raw = float(max(s_blow_final, 1.0e-12))
+        return qpr_final, s_blow_raw, float(max(size_floor, s_blow_raw))
 
     def _psd_mass_peak() -> float:
         """Return the size corresponding to the peak mass content."""
@@ -815,11 +847,11 @@ def run_zero_d(
         raise ConfigurationError(f"Unknown surface.collision_solver={collision_solver_mode!r}")
 
     s_min_config = cfg.sizes.s_min
-    qpr_for_blow, a_blow = _resolve_blowout(s_min_config)
+    qpr_for_blow, a_blow, a_blow_effective = _resolve_blowout(s_min_config)
     if psd_floor_mode == "none":
         s_min_effective = float(s_min_config)
     else:
-        s_min_effective = max(s_min_config, a_blow)
+        s_min_effective = float(max(s_min_config, a_blow_effective))
     s_min_floor_dynamic = float(s_min_effective)
     evolve_min_size_enabled = bool(getattr(cfg.sizes, "evolve_min_size", False))
     s_min_evolved_value = s_min_effective
@@ -827,6 +859,8 @@ def run_zero_d(
     s_min_components = {
         "config": float(s_min_config),
         "blowout": float(a_blow),
+        "blowout_raw": float(a_blow),
+        "blowout_effective": float(a_blow_effective),
         "effective": float(s_min_effective),
         "floor_mode": str(psd_floor_mode),
         "floor_dynamic": float(s_min_floor_dynamic),
@@ -888,6 +922,7 @@ def run_zero_d(
         psd_state["edges"] = np.linspace(0.0, float(n_bins), n_bins + 1)
         psd_state["s_min"] = s_mono
         psd_state["s_max"] = s_mono
+        psd_state["sizes_version"] = int(psd_state.get("sizes_version", 0)) + 1
     elif s0_mode_value in {"melt_lognormal_mixture", "melt_truncated_powerlaw"}:
         melt_cfg = getattr(cfg.initial, "melt_psd", None)
         if melt_cfg is None:
@@ -926,27 +961,6 @@ def run_zero_d(
     elif s0_mode_value != "upper":
         raise ConfigurationError(f"Unknown initial.s0_mode={s0_mode_value!r}")
     psd.sanitize_and_normalize_number(psd_state, normalize=False)
-    supply_injection_weights = None
-    if supply_injection_mode == "initial_psd":
-        sizes_arr = np.asarray(psd_state.get("sizes"), dtype=float)
-        widths_arr = np.asarray(psd_state.get("widths"), dtype=float)
-        number_raw = psd_state.get("number")
-        if number_raw is None:
-            number_raw = psd_state.get("n")
-        if number_raw is None:
-            raise ConfigurationError("initial_psd supply injection requires PSD number densities")
-        number_arr = np.asarray(number_raw, dtype=float)
-        if (
-            sizes_arr.shape != widths_arr.shape
-            or sizes_arr.shape != number_arr.shape
-            or sizes_arr.size == 0
-        ):
-            raise ConfigurationError("initial_psd supply injection requires sizes/widths/number arrays with matching shapes")
-        weights = sizes_arr**3 * widths_arr * number_arr
-        weights = np.where(np.isfinite(weights) & (weights > 0.0), weights, 0.0)
-        if float(np.sum(weights)) <= 0.0:
-            raise ConfigurationError("initial_psd supply injection requires positive mass weights from the initial PSD")
-        supply_injection_weights = weights
     kappa_surf = _ensure_finite_kappa(psd.compute_kappa(psd_state), label="kappa_surf_initial")
     kappa_surf_initial = float(kappa_surf)
     kappa_eff0 = kappa_surf_initial
@@ -1292,6 +1306,29 @@ def run_zero_d(
     supply_velocity_vrel_factor = getattr(supply_velocity_cfg, "vrel_factor", None) if supply_velocity_cfg else None
     supply_velocity_blend_mode = getattr(supply_velocity_cfg, "blend_mode", "rms") if supply_velocity_cfg else "rms"
     supply_velocity_weight_mode = getattr(supply_velocity_cfg, "weight_mode", "delta_sigma") if supply_velocity_cfg else "delta_sigma"
+    supply_injection_weights = None
+    if supply_injection_mode == "initial_psd":
+        sizes_arr = np.asarray(psd_state.get("sizes"), dtype=float)
+        widths_arr = np.asarray(psd_state.get("widths"), dtype=float)
+        number_raw = psd_state.get("number")
+        if number_raw is None:
+            number_raw = psd_state.get("n")
+        if number_raw is None:
+            raise ConfigurationError("initial_psd supply injection requires PSD number densities")
+        number_arr = np.asarray(number_raw, dtype=float)
+        if (
+            sizes_arr.shape != widths_arr.shape
+            or sizes_arr.shape != number_arr.shape
+            or sizes_arr.size == 0
+        ):
+            raise ConfigurationError(
+                "initial_psd supply injection requires sizes/widths/number arrays with matching shapes"
+            )
+        weights = sizes_arr**3 * widths_arr * number_arr
+        weights = np.where(np.isfinite(weights) & (weights > 0.0), weights, 0.0)
+        if float(np.sum(weights)) <= 0.0:
+            raise ConfigurationError("initial_psd supply injection requires positive mass weights from the initial PSD")
+        supply_injection_weights = weights
     supply_transport_cfg = getattr(supply_spec, "transport", None)
     supply_transport_mode = getattr(supply_transport_cfg, "mode", "direct") if supply_transport_cfg else "direct"
     supply_transport_headroom_gate = (
@@ -1887,12 +1924,14 @@ def run_zero_d(
     Omega_step = Omega
     t_orb_step = t_orb
     a_blow_step = a_blow
+    a_blow_effective_step = a_blow_effective
     qpr_mean_step = qpr_mean
     qpr_for_blow_step = qpr_for_blow
 
     temperature_track = history.temperature_track
     beta_track = history.beta_track
     ablow_track = history.ablow_track
+    blowout_effective_warned = False
     gate_factor_track = history.gate_factor_track
     t_solid_track = history.t_solid_track
     tau_gate_block_time = history.tau_gate_block_time
@@ -1940,6 +1979,7 @@ def run_zero_d(
     energy_last_row: Optional[Dict[str, float]] = None
     energy_count = 0
     collisions_smol._F_KE_MISMATCH_WARNED = False
+    smol_sink_workspace: SmolSinkWorkspace | None = None
 
     def _mark_reservoir_depletion(current_time: float) -> None:
         """Record the first time the finite reservoir is exhausted."""
@@ -2025,15 +2065,26 @@ def run_zero_d(
             setattr(sub_params, "runtime_t_orb_s", t_orb_step)
             setattr(sub_params, "runtime_Omega", Omega_step)
 
-            qpr_for_blow, a_blow_step = _resolve_blowout(
+            qpr_for_blow, a_blow_step, a_blow_effective_step = _resolve_blowout(
                 s_min_config,
                 initial=float(psd_state.get("s_min", s_min_effective)),
             )
+            if (
+                not blowout_effective_warned
+                and a_blow_effective_step > a_blow_step * (1.0 + 1.0e-12)
+            ):
+                warnings.warn(
+                    "s_blow_m now records the raw blow-out radius; use s_blow_m_effective for the "
+                    "size-floor-clipped value.",
+                    DeprecationWarning,
+                    stacklevel=2,
+                )
+                blowout_effective_warned = True
             qpr_for_blow_step = qpr_for_blow
             if psd_floor_mode == "none":
                 s_min_blow = float(s_min_config)
             else:
-                s_min_blow = max(s_min_config, a_blow_step)
+                s_min_blow = float(a_blow_effective_step)
             if psd_floor_mode == "none":
                 s_min_effective = float(psd_state.get("s_min", s_min_config))
             elif psd_floor_mode == "evolve_smin":
@@ -2043,6 +2094,8 @@ def run_zero_d(
                 s_min_floor_dynamic = float(max(s_min_floor_dynamic, s_min_effective))
             psd_state["s_min"] = s_min_effective
             s_min_components["blowout"] = float(a_blow_step)
+            s_min_components["blowout_raw"] = float(a_blow_step)
+            s_min_components["blowout_effective"] = float(a_blow_effective_step)
             s_min_components["effective"] = float(s_min_effective)
             s_min_components["floor_dynamic"] = float(s_min_floor_dynamic)
             qpr_mean_step = _lookup_qpr(s_min_effective)
@@ -2782,29 +2835,28 @@ def run_zero_d(
             )
             if N_k.size and sigma_surf > 0.0:
                 ds_dt_fill = ds_dt_val if ds_dt_val is not None else 0.0
-                ds_dt_k = np.full_like(sizes_arr, ds_dt_fill, dtype=float)
                 S_sub_k, mass_loss_rate_sub = sublimation_sink_from_dsdt(
                     sizes_arr,
                     N_k,
-                    ds_dt_k,
+                    ds_dt_fill,
                     m_k,
                 )
                 mass_loss_rate_sublimation_smol = mass_loss_rate_sub
                 if np.any(S_sub_k):
                     n_bins_smol = sizes_arr.size
-                    zeros_kernel = np.zeros((n_bins_smol, n_bins_smol))
-                    zeros_frag = np.zeros((n_bins_smol, n_bins_smol, n_bins_smol))
+                    smol_sink_workspace = _get_smol_sink_workspace(smol_sink_workspace, n_bins_smol)
                     N_new_smol, _smol_dt_eff, _smol_mass_err = smol.step_imex_bdf1_C3(
                         N_k,
-                        zeros_kernel,
-                        zeros_frag,
-                        np.zeros_like(N_k),
+                        smol_sink_workspace.zeros_kernel,
+                        smol_sink_workspace.zeros_frag,
+                        smol_sink_workspace.zeros_source,
                         m_k,
                         prod_subblow_mass_rate=0.0,
                         dt=dt,
                         S_external_k=None,
                         S_sublimation_k=S_sub_k,
                         extra_mass_loss_rate=mass_loss_rate_sub,
+                        workspace=smol_sink_workspace.imex,
                     )
                     sigma_before_smol = sigma_surf
                     psd_state, sigma_after_smol, sigma_loss_smol = smol.number_density_to_psd_state(
@@ -3470,6 +3522,7 @@ def run_zero_d(
             "chi_blow_eff": chi_blow_eff,
             "case_status": case_status,
             "s_blow_m": a_blow_step,
+            "s_blow_m_effective": a_blow_effective_step,
             "rho_used": rho_used,
             "Q_pr_used": qpr_mean_step,
             "Q_pr_blow": qpr_for_blow_step,
@@ -3992,9 +4045,10 @@ def run_zero_d(
 
     qpr_mean = qpr_mean_step
     a_blow = a_blow_step
+    a_blow_effective = max(s_min_config, a_blow)
     Omega = Omega_step
     t_orb = t_orb_step
-    qpr_blow_final = _lookup_qpr(max(s_min_config, a_blow))
+    qpr_blow_final = _lookup_qpr(max(a_blow, 1.0e-12))
 
     df: Optional[pd.DataFrame] = None
     if not streaming_state.enabled:
@@ -4266,6 +4320,7 @@ def run_zero_d(
         "beta_at_smin_config": beta_at_smin_config,
         "beta_at_smin_effective": beta_at_smin_effective,
         "s_blow_m": a_blow,
+        "s_blow_m_effective": a_blow_effective,
         "blowout_gate_mode": blowout_gate_mode,
         "chi_blow_input": chi_config_str,
         "chi_blow_eff": chi_blow_eff,
@@ -5010,6 +5065,12 @@ def run_zero_d(
         "temperature_source": temp_runtime.source,
         "use_mars_rp": mars_rp_enabled_cfg,
         "use_solar_rp": solar_rp_requested,
+    }
+    run_config["blowout_provenance"] = {
+        "s_blow_raw_m": float(a_blow),
+        "s_blow_effective_m": float(a_blow_effective),
+        "s_min_config_m": float(s_min_config),
+        "psd_floor_mode": str(psd_floor_mode),
     }
     psat_selection = getattr(sub_params, "_psat_last_selection", None) or {}
     psat_model_resolved = (

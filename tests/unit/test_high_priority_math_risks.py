@@ -318,6 +318,7 @@ def test_blowout_recorded_matches_physical_radius(tmp_path: Path) -> None:
 
     summary = json.loads((outdir / "summary.json").read_text())
     s_blow_recorded = float(summary["s_blow_m"])
+    s_blow_effective = float(summary["s_blow_m_effective"])
     s_blow_physical = radiation.blowout_radius(
         cfg.material.rho,
         cfg.radiation.TM_K,
@@ -326,6 +327,21 @@ def test_blowout_recorded_matches_physical_radius(tmp_path: Path) -> None:
 
     assert s_blow_physical < s_min_config
     assert s_blow_recorded == pytest.approx(s_blow_physical, rel=1.0e-3, abs=0.0)
+    assert s_blow_effective == pytest.approx(s_min_config, rel=1.0e-12, abs=0.0)
+
+
+def test_blowout_components_expose_raw_and_effective(tmp_path: Path) -> None:
+    s_min_config = 1.0e-5
+    outdir = tmp_path / "blowout_components"
+    cfg = _blowout_record_config(outdir, s_min=s_min_config)
+
+    run_module.run_zero_d(cfg)
+
+    summary = json.loads((outdir / "summary.json").read_text())
+    components = summary["s_min_components"]
+
+    assert components["blowout"] == pytest.approx(components["blowout_raw"])
+    assert components["blowout_effective"] == pytest.approx(s_min_config, rel=1.0e-12, abs=0.0)
 
 
 def test_sublimation_sink_reference_timescale_uses_inverse_omega(monkeypatch: pytest.MonkeyPatch) -> None:

@@ -145,6 +145,7 @@ ZERO_D_SERIES_KEYS: list[str] = [
     "chi_blow_eff",
     "case_status",
     "s_blow_m",
+    "s_blow_m_effective",
     "rho_used",
     "Q_pr_used",
     "Q_pr_blow",
