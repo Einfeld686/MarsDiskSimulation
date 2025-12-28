@@ -223,3 +223,13 @@ set "RUN_RC=%errorlevel%"
 
 popd
 exit /b %RUN_RC%
+
+:ensure_abs
+set "VAR_NAME=%~1"
+set "VAR_VAL=!%VAR_NAME%!"
+if not defined VAR_VAL exit /b 0
+if "!VAR_VAL:~1,1!"==":" exit /b 0
+if "!VAR_VAL:~0,2!"=="\\\\" exit /b 0
+if "!VAR_VAL:~0,1!"=="\\" exit /b 0
+set "%VAR_NAME%=%REPO_ROOT%\\!VAR_VAL!"
+exit /b 0
