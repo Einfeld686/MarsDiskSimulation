@@ -128,6 +128,36 @@ if defined STUDY_PATH set "STUDY_FILE=%STUDY_PATH%"
 if defined OUT_ROOT set "OUT_ROOT=%OUT_ROOT%"
 
 set "REPO_ROOT=%~dp0..\..\.."
+set "RUN_TS_SOURCE=pre"
+if defined RUN_TS (
+  set "RUN_TS=!RUN_TS::=!"
+  set "RUN_TS=!RUN_TS: =_!"
+  set "RUN_TS=!RUN_TS:/=-!"
+  set "RUN_TS=!RUN_TS:\=-!"
+)
+set "TEMP_ROOT=%TEMP%"
+set "TEMP_SOURCE=TEMP"
+if "%TEMP_ROOT%"=="" (
+  set "TEMP_ROOT=%REPO_ROOT%\\tmp"
+  set "TEMP_SOURCE=fallback"
+)
+if not exist "%TEMP_ROOT%" mkdir "%TEMP_ROOT%" >nul 2>&1
+if not exist "%TEMP_ROOT%" (
+  set "TEMP_ROOT=%REPO_ROOT%\\tmp"
+  set "TEMP_SOURCE=fallback"
+  if not exist "%TEMP_ROOT%" mkdir "%TEMP_ROOT%" >nul 2>&1
+)
+if not exist "%TEMP_ROOT%" (
+  echo.[error] temp_root unavailable: "%TEMP_ROOT%"
+  exit /b 1
+)
+set "TEMP=%TEMP_ROOT%"
+echo.[setup] repo_root=%REPO_ROOT%
+echo.[setup] temp_root=%TEMP_ROOT% (source=%TEMP_SOURCE%)
+if not exist "%REPO_ROOT%\\scripts\\research\\run_temp_supply_sweep.cmd" (
+  echo.[error] run_temp_supply_sweep.cmd not found: "%REPO_ROOT%\\scripts\\research\\run_temp_supply_sweep.cmd"
+  exit /b 1
+)
 pushd "%REPO_ROOT%" >nul
 
 if "%DRY_RUN%"=="1" (
