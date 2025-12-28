@@ -40,6 +40,11 @@ if exist "%REQ_FILE%" (
   echo [warn] %REQ_FILE% not found; skipping dependency install.
 )
 
+python -m pip install psutil
+if errorlevel 1 (
+  echo [warn] psutil install failed; perf logging will be limited.
+)
+
 python scripts\tests\overparallel_benchmark.py %*
 set "RC=%errorlevel%"
 

@@ -6,7 +6,40 @@ import os
 import subprocess
 import sys
 import time
+from datetime import datetime, timezone
 from pathlib import Path
+from typing import Any
+
+try:
+    import psutil
+except Exception:
+    psutil = None
+
+_ENV_SNAPSHOT_KEYS = (
+    "FORCE_STREAMING_OFF",
+    "IO_STREAMING",
+    "MARSDISK_CELL_PARALLEL",
+    "MARSDISK_CELL_JOBS",
+    "MARSDISK_CELL_MIN_CELLS",
+    "NUMBA_NUM_THREADS",
+    "OMP_NUM_THREADS",
+    "MKL_NUM_THREADS",
+    "OPENBLAS_NUM_THREADS",
+    "NUMEXPR_NUM_THREADS",
+)
+
+
+def _utc_now() -> str:
+    return datetime.now(timezone.utc).isoformat(timespec="seconds")
+
+
+def _env_snapshot(env: dict[str, str]) -> dict[str, str | None]:
+    return {key: env.get(key) for key in _ENV_SNAPSHOT_KEYS}
+
+
+def _write_json(path: Path, payload: dict[str, Any]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
 
 
 def _run_scenario(
@@ -16,22 +49,102 @@ def _run_scenario(
     out_root: Path,
     parallel_jobs: int,
     env_overrides: dict[str, str],
-) -> tuple[int, float, list[Path]]:
+) -> tuple[int, float, list[Path], list[dict[str, Any]]]:
     outdirs: list[Path] = []
-    procs: list[subprocess.Popen[bytes]] = []
+    runs: list[dict[str, Any]] = []
+    scenario_start = time.perf_counter()
     for idx in range(parallel_jobs):
         outdir = out_root / label / f"run_{idx:02d}"
         outdirs.append(outdir)
         cmd = cmd_base + ["--override", f"io.outdir={outdir}"]
         env = os.environ.copy()
         env.update(env_overrides)
-        procs.append(subprocess.Popen(cmd, env=env))
-    start = time.perf_counter()
+        start_perf = time.perf_counter()
+        start_time_utc = _utc_now()
+        proc = subprocess.Popen(cmd, env=env)
+        ps_proc = None
+        if psutil is not None:
+            try:
+                ps_proc = psutil.Process(proc.pid)
+            except Exception:
+                ps_proc = None
+        runs.append(
+            {
+                "index": idx,
+                "outdir": outdir,
+                "cmd": cmd,
+                "env_snapshot": _env_snapshot(env),
+                "start_perf": start_perf,
+                "start_time_utc": start_time_utc,
+                "proc": proc,
+                "ps_proc": ps_proc,
+                "cpu_time_sec": None,
+                "max_rss_mb": None,
+                "peak_threads": None,
+                "done": False,
+                "return_code": None,
+                "end_perf": None,
+                "end_time_utc": None,
+            }
+        )
     rc = 0
-    for proc in procs:
-        rc = max(rc, proc.wait())
-    elapsed = time.perf_counter() - start
-    return rc, elapsed, outdirs
+    while True:
+        remaining = 0
+        for run in runs:
+            if run["done"]:
+                continue
+            proc = run["proc"]
+            if psutil is not None and run["ps_proc"] is not None:
+                try:
+                    cpu_times = run["ps_proc"].cpu_times()
+                    run["cpu_time_sec"] = cpu_times.user + cpu_times.system
+                    rss = run["ps_proc"].memory_info().rss
+                    run["max_rss_mb"] = max(run["max_rss_mb"] or 0.0, rss / (1024 * 1024))
+                    threads = run["ps_proc"].num_threads()
+                    run["peak_threads"] = max(run["peak_threads"] or 0, threads)
+                except Exception:
+                    pass
+            proc_rc = proc.poll()
+            if proc_rc is None:
+                remaining += 1
+                continue
+            run["done"] = True
+            run["return_code"] = proc_rc
+            run["end_perf"] = time.perf_counter()
+            run["end_time_utc"] = _utc_now()
+            rc = max(rc, proc_rc)
+        if remaining == 0:
+            break
+        time.sleep(0.05)
+    elapsed = time.perf_counter() - scenario_start
+    perf_entries: list[dict[str, Any]] = []
+    cpu_logical = os.cpu_count() or 1
+    for run in runs:
+        wall_time = (run["end_perf"] or run["start_perf"]) - run["start_perf"]
+        cpu_time = run["cpu_time_sec"]
+        cpu_util = None
+        if cpu_time is not None and wall_time > 0:
+            cpu_util = 100.0 * cpu_time / wall_time
+        perf_data = {
+            "scenario_label": label,
+            "run_index": run["index"],
+            "pid": run["proc"].pid,
+            "command": run["cmd"],
+            "env": run["env_snapshot"],
+            "cpu_logical": cpu_logical,
+            "wall_time_sec": wall_time,
+            "cpu_time_sec": cpu_time,
+            "cpu_util_avg_pct": cpu_util,
+            "max_rss_mb": run["max_rss_mb"],
+            "peak_threads": run["peak_threads"],
+            "return_code": run["return_code"],
+            "start_time_utc": run["start_time_utc"],
+            "end_time_utc": run["end_time_utc"],
+            "psutil_available": psutil is not None,
+        }
+        perf_entries.append(perf_data)
+        _write_json(run["outdir"] / "perf.json", perf_data)
+    return rc, elapsed, outdirs, perf_entries
 
 
 def _load_cell_parallel(outdir: Path) -> dict:
@@ -60,6 +173,8 @@ def main() -> int:
     config_path = Path(args.config)
     out_root = Path(args.out_root)
     out_root.mkdir(parents=True, exist_ok=True)
+    if psutil is None:
+        print("[warn] psutil not available; perf.json will omit cpu/memory metrics.")
 
     overrides = [
         "geometry.mode=1D",
@@ -102,14 +217,14 @@ def main() -> int:
         "MARSDISK_CELL_JOBS": "1",
     }
 
-    rc_parallel, t_parallel, out_parallel = _run_scenario(
+    rc_parallel, t_parallel, out_parallel, perf_parallel = _run_scenario(
         label="parallel",
         cmd_base=cmd_base,
         out_root=out_root,
         parallel_jobs=args.parallel_jobs,
         env_overrides=parallel_env,
     )
-    rc_control, t_control, out_control = _run_scenario(
+    rc_control, t_control, out_control, perf_control = _run_scenario(
         label="control",
         cmd_base=cmd_base,
         out_root=out_root,
@@ -132,6 +247,24 @@ def main() -> int:
     print(f"[result] control_time_sec={t_control:.3f} rc={rc_control}")
     ratio = t_parallel / t_control if t_control > 0 else float("inf")
     print(f"[result] slowdown_ratio={ratio:.3f}")
+
+    summary = {
+        "parallel_time_sec": t_parallel,
+        "control_time_sec": t_control,
+        "slowdown_ratio": ratio,
+        "parallel": perf_parallel,
+        "control": perf_control,
+        "psutil_available": psutil is not None,
+        "cpu_logical": cpu_count,
+        "parallel_jobs": args.parallel_jobs,
+        "cell_jobs": args.cell_jobs,
+        "n_cells": args.n_cells,
+        "t_end_orbits": args.t_end_orbits,
+        "dt_init": args.dt_init,
+        "start_time_utc": perf_parallel[0]["start_time_utc"] if perf_parallel else None,
+        "end_time_utc": perf_control[-1]["end_time_utc"] if perf_control else None,
+    }
+    _write_json(out_root / "perf_summary.json", summary)
 
     if rc_parallel != 0 or rc_control != 0:
         return 2
