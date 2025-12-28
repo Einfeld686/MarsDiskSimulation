@@ -65,7 +65,17 @@ class ProgressReporter:
         self._last_sim_step_no = step_no
         self._update_eta(step_no, now)
         is_last = (step_no + 1) >= self.total_steps
-        frac = min(max((step_no + 1) / self.total_steps, 0.0), 1.0)
+        frac_time = None
+        if (
+            math.isfinite(self.total_time_s)
+            and self.total_time_s > 0.0
+            and math.isfinite(sim_time_s)
+        ):
+            frac_time = sim_time_s / self.total_time_s
+        if frac_time is not None:
+            frac = min(max(frac_time, 0.0), 1.0)
+        else:
+            frac = min(max((step_no + 1) / self.total_steps, 0.0), 1.0)
         percent_tenth = int(frac * 1000)
         if not force and not is_last and percent_tenth == self._last_percent_int:
             return
@@ -80,7 +90,22 @@ class ProgressReporter:
             remaining_s = max(self.total_time_s - sim_time_s, 0.0)
         remaining_years = remaining_s / SECONDS_PER_YEAR if math.isfinite(remaining_s) else float("nan")
         rem_text = f"rem~{remaining_years:.3g} yr" if math.isfinite(remaining_years) else "rem~?"
-        remaining_steps = max(self.total_steps - (step_no + 1), 0)
+        step_display = step_no + 1
+        total_display = self.total_steps
+        step_estimated = False
+        if (
+            dt_est is not None
+            and math.isfinite(self.total_time_s)
+            and self.total_time_s > 0.0
+            and math.isfinite(sim_time_s)
+            and sim_time_s >= 0.0
+        ):
+            total_display = max(int(math.ceil(self.total_time_s / dt_est)), 1)
+            step_display = max(int(math.ceil(sim_time_s / dt_est)), 1)
+            if step_display > total_display:
+                step_display = total_display
+            step_estimated = True
+        remaining_steps = max(total_display - step_display, 0)
         if dt_est is not None and math.isfinite(remaining_s):
             remaining_steps = max(int(math.ceil(remaining_s / dt_est)), 0)
         eta_seconds = float("nan")
@@ -102,8 +127,9 @@ class ProgressReporter:
 
         eta_text = _format_eta(eta_seconds)
         memory_text = f" mem~{self.memory_hint}" if self.memory_hint else ""
+        step_prefix = "~" if step_estimated else ""
         line = (
-            f"[{bar}] {frac * 100:5.1f}% step {step_no + 1}/{self.total_steps} "
+            f"[{bar}] {frac * 100:5.1f}% step {step_prefix}{step_display}/{step_prefix}{total_display} "
             f"t={sim_years:.3g} yr {rem_text} {eta_text}{memory_text}"
         )
         if self._isatty:

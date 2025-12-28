@@ -82,6 +82,9 @@ call :ensure_abs CONFIG_PATH
 call :ensure_abs OVERRIDES_PATH
 if defined STUDY_PATH call :ensure_abs STUDY_PATH
 
+echo.[info] run_sweep start
+echo.[info] config="%CONFIG_PATH%" overrides="%OVERRIDES_PATH%" study="%STUDY_PATH%" out_root="%OUT_ROOT%"
+
 if not defined HOOKS_ENABLE set "HOOKS_ENABLE=plot,eval,archive"
 if not defined HOOKS_STRICT set "HOOKS_STRICT=0"
 if not defined PLOT_ENABLE set "PLOT_ENABLE=1"
@@ -143,6 +146,8 @@ if defined OUT_ROOT (
 rem Staging outputs stay on the internal disk; external archive is handled via io.archive.*
 
 rem Validate archive defaults in the overrides file to match the archive plan.
+rem NOTE: PowerShell inlined parsing can break under cmd.exe redirection (">") and JP paths,
+rem so we always parse overrides via Python and emit a temp .cmd to avoid that class of errors.
 set "ARCHIVE_ENABLED_EXPECTED="
 set "ARCHIVE_DIR_EXPECTED="
 set "ARCHIVE_MERGE_TARGET="
@@ -191,6 +196,7 @@ if /i "%BATCH_ROOT%"=="%ARCHIVE_DIR_EXPECTED%" (
   echo.[error] BATCH_ROOT must be internal; it matches io.archive.dir (%ARCHIVE_DIR_EXPECTED%)
   exit /b 1
 )
+echo.[info] overrides validated
 
 set "RUN_TS_SOURCE=pre"
 if defined RUN_TS (
@@ -225,13 +231,16 @@ if not exist "%REPO_ROOT%\\scripts\\research\\run_temp_supply_sweep.cmd" (
 pushd "%REPO_ROOT%" >nul
 
 if "%DRY_RUN%"=="1" (
+  echo.[info] dry-run: calling run_temp_supply_sweep.cmd
   call scripts\research\run_temp_supply_sweep.cmd --dry-run
   popd
   exit /b %errorlevel%
 )
 
+echo.[info] launching run_temp_supply_sweep.cmd
 call scripts\research\run_temp_supply_sweep.cmd
 set "RUN_RC=%errorlevel%"
+echo.[info] run_temp_supply_sweep.cmd finished (rc=%RUN_RC%)
 
 popd
 exit /b %RUN_RC%

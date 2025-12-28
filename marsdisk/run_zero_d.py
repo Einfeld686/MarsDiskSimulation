@@ -1698,7 +1698,7 @@ def run_zero_d(
         progress.restore_state(progress_state_from_ckpt)
         progress.update(
             max(start_step - 1, 0),
-            max(time_offset + (start_step - 1) * dt, 0.0),
+            max(time_offset + start_step * dt, 0.0),
             force=True,
         )
 
@@ -3920,8 +3920,8 @@ def run_zero_d(
                 logger.error("Failed to write checkpoint %s: %s", ckpt_path, exc)
 
         last_step_index = step_no
-        last_time_value = time
-        progress.update(step_no, time)
+        last_time_value = time_after_step
+        progress.update(step_no, time_after_step)
 
         if (
             mass_initial != 0.0
