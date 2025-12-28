@@ -75,7 +75,7 @@ if not exist "%TMP_TEST%" (
 del "%TMP_TEST%"
 
 rem Force output root to out/ as requested
-if not defined BATCH_ROOT set "BATCH_ROOT=out"
+if not defined BATCH_ROOT set "BATCH_ROOT=E:\marsdisk_runs"
 if not defined SWEEP_TAG set "SWEEP_TAG=temp_supply_sweep"
 echo.[setup] Output root: %BATCH_ROOT%
 
@@ -175,19 +175,34 @@ rem STREAM_STEP_INTERVAL intentionally left undefined by default
 if not defined ENABLE_PROGRESS set "ENABLE_PROGRESS=1"
 if not defined AUTO_JOBS set "AUTO_JOBS=0"
 if not defined PARALLEL_JOBS set "PARALLEL_JOBS=1"
+if not defined JOB_MEM_GB set "JOB_MEM_GB=10"
 if not defined SWEEP_PARALLEL set "SWEEP_PARALLEL=0"
 if not defined MARSDISK_CELL_PARALLEL set "MARSDISK_CELL_PARALLEL=1"
 if not defined MARSDISK_CELL_MIN_CELLS set "MARSDISK_CELL_MIN_CELLS=4"
 if not defined MARSDISK_CELL_CHUNK_SIZE set "MARSDISK_CELL_CHUNK_SIZE=0"
+if not defined CELL_MEM_FRACTION set "CELL_MEM_FRACTION=0.7"
 if not defined MARSDISK_CELL_JOBS set "MARSDISK_CELL_JOBS=auto"
 set "CELL_JOBS_RAW=%MARSDISK_CELL_JOBS%"
 if /i "%MARSDISK_CELL_JOBS%"=="auto" (
   set "CELL_CPU_LOGICAL="
-  for /f %%A in ('powershell -NoProfile -Command "(Get-CimInstance Win32_Processor | Measure-Object -Sum -Property NumberOfLogicalProcessors).Sum"') do set "CELL_CPU_LOGICAL=%%A"
-  if not defined CELL_CPU_LOGICAL for /f %%A in ('powershell -NoProfile -Command "[Environment]::ProcessorCount"') do set "CELL_CPU_LOGICAL=%%A"
-  if not defined CELL_CPU_LOGICAL if defined NUMBER_OF_PROCESSORS set "CELL_CPU_LOGICAL=%NUMBER_OF_PROCESSORS%"
-  if not defined CELL_CPU_LOGICAL set "CELL_CPU_LOGICAL=1"
-  set "MARSDISK_CELL_JOBS=%CELL_CPU_LOGICAL%"
+  set "CELL_MEM_TOTAL_GB="
+  set "CELL_MEM_FRACTION_USED="
+  for /f "usebackq tokens=1-4 delims=|" %%A in (`powershell -NoProfile -Command "$fraction=[double]$env:CELL_MEM_FRACTION; if ($fraction -le 0 -or $fraction -gt 1){$fraction=0.7}; $mem=(Get-CimInstance Win32_ComputerSystem).TotalPhysicalMemory; $total=[math]::Floor($mem/1GB); $cpu=(Get-CimInstance Win32_Processor | Measure-Object -Sum -Property NumberOfLogicalProcessors).Sum; if (-not $cpu -or $cpu -lt 1){$cpu=[Environment]::ProcessorCount}; if ($cpu -lt 1){$cpu=1}; $jobs=[int]([math]::Max([math]::Floor($cpu*$fraction),1)); Write-Output (\"$total|$cpu|$fraction|$jobs\")"`) do (
+    set "CELL_MEM_TOTAL_GB=%%A"
+    set "CELL_CPU_LOGICAL=%%B"
+    set "CELL_MEM_FRACTION_USED=%%C"
+    set "MARSDISK_CELL_JOBS=%%D"
+  )
+  if not defined MARSDISK_CELL_JOBS set "MARSDISK_CELL_JOBS=1"
+  if not defined CELL_MEM_FRACTION_USED set "CELL_MEM_FRACTION_USED=%CELL_MEM_FRACTION%"
+  if not defined STREAM_MEM_GB (
+    if defined CELL_MEM_TOTAL_GB (
+      if not "!CELL_MEM_TOTAL_GB!"=="0" (
+        for /f %%A in ('powershell -NoProfile -Command "$total=[double]$env:CELL_MEM_TOTAL_GB; $fraction=[double]$env:CELL_MEM_FRACTION_USED; if ($fraction -le 0 -or $fraction -gt 1){$fraction=0.7}; [math]::Max([math]::Floor($total*$fraction),1)"') do set "STREAM_MEM_GB=%%A"
+      )
+    )
+  )
+  echo.[sys] cell_parallel auto: mem_total_gb=!CELL_MEM_TOTAL_GB! mem_fraction=!CELL_MEM_FRACTION_USED! cpu_logical=!CELL_CPU_LOGICAL! cell_jobs=!MARSDISK_CELL_JOBS!
 )
 set "CELL_JOBS_OK=1"
 for /f "delims=0123456789" %%A in ("%MARSDISK_CELL_JOBS%") do set "CELL_JOBS_OK=0"
@@ -196,7 +211,6 @@ if "%CELL_JOBS_OK%"=="0" (
   set "MARSDISK_CELL_JOBS=1"
 )
 if "%MARSDISK_CELL_JOBS%"=="0" set "MARSDISK_CELL_JOBS=1"
-if not defined JOB_MEM_GB set "JOB_MEM_GB=10"
 if not defined MEM_RESERVE_GB set "MEM_RESERVE_GB=4"
 if not defined PARALLEL_SLEEP_SEC set "PARALLEL_SLEEP_SEC=2"
 if not defined PARALLEL_WINDOW_STYLE set "PARALLEL_WINDOW_STYLE=Hidden"
