@@ -148,13 +148,22 @@ set "ARCHIVE_DIR_EXPECTED="
 set "ARCHIVE_MERGE_TARGET="
 set "ARCHIVE_VERIFY_LEVEL="
 set "ARCHIVE_KEEP_LOCAL="
-if exist "%OVERRIDES_PATH%" (
-  for /f "usebackq tokens=1,* delims==" %%A in (`findstr /i /r "^io\\.archive\\.enabled=" "%OVERRIDES_PATH%"`) do set "ARCHIVE_ENABLED_EXPECTED=%%B"
-  for /f "usebackq tokens=1,* delims==" %%A in (`findstr /i /r "^io\\.archive\\.dir=" "%OVERRIDES_PATH%"`) do set "ARCHIVE_DIR_EXPECTED=%%B"
-  for /f "usebackq tokens=1,* delims==" %%A in (`findstr /i /r "^io\\.archive\\.merge_target=" "%OVERRIDES_PATH%"`) do set "ARCHIVE_MERGE_TARGET=%%B"
-  for /f "usebackq tokens=1,* delims==" %%A in (`findstr /i /r "^io\\.archive\\.verify_level=" "%OVERRIDES_PATH%"`) do set "ARCHIVE_VERIFY_LEVEL=%%B"
-  for /f "usebackq tokens=1,* delims==" %%A in (`findstr /i /r "^io\\.archive\\.keep_local=" "%OVERRIDES_PATH%"`) do set "ARCHIVE_KEEP_LOCAL=%%B"
+if not exist "%OVERRIDES_PATH%" (
+  echo.[error] overrides file not found: "%OVERRIDES_PATH%"
+  exit /b 1
 )
+set "ARCHIVE_SET=%TEMP%\\marsdisk_archive_overrides_%RANDOM%.cmd"
+python "%REPO_ROOT%\\scripts\\runsets\\common\\read_overrides_cmd.py" --file "%OVERRIDES_PATH%" > "%ARCHIVE_SET%"
+if errorlevel 1 (
+  echo.[error] failed to parse overrides: "%OVERRIDES_PATH%"
+  exit /b 1
+)
+if not exist "%ARCHIVE_SET%" (
+  echo.[error] overrides parse output missing: "%ARCHIVE_SET%"
+  exit /b 1
+)
+call "%ARCHIVE_SET%"
+del "%ARCHIVE_SET%"
 if /i not "%ARCHIVE_ENABLED_EXPECTED%"=="true" (
   echo.[error] io.archive.enabled=true is required in %OVERRIDES_PATH%
   exit /b 1
