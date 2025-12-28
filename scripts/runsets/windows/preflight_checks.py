@@ -134,12 +134,27 @@ def _check_path_value(label: str, value: str, errors: list[str], warnings: list[
         warnings.append(f"{label} contains non-ASCII characters: {value}")
     if len(value) >= MAX_WARN_PATH_LEN:
         warnings.append(f"{label} path length >= {MAX_WARN_PATH_LEN}: {value}")
-    if any(ch in value for ch in WINDOWS_PATH_INVALID_CHARS):
+    if _has_invalid_windows_chars(value):
         errors.append(f"{label} contains invalid Windows path chars: {value}")
     if value.endswith((" ", ".")):
         warnings.append(f"{label} ends with space/dot: {value}")
     if value.startswith("\\\\") and label != "io.archive.dir":
         warnings.append(f"{label} is a UNC path: {value}")
+
+
+def _has_invalid_windows_chars(value: str) -> bool:
+    for idx, ch in enumerate(value):
+        if ch not in WINDOWS_PATH_INVALID_CHARS:
+            continue
+        if ch == ":":
+            if idx == 1 and len(value) >= 2 and value[0].isalpha():
+                continue
+            if value.startswith("\\\\?\\") or value.startswith("\\\\.\\"):
+                if idx == 5 and len(value) > 5 and value[4].isalpha():
+                    continue
+            return True
+        return True
+    return False
 
 
 def main() -> int:
@@ -150,6 +165,11 @@ def main() -> int:
     ap.add_argument("--out-root", default="", help="Output root (optional).")
     ap.add_argument("--require-git", action="store_true")
     ap.add_argument("--require-powershell", action="store_true")
+    ap.add_argument(
+        "--simulate-windows",
+        action="store_true",
+        help="Run Windows-style checks even on non-Windows hosts.",
+    )
     ap.add_argument("--strict", action="store_true")
     args = ap.parse_args()
 
@@ -158,7 +178,8 @@ def main() -> int:
 
     if sys.version_info < (3, 11):
         warnings.append(f"python {sys.version.split()[0]} < 3.11")
-    if not _is_windows():
+    is_windows_host = _is_windows()
+    if not is_windows_host and not args.simulate_windows:
         warnings.append("host is not Windows; cmd-specific checks may be incomplete")
 
     for label, path in {
@@ -209,7 +230,7 @@ def main() -> int:
             if args.out_root:
                 if _normalize_windows(args.out_root) == _normalize_windows(archive_dir):
                     errors.append("out-root matches io.archive.dir (must be internal)")
-            if _is_windows():
+            if is_windows_host:
                 drive = PureWindowsPath(archive_dir).drive
                 if drive:
                     drive_root = Path(f"{drive}\\")
