@@ -12,6 +12,8 @@ if /i "%~1"=="--dry-run" (
   exit /b 0
 )
 if /i "%~1"=="--run-one" set "RUN_ONE_MODE=1"
+echo.[setup] script_path=%~f0
+echo.[setup] cwd=%CD%
 
 rem ---------- setup ----------
 if not defined VENV_DIR set "VENV_DIR=.venv"
@@ -45,6 +47,16 @@ echo.[setup] temp_root=%TMP_ROOT% (source=%TMP_SOURCE%)
 if not defined GIT_SHA for /f %%A in ('git rev-parse --short HEAD 2^>nul') do set "GIT_SHA=%%A"
 if not defined GIT_SHA set "GIT_SHA=nogit"
 if not defined BATCH_SEED for /f %%A in ('python -c "import secrets; print(secrets.randbelow(2**31))"') do set "BATCH_SEED=%%A"
+if "%BATCH_SEED%"=="" set "BATCH_SEED=0"
+set "TMP_TEST=%TMP_ROOT%\\marsdisk_tmp_test_%RUN_TS%_%BATCH_SEED%.txt"
+> "%TMP_TEST%" echo ok
+if not exist "%TMP_TEST%" (
+  echo.[error] temp_root write test failed: "%TMP_TEST%"
+  echo.[error] temp_root=%TMP_ROOT%
+  popd
+  exit /b 1
+)
+del "%TMP_TEST%"
 
 rem Force output root to out/ as requested
 if not defined BATCH_ROOT set "BATCH_ROOT=out"
