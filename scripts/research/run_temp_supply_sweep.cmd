@@ -761,15 +761,14 @@ endlocal
 exit /b 0
 
 :override_append_var
-setlocal EnableDelayedExpansion
+setlocal DisableDelayedExpansion
 set "OV_KEY=%~1"
 set "OV_VAR=%~2"
-set "OV_VAL="
-for %%V in (!OV_VAR!) do set "OV_VAL=!%%V!"
-call :trace "override append: !OV_KEY!=!OV_VAL!"
->>"%BASE_OVERRIDES_FILE%" echo !OV_KEY!=!OV_VAL!
+call set "OV_VAL=%%%OV_VAR%%%"
+call :trace "override append: %OV_KEY%=%OV_VAL%"
+>>"%BASE_OVERRIDES_FILE%" echo %OV_KEY%=%OV_VAL%
 if errorlevel 1 (
-  echo.[error] override append failed: !OV_KEY!=!OV_VAL!
+  echo.[error] override append failed: %OV_KEY%=%OV_VAL%
   endlocal
   exit /b 1
 )
