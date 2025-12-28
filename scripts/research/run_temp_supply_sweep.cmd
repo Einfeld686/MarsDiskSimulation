@@ -295,107 +295,108 @@ if defined EXTRA_OVERRIDES_FILE (
   )
 )
 
-> "%BASE_OVERRIDES_FILE%" echo numerics.dt_init=2
+call :trace "base_overrides_file=%BASE_OVERRIDES_FILE%"
+call :override_write_literal "numerics.dt_init=2"
 if not exist "%BASE_OVERRIDES_FILE%" (
   echo.[error] failed to create temp overrides file: "%BASE_OVERRIDES_FILE%"
   echo.[error] temp_root=%TMP_ROOT%
   popd
   exit /b 1
 )
->>"%BASE_OVERRIDES_FILE%" echo numerics.stop_on_blowout_below_smin=%STOP_ON_BLOWOUT_BELOW_SMIN%
->>"%BASE_OVERRIDES_FILE%" echo phase.enabled=true
+call :override_append_var "numerics.stop_on_blowout_below_smin" STOP_ON_BLOWOUT_BELOW_SMIN
+call :override_append_literal "phase.enabled=true"
 if /i "%GEOMETRY_MODE%"=="1D" (
-  >>"%BASE_OVERRIDES_FILE%" echo geometry.mode=1D
-  >>"%BASE_OVERRIDES_FILE%" echo geometry.Nr=%GEOMETRY_NR%
-  if defined GEOMETRY_R_IN_M >>"%BASE_OVERRIDES_FILE%" echo geometry.r_in=%GEOMETRY_R_IN_M%
-  if defined GEOMETRY_R_OUT_M >>"%BASE_OVERRIDES_FILE%" echo geometry.r_out=%GEOMETRY_R_OUT_M%
+  call :override_append_literal "geometry.mode=1D"
+  call :override_append_var "geometry.Nr" GEOMETRY_NR
+  if defined GEOMETRY_R_IN_M call :override_append_var "geometry.r_in" GEOMETRY_R_IN_M
+  if defined GEOMETRY_R_OUT_M call :override_append_var "geometry.r_out" GEOMETRY_R_OUT_M
 )
->>"%BASE_OVERRIDES_FILE%" echo qstar.coeff_units=%QSTAR_UNITS%
->>"%BASE_OVERRIDES_FILE%" echo radiation.qpr_table_path=marsdisk/io/data/qpr_planck_sio2_abbas_calibrated_lowT.csv
->>"%BASE_OVERRIDES_FILE%" echo radiation.mars_temperature_driver.enabled=true
+call :override_append_var "qstar.coeff_units" QSTAR_UNITS
+call :override_append_literal "radiation.qpr_table_path=marsdisk/io/data/qpr_planck_sio2_abbas_calibrated_lowT.csv"
+call :override_append_literal "radiation.mars_temperature_driver.enabled=true"
 if "%COOL_MODE%"=="hyodo" (
-  >>"%BASE_OVERRIDES_FILE%" echo radiation.mars_temperature_driver.mode=hyodo
-  >>"%BASE_OVERRIDES_FILE%" echo radiation.mars_temperature_driver.hyodo.d_layer_m=1.0e5
-  >>"%BASE_OVERRIDES_FILE%" echo radiation.mars_temperature_driver.hyodo.rho=3000
-  >>"%BASE_OVERRIDES_FILE%" echo radiation.mars_temperature_driver.hyodo.cp=1000
+  call :override_append_literal "radiation.mars_temperature_driver.mode=hyodo"
+  call :override_append_literal "radiation.mars_temperature_driver.hyodo.d_layer_m=1.0e5"
+  call :override_append_literal "radiation.mars_temperature_driver.hyodo.rho=3000"
+  call :override_append_literal "radiation.mars_temperature_driver.hyodo.cp=1000"
 ) else (
-  >>"%BASE_OVERRIDES_FILE%" echo radiation.mars_temperature_driver.mode=table
-  >>"%BASE_OVERRIDES_FILE%" echo radiation.mars_temperature_driver.table.time_unit=day
-  >>"%BASE_OVERRIDES_FILE%" echo radiation.mars_temperature_driver.table.column_time=time_day
-  >>"%BASE_OVERRIDES_FILE%" echo radiation.mars_temperature_driver.table.column_temperature=T_K
-  >>"%BASE_OVERRIDES_FILE%" echo radiation.mars_temperature_driver.extrapolation=hold
+  call :override_append_literal "radiation.mars_temperature_driver.mode=table"
+  call :override_append_literal "radiation.mars_temperature_driver.table.time_unit=day"
+  call :override_append_literal "radiation.mars_temperature_driver.table.column_time=time_day"
+  call :override_append_literal "radiation.mars_temperature_driver.table.column_temperature=T_K"
+  call :override_append_literal "radiation.mars_temperature_driver.extrapolation=hold"
 )
->>"%BASE_OVERRIDES_FILE%" echo supply.enabled=true
->>"%BASE_OVERRIDES_FILE%" echo supply.mode=%SUPPLY_MODE%
->>"%BASE_OVERRIDES_FILE%" echo supply.const.mu_orbit10pct=%SUPPLY_MU_ORBIT10PCT%
->>"%BASE_OVERRIDES_FILE%" echo supply.const.mu_reference_tau=%SUPPLY_MU_REFERENCE_TAU%
->>"%BASE_OVERRIDES_FILE%" echo supply.const.orbit_fraction_at_mu1=%SUPPLY_ORBIT_FRACTION%
->>"%BASE_OVERRIDES_FILE%" echo optical_depth.tau_stop=%OPTICAL_TAU_STOP%
->>"%BASE_OVERRIDES_FILE%" echo optical_depth.tau_stop_tol=%OPTICAL_TAU_STOP_TOL%
->>"%BASE_OVERRIDES_FILE%" echo shielding.mode=%SHIELDING_MODE%
+call :override_append_literal "supply.enabled=true"
+call :override_append_var "supply.mode" SUPPLY_MODE
+call :override_append_var "supply.const.mu_orbit10pct" SUPPLY_MU_ORBIT10PCT
+call :override_append_var "supply.const.mu_reference_tau" SUPPLY_MU_REFERENCE_TAU
+call :override_append_var "supply.const.orbit_fraction_at_mu1" SUPPLY_ORBIT_FRACTION
+call :override_append_var "optical_depth.tau_stop" OPTICAL_TAU_STOP
+call :override_append_var "optical_depth.tau_stop_tol" OPTICAL_TAU_STOP_TOL
+call :override_append_var "shielding.mode" SHIELDING_MODE
 
 if defined STREAM_MEM_GB (
-  >>"%BASE_OVERRIDES_FILE%" echo io.streaming.memory_limit_gb=%STREAM_MEM_GB%
+  call :override_append_var "io.streaming.memory_limit_gb" STREAM_MEM_GB
   echo.[info] override io.streaming.memory_limit_gb=%STREAM_MEM_GB%
 )
 if defined STREAM_STEP_INTERVAL (
-  >>"%BASE_OVERRIDES_FILE%" echo io.streaming.step_flush_interval=%STREAM_STEP_INTERVAL%
+  call :override_append_var "io.streaming.step_flush_interval" STREAM_STEP_INTERVAL
   echo.[info] override io.streaming.step_flush_interval=%STREAM_STEP_INTERVAL%
 )
 
 if defined SUPPLY_RESERVOIR_M (
-  >>"%BASE_OVERRIDES_FILE%" echo supply.reservoir.enabled=true
-  >>"%BASE_OVERRIDES_FILE%" echo supply.reservoir.mass_total_Mmars=%SUPPLY_RESERVOIR_M%
-  >>"%BASE_OVERRIDES_FILE%" echo supply.reservoir.depletion_mode=%SUPPLY_RESERVOIR_MODE%
-  >>"%BASE_OVERRIDES_FILE%" echo supply.reservoir.taper_fraction=%SUPPLY_RESERVOIR_TAPER%
+  call :override_append_literal "supply.reservoir.enabled=true"
+  call :override_append_var "supply.reservoir.mass_total_Mmars" SUPPLY_RESERVOIR_M
+  call :override_append_var "supply.reservoir.depletion_mode" SUPPLY_RESERVOIR_MODE
+  call :override_append_var "supply.reservoir.taper_fraction" SUPPLY_RESERVOIR_TAPER
   echo.[info] supply reservoir: M=%SUPPLY_RESERVOIR_M% M_Mars mode=%SUPPLY_RESERVOIR_MODE% taper_fraction=%SUPPLY_RESERVOIR_TAPER%
 )
 if not "%SUPPLY_FEEDBACK_ENABLED%"=="0" (
-  >>"%BASE_OVERRIDES_FILE%" echo supply.feedback.enabled=true
-  >>"%BASE_OVERRIDES_FILE%" echo supply.feedback.target_tau=%SUPPLY_FEEDBACK_TARGET%
-  >>"%BASE_OVERRIDES_FILE%" echo supply.feedback.gain=%SUPPLY_FEEDBACK_GAIN%
-  >>"%BASE_OVERRIDES_FILE%" echo supply.feedback.response_time_years=%SUPPLY_FEEDBACK_RESPONSE_YR%
-  >>"%BASE_OVERRIDES_FILE%" echo supply.feedback.min_scale=%SUPPLY_FEEDBACK_MIN_SCALE%
-  >>"%BASE_OVERRIDES_FILE%" echo supply.feedback.max_scale=%SUPPLY_FEEDBACK_MAX_SCALE%
-  >>"%BASE_OVERRIDES_FILE%" echo supply.feedback.tau_field=%SUPPLY_FEEDBACK_TAU_FIELD%
-  >>"%BASE_OVERRIDES_FILE%" echo supply.feedback.initial_scale=%SUPPLY_FEEDBACK_INITIAL%
+  call :override_append_literal "supply.feedback.enabled=true"
+  call :override_append_var "supply.feedback.target_tau" SUPPLY_FEEDBACK_TARGET
+  call :override_append_var "supply.feedback.gain" SUPPLY_FEEDBACK_GAIN
+  call :override_append_var "supply.feedback.response_time_years" SUPPLY_FEEDBACK_RESPONSE_YR
+  call :override_append_var "supply.feedback.min_scale" SUPPLY_FEEDBACK_MIN_SCALE
+  call :override_append_var "supply.feedback.max_scale" SUPPLY_FEEDBACK_MAX_SCALE
+  call :override_append_var "supply.feedback.tau_field" SUPPLY_FEEDBACK_TAU_FIELD
+  call :override_append_var "supply.feedback.initial_scale" SUPPLY_FEEDBACK_INITIAL
   echo.[info] supply feedback enabled: target_tau=%SUPPLY_FEEDBACK_TARGET%, gain=%SUPPLY_FEEDBACK_GAIN%, tau_field=%SUPPLY_FEEDBACK_TAU_FIELD%
 )
 if not "%SUPPLY_TEMP_ENABLED%"=="0" (
-  >>"%BASE_OVERRIDES_FILE%" echo supply.temperature.enabled=true
-  >>"%BASE_OVERRIDES_FILE%" echo supply.temperature.mode=%SUPPLY_TEMP_MODE%
-  >>"%BASE_OVERRIDES_FILE%" echo supply.temperature.reference_K=%SUPPLY_TEMP_REF_K%
-  >>"%BASE_OVERRIDES_FILE%" echo supply.temperature.exponent=%SUPPLY_TEMP_EXP%
-  >>"%BASE_OVERRIDES_FILE%" echo supply.temperature.scale_at_reference=%SUPPLY_TEMP_SCALE_REF%
-  >>"%BASE_OVERRIDES_FILE%" echo supply.temperature.floor=%SUPPLY_TEMP_FLOOR%
-  >>"%BASE_OVERRIDES_FILE%" echo supply.temperature.cap=%SUPPLY_TEMP_CAP%
+  call :override_append_literal "supply.temperature.enabled=true"
+  call :override_append_var "supply.temperature.mode" SUPPLY_TEMP_MODE
+  call :override_append_var "supply.temperature.reference_K" SUPPLY_TEMP_REF_K
+  call :override_append_var "supply.temperature.exponent" SUPPLY_TEMP_EXP
+  call :override_append_var "supply.temperature.scale_at_reference" SUPPLY_TEMP_SCALE_REF
+  call :override_append_var "supply.temperature.floor" SUPPLY_TEMP_FLOOR
+  call :override_append_var "supply.temperature.cap" SUPPLY_TEMP_CAP
   if defined SUPPLY_TEMP_TABLE_PATH (
-    >>"%BASE_OVERRIDES_FILE%" echo supply.temperature.table.path=%SUPPLY_TEMP_TABLE_PATH%
-    >>"%BASE_OVERRIDES_FILE%" echo supply.temperature.table.value_kind=%SUPPLY_TEMP_TABLE_VALUE_KIND%
-    >>"%BASE_OVERRIDES_FILE%" echo supply.temperature.table.column_temperature=%SUPPLY_TEMP_TABLE_COL_T%
-    >>"%BASE_OVERRIDES_FILE%" echo supply.temperature.table.column_value=%SUPPLY_TEMP_TABLE_COL_VAL%
+    call :override_append_var "supply.temperature.table.path" SUPPLY_TEMP_TABLE_PATH
+    call :override_append_var "supply.temperature.table.value_kind" SUPPLY_TEMP_TABLE_VALUE_KIND
+    call :override_append_var "supply.temperature.table.column_temperature" SUPPLY_TEMP_TABLE_COL_T
+    call :override_append_var "supply.temperature.table.column_value" SUPPLY_TEMP_TABLE_COL_VAL
   )
   echo.[info] supply temperature coupling enabled: mode=%SUPPLY_TEMP_MODE%
 )
->>"%BASE_OVERRIDES_FILE%" echo supply.injection.mode=%SUPPLY_INJECTION_MODE%
->>"%BASE_OVERRIDES_FILE%" echo supply.injection.q=%SUPPLY_INJECTION_Q%
-if defined SUPPLY_INJECTION_SMIN >>"%BASE_OVERRIDES_FILE%" echo supply.injection.s_inj_min=%SUPPLY_INJECTION_SMIN%
-if defined SUPPLY_INJECTION_SMAX >>"%BASE_OVERRIDES_FILE%" echo supply.injection.s_inj_max=%SUPPLY_INJECTION_SMAX%
+call :override_append_var "supply.injection.mode" SUPPLY_INJECTION_MODE
+call :override_append_var "supply.injection.q" SUPPLY_INJECTION_Q
+if defined SUPPLY_INJECTION_SMIN call :override_append_var "supply.injection.s_inj_min" SUPPLY_INJECTION_SMIN
+if defined SUPPLY_INJECTION_SMAX call :override_append_var "supply.injection.s_inj_max" SUPPLY_INJECTION_SMAX
 if defined SUPPLY_DEEP_TMIX_ORBITS (
-  >>"%BASE_OVERRIDES_FILE%" echo supply.transport.t_mix_orbits=%SUPPLY_DEEP_TMIX_ORBITS%
-  >>"%BASE_OVERRIDES_FILE%" echo supply.transport.mode=deep_mixing
+  call :override_append_var "supply.transport.t_mix_orbits" SUPPLY_DEEP_TMIX_ORBITS
+  call :override_append_literal "supply.transport.mode=deep_mixing"
   echo.[info] deep reservoir enabled (legacy alias): t_mix=%SUPPLY_DEEP_TMIX_ORBITS% orbits
 )
-if defined SUPPLY_TRANSPORT_TMIX_ORBITS >>"%BASE_OVERRIDES_FILE%" echo supply.transport.t_mix_orbits=%SUPPLY_TRANSPORT_TMIX_ORBITS%
-if defined SUPPLY_TRANSPORT_MODE >>"%BASE_OVERRIDES_FILE%" echo supply.transport.mode=%SUPPLY_TRANSPORT_MODE%
-if defined SUPPLY_TRANSPORT_HEADROOM >>"%BASE_OVERRIDES_FILE%" echo supply.transport.headroom_gate=%SUPPLY_TRANSPORT_HEADROOM%
-if defined SUPPLY_HEADROOM_POLICY >>"%BASE_OVERRIDES_FILE%" echo supply.headroom_policy=%SUPPLY_HEADROOM_POLICY%
->>"%BASE_OVERRIDES_FILE%" echo supply.injection.velocity.mode=%SUPPLY_VEL_MODE%
-if defined SUPPLY_VEL_E >>"%BASE_OVERRIDES_FILE%" echo supply.injection.velocity.e_inj=%SUPPLY_VEL_E%
-if defined SUPPLY_VEL_I >>"%BASE_OVERRIDES_FILE%" echo supply.injection.velocity.i_inj=%SUPPLY_VEL_I%
-if defined SUPPLY_VEL_FACTOR >>"%BASE_OVERRIDES_FILE%" echo supply.injection.velocity.vrel_factor=%SUPPLY_VEL_FACTOR%
->>"%BASE_OVERRIDES_FILE%" echo supply.injection.velocity.blend_mode=%SUPPLY_VEL_BLEND%
->>"%BASE_OVERRIDES_FILE%" echo supply.injection.velocity.weight_mode=%SUPPLY_VEL_WEIGHT%
+if defined SUPPLY_TRANSPORT_TMIX_ORBITS call :override_append_var "supply.transport.t_mix_orbits" SUPPLY_TRANSPORT_TMIX_ORBITS
+if defined SUPPLY_TRANSPORT_MODE call :override_append_var "supply.transport.mode" SUPPLY_TRANSPORT_MODE
+if defined SUPPLY_TRANSPORT_HEADROOM call :override_append_var "supply.transport.headroom_gate" SUPPLY_TRANSPORT_HEADROOM
+if defined SUPPLY_HEADROOM_POLICY call :override_append_var "supply.headroom_policy" SUPPLY_HEADROOM_POLICY
+call :override_append_var "supply.injection.velocity.mode" SUPPLY_VEL_MODE
+if defined SUPPLY_VEL_E call :override_append_var "supply.injection.velocity.e_inj" SUPPLY_VEL_E
+if defined SUPPLY_VEL_I call :override_append_var "supply.injection.velocity.i_inj" SUPPLY_VEL_I
+if defined SUPPLY_VEL_FACTOR call :override_append_var "supply.injection.velocity.vrel_factor" SUPPLY_VEL_FACTOR
+call :override_append_var "supply.injection.velocity.blend_mode" SUPPLY_VEL_BLEND
+call :override_append_var "supply.injection.velocity.weight_mode" SUPPLY_VEL_WEIGHT
 
 if defined RUN_ONE_MODE (
   if not defined RUN_ONE_T (
