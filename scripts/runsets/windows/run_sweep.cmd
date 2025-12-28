@@ -2,10 +2,11 @@
 rem Run a temp_supply sweep (1D default).
 setlocal EnableExtensions EnableDelayedExpansion
 
-set "SCRIPT_DIR=%~dp0"
-if not "%SCRIPT_DIR:~-1%"=="\\" set "SCRIPT_DIR=%SCRIPT_DIR%\\"
-set "CONFIG_PATH=%SCRIPT_DIR%..\\common\\base.yml"
-set "OVERRIDES_PATH=%SCRIPT_DIR%overrides.txt"
+for %%I in ("%~f0") do set "SCRIPT_DIR=%%~dpI"
+set "REPO_ROOT=%SCRIPT_DIR%..\\..\\.."
+for %%I in ("%REPO_ROOT%") do set "REPO_ROOT=%%~fI"
+set "CONFIG_PATH=%REPO_ROOT%\\scripts\\runsets\\common\\base.yml"
+set "OVERRIDES_PATH=%REPO_ROOT%\\scripts\\runsets\\windows\\overrides.txt"
 set "STUDY_PATH="
 set "OUT_ROOT="
 set "GEOMETRY_MODE=1D"
@@ -76,6 +77,10 @@ echo Usage: run_sweep.cmd [--study ^<path^>] [--config ^<path^>] [--overrides ^<
 exit /b 1
 
 :args_done
+
+call :ensure_abs CONFIG_PATH
+call :ensure_abs OVERRIDES_PATH
+if defined STUDY_PATH call :ensure_abs STUDY_PATH
 
 if not defined HOOKS_ENABLE set "HOOKS_ENABLE=plot,eval,archive"
 if not defined HOOKS_STRICT set "HOOKS_STRICT=0"
@@ -175,7 +180,6 @@ if /i "%BATCH_ROOT%"=="%ARCHIVE_DIR_EXPECTED%" (
   exit /b 1
 )
 
-set "REPO_ROOT=%~dp0..\..\.."
 set "RUN_TS_SOURCE=pre"
 if defined RUN_TS (
   set "RUN_TS=!RUN_TS::=!"
