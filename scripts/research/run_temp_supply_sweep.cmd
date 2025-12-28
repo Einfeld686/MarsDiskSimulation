@@ -173,7 +173,7 @@ if not defined SUPPLY_VEL_WEIGHT set "SUPPLY_VEL_WEIGHT=delta_sigma"
 rem STREAM_MEM_GB intentionally left undefined by default
 rem STREAM_STEP_INTERVAL intentionally left undefined by default
 if not defined ENABLE_PROGRESS set "ENABLE_PROGRESS=1"
-if not defined AUTO_JOBS set "AUTO_JOBS=0"
+if not defined AUTO_JOBS set "AUTO_JOBS=1"
 if not defined PARALLEL_JOBS set "PARALLEL_JOBS="
 if not defined JOB_MEM_GB set "JOB_MEM_GB=10"
 if not defined MEM_RESERVE_GB set "MEM_RESERVE_GB=4"
