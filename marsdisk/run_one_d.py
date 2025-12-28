@@ -149,6 +149,61 @@ def _env_int(name: str) -> Optional[int]:
         return None
 
 
+def _resolve_cell_parallel_config(
+    *,
+    os_name: str,
+    n_cells: int,
+    cell_parallel_requested: bool,
+    cell_jobs_requested: int,
+    cell_min_cells: int,
+    cell_chunk_size_raw: int,
+    cell_coupling_enabled: bool,
+) -> Dict[str, object]:
+    cell_parallel_reason = "enabled"
+    if not cell_parallel_requested:
+        cell_parallel_reason = "not_requested"
+    elif os_name != "nt":
+        cell_parallel_reason = "non_windows"
+    elif n_cells < cell_min_cells:
+        cell_parallel_reason = "too_few_cells"
+    elif cell_coupling_enabled:
+        cell_parallel_reason = "cell_coupling_enabled"
+    elif cell_jobs_requested <= 1:
+        cell_parallel_reason = "single_job"
+
+    cell_parallel_enabled = cell_parallel_reason == "enabled"
+    cell_jobs_effective = cell_jobs_requested
+    if cell_parallel_enabled:
+        cell_jobs_effective = max(1, min(cell_jobs_effective, n_cells))
+        if cell_jobs_effective <= 1:
+            cell_parallel_enabled = False
+            cell_parallel_reason = "single_job"
+            cell_jobs_effective = 1
+    else:
+        cell_jobs_effective = 1
+
+    cell_chunk_mode = "auto"
+    if cell_chunk_size_raw > 0:
+        cell_chunk_mode = "fixed"
+        cell_chunk_size_effective = cell_chunk_size_raw
+    else:
+        cell_chunk_size_effective = (
+            int(math.ceil(n_cells / cell_jobs_effective)) if cell_jobs_effective > 0 else n_cells
+        )
+    if cell_chunk_size_effective < 1:
+        cell_chunk_size_effective = 1
+    if cell_chunk_size_effective > n_cells:
+        cell_chunk_size_effective = n_cells
+
+    return {
+        "enabled": cell_parallel_enabled,
+        "reason": cell_parallel_reason,
+        "jobs_effective": int(cell_jobs_effective),
+        "chunk_size": int(cell_chunk_size_effective),
+        "chunk_mode": cell_chunk_mode,
+    }
+
+
 def run_one_d(
     cfg: Config,
     *,
@@ -251,41 +306,20 @@ def run_one_d(
         getattr(cfg.numerics, "enable_viscosity", False)
         or getattr(cfg.numerics, "enable_radial_transport", False)
     )
-    cell_parallel_reason = "enabled"
-    if not cell_parallel_requested:
-        cell_parallel_reason = "not_requested"
-    elif os.name != "nt":
-        cell_parallel_reason = "non_windows"
-    elif n_cells < cell_min_cells:
-        cell_parallel_reason = "too_few_cells"
-    elif cell_coupling_enabled:
-        cell_parallel_reason = "cell_coupling_enabled"
-    elif cell_jobs_requested <= 1:
-        cell_parallel_reason = "single_job"
-
-    cell_parallel_enabled = cell_parallel_reason == "enabled"
-    cell_jobs_effective = cell_jobs_requested
-    if cell_parallel_enabled:
-        cell_jobs_effective = max(1, min(cell_jobs_effective, n_cells))
-        if cell_jobs_effective <= 1:
-            cell_parallel_enabled = False
-            cell_parallel_reason = "single_job"
-            cell_jobs_effective = 1
-    else:
-        cell_jobs_effective = 1
-
-    cell_chunk_mode = "auto"
-    if cell_chunk_size_raw > 0:
-        cell_chunk_mode = "fixed"
-        cell_chunk_size_effective = cell_chunk_size_raw
-    else:
-        cell_chunk_size_effective = (
-            int(math.ceil(n_cells / cell_jobs_effective)) if cell_jobs_effective > 0 else n_cells
-        )
-    if cell_chunk_size_effective < 1:
-        cell_chunk_size_effective = 1
-    if cell_chunk_size_effective > n_cells:
-        cell_chunk_size_effective = n_cells
+    cell_parallel_config = _resolve_cell_parallel_config(
+        os_name=os.name,
+        n_cells=n_cells,
+        cell_parallel_requested=cell_parallel_requested,
+        cell_jobs_requested=cell_jobs_requested,
+        cell_min_cells=cell_min_cells,
+        cell_chunk_size_raw=cell_chunk_size_raw,
+        cell_coupling_enabled=cell_coupling_enabled,
+    )
+    cell_parallel_enabled = bool(cell_parallel_config["enabled"])
+    cell_parallel_reason = str(cell_parallel_config["reason"])
+    cell_jobs_effective = int(cell_parallel_config["jobs_effective"])
+    cell_chunk_size_effective = int(cell_parallel_config["chunk_size"])
+    cell_chunk_mode = str(cell_parallel_config["chunk_mode"])
 
     numba_threads_env = os.environ.get("NUMBA_NUM_THREADS")
     if numba_threads_env is not None and not numba_threads_env.strip():
