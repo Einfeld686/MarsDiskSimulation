@@ -14,6 +14,7 @@ set "DRY_RUN=0"
 set "NO_PLOT=0"
 set "NO_EVAL=0"
 set "NO_PREFLIGHT=0"
+set "PREFLIGHT_ONLY=0"
 
 :parse_args
 if "%~1"=="" goto :args_done
@@ -61,6 +62,11 @@ if /i "%~1"=="--no-preflight" (
   shift
   goto :parse_args
 )
+if /i "%~1"=="--preflight-only" (
+  set "PREFLIGHT_ONLY=1"
+  shift
+  goto :parse_args
+)
 if /i "%~1"=="--debug" (
   set "DEBUG=1"
   set "TRACE_ENABLED=1"
@@ -73,7 +79,7 @@ if /i "%~1"=="-h" goto :usage
 echo.[error] Unknown option: %~1
 :usage
 echo Usage: run_sweep.cmd [--study ^<path^>] [--config ^<path^>] [--overrides ^<path^>]
- echo.           [--out-root ^<path^>] [--dry-run] [--no-plot] [--no-eval] [--no-preflight] [--debug]
+ echo.           [--out-root ^<path^>] [--dry-run] [--no-plot] [--no-eval] [--no-preflight] [--preflight-only] [--debug]
 exit /b 1
 
 :args_done
@@ -144,6 +150,25 @@ if defined OUT_ROOT (
   set "BATCH_ROOT=out"
 )
 rem Staging outputs stay on the internal disk; external archive is handled via io.archive.*
+if "%DEBUG%"=="1" echo.[info] batch_root="%BATCH_ROOT%"
+
+if not "%NO_PREFLIGHT%"=="1" (
+  where python >nul 2>&1
+  if errorlevel 1 (
+    echo.[error] python not found in PATH
+    exit /b 1
+  )
+  echo.[info] preflight checks
+  python "%REPO_ROOT%\\scripts\\runsets\\windows\\preflight_checks.py" --repo-root "%REPO_ROOT%" --config "%CONFIG_PATH%" --overrides "%OVERRIDES_PATH%" --out-root "%OUT_ROOT%" --require-git --require-powershell
+  if errorlevel 1 (
+    echo.[error] preflight failed
+    exit /b 1
+  )
+)
+if "%PREFLIGHT_ONLY%"=="1" (
+  echo.[info] preflight-only requested; exiting.
+  exit /b 0
+)
 
 rem Validate archive defaults in the overrides file to match the archive plan.
 rem NOTE: PowerShell inlined parsing can break under cmd.exe redirection (">") and JP paths,
@@ -180,22 +205,27 @@ if /i not "%ARCHIVE_ENABLED_EXPECTED%"=="true" (
   echo.[error] io.archive.enabled=true is required in %OVERRIDES_PATH%
   exit /b 1
 )
+if "%DEBUG%"=="1" echo.[info] archive check enabled ok
 if not defined ARCHIVE_DIR_EXPECTED (
   echo.[error] io.archive.dir is required in %OVERRIDES_PATH%
   exit /b 1
 )
+if "%DEBUG%"=="1" echo.[info] archive check dir ok
 if /i not "%ARCHIVE_MERGE_TARGET%"=="external" (
   echo.[error] io.archive.merge_target=external is required in %OVERRIDES_PATH%
   exit /b 1
 )
+if "%DEBUG%"=="1" echo.[info] archive check merge_target ok
 if /i not "%ARCHIVE_VERIFY_LEVEL%"=="standard_plus" (
   echo.[error] io.archive.verify_level=standard_plus is required in %OVERRIDES_PATH%
   exit /b 1
 )
+if "%DEBUG%"=="1" echo.[info] archive check verify_level ok
 if /i not "%ARCHIVE_KEEP_LOCAL%"=="metadata" (
   echo.[error] io.archive.keep_local=metadata is required in %OVERRIDES_PATH%
   exit /b 1
 )
+if "%DEBUG%"=="1" echo.[info] archive check keep_local ok
 if /i "%BATCH_ROOT%"=="%ARCHIVE_DIR_EXPECTED%" (
   echo.[error] BATCH_ROOT must be internal; it matches io.archive.dir (%ARCHIVE_DIR_EXPECTED%)
   exit /b 1

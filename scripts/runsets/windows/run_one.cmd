@@ -14,6 +14,7 @@ set "DRY_RUN=0"
 set "NO_PLOT=0"
 set "NO_EVAL=0"
 set "NO_PREFLIGHT=0"
+set "PREFLIGHT_ONLY=0"
 
 :parse_args
 if "%~1"=="" goto :args_done
@@ -84,6 +85,11 @@ if /i "%~1"=="--no-preflight" (
   shift
   goto :parse_args
 )
+if /i "%~1"=="--preflight-only" (
+  set "PREFLIGHT_ONLY=1"
+  shift
+  goto :parse_args
+)
 if /i "%~1"=="--help" goto :usage
 if /i "%~1"=="-h" goto :usage
 
@@ -91,7 +97,7 @@ echo.[error] Unknown option: %~1
 :usage
 echo Usage: run_one.cmd --t ^<K^> --eps ^<float^> --tau ^<float^> [--seed ^<int^>]
  echo.            [--config ^<path^>] [--overrides ^<path^>] [--out-root ^<path^>]
- echo.            [--0d] [--dry-run] [--no-plot] [--no-eval] [--no-preflight]
+ echo.            [--0d] [--dry-run] [--no-plot] [--no-eval] [--no-preflight] [--preflight-only]
 exit /b 1
 
 :args_done
@@ -171,6 +177,27 @@ if defined OUT_ROOT set "OUT_ROOT=%OUT_ROOT%"
 
 set "REPO_ROOT=%~dp0..\..\.."
 pushd "%REPO_ROOT%" >nul
+
+if not "%NO_PREFLIGHT%"=="1" (
+  where python >nul 2>&1
+  if errorlevel 1 (
+    echo.[error] python not found in PATH
+    popd
+    exit /b 1
+  )
+  echo.[info] preflight checks
+  python "scripts\\runsets\\windows\\preflight_checks.py" --repo-root "%REPO_ROOT%" --config "%CONFIG_PATH%" --overrides "%OVERRIDES_PATH%" --out-root "%OUT_ROOT%" --require-git --require-powershell
+  if errorlevel 1 (
+    echo.[error] preflight failed
+    popd
+    exit /b 1
+  )
+)
+if "%PREFLIGHT_ONLY%"=="1" (
+  echo.[info] preflight-only requested; exiting.
+  popd
+  exit /b 0
+)
 
 if "%DRY_RUN%"=="1" (
   call scripts\research\run_temp_supply_sweep.cmd --dry-run
