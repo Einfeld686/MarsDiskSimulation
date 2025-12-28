@@ -202,7 +202,7 @@ Wyatt 型の $t_{\mathrm{coll}} = 1/(\Omega\tau_{\perp})$ 減衰を用いて表�
 - Returns outflux and sink flux after the implicit update; logs step parameters.
 - Indicator $I_{\mathrm{blow}}$ is 1 only when the runtime flag `enable_blowout` is true, ensuring both the $1/t_{\mathrm{blow}}$ termと外向流束が無効化される。[marsdisk/physics/surface.py#step_surface_density_S1 [L110–L192]]
 
-`surface.collision_solver="surface_ode"` を選んだ場合にのみ呼び出され、`t_{\mathrm{sink}}` が `None` または非正（`sinks.mode="none"` のときなど）ならシンク指標を落として吹き飛びと Wyatt/Strubbe–Chiang 型衝突寿命のみを損失項に残す。[marsdisk/run_zero_d.py#run_zero_d [L286–L5149]][marsdisk/physics/sinks.py#total_sink_timescale [L83–L160]][marsdisk/physics/surface.py#step_surface_density_S1 [L110–L192]] その構成では `sink_flux` は常に0となる。
+`surface.collision_solver="surface_ode"` を選んだ場合にのみ呼び出され、`t_{\mathrm{sink}}` が `None` または非正（`sinks.mode="none"` のときなど）ならシンク指標を落として吹き飛びと Wyatt/Strubbe–Chiang 型衝突寿命のみを損失項に残す。[marsdisk/run_zero_d.py#run_zero_d [L316–L5180]][marsdisk/physics/sinks.py#total_sink_timescale [L83–L160]][marsdisk/physics/surface.py#step_surface_density_S1 [L110–L192]] その構成では `sink_flux` は常に0となる。
 
 **参考**: [無効: gas‑poor 既定] Takeuchi & Lin (2003); Hyodo et al. (2017); Hyodo et al. (2018); Canup & Salmon (2018); Strubbe & Chiang (2006); Kuramoto (2024); Wyatt (2008)
 
@@ -215,7 +215,7 @@ Wyatt 型の $t_{\mathrm{coll}} = 1/(\Omega\tau_{\perp})$ 減衰を用いて表�
  s_{\min,\mathrm{eff}} = \max\!\left(s_{\min,\mathrm{cfg}},\, s_{\mathrm{blow}}\right)
 \end{equation}
 ```
-with the component sizes assembled as `s_min_components = {"config": s_{\min,\mathrm{cfg}}, "blowout": s_{\mathrm{blow,raw}}, "blowout_raw": s_{\mathrm{blow,raw}}, "blowout_effective": s_{\mathrm{blow,eff}}, "effective": s_{\min,\mathrm{eff}}}` where `s_{\mathrm{blow,eff}}=\max(s_{\min,\mathrm{cfg}}, s_{\mathrm{blow,raw}})` (`[marsdisk/run_zero_d.py#run_zero_d [L286–L5149]]`). The sublimation helper `fragments.s_sub_boundary` (`[marsdisk/physics/fragments.py#s_sub_boundary [L160–L226]]`) is now used exclusively for the grain-size evolution hook (``ds/dt``) and no longer raises the PSD floor.
+with the component sizes assembled as `s_min_components = {"config": s_{\min,\mathrm{cfg}}, "blowout": s_{\mathrm{blow,raw}}, "blowout_raw": s_{\mathrm{blow,raw}}, "blowout_effective": s_{\mathrm{blow,eff}}, "effective": s_{\min,\mathrm{eff}}}` where `s_{\mathrm{blow,eff}}=\max(s_{\min,\mathrm{cfg}}, s_{\mathrm{blow,raw}})` (`[marsdisk/run_zero_d.py#run_zero_d [L316–L5180]]`). The sublimation helper `fragments.s_sub_boundary` (`[marsdisk/physics/fragments.py#s_sub_boundary [L160–L226]]`) is now used exclusively for the grain-size evolution hook (``ds/dt``) and no longer raises the PSD floor.
 
 The reported beta diagnostics are computed in two places:
 ```latex
@@ -223,34 +223,34 @@ The reported beta diagnostics are computed in two places:
 \beta_{\mathrm{eff}} = \beta\!\left(s_{\min,\mathrm{eff}}\right),
 ```
 where `radiation.beta` implements the Stefan–Boltzmann expression and takes the Planck mean `⟨Q_{\mathrm{pr}}⟩` from the current run (`[marsdisk/physics/radiation.py#beta [L458–L479]]`).
-Both fields are written to the time series と `summary.json` に `beta_at_smin_config` / `beta_at_smin_effective` として保存される（`[marsdisk/run_zero_d.py#run_zero_d [L286–L5149]]`, `[marsdisk/run_zero_d.py#run_zero_d [L286–L5149]]`）。
-The blow-out threshold originates from the module constant `BLOWOUT_BETA_THRESHOLD` (`[marsdisk/physics/radiation.py#BLOWOUT_BETA_THRESHOLD [L58]]`), and the recorded key is `beta_threshold` (`[marsdisk/run_zero_d.py#run_zero_d [L286–L5149]]`, `[marsdisk/run_zero_d.py#run_zero_d [L286–L5149]]`).
-The closed-form expression for β is persisted verbatim in `run_config.json["beta_formula"]` as part of the provenance record (`[marsdisk/run_zero_d.py#run_zero_d [L286–L5149]]`).
+Both fields are written to the time series と `summary.json` に `beta_at_smin_config` / `beta_at_smin_effective` として保存される（`[marsdisk/run_zero_d.py#run_zero_d [L316–L5180]]`, `[marsdisk/run_zero_d.py#run_zero_d [L316–L5180]]`）。
+The blow-out threshold originates from the module constant `BLOWOUT_BETA_THRESHOLD` (`[marsdisk/physics/radiation.py#BLOWOUT_BETA_THRESHOLD [L58]]`), and the recorded key is `beta_threshold` (`[marsdisk/run_zero_d.py#run_zero_d [L316–L5180]]`, `[marsdisk/run_zero_d.py#run_zero_d [L316–L5180]]`).
+The closed-form expression for β is persisted verbatim in `run_config.json["beta_formula"]` as part of the provenance record (`[marsdisk/run_zero_d.py#run_zero_d [L316–L5180]]`).
 
-Case classification follows the configuration beta: `case_status = "blowout"` when `beta_at_smin_config >= beta_threshold`, otherwise `"ok"`; exceptional mass-budget failures are escalated separately (`[marsdisk/run_zero_d.py#run_zero_d [L286–L5149]]`). This logic matches the recorded summaries used by downstream validation.
+Case classification follows the configuration beta: `case_status = "blowout"` when `beta_at_smin_config >= beta_threshold`, otherwise `"ok"`; exceptional mass-budget failures are escalated separately (`[marsdisk/run_zero_d.py#run_zero_d [L316–L5180]]`). This logic matches the recorded summaries used by downstream validation.
 
 **Recorded quantities**
 
 | Quantity (units) | Summary key(s) | Provenance | Notes |
 | --- | --- | --- | --- |
-| Effective minimum grain size (m) | `s_min_effective`, `s_min_components["effective"]` | `[marsdisk/run_zero_d.py#run_zero_d [L286–L5149]]`, `[marsdisk/run_zero_d.py#run_zero_d [L286–L5149]]` | `\max(s_{\min,\mathrm{cfg}}, s_{\mathrm{blow,eff}})` |
-| Configured minimum grain size (m) | `s_min_config`, `s_min_components["config"]` | `[marsdisk/run_zero_d.py#run_zero_d [L286–L5149]]`, `[marsdisk/run_zero_d.py#run_zero_d [L286–L5149]]` | YAML `sizes.s_min` from `schema.Sizes` |
-| Blow-out limit (raw, m) | `s_blow_m`, `s_min_components["blowout_raw"]`, `s_min_components["blowout"]` | `[marsdisk/run_zero_d.py#run_zero_d [L286–L5149]]`, `[marsdisk/run_zero_d.py#run_zero_d [L286–L5149]]` | Uses `radiation.blowout_radius` without size-floor clipping |
-| Blow-out limit (effective, m) | `s_blow_m_effective`, `s_min_components["blowout_effective"]` | `[marsdisk/run_zero_d.py#run_zero_d [L286–L5149]]`, `[marsdisk/run_zero_d.py#run_zero_d [L286–L5149]]` | Size-floor clipped value `\max(s_{\min,\mathrm{cfg}}, s_{\mathrm{blow,raw}})` |
-| Beta at config size (dimensionless) | `beta_at_smin_config` | `[marsdisk/run_zero_d.py#run_zero_d [L286–L5149]]`, `[marsdisk/run_zero_d.py#run_zero_d [L286–L5149]]` | Evaluated with `radiation.beta` |
-| Beta at effective size (dimensionless) | `beta_at_smin_effective` | `[marsdisk/run_zero_d.py#run_zero_d [L286–L5149]]`, `[marsdisk/run_zero_d.py#run_zero_d [L286–L5149]]` | Uses same β function at `s_min_effective` |
-| Beta threshold (dimensionless) | `beta_threshold` | `[marsdisk/physics/radiation.py#BLOWOUT_BETA_THRESHOLD [L58]]`, `[marsdisk/run_zero_d.py#run_zero_d [L286–L5149]]` | Constant 0.5 defined in radiation module |
-| Blow-out loss cumulative (M_Mars) | `M_out_cum` | `[marsdisk/run_zero_d.py#run_zero_d [L286–L5149]]` | Equal to `mass_lost_by_blowout` final value |
-| Sink loss cumulative (M_Mars) | `M_sink_cum` | `[marsdisk/run_zero_d.py#run_zero_d [L286–L5149]]` | Includes HKL erosion and IMEX sink flux |
-| Mean blow-out per orbit (M_Mars) | `M_out_mean_per_orbit` | `[marsdisk/run_zero_d.py#run_zero_d [L286–L5149]]` | Reported when at least one orbit completes |
-| Mean sink per orbit (M_Mars) | `M_sink_mean_per_orbit` | `[marsdisk/run_zero_d.py#run_zero_d [L286–L5149]]` | Reported when at least one orbit completes |
-| Orbit counter (dimensionless) | `orbits_completed` | `[marsdisk/run_zero_d.py#run_zero_d [L286–L5149]]` | Number of completed orbital rollups |
-| Mars-facing temperature (K) | `T_M_used`, `T_M_source` | `[marsdisk/run_zero_d.py#load_config [L228–L250]]`, `[marsdisk/run_zero_d.py#run_zero_d [L286–L5149]]` | `radiation.TM_K` または温度ドライバから決定（legacy `temps.T_M` は廃止） |
-| Radiation efficiency (dimensionless) | `Q_pr_used` | `[marsdisk/run_zero_d.py#run_zero_d [L286–L5149]]`, `[marsdisk/run_zero_d.py#run_zero_d [L286–L5149]]` | Planck mean stored for reference |
-| Shielding Φ table path | `phi_table_path` | `[marsdisk/run_zero_d.py#run_zero_d [L286–L5149]]` | Summary retains the resolved τ-table for provenance |
-| PSD bin index (dimensionless) | `bin_index` | `[marsdisk/run_zero_d.py#run_zero_d [L286–L5149]][marsdisk/io/writer.py#write_parquet [L24–L395]]` | Time×bin identifier stored in `psd_hist.parquet` |
-| PSD bin centre (m) | `s_bin_center` | `[marsdisk/run_zero_d.py#run_zero_d [L286–L5149]][marsdisk/io/writer.py#write_parquet [L24–L395]]` | Logarithmic midpoint used for PSD plots |
-| PSD bin number density | `N_bin` | `[marsdisk/run_zero_d.py#run_zero_d [L286–L5149]][marsdisk/io/writer.py#write_parquet [L24–L395]]` | Relative number surface density per bin |
+| Effective minimum grain size (m) | `s_min_effective`, `s_min_components["effective"]` | `[marsdisk/run_zero_d.py#run_zero_d [L316–L5180]]`, `[marsdisk/run_zero_d.py#run_zero_d [L316–L5180]]` | `\max(s_{\min,\mathrm{cfg}}, s_{\mathrm{blow,eff}})` |
+| Configured minimum grain size (m) | `s_min_config`, `s_min_components["config"]` | `[marsdisk/run_zero_d.py#run_zero_d [L316–L5180]]`, `[marsdisk/run_zero_d.py#run_zero_d [L316–L5180]]` | YAML `sizes.s_min` from `schema.Sizes` |
+| Blow-out limit (raw, m) | `s_blow_m`, `s_min_components["blowout_raw"]`, `s_min_components["blowout"]` | `[marsdisk/run_zero_d.py#run_zero_d [L316–L5180]]`, `[marsdisk/run_zero_d.py#run_zero_d [L316–L5180]]` | Uses `radiation.blowout_radius` without size-floor clipping |
+| Blow-out limit (effective, m) | `s_blow_m_effective`, `s_min_components["blowout_effective"]` | `[marsdisk/run_zero_d.py#run_zero_d [L316–L5180]]`, `[marsdisk/run_zero_d.py#run_zero_d [L316–L5180]]` | Size-floor clipped value `\max(s_{\min,\mathrm{cfg}}, s_{\mathrm{blow,raw}})` |
+| Beta at config size (dimensionless) | `beta_at_smin_config` | `[marsdisk/run_zero_d.py#run_zero_d [L316–L5180]]`, `[marsdisk/run_zero_d.py#run_zero_d [L316–L5180]]` | Evaluated with `radiation.beta` |
+| Beta at effective size (dimensionless) | `beta_at_smin_effective` | `[marsdisk/run_zero_d.py#run_zero_d [L316–L5180]]`, `[marsdisk/run_zero_d.py#run_zero_d [L316–L5180]]` | Uses same β function at `s_min_effective` |
+| Beta threshold (dimensionless) | `beta_threshold` | `[marsdisk/physics/radiation.py#BLOWOUT_BETA_THRESHOLD [L58]]`, `[marsdisk/run_zero_d.py#run_zero_d [L316–L5180]]` | Constant 0.5 defined in radiation module |
+| Blow-out loss cumulative (M_Mars) | `M_out_cum` | `[marsdisk/run_zero_d.py#run_zero_d [L316–L5180]]` | Equal to `mass_lost_by_blowout` final value |
+| Sink loss cumulative (M_Mars) | `M_sink_cum` | `[marsdisk/run_zero_d.py#run_zero_d [L316–L5180]]` | Includes HKL erosion and IMEX sink flux |
+| Mean blow-out per orbit (M_Mars) | `M_out_mean_per_orbit` | `[marsdisk/run_zero_d.py#run_zero_d [L316–L5180]]` | Reported when at least one orbit completes |
+| Mean sink per orbit (M_Mars) | `M_sink_mean_per_orbit` | `[marsdisk/run_zero_d.py#run_zero_d [L316–L5180]]` | Reported when at least one orbit completes |
+| Orbit counter (dimensionless) | `orbits_completed` | `[marsdisk/run_zero_d.py#run_zero_d [L316–L5180]]` | Number of completed orbital rollups |
+| Mars-facing temperature (K) | `T_M_used`, `T_M_source` | `[marsdisk/run_zero_d.py#load_config [L258–L280]]`, `[marsdisk/run_zero_d.py#run_zero_d [L316–L5180]]` | `radiation.TM_K` または温度ドライバから決定（legacy `temps.T_M` は廃止） |
+| Radiation efficiency (dimensionless) | `Q_pr_used` | `[marsdisk/run_zero_d.py#run_zero_d [L316–L5180]]`, `[marsdisk/run_zero_d.py#run_zero_d [L316–L5180]]` | Planck mean stored for reference |
+| Shielding Φ table path | `phi_table_path` | `[marsdisk/run_zero_d.py#run_zero_d [L316–L5180]]` | Summary retains the resolved τ-table for provenance |
+| PSD bin index (dimensionless) | `bin_index` | `[marsdisk/run_zero_d.py#run_zero_d [L316–L5180]][marsdisk/io/writer.py#write_parquet [L24–L395]]` | Time×bin identifier stored in `psd_hist.parquet` |
+| PSD bin centre (m) | `s_bin_center` | `[marsdisk/run_zero_d.py#run_zero_d [L316–L5180]][marsdisk/io/writer.py#write_parquet [L24–L395]]` | Logarithmic midpoint used for PSD plots |
+| PSD bin number density | `N_bin` | `[marsdisk/run_zero_d.py#run_zero_d [L316–L5180]][marsdisk/io/writer.py#write_parquet [L24–L395]]` | Relative number surface density per bin |
 
 
 ### (E.009) marsdisk/physics/surface.py: compute_surface_outflux (lines 178–188)
@@ -348,7 +348,7 @@ IMEX 更新後の質量差分を測るための診断式。衝突カスケード
 
 **Numerics**
 - Validates matching shapes and positivity of $M^{n}$.
-- Absolute error used to avoid cancellation sign issues; logs diagnostic values. [marsdisk/physics/smol.py#compute_mass_budget_error_C4 [L416–L480]]
+- Absolute error used to avoid cancellation sign issues; logs diagnostic values. [marsdisk/physics/smol.py#compute_mass_budget_error_C4 [L440–L504]]
 
 ### (E.012) marsdisk/physics/radiation.py: planck_mean_qpr (lines 207-218)
 放射圧効率の Planck 平均を表参照またはフォールバックで決める。β とブローアウトの定義は [@Burns1979_Icarus40_1] に従い、その入力として Q_pr を扱う。テーブルが無い場合は灰色体近似（$Q_{\mathrm{pr}}=1$）へ落とし、`radiation.qpr_strict=true` では例外を送出する。
@@ -546,7 +546,7 @@ P_{\mathrm{sat}}(T) =
 - Logistic branch guards against $dT\to0$ via `max(dT, 1.0)`.
 - Stores provenance in `run_config.json` under `sublimation_provenance`, capturing {`sublimation_formula`, `psat_model`, `A`, `B`, `mu`, `alpha_evap`, `P_gas`, `valid_K`, optional `psat_table_path`} for reproducibility.
 - Ambient vapour pressure $P_{\mathrm{gas}}$ (特に Si を含む蒸気分圧) は Ronnet et al. (2016) 同様に自由パラメータとして扱い、化学平衡は計算しない。既定は gas‑poor 前提で $P_{\mathrm{gas}}=0$ とし、感度試験では YAML `sinks.sub_params.P_gas` を明示調整すること（HKL フラックスの最大不確定要素）。[marsdisk/physics/sublimation.py#p_sat [L590–L605]], [marsdisk/schema.py#Supply [L450–L556]]
-- `sub_params.mass_conserving=true` の場合、昇華由来の ds/dt は粒径のみを縮小し、1 ステップ内に $s<a_{\rm blow}$ を跨いだ分だけをブローアウト損失として処理する（質量シンクには入れない）。false で従来どおり昇華シンクとして質量減算。[marsdisk/physics/collisions_smol.py#step_collisions_smol_0d [L812–L1258]][marsdisk/run_zero_d.py#run_zero_d [L286–L5149]]
+- `sub_params.mass_conserving=true` の場合、昇華由来の ds/dt は粒径のみを縮小し、1 ステップ内に $s<a_{\rm blow}$ を跨いだ分だけをブローアウト損失として処理する（質量シンクには入れない）。false で従来どおり昇華シンクとして質量減算。[marsdisk/physics/collisions_smol.py#step_collisions_smol_0d [L812–L1258]][marsdisk/run_zero_d.py#run_zero_d [L316–L5180]]
 
 ### (E.019) marsdisk/physics/sublimation.py: sink_timescale (implemented by s_sink_from_timescale, lines 116-129)
 [@Ronnet2016_ApJ828_109]
@@ -571,7 +571,7 @@ P_{\mathrm{sat}}(T) =
 - Validates positivity of $\rho$ and $t_{\mathrm{ref}}$.
 - Delegates to `mass_flux_hkl`; inherits its branch selection (HKL versus logistic).
 - No additional clamping beyond inherited flux behaviour; linear scaling in $t_{\mathrm{ref}}$.
-- See also [marsdisk/physics/sublimation.py#sublimation_sink_from_dsdt [L687–L723]] for per-bin sink conversion.
+- See also [marsdisk/physics/sublimation.py#sublimation_sink_from_dsdt [L687–L735]] for per-bin sink conversion.
 
 ### (E.020) marsdisk/physics/dynamics.py: v_ij (lines 18–45)
 低離心率・低傾斜のレイリー分布を仮定した平均相対速度近似で、惑星形成論レビュー [@LissauerStewart1993_PP3; @WetherillStewart1993_Icarus106_190] や Ohtsuki らの解析解 [@Ohtsuki2002_Icarus155_436] に基づく。
@@ -1324,7 +1324,7 @@ E_{\mathrm{error}} = \frac{\left|E_{\mathrm{diss,step}} + E_{\mathrm{ret,step}} 
 |`error_flag`|Categorical flag|—|`ok`/`warning`/`error`|
 
 **Numerics**
-- Consistency check performed each step; thresholds at $10^{-12}$ (warning) and $10^{-6}$ (error). [marsdisk/run_zero_d.py#run_zero_d [L286–L5149]]
+- Consistency check performed each step; thresholds at $10^{-12}$ (warning) and $10^{-6}$ (error). [marsdisk/run_zero_d.py#run_zero_d [L316–L5180]]
 
 ---
 
@@ -1367,7 +1367,7 @@ s_{\max} = s_0\,f_{\mathrm{lf}}^{1/3}
 
 **Numerics**
 - Uses the general form for $3<\alpha<4$; returns 0 for $\alpha\le3$ or $\alpha\ge4$ and other unphysical inputs.
-- Clamps result to $[0, s_{\max}]$; returns 0 for non-finite intermediate values. [marsdisk/run_zero_d.py#_surface_energy_floor [L151–L187]]
+- Clamps result to $[0, s_{\max}]$; returns 0 for non-finite intermediate values. [marsdisk/run_zero_d.py#_surface_energy_floor [L181–L217]]
 - Eq.4 is the $\alpha=3.5$ special case of the general solution.
 
 ---

@@ -1,12 +1,12 @@
 {
   "function_reference_rate": {
     "numerator": 111,
-    "denominator": 127,
-    "rate": 0.8740157480314961
+    "denominator": 130,
+    "rate": 0.8538461538461538
   },
   "anchor_consistency_rate": {
-    "numerator": 707,
-    "denominator": 707,
+    "numerator": 710,
+    "denominator": 710,
     "rate": 1.0
   },
   "equation_unit_coverage": {
@@ -22,8 +22,8 @@
     "detail": "in sync"
   },
   "holes": [
+    "marsdisk/archive.py#main",
     "marsdisk/io/_numba_tables.py#NUMBA_AVAILABLE",
-    "marsdisk/io/_numba_tables.py#qpr_interp_array_numba",
-    "marsdisk/io/_numba_tables.py#qpr_interp_scalar_numba"
+    "marsdisk/io/_numba_tables.py#qpr_interp_array_numba"
   ]
 }

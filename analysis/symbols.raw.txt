@@ -488,14 +488,14 @@ marsdisk/physics/phase.py:54:def particle_temperature_equilibrium(T_mars_K: floa
 marsdisk/physics/phase.py:82:class PhaseEvaluator
 marsdisk/physics/phase.py:594:def hydro_escape_timescale(cfg: Optional[HydroEscapeConfig], temperature_K: float, f_vap: float) -> Optional[float]
 marsdisk/physics/psd.py:62:def update_psd_state(*, s_min: float, s_max: float, alpha: float, wavy_strength: float, n_bins: int=40, rho: float=3000.0, wavy_decay: float=0.0, alpha_mode: str='size') -> Dict[str, np.ndarray | float]
-marsdisk/physics/psd.py:155:def sanitize_and_normalize_number(psd_state: Dict[str, np.ndarray | float], clip_max: float=1e+200, *, normalize: bool=True) -> Dict[str, np.ndarray | float]
-marsdisk/physics/psd.py:201:def compute_kappa(psd_state: Dict[str, np.ndarray | float]) -> float
-marsdisk/physics/psd.py:237:def mass_weights_lognormal_mixture(sizes: np.ndarray, widths: np.ndarray, *, f_fine: float, s_fine: float, s_meter: float, width_dex: float, s_cut: float | None=None) -> np.ndarray
-marsdisk/physics/psd.py:280:def mass_weights_truncated_powerlaw(sizes: np.ndarray, widths: np.ndarray, *, alpha_solid: float, s_min_solid: float, s_max_solid: float, s_cut: float | None=None) -> np.ndarray
-marsdisk/physics/psd.py:314:def apply_mass_weights(psd_state: Dict[str, np.ndarray | float], mass_weights: np.ndarray, *, rho: float | None=None) -> Dict[str, np.ndarray | float]
-marsdisk/physics/psd.py:359:def _size_drift_rebin_numpy(sizes: np.ndarray, number: np.ndarray, edges: np.ndarray, ds_step: float, floor_val: float) -> tuple[np.ndarray, np.ndarray]
-marsdisk/physics/psd.py:384:def apply_uniform_size_drift(psd_state: Dict[str, np.ndarray | float], *, ds_dt: float, dt: float, floor: float, sigma_surf: float) -> tuple[float, float, Dict[str, float]]
-marsdisk/physics/psd.py:524:def evolve_min_size(s_min_prev: float, *, dt: float, model: Optional[str]=None, params: Optional[Mapping[str, float]]=None, T: Optional[float]=None, rho: Optional[float]=None, s_floor: Optional[float]=None, sublimation_params: Optional[SublimationParams]=None) -> float
+marsdisk/physics/psd.py:156:def sanitize_and_normalize_number(psd_state: Dict[str, np.ndarray | float], clip_max: float=1e+200, *, normalize: bool=True) -> Dict[str, np.ndarray | float]
+marsdisk/physics/psd.py:202:def compute_kappa(psd_state: Dict[str, np.ndarray | float]) -> float
+marsdisk/physics/psd.py:238:def mass_weights_lognormal_mixture(sizes: np.ndarray, widths: np.ndarray, *, f_fine: float, s_fine: float, s_meter: float, width_dex: float, s_cut: float | None=None) -> np.ndarray
+marsdisk/physics/psd.py:281:def mass_weights_truncated_powerlaw(sizes: np.ndarray, widths: np.ndarray, *, alpha_solid: float, s_min_solid: float, s_max_solid: float, s_cut: float | None=None) -> np.ndarray
+marsdisk/physics/psd.py:315:def apply_mass_weights(psd_state: Dict[str, np.ndarray | float], mass_weights: np.ndarray, *, rho: float | None=None) -> Dict[str, np.ndarray | float]
+marsdisk/physics/psd.py:360:def _size_drift_rebin_numpy(sizes: np.ndarray, number: np.ndarray, edges: np.ndarray, ds_step: float, floor_val: float) -> tuple[np.ndarray, np.ndarray]
+marsdisk/physics/psd.py:385:def apply_uniform_size_drift(psd_state: Dict[str, np.ndarray | float], *, ds_dt: float, dt: float, floor: float, sigma_surf: float) -> tuple[float, float, Dict[str, float]]
+marsdisk/physics/psd.py:526:def evolve_min_size(s_min_prev: float, *, dt: float, model: Optional[str]=None, params: Optional[Mapping[str, float]]=None, T: Optional[float]=None, rho: Optional[float]=None, s_floor: Optional[float]=None, sublimation_params: Optional[SublimationParams]=None) -> float
 marsdisk/physics/qstar.py:90:def set_coeff_unit_system(units: CoeffUnits) -> CoeffUnits
 marsdisk/physics/qstar.py:102:def get_coeff_unit_system() -> CoeffUnits
 marsdisk/physics/qstar.py:108:def get_coefficient_table() -> Dict[float, Tuple[float, float, float, float]]
@@ -546,11 +546,12 @@ marsdisk/physics/sinks.py:70:def gas_drag_timescale(s: float, rho_p: float, rho_
 marsdisk/physics/sinks.py:83:def total_sink_timescale(T_use: float, rho_p: float, Omega: float, opts: SinkOptions, *, s_ref: float=1e-06) -> SinkTimescaleResult
 marsdisk/physics/sizes.py:11:def eval_ds_dt_sublimation(T: float, rho_bulk: float, params: sublimation.SublimationParams) -> float
 marsdisk/physics/smol.py:45:class ImexWorkspace
-marsdisk/physics/smol.py:54:def psd_state_to_number_density(psd_state: MutableMapping[str, np.ndarray | float], sigma_surf: float, *, rho_fallback: float | None=None) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, float]
-marsdisk/physics/smol.py:125:def number_density_to_psd_state(N_new: np.ndarray, psd_state: MutableMapping[str, np.ndarray | float], sigma_before: float, *, widths: np.ndarray, m: np.ndarray, scale_to_sigma: float) -> tuple[MutableMapping[str, np.ndarray | float], float, float]
-marsdisk/physics/smol.py:180:def _gain_tensor(C: np.ndarray, Y: np.ndarray, m: np.ndarray, out: np.ndarray | None=None) -> np.ndarray
-marsdisk/physics/smol.py:237:def step_imex_bdf1_C3(N: Iterable[float], C: np.ndarray, Y: np.ndarray, S: Iterable[float] | None, m: Iterable[float], prod_subblow_mass_rate: float | None, dt: float, *, source_k: Iterable[float] | None=None, S_external_k: Iterable[float] | None=None, S_sublimation_k: Iterable[float] | None=None, extra_mass_loss_rate: float=0.0, mass_tol: float=0.005, safety: float=0.1, diag_out: MutableMapping[str, float] | None=None, workspace: ImexWorkspace | None=None) -> tuple[np.ndarray, float, float]
-marsdisk/physics/smol.py:416:def compute_mass_budget_error_C4(N_old: Iterable[float], N_new: Iterable[float], m: Iterable[float], prod_subblow_mass_rate: float, dt: float, *, extra_mass_loss_rate: float=0.0) -> float
+marsdisk/physics/smol.py:54:def _sizes_fingerprint(sizes: np.ndarray) -> tuple[int, float, float]
+marsdisk/physics/smol.py:62:def psd_state_to_number_density(psd_state: MutableMapping[str, np.ndarray | float], sigma_surf: float, *, rho_fallback: float | None=None) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, float]
+marsdisk/physics/smol.py:149:def number_density_to_psd_state(N_new: np.ndarray, psd_state: MutableMapping[str, np.ndarray | float], sigma_before: float, *, widths: np.ndarray, m: np.ndarray, scale_to_sigma: float) -> tuple[MutableMapping[str, np.ndarray | float], float, float]
+marsdisk/physics/smol.py:204:def _gain_tensor(C: np.ndarray, Y: np.ndarray, m: np.ndarray, out: np.ndarray | None=None) -> np.ndarray
+marsdisk/physics/smol.py:261:def step_imex_bdf1_C3(N: Iterable[float], C: np.ndarray, Y: np.ndarray, S: Iterable[float] | None, m: Iterable[float], prod_subblow_mass_rate: float | None, dt: float, *, source_k: Iterable[float] | None=None, S_external_k: Iterable[float] | None=None, S_sublimation_k: Iterable[float] | None=None, extra_mass_loss_rate: float=0.0, mass_tol: float=0.005, safety: float=0.1, diag_out: MutableMapping[str, float] | None=None, workspace: ImexWorkspace | None=None) -> tuple[np.ndarray, float, float]
+marsdisk/physics/smol.py:440:def compute_mass_budget_error_C4(N_old: Iterable[float], N_new: Iterable[float], m: Iterable[float], prod_subblow_mass_rate: float, dt: float, *, extra_mass_loss_rate: float=0.0) -> float
 marsdisk/physics/sublimation.py:48:class PsatSelection(NamedTuple)
 marsdisk/physics/sublimation.py:55:class SublimationParams
 marsdisk/physics/sublimation.py:137:def _is_hkl_active(params: SublimationParams) -> bool
@@ -566,7 +567,7 @@ marsdisk/physics/sublimation.py:560:def _store_psat_selection(params: Sublimatio
 marsdisk/physics/sublimation.py:590:def p_sat(T: float, params: SublimationParams) -> float
 marsdisk/physics/sublimation.py:608:def mass_flux_hkl(T: float, params: SublimationParams) -> float
 marsdisk/physics/sublimation.py:669:def s_sink_from_timescale(T: float, rho: float, t_ref: float, params: SublimationParams) -> float
-marsdisk/physics/sublimation.py:687:def sublimation_sink_from_dsdt(s_grid_m: np.ndarray, N_k: np.ndarray, ds_dt_k: np.ndarray, m_k: np.ndarray) -> tuple[np.ndarray, float]
+marsdisk/physics/sublimation.py:687:def sublimation_sink_from_dsdt(s_grid_m: np.ndarray, N_k: np.ndarray, ds_dt_k: np.ndarray | float, m_k: np.ndarray) -> tuple[np.ndarray, float]
 marsdisk/physics/supply.py:29:class _TableData
 marsdisk/physics/supply.py:79:class _TemperatureTable
 marsdisk/physics/supply.py:118:class SupplyEvalResult
@@ -622,19 +623,22 @@ marsdisk/run_one_d.py:102:def _auto_chi_blow(beta: float, qpr: float) -> float
 marsdisk/run_one_d.py:117:def _fast_blowout_correction_factor(ratio: float) -> float
 marsdisk/run_one_d.py:130:def _env_flag(name: str) -> Optional[bool]
 marsdisk/run_one_d.py:142:def _env_int(name: str) -> Optional[int]
-marsdisk/run_one_d.py:152:def run_one_d(cfg: Config, *, enforce_mass_budget: bool=False, physics_mode_override: Optional[str]=None, physics_mode_source_override: Optional[str]=None) -> None
-marsdisk/run_zero_d.py:104:def _get_max_steps() -> int
-marsdisk/run_zero_d.py:118:def _log_stage(label: str, *, extra: Mapping[str, Any] | None=None) -> None
-marsdisk/run_zero_d.py:124:def _model_fields_set(model: Any) -> set[str]
-marsdisk/run_zero_d.py:135:def _resolve_los_factor(los_geom: Optional[object]) -> float
-marsdisk/run_zero_d.py:151:def _surface_energy_floor(gamma_J_m2: float, eta: float, alpha: float, rho: float, v_rel: float, s0: float, s_max: float) -> float
-marsdisk/run_zero_d.py:190:def _auto_chi_blow(beta: float, qpr: float) -> float
-marsdisk/run_zero_d.py:205:def _fast_blowout_correction_factor(ratio: float) -> float
-marsdisk/run_zero_d.py:228:def load_config(path: Path, overrides: Optional[Sequence[str]]=None) -> Config
-marsdisk/run_zero_d.py:253:def _gather_git_info() -> Dict[str, Any]
-marsdisk/run_zero_d.py:280:class MassBudgetViolationError(NumericalError)
-marsdisk/run_zero_d.py:286:def run_zero_d(cfg: Config, *, enforce_mass_budget: bool=False, physics_mode_override: Optional[str]=None, physics_mode_source_override: Optional[str]=None) -> None
-marsdisk/run_zero_d.py:5152:def main(argv: Optional[List[str]]=None) -> None
+marsdisk/run_one_d.py:152:def _resolve_cell_parallel_config(*, os_name: str, n_cells: int, cell_parallel_requested: bool, cell_jobs_requested: int, cell_min_cells: int, cell_chunk_size_raw: int, cell_coupling_enabled: bool) -> Dict[str, object]
+marsdisk/run_one_d.py:207:def run_one_d(cfg: Config, *, enforce_mass_budget: bool=False, physics_mode_override: Optional[str]=None, physics_mode_source_override: Optional[str]=None) -> None
+marsdisk/run_zero_d.py:105:class SmolSinkWorkspace
+marsdisk/run_zero_d.py:114:def _get_smol_sink_workspace(workspace: SmolSinkWorkspace | None, n_bins: int) -> SmolSinkWorkspace
+marsdisk/run_zero_d.py:134:def _get_max_steps() -> int
+marsdisk/run_zero_d.py:148:def _log_stage(label: str, *, extra: Mapping[str, Any] | None=None) -> None
+marsdisk/run_zero_d.py:154:def _model_fields_set(model: Any) -> set[str]
+marsdisk/run_zero_d.py:165:def _resolve_los_factor(los_geom: Optional[object]) -> float
+marsdisk/run_zero_d.py:181:def _surface_energy_floor(gamma_J_m2: float, eta: float, alpha: float, rho: float, v_rel: float, s0: float, s_max: float) -> float
+marsdisk/run_zero_d.py:220:def _auto_chi_blow(beta: float, qpr: float) -> float
+marsdisk/run_zero_d.py:235:def _fast_blowout_correction_factor(ratio: float) -> float
+marsdisk/run_zero_d.py:258:def load_config(path: Path, overrides: Optional[Sequence[str]]=None) -> Config
+marsdisk/run_zero_d.py:283:def _gather_git_info() -> Dict[str, Any]
+marsdisk/run_zero_d.py:310:class MassBudgetViolationError(NumericalError)
+marsdisk/run_zero_d.py:316:def run_zero_d(cfg: Config, *, enforce_mass_budget: bool=False, physics_mode_override: Optional[str]=None, physics_mode_source_override: Optional[str]=None) -> None
+marsdisk/run_zero_d.py:5183:def main(argv: Optional[List[str]]=None) -> None
 marsdisk/runtime/autotune.py:22:class MachineState
 marsdisk/runtime/autotune.py:43:class AutoTuneDecision
 marsdisk/runtime/autotune.py:56:def _safe_int(value: Any, fallback: int) -> int
@@ -1297,6 +1301,9 @@ tests/unit/test_cache_thread_safety.py:16:def mock_qpr_table(tmp_path)
 tests/unit/test_cache_thread_safety.py:44:def test_qpr_cache_thread_safety(mock_qpr_table)
 tests/unit/test_cache_thread_safety.py:64:def test_qdstar_cache_thread_safety()
 tests/unit/test_cache_thread_safety.py:89:def test_velocity_clamp_stats_thread_safety()
+tests/unit/test_cell_parallel_config.py:73:def test_cell_parallel_disabled_reasons(payload: dict[str, object], expected_reason: str) -> None
+tests/unit/test_cell_parallel_config.py:80:def test_cell_parallel_job_capping_and_auto_chunking() -> None
+tests/unit/test_cell_parallel_config.py:97:def test_cell_parallel_fixed_chunk_size() -> None
 tests/unit/test_collisions_ei_feedback.py:9:def test_compute_ei_damping_relaxes_toward_equilibrium()
 tests/unit/test_core.py:11:def test_constants_values()
 tests/unit/test_core.py:17:def test_grid_relations()
@@ -1397,9 +1404,10 @@ tests/unit/test_scripts_layout.py:28:def test_old_paths_absent() -> None
 tests/unit/test_scripts_layout.py:44:def test_runsets_mac_wrappers_reference_common_paths() -> None
 tests/unit/test_scripts_layout.py:58:def test_plot_tau_timescales_cmd_points_to_new_location() -> None
 tests/unit/test_scripts_layout.py:64:def test_windows_legacy_run_scripts_set_repo_root() -> None
-tests/unit/test_sublimation.py:8:def test_s_sink_from_timescale_logistic()
-tests/unit/test_sublimation.py:14:def test_s_sub_boundary_fallback_warning()
-tests/unit/test_sublimation.py:20:def test_compute_s_min_F2_uses_max()
+tests/unit/test_sublimation.py:10:def test_s_sink_from_timescale_logistic()
+tests/unit/test_sublimation.py:16:def test_s_sub_boundary_fallback_warning()
+tests/unit/test_sublimation.py:22:def test_compute_s_min_F2_uses_max()
+tests/unit/test_sublimation.py:35:def test_sublimation_sink_scalar_matches_array()
 tests/unit/test_supply_injection_powerlaw_slope.py:9:def test_powerlaw_injection_matches_number_slope() -> None
 tests/unit/test_surface_outflux.py:9:def _run(prod_rate: float, Omega: float, steps: int=200)
 tests/unit/test_surface_outflux.py:25:def test_supply_limited_outflux()
