@@ -45,7 +45,7 @@ if errorlevel 1 (
   echo [warn] psutil install failed; perf logging will be limited.
 )
 
-set "BENCH_ARGS=--parallel-jobs 4 --cell-jobs 8 --n-cells 64 --t-end-orbits 0.1 --dt-init 20"
+set "BENCH_ARGS=--parallel-jobs 6 --cell-jobs 8 --n-cells 128 --t-end-orbits 0.5 --dt-init 5"
 echo [info] Benchmark defaults: %BENCH_ARGS%
 python scripts\tests\overparallel_benchmark.py %BENCH_ARGS% %*
 set "RC=%errorlevel%"
