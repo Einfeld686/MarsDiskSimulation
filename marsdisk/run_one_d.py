@@ -2447,6 +2447,7 @@ def run_one_d(
         writer.append_csv(history.mass_budget, mass_budget_path, header=not mass_budget_path.exists())
         history.mass_budget.clear()
     if not mass_budget_path.exists():
+        mass_budget_path.parent.mkdir(parents=True, exist_ok=True)
         pd.DataFrame(columns=["time", "mass_initial", "mass_remaining", "mass_lost", "error_percent", "tolerance_percent"]).to_csv(
             mass_budget_path,
             index=False,
@@ -2459,6 +2460,7 @@ def run_one_d(
         writer.append_csv(history.mass_budget_cells, mass_budget_cells_path, header=not mass_budget_cells_path.exists())
         history.mass_budget_cells.clear()
     if not mass_budget_cells_path.exists():
+        mass_budget_cells_path.parent.mkdir(parents=True, exist_ok=True)
         pd.DataFrame(
             columns=[
                 "time",

@@ -910,6 +910,9 @@ scripts/runsets/common/merge_config.py:21:def _parse_scalar(value: str) -> Any
 scripts/runsets/common/merge_config.py:26:def _set_path(cfg: dict[str, Any], path: str, value: Any) -> None
 scripts/runsets/common/merge_config.py:36:def _load_overrides(path: Path) -> list[tuple[str, Any]]
 scripts/runsets/common/merge_config.py:49:def main() -> None
+scripts/runsets/common/read_study_overrides.py:10:def _join_list(value: Any) -> str
+scripts/runsets/common/read_study_overrides.py:16:def _emit(key: str, value: Any) -> None
+scripts/runsets/common/read_study_overrides.py:23:def main() -> int
 scripts/sweeps/sweep_beta_map.py:30:def _parse_grid(start: float, stop: float, count: int, label: str) -> np.ndarray
 scripts/sweeps/sweep_beta_map.py:39:def _load_config(path: Path) -> Config
 scripts/sweeps/sweep_beta_map.py:50:def _write_json(path: Path, payload: dict) -> None
@@ -995,6 +998,9 @@ scripts/sweeps/sweep_massloss_map.py:421:def _write_json(path: Path, payload: Di
 scripts/sweeps/sweep_massloss_map.py:427:def _collect_validation(records: Sequence[Dict[str, Any]], *, tolerance: float) -> Dict[str, Any]
 scripts/sweeps/sweep_massloss_map.py:455:def parse_args() -> argparse.Namespace
 scripts/sweeps/sweep_massloss_map.py:503:def main() -> None
+scripts/tests/overparallel_benchmark.py:12:def _run_scenario(*, label: str, cmd_base: list[str], out_root: Path, parallel_jobs: int, env_overrides: dict[str, str]) -> tuple[int, float, list[Path]]
+scripts/tests/overparallel_benchmark.py:37:def _load_cell_parallel(outdir: Path) -> dict
+scripts/tests/overparallel_benchmark.py:47:def main() -> int
 siO2_disk_cooling/io_utils.py:13:def ensure_outputs_dir() -> Path
 siO2_disk_cooling/io_utils.py:21:def write_csv(r_over_Rmars: np.ndarray, arrival_glass_s: np.ndarray, arrival_liquidus_s: np.ndarray, path: Path) -> None
 siO2_disk_cooling/io_utils.py:40:def _format_stat(values: Iterable[float]) -> str

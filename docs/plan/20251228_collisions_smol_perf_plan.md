@@ -1,9 +1,10 @@
 # 性能改善プラン: collisions_smol / smol の重点最適化
 
 > **作成日**: 2025-12-28  
-> **ステータス**: 計画  
+> **ステータス**: 統合済み  
 > **対象**: `marsdisk/physics/collisions_smol.py`, `marsdisk/physics/smol.py` のホットパス  
 > **根拠**: 0D cProfile (`configs/mars_0d_baseline.yaml`, `t_end_years=0.01`)  
+> **統合先**: [20251228_profile_hotspots_improvement_plan.md](./20251228_profile_hotspots_improvement_plan.md)  
 > **関連**: [20251227_psd_workspace_reuse_plan.md](./20251227_psd_workspace_reuse_plan.md)
 
 ---

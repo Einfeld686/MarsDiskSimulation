@@ -8876,6 +8876,27 @@
     "brief_usage": "No description available."
   },
   {
+    "file_path": "scripts/runsets/common/read_study_overrides.py",
+    "line_no": 10,
+    "symbol": "_join_list",
+    "signature": "_join_list(value: Any) -> str",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/runsets/common/read_study_overrides.py",
+    "line_no": 16,
+    "symbol": "_emit",
+    "signature": "_emit(key: str, value: Any) -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/runsets/common/read_study_overrides.py",
+    "line_no": 23,
+    "symbol": "main",
+    "signature": "main() -> int",
+    "brief_usage": "No description available."
+  },
+  {
     "file_path": "scripts/sweeps/sweep_beta_map.py",
     "line_no": 20,
     "symbol": "ROOT",
@@ -9671,6 +9692,27 @@
     "line_no": 503,
     "symbol": "main",
     "signature": "main() -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/tests/overparallel_benchmark.py",
+    "line_no": 12,
+    "symbol": "_run_scenario",
+    "signature": "_run_scenario(*, label: str, cmd_base: list[str], out_root: Path, parallel_jobs: int, env_overrides: dict[str, str]) -> tuple[int, float, list[Path]]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/tests/overparallel_benchmark.py",
+    "line_no": 37,
+    "symbol": "_load_cell_parallel",
+    "signature": "_load_cell_parallel(outdir: Path) -> dict",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/tests/overparallel_benchmark.py",
+    "line_no": 47,
+    "symbol": "main",
+    "signature": "main() -> int",
     "brief_usage": "No description available."
   },
   {
