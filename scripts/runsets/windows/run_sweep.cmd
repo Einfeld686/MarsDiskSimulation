@@ -15,6 +15,7 @@ set "NO_PLOT=0"
 set "NO_EVAL=0"
 set "NO_PREFLIGHT=0"
 set "PREFLIGHT_ONLY=0"
+set "PREFLIGHT_STRICT=0"
 
 :parse_args
 if "%~1"=="" goto :args_done
@@ -67,6 +68,11 @@ if /i "%~1"=="--preflight-only" (
   shift
   goto :parse_args
 )
+if /i "%~1"=="--preflight-strict" (
+  set "PREFLIGHT_STRICT=1"
+  shift
+  goto :parse_args
+)
 if /i "%~1"=="--debug" (
   set "DEBUG=1"
   set "TRACE_ENABLED=1"
@@ -79,7 +85,7 @@ if /i "%~1"=="-h" goto :usage
 echo.[error] Unknown option: %~1
 :usage
 echo Usage: run_sweep.cmd [--study ^<path^>] [--config ^<path^>] [--overrides ^<path^>]
- echo.           [--out-root ^<path^>] [--dry-run] [--no-plot] [--no-eval] [--no-preflight] [--preflight-only] [--debug]
+ echo.           [--out-root ^<path^>] [--dry-run] [--no-plot] [--no-eval] [--no-preflight] [--preflight-only] [--preflight-strict] [--debug]
 exit /b 1
 
 :args_done
@@ -159,7 +165,9 @@ if not "%NO_PREFLIGHT%"=="1" (
     exit /b 1
   )
   echo.[info] preflight checks
-  python "%REPO_ROOT%\\scripts\\runsets\\windows\\preflight_checks.py" --repo-root "%REPO_ROOT%" --config "%CONFIG_PATH%" --overrides "%OVERRIDES_PATH%" --out-root "%OUT_ROOT%" --require-git --require-powershell
+  set "PREFLIGHT_STRICT_FLAG="
+  if "%PREFLIGHT_STRICT%"=="1" set "PREFLIGHT_STRICT_FLAG=--strict"
+  python "%REPO_ROOT%\\scripts\\runsets\\windows\\preflight_checks.py" --repo-root "%REPO_ROOT%" --config "%CONFIG_PATH%" --overrides "%OVERRIDES_PATH%" --out-root "%OUT_ROOT%" --require-git --require-powershell %PREFLIGHT_STRICT_FLAG%
   if errorlevel 1 (
     echo.[error] preflight failed
     exit /b 1
@@ -201,37 +209,20 @@ del "%ARCHIVE_SET%"
 echo.[info] overrides parsed
 echo.[info] archive checks start
 if "%DEBUG%"=="1" echo.[info] archive expected: enabled="!ARCHIVE_ENABLED_EXPECTED!" dir="!ARCHIVE_DIR_EXPECTED!" merge="!ARCHIVE_MERGE_TARGET!" verify="!ARCHIVE_VERIFY_LEVEL!" keep="!ARCHIVE_KEEP_LOCAL!"
-if /i not "%ARCHIVE_ENABLED_EXPECTED%"=="true" (
-  echo.[error] io.archive.enabled=true is required in %OVERRIDES_PATH%
-  exit /b 1
-)
+if /i not "%ARCHIVE_ENABLED_EXPECTED%"=="true" goto :archive_fail_enabled
 if "%DEBUG%"=="1" echo.[info] archive check enabled ok
-if not defined ARCHIVE_DIR_EXPECTED (
-  echo.[error] io.archive.dir is required in %OVERRIDES_PATH%
-  exit /b 1
-)
+if not defined ARCHIVE_DIR_EXPECTED goto :archive_fail_dir
 if "%DEBUG%"=="1" echo.[info] archive check dir ok
-if /i not "%ARCHIVE_MERGE_TARGET%"=="external" (
-  echo.[error] io.archive.merge_target=external is required in %OVERRIDES_PATH%
-  exit /b 1
-)
+if /i not "%ARCHIVE_MERGE_TARGET%"=="external" goto :archive_fail_merge
 if "%DEBUG%"=="1" echo.[info] archive check merge_target ok
-if /i not "%ARCHIVE_VERIFY_LEVEL%"=="standard_plus" (
-  echo.[error] io.archive.verify_level=standard_plus is required in %OVERRIDES_PATH%
-  exit /b 1
-)
+if /i not "%ARCHIVE_VERIFY_LEVEL%"=="standard_plus" goto :archive_fail_verify
 if "%DEBUG%"=="1" echo.[info] archive check verify_level ok
-if /i not "%ARCHIVE_KEEP_LOCAL%"=="metadata" (
-  echo.[error] io.archive.keep_local=metadata is required in %OVERRIDES_PATH%
-  exit /b 1
-)
+if /i not "%ARCHIVE_KEEP_LOCAL%"=="metadata" goto :archive_fail_keep
 if "%DEBUG%"=="1" echo.[info] archive check keep_local ok
-if /i "%BATCH_ROOT%"=="%ARCHIVE_DIR_EXPECTED%" (
-  echo.[error] BATCH_ROOT must be internal; it matches io.archive.dir (%ARCHIVE_DIR_EXPECTED%)
-  exit /b 1
-)
+if /i "%BATCH_ROOT%"=="%ARCHIVE_DIR_EXPECTED%" goto :archive_fail_batch_root
 echo.[info] overrides validated
 echo.[info] preflight ok; preparing temp_root
+goto :archive_checks_done
 
 set "RUN_TS_SOURCE=pre"
 if defined RUN_TS (
@@ -280,6 +271,32 @@ echo.[info] run_temp_supply_sweep.cmd finished (rc=%RUN_RC%)
 
 popd
 exit /b %RUN_RC%
+
+:archive_fail_enabled
+echo.[error] io.archive.enabled=true is required in %OVERRIDES_PATH%
+exit /b 1
+
+:archive_fail_dir
+echo.[error] io.archive.dir is required in %OVERRIDES_PATH%
+exit /b 1
+
+:archive_fail_merge
+echo.[error] io.archive.merge_target=external is required in %OVERRIDES_PATH%
+exit /b 1
+
+:archive_fail_verify
+echo.[error] io.archive.verify_level=standard_plus is required in %OVERRIDES_PATH%
+exit /b 1
+
+:archive_fail_keep
+echo.[error] io.archive.keep_local=metadata is required in %OVERRIDES_PATH%
+exit /b 1
+
+:archive_fail_batch_root
+echo.[error] BATCH_ROOT must be internal; it matches io.archive.dir (%ARCHIVE_DIR_EXPECTED%)
+exit /b 1
+
+:archive_checks_done
 
 :ensure_abs
 set "VAR_NAME=%~1"

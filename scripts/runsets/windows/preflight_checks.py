@@ -18,9 +18,15 @@ REQUIRED_ARCHIVE_KEYS = {
     "io.archive.keep_local": "metadata",
 }
 
+PATH_ENV_VARS = ("TEMP", "TMP", "USERPROFILE", "HOMEDRIVE", "HOMEPATH", "COMSPEC")
+MAX_WARN_PATH_LEN = 240
+WINDOWS_PATH_INVALID_CHARS = set('<>:"|?*')
+CMD_UNSAFE_CHARS = "!"
 
-def _load_overrides(path: Path) -> dict[str, str]:
+
+def _load_overrides(path: Path) -> tuple[dict[str, str], list[str]]:
     data: dict[str, str] = {}
+    duplicates: list[str] = []
     for raw in path.read_text(encoding="utf-8-sig").splitlines():
         line = raw.strip()
         if not line or line.startswith("#"):
@@ -30,8 +36,11 @@ def _load_overrides(path: Path) -> dict[str, str]:
         if "=" not in line:
             continue
         key, val = line.split("=", 1)
-        data[key.strip()] = val.strip()
-    return data
+        key = key.strip()
+        if key in data and key not in duplicates:
+            duplicates.append(key)
+        data[key] = val.strip()
+    return data, duplicates
 
 
 def _contains_non_ascii(text: str) -> bool:
@@ -39,7 +48,7 @@ def _contains_non_ascii(text: str) -> bool:
 
 
 def _contains_cmd_unsafe(text: str) -> bool:
-    return "!" in text
+    return any(ch in text for ch in CMD_UNSAFE_CHARS)
 
 
 def _is_windows_abs(path_str: str) -> bool:
@@ -51,6 +60,10 @@ def _is_windows_abs(path_str: str) -> bool:
 
 def _normalize_windows(path_str: str) -> str:
     return str(PureWindowsPath(path_str)).lower()
+
+
+def _is_windows() -> bool:
+    return os.name == "nt"
 
 
 def _check_cmd(name: str, errors: list[str]) -> None:
@@ -97,6 +110,38 @@ def _check_temp_dir(temp_dir: str | None, errors: list[str], warnings: list[str]
         errors.append(f"TEMP/TMP not writable: {exc}")
 
 
+def _check_env_paths(errors: list[str], warnings: list[str]) -> None:
+    for key in PATH_ENV_VARS:
+        value = os.environ.get(key, "")
+        if not value:
+            continue
+        if _contains_cmd_unsafe(value):
+            errors.append(f"{key} contains '!': {value}")
+        if _contains_non_ascii(value):
+            warnings.append(f"{key} contains non-ASCII characters: {value}")
+        if key == "COMSPEC" and not Path(value).exists():
+            errors.append(f"COMSPEC not found: {value}")
+        if len(value) >= MAX_WARN_PATH_LEN:
+            warnings.append(f"{key} path length >= {MAX_WARN_PATH_LEN}: {value}")
+
+
+def _check_path_value(label: str, value: str, errors: list[str], warnings: list[str]) -> None:
+    if not value:
+        return
+    if _contains_cmd_unsafe(value):
+        errors.append(f"{label} contains '!': {value}")
+    if _contains_non_ascii(value):
+        warnings.append(f"{label} contains non-ASCII characters: {value}")
+    if len(value) >= MAX_WARN_PATH_LEN:
+        warnings.append(f"{label} path length >= {MAX_WARN_PATH_LEN}: {value}")
+    if any(ch in value for ch in WINDOWS_PATH_INVALID_CHARS):
+        errors.append(f"{label} contains invalid Windows path chars: {value}")
+    if value.endswith((" ", ".")):
+        warnings.append(f"{label} ends with space/dot: {value}")
+    if value.startswith("\\\\") and label != "io.archive.dir":
+        warnings.append(f"{label} is a UNC path: {value}")
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--repo-root", required=True, type=Path)
@@ -113,6 +158,8 @@ def main() -> int:
 
     if sys.version_info < (3, 11):
         warnings.append(f"python {sys.version.split()[0]} < 3.11")
+    if not _is_windows():
+        warnings.append("host is not Windows; cmd-specific checks may be incomplete")
 
     for label, path in {
         "repo_root": args.repo_root,
@@ -121,11 +168,15 @@ def main() -> int:
     }.items():
         if not path.exists():
             errors.append(f"{label} missing: {path}")
-        text = str(path)
-        if _contains_cmd_unsafe(text):
-            errors.append(f"{label} path contains '!': {path}")
-        if _contains_non_ascii(text):
-            warnings.append(f"{label} path contains non-ASCII characters: {path}")
+        _check_path_value(label, str(path), errors, warnings)
+
+    if args.config.suffix.lower() not in {".yml", ".yaml"}:
+        warnings.append(f"config extension is not .yml/.yaml: {args.config.name}")
+
+    if args.out_root:
+        _check_path_value("out_root", args.out_root, errors, warnings)
+        if not _is_windows_abs(args.out_root):
+            warnings.append(f"out_root is not absolute: {args.out_root}")
 
     if args.require_git:
         _check_cmd("git", errors)
@@ -135,24 +186,43 @@ def main() -> int:
 
     overrides = {}
     if args.overrides.exists():
-        overrides = _load_overrides(args.overrides)
+        overrides, duplicates = _load_overrides(args.overrides)
+        for key in duplicates:
+            warnings.append(f"overrides duplicated key: {key}")
         for key, expected in REQUIRED_ARCHIVE_KEYS.items():
             if key not in overrides:
                 errors.append(f"overrides missing: {key}")
                 continue
             if expected is not None and overrides[key].lower() != expected:
                 errors.append(f"overrides {key}={overrides[key]} (expected {expected})")
+        for key, value in overrides.items():
+            if _contains_cmd_unsafe(value):
+                warnings.append(f"overrides value contains '!': {key}={value}")
+            if _contains_non_ascii(value):
+                warnings.append(f"overrides value contains non-ASCII chars: {key}={value}")
 
         archive_dir = overrides.get("io.archive.dir", "")
         if archive_dir:
+            _check_path_value("io.archive.dir", archive_dir, errors, warnings)
             if not _is_windows_abs(archive_dir):
                 errors.append(f"io.archive.dir not absolute: {archive_dir}")
             if args.out_root:
                 if _normalize_windows(args.out_root) == _normalize_windows(archive_dir):
                     errors.append("out-root matches io.archive.dir (must be internal)")
+            if _is_windows():
+                drive = PureWindowsPath(archive_dir).drive
+                if drive:
+                    drive_root = Path(f"{drive}\\")
+                    if not drive_root.exists():
+                        errors.append(f"io.archive.dir drive missing: {drive}")
+                else:
+                    errors.append(f"io.archive.dir has no drive letter: {archive_dir}")
+            else:
+                warnings.append("non-Windows host; drive availability not checked")
 
     temp_dir = os.environ.get("TEMP") or os.environ.get("TMP")
     _check_temp_dir(temp_dir, errors, warnings)
+    _check_env_paths(errors, warnings)
 
     if errors:
         print("[preflight] failed")
