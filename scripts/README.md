@@ -46,6 +46,7 @@ scripts/runsets/mac/run_one.sh --t 4000 --eps 1.0 --tau 1.0
 | `scripts/plots/plot_tau_reference_mismatch.py` | τ 参照系の比較 | LOS 参照と指定テーブルの差分をヒートマップ化します。 |
 | `scripts/plots/plot_tau_timescales.py` | τ–timescale 図の生成 | `series/run.parquet` から `t_sub`/`t_coll`/`t_blow` を計算し、τとの散布図を保存します。 |
 | `scripts/plots/windows/plot_tau_timescales.cmd` | τ–timescale 図の Windows 実行 | `.venv` セットアップ後に `plot_tau_timescales.py` を呼びます。 |
+| `scripts/tests/run_cell_parallel_consistency.cmd` | 1Dセル並列のWindowsテスト実行 | `.venv` を作成し、`pytest` で `test_cell_parallel_on_off_consistency` を実行します。 |
 | `scripts/plots/render_figures_from_tasks.py` | 図タスクの一括生成 | 解析タスク定義から `plot_from_runs.py` を呼び出して図を生成します。 |
 | `scripts/runs/run_autotuned.py` | auto-tune 既定のランナー | `python -m marsdisk.run` に `--auto-tune` を付与します。 |
 | `scripts/runs/run_axis_r_sweep.py` | r–T–M グリッドの大量実行 | `analysis/agent_runs/AXIS_r_sweep` に YAML／結果を生成し、ケースを実行します。 |
