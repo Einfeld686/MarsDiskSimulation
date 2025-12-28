@@ -734,6 +734,48 @@ if "%JOB_COUNT%"=="0" exit /b 0
 timeout /t %PARALLEL_SLEEP_SEC% /nobreak >nul
 goto :wait_all
 
+:override_write_literal
+setlocal EnableDelayedExpansion
+set "OV_LINE=%~1"
+call :trace "override write: !OV_LINE!"
+> "%BASE_OVERRIDES_FILE%" echo !OV_LINE!
+if errorlevel 1 (
+  echo.[error] override write failed: !OV_LINE!
+  endlocal
+  exit /b 1
+)
+endlocal
+exit /b 0
+
+:override_append_literal
+setlocal EnableDelayedExpansion
+set "OV_LINE=%~1"
+call :trace "override append: !OV_LINE!"
+>>"%BASE_OVERRIDES_FILE%" echo !OV_LINE!
+if errorlevel 1 (
+  echo.[error] override append failed: !OV_LINE!
+  endlocal
+  exit /b 1
+)
+endlocal
+exit /b 0
+
+:override_append_var
+setlocal EnableDelayedExpansion
+set "OV_KEY=%~1"
+set "OV_VAR=%~2"
+set "OV_VAL="
+for %%V in (!OV_VAR!) do set "OV_VAL=!%%V!"
+call :trace "override append: !OV_KEY!=!OV_VAL!"
+>>"%BASE_OVERRIDES_FILE%" echo !OV_KEY!=!OV_VAL!
+if errorlevel 1 (
+  echo.[error] override append failed: !OV_KEY!=!OV_VAL!
+  endlocal
+  exit /b 1
+)
+endlocal
+exit /b 0
+
 :sanitize_list
 set "LIST_RAW=!%~1!"
 if not defined LIST_RAW exit /b 0
