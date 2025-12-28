@@ -174,19 +174,19 @@ set "EPS_LIST=1.0 0.5 0.1"
 set "TAU_LIST=1.0 0.5 0.1"
 
 if defined STUDY_FILE (
-  if exist "%STUDY_FILE%" (
-    set "STUDY_SET=%TMP_ROOT%\\marsdisk_study_%RUN_TS%_%BATCH_SEED%.cmd"
-    python scripts\\runsets\\common\\read_study_overrides.py --study "%STUDY_FILE%" > "%STUDY_SET%"
-    if not exist "%STUDY_SET%" (
-      echo.[error] failed to write study overrides: "%STUDY_SET%"
-      echo.[error] temp_root=%TMP_ROOT% study_file=%STUDY_FILE%
+  if exist "!STUDY_FILE!" (
+    set "STUDY_SET=!TMP_ROOT!\\marsdisk_study_!RUN_TS!_!BATCH_SEED!.cmd"
+    python scripts\\runsets\\common\\read_study_overrides.py --study "!STUDY_FILE!" > "!STUDY_SET!"
+    if not exist "!STUDY_SET!" (
+      echo.[error] failed to write study overrides: "!STUDY_SET!"
+      echo.[error] temp_root=!TMP_ROOT! study_file=!STUDY_FILE!
     ) else (
-      call "%STUDY_SET%"
-      del "%STUDY_SET%"
-      echo.[info] loaded study overrides from %STUDY_FILE%
+      call "!STUDY_SET!"
+      del "!STUDY_SET!"
+      echo.[info] loaded study overrides from !STUDY_FILE!
     )
   ) else (
-    echo.[warn] STUDY_FILE not found: %STUDY_FILE%
+    echo.[warn] STUDY_FILE not found: !STUDY_FILE!
   )
 )
 
