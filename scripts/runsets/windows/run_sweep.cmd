@@ -157,6 +157,7 @@ if not exist "%OVERRIDES_PATH%" (
   echo.[error] overrides file not found: "%OVERRIDES_PATH%"
   exit /b 1
 )
+echo.[info] parsing overrides file
 set "ARCHIVE_TMP=%TEMP%"
 if "%ARCHIVE_TMP%"=="" set "ARCHIVE_TMP=%REPO_ROOT%\\tmp"
 if not exist "%ARCHIVE_TMP%" mkdir "%ARCHIVE_TMP%" >nul 2>&1
@@ -172,6 +173,7 @@ if not exist "%ARCHIVE_SET%" (
 )
 call "%ARCHIVE_SET%"
 del "%ARCHIVE_SET%"
+echo.[info] overrides parsed
 if /i not "%ARCHIVE_ENABLED_EXPECTED%"=="true" (
   echo.[error] io.archive.enabled=true is required in %OVERRIDES_PATH%
   exit /b 1
