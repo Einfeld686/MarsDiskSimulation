@@ -17,6 +17,13 @@ rem ---------- setup ----------
 if not defined VENV_DIR set "VENV_DIR=.venv"
 if not defined REQ_FILE set "REQ_FILE=requirements.txt"
 if not defined RUN_TS for /f %%A in ('powershell -NoProfile -Command "Get-Date -Format \"yyyyMMdd-HHmmss\""') do set "RUN_TS=%%A"
+if defined RUN_TS (
+  rem Normalize to a filename-safe token in case a pre-set RUN_TS includes separators.
+  set "RUN_TS=!RUN_TS::=!"
+  set "RUN_TS=!RUN_TS: =_!"
+  set "RUN_TS=!RUN_TS:/=-!"
+  set "RUN_TS=!RUN_TS:\=-!"
+)
 if not defined GIT_SHA for /f %%A in ('git rev-parse --short HEAD 2^>nul') do set "GIT_SHA=%%A"
 if not defined GIT_SHA set "GIT_SHA=nogit"
 if not defined BATCH_SEED for /f %%A in ('python -c "import secrets; print(secrets.randbelow(2**31))"') do set "BATCH_SEED=%%A"
@@ -174,6 +181,9 @@ if "%AUTO_JOBS%"=="1" (
 )
 if not defined PARALLEL_JOBS set "PARALLEL_JOBS=1"
 if "%PARALLEL_JOBS%"=="" set "PARALLEL_JOBS=1"
+set "PARALLEL_JOBS_OK=1"
+for /f "delims=0123456789" %%A in ("%PARALLEL_JOBS%") do set "PARALLEL_JOBS_OK=0"
+if "%PARALLEL_JOBS_OK%"=="0" set "PARALLEL_JOBS=1"
 if "%PARALLEL_JOBS%"=="0" set "PARALLEL_JOBS=1"
 if "%AUTO_JOBS%"=="1" (
   if not defined TOTAL_GB set "TOTAL_GB=unknown"
