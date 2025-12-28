@@ -335,6 +335,20 @@ if defined RUN_ONE_MODE (
   echo.[info] run-one mode: T=%RUN_ONE_T% eps=%RUN_ONE_EPS% tau=%RUN_ONE_TAU% seed=%RUN_ONE_SEED%
 )
 
+set "SWEEP_LIST_FILE=%TMP_ROOT%\\marsdisk_sweep_list_%RUN_TS%_%BATCH_SEED%.txt"
+call :trace "sweep list file=%SWEEP_LIST_FILE%"
+python scripts\\runsets\\common\\write_sweep_list.py --out "%SWEEP_LIST_FILE%"
+if errorlevel 1 (
+  echo.[error] failed to build sweep list
+  popd
+  exit /b 1
+)
+if not exist "%SWEEP_LIST_FILE%" (
+  echo.[error] sweep list missing: "%SWEEP_LIST_FILE%"
+  popd
+  exit /b 1
+)
+
 call :trace "parallel check"
 if not "%PARALLEL_JOBS%"=="1" (
   if not defined RUN_ONE_MODE (
@@ -348,42 +362,38 @@ if not "%PARALLEL_JOBS%"=="1" (
 
 rem ---------- main loops ----------
 call :trace "entering main loops"
-setlocal DisableDelayedExpansion
-for %%T in (%T_LIST%) do (
-  setlocal EnableDelayedExpansion
-  call :trace "loop T=%%T"
-  set "T_TABLE=data/mars_temperature_T%%Tp0K.csv"
-  for %%M in (!EPS_LIST!) do (
-    set "EPS=%%M"
-    set "EPS_TITLE=%%M"
-    set "EPS_TITLE=!EPS_TITLE:0.=0p!"
-    set "EPS_TITLE=!EPS_TITLE:.=p!"
-    for %%U in (!TAU_LIST!) do (
-      set "TAU=%%U"
-      set "TAU_TITLE=!TAU!"
-      set "TAU_TITLE=!TAU_TITLE:0.=0p!"
-      set "TAU_TITLE=!TAU_TITLE:.=p!"
-      if defined SEED_OVERRIDE (
-        set "SEED=%SEED_OVERRIDE%"
-      ) else (
-        for /f %%S in ('python -c "import secrets; print(secrets.randbelow(2**31))"') do set "SEED=%%S"
-      )
-      set "TITLE=T%%T_eps!EPS_TITLE!_tau!TAU_TITLE!"
-      set "OUTDIR=%BATCH_DIR%\!TITLE!"
-      call :trace "case start T=%%T EPS=%%M TAU=%%U"
-      echo.[run] T=%%T eps=%%M tau=%%U -^> !OUTDIR! (batch=%BATCH_SEED%, seed=!SEED!)
+for /f "usebackq tokens=1-3 delims= " %%A in ("%SWEEP_LIST_FILE%") do (
+  set "T=%%A"
+  set "EPS=%%B"
+  set "TAU=%%C"
+  call :trace "case start T=%%A EPS=%%B TAU=%%C"
+  set "T_TABLE=data/mars_temperature_T!T!p0K.csv"
+  set "EPS_TITLE=!EPS!"
+  set "EPS_TITLE=!EPS_TITLE:0.=0p!"
+  set "EPS_TITLE=!EPS_TITLE:.=p!"
+  set "TAU_TITLE=!TAU!"
+  set "TAU_TITLE=!TAU_TITLE:0.=0p!"
+  set "TAU_TITLE=!TAU_TITLE:.=p!"
+  if defined SEED_OVERRIDE (
+    set "SEED=%SEED_OVERRIDE%"
+  ) else (
+    for /f %%S in ('python -c "import secrets; print(secrets.randbelow(2**31))"') do set "SEED=%%S"
+  )
+  set "TITLE=T!T!_eps!EPS_TITLE!_tau!TAU_TITLE!"
+  set "OUTDIR=%BATCH_DIR%\!TITLE!"
+  echo.[run] T=%%A eps=%%B tau=%%C -^> !OUTDIR! (batch=%BATCH_SEED%, seed=!SEED!)
       rem Show supply rate info (skip Python calc to avoid cmd.exe delayed expansion issues)
-      echo.[info] epsilon_mix=%%M; mu_orbit10pct=%SUPPLY_MU_ORBIT10PCT% orbit_fraction_at_mu1=%SUPPLY_ORBIT_FRACTION%
+      echo.[info] epsilon_mix=%%B; mu_orbit10pct=%SUPPLY_MU_ORBIT10PCT% orbit_fraction_at_mu1=%SUPPLY_ORBIT_FRACTION%
       echo.[info] shielding: mode=%SHIELDING_MODE% fixed_tau1_sigma=%SHIELDING_SIGMA% auto_max_margin=%SHIELDING_AUTO_MAX_MARGIN%
-      if "%%M"=="0.1" echo.[info] epsilon_mix=0.1 is a low-supply extreme case; expect weak blowout/sinks
+      if "%%B"=="0.1" echo.[info] epsilon_mix=0.1 is a low-supply extreme case; expect weak blowout/sinks
 
       if not exist "!OUTDIR!\series" mkdir "!OUTDIR!\series"
       if not exist "!OUTDIR!\checks" mkdir "!OUTDIR!\checks"
 
       > "%CASE_OVERRIDES_FILE%" echo io.outdir=!OUTDIR!
       >>"%CASE_OVERRIDES_FILE%" echo dynamics.rng_seed=!SEED!
-      >>"%CASE_OVERRIDES_FILE%" echo radiation.TM_K=%%T
-      >>"%CASE_OVERRIDES_FILE%" echo supply.mixing.epsilon_mix=%%M
+      >>"%CASE_OVERRIDES_FILE%" echo radiation.TM_K=%%A
+      >>"%CASE_OVERRIDES_FILE%" echo supply.mixing.epsilon_mix=%%B
       >>"%CASE_OVERRIDES_FILE%" echo optical_depth.tau0_target=!TAU!
       if /i "%COOL_MODE%" NEQ "hyodo" (
         >>"%CASE_OVERRIDES_FILE%" echo radiation.mars_temperature_driver.table.path=!T_TABLE!
@@ -537,11 +547,7 @@ for %%T in (%T_LIST%) do (
           if errorlevel 1 exit /b !errorlevel!
         )
       )
-    )
-  )
-  endlocal
 )
-endlocal
 
 popd
 call :trace "done"
