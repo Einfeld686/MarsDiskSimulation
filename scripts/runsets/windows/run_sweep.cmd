@@ -110,16 +110,11 @@ if not defined SUPPLY_HEADROOM_POLICY set "SUPPLY_HEADROOM_POLICY=off"
 if not defined SUPPLY_TRANSPORT_MODE set "SUPPLY_TRANSPORT_MODE=direct"
 if not defined SUPPLY_TRANSPORT_TMIX_ORBITS set "SUPPLY_TRANSPORT_TMIX_ORBITS=off"
 if not defined SUPPLY_TRANSPORT_HEADROOM set "SUPPLY_TRANSPORT_HEADROOM=hard"
-if not defined AUTO_JOBS set "AUTO_JOBS=1"
-if not defined PARALLEL_JOBS (
-  if "!AUTO_JOBS!"=="1" (
-    rem Leave undefined to allow auto sizing in run_temp_supply_sweep.cmd
-  ) else (
-    set "PARALLEL_JOBS=1"
-  )
-)
+set "AUTO_JOBS=0"
+set "PARALLEL_JOBS=1"
+set "SWEEP_PARALLEL=0"
 if not defined PARALLEL_WINDOW_STYLE set "PARALLEL_WINDOW_STYLE=Hidden"
-if not defined MARSDISK_CELL_PARALLEL set "MARSDISK_CELL_PARALLEL=1"
+set "MARSDISK_CELL_PARALLEL=1"
 if not defined MARSDISK_CELL_MIN_CELLS set "MARSDISK_CELL_MIN_CELLS=4"
 if not defined MARSDISK_CELL_CHUNK_SIZE set "MARSDISK_CELL_CHUNK_SIZE=0"
 if not defined MARSDISK_CELL_JOBS (

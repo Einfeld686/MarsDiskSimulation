@@ -173,8 +173,19 @@ if not defined SUPPLY_VEL_WEIGHT set "SUPPLY_VEL_WEIGHT=delta_sigma"
 rem STREAM_MEM_GB intentionally left undefined by default
 rem STREAM_STEP_INTERVAL intentionally left undefined by default
 if not defined ENABLE_PROGRESS set "ENABLE_PROGRESS=1"
-if not defined AUTO_JOBS set "AUTO_JOBS=1"
-if not defined PARALLEL_JOBS set "PARALLEL_JOBS="
+if not defined AUTO_JOBS set "AUTO_JOBS=0"
+if not defined PARALLEL_JOBS set "PARALLEL_JOBS=1"
+if not defined SWEEP_PARALLEL set "SWEEP_PARALLEL=0"
+if not defined MARSDISK_CELL_PARALLEL set "MARSDISK_CELL_PARALLEL=1"
+if not defined MARSDISK_CELL_MIN_CELLS set "MARSDISK_CELL_MIN_CELLS=4"
+if not defined MARSDISK_CELL_CHUNK_SIZE set "MARSDISK_CELL_CHUNK_SIZE=0"
+if not defined MARSDISK_CELL_JOBS (
+  if defined NUMBER_OF_PROCESSORS (
+    set "MARSDISK_CELL_JOBS=%NUMBER_OF_PROCESSORS%"
+  ) else (
+    set "MARSDISK_CELL_JOBS=1"
+  )
+)
 if not defined JOB_MEM_GB set "JOB_MEM_GB=10"
 if not defined MEM_RESERVE_GB set "MEM_RESERVE_GB=4"
 if not defined PARALLEL_SLEEP_SEC set "PARALLEL_SLEEP_SEC=2"
@@ -350,7 +361,9 @@ if not exist "%SWEEP_LIST_FILE%" (
 )
 
 call :trace "parallel check"
-if not "%PARALLEL_JOBS%"=="1" (
+if "%SWEEP_PARALLEL%"=="0" (
+  call :trace "sweep parallel disabled"
+) else if not "%PARALLEL_JOBS%"=="1" (
   if not defined RUN_ONE_MODE (
     call :trace "dispatch parallel"
     call :run_parallel
