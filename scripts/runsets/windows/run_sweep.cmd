@@ -58,13 +58,19 @@ if /i "%~1"=="--no-preflight" (
   shift
   goto :parse_args
 )
+if /i "%~1"=="--debug" (
+  set "DEBUG=1"
+  set "TRACE_ENABLED=1"
+  shift
+  goto :parse_args
+)
 if /i "%~1"=="--help" goto :usage
 if /i "%~1"=="-h" goto :usage
 
 echo.[error] Unknown option: %~1
 :usage
 echo Usage: run_sweep.cmd [--study ^<path^>] [--config ^<path^>] [--overrides ^<path^>]
- echo.           [--out-root ^<path^>] [--dry-run] [--no-plot] [--no-eval] [--no-preflight]
+ echo.           [--out-root ^<path^>] [--dry-run] [--no-plot] [--no-eval] [--no-preflight] [--debug]
 exit /b 1
 
 :args_done
@@ -119,6 +125,7 @@ if not defined MARSDISK_CELL_MIN_CELLS set "MARSDISK_CELL_MIN_CELLS=4"
 if not defined MARSDISK_CELL_CHUNK_SIZE set "MARSDISK_CELL_CHUNK_SIZE=0"
 if not defined MARSDISK_CELL_JOBS set "MARSDISK_CELL_JOBS=auto"
 if not defined CELL_MEM_FRACTION set "CELL_MEM_FRACTION=0.7"
+if not defined CELL_CPU_FRACTION set "CELL_CPU_FRACTION=0.7"
 
 if defined STUDY_PATH set "STUDY_FILE=%STUDY_PATH%"
 if defined OUT_ROOT (
@@ -127,6 +134,44 @@ if defined OUT_ROOT (
   set "BATCH_ROOT=out"
 )
 rem Staging outputs stay on the internal disk; external archive is handled via io.archive.*
+
+rem Validate archive defaults in the overrides file to match the archive plan.
+set "ARCHIVE_ENABLED_EXPECTED="
+set "ARCHIVE_DIR_EXPECTED="
+set "ARCHIVE_MERGE_TARGET="
+set "ARCHIVE_VERIFY_LEVEL="
+set "ARCHIVE_KEEP_LOCAL="
+if exist "%OVERRIDES_PATH%" (
+  for /f "usebackq tokens=1,* delims==" %%A in (`findstr /i /r "^io\\.archive\\.enabled=" "%OVERRIDES_PATH%"`) do set "ARCHIVE_ENABLED_EXPECTED=%%B"
+  for /f "usebackq tokens=1,* delims==" %%A in (`findstr /i /r "^io\\.archive\\.dir=" "%OVERRIDES_PATH%"`) do set "ARCHIVE_DIR_EXPECTED=%%B"
+  for /f "usebackq tokens=1,* delims==" %%A in (`findstr /i /r "^io\\.archive\\.merge_target=" "%OVERRIDES_PATH%"`) do set "ARCHIVE_MERGE_TARGET=%%B"
+  for /f "usebackq tokens=1,* delims==" %%A in (`findstr /i /r "^io\\.archive\\.verify_level=" "%OVERRIDES_PATH%"`) do set "ARCHIVE_VERIFY_LEVEL=%%B"
+  for /f "usebackq tokens=1,* delims==" %%A in (`findstr /i /r "^io\\.archive\\.keep_local=" "%OVERRIDES_PATH%"`) do set "ARCHIVE_KEEP_LOCAL=%%B"
+)
+if /i not "%ARCHIVE_ENABLED_EXPECTED%"=="true" (
+  echo.[error] io.archive.enabled=true is required in %OVERRIDES_PATH%
+  exit /b 1
+)
+if not defined ARCHIVE_DIR_EXPECTED (
+  echo.[error] io.archive.dir is required in %OVERRIDES_PATH%
+  exit /b 1
+)
+if /i not "%ARCHIVE_MERGE_TARGET%"=="external" (
+  echo.[error] io.archive.merge_target=external is required in %OVERRIDES_PATH%
+  exit /b 1
+)
+if /i not "%ARCHIVE_VERIFY_LEVEL%"=="standard_plus" (
+  echo.[error] io.archive.verify_level=standard_plus is required in %OVERRIDES_PATH%
+  exit /b 1
+)
+if /i not "%ARCHIVE_KEEP_LOCAL%"=="metadata" (
+  echo.[error] io.archive.keep_local=metadata is required in %OVERRIDES_PATH%
+  exit /b 1
+)
+if /i "%BATCH_ROOT%"=="%ARCHIVE_DIR_EXPECTED%" (
+  echo.[error] BATCH_ROOT must be internal; it matches io.archive.dir (%ARCHIVE_DIR_EXPECTED%)
+  exit /b 1
+)
 
 set "REPO_ROOT=%~dp0..\..\.."
 set "RUN_TS_SOURCE=pre"

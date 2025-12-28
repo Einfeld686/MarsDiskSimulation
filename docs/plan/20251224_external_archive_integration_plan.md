@@ -34,7 +34,8 @@
 
 # Windows運用補足（明示パス運用）
 - Windows runset は `--config`/`--overrides`/`--out-root` を明示指定する前提で運用しているため、アーカイブも `io.archive.dir` を overrides で明示的に指定する。
-- `io.archive.dir` は `D:\marsdisk_runs` のようなドライブレター付き絶対パスを推奨し、相対パスや `~` 展開には依存しない。
+- `io.archive.dir` は `E:\marsdisk_runs` を固定値として運用し、ドライブレター付き絶対パスで指定する（相対パスや `~` 展開には依存しない）。
+- 外付けHDDの保存先は `E:\marsdisk_runs` に固定する。
 - `run_card.md` には指定値と解決後の実パスの両方を記録する（Windowsのパス解決差異を吸収するため）。
 - `io.archive.enabled=true` の場合は `io.archive.dir` 未指定を許可しない（runset 側で必須化）。
 

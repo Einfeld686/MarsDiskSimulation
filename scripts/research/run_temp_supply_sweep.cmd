@@ -2,7 +2,9 @@
 rem Windows CMD version of run_temp_supply_sweep.sh (logic preserved, output rooted under out/)
 setlocal EnableExtensions EnableDelayedExpansion
 
-if not defined TRACE_ENABLED set "TRACE_ENABLED=1"
+if not defined DEBUG set "DEBUG=0"
+if not defined TRACE_ENABLED set "TRACE_ENABLED=0"
+if /i "%DEBUG%"=="1" set "TRACE_ENABLED=1"
 if not defined TRACE_ECHO set "TRACE_ECHO=0"
 set "SCRIPT_REV=run_temp_supply_sweep_cmd_trace_v2"
 
@@ -59,7 +61,7 @@ if "%TRACE_ENABLED%"=="1" (
   > "%TRACE_LOG%" echo.[trace] start script=%~f0 rev=%SCRIPT_REV%
   echo.[trace] log=%TRACE_LOG%
 )
-if "%TRACE_ECHO%"=="1" (
+if "%TRACE_ENABLED%"=="1" if "%TRACE_ECHO%"=="1" (
   echo.[trace] echo-on enabled
   echo on
 )
@@ -181,20 +183,24 @@ if not defined MARSDISK_CELL_PARALLEL set "MARSDISK_CELL_PARALLEL=1"
 if not defined MARSDISK_CELL_MIN_CELLS set "MARSDISK_CELL_MIN_CELLS=4"
 if not defined MARSDISK_CELL_CHUNK_SIZE set "MARSDISK_CELL_CHUNK_SIZE=0"
 if not defined CELL_MEM_FRACTION set "CELL_MEM_FRACTION=0.7"
+if not defined CELL_CPU_FRACTION set "CELL_CPU_FRACTION=0.7"
 if not defined MARSDISK_CELL_JOBS set "MARSDISK_CELL_JOBS=auto"
 set "CELL_JOBS_RAW=%MARSDISK_CELL_JOBS%"
 if /i "%MARSDISK_CELL_JOBS%"=="auto" (
   set "CELL_CPU_LOGICAL="
   set "CELL_MEM_TOTAL_GB="
   set "CELL_MEM_FRACTION_USED="
-  for /f "usebackq tokens=1-4 delims=|" %%A in (`powershell -NoProfile -Command "$fraction=[double]$env:CELL_MEM_FRACTION; if ($fraction -le 0 -or $fraction -gt 1){$fraction=0.7}; $mem=(Get-CimInstance Win32_ComputerSystem).TotalPhysicalMemory; $total=[math]::Floor($mem/1GB); $cpu=(Get-CimInstance Win32_Processor | Measure-Object -Sum -Property NumberOfLogicalProcessors).Sum; if (-not $cpu -or $cpu -lt 1){$cpu=[Environment]::ProcessorCount}; if ($cpu -lt 1){$cpu=1}; $jobs=[int]([math]::Max([math]::Floor($cpu*$fraction),1)); Write-Output (\"$total|$cpu|$fraction|$jobs\")"`) do (
+  set "CELL_CPU_FRACTION_USED="
+  for /f "usebackq tokens=1-5 delims=|" %%A in (`powershell -NoProfile -Command "$mem_fraction=[double]$env:CELL_MEM_FRACTION; if ($mem_fraction -le 0 -or $mem_fraction -gt 1){$mem_fraction=0.7}; $cpu_fraction=[double]$env:CELL_CPU_FRACTION; if ($cpu_fraction -le 0 -or $cpu_fraction -gt 1){$cpu_fraction=0.7}; $mem=(Get-CimInstance Win32_ComputerSystem).TotalPhysicalMemory; $total=[math]::Floor($mem/1GB); $cpu=(Get-CimInstance Win32_Processor | Measure-Object -Sum -Property NumberOfLogicalProcessors).Sum; if (-not $cpu -or $cpu -lt 1){$cpu=[Environment]::ProcessorCount}; if ($cpu -lt 1){$cpu=1}; $jobs=[int]([math]::Max([math]::Floor($cpu*$cpu_fraction),1)); Write-Output (\"$total|$cpu|$mem_fraction|$cpu_fraction|$jobs\")"`) do (
     set "CELL_MEM_TOTAL_GB=%%A"
     set "CELL_CPU_LOGICAL=%%B"
     set "CELL_MEM_FRACTION_USED=%%C"
-    set "MARSDISK_CELL_JOBS=%%D"
+    set "CELL_CPU_FRACTION_USED=%%D"
+    set "MARSDISK_CELL_JOBS=%%E"
   )
   if not defined MARSDISK_CELL_JOBS set "MARSDISK_CELL_JOBS=1"
   if not defined CELL_MEM_FRACTION_USED set "CELL_MEM_FRACTION_USED=%CELL_MEM_FRACTION%"
+  if not defined CELL_CPU_FRACTION_USED set "CELL_CPU_FRACTION_USED=%CELL_CPU_FRACTION%"
   if not defined STREAM_MEM_GB (
     if defined CELL_MEM_TOTAL_GB (
       if not "!CELL_MEM_TOTAL_GB!"=="0" (
@@ -202,8 +208,9 @@ if /i "%MARSDISK_CELL_JOBS%"=="auto" (
       )
     )
   )
-  echo.[sys] cell_parallel auto: mem_total_gb=!CELL_MEM_TOTAL_GB! mem_fraction=!CELL_MEM_FRACTION_USED! cpu_logical=!CELL_CPU_LOGICAL! cell_jobs=!MARSDISK_CELL_JOBS!
+  echo.[sys] cell_parallel auto: mem_total_gb=!CELL_MEM_TOTAL_GB! mem_fraction=!CELL_MEM_FRACTION_USED! cpu_logical=!CELL_CPU_LOGICAL! cpu_fraction=!CELL_CPU_FRACTION_USED! cell_jobs=!MARSDISK_CELL_JOBS!
 )
+if not defined CELL_CPU_FRACTION_USED set "CELL_CPU_FRACTION_USED=%CELL_CPU_FRACTION%"
 set "CELL_JOBS_OK=1"
 for /f "delims=0123456789" %%A in ("%MARSDISK_CELL_JOBS%") do set "CELL_JOBS_OK=0"
 if "%CELL_JOBS_OK%"=="0" (
@@ -211,6 +218,27 @@ if "%CELL_JOBS_OK%"=="0" (
   set "MARSDISK_CELL_JOBS=1"
 )
 if "%MARSDISK_CELL_JOBS%"=="0" set "MARSDISK_CELL_JOBS=1"
+if not defined CELL_THREAD_LIMIT set "CELL_THREAD_LIMIT=auto"
+set "CELL_THREAD_LIMIT_RAW=%CELL_THREAD_LIMIT%"
+if /i "%CELL_THREAD_LIMIT%"=="auto" (
+  set "CELL_THREAD_LIMIT="
+  for /f %%A in ('powershell -NoProfile -Command "$cpu=[double]$env:CELL_CPU_LOGICAL; if (-not $cpu -or $cpu -lt 1){$cpu=[Environment]::ProcessorCount}; if ($cpu -lt 1){$cpu=1}; $jobs=[double]$env:MARSDISK_CELL_JOBS; if ($jobs -lt 1){$jobs=1}; $fraction=[double]$env:CELL_CPU_FRACTION_USED; if ($fraction -le 0 -or $fraction -gt 1){$fraction=0.7}; $limit=[math]::Max([math]::Floor($cpu*$fraction/$jobs),1); Write-Output $limit"') do set "CELL_THREAD_LIMIT=%%A"
+)
+if not defined CELL_THREAD_LIMIT set "CELL_THREAD_LIMIT=1"
+set "CELL_THREAD_OK=1"
+for /f "delims=0123456789" %%A in ("%CELL_THREAD_LIMIT%") do set "CELL_THREAD_OK=0"
+if "%CELL_THREAD_OK%"=="0" (
+  if defined CELL_THREAD_LIMIT_RAW echo.[warn] CELL_THREAD_LIMIT invalid: "%CELL_THREAD_LIMIT_RAW%" -> 1
+  set "CELL_THREAD_LIMIT=1"
+)
+if "%CELL_THREAD_LIMIT%"=="0" set "CELL_THREAD_LIMIT=1"
+if not defined OMP_NUM_THREADS set "OMP_NUM_THREADS=%CELL_THREAD_LIMIT%"
+if not defined MKL_NUM_THREADS set "MKL_NUM_THREADS=%CELL_THREAD_LIMIT%"
+if not defined OPENBLAS_NUM_THREADS set "OPENBLAS_NUM_THREADS=%CELL_THREAD_LIMIT%"
+if not defined NUMEXPR_NUM_THREADS set "NUMEXPR_NUM_THREADS=%CELL_THREAD_LIMIT%"
+if not defined VECLIB_MAXIMUM_THREADS set "VECLIB_MAXIMUM_THREADS=%CELL_THREAD_LIMIT%"
+if not defined NUMBA_NUM_THREADS set "NUMBA_NUM_THREADS=%CELL_THREAD_LIMIT%"
+echo.[sys] thread caps: limit=%CELL_THREAD_LIMIT% (OMP/MKL/OPENBLAS/NUMEXPR/NUMBA)
 if not defined MEM_RESERVE_GB set "MEM_RESERVE_GB=4"
 if not defined PARALLEL_SLEEP_SEC set "PARALLEL_SLEEP_SEC=2"
 if not defined PARALLEL_WINDOW_STYLE set "PARALLEL_WINDOW_STYLE=Hidden"
