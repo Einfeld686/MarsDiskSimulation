@@ -163,16 +163,21 @@ set "AUTO_JOBS=0"
 set "PARALLEL_JOBS=1"
 set "SWEEP_PARALLEL=0"
 if not defined PARALLEL_WINDOW_STYLE set "PARALLEL_WINDOW_STYLE=Hidden"
+if not defined PARALLEL_MODE set "PARALLEL_MODE=numba"
 set "MARSDISK_CELL_PARALLEL=1"
 if not defined MARSDISK_CELL_MIN_CELLS set "MARSDISK_CELL_MIN_CELLS=4"
 if not defined MARSDISK_CELL_CHUNK_SIZE set "MARSDISK_CELL_CHUNK_SIZE=0"
-rem Force auto sizing to keep ~80% CPU usage for cell-parallel runs.
+rem Default to cell-parallel auto sizing unless PARALLEL_MODE=numba.
 set "MARSDISK_CELL_JOBS=auto"
 if not defined CELL_MEM_FRACTION set "CELL_MEM_FRACTION=0.8"
 set "CELL_CPU_FRACTION=0.8"
 if not defined CPU_UTIL_TARGET_PERCENT set "CPU_UTIL_TARGET_PERCENT=80"
 if not defined CPU_UTIL_TARGET_MAX_PERCENT set "CPU_UTIL_TARGET_MAX_PERCENT=90"
 if not defined CPU_UTIL_RESPECT_MEM set "CPU_UTIL_RESPECT_MEM=1"
+if /i "%PARALLEL_MODE%"=="numba" (
+  set "MARSDISK_CELL_PARALLEL=0"
+  set "MARSDISK_CELL_JOBS=1"
+)
 
 if defined STUDY_PATH set "STUDY_FILE=%STUDY_PATH%"
 if defined OUT_ROOT (

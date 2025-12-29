@@ -208,6 +208,10 @@ if not defined MARSDISK_CELL_CHUNK_SIZE set "MARSDISK_CELL_CHUNK_SIZE=0"
 if not defined CELL_MEM_FRACTION set "CELL_MEM_FRACTION=0.7"
 if not defined CELL_CPU_FRACTION set "CELL_CPU_FRACTION=0.7"
 if not defined MARSDISK_CELL_JOBS set "MARSDISK_CELL_JOBS=auto"
+if /i "%PARALLEL_MODE%"=="numba" (
+  set "MARSDISK_CELL_PARALLEL=0"
+  set "MARSDISK_CELL_JOBS=1"
+)
 set "CELL_JOBS_RAW=%MARSDISK_CELL_JOBS%"
 if /i "%MARSDISK_CELL_JOBS%"=="auto" (
   set "CELL_CPU_LOGICAL="
@@ -243,6 +247,22 @@ if "%CELL_JOBS_OK%"=="0" (
   set "MARSDISK_CELL_JOBS=1"
 )
 if "%MARSDISK_CELL_JOBS%"=="0" set "MARSDISK_CELL_JOBS=1"
+if /i "%PARALLEL_MODE%"=="numba" (
+  set "CPU_TARGET_CORES="
+  for /f "usebackq tokens=1,2 delims=|" %%A in (`"%PYTHON_EXE%" scripts\\runsets\\common\\calc_cpu_target_jobs.py`) do (
+    set "CPU_TARGET_CORES=%%A"
+  )
+  if not defined CPU_TARGET_CORES set "CPU_TARGET_CORES=1"
+  if "!CPU_TARGET_CORES!"=="" set "CPU_TARGET_CORES=1"
+  set "CELL_THREAD_LIMIT=!CPU_TARGET_CORES!"
+  set "NUMBA_NUM_THREADS=!CPU_TARGET_CORES!"
+  set "OMP_NUM_THREADS=!CPU_TARGET_CORES!"
+  set "MKL_NUM_THREADS=!CPU_TARGET_CORES!"
+  set "OPENBLAS_NUM_THREADS=!CPU_TARGET_CORES!"
+  set "NUMEXPR_NUM_THREADS=!CPU_TARGET_CORES!"
+  set "VECLIB_MAXIMUM_THREADS=!CPU_TARGET_CORES!"
+  echo.[sys] numba_parallel: target_cores=!CPU_TARGET_CORES! target_percent=%CPU_UTIL_TARGET_PERCENT% max_percent=%CPU_UTIL_TARGET_MAX_PERCENT%
+)
 if not defined CELL_THREAD_LIMIT set "CELL_THREAD_LIMIT=auto"
 set "CELL_THREAD_LIMIT_RAW=%CELL_THREAD_LIMIT%"
 if /i "%CELL_THREAD_LIMIT%"=="auto" (
@@ -356,7 +376,7 @@ if "%AUTO_JOBS%"=="1" (
   echo.[sys] mem_total_gb=%TOTAL_GB% cpu_logical=%CPU_LOGICAL% job_mem_gb=%JOB_MEM_GB% parallel_jobs=%PARALLEL_JOBS%
 )
 
-if defined CPU_UTIL_TARGET_PERCENT (
+if defined CPU_UTIL_TARGET_PERCENT if /i not "%PARALLEL_MODE%"=="numba" (
   if not defined CPU_UTIL_RESPECT_MEM set "CPU_UTIL_RESPECT_MEM=1"
   if not defined RUN_ONE_MODE (
     set "CPU_TARGET_OK=1"

@@ -22,7 +22,8 @@ REQUIRED_ARCHIVE_KEYS = {
 PATH_ENV_VARS = ("TEMP", "TMP", "USERPROFILE", "HOMEDRIVE", "HOMEPATH", "COMSPEC")
 MAX_WARN_PATH_LEN = 240
 WINDOWS_PATH_INVALID_CHARS = set('<>:"|?*')
-CMD_META_CHARS = "&<>|^"
+CMD_META_CHARS = "&<>|^()"
+CMD_META_CHARS_DISPLAY = "&<>|^()"
 POSIX_PATH_MARKERS = ("/Users/", "/Volumes/", "/home/", "~/")
 UNC_SHARED_PREFIXES = ("\\\\psf\\", "\\\\mac\\", "\\\\vmware-host\\shared folders\\")
 DEFAULT_SCAN_EXCLUDE_DIRS = {
@@ -37,9 +38,16 @@ DEFAULT_SCAN_EXCLUDE_DIRS = {
     "tmp",
 }
 MAX_PATH_CLASSIC = 260
+CMD_LINE_MAX = 8191
+CMD_LINE_WARN_LEN = 7000
+PATH_WARN_LEN = 7000
+CHCP_SCAN_LINES = 25
 DELAYED_SETLOCAL_RE = re.compile(r"\bsetlocal\b.*\benabledelayedexpansion\b", re.I)
 DELAYED_CMD_RE = re.compile(r"\bcmd(?:\.exe)?\b.*?/v\s*:\s*on\b", re.I)
 BANG_TOKEN_RE = re.compile(r"![^!]+!")
+CHCP_CMD_RE = re.compile(r"^\s*@?(?:call\s+)?chcp\b", re.I)
+EXEC_CMD_RE = re.compile(r'^\s*@?(?:"[^"]+"|[^"\s]+)\.(cmd|bat)\b', re.I)
+START_QUOTED_RE = re.compile(r'^\s*@?start\s+"(?!")', re.I)
 RESERVED_DEVICE_NAMES = {
     "CON",
     "PRN",
@@ -164,7 +172,7 @@ def _cmd_unsafe_issue(
     if "%" in value and not allow_expansion:
         warnings.append(f"{label} contains '%' which can confuse cmd expansion: {value}")
     if _contains_cmd_meta(value):
-        warnings.append(f"{label} contains cmd meta chars (&<>|^): {value}")
+        warnings.append(f"{label} contains cmd meta chars ({CMD_META_CHARS_DISPLAY}): {value}")
 
 
 def _check_shared_path(label: str, value: str, warnings: list[str]) -> None:
@@ -210,6 +218,82 @@ def _check_python(errors: list[str], warnings: list[str], warn_only: bool) -> No
         warnings.append(msg)
     else:
         errors.append(msg)
+
+
+def _coerce_registry_bool(value: object) -> bool | None:
+    if value is None:
+        return None
+    if isinstance(value, int):
+        return bool(value)
+    if isinstance(value, str):
+        normalized = value.strip().lower()
+        if normalized in {"1", "true", "yes", "on"}:
+            return True
+        if normalized in {"0", "false", "no", "off"}:
+            return False
+    return None
+
+
+def _read_cmd_registry_value(root, name: str) -> object | None:
+    try:
+        import winreg
+    except Exception:
+        return None
+    try:
+        key = winreg.OpenKey(root, r"Software\\Microsoft\\Command Processor")
+    except OSError:
+        return None
+    try:
+        value, _ = winreg.QueryValueEx(key, name)
+    except OSError:
+        return None
+    return value
+
+
+def _read_cmd_autorun_values() -> dict[str, object]:
+    try:
+        import winreg
+    except Exception:
+        return {}
+    values: dict[str, object] = {}
+    for label, root in (("HKCU", winreg.HKEY_CURRENT_USER), ("HKLM", winreg.HKEY_LOCAL_MACHINE)):
+        value = _read_cmd_registry_value(root, "AutoRun")
+        if value:
+            values[label] = value
+    return values
+
+
+def _read_cmd_extensions_enabled() -> tuple[bool | None, str | None, object | None]:
+    try:
+        import winreg
+    except Exception:
+        return None, None, None
+    value = _read_cmd_registry_value(winreg.HKEY_CURRENT_USER, "EnableExtensions")
+    source = "HKCU"
+    if value is None:
+        value = _read_cmd_registry_value(winreg.HKEY_LOCAL_MACHINE, "EnableExtensions")
+        source = "HKLM"
+    enabled = _coerce_registry_bool(value)
+    if value is None:
+        source = None
+    return enabled, source, value
+
+
+def _read_cmd_code_page() -> str | None:
+    try:
+        result = subprocess.run(
+            ["cmd", "/c", "chcp"],
+            capture_output=True,
+            text=True,
+            timeout=5,
+            check=False,
+        )
+    except Exception:
+        return None
+    if result.returncode != 0:
+        return None
+    output = (result.stdout or "").strip()
+    return output or None
 
 
 def _check_powershell(errors: list[str], warnings: list[str], warn_only: bool) -> None:
@@ -284,6 +368,17 @@ def _check_env_paths(
             errors.append(f"COMSPEC not found: {value}")
         if len(value) >= MAX_WARN_PATH_LEN:
             warnings.append(f"{key} path length >= {MAX_WARN_PATH_LEN}: {value}")
+
+
+def _check_path_env_length(warnings: list[str]) -> None:
+    value = os.environ.get("PATH", "")
+    if not value:
+        return
+    length = len(value)
+    if length >= CMD_LINE_MAX:
+        warnings.append(f"PATH length {length} >= {CMD_LINE_MAX} (cmd limit)")
+    elif length >= PATH_WARN_LEN:
+        warnings.append(f"PATH length {length} near cmd limit {CMD_LINE_MAX}")
 
 
 def _check_path_value(
@@ -382,6 +477,28 @@ def _read_cmd_text(path: Path, errors: list[str]) -> str | None:
     return _decode_cmd_text(data)
 
 
+def _has_chcp_directive(lines: list[str], limit: int = CHCP_SCAN_LINES) -> bool:
+    checked = 0
+    for raw in lines:
+        stripped = raw.strip()
+        if not stripped:
+            continue
+        line_body = stripped.lstrip()
+        if line_body.startswith("@"):
+            line_body = line_body[1:].lstrip()
+        lower = line_body.lower()
+        if lower.startswith("rem") and (len(lower) == 3 or lower[3].isspace()):
+            continue
+        if lower.startswith("::"):
+            continue
+        checked += 1
+        if CHCP_CMD_RE.match(line_body):
+            return True
+        if checked >= limit:
+            return False
+    return False
+
+
 def _scan_cmd_file(
     path: Path,
     errors: list[str],
@@ -405,22 +522,50 @@ def _scan_cmd_file(
         if b"\n" in data.replace(b"\r\n", b""):
             warnings.append(f"cmd has mixed line endings: {path}")
 
-    if any(byte >= 0x80 for byte in data):
+    has_non_ascii = any(byte >= 0x80 for byte in data)
+    if has_non_ascii:
         warnings.append(f"cmd contains non-ASCII characters: {path}")
 
     text = _decode_cmd_text(data)
-    for line_no, line in enumerate(text.splitlines(), 1):
+    lines = text.splitlines()
+    if has_non_ascii and not _has_chcp_directive(lines):
+        warnings.append(f"cmd contains non-ASCII without chcp near top: {path}")
+
+    for line_no, line in enumerate(lines, 1):
         stripped = line.strip()
         if not stripped:
             continue
-        lower = stripped.lower()
-        if lower.startswith("rem ") or lower.startswith("::"):
+        line_body = stripped.lstrip()
+        if line_body.startswith("@"):
+            line_body = line_body[1:].lstrip()
+        lower = line_body.lower()
+        if lower.startswith("rem") and (len(lower) == 3 or lower[3].isspace()):
             continue
-        if _contains_posix_path(stripped):
+        if lower.startswith("::"):
+            continue
+        if len(line) >= CMD_LINE_MAX:
+            warnings.append(f"cmd line length {len(line)} >= {CMD_LINE_MAX} at {path}:{line_no}")
+        elif len(line) >= CMD_LINE_WARN_LEN:
+            warnings.append(
+                f"cmd line length {len(line)} near cmd limit {CMD_LINE_MAX} at {path}:{line_no}"
+            )
+        if _contains_posix_path(line_body):
             errors.append(f"cmd contains POSIX-style path at {path}:{line_no}")
             continue
+        if lower.startswith(("cd ", "cd\t", "chdir ")):
+            if re.search(r"[A-Za-z]:[\\/]", line_body) and not re.search(r"\\s+/d\\b", lower):
+                warnings.append(f"cmd cd without /d for drive path at {path}:{line_no}")
+            if "\\\\" in line_body:
+                warnings.append(f"cmd cd uses UNC path; prefer pushd at {path}:{line_no}")
+        if START_QUOTED_RE.match(line_body):
+            warnings.append(
+                f'cmd start uses quoted arg without empty title (use start "" ...) at {path}:{line_no}'
+            )
+        if EXEC_CMD_RE.match(line_body):
+            if not lower.startswith("call ") and not lower.startswith("start "):
+                warnings.append(f"cmd invokes batch without call at {path}:{line_no}")
         if lower.startswith("set "):
-            value = _parse_set_value(stripped)
+            value = _parse_set_value(line_body)
             if not value:
                 continue
             if _contains_posix_path(value):
@@ -643,6 +788,7 @@ def main() -> int:
 
     errors: list[str] = []
     warnings: list[str] = []
+    infos: list[str] = []
 
     if sys.version_info < (3, 11):
         warnings.append(f"python {sys.version.split()[0]} < 3.11")
@@ -720,6 +866,17 @@ def main() -> int:
     if args.require_powershell:
         _check_powershell(errors, warnings, tool_checks_warn_only)
 
+    if is_windows_host:
+        autorun_values = _read_cmd_autorun_values()
+        for label, value in autorun_values.items():
+            warnings.append(f"cmd AutoRun is set in {label}: {value}")
+        enabled, source, raw = _read_cmd_extensions_enabled()
+        if enabled is False:
+            errors.append(f"cmd extensions disabled (EnableExtensions={raw} from {source})")
+        code_page = _read_cmd_code_page()
+        if code_page:
+            infos.append(f"cmd code page: {code_page}")
+
     overrides = {}
     if args.overrides.exists():
         overrides, duplicates = _load_overrides(args.overrides)
@@ -779,6 +936,8 @@ def main() -> int:
         temp_dir = os.environ.get("TEMP") or os.environ.get("TMP")
         _check_temp_dir(temp_dir, errors, warnings, cmd_unsafe_error)
         _check_env_paths(errors, warnings, cmd_unsafe_error)
+        if is_windows_host:
+            _check_path_env_length(warnings)
 
     if cmd_paths:
         for cmd_path in cmd_paths:
@@ -870,11 +1029,18 @@ def main() -> int:
         if warnings:
             for msg in warnings:
                 print(f"[warn] {msg}")
+        if infos:
+            for msg in infos:
+                print(f"[info] {msg}")
         return 1
     print("[preflight] ok")
     if warnings:
         for msg in warnings:
             print(f"[warn] {msg}")
+    if infos:
+        for msg in infos:
+            print(f"[info] {msg}")
+    if warnings:
         if args.strict:
             return 2
     return 0

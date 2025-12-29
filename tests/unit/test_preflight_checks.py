@@ -37,6 +37,15 @@ def _write_overrides(path: Path, archive_dir: str) -> None:
     )
 
 
+def _scan_cmd_text(module: object, tmp_path: Path, text: str, cmd_unsafe_error: bool = False):
+    path = tmp_path / "scan.cmd"
+    path.write_text(text, encoding="utf-8", newline="\r\n")
+    errors: list[str] = []
+    warnings: list[str] = []
+    module._scan_cmd_file(path, errors, warnings, cmd_unsafe_error)
+    return errors, warnings
+
+
 def _run_main(module: object, argv: list[str], monkeypatch) -> int:
     monkeypatch.setattr(sys, "argv", argv)
     return module.main()
@@ -229,3 +238,79 @@ def test_check_name_component_rejects_backslash() -> None:
     module._check_name_component(r"bad\\name", r"bad\\name", errors)
 
     assert any("contains '\\\\'" in err for err in errors)
+
+
+def test_cmd_non_ascii_without_chcp_warns(tmp_path: Path) -> None:
+    module = _load_module()
+    _errors, warnings = _scan_cmd_text(module, tmp_path, "echo あ\n")
+
+    assert any("non-ASCII without chcp" in warning for warning in warnings)
+
+
+def test_cmd_non_ascii_with_chcp_suppresses_warning(tmp_path: Path) -> None:
+    module = _load_module()
+    _errors, warnings = _scan_cmd_text(module, tmp_path, "chcp 65001\necho あ\n")
+
+    assert not any("non-ASCII without chcp" in warning for warning in warnings)
+
+
+def test_cmd_cd_checks(tmp_path: Path) -> None:
+    module = _load_module()
+    _errors, warnings = _scan_cmd_text(
+        module,
+        tmp_path,
+        "\n".join(
+            [
+                "cd C:\\Temp",
+                "cd /d D:\\Data",
+                "cd \\\\server\\share",
+                "",
+            ]
+        ),
+    )
+
+    assert any("cd without /d" in warning for warning in warnings)
+    assert any("cd uses UNC path" in warning for warning in warnings)
+
+
+def test_cmd_start_title_warning(tmp_path: Path) -> None:
+    module = _load_module()
+    _errors, warnings = _scan_cmd_text(
+        module,
+        tmp_path,
+        "\n".join(
+            [
+                'start "C:\\\\Program Files\\\\App.exe"',
+                'start "" "C:\\\\Program Files\\\\App.exe"',
+                "",
+            ]
+        ),
+    )
+
+    assert sum("start uses quoted arg without empty title" in warning for warning in warnings) == 1
+
+
+def test_cmd_call_missing_warning(tmp_path: Path) -> None:
+    module = _load_module()
+    _errors, warnings = _scan_cmd_text(
+        module,
+        tmp_path,
+        "\n".join(
+            [
+                "scripts\\\\foo.cmd",
+                "call scripts\\\\bar.cmd",
+                "set SCRIPT=scripts\\\\baz.cmd",
+                "",
+            ]
+        ),
+    )
+
+    assert sum("invokes batch without call" in warning for warning in warnings) == 1
+
+
+def test_cmd_line_length_warning(tmp_path: Path) -> None:
+    module = _load_module()
+    long_arg = "a" * (module.CMD_LINE_WARN_LEN + 10)
+    _errors, warnings = _scan_cmd_text(module, tmp_path, f"echo {long_arg}\n")
+
+    assert any("cmd line length" in warning for warning in warnings)
