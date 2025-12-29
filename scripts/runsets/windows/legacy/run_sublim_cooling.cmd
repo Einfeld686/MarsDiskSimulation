@@ -2,16 +2,28 @@
 rem Mars disk sublimation+smol+phase runner with enforced Mars-surface cooling (cmd.exe).
 rem - Creates .venv if missing, installs requirements, then runs with radiative cooling table/autogen enabled.
 rem - OUTDIR/TMK/TABLE can be adjusted below. Avoid ':' or other illegal path chars.
-rem - Requires Python 3.11 on PATH; replace "python3.11" with a full path if needed.
+rem - Prefers Python 3.11 on PATH; falls back to python/py or set PYTHON_EXE to a full path.
 
 setlocal enabledelayedexpansion
 
-if not defined PYTHON_EXE set "PYTHON_EXE=python3.11"
-if not exist "%PYTHON_EXE%" (
-  where %PYTHON_EXE% >nul 2>&1
-  if errorlevel 1 (
-    echo [error] %PYTHON_EXE% not found in PATH.
+if not defined PYTHON_EXE (
+  for %%P in (python3.11 python py) do (
+    if not defined PYTHON_EXE (
+      where %%P >nul 2>&1
+      if not errorlevel 1 set "PYTHON_EXE=%%P"
+    )
+  )
+  if not defined PYTHON_EXE (
+    echo [error] python3.11/python/py not found in PATH
     exit /b 1
+  )
+) else (
+  if not exist "%PYTHON_EXE%" (
+    where %PYTHON_EXE% >nul 2>&1
+    if errorlevel 1 (
+      echo [error] %PYTHON_EXE% not found in PATH
+      exit /b 1
+    )
   )
 )
 set "PYTHON_BOOT=%PYTHON_EXE%"

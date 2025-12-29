@@ -2,12 +2,24 @@
 rem Run a single temp_supply case (1D default).
 setlocal EnableExtensions EnableDelayedExpansion
 
-if not defined PYTHON_EXE set "PYTHON_EXE=python3.11"
-if not exist "%PYTHON_EXE%" (
-  where %PYTHON_EXE% >nul 2>&1
-  if errorlevel 1 (
-    echo.[error] %PYTHON_EXE% not found in PATH
+if not defined PYTHON_EXE (
+  for %%P in (python3.11 python py) do (
+    if not defined PYTHON_EXE (
+      where %%P >nul 2>&1
+      if not errorlevel 1 set "PYTHON_EXE=%%P"
+    )
+  )
+  if not defined PYTHON_EXE (
+    echo.[error] python3.11/python/py not found in PATH
     exit /b 1
+  )
+) else (
+  if not exist "%PYTHON_EXE%" (
+    where %PYTHON_EXE% >nul 2>&1
+    if errorlevel 1 (
+      echo.[error] %PYTHON_EXE% not found in PATH
+      exit /b 1
+    )
   )
 )
 

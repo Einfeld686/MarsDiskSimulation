@@ -8,12 +8,24 @@ if /i "%DEBUG%"=="1" set "TRACE_ENABLED=1"
 if not defined TRACE_ECHO set "TRACE_ECHO=0"
 set "SCRIPT_REV=run_temp_supply_sweep_cmd_trace_v2"
 
-if not defined PYTHON_EXE set "PYTHON_EXE=python3.11"
-if not exist "%PYTHON_EXE%" (
-  where %PYTHON_EXE% >nul 2>&1
-  if errorlevel 1 (
-    echo.[error] %PYTHON_EXE% not found in PATH
+if not defined PYTHON_EXE (
+  for %%P in (python3.11 python py) do (
+    if not defined PYTHON_EXE (
+      where %%P >nul 2>&1
+      if not errorlevel 1 set "PYTHON_EXE=%%P"
+    )
+  )
+  if not defined PYTHON_EXE (
+    echo.[error] python3.11/python/py not found in PATH
     exit /b 1
+  )
+) else (
+  if not exist "%PYTHON_EXE%" (
+    where %PYTHON_EXE% >nul 2>&1
+    if errorlevel 1 (
+      echo.[error] %PYTHON_EXE% not found in PATH
+      exit /b 1
+    )
   )
 )
 set "PYTHON_BOOT=%PYTHON_EXE%"

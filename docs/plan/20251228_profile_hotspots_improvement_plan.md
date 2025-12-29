@@ -170,21 +170,29 @@
 
 ## 実装タスク（チェックボックス）
 
+1. 計測・安全確認（優先）
+- [ ] JITウォームアップ分離の cProfile を取得（コンパイル時間を除外）
 - [ ] フル 2 年設定で cProfile を再取得（timeout 指定、run_card に記録）
 - [ ] I/O 無効版のプロファイルを取得し、計算パスのみの比率を確認
-- [ ] `_fragment_tensor` の weights_table キャッシュ導入
+- [ ] 単位コメントと変換箇所の棚卸し（差分レビューで確認）
+- [ ] キャッシュ無効化フラグを用意し、切替試験を実施
+
+2. 衝突パス最適化（高）
+- [ ] `_fragment_tensor` の weights_table キャッシュ導入（edges_version/alpha_frag）
 - [ ] `_FRAG_CACHE` キーの軽量化（sizes/edges version 対応）
 - [ ] サイズ依存ワークスペースの再利用（m1/m2/m_tot/valid_pair）
 - [ ] Q_D* 行列キャッシュ（スカラー v_rel）
 - [ ] `smol._gain_tensor` の `m_sum/denom` 再利用設計
 - [ ] 供給分配の重みキャッシュ（prod_rate だけスケーリング）
 - [ ] `collide.compute_collision_kernel_C1` のバッファ再利用可否を調査
+
+3. I/O・補助処理の削減（中）
 - [ ] `io.streaming.flush` の DataFrame 生成コスト削減案を作成
 - [ ] `output_schema._ensure_keys` のコスト低減案を作成
+
+4. 検証・比較（必須）
 - [ ] 改善後の cProfile 再測定と比較
 - [ ] 数値一致の確認（既存 pytest + 小規模比較テスト）
-- [ ] 単位コメントと変換箇所の棚卸し（差分レビューで確認）
-- [ ] キャッシュ無効化フラグを用意し、切替試験を実施
 
 ---
 
