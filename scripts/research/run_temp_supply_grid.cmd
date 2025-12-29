@@ -6,6 +6,16 @@ rem External supply uses mu_orbit10pct (1 orbit supplies 10% of Sigma_surf0).
 
 setlocal enabledelayedexpansion
 
+if not defined PYTHON_EXE set "PYTHON_EXE=python3.11"
+if not exist "%PYTHON_EXE%" (
+  where %PYTHON_EXE% >nul 2>&1
+  if errorlevel 1 (
+    echo [error] %PYTHON_EXE% not found in PATH.
+    exit /b 1
+  )
+)
+set "PYTHON_BOOT=%PYTHON_EXE%"
+
 set CONFIG=configs\temp_supply_sweep.yml
 set OUTROOT=out\temp_supply_grid
 set SUPPLY_MU_ORBIT10PCT=1.0
@@ -24,7 +34,7 @@ set REQ_FILE=requirements.txt
 
 if not exist "%VENV_DIR%\Scripts\python.exe" (
   echo [setup] Creating virtual environment in "%VENV_DIR%"...
-  python -m venv "%VENV_DIR%"
+  "%PYTHON_BOOT%" -m venv "%VENV_DIR%"
   if %errorlevel% neq 0 (
     echo [error] Failed to create virtual environment.
     exit /b %errorlevel%
@@ -36,11 +46,12 @@ if %errorlevel% neq 0 (
   echo [error] Failed to activate virtual environment.
   exit /b %errorlevel%
 )
+set "PYTHON_EXE=%VENV_DIR%\Scripts\python.exe"
 
 if exist "%REQ_FILE%" (
   echo [setup] Installing/upgrading dependencies from %REQ_FILE% ...
-  python -m pip install --upgrade pip
-  pip install -r "%REQ_FILE%"
+  "%PYTHON_EXE%" -m pip install --upgrade pip
+  "%PYTHON_EXE%" -m pip install -r "%REQ_FILE%"
   if %errorlevel% neq 0 (
     echo [error] Dependency installation failed.
     exit /b %errorlevel%
@@ -84,7 +95,7 @@ for %%T in (4000 2000 6000) do (
     )
 
     echo [run] T_M=%%T K, epsilon_mix=%%M -> !OUTDIR!
-    python -m marsdisk.run ^
+    "%PYTHON_EXE%" -m marsdisk.run ^
       --config "%CONFIG%" ^
       --override supply.const.mu_orbit10pct=%SUPPLY_MU_ORBIT10PCT% ^
       --override supply.const.orbit_fraction_at_mu1=%SUPPLY_ORBIT_FRACTION% ^

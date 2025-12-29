@@ -22,8 +22,24 @@ REQUIRED_ARCHIVE_KEYS = {
 PATH_ENV_VARS = ("TEMP", "TMP", "USERPROFILE", "HOMEDRIVE", "HOMEPATH", "COMSPEC")
 MAX_WARN_PATH_LEN = 240
 WINDOWS_PATH_INVALID_CHARS = set('<>:"|?*')
-CMD_UNSAFE_CHARS = "!"
+CMD_META_CHARS = "&<>|^"
 POSIX_PATH_MARKERS = ("/Users/", "/Volumes/", "/home/", "~/")
+UNC_SHARED_PREFIXES = ("\\\\psf\\", "\\\\mac\\", "\\\\vmware-host\\shared folders\\")
+DEFAULT_SCAN_EXCLUDE_DIRS = {
+    ".git",
+    ".venv",
+    "__pycache__",
+    ".mypy_cache",
+    ".pytest_cache",
+    ".ruff_cache",
+    "node_modules",
+    "out",
+    "tmp",
+}
+MAX_PATH_CLASSIC = 260
+DELAYED_SETLOCAL_RE = re.compile(r"\bsetlocal\b.*\benabledelayedexpansion\b", re.I)
+DELAYED_CMD_RE = re.compile(r"\bcmd(?:\.exe)?\b.*?/v\s*:\s*on\b", re.I)
+BANG_TOKEN_RE = re.compile(r"![^!]+!")
 RESERVED_DEVICE_NAMES = {
     "CON",
     "PRN",
@@ -73,10 +89,6 @@ def _contains_non_ascii(text: str) -> bool:
     return any(ord(ch) > 127 for ch in text)
 
 
-def _contains_cmd_unsafe(text: str) -> bool:
-    return any(ch in text for ch in CMD_UNSAFE_CHARS)
-
-
 def _is_windows_abs(path_str: str) -> bool:
     try:
         return PureWindowsPath(path_str).is_absolute()
@@ -115,39 +127,136 @@ def _has_reserved_windows_name(value: str) -> bool:
     return False
 
 
-def _check_cmd(name: str, errors: list[str]) -> None:
+def _contains_cmd_meta(text: str) -> bool:
+    return any(ch in text for ch in CMD_META_CHARS)
+
+
+def _has_expansion_token(value: str) -> bool:
+    if re.search(r"%[^%]+%", value):
+        return True
+    if re.search(r"![^!]+!", value):
+        return True
+    return False
+
+
+def _has_unsafe_bang(value: str, allow_expansion: bool) -> bool:
+    if "!" not in value:
+        return False
+    if not allow_expansion:
+        return True
+    cleaned = BANG_TOKEN_RE.sub("", value)
+    return "!" in cleaned
+
+
+def _cmd_unsafe_issue(
+    label: str,
+    value: str,
+    errors: list[str],
+    warnings: list[str],
+    cmd_unsafe_error: bool,
+    allow_expansion: bool,
+) -> None:
+    if _has_unsafe_bang(value, allow_expansion):
+        if cmd_unsafe_error:
+            errors.append(f"{label} contains '!': {value}")
+        else:
+            warnings.append(f"{label} contains '!': {value}")
+    if "%" in value and not allow_expansion:
+        warnings.append(f"{label} contains '%' which can confuse cmd expansion: {value}")
+    if _contains_cmd_meta(value):
+        warnings.append(f"{label} contains cmd meta chars (&<>|^): {value}")
+
+
+def _check_shared_path(label: str, value: str, warnings: list[str]) -> None:
+    lower = value.lower()
+    if lower.startswith("\\\\") and not lower.startswith("\\\\?\\") and not lower.startswith("\\\\.\\"):
+        if any(lower.startswith(prefix) for prefix in UNC_SHARED_PREFIXES):
+            warnings.append(
+                f"{label} is on a shared folder ({value}); consider local drive or C:\\\\Mac"
+            )
+        else:
+            warnings.append(f"{label} is a UNC path ({value}); consider local drive")
+
+
+def _check_name_component(name: str, rel_display: str, errors: list[str]) -> None:
+    if any(ch in name for ch in WINDOWS_PATH_INVALID_CHARS):
+        errors.append(f"invalid Windows name: {rel_display}")
+    if "\\" in name:
+        errors.append(f"invalid Windows name (contains '\\\\'): {rel_display}")
+    if name.endswith((" ", ".")):
+        errors.append(f"name ends with space/dot: {rel_display}")
+    base = name.rstrip(" .").split(".", 1)[0].upper()
+    if base in RESERVED_DEVICE_NAMES:
+        errors.append(f"reserved Windows name: {rel_display}")
+
+
+def _check_cmd(name: str, errors: list[str], warnings: list[str], warn_only: bool) -> None:
     if shutil.which(name) is None:
-        errors.append(f"{name} not found in PATH")
+        msg = f"{name} not found in PATH"
+        if warn_only:
+            warnings.append(msg)
+        else:
+            errors.append(msg)
 
 
-def _check_powershell(errors: list[str], warnings: list[str]) -> None:
-    if shutil.which("powershell") is None:
-        errors.append("powershell not found in PATH")
+def _check_python(errors: list[str], warnings: list[str], warn_only: bool) -> None:
+    if shutil.which("python") is not None:
         return
-    try:
-        result = subprocess.run(
-            ["powershell", "-NoProfile", "-Command", "Write-Output ok"],
-            capture_output=True,
-            text=True,
-            timeout=10,
-            check=False,
-        )
-    except Exception as exc:
-        errors.append(f"powershell exec failed: {exc}")
+    if shutil.which("py") is not None:
+        warnings.append("python not found in PATH; 'py' is available")
         return
-    if result.returncode != 0:
-        errors.append(f"powershell returned {result.returncode}")
-    if "ok" not in result.stdout.lower():
-        warnings.append("powershell output unexpected")
+    msg = "python not found in PATH"
+    if warn_only:
+        warnings.append(msg)
+    else:
+        errors.append(msg)
 
 
-def _check_temp_dir(temp_dir: str | None, errors: list[str], warnings: list[str]) -> None:
+def _check_powershell(errors: list[str], warnings: list[str], warn_only: bool) -> None:
+    candidates = [name for name in ("powershell", "pwsh") if shutil.which(name) is not None]
+    if not candidates:
+        msg = "powershell/pwsh not found in PATH"
+        if warn_only:
+            warnings.append(msg)
+        else:
+            errors.append(msg)
+        return
+    failures: list[str] = []
+    for name in candidates:
+        try:
+            result = subprocess.run(
+                [name, "-NoProfile", "-Command", "Write-Output ok"],
+                capture_output=True,
+                text=True,
+                timeout=10,
+                check=False,
+            )
+        except Exception as exc:
+            failures.append(f"{name} exec failed: {exc}")
+            continue
+        if result.returncode != 0:
+            failures.append(f"{name} returned {result.returncode}")
+            continue
+        if "ok" not in result.stdout.lower():
+            warnings.append(f"{name} output unexpected")
+        return
+    if warn_only:
+        warnings.extend(failures)
+    else:
+        errors.extend(failures)
+
+
+def _check_temp_dir(
+    temp_dir: str | None,
+    errors: list[str],
+    warnings: list[str],
+    cmd_unsafe_error: bool,
+) -> None:
     if not temp_dir:
         errors.append("TEMP/TMP is not set")
         return
     temp_path = Path(temp_dir)
-    if _contains_cmd_unsafe(temp_dir):
-        errors.append(f"TEMP/TMP contains '!': {temp_dir}")
+    _cmd_unsafe_issue("TEMP/TMP", temp_dir, errors, warnings, cmd_unsafe_error, False)
     if _contains_non_ascii(temp_dir):
         warnings.append(f"TEMP/TMP contains non-ASCII characters: {temp_dir}")
     try:
@@ -159,13 +268,16 @@ def _check_temp_dir(temp_dir: str | None, errors: list[str], warnings: list[str]
         errors.append(f"TEMP/TMP not writable: {exc}")
 
 
-def _check_env_paths(errors: list[str], warnings: list[str]) -> None:
+def _check_env_paths(
+    errors: list[str],
+    warnings: list[str],
+    cmd_unsafe_error: bool,
+) -> None:
     for key in PATH_ENV_VARS:
         value = os.environ.get(key, "")
         if not value:
             continue
-        if _contains_cmd_unsafe(value):
-            errors.append(f"{key} contains '!': {value}")
+        _cmd_unsafe_issue(key, value, errors, warnings, cmd_unsafe_error, False)
         if _contains_non_ascii(value):
             warnings.append(f"{key} contains non-ASCII characters: {value}")
         if key == "COMSPEC" and not Path(value).exists():
@@ -174,36 +286,49 @@ def _check_env_paths(errors: list[str], warnings: list[str]) -> None:
             warnings.append(f"{key} path length >= {MAX_WARN_PATH_LEN}: {value}")
 
 
-def _check_path_value(label: str, value: str, errors: list[str], warnings: list[str]) -> None:
+def _check_path_value(
+    label: str,
+    value: str,
+    errors: list[str],
+    warnings: list[str],
+    cmd_unsafe_error: bool,
+    allow_expansion: bool,
+    warn_unc: bool = True,
+) -> None:
     if not value:
         return
-    if _contains_cmd_unsafe(value):
-        errors.append(f"{label} contains '!': {value}")
+    has_expansion = allow_expansion and _has_expansion_token(value)
+    _cmd_unsafe_issue(label, value, errors, warnings, cmd_unsafe_error, allow_expansion)
     if _contains_non_ascii(value):
         warnings.append(f"{label} contains non-ASCII characters: {value}")
     if len(value) >= MAX_WARN_PATH_LEN:
         warnings.append(f"{label} path length >= {MAX_WARN_PATH_LEN}: {value}")
-    if _has_invalid_windows_chars(value):
-        errors.append(f"{label} contains invalid Windows path chars: {value}")
-    if value.endswith((" ", ".")):
-        warnings.append(f"{label} ends with space/dot: {value}")
-    if value.startswith("\\\\") and label != "io.archive.dir":
-        warnings.append(f"{label} is a UNC path: {value}")
-    if _looks_like_windows_path(value) and _has_reserved_windows_name(value):
-        errors.append(f"{label} contains reserved device name: {value}")
+    if not has_expansion:
+        if _has_invalid_windows_chars(value):
+            errors.append(f"{label} contains invalid Windows path chars: {value}")
+        if value.endswith((" ", ".")):
+            warnings.append(f"{label} ends with space/dot: {value}")
+        if warn_unc and value.startswith("\\\\") and label != "io.archive.dir":
+            warnings.append(f"{label} is a UNC path: {value}")
+        if _looks_like_windows_path(value) and _has_reserved_windows_name(value):
+            errors.append(f"{label} contains reserved device name: {value}")
 
 
 def _has_invalid_windows_chars(value: str) -> bool:
+    has_extended = value.startswith("\\\\?\\")
+    has_device = value.startswith("\\\\.\\")
     for idx, ch in enumerate(value):
         if ch not in WINDOWS_PATH_INVALID_CHARS:
             continue
         if ch == ":":
             if idx == 1 and len(value) >= 2 and value[0].isalpha():
                 continue
-            if value.startswith("\\\\?\\") or value.startswith("\\\\.\\"):
+            if has_extended or has_device:
                 if idx == 5 and len(value) > 5 and value[4].isalpha():
                     continue
             return True
+        if ch == "?" and has_extended and idx == 2:
+            continue
         return True
     return False
 
@@ -222,7 +347,47 @@ def _parse_set_value(line: str) -> str | None:
     return None
 
 
-def _scan_cmd_file(path: Path, errors: list[str], warnings: list[str]) -> None:
+def _detect_delayed_expansion(text: str) -> bool:
+    for line in text.splitlines():
+        stripped = line.strip()
+        if not stripped:
+            continue
+        lowered = stripped.lstrip()
+        if lowered.startswith("@"):
+            lowered = lowered[1:].lstrip()
+        lower = lowered.lower()
+        if lower.startswith("rem") and (len(lower) == 3 or lower[3].isspace()):
+            continue
+        if lower.startswith("::"):
+            continue
+        if DELAYED_SETLOCAL_RE.search(lowered):
+            return True
+        if DELAYED_CMD_RE.search(lowered):
+            return True
+    return False
+
+
+def _decode_cmd_text(data: bytes) -> str:
+    if data.startswith(b"\xef\xbb\xbf"):
+        return data.decode("utf-8-sig", errors="replace")
+    return data.decode("utf-8", errors="replace")
+
+
+def _read_cmd_text(path: Path, errors: list[str]) -> str | None:
+    try:
+        data = path.read_bytes()
+    except OSError as exc:
+        errors.append(f"cmd read failed: {path} ({exc})")
+        return None
+    return _decode_cmd_text(data)
+
+
+def _scan_cmd_file(
+    path: Path,
+    errors: list[str],
+    warnings: list[str],
+    cmd_unsafe_error: bool,
+) -> None:
     try:
         data = path.read_bytes()
     except OSError as exc:
@@ -243,10 +408,7 @@ def _scan_cmd_file(path: Path, errors: list[str], warnings: list[str]) -> None:
     if any(byte >= 0x80 for byte in data):
         warnings.append(f"cmd contains non-ASCII characters: {path}")
 
-    text = data.decode("utf-8", errors="replace")
-    if "EnableDelayedExpansion" in text and "!" in text:
-        warnings.append(f"cmd uses delayed expansion; avoid '!' in paths: {path}")
-
+    text = _decode_cmd_text(data)
     for line_no, line in enumerate(text.splitlines(), 1):
         stripped = line.strip()
         if not stripped:
@@ -264,7 +426,154 @@ def _scan_cmd_file(path: Path, errors: list[str], warnings: list[str]) -> None:
             if _contains_posix_path(value):
                 errors.append(f"cmd set uses POSIX path at {path}:{line_no}")
             if ("\\" in value or "/" in value) and not _contains_posix_path(value):
-                _check_path_value(f"{path}:{line_no}", value, errors, warnings)
+                _check_path_value(
+                    f"{path}:{line_no}",
+                    value,
+                    errors,
+                    warnings,
+                    cmd_unsafe_error,
+                    True,
+                )
+
+
+def _collect_cmd_paths(
+    cmd_files: list[str],
+    cmd_roots: list[str],
+    errors: list[str],
+    cmd_exclude: list[str],
+) -> list[Path]:
+    exclude_paths: list[Path] = []
+    for raw in cmd_exclude:
+        if not raw:
+            continue
+        exclude_paths.append(Path(raw).resolve(strict=False))
+
+    def is_excluded(path: Path) -> bool:
+        try:
+            resolved = path.resolve(strict=False)
+        except OSError:
+            resolved = path
+        for ex in exclude_paths:
+            if resolved == ex:
+                return True
+            try:
+                if resolved.is_relative_to(ex):
+                    return True
+            except AttributeError:
+                if str(resolved).startswith(str(ex)):
+                    return True
+        return False
+
+    paths: list[Path] = []
+    for cmd in cmd_files:
+        cmd_path = Path(cmd)
+        if not cmd_path.exists():
+            errors.append(f"cmd missing: {cmd_path}")
+            continue
+        if not is_excluded(cmd_path):
+            paths.append(cmd_path)
+    for root in cmd_roots:
+        root_path = Path(root)
+        if not root_path.exists():
+            errors.append(f"cmd root missing: {root_path}")
+            continue
+        for cmd_path in sorted(root_path.rglob("*")):
+            if not cmd_path.is_file():
+                continue
+            if cmd_path.suffix.lower() not in {".cmd", ".bat"}:
+                continue
+            if not is_excluded(cmd_path):
+                paths.append(cmd_path)
+    return sorted(set(paths))
+
+
+def _scan_repo_root(
+    root: Path,
+    errors: list[str],
+    warnings: list[str],
+    cmd_unsafe_error: bool,
+    exclude_dirs: set[str],
+) -> tuple[str, int]:
+    max_rel_path = ""
+    max_rel_len = 0
+    seen_casefold: dict[str, str] = {}
+    exclude_lower = {name.lower() for name in exclude_dirs}
+
+    for dirpath, dirnames, filenames in os.walk(root):
+        dirnames[:] = [d for d in dirnames if d.lower() not in exclude_lower]
+        base_dir = Path(dirpath)
+        rel_dir = base_dir.relative_to(root)
+        for name in list(dirnames) + list(filenames):
+            rel_path = rel_dir / name if rel_dir.parts else Path(name)
+            rel_display = str(PureWindowsPath(*rel_path.parts))
+            _check_name_component(name, rel_display, errors)
+            _cmd_unsafe_issue(
+                f"path {rel_display}",
+                rel_display,
+                errors,
+                warnings,
+                cmd_unsafe_error,
+                False,
+            )
+            if _contains_non_ascii(name):
+                warnings.append(f"non-ASCII name: {rel_display}")
+            rel_key = rel_display.casefold()
+            if rel_key in seen_casefold and seen_casefold[rel_key] != rel_display:
+                errors.append(
+                    f"case-insensitive conflict: {seen_casefold[rel_key]} vs {rel_display}"
+                )
+            else:
+                seen_casefold[rel_key] = rel_display
+            rel_len = len(rel_display)
+            if rel_len > max_rel_len:
+                max_rel_len = rel_len
+                max_rel_path = rel_display
+    return max_rel_path, max_rel_len
+
+
+def _estimate_path_len(base: str, rel_win: str) -> int:
+    rel = PureWindowsPath(rel_win)
+    base_path = PureWindowsPath(base)
+    return len(str(base_path / rel))
+
+
+def _read_long_paths_enabled() -> bool | None:
+    if os.name != "nt":
+        return None
+    try:
+        import winreg
+    except Exception:
+        return None
+    try:
+        key = winreg.OpenKey(
+            winreg.HKEY_LOCAL_MACHINE,
+            r"SYSTEM\\CurrentControlSet\\Control\\FileSystem",
+        )
+        value, _ = winreg.QueryValueEx(key, "LongPathsEnabled")
+    except OSError:
+        return None
+    return bool(value)
+
+
+def _read_git_longpaths(repo_root: Path) -> bool | None:
+    try:
+        result = subprocess.run(
+            ["git", "config", "--get", "core.longpaths"],
+            capture_output=True,
+            text=True,
+            cwd=repo_root,
+            check=False,
+        )
+    except OSError:
+        return None
+    if result.returncode != 0:
+        return None
+    value = result.stdout.strip().lower()
+    if value in {"true", "1", "yes", "on"}:
+        return True
+    if value in {"false", "0", "no", "off"}:
+        return False
+    return None
 
 
 def main() -> int:
@@ -276,26 +585,58 @@ def main() -> int:
     ap.add_argument("--require-git", action="store_true")
     ap.add_argument("--require-powershell", action="store_true")
     ap.add_argument(
+        "--check-tools",
+        action="store_true",
+        help="Enforce tool checks even when simulating on non-Windows hosts.",
+    )
+    ap.add_argument(
         "--simulate-windows",
         action="store_true",
         help="Run Windows-style checks even on non-Windows hosts.",
     )
     ap.add_argument(
+        "--windows-root",
+        default="",
+        help="Expected Windows path for repo_root when simulating.",
+    )
+    ap.add_argument(
         "--cmd",
         action="append",
         default=[],
-        help="CMD file to lint (repeatable).",
+        help="CMD/BAT file to lint (repeatable).",
     )
     ap.add_argument(
         "--cmd-root",
         action="append",
         default=[],
-        help="Directory to scan for .cmd files (repeatable).",
+        help="Directory to scan for .cmd/.bat files (repeatable).",
+    )
+    ap.add_argument(
+        "--cmd-exclude",
+        action="append",
+        default=[],
+        help="Path to exclude from cmd scan (repeatable).",
     )
     ap.add_argument(
         "--skip-env",
         action="store_true",
         help="Skip host environment path checks.",
+    )
+    ap.add_argument(
+        "--scan-repo",
+        action="store_true",
+        help="Scan repo_root for Windows-incompatible names.",
+    )
+    ap.add_argument(
+        "--skip-repo-scan",
+        action="store_true",
+        help="Skip repo_root scan.",
+    )
+    ap.add_argument(
+        "--scan-exclude",
+        action="append",
+        default=[],
+        help="Directory name to exclude from repo scan (repeatable).",
     )
     ap.add_argument("--strict", action="store_true")
     args = ap.parse_args()
@@ -309,6 +650,17 @@ def main() -> int:
     if not is_windows_host and not args.simulate_windows:
         warnings.append("host is not Windows; cmd-specific checks may be incomplete")
 
+    cmd_paths = _collect_cmd_paths(args.cmd, args.cmd_root, errors, args.cmd_exclude)
+    delayed_expansion_used = False
+    for cmd_path in cmd_paths:
+        text = _read_cmd_text(cmd_path, errors)
+        if text and _detect_delayed_expansion(text):
+            delayed_expansion_used = True
+            break
+    cmd_unsafe_error = True
+    if cmd_paths:
+        cmd_unsafe_error = delayed_expansion_used
+
     for label, path in {
         "repo_root": args.repo_root,
         "config": args.config,
@@ -316,21 +668,57 @@ def main() -> int:
     }.items():
         if not path.exists():
             errors.append(f"{label} missing: {path}")
-        _check_path_value(label, str(path), errors, warnings)
+        _check_path_value(
+            label,
+            str(path),
+            errors,
+            warnings,
+            cmd_unsafe_error,
+            False,
+            warn_unc=False,
+        )
+        _check_shared_path(label, str(path), warnings)
 
     if args.config.suffix.lower() not in {".yml", ".yaml"}:
         warnings.append(f"config extension is not .yml/.yaml: {args.config.name}")
 
     if args.out_root:
-        _check_path_value("out_root", args.out_root, errors, warnings)
+        _check_path_value(
+            "out_root",
+            args.out_root,
+            errors,
+            warnings,
+            cmd_unsafe_error,
+            False,
+            warn_unc=False,
+        )
+        _check_shared_path("out_root", args.out_root, warnings)
         if not _is_windows_abs(args.out_root):
             warnings.append(f"out_root is not absolute: {args.out_root}")
 
+    if args.windows_root:
+        _check_path_value(
+            "windows_root",
+            args.windows_root,
+            errors,
+            warnings,
+            cmd_unsafe_error,
+            False,
+            warn_unc=False,
+        )
+        _check_shared_path("windows_root", args.windows_root, warnings)
+        if not _is_windows_abs(args.windows_root):
+            warnings.append(f"windows_root is not absolute: {args.windows_root}")
+
+    tool_checks_warn_only = args.simulate_windows and not is_windows_host and not args.check_tools
+    if tool_checks_warn_only:
+        warnings.append("tool checks downgraded to warnings on non-Windows (simulate-windows)")
+
     if args.require_git:
-        _check_cmd("git", errors)
-    _check_cmd("python", errors)
+        _check_cmd("git", errors, warnings, tool_checks_warn_only)
+    _check_python(errors, warnings, tool_checks_warn_only)
     if args.require_powershell:
-        _check_powershell(errors, warnings)
+        _check_powershell(errors, warnings, tool_checks_warn_only)
 
     overrides = {}
     if args.overrides.exists():
@@ -344,14 +732,29 @@ def main() -> int:
             if expected is not None and overrides[key].lower() != expected:
                 errors.append(f"overrides {key}={overrides[key]} (expected {expected})")
         for key, value in overrides.items():
-            if _contains_cmd_unsafe(value):
-                warnings.append(f"overrides value contains '!': {key}={value}")
+            _cmd_unsafe_issue(
+                f"overrides value {key}",
+                value,
+                errors,
+                warnings,
+                cmd_unsafe_error,
+                False,
+            )
             if _contains_non_ascii(value):
                 warnings.append(f"overrides value contains non-ASCII chars: {key}={value}")
 
         archive_dir = overrides.get("io.archive.dir", "")
         if archive_dir:
-            _check_path_value("io.archive.dir", archive_dir, errors, warnings)
+            _check_path_value(
+                "io.archive.dir",
+                archive_dir,
+                errors,
+                warnings,
+                cmd_unsafe_error,
+                False,
+                warn_unc=False,
+            )
+            _check_shared_path("io.archive.dir", archive_dir, warnings)
             if not _is_windows_abs(archive_dir):
                 errors.append(f"io.archive.dir not absolute: {archive_dir}")
             if args.out_root:
@@ -374,25 +777,91 @@ def main() -> int:
         warnings.append("host env checks skipped on non-Windows (simulate-windows)")
     if not skip_env:
         temp_dir = os.environ.get("TEMP") or os.environ.get("TMP")
-        _check_temp_dir(temp_dir, errors, warnings)
-        _check_env_paths(errors, warnings)
+        _check_temp_dir(temp_dir, errors, warnings, cmd_unsafe_error)
+        _check_env_paths(errors, warnings, cmd_unsafe_error)
 
-    cmd_paths: list[Path] = []
-    for cmd in args.cmd:
-        cmd_path = Path(cmd)
-        if not cmd_path.exists():
-            errors.append(f"cmd missing: {cmd_path}")
-            continue
-        cmd_paths.append(cmd_path)
-    for root in args.cmd_root:
-        root_path = Path(root)
-        if not root_path.exists():
-            errors.append(f"cmd root missing: {root_path}")
-            continue
-        cmd_paths.extend(sorted(root_path.rglob("*.cmd")))
     if cmd_paths:
-        for cmd_path in sorted(set(cmd_paths)):
-            _scan_cmd_file(cmd_path, errors, warnings)
+        for cmd_path in cmd_paths:
+            _scan_cmd_file(cmd_path, errors, warnings, cmd_unsafe_error)
+
+    scan_repo = args.scan_repo or (args.simulate_windows and not args.skip_repo_scan)
+    if args.skip_repo_scan:
+        scan_repo = False
+    max_rel_path = ""
+    max_rel_len = 0
+    if scan_repo and args.repo_root.exists():
+        exclude_dirs = set(DEFAULT_SCAN_EXCLUDE_DIRS)
+        exclude_dirs.update(args.scan_exclude)
+        max_rel_path, max_rel_len = _scan_repo_root(
+            args.repo_root,
+            errors,
+            warnings,
+            cmd_unsafe_error,
+            exclude_dirs,
+        )
+
+    if max_rel_path:
+        long_paths_enabled = _read_long_paths_enabled()
+        git_longpaths = _read_git_longpaths(args.repo_root) if args.require_git else None
+        max_est_len = 0
+        longest_note = f" (longest relative path: {max_rel_path})"
+
+        repo_base = args.windows_root or str(args.repo_root)
+        if args.windows_root or _looks_like_windows_path(str(args.repo_root)):
+            est_len = _estimate_path_len(repo_base, max_rel_path)
+            max_est_len = max(max_est_len, est_len)
+            if not _is_windows_abs(repo_base):
+                warnings.append(f"repo_root path is not absolute: {repo_base}")
+            if est_len >= MAX_PATH_CLASSIC:
+                if long_paths_enabled is False:
+                    errors.append(
+                        f"repo_root path length estimate {est_len} >= {MAX_PATH_CLASSIC} (long paths disabled){longest_note}"
+                    )
+                else:
+                    warnings.append(
+                        f"repo_root path length estimate {est_len} >= {MAX_PATH_CLASSIC}{longest_note}"
+                    )
+            elif est_len >= MAX_PATH_CLASSIC - 20:
+                warnings.append(
+                    f"repo_root path length estimate {est_len} near {MAX_PATH_CLASSIC}{longest_note}"
+                )
+        else:
+            warnings.append("repo_root not Windows-like; provide --windows-root for length estimate")
+
+        for label, base in {
+            "out_root": args.out_root,
+            "io.archive.dir": overrides.get("io.archive.dir", ""),
+        }.items():
+            if not base:
+                continue
+            if _contains_posix_path(base):
+                warnings.append(f"{label} looks like POSIX path: {base}")
+            est_len = _estimate_path_len(base, max_rel_path)
+            max_est_len = max(max_est_len, est_len)
+            if not _is_windows_abs(base):
+                warnings.append(f"{label} path is not absolute: {base}")
+            if est_len >= MAX_PATH_CLASSIC:
+                if long_paths_enabled is False:
+                    errors.append(
+                        f"{label} path length estimate {est_len} >= {MAX_PATH_CLASSIC} (long paths disabled){longest_note}"
+                    )
+                else:
+                    warnings.append(
+                        f"{label} path length estimate {est_len} >= {MAX_PATH_CLASSIC}{longest_note}"
+                    )
+            elif est_len >= MAX_PATH_CLASSIC - 20:
+                warnings.append(
+                    f"{label} path length estimate {est_len} near {MAX_PATH_CLASSIC}{longest_note}"
+                )
+        if max_est_len >= MAX_PATH_CLASSIC - 20:
+            if long_paths_enabled is False:
+                warnings.append("Windows long paths disabled (LongPathsEnabled=0)")
+            elif long_paths_enabled is None and is_windows_host:
+                warnings.append("Windows long path setting unknown")
+            if git_longpaths is False:
+                warnings.append("git core.longpaths is disabled")
+            elif git_longpaths is None and args.require_git:
+                warnings.append("git core.longpaths not set")
 
     if errors:
         print("[preflight] failed")

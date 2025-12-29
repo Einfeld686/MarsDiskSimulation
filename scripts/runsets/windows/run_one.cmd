@@ -2,6 +2,15 @@
 rem Run a single temp_supply case (1D default).
 setlocal EnableExtensions EnableDelayedExpansion
 
+if not defined PYTHON_EXE set "PYTHON_EXE=python3.11"
+if not exist "%PYTHON_EXE%" (
+  where %PYTHON_EXE% >nul 2>&1
+  if errorlevel 1 (
+    echo.[error] %PYTHON_EXE% not found in PATH
+    exit /b 1
+  )
+)
+
 set "CONFIG_PATH=scripts\runsets\common\base.yml"
 set "OVERRIDES_PATH=scripts\runsets\windows\overrides.txt"
 set "OUT_ROOT="
@@ -175,18 +184,12 @@ if not defined MARSDISK_CELL_JOBS (
 if defined RUN_ONE_SEED set "RUN_ONE_SEED=%RUN_ONE_SEED%"
 if defined OUT_ROOT set "OUT_ROOT=%OUT_ROOT%"
 
-set "REPO_ROOT=%~dp0..\..\.."
+for %%I in ("%~dp0..\..\..") do set "REPO_ROOT=%%~fI"
 pushd "%REPO_ROOT%" >nul
 
 if not "%NO_PREFLIGHT%"=="1" (
-  where python >nul 2>&1
-  if errorlevel 1 (
-    echo.[error] python not found in PATH
-    popd
-    exit /b 1
-  )
   echo.[info] preflight checks
-  python "scripts\\runsets\\windows\\preflight_checks.py" --repo-root "%REPO_ROOT%" --config "%CONFIG_PATH%" --overrides "%OVERRIDES_PATH%" --out-root "%OUT_ROOT%" --require-git --cmd "%REPO_ROOT%\\scripts\\research\\run_temp_supply_sweep.cmd" --cmd-root "%REPO_ROOT%\\scripts\\runsets\\windows"
+  "%PYTHON_EXE%" "scripts\\runsets\\windows\\preflight_checks.py" --repo-root "%REPO_ROOT%" --config "%CONFIG_PATH%" --overrides "%OVERRIDES_PATH%" --out-root "%OUT_ROOT%" --require-git --cmd "%REPO_ROOT%\\scripts\\research\\run_temp_supply_sweep.cmd" --cmd-root "%REPO_ROOT%\\scripts\\runsets\\windows" --cmd-exclude "%REPO_ROOT%\\scripts\\runsets\\windows\\legacy"
   if errorlevel 1 (
     echo.[error] preflight failed
     popd

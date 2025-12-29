@@ -900,10 +900,13 @@ scripts/runsets/common/calc_cell_jobs.py:11:def _parse_fraction(name: str, defau
 scripts/runsets/common/calc_cell_jobs.py:22:def _get_cpu_logical() -> int
 scripts/runsets/common/calc_cell_jobs.py:35:def _get_mem_total_gb() -> int
 scripts/runsets/common/calc_cell_jobs.py:58:def main() -> int
+scripts/runsets/common/calc_cpu_target_jobs.py:9:def _parse_int(name: str, default: int) -> int
+scripts/runsets/common/calc_cpu_target_jobs.py:18:def main() -> int
 scripts/runsets/common/calc_parallel_jobs.py:10:def _get_cpu_logical() -> int
 scripts/runsets/common/calc_parallel_jobs.py:23:def _get_mem_total_gb() -> int
 scripts/runsets/common/calc_parallel_jobs.py:46:def _parse_positive_float(name: str, default: float) -> float
-scripts/runsets/common/calc_parallel_jobs.py:57:def main() -> int
+scripts/runsets/common/calc_parallel_jobs.py:57:def _get_mem_fraction(default: float) -> float
+scripts/runsets/common/calc_parallel_jobs.py:71:def main() -> int
 scripts/runsets/common/calc_thread_limit.py:9:def _parse_fraction(value: str | None, default: float) -> float
 scripts/runsets/common/calc_thread_limit.py:19:def _parse_int(value: str | None, default: int) -> int
 scripts/runsets/common/calc_thread_limit.py:29:def _get_cpu_logical() -> int
@@ -942,24 +945,38 @@ scripts/runsets/common/write_base_overrides.py:28:def append_literal(lines: list
 scripts/runsets/common/write_base_overrides.py:32:def main() -> int
 scripts/runsets/common/write_sweep_list.py:11:def _parse_list(raw: str) -> list[str]
 scripts/runsets/common/write_sweep_list.py:25:def main() -> int
-scripts/runsets/windows/preflight_checks.py:53:def _load_overrides(path: Path) -> tuple[dict[str, str], list[str]]
-scripts/runsets/windows/preflight_checks.py:72:def _contains_non_ascii(text: str) -> bool
-scripts/runsets/windows/preflight_checks.py:76:def _contains_cmd_unsafe(text: str) -> bool
-scripts/runsets/windows/preflight_checks.py:80:def _is_windows_abs(path_str: str) -> bool
-scripts/runsets/windows/preflight_checks.py:87:def _normalize_windows(path_str: str) -> str
-scripts/runsets/windows/preflight_checks.py:91:def _is_windows() -> bool
-scripts/runsets/windows/preflight_checks.py:95:def _contains_posix_path(text: str) -> bool
-scripts/runsets/windows/preflight_checks.py:99:def _looks_like_windows_path(value: str) -> bool
-scripts/runsets/windows/preflight_checks.py:105:def _has_reserved_windows_name(value: str) -> bool
-scripts/runsets/windows/preflight_checks.py:118:def _check_cmd(name: str, errors: list[str]) -> None
-scripts/runsets/windows/preflight_checks.py:123:def _check_powershell(errors: list[str], warnings: list[str]) -> None
-scripts/runsets/windows/preflight_checks.py:144:def _check_temp_dir(temp_dir: str | None, errors: list[str], warnings: list[str]) -> None
-scripts/runsets/windows/preflight_checks.py:162:def _check_env_paths(errors: list[str], warnings: list[str]) -> None
-scripts/runsets/windows/preflight_checks.py:177:def _check_path_value(label: str, value: str, errors: list[str], warnings: list[str]) -> None
-scripts/runsets/windows/preflight_checks.py:196:def _has_invalid_windows_chars(value: str) -> bool
-scripts/runsets/windows/preflight_checks.py:211:def _parse_set_value(line: str) -> str | None
-scripts/runsets/windows/preflight_checks.py:225:def _scan_cmd_file(path: Path, errors: list[str], warnings: list[str]) -> None
-scripts/runsets/windows/preflight_checks.py:270:def main() -> int
+scripts/runsets/windows/preflight_checks.py:69:def _load_overrides(path: Path) -> tuple[dict[str, str], list[str]]
+scripts/runsets/windows/preflight_checks.py:88:def _contains_non_ascii(text: str) -> bool
+scripts/runsets/windows/preflight_checks.py:92:def _is_windows_abs(path_str: str) -> bool
+scripts/runsets/windows/preflight_checks.py:99:def _normalize_windows(path_str: str) -> str
+scripts/runsets/windows/preflight_checks.py:103:def _is_windows() -> bool
+scripts/runsets/windows/preflight_checks.py:107:def _contains_posix_path(text: str) -> bool
+scripts/runsets/windows/preflight_checks.py:111:def _looks_like_windows_path(value: str) -> bool
+scripts/runsets/windows/preflight_checks.py:117:def _has_reserved_windows_name(value: str) -> bool
+scripts/runsets/windows/preflight_checks.py:130:def _contains_cmd_meta(text: str) -> bool
+scripts/runsets/windows/preflight_checks.py:134:def _has_expansion_token(value: str) -> bool
+scripts/runsets/windows/preflight_checks.py:142:def _has_unsafe_bang(value: str, allow_expansion: bool) -> bool
+scripts/runsets/windows/preflight_checks.py:151:def _cmd_unsafe_issue(label: str, value: str, errors: list[str], warnings: list[str], cmd_unsafe_error: bool, allow_expansion: bool) -> None
+scripts/runsets/windows/preflight_checks.py:170:def _check_shared_path(label: str, value: str, warnings: list[str]) -> None
+scripts/runsets/windows/preflight_checks.py:181:def _check_name_component(name: str, rel_display: str, errors: list[str]) -> None
+scripts/runsets/windows/preflight_checks.py:193:def _check_cmd(name: str, errors: list[str], warnings: list[str], warn_only: bool) -> None
+scripts/runsets/windows/preflight_checks.py:202:def _check_python(errors: list[str], warnings: list[str], warn_only: bool) -> None
+scripts/runsets/windows/preflight_checks.py:215:def _check_powershell(errors: list[str], warnings: list[str], warn_only: bool) -> None
+scripts/runsets/windows/preflight_checks.py:249:def _check_temp_dir(temp_dir: str | None, errors: list[str], warnings: list[str], cmd_unsafe_error: bool) -> None
+scripts/runsets/windows/preflight_checks.py:271:def _check_env_paths(errors: list[str], warnings: list[str], cmd_unsafe_error: bool) -> None
+scripts/runsets/windows/preflight_checks.py:289:def _check_path_value(label: str, value: str, errors: list[str], warnings: list[str], cmd_unsafe_error: bool, allow_expansion: bool, warn_unc: bool=True) -> None
+scripts/runsets/windows/preflight_checks.py:317:def _has_invalid_windows_chars(value: str) -> bool
+scripts/runsets/windows/preflight_checks.py:336:def _parse_set_value(line: str) -> str | None
+scripts/runsets/windows/preflight_checks.py:350:def _detect_delayed_expansion(text: str) -> bool
+scripts/runsets/windows/preflight_checks.py:370:def _decode_cmd_text(data: bytes) -> str
+scripts/runsets/windows/preflight_checks.py:376:def _read_cmd_text(path: Path, errors: list[str]) -> str | None
+scripts/runsets/windows/preflight_checks.py:385:def _scan_cmd_file(path: Path, errors: list[str], warnings: list[str], cmd_unsafe_error: bool) -> None
+scripts/runsets/windows/preflight_checks.py:439:def _collect_cmd_paths(cmd_files: list[str], cmd_roots: list[str], errors: list[str], cmd_exclude: list[str]) -> list[Path]
+scripts/runsets/windows/preflight_checks.py:490:def _scan_repo_root(root: Path, errors: list[str], warnings: list[str], cmd_unsafe_error: bool, exclude_dirs: set[str]) -> tuple[str, int]
+scripts/runsets/windows/preflight_checks.py:534:def _estimate_path_len(base: str, rel_win: str) -> int
+scripts/runsets/windows/preflight_checks.py:540:def _read_long_paths_enabled() -> bool | None
+scripts/runsets/windows/preflight_checks.py:558:def _read_git_longpaths(repo_root: Path) -> bool | None
+scripts/runsets/windows/preflight_checks.py:579:def main() -> int
 scripts/sweeps/sweep_beta_map.py:30:def _parse_grid(start: float, stop: float, count: int, label: str) -> np.ndarray
 scripts/sweeps/sweep_beta_map.py:39:def _load_config(path: Path) -> Config
 scripts/sweeps/sweep_beta_map.py:50:def _write_json(path: Path, payload: dict) -> None
@@ -1051,6 +1068,13 @@ scripts/tests/overparallel_benchmark.py:40:def _write_json(path: Path, payload: 
 scripts/tests/overparallel_benchmark.py:45:def _run_scenario(*, label: str, cmd_base: list[str], out_root: Path, parallel_jobs: int, env_overrides: dict[str, str]) -> tuple[int, float, list[Path], list[dict[str, Any]]]
 scripts/tests/overparallel_benchmark.py:150:def _load_cell_parallel(outdir: Path) -> dict
 scripts/tests/overparallel_benchmark.py:160:def main() -> int
+scripts/tests/preflight_checks_smoke.py:17:def _load_module() -> object
+scripts/tests/preflight_checks_smoke.py:26:def _write_text(path: Path, text: str) -> None
+scripts/tests/preflight_checks_smoke.py:30:def _write_overrides(path: Path, archive_dir: str) -> None
+scripts/tests/preflight_checks_smoke.py:46:def _run_preflight(module: object, argv: list[str]) -> tuple[int, str]
+scripts/tests/preflight_checks_smoke.py:58:def _check_unc_warning(module: object, temp_dir: Path) -> None
+scripts/tests/preflight_checks_smoke.py:88:def _check_comment_only_delayed_expansion(module: object, temp_dir: Path) -> None
+scripts/tests/preflight_checks_smoke.py:129:def main() -> int
 siO2_disk_cooling/io_utils.py:13:def ensure_outputs_dir() -> Path
 siO2_disk_cooling/io_utils.py:21:def write_csv(r_over_Rmars: np.ndarray, arrival_glass_s: np.ndarray, arrival_liquidus_s: np.ndarray, path: Path) -> None
 siO2_disk_cooling/io_utils.py:40:def _format_stat(values: Iterable[float]) -> str
@@ -1435,6 +1459,20 @@ tests/unit/test_numerical_anomaly_watchlist_additional.py:281:def test_phi_table
 tests/unit/test_numerical_anomaly_watchlist_additional.py:294:def test_dynamics_rejects_invalid_e0_i0() -> None
 tests/unit/test_numerical_anomaly_watchlist_additional.py:303:def test_evolve_min_size_requires_temperature() -> None
 tests/unit/test_numerical_anomaly_watchlist_additional.py:316:def test_clamp_sigma_surf_returns_zero_for_invalid() -> None
+tests/unit/test_preflight_checks.py:12:def _load_module() -> object
+tests/unit/test_preflight_checks.py:20:def _write_text(path: Path, text: str) -> None
+tests/unit/test_preflight_checks.py:24:def _write_overrides(path: Path, archive_dir: str) -> None
+tests/unit/test_preflight_checks.py:40:def _run_main(module: object, argv: list[str], monkeypatch) -> int
+tests/unit/test_preflight_checks.py:45:def test_unc_warning_not_duplicated(tmp_path: Path, monkeypatch, capsys) -> None
+tests/unit/test_preflight_checks.py:76:def test_comment_only_delayed_expansion_is_ignored(tmp_path: Path, monkeypatch, capsys) -> None
+tests/unit/test_preflight_checks.py:119:def test_collect_cmd_paths_includes_bat_and_uppercase(tmp_path: Path) -> None
+tests/unit/test_preflight_checks.py:137:def test_scan_cmd_file_handles_bom_first_line(tmp_path: Path) -> None
+tests/unit/test_preflight_checks.py:149:def test_cmd_unsafe_issue_flags_literal_bang_even_with_percent() -> None
+tests/unit/test_preflight_checks.py:166:def test_cmd_unsafe_issue_allows_bang_tokens() -> None
+tests/unit/test_preflight_checks.py:183:def test_check_python_accepts_py(monkeypatch) -> None
+tests/unit/test_preflight_checks.py:203:def test_check_cmd_warn_only(monkeypatch) -> None
+tests/unit/test_preflight_checks.py:219:def test_has_invalid_windows_chars_allows_extended_prefix() -> None
+tests/unit/test_preflight_checks.py:225:def test_check_name_component_rejects_backslash() -> None
 tests/unit/test_progress_eta.py:8:def _fake_monotonic(times)
 tests/unit/test_progress_eta.py:17:def test_progress_eta_prefers_recent_steps(monkeypatch, capsys)
 tests/unit/test_progress_eta.py:30:def test_progress_snapshot_restore(monkeypatch)

@@ -8,6 +8,16 @@ if /i "%DEBUG%"=="1" set "TRACE_ENABLED=1"
 if not defined TRACE_ECHO set "TRACE_ECHO=0"
 set "SCRIPT_REV=run_temp_supply_sweep_cmd_trace_v2"
 
+if not defined PYTHON_EXE set "PYTHON_EXE=python3.11"
+if not exist "%PYTHON_EXE%" (
+  where %PYTHON_EXE% >nul 2>&1
+  if errorlevel 1 (
+    echo.[error] %PYTHON_EXE% not found in PATH
+    exit /b 1
+  )
+)
+set "PYTHON_BOOT=%PYTHON_EXE%"
+
 rem Keep paths stable even if launched from another directory (double-click or direct call)
 pushd "%~dp0\..\.."
 
@@ -24,7 +34,7 @@ echo.[setup] cwd=%CD%
 rem ---------- setup ----------
 if not defined VENV_DIR set "VENV_DIR=.venv"
 if not defined REQ_FILE set "REQ_FILE=requirements.txt"
-if not defined RUN_TS for /f %%A in ('python scripts\\runsets\\common\\timestamp.py') do set "RUN_TS=%%A"
+if not defined RUN_TS for /f %%A in ('"%PYTHON_EXE%" scripts\\runsets\\common\\timestamp.py') do set "RUN_TS=%%A"
 if defined RUN_TS (
   set "RUN_TS_RAW=!RUN_TS!"
   rem Normalize to a filename-safe token in case a pre-set RUN_TS includes separators.
@@ -54,7 +64,7 @@ if not exist "%TMP_ROOT%" (
 echo.[setup] temp_root=%TMP_ROOT% (source=%TMP_SOURCE%)
 if not defined GIT_SHA for /f %%A in ('git rev-parse --short HEAD 2^>nul') do set "GIT_SHA=%%A"
 if not defined GIT_SHA set "GIT_SHA=nogit"
-if not defined BATCH_SEED for /f %%A in ('python scripts\\runsets\\common\\next_seed.py') do set "BATCH_SEED=%%A"
+if not defined BATCH_SEED for /f %%A in ('"%PYTHON_EXE%" scripts\\runsets\\common\\next_seed.py') do set "BATCH_SEED=%%A"
 if "%BATCH_SEED%"=="" set "BATCH_SEED=0"
 if "%TRACE_ENABLED%"=="1" (
   if not defined TRACE_LOG set "TRACE_LOG=%TMP_ROOT%\\marsdisk_trace_%RUN_TS%_%BATCH_SEED%.log"
@@ -83,17 +93,18 @@ echo.[setup] Output root: %BATCH_ROOT%
 
 if not exist "%VENV_DIR%\Scripts\python.exe" (
   echo.[setup] Creating virtual environment in %VENV_DIR%...
-  python -m venv "%VENV_DIR%"
+  "%PYTHON_BOOT%" -m venv "%VENV_DIR%"
 )
 
 call "%VENV_DIR%\Scripts\activate.bat"
+set "PYTHON_EXE=%VENV_DIR%\Scripts\python.exe"
 
 if "%SKIP_PIP%"=="1" (
   echo.[setup] SKIP_PIP=1; skipping dependency install.
 ) else if exist "%REQ_FILE%" (
   echo.[setup] Installing/upgrading dependencies from %REQ_FILE% ...
-  python -m pip install --upgrade pip
-  pip install -r "%REQ_FILE%"
+  "%PYTHON_EXE%" -m pip install --upgrade pip
+  "%PYTHON_EXE%" -m pip install -r "%REQ_FILE%"
 ) else (
   echo.[warn] %REQ_FILE% not found; skipping dependency install.
 )
@@ -193,7 +204,7 @@ if /i "%MARSDISK_CELL_JOBS%"=="auto" (
   set "CELL_CPU_FRACTION_USED="
   set "CELL_STREAM_MEM_GB="
   set "CELL_THREAD_LIMIT_AUTO="
-  for /f "usebackq tokens=1-7 delims=|" %%A in (`python scripts\\runsets\\common\\calc_cell_jobs.py`) do (
+  for /f "usebackq tokens=1-7 delims=|" %%A in (`"%PYTHON_EXE%" scripts\\runsets\\common\\calc_cell_jobs.py`) do (
     set "CELL_MEM_TOTAL_GB=%%A"
     set "CELL_CPU_LOGICAL=%%B"
     set "CELL_MEM_FRACTION_USED=%%C"
@@ -226,7 +237,7 @@ if /i "%CELL_THREAD_LIMIT%"=="auto" (
   if defined CELL_THREAD_LIMIT_AUTO (
     set "CELL_THREAD_LIMIT=%CELL_THREAD_LIMIT_AUTO%"
   ) else (
-    for /f %%A in ('python scripts\\runsets\\common\\calc_thread_limit.py') do set "CELL_THREAD_LIMIT=%%A"
+    for /f %%A in ('"%PYTHON_EXE%" scripts\\runsets\\common\\calc_thread_limit.py') do set "CELL_THREAD_LIMIT=%%A"
   )
 )
 if not defined CELL_THREAD_LIMIT set "CELL_THREAD_LIMIT=1"
@@ -260,7 +271,7 @@ set "TAU_LIST=1.0 0.5 0.1"
 if defined STUDY_FILE (
   if exist "!STUDY_FILE!" (
     set "STUDY_SET=!TMP_ROOT!\\marsdisk_study_!RUN_TS!_!BATCH_SEED!.cmd"
-    python scripts\\runsets\\common\\read_study_overrides.py --study "!STUDY_FILE!" > "!STUDY_SET!"
+    "%PYTHON_EXE%" scripts\\runsets\\common\\read_study_overrides.py --study "!STUDY_FILE!" > "!STUDY_SET!"
     if not exist "!STUDY_SET!" (
       echo.[error] failed to write study overrides: "!STUDY_SET!"
       echo.[error] temp_root=!TMP_ROOT! study_file=!STUDY_FILE!
@@ -309,7 +320,7 @@ if defined COOL_TO_K (
 set "TOTAL_GB="
 set "CPU_LOGICAL="
 if "%AUTO_JOBS%"=="1" (
-  for /f "usebackq tokens=1-3 delims=|" %%A in (`python scripts\\runsets\\common\\calc_parallel_jobs.py`) do (
+  for /f "usebackq tokens=1-3 delims=|" %%A in (`"%PYTHON_EXE%" scripts\\runsets\\common\\calc_parallel_jobs.py`) do (
     set "TOTAL_GB=%%A"
     set "CPU_LOGICAL=%%B"
     set "PARALLEL_JOBS=%%C"
@@ -331,6 +342,40 @@ if "%AUTO_JOBS%"=="1" (
   if not defined TOTAL_GB set "TOTAL_GB=unknown"
   if not defined CPU_LOGICAL set "CPU_LOGICAL=unknown"
   echo.[sys] mem_total_gb=%TOTAL_GB% cpu_logical=%CPU_LOGICAL% job_mem_gb=%JOB_MEM_GB% parallel_jobs=%PARALLEL_JOBS%
+)
+
+if defined CPU_UTIL_TARGET_PERCENT (
+  if not defined CPU_UTIL_RESPECT_MEM set "CPU_UTIL_RESPECT_MEM=1"
+  if not defined RUN_ONE_MODE (
+    set "CPU_TARGET_OK=1"
+    for /f "delims=0123456789" %%A in ("%CPU_UTIL_TARGET_PERCENT%") do set "CPU_TARGET_OK=0"
+    if "%CPU_TARGET_OK%"=="1" (
+      if not defined CELL_CPU_LOGICAL (
+        if defined NUMBER_OF_PROCESSORS set "CELL_CPU_LOGICAL=%NUMBER_OF_PROCESSORS%"
+      )
+      if defined CELL_CPU_LOGICAL (
+        for /f "usebackq tokens=1,2 delims=|" %%A in (`"%PYTHON_EXE%" scripts\\runsets\\common\\calc_cpu_target_jobs.py`) do (
+          set "CPU_TARGET_CORES=%%A"
+          set "PARALLEL_JOBS_TARGET=%%B"
+        )
+        if "!SWEEP_PARALLEL!"=="0" if "!PARALLEL_JOBS!"=="1" if !PARALLEL_JOBS_TARGET! GTR 1 (
+          if /i "!CPU_UTIL_RESPECT_MEM!"=="1" (
+            for /f "usebackq tokens=1-3 delims=|" %%A in (`"%PYTHON_EXE%" scripts\\runsets\\common\\calc_parallel_jobs.py`) do (
+              set "PARALLEL_JOBS_MEM=%%C"
+            )
+            if defined PARALLEL_JOBS_MEM (
+              if !PARALLEL_JOBS_TARGET! GTR !PARALLEL_JOBS_MEM! set "PARALLEL_JOBS_TARGET=!PARALLEL_JOBS_MEM!"
+            )
+          )
+          if !PARALLEL_JOBS_TARGET! GTR 1 (
+            set "SWEEP_PARALLEL=1"
+            set "PARALLEL_JOBS=!PARALLEL_JOBS_TARGET!"
+            echo.[sys] cpu_target auto-parallel: target_percent=%CPU_UTIL_TARGET_PERCENT% target_cores=!CPU_TARGET_CORES! cell_jobs=%MARSDISK_CELL_JOBS% parallel_jobs=!PARALLEL_JOBS!
+          )
+        )
+      )
+    )
+  )
 )
 
 echo.[config] supply multipliers: temp_enabled=%SUPPLY_TEMP_ENABLED% (mode=%SUPPLY_TEMP_MODE%) feedback_enabled=%SUPPLY_FEEDBACK_ENABLED% reservoir=%SUPPLY_RESERVOIR_M%
@@ -364,7 +409,7 @@ if defined EXTRA_OVERRIDES_FILE (
 
 call :trace "base_overrides_file=%BASE_OVERRIDES_FILE%"
 call :trace "base overrides: python build"
-python scripts\\runsets\\common\\write_base_overrides.py --out "%BASE_OVERRIDES_FILE%"
+"%PYTHON_EXE%" scripts\\runsets\\common\\write_base_overrides.py --out "%BASE_OVERRIDES_FILE%"
 if errorlevel 1 (
   echo.[error] failed to build base overrides
   popd
@@ -404,7 +449,7 @@ if defined RUN_ONE_MODE (
 
 set "SWEEP_LIST_FILE=%TMP_ROOT%\\marsdisk_sweep_list_%RUN_TS%_%BATCH_SEED%.txt"
 call :trace "sweep list file=%SWEEP_LIST_FILE%"
-python scripts\\runsets\\common\\write_sweep_list.py --out "%SWEEP_LIST_FILE%"
+"%PYTHON_EXE%" scripts\\runsets\\common\\write_sweep_list.py --out "%SWEEP_LIST_FILE%"
 if errorlevel 1 (
   echo.[error] failed to build sweep list
   popd
@@ -454,7 +499,7 @@ for /f "usebackq tokens=1-3 delims= " %%A in ("%SWEEP_LIST_FILE%") do (
   if defined SEED_OVERRIDE (
     set "SEED=%SEED_OVERRIDE%"
   ) else (
-    for /f %%S in ('python scripts\\runsets\\common\\next_seed.py') do set "SEED=%%S"
+    for /f %%S in ('"%PYTHON_EXE%" scripts\\runsets\\common\\next_seed.py') do set "SEED=%%S"
   )
   set "TITLE=T!T!_eps!EPS_TITLE!_tau!TAU_TITLE!"
   set "OUTDIR=%BATCH_DIR%\!TITLE!"
@@ -494,13 +539,13 @@ for /f "usebackq tokens=1-3 delims= " %%A in ("%SWEEP_LIST_FILE%") do (
 
       rem Override priority: base defaults ^< overrides file ^< per-case overrides.
       if "%EXTRA_OVERRIDES_EXISTS%"=="1" (
-        python %OVERRIDE_BUILDER% --file "%BASE_OVERRIDES_FILE%" --file "%EXTRA_OVERRIDES_FILE%" --file "%CASE_OVERRIDES_FILE%" > "%MERGED_OVERRIDES_FILE%"
+        "%PYTHON_EXE%" %OVERRIDE_BUILDER% --file "%BASE_OVERRIDES_FILE%" --file "%EXTRA_OVERRIDES_FILE%" --file "%CASE_OVERRIDES_FILE%" > "%MERGED_OVERRIDES_FILE%"
       ) else (
-        python %OVERRIDE_BUILDER% --file "%BASE_OVERRIDES_FILE%" --file "%CASE_OVERRIDES_FILE%" > "%MERGED_OVERRIDES_FILE%"
+        "%PYTHON_EXE%" %OVERRIDE_BUILDER% --file "%BASE_OVERRIDES_FILE%" --file "%CASE_OVERRIDES_FILE%" > "%MERGED_OVERRIDES_FILE%"
       )
 
       rem Assemble the run command on a single line (avoid carets in optional blocks)
-      set RUN_CMD=python -m marsdisk.run --config "%BASE_CONFIG%" --quiet
+      set RUN_CMD="%PYTHON_EXE%" -m marsdisk.run --config "%BASE_CONFIG%" --quiet
       if "%ENABLE_PROGRESS%"=="1" set RUN_CMD=!RUN_CMD! --progress
       for /f "usebackq delims=" %%L in ("%MERGED_OVERRIDES_FILE%") do (
         set "LINE=%%L"
@@ -518,7 +563,7 @@ for /f "usebackq tokens=1-3 delims= " %%A in ("%SWEEP_LIST_FILE%") do (
       ) else (
         set "RUN_DIR=!OUTDIR!"
         call :trace "quicklook: start"
-        python scripts\\runsets\\common\\hooks\\plot_sweep_run.py --run-dir "!RUN_DIR!"
+        "%PYTHON_EXE%" scripts\\runsets\\common\\hooks\\plot_sweep_run.py --run-dir "!RUN_DIR!"
         if errorlevel 1 (
           echo.[warn] quicklook failed (rc=!errorlevel!)
         )
@@ -569,19 +614,19 @@ exit /b 0
 :run_hook
 set "HOOK=%~1"
 if /i "%HOOK%"=="preflight" (
-  python scripts\\runsets\\common\\hooks\\preflight_streaming.py --run-dir "%RUN_DIR%"
+  "%PYTHON_EXE%" scripts\\runsets\\common\\hooks\\preflight_streaming.py --run-dir "%RUN_DIR%"
   exit /b %errorlevel%
 )
 if /i "%HOOK%"=="plot" (
-  python scripts\\runsets\\common\\hooks\\plot_sweep_run.py --run-dir "%RUN_DIR%"
+  "%PYTHON_EXE%" scripts\\runsets\\common\\hooks\\plot_sweep_run.py --run-dir "%RUN_DIR%"
   exit /b %errorlevel%
 )
 if /i "%HOOK%"=="eval" (
-  python scripts\\runsets\\common\\hooks\\evaluate_tau_supply.py --run-dir "%RUN_DIR%"
+  "%PYTHON_EXE%" scripts\\runsets\\common\\hooks\\evaluate_tau_supply.py --run-dir "%RUN_DIR%"
   exit /b %errorlevel%
 )
 if /i "%HOOK%"=="archive" (
-  python scripts\\runsets\\common\\hooks\\archive_run.py --run-dir "%RUN_DIR%"
+  "%PYTHON_EXE%" scripts\\runsets\\common\\hooks\\archive_run.py --run-dir "%RUN_DIR%"
   exit /b %errorlevel%
 )
 echo.[warn] unknown hook: %HOOK%
@@ -613,11 +658,11 @@ exit /b 0
 set "JOB_T=%~1"
 set "JOB_EPS=%~2"
 set "JOB_TAU=%~3"
-for /f %%S in ('python scripts\\runsets\\common\\next_seed.py') do set "JOB_SEED=%%S"
+for /f %%S in ('"%PYTHON_EXE%" scripts\\runsets\\common\\next_seed.py') do set "JOB_SEED=%%S"
 call :wait_for_slot
 set "JOB_PID="
 set "JOB_CMD=set RUN_ONE_T=!JOB_T!&& set RUN_ONE_EPS=!JOB_EPS!&& set RUN_ONE_TAU=!JOB_TAU!&& set RUN_ONE_SEED=!JOB_SEED!&& set AUTO_JOBS=0&& set PARALLEL_JOBS=1&& set SKIP_PIP=1&& call ""%~f0"" --run-one"
-for /f "usebackq delims=" %%P in (`python scripts\\runsets\\common\\win_process.py launch --window-style "%PARALLEL_WINDOW_STYLE%"`) do set "JOB_PID=%%P"
+for /f "usebackq delims=" %%P in (`"%PYTHON_EXE%" scripts\\runsets\\common\\win_process.py launch --window-style "%PARALLEL_WINDOW_STYLE%"`) do set "JOB_PID=%%P"
 if defined JOB_PID set "JOB_PIDS=!JOB_PIDS! !JOB_PID!"
 if not defined JOB_PID echo.[warn] failed to launch job for T=!JOB_T! eps=!JOB_EPS! tau=!JOB_TAU! (check Python availability)
 exit /b 0
@@ -633,7 +678,7 @@ exit /b 0
 :refresh_jobs
 set "JOB_COUNT=0"
 if not defined JOB_PIDS exit /b 0
-for /f "usebackq tokens=1,2 delims=|" %%A in (`python scripts\\runsets\\common\\win_process.py alive`) do (
+for /f "usebackq tokens=1,2 delims=|" %%A in (`"%PYTHON_EXE%" scripts\\runsets\\common\\win_process.py alive`) do (
   set "JOB_PIDS=%%A"
   set "JOB_COUNT=%%B"
 )

@@ -6,6 +6,15 @@ rem If no arguments given, tests all .cmd files in scripts/research/
 
 setlocal enabledelayedexpansion
 
+if not defined PYTHON_EXE set "PYTHON_EXE=python3.11"
+if not exist "%PYTHON_EXE%" (
+  where %PYTHON_EXE% >nul 2>&1
+  if errorlevel 1 (
+    echo [error] %PYTHON_EXE% not found in PATH.
+    exit /b 1
+  )
+)
+
 set "SCRIPT_DIR=%~dp0"
 for %%A in ("%SCRIPT_DIR:~0,-1%") do set "PARENT1=%%~dpA"
 for %%B in ("%PARENT1:~0,-1%") do set "REPO_ROOT=%%~dpB"
@@ -47,8 +56,8 @@ if not exist "%FILE%" (
   goto :eof
 )
 
-rem Check 2: Line endings (requires PowerShell)
-powershell -NoLogo -NoProfile -Command "$content = [IO.File]::ReadAllText('%FILE%'); if ($content -match \"`r`n\") { exit 0 } else { exit 1 }" 2>nul
+rem Check 2: Line endings (Python)
+"%PYTHON_EXE%" -c "import pathlib,sys; data=pathlib.Path(r'%FILE%').read_bytes(); sys.exit(0 if b'\r\n' in data else 1)" 2>nul
 if errorlevel 1 (
   echo   [WARN] File may have Unix line endings (LF instead of CRLF)
 )
@@ -70,7 +79,7 @@ if not errorlevel 1 (
 )
 
 rem Check 4: Very long lines (>1000 chars, may cause issues)
-powershell -NoLogo -NoProfile -Command "$lines = Get-Content '%FILE%'; $long = $lines | Where-Object { $_.Length -gt 1000 }; if ($long) { Write-Host '  [WARN] Found lines over 1000 characters'; $long | ForEach-Object { Write-Host ('    Line ' + ([array]::IndexOf($lines, $_) + 1) + ': ' + $_.Length + ' chars') } }" 2>nul
+"%PYTHON_EXE%" -c "import pathlib; p=pathlib.Path(r'%FILE%'); lines=p.read_text(encoding='utf-8', errors='replace').splitlines(); long=[(i+1, len(line)) for i, line in enumerate(lines) if len(line) > 1000]; print('  [WARN] Found lines over 1000 characters') if long else None; [print('    Line {}: {} chars'.format(i, length)) for i, length in long]" 2>nul
 
 rem Check 5: Dry-run if script supports it
 findstr /c:"--dry-run" "%FILE%" >nul 2>&1

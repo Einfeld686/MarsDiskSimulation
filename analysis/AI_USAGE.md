@@ -34,7 +34,7 @@ python -m marsdisk.run --config analysis/run-recipes/baseline_blowout_only.yml
 - `analysis/literature_map.md`: Hyodo+, Ronnet+, Kuramoto 2024 など主要論文とステータス（replicated/planned/reference_only）をまとめた表。AIは引用や位置づけ確認にのみ使用し、式を再掲しない。
 
 ## Windows CMD スクリプトの事前検証（必須）
-Windows 向け `.cmd` を新規作成/更新した場合は、**実行前に `preflight_checks.py` を必ず通す**。Mac 等の非Windows環境でも Windows 由来の失敗を検出できるよう `--simulate-windows` を付与する。
+Windows 向け `.cmd` を新規作成/更新した場合は、**実行前に `preflight_checks.py` を必ず通す**。Mac 等の非Windows環境でも Windows 由来の失敗を検出できるよう `--simulate-windows` を付与する。`--simulate-windows` 時はツール検査（python/git/powershell）が警告に降格されるため、非Windowsでも実際の配置要件まで確認したい場合は `--check-tools` を併用する。
 
 ```bash
 python scripts/runsets/windows/preflight_checks.py \
@@ -42,11 +42,14 @@ python scripts/runsets/windows/preflight_checks.py \
   --config <config_path> \
   --overrides <overrides_path> \
   --cmd-root scripts/runsets/windows \
+  --cmd-exclude scripts/runsets/windows/legacy \
   --cmd scripts/research/run_temp_supply_sweep.cmd \
-  --simulate-windows
+  --simulate-windows \
+  --windows-root C:\\path\\to\\repo
 ```
 
 Windows 実機では必要に応じて `--require-powershell` を追加し、警告が出た場合は `.cmd` と `overrides` の双方を修正してから実行する。
+`preflight_checks.py` は repo_root を再帰走査して Windows 禁則名・大文字小文字衝突・長パス見積りも検出するため、Windows 側の配置を想定する場合は `--windows-root C:\\path\\to\\repo` を指定する。
 
 ## ラベルとアンカーの補足規約
 - 数式のアンカー(E.xxx)は `analysis/equations.md` のみで定義し、他のドキュメントは参照に徹する。新しい E.xxx を他所に作らない。

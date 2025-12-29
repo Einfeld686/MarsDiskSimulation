@@ -3,6 +3,16 @@ rem Run the Windows-only cell parallel consistency test via pytest.
 
 setlocal EnableExtensions
 
+if not defined PYTHON_EXE set "PYTHON_EXE=python3.11"
+if not exist "%PYTHON_EXE%" (
+  where %PYTHON_EXE% >nul 2>&1
+  if errorlevel 1 (
+    echo [error] %PYTHON_EXE% not found in PATH.
+    exit /b 1
+  )
+)
+set "PYTHON_BOOT=%PYTHON_EXE%"
+
 set "SCRIPT_DIR=%~dp0"
 for %%I in ("%SCRIPT_DIR%..\\..") do set "REPO_ROOT=%%~fI"
 pushd "%REPO_ROOT%" >nul
@@ -12,7 +22,7 @@ set "REQ_FILE=requirements.txt"
 
 if not exist "%VENV_DIR%\Scripts\python.exe" (
   echo [setup] Creating virtual environment in "%VENV_DIR%"...
-  python -m venv "%VENV_DIR%"
+  "%PYTHON_BOOT%" -m venv "%VENV_DIR%"
   if errorlevel 1 (
     echo [error] Failed to create virtual environment.
     popd
@@ -26,11 +36,12 @@ if errorlevel 1 (
   popd
   exit /b 1
 )
+set "PYTHON_EXE=%VENV_DIR%\Scripts\python.exe"
 
 if exist "%REQ_FILE%" (
   echo [setup] Installing dependencies from %REQ_FILE% ...
-  python -m pip install --upgrade pip
-  python -m pip install -r "%REQ_FILE%"
+  "%PYTHON_EXE%" -m pip install --upgrade pip
+  "%PYTHON_EXE%" -m pip install -r "%REQ_FILE%"
   if errorlevel 1 (
     echo [error] Dependency install failed.
     popd
@@ -40,7 +51,7 @@ if exist "%REQ_FILE%" (
   echo [warn] %REQ_FILE% not found; skipping dependency install.
 )
 
-python -m pip install pytest
+"%PYTHON_EXE%" -m pip install pytest
 if errorlevel 1 (
   echo [error] Failed to install pytest.
   popd
@@ -48,7 +59,7 @@ if errorlevel 1 (
 )
 
 set FORCE_STREAMING_OFF=1
-python -m pytest tests\integration\test_numerical_anomaly_watchlist.py::test_cell_parallel_on_off_consistency -q
+"%PYTHON_EXE%" -m pytest tests\integration\test_numerical_anomaly_watchlist.py::test_cell_parallel_on_off_consistency -q
 set "RC=%errorlevel%"
 
 popd

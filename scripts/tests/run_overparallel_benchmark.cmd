@@ -3,6 +3,16 @@ rem Run over-parallelism benchmark on Windows.
 
 setlocal EnableExtensions
 
+if not defined PYTHON_EXE set "PYTHON_EXE=python3.11"
+if not exist "%PYTHON_EXE%" (
+  where %PYTHON_EXE% >nul 2>&1
+  if errorlevel 1 (
+    echo [error] %PYTHON_EXE% not found in PATH.
+    exit /b 1
+  )
+)
+set "PYTHON_BOOT=%PYTHON_EXE%"
+
 set "SCRIPT_DIR=%~dp0"
 for %%I in ("%SCRIPT_DIR%..\\..") do set "REPO_ROOT=%%~fI"
 pushd "%REPO_ROOT%" >nul
@@ -12,7 +22,7 @@ set "REQ_FILE=requirements.txt"
 
 if not exist "%VENV_DIR%\Scripts\python.exe" (
   echo [setup] Creating virtual environment in "%VENV_DIR%"...
-  python -m venv "%VENV_DIR%"
+  "%PYTHON_BOOT%" -m venv "%VENV_DIR%"
   if errorlevel 1 (
     echo [error] Failed to create virtual environment.
     popd
@@ -26,11 +36,12 @@ if errorlevel 1 (
   popd
   exit /b 1
 )
+set "PYTHON_EXE=%VENV_DIR%\Scripts\python.exe"
 
 if exist "%REQ_FILE%" (
   echo [setup] Installing dependencies from %REQ_FILE% ...
-  python -m pip install --upgrade pip
-  python -m pip install -r "%REQ_FILE%"
+  "%PYTHON_EXE%" -m pip install --upgrade pip
+  "%PYTHON_EXE%" -m pip install -r "%REQ_FILE%"
   if errorlevel 1 (
     echo [error] Dependency install failed.
     popd
@@ -40,7 +51,7 @@ if exist "%REQ_FILE%" (
   echo [warn] %REQ_FILE% not found; skipping dependency install.
 )
 
-python -m pip install psutil
+"%PYTHON_EXE%" -m pip install psutil
 if errorlevel 1 (
   echo [warn] psutil install failed; perf logging will be limited.
 )
@@ -52,11 +63,11 @@ if not defined MEM_RESERVE_GB set "MEM_RESERVE_GB=4"
 set "TOTAL_GB="
 set "CPU_LOGICAL="
 if "%AUTO_JOBS%"=="1" (
-  for /f %%A in ('powershell -NoProfile -Command "$mem=(Get-CimInstance Win32_ComputerSystem).TotalPhysicalMemory; [math]::Floor($mem/1GB)"') do set "TOTAL_GB=%%A"
-  for /f %%A in ('powershell -NoProfile -Command "(Get-CimInstance Win32_Processor | Measure-Object -Sum -Property NumberOfLogicalProcessors).Sum"') do set "CPU_LOGICAL=%%A"
-  if not defined CPU_LOGICAL for /f %%A in ('powershell -NoProfile -Command "[Environment]::ProcessorCount"') do set "CPU_LOGICAL=%%A"
-  if not defined PARALLEL_JOBS (
-    for /f %%A in ('powershell -NoProfile -Command "$total=[double]$env:TOTAL_GB; $reserve=[double]$env:MEM_RESERVE_GB; $job=[double]$env:JOB_MEM_GB; if (-not $job -or $job -le 0){$job=10}; if (-not $total -or $total -le 0){$total=0}; $avail=[math]::Max($total-$reserve,1); $memJobs=[math]::Max([math]::Floor($avail/$job),1); $cpu=[int]$env:CPU_LOGICAL; if ($cpu -lt 1){$cpu=[Environment]::ProcessorCount}; [int]([math]::Max([math]::Min($cpu,$memJobs),1))"') do set "PARALLEL_JOBS=%%A"
+  if not defined PARALLEL_MEM_FRACTION set "PARALLEL_MEM_FRACTION=1"
+  for /f "usebackq tokens=1-3 delims=|" %%A in (`"%PYTHON_EXE%" scripts\\runsets\\common\\calc_parallel_jobs.py`) do (
+    set "TOTAL_GB=%%A"
+    set "CPU_LOGICAL=%%B"
+    if not defined PARALLEL_JOBS set "PARALLEL_JOBS=%%C"
   )
 )
 if not defined PARALLEL_JOBS set "PARALLEL_JOBS=1"
@@ -80,7 +91,7 @@ echo [sys] mem_total_gb=%TOTAL_GB% cpu_logical=%CPU_LOGICAL% parallel_jobs=%PARA
 
 set "BENCH_ARGS=--parallel-jobs %PARALLEL_JOBS% --cell-jobs %MARSDISK_CELL_JOBS% --n-cells %BENCH_N_CELLS% --t-end-orbits %BENCH_T_END_ORBITS% --dt-init %BENCH_DT_INIT%"
 echo [info] Benchmark defaults: %BENCH_ARGS%
-python scripts\tests\overparallel_benchmark.py %BENCH_ARGS% %*
+"%PYTHON_EXE%" scripts\tests\overparallel_benchmark.py %BENCH_ARGS% %*
 set "RC=%errorlevel%"
 
 popd

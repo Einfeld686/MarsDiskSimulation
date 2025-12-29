@@ -5,7 +5,17 @@ rem no matter where this script is invoked from.
 
 setlocal enabledelayedexpansion
 
-set REPO=%~dp0..\..\..\..
+if not defined PYTHON_EXE set "PYTHON_EXE=python3.11"
+if not exist "%PYTHON_EXE%" (
+  where %PYTHON_EXE% >nul 2>&1
+  if errorlevel 1 (
+    echo [error] %PYTHON_EXE% not found in PATH.
+    exit /b 1
+  )
+)
+set "PYTHON_BOOT=%PYTHON_EXE%"
+
+for %%I in ("%~dp0..\..\..\..") do set "REPO=%%~fI"
 pushd "%REPO%"
 
 set OUTDIR=out\run_sublim_smol_phase_cooling
@@ -18,7 +28,7 @@ set REQ_FILE=requirements.txt
 
 if not exist "%VENV_DIR%\Scripts\python.exe" (
   echo [setup] Creating virtual environment in "%VENV_DIR%"...
-  python -m venv "%VENV_DIR%"
+  "%PYTHON_BOOT%" -m venv "%VENV_DIR%"
   if %errorlevel% neq 0 (
     echo [error] Failed to create virtual environment.
     popd
@@ -32,11 +42,12 @@ if %errorlevel% neq 0 (
   popd
   exit /b %errorlevel%
 )
+set "PYTHON_EXE=%VENV_DIR%\Scripts\python.exe"
 
 if exist "%REQ_FILE%" (
   echo [setup] Installing/upgrading dependencies from %REQ_FILE% ...
-  pip install --upgrade pip
-  pip install -r "%REQ_FILE%"
+  "%PYTHON_EXE%" -m pip install --upgrade pip
+  "%PYTHON_EXE%" -m pip install -r "%REQ_FILE%"
   if %errorlevel% neq 0 (
     echo [error] Dependency installation failed.
     popd
@@ -46,7 +57,7 @@ if exist "%REQ_FILE%" (
   echo [warn] %REQ_FILE% not found; skipping dependency install.
 )
 
-python -m marsdisk.run ^
+"%PYTHON_EXE%" -m marsdisk.run ^
   --config "%CONFIG%" ^
   --quiet ^
   --progress ^

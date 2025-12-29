@@ -3,6 +3,16 @@ rem Smoke test: run a tiny 0D case and verify archive output lands on external H
 
 setlocal EnableExtensions EnableDelayedExpansion
 
+if not defined PYTHON_EXE set "PYTHON_EXE=python3.11"
+if not exist "%PYTHON_EXE%" (
+  where %PYTHON_EXE% >nul 2>&1
+  if errorlevel 1 (
+    echo [error] %PYTHON_EXE% not found in PATH.
+    exit /b 1
+  )
+)
+set "PYTHON_BOOT=%PYTHON_EXE%"
+
 set "SCRIPT_DIR=%~dp0"
 for %%I in ("%SCRIPT_DIR%..\\..") do set "REPO_ROOT=%%~fI"
 pushd "%REPO_ROOT%" >nul
@@ -57,7 +67,7 @@ if not exist "%ARCHIVE_DIR%\\" (
 )
 
 set "RUN_TS="
-for /f %%A in ('powershell -NoProfile -Command "Get-Date -Format \"yyyyMMdd-HHmmss\""') do set "RUN_TS=%%A"
+for /f %%A in ('"%PYTHON_EXE%" scripts\\runsets\\common\\timestamp.py') do set "RUN_TS=%%A"
 set "OUTDIR=out\\archive_smoke\\%RUN_TS%__archive_smoke"
 for %%F in ("%OUTDIR%") do set "RUN_NAME=%%~nxF"
 set "ARCHIVE_DEST=%ARCHIVE_DIR%\\%RUN_NAME%"
@@ -67,7 +77,7 @@ set "REQ_FILE=requirements.txt"
 
 if not exist "%VENV_DIR%\\Scripts\\python.exe" (
   echo [setup] Creating virtual environment in "%VENV_DIR%"...
-  python -m venv "%VENV_DIR%"
+  "%PYTHON_BOOT%" -m venv "%VENV_DIR%"
   if errorlevel 1 (
     echo [error] Failed to create virtual environment.
     popd
@@ -81,13 +91,14 @@ if errorlevel 1 (
   popd
   exit /b 1
 )
+set "PYTHON_EXE=%VENV_DIR%\\Scripts\\python.exe"
 
 if "%SKIP_PIP%"=="1" (
   echo [setup] SKIP_PIP=1; skipping dependency install.
 ) else if exist "%REQ_FILE%" (
   echo [setup] Installing dependencies from %REQ_FILE% ...
-  python -m pip install --upgrade pip
-  python -m pip install -r "%REQ_FILE%"
+  "%PYTHON_EXE%" -m pip install --upgrade pip
+  "%PYTHON_EXE%" -m pip install -r "%REQ_FILE%"
   if errorlevel 1 (
     echo [error] Dependency install failed.
     popd
@@ -102,7 +113,7 @@ if not exist "%OUTDIR%" mkdir "%OUTDIR%"
 echo [run] OUTDIR=%OUTDIR%
 echo [run] ARCHIVE_DEST=%ARCHIVE_DEST%
 
-python -m marsdisk.run ^
+"%PYTHON_EXE%" -m marsdisk.run ^
   --config "%CONFIG_PATH%" ^
   --quiet ^
   --override geometry.mode=0D ^

@@ -2,6 +2,15 @@
 rem Run a temp_supply sweep (1D default).
 setlocal EnableExtensions EnableDelayedExpansion
 
+if not defined PYTHON_EXE set "PYTHON_EXE=python3.11"
+if not exist "%PYTHON_EXE%" (
+  where %PYTHON_EXE% >nul 2>&1
+  if errorlevel 1 (
+    echo.[error] %PYTHON_EXE% not found in PATH
+    exit /b 1
+  )
+)
+
 for %%I in ("%~f0") do set "SCRIPT_DIR=%%~dpI"
 set "REPO_ROOT=%SCRIPT_DIR%..\\..\\.."
 for %%I in ("%REPO_ROOT%") do set "REPO_ROOT=%%~fI"
@@ -145,9 +154,13 @@ if not defined PARALLEL_WINDOW_STYLE set "PARALLEL_WINDOW_STYLE=Hidden"
 set "MARSDISK_CELL_PARALLEL=1"
 if not defined MARSDISK_CELL_MIN_CELLS set "MARSDISK_CELL_MIN_CELLS=4"
 if not defined MARSDISK_CELL_CHUNK_SIZE set "MARSDISK_CELL_CHUNK_SIZE=0"
-if not defined MARSDISK_CELL_JOBS set "MARSDISK_CELL_JOBS=auto"
-if not defined CELL_MEM_FRACTION set "CELL_MEM_FRACTION=0.7"
-if not defined CELL_CPU_FRACTION set "CELL_CPU_FRACTION=0.7"
+rem Force auto sizing to keep ~80% CPU usage for cell-parallel runs.
+set "MARSDISK_CELL_JOBS=auto"
+if not defined CELL_MEM_FRACTION set "CELL_MEM_FRACTION=0.8"
+set "CELL_CPU_FRACTION=0.8"
+if not defined CPU_UTIL_TARGET_PERCENT set "CPU_UTIL_TARGET_PERCENT=80"
+if not defined CPU_UTIL_TARGET_MAX_PERCENT set "CPU_UTIL_TARGET_MAX_PERCENT=90"
+if not defined CPU_UTIL_RESPECT_MEM set "CPU_UTIL_RESPECT_MEM=1"
 
 if defined STUDY_PATH set "STUDY_FILE=%STUDY_PATH%"
 if defined OUT_ROOT (
@@ -159,15 +172,10 @@ rem Staging outputs stay on the internal disk; external archive is handled via i
 if "%DEBUG%"=="1" echo.[info] batch_root="%BATCH_ROOT%"
 
 if not "%NO_PREFLIGHT%"=="1" (
-  where python >nul 2>&1
-  if errorlevel 1 (
-    echo.[error] python not found in PATH
-    exit /b 1
-  )
   echo.[info] preflight checks
   set "PREFLIGHT_STRICT_FLAG="
   if "%PREFLIGHT_STRICT%"=="1" set "PREFLIGHT_STRICT_FLAG=--strict"
-  python "%REPO_ROOT%\\scripts\\runsets\\windows\\preflight_checks.py" --repo-root "%REPO_ROOT%" --config "%CONFIG_PATH%" --overrides "%OVERRIDES_PATH%" --out-root "%OUT_ROOT%" --require-git --cmd "%REPO_ROOT%\\scripts\\research\\run_temp_supply_sweep.cmd" --cmd-root "%REPO_ROOT%\\scripts\\runsets\\windows" %PREFLIGHT_STRICT_FLAG%
+  "%PYTHON_EXE%" "%REPO_ROOT%\\scripts\\runsets\\windows\\preflight_checks.py" --repo-root "%REPO_ROOT%" --config "%CONFIG_PATH%" --overrides "%OVERRIDES_PATH%" --out-root "%OUT_ROOT%" --require-git --cmd "%REPO_ROOT%\\scripts\\research\\run_temp_supply_sweep.cmd" --cmd-root "%REPO_ROOT%\\scripts\\runsets\\windows" --cmd-exclude "%REPO_ROOT%\\scripts\\runsets\\windows\\legacy" %PREFLIGHT_STRICT_FLAG%
   if errorlevel 1 (
     echo.[error] preflight failed
     exit /b 1
@@ -195,7 +203,7 @@ set "ARCHIVE_TMP=%TEMP%"
 if "%ARCHIVE_TMP%"=="" set "ARCHIVE_TMP=%REPO_ROOT%\\tmp"
 if not exist "%ARCHIVE_TMP%" mkdir "%ARCHIVE_TMP%" >nul 2>&1
 set "ARCHIVE_SET=%ARCHIVE_TMP%\\marsdisk_archive_overrides_%RANDOM%.cmd"
-python "%REPO_ROOT%\\scripts\\runsets\\common\\read_overrides_cmd.py" --file "%OVERRIDES_PATH%" --out "%ARCHIVE_SET%"
+"%PYTHON_EXE%" "%REPO_ROOT%\\scripts\\runsets\\common\\read_overrides_cmd.py" --file "%OVERRIDES_PATH%" --out "%ARCHIVE_SET%"
 if errorlevel 1 (
   echo.[error] failed to parse overrides: "%OVERRIDES_PATH%"
   exit /b 1

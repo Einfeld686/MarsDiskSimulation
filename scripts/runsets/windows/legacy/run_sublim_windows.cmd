@@ -2,11 +2,21 @@
 rem Simple runner for the sublimation+smol+phase setup on Windows (cmd.exe).
 rem - Creates .venv if missing, installs requirements, then runs the model.
 rem - Adjust OUTDIR as desired; avoid characters like ':' that are illegal in paths.
-rem - Requires Python on PATH; replace "python" below if必要ならフルパス指定。
+rem - Requires Python 3.11 on PATH; replace "python3.11" below if full path is needed.
 
 setlocal enabledelayedexpansion
 
-set REPO=%~dp0..\..\..\..
+if not defined PYTHON_EXE set "PYTHON_EXE=python3.11"
+if not exist "%PYTHON_EXE%" (
+  where %PYTHON_EXE% >nul 2>&1
+  if errorlevel 1 (
+    echo [error] %PYTHON_EXE% not found in PATH.
+    exit /b 1
+  )
+)
+set "PYTHON_BOOT=%PYTHON_EXE%"
+
+for %%I in ("%~dp0..\..\..\..") do set "REPO=%%~fI"
 pushd "%REPO%"
 
 set OUTDIR=out\run_sublim_smol_phase_MAX50M
@@ -16,7 +26,7 @@ set REQ_FILE=requirements.txt
 
 if not exist "%VENV_DIR%\Scripts\python.exe" (
   echo [setup] Creating virtual environment in "%VENV_DIR%"...
-  python -m venv "%VENV_DIR%"
+  "%PYTHON_BOOT%" -m venv "%VENV_DIR%"
   if %errorlevel% neq 0 (
     echo [error] Failed to create virtual environment.
     exit /b %errorlevel%
@@ -28,11 +38,12 @@ if %errorlevel% neq 0 (
   echo [error] Failed to activate virtual environment.
   exit /b %errorlevel%
 )
+set "PYTHON_EXE=%VENV_DIR%\Scripts\python.exe"
 
 if exist "%REQ_FILE%" (
   echo [setup] Installing/upgrading dependencies from %REQ_FILE% ...
-  pip install --upgrade pip
-  pip install -r "%REQ_FILE%"
+  "%PYTHON_EXE%" -m pip install --upgrade pip
+  "%PYTHON_EXE%" -m pip install -r "%REQ_FILE%"
   if %errorlevel% neq 0 (
     echo [error] Dependency installation failed.
     exit /b %errorlevel%
@@ -41,7 +52,7 @@ if exist "%REQ_FILE%" (
   echo [warn] %REQ_FILE% not found; skipping dependency install.
 )
 
-python -m marsdisk.run ^
+"%PYTHON_EXE%" -m marsdisk.run ^
   --config out\run_template_sublim_smol_phase_MAX50M\config_base_sublimation.yml ^
   --quiet ^
   --progress ^
