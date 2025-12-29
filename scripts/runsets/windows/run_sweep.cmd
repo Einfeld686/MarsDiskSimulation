@@ -37,6 +37,7 @@ set "NO_EVAL=0"
 set "NO_PREFLIGHT=0"
 set "PREFLIGHT_ONLY=0"
 set "PREFLIGHT_STRICT=0"
+if not defined QUIET_MODE set "QUIET_MODE=1"
 
 :parse_args
 if "%~1"=="" goto :args_done
@@ -84,6 +85,16 @@ if /i "%~1"=="--no-preflight" (
   shift
   goto :parse_args
 )
+if /i "%~1"=="--quiet" (
+  set "QUIET_MODE=1"
+  shift
+  goto :parse_args
+)
+if /i "%~1"=="--no-quiet" (
+  set "QUIET_MODE=0"
+  shift
+  goto :parse_args
+)
 if /i "%~1"=="--preflight-only" (
   set "PREFLIGHT_ONLY=1"
   shift
@@ -97,6 +108,7 @@ if /i "%~1"=="--preflight-strict" (
 if /i "%~1"=="--debug" (
   set "DEBUG=1"
   set "TRACE_ENABLED=1"
+  set "QUIET_MODE=0"
   shift
   goto :parse_args
 )
@@ -106,17 +118,31 @@ if /i "%~1"=="-h" goto :usage
 echo.[error] Unknown option: %~1
 :usage
 echo Usage: run_sweep.cmd [--study ^<path^>] [--config ^<path^>] [--overrides ^<path^>]
- echo.           [--out-root ^<path^>] [--dry-run] [--no-plot] [--no-eval] [--no-preflight] [--preflight-only] [--preflight-strict] [--debug]
+ echo.           [--out-root ^<path^>] [--dry-run] [--no-plot] [--no-eval] [--no-preflight] [--quiet] [--no-quiet] [--preflight-only] [--preflight-strict] [--debug]
 exit /b 1
 
 :args_done
+
+if "%QUIET_MODE%"=="1" (
+  set "LOG_INFO=rem"
+  set "LOG_SETUP=rem"
+  set "LOG_SYS=rem"
+  set "LOG_CONFIG=rem"
+  set "LOG_RUN=rem"
+) else (
+  set "LOG_INFO=echo.[info]"
+  set "LOG_SETUP=echo.[setup]"
+  set "LOG_SYS=echo.[sys]"
+  set "LOG_CONFIG=echo.[config]"
+  set "LOG_RUN=echo.[run]"
+)
 
 call :ensure_abs CONFIG_PATH
 call :ensure_abs OVERRIDES_PATH
 if defined STUDY_PATH call :ensure_abs STUDY_PATH
 
-echo.[info] run_sweep start
-echo.[info] config="%CONFIG_PATH%" overrides="%OVERRIDES_PATH%" study="%STUDY_PATH%" out_root="%OUT_ROOT%"
+%LOG_INFO% run_sweep start
+%LOG_INFO% config="%CONFIG_PATH%" overrides="%OVERRIDES_PATH%" study="%STUDY_PATH%" out_root="%OUT_ROOT%"
 
 if not defined HOOKS_ENABLE set "HOOKS_ENABLE=plot,eval,archive"
 if not defined HOOKS_STRICT set "HOOKS_STRICT=0"
@@ -159,6 +185,8 @@ if not defined SUPPLY_HEADROOM_POLICY set "SUPPLY_HEADROOM_POLICY=off"
 if not defined SUPPLY_TRANSPORT_MODE set "SUPPLY_TRANSPORT_MODE=direct"
 if not defined SUPPLY_TRANSPORT_TMIX_ORBITS set "SUPPLY_TRANSPORT_TMIX_ORBITS=off"
 if not defined SUPPLY_TRANSPORT_HEADROOM set "SUPPLY_TRANSPORT_HEADROOM=hard"
+rem run_temp_supply_sweep.sh defaults to COOL_TO_K=2000 (temperature stop).
+rem To force a fixed horizon, set COOL_TO_K=none and T_END_YEARS explicitly.
 set "AUTO_JOBS=0"
 set "PARALLEL_JOBS=1"
 set "SWEEP_PARALLEL=0"
@@ -186,10 +214,10 @@ if defined OUT_ROOT (
   set "BATCH_ROOT=out"
 )
 rem Staging outputs stay on the internal disk; external archive is handled via io.archive.*
-if "%DEBUG%"=="1" echo.[info] batch_root="%BATCH_ROOT%"
+if "%DEBUG%"=="1" %LOG_INFO% batch_root="%BATCH_ROOT%"
 
 if not "%NO_PREFLIGHT%"=="1" (
-  echo.[info] preflight checks
+  %LOG_INFO% preflight checks
   set "PREFLIGHT_STRICT_FLAG="
   if "%PREFLIGHT_STRICT%"=="1" set "PREFLIGHT_STRICT_FLAG=--strict"
   "%PYTHON_EXE%" "%REPO_ROOT%\\scripts\\runsets\\windows\\preflight_checks.py" --repo-root "%REPO_ROOT%" --config "%CONFIG_PATH%" --overrides "%OVERRIDES_PATH%" --out-root "%OUT_ROOT%" --require-git --cmd "%REPO_ROOT%\\scripts\\research\\run_temp_supply_sweep.cmd" --cmd-root "%REPO_ROOT%\\scripts\\runsets\\windows" --cmd-exclude "%REPO_ROOT%\\scripts\\runsets\\windows\\legacy" %PREFLIGHT_STRICT_FLAG%
@@ -199,7 +227,7 @@ if not "%NO_PREFLIGHT%"=="1" (
   )
 )
 if "%PREFLIGHT_ONLY%"=="1" (
-  echo.[info] preflight-only requested; exiting.
+  %LOG_INFO% preflight-only requested; exiting.
   exit /b 0
 )
 
@@ -215,7 +243,7 @@ if not exist "%OVERRIDES_PATH%" (
   echo.[error] overrides file not found: "%OVERRIDES_PATH%"
   exit /b 1
 )
-echo.[info] parsing overrides file
+%LOG_INFO% parsing overrides file
 set "ARCHIVE_TMP=%TEMP%"
 if "%ARCHIVE_TMP%"=="" set "ARCHIVE_TMP=%REPO_ROOT%\\tmp"
 if not exist "%ARCHIVE_TMP%" mkdir "%ARCHIVE_TMP%" >nul 2>&1
@@ -231,22 +259,22 @@ if not exist "%ARCHIVE_SET%" (
 )
 call "%ARCHIVE_SET%"
 del "%ARCHIVE_SET%"
-echo.[info] overrides parsed
-echo.[info] archive checks start
-if "%DEBUG%"=="1" echo.[info] archive expected: enabled="!ARCHIVE_ENABLED_EXPECTED!" dir="!ARCHIVE_DIR_EXPECTED!" merge="!ARCHIVE_MERGE_TARGET!" verify="!ARCHIVE_VERIFY_LEVEL!" keep="!ARCHIVE_KEEP_LOCAL!"
+%LOG_INFO% overrides parsed
+%LOG_INFO% archive checks start
+if "%DEBUG%"=="1" %LOG_INFO% archive expected: enabled="!ARCHIVE_ENABLED_EXPECTED!" dir="!ARCHIVE_DIR_EXPECTED!" merge="!ARCHIVE_MERGE_TARGET!" verify="!ARCHIVE_VERIFY_LEVEL!" keep="!ARCHIVE_KEEP_LOCAL!"
 if /i not "%ARCHIVE_ENABLED_EXPECTED%"=="true" goto :archive_fail_enabled
-if "%DEBUG%"=="1" echo.[info] archive check enabled ok
+if "%DEBUG%"=="1" %LOG_INFO% archive check enabled ok
 if not defined ARCHIVE_DIR_EXPECTED goto :archive_fail_dir
-if "%DEBUG%"=="1" echo.[info] archive check dir ok
+if "%DEBUG%"=="1" %LOG_INFO% archive check dir ok
 if /i not "%ARCHIVE_MERGE_TARGET%"=="external" goto :archive_fail_merge
-if "%DEBUG%"=="1" echo.[info] archive check merge_target ok
+if "%DEBUG%"=="1" %LOG_INFO% archive check merge_target ok
 if /i not "%ARCHIVE_VERIFY_LEVEL%"=="standard_plus" goto :archive_fail_verify
-if "%DEBUG%"=="1" echo.[info] archive check verify_level ok
+if "%DEBUG%"=="1" %LOG_INFO% archive check verify_level ok
 if /i not "%ARCHIVE_KEEP_LOCAL%"=="metadata" goto :archive_fail_keep
-if "%DEBUG%"=="1" echo.[info] archive check keep_local ok
+if "%DEBUG%"=="1" %LOG_INFO% archive check keep_local ok
 if /i "%BATCH_ROOT%"=="%ARCHIVE_DIR_EXPECTED%" goto :archive_fail_batch_root
-echo.[info] overrides validated
-echo.[info] preflight ok; preparing temp_root
+%LOG_INFO% overrides validated
+%LOG_INFO% preflight ok; preparing temp_root
 
 set "RUN_TS_SOURCE=pre"
 if defined RUN_TS (
@@ -257,7 +285,7 @@ if defined RUN_TS (
 )
 set "TEMP_ROOT=%TEMP%"
 set "TEMP_SOURCE=TEMP"
-echo.[info] temp_root candidate="%TEMP_ROOT%"
+%LOG_INFO% temp_root candidate="%TEMP_ROOT%"
 if "%TEMP_ROOT%"=="" (
   set "TEMP_ROOT=%REPO_ROOT%\\tmp"
   set "TEMP_SOURCE=fallback"
@@ -273,8 +301,8 @@ if not exist "%TEMP_ROOT%" (
   exit /b 1
 )
 set "TEMP=%TEMP_ROOT%"
-echo.[setup] repo_root=%REPO_ROOT%
-echo.[setup] temp_root=%TEMP_ROOT% (source=%TEMP_SOURCE%)
+%LOG_SETUP% repo_root=%REPO_ROOT%
+%LOG_SETUP% temp_root=%TEMP_ROOT% (source=%TEMP_SOURCE%)
 if not exist "%REPO_ROOT%\\scripts\\research\\run_temp_supply_sweep.cmd" (
   echo.[error] run_temp_supply_sweep.cmd not found: "%REPO_ROOT%\\scripts\\research\\run_temp_supply_sweep.cmd"
   exit /b 1
@@ -282,16 +310,16 @@ if not exist "%REPO_ROOT%\\scripts\\research\\run_temp_supply_sweep.cmd" (
 pushd "%REPO_ROOT%" >nul
 
 if "%DRY_RUN%"=="1" (
-  echo.[info] dry-run: calling run_temp_supply_sweep.cmd
+  %LOG_INFO% dry-run: calling run_temp_supply_sweep.cmd
   call scripts\research\run_temp_supply_sweep.cmd --dry-run
   popd
   exit /b %errorlevel%
 )
 
-echo.[info] launching run_temp_supply_sweep.cmd
+%LOG_INFO% launching run_temp_supply_sweep.cmd
 call scripts\research\run_temp_supply_sweep.cmd
 set "RUN_RC=%errorlevel%"
-echo.[info] run_temp_supply_sweep.cmd finished (rc=%RUN_RC%)
+%LOG_INFO% run_temp_supply_sweep.cmd finished (rc=%RUN_RC%)
 
 popd
 exit /b %RUN_RC%

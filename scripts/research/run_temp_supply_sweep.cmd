@@ -6,6 +6,9 @@ if not defined DEBUG set "DEBUG=0"
 if not defined TRACE_ENABLED set "TRACE_ENABLED=0"
 if /i "%DEBUG%"=="1" set "TRACE_ENABLED=1"
 if not defined TRACE_ECHO set "TRACE_ECHO=0"
+if not defined QUIET_MODE set "QUIET_MODE=1"
+if /i "%DEBUG%"=="1" set "QUIET_MODE=0"
+if /i "%TRACE_ENABLED%"=="1" set "QUIET_MODE=0"
 set "SCRIPT_REV=run_temp_supply_sweep_cmd_trace_v2"
 
 if not defined PYTHON_EXE (
@@ -40,8 +43,21 @@ if /i "%~1"=="--dry-run" (
   exit /b 0
 )
 if /i "%~1"=="--run-one" set "RUN_ONE_MODE=1"
-echo.[setup] script_path=%~f0
-echo.[setup] cwd=%CD%
+if "%QUIET_MODE%"=="1" (
+  set "LOG_SETUP=rem"
+  set "LOG_INFO=rem"
+  set "LOG_SYS=rem"
+  set "LOG_CONFIG=rem"
+  set "LOG_RUN=rem"
+) else (
+  set "LOG_SETUP=echo.[setup]"
+  set "LOG_INFO=echo.[info]"
+  set "LOG_SYS=echo.[sys]"
+  set "LOG_CONFIG=echo.[config]"
+  set "LOG_RUN=echo.[run]"
+)
+%LOG_SETUP% script_path=%~f0
+%LOG_SETUP% cwd=%CD%
 
 rem ---------- setup ----------
 if not defined VENV_DIR set "VENV_DIR=.venv"
@@ -73,7 +89,7 @@ if not exist "%TMP_ROOT%" (
   popd
   exit /b 1
 )
-echo.[setup] temp_root=%TMP_ROOT% (source=%TMP_SOURCE%)
+%LOG_SETUP% temp_root=%TMP_ROOT% (source=%TMP_SOURCE%)
 if not defined GIT_SHA for /f %%A in ('git rev-parse --short HEAD 2^>nul') do set "GIT_SHA=%%A"
 if not defined GIT_SHA set "GIT_SHA=nogit"
 if not defined BATCH_SEED for /f %%A in ('"%PYTHON_EXE%" scripts\\runsets\\common\\next_seed.py') do set "BATCH_SEED=%%A"
@@ -101,10 +117,10 @@ del "%TMP_TEST%"
 rem Force output root to out/ as requested
 if not defined BATCH_ROOT set "BATCH_ROOT=E:\marsdisk_runs"
 if not defined SWEEP_TAG set "SWEEP_TAG=temp_supply_sweep"
-echo.[setup] Output root: %BATCH_ROOT%
+%LOG_SETUP% Output root: %BATCH_ROOT%
 
 if not exist "%VENV_DIR%\Scripts\python.exe" (
-  echo.[setup] Creating virtual environment in %VENV_DIR%...
+  %LOG_SETUP% Creating virtual environment in %VENV_DIR%...
   "%PYTHON_BOOT%" -m venv "%VENV_DIR%"
 )
 
@@ -112,9 +128,9 @@ call "%VENV_DIR%\Scripts\activate.bat"
 set "PYTHON_EXE=%VENV_DIR%\Scripts\python.exe"
 
 if "%SKIP_PIP%"=="1" (
-  echo.[setup] SKIP_PIP=1; skipping dependency install.
+  %LOG_SETUP% SKIP_PIP=1; skipping dependency install.
 ) else if exist "%REQ_FILE%" (
-  echo.[setup] Installing/upgrading dependencies from %REQ_FILE% ...
+  %LOG_SETUP% Installing/upgrading dependencies from %REQ_FILE% ...
   "%PYTHON_EXE%" -m pip install --upgrade pip
   "%PYTHON_EXE%" -m pip install -r "%REQ_FILE%"
 ) else (
@@ -237,7 +253,7 @@ if /i "%MARSDISK_CELL_JOBS%"=="auto" (
       if not "!CELL_STREAM_MEM_GB!"=="0" set "STREAM_MEM_GB=!CELL_STREAM_MEM_GB!"
     )
   )
-  echo.[sys] cell_parallel auto: mem_total_gb=!CELL_MEM_TOTAL_GB! mem_fraction=!CELL_MEM_FRACTION_USED! cpu_logical=!CELL_CPU_LOGICAL! cpu_fraction=!CELL_CPU_FRACTION_USED! cell_jobs=!MARSDISK_CELL_JOBS!
+  %LOG_SYS% cell_parallel auto: mem_total_gb=!CELL_MEM_TOTAL_GB! mem_fraction=!CELL_MEM_FRACTION_USED! cpu_logical=!CELL_CPU_LOGICAL! cpu_fraction=!CELL_CPU_FRACTION_USED! cell_jobs=!MARSDISK_CELL_JOBS!
 )
 if not defined CELL_CPU_FRACTION_USED set "CELL_CPU_FRACTION_USED=%CELL_CPU_FRACTION%"
 set "CELL_JOBS_OK=1"
@@ -261,7 +277,7 @@ if /i "%PARALLEL_MODE%"=="numba" (
   set "OPENBLAS_NUM_THREADS=!CPU_TARGET_CORES!"
   set "NUMEXPR_NUM_THREADS=!CPU_TARGET_CORES!"
   set "VECLIB_MAXIMUM_THREADS=!CPU_TARGET_CORES!"
-  echo.[sys] numba_parallel: target_cores=!CPU_TARGET_CORES! target_percent=%CPU_UTIL_TARGET_PERCENT% max_percent=%CPU_UTIL_TARGET_MAX_PERCENT%
+  %LOG_SYS% numba_parallel: target_cores=!CPU_TARGET_CORES! target_percent=%CPU_UTIL_TARGET_PERCENT% max_percent=%CPU_UTIL_TARGET_MAX_PERCENT%
 )
 if not defined CELL_THREAD_LIMIT set "CELL_THREAD_LIMIT=auto"
 set "CELL_THREAD_LIMIT_RAW=%CELL_THREAD_LIMIT%"
@@ -286,7 +302,7 @@ if not defined OPENBLAS_NUM_THREADS set "OPENBLAS_NUM_THREADS=%CELL_THREAD_LIMIT
 if not defined NUMEXPR_NUM_THREADS set "NUMEXPR_NUM_THREADS=%CELL_THREAD_LIMIT%"
 if not defined VECLIB_MAXIMUM_THREADS set "VECLIB_MAXIMUM_THREADS=%CELL_THREAD_LIMIT%"
 if not defined NUMBA_NUM_THREADS set "NUMBA_NUM_THREADS=%CELL_THREAD_LIMIT%"
-echo.[sys] thread caps: limit=%CELL_THREAD_LIMIT% (OMP/MKL/OPENBLAS/NUMEXPR/NUMBA)
+%LOG_SYS% thread caps: limit=%CELL_THREAD_LIMIT% (OMP/MKL/OPENBLAS/NUMEXPR/NUMBA)
 if not defined MEM_RESERVE_GB set "MEM_RESERVE_GB=4"
 if not defined PARALLEL_SLEEP_SEC set "PARALLEL_SLEEP_SEC=2"
 if not defined PARALLEL_WINDOW_STYLE set "PARALLEL_WINDOW_STYLE=Hidden"
@@ -310,7 +326,7 @@ if defined STUDY_FILE (
     ) else (
       call "!STUDY_SET!"
       del "!STUDY_SET!"
-      echo.[info] loaded study overrides from !STUDY_FILE!
+      %LOG_INFO% loaded study overrides from !STUDY_FILE!
       call :trace "study overrides loaded"
     )
   ) else (
@@ -373,7 +389,7 @@ if "%PARALLEL_JOBS%"=="0" set "PARALLEL_JOBS=1"
 if "%AUTO_JOBS%"=="1" (
   if not defined TOTAL_GB set "TOTAL_GB=unknown"
   if not defined CPU_LOGICAL set "CPU_LOGICAL=unknown"
-  echo.[sys] mem_total_gb=%TOTAL_GB% cpu_logical=%CPU_LOGICAL% job_mem_gb=%JOB_MEM_GB% parallel_jobs=%PARALLEL_JOBS%
+  %LOG_SYS% mem_total_gb=%TOTAL_GB% cpu_logical=%CPU_LOGICAL% job_mem_gb=%JOB_MEM_GB% parallel_jobs=%PARALLEL_JOBS%
 )
 
 if defined CPU_UTIL_TARGET_PERCENT if /i not "%PARALLEL_MODE%"=="numba" (
@@ -402,7 +418,7 @@ if defined CPU_UTIL_TARGET_PERCENT if /i not "%PARALLEL_MODE%"=="numba" (
           if !PARALLEL_JOBS_TARGET! GTR 1 (
             set "SWEEP_PARALLEL=1"
             set "PARALLEL_JOBS=!PARALLEL_JOBS_TARGET!"
-            echo.[sys] cpu_target auto-parallel: target_percent=%CPU_UTIL_TARGET_PERCENT% target_cores=!CPU_TARGET_CORES! cell_jobs=%MARSDISK_CELL_JOBS% parallel_jobs=!PARALLEL_JOBS!
+            %LOG_SYS% cpu_target auto-parallel: target_percent=%CPU_UTIL_TARGET_PERCENT% target_cores=!CPU_TARGET_CORES! cell_jobs=%MARSDISK_CELL_JOBS% parallel_jobs=!PARALLEL_JOBS!
           )
         )
       )
@@ -410,16 +426,16 @@ if defined CPU_UTIL_TARGET_PERCENT if /i not "%PARALLEL_MODE%"=="numba" (
   )
 )
 
-echo.[config] supply multipliers: temp_enabled=%SUPPLY_TEMP_ENABLED% (mode=%SUPPLY_TEMP_MODE%) feedback_enabled=%SUPPLY_FEEDBACK_ENABLED% reservoir=%SUPPLY_RESERVOIR_M%
-echo.[config] shielding: mode=%SHIELDING_MODE% fixed_tau1_sigma=%SHIELDING_SIGMA% auto_max_margin=%SHIELDING_AUTO_MAX_MARGIN%
-echo.[config] injection: mode=%SUPPLY_INJECTION_MODE% q=%SUPPLY_INJECTION_Q% s_inj_min=%SUPPLY_INJECTION_SMIN% s_inj_max=%SUPPLY_INJECTION_SMAX%
-echo.[config] transport: mode=%SUPPLY_TRANSPORT_MODE% t_mix=%SUPPLY_TRANSPORT_TMIX_ORBITS% headroom_gate=%SUPPLY_TRANSPORT_HEADROOM% velocity=%SUPPLY_VEL_MODE%
-echo.[config] geometry: mode=%GEOMETRY_MODE% Nr=%GEOMETRY_NR% r_in_m=%GEOMETRY_R_IN_M% r_out_m=%GEOMETRY_R_OUT_M%
-echo.[config] external supply: mu_orbit10pct=%SUPPLY_MU_ORBIT10PCT% mu_reference_tau=%SUPPLY_MU_REFERENCE_TAU% orbit_fraction_at_mu1=%SUPPLY_ORBIT_FRACTION% (epsilon_mix swept per EPS_LIST)
-echo.[config] optical_depth: tau0_target_list=%TAU_LIST% tau_stop=%OPTICAL_TAU_STOP% tau_stop_tol=%OPTICAL_TAU_STOP_TOL%
-echo.[config] fast blowout substep: enabled=%SUBSTEP_FAST_BLOWOUT% substep_max_ratio=%SUBSTEP_MAX_RATIO%
-echo.[config] !COOL_STATUS!
-echo.[config] cooling driver mode: %COOL_MODE% (slab: T^-3, hyodo: linear flux)
+%LOG_CONFIG% supply multipliers: temp_enabled=%SUPPLY_TEMP_ENABLED% (mode=%SUPPLY_TEMP_MODE%) feedback_enabled=%SUPPLY_FEEDBACK_ENABLED% reservoir=%SUPPLY_RESERVOIR_M%
+%LOG_CONFIG% shielding: mode=%SHIELDING_MODE% fixed_tau1_sigma=%SHIELDING_SIGMA% auto_max_margin=%SHIELDING_AUTO_MAX_MARGIN%
+%LOG_CONFIG% injection: mode=%SUPPLY_INJECTION_MODE% q=%SUPPLY_INJECTION_Q% s_inj_min=%SUPPLY_INJECTION_SMIN% s_inj_max=%SUPPLY_INJECTION_SMAX%
+%LOG_CONFIG% transport: mode=%SUPPLY_TRANSPORT_MODE% t_mix=%SUPPLY_TRANSPORT_TMIX_ORBITS% headroom_gate=%SUPPLY_TRANSPORT_HEADROOM% velocity=%SUPPLY_VEL_MODE%
+%LOG_CONFIG% geometry: mode=%GEOMETRY_MODE% Nr=%GEOMETRY_NR% r_in_m=%GEOMETRY_R_IN_M% r_out_m=%GEOMETRY_R_OUT_M%
+%LOG_CONFIG% external supply: mu_orbit10pct=%SUPPLY_MU_ORBIT10PCT% mu_reference_tau=%SUPPLY_MU_REFERENCE_TAU% orbit_fraction_at_mu1=%SUPPLY_ORBIT_FRACTION% (epsilon_mix swept per EPS_LIST)
+%LOG_CONFIG% optical_depth: tau0_target_list=%TAU_LIST% tau_stop=%OPTICAL_TAU_STOP% tau_stop_tol=%OPTICAL_TAU_STOP_TOL%
+%LOG_CONFIG% fast blowout substep: enabled=%SUBSTEP_FAST_BLOWOUT% substep_max_ratio=%SUBSTEP_MAX_RATIO%
+%LOG_CONFIG% !COOL_STATUS!
+%LOG_CONFIG% cooling driver mode: %COOL_MODE% (slab: T^-3, hyodo: linear flux)
 call :trace "config printed"
 
 set "PROGRESS_FLAG="
@@ -476,7 +492,7 @@ if defined RUN_ONE_MODE (
   if defined RUN_ONE_SEED set "SEED_OVERRIDE=%RUN_ONE_SEED%"
   set "PARALLEL_JOBS=1"
   set "AUTO_JOBS=0"
-  echo.[info] run-one mode: T=%RUN_ONE_T% eps=%RUN_ONE_EPS% tau=%RUN_ONE_TAU% seed=%RUN_ONE_SEED%
+  %LOG_INFO% run-one mode: T=%RUN_ONE_T% eps=%RUN_ONE_EPS% tau=%RUN_ONE_TAU% seed=%RUN_ONE_SEED%
 )
 
 set "SWEEP_LIST_FILE=%TMP_ROOT%\\marsdisk_sweep_list_%RUN_TS%_%BATCH_SEED%.txt"
@@ -535,11 +551,11 @@ for /f "usebackq tokens=1-3 delims= " %%A in ("%SWEEP_LIST_FILE%") do (
   )
   set "TITLE=T!T!_eps!EPS_TITLE!_tau!TAU_TITLE!"
   set "OUTDIR=%BATCH_DIR%\!TITLE!"
-  echo.[run] T=!T! eps=!EPS! tau=!TAU! -^> !OUTDIR! (batch=%BATCH_SEED%, seed=!SEED!)
+  %LOG_RUN% T=!T! eps=!EPS! tau=!TAU! -^> !OUTDIR! (batch=%BATCH_SEED%, seed=!SEED!)
       rem Show supply rate info (skip Python calc to avoid cmd.exe delayed expansion issues)
-      echo.[info] epsilon_mix=!EPS!; mu_orbit10pct=%SUPPLY_MU_ORBIT10PCT% orbit_fraction_at_mu1=%SUPPLY_ORBIT_FRACTION%
-      echo.[info] shielding: mode=%SHIELDING_MODE% fixed_tau1_sigma=%SHIELDING_SIGMA% auto_max_margin=%SHIELDING_AUTO_MAX_MARGIN%
-      if "!EPS!"=="0.1" echo.[info] epsilon_mix=0.1 is a low-supply extreme case; expect weak blowout/sinks
+      %LOG_INFO% epsilon_mix=!EPS!; mu_orbit10pct=%SUPPLY_MU_ORBIT10PCT% orbit_fraction_at_mu1=%SUPPLY_ORBIT_FRACTION%
+      %LOG_INFO% shielding: mode=%SHIELDING_MODE% fixed_tau1_sigma=%SHIELDING_SIGMA% auto_max_margin=%SHIELDING_AUTO_MAX_MARGIN%
+      if "!EPS!"=="0.1" %LOG_INFO% epsilon_mix=0.1 is a low-supply extreme case; expect weak blowout/sinks
 
       if not exist "!OUTDIR!\series" mkdir "!OUTDIR!\series"
       if not exist "!OUTDIR!\checks" mkdir "!OUTDIR!\checks"
@@ -591,7 +607,7 @@ for /f "usebackq tokens=1-3 delims= " %%A in ("%SWEEP_LIST_FILE%") do (
       )
 
       if "%PLOT_ENABLE%"=="0" (
-        echo.[info] PLOT_ENABLE=0; skipping quicklook
+        %LOG_INFO% PLOT_ENABLE=0; skipping quicklook
       ) else (
         set "RUN_DIR=!OUTDIR!"
         call :trace "quicklook: start"
@@ -668,7 +684,7 @@ exit /b 0
 call :trace "run_parallel: enter"
 set "JOB_PIDS="
 set "JOB_COUNT=0"
-echo.[info] parallel mode: jobs=%PARALLEL_JOBS% sleep=%PARALLEL_SLEEP_SEC%s
+%LOG_INFO% parallel mode: jobs=%PARALLEL_JOBS% sleep=%PARALLEL_SLEEP_SEC%s
 
 if not defined SWEEP_LIST_FILE (
   echo.[error] sweep list file not set for parallel run
