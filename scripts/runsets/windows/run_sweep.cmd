@@ -116,9 +116,7 @@ set "NO_PLOT=0"
 
 set "NO_EVAL=0"
 
-set "NO_PREFLIGHT=0"
-
-set "PREFLIGHT_ONLY=0"
+set "PREFLIGHT_ONLY=0"
 
 set "PREFLIGHT_STRICT=0"
 
@@ -208,15 +206,13 @@ if /i "%~1"=="--no-eval" (
 
 )
 
-if /i "%~1"=="--no-preflight" (
-
-  set "NO_PREFLIGHT=1"
-
-  shift
-
-  goto :parse_args
-
-)
+if /i "%~1"=="--no-preflight" (
+
+  echo.[error] preflight checks are mandatory; remove --no-preflight
+
+  exit /b 1
+
+)
 
 if /i "%~1"=="--quiet" (
 
@@ -284,7 +280,7 @@ echo.[error] Unknown option: %~1
 
 echo Usage: run_sweep.cmd [--study ^<path^>] [--config ^<path^>] [--overrides ^<path^>]
 
- echo.           [--out-root ^<path^>] [--dry-run] [--no-plot] [--no-eval] [--no-preflight] [--quiet] [--no-quiet] [--preflight-only] [--preflight-strict] [--debug]
+ echo.           [--out-root ^<path^>] [--dry-run] [--no-plot] [--no-eval] [--quiet] [--no-quiet] [--preflight-only] [--preflight-strict] [--debug]
 
 exit /b 1
 
@@ -425,9 +421,7 @@ for %%H in (%HOOKS_RAW:,= %) do (
 
   if /i "!HOOK!"=="eval" if "%NO_EVAL%"=="1" set "SKIP=1"
 
-  if /i "!HOOK!"=="preflight" if "%NO_PREFLIGHT%"=="1" set "SKIP=1"
-
-  if not defined SKIP (
+  if not defined SKIP (
 
     if defined HOOKS_ENABLE (
 
@@ -600,25 +594,21 @@ if "%DEBUG%"=="1" %LOG_INFO% batch_root="%BATCH_ROOT%"
 
 
 
-if not "%NO_PREFLIGHT%"=="1" (
-
-  %LOG_INFO% preflight checks
-
-  set "PREFLIGHT_STRICT_FLAG="
-
-  if "%PREFLIGHT_STRICT%"=="1" set "PREFLIGHT_STRICT_FLAG=--strict"
-
-  !PYTHON_CMD! "%REPO_ROOT%\\scripts\\runsets\\windows\\preflight_checks.py" --repo-root "%REPO_ROOT%" --config "%CONFIG_PATH%" --overrides "%OVERRIDES_PATH%" --out-root "%OUT_ROOT%" --python-exe "!PYTHON_EXE!" --require-git --cmd "%REPO_ROOT%\\scripts\\research\\run_temp_supply_sweep.cmd" --cmd-root "%REPO_ROOT%\\scripts\\runsets\\windows" --cmd-exclude "%REPO_ROOT%\\scripts\\runsets\\windows\\legacy" %PREFLIGHT_STRICT_FLAG%
-
-  if errorlevel 1 (
-
-    echo.[error] preflight failed
-
-    exit /b 1
-
-  )
-
-)
+%LOG_INFO% preflight checks
+
+set "PREFLIGHT_STRICT_FLAG="
+
+if "%PREFLIGHT_STRICT%"=="1" set "PREFLIGHT_STRICT_FLAG=--strict"
+
+!PYTHON_CMD! "%REPO_ROOT%\\scripts\\runsets\\windows\\preflight_checks.py" --repo-root "%REPO_ROOT%" --config "%CONFIG_PATH%" --overrides "%OVERRIDES_PATH%" --out-root "%OUT_ROOT%" --python-exe "!PYTHON_EXE!" --require-git --cmd "%REPO_ROOT%\\scripts\\research\\run_temp_supply_sweep.cmd" --cmd-root "%REPO_ROOT%\\scripts\\runsets\\windows" --cmd-exclude "%REPO_ROOT%\\scripts\\runsets\\windows\\legacy" %PREFLIGHT_STRICT_FLAG%
+
+if errorlevel 1 (
+
+  echo.[error] preflight failed
+
+  exit /b 1
+
+)
 
 if "%PREFLIGHT_ONLY%"=="1" (
 

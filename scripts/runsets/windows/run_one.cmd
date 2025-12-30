@@ -34,7 +34,6 @@ set "GEOMETRY_MODE=1D"
 set "DRY_RUN=0"
 set "NO_PLOT=0"
 set "NO_EVAL=0"
-set "NO_PREFLIGHT=0"
 set "PREFLIGHT_ONLY=0"
 
 :parse_args
@@ -102,9 +101,8 @@ if /i "%~1"=="--no-eval" (
   goto :parse_args
 )
 if /i "%~1"=="--no-preflight" (
-  set "NO_PREFLIGHT=1"
-  shift
-  goto :parse_args
+  echo.[error] preflight checks are mandatory; remove --no-preflight
+  exit /b 1
 )
 if /i "%~1"=="--preflight-only" (
   set "PREFLIGHT_ONLY=1"
@@ -118,7 +116,7 @@ echo.[error] Unknown option: %~1
 :usage
 echo Usage: run_one.cmd --t ^<K^> --eps ^<float^> --tau ^<float^> [--seed ^<int^>]
  echo.            [--config ^<path^>] [--overrides ^<path^>] [--out-root ^<path^>]
- echo.            [--0d] [--dry-run] [--no-plot] [--no-eval] [--no-preflight] [--preflight-only]
+ echo.            [--0d] [--dry-run] [--no-plot] [--no-eval] [--preflight-only]
 exit /b 1
 
 :args_done
@@ -147,7 +145,6 @@ for %%H in (%HOOKS_RAW:,= %) do (
   set "SKIP="
   if /i "!HOOK!"=="plot" if "%NO_PLOT%"=="1" set "SKIP=1"
   if /i "!HOOK!"=="eval" if "%NO_EVAL%"=="1" set "SKIP=1"
-  if /i "!HOOK!"=="preflight" if "%NO_PREFLIGHT%"=="1" set "SKIP=1"
   if not defined SKIP (
     if defined HOOKS_ENABLE (
       set "HOOKS_ENABLE=!HOOKS_ENABLE!,!HOOK!"
@@ -208,14 +205,12 @@ if defined OUT_ROOT set "OUT_ROOT=%OUT_ROOT%"
 for %%I in ("%~dp0..\..\..") do set "REPO_ROOT=%%~fI"
 pushd "%REPO_ROOT%" >nul
 
-if not "%NO_PREFLIGHT%"=="1" (
-  echo.[info] preflight checks
-  "%PYTHON_EXE%" "scripts\\runsets\\windows\\preflight_checks.py" --repo-root "%REPO_ROOT%" --config "%CONFIG_PATH%" --overrides "%OVERRIDES_PATH%" --out-root "%OUT_ROOT%" --require-git --cmd "%REPO_ROOT%\\scripts\\research\\run_temp_supply_sweep.cmd" --cmd-root "%REPO_ROOT%\\scripts\\runsets\\windows" --cmd-exclude "%REPO_ROOT%\\scripts\\runsets\\windows\\legacy"
-  if errorlevel 1 (
-    echo.[error] preflight failed
-    popd
-    exit /b 1
-  )
+echo.[info] preflight checks
+"%PYTHON_EXE%" "scripts\\runsets\\windows\\preflight_checks.py" --repo-root "%REPO_ROOT%" --config "%CONFIG_PATH%" --overrides "%OVERRIDES_PATH%" --out-root "%OUT_ROOT%" --require-git --cmd "%REPO_ROOT%\\scripts\\research\\run_temp_supply_sweep.cmd" --cmd-root "%REPO_ROOT%\\scripts\\runsets\\windows" --cmd-exclude "%REPO_ROOT%\\scripts\\runsets\\windows\\legacy"
+if errorlevel 1 (
+  echo.[error] preflight failed
+  popd
+  exit /b 1
 )
 if "%PREFLIGHT_ONLY%"=="1" (
   echo.[info] preflight-only requested; exiting.
