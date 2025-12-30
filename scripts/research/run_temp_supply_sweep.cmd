@@ -23,19 +23,6 @@ if not defined PYTHON_EXE (
     echo.[error] python3.11/python/py not found in PATH
     exit /b 1
   )
-) else (
-  set "PYTHON_EXE_CHECK=%PYTHON_EXE%"
-  set "PYTHON_EXE_CHECK=%PYTHON_EXE_CHECK:"=%"
-  for /f "tokens=1" %%A in ("%PYTHON_EXE_CHECK%") do set "PYTHON_EXE_HEAD=%%A"
-  if not exist "%PYTHON_EXE_CHECK%" (
-    if /i "%PYTHON_EXE_CHECK%"=="%PYTHON_EXE_HEAD%" (
-      where %PYTHON_EXE_HEAD% >nul 2>&1
-      if errorlevel 1 (
-        echo.[error] %PYTHON_EXE% not found in PATH
-        exit /b 1
-      )
-    )
-  )
 )
 
 rem Keep paths stable even if launched from another directory (double-click or direct call)
