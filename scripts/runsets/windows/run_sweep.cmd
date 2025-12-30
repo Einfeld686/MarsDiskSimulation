@@ -336,6 +336,21 @@ if defined STUDY_PATH call :ensure_abs STUDY_PATH
 if defined OUT_ROOT call :ensure_abs OUT_ROOT
 if defined OUT_ROOT call :ensure_dir OUT_ROOT
 if errorlevel 1 exit /b 1
+
+rem If outputs go to external storage, keep archive dir on the same drive (separate subdir).
+set "OVERRIDES_PATH_EFFECTIVE=%OVERRIDES_PATH%"
+if /i "!OUT_ROOT_SOURCE:~0,8!"=="external" (
+  set "OVERRIDES_TMP_DIR=%REPO_ROOT%\\tmp"
+  if not exist "!OVERRIDES_TMP_DIR!" mkdir "!OVERRIDES_TMP_DIR!" >nul 2>&1
+  set "OVERRIDES_PATH_EFFECTIVE=!OVERRIDES_TMP_DIR!\\marsdisk_overrides_effective_%RANDOM%.txt"
+  copy /y "!OVERRIDES_PATH!" "!OVERRIDES_PATH_EFFECTIVE!" >nul 2>&1
+  if errorlevel 1 (
+    echo.[error] failed to prepare overrides: "!OVERRIDES_PATH_EFFECTIVE!"
+    exit /b 1
+  )
+  >>"!OVERRIDES_PATH_EFFECTIVE!" echo io.archive.dir=!OUT_ROOT!\\archive
+  set "OVERRIDES_PATH=!OVERRIDES_PATH_EFFECTIVE!"
+)
 
 %LOG_INFO% run_sweep start
 %LOG_INFO% config="%CONFIG_PATH%" overrides="%OVERRIDES_PATH%" study="%STUDY_PATH%" out_root="%OUT_ROOT%"
