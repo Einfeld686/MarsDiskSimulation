@@ -22,35 +22,25 @@ if not defined PYTHON_EXE (
 set "PYTHON_ARGS_SET=0"
 if defined PYTHON_ARGS set "PYTHON_ARGS_SET=1"
 set "PYTHON_EXE_RAW=%PYTHON_EXE%"
+set "PYTHON_EXE_RAW=%PYTHON_EXE_RAW:"=%"
 if "!PYTHON_ARGS_SET!"=="0" set "PYTHON_ARGS="
-if "!PYTHON_EXE_RAW:~0,1!"=="^"" (
-  if "!PYTHON_ARGS_SET!"=="0" (
-    for /f "tokens=2* delims="" %%A in ("!PYTHON_EXE_RAW!") do (
+set "PYTHON_EXE=!PYTHON_EXE_RAW!"
+if "!PYTHON_ARGS_SET!"=="0" (
+  set "PYTHON_HAS_SPACE=0"
+  if not "!PYTHON_EXE_RAW: =!"=="!PYTHON_EXE_RAW!" set "PYTHON_HAS_SPACE=1"
+  set "PYTHON_RAW_LOOKS_PATH=0"
+  for %%I in ("!PYTHON_EXE_RAW!") do (
+    if not "%%~pI"=="" set "PYTHON_RAW_LOOKS_PATH=1"
+    if not "%%~dI"=="" set "PYTHON_RAW_LOOKS_PATH=1"
+  )
+  if "!PYTHON_HAS_SPACE!"=="1" if "!PYTHON_RAW_LOOKS_PATH!"=="0" (
+    for /f "tokens=1* delims= " %%A in ("!PYTHON_EXE_RAW!") do (
       set "PYTHON_EXE=%%A"
       set "PYTHON_ARGS=%%B"
     )
-  ) else (
-    for /f "tokens=2 delims="" %%A in ("!PYTHON_EXE_RAW!") do set "PYTHON_EXE=%%A"
   )
-) else (
-  set "PYTHON_EXE=!PYTHON_EXE_RAW!"
-  if "!PYTHON_ARGS_SET!"=="0" (
-    set "PYTHON_HAS_SPACE=0"
-    if not "!PYTHON_EXE_RAW: =!"=="!PYTHON_EXE_RAW!" set "PYTHON_HAS_SPACE=1"
-    set "PYTHON_RAW_LOOKS_PATH=0"
-    for %%I in ("!PYTHON_EXE_RAW!") do (
-      if not "%%~pI"=="" set "PYTHON_RAW_LOOKS_PATH=1"
-      if not "%%~dI"=="" set "PYTHON_RAW_LOOKS_PATH=1"
-    )
-    if "!PYTHON_HAS_SPACE!"=="1" if "!PYTHON_RAW_LOOKS_PATH!"=="0" (
-      for /f "tokens=1* delims= " %%A in ("!PYTHON_EXE_RAW!") do (
-        set "PYTHON_EXE=%%A"
-        set "PYTHON_ARGS=%%B"
-      )
-    )
-    if "!PYTHON_HAS_SPACE!"=="1" if "!PYTHON_RAW_LOOKS_PATH!"=="1" (
-      echo.[warn] PYTHON_EXE looks like a path with spaces; quote it or set PYTHON_ARGS.
-    )
+  if "!PYTHON_HAS_SPACE!"=="1" if "!PYTHON_RAW_LOOKS_PATH!"=="1" (
+    echo.[warn] PYTHON_EXE looks like a path with spaces; quote it or set PYTHON_ARGS.
   )
 )
 if not defined PYTHON_EXE (
