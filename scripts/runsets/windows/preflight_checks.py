@@ -207,7 +207,25 @@ def _check_cmd(name: str, errors: list[str], warnings: list[str], warn_only: boo
             errors.append(msg)
 
 
-def _check_python(errors: list[str], warnings: list[str], warn_only: bool) -> None:
+def _check_python(
+    errors: list[str],
+    warnings: list[str],
+    warn_only: bool,
+    python_exe: str | None,
+) -> None:
+    if python_exe:
+        raw = python_exe.strip().strip('"')
+        if raw:
+            if os.path.exists(raw):
+                return
+            head = raw.split()[0]
+            if shutil.which(head) is not None:
+                return
+            msg = f"python_exe not found: {python_exe}"
+            if warn_only:
+                warnings.append(msg)
+            else:
+                errors.append(msg)
     if shutil.which("python") is not None:
         return
     if shutil.which("py") is not None:
@@ -727,6 +745,11 @@ def main() -> int:
     ap.add_argument("--config", required=True, type=Path)
     ap.add_argument("--overrides", required=True, type=Path)
     ap.add_argument("--out-root", default="", help="Output root (optional).")
+    ap.add_argument(
+        "--python-exe",
+        default="",
+        help="Python executable or command used by the caller (optional).",
+    )
     ap.add_argument("--require-git", action="store_true")
     ap.add_argument("--require-powershell", action="store_true")
     ap.add_argument(
@@ -862,7 +885,7 @@ def main() -> int:
 
     if args.require_git:
         _check_cmd("git", errors, warnings, tool_checks_warn_only)
-    _check_python(errors, warnings, tool_checks_warn_only)
+    _check_python(errors, warnings, tool_checks_warn_only, args.python_exe or None)
     if args.require_powershell:
         _check_powershell(errors, warnings, tool_checks_warn_only)
 

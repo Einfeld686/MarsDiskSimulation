@@ -28,27 +28,90 @@ if not defined PYTHON_EXE (
 
   )
 
-) else (
-
-  if not exist "%PYTHON_EXE%" (
-
-    where %PYTHON_EXE% >nul 2>&1
-
-    if errorlevel 1 (
-
-      echo.[error] %PYTHON_EXE% not found in PATH
-
-      exit /b 1
-
-    )
-
-  )
-
-)
-
-
-
-for %%I in ("%~f0") do set "SCRIPT_DIR=%%~dpI"
+) else (
+
+  set "PYTHON_EXE_CHECK=%PYTHON_EXE%"
+  set "PYTHON_EXE_CHECK=%PYTHON_EXE_CHECK:"=%"
+  for /f "tokens=1" %%A in ("%PYTHON_EXE_CHECK%") do set "PYTHON_EXE_HEAD=%%A"
+  if not exist "%PYTHON_EXE_CHECK%" (
+
+    if /i "%PYTHON_EXE_CHECK%"=="%PYTHON_EXE_HEAD%" (
+      where %PYTHON_EXE_HEAD% >nul 2>&1
+      if errorlevel 1 (
+        echo.[error] %PYTHON_EXE% not found in PATH
+        exit /b 1
+      )
+    )
+
+  )
+
+)
+
+set "PYTHON_EXE_RAW=%PYTHON_EXE%"
+set "PYTHON_EXE_RAW=%PYTHON_EXE_RAW:"=%"
+if not defined PYTHON_EXE_RAW (
+
+  echo.[error] PYTHON_EXE is empty after sanitizing quotes
+
+  exit /b 1
+
+)
+
+if exist "%PYTHON_EXE_RAW%" (
+
+  set "PYTHON_EXE=%PYTHON_EXE_RAW%"
+
+) else (
+
+  rem Resolve a real python executable path when PYTHON_EXE includes arguments (e.g., "py -3.11").
+
+  set "PY_RESOLVE_DIR=%TEMP%"
+
+  if "%PY_RESOLVE_DIR%"=="" set "PY_RESOLVE_DIR=%CD%\\tmp"
+
+  if not exist "%PY_RESOLVE_DIR%" mkdir "%PY_RESOLVE_DIR%" >nul 2>&1
+
+  set "PY_RESOLVE_PY=%PY_RESOLVE_DIR%\\marsdisk_pyresolve_%RANDOM%.py"
+
+  set "PY_RESOLVE_OUT=%PY_RESOLVE_DIR%\\marsdisk_pyresolve_%RANDOM%.txt"
+
+  >"%PY_RESOLVE_PY%" echo import sys
+
+  >>"%PY_RESOLVE_PY%" echo print(sys.executable)
+
+  set "PYTHON_CALL=%PYTHON_EXE_RAW%"
+
+  call %PYTHON_CALL% "%PY_RESOLVE_PY%" > "%PY_RESOLVE_OUT%" 2>nul
+
+  set "PYTHON_EXE="
+
+  if exist "%PY_RESOLVE_OUT%" set /p PYTHON_EXE=<"%PY_RESOLVE_OUT%"
+
+  del "%PY_RESOLVE_PY%" >nul 2>&1
+
+  del "%PY_RESOLVE_OUT%" >nul 2>&1
+
+  if not defined PYTHON_EXE (
+
+    echo.[error] failed to resolve python executable from "%PYTHON_EXE_RAW%"
+
+    exit /b 1
+
+  )
+
+  if not exist "%PYTHON_EXE%" (
+
+    echo.[error] resolved python executable not found: "%PYTHON_EXE%"
+
+    exit /b 1
+
+  )
+
+)
+
+
+
+for %%I in ("%~f0") do set "SCRIPT_DIR=%%~dpI"
 
 set "REPO_ROOT=%SCRIPT_DIR%..\\..\\.."
 
@@ -562,7 +625,7 @@ if not "%NO_PREFLIGHT%"=="1" (
 
   if "%PREFLIGHT_STRICT%"=="1" set "PREFLIGHT_STRICT_FLAG=--strict"
 
-  "%PYTHON_EXE%" "%REPO_ROOT%\\scripts\\runsets\\windows\\preflight_checks.py" --repo-root "%REPO_ROOT%" --config "%CONFIG_PATH%" --overrides "%OVERRIDES_PATH%" --out-root "%OUT_ROOT%" --require-git --cmd "%REPO_ROOT%\\scripts\\research\\run_temp_supply_sweep.cmd" --cmd-root "%REPO_ROOT%\\scripts\\runsets\\windows" --cmd-exclude "%REPO_ROOT%\\scripts\\runsets\\windows\\legacy" %PREFLIGHT_STRICT_FLAG%
+  "%PYTHON_EXE%" "%REPO_ROOT%\\scripts\\runsets\\windows\\preflight_checks.py" --repo-root "%REPO_ROOT%" --config "%CONFIG_PATH%" --overrides "%OVERRIDES_PATH%" --out-root "%OUT_ROOT%" --python-exe "%PYTHON_EXE%" --require-git --cmd "%REPO_ROOT%\\scripts\\research\\run_temp_supply_sweep.cmd" --cmd-root "%REPO_ROOT%\\scripts\\runsets\\windows" --cmd-exclude "%REPO_ROOT%\\scripts\\runsets\\windows\\legacy" %PREFLIGHT_STRICT_FLAG%
 
   if errorlevel 1 (
 
