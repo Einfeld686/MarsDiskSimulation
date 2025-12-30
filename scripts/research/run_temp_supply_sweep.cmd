@@ -24,33 +24,123 @@ if not defined PYTHON_EXE (
     exit /b 1
   )
 ) else (
-  if not exist "%PYTHON_EXE%" (
-    where %PYTHON_EXE% >nul 2>&1
-    if errorlevel 1 (
-      echo.[error] %PYTHON_EXE% not found in PATH
-      exit /b 1
+  set "PYTHON_EXE_CHECK=%PYTHON_EXE%"
+  set "PYTHON_EXE_CHECK=%PYTHON_EXE_CHECK:"=%"
+  for /f "tokens=1" %%A in ("%PYTHON_EXE_CHECK%") do set "PYTHON_EXE_HEAD=%%A"
+  if not exist "%PYTHON_EXE_CHECK%" (
+    if /i "%PYTHON_EXE_CHECK%"=="%PYTHON_EXE_HEAD%" (
+      where %PYTHON_EXE_HEAD% >nul 2>&1
+      if errorlevel 1 (
+        echo.[error] %PYTHON_EXE% not found in PATH
+        exit /b 1
+      )
     )
   )
 )
-set "PYTHON_BOOT=%PYTHON_EXE%"
 
 rem Keep paths stable even if launched from another directory (double-click or direct call)
 pushd "%~dp0\..\.."
+set "SCRIPT_SELF="
+set "JOB_CWD="
+set "SCRIPT_SELF_HAS_BANG=0"
+set "JOB_CWD_HAS_BANG=0"
+setlocal DisableDelayedExpansion
 set "SCRIPT_SELF=%~f0"
-set "SCRIPT_SELF_SHORT="
-for %%I in ("%SCRIPT_SELF%") do set "SCRIPT_SELF_SHORT=%%~sfI"
-if not defined USE_SHORT_PATHS set "USE_SHORT_PATHS=0"
-set "SCRIPT_SELF_USE=%SCRIPT_SELF%"
-if /i "%USE_SHORT_PATHS%"=="1" if defined SCRIPT_SELF_SHORT if exist "%SCRIPT_SELF_SHORT%" set "SCRIPT_SELF_USE=%SCRIPT_SELF_SHORT%"
-
 set "JOB_CWD=%CD%"
+set "SCRIPT_SELF_HAS_BANG=0"
+set "JOB_CWD_HAS_BANG=0"
+if not "%SCRIPT_SELF:!=%"=="%SCRIPT_SELF%" set "SCRIPT_SELF_HAS_BANG=1"
+if not "%JOB_CWD:!=%"=="%JOB_CWD%" set "JOB_CWD_HAS_BANG=1"
+endlocal & set "SCRIPT_SELF=%SCRIPT_SELF%" & set "JOB_CWD=%JOB_CWD%" & set "SCRIPT_SELF_HAS_BANG=%SCRIPT_SELF_HAS_BANG%" & set "JOB_CWD_HAS_BANG=%JOB_CWD_HAS_BANG%"
+
+if not defined USE_SHORT_PATHS set "USE_SHORT_PATHS=0"
+if "%USE_SHORT_PATHS%"=="0" (
+  if "%SCRIPT_SELF_HAS_BANG%"=="1" set "USE_SHORT_PATHS=1"
+  if "%JOB_CWD_HAS_BANG%"=="1" set "USE_SHORT_PATHS=1"
+)
+set "SCRIPT_SELF_SHORT="
 set "JOB_CWD_SHORT="
-for %%I in ("%JOB_CWD%") do set "JOB_CWD_SHORT=%%~sfI"
+if /i "%USE_SHORT_PATHS%"=="1" (
+  setlocal DisableDelayedExpansion
+  for %%I in ("%SCRIPT_SELF%") do set "SCRIPT_SELF_SHORT=%%~sfI"
+  for %%I in ("%JOB_CWD%") do set "JOB_CWD_SHORT=%%~sfI"
+  endlocal & set "SCRIPT_SELF_SHORT=%SCRIPT_SELF_SHORT%" & set "JOB_CWD_SHORT=%JOB_CWD_SHORT%"
+  if "%SCRIPT_SELF_HAS_BANG%"=="1" if not defined SCRIPT_SELF_SHORT (
+    echo.[error] script path contains ! and short path unavailable: "%SCRIPT_SELF%"
+    popd
+    exit /b 1
+  )
+  if "%JOB_CWD_HAS_BANG%"=="1" if not defined JOB_CWD_SHORT (
+    echo.[error] repo path contains ! and short path unavailable: "%JOB_CWD%"
+    popd
+    exit /b 1
+  )
+)
+
+set "SCRIPT_SELF_USE=%SCRIPT_SELF%"
+if defined SCRIPT_SELF_SHORT if exist "%SCRIPT_SELF_SHORT%" set "SCRIPT_SELF_USE=%SCRIPT_SELF_SHORT%"
+
 set "JOB_CWD_USE=%JOB_CWD%"
-if /i "%USE_SHORT_PATHS%"=="1" if defined JOB_CWD_SHORT if exist "%JOB_CWD_SHORT%" set "JOB_CWD_USE=%JOB_CWD_SHORT%"
-set "RUNSETS_COMMON_DIR=%JOB_CWD_USE%\\scripts\\runsets\\common"
-set "NEXT_SEED_PY=%RUNSETS_COMMON_DIR%\\next_seed.py"
-set "WIN_PROCESS_PY=%RUNSETS_COMMON_DIR%\\win_process.py"
+if defined JOB_CWD_SHORT if exist "%JOB_CWD_SHORT%" set "JOB_CWD_USE=%JOB_CWD_SHORT%"
+
+setlocal DisableDelayedExpansion
+set "RUNSETS_COMMON_DIR=%JOB_CWD_USE%\scripts\runsets\common"
+set "NEXT_SEED_PY=%RUNSETS_COMMON_DIR%\next_seed.py"
+set "WIN_PROCESS_PY=%RUNSETS_COMMON_DIR%\win_process.py"
+endlocal & set "RUNSETS_COMMON_DIR=%RUNSETS_COMMON_DIR%" & set "NEXT_SEED_PY=%NEXT_SEED_PY%" & set "WIN_PROCESS_PY=%WIN_PROCESS_PY%"
+
+if not exist "%RUNSETS_COMMON_DIR%" (
+  echo.[error] runsets common dir not found: "%RUNSETS_COMMON_DIR%"
+  popd
+  exit /b 1
+)
+if not exist "%NEXT_SEED_PY%" (
+  echo.[error] next_seed script not found: "%NEXT_SEED_PY%"
+  popd
+  exit /b 1
+)
+if not exist "%WIN_PROCESS_PY%" (
+  echo.[error] win_process script not found: "%WIN_PROCESS_PY%"
+  popd
+  exit /b 1
+)
+
+set "PYTHON_EXE_RAW=%PYTHON_EXE%"
+set "PYTHON_EXE_RAW=%PYTHON_EXE_RAW:"=%"
+if not defined PYTHON_EXE_RAW (
+  echo.[error] PYTHON_EXE is empty after sanitizing quotes
+  popd
+  exit /b 1
+)
+if exist "%PYTHON_EXE_RAW%" (
+  set "PYTHON_EXE=%PYTHON_EXE_RAW%"
+) else (
+  rem Resolve a real python executable path when PYTHON_EXE includes arguments (e.g., "py -3.11").
+  set "PY_RESOLVE_DIR=%TEMP%"
+  if "%PY_RESOLVE_DIR%"=="" set "PY_RESOLVE_DIR=%CD%\\tmp"
+  if not exist "%PY_RESOLVE_DIR%" mkdir "%PY_RESOLVE_DIR%" >nul 2>&1
+  set "PY_RESOLVE_PY=%PY_RESOLVE_DIR%\\marsdisk_pyresolve_%RANDOM%.py"
+  set "PY_RESOLVE_OUT=%PY_RESOLVE_DIR%\\marsdisk_pyresolve_%RANDOM%.txt"
+  >"%PY_RESOLVE_PY%" echo import sys
+  >>"%PY_RESOLVE_PY%" echo print(sys.executable)
+  set "PYTHON_CALL=%PYTHON_EXE_RAW%"
+  call %PYTHON_CALL% "%PY_RESOLVE_PY%" > "%PY_RESOLVE_OUT%" 2>nul
+  set "PYTHON_EXE="
+  if exist "%PY_RESOLVE_OUT%" set /p PYTHON_EXE=<"%PY_RESOLVE_OUT%"
+  del "%PY_RESOLVE_PY%" >nul 2>&1
+  del "%PY_RESOLVE_OUT%" >nul 2>&1
+  if not defined PYTHON_EXE (
+    echo.[error] failed to resolve python executable from "%PYTHON_EXE_RAW%"
+    popd
+    exit /b 1
+  )
+  if not exist "%PYTHON_EXE%" (
+    echo.[error] resolved python executable not found: "%PYTHON_EXE%"
+    popd
+    exit /b 1
+  )
+)
+set "PYTHON_BOOT=%PYTHON_EXE%"
 
 rem Optional dry-run for syntax tests (skip all heavy work)
 if /i "%~1"=="--dry-run" (
@@ -107,7 +197,12 @@ if not exist "%TMP_ROOT_BASE%" (
 )
 if not defined GIT_SHA for /f %%A in ('git rev-parse --short HEAD 2^>nul') do set "GIT_SHA=%%A"
 if not defined GIT_SHA set "GIT_SHA=nogit"
-if not defined BATCH_SEED for /f %%A in ('"%PYTHON_EXE%" "%NEXT_SEED_PY%"') do set "BATCH_SEED=%%A"
+if not defined BATCH_SEED (
+  set "BATCH_SEED_TMP="
+  setlocal DisableDelayedExpansion
+  for /f %%A in ('"%PYTHON_EXE%" "%NEXT_SEED_PY%"') do set "BATCH_SEED_TMP=%%A"
+  endlocal & set "BATCH_SEED=%BATCH_SEED_TMP%"
+)
 if "%BATCH_SEED%"=="" set "BATCH_SEED=0"
 set "TMP_ROOT=%TMP_ROOT_BASE%"
 if "%RUN_ONE_MODE%"=="1" (
@@ -751,11 +846,17 @@ exit /b 0
 set "JOB_T=%~1"
 set "JOB_EPS=%~2"
 set "JOB_TAU=%~3"
-for /f %%S in ('"%PYTHON_EXE%" "%NEXT_SEED_PY%"') do set "JOB_SEED=%%S"
+set "JOB_SEED_TMP="
+setlocal DisableDelayedExpansion
+for /f %%S in ('"%PYTHON_EXE%" "%NEXT_SEED_PY%"') do set "JOB_SEED_TMP=%%S"
+endlocal & set "JOB_SEED=%JOB_SEED_TMP%"
 call :wait_for_slot
 set "JOB_PID="
   set "JOB_CMD=set RUN_TS=!RUN_TS!&& set BATCH_SEED=!BATCH_SEED!&& set RUN_ONE_T=!JOB_T!&& set RUN_ONE_EPS=!JOB_EPS!&& set RUN_ONE_TAU=!JOB_TAU!&& set RUN_ONE_SEED=!JOB_SEED!&& set AUTO_JOBS=0&& set PARALLEL_JOBS=1&& set SKIP_PIP=1&& call ""!SCRIPT_SELF_USE!"" --run-one"
-for /f "usebackq delims=" %%P in (`"%PYTHON_EXE%" "%WIN_PROCESS_PY%" launch --window-style "%PARALLEL_WINDOW_STYLE%" --cwd "!JOB_CWD_USE!"`) do set "JOB_PID=%%P"
+set "JOB_PID_TMP="
+setlocal DisableDelayedExpansion
+for /f "usebackq delims=" %%P in (`"%PYTHON_EXE%" "%WIN_PROCESS_PY%" launch --window-style "%PARALLEL_WINDOW_STYLE%" --cwd "%JOB_CWD_USE%"`) do set "JOB_PID_TMP=%%P"
+endlocal & set "JOB_PID=%JOB_PID_TMP%"
 if defined JOB_PID set "JOB_PIDS=!JOB_PIDS! !JOB_PID!"
 if not defined JOB_PID echo.[warn] failed to launch job for T=!JOB_T! eps=!JOB_EPS! tau=!JOB_TAU! (check Python availability)
 exit /b 0
@@ -771,10 +872,14 @@ exit /b 0
 :refresh_jobs
 set "JOB_COUNT=0"
 if not defined JOB_PIDS exit /b 0
+set "JOB_PIDS_TMP="
+set "JOB_COUNT_TMP="
+setlocal DisableDelayedExpansion
 for /f "usebackq tokens=1,2 delims=|" %%A in (`"%PYTHON_EXE%" "%WIN_PROCESS_PY%" alive`) do (
-  set "JOB_PIDS=%%A"
-  set "JOB_COUNT=%%B"
+  set "JOB_PIDS_TMP=%%A"
+  set "JOB_COUNT_TMP=%%B"
 )
+endlocal & set "JOB_PIDS=%JOB_PIDS_TMP%" & set "JOB_COUNT=%JOB_COUNT_TMP%"
 if "%JOB_PIDS%"=="__NONE__" set "JOB_PIDS="
 exit /b 0
 
