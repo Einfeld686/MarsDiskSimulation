@@ -433,11 +433,20 @@ if not defined CELL_MEM_FRACTION set "CELL_MEM_FRACTION=0.8"
 
 set "CELL_CPU_FRACTION=0.8"
 
-if not defined CPU_UTIL_TARGET_PERCENT set "CPU_UTIL_TARGET_PERCENT=80"
-
-if not defined CPU_UTIL_TARGET_MAX_PERCENT set "CPU_UTIL_TARGET_MAX_PERCENT=90"
-
-if not defined CPU_UTIL_RESPECT_MEM set "CPU_UTIL_RESPECT_MEM=1"
+if not defined CPU_UTIL_TARGET_PERCENT set "CPU_UTIL_TARGET_PERCENT=80"
+
+if not defined CPU_UTIL_TARGET_MAX_PERCENT set "CPU_UTIL_TARGET_MAX_PERCENT=90"
+
+if not defined CPU_UTIL_RESPECT_MEM set "CPU_UTIL_RESPECT_MEM=1"
+
+rem Normalize CPU target and keep auto-parallel defaults when CPU target is active.
+set "CPU_TARGET_OK=1"
+for /f "delims=0123456789" %%A in ("%CPU_UTIL_TARGET_PERCENT%") do set "CPU_TARGET_OK=0"
+if "%CPU_TARGET_OK%"=="0" set "CPU_UTIL_TARGET_PERCENT=80"
+if not "%CPU_UTIL_TARGET_PERCENT%"=="0" (
+  if "%PARALLEL_JOBS%"=="1" set "PARALLEL_JOBS_DEFAULT=1"
+  if "%SWEEP_PARALLEL%"=="0" set "SWEEP_PARALLEL_DEFAULT=1"
+)
 
 if not defined SIZE_PROBE_ENABLE set "SIZE_PROBE_ENABLE=1"
 

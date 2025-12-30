@@ -127,8 +127,9 @@ if not exist "%TMP_TEST%" (
 )
 del "%TMP_TEST%"
 
-rem Force output root to out/ as requested
-if not defined BATCH_ROOT set "BATCH_ROOT=E:\marsdisk_runs"
+rem Output root defaults to out/ unless BATCH_ROOT/OUT_ROOT is set.
+if not defined BATCH_ROOT if defined OUT_ROOT set "BATCH_ROOT=%OUT_ROOT%"
+if not defined BATCH_ROOT set "BATCH_ROOT=out"
 if not defined SWEEP_TAG set "SWEEP_TAG=temp_supply_sweep"
 %LOG_SETUP% Output root: %BATCH_ROOT%
 
@@ -228,9 +229,19 @@ rem STREAM_MEM_GB intentionally left undefined by default
 rem STREAM_STEP_INTERVAL intentionally left undefined by default
 if not defined ENABLE_PROGRESS set "ENABLE_PROGRESS=1"
 if not defined AUTO_JOBS set "AUTO_JOBS=0"
-if not defined PARALLEL_JOBS set "PARALLEL_JOBS=1"
+if not defined PARALLEL_JOBS (
+  set "PARALLEL_JOBS=1"
+  if not defined PARALLEL_JOBS_DEFAULT set "PARALLEL_JOBS_DEFAULT=1"
+) else (
+  if not defined PARALLEL_JOBS_DEFAULT set "PARALLEL_JOBS_DEFAULT=0"
+)
 if not defined JOB_MEM_GB set "JOB_MEM_GB=10"
-if not defined SWEEP_PARALLEL set "SWEEP_PARALLEL=0"
+if not defined SWEEP_PARALLEL (
+  set "SWEEP_PARALLEL=0"
+  if not defined SWEEP_PARALLEL_DEFAULT set "SWEEP_PARALLEL_DEFAULT=1"
+) else (
+  if not defined SWEEP_PARALLEL_DEFAULT set "SWEEP_PARALLEL_DEFAULT=0"
+)
 if not defined MARSDISK_CELL_PARALLEL set "MARSDISK_CELL_PARALLEL=1"
 if not defined MARSDISK_CELL_MIN_CELLS set "MARSDISK_CELL_MIN_CELLS=4"
 if not defined MARSDISK_CELL_CHUNK_SIZE set "MARSDISK_CELL_CHUNK_SIZE=0"
@@ -419,7 +430,7 @@ if defined CPU_UTIL_TARGET_PERCENT if /i not "%PARALLEL_MODE%"=="numba" (
           set "CPU_TARGET_CORES=%%A"
           set "PARALLEL_JOBS_TARGET=%%B"
         )
-        if "!SWEEP_PARALLEL!"=="0" if "!PARALLEL_JOBS!"=="1" if !PARALLEL_JOBS_TARGET! GTR 1 (
+        if "!PARALLEL_JOBS_DEFAULT!"=="1" if "!PARALLEL_JOBS!"=="1" if !PARALLEL_JOBS_TARGET! GTR 1 (
           if /i "!CPU_UTIL_RESPECT_MEM!"=="1" (
             for /f "usebackq tokens=1-3 delims=|" %%A in (`"%PYTHON_EXE%" scripts\\runsets\\common\\calc_parallel_jobs.py`) do (
               set "PARALLEL_JOBS_MEM=%%C"
@@ -429,9 +440,11 @@ if defined CPU_UTIL_TARGET_PERCENT if /i not "%PARALLEL_MODE%"=="numba" (
             )
           )
           if !PARALLEL_JOBS_TARGET! GTR 1 (
-            set "SWEEP_PARALLEL=1"
-            set "PARALLEL_JOBS=!PARALLEL_JOBS_TARGET!"
-            %LOG_SYS% cpu_target auto-parallel: target_percent=%CPU_UTIL_TARGET_PERCENT% target_cores=!CPU_TARGET_CORES! cell_jobs=%MARSDISK_CELL_JOBS% parallel_jobs=!PARALLEL_JOBS!
+            if "!SWEEP_PARALLEL!"=="0" if "!SWEEP_PARALLEL_DEFAULT!"=="1" set "SWEEP_PARALLEL=1"
+            if "!SWEEP_PARALLEL!"=="1" (
+              set "PARALLEL_JOBS=!PARALLEL_JOBS_TARGET!"
+              %LOG_SYS% cpu_target auto-parallel: target_percent=%CPU_UTIL_TARGET_PERCENT% target_cores=!CPU_TARGET_CORES! cell_jobs=%MARSDISK_CELL_JOBS% parallel_jobs=!PARALLEL_JOBS!
+            )
           )
         )
       )
