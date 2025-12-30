@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import os
+import shutil
 import subprocess
 import sys
 from typing import Iterable
@@ -95,6 +96,12 @@ def _launch(cmd: str, window_style: str | None, cwd_raw: str | None) -> int:
         creationflags |= subprocess.CREATE_NEW_CONSOLE
 
     cmd_exe = os.environ.get("COMSPEC") or "cmd.exe"
+    if not os.path.isfile(cmd_exe):
+        resolved = shutil.which(cmd_exe)
+        if resolved:
+            cmd_exe = resolved
+        else:
+            cmd_exe = "cmd.exe"
     proc = subprocess.Popen(
         [cmd_exe, "/c", cmd],
         startupinfo=startupinfo,

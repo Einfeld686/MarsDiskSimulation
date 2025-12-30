@@ -6,111 +6,104 @@ setlocal EnableExtensions EnableDelayedExpansion
 
 
 
-if not defined PYTHON_EXE (
-
-  for %%P in (python3.11 python py) do (
-
-    if not defined PYTHON_EXE (
-
-      where %%P >nul 2>&1
-
-      if not errorlevel 1 set "PYTHON_EXE=%%P"
-
-    )
-
-  )
-
-  if not defined PYTHON_EXE (
-
-    echo.[error] python3.11/python/py not found in PATH
-
-    exit /b 1
-
-  )
-
+if not defined PYTHON_EXE (
+  for %%P in (python3.11 python py) do (
+    if not defined PYTHON_EXE (
+      where %%P >nul 2>&1
+      if not errorlevel 1 set "PYTHON_EXE=%%P"
+    )
+  )
+  if not defined PYTHON_EXE (
+    echo.[error] python3.11/python/py not found in PATH
+    exit /b 1
+  )
+)
+
+set "PYTHON_ARGS_SET=0"
+if defined PYTHON_ARGS set "PYTHON_ARGS_SET=1"
+set "PYTHON_EXE_RAW=%PYTHON_EXE%"
+if "!PYTHON_ARGS_SET!"=="0" set "PYTHON_ARGS="
+if "!PYTHON_EXE_RAW:~0,1!"=="^"" (
+  if "!PYTHON_ARGS_SET!"=="0" (
+    for /f "tokens=2* delims="" %%A in ("!PYTHON_EXE_RAW!") do (
+      set "PYTHON_EXE=%%A"
+      set "PYTHON_ARGS=%%B"
+    )
+  ) else (
+    for /f "tokens=2 delims="" %%A in ("!PYTHON_EXE_RAW!") do set "PYTHON_EXE=%%A"
+  )
 ) else (
-
-  set "PYTHON_EXE_CHECK=%PYTHON_EXE%"
-  set "PYTHON_EXE_CHECK=%PYTHON_EXE_CHECK:"=%"
-  for /f "tokens=1" %%A in ("%PYTHON_EXE_CHECK%") do set "PYTHON_EXE_HEAD=%%A"
-  if not exist "%PYTHON_EXE_CHECK%" (
-
-    if /i "%PYTHON_EXE_CHECK%"=="%PYTHON_EXE_HEAD%" (
-      where %PYTHON_EXE_HEAD% >nul 2>&1
-      if errorlevel 1 (
-        echo.[error] %PYTHON_EXE% not found in PATH
-        exit /b 1
+  set "PYTHON_EXE=!PYTHON_EXE_RAW!"
+  if "!PYTHON_ARGS_SET!"=="0" (
+    set "PYTHON_HAS_SPACE=0"
+    if not "!PYTHON_EXE_RAW: =!"=="!PYTHON_EXE_RAW!" set "PYTHON_HAS_SPACE=1"
+    set "PYTHON_RAW_LOOKS_PATH=0"
+    for %%I in ("!PYTHON_EXE_RAW!") do (
+      if not "%%~pI"=="" set "PYTHON_RAW_LOOKS_PATH=1"
+      if not "%%~dI"=="" set "PYTHON_RAW_LOOKS_PATH=1"
+    )
+    if "!PYTHON_HAS_SPACE!"=="1" if "!PYTHON_RAW_LOOKS_PATH!"=="0" (
+      for /f "tokens=1* delims= " %%A in ("!PYTHON_EXE_RAW!") do (
+        set "PYTHON_EXE=%%A"
+        set "PYTHON_ARGS=%%B"
       )
     )
-
+    if "!PYTHON_HAS_SPACE!"=="1" if "!PYTHON_RAW_LOOKS_PATH!"=="1" (
+      echo.[warn] PYTHON_EXE looks like a path with spaces; quote it or set PYTHON_ARGS.
+    )
   )
-
 )
-
-set "PYTHON_EXE_RAW=%PYTHON_EXE%"
-set "PYTHON_EXE_RAW=%PYTHON_EXE_RAW:"=%"
-if not defined PYTHON_EXE_RAW (
-
-  echo.[error] PYTHON_EXE is empty after sanitizing quotes
-
+if not defined PYTHON_EXE (
+  echo.[error] PYTHON_EXE is empty after normalization
   exit /b 1
-
 )
-
-if exist "%PYTHON_EXE_RAW%" (
-
-  set "PYTHON_EXE=%PYTHON_EXE_RAW%"
-
+set "PYTHON_LOOKS_PATH=0"
+for %%I in ("!PYTHON_EXE!") do (
+  if not "%%~pI"=="" set "PYTHON_LOOKS_PATH=1"
+  if not "%%~dI"=="" set "PYTHON_LOOKS_PATH=1"
+)
+if "!PYTHON_LOOKS_PATH!"=="1" (
+  if not exist "!PYTHON_EXE!" (
+    set "PYTHON_FALLBACK="
+    for %%P in (python3.11 python py) do (
+      if not defined PYTHON_FALLBACK (
+        where %%P >nul 2>&1
+        if not errorlevel 1 set "PYTHON_FALLBACK=%%P"
+      )
+    )
+    if defined PYTHON_FALLBACK (
+      echo.[warn] python path missing; falling back to !PYTHON_FALLBACK!
+      set "PYTHON_EXE=!PYTHON_FALLBACK!"
+      if "!PYTHON_ARGS_SET!"=="0" set "PYTHON_ARGS="
+    ) else (
+      echo.[error] resolved python executable not found: "!PYTHON_EXE!"
+      exit /b 1
+    )
+  )
 ) else (
-
-  rem Resolve a real python executable path when PYTHON_EXE includes arguments (e.g., "py -3.11").
-
-  set "PY_RESOLVE_DIR=%TEMP%"
-
-  if "%PY_RESOLVE_DIR%"=="" set "PY_RESOLVE_DIR=%CD%\\tmp"
-
-  if not exist "%PY_RESOLVE_DIR%" mkdir "%PY_RESOLVE_DIR%" >nul 2>&1
-
-  set "PY_RESOLVE_PY=%PY_RESOLVE_DIR%\\marsdisk_pyresolve_%RANDOM%.py"
-
-  set "PY_RESOLVE_OUT=%PY_RESOLVE_DIR%\\marsdisk_pyresolve_%RANDOM%.txt"
-
-  >"%PY_RESOLVE_PY%" echo import sys
-
-  >>"%PY_RESOLVE_PY%" echo print(sys.executable)
-
-  set "PYTHON_CALL=%PYTHON_EXE_RAW%"
-
-  call %PYTHON_CALL% "%PY_RESOLVE_PY%" > "%PY_RESOLVE_OUT%" 2>nul
-
-  set "PYTHON_EXE="
-
-  if exist "%PY_RESOLVE_OUT%" set /p PYTHON_EXE=<"%PY_RESOLVE_OUT%"
-
-  del "%PY_RESOLVE_PY%" >nul 2>&1
-
-  del "%PY_RESOLVE_OUT%" >nul 2>&1
-
-  if not defined PYTHON_EXE (
-
-    echo.[error] failed to resolve python executable from "%PYTHON_EXE_RAW%"
-
-    exit /b 1
-
+  where !PYTHON_EXE! >nul 2>&1
+  if errorlevel 1 (
+    set "PYTHON_FALLBACK="
+    for %%P in (python3.11 python py) do (
+      if not defined PYTHON_FALLBACK (
+        where %%P >nul 2>&1
+        if not errorlevel 1 set "PYTHON_FALLBACK=%%P"
+      )
+    )
+    if defined PYTHON_FALLBACK (
+      echo.[warn] !PYTHON_EXE! not found; falling back to !PYTHON_FALLBACK!
+      set "PYTHON_EXE=!PYTHON_FALLBACK!"
+      if "!PYTHON_ARGS_SET!"=="0" set "PYTHON_ARGS="
+    ) else (
+      echo.[error] !PYTHON_EXE! not found in PATH
+      exit /b 1
+    )
   )
-
-  if not exist "%PYTHON_EXE%" (
-
-    echo.[error] resolved python executable not found: "%PYTHON_EXE%"
-
-    exit /b 1
-
-  )
-
 )
-
-
-
+set "PYTHON_EXE_QUOTED=!PYTHON_EXE!"
+if not "!PYTHON_EXE: =!"=="!PYTHON_EXE!" set "PYTHON_EXE_QUOTED="!PYTHON_EXE!""
+set "PYTHON_CMD=!PYTHON_EXE_QUOTED!"
+if not "!PYTHON_ARGS!"=="" set "PYTHON_CMD=!PYTHON_EXE_QUOTED! !PYTHON_ARGS!"
 for %%I in ("%~f0") do set "SCRIPT_DIR=%%~dpI"
 
 set "REPO_ROOT=%SCRIPT_DIR%..\\..\\.."
@@ -354,7 +347,7 @@ if not defined OUT_ROOT if "%AUTO_OUT_ROOT%"=="1" (
   if "!OUT_ROOT:~1,1!"==":" set "CHECK_PATH=!OUT_ROOT:~0,3!"
   if not defined CHECK_PATH if "!OUT_ROOT:~0,2!"=="\\\\" set "CHECK_PATH=!OUT_ROOT!"
   set "FREE_GB="
-  for /f "usebackq delims=" %%F in (`"%PYTHON_EXE%" -c "import os,shutil; p=os.environ.get('CHECK_PATH',''); print(shutil.disk_usage(p).free//(1024**3) if p and os.path.exists(p) else '')"`) do set "FREE_GB=%%F"
+  for /f "usebackq delims=" %%F in (`!PYTHON_CMD! -c "import os,shutil; p=os.environ.get('CHECK_PATH',''); print(shutil.disk_usage(p).free//(1024**3) if p and os.path.exists(p) else '')"`) do set "FREE_GB=%%F"
   set "FREE_GB_RAW=!FREE_GB!"
   set "FREE_GB_OK=1"
   for /f "delims=0123456789" %%A in ("!FREE_GB!") do set "FREE_GB_OK=0"
@@ -625,7 +618,7 @@ if not "%NO_PREFLIGHT%"=="1" (
 
   if "%PREFLIGHT_STRICT%"=="1" set "PREFLIGHT_STRICT_FLAG=--strict"
 
-  "%PYTHON_EXE%" "%REPO_ROOT%\\scripts\\runsets\\windows\\preflight_checks.py" --repo-root "%REPO_ROOT%" --config "%CONFIG_PATH%" --overrides "%OVERRIDES_PATH%" --out-root "%OUT_ROOT%" --python-exe "%PYTHON_EXE%" --require-git --cmd "%REPO_ROOT%\\scripts\\research\\run_temp_supply_sweep.cmd" --cmd-root "%REPO_ROOT%\\scripts\\runsets\\windows" --cmd-exclude "%REPO_ROOT%\\scripts\\runsets\\windows\\legacy" %PREFLIGHT_STRICT_FLAG%
+  !PYTHON_CMD! "%REPO_ROOT%\\scripts\\runsets\\windows\\preflight_checks.py" --repo-root "%REPO_ROOT%" --config "%CONFIG_PATH%" --overrides "%OVERRIDES_PATH%" --out-root "%OUT_ROOT%" --python-exe "!PYTHON_EXE!" --require-git --cmd "%REPO_ROOT%\\scripts\\research\\run_temp_supply_sweep.cmd" --cmd-root "%REPO_ROOT%\\scripts\\runsets\\windows" --cmd-exclude "%REPO_ROOT%\\scripts\\runsets\\windows\\legacy" %PREFLIGHT_STRICT_FLAG%
 
   if errorlevel 1 (
 
@@ -681,7 +674,7 @@ if not exist "%ARCHIVE_TMP%" mkdir "%ARCHIVE_TMP%" >nul 2>&1
 
 set "ARCHIVE_SET=%ARCHIVE_TMP%\\marsdisk_archive_overrides_%RANDOM%.cmd"
 
-"%PYTHON_EXE%" "%REPO_ROOT%\\scripts\\runsets\\common\\read_overrides_cmd.py" --file "%OVERRIDES_PATH%" --out "%ARCHIVE_SET%"
+!PYTHON_CMD! "%REPO_ROOT%\\scripts\\runsets\\common\\read_overrides_cmd.py" --file "%OVERRIDES_PATH%" --out "%ARCHIVE_SET%"
 
 if errorlevel 1 (
 
@@ -748,6 +741,13 @@ if defined RUN_TS (
   set "RUN_TS=!RUN_TS:/=-!"
 
   set "RUN_TS=!RUN_TS:\=-!"
+  set "RUN_TS=!RUN_TS:&=_!"
+  set "RUN_TS=!RUN_TS:|=_!"
+  set "RUN_TS=!RUN_TS:<=_!"
+  set "RUN_TS=!RUN_TS:>=_!"
+  set "RUN_TS=!RUN_TS:?=_!"
+  set "RUN_TS=!RUN_TS:*=_!"
+  set "RUN_TS=!RUN_TS:!=_!"
 
 )
 
@@ -825,7 +825,7 @@ if "%SWEEP_PARALLEL%"=="1" if not "%SIZE_PROBE_ENABLE%"=="0" if "%PARALLEL_JOBS_
 
   set "SIZE_PROBE_JOBS="
 
-  for /f "usebackq delims=" %%J in (`"%PYTHON_EXE%" scripts\\tests\\measure_case_output_size.py --batch-root "!SIZE_PROBE_BATCH_ROOT!" --sweep-tag size_probe --t %SIZE_PROBE_T% --eps %SIZE_PROBE_EPS% --tau %SIZE_PROBE_TAU% --batch-seed %SIZE_PROBE_SEED% --hooks "%SIZE_PROBE_HOOKS%" --overrides "%OVERRIDES_PATH%" --reserve-gb %SIZE_PROBE_RESERVE_GB% --safety-fraction %SIZE_PROBE_FRACTION% --temp-root "%TEMP_ROOT%" --skip-pip --print-recommended-jobs --quiet`) do set "SIZE_PROBE_JOBS=%%J"
+  for /f "usebackq delims=" %%J in (`!PYTHON_CMD! scripts\\tests\\measure_case_output_size.py --batch-root "!SIZE_PROBE_BATCH_ROOT!" --sweep-tag size_probe --t %SIZE_PROBE_T% --eps %SIZE_PROBE_EPS% --tau %SIZE_PROBE_TAU% --batch-seed %SIZE_PROBE_SEED% --hooks "%SIZE_PROBE_HOOKS%" --overrides "%OVERRIDES_PATH%" --reserve-gb %SIZE_PROBE_RESERVE_GB% --safety-fraction %SIZE_PROBE_FRACTION% --temp-root "%TEMP_ROOT%" --skip-pip --print-recommended-jobs --quiet`) do set "SIZE_PROBE_JOBS=%%J"
 
   if errorlevel 1 echo.[warn] size-probe failed; keeping PARALLEL_JOBS=%PARALLEL_JOBS%
 
@@ -858,7 +858,7 @@ if "%SWEEP_PARALLEL%"=="1" if not "%SIZE_PROBE_ENABLE%"=="0" if "%PARALLEL_JOBS_
 if "%PARALLEL_JOBS_DEFAULT%"=="1" if "%PARALLEL_JOBS%"=="1" (
   if defined CPU_UTIL_TARGET_PERCENT (
     if /i "%PARALLEL_MODE%"=="cell" if /i "%MARSDISK_CELL_JOBS%"=="auto" (
-      for /f "usebackq tokens=1-7 delims=|" %%A in (`"%PYTHON_EXE%" scripts\\runsets\\common\\calc_cell_jobs.py`) do (
+      for /f "usebackq tokens=1-7 delims=|" %%A in (`!PYTHON_CMD! scripts\\runsets\\common\\calc_cell_jobs.py`) do (
         set "CELL_MEM_TOTAL_GB=%%A"
         set "CELL_CPU_LOGICAL=%%B"
         set "CELL_MEM_FRACTION_USED=%%C"
@@ -870,7 +870,7 @@ if "%PARALLEL_JOBS_DEFAULT%"=="1" if "%PARALLEL_JOBS%"=="1" (
     )
     set "CPU_TARGET_CORES="
     set "PARALLEL_JOBS_TARGET="
-    for /f "usebackq tokens=1,2 delims=|" %%A in (`"%PYTHON_EXE%" scripts\\runsets\\common\\calc_cpu_target_jobs.py`) do (
+    for /f "usebackq tokens=1,2 delims=|" %%A in (`!PYTHON_CMD! scripts\\runsets\\common\\calc_cpu_target_jobs.py`) do (
       set "CPU_TARGET_CORES=%%A"
       set "PARALLEL_JOBS_TARGET=%%B"
     )
@@ -880,7 +880,7 @@ if "%PARALLEL_JOBS_DEFAULT%"=="1" if "%PARALLEL_JOBS%"=="1" (
       if !PARALLEL_JOBS_TARGET! GTR 1 (
         if /i "%CPU_UTIL_RESPECT_MEM%"=="1" (
           set "PARALLEL_JOBS_MEM="
-          for /f "usebackq tokens=1-3 delims=|" %%A in (`"%PYTHON_EXE%" scripts\\runsets\\common\\calc_parallel_jobs.py`) do (
+          for /f "usebackq tokens=1-3 delims=|" %%A in (`!PYTHON_CMD! scripts\\runsets\\common\\calc_parallel_jobs.py`) do (
             set "PARALLEL_JOBS_MEM=%%C"
           )
           set "PARALLEL_JOBS_MEM_OK=1"
