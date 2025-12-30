@@ -1,7 +1,7 @@
 # 1D 性能改善プラン（セルループ中心）
 
 **作成日**: 2025-12-30  
-**ステータス**: 提案中  
+**ステータス**: 完了  
 **対象**: `marsdisk/run_one_d.py`, `marsdisk/physics/collisions_smol.py`, `marsdisk/physics/smol.py`, `marsdisk/output_schema.py`, `marsdisk/io/streaming.py`
 
 ---
@@ -145,7 +145,6 @@ I/O と記録生成の縮退も同時に効く。
 1) 1D セルループ再設計
 - [x] `_run_cell_indices` の出力を tuple 化（records/diagnostics は optional）
 - [x] ステップ集計値を NumPy 配列化して `sum` を削減
-- [ ] `step_records` の `t_coll_kernel_min` 付与を **ベクトル的に実施**（可能なら）
 
 2) 出力経路の縮退
 - [x] `psd_hist_records` は `io.psd_history=false` の場合のみ停止
