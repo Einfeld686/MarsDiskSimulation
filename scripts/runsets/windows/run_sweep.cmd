@@ -262,40 +262,74 @@ if "%QUIET_MODE%"=="1" (
   set "LOG_RUN=echo.[run]"
 )
 
-if not defined AUTO_OUT_ROOT set "AUTO_OUT_ROOT=1"
-if not defined INTERNAL_OUT_ROOT set "INTERNAL_OUT_ROOT=out"
-if not defined EXTERNAL_OUT_ROOT set "EXTERNAL_OUT_ROOT=F:\marsdisk_out"
-if not defined MIN_INTERNAL_FREE_GB set "MIN_INTERNAL_FREE_GB=100"
+if not defined AUTO_OUT_ROOT set "AUTO_OUT_ROOT=1"
+if not defined INTERNAL_OUT_ROOT (
+  set "INTERNAL_OUT_ROOT=out"
+  set "REPO_DRIVE="
+  if "!REPO_ROOT:~1,1!"==":" set "REPO_DRIVE=!REPO_ROOT:~0,2!"
+  set "SYSTEM_DRIVE=%SystemDrive%"
+  if not "!REPO_DRIVE!"=="" if not "%SYSTEM_DRIVE%"=="" (
+    if /i not "!REPO_DRIVE!"=="%SYSTEM_DRIVE%" (
+      if defined LOCALAPPDATA (
+        set "INTERNAL_OUT_ROOT=%LOCALAPPDATA%\\marsdisk_out"
+      ) else if defined USERPROFILE (
+        set "INTERNAL_OUT_ROOT=%USERPROFILE%\\marsdisk_out"
+      ) else (
+        set "INTERNAL_OUT_ROOT=%SYSTEM_DRIVE%\\marsdisk_out"
+      )
+    )
+  )
+)
+if not defined EXTERNAL_OUT_ROOT set "EXTERNAL_OUT_ROOT=F:\marsdisk_out"
+if not defined MIN_INTERNAL_FREE_GB set "MIN_INTERNAL_FREE_GB=100"
 
-if not defined OUT_ROOT if "%AUTO_OUT_ROOT%"=="1" (
-  set "OUT_ROOT=%INTERNAL_OUT_ROOT%"
-  call :ensure_abs OUT_ROOT
-  if not exist "!OUT_ROOT!" mkdir "!OUT_ROOT!" >nul 2>&1
+if not defined OUT_ROOT if "%AUTO_OUT_ROOT%"=="1" (
+  set "OUT_ROOT=%INTERNAL_OUT_ROOT%"
+  call :ensure_abs OUT_ROOT
+  if not exist "!OUT_ROOT!" mkdir "!OUT_ROOT!" >nul 2>&1
   set "CHECK_PATH=!OUT_ROOT!"
   set "FREE_GB="
   for /f "usebackq delims=" %%F in (`"%PYTHON_EXE%" -c "import os,shutil; p=os.environ.get('CHECK_PATH',''); print(shutil.disk_usage(p).free//(1024**3) if p and os.path.exists(p) else '')"`) do set "FREE_GB=%%F"
   set "FREE_GB_RAW=!FREE_GB!"
   set "FREE_GB_OK=1"
   for /f "delims=0123456789" %%A in ("!FREE_GB!") do set "FREE_GB_OK=0"
-  if "!FREE_GB_OK!"=="1" (
-    if !FREE_GB! LSS %MIN_INTERNAL_FREE_GB% (
-      set "OUT_ROOT=%EXTERNAL_OUT_ROOT%"
-      call :ensure_abs OUT_ROOT
-      set "OUT_ROOT_SOURCE=external"
-    ) else (
-      set "OUT_ROOT_SOURCE=internal"
-    )
-  ) else (
+  if "!FREE_GB_OK!"=="1" (
+    if !FREE_GB! LSS %MIN_INTERNAL_FREE_GB% (
+      set "OUT_ROOT=%EXTERNAL_OUT_ROOT%"
+      call :ensure_abs OUT_ROOT
+      set "OUT_ROOT_SOURCE=external"
+    ) else (
+      set "OUT_ROOT_SOURCE=internal"
+    )
+  ) else (
     if defined FREE_GB_RAW echo.[warn] auto-out-root free space check failed: "!FREE_GB_RAW!"
-    set "OUT_ROOT_SOURCE=internal"
-  )
-  %LOG_SYS% out_root auto: source=!OUT_ROOT_SOURCE! free_gb=!FREE_GB! min_gb=%MIN_INTERNAL_FREE_GB% out_root="!OUT_ROOT!"
-)
-
-call :ensure_abs CONFIG_PATH
-call :ensure_abs OVERRIDES_PATH
-if defined STUDY_PATH call :ensure_abs STUDY_PATH
-if defined OUT_ROOT call :ensure_abs OUT_ROOT
+    set "OUT_ROOT_SOURCE=internal"
+  )
+  if /i "!OUT_ROOT_SOURCE!"=="external" (
+    set "OUT_ROOT_DRIVE="
+    set "OUT_ROOT_DRIVE_OK=1"
+    if "!OUT_ROOT:~1,1!"==":" set "OUT_ROOT_DRIVE=!OUT_ROOT:~0,2!"
+    if defined OUT_ROOT_DRIVE (
+      if not exist "!OUT_ROOT_DRIVE!\\" set "OUT_ROOT_DRIVE_OK=0"
+    ) else if "!OUT_ROOT:~0,2!"=="\\\\" (
+      if not exist "!OUT_ROOT!" set "OUT_ROOT_DRIVE_OK=0"
+    )
+    if "!OUT_ROOT_DRIVE_OK!"=="0" (
+      echo.[warn] external out_root unavailable: "!OUT_ROOT!" -> fallback to "!INTERNAL_OUT_ROOT!"
+      set "OUT_ROOT=%INTERNAL_OUT_ROOT%"
+      call :ensure_abs OUT_ROOT
+      set "OUT_ROOT_SOURCE=internal_fallback"
+    )
+  )
+  %LOG_SYS% out_root auto: source=!OUT_ROOT_SOURCE! free_gb=!FREE_GB! min_gb=%MIN_INTERNAL_FREE_GB% out_root="!OUT_ROOT!"
+)
+
+call :ensure_abs CONFIG_PATH
+call :ensure_abs OVERRIDES_PATH
+if defined STUDY_PATH call :ensure_abs STUDY_PATH
+if defined OUT_ROOT call :ensure_abs OUT_ROOT
+if defined OUT_ROOT call :ensure_dir OUT_ROOT
+if errorlevel 1 exit /b 1
 
 %LOG_INFO% run_sweep start
 %LOG_INFO% config="%CONFIG_PATH%" overrides="%OVERRIDES_PATH%" study="%STUDY_PATH%" out_root="%OUT_ROOT%"
@@ -387,33 +421,14 @@ rem Temperature stop is the default (COOL_TO_K=1000) unless overridden.
 
 if not defined COOL_TO_K set "COOL_TO_K=1000"
 
-rem To force a fixed horizon, set COOL_TO_K=none and T_END_YEARS explicitly.
-
-if not defined AUTO_JOBS set "AUTO_JOBS=0"
-
-if not defined PARALLEL_JOBS (
-
-  set "PARALLEL_JOBS=1"
-
-  set "PARALLEL_JOBS_DEFAULT=1"
-
-) else (
-
-  set "PARALLEL_JOBS_DEFAULT=0"
-
-)
-
-if not defined SWEEP_PARALLEL (
-
-  set "SWEEP_PARALLEL=1"
-
-  set "SWEEP_PARALLEL_DEFAULT=1"
-
-) else (
-
-  set "SWEEP_PARALLEL_DEFAULT=0"
-
-)
+rem To force a fixed horizon, set COOL_TO_K=none and T_END_YEARS explicitly.
+
+rem Fixed parallel settings for 24 logical processors (12 cores), ~80% target.
+set "AUTO_JOBS=0"
+set "PARALLEL_JOBS=10"
+set "PARALLEL_JOBS_DEFAULT=0"
+set "SWEEP_PARALLEL=1"
+set "SWEEP_PARALLEL_DEFAULT=0"
 
 if not defined PARALLEL_WINDOW_STYLE set "PARALLEL_WINDOW_STYLE=Hidden"
 
@@ -448,7 +463,7 @@ if not "%CPU_UTIL_TARGET_PERCENT%"=="0" (
   if "%SWEEP_PARALLEL%"=="0" set "SWEEP_PARALLEL_DEFAULT=1"
 )
 
-if not defined SIZE_PROBE_ENABLE set "SIZE_PROBE_ENABLE=1"
+if not defined SIZE_PROBE_ENABLE set "SIZE_PROBE_ENABLE=1"
 
 if not defined SIZE_PROBE_RESERVE_GB set "SIZE_PROBE_RESERVE_GB=50"
 
@@ -464,6 +479,10 @@ if not defined SIZE_PROBE_SEED set "SIZE_PROBE_SEED=0"
 
 if not defined SIZE_PROBE_HOOKS set "SIZE_PROBE_HOOKS=plot,eval"
 
+rem Fixed per-process thread cap: PARALLEL_JOBS(10) x CELL_THREAD_LIMIT(2) = 20.
+set "CELL_THREAD_LIMIT=2"
+set "CELL_THREAD_LIMIT_DEFAULT=0"
+
 if /i "%PARALLEL_MODE%"=="cell" (
 
   if not defined CELL_THREAD_LIMIT (
@@ -860,7 +879,7 @@ exit /b 1
 
 
 
-:ensure_abs
+:ensure_abs
 
 set "VAR_NAME=%~1"
 
@@ -874,7 +893,34 @@ if "!VAR_VAL:~0,2!"=="\\\\" exit /b 0
 
 if "!VAR_VAL:~0,1!"=="\\" exit /b 0
 
-set "%VAR_NAME%=%REPO_ROOT%\\!VAR_VAL!"
-
-exit /b 0
+set "%VAR_NAME%=%REPO_ROOT%\\!VAR_VAL!"
+
+exit /b 0
+
+:ensure_dir
+
+set "VAR_NAME=%~1"
+set "VAR_VAL=!%VAR_NAME%!"
+if not defined VAR_VAL exit /b 0
+
+set "DRIVE_OK=1"
+if "!VAR_VAL:~1,1!"==":" (
+  set "DRIVE_ROOT=!VAR_VAL:~0,2!"
+  if not exist "!DRIVE_ROOT!\\" set "DRIVE_OK=0"
+)
+if "!VAR_VAL:~0,2!"=="\\\\" (
+  if not exist "!VAR_VAL!" set "DRIVE_OK=0"
+)
+if "!DRIVE_OK!"=="0" (
+  echo.[error] %VAR_NAME% drive/path unavailable: "!VAR_VAL!"
+  exit /b 1
+)
+
+if not exist "!VAR_VAL!" mkdir "!VAR_VAL!" >nul 2>&1
+if not exist "!VAR_VAL!" (
+  echo.[error] %VAR_NAME% unavailable: "!VAR_VAL!"
+  exit /b 1
+)
+
+exit /b 0
 

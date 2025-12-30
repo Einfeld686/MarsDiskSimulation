@@ -54,6 +54,66 @@
 
 ---
 
+## 実装メモ（安全化のための具体要件）
+
+### ColumnarBuffer API 契約（必須）
+
+- `append_row(record: Mapping[str, Any]) -> None`  
+  行辞書から列配列へ追加。欠損キーは「未設定」として扱い、`ensure_columns` 適用時に補完。
+- `row_count: int` / `__len__`  
+  現在の行数を返す。Streaming のメモリ推定で使用。
+- `clear() -> None`  
+  列配列を空にし、row_count を 0 に戻す。
+- `to_table(ensure_columns: Iterable[str] | None = None) -> pa.Table`  
+  欠損列を `None` で埋め、`ensure_columns` があれば列順を固定。
+- `columns() -> Iterable[str]`（任意）  
+  現在保持している列名一覧。
+
+### ColumnarBuffer 内部表現（推奨）
+
+- `dict[str, list]` を基本にする（numpy 配列は最後に変換）。
+- 1 行追加の O(列数) を許容し、flush 直前に `pyarrow.Table` へ変換。
+- 追加順に列を保持し、`output_schema` で指定された列順に再配列する。
+
+### Streaming 統合の要点
+
+- `StreamingState.flush` は `history.records` が list か ColumnarBuffer かを判定。  
+  - list の場合は現行の `writer.write_parquet` を継続  
+  - ColumnarBuffer の場合は `to_table` を使い `writer.write_parquet_table` へ
+- `StreamingState._estimate_bytes` は `row_count` を使う（list と ColumnarBuffer の両方対応）。
+- `history.records.clear()` は ColumnarBuffer の `clear()` を呼ぶか、`history` 側に共通インタフェースを持たせる。
+
+### writer API の設計要点
+
+- `write_parquet_columns` と `write_parquet_table` は `write_parquet` と同等の `units` / `definitions` を付与。
+- `ensure_columns` を受け取り、欠損列は `None` で補完。
+- dtype 安定化は `write_parquet*` 内で統一する（bool/float/str の混在を許容）。
+
+### run_one_d 実装の具体化
+
+- `step_records` は ColumnarBuffer を使用。
+- `t_coll_kernel_min` は **step 終端で `np.full(n, value)` 相当を一括追加**。
+- `psd_hist_records` / `mass_budget_cells` は当面 list[dict] を維持。
+- row/columnar 切替は `io.record_storage_mode` + 環境変数の優先順位で決定。
+
+### run_zero_d 実装の具体化（任意）
+
+- `records` と `diagnostics` のみに ColumnarBuffer を適用。
+- `summary.json` 生成や `checks/mass_budget.csv` の有無は row と同じにする。
+
+### トグル優先順位（明文化）
+
+1. `MARSDISK_DISABLE_COLUMNAR=1` → **強制 row**
+2. `io.record_storage_mode` or `io.columnar_records` → row/columnar を選択
+3. 未設定なら既定は row
+
+### 失敗時のフォールバック
+
+- ColumnarBuffer の `to_table` が失敗した場合は **row に落として継続**（ログ warning）。
+- Parquet 書き込み失敗は現行の例外処理と同一扱い。
+
+---
+
 ## 実装フェーズ
 
 ### フェーズA: ColumnarBuffer と writer の土台
@@ -152,7 +212,7 @@
   **設定**: `geometry.mode=1D`, `geometry.Nr=2`, `numerics.t_end_orbits=0.02`, `numerics.dt_init=50.0`, `phase.enabled=false`, `radiation.TM_K=2000.0`, `io.streaming.enable=false`  
   **期待**:  
   - 列集合が一致（`ZERO_D_SERIES_KEYS + ONE_D_EXTRA_SERIES_KEYS`）  
-  - `time`, `dt`, `M_loss_cum`, `M_out_dot` など主要列は `np.allclose` で一致  
+  - `time`, `dt`, `M_loss_cum`, `M_out_dot` など主要列は `np.allclose(rtol=1e-12, atol=0.0)` で一致  
   - `t_coll_kernel_min` が全行で `null` ではなく、同一 `time` 内で一定
 - **ケース: Streaming ON + columnar**  
   **設定**: 上記 + `io.streaming.enable=true`, `io.streaming.step_flush_interval=1`  
@@ -174,7 +234,14 @@
 
 - **ケース: run_zero_d の row/columnar 比較**  
   **設定**: 0D の小規模ケース（`t_end_years` を短く）  
-  **期待**: `ZERO_D_SERIES_KEYS`/`ZERO_D_DIAGNOSTIC_KEYS` の列集合一致と主要列一致
+  **期待**: `ZERO_D_SERIES_KEYS`/`ZERO_D_DIAGNOSTIC_KEYS` の列集合一致と主要列一致（`rtol=1e-12`）
+
+### 比較基準（許容誤差）
+
+- **float 系**: `rtol=1e-12, atol=0.0` を基本。
+- **積分・平均系**（`*_avg`, `M_loss_cum` 等）: `rtol=1e-6` まで許容。
+- **bool/カテゴリ列**: `np.array_equal` で一致確認。
+- **NaN 含む列**: `np.isnan` の位置一致を先に確認した上で値比較。
 
 ---
 
