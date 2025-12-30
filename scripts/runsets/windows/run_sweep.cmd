@@ -262,7 +262,7 @@ if "%QUIET_MODE%"=="1" (
   set "LOG_RUN=echo.[run]"
 )
 
-if not defined AUTO_OUT_ROOT set "AUTO_OUT_ROOT=1"
+if not defined AUTO_OUT_ROOT set "AUTO_OUT_ROOT=0"
 if not defined INTERNAL_OUT_ROOT (
   set "INTERNAL_OUT_ROOT=out"
   set "REPO_DRIVE="
@@ -322,6 +322,12 @@ if not defined OUT_ROOT if "%AUTO_OUT_ROOT%"=="1" (
     )
   )
   %LOG_SYS% out_root auto: source=!OUT_ROOT_SOURCE! free_gb=!FREE_GB! min_gb=%MIN_INTERNAL_FREE_GB% out_root="!OUT_ROOT!"
+)
+if not defined OUT_ROOT if not "%AUTO_OUT_ROOT%"=="1" (
+  set "OUT_ROOT=%EXTERNAL_OUT_ROOT%"
+  call :ensure_abs OUT_ROOT
+  set "OUT_ROOT_SOURCE=external_default"
+  %LOG_SYS% out_root fixed: source=!OUT_ROOT_SOURCE! out_root="!OUT_ROOT!"
 )
 
 call :ensure_abs CONFIG_PATH
