@@ -67,6 +67,7 @@ def main() -> int:
     ap.add_argument("--dt-init", default="5000", help="Initial dt override (numeric or 'auto').")
     ap.add_argument("--seed", type=int, default=12345, help="dynamics.rng_seed override.")
     ap.add_argument("--cell-jobs", type=int, default=4, help="MARSDISK_CELL_JOBS for parallel-on case.")
+    ap.add_argument("--geometry-nr", type=int, default=None, help="Override geometry.Nr for 1D runs.")
     ap.add_argument("--no-quiet", action="store_true", help="Show INFO logs.")
     args = ap.parse_args()
 
@@ -82,6 +83,8 @@ def main() -> int:
         f"numerics.dt_init={args.dt_init}",
         f"dynamics.rng_seed={args.seed}",
     ]
+    if args.geometry_nr is not None:
+        overrides.append(f"geometry.Nr={args.geometry_nr}")
 
     common_env = os.environ.copy()
     common_env.setdefault("FORCE_STREAMING_OFF", "1")

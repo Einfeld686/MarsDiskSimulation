@@ -71,6 +71,7 @@ def main() -> int:
     ap.add_argument("--t-end-years", type=float, default=0.02, help="Integration span in years.")
     ap.add_argument("--dt-init", default="5000", help="Initial dt override (numeric or 'auto').")
     ap.add_argument("--seed", type=int, default=12345, help="dynamics.rng_seed override.")
+    ap.add_argument("--geometry-nr", type=int, default=None, help="Override geometry.Nr.")
     ap.add_argument("--top-n", type=int, default=30, help="Top functions to dump in report.")
     ap.add_argument(
         "--disable-numba",
@@ -105,6 +106,8 @@ def main() -> int:
         "--override",
         f"dynamics.rng_seed={args.seed}",
     ]
+    if args.geometry_nr is not None:
+        argv.extend(["--override", f"geometry.Nr={args.geometry_nr}"])
     if not args.no_quiet:
         argv.append("--quiet")
 
