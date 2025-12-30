@@ -23,6 +23,14 @@ if not defined PYTHON_EXE (
   )
 )
 
+if defined CI (
+  "%PYTHON_EXE%" -c "import sys; raise SystemExit(0 if sys.version_info >= (3,11) else 1)" >nul 2>&1
+  if errorlevel 1 (
+    echo.[error] python 3.11+ is required in CI
+    exit /b 1
+  )
+)
+
 set "CONFIG_PATH=scripts\runsets\common\base.yml"
 set "OVERRIDES_PATH=scripts\runsets\windows\overrides.txt"
 set "OUT_ROOT="
@@ -205,8 +213,16 @@ if defined OUT_ROOT set "OUT_ROOT=%OUT_ROOT%"
 for %%I in ("%~dp0..\..\..") do set "REPO_ROOT=%%~fI"
 pushd "%REPO_ROOT%" >nul
 
+if defined OUT_ROOT (
+  for %%I in ("%OUT_ROOT%") do set "OUT_ROOT=%%~fI"
+)
+
 echo.[info] preflight checks
-"%PYTHON_EXE%" "scripts\\runsets\\windows\\preflight_checks.py" --repo-root "%REPO_ROOT%" --config "%CONFIG_PATH%" --overrides "%OVERRIDES_PATH%" --out-root "%OUT_ROOT%" --require-git --cmd "%REPO_ROOT%\\scripts\\research\\run_temp_supply_sweep.cmd" --cmd-root "%REPO_ROOT%\\scripts\\runsets\\windows" --cmd-exclude "%REPO_ROOT%\\scripts\\runsets\\windows\\legacy"
+if defined CI (
+  "%PYTHON_EXE%" "scripts\\runsets\\windows\\preflight_checks.py" --repo-root "%REPO_ROOT%" --config "%CONFIG_PATH%" --overrides "%OVERRIDES_PATH%" --out-root "%OUT_ROOT%" --require-git --cmd "%REPO_ROOT%\\scripts\\research\\run_temp_supply_sweep.cmd" --cmd-root "%REPO_ROOT%\\scripts\\runsets\\windows" --cmd-exclude "%REPO_ROOT%\\scripts\\runsets\\windows\\legacy" --cmd-allowlist "%REPO_ROOT%\\scripts\\runsets\\windows\\preflight_allowlist.txt" --profile ci --format json
+) else (
+  "%PYTHON_EXE%" "scripts\\runsets\\windows\\preflight_checks.py" --repo-root "%REPO_ROOT%" --config "%CONFIG_PATH%" --overrides "%OVERRIDES_PATH%" --out-root "%OUT_ROOT%" --require-git --cmd "%REPO_ROOT%\\scripts\\research\\run_temp_supply_sweep.cmd" --cmd-root "%REPO_ROOT%\\scripts\\runsets\\windows" --cmd-exclude "%REPO_ROOT%\\scripts\\runsets\\windows\\legacy"
+)
 if errorlevel 1 (
   echo.[error] preflight failed
   popd

@@ -8,7 +8,7 @@ from typing import Any, Dict, Optional
 import numpy as np
 import pandas as pd
 
-from ..runtime import ZeroDHistory
+from ..runtime import ColumnarBuffer, ZeroDHistory
 from ..schema import Config
 from . import writer
 
@@ -36,6 +36,8 @@ def write_zero_d_history(
     step_diag_path: Optional[Path],
     orbit_rollup_enabled: bool,
     extended_diag_enabled: bool,
+    series_columns: Optional[list[str]] = None,
+    diagnostic_columns: Optional[list[str]] = None,
 ) -> None:
     """Persist time series, diagnostics, and rollups for a zero-D run."""
 
@@ -49,13 +51,25 @@ def write_zero_d_history(
         else:
             ext = "jsonl" if step_diag_format == "jsonl" else "csv"
             resolved_step_diag_path = outdir / "series" / f"step_diagnostics.{ext}"
-    writer.write_parquet(df, outdir / "series" / "run.parquet")
+    writer.write_parquet(
+        df,
+        outdir / "series" / "run.parquet",
+        ensure_columns=series_columns,
+    )
     if history.psd_hist_records:
         psd_hist_df = pd.DataFrame(history.psd_hist_records)
         writer.write_parquet(psd_hist_df, outdir / "series" / "psd_hist.parquet")
     if history.diagnostics:
-        diag_df = pd.DataFrame(history.diagnostics)
-        writer.write_parquet(diag_df, outdir / "series" / "diagnostics.parquet")
+        if isinstance(history.diagnostics, ColumnarBuffer):
+            diag_table = history.diagnostics.to_table(ensure_columns=diagnostic_columns)
+            writer.write_parquet_table(diag_table, outdir / "series" / "diagnostics.parquet")
+        else:
+            diag_df = pd.DataFrame(history.diagnostics)
+            writer.write_parquet(
+                diag_df,
+                outdir / "series" / "diagnostics.parquet",
+                ensure_columns=diagnostic_columns,
+            )
     if step_diag_enabled and resolved_step_diag_path is not None:
         writer.write_step_diagnostics(
             history.step_diag_records, resolved_step_diag_path, fmt=step_diag_format

@@ -90,14 +90,14 @@ config_keys:
   - surface.freeze_sigma
 code_path:
   - [marsdisk/physics/shielding.py#apply_shielding [L134–L217]]
-  - [marsdisk/io/diagnostics.py#write_zero_d_history [L28–L128]]
-  - [marsdisk/run_zero_d.py#run_zero_d [L316–L5199]]
+  - [marsdisk/io/diagnostics.py#write_zero_d_history [L28–L142]]
+  - [marsdisk/run_zero_d.py#run_zero_d [L318–L5218]]
 run_stage:
   - shielding application
   - surface loop (gate evaluation)
 inputs:
   - tau  # from PSD κ and Σ_surf
-  - Phi(τ, w0, g) table  # from [marsdisk/io/tables.py#load_phi_table [L405–L481]]
+  - Phi(τ, w0, g) table  # from [marsdisk/io/tables.py#load_phi_table [L405–L482]]
 outputs:
   - series.kappa_eff
   - series.sigma_tau1
@@ -143,7 +143,7 @@ config_keys:
 code_path:
   - [marsdisk/physics/psd.py#update_psd_state [L83–L175]]
   - [marsdisk/physics/psd.py#apply_uniform_size_drift [L407–L545]]
-  - [marsdisk/run_zero_d.py#run_zero_d [L316–L5199]]
+  - [marsdisk/run_zero_d.py#run_zero_d [L318–L5218]]
 run_stage:
   - PSD initialisation
   - PSD evolution hooks
@@ -195,7 +195,7 @@ config_keys:
   - numerics.dt_init
 code_path:
   - [marsdisk/physics/surface.py#step_surface_density_S1 [L110–L192]]
-  - [marsdisk/run_zero_d.py#run_zero_d [L316–L5199]]
+  - [marsdisk/run_zero_d.py#run_zero_d [L318–L5218]]
 run_stage:
   - surface loop
 inputs:
@@ -245,7 +245,7 @@ config_keys:
 code_path:
   - [marsdisk/physics/sinks.py#total_sink_timescale [L83–L160]]
   - [marsdisk/physics/sublimation.py#choose_psat_backend [L434–L557]]
-  - [marsdisk/run_zero_d.py#run_zero_d [L316–L5199]]
+  - [marsdisk/run_zero_d.py#run_zero_d [L318–L5218]]
 run_stage:
   - sink selection
   - surface loop
@@ -301,7 +301,7 @@ run_stage:
 code_path:
   - [marsdisk/schema.py#DiskGeometry [L47–L74]]
   - [marsdisk/grid.py#omega_kepler [L17–L33]]
-  - [marsdisk/io/diagnostics.py#write_zero_d_history [L28–L128]]
+  - [marsdisk/io/diagnostics.py#write_zero_d_history [L28–L142]]
 inputs:
   - r_in_RM / r_out_RM  # runtime radius is derived from disk.geometry
 outputs:

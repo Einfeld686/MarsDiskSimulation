@@ -2,6 +2,7 @@ import numpy as np
 import pytest
 
 from marsdisk.physics import collisions_smol
+from marsdisk.warnings import NumericalWarning
 
 
 def _sample_inputs():
@@ -52,9 +53,10 @@ def test_fragment_tensor_numba_failure_falls_back(monkeypatch):
 
     monkeypatch.setattr(collisions_smol, "fill_fragment_tensor_numba", _explode)
 
-    y_fallback = collisions_smol._fragment_tensor(
-        sizes, masses, edges, v_rel, rho, use_numba=True
-    )
+    with pytest.warns(NumericalWarning, match="numba kernel failed"):
+        y_fallback = collisions_smol._fragment_tensor(
+            sizes, masses, edges, v_rel, rho, use_numba=True
+        )
     y_py = collisions_smol._fragment_tensor(
         sizes, masses, edges, v_rel, rho, use_numba=False
     )

@@ -68,7 +68,8 @@ def test_run_outputs_supply_visibility_columns(tmp_path: Path) -> None:
             "supply.injection.velocity.blend_mode=linear",
         ],
     )
-    run.run_zero_d(cfg)
+    with pytest.warns(DeprecationWarning, match="External supply configuration deviates"):
+        run.run_zero_d(cfg)
 
     series_path = outdir / "series" / "run.parquet"
     diag_path = outdir / "series" / "diagnostics.parquet"

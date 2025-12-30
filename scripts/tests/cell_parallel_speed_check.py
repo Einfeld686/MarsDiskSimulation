@@ -68,6 +68,11 @@ def main() -> int:
     ap.add_argument("--seed", type=int, default=12345, help="dynamics.rng_seed override.")
     ap.add_argument("--cell-jobs", type=int, default=4, help="MARSDISK_CELL_JOBS for parallel-on case.")
     ap.add_argument("--geometry-nr", type=int, default=None, help="Override geometry.Nr for 1D runs.")
+    ap.add_argument(
+        "--force-non-windows",
+        action="store_true",
+        help="Allow cell parallel on non-Windows by setting MARSDISK_CELL_PARALLEL_FORCE=1.",
+    )
     ap.add_argument("--no-quiet", action="store_true", help="Show INFO logs.")
     args = ap.parse_args()
 
@@ -96,6 +101,8 @@ def main() -> int:
     common_env.setdefault("OPENBLAS_NUM_THREADS", "1")
     common_env.setdefault("NUMEXPR_NUM_THREADS", "1")
     common_env.setdefault("VECLIB_MAXIMUM_THREADS", "1")
+    if args.force_non_windows:
+        common_env["MARSDISK_CELL_PARALLEL_FORCE"] = "1"
 
     on_env = dict(common_env)
     on_env["MARSDISK_CELL_PARALLEL"] = "1"

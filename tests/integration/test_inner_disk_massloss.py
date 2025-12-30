@@ -50,7 +50,7 @@ def _build_config(outdir: Path, *, sinks_mode: str, enable_sublimation: bool, en
 def _write_yaml(cfg: schema.Config, path: Path) -> Path:
     yaml = YAML()
     yaml.default_flow_style = False
-    payload = cfg.model_dump(mode="json")
+    payload = cfg.model_dump(mode="json", exclude_defaults=True)
     with path.open("w", encoding="utf-8") as fh:
         yaml.dump(payload, fh)
     return path

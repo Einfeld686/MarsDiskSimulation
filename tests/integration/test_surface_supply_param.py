@@ -203,7 +203,11 @@ def test_supply_modes_preserve_columns_and_budget(tmp_path: Path) -> None:
                 cfg.shielding = schema.Shielding()
             cfg.shielding.los_geometry.path_multiplier = 2.0
             cfg.shielding.los_geometry.h_over_r = 1.0
-        run.run_zero_d(cfg)
+        if spec.mode == "const":
+            run.run_zero_d(cfg)
+        else:
+            with pytest.warns(DeprecationWarning, match="External supply configuration deviates"):
+                run.run_zero_d(cfg)
 
         df = pd.read_parquet(Path(cfg.io.outdir) / "series" / "run.parquet")
         budget = pd.read_csv(Path(cfg.io.outdir) / "checks" / "mass_budget.csv")

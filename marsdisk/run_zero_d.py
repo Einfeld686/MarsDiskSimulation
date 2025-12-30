@@ -39,6 +39,7 @@ from .orchestrator import (
 )
 from .schema import Config
 from .runtime import (
+    ColumnarBuffer,
     ProgressReporter,
     ZeroDHistory,
     ensure_finite_kappa as _ensure_finite_kappa,
@@ -80,6 +81,7 @@ from .io.streaming import (
     MEMORY_PSD_ROW_BYTES,
     MEMORY_DIAG_ROW_BYTES,
 )
+from .output_schema import ZERO_D_DIAGNOSTIC_KEYS, ZERO_D_SERIES_KEYS
 from .physics.sublimation import SublimationParams, p_sat, grain_temperature_graybody, sublimation_sink_from_dsdt
 from . import constants
 from .errors import ConfigurationError, PhysicsError, NumericalError, MarsDiskError
@@ -1468,11 +1470,6 @@ def run_zero_d(
             deprecated_supply_messages.append(f"supply.mode='{supply_mode_value}'")
         if supply_const_tfill is not None:
             deprecated_supply_messages.append("supply.const.auto_from_tau1_tfill_years set")
-        if supply_mode_value == "const" and supply_mu_orbit_cfg is None:
-            if supply_const_rate is not None and abs(float(supply_const_rate)) > 0.0:
-                deprecated_supply_messages.append("supply.const.prod_area_rate_kg_m2_s without mu_orbit10pct")
-            else:
-                deprecated_supply_messages.append("supply.const.mu_orbit10pct not set")
         if supply_orbit_fraction is not None and math.isfinite(float(supply_orbit_fraction)):
             if abs(float(supply_orbit_fraction) - 0.10) > 1.0e-6:
                 deprecated_supply_messages.append(
@@ -1501,6 +1498,11 @@ def run_zero_d(
             deep_tmix_cfg = getattr(supply_injection_cfg, "deep_reservoir_tmix_orbits", None)
             if deep_tmix_cfg is not None and math.isfinite(float(deep_tmix_cfg)) and float(deep_tmix_cfg) > 0.0:
                 injection_flags.append(f"deep_reservoir_tmix_orbits={float(deep_tmix_cfg):.3g}")
+            if (
+                injection_flags == [f"mode='{supply_injection_mode}'"]
+                and supply_injection_mode == "initial_psd"
+            ):
+                injection_flags = []
             if injection_flags:
                 deprecated_supply_messages.append(f"supply.injection ({', '.join(injection_flags)})")
             default_velocity = getattr(default_injection, "velocity", None)
@@ -1823,6 +1825,14 @@ def run_zero_d(
     if psd_history_stride < 1:
         psd_history_stride = 1
     streaming_merge_completed: Optional[bool] = None
+    series_columns = list(ZERO_D_SERIES_KEYS)
+    diagnostic_columns = list(ZERO_D_DIAGNOSTIC_KEYS)
+    record_storage_mode = str(getattr(cfg.io, "record_storage_mode", "row") or "row").lower()
+    if record_storage_mode not in {"row", "columnar"}:
+        record_storage_mode = "row"
+    columnar_enabled = record_storage_mode == "columnar"
+    if _env_flag("MARSDISK_DISABLE_COLUMNAR") is True:
+        columnar_enabled = False
     streaming_state = StreamingState(
         enabled=streaming_enabled,
         outdir=Path(cfg.io.outdir),
@@ -1835,6 +1845,8 @@ def run_zero_d(
         step_diag_enabled=step_diag_enabled,
         step_diag_path=step_diag_path,
         step_diag_format=step_diag_format,
+        series_columns=series_columns,
+        diagnostic_columns=diagnostic_columns,
     )
 
     energy_streaming_cfg = getattr(getattr(cfg.diagnostics, "energy_bookkeeping", None), "stream", True)
@@ -1847,6 +1859,9 @@ def run_zero_d(
 
     last_step_index = max(start_step - 1, -1)
     history = ZeroDHistory()
+    if columnar_enabled:
+        history.records = ColumnarBuffer()
+        history.diagnostics = ColumnarBuffer()
 
     def _build_checkpoint_state(step_no: int, time_after_step: float) -> checkpoint_io.CheckpointState:
         supply_payload: Dict[str, Any] = {}
@@ -2092,11 +2107,9 @@ def run_zero_d(
                 not blowout_effective_warned
                 and a_blow_effective_step > a_blow_step * (1.0 + 1.0e-12)
             ):
-                warnings.warn(
+                logger.info(
                     "s_blow_m now records the raw blow-out radius; use s_blow_m_effective for the "
-                    "size-floor-clipped value.",
-                    DeprecationWarning,
-                    stacklevel=2,
+                    "size-floor-clipped value."
                 )
                 blowout_effective_warned = True
             qpr_for_blow_step = qpr_for_blow
@@ -4071,7 +4084,11 @@ def run_zero_d(
 
     df: Optional[pd.DataFrame] = None
     if not streaming_state.enabled:
-        df = pd.DataFrame(records)
+        if isinstance(records, ColumnarBuffer):
+            table = records.to_table(ensure_columns=series_columns)
+            df = table.to_pandas()
+        else:
+            df = pd.DataFrame(records)
         _write_zero_d_history(
             cfg,
             df,
@@ -4082,6 +4099,8 @@ def run_zero_d(
             step_diag_path=step_diag_path,
             orbit_rollup_enabled=orbit_rollup_enabled,
             extended_diag_enabled=extended_diag_enabled,
+            series_columns=series_columns,
+            diagnostic_columns=diagnostic_columns,
         )
     else:
         try:

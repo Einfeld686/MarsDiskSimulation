@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Any, Iterable, Literal, Mapping
+from typing import Any, Iterable, Literal, Mapping, Sequence
 
 import pandas as pd
 import pyarrow as pa
@@ -21,23 +21,32 @@ def _ensure_parent(path: Path) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
 
 
-def write_parquet(
-    df: pd.DataFrame | Iterable[Mapping[str, Any]],
+def _ensure_table_columns(table: pa.Table, ensure_columns: Iterable[str] | None) -> pa.Table:
+    if ensure_columns is None:
+        return table
+    ensure_list = list(ensure_columns)
+    if not ensure_list:
+        return table
+    ensure_set = set(ensure_list)
+    for name in ensure_list:
+        if name not in table.column_names:
+            table = table.append_column(name, pa.nulls(len(table)))
+    ordered = [name for name in ensure_list if name in table.column_names]
+    extras = [name for name in table.column_names if name not in ensure_set]
+    if extras:
+        return table.select(ordered + extras)
+    return table.select(ordered)
+
+
+def _write_parquet_table_internal(
+    table: pa.Table,
     path: Path,
     *,
     compression: str = "snappy",
     ensure_columns: Iterable[str] | None = None,
 ) -> None:
-    """Write tabular records to a Parquet file using ``pyarrow``.
-
-    Parameters
-    ----------
-    df:
-        Table to serialise (DataFrame or list-of-dicts).
-    path:
-        Destination file path.
-    """
     _ensure_parent(path)
+    table = _ensure_table_columns(table, ensure_columns)
     units = {
         "time": "s",
         "dt": "s",
@@ -388,25 +397,6 @@ def write_parquet(
         "frac_fragmentation": "Fraction of collision rate attributed to fragmentation = n_fragmentation/(n_cratering+n_fragmentation).",
         "f_ke_eps_mismatch": "Absolute mismatch between configured f_ke_fragmentation and eps_restitution**2 when fragmentation f_ke is provided (dimensionless).",
     }
-    if ensure_columns is None:
-        if isinstance(df, pd.DataFrame):
-            table = pa.Table.from_pandas(df, preserve_index=False)
-        else:
-            records = df if isinstance(df, list) else list(df)
-            table = pa.Table.from_pylist(records)
-    else:
-        if isinstance(df, pd.DataFrame):
-            frame = df
-        else:
-            records = df if isinstance(df, list) else list(df)
-            frame = pd.DataFrame(records)
-        missing = [col for col in ensure_columns if col not in frame.columns]
-        if missing:
-            if isinstance(df, pd.DataFrame):
-                frame = frame.copy()
-            for col in missing:
-                frame[col] = None
-        table = pa.Table.from_pandas(frame, preserve_index=False)
     metadata = dict(table.schema.metadata or {})
     metadata.update(
         {
@@ -417,6 +407,70 @@ def write_parquet(
     table = table.replace_schema_metadata(metadata)
     compression_arg = None if compression == "none" else compression
     pq.write_table(table, path, compression=compression_arg)
+
+
+def write_parquet(
+    df: pd.DataFrame | Iterable[Mapping[str, Any]],
+    path: Path,
+    *,
+    compression: str = "snappy",
+    ensure_columns: Iterable[str] | None = None,
+) -> None:
+    """Write tabular records to a Parquet file using ``pyarrow``.
+
+    Parameters
+    ----------
+    df:
+        Table to serialise (DataFrame or list-of-dicts).
+    path:
+        Destination file path.
+    """
+    if isinstance(df, pd.DataFrame):
+        table = pa.Table.from_pandas(df, preserve_index=False)
+    else:
+        records = df if isinstance(df, list) else list(df)
+        table = pa.Table.from_pylist(records)
+    _write_parquet_table_internal(
+        table,
+        path,
+        compression=compression,
+        ensure_columns=ensure_columns,
+    )
+
+
+def write_parquet_table(
+    table: pa.Table,
+    path: Path,
+    *,
+    compression: str = "snappy",
+    ensure_columns: Iterable[str] | None = None,
+) -> None:
+    """Write a pre-built Arrow table to Parquet with metadata attached."""
+
+    _write_parquet_table_internal(
+        table,
+        path,
+        compression=compression,
+        ensure_columns=ensure_columns,
+    )
+
+
+def write_parquet_columns(
+    columns: Mapping[str, Sequence[Any]],
+    path: Path,
+    *,
+    compression: str = "snappy",
+    ensure_columns: Iterable[str] | None = None,
+) -> None:
+    """Write column arrays to Parquet with output metadata attached."""
+
+    table = pa.Table.from_pydict(dict(columns))
+    _write_parquet_table_internal(
+        table,
+        path,
+        compression=compression,
+        ensure_columns=ensure_columns,
+    )
 
 
 def write_summary(summary: Mapping[str, Any], path: Path) -> None:

@@ -9,7 +9,7 @@ from typing import List, Optional
 import pyarrow as pa
 import pyarrow.parquet as pq
 
-from marsdisk.runtime.history import ZeroDHistory
+from marsdisk.runtime.history import ColumnarBuffer, ZeroDHistory
 from . import writer
 
 logger = logging.getLogger(__name__)
@@ -94,12 +94,29 @@ class StreamingState:
         wrote_any = False
         if history.records:
             path = series_dir / f"run_chunk_{label}.parquet"
-            writer.write_parquet(
-                history.records,
-                path,
-                compression=self.compression,
-                ensure_columns=self.series_columns,
-            )
+            if isinstance(history.records, ColumnarBuffer):
+                try:
+                    table = history.records.to_table(ensure_columns=self.series_columns)
+                    writer.write_parquet_table(
+                        table,
+                        path,
+                        compression=self.compression,
+                    )
+                except Exception as exc:
+                    logger.warning("Columnar flush failed for %s: %s; falling back to row write", path, exc)
+                    writer.write_parquet(
+                        history.records.to_records(),
+                        path,
+                        compression=self.compression,
+                        ensure_columns=self.series_columns,
+                    )
+            else:
+                writer.write_parquet(
+                    history.records,
+                    path,
+                    compression=self.compression,
+                    ensure_columns=self.series_columns,
+                )
             self.run_chunks.append(path)
             history.records.clear()
             wrote_any = True
@@ -111,12 +128,33 @@ class StreamingState:
             wrote_any = True
         if history.diagnostics:
             path = series_dir / f"diagnostics_chunk_{label}.parquet"
-            writer.write_parquet(
-                history.diagnostics,
-                path,
-                compression=self.compression,
-                ensure_columns=self.diagnostic_columns,
-            )
+            if isinstance(history.diagnostics, ColumnarBuffer):
+                try:
+                    table = history.diagnostics.to_table(ensure_columns=self.diagnostic_columns)
+                    writer.write_parquet_table(
+                        table,
+                        path,
+                        compression=self.compression,
+                    )
+                except Exception as exc:
+                    logger.warning(
+                        "Columnar diagnostics flush failed for %s: %s; falling back to row write",
+                        path,
+                        exc,
+                    )
+                    writer.write_parquet(
+                        history.diagnostics.to_records(),
+                        path,
+                        compression=self.compression,
+                        ensure_columns=self.diagnostic_columns,
+                    )
+            else:
+                writer.write_parquet(
+                    history.diagnostics,
+                    path,
+                    compression=self.compression,
+                    ensure_columns=self.diagnostic_columns,
+                )
             self.diag_chunks.append(path)
             history.diagnostics.clear()
             wrote_any = True

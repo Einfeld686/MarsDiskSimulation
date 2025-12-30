@@ -429,11 +429,12 @@ def load_phi_table(path: str | Path) -> Callable[[float], float]:
             work = work.loc[mask, ["tau", "Phi"]].copy()
             if work.empty:
                 raise ValueError("Phi table slice for w0/g is empty")
-            warnings.warn(
-                f"Phi table includes w0/g grid; using slice w0={w0_target} g={g_target} "
-                "to build Φ(τ) lookup.",
-                TableWarning,
-            )
+            if not (np.isclose(w0_target, 0.0) and np.isclose(g_target, 0.0)):
+                warnings.warn(
+                    f"Phi table includes w0/g grid; using slice w0={w0_target} g={g_target} "
+                    "to build Φ(τ) lookup.",
+                    TableWarning,
+                )
         else:
             work = work.loc[:, ["tau", "Phi"]].copy()
         work = work.rename(columns={"Phi": "phi"})

@@ -37,13 +37,20 @@ def _write_overrides(path: Path, archive_dir: str) -> None:
     )
 
 
-def _scan_cmd_text(module: object, tmp_path: Path, text: str, cmd_unsafe_error: bool = False):
+def _scan_cmd_text(
+    module: object,
+    tmp_path: Path,
+    text: str,
+    cmd_unsafe_error: bool = False,
+    profile: str = "default",
+):
     path = tmp_path / "scan.cmd"
     path.write_text(text, encoding="utf-8", newline="\r\n")
-    errors: list[str] = []
-    warnings: list[str] = []
-    module._scan_cmd_file(path, errors, warnings, cmd_unsafe_error)
-    return errors, warnings
+    errors: list[object] = []
+    warnings: list[object] = []
+    infos: list[object] = []
+    module._scan_cmd_file(path, errors, warnings, infos, cmd_unsafe_error, profile, None)
+    return errors, warnings, infos
 
 
 def _run_main(module: object, argv: list[str], monkeypatch) -> int:
@@ -133,7 +140,7 @@ def test_collect_cmd_paths_includes_bat_and_uppercase(tmp_path: Path) -> None:
     _write_text(root / "b.bat", "echo ok\n")
     _write_text(root / "c.txt", "echo ok\n")
 
-    errors: list[str] = []
+    errors: list[object] = []
     paths = module._collect_cmd_paths([], [str(root)], errors, [])
     names = {path.name for path in paths}
 
@@ -147,18 +154,101 @@ def test_scan_cmd_file_handles_bom_first_line(tmp_path: Path) -> None:
     module = _load_module()
     cmd_path = tmp_path / "bom.cmd"
     cmd_path.write_bytes(b"\xef\xbb\xbfset FOO=C:\\temp!dir\r\n")
-    errors: list[str] = []
-    warnings: list[str] = []
+    errors: list[object] = []
+    warnings: list[object] = []
 
-    module._scan_cmd_file(cmd_path, errors, warnings, cmd_unsafe_error=True)
+    infos: list[object] = []
 
-    assert any("contains '!'" in err for err in errors)
+    module._scan_cmd_file(
+        cmd_path,
+        errors,
+        warnings,
+        infos,
+        cmd_unsafe_error=True,
+        profile="default",
+        allowlist_rules=None,
+    )
+
+    assert any("contains '!'" in err.message for err in errors)
+
+
+def test_for_single_percent_is_error(tmp_path: Path) -> None:
+    module = _load_module()
+    errors, warnings, _infos = _scan_cmd_text(
+        module,
+        tmp_path,
+        "@echo off\nfor %i in (a b) do echo %i\n",
+    )
+
+    assert any(err.rule == "cmd.for.single_percent" for err in errors)
+    assert not warnings
+
+
+def test_set_space_around_equals_warns(tmp_path: Path) -> None:
+    module = _load_module()
+    errors, warnings, _infos = _scan_cmd_text(
+        module,
+        tmp_path,
+        "set VAR =value\n",
+    )
+
+    assert not errors
+    assert any(warn.rule == "cmd.set.space_around_equals" for warn in warnings)
+
+
+def test_setlocal_missing_warns(tmp_path: Path) -> None:
+    module = _load_module()
+    errors, warnings, _infos = _scan_cmd_text(
+        module,
+        tmp_path,
+        "set VAR=value\n",
+    )
+
+    assert not errors
+    assert any(warn.rule == "cmd.setlocal.missing" for warn in warnings)
+
+
+def test_interactive_pause_in_ci_is_error(tmp_path: Path) -> None:
+    module = _load_module()
+    errors, warnings, _infos = _scan_cmd_text(
+        module,
+        tmp_path,
+        "pause\n",
+        profile="ci",
+    )
+
+    assert any(err.rule == "cmd.interactive.pause" for err in errors)
+    assert not warnings
+
+
+def test_delayed_expansion_info(tmp_path: Path) -> None:
+    module = _load_module()
+    errors, warnings, infos = _scan_cmd_text(
+        module,
+        tmp_path,
+        "setlocal enabledelayedexpansion\n",
+    )
+
+    assert not errors
+    assert not warnings
+    assert any(info.rule == "cmd.delayed_expansion.enabled" for info in infos)
+
+
+def test_pathext_missing_is_error_in_ci(monkeypatch) -> None:
+    module = _load_module()
+    monkeypatch.delenv("PATHEXT", raising=False)
+    errors: list[object] = []
+    warnings: list[object] = []
+
+    module._check_pathext(errors, warnings, profile="ci")
+
+    assert any(err.rule == "env.pathext.missing_or_suspicious" for err in errors)
 
 
 def test_cmd_unsafe_issue_flags_literal_bang_even_with_percent() -> None:
     module = _load_module()
-    errors: list[str] = []
-    warnings: list[str] = []
+    errors: list[object] = []
+    warnings: list[object] = []
 
     module._cmd_unsafe_issue(
         "value",
@@ -169,13 +259,13 @@ def test_cmd_unsafe_issue_flags_literal_bang_even_with_percent() -> None:
         allow_expansion=True,
     )
 
-    assert any("contains '!'" in err for err in errors)
+    assert any("contains '!'" in err.message for err in errors)
 
 
 def test_cmd_unsafe_issue_allows_bang_tokens() -> None:
     module = _load_module()
-    errors: list[str] = []
-    warnings: list[str] = []
+    errors: list[object] = []
+    warnings: list[object] = []
 
     module._cmd_unsafe_issue(
         "value",
@@ -200,13 +290,13 @@ def test_check_python_accepts_py(monkeypatch) -> None:
         return None
 
     monkeypatch.setattr(module.shutil, "which", fake_which)
-    errors: list[str] = []
-    warnings: list[str] = []
+    errors: list[object] = []
+    warnings: list[object] = []
 
-    module._check_python(errors, warnings, warn_only=False)
+    module._check_python(errors, warnings, warn_only=False, python_exe=None)
 
     assert not errors
-    assert any("python not found" in warning for warning in warnings)
+    assert any("python not found" in warning.message for warning in warnings)
 
 
 def test_check_cmd_warn_only(monkeypatch) -> None:
@@ -216,13 +306,13 @@ def test_check_cmd_warn_only(monkeypatch) -> None:
         return None
 
     monkeypatch.setattr(module.shutil, "which", fake_which)
-    errors: list[str] = []
-    warnings: list[str] = []
+    errors: list[object] = []
+    warnings: list[object] = []
 
     module._check_cmd("git", errors, warnings, warn_only=True)
 
     assert not errors
-    assert any("git not found" in warning for warning in warnings)
+    assert any("git not found" in warning.message for warning in warnings)
 
 
 def test_has_invalid_windows_chars_allows_extended_prefix() -> None:
@@ -233,30 +323,30 @@ def test_has_invalid_windows_chars_allows_extended_prefix() -> None:
 
 def test_check_name_component_rejects_backslash() -> None:
     module = _load_module()
-    errors: list[str] = []
+    errors: list[object] = []
 
     module._check_name_component(r"bad\\name", r"bad\\name", errors)
 
-    assert any("contains '\\\\'" in err for err in errors)
+    assert any("invalid Windows name" in err.message for err in errors)
 
 
 def test_cmd_non_ascii_without_chcp_warns(tmp_path: Path) -> None:
     module = _load_module()
-    _errors, warnings = _scan_cmd_text(module, tmp_path, "echo あ\n")
+    _errors, warnings, _infos = _scan_cmd_text(module, tmp_path, "echo あ\n")
 
-    assert any("non-ASCII without chcp" in warning for warning in warnings)
+    assert any("non-ASCII without chcp" in warning.message for warning in warnings)
 
 
 def test_cmd_non_ascii_with_chcp_suppresses_warning(tmp_path: Path) -> None:
     module = _load_module()
-    _errors, warnings = _scan_cmd_text(module, tmp_path, "chcp 65001\necho あ\n")
+    _errors, warnings, _infos = _scan_cmd_text(module, tmp_path, "chcp 65001\necho あ\n")
 
-    assert not any("non-ASCII without chcp" in warning for warning in warnings)
+    assert not any("non-ASCII without chcp" in warning.message for warning in warnings)
 
 
 def test_cmd_cd_checks(tmp_path: Path) -> None:
     module = _load_module()
-    _errors, warnings = _scan_cmd_text(
+    _errors, warnings, _infos = _scan_cmd_text(
         module,
         tmp_path,
         "\n".join(
@@ -269,13 +359,13 @@ def test_cmd_cd_checks(tmp_path: Path) -> None:
         ),
     )
 
-    assert any("cd without /d" in warning for warning in warnings)
-    assert any("cd uses UNC path" in warning for warning in warnings)
+    assert any("cd without /d" in warning.message for warning in warnings)
+    assert any("cd uses UNC path" in warning.message for warning in warnings)
 
 
 def test_cmd_start_title_warning(tmp_path: Path) -> None:
     module = _load_module()
-    _errors, warnings = _scan_cmd_text(
+    _errors, warnings, _infos = _scan_cmd_text(
         module,
         tmp_path,
         "\n".join(
@@ -287,12 +377,14 @@ def test_cmd_start_title_warning(tmp_path: Path) -> None:
         ),
     )
 
-    assert sum("start uses quoted arg without empty title" in warning for warning in warnings) == 1
+    assert (
+        sum("start uses quoted arg without empty title" in warning.message for warning in warnings) == 1
+    )
 
 
 def test_cmd_call_missing_warning(tmp_path: Path) -> None:
     module = _load_module()
-    _errors, warnings = _scan_cmd_text(
+    _errors, warnings, _infos = _scan_cmd_text(
         module,
         tmp_path,
         "\n".join(
@@ -305,12 +397,12 @@ def test_cmd_call_missing_warning(tmp_path: Path) -> None:
         ),
     )
 
-    assert sum("invokes batch without call" in warning for warning in warnings) == 1
+    assert sum("invokes batch without call" in warning.message for warning in warnings) == 1
 
 
 def test_cmd_line_length_warning(tmp_path: Path) -> None:
     module = _load_module()
     long_arg = "a" * (module.CMD_LINE_WARN_LEN + 10)
-    _errors, warnings = _scan_cmd_text(module, tmp_path, f"echo {long_arg}\n")
+    _errors, warnings, _infos = _scan_cmd_text(module, tmp_path, f"echo {long_arg}\n")
 
-    assert any("cmd line length" in warning for warning in warnings)
+    assert any("cmd line length" in warning.message for warning in warnings)

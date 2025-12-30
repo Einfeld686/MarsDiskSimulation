@@ -1913,6 +1913,14 @@ class IO(BaseModel):
     progress: Progress = Progress()
     streaming: Streaming = Field(default_factory=Streaming)
     archive: Archive = Field(default_factory=Archive)
+    record_storage_mode: Literal["row", "columnar"] = Field(
+        "row",
+        description="Storage mode for series/diagnostic records (row or columnar).",
+    )
+    columnar_records: Optional[bool] = Field(
+        None,
+        description="Deprecated alias for record_storage_mode; overrides when set.",
+    )
     psd_history: bool = Field(
         True,
         description="Write per-bin PSD history to series/psd_hist.parquet.",
@@ -1948,6 +1956,12 @@ class IO(BaseModel):
         gt=0.0,
         description="Upper limit for dt/t_blow before a step is subdivided (1.0 is effectively disabled; typical 0.3-0.5).",
     )
+
+    @model_validator(mode="after")
+    def _resolve_record_storage_mode(self) -> "IO":
+        if self.columnar_records is not None:
+            self.record_storage_mode = "columnar" if self.columnar_records else "row"
+        return self
 
 
 class ExtendedDiagnostics(BaseModel):

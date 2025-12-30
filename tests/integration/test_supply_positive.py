@@ -64,7 +64,8 @@ def test_reservoir_depletes_and_records_metadata(tmp_path: Path) -> None:
             "optical_depth.tau_stop=1.0e6",
         ],
     )
-    run.run_zero_d(cfg)
+    with pytest.warns(DeprecationWarning, match="External supply configuration deviates"):
+        run.run_zero_d(cfg)
 
     series_path = outdir / "series" / "run.parquet"
     summary_path = outdir / "summary.json"
@@ -116,7 +117,8 @@ def test_supply_feedback_tau_los_updates_scale(tmp_path: Path) -> None:
             "supply.feedback.tau_field=tau_los",
         ],
     )
-    run.run_zero_d(cfg)
+    with pytest.warns(DeprecationWarning, match="External supply configuration deviates"):
+        run.run_zero_d(cfg)
 
     series_path = outdir / "series" / "run.parquet"
     assert series_path.exists()

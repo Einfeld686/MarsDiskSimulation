@@ -78,7 +78,8 @@ def test_tau_stop_triggers_without_clip(tmp_path: Path) -> None:
             f"io.outdir={outdir}",
         ],
     )
-    run.run_zero_d(cfg)
+    with pytest.warns(DeprecationWarning, match="External supply configuration deviates"):
+        run.run_zero_d(cfg)
 
     series_path = outdir / "series" / "run.parquet"
     assert series_path.exists()

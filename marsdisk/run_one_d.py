@@ -24,7 +24,7 @@ from .orchestrator import (
     human_bytes as _human_bytes,
     memory_estimate as _memory_estimate,
 )
-from .runtime import ProgressReporter, ZeroDHistory
+from .runtime import ColumnarBuffer, ProgressReporter, ZeroDHistory
 from .runtime.helpers import (
     compute_phase_tau_fields,
     compute_gate_factor,
@@ -194,11 +194,12 @@ def _resolve_cell_parallel_config(
     cell_min_cells_per_job: int,
     cell_chunk_size_raw: int,
     cell_coupling_enabled: bool,
+    allow_non_windows: bool = False,
 ) -> Dict[str, object]:
     cell_parallel_reason = "enabled"
     if not cell_parallel_requested:
         cell_parallel_reason = "not_requested"
-    elif os_name != "nt":
+    elif os_name != "nt" and not allow_non_windows:
         cell_parallel_reason = "non_windows"
     elif n_cells < cell_min_cells:
         cell_parallel_reason = "too_few_cells"
@@ -335,6 +336,7 @@ def run_one_d(
     }
 
     cell_parallel_requested = _env_flag("MARSDISK_CELL_PARALLEL") is True
+    cell_parallel_force = _env_flag("MARSDISK_CELL_PARALLEL_FORCE") is True
     cell_jobs_env = _env_int("MARSDISK_CELL_JOBS")
     cell_min_cells_env = _env_int("MARSDISK_CELL_MIN_CELLS")
     cell_min_cells_per_job_env = _env_int("MARSDISK_CELL_MIN_CELLS_PER_JOB")
@@ -366,6 +368,7 @@ def run_one_d(
         cell_min_cells_per_job=cell_min_cells_per_job,
         cell_chunk_size_raw=cell_chunk_size_raw,
         cell_coupling_enabled=cell_coupling_enabled,
+        allow_non_windows=cell_parallel_force,
     )
     cell_parallel_enabled = bool(cell_parallel_config["enabled"])
     cell_parallel_reason = str(cell_parallel_config["reason"])
@@ -394,6 +397,7 @@ def run_one_d(
         "requested": cell_parallel_requested,
         "enabled": cell_parallel_enabled,
         "disabled_reason": None if cell_parallel_enabled else cell_parallel_reason,
+        "force_non_windows": cell_parallel_force,
         "jobs_requested": int(cell_jobs_requested),
         "jobs_effective": int(cell_jobs_effective),
         "min_cells": int(cell_min_cells),
@@ -1057,7 +1061,17 @@ def run_one_d(
         psd_history_stride = 1
     mass_budget_cells_enabled = bool(getattr(cfg.io, "mass_budget_cells", True))
 
+    record_storage_mode = str(getattr(cfg.io, "record_storage_mode", "row") or "row").lower()
+    if record_storage_mode not in {"row", "columnar"}:
+        record_storage_mode = "row"
+    columnar_enabled = record_storage_mode == "columnar"
+    if _env_flag("MARSDISK_DISABLE_COLUMNAR") is True:
+        columnar_enabled = False
+
     history = ZeroDHistory()
+    if columnar_enabled:
+        history.records = ColumnarBuffer()
+        history.diagnostics = ColumnarBuffer()
     series_columns = list(ZERO_D_SERIES_KEYS) + list(ONE_D_EXTRA_SERIES_KEYS)
     diagnostic_columns = list(ZERO_D_DIAGNOSTIC_KEYS) + list(ONE_D_EXTRA_DIAGNOSTIC_KEYS)
     streaming_state = StreamingState(
@@ -1119,11 +1133,9 @@ def run_one_d(
                 not blowout_effective_warned
                 and a_blow_effective_step > a_blow_step * (1.0 + 1.0e-12)
             ):
-                warnings.warn(
+                logger.info(
                     "s_blow_m now records the raw blow-out radius; use s_blow_m_effective for the "
-                    "size-floor-clipped value.",
-                    DeprecationWarning,
-                    stacklevel=2,
+                    "size-floor-clipped value."
                 )
                 blowout_effective_warned = True
             s_min_effective = float(max(s_min_config, a_blow_effective_step))
@@ -1145,8 +1157,14 @@ def run_one_d(
                 break
 
             t_coll_min = float("inf")
-            step_records = []
-            step_diagnostics = []
+            step_records: list[dict[str, Any]] | ColumnarBuffer
+            step_diagnostics: list[dict[str, Any]] | ColumnarBuffer
+            if columnar_enabled:
+                step_records = ColumnarBuffer()
+                step_diagnostics = ColumnarBuffer()
+            else:
+                step_records = []
+                step_diagnostics = []
             step_sums = np.zeros(STEP_SUM_COUNT, dtype=float)
 
             def _run_cell_indices(indices):
@@ -2299,8 +2317,14 @@ def run_one_d(
             else:
                 step_payload_iter = (_run_cell_indices(range(n_cells)),)
             for payload in step_payload_iter:
-                step_records.extend(payload.records)
-                step_diagnostics.extend(payload.diagnostics)
+                if isinstance(step_records, ColumnarBuffer):
+                    step_records.extend_rows(payload.records)
+                else:
+                    step_records.extend(payload.records)
+                if isinstance(step_diagnostics, ColumnarBuffer):
+                    step_diagnostics.extend_rows(payload.diagnostics)
+                else:
+                    step_diagnostics.extend(payload.diagnostics)
                 step_sums += payload.sums
                 if payload.psd_hist_records:
                     history.psd_hist_records.extend(payload.psd_hist_records)
@@ -2358,11 +2382,30 @@ def run_one_d(
 
             t_coll_min_output = float(t_coll_min) if math.isfinite(t_coll_min) else None
             if step_records:
-                for record in step_records:
-                    record["t_coll_kernel_min"] = t_coll_min_output
-                history.records.extend(step_records)
+                if isinstance(step_records, ColumnarBuffer):
+                    step_records.set_column_constant("t_coll_kernel_min", t_coll_min_output)
+                    if isinstance(history.records, ColumnarBuffer):
+                        history.records.extend_buffer(step_records)
+                    else:
+                        history.records.extend(step_records.to_records())
+                else:
+                    for record in step_records:
+                        record["t_coll_kernel_min"] = t_coll_min_output
+                    if isinstance(history.records, ColumnarBuffer):
+                        history.records.extend_rows(step_records)
+                    else:
+                        history.records.extend(step_records)
             if step_diagnostics:
-                history.diagnostics.extend(step_diagnostics)
+                if isinstance(step_diagnostics, ColumnarBuffer):
+                    if isinstance(history.diagnostics, ColumnarBuffer):
+                        history.diagnostics.extend_buffer(step_diagnostics)
+                    else:
+                        history.diagnostics.extend(step_diagnostics.to_records())
+                else:
+                    if isinstance(history.diagnostics, ColumnarBuffer):
+                        history.diagnostics.extend_rows(step_diagnostics)
+                    else:
+                        history.diagnostics.extend(step_diagnostics)
 
             M_sublimation_cum += float(step_sums[SUM_SUBLIMATION_MASS])
             if orbit_rollup_enabled and t_orb_ref > 0.0:
@@ -2456,17 +2499,25 @@ def run_one_d(
         streaming_state.merge_chunks()
     else:
         if history.records:
-            writer.write_parquet(
-                history.records,
-                outdir / "series" / "run.parquet",
-                ensure_columns=series_columns,
-            )
+            if isinstance(history.records, ColumnarBuffer):
+                table = history.records.to_table(ensure_columns=series_columns)
+                writer.write_parquet_table(table, outdir / "series" / "run.parquet")
+            else:
+                writer.write_parquet(
+                    history.records,
+                    outdir / "series" / "run.parquet",
+                    ensure_columns=series_columns,
+                )
         if history.diagnostics:
-            writer.write_parquet(
-                history.diagnostics,
-                outdir / "series" / "diagnostics.parquet",
-                ensure_columns=diagnostic_columns,
-            )
+            if isinstance(history.diagnostics, ColumnarBuffer):
+                table = history.diagnostics.to_table(ensure_columns=diagnostic_columns)
+                writer.write_parquet_table(table, outdir / "series" / "diagnostics.parquet")
+            else:
+                writer.write_parquet(
+                    history.diagnostics,
+                    outdir / "series" / "diagnostics.parquet",
+                    ensure_columns=diagnostic_columns,
+                )
         if history.psd_hist_records:
             writer.write_parquet(
                 history.psd_hist_records,

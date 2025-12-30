@@ -47,6 +47,10 @@ scripts/runsets/mac/run_one.sh --t 4000 --eps 1.0 --tau 1.0
 | `scripts/plots/plot_tau_timescales.py` | τ–timescale 図の生成 | `series/run.parquet` から `t_sub`/`t_coll`/`t_blow` を計算し、τとの散布図を保存します。 |
 | `scripts/plots/windows/plot_tau_timescales.cmd` | τ–timescale 図の Windows 実行 | `.venv` セットアップ後に `plot_tau_timescales.py` を呼びます。 |
 | `scripts/tests/run_cell_parallel_consistency.cmd` | 1Dセル並列のWindowsテスト実行 | `.venv` を作成し、`pytest` で `test_cell_parallel_on_off_consistency` を実行します。 |
+| `scripts/tests/run_cell_parallel_speed_check.sh` | 1Dセル並列の速度比較（bash） | `.venv` を使って `cell_parallel_speed_check.py` を実行します（Windowsのみ。非Windowsで試す場合は `--force-non-windows`）。 |
+| `scripts/tests/run_sweep_parallel_speed_check.sh` | スイープ並列の速度比較（bash） | `.venv` を使って `sweep_parallel_speed_check.py` を実行します。 |
+| `scripts/tests/run_sweep_parallel_smoke_check.sh` | スイープ並列の構造スモーク（bash） | `.venv` を使って `sweep_parallel_smoke_check.py` を実行し、出力整合を検証します。 |
+| `scripts/tests/run_temp_supply_parallel_smoke.sh` | temp_supply 並列スモーク（bash） | `.venv` を使って `temp_supply_parallel_smoke.py` を実行します。 |
 | `scripts/tests/run_overparallel_benchmark.cmd` | 過剰並列の簡易ベンチ（Windows） | `.venv` を作成し、並列数を振って短時間の1D実行を計測し、各runに `perf.json` と `perf_summary.json` を残します。 |
 | `scripts/plots/render_figures_from_tasks.py` | 図タスクの一括生成 | 解析タスク定義から `plot_from_runs.py` を呼び出して図を生成します。 |
 | `scripts/runs/run_autotuned.py` | auto-tune 既定のランナー | `python -m marsdisk.run` に `--auto-tune` を付与します。 |

@@ -1,0 +1,4 @@
+# Allowlist for preflight cmd lint
+# Format: <path-glob>[::rule1,rule2]
+# Example: scripts/runsets/windows/run_one.cmd::cmd.line_endings.mixed
+# Use '*' as a rule to suppress all rules for that file.

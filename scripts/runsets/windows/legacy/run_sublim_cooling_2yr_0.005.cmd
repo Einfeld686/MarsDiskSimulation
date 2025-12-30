@@ -29,7 +29,7 @@ if not defined PYTHON_EXE (
 )
 set "PYTHON_BOOT=%PYTHON_EXE%"
 
-set "REPO=%~dp0..\..\..\..\"
+set REPO=%~dp0..\..\..\..
 for %%I in ("%REPO%") do set "REPO=%%~fI"
 pushd "%REPO%"
 

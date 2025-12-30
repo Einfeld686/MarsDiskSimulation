@@ -2,7 +2,7 @@
 
 from .progress import ProgressReporter
 from .autotune import apply_auto_tune, detect_machine_state
-from .history import ZeroDHistory
+from .history import ColumnarBuffer, ZeroDHistory
 from .helpers import (
     ensure_finite_kappa,
     safe_float,
@@ -13,6 +13,7 @@ from .helpers import (
 
 __all__ = [
     "ProgressReporter",
+    "ColumnarBuffer",
     "ZeroDHistory",
     "apply_auto_tune",
     "detect_machine_state",

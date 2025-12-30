@@ -533,10 +533,13 @@ PY
       fi
 
       # Override priority: base defaults < EXTRA_OVERRIDES_FILE < per-case overrides.
-      python "${OVERRIDE_BUILDER}" \
-        --file "${BASE_OVERRIDES_FILE}" \
-        "${EXTRA_OVERRIDE_FILE_ARGS[@]}" \
-        --file "${CASE_OVERRIDES_FILE}" > "${MERGED_OVERRIDES_FILE}"
+      # Avoid empty array expansion under `set -u` (bash 3.2 treats it as unbound).
+      override_cmd=(python "${OVERRIDE_BUILDER}" --file "${BASE_OVERRIDES_FILE}")
+      if ((${#EXTRA_OVERRIDE_FILE_ARGS[@]})); then
+        override_cmd+=("${EXTRA_OVERRIDE_FILE_ARGS[@]}")
+      fi
+      override_cmd+=(--file "${CASE_OVERRIDES_FILE}")
+      "${override_cmd[@]}" > "${MERGED_OVERRIDES_FILE}"
 
       cmd=(
         python -m marsdisk.run
