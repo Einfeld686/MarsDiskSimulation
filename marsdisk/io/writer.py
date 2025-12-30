@@ -21,13 +21,18 @@ def _ensure_parent(path: Path) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
 
 
-def write_parquet(df: pd.DataFrame, path: Path, *, compression: str = "snappy") -> None:
-    """Write a DataFrame to a Parquet file using ``pyarrow``.
+def write_parquet(
+    df: pd.DataFrame | Iterable[Mapping[str, Any]],
+    path: Path,
+    *,
+    compression: str = "snappy",
+) -> None:
+    """Write tabular records to a Parquet file using ``pyarrow``.
 
     Parameters
     ----------
     df:
-        Table to serialise.
+        Table to serialise (DataFrame or list-of-dicts).
     path:
         Destination file path.
     """
@@ -382,7 +387,11 @@ def write_parquet(df: pd.DataFrame, path: Path, *, compression: str = "snappy") 
         "frac_fragmentation": "Fraction of collision rate attributed to fragmentation = n_fragmentation/(n_cratering+n_fragmentation).",
         "f_ke_eps_mismatch": "Absolute mismatch between configured f_ke_fragmentation and eps_restitution**2 when fragmentation f_ke is provided (dimensionless).",
     }
-    table = pa.Table.from_pandas(df, preserve_index=False)
+    if isinstance(df, pd.DataFrame):
+        table = pa.Table.from_pandas(df, preserve_index=False)
+    else:
+        records = df if isinstance(df, list) else list(df)
+        table = pa.Table.from_pylist(records)
     metadata = dict(table.schema.metadata or {})
     metadata.update(
         {

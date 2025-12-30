@@ -2,7 +2,7 @@
 
 **作成日**: 2025-12-28  
 **ステータス**: 計画  
-**対象**: `marsdisk/run_one_d.py`, `marsdisk/physics/*`, `marsdisk/io/*`  
+**対象**: `marsdisk/run_one_d.py`, `marsdisk/physics/*`, `marsdisk/io/*`, `marsdisk/output_schema.py`  
 **統合**: `docs/plan/20251228_collisions_smol_perf_plan.md` の内容を本書へ統合
 
 ---
@@ -87,6 +87,47 @@
 - Parquet 変換コスト削減（flush 頻度/列数/履歴記録の最適化）。
 - `_ensure_keys` / `compute_kappa` の呼び出し頻度を低減。
 
+### フェーズD: スレッド設定の最適化（セル並列）
+- **目的**: セル並列を「確実にCPUを使う」状態に調整し、過並列とGIL影響を最小化する。
+- **前提**: Mac 開発環境では実測を後回しとし、設定方針と実装計画を先に固める。
+
+**方針**
+- `MARSDISK_CELL_JOBS` と `NUMBA_NUM_THREADS` を **同時に制御**し、過並列を避ける。
+- BLAS/NumPy 系のスレッドは **1 に固定**し、セル並列と競合させない。
+- `geometry.Nr` に対して `MARSDISK_CELL_JOBS` が過剰にならないように制限する。
+
+**推奨パラメータ指針（初期案）**
+- `cell_jobs_target = min(Nr, floor(physical_cores * 0.8))`  
+- `numba_threads_target = max(1, floor(physical_cores / cell_jobs_target))`  
+- `CELL_THREAD_LIMIT=1`（OMP/MKL/OPENBLAS/NUMEXPR/NUMBA を抑制）
+- `MARSDISK_CELL_CHUNK_SIZE` は `ceil(Nr / cell_jobs_target)` を基本に、実測で微調整
+
+**実装タスク（設定/ログ）**
+- `run_sweep.cmd` / `run_one.cmd` に **スレッド上限の明示ブロック**を追加（`CELL_THREAD_LIMIT` を採用）。
+- `run_config.json` に **実効スレッド情報**（`NUMBA_NUM_THREADS` / `OMP` など）を記録する。
+- `scripts/tests/overparallel_benchmark.py` を利用し、**最適な `MARSDISK_CELL_JOBS` を探索**する。
+
+### フェーズE: Python ループ削減（1D 内側ループ）
+- **目的**: `run_one_d` 内の Python ループを削減し、GIL 影響を減らす。
+- **対象**: セルごとの集計、履歴・診断の蓄積、辞書ベースの payload 結合。
+
+**優先順位**
+1) **集計のベクトル化**  
+   - `step_*_sum` の積み上げを Python ループから NumPy 配列演算に移す。  
+   - `_run_cell_indices` の戻りを数値配列ベースにし、辞書アクセスを削減。
+2) **診断/履歴の条件付き生成**  
+   - `psd_hist_records` / `mass_budget_cells` を **設定フラグで完全停止**。  
+   - 出力 OFF 時はリスト生成と extend を避ける。
+3) **payload 形式の軽量化**  
+   - `dict` ではなく `tuple/NamedTuple` に置換し、属性アクセスコストを削減。
+4) **チャンク単位の集約**  
+   - チャンク内で集計済みのサマリのみ返す設計へ変更し、親側のループコストを削減。
+
+**実装タスク（コード）**
+- `run_one_d.py` のセル集計部を NumPy ベースに置換。
+- `history` への append を **遅延バッファ**化し、flush タイミングを集約。
+- `cell_parallel` 無効時でも同じ集計ルーチンが使えるように共通化。
+
 ---
 
 ## 安全強化方針（必須）
@@ -103,15 +144,15 @@
 
 ## 安全チェックリスト（各タスク共通）
 
-- [ ] 入力と出力の **単位** をコメントに明記したか
-- [ ] キャッシュキーの **無効化条件** を列挙したか（sizes/edges/rho/v_rel など）
-- [ ] キャッシュヒット時に **配列が破壊されない** 設計か
-- [ ] **数値一致テスト** を追加し、許容誤差を明記したか
-- [ ] **性能改善の根拠**（pstats 比較）を提示できるか
-- [ ] 既存テストが **全て通る** ことを確認したか
-- [ ] **JITウォームアップ分離**の計測を行ったか
-- [ ] **1Dセル混線**を避けるキー設計になっているか
-- [ ] **非有限値検出**でキャッシュ破棄するガードを入れたか
+- [x] 入力と出力の **単位** をコメントに明記したか
+- [x] キャッシュキーの **無効化条件** を列挙したか（sizes/edges/rho/v_rel など）
+- [x] キャッシュヒット時に **配列が破壊されない** 設計か
+- [x] **数値一致テスト** を追加し、許容誤差を明記したか
+- [x] **性能改善の根拠**（pstats 比較）を提示できるか
+- [x] 既存テストが **全て通る** ことを確認したか
+- [x] **JITウォームアップ分離**の計測を行ったか
+- [x] **1Dセル混線**を避けるキー設計になっているか
+- [x] **非有限値検出**でキャッシュ破棄するガードを入れたか
 
 ---
 
@@ -124,11 +165,12 @@
    - 無効化条件: `edges_version` または `alpha_frag` が変化した場合。
 
 2) `_FRAG_CACHE` のキー軽量化  
-   - `tuple(sizes_arr.tolist())` を `sizes_version` / `edges_version` に置換。
+   - `tuple(sizes_arr.tolist())` を `sizes_version` / `edges_version` に置換（必要なら `edges` 指紋を併用）。
    - 無効化条件: `sizes_version` / `edges_version` / `rho` / `v_rel` / `alpha_frag` の変化。
 
 3) サイズ依存ワークスペースの再利用  
-   - `size_ref`, `m1`, `m2`, `m_tot`, `valid_pair` を thread-local で再利用。
+   - **既存**: `collide` の kernel workspace は thread-local で再利用済み。
+   - 追加対象は `_fragment_tensor` 系の `size_ref`, `m1`, `m2`, `m_tot`, `valid_pair` とし、重複実装は避ける。
    - 無効化条件: `sizes_version` / `rho` 変更。
 
 4) Q_D* 行列の再利用（スカラー v_rel が主対象）  
@@ -149,6 +191,7 @@
 
 - キャッシュは **run-local / thread-local のみ**（run 跨ぎ再利用は禁止）。
 - `sizes_version` / `edges_version` / `rho` / `v_rel` / `alpha_frag` をキーにして無効化。
+- **edges_version を新設**: `edges` 更新は専用ヘルパ経由で行い、内容が変わったときだけ `edges_version += 1`。`sizes_version` とは独立に管理する。
 - 破壊的変更を避けるため、**キャッシュ配列は read-only** とし必要時のみコピー。
 - キャッシュ上限を明示（最大エントリ数を制限）。
 - **単位ミス対策**: 変数名・コメントに単位を付記し、単位変換は 1 箇所で完結させる。
@@ -171,28 +214,29 @@
 ## 実装タスク（チェックボックス）
 
 1. 計測・安全確認（優先）
-- [ ] JITウォームアップ分離の cProfile を取得（コンパイル時間を除外）
-- [ ] フル 2 年設定で cProfile を再取得（timeout 指定、run_card に記録）
-- [ ] I/O 無効版のプロファイルを取得し、計算パスのみの比率を確認
-- [ ] 単位コメントと変換箇所の棚卸し（差分レビューで確認）
-- [ ] キャッシュ無効化フラグを用意し、切替試験を実施
+- [x] JITウォームアップ分離の cProfile を取得（コンパイル時間を除外）
+- [x] フル 2 年設定で cProfile を再取得（timeout 指定、run_card に記録）（15分でtimeout）
+- [x] I/O 無効版のプロファイルを取得し、計算パスのみの比率を確認
+- [x] 単位コメントと変換箇所の棚卸し（差分レビューで確認）
+- [x] キャッシュ無効化フラグを用意し、切替試験を実施
 
 2. 衝突パス最適化（高）
-- [ ] `_fragment_tensor` の weights_table キャッシュ導入（edges_version/alpha_frag）
-- [ ] `_FRAG_CACHE` キーの軽量化（sizes/edges version 対応）
-- [ ] サイズ依存ワークスペースの再利用（m1/m2/m_tot/valid_pair）
-- [ ] Q_D* 行列キャッシュ（スカラー v_rel）
-- [ ] `smol._gain_tensor` の `m_sum/denom` 再利用設計
-- [ ] 供給分配の重みキャッシュ（prod_rate だけスケーリング）
-- [ ] `collide.compute_collision_kernel_C1` のバッファ再利用可否を調査
+- [x] `edges_version` の導入と `edges` 更新ヘルパの実装（変更時のみインクリメント）
+- [x] `_fragment_tensor` の weights_table キャッシュ導入（edges_version/alpha_frag）
+- [x] `_FRAG_CACHE` キーの軽量化（sizes/edges version 対応）
+- [x] サイズ依存ワークスペースの再利用（m1/m2/m_tot/valid_pair）
+- [x] Q_D* 行列キャッシュ（スカラー v_rel）
+- [x] `smol._gain_tensor` の `m_sum/denom` 再利用設計
+- [x] 供給分配の重みキャッシュ（prod_rate だけスケーリング）
+- [x] `collide.compute_collision_kernel_C1` のバッファ再利用可否を調査
 
 3. I/O・補助処理の削減（中）
-- [ ] `io.streaming.flush` の DataFrame 生成コスト削減案を作成
-- [ ] `output_schema._ensure_keys` のコスト低減案を作成
+- [x] `io.streaming.flush` の DataFrame 生成コスト削減案を作成
+- [x] `output_schema._ensure_keys` のコスト低減案を作成（対象: `marsdisk/output_schema.py`）
 
 4. 検証・比較（必須）
-- [ ] 改善後の cProfile 再測定と比較
-- [ ] 数値一致の確認（既存 pytest + 小規模比較テスト）
+- [x] 改善後の cProfile 再測定と比較
+- [x] 数値一致の確認（既存 pytest + 小規模比較テスト）
 
 ---
 

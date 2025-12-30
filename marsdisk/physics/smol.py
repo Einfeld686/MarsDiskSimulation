@@ -47,6 +47,9 @@ class ImexWorkspace:
 
     gain: np.ndarray
     loss: np.ndarray
+    m_sum: np.ndarray | None = None
+    denom: np.ndarray | None = None
+    m_cache_key: tuple | None = None
 
 logger = logging.getLogger(__name__)
 
@@ -206,6 +209,7 @@ def _gain_tensor(
     Y: np.ndarray,
     m: np.ndarray,
     out: np.ndarray | None = None,
+    workspace: ImexWorkspace | None = None,
 ) -> np.ndarray:
     """Return gain term, preferring the Numba kernel when available."""
 
@@ -243,9 +247,29 @@ def _gain_tensor(
                     f"gain_tensor numba fallback failed ({exc2!r}); falling back to einsum.",
                     NumericalWarning,
                 )
-    m_sum = m_arr[:, None] + m_arr[None, :]
+    m_sum = None
+    denom = None
+    if workspace is not None:
+        m_key = _sizes_fingerprint(m_arr)
+        if (
+            workspace.m_cache_key == m_key
+            and isinstance(workspace.m_sum, np.ndarray)
+            and isinstance(workspace.denom, np.ndarray)
+            and workspace.m_sum.shape == (m_arr.size, m_arr.size)
+            and workspace.denom.shape == m_arr.shape
+        ):
+            m_sum = workspace.m_sum
+            denom = workspace.denom
+        else:
+            m_sum = m_arr[:, None] + m_arr[None, :]
+            denom = np.where(m_arr > 0.0, m_arr, 1.0)
+            workspace.m_sum = m_sum
+            workspace.denom = denom
+            workspace.m_cache_key = m_key
+    if m_sum is None or denom is None:
+        m_sum = m_arr[:, None] + m_arr[None, :]
+        denom = np.where(m_arr > 0.0, m_arr, 1.0)
     weighted_C = np.triu(np.asarray(C, dtype=np.float64) * m_sum)
-    denom = np.where(m_arr > 0.0, m_arr, 1.0)
     result = np.einsum("ij,kij->k", weighted_C, Y, out=out)
     if result is None and out is not None:
         result = out
@@ -405,7 +429,7 @@ def step_imex_bdf1_C3(
     else:
         prod_mass_rate_budget = float(prod_subblow_mass_rate)
 
-    gain = _gain_tensor(C, Y, m_arr, out=gain_out)
+    gain = _gain_tensor(C, Y, m_arr, out=gain_out, workspace=workspace)
 
     while True:
         N_new = (N_arr + dt_eff * (gain + source_arr - S_arr * N_arr)) / (1.0 + dt_eff * loss)

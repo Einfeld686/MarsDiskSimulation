@@ -22,6 +22,7 @@ __all__ = [
     "compute_q_d_star_array",
     "get_coeff_unit_system",
     "get_coefficient_table",
+    "get_qdstar_signature",
     "get_gravity_velocity_mu",
     "get_velocity_clamp_stats",
     "reset_coefficient_table",
@@ -63,6 +64,7 @@ _DEFAULT_COEFFS: Dict[float, Tuple[float, float, float, float]] = {
 }
 
 _COEFFS: Dict[float, Tuple[float, float, float, float]] = dict(_DEFAULT_COEFFS)
+_COEFF_VERSION = 0
 
 # Sorted list of reference velocities used for bracketing/interpolation.
 _V_KEYS = tuple(sorted(_COEFFS.keys()))
@@ -90,10 +92,11 @@ _QDSTAR_CACHE_LOCK = threading.Lock()
 def set_coeff_unit_system(units: CoeffUnits) -> CoeffUnits:
     """Set the coefficient unit system used during :math:`Q_D^*` evaluation."""
 
-    global _COEFF_UNIT_SYSTEM
+    global _COEFF_UNIT_SYSTEM, _COEFF_VERSION
     if units not in _COEFF_UNIT_CHOICES:
         raise MarsDiskError(f"unknown coeff_units={units!r}; expected one of {_COEFF_UNIT_CHOICES}")
     _COEFF_UNIT_SYSTEM = units
+    _COEFF_VERSION += 1
     with _QDSTAR_CACHE_LOCK:
         _QDSTAR_CACHE.clear()
     return _COEFF_UNIT_SYSTEM
@@ -145,12 +148,13 @@ def set_coefficient_table(
 ) -> Dict[float, Tuple[float, float, float, float]]:
     """Replace the active coefficient table and return the normalised copy."""
 
-    global _COEFFS, _V_KEYS, _V_MIN, _V_MAX
+    global _COEFFS, _V_KEYS, _V_MIN, _V_MAX, _COEFF_VERSION
     cleaned = _normalise_coeff_table(table)
     _COEFFS = dict(cleaned)
     _V_KEYS = tuple(sorted(_COEFFS.keys()))
     _V_MIN = _V_KEYS[0]
     _V_MAX = _V_KEYS[-1]
+    _COEFF_VERSION += 1
     with _QDSTAR_CACHE_LOCK:
         _QDSTAR_CACHE.clear()
     return dict(_COEFFS)
@@ -181,13 +185,20 @@ def get_velocity_clamp_stats() -> Dict[str, int]:
 def set_gravity_velocity_mu(mu: float) -> float:
     """Set the LS09 gravitational-regime exponent μ used for velocity scaling."""
 
-    global _GRAVITY_VELOCITY_MU
+    global _GRAVITY_VELOCITY_MU, _COEFF_VERSION
     if mu <= 0.0:
         raise MarsDiskError("gravity velocity exponent mu must be positive")
     _GRAVITY_VELOCITY_MU = float(mu)
+    _COEFF_VERSION += 1
     with _QDSTAR_CACHE_LOCK:
         _QDSTAR_CACHE.clear()
     return _GRAVITY_VELOCITY_MU
+
+
+def get_qdstar_signature() -> tuple[int, str, float]:
+    """Return a compact signature for Q_D* coefficient settings."""
+
+    return (int(_COEFF_VERSION), str(_COEFF_UNIT_SYSTEM), float(_GRAVITY_VELOCITY_MU))
 
 
 def get_gravity_velocity_mu() -> float:

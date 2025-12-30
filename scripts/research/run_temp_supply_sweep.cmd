@@ -72,28 +72,41 @@ if defined RUN_TS (
   set "RUN_TS=!RUN_TS:\=-!"
   if not "!RUN_TS!"=="!RUN_TS_RAW!" echo.[warn] RUN_TS sanitized: "!RUN_TS_RAW!" -> "!RUN_TS!"
 )
-set "TMP_ROOT=%TEMP%"
+set "TMP_ROOT_BASE=%TEMP%"
 set "TMP_SOURCE=TEMP"
-if "%TMP_ROOT%"=="" (
-  set "TMP_ROOT=%CD%\tmp"
+if "%TMP_ROOT_BASE%"=="" (
+  set "TMP_ROOT_BASE=%CD%\tmp"
   set "TMP_SOURCE=fallback"
 )
-if not exist "%TMP_ROOT%" mkdir "%TMP_ROOT%" >nul 2>&1
-if not exist "%TMP_ROOT%" (
-  set "TMP_ROOT=%CD%\tmp"
+if not exist "%TMP_ROOT_BASE%" mkdir "%TMP_ROOT_BASE%" >nul 2>&1
+if not exist "%TMP_ROOT_BASE%" (
+  set "TMP_ROOT_BASE=%CD%\tmp"
   set "TMP_SOURCE=fallback"
-  if not exist "%TMP_ROOT%" mkdir "%TMP_ROOT%" >nul 2>&1
+  if not exist "%TMP_ROOT_BASE%" mkdir "%TMP_ROOT_BASE%" >nul 2>&1
 )
-if not exist "%TMP_ROOT%" (
-  echo.[error] temp_root unavailable: "%TMP_ROOT%"
+if not exist "%TMP_ROOT_BASE%" (
+  echo.[error] temp_root unavailable: "%TMP_ROOT_BASE%"
   popd
   exit /b 1
 )
-%LOG_SETUP% temp_root=%TMP_ROOT% (source=%TMP_SOURCE%)
 if not defined GIT_SHA for /f %%A in ('git rev-parse --short HEAD 2^>nul') do set "GIT_SHA=%%A"
 if not defined GIT_SHA set "GIT_SHA=nogit"
 if not defined BATCH_SEED for /f %%A in ('"%PYTHON_EXE%" scripts\\runsets\\common\\next_seed.py') do set "BATCH_SEED=%%A"
 if "%BATCH_SEED%"=="" set "BATCH_SEED=0"
+set "TMP_ROOT=%TMP_ROOT_BASE%"
+if "%RUN_ONE_MODE%"=="1" (
+  if defined RUN_ONE_SEED (
+    set "TMP_ROOT=!TMP_ROOT_BASE!\marsdisk_tmp_!RUN_TS!_!BATCH_SEED!_!RUN_ONE_SEED!"
+    set "TMP_SOURCE=job"
+  )
+)
+if not exist "!TMP_ROOT!" mkdir "!TMP_ROOT!" >nul 2>&1
+if not exist "!TMP_ROOT!" (
+  echo.[error] temp_root unavailable: "!TMP_ROOT!"
+  popd
+  exit /b 1
+)
+%LOG_SETUP% temp_root=!TMP_ROOT! (source=!TMP_SOURCE!)
 if "%TRACE_ENABLED%"=="1" (
   if not defined TRACE_LOG set "TRACE_LOG=%TMP_ROOT%\\marsdisk_trace_%RUN_TS%_%BATCH_SEED%.log"
   > "%TRACE_LOG%" echo.[trace] start script=%~f0 rev=%SCRIPT_REV%
@@ -709,7 +722,7 @@ set "JOB_TAU=%~3"
 for /f %%S in ('"%PYTHON_EXE%" scripts\\runsets\\common\\next_seed.py') do set "JOB_SEED=%%S"
 call :wait_for_slot
 set "JOB_PID="
-set "JOB_CMD=set RUN_ONE_T=!JOB_T!&& set RUN_ONE_EPS=!JOB_EPS!&& set RUN_ONE_TAU=!JOB_TAU!&& set RUN_ONE_SEED=!JOB_SEED!&& set AUTO_JOBS=0&& set PARALLEL_JOBS=1&& set SKIP_PIP=1&& call ""%~f0"" --run-one"
+set "JOB_CMD=set RUN_TS=!RUN_TS!&& set BATCH_SEED=!BATCH_SEED!&& set RUN_ONE_T=!JOB_T!&& set RUN_ONE_EPS=!JOB_EPS!&& set RUN_ONE_TAU=!JOB_TAU!&& set RUN_ONE_SEED=!JOB_SEED!&& set AUTO_JOBS=0&& set PARALLEL_JOBS=1&& set SKIP_PIP=1&& call ""%~f0"" --run-one"
 for /f "usebackq delims=" %%P in (`"%PYTHON_EXE%" scripts\\runsets\\common\\win_process.py launch --window-style "%PARALLEL_WINDOW_STYLE%"`) do set "JOB_PID=%%P"
 if defined JOB_PID set "JOB_PIDS=!JOB_PIDS! !JOB_PID!"
 if not defined JOB_PID echo.[warn] failed to launch job for T=!JOB_T! eps=!JOB_EPS! tau=!JOB_TAU! (check Python availability)

@@ -45,6 +45,11 @@ class CollisionKernelWorkspace:
 
     s_sum_sq: np.ndarray
     delta: np.ndarray
+    v_mat_full: np.ndarray | None = None
+    N_outer: np.ndarray | None = None
+    H_sq: np.ndarray | None = None
+    H_ij: np.ndarray | None = None
+    kernel: np.ndarray | None = None
 
 
 def prepare_collision_kernel_workspace(s: Iterable[float]) -> CollisionKernelWorkspace:
@@ -115,6 +120,16 @@ def compute_collision_kernel_C1(
             raise MarsDiskError("workspace has incompatible shape for collision kernel")
         workspace_s_sum_sq = workspace.s_sum_sq
         workspace_delta = workspace.delta
+        if workspace.v_mat_full is None or workspace.v_mat_full.shape != (n, n):
+            workspace.v_mat_full = np.zeros((n, n), dtype=np.float64)
+        if workspace.N_outer is None or workspace.N_outer.shape != (n, n):
+            workspace.N_outer = np.zeros((n, n), dtype=np.float64)
+        if workspace.H_sq is None or workspace.H_sq.shape != (n, n):
+            workspace.H_sq = np.zeros((n, n), dtype=np.float64)
+        if workspace.H_ij is None or workspace.H_ij.shape != (n, n):
+            workspace.H_ij = np.zeros((n, n), dtype=np.float64)
+        if workspace.kernel is None or workspace.kernel.shape != (n, n):
+            workspace.kernel = np.zeros((n, n), dtype=np.float64)
     else:
         workspace_s_sum_sq = None
         workspace_delta = None
@@ -149,19 +164,45 @@ def compute_collision_kernel_C1(
             )
 
     if kernel is None:
-        v_mat_full = np.full((n, n), float(v_scalar), dtype=np.float64) if not use_matrix_velocity else v_mat
-        N_outer = np.outer(N_arr, N_arr)
-        s_sum_sq = workspace_s_sum_sq if workspace_s_sum_sq is not None else np.add.outer(s_arr, s_arr) ** 2
-        delta = workspace_delta if workspace_delta is not None else np.eye(n)
-        H_sq = np.add.outer(H_arr * H_arr, H_arr * H_arr)
-        H_ij = np.sqrt(H_sq)
-        kernel = (
-            N_outer / (1.0 + delta)
-            * np.pi
-            * s_sum_sq
-            * v_mat_full
-            / (np.sqrt(2.0 * np.pi) * H_ij)
-        )
+        if workspace is not None:
+            v_mat_full = workspace.v_mat_full
+            if not use_matrix_velocity:
+                v_mat_full.fill(float(v_scalar))
+            else:
+                v_mat_full[:] = v_mat
+            N_outer = workspace.N_outer
+            np.multiply(N_arr[:, None], N_arr[None, :], out=N_outer)
+            s_sum_sq = workspace_s_sum_sq
+            delta = workspace_delta
+            H_sq = workspace.H_sq
+            H2 = H_arr * H_arr
+            np.add(H2[:, None], H2[None, :], out=H_sq)
+            H_ij = workspace.H_ij
+            np.sqrt(H_sq, out=H_ij)
+            kernel = workspace.kernel
+            kernel[:] = N_outer / (1.0 + delta)
+            kernel *= np.pi
+            kernel *= s_sum_sq
+            kernel *= v_mat_full
+            kernel /= (np.sqrt(2.0 * np.pi) * H_ij)
+        else:
+            v_mat_full = (
+                np.full((n, n), float(v_scalar), dtype=np.float64)
+                if not use_matrix_velocity
+                else v_mat
+            )
+            N_outer = np.outer(N_arr, N_arr)
+            s_sum_sq = np.add.outer(s_arr, s_arr) ** 2
+            delta = np.eye(n)
+            H_sq = np.add.outer(H_arr * H_arr, H_arr * H_arr)
+            H_ij = np.sqrt(H_sq)
+            kernel = (
+                N_outer / (1.0 + delta)
+                * np.pi
+                * s_sum_sq
+                * v_mat_full
+                / (np.sqrt(2.0 * np.pi) * H_ij)
+            )
     if logger.isEnabledFor(logging.DEBUG):
         logger.debug("compute_collision_kernel_C1: n_bins=%d use_numba=%s", n, use_jit)
     return kernel

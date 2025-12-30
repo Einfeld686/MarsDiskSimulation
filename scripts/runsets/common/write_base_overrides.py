@@ -35,7 +35,7 @@ def main() -> int:
     args = ap.parse_args()
 
     lines: list[str] = []
-    append_literal(lines, "numerics.dt_init=2")
+    append_literal(lines, "numerics.dt_init=20")
     append(lines, "numerics.stop_on_blowout_below_smin", env("STOP_ON_BLOWOUT_BELOW_SMIN"))
     append_literal(lines, "phase.enabled=true")
 

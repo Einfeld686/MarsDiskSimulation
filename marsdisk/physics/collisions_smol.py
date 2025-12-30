@@ -6,6 +6,7 @@ import math
 import os
 import threading
 import warnings
+from collections import OrderedDict
 from dataclasses import dataclass
 from typing import MutableMapping, TYPE_CHECKING
 
@@ -41,6 +42,14 @@ _NUMBA_DISABLED_ENV = os.environ.get("MARSDISK_DISABLE_NUMBA", "").lower() in {
     "on",
 }
 _USE_NUMBA = _NUMBA_AVAILABLE and not _NUMBA_DISABLED_ENV
+# Honour opt-out for collision caches to ease A/B comparisons.
+_CACHE_DISABLED_ENV = os.environ.get("MARSDISK_DISABLE_COLLISION_CACHE", "").lower() in {
+    "1",
+    "true",
+    "yes",
+    "on",
+}
+_CACHE_ENABLED = not _CACHE_DISABLED_ENV
 # Set to True after a runtime failure to avoid repeatedly calling broken JIT kernels.
 _NUMBA_FAILED = False
 _THREAD_LOCAL = threading.local()
@@ -121,6 +130,46 @@ class TimeOrbitParams:
 
 
 @dataclass
+class FragmentWorkspace:
+    """Cached size-dependent arrays for fragment tensor construction."""
+
+    sizes_key: tuple
+    rho: float
+    m1: np.ndarray
+    m2: np.ndarray
+    m_tot: np.ndarray
+    valid_pair: np.ndarray
+    size_ref: np.ndarray
+
+
+def _array_fingerprint(arr: np.ndarray) -> tuple[int, float, float, float, float]:
+    arr = np.asarray(arr, dtype=float)
+    if arr.size == 0:
+        return (0, 0.0, 0.0, 0.0, 0.0)
+    return (
+        int(arr.size),
+        float(arr[0]),
+        float(arr[-1]),
+        float(np.sum(arr)),
+        float(np.sum(arr * arr)),
+    )
+
+
+def _versioned_key(version: int | None, arr: np.ndarray, *, tag: str) -> tuple:
+    if version is not None:
+        return (tag, int(version))
+    return (tag,) + _array_fingerprint(arr)
+
+
+def _get_thread_cache(name: str) -> "OrderedDict[tuple, object]":
+    cache = getattr(_THREAD_LOCAL, name, None)
+    if cache is None:
+        cache = OrderedDict()
+        setattr(_THREAD_LOCAL, name, cache)
+    return cache
+
+
+@dataclass
 class MaterialParams:
     """Group B: 物質パラメータ."""
 
@@ -195,6 +244,8 @@ def supply_mass_rate_to_number_source(
     s_inj_min: float | None = None,
     s_inj_max: float | None = None,
     q: float = 3.5,
+    sizes_version: int | None = None,
+    edges_version: int | None = None,
 ) -> np.ndarray:
     """Convert a mass flux to a per-bin number source ``F_k`` (1/s).
 
@@ -243,8 +294,9 @@ def supply_mass_rate_to_number_source(
         inj_floor = max(inj_floor, float(s_inj_min))
 
     def _inject_min_bin(effective_floor: float) -> np.ndarray:
-        candidates = np.nonzero(s_arr >= effective_floor)[0]
-        k_inj = int(candidates[0]) if candidates.size else int(len(s_arr) - 1)
+        k_inj = int(np.searchsorted(s_arr, effective_floor, side="left"))
+        if k_inj >= len(s_arr):
+            k_inj = int(len(s_arr) - 1)
         F_min = np.zeros_like(m_arr, dtype=float)
         if m_arr[k_inj] > 0.0:
             F_min[k_inj] = prod_rate / m_arr[k_inj]
@@ -261,38 +313,78 @@ def supply_mass_rate_to_number_source(
         inj_ceiling = float(s_inj_max)
     inj_ceiling = max(min(inj_ceiling, float(np.max(s_arr))), inj_floor)
 
-    if _USE_NUMBA and not _NUMBA_FAILED:
-        try:
-            return supply_mass_rate_powerlaw_numba(
-                s_arr.astype(np.float64),
-                m_arr.astype(np.float64),
-                widths_arr.astype(np.float64),
-                float(prod_rate),
-                float(inj_floor),
-                float(inj_ceiling),
-                float(q),
-            )
-        except Exception as exc:  # pragma: no cover - fallback
-            _NUMBA_FAILED = True
-            warnings.warn(
-                f"supply_mass_rate_to_number_source: numba powerlaw kernel failed ({exc!r}); falling back to NumPy.",
-                NumericalWarning,
-            )
+    if not _CACHE_ENABLED:
+        if _USE_NUMBA and not _NUMBA_FAILED:
+            try:
+                return supply_mass_rate_powerlaw_numba(
+                    s_arr.astype(np.float64),
+                    m_arr.astype(np.float64),
+                    widths_arr.astype(np.float64),
+                    float(prod_rate),
+                    float(inj_floor),
+                    float(inj_ceiling),
+                    float(q),
+                )
+            except Exception as exc:  # pragma: no cover - fallback
+                _NUMBA_FAILED = True
+                warnings.warn(
+                    f"supply_mass_rate_to_number_source: numba powerlaw kernel failed ({exc!r}); falling back to NumPy.",
+                    NumericalWarning,
+                )
 
-    left_edges = np.maximum(s_arr - 0.5 * widths_arr, 0.0)
-    right_edges = left_edges + widths_arr
-    overlap_left = np.maximum(left_edges, inj_floor)
-    overlap_right = np.minimum(right_edges, inj_ceiling)
-    mask = overlap_right > overlap_left
-    weights = np.zeros_like(s_arr, dtype=float)
-    if np.any(mask):
-        if math.isclose(q, 1.0):
-            weights[mask] = np.log(overlap_right[mask] / overlap_left[mask])
-        else:
-            power = 1.0 - float(q)
-            weights[mask] = (overlap_right[mask] ** power - overlap_left[mask] ** power) / power
-    weights = np.where(np.isfinite(weights) & (weights > 0.0), weights, 0.0)
-    mass_sum = float(np.sum(weights * m_arr))
+        left_edges = np.maximum(s_arr - 0.5 * widths_arr, 0.0)
+        right_edges = left_edges + widths_arr
+        overlap_left = np.maximum(left_edges, inj_floor)
+        overlap_right = np.minimum(right_edges, inj_ceiling)
+        mask = overlap_right > overlap_left
+        weights = np.zeros_like(s_arr, dtype=float)
+        if np.any(mask):
+            if math.isclose(q, 1.0):
+                weights[mask] = np.log(overlap_right[mask] / overlap_left[mask])
+            else:
+                power = 1.0 - float(q)
+                weights[mask] = (overlap_right[mask] ** power - overlap_left[mask] ** power) / power
+        weights = np.where(np.isfinite(weights) & (weights > 0.0), weights, 0.0)
+        mass_sum = float(np.sum(weights * m_arr))
+        if mass_sum <= 0.0:
+            return _inject_min_bin(inj_floor)
+        F = np.zeros_like(m_arr, dtype=float)
+        positive = (weights > 0.0) & (m_arr > 0.0)
+        if np.any(positive):
+            F[positive] = weights[positive] * prod_rate / mass_sum
+        return F
+
+    sizes_key = _versioned_key(sizes_version, s_arr, tag="sizes")
+    edges_key = _versioned_key(edges_version, widths_arr, tag="edges")
+    m_key = _array_fingerprint(m_arr)
+    cache_key = ("powerlaw", sizes_key, edges_key, m_key, float(inj_floor), float(inj_ceiling), float(q))
+
+    cache = _get_thread_cache("supply_cache")
+    cached = cache.get(cache_key)
+    if cached is not None:
+        cache.move_to_end(cache_key)
+        weights, mass_sum = cached
+    else:
+        left_edges = np.maximum(s_arr - 0.5 * widths_arr, 0.0)
+        right_edges = left_edges + widths_arr
+        overlap_left = np.maximum(left_edges, inj_floor)
+        overlap_right = np.minimum(right_edges, inj_ceiling)
+        mask = overlap_right > overlap_left
+        weights = np.zeros_like(s_arr, dtype=float)
+        if np.any(mask):
+            if math.isclose(q, 1.0):
+                weights[mask] = np.log(overlap_right[mask] / overlap_left[mask])
+            else:
+                power = 1.0 - float(q)
+                weights[mask] = (overlap_right[mask] ** power - overlap_left[mask] ** power) / power
+        weights = np.where(np.isfinite(weights) & (weights > 0.0), weights, 0.0)
+        mass_sum = float(np.sum(weights * m_arr))
+        weights.setflags(write=False)
+        cache[cache_key] = (weights, mass_sum)
+        cache.move_to_end(cache_key)
+        if len(cache) > _SUPPLY_CACHE_MAX:
+            cache.popitem(last=False)
+
     if mass_sum <= 0.0:
         return _inject_min_bin(inj_floor)
 
@@ -306,6 +398,166 @@ def supply_mass_rate_to_number_source(
 _FRAG_CACHE: dict[tuple, np.ndarray] = {}
 _FRAG_CACHE_MAX = 32
 _FRAG_CACHE_LOCK = threading.Lock()
+_WEIGHTS_CACHE_MAX = 16
+_QSTAR_CACHE_MAX = 8
+_SUPPLY_CACHE_MAX = 16
+
+# Cache keys cover size/edge versions (or fingerprints), rho, scalar v_rel, alpha_frag,
+# and the Q_D* signature to prevent cross-cell contamination in 1D runs.
+
+
+def reset_collision_caches() -> None:
+    """Clear run-local collision caches (fragment/weights/qstar/supply)."""
+
+    with _FRAG_CACHE_LOCK:
+        _FRAG_CACHE.clear()
+    for name in ("weights_cache", "qstar_cache", "supply_cache"):
+        cache = getattr(_THREAD_LOCAL, name, None)
+        if cache is not None:
+            cache.clear()
+    if hasattr(_THREAD_LOCAL, "frag_ws"):
+        _THREAD_LOCAL.frag_ws = None
+
+
+def _get_fragment_workspace(
+    sizes_arr: np.ndarray,
+    masses_arr: np.ndarray,
+    rho: float,
+    sizes_key: tuple,
+) -> FragmentWorkspace:
+    if not _CACHE_ENABLED:
+        m1 = masses_arr[:, None]
+        m2 = masses_arr[None, :]
+        m_tot = m1 + m2
+        valid_pair = (m1 > 0.0) & (m2 > 0.0) & (m_tot > 0.0)
+        size_ref = np.maximum.outer(sizes_arr, sizes_arr)
+        return FragmentWorkspace(
+            sizes_key=sizes_key,
+            rho=float(rho),
+            m1=m1,
+            m2=m2,
+            m_tot=m_tot,
+            valid_pair=valid_pair,
+            size_ref=size_ref,
+        )
+    workspace = getattr(_THREAD_LOCAL, "frag_ws", None)
+    if workspace is not None:
+        if workspace.sizes_key == sizes_key and workspace.rho == float(rho):
+            expected_shape = (sizes_arr.size, sizes_arr.size)
+            if (
+                workspace.m1.shape == expected_shape
+                and workspace.m2.shape == expected_shape
+                and workspace.m_tot.shape == expected_shape
+                and workspace.valid_pair.shape == expected_shape
+                and workspace.size_ref.shape == expected_shape
+            ):
+                return workspace
+    m1 = masses_arr[:, None]
+    m2 = masses_arr[None, :]
+    m_tot = m1 + m2
+    valid_pair = (m1 > 0.0) & (m2 > 0.0) & (m_tot > 0.0)
+    size_ref = np.maximum.outer(sizes_arr, sizes_arr)
+    workspace = FragmentWorkspace(
+        sizes_key=sizes_key,
+        rho=float(rho),
+        m1=m1,
+        m2=m2,
+        m_tot=m_tot,
+        valid_pair=valid_pair,
+        size_ref=size_ref,
+    )
+    _THREAD_LOCAL.frag_ws = workspace
+    return workspace
+
+
+def _get_weights_table(
+    edges_arr: np.ndarray,
+    alpha_frag: float,
+    edges_key: tuple,
+    *,
+    prefer_numba: bool,
+) -> np.ndarray:
+    global _NUMBA_FAILED
+    cache = None
+    cache_key = None
+    if _CACHE_ENABLED:
+        cache = _get_thread_cache("weights_cache")
+        cache_key = (edges_key, float(alpha_frag))
+        cached = cache.get(cache_key)
+        if cached is not None:
+            cache.move_to_end(cache_key)
+            return cached
+
+    weights_table = None
+    if prefer_numba and _NUMBA_AVAILABLE and not _NUMBA_FAILED:
+        try:
+            weights_table = compute_weights_table_numba(edges_arr, float(alpha_frag))
+        except Exception as exc:  # pragma: no cover - fallback
+            _NUMBA_FAILED = True
+            warnings.warn(
+                f"_fragment_tensor: numba weights_table failed ({exc!r}); falling back to NumPy.",
+                NumericalWarning,
+            )
+            weights_table = None
+
+    if weights_table is None:
+        n = edges_arr.size - 1
+        left_edges = np.maximum(edges_arr[:-1], 1.0e-30)
+        right_edges = np.maximum(edges_arr[1:], left_edges)
+        power = 1.0 - float(alpha_frag)
+        if abs(power) < 1.0e-12:
+            bin_integrals = np.log(right_edges / left_edges)
+        else:
+            bin_integrals = (right_edges**power - left_edges**power) / power
+        bin_integrals = np.where(
+            np.isfinite(bin_integrals) & (bin_integrals > 0.0), bin_integrals, 0.0
+        )
+        weights_table = np.zeros((n, n), dtype=np.float64)
+        for k_lr in range(n):
+            weights = bin_integrals[: k_lr + 1]
+            weights_sum = float(np.sum(weights))
+            if weights_sum > 0.0:
+                weights_table[k_lr, : k_lr + 1] = weights / weights_sum
+
+    if not np.isfinite(weights_table).all():
+        return weights_table
+    if _CACHE_ENABLED and cache is not None and cache_key is not None:
+        weights_table.setflags(write=False)
+        cache[cache_key] = weights_table
+        cache.move_to_end(cache_key)
+        if len(cache) > _WEIGHTS_CACHE_MAX:
+            cache.popitem(last=False)
+    return weights_table
+
+
+def _get_qstar_matrix(
+    size_ref: np.ndarray,
+    rho: float,
+    v_matrix: np.ndarray,
+    v_rel_scalar: float | None,
+    sizes_key: tuple,
+) -> np.ndarray:
+    if v_rel_scalar is None:
+        return qstar.compute_q_d_star_array(size_ref, rho, v_matrix / 1.0e3)
+    v_rel_use = max(float(v_rel_scalar), 1.0e-12)  # m/s; converted to km/s below
+    if not _CACHE_ENABLED:
+        return qstar.compute_q_d_star_array(size_ref, rho, v_rel_use / 1.0e3)
+    cache = _get_thread_cache("qstar_cache")
+    qstar_sig = qstar.get_qdstar_signature()
+    cache_key = (sizes_key, float(rho), float(v_rel_use), qstar_sig)
+    cached = cache.get(cache_key)
+    if cached is not None:
+        cache.move_to_end(cache_key)
+        return cached
+    q_star_matrix = qstar.compute_q_d_star_array(size_ref, rho, v_rel_use / 1.0e3)
+    q_star_matrix = np.asarray(q_star_matrix, dtype=float)
+    if np.isfinite(q_star_matrix).all():
+        q_star_matrix.setflags(write=False)
+        cache[cache_key] = q_star_matrix
+        cache.move_to_end(cache_key)
+        if len(cache) > _QSTAR_CACHE_MAX:
+            cache.popitem(last=False)
+    return q_star_matrix
 
 
 def _fragment_tensor(
@@ -315,6 +567,8 @@ def _fragment_tensor(
     v_rel: float | np.ndarray,
     rho: float,
     alpha_frag: float = 3.5,
+    sizes_version: int | None = None,
+    edges_version: int | None = None,
     *,
     use_numba: bool | None = None,
 ) -> np.ndarray:
@@ -341,16 +595,20 @@ def _fragment_tensor(
     if rho <= 0.0:
         raise MarsDiskError("rho must be positive")
 
-    use_cache = np.isscalar(v_rel)
+    sizes_key = _versioned_key(sizes_version, sizes_arr, tag="sizes")
+    edges_key = _versioned_key(edges_version, edges_arr, tag="edges")
+
+    is_scalar_v = np.isscalar(v_rel)
+    v_rel_scalar = float(v_rel) if is_scalar_v else None
+    use_cache = is_scalar_v and _CACHE_ENABLED
     cache_key: tuple | None = None
     if use_cache:
         cache_key = (
             "scalar",
             float(v_rel),
             float(rho),
-            tuple(sizes_arr.tolist()),
-            tuple(masses_arr.tolist()),
-            tuple(edges_arr.tolist()),
+            sizes_key,
+            edges_key,
             float(alpha_frag),
         )
         with _FRAG_CACHE_LOCK:
@@ -358,8 +616,8 @@ def _fragment_tensor(
         if cached is not None:
             return cached
 
-    if np.isscalar(v_rel):
-        v_matrix = np.full((n, n), float(v_rel), dtype=np.float64)
+    if v_rel_scalar is not None:
+        v_matrix = np.full((n, n), float(v_rel_scalar), dtype=np.float64)
     else:
         v_matrix = np.asarray(v_rel, dtype=np.float64)
         if v_matrix.shape != (n, n):
@@ -367,13 +625,13 @@ def _fragment_tensor(
     v_matrix = np.maximum(v_matrix, 1.0e-12)
 
     # Precompute matrices needed for fragment distribution
-    m1 = masses_arr[:, None]
-    m2 = masses_arr[None, :]
-    m_tot = m1 + m2
-    valid_pair = (m1 > 0.0) & (m2 > 0.0) & (m_tot > 0.0)
-
-    size_ref = np.maximum.outer(sizes_arr, sizes_arr)
-    q_star_matrix = qstar.compute_q_d_star_array(size_ref, rho, v_matrix / 1.0e3)
+    workspace = _get_fragment_workspace(sizes_arr, masses_arr, rho, sizes_key)
+    m1 = workspace.m1
+    m2 = workspace.m2
+    m_tot = workspace.m_tot
+    valid_pair = workspace.valid_pair
+    size_ref = workspace.size_ref
+    q_star_matrix = _get_qstar_matrix(size_ref, rho, v_matrix, v_rel_scalar, sizes_key)
     q_r_matrix = q_r_array(m1, m2, v_matrix)
     f_lr_matrix = np.clip(
         largest_remnant_fraction_array(q_r_matrix, q_star_matrix), 0.0, 1.0
@@ -399,7 +657,12 @@ def _fragment_tensor(
     # Branch: Numba-accelerated or pure Python fallback
     if use_jit:
         try:
-            weights_table = compute_weights_table_numba(edges_arr, float(alpha_frag))
+            weights_table = _get_weights_table(
+                edges_arr,
+                alpha_frag,
+                edges_key,
+                prefer_numba=True,
+            )
             fill_fragment_tensor_numba(
                 Y, n, valid_pair, f_lr_matrix, k_lr_matrix, weights_table
             )
@@ -430,21 +693,12 @@ def _fragment_tensor(
 
     if not use_jit and not used_fallback:
         # Pure Python fallback (original implementation)
-        left_edges = np.maximum(edges_arr[:-1], 1.0e-30)
-        right_edges = np.maximum(edges_arr[1:], left_edges)
-        power = 1.0 - float(alpha_frag)
-        if abs(power) < 1.0e-12:
-            bin_integrals = np.log(right_edges / left_edges)
-        else:
-            bin_integrals = (right_edges**power - left_edges**power) / power
-        bin_integrals = np.where(np.isfinite(bin_integrals) & (bin_integrals > 0.0), bin_integrals, 0.0)
-        weights_table = np.zeros((n, n), dtype=np.float64)
-        for k_lr in range(n):
-            weights = bin_integrals[: k_lr + 1]
-            weights_sum = float(np.sum(weights))
-            if weights_sum > 0.0:
-                weights_table[k_lr, : k_lr + 1] = weights / weights_sum
-
+        weights_table = _get_weights_table(
+            edges_arr,
+            alpha_frag,
+            edges_key,
+            prefer_numba=False,
+        )
         for i in range(n):
             for j in range(n):
                 if not valid_pair[i, j]:
@@ -462,6 +716,8 @@ def _fragment_tensor(
                 Y[: k_lr + 1, i, j] += remainder_frac * weights
 
     if use_cache and cache_key is not None:
+        if not np.isfinite(Y).all():
+            return Y
         with _FRAG_CACHE_LOCK:
             if len(_FRAG_CACHE) >= _FRAG_CACHE_MAX:
                 _FRAG_CACHE.pop(next(iter(_FRAG_CACHE)))
@@ -859,6 +1115,8 @@ def step_collisions_smol_0d(
         sigma_for_step,
         rho_fallback=rho,
     )
+    sizes_version = psd_state.get("sizes_version")
+    edges_version = psd_state.get("edges_version")
     energy_stats = None
     f_ke_eps_mismatch = None
     e_next_state = None
@@ -1063,7 +1321,15 @@ def step_collisions_smol_0d(
             edges_arr = np.empty(sizes_arr.size + 1, dtype=float)
             edges_arr[:-1] = left_edges
             edges_arr[-1] = sizes_arr[-1] + 0.5 * widths_arr[-1]
-        Y_tensor = _fragment_tensor(sizes_arr, m_k, edges_arr, v_rel_scalar, rho)
+        Y_tensor = _fragment_tensor(
+            sizes_arr,
+            m_k,
+            edges_arr,
+            v_rel_scalar,
+            rho,
+            sizes_version=sizes_version if isinstance(sizes_version, int) else None,
+            edges_version=edges_version if isinstance(edges_version, int) else None,
+        )
         if logger.isEnabledFor(logging.DEBUG):
             e_log = float(e_kernel) if e_kernel is not None else float("nan")
             i_log = float(i_kernel) if i_kernel is not None else float("nan")
@@ -1182,6 +1448,8 @@ def step_collisions_smol_0d(
         s_inj_min=supply_s_inj_min,
         s_inj_max=supply_s_inj_max,
         q=supply_q,
+        sizes_version=sizes_version if isinstance(sizes_version, int) else None,
+        edges_version=edges_version if isinstance(edges_version, int) else None,
     )
 
     smol_diag: dict[str, float] = {}

@@ -59,6 +59,27 @@ __all__ = [
 ]
 
 
+def _set_psd_edges(
+    psd_state: Dict[str, np.ndarray | float],
+    edges: np.ndarray,
+    *,
+    bump_version: bool = True,
+) -> None:
+    """Update PSD edges and bump edges_version only when the content changes."""
+
+    edges_arr = np.asarray(edges, dtype=float)
+    old_edges = psd_state.get("edges")
+    if isinstance(old_edges, np.ndarray):
+        if old_edges.shape == edges_arr.shape and np.array_equal(old_edges, edges_arr):
+            psd_state["edges"] = edges_arr
+            return
+    psd_state["edges"] = edges_arr
+    if bump_version:
+        psd_state["edges_version"] = int(psd_state.get("edges_version", 0)) + 1
+    else:
+        psd_state.setdefault("edges_version", 0)
+
+
 def update_psd_state(
     *,
     s_min: float,
@@ -141,14 +162,15 @@ def update_psd_state(
         "s_min": s_min,
         "s_max": s_max,
         "sizes_version": 0,
+        "edges_version": 0,
         "wavy_decay": wavy_decay,
         "alpha": alpha,
         "alpha_mode": alpha_mode,
         # ---- alias 追加（後段の関数が参照しやすい共通キー）
         "s": centres,
         "n": number,
-        "edges": edges,
     }
+    _set_psd_edges(psd_state, edges, bump_version=False)
     sanitize_and_normalize_number(psd_state)
     return psd_state
 
@@ -497,7 +519,7 @@ def apply_uniform_size_drift(
     psd_state["s"] = new_sizes
     psd_state["sizes_version"] = int(psd_state.get("sizes_version", 0)) + 1
     psd_state["s_min"] = float(np.min(new_sizes))
-    psd_state["edges"] = edges
+    _set_psd_edges(psd_state, edges)
     sanitize_and_normalize_number(psd_state)
 
     # determine the relative change in solid mass represented by the PSD

@@ -221,6 +221,7 @@ def run_one_d(
         except Exception:
             config_source_path = None
     outdir = Path(cfg.io.outdir)
+    collisions_smol.reset_collision_caches()
 
     geometry_cfg = getattr(cfg, "geometry", None)
     if geometry_cfg is None or getattr(geometry_cfg, "mode", "0D") != "1D":
@@ -352,6 +353,21 @@ def run_one_d(
         "numba_threads_auto": numba_threads_auto,
         "numba_threads_effective": numba_threads_effective,
         "cell_coupling_enabled": cell_coupling_enabled,
+    }
+    thread_env = {
+        "CELL_THREAD_LIMIT": os.environ.get("CELL_THREAD_LIMIT"),
+        "NUMBA_NUM_THREADS": os.environ.get("NUMBA_NUM_THREADS"),
+        "OMP_NUM_THREADS": os.environ.get("OMP_NUM_THREADS"),
+        "MKL_NUM_THREADS": os.environ.get("MKL_NUM_THREADS"),
+        "OPENBLAS_NUM_THREADS": os.environ.get("OPENBLAS_NUM_THREADS"),
+        "NUMEXPR_NUM_THREADS": os.environ.get("NUMEXPR_NUM_THREADS"),
+        "VECLIB_MAXIMUM_THREADS": os.environ.get("VECLIB_MAXIMUM_THREADS"),
+    }
+    thread_info = {
+        "env": thread_env,
+        "numba_threads_env": numba_threads_env,
+        "numba_threads_auto": numba_threads_auto,
+        "numba_threads_effective": numba_threads_effective,
     }
 
     if cell_parallel_requested:
@@ -901,6 +917,7 @@ def run_one_d(
         "init_ei": init_ei_snapshot,
     }
     run_config_snapshot["cell_parallel"] = cell_parallel_info
+    run_config_snapshot["threading"] = thread_info
     auto_tune_info = getattr(cfg, "_auto_tune_info", None)
     if auto_tune_info is not None:
         run_config_snapshot["auto_tune"] = auto_tune_info
@@ -995,8 +1012,17 @@ def run_one_d(
     )
     steps_since_flush = 0
 
-    run_rows_est = n_steps * n_cells
-    mem_short, mem_long = _memory_estimate(run_rows_est, n_bins)
+    mem_short, mem_long = _memory_estimate(
+        n_steps,
+        n_bins,
+        n_cells=n_cells,
+        psd_history_enabled=psd_history_enabled,
+        psd_history_stride=psd_history_stride,
+        diagnostics_enabled=True,
+        mass_budget_enabled=True,
+        mass_budget_cells_enabled=True,
+        step_diag_enabled=False,
+    )
     progress_enabled = bool(getattr(cfg.io.progress, "enable", False))
     progress = ProgressReporter(
         n_steps,
@@ -2825,6 +2851,7 @@ def run_one_d(
         },
     }
     run_config_snapshot["cell_parallel"] = cell_parallel_info
+    run_config_snapshot["threading"] = thread_info
     if auto_tune_info is not None:
         run_config_snapshot["auto_tune"] = auto_tune_info
     writer.write_run_config(run_config_snapshot, run_config_path)

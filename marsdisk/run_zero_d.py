@@ -1618,7 +1618,25 @@ def run_zero_d(
     memory_hint_header: Optional[str] = None
     if progress_enabled:
         n_bins_cfg = int(getattr(cfg.sizes, "n_bins", 0) or 0)
-        memory_hint_short, memory_hint_header = _memory_estimate(n_steps, n_bins_cfg)
+        psd_history_enabled_hint = bool(getattr(cfg.io, "psd_history", True))
+        psd_history_stride_hint = int(getattr(cfg.io, "psd_history_stride", 1) or 1)
+        if psd_history_stride_hint < 1:
+            psd_history_stride_hint = 1
+        step_diag_cfg_hint = getattr(cfg.io, "step_diagnostics", None)
+        step_diag_enabled_hint = (
+            bool(getattr(step_diag_cfg_hint, "enable", False)) if step_diag_cfg_hint else False
+        )
+        memory_hint_short, memory_hint_header = _memory_estimate(
+            n_steps,
+            n_bins_cfg,
+            n_cells=1,
+            psd_history_enabled=psd_history_enabled_hint,
+            psd_history_stride=psd_history_stride_hint,
+            diagnostics_enabled=True,
+            mass_budget_enabled=True,
+            mass_budget_cells_enabled=False,
+            step_diag_enabled=step_diag_enabled_hint,
+        )
     progress = ProgressReporter(
         n_steps,
         t_end,
@@ -1978,6 +1996,7 @@ def run_zero_d(
     energy_sum_ret = 0.0
     energy_last_row: Optional[Dict[str, float]] = None
     energy_count = 0
+    collisions_smol.reset_collision_caches()
     collisions_smol._F_KE_MISMATCH_WARNED = False
     smol_sink_workspace: SmolSinkWorkspace | None = None
 

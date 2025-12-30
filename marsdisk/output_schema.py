@@ -312,8 +312,15 @@ ONE_D_EXTRA_DIAGNOSTIC_KEYS: list[str] = ["cell_index"]
 
 
 def _ensure_keys(record: Dict[str, object], keys: Iterable[str]) -> None:
+    missing = None
     for key in keys:
-        record.setdefault(key, None)
+        if key not in record:
+            if missing is None:
+                missing = {key: None}
+            else:
+                missing[key] = None
+    if missing:
+        record.update(missing)
 
 
 def ensure_series_keys(record: Dict[str, object], *, include_1d: bool = True) -> None:

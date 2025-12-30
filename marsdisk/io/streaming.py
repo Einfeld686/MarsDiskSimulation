@@ -6,7 +6,6 @@ import logging
 from pathlib import Path
 from typing import List, Optional
 
-import pandas as pd
 import pyarrow as pa
 import pyarrow.parquet as pq
 
@@ -91,23 +90,19 @@ class StreamingState:
         wrote_any = False
         if history.records:
             path = series_dir / f"run_chunk_{label}.parquet"
-            writer.write_parquet(pd.DataFrame(history.records), path, compression=self.compression)
+            writer.write_parquet(history.records, path, compression=self.compression)
             self.run_chunks.append(path)
             history.records.clear()
             wrote_any = True
         if history.psd_hist_records:
             path = series_dir / f"psd_hist_chunk_{label}.parquet"
-            writer.write_parquet(
-                pd.DataFrame(history.psd_hist_records), path, compression=self.compression
-            )
+            writer.write_parquet(history.psd_hist_records, path, compression=self.compression)
             self.psd_chunks.append(path)
             history.psd_hist_records.clear()
             wrote_any = True
         if history.diagnostics:
             path = series_dir / f"diagnostics_chunk_{label}.parquet"
-            writer.write_parquet(
-                pd.DataFrame(history.diagnostics), path, compression=self.compression
-            )
+            writer.write_parquet(history.diagnostics, path, compression=self.compression)
             self.diag_chunks.append(path)
             history.diagnostics.clear()
             wrote_any = True

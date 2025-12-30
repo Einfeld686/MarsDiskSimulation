@@ -24,7 +24,8 @@ if not defined PYTHON_EXE (
 )
 set "PYTHON_BOOT=%PYTHON_EXE%"
 
-for %%I in ("%~dp0..\..\..") do set "REPO=%%~fI"
+set "REPO=%~dp0..\..\..\"
+for %%I in ("%REPO%") do set "REPO=%%~fI"
 pushd "%REPO%"
 
 if not defined VENV_DIR set "VENV_DIR=.venv"

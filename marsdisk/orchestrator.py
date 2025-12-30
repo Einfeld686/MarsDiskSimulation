@@ -56,7 +56,7 @@ from .errors import ConfigurationError
 from .schema import Config
 from . import config_utils, constants
 from .physics import tempdriver
-from .io.streaming import MEMORY_RUN_ROW_BYTES, MEMORY_PSD_ROW_BYTES
+from .io.streaming import MEMORY_DIAG_ROW_BYTES, MEMORY_PSD_ROW_BYTES, MEMORY_RUN_ROW_BYTES
 
 logger = logging.getLogger(__name__)
 
@@ -469,22 +469,68 @@ def memory_estimate(
     run_row_bytes: float = MEMORY_RUN_ROW_BYTES,
     psd_row_bytes: float = MEMORY_PSD_ROW_BYTES,
     *,
+    n_cells: int = 1,
+    psd_history_enabled: bool = True,
+    psd_history_stride: int = 1,
+    diagnostics_enabled: bool = True,
+    mass_budget_enabled: bool = True,
+    mass_budget_cells_enabled: bool = False,
+    step_diag_enabled: bool = False,
+    diag_row_bytes: float = MEMORY_DIAG_ROW_BYTES,
     smol_value_bytes: float = 8.0,
 ) -> tuple[str, str]:
-    """Return short and long memory hints estimated from steps and bins."""
+    """Return short and long memory hints estimated from expected row counts."""
 
-    run_rows = max(int(n_steps), 0)
-    psd_rows = max(int(n_steps * n_bins), 0)
+    steps = max(int(n_steps), 0)
+    bins = max(int(n_bins), 0)
+    cells = max(int(n_cells), 1)
+    stride = max(int(psd_history_stride), 1)
+
+    run_rows = steps * cells
+    diag_rows = run_rows if diagnostics_enabled else 0
+    budget_rows = steps if mass_budget_enabled else 0
+    budget_cells_rows = run_rows if mass_budget_cells_enabled else 0
+    step_diag_rows = steps if step_diag_enabled else 0
+
+    if psd_history_enabled and bins > 0 and steps > 0:
+        psd_steps = (steps + stride - 1) // stride
+        psd_rows = psd_steps * bins * cells
+    else:
+        psd_rows = 0
+
     run_mem = run_rows * float(run_row_bytes)
+    diag_mem = diag_rows * float(diag_row_bytes)
     psd_mem = psd_rows * float(psd_row_bytes)
-    smol_mem = smol_value_bytes * (n_bins**2 + n_bins**3)  # C_ij + Y_ijk dense tensors
-    total_mem = run_mem + psd_mem + smol_mem
+    budget_mem = (budget_rows + budget_cells_rows) * float(run_row_bytes)
+    step_diag_mem = step_diag_rows * float(diag_row_bytes)
+    smol_mem = smol_value_bytes * (bins**2 + bins**3) if bins > 0 else 0.0
+    total_mem = run_mem + diag_mem + psd_mem + budget_mem + step_diag_mem + smol_mem
     short = f"{human_bytes(total_mem)} est"
-    long = (
-        f"[mem est] run_rows={run_rows:,} psd_rows={psd_rows:,} "
-        f"run~{human_bytes(run_mem)} psd~{human_bytes(psd_mem)} "
-        f"smol~{human_bytes(smol_mem)} total~{human_bytes(total_mem)}"
-    )
+    row_parts = [f"run_rows={run_rows:,}"]
+    if diagnostics_enabled:
+        row_parts.append(f"diag_rows={diag_rows:,}")
+    if psd_history_enabled:
+        row_parts.append(f"psd_rows={psd_rows:,}")
+    if mass_budget_enabled:
+        row_parts.append(f"budget_rows={budget_rows:,}")
+    if mass_budget_cells_enabled:
+        row_parts.append(f"budget_cells_rows={budget_cells_rows:,}")
+    if step_diag_enabled:
+        row_parts.append(f"step_diag_rows={step_diag_rows:,}")
+    mem_parts = []
+    for label, value in (
+        ("run", run_mem),
+        ("diag", diag_mem),
+        ("psd", psd_mem),
+        ("budget", budget_mem),
+        ("step_diag", step_diag_mem),
+        ("smol", smol_mem),
+    ):
+        if value > 0.0:
+            mem_parts.append(f"{label}~{human_bytes(value)}")
+    row_text = " ".join(row_parts)
+    mem_text = " ".join(mem_parts)
+    long = f"[mem est] {row_text} {mem_text} total~{human_bytes(total_mem)}"
     return short, long
 
 def safe_float(value: Any) -> Optional[float]:
