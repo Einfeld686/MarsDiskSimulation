@@ -312,6 +312,9 @@ if /i "%CELL_THREAD_LIMIT%"=="auto" (
     for /f %%A in ('"%PYTHON_EXE%" scripts\\runsets\\common\\calc_thread_limit.py') do set "CELL_THREAD_LIMIT=%%A"
   )
 )
+if "%CELL_THREAD_LIMIT%"=="1" if "%CELL_THREAD_LIMIT_DEFAULT%"=="1" (
+  if defined CELL_THREAD_LIMIT_AUTO set "CELL_THREAD_LIMIT=%CELL_THREAD_LIMIT_AUTO%"
+)
 if not defined CELL_THREAD_LIMIT set "CELL_THREAD_LIMIT=1"
 set "CELL_THREAD_OK=1"
 for /f "delims=0123456789" %%A in ("%CELL_THREAD_LIMIT%") do set "CELL_THREAD_OK=0"

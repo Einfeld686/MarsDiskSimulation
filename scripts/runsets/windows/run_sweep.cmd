@@ -273,7 +273,7 @@ if not defined OUT_ROOT if "%AUTO_OUT_ROOT%"=="1" (
   if not exist "!OUT_ROOT!" mkdir "!OUT_ROOT!" >nul 2>&1
   set "CHECK_PATH=!OUT_ROOT!"
   set "FREE_GB="
-  for /f "usebackq delims=" %%F in (`"%PYTHON_EXE%" -c "import os,shutil; p=os.environ.get('CHECK_PATH',''); print(shutil.disk_usage(p).free//(1024**3))"`) do set "FREE_GB=%%F"
+  for /f "usebackq delims=" %%F in (`"%PYTHON_EXE%" -c "import os,shutil; p=os.environ.get('CHECK_PATH',''); print(shutil.disk_usage(p).free//(1024**3) if p and os.path.exists(p) else '')"`) do set "FREE_GB=%%F"
   set "FREE_GB_RAW=!FREE_GB!"
   set "FREE_GB_OK=1"
   for /f "delims=0123456789" %%A in ("!FREE_GB!") do set "FREE_GB_OK=0"
@@ -464,13 +464,18 @@ if not defined SIZE_PROBE_SEED set "SIZE_PROBE_SEED=0"
 
 if not defined SIZE_PROBE_HOOKS set "SIZE_PROBE_HOOKS=plot,eval"
 
-if /i "%PARALLEL_MODE%"=="cell" (
-
-  if not defined CELL_THREAD_LIMIT set "CELL_THREAD_LIMIT=1"
-
-  if not defined NUMBA_NUM_THREADS set "NUMBA_NUM_THREADS=%CELL_THREAD_LIMIT%"
-
-  if not defined OMP_NUM_THREADS set "OMP_NUM_THREADS=%CELL_THREAD_LIMIT%"
+if /i "%PARALLEL_MODE%"=="cell" (
+
+  if not defined CELL_THREAD_LIMIT (
+    set "CELL_THREAD_LIMIT=1"
+    if not defined CELL_THREAD_LIMIT_DEFAULT set "CELL_THREAD_LIMIT_DEFAULT=1"
+  ) else (
+    if not defined CELL_THREAD_LIMIT_DEFAULT set "CELL_THREAD_LIMIT_DEFAULT=0"
+  )
+
+  if not defined NUMBA_NUM_THREADS set "NUMBA_NUM_THREADS=%CELL_THREAD_LIMIT%"
+
+  if not defined OMP_NUM_THREADS set "OMP_NUM_THREADS=%CELL_THREAD_LIMIT%"
 
   if not defined MKL_NUM_THREADS set "MKL_NUM_THREADS=%CELL_THREAD_LIMIT%"
 
@@ -710,7 +715,7 @@ if "%DRY_RUN%"=="1" (
 
 
 
-if "%SWEEP_PARALLEL%"=="1" if not "%SIZE_PROBE_ENABLE%"=="0" if "%PARALLEL_JOBS_DEFAULT%"=="1" (
+if "%SWEEP_PARALLEL%"=="1" if not "%SIZE_PROBE_ENABLE%"=="0" if "%PARALLEL_JOBS_DEFAULT%"=="1" (
 
   %LOG_INFO% size-probe: estimating per-case output for parallel job sizing
 
@@ -738,19 +743,60 @@ if "%SWEEP_PARALLEL%"=="1" if not "%SIZE_PROBE_ENABLE%"=="0" if "%PARALLEL_JOBS_
 
   if "!SIZE_PROBE_JOBS!"=="0" set "SIZE_PROBE_JOBS=1"
 
-  if defined SIZE_PROBE_JOBS (
-
-    set "PARALLEL_JOBS=!SIZE_PROBE_JOBS!"
-
-    %LOG_INFO% size-probe recommended parallel_jobs=!PARALLEL_JOBS!
-
-  )
-
-)
-
-
-
-%LOG_INFO% launching run_temp_supply_sweep.cmd
+  if defined SIZE_PROBE_JOBS (
+
+    set "PARALLEL_JOBS=!SIZE_PROBE_JOBS!"
+
+    %LOG_INFO% size-probe recommended parallel_jobs=!PARALLEL_JOBS!
+
+  )
+
+)
+
+if "%PARALLEL_JOBS_DEFAULT%"=="1" if "%PARALLEL_JOBS%"=="1" (
+  if defined CPU_UTIL_TARGET_PERCENT (
+    if /i "%PARALLEL_MODE%"=="cell" if /i "%MARSDISK_CELL_JOBS%"=="auto" (
+      for /f "usebackq tokens=1-7 delims=|" %%A in (`"%PYTHON_EXE%" scripts\\runsets\\common\\calc_cell_jobs.py`) do (
+        set "CELL_MEM_TOTAL_GB=%%A"
+        set "CELL_CPU_LOGICAL=%%B"
+        set "CELL_MEM_FRACTION_USED=%%C"
+        set "CELL_CPU_FRACTION_USED=%%D"
+        set "MARSDISK_CELL_JOBS=%%E"
+        set "CELL_STREAM_MEM_GB=%%F"
+        set "CELL_THREAD_LIMIT_AUTO=%%G"
+      )
+    )
+    set "CPU_TARGET_CORES="
+    set "PARALLEL_JOBS_TARGET="
+    for /f "usebackq tokens=1,2 delims=|" %%A in (`"%PYTHON_EXE%" scripts\\runsets\\common\\calc_cpu_target_jobs.py`) do (
+      set "CPU_TARGET_CORES=%%A"
+      set "PARALLEL_JOBS_TARGET=%%B"
+    )
+    set "PARALLEL_JOBS_TARGET_OK=1"
+    for /f "delims=0123456789" %%A in ("!PARALLEL_JOBS_TARGET!") do set "PARALLEL_JOBS_TARGET_OK=0"
+    if "!PARALLEL_JOBS_TARGET_OK!"=="1" (
+      if !PARALLEL_JOBS_TARGET! GTR 1 (
+        if /i "%CPU_UTIL_RESPECT_MEM%"=="1" (
+          set "PARALLEL_JOBS_MEM="
+          for /f "usebackq tokens=1-3 delims=|" %%A in (`"%PYTHON_EXE%" scripts\\runsets\\common\\calc_parallel_jobs.py`) do (
+            set "PARALLEL_JOBS_MEM=%%C"
+          )
+          set "PARALLEL_JOBS_MEM_OK=1"
+          for /f "delims=0123456789" %%A in ("!PARALLEL_JOBS_MEM!") do set "PARALLEL_JOBS_MEM_OK=0"
+          if "!PARALLEL_JOBS_MEM_OK!"=="1" (
+            if !PARALLEL_JOBS_TARGET! GTR !PARALLEL_JOBS_MEM! set "PARALLEL_JOBS_TARGET=!PARALLEL_JOBS_MEM!"
+          )
+        )
+        set "PARALLEL_JOBS=!PARALLEL_JOBS_TARGET!"
+        %LOG_INFO% cpu_target fallback: target_cores=!CPU_TARGET_CORES! parallel_jobs=!PARALLEL_JOBS!
+      )
+    )
+  )
+)
+
+
+
+%LOG_INFO% launching run_temp_supply_sweep.cmd
 
 call scripts\research\run_temp_supply_sweep.cmd
 

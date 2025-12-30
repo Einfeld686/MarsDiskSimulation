@@ -126,6 +126,58 @@
 
 ---
 
+## テスト設計（詳細）
+
+### ColumnarBuffer 単体（unit）
+
+- **ケース: row_count / clear の基本動作**  
+  **入力**: ColumnarBuffer に 2 行分の列データを追加 → `row_count`/`__len__` を確認 → `clear()`  
+  **期待**: `row_count==2`, `len==2`, `clear()` 後に `row_count==0`
+- **ケース: to_table / columns の列順**  
+  **入力**: `output_schema` を基準に列を追加（欠損列あり）  
+  **期待**: 返却テーブルの列順が schema と一致、欠損列は `None` で補完
+
+### writer API（unit）
+
+- **ケース: write_parquet_columns のメタデータ継承**  
+  **入力**: `{"time":[0.0], "dt":[1.0]}` を `write_parquet_columns` で保存  
+  **期待**: Parquet metadata に `units`/`definitions` が付与される
+- **ケース: ensure_columns の欠損補完**  
+  **入力**: `ensure_columns=["time","dt","M_out_dot"]` で保存  
+  **期待**: `M_out_dot` が `null` 列として作成される
+
+### run_one_d row/columnar parity（integration）
+
+- **ケース: Streaming OFF で row/columnar 比較**  
+  **設定**: `geometry.mode=1D`, `geometry.Nr=2`, `numerics.t_end_orbits=0.02`, `numerics.dt_init=50.0`, `phase.enabled=false`, `radiation.TM_K=2000.0`, `io.streaming.enable=false`  
+  **期待**:  
+  - 列集合が一致（`ZERO_D_SERIES_KEYS + ONE_D_EXTRA_SERIES_KEYS`）  
+  - `time`, `dt`, `M_loss_cum`, `M_out_dot` など主要列は `np.allclose` で一致  
+  - `t_coll_kernel_min` が全行で `null` ではなく、同一 `time` 内で一定
+- **ケース: Streaming ON + columnar**  
+  **設定**: 上記 + `io.streaming.enable=true`, `io.streaming.step_flush_interval=1`  
+  **期待**: `series/run_chunk_*.parquet` が生成 → `series/run.parquet` にマージされ、列集合が row と一致
+
+### mass_budget.csv 出力（integration）
+
+- **ケース: Streaming ON/OFF**  
+  **設定**: `io.streaming.enable=true/false` を両方実行  
+  **期待**: `checks/mass_budget.csv` が必ず存在し、ヘッダーを含む
+
+### トグル優先順位（integration）
+
+- **ケース: 強制 row へのフォールバック**  
+  **設定**: `io.record_storage_mode=columnar` + `MARSDISK_DISABLE_COLUMNAR=1`  
+  **期待**: row モードが優先され、出力スキーマが従来と一致
+
+### 0D 展開後の追加（integration, 任意）
+
+- **ケース: run_zero_d の row/columnar 比較**  
+  **設定**: 0D の小規模ケース（`t_end_years` を短く）  
+  **期待**: `ZERO_D_SERIES_KEYS`/`ZERO_D_DIAGNOSTIC_KEYS` の列集合一致と主要列一致
+
+---
+
 ## 性能検証
 
 - 既存の短縮ケースで **I/O ON/OFF** の A/B を実施
