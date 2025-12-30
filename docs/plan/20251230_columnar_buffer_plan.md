@@ -30,6 +30,21 @@
 
 ---
 
+## 注意点・推奨（追記）
+
+- **推奨: ColumnarBuffer は最小APIを明記**  
+  `__len__`, `clear()`, `row_count`, `columns()` or `to_table()` を定義し、Streaming からは **list 互換 or 専用分岐**で扱えるようにする。
+- **推奨: Parquet メタデータを必ず継承**  
+  `write_parquet_columns` / `write_parquet_table` でも `units` / `definitions` を付与し、row/columnar で同等性を保証する。
+- **推奨: 列順と dtype の安定化方針を明記**  
+  `output_schema` を基準に列順を固定し、欠損列は `None` で補完、dtype は `writer` で統一する。
+- **推奨: Streaming の flush/メモリ推定を更新**  
+  `history.records` 依存の条件を ColumnarBuffer 対応に切替え、`_estimate_bytes` を `row_count` で評価できる設計にする。
+- **推奨: トグル優先順位を定義**  
+  `MARSDISK_DISABLE_COLUMNAR=1` が最優先で row を強制、次に YAML/CLI の `io.record_storage_mode` を適用。
+
+---
+
 ## 方針（設計概要）
 
 1) **ColumnarBuffer を追加**し、行指向（list[dict]）と列指向を切替可能にする  
@@ -47,8 +62,10 @@
 - `marsdisk/io/writer.py` に以下の新規 API を追加
   - `write_parquet_columns(columns: Mapping[str, Sequence], ...)`
   - `write_parquet_table(table: pa.Table, ...)`
+- ColumnarBuffer の最小 API を定義（`__len__`, `clear`, `row_count`, `to_table` など）
 - `marsdisk/io/streaming.py` が ColumnarBuffer を認識し、**行/列どちらでも flush**できるようにする
 - **出力列の欠落は flush 直前に補完**（`ensure_columns` を ColumnarBuffer 側で実施）
+- `write_parquet_*` は row と同等のメタデータ（units/definitions）を必ず付与
 
 ### フェーズB: run_one_d を列指向に置換
 
@@ -77,7 +94,7 @@
 - または `io.columnar_records: bool`（既定 `false`）
 
 **安全弁**:
-- `MARSDISK_DISABLE_COLUMNAR=1` で強制 row に戻す
+- `MARSDISK_DISABLE_COLUMNAR=1` で強制 row に戻す（最優先）
 
 ---
 
@@ -104,6 +121,8 @@
 - 新規: `tests/integration/test_columnar_records.py`  
   - row/columnar で列集合と主要値が一致すること  
   - `t_coll_kernel_min` の一括付与が正しいこと
+- 追加: Parquet メタデータ（units/definitions）が row/columnar で一致すること
+- 追加: Streaming ON/OFF の双方で `checks/mass_budget.csv` が生成されること
 
 ---
 
@@ -112,4 +131,3 @@
 - 既存の短縮ケースで **I/O ON/OFF** の A/B を実施
 - `cProfile` / `pstats` で `_ensure_keys`, `writer.write_parquet` の比率を比較
 - `scripts/tests/measure_case_output_size.py` で出力サイズ差を記録
-
