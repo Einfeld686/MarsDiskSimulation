@@ -60,8 +60,7 @@ def _alive_pids(pids: Iterable[int]) -> list[int]:
     return alive
 
 
-def _resolve_cwd() -> str | None:
-    raw = os.environ.get("JOB_CWD")
+def _resolve_cwd(raw: str | None) -> str | None:
     if not raw:
         return None
     try:
@@ -73,8 +72,8 @@ def _resolve_cwd() -> str | None:
     return path
 
 
-def _launch(cmd: str, window_style: str | None) -> int:
-    cwd = _resolve_cwd()
+def _launch(cmd: str, window_style: str | None, cwd_raw: str | None) -> int:
+    cwd = _resolve_cwd(cwd_raw or os.environ.get("JOB_CWD"))
     if os.name != "nt":
         proc = subprocess.Popen(cmd, shell=True, cwd=cwd)
         print(proc.pid)
@@ -112,6 +111,7 @@ def main() -> int:
 
     launch = sub.add_parser("launch", help="Launch a cmd.exe job and print its PID.")
     launch.add_argument("--cmd", default=None, help="Command string to run.")
+    launch.add_argument("--cwd", default=None, help="Working directory for the launched cmd.exe job.")
     launch.add_argument("--window-style", default=None, help="Normal/Hidden/Minimized/Maximized.")
 
     alive = sub.add_parser("alive", help="Check alive PIDs and print list|count.")
@@ -125,7 +125,7 @@ def main() -> int:
             print("[error] missing JOB_CMD", file=sys.stderr)
             return 2
         window_style = args.window_style or os.environ.get("PARALLEL_WINDOW_STYLE", "")
-        return _launch(cmd, window_style)
+        return _launch(cmd, window_style, args.cwd)
 
     if args.command == "alive":
         raw = args.pids or os.environ.get("JOB_PIDS", "")

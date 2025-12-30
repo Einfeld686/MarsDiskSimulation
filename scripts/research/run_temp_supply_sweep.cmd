@@ -754,8 +754,8 @@ set "JOB_TAU=%~3"
 for /f %%S in ('"%PYTHON_EXE%" "%NEXT_SEED_PY%"') do set "JOB_SEED=%%S"
 call :wait_for_slot
 set "JOB_PID="
-  set "JOB_CMD=cd /d ""!JOB_CWD_USE!""&& set RUN_TS=!RUN_TS!&& set BATCH_SEED=!BATCH_SEED!&& set RUN_ONE_T=!JOB_T!&& set RUN_ONE_EPS=!JOB_EPS!&& set RUN_ONE_TAU=!JOB_TAU!&& set RUN_ONE_SEED=!JOB_SEED!&& set AUTO_JOBS=0&& set PARALLEL_JOBS=1&& set SKIP_PIP=1&& call ""!SCRIPT_SELF_USE!"" --run-one"
-for /f "usebackq delims=" %%P in (`"%PYTHON_EXE%" "%WIN_PROCESS_PY%" launch --window-style "%PARALLEL_WINDOW_STYLE%"`) do set "JOB_PID=%%P"
+  set "JOB_CMD=set RUN_TS=!RUN_TS!&& set BATCH_SEED=!BATCH_SEED!&& set RUN_ONE_T=!JOB_T!&& set RUN_ONE_EPS=!JOB_EPS!&& set RUN_ONE_TAU=!JOB_TAU!&& set RUN_ONE_SEED=!JOB_SEED!&& set AUTO_JOBS=0&& set PARALLEL_JOBS=1&& set SKIP_PIP=1&& call ""!SCRIPT_SELF_USE!"" --run-one"
+for /f "usebackq delims=" %%P in (`"%PYTHON_EXE%" "%WIN_PROCESS_PY%" launch --window-style "%PARALLEL_WINDOW_STYLE%" --cwd "!JOB_CWD_USE!"`) do set "JOB_PID=%%P"
 if defined JOB_PID set "JOB_PIDS=!JOB_PIDS! !JOB_PID!"
 if not defined JOB_PID echo.[warn] failed to launch job for T=!JOB_T! eps=!JOB_EPS! tau=!JOB_TAU! (check Python availability)
 exit /b 0
