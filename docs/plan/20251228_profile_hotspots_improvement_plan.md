@@ -1,7 +1,7 @@
 # プロファイル実測に基づく性能改善プラン
 
 **作成日**: 2025-12-28  
-**ステータス**: 計画  
+**ステータス**: 完了  
 **対象**: `marsdisk/run_one_d.py`, `marsdisk/physics/*`, `marsdisk/io/*`, `marsdisk/output_schema.py`  
 **統合**: `docs/plan/20251228_collisions_smol_perf_plan.md` の内容を本書へ統合
 

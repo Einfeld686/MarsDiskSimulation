@@ -3174,54 +3174,54 @@
     "file_path": "marsdisk/io/writer.py",
     "line_no": 24,
     "symbol": "write_parquet",
-    "signature": "write_parquet(df: pd.DataFrame | Iterable[Mapping[str, Any]], path: Path, *, compression: str='snappy') -> None",
+    "signature": "write_parquet(df: pd.DataFrame | Iterable[Mapping[str, Any]], path: Path, *, compression: str='snappy', ensure_columns: Iterable[str] | None=None) -> None",
     "brief_usage": "Write tabular records to a Parquet file using ``pyarrow``."
   },
   {
     "file_path": "marsdisk/io/writer.py",
-    "line_no": 407,
+    "line_no": 422,
     "symbol": "write_summary",
     "signature": "write_summary(summary: Mapping[str, Any], path: Path) -> None",
     "brief_usage": "Write a summary dictionary to ``summary.json``."
   },
   {
     "file_path": "marsdisk/io/writer.py",
-    "line_no": 418,
+    "line_no": 433,
     "symbol": "write_run_config",
     "signature": "write_run_config(config: Mapping[str, Any], path: Path) -> None",
     "brief_usage": "Persist the deterministic run configuration metadata."
   },
   {
     "file_path": "marsdisk/io/writer.py",
-    "line_no": 426,
+    "line_no": 441,
     "symbol": "write_mass_budget",
     "signature": "write_mass_budget(records: Iterable[Mapping[str, Any]], path: Path) -> None",
     "brief_usage": "Write mass conservation diagnostics to a CSV file."
   },
   {
     "file_path": "marsdisk/io/writer.py",
-    "line_no": 433,
+    "line_no": 448,
     "symbol": "append_csv",
     "signature": "append_csv(records: Iterable[Mapping[str, Any]], path: Path, *, header: bool=True) -> bool",
     "brief_usage": "Append records to a CSV file, creating the file if needed."
   },
   {
     "file_path": "marsdisk/io/writer.py",
-    "line_no": 452,
+    "line_no": 467,
     "symbol": "write_orbit_rollup",
     "signature": "write_orbit_rollup(rows: Iterable[Mapping[str, Any]], path: Path) -> None",
     "brief_usage": "Serialise orbit-by-orbit loss diagnostics."
   },
   {
     "file_path": "marsdisk/io/writer.py",
-    "line_no": 463,
+    "line_no": 478,
     "symbol": "write_step_diagnostics",
     "signature": "write_step_diagnostics(rows: Iterable[Mapping[str, Any]], path: Path, *, fmt: Literal['csv', 'jsonl']='csv') -> None",
     "brief_usage": "Serialise per-step loss channel diagnostics."
   },
   {
     "file_path": "marsdisk/io/writer.py",
-    "line_no": 486,
+    "line_no": 501,
     "symbol": "append_step_diagnostics",
     "signature": "append_step_diagnostics(rows: Iterable[Mapping[str, Any]], path: Path, *, fmt: Literal['csv', 'jsonl']='csv', header: bool=True) -> bool",
     "brief_usage": "Append per-step diagnostics in CSV or JSONL format."
@@ -4733,238 +4733,245 @@
   },
   {
     "file_path": "marsdisk/physics/collisions_smol.py",
-    "line_no": 68,
+    "line_no": 67,
+    "symbol": "get_numba_status",
+    "signature": "get_numba_status() -> dict[str, object]",
+    "brief_usage": "Return Numba availability and runtime usage flags."
+  },
+  {
+    "file_path": "marsdisk/physics/collisions_smol.py",
+    "line_no": 79,
     "symbol": "Smol0DStepResult",
     "signature": "class Smol0DStepResult",
     "brief_usage": "Container for Smol collision updates and diagnostics."
   },
   {
     "file_path": "marsdisk/physics/collisions_smol.py",
-    "line_no": 112,
+    "line_no": 123,
     "symbol": "KernelEIState",
     "signature": "class KernelEIState",
     "brief_usage": "Baseline and effective eccentricity/inclination for the collision kernel."
   },
   {
     "file_path": "marsdisk/physics/collisions_smol.py",
-    "line_no": 123,
+    "line_no": 134,
     "symbol": "TimeOrbitParams",
     "signature": "class TimeOrbitParams",
     "brief_usage": "Group A: 時間・軌道パラメータ."
   },
   {
     "file_path": "marsdisk/physics/collisions_smol.py",
-    "line_no": 133,
+    "line_no": 144,
     "symbol": "FragmentWorkspace",
     "signature": "class FragmentWorkspace",
     "brief_usage": "Cached size-dependent arrays for fragment tensor construction."
   },
   {
     "file_path": "marsdisk/physics/collisions_smol.py",
-    "line_no": 145,
+    "line_no": 156,
     "symbol": "_array_fingerprint",
     "signature": "_array_fingerprint(arr: np.ndarray) -> tuple[int, float, float, float, float]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/physics/collisions_smol.py",
-    "line_no": 158,
+    "line_no": 169,
     "symbol": "_versioned_key",
     "signature": "_versioned_key(version: int | None, arr: np.ndarray, *, tag: str) -> tuple",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/physics/collisions_smol.py",
-    "line_no": 164,
+    "line_no": 175,
     "symbol": "_get_thread_cache",
     "signature": "_get_thread_cache(name: str) -> 'OrderedDict[tuple, object]'",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/physics/collisions_smol.py",
-    "line_no": 173,
+    "line_no": 184,
     "symbol": "MaterialParams",
     "signature": "class MaterialParams",
     "brief_usage": "Group B: 物質パラメータ."
   },
   {
     "file_path": "marsdisk/physics/collisions_smol.py",
-    "line_no": 182,
+    "line_no": 193,
     "symbol": "DynamicsParams",
     "signature": "class DynamicsParams",
     "brief_usage": "Group C: 力学パラメータ."
   },
   {
     "file_path": "marsdisk/physics/collisions_smol.py",
-    "line_no": 192,
+    "line_no": 203,
     "symbol": "SupplyParams",
     "signature": "class SupplyParams",
     "brief_usage": "Group D: 供給パラメータ."
   },
   {
     "file_path": "marsdisk/physics/collisions_smol.py",
-    "line_no": 205,
+    "line_no": 216,
     "symbol": "CollisionControlFlags",
     "signature": "class CollisionControlFlags",
     "brief_usage": "Group E: 制御フラグ."
   },
   {
     "file_path": "marsdisk/physics/collisions_smol.py",
-    "line_no": 222,
+    "line_no": 233,
     "symbol": "CollisionStepContext",
     "signature": "class CollisionStepContext",
     "brief_usage": "衝突ステップの統合コンテキスト."
   },
   {
     "file_path": "marsdisk/physics/collisions_smol.py",
-    "line_no": 235,
+    "line_no": 246,
     "symbol": "supply_mass_rate_to_number_source",
     "signature": "supply_mass_rate_to_number_source(prod_subblow_mass_rate: float, s_bin_center: np.ndarray, m_bin: np.ndarray, s_min_eff: float, *, widths: np.ndarray | None=None, mass_weights: np.ndarray | None=None, mode: str='min_bin', s_inj_min: float | None=None, s_inj_max: float | None=None, q: float=3.5, sizes_version: int | None=None, edges_version: int | None=None) -> np.ndarray",
     "brief_usage": "Convert a mass flux to a per-bin number source ``F_k`` (1/s)."
   },
   {
     "file_path": "marsdisk/physics/collisions_smol.py",
-    "line_no": 398,
+    "line_no": 409,
     "symbol": "_FRAG_CACHE",
     "signature": "_FRAG_CACHE: dict[tuple, np.ndarray] = {}",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/physics/collisions_smol.py",
-    "line_no": 399,
+    "line_no": 410,
     "symbol": "_FRAG_CACHE_MAX",
     "signature": "_FRAG_CACHE_MAX = 32",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/physics/collisions_smol.py",
-    "line_no": 400,
+    "line_no": 411,
     "symbol": "_FRAG_CACHE_LOCK",
     "signature": "_FRAG_CACHE_LOCK = threading.Lock()",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/physics/collisions_smol.py",
-    "line_no": 401,
+    "line_no": 412,
     "symbol": "_WEIGHTS_CACHE_MAX",
     "signature": "_WEIGHTS_CACHE_MAX = 16",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/physics/collisions_smol.py",
-    "line_no": 402,
+    "line_no": 413,
     "symbol": "_QSTAR_CACHE_MAX",
     "signature": "_QSTAR_CACHE_MAX = 8",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/physics/collisions_smol.py",
-    "line_no": 403,
+    "line_no": 414,
     "symbol": "_SUPPLY_CACHE_MAX",
     "signature": "_SUPPLY_CACHE_MAX = 16",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/physics/collisions_smol.py",
-    "line_no": 409,
+    "line_no": 420,
     "symbol": "reset_collision_caches",
     "signature": "reset_collision_caches() -> None",
     "brief_usage": "Clear run-local collision caches (fragment/weights/qstar/supply)."
   },
   {
     "file_path": "marsdisk/physics/collisions_smol.py",
-    "line_no": 422,
+    "line_no": 433,
     "symbol": "_get_fragment_workspace",
     "signature": "_get_fragment_workspace(sizes_arr: np.ndarray, masses_arr: np.ndarray, rho: float, sizes_key: tuple) -> FragmentWorkspace",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/physics/collisions_smol.py",
-    "line_no": 473,
+    "line_no": 484,
     "symbol": "_get_weights_table",
     "signature": "_get_weights_table(edges_arr: np.ndarray, alpha_frag: float, edges_key: tuple, *, prefer_numba: bool) -> np.ndarray",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/physics/collisions_smol.py",
-    "line_no": 533,
+    "line_no": 544,
     "symbol": "_get_qstar_matrix",
     "signature": "_get_qstar_matrix(size_ref: np.ndarray, rho: float, v_matrix: np.ndarray, v_rel_scalar: float | None, sizes_key: tuple) -> np.ndarray",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/physics/collisions_smol.py",
-    "line_no": 563,
+    "line_no": 574,
     "symbol": "_fragment_tensor",
     "signature": "_fragment_tensor(sizes: np.ndarray, masses: np.ndarray, edges: np.ndarray, v_rel: float | np.ndarray, rho: float, alpha_frag: float=3.5, sizes_version: int | None=None, edges_version: int | None=None, *, use_numba: bool | None=None) -> np.ndarray",
     "brief_usage": "Return a mass-conserving fragment distribution ``Y[k, i, j]``."
   },
   {
     "file_path": "marsdisk/physics/collisions_smol.py",
-    "line_no": 729,
+    "line_no": 740,
     "symbol": "_blowout_sink_vector",
     "signature": "_blowout_sink_vector(sizes: np.ndarray, a_blow: float, t_blow: float, enable_blowout: bool) -> np.ndarray",
     "brief_usage": "Return per-bin blow-out sink rates (1/s)."
   },
   {
     "file_path": "marsdisk/physics/collisions_smol.py",
-    "line_no": 759,
+    "line_no": 770,
     "symbol": "kernel_minimum_tcoll",
     "signature": "kernel_minimum_tcoll(C_kernel: np.ndarray, N: np.ndarray | None=None) -> float",
     "brief_usage": "Return the minimum collisional time-scale implied by ``C``."
   },
   {
     "file_path": "marsdisk/physics/collisions_smol.py",
-    "line_no": 793,
+    "line_no": 804,
     "symbol": "_supply_velocity_weight",
     "signature": "_supply_velocity_weight(delta_sigma: float, sigma_prev: float, mode: str='delta_sigma') -> float",
     "brief_usage": "Blend weight for supply velocities."
   },
   {
     "file_path": "marsdisk/physics/collisions_smol.py",
-    "line_no": 804,
+    "line_no": 815,
     "symbol": "_resolve_supply_velocity",
     "signature": "_resolve_supply_velocity(cfg: 'SupplyInjectionVelocity | None', e_base: float, i_base: float) -> tuple[float, float]",
     "brief_usage": "Return (e_supply, i_supply) given the injection velocity settings."
   },
   {
     "file_path": "marsdisk/physics/collisions_smol.py",
-    "line_no": 821,
+    "line_no": 832,
     "symbol": "_blend_supply_velocity",
     "signature": "_blend_supply_velocity(e_base: float, i_base: float, e_supply: float, i_supply: float, *, weight: float, mode: str='rms') -> tuple[float, float]",
     "brief_usage": "Blend baseline and supply e/i."
   },
   {
     "file_path": "marsdisk/physics/collisions_smol.py",
-    "line_no": 843,
+    "line_no": 854,
     "symbol": "compute_kernel_ei_state",
     "signature": "compute_kernel_ei_state(dynamics_cfg: 'Dynamics', tau_eff: float, a_orbit_m: float, v_k: float, sizes: np.ndarray, *, e_override: float | None=None, i_override: float | None=None) -> KernelEIState",
     "brief_usage": "Return baseline and effective e/i along with the scale height array."
   },
   {
     "file_path": "marsdisk/physics/collisions_smol.py",
-    "line_no": 894,
+    "line_no": 905,
     "symbol": "_compute_ei_damping",
     "signature": "_compute_ei_damping(e_curr: float, i_curr: float, *, dt: float, tau_eff: float | None, a_orbit_m: float, v_k: float, dynamics_cfg: 'Dynamics | None', t_coll_ref: float | None, eps_restitution: float) -> tuple[float | None, float | None, float | None, float | None]",
     "brief_usage": "Return (e_next, i_next, t_damp, e_eq_target) for post-collision damping."
   },
   {
     "file_path": "marsdisk/physics/collisions_smol.py",
-    "line_no": 947,
+    "line_no": 958,
     "symbol": "compute_kernel_e_i_H",
     "signature": "compute_kernel_e_i_H(dynamics_cfg: 'Dynamics', tau_eff: float, a_orbit_m: float, v_k: float, sizes: np.ndarray) -> tuple[float, float, np.ndarray]",
     "brief_usage": "Return ``(e_kernel, i_kernel, H_k)`` for the Smol collision kernel."
   },
   {
     "file_path": "marsdisk/physics/collisions_smol.py",
-    "line_no": 1027,
+    "line_no": 1038,
     "symbol": "step_collisions",
     "signature": "step_collisions(ctx: CollisionStepContext, psd_state: MutableMapping[str, np.ndarray | float]) -> Smol0DStepResult",
     "brief_usage": "Structured wrapper for the Smol 0D collision step."
   },
   {
     "file_path": "marsdisk/physics/collisions_smol.py",
-    "line_no": 1068,
+    "line_no": 1079,
     "symbol": "step_collisions_smol_0d",
     "signature": "step_collisions_smol_0d(psd_state: MutableMapping[str, np.ndarray | float], sigma_surf: float, *, dt: float, prod_subblow_area_rate: float, r: float, Omega: float, t_blow: float | None=None, a_blow: float, rho: float, e_value: float, i_value: float, sigma_tau1: float | None, enable_blowout: bool, t_sink: float | None, ds_dt_val: float | None=None, s_min_effective: float | None=None, dynamics_cfg: 'Dynamics | None'=None, tau_eff: float | None=None, collisions_enabled: bool=True, mass_conserving_sublimation: bool=False, supply_injection_mode: str='min_bin', supply_s_inj_min: float | None=None, supply_s_inj_max: float | None=None, supply_q: float=3.5, supply_mass_weights: np.ndarray | None=None, supply_velocity_cfg: 'SupplyInjectionVelocity | None'=None, headroom_policy: str='clip', energy_bookkeeping_enabled: bool=False, f_ke_fragmentation: float | None=None, f_ke_cratering: float=0.1, eps_restitution: float=0.5, enable_e_damping: bool=False, t_coll_for_damp: float | None=None) -> Smol0DStepResult",
     "brief_usage": "Advance collisions+fragmentation in 0D using the Smol solver."
@@ -5853,49 +5860,56 @@
   },
   {
     "file_path": "marsdisk/physics/smol.py",
-    "line_no": 45,
+    "line_no": 46,
     "symbol": "ImexWorkspace",
     "signature": "class ImexWorkspace",
     "brief_usage": "Reusable buffers for :func:`step_imex_bdf1_C3`."
   },
   {
     "file_path": "marsdisk/physics/smol.py",
-    "line_no": 57,
+    "line_no": 58,
+    "symbol": "get_numba_status",
+    "signature": "get_numba_status() -> dict[str, object]",
+    "brief_usage": "Return Numba availability and runtime usage flags."
+  },
+  {
+    "file_path": "marsdisk/physics/smol.py",
+    "line_no": 69,
     "symbol": "_sizes_fingerprint",
     "signature": "_sizes_fingerprint(sizes: np.ndarray) -> tuple[int, float, float]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/physics/smol.py",
-    "line_no": 65,
+    "line_no": 77,
     "symbol": "psd_state_to_number_density",
     "signature": "psd_state_to_number_density(psd_state: MutableMapping[str, np.ndarray | float], sigma_surf: float, *, rho_fallback: float | None=None) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, float]",
     "brief_usage": "Return Smoluchowski-ready arrays derived from a PSD state."
   },
   {
     "file_path": "marsdisk/physics/smol.py",
-    "line_no": 152,
+    "line_no": 164,
     "symbol": "number_density_to_psd_state",
     "signature": "number_density_to_psd_state(N_new: np.ndarray, psd_state: MutableMapping[str, np.ndarray | float], sigma_before: float, *, widths: np.ndarray, m: np.ndarray, scale_to_sigma: float) -> tuple[MutableMapping[str, np.ndarray | float], float, float]",
     "brief_usage": "Update ``psd_state`` from Smol output while preserving the current scaling."
   },
   {
     "file_path": "marsdisk/physics/smol.py",
-    "line_no": 207,
+    "line_no": 219,
     "symbol": "_gain_tensor",
     "signature": "_gain_tensor(C: np.ndarray, Y: np.ndarray, m: np.ndarray, out: np.ndarray | None=None, workspace: ImexWorkspace | None=None) -> np.ndarray",
     "brief_usage": "Return gain term, preferring the Numba kernel when available."
   },
   {
     "file_path": "marsdisk/physics/smol.py",
-    "line_no": 285,
+    "line_no": 297,
     "symbol": "step_imex_bdf1_C3",
     "signature": "step_imex_bdf1_C3(N: Iterable[float], C: np.ndarray, Y: np.ndarray, S: Iterable[float] | None, m: Iterable[float], prod_subblow_mass_rate: float | None, dt: float, *, source_k: Iterable[float] | None=None, S_external_k: Iterable[float] | None=None, S_sublimation_k: Iterable[float] | None=None, extra_mass_loss_rate: float=0.0, mass_tol: float=0.005, safety: float=0.1, diag_out: MutableMapping[str, float] | None=None, workspace: ImexWorkspace | None=None) -> tuple[np.ndarray, float, float]",
     "brief_usage": "Advance the Smoluchowski system by one time step."
   },
   {
     "file_path": "marsdisk/physics/smol.py",
-    "line_no": 464,
+    "line_no": 476,
     "symbol": "compute_mass_budget_error_C4",
     "signature": "compute_mass_budget_error_C4(N_old: Iterable[float], N_new: Iterable[float], m: Iterable[float], prod_subblow_mass_rate: float, dt: float, *, extra_mass_loss_rate: float=0.0) -> float",
     "brief_usage": "Return the relative mass budget error according to (C4)."
@@ -6462,126 +6476,259 @@
   },
   {
     "file_path": "marsdisk/run_one_d.py",
-    "line_no": 57,
+    "line_no": 62,
     "symbol": "SECONDS_PER_YEAR",
     "signature": "SECONDS_PER_YEAR = 365.25 * 24 * 3600.0",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/run_one_d.py",
-    "line_no": 58,
+    "line_no": 63,
     "symbol": "MAX_STEPS",
     "signature": "MAX_STEPS = 50000000",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/run_one_d.py",
-    "line_no": 59,
+    "line_no": 64,
     "symbol": "TAU_MIN",
     "signature": "TAU_MIN = 1e-12",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/run_one_d.py",
-    "line_no": 60,
+    "line_no": 65,
     "symbol": "KAPPA_MIN",
     "signature": "KAPPA_MIN = 1e-12",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/run_one_d.py",
-    "line_no": 61,
+    "line_no": 66,
     "symbol": "DEFAULT_SEED",
     "signature": "DEFAULT_SEED = 12345",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/run_one_d.py",
-    "line_no": 62,
+    "line_no": 67,
     "symbol": "MASS_BUDGET_TOLERANCE_PERCENT",
     "signature": "MASS_BUDGET_TOLERANCE_PERCENT = 0.5",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/run_one_d.py",
-    "line_no": 63,
+    "line_no": 68,
     "symbol": "SINK_REF_SIZE",
     "signature": "SINK_REF_SIZE = 1e-06",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/run_one_d.py",
-    "line_no": 64,
+    "line_no": 69,
     "symbol": "FAST_BLOWOUT_RATIO_THRESHOLD",
     "signature": "FAST_BLOWOUT_RATIO_THRESHOLD = 3.0",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/run_one_d.py",
-    "line_no": 65,
+    "line_no": 70,
     "symbol": "FAST_BLOWOUT_RATIO_STRICT",
     "signature": "FAST_BLOWOUT_RATIO_STRICT = 10.0",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/run_one_d.py",
-    "line_no": 68,
+    "line_no": 73,
     "symbol": "MassBudgetViolationError",
     "signature": "class MassBudgetViolationError(NumericalError)",
     "brief_usage": "Raised when the mass budget tolerance is exceeded."
   },
   {
     "file_path": "marsdisk/run_one_d.py",
-    "line_no": 72,
+    "line_no": 77,
+    "symbol": "SUM_OUT_MASS",
+    "signature": "SUM_OUT_MASS = 0",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "marsdisk/run_one_d.py",
+    "line_no": 78,
+    "symbol": "SUM_SINK_MASS",
+    "signature": "SUM_SINK_MASS = 1",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "marsdisk/run_one_d.py",
+    "line_no": 79,
+    "symbol": "SUM_SUBLIMATION_MASS",
+    "signature": "SUM_SUBLIMATION_MASS = 2",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "marsdisk/run_one_d.py",
+    "line_no": 80,
+    "symbol": "SUM_AREA",
+    "signature": "SUM_AREA = 3",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "marsdisk/run_one_d.py",
+    "line_no": 81,
+    "symbol": "SUM_SUPPLY_RATE_NOMINAL",
+    "signature": "SUM_SUPPLY_RATE_NOMINAL = 4",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "marsdisk/run_one_d.py",
+    "line_no": 82,
+    "symbol": "SUM_SUPPLY_RATE_SCALED",
+    "signature": "SUM_SUPPLY_RATE_SCALED = 5",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "marsdisk/run_one_d.py",
+    "line_no": 83,
+    "symbol": "SUM_SUPPLY_RATE_APPLIED",
+    "signature": "SUM_SUPPLY_RATE_APPLIED = 6",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "marsdisk/run_one_d.py",
+    "line_no": 84,
+    "symbol": "SUM_SUPPLY_HEADROOM",
+    "signature": "SUM_SUPPLY_HEADROOM = 7",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "marsdisk/run_one_d.py",
+    "line_no": 85,
+    "symbol": "SUM_SUPPLY_CLIP_FACTOR",
+    "signature": "SUM_SUPPLY_CLIP_FACTOR = 8",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "marsdisk/run_one_d.py",
+    "line_no": 86,
+    "symbol": "SUM_SUPPLY_VISIBILITY",
+    "signature": "SUM_SUPPLY_VISIBILITY = 9",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "marsdisk/run_one_d.py",
+    "line_no": 87,
+    "symbol": "SUM_SUPPLY_SPILL_RATE",
+    "signature": "SUM_SUPPLY_SPILL_RATE = 10",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "marsdisk/run_one_d.py",
+    "line_no": 88,
+    "symbol": "SUM_SUPPLY_FEEDBACK",
+    "signature": "SUM_SUPPLY_FEEDBACK = 11",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "marsdisk/run_one_d.py",
+    "line_no": 89,
+    "symbol": "SUM_SUPPLY_TEMPERATURE",
+    "signature": "SUM_SUPPLY_TEMPERATURE = 12",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "marsdisk/run_one_d.py",
+    "line_no": 90,
+    "symbol": "SUM_SUPPLY_RESERVOIR",
+    "signature": "SUM_SUPPLY_RESERVOIR = 13",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "marsdisk/run_one_d.py",
+    "line_no": 91,
+    "symbol": "SUM_DT_OVER_T_BLOW",
+    "signature": "SUM_DT_OVER_T_BLOW = 14",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "marsdisk/run_one_d.py",
+    "line_no": 92,
+    "symbol": "SUM_SUPPLY_BLOCKED_AREA",
+    "signature": "SUM_SUPPLY_BLOCKED_AREA = 15",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "marsdisk/run_one_d.py",
+    "line_no": 93,
+    "symbol": "SUM_SUPPLY_MIXING_AREA",
+    "signature": "SUM_SUPPLY_MIXING_AREA = 16",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "marsdisk/run_one_d.py",
+    "line_no": 94,
+    "symbol": "STEP_SUM_COUNT",
+    "signature": "STEP_SUM_COUNT = 17",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "marsdisk/run_one_d.py",
+    "line_no": 97,
+    "symbol": "CellStepPayload",
+    "signature": "class CellStepPayload(NamedTuple)",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "marsdisk/run_one_d.py",
+    "line_no": 107,
     "symbol": "_resolve_los_factor",
     "signature": "_resolve_los_factor(los_geom: Optional[object]) -> float",
     "brief_usage": "Return the multiplicative factor f_los scaling τ_vert to τ_los."
   },
   {
     "file_path": "marsdisk/run_one_d.py",
-    "line_no": 88,
+    "line_no": 123,
     "symbol": "_clamp_sigma_surf",
     "signature": "_clamp_sigma_surf(value: float, *, label: str='sigma_surf') -> float",
     "brief_usage": "Return a non-negative finite surface density (clamped to 0 on invalid)."
   },
   {
     "file_path": "marsdisk/run_one_d.py",
-    "line_no": 102,
+    "line_no": 137,
     "symbol": "_auto_chi_blow",
     "signature": "_auto_chi_blow(beta: float, qpr: float) -> float",
     "brief_usage": "Return an automatic chi_blow scaling based on β and ⟨Q_pr⟩."
   },
   {
     "file_path": "marsdisk/run_one_d.py",
-    "line_no": 117,
+    "line_no": 152,
     "symbol": "_fast_blowout_correction_factor",
     "signature": "_fast_blowout_correction_factor(ratio: float) -> float",
     "brief_usage": "Return the effective loss fraction ``f_fast = 1 - exp(-Δt/t_blow)``."
   },
   {
     "file_path": "marsdisk/run_one_d.py",
-    "line_no": 130,
+    "line_no": 165,
     "symbol": "_env_flag",
     "signature": "_env_flag(name: str) -> Optional[bool]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/run_one_d.py",
-    "line_no": 142,
+    "line_no": 177,
     "symbol": "_env_int",
     "signature": "_env_int(name: str) -> Optional[int]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/run_one_d.py",
-    "line_no": 152,
+    "line_no": 187,
     "symbol": "_resolve_cell_parallel_config",
-    "signature": "_resolve_cell_parallel_config(*, os_name: str, n_cells: int, cell_parallel_requested: bool, cell_jobs_requested: int, cell_min_cells: int, cell_chunk_size_raw: int, cell_coupling_enabled: bool) -> Dict[str, object]",
+    "signature": "_resolve_cell_parallel_config(*, os_name: str, n_cells: int, cell_parallel_requested: bool, cell_jobs_requested: int, cell_min_cells: int, cell_min_cells_per_job: int, cell_chunk_size_raw: int, cell_coupling_enabled: bool) -> Dict[str, object]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/run_one_d.py",
-    "line_no": 207,
+    "line_no": 251,
     "symbol": "run_one_d",
     "signature": "run_one_d(cfg: Config, *, enforce_mass_budget: bool=False, physics_mode_override: Optional[str]=None, physics_mode_source_override: Optional[str]=None) -> None",
     "brief_usage": "Execute the 1D radial Mars disk simulation."
@@ -7386,28 +7533,28 @@
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 1949,
+    "line_no": 1953,
     "symbol": "ExtendedDiagnostics",
     "signature": "class ExtendedDiagnostics(BaseModel)",
     "brief_usage": "Optional extended diagnostics controls."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 1962,
+    "line_no": 1966,
     "symbol": "EnergyBookkeeping",
     "signature": "class EnergyBookkeeping(BaseModel)",
     "brief_usage": "Controls for collision energy bookkeeping outputs."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 1975,
+    "line_no": 1979,
     "symbol": "Diagnostics",
     "signature": "class Diagnostics(BaseModel)",
     "brief_usage": "Diagnostics toggles grouped by feature phase."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 1982,
+    "line_no": 1986,
     "symbol": "Config",
     "signature": "class Config(BaseModel)",
     "brief_usage": "Top-level configuration object."
@@ -10465,6 +10612,83 @@
     "brief_usage": "No description available."
   },
   {
+    "file_path": "scripts/tests/cell_parallel_speed_check.py",
+    "line_no": 16,
+    "symbol": "_repo_root",
+    "signature": "_repo_root() -> Path",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/tests/cell_parallel_speed_check.py",
+    "line_no": 20,
+    "symbol": "_load_json",
+    "signature": "_load_json(path: Path) -> Dict[str, Any]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/tests/cell_parallel_speed_check.py",
+    "line_no": 24,
+    "symbol": "_run_case",
+    "signature": "_run_case(*, label: str, config_path: Path, outdir: Path, overrides: list[str], env: Dict[str, str], quiet: bool) -> Dict[str, Any]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/tests/cell_parallel_speed_check.py",
+    "line_no": 62,
+    "symbol": "main",
+    "signature": "main() -> int",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/tests/measure_case_output_size.py",
+    "line_no": 17,
+    "symbol": "_repo_root",
+    "signature": "_repo_root() -> Path",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/tests/measure_case_output_size.py",
+    "line_no": 21,
+    "symbol": "_sanitize_token",
+    "signature": "_sanitize_token(value: str) -> str",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/tests/measure_case_output_size.py",
+    "line_no": 29,
+    "symbol": "_git_short_sha",
+    "signature": "_git_short_sha(repo_root: Path) -> str",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/tests/measure_case_output_size.py",
+    "line_no": 45,
+    "symbol": "_dir_stats",
+    "signature": "_dir_stats(path: Path) -> Tuple[int, int, int]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/tests/measure_case_output_size.py",
+    "line_no": 61,
+    "symbol": "_build_outdir",
+    "signature": "_build_outdir(*, batch_root: Path, sweep_tag: str, run_ts: str, git_sha: str, batch_seed: int, t_value: str, eps_value: str, tau_value: str) -> Path",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/tests/measure_case_output_size.py",
+    "line_no": 79,
+    "symbol": "_write_report",
+    "signature": "_write_report(path: Path, payload: Dict[str, object]) -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/tests/measure_case_output_size.py",
+    "line_no": 83,
+    "symbol": "main",
+    "signature": "main() -> int",
+    "brief_usage": "No description available."
+  },
+  {
     "file_path": "scripts/tests/overparallel_benchmark.py",
     "line_no": 18,
     "symbol": "_ENV_SNAPSHOT_KEYS",
@@ -10572,6 +10796,41 @@
   {
     "file_path": "scripts/tests/preflight_checks_smoke.py",
     "line_no": 129,
+    "symbol": "main",
+    "signature": "main() -> int",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/tests/python_loop_profile_check.py",
+    "line_no": 17,
+    "symbol": "_repo_root",
+    "signature": "_repo_root() -> Path",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/tests/python_loop_profile_check.py",
+    "line_no": 21,
+    "symbol": "_set_default_env",
+    "signature": "_set_default_env() -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/tests/python_loop_profile_check.py",
+    "line_no": 34,
+    "symbol": "_run_profile",
+    "signature": "_run_profile(argv: list[str], outdir: Path) -> Path",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/tests/python_loop_profile_check.py",
+    "line_no": 46,
+    "symbol": "_summarize_profile",
+    "signature": "_summarize_profile(profile_path: Path, top_n: int) -> Dict[str, Any]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/tests/python_loop_profile_check.py",
+    "line_no": 67,
     "symbol": "main",
     "signature": "main() -> int",
     "brief_usage": "No description available."
@@ -12888,21 +13147,21 @@
   },
   {
     "file_path": "tests/unit/test_cell_parallel_config.py",
-    "line_no": 73,
+    "line_no": 91,
     "symbol": "test_cell_parallel_disabled_reasons",
     "signature": "test_cell_parallel_disabled_reasons(payload: dict[str, object], expected_reason: str) -> None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tests/unit/test_cell_parallel_config.py",
-    "line_no": 80,
+    "line_no": 98,
     "symbol": "test_cell_parallel_job_capping_and_auto_chunking",
     "signature": "test_cell_parallel_job_capping_and_auto_chunking() -> None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tests/unit/test_cell_parallel_config.py",
-    "line_no": 97,
+    "line_no": 116,
     "symbol": "test_cell_parallel_fixed_chunk_size",
     "signature": "test_cell_parallel_fixed_chunk_size() -> None",
     "brief_usage": "No description available."

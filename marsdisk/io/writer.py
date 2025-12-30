@@ -26,6 +26,7 @@ def write_parquet(
     path: Path,
     *,
     compression: str = "snappy",
+    ensure_columns: Iterable[str] | None = None,
 ) -> None:
     """Write tabular records to a Parquet file using ``pyarrow``.
 
@@ -387,11 +388,25 @@ def write_parquet(
         "frac_fragmentation": "Fraction of collision rate attributed to fragmentation = n_fragmentation/(n_cratering+n_fragmentation).",
         "f_ke_eps_mismatch": "Absolute mismatch between configured f_ke_fragmentation and eps_restitution**2 when fragmentation f_ke is provided (dimensionless).",
     }
-    if isinstance(df, pd.DataFrame):
-        table = pa.Table.from_pandas(df, preserve_index=False)
+    if ensure_columns is None:
+        if isinstance(df, pd.DataFrame):
+            table = pa.Table.from_pandas(df, preserve_index=False)
+        else:
+            records = df if isinstance(df, list) else list(df)
+            table = pa.Table.from_pylist(records)
     else:
-        records = df if isinstance(df, list) else list(df)
-        table = pa.Table.from_pylist(records)
+        if isinstance(df, pd.DataFrame):
+            frame = df
+        else:
+            records = df if isinstance(df, list) else list(df)
+            frame = pd.DataFrame(records)
+        missing = [col for col in ensure_columns if col not in frame.columns]
+        if missing:
+            if isinstance(df, pd.DataFrame):
+                frame = frame.copy()
+            for col in missing:
+                frame[col] = None
+        table = pa.Table.from_pandas(frame, preserve_index=False)
     metadata = dict(table.schema.metadata or {})
     metadata.update(
         {

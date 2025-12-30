@@ -1,8 +1,8 @@
 {
   "function_reference_rate": {
     "numerator": 111,
-    "denominator": 132,
-    "rate": 0.8409090909090909
+    "denominator": 134,
+    "rate": 0.8283582089552238
   },
   "anchor_consistency_rate": {
     "numerator": 710,

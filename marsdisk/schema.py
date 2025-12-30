@@ -1922,6 +1922,10 @@ class IO(BaseModel):
         ge=1,
         description="Stride for PSD history output (1 = every step).",
     )
+    mass_budget_cells: bool = Field(
+        True,
+        description="Write per-cell mass budget to checks/mass_budget_cells.csv.",
+    )
     quiet: bool = Field(
         False,
         description="Suppress INFO logging and Python warnings for cleaner CLI output.",

@@ -37,6 +37,8 @@ class StreamingState:
         step_diag_enabled: bool = False,
         step_diag_path: Optional[Path] = None,
         step_diag_format: str = "csv",
+        series_columns: Optional[List[str]] = None,
+        diagnostic_columns: Optional[List[str]] = None,
     ) -> None:
         self.enabled = bool(enabled)
         self.outdir = Path(outdir)
@@ -59,6 +61,8 @@ class StreamingState:
         self.mass_budget_cells_path: Path = self.outdir / "checks" / "mass_budget_cells.csv"
         self.mass_budget_cells_header_written = False
         self.step_diag_header_written = False
+        self.series_columns = series_columns
+        self.diagnostic_columns = diagnostic_columns
 
     def _estimate_bytes(self, history: ZeroDHistory) -> float:
         run_bytes = len(history.records) * MEMORY_RUN_ROW_BYTES
@@ -90,7 +94,12 @@ class StreamingState:
         wrote_any = False
         if history.records:
             path = series_dir / f"run_chunk_{label}.parquet"
-            writer.write_parquet(history.records, path, compression=self.compression)
+            writer.write_parquet(
+                history.records,
+                path,
+                compression=self.compression,
+                ensure_columns=self.series_columns,
+            )
             self.run_chunks.append(path)
             history.records.clear()
             wrote_any = True
@@ -102,7 +111,12 @@ class StreamingState:
             wrote_any = True
         if history.diagnostics:
             path = series_dir / f"diagnostics_chunk_{label}.parquet"
-            writer.write_parquet(history.diagnostics, path, compression=self.compression)
+            writer.write_parquet(
+                history.diagnostics,
+                path,
+                compression=self.compression,
+                ensure_columns=self.diagnostic_columns,
+            )
             self.diag_chunks.append(path)
             history.diagnostics.clear()
             wrote_any = True

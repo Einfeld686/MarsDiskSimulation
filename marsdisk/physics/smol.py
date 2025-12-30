@@ -38,6 +38,7 @@ __all__ = [
     "psd_state_to_number_density",
     "number_density_to_psd_state",
     "ImexWorkspace",
+    "get_numba_status",
 ]
 
 
@@ -52,6 +53,17 @@ class ImexWorkspace:
     m_cache_key: tuple | None = None
 
 logger = logging.getLogger(__name__)
+
+
+def get_numba_status() -> dict[str, object]:
+    """Return Numba availability and runtime usage flags."""
+
+    return {
+        "available": bool(_NUMBA_AVAILABLE),
+        "disabled_env": bool(_NUMBA_DISABLED_ENV),
+        "use_numba": bool(_USE_NUMBA),
+        "numba_failed": bool(_NUMBA_FAILED),
+    }
 
 
 def _sizes_fingerprint(sizes: np.ndarray) -> tuple[int, float, float]:

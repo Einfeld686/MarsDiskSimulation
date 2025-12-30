@@ -12,15 +12,15 @@
 - [marsdisk/physics/sinks.py#total_sink_timescale [L83–L160]] / `[marsdisk/physics/sinks.py#SinkOptions [L35–L45]]`: `SinkOptions` と `total_sink_timescale`。`sinks.mode="none"` では `SinkTimescaleResult(t_sink=None, ...)` を返し、昇華・gas drag の有効化時のみ最短寿命を採用する。
 - [marsdisk/physics/surface.py#step_surface [L229–L263]] / `[marsdisk/physics/surface.py#SurfaceStepResult [L91–L107]]`: `SurfaceStepResult` / `step_surface_density_S1`。`t_sink` が有限のときのみ `loss += 1/t_sink` と `sink_flux = sigma_new / t_sink` を適用する。
 - `[marsdisk/physics/surface.py#step_surface [L229–L263]]` `step_surface`。Wyatt 衝突寿命を挿入してから `step_surface_density_S1` へ委譲するラッパー。
-- `[marsdisk/physics/collisions_smol.py#step_collisions_smol_0d [L1068–L1526]]` `step_collisions_smol_0d`。Smol 経路で `t_sink` と `ds_dt_val` を受け取り、表層以外でも昇華・追加シンクを適用する。
+- `[marsdisk/physics/collisions_smol.py#step_collisions_smol_0d [L1079–L1537]]` `step_collisions_smol_0d`。Smol 経路で `t_sink` と `ds_dt_val` を受け取り、表層以外でも昇華・追加シンクを適用する。
 - `[marsdisk/physics/phase.py#hydro_escape_timescale [L594–L623]]` `hydro_escape_timescale`。蒸気相でのみ有効になる水素逸脱スケールを返し、ブローアウトと同時には作動しない。
 - [marsdisk/run_zero_d.py#run_zero_d [L316–L5199]] / `[marsdisk/run_zero_d.py#run_zero_d [L316–L5199]]`: 0D 本体での sink オプション解決と "no active sinks" 分岐。
 - `[marsdisk/run_zero_d.py#run_zero_d [L316–L5199]]` 表層 ODE・Smol 経路で `t_sink` と `ds_dt_val` を配分し、`sink_flux_surface` や水素逸脱の累積を計算するループ。
 
 ## I/O とトグルの対応
 - `sinks.mode=none` → `total_sink_timescale` を呼ばず `t_sink=None` を強制し、`mass_lost_by_sinks` は終始 0。[marsdisk/run_zero_d.py#run_zero_d [L316–L5199]][marsdisk/run_zero_d.py#run_zero_d [L316–L5199]]
-- `sinks.mode=sublimation` → HKL 由来の `t_sink` が有効化され、`sink_flux_surface` と `mass_lost_by_sinks` が増分を持つ。`sublimation_location` が `surface` / `smol` / `both` を切り替え、Smol 経路にも `t_sink` と `ds_dt_val` が伝搬する。[marsdisk/physics/sublimation.py#SublimationParams [L55–L134]][marsdisk/physics/sinks.py#SinkOptions [L35–L45]][marsdisk/run_zero_d.py#run_zero_d [L316–L5199]][marsdisk/run_zero_d.py#run_zero_d [L316–L5199]][marsdisk/physics/collisions_smol.py#step_collisions_smol_0d [L1068–L1526]]
-- `sub_params.mass_conserving=true` の場合、昇華 ds/dt は粒径のみを縮小し、blowout サイズを跨いだ分だけをブローアウト損失へ振替える（`M_sink_dot` は 0 を維持）。false で従来どおり昇華シンクとして質量減算。[marsdisk/physics/collisions_smol.py#step_collisions_smol_0d [L1068–L1526]][marsdisk/run_zero_d.py#run_zero_d [L316–L5199]]
+- `sinks.mode=sublimation` → HKL 由来の `t_sink` が有効化され、`sink_flux_surface` と `mass_lost_by_sinks` が増分を持つ。`sublimation_location` が `surface` / `smol` / `both` を切り替え、Smol 経路にも `t_sink` と `ds_dt_val` が伝搬する。[marsdisk/physics/sublimation.py#SublimationParams [L55–L134]][marsdisk/physics/sinks.py#SinkOptions [L35–L45]][marsdisk/run_zero_d.py#run_zero_d [L316–L5199]][marsdisk/run_zero_d.py#run_zero_d [L316–L5199]][marsdisk/physics/collisions_smol.py#step_collisions_smol_0d [L1079–L1537]]
+- `sub_params.mass_conserving=true` の場合、昇華 ds/dt は粒径のみを縮小し、blowout サイズを跨いだ分だけをブローアウト損失へ振替える（`M_sink_dot` は 0 を維持）。false で従来どおり昇華シンクとして質量減算。[marsdisk/physics/collisions_smol.py#step_collisions_smol_0d [L1079–L1537]][marsdisk/run_zero_d.py#run_zero_d [L316–L5199]]
 - `hydro_escape.enable=true` かつ相が vapor のときだけ水素逸脱スケールを使用し、ブローアウトとは排他的に選択される。[marsdisk/physics/phase.py#hydro_escape_timescale [L594–L623]][marsdisk/run_zero_d.py#run_zero_d [L316–L5199]]
 
 <!-- AUTOGEN:CALLGRAPH START -->
@@ -62,7 +62,7 @@ flowchart TD
 2. **Set the PSD floor** – 各ステップで `s_min_effective = max(cfg.sizes.s_min, a_blow, s_min_floor_dynamic)` を更新し、床情報を `s_min_components` に記録。[marsdisk/run_zero_d.py#run_zero_d [L316–L5199]]
 3. **Instantiate sink physics** – YAML `sinks` を `SinkOptions` へ束ね、昇華/drag の有効・無効と `sublimation_location` を反映。[marsdisk/physics/sinks.py#SinkOptions [L35–L45]][marsdisk/run_zero_d.py#run_zero_d [L316–L5199]]
 4. **Evaluate `t_sink`** – `sinks.mode="none"` では `t_sink=None` を強制し、そうでなければ `total_sink_timescale` で最短寿命を取得。`hydro_escape` が vapor 相で選択されるとブローアウトと排他的に `t_sink` を置換。[marsdisk/physics/phase.py#hydro_escape_timescale [L594–L623]][marsdisk/run_zero_d.py#run_zero_d [L316–L5199]]
-5. **Advance the surface/Smol layers** – `surface.step_surface(..., t_sink=t_sink_current, ...)` で表層 IMEX を進めつつ、`sublimation_location` が `smol`/`both` なら `collisions_smol.step_collisions_smol_0d(..., t_sink=t_sink_current, ds_dt_val=...)` にも同じ `t_sink` を渡す。[marsdisk/physics/surface.py#step_surface [L229–L263]][marsdisk/physics/collisions_smol.py#step_collisions_smol_0d [L1068–L1526]][marsdisk/run_zero_d.py#run_zero_d [L316–L5199]]
+5. **Advance the surface/Smol layers** – `surface.step_surface(..., t_sink=t_sink_current, ...)` で表層 IMEX を進めつつ、`sublimation_location` が `smol`/`both` なら `collisions_smol.step_collisions_smol_0d(..., t_sink=t_sink_current, ds_dt_val=...)` にも同じ `t_sink` を渡す。[marsdisk/physics/surface.py#step_surface [L229–L263]][marsdisk/physics/collisions_smol.py#step_collisions_smol_0d [L1079–L1537]][marsdisk/run_zero_d.py#run_zero_d [L316–L5199]]
 6. **Accumulate diagnostics** – `mass_lost_by_sinks` と `M_sink_cum` は `sink_flux_surface` が有限だったステップのみ増え、`M_hydro_cum` は水素逸脱を選択したステップでのみ加算される。[marsdisk/run_zero_d.py#run_zero_d [L316–L5199]]
 
 The blow-out and sink channels therefore remain disentangled even when additional sinks are disabled at the schema level.
@@ -85,10 +85,10 @@ Additional flags `enable_sublimation`, `enable_gas_drag`, `rho_g`, and `sublimat
 
 ## Output Columns and Provenance
 
-- **Time-series parquet** – 各ステップのフラックスと β/床診断を記録。`mass_lost_by_sinks` は `sink_flux_surface` の累積で、`mass_lost_sublimation_step` は HKL 由来の部分だけを抜き出す。Smol ルートでの `mass_loss_rate_sublimation` もここに合算される。[marsdisk/run_zero_d.py#run_zero_d [L316–L5199]][marsdisk/physics/psd.py#apply_uniform_size_drift [L407–L545]][marsdisk/physics/collisions_smol.py#step_collisions_smol_0d [L1068–L1526]][marsdisk/io/writer.py#write_parquet [L24–L404]]
-- 追加で `dt_over_t_blow`（`Δt / t_{\rm blow}`，無次元）と `fast_blowout_factor`（`1 - \exp(-Δt / t_{\rm blow})`，無次元）が出力され、時間ステップがブローアウト頻度に対して十分細かいか、および補正が適用されたかを判定できる。`case_status ≠ "blowout"` の行では `fast_blowout_factor` と旧互換カラム `fast_blowout_ratio` が 0.0 に設定される点に注意する。`fast_blowout_flag_gt3` / `fast_blowout_flag_gt10` は `dt/t_{\rm blow}` が 3 / 10 を超える場合に `true` になり、`fast_blowout_corrected` は補正が実際に乗算されたステップのみ `true` になる。既定では `io.correct_fast_blowout=false` のため補正は適用されず、列は診断目的で保持される。[marsdisk/run_zero_d.py#run_zero_d [L316–L5199]][marsdisk/io/writer.py#write_parquet [L24–L404]]
+- **Time-series parquet** – 各ステップのフラックスと β/床診断を記録。`mass_lost_by_sinks` は `sink_flux_surface` の累積で、`mass_lost_sublimation_step` は HKL 由来の部分だけを抜き出す。Smol ルートでの `mass_loss_rate_sublimation` もここに合算される。[marsdisk/run_zero_d.py#run_zero_d [L316–L5199]][marsdisk/physics/psd.py#apply_uniform_size_drift [L407–L545]][marsdisk/physics/collisions_smol.py#step_collisions_smol_0d [L1079–L1537]][marsdisk/io/writer.py#write_parquet [L24–L419]]
+- 追加で `dt_over_t_blow`（`Δt / t_{\rm blow}`，無次元）と `fast_blowout_factor`（`1 - \exp(-Δt / t_{\rm blow})`，無次元）が出力され、時間ステップがブローアウト頻度に対して十分細かいか、および補正が適用されたかを判定できる。`case_status ≠ "blowout"` の行では `fast_blowout_factor` と旧互換カラム `fast_blowout_ratio` が 0.0 に設定される点に注意する。`fast_blowout_flag_gt3` / `fast_blowout_flag_gt10` は `dt/t_{\rm blow}` が 3 / 10 を超える場合に `true` になり、`fast_blowout_corrected` は補正が実際に乗算されたステップのみ `true` になる。既定では `io.correct_fast_blowout=false` のため補正は適用されず、列は診断目的で保持される。[marsdisk/run_zero_d.py#run_zero_d [L316–L5199]][marsdisk/io/writer.py#write_parquet [L24–L419]]
 - **Summary JSON** – 累積損失、β診断、`s_min_components`、温度ソース、`M_hydro_cum` を集計。[marsdisk/run_zero_d.py#run_zero_d [L316–L5199]]
-- **Mass-budget checks** – `checks/mass_budget.csv` に質量保存ログを逐次書き出し。[marsdisk/run_zero_d.py#run_zero_d [L316–L5199]][marsdisk/io/writer.py#write_parquet [L24–L404]]
+- **Mass-budget checks** – `checks/mass_budget.csv` に質量保存ログを逐次書き出し。[marsdisk/run_zero_d.py#run_zero_d [L316–L5199]][marsdisk/io/writer.py#write_parquet [L24–L419]]
 - **Run configuration** – HKL/psat パラメータや β 定数を `run_config.json` に記録。[marsdisk/run_zero_d.py#run_zero_d [L316–L5199]]
 
 These artefacts document whether the sink term participated, how the effective grain size was chosen, and how the resulting β values compared with the global threshold.

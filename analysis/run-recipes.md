@@ -163,7 +163,7 @@ DocSync/テスト
 - CLI は `python -m marsdisk.run --config …` を受け取り、0D実行を呼び出す。[marsdisk/run_zero_d.py#run_zero_d [L316–L5199]]
 - 0Dケースの軌道量は `omega` と `v_kepler` が `runtime_orbital_radius_m` から導出し、ブローアウト時間や周速度評価の基礎となる。[marsdisk/grid.py#omega [L94–L95]][marsdisk/grid.py#v_kepler [L36–L52]]
 - 出力として `series/run.parquet`,`summary.json`,`checks/mass_budget.csv`,`run_config.json` を書き出す。[marsdisk/run_zero_d.py#run_zero_d [L316–L5199]][marsdisk/run_zero_d.py#run_zero_d [L316–L5199]][marsdisk/run_zero_d.py#run_zero_d [L316–L5199]][marsdisk/run_zero_d.py#run_zero_d [L316–L5199]]
-- タイムシリーズのレコード構造に上記カラムを追加し、損失項と高速ブローアウト診断を分離して記録する。[marsdisk/run_zero_d.py#run_zero_d [L316–L5199]][marsdisk/io/writer.py#write_parquet [L24–L404]]
+- タイムシリーズのレコード構造に上記カラムを追加し、損失項と高速ブローアウト診断を分離して記録する。[marsdisk/run_zero_d.py#run_zero_d [L316–L5199]][marsdisk/io/writer.py#write_parquet [L24–L419]]
 - 供給が定数モード0のため生成率は0で、ミキシング後も 0 に留まる（τ=1 クリップは行わない）。(configs/base.yml)[marsdisk/physics/supply.py#_TemperatureTable [L79–L114]]
 - 質量収支許容値と違反時の処理を 0.5% で定義している。[marsdisk/run_zero_d.py#SECONDS_PER_YEAR [L88]][marsdisk/run_zero_d.py#run_zero_d [L316–L5199]]
 - `run_config.json` に式と使用値を格納している。[marsdisk/run_zero_d.py#run_zero_d [L316–L5199]]
@@ -428,7 +428,7 @@ io:
 6) 根拠
 - ケース再利用時の `case_is_completed` 判定と `run_status` 更新ロジック。[scripts/sweeps/sweep_heatmaps.py#case_is_completed [L654–L659]][scripts/sweeps/sweep_heatmaps.py#run_case [L1146–L1253]]
 - 完了フラグ削除後は再実行し、新たなフラグと出力を生成する。[scripts/sweeps/sweep_heatmaps.py#mark_case_complete [L637–L651]][scripts/sweeps/sweep_heatmaps.py#run_case [L1146–L1253]][scripts/sweeps/sweep_heatmaps.py#main [L1265–L1529]]
-- 単発実行は `io.outdir` に書き込み、既存内容を上書きする。[marsdisk/run_zero_d.py#run_zero_d [L316–L5199]][marsdisk/io/writer.py#write_parquet [L24–L404]]
+- 単発実行は `io.outdir` に書き込み、既存内容を上書きする。[marsdisk/run_zero_d.py#run_zero_d [L316–L5199]][marsdisk/io/writer.py#write_parquet [L24–L419]]
 - CLI フラグ `--enforce-mass-budget` で許容超過時に例外を送出する。[marsdisk/run_zero_d.py#run_zero_d [L316–L5199]]
 
 ## D. 同定可能性チェック
@@ -544,7 +544,7 @@ PYTHONPATH=. pytest -q tests/integration/test_sublimation_sio.py -q
 - psatテーブルは Clausius式 `log10 P = A - B/T` から生成し、PCHIP補間にロードする。[analysis/checks_psat_auto_01/make_table.py][marsdisk/physics/sublimation.py#_load_psat_table [L209–L269]]
 - auto-selector はタブレット範囲内で内挿、それ以外で局所最小二乗フィットまたは既定係数にフォールバックする。[marsdisk/physics/sublimation.py#choose_psat_backend [L434–L557]][marsdisk/physics/sublimation.py#_local_clausius_fit_selection [L311–L377]]
 - HKLフラックスは `mass_flux_hkl` が評価し、`scan_hkl.py` で同式を再計算して温度スキャンを行う。[marsdisk/physics/sublimation.py#p_sat [L590–L605]][analysis/checks_psat_auto_01/scan_hkl.py]
-- 出力ファイル群は既存の writer 実装に従って Parquet/JSON/CSV として保存される。[marsdisk/io/writer.py#write_parquet [L24–L404]]
+- 出力ファイル群は既存の writer 実装に従って Parquet/JSON/CSV として保存される。[marsdisk/io/writer.py#write_parquet [L24–L419]]
 
 ## G. 解析ユーティリティ（β・質量損失マップ）
 

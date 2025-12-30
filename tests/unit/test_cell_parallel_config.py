@@ -15,6 +15,7 @@ from marsdisk import run_one_d
                 "cell_parallel_requested": False,
                 "cell_jobs_requested": 4,
                 "cell_min_cells": 4,
+                "cell_min_cells_per_job": 2,
                 "cell_chunk_size_raw": 0,
                 "cell_coupling_enabled": False,
             },
@@ -27,6 +28,7 @@ from marsdisk import run_one_d
                 "cell_parallel_requested": True,
                 "cell_jobs_requested": 4,
                 "cell_min_cells": 4,
+                "cell_min_cells_per_job": 2,
                 "cell_chunk_size_raw": 0,
                 "cell_coupling_enabled": False,
             },
@@ -39,6 +41,7 @@ from marsdisk import run_one_d
                 "cell_parallel_requested": True,
                 "cell_jobs_requested": 4,
                 "cell_min_cells": 4,
+                "cell_min_cells_per_job": 2,
                 "cell_chunk_size_raw": 0,
                 "cell_coupling_enabled": False,
             },
@@ -47,10 +50,24 @@ from marsdisk import run_one_d
         (
             {
                 "os_name": "nt",
+                "n_cells": 3,
+                "cell_parallel_requested": True,
+                "cell_jobs_requested": 2,
+                "cell_min_cells": 1,
+                "cell_min_cells_per_job": 2,
+                "cell_chunk_size_raw": 0,
+                "cell_coupling_enabled": False,
+            },
+            "too_few_cells_per_job",
+        ),
+        (
+            {
+                "os_name": "nt",
                 "n_cells": 8,
                 "cell_parallel_requested": True,
                 "cell_jobs_requested": 4,
                 "cell_min_cells": 4,
+                "cell_min_cells_per_job": 2,
                 "cell_chunk_size_raw": 0,
                 "cell_coupling_enabled": True,
             },
@@ -63,6 +80,7 @@ from marsdisk import run_one_d
                 "cell_parallel_requested": True,
                 "cell_jobs_requested": 1,
                 "cell_min_cells": 4,
+                "cell_min_cells_per_job": 2,
                 "cell_chunk_size_raw": 0,
                 "cell_coupling_enabled": False,
             },
@@ -84,14 +102,15 @@ def test_cell_parallel_job_capping_and_auto_chunking() -> None:
         cell_parallel_requested=True,
         cell_jobs_requested=10,
         cell_min_cells=1,
+        cell_min_cells_per_job=1,
         cell_chunk_size_raw=0,
         cell_coupling_enabled=False,
     )
 
     assert config["enabled"] is True
     assert config["jobs_effective"] == 5
-    assert config["chunk_mode"] == "auto"
-    assert config["chunk_size"] == 1
+    assert config["chunk_mode"] == "auto_single_chunk"
+    assert config["chunk_size"] == 5
 
 
 def test_cell_parallel_fixed_chunk_size() -> None:
@@ -101,6 +120,7 @@ def test_cell_parallel_fixed_chunk_size() -> None:
         cell_parallel_requested=True,
         cell_jobs_requested=3,
         cell_min_cells=1,
+        cell_min_cells_per_job=1,
         cell_chunk_size_raw=2,
         cell_coupling_enabled=False,
     )

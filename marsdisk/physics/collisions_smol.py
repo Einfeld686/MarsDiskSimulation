@@ -64,6 +64,17 @@ logger = logging.getLogger(__name__)
 _SUPPLY_EPS = 1.0e-30
 
 
+def get_numba_status() -> dict[str, object]:
+    """Return Numba availability and runtime usage flags."""
+
+    return {
+        "available": bool(_NUMBA_AVAILABLE),
+        "disabled_env": bool(_NUMBA_DISABLED_ENV),
+        "use_numba": bool(_USE_NUMBA),
+        "numba_failed": bool(_NUMBA_FAILED),
+    }
+
+
 @dataclass
 class Smol0DStepResult:
     """Container for Smol collision updates and diagnostics."""

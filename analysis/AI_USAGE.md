@@ -12,10 +12,10 @@
 python -m marsdisk.run --config analysis/run-recipes/baseline_blowout_only.yml
 ```
 
-- `OUTDIR/series/run.parquet`：各ステップの記録を`writer.write_parquet`が生成するタイムシリーズで、`F_abs`,`psi_shield`,`kappa_Planck`,`tau_eff`,`sigma_surf`,`s_peak`,`M_out_cum` などの診断列を保持する。（[marsdisk/run_zero_d.py#run_zero_d [L316–L5199]], [marsdisk/io/writer.py#write_parquet [L24–L404]]）
-- `OUTDIR/summary.json`：累積損失とβ診断に加え、`mass_budget_max_error_percent` や `dt_over_t_blow_median` を含む集約で、`run_zero_d`終端で書き出される。（[marsdisk/run_zero_d.py#run_zero_d [L316–L5199]], [marsdisk/io/writer.py#write_parquet [L24–L404]]）
-- `OUTDIR/checks/mass_budget.csv`：C4質量検査を逐次追記したCSVで、許容差と実測誤差を比較する。（[marsdisk/run_zero_d.py#run_zero_d [L316–L5199]], [marsdisk/io/writer.py#write_parquet [L24–L404]]）
-- `OUTDIR/run_config.json`：`physics_controls` にブローアウト／遮蔽／凍結／PSD床モードの実行値を残し、`blowout_provenance` に raw/effective の `s_blow` と `s_min_config` を記録する。`sublimation_provenance` で HKL 式・`psat_model`・SiO 既定パラメータ（`alpha_evap`,`mu`,`A`,`B`）・`P_gas`・`valid_K`・テーブルパス・実行半径・公転時間を追跡できる。（[marsdisk/run_zero_d.py#run_zero_d [L316–L5199]], [marsdisk/io/writer.py#write_parquet [L24–L404]]）
+- `OUTDIR/series/run.parquet`：各ステップの記録を`writer.write_parquet`が生成するタイムシリーズで、`F_abs`,`psi_shield`,`kappa_Planck`,`tau_eff`,`sigma_surf`,`s_peak`,`M_out_cum` などの診断列を保持する。（[marsdisk/run_zero_d.py#run_zero_d [L316–L5199]], [marsdisk/io/writer.py#write_parquet [L24–L419]]）
+- `OUTDIR/summary.json`：累積損失とβ診断に加え、`mass_budget_max_error_percent` や `dt_over_t_blow_median` を含む集約で、`run_zero_d`終端で書き出される。（[marsdisk/run_zero_d.py#run_zero_d [L316–L5199]], [marsdisk/io/writer.py#write_parquet [L24–L419]]）
+- `OUTDIR/checks/mass_budget.csv`：C4質量検査を逐次追記したCSVで、許容差と実測誤差を比較する。（[marsdisk/run_zero_d.py#run_zero_d [L316–L5199]], [marsdisk/io/writer.py#write_parquet [L24–L419]]）
+- `OUTDIR/run_config.json`：`physics_controls` にブローアウト／遮蔽／凍結／PSD床モードの実行値を残し、`blowout_provenance` に raw/effective の `s_blow` と `s_min_config` を記録する。`sublimation_provenance` で HKL 式・`psat_model`・SiO 既定パラメータ（`alpha_evap`,`mu`,`A`,`B`）・`P_gas`・`valid_K`・テーブルパス・実行半径・公転時間を追跡できる。（[marsdisk/run_zero_d.py#run_zero_d [L316–L5199]], [marsdisk/io/writer.py#write_parquet [L24–L419]]）
 
 # analysis のシングルソースと参照カタログ
 - 数式・変数定義の唯一のソースは `analysis/equations.md`。`slides_outline.md` / `run_catalog.md` / `figures_catalog.md` / `glossary.md` / `literature_map.md` は参照ビューであり、式本体や独自定義を持たず eq_refs や FIG_/RUN_/REF_ ID を列挙するだけとする。
@@ -113,7 +113,7 @@ PSDの下限は `psd.floor.mode` に応じて設定値・ブローアウト境�
   - `M_out_dot` / `M_sink_dot`：吹き飛び・追加シンクの瞬時流出率[M_Mars s⁻¹]。[marsdisk/run_zero_d.py#run_zero_d [L316–L5199]]
   - `mass_lost_by_blowout` / `mass_lost_by_sinks`：累積損失[M_Mars]。[marsdisk/run_zero_d.py#run_zero_d [L316–L5199]]
 
-- `series/diagnostics.parquet` では幾何吸収量や遮蔽を追跡できる。`F_abs`,`psi_shield`,`kappa_Planck`,`tau_eff`,`sigma_surf`,`s_peak`,`M_out_cum` を確認し、遮蔽モードやPSD床の挙動をレビューする。（[marsdisk/run_zero_d.py#run_zero_d [L316–L5199]], [marsdisk/io/writer.py#write_parquet [L24–L404]]）
+- `series/diagnostics.parquet` では幾何吸収量や遮蔽を追跡できる。`F_abs`,`psi_shield`,`kappa_Planck`,`tau_eff`,`sigma_surf`,`s_peak`,`M_out_cum` を確認し、遮蔽モードやPSD床の挙動をレビューする。（[marsdisk/run_zero_d.py#run_zero_d [L316–L5199]], [marsdisk/io/writer.py#write_parquet [L24–L419]]）
 
 <!-- AUTOGEN:AI_USAGE PRACTICES START -->
 
@@ -155,10 +155,10 @@ PSDの下限は `psd.floor.mode` に応じて設定値・ブローアウト境�
 例外票を作成したら、週次の運用ミーティングで棚卸しし、古い除外を削除する。除外リストのエントリには担当者と更新期限（YYYY-MM-DD）を必ず付けること。
 
 <!-- AUTOGEN:AI_USAGE PRACTICES END -->
-- `dt_over_t_blow`：`Δt / t_{\rm blow}`（無次元）。タイムステップがブローアウト時間を十分解像しているかの指標で、常に記録される。（[marsdisk/run_zero_d.py#run_zero_d [L316–L5199]], [marsdisk/io/writer.py#write_parquet [L24–L404]]）
-- `fast_blowout_factor` と `fast_blowout_flag_gt3/gt10`：高速ブローアウト補正の適用状況。`io.correct_fast_blowout=true` かつ `dt/t_{\rm blow} > 3` のステップで補正係数が乗算され、`case_status` が `"blowout"` でない行は互換性のため `0.0` を保持する。（[marsdisk/run_zero_d.py#run_zero_d [L316–L5199]], [marsdisk/io/writer.py#write_parquet [L24–L404]]）
-- `M_out_dot_avg` / `M_sink_dot_avg` / `dM_dt_surface_total_avg`：ステップ平均化した吹き飛び・シンク・総和の質量損失レート（M_Mars s⁻¹）。時間積分で累積値を復元する際に利用する。（[marsdisk/run_zero_d.py#run_zero_d [L316–L5199]], [marsdisk/io/writer.py#write_parquet [L24–L404]]）
-- `n_substeps`：`io.substep_fast_blowout=true` かつ `dt/t_{\rm blow}` が `io.substep_max_ratio` を超えた際に使用されたサブステップ数（既定 1）。（[marsdisk/run_zero_d.py#run_zero_d [L316–L5199]], [marsdisk/io/writer.py#write_parquet [L24–L404]]）
+- `dt_over_t_blow`：`Δt / t_{\rm blow}`（無次元）。タイムステップがブローアウト時間を十分解像しているかの指標で、常に記録される。（[marsdisk/run_zero_d.py#run_zero_d [L316–L5199]], [marsdisk/io/writer.py#write_parquet [L24–L419]]）
+- `fast_blowout_factor` と `fast_blowout_flag_gt3/gt10`：高速ブローアウト補正の適用状況。`io.correct_fast_blowout=true` かつ `dt/t_{\rm blow} > 3` のステップで補正係数が乗算され、`case_status` が `"blowout"` でない行は互換性のため `0.0` を保持する。（[marsdisk/run_zero_d.py#run_zero_d [L316–L5199]], [marsdisk/io/writer.py#write_parquet [L24–L419]]）
+- `M_out_dot_avg` / `M_sink_dot_avg` / `dM_dt_surface_total_avg`：ステップ平均化した吹き飛び・シンク・総和の質量損失レート（M_Mars s⁻¹）。時間積分で累積値を復元する際に利用する。（[marsdisk/run_zero_d.py#run_zero_d [L316–L5199]], [marsdisk/io/writer.py#write_parquet [L24–L419]]）
+- `n_substeps`：`io.substep_fast_blowout=true` かつ `dt/t_{\rm blow}` が `io.substep_max_ratio` を超えた際に使用されたサブステップ数（既定 1）。（[marsdisk/run_zero_d.py#run_zero_d [L316–L5199]], [marsdisk/io/writer.py#write_parquet [L24–L419]]）
 
 `checks/mass_budget.csv`は`time`,`mass_initial`,`mass_remaining`,`mass_lost`,`mass_diff`,`error_percent`,`tolerance_percent`を持ち、`error_percent`が0.5%以内かで合否を判断する。（[marsdisk/run_zero_d.py#run_zero_d [L316–L5199]]）
 
@@ -177,7 +177,7 @@ PSDの下限は `psd.floor.mode` に応じて設定値・ブローアウト境�
 # よくある落とし穴
 - 代表半径は `disk.geometry.r_in_RM/r_out_RM` から解決され、欠損すると 0D 実行は例外を投げるため、YAML で必ず `disk.geometry` を与える（`geometry.r` は廃止）。[marsdisk/config_utils.py#ensure_disk_geometry [L44–L55]][marsdisk/run_zero_d.py#run_zero_d [L316–L5199]]
 - 温度上書きの出典を混同しないよう、`radiation.TM_K`を使った場合はsummaryの`T_M_source`が`"radiation.TM_K"`になる点を確認する。（[marsdisk/run_zero_d.py#run_zero_d [L316–L5199]]）
-- `pyarrow`未導入だとParquet書き出しが失敗するので、CI環境では事前に依存関係を導入する。（[marsdisk/io/writer.py#write_parquet [L24–L404]]）
+- `pyarrow`未導入だとParquet書き出しが失敗するので、CI環境では事前に依存関係を導入する。（[marsdisk/io/writer.py#write_parquet [L24–L419]]）
 
 # 検証チェックリスト（短縮版）
 - `sinks.mode`が`none`のケースでは`mass_lost_by_sinks`の総和が0になることを確認する。（[marsdisk/run_zero_d.py#run_zero_d [L316–L5199]]）

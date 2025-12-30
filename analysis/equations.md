@@ -248,9 +248,9 @@ Case classification follows the configuration beta: `case_status = "blowout"` wh
 | Mars-facing temperature (K) | `T_M_used`, `T_M_source` | `[marsdisk/run_zero_d.py#load_config [L258–L280]]`, `[marsdisk/run_zero_d.py#run_zero_d [L316–L5199]]` | `radiation.TM_K` または温度ドライバから決定（legacy `temps.T_M` は廃止） |
 | Radiation efficiency (dimensionless) | `Q_pr_used` | `[marsdisk/run_zero_d.py#run_zero_d [L316–L5199]]`, `[marsdisk/run_zero_d.py#run_zero_d [L316–L5199]]` | Planck mean stored for reference |
 | Shielding Φ table path | `phi_table_path` | `[marsdisk/run_zero_d.py#run_zero_d [L316–L5199]]` | Summary retains the resolved τ-table for provenance |
-| PSD bin index (dimensionless) | `bin_index` | `[marsdisk/run_zero_d.py#run_zero_d [L316–L5199]][marsdisk/io/writer.py#write_parquet [L24–L404]]` | Time×bin identifier stored in `psd_hist.parquet` |
-| PSD bin centre (m) | `s_bin_center` | `[marsdisk/run_zero_d.py#run_zero_d [L316–L5199]][marsdisk/io/writer.py#write_parquet [L24–L404]]` | Logarithmic midpoint used for PSD plots |
-| PSD bin number density | `N_bin` | `[marsdisk/run_zero_d.py#run_zero_d [L316–L5199]][marsdisk/io/writer.py#write_parquet [L24–L404]]` | Relative number surface density per bin |
+| PSD bin index (dimensionless) | `bin_index` | `[marsdisk/run_zero_d.py#run_zero_d [L316–L5199]][marsdisk/io/writer.py#write_parquet [L24–L419]]` | Time×bin identifier stored in `psd_hist.parquet` |
+| PSD bin centre (m) | `s_bin_center` | `[marsdisk/run_zero_d.py#run_zero_d [L316–L5199]][marsdisk/io/writer.py#write_parquet [L24–L419]]` | Logarithmic midpoint used for PSD plots |
+| PSD bin number density | `N_bin` | `[marsdisk/run_zero_d.py#run_zero_d [L316–L5199]][marsdisk/io/writer.py#write_parquet [L24–L419]]` | Relative number surface density per bin |
 
 
 ### (E.009) marsdisk/physics/surface.py: compute_surface_outflux (lines 178–188)
@@ -278,7 +278,7 @@ Case classification follows the configuration beta: `case_status = "blowout"` wh
 ```latex
 \dot{N}_k = \sum_{i\le j} C_{ij}\,\frac{m_i+m_j}{m_k}\,Y_{kij} - \left(\sum_j C_{kj} + C_{kk}\right) + F_k - S_k N_k,
 ```
-として記述する（$C_{ij}$ は面密度込みの衝突率、$Y_{kij}$ は質量配分）。`collisions_smol` が `prod_subblow_mass_rate`（ソース）と昇華/外部シンク（負の項）を束ねて $F_k$ と $S_k$ を組み立て、Wyatt 型 $t_{\rm coll}\approx T_{\rm orb}/(4\pi\tau)$ スケール [@Wyatt2008] と Strubbe & Chiang (2006) の PR drag/衝突寿命整合を踏まえた $e,i,H$ を `compute_kernel_e_i_H` で評価したカーネル $K_{ij}(e,v_{\mathrm{rel}},H)$ を与える。[marsdisk/physics/collisions_smol.py:L1–L220][marsdisk/physics/collisions_smol.py#compute_kernel_e_i_H [L947–L1024]]
+として記述する（$C_{ij}$ は面密度込みの衝突率、$Y_{kij}$ は質量配分）。`collisions_smol` が `prod_subblow_mass_rate`（ソース）と昇華/外部シンク（負の項）を束ねて $F_k$ と $S_k$ を組み立て、Wyatt 型 $t_{\rm coll}\approx T_{\rm orb}/(4\pi\tau)$ スケール [@Wyatt2008] と Strubbe & Chiang (2006) の PR drag/衝突寿命整合を踏まえた $e,i,H$ を `compute_kernel_e_i_H` で評価したカーネル $K_{ij}(e,v_{\mathrm{rel}},H)$ を与える。[marsdisk/physics/collisions_smol.py:L1–L220][marsdisk/physics/collisions_smol.py#compute_kernel_e_i_H [L958–L1035]]
 
 補足（ビン分解能）: coagulation/fragmentation 平衡の解析解に基づき、Birnstiel et al. (2011) は隣接粒径比 $a_{i+1}/a_i \lesssim 1.1$–1.2 を推奨しており、基準格子 $s_{\min}=1.0\times10^{-6}$ m, $s_{\max}=3$ m, $n_{\mathrm{bins}}=40$ では $(a_{i+1}/a_i)\approx1.26$ となるため、wavy 再現時はビン数を増やす感度試験を併用する [@Birnstiel2011_AA525_A11]。
 
@@ -348,7 +348,7 @@ IMEX 更新後の質量差分を測るための診断式。衝突カスケード
 
 **Numerics**
 - Validates matching shapes and positivity of $M^{n}$.
-- Absolute error used to avoid cancellation sign issues; logs diagnostic values. [marsdisk/physics/smol.py#compute_mass_budget_error_C4 [L464–L528]]
+- Absolute error used to avoid cancellation sign issues; logs diagnostic values. [marsdisk/physics/smol.py#compute_mass_budget_error_C4 [L476–L540]]
 
 ### (E.012) marsdisk/physics/radiation.py: planck_mean_qpr (lines 207-218)
 放射圧効率の Planck 平均を表参照またはフォールバックで決める。β とブローアウトの定義は [@Burns1979_Icarus40_1] に従い、その入力として Q_pr を扱う。テーブルが無い場合は灰色体近似（$Q_{\mathrm{pr}}=1$）へ落とし、`radiation.qpr_strict=true` では例外を送出する。
@@ -546,7 +546,7 @@ P_{\mathrm{sat}}(T) =
 - Logistic branch guards against $dT\to0$ via `max(dT, 1.0)`.
 - Stores provenance in `run_config.json` under `sublimation_provenance`, capturing {`sublimation_formula`, `psat_model`, `A`, `B`, `mu`, `alpha_evap`, `P_gas`, `valid_K`, optional `psat_table_path`} for reproducibility.
 - Ambient vapour pressure $P_{\mathrm{gas}}$ (特に Si を含む蒸気分圧) は Ronnet et al. (2016) 同様に自由パラメータとして扱い、化学平衡は計算しない。既定は gas‑poor 前提で $P_{\mathrm{gas}}=0$ とし、感度試験では YAML `sinks.sub_params.P_gas` を明示調整すること（HKL フラックスの最大不確定要素）。[marsdisk/physics/sublimation.py#p_sat [L590–L605]], [marsdisk/schema.py#Supply [L450–L556]]
-- `sub_params.mass_conserving=true` の場合、昇華由来の ds/dt は粒径のみを縮小し、1 ステップ内に $s<a_{\rm blow}$ を跨いだ分だけをブローアウト損失として処理する（質量シンクには入れない）。false で従来どおり昇華シンクとして質量減算。[marsdisk/physics/collisions_smol.py#step_collisions_smol_0d [L1068–L1526]][marsdisk/run_zero_d.py#run_zero_d [L316–L5199]]
+- `sub_params.mass_conserving=true` の場合、昇華由来の ds/dt は粒径のみを縮小し、1 ステップ内に $s<a_{\rm blow}$ を跨いだ分だけをブローアウト損失として処理する（質量シンクには入れない）。false で従来どおり昇華シンクとして質量減算。[marsdisk/physics/collisions_smol.py#step_collisions_smol_0d [L1079–L1537]][marsdisk/run_zero_d.py#run_zero_d [L316–L5199]]
 
 ### (E.019) marsdisk/physics/sublimation.py: sink_timescale (implemented by s_sink_from_timescale, lines 116-129)
 [@Ronnet2016_ApJ828_109]
@@ -640,7 +640,7 @@ where the iteration is started with $c_0=\max(e,10^{-6})$ and stops once $|c_{n+
 **Numerics**
 - Iterates up to `max_iter` (default 100) and raises `MarsDiskError` on non-convergence.
 - Clamps the restitution coefficient to avoid division by zero and enforces positivity of the optical depth and wake factor.
-- Callers map $c$ to physical velocity dispersion and kernel eccentricity using $v_K$. [marsdisk/physics/collisions_smol.py#compute_kernel_ei_state [L843–L891]]
+- Callers map $c$ to physical velocity dispersion and kernel eccentricity using $v_K$. [marsdisk/physics/collisions_smol.py#compute_kernel_ei_state [L854–L902]]
 - Logs iteration progress for traceability. [marsdisk/physics/dynamics.py#solve_c_eq [L64–L127]]
 
 ### (E.022) marsdisk/physics/dynamics.py: update_e (lines 121–152)

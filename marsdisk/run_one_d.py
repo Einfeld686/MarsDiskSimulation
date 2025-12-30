@@ -9,7 +9,7 @@ import random
 import warnings
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, NamedTuple, Optional
 
 import numpy as np
 import pandas as pd
@@ -32,8 +32,12 @@ from .runtime.helpers import (
     safe_float as _safe_float,
     float_or_nan as _float_or_nan,
 )
-from .output_schema import ensure_series_keys as _ensure_series_keys
-from .output_schema import ensure_diagnostic_keys as _ensure_diagnostic_keys
+from .output_schema import (
+    ONE_D_EXTRA_DIAGNOSTIC_KEYS,
+    ONE_D_EXTRA_SERIES_KEYS,
+    ZERO_D_DIAGNOSTIC_KEYS,
+    ZERO_D_SERIES_KEYS,
+)
 from .schema import Config
 from .physics import (
     psd,
@@ -48,6 +52,7 @@ from .physics import (
     phase as phase_mod,
     qstar,
     collisions_smol,
+    smol,
     eccentricity,
 )
 from .physics.sublimation import SublimationParams, grain_temperature_graybody
@@ -67,6 +72,36 @@ FAST_BLOWOUT_RATIO_STRICT = 10.0
 
 class MassBudgetViolationError(NumericalError):
     """Raised when the mass budget tolerance is exceeded."""
+
+
+SUM_OUT_MASS = 0
+SUM_SINK_MASS = 1
+SUM_SUBLIMATION_MASS = 2
+SUM_AREA = 3
+SUM_SUPPLY_RATE_NOMINAL = 4
+SUM_SUPPLY_RATE_SCALED = 5
+SUM_SUPPLY_RATE_APPLIED = 6
+SUM_SUPPLY_HEADROOM = 7
+SUM_SUPPLY_CLIP_FACTOR = 8
+SUM_SUPPLY_VISIBILITY = 9
+SUM_SUPPLY_SPILL_RATE = 10
+SUM_SUPPLY_FEEDBACK = 11
+SUM_SUPPLY_TEMPERATURE = 12
+SUM_SUPPLY_RESERVOIR = 13
+SUM_DT_OVER_T_BLOW = 14
+SUM_SUPPLY_BLOCKED_AREA = 15
+SUM_SUPPLY_MIXING_AREA = 16
+STEP_SUM_COUNT = 17
+
+
+class CellStepPayload(NamedTuple):
+    records: List[Dict[str, Any]]
+    diagnostics: List[Dict[str, Any]]
+    psd_hist_records: Optional[List[Dict[str, Any]]]
+    mass_budget_cells: Optional[List[Dict[str, Any]]]
+    t_coll_min: float
+    supply_rate_scaled_initial: Optional[float]
+    sums: np.ndarray
 
 
 def _resolve_los_factor(los_geom: Optional[object]) -> float:
@@ -156,6 +191,7 @@ def _resolve_cell_parallel_config(
     cell_parallel_requested: bool,
     cell_jobs_requested: int,
     cell_min_cells: int,
+    cell_min_cells_per_job: int,
     cell_chunk_size_raw: int,
     cell_coupling_enabled: bool,
 ) -> Dict[str, object]:
@@ -179,6 +215,10 @@ def _resolve_cell_parallel_config(
             cell_parallel_enabled = False
             cell_parallel_reason = "single_job"
             cell_jobs_effective = 1
+        elif n_cells < cell_jobs_effective * cell_min_cells_per_job:
+            cell_parallel_enabled = False
+            cell_parallel_reason = "too_few_cells_per_job"
+            cell_jobs_effective = 1
     else:
         cell_jobs_effective = 1
 
@@ -190,6 +230,9 @@ def _resolve_cell_parallel_config(
         cell_chunk_size_effective = (
             int(math.ceil(n_cells / cell_jobs_effective)) if cell_jobs_effective > 0 else n_cells
         )
+        if cell_chunk_size_effective <= 1 and n_cells <= cell_jobs_effective:
+            cell_chunk_size_effective = n_cells
+            cell_chunk_mode = "auto_single_chunk"
     if cell_chunk_size_effective < 1:
         cell_chunk_size_effective = 1
     if cell_chunk_size_effective > n_cells:
@@ -201,6 +244,7 @@ def _resolve_cell_parallel_config(
         "jobs_effective": int(cell_jobs_effective),
         "chunk_size": int(cell_chunk_size_effective),
         "chunk_mode": cell_chunk_mode,
+        "min_cells_per_job": int(cell_min_cells_per_job),
     }
 
 
@@ -293,6 +337,7 @@ def run_one_d(
     cell_parallel_requested = _env_flag("MARSDISK_CELL_PARALLEL") is True
     cell_jobs_env = _env_int("MARSDISK_CELL_JOBS")
     cell_min_cells_env = _env_int("MARSDISK_CELL_MIN_CELLS")
+    cell_min_cells_per_job_env = _env_int("MARSDISK_CELL_MIN_CELLS_PER_JOB")
     cell_chunk_size_env = _env_int("MARSDISK_CELL_CHUNK_SIZE")
 
     cell_jobs_requested = cell_jobs_env if cell_jobs_env is not None else 1
@@ -301,6 +346,11 @@ def run_one_d(
     cell_min_cells = cell_min_cells_env if cell_min_cells_env is not None else 4
     if cell_min_cells < 1:
         cell_min_cells = 1
+    cell_min_cells_per_job = (
+        cell_min_cells_per_job_env if cell_min_cells_per_job_env is not None else 2
+    )
+    if cell_min_cells_per_job < 1:
+        cell_min_cells_per_job = 1
     cell_chunk_size_raw = cell_chunk_size_env if cell_chunk_size_env is not None else 0
 
     cell_coupling_enabled = bool(
@@ -313,6 +363,7 @@ def run_one_d(
         cell_parallel_requested=cell_parallel_requested,
         cell_jobs_requested=cell_jobs_requested,
         cell_min_cells=cell_min_cells,
+        cell_min_cells_per_job=cell_min_cells_per_job,
         cell_chunk_size_raw=cell_chunk_size_raw,
         cell_coupling_enabled=cell_coupling_enabled,
     )
@@ -346,6 +397,7 @@ def run_one_d(
         "jobs_requested": int(cell_jobs_requested),
         "jobs_effective": int(cell_jobs_effective),
         "min_cells": int(cell_min_cells),
+        "min_cells_per_job": int(cell_min_cells_per_job),
         "chunk_size": int(cell_chunk_size_effective),
         "chunk_mode": cell_chunk_mode,
         "os": os.name,
@@ -368,6 +420,10 @@ def run_one_d(
         "numba_threads_env": numba_threads_env,
         "numba_threads_auto": numba_threads_auto,
         "numba_threads_effective": numba_threads_effective,
+    }
+    numba_status = {
+        "collisions_smol": collisions_smol.get_numba_status(),
+        "smol": smol.get_numba_status(),
     }
 
     if cell_parallel_requested:
@@ -918,6 +974,7 @@ def run_one_d(
     }
     run_config_snapshot["cell_parallel"] = cell_parallel_info
     run_config_snapshot["threading"] = thread_info
+    run_config_snapshot["numba"] = numba_status
     auto_tune_info = getattr(cfg, "_auto_tune_info", None)
     if auto_tune_info is not None:
         run_config_snapshot["auto_tune"] = auto_tune_info
@@ -998,8 +1055,11 @@ def run_one_d(
     psd_history_stride = int(getattr(cfg.io, "psd_history_stride", 1) or 1)
     if psd_history_stride < 1:
         psd_history_stride = 1
+    mass_budget_cells_enabled = bool(getattr(cfg.io, "mass_budget_cells", True))
 
     history = ZeroDHistory()
+    series_columns = list(ZERO_D_SERIES_KEYS) + list(ONE_D_EXTRA_SERIES_KEYS)
+    diagnostic_columns = list(ZERO_D_DIAGNOSTIC_KEYS) + list(ONE_D_EXTRA_DIAGNOSTIC_KEYS)
     streaming_state = StreamingState(
         enabled=streaming_enabled,
         outdir=Path(cfg.io.outdir),
@@ -1009,6 +1069,8 @@ def run_one_d(
         step_flush_interval=streaming_step_interval,
         merge_at_end=streaming_merge_at_end,
         cleanup_chunks=streaming_cleanup_chunks,
+        series_columns=series_columns,
+        diagnostic_columns=diagnostic_columns,
     )
     steps_since_flush = 0
 
@@ -1020,7 +1082,7 @@ def run_one_d(
         psd_history_stride=psd_history_stride,
         diagnostics_enabled=True,
         mass_budget_enabled=True,
-        mass_budget_cells_enabled=True,
+        mass_budget_cells_enabled=mass_budget_cells_enabled,
         step_diag_enabled=False,
     )
     progress_enabled = bool(getattr(cfg.io.progress, "enable", False))
@@ -1085,46 +1147,14 @@ def run_one_d(
             t_coll_min = float("inf")
             step_records = []
             step_diagnostics = []
-            step_out_mass = 0.0
-            step_sink_mass = 0.0
-            step_sublimation_mass = 0.0
-            step_area_sum = 0.0
-            step_supply_rate_nominal_sum = 0.0
-            step_supply_rate_scaled_sum = 0.0
-            step_supply_rate_applied_sum = 0.0
-            step_supply_headroom_sum = 0.0
-            step_supply_clip_factor_sum = 0.0
-            step_supply_visibility_sum = 0.0
-            step_supply_spill_rate_sum = 0.0
-            step_supply_feedback_sum = 0.0
-            step_supply_temperature_sum = 0.0
-            step_supply_reservoir_remaining_sum = 0.0
-            step_dt_over_t_blow_sum = 0.0
-            step_supply_blocked_area_sum = 0.0
-            step_supply_mixing_area_sum = 0.0
+            step_sums = np.zeros(STEP_SUM_COUNT, dtype=float)
 
             def _run_cell_indices(indices):
                 local_step_records = []
                 local_step_diagnostics = []
-                local_step_out_mass = 0.0
-                local_step_sink_mass = 0.0
-                local_step_sublimation_mass = 0.0
-                local_step_area_sum = 0.0
-                local_step_supply_rate_nominal_sum = 0.0
-                local_step_supply_rate_scaled_sum = 0.0
-                local_step_supply_rate_applied_sum = 0.0
-                local_step_supply_headroom_sum = 0.0
-                local_step_supply_clip_factor_sum = 0.0
-                local_step_supply_visibility_sum = 0.0
-                local_step_supply_spill_rate_sum = 0.0
-                local_step_supply_feedback_sum = 0.0
-                local_step_supply_temperature_sum = 0.0
-                local_step_supply_reservoir_remaining_sum = 0.0
-                local_step_dt_over_t_blow_sum = 0.0
-                local_step_supply_blocked_area_sum = 0.0
-                local_step_supply_mixing_area_sum = 0.0
-                local_psd_hist_records = []
-                local_mass_budget_cells = []
+                local_sums = np.zeros(STEP_SUM_COUNT, dtype=float)
+                local_psd_hist_records = [] if psd_history_enabled else None
+                local_mass_budget_cells = [] if mass_budget_cells_enabled else None
                 local_supply_rate_scaled_initial = None
                 local_t_coll_min = float('inf')
                 for idx in indices:
@@ -1329,7 +1359,6 @@ def run_one_d(
                                 "cell_stop_time": float(cell_stop_time[idx]) if math.isfinite(cell_stop_time[idx]) else None,
                                 "cell_stop_tau": float(cell_stop_tau[idx]) if math.isfinite(cell_stop_tau[idx]) else None,
                             }
-                        _ensure_series_keys(record)
                         local_step_records.append(record)
                         tau_los_inactive = record.get("tau_los_mars")
                         diag_entry = {
@@ -1427,10 +1456,9 @@ def run_one_d(
                             "mass_loss_surface_solid_step": 0.0,
                             "blowout_gate_factor": 1.0,
                         }
-                        _ensure_diagnostic_keys(diag_entry)
                         local_step_diagnostics.append(diag_entry)
-                        local_step_area_sum += area_val
-                        local_step_dt_over_t_blow_sum += 0.0
+                        local_sums[SUM_AREA] += area_val
+                        local_sums[SUM_DT_OVER_T_BLOW] += 0.0
                         continue
 
                     if not math.isfinite(sigma_val):
@@ -1831,9 +1859,9 @@ def run_one_d(
                     dSigma_dt_total = dSigma_dt_blowout + dSigma_dt_sinks
                     M_loss_cum[idx] += M_out_dot * dt
                     M_sink_cum[idx] += M_sink_dot * dt
-                    local_step_out_mass += M_out_dot * dt
-                    local_step_sink_mass += M_sink_dot * dt
-                    local_step_sublimation_mass += mass_loss_sublimation_step
+                    local_sums[SUM_OUT_MASS] += M_out_dot * dt
+                    local_sums[SUM_SINK_MASS] += M_sink_dot * dt
+                    local_sums[SUM_SUBLIMATION_MASS] += mass_loss_sublimation_step
 
                     smol_sigma_before = None
                     smol_sigma_after = None
@@ -2048,7 +2076,6 @@ def run_one_d(
                         "cell_stop_time": float(cell_stop_time[idx]) if math.isfinite(cell_stop_time[idx]) else None,
                         "cell_stop_tau": float(cell_stop_tau[idx]) if math.isfinite(cell_stop_tau[idx]) else None,
                     }
-                    _ensure_series_keys(record)
                     local_step_records.append(record)
                     F_abs_geom = rad_flux_step * (constants.R_MARS / r_val) ** 2
                     F_abs_geom_qpr = F_abs_geom * qpr_mean_step
@@ -2178,34 +2205,36 @@ def run_one_d(
                         "smol_source_mass_rate": smol_source_mass_rate,
                         "blowout_gate_factor": gate_factor,
                     }
-                    _ensure_diagnostic_keys(diag_entry)
                     local_step_diagnostics.append(diag_entry)
-                    local_step_area_sum += area_val
-                    local_step_supply_rate_nominal_sum += _safe_float(supply_rate_nominal_current) * area_val
-                    local_step_supply_rate_scaled_sum += _safe_float(supply_rate_scaled_current) * area_val
-                    local_step_supply_rate_applied_sum += _safe_float(supply_rate_applied_current) * area_val
-                    local_step_supply_headroom_sum += _safe_float(headroom_current) * area_val
-                    local_step_supply_clip_factor_sum += _safe_float(clip_factor_current) * area_val
-                    local_step_supply_visibility_sum += _safe_float(visibility_factor_current) * area_val
-                    local_step_supply_spill_rate_sum += _safe_float(spill_rate_current) * area_val
-                    local_step_supply_feedback_sum += _safe_float(
+                    local_sums[SUM_AREA] += area_val
+                    local_sums[SUM_SUPPLY_RATE_NOMINAL] += _safe_float(supply_rate_nominal_current) * area_val
+                    local_sums[SUM_SUPPLY_RATE_SCALED] += _safe_float(supply_rate_scaled_current) * area_val
+                    local_sums[SUM_SUPPLY_RATE_APPLIED] += _safe_float(supply_rate_applied_current) * area_val
+                    local_sums[SUM_SUPPLY_HEADROOM] += _safe_float(headroom_current) * area_val
+                    local_sums[SUM_SUPPLY_CLIP_FACTOR] += _safe_float(clip_factor_current) * area_val
+                    local_sums[SUM_SUPPLY_VISIBILITY] += _safe_float(visibility_factor_current) * area_val
+                    local_sums[SUM_SUPPLY_SPILL_RATE] += _safe_float(spill_rate_current) * area_val
+                    local_sums[SUM_SUPPLY_FEEDBACK] += _safe_float(
                         supply_diag.feedback_scale if supply_diag else None
                     ) * area_val
-                    local_step_supply_temperature_sum += _safe_float(
+                    local_sums[SUM_SUPPLY_TEMPERATURE] += _safe_float(
                         supply_diag.temperature_scale if supply_diag else None
                     ) * area_val
-                    local_step_supply_reservoir_remaining_sum += _safe_float(
+                    local_sums[SUM_SUPPLY_RESERVOIR] += _safe_float(
                         supply_diag.reservoir_remaining_Mmars if supply_diag else None
                     ) * area_val
-                    local_step_dt_over_t_blow_sum += _safe_float(dt_over_t_blow) * area_val
+                    local_sums[SUM_DT_OVER_T_BLOW] += _safe_float(dt_over_t_blow) * area_val
                     if supply_blocked_by_headroom_flag:
-                        local_step_supply_blocked_area_sum += area_val
+                        local_sums[SUM_SUPPLY_BLOCKED_AREA] += area_val
                     if supply_mixing_limited_flag:
-                        local_step_supply_mixing_area_sum += area_val
+                        local_sums[SUM_SUPPLY_MIXING_AREA] += area_val
                     if not cell_active[idx] and frozen_records[idx] is None:
                         frozen_records[idx] = dict(record)
 
-                    if psd_history_enabled and (psd_history_stride <= 1 or step_no % psd_history_stride == 0):
+                    if (
+                        local_psd_hist_records is not None
+                        and (psd_history_stride <= 1 or step_no % psd_history_stride == 0)
+                    ):
                         sizes_arr = np.asarray(psd_state.get("sizes"), dtype=float)
                         widths_arr = np.asarray(psd_state.get("widths"), dtype=float)
                         number_arr = np.asarray(psd_state.get("number"), dtype=float)
@@ -2238,46 +2267,31 @@ def run_one_d(
                     error_percent_cell = 0.0
                     if mass_initial_cell[idx] > 0.0:
                         error_percent_cell = abs(mass_diff_cell / mass_initial_cell[idx]) * 100.0
-                    local_mass_budget_cells.append(
-                        {
-                            "time": time + dt,
-                            "cell_index": idx,
-                            "r_RM": r_rm,
-                            "mass_initial": float(mass_initial_cell[idx]),
-                            "mass_remaining": float(mass_remaining_cell),
-                            "mass_lost": float(mass_lost_cell),
-                            "mass_diff": float(mass_diff_cell),
-                            "error_percent": float(error_percent_cell),
-                            "tolerance_percent": MASS_BUDGET_TOLERANCE_PERCENT,
-                            "cell_active": bool(cell_active[idx]),
-                        }
-                    )
+                    if local_mass_budget_cells is not None:
+                        local_mass_budget_cells.append(
+                            {
+                                "time": time + dt,
+                                "cell_index": idx,
+                                "r_RM": r_rm,
+                                "mass_initial": float(mass_initial_cell[idx]),
+                                "mass_remaining": float(mass_remaining_cell),
+                                "mass_lost": float(mass_lost_cell),
+                                "mass_diff": float(mass_diff_cell),
+                                "error_percent": float(error_percent_cell),
+                                "tolerance_percent": MASS_BUDGET_TOLERANCE_PERCENT,
+                                "cell_active": bool(cell_active[idx]),
+                            }
+                        )
 
-                return {
-                    'records': local_step_records,
-                    'diagnostics': local_step_diagnostics,
-                    'out_mass': local_step_out_mass,
-                    'sink_mass': local_step_sink_mass,
-                    'sublimation_mass': local_step_sublimation_mass,
-                    'area_sum': local_step_area_sum,
-                    'supply_rate_nominal_sum': local_step_supply_rate_nominal_sum,
-                    'supply_rate_scaled_sum': local_step_supply_rate_scaled_sum,
-                    'supply_rate_applied_sum': local_step_supply_rate_applied_sum,
-                    'supply_headroom_sum': local_step_supply_headroom_sum,
-                    'supply_clip_factor_sum': local_step_supply_clip_factor_sum,
-                    'supply_visibility_sum': local_step_supply_visibility_sum,
-                    'supply_spill_rate_sum': local_step_supply_spill_rate_sum,
-                    'supply_feedback_sum': local_step_supply_feedback_sum,
-                    'supply_temperature_sum': local_step_supply_temperature_sum,
-                    'supply_reservoir_remaining_sum': local_step_supply_reservoir_remaining_sum,
-                    'dt_over_t_blow_sum': local_step_dt_over_t_blow_sum,
-                    'supply_blocked_area_sum': local_step_supply_blocked_area_sum,
-                    'supply_mixing_area_sum': local_step_supply_mixing_area_sum,
-                    'psd_hist_records': local_psd_hist_records,
-                    'mass_budget_cells': local_mass_budget_cells,
-                    't_coll_min': local_t_coll_min,
-                    'supply_rate_scaled_initial': local_supply_rate_scaled_initial,
-                }
+                return CellStepPayload(
+                    records=local_step_records,
+                    diagnostics=local_step_diagnostics,
+                    psd_hist_records=local_psd_hist_records,
+                    mass_budget_cells=local_mass_budget_cells,
+                    t_coll_min=local_t_coll_min,
+                    supply_rate_scaled_initial=local_supply_rate_scaled_initial,
+                    sums=local_sums,
+                )
 
             step_payload_iter = None
             if cell_parallel_enabled and cell_executor is not None and cell_chunks is not None:
@@ -2285,49 +2299,34 @@ def run_one_d(
             else:
                 step_payload_iter = (_run_cell_indices(range(n_cells)),)
             for payload in step_payload_iter:
-                step_records.extend(payload['records'])
-                step_diagnostics.extend(payload['diagnostics'])
-                step_out_mass += payload['out_mass']
-                step_sink_mass += payload['sink_mass']
-                step_sublimation_mass += payload['sublimation_mass']
-                step_area_sum += payload['area_sum']
-                step_supply_rate_nominal_sum += payload['supply_rate_nominal_sum']
-                step_supply_rate_scaled_sum += payload['supply_rate_scaled_sum']
-                step_supply_rate_applied_sum += payload['supply_rate_applied_sum']
-                step_supply_headroom_sum += payload['supply_headroom_sum']
-                step_supply_clip_factor_sum += payload['supply_clip_factor_sum']
-                step_supply_visibility_sum += payload['supply_visibility_sum']
-                step_supply_spill_rate_sum += payload['supply_spill_rate_sum']
-                step_supply_feedback_sum += payload['supply_feedback_sum']
-                step_supply_temperature_sum += payload['supply_temperature_sum']
-                step_supply_reservoir_remaining_sum += payload['supply_reservoir_remaining_sum']
-                step_dt_over_t_blow_sum += payload['dt_over_t_blow_sum']
-                step_supply_blocked_area_sum += payload['supply_blocked_area_sum']
-                step_supply_mixing_area_sum += payload['supply_mixing_area_sum']
-                if payload['psd_hist_records']:
-                    history.psd_hist_records.extend(payload['psd_hist_records'])
-                if payload['mass_budget_cells']:
-                    history.mass_budget_cells.extend(payload['mass_budget_cells'])
-                if supply_rate_scaled_initial is None and payload['supply_rate_scaled_initial'] is not None:
-                    supply_rate_scaled_initial = payload['supply_rate_scaled_initial']
-                if payload['t_coll_min'] is not None and math.isfinite(payload['t_coll_min']):
-                    t_coll_min = min(t_coll_min, payload['t_coll_min'])
-            area_denom = step_area_sum if step_area_sum > 0.0 else total_area
+                step_records.extend(payload.records)
+                step_diagnostics.extend(payload.diagnostics)
+                step_sums += payload.sums
+                if payload.psd_hist_records:
+                    history.psd_hist_records.extend(payload.psd_hist_records)
+                if payload.mass_budget_cells:
+                    history.mass_budget_cells.extend(payload.mass_budget_cells)
+                if supply_rate_scaled_initial is None and payload.supply_rate_scaled_initial is not None:
+                    supply_rate_scaled_initial = payload.supply_rate_scaled_initial
+                if payload.t_coll_min is not None and math.isfinite(payload.t_coll_min):
+                    t_coll_min = min(t_coll_min, payload.t_coll_min)
+            area_sum = float(step_sums[SUM_AREA])
+            area_denom = area_sum if area_sum > 0.0 else total_area
             if area_denom <= 0.0 or not math.isfinite(area_denom):
                 area_denom = 1.0
-            supply_rate_nominal_avg = step_supply_rate_nominal_sum / area_denom
-            supply_rate_scaled_avg = step_supply_rate_scaled_sum / area_denom
-            supply_rate_applied_avg = step_supply_rate_applied_sum / area_denom
-            supply_headroom_avg = step_supply_headroom_sum / area_denom
-            supply_clip_factor_avg = step_supply_clip_factor_sum / area_denom
-            supply_visibility_avg = step_supply_visibility_sum / area_denom
-            supply_spill_rate_avg = step_supply_spill_rate_sum / area_denom
-            supply_feedback_avg = step_supply_feedback_sum / area_denom
-            supply_temperature_avg = step_supply_temperature_sum / area_denom
-            supply_reservoir_remaining_avg = step_supply_reservoir_remaining_sum / area_denom
-            dt_over_t_blow_avg = step_dt_over_t_blow_sum / area_denom
-            supply_blocked_fraction = step_supply_blocked_area_sum / area_denom
-            supply_mixing_fraction = step_supply_mixing_area_sum / area_denom
+            supply_rate_nominal_avg = step_sums[SUM_SUPPLY_RATE_NOMINAL] / area_denom
+            supply_rate_scaled_avg = step_sums[SUM_SUPPLY_RATE_SCALED] / area_denom
+            supply_rate_applied_avg = step_sums[SUM_SUPPLY_RATE_APPLIED] / area_denom
+            supply_headroom_avg = step_sums[SUM_SUPPLY_HEADROOM] / area_denom
+            supply_clip_factor_avg = step_sums[SUM_SUPPLY_CLIP_FACTOR] / area_denom
+            supply_visibility_avg = step_sums[SUM_SUPPLY_VISIBILITY] / area_denom
+            supply_spill_rate_avg = step_sums[SUM_SUPPLY_SPILL_RATE] / area_denom
+            supply_feedback_avg = step_sums[SUM_SUPPLY_FEEDBACK] / area_denom
+            supply_temperature_avg = step_sums[SUM_SUPPLY_TEMPERATURE] / area_denom
+            supply_reservoir_remaining_avg = step_sums[SUM_SUPPLY_RESERVOIR] / area_denom
+            dt_over_t_blow_avg = step_sums[SUM_DT_OVER_T_BLOW] / area_denom
+            supply_blocked_fraction = step_sums[SUM_SUPPLY_BLOCKED_AREA] / area_denom
+            supply_mixing_fraction = step_sums[SUM_SUPPLY_MIXING_AREA] / area_denom
 
             supply_rate_nominal_track.append(supply_rate_nominal_avg)
             supply_rate_scaled_track.append(supply_rate_scaled_avg)
@@ -2365,11 +2364,11 @@ def run_one_d(
             if step_diagnostics:
                 history.diagnostics.extend(step_diagnostics)
 
-            M_sublimation_cum += step_sublimation_mass
+            M_sublimation_cum += float(step_sums[SUM_SUBLIMATION_MASS])
             if orbit_rollup_enabled and t_orb_ref > 0.0:
                 orbit_time_accum += dt
-                orbit_loss_blow += step_out_mass
-                orbit_loss_sink += step_sink_mass
+                orbit_loss_blow += float(step_sums[SUM_OUT_MASS])
+                orbit_loss_sink += float(step_sums[SUM_SINK_MASS])
                 while orbit_time_accum >= t_orb_ref and orbit_time_accum > 0.0:
                     orbit_time_accum_before = orbit_time_accum
                     fraction = t_orb_ref / orbit_time_accum_before
@@ -2457,14 +2456,21 @@ def run_one_d(
         streaming_state.merge_chunks()
     else:
         if history.records:
-            writer.write_parquet(pd.DataFrame(history.records), outdir / "series" / "run.parquet")
+            writer.write_parquet(
+                history.records,
+                outdir / "series" / "run.parquet",
+                ensure_columns=series_columns,
+            )
         if history.diagnostics:
             writer.write_parquet(
-                pd.DataFrame(history.diagnostics), outdir / "series" / "diagnostics.parquet"
+                history.diagnostics,
+                outdir / "series" / "diagnostics.parquet",
+                ensure_columns=diagnostic_columns,
             )
         if history.psd_hist_records:
             writer.write_parquet(
-                pd.DataFrame(history.psd_hist_records), outdir / "series" / "psd_hist.parquet"
+                history.psd_hist_records,
+                outdir / "series" / "psd_hist.parquet",
             )
     mass_budget_path = (
         streaming_state.mass_budget_path if streaming_state.enabled else outdir / "checks" / "mass_budget.csv"
@@ -2479,27 +2485,34 @@ def run_one_d(
             index=False,
         )
 
-    mass_budget_cells_path = (
-        streaming_state.mass_budget_cells_path if streaming_state.enabled else outdir / "checks" / "mass_budget_cells.csv"
-    )
-    if history.mass_budget_cells:
-        writer.append_csv(history.mass_budget_cells, mass_budget_cells_path, header=not mass_budget_cells_path.exists())
-        history.mass_budget_cells.clear()
-    if not mass_budget_cells_path.exists():
-        mass_budget_cells_path.parent.mkdir(parents=True, exist_ok=True)
-        pd.DataFrame(
-            columns=[
-                "time",
-                "cell_index",
-                "r_RM",
-                "mass_initial",
-                "mass_remaining",
-                "mass_lost",
-                "error_percent",
-                "tolerance_percent",
-                "cell_active",
-            ]
-        ).to_csv(mass_budget_cells_path, index=False)
+    if mass_budget_cells_enabled:
+        mass_budget_cells_path = (
+            streaming_state.mass_budget_cells_path
+            if streaming_state.enabled
+            else outdir / "checks" / "mass_budget_cells.csv"
+        )
+        if history.mass_budget_cells:
+            writer.append_csv(
+                history.mass_budget_cells,
+                mass_budget_cells_path,
+                header=not mass_budget_cells_path.exists(),
+            )
+            history.mass_budget_cells.clear()
+        if not mass_budget_cells_path.exists():
+            mass_budget_cells_path.parent.mkdir(parents=True, exist_ok=True)
+            pd.DataFrame(
+                columns=[
+                    "time",
+                    "cell_index",
+                    "r_RM",
+                    "mass_initial",
+                    "mass_remaining",
+                    "mass_lost",
+                    "error_percent",
+                    "tolerance_percent",
+                    "cell_active",
+                ]
+            ).to_csv(mass_budget_cells_path, index=False)
 
     M_out_cum = float(np.sum(M_loss_cum))
     M_sink_cum = float(np.sum(M_sink_cum))
@@ -2791,6 +2804,10 @@ def run_one_d(
         if sub_params_base.valid_liquid_K is not None
         else None,
     }
+    numba_status = {
+        "collisions_smol": collisions_smol.get_numba_status(),
+        "smol": smol.get_numba_status(),
+    }
     run_config_snapshot = {
         "status": "complete",
         "outdir": str(outdir),
@@ -2825,6 +2842,9 @@ def run_one_d(
     }
     run_config_snapshot["io"] = {
         "outdir": str(outdir),
+        "psd_history": psd_history_enabled,
+        "psd_history_stride": psd_history_stride,
+        "mass_budget_cells": mass_budget_cells_enabled,
         "streaming": {
             "enabled": streaming_state.enabled,
             "merge_at_end": streaming_merge_at_end if streaming_state.enabled else False,
@@ -2852,6 +2872,7 @@ def run_one_d(
     }
     run_config_snapshot["cell_parallel"] = cell_parallel_info
     run_config_snapshot["threading"] = thread_info
+    run_config_snapshot["numba"] = numba_status
     if auto_tune_info is not None:
         run_config_snapshot["auto_tune"] = auto_tune_info
     writer.write_run_config(run_config_snapshot, run_config_path)
