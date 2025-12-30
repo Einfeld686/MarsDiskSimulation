@@ -36,15 +36,21 @@ set "PYTHON_BOOT=%PYTHON_EXE%"
 
 rem Keep paths stable even if launched from another directory (double-click or direct call)
 pushd "%~dp0\..\.."
-for %%I in ("%~f0") do (
-  set "SCRIPT_SELF=%%~fI"
-  set "SCRIPT_SELF_SHORT=%%~sfI"
-)
-if not defined SCRIPT_SELF set "SCRIPT_SELF=%~f0"
-if not defined SCRIPT_SELF_SHORT set "SCRIPT_SELF_SHORT=%SCRIPT_SELF%"
-for %%I in ("%CD%") do set "JOB_CWD_SHORT=%%~sfI"
-if not defined JOB_CWD_SHORT set "JOB_CWD_SHORT=%CD%"
-set "JOB_CWD=%JOB_CWD_SHORT%"
+set "SCRIPT_SELF=%~f0"
+set "SCRIPT_SELF_SHORT="
+for %%I in ("%SCRIPT_SELF%") do set "SCRIPT_SELF_SHORT=%%~sfI"
+if not defined USE_SHORT_PATHS set "USE_SHORT_PATHS=0"
+set "SCRIPT_SELF_USE=%SCRIPT_SELF%"
+if /i "%USE_SHORT_PATHS%"=="1" if defined SCRIPT_SELF_SHORT if exist "%SCRIPT_SELF_SHORT%" set "SCRIPT_SELF_USE=%SCRIPT_SELF_SHORT%"
+
+set "JOB_CWD=%CD%"
+set "JOB_CWD_SHORT="
+for %%I in ("%JOB_CWD%") do set "JOB_CWD_SHORT=%%~sfI"
+set "JOB_CWD_USE=%JOB_CWD%"
+if /i "%USE_SHORT_PATHS%"=="1" if defined JOB_CWD_SHORT if exist "%JOB_CWD_SHORT%" set "JOB_CWD_USE=%JOB_CWD_SHORT%"
+set "RUNSETS_COMMON_DIR=%JOB_CWD_USE%\\scripts\\runsets\\common"
+set "NEXT_SEED_PY=%RUNSETS_COMMON_DIR%\\next_seed.py"
+set "WIN_PROCESS_PY=%RUNSETS_COMMON_DIR%\\win_process.py"
 
 rem Optional dry-run for syntax tests (skip all heavy work)
 if /i "%~1"=="--dry-run" (
@@ -101,7 +107,7 @@ if not exist "%TMP_ROOT_BASE%" (
 )
 if not defined GIT_SHA for /f %%A in ('git rev-parse --short HEAD 2^>nul') do set "GIT_SHA=%%A"
 if not defined GIT_SHA set "GIT_SHA=nogit"
-if not defined BATCH_SEED for /f %%A in ('"%PYTHON_EXE%" scripts\\runsets\\common\\next_seed.py') do set "BATCH_SEED=%%A"
+if not defined BATCH_SEED for /f %%A in ('"%PYTHON_EXE%" "%NEXT_SEED_PY%"') do set "BATCH_SEED=%%A"
 if "%BATCH_SEED%"=="" set "BATCH_SEED=0"
 set "TMP_ROOT=%TMP_ROOT_BASE%"
 if "%RUN_ONE_MODE%"=="1" (
@@ -745,11 +751,11 @@ exit /b 0
 set "JOB_T=%~1"
 set "JOB_EPS=%~2"
 set "JOB_TAU=%~3"
-for /f %%S in ('"%PYTHON_EXE%" scripts\\runsets\\common\\next_seed.py') do set "JOB_SEED=%%S"
+for /f %%S in ('"%PYTHON_EXE%" "%NEXT_SEED_PY%"') do set "JOB_SEED=%%S"
 call :wait_for_slot
 set "JOB_PID="
-  set "JOB_CMD=cd /d ""!JOB_CWD!""&& set RUN_TS=!RUN_TS!&& set BATCH_SEED=!BATCH_SEED!&& set RUN_ONE_T=!JOB_T!&& set RUN_ONE_EPS=!JOB_EPS!&& set RUN_ONE_TAU=!JOB_TAU!&& set RUN_ONE_SEED=!JOB_SEED!&& set AUTO_JOBS=0&& set PARALLEL_JOBS=1&& set SKIP_PIP=1&& call ""!SCRIPT_SELF_SHORT!"" --run-one"
-for /f "usebackq delims=" %%P in (`"%PYTHON_EXE%" scripts\\runsets\\common\\win_process.py launch --window-style "%PARALLEL_WINDOW_STYLE%"`) do set "JOB_PID=%%P"
+  set "JOB_CMD=cd /d ""!JOB_CWD_USE!""&& set RUN_TS=!RUN_TS!&& set BATCH_SEED=!BATCH_SEED!&& set RUN_ONE_T=!JOB_T!&& set RUN_ONE_EPS=!JOB_EPS!&& set RUN_ONE_TAU=!JOB_TAU!&& set RUN_ONE_SEED=!JOB_SEED!&& set AUTO_JOBS=0&& set PARALLEL_JOBS=1&& set SKIP_PIP=1&& call ""!SCRIPT_SELF_USE!"" --run-one"
+for /f "usebackq delims=" %%P in (`"%PYTHON_EXE%" "%WIN_PROCESS_PY%" launch --window-style "%PARALLEL_WINDOW_STYLE%"`) do set "JOB_PID=%%P"
 if defined JOB_PID set "JOB_PIDS=!JOB_PIDS! !JOB_PID!"
 if not defined JOB_PID echo.[warn] failed to launch job for T=!JOB_T! eps=!JOB_EPS! tau=!JOB_TAU! (check Python availability)
 exit /b 0
@@ -765,7 +771,7 @@ exit /b 0
 :refresh_jobs
 set "JOB_COUNT=0"
 if not defined JOB_PIDS exit /b 0
-for /f "usebackq tokens=1,2 delims=|" %%A in (`"%PYTHON_EXE%" scripts\\runsets\\common\\win_process.py alive`) do (
+for /f "usebackq tokens=1,2 delims=|" %%A in (`"%PYTHON_EXE%" "%WIN_PROCESS_PY%" alive`) do (
   set "JOB_PIDS=%%A"
   set "JOB_COUNT=%%B"
 )
