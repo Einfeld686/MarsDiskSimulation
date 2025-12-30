@@ -262,7 +262,7 @@ if "%QUIET_MODE%"=="1" (
   set "LOG_RUN=echo.[run]"
 )
 
-if not defined AUTO_OUT_ROOT set "AUTO_OUT_ROOT=0"
+if not defined AUTO_OUT_ROOT set "AUTO_OUT_ROOT=1"
 if not defined INTERNAL_OUT_ROOT (
   set "INTERNAL_OUT_ROOT=out"
   set "REPO_DRIVE="
@@ -287,8 +287,10 @@ if not defined OUT_ROOT if "%AUTO_OUT_ROOT%"=="1" (
   set "OUT_ROOT=%INTERNAL_OUT_ROOT%"
   call :ensure_abs OUT_ROOT
   if not exist "!OUT_ROOT!" mkdir "!OUT_ROOT!" >nul 2>&1
-  set "CHECK_PATH=!OUT_ROOT!"
-  set "FREE_GB="
+  set "CHECK_PATH="
+  if "!OUT_ROOT:~1,1!"==":" set "CHECK_PATH=!OUT_ROOT:~0,3!"
+  if not defined CHECK_PATH if "!OUT_ROOT:~0,2!"=="\\\\" set "CHECK_PATH=!OUT_ROOT!"
+  set "FREE_GB="
   for /f "usebackq delims=" %%F in (`"%PYTHON_EXE%" -c "import os,shutil; p=os.environ.get('CHECK_PATH',''); print(shutil.disk_usage(p).free//(1024**3) if p and os.path.exists(p) else '')"`) do set "FREE_GB=%%F"
   set "FREE_GB_RAW=!FREE_GB!"
   set "FREE_GB_OK=1"
@@ -305,29 +307,7 @@ if not defined OUT_ROOT if "%AUTO_OUT_ROOT%"=="1" (
     if defined FREE_GB_RAW echo.[warn] auto-out-root free space check failed: "!FREE_GB_RAW!"
     set "OUT_ROOT_SOURCE=internal"
   )
-  if /i "!OUT_ROOT_SOURCE!"=="external" (
-    set "OUT_ROOT_DRIVE="
-    set "OUT_ROOT_DRIVE_OK=1"
-    if "!OUT_ROOT:~1,1!"==":" set "OUT_ROOT_DRIVE=!OUT_ROOT:~0,2!"
-    if defined OUT_ROOT_DRIVE (
-      if not exist "!OUT_ROOT_DRIVE!\\" set "OUT_ROOT_DRIVE_OK=0"
-    ) else if "!OUT_ROOT:~0,2!"=="\\\\" (
-      if not exist "!OUT_ROOT!" set "OUT_ROOT_DRIVE_OK=0"
-    )
-    if "!OUT_ROOT_DRIVE_OK!"=="0" (
-      echo.[warn] external out_root unavailable: "!OUT_ROOT!" -> fallback to "!INTERNAL_OUT_ROOT!"
-      set "OUT_ROOT=%INTERNAL_OUT_ROOT%"
-      call :ensure_abs OUT_ROOT
-      set "OUT_ROOT_SOURCE=internal_fallback"
-    )
-  )
   %LOG_SYS% out_root auto: source=!OUT_ROOT_SOURCE! free_gb=!FREE_GB! min_gb=%MIN_INTERNAL_FREE_GB% out_root="!OUT_ROOT!"
-)
-if not defined OUT_ROOT if not "%AUTO_OUT_ROOT%"=="1" (
-  set "OUT_ROOT=%EXTERNAL_OUT_ROOT%"
-  call :ensure_abs OUT_ROOT
-  set "OUT_ROOT_SOURCE=external_default"
-  %LOG_SYS% out_root fixed: source=!OUT_ROOT_SOURCE! out_root="!OUT_ROOT!"
 )
 
 call :ensure_abs CONFIG_PATH
@@ -337,9 +317,28 @@ if defined OUT_ROOT call :ensure_abs OUT_ROOT
 if defined OUT_ROOT call :ensure_dir OUT_ROOT
 if errorlevel 1 exit /b 1
 
-rem If outputs go to external storage, keep archive dir on the same drive (separate subdir).
+if not exist "%OVERRIDES_PATH%" (
+  echo.[error] overrides file not found: "%OVERRIDES_PATH%"
+  exit /b 1
+)
+
+rem If archive dir is missing/unavailable, fall back to OUT_ROOT\archive.
 set "OVERRIDES_PATH_EFFECTIVE=%OVERRIDES_PATH%"
-if /i "!OUT_ROOT_SOURCE:~0,8!"=="external" (
+set "ARCHIVE_DIR_CFG="
+for /f "usebackq tokens=1,* delims==" %%A in (`findstr /v /r "^[ ]*#" "%OVERRIDES_PATH%"`) do (
+  if /i "%%A"=="io.archive.dir" set "ARCHIVE_DIR_CFG=%%B"
+)
+set "ARCHIVE_DIR_OK=1"
+if not defined ARCHIVE_DIR_CFG set "ARCHIVE_DIR_OK=0"
+if defined ARCHIVE_DIR_CFG (
+  if "!ARCHIVE_DIR_CFG:~1,1!"==":" (
+    set "ARCHIVE_DRIVE=!ARCHIVE_DIR_CFG:~0,2!"
+    if not exist "!ARCHIVE_DRIVE!\\" set "ARCHIVE_DIR_OK=0"
+  ) else if "!ARCHIVE_DIR_CFG:~0,2!"=="\\\\" (
+    if not exist "!ARCHIVE_DIR_CFG!" set "ARCHIVE_DIR_OK=0"
+  )
+)
+if "%ARCHIVE_DIR_OK%"=="0" (
   set "OVERRIDES_TMP_DIR=%REPO_ROOT%\\tmp"
   if not exist "!OVERRIDES_TMP_DIR!" mkdir "!OVERRIDES_TMP_DIR!" >nul 2>&1
   set "OVERRIDES_PATH_EFFECTIVE=!OVERRIDES_TMP_DIR!\\marsdisk_overrides_effective_%RANDOM%.txt"

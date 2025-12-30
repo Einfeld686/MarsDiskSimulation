@@ -60,9 +60,23 @@ def _alive_pids(pids: Iterable[int]) -> list[int]:
     return alive
 
 
+def _resolve_cwd() -> str | None:
+    raw = os.environ.get("JOB_CWD")
+    if not raw:
+        return None
+    try:
+        path = os.path.abspath(raw)
+    except OSError:
+        return None
+    if not os.path.isdir(path):
+        return None
+    return path
+
+
 def _launch(cmd: str, window_style: str | None) -> int:
+    cwd = _resolve_cwd()
     if os.name != "nt":
-        proc = subprocess.Popen(cmd, shell=True)
+        proc = subprocess.Popen(cmd, shell=True, cwd=cwd)
         print(proc.pid)
         return 0
 
@@ -81,10 +95,12 @@ def _launch(cmd: str, window_style: str | None) -> int:
     else:
         creationflags |= subprocess.CREATE_NEW_CONSOLE
 
+    cmd_exe = os.environ.get("COMSPEC") or "cmd.exe"
     proc = subprocess.Popen(
-        ["cmd.exe", "/c", cmd],
+        [cmd_exe, "/c", cmd],
         startupinfo=startupinfo,
         creationflags=creationflags,
+        cwd=cwd,
     )
     print(proc.pid)
     return 0

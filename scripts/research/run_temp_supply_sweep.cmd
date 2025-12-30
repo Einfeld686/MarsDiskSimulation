@@ -6,6 +6,7 @@ if not defined DEBUG set "DEBUG=0"
 if not defined TRACE_ENABLED set "TRACE_ENABLED=0"
 if /i "%DEBUG%"=="1" set "TRACE_ENABLED=1"
 if not defined TRACE_ECHO set "TRACE_ECHO=0"
+if not defined TRACE_DETAIL set "TRACE_DETAIL=0"
 if not defined QUIET_MODE set "QUIET_MODE=1"
 if /i "%DEBUG%"=="1" set "QUIET_MODE=0"
 if /i "%TRACE_ENABLED%"=="1" set "QUIET_MODE=0"
@@ -35,6 +36,15 @@ set "PYTHON_BOOT=%PYTHON_EXE%"
 
 rem Keep paths stable even if launched from another directory (double-click or direct call)
 pushd "%~dp0\..\.."
+for %%I in ("%~f0") do (
+  set "SCRIPT_SELF=%%~fI"
+  set "SCRIPT_SELF_SHORT=%%~sfI"
+)
+if not defined SCRIPT_SELF set "SCRIPT_SELF=%~f0"
+if not defined SCRIPT_SELF_SHORT set "SCRIPT_SELF_SHORT=%SCRIPT_SELF%"
+for %%I in ("%CD%") do set "JOB_CWD_SHORT=%%~sfI"
+if not defined JOB_CWD_SHORT set "JOB_CWD_SHORT=%CD%"
+set "JOB_CWD=%JOB_CWD_SHORT%"
 
 rem Optional dry-run for syntax tests (skip all heavy work)
 if /i "%~1"=="--dry-run" (
@@ -110,7 +120,7 @@ if not exist "!TMP_ROOT!" (
 if "%TRACE_ENABLED%"=="1" (
   if not defined TRACE_LOG set "TRACE_LOG=%TMP_ROOT%\\marsdisk_trace_%RUN_TS%_%BATCH_SEED%.log"
   > "%TRACE_LOG%" echo.[trace] start script=%~f0 rev=%SCRIPT_REV%
-  echo.[trace] log=%TRACE_LOG%
+  if "%TRACE_DETAIL%"=="1" echo.[trace] log=%TRACE_LOG%
 )
 if "%TRACE_ENABLED%"=="1" if "%TRACE_ECHO%"=="1" (
   echo.[trace] echo-on enabled
@@ -354,7 +364,7 @@ if defined STUDY_FILE (
       call "!STUDY_SET!"
       del "!STUDY_SET!"
       %LOG_INFO% loaded study overrides from !STUDY_FILE!
-      call :trace "study overrides loaded"
+      call :trace_detail "study overrides loaded"
     )
   ) else (
     echo.[warn] STUDY_FILE not found: !STUDY_FILE!
@@ -484,8 +494,8 @@ if defined EXTRA_OVERRIDES_FILE (
   )
 )
 
-call :trace "base_overrides_file=%BASE_OVERRIDES_FILE%"
-call :trace "base overrides: python build"
+call :trace_detail "base_overrides_file=%BASE_OVERRIDES_FILE%"
+call :trace_detail "base overrides: python build"
 "%PYTHON_EXE%" scripts\\runsets\\common\\write_base_overrides.py --out "%BASE_OVERRIDES_FILE%"
 if errorlevel 1 (
   echo.[error] failed to build base overrides
@@ -497,7 +507,7 @@ if not exist "%BASE_OVERRIDES_FILE%" (
   popd
   exit /b 1
 )
-call :trace "base overrides: python done"
+call :trace_detail "base overrides: python done"
 
 if defined RUN_ONE_MODE (
   if not defined RUN_ONE_T (
@@ -525,7 +535,7 @@ if defined RUN_ONE_MODE (
 )
 
 set "SWEEP_LIST_FILE=%TMP_ROOT%\\marsdisk_sweep_list_%RUN_TS%_%BATCH_SEED%.txt"
-call :trace "sweep list file=%SWEEP_LIST_FILE%"
+call :trace_detail "sweep list file=%SWEEP_LIST_FILE%"
 "%PYTHON_EXE%" scripts\\runsets\\common\\write_sweep_list.py --out "%SWEEP_LIST_FILE%"
 if errorlevel 1 (
   echo.[error] failed to build sweep list
@@ -538,12 +548,12 @@ if not exist "%SWEEP_LIST_FILE%" (
   exit /b 1
 )
 
-call :trace "parallel check"
+call :trace_detail "parallel check"
 if "%SWEEP_PARALLEL%"=="0" (
-  call :trace "sweep parallel disabled"
+  call :trace_detail "sweep parallel disabled"
 ) else if not "%PARALLEL_JOBS%"=="1" (
   if not defined RUN_ONE_MODE (
-    call :trace "dispatch parallel"
+    call :trace_detail "dispatch parallel"
     call :run_parallel
     popd
     endlocal
@@ -639,7 +649,7 @@ for /f "usebackq tokens=1-3 delims= " %%A in ("%SWEEP_LIST_FILE%") do (
         %LOG_INFO% PLOT_ENABLE=0; skipping quicklook
       ) else (
         set "RUN_DIR=!OUTDIR!"
-        call :trace "quicklook: start"
+        call :trace_detail "quicklook: start"
         "%PYTHON_EXE%" scripts\\runsets\\common\\hooks\\plot_sweep_run.py --run-dir "!RUN_DIR!"
         if errorlevel 1 (
           echo.[warn] quicklook failed (rc=!errorlevel!)
@@ -738,7 +748,7 @@ set "JOB_TAU=%~3"
 for /f %%S in ('"%PYTHON_EXE%" scripts\\runsets\\common\\next_seed.py') do set "JOB_SEED=%%S"
 call :wait_for_slot
 set "JOB_PID="
-set "JOB_CMD=set RUN_TS=!RUN_TS!&& set BATCH_SEED=!BATCH_SEED!&& set RUN_ONE_T=!JOB_T!&& set RUN_ONE_EPS=!JOB_EPS!&& set RUN_ONE_TAU=!JOB_TAU!&& set RUN_ONE_SEED=!JOB_SEED!&& set AUTO_JOBS=0&& set PARALLEL_JOBS=1&& set SKIP_PIP=1&& call ""%~f0"" --run-one"
+  set "JOB_CMD=cd /d ""!JOB_CWD!""&& set RUN_TS=!RUN_TS!&& set BATCH_SEED=!BATCH_SEED!&& set RUN_ONE_T=!JOB_T!&& set RUN_ONE_EPS=!JOB_EPS!&& set RUN_ONE_TAU=!JOB_TAU!&& set RUN_ONE_SEED=!JOB_SEED!&& set AUTO_JOBS=0&& set PARALLEL_JOBS=1&& set SKIP_PIP=1&& call ""!SCRIPT_SELF_SHORT!"" --run-one"
 for /f "usebackq delims=" %%P in (`"%PYTHON_EXE%" scripts\\runsets\\common\\win_process.py launch --window-style "%PARALLEL_WINDOW_STYLE%"`) do set "JOB_PID=%%P"
 if defined JOB_PID set "JOB_PIDS=!JOB_PIDS! !JOB_PID!"
 if not defined JOB_PID echo.[warn] failed to launch job for T=!JOB_T! eps=!JOB_EPS! tau=!JOB_TAU! (check Python availability)
@@ -815,4 +825,9 @@ echo.[trace] %TRACE_MSG%
 if defined TRACE_LOG (
   >>"%TRACE_LOG%" echo.[trace] %DATE% %TIME% %TRACE_MSG%
 )
+exit /b 0
+
+:trace_detail
+if "%TRACE_DETAIL%"=="0" exit /b 0
+call :trace "%~1"
 exit /b 0
