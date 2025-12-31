@@ -156,6 +156,7 @@ if "!PYTHON_PYVER_ARG!"=="1" (
     set "PYTHON_ARGS=!PYTHON_ARGS_REST!"
   )
 )
+if "%~1"=="--debug" echo.[DEBUG] checkpoint 4a: PYTHON_PYVER_ARG done
 set "PYTHON_LOOKS_PATH=0"
 for %%I in ("!PYTHON_EXE!") do (
   if not "%%~pI"=="" set "PYTHON_LOOKS_PATH=1"
@@ -199,6 +200,7 @@ if "!PYTHON_LOOKS_PATH!"=="1" (
     )
   )
 )
+if "%~1"=="--debug" echo.[DEBUG] checkpoint 4b: PYTHON path check done
 set "PYTHON_ARGS_FIRST="
 set "PYTHON_ARGS_REST="
 if not "!PYTHON_ARGS!"=="" (
