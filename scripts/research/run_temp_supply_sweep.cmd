@@ -15,7 +15,12 @@ set "SCRIPT_REV=run_temp_supply_sweep_cmd_trace_v2"
 if not defined PYTHON_ALLOW_LAUNCHER set "PYTHON_ALLOW_LAUNCHER=0"
 
 rem Debug: show if PYTHON_EXE was passed from parent
-if "%DEBUG%"=="1" echo.[DEBUG] run_temp_supply_sweep: received PYTHON_EXE=%PYTHON_EXE%
+if "%DEBUG%"=="1" echo.[DEBUG] run_temp_supply_sweep: received PYTHON_EXE=[%PYTHON_EXE%]
+
+rem Trim trailing spaces from PYTHON_EXE if it was passed from parent
+if defined PYTHON_EXE (
+  call :trim_python_exe
+)
 
 if not defined PYTHON_EXE (
   for %%P in (python3.11 python) do (
@@ -1051,13 +1056,19 @@ if "%DEBUG%"=="1" echo.[DEBUG] launch_job (DisableDelayedExpansion): PYTHON_CMD=
 if "%DEBUG%"=="1" echo.[DEBUG] launch_job (DisableDelayedExpansion): NEXT_SEED_PY=%NEXT_SEED_PY%
 for /f %%S in ('%PYTHON_CMD% "%NEXT_SEED_PY%"') do set "JOB_SEED_TMP=%%S"
 endlocal & set "JOB_SEED=%JOB_SEED_TMP%"
+if "%DEBUG%"=="1" echo.[DEBUG] launch_job: JOB_SEED=!JOB_SEED!
 call :wait_for_slot
+if "%DEBUG%"=="1" echo.[DEBUG] launch_job: after wait_for_slot
 set "JOB_PID="
 rem Build JOB_CMD with delayed expansion
 set "JOB_CMD=set RUN_TS=!RUN_TS!&& set BATCH_SEED=!BATCH_SEED!&& set RUN_ONE_T=!JOB_T!&& set RUN_ONE_EPS=!JOB_EPS!&& set RUN_ONE_TAU=!JOB_TAU!&& set RUN_ONE_SEED=!JOB_SEED!&& set AUTO_JOBS=0&& set PARALLEL_JOBS=1&& set SKIP_PIP=1&& call ""!SCRIPT_SELF_USE!"" --run-one"
 set "JOB_PID_TMP="
+if "%DEBUG%"=="1" echo.[DEBUG] launch_job: TMP_ROOT=!TMP_ROOT!
+if "%DEBUG%"=="1" echo.[DEBUG] launch_job: temp file=!TMP_ROOT!\marsdisk_pid_!JOB_T!_!JOB_EPS!_!JOB_TAU!.tmp
 rem Pass command via stdin to avoid environment variable inheritance issues
-echo !JOB_CMD!| !PYTHON_CMD! "!WIN_PROCESS_PY!" launch --cmd-stdin --window-style "!PARALLEL_WINDOW_STYLE!" --cwd "!JOB_CWD_USE!" > "!TMP_ROOT!\marsdisk_pid_!JOB_T!_!JOB_EPS!_!JOB_TAU!.tmp" 2>&1
+if "%DEBUG%"=="1" echo.[DEBUG] launch_job: executing win_process.py
+echo !JOB_CMD!| "!PYTHON_CMD!" "!WIN_PROCESS_PY!" launch --cmd-stdin --window-style "!PARALLEL_WINDOW_STYLE!" --cwd "!JOB_CWD_USE!" > "!TMP_ROOT!\marsdisk_pid_!JOB_T!_!JOB_EPS!_!JOB_TAU!.tmp" 2>&1
+if "%DEBUG%"=="1" echo.[DEBUG] launch_job: win_process.py done, errorlevel=%errorlevel%
 if exist "!TMP_ROOT!\marsdisk_pid_!JOB_T!_!JOB_EPS!_!JOB_TAU!.tmp" (
   set /p JOB_PID_TMP=<"!TMP_ROOT!\marsdisk_pid_!JOB_T!_!JOB_EPS!_!JOB_TAU!.tmp"
   del "!TMP_ROOT!\marsdisk_pid_!JOB_T!_!JOB_EPS!_!JOB_TAU!.tmp" >nul 2>&1
@@ -1185,5 +1196,20 @@ if defined MARSDISK_POPD_ACTIVE (
   set "MARSDISK_POPD_ACTIVE="
 )
 exit /b %MARSDISK_POPD_ERRORLEVEL%
+
+:trim_python_exe
+rem Trim trailing spaces from PYTHON_EXE
+setlocal EnableDelayedExpansion
+set "TRIM_VAL=!PYTHON_EXE!"
+rem Remove leading/trailing quotes first
+set "TRIM_VAL=!TRIM_VAL:"=!"
+:trim_python_exe_loop
+if "!TRIM_VAL:~-1!"==" " (
+  set "TRIM_VAL=!TRIM_VAL:~0,-1!"
+  goto :trim_python_exe_loop
+)
+endlocal & set "PYTHON_EXE=%TRIM_VAL%"
+if "%DEBUG%"=="1" echo.[DEBUG] run_temp_supply_sweep: trimmed PYTHON_EXE=[%PYTHON_EXE%]
+exit /b 0
 
 endlocal
