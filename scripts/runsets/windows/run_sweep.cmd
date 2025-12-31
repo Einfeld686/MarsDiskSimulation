@@ -108,6 +108,9 @@ if /i "!PYTHON_EXE_NAME!"=="py.exe" if not "!PYTHON_ALLOW_LAUNCHER!"=="1" set "P
 if defined PYTHON_EXE if /i not "!PYTHON_EXE!"=="python" if /i not "!PYTHON_EXE!"=="python3.11" if /i not "!PYTHON_EXE!"=="py" if /i not "!PYTHON_EXE!"=="py.exe" (
   set "PYTHON_EXE_CHECK=1"
   set "PYTHON_EXE_RAW_PATH=0"
+  rem Check if it looks like a path (has \ or / or drive letter)
+  echo.!PYTHON_EXE! | findstr /C:"\" /C:"/" >nul 2>&1
+  if not errorlevel 1 set "PYTHON_EXE_RAW_PATH=1"
   for %%I in ("!PYTHON_EXE!") do (
     if not "%%~pI"=="" set "PYTHON_EXE_RAW_PATH=1"
     if not "%%~dI"=="" set "PYTHON_EXE_RAW_PATH=1"
