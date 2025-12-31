@@ -284,7 +284,41 @@ if not errorlevel 1 set "PYTHON_VERSION_OK=1"
 if "%~1"=="--debug" echo.[DEBUG] checkpoint 4f: PYTHON_VERSION_OK=!PYTHON_VERSION_OK!
 
 if "!PYTHON_VERSION_OK!"=="0" (
-  rem py launcher fallback disabled.
+  if "%~1"=="--debug" echo.[DEBUG] checkpoint 4g: Python version too old, searching for Python 3.11...
+  rem Try to find Python 3.11 in common locations
+  set "PYTHON_311_FOUND="
+  rem Check for python3.11 in PATH
+  where python3.11 >nul 2>&1
+  if not errorlevel 1 (
+    for /f "delims=" %%P in ('where python3.11 2^>nul') do (
+      if not defined PYTHON_311_FOUND set "PYTHON_311_FOUND=%%P"
+    )
+  )
+  rem Check common install locations
+  if not defined PYTHON_311_FOUND (
+    for %%D in (
+      "%LOCALAPPDATA%\Programs\Python\Python311\python.exe"
+      "%PROGRAMFILES%\Python311\python.exe"
+      "%PROGRAMFILES(x86)%\Python311\python.exe"
+      "%USERPROFILE%\AppData\Local\Programs\Python\Python311\python.exe"
+    ) do (
+      if not defined PYTHON_311_FOUND if exist %%D set "PYTHON_311_FOUND=%%~D"
+    )
+  )
+  rem Try py launcher as last resort
+  if not defined PYTHON_311_FOUND (
+    py -3.11 -c "import sys" >nul 2>&1
+    if not errorlevel 1 (
+      for /f "delims=" %%P in ('py -3.11 -c "import sys; print(sys.executable)"') do set "PYTHON_311_FOUND=%%P"
+    )
+  )
+  if defined PYTHON_311_FOUND (
+    if "%~1"=="--debug" echo.[DEBUG] checkpoint 4h: Found Python 3.11 at !PYTHON_311_FOUND!
+    set "PYTHON_CMD_ABS="!PYTHON_311_FOUND!""
+    !PYTHON_CMD_ABS! -c "import sys; raise SystemExit(0 if sys.version_info >= (3,11) else 1)" >nul 2>&1
+    if not errorlevel 1 set "PYTHON_VERSION_OK=1"
+    if "%~1"=="--debug" echo.[DEBUG] checkpoint 4i: PYTHON_VERSION_OK after fallback=!PYTHON_VERSION_OK!
+  )
 )
 
 if "!PYTHON_VERSION_OK!"=="0" (
