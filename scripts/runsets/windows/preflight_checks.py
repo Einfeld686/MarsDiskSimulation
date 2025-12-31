@@ -1,5 +1,15 @@
 #!/usr/bin/env python3
-"""Preflight checks for Windows cmd runsets."""
+"""Preflight checks for Windows cmd runsets.
+
+This tool performs static analysis of CMD/BAT files and validates
+Windows-specific path and environment configurations before running
+batch scripts.
+
+Usage:
+    python preflight_checks.py --repo-root . --config config.yml --overrides overrides.txt
+    python preflight_checks.py --list-rules
+    python preflight_checks.py --fix --cmd script.cmd
+"""
 
 import argparse
 import fnmatch
@@ -10,8 +20,16 @@ import shutil
 import shlex
 import subprocess
 import sys
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path, PureWindowsPath
+from typing import Any
+
+# Optional: YAML support for config file
+try:
+    import yaml
+    HAS_YAML = True
+except ImportError:
+    HAS_YAML = False
 
 
 REQUIRED_ARCHIVE_KEYS = {
@@ -163,6 +181,78 @@ CMD_ALLOWLIST_RULES = {
     "path.value_non_ascii",
 }
 
+# Rules that can be automatically fixed
+FIXABLE_RULES = {
+    "cmd.encoding.bom": "Remove UTF-8 BOM from file",
+    "cmd.line_endings.lf_only": "Convert LF to CRLF line endings",
+    "cmd.line_endings.mixed": "Normalize to CRLF line endings",
+}
+
+# Rule descriptions for --list-rules
+RULE_DESCRIPTIONS: dict[str, str] = {
+    "cmd.autorun.missing_d": "cmd invocation missing /d when AutoRun is enabled in registry",
+    "cmd.call.missing": "Batch file invoked without 'call' keyword",
+    "cmd.call.unquoted_space": "call command path contains unquoted spaces",
+    "cmd.caret.trailing_space": "Line continuation caret (^) has trailing whitespace",
+    "cmd.cd.missing_d": "cd command without /d flag for cross-drive paths",
+    "cmd.cd.unc": "cd command uses UNC path (prefer pushd)",
+    "cmd.cd.unquoted_space": "cd command path has unquoted spaces",
+    "cmd.cmd_c.quote_meta": "cmd /c quoted string contains meta characters",
+    "cmd.delayed_expansion.before_enabled": "!VAR! syntax used before enabling delayed expansion",
+    "cmd.delayed_expansion.cmd_v_on": "Delayed expansion enabled via cmd /v:on",
+    "cmd.delayed_expansion.enabled": "Script enables delayed expansion",
+    "cmd.delayed_expansion.token": "Script uses !VAR! token syntax",
+    "cmd.encoding.bom": "File has UTF-8 BOM (fixable)",
+    "cmd.encoding.no_chcp": "Non-ASCII content without chcp directive near top",
+    "cmd.encoding.non_ascii": "File contains non-ASCII characters",
+    "cmd.encoding.nul": "File contains many NUL bytes (possible wrong encoding)",
+    "cmd.encoding.utf16": "File is UTF-16 encoded (save as UTF-8)",
+    "cmd.env.setx": "setx command modifies persistent environment",
+    "cmd.errorlevel.ascending": "if errorlevel checks in ascending order (should be descending)",
+    "cmd.errorlevel.zero": "if errorlevel 0 always matches (errorlevel is >= comparison)",
+    "cmd.exit.missing_b": "exit command without /b (will exit cmd.exe)",
+    "cmd.extensions.disabled_in_script": "Script disables command extensions",
+    "cmd.for.single_percent": "for loop uses single % variable (use %% in .cmd)",
+    "cmd.interactive.choice": "choice command is interactive",
+    "cmd.interactive.cmd": "cmd invoked without /c or with /k (interactive)",
+    "cmd.interactive.pause": "pause command is interactive",
+    "cmd.interactive.set_p": "set /p is interactive (prompts for input)",
+    "cmd.line_endings.lf_only": "File uses LF-only line endings (fixable)",
+    "cmd.line_endings.mixed": "File has mixed line endings (fixable)",
+    "cmd.line_length.limit": "Line exceeds cmd.exe limit (8191 chars)",
+    "cmd.line_length.near": "Line near cmd.exe limit",
+    "cmd.option.dash": "Command uses dash-style options (prefer /style)",
+    "cmd.posix_path": "POSIX-style path detected in cmd script",
+    "cmd.pushd_popd.unbalanced": "Unbalanced pushd/popd commands",
+    "cmd.pushd.unquoted_space": "pushd path has unquoted spaces",
+    "cmd.read_failed": "Failed to read cmd file",
+    "cmd.set.space_around_equals": "set command has spaces around '='",
+    "cmd.set.posix_path": "set command assigns POSIX-style path",
+    "cmd.setlocal.missing": "Environment modified without setlocal",
+    "cmd.setlocal.order": "endlocal used before setlocal",
+    "cmd.setlocal.unbalanced": "Unbalanced setlocal/endlocal",
+    "cmd.start.no_wait": "start without /wait in CI profile",
+    "cmd.start.quoted_title": "start with quoted arg missing empty title",
+    "cmd.unsafe.bang": "Path/value contains '!' (conflicts with delayed expansion)",
+    "cmd.unsafe.meta": "Path/value contains cmd meta characters (&<>|^)",
+    "cmd.unsafe.percent": "Path/value contains '%' (may cause expansion issues)",
+    "path.invalid_chars": "Path contains invalid Windows characters",
+    "path.reserved_device": "Path contains Windows reserved device name",
+    "path.trailing_space_dot": "Path ends with space or dot",
+    "path.unc": "UNC network path detected",
+    "path.value_length": "Path length near or exceeds limits",
+    "path.value_non_ascii": "Path contains non-ASCII characters",
+}
+
+# SARIF format constants
+SARIF_VERSION = "2.1.0"
+SARIF_SCHEMA = "https://raw.githubusercontent.com/oasis-tcs/sarif-spec/master/Schemata/sarif-schema-2.1.0.json"
+TOOL_NAME = "preflight_checks"
+TOOL_VERSION = "1.1.0"
+
+# Default config file names
+CONFIG_FILE_NAMES = [".preflightrc.yml", ".preflightrc.yaml", ".preflightrc.json", "preflight.config.yml"]
+
 
 @dataclass(frozen=True)
 class Issue:
@@ -221,6 +311,347 @@ def _info(
     line: int | None = None,
 ) -> None:
     _add_issue(bucket, "info", rule, message, path, line)
+
+
+# =============================================================================
+# Configuration file support
+# =============================================================================
+
+@dataclass
+class PreflightConfig:
+    """Configuration loaded from .preflightrc.yml or similar."""
+    profile: str = "default"
+    allow_non_ascii: bool = False
+    cmd_exclude: list[str] = field(default_factory=list)
+    scan_exclude: list[str] = field(default_factory=list)
+    disable_rules: list[str] = field(default_factory=list)
+    enable_only: list[str] = field(default_factory=list)
+    require_git: bool = False
+    require_powershell: bool = False
+    strict: bool = False
+    simulate_windows: bool = False
+
+
+def _find_config_file(repo_root: Path) -> Path | None:
+    """Search for a config file in the repo root."""
+    for name in CONFIG_FILE_NAMES:
+        candidate = repo_root / name
+        if candidate.exists():
+            return candidate
+    return None
+
+
+def _load_config_file(path: Path) -> PreflightConfig:
+    """Load configuration from YAML or JSON file."""
+    config = PreflightConfig()
+    if not path.exists():
+        return config
+    
+    text = path.read_text(encoding="utf-8-sig")
+    data: dict[str, Any] = {}
+    
+    if path.suffix in {".yml", ".yaml"}:
+        if not HAS_YAML:
+            print(f"[warn] YAML config found but PyYAML not installed: {path}", file=sys.stderr)
+            return config
+        data = yaml.safe_load(text) or {}
+    elif path.suffix == ".json":
+        data = json.loads(text)
+    else:
+        return config
+    
+    if not isinstance(data, dict):
+        return config
+    
+    if "profile" in data:
+        config.profile = str(data["profile"])
+    if "allow_non_ascii" in data:
+        config.allow_non_ascii = bool(data["allow_non_ascii"])
+    if "cmd_exclude" in data and isinstance(data["cmd_exclude"], list):
+        config.cmd_exclude = [str(x) for x in data["cmd_exclude"]]
+    if "scan_exclude" in data and isinstance(data["scan_exclude"], list):
+        config.scan_exclude = [str(x) for x in data["scan_exclude"]]
+    if "disable_rules" in data and isinstance(data["disable_rules"], list):
+        config.disable_rules = [str(x) for x in data["disable_rules"]]
+    if "enable_only" in data and isinstance(data["enable_only"], list):
+        config.enable_only = [str(x) for x in data["enable_only"]]
+    if "require_git" in data:
+        config.require_git = bool(data["require_git"])
+    if "require_powershell" in data:
+        config.require_powershell = bool(data["require_powershell"])
+    if "strict" in data:
+        config.strict = bool(data["strict"])
+    if "simulate_windows" in data:
+        config.simulate_windows = bool(data["simulate_windows"])
+    
+    return config
+
+
+# =============================================================================
+# Git integration for --changed-only
+# =============================================================================
+
+def _get_git_changed_files(repo_root: Path, extensions: set[str]) -> list[Path]:
+    """Get list of changed files (staged + unstaged) from git."""
+    changed: set[Path] = set()
+    
+    try:
+        # Get staged files
+        result = subprocess.run(
+            ["git", "diff", "--cached", "--name-only"],
+            capture_output=True,
+            text=True,
+            cwd=repo_root,
+            check=False,
+        )
+        if result.returncode == 0:
+            for line in result.stdout.strip().splitlines():
+                if line:
+                    p = repo_root / line
+                    if p.suffix.lower() in extensions:
+                        changed.add(p)
+        
+        # Get unstaged files
+        result = subprocess.run(
+            ["git", "diff", "--name-only"],
+            capture_output=True,
+            text=True,
+            cwd=repo_root,
+            check=False,
+        )
+        if result.returncode == 0:
+            for line in result.stdout.strip().splitlines():
+                if line:
+                    p = repo_root / line
+                    if p.suffix.lower() in extensions:
+                        changed.add(p)
+        
+        # Get untracked files
+        result = subprocess.run(
+            ["git", "ls-files", "--others", "--exclude-standard"],
+            capture_output=True,
+            text=True,
+            cwd=repo_root,
+            check=False,
+        )
+        if result.returncode == 0:
+            for line in result.stdout.strip().splitlines():
+                if line:
+                    p = repo_root / line
+                    if p.suffix.lower() in extensions:
+                        changed.add(p)
+    except OSError:
+        pass
+    
+    return sorted(changed)
+
+
+# =============================================================================
+# Auto-fix functionality
+# =============================================================================
+
+@dataclass
+class FixResult:
+    """Result of an auto-fix operation."""
+    path: Path
+    rule: str
+    success: bool
+    message: str
+
+
+def _fix_bom(path: Path) -> FixResult:
+    """Remove UTF-8 BOM from a file."""
+    try:
+        data = path.read_bytes()
+        if data.startswith(b"\xef\xbb\xbf"):
+            path.write_bytes(data[3:])
+            return FixResult(path, "cmd.encoding.bom", True, "Removed UTF-8 BOM")
+        return FixResult(path, "cmd.encoding.bom", True, "No BOM found")
+    except OSError as e:
+        return FixResult(path, "cmd.encoding.bom", False, f"Failed: {e}")
+
+
+def _fix_line_endings(path: Path) -> FixResult:
+    """Convert line endings to CRLF."""
+    try:
+        data = path.read_bytes()
+        # Normalize all line endings to LF first, then convert to CRLF
+        normalized = data.replace(b"\r\n", b"\n").replace(b"\r", b"\n")
+        crlf_data = normalized.replace(b"\n", b"\r\n")
+        if data != crlf_data:
+            path.write_bytes(crlf_data)
+            return FixResult(path, "cmd.line_endings", True, "Converted to CRLF")
+        return FixResult(path, "cmd.line_endings", True, "Already CRLF")
+    except OSError as e:
+        return FixResult(path, "cmd.line_endings", False, f"Failed: {e}")
+
+
+def _apply_fixes(path: Path, rules_to_fix: set[str]) -> list[FixResult]:
+    """Apply all applicable fixes to a file."""
+    results: list[FixResult] = []
+    
+    if "cmd.encoding.bom" in rules_to_fix:
+        results.append(_fix_bom(path))
+    
+    if "cmd.line_endings.lf_only" in rules_to_fix or "cmd.line_endings.mixed" in rules_to_fix:
+        results.append(_fix_line_endings(path))
+    
+    return results
+
+
+def _collect_fixable_issues(issues: list[Issue]) -> dict[Path, set[str]]:
+    """Collect fixable issues grouped by file path."""
+    fixable: dict[Path, set[str]] = {}
+    for issue in issues:
+        if issue.rule in FIXABLE_RULES and issue.path:
+            p = Path(issue.path)
+            if p not in fixable:
+                fixable[p] = set()
+            fixable[p].add(issue.rule)
+    return fixable
+
+
+# =============================================================================
+# SARIF output format
+# =============================================================================
+
+def _issue_to_sarif_result(issue: Issue, repo_root: Path) -> dict[str, Any]:
+    """Convert an Issue to a SARIF result object."""
+    level_map = {"error": "error", "warn": "warning", "info": "note"}
+    
+    result: dict[str, Any] = {
+        "ruleId": issue.rule,
+        "level": level_map.get(issue.level, "warning"),
+        "message": {"text": issue.message},
+    }
+    
+    if issue.path:
+        try:
+            rel_path = Path(issue.path).relative_to(repo_root)
+            uri = str(rel_path).replace("\\", "/")
+        except ValueError:
+            uri = issue.path
+        
+        location: dict[str, Any] = {
+            "physicalLocation": {
+                "artifactLocation": {"uri": uri},
+            }
+        }
+        
+        if issue.line is not None:
+            location["physicalLocation"]["region"] = {
+                "startLine": issue.line,
+            }
+        
+        result["locations"] = [location]
+    
+    return result
+
+
+def _build_sarif_output(
+    errors: list[Issue],
+    warnings: list[Issue],
+    infos: list[Issue],
+    repo_root: Path,
+) -> dict[str, Any]:
+    """Build SARIF 2.1.0 compliant output."""
+    all_issues = errors + warnings + infos
+    
+    # Build rule definitions
+    rules: list[dict[str, Any]] = []
+    seen_rules: set[str] = set()
+    for issue in all_issues:
+        if issue.rule not in seen_rules:
+            seen_rules.add(issue.rule)
+            rule_def: dict[str, Any] = {
+                "id": issue.rule,
+                "shortDescription": {"text": issue.rule},
+            }
+            if issue.rule in RULE_DESCRIPTIONS:
+                rule_def["fullDescription"] = {"text": RULE_DESCRIPTIONS[issue.rule]}
+            if issue.rule in FIXABLE_RULES:
+                rule_def["properties"] = {"fixable": True}
+            rules.append(rule_def)
+    
+    # Build results
+    results = [_issue_to_sarif_result(issue, repo_root) for issue in all_issues]
+    
+    return {
+        "$schema": SARIF_SCHEMA,
+        "version": SARIF_VERSION,
+        "runs": [
+            {
+                "tool": {
+                    "driver": {
+                        "name": TOOL_NAME,
+                        "version": TOOL_VERSION,
+                        "informationUri": "https://github.com/Einfeld686/MarsDiskSimulation",
+                        "rules": rules,
+                    }
+                },
+                "results": results,
+            }
+        ],
+    }
+
+
+# =============================================================================
+# Rule filtering
+# =============================================================================
+
+def _should_report_rule(
+    rule: str,
+    disable_rules: set[str],
+    enable_only: set[str],
+) -> bool:
+    """Determine if a rule should be reported based on filters."""
+    if enable_only:
+        return rule in enable_only
+    if disable_rules:
+        return rule not in disable_rules
+    return True
+
+
+def _filter_issues(
+    issues: list[Issue],
+    disable_rules: set[str],
+    enable_only: set[str],
+) -> list[Issue]:
+    """Filter issues based on rule enable/disable settings."""
+    return [
+        issue for issue in issues
+        if _should_report_rule(issue.rule, disable_rules, enable_only)
+    ]
+
+
+# =============================================================================
+# List rules command
+# =============================================================================
+
+def _print_rules_list() -> None:
+    """Print all available rules with descriptions."""
+    print("Available preflight check rules:\n")
+    
+    # Group rules by prefix
+    groups: dict[str, list[str]] = {}
+    all_rules = set(CMD_ALLOWLIST_RULES) | set(RULE_DESCRIPTIONS.keys())
+    
+    for rule in sorted(all_rules):
+        prefix = rule.split(".")[0] if "." in rule else "other"
+        if prefix not in groups:
+            groups[prefix] = []
+        groups[prefix].append(rule)
+    
+    for group_name in sorted(groups.keys()):
+        print(f"## {group_name.upper()}\n")
+        for rule in sorted(groups[group_name]):
+            desc = RULE_DESCRIPTIONS.get(rule, "(no description)")
+            fixable = " [FIXABLE]" if rule in FIXABLE_RULES else ""
+            print(f"  {rule}{fixable}")
+            print(f"    {desc}\n")
+    
+    print("\nFixable rules can be automatically corrected with --fix option.")
+    print(f"Total rules: {len(all_rules)}")
 
 
 def _load_overrides(path: Path) -> tuple[dict[str, str], list[str]]:

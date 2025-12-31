@@ -842,18 +842,24 @@ if not exist "%SWEEP_LIST_FILE%" (
 )
 
 call :trace_detail "parallel check"
+echo.[debug] SWEEP_PARALLEL=%SWEEP_PARALLEL% PARALLEL_JOBS=%PARALLEL_JOBS% RUN_ONE_MODE=%RUN_ONE_MODE%
 if "%SWEEP_PARALLEL%"=="0" (
   call :trace_detail "sweep parallel disabled"
+  echo.[debug] branch: sweep_parallel=0 -> sequential
 ) else if not "%PARALLEL_JOBS%"=="1" (
   if not defined RUN_ONE_MODE (
     call :trace_detail "dispatch parallel"
+    echo.[debug] branch: sweep_parallel=1, parallel_jobs!=1, no run_one -> parallel
     call :run_parallel
     call :popd_safe
     exit /b 0
   )
+) else (
+  echo.[debug] branch: sweep_parallel=1, parallel_jobs=1 -> sequential (fallback)
 )
 
 rem ---------- main loops ----------
+echo.[debug] entering main loops (sequential mode)
 call :trace "entering main loops"
 set "HAS_CASE=0"
 for /f "usebackq tokens=1-3 delims= " %%A in ("%SWEEP_LIST_FILE%") do (
