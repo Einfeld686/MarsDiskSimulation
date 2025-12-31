@@ -683,14 +683,21 @@ if defined CPU_UTIL_TARGET_PERCENT if /i not "%PARALLEL_MODE%"=="numba" (
           set "CPU_TARGET_CORES=%%A"
           set "PARALLEL_JOBS_TARGET=%%B"
         )
+        set "PARALLEL_JOBS_TARGET_OK=1"
+        if "!PARALLEL_JOBS_TARGET!"=="" set "PARALLEL_JOBS_TARGET_OK=0"
+        for /f "delims=0123456789" %%A in ("!PARALLEL_JOBS_TARGET!") do set "PARALLEL_JOBS_TARGET_OK=0"
+        if "!PARALLEL_JOBS_TARGET_OK!"=="1" (
         if "!PARALLEL_JOBS_DEFAULT!"=="1" if "!PARALLEL_JOBS!"=="1" if !PARALLEL_JOBS_TARGET! GTR 1 (
           if /i "!CPU_UTIL_RESPECT_MEM!"=="1" (
             for /f "usebackq tokens=1-3 delims=|" %%A in (`%PYTHON_CMD% scripts\\runsets\\common\\calc_parallel_jobs.py`) do (
               set "PARALLEL_JOBS_MEM=%%C"
             )
-            if defined PARALLEL_JOBS_MEM (
-              if !PARALLEL_JOBS_TARGET! GTR !PARALLEL_JOBS_MEM! set "PARALLEL_JOBS_TARGET=!PARALLEL_JOBS_MEM!"
-            )
+          set "PARALLEL_JOBS_MEM_OK=1"
+          if "!PARALLEL_JOBS_MEM!"=="" set "PARALLEL_JOBS_MEM_OK=0"
+          for /f "delims=0123456789" %%A in ("!PARALLEL_JOBS_MEM!") do set "PARALLEL_JOBS_MEM_OK=0"
+          if "!PARALLEL_JOBS_MEM_OK!"=="1" (
+            if !PARALLEL_JOBS_TARGET! GTR !PARALLEL_JOBS_MEM! set "PARALLEL_JOBS_TARGET=!PARALLEL_JOBS_MEM!"
+          )
           )
           if !PARALLEL_JOBS_TARGET! GTR 1 (
             if "!SWEEP_PARALLEL!"=="0" if "!SWEEP_PARALLEL_DEFAULT!"=="1" set "SWEEP_PARALLEL=1"
@@ -699,6 +706,7 @@ if defined CPU_UTIL_TARGET_PERCENT if /i not "%PARALLEL_MODE%"=="numba" (
               %LOG_SYS% cpu_target auto-parallel: target_percent=%CPU_UTIL_TARGET_PERCENT% target_cores=!CPU_TARGET_CORES! cell_jobs=%MARSDISK_CELL_JOBS% parallel_jobs=!PARALLEL_JOBS!
             )
           )
+        )
         )
       )
     )
