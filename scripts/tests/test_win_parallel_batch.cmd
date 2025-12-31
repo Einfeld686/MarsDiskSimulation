@@ -25,15 +25,31 @@ echo [INFO] Python: %PYTHON_CMD%
 
 rem Get script directory
 for %%I in ("%~f0") do set "SCRIPT_DIR=%%~dpI"
-set "REPO_ROOT=%SCRIPT_DIR%..\..\..\"
-for %%I in ("%REPO_ROOT%") do set "REPO_ROOT=%%~fI"
+echo [DEBUG] SCRIPT_DIR=%SCRIPT_DIR%
+rem scripts\tests\ -> go up 2 levels to repo root
+cd /d "%SCRIPT_DIR%"
+cd ..\..
+set "REPO_ROOT=%CD%"
 echo [INFO] Repo root: %REPO_ROOT%
 
-set "WIN_PROCESS_PY=%REPO_ROOT%scripts\runsets\common\win_process.py"
+set "WIN_PROCESS_PY=%REPO_ROOT%\scripts\runsets\common\win_process.py"
 echo [INFO] win_process.py: %WIN_PROCESS_PY%
 
 if not exist "%WIN_PROCESS_PY%" (
-    echo [ERROR] win_process.py not found
+    echo [DEBUG] Trying alternative path detection...
+    rem Try finding from current directory
+    if exist "scripts\runsets\common\win_process.py" (
+        for %%I in (".") do set "REPO_ROOT=%%~fI"
+        set "WIN_PROCESS_PY=!REPO_ROOT!\scripts\runsets\common\win_process.py"
+        echo [INFO] Found via current dir: !WIN_PROCESS_PY!
+    )
+)
+
+if not exist "%WIN_PROCESS_PY%" (
+    echo [ERROR] win_process.py not found at: %WIN_PROCESS_PY%
+    echo [ERROR] Please run this script from the repository root directory.
+    echo [ERROR] Example: cd C:\path\to\MarsDiskSimulation
+    echo [ERROR]          scripts\tests\test_win_parallel_batch.cmd
     exit /b 1
 )
 
