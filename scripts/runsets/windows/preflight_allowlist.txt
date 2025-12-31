@@ -1,10 +1,10 @@
 # Allowlist for preflight cmd lint
-# Format: <path-glob>[::rule1,rule2]
+# Format: <path-glob>::rule1,rule2
 # - Matching is case-insensitive (paths are normalized to lowercase with '/' separators).
 # - Patterns use fnmatch-style globs; '*' can span directories (e.g. *.cmd matches nested files).
 # - Patterns are matched against both repo-relative and absolute paths.
-# - Omit ::rules (or use path::) to suppress all rules for that path.
+# - Full suppression requires an explicit "*": use "::*".
 # - Use "::rule1,rule2" to suppress specific rules only.
+# - Lines without "::" (or with empty rules) are ignored and reported as warnings.
 # Example: scripts/runsets/windows/run_one.cmd::cmd.line_endings.mixed
 # Example: scripts/**/legacy/*.cmd::*
-# Example: scripts/runsets/windows/run_one.cmd

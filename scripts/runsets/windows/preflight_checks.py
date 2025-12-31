@@ -48,7 +48,6 @@ PATH_WARN_LEN = 7000
 PATHEXT_REQUIRED = {".COM", ".EXE", ".BAT", ".CMD"}
 CHCP_SCAN_LINES = 25
 DELAYED_SETLOCAL_RE = re.compile(r"\bsetlocal\b.*\benabledelayedexpansion\b", re.I)
-DELAYED_CMD_RE = re.compile(r"\bcmd(?:\.exe)?\b.*?/v\s*:\s*on\b", re.I)
 DELAYED_SETLOCAL_OFF_RE = re.compile(r"\bsetlocal\b.*\bdisabledelayedexpansion\b", re.I)
 DISABLE_EXT_RE = re.compile(r"\bsetlocal\b.*\bdisableextensions\b", re.I)
 ENABLE_EXT_RE = re.compile(r"\bsetlocal\b.*\benableextensions\b", re.I)
@@ -59,9 +58,13 @@ EXEC_CMD_RE = re.compile(r'^\s*@?(?:"[^"]+"|[^"\s]+)\.(cmd|bat)\b', re.I)
 START_QUOTED_RE = re.compile(r'^\s*@?start\s+"(?!")', re.I)
 START_CMD_RE = re.compile(r"^\s*@?start\b", re.I)
 CMD_C_QUOTED_RE = re.compile(r'\bcmd(?:\.exe)?\b\s+/c\s+"([^"]+)"', re.I)
-CMD_INVOKE_RE = re.compile(r"^\s*@?(?:call\s+)?cmd(?:\.exe)?\b", re.I)
 CMD_SWITCH_C_RE = re.compile(r"(?:^|\s)/c(?:\s|$)", re.I)
 CMD_SWITCH_K_RE = re.compile(r"(?:^|\s)/k(?:\s|$)", re.I)
+CMD_SWITCH_V_ON_RE = re.compile(r"(?:^|\s)/v\s*:\s*on(?:\s|$)", re.I)
+CMD_TOKEN_RE = re.compile(
+    r'(?i)(?P<token>"%comspec%"|%comspec%|!comspec!|"[^"]*\\cmd(?:\.exe)?"|'
+    r'[A-Za-z]:\\[^"\s&|]*\\cmd(?:\.exe)?|\\\\[^"\s&|]*\\cmd(?:\.exe)?|\bcmd(?:\.exe)?\b)'
+)
 SET_INTERACTIVE_RE = re.compile(r"\bset\s+/p\b", re.I)
 EXIT_CMD_RE = re.compile(r"^\s*@?exit(?:\s+|$)", re.I)
 EXIT_B_RE = re.compile(r"\bexit\s+/b\b", re.I)
@@ -205,6 +208,8 @@ def _maybe_reexec_with_python311() -> None:
     if os.environ.get("MARS_PREFLIGHT_NO_REEXEC") == "1":
         return
     if os.environ.get("MARS_PREFLIGHT_REEXEC") == "1":
+        return
+    if not Path(sys.argv[0]).exists():
         return
     candidates: list[list[str]] = []
     if _is_windows():
@@ -751,7 +756,23 @@ def _detect_delayed_expansion_lines(text: str) -> list[int]:
 
 
 def _detect_delayed_expansion(text: str) -> bool:
-    return bool(_detect_delayed_expansion_lines(text))
+    for line in text.splitlines():
+        stripped = line.strip()
+        if not stripped:
+            continue
+        line_body = stripped.lstrip()
+        if line_body.startswith("@"):
+            line_body = line_body[1:].lstrip()
+        lower = line_body.lower()
+        if lower.startswith("rem") and (len(lower) == 3 or lower[3].isspace()):
+            continue
+        if lower.startswith("::"):
+            continue
+        if DELAYED_SETLOCAL_RE.search(line_body):
+            return True
+        if _line_has_cmd_v_on(line_body):
+            return True
+    return False
 
 
 def _decode_cmd_text(data: bytes) -> str:
@@ -773,9 +794,9 @@ def _normalize_allowlist_path(value: str) -> str:
     return value.replace("\\", "/").strip().lower()
 
 
-def _load_cmd_allowlist(path: Path) -> list[AllowlistEntry]:
+def _load_cmd_allowlist(path: Path, warnings: list[Issue]) -> list[AllowlistEntry]:
     entries: list[AllowlistEntry] = []
-    for raw in path.read_text(encoding="utf-8").splitlines():
+    for line_no, raw in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
         line = raw.strip()
         if not line or line.startswith("#"):
             continue
@@ -783,15 +804,46 @@ def _load_cmd_allowlist(path: Path) -> list[AllowlistEntry]:
             line = line.split("#", 1)[0].strip()
         if not line:
             continue
-        rules: set[str] | None = None
-        path_part = line
-        if "::" in line:
-            path_part, rule_part = line.split("::", 1)
-            rule_part = rule_part.strip()
-            if rule_part:
-                rules = {item.strip() for item in rule_part.split(",") if item.strip()}
-            else:
-                rules = None
+        if "::" not in line:
+            _warn(
+                warnings,
+                "cmd.allowlist.missing_rules",
+                "allowlist entry missing rules; use ::* or ::rule1,rule2",
+                path=path,
+                line=line_no,
+            )
+            continue
+        path_part, rule_part = line.split("::", 1)
+        path_part = path_part.strip()
+        rule_part = rule_part.strip()
+        if not path_part:
+            _warn(
+                warnings,
+                "cmd.allowlist.missing_path",
+                "allowlist entry missing path",
+                path=path,
+                line=line_no,
+            )
+            continue
+        rules = {item.strip() for item in rule_part.split(",") if item.strip()}
+        if not rules:
+            _warn(
+                warnings,
+                "cmd.allowlist.missing_rules",
+                "allowlist entry missing rules; use ::* or ::rule1,rule2",
+                path=path,
+                line=line_no,
+            )
+            continue
+        if "*" in rules and len(rules) > 1:
+            _warn(
+                warnings,
+                "cmd.allowlist.ambiguous_rules",
+                "allowlist entry mixes '*' with rule names; '*' will override",
+                path=path,
+                line=line_no,
+            )
+            rules = {"*"}
         entries.append(
             AllowlistEntry(
                 path=_normalize_allowlist_path(path_part),
@@ -820,7 +872,9 @@ def _allowlist_rules_for(
     matched_rules: set[str] = set()
     for entry in entries:
         if any(fnmatch.fnmatch(candidate, entry.path) for candidate in normalized):
-            if entry.rules is None:
+            if not entry.rules:
+                continue
+            if "*" in entry.rules:
                 return {"*"}
             matched_rules.update(entry.rules)
     return matched_rules or None
@@ -906,6 +960,102 @@ def _has_chcp_directive(lines: list[str], limit: int = CHCP_SCAN_LINES) -> bool:
         if checked >= limit:
             return False
     return False
+
+
+def _join_caret_lines(lines: list[str]) -> list[tuple[int, str]]:
+    logical_lines: list[tuple[int, str]] = []
+    buffer: list[str] = []
+    start_line: int | None = None
+    for line_no, line in enumerate(lines, 1):
+        if start_line is None:
+            start_line = line_no
+        stripped = line.rstrip("\r\n")
+        trimmed = stripped.rstrip()
+        if trimmed.endswith("^"):
+            buffer.append(trimmed[:-1])
+            continue
+        buffer.append(stripped)
+        logical_lines.append((start_line, "".join(buffer)))
+        buffer = []
+        start_line = None
+    if buffer:
+        logical_lines.append((start_line or 1, "".join(buffer)))
+    return logical_lines
+
+
+def _split_cmd_segments(line: str) -> list[str]:
+    segments: list[str] = []
+    current: list[str] = []
+    in_quote = False
+    escape = False
+    for ch in line:
+        if escape:
+            current.append(ch)
+            escape = False
+            continue
+        if ch == "^":
+            escape = True
+            current.append(ch)
+            continue
+        if ch == '"':
+            in_quote = not in_quote
+            current.append(ch)
+            continue
+        if not in_quote and ch in "&|":
+            segment = "".join(current)
+            if segment.strip():
+                segments.append(segment)
+            current = []
+            continue
+        current.append(ch)
+    segment = "".join(current)
+    if segment.strip():
+        segments.append(segment)
+    return segments
+
+
+def _cmd_token_is_command(segment: str, match_start: int) -> bool:
+    prefix = segment[:match_start]
+    prefix_stripped = prefix.rstrip()
+    if prefix_stripped.endswith("="):
+        return False
+    if not prefix_stripped:
+        return True
+    last_token = prefix_stripped.split()[-1].lstrip("@")
+    if last_token.lower() in {"echo", "set", "setx"}:
+        return False
+    return True
+
+
+def _iter_cmd_invocations(line: str) -> list[tuple[bool, bool, bool]]:
+    invocations: list[tuple[bool, bool, bool]] = []
+    for segment in _split_cmd_segments(line):
+        segment_body = segment.strip()
+        if segment_body.startswith("@"):
+            segment_body = segment_body[1:].lstrip()
+        lower = segment_body.lower()
+        if lower.startswith("rem") and (len(lower) == 3 or lower[3].isspace()):
+            continue
+        if lower.startswith("::"):
+            continue
+        if lower.startswith("echo") and (len(lower) == 4 or lower[4].isspace()):
+            continue
+        for match in CMD_TOKEN_RE.finditer(segment_body):
+            if not _cmd_token_is_command(segment_body, match.start()):
+                continue
+            tail = segment_body[match.end():]
+            invocations.append(
+                (
+                    bool(CMD_SWITCH_C_RE.search(tail)),
+                    bool(CMD_SWITCH_K_RE.search(tail)),
+                    bool(CMD_SWITCH_V_ON_RE.search(tail)),
+                )
+            )
+    return invocations
+
+
+def _line_has_cmd_v_on(line_body: str) -> bool:
+    return any(cmd_v_on for _cmd_c, _cmd_k, cmd_v_on in _iter_cmd_invocations(line_body))
 
 
 def _scan_cmd_file(
@@ -994,6 +1144,14 @@ def _scan_cmd_file(
             "cmd enables delayed expansion",
             line_no,
         )
+    for line_no, line in enumerate(lines, 1):
+        if line.rstrip().endswith("^") and not line.endswith("^"):
+            report_warn(
+                "cmd.caret.trailing_space",
+                "cmd line continuation caret has trailing whitespace",
+                line_no,
+            )
+    logical_lines = _join_caret_lines(lines)
     delayed_now = False
     extensions_disabled = False
     delayed_stack: list[bool] = []
@@ -1014,7 +1172,7 @@ def _scan_cmd_file(
     last_errorlevel_value: int | None = None
     last_errorlevel_plain = False
 
-    for line_no, line in enumerate(lines, 1):
+    for line_no, line in logical_lines:
         stripped = line.strip()
         if not stripped:
             continue
@@ -1055,9 +1213,10 @@ def _scan_cmd_file(
                 delayed_now = delayed_stack.pop()
             if extensions_stack:
                 extensions_disabled = extensions_stack.pop()
-        # cmd /v:on only affects the nested cmd; do not treat it as a state change.
-        cmd_v_on = bool(DELAYED_CMD_RE.search(line_body))
-        cmd_has_c = bool(CMD_SWITCH_C_RE.search(lower))
+        cmd_invocations = _iter_cmd_invocations(line_body)
+        cmd_v_on_with_c = any(
+            cmd_v_on and cmd_has_c for cmd_has_c, _cmd_k, cmd_v_on in cmd_invocations
+        )
         for_var = _extract_for_var_token(line_body)
         if for_var and not for_var.startswith("%%"):
             report_error(
@@ -1133,7 +1292,7 @@ def _scan_cmd_file(
             )
         if (
             BANG_TOKEN_RE.search(line_body)
-            and not (delayed_now or (cmd_v_on and cmd_has_c))
+            and not (delayed_now or cmd_v_on_with_c)
             and not bang_missing_reported
         ):
             bang_missing_reported = True
@@ -1204,8 +1363,7 @@ def _scan_cmd_file(
                                 )
         if EXIT_CMD_RE.match(line_body) and not EXIT_B_RE.search(line_body):
             report_warn("cmd.exit.missing_b", "cmd exit without /b", line_no)
-        if CMD_INVOKE_RE.match(line_body):
-            cmd_has_k = bool(CMD_SWITCH_K_RE.search(lower))
+        for cmd_has_c, cmd_has_k, _cmd_v_on in cmd_invocations:
             if cmd_has_k or not cmd_has_c:
                 if profile == "ci":
                     report_error(
@@ -1219,6 +1377,7 @@ def _scan_cmd_file(
                         "cmd invoked without /c (or with /k) is interactive",
                         line_no,
                     )
+                break
         if SET_INTERACTIVE_RE.search(line_body):
             if profile == "ci":
                 report_error("cmd.interactive.set_p", "cmd uses set /p (interactive)", line_no)
@@ -1234,12 +1393,6 @@ def _scan_cmd_file(
                 report_error("cmd.interactive.choice", "cmd uses choice (interactive)", line_no)
             else:
                 report_warn("cmd.interactive.choice", "cmd uses choice (interactive)", line_no)
-        if line.rstrip().endswith("^") and not line.endswith("^"):
-            report_warn(
-                "cmd.caret.trailing_space",
-                "cmd line continuation caret has trailing whitespace",
-                line_no,
-            )
         for match in CMD_C_QUOTED_RE.finditer(line_body):
             inner = match.group(1)
             if any(ch in inner for ch in CMD_QUOTED_META_CHARS):
@@ -1641,7 +1794,7 @@ def main() -> int:
             )
         else:
             try:
-                allowlist_entries = _load_cmd_allowlist(args.cmd_allowlist)
+                allowlist_entries = _load_cmd_allowlist(args.cmd_allowlist, warnings)
             except OSError as exc:
                 _error(
                     errors,

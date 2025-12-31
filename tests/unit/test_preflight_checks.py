@@ -132,6 +132,48 @@ def test_comment_only_delayed_expansion_is_ignored(tmp_path: Path, monkeypatch, 
     assert "[error]" not in out
 
 
+def test_cmd_v_on_triggers_cmd_unsafe_error(tmp_path: Path, monkeypatch, capsys) -> None:
+    module = _load_module()
+    config = tmp_path / "config.yml"
+    overrides = tmp_path / "overrides.txt"
+    cmd = tmp_path / "delayed.cmd"
+    _write_text(config, "dummy: 1\n")
+    _write_overrides(overrides, r"E:\temp!dir")
+    _write_text(cmd, "cmd /v:on /c echo ok\n")
+
+    argv = [
+        "preflight_checks.py",
+        "--repo-root",
+        str(tmp_path),
+        "--config",
+        str(config),
+        "--overrides",
+        str(overrides),
+        "--cmd",
+        str(cmd),
+        "--skip-env",
+        "--skip-repo-scan",
+    ]
+    rc = _run_main(module, argv, monkeypatch)
+    out = capsys.readouterr().out
+
+    assert rc == 1
+    assert "contains '!': E:\\temp!dir" in out
+    assert "[error]" in out
+
+
+def test_allowlist_missing_rules_warns(tmp_path: Path) -> None:
+    module = _load_module()
+    allowlist = tmp_path / "allowlist.txt"
+    _write_text(allowlist, "scripts/foo.cmd\n")
+    warnings: list[object] = []
+
+    entries = module._load_cmd_allowlist(allowlist, warnings)
+
+    assert not entries
+    assert any(warn.rule == "cmd.allowlist.missing_rules" for warn in warnings)
+
+
 def test_collect_cmd_paths_includes_bat_and_uppercase(tmp_path: Path) -> None:
     module = _load_module()
     root = tmp_path / "cmds"
@@ -513,5 +555,16 @@ def test_cmd_line_length_warning(tmp_path: Path) -> None:
     module = _load_module()
     long_arg = "a" * (module.CMD_LINE_WARN_LEN + 10)
     _errors, warnings, _infos = _scan_cmd_text(module, tmp_path, f"echo {long_arg}\n")
+
+    assert any("cmd line length" in warning.message for warning in warnings)
+
+
+def test_cmd_line_length_with_caret_continuation_warns(tmp_path: Path) -> None:
+    module = _load_module()
+    half = module.CMD_LINE_WARN_LEN // 2
+    part1 = "a" * half
+    part2 = "b" * (half + 10)
+    text = f"echo {part1}^\n{part2}\n"
+    _errors, warnings, _infos = _scan_cmd_text(module, tmp_path, text)
 
     assert any("cmd line length" in warning.message for warning in warnings)
