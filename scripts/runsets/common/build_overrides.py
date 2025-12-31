@@ -12,7 +12,15 @@ from typing import Iterable, Iterator
 
 def _iter_pairs(paths: Iterable[Path]) -> Iterator[tuple[str, str]]:
     for path in paths:
-        for line in path.read_text(encoding="utf-8").splitlines():
+        # Try UTF-8 first, then fall back to system default encoding
+        try:
+            text = path.read_text(encoding="utf-8")
+        except UnicodeDecodeError:
+            try:
+                text = path.read_text(encoding="cp932")  # Japanese Windows
+            except UnicodeDecodeError:
+                text = path.read_text(encoding="latin-1")  # Last resort
+        for line in text.splitlines():
             raw = line.strip()
             if not raw or raw.startswith("#"):
                 continue

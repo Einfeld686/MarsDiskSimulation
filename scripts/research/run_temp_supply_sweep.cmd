@@ -399,24 +399,24 @@ if not exist "!TMP_ROOT!" (
 )
 %LOG_SETUP% temp_root=!TMP_ROOT! (source=!TMP_SOURCE!)
 if "%TRACE_ENABLED%"=="1" (
-  if not defined TRACE_LOG set "TRACE_LOG=%TMP_ROOT%\\marsdisk_trace_%RUN_TS%_%BATCH_SEED%.log"
-  > "%TRACE_LOG%" echo.[trace] start script=%~f0 rev=%SCRIPT_REV%
-  if "%TRACE_DETAIL%"=="1" echo.[trace] log=%TRACE_LOG%
+  if not defined TRACE_LOG set "TRACE_LOG=!TMP_ROOT!\\marsdisk_trace_!RUN_TS!_!BATCH_SEED!.log"
+  > "!TRACE_LOG!" echo.[trace] start script=%~f0 rev=%SCRIPT_REV%
+  if "%TRACE_DETAIL%"=="1" echo.[trace] log=!TRACE_LOG!
 )
 if "%TRACE_ENABLED%"=="1" if "%TRACE_ECHO%"=="1" (
   echo.[trace] echo-on enabled
   echo on
 )
 call :trace "setup: env ready"
-set "TMP_TEST=%TMP_ROOT%\\marsdisk_tmp_test_%RUN_TS%_%BATCH_SEED%.txt"
-> "%TMP_TEST%" echo ok
-if not exist "%TMP_TEST%" (
-  echo.[error] temp_root write test failed: "%TMP_TEST%"
-  echo.[error] temp_root=%TMP_ROOT%
+set "TMP_TEST=!TMP_ROOT!\\marsdisk_tmp_test_!RUN_TS!_!BATCH_SEED!.txt"
+> "!TMP_TEST!" echo ok
+if not exist "!TMP_TEST!" (
+  echo.[error] temp_root write test failed: "!TMP_TEST!"
+  echo.[error] temp_root=!TMP_ROOT!
   call :popd_safe
   exit /b 1
 )
-del "%TMP_TEST%"
+del "!TMP_TEST!"
 
 rem Output root defaults to out/ unless BATCH_ROOT/OUT_ROOT is set.
 if not defined BATCH_ROOT if defined OUT_ROOT set "BATCH_ROOT=%OUT_ROOT%"
@@ -674,9 +674,9 @@ if defined SWEEP_TAG (
   if not "!SWEEP_TAG!"=="!SWEEP_TAG_RAW!" echo.[warn] SWEEP_TAG sanitized: "!SWEEP_TAG_RAW!" -> "!SWEEP_TAG!"
 )
 
-set "BATCH_DIR=%BATCH_ROOT%\\%SWEEP_TAG%\\%RUN_TS%__%GIT_SHA%__seed%BATCH_SEED%"
-if not exist "%BATCH_DIR%" mkdir "%BATCH_DIR%" >nul 2>&1
-if not exist "%BATCH_DIR%" (
+set "BATCH_DIR=!BATCH_ROOT!\\!SWEEP_TAG!\\!RUN_TS!__!GIT_SHA!__seed!BATCH_SEED!"
+if not exist "!BATCH_DIR!" mkdir "!BATCH_DIR!" >nul 2>&1
+if not exist "!BATCH_DIR!" (
   echo.[error] failed to create output dir: "%BATCH_DIR%"
   call :popd_safe
   exit /b 1
@@ -782,9 +782,9 @@ set "PROGRESS_FLAG="
 if "%ENABLE_PROGRESS%"=="1" set "PROGRESS_FLAG=--progress"
 
 set "OVERRIDE_BUILDER=scripts\\runsets\\common\\build_overrides.py"
-set "BASE_OVERRIDES_FILE=%TMP_ROOT%\\marsdisk_overrides_base_%RUN_TS%_%BATCH_SEED%.txt"
-set "CASE_OVERRIDES_FILE=%TMP_ROOT%\\marsdisk_overrides_case_%RUN_TS%_%BATCH_SEED%.txt"
-set "MERGED_OVERRIDES_FILE=%TMP_ROOT%\\marsdisk_overrides_merged_%RUN_TS%_%BATCH_SEED%.txt"
+set "BASE_OVERRIDES_FILE=!TMP_ROOT!\\marsdisk_overrides_base_!RUN_TS!_!BATCH_SEED!.txt"
+set "CASE_OVERRIDES_FILE=!TMP_ROOT!\\marsdisk_overrides_case_!RUN_TS!_!BATCH_SEED!.txt"
+set "MERGED_OVERRIDES_FILE=!TMP_ROOT!\\marsdisk_overrides_merged_!RUN_TS!_!BATCH_SEED!.txt"
 
 set "EXTRA_OVERRIDES_EXISTS=0"
 if defined EXTRA_OVERRIDES_FILE (
@@ -835,16 +835,16 @@ if defined RUN_ONE_MODE (
   %LOG_INFO% run-one mode: T=%RUN_ONE_T% eps=%RUN_ONE_EPS% tau=%RUN_ONE_TAU% seed=%RUN_ONE_SEED%
 )
 
-set "SWEEP_LIST_FILE=%TMP_ROOT%\\marsdisk_sweep_list_%RUN_TS%_%BATCH_SEED%.txt"
-call :trace_detail "sweep list file=%SWEEP_LIST_FILE%"
-%PYTHON_CMD% scripts\\runsets\\common\\write_sweep_list.py --out "%SWEEP_LIST_FILE%"
+set "SWEEP_LIST_FILE=!TMP_ROOT!\\marsdisk_sweep_list_!RUN_TS!_!BATCH_SEED!.txt"
+call :trace_detail "sweep list file=!SWEEP_LIST_FILE!"
+%PYTHON_CMD% scripts\\runsets\\common\\write_sweep_list.py --out "!SWEEP_LIST_FILE!"
 if errorlevel 1 (
   echo.[error] failed to build sweep list
   call :popd_safe
   exit /b 1
 )
-if not exist "%SWEEP_LIST_FILE%" (
-  echo.[error] sweep list missing: "%SWEEP_LIST_FILE%"
+if not exist "!SWEEP_LIST_FILE!" (
+  echo.[error] sweep list missing: "!SWEEP_LIST_FILE!"
   call :popd_safe
   exit /b 1
 )
