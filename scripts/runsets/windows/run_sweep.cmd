@@ -8,6 +8,7 @@ rem Run a temp_supply sweep (1D default).
 
 setlocal EnableExtensions EnableDelayedExpansion
 if not defined DEBUG set "DEBUG=0"
+if "%~1"=="--debug" echo.[DEBUG] script started successfully at line 10
 
 if not defined TRACE_ENABLED set "TRACE_ENABLED=0"
 
