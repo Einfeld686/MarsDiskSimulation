@@ -473,12 +473,19 @@ if not defined SWEEP_PARALLEL (
 ) else (
   if not defined SWEEP_PARALLEL_DEFAULT set "SWEEP_PARALLEL_DEFAULT=0"
 )
-if not defined MARSDISK_CELL_PARALLEL set "MARSDISK_CELL_PARALLEL=1"
+rem Sweep-parallel primary: keep cell-parallel off to avoid nested parallelism.
+if "%SWEEP_PARALLEL%"=="1" (
+  set "MARSDISK_CELL_PARALLEL=0"
+  set "MARSDISK_CELL_JOBS=1"
+  if not defined CELL_THREAD_LIMIT set "CELL_THREAD_LIMIT=1"
+) else (
+  if not defined MARSDISK_CELL_PARALLEL set "MARSDISK_CELL_PARALLEL=1"
+  if not defined MARSDISK_CELL_JOBS set "MARSDISK_CELL_JOBS=auto"
+)
 if not defined MARSDISK_CELL_MIN_CELLS set "MARSDISK_CELL_MIN_CELLS=4"
 if not defined MARSDISK_CELL_CHUNK_SIZE set "MARSDISK_CELL_CHUNK_SIZE=0"
 if not defined CELL_MEM_FRACTION set "CELL_MEM_FRACTION=0.7"
 if not defined CELL_CPU_FRACTION set "CELL_CPU_FRACTION=0.7"
-if not defined MARSDISK_CELL_JOBS set "MARSDISK_CELL_JOBS=auto"
 if /i "%PARALLEL_MODE%"=="numba" (
   set "MARSDISK_CELL_PARALLEL=0"
   set "MARSDISK_CELL_JOBS=1"

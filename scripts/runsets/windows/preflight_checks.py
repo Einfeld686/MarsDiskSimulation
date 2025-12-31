@@ -108,6 +108,61 @@ RESERVED_DEVICE_NAMES = {
     "LPT9",
 }
 
+CMD_ALLOWLIST_RULES = {
+    "cmd.autorun.missing_d",
+    "cmd.call.missing",
+    "cmd.call.unquoted_space",
+    "cmd.caret.trailing_space",
+    "cmd.cd.missing_d",
+    "cmd.cd.unc",
+    "cmd.cd.unquoted_space",
+    "cmd.cmd_c.quote_meta",
+    "cmd.delayed_expansion.before_enabled",
+    "cmd.delayed_expansion.cmd_v_on",
+    "cmd.delayed_expansion.enabled",
+    "cmd.delayed_expansion.token",
+    "cmd.encoding.bom",
+    "cmd.encoding.no_chcp",
+    "cmd.encoding.non_ascii",
+    "cmd.encoding.nul",
+    "cmd.encoding.utf16",
+    "cmd.env.setx",
+    "cmd.errorlevel.ascending",
+    "cmd.errorlevel.zero",
+    "cmd.exit.missing_b",
+    "cmd.extensions.disabled_in_script",
+    "cmd.for.single_percent",
+    "cmd.interactive.choice",
+    "cmd.interactive.cmd",
+    "cmd.interactive.pause",
+    "cmd.interactive.set_p",
+    "cmd.line_endings.lf_only",
+    "cmd.line_endings.mixed",
+    "cmd.line_length.limit",
+    "cmd.line_length.near",
+    "cmd.option.dash",
+    "cmd.posix_path",
+    "cmd.pushd_popd.unbalanced",
+    "cmd.pushd.unquoted_space",
+    "cmd.read_failed",
+    "cmd.set.space_around_equals",
+    "cmd.set.posix_path",
+    "cmd.setlocal.missing",
+    "cmd.setlocal.order",
+    "cmd.setlocal.unbalanced",
+    "cmd.start.no_wait",
+    "cmd.start.quoted_title",
+    "cmd.unsafe.bang",
+    "cmd.unsafe.meta",
+    "cmd.unsafe.percent",
+    "path.invalid_chars",
+    "path.reserved_device",
+    "path.trailing_space_dot",
+    "path.unc",
+    "path.value_length",
+    "path.value_non_ascii",
+}
+
 
 @dataclass(frozen=True)
 class Issue:
@@ -929,6 +984,8 @@ def _detect_delayed_expansion_lines(text: str) -> list[int]:
             continue
         if DELAYED_SETLOCAL_RE.search(lowered):
             lines.append(line_no)
+        elif _line_has_cmd_v_on(lowered):
+            lines.append(line_no)
     return lines
 
 
@@ -973,7 +1030,7 @@ def _normalize_allowlist_path(value: str) -> str:
 
 def _load_cmd_allowlist(path: Path, warnings: list[Issue]) -> list[AllowlistEntry]:
     entries: list[AllowlistEntry] = []
-    for line_no, raw in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
+    for line_no, raw in enumerate(path.read_text(encoding="utf-8-sig").splitlines(), 1):
         line = raw.strip()
         if not line or line.startswith("#"):
             continue
@@ -985,7 +1042,7 @@ def _load_cmd_allowlist(path: Path, warnings: list[Issue]) -> list[AllowlistEntr
             _warn(
                 warnings,
                 "cmd.allowlist.missing_rules",
-                "allowlist entry missing rules; use ::* or ::rule1,rule2",
+                "allowlist entry missing rules; ignored (use ::* or ::rule1,rule2)",
                 path=path,
                 line=line_no,
             )
@@ -1007,11 +1064,31 @@ def _load_cmd_allowlist(path: Path, warnings: list[Issue]) -> list[AllowlistEntr
             _warn(
                 warnings,
                 "cmd.allowlist.missing_rules",
-                "allowlist entry missing rules; use ::* or ::rule1,rule2",
+                "allowlist entry missing rules; ignored (use ::* or ::rule1,rule2)",
                 path=path,
                 line=line_no,
             )
             continue
+        unknown_rules = {rule for rule in rules if rule != "*" and rule not in CMD_ALLOWLIST_RULES}
+        if unknown_rules:
+            unknown_list = ", ".join(sorted(unknown_rules))
+            _warn(
+                warnings,
+                "cmd.allowlist.unknown_rule",
+                f"allowlist entry has unknown rule(s): {unknown_list}",
+                path=path,
+                line=line_no,
+            )
+            rules.difference_update(unknown_rules)
+            if not rules:
+                _warn(
+                    warnings,
+                    "cmd.allowlist.missing_rules",
+                    "allowlist entry has no valid rules; ignored (use ::* or ::rule1,rule2)",
+                    path=path,
+                    line=line_no,
+                )
+                continue
         if "*" in rules and len(rules) > 1:
             _warn(
                 warnings,
@@ -1201,8 +1278,8 @@ def _is_cmd_token(token: str) -> bool:
     return base in {"cmd", "cmd.exe"}
 
 
-def _iter_cmd_invocations(line: str) -> list[tuple[bool, bool, bool]]:
-    invocations: list[tuple[bool, bool, bool]] = []
+def _iter_cmd_invocations(line: str) -> list[tuple[bool, bool, bool, bool]]:
+    invocations: list[tuple[bool, bool, bool, bool]] = []
     for segment in _split_cmd_segments(line):
         segment_body = segment.strip()
         if not segment_body:
@@ -1236,19 +1313,30 @@ def _iter_cmd_invocations(line: str) -> list[tuple[bool, bool, bool]]:
                     prev2 == "start" and prev in {"", '""'}
                 ):
                     continue
-            tail = " ".join(tokens[idx + 1 :])
+            tail_tokens = tokens[idx + 1 :]
+            tail = " ".join(tail_tokens)
+            has_d = False
+            for tail_token in tail_tokens:
+                token_clean = _normalize_exe_token(tail_token).lower()
+                if not token_clean:
+                    continue
+                if token_clean.startswith(("/c", "/k")):
+                    break
+                if token_clean == "/d" or token_clean.startswith("/d:"):
+                    has_d = True
             invocations.append(
                 (
                     bool(CMD_SWITCH_C_RE.search(tail)),
                     bool(CMD_SWITCH_K_RE.search(tail)),
                     bool(CMD_SWITCH_V_ON_RE.search(tail)),
+                    has_d,
                 )
             )
     return invocations
 
 
 def _line_has_cmd_v_on(line_body: str) -> bool:
-    return any(cmd_v_on for _cmd_c, _cmd_k, cmd_v_on in _iter_cmd_invocations(line_body))
+    return any(cmd_v_on for _cmd_c, _cmd_k, cmd_v_on, _cmd_d in _iter_cmd_invocations(line_body))
 
 
 def _dash_option_cmd(line_body: str) -> str | None:
@@ -1278,6 +1366,7 @@ def _scan_cmd_file(
     cmd_unsafe_error: bool,
     profile: str,
     allowlist_rules: set[str] | None,
+    autorun_detected: bool,
     debug: bool = False,
 ) -> None:
     def should_skip(rule: str) -> bool:
@@ -1453,8 +1542,24 @@ def _scan_cmd_file(
                 extensions_disabled = extensions_stack.pop()
         cmd_invocations = _iter_cmd_invocations(line_body)
         cmd_v_on_with_c = any(
-            cmd_v_on and cmd_has_c for cmd_has_c, _cmd_k, cmd_v_on in cmd_invocations
+            cmd_v_on and cmd_has_c for cmd_has_c, _cmd_k, cmd_v_on, _cmd_d in cmd_invocations
         )
+        if autorun_detected:
+            for _cmd_has_c, _cmd_has_k, _cmd_v_on, cmd_has_d in cmd_invocations:
+                if not cmd_has_d:
+                    if profile == "ci":
+                        report_error(
+                            "cmd.autorun.missing_d",
+                            "cmd invocation missing /d while AutoRun is enabled",
+                            line_no,
+                        )
+                    else:
+                        report_warn(
+                            "cmd.autorun.missing_d",
+                            "cmd invocation missing /d while AutoRun is enabled",
+                            line_no,
+                        )
+                    break
         for_var = _extract_for_var_token(line_body)
         if for_var and not for_var.startswith("%%"):
             report_error(
@@ -1601,7 +1706,7 @@ def _scan_cmd_file(
                                 )
         if EXIT_CMD_RE.match(line_body) and not EXIT_B_RE.search(line_body):
             report_warn("cmd.exit.missing_b", "cmd exit without /b", line_no)
-        for cmd_has_c, cmd_has_k, _cmd_v_on in cmd_invocations:
+        for cmd_has_c, cmd_has_k, _cmd_v_on, _cmd_d in cmd_invocations:
             if cmd_has_k or not cmd_has_c:
                 if profile == "ci":
                     report_error(
@@ -1741,6 +1846,12 @@ def _scan_cmd_file(
             "cmd.setlocal.unbalanced",
             "cmd uses endlocal without matching setlocal",
             first_endlocal_line,
+        )
+    elif setlocal_count > endlocal_count or delayed_stack or extensions_stack:
+        report_warn(
+            "cmd.setlocal.unbalanced",
+            "cmd uses setlocal without matching endlocal (state stack not empty at end)",
+            first_setlocal_line,
         )
     if popd_count > pushd_count:
         report_warn(
@@ -2046,6 +2157,7 @@ def main() -> int:
     cmd_unsafe_error = True
     if cmd_paths:
         cmd_unsafe_error = delayed_expansion_used
+    autorun_detected = False
 
     allowlist_entries: list[AllowlistEntry] = []
     if args.cmd_allowlist:
@@ -2147,6 +2259,7 @@ def main() -> int:
                 "cmd.autorun",
                 f"cmd AutoRun is set in {label}: {value}; use cmd /d to disable",
             )
+        autorun_detected = bool(autorun_values)
         enabled, source, raw = _read_cmd_extensions_enabled()
         if enabled is False:
             _error(
@@ -2275,6 +2388,7 @@ def main() -> int:
                 cmd_unsafe_error,
                 args.profile,
                 allowlist_rules,
+                autorun_detected,
                 debug=args.debug,
             )
 

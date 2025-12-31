@@ -894,9 +894,14 @@ if not defined PARALLEL_WINDOW_STYLE set "PARALLEL_WINDOW_STYLE=Hidden"
 
 if not defined PARALLEL_MODE set "PARALLEL_MODE=cell"
 
-
-
-set "MARSDISK_CELL_PARALLEL=1"
+rem Sweep-parallel primary: keep cell-parallel off to avoid nested parallelism.
+if "%SWEEP_PARALLEL%"=="1" (
+  set "MARSDISK_CELL_PARALLEL=0"
+  set "MARSDISK_CELL_JOBS=1"
+) else (
+  set "MARSDISK_CELL_PARALLEL=1"
+  set "MARSDISK_CELL_JOBS=auto"
+)
 
 
 
@@ -905,14 +910,6 @@ if not defined MARSDISK_CELL_MIN_CELLS set "MARSDISK_CELL_MIN_CELLS=4"
 
 
 if not defined MARSDISK_CELL_CHUNK_SIZE set "MARSDISK_CELL_CHUNK_SIZE=0"
-
-
-
-rem Default to cell-parallel auto sizing (PARALLEL_MODE=cell unless overridden).
-
-
-
-set "MARSDISK_CELL_JOBS=auto"
 
 
 
@@ -971,9 +968,14 @@ if not defined SIZE_PROBE_HOOKS set "SIZE_PROBE_HOOKS=plot,eval"
 
 
 
-rem Fixed per-process thread cap: PARALLEL_JOBS(10) x CELL_THREAD_LIMIT(2) = 20.
-set "CELL_THREAD_LIMIT=2"
-set "CELL_THREAD_LIMIT_DEFAULT=0"
+rem Per-process thread cap (sweep-parallel uses 1, cell-parallel uses 2).
+if "%SWEEP_PARALLEL%"=="1" (
+  set "CELL_THREAD_LIMIT=1"
+  set "CELL_THREAD_LIMIT_DEFAULT=1"
+) else (
+  set "CELL_THREAD_LIMIT=2"
+  set "CELL_THREAD_LIMIT_DEFAULT=0"
+)
 
 if /i "%PARALLEL_MODE%"=="cell" (
 
