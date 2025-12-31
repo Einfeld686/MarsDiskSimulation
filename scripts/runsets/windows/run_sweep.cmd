@@ -330,9 +330,13 @@ if "!PYTHON_VERSION_OK!"=="0" (
   )
   exit /b 1
 )
-rem Use absolute path from now on
+rem Use absolute path from now on - remove quotes for PYTHON_EXE (will be quoted when needed)
 set "PYTHON_CMD=!PYTHON_CMD_ABS!"
-if "%~1"=="--debug" echo.[DEBUG] checkpoint 5: Python version OK, setting REPO_ROOT
+set "PYTHON_EXE_RESOLVED=!PYTHON_CMD_ABS:"=!"
+rem Export PYTHON_EXE for child scripts
+endlocal & set "PYTHON_EXE=%PYTHON_EXE_RESOLVED%" & setlocal EnableExtensions EnableDelayedExpansion
+set "PYTHON_CMD="!PYTHON_EXE!""
+if "%~1"=="--debug" echo.[DEBUG] checkpoint 5: Python version OK, PYTHON_EXE=!PYTHON_EXE!
 for %%I in ("%~f0") do set "SCRIPT_DIR=%%~dpI"
 
 
@@ -1797,7 +1801,9 @@ if "%DEBUG%"=="1" call :debug_log "run_temp_supply: start cmd=scripts\research\r
 
 if "%DEBUG%"=="1" call :debug_log "run_temp_supply: trace_log=!TRACE_LOG!"
 
-
+rem Export PYTHON_EXE for child script (endlocal passes it out)
+if "%DEBUG%"=="1" echo.[DEBUG] Passing PYTHON_EXE=!PYTHON_EXE! to child script
+endlocal & set "PYTHON_EXE=%PYTHON_EXE%" & set "DEBUG=%DEBUG%" & set "TRACE_ENABLED=%TRACE_ENABLED%" & set "TRACE_DETAIL=%TRACE_DETAIL%" & set "TRACE_ECHO=%TRACE_ECHO%" & set "SWEEP_PARALLEL=%SWEEP_PARALLEL%" & set "PARALLEL_JOBS=%PARALLEL_JOBS%"
 
 call scripts\research\run_temp_supply_sweep.cmd
 
