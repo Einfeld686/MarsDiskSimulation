@@ -345,17 +345,13 @@ if not defined RUN_TS for /f %%A in ('%PYTHON_CMD% scripts\\runsets\\common\\tim
 if defined RUN_TS (
   set "RUN_TS_RAW=!RUN_TS!"
   rem Normalize to a filename-safe token in case a pre-set RUN_TS includes separators.
+  rem Only replace common separators that work reliably with delayed expansion.
   set "RUN_TS=!RUN_TS::=!"
   set "RUN_TS=!RUN_TS: =_!"
   set "RUN_TS=!RUN_TS:/=-!"
   set "RUN_TS=!RUN_TS:\=-!"
-  set "RUN_TS=!RUN_TS:&=_!"
-  set "RUN_TS=!RUN_TS:|=_!"
-  set "RUN_TS=!RUN_TS:<=_!"
-  set "RUN_TS=!RUN_TS:>=_!"
-  set "RUN_TS=!RUN_TS:?=_!"
-  set "RUN_TS=!RUN_TS:*=_!"
-  rem Note: Cannot replace ! in delayed expansion mode; skip it (rare in timestamps)
+  rem Note: Cannot replace special chars (! * ? < > | &) in delayed expansion mode; skip them.
+  rem These are rare in timestamps and would cause script errors anyway.
   if not "!RUN_TS!"=="!RUN_TS_RAW!" echo.[warn] RUN_TS sanitized: "!RUN_TS_RAW!" -^> "!RUN_TS!"
 )
 set "TMP_ROOT_BASE=%TEMP%"
