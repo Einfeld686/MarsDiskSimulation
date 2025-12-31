@@ -446,6 +446,8 @@ set "COOL_MARGIN_YEARS="
 set "COOL_SEARCH_YEARS="
 
 if not defined BASE_CONFIG set "BASE_CONFIG=configs/sweep_temp_supply/temp_supply_T4000_eps1.yml"
+rem Normalize BASE_CONFIG to absolute path and fix any double backslashes
+for %%I in ("!BASE_CONFIG!") do set "BASE_CONFIG=%%~fI"
 if not defined QSTAR_UNITS set "QSTAR_UNITS=ba99_cgs"
 if not defined GEOMETRY_MODE set "GEOMETRY_MODE=0D"
 if not defined GEOMETRY_NR set "GEOMETRY_NR=32"

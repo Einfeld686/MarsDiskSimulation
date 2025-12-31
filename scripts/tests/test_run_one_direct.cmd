@@ -25,6 +25,10 @@ set "PARALLEL_JOBS=1"
 set "SKIP_PIP=1"
 set "DEBUG=1"
 set "SWEEP_PARALLEL=1"
+rem Set BASE_CONFIG explicitly to avoid inheriting from environment
+set "BASE_CONFIG=!REPO_ROOT!\configs\base.yml"
+set "SWEEP_TAG=temp_supply_sweep_1d"
+set "GEOMETRY_MODE=1D"
 
 echo.
 echo.[info] Environment variables set:
