@@ -1072,10 +1072,14 @@ rem Pass command via stdin to avoid environment variable inheritance issues
 if "%DEBUG%"=="1" echo.[DEBUG] launch_job: executing win_process.py
 rem Write JOB_CMD to temp file first to avoid pipe issues with special characters
 set "JOB_CMD_FILE=!TMP_ROOT!\marsdisk_cmd_!JOB_T!_!JOB_EPS!_!JOB_TAU!.tmp"
->>"!JOB_CMD_FILE!" echo !JOB_CMD!
+if "%DEBUG%"=="1" echo.[DEBUG] launch_job: MARKER_A before write cmd file
+> "!JOB_CMD_FILE!" echo !JOB_CMD!
+if "%DEBUG%"=="1" echo.[DEBUG] launch_job: MARKER_B after write cmd file
+if "%DEBUG%"=="1" echo.[DEBUG] launch_job: MARKER_C before python call
 "!PYTHON_CMD!" "!WIN_PROCESS_PY!" launch --cmd-file "!JOB_CMD_FILE!" --window-style "!PARALLEL_WINDOW_STYLE!" --cwd "!JOB_CWD_USE!" > "!TMP_ROOT!\marsdisk_pid_!JOB_T!_!JOB_EPS!_!JOB_TAU!.tmp" 2>&1
-if "%DEBUG%"=="1" echo.[DEBUG] launch_job: win_process.py done, errorlevel=%errorlevel%
+if "%DEBUG%"=="1" echo.[DEBUG] launch_job: MARKER_D after python call, errorlevel=%errorlevel%
 del "!JOB_CMD_FILE!" >nul 2>&1
+if "%DEBUG%"=="1" echo.[DEBUG] launch_job: MARKER_E after delete cmd file
 if exist "!TMP_ROOT!\marsdisk_pid_!JOB_T!_!JOB_EPS!_!JOB_TAU!.tmp" (
   set /p JOB_PID_TMP=<"!TMP_ROOT!\marsdisk_pid_!JOB_T!_!JOB_EPS!_!JOB_TAU!.tmp"
   del "!TMP_ROOT!\marsdisk_pid_!JOB_T!_!JOB_EPS!_!JOB_TAU!.tmp" >nul 2>&1
