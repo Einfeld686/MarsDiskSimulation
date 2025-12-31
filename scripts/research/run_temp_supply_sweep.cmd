@@ -670,7 +670,7 @@ if defined SWEEP_TAG (
   if not "!SWEEP_TAG!"=="!SWEEP_TAG_RAW!" echo.[warn] SWEEP_TAG sanitized: "!SWEEP_TAG_RAW!" -> "!SWEEP_TAG!"
 )
 
-set "BATCH_DIR=!BATCH_ROOT!\\!SWEEP_TAG!\\!RUN_TS!__!GIT_SHA!__seed!BATCH_SEED!"
+set "BATCH_DIR=!BATCH_ROOT!\!SWEEP_TAG!\!RUN_TS!__!GIT_SHA!__seed!BATCH_SEED!"
 if not exist "!BATCH_DIR!" mkdir "!BATCH_DIR!" >nul 2>&1
 if not exist "!BATCH_DIR!" (
   echo.[error] failed to create output dir: "!BATCH_DIR!"
