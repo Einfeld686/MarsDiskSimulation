@@ -180,8 +180,10 @@ if not "!PYTHON_ARGS!"=="" (
   )
 )
 set "PYTHON_PYVER_ARG=0"
-if /i "!PYTHON_ARGS_FIRST:~0,2!"=="-3" set "PYTHON_PYVER_ARG=1"
-if /i "!PYTHON_ARGS_FIRST:~0,2!"=="-2" set "PYTHON_PYVER_ARG=1"
+if not "!PYTHON_ARGS_FIRST!"=="" (
+  if /i "!PYTHON_ARGS_FIRST:~0,2!"=="-3" set "PYTHON_PYVER_ARG=1"
+  if /i "!PYTHON_ARGS_FIRST:~0,2!"=="-2" set "PYTHON_PYVER_ARG=1"
+)
 if "!PYTHON_PYVER_ARG!"=="1" (
   set "PYTHON_KEEP_PYVER_ARG=0"
   if "!PYTHON_ALLOW_LAUNCHER!"=="1" (
@@ -189,7 +191,7 @@ if "!PYTHON_PYVER_ARG!"=="1" (
     if /i "!PYTHON_EXE_NAME!"=="py.exe" set "PYTHON_KEEP_PYVER_ARG=1"
   )
   if "!PYTHON_KEEP_PYVER_ARG!"=="0" (
-    if not "!PYTHON_ARGS_FIRST!"=="" echo.[warn] PYTHON_ARGS includes py launcher version flag; dropping it (use python3.11 instead).
+    if not "!PYTHON_ARGS_FIRST!"=="" echo.[warn] PYTHON_ARGS includes py launcher version flag; dropping it - use python3.11 instead.
     set "PYTHON_ARGS=!PYTHON_ARGS_REST!"
   )
 )
@@ -247,8 +249,10 @@ if not "!PYTHON_ARGS!"=="" (
   )
 )
 set "PYTHON_PYVER_ARG=0"
-if /i "!PYTHON_ARGS_FIRST:~0,2!"=="-3" set "PYTHON_PYVER_ARG=1"
-if /i "!PYTHON_ARGS_FIRST:~0,2!"=="-2" set "PYTHON_PYVER_ARG=1"
+if not "!PYTHON_ARGS_FIRST!"=="" (
+  if /i "!PYTHON_ARGS_FIRST:~0,2!"=="-3" set "PYTHON_PYVER_ARG=1"
+  if /i "!PYTHON_ARGS_FIRST:~0,2!"=="-2" set "PYTHON_PYVER_ARG=1"
+)
 if "!PYTHON_PYVER_ARG!"=="1" (
   set "PYTHON_KEEP_PYVER_ARG=0"
   if "!PYTHON_ALLOW_LAUNCHER!"=="1" (
@@ -256,7 +260,7 @@ if "!PYTHON_PYVER_ARG!"=="1" (
     if /i "!PYTHON_EXE_NAME!"=="py.exe" set "PYTHON_KEEP_PYVER_ARG=1"
   )
   if "!PYTHON_KEEP_PYVER_ARG!"=="0" (
-    if not "!PYTHON_ARGS_FIRST!"=="" echo.[warn] PYTHON_ARGS includes py launcher version flag; dropping it (use python3.11 instead).
+    if not "!PYTHON_ARGS_FIRST!"=="" echo.[warn] PYTHON_ARGS includes py launcher version flag; dropping it - use python3.11 instead.
     set "PYTHON_ARGS=!PYTHON_ARGS_REST!"
   )
 )
@@ -937,7 +941,7 @@ for /f "usebackq tokens=1-3 delims= " %%A in ("%SWEEP_LIST_FILE%") do (
         call :trace_detail "quicklook: start"
         %PYTHON_CMD% scripts\\runsets\\common\\hooks\\plot_sweep_run.py --run-dir "!RUN_DIR!"
         if errorlevel 1 (
-          echo.[warn] quicklook failed (rc=!errorlevel!)
+          echo.[warn] quicklook failed [rc=!errorlevel!]
         )
       )
 
@@ -972,7 +976,7 @@ for %%H in (%HOOKS_LIST%) do (
   call :run_hook %%H
   set "HOOK_RC=!errorlevel!"
   if not "!HOOK_RC!"=="0" (
-    echo.[warn] hook %%H failed (rc=!HOOK_RC!) for %RUN_DIR%
+    echo.[warn] hook %%H failed [rc=!HOOK_RC!] for %RUN_DIR%
     if "%HOOKS_STRICT%"=="1" exit /b !HOOK_RC!
     set "HOOKS_FAIL=1"
   )
@@ -1020,7 +1024,7 @@ for /f "usebackq tokens=1-3 delims= " %%A in ("%SWEEP_LIST_FILE%") do (
 )
 
 call :wait_all
-echo.[done] Parallel sweep completed (batch=%BATCH_SEED%, dir=%BATCH_DIR%).
+echo.[done] Parallel sweep completed [batch=%BATCH_SEED%, dir=%BATCH_DIR%].
 exit /b 0
 
 :launch_job
@@ -1039,7 +1043,7 @@ setlocal DisableDelayedExpansion
 for /f "usebackq delims=" %%P in (`%PYTHON_CMD% "%WIN_PROCESS_PY%" launch --window-style "%PARALLEL_WINDOW_STYLE%" --cwd "%JOB_CWD_USE%"`) do set "JOB_PID_TMP=%%P"
 endlocal & set "JOB_PID=%JOB_PID_TMP%"
 if defined JOB_PID set "JOB_PIDS=!JOB_PIDS! !JOB_PID!"
-if not defined JOB_PID echo.[warn] failed to launch job for T=!JOB_T! eps=!JOB_EPS! tau=!JOB_TAU! (check Python availability)
+if not defined JOB_PID echo.[warn] failed to launch job for T=!JOB_T! eps=!JOB_EPS! tau=!JOB_TAU! - check Python availability
 exit /b 0
 
 :wait_for_slot
