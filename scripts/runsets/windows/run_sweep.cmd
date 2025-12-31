@@ -110,12 +110,32 @@ set "PYTHON_EXE_QUOTED=!PYTHON_EXE!"
 if not "!PYTHON_EXE: =!"=="!PYTHON_EXE!" set "PYTHON_EXE_QUOTED="!PYTHON_EXE!""
 set "PYTHON_CMD=!PYTHON_EXE_QUOTED!"
 if not "!PYTHON_ARGS!"=="" set "PYTHON_CMD=!PYTHON_EXE_QUOTED! !PYTHON_ARGS!"
-if defined CI (
-  !PYTHON_CMD! -c "import sys; raise SystemExit(0 if sys.version_info >= (3,11) else 1)" >nul 2>&1
-  if errorlevel 1 (
-    echo.[error] python 3.11+ is required in CI
-    exit /b 1
+set "PYTHON_VERSION_OK=0"
+!PYTHON_CMD! -c "import sys; raise SystemExit(0 if sys.version_info >= (3,11) else 1)" >nul 2>&1
+if not errorlevel 1 set "PYTHON_VERSION_OK=1"
+
+if "!PYTHON_VERSION_OK!"=="0" (
+  where py >nul 2>&1
+  if not errorlevel 1 (
+    py -3.11 -c "import sys; raise SystemExit(0 if sys.version_info >= (3,11) else 1)" >nul 2>&1
+    if not errorlevel 1 (
+      set "PYTHON_EXE=py"
+      set "PYTHON_ARGS=-3.11"
+      set "PYTHON_EXE_QUOTED=py"
+      set "PYTHON_CMD=py -3.11"
+      set "PYTHON_VERSION_OK=1"
+    )
   )
+)
+
+if "!PYTHON_VERSION_OK!"=="0" (
+  if defined CI (
+    echo.[error] python 3.11+ is required in CI
+  ) else (
+    echo.[error] python 3.11+ is required. Install Python 3.11 or set PYTHON_EXE.
+    echo.[error] Example: set PYTHON_EXE=py ^& set PYTHON_ARGS=-3.11
+  )
+  exit /b 1
 )
 for %%I in ("%~f0") do set "SCRIPT_DIR=%%~dpI"
 
