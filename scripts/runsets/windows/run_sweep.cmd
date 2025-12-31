@@ -207,6 +207,7 @@ if "!PYTHON_LOOKS_PATH!"=="1" (
   )
 )
 if "%~1"=="--debug" echo.[DEBUG] checkpoint 4b: PYTHON path check done
+if "%~1"=="--debug" echo.[DEBUG] checkpoint 4b-1: PYTHON_EXE=!PYTHON_EXE!
 set "PYTHON_ARGS_FIRST="
 set "PYTHON_ARGS_REST="
 if not "!PYTHON_ARGS!"=="" (
@@ -235,11 +236,13 @@ set "PYTHON_EXE_QUOTED=!PYTHON_EXE!"
 if not "!PYTHON_EXE: =!"=="!PYTHON_EXE!" set "PYTHON_EXE_QUOTED="!PYTHON_EXE!""
 set "PYTHON_CMD=!PYTHON_EXE_QUOTED!"
 if not "!PYTHON_ARGS!"=="" set "PYTHON_CMD=!PYTHON_EXE_QUOTED! !PYTHON_ARGS!"
+if "%~1"=="--debug" echo.[DEBUG] checkpoint 4c: PYTHON_CMD=!PYTHON_CMD!
 set "PYTHON_CMD_SANITY=1"
 if not defined PYTHON_EXE set "PYTHON_CMD_SANITY=0"
 if "!PYTHON_EXE:~0,1!"=="-" set "PYTHON_CMD_SANITY=0"
 if "!PYTHON_CMD:~0,1!"=="-" set "PYTHON_CMD_SANITY=0"
 if "!PYTHON_CMD:~0,1!"=="." set "PYTHON_CMD_SANITY=0"
+if "%~1"=="--debug" echo.[DEBUG] checkpoint 4d: PYTHON_CMD_SANITY=!PYTHON_CMD_SANITY! set "PYTHON_CMD_SANITY=0"
 if "!PYTHON_CMD_SANITY!"=="0" (
   echo.[warn] python command invalid; resetting to python in PATH
   set "PYTHON_EXE="
