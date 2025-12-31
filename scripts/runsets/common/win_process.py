@@ -119,6 +119,7 @@ def main() -> int:
     launch = sub.add_parser("launch", help="Launch a cmd.exe job and print its PID.")
     launch.add_argument("--cmd", default=None, help="Command string to run.")
     launch.add_argument("--cmd-file", default=None, help="File containing command string to run.")
+    launch.add_argument("--cmd-stdin", action="store_true", help="Read command from stdin.")
     launch.add_argument("--cwd", default=None, help="Working directory for the launched cmd.exe job.")
     launch.add_argument("--window-style", default=None, help="Normal/Hidden/Minimized/Maximized.")
 
@@ -129,6 +130,13 @@ def main() -> int:
 
     if args.command == "launch":
         cmd = args.cmd
+        # Priority: --cmd > --cmd-stdin > --cmd-file > JOB_CMD env
+        if not cmd and args.cmd_stdin:
+            try:
+                cmd = sys.stdin.read().strip()
+            except Exception as e:
+                print(f"[error] failed to read from stdin: {e}", file=sys.stderr)
+                return 2
         if not cmd and args.cmd_file:
             # Try multiple encodings for Windows cmd.exe output
             encodings = ["utf-8", "cp932", "latin-1"]
@@ -140,14 +148,12 @@ def main() -> int:
                 except (OSError, UnicodeDecodeError):
                     continue
             if not cmd:
-                print(f"[error] failed to read cmd-file with any encoding", file=sys.stderr)
+                print("[error] failed to read cmd-file with any encoding", file=sys.stderr)
                 return 2
         if not cmd:
             cmd = os.environ.get("JOB_CMD", "")
         if not cmd:
-            # Debug: show what environment variables are available
-            print("[error] missing JOB_CMD", file=sys.stderr)
-            print(f"[debug] Available env vars with JOB: {[k for k in os.environ if 'JOB' in k.upper()]}", file=sys.stderr)
+            print("[error] missing JOB_CMD - provide via --cmd, --cmd-stdin, --cmd-file, or JOB_CMD env", file=sys.stderr)
             return 2
         window_style = args.window_style or os.environ.get("PARALLEL_WINDOW_STYLE", "")
         return _launch(cmd, window_style, args.cwd)
