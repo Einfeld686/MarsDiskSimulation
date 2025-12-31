@@ -241,7 +241,8 @@ set "PYTHON_CMD_SANITY=1"
 if not defined PYTHON_EXE set "PYTHON_CMD_SANITY=0"
 if "!PYTHON_EXE:~0,1!"=="-" set "PYTHON_CMD_SANITY=0"
 if "!PYTHON_CMD:~0,1!"=="-" set "PYTHON_CMD_SANITY=0"
-if "!PYTHON_CMD:~0,1!"=="." set "PYTHON_CMD_SANITY=0"
+rem Allow relative paths like .venv\... but reject standalone "."
+if "!PYTHON_CMD!"=="." set "PYTHON_CMD_SANITY=0"
 if "%~1"=="--debug" echo.[DEBUG] checkpoint 4d: PYTHON_CMD_SANITY=!PYTHON_CMD_SANITY! set "PYTHON_CMD_SANITY=0"
 if "!PYTHON_CMD_SANITY!"=="0" (
   echo.[warn] python command invalid; resetting to python in PATH
