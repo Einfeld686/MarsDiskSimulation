@@ -145,53 +145,40 @@ def test_win_process_launch_cmdfile_cp932():
 
 
 def test_cmd_echo_redirect():
-    """Test 4: Simulate cmd.exe echo > file behavior."""
+    """Test 4: Test stdin command passing (replaces echo > file test)."""
     print("\n" + "=" * 60)
-    print("TEST 4: Simulate cmd.exe 'echo > file' behavior")
+    print("TEST 4: Stdin command passing")
     print("=" * 60)
     
-    with tempfile.TemporaryDirectory() as tmpdir:
-        cmd_file = Path(tmpdir) / "test_cmd.txt"
-        
-        # Simulate what the batch file does: echo !JOB_CMD! > file
-        # On Windows, this uses the system's default encoding
-        test_content = "set RUN_TS=test&& set BATCH_SEED=0&& echo TEST"
-        
-        if os.name == "nt":
-            # On Windows, use cmd.exe to write the file
-            write_cmd = f'echo {test_content}> "{cmd_file}"'
-            result = subprocess.run(
-                ["cmd.exe", "/c", write_cmd],
-                capture_output=True,
-                timeout=10,
-            )
-            print(f"[INFO] cmd.exe write result: rc={result.returncode}")
-        else:
-            # On non-Windows, simulate with cp932
-            print("[INFO] Simulating Windows cmd.exe write with CP932")
-            with open(cmd_file, "wb") as f:
-                f.write(test_content.encode("cp932"))
-        
-        # Read the file back with different encodings
-        print(f"[INFO] File created: {cmd_file}")
-        print(f"[INFO] File size: {cmd_file.stat().st_size} bytes")
-        
-        # Show raw bytes
-        with open(cmd_file, "rb") as f:
-            raw = f.read()
-        print(f"[INFO] Raw bytes (first 100): {raw[:100]}")
-        
-        # Try reading with different encodings
-        for enc in ["utf-8", "cp932", "latin-1"]:
-            try:
-                with open(cmd_file, "r", encoding=enc) as f:
-                    content = f.read().strip()
-                print(f"[INFO] Read with {enc}: {content!r}")
-            except UnicodeDecodeError as e:
-                print(f"[INFO] Read with {enc}: FAILED - {e}")
-        
-        print("[PASS] File encoding test completed")
-        return True
+    win_process_py = REPO_ROOT / "scripts" / "runsets" / "common" / "win_process.py"
+    
+    test_cmd = "echo STDIN_TEST_SUCCESS"
+    print(f"[INFO] Testing stdin command: {test_cmd}")
+    
+    result = subprocess.run(
+        [sys.executable, str(win_process_py), "launch", "--cmd-stdin"],
+        input=test_cmd,
+        capture_output=True,
+        text=True,
+        timeout=30,
+    )
+    
+    print(f"[INFO] Return code: {result.returncode}")
+    print(f"[INFO] stdout: {result.stdout.strip()}")
+    if result.stderr:
+        print(f"[INFO] stderr: {result.stderr.strip()}")
+    
+    if result.returncode != 0:
+        print("[FAIL] stdin command passing failed")
+        return False
+    
+    pid = result.stdout.strip()
+    if not pid.isdigit():
+        print(f"[FAIL] Expected PID, got: {pid}")
+        return False
+    
+    print(f"[PASS] Stdin command passing works, PID: {pid}")
+    return True
 
 
 def test_parallel_job_simulation():
