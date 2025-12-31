@@ -12,11 +12,31 @@ if /i "%DEBUG%"=="1" set "QUIET_MODE=0"
 if /i "%TRACE_ENABLED%"=="1" set "QUIET_MODE=0"
 set "SCRIPT_REV=run_temp_supply_sweep_cmd_trace_v2"
 
+if not defined PYTHON_ALLOW_LAUNCHER set "PYTHON_ALLOW_LAUNCHER=0"
+
 if not defined PYTHON_EXE (
   for %%P in (python3.11 python) do (
     if not defined PYTHON_EXE (
       where %%P >nul 2>&1
       if not errorlevel 1 set "PYTHON_EXE=%%P"
+    )
+  )
+  if not defined PYTHON_EXE (
+    where py >nul 2>&1
+    if not errorlevel 1 (
+      py -3.11 -c "import sys; raise SystemExit(0 if sys.version_info >= (3,11) else 1)" >nul 2>&1
+      if not errorlevel 1 (
+        set "PYTHON_EXE=py"
+        set "PYTHON_ALLOW_LAUNCHER=1"
+        if not defined PYTHON_ARGS (
+          set "PYTHON_ARGS=-3.11"
+        ) else (
+          set "PYTHON_ARGS_NEEDS_VER=1"
+          if /i "!PYTHON_ARGS:~0,2!"=="-3" set "PYTHON_ARGS_NEEDS_VER=0"
+          if /i "!PYTHON_ARGS:~0,2!"=="-2" set "PYTHON_ARGS_NEEDS_VER=0"
+          if "!PYTHON_ARGS_NEEDS_VER!"=="1" set "PYTHON_ARGS=-3.11 !PYTHON_ARGS!"
+        )
+      )
     )
   )
   if not defined PYTHON_EXE (
@@ -134,8 +154,10 @@ if "!PYTHON_HAS_SPACE!"=="1" if "!PYTHON_RAW_LOOKS_PATH!"=="1" if "!PYTHON_ARGS_
 )
 set "PYTHON_EXE_NAME="
 for %%I in ("!PYTHON_EXE!") do set "PYTHON_EXE_NAME=%%~nxI"
-if /i "!PYTHON_EXE!"=="py" set "PYTHON_EXE="
-if /i "!PYTHON_EXE_NAME!"=="py.exe" set "PYTHON_EXE="
+if /i "!PYTHON_EXE!"=="py" set "PYTHON_ALLOW_LAUNCHER=1"
+if /i "!PYTHON_EXE_NAME!"=="py.exe" set "PYTHON_ALLOW_LAUNCHER=1"
+if /i "!PYTHON_EXE!"=="py" if not "!PYTHON_ALLOW_LAUNCHER!"=="1" set "PYTHON_EXE="
+if /i "!PYTHON_EXE_NAME!"=="py.exe" if not "!PYTHON_ALLOW_LAUNCHER!"=="1" set "PYTHON_EXE="
 if not defined PYTHON_EXE (
   for %%P in (python3.11 python) do (
     if not defined PYTHON_EXE (
@@ -161,8 +183,15 @@ set "PYTHON_PYVER_ARG=0"
 if /i "!PYTHON_ARGS_FIRST:~0,2!"=="-3" set "PYTHON_PYVER_ARG=1"
 if /i "!PYTHON_ARGS_FIRST:~0,2!"=="-2" set "PYTHON_PYVER_ARG=1"
 if "!PYTHON_PYVER_ARG!"=="1" (
-  if not "!PYTHON_ARGS_FIRST!"=="" echo.[warn] PYTHON_ARGS includes py launcher version flag; dropping it (use python3.11 instead).
-  set "PYTHON_ARGS=!PYTHON_ARGS_REST!"
+  set "PYTHON_KEEP_PYVER_ARG=0"
+  if "!PYTHON_ALLOW_LAUNCHER!"=="1" (
+    if /i "!PYTHON_EXE!"=="py" set "PYTHON_KEEP_PYVER_ARG=1"
+    if /i "!PYTHON_EXE_NAME!"=="py.exe" set "PYTHON_KEEP_PYVER_ARG=1"
+  )
+  if "!PYTHON_KEEP_PYVER_ARG!"=="0" (
+    if not "!PYTHON_ARGS_FIRST!"=="" echo.[warn] PYTHON_ARGS includes py launcher version flag; dropping it (use python3.11 instead).
+    set "PYTHON_ARGS=!PYTHON_ARGS_REST!"
+  )
 )
 set "PYTHON_LOOKS_PATH=0"
 for %%I in ("!PYTHON_EXE!") do (
@@ -221,8 +250,15 @@ set "PYTHON_PYVER_ARG=0"
 if /i "!PYTHON_ARGS_FIRST:~0,2!"=="-3" set "PYTHON_PYVER_ARG=1"
 if /i "!PYTHON_ARGS_FIRST:~0,2!"=="-2" set "PYTHON_PYVER_ARG=1"
 if "!PYTHON_PYVER_ARG!"=="1" (
-  if not "!PYTHON_ARGS_FIRST!"=="" echo.[warn] PYTHON_ARGS includes py launcher version flag; dropping it (use python3.11 instead).
-  set "PYTHON_ARGS=!PYTHON_ARGS_REST!"
+  set "PYTHON_KEEP_PYVER_ARG=0"
+  if "!PYTHON_ALLOW_LAUNCHER!"=="1" (
+    if /i "!PYTHON_EXE!"=="py" set "PYTHON_KEEP_PYVER_ARG=1"
+    if /i "!PYTHON_EXE_NAME!"=="py.exe" set "PYTHON_KEEP_PYVER_ARG=1"
+  )
+  if "!PYTHON_KEEP_PYVER_ARG!"=="0" (
+    if not "!PYTHON_ARGS_FIRST!"=="" echo.[warn] PYTHON_ARGS includes py launcher version flag; dropping it (use python3.11 instead).
+    set "PYTHON_ARGS=!PYTHON_ARGS_REST!"
+  )
 )
 set "PYTHON_EXE_QUOTED=!PYTHON_EXE!"
 if not "!PYTHON_EXE: =!"=="!PYTHON_EXE!" set "PYTHON_EXE_QUOTED="!PYTHON_EXE!""
