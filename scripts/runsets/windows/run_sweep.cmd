@@ -27,6 +27,7 @@ if "%~1"=="--debug" echo.[DEBUG] checkpoint 2: before PYTHON_EXE detection
 
 
 if not defined PYTHON_EXE (
+  if "%~1"=="--debug" echo.[DEBUG] checkpoint 2a: entering PYTHON_EXE block
   for %%P in (python3.11 python) do (
     if not defined PYTHON_EXE (
       where %%P >nul 2>&1
@@ -34,6 +35,7 @@ if not defined PYTHON_EXE (
     )
   )
   if not defined PYTHON_EXE (
+    if "%~1"=="--debug" echo.[DEBUG] checkpoint 2b: trying py launcher
     where py >nul 2>&1
     if not errorlevel 1 (
       py -3.11 -c "import sys" >nul 2>&1
