@@ -14,6 +14,9 @@ set "SCRIPT_REV=run_temp_supply_sweep_cmd_trace_v2"
 
 if not defined PYTHON_ALLOW_LAUNCHER set "PYTHON_ALLOW_LAUNCHER=0"
 
+rem Debug: show if PYTHON_EXE was passed from parent
+if "%DEBUG%"=="1" echo.[DEBUG] run_temp_supply_sweep: received PYTHON_EXE=%PYTHON_EXE%
+
 if not defined PYTHON_EXE (
   for %%P in (python3.11 python) do (
     if not defined PYTHON_EXE (
