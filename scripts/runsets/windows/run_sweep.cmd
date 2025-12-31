@@ -158,7 +158,7 @@ if "!PYTHON_PYVER_ARG!"=="1" (
     if /i "!PYTHON_EXE_NAME!"=="py.exe" set "PYTHON_KEEP_PYVER_ARG=1"
   )
   if "!PYTHON_KEEP_PYVER_ARG!"=="0" (
-    if not "!PYTHON_ARGS_FIRST!"=="" echo.[warn] PYTHON_ARGS includes py launcher version flag; dropping it (use python3.11 instead).
+    if not "!PYTHON_ARGS_FIRST!"=="" echo.[warn] PYTHON_ARGS includes py launcher version flag; dropping it - use python3.11 instead.
     set "PYTHON_ARGS=!PYTHON_ARGS_REST!"
   )
 )
