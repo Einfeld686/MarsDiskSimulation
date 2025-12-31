@@ -677,12 +677,12 @@ if defined SWEEP_TAG (
 set "BATCH_DIR=!BATCH_ROOT!\\!SWEEP_TAG!\\!RUN_TS!__!GIT_SHA!__seed!BATCH_SEED!"
 if not exist "!BATCH_DIR!" mkdir "!BATCH_DIR!" >nul 2>&1
 if not exist "!BATCH_DIR!" (
-  echo.[error] failed to create output dir: "%BATCH_DIR%"
+  echo.[error] failed to create output dir: "!BATCH_DIR!"
   call :popd_safe
   exit /b 1
 )
 
-set "COOL_SEARCH_DISPLAY=%COOL_SEARCH_YEARS%"
+set "COOL_SEARCH_DISPLAY=!COOL_SEARCH_YEARS!"
 if not defined COOL_SEARCH_DISPLAY set "COOL_SEARCH_DISPLAY=none"
 
 set "COOL_STATUS="
@@ -795,16 +795,16 @@ if defined EXTRA_OVERRIDES_FILE (
   )
 )
 
-call :trace_detail "base_overrides_file=%BASE_OVERRIDES_FILE%"
+call :trace_detail "base_overrides_file=!BASE_OVERRIDES_FILE!"
 call :trace_detail "base overrides: python build"
-%PYTHON_CMD% scripts\\runsets\\common\\write_base_overrides.py --out "%BASE_OVERRIDES_FILE%"
+%PYTHON_CMD% scripts\\runsets\\common\\write_base_overrides.py --out "!BASE_OVERRIDES_FILE!"
 if errorlevel 1 (
   echo.[error] failed to build base overrides
   call :popd_safe
   exit /b 1
 )
-if not exist "%BASE_OVERRIDES_FILE%" (
-  echo.[error] base overrides file missing: "%BASE_OVERRIDES_FILE%"
+if not exist "!BASE_OVERRIDES_FILE!" (
+  echo.[error] base overrides file missing: "!BASE_OVERRIDES_FILE!"
   call :popd_safe
   exit /b 1
 )
@@ -897,8 +897,8 @@ for /f "usebackq tokens=1-3 delims= " %%A in ("%SWEEP_LIST_FILE%") do (
     for /f %%S in ('%PYTHON_CMD% scripts\\runsets\\common\\next_seed.py') do set "SEED=%%S"
   )
   set "TITLE=T!T!_eps!EPS_TITLE!_tau!TAU_TITLE!"
-  set "OUTDIR=%BATCH_DIR%\!TITLE!"
-  %LOG_RUN% T=!T! eps=!EPS! tau=!TAU! -^> !OUTDIR! (batch=%BATCH_SEED%, seed=!SEED!)
+  set "OUTDIR=!BATCH_DIR!\!TITLE!"
+  %LOG_RUN% T=!T! eps=!EPS! tau=!TAU! -^> !OUTDIR! (batch=!BATCH_SEED!, seed=!SEED!)
       rem Show supply rate info (skip Python calc to avoid cmd.exe delayed expansion issues)
       %LOG_INFO% epsilon_mix=!EPS!; mu_orbit10pct=%SUPPLY_MU_ORBIT10PCT% orbit_fraction_at_mu1=%SUPPLY_ORBIT_FRACTION%
       %LOG_INFO% shielding: mode=%SHIELDING_MODE% fixed_tau1_sigma=%SHIELDING_SIGMA% auto_max_margin=%SHIELDING_AUTO_MAX_MARGIN%
@@ -907,42 +907,42 @@ for /f "usebackq tokens=1-3 delims= " %%A in ("%SWEEP_LIST_FILE%") do (
       if not exist "!OUTDIR!\series" mkdir "!OUTDIR!\series"
       if not exist "!OUTDIR!\checks" mkdir "!OUTDIR!\checks"
 
-      > "%CASE_OVERRIDES_FILE%" echo io.outdir=!OUTDIR!
-      >>"%CASE_OVERRIDES_FILE%" echo dynamics.rng_seed=!SEED!
-      >>"%CASE_OVERRIDES_FILE%" echo radiation.TM_K=!T!
-      >>"%CASE_OVERRIDES_FILE%" echo supply.mixing.epsilon_mix=!EPS!
-      >>"%CASE_OVERRIDES_FILE%" echo optical_depth.tau0_target=!TAU!
-      if /i "%COOL_MODE%" NEQ "hyodo" (
-        >>"%CASE_OVERRIDES_FILE%" echo radiation.mars_temperature_driver.table.path=!T_TABLE!
+      > "!CASE_OVERRIDES_FILE!" echo io.outdir=!OUTDIR!
+      >>"!CASE_OVERRIDES_FILE!" echo dynamics.rng_seed=!SEED!
+      >>"!CASE_OVERRIDES_FILE!" echo radiation.TM_K=!T!
+      >>"!CASE_OVERRIDES_FILE!" echo supply.mixing.epsilon_mix=!EPS!
+      >>"!CASE_OVERRIDES_FILE!" echo optical_depth.tau0_target=!TAU!
+      if /i "!COOL_MODE!" NEQ "hyodo" (
+        >>"!CASE_OVERRIDES_FILE!" echo radiation.mars_temperature_driver.table.path=!T_TABLE!
       )
       if defined COOL_TO_K (
-        >>"%CASE_OVERRIDES_FILE%" echo numerics.t_end_until_temperature_K=%COOL_TO_K%
-        >>"%CASE_OVERRIDES_FILE%" echo numerics.t_end_temperature_margin_years=%COOL_MARGIN_YEARS%
+        >>"!CASE_OVERRIDES_FILE!" echo numerics.t_end_until_temperature_K=!COOL_TO_K!
+        >>"!CASE_OVERRIDES_FILE!" echo numerics.t_end_temperature_margin_years=!COOL_MARGIN_YEARS!
         if defined COOL_SEARCH_YEARS (
-          >>"%CASE_OVERRIDES_FILE%" echo numerics.t_end_temperature_search_years=%COOL_SEARCH_YEARS%
+          >>"!CASE_OVERRIDES_FILE!" echo numerics.t_end_temperature_search_years=!COOL_SEARCH_YEARS!
         )
       )
-      if "%SUBSTEP_FAST_BLOWOUT%" NEQ "0" (
-        >>"%CASE_OVERRIDES_FILE%" echo io.substep_fast_blowout=true
+      if "!SUBSTEP_FAST_BLOWOUT!" NEQ "0" (
+        >>"!CASE_OVERRIDES_FILE!" echo io.substep_fast_blowout=true
         if defined SUBSTEP_MAX_RATIO (
-          >>"%CASE_OVERRIDES_FILE%" echo io.substep_max_ratio=%SUBSTEP_MAX_RATIO%
+          >>"!CASE_OVERRIDES_FILE!" echo io.substep_max_ratio=!SUBSTEP_MAX_RATIO!
         )
       )
       if defined STREAM_MEM_GB (
-        >>"%CASE_OVERRIDES_FILE%" echo io.streaming.memory_limit_gb=%STREAM_MEM_GB%
+        >>"!CASE_OVERRIDES_FILE!" echo io.streaming.memory_limit_gb=!STREAM_MEM_GB!
       )
 
       rem Override priority: base defaults ^< overrides file ^< per-case overrides.
-      if "%EXTRA_OVERRIDES_EXISTS%"=="1" (
-        %PYTHON_CMD% %OVERRIDE_BUILDER% --file "%BASE_OVERRIDES_FILE%" --file "%EXTRA_OVERRIDES_FILE%" --file "%CASE_OVERRIDES_FILE%" > "%MERGED_OVERRIDES_FILE%"
+      if "!EXTRA_OVERRIDES_EXISTS!"=="1" (
+        !PYTHON_CMD! !OVERRIDE_BUILDER! --file "!BASE_OVERRIDES_FILE!" --file "!EXTRA_OVERRIDES_FILE!" --file "!CASE_OVERRIDES_FILE!" > "!MERGED_OVERRIDES_FILE!"
       ) else (
-        %PYTHON_CMD% %OVERRIDE_BUILDER% --file "%BASE_OVERRIDES_FILE%" --file "%CASE_OVERRIDES_FILE%" > "%MERGED_OVERRIDES_FILE%"
+        !PYTHON_CMD! !OVERRIDE_BUILDER! --file "!BASE_OVERRIDES_FILE!" --file "!CASE_OVERRIDES_FILE!" > "!MERGED_OVERRIDES_FILE!"
       )
 
       rem Assemble the run command on a single line (avoid carets in optional blocks).
       rem Use overrides file to keep cmd line length manageable.
-      set RUN_CMD=%PYTHON_CMD% -m marsdisk.run --config "%BASE_CONFIG%" --quiet --overrides-file "%MERGED_OVERRIDES_FILE%"
-      if "%ENABLE_PROGRESS%"=="1" set RUN_CMD=!RUN_CMD! --progress
+      set RUN_CMD=!PYTHON_CMD! -m marsdisk.run --config "!BASE_CONFIG!" --quiet --overrides-file "!MERGED_OVERRIDES_FILE!"
+      if "!ENABLE_PROGRESS!"=="1" set RUN_CMD=!RUN_CMD! --progress
 
       !RUN_CMD!
 
@@ -1032,15 +1032,15 @@ if not defined SWEEP_LIST_FILE (
   exit /b 1
 )
 if not exist "%SWEEP_LIST_FILE%" (
-  echo.[error] sweep list missing: "%SWEEP_LIST_FILE%"
+  echo.[error] sweep list missing: "!SWEEP_LIST_FILE!"
   exit /b 1
 )
-for /f "usebackq tokens=1-3 delims= " %%A in ("%SWEEP_LIST_FILE%") do (
+for /f "usebackq tokens=1-3 delims= " %%A in ("!SWEEP_LIST_FILE!") do (
   call :launch_job %%A %%B %%C
 )
 
 call :wait_all
-echo.[done] Parallel sweep completed [batch=%BATCH_SEED%, dir=%BATCH_DIR%].
+echo.[done] Parallel sweep completed [batch=!BATCH_SEED!, dir=!BATCH_DIR!].
 exit /b 0
 
 :launch_job

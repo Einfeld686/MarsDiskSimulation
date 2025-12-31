@@ -13,8 +13,9 @@ for %%I in ("%~dp0\..\..") do set "REPO_ROOT=%%~fI"
 echo.[info] REPO_ROOT=!REPO_ROOT!
 
 rem Setup required environment variables for --run-one
+rem These must be set BEFORE calling the child script
 set "RUN_TS=20251231_test"
-set "BATCH_SEED=0"
+set "BATCH_SEED=12345"
 set "RUN_ONE_T=5000"
 set "RUN_ONE_EPS=1.0"
 set "RUN_ONE_TAU=1.0"
@@ -23,6 +24,7 @@ set "AUTO_JOBS=0"
 set "PARALLEL_JOBS=1"
 set "SKIP_PIP=1"
 set "DEBUG=1"
+set "SWEEP_PARALLEL=1"
 
 echo.
 echo.[info] Environment variables set:
@@ -36,6 +38,7 @@ echo.  AUTO_JOBS=!AUTO_JOBS!
 echo.  PARALLEL_JOBS=!PARALLEL_JOBS!
 echo.  SKIP_PIP=!SKIP_PIP!
 echo.  DEBUG=!DEBUG!
+echo.  SWEEP_PARALLEL=!SWEEP_PARALLEL!
 echo.
 
 set "SCRIPT=!REPO_ROOT!\scripts\research\run_temp_supply_sweep.cmd"
