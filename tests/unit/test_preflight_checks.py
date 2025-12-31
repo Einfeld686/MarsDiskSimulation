@@ -162,6 +162,42 @@ def test_cmd_v_on_triggers_cmd_unsafe_error(tmp_path: Path, monkeypatch, capsys)
     assert "[error]" in out
 
 
+def test_validate_python_exe_tokens_rejects_dash_arg(tmp_path: Path) -> None:
+    module = _load_module()
+    errors: list[object] = []
+    warnings: list[object] = []
+
+    ok = module._validate_python_exe_tokens(
+        "python_exe",
+        "py",
+        ["-"],
+        errors,
+        warnings,
+        warn_only=False,
+    )
+
+    assert not ok
+    assert any(err.rule == "tool.python_exe_arg_dash" for err in errors)
+
+
+def test_validate_python_exe_tokens_rejects_version_arg_non_py(tmp_path: Path) -> None:
+    module = _load_module()
+    errors: list[object] = []
+    warnings: list[object] = []
+
+    ok = module._validate_python_exe_tokens(
+        "python_exe",
+        "python",
+        ["-3.11"],
+        errors,
+        warnings,
+        warn_only=False,
+    )
+
+    assert not ok
+    assert any(err.rule == "tool.python_exe_version_arg_non_py" for err in errors)
+
+
 def test_allowlist_missing_rules_warns(tmp_path: Path) -> None:
     module = _load_module()
     allowlist = tmp_path / "allowlist.txt"
@@ -568,3 +604,36 @@ def test_cmd_line_length_with_caret_continuation_warns(tmp_path: Path) -> None:
     _errors, warnings, _infos = _scan_cmd_text(module, tmp_path, text)
 
     assert any("cmd line length" in warning.message for warning in warnings)
+
+
+def test_cmd_dash_option_warning_and_error(tmp_path: Path) -> None:
+    module = _load_module()
+    _errors, warnings, _infos = _scan_cmd_text(module, tmp_path, "where -foo\n")
+
+    assert any(warn.rule == "cmd.option.dash" for warn in warnings)
+
+    errors, _warnings, _infos = _scan_cmd_text(
+        module,
+        tmp_path,
+        "findstr -bar\n",
+        profile="ci",
+    )
+
+    assert any(err.rule == "cmd.option.dash" for err in errors)
+
+
+def test_cmd_invocation_ignores_cmd_flags(tmp_path: Path) -> None:
+    module = _load_module()
+    text = (
+        '"%PYTHON_EXE%" preflight_checks.py --cmd "scripts\\\\foo.cmd" --cmd-root scripts\n'
+    )
+    _errors, warnings, _infos = _scan_cmd_text(module, tmp_path, text)
+
+    assert not any(warn.rule == "cmd.interactive.cmd" for warn in warnings)
+
+
+def test_cmd_invocation_detects_cmd_without_c(tmp_path: Path) -> None:
+    module = _load_module()
+    _errors, warnings, _infos = _scan_cmd_text(module, tmp_path, "cmd /k echo ok\n")
+
+    assert any(warn.rule == "cmd.interactive.cmd" for warn in warnings)

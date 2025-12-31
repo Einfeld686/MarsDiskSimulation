@@ -71,6 +71,31 @@ if not defined PYTHON_EXE (
   echo.[error] PYTHON_EXE is empty after normalization
   exit /b 1
 )
+set "PYTHON_ARGS_FIRST="
+set "PYTHON_ARGS_REST="
+if not "!PYTHON_ARGS!"=="" (
+  for /f "tokens=1* delims= " %%A in ("!PYTHON_ARGS!") do (
+    set "PYTHON_ARGS_FIRST=%%A"
+    set "PYTHON_ARGS_REST=%%B"
+  )
+)
+set "PYTHON_EXE_NAME="
+for %%I in ("!PYTHON_EXE!") do set "PYTHON_EXE_NAME=%%~nxI"
+set "PYTHON_IS_PY=0"
+if /i "!PYTHON_EXE!"=="py" set "PYTHON_IS_PY=1"
+if /i "!PYTHON_EXE_NAME!"=="py.exe" set "PYTHON_IS_PY=1"
+set "PYTHON_PYVER_ARG=0"
+if /i "!PYTHON_ARGS_FIRST:~0,2!"=="-3" set "PYTHON_PYVER_ARG=1"
+if /i "!PYTHON_ARGS_FIRST:~0,2!"=="-2" set "PYTHON_PYVER_ARG=1"
+if "!PYTHON_PYVER_ARG!"=="1" if "!PYTHON_IS_PY!"=="0" (
+  where py >nul 2>&1
+  if not errorlevel 1 (
+    set "PYTHON_EXE=py"
+  ) else (
+    if not "!PYTHON_ARGS_FIRST!"=="" echo.[warn] PYTHON_ARGS requested py launcher but py not found; dropping version flag.
+    set "PYTHON_ARGS=!PYTHON_ARGS_REST!"
+  )
+)
 set "PYTHON_LOOKS_PATH=0"
 for %%I in ("!PYTHON_EXE!") do (
   if not "%%~pI"=="" set "PYTHON_LOOKS_PATH=1"
@@ -1083,9 +1108,9 @@ if "%DEBUG%"=="1" call :debug_log "preflight: python=!PYTHON_CMD!"
 
 
 if defined CI (
-  !PYTHON_CMD! "%REPO_ROOT%\\scripts\\runsets\\windows\\preflight_checks.py" --repo-root "%REPO_ROOT%" --config "%CONFIG_PATH%" --overrides "%OVERRIDES_PATH%" --out-root "%OUT_ROOT%" --python-exe "!PYTHON_EXE!" --require-git --cmd "%REPO_ROOT%\\scripts\\research\\run_temp_supply_sweep.cmd" --cmd-root "%REPO_ROOT%\\scripts\\runsets\\windows" --cmd-exclude "%REPO_ROOT%\\scripts\\runsets\\windows\\legacy" --cmd-allowlist "%REPO_ROOT%\\scripts\\runsets\\windows\\preflight_allowlist.txt" --profile ci --format json %PREFLIGHT_STRICT_FLAG%
+  !PYTHON_CMD! "%REPO_ROOT%\\scripts\\runsets\\windows\\preflight_checks.py" --repo-root "%REPO_ROOT%" --config "%CONFIG_PATH%" --overrides "%OVERRIDES_PATH%" --out-root "%OUT_ROOT%" --python-exe "!PYTHON_EXE!" --require-git --cmd "%REPO_ROOT%\\scripts\\research\\run_temp_supply_sweep.cmd" --cmd-root "%REPO_ROOT%\\scripts\\runsets\\windows" --cmd-exclude "%REPO_ROOT%\\scripts\\runsets\\windows\\legacy" --cmd-allowlist "%REPO_ROOT%\\scripts\\runsets\\windows\\preflight_allowlist.txt" --allow-non-ascii --profile ci --format json %PREFLIGHT_STRICT_FLAG%
 ) else (
-  !PYTHON_CMD! "%REPO_ROOT%\\scripts\\runsets\\windows\\preflight_checks.py" --repo-root "%REPO_ROOT%" --config "%CONFIG_PATH%" --overrides "%OVERRIDES_PATH%" --out-root "%OUT_ROOT%" --python-exe "!PYTHON_EXE!" --require-git --cmd "%REPO_ROOT%\\scripts\\research\\run_temp_supply_sweep.cmd" --cmd-root "%REPO_ROOT%\\scripts\\runsets\\windows" --cmd-exclude "%REPO_ROOT%\\scripts\\runsets\\windows\\legacy" %PREFLIGHT_STRICT_FLAG%
+  !PYTHON_CMD! "%REPO_ROOT%\\scripts\\runsets\\windows\\preflight_checks.py" --repo-root "%REPO_ROOT%" --config "%CONFIG_PATH%" --overrides "%OVERRIDES_PATH%" --out-root "%OUT_ROOT%" --python-exe "!PYTHON_EXE!" --require-git --cmd "%REPO_ROOT%\\scripts\\research\\run_temp_supply_sweep.cmd" --cmd-root "%REPO_ROOT%\\scripts\\runsets\\windows" --cmd-exclude "%REPO_ROOT%\\scripts\\runsets\\windows\\legacy" --allow-non-ascii %PREFLIGHT_STRICT_FLAG%
 )
 
 set "PREFLIGHT_RC=!errorlevel!"

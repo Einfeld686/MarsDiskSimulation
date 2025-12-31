@@ -61,10 +61,6 @@ CMD_C_QUOTED_RE = re.compile(r'\bcmd(?:\.exe)?\b\s+/c\s+"([^"]+)"', re.I)
 CMD_SWITCH_C_RE = re.compile(r"(?:^|\s)/c(?:\s|$)", re.I)
 CMD_SWITCH_K_RE = re.compile(r"(?:^|\s)/k(?:\s|$)", re.I)
 CMD_SWITCH_V_ON_RE = re.compile(r"(?:^|\s)/v\s*:\s*on(?:\s|$)", re.I)
-CMD_TOKEN_RE = re.compile(
-    r'(?i)(?P<token>"%comspec%"|%comspec%|!comspec!|"[^"]*\\cmd(?:\.exe)?"|'
-    r'[A-Za-z]:\\[^"\s&|]*\\cmd(?:\.exe)?|\\\\[^"\s&|]*\\cmd(?:\.exe)?|\bcmd(?:\.exe)?\b)'
-)
 SET_INTERACTIVE_RE = re.compile(r"\bset\s+/p\b", re.I)
 EXIT_CMD_RE = re.compile(r"^\s*@?exit(?:\s+|$)", re.I)
 EXIT_B_RE = re.compile(r"\bexit\s+/b\b", re.I)
@@ -419,7 +415,8 @@ def _validate_python_exe_tokens(
     if exe_clean == "-" or exe_clean.startswith("-"):
         report("tool.python_exe_invalid", f"{label} starts with '-': {exe_token}")
     exe_name = _python_exe_basename(exe_clean)
-    exe_is_py = exe_name in {"py", "py.exe"}
+    exe_unknown = any(ch in exe_clean for ch in "%!$")
+    exe_is_py = None if exe_unknown else exe_name in {"py", "py.exe"}
     for raw_arg in args:
         arg = _normalize_exe_token(raw_arg)
         if not arg:
@@ -428,6 +425,8 @@ def _validate_python_exe_tokens(
             report("tool.python_exe_arg_dash", f"{label} has standalone '-' argument")
             continue
         if arg.startswith("-"):
+            if exe_is_py is None:
+                continue
             if exe_is_py:
                 if arg in PY_LAUNCHER_ALLOWED_ARGS or PY_LAUNCHER_VERSION_RE.match(arg):
                     continue
@@ -694,13 +693,14 @@ def _check_temp_dir(
     errors: list[Issue],
     warnings: list[Issue],
     cmd_unsafe_error: bool,
+    allow_non_ascii: bool = False,
 ) -> None:
     if not temp_dir:
         _error(errors, "env.temp_missing", "TEMP/TMP is not set")
         return
     temp_path = Path(temp_dir)
     _cmd_unsafe_issue("TEMP/TMP", temp_dir, errors, warnings, cmd_unsafe_error, False)
-    if _contains_non_ascii(temp_dir):
+    if _contains_non_ascii(temp_dir) and not allow_non_ascii:
         _warn(
             warnings,
             "env.temp_non_ascii",
@@ -719,13 +719,14 @@ def _check_env_paths(
     errors: list[Issue],
     warnings: list[Issue],
     cmd_unsafe_error: bool,
+    allow_non_ascii: bool = False,
 ) -> None:
     for key in PATH_ENV_VARS:
         value = os.environ.get(key, "")
         if not value:
             continue
         _cmd_unsafe_issue(key, value, errors, warnings, cmd_unsafe_error, False)
-        if _contains_non_ascii(value):
+        if _contains_non_ascii(value) and not allow_non_ascii:
             _warn(warnings, "env.var_non_ascii", f"{key} contains non-ASCII characters: {value}")
         if key == "COMSPEC":
             lower_value = value.lower()
@@ -804,6 +805,7 @@ def _check_path_value(
     warn_unc: bool = True,
     meta_as_error: bool = False,
     skip_rules: set[str] | None = None,
+    allow_non_ascii: bool = False,
 ) -> None:
     if not value:
         return
@@ -818,7 +820,7 @@ def _check_path_value(
         meta_as_error,
         skip_rules,
     )
-    if _contains_non_ascii(value):
+    if _contains_non_ascii(value) and not allow_non_ascii:
         if not skip_rules or ("*" not in skip_rules and "path.value_non_ascii" not in skip_rules):
             _warn(
                 warnings,
@@ -1189,23 +1191,22 @@ def _split_cmd_segments(line: str) -> list[str]:
     return segments
 
 
-def _cmd_token_is_command(segment: str, match_start: int) -> bool:
-    prefix = segment[:match_start]
-    prefix_stripped = prefix.rstrip()
-    if prefix_stripped.endswith("="):
+def _is_cmd_token(token: str) -> bool:
+    if not token:
         return False
-    if not prefix_stripped:
+    lower = token.lower()
+    if lower in {"cmd", "cmd.exe", "%comspec%", "!comspec!"}:
         return True
-    last_token = prefix_stripped.split()[-1].lstrip("@")
-    if last_token.lower() in {"echo", "set", "setx"}:
-        return False
-    return True
+    base = PureWindowsPath(token).name.lower()
+    return base in {"cmd", "cmd.exe"}
 
 
 def _iter_cmd_invocations(line: str) -> list[tuple[bool, bool, bool]]:
     invocations: list[tuple[bool, bool, bool]] = []
     for segment in _split_cmd_segments(line):
         segment_body = segment.strip()
+        if not segment_body:
+            continue
         if segment_body.startswith("@"):
             segment_body = segment_body[1:].lstrip()
         lower = segment_body.lower()
@@ -1213,12 +1214,29 @@ def _iter_cmd_invocations(line: str) -> list[tuple[bool, bool, bool]]:
             continue
         if lower.startswith("::"):
             continue
-        if lower.startswith("echo") and (len(lower) == 4 or lower[4].isspace()):
+        tokens = _split_cmdline_tokens(segment_body)
+        if not tokens:
             continue
-        for match in CMD_TOKEN_RE.finditer(segment_body):
-            if not _cmd_token_is_command(segment_body, match.start()):
+        tokens[0] = tokens[0].lstrip("@")
+        first_token = _normalize_exe_token(tokens[0]).lower()
+        if first_token.startswith("echo") or first_token in {"set", "setx"}:
+            continue
+        for idx, token in enumerate(tokens):
+            token_clean = _normalize_exe_token(token)
+            if not token_clean:
                 continue
-            tail = segment_body[match.end():]
+            if not _is_cmd_token(token_clean):
+                continue
+            if idx > 0:
+                prev = _normalize_exe_token(tokens[idx - 1]).lower()
+                prev2 = ""
+                if idx > 1:
+                    prev2 = _normalize_exe_token(tokens[idx - 2]).lower()
+                if prev not in {"call", "start"} and not (
+                    prev2 == "start" and prev in {"", '""'}
+                ):
+                    continue
+            tail = " ".join(tokens[idx + 1 :])
             invocations.append(
                 (
                     bool(CMD_SWITCH_C_RE.search(tail)),
@@ -1781,6 +1799,7 @@ def _scan_repo_root(
     warnings: list[Issue],
     cmd_unsafe_error: bool,
     exclude_dirs: set[str],
+    allow_non_ascii: bool = False,
 ) -> tuple[str, int]:
     max_rel_path = ""
     max_rel_len = 0
@@ -1807,7 +1826,7 @@ def _scan_repo_root(
                 cmd_unsafe_error,
                 False,
             )
-            if _contains_non_ascii(name):
+            if _contains_non_ascii(name) and not allow_non_ascii:
                 _warn(warnings, "repo.name_non_ascii", f"non-ASCII name: {rel_display}")
             rel_key = rel_display.casefold()
             if rel_key in seen_casefold and seen_casefold[rel_key] != rel_display:
@@ -1898,6 +1917,11 @@ def main() -> int:
         "--windows-root",
         default="",
         help="Expected Windows path for repo_root when simulating.",
+    )
+    ap.add_argument(
+        "--allow-non-ascii",
+        action="store_true",
+        help="Suppress non-ASCII path warnings.",
     )
     ap.add_argument(
         "--cmd",
@@ -2025,6 +2049,7 @@ def main() -> int:
             cmd_unsafe_error,
             False,
             warn_unc=False,
+            allow_non_ascii=args.allow_non_ascii,
         )
         _check_shared_path(label, str(path), warnings)
 
@@ -2044,6 +2069,7 @@ def main() -> int:
             cmd_unsafe_error,
             False,
             warn_unc=False,
+            allow_non_ascii=args.allow_non_ascii,
         )
         _check_shared_path("out_root", args.out_root, warnings)
         if not _is_windows_abs(args.out_root):
@@ -2058,6 +2084,7 @@ def main() -> int:
             cmd_unsafe_error,
             False,
             warn_unc=False,
+            allow_non_ascii=args.allow_non_ascii,
         )
         _check_shared_path("windows_root", args.windows_root, warnings)
         if not _is_windows_abs(args.windows_root):
@@ -2124,7 +2151,7 @@ def main() -> int:
                 cmd_unsafe_error,
                 False,
             )
-            if _contains_non_ascii(value):
+            if _contains_non_ascii(value) and not args.allow_non_ascii:
                 _warn(
                     warnings,
                     "overrides.value_non_ascii",
@@ -2141,6 +2168,7 @@ def main() -> int:
                 cmd_unsafe_error,
                 False,
                 warn_unc=False,
+                allow_non_ascii=args.allow_non_ascii,
             )
             _check_shared_path("io.archive.dir", archive_dir, warnings)
             if not _is_windows_abs(archive_dir):
@@ -2197,8 +2225,8 @@ def main() -> int:
             )
     if not skip_env:
         temp_dir = os.environ.get("TEMP") or os.environ.get("TMP")
-        _check_temp_dir(temp_dir, errors, warnings, cmd_unsafe_error)
-        _check_env_paths(errors, warnings, cmd_unsafe_error)
+        _check_temp_dir(temp_dir, errors, warnings, cmd_unsafe_error, args.allow_non_ascii)
+        _check_env_paths(errors, warnings, cmd_unsafe_error, args.allow_non_ascii)
         if is_windows_host:
             _check_path_env_length(warnings)
             _check_pathext(errors, warnings, args.profile)
@@ -2232,6 +2260,7 @@ def main() -> int:
             warnings,
             cmd_unsafe_error,
             exclude_dirs,
+            args.allow_non_ascii,
         )
 
     if max_rel_path:

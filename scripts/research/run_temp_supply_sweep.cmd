@@ -130,6 +130,31 @@ if not defined PYTHON_EXE (
   call :popd_safe
   exit /b 1
 )
+set "PYTHON_ARGS_FIRST="
+set "PYTHON_ARGS_REST="
+if not "!PYTHON_ARGS!"=="" (
+  for /f "tokens=1* delims= " %%A in ("!PYTHON_ARGS!") do (
+    set "PYTHON_ARGS_FIRST=%%A"
+    set "PYTHON_ARGS_REST=%%B"
+  )
+)
+set "PYTHON_EXE_NAME="
+for %%I in ("!PYTHON_EXE!") do set "PYTHON_EXE_NAME=%%~nxI"
+set "PYTHON_IS_PY=0"
+if /i "!PYTHON_EXE!"=="py" set "PYTHON_IS_PY=1"
+if /i "!PYTHON_EXE_NAME!"=="py.exe" set "PYTHON_IS_PY=1"
+set "PYTHON_PYVER_ARG=0"
+if /i "!PYTHON_ARGS_FIRST:~0,2!"=="-3" set "PYTHON_PYVER_ARG=1"
+if /i "!PYTHON_ARGS_FIRST:~0,2!"=="-2" set "PYTHON_PYVER_ARG=1"
+if "!PYTHON_PYVER_ARG!"=="1" if "!PYTHON_IS_PY!"=="0" (
+  where py >nul 2>&1
+  if not errorlevel 1 (
+    set "PYTHON_EXE=py"
+  ) else (
+    if not "!PYTHON_ARGS_FIRST!"=="" echo.[warn] PYTHON_ARGS requested py launcher but py not found; dropping version flag.
+    set "PYTHON_ARGS=!PYTHON_ARGS_REST!"
+  )
+)
 set "PYTHON_LOOKS_PATH=0"
 for %%I in ("!PYTHON_EXE!") do (
   if not "%%~pI"=="" set "PYTHON_LOOKS_PATH=1"
@@ -179,6 +204,30 @@ set "PYTHON_EXE_QUOTED=!PYTHON_EXE!"
 if not "!PYTHON_EXE: =!"=="!PYTHON_EXE!" set "PYTHON_EXE_QUOTED="!PYTHON_EXE!""
 set "PYTHON_CMD=!PYTHON_EXE_QUOTED!"
 if not "!PYTHON_ARGS!"=="" set "PYTHON_CMD=!PYTHON_EXE_QUOTED! !PYTHON_ARGS!"
+set "PYTHON_VERSION_OK=0"
+!PYTHON_CMD! -c "import sys; raise SystemExit(0 if sys.version_info >= (3,11) else 1)" >nul 2>&1
+if not errorlevel 1 set "PYTHON_VERSION_OK=1"
+
+if "!PYTHON_VERSION_OK!"=="0" (
+  where py >nul 2>&1
+  if not errorlevel 1 (
+    py -3.11 -c "import sys; raise SystemExit(0 if sys.version_info >= (3,11) else 1)" >nul 2>&1
+    if not errorlevel 1 (
+      set "PYTHON_EXE=py"
+      set "PYTHON_ARGS=-3.11"
+      set "PYTHON_EXE_QUOTED=py"
+      set "PYTHON_CMD=py -3.11"
+      set "PYTHON_VERSION_OK=1"
+    )
+  )
+)
+
+if "!PYTHON_VERSION_OK!"=="0" (
+  echo.[error] python 3.11+ is required. Install Python 3.11 or set PYTHON_EXE.
+  echo.[error] Example: set PYTHON_EXE=py ^& set PYTHON_ARGS=-3.11
+  call :popd_safe
+  exit /b 1
+)
 set "PYTHON_BOOT_CMD=%PYTHON_CMD%"
 
 rem Optional dry-run for syntax tests (skip all heavy work)
