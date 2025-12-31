@@ -312,9 +312,14 @@ if "!PYTHON_VERSION_OK!"=="0" (
       for /f "delims=" %%P in ('py -3.11 -c "import sys; print(sys.executable)"') do set "PYTHON_311_FOUND=%%P"
     )
   )
+  rem Remove trailing spaces from PYTHON_311_FOUND
   if defined PYTHON_311_FOUND (
-    if "%~1"=="--debug" echo.[DEBUG] checkpoint 4h: Found Python 3.11 at !PYTHON_311_FOUND!
-    set "PYTHON_CMD_ABS="!PYTHON_311_FOUND!""
+    for /f "tokens=* delims= " %%A in ("!PYTHON_311_FOUND!") do set "PYTHON_311_FOUND=%%A"
+  )
+  if defined PYTHON_311_FOUND (
+    if "%~1"=="--debug" echo.[DEBUG] checkpoint 4h: Found Python 3.11 at [!PYTHON_311_FOUND!]
+    set "PYTHON_EXE_ABS=!PYTHON_311_FOUND!"
+    set "PYTHON_CMD_ABS="!PYTHON_EXE_ABS!""
     !PYTHON_CMD_ABS! -c "import sys; raise SystemExit(0 if sys.version_info >= (3,11) else 1)" >nul 2>&1
     if not errorlevel 1 set "PYTHON_VERSION_OK=1"
     if "%~1"=="--debug" echo.[DEBUG] checkpoint 4i: PYTHON_VERSION_OK after fallback=!PYTHON_VERSION_OK!
@@ -332,9 +337,12 @@ if "!PYTHON_VERSION_OK!"=="0" (
 )
 rem Use absolute path from now on - remove quotes for PYTHON_EXE (will be quoted when needed)
 set "PYTHON_CMD=!PYTHON_CMD_ABS!"
+rem Strip quotes from PYTHON_CMD_ABS to get clean path
 set "PYTHON_EXE=!PYTHON_CMD_ABS:"=!"
+rem Remove any trailing spaces
+call :trim_var PYTHON_EXE
 set "PYTHON_CMD="!PYTHON_EXE!""
-if "%~1"=="--debug" echo.[DEBUG] checkpoint 5: Python version OK, PYTHON_EXE=!PYTHON_EXE!
+if "%~1"=="--debug" echo.[DEBUG] checkpoint 5: Python version OK, PYTHON_EXE=[!PYTHON_EXE!]
 for %%I in ("%~f0") do set "SCRIPT_DIR=%%~dpI"
 
 
@@ -2016,5 +2024,21 @@ if defined MARSDISK_POPD_ACTIVE (
   set "MARSDISK_POPD_ACTIVE="
 )
 exit /b %MARSDISK_POPD_ERRORLEVEL%
+
+:trim_var
+rem Trims leading and trailing spaces from the variable named %1
+setlocal EnableDelayedExpansion
+set "TRIM_NAME=%~1"
+set "TRIM_VAL=!%TRIM_NAME%!"
+rem Remove trailing spaces using for loop
+for /f "tokens=* delims= " %%A in ("!TRIM_VAL!") do set "TRIM_VAL=%%A"
+rem Remove trailing spaces (reverse approach)
+:trim_loop
+if "!TRIM_VAL:~-1!"==" " (
+  set "TRIM_VAL=!TRIM_VAL:~0,-1!"
+  goto :trim_loop
+)
+endlocal & set "%TRIM_NAME%=%TRIM_VAL%"
+exit /b 0
 
 endlocal
