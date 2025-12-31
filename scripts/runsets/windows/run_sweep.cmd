@@ -78,6 +78,10 @@ set "PYTHON_EXE_NAME="
 for %%I in ("!PYTHON_EXE!") do set "PYTHON_EXE_NAME=%%~nxI"
 if /i "!PYTHON_EXE!"=="py" set "PYTHON_EXE="
 if /i "!PYTHON_EXE_NAME!"=="py.exe" set "PYTHON_EXE="
+if /i "!PYTHON_EXE!"=="." (
+  echo.[warn] PYTHON_EXE cannot be '.'; ignoring and falling back to PATH.
+  set "PYTHON_EXE="
+)
 if not defined PYTHON_EXE (
   for %%P in (python3.11 python) do (
     if not defined PYTHON_EXE (
@@ -171,6 +175,7 @@ set "PYTHON_CMD_SANITY=1"
 if not defined PYTHON_EXE set "PYTHON_CMD_SANITY=0"
 if "!PYTHON_EXE:~0,1!"=="-" set "PYTHON_CMD_SANITY=0"
 if "!PYTHON_CMD:~0,1!"=="-" set "PYTHON_CMD_SANITY=0"
+if "!PYTHON_CMD:~0,1!"=="." set "PYTHON_CMD_SANITY=0"
 if "!PYTHON_CMD_SANITY!"=="0" (
   echo.[warn] python command invalid; resetting to python in PATH
   set "PYTHON_EXE="
