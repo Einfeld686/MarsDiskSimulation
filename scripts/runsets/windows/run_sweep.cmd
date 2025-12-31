@@ -710,9 +710,9 @@ if not defined OUT_ROOT if "%AUTO_OUT_ROOT%"=="1" (
   set "FREE_GB_RAW=!FREE_GB!"
 
   set "FREE_GB_OK=1"
-if "!FREE_GB!"=="" set "FREE_GB_OK=0"
+  if "!FREE_GB!"=="" set "FREE_GB_OK=0"
 
-  for /f "delims=0123456789" %%A in ("!FREE_GB!") do set "FREE_GB_OK=0"
+  if "!FREE_GB_OK!"=="1" for /f "delims=0123456789" %%A in ("!FREE_GB!") do set "FREE_GB_OK=0"
 
   if "!FREE_GB_OK!"=="1" (
     if !FREE_GB! LSS %MIN_INTERNAL_FREE_GB% (
@@ -1631,11 +1631,11 @@ if "%SWEEP_PARALLEL%"=="1" if not "%SIZE_PROBE_ENABLE%"=="0" if "%PARALLEL_JOBS_
 
 
   set "SIZE_PROBE_JOBS_OK=1"
-if "!SIZE_PROBE_JOBS!"=="" set "SIZE_PROBE_JOBS_OK=0"
+  if "!SIZE_PROBE_JOBS!"=="" set "SIZE_PROBE_JOBS_OK=0"
 
 
 
-  for /f "delims=0123456789" %%A in ("!SIZE_PROBE_JOBS!") do set "SIZE_PROBE_JOBS_OK=0"
+  if "!SIZE_PROBE_JOBS_OK!"=="1" for /f "delims=0123456789" %%A in ("!SIZE_PROBE_JOBS!") do set "SIZE_PROBE_JOBS_OK=0"
 
 
 
@@ -1690,8 +1690,8 @@ if "%PARALLEL_JOBS_DEFAULT%"=="1" if "%PARALLEL_JOBS%"=="1" (
       for /f "tokens=1 delims=." %%Z in ("!PARALLEL_JOBS_TARGET!") do set "PARALLEL_JOBS_TARGET=%%Z"
     )
     set "PARALLEL_JOBS_TARGET_OK=1"
-if "!PARALLEL_JOBS_TARGET!"=="" set "PARALLEL_JOBS_TARGET_OK=0"
-    for /f "delims=0123456789" %%A in ("!PARALLEL_JOBS_TARGET!") do set "PARALLEL_JOBS_TARGET_OK=0"
+    if "!PARALLEL_JOBS_TARGET!"=="" set "PARALLEL_JOBS_TARGET_OK=0"
+    if "!PARALLEL_JOBS_TARGET_OK!"=="1" for /f "delims=0123456789" %%A in ("!PARALLEL_JOBS_TARGET!") do set "PARALLEL_JOBS_TARGET_OK=0"
     if "!PARALLEL_JOBS_TARGET_OK!"=="1" (
       if !PARALLEL_JOBS_TARGET! GTR 1 (
         if /i "%CPU_UTIL_RESPECT_MEM%"=="1" (
@@ -1701,8 +1701,8 @@ if "!PARALLEL_JOBS_TARGET!"=="" set "PARALLEL_JOBS_TARGET_OK=0"
             for /f "tokens=1 delims=." %%Z in ("!PARALLEL_JOBS_MEM!") do set "PARALLEL_JOBS_MEM=%%Z"
           )
           set "PARALLEL_JOBS_MEM_OK=1"
-if "!PARALLEL_JOBS_MEM!"=="" set "PARALLEL_JOBS_MEM_OK=0"
-          for /f "delims=0123456789" %%A in ("!PARALLEL_JOBS_MEM!") do set "PARALLEL_JOBS_MEM_OK=0"
+          if "!PARALLEL_JOBS_MEM!"=="" set "PARALLEL_JOBS_MEM_OK=0"
+          if "!PARALLEL_JOBS_MEM_OK!"=="1" for /f "delims=0123456789" %%A in ("!PARALLEL_JOBS_MEM!") do set "PARALLEL_JOBS_MEM_OK=0"
           if "!PARALLEL_JOBS_MEM_OK!"=="1" (
             if !PARALLEL_JOBS_TARGET! GTR !PARALLEL_JOBS_MEM! set "PARALLEL_JOBS_TARGET=!PARALLEL_JOBS_MEM!"
           )
