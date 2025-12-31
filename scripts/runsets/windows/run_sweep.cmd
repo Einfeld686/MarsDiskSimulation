@@ -136,12 +136,14 @@ if not defined PYTHON_EXE (
 if "%~1"=="--debug" echo.[DEBUG] checkpoint 4: PYTHON_EXE normalization done
 set "PYTHON_ARGS_FIRST="
 set "PYTHON_ARGS_REST="
+if "%~1"=="--debug" echo.[DEBUG] checkpoint 4-1: before PYTHON_ARGS parse
 if not "!PYTHON_ARGS!"=="" (
   for /f "tokens=1* delims= " %%A in ("!PYTHON_ARGS!") do (
     set "PYTHON_ARGS_FIRST=%%A"
     set "PYTHON_ARGS_REST=%%B"
   )
 )
+if "%~1"=="--debug" echo.[DEBUG] checkpoint 4-2: after PYTHON_ARGS parse
 set "PYTHON_PYVER_ARG=0"
 if /i "!PYTHON_ARGS_FIRST:~0,2!"=="-3" set "PYTHON_PYVER_ARG=1"
 if /i "!PYTHON_ARGS_FIRST:~0,2!"=="-2" set "PYTHON_PYVER_ARG=1"
