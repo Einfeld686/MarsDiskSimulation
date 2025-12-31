@@ -130,11 +130,17 @@ def main() -> int:
     if args.command == "launch":
         cmd = args.cmd
         if not cmd and args.cmd_file:
-            try:
-                with open(args.cmd_file, "r", encoding="utf-8") as f:
-                    cmd = f.read().strip()
-            except OSError as e:
-                print(f"[error] failed to read cmd-file: {e}", file=sys.stderr)
+            # Try multiple encodings for Windows cmd.exe output
+            encodings = ["utf-8", "cp932", "latin-1"]
+            for enc in encodings:
+                try:
+                    with open(args.cmd_file, "r", encoding=enc) as f:
+                        cmd = f.read().strip()
+                    break
+                except (OSError, UnicodeDecodeError):
+                    continue
+            if not cmd:
+                print(f"[error] failed to read cmd-file with any encoding", file=sys.stderr)
                 return 2
         if not cmd:
             cmd = os.environ.get("JOB_CMD", "")
