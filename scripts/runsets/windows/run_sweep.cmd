@@ -227,7 +227,7 @@ if "!PYTHON_PYVER_ARG!"=="1" (
     if /i "!PYTHON_EXE_NAME!"=="py.exe" set "PYTHON_KEEP_PYVER_ARG=1"
   )
   if "!PYTHON_KEEP_PYVER_ARG!"=="0" (
-    if not "!PYTHON_ARGS_FIRST!"=="" echo.[warn] PYTHON_ARGS includes py launcher version flag; dropping it (use python3.11 instead).
+    if not "!PYTHON_ARGS_FIRST!"=="" echo.[warn] PYTHON_ARGS includes py launcher version flag; dropping it - use python3.11 instead.
     set "PYTHON_ARGS=!PYTHON_ARGS_REST!"
   )
 )
@@ -1233,7 +1233,7 @@ if "%DEBUG%"=="1" call :debug_log "preflight: rc=!PREFLIGHT_RC!"
 
 if not "%PREFLIGHT_RC%"=="0" (
 
-  if "%DEBUG%"=="1" if defined DEBUG_LOG_FILE echo.[error] preflight failed (rc=!PREFLIGHT_RC!) -> "!DEBUG_LOG_FILE!"
+  if "%DEBUG%"=="1" if defined DEBUG_LOG_FILE echo.[error] preflight failed [rc=!PREFLIGHT_RC!] -^> "!DEBUG_LOG_FILE!"
 
   echo.[error] preflight failed
 
@@ -1749,7 +1749,7 @@ call scripts\research\run_temp_supply_sweep.cmd
 set "RUN_RC=%errorlevel%"
 if "%DEBUG%"=="1" call :debug_log "run_temp_supply: rc=!RUN_RC!"
 
-if "%DEBUG%"=="1" if not "%RUN_RC%"=="0" if defined DEBUG_LOG_FILE echo.[error] run_temp_supply failed (rc=%RUN_RC%) -> "!DEBUG_LOG_FILE!"
+if "%DEBUG%"=="1" if not "%RUN_RC%"=="0" if defined DEBUG_LOG_FILE echo.[error] run_temp_supply failed [rc=%RUN_RC%] -^> "!DEBUG_LOG_FILE!"
 
 if "%DEBUG%"=="1" if not "%RUN_RC%"=="0" if defined TRACE_LOG echo.[error] trace log="!TRACE_LOG!"
 
@@ -1876,7 +1876,7 @@ exit /b 1
 
 
 
-echo.[error] BATCH_ROOT must be internal; it matches io.archive.dir (%ARCHIVE_DIR_EXPECTED%)
+echo.[error] BATCH_ROOT must be internal; it matches io.archive.dir [%ARCHIVE_DIR_EXPECTED%]
 
 
 
