@@ -1065,10 +1065,17 @@ set "JOB_CMD=set RUN_TS=!RUN_TS!&& set BATCH_SEED=!BATCH_SEED!&& set RUN_ONE_T=!
 set "JOB_PID_TMP="
 if "%DEBUG%"=="1" echo.[DEBUG] launch_job: TMP_ROOT=!TMP_ROOT!
 if "%DEBUG%"=="1" echo.[DEBUG] launch_job: temp file=!TMP_ROOT!\marsdisk_pid_!JOB_T!_!JOB_EPS!_!JOB_TAU!.tmp
+if "%DEBUG%"=="1" echo.[DEBUG] launch_job: JOB_CWD_USE=!JOB_CWD_USE!
+if "%DEBUG%"=="1" echo.[DEBUG] launch_job: SCRIPT_SELF_USE=!SCRIPT_SELF_USE!
+if "%DEBUG%"=="1" echo.[DEBUG] launch_job: JOB_CMD=!JOB_CMD!
 rem Pass command via stdin to avoid environment variable inheritance issues
 if "%DEBUG%"=="1" echo.[DEBUG] launch_job: executing win_process.py
-echo !JOB_CMD!| "!PYTHON_CMD!" "!WIN_PROCESS_PY!" launch --cmd-stdin --window-style "!PARALLEL_WINDOW_STYLE!" --cwd "!JOB_CWD_USE!" > "!TMP_ROOT!\marsdisk_pid_!JOB_T!_!JOB_EPS!_!JOB_TAU!.tmp" 2>&1
+rem Write JOB_CMD to temp file first to avoid pipe issues with special characters
+set "JOB_CMD_FILE=!TMP_ROOT!\marsdisk_cmd_!JOB_T!_!JOB_EPS!_!JOB_TAU!.tmp"
+>>"!JOB_CMD_FILE!" echo !JOB_CMD!
+"!PYTHON_CMD!" "!WIN_PROCESS_PY!" launch --cmd-file "!JOB_CMD_FILE!" --window-style "!PARALLEL_WINDOW_STYLE!" --cwd "!JOB_CWD_USE!" > "!TMP_ROOT!\marsdisk_pid_!JOB_T!_!JOB_EPS!_!JOB_TAU!.tmp" 2>&1
 if "%DEBUG%"=="1" echo.[DEBUG] launch_job: win_process.py done, errorlevel=%errorlevel%
+del "!JOB_CMD_FILE!" >nul 2>&1
 if exist "!TMP_ROOT!\marsdisk_pid_!JOB_T!_!JOB_EPS!_!JOB_TAU!.tmp" (
   set /p JOB_PID_TMP=<"!TMP_ROOT!\marsdisk_pid_!JOB_T!_!JOB_EPS!_!JOB_TAU!.tmp"
   del "!TMP_ROOT!\marsdisk_pid_!JOB_T!_!JOB_EPS!_!JOB_TAU!.tmp" >nul 2>&1
