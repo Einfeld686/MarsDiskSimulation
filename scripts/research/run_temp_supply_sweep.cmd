@@ -582,6 +582,8 @@ if not defined NUMBA_NUM_THREADS set "NUMBA_NUM_THREADS=%CELL_THREAD_LIMIT%"
 %LOG_SYS% thread caps: limit=%CELL_THREAD_LIMIT% (OMP/MKL/OPENBLAS/NUMEXPR/NUMBA)
 if not defined MEM_RESERVE_GB set "MEM_RESERVE_GB=4"
 if not defined PARALLEL_SLEEP_SEC set "PARALLEL_SLEEP_SEC=2"
+call :normalize_int PARALLEL_SLEEP_SEC 2
+if "%PARALLEL_SLEEP_SEC%"=="0" set "PARALLEL_SLEEP_SEC=1"
 if not defined PARALLEL_WINDOW_STYLE set "PARALLEL_WINDOW_STYLE=Hidden"
 
 if /i "%SUPPLY_HEADROOM_POLICY%"=="none" set "SUPPLY_HEADROOM_POLICY="
@@ -654,6 +656,7 @@ if "%AUTO_JOBS%"=="1" (
 )
 set "PARALLEL_JOBS_RAW=%PARALLEL_JOBS%"
 set "PARALLEL_JOBS=%PARALLEL_JOBS:"=%"
+for /f "tokens=1 delims=." %%Z in ("!PARALLEL_JOBS!") do set "PARALLEL_JOBS=%%Z"
 if not defined PARALLEL_JOBS set "PARALLEL_JOBS=1"
 if "%PARALLEL_JOBS%"=="" set "PARALLEL_JOBS=1"
 set "PARALLEL_JOBS_OK=1"
@@ -682,6 +685,7 @@ if defined CPU_UTIL_TARGET_PERCENT if /i not "%PARALLEL_MODE%"=="numba" (
         for /f "usebackq tokens=1,2 delims=|" %%A in (`%PYTHON_CMD% scripts\\runsets\\common\\calc_cpu_target_jobs.py`) do (
           set "CPU_TARGET_CORES=%%A"
           set "PARALLEL_JOBS_TARGET=%%B"
+          for /f "tokens=1 delims=." %%Z in ("!PARALLEL_JOBS_TARGET!") do set "PARALLEL_JOBS_TARGET=%%Z"
         )
         set "PARALLEL_JOBS_TARGET_OK=1"
         if "!PARALLEL_JOBS_TARGET!"=="" set "PARALLEL_JOBS_TARGET_OK=0"
@@ -691,6 +695,7 @@ if defined CPU_UTIL_TARGET_PERCENT if /i not "%PARALLEL_MODE%"=="numba" (
           if /i "!CPU_UTIL_RESPECT_MEM!"=="1" (
             for /f "usebackq tokens=1-3 delims=|" %%A in (`%PYTHON_CMD% scripts\\runsets\\common\\calc_parallel_jobs.py`) do (
               set "PARALLEL_JOBS_MEM=%%C"
+              for /f "tokens=1 delims=." %%Z in ("!PARALLEL_JOBS_MEM!") do set "PARALLEL_JOBS_MEM=%%Z"
             )
           set "PARALLEL_JOBS_MEM_OK=1"
           if "!PARALLEL_JOBS_MEM!"=="" set "PARALLEL_JOBS_MEM_OK=0"
@@ -1003,7 +1008,9 @@ exit /b 0
 
 :wait_for_slot
 call :refresh_jobs
-if %JOB_COUNT% GEQ %PARALLEL_JOBS% (
+call :normalize_int JOB_COUNT 0
+call :normalize_int PARALLEL_JOBS 1
+if !JOB_COUNT! GEQ !PARALLEL_JOBS! (
   timeout /t %PARALLEL_SLEEP_SEC% /nobreak >nul
   goto :wait_for_slot
 )
@@ -1020,6 +1027,7 @@ for /f "usebackq tokens=1,2 delims=|" %%A in (`%PYTHON_CMD% "%WIN_PROCESS_PY%" a
   set "JOB_COUNT_TMP=%%B"
 )
 endlocal & set "JOB_PIDS=%JOB_PIDS_TMP%" & set "JOB_COUNT=%JOB_COUNT_TMP%"
+call :normalize_int JOB_COUNT 0
 if "%JOB_PIDS%"=="__NONE__" set "JOB_PIDS="
 exit /b 0
 
@@ -1028,6 +1036,19 @@ call :refresh_jobs
 if "%JOB_COUNT%"=="0" exit /b 0
 timeout /t %PARALLEL_SLEEP_SEC% /nobreak >nul
 goto :wait_all
+
+:normalize_int
+set "NORM_NAME=%~1"
+set "NORM_DEFAULT=%~2"
+set "NORM_VAL=!%NORM_NAME%!"
+set "NORM_VAL=!NORM_VAL:"=!"
+for /f "tokens=1 delims=." %%Z in ("!NORM_VAL!") do set "NORM_VAL=%%Z"
+if "!NORM_VAL!"=="" set "NORM_VAL=%NORM_DEFAULT%"
+set "NORM_OK=1"
+for /f "delims=0123456789" %%Z in ("!NORM_VAL!") do set "NORM_OK=0"
+if "!NORM_OK!"=="0" set "NORM_VAL=%NORM_DEFAULT%"
+set "%NORM_NAME%=!NORM_VAL!"
+exit /b 0
 
 :sanitize_list
 set "LIST_RAW=!%~1!"
