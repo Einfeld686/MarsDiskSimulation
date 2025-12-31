@@ -355,8 +355,8 @@ if defined RUN_TS (
   set "RUN_TS=!RUN_TS:>=_!"
   set "RUN_TS=!RUN_TS:?=_!"
   set "RUN_TS=!RUN_TS:*=_!"
-  set "RUN_TS=!RUN_TS:!=_!"
-  if not "!RUN_TS!"=="!RUN_TS_RAW!" echo.[warn] RUN_TS sanitized: "!RUN_TS_RAW!" -> "!RUN_TS!"
+  rem Note: Cannot replace ! in delayed expansion mode; skip it (rare in timestamps)
+  if not "!RUN_TS!"=="!RUN_TS_RAW!" echo.[warn] RUN_TS sanitized: "!RUN_TS_RAW!" -^> "!RUN_TS!"
 )
 set "TMP_ROOT_BASE=%TEMP%"
 set "TMP_SOURCE=TEMP"
