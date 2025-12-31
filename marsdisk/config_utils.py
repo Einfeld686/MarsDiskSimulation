@@ -6,7 +6,7 @@ import math
 import subprocess
 import warnings
 from pathlib import Path
-from typing import Any, Dict, Sequence, Tuple
+from typing import Any, Dict, List, Sequence, Tuple
 
 from . import constants
 from .errors import ConfigurationError
@@ -92,6 +92,27 @@ def parse_override_value(raw: str) -> Any:
     if (text.startswith('"') and text.endswith('"')) or (text.startswith("'") and text.endswith("'")):
         return text[1:-1]
     return text
+
+
+def read_overrides_file(path: Path) -> List[str]:
+    """Load override entries from a file (one PATH=VALUE per line)."""
+
+    path = Path(path).expanduser()
+    if not path.exists():
+        raise FileNotFoundError(f"Overrides file not found: {path}")
+    overrides: List[str] = []
+    for raw in path.read_text(encoding="utf-8-sig").splitlines():
+        line = raw.strip()
+        if not line or line.startswith("#"):
+            continue
+        if "#" in line:
+            line = line.split("#", 1)[0].strip()
+        if not line:
+            continue
+        if "=" not in line:
+            raise ConfigurationError(f"Invalid override '{line}'; expected path=value")
+        overrides.append(line)
+    return overrides
 
 
 def apply_overrides_dict(payload: Dict[str, Any], overrides: Sequence[str]) -> Dict[str, Any]:

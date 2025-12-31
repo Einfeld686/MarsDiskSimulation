@@ -769,13 +769,10 @@ for /f "usebackq tokens=1-3 delims= " %%A in ("%SWEEP_LIST_FILE%") do (
         %PYTHON_CMD% %OVERRIDE_BUILDER% --file "%BASE_OVERRIDES_FILE%" --file "%CASE_OVERRIDES_FILE%" > "%MERGED_OVERRIDES_FILE%"
       )
 
-      rem Assemble the run command on a single line (avoid carets in optional blocks)
-      set RUN_CMD=%PYTHON_CMD% -m marsdisk.run --config "%BASE_CONFIG%" --quiet
+      rem Assemble the run command on a single line (avoid carets in optional blocks).
+      rem Use overrides file to keep cmd line length manageable.
+      set RUN_CMD=%PYTHON_CMD% -m marsdisk.run --config "%BASE_CONFIG%" --quiet --overrides-file "%MERGED_OVERRIDES_FILE%"
       if "%ENABLE_PROGRESS%"=="1" set RUN_CMD=!RUN_CMD! --progress
-      for /f "usebackq delims=" %%L in ("%MERGED_OVERRIDES_FILE%") do (
-        set "LINE=%%L"
-        if not "!LINE!"=="" set "RUN_CMD=!RUN_CMD! --override !LINE!"
-      )
 
       !RUN_CMD!
 

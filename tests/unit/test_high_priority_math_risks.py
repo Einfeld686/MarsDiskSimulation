@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+import copy
 import json
 import math
 
@@ -9,7 +10,16 @@ import pandas as pd
 import pytest
 
 from marsdisk import constants, grid, run as run_module, schema
-from marsdisk.physics import collisions_smol, psd, radiation, sinks, surface
+from marsdisk.physics import (
+    collisions_smol,
+    psd,
+    radiation,
+    sinks,
+    smol,
+    sublimation,
+    supply,
+    surface,
+)
 
 
 def _reference_rebin_dnds(
@@ -410,3 +420,147 @@ def test_powerlaw_injection_matches_exact_log_edges_within_tolerance() -> None:
     assert np.isclose(np.sum(m_k * F_code), prod_rate, rtol=1.0e-6, atol=0.0)
     rel = np.abs((F_code[F_exact > 0.0] - F_exact[F_exact > 0.0]) / F_exact[F_exact > 0.0])
     assert float(np.max(rel)) <= 0.1
+
+
+def test_sublimation_timescale_includes_eta_factor() -> None:
+    params = sublimation.SublimationParams(
+        mode="logistic",
+        eta_instant=0.1,
+        T_sub=1200.0,
+        dT=100.0,
+    )
+    opts = sinks.SinkOptions(enable_sublimation=True, sub_params=params)
+    T_use = 1500.0
+    rho = 3000.0
+    Omega = 2.0
+    s_ref = 1.0e-6
+
+    result = sinks.total_sink_timescale(T_use, rho, Omega, opts, s_ref=s_ref)
+    assert result.t_sink is not None
+
+    t_ref = 1.0 / Omega
+    s_sink = sublimation.s_sink_from_timescale(T_use, rho, t_ref, params)
+    expected_with_eta = params.eta_instant * t_ref * s_ref / s_sink
+
+    assert math.isclose(result.t_sink, expected_with_eta, rel_tol=1.0e-12, abs_tol=0.0)
+
+
+def test_wavy_decay_modulates_wavy_pattern() -> None:
+    base_kwargs = dict(
+        s_min=1.0e-6,
+        s_max=1.0e-4,
+        alpha=1.5,
+        wavy_strength=0.2,
+        n_bins=16,
+        rho=3000.0,
+    )
+    state_no_decay = psd.update_psd_state(**base_kwargs, wavy_decay=0.0)
+    state_decay = psd.update_psd_state(**base_kwargs, wavy_decay=2.0)
+
+    number_no = np.asarray(state_no_decay["number"], dtype=float)
+    number_decay = np.asarray(state_decay["number"], dtype=float)
+    assert not np.allclose(number_no, number_decay, rtol=0.0, atol=0.0)
+
+
+def test_blowout_rate_uses_pre_step_number_density() -> None:
+    psd_state = psd.update_psd_state(
+        s_min=1.0e-6,
+        s_max=1.0e-5,
+        alpha=3.5,
+        wavy_strength=0.0,
+        n_bins=4,
+        rho=3000.0,
+    )
+    psd_state_before = copy.deepcopy(psd_state)
+    sigma_surf = 1.0
+    t_blow = 10.0
+    dt = 5.0
+    a_blow = 1.0e-3
+
+    res = collisions_smol.step_collisions_smol_0d(
+        psd_state,
+        sigma_surf,
+        dt=dt,
+        prod_subblow_area_rate=0.0,
+        r=1.0,
+        Omega=1.0,
+        t_blow=t_blow,
+        a_blow=a_blow,
+        rho=3000.0,
+        e_value=0.0,
+        i_value=0.0,
+        sigma_tau1=None,
+        enable_blowout=True,
+        t_sink=None,
+        ds_dt_val=None,
+        s_min_effective=float(psd_state_before["s_min"]),
+        collisions_enabled=False,
+    )
+
+    sizes_old, _, m_old, N_old, _ = smol.psd_state_to_number_density(
+        psd_state_before, sigma_surf, rho_fallback=3000.0
+    )
+    sizes_new, _, m_new, N_new, _ = smol.psd_state_to_number_density(
+        res.psd_state, res.sigma_after, rho_fallback=3000.0
+    )
+    np.testing.assert_allclose(sizes_old, sizes_new, rtol=0.0, atol=0.0)
+    np.testing.assert_allclose(m_old, m_new, rtol=0.0, atol=0.0)
+
+    S_blow = np.where(sizes_old <= a_blow, 1.0 / t_blow, 0.0)
+    mass_loss_pre = float(np.sum(m_old * S_blow * N_old))
+    mass_loss_post = float(np.sum(m_old * S_blow * N_new))
+
+    assert res.mass_loss_rate_blowout == pytest.approx(mass_loss_pre, rel=1.0e-12, abs=0.0)
+    expected_ratio = 1.0 - dt / t_blow
+    assert mass_loss_post == pytest.approx(mass_loss_pre * expected_ratio, rel=1.0e-6, abs=0.0)
+    assert mass_loss_post < mass_loss_pre
+
+
+def test_supply_table_time_axis_is_raw_seconds(tmp_path: Path) -> None:
+    csv_text = "t,rate\n0,1\n1,2\n2,3\n"
+    path = tmp_path / "supply_table.csv"
+    path.write_text(csv_text)
+    table = supply._TableData.load(path)
+    value_year = table.interp(1.0, 0.0)
+    value_seconds = table.interp(run_module.SECONDS_PER_YEAR, 0.0)
+
+    assert value_year == pytest.approx(2.0, rel=0.0, abs=0.0)
+    assert value_seconds == pytest.approx(3.0, rel=0.0, abs=0.0)
+
+
+def test_supply_table_time_axis_year_unit_converts(tmp_path: Path) -> None:
+    csv_text = "t,rate\n0,1\n1,2\n2,3\n"
+    path = tmp_path / "supply_table_year.csv"
+    path.write_text(csv_text)
+    table_cfg = schema.SupplyTable(path=path, time_unit="year")
+    spec = schema.Supply(mode="table", table=table_cfg)
+
+    value_seconds = supply._rate_basic(run_module.SECONDS_PER_YEAR, 0.0, spec)
+
+    assert value_seconds == pytest.approx(2.0, rel=0.0, abs=0.0)
+
+
+def test_kernel_scale_height_uses_i0_directly() -> None:
+    dynamics_cfg = schema.Dynamics(
+        e0=0.01,
+        i0=30.0,
+        i0_unit="deg",
+        t_damp_orbits=10.0,
+        f_wake=1.0,
+        e_mode="fixed",
+        i_mode="fixed",
+        e_profile=schema.DynamicsEccentricityProfile(mode="off"),
+    )
+    sizes = np.array([1.0e-6, 2.0e-6], dtype=float)
+    a_orbit_m = 1.0e7
+    state = collisions_smol.compute_kernel_ei_state(
+        dynamics_cfg,
+        tau_eff=0.0,
+        a_orbit_m=a_orbit_m,
+        v_k=1.0e3,
+        sizes=sizes,
+    )
+    H_over_a = float(state.H_k[0] / a_orbit_m)
+    expected = math.radians(30.0)
+
+    assert H_over_a == pytest.approx(expected, rel=1.0e-12, abs=0.0)

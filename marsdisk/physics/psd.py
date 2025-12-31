@@ -151,7 +151,7 @@ def update_psd_state(
         period = np.log(s_max / s_min)
         phase = np.log(centres / s_min)
         envelope = np.exp(-wavy_decay * phase) if wavy_decay > 0.0 else 1.0
-        number *= 1.0 + wavy_strength * np.sin(2.0 * np.pi * phase / period)
+        number *= 1.0 + wavy_strength * envelope * np.sin(2.0 * np.pi * phase / period)
 
     logger.info("PSD updated: s_min=%g m, s_max=%g m", s_min, s_max)
     psd_state = {

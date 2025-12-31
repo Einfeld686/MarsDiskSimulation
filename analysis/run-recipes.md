@@ -49,7 +49,7 @@ python -m marsdisk.run --config configs/base.yml
 <!-- README_CLI_EXAMPLES END -->
 
 ### ストリーミング出力（既定ON）
-- `io.streaming` は既定で ON（`enable=true`, `memory_limit_gb=10`, `step_flush_interval=10000`, `merge_at_end=true`, `cleanup_chunks=true`）に固定し、重いスイープでも OOM を避ける。`cleanup_chunks=false` でチャンクを保持できる。`FORCE_STREAMING_OFF=1` または `IO_STREAMING=off` を環境に置けば config より優先で無効化できる（pytest では `--no-streaming` が同等の環境設定を行う）。[marsdisk/schema.py#Streaming [L1767–L1811]][marsdisk/run.py:8–8][tests/conftest.py:10–10]
+- `io.streaming` は既定で ON（`enable=true`, `memory_limit_gb=10`, `step_flush_interval=10000`, `merge_at_end=true`, `cleanup_chunks=true`）に固定し、重いスイープでも OOM を避ける。`cleanup_chunks=false` でチャンクを保持できる。`FORCE_STREAMING_OFF=1` または `IO_STREAMING=off` を環境に置けば config より優先で無効化できる（pytest では `--no-streaming` が同等の環境設定を行う）。[marsdisk/schema.py#Streaming [L1789–L1833]][marsdisk/run.py:8–8][tests/conftest.py:10–10]
 - ストリーミング有効時でも flush/merge 後に `checks/mass_budget.csv` を必ず残し、`summary["streaming"]` に env トグルと merge 完了フラグを記録する。[marsdisk/run.py:8–8][marsdisk/run.py:8–8]
 
 ### レシピ選択デシジョンツリー
@@ -90,7 +90,7 @@ graph TD
   - 成否: 上記 2 条件を同じ連続区間で満たせば success（`evaluate_tau_supply.py --window-spans "0.5-1.0" --min-duration-days 0.1 --threshold-factor 0.9` の `success_any=true` を採用）。[scripts/research/evaluate_tau_supply.py:130–141]
 - 最新デフォルト（`scripts/research/run_temp_supply_sweep.sh`）: `mu_orbit10pct=1.0`（τ=1 参照）を基準に、T_LIST∈{5000,4000,3000} K、EPS_LIST（epsilon_mix）∈{1.0,0.5,0.1}、TAU_LIST（`optical_depth.tau0_target`）∈{1.0,0.5,0.1} の 27 ケースを掃引する。`shielding.mode=off`（Φ=1）＋`optical_depth.tau0_target` を軸にし、`init_tau1.scale_to_tau1` は optical_depth と排他のため使用しない。冷却モードは slab（`T^(-3)` 解析解）をデフォルトとする。供給経路は `deep_mixing`（`t_mix_orbits=50`）を既定とし、`EVAL=1` なら各 run 後に `evaluate_tau_supply.py --window-spans "0.5-1.0" --min-duration-days 0.1 --threshold-factor 0.9` を実行して `checks/tau_supply_eval.json` を保存する。[scripts/research/run_temp_supply_sweep.sh:1–578][marsdisk/run_zero_d.py#run_zero_d [L318–L5218]]
 - 本番の供給経路は時間関数のみ（const/powerlaw/table/piecewise）。τフィードバックは control experiment 用スイッチとして残し（デフォルト Off）、本番判定には組み込まない。
-- 有限リザーバー: `supply.reservoir.enabled=true` と `mass_total_Mmars` を与えると供給総量を減算管理し、枯渇時刻や残量を `series/run.parquet`・`summary.json`・`run_config.json` に記録する。[marsdisk/physics/supply.py#init_runtime_state [L219–L274]][marsdisk/physics/supply.py#evaluate_supply [L310–L403]][marsdisk/run_zero_d.py#run_zero_d [L318–L5218]]
+- 有限リザーバー: `supply.reservoir.enabled=true` と `mass_total_Mmars` を与えると供給総量を減算管理し、枯渇時刻や残量を `series/run.parquet`・`summary.json`・`run_config.json` に記録する。[marsdisk/physics/supply.py#init_runtime_state [L230–L285]][marsdisk/physics/supply.py#evaluate_supply [L321–L414]][marsdisk/run_zero_d.py#run_zero_d [L318–L5218]]
 - 失敗パターンの目安  
   - τ不足（tau_median<0.5）: 供給が弱すぎるか、`tau0_target` が小さすぎて初期 Σ が薄い。`mu_orbit10pct` または `tau0_target` を調整する。  
   - 供給不足（longest_supply_duration<Δt）: τ_stop 超過で早期停止しているか、供給ゲート（step0 遅延/相分岐）で供給が止まっている可能性。`mu_orbit10pct`/`tau_stop`/phase 設定を確認する。
@@ -188,7 +188,7 @@ dynamics:
 - 確認ポイント
   - `run_config.json` の `init_ei` に `e_profile_mode`/`e_profile_formula`/`e_profile_applied` が入り、`e0_applied` が `1 - R_MARS/r` を反映する。[marsdisk/run_zero_d.py:4600–4670]
   - `r <= R_MARS` の場合は警告ログが出て `e=0` にクランプされる。[marsdisk/physics/eccentricity.py:29–98]
-- 互換モード（legacy）: `e_mode="mars_clearance"` を使う場合は `dynamics.e_profile.mode=off` を明示し、併用は設定エラー。[marsdisk/schema.py:749–876]
+- 互換モード（legacy）: `e_mode="mars_clearance"` を使う場合は `dynamics.e_profile.mode=off` を明示し、併用は設定エラー。[marsdisk/schema.py:754–876]
 - テーブル入力（legacy）
 ```yaml
 dynamics:
@@ -386,7 +386,7 @@ Python から直接呼ぶ場合は `sample_mass_loss_one_orbit(..., sinks_mode="
 5) 確認項目  
 - `sample_mass_loss_one_orbit` は一時 outdir に `summary.json` と `series/run.parquet` を生成し、累積 `M_out_cum`,`M_sink_cum` が欠損した場合は最終行の `mass_lost_by_*` を読み出す。`checks/mass_budget.csv` の `|error_percent|` 最大値が 0.5% 未満であることを `mass_budget_max_error_percent` から確認する。[marsdisk/analysis/massloss_sampler.py#sample_mass_loss_one_orbit [L110–L259]]  
 - `dt_over_t_blow_requirement_pass` が `True` でも、中央値・p90 が `--dt-over-tblow-max` を超えないか `map_massloss.csv` 側で再確認する。  
-- `--override` は `PATH=VALUE` をスペース区切りで並べる書式で、`PATH` は `radiation.TM_K` や `disk.geometry.r_in_RM` のようなドット区切り、`VALUE` は bool/数値/quoted string を自動解釈する。複数指定する場合は `--override ... --override ...` と繰り返すか、単一フラグに複数パラメータを与える。解析側では `_apply_overrides_dict` が YAML dict にマージするため、r/T の固定や追加のシンク係数を安全に上書きできる。[scripts/sweeps/sweep_mass_loss_map.py#main [L302–L364]][marsdisk/config_utils.py#apply_overrides_dict [L97–L132]]  
+- `--override` は `PATH=VALUE` をスペース区切りで並べる書式で、`PATH` は `radiation.TM_K` や `disk.geometry.r_in_RM` のようなドット区切り、`VALUE` は bool/数値/quoted string を自動解釈する。複数指定する場合は `--override ... --override ...` と繰り返すか、単一フラグに複数パラメータを与える。解析側では `_apply_overrides_dict` が YAML dict にマージするため、r/T の固定や追加のシンク係数を安全に上書きできる。[scripts/sweeps/sweep_mass_loss_map.py#main [L302–L364]][marsdisk/config_utils.py#apply_overrides_dict [L118–L153]]  
 - gas drag 感度を取る場合は Python サンプリングで `enable_gas_drag=True` を渡し、`result["sinks_mode"]` が意図どおり変わっているか `map_massloss.csv` もしくは辞書出力で確認する。  
 
 6) 根拠  
@@ -461,7 +461,7 @@ sinks:
 6) 根拠
 - `summary.json` の `M_loss` は `M_out_cum + M_sink_cum` を記録する。[marsdisk/run_zero_d.py#run_zero_d [L318–L5218]]
 - タイムシリーズ `M_loss_cum`,`mass_lost_by_blowout`,`mass_lost_by_sinks`,`mass_total_bins` の更新式。[marsdisk/run_zero_d.py#run_zero_d [L318–L5218]]
-- シンク無効設定は昇華・ガス抗力を停止させる。(configs/base.yml)[marsdisk/schema.py#SupplyFeedback [L233–L277]]
+- シンク無効設定は昇華・ガス抗力を停止させる。(configs/base.yml)[marsdisk/schema.py#SupplyFeedback [L238–L282]]
 
 ## E. トラブルシュート
 
@@ -501,7 +501,7 @@ supply:
 
 6) 根拠
 - Parquet書き出しが `pyarrow` 依存である。[marsdisk/io/writer.py#_ensure_parent [L20–L21]]
-- 0D実行は `disk.geometry` 未指定時に例外を送出する。[marsdisk/config_utils.py#normalise_physics_mode [L154–L167]]
+- 0D実行は `disk.geometry` 未指定時に例外を送出する。[marsdisk/config_utils.py#normalise_physics_mode [L175–L188]]
 - 供給テーブル読込は `pd.read_csv` でパスが必要。[marsdisk/physics/supply.py#_TableData [L29–L75]]
 
 ## F. SiO psat auto-selector と HKLフラックスの最小検証
@@ -665,7 +665,7 @@ pytest tests/integration/test_analysis_coverage_guard.py -q
 ### update_psd_state — PSD初期化の流れ
 
 - 手順
-  - `configs/*.yml` で `sizes` と `psd` セクションを調整する。`sizes.s_min/s_max/n_bins` がビン定義を、`psd.alpha` と `psd.wavy_strength` が三勾配＋“wavy”補正を決め、`psd.floor.mode` を `fixed`/`evolve_smin`/`none` から選ぶと床処理が切り替わる。[marsdisk/schema.py#SupplyMixing [L166–L185]][marsdisk/schema.py#SupplyFeedback [L233–L277]]
+  - `configs/*.yml` で `sizes` と `psd` セクションを調整する。`sizes.s_min/s_max/n_bins` がビン定義を、`psd.alpha` と `psd.wavy_strength` が三勾配＋“wavy”補正を決め、`psd.floor.mode` を `fixed`/`evolve_smin`/`none` から選ぶと床処理が切り替わる。[marsdisk/schema.py#SupplyMixing [L171–L190]][marsdisk/schema.py#SupplyFeedback [L238–L282]]
   - 標準の `configs/base.yml` では力学系を平滑に保つため `psd.wavy_strength=0.0` を既定とし、wavy パターンを検証したい場合は CLI で `--override psd.wavy_strength=0.2` などと上書きする。
   - 実行時は `run_zero_d` がブローアウト境界を評価したあと `psd.update_psd_state` を呼び出し、初期PSDを構築する。[marsdisk/run_zero_d.py#run_zero_d [L318–L5218]][marsdisk/physics/psd.py#update_psd_state [L83–L175]]
   - 完走後、`out/series/run.parquet` に `kappa`,`s_min`,`mass_total_bins` などが記録される。`psd.floor.mode="evolve_smin"` の場合は `s_min_evolved` 列で進化床を確認する。
@@ -678,7 +678,7 @@ pytest tests/integration/test_analysis_coverage_guard.py -q
 ### qpr_lookup — ⟨Q_pr⟩ テーブルの運用
 
 - 手順
-  - `radiation.qpr_table_path`（または互換の `qpr_table`）に Planck平均表の CSV を指定するか、`radiation.Q_pr` で単一値を強制する。[marsdisk/schema.py#Supply [L450–L556]]
+  - `radiation.qpr_table_path`（または互換の `qpr_table`）に Planck平均表の CSV を指定するか、`radiation.Q_pr` で単一値を強制する。[marsdisk/schema.py#Supply [L455–L561]]
 - `python -m marsdisk.run --config ...` を起動すると、`run_zero_d` がテーブルをロードし `_lookup_qpr` 経由で `radiation.qpr_lookup` を呼び、ブローアウト解を反復評価する。[marsdisk/orchestrator.py#resolve_time_grid [L210–L306]]
   - テーブル未指定で override も無い場合は実行開始時に `RuntimeError` で停止するため、CI で早期に検出できる。
 - 入出力
@@ -690,7 +690,7 @@ pytest tests/integration/test_analysis_coverage_guard.py -q
 ### beta — 放射圧比の確認ポイント
 
 - 手順
-- `material.rho` と `radiation.TM_K`（または `radiation.mars_temperature_driver`）を設定し、`radiation.qpr_table_path` もしくは `radiation.Q_pr` で `⟨Q_pr⟩` を定義する。[marsdisk/schema.py#InnerDiskMass [L100–L119]][marsdisk/schema.py#SupplyTable [L161–L163]][marsdisk/schema.py#Supply [L450–L556]]
+- `material.rho` と `radiation.TM_K`（または `radiation.mars_temperature_driver`）を設定し、`radiation.qpr_table_path` もしくは `radiation.Q_pr` で `⟨Q_pr⟩` を定義する。[marsdisk/schema.py#InnerDiskMass [L101–L120]][marsdisk/schema.py#SupplyTable [L162–L168]][marsdisk/schema.py#Supply [L455–L561]]
 - 実行中は `run_zero_d` が βを `s_min_config` と `s_min_effective` で評価し、`case_status` や `summary.json` の `beta_at_smin_config` / `beta_at_smin_effective` フィールドへ書き出す。[marsdisk/runtime/legacy_steps.py#RunConfig [L22–L35]][marsdisk/run_zero_d.py#run_zero_d [L318–L5218]]
   - `out/series/run.parquet` で列 `beta_at_smin_config` / `beta_at_smin_effective` を確認し、閾値を超えた場合 `case_status="blowout"` が記録される。
 - 入出力

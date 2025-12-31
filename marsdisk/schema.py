@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import logging
 import math
+import warnings
 from pathlib import Path
 from typing import Any, Dict, List, Literal, Optional, Tuple, Union
 
@@ -161,6 +162,10 @@ class SupplyPowerLaw(BaseModel):
 class SupplyTable(BaseModel):
     path: Path = Path("data/supply_rate.csv")
     interp: Literal["linear"] = "linear"
+    time_unit: Literal["s", "year"] = Field(
+        "s",
+        description="Time unit for the table t column ('s' or 'year').",
+    )
 
 
 class SupplyMixing(BaseModel):
@@ -751,6 +756,10 @@ class Dynamics(BaseModel):
 
     e0: float
     i0: float
+    i0_unit: Literal["rad", "deg"] = Field(
+        "rad",
+        description="Unit for i0 ('rad' or 'deg'); values are converted to radians at load time.",
+    )
     t_damp_orbits: float
     f_wake: float = 1.0
     e_profile: DynamicsEccentricityProfile = Field(
@@ -851,6 +860,19 @@ class Dynamics(BaseModel):
         if value < 0.0:
             raise ConfigurationError("dynamics.i0 must be non-negative")
         return value
+
+    @model_validator(mode="after")
+    def _normalize_i0_unit(cls, model: "Dynamics") -> "Dynamics":
+        unit = str(getattr(model, "i0_unit", "rad")).lower()
+        if unit == "deg":
+            model.i0 = math.radians(model.i0)
+            model.i0_unit = "rad"
+        if model.i0 > 0.5 * math.pi:
+            warnings.warn(
+                f"dynamics.i0={model.i0:.3f} rad exceeds pi/2; verify inclination units.",
+                RuntimeWarning,
+            )
+        return model
 
     @model_validator(mode="after")
     def _validate_e_profile_mode(cls, model: "Dynamics") -> "Dynamics":

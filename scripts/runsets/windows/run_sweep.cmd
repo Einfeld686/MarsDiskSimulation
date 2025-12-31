@@ -7,6 +7,14 @@ rem Run a temp_supply sweep (1D default).
 
 
 setlocal EnableExtensions EnableDelayedExpansion
+if not defined DEBUG set "DEBUG=0"
+
+if not defined TRACE_ENABLED set "TRACE_ENABLED=0"
+
+if not defined TRACE_DETAIL set "TRACE_DETAIL=0"
+
+if not defined TRACE_ECHO set "TRACE_ECHO=0"
+
 
 
 
@@ -429,6 +437,8 @@ if /i "%~1"=="--debug" (
 
 
   set "TRACE_ENABLED=1"
+  set "TRACE_DETAIL=1"
+
 
 
 
@@ -969,6 +979,62 @@ rem Staging outputs stay on the internal disk; external archive is handled via i
 
 
 if "%DEBUG%"=="1" %LOG_INFO% batch_root="%BATCH_ROOT%"
+if "%DEBUG%"=="1" (
+
+  if not defined DEBUG_RUN_ID set "DEBUG_RUN_ID=!RANDOM!!RANDOM!"
+
+  if not defined DEBUG_LOG_DIR set "DEBUG_LOG_DIR=!BATCH_ROOT!\debug"
+
+  if not exist "!DEBUG_LOG_DIR!" mkdir "!DEBUG_LOG_DIR!" >nul 2>&1
+
+  if not exist "!DEBUG_LOG_DIR!" set "DEBUG_LOG_DIR=!BATCH_ROOT!"
+
+  if not defined DEBUG_LOG_FILE set "DEBUG_LOG_FILE=!DEBUG_LOG_DIR!\run_sweep_debug_!DEBUG_RUN_ID!.log"
+
+  if not defined TRACE_LOG set "TRACE_LOG=!DEBUG_LOG_DIR!\run_sweep_trace_!DEBUG_RUN_ID!.log"
+
+  >"!DEBUG_LOG_FILE!" echo [debug] run_sweep debug log
+
+  %LOG_INFO% debug log="!DEBUG_LOG_FILE!"
+
+  call :debug_log "debug_log=!DEBUG_LOG_FILE!"
+
+  call :debug_log "trace_log=!TRACE_LOG!"
+
+  call :debug_log "repo_root=!REPO_ROOT!"
+
+  call :debug_log "config_path=!CONFIG_PATH!"
+
+  call :debug_log "overrides_path=!OVERRIDES_PATH!"
+
+  if defined OVERRIDES_PATH_EFFECTIVE call :debug_log "overrides_effective=!OVERRIDES_PATH_EFFECTIVE!"
+
+  call :debug_log "study_path=!STUDY_PATH!"
+
+  call :debug_log "out_root=!OUT_ROOT!"
+
+  call :debug_log "batch_root=!BATCH_ROOT!"
+
+  call :debug_log "python_exe=!PYTHON_EXE!"
+
+  call :debug_log "python_args=!PYTHON_ARGS!"
+
+  call :debug_log "python_cmd=!PYTHON_CMD!"
+
+  call :debug_log "ci=!CI!"
+
+  call :debug_log "dry_run=!DRY_RUN! no_plot=!NO_PLOT! no_eval=!NO_EVAL!"
+
+  call :debug_log "trace_enabled=!TRACE_ENABLED! trace_detail=!TRACE_DETAIL! trace_echo=!TRACE_ECHO!"
+
+  call :debug_log "parallel_mode=!PARALLEL_MODE! sweep_parallel=!SWEEP_PARALLEL! parallel_jobs=!PARALLEL_JOBS!"
+
+  call :debug_log "cell_parallel=!MARSDISK_CELL_PARALLEL! cell_jobs=!MARSDISK_CELL_JOBS! cell_thread_limit=!CELL_THREAD_LIMIT!"
+
+  call :debug_log "numba_threads=!NUMBA_NUM_THREADS! omp_threads=!OMP_NUM_THREADS!"
+
+)
+
 
 
 
@@ -981,6 +1047,12 @@ if "%DEBUG%"=="1" %LOG_INFO% batch_root="%BATCH_ROOT%"
 set "PREFLIGHT_STRICT_FLAG="
 
 if "%PREFLIGHT_STRICT%"=="1" set "PREFLIGHT_STRICT_FLAG=--strict"
+if "%DEBUG%"=="1" call :debug_log "preflight: strict=!PREFLIGHT_STRICT! flag=!PREFLIGHT_STRICT_FLAG!"
+
+if "%DEBUG%"=="1" call :debug_log "preflight: config=!CONFIG_PATH! overrides=!OVERRIDES_PATH! out_root=!OUT_ROOT!"
+
+if "%DEBUG%"=="1" call :debug_log "preflight: python=!PYTHON_CMD!"
+
 
 if defined CI (
   !PYTHON_CMD! "%REPO_ROOT%\\scripts\\runsets\\windows\\preflight_checks.py" --repo-root "%REPO_ROOT%" --config "%CONFIG_PATH%" --overrides "%OVERRIDES_PATH%" --out-root "%OUT_ROOT%" --python-exe "!PYTHON_EXE!" --require-git --cmd "%REPO_ROOT%\\scripts\\research\\run_temp_supply_sweep.cmd" --cmd-root "%REPO_ROOT%\\scripts\\runsets\\windows" --cmd-exclude "%REPO_ROOT%\\scripts\\runsets\\windows\\legacy" --cmd-allowlist "%REPO_ROOT%\\scripts\\runsets\\windows\\preflight_allowlist.txt" --profile ci --format json %PREFLIGHT_STRICT_FLAG%
@@ -988,13 +1060,22 @@ if defined CI (
   !PYTHON_CMD! "%REPO_ROOT%\\scripts\\runsets\\windows\\preflight_checks.py" --repo-root "%REPO_ROOT%" --config "%CONFIG_PATH%" --overrides "%OVERRIDES_PATH%" --out-root "%OUT_ROOT%" --python-exe "!PYTHON_EXE!" --require-git --cmd "%REPO_ROOT%\\scripts\\research\\run_temp_supply_sweep.cmd" --cmd-root "%REPO_ROOT%\\scripts\\runsets\\windows" --cmd-exclude "%REPO_ROOT%\\scripts\\runsets\\windows\\legacy" %PREFLIGHT_STRICT_FLAG%
 )
 
-if errorlevel 1 (
+set "PREFLIGHT_RC=!errorlevel!"
+
+if "%DEBUG%"=="1" call :debug_log "preflight: rc=!PREFLIGHT_RC!"
+
+if not "%PREFLIGHT_RC%"=="0" (
+
+  if "%DEBUG%"=="1" if defined DEBUG_LOG_FILE echo.[error] preflight failed (rc=!PREFLIGHT_RC!) -> "!DEBUG_LOG_FILE!"
 
   echo.[error] preflight failed
 
   exit /b 1
 
 )
+
+if "%DEBUG%"=="1" call :debug_log "preflight: ok"
+
 
 
 if "%PREFLIGHT_ONLY%"=="1" (
@@ -1082,6 +1163,8 @@ if not exist "%ARCHIVE_TMP%" mkdir "%ARCHIVE_TMP%" >nul 2>&1
 
 
 set "ARCHIVE_SET=%ARCHIVE_TMP%\\marsdisk_archive_overrides_%RANDOM%.cmd"
+if "%DEBUG%"=="1" call :debug_log "archive_parse_cmd=!ARCHIVE_SET!"
+
 
 
 
@@ -1138,6 +1221,8 @@ del "%ARCHIVE_SET%"
 
 
 if "%DEBUG%"=="1" %LOG_INFO% archive expected: enabled="!ARCHIVE_ENABLED_EXPECTED!" dir="!ARCHIVE_DIR_EXPECTED!" merge="!ARCHIVE_MERGE_TARGET!" verify="!ARCHIVE_VERIFY_LEVEL!" keep="!ARCHIVE_KEEP_LOCAL!"
+if "%DEBUG%"=="1" call :debug_log "archive_expected: enabled=!ARCHIVE_ENABLED_EXPECTED! dir=!ARCHIVE_DIR_EXPECTED! merge=!ARCHIVE_MERGE_TARGET! verify=!ARCHIVE_VERIFY_LEVEL! keep=!ARCHIVE_KEEP_LOCAL!"
+
 
 
 
@@ -1309,6 +1394,8 @@ set "TEMP=%TEMP_ROOT%"
 
 
 %LOG_SETUP% temp_root=%TEMP_ROOT% (source=%TEMP_SOURCE%)
+if "%DEBUG%"=="1" call :debug_log "temp_root=%TEMP_ROOT% source=%TEMP_SOURCE%"
+
 
 
 
@@ -1473,7 +1560,13 @@ if "%PARALLEL_JOBS_DEFAULT%"=="1" if "%PARALLEL_JOBS%"=="1" (
 
 
 
+if "%DEBUG%"=="1" call :debug_log "parallel_final: mode=!PARALLEL_MODE! sweep_parallel=!SWEEP_PARALLEL! parallel_jobs=!PARALLEL_JOBS! cell_parallel=!MARSDISK_CELL_PARALLEL! cell_jobs=!MARSDISK_CELL_JOBS! cell_thread_limit=!CELL_THREAD_LIMIT! numba_threads=!NUMBA_NUM_THREADS! omp_threads=!OMP_NUM_THREADS!"
+
 %LOG_INFO% launching run_temp_supply_sweep.cmd
+if "%DEBUG%"=="1" call :debug_log "run_temp_supply: start cmd=scripts\research\run_temp_supply_sweep.cmd"
+
+if "%DEBUG%"=="1" call :debug_log "run_temp_supply: trace_log=!TRACE_LOG!"
+
 
 
 call scripts\research\run_temp_supply_sweep.cmd
@@ -1481,6 +1574,12 @@ call scripts\research\run_temp_supply_sweep.cmd
 
 
 set "RUN_RC=%errorlevel%"
+if "%DEBUG%"=="1" call :debug_log "run_temp_supply: rc=!RUN_RC!"
+
+if "%DEBUG%"=="1" if not "%RUN_RC%"=="0" if defined DEBUG_LOG_FILE echo.[error] run_temp_supply failed (rc=%RUN_RC%) -> "!DEBUG_LOG_FILE!"
+
+if "%DEBUG%"=="1" if not "%RUN_RC%"=="0" if defined TRACE_LOG echo.[error] trace log="!TRACE_LOG!"
+
 
 
 
@@ -1503,6 +1602,22 @@ exit /b %RUN_RC%
 
 
 
+
+:debug_log
+
+if not "%DEBUG%"=="1" exit /b 0
+
+if not defined DEBUG_LOG_FILE exit /b 0
+
+setlocal DisableDelayedExpansion
+
+set "DEBUG_LINE=%~1"
+
+>>"%DEBUG_LOG_FILE%" echo %DEBUG_LINE%
+
+endlocal
+
+exit /b 0
 
 :archive_fail_enabled
 

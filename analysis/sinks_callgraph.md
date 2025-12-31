@@ -73,7 +73,7 @@ The blow-out and sink channels therefore remain disentangled even when additiona
 sinks.mode (YAML)
    │
    ▼
-schema.Sinks.mode  ([marsdisk/schema.py#Surface [L964–L979]])
+schema.Sinks.mode  ([marsdisk/schema.py#Surface [L986–L1001]])
    │
    ▼
 cfg.sinks.mode in run_zero_d  ([marsdisk/run_zero_d.py#run_zero_d [L318–L5218]])

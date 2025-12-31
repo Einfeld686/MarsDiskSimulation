@@ -50,7 +50,6 @@ CHCP_SCAN_LINES = 25
 DELAYED_SETLOCAL_RE = re.compile(r"\bsetlocal\b.*\benabledelayedexpansion\b", re.I)
 DELAYED_CMD_RE = re.compile(r"\bcmd(?:\.exe)?\b.*?/v\s*:\s*on\b", re.I)
 DELAYED_SETLOCAL_OFF_RE = re.compile(r"\bsetlocal\b.*\bdisabledelayedexpansion\b", re.I)
-DELAYED_CMD_OFF_RE = re.compile(r"\bcmd(?:\.exe)?\b.*?/v\s*:\s*off\b", re.I)
 DISABLE_EXT_RE = re.compile(r"\bsetlocal\b.*\bdisableextensions\b", re.I)
 ENABLE_EXT_RE = re.compile(r"\bsetlocal\b.*\benableextensions\b", re.I)
 DISABLE_EXT_CMD_RE = re.compile(r"\bcmd(?:\.exe)?\b.*?/e\s*:\s*off\b", re.I)
@@ -61,6 +60,8 @@ START_QUOTED_RE = re.compile(r'^\s*@?start\s+"(?!")', re.I)
 START_CMD_RE = re.compile(r"^\s*@?start\b", re.I)
 CMD_C_QUOTED_RE = re.compile(r'\bcmd(?:\.exe)?\b\s+/c\s+"([^"]+)"', re.I)
 CMD_INVOKE_RE = re.compile(r"^\s*@?(?:call\s+)?cmd(?:\.exe)?\b", re.I)
+CMD_SWITCH_C_RE = re.compile(r"(?:^|\s)/c(?:\s|$)", re.I)
+CMD_SWITCH_K_RE = re.compile(r"(?:^|\s)/k(?:\s|$)", re.I)
 SET_INTERACTIVE_RE = re.compile(r"\bset\s+/p\b", re.I)
 EXIT_CMD_RE = re.compile(r"^\s*@?exit(?:\s+|$)", re.I)
 EXIT_B_RE = re.compile(r"\bexit\s+/b\b", re.I)
@@ -196,6 +197,28 @@ def _normalize_windows(path_str: str) -> str:
 
 def _is_windows() -> bool:
     return os.name == "nt"
+
+
+def _maybe_reexec_with_python311() -> None:
+    if sys.version_info >= (3, 11):
+        return
+    if os.environ.get("MARS_PREFLIGHT_NO_REEXEC") == "1":
+        return
+    if os.environ.get("MARS_PREFLIGHT_REEXEC") == "1":
+        return
+    candidates: list[list[str]] = []
+    if _is_windows():
+        candidates.append(["py", "-3.11"])
+    candidates.append(["python3.11"])
+    env = os.environ.copy()
+    env["MARS_PREFLIGHT_REEXEC"] = "1"
+    for cmd in candidates:
+        try:
+            os.execvpe(cmd[0], cmd + sys.argv, env)
+        except FileNotFoundError:
+            continue
+        except OSError:
+            continue
 
 
 def _contains_posix_path(text: str) -> bool:
@@ -722,7 +745,7 @@ def _detect_delayed_expansion_lines(text: str) -> list[int]:
             continue
         if lower.startswith("::"):
             continue
-        if DELAYED_SETLOCAL_RE.search(lowered) or DELAYED_CMD_RE.search(lowered):
+        if DELAYED_SETLOCAL_RE.search(lowered):
             lines.append(line_no)
     return lines
 
@@ -1032,10 +1055,9 @@ def _scan_cmd_file(
                 delayed_now = delayed_stack.pop()
             if extensions_stack:
                 extensions_disabled = extensions_stack.pop()
-        if DELAYED_CMD_RE.search(line_body):
-            delayed_now = True
-        if DELAYED_CMD_OFF_RE.search(line_body):
-            delayed_now = False
+        # cmd /v:on only affects the nested cmd; do not treat it as a state change.
+        cmd_v_on = bool(DELAYED_CMD_RE.search(line_body))
+        cmd_has_c = bool(CMD_SWITCH_C_RE.search(lower))
         for_var = _extract_for_var_token(line_body)
         if for_var and not for_var.startswith("%%"):
             report_error(
@@ -1111,9 +1133,8 @@ def _scan_cmd_file(
             )
         if (
             BANG_TOKEN_RE.search(line_body)
-            and not delayed_now
+            and not (delayed_now or (cmd_v_on and cmd_has_c))
             and not bang_missing_reported
-            and not DELAYED_CMD_RE.search(line_body)
         ):
             bang_missing_reported = True
             report_warn(
@@ -1183,6 +1204,21 @@ def _scan_cmd_file(
                                 )
         if EXIT_CMD_RE.match(line_body) and not EXIT_B_RE.search(line_body):
             report_warn("cmd.exit.missing_b", "cmd exit without /b", line_no)
+        if CMD_INVOKE_RE.match(line_body):
+            cmd_has_k = bool(CMD_SWITCH_K_RE.search(lower))
+            if cmd_has_k or not cmd_has_c:
+                if profile == "ci":
+                    report_error(
+                        "cmd.interactive.cmd",
+                        "cmd invoked without /c (or with /k) is interactive",
+                        line_no,
+                    )
+                else:
+                    report_warn(
+                        "cmd.interactive.cmd",
+                        "cmd invoked without /c (or with /k) is interactive",
+                        line_no,
+                    )
         if SET_INTERACTIVE_RE.search(line_body):
             if profile == "ci":
                 report_error("cmd.interactive.set_p", "cmd uses set /p (interactive)", line_no)
@@ -1343,14 +1379,26 @@ def _collect_cmd_paths(
                     return True
         return False
 
-    paths: list[Path] = []
+    def normalize_path(path: Path) -> Path:
+        try:
+            return path.resolve(strict=False)
+        except OSError:
+            return path
+
+    seen: dict[Path, Path] = {}
+
+    def add_path(path: Path) -> None:
+        normalized = normalize_path(path)
+        if normalized not in seen:
+            seen[normalized] = normalized
+
     for cmd in cmd_files:
         cmd_path = Path(cmd)
         if not cmd_path.exists():
             _error(errors, "cmd.file_missing", f"cmd missing: {cmd_path}")
             continue
         if not is_excluded(cmd_path):
-            paths.append(cmd_path)
+            add_path(cmd_path)
     for root in cmd_roots:
         root_path = Path(root)
         if not root_path.exists():
@@ -1362,8 +1410,8 @@ def _collect_cmd_paths(
             if cmd_path.suffix.lower() not in {".cmd", ".bat"}:
                 continue
             if not is_excluded(cmd_path):
-                paths.append(cmd_path)
-    return sorted(set(paths))
+                add_path(cmd_path)
+    return sorted(seen.values())
 
 
 def _scan_repo_root(
@@ -1462,6 +1510,7 @@ def _read_git_longpaths(repo_root: Path) -> bool | None:
 
 
 def main() -> int:
+    _maybe_reexec_with_python311()
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--repo-root", required=True, type=Path)
     ap.add_argument("--config", required=True, type=Path)

@@ -124,7 +124,7 @@ def total_sink_timescale(
     if opts.enable_sublimation:
         s_sink = s_sink_from_timescale(T_eval, rho_p, t_ref, params)
         if s_sink > 0.0:
-            sub_timescale = t_ref * s_ref / s_sink
+            sub_timescale = params.eta_instant * t_ref * s_ref / s_sink
             components["sublimation"] = sub_timescale
             entries.append(("sublimation", sub_timescale))
 

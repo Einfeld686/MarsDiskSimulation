@@ -186,8 +186,15 @@ class SupplyRuntimeState:
         return float(self.reservoir_mass_remaining_kg / self.reservoir_mass_total_kg)
 
 
-_TABLE_CACHE: Dict[Path, _TableData] = {}
+_TABLE_CACHE: Dict[tuple[Path, str], _TableData] = {}
 _TEMP_TABLE_CACHE: Dict[Path, _TemperatureTable] = {}
+
+
+def _table_time_scale(unit: str) -> float:
+    unit_norm = str(unit or "s").lower()
+    if unit_norm == "year":
+        return SECONDS_PER_YEAR
+    return 1.0
 
 
 def _rate_basic(t: float, r: float, spec: Supply | SupplyPiece) -> float:
@@ -203,11 +210,15 @@ def _rate_basic(t: float, r: float, spec: Supply | SupplyPiece) -> float:
             return 0.0
         return A * ((t - t0) + _EPS) ** spec.powerlaw.index
     if mode == "table":
-        data = _TABLE_CACHE.get(spec.table.path)
+        time_unit = getattr(spec.table, "time_unit", "s")
+        cache_key = (spec.table.path, str(time_unit))
+        data = _TABLE_CACHE.get(cache_key)
         if data is None:
             data = _TableData.load(spec.table.path)
-            _TABLE_CACHE[spec.table.path] = data
-        return data.interp(t, r)
+            _TABLE_CACHE[cache_key] = data
+        scale = _table_time_scale(time_unit)
+        t_eval = float(t) / scale if scale > 0.0 else float(t)
+        return data.interp(t_eval, r)
     if mode == "piecewise":  # type: ignore[comparison-overlap]
         for piece in spec.piecewise:
             if piece.t_start_s <= t < piece.t_end_s:

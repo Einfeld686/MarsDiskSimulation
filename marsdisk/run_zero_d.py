@@ -5266,6 +5266,12 @@ def main(argv: Optional[List[str]] = None) -> None:
         ),
     )
     parser.add_argument(
+        "--overrides-file",
+        action="append",
+        type=Path,
+        help="Load overrides from a file (one PATH=VALUE per line).",
+    )
+    parser.add_argument(
         "--auto-tune",
         action="store_true",
         help="Enable runtime auto-tuning of thread settings (default: off).",
@@ -5279,6 +5285,9 @@ def main(argv: Optional[List[str]] = None) -> None:
     args = parser.parse_args(argv)
 
     override_list: List[str] = []
+    if args.overrides_file:
+        for override_path in args.overrides_file:
+            override_list.extend(config_utils.read_overrides_file(override_path))
     if args.override:
         for group in args.override:
             override_list.extend(group)

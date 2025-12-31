@@ -544,14 +544,10 @@ PY
       cmd=(
         python -m marsdisk.run
         --config "${BASE_CONFIG}"
+        --overrides-file "${MERGED_OVERRIDES_FILE}"
       )
       # 強制的に progress を有効化しつつ、ログは静かめに
       cmd+=(--progress --quiet)
-      while IFS= read -r line; do
-        if [[ -n "${line}" ]]; then
-          cmd+=(--override "${line}")
-        fi
-      done < "${MERGED_OVERRIDES_FILE}"
       if [[ "${DRY_RUN}" == "1" ]]; then
         printf '[dry-run]'
         printf ' %q' "${cmd[@]}"

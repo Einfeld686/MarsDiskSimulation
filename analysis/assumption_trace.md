@@ -299,7 +299,7 @@ run_stage:
   - config loading
   - orbital grid initialisation
 code_path:
-  - [marsdisk/schema.py#DiskGeometry [L47–L74]]
+  - [marsdisk/schema.py#DiskGeometry [L48–L75]]
   - [marsdisk/grid.py#omega_kepler [L17–L33]]
   - [marsdisk/io/diagnostics.py#write_zero_d_history [L28–L142]]
 inputs:
