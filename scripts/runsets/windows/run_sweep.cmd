@@ -269,10 +269,15 @@ rem Convert relative path to absolute path for execution
 set "PYTHON_CMD_ABS=!PYTHON_CMD!"
 if exist "!PYTHON_EXE!" (
   for %%I in ("!PYTHON_EXE!") do set "PYTHON_EXE_ABS=%%~fI"
-  set "PYTHON_CMD_ABS=!PYTHON_EXE_ABS!"
-  if not "!PYTHON_ARGS!"=="" set "PYTHON_CMD_ABS=!PYTHON_EXE_ABS! !PYTHON_ARGS!"
+  rem Quote if path contains spaces
+  set "PYTHON_CMD_ABS="!PYTHON_EXE_ABS!""
+  if not "!PYTHON_ARGS!"=="" set "PYTHON_CMD_ABS="!PYTHON_EXE_ABS!" !PYTHON_ARGS!"
 )
 if "%~1"=="--debug" echo.[DEBUG] checkpoint 4e: PYTHON_CMD_ABS=!PYTHON_CMD_ABS!
+if "%~1"=="--debug" (
+  echo.[DEBUG] Testing Python execution:
+  !PYTHON_CMD_ABS! -c "import sys; print('Python', sys.version)"
+)
 set "PYTHON_VERSION_OK=0"
 !PYTHON_CMD_ABS! -c "import sys; raise SystemExit(0 if sys.version_info >= (3,11) else 1)" >nul 2>&1
 if not errorlevel 1 set "PYTHON_VERSION_OK=1"
