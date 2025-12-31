@@ -1050,8 +1050,12 @@ set "JOB_CMD=set RUN_TS=!RUN_TS!&& set BATCH_SEED=!BATCH_SEED!&& set RUN_ONE_T=!
 set "JOB_PID_TMP="
 rem Pass command via stdin to avoid environment variable inheritance issues
 echo !JOB_CMD!| !PYTHON_CMD! "!WIN_PROCESS_PY!" launch --cmd-stdin --window-style "!PARALLEL_WINDOW_STYLE!" --cwd "!JOB_CWD_USE!" > "!TMP_ROOT!\marsdisk_pid_!JOB_T!_!JOB_EPS!_!JOB_TAU!.tmp" 2>&1
-set /p JOB_PID_TMP=<"!TMP_ROOT!\marsdisk_pid_!JOB_T!_!JOB_EPS!_!JOB_TAU!.tmp"
-del "!TMP_ROOT!\marsdisk_pid_!JOB_T!_!JOB_EPS!_!JOB_TAU!.tmp" >nul 2>&1
+if exist "!TMP_ROOT!\marsdisk_pid_!JOB_T!_!JOB_EPS!_!JOB_TAU!.tmp" (
+  set /p JOB_PID_TMP=<"!TMP_ROOT!\marsdisk_pid_!JOB_T!_!JOB_EPS!_!JOB_TAU!.tmp"
+  del "!TMP_ROOT!\marsdisk_pid_!JOB_T!_!JOB_EPS!_!JOB_TAU!.tmp" >nul 2>&1
+) else (
+  set "JOB_PID_TMP="
+)
 set "JOB_PID=!JOB_PID_TMP!"
 if defined JOB_PID (
     rem Check if JOB_PID is a number
