@@ -1043,7 +1043,12 @@ set "JOB_T=%~1"
 set "JOB_EPS=%~2"
 set "JOB_TAU=%~3"
 set "JOB_SEED_TMP="
+if "%DEBUG%"=="1" echo.[DEBUG] launch_job: PYTHON_CMD=!PYTHON_CMD!
+if "%DEBUG%"=="1" echo.[DEBUG] launch_job: NEXT_SEED_PY=!NEXT_SEED_PY!
+if "%DEBUG%"=="1" echo.[DEBUG] launch_job: WIN_PROCESS_PY=!WIN_PROCESS_PY!
 setlocal DisableDelayedExpansion
+if "%DEBUG%"=="1" echo.[DEBUG] launch_job (DisableDelayedExpansion): PYTHON_CMD=%PYTHON_CMD%
+if "%DEBUG%"=="1" echo.[DEBUG] launch_job (DisableDelayedExpansion): NEXT_SEED_PY=%NEXT_SEED_PY%
 for /f %%S in ('%PYTHON_CMD% "%NEXT_SEED_PY%"') do set "JOB_SEED_TMP=%%S"
 endlocal & set "JOB_SEED=%JOB_SEED_TMP%"
 call :wait_for_slot
