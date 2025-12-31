@@ -395,7 +395,7 @@ if not exist "!TMP_ROOT!" (
 )
 %LOG_SETUP% temp_root=!TMP_ROOT! (source=!TMP_SOURCE!)
 if "%TRACE_ENABLED%"=="1" (
-  if not defined TRACE_LOG set "TRACE_LOG=!TMP_ROOT!\\marsdisk_trace_!RUN_TS!_!BATCH_SEED!.log"
+  if not defined TRACE_LOG set "TRACE_LOG=!TMP_ROOT!\marsdisk_trace_!RUN_TS!_!BATCH_SEED!.log"
   > "!TRACE_LOG!" echo.[trace] start script=%~f0 rev=%SCRIPT_REV%
   if "%TRACE_DETAIL%"=="1" echo.[trace] log=!TRACE_LOG!
 )
@@ -404,7 +404,7 @@ if "%TRACE_ENABLED%"=="1" if "%TRACE_ECHO%"=="1" (
   echo on
 )
 call :trace "setup: env ready"
-set "TMP_TEST=!TMP_ROOT!\\marsdisk_tmp_test_!RUN_TS!_!BATCH_SEED!.txt"
+set "TMP_TEST=!TMP_ROOT!\marsdisk_tmp_test_!RUN_TS!_!BATCH_SEED!.txt"
 > "!TMP_TEST!" echo ok
 if not exist "!TMP_TEST!" (
   echo.[error] temp_root write test failed: "!TMP_TEST!"
@@ -641,7 +641,7 @@ set "TAU_LIST=1.0 0.5 0.1"
 
 if defined STUDY_FILE (
   if exist "!STUDY_FILE!" (
-    set "STUDY_SET=!TMP_ROOT!\\marsdisk_study_!RUN_TS!_!BATCH_SEED!.cmd"
+    set "STUDY_SET=!TMP_ROOT!\marsdisk_study_!RUN_TS!_!BATCH_SEED!.cmd"
     %PYTHON_CMD% scripts\\runsets\\common\\read_study_overrides.py --study "!STUDY_FILE!" > "!STUDY_SET!"
     if not exist "!STUDY_SET!" (
       echo.[error] failed to write study overrides: "!STUDY_SET!"
@@ -777,10 +777,10 @@ call :trace "config printed"
 set "PROGRESS_FLAG="
 if "%ENABLE_PROGRESS%"=="1" set "PROGRESS_FLAG=--progress"
 
-set "OVERRIDE_BUILDER=scripts\\runsets\\common\\build_overrides.py"
-set "BASE_OVERRIDES_FILE=!TMP_ROOT!\\marsdisk_overrides_base_!RUN_TS!_!BATCH_SEED!.txt"
-set "CASE_OVERRIDES_FILE=!TMP_ROOT!\\marsdisk_overrides_case_!RUN_TS!_!BATCH_SEED!.txt"
-set "MERGED_OVERRIDES_FILE=!TMP_ROOT!\\marsdisk_overrides_merged_!RUN_TS!_!BATCH_SEED!.txt"
+set "OVERRIDE_BUILDER=scripts\runsets\common\build_overrides.py"
+set "BASE_OVERRIDES_FILE=!TMP_ROOT!\marsdisk_overrides_base_!RUN_TS!_!BATCH_SEED!.txt"
+set "CASE_OVERRIDES_FILE=!TMP_ROOT!\marsdisk_overrides_case_!RUN_TS!_!BATCH_SEED!.txt"
+set "MERGED_OVERRIDES_FILE=!TMP_ROOT!\marsdisk_overrides_merged_!RUN_TS!_!BATCH_SEED!.txt"
 
 set "EXTRA_OVERRIDES_EXISTS=0"
 if defined EXTRA_OVERRIDES_FILE (
@@ -831,7 +831,7 @@ if defined RUN_ONE_MODE (
   %LOG_INFO% run-one mode: T=%RUN_ONE_T% eps=%RUN_ONE_EPS% tau=%RUN_ONE_TAU% seed=%RUN_ONE_SEED%
 )
 
-set "SWEEP_LIST_FILE=!TMP_ROOT!\\marsdisk_sweep_list_!RUN_TS!_!BATCH_SEED!.txt"
+set "SWEEP_LIST_FILE=!TMP_ROOT!\marsdisk_sweep_list_!RUN_TS!_!BATCH_SEED!.txt"
 call :trace_detail "sweep list file=!SWEEP_LIST_FILE!"
 %PYTHON_CMD% scripts\\runsets\\common\\write_sweep_list.py --out "!SWEEP_LIST_FILE!"
 if errorlevel 1 (

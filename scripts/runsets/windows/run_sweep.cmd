@@ -354,11 +354,11 @@ for %%I in ("%REPO_ROOT%") do set "REPO_ROOT=%%~fI"
 
 
 
-set "CONFIG_PATH=%REPO_ROOT%\\scripts\\runsets\\common\\base.yml"
+set "CONFIG_PATH=%REPO_ROOT%\scripts\runsets\common\base.yml"
 
 
 
-set "OVERRIDES_PATH=%REPO_ROOT%\\scripts\\runsets\\windows\\overrides.txt"
+set "OVERRIDES_PATH=%REPO_ROOT%\scripts\runsets\windows\overrides.txt"
 
 
 
@@ -843,15 +843,15 @@ if defined ARCHIVE_DIR_CFG (
   )
 )
 if "%ARCHIVE_DIR_OK%"=="0" (
-  set "OVERRIDES_TMP_DIR=%REPO_ROOT%\\tmp"
+  set "OVERRIDES_TMP_DIR=%REPO_ROOT%\tmp"
   if not exist "!OVERRIDES_TMP_DIR!" mkdir "!OVERRIDES_TMP_DIR!" >nul 2>&1
-  set "OVERRIDES_PATH_EFFECTIVE=!OVERRIDES_TMP_DIR!\\marsdisk_overrides_effective_%RANDOM%.txt"
+  set "OVERRIDES_PATH_EFFECTIVE=!OVERRIDES_TMP_DIR!\marsdisk_overrides_effective_%RANDOM%.txt"
   copy /y "!OVERRIDES_PATH!" "!OVERRIDES_PATH_EFFECTIVE!" >nul 2>&1
   if errorlevel 1 (
     echo.[error] failed to prepare overrides: "!OVERRIDES_PATH_EFFECTIVE!"
     exit /b 1
   )
-  >>"!OVERRIDES_PATH_EFFECTIVE!" echo io.archive.dir=!OUT_ROOT!\\archive
+  >>"!OVERRIDES_PATH_EFFECTIVE!" echo io.archive.dir=!OUT_ROOT!\archive
   set "OVERRIDES_PATH=!OVERRIDES_PATH_EFFECTIVE!"
 )
 
@@ -1388,7 +1388,7 @@ set "ARCHIVE_TMP=%TEMP%"
 
 
 
-if "%ARCHIVE_TMP%"=="" set "ARCHIVE_TMP=%REPO_ROOT%\\tmp"
+if "%ARCHIVE_TMP%"=="" set "ARCHIVE_TMP=%REPO_ROOT%\tmp"
 
 
 
@@ -1396,7 +1396,7 @@ if not exist "%ARCHIVE_TMP%" mkdir "%ARCHIVE_TMP%" >nul 2>&1
 
 
 
-set "ARCHIVE_SET=%ARCHIVE_TMP%\\marsdisk_archive_overrides_%RANDOM%.cmd"
+set "ARCHIVE_SET=%ARCHIVE_TMP%\marsdisk_archive_overrides_%RANDOM%.cmd"
 if "%DEBUG%"=="1" call :debug_log "archive_parse_cmd=!ARCHIVE_SET!"
 
 
@@ -1567,7 +1567,7 @@ if "%TEMP_ROOT%"=="" (
 
 
 
-  set "TEMP_ROOT=%REPO_ROOT%\\tmp"
+  set "TEMP_ROOT=%REPO_ROOT%\tmp"
 
 
 
@@ -1587,7 +1587,7 @@ if not exist "%TEMP_ROOT%" (
 
 
 
-  set "TEMP_ROOT=%REPO_ROOT%\\tmp"
+  set "TEMP_ROOT=%REPO_ROOT%\tmp"
 
 
 
@@ -1633,11 +1633,11 @@ if "%DEBUG%"=="1" call :debug_log "temp_root=%TEMP_ROOT% source=%TEMP_SOURCE%"
 
 
 
-if not exist "%REPO_ROOT%\\scripts\\research\\run_temp_supply_sweep.cmd" (
+if not exist "%REPO_ROOT%\scripts\research\run_temp_supply_sweep.cmd" (
 
 
 
-  echo.[error] run_temp_supply_sweep.cmd not found: "%REPO_ROOT%\\scripts\\research\\run_temp_supply_sweep.cmd"
+  echo.[error] run_temp_supply_sweep.cmd not found: "%REPO_ROOT%\scripts\research\run_temp_supply_sweep.cmd"
 
 
 
@@ -1984,7 +1984,7 @@ if "!VAR_VAL:~0,1!"=="\\" exit /b 0
 
 
 
-set "%VAR_NAME%=%REPO_ROOT%\\!VAR_VAL!"
+set "%VAR_NAME%=%REPO_ROOT%\!VAR_VAL!"
 
 exit /b 0
 
