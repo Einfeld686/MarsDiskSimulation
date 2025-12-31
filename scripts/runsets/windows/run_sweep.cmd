@@ -145,8 +145,10 @@ if not "!PYTHON_ARGS!"=="" (
 )
 if "%~1"=="--debug" echo.[DEBUG] checkpoint 4-2: after PYTHON_ARGS parse
 set "PYTHON_PYVER_ARG=0"
-if /i "!PYTHON_ARGS_FIRST:~0,2!"=="-3" set "PYTHON_PYVER_ARG=1"
-if /i "!PYTHON_ARGS_FIRST:~0,2!"=="-2" set "PYTHON_PYVER_ARG=1"
+if not "!PYTHON_ARGS_FIRST!"=="" (
+  if /i "!PYTHON_ARGS_FIRST:~0,2!"=="-3" set "PYTHON_PYVER_ARG=1"
+  if /i "!PYTHON_ARGS_FIRST:~0,2!"=="-2" set "PYTHON_PYVER_ARG=1"
+)
 if "!PYTHON_PYVER_ARG!"=="1" (
   set "PYTHON_KEEP_PYVER_ARG=0"
   if "!PYTHON_ALLOW_LAUNCHER!"=="1" (
@@ -212,8 +214,10 @@ if not "!PYTHON_ARGS!"=="" (
   )
 )
 set "PYTHON_PYVER_ARG=0"
-if /i "!PYTHON_ARGS_FIRST:~0,2!"=="-3" set "PYTHON_PYVER_ARG=1"
-if /i "!PYTHON_ARGS_FIRST:~0,2!"=="-2" set "PYTHON_PYVER_ARG=1"
+if not "!PYTHON_ARGS_FIRST!"=="" (
+  if /i "!PYTHON_ARGS_FIRST:~0,2!"=="-3" set "PYTHON_PYVER_ARG=1"
+  if /i "!PYTHON_ARGS_FIRST:~0,2!"=="-2" set "PYTHON_PYVER_ARG=1"
+)
 if "!PYTHON_PYVER_ARG!"=="1" (
   set "PYTHON_KEEP_PYVER_ARG=0"
   if "!PYTHON_ALLOW_LAUNCHER!"=="1" (
