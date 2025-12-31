@@ -624,7 +624,7 @@ echo Usage: run_sweep.cmd [--study ^<path^>] [--config ^<path^>] [--overrides ^<
 
 
 
- echo.           [--out-root ^<path^>] [--dry-run] [--no-plot] [--no-eval] [--quiet] [--no-quiet] [--preflight-only] [--preflight-strict] [--debug]
+echo.           [--out-root ^<path^>] [--dry-run] [--no-plot] [--no-eval] [--quiet] [--no-quiet] [--preflight-only] [--preflight-strict] [--debug]
 
 
 exit /b 1
