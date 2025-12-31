@@ -273,6 +273,7 @@ if "!PYTHON_PYVER_ARG!"=="1" (
   )
 )
 set "PYTHON_EXE_QUOTED=!PYTHON_EXE!"
+if "!PYTHON_LOOKS_PATH!"=="1" set "PYTHON_EXE_QUOTED="!PYTHON_EXE!""
 if not "!PYTHON_EXE: =!"=="!PYTHON_EXE!" set "PYTHON_EXE_QUOTED="!PYTHON_EXE!""
 set "PYTHON_CMD=!PYTHON_EXE_QUOTED!"
 if not "!PYTHON_ARGS!"=="" set "PYTHON_CMD=!PYTHON_EXE_QUOTED! !PYTHON_ARGS!"
@@ -295,7 +296,13 @@ if "!PYTHON_CMD_SANITY!"=="0" (
     call :popd_safe
     exit /b 1
   )
+  set "PYTHON_LOOKS_PATH=0"
+  for %%I in ("!PYTHON_EXE!") do (
+    if not "%%~pI"=="" set "PYTHON_LOOKS_PATH=1"
+    if not "%%~dI"=="" set "PYTHON_LOOKS_PATH=1"
+  )
   set "PYTHON_EXE_QUOTED=!PYTHON_EXE!"
+  if "!PYTHON_LOOKS_PATH!"=="1" set "PYTHON_EXE_QUOTED="!PYTHON_EXE!""
   if not "!PYTHON_EXE: =!"=="!PYTHON_EXE!" set "PYTHON_EXE_QUOTED="!PYTHON_EXE!""
   set "PYTHON_CMD=!PYTHON_EXE_QUOTED!"
 )
@@ -784,6 +791,32 @@ set "BASE_OVERRIDES_FILE=!TMP_ROOT!\marsdisk_overrides_base_!RUN_TS!_!BATCH_SEED
 set "CASE_OVERRIDES_FILE=!TMP_ROOT!\marsdisk_overrides_case_!RUN_TS!_!BATCH_SEED!.txt"
 set "MERGED_OVERRIDES_FILE=!TMP_ROOT!\marsdisk_overrides_merged_!RUN_TS!_!BATCH_SEED!.txt"
 
+if defined RUN_ONE_MODE (
+  if not defined RUN_ONE_T (
+    echo.[error] RUN_ONE_T is required for --run-one
+    call :popd_safe
+    exit /b 1
+  )
+  if not defined RUN_ONE_EPS (
+    echo.[error] RUN_ONE_EPS is required for --run-one
+    call :popd_safe
+    exit /b 1
+  )
+  if not defined RUN_ONE_TAU (
+    echo.[error] RUN_ONE_TAU is required for --run-one
+    call :popd_safe
+    exit /b 1
+  )
+  %LOG_INFO% run-one mode: T=%RUN_ONE_T% eps=%RUN_ONE_EPS% tau=%RUN_ONE_TAU% seed=%RUN_ONE_SEED%
+  call :trace_detail "run-one: dispatch to run_one.py"
+  %PYTHON_CMD% scripts\\runsets\\common\\run_one.py
+  if errorlevel 1 (
+    echo.[warn] run_one.py exited with status !errorlevel!
+  )
+  call :popd_safe
+  exit /b %errorlevel%
+)
+
 set "EXTRA_OVERRIDES_EXISTS=0"
 if defined EXTRA_OVERRIDES_FILE (
   if exist "%EXTRA_OVERRIDES_FILE%" (
@@ -807,31 +840,6 @@ if not exist "!BASE_OVERRIDES_FILE!" (
   exit /b 1
 )
 call :trace_detail "base overrides: python done"
-
-if defined RUN_ONE_MODE (
-  if not defined RUN_ONE_T (
-    echo.[error] RUN_ONE_T is required for --run-one
-    call :popd_safe
-    exit /b 1
-  )
-  if not defined RUN_ONE_EPS (
-    echo.[error] RUN_ONE_EPS is required for --run-one
-    call :popd_safe
-    exit /b 1
-  )
-  if not defined RUN_ONE_TAU (
-    echo.[error] RUN_ONE_TAU is required for --run-one
-    call :popd_safe
-    exit /b 1
-  )
-  set "T_LIST=%RUN_ONE_T%"
-  set "EPS_LIST=%RUN_ONE_EPS%"
-  set "TAU_LIST=%RUN_ONE_TAU%"
-  if defined RUN_ONE_SEED set "SEED_OVERRIDE=%RUN_ONE_SEED%"
-  set "PARALLEL_JOBS=1"
-  set "AUTO_JOBS=0"
-  %LOG_INFO% run-one mode: T=%RUN_ONE_T% eps=%RUN_ONE_EPS% tau=%RUN_ONE_TAU% seed=%RUN_ONE_SEED%
-)
 
 set "SWEEP_LIST_FILE=!TMP_ROOT!\marsdisk_sweep_list_!RUN_TS!_!BATCH_SEED!.txt"
 call :trace_detail "sweep list file=!SWEEP_LIST_FILE!"

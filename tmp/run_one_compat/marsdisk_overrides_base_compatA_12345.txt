@@ -1,0 +1,12 @@
+numerics.dt_init=20
+phase.enabled=true
+radiation.qpr_table_path=marsdisk/io/data/qpr_planck_sio2_abbas_calibrated_lowT.csv
+radiation.mars_temperature_driver.enabled=true
+radiation.mars_temperature_driver.mode=table
+radiation.mars_temperature_driver.table.time_unit=day
+radiation.mars_temperature_driver.table.column_time=time_day
+radiation.mars_temperature_driver.table.column_temperature=T_K
+radiation.mars_temperature_driver.extrapolation=hold
+supply.enabled=true
+supply.feedback.enabled=true
+supply.temperature.enabled=true

@@ -1,0 +1,7 @@
+io.outdir=/Users/daichi/marsshearingsheet/out/temp_supply_compat/compatA__28d279d37__seed12345/T4000_eps1p0_tau1p0
+dynamics.rng_seed=12345
+radiation.TM_K=4000
+supply.mixing.epsilon_mix=1.0
+optical_depth.tau0_target=1.0
+radiation.mars_temperature_driver.table.path=data/mars_temperature_T4000p0K.csv
+numerics.t_end_until_temperature_K=3900

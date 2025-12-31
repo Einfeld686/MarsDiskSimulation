@@ -22,7 +22,7 @@ from __future__ import annotations
 import logging
 import math
 from dataclasses import dataclass, field
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Dict, Optional, Tuple, Callable
 
 import numpy as np
 
@@ -160,14 +160,18 @@ def compute_radiation_parameters(
     T_M: float,
     *,
     qpr_override: Optional[float] = None,
+    qpr_lookup_fn: Optional[Callable[[float, float], float]] = None,
+    initial: Optional[float] = None,
+    a_blow_override: Optional[float] = None,
+    iterations: int = 6,
 ) -> RadiationResult:
     """Compute radiation pressure parameters for the current step.
-    
+
     This implements the R1-R3 equations from the specification:
-    - R1: ⟨Q_pr⟩ from table or override
-    - R2: β = f(s, ρ, T_M, Q_pr)  
-    - R3: a_blow where β ≈ 0.5
-    
+    - R1: ⟨Q_pr⟩ at ``s_min`` from table or override
+    - R2: β = f(s_min, ρ, T_M, Q_pr)
+    - R3: a_blow from iterative self-consistency (optional override supported)
+
     Parameters
     ----------
     s_min : float
@@ -178,34 +182,44 @@ def compute_radiation_parameters(
         Mars surface temperature [K].
     qpr_override : float, optional
         Override value for Q_pr instead of table lookup.
-        
+    qpr_lookup_fn : callable, optional
+        Optional lookup function ``qpr_lookup_fn(size, T_M)`` for caching.
+    initial : float, optional
+        Initial size guess for the blowout iteration.
+    a_blow_override : float, optional
+        Precomputed blowout radius to skip the iteration.
+    iterations : int
+        Iteration count for self-consistent blowout sizing.
+
     Returns
     -------
     RadiationResult
         Computed radiation parameters.
-        
+
     See Also
     --------
     analysis/equations.md : (E.004), (E.013), (E.014)
     """
-    s_eval = max(float(s_min), 1.0e-12)
-    
-    if qpr_override is not None:
-        qpr_val = float(qpr_override)
-        a_blow_val = radiation.blowout_radius(rho, T_M, Q_pr=qpr_val)
+    lookup = qpr_lookup_fn or radiation.qpr_lookup
+    qpr_mean = float(qpr_override) if qpr_override is not None else float(lookup(s_min, T_M))
+
+    if a_blow_override is not None:
+        a_blow_val = float(a_blow_override)
+    elif qpr_override is not None:
+        a_blow_val = float(radiation.blowout_radius(rho, T_M, Q_pr=qpr_mean))
     else:
-        # Iterative refinement for self-consistent Q_pr and a_blow
-        for _ in range(6):
-            qpr_val = float(radiation.qpr_lookup(s_eval, T_M))
-            a_blow_val = float(radiation.blowout_radius(rho, T_M, Q_pr=qpr_val))
-            s_eval = float(max(s_min, a_blow_val, 1.0e-12))
-        qpr_val = float(radiation.qpr_lookup(s_eval, T_M))
-        a_blow_val = float(radiation.blowout_radius(rho, T_M, Q_pr=qpr_val))
-    
-    beta_val = radiation.beta(s_min, rho, T_M, Q_pr=qpr_val)
-    
+        s_eval = max(float(initial if initial is not None else s_min), 1.0e-12)
+        for _ in range(max(int(iterations), 1)):
+            qpr_blow = float(lookup(s_eval, T_M))
+            a_blow_val = float(radiation.blowout_radius(rho, T_M, Q_pr=qpr_blow))
+            s_eval = max(float(a_blow_val), 1.0e-12)
+        qpr_blow = float(lookup(s_eval, T_M))
+        a_blow_val = float(radiation.blowout_radius(rho, T_M, Q_pr=qpr_blow))
+
+    beta_val = radiation.beta(s_min, rho, T_M, Q_pr=qpr_mean)
+
     return RadiationResult(
-        qpr_mean=qpr_val,
+        qpr_mean=qpr_mean,
         beta=beta_val,
         a_blow=a_blow_val,
         T_M=T_M,
@@ -261,11 +275,13 @@ def compute_shielding(
     tau = tau_vert * los_factor_val
     
     if mode == "off":
+        sigma_tau1 = shielding.sigma_tau1(kappa_surf)
+        phi = kappa_surf / kappa_surf if kappa_surf > 0.0 else None
         return ShieldingResult(
             tau=tau,
             kappa_eff=kappa_surf,
-            sigma_tau1=float("inf"),
-            phi=1.0,
+            sigma_tau1=sigma_tau1,
+            phi=phi,
         )
     
     if mode == "fixed_tau1":
@@ -274,7 +290,7 @@ def compute_shielding(
         if sigma_tau1_fixed is not None:
             sigma_tau1 = float(sigma_tau1_fixed)
             if kappa_surf > 0.0 and not math.isfinite(tau_target):
-                tau_target = kappa_surf * sigma_tau1
+                tau_target = kappa_surf * sigma_tau1 * los_factor_val
         else:
             sigma_tau1 = None
         
@@ -289,7 +305,7 @@ def compute_shielding(
             else:
                 sigma_tau1 = float(tau_target / max(kappa_eff, 1.0e-30))
         
-        phi = kappa_eff / kappa_surf if kappa_surf > 0.0 else 1.0
+        phi = kappa_eff / kappa_surf if kappa_surf > 0.0 else None
         
         return ShieldingResult(
             tau=tau_target,
@@ -305,7 +321,7 @@ def compute_shielding(
     else:
         kappa_eff, sigma_tau1 = shielding.apply_shielding(kappa_surf, tau, 0.0, 0.0)
     
-    phi = kappa_eff / kappa_surf if kappa_surf > 0.0 else 1.0
+    phi = kappa_eff / kappa_surf if kappa_surf > 0.0 else None
     
     return ShieldingResult(
         tau=tau,

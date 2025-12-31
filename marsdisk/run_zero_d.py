@@ -73,6 +73,7 @@ from .physics import (
     collisions_smol,
     eccentricity,
 )
+from . import physics_step
 from .io import writer, tables, checkpoint as checkpoint_io, archive as archive_mod
 from .io.diagnostics import write_zero_d_history as _write_zero_d_history, safe_float as _safe_float
 from .io.streaming import (
@@ -761,6 +762,12 @@ def run_zero_d(
             if matches.size:
                 return float(qpr_cache_values[int(matches[0])])
         return float(radiation.qpr_lookup(size_eff, T_use))
+
+    def _lookup_qpr_cached(size: float, T_M: float) -> float:
+        """Adapter for physics_step to reuse the step-local Q_pr cache."""
+
+        _ = T_M
+        return _lookup_qpr(size)
 
     def _resolve_blowout(
         size_floor: float,
@@ -2099,9 +2106,20 @@ def run_zero_d(
             setattr(sub_params, "runtime_t_orb_s", t_orb_step)
             setattr(sub_params, "runtime_Omega", Omega_step)
 
-            qpr_for_blow, a_blow_step, a_blow_effective_step = _resolve_blowout(
-                s_min_config,
-                initial=float(psd_state.get("s_min", s_min_effective)),
+            blowout_init = float(psd_state.get("s_min", s_min_config))
+            rad_blow = physics_step.compute_radiation_parameters(
+                s_min_effective,
+                rho_used,
+                T_use,
+                qpr_override=qpr_override,
+                initial=blowout_init,
+            )
+            a_blow_step = float(rad_blow.a_blow)
+            a_blow_effective_step = float(max(s_min_config, a_blow_step))
+            qpr_for_blow = (
+                float(qpr_override)
+                if qpr_override is not None
+                else float(radiation.qpr_lookup(max(a_blow_step, 1.0e-12), T_use))
             )
             if (
                 not blowout_effective_warned
@@ -2130,13 +2148,16 @@ def run_zero_d(
             s_min_components["blowout_effective"] = float(a_blow_effective_step)
             s_min_components["effective"] = float(s_min_effective)
             s_min_components["floor_dynamic"] = float(s_min_floor_dynamic)
-            qpr_mean_step = _lookup_qpr(s_min_effective)
-            beta_at_smin_effective = radiation.beta(
+            rad_step = physics_step.compute_radiation_parameters(
                 s_min_effective,
                 rho_used,
                 T_use,
-                Q_pr=qpr_mean_step,
+                qpr_override=qpr_override,
+                qpr_lookup_fn=_lookup_qpr_cached,
+                a_blow_override=a_blow_step,
             )
+            qpr_mean_step = float(rad_step.qpr_mean)
+            beta_at_smin_effective = float(rad_step.beta)
             beta_gate_active = beta_at_smin_effective >= beta_threshold
         beta_track.append(beta_at_smin_effective)
         ablow_track.append(a_blow_step)
@@ -2215,14 +2236,18 @@ def run_zero_d(
             and phase_bulk_step.state == "liquid_dominated"
             and not allow_liquid_hkl
         )
-        if sublimation_active:
-            T_grain = grain_temperature_graybody(T_use, r)
-            try:
-                ds_dt_raw = sizes.eval_ds_dt_sublimation(T_grain, rho_used, sub_params)
-            except ValueError:
-                ds_dt_raw = 0.0
-            sublimation_blocked_by_phase = bool(liquid_block_step and ds_dt_raw < 0.0)
-            ds_dt_val = 0.0 if liquid_block_step else ds_dt_raw
+        sublimation_res = physics_step.compute_sublimation(
+            T_use,
+            r,
+            rho_used,
+            sub_params,
+            phase_state="liquid_dominated" if liquid_block_step else "solid",
+            enabled=sublimation_active,
+        )
+        T_grain = sublimation_res.T_grain
+        ds_dt_raw = sublimation_res.ds_dt_raw
+        sublimation_blocked_by_phase = bool(liquid_block_step and ds_dt_raw < 0.0)
+        ds_dt_val = 0.0 if liquid_block_step else ds_dt_raw
         sublimation_surface_active_step = bool(
             sublimation_active and sublimation_to_surface and not sublimation_blocked_by_phase
         )
@@ -2455,46 +2480,28 @@ def run_zero_d(
                     if freeze_sigma:
                         sigma_surf = sigma_surf_reference
                     sigma_for_tau = sigma_surf
-                    tau_los = kappa_surf * sigma_for_tau * los_factor
-                    tau_eval_los = tau_los
+                    tau_eval_los = kappa_surf * sigma_for_tau * los_factor
                     phi_value = None
                     if collisions_active_step:
-                        if shielding_mode == "off":
-                            kappa_eff = kappa_surf
-                            sigma_tau1_limit = shielding.sigma_tau1(kappa_eff)
-                        elif shielding_mode == "fixed_tau1":
-                            tau_target_los = tau_fixed_target
-                            if not math.isfinite(tau_target_los):
-                                tau_target_los = tau_los
-                            if sigma_tau1_fixed_target is not None:
-                                sigma_tau1_limit = float(sigma_tau1_fixed_target)
-                                if kappa_surf > 0.0 and not math.isfinite(tau_target_los):
-                                    tau_target_los = kappa_surf * sigma_tau1_limit * los_factor
-                            tau_eval_los = tau_target_los
-                            if phi_tau_fn is not None:
-                                kappa_eff = shielding.effective_kappa(kappa_surf, tau_eval_los, phi_tau_fn)
-                            else:
-                                kappa_eff = kappa_surf
-                            if sigma_tau1_fixed_target is None:
-                                if kappa_eff <= 0.0:
-                                    sigma_tau1_limit = float("inf")
-                                else:
-                                    sigma_tau1_limit = float(tau_eval_los / max(kappa_eff, 1.0e-30))
-                        else:
-                            tau_eval_los = tau_los
-                            if phi_tau_fn is not None:
-                                kappa_eff = shielding.effective_kappa(kappa_surf, tau_eval_los, phi_tau_fn)
-                                sigma_tau1_limit = shielding.sigma_tau1(kappa_eff)
-                            else:
-                                kappa_eff, sigma_tau1_limit = shielding.apply_shielding(
-                                    kappa_surf, tau_eval_los, 0.0, 0.0
-                                )
+                        shield_res = physics_step.compute_shielding(
+                            kappa_surf,
+                            sigma_for_tau,
+                            mode=shielding_mode,
+                            phi_tau_fn=phi_tau_fn,
+                            tau_fixed=tau_fixed_target,
+                            sigma_tau1_fixed=sigma_tau1_fixed_target,
+                            los_factor=los_factor,
+                        )
+                        tau_eval_los = shield_res.tau
+                        kappa_eff = shield_res.kappa_eff
+                        sigma_tau1_limit = shield_res.sigma_tau1
+                        phi_value = shield_res.phi
                     else:
                         kappa_eff = kappa_surf
                         sigma_tau1_limit = None
+                        if kappa_surf > 0.0 and kappa_eff is not None:
+                            phi_value = kappa_eff / kappa_surf
                     _update_sigma_tau1_last_finite(sigma_tau1_limit)
-                    if kappa_surf > 0.0 and kappa_eff is not None:
-                        phi_value = kappa_eff / kappa_surf
                     phi_effective_last = phi_value
                     tau_los_last = tau_eval_los
                     enable_blowout_sub = enable_blowout_step and collisions_active_step
@@ -2553,20 +2560,20 @@ def run_zero_d(
                     deep_to_surf_mass_step += deep_to_surf_flux_current * dt_sub
                     deep_to_surf_attempt_mass_step += deep_to_surf_flux_attempt_current * dt_sub
                     total_prod_surface += prod_rate * dt_sub
-                    res = surface.step_surface(
+                    surface_res = physics_step.step_surface_layer(
                         sigma_surf,
                         prod_rate,
                         dt_sub,
                         Omega_step,
                         tau=tau_for_coll,
-                        t_blow=t_blow_step,
                         t_sink=t_sink_current,
                         sigma_tau1=sigma_tau1_active,
                         enable_blowout=enable_blowout_sub,
+                        chi_blow=chi_blow_eff,
                     )
-                    sigma_surf = res.sigma_surf
-                    outflux_surface = res.outflux
-                    sink_flux_surface = res.sink_flux
+                    sigma_surf = surface_res.sigma_surf
+                    outflux_surface = surface_res.outflux
+                    sink_flux_surface = surface_res.sink_flux
                     if sink_selected_step == "hydro_escape" and hydro_timescale_step is not None:
                         hydro_mass_total += sink_flux_surface * dt_sub * area / constants.M_MARS
                     if freeze_sigma:
@@ -2589,46 +2596,28 @@ def run_zero_d(
                 if freeze_sigma:
                     sigma_surf = sigma_surf_reference
                 sigma_for_tau = sigma_surf
-                tau_los = kappa_surf * sigma_for_tau * los_factor
-                tau_eval_los = tau_los
+                tau_eval_los = kappa_surf * sigma_for_tau * los_factor
                 phi_value = None
                 if collisions_active_step:
-                    if shielding_mode == "off":
-                        kappa_eff = kappa_surf
-                        sigma_tau1_limit = shielding.sigma_tau1(kappa_eff)
-                    elif shielding_mode == "fixed_tau1":
-                        tau_target_los = tau_fixed_target
-                        if not math.isfinite(tau_target_los):
-                            tau_target_los = tau_los
-                        if sigma_tau1_fixed_target is not None:
-                            sigma_tau1_limit = float(sigma_tau1_fixed_target)
-                            if kappa_surf > 0.0 and not math.isfinite(tau_target_los):
-                                tau_target_los = kappa_surf * sigma_tau1_limit * los_factor
-                        tau_eval_los = tau_target_los
-                        if phi_tau_fn is not None:
-                            kappa_eff = shielding.effective_kappa(kappa_surf, tau_eval_los, phi_tau_fn)
-                        else:
-                            kappa_eff = kappa_surf
-                        if sigma_tau1_fixed_target is None:
-                            if kappa_eff <= 0.0:
-                                sigma_tau1_limit = float("inf")
-                            else:
-                                sigma_tau1_limit = float(tau_eval_los / max(kappa_eff, 1.0e-30))
-                    else:
-                        tau_eval_los = tau_los
-                        if phi_tau_fn is not None:
-                            kappa_eff = shielding.effective_kappa(kappa_surf, tau_eval_los, phi_tau_fn)
-                            sigma_tau1_limit = shielding.sigma_tau1(kappa_eff)
-                        else:
-                            kappa_eff, sigma_tau1_limit = shielding.apply_shielding(
-                                kappa_surf, tau_eval_los, 0.0, 0.0
-                            )
+                    shield_res = physics_step.compute_shielding(
+                        kappa_surf,
+                        sigma_for_tau,
+                        mode=shielding_mode,
+                        phi_tau_fn=phi_tau_fn,
+                        tau_fixed=tau_fixed_target,
+                        sigma_tau1_fixed=sigma_tau1_fixed_target,
+                        los_factor=los_factor,
+                    )
+                    tau_eval_los = shield_res.tau
+                    kappa_eff = shield_res.kappa_eff
+                    sigma_tau1_limit = shield_res.sigma_tau1
+                    phi_value = shield_res.phi
                 else:
                     kappa_eff = kappa_surf
                     sigma_tau1_limit = None
+                    if kappa_surf > 0.0 and kappa_eff is not None:
+                        phi_value = kappa_eff / kappa_surf
                 _update_sigma_tau1_last_finite(sigma_tau1_limit)
-                if kappa_surf > 0.0 and kappa_eff is not None:
-                    phi_value = kappa_eff / kappa_surf
                 phi_effective_last = phi_value
                 tau_los_last = tau_eval_los
                 enable_blowout_sub = enable_blowout_step and collisions_active_step

@@ -236,6 +236,7 @@ if "!PYTHON_PYVER_ARG!"=="1" (
   )
 )
 set "PYTHON_EXE_QUOTED=!PYTHON_EXE!"
+if "!PYTHON_LOOKS_PATH!"=="1" set "PYTHON_EXE_QUOTED="!PYTHON_EXE!""
 if not "!PYTHON_EXE: =!"=="!PYTHON_EXE!" set "PYTHON_EXE_QUOTED="!PYTHON_EXE!""
 set "PYTHON_CMD=!PYTHON_EXE_QUOTED!"
 if not "!PYTHON_ARGS!"=="" set "PYTHON_CMD=!PYTHON_EXE_QUOTED! !PYTHON_ARGS!"
@@ -261,7 +262,13 @@ if "!PYTHON_CMD_SANITY!"=="0" (
     echo.[error] python3.11/python not found in PATH
     exit /b 1
   )
+  set "PYTHON_LOOKS_PATH=0"
+  for %%I in ("!PYTHON_EXE!") do (
+    if not "%%~pI"=="" set "PYTHON_LOOKS_PATH=1"
+    if not "%%~dI"=="" set "PYTHON_LOOKS_PATH=1"
+  )
   set "PYTHON_EXE_QUOTED=!PYTHON_EXE!"
+  if "!PYTHON_LOOKS_PATH!"=="1" set "PYTHON_EXE_QUOTED="!PYTHON_EXE!""
   if not "!PYTHON_EXE: =!"=="!PYTHON_EXE!" set "PYTHON_EXE_QUOTED="!PYTHON_EXE!""
   set "PYTHON_CMD=!PYTHON_EXE_QUOTED!"
 )

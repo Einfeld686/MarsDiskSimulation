@@ -1,7 +1,7 @@
 # 列指向バッファ化 実装プラン
 
 > **作成日**: 2025-12-30  
-> **ステータス**: 提案中  
+> **ステータス**: 完了  
 > **対象**: `marsdisk/run_one_d.py`, `marsdisk/run_zero_d.py`, `marsdisk/runtime/history.py`, `marsdisk/io/streaming.py`, `marsdisk/io/writer.py`, `marsdisk/output_schema.py`
 
 ---
@@ -11,6 +11,7 @@
 - 1D/0D の `list[dict]` 生成と `_ensure_keys` 呼び出しを削減し、I/O 系の Python オーバーヘッドを下げる
 - `t_coll_kernel_min` など **ステップ定数列の一括付与**を可能にする
 - Streaming ON/OFF の双方で **出力スキーマ互換**を維持する
+- 物理式・数値スキーム・スイッチの意味を **一切変更しない**（速度改善のみ）
 
 ---
 
@@ -19,6 +20,8 @@
 - `run_one_d` はセルごとに巨大な `record` 辞書を生成し、最後に `t_coll_kernel_min` を **Python ループで後付け**している。
 - Parquet 書き出し時に `list[dict] -> DataFrame -> pyarrow` の変換が発生し、I/O の支配度が高いケースで顕著に遅い。
 - 既存の最適化（cache/Numba 等）は計算コストには効くが、**記録生成/変換のコストは残っている**。
+- 最近の計測では Python ループ比率は 10–17% 程度で、`t_end` を延ばすほど `write_parquet` の比率が上がる。**I/O と記録生成の最適化が優先**。
+- 運用は **スイープ並列が主軸**で、ネスト並列（セル並列＋スイープ並列）は過剰並列になりやすい。
 
 ---
 
@@ -27,6 +30,7 @@
 - 物理モデル変更・新式導入
 - 出力列の互換性破壊（列名・単位の変更）
 - `psd_hist` / `mass_budget_cells` の全面的な列指向化（フェーズ後半で検討）
+- データのリサンプリングや間引き（統計的な近似）
 
 ---
 
@@ -42,6 +46,8 @@
   `history.records` 依存の条件を ColumnarBuffer 対応に切替え、`_estimate_bytes` を `row_count` で評価できる設計にする。
 - **推奨: トグル優先順位を定義**  
   `MARSDISK_DISABLE_COLUMNAR=1` が最優先で row を強制、次に YAML/CLI の `io.record_storage_mode` を適用。
+- **推奨: スイープ並列前提のスレッド抑制**  
+  スイープ並列時は `CELL_THREAD_LIMIT=1` / `NUMBA_NUM_THREADS=1` を基準とし、セル並列は必要時のみ明示的に有効化する。
 
 ---
 
@@ -51,6 +57,48 @@
 2) `writer` に **列指向入力**を受け付ける API を追加し、`pyarrow.Table` 直書きを許可  
 3) `run_one_d` / `run_zero_d` の記録生成を **列指向に置換**し、定数列は一括で付与  
 4) **安全なフォールバック**（row モード）を残し、段階導入する
+
+---
+
+## スイープ並列前提の優先順位（更新）
+
+- 1ランあたりの **I/O と記録生成の削減**を最優先（列指向化で DataFrame/辞書生成を減らす）。
+- スイープ実行時は **セル並列を基本的に使わない**前提でチューニングする（廃止はしない）。
+- 短い検証では `IO_STREAMING=off` とフック類の省略を推奨し、スイープ本番では `step_flush_interval` を大きめにして I/O をまとめる。
+
+---
+
+## 精密化した実装方針（数学・物理の妥当性維持）
+
+### 変更の原則
+
+- **数値スキームと力学は不変**  
+  `run_one_d` / `run_zero_d` の更新式、停止判定、シンク/供給の分岐は一切変更しない。
+- **出力値は同一であるべき**  
+  row/columnar の差は「記録の持ち方」だけで、数値の差分を許容しない（丸め誤差レベル）。
+- **スキーマ互換性を最優先**  
+  既存の列名・単位・欠損扱いを維持し、解析パイプラインの破壊を避ける。
+- **行順と再現性は不変**  
+  `time` / `cell_index` の並び順や RNG の呼び順・シード・checkpoint/resume の挙動を変更しない。
+
+### 実装の粒度（安全な差分単位）
+
+1. **I/O層の拡張のみ**（計算と記録生成は変更しない）  
+   - `writer.write_parquet_table` を追加し、既存 `write_parquet` と同じメタデータ付与に限定。
+2. **記録コンテナの置換**（数値は同じ）  
+   - `ColumnarBuffer` の導入は `history.records` / `history.diagnostics` の入れ替えのみ。
+3. **run_one_d の記録生成最適化**  
+   - `t_coll_kernel_min` など **ステップ定数列の一括付与**を row→columnar で実現。
+4. **Streaming 統合**  
+   - flush/merge で `ColumnarBuffer` を扱う分岐を追加するだけで、出力先やスキーマは不変。
+
+### リスクと対策（妥当性維持）
+
+- **列欠損のリスク**: `ensure_columns` を flush 直前に強制補完（row/columnar 両方）。
+- **dtypeの揺れ**: `writer` 側で dtype 正規化（現行のメタデータ付与規則を踏襲）。
+- **欠損表現の揺れ**: `None`/`NaN` の扱いを現行と一致させる（置換・統一しない）。
+- **既存解析の互換**: `ZERO_D_SERIES_KEYS`/`ONE_D_EXTRA_SERIES_KEYS` を列順の基準とする。
+
 
 ---
 
@@ -133,6 +181,7 @@
 - `t_coll_kernel_min` は **ステップ末に一括埋め**（`np.full(n, value)` 相当）
 - `output_schema` のキーリストを列順の基準として使用し、動的列は最小限にする
 - 既存の `psd_hist_records` / `mass_budget_cells` は当面 list[dict] を維持
+- **不変条件**: ステップ内の `record` 構築ロジック（値の計算式・キーの意味）は変更しない
 
 ### フェーズC: run_zero_d への展開（任意）
 
@@ -183,6 +232,8 @@
   - `t_coll_kernel_min` の一括付与が正しいこと
 - 追加: Parquet メタデータ（units/definitions）が row/columnar で一致すること
 - 追加: Streaming ON/OFF の双方で `checks/mass_budget.csv` が生成されること
+- 追加: `checks/mass_budget.csv` の内容（error_percent 等）が row/columnar で一致すること
+- 追加: 既存スイープ結果の解析スクリプトが **同一列名で読み込める**こと（スキーマ互換）
 
 ---
 
@@ -214,29 +265,85 @@
   - 列集合が一致（`ZERO_D_SERIES_KEYS + ONE_D_EXTRA_SERIES_KEYS`）  
   - `time`, `dt`, `M_loss_cum`, `M_out_dot` など主要列は `np.allclose(rtol=1e-12, atol=0.0)` で一致  
   - `t_coll_kernel_min` が全行で `null` ではなく、同一 `time` 内で一定
+- **チェックボックス: 行順・セル順の一致（必須）**  
+  - [x] `time` は昇順で一致  
+  - [x] `cell_index` は同一 `time` 内で昇順かつ一致  
+  - [x] `time, cell_index` の組が row/columnar で完全一致  
+  **対象列**: `time`, `cell_index`
 - **ケース: Streaming ON + columnar**  
   **設定**: 上記 + `io.streaming.enable=true`, `io.streaming.step_flush_interval=1`  
   **期待**: `series/run_chunk_*.parquet` が生成 → `series/run.parquet` にマージされ、列集合が row と一致
+- **チェックボックス: 行順の維持（Streaming ON）**  
+  - [x] `series/run.parquet` の `time, cell_index` の順序が Streaming OFF と一致  
+  **対象列**: `time`, `cell_index`
 
 ### mass_budget.csv 出力（integration）
 
 - **ケース: Streaming ON/OFF**  
   **設定**: `io.streaming.enable=true/false` を両方実行  
   **期待**: `checks/mass_budget.csv` が必ず存在し、ヘッダーを含む
+- **チェックボックス: mass_budget 内容一致**  
+  - [x] `time` の並びが一致  
+  - [x] `error_percent`, `mass_diff`, `mass_lost` が `rtol=1e-12, atol=0.0` で一致  
+  **対象列**: `time`, `error_percent`, `mass_diff`, `mass_lost`
 
 ### トグル優先順位（integration）
 
 - **ケース: 強制 row へのフォールバック**  
   **設定**: `io.record_storage_mode=columnar` + `MARSDISK_DISABLE_COLUMNAR=1`  
   **期待**: row モードが優先され、出力スキーマが従来と一致
+- **チェックボックス: 欠損表現の一致**  
+  - [x] `None`/`NaN` の扱いが row と columnar で同一  
+  **対象列**: `s_min`, `t_coll_kernel_min`, `sigma_tau1`（代表列）
 
 ### 0D 展開後の追加（integration, 任意）
 
 - **ケース: run_zero_d の row/columnar 比較**  
   **設定**: 0D の小規模ケース（`t_end_years` を短く）  
   **期待**: `ZERO_D_SERIES_KEYS`/`ZERO_D_DIAGNOSTIC_KEYS` の列集合一致と主要列一致（`rtol=1e-12`）
+- **チェックボックス: 行順の一致（0D）**  
+  - [x] `time` は昇順で一致  
+  - [x] `time` の並びが row/columnar で完全一致  
+  **対象列**: `time`
 
 ### 比較基準（許容誤差）
+
+- **数値一致**: `rtol=1e-12, atol=0.0` を基準（浮動小数誤差の範囲で完全一致を期待）
+- **列順**: `output_schema` を基準に一致
+- **欠損列**: `None` で補完されること（row/columnar と同等）
+- **行順**: `time` / `cell_index` の順序が row/columnar で完全一致
+
+---
+
+## 実装タスク分割（Issue化）
+
+- [x] **Issue A: ColumnarBuffer の基盤実装**  
+  `marsdisk/runtime/history.py` に ColumnarBuffer を追加し、`__len__`/`row_count`/`clear`/`to_table` を定義。  
+  受入条件: 単体テストで `row_count` と `clear` が正しく動作。
+
+- [x] **Issue B: writer の columnar API 追加**  
+  `marsdisk/io/writer.py` に `write_parquet_table` / `write_parquet_columns` を追加。  
+  受入条件: units/definitions メタデータが row と一致。
+
+- [x] **Issue C: Streaming 対応（ColumnarBuffer flush）**  
+  `marsdisk/io/streaming.py` で ColumnarBuffer を判定し `to_table` 分岐を追加。  
+  受入条件: Streaming ON/OFF の双方で `series/run.parquet` が生成される。
+
+- [x] **Issue D: run_one_d の列指向化（records/diagnostics）**  
+  `marsdisk/run_one_d.py` の `records` と `diagnostics` を ColumnarBuffer 化し、`t_coll_kernel_min` を一括付与。  
+  受入条件: row/columnar で列集合・主要列が一致。
+
+- [x] **Issue E: run_zero_d の列指向化（任意）**  
+  `marsdisk/run_zero_d.py` の `records/diagnostics` を ColumnarBuffer 化。  
+  受入条件: `ZERO_D_*` の列集合と主要列が一致。
+
+- [x] **Issue F: 出力スキーマ整理**  
+  `marsdisk/output_schema.py` の列順を基準化し、`ensure_columns` に反映。  
+  受入条件: row/columnar で列順が一致。
+
+- [x] **Issue G: テスト追加**  
+  `tests/integration/test_columnar_records.py` などを追加し、row/columnar の同一性を検証。  
+  受入条件: 既存の解析スクリプトが同一列名で動作する。
 
 - **float 系**: `rtol=1e-12, atol=0.0` を基本。
 - **積分・平均系**（`*_avg`, `M_loss_cum` 等）: `rtol=1e-6` まで許容。
@@ -250,3 +357,10 @@
 - 既存の短縮ケースで **I/O ON/OFF** の A/B を実施
 - `cProfile` / `pstats` で `_ensure_keys`, `writer.write_parquet` の比率を比較
 - `scripts/tests/measure_case_output_size.py` で出力サイズ差を記録
+
+---
+
+## 検証ログ
+
+- integration tests: `pytest tests/integration -q`  
+  ログ: `out/tests/integration_20260101-002601.log`（212 passed, 3 skipped）
