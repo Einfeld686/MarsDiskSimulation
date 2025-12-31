@@ -37,6 +37,10 @@ if not exist "%WIN_PROCESS_PY%" (
     exit /b 1
 )
 
+set "TMP_ROOT=%TEMP%"
+if not exist "%TMP_ROOT%" set "TMP_ROOT=%REPO_ROOT%tmp"
+echo [INFO] TMP_ROOT: %TMP_ROOT%
+
 echo.
 echo ============================================
 echo Test 1: Direct --cmd option
@@ -48,46 +52,35 @@ echo [INFO] Exit code: %errorlevel%
 
 echo.
 echo ============================================
-echo Test 2: JOB_CMD environment variable
+echo Test 2: --cmd-stdin option (new method)
 echo ============================================
-set "JOB_CMD=echo JOB_CMD_ENV_SUCCESS"
-echo [INFO] JOB_CMD=%JOB_CMD%
-%PYTHON_CMD% "%WIN_PROCESS_PY%" launch
+set "TEST_CMD=echo STDIN_CMD_SUCCESS"
+echo [INFO] Command: %TEST_CMD%
+echo %TEST_CMD%| %PYTHON_CMD% "%WIN_PROCESS_PY%" launch --cmd-stdin
 echo [INFO] Exit code: %errorlevel%
 
 echo.
 echo ============================================
-echo Test 3: JOB_CMD with delayed expansion
+echo Test 3: --cmd-stdin with delayed expansion
 echo ============================================
 set "TEST_VAR=DELAYED_VAR_VALUE"
-set "JOB_CMD=echo TEST_VAR=!TEST_VAR!"
-echo [INFO] JOB_CMD=!JOB_CMD!
-%PYTHON_CMD% "%WIN_PROCESS_PY%" launch
-echo [INFO] Exit code: %errorlevel%
+set "TEST_CMD=echo TEST_VAR=!TEST_VAR!"
+echo [INFO] Command: !TEST_CMD!
+echo !TEST_CMD!| !PYTHON_CMD! "!WIN_PROCESS_PY!" launch --cmd-stdin
+echo [INFO] Exit code: !errorlevel!
 
 echo.
 echo ============================================
-echo Test 4: JOB_CMD with complex command
+echo Test 4: --cmd-stdin with complex command
 echo ============================================
-set "JOB_CMD=set A=1&& set B=2&& echo A=%%A%% B=%%B%%"
-echo [INFO] JOB_CMD=!JOB_CMD!
-%PYTHON_CMD% "%WIN_PROCESS_PY%" launch
-echo [INFO] Exit code: %errorlevel%
+set "TEST_CMD=set A=1&& set B=2&& echo Complex command executed"
+echo [INFO] Command: !TEST_CMD!
+echo !TEST_CMD!| !PYTHON_CMD! "!WIN_PROCESS_PY!" launch --cmd-stdin
+echo [INFO] Exit code: !errorlevel!
 
 echo.
 echo ============================================
-echo Test 5: JOB_CMD via for /f subshell
-echo ============================================
-set "JOB_CMD=echo FOR_F_SUBSHELL_TEST"
-echo [INFO] JOB_CMD=%JOB_CMD%
-for /f "usebackq delims=" %%P in (`%PYTHON_CMD% "%WIN_PROCESS_PY%" launch`) do (
-    echo [INFO] Result: %%P
-)
-echo [INFO] Exit code: %errorlevel%
-
-echo.
-echo ============================================
-echo Test 6: Simulating actual launch_job behavior
+echo Test 5: Simulating actual launch_job (stdin + file redirect)
 echo ============================================
 set "RUN_TS=20251231"
 set "BATCH_SEED=0"
@@ -95,15 +88,55 @@ set "JOB_T=5000"
 set "JOB_EPS=1.0"
 set "JOB_TAU=1.0"
 set "JOB_SEED=12345"
-set "SCRIPT_SELF=%~f0"
 set "JOB_CMD=set RUN_TS=!RUN_TS!&& set BATCH_SEED=!BATCH_SEED!&& set RUN_ONE_T=!JOB_T!&& set RUN_ONE_EPS=!JOB_EPS!&& set RUN_ONE_TAU=!JOB_TAU!&& set RUN_ONE_SEED=!JOB_SEED!&& echo SIMULATED_JOB_LAUNCH"
-echo [INFO] JOB_CMD length: 
-echo !JOB_CMD! | find /c /v ""
 echo [INFO] JOB_CMD=!JOB_CMD!
-set "JOB_PID_TMP="
-for /f "usebackq delims=" %%P in (`!PYTHON_CMD! "!WIN_PROCESS_PY!" launch`) do set "JOB_PID_TMP=%%P"
-echo [INFO] JOB_PID_TMP=!JOB_PID_TMP!
-echo [INFO] Exit code: %errorlevel%
+
+set "PID_FILE=!TMP_ROOT!\test_pid_!JOB_T!_!JOB_EPS!_!JOB_TAU!.tmp"
+echo [INFO] PID_FILE=!PID_FILE!
+
+echo !JOB_CMD!| !PYTHON_CMD! "!WIN_PROCESS_PY!" launch --cmd-stdin > "!PID_FILE!" 2>&1
+echo [INFO] Command exit code: !errorlevel!
+
+if exist "!PID_FILE!" (
+    set /p JOB_PID_TMP=<"!PID_FILE!"
+    echo [INFO] PID file content: !JOB_PID_TMP!
+    del "!PID_FILE!" >nul 2>&1
+    
+    rem Check if it's a number
+    echo !JOB_PID_TMP!| findstr /r "^[0-9][0-9]*$" >nul
+    if errorlevel 1 (
+        echo [FAIL] Not a valid PID: !JOB_PID_TMP!
+    ) else (
+        echo [PASS] Valid PID: !JOB_PID_TMP!
+    )
+) else (
+    echo [FAIL] PID file not created
+)
+
+echo.
+echo ============================================
+echo Test 6: Multiple parallel jobs simulation
+echo ============================================
+set "PIDS="
+for %%T in (5000 4000 3000) do (
+    set "JOB_CMD=echo Job T=%%T started && timeout /t 2 /nobreak"
+    set "PID_FILE=!TMP_ROOT!\test_pid_%%T.tmp"
+    echo !JOB_CMD!| !PYTHON_CMD! "!WIN_PROCESS_PY!" launch --cmd-stdin > "!PID_FILE!" 2>&1
+    if exist "!PID_FILE!" (
+        set /p TEMP_PID=<"!PID_FILE!"
+        del "!PID_FILE!" >nul 2>&1
+        echo !TEMP_PID!| findstr /r "^[0-9][0-9]*$" >nul
+        if not errorlevel 1 (
+            set "PIDS=!PIDS! !TEMP_PID!"
+            echo [INFO] Launched T=%%T with PID=!TEMP_PID!
+        ) else (
+            echo [WARN] T=%%T: Invalid response: !TEMP_PID!
+        )
+    ) else (
+        echo [WARN] T=%%T: No PID file created
+    )
+)
+echo [INFO] All PIDs: !PIDS!
 
 echo.
 echo ============================================
