@@ -79,6 +79,14 @@ CHOICE_RE = re.compile(r"^\s*@?choice\b", re.I)
 SETX_RE = re.compile(r"^\s*@?setx\b", re.I)
 ERRORLEVEL_RE = re.compile(r"^\s*@?if\s+(not\s+)?errorlevel\s+(-?\d+)\b", re.I)
 CMD_QUOTED_META_CHARS = "&<>|^()@"
+CMD_ENV_VAR_RE = re.compile(r"%([^%]+)%")
+PY_LAUNCHER_VERSION_RE = re.compile(r"^-\d+(?:\.\d+)*(?:-[0-9A-Za-z]+)?$")
+PY_LAUNCHER_ALLOWED_ARGS = {"-V", "-h", "-?"}
+PYTHON_PROBE_ERROR_RE = re.compile(
+    r"(usage:|unknown option|unrecognized option|invalid option|unknown switch)",
+    re.I,
+)
+DASH_OPTION_CMD_NAMES = {"where", "findstr"}
 RESERVED_DEVICE_NAMES = {
     "CON",
     "PRN",
@@ -357,6 +365,135 @@ def _check_cmd(
             _error(errors, "tool.missing", msg)
 
 
+def _split_cmdline_tokens(raw: str) -> list[str]:
+    try:
+        return shlex.split(raw, posix=False)
+    except ValueError:
+        return raw.split()
+
+
+def _expand_cmd_vars(raw: str) -> tuple[str, bool]:
+    expanded = False
+
+    def repl(match: re.Match[str]) -> str:
+        nonlocal expanded
+        expanded = True
+        name = match.group(1)
+        return os.environ.get(name, "")
+
+    return CMD_ENV_VAR_RE.sub(repl, raw), expanded
+
+
+def _normalize_exe_token(token: str) -> str:
+    return token.strip().strip('"').strip("'")
+
+
+def _python_exe_basename(token: str) -> str:
+    if not token:
+        return ""
+    return PureWindowsPath(token).name.lower()
+
+
+def _validate_python_exe_tokens(
+    label: str,
+    exe_token: str,
+    args: list[str],
+    errors: list[Issue],
+    warnings: list[Issue],
+    warn_only: bool,
+) -> bool:
+    ok = True
+
+    def report(rule: str, message: str) -> None:
+        nonlocal ok
+        ok = False
+        if warn_only:
+            _warn(warnings, rule, message)
+        else:
+            _error(errors, rule, message)
+
+    exe_clean = _normalize_exe_token(exe_token)
+    if not exe_clean:
+        report("tool.python_exe_empty", f"{label} is empty")
+        return False
+    if exe_clean == "-" or exe_clean.startswith("-"):
+        report("tool.python_exe_invalid", f"{label} starts with '-': {exe_token}")
+    exe_name = _python_exe_basename(exe_clean)
+    exe_is_py = exe_name in {"py", "py.exe"}
+    for raw_arg in args:
+        arg = _normalize_exe_token(raw_arg)
+        if not arg:
+            continue
+        if arg == "-":
+            report("tool.python_exe_arg_dash", f"{label} has standalone '-' argument")
+            continue
+        if arg.startswith("-"):
+            if exe_is_py:
+                if arg in PY_LAUNCHER_ALLOWED_ARGS or PY_LAUNCHER_VERSION_RE.match(arg):
+                    continue
+                report(
+                    "tool.python_exe_arg_invalid",
+                    f"{label} has unsupported py argument: {arg}",
+                )
+                continue
+            if PY_LAUNCHER_VERSION_RE.match(arg):
+                report(
+                    "tool.python_exe_version_arg_non_py",
+                    f"{label} has {arg} but launcher is '{exe_name}'",
+                )
+                continue
+            report(
+                "tool.python_exe_arg_invalid",
+                f"{label} has unexpected argument: {arg}",
+            )
+    return ok
+
+
+def _probe_python_exe(
+    exe_token: str,
+    args: list[str],
+    errors: list[Issue],
+    warnings: list[Issue],
+    warn_only: bool,
+) -> bool:
+    normalized_args = [_normalize_exe_token(arg) for arg in args if arg]
+    cmd = [_normalize_exe_token(exe_token)] + normalized_args + [
+        "-c",
+        "import sys; sys.exit(0)",
+    ]
+    try:
+        result = subprocess.run(
+            cmd,
+            capture_output=True,
+            text=True,
+            timeout=5,
+            check=False,
+        )
+    except OSError as exc:
+        msg = f"python_exe probe failed to start: {exe_token} ({exc})"
+        if warn_only:
+            _warn(warnings, "tool.python_exe_probe_failed", msg)
+        else:
+            _error(errors, "tool.python_exe_probe_failed", msg)
+        return False
+    if result.returncode != 0:
+        combined = f"{result.stderr}\n{result.stdout}".strip()
+        if PYTHON_PROBE_ERROR_RE.search(combined):
+            msg = f"python_exe probe rejected arguments: {exe_token}"
+            if warn_only:
+                _warn(warnings, "tool.python_exe_invalid_invocation", msg)
+            else:
+                _error(errors, "tool.python_exe_invalid_invocation", msg)
+            return False
+        msg = f"python_exe probe exited with {result.returncode}: {exe_token}"
+        if warn_only:
+            _warn(warnings, "tool.python_exe_probe_failed", msg)
+        else:
+            _error(errors, "tool.python_exe_probe_failed", msg)
+        return False
+    return True
+
+
 def _check_python(
     errors: list[Issue],
     warnings: list[Issue],
@@ -366,26 +503,64 @@ def _check_python(
     if python_exe:
         raw = python_exe.strip()
         if raw:
-            exe_token = ""
-            try:
-                parts = shlex.split(raw, posix=False)
-            except ValueError:
-                parts = raw.split()
-            if parts:
-                exe_token = parts[0].strip().strip('"').strip("'")
-            if exe_token:
-                expanded = exe_token
-                if _is_windows():
-                    expanded = os.path.expandvars(exe_token)
-                if os.path.exists(expanded):
-                    return
-                if shutil.which(expanded) is not None:
-                    return
-            msg = f"python_exe not found: {python_exe}"
-            if warn_only:
-                _warn(warnings, "tool.python_exe_missing", msg)
+            raw_parts = _split_cmdline_tokens(raw)
+            raw_exe = _normalize_exe_token(raw_parts[0]) if raw_parts else ""
+            raw_args = raw_parts[1:] if raw_parts else []
+            ok = True
+            if raw_parts:
+                ok = _validate_python_exe_tokens(
+                    "python_exe",
+                    raw_exe,
+                    raw_args,
+                    errors,
+                    warnings,
+                    warn_only,
+                )
             else:
-                _error(errors, "tool.python_exe_missing", msg)
+                msg = f"python_exe is empty: {python_exe}"
+                if warn_only:
+                    _warn(warnings, "tool.python_exe_empty", msg)
+                else:
+                    _error(errors, "tool.python_exe_empty", msg)
+                ok = False
+            expanded_raw, did_expand = _expand_cmd_vars(raw)
+            exe_token = raw_exe
+            args = raw_args
+            if did_expand:
+                expanded_parts = _split_cmdline_tokens(expanded_raw.strip())
+                if expanded_parts:
+                    exe_token = _normalize_exe_token(expanded_parts[0])
+                    args = expanded_parts[1:]
+                    ok = _validate_python_exe_tokens(
+                        "python_exe (expanded)",
+                        exe_token,
+                        args,
+                        errors,
+                        warnings,
+                        warn_only,
+                    ) and ok
+                else:
+                    msg = f"python_exe empty after expansion: {python_exe}"
+                    if warn_only:
+                        _warn(warnings, "tool.python_exe_empty_after_expand", msg)
+                    else:
+                        _error(errors, "tool.python_exe_empty_after_expand", msg)
+                    exe_token = ""
+                    args = []
+                    ok = False
+            if exe_token and not exe_token.startswith("-"):
+                expanded = exe_token
+                if _is_windows() or "$" in expanded or "%" in expanded:
+                    expanded = os.path.expandvars(exe_token)
+                if os.path.exists(expanded) or shutil.which(expanded) is not None:
+                    if ok and _probe_python_exe(expanded, args, errors, warnings, warn_only):
+                        return
+                else:
+                    msg = f"python_exe not found: {python_exe}"
+                    if warn_only:
+                        _warn(warnings, "tool.python_exe_missing", msg)
+                    else:
+                        _error(errors, "tool.python_exe_missing", msg)
     if shutil.which("python") is not None:
         return
     if shutil.which("py") is not None:
@@ -1058,6 +1233,25 @@ def _line_has_cmd_v_on(line_body: str) -> bool:
     return any(cmd_v_on for _cmd_c, _cmd_k, cmd_v_on in _iter_cmd_invocations(line_body))
 
 
+def _dash_option_cmd(line_body: str) -> str | None:
+    for segment in _split_cmd_segments(line_body):
+        tokens = _split_cmdline_tokens(segment)
+        if not tokens:
+            continue
+        tokens[0] = tokens[0].lstrip("@")
+        idx = 0
+        if tokens[0].lower() == "call" and len(tokens) > 1:
+            idx = 1
+        if idx >= len(tokens):
+            continue
+        cmd_token = _normalize_exe_token(tokens[idx])
+        cmd_name = PureWindowsPath(cmd_token).name.lower()
+        if cmd_name in DASH_OPTION_CMD_NAMES:
+            if len(tokens) > idx + 1 and tokens[idx + 1].startswith("-"):
+                return cmd_name
+    return None
+
+
 def _scan_cmd_file(
     path: Path,
     errors: list[Issue],
@@ -1393,6 +1587,20 @@ def _scan_cmd_file(
                 report_error("cmd.interactive.choice", "cmd uses choice (interactive)", line_no)
             else:
                 report_warn("cmd.interactive.choice", "cmd uses choice (interactive)", line_no)
+        dash_cmd = _dash_option_cmd(line_body)
+        if dash_cmd:
+            if profile == "ci":
+                report_error(
+                    "cmd.option.dash",
+                    f"cmd {dash_cmd} uses '-' option; prefer '/' style switches",
+                    line_no,
+                )
+            else:
+                report_warn(
+                    "cmd.option.dash",
+                    f"cmd {dash_cmd} uses '-' option; prefer '/' style switches",
+                    line_no,
+                )
         for match in CMD_C_QUOTED_RE.finditer(line_body):
             inner = match.group(1)
             if any(ch in inner for ch in CMD_QUOTED_META_CHARS):
