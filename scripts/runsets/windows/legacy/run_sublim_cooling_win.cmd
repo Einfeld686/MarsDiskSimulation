@@ -14,14 +14,14 @@ if not defined PYTHON_EXE (
   )
   if not defined PYTHON_EXE (
     echo [error] python3.11/python/py not found in PATH
-    exit /b 1
+    call :popd_safe 1
   )
 ) else (
   if not exist "%PYTHON_EXE%" (
-    where %PYTHON_EXE% >nul 2>&1
+    where "%PYTHON_EXE%" >nul 2>&1
     if errorlevel 1 (
       echo [error] %PYTHON_EXE% not found in PATH
-      exit /b 1
+      call :popd_safe 1
     )
   )
 )
@@ -46,7 +46,6 @@ if not exist "%VENV_DIR%\Scripts\python.exe" (
   if %errorlevel% neq 0 (
     echo [error] Failed to create virtual environment.
     call :popd_safe
-    exit /b %errorlevel%
   )
 )
 
@@ -54,7 +53,6 @@ call "%VENV_DIR%\Scripts\activate.bat"
 if %errorlevel% neq 0 (
   echo [error] Failed to activate virtual environment.
   call :popd_safe
-  exit /b %errorlevel%
 )
 set "PYTHON_EXE=%VENV_DIR%\Scripts\python.exe"
 
@@ -65,7 +63,6 @@ if exist "%REQ_FILE%" (
   if %errorlevel% neq 0 (
     echo [error] Dependency installation failed.
     call :popd_safe
-    exit /b %errorlevel%
   )
 ) else (
   echo [warn] %REQ_FILE% not found; skipping dependency install.
@@ -115,17 +112,17 @@ if exist "%REQ_FILE%" (
 set EXITCODE=%errorlevel%
 if %EXITCODE% neq 0 (
   echo [error] Run failed with exit code %EXITCODE%.
-  call :popd_safe
-  exit /b %EXITCODE%
+  call :popd_safe %EXITCODE%
 )
 
 echo [done] Run finished. Output: %OUTDIR%
 call :popd_safe
 
 :popd_safe
-set "MARSDISK_POPD_ERRORLEVEL=%ERRORLEVEL%"
+set "MARSDISK_POPD_ERRORLEVEL=%~1"
+if not defined MARSDISK_POPD_ERRORLEVEL set "MARSDISK_POPD_ERRORLEVEL=%ERRORLEVEL%"
 if defined MARSDISK_POPD_ACTIVE (
   popd
   set "MARSDISK_POPD_ACTIVE="
 )
-exit /b %MARSDISK_POPD_ERRORLEVEL%
+endlocal & exit /b %MARSDISK_POPD_ERRORLEVEL%

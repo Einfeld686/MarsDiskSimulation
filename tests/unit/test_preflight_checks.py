@@ -43,6 +43,7 @@ def _scan_cmd_text(
     text: str,
     cmd_unsafe_error: bool = False,
     profile: str = "default",
+    autorun_detected: bool = False,
     debug: bool = False,
 ):
     path = tmp_path / "scan.cmd"
@@ -50,7 +51,17 @@ def _scan_cmd_text(
     errors: list[object] = []
     warnings: list[object] = []
     infos: list[object] = []
-    module._scan_cmd_file(path, errors, warnings, infos, cmd_unsafe_error, profile, None, debug)
+    module._scan_cmd_file(
+        path,
+        errors,
+        warnings,
+        infos,
+        cmd_unsafe_error,
+        profile,
+        None,
+        autorun_detected,
+        debug,
+    )
     return errors, warnings, infos
 
 
@@ -246,6 +257,7 @@ def test_scan_cmd_file_handles_bom_first_line(tmp_path: Path) -> None:
         cmd_unsafe_error=True,
         profile="default",
         allowlist_rules=None,
+        autorun_detected=False,
     )
 
     assert any("contains '!'" in err.message for err in errors)
@@ -267,6 +279,7 @@ def test_cmd_utf16_bom_errors(tmp_path: Path) -> None:
         cmd_unsafe_error=False,
         profile="default",
         allowlist_rules=None,
+        autorun_detected=False,
     )
 
     assert any(err.rule == "cmd.encoding.utf16" for err in errors)
@@ -288,6 +301,7 @@ def test_cmd_nul_bytes_warns(tmp_path: Path) -> None:
         cmd_unsafe_error=False,
         profile="default",
         allowlist_rules=None,
+        autorun_detected=False,
     )
 
     assert any(warn.rule == "cmd.encoding.nul" for warn in warnings)
@@ -347,7 +361,7 @@ def test_delayed_expansion_info(tmp_path: Path) -> None:
     errors, warnings, infos = _scan_cmd_text(
         module,
         tmp_path,
-        "setlocal enabledelayedexpansion\n",
+        "setlocal enabledelayedexpansion\nendlocal\n",
     )
 
     assert not errors
@@ -653,3 +667,15 @@ def test_cmd_invocation_detects_cmd_without_c(tmp_path: Path) -> None:
     _errors, warnings, _infos = _scan_cmd_text(module, tmp_path, "cmd /k echo ok\n")
 
     assert any(warn.rule == "cmd.interactive.cmd" for warn in warnings)
+
+
+def test_cmd_autorun_missing_d_warns(tmp_path: Path) -> None:
+    module = _load_module()
+    _errors, warnings, _infos = _scan_cmd_text(
+        module,
+        tmp_path,
+        "cmd /c echo ok\n",
+        autorun_detected=True,
+    )
+
+    assert any(warn.rule == "cmd.autorun.missing_d" for warn in warnings)

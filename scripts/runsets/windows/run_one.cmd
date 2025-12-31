@@ -15,7 +15,7 @@ if not defined PYTHON_EXE (
   )
 ) else (
   if not exist "%PYTHON_EXE%" (
-    where %PYTHON_EXE% >nul 2>&1
+    where "%PYTHON_EXE%" >nul 2>&1
     if errorlevel 1 (
       echo.[error] %PYTHON_EXE% not found in PATH
       exit /b 1
@@ -254,3 +254,5 @@ if defined MARSDISK_POPD_ACTIVE (
   set "MARSDISK_POPD_ACTIVE="
 )
 exit /b %MARSDISK_POPD_ERRORLEVEL%
+
+endlocal

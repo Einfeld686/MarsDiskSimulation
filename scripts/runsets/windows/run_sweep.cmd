@@ -39,6 +39,13 @@ set "PYTHON_ARGS_SET=0"
 if defined PYTHON_ARGS set "PYTHON_ARGS_SET=1"
 set "PYTHON_EXE_RAW=%PYTHON_EXE%"
 set "PYTHON_EXE_RAW=%PYTHON_EXE_RAW:"=%"
+if "!PYTHON_EXE_RAW:~0,1!"=="-" (
+  if "!PYTHON_ARGS_SET!"=="0" (
+    set "PYTHON_ARGS=!PYTHON_EXE_RAW!"
+    set "PYTHON_ARGS_SET=1"
+  )
+  set "PYTHON_EXE_RAW="
+)
 if "!PYTHON_ARGS_SET!"=="0" set "PYTHON_ARGS="
 set "PYTHON_EXE=!PYTHON_EXE_RAW!"
 set "PYTHON_HAS_SPACE=0"
@@ -68,8 +75,16 @@ if "!PYTHON_HAS_SPACE!"=="1" if "!PYTHON_RAW_LOOKS_PATH!"=="1" if "!PYTHON_ARGS_
   echo.[warn] PYTHON_EXE looks like a path with spaces; quote it or set PYTHON_ARGS.
 )
 if not defined PYTHON_EXE (
-  echo.[error] PYTHON_EXE is empty after normalization
-  exit /b 1
+  for %%P in (python3.11 python py) do (
+    if not defined PYTHON_EXE (
+      where %%P >nul 2>&1
+      if not errorlevel 1 set "PYTHON_EXE=%%P"
+    )
+  )
+  if not defined PYTHON_EXE (
+    echo.[error] PYTHON_EXE is empty after normalization
+    exit /b 1
+  )
 )
 set "PYTHON_ARGS_FIRST="
 set "PYTHON_ARGS_REST="
@@ -168,6 +183,28 @@ set "PYTHON_EXE_QUOTED=!PYTHON_EXE!"
 if not "!PYTHON_EXE: =!"=="!PYTHON_EXE!" set "PYTHON_EXE_QUOTED="!PYTHON_EXE!""
 set "PYTHON_CMD=!PYTHON_EXE_QUOTED!"
 if not "!PYTHON_ARGS!"=="" set "PYTHON_CMD=!PYTHON_EXE_QUOTED! !PYTHON_ARGS!"
+set "PYTHON_CMD_SANITY=1"
+if not defined PYTHON_EXE set "PYTHON_CMD_SANITY=0"
+if "!PYTHON_EXE:~0,1!"=="-" set "PYTHON_CMD_SANITY=0"
+if "!PYTHON_CMD:~0,1!"=="-" set "PYTHON_CMD_SANITY=0"
+if "!PYTHON_CMD_SANITY!"=="0" (
+  echo.[warn] python command invalid; resetting to python in PATH
+  set "PYTHON_EXE="
+  set "PYTHON_ARGS="
+  for %%P in (python3.11 python py) do (
+    if not defined PYTHON_EXE (
+      where %%P >nul 2>&1
+      if not errorlevel 1 set "PYTHON_EXE=%%P"
+    )
+  )
+  if not defined PYTHON_EXE (
+    echo.[error] python3.11/python/py not found in PATH
+    exit /b 1
+  )
+  set "PYTHON_EXE_QUOTED=!PYTHON_EXE!"
+  if not "!PYTHON_EXE: =!"=="!PYTHON_EXE!" set "PYTHON_EXE_QUOTED="!PYTHON_EXE!""
+  set "PYTHON_CMD=!PYTHON_EXE_QUOTED!"
+)
 set "PYTHON_VERSION_OK=0"
 !PYTHON_CMD! -c "import sys; raise SystemExit(0 if sys.version_info >= (3,11) else 1)" >nul 2>&1
 if not errorlevel 1 set "PYTHON_VERSION_OK=1"
@@ -1866,3 +1903,5 @@ if defined MARSDISK_POPD_ACTIVE (
   set "MARSDISK_POPD_ACTIVE="
 )
 exit /b %MARSDISK_POPD_ERRORLEVEL%
+
+endlocal
