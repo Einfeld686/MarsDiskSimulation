@@ -1,0 +1,41 @@
+# Preflight checks configuration file
+# Copy to .preflightrc.yml in your repo root to use
+
+# Lint profile: "default" or "ci"
+# CI profile treats interactive commands as errors
+profile: default
+
+# Allow non-ASCII characters in paths
+allow_non_ascii: false
+
+# Directories to exclude from CMD file scanning
+cmd_exclude:
+  - legacy/
+  - vendor/
+
+# Directories to exclude from repo name scanning
+scan_exclude:
+  - node_modules
+  - .git
+  - __pycache__
+  - out
+
+# Rules to disable (check --list-rules for available rules)
+disable_rules: []
+  # - cmd.encoding.bom
+  # - cmd.line_endings.lf_only
+
+# Enable only specific rules (if set, only these rules are checked)
+enable_only: []
+
+# Require git to be installed
+require_git: false
+
+# Require PowerShell to be installed
+require_powershell: false
+
+# Strict mode: treat warnings as failures
+strict: false
+
+# Run Windows-style checks on non-Windows hosts
+simulate_windows: false

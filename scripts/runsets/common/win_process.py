@@ -118,6 +118,7 @@ def main() -> int:
 
     launch = sub.add_parser("launch", help="Launch a cmd.exe job and print its PID.")
     launch.add_argument("--cmd", default=None, help="Command string to run.")
+    launch.add_argument("--cmd-file", default=None, help="File containing command string to run.")
     launch.add_argument("--cwd", default=None, help="Working directory for the launched cmd.exe job.")
     launch.add_argument("--window-style", default=None, help="Normal/Hidden/Minimized/Maximized.")
 
@@ -127,7 +128,16 @@ def main() -> int:
     args = ap.parse_args()
 
     if args.command == "launch":
-        cmd = args.cmd or os.environ.get("JOB_CMD", "")
+        cmd = args.cmd
+        if not cmd and args.cmd_file:
+            try:
+                with open(args.cmd_file, "r", encoding="utf-8") as f:
+                    cmd = f.read().strip()
+            except OSError as e:
+                print(f"[error] failed to read cmd-file: {e}", file=sys.stderr)
+                return 2
+        if not cmd:
+            cmd = os.environ.get("JOB_CMD", "")
         if not cmd:
             print("[error] missing JOB_CMD", file=sys.stderr)
             return 2

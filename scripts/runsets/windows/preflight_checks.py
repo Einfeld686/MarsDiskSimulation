@@ -2459,10 +2459,15 @@ def _read_git_longpaths(repo_root: Path) -> bool | None:
 
 def main() -> int:
     _maybe_reexec_with_python311()
-    ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument("--repo-root", required=True, type=Path)
-    ap.add_argument("--config", required=True, type=Path)
-    ap.add_argument("--overrides", required=True, type=Path)
+    ap = argparse.ArgumentParser(
+        description=__doc__,
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
+    
+    # Core arguments (made optional for --list-rules and --fix modes)
+    ap.add_argument("--repo-root", type=Path, help="Repository root directory.")
+    ap.add_argument("--config", type=Path, help="Configuration YAML file.")
+    ap.add_argument("--overrides", type=Path, help="Overrides file.")
     ap.add_argument("--out-root", default="", help="Output root (optional).")
     ap.add_argument(
         "--python-exe",
@@ -2544,9 +2549,9 @@ def main() -> int:
     )
     ap.add_argument(
         "--format",
-        choices=("text", "json"),
+        choices=("text", "json", "sarif"),
         default="text",
-        help="Output format.",
+        help="Output format (text, json, or sarif).",
     )
     ap.add_argument(
         "--debug",
@@ -2554,7 +2559,123 @@ def main() -> int:
         help="Emit verbose diagnostics (e.g., delayed expansion usage).",
     )
     ap.add_argument("--strict", action="store_true")
+    
+    # New feature arguments
+    ap.add_argument(
+        "--list-rules",
+        action="store_true",
+        help="List all available rules and exit.",
+    )
+    ap.add_argument(
+        "--fix",
+        action="store_true",
+        help="Automatically fix issues where possible (BOM, line endings).",
+    )
+    ap.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Show what --fix would do without making changes.",
+    )
+    ap.add_argument(
+        "--disable-rule",
+        action="append",
+        default=[],
+        dest="disable_rules",
+        metavar="RULE",
+        help="Disable specific rule (repeatable).",
+    )
+    ap.add_argument(
+        "--enable-only",
+        action="append",
+        default=[],
+        dest="enable_only",
+        metavar="RULE",
+        help="Enable only specific rules (repeatable).",
+    )
+    ap.add_argument(
+        "--changed-only",
+        action="store_true",
+        help="Only scan files changed in git working tree.",
+    )
+    ap.add_argument(
+        "--config-file",
+        type=Path,
+        default=None,
+        help="Path to .preflightrc.yml config file (auto-detected if not specified).",
+    )
+    
     args = ap.parse_args()
+
+    # Handle --list-rules early exit
+    if args.list_rules:
+        _print_rules_list()
+        return 0
+    
+    # Load config file if present
+    file_config: PreflightConfig | None = None
+    if args.config_file:
+        if args.config_file.exists():
+            file_config = _load_config_file(args.config_file)
+        else:
+            print(f"[error] Config file not found: {args.config_file}", file=sys.stderr)
+            return 1
+    elif args.repo_root:
+        found_config = _find_config_file(args.repo_root)
+        if found_config:
+            file_config = _load_config_file(found_config)
+            print(f"[info] Using config file: {found_config}", file=sys.stderr)
+    
+    # Merge config file settings with CLI args (CLI takes precedence)
+    if file_config:
+        if not args.profile or args.profile == "default":
+            args.profile = file_config.profile
+        if not args.allow_non_ascii:
+            args.allow_non_ascii = file_config.allow_non_ascii
+        if not args.cmd_exclude:
+            args.cmd_exclude = file_config.cmd_exclude
+        if not args.scan_exclude:
+            args.scan_exclude = file_config.scan_exclude
+        if not args.disable_rules:
+            args.disable_rules = file_config.disable_rules
+        if not args.enable_only:
+            args.enable_only = file_config.enable_only
+        if not args.require_git:
+            args.require_git = file_config.require_git
+        if not args.require_powershell:
+            args.require_powershell = file_config.require_powershell
+        if not args.strict:
+            args.strict = file_config.strict
+        if not args.simulate_windows:
+            args.simulate_windows = file_config.simulate_windows
+
+    # Convert rule lists to sets for faster lookup
+    disable_rules_set = set(args.disable_rules) if args.disable_rules else set()
+    enable_only_set = set(args.enable_only) if args.enable_only else set()
+    
+    # Validate rule names
+    all_known_rules = set(CMD_ALLOWLIST_RULES) | set(RULE_DESCRIPTIONS.keys())
+    for rule in disable_rules_set | enable_only_set:
+        if rule not in all_known_rules:
+            print(f"[warn] Unknown rule: {rule}", file=sys.stderr)
+
+    # For --fix mode with minimal args, allow operation on just cmd files
+    if args.fix and args.cmd and not args.repo_root:
+        args.repo_root = Path.cwd()
+    if args.fix and args.cmd and not args.config:
+        args.config = Path("/dev/null") if not _is_windows() else Path("NUL")
+    if args.fix and args.cmd and not args.overrides:
+        args.overrides = Path("/dev/null") if not _is_windows() else Path("NUL")
+    
+    # Validate required arguments for normal operation
+    if not args.repo_root:
+        print("[error] --repo-root is required", file=sys.stderr)
+        return 1
+    if not args.config:
+        print("[error] --config is required", file=sys.stderr)
+        return 1
+    if not args.overrides:
+        print("[error] --overrides is required", file=sys.stderr)
+        return 1
 
     args.repo_root = args.repo_root.resolve(strict=False)
     args.config = args.config.resolve(strict=False)
@@ -2577,6 +2698,16 @@ def main() -> int:
             "host.non_windows",
             "host is not Windows; cmd-specific checks may be incomplete",
         )
+
+    # Handle --changed-only: get changed CMD files from git
+    if args.changed_only:
+        changed_cmd_files = _get_git_changed_files(args.repo_root, {".cmd", ".bat"})
+        if changed_cmd_files:
+            args.cmd = [str(p) for p in changed_cmd_files]
+            print(f"[info] Scanning {len(changed_cmd_files)} changed file(s)", file=sys.stderr)
+        else:
+            print("[info] No changed CMD/BAT files found", file=sys.stderr)
+            args.cmd = []
 
     cmd_paths = _collect_cmd_paths(args.cmd, args.cmd_root, errors, args.cmd_exclude)
     delayed_expansion_used = False
@@ -2927,15 +3058,89 @@ def main() -> int:
             elif git_longpaths is None and args.require_git:
                 _warn(warnings, "git.longpaths_unset", "git core.longpaths not set")
 
+    # Apply rule filtering
+    if disable_rules_set or enable_only_set:
+        errors = _filter_issues(errors, disable_rules_set, enable_only_set)
+        warnings = _filter_issues(warnings, disable_rules_set, enable_only_set)
+        infos = _filter_issues(infos, disable_rules_set, enable_only_set)
+
+    # Handle --fix mode
+    fix_results: list[FixResult] = []
+    if args.fix or args.dry_run:
+        all_issues = errors + warnings
+        fixable_by_path = _collect_fixable_issues(all_issues)
+        
+        if fixable_by_path:
+            if args.dry_run:
+                print("\n[dry-run] Would fix the following files:")
+                for path, rules in sorted(fixable_by_path.items()):
+                    for rule in sorted(rules):
+                        print(f"  {path}: {rule} - {FIXABLE_RULES.get(rule, 'fix')}")
+            else:
+                print("\n[fix] Applying automatic fixes...")
+                for path, rules in sorted(fixable_by_path.items()):
+                    results = _apply_fixes(path, rules)
+                    fix_results.extend(results)
+                    for result in results:
+                        status_icon = "✓" if result.success else "✗"
+                        print(f"  [{status_icon}] {result.path}: {result.message}")
+                
+                # Re-scan fixed files to update issue counts
+                if fix_results:
+                    fixed_paths = {r.path for r in fix_results if r.success}
+                    if fixed_paths:
+                        print(f"\n[fix] Fixed {len(fixed_paths)} file(s). Re-scanning...")
+                        # Clear issues for re-scan
+                        errors_new: list[Issue] = []
+                        warnings_new: list[Issue] = []
+                        infos_new: list[Issue] = []
+                        
+                        for cmd_path in cmd_paths:
+                            if cmd_path in fixed_paths:
+                                allowlist_rules = _allowlist_rules_for(cmd_path, args.repo_root, allowlist_entries)
+                                if allowlist_rules and "*" in allowlist_rules:
+                                    continue
+                                _scan_cmd_file(
+                                    cmd_path,
+                                    errors_new,
+                                    warnings_new,
+                                    infos_new,
+                                    cmd_unsafe_error,
+                                    args.profile,
+                                    allowlist_rules,
+                                    autorun_detected,
+                                    debug=args.debug,
+                                )
+                        
+                        # Update with re-scanned results for fixed files
+                        # Keep issues from unfixed files
+                        errors = [e for e in errors if e.path not in {str(p) for p in fixed_paths}] + errors_new
+                        warnings = [w for w in warnings if w.path not in {str(p) for p in fixed_paths}] + warnings_new
+                        infos = [i for i in infos if i.path not in {str(p) for p in fixed_paths}] + infos_new
+                        
+                        # Re-apply filtering
+                        if disable_rules_set or enable_only_set:
+                            errors = _filter_issues(errors, disable_rules_set, enable_only_set)
+                            warnings = _filter_issues(warnings, disable_rules_set, enable_only_set)
+                            infos = _filter_issues(infos, disable_rules_set, enable_only_set)
+        else:
+            print("\n[fix] No fixable issues found.")
+
     exit_code = 0
     if errors:
         exit_code = 1
     elif warnings and args.strict:
         exit_code = 2
 
+    # Output formatting
     if args.format == "json":
         payload = _build_json_payload(errors, warnings, infos, exit_code)
         print(json.dumps(payload, ensure_ascii=True, indent=2))
+        return exit_code
+    
+    if args.format == "sarif":
+        sarif_output = _build_sarif_output(errors, warnings, infos, args.repo_root)
+        print(json.dumps(sarif_output, ensure_ascii=True, indent=2))
         return exit_code
 
     status = "ok"
@@ -2943,8 +3148,15 @@ def main() -> int:
         status = "failed"
     elif warnings and args.strict:
         status = "warn"
+    
+    # Summary line
+    fix_summary = ""
+    if fix_results:
+        success_count = sum(1 for r in fix_results if r.success)
+        fix_summary = f", fixes={success_count}/{len(fix_results)}"
+    
     print(
-        f"[preflight] {status} (errors={len(errors)}, warnings={len(warnings)}, infos={len(infos)})"
+        f"[preflight] {status} (errors={len(errors)}, warnings={len(warnings)}, infos={len(infos)}{fix_summary})"
     )
 
     if errors:

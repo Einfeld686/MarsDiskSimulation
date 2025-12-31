@@ -842,24 +842,18 @@ if not exist "%SWEEP_LIST_FILE%" (
 )
 
 call :trace_detail "parallel check"
-echo.[debug] SWEEP_PARALLEL=%SWEEP_PARALLEL% PARALLEL_JOBS=%PARALLEL_JOBS% RUN_ONE_MODE=%RUN_ONE_MODE%
 if "%SWEEP_PARALLEL%"=="0" (
   call :trace_detail "sweep parallel disabled"
-  echo.[debug] branch: sweep_parallel=0 -> sequential
 ) else if not "%PARALLEL_JOBS%"=="1" (
   if not defined RUN_ONE_MODE (
     call :trace_detail "dispatch parallel"
-    echo.[debug] branch: sweep_parallel=1, parallel_jobs!=1, no run_one -> parallel
     call :run_parallel
     call :popd_safe
     exit /b 0
   )
-) else (
-  echo.[debug] branch: sweep_parallel=1, parallel_jobs=1 -> sequential (fallback)
 )
 
 rem ---------- main loops ----------
-echo.[debug] entering main loops (sequential mode)
 call :trace "entering main loops"
 set "HAS_CASE=0"
 for /f "usebackq tokens=1-3 delims= " %%A in ("%SWEEP_LIST_FILE%") do (
@@ -1043,11 +1037,14 @@ for /f %%S in ('%PYTHON_CMD% "%NEXT_SEED_PY%"') do set "JOB_SEED_TMP=%%S"
 endlocal & set "JOB_SEED=%JOB_SEED_TMP%"
 call :wait_for_slot
 set "JOB_PID="
-  set "JOB_CMD=set RUN_TS=!RUN_TS!&& set BATCH_SEED=!BATCH_SEED!&& set RUN_ONE_T=!JOB_T!&& set RUN_ONE_EPS=!JOB_EPS!&& set RUN_ONE_TAU=!JOB_TAU!&& set RUN_ONE_SEED=!JOB_SEED!&& set AUTO_JOBS=0&& set PARALLEL_JOBS=1&& set SKIP_PIP=1&& call ""!SCRIPT_SELF_USE!"" --run-one"
+rem Build JOB_CMD with delayed expansion, then export to environment
+set "JOB_CMD=set RUN_TS=!RUN_TS!&& set BATCH_SEED=!BATCH_SEED!&& set RUN_ONE_T=!JOB_T!&& set RUN_ONE_EPS=!JOB_EPS!&& set RUN_ONE_TAU=!JOB_TAU!&& set RUN_ONE_SEED=!JOB_SEED!&& set AUTO_JOBS=0&& set PARALLEL_JOBS=1&& set SKIP_PIP=1&& call ""!SCRIPT_SELF_USE!"" --run-one"
+rem Write JOB_CMD to temp file to avoid cmd.exe escaping issues
+set "JOB_CMD_FILE=!TMP_ROOT!\marsdisk_job_cmd_!JOB_T!_!JOB_EPS!_!JOB_TAU!_!JOB_SEED!.txt"
+>"%JOB_CMD_FILE%" echo !JOB_CMD!
 set "JOB_PID_TMP="
-setlocal DisableDelayedExpansion
-for /f "usebackq delims=" %%P in (`%PYTHON_CMD% "%WIN_PROCESS_PY%" launch --window-style "%PARALLEL_WINDOW_STYLE%" --cwd "%JOB_CWD_USE%"`) do set "JOB_PID_TMP=%%P"
-endlocal & set "JOB_PID=%JOB_PID_TMP%"
+for /f "usebackq delims=" %%P in (`%PYTHON_CMD% "%WIN_PROCESS_PY%" launch --window-style "%PARALLEL_WINDOW_STYLE%" --cwd "%JOB_CWD_USE%" --cmd-file "!JOB_CMD_FILE!"`) do set "JOB_PID_TMP=%%P"
+set "JOB_PID=!JOB_PID_TMP!"
 if defined JOB_PID set "JOB_PIDS=!JOB_PIDS! !JOB_PID!"
 if not defined JOB_PID echo.[warn] failed to launch job for T=!JOB_T! eps=!JOB_EPS! tau=!JOB_TAU! - check Python availability
 exit /b 0
