@@ -145,7 +145,9 @@ def main() -> int:
         if not cmd:
             cmd = os.environ.get("JOB_CMD", "")
         if not cmd:
+            # Debug: show what environment variables are available
             print("[error] missing JOB_CMD", file=sys.stderr)
+            print(f"[debug] Available env vars with JOB: {[k for k in os.environ if 'JOB' in k.upper()]}", file=sys.stderr)
             return 2
         window_style = args.window_style or os.environ.get("PARALLEL_WINDOW_STYLE", "")
         return _launch(cmd, window_style, args.cwd)

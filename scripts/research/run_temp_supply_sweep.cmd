@@ -1037,13 +1037,11 @@ for /f %%S in ('%PYTHON_CMD% "%NEXT_SEED_PY%"') do set "JOB_SEED_TMP=%%S"
 endlocal & set "JOB_SEED=%JOB_SEED_TMP%"
 call :wait_for_slot
 set "JOB_PID="
-rem Build JOB_CMD with delayed expansion, then export to environment
+rem Build JOB_CMD with delayed expansion and pass via environment variable
 set "JOB_CMD=set RUN_TS=!RUN_TS!&& set BATCH_SEED=!BATCH_SEED!&& set RUN_ONE_T=!JOB_T!&& set RUN_ONE_EPS=!JOB_EPS!&& set RUN_ONE_TAU=!JOB_TAU!&& set RUN_ONE_SEED=!JOB_SEED!&& set AUTO_JOBS=0&& set PARALLEL_JOBS=1&& set SKIP_PIP=1&& call ""!SCRIPT_SELF_USE!"" --run-one"
-rem Write JOB_CMD to temp file to avoid cmd.exe escaping issues
-set "JOB_CMD_FILE=!TMP_ROOT!\marsdisk_job_cmd_!JOB_T!_!JOB_EPS!_!JOB_TAU!_!JOB_SEED!.txt"
->"%JOB_CMD_FILE%" echo !JOB_CMD!
 set "JOB_PID_TMP="
-for /f "usebackq delims=" %%P in (`%PYTHON_CMD% "%WIN_PROCESS_PY%" launch --window-style "%PARALLEL_WINDOW_STYLE%" --cwd "%JOB_CWD_USE%" --cmd-file "!JOB_CMD_FILE!"`) do set "JOB_PID_TMP=%%P"
+rem Use Python to launch - JOB_CMD is passed via environment variable
+for /f "usebackq delims=" %%P in (`!PYTHON_CMD! "!WIN_PROCESS_PY!" launch --window-style "!PARALLEL_WINDOW_STYLE!" --cwd "!JOB_CWD_USE!"`) do set "JOB_PID_TMP=%%P"
 set "JOB_PID=!JOB_PID_TMP!"
 if defined JOB_PID set "JOB_PIDS=!JOB_PIDS! !JOB_PID!"
 if not defined JOB_PID echo.[warn] failed to launch job for T=!JOB_T! eps=!JOB_EPS! tau=!JOB_TAU! - check Python availability
