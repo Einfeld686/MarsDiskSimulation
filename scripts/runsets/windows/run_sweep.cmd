@@ -8,7 +8,7 @@ rem Run a temp_supply sweep (1D default).
 
 setlocal EnableExtensions EnableDelayedExpansion
 if not defined DEBUG set "DEBUG=0"
-if "%~1"=="--debug" echo.[DEBUG] script started successfully at line 10
+if "%~1"=="--debug" echo.[DEBUG] checkpoint 1: script started, setlocal done
 
 if not defined TRACE_ENABLED set "TRACE_ENABLED=0"
 
@@ -17,6 +17,7 @@ if not defined TRACE_DETAIL set "TRACE_DETAIL=0"
 if not defined TRACE_ECHO set "TRACE_ECHO=0"
 
 if not defined PYTHON_ALLOW_LAUNCHER set "PYTHON_ALLOW_LAUNCHER=0"
+if "%~1"=="--debug" echo.[DEBUG] checkpoint 2: before PYTHON_EXE detection
 
 
 
@@ -54,7 +55,7 @@ if not defined PYTHON_EXE (
     echo.[error] python3.11/python not found in PATH
     exit /b 1
   )
-)
+if "%~1"=="--debug" echo.[DEBUG] checkpoint 3: PYTHON_EXE first pass done
 
 set "PYTHON_ARGS_SET=0"
 if defined PYTHON_ARGS set "PYTHON_ARGS_SET=1"
@@ -129,6 +130,7 @@ if not defined PYTHON_EXE (
     exit /b 1
   )
 )
+if "%~1"=="--debug" echo.[DEBUG] checkpoint 4: PYTHON_EXE normalization done
 set "PYTHON_ARGS_FIRST="
 set "PYTHON_ARGS_REST="
 if not "!PYTHON_ARGS!"=="" (
@@ -260,6 +262,7 @@ if "!PYTHON_VERSION_OK!"=="0" (
   )
   exit /b 1
 )
+if "%~1"=="--debug" echo.[DEBUG] checkpoint 5: Python version OK, setting REPO_ROOT
 for %%I in ("%~f0") do set "SCRIPT_DIR=%%~dpI"
 
 
