@@ -172,6 +172,48 @@ def test_scan_cmd_file_handles_bom_first_line(tmp_path: Path) -> None:
     assert any("contains '!'" in err.message for err in errors)
 
 
+def test_cmd_utf16_bom_errors(tmp_path: Path) -> None:
+    module = _load_module()
+    cmd_path = tmp_path / "utf16.cmd"
+    cmd_path.write_bytes(b"\xff\xfe@\x00e\x00c\x00h\x00o\x00\r\x00\n\x00")
+    errors: list[object] = []
+    warnings: list[object] = []
+    infos: list[object] = []
+
+    module._scan_cmd_file(
+        cmd_path,
+        errors,
+        warnings,
+        infos,
+        cmd_unsafe_error=False,
+        profile="default",
+        allowlist_rules=None,
+    )
+
+    assert any(err.rule == "cmd.encoding.utf16" for err in errors)
+
+
+def test_cmd_nul_bytes_warns(tmp_path: Path) -> None:
+    module = _load_module()
+    cmd_path = tmp_path / "nul.cmd"
+    cmd_path.write_bytes(b"@\x00e\x00c\x00h\x00o\x00\r\x00\n\x00")
+    errors: list[object] = []
+    warnings: list[object] = []
+    infos: list[object] = []
+
+    module._scan_cmd_file(
+        cmd_path,
+        errors,
+        warnings,
+        infos,
+        cmd_unsafe_error=False,
+        profile="default",
+        allowlist_rules=None,
+    )
+
+    assert any(warn.rule == "cmd.encoding.nul" for warn in warnings)
+
+
 def test_for_single_percent_is_error(tmp_path: Path) -> None:
     module = _load_module()
     errors, warnings, _infos = _scan_cmd_text(
@@ -243,6 +285,73 @@ def test_pathext_missing_is_error_in_ci(monkeypatch) -> None:
     module._check_pathext(errors, warnings, profile="ci")
 
     assert any(err.rule == "env.pathext.missing_or_suspicious" for err in errors)
+
+
+def test_delayed_expansion_before_enabled_warns(tmp_path: Path) -> None:
+    module = _load_module()
+    _errors, warnings, _infos = _scan_cmd_text(
+        module,
+        tmp_path,
+        "echo !FOO!\nsetlocal enabledelayedexpansion\n",
+    )
+
+    assert any(warn.rule == "cmd.delayed_expansion.before_enabled" for warn in warnings)
+
+
+def test_errorlevel_zero_warns(tmp_path: Path) -> None:
+    module = _load_module()
+    _errors, warnings, _infos = _scan_cmd_text(
+        module,
+        tmp_path,
+        "if errorlevel 0 echo ok\n",
+    )
+
+    assert any(warn.rule == "cmd.errorlevel.zero" for warn in warnings)
+
+
+def test_errorlevel_ascending_warns(tmp_path: Path) -> None:
+    module = _load_module()
+    _errors, warnings, _infos = _scan_cmd_text(
+        module,
+        tmp_path,
+        "if errorlevel 1 echo bad\nif errorlevel 2 echo worse\n",
+    )
+
+    assert any(warn.rule == "cmd.errorlevel.ascending" for warn in warnings)
+
+
+def test_setx_ci_is_error(tmp_path: Path) -> None:
+    module = _load_module()
+    errors, _warnings, _infos = _scan_cmd_text(
+        module,
+        tmp_path,
+        "setx FOO bar\n",
+        profile="ci",
+    )
+
+    assert any(err.rule == "cmd.env.setx" for err in errors)
+
+
+def test_endlocal_before_setlocal_warns(tmp_path: Path) -> None:
+    module = _load_module()
+    _errors, warnings, _infos = _scan_cmd_text(
+        module,
+        tmp_path,
+        "endlocal\nsetlocal\n",
+    )
+
+    assert any(warn.rule == "cmd.setlocal.order" for warn in warnings)
+
+
+def test_popd_more_than_pushd_warns(tmp_path: Path) -> None:
+    module = _load_module()
+    _errors, warnings, _infos = _scan_cmd_text(
+        module,
+        tmp_path,
+        "pushd C:\\Temp\npopd\npopd\n",
+    )
+
+    assert any(warn.rule == "cmd.pushd_popd.unbalanced" for warn in warnings)
 
 
 def test_cmd_unsafe_issue_flags_literal_bang_even_with_percent() -> None:

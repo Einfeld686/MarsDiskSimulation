@@ -28,6 +28,7 @@ set "PYTHON_BOOT=%PYTHON_EXE%"
 set "SCRIPT_DIR=%~dp0"
 for %%I in ("%SCRIPT_DIR%..\\..") do set "REPO_ROOT=%%~fI"
 pushd "%REPO_ROOT%" >nul
+set "MARSDISK_POPD_ACTIVE=1"
 
 if not defined ARCHIVE_DIR set "ARCHIVE_DIR=E:\marsdisk_runs"
 if not defined CONFIG_PATH set "CONFIG_PATH=configs\base.yml"
@@ -67,14 +68,14 @@ echo.[error] Unknown option: %~1
 :usage
 echo Usage: run_archive_external_smoke.cmd [--archive-dir ^<path^>] [--config ^<path^>]
 echo.       [--t-end-years ^<years^>] [--dt-init ^<seconds^>]
-popd
+call :popd_safe
 exit /b 1
 
 :args_done
 
 if not exist "%ARCHIVE_DIR%\\" (
   echo.[error] ARCHIVE_DIR not found: %ARCHIVE_DIR%
-  popd
+  call :popd_safe
   exit /b 2
 )
 
@@ -92,7 +93,7 @@ if not exist "%VENV_DIR%\\Scripts\\python.exe" (
   "%PYTHON_BOOT%" -m venv "%VENV_DIR%"
   if errorlevel 1 (
     echo [error] Failed to create virtual environment.
-    popd
+    call :popd_safe
     exit /b 1
   )
 )
@@ -100,7 +101,7 @@ if not exist "%VENV_DIR%\\Scripts\\python.exe" (
 call "%VENV_DIR%\\Scripts\\activate.bat"
 if errorlevel 1 (
   echo [error] Failed to activate virtual environment.
-  popd
+  call :popd_safe
   exit /b 1
 )
 set "PYTHON_EXE=%VENV_DIR%\\Scripts\\python.exe"
@@ -113,7 +114,7 @@ if "%SKIP_PIP%"=="1" (
   "%PYTHON_EXE%" -m pip install -r "%REQ_FILE%"
   if errorlevel 1 (
     echo [error] Dependency install failed.
-    popd
+    call :popd_safe
     exit /b 1
   )
 ) else (
@@ -150,41 +151,49 @@ echo [run] ARCHIVE_DEST=%ARCHIVE_DEST%
 set "RC=%errorlevel%"
 if not "%RC%"=="0" (
   echo [error] Run failed with exit code %RC%.
-  popd
+  call :popd_safe
   exit /b %RC%
 )
 
 if exist "%OUTDIR%\\INCOMPLETE" (
   echo [error] Archive marked INCOMPLETE; check %OUTDIR%\INCOMPLETE
-  popd
+  call :popd_safe
   exit /b 3
 )
 if exist "%OUTDIR%\\ARCHIVE_SKIPPED" (
   echo [error] Archive skipped; check %OUTDIR%\ARCHIVE_SKIPPED
-  popd
+  call :popd_safe
   exit /b 4
 )
 if not exist "%ARCHIVE_DEST%\\ARCHIVE_DONE" (
   echo [error] Archive marker missing: %ARCHIVE_DEST%\ARCHIVE_DONE
-  popd
+  call :popd_safe
   exit /b 5
 )
 if not exist "%ARCHIVE_DEST%\\summary.json" (
   echo [error] summary.json missing in archive: %ARCHIVE_DEST%\summary.json
-  popd
+  call :popd_safe
   exit /b 6
 )
 if not exist "%ARCHIVE_DEST%\\checks\\mass_budget.csv" (
   echo [error] mass_budget.csv missing in archive: %ARCHIVE_DEST%\checks\mass_budget.csv
-  popd
+  call :popd_safe
   exit /b 7
 )
 if not exist "%ARCHIVE_DEST%\\series\\run.parquet" (
   echo [error] run.parquet missing in archive: %ARCHIVE_DEST%\series\run.parquet
-  popd
+  call :popd_safe
   exit /b 8
 )
 
 echo [done] Archive smoke test passed: %ARCHIVE_DEST%
-popd
+call :popd_safe
 exit /b 0
+
+:popd_safe
+set "MARSDISK_POPD_ERRORLEVEL=%ERRORLEVEL%"
+if defined MARSDISK_POPD_ACTIVE (
+  popd
+  set "MARSDISK_POPD_ACTIVE="
+)
+exit /b %MARSDISK_POPD_ERRORLEVEL%

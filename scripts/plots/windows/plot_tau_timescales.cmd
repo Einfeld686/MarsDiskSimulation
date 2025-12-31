@@ -24,9 +24,10 @@ if not defined PYTHON_EXE (
 )
 set "PYTHON_BOOT=%PYTHON_EXE%"
 
-set "REPO=%~dp0..\..\.."
+set "REPO=%~dp0..\..\..\"
 for %%I in ("%REPO%") do set "REPO=%%~fI"
 pushd "%REPO%"
+set "MARSDISK_POPD_ACTIVE=1"
 
 if not defined VENV_DIR set "VENV_DIR=.venv"
 if not defined REQ_FILE set "REQ_FILE=requirements.txt"
@@ -36,7 +37,7 @@ if not exist "%VENV_DIR%\Scripts\python.exe" (
   "%PYTHON_BOOT%" -m venv "%VENV_DIR%"
   if %errorlevel% neq 0 (
     echo.[error] Failed to create virtual environment.
-    popd
+    call :popd_safe
     exit /b %errorlevel%
   )
 )
@@ -44,7 +45,7 @@ if not exist "%VENV_DIR%\Scripts\python.exe" (
 call "%VENV_DIR%\Scripts\activate.bat"
 if %errorlevel% neq 0 (
   echo.[error] Failed to activate virtual environment.
-  popd
+  call :popd_safe
   exit /b %errorlevel%
 )
 set "PYTHON_EXE=%VENV_DIR%\Scripts\python.exe"
@@ -55,7 +56,7 @@ if exist "%REQ_FILE%" (
   "%PYTHON_EXE%" -m pip install -r "%REQ_FILE%"
   if %errorlevel% neq 0 (
     echo.[error] Dependency installation failed.
-    popd
+    call :popd_safe
     exit /b %errorlevel%
   )
 ) else (
@@ -89,7 +90,7 @@ if "%~1"=="" (
   for /f "usebackq delims=" %%A in (`"%PYTHON_EXE%" -c "from pathlib import Path; import sys; root=Path('out'); if not root.exists(): sys.exit(2); files=list(root.rglob('run.parquet')); files=files or list(root.rglob('run_chunk_*.parquet')); if not files: sys.exit(3); latest=max(files, key=lambda p: p.stat().st_mtime); print(latest.parent.parent)"`) do set "DEFAULT_RUN=%%A"
   if not defined DEFAULT_RUN (
     echo.[error] No run outputs found under out\\ (need series\\run.parquet or run_chunk_*.parquet).
-    popd
+    call :popd_safe
     exit /b 2
   )
   echo.[info] Using latest run: !DEFAULT_RUN!
@@ -100,9 +101,17 @@ if "%~1"=="" (
 set EXITCODE=%errorlevel%
 if %EXITCODE% neq 0 (
   echo.[error] Plot failed with exit code %EXITCODE%.
-  popd
+  call :popd_safe
   exit /b %EXITCODE%
 )
 
-popd
+call :popd_safe
 endlocal
+
+:popd_safe
+set "MARSDISK_POPD_ERRORLEVEL=%ERRORLEVEL%"
+if defined MARSDISK_POPD_ACTIVE (
+  popd
+  set "MARSDISK_POPD_ACTIVE="
+)
+exit /b %MARSDISK_POPD_ERRORLEVEL%

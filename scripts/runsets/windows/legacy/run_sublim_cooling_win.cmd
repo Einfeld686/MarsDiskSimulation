@@ -27,9 +27,10 @@ if not defined PYTHON_EXE (
 )
 set "PYTHON_BOOT=%PYTHON_EXE%"
 
-set REPO=%~dp0..\..\..\..
+set "REPO=%~dp0..\..\..\..\"
 for %%I in ("%REPO%") do set "REPO=%%~fI"
 pushd "%REPO%"
+set "MARSDISK_POPD_ACTIVE=1"
 
 set OUTDIR=out\run_sublim_smol_phase_cooling
 set ARCHIVE_DIR=E:\marsdisk_runs
@@ -44,7 +45,7 @@ if not exist "%VENV_DIR%\Scripts\python.exe" (
   "%PYTHON_BOOT%" -m venv "%VENV_DIR%"
   if %errorlevel% neq 0 (
     echo [error] Failed to create virtual environment.
-    popd
+    call :popd_safe
     exit /b %errorlevel%
   )
 )
@@ -52,7 +53,7 @@ if not exist "%VENV_DIR%\Scripts\python.exe" (
 call "%VENV_DIR%\Scripts\activate.bat"
 if %errorlevel% neq 0 (
   echo [error] Failed to activate virtual environment.
-  popd
+  call :popd_safe
   exit /b %errorlevel%
 )
 set "PYTHON_EXE=%VENV_DIR%\Scripts\python.exe"
@@ -63,7 +64,7 @@ if exist "%REQ_FILE%" (
   "%PYTHON_EXE%" -m pip install -r "%REQ_FILE%"
   if %errorlevel% neq 0 (
     echo [error] Dependency installation failed.
-    popd
+    call :popd_safe
     exit /b %errorlevel%
   )
 ) else (
@@ -114,9 +115,17 @@ if exist "%REQ_FILE%" (
 set EXITCODE=%errorlevel%
 if %EXITCODE% neq 0 (
   echo [error] Run failed with exit code %EXITCODE%.
-  popd
+  call :popd_safe
   exit /b %EXITCODE%
 )
 
 echo [done] Run finished. Output: %OUTDIR%
-popd
+call :popd_safe
+
+:popd_safe
+set "MARSDISK_POPD_ERRORLEVEL=%ERRORLEVEL%"
+if defined MARSDISK_POPD_ACTIVE (
+  popd
+  set "MARSDISK_POPD_ACTIVE="
+)
+exit /b %MARSDISK_POPD_ERRORLEVEL%

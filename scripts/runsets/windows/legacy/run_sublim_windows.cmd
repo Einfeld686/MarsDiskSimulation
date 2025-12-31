@@ -28,9 +28,10 @@ if not defined PYTHON_EXE (
 )
 set "PYTHON_BOOT=%PYTHON_EXE%"
 
-set REPO=%~dp0..\..\..\..
+set "REPO=%~dp0..\..\..\..\"
 for %%I in ("%REPO%") do set "REPO=%%~fI"
 pushd "%REPO%"
+set "MARSDISK_POPD_ACTIVE=1"
 
 set OUTDIR=out\run_sublim_smol_phase_MAX50M
 set ARCHIVE_DIR=E:\marsdisk_runs
@@ -92,9 +93,17 @@ if exist "%REQ_FILE%" (
 
 if %errorlevel% neq 0 (
   echo [error] Run failed with exit code %errorlevel%.
-  popd
+  call :popd_safe
   exit /b %errorlevel%
 )
 
 echo [done] Run finished. Output: %OUTDIR%
-popd
+call :popd_safe
+
+:popd_safe
+set "MARSDISK_POPD_ERRORLEVEL=%ERRORLEVEL%"
+if defined MARSDISK_POPD_ACTIVE (
+  popd
+  set "MARSDISK_POPD_ACTIVE="
+)
+exit /b %MARSDISK_POPD_ERRORLEVEL%

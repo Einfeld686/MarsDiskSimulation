@@ -98,16 +98,17 @@ findstr /c:"--dry-run" "%FILE%" >nul 2>&1
 if not errorlevel 1 (
   echo   [info] Script supports --dry-run, attempting dry-run test...
   pushd "%REPO_ROOT%"
+  set "MARSDISK_POPD_ACTIVE=1"
   call "%FILE%" --dry-run >nul 2>&1
   if errorlevel 1 (
     echo   [FAIL] Dry-run failed with errorlevel %errorlevel%
     set /a FAIL+=1
-    popd
+    call :popd_safe
     goto :eof
   ) else (
     echo   [PASS] Dry-run succeeded
   )
-  popd
+  call :popd_safe
 ) else (
   echo   [info] Script does not support --dry-run, skipping execution test
 )
@@ -115,3 +116,11 @@ if not errorlevel 1 (
 echo   [PASS] Basic checks passed
 set /a PASS+=1
 goto :eof
+
+:popd_safe
+set "MARSDISK_POPD_ERRORLEVEL=%ERRORLEVEL%"
+if defined MARSDISK_POPD_ACTIVE (
+  popd
+  set "MARSDISK_POPD_ACTIVE="
+)
+exit /b %MARSDISK_POPD_ERRORLEVEL%

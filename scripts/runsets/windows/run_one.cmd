@@ -212,6 +212,7 @@ if defined OUT_ROOT set "OUT_ROOT=%OUT_ROOT%"
 
 for %%I in ("%~dp0..\..\..") do set "REPO_ROOT=%%~fI"
 pushd "%REPO_ROOT%" >nul
+set "MARSDISK_POPD_ACTIVE=1"
 
 if defined OUT_ROOT (
   for %%I in ("%OUT_ROOT%") do set "OUT_ROOT=%%~fI"
@@ -225,23 +226,31 @@ if defined CI (
 )
 if errorlevel 1 (
   echo.[error] preflight failed
-  popd
+  call :popd_safe
   exit /b 1
 )
 if "%PREFLIGHT_ONLY%"=="1" (
   echo.[info] preflight-only requested; exiting.
-  popd
+  call :popd_safe
   exit /b 0
 )
 
 if "%DRY_RUN%"=="1" (
   call scripts\research\run_temp_supply_sweep.cmd --dry-run
-  popd
+  call :popd_safe
   exit /b %errorlevel%
 )
 
 call scripts\research\run_temp_supply_sweep.cmd --run-one
 set "RUN_RC=%errorlevel%"
 
-popd
+call :popd_safe
 exit /b %RUN_RC%
+
+:popd_safe
+set "MARSDISK_POPD_ERRORLEVEL=%ERRORLEVEL%"
+if defined MARSDISK_POPD_ACTIVE (
+  popd
+  set "MARSDISK_POPD_ACTIVE="
+)
+exit /b %MARSDISK_POPD_ERRORLEVEL%

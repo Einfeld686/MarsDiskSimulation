@@ -4,6 +4,8 @@ io.streaming.memory_limit_gb=10
 io.streaming.step_flush_interval=10000
 io.streaming.merge_at_end=true
 io.streaming.cleanup_chunks=true
+io.psd_history=true
+io.psd_history_stride=10
 # Archive (Windows production defaults)
 io.archive.enabled=true
 io.archive.dir=E:\marsdisk_runs

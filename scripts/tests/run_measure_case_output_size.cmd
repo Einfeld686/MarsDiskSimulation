@@ -57,6 +57,7 @@ set "SCRIPT_DIR=%~dp0"
 for %%I in ("%SCRIPT_DIR%..\..") do set "REPO_ROOT=%%~fI"
 
 pushd "%REPO_ROOT%" >nul
+set "MARSDISK_POPD_ACTIVE=1"
 
 
 
@@ -76,7 +77,7 @@ if not exist "%VENV_DIR%\Scripts\python.exe" (
 
     echo [error] Failed to create virtual environment.
 
-    popd
+    call :popd_safe
 
     exit /b 1
 
@@ -92,7 +93,7 @@ if errorlevel 1 (
 
   echo [error] Failed to activate virtual environment.
 
-  popd
+  call :popd_safe
 
   exit /b 1
 
@@ -114,7 +115,7 @@ if exist "%REQ_FILE%" (
 
     echo [error] Dependency install failed.
 
-    popd
+    call :popd_safe
 
     exit /b 1
 
@@ -170,7 +171,15 @@ set "RC=%errorlevel%"
 
 
 
-popd
+call :popd_safe
 
 exit /b %RC%
 
+
+:popd_safe
+set "MARSDISK_POPD_ERRORLEVEL=%ERRORLEVEL%"
+if defined MARSDISK_POPD_ACTIVE (
+  popd
+  set "MARSDISK_POPD_ACTIVE="
+)
+exit /b %MARSDISK_POPD_ERRORLEVEL%

@@ -1329,6 +1329,7 @@ if not exist "%REPO_ROOT%\\scripts\\research\\run_temp_supply_sweep.cmd" (
 
 
 pushd "%REPO_ROOT%" >nul
+set "MARSDISK_POPD_ACTIVE=1"
 
 
 
@@ -1348,7 +1349,7 @@ if "%DRY_RUN%"=="1" (
 
 
 
-  popd
+  call :popd_safe
 
 
 
@@ -1491,7 +1492,7 @@ set "RUN_RC=%errorlevel%"
 
 
 
-popd
+call :popd_safe
 
 
 
@@ -1658,3 +1659,11 @@ if not exist "!VAR_VAL!" (
 exit /b 0
 
 
+
+:popd_safe
+set "MARSDISK_POPD_ERRORLEVEL=%ERRORLEVEL%"
+if defined MARSDISK_POPD_ACTIVE (
+  popd
+  set "MARSDISK_POPD_ACTIVE="
+)
+exit /b %MARSDISK_POPD_ERRORLEVEL%

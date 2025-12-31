@@ -28,6 +28,7 @@ set "PYTHON_BOOT=%PYTHON_EXE%"
 set "SCRIPT_DIR=%~dp0"
 for %%I in ("%SCRIPT_DIR%..\..") do set "REPO_ROOT=%%~fI"
 pushd "%REPO_ROOT%" >nul
+set "MARSDISK_POPD_ACTIVE=1"
 
 set "VENV_DIR=.venv"
 set "REQ_FILE=requirements.txt"
@@ -37,7 +38,7 @@ if not exist "%VENV_DIR%\Scripts\python.exe" (
   "%PYTHON_BOOT%" -m venv "%VENV_DIR%"
   if errorlevel 1 (
     echo [error] Failed to create virtual environment.
-    popd
+    call :popd_safe
     exit /b 1
   )
 )
@@ -45,7 +46,7 @@ if not exist "%VENV_DIR%\Scripts\python.exe" (
 call "%VENV_DIR%\Scripts\activate.bat"
 if errorlevel 1 (
   echo [error] Failed to activate virtual environment.
-  popd
+  call :popd_safe
   exit /b 1
 )
 set "PYTHON_EXE=%VENV_DIR%\Scripts\python.exe"
@@ -56,7 +57,7 @@ if exist "%REQ_FILE%" (
   "%PYTHON_EXE%" -m pip install -r "%REQ_FILE%"
   if errorlevel 1 (
     echo [error] Dependency install failed.
-    popd
+    call :popd_safe
     exit /b 1
   )
 ) else (
@@ -103,11 +104,19 @@ if "%RUN_PROFILE_NUMBA_OFF%"=="1" (
 )
 
 echo [done] re-measurement commands completed.
-popd
+call :popd_safe
 exit /b 0
 
 :fail
 set "RC=%errorlevel%"
 echo [error] re-measurement failed (rc=%RC%).
-popd
+call :popd_safe
 exit /b %RC%
+
+:popd_safe
+set "MARSDISK_POPD_ERRORLEVEL=%ERRORLEVEL%"
+if defined MARSDISK_POPD_ACTIVE (
+  popd
+  set "MARSDISK_POPD_ACTIVE="
+)
+exit /b %MARSDISK_POPD_ERRORLEVEL%

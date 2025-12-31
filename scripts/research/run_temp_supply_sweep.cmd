@@ -27,6 +27,7 @@ if not defined PYTHON_EXE (
 
 rem Keep paths stable even if launched from another directory (double-click or direct call)
 pushd "%~dp0\..\.."
+set "MARSDISK_POPD_ACTIVE=1"
 set "SCRIPT_SELF="
 set "JOB_CWD="
 set "SCRIPT_SELF_HAS_BANG=0"
@@ -54,12 +55,12 @@ if /i "%USE_SHORT_PATHS%"=="1" (
   endlocal & set "SCRIPT_SELF_SHORT=%SCRIPT_SELF_SHORT%" & set "JOB_CWD_SHORT=%JOB_CWD_SHORT%"
   if "%SCRIPT_SELF_HAS_BANG%"=="1" if not defined SCRIPT_SELF_SHORT (
     echo.[error] script path contains ! and short path unavailable: "%SCRIPT_SELF%"
-    popd
+    call :popd_safe
     exit /b 1
   )
   if "%JOB_CWD_HAS_BANG%"=="1" if not defined JOB_CWD_SHORT (
     echo.[error] repo path contains ! and short path unavailable: "%JOB_CWD%"
-    popd
+    call :popd_safe
     exit /b 1
   )
 )
@@ -78,17 +79,17 @@ endlocal & set "RUNSETS_COMMON_DIR=%RUNSETS_COMMON_DIR%" & set "NEXT_SEED_PY=%NE
 
 if not exist "%RUNSETS_COMMON_DIR%" (
   echo.[error] runsets common dir not found: "%RUNSETS_COMMON_DIR%"
-  popd
+  call :popd_safe
   exit /b 1
 )
 if not exist "%NEXT_SEED_PY%" (
   echo.[error] next_seed script not found: "%NEXT_SEED_PY%"
-  popd
+  call :popd_safe
   exit /b 1
 )
 if not exist "%WIN_PROCESS_PY%" (
   echo.[error] win_process script not found: "%WIN_PROCESS_PY%"
-  popd
+  call :popd_safe
   exit /b 1
 )
 
@@ -118,7 +119,7 @@ if "!PYTHON_ARGS_SET!"=="0" (
 )
 if not defined PYTHON_EXE (
   echo.[error] PYTHON_EXE is empty after normalization
-  popd
+  call :popd_safe
   exit /b 1
 )
 set "PYTHON_LOOKS_PATH=0"
@@ -141,7 +142,7 @@ if "!PYTHON_LOOKS_PATH!"=="1" (
       if "!PYTHON_ARGS_SET!"=="0" set "PYTHON_ARGS="
     ) else (
       echo.[error] resolved python executable not found: "!PYTHON_EXE!"
-      popd
+      call :popd_safe
       exit /b 1
     )
   )
@@ -161,7 +162,7 @@ if "!PYTHON_LOOKS_PATH!"=="1" (
       if "!PYTHON_ARGS_SET!"=="0" set "PYTHON_ARGS="
     ) else (
       echo.[error] !PYTHON_EXE! not found in PATH
-      popd
+      call :popd_safe
       exit /b 1
     )
   )
@@ -175,7 +176,7 @@ set "PYTHON_BOOT_CMD=%PYTHON_CMD%"
 rem Optional dry-run for syntax tests (skip all heavy work)
 if /i "%~1"=="--dry-run" (
   echo.[dry-run] run_temp_supply_sweep.cmd syntax-only check; skipping execution.
-  popd
+  call :popd_safe
   exit /b 0
 )
 if /i "%~1"=="--run-one" set "RUN_ONE_MODE=1"
@@ -229,7 +230,7 @@ if not exist "%TMP_ROOT_BASE%" (
 )
 if not exist "%TMP_ROOT_BASE%" (
   echo.[error] temp_root unavailable: "%TMP_ROOT_BASE%"
-  popd
+  call :popd_safe
   exit /b 1
 )
 if not defined GIT_SHA for /f %%A in ('git rev-parse --short HEAD 2^>nul') do set "GIT_SHA=%%A"
@@ -251,7 +252,7 @@ if "%RUN_ONE_MODE%"=="1" (
 if not exist "!TMP_ROOT!" mkdir "!TMP_ROOT!" >nul 2>&1
 if not exist "!TMP_ROOT!" (
   echo.[error] temp_root unavailable: "!TMP_ROOT!"
-  popd
+  call :popd_safe
   exit /b 1
 )
 %LOG_SETUP% temp_root=!TMP_ROOT! (source=!TMP_SOURCE!)
@@ -270,7 +271,7 @@ set "TMP_TEST=%TMP_ROOT%\\marsdisk_tmp_test_%RUN_TS%_%BATCH_SEED%.txt"
 if not exist "%TMP_TEST%" (
   echo.[error] temp_root write test failed: "%TMP_TEST%"
   echo.[error] temp_root=%TMP_ROOT%
-  popd
+  call :popd_safe
   exit /b 1
 )
 del "%TMP_TEST%"
@@ -526,7 +527,7 @@ set "BATCH_DIR=%BATCH_ROOT%\\%SWEEP_TAG%\\%RUN_TS%__%GIT_SHA%__seed%BATCH_SEED%"
 if not exist "%BATCH_DIR%" mkdir "%BATCH_DIR%" >nul 2>&1
 if not exist "%BATCH_DIR%" (
   echo.[error] failed to create output dir: "%BATCH_DIR%"
-  popd
+  call :popd_safe
   exit /b 1
 )
 
@@ -637,12 +638,12 @@ call :trace_detail "base overrides: python build"
 %PYTHON_CMD% scripts\\runsets\\common\\write_base_overrides.py --out "%BASE_OVERRIDES_FILE%"
 if errorlevel 1 (
   echo.[error] failed to build base overrides
-  popd
+  call :popd_safe
   exit /b 1
 )
 if not exist "%BASE_OVERRIDES_FILE%" (
   echo.[error] base overrides file missing: "%BASE_OVERRIDES_FILE%"
-  popd
+  call :popd_safe
   exit /b 1
 )
 call :trace_detail "base overrides: python done"
@@ -650,17 +651,17 @@ call :trace_detail "base overrides: python done"
 if defined RUN_ONE_MODE (
   if not defined RUN_ONE_T (
     echo.[error] RUN_ONE_T is required for --run-one
-    popd
+    call :popd_safe
     exit /b 1
   )
   if not defined RUN_ONE_EPS (
     echo.[error] RUN_ONE_EPS is required for --run-one
-    popd
+    call :popd_safe
     exit /b 1
   )
   if not defined RUN_ONE_TAU (
     echo.[error] RUN_ONE_TAU is required for --run-one
-    popd
+    call :popd_safe
     exit /b 1
   )
   set "T_LIST=%RUN_ONE_T%"
@@ -677,12 +678,12 @@ call :trace_detail "sweep list file=%SWEEP_LIST_FILE%"
 %PYTHON_CMD% scripts\\runsets\\common\\write_sweep_list.py --out "%SWEEP_LIST_FILE%"
 if errorlevel 1 (
   echo.[error] failed to build sweep list
-  popd
+  call :popd_safe
   exit /b 1
 )
 if not exist "%SWEEP_LIST_FILE%" (
   echo.[error] sweep list missing: "%SWEEP_LIST_FILE%"
-  popd
+  call :popd_safe
   exit /b 1
 )
 
@@ -693,8 +694,7 @@ if "%SWEEP_PARALLEL%"=="0" (
   if not defined RUN_ONE_MODE (
     call :trace_detail "dispatch parallel"
     call :run_parallel
-    popd
-    endlocal
+    call :popd_safe
     exit /b 0
   )
 )
@@ -805,20 +805,17 @@ for /f "usebackq tokens=1-3 delims= " %%A in ("%SWEEP_LIST_FILE%") do (
 
 if "%HAS_CASE%"=="0" (
   echo.[error] sweep list had no cases: "%SWEEP_LIST_FILE%"
-  popd
-  endlocal
+  call :popd_safe
   exit /b 1
 )
 
-popd
+call :popd_safe
 call :trace "done"
-endlocal
 exit /b %errorlevel%
 
 :abort
 call :trace "abort"
-popd
-endlocal
+call :popd_safe
 exit /b 1
 
 :run_hooks
@@ -979,3 +976,11 @@ exit /b 0
 if "%TRACE_DETAIL%"=="0" exit /b 0
 call :trace "%~1"
 exit /b 0
+
+:popd_safe
+set "MARSDISK_POPD_ERRORLEVEL=%ERRORLEVEL%"
+if defined MARSDISK_POPD_ACTIVE (
+  popd
+  set "MARSDISK_POPD_ACTIVE="
+)
+exit /b %MARSDISK_POPD_ERRORLEVEL%

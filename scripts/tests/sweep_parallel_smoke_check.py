@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import csv
+import importlib.util
 import json
 import os
 import subprocess
@@ -35,6 +36,60 @@ def _parse_triplet(values: Iterable[str], default: Tuple[float, float, int]) -> 
     return default
 
 
+def _load_sweep_module(repo_root: Path):
+    module_path = repo_root / "scripts" / "sweeps" / "sweep_heatmaps.py"
+    spec = importlib.util.spec_from_file_location("sweep_heatmaps_module", module_path)
+    if spec is None or spec.loader is None:
+        raise ImportError(f"Failed to load sweep_heatmaps module: {module_path}")
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = module
+    spec.loader.exec_module(module)
+    return module
+
+
+def _expected_case_count(
+    *,
+    repo_root: Path,
+    map_id: str,
+    rrm_spec: Tuple[float, float, int],
+    tm_spec: Tuple[float, float, int],
+    variants_spec: Optional[str],
+) -> Optional[int]:
+    try:
+        module = _load_sweep_module(repo_root)
+        r_min, r_max, r_count = rrm_spec
+        if r_count <= 1:
+            r_step = r_max - r_min if r_max != r_min else 0.0
+        else:
+            r_step = (r_max - r_min) / max(r_count - 1, 1)
+        t_min, t_max, t_count = tm_spec
+        if t_count <= 1:
+            t_step = t_max - t_min if t_max != t_min else 0.0
+        else:
+            t_step = (t_max - t_min) / max(t_count - 1, 1)
+        map_def = module.create_map_definition(
+            map_id,
+            overrides={
+                "rRM_min": r_min,
+                "rRM_max": r_max,
+                "rRM_step": r_step,
+                "TM_min": t_min,
+                "TM_max": t_max,
+                "TM_step": t_step,
+            },
+        )
+        if map_def.map_key == "1":
+            if variants_spec:
+                variant_count = len(module.build_variant_grid_from_spec(variants_spec))
+            else:
+                variant_count = len(module.VARIANT_GRID)
+        else:
+            variant_count = 1
+        return len(map_def.param_x.values) * len(map_def.param_y.values) * variant_count
+    except Exception:
+        return None
+
+
 def _run_case(
     *,
     label: str,
@@ -46,6 +101,7 @@ def _run_case(
     tm_spec: Tuple[float, float, int],
     qpr_table: str,
     env: Dict[str, str],
+    variants_spec: Optional[str],
 ) -> Dict[str, Any]:
     cmd = [
         sys.executable,
@@ -69,6 +125,8 @@ def _run_case(
         "--qpr_table",
         qpr_table,
     ]
+    if variants_spec:
+        cmd.extend(["--variants", variants_spec])
 
     start = time.perf_counter()
     result = subprocess.run(cmd, cwd=_repo_root(), env=env, check=False)
@@ -103,7 +161,7 @@ def _resolve_outdir(raw: Optional[str], repo_root: Path) -> Optional[Path]:
     return path
 
 
-def _expected_row_count(rows: List[Dict[str, str]]) -> int:
+def _fallback_expected_row_count(rows: List[Dict[str, str]]) -> int:
     if not rows:
         return 0
     x_values = {row.get("param_x_value", "").strip() for row in rows if row.get("param_x_value")}
@@ -171,16 +229,21 @@ def _check_outputs(row: Dict[str, str], repo_root: Path) -> Tuple[List[str], Lis
         errors.append(f"case_completed.json missing: {completion_path}")
     budget_issue = _check_mass_budget(budget_path)
     if budget_issue:
-        warnings.append(f"{budget_issue}: {budget_path}")
+        errors.append(f"{budget_issue}: {budget_path}")
     return errors, warnings
 
 
-def _validate_rows(rows: List[Dict[str, str]], repo_root: Path) -> Tuple[List[str], List[str], Dict[str, Any]]:
+def _validate_rows(
+    rows: List[Dict[str, str]],
+    repo_root: Path,
+    expected_count: Optional[int],
+) -> Tuple[List[str], List[str], Dict[str, Any]]:
     errors: List[str] = []
     warnings: List[str] = []
+    fallback_expected = _fallback_expected_row_count(rows)
     details: Dict[str, Any] = {
         "row_count": len(rows),
-        "expected_row_count": _expected_row_count(rows),
+        "expected_row_count": expected_count if expected_count is not None else fallback_expected,
         "duplicate_case_ids": [],
         "duplicate_outdirs": [],
         "invalid_status_count": 0,
@@ -259,6 +322,7 @@ def main() -> int:
         default=None,
         help="T_M range for the test sweep (min max count).",
     )
+    ap.add_argument("--variants", default="", help="Variant spec string for sweep_heatmaps.")
     ap.add_argument("--no-quiet", action="store_true", help="Show marsdisk logs.")
     args = ap.parse_args()
 
@@ -304,14 +368,25 @@ def main() -> int:
     else:
         common_env.setdefault("MARSDISK_LOG_LEVEL", "warning")
 
+    variants_spec = args.variants.strip() or None
+    expected_count = _expected_case_count(
+        repo_root=repo_root,
+        map_id=str(args.map),
+        rrm_spec=rrm_spec,
+        tm_spec=tm_spec,
+        variants_spec=variants_spec,
+    )
+
     results = {
         "map": str(args.map),
         "base": str(base_config_path),
         "qpr_table": str(qpr_table_path),
+        "variants": variants_spec or "",
         "timestamp": timestamp,
         "cases": [],
         "rRM": rrm_spec,
         "TM": tm_spec,
+        "expected_case_count": expected_count,
         "errors": [],
         "warnings": [],
         "cross_checks": {},
@@ -329,6 +404,7 @@ def main() -> int:
         tm_spec=tm_spec,
         qpr_table=str(qpr_table_path),
         env=common_env,
+        variants_spec=variants_spec,
     )
     results["cases"].append(on_result)
 
@@ -344,6 +420,7 @@ def main() -> int:
         tm_spec=tm_spec,
         qpr_table=str(qpr_table_path),
         env=common_env,
+        variants_spec=variants_spec,
     )
     results["cases"].append(off_result)
 
@@ -360,7 +437,7 @@ def main() -> int:
         csv_path = Path(result["results_csv"])
         rows = _load_rows(csv_path)
         case_rows[label] = rows
-        errors, warnings, details = _validate_rows(rows, repo_root)
+        errors, warnings, details = _validate_rows(rows, repo_root, expected_count)
         result["checks"] = details
         if errors:
             result["errors"] = errors

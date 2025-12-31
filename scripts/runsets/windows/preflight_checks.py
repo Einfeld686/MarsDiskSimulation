@@ -7,6 +7,7 @@ import json
 import os
 import re
 import shutil
+import shlex
 import subprocess
 import sys
 from dataclasses import dataclass
@@ -48,7 +49,10 @@ PATHEXT_REQUIRED = {".COM", ".EXE", ".BAT", ".CMD"}
 CHCP_SCAN_LINES = 25
 DELAYED_SETLOCAL_RE = re.compile(r"\bsetlocal\b.*\benabledelayedexpansion\b", re.I)
 DELAYED_CMD_RE = re.compile(r"\bcmd(?:\.exe)?\b.*?/v\s*:\s*on\b", re.I)
+DELAYED_SETLOCAL_OFF_RE = re.compile(r"\bsetlocal\b.*\bdisabledelayedexpansion\b", re.I)
+DELAYED_CMD_OFF_RE = re.compile(r"\bcmd(?:\.exe)?\b.*?/v\s*:\s*off\b", re.I)
 DISABLE_EXT_RE = re.compile(r"\bsetlocal\b.*\bdisableextensions\b", re.I)
+ENABLE_EXT_RE = re.compile(r"\bsetlocal\b.*\benableextensions\b", re.I)
 DISABLE_EXT_CMD_RE = re.compile(r"\bcmd(?:\.exe)?\b.*?/e\s*:\s*off\b", re.I)
 BANG_TOKEN_RE = re.compile(r"![^!]+!")
 CHCP_CMD_RE = re.compile(r"^\s*@?(?:call\s+)?chcp\b", re.I)
@@ -63,10 +67,13 @@ EXIT_B_RE = re.compile(r"\bexit\s+/b\b", re.I)
 FOR_CMD_RE = re.compile(r"^\s*@?for\b", re.I)
 FOR_VAR_RE = re.compile(r"^%{1,2}[A-Za-z]$")
 SETLOCAL_RE = re.compile(r"^\s*@?setlocal\b", re.I)
+ENDLOCAL_RE = re.compile(r"^\s*@?endlocal\b", re.I)
 PUSHD_RE = re.compile(r"^\s*@?pushd\b", re.I)
 POPD_RE = re.compile(r"^\s*@?popd\b", re.I)
 PAUSE_RE = re.compile(r"^\s*@?pause\b", re.I)
 CHOICE_RE = re.compile(r"^\s*@?choice\b", re.I)
+SETX_RE = re.compile(r"^\s*@?setx\b", re.I)
+ERRORLEVEL_RE = re.compile(r"^\s*@?if\s+(not\s+)?errorlevel\s+(-?\d+)\b", re.I)
 CMD_QUOTED_META_CHARS = "&<>|^()@"
 RESERVED_DEVICE_NAMES = {
     "CON",
@@ -329,13 +336,23 @@ def _check_python(
     python_exe: str | None,
 ) -> None:
     if python_exe:
-        raw = python_exe.strip().strip('"')
+        raw = python_exe.strip()
         if raw:
-            if os.path.exists(raw):
-                return
-            head = raw.split()[0]
-            if shutil.which(head) is not None:
-                return
+            exe_token = ""
+            try:
+                parts = shlex.split(raw, posix=False)
+            except ValueError:
+                parts = raw.split()
+            if parts:
+                exe_token = parts[0].strip().strip('"').strip("'")
+            if exe_token:
+                expanded = exe_token
+                if _is_windows():
+                    expanded = os.path.expandvars(exe_token)
+                if os.path.exists(expanded):
+                    return
+                if shutil.which(expanded) is not None:
+                    return
             msg = f"python_exe not found: {python_exe}"
             if warn_only:
                 _warn(warnings, "tool.python_exe_missing", msg)
@@ -903,6 +920,27 @@ def _scan_cmd_file(
         report_error("cmd.read_failed", f"cmd read failed: {path} ({exc})")
         return
 
+    if data.startswith((b"\xff\xfe", b"\xfe\xff")):
+        report_error(
+            "cmd.encoding.utf16",
+            "cmd appears to be UTF-16 encoded; save as UTF-8 without BOM",
+        )
+        return
+    sample = data[:4096]
+    if sample:
+        nul_count = sample.count(b"\x00")
+        if nul_count / len(sample) >= 0.1:
+            if profile == "ci":
+                report_error(
+                    "cmd.encoding.nul",
+                    "cmd contains many NUL bytes (possible UTF-16/UTF-32 encoding)",
+                )
+                return
+            report_warn(
+                "cmd.encoding.nul",
+                "cmd contains many NUL bytes (possible UTF-16/UTF-32 encoding)",
+            )
+
     if data.startswith(b"\xef\xbb\xbf"):
         if profile == "ci":
             report_error("cmd.encoding.bom", "cmd has UTF-8 BOM")
@@ -927,22 +965,31 @@ def _scan_cmd_file(
         report_warn("cmd.encoding.no_chcp", "cmd contains non-ASCII without chcp near top")
 
     delayed_lines = _detect_delayed_expansion_lines(text)
-    delayed_enabled = bool(delayed_lines)
     for line_no in delayed_lines:
         report_info(
             "cmd.delayed_expansion.enabled",
             "cmd enables delayed expansion",
             line_no,
         )
+    delayed_now = False
     extensions_disabled = False
+    delayed_stack: list[bool] = []
+    extensions_stack: list[bool] = []
+    extensions_cmd_off_reported = False
     bang_missing_reported = False
     has_setlocal = False
+    setlocal_count = 0
+    endlocal_count = 0
+    first_setlocal_line: int | None = None
+    first_endlocal_line: int | None = None
     env_modified = False
     env_modified_line: int | None = None
     pushd_count = 0
     popd_count = 0
     first_pushd_line: int | None = None
     first_popd_line: int | None = None
+    last_errorlevel_value: int | None = None
+    last_errorlevel_plain = False
 
     for line_no, line in enumerate(lines, 1):
         stripped = line.strip()
@@ -958,6 +1005,37 @@ def _scan_cmd_file(
             continue
         if SETLOCAL_RE.match(line_body):
             has_setlocal = True
+            setlocal_count += 1
+            if first_setlocal_line is None:
+                first_setlocal_line = line_no
+            delayed_stack.append(delayed_now)
+            extensions_stack.append(extensions_disabled)
+            if DELAYED_SETLOCAL_RE.search(line_body):
+                delayed_now = True
+            if DELAYED_SETLOCAL_OFF_RE.search(line_body):
+                delayed_now = False
+            if DISABLE_EXT_RE.search(line_body):
+                if not extensions_disabled:
+                    report_warn(
+                        "cmd.extensions.disabled_in_script",
+                        "cmd disables command extensions (setlocal disableextensions / cmd /e:off)",
+                        line_no,
+                    )
+                extensions_disabled = True
+            if ENABLE_EXT_RE.search(line_body):
+                extensions_disabled = False
+        if ENDLOCAL_RE.match(line_body):
+            endlocal_count += 1
+            if first_endlocal_line is None:
+                first_endlocal_line = line_no
+            if delayed_stack:
+                delayed_now = delayed_stack.pop()
+            if extensions_stack:
+                extensions_disabled = extensions_stack.pop()
+        if DELAYED_CMD_RE.search(line_body):
+            delayed_now = True
+        if DELAYED_CMD_OFF_RE.search(line_body):
+            delayed_now = False
         for_var = _extract_for_var_token(line_body)
         if for_var and not for_var.startswith("%%"):
             report_error(
@@ -983,6 +1061,32 @@ def _scan_cmd_file(
             popd_count += 1
             if first_popd_line is None:
                 first_popd_line = line_no
+        errorlevel_match = ERRORLEVEL_RE.match(line_body)
+        if errorlevel_match:
+            is_plain = errorlevel_match.group(1) is None
+            value = int(errorlevel_match.group(2))
+            if value == 0:
+                report_warn(
+                    "cmd.errorlevel.zero",
+                    "cmd uses 'if errorlevel 0' (errorlevel is >= comparison)",
+                    line_no,
+                )
+            if (
+                is_plain
+                and last_errorlevel_plain
+                and last_errorlevel_value is not None
+                and value > last_errorlevel_value
+            ):
+                report_warn(
+                    "cmd.errorlevel.ascending",
+                    "cmd uses ascending if errorlevel checks (should be descending)",
+                    line_no,
+                )
+            last_errorlevel_value = value
+            last_errorlevel_plain = is_plain
+        else:
+            last_errorlevel_value = None
+            last_errorlevel_plain = False
         if len(line) >= CMD_LINE_MAX:
             report_error(
                 "cmd.line_length.limit",
@@ -998,22 +1102,25 @@ def _scan_cmd_file(
         if _contains_posix_path(line_body):
             report_error("cmd.posix_path", "cmd contains POSIX-style path", line_no)
             continue
-        if not extensions_disabled:
-            if DISABLE_EXT_RE.search(line_body) or DISABLE_EXT_CMD_RE.search(line_body):
-                extensions_disabled = True
-                report_warn(
-                    "cmd.extensions.disabled_in_script",
-                    "cmd disables command extensions (setlocal disableextensions / cmd /e:off)",
-                    line_no,
-                )
-        if not delayed_enabled and not bang_missing_reported:
-            if BANG_TOKEN_RE.search(line_body):
-                bang_missing_reported = True
-                report_warn(
-                    "cmd.delayed_expansion.missing",
-                    "cmd uses !VAR! without enabling delayed expansion",
-                    line_no,
-                )
+        if DISABLE_EXT_CMD_RE.search(line_body) and not extensions_cmd_off_reported:
+            extensions_cmd_off_reported = True
+            report_warn(
+                "cmd.extensions.disabled_in_script",
+                "cmd disables command extensions (setlocal disableextensions / cmd /e:off)",
+                line_no,
+            )
+        if (
+            BANG_TOKEN_RE.search(line_body)
+            and not delayed_now
+            and not bang_missing_reported
+            and not DELAYED_CMD_RE.search(line_body)
+        ):
+            bang_missing_reported = True
+            report_warn(
+                "cmd.delayed_expansion.before_enabled",
+                "cmd uses !VAR! before enabling delayed expansion",
+                line_no,
+            )
         if lower.startswith(("cd ", "cd\t", "chdir ")):
             if re.search(r"[A-Za-z]:[\\/]", line_body) and not re.search(r"\s+/d\b", lower):
                 report_warn(
@@ -1110,10 +1217,22 @@ def _scan_cmd_file(
             if not env_modified:
                 env_modified = True
                 env_modified_line = line_no
-        if lower.startswith("setx "):
+        if SETX_RE.match(line_body):
             if not env_modified:
                 env_modified = True
                 env_modified_line = line_no
+            if profile == "ci":
+                report_error(
+                    "cmd.env.setx",
+                    "cmd uses setx (persistent environment change)",
+                    line_no,
+                )
+            else:
+                report_warn(
+                    "cmd.env.setx",
+                    "cmd uses setx (persistent environment change)",
+                    line_no,
+                )
         if lower.startswith("set "):
             rest = line_body[3:].lstrip()
             rest_lower = rest.lower()
@@ -1168,10 +1287,24 @@ def _scan_cmd_file(
             "cmd modifies environment without setlocal",
             env_modified_line,
         )
-    if pushd_count == 0 and popd_count > 0:
+    if first_endlocal_line is not None and (
+        first_setlocal_line is None or first_endlocal_line < first_setlocal_line
+    ):
+        report_warn(
+            "cmd.setlocal.order",
+            "cmd uses endlocal before setlocal",
+            first_endlocal_line,
+        )
+    if endlocal_count > setlocal_count:
+        report_warn(
+            "cmd.setlocal.unbalanced",
+            "cmd uses endlocal without matching setlocal",
+            first_endlocal_line,
+        )
+    if popd_count > pushd_count:
         report_warn(
             "cmd.pushd_popd.unbalanced",
-            "cmd uses popd without pushd",
+            "cmd uses more popd than pushd",
             first_popd_line,
         )
     elif pushd_count > popd_count:
@@ -1246,7 +1379,11 @@ def _scan_repo_root(
     exclude_lower = {name.lower() for name in exclude_dirs}
 
     for dirpath, dirnames, filenames in os.walk(root):
-        dirnames[:] = [d for d in dirnames if d.lower() not in exclude_lower]
+        dirnames[:] = sorted(
+            [d for d in dirnames if d.lower() not in exclude_lower],
+            key=str.lower,
+        )
+        filenames = sorted(filenames, key=str.lower)
         base_dir = Path(dirpath)
         rel_dir = base_dir.relative_to(root)
         for name in list(dirnames) + list(filenames):
@@ -1785,8 +1922,16 @@ def main() -> int:
         print(json.dumps(payload, ensure_ascii=True, indent=2))
         return exit_code
 
+    status = "ok"
     if errors:
-        print("[preflight] failed")
+        status = "failed"
+    elif warnings and args.strict:
+        status = "warn"
+    print(
+        f"[preflight] {status} (errors={len(errors)}, warnings={len(warnings)}, infos={len(infos)})"
+    )
+
+    if errors:
         for issue in errors:
             print(f"[error] {_format_issue(issue)}")
         if warnings:
@@ -1796,7 +1941,6 @@ def main() -> int:
             for issue in infos:
                 print(f"[info] {_format_issue(issue)}")
         return exit_code
-    print("[preflight] ok")
     if warnings:
         for issue in warnings:
             print(f"[warn] {_format_issue(issue)}")
