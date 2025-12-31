@@ -43,13 +43,14 @@ def _scan_cmd_text(
     text: str,
     cmd_unsafe_error: bool = False,
     profile: str = "default",
+    debug: bool = False,
 ):
     path = tmp_path / "scan.cmd"
     path.write_text(text, encoding="utf-8", newline="\r\n")
     errors: list[object] = []
     warnings: list[object] = []
     infos: list[object] = []
-    module._scan_cmd_file(path, errors, warnings, infos, cmd_unsafe_error, profile, None)
+    module._scan_cmd_file(path, errors, warnings, infos, cmd_unsafe_error, profile, None, debug)
     return errors, warnings, infos
 
 
@@ -352,6 +353,21 @@ def test_delayed_expansion_info(tmp_path: Path) -> None:
     assert not errors
     assert not warnings
     assert any(info.rule == "cmd.delayed_expansion.enabled" for info in infos)
+
+
+def test_delayed_expansion_debug_info(tmp_path: Path) -> None:
+    module = _load_module()
+    errors, warnings, infos = _scan_cmd_text(
+        module,
+        tmp_path,
+        "cmd /v:on /c echo !FOO!\n",
+        debug=True,
+    )
+
+    assert not errors
+    assert not warnings
+    assert any(info.rule == "cmd.delayed_expansion.cmd_v_on" for info in infos)
+    assert any(info.rule == "cmd.delayed_expansion.token" for info in infos)
 
 
 def test_pathext_missing_is_error_in_ci(monkeypatch) -> None:

@@ -1278,6 +1278,7 @@ def _scan_cmd_file(
     cmd_unsafe_error: bool,
     profile: str,
     allowlist_rules: set[str] | None,
+    debug: bool = False,
 ) -> None:
     def should_skip(rule: str) -> bool:
         if not allowlist_rules:
@@ -1364,6 +1365,31 @@ def _scan_cmd_file(
                 line_no,
             )
     logical_lines = _join_caret_lines(lines)
+    if debug:
+        for line_no, line in logical_lines:
+            stripped = line.strip()
+            if not stripped:
+                continue
+            line_body = stripped.lstrip()
+            if line_body.startswith("@"):
+                line_body = line_body[1:].lstrip()
+            lower = line_body.lower()
+            if lower.startswith("rem") and (len(lower) == 3 or lower[3].isspace()):
+                continue
+            if lower.startswith("::"):
+                continue
+            if _line_has_cmd_v_on(line_body):
+                report_info(
+                    "cmd.delayed_expansion.cmd_v_on",
+                    "cmd enables delayed expansion via /v:on",
+                    line_no,
+                )
+            if BANG_TOKEN_RE.search(line_body):
+                report_info(
+                    "cmd.delayed_expansion.token",
+                    "cmd uses !VAR! token",
+                    line_no,
+                )
     delayed_now = False
     extensions_disabled = False
     delayed_stack: list[bool] = []
@@ -1980,6 +2006,11 @@ def main() -> int:
         default="text",
         help="Output format.",
     )
+    ap.add_argument(
+        "--debug",
+        action="store_true",
+        help="Emit verbose diagnostics (e.g., delayed expansion usage).",
+    )
     ap.add_argument("--strict", action="store_true")
     args = ap.parse_args()
 
@@ -2244,6 +2275,7 @@ def main() -> int:
                 cmd_unsafe_error,
                 args.profile,
                 allowlist_rules,
+                debug=args.debug,
             )
 
     scan_repo = args.scan_repo or (args.simulate_windows and not args.skip_repo_scan)
