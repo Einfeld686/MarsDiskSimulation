@@ -265,9 +265,18 @@ if "!PYTHON_CMD_SANITY!"=="0" (
   if not "!PYTHON_EXE: =!"=="!PYTHON_EXE!" set "PYTHON_EXE_QUOTED="!PYTHON_EXE!""
   set "PYTHON_CMD=!PYTHON_EXE_QUOTED!"
 )
+rem Convert relative path to absolute path for execution
+set "PYTHON_CMD_ABS=!PYTHON_CMD!"
+if exist "!PYTHON_EXE!" (
+  for %%I in ("!PYTHON_EXE!") do set "PYTHON_EXE_ABS=%%~fI"
+  set "PYTHON_CMD_ABS=!PYTHON_EXE_ABS!"
+  if not "!PYTHON_ARGS!"=="" set "PYTHON_CMD_ABS=!PYTHON_EXE_ABS! !PYTHON_ARGS!"
+)
+if "%~1"=="--debug" echo.[DEBUG] checkpoint 4e: PYTHON_CMD_ABS=!PYTHON_CMD_ABS!
 set "PYTHON_VERSION_OK=0"
-!PYTHON_CMD! -c "import sys; raise SystemExit(0 if sys.version_info >= (3,11) else 1)" >nul 2>&1
+!PYTHON_CMD_ABS! -c "import sys; raise SystemExit(0 if sys.version_info >= (3,11) else 1)" >nul 2>&1
 if not errorlevel 1 set "PYTHON_VERSION_OK=1"
+if "%~1"=="--debug" echo.[DEBUG] checkpoint 4f: PYTHON_VERSION_OK=!PYTHON_VERSION_OK!
 
 if "!PYTHON_VERSION_OK!"=="0" (
   rem py launcher fallback disabled.
@@ -282,6 +291,8 @@ if "!PYTHON_VERSION_OK!"=="0" (
   )
   exit /b 1
 )
+rem Use absolute path from now on
+set "PYTHON_CMD=!PYTHON_CMD_ABS!"
 if "%~1"=="--debug" echo.[DEBUG] checkpoint 5: Python version OK, setting REPO_ROOT
 for %%I in ("%~f0") do set "SCRIPT_DIR=%%~dpI"
 
