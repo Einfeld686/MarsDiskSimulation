@@ -942,18 +942,14 @@ for /f "usebackq tokens=1-3 delims= " %%A in ("%SWEEP_LIST_FILE%") do (
       set RUN_CMD=!PYTHON_CMD! -m marsdisk.run --config "!BASE_CONFIG!" --quiet --overrides-file "!MERGED_OVERRIDES_FILE!"
       if "!ENABLE_PROGRESS!"=="1" set RUN_CMD=!RUN_CMD! --progress
 
-      if "!DEBUG!"=="1" (
-        echo.[DEBUG] RUN_CMD=!RUN_CMD!
-        echo.[DEBUG] MERGED_OVERRIDES_FILE=!MERGED_OVERRIDES_FILE!
-        echo.[DEBUG] BASE_CONFIG=!BASE_CONFIG!
-        echo.[DEBUG] OUTDIR=!OUTDIR!
-        if exist "!MERGED_OVERRIDES_FILE!" (
-          echo.[DEBUG] MERGED_OVERRIDES_FILE contents:
-          type "!MERGED_OVERRIDES_FILE!"
-        ) else (
-          echo.[DEBUG] MERGED_OVERRIDES_FILE not found
-        )
-      )
+      echo.[DEBUG] About to run simulation
+      echo.[DEBUG] PYTHON_CMD=!PYTHON_CMD!
+      echo.[DEBUG] RUN_CMD=!RUN_CMD!
+      echo.[DEBUG] BASE_CONFIG=!BASE_CONFIG!
+      echo.[DEBUG] MERGED_OVERRIDES_FILE=!MERGED_OVERRIDES_FILE!
+      echo.[DEBUG] Checking if files exist:
+      if exist "!BASE_CONFIG!" (echo.[DEBUG] BASE_CONFIG exists) else (echo.[DEBUG] BASE_CONFIG NOT FOUND)
+      if exist "!MERGED_OVERRIDES_FILE!" (echo.[DEBUG] MERGED_OVERRIDES_FILE exists) else (echo.[DEBUG] MERGED_OVERRIDES_FILE NOT FOUND)
 
       !RUN_CMD!
 
