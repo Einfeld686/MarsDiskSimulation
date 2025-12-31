@@ -57,6 +57,7 @@ if not defined PYTHON_EXE (
     echo.[error] python3.11/python not found in PATH
     exit /b 1
   )
+)
 if "%~1"=="--debug" echo.[DEBUG] checkpoint 3: PYTHON_EXE first pass done
 
 set "PYTHON_ARGS_SET=0"
