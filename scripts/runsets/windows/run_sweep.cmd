@@ -78,6 +78,18 @@ set "PYTHON_EXE_NAME="
 for %%I in ("!PYTHON_EXE!") do set "PYTHON_EXE_NAME=%%~nxI"
 if /i "!PYTHON_EXE!"=="py" set "PYTHON_EXE="
 if /i "!PYTHON_EXE_NAME!"=="py.exe" set "PYTHON_EXE="
+if defined PYTHON_EXE if /i not "!PYTHON_EXE!"=="python" if /i not "!PYTHON_EXE!"=="python3.11" (
+  set "PYTHON_EXE_CHECK=1"
+  set "PYTHON_EXE_RAW_PATH=0"
+  for %%I in ("!PYTHON_EXE!") do (
+    if not "%%~pI"=="" set "PYTHON_EXE_RAW_PATH=1"
+    if not "%%~dI"=="" set "PYTHON_EXE_RAW_PATH=1"
+  )
+  if "!PYTHON_EXE_RAW_PATH!"=="0" (
+    echo.[warn] PYTHON_EXE should be python/python3.11 or an absolute path; ignoring "%PYTHON_EXE%".
+    set "PYTHON_EXE="
+  )
+)
 if /i "!PYTHON_EXE!"=="." (
   echo.[warn] PYTHON_EXE cannot be '.'; ignoring and falling back to PATH.
   set "PYTHON_EXE="
