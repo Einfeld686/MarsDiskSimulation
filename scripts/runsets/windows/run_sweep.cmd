@@ -23,14 +23,14 @@ if not defined TRACE_ECHO set "TRACE_ECHO=0"
 
 
 if not defined PYTHON_EXE (
-  for %%P in (python3.11 python py) do (
+  for %%P in (python3.11 python) do (
     if not defined PYTHON_EXE (
       where %%P >nul 2>&1
       if not errorlevel 1 set "PYTHON_EXE=%%P"
     )
   )
   if not defined PYTHON_EXE (
-    echo.[error] python3.11/python/py not found in PATH
+    echo.[error] python3.11/python not found in PATH
     exit /b 1
   )
 )
@@ -74,8 +74,12 @@ if "!PYTHON_HAS_SPACE!"=="1" if "!PYTHON_RAW_LOOKS_PATH!"=="0" (
 if "!PYTHON_HAS_SPACE!"=="1" if "!PYTHON_RAW_LOOKS_PATH!"=="1" if "!PYTHON_ARGS_SET!"=="0" (
   echo.[warn] PYTHON_EXE looks like a path with spaces; quote it or set PYTHON_ARGS.
 )
+set "PYTHON_EXE_NAME="
+for %%I in ("!PYTHON_EXE!") do set "PYTHON_EXE_NAME=%%~nxI"
+if /i "!PYTHON_EXE!"=="py" set "PYTHON_EXE="
+if /i "!PYTHON_EXE_NAME!"=="py.exe" set "PYTHON_EXE="
 if not defined PYTHON_EXE (
-  for %%P in (python3.11 python py) do (
+  for %%P in (python3.11 python) do (
     if not defined PYTHON_EXE (
       where %%P >nul 2>&1
       if not errorlevel 1 set "PYTHON_EXE=%%P"
@@ -94,22 +98,12 @@ if not "!PYTHON_ARGS!"=="" (
     set "PYTHON_ARGS_REST=%%B"
   )
 )
-set "PYTHON_EXE_NAME="
-for %%I in ("!PYTHON_EXE!") do set "PYTHON_EXE_NAME=%%~nxI"
-set "PYTHON_IS_PY=0"
-if /i "!PYTHON_EXE!"=="py" set "PYTHON_IS_PY=1"
-if /i "!PYTHON_EXE_NAME!"=="py.exe" set "PYTHON_IS_PY=1"
 set "PYTHON_PYVER_ARG=0"
 if /i "!PYTHON_ARGS_FIRST:~0,2!"=="-3" set "PYTHON_PYVER_ARG=1"
 if /i "!PYTHON_ARGS_FIRST:~0,2!"=="-2" set "PYTHON_PYVER_ARG=1"
-if "!PYTHON_PYVER_ARG!"=="1" if "!PYTHON_IS_PY!"=="0" (
-  where py >nul 2>&1
-  if not errorlevel 1 (
-    set "PYTHON_EXE=py"
-  ) else (
-    if not "!PYTHON_ARGS_FIRST!"=="" echo.[warn] PYTHON_ARGS requested py launcher but py not found; dropping version flag.
-    set "PYTHON_ARGS=!PYTHON_ARGS_REST!"
-  )
+if "!PYTHON_PYVER_ARG!"=="1" (
+  if not "!PYTHON_ARGS_FIRST!"=="" echo.[warn] PYTHON_ARGS includes py launcher version flag; dropping it (use python3.11 instead).
+  set "PYTHON_ARGS=!PYTHON_ARGS_REST!"
 )
 set "PYTHON_LOOKS_PATH=0"
 for %%I in ("!PYTHON_EXE!") do (
@@ -119,7 +113,7 @@ for %%I in ("!PYTHON_EXE!") do (
 if "!PYTHON_LOOKS_PATH!"=="1" (
   if not exist "!PYTHON_EXE!" (
     set "PYTHON_FALLBACK="
-    for %%P in (python3.11 python py) do (
+    for %%P in (python3.11 python) do (
       if not defined PYTHON_FALLBACK (
         where %%P >nul 2>&1
         if not errorlevel 1 set "PYTHON_FALLBACK=%%P"
@@ -138,7 +132,7 @@ if "!PYTHON_LOOKS_PATH!"=="1" (
   where !PYTHON_EXE! >nul 2>&1
   if errorlevel 1 (
     set "PYTHON_FALLBACK="
-    for %%P in (python3.11 python py) do (
+    for %%P in (python3.11 python) do (
       if not defined PYTHON_FALLBACK (
         where %%P >nul 2>&1
         if not errorlevel 1 set "PYTHON_FALLBACK=%%P"
@@ -162,22 +156,12 @@ if not "!PYTHON_ARGS!"=="" (
     set "PYTHON_ARGS_REST=%%B"
   )
 )
-set "PYTHON_EXE_NAME="
-for %%I in ("!PYTHON_EXE!") do set "PYTHON_EXE_NAME=%%~nxI"
-set "PYTHON_IS_PY=0"
-if /i "!PYTHON_EXE!"=="py" set "PYTHON_IS_PY=1"
-if /i "!PYTHON_EXE_NAME!"=="py.exe" set "PYTHON_IS_PY=1"
 set "PYTHON_PYVER_ARG=0"
 if /i "!PYTHON_ARGS_FIRST:~0,2!"=="-3" set "PYTHON_PYVER_ARG=1"
 if /i "!PYTHON_ARGS_FIRST:~0,2!"=="-2" set "PYTHON_PYVER_ARG=1"
-if "!PYTHON_PYVER_ARG!"=="1" if "!PYTHON_IS_PY!"=="0" (
-  where py >nul 2>&1
-  if not errorlevel 1 (
-    set "PYTHON_EXE=py"
-  ) else (
-    if not "!PYTHON_ARGS_FIRST!"=="" echo.[warn] PYTHON_ARGS requested py launcher but py not found; dropping version flag.
-    set "PYTHON_ARGS=!PYTHON_ARGS_REST!"
-  )
+if "!PYTHON_PYVER_ARG!"=="1" (
+  if not "!PYTHON_ARGS_FIRST!"=="" echo.[warn] PYTHON_ARGS includes py launcher version flag; dropping it (use python3.11 instead).
+  set "PYTHON_ARGS=!PYTHON_ARGS_REST!"
 )
 set "PYTHON_EXE_QUOTED=!PYTHON_EXE!"
 if not "!PYTHON_EXE: =!"=="!PYTHON_EXE!" set "PYTHON_EXE_QUOTED="!PYTHON_EXE!""
@@ -191,14 +175,14 @@ if "!PYTHON_CMD_SANITY!"=="0" (
   echo.[warn] python command invalid; resetting to python in PATH
   set "PYTHON_EXE="
   set "PYTHON_ARGS="
-  for %%P in (python3.11 python py) do (
+  for %%P in (python3.11 python) do (
     if not defined PYTHON_EXE (
       where %%P >nul 2>&1
       if not errorlevel 1 set "PYTHON_EXE=%%P"
     )
   )
   if not defined PYTHON_EXE (
-    echo.[error] python3.11/python/py not found in PATH
+    echo.[error] python3.11/python not found in PATH
     exit /b 1
   )
   set "PYTHON_EXE_QUOTED=!PYTHON_EXE!"
@@ -210,17 +194,7 @@ set "PYTHON_VERSION_OK=0"
 if not errorlevel 1 set "PYTHON_VERSION_OK=1"
 
 if "!PYTHON_VERSION_OK!"=="0" (
-  where py >nul 2>&1
-  if not errorlevel 1 (
-    py -3.11 -c "import sys; raise SystemExit(0 if sys.version_info >= (3,11) else 1)" >nul 2>&1
-    if not errorlevel 1 (
-      set "PYTHON_EXE=py"
-      set "PYTHON_ARGS=-3.11"
-      set "PYTHON_EXE_QUOTED=py"
-      set "PYTHON_CMD=py -3.11"
-      set "PYTHON_VERSION_OK=1"
-    )
-  )
+  rem py launcher fallback disabled.
 )
 
 if "!PYTHON_VERSION_OK!"=="0" (
@@ -228,7 +202,7 @@ if "!PYTHON_VERSION_OK!"=="0" (
     echo.[error] python 3.11+ is required in CI
   ) else (
     echo.[error] python 3.11+ is required. Install Python 3.11 or set PYTHON_EXE.
-    echo.[error] Example: set PYTHON_EXE=py ^& set PYTHON_ARGS=-3.11
+    echo.[error] Example: set PYTHON_EXE=python3.11
   )
   exit /b 1
 )
