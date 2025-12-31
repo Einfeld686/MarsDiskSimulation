@@ -24,7 +24,7 @@ if not defined PYTHON_EXE (
   if not defined PYTHON_EXE (
     where py >nul 2>&1
     if not errorlevel 1 (
-      py -3.11 -c "import sys; raise SystemExit(0 if sys.version_info >= (3,11) else 1)" >nul 2>&1
+      py -3.11 -c "import sys" >nul 2>&1
       if not errorlevel 1 (
         set "PYTHON_EXE=py"
         set "PYTHON_ALLOW_LAUNCHER=1"
