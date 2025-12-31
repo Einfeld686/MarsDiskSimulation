@@ -940,6 +940,19 @@ for /f "usebackq tokens=1-3 delims= " %%A in ("%SWEEP_LIST_FILE%") do (
       set RUN_CMD=!PYTHON_CMD! -m marsdisk.run --config "!BASE_CONFIG!" --quiet --overrides-file "!MERGED_OVERRIDES_FILE!"
       if "!ENABLE_PROGRESS!"=="1" set RUN_CMD=!RUN_CMD! --progress
 
+      if "!DEBUG!"=="1" (
+        echo.[DEBUG] RUN_CMD=!RUN_CMD!
+        echo.[DEBUG] MERGED_OVERRIDES_FILE=!MERGED_OVERRIDES_FILE!
+        echo.[DEBUG] BASE_CONFIG=!BASE_CONFIG!
+        echo.[DEBUG] OUTDIR=!OUTDIR!
+        if exist "!MERGED_OVERRIDES_FILE!" (
+          echo.[DEBUG] MERGED_OVERRIDES_FILE contents:
+          type "!MERGED_OVERRIDES_FILE!"
+        ) else (
+          echo.[DEBUG] MERGED_OVERRIDES_FILE not found
+        )
+      )
+
       !RUN_CMD!
 
       if errorlevel 1 (
