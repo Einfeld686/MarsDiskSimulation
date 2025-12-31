@@ -1626,7 +1626,7 @@ if "%SWEEP_PARALLEL%"=="1" if not "%SIZE_PROBE_ENABLE%"=="0" if "%PARALLEL_JOBS_
 
 
   set "SIZE_PROBE_JOBS_RAW=!SIZE_PROBE_JOBS!"
-  for /f "tokens=1 delims=." %%Z in ("!SIZE_PROBE_JOBS!") do set "SIZE_PROBE_JOBS=%%Z"
+  if not "!SIZE_PROBE_JOBS!"=="" for /f "tokens=1 delims=." %%Z in ("!SIZE_PROBE_JOBS!") do set "SIZE_PROBE_JOBS=%%Z"
 
 
 
@@ -1687,7 +1687,7 @@ if "%PARALLEL_JOBS_DEFAULT%"=="1" if "%PARALLEL_JOBS%"=="1" (
     for /f "usebackq tokens=1,2 delims=|" %%A in (`!PYTHON_CMD! scripts\\runsets\\common\\calc_cpu_target_jobs.py`) do (
       set "CPU_TARGET_CORES=%%A"
       set "PARALLEL_JOBS_TARGET=%%B"
-      for /f "tokens=1 delims=." %%Z in ("!PARALLEL_JOBS_TARGET!") do set "PARALLEL_JOBS_TARGET=%%Z"
+      if not "!PARALLEL_JOBS_TARGET!"=="" for /f "tokens=1 delims=." %%Z in ("!PARALLEL_JOBS_TARGET!") do set "PARALLEL_JOBS_TARGET=%%Z"
     )
     set "PARALLEL_JOBS_TARGET_OK=1"
     if "!PARALLEL_JOBS_TARGET!"=="" set "PARALLEL_JOBS_TARGET_OK=0"
@@ -1698,7 +1698,7 @@ if "%PARALLEL_JOBS_DEFAULT%"=="1" if "%PARALLEL_JOBS%"=="1" (
           set "PARALLEL_JOBS_MEM="
           for /f "usebackq tokens=1-3 delims=|" %%A in (`!PYTHON_CMD! scripts\\runsets\\common\\calc_parallel_jobs.py`) do (
             set "PARALLEL_JOBS_MEM=%%C"
-            for /f "tokens=1 delims=." %%Z in ("!PARALLEL_JOBS_MEM!") do set "PARALLEL_JOBS_MEM=%%Z"
+            if not "!PARALLEL_JOBS_MEM!"=="" for /f "tokens=1 delims=." %%Z in ("!PARALLEL_JOBS_MEM!") do set "PARALLEL_JOBS_MEM=%%Z"
           )
           set "PARALLEL_JOBS_MEM_OK=1"
           if "!PARALLEL_JOBS_MEM!"=="" set "PARALLEL_JOBS_MEM_OK=0"

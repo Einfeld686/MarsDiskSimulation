@@ -692,11 +692,11 @@ if "%AUTO_JOBS%"=="1" (
 )
 set "PARALLEL_JOBS_RAW=%PARALLEL_JOBS%"
 set "PARALLEL_JOBS=%PARALLEL_JOBS:"=%"
-for /f "tokens=1 delims=." %%Z in ("!PARALLEL_JOBS!") do set "PARALLEL_JOBS=%%Z"
+if not "!PARALLEL_JOBS!"=="" for /f "tokens=1 delims=." %%Z in ("!PARALLEL_JOBS!") do set "PARALLEL_JOBS=%%Z"
 if not defined PARALLEL_JOBS set "PARALLEL_JOBS=1"
 if "%PARALLEL_JOBS%"=="" set "PARALLEL_JOBS=1"
 set "PARALLEL_JOBS_OK=1"
-for /f "delims=0123456789" %%A in ("%PARALLEL_JOBS%") do set "PARALLEL_JOBS_OK=0"
+if not "%PARALLEL_JOBS%"=="" for /f "delims=0123456789" %%A in ("%PARALLEL_JOBS%") do set "PARALLEL_JOBS_OK=0"
 if "%PARALLEL_JOBS_OK%"=="0" (
   if defined PARALLEL_JOBS_RAW echo.[warn] PARALLEL_JOBS invalid: "%PARALLEL_JOBS_RAW%" -> 1
   set "PARALLEL_JOBS=1"
@@ -721,21 +721,21 @@ if defined CPU_UTIL_TARGET_PERCENT if /i not "%PARALLEL_MODE%"=="numba" (
         for /f "usebackq tokens=1,2 delims=|" %%A in (`%PYTHON_CMD% scripts\\runsets\\common\\calc_cpu_target_jobs.py`) do (
           set "CPU_TARGET_CORES=%%A"
           set "PARALLEL_JOBS_TARGET=%%B"
-          for /f "tokens=1 delims=." %%Z in ("!PARALLEL_JOBS_TARGET!") do set "PARALLEL_JOBS_TARGET=%%Z"
+          if not "!PARALLEL_JOBS_TARGET!"=="" for /f "tokens=1 delims=." %%Z in ("!PARALLEL_JOBS_TARGET!") do set "PARALLEL_JOBS_TARGET=%%Z"
         )
         set "PARALLEL_JOBS_TARGET_OK=1"
         if "!PARALLEL_JOBS_TARGET!"=="" set "PARALLEL_JOBS_TARGET_OK=0"
-        for /f "delims=0123456789" %%A in ("!PARALLEL_JOBS_TARGET!") do set "PARALLEL_JOBS_TARGET_OK=0"
+        if "!PARALLEL_JOBS_TARGET_OK!"=="1" for /f "delims=0123456789" %%A in ("!PARALLEL_JOBS_TARGET!") do set "PARALLEL_JOBS_TARGET_OK=0"
         if "!PARALLEL_JOBS_TARGET_OK!"=="1" (
         if "!PARALLEL_JOBS_DEFAULT!"=="1" if "!PARALLEL_JOBS!"=="1" if !PARALLEL_JOBS_TARGET! GTR 1 (
           if /i "!CPU_UTIL_RESPECT_MEM!"=="1" (
             for /f "usebackq tokens=1-3 delims=|" %%A in (`%PYTHON_CMD% scripts\\runsets\\common\\calc_parallel_jobs.py`) do (
               set "PARALLEL_JOBS_MEM=%%C"
-              for /f "tokens=1 delims=." %%Z in ("!PARALLEL_JOBS_MEM!") do set "PARALLEL_JOBS_MEM=%%Z"
+              if not "!PARALLEL_JOBS_MEM!"=="" for /f "tokens=1 delims=." %%Z in ("!PARALLEL_JOBS_MEM!") do set "PARALLEL_JOBS_MEM=%%Z"
             )
           set "PARALLEL_JOBS_MEM_OK=1"
           if "!PARALLEL_JOBS_MEM!"=="" set "PARALLEL_JOBS_MEM_OK=0"
-          for /f "delims=0123456789" %%A in ("!PARALLEL_JOBS_MEM!") do set "PARALLEL_JOBS_MEM_OK=0"
+          if "!PARALLEL_JOBS_MEM_OK!"=="1" for /f "delims=0123456789" %%A in ("!PARALLEL_JOBS_MEM!") do set "PARALLEL_JOBS_MEM_OK=0"
           if "!PARALLEL_JOBS_MEM_OK!"=="1" (
             if !PARALLEL_JOBS_TARGET! GTR !PARALLEL_JOBS_MEM! set "PARALLEL_JOBS_TARGET=!PARALLEL_JOBS_MEM!"
           )
@@ -1078,10 +1078,10 @@ set "NORM_NAME=%~1"
 set "NORM_DEFAULT=%~2"
 set "NORM_VAL=!%NORM_NAME%!"
 set "NORM_VAL=!NORM_VAL:"=!"
-for /f "tokens=1 delims=." %%Z in ("!NORM_VAL!") do set "NORM_VAL=%%Z"
+if not "!NORM_VAL!"=="" for /f "tokens=1 delims=." %%Z in ("!NORM_VAL!") do set "NORM_VAL=%%Z"
 if "!NORM_VAL!"=="" set "NORM_VAL=%NORM_DEFAULT%"
 set "NORM_OK=1"
-for /f "delims=0123456789" %%Z in ("!NORM_VAL!") do set "NORM_OK=0"
+if "!NORM_OK!"=="1" for /f "delims=0123456789" %%Z in ("!NORM_VAL!") do set "NORM_OK=0"
 if "!NORM_OK!"=="0" set "NORM_VAL=%NORM_DEFAULT%"
 set "%NORM_NAME%=!NORM_VAL!"
 exit /b 0
