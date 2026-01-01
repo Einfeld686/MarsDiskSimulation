@@ -74,7 +74,7 @@ init_tau1:
   scale_to_tau1: true
 ```
 
-**コード参照**: [marsdisk/run_zero_d.py#L1599–L1700](marsdisk/run_zero_d.py) — `init_tau1` 処理
+**コード参照**: [marsdisk/run_zero_d.py#L1599–L1700](marsdisk/run_zero_d.py#L1599-L1700) — `init_tau1` 処理
 
 ### 2. 供給を絞る (`supply.const`)
 
@@ -176,6 +176,6 @@ sinks:
 | 遮蔽係数 Φ 適用 | [shielding.py#effective_kappa](marsdisk/physics/shielding.py) | L81–120 |
 | Σ_{τ=1} 計算 | [shielding.py#sigma_tau1](marsdisk/physics/shielding.py) | L123–130 |
 | τ=1 クリップ | [shielding.py#clip_to_tau1](marsdisk/physics/shielding.py) | L219–261 |
-| 初期 τ クリップ | [run.py](marsdisk/run_zero_d.py) | L1599–1700 (`init_tau1`) |
+| 初期 τ クリップ | [run_zero_d.py](marsdisk/run_zero_d.py#L1599-L1700) | L1599–1700 (`init_tau1`) |
 | 供給フィードバック | [supply.py](marsdisk/physics/supply.py) | L147 (`feedback_tau_field`) |
 | headroom ポリシー | [collisions_smol.py](marsdisk/physics/collisions_smol.py) | L476–480 |

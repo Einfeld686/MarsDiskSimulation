@@ -966,9 +966,18 @@ call :wait_for_slot
 if "%DEBUG%"=="1" echo.[DEBUG] launch_job: after wait_for_slot
 set "JOB_PID="
 rem Build JOB_CMD with delayed expansion
-rem Include BASE_CONFIG, GEOMETRY_MODE, SWEEP_TAG, BATCH_ROOT, PYTHON_EXE, PYTHON_ARGS for child process
-rem Pass skip flags to child so it does not re-install dependencies or recreate the venv.
-set "JOB_CMD=set RUN_TS=!RUN_TS!&& set BATCH_SEED=!BATCH_SEED!&& set RUN_ONE_T=!JOB_T!&& set RUN_ONE_EPS=!JOB_EPS!&& set RUN_ONE_TAU=!JOB_TAU!&& set RUN_ONE_SEED=!JOB_SEED!&& set AUTO_JOBS=0&& set PARALLEL_JOBS=1&& set SKIP_PIP=1&& set REQUIREMENTS_INSTALLED=1&& set SKIP_VENV=!SKIP_VENV!&& set BASE_CONFIG=!BASE_CONFIG!&& set GEOMETRY_MODE=!GEOMETRY_MODE!&& set SWEEP_TAG=!SWEEP_TAG!&& set BATCH_ROOT=!BATCH_ROOT!&& set PYTHON_EXE=!PYTHON_EXE!&& set PYTHON_ARGS=!PYTHON_ARGS!&& set VENV_DIR=!VENV_DIR!&& call ""!SCRIPT_SELF_USE!"" --run-one"
+rem Environment variables for child process are inherited from the parent environment.
+rem We only need to set the job-specific parameters and the basic command.
+set "RUN_ONE_T=!JOB_T!"
+set "RUN_ONE_EPS=!JOB_EPS!"
+set "RUN_ONE_TAU=!JOB_TAU!"
+set "RUN_ONE_SEED=!JOB_SEED!"
+set "AUTO_JOBS=0"
+set "PARALLEL_JOBS=1"
+set "SKIP_PIP=1"
+set "REQUIREMENTS_INSTALLED=1"
+set "SKIP_VENV=!SKIP_VENV!"
+set "JOB_CMD=call "!SCRIPT_SELF_USE!" --run-one"
 set "JOB_PID_TMP="
 if "%DEBUG%"=="1" echo.[DEBUG] launch_job: TMP_ROOT=!TMP_ROOT!
 if "%DEBUG%"=="1" echo.[DEBUG] launch_job: temp file=!TMP_ROOT!\marsdisk_pid_!JOB_T!_!JOB_EPS!_!JOB_TAU!.tmp
@@ -979,8 +988,13 @@ rem Pass command via stdin to avoid environment variable inheritance issues
 if "%DEBUG%"=="1" echo.[DEBUG] launch_job: executing win_process.py
 rem Write JOB_CMD to temp file first to avoid pipe issues with special characters
 set "JOB_CMD_FILE=!TMP_ROOT!\marsdisk_cmd_!JOB_T!_!JOB_EPS!_!JOB_TAU!.tmp"
-if "%DEBUG%"=="1" echo.[DEBUG] launch_job: MARKER_A before write cmd file
-> "!JOB_CMD_FILE!" echo !JOB_CMD!
+rem Use PowerShell to write the command file safely to avoid issues with special characters in JOB_CMD
+if "%DEBUG%"=="1" echo.[DEBUG] launch_job: writing cmd file using powershell
+powershell -Command "[System.IO.File]::WriteAllText('!JOB_CMD_FILE!', [System.Environment]::GetEnvironmentVariable('JOB_CMD'))"
+if !errorlevel! neq 0 (
+    if "%DEBUG%"=="1" echo.[DEBUG] launch_job: powershell failed, falling back to echo
+    > "!JOB_CMD_FILE!" echo !JOB_CMD!
+)
 if "%DEBUG%"=="1" echo.[DEBUG] launch_job: MARKER_B after write cmd file
   if "%DEBUG%"=="1" echo.[DEBUG] launch_job: MARKER_C before python call
   set "JOB_PID_TMP="

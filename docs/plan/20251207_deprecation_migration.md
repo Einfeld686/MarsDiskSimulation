@@ -26,7 +26,7 @@
    - `tests/` で旧キーを使うケースを新キーへ修正し、期待値が変わる場合は差分を説明。  
    - `marsdisk/analysis/` 配下のサンプラー類も新キーへ修正し、回帰データの再生成が必要ならスコープを明記。
 4. **コード本体の互換ルート削除**  
-   - `schema.py` の旧フィールド定義・バリデータ・警告を削除し、`run.py` のフォールバックロジックも撤去。  
+   - `schema.py` の旧フィールド定義・バリデータ・警告を削除し、`run_zero_d.py` のフォールバックロジックも撤去。  
    - 旧キーを受け付けないバリデーションを追加し、エラーメッセージに移行先を明記。  
    - `config_validator.py` など補助バリデータから旧キー分岐を除去。
 5. **仕上げとガード強化**  
@@ -43,6 +43,6 @@
 ------------------
 - [ ] 設定置換パッチを準備し、旧キーが configs/ に残らないことを `rg` で確認。  
 - [ ] テスト入力を新キーへ更新し、`pytest` 完走を確認。  
-- [ ] `run.py`/`schema.py`/`config_validator.py` から互換分岐を削除。  
+- [ ] `run_zero_d.py`/`schema.py`/`config_validator.py` から互換分岐を削除。  
 - [ ] DocSyncAgent → `make analysis-doc-tests` → `python -m tools.evaluation_system --outdir <run_dir>` を連続実行。  
 - [ ] リリースノート/README に移行ガイドを追記。

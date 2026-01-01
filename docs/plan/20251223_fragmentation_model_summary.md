@@ -141,15 +141,15 @@ flowchart TD
 
 | テストファイル | 検証内容 | 合格基準 |
 |---------------|----------|----------|
-| `test_fragment_tensor_numba.py` | Numba JIT と純 Python の整合性 | 相対誤差 < 1e-10 |
-| `test_qstar_fragments.py` | $Q_D^*$ と破片モデルの単位整合 | 期待値との一致 |
-| `test_qstar_units.py` | CGS/SI 単位系の変換 | 相互変換の無矛盾 |
-| `test_baseline_smol_pipeline.py` | Smol パイプライン全体 | 質量保存 |
-| `test_smol_supply_source.py` | 供給・シンク結合 | 供給レート再現 |
-| `test_scalings.py` | Wyatt 近似との比較 | オーダー一致 |
-| `test_surface_outflux_wavy.py` | wavy PSD の定性的再現 | 振動パターン |
-| `test_mass_conservation.py` | 質量収支 (C4) | 誤差 < 0.5% |
-| `test_mass_budget_combined.py` | 複合シンクでの質量追跡 | 累積誤差 < 1% |
+| `tests/integration/test_fragment_tensor_numba.py` | Numba JIT と純 Python の整合性 | 相対誤差 < 1e-10 |
+| `tests/integration/test_qstar_fragments.py` | $Q_D^*$ と破片モデルの単位整合 | 期待値との一致 |
+| `tests/integration/test_qstar_units.py` | CGS/SI 単位系の変換 | 相互変換の無矛盾 |
+| `tests/integration/test_baseline_smol_pipeline.py` | Smol パイプライン全体 | 質量保存 |
+| `tests/integration/test_smol_supply_source.py` | 供給・シンク結合 | 供給レート再現 |
+| `tests/integration/test_scalings.py` | Wyatt 近似との比較 | オーダー一致 |
+| `tests/integration/test_surface_outflux_wavy.py` | wavy PSD の定性的再現 | 振動パターン |
+| `tests/integration/test_mass_conservation.py` | 質量収支 (C4) | 誤差 < 0.5% |
+| `tests/integration/test_mass_budget_combined.py` | 複合シンクでの質量追跡 | 累積誤差 < 1% |
 
 ### 詳細
 

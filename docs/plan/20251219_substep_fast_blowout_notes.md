@@ -27,8 +27,8 @@
 | **t_blow（ブローアウト時間）** | ブローアウトが完了するまでの時間スケール。$t_{\rm blow} = \chi_{\rm blow}/\Omega$ | — |
 | **dt/t_blow 比** | タイムステップ幅とブローアウト時間の比。大きいと数値誤差が増加 | — |
 | **サブステップ (substep)** | dt/t_blow が大きいとき、ブローアウト項のみを細分化して精度を保つ手法 | — |
-| `substep_fast_blowout` | サブステップ機能の有効化フラグ（`io` セクション） | [run.py](marsdisk/run_zero_d.py) |
-| `substep_max_ratio` | サブステップ発動の閾値。dt/t_blow がこれを超えると細分化。デフォルト 1.0（実質無効）、運用値 0.3–0.5 | [run.py](marsdisk/run_zero_d.py) |
+| `substep_fast_blowout` | サブステップ機能の有効化フラグ（`io` セクション） | [run_zero_d.py](marsdisk/run_zero_d.py) |
+| `substep_max_ratio` | サブステップ発動の閾値。dt/t_blow がこれを超えると細分化。デフォルト 1.0（実質無効）、運用値 0.3–0.5 | [run_zero_d.py](marsdisk/run_zero_d.py) |
 | `fast_blowout_factor` | 高速ブローアウト補正係数。粗いステップでの誤差を補正 | — |
 | `fast_blowout_factor_avg` | サブステップ時の `dt_sub` 重み平均補正係数 | — |
 | **M_out_dot** | 瞬時の質量流出率（$\dot{M}_{\rm out}$）。ジグザグはサブステップで緩和可能 | — |
@@ -94,12 +94,12 @@
 
 | 変更箇所 | 内容 | ファイル |
 |----------|------|----------|
-| **サブステップ判定** | `collision_solver=surface_ode` かつ `dt/t_blow > substep_max_ratio` のみ有効化 | [run.py](marsdisk/run_zero_d.py) |
-| **n_substeps 計算** | `ceil(dt / (substep_max_ratio * t_blow))` で分割数を決定 | [run.py](marsdisk/run_zero_d.py) |
-| **サブステップ反復** | 遮蔽→供給→deep buffer→`surface.step_surface` を `dt_sub` で反復 | [run.py](marsdisk/run_zero_d.py) |
-| **Smol 経路** | 常に `n_substeps=1`（サブステップ無効）。`fast_blowout_factor` は元の `dt/t_blow` 基準を維持 | [run.py](marsdisk/run_zero_d.py) |
+| **サブステップ判定** | `collision_solver=surface_ode` かつ `dt/t_blow > substep_max_ratio` のみ有効化 | [run_zero_d.py](marsdisk/run_zero_d.py) |
+| **n_substeps 計算** | `ceil(dt / (substep_max_ratio * t_blow))` で分割数を決定 | [run_zero_d.py](marsdisk/run_zero_d.py) |
+| **サブステップ反復** | 遮蔽→供給→deep buffer→`surface.step_surface` を `dt_sub` で反復 | [run_zero_d.py](marsdisk/run_zero_d.py) |
+| **Smol 経路** | 常に `n_substeps=1`（サブステップ無効）。`fast_blowout_factor` は元の `dt/t_blow` 基準を維持 | [run_zero_d.py](marsdisk/run_zero_d.py) |
 | **新規出力列** | `substep_active` 列を追加 | [writer.py](marsdisk/io/writer.py) |
-| **平均化変更** | `fast_blowout_factor_avg` を `dt_sub` 重み平均に変更 | [run.py](marsdisk/run_zero_d.py), [writer.py](marsdisk/io/writer.py) |
+| **平均化変更** | `fast_blowout_factor_avg` を `dt_sub` 重み平均に変更 | [run_zero_d.py](marsdisk/run_zero_d.py), [writer.py](marsdisk/io/writer.py) |
 | **スキーマ更新** | `io.substep_max_ratio` のデフォルト 1.0（実質無効）、運用値 0.3–0.5 を明示 | [schema.py](marsdisk/schema.py) |
 | **回帰テスト** | surface_ode でサブステップ有効、smol では無効、質量誤差≦0.5% を検証 | [test_fast_blowout.py](tests/integration/test_fast_blowout.py) |
 
@@ -120,7 +120,7 @@
 - `substep_fast_blowout=false`（デフォルト）の場合、従来と完全に同一の挙動
 
 ## ChatGPT 等に依頼するときの指示サンプル
-- 入力: 上記設定ファイルと出力例、`run.py` のサブステップ判定箇所。
+- 入力: 上記設定ファイルと出力例、`run_zero_d.py` のサブステップ判定箇所。
 - 相談したい点:
   - 適切な `substep_max_ratio` の推奨レンジ（精度 vs コスト）。
   - サブステップ時の出力の平均化／積分の取り方（現状は per-substep の累積をステップ値として記録）。
@@ -137,7 +137,7 @@
 ### コード参照
 | 機能 | ファイル | 備考 |
 |------|----------|------|
-| サブステップ判定・実行 | [run.py](marsdisk/run_zero_d.py) | `dt_over_t_blow` 判定、`n_substeps` 計算 |
+| サブステップ判定・実行 | [run_zero_d.py](marsdisk/run_zero_d.py) | `dt_over_t_blow` 判定、`n_substeps` 計算 |
 | ブローアウト時間計算 | [radiation.py](marsdisk/physics/radiation.py) | `chi_blow_eff`, β=0.5 基準 |
 | 出力メタデータ定義 | [writer.py](marsdisk/io/writer.py) | `fast_blowout_*` 列の記録 |
 | 数値設定スキーマ | [schema.py](marsdisk/schema.py) | `numerics.dt_over_t_blow_max` 等 |

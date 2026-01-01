@@ -79,18 +79,18 @@
 
 ### アクション1: 供給パスの復旧
 
-**目的**: 供給が正しく `run.py` 内で処理され、`out/<run_id>/run_config.json` に記録されることを確認・修正する。
+**目的**: 供給が正しく `run_zero_d.py` 内で処理され、`out/<run_id>/run_config.json` に記録されることを確認・修正する。
 
 1. **Config ロードの確認**
    - [`marsdisk/schema.py:155-198`](marsdisk/schema.py#L155-L198) の `Supply` クラス定義を確認
-    - CLI オーバーライド（`--override supply.mode=const` 等）が正しくパースされているか `_apply_overrides_dict`（[run.py:241-276](marsdisk/run_zero_d.py#L241-L276)）を確認
+    - CLI オーバーライド（`--override supply.mode=const` 等）が正しくパースされているか `_apply_overrides_dict`（[marsdisk/run_zero_d.py:241-276](marsdisk/run_zero_d.py#L241-L276)）を確認
    - YAML 側に `supply.enabled: false` や `supply.mixing.epsilon_mix: 0` が残っていないか確認し、override では `epsilon_mix` を直接指定する
 
 2. **`process_overview` への追加**
-    - [`run.py:2991-3007`](marsdisk/run_zero_d.py#L2991-L3007) に supply 有効/無効を明示するフィールド（`supply_enabled`, `supply_mode` など）を追加
+    - [`marsdisk/run_zero_d.py:2991-3007`](marsdisk/run_zero_d.py#L2991-L3007) に supply 有効/無効を明示するフィールド（`supply_enabled`, `supply_mode` など）を追加
 
 3. **`run_config` への記録**
-    - [`run.py:3281`](marsdisk/run_zero_d.py#L3281) 以降の `run_config` 構築に supply 設定を追加
+    - [`marsdisk/run_zero_d.py:3281`](marsdisk/run_zero_d.py#L3281) 以降の `run_config` 構築に supply 設定を追加
 
 4. **警告ログの追加**
    - `supply_spec` が None または const で rate=0 の場合に warning を出す
@@ -159,7 +159,7 @@
 ### 実装済み
 - Supply に `enabled` を追加しデフォルト true（`schema.py`）。`supply.enabled=false` なら供給を 0 にする。
 - `physics/supply.get_prod_area_rate` で enabled をチェック。
-- `run.py` で supply 有効/モード/epsilon_mix/const rate を取得し、`process_overview` と `out/<run_id>/run_config.json` に記録。
+- `run_zero_d.py` で supply 有効/モード/epsilon_mix/const rate を取得し、`process_overview` と `out/<run_id>/run_config.json` に記録。
 - `collisions_smol` で Στ=1 headroom=0 の場合にデバッグログを出すよう追加（クリップ原因の特定用）。
 - `scripts/research/run_temp_supply_sweep.sh` を `supply.enabled=true` と `supply.mixing.epsilon_mix=${MU}` 明示に変更（mu エイリアス依存を排除）。
 - `shielding.fixed_tau1_sigma`: `"auto"`（1/κ_eff(t0)固定）に加え、デバッグ用途の `"auto_max"` を追加（max(1/κ_eff, Σ_init)×(1+5%)）。モードと採用 Στ=1 を run_config に記録。

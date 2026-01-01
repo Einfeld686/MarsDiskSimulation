@@ -74,9 +74,9 @@ cat analysis/coverage/coverage.json | jq '.holes'
 
 ## 2. 中優先度
 
-### 2.1 `run.py` の関数数削減
+### 2.1 `run_zero_d.py` の関数数削減
 
-**現状**: `run.py` に 29 関数、4,826 行（目標 4,000 行以下）
+**現状**: `run_zero_d.py` に 29 関数、4,826 行（目標 4,000 行以下）
 
 **パッケージ構成の現状** (新設ファイルは存在しない):
 ```
@@ -181,7 +181,7 @@ clean-tmp:
 
 ### 3.3 `DEBUG_STAGE` 環境変数の整理
 
-**現状**: `run.py:L89` に `DEBUG_STAGE = bool(int(os.environ.get("MARSDISK_DEBUG_STAGE", "0")))`
+**現状**: `run_zero_d.py:L89` に `DEBUG_STAGE = bool(int(os.environ.get("MARSDISK_DEBUG_STAGE", "0")))`
 
 **対応**: 利用箇所を精査し、不要なら削除。必要なら使い方をドキュメント化
 
@@ -195,7 +195,7 @@ clean-tmp:
 - [x] `writer.py` の Phase7 コメントが更新されている
 
 ### 中優先度（推奨）
-- [x] `run.py` が 4,000 行以下
+- [x] `run_zero_d.py` が 4,000 行以下
 - [x] `analysis/run_py_sections.md` がリファクタ後の構造を反映
 - [x] 衝突物理モジュールに `isEnabledFor` ガード付きログ出力が追加されている
 

@@ -95,6 +95,6 @@
 | 機能 | ファイル | 行範囲 |
 |------|----------|--------|
 | headroom クリップ実装 | [collisions_smol.py](marsdisk/physics/collisions_smol.py) | L308–352 |
-| τ=1 初期化・自動決定 | [run.py](marsdisk/run_zero_d.py) | L2290–2345 |
+| τ=1 初期化・自動決定 | [run_zero_d.py](marsdisk/run_zero_d.py) | L2290–2345 |
 | deep_mixing 供給制御 | [supply.py](marsdisk/physics/supply.py) | `split_supply_with_deep_buffer()` |
 | 遮蔽モード定義 | [schema.py](marsdisk/schema.py) | `Shielding` クラス |

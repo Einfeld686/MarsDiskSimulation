@@ -11,7 +11,7 @@
 
 ### 関連ドキュメント
 
-- [analysis/run_py_sections.md]: `run.py` 内部構造マップ
+- [analysis/run_py_sections.md]: `run_zero_d.py` 内部構造マップ
 - [analysis/equations.md]: 衝突関連式 (E.020–E.026)
 - [AGENTS.md]: 完了条件と DocSyncAgent 手順
 
@@ -23,7 +23,7 @@
 
 | ファイル | 行数 | 問題 |
 |----------|------|------|
-| `run.py` | 5,455 | `run_zero_d()` 単体で 3,900 行、責務過多 |
+| `run_zero_d.py` | 5,548 | `run_zero_d()` 単体で 3,900 行、責務過多 |
 | `collisions_smol.py` | 745 | 衝突ステップ + supply 注入 + velocity ブレンドが混在 |
 | `schema.py` | ~65,000 bytes | 全設定が一枚岩、衝突関連の追加で肥大化リスク |
 
@@ -41,10 +41,10 @@
 
 | Phase | テスト / コード | 現在の状態 |
 |-------|----------------|-----------|
-| Phase3 | `test_phase3_surface_blowout.py` | 表層 + blowout の初期実装残骸 |
+| Phase3 | `tests/integration/test_phase3_surface_blowout.py` | 表層 + blowout の初期実装残骸 |
 | Phase5（削除済み） | ― | 2バリアント比較ランナーは Phase3 で削除済み |
 | Phase7→extended | `EXTENDED_DIAGNOSTICS_VERSION`, 診断トラック | 現在も使用中だが命名が不明瞭 |
-| Phase9 | `test_phase9_usecases.py` | ユースケーステスト |
+| Phase9 | `tests/integration/test_phase9_usecases.py` | ユースケーステスト |
 
 ### 1.4 衝突物理の責務散在
 
@@ -56,7 +56,7 @@
   physics/smol.py           → IMEX ソルバ
   physics/qstar.py          → Q_D* 破壊閾値
   physics/fragments.py      → 最大残骸比
-  run.py:L3015             → step_collisions_smol_0d 呼び出し（25+ 引数）
+  run_zero_d.py:L3015        → step_collisions_smol_0d 呼び出し（25+ 引数）
 ```
 
 ---
@@ -171,18 +171,18 @@ git commit -m "chore: add tmp_debug to gitignore"
 
 ---
 
-### 2.3 【中優先度】`run.py` の段階的分割
+### 2.3 【中優先度】`run_zero_d.py` の段階的分割
 
 **ステップ 1（低リスク）**: 独立クラスの抽出
 ```
-run.py → marsdisk/runtime/progress.py    (ProgressReporter)
-run.py → marsdisk/io/streaming.py        (StreamingState)
-run.py → marsdisk/runtime/history.py     (ZeroDHistory)
+run_zero_d.py → marsdisk/runtime/progress.py    (ProgressReporter)
+run_zero_d.py → marsdisk/io/streaming.py        (StreamingState)
+run_zero_d.py → marsdisk/runtime/history.py     (ZeroDHistory)
 ```
 
 **ステップ 2（中リスク）**: Phase5 比較機能の分離・削除
 ```
-run.py → marsdisk/runtime/legacy_steps.py (run_phase5_comparison 関連)
+run_zero_d.py → marsdisk/runtime/legacy_steps.py (run_phase5_comparison 関連)
 → 今後不必要のため削除候補としてマーク
 ```
 
@@ -213,7 +213,7 @@ run.py → marsdisk/runtime/legacy_steps.py (run_phase5_comparison 関連)
 tests/
   integration/
     test_phase3_surface_blowout.py
-    test_phase7_single_process.py
+    test_extended_diagnostics_single_process.py
     test_run_regressions.py
     ...
   unit/
@@ -398,7 +398,7 @@ git cherry-pick <good-commit-hash>
 
 | リファクタ前 | リファクタ後 |
 |-------------|-------------|
-| `run.py` の 25+ 引数を編集 | `CollisionStepContext` に 1 フィールド追加 |
+| `run_zero_d.py` の 25+ 引数を編集 | `CollisionStepContext` に 1 フィールド追加 |
 | `collisions_smol.py` 全体を読解 | `dynamics.py` に新関数追加のみ |
 | Phase テストの名前から意図を推測 | `tests/unit/test_collisions_ei_feedback.py` で明確 |
 | `tmp_debug/` のどれが最新か不明 | 削除済みでクリーン |
@@ -444,7 +444,7 @@ git cherry-pick <good-commit-hash>
 | Phase7 リネーム | 1 時間 | `phase7` → `extended_diagnostics` (44箇所) |
 
 **完了基準**: 
-- `run.py` が 4,000 行以下
+- `run_zero_d.py` が 4,000 行以下
 - Phase 命名が解消
 - 全テスト通過 + カバレッジ維持
 

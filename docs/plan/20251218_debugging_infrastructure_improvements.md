@@ -17,7 +17,7 @@
 | `warnings.warn()` 使用箇所 | 14箇所（構造化なし） | `rg "warnings.warn" marsdisk/` |
 | Provenance coverage | 7/44 式（15.9%） | [provenance_report.md L58-67](analysis/provenance_report.md) |
 | TODO(REF:...) 残存 | 37件（report値）／ファイルは0件（要再生成） | [analysis/UNKNOWN_REF_REQUESTS.jsonl](analysis/UNKNOWN_REF_REQUESTS.jsonl) |
-| `run.py` 行数 | 4,489行（目標 4,000行） | `wc -l marsdisk/run_zero_d.py` |
+| `run_zero_d.py` 行数 | 5,548行（目標 4,000行） | `wc -l marsdisk/run_zero_d.py` |
 | テストルート残存 | 2ファイル | - |
 
 > [!NOTE]
@@ -55,7 +55,7 @@ class TableLoadError(MarsDiskError):
 |------------|-----------|--------|
 | `schema.py` | `ValueError` | `ConfigurationError` |
 | `physics/*.py` | `ValueError`, `RuntimeError` | `PhysicsError` |
-| `run.py` 数値処理 | `RuntimeError` | `NumericalError` |
+| `run_zero_d.py` 数値処理 | `RuntimeError` | `NumericalError` |
 
 > [!WARNING]
 > **`io/tables.py` のフォールバック動作は維持**
@@ -133,7 +133,7 @@ class TableWarning(MarsDiskWarning):
 
 ## 3. アーキテクチャ整理
 
-### 3.1 `run.py` の責務分離
+### 3.1 `run_zero_d.py` の責務分離
 
 **現状**: 5,033行（目標 4,000行以下）
 
@@ -193,7 +193,7 @@ class TableWarning(MarsDiskWarning):
 ### 中優先度（推奨）
 
 - [x] `warnings.py` が新設され、構造化警告が使用されている
-- [x] `run.py` が 4,500行以下
+- [x] `run_zero_d.py` が 4,500行以下
 - [x] テストファイルが適切なディレクトリに配置されている
 
 ### 低優先度（任意）

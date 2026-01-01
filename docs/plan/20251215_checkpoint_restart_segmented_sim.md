@@ -37,7 +37,7 @@
 | **セグメント分割** | 長時間シミュレーションを複数の短い区間に分けて実行する手法 | — |
 | `sigma_surf` | 表面密度 [kg m⁻²] | — |
 | `psd_state` | 粒径分布の状態（ビンサイズ、数密度等） | — |
-| `run_zero_d()` | メインのシミュレーションドライバー関数 | [run.py](marsdisk/run_zero_d.py) |
+| `run_zero_d()` | メインのシミュレーションドライバー関数 | [run_zero_d.py](marsdisk/run_zero_d.py) |
 
 ---
 
@@ -268,7 +268,7 @@ python -m marsdisk.run --config configs/<test_checkpoint>.yml
 ### コード参照
 | 機能 | ファイル | 備考 |
 |------|----------|------|
-| メインドライバー | [run.py](marsdisk/run_zero_d.py) | `run_zero_d()` L1081〜 |
-| 状態管理 | [run.py](marsdisk/run_zero_d.py) | `ZeroDHistory` L672〜 |
-| ストリーミング | [run.py](marsdisk/run_zero_d.py) | `StreamingState` L696〜 |
+| メインドライバー | [run_zero_d.py](marsdisk/run_zero_d.py) | `run_zero_d()` L1081〜 |
+| 状態管理 | [run_zero_d.py](marsdisk/run_zero_d.py) | `ZeroDHistory` L672〜 |
+| ストリーミング | [run_zero_d.py](marsdisk/run_zero_d.py) | `StreamingState` L696〜 |
 | 設定スキーマ | [schema.py](marsdisk/schema.py) | 拡張予定 |

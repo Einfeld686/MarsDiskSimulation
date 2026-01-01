@@ -17,7 +17,7 @@
    - `shielding.los_geometry.mode` に `distance_scaled` を追加。
    - パラメータ: `h_over_r`, `path_multiplier`, `use_radius` (r を光路に掛けるか)、将来拡張用の `inclination_deg` (未使用なら None)。
 2) **f_los 計算の切替**
-   - `run.py/_resolve_los_factor` を拡張し、`mode=="distance_scaled"` の場合は `f_los = max(1, path_multiplier * r / (2 * H))` （H = h_over_r * r）を使用。
+   - `run_zero_d.py/_resolve_los_factor` を拡張し、`mode=="distance_scaled"` の場合は `f_los = max(1, path_multiplier * r / (2 * H))` （H = h_over_r * r）を使用。
    - 既存 `aspect_ratio_factor` モードは現行の定数係数で維持。
 3) **LOS τ 評価の更新**
    - `tau_los_mars = kappa_surf * Sigma_surf * f_los` として距離依存を反映（既存パスを置換）。

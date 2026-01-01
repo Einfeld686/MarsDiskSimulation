@@ -53,7 +53,7 @@
 
 ## 実装フロー（案B 基準）
 1. **スキーマ**: `schema.py` に `shielding.los_geometry` を追加（`h_over_r`, `path_multiplier`, `mode`）。デフォルトは 1.0 で互換維持。
-2. **f_los 評価**: `run.py`/`physics_step.py` で `tau_vert` を算出後、`f_los` を用いて `tau_los_mars` を得るヘルパを新設（0D 近似式を埋め込む）。
+2. **f_los 評価**: `run_zero_d.py`/`physics_step.py` で `tau_vert` を算出後、`f_los` を用いて `tau_los_mars` を得るヘルパを新設（0D 近似式を埋め込む）。
 3. **シールド入力の切替**: `shielding.apply_shielding` への τ を `tau_los_mars` に変更し、戻り値を `Sigma_tau1_los` として記録・伝搬する（`surface.step_surface`、`collisions_smol.step_collisions_smol_0d` の `sigma_tau1` に渡す）。
 4. **Wyatt/衝突 τ の維持**: 衝突寿命や t_coll 用 τ は `tau_vert` のまま引数名で明示。
 5. **I/O 拡張**: `writer.py` で `tau_vert`, `tau_los_mars`, `Sigma_tau1_los`, `phi_los` を出力。`Sigma_tau1` はエイリアスとして残す。

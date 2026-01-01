@@ -13,12 +13,14 @@ for %%I in ("%~dp0\..\..") do set "REPO_ROOT=%%~fI"
 echo.[info] REPO_ROOT=!REPO_ROOT!
 cd /d "!REPO_ROOT!"
 
-rem --- Python resolution ---
-set "RUNSETS_COMMON_DIR=!REPO_ROOT!\scripts\runsets\common"
-call "!RUNSETS_COMMON_DIR!\resolve_python.cmd"
-if !errorlevel! neq 0 (
-    echo.[error] Python resolution failed
-    exit /b 1
+rem --- Initial setup ---
+if not defined PYTHON_EXE (
+    set "RUNSETS_COMMON_DIR=!REPO_ROOT!\scripts\runsets\common"
+    call "!RUNSETS_COMMON_DIR!\resolve_python.cmd"
+    if !errorlevel! neq 0 (
+        echo.[error] Python resolution failed
+        exit /b 1
+    )
 )
 echo.[info] PYTHON_EXE=!PYTHON_EXE!
 echo.
@@ -52,33 +54,20 @@ echo.  BASE_CONFIG=!BASE_CONFIG!
 echo.  BATCH_ROOT=!BATCH_ROOT!
 echo.
 
-rem --- Ensure dependencies are installed (like parent process would do) ---
-echo.[setup] Installing dependencies from !REPO_ROOT!\requirements.txt ...
-"!PYTHON_EXE!" -m pip install -r "!REPO_ROOT!\requirements.txt" --quiet
-if !errorlevel! neq 0 (
-    echo.[warn] pip install had warnings but continuing...
-)
+rem --- Skip redundant setup in child script ---
+set "REQUIREMENTS_INSTALLED=1"
+set "SKIP_PIP=1"
+set "SKIP_VENV=1"
 
 rem --- Create log directory ---
 set "LOG_DIR=!REPO_ROOT!\out\debug"
 if not exist "!LOG_DIR!" mkdir "!LOG_DIR!"
 set "LOG_FILE=!LOG_DIR!\child_job_log.txt"
 
-echo.============================================================
-echo. Step 1: Test run_temp_supply_sweep.cmd --run-one directly
-echo. Output will be logged to: !LOG_FILE!
-echo.============================================================
 echo.
-
-echo.=== Direct call to run_temp_supply_sweep.cmd --run-one === > "!LOG_FILE!" 2>&1
-echo.Environment: >> "!LOG_FILE!" 2>&1
-echo.  PYTHON_EXE=!PYTHON_EXE! >> "!LOG_FILE!" 2>&1
-echo.  BASE_CONFIG=!BASE_CONFIG! >> "!LOG_FILE!" 2>&1
-echo.  BATCH_ROOT=!BATCH_ROOT! >> "!LOG_FILE!" 2>&1
-echo.  RUN_ONE_T=!RUN_ONE_T! >> "!LOG_FILE!" 2>&1
-echo.  RUN_ONE_EPS=!RUN_ONE_EPS! >> "!LOG_FILE!" 2>&1
-echo.  RUN_ONE_TAU=!RUN_ONE_TAU! >> "!LOG_FILE!" 2>&1
-echo. >> "!LOG_FILE!" 2>&1
+echo.[status] Starting simulation...
+echo.         This may take a few minutes. Check !LOG_FILE! for live progress.
+echo.
 
 call scripts\research\run_temp_supply_sweep.cmd --run-one >> "!LOG_FILE!" 2>&1
 set "RC=!errorlevel!"
