@@ -8,6 +8,8 @@ if defined DEBUG_ARG if /i "%DEBUG_ARG%"=="1" set "DEBUG_RESOLVE=1"
 
 if not defined PYTHON_ALLOW_LAUNCHER set "PYTHON_ALLOW_LAUNCHER=0"
 if "%DEBUG_RESOLVE%"=="1" echo.[DEBUG] resolve_python: start
+set "SCRIPT_DIR=%~dp0"
+set "PYTHON_EXE_DIR="
 
 if not defined PYTHON_EXE (
   for %%P in (python3.11 python) do (
@@ -32,6 +34,14 @@ if not defined PYTHON_EXE (
           if "!PYTHON_ARGS_NEEDS_VER!"=="1" set "PYTHON_ARGS=-3.11 !PYTHON_ARGS!"
         )
       )
+    )
+  )
+  if not defined PYTHON_EXE (
+    for %%I in ("%LOCALAPPDATA%\Programs\Python\Python311\python.exe" "%LOCALAPPDATA%\Programs\Python\Python312\python.exe" "%LOCALAPPDATA%\Programs\Python\Python313\python.exe" "%ProgramFiles%\Python311\python.exe" "%ProgramFiles%\Python312\python.exe" "%ProgramFiles%\Python313\python.exe" "%ProgramFiles(x86)%\Python311\python.exe" "%ProgramFiles(x86)%\Python312\python.exe" "%ProgramFiles(x86)%\Python313\python.exe") do (
+      if not defined PYTHON_EXE if exist "%%~fI" set "PYTHON_EXE=%%~fI"
+    )
+    if defined PYTHON_EXE (
+      for %%I in ("!PYTHON_EXE!") do set "PYTHON_EXE_DIR=%%~dpI"
     )
   )
   if not defined PYTHON_EXE (
@@ -248,5 +258,6 @@ if not "!PYTHON_ARGS!"=="" set "PYTHON_CMD=!PYTHON_EXE_QUOTED! !PYTHON_ARGS!"
 if "%DEBUG_RESOLVE%"=="1" echo.[DEBUG] resolve_python: PYTHON_EXE=!PYTHON_EXE!
 if "%DEBUG_RESOLVE%"=="1" echo.[DEBUG] resolve_python: PYTHON_ARGS=!PYTHON_ARGS!
 
-endlocal & set "PYTHON_EXE=%PYTHON_EXE%" & set "PYTHON_ARGS=%PYTHON_ARGS%" & set "PYTHON_CMD=%PYTHON_CMD%" & set "PYTHON_ALLOW_LAUNCHER=%PYTHON_ALLOW_LAUNCHER%"
+endlocal & set "PYTHON_EXE=%PYTHON_EXE%" & set "PYTHON_ARGS=%PYTHON_ARGS%" & set "PYTHON_CMD=%PYTHON_CMD%" & set "PYTHON_ALLOW_LAUNCHER=%PYTHON_ALLOW_LAUNCHER%" & set "PYTHON_EXE_DIR=%PYTHON_EXE_DIR%"
+if not "%PYTHON_EXE_DIR%"=="" set "PATH=%PYTHON_EXE_DIR%;%PATH%" & set "PYTHON_EXE_DIR="
 exit /b 0

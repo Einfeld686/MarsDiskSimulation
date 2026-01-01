@@ -55,7 +55,7 @@
 > スクリーニング用設定では **`n_bins` のみを変更**し、サイズ範囲 `s_min`, `s_max` はデフォルト（`[1e-6, 3] m`）を維持すること。範囲を変更すると `M_loss` や wavy PSD の再現性が変わる。
 
 ```yaml
-# configs/fast_screening.yml
+# configs/<fast_screening>.yml
 # ベース設定を継承し、n_bins のみ変更
 sizes:
   n_bins: 20
@@ -79,7 +79,7 @@ sizes:
 GitHub Education 加入者は大型インスタンス（16-32コア）を無料で利用可能。
 
 ```json
-// .devcontainer/devcontainer.json
+// devcontainer.json (optional)
 {
   "hostRequirements": {
     "cpus": 16,
@@ -97,7 +97,7 @@ python scripts/sweeps/sweep_heatmaps.py --map 1 --jobs 16 --outdir sweeps/map1_f
 
 CI で分散実行する場合:
 ```yaml
-# .github/workflows/sweep.yml
+# .github/workflows/<sweep>.yml
 jobs:
   sweep:
     strategy:

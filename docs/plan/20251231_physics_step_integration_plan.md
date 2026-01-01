@@ -506,10 +506,10 @@ psd_state の実参照（現行コードが触っているキー）
 
 #### 中期実装チェックリスト
 
-- [ ] surface_ode / smol の共通I/O契約が文書化され、呼び出し側が同一インターフェースを使用している
-- [ ] 供給/リザーバ更新が単一経路になり、substep/非substepで積分粒度の差が意図どおり説明できる
-- [ ] blowout補正/ゲート係数の適用位置が一貫し、二重適用/適用漏れがない
-- [ ] `t_coll` の定義が統一され、系列出力に混乱がない
+- [x] surface_ode / smol の共通I/O契約が文書化され、呼び出し側が同一インターフェースを使用している（SurfaceUpdateResultで統一）
+- [x] 供給/リザーバ更新が単一経路になり、substep/非substepで積分粒度の差が意図どおり説明できる（surface_ode: dt_sub / smol: dt）
+- [x] blowout補正/ゲート係数の適用位置が一貫し、二重適用/適用漏れがない（helpersで共通化）
+- [x] `t_coll` の定義が統一され、系列出力に混乱がない（`_resolve_t_coll_step`）
 - [ ] psd_state の `sizes/number` と `s/n` が常に同期され、`sizes_version/edges_version` の更新責務が明確
 - [ ] Numba/キャッシュの寿命管理が run 境界で明確化され、A/B テスト時に再現性が確保される
 - [ ] streaming ON/OFF の両方で `out/<run_id>/series/run.parquet` と `out/<run_id>/checks/mass_budget.csv` が同等に出力される

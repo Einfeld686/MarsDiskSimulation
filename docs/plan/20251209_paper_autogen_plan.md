@@ -8,8 +8,8 @@
 - 生成に使う RUN_/FIG_ は `analysis/run_catalog.md` と `analysis/figures_catalog.md` から選択し、一意性を崩さない。
 
 ## 1. 入力収集ステップ（データ整形）
-- 1 論文 = 1 マニフェスト（例: `paper_config.yml`）とし、`runs: [RUN_001, RUN_002, ...]` と FIG_ID の集合を列挙する。JSON も `{runs: {run_id: {...}}, derived: {...}}` のようにネストして「論文単位」を保持する。
-- サンプル: `configs/paper_marsdisk_draft.yml`（既存 out/01_inner1RM_blowout, 02_inner1RM_sublimation, 20251022-0501_* を束ねる草稿用）。`python tools/paper_manifest.py --manifest configs/paper_marsdisk_draft.yml --outdir out/paper_inputs/PAPER_MARSDISK_DRAFT` で resolved_manifest.json / paper_checks.json / figure_tasks.json を生成する。
+- 1 論文 = 1 マニフェスト（例: `configs/<paper_config>.yml`）とし、`runs: [RUN_001, RUN_002, ...]` と FIG_ID の集合を列挙する。JSON も `{runs: {run_id: {...}}, derived: {...}}` のようにネストして「論文単位」を保持する。
+- サンプル: `configs/paper_marsdisk_draft.yml`（既存 out/01_inner1RM_blowout, 02_inner1RM_sublimation, 20251022-0501_* を束ねる草稿用）。`python tools/paper_manifest.py --manifest configs/paper_marsdisk_draft.yml --outdir out/paper_inputs/PAPER_MARSDISK_DRAFT` で `out/paper_inputs/PAPER_MARSDISK_DRAFT/resolved_manifest.json` / `out/paper_inputs/PAPER_MARSDISK_DRAFT/paper_checks.json` / `out/paper_inputs/PAPER_MARSDISK_DRAFT/figure_tasks.json` を生成する。
 - 各 run の `out/<stamp>/run_card.md` を読み取り、設定・環境・パラメータ・乱数種を抽出して JSON にまとめる。簡易スキーマを定義し、`run_id: str`, `M_out_dot: float`, `tau: list[float]`, `tags: list[str]` などを型チェックする。
 - `out/<stamp>/series/*.parquet` から主要系列（M_out_dot, prod_subblow_area_rate, tau など）を集計し、図表用の tidy データフレームを生成する。
 - `out/<run_id>/summary.json` と `out/<run_id>/checks/mass_budget.csv` を突合し、質量収支と安定性のステータスを付与する。論文レベルの集約タグ（質量収支OK率、IMEX安定率など）もここで計算して JSON に格納する。
@@ -23,13 +23,13 @@
 
 ## 3. 図表生成ステップ（再現性付き）
 - `analysis/figures_catalog.md` の FIG_ID をキーに、対応する run と生成手順をマッピングする。複数 run 比較図も扱えるよう、`FIG_010: {runs: [RUN_A, RUN_B], script: ...}` のような構造を想定する。
-- Parquet 集計から直接生成する図は、軸・単位・凡例のテンプレートを固定し、スタイルは共通の matplotlib スタイルファイルまたは `plot_style.py`（実装済: `paper/plot_style.py`）に集約する。`paper_manifest.py --emit-figure-tasks` で `figure_tasks.json` を出力し、後続の描画スクリプトの入力に使う。
-- `scripts/plots/render_figures_from_tasks.py --tasks <figure_tasks.json> --resolved-manifest <resolved_manifest.json>` で run_id→outdir を解決した推奨コマンド（figure_commands.txt）を生成し、手元の CLI に合わせて実行する。共通描画ユーティリティとして `scripts/plots/plot_from_runs.py` を用意（mode: beta_timeseries / mass_budget / psd_wavy）。
+- Parquet 集計から直接生成する図は、軸・単位・凡例のテンプレートを固定し、スタイルは共通の matplotlib スタイルファイルまたは `plot_style.py`（実装済: `paper/plot_style.py`）に集約する。`paper_manifest.py --emit-figure-tasks` で `out/<paper_run_id>/figure_tasks.json` を出力し、後続の描画スクリプトの入力に使う。
+- `scripts/plots/render_figures_from_tasks.py --tasks out/<paper_run_id>/figure_tasks.json --resolved-manifest out/<paper_run_id>/resolved_manifest.json` で run_id→outdir を解決した推奨コマンド（`out/<paper_run_id>/figure_commands.txt`）を生成し、手元の CLI に合わせて実行する。共通描画ユーティリティとして `scripts/plots/plot_from_runs.py` を用意（mode: beta_timeseries / mass_budget / psd_wavy）。
 - 乱数を使う図は run_card の seed を読み、再現性を保証する。
 - 表（例: 感度掃引のまとめ）は `pandas.DataFrame.to_markdown()` 等で Markdown/LaTeX 両対応のフォーマットを出力する。
 
 ## 4. アセンブリステップ（論文骨子統合）
-- 「1 論文 = 1 コンフィグ」を基本にし、`configs/paper_*.yml` にタイトル・著者・キーワード・採用する RUN_ID/FIG_ID・章構成テンプレートを記述する。
+- 「1 論文 = 1 コンフィグ」を基本にし、`configs/<paper_config>.yml` にタイトル・著者・キーワード・採用する RUN_ID/FIG_ID・章構成テンプレートを記述する。
 - セクション別テキスト素片と図表パスを統合する組版スクリプトを用意する（TeX なら main.autogen.tex を Jinja で生成し、main.manual.tex で手直しを重ねる等の二層構造を許容）。Markdown→Pandoc も選択肢に含める。
 - メタデータ（タイトル、著者、キーワード、対応 RUN_/FIG_ 一覧、Git shortsha）を同時に埋め込む。
 - ビルド成果物と中間生成物は `out/<YYYYMMDD-HHMM>_paper_draft__<shortsha>/` にまとめ、実行コマンドとハッシュを `out/<run_id>/run_card.md` ライクに記録する。
@@ -44,7 +44,7 @@
 ## 6. 運用メモ
 - 本ファイルはローカル補助用であり、GitHub への push は行わない（CI 想定外）。共有する場合は別ブランチや外部ストレージで。
 - 追加の自動化スクリプトを置く場合は `tools/` または `scripts/` に配置し、analysis への参照と再現手順を明示する。
-- 将来共有を見据え、簡易版ユーザ向けドキュメントを `docs/paper_pipeline.md` 等に分離して用意する余地を残す。
+- 将来共有を見据え、簡易版ユーザ向けドキュメントを `docs/<paper_pipeline>.md` 等に分離して用意する余地を残す。
 
 ## 7. 次の実装順序（推奨）
 - まず Step 1（論文マニフェスト + 入力整形）と Step 3（図表再生成）を動かし、RUN/FIG の再現性ループを固める。
@@ -53,8 +53,8 @@
 
 ## 現状のスケルトンと成果物
 - マニフェスト例: `configs/paper_marsdisk_draft.yml`（RUN/FIG の束ね方としきい値を定義、既存 out/ ディレクトリに紐付け済）
-- 解決スクリプト: `tools/paper_manifest.py`（resolved_manifest.json, paper_checks.json, figure_tasks.json を生成）
-- 図生成: `scripts/plots/plot_from_runs.py`（figure_tasks.json の mode に応じた簡易図を生成）
-- 図コマンド生成: `scripts/plots/render_figures_from_tasks.py`（figure_tasks.json から figure_commands.txt を生成）
+- 解決スクリプト: `tools/paper_manifest.py`（`out/<paper_run_id>/resolved_manifest.json`, `out/<paper_run_id>/paper_checks.json`, `out/<paper_run_id>/figure_tasks.json` を生成）
+- 図生成: `scripts/plots/plot_from_runs.py`（`out/<paper_run_id>/figure_tasks.json` の mode に応じた簡易図を生成）
+- 図コマンド生成: `scripts/plots/render_figures_from_tasks.py`（`out/<paper_run_id>/figure_tasks.json` から `out/<paper_run_id>/figure_commands.txt` を生成）
 - 図スタイル: `paper/plot_style.py`（rcParams の統一適用ユーティリティ）
 - 手書き枠: `paper/manual/discussion.md`, `paper/manual/conclusion.md`（自動生成が上書きしない考察・結論用プレースホルダ）

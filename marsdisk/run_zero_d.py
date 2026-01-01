@@ -1024,7 +1024,6 @@ def run_zero_d(
         rho_used,
         T_use,
         qpr_override=qpr_override,
-        qpr_lookup_fn=_lookup_qpr_cached,
     )
     a_blow = float(rad_init.a_blow)
     a_blow_effective = float(max(s_min_config, a_blow))

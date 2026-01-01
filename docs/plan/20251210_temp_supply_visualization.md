@@ -25,7 +25,7 @@
 
 対象・非対象
 ------------
-- 対象: `configs/sweep_temp_supply/` 由来の 0D 実行結果（summary.json, series/run.parquet, checks/mass_budget.csv, run_config.json, run_card.md）。
+- 対象: `configs/sweep_temp_supply/` 由来の 0D 実行結果（`out/<run_id>/summary.json`, `out/<run_id>/series/run.parquet`, `out/<run_id>/checks/mass_budget.csv`, `out/<run_id>/run_config.json`, `out/<run_id>/run_card.md`）。
 - 非対象: 1D 半径拡張や TL2003 有効化シナリオ、SiO₂ 冷却サブプロジェクト（別プラン扱い）。
 
 入力フォルダと必要データ
@@ -58,7 +58,7 @@
    - matplotlib ベースで上記プロットを作成し、`out/<timestamp>_temp_supply_viz__<sha>/figs/` に PNG 保存。ファイル名は `runid_metric.png` 形式（例: `T2000_mu0p1_Mout.png`）。
    - `out/<run_id>/checks/mass_budget.csv` の最大誤差が閾値超のケースには図や凡例に `(mass budget warn)` を付記。
 4. 記録:
-   - `out/<run_id>/run_card.md` から T, μ, Q_pr テーブル、`physics_controls`（特に `allow_TL2003`）を転記せずに引用し、可視化ノートを別途 `figs/notes.md` に残す。
+   - `out/<run_id>/run_card.md` から T, μ, Q_pr テーブル、`physics_controls`（特に `allow_TL2003`）を転記せずに引用し、可視化ノートを別途 `out/<timestamp>_temp_supply_viz__<sha>/figs/notes.md` に残す。
    - 必要に応じて analysis/run_catalog.md への run 追加は別コミットで行い、ここでは方針のみ。
 
 読み込みスニペット例（外部ツール向け）
