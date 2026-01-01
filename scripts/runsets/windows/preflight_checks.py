@@ -99,6 +99,10 @@ ERRORLEVEL_CMP_RE = re.compile(
     r"(?:%|!)errorlevel(?:%|!)\s+(geq|gtr|leq|lss)\s+(-?\d+)",
     re.I,
 )
+NUMERIC_COMPARISON_RE = re.compile(
+    r"\bif\s+(?:not\s+)?(?:%[^%]+%|![^!]+!)\s+(equ|neq|lss|leq|gtr|geq)\s+",
+    re.I,
+)
 PERCENT_ERRORLEVEL_RE = re.compile(r"%errorlevel%", re.I)
 CMD_QUOTED_META_CHARS = "&<>|^()@"
 CMD_ENV_VAR_RE = re.compile(r"%([^%]+)%")
@@ -174,8 +178,10 @@ CMD_ALLOWLIST_RULES = {
     "cmd.line_endings.mixed",
     "cmd.line_length.limit",
     "cmd.line_length.near",
+    "cmd.numeric_comparison.unguarded",
     "cmd.option.dash",
     "cmd.posix_path",
+    "infra.common_scripts.missing",
     "cmd.pushd_popd.unbalanced",
     "cmd.pushd.unquoted_space",
     "cmd.read_failed",
@@ -247,6 +253,7 @@ RULE_DESCRIPTIONS: dict[str, str] = {
     "cmd.line_endings.mixed": "File has mixed line endings (fixable)",
     "cmd.line_length.limit": "Line exceeds cmd.exe limit (8191 chars)",
     "cmd.line_length.near": "Line near cmd.exe limit",
+    "cmd.numeric_comparison.unguarded": "Numeric comparison (GTR/LSS etc) with possibly empty variable (requires 'if defined' or non-empty guard)",
     "cmd.option.dash": "Command uses dash-style options (prefer /style)",
     "cmd.posix_path": "POSIX-style path detected in cmd script",
     "cmd.pushd_popd.unbalanced": "Unbalanced pushd/popd commands",
@@ -274,6 +281,7 @@ RULE_DESCRIPTIONS: dict[str, str] = {
     "path.unc": "UNC network path detected",
     "path.value_length": "Path length near or exceeds limits",
     "path.value_non_ascii": "Path contains non-ASCII characters",
+    "infra.common_scripts.missing": "Required core common script missing from scripts/runsets/common/",
 }
 
 # SARIF format constants
@@ -1114,7 +1122,7 @@ def _read_cmd_registry_value(root, name: str) -> object | None:
     except Exception:
         return None
     try:
-        key = winreg.OpenKey(root, r"Software\\Microsoft\\Command Processor")
+        key = winreg.OpenKey(root, r"Software\Microsoft\Command Processor")
     except OSError:
         return None
     try:
@@ -1432,6 +1440,25 @@ def _parse_set_value(line: str) -> str | None:
         _, value = rest.split("=", 1)
         return value.strip()
     return None
+
+
+def _check_common_scripts(repo_root: Path, errors: list[Issue]) -> None:
+    common_dir = repo_root / "scripts" / "runsets" / "common"
+    required = [
+        "resolve_python.cmd",
+        "python_exec.cmd",
+        "sanitize_token.cmd",
+        "read_overrides_cmd.py",
+        "calc_parallel_jobs.py",
+    ]
+    for script in required:
+        script_path = common_dir / script
+        if not script_path.exists():
+            _error(
+                errors,
+                "infra.common_scripts.missing",
+                f"required common infrastructure script missing: {script}",
+            )
 
 
 def _detect_delayed_expansion_lines(text: str) -> list[int]:
@@ -2205,6 +2232,14 @@ def _scan_cmd_file(
                             line_no,
                         )
                         block.warned_vars.add(var_upper)
+            if NUMERIC_COMPARISON_RE.search(line_body):
+                # Heuristic skip if the line seems to have a guard early on
+                if not re.search(r"\bif\s+defined\s+", line_body, re.I) and not '""' in line_body:
+                    report_warn(
+                        "cmd.numeric_comparison.unguarded",
+                        "cmd uses numeric comparison with possibly empty variable; wrap in 'if defined' or check for empty string",
+                        line_no,
+                    )
             set_name = _extract_set_name(line_body)
             if set_name and VAR_NAME_RE.match(set_name):
                 set_upper = set_name.upper()
@@ -3177,6 +3212,7 @@ def main() -> int:
     _check_python(errors, warnings, tool_checks_warn_only, args.python_exe or None)
     if args.require_powershell:
         _check_powershell(errors, warnings, tool_checks_warn_only)
+    _check_common_scripts(args.repo_root, errors)
 
     if is_windows_host:
         autorun_values = _read_cmd_autorun_values()

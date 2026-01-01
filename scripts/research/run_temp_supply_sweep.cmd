@@ -256,7 +256,7 @@ if "%USE_VENV%"=="1" if not "%VENV_OK%"=="1" (
   if exist "!VENV_PY!" (
     rem Use short path to avoid issues with non-ASCII characters
     for %%I in ("!VENV_PY!") do set "VENV_PY_SHORT=%%~sI"
-    for /f %%V in ('"!VENV_PY_SHORT!" -c "import sys; print(1 if sys.version_info >= (3,11) else 0)" 2^>nul') do set "VENV_OK=%%V"
+    for /f %%V in ('"!VENV_PY_SHORT!" -c "import sys; print(1 if sys.version_info >= ^(3,11^) else 0)" 2^>nul') do set "VENV_OK=%%V"
   )
   if not "!VENV_OK!"=="1" (
     if exist "!VENV_DIR!" (

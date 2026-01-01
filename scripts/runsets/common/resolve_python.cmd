@@ -12,10 +12,20 @@ set "SCRIPT_DIR=%~dp0"
 set "PYTHON_EXE_DIR="
 
 if not defined PYTHON_EXE (
-  for %%P in (python3.13 python3.12 python3.11 python) do (
-    if not defined PYTHON_EXE (
-      where %%P >nul 2>&1
-      if !errorlevel! lss 1 set "PYTHON_EXE=%%P"
+  rem Try project-local virtual environments first
+  set "VENV_DIR_HINT=!VENV_DIR!"
+  if not defined VENV_DIR_HINT set "VENV_DIR_HINT=.venv"
+  if exist "!VENV_DIR_HINT!\Scripts\python.exe" (
+    set "PYTHON_EXE=!VENV_DIR_HINT!\Scripts\python.exe"
+    if "%DEBUG_RESOLVE%"=="1" echo.[DEBUG] resolve_python: found project venv python: !PYTHON_EXE!
+  )
+
+  if not defined PYTHON_EXE (
+    for %%P in (python3.13 python3.12 python3.11 python) do (
+      if not defined PYTHON_EXE (
+        where %%P >nul 2>&1
+        if !errorlevel! lss 1 set "PYTHON_EXE=%%P"
+      )
     )
   )
   if not defined PYTHON_EXE (

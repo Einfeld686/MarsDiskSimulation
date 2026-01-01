@@ -1531,6 +1531,7 @@ if "%PARALLEL_JOBS_DEFAULT%"=="1" if "!PARALLEL_JOBS!"=="1" (
         if not "!PARALLEL_JOBS_TARGET!"=="" if !PARALLEL_JOBS_TARGET! GTR 1 (
         %LOG_INFO% cpu_target fallback: target_cores=!CPU_TARGET_CORES! parallel_jobs=!PARALLEL_JOBS!
       )
+      )
     )
   )
 )
