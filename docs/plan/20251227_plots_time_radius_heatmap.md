@@ -32,7 +32,7 @@
   - `--max-rows`（自動間引き）
 
 ## 実データ観察（temp_supply_sweep_1d の例）
-対象: `/Volumes/KIOXIA/marsdisk_out/temp_supply_sweep_1d/20251225-114845__e71165335__seed343344874/T5000_eps1p0_tau1p0`
+対象: `out/<run_id>`
 
 - `out/<run_id>/series/run.parquet` は約 4.5GB、行数は約 5.1e7。
 - `r_RM` は 32セルで等間隔（例: 1.0266–2.6734）。

@@ -182,7 +182,7 @@ run.py → marsdisk/runtime/history.py     (ZeroDHistory)
 
 **ステップ 2（中リスク）**: Phase5 比較機能の分離・削除
 ```
-run.py → marsdisk/run_phase5.py          (run_phase5_comparison 関連)
+run.py → marsdisk/runtime/legacy_steps.py (run_phase5_comparison 関連)
 → 今後不必要のため削除候補としてマーク
 ```
 
@@ -240,7 +240,6 @@ tests/
   research/                  # 研究スクリプト検証
     test_temp_supply_sweep.py
   legacy/                    # Phase 命名のレガシー（将来削除候補）
-    test_phase3_surface_blowout.py
     test_phase5.py
 ```
 
@@ -255,10 +254,10 @@ tests/
 > grep -r "test_phase3" analysis/
 >
 > # 2. ファイル移動（git mv 必須）
-> git mv tests/integration/test_phase3_surface_blowout.py tests/legacy/
+> git mv tests/integration/test_phase3_surface_blowout.py tests/legacy/<test_phase3_surface_blowout>.py
 >
 > # 3. アンカー参照を更新
-> # analysis/overview.md 等の [tests/test_phase3...] を [tests/legacy/test_phase3...] に修正
+> # analysis/overview.md 等の [tests/integration/test_phase3_surface_blowout.py:...] を更新
 >
 > # 4. DocSyncAgent 実行 + テスト
 > make analysis-update  # DocSync → doc-tests の順で実行
@@ -303,10 +302,10 @@ cat analysis/coverage/coverage.json | jq '.function_reference_rate'
 
 # 4. 研究スクリプトの基準出力を保存
 T_END_SHORT_YEARS=0.001 scripts/research/run_temp_supply_sweep.sh
-cp out/temp_supply_sweep/latest/summary.json tests/fixtures/baseline_summary.json
+cp out/<run_id>/summary.json tests/fixtures/baseline_summary.json
 
 # 5. 評価システム実行（シミュレーション後は必須）
-python -m tools.evaluation_system --outdir out/temp_supply_sweep/latest
+python -m tools.evaluation_system --outdir out/<run_id>
 ```
 
 > [!WARNING]
@@ -381,7 +380,7 @@ git cherry-pick <good-commit-hash>
 ### 3.5 CI 統合（推奨）
 
 ```yaml
-# ..github/workflows/refactor-guard.yml
+# ..github/workflows/tests.yml
 - name: Baseline comparison
   run: |
     pytest tests/ -q

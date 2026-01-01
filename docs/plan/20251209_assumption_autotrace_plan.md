@@ -73,7 +73,7 @@
 - config_keys: ドット付きパス（例: `surface.use_tcoll`, `radiation.TM_K`）。`config_utils` の返す label を provenance.note に写し、YAML の生値ではなく schema 上のキーを canonical にする。
 - analysis/assumption_trace.md の運用: 自動ブロックを上書きし、手書き部分は保持。完全自動ファイルに分離する場合は `analysis/<target>.autogen.md` を別途用意するオプションを残す。
 - code_path/run_stage: run.py の段階構造に沿って run_stage を付与し、code_path は JSONPath 風を基本形とする。段階マップ（init_ei/time_grid/physics_controls/surface_loop/smol_kernel）はフェーズ1で固定し、decorator 化も検討。
-- run_stage テンプレ（初期案）: `init_ei`（初期 e/i 設定、例: run_config["init_ei"] セクション）、`time_grid`（_resolve_time_grid 系）、`physics_controls`（blowout/shielding/psd_floor 等の有効化判断）、`surface_loop`（表層 ODE, tau_gate/gate_factor, fast_blowout 判定）、`smol_kernel`（Smoluchowski カーネル・質量検査）。フェーズ1で run.py の該当関数/辞書キーとの対応表を作る。
+- run_stage テンプレ（初期案）: `init_ei`（初期 e/i 設定、例: run_config["init_ei"] セクション）、`time_grid`（_resolve_time_grid 系）、`physics_controls`（blowout, shielding, psd_floor 等の有効化判断）、`surface_loop`（表層 ODE, tau_gate/gate_factor, fast_blowout 判定）、`smol_kernel`（Smoluchowski カーネル・質量検査）。フェーズ1で run.py の該当関数/辞書キーとの対応表を作る。
 
 ## 6. リスクと緩和
 - アンカーずれ・誤検出: DocSyncAgent 連動と `analysis/tools/check_docs.py --strict` で検査。eq_id 未発見は WARN だが、coverage 指標が閾値未達なら make ターゲットで FAIL。

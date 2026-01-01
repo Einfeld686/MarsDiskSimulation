@@ -162,7 +162,7 @@ python -m marsdisk.run --config config.yml \
 
 # リスタート実行
 python -m marsdisk.run --config config.yml \
-    --resume-from out/run_001/checkpoints/checkpoint_step_500000.json
+    --resume-from out/<run_id>/checkpoints/checkpoint_step_500000.json
 ```
 
 ---

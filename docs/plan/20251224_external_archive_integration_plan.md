@@ -34,8 +34,8 @@
 
 # Windows運用補足（明示パス運用）
 - Windows runset は `--config`/`--overrides`/`--out-root` を明示指定する前提で運用しているため、アーカイブも `io.archive.dir` を overrides で明示的に指定する。
-- `io.archive.dir` は `E:\marsdisk_runs` を固定値として運用し、ドライブレター付き絶対パスで指定する（相対パスや `~` 展開には依存しない）。
-- 外付けHDDの保存先は `E:\marsdisk_runs` に固定する。
+- `io.archive.dir` は `<archive_root_windows>` を固定値として運用し、ドライブレター付き絶対パスで指定する（相対パスや `~` 展開には依存しない）。
+- 外付けHDDの保存先は `<archive_root_windows>` に固定する。
 - `out/<run_id>/run_card.md` には指定値と解決後の実パスの両方を記録する（Windowsのパス解決差異を吸収するため）。
 - `io.archive.enabled=true` の場合は `io.archive.dir` 未指定を許可しない（runset 側で必須化）。
 
@@ -79,7 +79,7 @@
 
 # 設定キー案（実装対象）
 - [x] `io.archive.enabled` (bool, default false): アーカイブ有効化。
-- [x] `io.archive.dir` (str, required when enabled): 外部HDDのルート（例: `/Volumes/HDD/marsdisk_runs`）。未指定なら設定エラー。
+- [x] `io.archive.dir` (str, required when enabled): 外部HDDのルート（例: `<archive_root>`）。未指定なら設定エラー。
 - [x] `io.archive.mode` (str, default "copy"): `copy`/`move` を選択。
 - [x] `io.archive.trigger` (str, default "post_finalize"): `post_finalize` / `post_merge` など最終フェーズのフック位置。
 - [x] `io.archive.merge_target` (str, default "external"): `local` / `external`。

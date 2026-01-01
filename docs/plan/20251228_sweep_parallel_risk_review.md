@@ -103,7 +103,7 @@
 
 ### 実装スケッチ（Python）
 ```
-python scripts/runsets/common/check_sweep_completeness.py ^
+python scripts/runsets/common/write_sweep_list.py ^
   --batch-dir "%BATCH_DIR%" ^
   --sweep-list "%BATCH_DIR%\\checks\\expected_sweep_list.txt" ^
   --archive-dir "%ARCHIVE_DIR%" ^

@@ -180,7 +180,7 @@ optical_depth:
 shielding:
   mode: enabled
   # Φは(1)テーブル、(2)定数上書きのどちらか
-  phi_table_path: data/phi_table.csv
+  phi_table_path: marsdisk/io/data/phi.csv
   phi_override: null    # 例: 0.37 を置くと param study がしやすい
 
 supply:

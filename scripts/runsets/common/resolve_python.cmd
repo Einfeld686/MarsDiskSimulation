@@ -263,8 +263,23 @@ set "CHECK_RC=%errorlevel%"
 endlocal & if %CHECK_RC% lss 1 set "PYTHON_VERSION_OK=1"
 exit /b 0
 
+:check_python_candidate
+setlocal DisableDelayedExpansion
+set "CAND=%~1"
+set "CAND_OK=0"
+if "%CAND%"=="" goto :check_python_candidate_done
+if /i not "%CAND:WindowsApps\\python.exe=%"=="%CAND%" goto :check_python_candidate_done
+"%CAND%" -c "import sys; raise SystemExit(0 if sys.version_info >= (3,11) else 1)" >nul 2>&1
+if %errorlevel% lss 1 set "CAND_OK=1"
+:check_python_candidate_done
+endlocal & if %CAND_OK%==1 set "PYTHON_311_FOUND=%CAND%"
+exit /b 0
+
 :find_python311
 set "PYTHON_311_FOUND="
+for /f "delims=" %%P in ('where python 2^>nul') do (
+  if not defined PYTHON_311_FOUND call :check_python_candidate "%%P"
+)
 for /f "delims=" %%P in ('where python3.13 2^>nul') do (
   if not defined PYTHON_311_FOUND set "PYTHON_311_FOUND=%%P"
 )

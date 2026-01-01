@@ -83,7 +83,7 @@ class TableLoadError(MarsDiskError):
 **提案**:
 
 ```python
-# marsdisk/warnings.py（新規）
+# marsdisk/warnings.py （新規）
 
 import warnings
 
@@ -164,7 +164,7 @@ class TableWarning(MarsDiskWarning):
 > python -m tools.evaluation_system --outdir <run_dir>
 > ```
 >
-> `<run_dir>` は直近のシミュレーション出力パス（例: `out/` や `out/20251218-xxxx_runYYYY`）を指定。
+> `<run_dir>` は直近のシミュレーション出力パス（例: `out/` や `out/<run_id>`）を指定。
 
 **工数**: 3-4時間
 

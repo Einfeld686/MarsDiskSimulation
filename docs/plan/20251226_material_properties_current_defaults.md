@@ -95,7 +95,7 @@
 ```yaml
 # configs/base.yml での変更例
 radiation:
-  qpr_table_path: "marsdisk/io/data/qpr_planck_basalt_<source>.csv"  # 要生成
+  qpr_table_path: "marsdisk/io/data/qpr_planck_basalt_{source}.csv"  # 要生成
 ```
 - 玄武岩の複素屈折率データから Mie 計算を実行し、新しい ⟨Q_pr⟩ テーブルを生成する
 

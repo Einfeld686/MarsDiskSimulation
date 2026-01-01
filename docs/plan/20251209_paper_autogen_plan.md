@@ -9,7 +9,7 @@
 
 ## 1. 入力収集ステップ（データ整形）
 - 1 論文 = 1 マニフェスト（例: `configs/<paper_config>.yml`）とし、`runs: [RUN_001, RUN_002, ...]` と FIG_ID の集合を列挙する。JSON も `{runs: {run_id: {...}}, derived: {...}}` のようにネストして「論文単位」を保持する。
-- サンプル: `configs/paper_marsdisk_draft.yml`（既存 out/01_inner1RM_blowout, 02_inner1RM_sublimation, 20251022-0501_* を束ねる草稿用）。`python tools/paper_manifest.py --manifest configs/paper_marsdisk_draft.yml --outdir out/paper_inputs/PAPER_MARSDISK_DRAFT` で `out/paper_inputs/PAPER_MARSDISK_DRAFT/resolved_manifest.json` / `out/paper_inputs/PAPER_MARSDISK_DRAFT/paper_checks.json` / `out/paper_inputs/PAPER_MARSDISK_DRAFT/figure_tasks.json` を生成する。
+- サンプル: `configs/paper_marsdisk_draft.yml`（既存 `out/<run_id>` を束ねる草稿用）。`python tools/paper_manifest.py --manifest configs/paper_marsdisk_draft.yml --outdir out/<paper_run_id>` で `out/<paper_run_id>/resolved_manifest.json` / `out/<paper_run_id>/paper_checks.json` / `out/<paper_run_id>/figure_tasks.json` を生成する。
 - 各 run の `out/<stamp>/run_card.md` を読み取り、設定・環境・パラメータ・乱数種を抽出して JSON にまとめる。簡易スキーマを定義し、`run_id: str`, `M_out_dot: float`, `tau: list[float]`, `tags: list[str]` などを型チェックする。
 - `out/<stamp>/series/*.parquet` から主要系列（M_out_dot, prod_subblow_area_rate, tau など）を集計し、図表用の tidy データフレームを生成する。
 - `out/<run_id>/summary.json` と `out/<run_id>/checks/mass_budget.csv` を突合し、質量収支と安定性のステータスを付与する。論文レベルの集約タグ（質量収支OK率、IMEX安定率など）もここで計算して JSON に格納する。

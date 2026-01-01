@@ -30,7 +30,7 @@ This report inventories boolean/enum-style switches in the YAML schema and flags
 
 ## Candidate-remove review (manual)
 - Confirmed removal candidates (unused in runtime; config/test updates required):
-- `disk.geometry.r_profile` only appears in configs/tests, no runtime usage found. Example refs: [configs/base.yml:53-53], [tests/integration/test_phase_branching_run.py:24-24].
+- `disk.geometry.r_profile` only appears in configs/<tests>/, no runtime usage found. Example refs: [configs/base.yml:53-53], [tests/integration/test_phase_branching_run.py:24-24].
 - `supply.table.interp` is set in configs but the supply table always uses linear interpolation in code. Example refs: [configs/base.yml:86-86], [marsdisk/physics/supply.py:51-59].
 - Reclassify to keep (runtime usage confirmed):
 - `dynamics.enable_e_damping` [marsdisk/run_zero_d.py:2502-2502], [marsdisk/physics/collisions_smol.py:904-904]

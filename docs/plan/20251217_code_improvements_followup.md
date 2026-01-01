@@ -1,7 +1,7 @@
 # コード整備の追加改善項目
 
 > **作成日**: 2025-12-17  
-> **関連**: [20251216_code_reorganization_for_collision_physics.md](.docs/plan/20251216_code_reorganization_for_collision_physics.md)（Phase 1–3 完了済み）
+> **関連**: [20251216_code_reorganization_for_collision_physics.md](docs/plan/20251216_code_reorganization_for_collision_physics.md)（Phase 1–3 完了済み）
 
 ---
 
@@ -22,7 +22,7 @@ Phase 1–3 のコード整備が完了し、以下が達成済み:
 
 | # | 質問 | 選択肢 | 推奨 |
 |---|------|--------|------|
-| 1 | 関数外出しで新設するパッケージ | A: `marsdisk/utils/` を新設 / B: 既存 `config_utils.py` 等に統合 | B（既存活用） |
+| 1 | 関数外出しで新設するパッケージ | A: `marsdisk/<utils>/` を新設 / B: 既存 `config_utils.py` 等に統合 | B（既存活用） |
 | 2 | `make clean-tmp` でtarball/inventory を削除対象にするか | A: 含める / B: 成果物として保持 | B（保持） |
 
 ---
@@ -86,17 +86,17 @@ marsdisk/
 │   ├── history.py       # 既存
 │   └── progress.py      # 既存
 ├── config_utils.py      # 既存: 設定ロード関連
-└── utils/               # ← 未作成
+└── <utils>/             # ← 未作成
 ```
 
 **移動候補と配置オプション**:
 
 | 関数群 | オプション A（新設） | オプション B（既存活用） |
 |--------|---------------------|------------------------|
-| `_resolve_time_grid`, `_resolve_seed` | `runtime/config_helpers.py` | `config_utils.py` に追加 |
-| `_parse_override_value`, `_apply_overrides_dict` | `utils/cli.py` | `config_utils.py` に追加 |
-| `_human_bytes`, `_memory_estimate` | `utils/format.py` | `runtime/` に追加 |
-| `_ensure_finite_kappa`, `_safe_float` | `utils/numerics.py` | 移動せず（低優先） |
+| `_resolve_time_grid`, `_resolve_seed` | `runtime/<config_helpers>.py` | `config_utils.py` に追加 |
+| `_parse_override_value`, `_apply_overrides_dict` | `<utils>/cli.py` | `config_utils.py` に追加 |
+| `_human_bytes`, `_memory_estimate` | `<utils>/format.py` | `runtime/` に追加 |
+| `_ensure_finite_kappa`, `_safe_float` | `<utils>/numerics.py` | 移動せず（低優先） |
 
 > [!IMPORTANT]
 > **アンカー更新が必要**
@@ -112,7 +112,7 @@ marsdisk/
 > python -m analysis.tools.make_run_sections  # run_py_sections.md 再生成
 > python -m tools.doc_sync_agent --all --write
 > make analysis-doc-tests
-> python -m tools.evaluation_system --outdir out/temp_supply_sweep/latest
+> python -m tools.evaluation_system --outdir out/<run_id>
 > ```
 
 **工数**: 2–3 時間（アンカー更新含む）

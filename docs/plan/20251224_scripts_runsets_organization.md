@@ -165,7 +165,7 @@ Windows 固有の運用設計を runsets に移植する。
 - streaming チェック: `scripts/research/preflight_streaming_check.py` を必要時に実行
 
 > 既存の inline プロットは段階的に移行し、**専用の共通プロットスクリプト**へ統一する。
-> 推奨: `scripts/plots/quicklook.py`（または `scripts/runsets/common/hooks/plot_quicklook.py`）。
+> 推奨: `scripts/runsets/common/hooks/plot_sweep_run.py`。
 
 ---
 

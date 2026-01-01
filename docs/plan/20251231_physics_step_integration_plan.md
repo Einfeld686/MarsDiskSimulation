@@ -552,7 +552,7 @@ psd_state の実参照（現行コードが触っているキー）
 - [ ] `sigma_surf<=0` / `kappa_surf<=0` / `tau<=0` でも NaN/inf を出さない
 - [ ] `s_min >= s_max` / `rho<=0` などの入力で明示的にエラーになる
 - [ ] 温度テーブル境界外の評価が意図どおり（clamp/例外）
-- [ ] pytest（`test_scalings`/mass conservation/surface outflux/wavy PSD）が通る
+- [ ] pytest（`test_scalings`, mass conservation, surface outflux, wavy PSD）が通る
 - [ ] 3ケース baseline compare が共通I/O契約でも一致する
 
 ### フェーズ3: グローバル状態の隔離

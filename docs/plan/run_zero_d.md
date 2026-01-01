@@ -38,7 +38,7 @@
 
 ## 2.1 デフォルト/非推奨方針（全シミュレーション共通）
 
-本ドキュメントの外部供給方針を **0Dシミュレーションのデフォルト**とし、以後の全シミュレーションはこれを前提にする。外部供給のデフォルト参照は `docs/plan/20251220_optical_depth_external_supply_impl_plan.md` と `~/.codex/plans/marsdisk-tau-sweep-phi-off.md` に限定し、それ以外の外部供給スイッチは非推奨・削除候補として扱う。
+本ドキュメントの外部供給方針を **0Dシミュレーションのデフォルト**とし、以後の全シミュレーションはこれを前提にする。外部供給のデフォルト参照は `docs/plan/20251220_optical_depth_external_supply_impl_plan.md` と `docs/plan/<tau_sweep>.md` に限定し、それ以外の外部供給スイッチは非推奨・削除候補として扱う。
 
 **デフォルトとして採用する挙動**
 - `optical_depth` を有効化し、初期表層を `tau0_target` で規定する。

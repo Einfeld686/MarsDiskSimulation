@@ -86,6 +86,8 @@ def iter_absolute_matches(line: str) -> list[str]:
                     prefix = line[match.start() - 1]
                     if prefix not in " \t([{\"'`":
                         continue
+                if re.fullmatch(r"/[A-Za-z]{1,2}", match.group(0)):
+                    continue
             matches.append(match.group(0))
     return matches
 

@@ -226,8 +226,8 @@
 - `tests/integration/test_run_one_d_output_parity.py`
 - `tests/integration/test_run_one_d_streaming_schema.py`
 - `tests/integration/test_mass_budget_cells.py`
-- `tests/integration/test_run_zero_d_output_parity.py`（0D拡張時）
-- 新規: `tests/integration/test_columnar_records.py`  
+- `tests/integration/test_run_one_d_output_parity.py`（0D拡張時）
+- 新規: `tests/integration/test_columnar_output_parity.py`  
   - row/columnar で列集合と主要値が一致すること  
   - `t_coll_kernel_min` の一括付与が正しいこと
 - 追加: Parquet メタデータ（units/definitions）が row/columnar で一致すること
@@ -342,7 +342,7 @@
   受入条件: row/columnar で列順が一致。
 
 - [x] **Issue G: テスト追加**  
-  `tests/integration/test_columnar_records.py` などを追加し、row/columnar の同一性を検証。  
+  `tests/integration/test_columnar_output_parity.py` などを追加し、row/columnar の同一性を検証。  
   受入条件: 既存の解析スクリプトが同一列名で動作する。
 
 - **float 系**: `rtol=1e-12, atol=0.0` を基本。
