@@ -785,12 +785,12 @@ if not defined COOL_TO_K set "COOL_TO_K=1000"
 
 rem To force a fixed horizon, set COOL_TO_K=none and T_END_YEARS explicitly.
 
-rem Auto parallel defaults: size-probe picks jobs based on free disk.
-set "AUTO_JOBS=0"
-set "PARALLEL_JOBS=1"
-set "PARALLEL_JOBS_DEFAULT=1"
-set "SWEEP_PARALLEL=1"
-set "SWEEP_PARALLEL_DEFAULT=1"
+rem Default parallel settings: 6 sweep jobs on internal disk.
+if not defined AUTO_JOBS set "AUTO_JOBS=0"
+if not defined PARALLEL_JOBS set "PARALLEL_JOBS=6"
+if not defined PARALLEL_JOBS_DEFAULT set "PARALLEL_JOBS_DEFAULT=0"
+if not defined SWEEP_PARALLEL set "SWEEP_PARALLEL=1"
+if not defined SWEEP_PARALLEL_DEFAULT set "SWEEP_PARALLEL_DEFAULT=0"
 
 
 if not defined PARALLEL_WINDOW_STYLE set "PARALLEL_WINDOW_STYLE=Hidden"
