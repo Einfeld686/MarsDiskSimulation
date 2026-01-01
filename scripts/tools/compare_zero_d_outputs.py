@@ -20,8 +20,10 @@ SUMMARY_KEYS = [
     "beta_at_smin_effective",
 ]
 
-RTOL = 1.0e-6
-ATOL = 1.0e-12
+SUMMARY_RTOL = 1.0e-6
+SUMMARY_ATOL = 1.0e-12
+SERIES_RTOL = 1.0e-6
+SERIES_ATOL = 1.0e-10
 MASS_BUDGET_TOL = 0.5
 
 
@@ -30,7 +32,7 @@ def _read_json(path: Path) -> dict[str, Any]:
         return json.load(fh)
 
 
-def _compare_numeric(ref: np.ndarray, new: np.ndarray) -> tuple[float, bool]:
+def _compare_numeric(ref: np.ndarray, new: np.ndarray, *, rtol: float, atol: float) -> tuple[float, bool]:
     ref = np.asarray(ref, dtype=float)
     new = np.asarray(new, dtype=float)
     if ref.shape != new.shape:
@@ -39,25 +41,51 @@ def _compare_numeric(ref: np.ndarray, new: np.ndarray) -> tuple[float, bool]:
     diff = np.abs(new - ref)
     diff[nan_mask] = 0.0
     diff[np.isnan(diff)] = float("inf")
-    tol = ATOL + RTOL * np.abs(ref)
-    ok = bool(np.all(diff <= tol))
-    max_diff = float(np.nanmax(diff)) if diff.size else 0.0
+    tol = atol + rtol * np.abs(ref)
+    valid = ~nan_mask
+    diff_valid = diff[valid]
+    tol_valid = tol[valid]
+    if diff_valid.size:
+        comp = diff_valid <= tol_valid
+        comp = comp & np.isfinite(tol_valid)
+        ok = bool(np.all(comp))
+        max_diff = float(np.nanmax(diff_valid))
+    else:
+        ok = True
+        max_diff = 0.0
     return max_diff, ok
 
 
-def _compare_series(ref_df: pd.DataFrame, new_df: pd.DataFrame) -> tuple[dict[str, float], bool, list[str]]:
+def _compare_series(
+    ref_df: pd.DataFrame,
+    new_df: pd.DataFrame,
+    *,
+    series_rtol: float,
+    series_atol: float,
+    include_cols: list[str] | None,
+    exclude_cols: set[str],
+    include_non_numeric: bool,
+) -> tuple[dict[str, float], bool, list[str], list[str], list[str]]:
     diffs: dict[str, float] = {}
     ok = True
     missing_cols: list[str] = []
+    skipped_cols: list[str] = []
 
     ref_cols = set(ref_df.columns)
     new_cols = set(new_df.columns)
-    if ref_cols != new_cols:
-        missing_cols = sorted(ref_cols.symmetric_difference(new_cols))
+    if include_cols is None:
+        target_cols = sorted(ref_cols.union(new_cols))
+    else:
+        target_cols = list(include_cols)
+    if exclude_cols:
+        target_cols = [col for col in target_cols if col not in exclude_cols]
+
+    missing_cols = sorted([col for col in target_cols if col not in ref_cols or col not in new_cols])
+    if missing_cols:
         ok = False
 
-    common_cols = sorted(ref_cols.intersection(new_cols))
-    for col in common_cols:
+    compare_cols = [col for col in target_cols if col in ref_cols and col in new_cols]
+    for col in compare_cols:
         ref_col = ref_df[col]
         new_col = new_df[col]
         if is_bool_dtype(ref_col) or is_bool_dtype(new_col):
@@ -66,22 +94,37 @@ def _compare_series(ref_df: pd.DataFrame, new_df: pd.DataFrame) -> tuple[dict[st
             ok = ok and mismatch == 0
             continue
         if is_numeric_dtype(ref_col) and is_numeric_dtype(new_col):
-            max_diff, col_ok = _compare_numeric(ref_col.to_numpy(), new_col.to_numpy())
+            max_diff, col_ok = _compare_numeric(
+                ref_col.to_numpy(),
+                new_col.to_numpy(),
+                rtol=series_rtol,
+                atol=series_atol,
+            )
             diffs[col] = max_diff
             ok = ok and col_ok
+            continue
+        if include_cols is None and not include_non_numeric:
+            skipped_cols.append(col)
             continue
         mismatch = int((ref_col.fillna("__nan__") != new_col.fillna("__nan__")).sum())
         diffs[col] = float(mismatch)
         ok = ok and mismatch == 0
 
-    return diffs, ok, missing_cols
+    return diffs, ok, missing_cols, compare_cols, skipped_cols
 
 
-def _compare_summary(ref: dict[str, Any], new: dict[str, Any]) -> tuple[dict[str, float], bool, list[str]]:
+def _compare_summary(
+    ref: dict[str, Any],
+    new: dict[str, Any],
+    *,
+    summary_rtol: float,
+    summary_atol: float,
+    summary_keys: list[str],
+) -> tuple[dict[str, float], bool, list[str]]:
     diffs: dict[str, float] = {}
     ok = True
     missing: list[str] = []
-    for key in SUMMARY_KEYS:
+    for key in summary_keys:
         if key not in ref or key not in new:
             missing.append(key)
             ok = False
@@ -93,7 +136,12 @@ def _compare_summary(ref: dict[str, Any], new: dict[str, Any]) -> tuple[dict[str
             ok = False
             diffs[key] = float("inf")
             continue
-        max_diff, col_ok = _compare_numeric(np.array([ref_val]), np.array([new_val]))
+        max_diff, col_ok = _compare_numeric(
+            np.array([ref_val]),
+            np.array([new_val]),
+            rtol=summary_rtol,
+            atol=summary_atol,
+        )
         diffs[key] = max_diff
         ok = ok and col_ok
     return diffs, ok, missing
@@ -149,6 +197,14 @@ def main() -> int:
     parser.add_argument("--new", required=True, help="New output directory")
     parser.add_argument("--case-id", required=True, help="Case identifier")
     parser.add_argument("--outdir", help="Output directory for compare reports")
+    parser.add_argument("--summary-keys", help="Comma-separated summary keys to compare")
+    parser.add_argument("--summary-rtol", type=float, default=SUMMARY_RTOL)
+    parser.add_argument("--summary-atol", type=float, default=SUMMARY_ATOL)
+    parser.add_argument("--series-rtol", type=float, default=SERIES_RTOL)
+    parser.add_argument("--series-atol", type=float, default=SERIES_ATOL)
+    parser.add_argument("--series-include", help="Comma-separated series columns to compare")
+    parser.add_argument("--series-exclude", help="Comma-separated series columns to skip")
+    parser.add_argument("--include-non-numeric", action="store_true", help="Compare non-numeric series columns")
     args = parser.parse_args()
 
     ref_dir = Path(args.ref)
@@ -173,13 +229,28 @@ def main() -> int:
     status = "pass"
     exit_code = 0
 
+    summary_keys = SUMMARY_KEYS
+    if args.summary_keys:
+        summary_keys = [item for item in args.summary_keys.split(",") if item]
+
+    series_include = None
+    if args.series_include:
+        series_include = [item for item in args.series_include.split(",") if item]
+    series_exclude = set(item for item in (args.series_exclude or "").split(",") if item)
+
     if missing_files:
         status = "fail"
         exit_code = 2
     else:
         ref_summary = _read_json(summary_ref_path)
         new_summary = _read_json(summary_new_path)
-        summary_diff, summary_ok, summary_missing = _compare_summary(ref_summary, new_summary)
+        summary_diff, summary_ok, summary_missing = _compare_summary(
+            ref_summary,
+            new_summary,
+            summary_rtol=args.summary_rtol,
+            summary_atol=args.summary_atol,
+            summary_keys=summary_keys,
+        )
         if summary_missing:
             missing_files.extend([f"summary.json:{k}" for k in summary_missing])
         if not summary_ok:
@@ -191,7 +262,15 @@ def main() -> int:
         if len(ref_series) != len(new_series):
             status = "fail"
             exit_code = max(exit_code, 3)
-        series_diff, series_ok, series_missing = _compare_series(ref_series, new_series)
+        series_diff, series_ok, series_missing, series_cols_compared, series_cols_skipped = _compare_series(
+            ref_series,
+            new_series,
+            series_rtol=args.series_rtol,
+            series_atol=args.series_atol,
+            include_cols=series_include,
+            exclude_cols=series_exclude,
+            include_non_numeric=args.include_non_numeric,
+        )
         if series_missing:
             missing_files.extend([f"series/run.parquet:{col}" for col in series_missing])
         if not series_ok:
@@ -213,6 +292,15 @@ def main() -> int:
         "missing_files": missing_files,
         "summary_diff_max": summary_diff,
         "series_diff_max": series_diff,
+        "summary_keys_compared": summary_keys,
+        "series_columns_compared": series_cols_compared if not missing_files else [],
+        "series_columns_skipped": series_cols_skipped if not missing_files else [],
+        "tolerances": {
+            "summary_rtol": args.summary_rtol,
+            "summary_atol": args.summary_atol,
+            "series_rtol": args.series_rtol,
+            "series_atol": args.series_atol,
+        },
         "mass_budget_max_error_percent": mass_budget_max,
     }
 

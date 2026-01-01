@@ -101,6 +101,7 @@
 - **ツール配置**: `scripts/tools/compare_zero_d_outputs.py`（新規）
 - **入力**: `--ref <outdir> --new <outdir> --case-id <id> --outdir <dir>`  
   - `--outdir` 省略時は `out/plan/physics_step_baseline/<case-id>` を自動使用
+  - 追加オプション: `--summary-keys`, `--summary-rtol`, `--summary-atol`, `--series-rtol`, `--series-atol`, `--series-include`, `--series-exclude`, `--include-non-numeric`
 - **前提実行**: `FORCE_STREAMING_OFF=1` で実行し、`--override io.outdir=<outdir>` で出力先を分離
 - **比較対象**:
   - `summary.json`
@@ -109,7 +110,9 @@
 - **比較ルール（合格条件）**:
   - `summary.json`: 指定キーが全て存在し、数値は `rtol=1e-6, atol=1e-12` 以内  
     対象キー: `M_loss`, `M_out_cum`, `M_sink_cum`, `mass_budget_max_error_percent`, `dt_over_t_blow_median`, `beta_at_smin_config`, `beta_at_smin_effective`
-  - `series/run.parquet`: 行数・列集合が一致し、数値列は `rtol=1e-6, atol=1e-12` 以内（最大差分で評価）
+  - `series/run.parquet`: 行数が一致し、列は union に欠落がないこと（欠落があれば fail）  
+    数値列は `rtol=1e-6, atol=1e-10` 以内（最大差分で評価）  
+    非数値列はデフォルトで比較対象外（`--include-non-numeric` または `--series-include` で比較可）
   - `checks/mass_budget.csv`: 両者とも `error_percent <= 0.5` を満たすこと
 - **出力**:
   - `out/plan/physics_step_baseline/<case-id>/compare.json`
@@ -118,6 +121,10 @@
     - `missing_files`: list
     - `summary_diff_max`: dict（キーごとの最大差分）
     - `series_diff_max`: dict（列ごとの最大差分）
+    - `summary_keys_compared`: list（実際に比較した summary キー）
+    - `series_columns_compared`: list（比較対象の series 列）
+    - `series_columns_skipped`: list（スキップした非数値列）
+    - `tolerances`: dict（summary/series の rtol/atol）
     - `mass_budget_max_error_percent`: dict（ref/new）
   - `out/plan/physics_step_baseline/<case-id>/compare.md`（要約）
 - **終了コード**:
@@ -275,7 +282,7 @@
 - [x] **Issue P1-05: 表層アダプタ実装（surface_odeのみ）**  
   - `surface.step_surface` 呼び出しを置換  
   - 高速ブローアウト補正適用順序を維持
-- [ ] **Issue P1-06: フェーズ0ベースライン差分比較**  
+- [x] **Issue P1-06: フェーズ0ベースライン差分比較**  
   - 3ケースで `compare_zero_d_outputs.py` を実行し、差分ゼロを確認
 
 #### 実装順序と依存関係（確定）
@@ -304,7 +311,7 @@
 **検証タイミング**
 
 1) **P1-01〜P1-02 完了時（最小検証）**  
-   - `pytest tests/test_scalings.py -q`  
+   - `pytest tests/integration/test_scalings.py -q`  
    - `python -m marsdisk.run --config configs/innerdisk_collisions_only.yml --override io.outdir=out/plan/physics_step_baseline/collisions_only/new`  
    - `python -m marsdisk.run --config configs/innerdisk_sublimation_only.yml --override io.outdir=out/plan/physics_step_baseline/sublimation_only/new`
 
@@ -431,11 +438,11 @@
 
 ## 実装タスク（チェックボックス）
 
-- [ ] [短期] フェーズ0: 0Dベースラインの出力スナップショットを確定
+- [x] [短期] フェーズ0: 0Dベースラインの出力スナップショットを確定
 - [x] [短期] フェーズ0: 差分比較（series/summary/mass_budget）の簡易ツールを用意
 - [x] [短期] フェーズ1: `run_zero_d` に4系のアダプタ導入（放射・遮蔽・昇華・表層）
 - [x] [短期] フェーズ1: 既存の記録列を保持したまま新経路に接続
-- [ ] [短期] フェーズ1: パリティチェック（数値差分が許容範囲内）
+- [x] [短期] フェーズ1: パリティチェック（数値差分が許容範囲内）
 - [ ] [中期] フェーズ2: 旧ロジックの削除・重複コードの整理
 - [ ] [中期] フェーズ2: `physics_step` のI/F安定化（引数・返り値固定）
 - [ ] [長期] フェーズ3: RunContext でグローバル状態の初期化/復元

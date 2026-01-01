@@ -65,6 +65,7 @@ CMD_LINE_WARN_LEN = 7000
 PATH_WARN_LEN = 7000
 PATHEXT_REQUIRED = {".COM", ".EXE", ".BAT", ".CMD"}
 CHCP_SCAN_LINES = 25
+CWD_SCAN_LINES = 30
 DELAYED_SETLOCAL_RE = re.compile(r"\bsetlocal\b.*\benabledelayedexpansion\b", re.I)
 DELAYED_SETLOCAL_OFF_RE = re.compile(r"\bsetlocal\b.*\bdisabledelayedexpansion\b", re.I)
 DISABLE_EXT_RE = re.compile(r"\bsetlocal\b.*\bdisableextensions\b", re.I)
@@ -79,6 +80,7 @@ CMD_C_QUOTED_RE = re.compile(r'\bcmd(?:\.exe)?\b\s+/c\s+"([^"]+)"', re.I)
 CMD_SWITCH_C_RE = re.compile(r"(?:^|\s)/c(?:\s|$)", re.I)
 CMD_SWITCH_K_RE = re.compile(r"(?:^|\s)/k(?:\s|$)", re.I)
 CMD_SWITCH_V_ON_RE = re.compile(r"(?:^|\s)/v\s*:\s*on(?:\s|$)", re.I)
+SCRIPT_DIR_RE = re.compile(r"%~dp0", re.I)
 SET_INTERACTIVE_RE = re.compile(r"\bset\s+/p\b", re.I)
 EXIT_CMD_RE = re.compile(r"^\s*@?exit(?:\s+|$)", re.I)
 EXIT_B_RE = re.compile(r"\bexit\s+/b\b", re.I)
@@ -92,8 +94,15 @@ PAUSE_RE = re.compile(r"^\s*@?pause\b", re.I)
 CHOICE_RE = re.compile(r"^\s*@?choice\b", re.I)
 SETX_RE = re.compile(r"^\s*@?setx\b", re.I)
 ERRORLEVEL_RE = re.compile(r"^\s*@?if\s+(not\s+)?errorlevel\s+(-?\d+)\b", re.I)
+ERRORLEVEL_ANY_RE = re.compile(r"\bif\s+(not\s+)?errorlevel\s+(-?\d+)\b", re.I)
+ERRORLEVEL_CMP_RE = re.compile(
+    r"(?:%|!)errorlevel(?:%|!)\s+(geq|gtr|leq|lss)\s+(-?\d+)",
+    re.I,
+)
+PERCENT_ERRORLEVEL_RE = re.compile(r"%errorlevel%", re.I)
 CMD_QUOTED_META_CHARS = "&<>|^()@"
 CMD_ENV_VAR_RE = re.compile(r"%([^%]+)%")
+VAR_NAME_RE = re.compile(r"^[A-Za-z0-9_]+$")
 PY_LAUNCHER_VERSION_RE = re.compile(r"^-\d+(?:\.\d+)*(?:-[0-9A-Za-z]+)?$")
 PY_LAUNCHER_ALLOWED_ARGS = {"-V", "-h", "-?"}
 PYTHON_PROBE_ERROR_RE = re.compile(
@@ -101,6 +110,8 @@ PYTHON_PROBE_ERROR_RE = re.compile(
     re.I,
 )
 DASH_OPTION_CMD_NAMES = {"where", "findstr"}
+XCOPY_CMD_NAMES = {"xcopy", "xcopy.exe"}
+ROBOCOPY_CMD_NAMES = {"robocopy", "robocopy.exe"}
 RESERVED_DEVICE_NAMES = {
     "CON",
     "PRN",
@@ -128,7 +139,10 @@ RESERVED_DEVICE_NAMES = {
 
 CMD_ALLOWLIST_RULES = {
     "cmd.autorun.missing_d",
+    "cmd.block.percent_errorlevel",
+    "cmd.block.percent_var_after_set",
     "cmd.call.missing",
+    "cmd.call.pipe_or_redirect",
     "cmd.call.unquoted_space",
     "cmd.caret.trailing_space",
     "cmd.cd.missing_d",
@@ -139,6 +153,7 @@ CMD_ALLOWLIST_RULES = {
     "cmd.delayed_expansion.cmd_v_on",
     "cmd.delayed_expansion.enabled",
     "cmd.delayed_expansion.token",
+    "cmd.cwd.relative_paths",
     "cmd.encoding.bom",
     "cmd.encoding.no_chcp",
     "cmd.encoding.non_ascii",
@@ -150,6 +165,7 @@ CMD_ALLOWLIST_RULES = {
     "cmd.exit.missing_b",
     "cmd.extensions.disabled_in_script",
     "cmd.for.single_percent",
+    "cmd.if_errorlevel_equal_misuse",
     "cmd.interactive.choice",
     "cmd.interactive.cmd",
     "cmd.interactive.pause",
@@ -163,6 +179,8 @@ CMD_ALLOWLIST_RULES = {
     "cmd.pushd_popd.unbalanced",
     "cmd.pushd.unquoted_space",
     "cmd.read_failed",
+    "cmd.robocopy.exitcode",
+    "cmd.robocopy.retries_default",
     "cmd.set.space_around_equals",
     "cmd.set.posix_path",
     "cmd.setlocal.missing",
@@ -173,6 +191,9 @@ CMD_ALLOWLIST_RULES = {
     "cmd.unsafe.bang",
     "cmd.unsafe.meta",
     "cmd.unsafe.percent",
+    "cmd.xcopy.interactive",
+    "cmd.xcopy.missing_i",
+    "cmd.xcopy.missing_y",
     "path.invalid_chars",
     "path.reserved_device",
     "path.trailing_space_dot",
@@ -191,7 +212,10 @@ FIXABLE_RULES = {
 # Rule descriptions for --list-rules
 RULE_DESCRIPTIONS: dict[str, str] = {
     "cmd.autorun.missing_d": "cmd invocation missing /d when AutoRun is enabled in registry",
+    "cmd.block.percent_errorlevel": "Percent expansion of ERRORLEVEL inside (...) block (may be stale)",
+    "cmd.block.percent_var_after_set": "Percent expansion inside (...) block with set variable (use delayed expansion)",
     "cmd.call.missing": "Batch file invoked without 'call' keyword",
+    "cmd.call.pipe_or_redirect": "call combined with pipe or redirection (cmd parsing can break)",
     "cmd.call.unquoted_space": "call command path contains unquoted spaces",
     "cmd.caret.trailing_space": "Line continuation caret (^) has trailing whitespace",
     "cmd.cd.missing_d": "cd command without /d flag for cross-drive paths",
@@ -202,6 +226,7 @@ RULE_DESCRIPTIONS: dict[str, str] = {
     "cmd.delayed_expansion.cmd_v_on": "Delayed expansion enabled via cmd /v:on",
     "cmd.delayed_expansion.enabled": "Script enables delayed expansion",
     "cmd.delayed_expansion.token": "Script uses !VAR! token syntax",
+    "cmd.cwd.relative_paths": "Script uses relative paths without early script-dir anchor (e.g., %~dp0)",
     "cmd.encoding.bom": "File has UTF-8 BOM (fixable)",
     "cmd.encoding.no_chcp": "Non-ASCII content without chcp directive near top",
     "cmd.encoding.non_ascii": "File contains non-ASCII characters",
@@ -213,6 +238,7 @@ RULE_DESCRIPTIONS: dict[str, str] = {
     "cmd.exit.missing_b": "exit command without /b (will exit cmd.exe)",
     "cmd.extensions.disabled_in_script": "Script disables command extensions",
     "cmd.for.single_percent": "for loop uses single % variable (use %% in .cmd)",
+    "cmd.if_errorlevel_equal_misuse": "if errorlevel uses >= comparison (order comparisons carefully)",
     "cmd.interactive.choice": "choice command is interactive",
     "cmd.interactive.cmd": "cmd invoked without /c or with /k (interactive)",
     "cmd.interactive.pause": "pause command is interactive",
@@ -226,6 +252,8 @@ RULE_DESCRIPTIONS: dict[str, str] = {
     "cmd.pushd_popd.unbalanced": "Unbalanced pushd/popd commands",
     "cmd.pushd.unquoted_space": "pushd path has unquoted spaces",
     "cmd.read_failed": "Failed to read cmd file",
+    "cmd.robocopy.exitcode": "robocopy used without handling success codes (0-7 are success)",
+    "cmd.robocopy.retries_default": "robocopy used without /r: and /w: (defaults can be very long)",
     "cmd.set.space_around_equals": "set command has spaces around '='",
     "cmd.set.posix_path": "set command assigns POSIX-style path",
     "cmd.setlocal.missing": "Environment modified without setlocal",
@@ -236,6 +264,10 @@ RULE_DESCRIPTIONS: dict[str, str] = {
     "cmd.unsafe.bang": "Path/value contains '!' (conflicts with delayed expansion)",
     "cmd.unsafe.meta": "Path/value contains cmd meta characters (&<>|^)",
     "cmd.unsafe.percent": "Path/value contains '%' (may cause expansion issues)",
+    "cmd.xcopy.interactive": "xcopy uses interactive flags (/w or /p)",
+    "cmd.xcopy.missing_i": "xcopy without /i may prompt for file/dir destination",
+    "cmd.xcopy.missing_y": "xcopy without /y may prompt for overwrite confirmation",
+    "env.copycmd.present": "COPYCMD is set (xcopy overwrite prompt behavior may change)",
     "path.invalid_chars": "Path contains invalid Windows characters",
     "path.reserved_device": "Path contains Windows reserved device name",
     "path.trailing_space_dot": "Path ends with space or dot",
@@ -1697,6 +1729,160 @@ def _split_cmd_segments(line: str) -> list[str]:
     if segment.strip():
         segments.append(segment)
     return segments
+
+
+@dataclass
+class _BlockState:
+    set_vars: set[str] = field(default_factory=set)
+    used_vars: dict[str, int] = field(default_factory=dict)
+    warned_vars: set[str] = field(default_factory=set)
+    errorlevel_warned: bool = False
+
+
+def _has_unquoted_meta(line: str, meta_chars: set[str]) -> bool:
+    in_quote = False
+    escape = False
+    for ch in line:
+        if escape:
+            escape = False
+            continue
+        if ch == "^":
+            escape = True
+            continue
+        if ch == '"':
+            in_quote = not in_quote
+            continue
+        if not in_quote and ch in meta_chars:
+            return True
+    return False
+
+
+def _count_parens(line: str) -> tuple[int, int]:
+    opens = 0
+    closes = 0
+    in_quote = False
+    escape = False
+    for ch in line:
+        if escape:
+            escape = False
+            continue
+        if ch == "^":
+            escape = True
+            continue
+        if ch == '"':
+            in_quote = not in_quote
+            continue
+        if in_quote:
+            continue
+        if ch == "(":
+            opens += 1
+        elif ch == ")":
+            closes += 1
+    return opens, closes
+
+
+def _token_is_relative_path(token: str) -> bool:
+    if not token:
+        return False
+    cleaned = token.strip()
+    if not cleaned:
+        return False
+    if cleaned.startswith(("%", "!", "^")):
+        return False
+    if cleaned.startswith(("-", "/")):
+        return False
+    if cleaned.startswith(("\\\\", "//")):
+        return False
+    if re.match(r"^[A-Za-z]:[\\/]", cleaned):
+        return False
+    if cleaned.startswith((".\\", "..\\", "./", "../")):
+        return True
+    if "\\" in cleaned or "/" in cleaned:
+        return True
+    return False
+
+
+def _line_has_relative_path(line_body: str) -> bool:
+    try:
+        tokens = _split_cmdline_tokens(line_body)
+    except Exception:
+        tokens = line_body.split()
+    for token in tokens:
+        token_clean = _normalize_exe_token(token)
+        if _token_is_relative_path(token_clean):
+            return True
+    return False
+
+
+def _detect_script_dir_anchor(lines: list[tuple[int, str]], limit: int) -> bool:
+    checked = 0
+    for _line_no, line in lines:
+        stripped = line.strip()
+        if not stripped:
+            continue
+        line_body = stripped.lstrip()
+        if line_body.startswith("@"):
+            line_body = line_body[1:].lstrip()
+        lower = line_body.lower()
+        if lower.startswith("rem") and (len(lower) == 3 or lower[3].isspace()):
+            continue
+        if lower.startswith("::"):
+            continue
+        checked += 1
+        if SCRIPT_DIR_RE.search(line_body):
+            return True
+        if checked >= limit:
+            return False
+    return False
+
+
+def _iter_named_commands(line: str, names: set[str]) -> list[tuple[str, list[str]]]:
+    commands: list[tuple[str, list[str]]] = []
+    for segment in _split_cmd_segments(line):
+        segment_body = segment.strip()
+        if not segment_body:
+            continue
+        if segment_body.startswith("@"):
+            segment_body = segment_body[1:].lstrip()
+        lower = segment_body.lower()
+        if lower.startswith("rem") and (len(lower) == 3 or lower[3].isspace()):
+            continue
+        if lower.startswith("::"):
+            continue
+        tokens = _split_cmdline_tokens(segment_body)
+        if not tokens:
+            continue
+        tokens[0] = tokens[0].lstrip("@")
+        first_token = _normalize_exe_token(tokens[0]).lower()
+        if first_token.startswith("echo") or first_token in {"set", "setx"}:
+            continue
+        for idx, token in enumerate(tokens):
+            token_clean = _normalize_exe_token(token)
+            if not token_clean:
+                continue
+            cmd_name = PureWindowsPath(token_clean).name.lower()
+            if cmd_name in names:
+                commands.append((cmd_name, tokens[idx + 1 :]))
+                break
+    return commands
+
+
+def _extract_set_name(line_body: str) -> str | None:
+    rest = line_body[3:].lstrip()
+    if not rest:
+        return None
+    rest = re.split(r"[&|]", rest, 1)[0].strip()
+    rest_lower = rest.lower()
+    if rest_lower.startswith("/p") or rest_lower.startswith("/a"):
+        return None
+    if rest.startswith('"') and rest.endswith('"') and "=" in rest:
+        content = rest.strip('"')
+        name, _ = content.split("=", 1)
+        return name.strip()
+    if "=" in rest:
+        name, _ = rest.split("=", 1)
+        return name.strip()
+    return None
 
 
 def _is_cmd_token(token: str) -> bool:
