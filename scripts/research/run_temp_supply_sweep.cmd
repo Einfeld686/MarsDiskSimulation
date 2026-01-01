@@ -231,21 +231,14 @@ if !errorlevel! geq 1 (
 %LOG_SETUP% Output root: %BATCH_ROOT%
 
 rem --- Virtual environment handling ---
-rem Skip venv creation/check if SKIP_VENV=1 or if REQUIREMENTS_INSTALLED=1 (child process)
+rem Skip venv entirely for child processes (SKIP_PIP=1 implies system Python has deps)
+rem This avoids issues where venv exists but has no dependencies installed
 set "USE_VENV=1"
 if /i "%SKIP_VENV%"=="1" set "USE_VENV=0"
-if /i "%REQUIREMENTS_INSTALLED%"=="1" if /i "%SKIP_PIP%"=="1" (
-  rem Child process: check if parent's venv exists and use it directly
-  set "VENV_PY=!VENV_DIR!\Scripts\python.exe"
-  if exist "!VENV_PY!" (
-    set "USE_VENV=1"
-    set "VENV_OK=1"
-    if "%DEBUG%"=="1" echo.[DEBUG] Using parent venv: !VENV_DIR!
-  ) else (
-    rem Parent venv not found, use system Python
-    set "USE_VENV=0"
-    if "%DEBUG%"=="1" echo.[DEBUG] Parent venv not found, using system Python
-  )
+if /i "%SKIP_PIP%"=="1" (
+  rem Child process with SKIP_PIP: use system Python directly (dependencies already installed)
+  set "USE_VENV=0"
+  if "%DEBUG%"=="1" echo.[DEBUG] SKIP_PIP=1: using system Python (venv skipped^)
 )
 
 if "%USE_VENV%"=="1" if not "%VENV_OK%"=="1" (
