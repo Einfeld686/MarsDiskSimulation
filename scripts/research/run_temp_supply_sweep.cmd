@@ -791,7 +791,7 @@ for /f "usebackq tokens=1-3 delims= " %%A in ("%SWEEP_LIST_FILE%") do (
   set "OUTDIR_REL=!BATCH_DIR!\!TITLE!"
   rem Convert to absolute path to avoid double-backslash issues
   for %%I in ("!OUTDIR_REL!") do set "OUTDIR=%%~fI"
-  %LOG_RUN% T=!T! eps=!EPS! tau=!TAU! -^> !OUTDIR! (batch=!BATCH_SEED!, seed=!SEED!)
+  %LOG_RUN% T=!T! eps=!EPS! tau=!TAU! -^> !OUTDIR! ^(batch=!BATCH_SEED!, seed=!SEED!^)
       rem Show supply rate info (skip Python calc to avoid cmd.exe delayed expansion issues)
       %LOG_INFO% epsilon_mix=!EPS!; mu_orbit10pct=%SUPPLY_MU_ORBIT10PCT% orbit_fraction_at_mu1=%SUPPLY_ORBIT_FRACTION%
       %LOG_INFO% shielding: mode=%SHIELDING_MODE% fixed_tau1_sigma=%SHIELDING_SIGMA% auto_max_margin=%SHIELDING_AUTO_MAX_MARGIN%
