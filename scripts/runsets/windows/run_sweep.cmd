@@ -1030,6 +1030,13 @@ if "%DEBUG%"=="1" (
 
 %LOG_INFO% preflight checks
 
+rem preflight_checks.py is a Mac-only analysis tool; skip on Windows by default
+if not defined SKIP_PREFLIGHT set "SKIP_PREFLIGHT=1"
+if "%SKIP_PREFLIGHT%"=="1" (
+  %LOG_INFO% preflight checks skipped [SKIP_PREFLIGHT=1]
+  goto :preflight_done
+)
+
 set "PREFLIGHT_STRICT_FLAG="
 
 if "%PREFLIGHT_STRICT%"=="1" set "PREFLIGHT_STRICT_FLAG=--strict"
@@ -1062,6 +1069,7 @@ if not "%PREFLIGHT_RC%"=="0" (
 
 if "%DEBUG%"=="1" call :debug_log "preflight: ok"
 
+:preflight_done
 
 
 if "%PREFLIGHT_ONLY%"=="1" (
@@ -1365,38 +1373,6 @@ if defined OUT_ROOT_ABS %LOG_PATH% out_root="!OUT_ROOT_ABS!"
 %LOG_PATH% temp_root="!TEMP_ROOT_ABS!"
 if defined OUT_ROOT_SOURCE %LOG_PATH% out_root_source="!OUT_ROOT_SOURCE!"
 if defined TEMP_SOURCE %LOG_PATH% temp_root_source="!TEMP_SOURCE!"
-
-
-
-# 修正内容のまとめ（包括的な CMD 改善）
-
-以前報告された「UnicodeDecodeError」および「構文エラー」を完全に解消し、スクリプトの信頼性を大幅に向上させる修正を完了しました。
-
-## 主な修正内容
-
-### 1. 文字コード問題の解消 (CP932 回避)
-日本語パス環境下で `pip` や Python がエラーを起こさないよう、以下の対策を講じました。
-- **UTF-8 の強制**: 各スクリプト（`run_sweep.cmd` 等）の冒頭で `set PYTHONUTF8=1` を設定し、Python が常に UTF-8 を使用するようにしました。
-- **依存関係の固定**: 問題のあった `ruamel.yaml` のバージョンを `0.19.0` 未満に固定し、ビルドエラーを回避しました。
-
-### 2. CMD スクリプトの堅牢性向上
-Preflight check で指摘されていた潜在的なバグを根絶しました。
-- **遅延展開 (`!VAR!`) への移行**: `if` や `for` のブロック内（`(...)`）で、値を更新した直後にその値を参照する際、古い値を参照してしまう `%VAR%` の使用を `!VAR!` に修正しました。
-- **構造修正とエスケープ**: `run_sweep.cmd` の複雑なネスト構造における括弧の不整合、および Python 命令文中の括弧 `^(3,11^)` のエスケープ漏れを全て修正しました。
-
-### 3. エラー判定の厳密化
-`if errorlevel 1` などの曖昧な判定を `if !errorlevel! neq 0` に書き換え、エラーの予期せぬスルーを防止しました。
-
-## ユーザーへのお願い
-
-再度、以下のコマンドを実行してください。
-
-```cmd
-scripts\runsets\windows\run_sweep.cmd --debug
-```
-
-これで `pip install` が完了し、`launched job ...` というメッセージとともにシミュレーションが進行するはずです。
-!errorlevel!
 
 
 
