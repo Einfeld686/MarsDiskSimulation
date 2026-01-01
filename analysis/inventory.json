@@ -16682,42 +16682,56 @@
   },
   {
     "file_path": "tools/plan_lint.py",
-    "line_no": 58,
+    "line_no": 56,
+    "symbol": "LINK_RE",
+    "signature": "LINK_RE = re.compile('\\\\[([^\\\\]]+)\\\\]\\\\(([^)]+)\\\\)')",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "tools/plan_lint.py",
+    "line_no": 57,
+    "symbol": "ANCHOR_RE",
+    "signature": "ANCHOR_RE = re.compile('#L(?P<start>\\\\d+)(?:-L?(?P<end>\\\\d+))?')",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "tools/plan_lint.py",
+    "line_no": 60,
     "symbol": "build_prefix_regex",
     "signature": "build_prefix_regex(prefixes: list[str]) -> re.Pattern[str]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/plan_lint.py",
-    "line_no": 65,
+    "line_no": 67,
     "symbol": "normalize_token",
     "signature": "normalize_token(token: str) -> str",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/plan_lint.py",
-    "line_no": 75,
+    "line_no": 77,
     "symbol": "is_placeholder",
     "signature": "is_placeholder(token: str) -> bool",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/plan_lint.py",
-    "line_no": 79,
+    "line_no": 81,
     "symbol": "iter_absolute_matches",
     "signature": "iter_absolute_matches(line: str) -> list[str]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/plan_lint.py",
-    "line_no": 96,
+    "line_no": 98,
     "symbol": "scan_file",
-    "signature": "scan_file(path: Path, root: Path, rel_re: re.Pattern[str]) -> list[Finding]",
+    "signature": "scan_file(path: Path, root: Path, rel_re: re.Pattern[str], line_counts: dict[Path, int]) -> list[Finding]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/plan_lint.py",
-    "line_no": 138,
+    "line_no": 213,
     "symbol": "main",
     "signature": "main() -> int",
     "brief_usage": "No description available."

@@ -1829,12 +1829,12 @@ tools/pipeline/run_analysis_pipeline.py:21:def _run_step(label: str, command: Se
 tools/pipeline/run_analysis_pipeline.py:28:def _write_stamp(outdir: str, steps: Sequence[str]) -> None
 tools/pipeline/run_analysis_pipeline.py:40:def main(argv: Sequence[str] | None=None) -> None
 tools/plan_lint.py:14:class Finding
-tools/plan_lint.py:58:def build_prefix_regex(prefixes: list[str]) -> re.Pattern[str]
-tools/plan_lint.py:65:def normalize_token(token: str) -> str
-tools/plan_lint.py:75:def is_placeholder(token: str) -> bool
-tools/plan_lint.py:79:def iter_absolute_matches(line: str) -> list[str]
-tools/plan_lint.py:96:def scan_file(path: Path, root: Path, rel_re: re.Pattern[str]) -> list[Finding]
-tools/plan_lint.py:138:def main() -> int
+tools/plan_lint.py:60:def build_prefix_regex(prefixes: list[str]) -> re.Pattern[str]
+tools/plan_lint.py:67:def normalize_token(token: str) -> str
+tools/plan_lint.py:77:def is_placeholder(token: str) -> bool
+tools/plan_lint.py:81:def iter_absolute_matches(line: str) -> list[str]
+tools/plan_lint.py:98:def scan_file(path: Path, root: Path, rel_re: re.Pattern[str], line_counts: dict[Path, int]) -> list[Finding]
+tools/plan_lint.py:213:def main() -> int
 tools/plotting/base.py:19:def _temperature_edges(temperatures: np.ndarray) -> np.ndarray
 tools/plotting/base.py:34:def save_heatmap_frames(outdir: Path, times: Sequence[float], temperatures: np.ndarray, size_edges: np.ndarray, log_counts_cube: np.ndarray, s_min_eff_curve: np.ndarray, cmap: str='viridis', dpi: int=DEFAULT_DPI) -> list[Path]
 tools/plotting/base.py:109:def save_keyframe_montage(out_path: Path, times: Sequence[float], temperatures: np.ndarray, size_edges: np.ndarray, log_counts_cube: np.ndarray, s_min_eff_curve: np.ndarray, indices: Iterable[int] | None=None, cmap: str='viridis', dpi: int=DEFAULT_DPI) -> None

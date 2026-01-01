@@ -53,6 +53,8 @@ POSIX_ABS_RE = re.compile(
     r"(?<![A-Za-z0-9])/(?:[A-Za-z0-9_.-]+(?:/[A-Za-z0-9_.<>%{}$*+,:-]+)*)"
 )
 OUTDIR_PREFIX_RE = re.compile(r"out/[^\s`\"'()\[\]]+/$")
+LINK_RE = re.compile(r"\[([^\]]+)\]\(([^)]+)\)")
+ANCHOR_RE = re.compile(r"#L(?P<start>\d+)(?:-L?(?P<end>\d+))?")
 
 
 def build_prefix_regex(prefixes: list[str]) -> re.Pattern[str]:
@@ -93,7 +95,12 @@ def iter_absolute_matches(line: str) -> list[str]:
     return matches
 
 
-def scan_file(path: Path, root: Path, rel_re: re.Pattern[str]) -> list[Finding]:
+def scan_file(
+    path: Path,
+    root: Path,
+    rel_re: re.Pattern[str],
+    line_counts: dict[Path, int],
+) -> list[Finding]:
     findings: list[Finding] = []
     for lineno, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
         for raw in iter_absolute_matches(line):
@@ -132,6 +139,74 @@ def scan_file(path: Path, root: Path, rel_re: re.Pattern[str]) -> list[Finding]:
                         normalized=token,
                     )
                 )
+        for match in LINK_RE.finditer(line):
+            label = match.group(1)
+            target_raw = match.group(2).strip()
+            target = target_raw.split()[0]
+            if target.startswith(("#", "http://", "https://", "mailto:")):
+                continue
+            if target.startswith("<") and target.endswith(">"):
+                target = target[1:-1]
+            if not target:
+                continue
+            target_path_raw = target.split("#", 1)[0]
+            if is_placeholder(target_path_raw):
+                continue
+            target_path = normalize_token(target_path_raw)
+            if not target_path:
+                continue
+            if not rel_re.search(target_path):
+                continue
+            label_paths = [
+                normalize_token(match.group("path")) for match in rel_re.finditer(label)
+            ]
+            label_paths = [p for p in label_paths if p and not is_placeholder(p)]
+            if len(label_paths) == 1 and label_paths[0] != target_path:
+                findings.append(
+                    Finding(
+                        "link_mismatch",
+                        path,
+                        lineno,
+                        target,
+                        normalized=label_paths[0],
+                        detail=f"target={target_path}",
+                    )
+                )
+            anchor_match = ANCHOR_RE.search(target)
+            if anchor_match:
+                resolved = (root / target_path).resolve(strict=False)
+                if not resolved.is_relative_to(root):
+                    continue
+                if not resolved.exists():
+                    continue
+                line_count = line_counts.get(resolved)
+                if line_count is None:
+                    line_count = len(resolved.read_text(encoding="utf-8").splitlines())
+                    line_counts[resolved] = line_count
+                start = int(anchor_match.group("start"))
+                end_raw = anchor_match.group("end")
+                end = int(end_raw) if end_raw else start
+                if end < start:
+                    findings.append(
+                        Finding(
+                            "anchor",
+                            path,
+                            lineno,
+                            target,
+                            detail="reversed",
+                        )
+                    )
+                    continue
+                if start > line_count or end > line_count:
+                    findings.append(
+                        Finding(
+                            "anchor",
+                            path,
+                            lineno,
+                            target,
+                            detail=f"out_of_range(max={line_count})",
+                        )
+                    )
     return findings
 
 
@@ -159,10 +234,11 @@ def main() -> int:
         return 2
 
     rel_re = build_prefix_regex(DEFAULT_PREFIXES)
+    line_counts: dict[Path, int] = {}
 
     findings: list[Finding] = []
     for path in sorted(plan_dir.rglob("*.md")):
-        findings.extend(scan_file(path, root, rel_re))
+        findings.extend(scan_file(path, root, rel_re, line_counts))
 
     if not findings:
         print("Plan lint: OK")
@@ -170,6 +246,8 @@ def main() -> int:
 
     abs_findings = [f for f in findings if f.kind == "absolute"]
     missing_findings = [f for f in findings if f.kind == "missing"]
+    link_mismatch_findings = [f for f in findings if f.kind == "link_mismatch"]
+    anchor_findings = [f for f in findings if f.kind == "anchor"]
 
     if abs_findings:
         print(f"[ERROR] Absolute paths detected: {len(abs_findings)}")
@@ -184,6 +262,20 @@ def main() -> int:
             suffix = f" ({finding.detail})" if finding.detail else ""
             normalized = finding.normalized or finding.raw
             print(f"  - {relpath}:{finding.line}: {normalized}{suffix}")
+
+    if link_mismatch_findings:
+        print(f"[ERROR] Link path mismatches detected: {len(link_mismatch_findings)}")
+        for finding in link_mismatch_findings:
+            relpath = finding.file.relative_to(root)
+            detail = f" ({finding.detail})" if finding.detail else ""
+            print(f"  - {relpath}:{finding.line}: {finding.normalized}{detail}")
+
+    if anchor_findings:
+        print(f"[ERROR] Invalid line anchors detected: {len(anchor_findings)}")
+        for finding in anchor_findings:
+            relpath = finding.file.relative_to(root)
+            suffix = f" ({finding.detail})" if finding.detail else ""
+            print(f"  - {relpath}:{finding.line}: {finding.raw}{suffix}")
 
     return 1
 
