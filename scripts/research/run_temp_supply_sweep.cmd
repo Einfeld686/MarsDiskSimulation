@@ -374,10 +374,13 @@ if "!TMP_ROOT_BASE!"=="" (
   set "TMP_ROOT_BASE=%CD%\tmp"
   set "TMP_SOURCE=fallback"
 )
+rem Convert to short 8.3 path to avoid Unicode/space issues
+for %%I in ("!TMP_ROOT_BASE!") do set "TMP_ROOT_BASE=%%~sI"
 if not exist "!TMP_ROOT_BASE!" mkdir "!TMP_ROOT_BASE!" >nul 2>&1
 if not exist "!TMP_ROOT_BASE!" (
   set "TMP_ROOT_BASE=%CD%\tmp"
   set "TMP_SOURCE=fallback"
+  for %%I in ("!TMP_ROOT_BASE!") do set "TMP_ROOT_BASE=%%~sI"
   if not exist "!TMP_ROOT_BASE!" mkdir "!TMP_ROOT_BASE!" >nul 2>&1
 )
 if not exist "!TMP_ROOT_BASE!" (
@@ -438,6 +441,11 @@ if not exist "%VENV_DIR%\Scripts\python.exe" (
 
 call "%VENV_DIR%\Scripts\activate.bat"
 set "PYTHON_EXE=%VENV_DIR%\Scripts\python.exe"
+rem Refresh python command after venv activation to avoid stale PATH/quotes.
+set "PYTHON_EXE_QUOTED=!PYTHON_EXE!"
+if not "!PYTHON_EXE: =!"=="!PYTHON_EXE!" set "PYTHON_EXE_QUOTED="!PYTHON_EXE!""
+set "PYTHON_CMD=!PYTHON_EXE_QUOTED!"
+if not "!PYTHON_ARGS!"=="" set "PYTHON_CMD=!PYTHON_EXE_QUOTED! !PYTHON_ARGS!"
 
 if "%SKIP_PIP%"=="1" (
   %LOG_SETUP% SKIP_PIP=1; skipping dependency install.
@@ -1106,7 +1114,11 @@ if "%DEBUG%"=="1" echo.[DEBUG] launch_job: WIN_PROCESS_PY=!WIN_PROCESS_PY!
 setlocal DisableDelayedExpansion
 if "%DEBUG%"=="1" echo.[DEBUG] launch_job (DisableDelayedExpansion): PYTHON_CMD=%PYTHON_CMD%
 if "%DEBUG%"=="1" echo.[DEBUG] launch_job (DisableDelayedExpansion): NEXT_SEED_PY=%NEXT_SEED_PY%
-for /f %%S in ('%PYTHON_CMD% "%NEXT_SEED_PY%"') do set "JOB_SEED_TMP=%%S"
+rem Use call to handle paths with spaces/unicode properly
+for /f %%S in ('call %PYTHON_CMD% "%NEXT_SEED_PY%" 2^>nul') do set "JOB_SEED_TMP=%%S"
+if not defined JOB_SEED_TMP (
+  for /f %%S in ('python "%NEXT_SEED_PY%" 2^>nul') do set "JOB_SEED_TMP=%%S"
+)
 endlocal & set "JOB_SEED=%JOB_SEED_TMP%"
 if "%DEBUG%"=="1" echo.[DEBUG] launch_job: JOB_SEED=!JOB_SEED!
 call :wait_for_slot
@@ -1128,7 +1140,8 @@ if "%DEBUG%"=="1" echo.[DEBUG] launch_job: MARKER_A before write cmd file
 > "!JOB_CMD_FILE!" echo !JOB_CMD!
 if "%DEBUG%"=="1" echo.[DEBUG] launch_job: MARKER_B after write cmd file
 if "%DEBUG%"=="1" echo.[DEBUG] launch_job: MARKER_C before python call
-"!PYTHON_CMD!" "!WIN_PROCESS_PY!" launch --cmd-file "!JOB_CMD_FILE!" --window-style "!PARALLEL_WINDOW_STYLE!" --cwd "!JOB_CWD_USE!" > "!TMP_ROOT!\marsdisk_pid_!JOB_T!_!JOB_EPS!_!JOB_TAU!.tmp" 2>&1
+rem PYTHON_CMD may already include quotes; avoid double-quoting
+!PYTHON_CMD! "!WIN_PROCESS_PY!" launch --cmd-file "!JOB_CMD_FILE!" --window-style "!PARALLEL_WINDOW_STYLE!" --cwd "!JOB_CWD_USE!" > "!TMP_ROOT!\marsdisk_pid_!JOB_T!_!JOB_EPS!_!JOB_TAU!.tmp" 2>&1
 if "%DEBUG%"=="1" echo.[DEBUG] launch_job: MARKER_D after python call, errorlevel=%errorlevel%
 del "!JOB_CMD_FILE!" >nul 2>&1
 if "%DEBUG%"=="1" echo.[DEBUG] launch_job: MARKER_E after delete cmd file
@@ -1170,7 +1183,8 @@ if not defined JOB_PIDS exit /b 0
 set "JOB_PIDS_TMP="
 set "JOB_COUNT_TMP="
 setlocal DisableDelayedExpansion
-for /f "usebackq tokens=1,2 delims=|" %%A in (`%PYTHON_CMD% "%WIN_PROCESS_PY%" alive`) do (
+rem Use call to handle paths with spaces/unicode properly
+for /f "usebackq tokens=1,2 delims=|" %%A in (`call %PYTHON_CMD% "%WIN_PROCESS_PY%" alive`) do (
   set "JOB_PIDS_TMP=%%A"
   set "JOB_COUNT_TMP=%%B"
 )

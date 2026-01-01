@@ -19,7 +19,7 @@ import weakref
 from collections import defaultdict
 from dataclasses import asdict, dataclass
 from pathlib import Path
-from typing import Any, Dict, List, Mapping, Optional, Sequence, Tuple, cast
+from typing import Any, Callable, Dict, List, Mapping, Optional, Sequence, Tuple, cast
 import os
 
 import pandas as pd
@@ -114,6 +114,35 @@ class SmolSinkWorkspace:
     imex: smol.ImexWorkspace
 
 
+@dataclass
+class SupplyStepResult:
+    supply_res: "supply.SupplyEvalResult"
+    split_res: "supply.SupplySplitResult"
+    prod_rate_raw: float
+    supply_rate_nominal: float
+    supply_rate_scaled: float
+
+
+@dataclass
+class SurfaceUpdateResult:
+    sigma_surf: float
+    outflux_surface: float
+    sink_flux_surface: float
+    t_blow: float | None
+    t_coll: float | None
+    prod_rate_effective: float
+    mass_error: float
+
+
+@dataclass
+class ShieldingStepResult:
+    tau_los: float
+    kappa_eff: float
+    sigma_tau1: float | None
+    phi_effective: float | None
+    tau_for_coll: float | None
+
+
 def _get_smol_sink_workspace(
     workspace: SmolSinkWorkspace | None,
     n_bins: int,
@@ -132,6 +161,170 @@ def _get_smol_sink_workspace(
         )
     workspace.zeros_source.fill(0.0)
     return workspace
+
+
+def _apply_supply_step(
+    *,
+    time_now: float,
+    r: float,
+    dt: float,
+    supply_spec: "supply.Supply",
+    area: float,
+    supply_state: "supply.SupplyRuntimeState | None",
+    tau_for_feedback: float | None,
+    temperature_K: float,
+    allow_supply: bool,
+    sigma_surf: float,
+    sigma_tau1: float | None,
+    sigma_deep: float,
+    t_mix: float | None,
+    deep_enabled: bool,
+    transport_mode: str,
+    headroom_gate: str,
+    headroom_policy: str,
+    t_blow: float | None,
+) -> SupplyStepResult:
+    supply_res = supply.evaluate_supply(
+        time_now,
+        r,
+        dt,
+        supply_spec,
+        area=area,
+        state=supply_state,
+        tau_for_feedback=tau_for_feedback,
+        temperature_K=temperature_K,
+        apply_reservoir=allow_supply,
+    )
+    prod_rate_raw = supply_res.rate if allow_supply else 0.0
+    supply_rate_nominal = supply_res.mixed_rate if allow_supply else 0.0
+    supply_rate_scaled = supply_res.rate if allow_supply else 0.0
+    split_res = supply.split_supply_with_deep_buffer(
+        prod_rate_raw,
+        dt,
+        sigma_surf,
+        sigma_tau1,
+        sigma_deep,
+        t_mix=t_mix,
+        deep_enabled=deep_enabled,
+        transport_mode=transport_mode,
+        headroom_gate=headroom_gate,
+        headroom_policy=headroom_policy,
+        t_blow=t_blow,
+    )
+    return SupplyStepResult(
+        supply_res=supply_res,
+        split_res=split_res,
+        prod_rate_raw=prod_rate_raw,
+        supply_rate_nominal=supply_rate_nominal,
+        supply_rate_scaled=supply_rate_scaled,
+    )
+
+
+def _compute_shielding_step(
+    kappa_surf: float,
+    sigma_for_tau: float,
+    *,
+    collisions_active: bool,
+    shielding_mode: str,
+    phi_tau_fn: Callable[[float], float] | None,
+    tau_fixed: float | None,
+    sigma_tau1_fixed: float | None,
+    los_factor: float,
+    use_tcoll: bool,
+) -> ShieldingStepResult:
+    tau_eval_los = kappa_surf * sigma_for_tau * los_factor
+    kappa_eff = kappa_surf
+    sigma_tau1_limit = None
+    phi_value = None
+    if collisions_active:
+        shield_res = physics_step.compute_shielding(
+            kappa_surf,
+            sigma_for_tau,
+            mode=shielding_mode,
+            phi_tau_fn=phi_tau_fn,
+            tau_fixed=tau_fixed,
+            sigma_tau1_fixed=sigma_tau1_fixed,
+            los_factor=los_factor,
+        )
+        tau_eval_los = shield_res.tau
+        kappa_eff = shield_res.kappa_eff
+        sigma_tau1_limit = shield_res.sigma_tau1
+        phi_value = shield_res.phi
+    else:
+        if kappa_surf > 0.0 and kappa_eff is not None:
+            phi_value = kappa_eff / kappa_surf
+
+    tau_for_coll = None
+    if collisions_active and use_tcoll and tau_eval_los > TAU_MIN:
+        tau_candidate = tau_eval_los / max(los_factor, 1.0)
+        if tau_candidate > TAU_MIN:
+            tau_for_coll = tau_candidate
+
+    return ShieldingStepResult(
+        tau_los=tau_eval_los,
+        kappa_eff=kappa_eff,
+        sigma_tau1=sigma_tau1_limit,
+        phi_effective=phi_value,
+        tau_for_coll=tau_for_coll,
+    )
+
+
+def _apply_blowout_correction(
+    outflux_surface: float,
+    *,
+    factor: float,
+    apply: bool,
+) -> tuple[float, bool]:
+    if apply:
+        return outflux_surface * factor, True
+    return outflux_surface, False
+
+
+def _apply_blowout_gate(
+    blow_surface_total: float,
+    outflux_surface: float,
+    *,
+    enable_blowout: bool,
+    gate_enabled: bool,
+    gate_factor: float,
+) -> tuple[float, float]:
+    if enable_blowout and gate_enabled:
+        return blow_surface_total * gate_factor, outflux_surface * gate_factor
+    return blow_surface_total, outflux_surface
+
+
+def _resolve_t_coll_step(
+    *,
+    collision_solver_mode: str,
+    collisions_active: bool,
+    tau_los_last: float | None,
+    los_factor: float,
+    Omega: float,
+    t_coll_kernel_last: float | None,
+) -> float | None:
+    if not collisions_active or tau_los_last is None or tau_los_last <= TAU_MIN or Omega <= 0.0:
+        return None
+    if collision_solver_mode == "smol":
+        t_coll_candidate = t_coll_kernel_last
+    else:
+        try:
+            tau_vert = float(tau_los_last) / max(los_factor, 1.0)
+            if tau_vert > TAU_MIN:
+                t_coll_candidate = surface.wyatt_tcoll_S1(tau_vert, Omega)
+            else:
+                t_coll_candidate = None
+        except Exception:
+            t_coll_candidate = None
+    if t_coll_candidate is not None and math.isfinite(t_coll_candidate) and t_coll_candidate > 0.0:
+        return float(t_coll_candidate)
+    return None
+
+
+def _reset_collision_runtime_state() -> None:
+    """Clear per-run collision caches and warning state."""
+
+    collisions_smol.reset_collision_caches()
+    collisions_smol._F_KE_MISMATCH_WARNED = False
 
 
 def _get_max_steps() -> int:
@@ -969,6 +1162,7 @@ def run_zero_d(
         psd_state["s_min"] = s_min_effective
     elif s0_mode_value != "upper":
         raise ConfigurationError(f"Unknown initial.s0_mode={s0_mode_value!r}")
+    psd.ensure_psd_state_contract(psd_state)
     psd.sanitize_and_normalize_number(psd_state, normalize=False)
     kappa_surf = _ensure_finite_kappa(psd.compute_kappa(psd_state), label="kappa_surf_initial")
     kappa_surf_initial = float(kappa_surf)
@@ -2018,8 +2212,7 @@ def run_zero_d(
     energy_sum_ret = 0.0
     energy_last_row: Optional[Dict[str, float]] = None
     energy_count = 0
-    collisions_smol.reset_collision_caches()
-    collisions_smol._F_KE_MISMATCH_WARNED = False
+    _reset_collision_runtime_state()
     smol_sink_workspace: SmolSinkWorkspace | None = None
 
     def _mark_reservoir_depletion(current_time: float) -> None:
@@ -2470,6 +2663,7 @@ def run_zero_d(
         hydro_mass_total = 0.0
         mass_loss_sublimation_smol_step = 0.0
         mass_loss_rate_sublimation_smol = 0.0
+        mass_err_percent_step = 0.0
         sigma_loss_smol = 0.0
         t_coll_kernel_last = None
         surface_active = collisions_active_step or sink_timescale_active
@@ -2480,63 +2674,42 @@ def run_zero_d(
                     if freeze_sigma:
                         sigma_surf = sigma_surf_reference
                     sigma_for_tau = sigma_surf
-                    tau_eval_los = kappa_surf * sigma_for_tau * los_factor
-                    phi_value = None
-                    if collisions_active_step:
-                        shield_res = physics_step.compute_shielding(
-                            kappa_surf,
-                            sigma_for_tau,
-                            mode=shielding_mode,
-                            phi_tau_fn=phi_tau_fn,
-                            tau_fixed=tau_fixed_target,
-                            sigma_tau1_fixed=sigma_tau1_fixed_target,
-                            los_factor=los_factor,
-                        )
-                        tau_eval_los = shield_res.tau
-                        kappa_eff = shield_res.kappa_eff
-                        sigma_tau1_limit = shield_res.sigma_tau1
-                        phi_value = shield_res.phi
-                    else:
-                        kappa_eff = kappa_surf
-                        sigma_tau1_limit = None
-                        if kappa_surf > 0.0 and kappa_eff is not None:
-                            phi_value = kappa_eff / kappa_surf
+                    shield_step = _compute_shielding_step(
+                        kappa_surf,
+                        sigma_for_tau,
+                        collisions_active=collisions_active_step,
+                        shielding_mode=shielding_mode,
+                        phi_tau_fn=phi_tau_fn,
+                        tau_fixed=tau_fixed_target,
+                        sigma_tau1_fixed=sigma_tau1_fixed_target,
+                        los_factor=los_factor,
+                        use_tcoll=bool(getattr(cfg.surface, "use_tcoll", False)),
+                    )
+                    tau_eval_los = shield_step.tau_los
+                    kappa_eff = shield_step.kappa_eff
+                    sigma_tau1_limit = shield_step.sigma_tau1
+                    phi_value = shield_step.phi_effective
                     _update_sigma_tau1_last_finite(sigma_tau1_limit)
                     phi_effective_last = phi_value
                     tau_los_last = tau_eval_los
                     enable_blowout_sub = enable_blowout_step and collisions_active_step
                     t_sink_current = t_sink_step_effective if sink_timescale_active else None
-                    tau_for_coll = None
-                    if collisions_active_step and cfg.surface.use_tcoll and tau_eval_los > TAU_MIN:
-                        tau_candidate = tau_eval_los / max(los_factor, 1.0)
-                        if tau_candidate > TAU_MIN:
-                            tau_for_coll = tau_candidate
+                    tau_for_coll = shield_step.tau_for_coll
                     tau_for_feedback_val = tau_eval_los
                     allow_supply = allow_supply_step
-                    supply_res = supply.evaluate_supply(
-                        time_sub,
-                        r,
-                        dt_sub,
-                        supply_spec,
+                    supply_step = _apply_supply_step(
+                        time_now=time_sub,
+                        r=r,
+                        dt=dt_sub,
+                        supply_spec=supply_spec,
                         area=area,
-                        state=supply_state,
+                        supply_state=supply_state,
                         tau_for_feedback=tau_for_feedback_val,
                         temperature_K=T_use,
-                        apply_reservoir=allow_supply_step,
-                    )
-                    prod_rate_raw_current = supply_res.rate if allow_supply else 0.0
-                    supply_rate_nominal_current = supply_res.mixed_rate if allow_supply else 0.0
-                    supply_rate_scaled_current = supply_res.rate if allow_supply else 0.0
-                    if supply_rate_scaled_initial is None and math.isfinite(supply_res.rate):
-                        supply_rate_scaled_initial = float(supply_res.rate)
-                    sigma_tau1_active = None
-                    sigma_tau1_active_last = sigma_tau1_active
-                    split_res = supply.split_supply_with_deep_buffer(
-                        prod_rate_raw_current,
-                        dt_sub,
-                        sigma_surf,
-                        sigma_tau1_active,
-                        sigma_deep,
+                        allow_supply=allow_supply,
+                        sigma_surf=sigma_surf,
+                        sigma_tau1=None,
+                        sigma_deep=sigma_deep,
                         t_mix=t_mix_seconds_current,
                         deep_enabled=supply_deep_enabled,
                         transport_mode=supply_transport_mode,
@@ -2544,6 +2717,14 @@ def run_zero_d(
                         headroom_policy=supply_headroom_policy,
                         t_blow=t_blow_step,
                     )
+                    prod_rate_raw_current = supply_step.prod_rate_raw
+                    supply_rate_nominal_current = supply_step.supply_rate_nominal
+                    supply_rate_scaled_current = supply_step.supply_rate_scaled
+                    if supply_rate_scaled_initial is None and math.isfinite(supply_step.supply_res.rate):
+                        supply_rate_scaled_initial = float(supply_step.supply_res.rate)
+                    sigma_tau1_active = None
+                    sigma_tau1_active_last = sigma_tau1_active
+                    split_res = supply_step.split_res
                     prod_rate = split_res.prod_rate_applied
                     prod_rate_last = prod_rate
                     prod_rate_diverted_current = split_res.prod_rate_diverted
@@ -2553,7 +2734,7 @@ def run_zero_d(
                     sigma_deep = split_res.sigma_deep
                     headroom_current = split_res.headroom
                     supply_rate_applied_current = prod_rate
-                    supply_diag_last = supply_res
+                    supply_diag_last = supply_step.supply_res
                     _mark_reservoir_depletion(time_sub)
                     diverted_mass_step += prod_rate_diverted_current * dt_sub
                     prod_into_deep_mass_step += prod_rate_into_deep_current * dt_sub
@@ -2578,45 +2759,56 @@ def run_zero_d(
                         hydro_mass_total += sink_flux_surface * dt_sub * area / constants.M_MARS
                     if freeze_sigma:
                         sigma_surf = sigma_surf_reference
-                    if apply_correction:
-                        outflux_surface *= fast_blowout_factor_sub
-                        fast_blowout_applied = True
                     total_sink_surface += sink_flux_surface * dt_sub
                     fast_factor_numer += fast_blowout_factor_sub * dt_sub
                     fast_factor_denom += dt_sub
                     time_sub += dt_sub
+                if apply_correction:
+                    outflux_surface, corrected = _apply_blowout_correction(
+                        outflux_surface,
+                        factor=fast_blowout_factor_sub,
+                        apply=True,
+                    )
+                    fast_blowout_applied = fast_blowout_applied or corrected
             else:
                 time_sub = time_start + dt
                 tau_los_last = kappa_surf * sigma_surf * los_factor
                 sigma_tau1_limit = None
                 kappa_eff = kappa_surf
                 sigma_tau1_active_last = None
+            surface_update = SurfaceUpdateResult(
+                sigma_surf=sigma_surf,
+                outflux_surface=outflux_surface,
+                sink_flux_surface=sink_flux_surface,
+                t_blow=t_blow_step,
+                t_coll=None,
+                prod_rate_effective=prod_rate_last,
+                mass_error=0.0,
+            )
+            sigma_surf = surface_update.sigma_surf
+            outflux_surface = surface_update.outflux_surface
+            sink_flux_surface = surface_update.sink_flux_surface
+            prod_rate_last = surface_update.prod_rate_effective
         else:
             if surface_active:
                 if freeze_sigma:
                     sigma_surf = sigma_surf_reference
                 sigma_for_tau = sigma_surf
-                tau_eval_los = kappa_surf * sigma_for_tau * los_factor
-                phi_value = None
-                if collisions_active_step:
-                    shield_res = physics_step.compute_shielding(
-                        kappa_surf,
-                        sigma_for_tau,
-                        mode=shielding_mode,
-                        phi_tau_fn=phi_tau_fn,
-                        tau_fixed=tau_fixed_target,
-                        sigma_tau1_fixed=sigma_tau1_fixed_target,
-                        los_factor=los_factor,
-                    )
-                    tau_eval_los = shield_res.tau
-                    kappa_eff = shield_res.kappa_eff
-                    sigma_tau1_limit = shield_res.sigma_tau1
-                    phi_value = shield_res.phi
-                else:
-                    kappa_eff = kappa_surf
-                    sigma_tau1_limit = None
-                    if kappa_surf > 0.0 and kappa_eff is not None:
-                        phi_value = kappa_eff / kappa_surf
+                shield_step = _compute_shielding_step(
+                    kappa_surf,
+                    sigma_for_tau,
+                    collisions_active=collisions_active_step,
+                    shielding_mode=shielding_mode,
+                    phi_tau_fn=phi_tau_fn,
+                    tau_fixed=tau_fixed_target,
+                    sigma_tau1_fixed=sigma_tau1_fixed_target,
+                    los_factor=los_factor,
+                    use_tcoll=bool(getattr(cfg.surface, "use_tcoll", False)),
+                )
+                tau_eval_los = shield_step.tau_los
+                kappa_eff = shield_step.kappa_eff
+                sigma_tau1_limit = shield_step.sigma_tau1
+                phi_value = shield_step.phi_effective
                 _update_sigma_tau1_last_finite(sigma_tau1_limit)
                 phi_effective_last = phi_value
                 tau_los_last = tau_eval_los
@@ -2624,30 +2816,19 @@ def run_zero_d(
                 t_sink_current = t_sink_step_effective if sink_timescale_active else None
                 tau_for_feedback_val = tau_eval_los
                 allow_supply = allow_supply_step
-                supply_res = supply.evaluate_supply(
-                    time_start,
-                    r,
-                    dt,
-                    supply_spec,
+                supply_step = _apply_supply_step(
+                    time_now=time_start,
+                    r=r,
+                    dt=dt,
+                    supply_spec=supply_spec,
                     area=area,
-                    state=supply_state,
+                    supply_state=supply_state,
                     tau_for_feedback=tau_for_feedback_val,
                     temperature_K=T_use,
-                    apply_reservoir=allow_supply_step,
-                )
-                prod_rate_raw_current = supply_res.rate if allow_supply else 0.0
-                supply_rate_nominal_current = supply_res.mixed_rate if allow_supply else 0.0
-                supply_rate_scaled_current = supply_res.rate if allow_supply else 0.0
-                if supply_rate_scaled_initial is None and math.isfinite(supply_res.rate):
-                    supply_rate_scaled_initial = float(supply_res.rate)
-                sigma_tau1_active = None
-                sigma_tau1_active_last = sigma_tau1_active
-                split_res = supply.split_supply_with_deep_buffer(
-                    prod_rate_raw_current,
-                    dt,
-                    sigma_surf,
-                    sigma_tau1_active,
-                    sigma_deep,
+                    allow_supply=allow_supply,
+                    sigma_surf=sigma_surf,
+                    sigma_tau1=None,
+                    sigma_deep=sigma_deep,
                     t_mix=t_mix_seconds_current,
                     deep_enabled=supply_deep_enabled,
                     transport_mode=supply_transport_mode,
@@ -2655,6 +2836,14 @@ def run_zero_d(
                     headroom_policy=supply_headroom_policy,
                     t_blow=t_blow_step,
                 )
+                prod_rate_raw_current = supply_step.prod_rate_raw
+                supply_rate_nominal_current = supply_step.supply_rate_nominal
+                supply_rate_scaled_current = supply_step.supply_rate_scaled
+                if supply_rate_scaled_initial is None and math.isfinite(supply_step.supply_res.rate):
+                    supply_rate_scaled_initial = float(supply_step.supply_res.rate)
+                sigma_tau1_active = None
+                sigma_tau1_active_last = sigma_tau1_active
+                split_res = supply_step.split_res
                 prod_rate = split_res.prod_rate_applied
                 prod_rate_last = prod_rate
                 prod_rate_diverted_current = split_res.prod_rate_diverted
@@ -2664,7 +2853,7 @@ def run_zero_d(
                 sigma_deep = split_res.sigma_deep
                 headroom_current = split_res.headroom
                 supply_rate_applied_current = prod_rate
-                supply_diag_last = supply_res
+                supply_diag_last = supply_step.supply_res
                 _mark_reservoir_depletion(time_start)
                 diverted_mass_step += prod_rate_diverted_current * dt
                 prod_into_deep_mass_step += prod_rate_into_deep_current * dt
@@ -2747,8 +2936,12 @@ def run_zero_d(
                         spill_rate_current * dt * area / constants.M_MARS if dt > 0.0 else 0.0
                     )
                     if apply_correction:
-                        outflux_surface *= fast_blowout_factor_sub
-                        fast_blowout_applied = True
+                        outflux_surface, corrected = _apply_blowout_correction(
+                            outflux_surface,
+                            factor=fast_blowout_factor_sub,
+                            apply=True,
+                        )
+                        fast_blowout_applied = fast_blowout_applied or corrected
                     clip_rate = max(
                         smol_res.dSigma_dt_sinks
                         - smol_res.mass_loss_rate_sinks
@@ -2834,6 +3027,19 @@ def run_zero_d(
                 sigma_tau1_limit = None
                 kappa_eff = kappa_surf
                 sigma_tau1_active_last = None
+            surface_update = SurfaceUpdateResult(
+                sigma_surf=sigma_surf,
+                outflux_surface=outflux_surface,
+                sink_flux_surface=sink_flux_surface,
+                t_blow=t_blow_step,
+                t_coll=t_coll_kernel_last,
+                prod_rate_effective=prod_rate_last,
+                mass_error=mass_err_percent_step / 100.0 if mass_err_percent_step is not None else 0.0,
+            )
+            sigma_surf = surface_update.sigma_surf
+            outflux_surface = surface_update.outflux_surface
+            sink_flux_surface = surface_update.sink_flux_surface
+            prod_rate_last = surface_update.prod_rate_effective
 
         if sink_timescale_active:
             t_sink_step = t_sink_step_effective
@@ -2957,9 +3163,13 @@ def run_zero_d(
             if dt > 0.0:
                 outflux_surface += sigma_loss_sublimation_blow / dt
 
-        if enable_blowout_step and gate_enabled:
-            blow_surface_total *= gate_factor
-            outflux_surface *= gate_factor
+        blow_surface_total, outflux_surface = _apply_blowout_gate(
+            blow_surface_total,
+            outflux_surface,
+            enable_blowout=enable_blowout_step,
+            gate_enabled=gate_enabled,
+            gate_factor=gate_factor,
+        )
 
         t_solid_track.append(float(t_solid_step) if t_solid_step is not None else float("nan"))
         gate_factor_track.append(float(gate_factor))
@@ -3316,21 +3526,14 @@ def run_zero_d(
                 )
         else:
             supply_clip_streak = 0
-        t_coll_step = None
-        if collisions_active_step and tau_los_last is not None and tau_los_last > TAU_MIN and Omega_step > 0.0:
-            if collision_solver_mode == "smol":
-                t_coll_candidate = t_coll_kernel_last
-            else:
-                try:
-                    tau_vert = float(tau_los_last) / max(los_factor, 1.0)
-                    if tau_vert > TAU_MIN:
-                        t_coll_candidate = surface.wyatt_tcoll_S1(tau_vert, Omega_step)
-                    else:
-                        t_coll_candidate = None
-                except Exception:
-                    t_coll_candidate = None
-            if t_coll_candidate is not None and math.isfinite(t_coll_candidate) and t_coll_candidate > 0.0:
-                t_coll_step = float(t_coll_candidate)
+        t_coll_step = _resolve_t_coll_step(
+            collision_solver_mode=collision_solver_mode,
+            collisions_active=collisions_active_step,
+            tau_los_last=tau_los_last,
+            los_factor=los_factor,
+            Omega=Omega_step,
+            t_coll_kernel_last=t_coll_kernel_last,
+        )
         ts_ratio_value = None
         if (
             t_coll_step is not None

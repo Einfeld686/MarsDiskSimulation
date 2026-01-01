@@ -483,13 +483,13 @@ psd_state の実参照（現行コードが触っているキー）
 
 #### 中期実装の明示タスク（追加）
 
-- [ ] **M2-01 共通I/O契約の設計**: surface_ode / smol で共通に返すフィールドを固定し、結果コンテナ（仮称 `SurfaceUpdateResult`）を定義
-- [ ] **M2-02 供給/リザーバ更新の共通化**: `evaluate_supply`→`split_supply_with_deep_buffer` の経路を共通関数化し、surface_ode/smol 両経路で同じ出力を受ける
-- [ ] **M2-03 遮蔽/tau の共通化**: `compute_shielding` と `tau_for_coll` 計算を単一ユーティリティにまとめる
-- [ ] **M2-04 表層更新の共通ポスト処理**: blowout補正/ゲート係数を共通ポスト処理に移し、適用順序を固定
-- [ ] **M2-05 t_coll の扱い統一**: surface_ode の `tau_for_coll` と smol の `t_coll_kernel` の優先順位を確定
-- [ ] **M2-06 psd_state 契約の固定**: 必須/推奨/内部キャッシュの一覧と更新責務をドキュメント化し、同期規約を明記
-- [ ] **M2-07 キャッシュ/Numba寿命管理の明文化**: run 境界での reset/clear の実行箇所と環境変数の取り扱いを決める
+- [x] **M2-01 共通I/O契約の設計**: surface_ode / smol で共通に返すフィールドを固定し、結果コンテナ（仮称 `SurfaceUpdateResult`）を定義
+- [x] **M2-02 供給/リザーバ更新の共通化**: `evaluate_supply`→`split_supply_with_deep_buffer` の経路を共通関数化し、surface_ode/smol 両経路で同じ出力を受ける
+- [x] **M2-03 遮蔽/tau の共通化**: `compute_shielding` と `tau_for_coll` 計算を単一ユーティリティにまとめる
+- [x] **M2-04 表層更新の共通ポスト処理**: blowout補正/ゲート係数を共通ポスト処理に移し、適用順序を固定
+- [x] **M2-05 t_coll の扱い統一**: surface_ode の `tau_for_coll` と smol の `t_coll_kernel` の優先順位を確定
+- [x] **M2-06 psd_state 契約の固定**: 必須/推奨/内部キャッシュの一覧と更新責務をドキュメント化し、同期規約を明記
+- [x] **M2-07 キャッシュ/Numba寿命管理の明文化**: run 境界での reset/clear の実行箇所と環境変数の取り扱いを決める
 
 #### 中期実装チェックリスト
 
@@ -511,6 +511,36 @@ psd_state の実参照（現行コードが触っているキー）
 - [ ] `qpr_table` 未指定時の fallback / `qpr_strict=true` の例外挙動が維持される
 - [ ] Wyatt スケーリングの `t_coll` オーダー感が崩れていない
 - [ ] substep 多発時の性能/メモリ退行がない
+
+#### 中期実装チェックリスト（追加項目）
+
+- [ ] `s_min` の決定順序（config/吹き飛び/昇華床/表面エネルギー床）が変わっていない
+- [ ] `beta_at_smin_config` / `beta_at_smin_effective` と `case_status` 判定が一致する
+- [ ] 遮蔽モード（`off`/`fixed_tau1`/`psitau`）で `tau_los`/`kappa_eff`/`phi` の意味が揺れない
+- [ ] sink 分岐（昇華/ガス抗力/水蒸気逃避）で `M_sink_cum` と内訳の整合が保たれる
+- [ ] `dt <= 0.1 * min(t_coll)` の収束条件が surface_ode / smol 両方で守られる
+- [ ] substep 分割時の質量収支が per-step と一致する（`dt_over_t_blow` 周辺）
+- [ ] IMEX-BDF1 で負の `N_k` / `sigma_surf` が出ない
+- [ ] `t_blow=1/Ω` の既定と override が同じ意味で扱われる
+- [ ] エネルギー収支ログの誤差閾値（warning/error）が共通化後も維持される
+- [ ] `psd_state` の内部キャッシュ（`_mk_cache*`）がサイズ変更時に再計算される
+- [ ] `cfg` の破壊更新が拡大しない（runtime params への移管方針を維持）
+- [ ] `SupplyRuntimeState` / `sigma_deep` の更新が substep でも一貫する
+- [ ] `checks/mass_budget.csv` が streaming 有無に関係なく必ず生成される
+- [ ] `energy_bookkeeping` の CSV/Parquet 出力が ON/OFF で同等に動作する
+- [ ] `--override` の適用順序と型変換が従来どおり
+- [ ] `FORCE_STREAMING_OFF` / `IO_STREAMING` の優先順位が変わらない
+- [ ] `geometry` / `temperature` / `tau_stop` のバリデーションが維持される
+- [ ] `ALLOW_TL2003=false` の既定が変わらない
+- [ ] Numba 無効時の性能退行が急増しない
+- [ ] Qpr/Q* キャッシュ利用率が低下しない
+- [ ] Smol kernel の再計算頻度がサイズ変更時のみになる
+- [ ] streaming merge が過剰に重くならない
+- [ ] `sigma_surf<=0` / `kappa_surf<=0` / `tau<=0` でも NaN/inf を出さない
+- [ ] `s_min >= s_max` / `rho<=0` などの入力で明示的にエラーになる
+- [ ] 温度テーブル境界外の評価が意図どおり（clamp/例外）
+- [ ] pytest（`test_scalings`/mass conservation/surface outflux/wavy PSD）が通る
+- [ ] 3ケース baseline compare が共通I/O契約でも一致する
 
 ### フェーズ3: グローバル状態の隔離
 

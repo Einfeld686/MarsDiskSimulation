@@ -221,6 +221,23 @@ def sanitize_and_normalize_number(
     return psd_state
 
 
+def ensure_psd_state_contract(
+    psd_state: Dict[str, np.ndarray | float],
+) -> Dict[str, np.ndarray | float]:
+    """Ensure alias keys and version markers remain in sync."""
+
+    sizes = psd_state.get("sizes")
+    if sizes is not None:
+        psd_state["s"] = sizes
+    number = psd_state.get("number")
+    if number is not None:
+        psd_state["n"] = number
+    psd_state.setdefault("sizes_version", 0)
+    if "edges" in psd_state:
+        psd_state.setdefault("edges_version", 0)
+    return psd_state
+
+
 def compute_kappa(psd_state: Dict[str, np.ndarray | float]) -> float:
     r"""Compute the mass opacity ``\kappa`` from a PSD state (P1).
 
