@@ -13,6 +13,7 @@ if not exist "%RESOLVE_PYTHON_CMD%" (
   goto :bootstrap_done
 )
 
+set "RESOLVE_PYTHON_SKIP_REQUIREMENTS=1"
 call "%RESOLVE_PYTHON_CMD%"
 if errorlevel 1 (
   set "BOOTSTRAP_RC=%errorlevel%"
@@ -55,6 +56,7 @@ set "PYTHON_CMD=%PYTHON_EXE%"
 
 if "%SKIP_REQUIREMENTS%"=="1" (
   echo.[setup] SKIP_REQUIREMENTS=1; skipping dependency install.
+  set "REQUIREMENTS_INSTALLED=0"
 ) else if exist "%REQ_FILE%" (
   echo.[setup] Installing/upgrading dependencies from %REQ_FILE% ...
   "%PYTHON_EXE%" -m pip install --upgrade pip
@@ -64,8 +66,10 @@ if "%SKIP_REQUIREMENTS%"=="1" (
     set "BOOTSTRAP_RC=%errorlevel%"
     goto :bootstrap_done
   )
+  set "REQUIREMENTS_INSTALLED=1"
 ) else (
   echo.[warn] %REQ_FILE% not found; skipping dependency install.
+  set "REQUIREMENTS_INSTALLED=0"
 )
 
 :bootstrap_done
@@ -78,5 +82,6 @@ endlocal & (
   set "VENV_DIR=%VENV_DIR%"
   set "REQ_FILE=%REQ_FILE%"
   set "SKIP_REQUIREMENTS=%SKIP_REQUIREMENTS%"
+  set "REQUIREMENTS_INSTALLED=%REQUIREMENTS_INSTALLED%"
 )
 exit /b %BOOTSTRAP_RC%

@@ -245,7 +245,57 @@ if not "!PYTHON_ARGS!"=="" set "PYTHON_CMD=!PYTHON_EXE_QUOTED! !PYTHON_ARGS!"
 if "%DEBUG_RESOLVE%"=="1" echo.[DEBUG] resolve_python: PYTHON_EXE=!PYTHON_EXE!
 if "%DEBUG_RESOLVE%"=="1" echo.[DEBUG] resolve_python: PYTHON_ARGS=!PYTHON_ARGS!
 
-endlocal & set "PYTHON_EXE=%PYTHON_EXE%" & set "PYTHON_ARGS=%PYTHON_ARGS%" & set "PYTHON_CMD=%PYTHON_CMD%" & set "PYTHON_ALLOW_LAUNCHER=%PYTHON_ALLOW_LAUNCHER%" & set "PYTHON_EXE_DIR=%PYTHON_EXE_DIR%"
+if /i "%REQUIREMENTS_INSTALLED%"=="1" goto :requirements_done
+if /i "%RESOLVE_PYTHON_SKIP_REQUIREMENTS%"=="1" (
+  set "REQUIREMENTS_INSTALLED=0"
+  goto :requirements_done
+)
+if "%SKIP_REQUIREMENTS%"=="" (
+  if /i "%SKIP_PIP%"=="1" (
+    set "SKIP_REQUIREMENTS=1"
+  ) else (
+    set "SKIP_REQUIREMENTS=0"
+  )
+)
+if "%SKIP_REQUIREMENTS%"=="1" (
+  set "REQUIREMENTS_INSTALLED=0"
+  goto :requirements_done
+)
+if not defined REPO_ROOT (
+  for %%I in ("%SCRIPT_DIR%..\..\..") do set "REPO_ROOT=%%~fI"
+)
+set "REQ_FILE_RESOLVED="
+if not defined REQ_FILE (
+  if defined REPO_ROOT (
+    set "REQ_FILE_RESOLVED=%REPO_ROOT%\requirements.txt"
+  ) else (
+    set "REQ_FILE_RESOLVED=requirements.txt"
+  )
+) else (
+  set "REQ_FILE_RESOLVED=%REQ_FILE%"
+  if not exist "!REQ_FILE_RESOLVED!" (
+    if defined REPO_ROOT if exist "!REPO_ROOT!\!REQ_FILE!" set "REQ_FILE_RESOLVED=!REPO_ROOT!\!REQ_FILE!"
+  )
+)
+if exist "!REQ_FILE_RESOLVED!" (
+  echo.[setup] Installing dependencies from !REQ_FILE_RESOLVED! ...
+  if not "!PYTHON_ARGS!"=="" (
+    "!PYTHON_EXE!" !PYTHON_ARGS! -m pip install -r "!REQ_FILE_RESOLVED!"
+  ) else (
+    "!PYTHON_EXE!" -m pip install -r "!REQ_FILE_RESOLVED!"
+  )
+  if errorlevel 1 (
+    echo.[error] Dependency install failed.
+    exit /b 1
+  )
+  set "REQUIREMENTS_INSTALLED=1"
+) else (
+  echo.[warn] requirements file not found: !REQ_FILE_RESOLVED!
+  set "REQUIREMENTS_INSTALLED=0"
+)
+
+:requirements_done
+endlocal & set "PYTHON_EXE=%PYTHON_EXE%" & set "PYTHON_ARGS=%PYTHON_ARGS%" & set "PYTHON_CMD=%PYTHON_CMD%" & set "PYTHON_ALLOW_LAUNCHER=%PYTHON_ALLOW_LAUNCHER%" & set "PYTHON_EXE_DIR=%PYTHON_EXE_DIR%" & set "REQUIREMENTS_INSTALLED=%REQUIREMENTS_INSTALLED%"
 if not "%PYTHON_EXE_DIR%"=="" set "PATH=%PYTHON_EXE_DIR%;%PATH%" & set "PYTHON_EXE_DIR="
 exit /b 0
 

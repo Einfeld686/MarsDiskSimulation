@@ -13,22 +13,16 @@ for %%I in ("%~dp0\..\..") do set "REPO_ROOT=%%~fI"
 set "WIN_PROCESS_PY=!REPO_ROOT!\scripts\runsets\common\win_process.py"
 set "TMP_ROOT=%TEMP%"
 
-rem Find Python 3.11
-set "PYTHON_EXE="
-for %%D in (
-    "%LOCALAPPDATA%\Programs\Python\Python311\python.exe"
-    "%USERPROFILE%\AppData\Local\Programs\Python\Python311\python.exe"
-) do (
-    if not defined PYTHON_EXE if exist %%D set "PYTHON_EXE=%%~D"
+set "COMMON_DIR=!REPO_ROOT!\scripts\runsets\common"
+if not exist "!COMMON_DIR!\resolve_python.cmd" (
+    echo.[error] resolve_python.cmd not found: "!COMMON_DIR!\resolve_python.cmd"
+    exit /b 1
 )
-if not defined PYTHON_EXE (
-    for /f "delims=" %%P in ('where python 2^>nul') do (
-        if not defined PYTHON_EXE set "PYTHON_EXE=%%P"
-    )
-)
+call "!COMMON_DIR!\resolve_python.cmd"
+if errorlevel 1 exit /b 1
 
 echo.[info] REPO_ROOT=!REPO_ROOT!
-echo.[info] PYTHON_EXE=!PYTHON_EXE!
+echo.[info] PYTHON_CMD=!PYTHON_CMD!
 echo.
 
 set "SCRIPT_SELF_USE=!REPO_ROOT!\scripts\research\run_temp_supply_sweep.cmd"
@@ -64,7 +58,7 @@ echo.Watch the new window that opens - it should show the simulation running
 echo.If it closes immediately, there's an error
 echo.
 
-"!PYTHON_EXE!" "!WIN_PROCESS_PY!" launch --cmd-file "!CMD_FILE!" --window-style normal --cwd "!REPO_ROOT!"
+!PYTHON_CMD! "!WIN_PROCESS_PY!" launch --cmd-file "!CMD_FILE!" --window-style normal --cwd "!REPO_ROOT!"
 
 echo.
 echo.[info] Process launched. Check the spawned window for output.

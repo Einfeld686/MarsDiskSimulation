@@ -65,20 +65,36 @@ rem --- Auto-install dependencies (skip with SKIP_PIP=1) ---
 if not defined SKIP_PIP set "SKIP_PIP=0"
 if /i "!SKIP_PIP!"=="1" (
   if "%DEBUG_ARG%"=="1" echo.[DEBUG] SKIP_PIP=1, skipping pip install
+) else if /i "!REQUIREMENTS_INSTALLED!"=="1" (
+  if "%DEBUG_ARG%"=="1" echo.[DEBUG] REQUIREMENTS_INSTALLED=1, skipping pip install
 ) else (
   set "REQ_FILE=!REPO_ROOT!\requirements.txt"
   if exist "!REQ_FILE!" (
     echo.[info] Installing dependencies from requirements.txt...
+    rem --- Workaround for non-ASCII paths (e.g., Japanese usernames) ---
+    rem Set pip cache and temp directories to ASCII-only paths to avoid cp932 encoding errors
+    if not defined PIP_CACHE_DIR set "PIP_CACHE_DIR=C:\pip_cache"
+    if not exist "!PIP_CACHE_DIR!" mkdir "!PIP_CACHE_DIR!" 2>nul
+    set "MARSDISK_ORIG_TMP=!TMP!"
+    set "MARSDISK_ORIG_TEMP=!TEMP!"
+    if not exist "C:\tmp" mkdir "C:\tmp" 2>nul
+    set "TMP=C:\tmp"
+    set "TEMP=C:\tmp"
     if defined PYTHON_ARGS (
       "!PYTHON_EXE!" !PYTHON_ARGS! -m pip install -r "!REQ_FILE!" --quiet
     ) else (
       "!PYTHON_EXE!" -m pip install -r "!REQ_FILE!" --quiet
     )
-    if !errorlevel! neq 0 (
+    set "PIP_RC=!errorlevel!"
+    rem Restore original TMP/TEMP
+    set "TMP=!MARSDISK_ORIG_TMP!"
+    set "TEMP=!MARSDISK_ORIG_TEMP!"
+    if !PIP_RC! neq 0 (
       echo.[error] pip install failed
       exit /b 1
     )
     echo.[info] Dependencies installed successfully
+    set "REQUIREMENTS_INSTALLED=1"
   ) else (
     echo.[warn] requirements.txt not found at !REQ_FILE!
   )

@@ -6,31 +6,17 @@ rem If no arguments given, tests all .cmd files in scripts/research/
 
 setlocal enabledelayedexpansion
 
-if not defined PYTHON_EXE (
-  for %%P in (python3.11 python py) do (
-    if not defined PYTHON_EXE (
-      where %%P >nul 2>&1
-      if !errorlevel! lss 1 set "PYTHON_EXE=%%P"
-    )
-  )
-  if not defined PYTHON_EXE (
-    echo [error] python3.11/python/py not found in PATH
-    exit /b 1
-  )
-) else (
-  if not exist "%PYTHON_EXE%" (
-    where %PYTHON_EXE% >nul 2>&1
-    if !errorlevel! geq 1 (
-      echo [error] %PYTHON_EXE% not found in PATH
-      exit /b 1
-    )
-  )
-)
-
 set "SCRIPT_DIR=%~dp0"
 for %%A in ("%SCRIPT_DIR:~0,-1%") do set "PARENT1=%%~dpA"
 for %%B in ("%PARENT1:~0,-1%") do set "REPO_ROOT=%%~dpB"
 if "%REPO_ROOT:~-1%"=="\" set "REPO_ROOT=%REPO_ROOT:~0,-1%"
+set "COMMON_DIR=%REPO_ROOT%\scripts\runsets\common"
+if not exist "%COMMON_DIR%\resolve_python.cmd" (
+  echo [error] resolve_python.cmd not found: "%COMMON_DIR%\resolve_python.cmd"
+  exit /b 1
+)
+call "%COMMON_DIR%\resolve_python.cmd"
+if !errorlevel! geq 1 exit /b 1
 
 set PASS=0
 set FAIL=0
@@ -70,7 +56,7 @@ if not exist "%FILE%" (
 )
 
 rem Check 2: Line endings (Python)
-"%PYTHON_EXE%" -c "import pathlib,sys; data=pathlib.Path(r'%FILE%').read_bytes(); sys.exit(0 if b'\r\n' in data else 1)" 2>nul
+!PYTHON_CMD! -c "import pathlib,sys; data=pathlib.Path(r'%FILE%').read_bytes(); sys.exit(0 if b'\r\n' in data else 1)" 2>nul
 if !errorlevel! geq 1 (
   echo   [WARN] File may have Unix line endings (LF instead of CRLF)
 )
@@ -92,7 +78,7 @@ if !errorlevel! lss 1 (
 )
 
 rem Check 4: Very long lines (>1000 chars, may cause issues)
-"%PYTHON_EXE%" -c "import pathlib; p=pathlib.Path(r'%FILE%'); lines=p.read_text(encoding='utf-8', errors='replace').splitlines(); long=[(i+1, len(line)) for i, line in enumerate(lines) if len(line) > 1000]; print('  [WARN] Found lines over 1000 characters') if long else None; [print('    Line {}: {} chars'.format(i, length)) for i, length in long]" 2>nul
+!PYTHON_CMD! -c "import pathlib; p=pathlib.Path(r'%FILE%'); lines=p.read_text(encoding='utf-8', errors='replace').splitlines(); long=[(i+1, len(line)) for i, line in enumerate(lines) if len(line) > 1000]; print('  [WARN] Found lines over 1000 characters') if long else None; [print('    Line {}: {} chars'.format(i, length)) for i, length in long]" 2>nul
 
 rem Check 5: Dry-run if script supports it
 findstr /c:"--dry-run" "%FILE%" >nul 2>&1

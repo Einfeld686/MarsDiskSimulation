@@ -22,7 +22,7 @@ set "RUN_ONE_TAU=1.0"
 set "RUN_ONE_SEED=12345"
 set "AUTO_JOBS=0"
 set "PARALLEL_JOBS=1"
-set "SKIP_PIP=1"
+if not defined SKIP_PIP set "SKIP_PIP=0"
 set "DEBUG=1"
 set "SWEEP_PARALLEL=1"
 rem Set BASE_CONFIG explicitly to avoid inheriting from environment

@@ -3,29 +3,18 @@ rem Run a single temp_supply case (1D default).
 setlocal EnableExtensions EnableDelayedExpansion
 set "SCRIPT_DIR=%~dp0"
 
-if not defined PYTHON_EXE (
-  for %%P in (python3.11 python py) do (
-    if not defined PYTHON_EXE (
-      where %%P >nul 2>&1
-      if !errorlevel! lss 1 set "PYTHON_EXE=%%P"
-    )
-  )
-  if not defined PYTHON_EXE (
-    echo.[error] python3.11/python/py not found in PATH
-    exit /b 1
-  )
-) else (
-  if not exist "%PYTHON_EXE%" (
-    where "%PYTHON_EXE%" >nul 2>&1
-    if !errorlevel! geq 1 (
-      echo.[error] %PYTHON_EXE% not found in PATH
-      exit /b 1
-    )
-  )
+set "RUNSETS_COMMON_DIR=%SCRIPT_DIR%..\common"
+for %%I in ("%RUNSETS_COMMON_DIR%") do set "RUNSETS_COMMON_DIR=%%~fI"
+set "RESOLVE_PYTHON_CMD=%RUNSETS_COMMON_DIR%\resolve_python.cmd"
+if not exist "%RESOLVE_PYTHON_CMD%" (
+  echo.[error] resolve_python helper not found: "%RESOLVE_PYTHON_CMD%"
+  exit /b 1
 )
+call "%RESOLVE_PYTHON_CMD%"
+if errorlevel 1 exit /b 1
 
 if defined CI (
-  "%PYTHON_EXE%" -c "import sys; raise SystemExit(0 if sys.version_info >= (3,11) else 1)" >nul 2>&1
+  !PYTHON_CMD! -c "import sys; raise SystemExit(0 if sys.version_info >= (3,11) else 1)" >nul 2>&1
   if !errorlevel! geq 1 (
     echo.[error] python 3.11+ is required in CI
     exit /b 1
@@ -221,9 +210,9 @@ if defined OUT_ROOT (
 
 echo.[info] preflight checks
 if defined CI (
-  "%PYTHON_EXE%" "scripts\\runsets\\windows\\preflight_checks.py" --repo-root "%REPO_ROOT%" --config "%CONFIG_PATH%" --overrides "%OVERRIDES_PATH%" --out-root "%OUT_ROOT%" --require-git --cmd "%REPO_ROOT%\\scripts\\research\\run_temp_supply_sweep.cmd" --cmd-root "%REPO_ROOT%\\scripts\\runsets\\windows" --cmd-root "%REPO_ROOT%\\scripts\\research" --cmd-exclude "%REPO_ROOT%\\scripts\\runsets\\windows\\legacy" --cmd-allowlist "%REPO_ROOT%\\scripts\\runsets\\windows\\preflight_allowlist.txt" --profile ci --format json --allow-non-ascii
+  !PYTHON_CMD! "scripts\\runsets\\windows\\preflight_checks.py" --repo-root "%REPO_ROOT%" --config "%CONFIG_PATH%" --overrides "%OVERRIDES_PATH%" --out-root "%OUT_ROOT%" --require-git --cmd "%REPO_ROOT%\\scripts\\research\\run_temp_supply_sweep.cmd" --cmd-root "%REPO_ROOT%\\scripts\\runsets\\windows" --cmd-root "%REPO_ROOT%\\scripts\\research" --cmd-exclude "%REPO_ROOT%\\scripts\\runsets\\windows\\legacy" --cmd-allowlist "%REPO_ROOT%\\scripts\\runsets\\windows\\preflight_allowlist.txt" --profile ci --format json --allow-non-ascii
 ) else (
-  "%PYTHON_EXE%" "scripts\\runsets\\windows\\preflight_checks.py" --repo-root "%REPO_ROOT%" --config "%CONFIG_PATH%" --overrides "%OVERRIDES_PATH%" --out-root "%OUT_ROOT%" --require-git --cmd "%REPO_ROOT%\\scripts\\research\\run_temp_supply_sweep.cmd" --cmd-root "%REPO_ROOT%\\scripts\\runsets\\windows" --cmd-root "%REPO_ROOT%\\scripts\\research" --cmd-exclude "%REPO_ROOT%\\scripts\\runsets\\windows\\legacy" --allow-non-ascii
+  !PYTHON_CMD! "scripts\\runsets\\windows\\preflight_checks.py" --repo-root "%REPO_ROOT%" --config "%CONFIG_PATH%" --overrides "%OVERRIDES_PATH%" --out-root "%OUT_ROOT%" --require-git --cmd "%REPO_ROOT%\\scripts\\research\\run_temp_supply_sweep.cmd" --cmd-root "%REPO_ROOT%\\scripts\\runsets\\windows" --cmd-root "%REPO_ROOT%\\scripts\\research" --cmd-exclude "%REPO_ROOT%\\scripts\\runsets\\windows\\legacy" --allow-non-ascii
 )
 if !errorlevel! geq 1 (
   echo.[error] preflight failed

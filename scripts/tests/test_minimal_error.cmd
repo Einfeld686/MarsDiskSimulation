@@ -10,6 +10,13 @@ echo.============================================================
 echo.
 
 for %%I in ("%~dp0\..\..") do set "REPO_ROOT=%%~fI"
+set "COMMON_DIR=!REPO_ROOT!\scripts\runsets\common"
+if not exist "!COMMON_DIR!\resolve_python.cmd" (
+    echo.[error] resolve_python.cmd not found: "!COMMON_DIR!\resolve_python.cmd"
+    exit /b 1
+)
+call "!COMMON_DIR!\resolve_python.cmd"
+if errorlevel 1 exit /b 1
 
 echo.[info] REPO_ROOT=!REPO_ROOT!
 echo.[info] TEMP=!TEMP!
@@ -70,7 +77,7 @@ echo.
 rem ============================================================
 echo.Step F: Python simple execution
 echo.------------------------------------------------------------
-python -c "print('Python works')"
+!PYTHON_CMD! -c "print('Python works')"
 echo.[result] errorlevel=%errorlevel%
 pause
 echo.
@@ -78,7 +85,7 @@ echo.
 rem ============================================================
 echo.Step G: Python with output to file
 echo.------------------------------------------------------------
-python -c "print('test output')" > "!TMP_ROOT!\python_out.tmp" 2>&1
+!PYTHON_CMD! -c "print('test output')" > "!TMP_ROOT!\python_out.tmp" 2>&1
 echo.[result] errorlevel=%errorlevel%
 if exist "!TMP_ROOT!\python_out.tmp" (
     echo.[debug] File contents:
@@ -92,7 +99,7 @@ rem ============================================================
 echo.Step H: win_process.py simple
 echo.------------------------------------------------------------
 set "WIN_PROCESS_PY=!REPO_ROOT!\scripts\runsets\common\win_process.py"
-python "!WIN_PROCESS_PY!" launch --cmd "echo test" --window-style hidden --cwd "!REPO_ROOT!"
+!PYTHON_CMD! "!WIN_PROCESS_PY!" launch --cmd "echo test" --window-style hidden --cwd "!REPO_ROOT!"
 echo.[result] errorlevel=%errorlevel%
 pause
 echo.
@@ -100,7 +107,7 @@ echo.
 rem ============================================================
 echo.Step I: win_process.py with output redirection
 echo.------------------------------------------------------------
-python "!WIN_PROCESS_PY!" launch --cmd "echo test" --window-style hidden --cwd "!REPO_ROOT!" > "!TMP_ROOT!\pid_out.tmp" 2>&1
+!PYTHON_CMD! "!WIN_PROCESS_PY!" launch --cmd "echo test" --window-style hidden --cwd "!REPO_ROOT!" > "!TMP_ROOT!\pid_out.tmp" 2>&1
 echo.[result] errorlevel=%errorlevel%
 if exist "!TMP_ROOT!\pid_out.tmp" (
     echo.[debug] File contents:
@@ -126,7 +133,7 @@ echo.[debug] Command file exists:
 if exist "!JOB_CMD_FILE!" (echo YES) else (echo NO)
 
 echo MARKER_3
-python "!WIN_PROCESS_PY!" launch --cmd-file "!JOB_CMD_FILE!" --window-style hidden --cwd "!REPO_ROOT!" > "!TMP_ROOT!\marsdisk_pid_!JOB_T!_!JOB_EPS!_!JOB_TAU!.tmp" 2>&1
+!PYTHON_CMD! "!WIN_PROCESS_PY!" launch --cmd-file "!JOB_CMD_FILE!" --window-style hidden --cwd "!REPO_ROOT!" > "!TMP_ROOT!\marsdisk_pid_!JOB_T!_!JOB_EPS!_!JOB_TAU!.tmp" 2>&1
 echo MARKER_4
 echo.[result] errorlevel=%errorlevel%
 

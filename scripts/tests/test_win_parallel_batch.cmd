@@ -9,20 +9,6 @@ echo Windows Parallel Job Launch Test
 echo ============================================
 echo.
 
-rem Find Python
-set "PYTHON_CMD="
-for %%P in (python3.11 python) do (
-    if not defined PYTHON_CMD (
-        where %%P >nul 2>&1
-        if not errorlevel 1 set "PYTHON_CMD=%%P"
-    )
-)
-if not defined PYTHON_CMD (
-    echo [ERROR] Python not found
-    exit /b 1
-)
-echo [INFO] Python: %PYTHON_CMD%
-
 rem Get script directory
 for %%I in ("%~f0") do set "SCRIPT_DIR=%%~dpI"
 echo [DEBUG] SCRIPT_DIR=%SCRIPT_DIR%
@@ -31,6 +17,14 @@ cd /d "%SCRIPT_DIR%"
 cd ..\..
 set "REPO_ROOT=%CD%"
 echo [INFO] Repo root: %REPO_ROOT%
+set "COMMON_DIR=%REPO_ROOT%\scripts\runsets\common"
+if not exist "%COMMON_DIR%\resolve_python.cmd" (
+    echo [ERROR] resolve_python.cmd not found: "%COMMON_DIR%\resolve_python.cmd"
+    exit /b 1
+)
+call "%COMMON_DIR%\resolve_python.cmd"
+if errorlevel 1 exit /b 1
+echo [INFO] Python: !PYTHON_CMD!
 
 set "WIN_PROCESS_PY=%REPO_ROOT%\scripts\runsets\common\win_process.py"
 echo [INFO] win_process.py: %WIN_PROCESS_PY%
@@ -63,7 +57,7 @@ echo Test 1: Direct --cmd option
 echo ============================================
 set "TEST_CMD=echo DIRECT_CMD_SUCCESS"
 echo [INFO] Command: %TEST_CMD%
-%PYTHON_CMD% "%WIN_PROCESS_PY%" launch --cmd "%TEST_CMD%"
+!PYTHON_CMD! "%WIN_PROCESS_PY%" launch --cmd "%TEST_CMD%"
 echo [INFO] Exit code: %errorlevel%
 
 echo.
@@ -72,7 +66,7 @@ echo Test 2: --cmd-stdin option (new method)
 echo ============================================
 set "TEST_CMD=echo STDIN_CMD_SUCCESS"
 echo [INFO] Command: %TEST_CMD%
-echo %TEST_CMD%| %PYTHON_CMD% "%WIN_PROCESS_PY%" launch --cmd-stdin
+echo !TEST_CMD!| !PYTHON_CMD! "%WIN_PROCESS_PY%" launch --cmd-stdin
 echo [INFO] Exit code: %errorlevel%
 
 echo.

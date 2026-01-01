@@ -14,21 +14,15 @@ for %%I in ("%~dp0\..\..") do set "REPO_ROOT=%%~fI"
 set "WIN_PROCESS_PY=!REPO_ROOT!\scripts\runsets\common\win_process.py"
 set "TMP_ROOT=%TEMP%"
 
-rem Find Python
-set "PYTHON_EXE="
-for %%D in (
-    "%LOCALAPPDATA%\Programs\Python\Python311\python.exe"
-    "%USERPROFILE%\AppData\Local\Programs\Python\Python311\python.exe"
-) do (
-    if not defined PYTHON_EXE if exist %%D set "PYTHON_EXE=%%~D"
+set "COMMON_DIR=!REPO_ROOT!\scripts\runsets\common"
+if not exist "!COMMON_DIR!\resolve_python.cmd" (
+    echo.[error] resolve_python.cmd not found: "!COMMON_DIR!\resolve_python.cmd"
+    exit /b 1
 )
-if not defined PYTHON_EXE (
-    for /f "delims=" %%P in ('where python 2^>nul') do (
-        if not defined PYTHON_EXE set "PYTHON_EXE=%%P"
-    )
-)
+call "!COMMON_DIR!\resolve_python.cmd"
+if errorlevel 1 exit /b 1
 
-echo.[info] PYTHON_EXE=!PYTHON_EXE!
+echo.[info] PYTHON_CMD=!PYTHON_CMD!
 echo.[info] REPO_ROOT=!REPO_ROOT!
 echo.[info] TMP_ROOT=!TMP_ROOT!
 echo.
@@ -93,8 +87,8 @@ echo.[action] Calling win_process.py with --cmd-file
 set "PID_FILE=!TMP_ROOT!\marsdisk_pid_!JOB_T!_!JOB_EPS!_!JOB_TAU!.tmp"
 echo.[debug] Output to: !PID_FILE!
 echo.[debug] Full command:
-echo "!PYTHON_EXE!" "!WIN_PROCESS_PY!" launch --cmd-file "!CMD_FILE!" --window-style hidden --cwd "!REPO_ROOT!"
-"!PYTHON_EXE!" "!WIN_PROCESS_PY!" launch --cmd-file "!CMD_FILE!" --window-style hidden --cwd "!REPO_ROOT!" > "!PID_FILE!" 2>&1
+echo !PYTHON_CMD! "!WIN_PROCESS_PY!" launch --cmd-file "!CMD_FILE!" --window-style hidden --cwd "!REPO_ROOT!"
+!PYTHON_CMD! "!WIN_PROCESS_PY!" launch --cmd-file "!CMD_FILE!" --window-style hidden --cwd "!REPO_ROOT!" > "!PID_FILE!" 2>&1
 set "LAUNCH_RC=!errorlevel!"
 echo.[debug] Return code: !LAUNCH_RC!
 if exist "!PID_FILE!" (
@@ -122,7 +116,7 @@ echo.------------------------------------------------------------
 echo.[info] Testing if the error message comes from stderr
 set "TEST5_FILE=!TMP_ROOT!\test5_!RANDOM!.tmp"
 echo.[action] Running command and capturing stderr separately
-"!PYTHON_EXE!" "!WIN_PROCESS_PY!" launch --cmd "echo test5" --window-style hidden --cwd "!REPO_ROOT!" > "!TEST5_FILE!" 2> "!TEST5_FILE!.err"
+!PYTHON_CMD! "!WIN_PROCESS_PY!" launch --cmd "echo test5" --window-style hidden --cwd "!REPO_ROOT!" > "!TEST5_FILE!" 2> "!TEST5_FILE!.err"
 echo.[debug] stdout:
 type "!TEST5_FILE!"
 echo.
@@ -157,7 +151,7 @@ echo.
 echo.[question] Launch with visible window to see what happens? (Y/N)
 choice /c YN /m "Launch"
 if errorlevel 2 goto :skip6
-"!PYTHON_EXE!" "!WIN_PROCESS_PY!" launch --cmd-file "!FULL_CMD_FILE!" --window-style normal --cwd "!REPO_ROOT!"
+!PYTHON_CMD! "!WIN_PROCESS_PY!" launch --cmd-file "!FULL_CMD_FILE!" --window-style normal --cwd "!REPO_ROOT!"
 :skip6
 del "!FULL_CMD_FILE!" >nul 2>&1
 echo.

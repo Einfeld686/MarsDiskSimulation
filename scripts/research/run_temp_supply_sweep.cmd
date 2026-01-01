@@ -252,10 +252,31 @@ if !errorlevel! geq 1 (
 
 if "%SKIP_PIP%"=="1" (
   %LOG_SETUP% SKIP_PIP=1; skipping dependency install.
+) else if /i "%REQUIREMENTS_INSTALLED%"=="1" (
+  %LOG_SETUP% REQUIREMENTS_INSTALLED=1; skipping dependency install.
 ) else if exist "%REQ_FILE%" (
   %LOG_SETUP% Installing/upgrading dependencies from %REQ_FILE% ...
+  rem --- Workaround for non-ASCII paths (e.g., Japanese usernames) ---
+  rem Set pip cache and temp directories to ASCII-only paths to avoid cp932 encoding errors
+  if not defined PIP_CACHE_DIR set "PIP_CACHE_DIR=C:\pip_cache"
+  if not exist "!PIP_CACHE_DIR!" mkdir "!PIP_CACHE_DIR!" 2>nul
+  set "MARSDISK_ORIG_TMP=!TMP!"
+  set "MARSDISK_ORIG_TEMP=!TEMP!"
+  if not exist "C:\tmp" mkdir "C:\tmp" 2>nul
+  set "TMP=C:\tmp"
+  set "TEMP=C:\tmp"
   call "%PYTHON_EXEC_CMD%" -m pip install --upgrade pip
   call "%PYTHON_EXEC_CMD%" -m pip install -r "%REQ_FILE%"
+  set "PIP_RC=!errorlevel!"
+  rem Restore original TMP/TEMP
+  set "TMP=!MARSDISK_ORIG_TMP!"
+  set "TEMP=!MARSDISK_ORIG_TEMP!"
+  if !PIP_RC! geq 1 (
+    echo.[error] Dependency install failed.
+    call :popd_safe
+    exit /b 1
+  )
+  set "REQUIREMENTS_INSTALLED=1"
 ) else (
   echo.[warn] %REQ_FILE% not found; skipping dependency install.
 )
