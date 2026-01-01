@@ -7,28 +7,6 @@ rem External supply uses mu_orbit10pct (1 orbit supplies 10% of Sigma_surf0).
 setlocal enabledelayedexpansion
 set "SCRIPT_DIR=%~dp0"
 
-if not defined PYTHON_EXE (
-  for %%P in (python3.11 python py) do (
-    if not defined PYTHON_EXE (
-      where %%P >nul 2>&1
-      if !errorlevel! lss 1 set "PYTHON_EXE=%%P"
-    )
-  )
-  if not defined PYTHON_EXE (
-    echo [error] python3.11/python/py not found in PATH
-    exit /b 1
-  )
-) else (
-  if not exist "%PYTHON_EXE%" (
-    where %PYTHON_EXE% >nul 2>&1
-    if !errorlevel! geq 1 (
-      echo [error] %PYTHON_EXE% not found in PATH
-      exit /b 1
-    )
-  )
-)
-set "PYTHON_BOOT=%PYTHON_EXE%"
-
 set CONFIG=configs\temp_supply_sweep.yml
 set OUTROOT=out\temp_supply_grid
 set SUPPLY_MU_ORBIT10PCT=1.0
@@ -44,33 +22,18 @@ set MU_HKL=0.0440849
 rem Optional venv setup (portable, avoids system Python pollution)
 set VENV_DIR=.venv
 set REQ_FILE=requirements.txt
-
-if not exist "%VENV_DIR%\Scripts\python.exe" (
-  echo [setup] Creating virtual environment in "%VENV_DIR%"...
-  "%PYTHON_BOOT%" -m venv "%VENV_DIR%"
-  if !errorlevel! neq 0 (
-    echo [error] Failed to create virtual environment.
-    exit /b !errorlevel!
-  )
+set "RUNSETS_COMMON_DIR=%SCRIPT_DIR%..\\runsets\\common"
+for %%I in ("%RUNSETS_COMMON_DIR%") do set "RUNSETS_COMMON_DIR=%%~fI"
+set "VENV_BOOTSTRAP_CMD=%RUNSETS_COMMON_DIR%\\venv_bootstrap.cmd"
+if not exist "%VENV_BOOTSTRAP_CMD%" (
+  echo [error] venv_bootstrap helper not found: "%VENV_BOOTSTRAP_CMD%"
+  exit /b 1
 )
-
-call "%VENV_DIR%\Scripts\activate.bat"
-if !errorlevel! neq 0 (
-  echo [error] Failed to activate virtual environment.
-  exit /b !errorlevel!
-)
-set "PYTHON_EXE=%VENV_DIR%\Scripts\python.exe"
-
-if exist "%REQ_FILE%" (
-  echo [setup] Installing/upgrading dependencies from %REQ_FILE% ...
-  "%PYTHON_EXE%" -m pip install --upgrade pip
-  "%PYTHON_EXE%" -m pip install -r "%REQ_FILE%"
-  if !errorlevel! neq 0 (
-    echo [error] Dependency installation failed.
-    exit /b !errorlevel!
-  )
-) else (
-  echo [warn] %REQ_FILE% not found; skipping dependency install.
+call "%VENV_BOOTSTRAP_CMD%"
+if errorlevel 1 (
+  set "BOOTSTRAP_RC=%errorlevel%"
+  echo [error] Failed to initialize Python environment.
+  exit /b %BOOTSTRAP_RC%
 )
 
 rem Ensure base output directory exists and is not a file (avoid legacy \NUL checks)

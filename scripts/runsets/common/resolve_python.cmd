@@ -35,7 +35,7 @@ if not defined PYTHON_EXE (
     )
   )
   if not defined PYTHON_EXE (
-    echo.[error] python3.11/python not found in PATH
+    echo.[error] python3.11 or python not found in PATH
     exit /b 1
   )
 )
@@ -96,7 +96,7 @@ if defined PYTHON_EXE if /i not "!PYTHON_EXE!"=="python" if /i not "!PYTHON_EXE!
     if not "%%~dI"=="" set "PYTHON_EXE_RAW_PATH=1"
   )
   if "!PYTHON_EXE_RAW_PATH!"=="0" (
-    echo.[warn] PYTHON_EXE should be python/python3.11 or an absolute path; ignoring "!PYTHON_EXE!".
+    echo.[warn] PYTHON_EXE should be python3.11 or python or an absolute path; ignoring "!PYTHON_EXE!".
     set "PYTHON_EXE="
   )
 )

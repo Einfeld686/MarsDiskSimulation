@@ -83,6 +83,9 @@ marsdisk/
 * Wyattスケールの $t_{\rm coll}$ 推定とモデル内 $t_{\rm coll}$ の比
 * “wavy”の指標（隣接ビンの偏差ジグザグ度）
 
+## Windows CMD 事前検証（必須）
+- Windows 向け `.cmd` を新規作成／更新した場合は、**必ず preflight をテストとして実行**する（非Windowsは `--simulate-windows` を付与）。詳細は `analysis/AI_USAGE.md` を参照する。
+
 ## DocSyncAgent
 - トリガ一文: 「analysis を現在の状況に更新して」
 - 実行コマンド: `python -m tools.doc_sync_agent --all --write`

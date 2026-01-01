@@ -2,6 +2,8 @@
 Simple test to verify win_process.py functionality.
 Run this directly with Python to test the launcher.
 """
+__test__ = False
+
 import subprocess
 import sys
 import os
@@ -17,7 +19,7 @@ print(f"win_process.py: {win_process_py}")
 print(f"win_process.py exists: {win_process_py.exists()}")
 print()
 
-def test_launch(name: str, args: list, input_data: str = None):
+def _launch(name: str, args: list, input_data: str = None):
     """Run win_process.py with given args and optional stdin input."""
     cmd = [sys.executable, str(win_process_py)] + args
     print(f"=== {name} ===")
@@ -63,49 +65,49 @@ def main():
     results = []
     
     # Test 1: Help
-    results.append(("Help", test_launch("Test 1: --help", ["--help"])))
+    results.append(("Help", _launch("Test 1: --help", ["--help"])))
     
     # Test 2: Simple command
-    results.append(("Simple cmd", test_launch(
+    results.append(("Simple cmd", _launch(
         "Test 2: Simple echo command",
         ["launch", "--cmd", "echo Hello", "--window-style", "hidden", "--cwd", str(repo_root)]
     )))
     
     # Test 3: Command via stdin
-    results.append(("Stdin cmd", test_launch(
+    results.append(("Stdin cmd", _launch(
         "Test 3: Command via stdin",
         ["launch", "--cmd-stdin", "--window-style", "hidden", "--cwd", str(repo_root)],
         input_data="echo Test from stdin"
     )))
     
     # Test 4: Command with special characters
-    results.append(("Special chars", test_launch(
+    results.append(("Special chars", _launch(
         "Test 4: Command with && ",
         ["launch", "--cmd", "set FOO=bar&& echo FOO set", "--window-style", "hidden", "--cwd", str(repo_root)]
     )))
     
     # Test 5: Command with quotes
-    results.append(("Quotes", test_launch(
+    results.append(("Quotes", _launch(
         "Test 5: Command with quotes",
         ["launch", "--cmd", 'echo "Hello World"', "--window-style", "hidden", "--cwd", str(repo_root)]
     )))
     
     # Test 6: Call statement
-    results.append(("Call stmt", test_launch(
+    results.append(("Call stmt", _launch(
         "Test 6: Call statement",
         ["launch", "--cmd", "call echo Test call", "--window-style", "hidden", "--cwd", str(repo_root)]
     )))
     
     # Test 7: Complex batch-like command
     complex_cmd = 'set RUN_TS=20251231&& set BATCH_SEED=0&& echo Variables set'
-    results.append(("Complex cmd", test_launch(
+    results.append(("Complex cmd", _launch(
         "Test 7: Complex batch command",
         ["launch", "--cmd", complex_cmd, "--window-style", "hidden", "--cwd", str(repo_root)]
     )))
     
     # Test 8: Visible window (optional - comment out for automated testing)
     if os.environ.get("TEST_VISIBLE"):
-        results.append(("Visible", test_launch(
+        results.append(("Visible", _launch(
             "Test 8: Visible window",
             ["launch", "--cmd", "echo Test visible && pause", "--window-style", "normal", "--cwd", str(repo_root)]
         )))

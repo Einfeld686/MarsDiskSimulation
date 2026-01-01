@@ -1,7 +1,7 @@
 # run_sweep.cmd / run_temp_supply_sweep.cmd フル構造化プラン
 
 **作成日**: 2026-01-01  
-**ステータス**: 完了（2026-01-01更新）  
+**ステータス**: 実装完了・テスト未完了（2026-01-01更新）  
 **対象**: Windows runsets（.cmd）と Python 呼び出し共通化
 
 ---
@@ -238,9 +238,9 @@ python_exec.cmd
 ## テスト計画（チェックリスト）
 
 ### 単体・構造確認
-- [ ] `resolve_python.cmd` のみで `PYTHON_EXE` が絶対パス化されることを確認
-- [ ] `python_exec.cmd` で `-c "import sys; print(sys.executable)"` が通る
-- [ ] `sanitize_token.cmd` で `RUN_TS==` 等の不正値が再生成される
+- [x] `resolve_python.cmd` のみで `PYTHON_EXE` が絶対パス化されることを確認
+- [x] `python_exec.cmd` で `-c "import sys; print(sys.executable)"` が通る
+- [x] `sanitize_token.cmd` で `RUN_TS==` 等の不正値が再生成される
 
 ### Windows 実機
 - [ ] `scripts\tests\test_parallel_launch.cmd`

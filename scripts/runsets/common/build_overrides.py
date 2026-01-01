@@ -58,11 +58,20 @@ def main() -> None:
         dest="files",
         help="Override file (key=value per line). Later files win.",
     )
+    ap.add_argument("--out", default=None, type=Path, help="Optional output file path.")
     args = ap.parse_args()
 
     order, values = _merge_pairs(_iter_pairs(args.files))
-    for key in order:
-        print(f"{key}={values[key]}")
+    lines = [f"{key}={values[key]}" for key in order]
+    if args.out is not None:
+        args.out.parent.mkdir(parents=True, exist_ok=True)
+        text = "\n".join(lines)
+        if text:
+            text += "\n"
+        args.out.write_text(text, encoding="utf-8")
+        return
+    for line in lines:
+        print(line)
 
 
 if __name__ == "__main__":

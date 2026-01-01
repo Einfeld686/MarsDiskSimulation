@@ -5,29 +5,7 @@ rem no matter where this script is invoked from.
 
 setlocal enabledelayedexpansion
 
-if not defined PYTHON_EXE (
-  for %%P in (python3.11 python py) do (
-    if not defined PYTHON_EXE (
-      where %%P >nul 2>&1
-      if not errorlevel 1 set "PYTHON_EXE=%%P"
-    )
-  )
-  if not defined PYTHON_EXE (
-    echo [error] python3.11/python/py not found in PATH
-    call :popd_safe 1
-  )
-) else (
-  if not exist "%PYTHON_EXE%" (
-    where "%PYTHON_EXE%" >nul 2>&1
-    if errorlevel 1 (
-      echo [error] %PYTHON_EXE% not found in PATH
-      call :popd_safe 1
-    )
-  )
-)
-set "PYTHON_BOOT=%PYTHON_EXE%"
-
-set "REPO=%~dp0..\..\..\..\"
+set REPO=%~dp0..\..\..\..
 for %%I in ("%REPO%") do set "REPO=%%~fI"
 pushd "%REPO%"
 set "MARSDISK_POPD_ACTIVE=1"
@@ -39,33 +17,19 @@ set TEMP_TABLE=data\mars_temperature_T4000p0K.csv
 set CONFIG=out\run_template_sublim_smol_phase_MAX50M\config_base_sublimation.yml
 set VENV_DIR=.venv
 set REQ_FILE=requirements.txt
-
-if not exist "%VENV_DIR%\Scripts\python.exe" (
-  echo [setup] Creating virtual environment in "%VENV_DIR%"...
-  "%PYTHON_BOOT%" -m venv "%VENV_DIR%"
-  if %errorlevel% neq 0 (
-    echo [error] Failed to create virtual environment.
-    call :popd_safe
-  )
-)
-
-call "%VENV_DIR%\Scripts\activate.bat"
-if %errorlevel% neq 0 (
-  echo [error] Failed to activate virtual environment.
+set "RUNSETS_COMMON_DIR=%REPO%\scripts\runsets\common"
+set "VENV_BOOTSTRAP_CMD=%RUNSETS_COMMON_DIR%\venv_bootstrap.cmd"
+if not exist "%VENV_BOOTSTRAP_CMD%" (
+  echo [error] venv_bootstrap helper not found: "%VENV_BOOTSTRAP_CMD%"
   call :popd_safe
+  exit /b 1
 )
-set "PYTHON_EXE=%VENV_DIR%\Scripts\python.exe"
-
-if exist "%REQ_FILE%" (
-  echo [setup] Installing/upgrading dependencies from %REQ_FILE% ...
-  "%PYTHON_EXE%" -m pip install --upgrade pip
-  "%PYTHON_EXE%" -m pip install -r "%REQ_FILE%"
-  if %errorlevel% neq 0 (
-    echo [error] Dependency installation failed.
-    call :popd_safe
-  )
-) else (
-  echo [warn] %REQ_FILE% not found; skipping dependency install.
+call "%VENV_BOOTSTRAP_CMD%"
+if errorlevel 1 (
+  set "BOOTSTRAP_RC=%errorlevel%"
+  echo [error] Failed to initialize Python environment.
+  call :popd_safe
+  exit /b %BOOTSTRAP_RC%
 )
 
 "%PYTHON_EXE%" -m marsdisk.run ^

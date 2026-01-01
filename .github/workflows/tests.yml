@@ -26,4 +26,5 @@ jobs:
             tests/integration/test_run_one_d_freeze.py \
             tests/integration/test_run_one_d_output_parity.py \
             tests/integration/test_run_one_d_streaming_schema.py \
-            tests/integration/test_mass_budget_cells.py
+            tests/integration/test_mass_budget_cells.py \
+            tests/integration/test_preflight_cmds.py

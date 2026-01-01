@@ -68,6 +68,7 @@ scripts/runsets/mac/run_one.sh --t 4000 --eps 1.0 --tau 1.0
 
 ## 運用メモ
 - すべてのスクリプトは `python scripts/<category>/<name>.py [options]` で単独起動できます。CI・エージェントから呼び出す場合もこのパスを基準にしてください。
+- Windows 向け `.cmd` を新規作成・更新した場合は、**必ず preflight をテストとして実行**します（非Windowsは `--simulate-windows` を付与）。必要に応じて `--check-tools` / `--require-powershell` を追加してください。
 - 分析用ユーティリティが必要になった場合は、`tools/` ではなく本ディレクトリに追加し、本 README の表へ追記する運用に統一します。
 - 既存の `tools/` には互換ラッパーが一時的に残っていますが、将来的に削除されても本 README に列挙した機能は維持される想定です。
 - 新しい Windows 向け `.cmd` ランナーは `scripts/runsets/windows/` か `scripts/runsets/windows/legacy/` に追加します。`scripts/runsets/windows/legacy/run_sublim_windows.cmd` を雛形に、(1) `.venv` が無ければ作成し `requirements.txt` から依存を取得、(2) `OUTDIR` を標準の保存規則（例: `out/<YYYYMMDD-HHMM>_<short-title>__<shortsha>__seed<n>/`）に従って設定し、必要なら `if not exist "%OUTDIR%" mkdir "%OUTDIR%"` で生成、(3) `python -m marsdisk.run` を既存スクリプトと同じフローで起動して結果を書き込む、を必須手順とします。追加した `.cmd` はこの README の表にも用途を一行で追記してください。

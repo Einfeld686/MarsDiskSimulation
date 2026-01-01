@@ -81,6 +81,17 @@ class ShieldingResult:
 
 
 @dataclass
+class ShieldingStepResult:
+    """Step-level shielding outputs used by the zero-D orchestrator."""
+
+    tau_los: float
+    kappa_eff: float
+    sigma_tau1: Optional[float]
+    phi_effective: Optional[float]
+    tau_for_coll: Optional[float]
+
+
+@dataclass
 class SublimationResult:
     """Results from sublimation calculations.
     
@@ -123,6 +134,19 @@ class SurfaceStepResult:
     sink_flux: float
     t_coll: Optional[float]
     t_blow: float
+
+
+@dataclass
+class SurfaceUpdateResult:
+    """Normalized surface update result shared across collision solvers."""
+
+    sigma_surf: float
+    outflux_surface: float
+    sink_flux_surface: float
+    t_blow: Optional[float]
+    t_coll: Optional[float]
+    prod_rate_effective: float
+    mass_error: float
 
 
 @dataclass
@@ -332,6 +356,57 @@ def compute_shielding(
     )
 
 
+def compute_shielding_step(
+    kappa_surf: float,
+    sigma_surf: float,
+    *,
+    collisions_active: bool,
+    shielding_mode: str,
+    phi_tau_fn: Optional[Callable[[float], float]],
+    tau_fixed: Optional[float],
+    sigma_tau1_fixed: Optional[float],
+    los_factor: float,
+    use_tcoll: bool,
+) -> ShieldingStepResult:
+    """Compute shielding and optional τ_for_coll for a single step."""
+
+    tau_eval_los = kappa_surf * sigma_surf * los_factor
+    kappa_eff = kappa_surf
+    sigma_tau1_limit = None
+    phi_value = None
+    if collisions_active:
+        shield_res = compute_shielding(
+            kappa_surf,
+            sigma_surf,
+            mode=shielding_mode,
+            phi_tau_fn=phi_tau_fn,
+            tau_fixed=tau_fixed,
+            sigma_tau1_fixed=sigma_tau1_fixed,
+            los_factor=los_factor,
+        )
+        tau_eval_los = shield_res.tau
+        kappa_eff = shield_res.kappa_eff
+        sigma_tau1_limit = shield_res.sigma_tau1
+        phi_value = shield_res.phi
+    else:
+        if kappa_surf > 0.0 and kappa_eff is not None:
+            phi_value = kappa_eff / kappa_surf
+
+    tau_for_coll = None
+    if collisions_active and use_tcoll and tau_eval_los > TAU_MIN:
+        tau_candidate = tau_eval_los / max(los_factor, 1.0)
+        if tau_candidate > TAU_MIN:
+            tau_for_coll = tau_candidate
+
+    return ShieldingStepResult(
+        tau_los=tau_eval_los,
+        kappa_eff=kappa_eff,
+        sigma_tau1=sigma_tau1_limit,
+        phi_effective=phi_value,
+        tau_for_coll=tau_for_coll,
+    )
+
+
 # ===========================================================================
 # Sublimation Functions
 # ===========================================================================
@@ -474,4 +549,3 @@ def step_surface_layer(
         t_coll=t_coll,
         t_blow=t_blow,
     )
-

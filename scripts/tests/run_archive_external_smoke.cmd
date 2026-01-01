@@ -3,28 +3,6 @@ rem Smoke test: run a tiny 0D case and verify archive output lands on external H
 
 setlocal EnableExtensions EnableDelayedExpansion
 
-if not defined PYTHON_EXE (
-  for %%P in (python3.11 python py) do (
-    if not defined PYTHON_EXE (
-      where %%P >nul 2>&1
-      if not errorlevel 1 set "PYTHON_EXE=%%P"
-    )
-  )
-  if not defined PYTHON_EXE (
-    echo [error] python3.11/python/py not found in PATH
-    exit /b 1
-  )
-) else (
-  if not exist "%PYTHON_EXE%" (
-    where %PYTHON_EXE% >nul 2>&1
-    if errorlevel 1 (
-      echo [error] %PYTHON_EXE% not found in PATH
-      exit /b 1
-    )
-  )
-)
-set "PYTHON_BOOT=%PYTHON_EXE%"
-
 set "SCRIPT_DIR=%~dp0"
 for %%I in ("%SCRIPT_DIR%..\\..") do set "REPO_ROOT=%%~fI"
 pushd "%REPO_ROOT%" >nul
@@ -79,47 +57,28 @@ if not exist "%ARCHIVE_DIR%\\" (
   exit /b 2
 )
 
+set "VENV_DIR=.venv"
+set "REQ_FILE=requirements.txt"
+set "RUNSETS_COMMON_DIR=%REPO_ROOT%\\scripts\\runsets\\common"
+set "VENV_BOOTSTRAP_CMD=%RUNSETS_COMMON_DIR%\\venv_bootstrap.cmd"
+if not exist "%VENV_BOOTSTRAP_CMD%" (
+  echo [error] venv_bootstrap helper not found: "%VENV_BOOTSTRAP_CMD%"
+  call :popd_safe
+  exit /b 1
+)
+call "%VENV_BOOTSTRAP_CMD%"
+if errorlevel 1 (
+  set "BOOTSTRAP_RC=%errorlevel%"
+  echo [error] Failed to initialize Python environment.
+  call :popd_safe
+  exit /b %BOOTSTRAP_RC%
+)
+
 set "RUN_TS="
 for /f %%A in ('"%PYTHON_EXE%" scripts\\runsets\\common\\timestamp.py') do set "RUN_TS=%%A"
 set "OUTDIR=out\\archive_smoke\\%RUN_TS%__archive_smoke"
 for %%F in ("%OUTDIR%") do set "RUN_NAME=%%~nxF"
 set "ARCHIVE_DEST=%ARCHIVE_DIR%\\%RUN_NAME%"
-
-set "VENV_DIR=.venv"
-set "REQ_FILE=requirements.txt"
-
-if not exist "%VENV_DIR%\\Scripts\\python.exe" (
-  echo [setup] Creating virtual environment in "%VENV_DIR%"...
-  "%PYTHON_BOOT%" -m venv "%VENV_DIR%"
-  if errorlevel 1 (
-    echo [error] Failed to create virtual environment.
-    call :popd_safe
-    exit /b 1
-  )
-)
-
-call "%VENV_DIR%\\Scripts\\activate.bat"
-if errorlevel 1 (
-  echo [error] Failed to activate virtual environment.
-  call :popd_safe
-  exit /b 1
-)
-set "PYTHON_EXE=%VENV_DIR%\\Scripts\\python.exe"
-
-if "%SKIP_PIP%"=="1" (
-  echo [setup] SKIP_PIP=1; skipping dependency install.
-) else if exist "%REQ_FILE%" (
-  echo [setup] Installing dependencies from %REQ_FILE% ...
-  "%PYTHON_EXE%" -m pip install --upgrade pip
-  "%PYTHON_EXE%" -m pip install -r "%REQ_FILE%"
-  if errorlevel 1 (
-    echo [error] Dependency install failed.
-    call :popd_safe
-    exit /b 1
-  )
-) else (
-  echo [warn] %REQ_FILE% not found; skipping dependency install.
-)
 
 if not exist "%OUTDIR%" mkdir "%OUTDIR%"
 

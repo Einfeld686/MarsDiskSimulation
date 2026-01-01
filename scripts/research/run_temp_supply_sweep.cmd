@@ -479,7 +479,7 @@ set "TAU_LIST=1.0 0.5 0.1"
 if defined STUDY_FILE (
   if exist "!STUDY_FILE!" (
     set "STUDY_SET=!TMP_ROOT!\marsdisk_study_!RUN_TS!_!BATCH_SEED!.cmd"
-    call "%PYTHON_EXEC_CMD%" scripts\\runsets\\common\\read_study_overrides.py --study "!STUDY_FILE!" > "!STUDY_SET!"
+    call "%PYTHON_EXEC_CMD%" scripts\\runsets\\common\\read_study_overrides.py --study "!STUDY_FILE!" --out "!STUDY_SET!"
     if not exist "!STUDY_SET!" (
       echo.[error] failed to write study overrides: "!STUDY_SET!"
       echo.[error] temp_root=!TMP_ROOT! study_file=!STUDY_FILE!
@@ -767,9 +767,9 @@ for /f "usebackq tokens=1-3 delims= " %%A in ("%SWEEP_LIST_FILE%") do (
 
       rem Override priority: base defaults ^< overrides file ^< per-case overrides.
       if "!EXTRA_OVERRIDES_EXISTS!"=="1" (
-        call "%PYTHON_EXEC_CMD%" !OVERRIDE_BUILDER! --file "!BASE_OVERRIDES_FILE!" --file "!EXTRA_OVERRIDES_FILE!" --file "!CASE_OVERRIDES_FILE!" > "!MERGED_OVERRIDES_FILE!"
+        call "%PYTHON_EXEC_CMD%" !OVERRIDE_BUILDER! --file "!BASE_OVERRIDES_FILE!" --file "!EXTRA_OVERRIDES_FILE!" --file "!CASE_OVERRIDES_FILE!" --out "!MERGED_OVERRIDES_FILE!"
       ) else (
-        call "%PYTHON_EXEC_CMD%" !OVERRIDE_BUILDER! --file "!BASE_OVERRIDES_FILE!" --file "!CASE_OVERRIDES_FILE!" > "!MERGED_OVERRIDES_FILE!"
+        call "%PYTHON_EXEC_CMD%" !OVERRIDE_BUILDER! --file "!BASE_OVERRIDES_FILE!" --file "!CASE_OVERRIDES_FILE!" --out "!MERGED_OVERRIDES_FILE!"
       )
 
       echo.[DEBUG] About to run simulation
@@ -920,18 +920,13 @@ set "JOB_CMD_FILE=!TMP_ROOT!\marsdisk_cmd_!JOB_T!_!JOB_EPS!_!JOB_TAU!.tmp"
 if "%DEBUG%"=="1" echo.[DEBUG] launch_job: MARKER_A before write cmd file
 > "!JOB_CMD_FILE!" echo !JOB_CMD!
 if "%DEBUG%"=="1" echo.[DEBUG] launch_job: MARKER_B after write cmd file
-if "%DEBUG%"=="1" echo.[DEBUG] launch_job: MARKER_C before python call
-call "%PYTHON_EXEC_CMD%" "!WIN_PROCESS_PY!" launch --cmd-file "!JOB_CMD_FILE!" --window-style "!PARALLEL_WINDOW_STYLE!" --cwd "!JOB_CWD_USE!" > "!TMP_ROOT!\marsdisk_pid_!JOB_T!_!JOB_EPS!_!JOB_TAU!.tmp" 2>&1
-if "%DEBUG%"=="1" echo.[DEBUG] launch_job: MARKER_D after python call, errorlevel=%errorlevel%
-del "!JOB_CMD_FILE!" >nul 2>&1
-if "%DEBUG%"=="1" echo.[DEBUG] launch_job: MARKER_E after delete cmd file
-if exist "!TMP_ROOT!\marsdisk_pid_!JOB_T!_!JOB_EPS!_!JOB_TAU!.tmp" (
-  for /f "usebackq delims=" %%P in ("!TMP_ROOT!\marsdisk_pid_!JOB_T!_!JOB_EPS!_!JOB_TAU!.tmp") do set "JOB_PID_TMP=%%P"
-  del "!TMP_ROOT!\marsdisk_pid_!JOB_T!_!JOB_EPS!_!JOB_TAU!.tmp" >nul 2>&1
-) else (
+  if "%DEBUG%"=="1" echo.[DEBUG] launch_job: MARKER_C before python call
   set "JOB_PID_TMP="
-)
-set "JOB_PID=!JOB_PID_TMP!"
+  for /f "usebackq delims=" %%P in (`call "%PYTHON_EXEC_CMD%" "!WIN_PROCESS_PY!" launch --cmd-file "!JOB_CMD_FILE!" --window-style "!PARALLEL_WINDOW_STYLE!" --cwd "!JOB_CWD_USE!"`) do set "JOB_PID_TMP=%%P"
+  if "%DEBUG%"=="1" echo.[DEBUG] launch_job: MARKER_D after python call, errorlevel=%errorlevel%
+  del "!JOB_CMD_FILE!" >nul 2>&1
+  if "%DEBUG%"=="1" echo.[DEBUG] launch_job: MARKER_E after delete cmd file
+  set "JOB_PID=!JOB_PID_TMP!"
 if defined JOB_PID (
     rem Check if JOB_PID is a number
     echo !JOB_PID!| findstr /r "^[0-9][0-9]*$" >nul
