@@ -57,7 +57,7 @@
    - analysis/run-recipes.md に μ 指定→`supply.const.prod_area_rate_kg_m2_s` 決定手順を追記。μ=0.1,1.0 を例示し、光学的厚さが 1 を大きく超えない範囲で μ を選ぶ注意書きを入れる。  
    - config_guide.md に μ 由来設定例を追加（`epsilon_mix: 0.3` と `prod_area_rate_kg_m2_s` を derive_supply_rate の出力で置換）。
 5. 実行と検証  
-   - 代表ケース（μ=0.1, 1.0）で `python -m marsdisk.run --config configs/base.yml --override ...` を実行し、`out/series/run.parquet` の `prod_subblow_area_rate` と `M_out_dot` を確認。ブローアウトのみのケースでは後半 `M_out_dot ≃ dotSigma_prod × 2π r Δr`（0D 相当）かつ Σ_surf が μ Σ_tau=1 に近づくことをチェック。  
+   - 代表ケース（μ=0.1, 1.0）で `python -m marsdisk.run --config configs/base.yml --override ...` を実行し、`out/<run_id>/series/run.parquet` の `prod_subblow_area_rate` と `M_out_dot` を確認。ブローアウトのみのケースでは後半 `M_out_dot ≃ dotSigma_prod × 2π r Δr`（0D 相当）かつ Σ_surf が μ Σ_tau=1 に近づくことをチェック。  
    - DocSyncAgent → analysis-doc-tests → evaluation_system の通常フローを実施し、ドキュメントとコードの整合を確認。
 
 ユーティリティ案（μ→R_base）の整理版

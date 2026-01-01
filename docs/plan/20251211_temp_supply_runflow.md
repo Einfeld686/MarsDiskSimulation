@@ -1,7 +1,7 @@
 # temp_supply 系シミュレーションの現状フロー（T=2000/4000/6000, ε_mix=1/0.1）
 
 ## 背景と目的
-- temp_supply_* の感度スイープ（T=2000/4000/6000, ε_mix=1/0.1）で out/20251211-011457_* が揃ったため、現状の実行手順と挙動を整理し、次の改善ポイント（遮蔽・昇華カウント）を共有する。
+- temp_supply_* の感度スイープ（T=2000/4000/6000, ε_mix=1/0.1）で `out/<run_id>` が揃ったため、現状の実行手順と挙動を整理し、次の改善ポイント（遮蔽・昇華カウント）を共有する。
 - 詳細仕様や式は analysis/ を唯一の参照源とし、ここでは流れと懸念点のみを記載する。
 
 ## 実行フロー（0D, marsdisk.run）
@@ -22,7 +22,7 @@
 - 光学的厚さのクリップ不足: Phi テーブル導入または shielding.mode=fixed_tau1 で Σ_tau1 を明示し、表層全体の一斉吹き飛びを抑制する。
 - 昇華フラックスの可視化: sub_params.mass_conserving=false で純粋シンクとして分離、または sublimation_location=surface に切り替え、mass_lost_by_sinks に記録させる。
 - 挙動再現性: surface.collision_solver=surface_ode で同条件を再実行し、Smol 特有のステップかを比較。
-- 可視化: 各 out/*/plots に overview.png, supply_surface.png を生成済み。比較図（M_out_dot, M_loss バー）を追加するとレビューが容易。
+- 可視化: 各 `out/<run_id>/plots` に overview.png, supply_surface.png を生成済み。比較図（M_out_dot, M_loss バー）を追加するとレビューが容易。
 
 ## 直近の TODO（提案）
 - [ ] shielding テーブルまたは fixed_tau1_sigma を与えた再走で段差が消えるか確認。

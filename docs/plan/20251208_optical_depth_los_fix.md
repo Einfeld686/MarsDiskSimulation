@@ -36,7 +36,7 @@
    - YAML サンプル（`configs/base.yml` や sweep 例）に新設定を追加し、既定値は互換モードで記録。
 
 6) **検証・実行**
-   - `python -m marsdisk.run --config configs/base.yml` で 0D 完走と `out/checks/mass_budget.csv` の誤差 <0.5% を確認。
+   - `python -m marsdisk.run --config configs/base.yml` で 0D 完走と `out/<run_id>/checks/mass_budget.csv` の誤差 <0.5% を確認。
    - 主要テスト (`pytest tests/unit/test_surface_outflux.py tests/integration/test_phase3_surface_blowout.py` など) を通し、`out/<run_id>/series/run.parquet` に LOS カラムが出力されているか目視確認。
 
 ## 非対象と留意点

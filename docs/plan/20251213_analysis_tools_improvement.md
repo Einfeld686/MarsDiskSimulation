@@ -64,7 +64,7 @@ analysis-update: analysis-sync
 ```
 
 > [!NOTE]
-> `evaluation_system` は `--outdir` が必須のため自動実行せず、手動実行を促すメッセージを表示。直近の out/ パスが必要なため。
+> `evaluation_system` は `--outdir` が必須のため自動実行せず、手動実行を促すメッセージを表示。直近の `out/<run_id>` パスが必要なため。
 
 代替案（OUTDIR 変数使用）:
 ```makefile

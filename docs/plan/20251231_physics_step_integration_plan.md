@@ -510,50 +510,50 @@ psd_state の実参照（現行コードが触っているキー）
 - [x] 供給/リザーバ更新が単一経路になり、substep/非substepで積分粒度の差が意図どおり説明できる（surface_ode: dt_sub / smol: dt）
 - [x] blowout補正/ゲート係数の適用位置が一貫し、二重適用/適用漏れがない（helpersで共通化）
 - [x] `t_coll` の定義が統一され、系列出力に混乱がない（`_resolve_t_coll_step`）
-- [ ] psd_state の `sizes/number` と `s/n` が常に同期され、`sizes_version/edges_version` の更新責務が明確
-- [ ] Numba/キャッシュの寿命管理が run 境界で明確化され、A/B テスト時に再現性が確保される
-- [ ] streaming ON/OFF の両方で `out/<run_id>/series/run.parquet` と `out/<run_id>/checks/mass_budget.csv` が同等に出力される
-- [ ] `energy_bookkeeping` 有効時の系列/予算出力が共通I/O後も一致する
-- [ ] `sinks.mode` の主要分岐（none/sublimation/hydro_escape）で sink 系集計が破綻しない
-- [ ] blowout 無効時に `outflux_surface` が確実に 0 になる
-- [ ] psd_state の `sizes_version/edges_version` が smol 経路でも破綻せず更新される
-- [ ] 乱数シード固定時に供給/混合の乱数が再現される
-- [ ] `out/<run_id>/run_config.json` の provenance（`blowout_provenance` / `sublimation_provenance`）が共通化後も維持される
-- [ ] `out/<run_id>/summary.json` の主要キー（`M_loss`, `M_out_cum`, `M_sink_cum`, `mass_budget_max_error_percent`）がパリティを保つ
-- [ ] `out/<run_id>/series/diagnostics.parquet` の列スキーマが streaming ON/OFF で一致する
-- [ ] `qpr_table` 未指定時の fallback / `qpr_strict=true` の例外挙動が維持される
-- [ ] Wyatt スケーリングの `t_coll` オーダー感が崩れていない
-- [ ] substep 多発時の性能/メモリ退行がない
+- [x] psd_state の `sizes/number` と `s/n` が常に同期され、`sizes_version/edges_version` の更新責務が明確
+- [x] Numba/キャッシュの寿命管理が run 境界で明確化され、A/B テスト時に再現性が確保される
+- [x] streaming ON/OFF の両方で `out/<run_id>/series/run.parquet` と `out/<run_id>/checks/mass_budget.csv` が同等に出力される
+- [x] `energy_bookkeeping` 有効時の系列/予算出力が共通I/O後も一致する
+- [x] `sinks.mode` の主要分岐（none/sublimation/hydro_escape）で sink 系集計が破綻しない
+- [x] blowout 無効時に `outflux_surface` が確実に 0 になる
+- [x] psd_state の `sizes_version/edges_version` が smol 経路でも破綻せず更新される
+- [x] 乱数シード固定時に供給/混合の乱数が再現される
+- [x] `out/<run_id>/run_config.json` の provenance（`blowout_provenance` / `sublimation_provenance`）が共通化後も維持される
+- [x] `out/<run_id>/summary.json` の主要キー（`M_loss`, `M_out_cum`, `M_sink_cum`, `mass_budget_max_error_percent`）がパリティを保つ
+- [x] `out/<run_id>/series/diagnostics.parquet` の列スキーマが streaming ON/OFF で一致する
+- [x] `qpr_table` 未指定時の fallback / `qpr_strict=true` の例外挙動が維持される
+- [x] Wyatt スケーリングの `t_coll` オーダー感が崩れていない
+- [x] substep 多発時の性能/メモリ退行がない
 
 #### 中期実装チェックリスト（追加項目）
 
-- [ ] `s_min` の決定順序（config/吹き飛び/昇華床/表面エネルギー床）が変わっていない
-- [ ] `beta_at_smin_config` / `beta_at_smin_effective` と `case_status` 判定が一致する
-- [ ] 遮蔽モード（`off`/`fixed_tau1`/`psitau`）で `tau_los`/`kappa_eff`/`phi` の意味が揺れない
-- [ ] sink 分岐（昇華/ガス抗力/水蒸気逃避）で `M_sink_cum` と内訳の整合が保たれる
-- [ ] `dt <= 0.1 * min(t_coll)` の収束条件が surface_ode / smol 両方で守られる
-- [ ] substep 分割時の質量収支が per-step と一致する（`dt_over_t_blow` 周辺）
-- [ ] IMEX-BDF1 で負の `N_k` / `sigma_surf` が出ない
-- [ ] `t_blow=1/Ω` の既定と override が同じ意味で扱われる
-- [ ] エネルギー収支ログの誤差閾値（warning/error）が共通化後も維持される
-- [ ] `psd_state` の内部キャッシュ（`_mk_cache*`）がサイズ変更時に再計算される
-- [ ] `cfg` の破壊更新が拡大しない（runtime params への移管方針を維持）
-- [ ] `SupplyRuntimeState` / `sigma_deep` の更新が substep でも一貫する
-- [ ] `out/<run_id>/checks/mass_budget.csv` が streaming 有無に関係なく必ず生成される
-- [ ] `energy_bookkeeping` の CSV/Parquet 出力が ON/OFF で同等に動作する
-- [ ] `--override` の適用順序と型変換が従来どおり
-- [ ] `FORCE_STREAMING_OFF` / `IO_STREAMING` の優先順位が変わらない
-- [ ] `geometry` / `temperature` / `tau_stop` のバリデーションが維持される
-- [ ] `ALLOW_TL2003=false` の既定が変わらない
-- [ ] Numba 無効時の性能退行が急増しない
-- [ ] Qpr/Q* キャッシュ利用率が低下しない
-- [ ] Smol kernel の再計算頻度がサイズ変更時のみになる
-- [ ] streaming merge が過剰に重くならない
-- [ ] `sigma_surf<=0` / `kappa_surf<=0` / `tau<=0` でも NaN/inf を出さない
-- [ ] `s_min >= s_max` / `rho<=0` などの入力で明示的にエラーになる
-- [ ] 温度テーブル境界外の評価が意図どおり（clamp/例外）
-- [ ] pytest（`test_scalings`, mass conservation, surface outflux, wavy PSD）が通る
-- [ ] 3ケース baseline compare が共通I/O契約でも一致する
+- [x] `s_min` の決定順序（config/吹き飛び/昇華床/表面エネルギー床）が変わっていない
+- [x] `beta_at_smin_config` / `beta_at_smin_effective` と `case_status` 判定が一致する
+- [x] 遮蔽モード（`off`/`fixed_tau1`/`psitau`）で `tau_los`/`kappa_eff`/`phi` の意味が揺れない
+- [x] sink 分岐（昇華/ガス抗力/水蒸気逃避）で `M_sink_cum` と内訳の整合が保たれる
+- [x] `dt <= 0.1 * min(t_coll)` の収束条件が surface_ode / smol 両方で守られる
+- [x] substep 分割時の質量収支が per-step と一致する（`dt_over_t_blow` 周辺）
+- [x] IMEX-BDF1 で負の `N_k` / `sigma_surf` が出ない
+- [x] `t_blow=1/Ω` の既定と override が同じ意味で扱われる
+- [x] エネルギー収支ログの誤差閾値（warning/error）が共通化後も維持される
+- [x] `psd_state` の内部キャッシュ（`_mk_cache*`）がサイズ変更時に再計算される
+- [x] `cfg` の破壊更新が拡大しない（runtime params への移管方針を維持）
+- [x] `SupplyRuntimeState` / `sigma_deep` の更新が substep でも一貫する
+- [x] `out/<run_id>/checks/mass_budget.csv` が streaming 有無に関係なく必ず生成される
+- [x] `energy_bookkeeping` の CSV/Parquet 出力が ON/OFF で同等に動作する
+- [x] `--override` の適用順序と型変換が従来どおり
+- [x] `FORCE_STREAMING_OFF` / `IO_STREAMING` の優先順位が変わらない
+- [x] `geometry` / `temperature` / `tau_stop` のバリデーションが維持される
+- [x] `ALLOW_TL2003=false` の既定が変わらない
+- [x] Numba 無効時の性能退行が急増しない
+- [x] Qpr/Q* キャッシュ利用率が低下しない
+- [x] Smol kernel の再計算頻度がサイズ変更時のみになる
+- [x] streaming merge が過剰に重くならない
+- [x] `sigma_surf<=0` / `kappa_surf<=0` / `tau<=0` でも NaN/inf を出さない
+- [x] `s_min >= s_max` / `rho<=0` などの入力で明示的にエラーになる
+- [x] 温度テーブル境界外の評価が意図どおり（clamp/例外）
+- [x] pytest（`test_scalings`, mass conservation, surface outflux, wavy PSD）が通る
+- [x] 3ケース baseline compare が共通I/O契約でも一致する
 
 ### フェーズ3: グローバル状態の隔離
 

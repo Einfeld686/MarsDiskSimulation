@@ -90,7 +90,7 @@ SUPPLY_OVERRIDES+=(--override "supply.headroom_policy=${SUPPLY_HEADROOM_POLICY:-
 | 項目 | 推奨設定 | 理由 |
 |------|----------|------|
 | **初期化** | `INIT_SCALE_TO_TAU1=true` | 低 headroom ケースでの初期供給ゼロ貼り付きを防止 |
-| **出力先** | `OUT_ROOT` で外部 SSD か `out/` を指定 | 大量データ対応 |
+| **出力先** | `OUT_ROOT` で外部 SSD か `out/<run_id>/` を指定 | 大量データ対応 |
 | **タイトル形式** | `${RUN_TS}__${sha}__seed${batch}` | 既定のまま維持 |
 
 ### 診断用プロット追加カラム
@@ -113,7 +113,7 @@ spill 量の可視化を行う場合は、以下のカラムをプロットに�
 |------|------|
 | **spill の行き先** | 系外ロスとして扱い、deep に戻さない |
 | **適用タイミング** | Smol ステップ後に適用。出力の Σ_surf は spill 反映後 |
-| **レート保持** | blowout/sink レートはステップ計算時の値を保持（再評価しない） |
+| **レート保持** | blowout・sink レートはステップ計算時の値を保持（再評価しない） |
 
 ### 運用上の注意
 

@@ -55,7 +55,7 @@
 - Windows 実行:
   - `scripts/plots/windows/plot_tau_timescales.cmd` を新設し、`.venv` 作成・依存導入・実行までを一括化。
   - PowerShell 経由で論理 CPU 数と搭載メモリを取得し、`STREAM_MEM_GB`（または plot 用メモリ上限）を自動設定する。
-  - 引数なし実行時は `out/` 配下の最新 run を自動選択して可視化を実行する。
+  - 引数なし実行時は `out/<run_id>` 配下の最新 run を自動選択して可視化を実行する。
   - 既存の `.cmd` 運用ルール（`scripts/README.md`）に従ってパスと `OUTDIR` を扱う。
 
 実装ステップ

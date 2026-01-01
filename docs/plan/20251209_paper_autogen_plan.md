@@ -52,7 +52,7 @@
 - 最後に Step 4–5 でビルド成果物構造と paper_checks.json の出力形式を固め、CI からも実行できるようにする。
 
 ## 現状のスケルトンと成果物
-- マニフェスト例: `configs/paper_marsdisk_draft.yml`（RUN/FIG の束ね方としきい値を定義、既存 out/ ディレクトリに紐付け済）
+- マニフェスト例: `configs/paper_marsdisk_draft.yml`（RUN/FIG の束ね方としきい値を定義、既存 `out/<run_id>/` ディレクトリに紐付け済）
 - 解決スクリプト: `tools/paper_manifest.py`（`out/<paper_run_id>/resolved_manifest.json`, `out/<paper_run_id>/paper_checks.json`, `out/<paper_run_id>/figure_tasks.json` を生成）
 - 図生成: `scripts/plots/plot_from_runs.py`（`out/<paper_run_id>/figure_tasks.json` の mode に応じた簡易図を生成）
 - 図コマンド生成: `scripts/plots/render_figures_from_tasks.py`（`out/<paper_run_id>/figure_tasks.json` から `out/<paper_run_id>/figure_commands.txt` を生成）
