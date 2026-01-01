@@ -970,37 +970,56 @@ if "%DEBUG%"=="1" echo.[DEBUG] launch_job: JOB_SEED=!JOB_SEED!
 call :wait_for_slot
 if "%DEBUG%"=="1" echo.[DEBUG] launch_job: after wait_for_slot
 set "JOB_PID="
-rem Build JOB_CMD with all required environment variables embedded inline
-rem This ensures child cmd.exe process receives the correct values even when launched via win_process.py
-set "JOB_ENV_VARS=set RUN_ONE_T=!JOB_T!^& set RUN_ONE_EPS=!JOB_EPS!^& set RUN_ONE_TAU=!JOB_TAU!^& set RUN_ONE_SEED=!JOB_SEED!^& set RUN_ONE_MODE=1^& set AUTO_JOBS=0^& set PARALLEL_JOBS=1^& set SKIP_PIP=1^& set REQUIREMENTS_INSTALLED=1^& set QUIET_MODE=!QUIET_MODE!^& set DEBUG=!DEBUG!^& set PYTHON_EXE=!PYTHON_EXE!^& set PYTHON_ARGS=!PYTHON_ARGS!^& set BASE_CONFIG=!BASE_CONFIG!^& set BATCH_ROOT=!BATCH_ROOT!^& set BATCH_SEED=!BATCH_SEED!^& set RUN_TS=!RUN_TS!^& set SWEEP_TAG=!SWEEP_TAG!^& set GIT_SHA=!GIT_SHA!^& set TMP_ROOT=!TMP_ROOT!^& set VENV_DIR=!VENV_DIR!^& set BASE_OVERRIDES_FILE=!BASE_OVERRIDES_FILE!^& set EXTRA_OVERRIDES_FILE=!EXTRA_OVERRIDES_FILE!^& set COOL_MODE=!COOL_MODE!^& set COOL_TO_K=!COOL_TO_K!^& set COOL_MARGIN_YEARS=!COOL_MARGIN_YEARS!^& set HOOKS_ENABLE=!HOOKS_ENABLE!^& set PLOT_ENABLE=!PLOT_ENABLE!^& set GEOMETRY_MODE=!GEOMETRY_MODE!^& set SUPPLY_MODE=!SUPPLY_MODE!^& set SHIELDING_MODE=!SHIELDING_MODE!^& set SUPPLY_INJECTION_MODE=!SUPPLY_INJECTION_MODE!^& set SUPPLY_TRANSPORT_MODE=!SUPPLY_TRANSPORT_MODE!"
-if defined SKIP_VENV set "JOB_ENV_VARS=!JOB_ENV_VARS!^& set SKIP_VENV=!SKIP_VENV!"
-set "JOB_CMD=!JOB_ENV_VARS!^& call \"!SCRIPT_SELF_USE!\" --run-one"
-
+rem Generate a proper batch file with env vars on separate lines (avoids escaping issues)
+set "JOB_CMD_FILE=!TMP_ROOT!\marsdisk_job_!JOB_T!_!JOB_EPS!_!JOB_TAU!.cmd"
+> "!JOB_CMD_FILE!" echo @echo off
+>> "!JOB_CMD_FILE!" echo set "RUN_ONE_T=!JOB_T!"
+>> "!JOB_CMD_FILE!" echo set "RUN_ONE_EPS=!JOB_EPS!"
+>> "!JOB_CMD_FILE!" echo set "RUN_ONE_TAU=!JOB_TAU!"
+>> "!JOB_CMD_FILE!" echo set "RUN_ONE_SEED=!JOB_SEED!"
+>> "!JOB_CMD_FILE!" echo set "RUN_ONE_MODE=1"
+>> "!JOB_CMD_FILE!" echo set "AUTO_JOBS=0"
+>> "!JOB_CMD_FILE!" echo set "PARALLEL_JOBS=1"
+>> "!JOB_CMD_FILE!" echo set "SKIP_PIP=1"
+>> "!JOB_CMD_FILE!" echo set "REQUIREMENTS_INSTALLED=1"
+>> "!JOB_CMD_FILE!" echo set "QUIET_MODE=!QUIET_MODE!"
+>> "!JOB_CMD_FILE!" echo set "DEBUG=!DEBUG!"
+>> "!JOB_CMD_FILE!" echo set "PYTHON_EXE=!PYTHON_EXE!"
+>> "!JOB_CMD_FILE!" echo set "PYTHON_ARGS=!PYTHON_ARGS!"
+>> "!JOB_CMD_FILE!" echo set "BASE_CONFIG=!BASE_CONFIG!"
+>> "!JOB_CMD_FILE!" echo set "BATCH_ROOT=!BATCH_ROOT!"
+>> "!JOB_CMD_FILE!" echo set "BATCH_SEED=!BATCH_SEED!"
+>> "!JOB_CMD_FILE!" echo set "RUN_TS=!RUN_TS!"
+>> "!JOB_CMD_FILE!" echo set "SWEEP_TAG=!SWEEP_TAG!"
+>> "!JOB_CMD_FILE!" echo set "GIT_SHA=!GIT_SHA!"
+>> "!JOB_CMD_FILE!" echo set "TMP_ROOT=!TMP_ROOT!"
+>> "!JOB_CMD_FILE!" echo set "VENV_DIR=!VENV_DIR!"
+>> "!JOB_CMD_FILE!" echo set "BASE_OVERRIDES_FILE=!BASE_OVERRIDES_FILE!"
+>> "!JOB_CMD_FILE!" echo set "EXTRA_OVERRIDES_FILE=!EXTRA_OVERRIDES_FILE!"
+>> "!JOB_CMD_FILE!" echo set "COOL_MODE=!COOL_MODE!"
+>> "!JOB_CMD_FILE!" echo set "COOL_TO_K=!COOL_TO_K!"
+>> "!JOB_CMD_FILE!" echo set "COOL_MARGIN_YEARS=!COOL_MARGIN_YEARS!"
+>> "!JOB_CMD_FILE!" echo set "HOOKS_ENABLE=!HOOKS_ENABLE!"
+>> "!JOB_CMD_FILE!" echo set "PLOT_ENABLE=!PLOT_ENABLE!"
+>> "!JOB_CMD_FILE!" echo set "GEOMETRY_MODE=!GEOMETRY_MODE!"
+>> "!JOB_CMD_FILE!" echo set "SUPPLY_MODE=!SUPPLY_MODE!"
+>> "!JOB_CMD_FILE!" echo set "SHIELDING_MODE=!SHIELDING_MODE!"
+>> "!JOB_CMD_FILE!" echo set "SUPPLY_INJECTION_MODE=!SUPPLY_INJECTION_MODE!"
+>> "!JOB_CMD_FILE!" echo set "SUPPLY_TRANSPORT_MODE=!SUPPLY_TRANSPORT_MODE!"
+if defined SKIP_VENV >> "!JOB_CMD_FILE!" echo set "SKIP_VENV=!SKIP_VENV!"
+>> "!JOB_CMD_FILE!" echo call "!SCRIPT_SELF_USE!" --run-one
 set "JOB_PID_TMP="
 if "%DEBUG%"=="1" echo.[DEBUG] launch_job: TMP_ROOT=!TMP_ROOT!
-if "%DEBUG%"=="1" echo.[DEBUG] launch_job: temp file=!TMP_ROOT!\marsdisk_pid_!JOB_T!_!JOB_EPS!_!JOB_TAU!.tmp
+if "%DEBUG%"=="1" echo.[DEBUG] launch_job: JOB_CMD_FILE=!JOB_CMD_FILE!
 if "%DEBUG%"=="1" echo.[DEBUG] launch_job: JOB_CWD_USE=!JOB_CWD_USE!
 if "%DEBUG%"=="1" echo.[DEBUG] launch_job: SCRIPT_SELF_USE=!SCRIPT_SELF_USE!
-if "%DEBUG%"=="1" echo.[DEBUG] launch_job: JOB_CMD=!JOB_CMD!
-rem Pass command via stdin to avoid environment variable inheritance issues
 if "%DEBUG%"=="1" echo.[DEBUG] launch_job: executing win_process.py
-rem Write JOB_CMD to temp file first to avoid pipe issues with special characters
-set "JOB_CMD_FILE=!TMP_ROOT!\marsdisk_cmd_!JOB_T!_!JOB_EPS!_!JOB_TAU!.tmp"
-rem Use PowerShell to write the command file safely to avoid issues with special characters in JOB_CMD
-if "%DEBUG%"=="1" echo.[DEBUG] launch_job: writing cmd file using powershell
-powershell -Command "[System.IO.File]::WriteAllText('!JOB_CMD_FILE!', [System.Environment]::GetEnvironmentVariable('JOB_CMD'))"
-if !errorlevel! neq 0 (
-    if "%DEBUG%"=="1" echo.[DEBUG] launch_job: powershell failed, falling back to echo
-    > "!JOB_CMD_FILE!" echo !JOB_CMD!
-)
-if "%DEBUG%"=="1" echo.[DEBUG] launch_job: MARKER_B after write cmd file
-  if "%DEBUG%"=="1" echo.[DEBUG] launch_job: MARKER_C before python call
   set "JOB_PID_TMP="
-  for /f "usebackq delims=" %%P in (`call "%PYTHON_EXEC_CMD%" "!WIN_PROCESS_PY!" launch --cmd-file "!JOB_CMD_FILE!" --window-style "!PARALLEL_WINDOW_STYLE!" --cwd "!JOB_CWD_USE!"`) do set "JOB_PID_TMP=%%P"
-  if "%DEBUG%"=="1" echo.[DEBUG] launch_job: MARKER_D after python call, errorlevel=%errorlevel%
-  del "!JOB_CMD_FILE!" >nul 2>&1
-  if "%DEBUG%"=="1" echo.[DEBUG] launch_job: MARKER_E after delete cmd file
+  for /f "usebackq delims=" %%P in (`call "%PYTHON_EXEC_CMD%" "!WIN_PROCESS_PY!" launch --cmd "!JOB_CMD_FILE!" --window-style "!PARALLEL_WINDOW_STYLE!" --cwd "!JOB_CWD_USE!"`) do set "JOB_PID_TMP=%%P"
+  if "%DEBUG%"=="1" echo.[DEBUG] launch_job: after python call, errorlevel=%errorlevel%, PID=!JOB_PID_TMP!
+  rem Do not delete the job cmd file - the child process needs it
   set "JOB_PID=!JOB_PID_TMP!"
+
 if defined JOB_PID (
     rem Check if JOB_PID is a number
     echo !JOB_PID!| findstr /r "^[0-9][0-9]*$" >nul
