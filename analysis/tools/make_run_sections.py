@@ -23,7 +23,9 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 ANALYSIS_DIR = REPO_ROOT / "analysis"
 INVENTORY_PATH = ANALYSIS_DIR / "inventory.json"
 TARGET_DOC = ANALYSIS_DIR / "run_py_sections.md"
-RUN_PY_PATH = "marsdisk/run_zero_d.py"
+RUN_PY_PATH = "marsdisk/orchestrator.py"
+RUN_ZERO_D_PATH = "marsdisk/run_zero_d.py"
+
 
 AUTOGEN_START = "<!-- AUTOGEN:RUN_SECTIONS START -->"
 AUTOGEN_END = "<!-- AUTOGEN:RUN_SECTIONS END -->"
@@ -62,9 +64,13 @@ def load_inventory() -> Dict[str, List[SymbolInfo]]:
 
 
 def get_run_py_symbols(inventory: Dict[str, List[SymbolInfo]]) -> List[SymbolInfo]:
-    """Extract and sort symbols from run.py."""
+    """Extract and sort symbols from run.py (orchestrator or run_zero_d)."""
+    # Prefer orchestrator symbols for the overview
     symbols = inventory.get(RUN_PY_PATH, [])
+    if not symbols:
+        symbols = inventory.get(RUN_ZERO_D_PATH, [])
     return sorted(symbols, key=lambda s: s.line_no)
+
 
 
 def categorize_symbol(sym: SymbolInfo) -> str:
@@ -137,11 +143,15 @@ def build_sections_table(symbols: List[SymbolInfo]) -> str:
     # Find key markers
     run_zero_d_sym = next((s for s in symbols if s.symbol == "run_zero_d"), None)
     main_sym = next((s for s in symbols if s.symbol == "main"), None)
+    orchestrate_sym = next((s for s in symbols if s.symbol == "OrchestratorContext"), None)
     
+    if orchestrate_sym:
+        lines.append(f"- **`OrchestratorContext`**: L{orchestrate_sym.line_no}–{orchestrate_sym.end_line or '?'} (実行コンテキスト管理)")
     if run_zero_d_sym:
         lines.append(f"- **`run_zero_d()`**: L{run_zero_d_sym.line_no}–{run_zero_d_sym.end_line or '?'} (メイン実行ドライバ)")
     if main_sym:
         lines.append(f"- **`main()`**: L{main_sym.line_no}–{main_sym.end_line or '?'} (CLI エントリポイント)")
+
     
     # Find streaming/checkpoint classes
     streaming = next((s for s in symbols if s.symbol == "StreamingState"), None)
@@ -164,13 +174,14 @@ def build_exploration_guide(symbols: List[SymbolInfo]) -> str:
     
     guides = [
         ("設定ロード", "load_config", "YAML→Config変換"),
-        ("時間グリッド", "_resolve_time_grid", "dt, n_steps決定"),
-        ("シード解決", "_resolve_seed", "RNG初期化"),
-        ("高速ブローアウト補正", "_fast_blowout_correction_factor", "dt/t_blow補正"),
+        ("時間グリッド", "resolve_time_grid", "dt, n_steps決定"),
+        ("シード解決", "resolve_seed", "RNG初期化"),
+        ("高速ブローアウト補正", "fast_blowout_correction_factor", "dt/t_blow補正"),
         ("進捗表示", "ProgressReporter", "プログレスバー"),
         ("履歴書き出し", "_write_zero_d_history", "Parquet/CSV出力"),
         ("Phase5比較", "run_phase5_comparison", "バリアント比較"),
     ]
+
     
     for task, sym_name, note in guides:
         sym = next((s for s in symbols if s.symbol == sym_name), None)

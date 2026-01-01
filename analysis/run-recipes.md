@@ -45,7 +45,8 @@ python -m marsdisk.run --config configs/base.yml
 | 標準シナリオ（旧fiducial） | `python -m marsdisk.run --config configs/scenarios/fiducial.yml` |
 | 高温シナリオ | `python -m marsdisk.run --config configs/scenarios/high_temp.yml` |
 | 質量損失スイープベース | `python -m marsdisk.run --config _configs/05_massloss_base.yml` |
-| サブリメーション+冷却（Windows向け） | `scripts/runsets/windows/legacy/run_sublim_cooling_win.cmd` / `scripts/runsets/windows/legacy/run_sublim_cooling.cmd` ※ストリーミング出力ON（io.streaming.*, merge_at_end=true） |
+| サブリメーション+冷却（Windows向け） | `scripts/runsets/windows/run_sweep.cmd` ※リファクタリング済み。ストリーミング出力ON（io.streaming.*, merge_at_end=true） |
+
 <!-- README_CLI_EXAMPLES END -->
 
 ### ストリーミング出力（既定ON）
@@ -88,7 +89,8 @@ graph TD
   - τ条件: 評価区間の `tau_los_mars`（なければ `tau`）の中央値が 0.5–2。  
   - 供給条件: 評価区間で `prod_subblow_area_rate` が設定供給（`supply.const.prod_area_rate_kg_m2_s × epsilon_mix`）の 90%以上を連続して維持する区間が存在（連続 0.1 日以上）。  
   - 成否: 上記 2 条件を同じ連続区間で満たせば success（`evaluate_tau_supply.py --window-spans "0.5-1.0" --min-duration-days 0.1 --threshold-factor 0.9` の `success_any=true` を採用）。[scripts/research/evaluate_tau_supply.py:130–141]
-- 最新デフォルト（`scripts/research/run_temp_supply_sweep.sh`）: `mu_orbit10pct=1.0`（τ=1 参照）を基準に、T_LIST∈{5000,4000,3000} K、EPS_LIST（epsilon_mix）∈{1.0,0.5,0.1}、TAU_LIST（`optical_depth.tau0_target`）∈{1.0,0.5,0.1} の 27 ケースを掃引する。`shielding.mode=off`（Φ=1）＋`optical_depth.tau0_target` を軸にし、`init_tau1.scale_to_tau1` は optical_depth と排他のため使用しない。冷却モードは slab（`T^(-3)` 解析解）をデフォルトとする。供給経路は `deep_mixing`（`t_mix_orbits=50`）を既定とし、`EVAL=1` なら各 run 後に `evaluate_tau_supply.py --window-spans "0.5-1.0" --min-duration-days 0.1 --threshold-factor 0.9` を実行して `checks/tau_supply_eval.json` を保存する。[scripts/research/run_temp_supply_sweep.sh:1–578][marsdisk/run_zero_d.py#run_zero_d [L505–L5386]]
+- 最新デフォルト（`scripts/runsets/windows/run_sweep.cmd`）: `mu_orbit10pct=1.0`（τ=1 参照）を基準に、T_LIST∈{5000,4000,3000} K、EPS_LIST（epsilon_mix）∈{1.0,0.5,0.1}、TAU_LIST（`optical_depth.tau0_tau1_target`）∈{1.0,0.5,0.1} の 27 ケースを掃引する。`shielding.mode=psitau`（Φ=1）＋`optical_depth.tau0_tau1_target` を軸にし、`init_tau1.scale_to_tau1` は optical_depth と排他のため使用しない。冷却モードは slab（`T^(-3)` 解析解）をデフォルトとする。供給経路は `deep_mixing`（`t_mix_orbits=50`）を既定とし、`EVAL=1` なら各 run 後に `evaluate_tau_supply.py --window-spans "0.5-1.0" --min-duration-days 0.1 --threshold-factor 0.9` を実行して `checks/tau_supply_eval.json` を保存する。[scripts/runsets/windows/run_sweep.cmd][marsdisk/orchestrator.py#resolve_time_grid]
+
 - 本番の供給経路は時間関数のみ（const/powerlaw/table/piecewise）。τフィードバックは control experiment 用スイッチとして残し（デフォルト Off）、本番判定には組み込まない。
 - 有限リザーバー: `supply.reservoir.enabled=true` と `mass_total_Mmars` を与えると供給総量を減算管理し、枯渇時刻や残量を `series/run.parquet`・`summary.json`・`run_config.json` に記録する。[marsdisk/physics/supply.py#init_runtime_state [L230–L285]][marsdisk/physics/supply.py#evaluate_supply [L321–L414]][marsdisk/run_zero_d.py#run_zero_d [L505–L5386]]
 - 失敗パターンの目安  
@@ -160,7 +162,8 @@ io:
 DocSync/テスト
 - DocSyncAgent → doc テストの順で回す。Smol/衝突経路周りを更新した場合も必ず `make analysis-update`（`make analysis-sync` + `make analysis-doc-tests` の短縮）と `make analysis-coverage-guard` を実行し、coverage ガードを維持する。
 
-- CLI は `python -m marsdisk.run --config …` を受け取り、0D実行を呼び出す。[marsdisk/run_zero_d.py#run_zero_d [L505–L5386]]
+- CLI は `python -m marsdisk.run --config …` を受け取り、`orchestrator.py` 経由で 0D実行を呼び出す。[marsdisk/orchestrator.py#resolve_time_grid]
+
 - 0Dケースの軌道量は `omega` と `v_kepler` が `runtime_orbital_radius_m` から導出し、ブローアウト時間や周速度評価の基礎となる。[marsdisk/grid.py#omega [L94–L95]][marsdisk/grid.py#v_kepler [L36–L52]]
 - 出力として `series/run.parquet`,`summary.json`,`checks/mass_budget.csv`,`run_config.json` を書き出す。[marsdisk/run_zero_d.py#run_zero_d [L505–L5386]][marsdisk/run_zero_d.py#run_zero_d [L505–L5386]][marsdisk/run_zero_d.py#run_zero_d [L505–L5386]][marsdisk/run_zero_d.py#run_zero_d [L505–L5386]]
 - タイムシリーズのレコード構造に上記カラムを追加し、損失項と高速ブローアウト診断を分離して記録する。[marsdisk/run_zero_d.py#run_zero_d [L505–L5386]][marsdisk/io/writer.py#write_parquet [L412–L438]]

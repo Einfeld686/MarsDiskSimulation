@@ -549,7 +549,7 @@ if not defined OUT_ROOT if "%AUTO_OUT_ROOT%"=="1" (
   if "!FREE_GB_OK!"=="1" for /f "delims=0123456789" %%A in ("!FREE_GB!") do set "FREE_GB_OK=0"
 
   if "!FREE_GB_OK!"=="1" (
-    if !FREE_GB! LSS %MIN_INTERNAL_FREE_GB% (
+    if not "!FREE_GB!"=="" if !FREE_GB! LSS %MIN_INTERNAL_FREE_GB% (
       set "OUT_ROOT=%EXTERNAL_OUT_ROOT%"
       call :ensure_abs OUT_ROOT
       set "OUT_ROOT_SOURCE=external"
@@ -1462,7 +1462,7 @@ if "%SWEEP_PARALLEL%"=="1" if not "%SIZE_PROBE_ENABLE%"=="0" if "%PARALLEL_JOBS_
 
 
 
-    if defined SIZE_PROBE_JOBS_RAW echo.[warn] size-probe jobs invalid: "!SIZE_PROBE_JOBS_RAW!" -> 1
+    if defined SIZE_PROBE_JOBS_RAW echo.[warn] size-probe jobs invalid: "!SIZE_PROBE_JOBS_RAW!" -^> 1
 
 
 
@@ -1512,7 +1512,7 @@ if "%PARALLEL_JOBS_DEFAULT%"=="1" if "!PARALLEL_JOBS!"=="1" (
     if "!PARALLEL_JOBS_TARGET!"=="" set "PARALLEL_JOBS_TARGET_OK=0"
     if "!PARALLEL_JOBS_TARGET_OK!"=="1" for /f "delims=0123456789" %%A in ("!PARALLEL_JOBS_TARGET!") do set "PARALLEL_JOBS_TARGET_OK=0"
     if "!PARALLEL_JOBS_TARGET_OK!"=="1" (
-      if !PARALLEL_JOBS_TARGET! GTR 1 (
+      if not "!PARALLEL_JOBS_TARGET!"=="" if !PARALLEL_JOBS_TARGET! GTR 1 (
         if /i "%CPU_UTIL_RESPECT_MEM%"=="1" (
           set "PARALLEL_JOBS_MEM="
           for /f "usebackq tokens=1-3 delims=|" %%A in (`call "%PYTHON_EXEC_CMD%" scripts\\runsets\\common\\calc_parallel_jobs.py`) do (
@@ -1523,10 +1523,12 @@ if "%PARALLEL_JOBS_DEFAULT%"=="1" if "!PARALLEL_JOBS!"=="1" (
           if "!PARALLEL_JOBS_MEM!"=="" set "PARALLEL_JOBS_MEM_OK=0"
           if "!PARALLEL_JOBS_MEM_OK!"=="1" for /f "delims=0123456789" %%A in ("!PARALLEL_JOBS_MEM!") do set "PARALLEL_JOBS_MEM_OK=0"
           if "!PARALLEL_JOBS_MEM_OK!"=="1" (
-            if !PARALLEL_JOBS_TARGET! GTR !PARALLEL_JOBS_MEM! set "PARALLEL_JOBS_TARGET=!PARALLEL_JOBS_MEM!"
+            if not "!PARALLEL_JOBS_TARGET!"=="" if not "!PARALLEL_JOBS_MEM!"=="" (
+              if !PARALLEL_JOBS_TARGET! GTR !PARALLEL_JOBS_MEM! set "PARALLEL_JOBS_TARGET=!PARALLEL_JOBS_MEM!"
+            )
           )
         )
-        set "PARALLEL_JOBS=!PARALLEL_JOBS_TARGET!"
+        if not "!PARALLEL_JOBS_TARGET!"=="" if !PARALLEL_JOBS_TARGET! GTR 1 (
         %LOG_INFO% cpu_target fallback: target_cores=!CPU_TARGET_CORES! parallel_jobs=!PARALLEL_JOBS!
       )
     )

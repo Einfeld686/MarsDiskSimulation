@@ -348,3 +348,6 @@ io:
 - レポートは `reports/physcheck/` に JSON/Markdown で保存し、WARN/FAIL の根拠を列挙。
 - DocSync 後は `make analysis-doc-tests` を実行し、`tests/integration/test_ref_coverage.py` まで含めた検査結果を記録する。
 @-- END:PHYSCHECK_OVERVIEW --
+## 7. 補足リファレンス
+- `marsdisk/archive.py#main`: 実行結果のパッケージングとアーカイブ管理を担当。
+- `marsdisk/io/_numba_tables.py#qpr_interp_array_numba`: ⟨Q_pr⟩ テーブルの高速内挿処理（Numba 加速）。

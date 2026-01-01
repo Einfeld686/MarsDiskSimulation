@@ -230,10 +230,11 @@ if !errorlevel! geq 1 (
 )
 %LOG_SETUP% Output root: %BATCH_ROOT%
 
-rem --- Virtual environment handling ---
 set "USE_VENV=1"
-if /i "%SKIP_VENV%"=="1" (
-  set "USE_VENV=0"
+if /i "%RUN_ONE_MODE%"=="1" if not defined SKIP_VENV set "SKIP_VENV=1"
+if /i "%SKIP_VENV%"=="1" set "USE_VENV=0"
+if /i "!SKIP_VENV!"=="1" set "USE_VENV=0"
+if "%USE_VENV%"=="0" (
   if "%DEBUG%"=="1" echo.[DEBUG] SKIP_VENV=1: skipping venv
 )
 if "%USE_VENV%"=="1" if /i "%REQUIREMENTS_INSTALLED%"=="1" if /i "%SKIP_PIP%"=="1" (
@@ -474,7 +475,7 @@ if not defined CELL_CPU_FRACTION_USED set "CELL_CPU_FRACTION_USED=%CELL_CPU_FRAC
 set "CELL_JOBS_OK=1"
 for /f "delims=0123456789" %%A in ("%MARSDISK_CELL_JOBS%") do set "CELL_JOBS_OK=0"
 if "%CELL_JOBS_OK%"=="0" (
-  if defined CELL_JOBS_RAW echo.[warn] MARSDISK_CELL_JOBS invalid: "%CELL_JOBS_RAW%" -> 1
+  if defined CELL_JOBS_RAW echo.[warn] MARSDISK_CELL_JOBS invalid: "%CELL_JOBS_RAW%" -^> 1
   set "MARSDISK_CELL_JOBS=1"
 )
 if "%MARSDISK_CELL_JOBS%"=="0" set "MARSDISK_CELL_JOBS=1"
@@ -510,7 +511,7 @@ if not defined CELL_THREAD_LIMIT set "CELL_THREAD_LIMIT=1"
 set "CELL_THREAD_OK=1"
 for /f "delims=0123456789" %%A in ("%CELL_THREAD_LIMIT%") do set "CELL_THREAD_OK=0"
 if "%CELL_THREAD_OK%"=="0" (
-  if defined CELL_THREAD_LIMIT_RAW echo.[warn] CELL_THREAD_LIMIT invalid: "%CELL_THREAD_LIMIT_RAW%" -> 1
+  if defined CELL_THREAD_LIMIT_RAW echo.[warn] CELL_THREAD_LIMIT invalid: "%CELL_THREAD_LIMIT_RAW%" -^> 1
   set "CELL_THREAD_LIMIT=1"
 )
 if "%CELL_THREAD_LIMIT%"=="0" set "CELL_THREAD_LIMIT=1"
@@ -594,7 +595,7 @@ if "%PARALLEL_JOBS%"=="" set "PARALLEL_JOBS=1"
 set "PARALLEL_JOBS_OK=1"
 if not "%PARALLEL_JOBS%"=="" for /f "delims=0123456789" %%A in ("%PARALLEL_JOBS%") do set "PARALLEL_JOBS_OK=0"
 if "%PARALLEL_JOBS_OK%"=="0" (
-  if defined PARALLEL_JOBS_RAW echo.[warn] PARALLEL_JOBS invalid: "%PARALLEL_JOBS_RAW%" -> 1
+  if defined PARALLEL_JOBS_RAW echo.[warn] PARALLEL_JOBS invalid: "%PARALLEL_JOBS_RAW%" -^> 1
   set "PARALLEL_JOBS=1"
 )
 if "%PARALLEL_JOBS%"=="0" set "PARALLEL_JOBS=1"
@@ -623,7 +624,7 @@ if defined CPU_UTIL_TARGET_PERCENT if /i not "%PARALLEL_MODE%"=="numba" (
         if "!PARALLEL_JOBS_TARGET!"=="" set "PARALLEL_JOBS_TARGET_OK=0"
         if "!PARALLEL_JOBS_TARGET_OK!"=="1" for /f "delims=0123456789" %%A in ("!PARALLEL_JOBS_TARGET!") do set "PARALLEL_JOBS_TARGET_OK=0"
         if "!PARALLEL_JOBS_TARGET_OK!"=="1" (
-        if "!PARALLEL_JOBS_DEFAULT!"=="1" if "!PARALLEL_JOBS!"=="1" if !PARALLEL_JOBS_TARGET! GTR 1 (
+        if "!PARALLEL_JOBS_DEFAULT!"=="1" if "!PARALLEL_JOBS!"=="1" if not "!PARALLEL_JOBS_TARGET!"=="" if !PARALLEL_JOBS_TARGET! GTR 1 (
           if /i "!CPU_UTIL_RESPECT_MEM!"=="1" (
             for /f "usebackq tokens=1-3 delims=|" %%A in (`call "%PYTHON_EXEC_CMD%" scripts\\runsets\\common\\calc_parallel_jobs.py`) do (
               set "PARALLEL_JOBS_MEM=%%C"
@@ -633,10 +634,12 @@ if defined CPU_UTIL_TARGET_PERCENT if /i not "%PARALLEL_MODE%"=="numba" (
           if "!PARALLEL_JOBS_MEM!"=="" set "PARALLEL_JOBS_MEM_OK=0"
           if "!PARALLEL_JOBS_MEM_OK!"=="1" for /f "delims=0123456789" %%A in ("!PARALLEL_JOBS_MEM!") do set "PARALLEL_JOBS_MEM_OK=0"
           if "!PARALLEL_JOBS_MEM_OK!"=="1" (
-            if !PARALLEL_JOBS_TARGET! GTR !PARALLEL_JOBS_MEM! set "PARALLEL_JOBS_TARGET=!PARALLEL_JOBS_MEM!"
+            if not "!PARALLEL_JOBS_TARGET!"=="" if not "!PARALLEL_JOBS_MEM!"=="" (
+              if !PARALLEL_JOBS_TARGET! GTR !PARALLEL_JOBS_MEM! set "PARALLEL_JOBS_TARGET=!PARALLEL_JOBS_MEM!"
+            )
           )
           )
-          if !PARALLEL_JOBS_TARGET! GTR 1 (
+          if not "!PARALLEL_JOBS_TARGET!"=="" if !PARALLEL_JOBS_TARGET! GTR 1 (
             if "!SWEEP_PARALLEL!"=="0" if "!SWEEP_PARALLEL_DEFAULT!"=="1" set "SWEEP_PARALLEL=1"
             if "!SWEEP_PARALLEL!"=="1" (
               set "PARALLEL_JOBS=!PARALLEL_JOBS_TARGET!"
@@ -748,7 +751,7 @@ if "%SWEEP_PARALLEL%"=="0" (
 ) else if not "%PARALLEL_JOBS%"=="1" (
   if not defined RUN_ONE_MODE (
     call :trace_detail "dispatch parallel"
-    echo.[DEBUG] Branch: SWEEP_PARALLEL=1, PARALLEL_JOBS!=1, no RUN_ONE_MODE -^> parallel mode
+    echo.[DEBUG] Branch: SWEEP_PARALLEL=1, PARALLEL_JOBS=%PARALLEL_JOBS%, no RUN_ONE_MODE -^> parallel mode
     call :run_parallel
     call :popd_safe
     exit /b 0
@@ -1081,7 +1084,7 @@ for %%A in (!LIST_RAW!) do (
 )
 if defined LIST_OUT (
   set "LIST_OUT=!LIST_OUT:~1!"
-  if not "!LIST_OUT!"=="!LIST_RAW!" echo.[warn] %~1 sanitized: "!LIST_RAW!" -> "!LIST_OUT!"
+  if not "!LIST_OUT!"=="!LIST_RAW!" echo.[warn] %~1 sanitized: "!LIST_RAW!" -^> "!LIST_OUT!"
   set "%~1=!LIST_OUT!"
 ) else (
   set "%~1="

@@ -54,7 +54,7 @@
       "key": "FegleySchaefer2012_arXiv",
       "short": "Fegley & Schaefer (2012)",
       "title": "Chemistry of impact-generated silicate vapors (MAGMA calculations)",
-      "doi": null,
+      "doi": "10.1016/j.epsl.2012.06.015",
       "bibtex": "@article{FegleySchaefer2012_arXiv, journal = {arXiv}, year = {2012}}",
       "adopted_scope": "Provides MAGMA equilibrium vapour pressures for molten SiO2; supplies the Clausius fit log10 P[Pa] = 13.203 - 25898.9/T used as the HKL liquid branch.",
       "claims": [
@@ -66,7 +66,7 @@
       "key": "VisscherFegley2013_arXiv",
       "short": "Visscher & Fegley (2013)",
       "title": "Chemistry of impact-generated silicate melt-vapor debris disks",
-      "doi": null,
+      "doi": "10.1088/2041-8205/767/1/L12",
       "bibtex": "@article{VisscherFegley2013_arXiv, journal = {arXiv}, year = {2013}}",
       "adopted_scope": "Independent MAGMA equilibrium runs for molten silica + vapor; corroborates the molten SiO2 vapour-pressure fit adopted for the HKL liquid branch.",
       "claims": [

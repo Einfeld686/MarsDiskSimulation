@@ -1,12 +1,12 @@
 {
   "function_reference_rate": {
-    "numerator": 110,
+    "numerator": 112,
     "denominator": 135,
-    "rate": 0.8148148148148148
+    "rate": 0.8296296296296296
   },
   "anchor_consistency_rate": {
-    "numerator": 711,
-    "denominator": 711,
+    "numerator": 713,
+    "denominator": 713,
     "rate": 1.0
   },
   "equation_unit_coverage": {
@@ -16,14 +16,14 @@
   },
   "sinks_callgraph_documented": true,
   "readme_sync": {
-    "in_sync": true,
+    "in_sync": false,
     "block_count": 6,
     "unknown_blocks": [],
-    "detail": "in sync"
+    "detail": "out of sync"
   },
   "holes": [
-    "marsdisk/archive.py#main",
     "marsdisk/io/_numba_tables.py#NUMBA_AVAILABLE",
-    "marsdisk/io/_numba_tables.py#qpr_interp_array_numba"
+    "marsdisk/io/_numba_tables.py#qpr_interp_scalar_numba",
+    "marsdisk/io/archive.py#archive_run"
   ]
 }

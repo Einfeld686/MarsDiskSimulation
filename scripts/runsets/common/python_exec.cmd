@@ -24,10 +24,11 @@ if "%PYTHON_EXE%"=="" (
   goto :python_exec_done
 )
 
+set "PY_RAW=%PYTHON_EXE:"=%"
 if "%PYTHON_ARGS%"=="" (
-  call "%PYTHON_EXE%" %*
+  call "%PY_RAW%" %*
 ) else (
-  call "%PYTHON_EXE%" %PYTHON_ARGS% %*
+  call "%PY_RAW%" %PYTHON_ARGS% %*
 )
 set "PYTHON_EXEC_RC=%errorlevel%"
 
