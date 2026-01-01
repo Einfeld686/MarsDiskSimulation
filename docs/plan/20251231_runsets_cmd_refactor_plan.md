@@ -1,7 +1,7 @@
 # run_sweep.cmd / run_temp_supply_sweep.cmd 中規模整理プラン
 
 **作成日**: 2025-12-31  
-**ステータス**: 提案  
+**ステータス**: 完了（2026-01-01更新）  
 **対象**: Windows runsets（`.cmd`）と run-one 実行経路
 
 ---

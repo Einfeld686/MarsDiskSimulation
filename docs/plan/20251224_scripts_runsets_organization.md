@@ -1,8 +1,18 @@
 # scripts 整理計画: runsets 方式
 
 **作成日**: 2025-12-24  
-**ステータス**: 提案  
+**ステータス**: 部分実装完了（2026-01-01更新）  
 **対象**: `scripts/` 配下の実行ラッパ整理（1D が主、0D は検証用）
+
+## 実装完了状況
+
+以下の構造が実装済み：
+
+- ✅ `scripts/runsets/` ディレクトリ構造
+- ✅ `scripts/runsets/common/` 共通ヘルパー
+- ✅ `scripts/runsets/windows/` Windows 用スクリプト
+- ✅ `scripts/runsets/mac/` macOS 用スクリプト
+- ⚠️ hooks 統合：部分的に実装
 
 ---
 

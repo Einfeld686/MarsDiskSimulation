@@ -1,5 +1,19 @@
 # 昇華を「粒径のみ更新・質量は blowout 時のみ損失」とする実装プラン
 
+> **ステータス**: 実装完了（2026-01-01更新）
+
+## 実装完了状況
+
+以下の機能が実装済み：
+
+- ✅ `marsdisk/schema.py`: `sinks.sub_params.mass_conserving` フラグ追加
+- ✅ `marsdisk/physics/sinks.py`: 昇華フラックス→質量源項の分岐（振替なし/あり）
+- ✅ `marsdisk/run_zero_d.py`: `mass_conserving=true` 時の分岐ロジック実装
+- ✅ 出力集計（`M_sink_dot`/`M_out_dot`）の振替ロジック実装
+- ✅ 複数の設定ファイルで `mass_conserving: true` を使用（temp_supply シナリオ等）
+
+---
+
 目的と背景
 ----------
 - 昇華が粒径を縮めるだけで質量を減らさないモードを追加し、s が blowout 境界未満になった分だけをブローアウト損失として計上する挙動を導入する。

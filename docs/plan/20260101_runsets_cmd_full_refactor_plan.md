@@ -1,7 +1,7 @@
 # run_sweep.cmd / run_temp_supply_sweep.cmd フル構造化プラン
 
 **作成日**: 2026-01-01  
-**ステータス**: 提案  
+**ステータス**: 完了（2026-01-01更新）  
 **対象**: Windows runsets（.cmd）と Python 呼び出し共通化
 
 ---
@@ -248,7 +248,7 @@ python_exec.cmd
 - [ ] `scripts\runsets\windows\run_sweep.cmd --debug`
 
 ### 非 Windows
-- [ ] `preflight_checks.py --simulate-windows` で新 .cmd の構文/参照確認
+- [x] `preflight_checks.py --simulate-windows` で新 .cmd の構文/参照確認
 
 ---
 

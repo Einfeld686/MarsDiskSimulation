@@ -1,6 +1,25 @@
 外部供給（内側→表層 ODE）導入プラン
 ==============================
 
+> **ステータス**: 実装完了（2026-01-01更新）
+
+## 実装完了状況
+
+以下の機能が実装済み：
+
+- ✅ `tools/derive_supply_rate.py`: μ → R_base 変換ユーティリティ（262行）
+  - CLI インターフェース（`--mu`, `--sigma-tau1`, `--t-blow`, `--epsilon-mix`, `--format`）
+  - r×μ グリッド出力機能
+- ✅ `marsdisk/physics/supply.py`: 外部供給パラメータ処理（547行）
+  - `SupplyTableConfig` クラス: テーブル形式の供給率サポート
+  - `SupplyTemperatureTable` クラス: 温度依存テーブル
+  - `get_prod_area_rate` 関数
+- ✅ `analysis/equations.md`: (E.027a) として μ の式を記載
+- ✅ `analysis/run-recipes.md`: 使用例を記載
+- ✅ `tests/integration/test_external_supply.py`: テスト実装
+
+---
+
 目的と背景
 ----------
 - 現行の S1 表層 ODE は供給項 (dotSigma_prod) を時間一定の入力として受け取り、ブローアウト・衝突・追加シンクとは独立に扱う設計。

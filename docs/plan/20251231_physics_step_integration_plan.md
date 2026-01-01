@@ -1,7 +1,7 @@
 # physics_step 実務統合プラン（0D優先）
 
 > **作成日**: 2025-12-31  
-> **ステータス**: 短期スコープ確定  
+> **ステータス**: フェーズ1完了（2026-01-01更新）  
 > **対象**: `marsdisk/run_zero_d.py`, `marsdisk/physics_step.py`, `marsdisk/physics/*`, `marsdisk/io/*`, `marsdisk/runtime/*`
 
 ---

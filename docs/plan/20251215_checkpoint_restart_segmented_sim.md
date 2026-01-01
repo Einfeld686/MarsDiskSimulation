@@ -1,7 +1,20 @@
 # チェックポイント・リスタート機能：セグメント分割シミュレーション
 
 > 作成日: 2025-12-15  
+> **ステータス**: 実装完了（2026-01-01更新）  
 > 区分: 機能追加提案（長時間シミュレーションのメモリ問題解決）
+
+## 実装完了状況
+
+以下の主要機能が `marsdisk/runtime/checkpoint.py` および関連モジュールに実装済み：
+
+- ✅ `CheckpointState` dataclass: シミュレーション状態の保存構造
+- ✅ `save_checkpoint()`: 状態のファイル保存
+- ✅ `load_checkpoint()`: 状態の復元
+- ✅ `list_checkpoints()`: チェックポイント一覧取得
+- ✅ `cleanup_old_checkpoints()`: 古いチェックポイントの削除（keep_last_n サポート）
+- ✅ `run_zero_d.py` へのリスタート機能統合
+- ✅ スクリプト（run_sweep.cmd, run_temp_supply_sweep.cmd）での `numerics.resume.*` オーバーライド対応
 
 ---
 
