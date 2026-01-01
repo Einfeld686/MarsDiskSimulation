@@ -6,7 +6,7 @@
 
 ## 実装完了状況
 
-以下の主要機能が `marsdisk/runtime/checkpoint.py` および関連モジュールに実装済み：
+以下の主要機能が `marsdisk/io/checkpoint.py` および関連モジュールに実装済み：
 
 - ✅ `CheckpointState` dataclass: シミュレーション状態の保存構造
 - ✅ `save_checkpoint()`: 状態のファイル保存
@@ -205,7 +205,7 @@ python -m marsdisk.run --config configs/test_checkpoint.yml
 
 2. **リスタート後の継続性**:
    - チェックポイントから再開した結果が連続実行と一致することを確認
-   - `summary.json` の値が一貫していることを確認
+   - `out/<run_id>/summary.json` の値が一貫していることを確認
 
 ---
 

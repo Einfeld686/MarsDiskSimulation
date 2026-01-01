@@ -84,7 +84,7 @@
 - **仕様**: `E.010`（IMEX-BDF1）, `E.011`（質量保存 C4）, `E.024`（衝突カーネル）
 - **実装**: `marsdisk/physics/smol.py`, `marsdisk/physics/collide.py`
 - **主な設定**: `surface.collision_solver="smol"`, `time_step.safety`, `mass_tol`
-- **主な出力**: `checks/mass_budget.csv`（C4）, `series/run.parquet`
+- **主な出力**: `out/<run_id>/checks/mass_budget.csv`（C4）, `out/<run_id>/series/run.parquet`
 - **文献**: Krivov2006_AA455_509 (10.1051/0004-6361:20064907), Wyatt2008 (10.1146/annurev.astro.45.051806.110525), Birnstiel2011_AA525_A11 (10.1051/0004-6361/201015228)
 - **注意**: E.010/E.011/E.044/E.046 は仕様更新済みで実装と整合済み
 
@@ -99,7 +99,7 @@
 - **仕様**: `E.008`（s_min）, `E.053`（surface-energy floor）
 - **実装**: `marsdisk/run_zero_d.py`（_surface_energy_floor）, `marsdisk/physics/psd.py`
 - **主な設定**: `psd.alpha`, `psd.wavy_strength`, `surface_energy.*`
-- **主な出力**: `s_min_effective`, `s_min_surface_energy`, `psd_hist.parquet`
+- **主な出力**: `s_min_effective`, `s_min_surface_energy`, `out/<run_id>/series/psd_hist.parquet`
 - **文献**: Dohnanyi1969_JGR74_2531 (10.1029/JB074i010p02531), ThebaultAugereau2007_AA472_169 (10.1051/0004-6361:20077709), KrijtKama2014_AA566_L2 (10.1051/0004-6361/201423862)
 
 ### F. 昇華シンク
@@ -132,7 +132,7 @@
   - 主要列: `time`, `mass_initial`, `mass_remaining`, `mass_lost`, `mass_diff`, `error_percent`, `tolerance_percent`
 
 ### 検証基準（代表）
-- `checks/mass_budget.csv` の `error_percent <= 0.5%` を満たすこと
+- `out/<run_id>/checks/mass_budget.csv` の `error_percent <= 0.5%` を満たすこと
 - `sinks.mode="none"` の場合、`mass_lost_by_sinks` が 0 になること
 - `case_status` が `beta_at_smin_config` と `beta_threshold` の比較に一致すること
 
@@ -314,8 +314,8 @@
 - [x] 0D: `e_profile` 有効時は `e_mode="fixed"` のみ許可し、他は `ConfigurationError`。
 - [x] 1D: `marsdisk/run_one_d.py` のセル半径配列から `e_cells` を事前計算。
 - [x] 1D: 各セルで `cfg.dynamics.model_copy(update={"e0": e_cell})` を用意し、`CollisionStepContext` に渡す。
-- [x] 1D: `series/run.parquet` に `e_value`（セルごとの適用値）を追加する。
-- [x] `run_config.json` の `init_ei` に以下を記録する: `e_profile_mode`, `e_profile_r_kind`, `e_profile_table_path`, `e_profile_formula`（`mars_pericenter` 時のみ）, `e_profile_applied`
+- [x] 1D: `out/<run_id>/series/run.parquet` に `e_value`（セルごとの適用値）を追加する。
+- [x] `out/<run_id>/run_config.json` の `init_ei` に以下を記録する: `e_profile_mode`, `e_profile_r_kind`, `e_profile_table_path`, `e_profile_formula`（`mars_pericenter` 時のみ）, `e_profile_applied`
 - [x] テスト: テーブル補間の一致、0D で `e_profile` が `e0` を置換、1D でセルごとに `e_kernel_base` が変わることを確認。
 - [ ] ドキュメント: `analysis/overview.md` と `analysis/run-recipes.md` に設定例を追加（本変更実装後に更新）。
 

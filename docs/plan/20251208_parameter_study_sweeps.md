@@ -4,7 +4,7 @@
 ----------
 - gas-poor 標準（TL2003 無効, `ALLOW_TL2003=false`）の 0D 実行で、先行研究に明示値がない自由度を系統的に掃引する。
 - 研究で固まっている定数（β=0.5, Q_D* 係数, ρ=3000 kg/m³ 等）は固定し、シナリオ依存のものだけを振る。
-- ベース設定は `configs/base.yml`（analysis 指定の 2 年・40 bin）とし、各スイープは `out/<timestamp>_param_sweep__<sha>/` 配下に run_card を残す。
+- ベース設定は `configs/base.yml`（analysis 指定の 2 年・40 bin）とし、各スイープは `out/<timestamp>_param_sweep__<sha>/` 配下に `out/<run_id>/run_card.md` を残す。
 
 対象・非対象
 ------------
@@ -23,7 +23,7 @@
 
 進め方・メモ
 ------------
-- 各スイープは 1 本ずつ軸を変え、他軸は `configs/base.yml` に固定。セット間の変更は `run_card.md` に差分として記録。
+- 各スイープは 1 本ずつ軸を変え、他軸は `configs/base.yml` に固定。セット間の変更は `out/<run_id>/run_card.md` に差分として記録。
 - マスバジェット 0.5% を必ず確認し、`out/checks/mass_budget.csv` が閾値越えの場合は再試行またはステップ設定を緩和する。
 - TL2003/gas-rich シナリオは対象外。必要時は別プランを起こし、`ALLOW_TL2003=true` を明示した上で扱う。
 
@@ -35,5 +35,5 @@
 
 完了判定
 --------
-- 主要軸（供給、PSD床/波、力学励起、遮蔽/ゲート、昇華/ガス、放射、数値）の最低 1 本ずつについて、範囲を走らせた run_card と summary.json を out/ 以下に保存。
-- 失敗ケースを含め、使用した設定・ハッシュ・主要メトリクスを run_card に記録（analysis へ詳細を複写しない）。
+- 主要軸（供給、PSD床/波、力学励起、遮蔽/ゲート、昇華/ガス、放射、数値）の最低 1 本ずつについて、範囲を走らせた `out/<run_id>/run_card.md` と `out/<run_id>/summary.json` を out/ 以下に保存。
+- 失敗ケースを含め、使用した設定・ハッシュ・主要メトリクスを `out/<run_id>/run_card.md` に記録（analysis へ詳細を複写しない）。

@@ -243,9 +243,9 @@ python_exec.cmd
 - [x] `sanitize_token.cmd` で `RUN_TS==` 等の不正値が再生成される
 
 ### Windows 実機
-- [ ] `scripts\tests\test_parallel_launch.cmd`
-- [ ] `scripts\tests\test_job_launch_detailed.cmd`
-- [ ] `scripts\runsets\windows\run_sweep.cmd --debug`
+- [x] `scripts\tests\test_parallel_launch.cmd`
+- [x] `scripts\tests\test_job_launch_detailed.cmd`
+- [ ] `scripts\runsets\windows\run_sweep.cmd --debug`（エラーのため保留）
 
 ### 非 Windows
 - [x] `preflight_checks.py --simulate-windows` で新 .cmd の構文/参照確認
@@ -255,39 +255,39 @@ python_exec.cmd
 ## 実装時の注意点（網羅チェック）
 
 ### 互換性と動作
-- [ ] `RUN_TS` / `RUN_ONE_*` / `BATCH_SEED` / `SWEEP_TAG` の既定値と優先順位を崩さない
-- [ ] overrides の優先順（base < extra < case）を変更しない
-- [ ] 出力ディレクトリ規約（`out/<SWEEP_TAG>/<RUN_TS>__<sha>__seed<batch>/<case>`）を維持
-- [ ] `PYTHON_ALLOW_LAUNCHER` の許容条件を既存互換に保つ
-- [ ] `QUIET_MODE` / `DEBUG` / `TRACE_*` のログ挙動を変えない
-- [ ] hooks/plot/eval の実行条件を変えない
+- [x] `RUN_TS` / `RUN_ONE_*` / `BATCH_SEED` / `SWEEP_TAG` の既定値と優先順位を崩さない
+- [x] overrides の優先順（base < extra < case）を変更しない
+- [x] 出力ディレクトリ規約（`out/<SWEEP_TAG>/<RUN_TS>__<sha>__seed<batch>/<case>`）を維持
+- [x] `PYTHON_ALLOW_LAUNCHER` の許容条件を既存互換に保つ
+- [x] `QUIET_MODE` / `DEBUG` / `TRACE_*` のログ挙動を変えない
+- [x] hooks/plot/eval の実行条件を変えない
 
 ### Python 呼び出しと quoting
-- [ ] `PYTHON_EXE` は常に絶対パス・非クォートで保持する
-- [ ] 実行は `python_exec.cmd` 経由に統一し、`PYTHON_CMD` を実行に使わない
-- [ ] `for /f` で Python 出力を取る箇所は `call python_exec.cmd ...` に統一する
-- [ ] 二重クォート（`""python""`）が発生しないことを確認
-- [ ] venv 有効化後に `resolve_python.cmd` を再実行して Python 経路を再解決する
+- [x] `PYTHON_EXE` は常に絶対パス・非クォートで保持する
+- [x] 実行は `python_exec.cmd` 経由に統一し、`PYTHON_CMD` を実行に使わない
+- [x] `for /f` で Python 出力を取る箇所は `call python_exec.cmd ...` に統一する
+- [x] 二重クォート（`""python""`）が発生しないことを確認
+- [x] venv 有効化後に `resolve_python.cmd` を再実行して Python 経路を再解決する
 
 ### Windows CMD の罠
-- [ ] delayed expansion の `!` を含む文字列を扱わない（`RUN_TS` に禁止文字を許さない）
-- [ ] `for /f` は `usebackq` と `call` の相性に注意してテストする
-- [ ] UTF-8/CP932 混在で `win_process.py` の cmd-file 読み取りが壊れないようにする
-- [ ] short path 依存（`~1`）の有無に配慮し、絶対パスを優先する
+- [x] delayed expansion の `!` を含む文字列を扱わない（`RUN_TS` に禁止文字を許さない）
+- [x] `for /f` は `usebackq` と `call` の相性に注意してテストする
+- [x] UTF-8/CP932 混在で `win_process.py` の cmd-file 読み取りが壊れないようにする
+- [x] short path 依存（`~1`）の有無に配慮し、絶対パスを優先する
 
 ### preflight / allowlist
-- [ ] 新規 `.cmd` を `preflight_allowlist.txt` に追加する必要があるか確認する
-- [ ] `preflight_checks.py` の cmd-root / cmd-exclude との整合を崩さない
+- [x] 新規 `.cmd` を `preflight_allowlist.txt` に追加する必要があるか確認する
+- [x] `preflight_checks.py` の cmd-root / cmd-exclude との整合を崩さない
 
 ### 並列起動・プロセス管理
-- [ ] `win_process.py launch` の呼び出し方法を維持（`--cmd-file`/`--cwd`/`--window-style`）
-- [ ] `alive` チェックの出力形式（`pids|count`）に依存するロジックを変えない
-- [ ] `JOB_SEED` が空にならないことをチェックする（seed 取得失敗時の再試行）
+- [x] `win_process.py launch` の呼び出し方法を維持（`--cmd-file`/`--cwd`/`--window-style`）
+- [x] `alive` チェックの出力形式（`pids|count`）に依存するロジックを変えない
+- [x] `JOB_SEED` が空にならないことをチェックする（seed 取得失敗時の再試行）
 
 ### ログと診断
-- [ ] debug/trace のログファイル出力パスとファイル名規約を維持
-- [ ] `PYTHON_CMD` はログ用途に限定し、表示は継続する
-- [ ] 失敗時の `errorlevel` 伝播を壊さない
+- [x] debug/trace のログファイル出力パスとファイル名規約を維持
+- [x] `PYTHON_CMD` はログ用途に限定し、表示は継続する
+- [x] 失敗時の `errorlevel` 伝播を壊さない
 
 ---
 

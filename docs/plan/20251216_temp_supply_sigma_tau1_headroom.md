@@ -66,7 +66,7 @@
 - [ ] 本事象の経緯を `docs/plan/README.md` から本メモにリンク。
 
 ## 今回の修正（2025-12-13）
-- `run.parquet` に `supply_rate_nominal/scaled/applied` と `supply_headroom`・`supply_clip_factor` を追加し、`summary.json`/`run_config.json` で headroom・clip_factor の min/median/max と「scaled>0 なのに applied==0 だった時間割合」を追跡できるようにした。
+- `out/<run_id>/series/run.parquet` に `supply_rate_nominal/scaled/applied` と `supply_headroom`・`supply_clip_factor` を追加し、`out/<run_id>/summary.json`/`out/<run_id>/run_config.json` で headroom・clip_factor の min/median/max と「scaled>0 なのに applied==0 だった時間割合」を追跡できるようにした。
 - 連続して `supply_rate_scaled>0` かつ `applied==0` が続くと warn を出し、ログに time・Sigma_surf・Sigma_tau1・headroom・温度/フィードバックスケールを必ず含める。初期 headroom も起動時に一行でログ出力する。
 - `run_temp_supply_sweep.sh` のデフォルトで温度スケールを無効化し（feedback は従来どおり off）、起動時に有効な倍率・遮蔽設定を echo。クイックプロットに supply 内訳と headroom/clip factor を載せ、summary の clip 時間割合をタイトルに含めた。
 ## 参考

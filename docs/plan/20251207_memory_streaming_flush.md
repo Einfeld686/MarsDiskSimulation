@@ -14,7 +14,7 @@
 
 # 実装ステップ
 1. **閾値設定とフラッシュ条件**: `ZeroDHistory` あるいはランナーに、推定メモリとステップ数の閾値（例: 80 GB 相当、補助で 1 万ステップ）を設定可能にするフックを追加。run/psd/diagnostics を同じステップ範囲でまとめてフラッシュし、対応リストをクリア。
-2. **Parquet チャンク書き出し**: `io.writer` へ `append_parquet_chunk(path, df, schema_hint, compression="snappy")` のようなユーティリティを追加し、初回スキーマを固定して連番ファイル（`run_chunk_0001.parquet` 等）へ追記する。NaN 埋めで欠損列を保持し、型ブレを防ぐ。最後に統合ビュー用メタ（チャンク一覧）を残す。
+2. **Parquet チャンク書き出し**: `io.writer` へ `append_parquet_chunk(path, df, schema_hint, compression="snappy")` のようなユーティリティを追加し、初回スキーマを固定して連番ファイル（`out/<run_id>/series/run_chunk_0001.parquet` 等）へ追記する。NaN 埋めで欠損列を保持し、型ブレを防ぐ。最後に統合ビュー用メタ（チャンク一覧）を残す。
 3. **進捗・メモリ表示**: `ProgressReporter` のヘッダに推定メモリと現在のバッファ使用概算を表示し、フラッシュ実行時にログを出す。`--quiet --progress` を標準 on にする CLI デフォルトを検討。
 4. **クリーンアップと集約**: 終了時に残バッファをフラッシュし、（オプションで）チャンクを 1 本にマージするか、ディレクトリ読み込み手順を summary に記録。異常終了でも読めるよう、チャンク名にステップ範囲を含める。
 5. **設定とドキュメント**: 閾値・チャンクサイズ・圧縮方式の設定キーを追加する場合は YAML/スキーマを拡張し、README/analysis に利用手順を追記。オプトアウトフラグも検討。
@@ -44,13 +44,13 @@
 # 実装メモ（進捗）
 - `io.streaming` セクションを schema に追加（enable/opt_out/memory_limit_gb/step_flush_interval/compression/merge_at_end）。
 - `run_zero_d` に StreamingState を挿入し、run/psd/diagnostics/step_diag/mass_budget を同じステップ範囲で同期フラッシュする実装を追加。
-- Parquet 書き出しは snappy 既定、チャンクは `series/*_chunk_<start>_<end>.parquet` 形式。mass_budget は CSV 追記。
+- Parquet 書き出しは snappy 既定、チャンクは `out/<run_id>/series/run_chunk_<start>_<end>.parquet` 形式。mass_budget は CSV 追記。
 - streaming 有効時は summary にチャンク一覧と設定を記録し、merge_at_end=true で単一ファイルへ連結する。
 
 # 追加考慮点（周辺影響）
-- **単一ファイル前提の解析**: streaming 有効時は `series/run.parquet` が生成されないため、既存の分析スクリプトやテストが単一ファイルを前提にしている場合は `merge_at_end=true` を使うか、チャンクディレクトリ読み込みに対応する変更が必要。
+- **単一ファイル前提の解析**: streaming 有効時は `out/<run_id>/series/run.parquet` が生成されないため、既存の分析スクリプトやテストが単一ファイルを前提にしている場合は `merge_at_end=true` を使うか、チャンクディレクトリ読み込みに対応する変更が必要。
 - **ドキュメント更新**: `analysis/config_guide.md` や README/run-recipes に `io.streaming.*` キーとチャンク運用（mass_budget が追記型になる点、チャンク名パターン）を追記する必要あり。
-- **スクリプト適用範囲**: `scripts/runsets/windows/legacy/run_sublim_cooling.cmd` は override 済み。類似スクリプト（例: `scripts/run_sublim_windows_cooling.cmd`）で同様の挙動を望む場合は明示的に override を追加するかデフォルトを見直す。
+- **スクリプト適用範囲**: `scripts/runsets/windows/legacy/run_sublim_cooling.cmd` は override 済み。類似スクリプト（例: `scripts/runsets/windows/legacy/run_sublim_windows.cmd`）で同様の挙動を望む場合は明示的に override を追加するかデフォルトを見直す。
 - **テスト強化**: streaming 無効時の回帰は従来通り。有効ケースで小規模ランの簡易テスト（チャンク出力と summary.streaming ブロックの検証）を追加すると安全。
 - **mass_budget 依存**: mass_budget がチャンク追記になるため、後処理ツールが単一CSVを期待していないか確認し、必要に応じて連結手順をドキュメント化する。
 

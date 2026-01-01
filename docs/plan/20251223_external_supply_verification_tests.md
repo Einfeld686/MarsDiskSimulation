@@ -30,7 +30,7 @@
 ### T1: デフォルト供給（mu_orbit10pct）パイプライン検証
 - 概要: デフォルト供給（`optical_depth` + `mu_orbit10pct` + `transport=direct`）のスケーリングを Smol 経路で検証する。
 - 期待値:
-  - `dotSigma_target = mu_orbit10pct * orbit_fraction_at_mu1 * sigma_surf_mu_reference / t_orb` を `run_config.json` と `t_orb_s` から再計算できる。[marsdisk/run_zero_d.py:918-933][marsdisk/run_zero_d.py:1283-1338]
+  - `dotSigma_target = mu_orbit10pct * orbit_fraction_at_mu1 * sigma_surf_mu_reference / t_orb` を `out/<run_id>/run_config.json` と `t_orb_s` から再計算できる。[marsdisk/run_zero_d.py:918-933][marsdisk/run_zero_d.py:1283-1338]
   - `supply_rate_nominal` と `supply_rate_scaled` が `dotSigma_target` に一致（温度/feedback/リザーバなし）。
   - `prod_subblow_area_rate_raw` は `dotSigma_target / epsilon_mix` に一致。
   - `supply_rate_applied == prod_subblow_area_rate`（`transport=direct` かつ headroom 無効で減衰なし）。

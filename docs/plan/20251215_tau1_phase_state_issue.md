@@ -18,5 +18,5 @@
 - フェーズ（固体/液体）に関わらず初期化時点で `sigma_tau1_limit` を決定し、以後のステップで None にならないよう run.py 初期化ロジックを修正しようとしたが、バグで失敗。具体的には:
   - `init_tau1` に `target_tau` / `tau_field` を導入し、LOS τ=1 でキャップを計算するロジックを追加。
   - その際のコード変更で例外処理のインデント崩れや `_log_stage` 呼び出しの引数ミスマッチを混入させ、run.py が起動直後に落ち、出力が一切生成されない状態になった。
-  - テスト `tests/test_init_tau1_los_target.py` で初期 τ=1 を保証する確認を追加したが、run.py 側のバグで本番実行では series/checkpoints が生成されず失敗。
+  - テスト `tests/integration/test_init_tau1_los_target.py` で初期 τ=1 を保証する確認を追加したが、run.py 側のバグで本番実行では series/checkpoints が生成されず失敗。
 - 結論: `sigma_tau1_limit` を初期化で確定させる改修は、run.py を別ブランチで安全に実装し直し、短縮ラン＋ステージログ付きで検証してから統合する必要がある。

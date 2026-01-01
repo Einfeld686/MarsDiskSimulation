@@ -15,9 +15,9 @@
 - [x] `_resolve_blowout` を raw/effective の両方を返す形に変更する
 - [x] `run_zero_d` の変数命名を整理し、床・PSD には effective を使用する
 - [x] 出力へ raw/effective の両方を保存する
-  - [x] 時系列 `series/run.parquet`
-  - [x] 集計 `summary.json`
-  - [x] `run_config.json` の provenance 追加（必要なら）
+  - [x] 時系列 `out/<run_id>/series/run.parquet`
+  - [x] 集計 `out/<run_id>/summary.json`
+  - [x] `out/<run_id>/run_config.json` の provenance 追加（必要なら）
 - [x] 旧モデル互換値の利用時は非推奨警告をデフォルトで出す（サイレント化手段を定義）
 - [x] `s_min_components` へ raw/effective を追加し、旧 `blowout` の意味を明示する
 - [x] テスト更新

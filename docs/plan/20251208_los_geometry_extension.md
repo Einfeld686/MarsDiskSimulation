@@ -23,7 +23,7 @@
    - `tau_los_mars = kappa_surf * Sigma_surf * f_los` として距離依存を反映（既存パスを置換）。
    - `phase_payload`/`tau_gate`/`Sigma_tau1` の計算は新しい τ_los を使う。
 4) **I/O と検証**
-   - 出力カラムに `f_los`（選択モードと値）を追加するか、`run_config.json` に記録する。
+   - 出力カラムに `f_los`（選択モードと値）を追加するか、`out/<run_id>/run_config.json` に記録する。
    - `writer` 定義と `evaluation_system.REQUIRED_SERIES_COLUMNS` を調整。
 5) **テスト**
    - f_los が距離スケーリングすることをユニットテストで確認（例: r を倍にすると f_los も比例増）。

@@ -65,9 +65,9 @@ I/O と記録生成の縮退も同時に効く。
 ## 実装前の注意点（必須）
 
 - **出力スキーマの維持**: `marsdisk/output_schema.py` のキーは必ず出力に揃える。`_ensure_keys` を削減する場合は「書き出し直前に補完」を徹底し、`tests/integration/test_run_one_d_output_parity.py` と `tests/integration/test_run_one_d_streaming_schema.py` の前提を崩さない。
-- **psd_hist / mass_budget_cells の契約**: `io.psd_history` が OFF でない限り `series/psd_hist.parquet` を出力すること。`mass_budget_cells` は現状常時 ON のため、無効化フラグを導入する場合は `marsdisk/schema.py` とテスト更新が必須。
-- **ストリーミング ON/OFF の整合**: `checks/mass_budget.csv` / `checks/mass_budget_cells.csv` は両モードで必ず生成し、列集合が一致することを維持する。
-- **セル並列設定の更新はテストとセット**: `_resolve_cell_parallel_config` を変更する場合は `tests/unit/test_cell_parallel_config.py` と `run_config.json` の `cell_parallel` 仕様整合を同時に更新する。
+- **psd_hist / mass_budget_cells の契約**: `io.psd_history` が OFF でない限り `out/<run_id>/series/psd_hist.parquet` を出力すること。`mass_budget_cells` は現状常時 ON のため、無効化フラグを導入する場合は `marsdisk/schema.py` とテスト更新が必須。
+- **ストリーミング ON/OFF の整合**: `out/<run_id>/checks/mass_budget.csv` / `checks/mass_budget_cells.csv` は両モードで必ず生成し、列集合が一致することを維持する。
+- **セル並列設定の更新はテストとセット**: `_resolve_cell_parallel_config` を変更する場合は `tests/unit/test_cell_parallel_config.py` と `out/<run_id>/run_config.json` の `cell_parallel` 仕様整合を同時に更新する。
 - **キャッシュのスコープ制約**: thread-local/run-local に限定し、`MARSDISK_DISABLE_COLLISION_CACHE` / `MARSDISK_DISABLE_NUMBA` を尊重する。セル間混線の可能性がある共有バッファは禁止。
 
 ---
@@ -101,7 +101,7 @@ I/O と記録生成の縮退も同時に効く。
 
 - `Nr` と `jobs` に応じて **自動で無効化**（小規模では OFF）
 - `chunk_size` の自動設定を見直し、**過細分割を避ける**
-- 有効/無効の判定理由を `run_config.json` に記録
+- 有効/無効の判定理由を `out/<run_id>/run_config.json` に記録
 
 ---
 
@@ -140,7 +140,7 @@ I/O と記録生成の縮退も同時に効く。
 0) セル並列の有効条件を再調整
 - [x] `Nr` と `jobs` による **自動無効化条件** を追加
 - [x] `chunk_size` の算出式を見直し（小規模時は単一チャンク）
-- [x] 無効化理由を `run_config.json` に記録
+- [x] 無効化理由を `out/<run_id>/run_config.json` に記録
 
 1) 1D セルループ再設計
 - [x] `_run_cell_indices` の出力を tuple 化（records/diagnostics は optional）
@@ -155,7 +155,7 @@ I/O と記録生成の縮退も同時に効く。
 3) 衝突/Smol ループの再利用
 - [x] `ImexWorkspace` を 1D 各セルで再利用
 - [x] kernel workspace をセル単位で持ち回し
-- [x] Numba の有効/無効を `run_config.json` に記録
+- [x] Numba の有効/無効を `out/<run_id>/run_config.json` に記録
 
 4) 計測の整備
 - [x] 短縮ケース + I/O オフのプロファイルを定型化
@@ -166,7 +166,7 @@ I/O と記録生成の縮退も同時に効く。
 ## 検証計画
 
 - **数値一致**: 既存テスト（mass_budget/PSD/wavy）を維持
-- **再現性**: 並列 OFF 条件で `summary.json` の差分が許容誤差内
+- **再現性**: 並列 OFF 条件で `out/<run_id>/summary.json` の差分が許容誤差内
 - **性能**: 短縮ケースで 20% 以上の改善を確認
 - **セル並列**: `Nr` 小規模では OFF が高速であることを確認し、  
   大規模セル数でのみ ON の改善を評価する
@@ -198,6 +198,6 @@ I/O と記録生成の縮退も同時に効く。
 ## 受入基準
 
 - 1D 短縮ケースの wall-time が 20% 以上短縮
-- `summary.json` と `checks/mass_budget.csv` が許容差内
+- `out/<run_id>/summary.json` と `out/<run_id>/checks/mass_budget.csv` が許容差内
 - 既存 pytest が全てパス
 - 小規模セル数ではセル並列が自動で無効化される

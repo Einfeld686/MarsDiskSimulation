@@ -5,7 +5,7 @@
 - 既定テーブルは `_DEFAULT_COEFFS={3.0, 5.0}` km/s の2点のみで、範囲外は端値クランプ＋警告（`marsdisk/physics/qstar.py`）。
 - `qstar.v_ref_kms` は **`override_coeffs=true` か `coeff_table` 指定時のみ**テーブルに反映される。既定では無視される（`marsdisk/run_zero_d.py`）。
 - 一部 config に 1.5–7.0 km/s が書かれているが、`override_coeffs` が無いため **実際には反映されていない**。
-- Q_pr テーブル（`marsdisk/io/data/qpr_planck_*.csv`）と Q_D* テーブルは別物であり、混同しやすい。
+- Q_pr テーブル（`marsdisk/io/data/qpr_planck.csv`, `marsdisk/io/data/qpr_planck_sio2_abbas_calibrated_lowT.csv`, `marsdisk/io/data/qpr_planck_sio2_generated.csv`）と Q_D* テーブルは別物であり、混同しやすい。
 
 # 目標 (Definition of Done)
 1. **1–7 km/s をカバーする Q_D* 係数テーブル**が repo に存在し、出典を追跡できる。

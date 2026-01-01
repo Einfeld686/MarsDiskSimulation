@@ -255,7 +255,7 @@ tests/
 > grep -r "test_phase3" analysis/
 >
 > # 2. ファイル移動（git mv 必須）
-> git mv tests/test_phase3_surface_blowout.py tests/legacy/
+> git mv tests/integration/test_phase3_surface_blowout.py tests/legacy/
 >
 > # 3. アンカー参照を更新
 > # analysis/overview.md 等の [tests/test_phase3...] を [tests/legacy/test_phase3...] に修正
@@ -265,7 +265,7 @@ tests/
 >
 > # 5. カバレッジガード確認
 > python -m agent_test.ci_guard_analysis \
->   --coverage analysis/coverage.json \
+>   --coverage analysis/coverage/coverage.json \
 >   --fail-under 0.75 --require-clean-anchors
 > ```
 
@@ -298,7 +298,7 @@ python -m tools.doc_sync_agent --all --write
 make analysis-doc-tests  # pytest tests/test_analysis_* を実行
 
 # 3. カバレッジ基準を記録
-cat analysis/coverage.json | jq '.function_reference_rate'
+cat analysis/coverage/coverage.json | jq '.function_reference_rate'
 # → 現在 1.0 を維持
 
 # 4. 研究スクリプトの基準出力を保存
@@ -386,7 +386,7 @@ git cherry-pick <good-commit-hash>
   run: |
     pytest tests/ -q
     python -m agent_test.ci_guard_analysis \
-      --coverage analysis/coverage.json \
+      --coverage analysis/coverage/coverage.json \
       --fail-under 0.75 \
       --require-clean-anchors
 ```
@@ -490,7 +490,7 @@ gantt
 - [x] テストディレクトリが `unit/`, `integration/`, `research/`, `legacy/` に分類されている
 - [x] Phase5 関連コードが削除されている
 - [x] Phase7 が `extended_diagnostics` にリネームされている
-- [x] `analysis/coverage.json` の `function_reference_rate` が 0.75 以上を維持
+- [x] `analysis/coverage/coverage.json` の `function_reference_rate` が 0.75 以上を維持
 
 ### legacy テスト削除時期
 - **削除予定**: 衝突物理追加完了後、動作が安定したら `tests/legacy/` を削除
@@ -512,8 +512,8 @@ gantt
 ### 8.3 実装スコープ（0D 優先）
 - `CollisionStepContext` にエネルギー簿記用フィールド（例: `E_rel`, `f_ke`, `dE_dissipated`, `dE_retained`）を追加し、smol ステップで算出・保持する。値の入力元は Krivov/Thébault の既存式に限定し、新しい係数は導入しない。
 - `marsdisk/physics/collisions_smol.py` で衝突前後の運動エネルギーと散逸分を評価し、`smol_res` に格納する。
-- 出力追加: `series/run.parquet` に `E_rel`, `E_dissipated`, `E_retained`, `E_error_percent`（質量誤差ログに準じた閾値 0.5%）を追加。`summary.json` に 2 年間の総散逸エネルギーと最大誤差を追加。
-- 質量保存ログ `checks/mass_budget.csv` にエネルギー列を並記し、閾値超過時は同様にアラートを出す。
+- 出力追加: `out/<run_id>/series/run.parquet` に `E_rel`, `E_dissipated`, `E_retained`, `E_error_percent`（質量誤差ログに準じた閾値 0.5%）を追加。`out/<run_id>/summary.json` に 2 年間の総散逸エネルギーと最大誤差を追加。
+- 質量保存ログ `out/<run_id>/checks/mass_budget.csv` にエネルギー列を並記し、閾値超過時は同様にアラートを出す。
 
 ### 8.4 テストと検証
 - pytest: (1) `f_ke` による散逸上限が守られること（侵食ケース）。(2) 壊滅的破砕で `E_dissipated` が正で、`E_rel = E_dissipated + E_retained` となること。(3) IMEX 時間積分でエネルギー誤差が Δt 縮小とともに収束すること。既存の wavy PSD テストに影響しないことも確認。
@@ -528,7 +528,7 @@ gantt
 ### 8.6 追加の具体化事項
 - 反発係数との整合: `f_ke_effective = min(1, max(0, eps_restitution**2))` をデフォルトの近似とし、設定で上書き可能にする。侵食では Thébault の \(f_{\mathrm{ke}}\) を優先し、壊滅的破砕では `f_ke_fragmentation`（既定 0.1 など）を導入するか、設定が無い場合は eps² でフォールバックする。
 - e/i 更新: `dynamics.update_e_i` に減衰タイムスケール \(t_{\mathrm{damp}}=t_{\mathrm{coll}}/\varepsilon^{2}\) を組み込み、散逸ログと同じ eps/f_ke を共有する。`CollisionStepContext` に `eps_restitution`（または `f_ke_effective`）を渡し、速度分散更新とエネルギー簿記が一致するようにする。
-- 表面エネルギー制約: Krijt & Kama (2014) による \(s_{\min}\) をオプションで計算し、`psd.floor` との min/ max で下限を決定するフックを追加する（デフォルト off）。採用した場合は `series/run.parquet` に `s_min_surface_energy` を出力。
+- 表面エネルギー制約: Krijt & Kama (2014) による \(s_{\min}\) をオプションで計算し、`psd.floor` との min/ max で下限を決定するフックを追加する（デフォルト off）。採用した場合は `out/<run_id>/series/run.parquet` に `s_min_surface_energy` を出力。
 - 壊滅的破砕での熱化係数: §3.2/§6 の指摘に対応し、Krivov 2006 の破砕でも `f_ke_fragmentation` を明示的に適用し、`analysis/overview.md` にフローを記載する。
 - checks/energy_budget.csv カラム案（固定名）:
   - `time`, `dt`

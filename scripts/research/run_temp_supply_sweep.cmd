@@ -898,7 +898,7 @@ if "%DEBUG%"=="1" echo.[DEBUG] launch_job (DisableDelayedExpansion): NEXT_SEED_P
 rem Use call to handle paths with spaces/unicode properly
 for /f %%S in ('call "%PYTHON_EXEC_CMD%" "%NEXT_SEED_PY%" 2^>nul') do set "JOB_SEED_TMP=%%S"
 if not defined JOB_SEED_TMP (
-  for /f %%S in ('python "%NEXT_SEED_PY%" 2^>nul') do set "JOB_SEED_TMP=%%S"
+  for /f %%S in ('call "%PYTHON_EXEC_CMD%" "%NEXT_SEED_PY%"') do set "JOB_SEED_TMP=%%S"
 )
 endlocal & set "JOB_SEED=%JOB_SEED_TMP%"
 if "%DEBUG%"=="1" echo.[DEBUG] launch_job: JOB_SEED=!JOB_SEED!

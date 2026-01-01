@@ -87,7 +87,7 @@
 
 #### 1. `np.einsum` の Numba 化
 
-**場所**: [smol.py:255](file:///Users/daichi/marsshearingsheet/marsdisk/physics/smol.py#L255)
+**場所**: [smol.py:255](file://marsdisk/physics/smol.py#L255)
 
 ```python
 gain = 0.5 * np.einsum("ij,kij->k", C, Y)
@@ -104,7 +104,7 @@ gain = 0.5 * np.einsum("ij,kij->k", C, Y)
 
 #### 2. 衝突カーネル計算の最適化
 
-**場所**: [collide.py:compute_collision_kernel_C1](file:///Users/daichi/marsshearingsheet/marsdisk/physics/collide.py#L18-78)
+**場所**: [collide.py:compute_collision_kernel_C1](file://marsdisk/physics/collide.py#L18-78)
 
 ```python
 kernel = N_outer / (1.0 + delta) * np.pi * (s_sum ** 2) * v_mat / (np.sqrt(2.0 * np.pi) * H_ij)
@@ -117,13 +117,13 @@ kernel = N_outer / (1.0 + delta) * np.pi * (s_sum ** 2) * v_mat / (np.sqrt(2.0 *
 | **提案** | Numba JIT 化 |
 
 > [!WARNING]
-> `N` と `H` はステップごとに更新されるため（[collisions_smol.py:640-735](file:///Users/daichi/marsshearingsheet/marsdisk/physics/collisions_smol.py#L640-735)）、カーネル全体のキャッシュは実質再利用不可。キャッシュ対象はサイズ配列 `s` や固定 `v_rel` に限定する必要がある。
+> `N` と `H` はステップごとに更新されるため（[collisions_smol.py:640-735](file://marsdisk/physics/collisions_smol.py#L640-735)）、カーネル全体のキャッシュは実質再利用不可。キャッシュ対象はサイズ配列 `s` や固定 `v_rel` に限定する必要がある。
 
 ---
 
 #### 3. Q_D* 計算のテーブル化
 
-**場所**: [qstar.py:compute_q_d_star_array](file:///Users/daichi/marsshearingsheet/marsdisk/physics/qstar.py#L165-194)
+**場所**: [qstar.py:compute_q_d_star_array](file://marsdisk/physics/qstar.py#L165-194)
 
 | 項目 | 内容 |
 |------|------|
@@ -135,7 +135,7 @@ kernel = N_outer / (1.0 + delta) * np.pi * (s_sum ** 2) * v_mat / (np.sqrt(2.0 *
 
 #### 4. 昇華計算の最適化
 
-**場所**: [sublimation.py](file:///Users/daichi/marsshearingsheet/marsdisk/physics/sublimation.py)
+**場所**: [sublimation.py](file://marsdisk/physics/sublimation.py)
 
 特に `p_sat` 関数群（Clausius-Clapeyron 評価）がホットスポット。
 
@@ -151,7 +151,7 @@ kernel = N_outer / (1.0 + delta) * np.pi * (s_sum ** 2) * v_mat / (np.sqrt(2.0 *
 
 #### 5. IMEX-BDF(1) ソルバーの反復削減
 
-**場所**: [smol.py:step_imex_bdf1_C3](file:///Users/daichi/marsshearingsheet/marsdisk/physics/smol.py#L146-276)
+**場所**: [smol.py:step_imex_bdf1_C3](file://marsdisk/physics/smol.py#L146-276)
 
 ```python
 while True:
@@ -164,14 +164,14 @@ while True:
 
 | 項目 | 内容 |
 |------|------|
-| **問題** | 初期 `dt` が過大だと負値や質量誤差で弾かれ、反復回数が増加（[smol.py:244-275](file:///Users/daichi/marsshearingsheet/marsdisk/physics/smol.py#L244-275)） |
+| **問題** | 初期 `dt` が過大だと負値や質量誤差で弾かれ、反復回数が増加（[smol.py:244-275](file://marsdisk/physics/smol.py#L244-275)） |
 | **提案** | 初期 `dt` 推定を `t_coll` ベースでより正確に設定 |
 
 ---
 
 #### 6. `_blowout_sink_vector` の最適化
 
-**場所**: [collisions_smol.py:366-379](file:///Users/daichi/marsshearingsheet/marsdisk/physics/collisions_smol.py#L366-379)
+**場所**: [collisions_smol.py:366-379](file://marsdisk/physics/collisions_smol.py#L366-379)
 
 ```python
 mask = sizes <= a_blow
@@ -188,7 +188,7 @@ sink[mask] = Omega
 
 #### 7. PSD 状態変換の高速化
 
-**場所**: [smol.py:psd_state_to_number_density / number_density_to_psd_state](file:///Users/daichi/marsshearingsheet/marsdisk/physics/smol.py#L25-143)
+**場所**: [smol.py:psd_state_to_number_density / number_density_to_psd_state](file://marsdisk/physics/smol.py#L25-143)
 
 | 項目 | 内容 |
 |------|------|
@@ -279,6 +279,6 @@ py-spy record -o flame.svg -- python -m marsdisk.run --config configs/base.yml
 ## 関連ドキュメント
 
 - [20251212_simulation_performance_optimization.md](./20251212_simulation_performance_optimization.md) — 実行時間短縮計画（施策詳細）
-- [marsdisk/physics/_numba_kernels.py](file:///Users/daichi/marsshearingsheet/marsdisk/physics/_numba_kernels.py) — 既存 Numba カーネル
-- [marsdisk/physics/smol.py](file:///Users/daichi/marsshearingsheet/marsdisk/physics/smol.py) — IMEX ソルバー
-- [marsdisk/physics/collide.py](file:///Users/daichi/marsshearingsheet/marsdisk/physics/collide.py) — 衝突カーネル
+- [marsdisk/physics/_numba_kernels.py](file://marsdisk/physics/_numba_kernels.py) — 既存 Numba カーネル
+- [marsdisk/physics/smol.py](file://marsdisk/physics/smol.py) — IMEX ソルバー
+- [marsdisk/physics/collide.py](file://marsdisk/physics/collide.py) — 衝突カーネル

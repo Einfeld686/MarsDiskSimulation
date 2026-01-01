@@ -104,7 +104,7 @@
 
 **実装タスク（設定/ログ）**
 - `run_sweep.cmd` / `run_one.cmd` に **スレッド上限の明示ブロック**を追加（`CELL_THREAD_LIMIT` を採用）。
-- `run_config.json` に **実効スレッド情報**（`NUMBA_NUM_THREADS` / `OMP` など）を記録する。
+- `out/<run_id>/run_config.json` に **実効スレッド情報**（`NUMBA_NUM_THREADS` / `OMP` など）を記録する。
 - `scripts/tests/overparallel_benchmark.py` を利用し、**最適な `MARSDISK_CELL_JOBS` を探索**する。
 
 ### フェーズE: Python ループ削減（1D 内側ループ）

@@ -9,9 +9,9 @@
 **火星月形成円盤**モデルでは、外部から供給された質量が表層に蓄積し、放射圧によるブローアウト（小粒子の系外脱出）と衝突カスケード（破砕連鎖）を通じて質量損失を引き起こします。しかし、**ヘッドルームポリシーが `spill` の場合**、光学深度 $\tau=1$ を超える供給分が即座にスピル（溢れ流出）として系外へ排出され、表層に「燃料」が残らない状態が発生しました。
 
 ### この文書で扱う物理
-- **ブローアウト**: $\beta \geq 0.5$ の小粒子が放射圧で系外へ脱出（式 [E.013](file:///Users/daichi/marsshearingsheet/analysis/equations.md#E013), [E.014](file:///Users/daichi/marsshearingsheet/analysis/equations.md#E014)）
+- **ブローアウト**: $\beta \geq 0.5$ の小粒子が放射圧で系外へ脱出（式 [E.013](file://analysis/equations.md#E013), [E.014](file://analysis/equations.md#E014)）
 - **スピル**: $\tau > 1$ 超過時に供給を表層に入れず系外へ逃がす経路
-- **光学深度クリップ**: $\Sigma_{\rm surf}$ を $\Sigma_{\tau=1}$ 以下に制限する処理（式 [E.016](file:///Users/daichi/marsshearingsheet/analysis/equations.md#E016)）
+- **光学深度クリップ**: $\Sigma_{\rm surf}$ を $\Sigma_{\tau=1}$ 以下に制限する処理（式 [E.016](file://analysis/equations.md#E016)）
 
 ---
 
@@ -35,10 +35,10 @@
 
 | モジュール | 役割 |
 |------------|------|
-| [marsdisk/run.py](file:///Users/daichi/marsshearingsheet/marsdisk/run.py) | メインループ `run_zero_d`、昇華→ブローアウト振替ロジック |
-| [marsdisk/physics/supply.py](file:///Users/daichi/marsshearingsheet/marsdisk/physics/supply.py) | 供給率計算、headroom_policy の適用 |
-| [marsdisk/physics/shielding.py](file:///Users/daichi/marsshearingsheet/marsdisk/physics/shielding.py) | 遮蔽と $\Sigma_{\tau=1}$ クリップ |
-| [marsdisk/schema.py](file:///Users/daichi/marsshearingsheet/marsdisk/schema.py) | YAML 設定のバリデーション |
+| [marsdisk/run.py](file://marsdisk/run.py) | メインループ `run_zero_d`、昇華→ブローアウト振替ロジック |
+| [marsdisk/physics/supply.py](file://marsdisk/physics/supply.py) | 供給率計算、headroom_policy の適用 |
+| [marsdisk/physics/shielding.py](file://marsdisk/physics/shielding.py) | 遮蔽と $\Sigma_{\tau=1}$ クリップ |
+| [marsdisk/schema.py](file://marsdisk/schema.py) | YAML 設定のバリデーション |
 
 ---
 
@@ -75,10 +75,10 @@
 
 | ファイル | 確認項目 | 期待値 |
 |----------|----------|--------|
-| `summary.json` | `M_out_dot` (最終ステップ) | > 0（ブローアウト発生） |
-| `summary.json` | `supply_clip_time_fraction` | < 1（常時クリップでない） |
-| `series/run.parquet` | `mass_loss_rate_spill` | ≈ 0（spill→clip 後） |
-| `series/run.parquet` | `headroom` | > 0（供給余地あり） |
+| `out/<run_id>/summary.json` | `M_out_dot` (最終ステップ) | > 0（ブローアウト発生） |
+| `out/<run_id>/summary.json` | `supply_clip_time_fraction` | < 1（常時クリップでない） |
+| `out/<run_id>/series/run.parquet` | `mass_loss_rate_spill` | ≈ 0（spill→clip 後） |
+| `out/<run_id>/series/run.parquet` | `headroom` | > 0（供給余地あり） |
 
 ---
 
@@ -86,8 +86,8 @@
 
 | ドキュメント | 内容 |
 |--------------|------|
-| [analysis/equations.md](file:///Users/daichi/marsshearingsheet/analysis/equations.md) | β, s_blow, 遮蔽 (E.013–E.017) の数式定義 |
-| [analysis/AI_USAGE.md](file:///Users/daichi/marsshearingsheet/analysis/AI_USAGE.md) | 出力ファイルのカラム定義 |
-| [analysis/glossary.md](file:///Users/daichi/marsshearingsheet/analysis/glossary.md) | 用語集と変数命名規約 |
-| [docs/plan/20251221_temp_supply_external_supply.md](file:///Users/daichi/marsshearingsheet/docs/plan/20251221_temp_supply_external_supply.md) | 外部供給スイープの環境変数リファレンス |
+| [analysis/equations.md](file://analysis/equations.md) | β, s_blow, 遮蔽 (E.013–E.017) の数式定義 |
+| [analysis/AI_USAGE.md](file://analysis/AI_USAGE.md) | 出力ファイルのカラム定義 |
+| [analysis/glossary.md](file://analysis/glossary.md) | 用語集と変数命名規約 |
+| [docs/plan/20251221_temp_supply_external_supply.md](file://docs/plan/20251221_temp_supply_external_supply.md) | 外部供給スイープの環境変数リファレンス |
 

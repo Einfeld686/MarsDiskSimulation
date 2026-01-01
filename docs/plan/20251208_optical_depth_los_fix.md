@@ -29,7 +29,7 @@
 4) **テスト追加と更新（期待値を修正）**
    - `los_factor>1` で必ずしも `Sigma_tau1_los` が縮むとは限らない（Φ(τ_los) 低下で κ_eff が下がると Σ_tau1 は増えることもある）。テストは「LOS を伸ばすと κ_eff/β_eff や `M_out_dot` が減少する」ことを確認するように組む。
    - もし Σ_tau1_los の縮小自体を保証したい場合は案A（`Sigma_tau1_los = Sigma_tau1_vert / f_los`）を採用し、その挙動をテストにする。
-   - `tests/test_phase3_surface_blowout.py` を `Sigma_tau1_active` の基準を LOS に合わせて期待値更新。`tau_gate` が `tau_los_mars` を使うことも単体で確認できるとなお良い。
+   - `tests/integration/test_phase3_surface_blowout.py` を `Sigma_tau1_active` の基準を LOS に合わせて期待値更新。`tau_gate` が `tau_los_mars` を使うことも単体で確認できるとなお良い。
 
 5) **ドキュメントと同期**
    - `analysis/equations.md`/`overview.md`/`assumption_trace.md` を更新後、DocSyncAgent (`make analysis-sync`) → `make analysis-doc-tests` → `python -m tools.evaluation_system --outdir <run_dir>` を実行。
@@ -37,7 +37,7 @@
 
 6) **検証・実行**
    - `python -m marsdisk.run --config configs/base.yml` で 0D 完走と `out/checks/mass_budget.csv` の誤差 <0.5% を確認。
-   - 主要テスト (`pytest tests/test_surface_outflux.py tests/test_phase3_surface_blowout.py` など) を通し、`series/run.parquet` に LOS カラムが出力されているか目視確認。
+   - 主要テスト (`pytest tests/unit/test_surface_outflux.py tests/integration/test_phase3_surface_blowout.py` など) を通し、`out/<run_id>/series/run.parquet` に LOS カラムが出力されているか目視確認。
 
 ## 非対象と留意点
 - 1D 拡散（C5）や半径プロファイルへの LOS 拡張は今回は見送り、0D の線形光路補正に限定する。
@@ -57,5 +57,5 @@
 3. **シールド入力の切替**: `shielding.apply_shielding` への τ を `tau_los_mars` に変更し、戻り値を `Sigma_tau1_los` として記録・伝搬する（`surface.step_surface`、`collisions_smol.step_collisions_smol_0d` の `sigma_tau1` に渡す）。
 4. **Wyatt/衝突 τ の維持**: 衝突寿命や t_coll 用 τ は `tau_vert` のまま引数名で明示。
 5. **I/O 拡張**: `writer.py` で `tau_vert`, `tau_los_mars`, `Sigma_tau1_los`, `phi_los` を出力。`Sigma_tau1` はエイリアスとして残す。
-6. **テスト更新**: `tests/test_surface_outflux.py`, `tests/test_phase3_surface_blowout.py` を「los_factor>1 で κ_eff/β_eff・M_out_dot が減る」期待に合わせる。`tau_gate` が LOS を見ることもカバー。
+6. **テスト更新**: `tests/unit/test_surface_outflux.py`, `tests/integration/test_phase3_surface_blowout.py` を「los_factor>1 で κ_eff/β_eff・M_out_dot が減る」期待に合わせる。`tau_gate` が LOS を見ることもカバー。
 7. **ドキュメント**: `analysis/equations.md` に τ_vert/τ_los と f_los 式を追記し、`overview.md`/`assumption_trace.md`/μ 定義を LOS 基準に更新。DocSync→doc-tests→evaluation_system の手順を実行。

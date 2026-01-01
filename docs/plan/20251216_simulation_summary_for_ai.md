@@ -81,7 +81,7 @@ temp_supply_sweep/<timestamp>__<git_sha>__seed<N>/
 └── ... (27 directories total)
 ```
 
-### Time Series Columns (`run.parquet`)
+### Time Series Columns (`out/<run_id>/series/run.parquet`)
 
 **Core quantities:**
 - `time`, `dt` — Time and timestep [s]
@@ -146,7 +146,7 @@ Current visualization struggles that need AI advice:
 
 ## 7. Data Samples (for Context)
 
-### `summary.json` Example
+### `out/<run_id>/summary.json` Example
 ```json
 {
   "M_loss": 1.2e-4,
@@ -166,7 +166,7 @@ Current visualization struggles that need AI advice:
 }
 ```
 
-### `run.parquet` Schema (dtypes)
+### `out/<run_id>/series/run.parquet` Schema (dtypes)
 ```python
 time: float64
 M_out_dot: float64          # Mass loss rate

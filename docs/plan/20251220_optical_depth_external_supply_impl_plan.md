@@ -60,7 +60,7 @@
 - 旧 μ（E.027a 相当）は診断・ツール側の導出値としてのみ保持し、設定に使わない。
 - `optical_depth` は新設で維持し、既存 `init_tau1` とは統合しない（互換性のため `init_tau1` は残す）。
 - `optical_depth` と `init_tau1.scale_to_tau1` の同時指定は検証でエラーにする。
-- `summary.json` に `stop_reason`, `stop_tau_los` を追加。
+- `out/<run_id>/summary.json` に `stop_reason`, `stop_tau_los` を追加。
 - 外部供給は本方式へ一本化し、旧系（feedback/transport/headroom/temperature/reservoir 等）は段階的に非推奨化→削除する。
 
 ## 実装タスク
@@ -73,7 +73,7 @@
 [x] 表層更新時の τ=1 クリップを撤廃し、`Sigma_tau1` は診断用のみ保持。
 [x] 更新後に `tau_los > tau_stop * (1 + tol)` を判定し停止、`stop_reason="tau_exceeded"` と最終 `tau_los` を記録。
 [x] 時系列出力に `tau_los_mars`, `kappa_surf`, `phi_used`, `kappa_eff`, `Sigma_tau1`, `Sigma_surf0`, `mu_orbit10pct`, `epsilon_mix`, `dotSigma_prod` を追加（列名は既存仕様に合わせる）。
-[x] `summary.json` に `stop_reason`, `stop_tau_los` を追加。
+[x] `out/<run_id>/summary.json` に `stop_reason`, `stop_tau_los` を追加。
 [x] `tools/derive_supply_rate` など旧 μ を扱う箇所を「診断用導出値」と明示し、設定キーとの混同が起きないよう更新。
 [x] テスト追加（μスケール、停止条件）と既存テスト（ヘッドルーム/遮蔽/質量収支）の更新。
 [ ] `analysis/methods.md` と関連ドキュメントの「Σ_tau1 でクリップ」記述を「停止判定」へ更新し、旧挙動は注記として残す。

@@ -89,7 +89,7 @@
 
 ## 使い方メモ
 - 式の変更や追加は必ず `analysis/equations.md` に反映し、本メモは参照行を更新するだけに留める。
-- 設定を変える場合は sweep YAML（`configs/sweep_temp_supply/temp_supply_T6000_eps1.yml` など）を編集し、`run_config.json` で実績値を確認する。
+- 設定を変える場合は sweep YAML（`configs/sweep_temp_supply/temp_supply_T6000_eps1.yml` など）を編集し、`out/<run_id>/run_config.json` で実績値を確認する。
 
 ---
 

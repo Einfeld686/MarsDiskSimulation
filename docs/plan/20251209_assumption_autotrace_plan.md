@@ -1,12 +1,12 @@
 # 仮定自動抽出システム（初期草案）
 
-目的: code/analysis から仮定と式参照を機械抽出し、`analysis/assumption_trace.*` と `analysis/assumptions_overview.md` を自動更新する段取りをまとめる。既存の出典管理（`analysis/references.registry.json` / `analysis/source_map.json` / `analysis/UNKNOWN_REF_REQUESTS.*` / `analysis/inventory.json`）を前提に、仮定レベルの集約レイヤー `assumption_registry.jsonl` を追加する。
+目的: code/analysis から仮定と式参照を機械抽出し、`analysis/assumption_trace.md` と `analysis/assumptions_overview.md` を自動更新する段取りをまとめる。既存の出典管理（`analysis/references.registry.json` / `analysis/source_map.json` / `analysis/UNKNOWN_REF_REQUESTS.jsonll` / `analysis/inventory.json`）を前提に、仮定レベルの集約レイヤー `analysis/assumption_registry.jsonl` を追加する。
 
 ## 0. 事前確認と運用ルール
 - 最終的には `make assumptions-autogen-check` で doc_sync → scan → render → analysis-doc-tests → evaluation_system を一括実行することを目標にする。それまでは `python -m tools.doc_sync_agent --all --write` → `make analysis-doc-tests` → `python -m tools.evaluation_system --outdir <run_dir>` を同一バッチで回す。
 - 仮定が出典不明な場合は `analysis/UNKNOWN_REF_REQUESTS.jsonl` に slug を登録し、コードや docs では `TODO(REF:slug)` を使う（AI_USAGE 準拠）。
 - 数式の唯一ソースは `analysis/equations.md`。本システムは eq_id とアンカーのみ参照し、式本文を再生成しない。
-- `assumption_trace.*` / `assumptions_overview.md` は、`@-- BEGIN:ASSUMPTION_REGISTRY --`〜`@-- END:ASSUMPTION_REGISTRY --` の自動ブロックをレンダーで上書きし、それ以外は人間が追記可能とする（全自動ファイルにする案も残すが、当面は部分自動で overview の運用に揃える）。
+- `analysis/assumption_trace.md` / `assumptions_overview.md` は、`@-- BEGIN:ASSUMPTION_REGISTRY --`〜`@-- END:ASSUMPTION_REGISTRY --` の自動ブロックをレンダーで上書きし、それ以外は人間が追記可能とする（全自動ファイルにする案も残すが、当面は部分自動で overview の運用に揃える）。
 - UNKNOWN_REF_REQUESTS の slug は仮定系なら `assumption:<slug>` を推奨し、式レベルの slug と混在させない。
 
 ## 1. スコープと「仮定」の定義
@@ -53,7 +53,7 @@
 - 入力ソース: `analysis/` docs（eq_id, TODO slug）, `marsdisk/` ソース（関数・コメント）, `configs/` YAML（値とブールトグル）, `schema.py` / `config_utils.py`（canonical key とラベル）, `analysis/source_map.json` / `analysis/inventory.json`（優先 index）。
 
 ## 4. フェーズ案（最新案に一本化）
-1. ベースライン調査: `assumption_trace.*` skeleton, `AI_USAGE`, `overview.md` の provenance 節、`schema.py` / `config_utils.py`（温度・幾何・label返却）、`assumption_trace_gap_list.md`, `assumption_trace_data_sources.md` を読み、必須フィールド表と run_stage マップ（run.py の段階→列挙値）を起こす。inventory.json は「関数一覧＋アンカー付き index」として位置づける。
+1. ベースライン調査: `analysis/assumption_trace.md` skeleton, `AI_USAGE`, `overview.md` の provenance 節、`schema.py` / `config_utils.py`（温度・幾何・label返却）、`assumption_trace_gap_list.md`, `assumption_trace_data_sources.md` を読み、必須フィールド表と run_stage マップ（run.py の段階→列挙値）を起こす。inventory.json は「関数一覧＋アンカー付き index」として位置づける。
 2. スキーマ確定: `assumption_trace_schema.md` を更新し、2章フィールドを必須/任意にマーク。config_keys の表記（ドットパス）、run_stage 列挙、provenance 構造、scope の扱いを明文化。必要 slug を UNKNOWN_REF_REQUESTS に登録（`assumption:` プレフィックス）。
 3. 抽出パイプライン PoC（scanner 役割を明示）:
    - eq_id: `analysis/equations.md` → eq 辞書（DocSync 前提）→ source_map/inventory のアンカーと紐付け。未解決は WARN。
@@ -62,7 +62,7 @@
    - Markdown: TODO(REF:*) / assumption_tags / scope を軽量 regex で拾い、未知 slug は UNKNOWN_REF_REQUESTS に登録。
    - run_stage: run.py の段階マップに従い、scanner は JSONPath 風 (`run_config.physics_controls.blowout_enabled`) を code_path に併記可能とする。
    - tests: Phase1 は空でもよく、手入力のみ。将来 pytest コレクションからの自動紐付けを検討。
-4. 集約・レンダー: スキャナ出力を `assumption_registry.jsonl` に書き出し、`analysis/tools/render_assumptions.py` で `assumption_trace.md` / `assumptions_overview.md` の自動ブロックを再生成。初回 PoC では現行構造に寄せて diff を確認し、将来の構造変更は意図的に記録する。
+4. 集約・レンダー: スキャナ出力を `analysis/assumption_registry.jsonl` に書き出し、`analysis/tools/render_assumptions.py` で `assumption_trace.md` / `assumptions_overview.md` の自動ブロックを再生成。初回 PoC では現行構造に寄せて diff を確認し、将来の構造変更は意図的に記録する。
 5. 検証・CI フック: `make assumptions-autogen-check` を追加し、doc_sync → scan → render → analysis-doc-tests → evaluation_system を束ねる。スキャナ単体は eq_id 未検出で WARN 続行だが、make ターゲットでは equation_coverage（例: ≥0.95）、function_reference_rate、anchor_consistency_rate が閾値未達なら FAIL。
 
 ## 5. 技術メモ
@@ -71,7 +71,7 @@
 - anchor_consistency_rate: source_map.json と inventory.json の行範囲が scanner 推定の `[file:line–line]` と一致（±数行）する割合。
 - 解析手段の優先度: `analysis/source_map.json` / `analysis/inventory.json` を第一ソースとし、不足分のみ rg+ast で補う。inventory.json は「関数一覧＋アンカー付き index」として扱う。コードコメント由来は provenance.source_kind=`code_comment` で区別。
 - config_keys: ドット付きパス（例: `surface.use_tcoll`, `radiation.TM_K`）。`config_utils` の返す label を provenance.note に写し、YAML の生値ではなく schema 上のキーを canonical にする。
-- assumption_trace.* の運用: 自動ブロックを上書きし、手書き部分は保持。完全自動ファイルに分離する場合は `.autogen.md` を別途用意するオプションを残す。
+- analysis/assumption_trace.md の運用: 自動ブロックを上書きし、手書き部分は保持。完全自動ファイルに分離する場合は `.autogen.md` を別途用意するオプションを残す。
 - code_path/run_stage: run.py の段階構造に沿って run_stage を付与し、code_path は JSONPath 風を基本形とする。段階マップ（init_ei/time_grid/physics_controls/surface_loop/smol_kernel）はフェーズ1で固定し、decorator 化も検討。
 - run_stage テンプレ（初期案）: `init_ei`（初期 e/i 設定、例: run_config["init_ei"] セクション）、`time_grid`（_resolve_time_grid 系）、`physics_controls`（blowout/shielding/psd_floor 等の有効化判断）、`surface_loop`（表層 ODE, tau_gate/gate_factor, fast_blowout 判定）、`smol_kernel`（Smoluchowski カーネル・質量検査）。フェーズ1で run.py の該当関数/辞書キーとの対応表を作る。
 

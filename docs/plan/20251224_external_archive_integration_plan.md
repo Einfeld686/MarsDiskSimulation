@@ -5,7 +5,7 @@
 # 背景
 - 現行の `out/<timestamp>...` 直下にチャンク/統合Parquet/図を保存する運用では、全パターン完走後の移動が内部SSD容量を超過する。
 - ストリーミング書き出しは既に前提となっており、`merge_at_end` での統合タイミングに合わせたアーカイブが自然な切り分け点。
-- 統合Parquet自体は既存実装で対応済み（streaming の `merge_at_end` で `series/run.parquet` 等を生成）。
+- 統合Parquet自体は既存実装で対応済み（streaming の `merge_at_end` で `out/<run_id>/series/run.parquet` 等を生成）。
 
 # 方針（推奨アーキテクチャ）
 - **最終フェーズ（post_finalize）でアーカイブ**を起動し、図生成後に外部HDDへコピーしたうえでローカルの大容量データを削除または最小化する。
@@ -19,8 +19,8 @@
 - [x] 断線/スリープ検知: コピー中の I/O エラーを捕捉し、`INCOMPLETE` マーカーで再開可能にする。
 - [x] パフォーマンス記録: コピー総量と所要時間/速度をログに残す。
 - [x] 低速デバイス警告: 閾値を定めて警告を出す（throughput が閾値未満で警告）。
-- [x] パス永続化: `run_card.md` に実際の保存先を記録する。
-- [x] ボリューム情報記録: `run_card.md` にボリューム名/UUID などの識別情報を追記する。
+- [x] パス永続化: `out/<run_id>/run_card.md` に実際の保存先を記録する。
+- [x] ボリューム情報記録: `out/<run_id>/run_card.md` にボリューム名/UUID などの識別情報を追記する。
 - [x] Windows向け: `io.archive.dir` はドライブレター/UNC の絶対パス前提で解決し、解決後の実パスをログに残す。
 - [x] `io.archive.enabled=true` の場合は `io.archive.dir` の明示指定を必須とし、未指定なら設定エラーで停止する。
 
@@ -29,26 +29,26 @@
 - 移動方式とローカル保持: `mode=copy` + 検証後削除、`keep_local=metadata` を既定とする。
 - 整合性検証の厳密さ: 既定は「標準+」（manifest + 主要成果物ハッシュ + Parquetメタ検証）。
 - 失敗時の扱い: アーカイブ失敗は警告で継続し、`INCOMPLETE` を残して再試行可能にする（厳格モードは別途）。
-- アーカイブ先の構造: `out/<timestamp>...` と同一命名で外部HDDへミラーし、`run_card.md` に `archive_path` とボリューム情報を記録する。
+- アーカイブ先の構造: `out/<timestamp>...` と同一命名で外部HDDへミラーし、`out/<run_id>/run_card.md` に `archive_path` とボリューム情報を記録する。
 - 明示指定必須: `io.archive.enabled=true` の場合は `io.archive.dir` を必ず指定する。
 
 # Windows運用補足（明示パス運用）
 - Windows runset は `--config`/`--overrides`/`--out-root` を明示指定する前提で運用しているため、アーカイブも `io.archive.dir` を overrides で明示的に指定する。
 - `io.archive.dir` は `E:\marsdisk_runs` を固定値として運用し、ドライブレター付き絶対パスで指定する（相対パスや `~` 展開には依存しない）。
 - 外付けHDDの保存先は `E:\marsdisk_runs` に固定する。
-- `run_card.md` には指定値と解決後の実パスの両方を記録する（Windowsのパス解決差異を吸収するため）。
+- `out/<run_id>/run_card.md` には指定値と解決後の実パスの両方を記録する（Windowsのパス解決差異を吸収するため）。
 - `io.archive.enabled=true` の場合は `io.archive.dir` 未指定を許可しない（runset 側で必須化）。
 
 # 整合性検証（標準+）の実装チェック項目
 - [x] manifest を出力し、ファイル数・サイズ・mtime を記録する。
-- [x] 小さな成果物（`summary.json`/`checks/*.csv`/`run_card.md`/図ファイル）はハッシュ一致を確認する。
+- [x] 小さな成果物（`out/<run_id>/summary.json`/`checks/*.csv`/`out/<run_id>/run_card.md`/図ファイル）はハッシュ一致を確認する。
 - [x] 統合Parquetは `schema_hash`/`row_count`/`row_group_count` を比較する。
 - [x] チャンク合算行数と統合Parquet行数の一致を検査する。
 - [x] Parquetの先頭/末尾row groupを読み込み、簡易チェックサムで実読検証する。
 - [x] 整合性検証が合格した場合のみローカル削除を許可する。
 
 # verify_level 判定項目メモ
-- `standard`: manifest（ファイル数/サイズ/mtime）+ 主要成果物の存在確認（`summary.json`/`checks/*.csv`/`run_card.md`/統合Parquet）。
+- `standard`: manifest（ファイル数/サイズ/mtime）+ 主要成果物の存在確認（`out/<run_id>/summary.json`/`checks/*.csv`/`out/<run_id>/run_card.md`/統合Parquet）。
 - `standard_plus`: `standard` + 主要成果物のハッシュ一致 + 統合Parquetの `schema_hash`/`row_count`/`row_group_count` + チャンク合算行数一致 + 先頭/末尾row groupの簡易チェックサム。
 - `strict`: `standard_plus` + 全ファイルのハッシュ一致 + Parquet全row groupの読み込み検証。
 
@@ -95,11 +95,11 @@
 # エラー処理/リカバリ設計
 - [x] **外部未接続**: `ARCHIVE_SKIPPED` マーカーを作成し、ローカル保持で終了。
 - [x] **中断/失敗**: `INCOMPLETE` マーカーと途中manifestを残し、再実行で `--archive-resume` を可能にする。
-- [x] **整合性検証**: アーカイブ後に `run_card.md` へ `archive_path` と `manifest_hash` を記録。
+- [x] **整合性検証**: アーカイブ後に `out/<run_id>/run_card.md` へ `archive_path` と `manifest_hash` を記録。
 
 # テスト計画
 - [ ] 単体: `archive.py` の copy/move/verify を小規模ディレクトリで検証。
-- [ ] 結合: streaming ON の短尺 run を実行し、アーカイブ後に外部HDD側で `summary.json`/`checks/mass_budget.csv`/`series` が揃うことを確認。
+- [ ] 結合: streaming ON の短尺 run を実行し、アーカイブ後に外部HDD側で `out/<run_id>/summary.json`/`out/<run_id>/checks/mass_budget.csv`/`series` が揃うことを確認。
 - [ ] 二重持ち回避: `merge_target=external` でローカルに統合Parquetが残らないことを検証。
 - [ ] 失敗時: 外部パスが存在しない場合に `ARCHIVE_SKIPPED` が生成され、ローカルにデータが残ることを確認。
 - [x] 設定検証: `io.archive.enabled=true` かつ `io.archive.dir` 未指定で設定エラーになることを確認。

@@ -147,7 +147,7 @@
 ### run_zero_d 実装の具体化（任意）
 
 - `records` と `diagnostics` のみに ColumnarBuffer を適用。
-- `summary.json` 生成や `checks/mass_budget.csv` の有無は row と同じにする。
+- `out/<run_id>/summary.json` 生成や `out/<run_id>/checks/mass_budget.csv` の有無は row と同じにする。
 
 ### トグル優先順位（明文化）
 
@@ -186,7 +186,7 @@
 ### フェーズC: run_zero_d への展開（任意）
 
 - 0D の `records/diagnostics` にも ColumnarBuffer を適用
-- Streaming ON/OFF と `summary.json` の互換性確認
+- Streaming ON/OFF と `out/<run_id>/summary.json` の互換性確認
 
 ### フェーズD: 拡張（任意）
 
@@ -231,8 +231,8 @@
   - row/columnar で列集合と主要値が一致すること  
   - `t_coll_kernel_min` の一括付与が正しいこと
 - 追加: Parquet メタデータ（units/definitions）が row/columnar で一致すること
-- 追加: Streaming ON/OFF の双方で `checks/mass_budget.csv` が生成されること
-- 追加: `checks/mass_budget.csv` の内容（error_percent 等）が row/columnar で一致すること
+- 追加: Streaming ON/OFF の双方で `out/<run_id>/checks/mass_budget.csv` が生成されること
+- 追加: `out/<run_id>/checks/mass_budget.csv` の内容（error_percent 等）が row/columnar で一致すること
 - 追加: 既存スイープ結果の解析スクリプトが **同一列名で読み込める**こと（スキーマ互換）
 
 ---
@@ -272,16 +272,16 @@
   **対象列**: `time`, `cell_index`
 - **ケース: Streaming ON + columnar**  
   **設定**: 上記 + `io.streaming.enable=true`, `io.streaming.step_flush_interval=1`  
-  **期待**: `series/run_chunk_*.parquet` が生成 → `series/run.parquet` にマージされ、列集合が row と一致
+  **期待**: `out/<run_id>/series/run_chunk_*.parquet` が生成 → `out/<run_id>/series/run.parquet` にマージされ、列集合が row と一致
 - **チェックボックス: 行順の維持（Streaming ON）**  
-  - [x] `series/run.parquet` の `time, cell_index` の順序が Streaming OFF と一致  
+  - [x] `out/<run_id>/series/run.parquet` の `time, cell_index` の順序が Streaming OFF と一致  
   **対象列**: `time`, `cell_index`
 
 ### mass_budget.csv 出力（integration）
 
 - **ケース: Streaming ON/OFF**  
   **設定**: `io.streaming.enable=true/false` を両方実行  
-  **期待**: `checks/mass_budget.csv` が必ず存在し、ヘッダーを含む
+  **期待**: `out/<run_id>/checks/mass_budget.csv` が必ず存在し、ヘッダーを含む
 - **チェックボックス: mass_budget 内容一致**  
   - [x] `time` の並びが一致  
   - [x] `error_percent`, `mass_diff`, `mass_lost` が `rtol=1e-12, atol=0.0` で一致  
@@ -327,7 +327,7 @@
 
 - [x] **Issue C: Streaming 対応（ColumnarBuffer flush）**  
   `marsdisk/io/streaming.py` で ColumnarBuffer を判定し `to_table` 分岐を追加。  
-  受入条件: Streaming ON/OFF の双方で `series/run.parquet` が生成される。
+  受入条件: Streaming ON/OFF の双方で `out/<run_id>/series/run.parquet` が生成される。
 
 - [x] **Issue D: run_one_d の列指向化（records/diagnostics）**  
   `marsdisk/run_one_d.py` の `records` と `diagnostics` を ColumnarBuffer 化し、`t_coll_kernel_min` を一括付与。  

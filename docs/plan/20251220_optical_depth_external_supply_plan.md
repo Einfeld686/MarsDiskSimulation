@@ -213,7 +213,7 @@ supply:
 * `Sigma_surf`, `Sigma_surf0`
 * `mu_orbit10pct`, `epsilon_mix`, `dotSigma_prod`
 
-停止した場合は `summary.json` に `stop_reason="tau_exceeded"` と最終 `tau_los` を記録します。
+停止した場合は `out/<run_id>/summary.json` に `stop_reason="tau_exceeded"` と最終 `tau_los` を記録します。
 
 ---
 

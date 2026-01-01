@@ -14,7 +14,7 @@
 TODO（優先順）
 --------------
 1. スクリプト/テストの追随  
-   - `scripts/runs/run_inner_disk_suite.py`、`run_inner_disk.sh`、`sweep_*` 系を `physics_mode`/`disk.geometry`/`radiation.TM_K` 基準に修正。  
+   - `scripts/runs/run_inner_disk_suite.py`、`./run_inner_disk.sh`、`sweep_*` 系を `physics_mode`/`disk.geometry`/`radiation.TM_K` 基準に修正。  
    - 全テストで `single_process_mode` 依存を `physics_mode_override` に置換、期待フィールドを物理モード表記に更新。
 2. 残留キーの掃除と設定整合  
    - `rg "geometry.r|temps.T_M|single_process_mode|phase.map|qpr_table|phi_table"` をリポジトリ全体に実行し、残存箇所を新キーへ置換。  
@@ -24,7 +24,7 @@ TODO（優先順）
    - DocSyncAgent → `make analysis-doc-tests` → `python -m tools.evaluation_system --outdir <run_dir>` のバンドル実行。
 4. 回帰テスト  
    - `pytest` を一通り実行し、`run_zero_d` 引数変更由来の失敗を修正。  
-   - 必要に応じてサンプルランで `summary.json`/`run_config.json` のフィールドを確認。
+   - 必要に応じてサンプルランで `out/<run_id>/summary.json`/`out/<run_id>/run_config.json` のフィールドを確認。
 
 リスクと緩和
 ------------

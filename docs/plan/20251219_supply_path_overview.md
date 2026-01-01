@@ -146,7 +146,7 @@ for each step:
 
 ## 供給経路の出力（確認ポイント）
 
-以下の列で供給の流れを追跡できる（`series/run.parquet`）。
+以下の列で供給の流れを追跡できる（`out/<run_id>/series/run.parquet`）。
 
 - `prod_rate_raw` / `prod_rate_applied_to_surf`  
 - `prod_rate_diverted_to_deep` / `deep_to_surf_flux`  

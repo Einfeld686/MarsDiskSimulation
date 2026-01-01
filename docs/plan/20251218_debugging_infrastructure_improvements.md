@@ -15,8 +15,8 @@
 |------|------|------|
 | `errors.py` | `MarsDiskError` のみ（10行） | - |
 | `warnings.warn()` 使用箇所 | 14箇所（構造化なし） | `rg "warnings.warn" marsdisk/` |
-| Provenance coverage | 7/44 式（15.9%） | [provenance_report.md L58-67](file:///Users/daichi/marsshearingsheet/analysis/provenance_report.md) |
-| TODO(REF:...) 残存 | 37件（report値）／ファイルは0件（要再生成） | [UNKNOWN_REF_REQUESTS.jsonl](file:///Users/daichi/marsshearingsheet/analysis/UNKNOWN_REF_REQUESTS.jsonl) |
+| Provenance coverage | 7/44 式（15.9%） | [provenance_report.md L58-67](file://analysis/provenance_report.md) |
+| TODO(REF:...) 残存 | 37件（report値）／ファイルは0件（要再生成） | [analysis/UNKNOWN_REF_REQUESTS.jsonl](file://analysis/UNKNOWN_REF_REQUESTS.jsonl) |
 | `run.py` 行数 | 4,489行（目標 4,000行） | `wc -l marsdisk/run.py` |
 | テストルート残存 | 2ファイル | - |
 
@@ -115,7 +115,7 @@ class TableWarning(MarsDiskWarning):
 
 **スナップショット値** (2025-12-18 時点):
 - **確認済み式**: 7/44 (15.9%)
-- **TODO(REF:...) 残存**: 37件（provenance_report.md の値／UNKNOWN_REF_REQUESTS.jsonl は空）
+- **TODO(REF:...) 残存**: 37件（provenance_report.md の値／analysis/UNKNOWN_REF_REQUESTS.jsonl は空）
 - 主要クラスタ: `blowout_core`, `shielding_gate_order`, `psd_wavy_floor`, `tcoll_regime_switch`, `sublimation_gasdrag`, `radius_fix_0d`
 
 ### 2.2 優先対応（ドキュメント系）
@@ -176,8 +176,8 @@ class TableWarning(MarsDiskWarning):
 
 | ファイル | 移動先 |
 |----------|--------|
-| `tests/test_energy_bookkeeping.py` | `tests/unit/` |
-| `tests/test_energy_bookkeeping_boundaries.py` | `tests/unit/` |
+| `tests/unit/test_energy_bookkeeping.py` | `tests/unit/` |
+| `tests/unit/test_energy_bookkeeping_boundaries.py` | `tests/unit/` |
 
 **工数**: 15分
 

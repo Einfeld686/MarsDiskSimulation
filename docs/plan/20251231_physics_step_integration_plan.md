@@ -104,16 +104,16 @@
   - 追加オプション: `--summary-keys`, `--summary-rtol`, `--summary-atol`, `--series-rtol`, `--series-atol`, `--series-include`, `--series-exclude`, `--include-non-numeric`
 - **前提実行**: `FORCE_STREAMING_OFF=1` で実行し、`--override io.outdir=<outdir>` で出力先を分離
 - **比較対象**:
-  - `summary.json`
-  - `series/run.parquet`
-  - `checks/mass_budget.csv`
+  - `out/<run_id>/summary.json`
+  - `out/<run_id>/series/run.parquet`
+  - `out/<run_id>/checks/mass_budget.csv`
 - **比較ルール（合格条件）**:
-  - `summary.json`: 指定キーが全て存在し、数値は `rtol=1e-6, atol=1e-12` 以内  
+  - `out/<run_id>/summary.json`: 指定キーが全て存在し、数値は `rtol=1e-6, atol=1e-12` 以内  
     対象キー: `M_loss`, `M_out_cum`, `M_sink_cum`, `mass_budget_max_error_percent`, `dt_over_t_blow_median`, `beta_at_smin_config`, `beta_at_smin_effective`
-  - `series/run.parquet`: 行数が一致し、列は union に欠落がないこと（欠落があれば fail）  
+  - `out/<run_id>/series/run.parquet`: 行数が一致し、列は union に欠落がないこと（欠落があれば fail）  
     数値列は `rtol=1e-6, atol=1e-10` 以内（最大差分で評価）  
     非数値列はデフォルトで比較対象外（`--include-non-numeric` または `--series-include` で比較可）
-  - `checks/mass_budget.csv`: 両者とも `error_percent <= 0.5` を満たすこと
+  - `out/<run_id>/checks/mass_budget.csv`: 両者とも `error_percent <= 0.5` を満たすこと
 - **出力**:
   - `out/plan/physics_step_baseline/<case-id>/compare.json`
     - `status`: `pass` / `fail`
@@ -157,7 +157,7 @@
 
 **適用方針**
 - `run_zero_d` 側で「元の入力 → `physics_step` 呼び出し → 同じ記録列へ反映」のみ行う
-- 置換前後で `series/run.parquet` と `summary.json` の主要列の一致を必須条件にする
+- 置換前後で `out/<run_id>/series/run.parquet` と `out/<run_id>/summary.json` の主要列の一致を必須条件にする
 
 #### フェーズ1 アダプタ差し込み位置（確定）
 
@@ -321,7 +321,7 @@
 
 3) **P1-06 完了時（受入確認）**  
    - `compare.json` が全ケース `status=pass`  
-   - `checks/mass_budget.csv` が `error_percent<=0.5` を満たすこと
+   - `out/<run_id>/checks/mass_budget.csv` が `error_percent<=0.5` を満たすこと
 
 #### 数学・物理の骨子維持（非回帰ガード）
 
@@ -459,6 +459,19 @@
 | _mk_cache | np.ndarray | kg | m_k キャッシュ |
 | sanitize_reset_count | int | - | 正規化リセット回数 |
 
+補足（不変条件/更新ルール）
+- `sizes`/`widths`/`number` は同一長、`sizes` は単調増加、`widths == diff(edges)`、`edges` は `len(sizes)+1`
+- `s`/`n` は `sizes`/`number` のエイリアスとして常に同期（配列差し替え時に必ず更新）
+- `sizes_version` はサイズ配列更新時にインクリメント（`edges` 変更時は `edges_version` も更新）
+- `_mk_cache_key/_mk_cache` は `sizes_version/edges_version` 変更時に無効化（再計算）
+- `sanitize_and_normalize_number` は `number` を直接更新した後に必ず呼び、`n` の同期と `sanitize_reset_count` の更新を担う
+
+更新責務の所在（主要関数）
+- `update_psd_state`: 必須キーの初期化、`sizes_version/edges_version` の初期値設定、`s/n` の同期
+- `_set_psd_edges`: `edges` 更新時の `edges_version` のインクリメント
+- `ensure_psd_state_contract`: `s/n` 同期と `sizes_version/edges_version` の存在保証
+- `sanitize_and_normalize_number`: `number` の健全化/正規化と `sanitize_reset_count` の更新
+
 #### 調査メモ（中期実装の前提確認）
 
 共通化の重複箇所（surface_ode / smol の両経路でほぼ同じ処理）
@@ -499,15 +512,15 @@ psd_state の実参照（現行コードが触っているキー）
 - [ ] `t_coll` の定義が統一され、系列出力に混乱がない
 - [ ] psd_state の `sizes/number` と `s/n` が常に同期され、`sizes_version/edges_version` の更新責務が明確
 - [ ] Numba/キャッシュの寿命管理が run 境界で明確化され、A/B テスト時に再現性が確保される
-- [ ] streaming ON/OFF の両方で `series/run.parquet` と `checks/mass_budget.csv` が同等に出力される
+- [ ] streaming ON/OFF の両方で `out/<run_id>/series/run.parquet` と `out/<run_id>/checks/mass_budget.csv` が同等に出力される
 - [ ] `energy_bookkeeping` 有効時の系列/予算出力が共通I/O後も一致する
 - [ ] `sinks.mode` の主要分岐（none/sublimation/hydro_escape）で sink 系集計が破綻しない
 - [ ] blowout 無効時に `outflux_surface` が確実に 0 になる
 - [ ] psd_state の `sizes_version/edges_version` が smol 経路でも破綻せず更新される
 - [ ] 乱数シード固定時に供給/混合の乱数が再現される
-- [ ] `run_config.json` の provenance（`blowout_provenance` / `sublimation_provenance`）が共通化後も維持される
-- [ ] `summary.json` の主要キー（`M_loss`, `M_out_cum`, `M_sink_cum`, `mass_budget_max_error_percent`）がパリティを保つ
-- [ ] `diagnostics.parquet` の列スキーマが streaming ON/OFF で一致する
+- [ ] `out/<run_id>/run_config.json` の provenance（`blowout_provenance` / `sublimation_provenance`）が共通化後も維持される
+- [ ] `out/<run_id>/summary.json` の主要キー（`M_loss`, `M_out_cum`, `M_sink_cum`, `mass_budget_max_error_percent`）がパリティを保つ
+- [ ] `out/<run_id>/series/diagnostics.parquet` の列スキーマが streaming ON/OFF で一致する
 - [ ] `qpr_table` 未指定時の fallback / `qpr_strict=true` の例外挙動が維持される
 - [ ] Wyatt スケーリングの `t_coll` オーダー感が崩れていない
 - [ ] substep 多発時の性能/メモリ退行がない
@@ -526,7 +539,7 @@ psd_state の実参照（現行コードが触っているキー）
 - [ ] `psd_state` の内部キャッシュ（`_mk_cache*`）がサイズ変更時に再計算される
 - [ ] `cfg` の破壊更新が拡大しない（runtime params への移管方針を維持）
 - [ ] `SupplyRuntimeState` / `sigma_deep` の更新が substep でも一貫する
-- [ ] `checks/mass_budget.csv` が streaming 有無に関係なく必ず生成される
+- [ ] `out/<run_id>/checks/mass_budget.csv` が streaming 有無に関係なく必ず生成される
 - [ ] `energy_bookkeeping` の CSV/Parquet 出力が ON/OFF で同等に動作する
 - [ ] `--override` の適用順序と型変換が従来どおり
 - [ ] `FORCE_STREAMING_OFF` / `IO_STREAMING` の優先順位が変わらない
@@ -571,7 +584,7 @@ psd_state の実参照（現行コードが触っているキー）
 - [x] [中期] フェーズ2: blowout補正/ゲート係数の共通化（helpers集約）
 - [x] [中期] フェーズ2: `physics_step` のI/F安定化（引数・返り値固定）
 - [x] [中期] フェーズ2: `collision_solver_mode` 分岐の共通化（surface_ode/smol の重複削減）
-- [ ] [中期] フェーズ2: `psd_state` の暗黙契約を明文化（必須キー/単位/キャッシュキー）
+- [x] [中期] フェーズ2: `psd_state` の暗黙契約を明文化（必須キー/単位/キャッシュキー）
 - [ ] [長期] フェーズ3: RunContext でグローバル状態の初期化/復元
 - [ ] [長期] フェーズ3: `psd_state` の型固定とRunContext内での寿命管理
 - [ ] [長期] フェーズ4: cfgの破壊更新を排除（runtime paramsへ移管）
@@ -592,8 +605,8 @@ psd_state の実参照（現行コードが触っているキー）
 
 ## 受入条件（最小）
 
-- 0D基準ケースで `series/run.parquet` と `summary.json` の主要列が一致
-- `checks/mass_budget.csv` の誤差が 0.5% を超えない
+- 0D基準ケースで `out/<run_id>/series/run.parquet` と `out/<run_id>/summary.json` の主要列が一致
+- `out/<run_id>/checks/mass_budget.csv` の誤差が 0.5% を超えない
 - 既存pytestが通る
 
 ---

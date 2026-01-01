@@ -28,7 +28,7 @@ analysis 自動更新ツール群を整理し、現行ワークフローとの�
 - `tools/coverage_guard.py` → `tools/pipeline/coverage_guard.py` も同様に維持
 - `pyproject.toml` は存在しないため変更不要（requirements.txt 運用継続）
 
-#### [MODIFY] [doc_sync_agent.py](file:///Users/daichi/marsshearingsheet/tools/pipeline/doc_sync_agent.py)
+#### [MODIFY] [doc_sync_agent.py](file://tools/pipeline/doc_sync_agent.py)
 
 docstring を更新し、この shim が意図的に残されていることを明記：
 
@@ -45,7 +45,7 @@ docstring を更新し、この shim が意図的に残されていることを�
 
 ### Phase 2: Makefile 整備（AGENTS.md 完全準拠）
 
-#### [MODIFY] [Makefile](file:///Users/daichi/marsshearingsheet/Makefile)
+#### [MODIFY] [Makefile](file://Makefile)
 
 現行:
 ```makefile
@@ -81,7 +81,7 @@ endif
 
 ### Phase 3: Reference Tracker（任意・標準フロー外）
 
-#### [MODIFY] [Makefile](file:///Users/daichi/marsshearingsheet/Makefile)
+#### [MODIFY] [Makefile](file://Makefile)
 
 ```makefile
 # 任意: 参照レジストリとの差分検出（標準フローには含まない）
@@ -96,7 +96,7 @@ analysis-refs:
 
 ### Phase 4: UNKNOWN_REF_REQUESTS 検証（warn-only）
 
-#### [NEW] [check_unknown_refs.py](file:///Users/daichi/marsshearingsheet/tools/check_unknown_refs.py)
+#### [NEW] [check_unknown_refs.py](file://tools/check_unknown_refs.py)
 
 ```python
 #!/usr/bin/env python3
@@ -114,7 +114,7 @@ def main() -> int:
     args = parser.parse_args()
 
     if not REQUESTS_PATH.exists():
-        print("No UNKNOWN_REF_REQUESTS.jsonl found.")
+        print("No analysis/UNKNOWN_REF_REQUESTS.jsonl found.")
         return 0
 
     entries = [json.loads(line) for line in REQUESTS_PATH.read_text().splitlines() if line.strip()]
@@ -134,7 +134,7 @@ if __name__ == "__main__":
     raise SystemExit(main())
 ```
 
-#### [MODIFY] [Makefile](file:///Users/daichi/marsshearingsheet/Makefile)
+#### [MODIFY] [Makefile](file://Makefile)
 
 ```makefile
 # 任意: 未解決参照リクエストの確認（warn-only, 標準フロー外）

@@ -16,7 +16,7 @@
   - `get_prod_area_rate` 関数
 - ✅ `analysis/equations.md`: (E.027a) として μ の式を記載
 - ✅ `analysis/run-recipes.md`: 使用例を記載
-- ✅ `tests/integration/test_external_supply.py`: テスト実装
+- ✅ `tests/integration/test_external_supply_pipeline.py`: テスト実装
 
 ---
 

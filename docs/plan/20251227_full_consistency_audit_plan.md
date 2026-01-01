@@ -78,7 +78,7 @@
 
 ### 6.7 0D 統合ループ（analysis/run-recipes.md ↔ run_zero_d）
 - [x] 出力列（series/summary/checks）が仕様どおりに生成されているか確認
-- [x] 質量収支ログ（C4）と `mass_budget.csv` の項目整合確認
+- [x] 質量収支ログ（C4）と `out/<run_id>/checks/mass_budget.csv` の項目整合確認
 - [x] ストリーミング ON/OFF の動作仕様が一致しているか確認
 - [x] 状態更新: 「一致」/「不一致」を表に反映
 

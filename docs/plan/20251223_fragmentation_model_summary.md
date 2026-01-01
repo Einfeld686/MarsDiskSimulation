@@ -153,12 +153,12 @@ flowchart TD
 
 ### 詳細
 
-- 破片テンソルと numba/fallback の整合: `tests/test_fragment_tensor_numba.py`
-- Q_D* と破片モデルの単位・エネルギー整合: `tests/test_qstar_fragments.py`, `tests/test_qstar_units.py`
-- Smol パイプラインと供給・シンクの結合: `tests/test_baseline_smol_pipeline.py`, `tests/test_smol_supply_source.py`
+- 破片テンソルと numba/fallback の整合: `tests/integration/test_fragment_tensor_numba.py`
+- Q_D* と破片モデルの単位・エネルギー整合: `tests/integration/test_qstar_fragments.py`, `tests/integration/test_qstar_units.py`
+- Smol パイプラインと供給・シンクの結合: `tests/integration/test_baseline_smol_pipeline.py`, `tests/integration/test_smol_supply_source.py`
 - 衝突時間スケーリングのオーダー確認（Wyatt 近似）: `tests/integration/test_scalings.py`
 - ブローアウト直後の wavy PSD 再現性: `tests/integration/test_surface_outflux_wavy.py`
-- 質量収支 (C4) ガード: `tests/integration/test_mass_conservation.py`, `tests/test_mass_budget_combined.py`
+- 質量収支 (C4) ガード: `tests/integration/test_mass_conservation.py`, `tests/integration/test_mass_budget_combined.py`
 
 ## 既知の制約・今後検討したい点
 - 幾何学断面のみで重力集光やクレーター生成を含まないため、高光学深度での過少評価リスクがある。

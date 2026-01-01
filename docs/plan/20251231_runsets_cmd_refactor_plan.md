@@ -52,7 +52,7 @@
 
 - **式・係数・物理トグル**は既存の YAML/overrides に従い、run_one.py で再定義しない。
 - **overrides の優先順**（base < extra < case）を固定し、順序変更や上書き規則を変更しない。
-- **出力スキーマ**（`run.parquet`, `summary.json`, `checks/mass_budget.csv` 等）を変更しない。
+- **出力スキーマ**（`out/<run_id>/series/run.parquet`, `out/<run_id>/summary.json`, `out/<run_id>/checks/mass_budget.csv` 等）を変更しない。
 - **タイムステップや安定化ロジック**に新規介入しない。既存 `.cmd` が出力する
   `numerics.*` / `io.substep_*` の overrides は許容し、run_one.py で追加の自動調整は行わない。
 - **再現性（seed）**は既存ルールを維持する（`RUN_ONE_SEED` 優先、未指定時は `next_seed.py`）。
@@ -205,9 +205,9 @@ python scripts/runsets/common/run_one.py
 - `scripts/tests/test_run_one_direct.cmd` の再実行（Windows 実機）。
 - `scripts/tests/test_job_launch_detailed.cmd` の run-one 部分（JOB_CMD 互換確認）。
 - `scripts/runsets/windows/preflight_checks.py`（simulate-windows を含む lint）。
-- 既存の `run_temp_supply_sweep.cmd --run-one` の出力一致確認（`run.parquet` 生成）。
-- 同一ケースでの `summary.json` と `run_config.json` の差分確認（物理入力が一致するか）。
-- `checks/mass_budget.csv` が生成され、列構成が維持されていることを確認。
+- 既存の `run_temp_supply_sweep.cmd --run-one` の出力一致確認（`out/<run_id>/series/run.parquet` 生成）。
+- 同一ケースでの `out/<run_id>/summary.json` と `out/<run_id>/run_config.json` の差分確認（物理入力が一致するか）。
+- `out/<run_id>/checks/mass_budget.csv` が生成され、列構成が維持されていることを確認。
 
 ---
 
@@ -222,7 +222,7 @@ python scripts/runsets/common/run_one.py
 - [x] Issue 7: `run_sweep.cmd` の run-one 経路を簡素化（run-one 経路が存在しないため変更不要）。
 - [x] Issue 8a: 非Windows環境での検証（simulate-windows preflight / pytest）。
 - [ ] Issue 8b: Windows 実機検証（`test_run_one_direct.cmd` / `test_job_launch_detailed.cmd`）。
-- [x] Issue 9: 物理互換チェック（`summary.json`/`run_config.json`/`mass_budget.csv` の一致確認）。
+- [x] Issue 9: 物理互換チェック（`out/<run_id>/summary.json`/`out/<run_id>/run_config.json`/`out/<run_id>/checks/mass_budget.csv` の一致確認）。
 
 ---
 
@@ -239,7 +239,7 @@ python scripts/runsets/common/run_one.py
 
 ## 完了条件（DoD）
 
-- `run_temp_supply_sweep.cmd --run-one` が Python 実装を通じて動作し、`run.parquet` が生成される。
+- `run_temp_supply_sweep.cmd --run-one` が Python 実装を通じて動作し、`out/<run_id>/series/run.parquet` が生成される。
 - `run_sweep.cmd` の並列/逐次フローが維持される。
 - `scripts/tests/test_run_one_direct.cmd` が通る。
 - `preflight_checks.py` の lint で新規エラーが発生しない。

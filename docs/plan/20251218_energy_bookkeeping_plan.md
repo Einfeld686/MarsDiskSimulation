@@ -1,7 +1,7 @@
 # 衝突エネルギー簿記・反発係数対応 導入計画
 
 > 作成日: 2025-12-18  
-> 出典: [collision_energy_conservation_requirements.md](file:///Users/daichi/marsshearingsheet/docs/plan/collision_energy_conservation_requirements.md)
+> 出典: [collision_energy_conservation_requirements.md](file://docs/plan/collision_energy_conservation_requirements.md)
 
 ---
 
@@ -158,18 +158,18 @@ $$
 
 **モニタリング運用**:
 - 初期運用で閾値超過頻度を観測し、必要に応じて調整
-- 超過時は `energy_budget.csv` の該当行に `warning`/`error` フラグを付与
+- 超過時は `out/<run_id>/checks/energy_budget.csv` の該当行に `warning`/`error` フラグを付与
 
 ---
 
 ## 4. 出力定義
 
-**I/O 方針**: `io.streaming` ON/OFF いずれでも `series/run.parquet` と `checks/energy_budget.csv` を生成する。`writer`/`streaming` 層に簿記列を追加し、ストリーミング OFF 時でも欠損しないようにする。
+**I/O 方針**: `io.streaming` ON/OFF いずれでも `out/<run_id>/series/run.parquet` と `out/<run_id>/checks/energy_budget.csv` を生成する。`writer`/`streaming` 層に簿記列を追加し、ストリーミング OFF 時でも欠損しないようにする。
 
-- `series/run.parquet`: 既存 `writer.write_parquet` の units/definitions に新規列を追加。  
-- `checks/energy_budget.csv`: `writer` 側に新しい CSV ライタを追加し、ストリーミング OFF でも run 終了時に flush する経路を用意。  
+- `out/<run_id>/series/run.parquet`: 既存 `writer.write_parquet` の units/definitions に新規列を追加。  
+- `out/<run_id>/checks/energy_budget.csv`: `writer` 側に新しい CSV ライタを追加し、ストリーミング OFF でも run 終了時に flush する経路を用意。  
 - streaming ON 時は `io/streaming.py` に追加バッファを持たせ、`step_flush_interval` に従い逐次フラッシュする。
-- `summary.json`/`run_card.md`: エネルギー簿記の累積合計と `frac_fragmentation`/`frac_cratering` を集約し、`run_card` に記録する。
+- `out/<run_id>/summary.json`/`out/<run_id>/run_card.md`: エネルギー簿記の累積合計と `frac_fragmentation`/`frac_cratering` を集約し、`run_card` に記録する。
 
 ### 4.1 series/run.parquet 追加列
 
@@ -269,7 +269,7 @@ E.047–E.053 を追加（E.053: Krijt & Kama 式）。
 ### 8.3 テストシナリオ
 
 - 5ビン固定で単一ペア衝突（固定 C, Y, f_ke, F_lf）を使い、Numba ON/OFF の簿記列一致を検証するユニットテストを追加。  
-- streaming ON/OFF で `energy_budget.csv` と Parquet 列が同じ値になることを比較する統合テストを追加。
+- streaming ON/OFF で `out/<run_id>/checks/energy_budget.csv` と Parquet 列が同じ値になることを比較する統合テストを追加。
 - ε 極限テストと dt 積分テスト（rate/step 混同防止）を追加。
 - surface_energy: $\alpha \le 3$ でガードが効くこと、`s_min_surface_energy > s_max` の場合にログすることを確認。
 

@@ -50,10 +50,10 @@
 
 | ドキュメント | 役割 |
 |-------------|------|
-| [20251212_temp_supply_tau_unity_fix.md](file:///Users/daichi/marsshearingsheet/docs/plan/20251212_temp_supply_tau_unity_fix.md) | 本方針案の前提となる原因調査・実装済み機構の詳細 |
-| [20251211_temp_supply_runflow.md](file:///Users/daichi/marsshearingsheet/docs/plan/20251211_temp_supply_runflow.md) | temp_supply 実行フロー整理 |
-| [run_temp_supply_sweep.sh](file:///Users/daichi/marsshearingsheet/scripts/research/run_temp_supply_sweep.sh) | スイープ実行スクリプト |
-| [evaluate_tau_supply.py](file:///Users/daichi/marsshearingsheet/scripts/research/evaluate_tau_supply.py) | 成功判定スクリプト |
+| [20251212_temp_supply_tau_unity_fix.md](file://docs/plan/20251212_temp_supply_tau_unity_fix.md) | 本方針案の前提となる原因調査・実装済み機構の詳細 |
+| [20251211_temp_supply_runflow.md](file://docs/plan/20251211_temp_supply_runflow.md) | temp_supply 実行フロー整理 |
+| [run_temp_supply_sweep.sh](file://scripts/research/run_temp_supply_sweep.sh) | スイープ実行スクリプト |
+| [evaluate_tau_supply.py](file://scripts/research/evaluate_tau_supply.py) | 成功判定スクリプト |
 
 ---
 
@@ -73,7 +73,7 @@
 
 ## 成功判定の基準
 
-[evaluate_tau_supply.py](file:///Users/daichi/marsshearingsheet/scripts/research/evaluate_tau_supply.py) で定義されている判定基準：
+[evaluate_tau_supply.py](file://scripts/research/evaluate_tau_supply.py) で定義されている判定基準：
 
 | 条件 | デフォルト値 | 説明 |
 |------|-------------|------|

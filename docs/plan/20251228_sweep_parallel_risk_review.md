@@ -29,8 +29,8 @@
 | --- | --- | --- | --- | --- |
 | 出力 | ケースが別々のバッチに分裂 | 子が `RUN_TS/BATCH_SEED` を継承しない | 出力が分散し「保存されていない」ように見える | `RUN_TS/BATCH_SEED` 継承を強制 |
 | 出力 | 既存ケースが上書きされる | `TITLE` が重複（T/EPS/TAU 重複） | データ欠落 | スイープ入力の重複排除 |
-| 出力 | `series/run.parquet` が無い | 途中停止、ストリーミング未マージ | 解析不可 | 途中停止の検知と再実行 |
-| 出力 | `summary.json`/`run_config.json` 不在 | 実行失敗、例外終了 | 完走判定不可 | 終了コード集約、欠落チェック |
+| 出力 | `out/<run_id>/series/run.parquet` が無い | 途中停止、ストリーミング未マージ | 解析不可 | 途中停止の検知と再実行 |
+| 出力 | `out/<run_id>/summary.json`/`out/<run_id>/run_config.json` 不在 | 実行失敗、例外終了 | 完走判定不可 | 終了コード集約、欠落チェック |
 | 一時ファイル | overrides/sweep list が混在 | TMP 共有で上書き | 誤設定で実行 | ジョブ別 TMP_ROOT |
 | アーカイブ | archive にのみ出力がある | `merge_target=external` で外部へ直接マージ | ローカルに結果が残らない | archive 先を正として確認 |
 | アーカイブ | `ARCHIVE_DONE` 不在 | 外部ドライブ遅延/切断/権限 | 実質未保存 | archive エラー検知と再実行 |
@@ -47,10 +47,10 @@
 ## 監視ポイント（長期運転向けチェック）
 
 ### 1. ケース単位の必須生成物
-- `summary.json`
-- `run_config.json`
-- `checks/mass_budget.csv`
-- `series/run.parquet`（ストリーミング OFF または merge 完了時）
+- `out/<run_id>/summary.json`
+- `out/<run_id>/run_config.json`
+- `out/<run_id>/checks/mass_budget.csv`
+- `out/<run_id>/series/run.parquet`（ストリーミング OFF または merge 完了時）
 
 ### 2. アーカイブ関連
 - `ARCHIVE_DONE` の有無（成功の指標）
@@ -60,7 +60,7 @@
 ### 3. 並列全体の健全性
 - 期待ケース数と出力ディレクトリ数の一致
 - 出力先が **ローカル** か **アーカイブ先** かの把握（`merge_target=external` の場合）
-- `summary.json` の欠落件数（=失敗推定）
+- `out/<run_id>/summary.json` の欠落件数（=失敗推定）
 
 ---
 
@@ -82,10 +82,10 @@
 
 ### 実出力の判定ルール
 - **必須ファイル（最小）**:
-  - `summary.json`
-  - `run_config.json`
-  - `checks/mass_budget.csv`
-  - `series/run.parquet`（または `series/*.parquet` が存在すれば OK）
+  - `out/<run_id>/summary.json`
+  - `out/<run_id>/run_config.json`
+  - `out/<run_id>/checks/mass_budget.csv`
+  - `out/<run_id>/series/run.parquet`（または `out/<run_id>/series/*.parquet` が存在すれば OK）
 - **アーカイブが有効な場合**:
   - `merge_target=external` のときは、`io.archive.dir` 側の出力も探索対象にする。
   - `ARCHIVE_DONE` の有無で「アーカイブ成功/失敗」を判定する。

@@ -21,7 +21,7 @@
 - 0D の場合は縦軸が 1 行になるが、同じ描画ルーチンを使用する。
 
 ## データ入力と整形
-- 入力: `series/run.parquet`（無い場合は `series/run_chunk_*.parquet` を読む）。
+- 入力: `out/<run_id>/series/run.parquet`（無い場合は `out/<run_id>/series/run_chunk_*.parquet` を読む）。
 - 1D では `time` × `r_RM`（または `r_m`）で 2D 配列を構成。
   - 1ステップで同一 `(time, r_RM)` が複数存在する場合は **median** で集約。
 - 列の優先順位:
@@ -34,7 +34,7 @@
 ## 実データ観察（temp_supply_sweep_1d の例）
 対象: `/Volumes/KIOXIA/marsdisk_out/temp_supply_sweep_1d/20251225-114845__e71165335__seed343344874/T5000_eps1p0_tau1p0`
 
-- `series/run.parquet` は約 4.5GB、行数は約 5.1e7。
+- `out/<run_id>/series/run.parquet` は約 4.5GB、行数は約 5.1e7。
 - `r_RM` は 32セルで等間隔（例: 1.0266–2.6734）。
 - 時刻は `time`（秒）で、最終時刻は約 3.2e7 s（≒1.02 yr）。
 - `tau_los_mars`, `r_RM`, `cell_index` が揃っており、**Y軸は r_RM をそのまま使用可能**。

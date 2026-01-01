@@ -93,7 +93,7 @@ set MARSDISK_CELL_CHUNK_SIZE=0
 
 ### 6. ロギング・設定スナップショット
 
-- `run_config.json` に並列設定と実効値を記録
+- `out/<run_id>/run_config.json` に並列設定と実効値を記録
 - 既存の `auto_tune` 情報に追記可能なら統合
 
 ---
@@ -112,17 +112,17 @@ set MARSDISK_CELL_CHUNK_SIZE=0
   - run_one_d に環境変数の解釈を追加
   - `.cmd` 側で既定値を設定
 - [ ] **再現性・性能検証**
-  - 並列オン/オフで `summary.json` を比較
+  - 並列オン/オフで `out/<run_id>/summary.json` を比較
 
 ---
 
 ## 検証計画
 
 - **再現性テスト**
-  - 同一設定で並列 ON/OFF の `summary.json` を比較
+  - 同一設定で並列 ON/OFF の `out/<run_id>/summary.json` を比較
   - 許容差: `M_loss` など主要量が 1e-6〜1e-4 程度以内
 - **質量保存**
-  - `checks/mass_budget.csv` が 0.5% 以内
+  - `out/<run_id>/checks/mass_budget.csv` が 0.5% 以内
 - **性能**
   - 1ケースの wall-time を計測し改善率を記録
 
@@ -162,8 +162,8 @@ set MARSDISK_CELL_CHUNK_SIZE=0
 ## 受入基準
 
 - 並列 OFF が既存と完全一致（回帰なし）
-- 並列 ON で `summary.json` が許容差内
-- `run_config.json` に並列設定が記録される
+- 並列 ON で `out/<run_id>/summary.json` が許容差内
+- `out/<run_id>/run_config.json` に並列設定が記録される
 - 粘性拡散 / セル間輸送が有効な場合は **自動で並列を無効化**する
 - Windows 以外では **必ず無効**であること
 

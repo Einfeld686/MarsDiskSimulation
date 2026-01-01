@@ -7,8 +7,8 @@
 ## 役割と基本フロー
 - 0D 円盤で温度・混合効率・初期光学的厚さを掃引し、各ケースを `python -m marsdisk.run` で 2 年間回すバッチランナー。base config は `configs/sweep_temp_supply/temp_supply_T4000_eps1.yml`。
 - 実行前に `.venv` が無ければ作成し、`requirements.txt` をインストール。完了後は外付け SSD（存在し書込可なら `/Volumes/KIOXIA/marsdisk_out`）を優先し、なければ `out/` へ保存。
-- 出力ルートは `OUT_ROOT`（未設定なら上記ルール）配下に `temp_supply_sweep/<YYYYMMDD-HHMMSS>__<gitsha>__seed<BATCH_SEED>/` を作成。各ケースは `T${T}_eps${EPS_TITLE}_tau${TAU_TITLE}` ディレクトリにまとまり、`series/`, `checks/`, `plots/`, `summary.json`, `run_config.json` を生成する。
-- 各 run 後に quick-look プロット（`plots/overview.png`, `plots/supply_surface.png`）を自動生成。`EVAL=1`（デフォルト）なら `scripts/research/evaluate_tau_supply.py` で τ・供給維持の簡易評価を行い、`checks/tau_supply_eval.json` に記録する。
+- 出力ルートは `OUT_ROOT`（未設定なら上記ルール）配下に `temp_supply_sweep/<YYYYMMDD-HHMMSS>__<gitsha>__seed<BATCH_SEED>/` を作成。各ケースは `T${T}_eps${EPS_TITLE}_tau${TAU_TITLE}` ディレクトリにまとまり、`series/`, `checks/`, `plots/`, `out/<run_id>/summary.json`, `out/<run_id>/run_config.json` を生成する。
+- 各 run 後に quick-look プロット（`plots/overview.png`, `plots/supply_surface.png`）を自動生成。`EVAL=1`（デフォルト）なら `scripts/research/evaluate_tau_supply.py` で τ・供給維持の簡易評価を行い、`out/<run_id>/checks/tau_supply_eval.json` に記録する。
 
 ## スイープ軸（固定グリッド）
 - 温度 `T_LIST`: 6000 / 4000 / 2000 K（高温順に実行）。各ケースで `radiation.TM_K` と `data/mars_temperature_T${T}p0K.csv` を適用。
@@ -48,7 +48,7 @@
 - **評価の有無**: `EVAL=0` で `evaluate_tau_supply.py` 呼び出しをスキップ。
 
 ## ポストプロセス・ログのポイント
-- プロットは `series/run.parquet` が無い場合スキップし、欠損列があっても NA で埋めて生成する安全策が入っている。
-- `summary.json` から `M_loss`、`mass_budget_max_error_percent`、`effective_prod_rate_kg_m2_s`、`supply_clip_time_fraction` などを拾ってグラフタイトルに出力。
+- プロットは `out/<run_id>/series/run.parquet` が無い場合スキップし、欠損列があっても NA で埋めて生成する安全策が入っている。
+- `out/<run_id>/summary.json` から `M_loss`、`mass_budget_max_error_percent`、`effective_prod_rate_kg_m2_s`、`supply_clip_time_fraction` などを拾ってグラフタイトルに出力。
 - `SHIELDING_SIGMA=auto_max` 指定時はデバッグ専用である旨を警告。`optical_depth.tau0_target` が小さすぎると headroom が不足し、供給クリップが増える可能性をログ。
-- バッチ全体のシード `BATCH_SEED` と各 run の `dynamics.rng_seed` は別管理。ベース設定に対する上書き内容は各 run の `run_config.json` に残るため、再解析時はこれを参照すれば足りる。
+- バッチ全体のシード `BATCH_SEED` と各 run の `dynamics.rng_seed` は別管理。ベース設定に対する上書き内容は各 run の `out/<run_id>/run_config.json` に残るため、再解析時はこれを参照すれば足りる。

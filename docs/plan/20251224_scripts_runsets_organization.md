@@ -175,7 +175,7 @@ Windows 固有の運用設計を runsets に移植する。
 
 - **設定の優先順位**: CLI > overrides.txt > env > study.yml > base.yml の順に適用。
 - **環境変数の命名**: 既存互換を維持しつつ、runsets 専用は `RUNSET_` 接頭辞で衝突を回避。
-- **出力の命名/再現性**: `out/<ts>__<sha>__seed<batch>/<case>` 形式を維持し、`run_config.json` と `summary.json` の記録を必須化。
+- **出力の命名/再現性**: `out/<ts>__<sha>__seed<batch>/<case>` 形式を維持し、`out/<run_id>/run_config.json` と `out/<run_id>/summary.json` の記録を必須化。
 - **失敗時の挙動**: run 本体が失敗しても plot/eval を「可能な範囲で実行」し、exit code は `HOOKS_STRICT` で制御。
 - **OS 差異の最小化**: Windows 固有の `AUTO_JOBS/parallel` は runsets/windows に閉じる。
 - **1D/0D の境界**: 0D 実行は `--0d` の明示指定のみ許可。
@@ -190,7 +190,7 @@ Windows 固有の運用設計を runsets に移植する。
 - **セル並列の引き継ぎ**: `run_temp_supply_sweep_1d.cmd` の `MARSDISK_CELL_*` 既定値を runsets/windows に反映。
 - **progress/quiet の互換**: `--quiet` と `ENABLE_PROGRESS` の扱いを維持。
 - **簡易プロット互換**: `overview.png` / `supply_surface.png` / `optical_depth.png` と `quicklook.png` の両系統を維持。
-- **chunk 対応**: `run.parquet` 不在時に `run_chunk_*.parquet` を読む経路を必須化。
+- **chunk 対応**: `out/<run_id>/series/run.parquet` 不在時に `out/<run_id>/series/run_chunk_*.parquet` を読む経路を必須化。
 - **merge フロー**: `merge_at_end` 既定 ON + `preflight_streaming_check.py` + `merge_streaming_chunks.py` を前提にする。
 - **評価出力の互換**: `evaluate_tau_supply.py` の出力先と CLI 引数を変更しない。
 
@@ -209,7 +209,7 @@ Windows 固有の運用設計を runsets に移植する。
 ## 簡易プロットの互換性要件（既存実装の整理）
 
 - **必須出力**: `overview.png`, `supply_surface.png`, `optical_depth.png`（既存の quick-look を維持）。
-- **入力互換**: `series/run.parquet` が無い場合は `run_chunk_*.parquet` を自動で読む。
+- **入力互換**: `out/<run_id>/series/run.parquet` が無い場合は `out/<run_id>/series/run_chunk_*.parquet` を自動で読む。
 - **列不足の扱い**: 欠損列は NaN で埋め、プロットから除外（警告のみ）。
 - **大規模データ対応**: downsample を既定で有効化し、`PLOT_MAX_ROWS` で制御。
 - **1D/0D 両対応**: `cell_index` がある場合はセル集約 or 重み平均で可視化。
@@ -220,13 +220,13 @@ Windows 固有の運用設計を runsets に移植する。
 
 **出力パターン**
 
-- streaming 有効: `series/run_chunk_*.parquet` を随時書き出し、`merge_at_end=true` なら終了時に `run.parquet` を生成。
-- streaming 無効: 直接 `series/run.parquet` を生成。
+- streaming 有効: `out/<run_id>/series/run_chunk_*.parquet` を随時書き出し、`merge_at_end=true` なら終了時に `out/<run_id>/series/run.parquet` を生成。
+- streaming 無効: 直接 `out/<run_id>/series/run.parquet` を生成。
 
 **統合フロー**
 
 1. `merge_at_end=true` の場合、実行終了時に自動 merge（`marsdisk/io/streaming.py`）。
-2. `run.parquet` が無い場合は `tools/merge_streaming_chunks.py` を使用して後処理 merge。
+2. `out/<run_id>/series/run.parquet` が無い場合は `tools/merge_streaming_chunks.py` を使用して後処理 merge。
 3. merge 前に `scripts/research/preflight_streaming_check.py` でスキーマ整合を確認。
 
 **運用規約（runsets に反映）**

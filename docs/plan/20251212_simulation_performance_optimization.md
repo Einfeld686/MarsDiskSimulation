@@ -70,7 +70,7 @@ sizes:
 **効果**: コア数に比例（4〜16倍）
 
 > [!NOTE]
-> 現行の `sweep_heatmaps.py` は `ThreadPoolExecutor` を使用しているが、各ケースは `subprocess.run([python, -m, marsdisk.run, ...])` で別プロセスを起動するため（[sweep_heatmaps.py:1222-1228](file:///Users/daichi/marsshearingsheet/scripts/sweeps/sweep_heatmaps.py#L1222-1228)）、**実計算は既に GIL の影響外で並列化されている**。`ProcessPoolExecutor` への変更は pickling オーバーヘッドを増やすだけで効果がない。
+> 現行の `sweep_heatmaps.py` は `ThreadPoolExecutor` を使用しているが、各ケースは `subprocess.run([python, -m, marsdisk.run, ...])` で別プロセスを起動するため（[sweep_heatmaps.py:1222-1228](file://scripts/sweeps/sweep_heatmaps.py#L1222-1228)）、**実計算は既に GIL の影響外で並列化されている**。`ProcessPoolExecutor` への変更は pickling オーバーヘッドを増やすだけで効果がない。
 >
 > 並列度向上には `--jobs N` の増加と、より多くのコアを持つ実行環境（Codespaces 等）の活用が有効。
 
@@ -137,7 +137,7 @@ def compute_gain_numba(C: np.ndarray, Y: np.ndarray) -> np.ndarray:
 #### 3b. 衝突カーネル構築の JIT 化
 
 > [!IMPORTANT]
-> 既存の `compute_collision_kernel_C1`（[collide.py:18-65](file:///Users/daichi/marsshearingsheet/marsdisk/physics/collide.py#L18-65)）は `v_rel` としてスカラーまたは `(n, n)` 行列を受け付ける。Numba 版も同等の柔軟性を維持し、数値一致ベンチマーク（小規模 `n_bins`）で検証すること。
+> 既存の `compute_collision_kernel_C1`（[collide.py:18-65](file://marsdisk/physics/collide.py#L18-65)）は `v_rel` としてスカラーまたは `(n, n)` 行列を受け付ける。Numba 版も同等の柔軟性を維持し、数値一致ベンチマーク（小規模 `n_bins`）で検証すること。
 
 ```python
 # marsdisk/physics/_numba_kernels.py に追加
@@ -205,7 +205,7 @@ def compute_collision_kernel_C1_numba_wrapper(
 **検証手順**:
 1. 小規模 `n_bins=10` で既存 `compute_collision_kernel_C1` と数値一致を確認
 2. `v_rel` をスカラー / 行列の両パターンでテスト
-3. `tests/test_numba_kernels.py` にベンチマークを追加
+3. `tests/unit/test_numba_helpers.py` にベンチマークを追加
 
 ---
 
@@ -231,7 +231,7 @@ numerics:
 ```
 
 3. 検証項目:
-   - `checks/mass_budget.csv` の `error_percent` が 0.5% 以内か
+   - `out/<run_id>/checks/mass_budget.csv` の `error_percent` が 0.5% 以内か
    - `tests/integration/test_mass_conservation.py` が PASS するか
    - IMEX 収束テストが合格するか
 
@@ -285,7 +285,7 @@ time python -m marsdisk.run --config configs/base.yml
 
 ## 関連ドキュメント
 
-- [analysis/run-recipes.md](file:///Users/daichi/marsshearingsheet/analysis/run-recipes.md) — 実行レシピ（dt 推奨値の根拠）
-- [scripts/sweeps/sweep_heatmaps.py](file:///Users/daichi/marsshearingsheet/scripts/sweeps/sweep_heatmaps.py) — スイープスクリプト
-- [marsdisk/physics/_numba_kernels.py](file:///Users/daichi/marsshearingsheet/marsdisk/physics/_numba_kernels.py) — Numba カーネル
-- [marsdisk/physics/collide.py](file:///Users/daichi/marsshearingsheet/marsdisk/physics/collide.py) — 既存衝突カーネル実装（v_rel 行列対応）
+- [analysis/run-recipes.md](file://analysis/run-recipes.md) — 実行レシピ（dt 推奨値の根拠）
+- [scripts/sweeps/sweep_heatmaps.py](file://scripts/sweeps/sweep_heatmaps.py) — スイープスクリプト
+- [marsdisk/physics/_numba_kernels.py](file://marsdisk/physics/_numba_kernels.py) — Numba カーネル
+- [marsdisk/physics/collide.py](file://marsdisk/physics/collide.py) — 既存衝突カーネル実装（v_rel 行列対応）

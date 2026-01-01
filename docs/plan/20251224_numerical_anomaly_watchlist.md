@@ -33,7 +33,7 @@
 4. **PSD 負値/NaN の伝播**
    - 対象: `marsdisk/physics/collisions_smol.py` → `psd_state` 更新
    - 懸念: IMEX で負値が混入すると `kappa`, `tau`, `Q_pr` などに NaN が伝播。run_one_d は毎ステップで全PSDを正規化しないため、異常が長引く可能性。
-   - 方針: `psd_hist.parquet` で `N_bin`, `Sigma_bin`, `Sigma_surf` の非負性・有限性を検査する。
+   - 方針: `out/<run_id>/series/psd_hist.parquet` で `N_bin`, `Sigma_bin`, `Sigma_surf` の非負性・有限性を検査する。
 
 5. **質量保存チェックが実質ゼロ差分になる設計**
    - 対象: `marsdisk/run_one_d.py` の `mass_remaining = mass_initial - mass_lost` 型の集計
@@ -170,13 +170,13 @@
 - **目的**: セル並列が数値を壊していないことの確認
 - **案**:
   - 同一設定で `MARSDISK_CELL_PARALLEL=0` と `1` を実行。
-  - `summary.json` の `M_loss`, `M_out_cum`, `mass_budget_max_error_percent` を比較。
+  - `out/<run_id>/summary.json` の `M_loss`, `M_out_cum`, `mass_budget_max_error_percent` を比較。
   - 許容差: `rtol=1e-5`, `atol=1e-10`（短時間テスト）。
 
 ### 3) PSD 非負性チェック（統合）
 - **目的**: PSD の負値・NaN 混入検知
 - **案**:
-  - 出力 `series/psd_hist.parquet` を読み込み、`N_bin`, `Sigma_bin`, `Sigma_surf` の負値・NaN を検査。
+  - 出力 `out/<run_id>/series/psd_hist.parquet` を読み込み、`N_bin`, `Sigma_bin`, `Sigma_surf` の負値・NaN を検査。
   - 異常があれば失敗（負値は `-1e-12` 未満を NG）。
 
 ### 4) “実質質量”による保存則再計算（統合）
@@ -194,7 +194,7 @@
 ### 6) 並列加算順序差の監視（回帰）
 - **目的**: 微小誤差を許容範囲に抑えているか確認
 - **案**:
-  - 並列 ON/OFF の `series/run.parquet` で `prod_subblow_area_rate`, `M_out_dot` の平均との差を比較。
+  - 並列 ON/OFF の `out/<run_id>/series/run.parquet` で `prod_subblow_area_rate`, `M_out_dot` の平均との差を比較。
   - 差分が閾値を超えた場合は警告扱い。
 
 ### 7) IMEX ループ非停止の検出（ユニット）
@@ -363,7 +363,7 @@
 - [x] deep_mixing の質量再計算テストを実装する
 - [x] `_NUMBA_FAILED` グローバル影響テストを実装する
 - [ ] Windows/.cmd 実行での再現性テストを実行し記録する
-- [ ] `summary.json` と質量保存ログの差分を確認し、許容範囲内であることを確認する
+- [ ] `out/<run_id>/summary.json` と質量保存ログの差分を確認し、許容範囲内であることを確認する
 - [x] 追加リスク（14–23）の方針を確定する
 - [x] 追加リスク（14–23）のテスト設計を確定する
 - [x] 追加リスク（24–28）の方針を確定する

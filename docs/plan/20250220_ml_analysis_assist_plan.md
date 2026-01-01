@@ -25,10 +25,10 @@
 - 出力: `analysis/anchor_anomalies.json` に警告リスト。CI非ブロック、DocSyncレポートに統合。
 
 ## 4. 実行ログの外れ値フラグ
-- 入力: `out/series/*.parquet` の統計列（mass_budget_error, dt_over_t_blow など）。
+- 入力: `out/<run_id>/series/*.parquet` の統計列（mass_budget_error, dt_over_t_blow など）。
 - 特徴: 時系列の分位点、ステップ間差分。簡易標準化のみ。
 - モデル: IsolationForest または IQR ルールで外れ値検知。
-- 出力: `out/*/run_card.md` 補助用の `anomaly_flags.json` を生成（分析用、Git無視）。analysis には集計サマリだけを参照で追記。
+- 出力: `out/<run_id>/run_card.md` 補助用の `out/<run_id>/checks/anomaly_flags.json` を生成（分析用、Git無視）。analysis には集計サマリだけを参照で追記。
 
 ## 5. 未参照シンボルの優先度付け
 - 入力: coverage holes（unreferenced functions）、docstring、パス。

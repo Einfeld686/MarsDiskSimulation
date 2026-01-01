@@ -81,7 +81,7 @@ supply:
 
 ## テスト
 
-新規テストファイル: `tests/test_supply_headroom_policy.py`
+新規テストファイル: `tests/integration/test_supply_headroom_policy.py`
 
 検証項目：
 - [x] spill モードで供給がゼロに貼り付かないこと

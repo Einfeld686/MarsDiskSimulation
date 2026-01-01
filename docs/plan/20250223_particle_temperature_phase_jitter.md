@@ -10,9 +10,9 @@
 
 ### 関連する物理式
 - **粒子温度スケール**: $T_p = T_M \times q_{\rm abs}^{0.25} \times \sqrt{R_M / (2r)}$（幾何学的距離と吸収効率による低温化）
-- **放射圧効率**: $\langle Q_{\rm pr} \rangle$（式 [E.004](file:///Users/daichi/marsshearingsheet/analysis/equations.md#E004)）
-- **ブローアウト半径**: $s_{\rm blow}$（式 [E.014](file:///Users/daichi/marsshearingsheet/analysis/equations.md#E014)）
-- **昇華フラックス**: HKL 式（式 [E.018](file:///Users/daichi/marsshearingsheet/analysis/equations.md#E018)）
+- **放射圧効率**: $\langle Q_{\rm pr} \rangle$（式 [E.004](analysis/equations.md#E004)）
+- **ブローアウト半径**: $s_{\rm blow}$（式 [E.014](analysis/equations.md#E014)）
+- **昇華フラックス**: HKL 式（式 [E.018](analysis/equations.md#E018)）
 
 ---
 
@@ -34,23 +34,23 @@
 
 | モジュール | 役割 |
 |------------|------|
-| [siO2_disk_cooling/siO2_cooling_map.py](file:///Users/daichi/marsshearingsheet/siO2_disk_cooling/siO2_cooling_map.py) | `lookup_phase_state` 相判定関数 |
-| [marsdisk/physics/tempdriver.py](file:///Users/daichi/marsshearingsheet/marsdisk/physics/tempdriver.py) | 温度ドライバ（$T_M$ テーブル／定数） |
-| [marsdisk/physics/sublimation.py](file:///Users/daichi/marsshearingsheet/marsdisk/physics/sublimation.py) | 昇華フラックス（HKL 式） |
-| [marsdisk/run.py](file:///Users/daichi/marsshearingsheet/marsdisk/run.py) | メインループ `run_zero_d`、相判定呼び出し |
-| [marsdisk/schema.py](file:///Users/daichi/marsshearingsheet/marsdisk/schema.py) | `Phase` 設定クラス |
+| [siO2_disk_cooling/siO2_cooling_map.py](siO2_disk_cooling/siO2_cooling_map.py) | `lookup_phase_state` 相判定関数 |
+| [marsdisk/physics/tempdriver.py](marsdisk/physics/tempdriver.py) | 温度ドライバ（$T_M$ テーブル／定数） |
+| [marsdisk/physics/sublimation.py](marsdisk/physics/sublimation.py) | 昇華フラックス（HKL 式） |
+| [marsdisk/run.py](marsdisk/run.py) | メインループ `run_zero_d`、相判定呼び出し |
+| [marsdisk/schema.py](marsdisk/schema.py) | `Phase` 設定クラス |
 
 ---
 
 ## 背景
-- `run_temp_supply_sweep.sh` は `phase.enabled=true` で実行し、`siO2_disk_cooling.siO2_cooling_map:lookup_phase_state` を相判定に用いる。
+- `scripts/research/run_temp_supply_sweep.sh` は `phase.enabled=true` で実行し、`siO2_disk_cooling.siO2_cooling_map:lookup_phase_state` を相判定に用いる。
 - 判定入力は「その場の温度」だが、現状は火星表面温度 `T_M(t)` をそのまま渡しており、粒子温度への幾何スケール `sqrt(R_M/(2r))` と吸収効率 `q_abs_mean^0.25` を掛けていない。
 - `q_abs_mean` を 0.4 に引き下げたが、`T_M` テーブルと相判定は依然として `q_abs_mean` 非依存のまま。粒子温度 `T_p` の方が低い場合、液相継続を過大評価するリスクがある。
 
 ## 影響
 - 相依存の挙動（例: 衝突カスケード/昇華の有効性）が `T_M` 基準で長めに液相判定される可能性。
 - `T_p` を考慮するまでの間、液体期間が実際より長く記録される恐れがある。
-- `siO2_disk_cooling` で生成済みの距離依存マップ／CSV（`siO2_cooling_map_T*.csv`）を phase 判定で参照しておらず、既存リソースを活用できていない。
+- `siO2_disk_cooling` で生成済みの距離依存マップ／CSV（`siO2_disk_cooling/outputs/siO2_cooling_map_T02000K.csv` など）を phase 判定で参照しておらず、既存リソースを活用できていない。
 
 ## 対応オプション（要選択）
 1. **簡易スケール適用**: `lookup_phase_state` を拡張し、`T_input = T_M × q_abs_mean^0.25 × sqrt(R_M/(2r))` に置換してから判定する。`r` と `q_abs_mean` を設定経由で渡せるようにする。
@@ -62,7 +62,7 @@
   - `python -m siO2_disk_cooling.siO2_cooling_map --T0 2000`  
   - `python -m siO2_disk_cooling.siO2_cooling_map --T0 4000`  
   - `python -m siO2_disk_cooling.siO2_cooling_map --T0 6000`  
-  出力: `siO2_disk_cooling/outputs/siO2_cooling_map_T0*.csv` と `map_T0_*.png`（距離×時間の到達時刻・相マップ）。
+  出力: `siO2_disk_cooling/outputs/siO2_cooling_map_T02000K.csv` / `siO2_disk_cooling/outputs/siO2_cooling_map_T04000K.csv` / `siO2_disk_cooling/outputs/siO2_cooling_map_T06000K.csv` と `siO2_disk_cooling/outputs/map_T0_2000K.png` / `siO2_disk_cooling/outputs/map_T0_4000K.png` / `siO2_disk_cooling/outputs/map_T0_6000K.png`（距離×時間の到達時刻・相マップ）。
 - 火星表面温度テーブル（T_M のみ、r スケールなし）  
   - `marsdisk.physics.tempdriver.ensure_temperature_table` を使う。例:  
     ```python
@@ -77,7 +77,7 @@
     ensure_temperature_table(autogen, T0=4000.0, t_end_years=60.0, t_orb=1.0)
     ```
   - 出力: `data/mars_temperature_T4000p0K.csv` など（T_M 時系列）。
-- オプション2を採用する場合、phase 判定で `siO2_cooling_map_T0*.csv` を読み、`q_abs_mean` 変更時に再生成するフローを `run_temp_supply_sweep.sh` 側で組み込む。オプション1/2を併用する場合は二重スケールを避ける。
+- オプション2を採用する場合、phase 判定で `siO2_disk_cooling/outputs/siO2_cooling_map_T02000K.csv` などを読み、`q_abs_mean` 変更時に再生成するフローを `scripts/research/run_temp_supply_sweep.sh` 側で組み込む。オプション1/2を併用する場合は二重スケールを避ける。
 
 ## 推奨初手
 - 影響を減らすため、オプション1で `r` を代表値（例: 1.7–2.4 R_M を設定／可変）としてスケール適用し、`q_abs_mean` を設定から注入できるようにする。並行してテーブル駆動（オプション2）の実装計画を詰める。
@@ -88,9 +88,9 @@
 
 | ファイル | 確認項目 | 期待値 |
 |----------|----------|--------|
-| `summary.json` | `phase_state_final` | 液相/固相の妥当性 |
-| `series/run.parquet` | `T_M_used`, `T_p_effective`（実装後） | $T_p < T_M$ |
-| `run_config.json` | `phase.enabled`, `q_abs_mean` | 設定の再現性確認 |
+| `out/<run_id>/summary.json` | `phase_state_final` | 液相/固相の妥当性 |
+| `out/<run_id>/series/run.parquet` | `T_M_used`, `T_p_effective`（実装後） | $T_p < T_M$ |
+| `out/<run_id>/run_config.json` | `phase.enabled`, `q_abs_mean` | 設定の再現性確認 |
 
 ---
 
@@ -98,7 +98,7 @@
 
 | ドキュメント | 内容 |
 |--------------|------|
-| [analysis/equations.md](file:///Users/daichi/marsshearingsheet/analysis/equations.md) | Q_pr, β, 昇華 (E.004, E.013–E.019) の数式定義 |
-| [analysis/AI_USAGE.md](file:///Users/daichi/marsshearingsheet/analysis/AI_USAGE.md) | 出力ファイルのカラム定義 |
-| [analysis/glossary.md](file:///Users/daichi/marsshearingsheet/analysis/glossary.md) | 用語集と変数命名規約 |
-| [AGENTS.md](file:///Users/daichi/marsshearingsheet/AGENTS.md) | SiO₂ Disk Cooling シミュレーションの記述 |
+| [analysis/equations.md](analysis/equations.md) | Q_pr, β, 昇華 (E.004, E.013–E.019) の数式定義 |
+| [analysis/AI_USAGE.md](analysis/AI_USAGE.md) | 出力ファイルのカラム定義 |
+| [analysis/glossary.md](analysis/glossary.md) | 用語集と変数命名規約 |
+| [AGENTS.md](AGENTS.md) | SiO₂ Disk Cooling シミュレーションの記述 |

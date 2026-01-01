@@ -14,14 +14,14 @@
 
 出力ファイルの最小構成と主カラム（知らない人向け）
 ----------------------------------------------
-- `summary.json`: 集計スカラー。
+- `out/<run_id>/summary.json`: 集計スカラー。
   - 主要キー: `M_loss`, `M_out_cum`, `M_sink_cum` (いずれも火星質量単位), `case_status`, `s_min_effective`, `beta_at_smin_effective`, `mass_budget_max_error_percent`, `dt_over_t_blow_median`, `T_M_used`, `mu_used`。
-- `series/run.parquet`: 時系列（pandas/pyarrow で読める）。
+- `out/<run_id>/series/run.parquet`: 時系列（pandas/pyarrow で読める）。
   - 必須列: `time` [s], `dt` [s], `prod_subblow_area_rate` [kg m^-2 s^-1], `M_out_dot` [M_Mars s^-1], `M_sink_dot` [M_Mars s^-1], `mass_lost_by_blowout` [M_Mars], `mass_lost_by_sinks` [M_Mars], `s_min` [m], `beta_at_smin_effective`, `Sigma_tau1` [kg m^-2], `dt_over_t_blow`, `fast_blowout_flag_gt3/gt10`。
-- `series/diagnostics.parquet`（存在する場合）: 遮蔽などの補助列。
+- `out/<run_id>/series/diagnostics.parquet`（存在する場合）: 遮蔽などの補助列。
   - 例: `tau_eff`, `psi_shield`, `kappa_Planck`, `fast_blowout_factor`, `n_substeps`。
-- `checks/mass_budget.csv`: C4 質量検査ログ。`error_percent` が 0.5% 未満であることを確認する。
-- `run_config.json` / `run_card.md`: 実行時の設定・温度ソース・Q_pr テーブル・物理トグル（特に `allow_TL2003`）を確認する。
+- `out/<run_id>/checks/mass_budget.csv`: C4 質量検査ログ。`error_percent` が 0.5% 未満であることを確認する。
+- `out/<run_id>/run_config.json` / `out/<run_id>/run_card.md`: 実行時の設定・温度ソース・Q_pr テーブル・物理トグル（特に `allow_TL2003`）を確認する。
 
 対象・非対象
 ------------
@@ -31,8 +31,8 @@
 入力フォルダと必要データ
 ------------------------
 - 想定出力: `out/<timestamp>_temp_supply_T{2000|4000|6000}_eps{0p1|1}__<sha>__seed<rng>/`
-- 使用ファイル: `summary.json`（集計）、`series/run.parquet`（主要時系列）、`checks/mass_budget.csv`（C4 監査）、`run_config.json`/`run_card.md`（前提確認）、`series/diagnostics.parquet` があれば遮蔽確認。
-- 6 ケース揃い次第、欠損なく読み込めるかを最初に確認し、`mass_budget.csv` の |error_percent|<0.5% を満たさないものは別フラグを立てる。
+- 使用ファイル: `out/<run_id>/summary.json`（集計）、`out/<run_id>/series/run.parquet`（主要時系列）、`out/<run_id>/checks/mass_budget.csv`（C4 監査）、`out/<run_id>/run_config.json`/`out/<run_id>/run_card.md`（前提確認）、`out/<run_id>/series/diagnostics.parquet` があれば遮蔽確認。
+- 6 ケース揃い次第、欠損なく読み込めるかを最初に確認し、`out/<run_id>/checks/mass_budget.csv` の |error_percent|<0.5% を満たさないものは別フラグを立てる。
 
 可視化アウトプット案
 --------------------
@@ -56,9 +56,9 @@
    - series/run.parquet から必要列を抜き出し、プロットに使う DataFrame をキャッシュ（例: feather）。
 3. 可視化:
    - matplotlib ベースで上記プロットを作成し、`out/<timestamp>_temp_supply_viz__<sha>/figs/` に PNG 保存。ファイル名は `runid_metric.png` 形式（例: `T2000_mu0p1_Mout.png`）。
-   - `mass_budget.csv` の最大誤差が閾値超のケースには図や凡例に `(mass budget warn)` を付記。
+   - `out/<run_id>/checks/mass_budget.csv` の最大誤差が閾値超のケースには図や凡例に `(mass budget warn)` を付記。
 4. 記録:
-   - `run_card.md` から T, μ, Q_pr テーブル、`physics_controls`（特に `allow_TL2003`）を転記せずに引用し、可視化ノートを別途 `figs/notes.md` に残す。
+   - `out/<run_id>/run_card.md` から T, μ, Q_pr テーブル、`physics_controls`（特に `allow_TL2003`）を転記せずに引用し、可視化ノートを別途 `figs/notes.md` に残す。
    - 必要に応じて analysis/run_catalog.md への run 追加は別コミットで行い、ここでは方針のみ。
 
 読み込みスニペット例（外部ツール向け）

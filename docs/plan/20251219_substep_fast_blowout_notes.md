@@ -70,7 +70,7 @@
 - トグル: `io.substep_fast_blowout`（bool）、`io.substep_max_ratio`（float）。`run_zero_d` 内で `dt/t_blow > substep_max_ratio` のときのみサブステップ分割を行う。[marsdisk/run.py で dt_over_t_blow 判定]
 - ブローアウト時間: `t_blow = chi_blow_eff / Omega`。`chi_blow_eff` は β=0.5 を基準に `radiation` モジュールで決定。[marsdisk/physics/radiation.py]
 - 追加安全弁: `numerics.dt_over_t_blow_max`（例 0.1）。ここを下げると dt 自体を縮める挙動と併用できる。
-- 出力: `series/run.parquet` に `fast_blowout_factor`, `fast_blowout_ratio`, `fast_blowout_flag_gt3/gt10`, `n_substeps` が記録される。[marsdisk/io/writer.py メタデータ]
+- 出力: `out/<run_id>/series/run.parquet` に `fast_blowout_factor`, `fast_blowout_ratio`, `fast_blowout_flag_gt3/gt10`, `n_substeps` が記録される。[marsdisk/io/writer.py メタデータ]
 
 ## 既知の制約・注意
 - サブステップはブローアウト項のみに適用（Smol 内部の衝突計算を細分化するわけではない）。
@@ -80,12 +80,12 @@
 
 ## 検討時に必要な環境情報
 - 代表設定: `configs/sweep_temp_supply/temp_supply_T6000_eps1.yml` など（dt=20 s, shielding.mode=psitau, supply.const × epsilon_mix）。
-- 代表出力: `series/run.parquet` で `dt_over_t_blow`, `n_substeps`, `M_out_dot` を確認すると効果が見える。
+- 代表出力: `out/<run_id>/series/run.parquet` で `dt_over_t_blow`, `n_substeps`, `M_out_dot` を確認すると効果が見える。
 - 典型スケール: `t_orb ≈ 1.5e4 s`（r≃1.85 RM）、`t_blow ≈ 1/Omega ≃ 2.4e3 s`。`dt=20 s` なら `dt/t_blow ≃ 8e-3` なので、サブステップが効くのはさらに短い t_blow（高速ブローアウト補正が必要な領域）や粗い dt のケース。
 
 ## 期待するアウトカム
 - ジグザグ（M_out_dot, sigma_surf）の緩和：大きな dt でもブローアウトの速さを部分的に解像。
-- 質量収支: サブステップ導入で質量誤差が増えないこと（`checks/mass_budget.csv` |error|<0.5% 維持）。
+- 質量収支: サブステップ導入で質量誤差が増えないこと（`out/<run_id>/checks/mass_budget.csv` |error|<0.5% 維持）。
 - 速度: 全ステップ細分化ではなく「dt/t_blow が閾値超えのステップだけ」細分化し、総計算時間の増加を抑える。
 
 ## 実装反映メモ（サブステップ導入後）
@@ -101,7 +101,7 @@
 | **新規出力列** | `substep_active` 列を追加 | [writer.py](../../marsdisk/io/writer.py) |
 | **平均化変更** | `fast_blowout_factor_avg` を `dt_sub` 重み平均に変更 | [run.py](../../marsdisk/run.py), [writer.py](../../marsdisk/io/writer.py) |
 | **スキーマ更新** | `io.substep_max_ratio` のデフォルト 1.0（実質無効）、運用値 0.3–0.5 を明示 | [schema.py](../../marsdisk/schema.py) |
-| **回帰テスト** | surface_ode でサブステップ有効、smol では無効、質量誤差≦0.5% を検証 | [test_fast_blowout.py](../../tests/test_fast_blowout.py) |
+| **回帰テスト** | surface_ode でサブステップ有効、smol では無効、質量誤差≦0.5% を検証 | [test_fast_blowout.py](../../tests/integration/test_fast_blowout.py) |
 
 ### 出力カラム詳細
 

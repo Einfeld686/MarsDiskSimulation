@@ -3,19 +3,19 @@
 目的と背景
 ----------
 - 光学的厚さ（縦軸）に対して、昇華・衝突（t_coll）・放射圧（t_blow）のタイムスケールを同一図に重ね、支配的な時間スケール領域の移り変わりを把握する。
-- 既存のシミュレーション出力（`series/run.parquet`）に記録済みの列を優先し、新規の物理式は導入しない。
+- 既存のシミュレーション出力（`out/<run_id>/series/run.parquet`）に記録済みの列を優先し、新規の物理式は導入しない。
 - シミュレーションと可視化は Windows 機での実行を想定し、.cmd ランナーの作成を完了条件に含める（動的に CPU/メモリを取得して最適値を選択）。
 
 対象・非対象
 ------------
-- 対象: 0D/1D 実行の `out/<run>/series/run.parquet`（または streaming の `run_chunk_*.parquet`）。
+- 対象: 0D/1D 実行の `out/<run>/series/run.parquet`（または streaming の `out/<run_id>/series/run_chunk_*.parquet`）。
 - 対象: Windows 向け .cmd 実行スクリプト（動的リソース検出つき）。
 - 非対象: 新しい物理式の導入、analysis/ の更新、TL2003 の新規適用。
 
 入力データと使用カラム
 ----------------------
 - 基本入力:
-  - `series/run.parquet` または `series/run_chunk_*.parquet`
+  - `out/<run_id>/series/run.parquet` または `out/<run_id>/series/run_chunk_*.parquet`
 - 必須列（原則）:
   - `tau`（縦軸の光学的厚さ）
   - `t_coll`（衝突タイムスケール）
@@ -48,7 +48,7 @@
 - 追加スクリプト: `scripts/plots/plot_tau_timescales.py`（既存 `plot_from_runs.py` と同様の構成）。
 - 入力: `--run out/<run_dir>`、複数 run の重ね描きにも対応可能にする。
 - streaming 対応:
-  - `run.parquet` が無い場合は `run_chunk_*.parquet` を `pyarrow.dataset` で読み込む。
+  - `out/<run_id>/series/run.parquet` が無い場合は `out/<run_id>/series/run_chunk_*.parquet` を `pyarrow.dataset` で読み込む。
   - 必要列のみを読み、メモリ使用量を抑える。
 - 1D 集約:
   - `--reduce cell_median` / `cell_mean` のオプションを用意し、`cell_active` をフィルタ可能にする。

@@ -12,7 +12,7 @@
 - サンプル: `configs/paper_marsdisk_draft.yml`（既存 out/01_inner1RM_blowout, 02_inner1RM_sublimation, 20251022-0501_* を束ねる草稿用）。`python tools/paper_manifest.py --manifest configs/paper_marsdisk_draft.yml --outdir out/paper_inputs/PAPER_MARSDISK_DRAFT` で resolved_manifest.json / paper_checks.json / figure_tasks.json を生成する。
 - 各 run の `out/<stamp>/run_card.md` を読み取り、設定・環境・パラメータ・乱数種を抽出して JSON にまとめる。簡易スキーマを定義し、`run_id: str`, `M_out_dot: float`, `tau: list[float]`, `tags: list[str]` などを型チェックする。
 - `out/<stamp>/series/*.parquet` から主要系列（M_out_dot, prod_subblow_area_rate, tau など）を集計し、図表用の tidy データフレームを生成する。
-- `summary.json` と `checks/mass_budget.csv` を突合し、質量収支と安定性のステータスを付与する。論文レベルの集約タグ（質量収支OK率、IMEX安定率など）もここで計算して JSON に格納する。
+- `out/<run_id>/summary.json` と `out/<run_id>/checks/mass_budget.csv` を突合し、質量収支と安定性のステータスを付与する。論文レベルの集約タグ（質量収支OK率、IMEX安定率など）もここで計算して JSON に格納する。
 
 ## 2. テキスト素片生成ステップ（セクション別）
 - 機械が書く範囲と人間が書く範囲を分離する。背景・設定列挙・数値要約・しきい値比較はテンプレートで自動生成し、解釈や考察（Discussion/Conclusion）は `%% MANUAL_DISCUSSION %%` のような手書きブロックを残して上書きしない。
@@ -32,11 +32,11 @@
 - 「1 論文 = 1 コンフィグ」を基本にし、`configs/paper_*.yml` にタイトル・著者・キーワード・採用する RUN_ID/FIG_ID・章構成テンプレートを記述する。
 - セクション別テキスト素片と図表パスを統合する組版スクリプトを用意する（TeX なら main.autogen.tex を Jinja で生成し、main.manual.tex で手直しを重ねる等の二層構造を許容）。Markdown→Pandoc も選択肢に含める。
 - メタデータ（タイトル、著者、キーワード、対応 RUN_/FIG_ 一覧、Git shortsha）を同時に埋め込む。
-- ビルド成果物と中間生成物は `out/<YYYYMMDD-HHMM>_paper_draft__<shortsha>/` にまとめ、実行コマンドとハッシュを `run_card.md` ライクに記録する。
+- ビルド成果物と中間生成物は `out/<YYYYMMDD-HHMM>_paper_draft__<shortsha>/` にまとめ、実行コマンドとハッシュを `out/<run_id>/run_card.md` ライクに記録する。
 
 ## 5. 検証ステップ（自動チェック）
 - チェックレベルを「エラー/警告/情報」に分ける（例: 質量収支 >0.5% はエラーでビルド失敗、IMEX 収束ギリギリは警告で脚注を出すなど）。
-- チェック結果を `out/.../paper_checks.json` に集約し、質量収支・IMEX・RUN/FIG の欠損重複・spell/grammar・アンカー整合性を記録する。`tools/paper_manifest.py` は mass_budget と dt_over_t_blow の閾値判定を含み、`--extra-checks <json|jsonl>` で外部ツール（spell/grammar/anchor）結果もマージできる。
+- チェック結果を `out/<run_id>/paper_checks.json` に集約し、質量収支・IMEX・RUN/FIG の欠損重複・spell/grammar・アンカー整合性を記録する。`tools/paper_manifest.py` は mass_budget と dt_over_t_blow の閾値判定を含み、`--extra-checks <json|jsonl>` で外部ツール（spell/grammar/anchor）結果もマージできる。
 - 質量収支誤差（|error_percent| < 0.5%）と IMEX 収束条件（Δt ≤ 0.1 min t_coll,k）を再評価し、本文に記載したしきい値と矛盾しないか確認する。
 - 図表の再生成が FIG_ID と一致するか、RUN_ID が欠損・重複していないかをチェックする。
 - 全文生成後に spell/grammar チェックとアンカー整合性の確認を走らせ、差分をログ化する。
