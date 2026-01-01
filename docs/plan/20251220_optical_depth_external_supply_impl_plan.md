@@ -99,7 +99,7 @@
 ## 議論メモ（2025-12-21）
 - 透過率 10% を閾値にするため、停止条件は `tau_los > tau_stop * (1 + tol)` に合わせて `tau_stop=ln(10)=2.302585092994046`、`tau_stop_tol=1.0e-6` とする方針。
 - 既存の `tau_stop=1.0` ケース（temp_supply_sweep 等）は `tau_exceeded` で数十〜百秒で停止していたため、閾値更新により停止時刻が後ろに伸びる見込み。
-- 停止判定の動作確認（`out/<tau_stop_check_run_id>`）では `stop_reason="tau_exceeded"`、`stop_tau_los=2.3057`、`early_stop_time_s=8.379e3`（約 2.33 時間）。`tau_stop=2.302585...` と `tau_stop_tol=1e-6` を反映して閾値超過で停止。
+- 停止判定の動作確認（`out/<run_id>`）では `stop_reason="tau_exceeded"`、`stop_tau_los=2.3057`、`early_stop_time_s=8.379e3`（約 2.33 時間）。`tau_stop=2.302585...` と `tau_stop_tol=1e-6` を反映して閾値超過で停止（run_id 例: `tau_stop_check`）。
 - 供給ゲートは相判定に連動し、`phase_state="solid"` かつ `liquid_dominated` でない場合のみ供給を許可（グローバル1ステップ遅延あり）。液体優勢では衝突カスケードもブロック。
 - 0D の `tau_los` は角度分解ではなくスカラー診断で、`tau_los = kappa * Sigma * los_factor`（`los_factor` は `h_over_r` と `path_multiplier` から決まる）。垂直構造は明示的に解かない。
 - 初期 `Sigma_surf0` は `optical_depth.tau0_target` と `kappa_eff0` から決まり、`mu_orbit10pct` は「表層の何割を1公転で供給するか」のスケールであって、内側円盤総質量の10%を表層に割り当てる意味ではない。
@@ -149,7 +149,7 @@
 - `i0=0` はエラーにならないが `H` は最小値でクランプされ、衝突率が過大になりうる。
 
 ### 具体例（検証ランの数値）
-- 対象: `out/<tau_stop_check_run_id>`
+- 対象: `out/<run_id>`（run_id 例: `tau_stop_check`）
 - `r_in=1.0 R_Mars`, `r_out=2.7 R_Mars` -> `A=2.27024e14 m^2`
 - `Sigma_surf0=10088.9 kg/m^2`, `kappa_eff0=9.9119e-05` -> `tau_los(t0) ~ 1.0`
 - 表層質量: `M_surface=2.29e18 kg = 3.57e-6 M_Mars`

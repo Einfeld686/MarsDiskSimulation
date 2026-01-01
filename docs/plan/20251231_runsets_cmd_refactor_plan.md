@@ -186,7 +186,7 @@ python scripts/runsets/common/run_one.py
 - `RUN_ONE_*` の必須条件と `RUN_TS` / `BATCH_SEED` / `SWEEP_TAG` / `BASE_CONFIG` / `*_OVERRIDES_FILE` の
   **意味・既定値・補完ルール**は既存互換。
 - `RUN_ONE_SEED` と `dynamics.rng_seed` の関係（未指定時は `next_seed.py`）を維持。
-- 出力ディレクトリ規約（`out/<SWEEP_TAG>/<RUN_TS>__<sha>__seed<batch>/<case>`）を維持。
+- 出力ディレクトリ規約（run_id は `<SWEEP_TAG>/<RUN_TS>__<sha>__seed<batch>/<case>`）を維持。
 - `scripts/tests/test_run_one_direct.cmd` の前提（JOB_CMD 形式）を維持。
 - exit code の伝播（run-one 失敗時の rc）を維持。
 

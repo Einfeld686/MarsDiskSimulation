@@ -8,7 +8,7 @@
 
 対象・非対象
 ------------
-- 対象: 0D/1D 実行の `out/<run>/series/run.parquet`（または streaming の `out/<run_id>/series/run_chunk_*.parquet`）。
+- 対象: 0D/1D 実行の `out/<run_id>/series/run.parquet`（または streaming の `out/<run_id>/series/run_chunk_*.parquet`）。
 - 対象: Windows 向け .cmd 実行スクリプト（動的リソース検出つき）。
 - 非対象: 新しい物理式の導入、analysis/ の更新、TL2003 の新規適用。
 
@@ -46,7 +46,7 @@
 実装方針
 --------
 - 追加スクリプト: `scripts/plots/plot_tau_timescales.py`（既存 `plot_from_runs.py` と同様の構成）。
-- 入力: `--run out/<run_dir>`、複数 run の重ね描きにも対応可能にする。
+- 入力: `--run out/<run_id>`、複数 run の重ね描きにも対応可能にする。
 - streaming 対応:
   - `out/<run_id>/series/run.parquet` が無い場合は `out/<run_id>/series/run_chunk_*.parquet` を `pyarrow.dataset` で読み込む。
   - 必要列のみを読み、メモリ使用量を抑える。
@@ -65,7 +65,7 @@
 - [x] タイムスケール算出: `t_sub`, `t_coll`, `t_blow` を列として追加し、NaN を除外（推奨: `t_sub=s_min_effective/abs(ds_dt_sublimation)` を既定、`ds_dt_sublimation>=0` は NaN、`t_*` は `finite & >0` のみ採用）。
 - [x] 1D 集約: `cell_active` フィルタ + 時刻ごと集約を選択可能にする（推奨: `cell_active==True` を既定、集約は `cell_median` をデフォルト）。
 - [x] プロット実装: matplotlib で `tau` vs timescale を描画、軸スケールと凡例を整理（推奨: x=log, y=log, `alpha=0.25`, `s=6`, `figsize=(7,4)`, `dpi=150`）。
-- [x] 出力: `out/<run>/figures/tau_timescales.png`（または `--output-dir` 指定）（推奨: 既定出力先は `out/<run>/figures`、ファイル名は `tau_timescales.png` 固定）。
+- [x] 出力: `out/<run_id>/figures/tau_timescales.png`（または `--output-dir` 指定）（推奨: 既定出力先は `out/<run_id>/figures`、ファイル名は `tau_timescales.png` 固定）。
 - [x] Windows .cmd: `scripts/plots/windows/plot_tau_timescales.cmd` を作成し、CPU/メモリ自動検出を組み込む（推奨: PowerShell で `TotalPhysicalMemory` と `NumberOfLogicalProcessors` を取得し、`MEM_GB=min(max(8, total_gb*0.6), total_gb-4)` を `STREAM_MEM_GB` に設定、`total_gb`/`logical_processors`/`MEM_GB` をログ出力）。
 - [x] `scripts/README.md` の表に新しい .cmd の用途を追記（推奨: "tau timescale plot (Windows) / scripts/plots/windows/plot_tau_timescales.cmd" の 1 行追加）。
 

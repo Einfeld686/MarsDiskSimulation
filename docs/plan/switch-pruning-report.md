@@ -74,7 +74,7 @@ This report inventories boolean/enum-style switches in the YAML schema and flags
 | inner_disk_mass.map_to_sigma | literal | analytic | analytic | - | [marsdisk/schema.py:100-119] | [analysis/config_guide.md:190-190] | InnerDiskMass | docs-only | - |
 | inner_disk_mass.use_Mmars_ratio | bool | True | true/false | - | [marsdisk/schema.py:100-119] | [marsdisk/run_zero_d.py:977-977] [analysis/config_guide.md:190-190] | InnerDiskMass | keep | - |
 | io.correct_fast_blowout | bool | False | true/false | Apply a correction factor when dt greatly exceeds the blow-out timescale. | [marsdisk/schema.py:1710-1747] | [marsdisk/io/writer.py:270-270] [analysis/AI_USAGE.md:141-141] | IO | keep | - |
-| io.debug_sinks | bool | False | true/false | Enable verbose sink logging to out/<run>/debug/sinks_trace.jsonl | [marsdisk/schema.py:1710-1747] | [tests/integration/test_run_regressions.py:21-21] [docs/modeling-notes.md:41-41] | IO | review | - |
+| io.debug_sinks | bool | False | true/false | Enable verbose sink logging to out/<run_id>/debug/sinks_trace.jsonl | [marsdisk/schema.py:1710-1747] | [tests/integration/test_run_regressions.py:21-21] [docs/modeling-notes.md:41-41] | IO | review | - |
 | io.progress.enable | bool | False | true/false | Enable a lightweight progress bar with ETA on the CLI. | [marsdisk/schema.py:1649-1660] | [marsdisk/run_zero_d.py:4912-4912] | Progress | keep | - |
 | io.psd_history | bool | True | true/false | Write per-bin PSD history to series/psd_hist.parquet. | [marsdisk/schema.py:1710-1747] | (none) | IO | candidate-remove | - |
 | io.quiet | bool | False | true/false | Suppress INFO logging and Python warnings for cleaner CLI output. | [marsdisk/schema.py:1710-1747] | [marsdisk/run_zero_d.py:4902-4902] | IO | keep | - |

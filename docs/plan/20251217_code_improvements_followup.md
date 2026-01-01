@@ -51,7 +51,7 @@ Phase 1–3 のコード整備が完了し、以下が達成済み:
 # 2. DocSync + ドキュメントテスト + 評価システム（AGENTS.md 必須ワークフロー）
 python -m tools.doc_sync_agent --all --write
 make analysis-doc-tests
-python -m tools.evaluation_system --outdir out/<latest-run-dir>  # 直近の run 出力を指定
+python -m tools.evaluation_system --outdir out/<run_id>  # 直近の run 出力を指定
 
 # 3. カバレッジ確認
 cat analysis/coverage/coverage.json | jq '.holes'

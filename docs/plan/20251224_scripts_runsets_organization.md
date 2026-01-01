@@ -175,7 +175,7 @@ Windows 固有の運用設計を runsets に移植する。
 
 - **設定の優先順位**: CLI > overrides.txt > env > study.yml > base.yml の順に適用。
 - **環境変数の命名**: 既存互換を維持しつつ、runsets 専用は `RUNSET_` 接頭辞で衝突を回避。
-- **出力の命名/再現性**: `out/<ts>__<sha>__seed<batch>/<case>` 形式を維持し、`out/<run_id>/run_config.json` と `out/<run_id>/summary.json` の記録を必須化。
+- **出力の命名/再現性**: run_id は `<ts>__<sha>__seed<batch>/<case>` 形式を維持し、出力は `out/<run_id>/run_config.json` と `out/<run_id>/summary.json` の記録を必須化。
 - **失敗時の挙動**: run 本体が失敗しても plot/eval を「可能な範囲で実行」し、exit code は `HOOKS_STRICT` で制御。
 - **OS 差異の最小化**: Windows 固有の `AUTO_JOBS/parallel` は runsets/windows に閉じる。
 - **1D/0D の境界**: 0D 実行は `--0d` の明示指定のみ許可。
@@ -185,7 +185,7 @@ Windows 固有の運用設計を runsets に移植する。
 ## 既存実装の遵守ポイント（追加）
 
 - **環境変数の互換維持**: `run_temp_supply_sweep.*` で使う変数名と意味を変更しない。
-- **出力ディレクトリ規約**: `timestamp + git sha + seed` の命名を維持（Windows は `out/<run_id>/` 固定）。
+- **出力ディレクトリ規約**: run_id は `timestamp + git sha + seed` の命名を維持（Windows は `out/<run_id>/` 固定）。
 - **Windows 並列運用**: `AUTO_JOBS` / `PARALLEL_JOBS` / `RUN_ONE_*` / `PARALLEL_WINDOW_STYLE` の挙動を再現。
 - **セル並列の引き継ぎ**: `run_temp_supply_sweep_1d.cmd` の `MARSDISK_CELL_*` 既定値を runsets/windows に反映。
 - **progress/quiet の互換**: `--quiet` と `ENABLE_PROGRESS` の扱いを維持。

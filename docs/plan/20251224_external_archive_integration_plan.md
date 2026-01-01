@@ -3,7 +3,7 @@
 - 1パターン完了後の最終フェーズ（ストリーミングチャンクの統合・図生成・集計）をトリガに、外部HDDへ安全に移行/保管する仕組みを既存ランナーへ統合する。
 
 # 背景
-- 現行の `out/<timestamp>...` 直下にチャンク/統合Parquet/図を保存する運用では、全パターン完走後の移動が内部SSD容量を超過する。
+- 現行の `out/<run_id>/...` 直下にチャンク/統合Parquet/図を保存する運用では、全パターン完走後の移動が内部SSD容量を超過する（run_id は `<timestamp>...` 形式）。
 - ストリーミング書き出しは既に前提となっており、`merge_at_end` での統合タイミングに合わせたアーカイブが自然な切り分け点。
 - 統合Parquet自体は既存実装で対応済み（streaming の `merge_at_end` で `out/<run_id>/series/run.parquet` 等を生成）。
 
@@ -29,7 +29,7 @@
 - 移動方式とローカル保持: `mode=copy` + 検証後削除、`keep_local=metadata` を既定とする。
 - 整合性検証の厳密さ: 既定は「標準+」（manifest + 主要成果物ハッシュ + Parquetメタ検証）。
 - 失敗時の扱い: アーカイブ失敗は警告で継続し、`INCOMPLETE` を残して再試行可能にする（厳格モードは別途）。
-- アーカイブ先の構造: `out/<timestamp>...` と同一命名で外部HDDへミラーし、`out/<run_id>/run_card.md` に `archive_path` とボリューム情報を記録する。
+- アーカイブ先の構造: `out/<run_id>/...` と同一命名で外部HDDへミラーし、`out/<run_id>/run_card.md` に `archive_path` とボリューム情報を記録する（run_id は `<timestamp>...` 形式）。
 - 明示指定必須: `io.archive.enabled=true` の場合は `io.archive.dir` を必ず指定する。
 
 # Windows運用補足（明示パス運用）

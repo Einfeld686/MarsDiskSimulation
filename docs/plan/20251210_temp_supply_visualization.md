@@ -9,7 +9,7 @@
 このプランを読む人の前提
 ----------------------
 - リポジトリや出力構造を知らない前提で、フォルダやカラム名を明示する。
-- 0D の標準実行は `python -m marsdisk.run --config <yaml>` で `out/<timestamp>_<tag>__<sha>__seed<n>/` を生成する。今回の tag は `temp_supply_T{T}_eps{eps}` 形式。
+- 0D の標準実行は `python -m marsdisk.run --config <yaml>` で `out/<run_id>/` を生成する。run_id は `<timestamp>_<tag>__<sha>__seed<n>` 形式（tag は `temp_supply_T{T}_eps{eps}`）。
 - `eps` は混合効率 `mixing.epsilon_mix` の略。`mu` は昇華モデルの平均分子量 [kg/mol] を指す。
 
 出力ファイルの最小構成と主カラム（知らない人向け）
@@ -30,7 +30,7 @@
 
 入力フォルダと必要データ
 ------------------------
-- 想定出力: `out/<timestamp>_temp_supply_T{2000|4000|6000}_eps{0p1|1}__<sha>__seed<rng>/`
+- 想定出力: `out/<run_id>/`（run_id: `<timestamp>_temp_supply_T{2000|4000|6000}_eps{0p1|1}__<sha>__seed<rng>`）
 - 使用ファイル: `out/<run_id>/summary.json`（集計）、`out/<run_id>/series/run.parquet`（主要時系列）、`out/<run_id>/checks/mass_budget.csv`（C4 監査）、`out/<run_id>/run_config.json`/`out/<run_id>/run_card.md`（前提確認）、`out/<run_id>/series/diagnostics.parquet` があれば遮蔽確認。
 - 6 ケース揃い次第、欠損なく読み込めるかを最初に確認し、`out/<run_id>/checks/mass_budget.csv` の |error_percent|<0.5% を満たさないものは別フラグを立てる。
 
@@ -52,20 +52,22 @@
 --------
 1. 出力収集: 6 ケースの outdir をリスト化（先行 2 ケースは固定）。存在しない組み合わせは `missing` ラベルでプレースホルダ行を作る。
 2. 集計スクリプト案（pandas/pyarrow 前提）:
-   - summary.json から主要スカラーを読み込み、集約表を生成して `out/<timestamp>_temp_supply_viz__/summary_table.csv` に書き出す。
+   - 可視化出力の run_id は `<timestamp>_temp_supply_viz__<sha>` とし、成果物は `out/<run_id>/...` 配下に集約する。
+   - summary.json から主要スカラーを読み込み、集約表を生成して `out/<run_id>/summary_table.csv` に書き出す。
    - series/run.parquet から必要列を抜き出し、プロットに使う DataFrame をキャッシュ（例: feather）。
 3. 可視化:
-   - matplotlib ベースで上記プロットを作成し、`out/<timestamp>_temp_supply_viz__<sha>/figs/` に PNG 保存。ファイル名は `runid_metric.png` 形式（例: `T2000_mu0p1_Mout.png`）。
+   - matplotlib ベースで上記プロットを作成し、`out/<run_id>/figs/` に PNG 保存。ファイル名は `runid_metric.png` 形式（例: `T2000_mu0p1_Mout.png`）。
    - `out/<run_id>/checks/mass_budget.csv` の最大誤差が閾値超のケースには図や凡例に `(mass budget warn)` を付記。
 4. 記録:
-   - `out/<run_id>/run_card.md` から T, μ, Q_pr テーブル、`physics_controls`（特に `allow_TL2003`）を転記せずに引用し、可視化ノートを別途 `out/<timestamp>_temp_supply_viz__<sha>/figs/notes.md` に残す。
+   - `out/<run_id>/run_card.md` から T, μ, Q_pr テーブル、`physics_controls`（特に `allow_TL2003`）を転記せずに引用し、可視化ノートを別途 `out/<run_id>/figs/notes.md` に残す。
    - 必要に応じて analysis/run_catalog.md への run 追加は別コミットで行い、ここでは方針のみ。
 
 読み込みスニペット例（外部ツール向け）
 ------------------------------------
 ```python
 import json, pandas as pd, pyarrow.parquet as pq, glob
-outdirs = sorted(glob.glob("out/*_temp_supply_*"))
+run_id_pattern = "<timestamp>_temp_supply_T*_eps*__<sha>__seed*"
+outdirs = sorted(glob.glob(f"out/{run_id_pattern}"))
 rows = []
 for od in outdirs:
     try:
@@ -102,6 +104,6 @@ if outdirs:
 
 完了条件
 --------
-- 6 ケースの集約表（欠損は `missing`）と主要プロット群を `out/<timestamp>_temp_supply_viz__<sha>/` に配置。
+- 6 ケースの集約表（欠損は `missing`）と主要プロット群を `out/<run_id>/` に配置。
 - 各プロットに軸ラベル・単位・ケース識別（T, μ, run_hash）を付記し、mass budget 関連の警告があれば明示。
 - 可視化用スクリプト/ノートの所在を本プランで参照でき、実行コマンド例を残す（詳細コードは今後作成）。

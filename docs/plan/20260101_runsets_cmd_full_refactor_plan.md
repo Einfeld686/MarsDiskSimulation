@@ -257,7 +257,7 @@ python_exec.cmd
 ### 互換性と動作
 - [x] `RUN_TS` / `RUN_ONE_*` / `BATCH_SEED` / `SWEEP_TAG` の既定値と優先順位を崩さない
 - [x] overrides の優先順（base < extra < case）を変更しない
-- [x] 出力ディレクトリ規約（`out/<SWEEP_TAG>/<RUN_TS>__<sha>__seed<batch>/<case>`）を維持
+- [x] 出力ディレクトリ規約（run_id は `<SWEEP_TAG>/<RUN_TS>__<sha>__seed<batch>/<case>`）を維持
 - [x] `PYTHON_ALLOW_LAUNCHER` の許容条件を既存互換に保つ
 - [x] `QUIET_MODE` / `DEBUG` / `TRACE_*` のログ挙動を変えない
 - [x] hooks/plot/eval の実行条件を変えない

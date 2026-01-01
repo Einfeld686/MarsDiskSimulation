@@ -4,7 +4,7 @@
 ----------
 - gas-poor 標準（TL2003 無効, `ALLOW_TL2003=false`）の 0D 実行で、先行研究に明示値がない自由度を系統的に掃引する。
 - 研究で固まっている定数（β=0.5, Q_D* 係数, ρ=3000 kg/m³ 等）は固定し、シナリオ依存のものだけを振る。
-- ベース設定は `configs/base.yml`（analysis 指定の 2 年・40 bin）とし、各スイープは `out/<timestamp>_param_sweep__<sha>/` 配下に `out/<run_id>/run_card.md` を残す。
+- ベース設定は `configs/base.yml`（analysis 指定の 2 年・40 bin）とし、各スイープは `out/<run_id>/` 配下に `out/<run_id>/run_card.md` を残す（run_id 例: `<timestamp>_param_sweep__<sha>`）。
 
 対象・非対象
 ------------

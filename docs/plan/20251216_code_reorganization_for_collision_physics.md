@@ -148,7 +148,7 @@ smol_res = collisions_smol.step_collisions(ctx, psd_state)
 **削除基準**（以下に該当するものは削除対象）:
 - 最終更新が **1 ヶ月** 以上前
 - ファイル名に日付がなく、目的が不明
-- 類似内容が `tests/` または `out/` に既存
+- 類似内容が `tests/` または `out/<run_id>/...` に既存
 
 **実施手順**:
 ```bash
@@ -522,7 +522,7 @@ gantt
 1. `analysis/equations.md`/`overview.md` を更新し、DocSync + doc tests + evaluation を実行。
 2. `CollisionStepContext` 拡張と smol 内簿記の実装、出力カラム追加。
 3. pytest 追加（散逸率・収束・符号チェック）、CI ガードに組み込む。
-4. 基準 run（base.yml）を保存し、`out/<timestamp>_energy_bookkeeping__<sha>/run_card.md` に評価結果を記録。
+4. 基準 run（base.yml）を保存し、`out/<run_id>/run_card.md` に評価結果を記録（run_id 例: `<timestamp>_energy_bookkeeping__<sha>`）。
 
 ### 8.6 追加の具体化事項
 - 反発係数との整合: `f_ke_effective = min(1, max(0, eps_restitution**2))` をデフォルトの近似とし、設定で上書き可能にする。侵食では Thébault の \(f_{\mathrm{ke}}\) を優先し、壊滅的破砕では `f_ke_fragmentation`（既定 0.1 など）を導入するか、設定が無い場合は eps² でフォールバックする。
