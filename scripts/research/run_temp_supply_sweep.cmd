@@ -1,6 +1,7 @@
 @echo off
 rem Windows CMD version of run_temp_supply_sweep.sh (logic preserved, output rooted under out/)
 setlocal EnableExtensions EnableDelayedExpansion
+set "SCRIPT_DIR=%~dp0"
 
 if not defined DEBUG set "DEBUG=0"
 if not defined TRACE_ENABLED set "TRACE_ENABLED=0"
@@ -11,6 +12,10 @@ if not defined QUIET_MODE set "QUIET_MODE=1"
 if /i "%DEBUG%"=="1" set "QUIET_MODE=0"
 if /i "%TRACE_ENABLED%"=="1" set "QUIET_MODE=0"
 set "SCRIPT_REV=run_temp_supply_sweep_cmd_trace_v2"
+
+if not defined DEBUG_DOC_ALWAYS set "DEBUG_DOC_ALWAYS=0"
+set "DEBUG_DOC_ENABLED=0"
+if /i "%DEBUG%"=="1" set "DEBUG_DOC_ENABLED=1"
 
 if not defined PYTHON_ALLOW_LAUNCHER set "PYTHON_ALLOW_LAUNCHER=0"
 
@@ -26,14 +31,14 @@ if not defined PYTHON_EXE (
   for %%P in (python3.11 python) do (
     if not defined PYTHON_EXE (
       where %%P >nul 2>&1
-      if not errorlevel 1 set "PYTHON_EXE=%%P"
+      if !errorlevel! lss 1 set "PYTHON_EXE=%%P"
     )
   )
   if not defined PYTHON_EXE (
     where py >nul 2>&1
-    if not errorlevel 1 (
+    if !errorlevel! lss 1 (
       py -3.11 -c "import sys" >nul 2>&1
-      if not errorlevel 1 (
+      if !errorlevel! lss 1 (
         set "PYTHON_EXE=py"
         set "PYTHON_ALLOW_LAUNCHER=1"
         if not defined PYTHON_ARGS (
@@ -170,7 +175,7 @@ if not defined PYTHON_EXE (
   for %%P in (python3.11 python) do (
     if not defined PYTHON_EXE (
       where %%P >nul 2>&1
-      if not errorlevel 1 set "PYTHON_EXE=%%P"
+      if !errorlevel! lss 1 set "PYTHON_EXE=%%P"
     )
   )
   if not defined PYTHON_EXE (
@@ -214,7 +219,7 @@ if "!PYTHON_LOOKS_PATH!"=="1" (
     for %%P in (python3.11 python) do (
       if not defined PYTHON_FALLBACK (
         where %%P >nul 2>&1
-        if not errorlevel 1 set "PYTHON_FALLBACK=%%P"
+        if !errorlevel! lss 1 set "PYTHON_FALLBACK=%%P"
       )
     )
     if defined PYTHON_FALLBACK (
@@ -229,12 +234,12 @@ if "!PYTHON_LOOKS_PATH!"=="1" (
   )
 ) else (
   where !PYTHON_EXE! >nul 2>&1
-  if errorlevel 1 (
+  if !errorlevel! geq 1 (
     set "PYTHON_FALLBACK="
     for %%P in (python3.11 python) do (
       if not defined PYTHON_FALLBACK (
         where %%P >nul 2>&1
-        if not errorlevel 1 set "PYTHON_FALLBACK=%%P"
+        if !errorlevel! lss 1 set "PYTHON_FALLBACK=%%P"
       )
     )
     if defined PYTHON_FALLBACK (
@@ -288,7 +293,7 @@ if "!PYTHON_CMD_SANITY!"=="0" (
   for %%P in (python3.11 python) do (
     if not defined PYTHON_EXE (
       where %%P >nul 2>&1
-      if not errorlevel 1 set "PYTHON_EXE=%%P"
+      if !errorlevel! lss 1 set "PYTHON_EXE=%%P"
     )
   )
   if not defined PYTHON_EXE (
@@ -308,7 +313,7 @@ if "!PYTHON_CMD_SANITY!"=="0" (
 )
 set "PYTHON_VERSION_OK=0"
 !PYTHON_CMD! -c "import sys; raise SystemExit(0 if sys.version_info >= (3,11) else 1)" >nul 2>&1
-if not errorlevel 1 set "PYTHON_VERSION_OK=1"
+if !errorlevel! lss 1 set "PYTHON_VERSION_OK=1"
 
 if "!PYTHON_VERSION_OK!"=="0" (
   rem py launcher fallback disabled.
@@ -335,12 +340,14 @@ if "%QUIET_MODE%"=="1" (
   set "LOG_SYS=rem"
   set "LOG_CONFIG=rem"
   set "LOG_RUN=rem"
+  set "LOG_PATH=rem"
 ) else (
   set "LOG_SETUP=echo.[setup]"
   set "LOG_INFO=echo.[info]"
   set "LOG_SYS=echo.[sys]"
   set "LOG_CONFIG=echo.[config]"
   set "LOG_RUN=echo.[run]"
+  set "LOG_PATH=echo.[paths]"
 )
 %LOG_SETUP% script_path=%~f0
 %LOG_SETUP% cwd=%CD%
@@ -363,28 +370,25 @@ if defined RUN_TS (
 )
 set "TMP_ROOT_BASE=%TEMP%"
 set "TMP_SOURCE=TEMP"
-if "%TMP_ROOT_BASE%"=="" (
+if "!TMP_ROOT_BASE!"=="" (
   set "TMP_ROOT_BASE=%CD%\tmp"
   set "TMP_SOURCE=fallback"
 )
-if not exist "%TMP_ROOT_BASE%" mkdir "%TMP_ROOT_BASE%" >nul 2>&1
-if not exist "%TMP_ROOT_BASE%" (
+if not exist "!TMP_ROOT_BASE!" mkdir "!TMP_ROOT_BASE!" >nul 2>&1
+if not exist "!TMP_ROOT_BASE!" (
   set "TMP_ROOT_BASE=%CD%\tmp"
   set "TMP_SOURCE=fallback"
-  if not exist "%TMP_ROOT_BASE%" mkdir "%TMP_ROOT_BASE%" >nul 2>&1
+  if not exist "!TMP_ROOT_BASE!" mkdir "!TMP_ROOT_BASE!" >nul 2>&1
 )
-if not exist "%TMP_ROOT_BASE%" (
-  echo.[error] temp_root unavailable: "%TMP_ROOT_BASE%"
+if not exist "!TMP_ROOT_BASE!" (
+  echo.[error] temp_root unavailable: "!TMP_ROOT_BASE!"
   call :popd_safe
   exit /b 1
 )
 if not defined GIT_SHA for /f %%A in ('git rev-parse --short HEAD 2^>nul') do set "GIT_SHA=%%A"
 if not defined GIT_SHA set "GIT_SHA=nogit"
 if not defined BATCH_SEED (
-  set "BATCH_SEED_TMP="
-  setlocal DisableDelayedExpansion
-  for /f %%A in ('%PYTHON_CMD% "%NEXT_SEED_PY%"') do set "BATCH_SEED_TMP=%%A"
-  endlocal & set "BATCH_SEED=%BATCH_SEED_TMP%"
+  for /f %%A in ('!PYTHON_CMD! "!NEXT_SEED_PY!"') do set "BATCH_SEED=%%A"
 )
 if "%BATCH_SEED%"=="" set "BATCH_SEED=0"
 set "TMP_ROOT=%TMP_ROOT_BASE%"
@@ -455,6 +459,31 @@ set "COOL_SEARCH_YEARS="
 if not defined BASE_CONFIG set "BASE_CONFIG=configs/sweep_temp_supply/temp_supply_T4000_eps1.yml"
 rem Normalize BASE_CONFIG to absolute path and fix any double backslashes
 for %%I in ("!BASE_CONFIG!") do set "BASE_CONFIG=%%~fI"
+set "BATCH_ROOT_ABS=!BATCH_ROOT!"
+for %%I in ("!BATCH_ROOT!") do set "BATCH_ROOT_ABS=%%~fI"
+set "TMP_ROOT_ABS=!TMP_ROOT!"
+for %%I in ("!TMP_ROOT!") do set "TMP_ROOT_ABS=%%~fI"
+%LOG_PATH% repo_root="!JOB_CWD_USE!"
+%LOG_PATH% tmp_root="!TMP_ROOT_ABS!"
+%LOG_PATH% batch_root="!BATCH_ROOT_ABS!"
+%LOG_PATH% base_config="!BASE_CONFIG!"
+if "%DEBUG_DOC_ENABLED%"=="1" (
+  if not defined DEBUG_DOC_DIR set "DEBUG_DOC_DIR=!BATCH_ROOT!\debug"
+  if not exist "!DEBUG_DOC_DIR!" mkdir "!DEBUG_DOC_DIR!" >nul 2>&1
+  if not exist "!DEBUG_DOC_DIR!" set "DEBUG_DOC_DIR=!BATCH_ROOT!"
+  if not defined DEBUG_DOC_FILE set "DEBUG_DOC_FILE=!DEBUG_DOC_DIR!\run_temp_supply_debug_!RUN_TS!_!BATCH_SEED!.log"
+  >"!DEBUG_DOC_FILE!" echo [debug] run_temp_supply debug doc
+  >>"!DEBUG_DOC_FILE!" echo script=!SCRIPT_SELF_USE!
+  >>"!DEBUG_DOC_FILE!" echo repo_root=!JOB_CWD_USE!
+  >>"!DEBUG_DOC_FILE!" echo run_ts=!RUN_TS! batch_seed=!BATCH_SEED!
+  >>"!DEBUG_DOC_FILE!" echo tmp_root=!TMP_ROOT_ABS!
+  >>"!DEBUG_DOC_FILE!" echo batch_root=!BATCH_ROOT_ABS!
+  >>"!DEBUG_DOC_FILE!" echo venv_dir=!VENV_DIR!
+  >>"!DEBUG_DOC_FILE!" echo python_exe=!PYTHON_EXE!
+  >>"!DEBUG_DOC_FILE!" echo python_cmd=!PYTHON_CMD!
+  >>"!DEBUG_DOC_FILE!" echo base_config=!BASE_CONFIG!
+  %LOG_INFO% debug doc="!DEBUG_DOC_FILE!"
+)
 if not defined QSTAR_UNITS set "QSTAR_UNITS=ba99_cgs"
 if not defined GEOMETRY_MODE set "GEOMETRY_MODE=0D"
 if not defined GEOMETRY_NR set "GEOMETRY_NR=32"
@@ -556,7 +585,7 @@ if /i "%PARALLEL_MODE%"=="numba" (
   set "MARSDISK_CELL_JOBS=1"
 )
 set "CELL_JOBS_RAW=%MARSDISK_CELL_JOBS%"
-if /i "%MARSDISK_CELL_JOBS%"=="auto" (
+if /i "!MARSDISK_CELL_JOBS!"=="auto" (
   set "CELL_CPU_LOGICAL="
   set "CELL_MEM_TOTAL_GB="
   set "CELL_MEM_FRACTION_USED="
@@ -608,14 +637,14 @@ if /i "%PARALLEL_MODE%"=="numba" (
 )
 if not defined CELL_THREAD_LIMIT set "CELL_THREAD_LIMIT=auto"
 set "CELL_THREAD_LIMIT_RAW=%CELL_THREAD_LIMIT%"
-if /i "%CELL_THREAD_LIMIT%"=="auto" (
+if /i "!CELL_THREAD_LIMIT!"=="auto" (
   if defined CELL_THREAD_LIMIT_AUTO (
     set "CELL_THREAD_LIMIT=%CELL_THREAD_LIMIT_AUTO%"
   ) else (
     for /f %%A in ('%PYTHON_CMD% scripts\\runsets\\common\\calc_thread_limit.py') do set "CELL_THREAD_LIMIT=%%A"
   )
 )
-if "%CELL_THREAD_LIMIT%"=="1" if "%CELL_THREAD_LIMIT_DEFAULT%"=="1" (
+if "!CELL_THREAD_LIMIT!"=="1" if "%CELL_THREAD_LIMIT_DEFAULT%"=="1" (
   if defined CELL_THREAD_LIMIT_AUTO set "CELL_THREAD_LIMIT=%CELL_THREAD_LIMIT_AUTO%"
 )
 if not defined CELL_THREAD_LIMIT set "CELL_THREAD_LIMIT=1"
@@ -730,7 +759,7 @@ if defined CPU_UTIL_TARGET_PERCENT if /i not "%PARALLEL_MODE%"=="numba" (
   if not defined RUN_ONE_MODE (
     set "CPU_TARGET_OK=1"
     for /f "delims=0123456789" %%A in ("%CPU_UTIL_TARGET_PERCENT%") do set "CPU_TARGET_OK=0"
-    if "%CPU_TARGET_OK%"=="1" (
+    if "!CPU_TARGET_OK!"=="1" (
       if not defined CELL_CPU_LOGICAL (
         if defined NUMBER_OF_PROCESSORS set "CELL_CPU_LOGICAL=%NUMBER_OF_PROCESSORS%"
       )
@@ -835,7 +864,7 @@ if defined EXTRA_OVERRIDES_FILE (
 call :trace_detail "base_overrides_file=!BASE_OVERRIDES_FILE!"
 call :trace_detail "base overrides: python build"
 %PYTHON_CMD% scripts\\runsets\\common\\write_base_overrides.py --out "!BASE_OVERRIDES_FILE!"
-if errorlevel 1 (
+if !errorlevel! geq 1 (
   echo.[error] failed to build base overrides
   call :popd_safe
   exit /b 1
@@ -850,7 +879,7 @@ call :trace_detail "base overrides: python done"
 set "SWEEP_LIST_FILE=!TMP_ROOT!\marsdisk_sweep_list_!RUN_TS!_!BATCH_SEED!.txt"
 call :trace_detail "sweep list file=!SWEEP_LIST_FILE!"
 %PYTHON_CMD% scripts\\runsets\\common\\write_sweep_list.py --out "!SWEEP_LIST_FILE!"
-if errorlevel 1 (
+if !errorlevel! geq 1 (
   echo.[error] failed to build sweep list
   call :popd_safe
   exit /b 1
@@ -890,11 +919,11 @@ for /f "usebackq tokens=1-3 delims= " %%A in ("%SWEEP_LIST_FILE%") do (
   set "EPS=%%B"
   set "TAU=%%C"
   call :validate_token T "!T!"
-  if errorlevel 1 goto :abort
+  if !errorlevel! geq 1 goto :abort
   call :validate_token EPS "!EPS!"
-  if errorlevel 1 goto :abort
+  if !errorlevel! geq 1 goto :abort
   call :validate_token TAU "!TAU!"
-  if errorlevel 1 goto :abort
+  if !errorlevel! geq 1 goto :abort
   call :trace "case start T=%%A EPS=%%B TAU=%%C"
   set "T_TABLE=data/mars_temperature_T!T!p0K.csv"
   set "EPS_TITLE=!EPS!"
@@ -969,7 +998,7 @@ for /f "usebackq tokens=1-3 delims= " %%A in ("%SWEEP_LIST_FILE%") do (
 
       !RUN_CMD!
 
-      if errorlevel 1 (
+      if !errorlevel! geq 1 (
         echo.[warn] run command exited with status !errorlevel!; attempting plots anyway
       )
 
@@ -979,7 +1008,7 @@ for /f "usebackq tokens=1-3 delims= " %%A in ("%SWEEP_LIST_FILE%") do (
         set "RUN_DIR=!OUTDIR!"
         call :trace_detail "quicklook: start"
         %PYTHON_CMD% scripts\\runsets\\common\\hooks\\plot_sweep_run.py --run-dir "!RUN_DIR!"
-        if errorlevel 1 (
+        if !errorlevel! geq 1 (
           echo.[warn] quicklook failed [rc=!errorlevel!]
         )
       )
@@ -988,7 +1017,7 @@ for /f "usebackq tokens=1-3 delims= " %%A in ("%SWEEP_LIST_FILE%") do (
         set "RUN_DIR=!OUTDIR!"
         call :run_hooks
         if "%HOOKS_STRICT%"=="1" (
-          if errorlevel 1 exit /b !errorlevel!
+          if !errorlevel! geq 1 exit /b !errorlevel!
         )
       )
 )
@@ -1001,7 +1030,7 @@ if "%HAS_CASE%"=="0" (
 
 call :popd_safe
 call :trace "done"
-exit /b %errorlevel%
+exit /b !errorlevel!
 
 :abort
 call :trace "abort"
@@ -1027,19 +1056,19 @@ exit /b 0
 set "HOOK=%~1"
 if /i "%HOOK%"=="preflight" (
   %PYTHON_CMD% scripts\\runsets\\common\\hooks\\preflight_streaming.py --run-dir "%RUN_DIR%"
-  exit /b %errorlevel%
+  exit /b !errorlevel!
 )
 if /i "%HOOK%"=="plot" (
   %PYTHON_CMD% scripts\\runsets\\common\\hooks\\plot_sweep_run.py --run-dir "%RUN_DIR%"
-  exit /b %errorlevel%
+  exit /b !errorlevel!
 )
 if /i "%HOOK%"=="eval" (
   %PYTHON_CMD% scripts\\runsets\\common\\hooks\\evaluate_tau_supply.py --run-dir "%RUN_DIR%"
-  exit /b %errorlevel%
+  exit /b !errorlevel!
 )
 if /i "%HOOK%"=="archive" (
   %PYTHON_CMD% scripts\\runsets\\common\\hooks\\archive_run.py --run-dir "%RUN_DIR%"
-  exit /b %errorlevel%
+  exit /b !errorlevel!
 )
 echo.[warn] unknown hook: %HOOK%
 exit /b 0
@@ -1104,7 +1133,7 @@ if "%DEBUG%"=="1" echo.[DEBUG] launch_job: MARKER_D after python call, errorleve
 del "!JOB_CMD_FILE!" >nul 2>&1
 if "%DEBUG%"=="1" echo.[DEBUG] launch_job: MARKER_E after delete cmd file
 if exist "!TMP_ROOT!\marsdisk_pid_!JOB_T!_!JOB_EPS!_!JOB_TAU!.tmp" (
-  set /p JOB_PID_TMP=<"!TMP_ROOT!\marsdisk_pid_!JOB_T!_!JOB_EPS!_!JOB_TAU!.tmp"
+  for /f "usebackq delims=" %%P in ("!TMP_ROOT!\marsdisk_pid_!JOB_T!_!JOB_EPS!_!JOB_TAU!.tmp") do set "JOB_PID_TMP=%%P"
   del "!TMP_ROOT!\marsdisk_pid_!JOB_T!_!JOB_EPS!_!JOB_TAU!.tmp" >nul 2>&1
 ) else (
   set "JOB_PID_TMP="
@@ -1113,7 +1142,7 @@ set "JOB_PID=!JOB_PID_TMP!"
 if defined JOB_PID (
     rem Check if JOB_PID is a number
     echo !JOB_PID!| findstr /r "^[0-9][0-9]*$" >nul
-    if errorlevel 1 (
+    if !errorlevel! geq 1 (
         echo.[warn] failed to launch job for T=!JOB_T! eps=!JOB_EPS! tau=!JOB_TAU! - output: !JOB_PID!
         set "JOB_PID="
     ) else (
@@ -1202,7 +1231,7 @@ if "%TOK_VAL%"=="" (
   exit /b 1
 )
 echo(%TOK_VAL%| findstr /c:"%%" >nul
-if not errorlevel 1 (
+if !errorlevel! lss 1 (
   echo.[error] %TOK_NAME% token contains %%: %TOK_VAL%
   exit /b 1
 )
@@ -1211,10 +1240,10 @@ exit /b 0
 :trace
 if "%TRACE_ENABLED%"=="0" exit /b 0
 set "TRACE_MSG=%~1"
-if "%TRACE_MSG%"=="" set "TRACE_MSG=trace"
-echo.[trace] %TRACE_MSG%
+if "!TRACE_MSG!"=="" set "TRACE_MSG=trace"
+echo.[trace] !TRACE_MSG!
 if defined TRACE_LOG (
-  >>"%TRACE_LOG%" echo.[trace] %DATE% %TIME% %TRACE_MSG%
+  >>"%TRACE_LOG%" echo.[trace] %DATE% %TIME% !TRACE_MSG!
 )
 exit /b 0
 
@@ -1224,12 +1253,12 @@ call :trace "%~1"
 exit /b 0
 
 :popd_safe
-set "MARSDISK_POPD_ERRORLEVEL=%ERRORLEVEL%"
+set "MARSDISK_POPD_ERRORLEVEL=!errorlevel!"
 if defined MARSDISK_POPD_ACTIVE (
   popd
   set "MARSDISK_POPD_ACTIVE="
 )
-exit /b %MARSDISK_POPD_ERRORLEVEL%
+exit /b !MARSDISK_POPD_ERRORLEVEL!
 
 :trim_python_exe
 rem Trim trailing spaces from PYTHON_EXE
@@ -1242,7 +1271,7 @@ if "!TRIM_VAL:~-1!"==" " (
   set "TRIM_VAL=!TRIM_VAL:~0,-1!"
   goto :trim_python_exe_loop
 )
-endlocal & set "PYTHON_EXE=%TRIM_VAL%"
+endlocal & set "PYTHON_EXE=!TRIM_VAL!"
 if "%DEBUG%"=="1" echo.[DEBUG] run_temp_supply_sweep: trimmed PYTHON_EXE=[%PYTHON_EXE%]
 exit /b 0
 

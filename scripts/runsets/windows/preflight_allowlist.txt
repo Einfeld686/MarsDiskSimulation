@@ -8,3 +8,4 @@
 # - Lines without "::" (or with empty rules) are ignored and reported as warnings.
 # Example: scripts/runsets/windows/run_one.cmd::cmd.line_endings.mixed
 # Example: scripts/**/legacy/*.cmd::*
+scripts/runsets/windows/legacy/*.cmd::*

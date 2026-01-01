@@ -5,12 +5,13 @@ rem Uses configs\temp_supply_sweep.yml (sublimation ON, gas-poor, Smol collision
 rem External supply uses mu_orbit10pct (1 orbit supplies 10% of Sigma_surf0).
 
 setlocal enabledelayedexpansion
+set "SCRIPT_DIR=%~dp0"
 
 if not defined PYTHON_EXE (
   for %%P in (python3.11 python py) do (
     if not defined PYTHON_EXE (
       where %%P >nul 2>&1
-      if not errorlevel 1 set "PYTHON_EXE=%%P"
+      if !errorlevel! lss 1 set "PYTHON_EXE=%%P"
     )
   )
   if not defined PYTHON_EXE (
@@ -20,7 +21,7 @@ if not defined PYTHON_EXE (
 ) else (
   if not exist "%PYTHON_EXE%" (
     where %PYTHON_EXE% >nul 2>&1
-    if errorlevel 1 (
+    if !errorlevel! geq 1 (
       echo [error] %PYTHON_EXE% not found in PATH
       exit /b 1
     )
@@ -47,16 +48,16 @@ set REQ_FILE=requirements.txt
 if not exist "%VENV_DIR%\Scripts\python.exe" (
   echo [setup] Creating virtual environment in "%VENV_DIR%"...
   "%PYTHON_BOOT%" -m venv "%VENV_DIR%"
-  if %errorlevel% neq 0 (
+  if !errorlevel! neq 0 (
     echo [error] Failed to create virtual environment.
-    exit /b %errorlevel%
+    exit /b !errorlevel!
   )
 )
 
 call "%VENV_DIR%\Scripts\activate.bat"
-if %errorlevel% neq 0 (
+if !errorlevel! neq 0 (
   echo [error] Failed to activate virtual environment.
-  exit /b %errorlevel%
+  exit /b !errorlevel!
 )
 set "PYTHON_EXE=%VENV_DIR%\Scripts\python.exe"
 
@@ -64,9 +65,9 @@ if exist "%REQ_FILE%" (
   echo [setup] Installing/upgrading dependencies from %REQ_FILE% ...
   "%PYTHON_EXE%" -m pip install --upgrade pip
   "%PYTHON_EXE%" -m pip install -r "%REQ_FILE%"
-  if %errorlevel% neq 0 (
+  if !errorlevel! neq 0 (
     echo [error] Dependency installation failed.
-    exit /b %errorlevel%
+    exit /b !errorlevel!
   )
 ) else (
   echo [warn] %REQ_FILE% not found; skipping dependency install.
@@ -139,11 +140,13 @@ for %%T in (4000 2000 6000) do (
       --progress ^
       --quiet
 
-    if errorlevel 1 (
+    if !errorlevel! geq 1 (
       echo [error] Run failed for T_M=%%T, epsilon_mix=%%M
-      exit /b %errorlevel%
+      exit /b !errorlevel!
     )
   )
 )
 
 echo [done] All runs completed.
+endlocal
+exit /b 0

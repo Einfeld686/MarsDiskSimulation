@@ -10,7 +10,7 @@ if not defined PYTHON_EXE (
   for %%P in (python3.11 python py) do (
     if not defined PYTHON_EXE (
       where %%P >nul 2>&1
-      if not errorlevel 1 set "PYTHON_EXE=%%P"
+      if !errorlevel! lss 1 set "PYTHON_EXE=%%P"
     )
   )
   if not defined PYTHON_EXE (
@@ -20,7 +20,7 @@ if not defined PYTHON_EXE (
 ) else (
   if not exist "%PYTHON_EXE%" (
     where %PYTHON_EXE% >nul 2>&1
-    if errorlevel 1 (
+    if !errorlevel! geq 1 (
       echo [error] %PYTHON_EXE% not found in PATH
       exit /b 1
     )
@@ -53,8 +53,9 @@ echo.
 echo ========================================
 echo Test Summary: PASS=%PASS% FAIL=%FAIL%
 echo ========================================
-if %FAIL% gtr 0 exit /b 1
-exit /b 0
+set "EXIT_CODE=0"
+if %FAIL% gtr 0 set "EXIT_CODE=1"
+goto :exit_main
 
 :test_one
 set "FILE=%~1"
@@ -70,24 +71,24 @@ if not exist "%FILE%" (
 
 rem Check 2: Line endings (Python)
 "%PYTHON_EXE%" -c "import pathlib,sys; data=pathlib.Path(r'%FILE%').read_bytes(); sys.exit(0 if b'\r\n' in data else 1)" 2>nul
-if errorlevel 1 (
+if !errorlevel! geq 1 (
   echo   [WARN] File may have Unix line endings (LF instead of CRLF)
 )
 
 rem Check 3: Check for common problematic patterns
 findstr /r /c:"pushd.*\.\.\\\.\." "%FILE%" >nul 2>&1
-if not errorlevel 1 (
+if !errorlevel! lss 1 (
   echo   [WARN] Found 'pushd ..\..' pattern - may cause path issues
 )
 
 findstr /r /c:"\\NUL" "%FILE%" >nul 2>&1
-if not errorlevel 1 (
+if !errorlevel! lss 1 (
   echo   [WARN] Found '\NUL' pattern - deprecated on Windows 10+
 )
 
 findstr /r /c:"|| *(" "%FILE%" >nul 2>&1
-if not errorlevel 1 (
-  echo   [WARN] Found '|| (' pattern - unreliable with 'call' in cmd.exe
+if !errorlevel! lss 1 (
+  echo   [WARN] Found '^|^| ^(' pattern - unreliable with call in cmd.exe
 )
 
 rem Check 4: Very long lines (>1000 chars, may cause issues)
@@ -95,13 +96,13 @@ rem Check 4: Very long lines (>1000 chars, may cause issues)
 
 rem Check 5: Dry-run if script supports it
 findstr /c:"--dry-run" "%FILE%" >nul 2>&1
-if not errorlevel 1 (
+if !errorlevel! lss 1 (
   echo   [info] Script supports --dry-run, attempting dry-run test...
   pushd "%REPO_ROOT%"
   set "MARSDISK_POPD_ACTIVE=1"
-  call "%FILE%" --dry-run >nul 2>&1
-  if errorlevel 1 (
-    echo   [FAIL] Dry-run failed with errorlevel %errorlevel%
+  cmd /c ""%FILE%" --dry-run >nul 2>&1"
+  if !errorlevel! geq 1 (
+    echo   [FAIL] Dry-run failed with errorlevel !errorlevel!
     set /a FAIL+=1
     call :popd_safe
     goto :eof
@@ -118,9 +119,12 @@ set /a PASS+=1
 goto :eof
 
 :popd_safe
-set "MARSDISK_POPD_ERRORLEVEL=%ERRORLEVEL%"
+set "MARSDISK_POPD_ERRORLEVEL=!errorlevel!"
 if defined MARSDISK_POPD_ACTIVE (
   popd
   set "MARSDISK_POPD_ACTIVE="
 )
-exit /b %MARSDISK_POPD_ERRORLEVEL%
+exit /b !MARSDISK_POPD_ERRORLEVEL!
+
+:exit_main
+endlocal & exit /b %EXIT_CODE%

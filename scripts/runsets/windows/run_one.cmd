@@ -1,12 +1,13 @@
 @echo off
 rem Run a single temp_supply case (1D default).
 setlocal EnableExtensions EnableDelayedExpansion
+set "SCRIPT_DIR=%~dp0"
 
 if not defined PYTHON_EXE (
   for %%P in (python3.11 python py) do (
     if not defined PYTHON_EXE (
       where %%P >nul 2>&1
-      if not errorlevel 1 set "PYTHON_EXE=%%P"
+      if !errorlevel! lss 1 set "PYTHON_EXE=%%P"
     )
   )
   if not defined PYTHON_EXE (
@@ -16,7 +17,7 @@ if not defined PYTHON_EXE (
 ) else (
   if not exist "%PYTHON_EXE%" (
     where "%PYTHON_EXE%" >nul 2>&1
-    if errorlevel 1 (
+    if !errorlevel! geq 1 (
       echo.[error] %PYTHON_EXE% not found in PATH
       exit /b 1
     )
@@ -25,7 +26,7 @@ if not defined PYTHON_EXE (
 
 if defined CI (
   "%PYTHON_EXE%" -c "import sys; raise SystemExit(0 if sys.version_info >= (3,11) else 1)" >nul 2>&1
-  if errorlevel 1 (
+  if !errorlevel! geq 1 (
     echo.[error] python 3.11+ is required in CI
     exit /b 1
   )
@@ -199,12 +200,12 @@ if not defined MARSDISK_CELL_JOBS (
 )
 if /i "%MARSDISK_CELL_PARALLEL%"=="1" (
   if not defined CELL_THREAD_LIMIT set "CELL_THREAD_LIMIT=1"
-  if not defined NUMBA_NUM_THREADS set "NUMBA_NUM_THREADS=%CELL_THREAD_LIMIT%"
-  if not defined OMP_NUM_THREADS set "OMP_NUM_THREADS=%CELL_THREAD_LIMIT%"
-  if not defined MKL_NUM_THREADS set "MKL_NUM_THREADS=%CELL_THREAD_LIMIT%"
-  if not defined OPENBLAS_NUM_THREADS set "OPENBLAS_NUM_THREADS=%CELL_THREAD_LIMIT%"
-  if not defined NUMEXPR_NUM_THREADS set "NUMEXPR_NUM_THREADS=%CELL_THREAD_LIMIT%"
-  if not defined VECLIB_MAXIMUM_THREADS set "VECLIB_MAXIMUM_THREADS=%CELL_THREAD_LIMIT%"
+  if not defined NUMBA_NUM_THREADS set "NUMBA_NUM_THREADS=!CELL_THREAD_LIMIT!"
+  if not defined OMP_NUM_THREADS set "OMP_NUM_THREADS=!CELL_THREAD_LIMIT!"
+  if not defined MKL_NUM_THREADS set "MKL_NUM_THREADS=!CELL_THREAD_LIMIT!"
+  if not defined OPENBLAS_NUM_THREADS set "OPENBLAS_NUM_THREADS=!CELL_THREAD_LIMIT!"
+  if not defined NUMEXPR_NUM_THREADS set "NUMEXPR_NUM_THREADS=!CELL_THREAD_LIMIT!"
+  if not defined VECLIB_MAXIMUM_THREADS set "VECLIB_MAXIMUM_THREADS=!CELL_THREAD_LIMIT!"
 )
 
 if defined RUN_ONE_SEED set "RUN_ONE_SEED=%RUN_ONE_SEED%"
@@ -220,11 +221,11 @@ if defined OUT_ROOT (
 
 echo.[info] preflight checks
 if defined CI (
-  "%PYTHON_EXE%" "scripts\\runsets\\windows\\preflight_checks.py" --repo-root "%REPO_ROOT%" --config "%CONFIG_PATH%" --overrides "%OVERRIDES_PATH%" --out-root "%OUT_ROOT%" --require-git --cmd "%REPO_ROOT%\\scripts\\research\\run_temp_supply_sweep.cmd" --cmd-root "%REPO_ROOT%\\scripts\\runsets\\windows" --cmd-exclude "%REPO_ROOT%\\scripts\\runsets\\windows\\legacy" --cmd-allowlist "%REPO_ROOT%\\scripts\\runsets\\windows\\preflight_allowlist.txt" --profile ci --format json --allow-non-ascii
+  "%PYTHON_EXE%" "scripts\\runsets\\windows\\preflight_checks.py" --repo-root "%REPO_ROOT%" --config "%CONFIG_PATH%" --overrides "%OVERRIDES_PATH%" --out-root "%OUT_ROOT%" --require-git --cmd "%REPO_ROOT%\\scripts\\research\\run_temp_supply_sweep.cmd" --cmd-root "%REPO_ROOT%\\scripts\\runsets\\windows" --cmd-root "%REPO_ROOT%\\scripts\\research" --cmd-exclude "%REPO_ROOT%\\scripts\\runsets\\windows\\legacy" --cmd-allowlist "%REPO_ROOT%\\scripts\\runsets\\windows\\preflight_allowlist.txt" --profile ci --format json --allow-non-ascii
 ) else (
-  "%PYTHON_EXE%" "scripts\\runsets\\windows\\preflight_checks.py" --repo-root "%REPO_ROOT%" --config "%CONFIG_PATH%" --overrides "%OVERRIDES_PATH%" --out-root "%OUT_ROOT%" --require-git --cmd "%REPO_ROOT%\\scripts\\research\\run_temp_supply_sweep.cmd" --cmd-root "%REPO_ROOT%\\scripts\\runsets\\windows" --cmd-exclude "%REPO_ROOT%\\scripts\\runsets\\windows\\legacy" --allow-non-ascii
+  "%PYTHON_EXE%" "scripts\\runsets\\windows\\preflight_checks.py" --repo-root "%REPO_ROOT%" --config "%CONFIG_PATH%" --overrides "%OVERRIDES_PATH%" --out-root "%OUT_ROOT%" --require-git --cmd "%REPO_ROOT%\\scripts\\research\\run_temp_supply_sweep.cmd" --cmd-root "%REPO_ROOT%\\scripts\\runsets\\windows" --cmd-root "%REPO_ROOT%\\scripts\\research" --cmd-exclude "%REPO_ROOT%\\scripts\\runsets\\windows\\legacy" --allow-non-ascii
 )
-if errorlevel 1 (
+if !errorlevel! geq 1 (
   echo.[error] preflight failed
   call :popd_safe
   exit /b 1
@@ -238,7 +239,7 @@ if "%PREFLIGHT_ONLY%"=="1" (
 if "%DRY_RUN%"=="1" (
   call scripts\research\run_temp_supply_sweep.cmd --dry-run
   call :popd_safe
-  exit /b %errorlevel%
+  exit /b !errorlevel!
 )
 
 call scripts\research\run_temp_supply_sweep.cmd --run-one

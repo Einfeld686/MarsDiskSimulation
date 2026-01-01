@@ -7,8 +7,17 @@ rem Run a temp_supply sweep (1D default).
 
 
 setlocal EnableExtensions EnableDelayedExpansion
-if not defined DEBUG set "DEBUG=0"
-if "%~1"=="--debug" echo.[DEBUG] checkpoint 1: script started, setlocal done
+set "SCRIPT_DIR=%~dp0"
+set "DEBUG_ARG=0"
+for %%A in (%*) do (
+  if /i "%%~A"=="--debug" set "DEBUG_ARG=1"
+)
+if "%DEBUG_ARG%"=="1" (
+  set "DEBUG=1"
+) else (
+  set "DEBUG=0"
+)
+if "%DEBUG_ARG%"=="1" echo.[DEBUG] checkpoint 1: script started, setlocal done
 
 if not defined TRACE_ENABLED set "TRACE_ENABLED=0"
 
@@ -16,8 +25,10 @@ if not defined TRACE_DETAIL set "TRACE_DETAIL=0"
 
 if not defined TRACE_ECHO set "TRACE_ECHO=0"
 
+if not defined DEBUG_DOC_ALWAYS set "DEBUG_DOC_ALWAYS=0"
+
 if not defined PYTHON_ALLOW_LAUNCHER set "PYTHON_ALLOW_LAUNCHER=0"
-if "%~1"=="--debug" echo.[DEBUG] checkpoint 2: before PYTHON_EXE detection
+if "%DEBUG_ARG%"=="1" echo.[DEBUG] checkpoint 2: before PYTHON_EXE detection
 
 
 
@@ -27,19 +38,19 @@ if "%~1"=="--debug" echo.[DEBUG] checkpoint 2: before PYTHON_EXE detection
 
 
 if not defined PYTHON_EXE (
-  if "%~1"=="--debug" echo.[DEBUG] checkpoint 2a: entering PYTHON_EXE block
+  if "%DEBUG_ARG%"=="1" echo.[DEBUG] checkpoint 2a: entering PYTHON_EXE block
   for %%P in (python3.11 python) do (
     if not defined PYTHON_EXE (
       where %%P >nul 2>&1
-      if not errorlevel 1 set "PYTHON_EXE=%%P"
+      if !errorlevel! lss 1 set "PYTHON_EXE=%%P"
     )
   )
   if not defined PYTHON_EXE (
-    if "%~1"=="--debug" echo.[DEBUG] checkpoint 2b: trying py launcher
+    if "%DEBUG_ARG%"=="1" echo.[DEBUG] checkpoint 2b: trying py launcher
     where py >nul 2>&1
-    if not errorlevel 1 (
+    if !errorlevel! lss 1 (
       py -3.11 -c "import sys" >nul 2>&1
-      if not errorlevel 1 (
+      if !errorlevel! lss 1 (
         set "PYTHON_EXE=py"
         set "PYTHON_ALLOW_LAUNCHER=1"
         if not defined PYTHON_ARGS (
@@ -58,7 +69,7 @@ if not defined PYTHON_EXE (
     exit /b 1
   )
 )
-if "%~1"=="--debug" echo.[DEBUG] checkpoint 3: PYTHON_EXE first pass done
+if "%DEBUG_ARG%"=="1" echo.[DEBUG] checkpoint 3: PYTHON_EXE first pass done
 
 set "PYTHON_ARGS_SET=0"
 if defined PYTHON_ARGS set "PYTHON_ARGS_SET=1"
@@ -96,9 +107,9 @@ if "!PYTHON_HAS_SPACE!"=="1" if "!PYTHON_RAW_LOOKS_PATH!"=="0" (
     )
   )
 )
-if "!PYTHON_HAS_SPACE!"=="1" if "!PYTHON_RAW_LOOKS_PATH!"=="1" if "!PYTHON_ARGS_SET!"=="0" (
-  echo.[warn] PYTHON_EXE looks like a path with spaces; quote it or set PYTHON_ARGS.
-)
+  if "!PYTHON_HAS_SPACE!"=="1" if "!PYTHON_RAW_LOOKS_PATH!"=="1" if "!PYTHON_ARGS_SET!"=="0" (
+    echo.[warn] PYTHON_EXE looks like a path with spaces; quote it or set PYTHON_ARGS.
+  )
 set "PYTHON_EXE_NAME="
 for %%I in ("!PYTHON_EXE!") do set "PYTHON_EXE_NAME=%%~nxI"
 if /i "!PYTHON_EXE!"=="py" set "PYTHON_ALLOW_LAUNCHER=1"
@@ -110,13 +121,13 @@ if defined PYTHON_EXE if /i not "!PYTHON_EXE!"=="python" if /i not "!PYTHON_EXE!
   set "PYTHON_EXE_RAW_PATH=0"
   rem Check if it looks like a path (has \ or / or drive letter)
   echo.!PYTHON_EXE! | findstr /C:"\" /C:"/" >nul 2>&1
-  if not errorlevel 1 set "PYTHON_EXE_RAW_PATH=1"
+  if !errorlevel! lss 1 set "PYTHON_EXE_RAW_PATH=1"
   for %%I in ("!PYTHON_EXE!") do (
     if not "%%~pI"=="" set "PYTHON_EXE_RAW_PATH=1"
     if not "%%~dI"=="" set "PYTHON_EXE_RAW_PATH=1"
   )
   if "!PYTHON_EXE_RAW_PATH!"=="0" (
-    echo.[warn] PYTHON_EXE should be python/python3.11 or an absolute path; ignoring "%PYTHON_EXE%".
+    echo.[warn] PYTHON_EXE should be python/python3.11 or an absolute path; ignoring "!PYTHON_EXE!".
     set "PYTHON_EXE="
   )
 )
@@ -128,7 +139,7 @@ if not defined PYTHON_EXE (
   for %%P in (python3.11 python) do (
     if not defined PYTHON_EXE (
       where %%P >nul 2>&1
-      if not errorlevel 1 set "PYTHON_EXE=%%P"
+      if !errorlevel! lss 1 set "PYTHON_EXE=%%P"
     )
   )
   if not defined PYTHON_EXE (
@@ -136,24 +147,24 @@ if not defined PYTHON_EXE (
     exit /b 1
   )
 )
-if "%~1"=="--debug" echo.[DEBUG] checkpoint 4: PYTHON_EXE normalization done
+if "%DEBUG_ARG%"=="1" echo.[DEBUG] checkpoint 4: PYTHON_EXE normalization done
 set "PYTHON_ARGS_FIRST="
 set "PYTHON_ARGS_REST="
-if "%~1"=="--debug" echo.[DEBUG] checkpoint 4-1: before PYTHON_ARGS parse
+if "%DEBUG_ARG%"=="1" echo.[DEBUG] checkpoint 4-1: before PYTHON_ARGS parse
 if not "!PYTHON_ARGS!"=="" (
   for /f "tokens=1* delims= " %%A in ("!PYTHON_ARGS!") do (
     set "PYTHON_ARGS_FIRST=%%A"
     set "PYTHON_ARGS_REST=%%B"
   )
 )
-if "%~1"=="--debug" echo.[DEBUG] checkpoint 4-2: after PYTHON_ARGS parse
+if "%DEBUG_ARG%"=="1" echo.[DEBUG] checkpoint 4-2: after PYTHON_ARGS parse
 set "PYTHON_PYVER_ARG=0"
-if "%~1"=="--debug" echo.[DEBUG] checkpoint 4-3: before PYTHON_ARGS_FIRST check
+if "%DEBUG_ARG%"=="1" echo.[DEBUG] checkpoint 4-3: before PYTHON_ARGS_FIRST check
 if not "!PYTHON_ARGS_FIRST!"=="" (
   if /i "!PYTHON_ARGS_FIRST:~0,2!"=="-3" set "PYTHON_PYVER_ARG=1"
   if /i "!PYTHON_ARGS_FIRST:~0,2!"=="-2" set "PYTHON_PYVER_ARG=1"
 )
-if "%~1"=="--debug" echo.[DEBUG] checkpoint 4-4: after PYTHON_ARGS_FIRST check
+if "%DEBUG_ARG%"=="1" echo.[DEBUG] checkpoint 4-4: after PYTHON_ARGS_FIRST check
 if "!PYTHON_PYVER_ARG!"=="1" (
   set "PYTHON_KEEP_PYVER_ARG=0"
   if "!PYTHON_ALLOW_LAUNCHER!"=="1" (
@@ -165,7 +176,7 @@ if "!PYTHON_PYVER_ARG!"=="1" (
     set "PYTHON_ARGS=!PYTHON_ARGS_REST!"
   )
 )
-if "%~1"=="--debug" echo.[DEBUG] checkpoint 4a: PYTHON_PYVER_ARG done
+if "%DEBUG_ARG%"=="1" echo.[DEBUG] checkpoint 4a: PYTHON_PYVER_ARG done
 set "PYTHON_LOOKS_PATH=0"
 for %%I in ("!PYTHON_EXE!") do (
   if not "%%~pI"=="" set "PYTHON_LOOKS_PATH=1"
@@ -177,7 +188,7 @@ if "!PYTHON_LOOKS_PATH!"=="1" (
     for %%P in (python3.11 python) do (
       if not defined PYTHON_FALLBACK (
         where %%P >nul 2>&1
-        if not errorlevel 1 set "PYTHON_FALLBACK=%%P"
+        if !errorlevel! lss 1 set "PYTHON_FALLBACK=%%P"
       )
     )
     if defined PYTHON_FALLBACK (
@@ -191,12 +202,12 @@ if "!PYTHON_LOOKS_PATH!"=="1" (
   )
 ) else (
   where !PYTHON_EXE! >nul 2>&1
-  if errorlevel 1 (
+  if !errorlevel! geq 1 (
     set "PYTHON_FALLBACK="
     for %%P in (python3.11 python) do (
       if not defined PYTHON_FALLBACK (
         where %%P >nul 2>&1
-        if not errorlevel 1 set "PYTHON_FALLBACK=%%P"
+        if !errorlevel! lss 1 set "PYTHON_FALLBACK=%%P"
       )
     )
     if defined PYTHON_FALLBACK (
@@ -209,8 +220,8 @@ if "!PYTHON_LOOKS_PATH!"=="1" (
     )
   )
 )
-if "%~1"=="--debug" echo.[DEBUG] checkpoint 4b: PYTHON path check done
-if "%~1"=="--debug" echo.[DEBUG] checkpoint 4b-1: PYTHON_EXE=!PYTHON_EXE!
+if "%DEBUG_ARG%"=="1" echo.[DEBUG] checkpoint 4b: PYTHON path check done
+if "%DEBUG_ARG%"=="1" echo.[DEBUG] checkpoint 4b-1: PYTHON_EXE=!PYTHON_EXE!
 set "PYTHON_ARGS_FIRST="
 set "PYTHON_ARGS_REST="
 if not "!PYTHON_ARGS!"=="" (
@@ -240,14 +251,14 @@ if "!PYTHON_LOOKS_PATH!"=="1" set "PYTHON_EXE_QUOTED="!PYTHON_EXE!""
 if not "!PYTHON_EXE: =!"=="!PYTHON_EXE!" set "PYTHON_EXE_QUOTED="!PYTHON_EXE!""
 set "PYTHON_CMD=!PYTHON_EXE_QUOTED!"
 if not "!PYTHON_ARGS!"=="" set "PYTHON_CMD=!PYTHON_EXE_QUOTED! !PYTHON_ARGS!"
-if "%~1"=="--debug" echo.[DEBUG] checkpoint 4c: PYTHON_CMD=!PYTHON_CMD!
+if "%DEBUG_ARG%"=="1" echo.[DEBUG] checkpoint 4c: PYTHON_CMD=!PYTHON_CMD!
 set "PYTHON_CMD_SANITY=1"
 if not defined PYTHON_EXE set "PYTHON_CMD_SANITY=0"
 if "!PYTHON_EXE:~0,1!"=="-" set "PYTHON_CMD_SANITY=0"
 if "!PYTHON_CMD:~0,1!"=="-" set "PYTHON_CMD_SANITY=0"
 rem Allow relative paths like .venv\... but reject standalone "."
 if "!PYTHON_CMD!"=="." set "PYTHON_CMD_SANITY=0"
-if "%~1"=="--debug" echo.[DEBUG] checkpoint 4d: PYTHON_CMD_SANITY=!PYTHON_CMD_SANITY! set "PYTHON_CMD_SANITY=0"
+if "%DEBUG_ARG%"=="1" echo.[DEBUG] checkpoint 4d: PYTHON_CMD_SANITY=!PYTHON_CMD_SANITY! set "PYTHON_CMD_SANITY=0"
 if "!PYTHON_CMD_SANITY!"=="0" (
   echo.[warn] python command invalid; resetting to python in PATH
   set "PYTHON_EXE="
@@ -255,7 +266,7 @@ if "!PYTHON_CMD_SANITY!"=="0" (
   for %%P in (python3.11 python) do (
     if not defined PYTHON_EXE (
       where %%P >nul 2>&1
-      if not errorlevel 1 set "PYTHON_EXE=%%P"
+      if !errorlevel! lss 1 set "PYTHON_EXE=%%P"
     )
   )
   if not defined PYTHON_EXE (
@@ -280,23 +291,23 @@ if exist "!PYTHON_EXE!" (
   set "PYTHON_CMD_ABS="!PYTHON_EXE_ABS!""
   if not "!PYTHON_ARGS!"=="" set "PYTHON_CMD_ABS="!PYTHON_EXE_ABS!" !PYTHON_ARGS!"
 )
-if "%~1"=="--debug" echo.[DEBUG] checkpoint 4e: PYTHON_CMD_ABS=!PYTHON_CMD_ABS!
-if "%~1"=="--debug" (
+if "%DEBUG_ARG%"=="1" echo.[DEBUG] checkpoint 4e: PYTHON_CMD_ABS=!PYTHON_CMD_ABS!
+if "%DEBUG_ARG%"=="1" (
   echo.[DEBUG] Testing Python execution:
   !PYTHON_CMD_ABS! -c "import sys; print('Python', sys.version)"
 )
 set "PYTHON_VERSION_OK=0"
 !PYTHON_CMD_ABS! -c "import sys; raise SystemExit(0 if sys.version_info >= (3,11) else 1)" >nul 2>&1
-if not errorlevel 1 set "PYTHON_VERSION_OK=1"
-if "%~1"=="--debug" echo.[DEBUG] checkpoint 4f: PYTHON_VERSION_OK=!PYTHON_VERSION_OK!
+if !errorlevel! lss 1 set "PYTHON_VERSION_OK=1"
+if "%DEBUG_ARG%"=="1" echo.[DEBUG] checkpoint 4f: PYTHON_VERSION_OK=!PYTHON_VERSION_OK!
 
 if "!PYTHON_VERSION_OK!"=="0" (
-  if "%~1"=="--debug" echo.[DEBUG] checkpoint 4g: Python version too old, searching for Python 3.11...
+  if "%DEBUG_ARG%"=="1" echo.[DEBUG] checkpoint 4g: Python version too old, searching for Python 3.11...
   rem Try to find Python 3.11 in common locations
   set "PYTHON_311_FOUND="
   rem Check for python3.11 in PATH
   where python3.11 >nul 2>&1
-  if not errorlevel 1 (
+  if !errorlevel! lss 1 (
     for /f "delims=" %%P in ('where python3.11 2^>nul') do (
       if not defined PYTHON_311_FOUND set "PYTHON_311_FOUND=%%P"
     )
@@ -315,7 +326,7 @@ if "!PYTHON_VERSION_OK!"=="0" (
   rem Try py launcher as last resort
   if not defined PYTHON_311_FOUND (
     py -3.11 -c "import sys" >nul 2>&1
-    if not errorlevel 1 (
+    if !errorlevel! lss 1 (
       for /f "delims=" %%P in ('py -3.11 -c "import sys; print(sys.executable)"') do set "PYTHON_311_FOUND=%%P"
     )
   )
@@ -324,12 +335,12 @@ if "!PYTHON_VERSION_OK!"=="0" (
     for /f "tokens=* delims= " %%A in ("!PYTHON_311_FOUND!") do set "PYTHON_311_FOUND=%%A"
   )
   if defined PYTHON_311_FOUND (
-    if "%~1"=="--debug" echo.[DEBUG] checkpoint 4h: Found Python 3.11 at [!PYTHON_311_FOUND!]
+    if "%DEBUG_ARG%"=="1" echo.[DEBUG] checkpoint 4h: Found Python 3.11 at [!PYTHON_311_FOUND!]
     set "PYTHON_EXE_ABS=!PYTHON_311_FOUND!"
     set "PYTHON_CMD_ABS="!PYTHON_EXE_ABS!""
     !PYTHON_CMD_ABS! -c "import sys; raise SystemExit(0 if sys.version_info >= (3,11) else 1)" >nul 2>&1
-    if not errorlevel 1 set "PYTHON_VERSION_OK=1"
-    if "%~1"=="--debug" echo.[DEBUG] checkpoint 4i: PYTHON_VERSION_OK after fallback=!PYTHON_VERSION_OK!
+    if !errorlevel! lss 1 set "PYTHON_VERSION_OK=1"
+    if "%DEBUG_ARG%"=="1" echo.[DEBUG] checkpoint 4i: PYTHON_VERSION_OK after fallback=!PYTHON_VERSION_OK!
   )
 )
 
@@ -349,7 +360,7 @@ set "PYTHON_EXE=!PYTHON_CMD_ABS:"=!"
 rem Remove any trailing spaces
 call :trim_var PYTHON_EXE
 set "PYTHON_CMD="!PYTHON_EXE!""
-if "%~1"=="--debug" echo.[DEBUG] checkpoint 5: Python version OK, PYTHON_EXE=[!PYTHON_EXE!]
+if "%DEBUG_ARG%"=="1" echo.[DEBUG] checkpoint 5: Python version OK, PYTHON_EXE=[!PYTHON_EXE!]
 for %%I in ("%~f0") do set "SCRIPT_DIR=%%~dpI"
 
 
@@ -745,6 +756,7 @@ if "%QUIET_MODE%"=="1" (
   set "LOG_CONFIG=rem"
 
   set "LOG_RUN=rem"
+  set "LOG_PATH=rem"
 
 ) else (
 
@@ -757,6 +769,7 @@ if "%QUIET_MODE%"=="1" (
   set "LOG_CONFIG=echo.[config]"
 
   set "LOG_RUN=echo.[run]"
+  set "LOG_PATH=echo.[paths]"
 
 )
 
@@ -767,15 +780,15 @@ if not defined INTERNAL_OUT_ROOT (
   set "INTERNAL_OUT_ROOT=out"
   set "REPO_DRIVE="
   if "!REPO_ROOT:~1,1!"==":" set "REPO_DRIVE=!REPO_ROOT:~0,2!"
-  set "SYSTEM_DRIVE=%SystemDrive%"
-  if not "!REPO_DRIVE!"=="" if not "%SYSTEM_DRIVE%"=="" (
-    if /i not "!REPO_DRIVE!"=="%SYSTEM_DRIVE%" (
+  set "SYSTEM_DRIVE=!SystemDrive!"
+  if not "!REPO_DRIVE!"=="" if not "!SYSTEM_DRIVE!"=="" (
+    if /i not "!REPO_DRIVE!"=="!SYSTEM_DRIVE!" (
       if defined LOCALAPPDATA (
         set "INTERNAL_OUT_ROOT=%LOCALAPPDATA%\\marsdisk_out"
       ) else if defined USERPROFILE (
         set "INTERNAL_OUT_ROOT=%USERPROFILE%\\marsdisk_out"
       ) else (
-        set "INTERNAL_OUT_ROOT=%SYSTEM_DRIVE%\\marsdisk_out"
+        set "INTERNAL_OUT_ROOT=!SYSTEM_DRIVE!\\marsdisk_out"
       )
     )
   )
@@ -826,7 +839,7 @@ call :ensure_abs OVERRIDES_PATH
 if defined STUDY_PATH call :ensure_abs STUDY_PATH
 if defined OUT_ROOT call :ensure_abs OUT_ROOT
 if defined OUT_ROOT call :ensure_dir OUT_ROOT
-if errorlevel 1 exit /b 1
+if !errorlevel! geq 1 exit /b 1
 
 if not exist "%OVERRIDES_PATH%" (
   echo.[error] overrides file not found: "%OVERRIDES_PATH%"
@@ -854,7 +867,7 @@ if "%ARCHIVE_DIR_OK%"=="0" (
   if not exist "!OVERRIDES_TMP_DIR!" mkdir "!OVERRIDES_TMP_DIR!" >nul 2>&1
   set "OVERRIDES_PATH_EFFECTIVE=!OVERRIDES_TMP_DIR!\marsdisk_overrides_effective_%RANDOM%.txt"
   copy /y "!OVERRIDES_PATH!" "!OVERRIDES_PATH_EFFECTIVE!" >nul 2>&1
-  if errorlevel 1 (
+  if !errorlevel! geq 1 (
     echo.[error] failed to prepare overrides: "!OVERRIDES_PATH_EFFECTIVE!"
     exit /b 1
   )
@@ -1146,24 +1159,24 @@ if /i "%PARALLEL_MODE%"=="cell" (
     if not defined CELL_THREAD_LIMIT_DEFAULT set "CELL_THREAD_LIMIT_DEFAULT=0"
   )
 
-  if not defined NUMBA_NUM_THREADS set "NUMBA_NUM_THREADS=%CELL_THREAD_LIMIT%"
+  if not defined NUMBA_NUM_THREADS set "NUMBA_NUM_THREADS=!CELL_THREAD_LIMIT!"
 
-  if not defined OMP_NUM_THREADS set "OMP_NUM_THREADS=%CELL_THREAD_LIMIT%"
-
-
-  if not defined MKL_NUM_THREADS set "MKL_NUM_THREADS=%CELL_THREAD_LIMIT%"
+  if not defined OMP_NUM_THREADS set "OMP_NUM_THREADS=!CELL_THREAD_LIMIT!"
 
 
-
-  if not defined OPENBLAS_NUM_THREADS set "OPENBLAS_NUM_THREADS=%CELL_THREAD_LIMIT%"
+  if not defined MKL_NUM_THREADS set "MKL_NUM_THREADS=!CELL_THREAD_LIMIT!"
 
 
 
-  if not defined NUMEXPR_NUM_THREADS set "NUMEXPR_NUM_THREADS=%CELL_THREAD_LIMIT%"
+  if not defined OPENBLAS_NUM_THREADS set "OPENBLAS_NUM_THREADS=!CELL_THREAD_LIMIT!"
 
 
 
-  if not defined VECLIB_MAXIMUM_THREADS set "VECLIB_MAXIMUM_THREADS=%CELL_THREAD_LIMIT%"
+  if not defined NUMEXPR_NUM_THREADS set "NUMEXPR_NUM_THREADS=!CELL_THREAD_LIMIT!"
+
+
+
+  if not defined VECLIB_MAXIMUM_THREADS set "VECLIB_MAXIMUM_THREADS=!CELL_THREAD_LIMIT!"
 
 
 
@@ -1296,9 +1309,9 @@ if "%DEBUG%"=="1" call :debug_log "preflight: python=!PYTHON_CMD!"
 
 
 if defined CI (
-  !PYTHON_CMD! "%REPO_ROOT%\\scripts\\runsets\\windows\\preflight_checks.py" --repo-root "%REPO_ROOT%" --config "%CONFIG_PATH%" --overrides "%OVERRIDES_PATH%" --out-root "%OUT_ROOT%" --python-exe "!PYTHON_EXE!" --require-git --cmd "%REPO_ROOT%\\scripts\\research\\run_temp_supply_sweep.cmd" --cmd-root "%REPO_ROOT%\\scripts\\runsets\\windows" --cmd-exclude "%REPO_ROOT%\\scripts\\runsets\\windows\\legacy" --cmd-allowlist "%REPO_ROOT%\\scripts\\runsets\\windows\\preflight_allowlist.txt" --allow-non-ascii --profile ci --format json %PREFLIGHT_STRICT_FLAG%
+  !PYTHON_CMD! "%REPO_ROOT%\\scripts\\runsets\\windows\\preflight_checks.py" --repo-root "%REPO_ROOT%" --config "%CONFIG_PATH%" --overrides "%OVERRIDES_PATH%" --out-root "%OUT_ROOT%" --python-exe "!PYTHON_EXE!" --require-git --cmd "%REPO_ROOT%\\scripts\\research\\run_temp_supply_sweep.cmd" --cmd-root "%REPO_ROOT%\\scripts\\runsets\\windows" --cmd-root "%REPO_ROOT%\\scripts\\research" --cmd-exclude "%REPO_ROOT%\\scripts\\runsets\\windows\\legacy" --cmd-allowlist "%REPO_ROOT%\\scripts\\runsets\\windows\\preflight_allowlist.txt" --allow-non-ascii --profile ci --format json %PREFLIGHT_STRICT_FLAG%
 ) else (
-  !PYTHON_CMD! "%REPO_ROOT%\\scripts\\runsets\\windows\\preflight_checks.py" --repo-root "%REPO_ROOT%" --config "%CONFIG_PATH%" --overrides "%OVERRIDES_PATH%" --out-root "%OUT_ROOT%" --python-exe "!PYTHON_EXE!" --require-git --cmd "%REPO_ROOT%\\scripts\\research\\run_temp_supply_sweep.cmd" --cmd-root "%REPO_ROOT%\\scripts\\runsets\\windows" --cmd-exclude "%REPO_ROOT%\\scripts\\runsets\\windows\\legacy" --allow-non-ascii %PREFLIGHT_STRICT_FLAG%
+  !PYTHON_CMD! "%REPO_ROOT%\\scripts\\runsets\\windows\\preflight_checks.py" --repo-root "%REPO_ROOT%" --config "%CONFIG_PATH%" --overrides "%OVERRIDES_PATH%" --out-root "%OUT_ROOT%" --python-exe "!PYTHON_EXE!" --require-git --cmd "%REPO_ROOT%\\scripts\\research\\run_temp_supply_sweep.cmd" --cmd-root "%REPO_ROOT%\\scripts\\runsets\\windows" --cmd-root "%REPO_ROOT%\\scripts\\research" --cmd-exclude "%REPO_ROOT%\\scripts\\runsets\\windows\\legacy" --allow-non-ascii %PREFLIGHT_STRICT_FLAG%
 )
 
 set "PREFLIGHT_RC=!errorlevel!"
@@ -1413,7 +1426,7 @@ if "%DEBUG%"=="1" call :debug_log "archive_parse_cmd=!ARCHIVE_SET!"
 
 
 
-if errorlevel 1 (
+if !errorlevel! geq 1 (
 
 
 
@@ -1570,7 +1583,7 @@ set "TEMP_SOURCE=TEMP"
 
 
 
-if "%TEMP_ROOT%"=="" (
+if "!TEMP_ROOT!"=="" (
 
 
 
@@ -1590,7 +1603,7 @@ if not exist "%TEMP_ROOT%" mkdir "%TEMP_ROOT%" >nul 2>&1
 
 
 
-if not exist "%TEMP_ROOT%" (
+if not exist "!TEMP_ROOT!" (
 
 
 
@@ -1602,7 +1615,7 @@ if not exist "%TEMP_ROOT%" (
 
 
 
-  if not exist "%TEMP_ROOT%" mkdir "%TEMP_ROOT%" >nul 2>&1
+  if not exist "!TEMP_ROOT!" mkdir "!TEMP_ROOT!" >nul 2>&1
 
 
 
@@ -1610,11 +1623,11 @@ if not exist "%TEMP_ROOT%" (
 
 
 
-if not exist "%TEMP_ROOT%" (
+if not exist "!TEMP_ROOT!" (
 
 
 
-  echo.[error] temp_root unavailable: "%TEMP_ROOT%"
+  echo.[error] temp_root unavailable: "!TEMP_ROOT!"
 
 
 
@@ -1636,6 +1649,26 @@ set "TEMP=%TEMP_ROOT%"
 
 %LOG_SETUP% temp_root=%TEMP_ROOT% (source=%TEMP_SOURCE%)
 if "%DEBUG%"=="1" call :debug_log "temp_root=%TEMP_ROOT% source=%TEMP_SOURCE%"
+
+set "OUT_ROOT_ABS="
+if defined OUT_ROOT (
+  set "OUT_ROOT_ABS=!OUT_ROOT!"
+  for %%I in ("!OUT_ROOT!") do set "OUT_ROOT_ABS=%%~fI"
+)
+set "BATCH_ROOT_ABS=!BATCH_ROOT!"
+for %%I in ("!BATCH_ROOT!") do set "BATCH_ROOT_ABS=%%~fI"
+set "TEMP_ROOT_ABS=!TEMP_ROOT!"
+for %%I in ("!TEMP_ROOT!") do set "TEMP_ROOT_ABS=%%~fI"
+%LOG_PATH% repo_root="!REPO_ROOT!"
+%LOG_PATH% config="!CONFIG_PATH!"
+%LOG_PATH% overrides="!OVERRIDES_PATH!"
+if defined OVERRIDES_PATH_EFFECTIVE %LOG_PATH% overrides_effective="!OVERRIDES_PATH_EFFECTIVE!"
+if defined OUT_ROOT_ABS %LOG_PATH% out_root="!OUT_ROOT_ABS!"
+%LOG_PATH% batch_root="!BATCH_ROOT_ABS!"
+%LOG_PATH% temp_root="!TEMP_ROOT_ABS!"
+if defined OUT_ROOT_SOURCE %LOG_PATH% out_root_source="!OUT_ROOT_SOURCE!"
+if defined TEMP_SOURCE %LOG_PATH% temp_root_source="!TEMP_SOURCE!"
+
 
 
 
@@ -1681,7 +1714,7 @@ if "%DRY_RUN%"=="1" (
 
 
 
-  exit /b %errorlevel%
+  exit /b !errorlevel!
 
 
 
@@ -1712,7 +1745,7 @@ if "%SWEEP_PARALLEL%"=="1" if not "%SIZE_PROBE_ENABLE%"=="0" if "%PARALLEL_JOBS_
 
 
 
-  if errorlevel 1 echo.[warn] size-probe failed; keeping PARALLEL_JOBS=%PARALLEL_JOBS%
+  if !errorlevel! geq 1 echo.[warn] size-probe failed; keeping PARALLEL_JOBS=!PARALLEL_JOBS!
 
 
 
@@ -1760,9 +1793,9 @@ if "%SWEEP_PARALLEL%"=="1" if not "%SIZE_PROBE_ENABLE%"=="0" if "%PARALLEL_JOBS_
 
 )
 
-if "%PARALLEL_JOBS_DEFAULT%"=="1" if "%PARALLEL_JOBS%"=="1" (
+if "%PARALLEL_JOBS_DEFAULT%"=="1" if "!PARALLEL_JOBS!"=="1" (
   if defined CPU_UTIL_TARGET_PERCENT (
-    if /i "%PARALLEL_MODE%"=="cell" if /i "%MARSDISK_CELL_JOBS%"=="auto" (
+    if /i "%PARALLEL_MODE%"=="cell" if /i "!MARSDISK_CELL_JOBS!"=="auto" (
       for /f "usebackq tokens=1-7 delims=|" %%A in (`!PYTHON_CMD! scripts\\runsets\\common\\calc_cell_jobs.py`) do (
         set "CELL_MEM_TOTAL_GB=%%A"
         set "CELL_CPU_LOGICAL=%%B"

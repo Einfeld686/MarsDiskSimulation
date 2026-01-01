@@ -418,11 +418,105 @@
 
 - `run_zero_d` 内の同等ロジックを**段階的に削減**
 - `physics_step` を**唯一の実装**に寄せ、結果のみを上位に返す
+- `collision_solver_mode` 分岐（surface_ode / smol）で重複する計算ブロックを共通化し、差分の責務を明確化
+- `psd_state` の暗黙契約（必須キー/単位/キャッシュキー）を明文化し、辞書の寿命管理を整理する
+
+#### フェーズ2: 共通化の対象関数/ブロック（詳細）
+
+| 対象ブロック | 現在の主要呼び出し | 共通化で揃えるI/O（案） |
+| --- | --- | --- |
+| 供給+deep buffer | `supply.evaluate_supply`, `supply.split_supply_with_deep_buffer`, `_mark_reservoir_depletion` | `prod_rate`, `prod_rate_diverted`, `prod_rate_into_deep`, `deep_to_surf_rate`, `headroom`, `supply_diag` |
+| 遮蔽/tau | `physics_step.compute_shielding` + `tau_for_coll` 計算 | `tau_los`, `kappa_eff`, `sigma_tau1`, `phi_effective`, `tau_for_coll` |
+| 表層更新 | `surface.step_surface_layer`, `surface.step_surface_sink_only`, `collisions_smol.step_collisions` | `sigma_surf`, `outflux_surface`, `sink_flux_surface`, `t_blow`, `t_coll`, `prod_rate_effective`, `mass_error` |
+| blowout補正/ゲート | `_fast_blowout_correction_factor`, `_compute_gate_factor` | `outflux_surface`, `blow_surface_total`, `fast_blowout_applied`, `gate_factor` |
+| 質量収支集計 | `blow_surface_total`, `sink_surface_total`, `M_out_dot`, `M_sink_dot`, `dSigma_dt_*` | `M_out_dot`, `M_sink_dot`, `dSigma_dt_blowout`, `dSigma_dt_sinks`, `M_loss_cum` |
+
+#### psd_state 契約（必須キー/推奨キーの明文化）
+
+必須キー（計算に必要）
+| key | type | unit | 用途 |
+| --- | --- | --- | --- |
+| sizes | np.ndarray | m | サイズビン中心 |
+| widths | np.ndarray | m | ビン幅 |
+| number | np.ndarray | unitless | 正規化された分布形状 |
+| rho | float | kg/m^3 | 粒子密度 |
+
+推奨キー（互換/再計算防止）
+| key | type | unit | 用途 |
+| --- | --- | --- | --- |
+| s | np.ndarray | m | sizes のエイリアス（同期必須） |
+| n | np.ndarray | unitless | number のエイリアス（同期必須） |
+| s_min | float | m | PSD下限 |
+| s_max | float | m | PSD上限 |
+| edges | np.ndarray | m | ビン境界 |
+| sizes_version | int | - | サイズ変更の世代管理 |
+| edges_version | int | - | edges変更の世代管理 |
+
+内部キャッシュ/診断（runtimeのみ）
+| key | type | unit | 用途 |
+| --- | --- | --- | --- |
+| _mk_cache_key | tuple | - | m_k キャッシュのキー |
+| _mk_cache | np.ndarray | kg | m_k キャッシュ |
+| sanitize_reset_count | int | - | 正規化リセット回数 |
+
+#### 調査メモ（中期実装の前提確認）
+
+共通化の重複箇所（surface_ode / smol の両経路でほぼ同じ処理）
+- 供給+deep buffer: `supply.evaluate_supply` → `supply.split_supply_with_deep_buffer` の連鎖
+- 遮蔽/tau: `physics_step.compute_shielding` の呼び出しと `tau_for_coll` の派生
+- 表層更新の出力: `sigma_surf`, `outflux_surface`, `sink_flux_surface` の集計と mass-budget への反映
+- blowout補正/ゲート: `_fast_blowout_correction_factor` と `_compute_gate_factor` の適用箇所
+
+psd_state の実参照（現行コードが触っているキー）
+- 必須: `sizes`, `widths`, `number`, `rho`
+- 互換エイリアス: `s`, `n`
+- 境界/世代管理: `s_min`, `s_max`, `edges`, `sizes_version`, `edges_version`
+- 内部キャッシュ: `_mk_cache_key`, `_mk_cache`, `sanitize_reset_count`
+
+#### 追記候補（中期計画の明文化ポイント）
+
+- 共通I/O契約の定義: surface_ode / smol が共通で返す `sigma_surf`, `outflux_surface`, `sink_flux_surface`, `t_blow`, `t_coll`, `prod_rate_effective`, `mass_error` を固定し、結果コンテナで受ける
+- psd_state 更新ポリシー: `sizes/number` と `s/n` の同期規約、`sizes_version/edges_version` の更新責務、`sanitize_and_normalize_number` を呼ぶ責任箇所を明記
+- 供給/リザーバ状態の責務: `SupplyRuntimeState` と `sigma_deep` の更新タイミングと責任者を統一し、surface_ode / smol で同一経路に寄せる
+- blowout補正/ゲートの共通化: 補正適用を「表層更新後の共通ポスト処理」に移す方針を明記
+- キャッシュ/Numba寿命管理: run 境界でのキャッシュ初期化/リセットと `MARSDISK_DISABLE_NUMBA` / `MARSDISK_DISABLE_COLLISION_CACHE` の扱いを中期前提として明記
+
+#### 中期実装の明示タスク（追加）
+
+- [ ] **M2-01 共通I/O契約の設計**: surface_ode / smol で共通に返すフィールドを固定し、結果コンテナ（仮称 `SurfaceUpdateResult`）を定義
+- [ ] **M2-02 供給/リザーバ更新の共通化**: `evaluate_supply`→`split_supply_with_deep_buffer` の経路を共通関数化し、surface_ode/smol 両経路で同じ出力を受ける
+- [ ] **M2-03 遮蔽/tau の共通化**: `compute_shielding` と `tau_for_coll` 計算を単一ユーティリティにまとめる
+- [ ] **M2-04 表層更新の共通ポスト処理**: blowout補正/ゲート係数を共通ポスト処理に移し、適用順序を固定
+- [ ] **M2-05 t_coll の扱い統一**: surface_ode の `tau_for_coll` と smol の `t_coll_kernel` の優先順位を確定
+- [ ] **M2-06 psd_state 契約の固定**: 必須/推奨/内部キャッシュの一覧と更新責務をドキュメント化し、同期規約を明記
+- [ ] **M2-07 キャッシュ/Numba寿命管理の明文化**: run 境界での reset/clear の実行箇所と環境変数の取り扱いを決める
+
+#### 中期実装チェックリスト
+
+- [ ] surface_ode / smol の共通I/O契約が文書化され、呼び出し側が同一インターフェースを使用している
+- [ ] 供給/リザーバ更新が単一経路になり、substep/非substepで積分粒度の差が意図どおり説明できる
+- [ ] blowout補正/ゲート係数の適用位置が一貫し、二重適用/適用漏れがない
+- [ ] `t_coll` の定義が統一され、系列出力に混乱がない
+- [ ] psd_state の `sizes/number` と `s/n` が常に同期され、`sizes_version/edges_version` の更新責務が明確
+- [ ] Numba/キャッシュの寿命管理が run 境界で明確化され、A/B テスト時に再現性が確保される
+- [ ] streaming ON/OFF の両方で `series/run.parquet` と `checks/mass_budget.csv` が同等に出力される
+- [ ] `energy_bookkeeping` 有効時の系列/予算出力が共通I/O後も一致する
+- [ ] `sinks.mode` の主要分岐（none/sublimation/hydro_escape）で sink 系集計が破綻しない
+- [ ] blowout 無効時に `outflux_surface` が確実に 0 になる
+- [ ] psd_state の `sizes_version/edges_version` が smol 経路でも破綻せず更新される
+- [ ] 乱数シード固定時に供給/混合の乱数が再現される
+- [ ] `run_config.json` の provenance（`blowout_provenance` / `sublimation_provenance`）が共通化後も維持される
+- [ ] `summary.json` の主要キー（`M_loss`, `M_out_cum`, `M_sink_cum`, `mass_budget_max_error_percent`）がパリティを保つ
+- [ ] `diagnostics.parquet` の列スキーマが streaming ON/OFF で一致する
+- [ ] `qpr_table` 未指定時の fallback / `qpr_strict=true` の例外挙動が維持される
+- [ ] Wyatt スケーリングの `t_coll` オーダー感が崩れていない
+- [ ] substep 多発時の性能/メモリ退行がない
 
 ### フェーズ3: グローバル状態の隔離
 
 - Q* テーブル/放射テーブル/衝突キャッシュの初期化を**RunContext化**
 - `run_zero_d` の開始/終了で状態を明示的に設定・リセット
+- `psd_state` の契約を型で固定化（dataclass / TypedDict など）し、キャッシュの初期化/破棄をRunContext側で統一
 
 ### フェーズ4: cfg 破壊更新の解消
 
@@ -445,7 +539,10 @@
 - [x] [短期] フェーズ1: パリティチェック（数値差分が許容範囲内）
 - [ ] [中期] フェーズ2: 旧ロジックの削除・重複コードの整理
 - [ ] [中期] フェーズ2: `physics_step` のI/F安定化（引数・返り値固定）
+- [ ] [中期] フェーズ2: `collision_solver_mode` 分岐の共通化（surface_ode/smol の重複削減）
+- [ ] [中期] フェーズ2: `psd_state` の暗黙契約を明文化（必須キー/単位/キャッシュキー）
 - [ ] [長期] フェーズ3: RunContext でグローバル状態の初期化/復元
+- [ ] [長期] フェーズ3: `psd_state` の型固定とRunContext内での寿命管理
 - [ ] [長期] フェーズ4: cfgの破壊更新を排除（runtime paramsへ移管）
 - [ ] [長期] フェーズ5: DiagnosticsPayload でI/O接続を一本化
 - [ ] ドキュメント更新（必要時のみ）: `analysis/overview.md` と関連プランの追記

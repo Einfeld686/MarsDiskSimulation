@@ -1269,6 +1269,9 @@ def _check_env_paths(
                 "env.var_length",
                 f"{key} path length >= {MAX_WARN_PATH_LEN}: {value}",
             )
+    copycmd = os.environ.get("COPYCMD", "")
+    if copycmd:
+        _warn(warnings, "env.copycmd.present", f"COPYCMD is set: {copycmd}")
 
 
 def _check_path_env_length(warnings: list[Issue]) -> None:
@@ -2577,24 +2580,49 @@ def _scan_cmd_file(
                             "cmd set has spaces around '='",
                             line_no,
                         )
-            if is_set_p or is_set_a:
-                continue
-            value = _parse_set_value(line_body)
-            if not value:
-                continue
-            if _contains_posix_path(value):
-                report_error("cmd.set.posix_path", "cmd set uses POSIX path", line_no)
-            if ("\\" in value or "/" in value) and not _contains_posix_path(value):
-                _check_path_value(
-                    f"{path}:{line_no}",
-                    value,
-                    errors,
-                    warnings,
-                    cmd_unsafe_error,
-                    True,
-                    meta_as_error=extensions_disabled,
-                    skip_rules=allowlist_rules,
-                )
+            if not (is_set_p or is_set_a):
+                value = _parse_set_value(line_body)
+                if value:
+                    if _contains_posix_path(value):
+                        report_error("cmd.set.posix_path", "cmd set uses POSIX path", line_no)
+                    if ("\\" in value or "/" in value) and not _contains_posix_path(value):
+                        _check_path_value(
+                            f"{path}:{line_no}",
+                            value,
+                            errors,
+                            warnings,
+                            cmd_unsafe_error,
+                            True,
+                            meta_as_error=extensions_disabled,
+                            skip_rules=allowlist_rules,
+                        )
+        for _ in range(closes):
+            if block_stack:
+                block_stack.pop()
+    if relative_path_line is not None and not script_dir_anchor:
+        report_warn(
+            "cmd.cwd.relative_paths",
+            "cmd uses relative paths without anchoring to script dir (e.g., pushd %~dp0)",
+            relative_path_line,
+        )
+    if errorlevel_semantics_line is not None:
+        report_warn(
+            "cmd.if_errorlevel_equal_misuse",
+            "cmd uses if errorlevel; comparisons are >= (use descending checks or %errorlevel%)",
+            errorlevel_semantics_line,
+        )
+    if robocopy_used and not robocopy_exitcode_checked and robocopy_first_line is not None:
+        report_warn(
+            "cmd.robocopy.exitcode",
+            "robocopy used without handling success codes 0-7 (use if errorlevel 8)",
+            robocopy_first_line,
+        )
+    if robocopy_retry_missing_line is not None:
+        report_warn(
+            "cmd.robocopy.retries_default",
+            "robocopy used without /r: and /w: (defaults can be very long)",
+            robocopy_retry_missing_line,
+        )
     if env_modified and not has_setlocal:
         report_warn(
             "cmd.setlocal.missing",
