@@ -19,7 +19,7 @@ supply:   { mode: "const", const: { prod_area_rate_kg_m2_s: 1.0e-8 }, mixing: { 
 sinks:
   enable_sublimation: true
   T_sub: 1300.0
-  sub_params: { mode: "logistic", alpha_evap: 1.0, mu: 0.1, dT: 50.0, eta_instant: 0.1, P_gas: 0.0 }
+  sub_params: { mode: "exponential", alpha_evap: 1.0, mu: 0.1, dT: 50.0, eta_instant: 0.1, P_gas: 0.0 }
 
 # 積分
 numerics: { t_end_years: 0.01, dt_init: 1.0e4 }   # 0.01 年 ≈ 3.65 日を 1e4 s 刻み

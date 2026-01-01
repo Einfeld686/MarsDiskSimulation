@@ -5,6 +5,8 @@ rem Uses configs\temp_supply_sweep.yml (sublimation ON, gas-poor, Smol collision
 rem External supply uses mu_orbit10pct (1 orbit supplies 10% of Sigma_surf0).
 
 setlocal enabledelayedexpansion
+set "PYTHONUTF8=1"
+set "PYTHONIOENCODING=utf-8"
 set "SCRIPT_DIR=%~dp0"
 
 set CONFIG=configs\temp_supply_sweep.yml
@@ -30,10 +32,10 @@ if not exist "%VENV_BOOTSTRAP_CMD%" (
   exit /b 1
 )
 call "%VENV_BOOTSTRAP_CMD%"
-if errorlevel 1 (
-  set "BOOTSTRAP_RC=%errorlevel%"
+if !errorlevel! geq 1 (
+  set "BOOTSTRAP_RC=!errorlevel!"
   echo [error] Failed to initialize Python environment.
-  exit /b %BOOTSTRAP_RC%
+  exit /b !BOOTSTRAP_RC!
 )
 
 rem Ensure base output directory exists and is not a file (avoid legacy \NUL checks)

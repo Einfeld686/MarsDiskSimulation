@@ -1053,9 +1053,9 @@ class SublimationParamsModel(BaseModel):
         Only specify parameters relevant to your chosen mode.
         Irrelevant parameters can be omitted and will use defaults.
 
-        Example (logistic mode - minimal):
+        Example (exponential mode - minimal):
             sub_params:
-              mode: "logistic"
+              mode: "exponential"
               dT: 50.0
 
         Example (hkl mode - minimal):
@@ -1065,20 +1065,20 @@ class SublimationParamsModel(BaseModel):
               mu: 0.044
 
     Mode-Specific Parameters:
-        - logistic: dT, eta_instant
+        - exponential/logistic: dT, eta_instant
         - hkl/hkl_timescale: alpha_evap, mu, A, B, valid_K, psat_model, psat_table_*
     """
 
-    mode: Literal["logistic", "hkl", "hkl_timescale"] = Field(
-        "logistic",
-        description="Sublimation model: 'logistic' (simple), 'hkl' (Hertz-Knudsen-Langmuir), 'hkl_timescale'",
+    mode: Literal["exponential", "logistic", "hkl", "hkl_timescale"] = Field(
+        "exponential",
+        description="Sublimation model: 'exponential' (simple), 'hkl' (Hertz-Knudsen-Langmuir), 'hkl_timescale'",
     )
     # --- Common parameters ---
     P_gas: float = Field(0.0, ge=0.0, description="Ambient gas pressure [Pa]")
 
-    # --- Logistic mode parameters ---
-    dT: float = Field(50.0, gt=0.0, description="Transition width for logistic mode [K]")
-    eta_instant: float = Field(0.1, ge=0.0, le=1.0, description="Instantaneous loss fraction for logistic mode")
+    # --- Exponential mode parameters ---
+    dT: float = Field(50.0, gt=0.0, description="Transition width for exponential mode [K]")
+    eta_instant: float = Field(0.1, ge=0.0, le=1.0, description="Instantaneous loss fraction for exponential mode")
 
     # --- HKL mode parameters ---
     alpha_evap: float = Field(0.007, ge=0.0, le=1.0, description="Evaporation coefficient for HKL modes")

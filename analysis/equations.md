@@ -9,7 +9,7 @@
 ```mermaid
 graph TD
     %% Basic Inputs
-    TM(E.012<br/>Temp T_M) --> Beta(E.013<br/>Beta β)
+    TM(Temp T_M) --> Beta(E.013<br/>Beta β)
     TM --> HKL(E.018<br/>Sublimation J)
     
     %% Radiation Handling

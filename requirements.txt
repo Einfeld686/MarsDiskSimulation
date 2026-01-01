@@ -3,7 +3,7 @@ numpy
 scipy
 pandas
 pyarrow
-ruamel.yaml
+ruamel.yaml<0.19
 pydantic>=2,<3
 matplotlib
 numba

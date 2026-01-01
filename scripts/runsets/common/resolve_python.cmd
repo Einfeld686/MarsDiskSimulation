@@ -7,6 +7,8 @@ if defined DEBUG if /i "%DEBUG%"=="1" set "DEBUG_RESOLVE=1"
 if defined DEBUG_ARG if /i "%DEBUG_ARG%"=="1" set "DEBUG_RESOLVE=1"
 
 if not defined PYTHON_ALLOW_LAUNCHER set "PYTHON_ALLOW_LAUNCHER=0"
+set "PYTHONUTF8=1"
+set "PYTHONIOENCODING=utf-8"
 if "%DEBUG_RESOLVE%"=="1" echo.[DEBUG] resolve_python: start
 set "SCRIPT_DIR=%~dp0"
 set "PYTHON_EXE_DIR="
@@ -294,7 +296,7 @@ if exist "!REQ_FILE_RESOLVED!" (
   ) else (
     "!PYTHON_EXE!" -m pip install -r "!REQ_FILE_RESOLVED!"
   )
-  if errorlevel 1 (
+  if !errorlevel! neq 0 (
     echo.[error] Dependency install failed.
     exit /b 1
   )

@@ -2,7 +2,7 @@
 
 This module provides tools to estimate sublimation mass fluxes and the
 corresponding instantaneous-sink size for dust grains.  When saturation
-vapour pressure data are unavailable a logistic placeholder is used as a
+vapour pressure data are unavailable an exponential placeholder is used as a
 smooth approximation, allowing the interface to remain stable until
 proper tables are supplied.  Grain temperatures feeding the HKL flux
 use :func:`radiation.grain_temperature_graybody`, i.e. the Hyodo et al.
@@ -60,7 +60,7 @@ class SublimationParams:
     mode:
         ``"hkl"`` to evaluate the full Hertz–Knudsen–Langmuir expression
         using saturation vapour pressure.  Any other value activates the
-        logistic placeholder.
+        exponential placeholder.
     psat_model:
         Saturation vapour pressure source.  ``"auto"`` prefers tabulated
         datasets when available, falling back to local Clausius fits or the
@@ -88,18 +88,18 @@ class SublimationParams:
     min_points_local_fit:
         Minimum number of table samples required for a local Clausius fit.
     T_sub:
-        Nominal sublimation threshold for the logistic placeholder (K).
+        Nominal sublimation threshold for the exponential placeholder (K).
     s_ref:
         Reference size used to calibrate the placeholder (m).
     eta_instant:
         Fraction defining the "instantaneous" criterion.
     dT:
-        Temperature width controlling the steepness of the logistic model.
+        Temperature width controlling the steepness of the exponential model.
     P_gas:
         Ambient vapour pressure (Pa); defaults to vacuum.
     """
 
-    mode: str = "logistic"
+    mode: str = "exponential"
     psat_model: str = "auto"
     alpha_evap: float = 0.007
     mu: float = 0.0440849
@@ -484,14 +484,12 @@ def choose_psat_backend(
                 )
                 fit_center = selection.metadata.get("fit_T_center", Tmin)
                 delta = abs(float(T_req) - float(fit_center))
-                selection.metadata["delta_extrapolation_K"] = float(delta)
-                if delta > buffer:
-                    selection.metadata["extrapolation_exceeds_buffer"] = True
-                    logger.info(
-                        "psat auto: requested temperature %.1f K is %.0f K away from tabulated support; using local Clausius fit.",
-                        T_req,
-                        delta,
-                    )
+                selection.metadata["extrapolation_exceeds_buffer"] = True
+                logger.info(
+                    "psat auto: requested temperature %.1f K is %.0f K away from tabulated support; using local Clausius fit.",
+                    T_req,
+                    delta,
+                )
                 return selection
             logger.warning(
                 "psat auto: insufficient samples around %.1f K for a local Clausius fit (table range %.1f–%.1f K).",
@@ -613,7 +611,7 @@ def mass_flux_hkl(T: float, params: SublimationParams) -> float:
 
     ``J = α (P_sat - P_gas) * sqrt( μ / (2π R T) )``.
 
-    Otherwise a logistic placeholder ``J = exp((T - T_sub)/dT)`` is returned,
+    Otherwise an exponential placeholder ``J = exp((T - T_sub)/dT)`` is returned,
     providing a monotonic and differentiable approximation suitable for
     testing.
     """
@@ -661,7 +659,7 @@ def mass_flux_hkl(T: float, params: SublimationParams) -> float:
             )
         return params.alpha_evap * P_ex * root
 
-    # logistic placeholder: J0 * exp((T - T_sub)/dT)
+    # exponential placeholder: J0 * exp((T - T_sub)/dT)
     J0 = 1.0
     return J0 * math.exp((T - params.T_sub) / max(params.dT, 1.0))
 

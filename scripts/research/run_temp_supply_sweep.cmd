@@ -1,6 +1,8 @@
 @echo off
 rem Windows CMD version of run_temp_supply_sweep.sh (logic preserved, output rooted under out/)
 setlocal EnableExtensions EnableDelayedExpansion
+set "PYTHONUTF8=1"
+set "PYTHONIOENCODING=utf-8"
 set "SCRIPT_DIR=%~dp0"
 
 if not defined DEBUG set "DEBUG=0"
@@ -243,10 +245,10 @@ if "%USE_VENV%"=="1" if /i "%REQUIREMENTS_INSTALLED%"=="1" if /i "%SKIP_PIP%"=="
   if exist "!VENV_PY!" (
     set "USE_VENV=1"
     set "VENV_OK=1"
-    if "%DEBUG%"=="1" echo.[DEBUG] Using parent venv: !VENV_DIR!
+    if "!DEBUG!"=="1" echo.[DEBUG] Using parent venv: !VENV_DIR!
   ) else (
     set "USE_VENV=0"
-    if "%DEBUG%"=="1" echo.[DEBUG] Parent venv not found, using system Python
+    if "!DEBUG!"=="1" echo.[DEBUG] Parent venv not found, using system Python
   )
 )
 
@@ -299,11 +301,11 @@ if "%SKIP_PIP%"=="1" (
   rem Restore original TMP/TEMP
   set "TMP=!MARSDISK_ORIG_TMP!"
   set "TEMP=!MARSDISK_ORIG_TEMP!"
-  if !PIP_RC! geq 1 (
-    echo.[error] Dependency install failed.
-    call :popd_safe
+  if !PIP_RC! neq 0 (
+    echo.[error] pip install failed
     exit /b 1
   )
+  echo.[info] Dependencies installed successfully
   set "REQUIREMENTS_INSTALLED=1"
 ) else (
   echo.[warn] %REQ_FILE% not found; skipping dependency install.
