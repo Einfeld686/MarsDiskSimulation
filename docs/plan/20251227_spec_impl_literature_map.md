@@ -124,11 +124,11 @@
 ## 7. 主要な出力と検証基準
 
 ### 出力ファイル
-- `out/series/run.parquet`
+- `out/<run_id>/series/run.parquet`
   - 必須列の例: `time`, `dt`, `tau`, `a_blow`, `s_min`, `prod_subblow_area_rate`, `M_out_dot`, `mass_lost_by_blowout`, `mass_lost_by_sinks`
-- `out/summary.json`
+- `out/<run_id>/summary.json`
   - 必須キーの例: `M_loss`, `case_status`, `dt_over_t_blow_median`, `mass_budget_max_error_percent`
-- `out/checks/mass_budget.csv`
+- `out/<run_id>/checks/mass_budget.csv`
   - 主要列: `time`, `mass_initial`, `mass_remaining`, `mass_lost`, `mass_diff`, `error_percent`, `tolerance_percent`
 
 ### 検証基準（代表）
@@ -145,8 +145,8 @@
 - 代表例（0D）:
   - `python -m marsdisk.run --config configs/base.yml`
 - 既定の確認ポイント:
-  - `out/checks/mass_budget.csv` の `error_percent` を確認
-  - `out/summary.json` の `M_loss`, `case_status` を確認
+  - `out/<run_id>/checks/mass_budget.csv` の `error_percent` を確認
+  - `out/<run_id>/summary.json` の `M_loss`, `case_status` を確認
 
 ## 9. 問題点・ギャップ（この文書だけで把握できる一覧）
 

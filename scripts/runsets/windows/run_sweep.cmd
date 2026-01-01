@@ -61,6 +61,29 @@ set "REPO_ROOT=%SCRIPT_DIR%..\\..\\.."
 
 for %%I in ("%REPO_ROOT%") do set "REPO_ROOT=%%~fI"
 
+rem --- Auto-install dependencies (skip with SKIP_PIP=1) ---
+if not defined SKIP_PIP set "SKIP_PIP=0"
+if /i "!SKIP_PIP!"=="1" (
+  if "%DEBUG_ARG%"=="1" echo.[DEBUG] SKIP_PIP=1, skipping pip install
+) else (
+  set "REQ_FILE=!REPO_ROOT!\requirements.txt"
+  if exist "!REQ_FILE!" (
+    echo.[info] Installing dependencies from requirements.txt...
+    if defined PYTHON_ARGS (
+      "!PYTHON_EXE!" !PYTHON_ARGS! -m pip install -r "!REQ_FILE!" --quiet
+    ) else (
+      "!PYTHON_EXE!" -m pip install -r "!REQ_FILE!" --quiet
+    )
+    if !errorlevel! neq 0 (
+      echo.[error] pip install failed
+      exit /b 1
+    )
+    echo.[info] Dependencies installed successfully
+  ) else (
+    echo.[warn] requirements.txt not found at !REQ_FILE!
+  )
+)
+
 
 
 set "CONFIG_PATH=%REPO_ROOT%\scripts\runsets\common\base.yml"

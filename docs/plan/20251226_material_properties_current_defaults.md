@@ -144,11 +144,11 @@ python -m marsdisk.run --config configs/base.yml \
 
 | ファイル | 確認すべき列 | 意味 |
 |----------|-------------|------|
-| `out/series/run.parquet` | `a_blow` | ブローアウト粒径 |
+| `out/<run_id>/series/run.parquet` | `a_blow` | ブローアウト粒径 |
 | 同上 | `beta_at_smin_*` | 最小粒径での β 値 |
 | 同上 | `M_sink_dot` | 昇華による質量損失率 |
-| `out/summary.json` | `case_status` | "blowout" / "ok" の判定 |
-| `out/checks/mass_budget.csv` | `error_percent` | 質量保存誤差（< 0.5% が目標）|
+| `out/<run_id>/summary.json` | `case_status` | "blowout" / "ok" の判定 |
+| `out/<run_id>/checks/mass_budget.csv` | `error_percent` | 質量保存誤差（< 0.5% が目標）|
 
 ### 参考ドキュメント
 

@@ -363,4 +363,4 @@
 ## 検証ログ
 
 - integration tests: `pytest tests/integration -q`  
-  ログ: `out/tests/integration_20260101-002601.log`（212 passed, 3 skipped）
+  ログ: `out/<run_id>/tests/integration_<timestamp>.log`（212 passed, 3 skipped）

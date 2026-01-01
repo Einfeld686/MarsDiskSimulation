@@ -21,8 +21,8 @@
 プロファイルを取得した（短縮版は「代表的な計算パスの傾向確認」目的）。
 
 **プロファイル条件（短縮版）**
-- 実行: `python -m marsdisk.run --config configs/base.yml --override io.outdir=out/profile_base_short2 --override numerics.t_end_years=0.05 --override numerics.dt_init=5000`
-- pstats: `out/profile_base_short2.pstats`
+- 実行: `python -m marsdisk.run --config configs/base.yml --override io.outdir=out/<profile_run_id> --override numerics.t_end_years=0.05 --override numerics.dt_init=5000`
+- pstats: `out/<profile_run_id>.pstats`
 
 **上位ホットスポット（短縮版）**
 - 1D ループ本体: `marsdisk/run_one_d.py:1080`

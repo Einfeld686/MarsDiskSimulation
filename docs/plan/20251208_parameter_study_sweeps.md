@@ -35,5 +35,5 @@
 
 完了判定
 --------
-- 主要軸（供給、PSD床/波、力学励起、遮蔽/ゲート、昇華/ガス、放射、数値）の最低 1 本ずつについて、範囲を走らせた `out/<run_id>/run_card.md` と `out/<run_id>/summary.json` を out/ 以下に保存。
+- 主要軸（供給、PSD床/波、力学励起、遮蔽/ゲート、昇華/ガス、放射、数値）の最低 1 本ずつについて、範囲を走らせた `out/<run_id>/run_card.md` と `out/<run_id>/summary.json` を `out/<run_id>/` 以下に保存。
 - 失敗ケースを含め、使用した設定・ハッシュ・主要メトリクスを `out/<run_id>/run_card.md` に記録（analysis へ詳細を複写しない）。

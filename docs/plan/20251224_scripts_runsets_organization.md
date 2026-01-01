@@ -130,7 +130,7 @@ scripts/
 `scripts/research/run_temp_supply_sweep.cmd` と `run_temp_supply_sweep_1d.cmd` から、
 Windows 固有の運用設計を runsets に移植する。
 
-- **実行ディレクトリ固定**: `out/` を強制 root にする。
+- **実行ディレクトリ固定**: `out/<run_id>/` を強制 root にする。
 - **auto jobs**: `AUTO_JOBS=1` で CPU/メモリを PowerShell から取得し、
   `PARALLEL_JOBS` と `STREAM_MEM_GB` を自動決定。
 - **並列実行（ケース並列）**: `PARALLEL_JOBS>1` の場合、`--run-one` で子プロセス起動。
@@ -185,7 +185,7 @@ Windows 固有の運用設計を runsets に移植する。
 ## 既存実装の遵守ポイント（追加）
 
 - **環境変数の互換維持**: `run_temp_supply_sweep.*` で使う変数名と意味を変更しない。
-- **出力ディレクトリ規約**: `timestamp + git sha + seed` の命名を維持（Windows は `out/` 固定）。
+- **出力ディレクトリ規約**: `timestamp + git sha + seed` の命名を維持（Windows は `out/<run_id>/` 固定）。
 - **Windows 並列運用**: `AUTO_JOBS` / `PARALLEL_JOBS` / `RUN_ONE_*` / `PARALLEL_WINDOW_STYLE` の挙動を再現。
 - **セル並列の引き継ぎ**: `run_temp_supply_sweep_1d.cmd` の `MARSDISK_CELL_*` 既定値を runsets/windows に反映。
 - **progress/quiet の互換**: `--quiet` と `ENABLE_PROGRESS` の扱いを維持。
@@ -508,7 +508,7 @@ numerics.checkpoint.interval_years=0.083
    - 例: `python -m marsdisk.run --config configs/base.yml --override io.streaming.enable=true ...`
 3. **小さな merge ツールを `merge_config.py` に置く**
    - `base.yml + study.yml + overrides.txt` を一時 YAML にしてから run
-   - 生成物は `out/` か `scripts/runsets/<os>/_generated/` に置く
+  - 生成物は `out/<run_id>/` か `scripts/runsets/<os>/_generated/` に置く
 
 ---
 

@@ -80,19 +80,19 @@
 
 共通ルール:
 - `FORCE_STREAMING_OFF=1` でストリーミングを明示的にOFF
-- outdirは `out/plan/physics_step_baseline/<case-id>/<ref|new>` で分離
+- outdirは `out/<run_id>` で分離（run_id = `plan/physics_step_baseline/<case-id>/<ref|new>`）
 - 参照実行は「現行実装」、`new` は置換後の候補で実行
 
 例:
 - collisions_only
-  - ref: `FORCE_STREAMING_OFF=1 python -m marsdisk.run --config configs/innerdisk_collisions_only.yml --override io.outdir=out/plan/physics_step_baseline/collisions_only/ref`
-  - new: `FORCE_STREAMING_OFF=1 python -m marsdisk.run --config configs/innerdisk_collisions_only.yml --override io.outdir=out/plan/physics_step_baseline/collisions_only/new`
+  - ref: `FORCE_STREAMING_OFF=1 python -m marsdisk.run --config configs/innerdisk_collisions_only.yml --override io.outdir=out/<run_id>`
+  - new: `FORCE_STREAMING_OFF=1 python -m marsdisk.run --config configs/innerdisk_collisions_only.yml --override io.outdir=out/<run_id>`
 - sublimation_only
-  - ref: `FORCE_STREAMING_OFF=1 python -m marsdisk.run --config configs/innerdisk_sublimation_only.yml --override io.outdir=out/plan/physics_step_baseline/sublimation_only/ref`
-  - new: `FORCE_STREAMING_OFF=1 python -m marsdisk.run --config configs/innerdisk_sublimation_only.yml --override io.outdir=out/plan/physics_step_baseline/sublimation_only/new`
+  - ref: `FORCE_STREAMING_OFF=1 python -m marsdisk.run --config configs/innerdisk_sublimation_only.yml --override io.outdir=out/<run_id>`
+  - new: `FORCE_STREAMING_OFF=1 python -m marsdisk.run --config configs/innerdisk_sublimation_only.yml --override io.outdir=out/<run_id>`
 - fiducial_combined
-  - ref: `FORCE_STREAMING_OFF=1 python -m marsdisk.run --config configs/innerdisk_fiducial.yml --override io.outdir=out/plan/physics_step_baseline/fiducial_combined/ref`
-  - new: `FORCE_STREAMING_OFF=1 python -m marsdisk.run --config configs/innerdisk_fiducial.yml --override io.outdir=out/plan/physics_step_baseline/fiducial_combined/new`
+  - ref: `FORCE_STREAMING_OFF=1 python -m marsdisk.run --config configs/innerdisk_fiducial.yml --override io.outdir=out/<run_id>`
+  - new: `FORCE_STREAMING_OFF=1 python -m marsdisk.run --config configs/innerdisk_fiducial.yml --override io.outdir=out/<run_id>`
 
 注: 既定のストリーミングONを避けるため、CI/ローカル双方で `FORCE_STREAMING_OFF=1` を固定する。
 
@@ -100,7 +100,7 @@
 
 - **ツール配置**: `scripts/tools/compare_zero_d_outputs.py`（新規）
 - **入力**: `--ref <outdir> --new <outdir> --case-id <id> --outdir <dir>`  
-  - `--outdir` 省略時は `out/plan/physics_step_baseline/<case-id>` を自動使用
+  - `--outdir` 省略時は `out/<run_id>` を自動使用
   - 追加オプション: `--summary-keys`, `--summary-rtol`, `--summary-atol`, `--series-rtol`, `--series-atol`, `--series-include`, `--series-exclude`, `--include-non-numeric`
 - **前提実行**: `FORCE_STREAMING_OFF=1` で実行し、`--override io.outdir=<outdir>` で出力先を分離
 - **比較対象**:
@@ -115,7 +115,7 @@
     非数値列はデフォルトで比較対象外（`--include-non-numeric` または `--series-include` で比較可）
   - `out/<run_id>/checks/mass_budget.csv`: 両者とも `error_percent <= 0.5` を満たすこと
 - **出力**:
-  - `out/plan/physics_step_baseline/<case-id>/compare.json`
+  - `out/<run_id>/compare.json`
     - `status`: `pass` / `fail`
     - `case_id`, `ref_dir`, `new_dir`
     - `missing_files`: list
@@ -126,7 +126,7 @@
     - `series_columns_skipped`: list（スキップした非数値列）
     - `tolerances`: dict（summary/series の rtol/atol）
     - `mass_budget_max_error_percent`: dict（ref/new）
-  - `out/plan/physics_step_baseline/<case-id>/compare.md`（要約）
+  - `out/<run_id>/compare.md`（要約）
 - **終了コード**:
   - 0: pass
   - 2: 入力不足（ファイル欠落）
@@ -312,8 +312,8 @@
 
 1) **P1-01〜P1-02 完了時（最小検証）**  
    - `pytest tests/integration/test_scalings.py -q`  
-   - `python -m marsdisk.run --config configs/innerdisk_collisions_only.yml --override io.outdir=out/plan/physics_step_baseline/collisions_only/new`  
-   - `python -m marsdisk.run --config configs/innerdisk_sublimation_only.yml --override io.outdir=out/plan/physics_step_baseline/sublimation_only/new`
+   - `python -m marsdisk.run --config configs/innerdisk_collisions_only.yml --override io.outdir=out/<run_id>`  
+   - `python -m marsdisk.run --config configs/innerdisk_sublimation_only.yml --override io.outdir=out/<run_id>`
 
 2) **P1-03〜P1-05 完了時（全面検証）**  
    - 3ケースのベースラインを実行（ref/new）  
