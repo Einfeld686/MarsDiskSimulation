@@ -612,6 +612,74 @@ psd_state の実参照（現行コードが触っているキー）
 - **再現性**: `rng_seed` を固定し、同条件の再実行と比較を担保
 - **run_card**: `run_card.md` の生成を必須とし、run記録を残す
 
+## 長期実行の必須条件
+
+- Python 3.11+ で実行する
+- `io.streaming.enable=true` を維持し、`FORCE_STREAMING_OFF` / `IO_STREAMING=off` を使わない
+- `out/<YYYYMMDD-HHMM>_<title>__<shortsha>__seed<n>/` 形式の outdir を必ず指定する
+- `geometry.mode`（0D/1D）を目的に合わせて明示し、想定と一致させる
+- gas‑poor 前提として `ALLOW_TL2003=false` を維持する
+- 事前スモークで `summary.json` / `checks/mass_budget.csv` / `series` の列整合を確認する
+
+## 長期実行での注意点（網羅チェック）
+
+### 設定・物理
+- `geometry.mode` と `Nr` を目的（0D/1D）に合わせる（`configs/base.yml` は 1D）
+- `sinks.mode` と `mass_conserving` の意図を明確化（`mass_lost_by_sinks` の意味が変わる）
+- `stop_on_blowout_below_smin` / `tau_stop` による早期終了の有無を確認
+- `phase.enabled` と `allow_liquid_hkl` の影響（液相で衝突/供給が止まる）
+- `qpr_table_path` / `phi_table_path` / 温度テーブルの存在と整合
+
+### 数値安定・停止条件
+- `dt_init` と `dt_over_t_blow_max` を確認（大きいと補正/サブステップが多発）
+- `t_coll` 解像（`dt <= 0.1 * min(t_coll)`）の想定維持
+- `mass_budget_max_error_percent <= 0.5%` を必ず監視
+- `sigma_surf<=0` / `kappa_surf<=0` / `tau<=0` で NaN/inf を出さないこと
+- `s_min >= s_max` / `rho<=0` の入力は即エラーになること
+
+### I/O・成果物
+- `io.streaming` は長期運用のデフォルト（`merge_at_end=true` が前提）
+- `checks/mass_budget.csv` が streaming 有無に関係なく必ず生成されること
+- `summary.json` の主要キーが揃い、`case_status`/β判定が一致すること
+- `series/diagnostics.parquet` の列スキーマが ON/OFF で一致すること
+- `run_card.md` が生成されること（run記録の最低保証）
+
+### 再現性・運用
+- `rng_seed` を固定（比較・再現用）
+- `ALLOW_TL2003` を既定で無効（gas‑poor前提維持）
+- `FORCE_STREAMING_OFF` / `IO_STREAMING=off` を長期で使わない
+- `run_config.json` の provenance が共通化後も維持されていること
+- 長期前に短期スモークで列/予算の整合を確認
+
+### 性能・リソース
+- 1D の `Nr`×サイズビンでメモリが増えるため、`memory_limit_gb` と flush 間隔を意識
+- Numba の有効/無効で性能差が大きい（`MARSDISK_DISABLE_NUMBA` を不用意に立てない）
+- `merge_at_end` が重い場合は `cleanup_chunks=false` を検討
+- `pyarrow` 未導入だと Parquet 出力で失敗するため注意
+- 長時間 run のタイムアウト設定（ジョブ管理側で十分に長く）
+
+## 長期実行チェックリスト
+
+事前準備
+- [ ] Python 3.11+ を使用している
+- [ ] `io.streaming.enable=true` を確認し、環境変数で無効化されていない
+- [ ] outdir が規定フォーマットで指定されている
+- [ ] `geometry.mode` と目的（0D/1D）が一致している
+- [ ] `ALLOW_TL2003` が未設定（gas‑poor 既定）
+- [ ] 乱数 seed を固定した（再現性が必要な場合）
+- [ ] 事前スモークで `summary.json` / `checks/mass_budget.csv` / `series` の列整合を確認済み
+
+実行中の監視
+- [ ] `checks/mass_budget.csv` の `error_percent <= 0.5%` を満たす
+- [ ] `case_status` と β判定が矛盾しない
+- [ ] `dt_over_t_blow` と `n_substeps` が想定範囲内
+- [ ] 早期停止（`tau_stop` / `stop_on_blowout_below_smin`）が意図どおり
+
+実行後の検収
+- [ ] `series/run.parquet` / `summary.json` / `checks/mass_budget.csv` が揃っている
+- [ ] `run_card.md` と `run_config.json` が生成されている
+- [ ] `summary.json` の主要キー（`M_loss`, `M_out_cum`, `M_sink_cum`, `mass_budget_max_error_percent`）を確認済み
+
 ---
 
 ## 受入条件（最小）

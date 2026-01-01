@@ -40,7 +40,7 @@
 `docs/plan/` 内のドキュメントは開発プラン・イシュー整理・振り返りを管理します。本メモは **τクリップと供給ゲートの現状整理および deep_mixing 挙動**に関する調査結果と対応方針をまとめたものです。
 
 関連ドキュメント：
-- [20251216_temp_supply_sigma_tau1_headroom.md](.docs/plan/20251216_temp_supply_sigma_tau1_headroom.md) — Σ_τ1 固定による供給クリップ事象の初回報告
+- [20251216_temp_supply_sigma_tau1_headroom.md](docs/plan/20251216_temp_supply_sigma_tau1_headroom.md) — Σ_τ1 固定による供給クリップ事象の初回報告
 
 ---
 
@@ -50,7 +50,7 @@
 - 直近の短時間テスト（`dt_init=0.5 s`, `t_end=5e-4 yr`, deep_mixing, t_mix_orbits=0.1）でも headroom=0 のまま供給 99.9% がブロックされ、M_out_dot は滑らかになる以前の問題だった。
 
 ## 現状（実装サマリ）
-- τクリップ: `shielding.mode=psitau` かつ `fixed_tau1_sigma=auto` → κ_eff 逆数で Σ_τ=1 を決め、`init_tau1.scale_to_tau1` ありなら初期 Σ_surf をそこへクランプ。[marsdisk/run.py:2290–2345]
+- τクリップ: `shielding.mode=psitau` かつ `fixed_tau1_sigma=auto` → κ_eff 逆数で Σ_τ=1 を決め、`init_tau1.scale_to_tau1` ありなら初期 Σ_surf をそこへクランプ。[marsdisk/run_zero_d.py:2290–2345]
 - 供給ゲート: Smol 側で headroom (=Σ_τ=1−Σ_surf) を dt で割った prod_cap と比較し、超過分をカット。[marsdisk/physics/collisions_smol.py:308–352]
 - deep mixing: `supply.transport.mode=deep_mixing` で deep→surface を headroom で制限。`headroom_gate` は `"hard"` のみ実装・選択肢なし。
 
@@ -86,7 +86,7 @@
 ## 参考
 
 ### 関連ドキュメント
-- 先行メモ: [20251216_temp_supply_sigma_tau1_headroom.md](.docs/plan/20251216_temp_supply_sigma_tau1_headroom.md)（Sigma_tau1 固定で供給が長時間ゼロになった事例）
+- 先行メモ: [20251216_temp_supply_sigma_tau1_headroom.md](docs/plan/20251216_temp_supply_sigma_tau1_headroom.md)（Sigma_tau1 固定で供給が長時間ゼロになった事例）
 - 物理式の詳細: [analysis/equations.md](analysis/equations.md)
 - シミュレーション実行方法: [analysis/run-recipes.md](analysis/run-recipes.md)
 - AI向け利用ガイド: [analysis/AI_USAGE.md](analysis/AI_USAGE.md)
@@ -95,6 +95,6 @@
 | 機能 | ファイル | 行範囲 |
 |------|----------|--------|
 | headroom クリップ実装 | [collisions_smol.py](marsdisk/physics/collisions_smol.py) | L308–352 |
-| τ=1 初期化・自動決定 | [run.py](marsdisk/run.py) | L2290–2345 |
+| τ=1 初期化・自動決定 | [run.py](marsdisk/run_zero_d.py) | L2290–2345 |
 | deep_mixing 供給制御 | [supply.py](marsdisk/physics/supply.py) | `split_supply_with_deep_buffer()` |
 | 遮蔽モード定義 | [schema.py](marsdisk/schema.py) | `Shielding` クラス |

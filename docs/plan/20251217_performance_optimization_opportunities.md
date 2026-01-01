@@ -3,7 +3,7 @@
 **作成日**: 2025-12-17  
 **ステータス**: 調査完了・提案  
 **対象**: `marsdisk/` 数値計算モジュール全般  
-**関連**: [20251212_simulation_performance_optimization.md](.docs/plan/20251212_simulation_performance_optimization.md)
+**関連**: [20251212_simulation_performance_optimization.md](docs/plan/20251212_simulation_performance_optimization.md)
 
 ---
 
@@ -278,7 +278,7 @@ py-spy record -o flame.svg -- python -m marsdisk.run --config configs/base.yml
 
 ## 関連ドキュメント
 
-- [20251212_simulation_performance_optimization.md](.docs/plan/20251212_simulation_performance_optimization.md) — 実行時間短縮計画（施策詳細）
+- [20251212_simulation_performance_optimization.md](docs/plan/20251212_simulation_performance_optimization.md) — 実行時間短縮計画（施策詳細）
 - [marsdisk/physics/_numba_kernels.py](marsdisk/physics/_numba_kernels.py) — 既存 Numba カーネル
 - [marsdisk/physics/smol.py](marsdisk/physics/smol.py) — IMEX ソルバー
 - [marsdisk/physics/collide.py](marsdisk/physics/collide.py) — 衝突カーネル

@@ -56,10 +56,10 @@
 - `SupplyMixing._alias_mu` は「epsilon_mix が無ければ mu を入れる」実装のため、YAML に epsilon_mix=0 があると mu の override が効かず raw×0=0 になる（推測B）
 
 **コード調査ポイント**:
-1. [`marsdisk/run.py:1525`](marsdisk/run_zero_d.py#L1525): `supply_spec = cfg.supply` の取得
-2. [`marsdisk/run.py:2037`](marsdisk/run_zero_d.py#L2037): `supply.get_prod_area_rate(time_sub, r, supply_spec)` の呼び出し
-3. [`marsdisk/run.py:2991-3007`](marsdisk/run_zero_d.py#L2991-L3007): `process_overview` の構築（supply 有効/無効が含まれていない）
-4. [`marsdisk/run.py:3281-3415`](marsdisk/run_zero_d.py#L3281-L3415): `run_config` の構築（supply 情報が記録されていない可能性）
+1. [`marsdisk/run_zero_d.py:1525`](marsdisk/run_zero_d.py#L1525): `supply_spec = cfg.supply` の取得
+2. [`marsdisk/run_zero_d.py:2037`](marsdisk/run_zero_d.py#L2037): `supply.get_prod_area_rate(time_sub, r, supply_spec)` の呼び出し
+3. [`marsdisk/run_zero_d.py:2991-3007`](marsdisk/run_zero_d.py#L2991-L3007): `process_overview` の構築（supply 有効/無効が含まれていない）
+4. [`marsdisk/run_zero_d.py:3281-3415`](marsdisk/run_zero_d.py#L3281-L3415): `run_config` の構築（supply 情報が記録されていない可能性）
 
 ### 仮説2: τ 上限の設定ミス
 
@@ -245,7 +245,7 @@
 
 ### コードファイル
 - [`marsdisk/schema.py`](marsdisk/schema.py): Supply クラス定義（L155-198）
-- [`marsdisk/run.py`](marsdisk/run.py): オーケストレータ（supply_spec L1525, process_overview L2991-3007）
+- [`marsdisk/run_zero_d.py`](marsdisk/run_zero_d.py): オーケストレータ（supply_spec L1525, process_overview L2991-3007）
 - [`marsdisk/physics/supply.py`](marsdisk/physics/supply.py): `get_prod_area_rate` 関数（L93-98）
 - [`scripts/research/run_temp_supply_sweep.sh`](scripts/research/run_temp_supply_sweep.sh): パラメータスイープ実行スクリプト
 
@@ -295,7 +295,7 @@ def get_prod_area_rate(t: float, r: float, spec: Supply) -> float:
 ## 補足: 期待される動作フロー
 
 1. `run_temp_supply_sweep.sh` が CLI オーバーライドで supply パラメータを渡す
-2. `marsdisk/run.py` が `cfg.supply` から `Supply` オブジェクトを取得
+2. `marsdisk/run_zero_d.py` が `cfg.supply` から `Supply` オブジェクトを取得
 3. 各タイムステップで `supply.get_prod_area_rate(t, r, supply_spec)` が呼ばれ、`prod_rate` が計算される
 4. `prod_rate` が `prod_subblow_area_rate` として診断出力（`out/<run_id>/series/run.parquet`）に記録される
 5. `out/<run_id>/run_config.json` に supply 設定が書き出される（現状これが欠落している疑い）

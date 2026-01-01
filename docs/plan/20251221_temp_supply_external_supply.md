@@ -42,7 +42,7 @@
 | [marsdisk/physics/supply.py](marsdisk/physics/supply.py) | 外部供給率の計算（`get_prod_area_rate`, `_rate_basic`） |
 | [marsdisk/physics/shielding.py](marsdisk/physics/shielding.py) | 遮蔽と $\Sigma_{\tau=1}$ クリップ |
 | [marsdisk/schema.py](marsdisk/schema.py) | YAML 設定のバリデーション（`Supply`, `Shielding` クラス） |
-| [marsdisk/run.py](marsdisk/run.py) | メイン実行ループ `run_zero_d` |
+| [marsdisk/run_zero_d.py](marsdisk/run_zero_d.py) | メイン実行ループ `run_zero_d` |
 
 ---
 

@@ -37,7 +37,7 @@
 | [siO2_disk_cooling/siO2_cooling_map.py](siO2_disk_cooling/siO2_cooling_map.py) | `lookup_phase_state` 相判定関数 |
 | [marsdisk/physics/tempdriver.py](marsdisk/physics/tempdriver.py) | 温度ドライバ（$T_M$ テーブル／定数） |
 | [marsdisk/physics/sublimation.py](marsdisk/physics/sublimation.py) | 昇華フラックス（HKL 式） |
-| [marsdisk/run.py](marsdisk/run.py) | メインループ `run_zero_d`、相判定呼び出し |
+| [marsdisk/run_zero_d.py](marsdisk/run_zero_d.py) | メインループ `run_zero_d`、相判定呼び出し |
 | [marsdisk/schema.py](marsdisk/schema.py) | `Phase` 設定クラス |
 
 ---

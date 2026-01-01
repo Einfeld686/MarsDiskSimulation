@@ -3,7 +3,7 @@
 > **作成日**: 2025-12-27  
 > **ステータス**: 計画  
 > **対象**: `run_zero_d` ループの配列再確保削減（PSD/Smol 周辺）  
-> **関連**: [20251217_performance_optimization_opportunities.md](.docs/plan/20251217_performance_optimization_opportunities.md), [20251219_qpr_vectorization_and_collision_perf.md](.docs/plan/20251219_qpr_vectorization_and_collision_perf.md)
+> **関連**: [20251217_performance_optimization_opportunities.md](docs/plan/20251217_performance_optimization_opportunities.md), [20251219_qpr_vectorization_and_collision_perf.md](docs/plan/20251219_qpr_vectorization_and_collision_perf.md)
 
 ---
 

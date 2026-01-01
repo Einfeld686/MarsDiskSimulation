@@ -193,7 +193,7 @@ run.py → marsdisk/runtime/legacy_steps.py (run_phase5_comparison 関連)
 >
 > | ファイル | 箇所数 | 主な内容 |
 > |----------|--------|----------|
-> | `marsdisk/run.py` | 30+ | `EXTENDED_DIAGNOSTICS_VERSION`, `extended_diag_enabled`, tracking変数, summary出力 |
+> | `marsdisk/run_zero_d.py` | 30+ | `EXTENDED_DIAGNOSTICS_VERSION`, `extended_diag_enabled`, tracking変数, summary出力 |
 > | `marsdisk/schema.py` | 7 | `Phase7Diagnostics` クラス定義 |
 > | `marsdisk/io/writer.py` | 6 | カラム説明文 |
 > | `marsdisk/orchestrator.py` | 1 | 定数定義 |
@@ -564,4 +564,4 @@ gantt
 
 ## 関連ドキュメント
 
-- [ストリーミング既定 ON への移行](.docs/plan/20251217_streaming_default_on_migration.md): テスト時の明示 OFF 設定を含む
+- [ストリーミング既定 ON への移行](docs/plan/20251217_streaming_default_on_migration.md): テスト時の明示 OFF 設定を含む

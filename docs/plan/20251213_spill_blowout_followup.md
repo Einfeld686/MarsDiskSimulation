@@ -35,7 +35,7 @@
 
 | モジュール | 役割 |
 |------------|------|
-| [marsdisk/run.py](marsdisk/run.py) | メインループ `run_zero_d`、昇華→ブローアウト振替ロジック |
+| [marsdisk/run_zero_d.py](marsdisk/run_zero_d.py) | メインループ `run_zero_d`、昇華→ブローアウト振替ロジック |
 | [marsdisk/physics/supply.py](marsdisk/physics/supply.py) | 供給率計算、headroom_policy の適用 |
 | [marsdisk/physics/shielding.py](marsdisk/physics/shielding.py) | 遮蔽と $\Sigma_{\tau=1}$ クリップ |
 | [marsdisk/schema.py](marsdisk/schema.py) | YAML 設定のバリデーション |
@@ -51,7 +51,7 @@
   - `sinks.mode: sublimation`、`sub_params.mass_conserving: true`（昇華は質量を減らさず、ブローアウトへ振替）
   - `blowout.enabled: true`、`blowout.layer: surface_tau_le_1`（既定）
   - 遮蔽：`shielding.mode: psitau`、φテーブルは各レシピ既定（例: phi_const_0p20/0p37）
-- コード側（`marsdisk/run.py`）
+- コード側（`marsdisk/run_zero_d.py`）
   - `psd.floor.mode=none` 時、ステップごとも `s_min` を設定値に維持し a_blow で上書きしないよう修正。
   - 昇華ドリフトの床を mass_conserving 時に 0 まで緩め、粒径が設定未満に落ちても許容。
   - 昇華で削れた質量を sink ではなくブローアウトに振り替え、`outflux_surface` と `M_loss_cum` に積算。
@@ -67,7 +67,7 @@
 
 ## 参考パス
 - 設定: `configs/sweep_temp_supply/temp_supply_T4000_eps1.yml` ほか全6ファイル。
-- 変更コード: `marsdisk/run.py`（昇華→ブローアウト振替、s_min 更新ロジック）。
+- 変更コード: `marsdisk/run_zero_d.py`（昇華→ブローアウト振替、s_min 更新ロジック）。
 
 ---
 

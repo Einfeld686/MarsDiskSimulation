@@ -4,7 +4,7 @@
 
 対象範囲
 --------
-- `marsdisk/run.py` のストリーミング書き出し経路と終了処理（`merge_chunks` 呼び出し）。
+- `marsdisk/run_zero_d.py` のストリーミング書き出し経路と終了処理（`merge_chunks` 呼び出し）。
 - `scripts/research/run_temp_supply_sweep.cmd` など streaming を前提にするスイープ実行スクリプト。
 - 残存チャンクの事後統合・検出を行う補助スクリプト/CLI。
 

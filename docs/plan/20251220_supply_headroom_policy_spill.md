@@ -35,8 +35,8 @@
 `docs/plan/` 内のドキュメントは開発プラン・イシュー整理・振り返りを管理します。本メモは **headroom 超過時の処理方針に関する新モード（spill）の実装提案**です。
 
 関連ドキュメント：
-- [20251219_tau_clip_gate_review.md](.docs/plan/20251219_tau_clip_gate_review.md) — τクリップと供給ゲートの現状整理
-- [20251216_temp_supply_sigma_tau1_headroom.md](.docs/plan/20251216_temp_supply_sigma_tau1_headroom.md) — 供給クリップ事象の報告
+- [20251219_tau_clip_gate_review.md](docs/plan/20251219_tau_clip_gate_review.md) — τクリップと供給ゲートの現状整理
+- [20251216_temp_supply_sigma_tau1_headroom.md](docs/plan/20251216_temp_supply_sigma_tau1_headroom.md) — 供給クリップ事象の報告
 
 ---
 

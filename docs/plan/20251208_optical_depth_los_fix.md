@@ -17,7 +17,7 @@
    - `analysis/equations.md` へ τ の定義を「面直 τ_vert」「火星 LOS τ_los_mars」に分けて明文化し、換算式 (E.#) を追記。
 
 2) **コードの経路分離**
-   - `marsdisk/run.py` と `marsdisk/physics_step.py` で `tau_vert = kappa_surf * Sigma_surf` を維持しつつ、LOS 用に `tau_los_mars = tau_vert * f_los(r, h_over_r, …)` を計算。
+   - `marsdisk/run_zero_d.py` と `marsdisk/physics_step.py` で `tau_vert = kappa_surf * Sigma_surf` を維持しつつ、LOS 用に `tau_los_mars = tau_vert * f_los(r, h_over_r, …)` を計算。
    - `shielding.apply_shielding` の τ を LOS 前提に切り替え、返す `Sigma_tau1` を `Sigma_tau1_los` として扱う（案B）。`surface.step_surface` や `collisions_smol.step_collisions_smol_0d` へのクリップ渡しも LOS 版に合わせる。代案として、Φ 計算は従来の τ_vert で行い、`Sigma_tau1_los = Sigma_tau1_vert / f_los` と後段で縮める案Aも検討。
    - Wyatt 衝突寿命など衝突関連の τ は `tau_vert` を使い続けるよう引数名を明示する。
 

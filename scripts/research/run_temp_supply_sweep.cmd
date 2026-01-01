@@ -231,14 +231,22 @@ if !errorlevel! geq 1 (
 %LOG_SETUP% Output root: %BATCH_ROOT%
 
 rem --- Virtual environment handling ---
-rem Skip venv entirely for child processes (SKIP_PIP=1 implies system Python has deps)
-rem This avoids issues where venv exists but has no dependencies installed
 set "USE_VENV=1"
-if /i "%SKIP_VENV%"=="1" set "USE_VENV=0"
-if /i "%SKIP_PIP%"=="1" (
-  rem Child process with SKIP_PIP: use system Python directly (dependencies already installed)
+if /i "%SKIP_VENV%"=="1" (
   set "USE_VENV=0"
-  if "%DEBUG%"=="1" echo.[DEBUG] SKIP_PIP=1: using system Python (venv skipped^)
+  if "%DEBUG%"=="1" echo.[DEBUG] SKIP_VENV=1: skipping venv
+)
+if "%USE_VENV%"=="1" if /i "%REQUIREMENTS_INSTALLED%"=="1" if /i "%SKIP_PIP%"=="1" (
+  rem Child process: reuse parent venv if present; otherwise fall back to system Python.
+  set "VENV_PY=!VENV_DIR!\Scripts\python.exe"
+  if exist "!VENV_PY!" (
+    set "USE_VENV=1"
+    set "VENV_OK=1"
+    if "%DEBUG%"=="1" echo.[DEBUG] Using parent venv: !VENV_DIR!
+  ) else (
+    set "USE_VENV=0"
+    if "%DEBUG%"=="1" echo.[DEBUG] Parent venv not found, using system Python
+  )
 )
 
 if "%USE_VENV%"=="1" if not "%VENV_OK%"=="1" (
@@ -959,8 +967,8 @@ if "%DEBUG%"=="1" echo.[DEBUG] launch_job: after wait_for_slot
 set "JOB_PID="
 rem Build JOB_CMD with delayed expansion
 rem Include BASE_CONFIG, GEOMETRY_MODE, SWEEP_TAG, BATCH_ROOT, PYTHON_EXE, PYTHON_ARGS for child process
-rem Pass REQUIREMENTS_INSTALLED=1 so child skips redundant pip install, and VENV_DIR so it uses parent's venv
-set "JOB_CMD=set RUN_TS=!RUN_TS!&& set BATCH_SEED=!BATCH_SEED!&& set RUN_ONE_T=!JOB_T!&& set RUN_ONE_EPS=!JOB_EPS!&& set RUN_ONE_TAU=!JOB_TAU!&& set RUN_ONE_SEED=!JOB_SEED!&& set AUTO_JOBS=0&& set PARALLEL_JOBS=1&& set SKIP_PIP=1&& set REQUIREMENTS_INSTALLED=1&& set BASE_CONFIG=!BASE_CONFIG!&& set GEOMETRY_MODE=!GEOMETRY_MODE!&& set SWEEP_TAG=!SWEEP_TAG!&& set BATCH_ROOT=!BATCH_ROOT!&& set PYTHON_EXE=!PYTHON_EXE!&& set PYTHON_ARGS=!PYTHON_ARGS!&& set VENV_DIR=!VENV_DIR!&& call ""!SCRIPT_SELF_USE!"" --run-one"
+rem Pass skip flags to child so it does not re-install dependencies or recreate the venv.
+set "JOB_CMD=set RUN_TS=!RUN_TS!&& set BATCH_SEED=!BATCH_SEED!&& set RUN_ONE_T=!JOB_T!&& set RUN_ONE_EPS=!JOB_EPS!&& set RUN_ONE_TAU=!JOB_TAU!&& set RUN_ONE_SEED=!JOB_SEED!&& set AUTO_JOBS=0&& set PARALLEL_JOBS=1&& set SKIP_PIP=1&& set REQUIREMENTS_INSTALLED=1&& set SKIP_VENV=!SKIP_VENV!&& set BASE_CONFIG=!BASE_CONFIG!&& set GEOMETRY_MODE=!GEOMETRY_MODE!&& set SWEEP_TAG=!SWEEP_TAG!&& set BATCH_ROOT=!BATCH_ROOT!&& set PYTHON_EXE=!PYTHON_EXE!&& set PYTHON_ARGS=!PYTHON_ARGS!&& set VENV_DIR=!VENV_DIR!&& call ""!SCRIPT_SELF_USE!"" --run-one"
 set "JOB_PID_TMP="
 if "%DEBUG%"=="1" echo.[DEBUG] launch_job: TMP_ROOT=!TMP_ROOT!
 if "%DEBUG%"=="1" echo.[DEBUG] launch_job: temp file=!TMP_ROOT!\marsdisk_pid_!JOB_T!_!JOB_EPS!_!JOB_TAU!.tmp

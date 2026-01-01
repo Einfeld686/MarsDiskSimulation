@@ -25,7 +25,7 @@
 | $\Sigma_{\tau=1}$ (`sigma_tau1`) | 光学的深さ τ = 1 となる臨界面密度 | (E.016), (E.017) |
 | **headroom** | $\Sigma_{\tau=1} - \Sigma_{\rm surf}$。供給ゲートの開閉を決定 | (E.031) |
 | **clip モード** | headroom がゼロになると供給を遮断する方式（従来動作） | — |
-| **spill モード** | 供給は止めず、τ=1 超過分を系外ロスとして除去する方式 | [20251220_supply_headroom_policy_spill.md](.docs/plan/20251220_supply_headroom_policy_spill.md) |
+| **spill モード** | 供給は止めず、τ=1 超過分を系外ロスとして除去する方式 | [20251220_supply_headroom_policy_spill.md](docs/plan/20251220_supply_headroom_policy_spill.md) |
 | `supply.headroom_policy` | headroom 処理のモード設定（`clip` / `spill`） | [schema.py](marsdisk/schema.py) |
 | **deep_mixing** | 深部→表層の物質輸送モード。`t_mix_orbits` で時定数を指定 | [supply.py](marsdisk/physics/supply.py) |
 | **headroom gate** | deep_mixing 時に headroom に応じて供給を制御する機構 | — |
@@ -35,9 +35,9 @@
 `docs/plan/` 内のドキュメントは開発プラン・イシュー整理・振り返りを管理します。本メモは **run_temp_supply_sweep.sh スクリプトで spill モードを使用する際の設定・注意点**をまとめた運用ガイドです。
 
 関連ドキュメント：
-- [20251220_supply_headroom_policy_spill.md](.docs/plan/20251220_supply_headroom_policy_spill.md) — spill モードの実装仕様
-- [20251219_tau_clip_gate_review.md](.docs/plan/20251219_tau_clip_gate_review.md) — τクリップと供給ゲートの現状整理
-- [20251216_temp_supply_sigma_tau1_headroom.md](.docs/plan/20251216_temp_supply_sigma_tau1_headroom.md) — 供給クリップ事象の報告
+- [20251220_supply_headroom_policy_spill.md](docs/plan/20251220_supply_headroom_policy_spill.md) — spill モードの実装仕様
+- [20251219_tau_clip_gate_review.md](docs/plan/20251219_tau_clip_gate_review.md) — τクリップと供給ゲートの現状整理
+- [20251216_temp_supply_sigma_tau1_headroom.md](docs/plan/20251216_temp_supply_sigma_tau1_headroom.md) — 供給クリップ事象の報告
 
 ---
 
@@ -128,7 +128,7 @@ spill 量の可視化を行う場合は、以下のカラムをプロットに�
 ## 参考
 
 ### 関連ドキュメント
-- 実装仕様: [20251220_supply_headroom_policy_spill.md](.docs/plan/20251220_supply_headroom_policy_spill.md)
+- 実装仕様: [20251220_supply_headroom_policy_spill.md](docs/plan/20251220_supply_headroom_policy_spill.md)
 - 物理式の詳細: [analysis/equations.md](analysis/equations.md)
 - AI向け利用ガイド: [analysis/AI_USAGE.md](analysis/AI_USAGE.md)
 

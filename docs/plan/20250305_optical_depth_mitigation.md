@@ -30,7 +30,7 @@
 | $\Phi(\tau)$ | **自遮蔽係数** (self-shielding factor)。光学的に厚い円盤での放射減衰を表す [0–1] の係数 | (E.015), (E.028) |
 | $\kappa_{\rm eff}$ | **有効不透明度** (effective opacity)。$\kappa_{\rm eff} = \Phi(\tau) \cdot \kappa_{\rm surf}$ | (E.015) |
 | **headroom** | $\Sigma_{\tau=1} - \Sigma_{\rm surf}$。表層が τ=1 を超えないための「余裕」 | (E.031) |
-| **spill** | headroom 超過分を即時除去するモード | [supply_headroom_policy_spill](.docs/plan/20251220_supply_headroom_policy_spill.md) |
+| **spill** | headroom 超過分を即時除去するモード | [supply_headroom_policy_spill](docs/plan/20251220_supply_headroom_policy_spill.md) |
 | **deep_mixing** | 深部リザーバ→表層への物質輸送モード | [supply.py](marsdisk/physics/supply.py) |
 
 ### ドキュメントの位置付け
@@ -38,9 +38,9 @@
 `docs/plan/` 内のドキュメントは開発プラン・イシュー整理・運用ノートを管理します。本メモは **光学的厚さ τ が高止まりするケースの調整方法**を示す運用ガイドです。
 
 関連ドキュメント：
-- [20251219_tau_clip_gate_review.md](.docs/plan/20251219_tau_clip_gate_review.md) — τクリップと供給ゲートの現状整理
-- [20251220_supply_headroom_policy_spill.md](.docs/plan/20251220_supply_headroom_policy_spill.md) — headroom 処理の spill モード提案
-- [20251216_temp_supply_sigma_tau1_headroom.md](.docs/plan/20251216_temp_supply_sigma_tau1_headroom.md) — 供給クリップ事象の報告
+- [20251219_tau_clip_gate_review.md](docs/plan/20251219_tau_clip_gate_review.md) — τクリップと供給ゲートの現状整理
+- [20251220_supply_headroom_policy_spill.md](docs/plan/20251220_supply_headroom_policy_spill.md) — headroom 処理の spill モード提案
+- [20251216_temp_supply_sigma_tau1_headroom.md](docs/plan/20251216_temp_supply_sigma_tau1_headroom.md) — 供給クリップ事象の報告
 
 ---
 
@@ -74,7 +74,7 @@ init_tau1:
   scale_to_tau1: true
 ```
 
-**コード参照**: [marsdisk/run_zero_d.py#L1599–L1700](marsdisk/run.py) — `init_tau1` 処理
+**コード参照**: [marsdisk/run_zero_d.py#L1599–L1700](marsdisk/run_zero_d.py) — `init_tau1` 処理
 
 ### 2. 供給を絞る (`supply.const`)
 
@@ -119,7 +119,7 @@ supply:
 > [!WARNING]
 > spill モードでは超過質量が系外ロスとして扱われる。質量保存検証時には `supply_tau_clip_spill_rate` カラムに注意。
 
-**詳細**: [20251220_supply_headroom_policy_spill.md](.docs/plan/20251220_supply_headroom_policy_spill.md)
+**詳細**: [20251220_supply_headroom_policy_spill.md](docs/plan/20251220_supply_headroom_policy_spill.md)
 
 ### 5. 深層バッファを使う (`supply.transport.mode`)
 
@@ -176,6 +176,6 @@ sinks:
 | 遮蔽係数 Φ 適用 | [shielding.py#effective_kappa](marsdisk/physics/shielding.py) | L81–120 |
 | Σ_{τ=1} 計算 | [shielding.py#sigma_tau1](marsdisk/physics/shielding.py) | L123–130 |
 | τ=1 クリップ | [shielding.py#clip_to_tau1](marsdisk/physics/shielding.py) | L219–261 |
-| 初期 τ クリップ | [run.py](marsdisk/run.py) | L1599–1700 (`init_tau1`) |
+| 初期 τ クリップ | [run.py](marsdisk/run_zero_d.py) | L1599–1700 (`init_tau1`) |
 | 供給フィードバック | [supply.py](marsdisk/physics/supply.py) | L147 (`feedback_tau_field`) |
 | headroom ポリシー | [collisions_smol.py](marsdisk/physics/collisions_smol.py) | L476–480 |

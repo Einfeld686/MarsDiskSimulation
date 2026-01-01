@@ -72,4 +72,4 @@
 ## 参考
 - 対象 run: `out/<run_id>`
 - 実装ヘッドルーム判定: [marsdisk/physics/collisions_smol.py:308–352]
-- Στ=1 固定の適用箇所: [marsdisk/run.py:2290–2345]
+- Στ=1 固定の適用箇所: [marsdisk/run_zero_d.py:2290–2345]
