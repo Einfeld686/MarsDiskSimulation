@@ -230,22 +230,46 @@ if !errorlevel! geq 1 (
 )
 %LOG_SETUP% Output root: %BATCH_ROOT%
 
-set "VENV_PY=%VENV_DIR%\Scripts\python.exe"
-set "VENV_OK=0"
-if exist "%VENV_PY%" (
-  for /f %%V in ('"%VENV_PY%" -c "import sys; print(1 if sys.version_info >= (3,11) else 0)"') do set "VENV_OK=%%V"
-)
-if not "%VENV_OK%"=="1" (
-  if exist "%VENV_DIR%" (
-    echo.[warn] venv python is missing or <3.11; recreating: %VENV_DIR%
-    rmdir /s /q "%VENV_DIR%"
+rem --- Virtual environment handling ---
+rem Skip venv creation/check if SKIP_VENV=1 or if REQUIREMENTS_INSTALLED=1 (child process)
+set "USE_VENV=1"
+if /i "%SKIP_VENV%"=="1" set "USE_VENV=0"
+if /i "%REQUIREMENTS_INSTALLED%"=="1" if /i "%SKIP_PIP%"=="1" (
+  rem Child process: check if parent's venv exists and use it directly
+  set "VENV_PY=!VENV_DIR!\Scripts\python.exe"
+  if exist "!VENV_PY!" (
+    set "USE_VENV=1"
+    set "VENV_OK=1"
+    if "%DEBUG%"=="1" echo.[DEBUG] Using parent venv: !VENV_DIR!
+  ) else (
+    rem Parent venv not found, use system Python
+    set "USE_VENV=0"
+    if "%DEBUG%"=="1" echo.[DEBUG] Parent venv not found, using system Python
   )
-  %LOG_SETUP% Creating virtual environment in %VENV_DIR%...
-  call "%PYTHON_EXEC_CMD%" -m venv "%VENV_DIR%"
 )
 
-call "%VENV_DIR%\Scripts\activate.bat"
-set "PYTHON_EXE=%VENV_DIR%\Scripts\python.exe"
+if "%USE_VENV%"=="1" if not "%VENV_OK%"=="1" (
+  set "VENV_PY=!VENV_DIR!\Scripts\python.exe"
+  set "VENV_OK=0"
+  if exist "!VENV_PY!" (
+    rem Use short path to avoid issues with non-ASCII characters
+    for %%I in ("!VENV_PY!") do set "VENV_PY_SHORT=%%~sI"
+    for /f %%V in ('"!VENV_PY_SHORT!" -c "import sys; print(1 if sys.version_info >= (3,11) else 0)" 2^>nul') do set "VENV_OK=%%V"
+  )
+  if not "!VENV_OK!"=="1" (
+    if exist "!VENV_DIR!" (
+      echo.[warn] venv python is missing or ^<3.11; recreating: !VENV_DIR!
+      rmdir /s /q "!VENV_DIR!"
+    )
+    %LOG_SETUP% Creating virtual environment in !VENV_DIR!...
+    call "%PYTHON_EXEC_CMD%" -m venv "!VENV_DIR!"
+  )
+)
+
+if "%USE_VENV%"=="1" (
+  call "!VENV_DIR!\Scripts\activate.bat"
+  set "PYTHON_EXE=!VENV_DIR!\Scripts\python.exe"
+)
 call "%RESOLVE_PYTHON_CMD%"
 if !errorlevel! geq 1 (
   call :popd_safe
