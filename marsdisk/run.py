@@ -5,4 +5,8 @@ from .run_zero_d import *  # noqa: F401,F403
 
 
 if __name__ == "__main__":  # pragma: no cover - standard CLI entrypoint
-    main()
+    try:
+        main()
+    except KeyboardInterrupt:
+        print("[info] interrupted by user")
+        raise SystemExit(130)

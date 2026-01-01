@@ -810,11 +810,17 @@ if defined RUN_ONE_MODE (
   %LOG_INFO% run-one mode: T=%RUN_ONE_T% eps=%RUN_ONE_EPS% tau=%RUN_ONE_TAU% seed=%RUN_ONE_SEED%
   call :trace_detail "run-one: dispatch to run_one.py"
   %PYTHON_CMD% scripts\\runsets\\common\\run_one.py
-  if errorlevel 1 (
-    echo.[warn] run_one.py exited with status !errorlevel!
+  set "RUN_ONE_RC=!errorlevel!"
+  if "!RUN_ONE_RC!"=="130" (
+    %LOG_INFO% run-one interrupted by user
+    call :popd_safe
+    exit /b 0
+  )
+  if not "!RUN_ONE_RC!"=="0" (
+    echo.[warn] run_one.py exited with status !RUN_ONE_RC!
   )
   call :popd_safe
-  exit /b %errorlevel%
+  exit /b !RUN_ONE_RC!
 )
 
 set "EXTRA_OVERRIDES_EXISTS=0"

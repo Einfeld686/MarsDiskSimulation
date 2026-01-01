@@ -1867,6 +1867,35 @@ def _iter_named_commands(line: str, names: set[str]) -> list[tuple[str, list[str
     return commands
 
 
+def _parse_xcopy_flags(tokens: list[str]) -> tuple[bool, bool, bool, bool, bool]:
+    has_w = False
+    has_p = False
+    has_y = False
+    has_i = False
+    has_no_y = False
+    for raw in tokens:
+        token = _normalize_exe_token(raw).lower()
+        if not token.startswith("/"):
+            continue
+        if token.startswith("/-y"):
+            has_no_y = True
+            continue
+        body = token[1:]
+        if ":" in body:
+            continue
+        if not body:
+            continue
+        if "w" in body:
+            has_w = True
+        if "p" in body:
+            has_p = True
+        if "y" in body:
+            has_y = True
+        if "i" in body:
+            has_i = True
+    return has_w, has_p, has_y, has_i, has_no_y
+
+
 def _extract_set_name(line_body: str) -> str | None:
     rest = line_body[3:].lstrip()
     if not rest:
@@ -2071,6 +2100,7 @@ def _scan_cmd_file(
                 line_no,
             )
     logical_lines = _join_caret_lines(lines)
+    script_dir_anchor = _detect_script_dir_anchor(logical_lines, CWD_SCAN_LINES)
     if debug:
         for line_no, line in logical_lines:
             stripped = line.strip()
@@ -2115,6 +2145,14 @@ def _scan_cmd_file(
     first_popd_line: int | None = None
     last_errorlevel_value: int | None = None
     last_errorlevel_plain = False
+    block_stack: list[_BlockState] = []
+    block_errorlevel_warned = False
+    relative_path_line: int | None = None
+    errorlevel_semantics_line: int | None = None
+    robocopy_used = False
+    robocopy_exitcode_checked = False
+    robocopy_first_line: int | None = None
+    robocopy_retry_missing_line: int | None = None
 
     for line_no, line in logical_lines:
         stripped = line.strip()
@@ -2128,6 +2166,54 @@ def _scan_cmd_file(
             continue
         if lower.startswith("::"):
             continue
+        if relative_path_line is None and _line_has_relative_path(line_body):
+            relative_path_line = line_no
+        if re.search(r"\bcall\b", lower) and _has_unquoted_meta(line_body, {"|", "<", ">"}):
+            report_warn(
+                "cmd.call.pipe_or_redirect",
+                "cmd call with pipe/redirection is unreliable (avoid call + |/< / >)",
+                line_no,
+            )
+        opens, closes = _count_parens(line_body)
+        for _ in range(opens):
+            block_stack.append(_BlockState())
+        if block_stack:
+            if PERCENT_ERRORLEVEL_RE.search(line_body) and not block_errorlevel_warned:
+                report_warn(
+                    "cmd.block.percent_errorlevel",
+                    "cmd uses %ERRORLEVEL% inside (...) block; value may be stale",
+                    line_no,
+                )
+                block_errorlevel_warned = True
+            for match in CMD_ENV_VAR_RE.finditer(line_body):
+                var_name = match.group(1)
+                if not var_name or not VAR_NAME_RE.match(var_name):
+                    continue
+                var_upper = var_name.upper()
+                if var_upper == "ERRORLEVEL":
+                    continue
+                for block in block_stack:
+                    if var_upper not in block.used_vars:
+                        block.used_vars[var_upper] = line_no
+                    if var_upper in block.set_vars and var_upper not in block.warned_vars:
+                        report_warn(
+                            "cmd.block.percent_var_after_set",
+                            f"cmd uses %{var_name}% inside (...) block; percent expansion is parsed before execution",
+                            line_no,
+                        )
+                        block.warned_vars.add(var_upper)
+            set_name = _extract_set_name(line_body)
+            if set_name and VAR_NAME_RE.match(set_name):
+                set_upper = set_name.upper()
+                for block in block_stack:
+                    if set_upper in block.used_vars and set_upper not in block.warned_vars:
+                        report_warn(
+                            "cmd.block.percent_var_after_set",
+                            f"cmd sets {set_name} inside (...) block; percent expansion may not reflect updates",
+                            line_no,
+                        )
+                        block.warned_vars.add(set_upper)
+                    block.set_vars.add(set_upper)
         if SETLOCAL_RE.match(line_body):
             has_setlocal = True
             setlocal_count += 1
@@ -2206,6 +2292,8 @@ def _scan_cmd_file(
         if errorlevel_match:
             is_plain = errorlevel_match.group(1) is None
             value = int(errorlevel_match.group(2))
+            if errorlevel_semantics_line is None:
+                errorlevel_semantics_line = line_no
             if value == 0:
                 report_warn(
                     "cmd.errorlevel.zero",
@@ -2228,6 +2316,25 @@ def _scan_cmd_file(
         else:
             last_errorlevel_value = None
             last_errorlevel_plain = False
+        if errorlevel_semantics_line is None and ERRORLEVEL_ANY_RE.search(line_body):
+            errorlevel_semantics_line = line_no
+        for match in ERRORLEVEL_ANY_RE.finditer(line_body):
+            try:
+                value = int(match.group(2))
+            except (TypeError, ValueError):
+                continue
+            if value >= 8:
+                robocopy_exitcode_checked = True
+        for match in ERRORLEVEL_CMP_RE.finditer(line_body):
+            op = match.group(1).lower()
+            try:
+                value = int(match.group(2))
+            except (TypeError, ValueError):
+                continue
+            if op in {"geq", "gtr"} and value >= 8:
+                robocopy_exitcode_checked = True
+            if op in {"leq", "lss"} and value <= 7:
+                robocopy_exitcode_checked = True
         if len(line) >= CMD_LINE_MAX:
             report_error(
                 "cmd.line_length.limit",
@@ -2242,6 +2349,9 @@ def _scan_cmd_file(
             )
         if _contains_posix_path(line_body):
             report_error("cmd.posix_path", "cmd contains POSIX-style path", line_no)
+            for _ in range(closes):
+                if block_stack:
+                    block_stack.pop()
             continue
         if DISABLE_EXT_CMD_RE.search(line_body) and not extensions_cmd_off_reported:
             extensions_cmd_off_reported = True
@@ -2376,6 +2486,47 @@ def _scan_cmd_file(
                     line_no,
                 )
                 break
+        for _cmd_name, tail_tokens in _iter_named_commands(line_body, XCOPY_CMD_NAMES):
+            has_w, has_p, has_y, has_i, has_no_y = _parse_xcopy_flags(tail_tokens)
+            if has_w or has_p:
+                if profile == "ci":
+                    report_error(
+                        "cmd.xcopy.interactive",
+                        "xcopy uses /w or /p (interactive)",
+                        line_no,
+                    )
+                else:
+                    report_warn(
+                        "cmd.xcopy.interactive",
+                        "xcopy uses /w or /p (interactive)",
+                        line_no,
+                    )
+            if not has_y or has_no_y:
+                report_warn(
+                    "cmd.xcopy.missing_y",
+                    "xcopy without /y may prompt for overwrite confirmation",
+                    line_no,
+                )
+            if not has_i:
+                report_warn(
+                    "cmd.xcopy.missing_i",
+                    "xcopy without /i may prompt for file/dir destination",
+                    line_no,
+                )
+        for _cmd_name, tail_tokens in _iter_named_commands(line_body, ROBOCOPY_CMD_NAMES):
+            robocopy_used = True
+            if robocopy_first_line is None:
+                robocopy_first_line = line_no
+            has_r = False
+            has_w = False
+            for raw in tail_tokens:
+                token = _normalize_exe_token(raw).lower()
+                if token.startswith("/r:"):
+                    has_r = True
+                if token.startswith("/w:"):
+                    has_w = True
+            if (not has_r or not has_w) and robocopy_retry_missing_line is None:
+                robocopy_retry_missing_line = line_no
         if lower.startswith("path "):
             if not env_modified:
                 env_modified = True
