@@ -38,7 +38,10 @@ set "DEBUG=1"
 set "QUIET_MODE=0"
 set "AUTO_JOBS=0"
 set "PARALLEL_JOBS=1"
+rem --- Flags to skip re-initialization in child script ---
 set "SKIP_PIP=1"
+set "SKIP_VENV=1"
+set "REQUIREMENTS_INSTALLED=1"
 set "RUN_ONE_MODE=1"
 
 echo.[info] Test parameters:
@@ -48,6 +51,13 @@ echo.  RUN_ONE_TAU=!RUN_ONE_TAU!
 echo.  BASE_CONFIG=!BASE_CONFIG!
 echo.  BATCH_ROOT=!BATCH_ROOT!
 echo.
+
+rem --- Ensure dependencies are installed (like parent process would do) ---
+echo.[setup] Installing dependencies from !REPO_ROOT!\requirements.txt ...
+"!PYTHON_EXE!" -m pip install -r "!REPO_ROOT!\requirements.txt" --quiet
+if !errorlevel! neq 0 (
+    echo.[warn] pip install had warnings but continuing...
+)
 
 rem --- Create log directory ---
 set "LOG_DIR=!REPO_ROOT!\out\debug"

@@ -1542,7 +1542,12 @@ if "%DEBUG%"=="1" call :debug_log "run_temp_supply: start cmd=scripts\research\r
 
 if "%DEBUG%"=="1" call :debug_log "run_temp_supply: trace_log=!TRACE_LOG!"
 
-rem Export PYTHON_EXE for child script
+rem Export environment for child script to avoid re-initialization
+rem SKIP_PIP=1 tells child to skip dependency installation (already done)
+rem REQUIREMENTS_INSTALLED=1 confirms dependencies are ready
+set "SKIP_PIP=1"
+set "REQUIREMENTS_INSTALLED=1"
+set "SKIP_VENV=1"
 if "%DEBUG%"=="1" echo.[DEBUG] Passing PYTHON_EXE=!PYTHON_EXE! to child script
 set "PYTHON_EXE_EXPORT=!PYTHON_EXE!"
 
