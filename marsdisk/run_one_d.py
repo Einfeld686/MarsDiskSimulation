@@ -28,6 +28,7 @@ from .runtime import ColumnarBuffer, ProgressReporter, ZeroDHistory
 from .runtime.helpers import (
     compute_phase_tau_fields,
     compute_gate_factor,
+    fast_blowout_correction_factor,
     ensure_finite_kappa,
     safe_float as _safe_float,
     float_or_nan as _float_or_nan,
@@ -56,6 +57,8 @@ from .physics import (
     eccentricity,
 )
 from .physics.sublimation import SublimationParams, grain_temperature_graybody
+
+_fast_blowout_correction_factor = fast_blowout_correction_factor
 
 logger = logging.getLogger(__name__)
 
@@ -147,19 +150,6 @@ def _auto_chi_blow(beta: float, qpr: float) -> float:
     chi_qpr = min(max(qpr, 0.5), 1.5)
     chi = chi_beta * chi_qpr
     return float(min(max(chi, 0.5), 2.0))
-
-
-def _fast_blowout_correction_factor(ratio: float) -> float:
-    """Return the effective loss fraction ``f_fast = 1 - exp(-Δt/t_blow)``."""
-
-    if ratio <= 0.0 or math.isinf(ratio):
-        return 0.0 if ratio <= 0.0 else 1.0
-    value = -math.expm1(-ratio)
-    if value < 0.0:
-        return 0.0
-    if value > 1.0:
-        return 1.0
-    return value
 
 
 def _env_flag(name: str) -> Optional[bool]:

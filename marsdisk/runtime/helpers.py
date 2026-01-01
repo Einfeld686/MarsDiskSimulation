@@ -54,6 +54,19 @@ def compute_gate_factor(t_blow: Optional[float], t_solid: Optional[float]) -> fl
     return factor
 
 
+def fast_blowout_correction_factor(ratio: float) -> float:
+    """Return the effective loss fraction ``f_fast = 1 - exp(-dt/t_blow)``."""
+
+    if ratio <= 0.0 or math.isinf(ratio):
+        return 0.0 if ratio <= 0.0 else 1.0
+    value = -math.expm1(-ratio)
+    if value < 0.0:
+        return 0.0
+    if value > 1.0:
+        return 1.0
+    return value
+
+
 def ensure_finite_kappa(kappa: Any, *, label: str | None = None) -> float:
     """Return finite, non-negative kappa; replace NaN/inf/negative with 0."""
 
@@ -111,6 +124,7 @@ __all__ = [
     "compute_phase_tau_fields",
     "resolve_feedback_tau_field",
     "compute_gate_factor",
+    "fast_blowout_correction_factor",
     "ensure_finite_kappa",
     "safe_float",
     "float_or_nan",

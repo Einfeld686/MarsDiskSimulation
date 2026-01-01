@@ -1,4 +1,5 @@
 import numpy as np
+import pytest
 
 from marsdisk.physics.surface import step_surface_density_S1
 from marsdisk.physics.sinks import SinkOptions, total_sink_timescale
@@ -11,13 +12,14 @@ def _run(prod_rate: float, Omega: float, steps: int = 200):
     sigma = 0.0
     res = None
     for _ in range(steps):
-        res = step_surface_density_S1(
-            sigma,
-            prod_rate,
-            dt,
-            Omega,
-            sigma_tau1=None,
-        )
+        with pytest.warns(DeprecationWarning):
+            res = step_surface_density_S1(
+                sigma,
+                prod_rate,
+                dt,
+                Omega,
+                sigma_tau1=None,
+            )
         sigma = res.sigma_surf
     return res
 
@@ -43,24 +45,26 @@ def test_sink_increases_mass_loss():
     sigma0 = 1e-3
     dt = 1.0
 
-    res_no = step_surface_density_S1(
-        sigma0,
-        0.0,
-        dt,
-        Omega,
-        sigma_tau1=None,
-    )
+    with pytest.warns(DeprecationWarning):
+        res_no = step_surface_density_S1(
+            sigma0,
+            0.0,
+            dt,
+            Omega,
+            sigma_tau1=None,
+        )
 
     opts = SinkOptions(enable_sublimation=True, sub_params=SublimationParams())
     sink_result = total_sink_timescale(1500.0, 3000.0, Omega, opts)
-    res_sink = step_surface_density_S1(
-        sigma0,
-        0.0,
-        dt,
-        Omega,
-        sigma_tau1=None,
-        t_sink=sink_result.t_sink,
-    )
+    with pytest.warns(DeprecationWarning):
+        res_sink = step_surface_density_S1(
+            sigma0,
+            0.0,
+            dt,
+            Omega,
+            sigma_tau1=None,
+            t_sink=sink_result.t_sink,
+        )
     total_no = res_no.outflux + res_no.sink_flux
     total_sink = res_sink.outflux + res_sink.sink_flux
     assert total_sink > total_no

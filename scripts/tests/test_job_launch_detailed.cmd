@@ -22,47 +22,23 @@ echo.[info] WIN_PROCESS_PY=!WIN_PROCESS_PY!
 echo.[info] TMP_ROOT=!TMP_ROOT!
 echo.
 
-rem Find Python (same logic as run_sweep.cmd)
-set "PYTHON_CMD="
-set "PYTHON_EXE="
-
-rem First try to find Python 3.11
-for %%P in (python3.11 python) do (
-    if not defined PYTHON_EXE (
-        where %%P >nul 2>&1
-        if not errorlevel 1 (
-            for /f "delims=" %%Q in ('where %%P') do (
-                if not defined PYTHON_EXE set "PYTHON_EXE=%%Q"
-            )
-        )
-    )
-)
-
-rem Check Python version
-if defined PYTHON_EXE (
-    "!PYTHON_EXE!" -c "import sys; exit(0 if sys.version_info >= (3,11) else 1)" >nul 2>&1
-    if errorlevel 1 (
-        echo.[warn] Python at !PYTHON_EXE! is not 3.11+, searching for Python 3.11...
-        set "PYTHON_EXE="
-        rem Search common locations
-        for %%D in (
-            "%LOCALAPPDATA%\Programs\Python\Python311\python.exe"
-            "%PROGRAMFILES%\Python311\python.exe"
-            "%USERPROFILE%\AppData\Local\Programs\Python\Python311\python.exe"
-        ) do (
-            if not defined PYTHON_EXE if exist %%D set "PYTHON_EXE=%%~D"
-        )
-    )
-)
-
-if not defined PYTHON_EXE (
-    echo.[error] Python 3.11+ not found
+rem Resolve Python via shared helper
+set "RUNSETS_COMMON_DIR=!REPO_ROOT!\scripts\runsets\common"
+set "PYTHON_EXEC_CMD=!RUNSETS_COMMON_DIR!\python_exec.cmd"
+set "RESOLVE_PYTHON_CMD=!RUNSETS_COMMON_DIR!\resolve_python.cmd"
+if not exist "!PYTHON_EXEC_CMD!" (
+    echo.[error] python_exec helper not found: !PYTHON_EXEC_CMD!
     exit /b 1
 )
-
-rem Trim trailing spaces
-call :trim_var PYTHON_EXE
-set "PYTHON_CMD=!PYTHON_EXE!"
+if not exist "!RESOLVE_PYTHON_CMD!" (
+    echo.[error] resolve_python helper not found: !RESOLVE_PYTHON_CMD!
+    exit /b 1
+)
+call "!RESOLVE_PYTHON_CMD!"
+if errorlevel 1 (
+    echo.[error] Python resolution failed
+    exit /b 1
+)
 
 echo.[info] PYTHON_EXE=[!PYTHON_EXE!]
 echo.[info] PYTHON_CMD=[!PYTHON_CMD!]
@@ -70,7 +46,7 @@ echo.
 
 rem Verify Python works
 echo.--- Test: Python version ---
-"!PYTHON_CMD!" -c "import sys; print(f'Python {sys.version}')"
+call "!PYTHON_EXEC_CMD!" -c "import sys; print(f'Python {sys.version}')"
 echo.
 
 rem ============================================================
@@ -80,7 +56,7 @@ echo.============================================================
 set "TEST_A_CMD=echo Test A Success && echo Press any key... && pause"
 echo.[debug] Command: !TEST_A_CMD!
 echo.[action] Launching visible window...
-"!PYTHON_CMD!" "!WIN_PROCESS_PY!" launch --cmd "!TEST_A_CMD!" --window-style normal --cwd "!REPO_ROOT!"
+call "!PYTHON_EXEC_CMD!" "!WIN_PROCESS_PY!" launch --cmd "!TEST_A_CMD!" --window-style normal --cwd "!REPO_ROOT!"
 echo.[result] PID returned: check above, window should have appeared
 echo.
 
@@ -91,7 +67,7 @@ echo.============================================================
 set "TEST_B_CMD=set FOO=bar&& echo FOO is: %%FOO%% && pause"
 echo.[debug] Command: !TEST_B_CMD!
 echo.[action] Launching visible window...
-"!PYTHON_CMD!" "!WIN_PROCESS_PY!" launch --cmd "!TEST_B_CMD!" --window-style normal --cwd "!REPO_ROOT!"
+call "!PYTHON_EXEC_CMD!" "!WIN_PROCESS_PY!" launch --cmd "!TEST_B_CMD!" --window-style normal --cwd "!REPO_ROOT!"
 echo.[result] Window should show "FOO is: bar"
 echo.
 
@@ -107,7 +83,7 @@ echo.[debug] File contents:
 type "!CMD_FILE!"
 echo.
 echo.[action] Launching via --cmd-file...
-"!PYTHON_CMD!" "!WIN_PROCESS_PY!" launch --cmd-file "!CMD_FILE!" --window-style normal --cwd "!REPO_ROOT!"
+call "!PYTHON_EXEC_CMD!" "!WIN_PROCESS_PY!" launch --cmd-file "!CMD_FILE!" --window-style normal --cwd "!REPO_ROOT!"
 echo.[result] Check window for environment dump
 del "!CMD_FILE!" >nul 2>&1
 echo.
@@ -135,7 +111,7 @@ echo.[debug] File contents:
 type "!CMD_FILE!"
 echo.
 echo.[action] Launching...
-"!PYTHON_CMD!" "!WIN_PROCESS_PY!" launch --cmd-file "!CMD_FILE!" --window-style normal --cwd "!REPO_ROOT!"
+call "!PYTHON_EXEC_CMD!" "!WIN_PROCESS_PY!" launch --cmd-file "!CMD_FILE!" --window-style normal --cwd "!REPO_ROOT!"
 echo.[result] Window should show RUN_ONE_T=5000, RUN_ONE_EPS=1.0
 del "!CMD_FILE!" >nul 2>&1
 echo.
@@ -155,7 +131,7 @@ type "!TEST_BATCH!"
 echo.
 set "CALL_CMD=call "!TEST_BATCH!""
 echo.[debug] Call command: !CALL_CMD!
-"!PYTHON_CMD!" "!WIN_PROCESS_PY!" launch --cmd "!CALL_CMD!" --window-style normal --cwd "!REPO_ROOT!"
+call "!PYTHON_EXEC_CMD!" "!WIN_PROCESS_PY!" launch --cmd "!CALL_CMD!" --window-style normal --cwd "!REPO_ROOT!"
 echo.[result] Window should show batch file output
 del "!TEST_BATCH!" >nul 2>&1
 echo.
@@ -185,7 +161,7 @@ if errorlevel 1 (
     set "CMD_FILE=!TMP_ROOT!\test_f_cmd.tmp"
     > "!CMD_FILE!" echo !FULL_JOB_CMD!
     echo.[action] Launching actual --run-one...
-    "!PYTHON_CMD!" "!WIN_PROCESS_PY!" launch --cmd-file "!CMD_FILE!" --window-style normal --cwd "!REPO_ROOT!"
+    call "!PYTHON_EXEC_CMD!" "!WIN_PROCESS_PY!" launch --cmd-file "!CMD_FILE!" --window-style normal --cwd "!REPO_ROOT!"
     del "!CMD_FILE!" >nul 2>&1
 )
 :skip_f

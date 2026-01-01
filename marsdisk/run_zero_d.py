@@ -52,6 +52,7 @@ from .runtime.helpers import (
     compute_phase_tau_fields,
     resolve_feedback_tau_field as _resolve_feedback_tau_field,
     compute_gate_factor,
+    fast_blowout_correction_factor,
 )
 from .runtime.legacy_steps import RunConfig, RunState, step, run_n_steps
 from .runtime.legacy_steps import RunConfig, RunState, step, run_n_steps
@@ -102,6 +103,7 @@ EXTENDED_DIAGNOSTICS_VERSION = "extended-minimal-v1"
 
 # Legacy aliases preserved for external callers/tests
 _compute_gate_factor = compute_gate_factor
+_fast_blowout_correction_factor = fast_blowout_correction_factor
 
 
 @dataclass
@@ -428,24 +430,6 @@ def _auto_chi_blow(beta: float, qpr: float) -> float:
     return float(min(max(chi, 0.5), 2.0))
 
 
-def _fast_blowout_correction_factor(ratio: float) -> float:
-    """Return the effective loss fraction ``f_fast = 1 - exp(-Δt/t_blow)``.
-
-    This quantity represents the integrated hazard of an exponential decay
-    process over a finite step ``Δt``.  It is bounded within ``[0, 1]`` and
-    captures the fraction of the surface reservoir removed by blow-out during
-    the step when the rate is resolved exactly.
-    """
-
-    if ratio <= 0.0 or math.isinf(ratio):
-        return 0.0 if ratio <= 0.0 else 1.0
-    # numerically stable evaluation of 1 - exp(-ratio)
-    value = -math.expm1(-ratio)
-    if value < 0.0:
-        return 0.0
-    if value > 1.0:
-        return 1.0
-    return value
 # ---------------------------------------------------------------------------
 # Configuration loading and CLI run
 # ---------------------------------------------------------------------------

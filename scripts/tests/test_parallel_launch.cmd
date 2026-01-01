@@ -13,28 +13,27 @@ rem Find repo root
 for %%I in ("%~dp0\..\..") do set "REPO_ROOT=%%~fI"
 echo.[info] REPO_ROOT=%REPO_ROOT%
 
-rem Find Python
-set "PYTHON_CMD="
-for %%P in (python3.11 python) do (
-    if not defined PYTHON_CMD (
-        where %%P >nul 2>&1
-        if not errorlevel 1 (
-            for /f "delims=" %%Q in ('where %%P') do (
-                if not defined PYTHON_CMD set "PYTHON_CMD=%%Q"
-            )
-        )
-    )
-)
-
-if not defined PYTHON_CMD (
-    echo.[error] Python not found
+rem Resolve Python via shared helper
+set "RUNSETS_COMMON_DIR=%REPO_ROOT%\scripts\runsets\common"
+set "PYTHON_EXEC_CMD=%RUNSETS_COMMON_DIR%\python_exec.cmd"
+set "RESOLVE_PYTHON_CMD=%RUNSETS_COMMON_DIR%\resolve_python.cmd"
+if not exist "%PYTHON_EXEC_CMD%" (
+    echo.[error] python_exec helper not found: %PYTHON_EXEC_CMD%
     exit /b 1
 )
-
+if not exist "%RESOLVE_PYTHON_CMD%" (
+    echo.[error] resolve_python helper not found: %RESOLVE_PYTHON_CMD%
+    exit /b 1
+)
+call "%RESOLVE_PYTHON_CMD%"
+if errorlevel 1 (
+    echo.[error] Python resolution failed
+    exit /b 1
+)
 echo.[info] PYTHON_CMD=%PYTHON_CMD%
 
 rem Test Python version
-"%PYTHON_CMD%" -c "import sys; print(f'Python {sys.version}')"
+call "%PYTHON_EXEC_CMD%" -c "import sys; print(f'Python {sys.version}')"
 if errorlevel 1 (
     echo.[error] Python execution failed
     exit /b 1
@@ -51,7 +50,7 @@ echo.
 rem ========================================
 echo.Test 1: Basic Python execution with quoted path
 echo.----------------------------------------
-"%PYTHON_CMD%" -c "print('Test 1 PASSED: Basic Python execution works')"
+call "%PYTHON_EXEC_CMD%" -c "print('Test 1 PASSED: Basic Python execution works')"
 if errorlevel 1 (
     echo.[FAIL] Test 1 failed
 ) else (
@@ -62,10 +61,10 @@ echo.
 rem ========================================
 echo.Test 2: win_process.py --help
 echo.----------------------------------------
-"%PYTHON_CMD%" "%WIN_PROCESS_PY%" --help >nul 2>&1
+call "%PYTHON_EXEC_CMD%" "%WIN_PROCESS_PY%" --help >nul 2>&1
 if errorlevel 1 (
     echo.[FAIL] Test 2 failed - win_process.py --help returned error
-    "%PYTHON_CMD%" "%WIN_PROCESS_PY%" --help
+    call "%PYTHON_EXEC_CMD%" "%WIN_PROCESS_PY%" --help
 ) else (
     echo.[PASS] Test 2
 )
@@ -75,7 +74,7 @@ rem ========================================
 echo.Test 3: Simple echo command via --cmd
 echo.----------------------------------------
 set "TEST_CMD=echo Test3 Success"
-"%PYTHON_CMD%" "%WIN_PROCESS_PY%" launch --cmd "%TEST_CMD%" --window-style hidden --cwd "%REPO_ROOT%"
+call "%PYTHON_EXEC_CMD%" "%WIN_PROCESS_PY%" launch --cmd "%TEST_CMD%" --window-style hidden --cwd "%REPO_ROOT%"
 if errorlevel 1 (
     echo.[FAIL] Test 3 failed
 ) else (
@@ -90,7 +89,7 @@ set "TEST_CMD_FILE=%TMP_ROOT%\test_cmd_file.tmp"
 echo echo Test4 via file > "%TEST_CMD_FILE%"
 echo.[debug] Command file contents:
 type "%TEST_CMD_FILE%"
-"%PYTHON_CMD%" "%WIN_PROCESS_PY%" launch --cmd-file "%TEST_CMD_FILE%" --window-style hidden --cwd "%REPO_ROOT%"
+call "%PYTHON_EXEC_CMD%" "%WIN_PROCESS_PY%" launch --cmd-file "%TEST_CMD_FILE%" --window-style hidden --cwd "%REPO_ROOT%"
 if errorlevel 1 (
     echo.[FAIL] Test 4 failed
 ) else (
@@ -102,7 +101,7 @@ echo.
 rem ========================================
 echo.Test 5: Command via stdin (pipe)
 echo.----------------------------------------
-echo echo Test5 via stdin | "%PYTHON_CMD%" "%WIN_PROCESS_PY%" launch --cmd-stdin --window-style hidden --cwd "%REPO_ROOT%"
+echo echo Test5 via stdin | call "%PYTHON_EXEC_CMD%" "%WIN_PROCESS_PY%" launch --cmd-stdin --window-style hidden --cwd "%REPO_ROOT%"
 if errorlevel 1 (
     echo.[FAIL] Test 5 failed
 ) else (
@@ -115,7 +114,7 @@ echo.Test 6: Complex command with special characters
 echo.----------------------------------------
 set "COMPLEX_CMD=set FOO=bar&& echo FOO is set"
 echo.[debug] COMPLEX_CMD=%COMPLEX_CMD%
-"%PYTHON_CMD%" "%WIN_PROCESS_PY%" launch --cmd "%COMPLEX_CMD%" --window-style hidden --cwd "%REPO_ROOT%"
+call "%PYTHON_EXEC_CMD%" "%WIN_PROCESS_PY%" launch --cmd "%COMPLEX_CMD%" --window-style hidden --cwd "%REPO_ROOT%"
 if errorlevel 1 (
     echo.[FAIL] Test 6 failed
 ) else (
@@ -128,7 +127,7 @@ echo.Test 7: Command with call to batch file
 echo.----------------------------------------
 set "BATCH_CMD=call echo Test7 with call"
 echo.[debug] BATCH_CMD=%BATCH_CMD%
-"%PYTHON_CMD%" "%WIN_PROCESS_PY%" launch --cmd "%BATCH_CMD%" --window-style hidden --cwd "%REPO_ROOT%"
+call "%PYTHON_EXEC_CMD%" "%WIN_PROCESS_PY%" launch --cmd "%BATCH_CMD%" --window-style hidden --cwd "%REPO_ROOT%"
 if errorlevel 1 (
     echo.[FAIL] Test 7 failed
 ) else (
@@ -141,7 +140,7 @@ echo.Test 8: Verify spawned process actually runs (visible window)
 echo.----------------------------------------
 echo.[info] This test will open a visible window that should show "Test8 Success" and pause
 set "VISIBLE_CMD=echo Test8 Success && echo Press any key to close... && pause"
-"%PYTHON_CMD%" "%WIN_PROCESS_PY%" launch --cmd "%VISIBLE_CMD%" --window-style normal --cwd "%REPO_ROOT%"
+call "%PYTHON_EXEC_CMD%" "%WIN_PROCESS_PY%" launch --cmd "%VISIBLE_CMD%" --window-style normal --cwd "%REPO_ROOT%"
 if errorlevel 1 (
     echo.[FAIL] Test 8 failed
 ) else (
@@ -153,7 +152,7 @@ rem ========================================
 echo.Test 9: Capture PID to file and verify
 echo.----------------------------------------
 set "PID_FILE=%TMP_ROOT%\test_pid.tmp"
-"%PYTHON_CMD%" "%WIN_PROCESS_PY%" launch --cmd "echo Test9" --window-style hidden --cwd "%REPO_ROOT%" > "%PID_FILE%" 2>&1
+call "%PYTHON_EXEC_CMD%" "%WIN_PROCESS_PY%" launch --cmd "echo Test9" --window-style hidden --cwd "%REPO_ROOT%" > "%PID_FILE%" 2>&1
 echo.[debug] PID file contents:
 type "%PID_FILE%"
 set /p TEST_PID=<"%PID_FILE%"
@@ -189,7 +188,7 @@ set "SIM_CMD_FILE=%TMP_ROOT%\sim_cmd.tmp"
 echo.[debug] Command file contents:
 type "%SIM_CMD_FILE%"
 
-"%PYTHON_CMD%" "%WIN_PROCESS_PY%" launch --cmd-file "%SIM_CMD_FILE%" --window-style normal --cwd "%REPO_ROOT%"
+call "%PYTHON_EXEC_CMD%" "%WIN_PROCESS_PY%" launch --cmd-file "%SIM_CMD_FILE%" --window-style normal --cwd "%REPO_ROOT%"
 if errorlevel 1 (
     echo.[FAIL] Test 10 failed
 ) else (

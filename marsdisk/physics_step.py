@@ -29,6 +29,7 @@ import numpy as np
 from . import constants, grid
 from .physics import radiation, shielding, psd, surface, sinks, sizes
 from .physics.sublimation import grain_temperature_graybody
+from .runtime.helpers import compute_gate_factor, fast_blowout_correction_factor
 
 logger = logging.getLogger(__name__)
 
@@ -474,69 +475,3 @@ def step_surface_layer(
         t_blow=t_blow,
     )
 
-
-# ===========================================================================
-# Fast Blowout Correction
-# ===========================================================================
-
-def fast_blowout_correction_factor(ratio: float) -> float:
-    """Compute the effective loss fraction for fast blowout.
-    
-    Returns f_fast = 1 - exp(-Δt/t_blow), which represents the
-    integrated hazard of exponential decay over a finite step.
-    
-    Parameters
-    ----------
-    ratio : float
-        Δt / t_blow ratio.
-        
-    Returns
-    -------
-    float
-        Correction factor in [0, 1].
-    """
-    if ratio <= 0.0 or math.isinf(ratio):
-        return 0.0 if ratio <= 0.0 else 1.0
-    
-    # Numerically stable: 1 - exp(-x) = -expm1(-x)
-    value = -math.expm1(-ratio)
-    return max(0.0, min(1.0, value))
-
-
-def compute_gate_factor(
-    t_blow: Optional[float],
-    t_solid: Optional[float],
-) -> float:
-    """Compute blowout gate coefficient.
-    
-    Returns f_gate = t_solid / (t_solid + t_blow), clipped to [0, 1].
-    
-    Parameters
-    ----------
-    t_blow : float, optional
-        Blowout timescale [s].
-    t_solid : float, optional
-        Solid maintenance timescale [s].
-        
-    Returns
-    -------
-    float
-        Gate factor in [0, 1].
-    """
-    if t_blow is None or t_solid is None:
-        return 1.0
-    
-    try:
-        t_blow_val = float(t_blow)
-        t_solid_val = float(t_solid)
-    except (TypeError, ValueError):
-        return 1.0
-    
-    if not (math.isfinite(t_blow_val) and math.isfinite(t_solid_val)):
-        return 1.0
-    
-    if t_blow_val <= 0.0 or t_solid_val <= 0.0:
-        return 1.0
-    
-    factor = t_solid_val / (t_solid_val + t_blow_val)
-    return max(0.0, min(1.0, factor))

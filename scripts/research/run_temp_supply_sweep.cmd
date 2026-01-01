@@ -27,36 +27,7 @@ if defined PYTHON_EXE (
   call :trim_python_exe
 )
 
-if not defined PYTHON_EXE (
-  for %%P in (python3.11 python) do (
-    if not defined PYTHON_EXE (
-      where %%P >nul 2>&1
-      if !errorlevel! lss 1 set "PYTHON_EXE=%%P"
-    )
-  )
-  if not defined PYTHON_EXE (
-    where py >nul 2>&1
-    if !errorlevel! lss 1 (
-      py -3.11 -c "import sys" >nul 2>&1
-      if !errorlevel! lss 1 (
-        set "PYTHON_EXE=py"
-        set "PYTHON_ALLOW_LAUNCHER=1"
-        if not defined PYTHON_ARGS (
-          set "PYTHON_ARGS=-3.11"
-        ) else (
-          set "PYTHON_ARGS_NEEDS_VER=1"
-          if /i "!PYTHON_ARGS:~0,2!"=="-3" set "PYTHON_ARGS_NEEDS_VER=0"
-          if /i "!PYTHON_ARGS:~0,2!"=="-2" set "PYTHON_ARGS_NEEDS_VER=0"
-          if "!PYTHON_ARGS_NEEDS_VER!"=="1" set "PYTHON_ARGS=-3.11 !PYTHON_ARGS!"
-        )
-      )
-    )
-  )
-  if not defined PYTHON_EXE (
-    echo.[error] python3.11/python not found in PATH
-    exit /b 1
-  )
-)
+rem Python resolution is handled after repo root is known.
 
 rem Keep paths stable even if launched from another directory (double-click or direct call)
 pushd "%~dp0\..\.."
@@ -126,206 +97,29 @@ if not exist "%WIN_PROCESS_PY%" (
   exit /b 1
 )
 
-set "PYTHON_ARGS_SET=0"
-if defined PYTHON_ARGS set "PYTHON_ARGS_SET=1"
-set "PYTHON_EXE_RAW=%PYTHON_EXE%"
-set "PYTHON_EXE_RAW=%PYTHON_EXE_RAW:"=%"
-if "!PYTHON_EXE_RAW:~0,1!"=="-" (
-  if "!PYTHON_ARGS_SET!"=="0" (
-    set "PYTHON_ARGS=!PYTHON_EXE_RAW!"
-    set "PYTHON_ARGS_SET=1"
-  )
-  set "PYTHON_EXE_RAW="
-)
-if "!PYTHON_ARGS_SET!"=="0" set "PYTHON_ARGS="
-set "PYTHON_EXE=!PYTHON_EXE_RAW!"
-set "PYTHON_HAS_SPACE=0"
-if not "!PYTHON_EXE_RAW: =!"=="!PYTHON_EXE_RAW!" set "PYTHON_HAS_SPACE=1"
-set "PYTHON_RAW_LOOKS_PATH=0"
-for %%I in ("!PYTHON_EXE_RAW!") do (
-  if not "%%~pI"=="" set "PYTHON_RAW_LOOKS_PATH=1"
-  if not "%%~dI"=="" set "PYTHON_RAW_LOOKS_PATH=1"
-)
-if "!PYTHON_HAS_SPACE!"=="1" if "!PYTHON_RAW_LOOKS_PATH!"=="0" (
-  for /f "tokens=1* delims= " %%A in ("!PYTHON_EXE_RAW!") do (
-    set "PYTHON_EXE=%%A"
-    if "!PYTHON_ARGS_SET!"=="0" (
-      set "PYTHON_ARGS=%%B"
-    ) else (
-      if not "%%B"=="" (
-        if "!PYTHON_ARGS!"=="" (
-          set "PYTHON_ARGS=%%B"
-        ) else (
-          set "PYTHON_ARGS=%%B !PYTHON_ARGS!"
-        )
-      )
-    )
-  )
-)
-if "!PYTHON_HAS_SPACE!"=="1" if "!PYTHON_RAW_LOOKS_PATH!"=="1" if "!PYTHON_ARGS_SET!"=="0" (
-  echo.[warn] PYTHON_EXE looks like a path with spaces; quote it or set PYTHON_ARGS.
-)
-set "PYTHON_EXE_NAME="
-for %%I in ("!PYTHON_EXE!") do set "PYTHON_EXE_NAME=%%~nxI"
-if /i "!PYTHON_EXE!"=="py" set "PYTHON_ALLOW_LAUNCHER=1"
-if /i "!PYTHON_EXE_NAME!"=="py.exe" set "PYTHON_ALLOW_LAUNCHER=1"
-if /i "!PYTHON_EXE!"=="py" if not "!PYTHON_ALLOW_LAUNCHER!"=="1" set "PYTHON_EXE="
-if /i "!PYTHON_EXE_NAME!"=="py.exe" if not "!PYTHON_ALLOW_LAUNCHER!"=="1" set "PYTHON_EXE="
-if not defined PYTHON_EXE (
-  for %%P in (python3.11 python) do (
-    if not defined PYTHON_EXE (
-      where %%P >nul 2>&1
-      if !errorlevel! lss 1 set "PYTHON_EXE=%%P"
-    )
-  )
-  if not defined PYTHON_EXE (
-    echo.[error] PYTHON_EXE is empty after normalization
-    call :popd_safe
-    exit /b 1
-  )
-)
-set "PYTHON_ARGS_FIRST="
-set "PYTHON_ARGS_REST="
-if not "!PYTHON_ARGS!"=="" (
-  for /f "tokens=1* delims= " %%A in ("!PYTHON_ARGS!") do (
-    set "PYTHON_ARGS_FIRST=%%A"
-    set "PYTHON_ARGS_REST=%%B"
-  )
-)
-set "PYTHON_PYVER_ARG=0"
-if not "!PYTHON_ARGS_FIRST!"=="" (
-  if /i "!PYTHON_ARGS_FIRST:~0,2!"=="-3" set "PYTHON_PYVER_ARG=1"
-  if /i "!PYTHON_ARGS_FIRST:~0,2!"=="-2" set "PYTHON_PYVER_ARG=1"
-)
-if "!PYTHON_PYVER_ARG!"=="1" (
-  set "PYTHON_KEEP_PYVER_ARG=0"
-  if "!PYTHON_ALLOW_LAUNCHER!"=="1" (
-    if /i "!PYTHON_EXE!"=="py" set "PYTHON_KEEP_PYVER_ARG=1"
-    if /i "!PYTHON_EXE_NAME!"=="py.exe" set "PYTHON_KEEP_PYVER_ARG=1"
-  )
-  if "!PYTHON_KEEP_PYVER_ARG!"=="0" (
-    if not "!PYTHON_ARGS_FIRST!"=="" echo.[warn] PYTHON_ARGS includes py launcher version flag; dropping it - use python3.11 instead.
-    set "PYTHON_ARGS=!PYTHON_ARGS_REST!"
-  )
-)
-set "PYTHON_LOOKS_PATH=0"
-for %%I in ("!PYTHON_EXE!") do (
-  if not "%%~pI"=="" set "PYTHON_LOOKS_PATH=1"
-  if not "%%~dI"=="" set "PYTHON_LOOKS_PATH=1"
-)
-if "!PYTHON_LOOKS_PATH!"=="1" (
-  if not exist "!PYTHON_EXE!" (
-    set "PYTHON_FALLBACK="
-    for %%P in (python3.11 python) do (
-      if not defined PYTHON_FALLBACK (
-        where %%P >nul 2>&1
-        if !errorlevel! lss 1 set "PYTHON_FALLBACK=%%P"
-      )
-    )
-    if defined PYTHON_FALLBACK (
-      echo.[warn] python path missing; falling back to !PYTHON_FALLBACK!
-      set "PYTHON_EXE=!PYTHON_FALLBACK!"
-      if "!PYTHON_ARGS_SET!"=="0" set "PYTHON_ARGS="
-    ) else (
-      echo.[error] resolved python executable not found: "!PYTHON_EXE!"
-      call :popd_safe
-      exit /b 1
-    )
-  )
-) else (
-  where !PYTHON_EXE! >nul 2>&1
-  if !errorlevel! geq 1 (
-    set "PYTHON_FALLBACK="
-    for %%P in (python3.11 python) do (
-      if not defined PYTHON_FALLBACK (
-        where %%P >nul 2>&1
-        if !errorlevel! lss 1 set "PYTHON_FALLBACK=%%P"
-      )
-    )
-    if defined PYTHON_FALLBACK (
-      echo.[warn] !PYTHON_EXE! not found; falling back to !PYTHON_FALLBACK!
-      set "PYTHON_EXE=!PYTHON_FALLBACK!"
-      if "!PYTHON_ARGS_SET!"=="0" set "PYTHON_ARGS="
-    ) else (
-      echo.[error] !PYTHON_EXE! not found in PATH
-      call :popd_safe
-      exit /b 1
-    )
-  )
-)
-set "PYTHON_ARGS_FIRST="
-set "PYTHON_ARGS_REST="
-if not "!PYTHON_ARGS!"=="" (
-  for /f "tokens=1* delims= " %%A in ("!PYTHON_ARGS!") do (
-    set "PYTHON_ARGS_FIRST=%%A"
-    set "PYTHON_ARGS_REST=%%B"
-  )
-)
-set "PYTHON_PYVER_ARG=0"
-if not "!PYTHON_ARGS_FIRST!"=="" (
-  if /i "!PYTHON_ARGS_FIRST:~0,2!"=="-3" set "PYTHON_PYVER_ARG=1"
-  if /i "!PYTHON_ARGS_FIRST:~0,2!"=="-2" set "PYTHON_PYVER_ARG=1"
-)
-if "!PYTHON_PYVER_ARG!"=="1" (
-  set "PYTHON_KEEP_PYVER_ARG=0"
-  if "!PYTHON_ALLOW_LAUNCHER!"=="1" (
-    if /i "!PYTHON_EXE!"=="py" set "PYTHON_KEEP_PYVER_ARG=1"
-    if /i "!PYTHON_EXE_NAME!"=="py.exe" set "PYTHON_KEEP_PYVER_ARG=1"
-  )
-  if "!PYTHON_KEEP_PYVER_ARG!"=="0" (
-    if not "!PYTHON_ARGS_FIRST!"=="" echo.[warn] PYTHON_ARGS includes py launcher version flag; dropping it - use python3.11 instead.
-    set "PYTHON_ARGS=!PYTHON_ARGS_REST!"
-  )
-)
-set "PYTHON_EXE_QUOTED=!PYTHON_EXE!"
-if "!PYTHON_LOOKS_PATH!"=="1" set "PYTHON_EXE_QUOTED="!PYTHON_EXE!""
-if not "!PYTHON_EXE: =!"=="!PYTHON_EXE!" set "PYTHON_EXE_QUOTED="!PYTHON_EXE!""
-set "PYTHON_CMD=!PYTHON_EXE_QUOTED!"
-if not "!PYTHON_ARGS!"=="" set "PYTHON_CMD=!PYTHON_EXE_QUOTED! !PYTHON_ARGS!"
-set "PYTHON_CMD_SANITY=1"
-if not defined PYTHON_EXE set "PYTHON_CMD_SANITY=0"
-if "!PYTHON_EXE:~0,1!"=="-" set "PYTHON_CMD_SANITY=0"
-if "!PYTHON_CMD:~0,1!"=="-" set "PYTHON_CMD_SANITY=0"
-if "!PYTHON_CMD_SANITY!"=="0" (
-  echo.[warn] python command invalid; resetting to python in PATH
-  set "PYTHON_EXE="
-  set "PYTHON_ARGS="
-  for %%P in (python3.11 python) do (
-    if not defined PYTHON_EXE (
-      where %%P >nul 2>&1
-      if !errorlevel! lss 1 set "PYTHON_EXE=%%P"
-    )
-  )
-  if not defined PYTHON_EXE (
-    echo.[error] python3.11/python not found in PATH
-    call :popd_safe
-    exit /b 1
-  )
-  set "PYTHON_LOOKS_PATH=0"
-  for %%I in ("!PYTHON_EXE!") do (
-    if not "%%~pI"=="" set "PYTHON_LOOKS_PATH=1"
-    if not "%%~dI"=="" set "PYTHON_LOOKS_PATH=1"
-  )
-  set "PYTHON_EXE_QUOTED=!PYTHON_EXE!"
-  if "!PYTHON_LOOKS_PATH!"=="1" set "PYTHON_EXE_QUOTED="!PYTHON_EXE!""
-  if not "!PYTHON_EXE: =!"=="!PYTHON_EXE!" set "PYTHON_EXE_QUOTED="!PYTHON_EXE!""
-  set "PYTHON_CMD=!PYTHON_EXE_QUOTED!"
-)
-set "PYTHON_VERSION_OK=0"
-!PYTHON_CMD! -c "import sys; raise SystemExit(0 if sys.version_info >= (3,11) else 1)" >nul 2>&1
-if !errorlevel! lss 1 set "PYTHON_VERSION_OK=1"
-
-if "!PYTHON_VERSION_OK!"=="0" (
-  rem py launcher fallback disabled.
-)
-
-if "!PYTHON_VERSION_OK!"=="0" (
-  echo.[error] python 3.11+ is required. Install Python 3.11 or set PYTHON_EXE.
-  echo.[error] Example: set PYTHON_EXE=python3.11
+set "PYTHON_EXEC_CMD=%RUNSETS_COMMON_DIR%\python_exec.cmd"
+set "RESOLVE_PYTHON_CMD=%RUNSETS_COMMON_DIR%\resolve_python.cmd"
+set "SANITIZE_TOKEN_CMD=%RUNSETS_COMMON_DIR%\sanitize_token.cmd"
+if not exist "%PYTHON_EXEC_CMD%" (
+  echo.[error] python_exec helper not found: "%PYTHON_EXEC_CMD%"
   call :popd_safe
   exit /b 1
 )
-set "PYTHON_BOOT_CMD=%PYTHON_CMD%"
+if not exist "%RESOLVE_PYTHON_CMD%" (
+  echo.[error] resolve_python helper not found: "%RESOLVE_PYTHON_CMD%"
+  call :popd_safe
+  exit /b 1
+)
+if not exist "%SANITIZE_TOKEN_CMD%" (
+  echo.[error] sanitize_token helper not found: "%SANITIZE_TOKEN_CMD%"
+  call :popd_safe
+  exit /b 1
+)
+call "%RESOLVE_PYTHON_CMD%"
+if !errorlevel! geq 1 (
+  call :popd_safe
+  exit /b 1
+)
 
 rem Optional dry-run for syntax tests (skip all heavy work)
 if /i "%~1"=="--dry-run" (
@@ -355,18 +149,10 @@ if "%QUIET_MODE%"=="1" (
 rem ---------- setup ----------
 if not defined VENV_DIR set "VENV_DIR=.venv"
 if not defined REQ_FILE set "REQ_FILE=requirements.txt"
-if not defined RUN_TS for /f %%A in ('%PYTHON_CMD% scripts\\runsets\\common\\timestamp.py') do set "RUN_TS=%%A"
-if defined RUN_TS (
-  set "RUN_TS_RAW=!RUN_TS!"
-  rem Normalize to a filename-safe token in case a pre-set RUN_TS includes separators.
-  rem Only replace common separators that work reliably with delayed expansion.
-  set "RUN_TS=!RUN_TS::=!"
-  set "RUN_TS=!RUN_TS: =_!"
-  set "RUN_TS=!RUN_TS:/=-!"
-  set "RUN_TS=!RUN_TS:\=-!"
-  rem Note: Cannot replace special chars (! * ? < > | &) in delayed expansion mode; skip them.
-  rem These are rare in timestamps and would cause script errors anyway.
-  if not "!RUN_TS!"=="!RUN_TS_RAW!" echo.[warn] RUN_TS sanitized: "!RUN_TS_RAW!" -^> "!RUN_TS!"
+call "%SANITIZE_TOKEN_CMD%" RUN_TS timestamp
+if !errorlevel! geq 1 (
+  call :popd_safe
+  exit /b 1
 )
 set "TMP_ROOT_BASE=%TEMP%"
 set "TMP_SOURCE=TEMP"
@@ -391,7 +177,7 @@ if not exist "!TMP_ROOT_BASE!" (
 if not defined GIT_SHA for /f %%A in ('git rev-parse --short HEAD 2^>nul') do set "GIT_SHA=%%A"
 if not defined GIT_SHA set "GIT_SHA=nogit"
 if not defined BATCH_SEED (
-  for /f %%A in ('!PYTHON_CMD! "!NEXT_SEED_PY!"') do set "BATCH_SEED=%%A"
+  for /f %%A in ('call "%PYTHON_EXEC_CMD%" "!NEXT_SEED_PY!"') do set "BATCH_SEED=%%A"
 )
 if "%BATCH_SEED%"=="" set "BATCH_SEED=0"
 set "TMP_ROOT=%TMP_ROOT_BASE%"
@@ -432,27 +218,32 @@ rem Output root defaults to out/ unless BATCH_ROOT/OUT_ROOT is set.
 if not defined BATCH_ROOT if defined OUT_ROOT set "BATCH_ROOT=%OUT_ROOT%"
 if not defined BATCH_ROOT set "BATCH_ROOT=out"
 if not defined SWEEP_TAG set "SWEEP_TAG=temp_supply_sweep"
+call "%SANITIZE_TOKEN_CMD%" SWEEP_TAG default "temp_supply_sweep"
+if !errorlevel! geq 1 (
+  call :popd_safe
+  exit /b 1
+)
 %LOG_SETUP% Output root: %BATCH_ROOT%
 
 if not exist "%VENV_DIR%\Scripts\python.exe" (
   %LOG_SETUP% Creating virtual environment in %VENV_DIR%...
-  !PYTHON_BOOT_CMD! -m venv "%VENV_DIR%"
+  call "%PYTHON_EXEC_CMD%" -m venv "%VENV_DIR%"
 )
 
 call "%VENV_DIR%\Scripts\activate.bat"
 set "PYTHON_EXE=%VENV_DIR%\Scripts\python.exe"
-rem Refresh python command after venv activation to avoid stale PATH/quotes.
-set "PYTHON_EXE_QUOTED=!PYTHON_EXE!"
-if not "!PYTHON_EXE: =!"=="!PYTHON_EXE!" set "PYTHON_EXE_QUOTED="!PYTHON_EXE!""
-set "PYTHON_CMD=!PYTHON_EXE_QUOTED!"
-if not "!PYTHON_ARGS!"=="" set "PYTHON_CMD=!PYTHON_EXE_QUOTED! !PYTHON_ARGS!"
+call "%RESOLVE_PYTHON_CMD%"
+if !errorlevel! geq 1 (
+  call :popd_safe
+  exit /b 1
+)
 
 if "%SKIP_PIP%"=="1" (
   %LOG_SETUP% SKIP_PIP=1; skipping dependency install.
 ) else if exist "%REQ_FILE%" (
   %LOG_SETUP% Installing/upgrading dependencies from %REQ_FILE% ...
-  %PYTHON_CMD% -m pip install --upgrade pip
-  %PYTHON_CMD% -m pip install -r "%REQ_FILE%"
+  call "%PYTHON_EXEC_CMD%" -m pip install --upgrade pip
+  call "%PYTHON_EXEC_CMD%" -m pip install -r "%REQ_FILE%"
 ) else (
   echo.[warn] %REQ_FILE% not found; skipping dependency install.
 )
@@ -600,7 +391,7 @@ if /i "!MARSDISK_CELL_JOBS!"=="auto" (
   set "CELL_CPU_FRACTION_USED="
   set "CELL_STREAM_MEM_GB="
   set "CELL_THREAD_LIMIT_AUTO="
-  for /f "usebackq tokens=1-7 delims=|" %%A in (`%PYTHON_CMD% scripts\\runsets\\common\\calc_cell_jobs.py`) do (
+  for /f "usebackq tokens=1-7 delims=|" %%A in (`call "%PYTHON_EXEC_CMD%" scripts\\runsets\\common\\calc_cell_jobs.py`) do (
     set "CELL_MEM_TOTAL_GB=%%A"
     set "CELL_CPU_LOGICAL=%%B"
     set "CELL_MEM_FRACTION_USED=%%C"
@@ -629,7 +420,7 @@ if "%CELL_JOBS_OK%"=="0" (
 if "%MARSDISK_CELL_JOBS%"=="0" set "MARSDISK_CELL_JOBS=1"
 if /i "%PARALLEL_MODE%"=="numba" (
   set "CPU_TARGET_CORES="
-  for /f "usebackq tokens=1,2 delims=|" %%A in (`%PYTHON_CMD% scripts\\runsets\\common\\calc_cpu_target_jobs.py`) do (
+  for /f "usebackq tokens=1,2 delims=|" %%A in (`call "%PYTHON_EXEC_CMD%" scripts\\runsets\\common\\calc_cpu_target_jobs.py`) do (
     set "CPU_TARGET_CORES=%%A"
   )
   if not defined CPU_TARGET_CORES set "CPU_TARGET_CORES=1"
@@ -649,7 +440,7 @@ if /i "!CELL_THREAD_LIMIT!"=="auto" (
   if defined CELL_THREAD_LIMIT_AUTO (
     set "CELL_THREAD_LIMIT=%CELL_THREAD_LIMIT_AUTO%"
   ) else (
-    for /f %%A in ('%PYTHON_CMD% scripts\\runsets\\common\\calc_thread_limit.py') do set "CELL_THREAD_LIMIT=%%A"
+    for /f %%A in ('call "%PYTHON_EXEC_CMD%" scripts\\runsets\\common\\calc_thread_limit.py') do set "CELL_THREAD_LIMIT=%%A"
   )
 )
 if "!CELL_THREAD_LIMIT!"=="1" if "%CELL_THREAD_LIMIT_DEFAULT%"=="1" (
@@ -688,7 +479,7 @@ set "TAU_LIST=1.0 0.5 0.1"
 if defined STUDY_FILE (
   if exist "!STUDY_FILE!" (
     set "STUDY_SET=!TMP_ROOT!\marsdisk_study_!RUN_TS!_!BATCH_SEED!.cmd"
-    %PYTHON_CMD% scripts\\runsets\\common\\read_study_overrides.py --study "!STUDY_FILE!" > "!STUDY_SET!"
+    call "%PYTHON_EXEC_CMD%" scripts\\runsets\\common\\read_study_overrides.py --study "!STUDY_FILE!" > "!STUDY_SET!"
     if not exist "!STUDY_SET!" (
       echo.[error] failed to write study overrides: "!STUDY_SET!"
       echo.[error] temp_root=!TMP_ROOT! study_file=!STUDY_FILE!
@@ -706,15 +497,6 @@ if defined STUDY_FILE (
 call :sanitize_list T_LIST
 call :sanitize_list EPS_LIST
 call :sanitize_list TAU_LIST
-
-if defined SWEEP_TAG (
-  set "SWEEP_TAG_RAW=!SWEEP_TAG!"
-  set "SWEEP_TAG=!SWEEP_TAG::=!"
-  set "SWEEP_TAG=!SWEEP_TAG: =_!"
-  set "SWEEP_TAG=!SWEEP_TAG:/=-!"
-  set "SWEEP_TAG=!SWEEP_TAG:\=-!"
-  if not "!SWEEP_TAG!"=="!SWEEP_TAG_RAW!" echo.[warn] SWEEP_TAG sanitized: "!SWEEP_TAG_RAW!" -> "!SWEEP_TAG!"
-)
 
 set "BATCH_DIR=!BATCH_ROOT!\!SWEEP_TAG!\!RUN_TS!__!GIT_SHA!__seed!BATCH_SEED!"
 if not exist "!BATCH_DIR!" mkdir "!BATCH_DIR!" >nul 2>&1
@@ -737,7 +519,7 @@ if defined COOL_TO_K (
 set "TOTAL_GB="
 set "CPU_LOGICAL="
 if "%AUTO_JOBS%"=="1" (
-  for /f "usebackq tokens=1-3 delims=|" %%A in (`%PYTHON_CMD% scripts\\runsets\\common\\calc_parallel_jobs.py`) do (
+  for /f "usebackq tokens=1-3 delims=|" %%A in (`call "%PYTHON_EXEC_CMD%" scripts\\runsets\\common\\calc_parallel_jobs.py`) do (
     set "TOTAL_GB=%%A"
     set "CPU_LOGICAL=%%B"
     set "PARALLEL_JOBS=%%C"
@@ -772,7 +554,7 @@ if defined CPU_UTIL_TARGET_PERCENT if /i not "%PARALLEL_MODE%"=="numba" (
         if defined NUMBER_OF_PROCESSORS set "CELL_CPU_LOGICAL=%NUMBER_OF_PROCESSORS%"
       )
       if defined CELL_CPU_LOGICAL (
-        for /f "usebackq tokens=1,2 delims=|" %%A in (`%PYTHON_CMD% scripts\\runsets\\common\\calc_cpu_target_jobs.py`) do (
+        for /f "usebackq tokens=1,2 delims=|" %%A in (`call "%PYTHON_EXEC_CMD%" scripts\\runsets\\common\\calc_cpu_target_jobs.py`) do (
           set "CPU_TARGET_CORES=%%A"
           set "PARALLEL_JOBS_TARGET=%%B"
           if not "!PARALLEL_JOBS_TARGET!"=="" for /f "tokens=1 delims=." %%Z in ("!PARALLEL_JOBS_TARGET!") do set "PARALLEL_JOBS_TARGET=%%Z"
@@ -783,7 +565,7 @@ if defined CPU_UTIL_TARGET_PERCENT if /i not "%PARALLEL_MODE%"=="numba" (
         if "!PARALLEL_JOBS_TARGET_OK!"=="1" (
         if "!PARALLEL_JOBS_DEFAULT!"=="1" if "!PARALLEL_JOBS!"=="1" if !PARALLEL_JOBS_TARGET! GTR 1 (
           if /i "!CPU_UTIL_RESPECT_MEM!"=="1" (
-            for /f "usebackq tokens=1-3 delims=|" %%A in (`%PYTHON_CMD% scripts\\runsets\\common\\calc_parallel_jobs.py`) do (
+            for /f "usebackq tokens=1-3 delims=|" %%A in (`call "%PYTHON_EXEC_CMD%" scripts\\runsets\\common\\calc_parallel_jobs.py`) do (
               set "PARALLEL_JOBS_MEM=%%C"
               if not "!PARALLEL_JOBS_MEM!"=="" for /f "tokens=1 delims=." %%Z in ("!PARALLEL_JOBS_MEM!") do set "PARALLEL_JOBS_MEM=%%Z"
             )
@@ -846,7 +628,7 @@ if defined RUN_ONE_MODE (
   )
   %LOG_INFO% run-one mode: T=%RUN_ONE_T% eps=%RUN_ONE_EPS% tau=%RUN_ONE_TAU% seed=%RUN_ONE_SEED%
   call :trace_detail "run-one: dispatch to run_one.py"
-  %PYTHON_CMD% scripts\\runsets\\common\\run_one.py
+  call "%PYTHON_EXEC_CMD%" scripts\\runsets\\common\\run_one.py
   set "RUN_ONE_RC=!errorlevel!"
   if "!RUN_ONE_RC!"=="130" (
     %LOG_INFO% run-one interrupted by user
@@ -871,7 +653,7 @@ if defined EXTRA_OVERRIDES_FILE (
 
 call :trace_detail "base_overrides_file=!BASE_OVERRIDES_FILE!"
 call :trace_detail "base overrides: python build"
-%PYTHON_CMD% scripts\\runsets\\common\\write_base_overrides.py --out "!BASE_OVERRIDES_FILE!"
+call "%PYTHON_EXEC_CMD%" scripts\\runsets\\common\\write_base_overrides.py --out "!BASE_OVERRIDES_FILE!"
 if !errorlevel! geq 1 (
   echo.[error] failed to build base overrides
   call :popd_safe
@@ -886,7 +668,7 @@ call :trace_detail "base overrides: python done"
 
 set "SWEEP_LIST_FILE=!TMP_ROOT!\marsdisk_sweep_list_!RUN_TS!_!BATCH_SEED!.txt"
 call :trace_detail "sweep list file=!SWEEP_LIST_FILE!"
-%PYTHON_CMD% scripts\\runsets\\common\\write_sweep_list.py --out "!SWEEP_LIST_FILE!"
+call "%PYTHON_EXEC_CMD%" scripts\\runsets\\common\\write_sweep_list.py --out "!SWEEP_LIST_FILE!"
 if !errorlevel! geq 1 (
   echo.[error] failed to build sweep list
   call :popd_safe
@@ -943,7 +725,7 @@ for /f "usebackq tokens=1-3 delims= " %%A in ("%SWEEP_LIST_FILE%") do (
   if defined SEED_OVERRIDE (
     set "SEED=%SEED_OVERRIDE%"
   ) else (
-    for /f %%S in ('%PYTHON_CMD% scripts\\runsets\\common\\next_seed.py') do set "SEED=%%S"
+    for /f %%S in ('call "%PYTHON_EXEC_CMD%" scripts\\runsets\\common\\next_seed.py') do set "SEED=%%S"
   )
   set "TITLE=T!T!_eps!EPS_TITLE!_tau!TAU_TITLE!"
   set "OUTDIR_REL=!BATCH_DIR!\!TITLE!"
@@ -985,26 +767,25 @@ for /f "usebackq tokens=1-3 delims= " %%A in ("%SWEEP_LIST_FILE%") do (
 
       rem Override priority: base defaults ^< overrides file ^< per-case overrides.
       if "!EXTRA_OVERRIDES_EXISTS!"=="1" (
-        !PYTHON_CMD! !OVERRIDE_BUILDER! --file "!BASE_OVERRIDES_FILE!" --file "!EXTRA_OVERRIDES_FILE!" --file "!CASE_OVERRIDES_FILE!" > "!MERGED_OVERRIDES_FILE!"
+        call "%PYTHON_EXEC_CMD%" !OVERRIDE_BUILDER! --file "!BASE_OVERRIDES_FILE!" --file "!EXTRA_OVERRIDES_FILE!" --file "!CASE_OVERRIDES_FILE!" > "!MERGED_OVERRIDES_FILE!"
       ) else (
-        !PYTHON_CMD! !OVERRIDE_BUILDER! --file "!BASE_OVERRIDES_FILE!" --file "!CASE_OVERRIDES_FILE!" > "!MERGED_OVERRIDES_FILE!"
+        call "%PYTHON_EXEC_CMD%" !OVERRIDE_BUILDER! --file "!BASE_OVERRIDES_FILE!" --file "!CASE_OVERRIDES_FILE!" > "!MERGED_OVERRIDES_FILE!"
       )
-
-      rem Assemble the run command on a single line (avoid carets in optional blocks).
-      rem Use overrides file to keep cmd line length manageable.
-      set RUN_CMD=!PYTHON_CMD! -m marsdisk.run --config "!BASE_CONFIG!" --quiet --overrides-file "!MERGED_OVERRIDES_FILE!"
-      if "!ENABLE_PROGRESS!"=="1" set RUN_CMD=!RUN_CMD! --progress
 
       echo.[DEBUG] About to run simulation
       echo.[DEBUG] PYTHON_CMD=!PYTHON_CMD!
-      echo.[DEBUG] RUN_CMD=!RUN_CMD!
+      echo.[DEBUG] PYTHON_EXEC_CMD=!PYTHON_EXEC_CMD!
+      echo.[DEBUG] ENABLE_PROGRESS=!ENABLE_PROGRESS!
       echo.[DEBUG] BASE_CONFIG=!BASE_CONFIG!
       echo.[DEBUG] MERGED_OVERRIDES_FILE=!MERGED_OVERRIDES_FILE!
       echo.[DEBUG] Checking if files exist:
       if exist "!BASE_CONFIG!" (echo.[DEBUG] BASE_CONFIG exists) else (echo.[DEBUG] BASE_CONFIG NOT FOUND)
       if exist "!MERGED_OVERRIDES_FILE!" (echo.[DEBUG] MERGED_OVERRIDES_FILE exists) else (echo.[DEBUG] MERGED_OVERRIDES_FILE NOT FOUND)
-
-      !RUN_CMD!
+      if "!ENABLE_PROGRESS!"=="1" (
+        call "%PYTHON_EXEC_CMD%" -m marsdisk.run --config "!BASE_CONFIG!" --quiet --overrides-file "!MERGED_OVERRIDES_FILE!" --progress
+      ) else (
+        call "%PYTHON_EXEC_CMD%" -m marsdisk.run --config "!BASE_CONFIG!" --quiet --overrides-file "!MERGED_OVERRIDES_FILE!"
+      )
 
       if !errorlevel! geq 1 (
         echo.[warn] run command exited with status !errorlevel!; attempting plots anyway
@@ -1015,7 +796,7 @@ for /f "usebackq tokens=1-3 delims= " %%A in ("%SWEEP_LIST_FILE%") do (
       ) else (
         set "RUN_DIR=!OUTDIR!"
         call :trace_detail "quicklook: start"
-        %PYTHON_CMD% scripts\\runsets\\common\\hooks\\plot_sweep_run.py --run-dir "!RUN_DIR!"
+        call "%PYTHON_EXEC_CMD%" scripts\\runsets\\common\\hooks\\plot_sweep_run.py --run-dir "!RUN_DIR!"
         if !errorlevel! geq 1 (
           echo.[warn] quicklook failed [rc=!errorlevel!]
         )
@@ -1063,19 +844,19 @@ exit /b 0
 :run_hook
 set "HOOK=%~1"
 if /i "%HOOK%"=="preflight" (
-  %PYTHON_CMD% scripts\\runsets\\common\\hooks\\preflight_streaming.py --run-dir "%RUN_DIR%"
+  call "%PYTHON_EXEC_CMD%" scripts\\runsets\\common\\hooks\\preflight_streaming.py --run-dir "%RUN_DIR%"
   exit /b !errorlevel!
 )
 if /i "%HOOK%"=="plot" (
-  %PYTHON_CMD% scripts\\runsets\\common\\hooks\\plot_sweep_run.py --run-dir "%RUN_DIR%"
+  call "%PYTHON_EXEC_CMD%" scripts\\runsets\\common\\hooks\\plot_sweep_run.py --run-dir "%RUN_DIR%"
   exit /b !errorlevel!
 )
 if /i "%HOOK%"=="eval" (
-  %PYTHON_CMD% scripts\\runsets\\common\\hooks\\evaluate_tau_supply.py --run-dir "%RUN_DIR%"
+  call "%PYTHON_EXEC_CMD%" scripts\\runsets\\common\\hooks\\evaluate_tau_supply.py --run-dir "%RUN_DIR%"
   exit /b !errorlevel!
 )
 if /i "%HOOK%"=="archive" (
-  %PYTHON_CMD% scripts\\runsets\\common\\hooks\\archive_run.py --run-dir "%RUN_DIR%"
+  call "%PYTHON_EXEC_CMD%" scripts\\runsets\\common\\hooks\\archive_run.py --run-dir "%RUN_DIR%"
   exit /b !errorlevel!
 )
 echo.[warn] unknown hook: %HOOK%
@@ -1115,7 +896,7 @@ setlocal DisableDelayedExpansion
 if "%DEBUG%"=="1" echo.[DEBUG] launch_job (DisableDelayedExpansion): PYTHON_CMD=%PYTHON_CMD%
 if "%DEBUG%"=="1" echo.[DEBUG] launch_job (DisableDelayedExpansion): NEXT_SEED_PY=%NEXT_SEED_PY%
 rem Use call to handle paths with spaces/unicode properly
-for /f %%S in ('call %PYTHON_CMD% "%NEXT_SEED_PY%" 2^>nul') do set "JOB_SEED_TMP=%%S"
+for /f %%S in ('call "%PYTHON_EXEC_CMD%" "%NEXT_SEED_PY%" 2^>nul') do set "JOB_SEED_TMP=%%S"
 if not defined JOB_SEED_TMP (
   for /f %%S in ('python "%NEXT_SEED_PY%" 2^>nul') do set "JOB_SEED_TMP=%%S"
 )
@@ -1140,8 +921,7 @@ if "%DEBUG%"=="1" echo.[DEBUG] launch_job: MARKER_A before write cmd file
 > "!JOB_CMD_FILE!" echo !JOB_CMD!
 if "%DEBUG%"=="1" echo.[DEBUG] launch_job: MARKER_B after write cmd file
 if "%DEBUG%"=="1" echo.[DEBUG] launch_job: MARKER_C before python call
-rem PYTHON_CMD may already include quotes; avoid double-quoting
-!PYTHON_CMD! "!WIN_PROCESS_PY!" launch --cmd-file "!JOB_CMD_FILE!" --window-style "!PARALLEL_WINDOW_STYLE!" --cwd "!JOB_CWD_USE!" > "!TMP_ROOT!\marsdisk_pid_!JOB_T!_!JOB_EPS!_!JOB_TAU!.tmp" 2>&1
+call "%PYTHON_EXEC_CMD%" "!WIN_PROCESS_PY!" launch --cmd-file "!JOB_CMD_FILE!" --window-style "!PARALLEL_WINDOW_STYLE!" --cwd "!JOB_CWD_USE!" > "!TMP_ROOT!\marsdisk_pid_!JOB_T!_!JOB_EPS!_!JOB_TAU!.tmp" 2>&1
 if "%DEBUG%"=="1" echo.[DEBUG] launch_job: MARKER_D after python call, errorlevel=%errorlevel%
 del "!JOB_CMD_FILE!" >nul 2>&1
 if "%DEBUG%"=="1" echo.[DEBUG] launch_job: MARKER_E after delete cmd file
@@ -1184,7 +964,7 @@ set "JOB_PIDS_TMP="
 set "JOB_COUNT_TMP="
 setlocal DisableDelayedExpansion
 rem Use call to handle paths with spaces/unicode properly
-for /f "usebackq tokens=1,2 delims=|" %%A in (`call %PYTHON_CMD% "%WIN_PROCESS_PY%" alive`) do (
+for /f "usebackq tokens=1,2 delims=|" %%A in (`call "%PYTHON_EXEC_CMD%" "%WIN_PROCESS_PY%" alive`) do (
   set "JOB_PIDS_TMP=%%A"
   set "JOB_COUNT_TMP=%%B"
 )
