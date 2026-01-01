@@ -9,10 +9,10 @@
 **対象読者**: プロジェクト外部の研究者・開発者で、本シミュレーションの衝突破砕モデルを理解したい方
 
 **関連ドキュメント**:
-- [analysis/equations.md](../../analysis/equations.md) — 物理式の正式定義（式番号 E.xxx）
-- [analysis/introduction.md](../../analysis/introduction.md) — 科学的背景と研究目的
-- [analysis/glossary.md](../../analysis/glossary.md) — 用語集・記号規約
-- [analysis/bibliography.md](../../analysis/bibliography.md) — 参考文献一覧
+- [analysis/equations.md](analysis/equations.md) — 物理式の正式定義（式番号 E.xxx）
+- [analysis/introduction.md](analysis/introduction.md) — 科学的背景と研究目的
+- [analysis/glossary.md](analysis/glossary.md) — 用語集・記号規約
+- [analysis/bibliography.md](analysis/bibliography.md) — 参考文献一覧
 
 ---
 
@@ -198,11 +198,11 @@ flowchart TD
 
 ## 🔗 関連ドキュメント
 
-- **物理式の正式定義**: [analysis/equations.md](../../analysis/equations.md)
+- **物理式の正式定義**: [analysis/equations.md](analysis/equations.md)
   - 衝突カーネル: (E.006), (E.010)
   - $Q_D^*$: 式は `qstar.py` 内で BA99+LS12 に基づき実装
   - 質量収支検査: (C4) / (E.011)
-- **用語集**: [analysis/glossary.md](../../analysis/glossary.md)
-- **参考文献詳細**: [analysis/bibliography.md](../../analysis/bibliography.md)
-- **計算フロー図**: [analysis/physics_flow.md](../../analysis/physics_flow.md)
-- **シンク物理のコールグラフ**: [analysis/sinks_callgraph.md](../../analysis/sinks_callgraph.md)
+- **用語集**: [analysis/glossary.md](analysis/glossary.md)
+- **参考文献詳細**: [analysis/bibliography.md](analysis/bibliography.md)
+- **計算フロー図**: [analysis/physics_flow.md](analysis/physics_flow.md)
+- **シンク物理のコールグラフ**: [analysis/sinks_callgraph.md](analysis/sinks_callgraph.md)

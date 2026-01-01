@@ -2,7 +2,7 @@
 
 **作成日**: 2025-12-26  
 **ステータス**: 調査・整理  
-**関連ファイル**: [`configs/base.yml`](file://configs/base.yml), [`analysis/AI_USAGE.md`](file://analysis/AI_USAGE.md)
+**関連ファイル**: [`configs/base.yml`](configs/base.yml), [`analysis/AI_USAGE.md`](analysis/AI_USAGE.md)
 
 ---
 
@@ -152,10 +152,10 @@ python -m marsdisk.run --config configs/base.yml \
 
 ### 参考ドキュメント
 
-- 質量収支の検証手順 → [`analysis/AI_USAGE.md`](file://analysis/AI_USAGE.md)
-- 設定スキーマの詳細 → [`marsdisk/schema.py`](file://marsdisk/schema.py)
-- 放射圧計算の実装 → [`marsdisk/physics/radiation.py`](file://marsdisk/physics/radiation.py)
-- 昇華計算の実装 → [`marsdisk/physics/sublimation.py`](file://marsdisk/physics/sublimation.py)
+- 質量収支の検証手順 → [`analysis/AI_USAGE.md`](analysis/AI_USAGE.md)
+- 設定スキーマの詳細 → [`marsdisk/schema.py`](marsdisk/schema.py)
+- 放射圧計算の実装 → [`marsdisk/physics/radiation.py`](marsdisk/physics/radiation.py)
+- 昇華計算の実装 → [`marsdisk/physics/sublimation.py`](marsdisk/physics/sublimation.py)
 
 ---
 

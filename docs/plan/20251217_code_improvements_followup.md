@@ -1,7 +1,7 @@
 # コード整備の追加改善項目
 
 > **作成日**: 2025-12-17  
-> **関連**: [20251216_code_reorganization_for_collision_physics.md](./20251216_code_reorganization_for_collision_physics.md)（Phase 1–3 完了済み）
+> **関連**: [20251216_code_reorganization_for_collision_physics.md](.docs/plan/20251216_code_reorganization_for_collision_physics.md)（Phase 1–3 完了済み）
 
 ---
 

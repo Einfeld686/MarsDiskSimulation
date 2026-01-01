@@ -12,7 +12,7 @@
 
 ### 1. 実行結果の異常
 
-**対象**: `/Volumes/KIOXIA/marsdisk_out/temp_supply_sweep/20251212-105035__58574b78a__seed396228398/T6000_mu1p0_phi20/series/run.parquet`
+**対象**: `out/<run_id>/series/run.parquet`
 
 | カラム名 | 観測値 | 期待値（正常時） |
 |----------|--------|------------------|
@@ -27,7 +27,7 @@
 
 - `out/<run_id>/run_config.json` に **`supply` ブロックが存在しない**。
 - `process_overview` にも supply/production を示すフィールドがない。
-- 実行スクリプト（[run_temp_supply_sweep.sh](file://scripts/research/run_temp_supply_sweep.sh)）では以下を渡している:
+- 実行スクリプト（[run_temp_supply_sweep.sh](scripts/research/run_temp_supply_sweep.sh)）では以下を渡している:
   ```bash
   --override "supply.mode=${SUPPLY_MODE}"           # default: const
   --override "supply.const.prod_area_rate_kg_m2_s=${SUPPLY_RATE}"  # default: 1.0e-10
@@ -56,10 +56,10 @@
 - `SupplyMixing._alias_mu` は「epsilon_mix が無ければ mu を入れる」実装のため、YAML に epsilon_mix=0 があると mu の override が効かず raw×0=0 になる（推測B）
 
 **コード調査ポイント**:
-1. [`marsdisk/run.py:1525`](file://marsdisk/run_zero_d.py#L1525): `supply_spec = cfg.supply` の取得
-2. [`marsdisk/run.py:2037`](file://marsdisk/run_zero_d.py#L2037): `supply.get_prod_area_rate(time_sub, r, supply_spec)` の呼び出し
-3. [`marsdisk/run.py:2991-3007`](file://marsdisk/run_zero_d.py#L2991-L3007): `process_overview` の構築（supply 有効/無効が含まれていない）
-4. [`marsdisk/run.py:3281-3415`](file://marsdisk/run_zero_d.py#L3281-L3415): `run_config` の構築（supply 情報が記録されていない可能性）
+1. [`marsdisk/run.py:1525`](marsdisk/run_zero_d.py#L1525): `supply_spec = cfg.supply` の取得
+2. [`marsdisk/run.py:2037`](marsdisk/run_zero_d.py#L2037): `supply.get_prod_area_rate(time_sub, r, supply_spec)` の呼び出し
+3. [`marsdisk/run.py:2991-3007`](marsdisk/run_zero_d.py#L2991-L3007): `process_overview` の構築（supply 有効/無効が含まれていない）
+4. [`marsdisk/run.py:3281-3415`](marsdisk/run_zero_d.py#L3281-L3415): `run_config` の構築（supply 情報が記録されていない可能性）
 
 ### 仮説2: τ 上限の設定ミス
 
@@ -82,15 +82,15 @@
 **目的**: 供給が正しく `run.py` 内で処理され、`out/<run_id>/run_config.json` に記録されることを確認・修正する。
 
 1. **Config ロードの確認**
-   - [`marsdisk/schema.py:155-198`](file://marsdisk/schema.py#L155-L198) の `Supply` クラス定義を確認
-    - CLI オーバーライド（`--override supply.mode=const` 等）が正しくパースされているか `_apply_overrides_dict`（[run.py:241-276](file://marsdisk/run_zero_d.py#L241-L276)）を確認
+   - [`marsdisk/schema.py:155-198`](marsdisk/schema.py#L155-L198) の `Supply` クラス定義を確認
+    - CLI オーバーライド（`--override supply.mode=const` 等）が正しくパースされているか `_apply_overrides_dict`（[run.py:241-276](marsdisk/run_zero_d.py#L241-L276)）を確認
    - YAML 側に `supply.enabled: false` や `supply.mixing.epsilon_mix: 0` が残っていないか確認し、override では `epsilon_mix` を直接指定する
 
 2. **`process_overview` への追加**
-    - [`run.py:2991-3007`](file://marsdisk/run_zero_d.py#L2991-L3007) に supply 有効/無効を明示するフィールド（`supply_enabled`, `supply_mode` など）を追加
+    - [`run.py:2991-3007`](marsdisk/run_zero_d.py#L2991-L3007) に supply 有効/無効を明示するフィールド（`supply_enabled`, `supply_mode` など）を追加
 
 3. **`run_config` への記録**
-    - [`run.py:3281`](file://marsdisk/run_zero_d.py#L3281) 以降の `run_config` 構築に supply 設定を追加
+    - [`run.py:3281`](marsdisk/run_zero_d.py#L3281) 以降の `run_config` 構築に supply 設定を追加
 
 4. **警告ログの追加**
    - `supply_spec` が None または const で rate=0 の場合に warning を出す
@@ -121,7 +121,7 @@
 
 1. **1ケース再実行**
    ```bash
-   cd /Users/daichi/marsshearingsheet
+   cd <repo_root>
    source .venv/bin/activate
     python -m marsdisk.run \
       --config configs/sweep_temp_supply/temp_supply_T4000_eps1.yml \
@@ -130,7 +130,7 @@
       --override "supply.mode=const" \
        --override "supply.const.prod_area_rate_kg_m2_s=1.0e-10" \
      --override "supply.mixing.epsilon_mix=1.0" \
-      --override "io.outdir=out/debug_supply_test"
+      --override "io.outdir=out/<run_id>"
     ```
 
 2. **検証ポイント**
@@ -166,15 +166,15 @@
 - `init_tau1.scale_to_tau1`: 初期 Σ を Στ=1 以下にクランプするオプションを追加し、初期クリップ発生と適用値を run_config に記録。
 
 ### 短時間テスト結果
-- τ上限を緩めた 1e-6 年 run（`shielding.fixed_tau1_sigma=1000`）では `prod_subblow_area_rate=1e-10` が全ステップで正に立つことを確認（出力 `/tmp/codex_supply_check/series/run.parquet`）。
+- τ上限を緩めた 1e-6 年 run（`shielding.fixed_tau1_sigma=1000`）では `prod_subblow_area_rate=1e-10` が全ステップで正に立つことを確認（出力 `out/<run_id>/series/run.parquet`）。
 - デフォルトの `Sigma_tau1=1e-2` では headroom=0 となり供給が 0 にクリップされることを確認。τ≈1 を狙うには上限を κ に合わせて桁上げする必要がある。
 - `fixed_tau1_sigma=auto` では κ_eff(t0)≈2.16e-3 → Στ=1≈462 が自動設定されるが、初期 Σ_surf（外部初期条件）がそれを上回る場合、即時クリップされ `prod_subblow_area_rate` は 0 のままになる（auto でも初期質量の調整が必要）。
 - 回帰テスト `tests/integration/test_supply_positive.py` を追加し、十分大きな Στ=1（1000）環境で供給>0 を保証することを確認済み。
 
 ### なお残る課題
-- 回帰テストは最小の供給>0 ケースのみ追加済み（tests/integration/test_supply_positive.py）。auto/auto_max や初期クリップ警告まで含む拡張テストは未実装。
+- 回帰テストは最小の供給>0 ケースのみ追加済み（`tests/integration/test_supply_positive.py`）。auto/auto_max や初期クリップ警告まで含む拡張テストは未実装。
 - 適正な `Sigma_tau1`（例: κ_eff~1e-3 なら ≳1e3 kg/m²）をどう選ぶか要決定。固定値か κ から 1/κ を毎回計算するモードかを検討する。
-- run_config への供給記録は入ったが、解析側での確認手順（analysis/run-recipes 等）への追記は未実施。
+- run_config への供給記録は入ったが、解析側での確認手順（analysis/run-recipes.md 等）への追記は未実施。
 
 ### 論点と方針（追記）
 - **Sigma_tau1 の決め方**: まずは「run 開始時に κ_eff(t0) を測り、`Sigma_tau1=1/κ_eff(t0)` を固定値として使う」案を優先。後段で必要なら κ を平滑化しつつ追従するモードを検討する（τ≈1 を維持する目的と数値安定性のバランス）。
@@ -225,7 +225,7 @@
 
 - **成功判定の定義とドキュメント反映**  
   - 成功基準: 代表半径での `tau_los_mars` 時間中央値が 0.5–2、かつ `prod_subblow_area_rate` が設定値に対して >90% を維持する期間が連続して存在。  
-  - analysis/run-recipes へ上記基準を追記し、チェック手順を明文化。
+  - analysis/run-recipes.md へ上記基準を追記し、チェック手順を明文化。
 
 - **回帰テストの追加**  
   - `tests/integration/test_supply_positive.py` を拡張し、(i) auto_max で供給>0、(ii) 初期クリップ警告が立たない、を検査するケースを追加。  
@@ -233,7 +233,7 @@
 
 ## 実装手順サマリ（優先順）
 1. 初期Σを Στ=1 以下に収める機構（init_tau1 スケール、初期クリップ警告、run_config/summary フラグ）を導入し、auto で headroom>0 を確保。  
-2. τ≈1 成功判定の指標を analysis/run-recipes に追記し、確認手順を固定。  
+2. τ≈1 成功判定の指標を analysis/run-recipes.md に追記し、確認手順を固定。  
 3. auto_max（デバッグ目的）と warmup モードを追加し、必要時のみ利用できるようスクリプト切替を用意。  
 4. テスト: test_supply_positive を拡張し、auto_max と初期警告なし条件を検証するケースを追加。  
 5. スイープスクリプト: auto/auto_max 切替と初期質量スケールのオプションを追加。  
@@ -244,14 +244,14 @@
 ## 参照
 
 ### コードファイル
-- [`marsdisk/schema.py`](file://marsdisk/schema.py): Supply クラス定義（L155-198）
-- [`marsdisk/run.py`](file://marsdisk/run.py): オーケストレータ（supply_spec L1525, process_overview L2991-3007）
-- [`marsdisk/physics/supply.py`](file://marsdisk/physics/supply.py): `get_prod_area_rate` 関数（L93-98）
-- [`scripts/research/run_temp_supply_sweep.sh`](file://scripts/research/run_temp_supply_sweep.sh): パラメータスイープ実行スクリプト
+- [`marsdisk/schema.py`](marsdisk/schema.py): Supply クラス定義（L155-198）
+- [`marsdisk/run.py`](marsdisk/run.py): オーケストレータ（supply_spec L1525, process_overview L2991-3007）
+- [`marsdisk/physics/supply.py`](marsdisk/physics/supply.py): `get_prod_area_rate` 関数（L93-98）
+- [`scripts/research/run_temp_supply_sweep.sh`](scripts/research/run_temp_supply_sweep.sh): パラメータスイープ実行スクリプト
 
 ### 関連ドキュメント
-- [`docs/plan/20251211_optical_depth_unity_init.md`](file://docs/plan/20251211_optical_depth_unity_init.md): 既存の τ≈1 初期化メモ
-- [`docs/plan/20251211_temp_supply_runflow.md`](file://docs/plan/20251211_temp_supply_runflow.md): 直近の temp_supply 実行フロー整理
+- [`docs/plan/20251211_optical_depth_unity_init.md`](docs/plan/20251211_optical_depth_unity_init.md): 既存の τ≈1 初期化メモ
+- [`docs/plan/20251211_temp_supply_runflow.md`](docs/plan/20251211_temp_supply_runflow.md): 直近の temp_supply 実行フロー整理
  - コメント反映の補足: supply.enabled/epsilon_mix の明示と Στ=1 の桁合わせを優先すること
 
 ### Supply スキーマ構造（参考）

@@ -32,7 +32,7 @@
 | 場所 | ファイル数 | 内容 | 問題 |
 |------|-----------|------|------|
 | `tests/` | 72 | メインテスト | Phase 番号命名の履歴的混乱 |
-| `marsdisk/tests/` | 10 | パッケージ内テスト | tests/ との責務重複不明確 |
+| `tests/` | 10 | パッケージ内テスト | tests/ との責務重複不明確 |
 | `tmp_debug/` | 73 | 一時デバッグ | 未整理のまま残存 |
 | `tmp_debug2/` | 6 | 同上 | 同上 |
 | `agent_test/` | 626 | AI エージェント用 | 研究テストと混在 |
@@ -271,15 +271,15 @@ tests/
 
 ---
 
-### 2.5 【低優先度】`marsdisk/tests/` の統合判断
+### 2.5 【低優先度】`tests/` の統合判断
 
-`marsdisk/tests/` (10 ファイル) と `tests/` (72 ファイル) の役割重複を解消：
+`tests/` (10 ファイル) と `tests/` (72 ファイル) の役割重複を解消：
 
 | 選択肢 | 内容 | 推奨度 |
 |--------|------|--------|
-| A | `marsdisk/tests/` を `tests/unit/` へ統合 | ✓ 推奨 |
+| A | `tests/` を `tests/unit/` へ統合 | ✓ 推奨 |
 | B | 両方を維持し責務を明文化 | △ 管理コスト |
-| C | `marsdisk/tests/` を pytest 除外して非公式化 | × 混乱増 |
+| C | `tests/` を pytest 除外して非公式化 | × 混乱増 |
 
 ---
 
@@ -289,7 +289,7 @@ tests/
 
 ```bash
 # 1. 全テスト通過を確認
-make test  # または pytest tests/ marsdisk/tests/
+make test  # または pytest tests/ tests/
 
 # 2. DocSyncAgent + ドキュメントテスト（AGENTS.md 必須手順）
 make analysis-update  # DocSync → doc-tests の順で実行
@@ -381,7 +381,7 @@ git cherry-pick <good-commit-hash>
 ### 3.5 CI 統合（推奨）
 
 ```yaml
-# .github/workflows/refactor-guard.yml
+# ..github/workflows/refactor-guard.yml
 - name: Baseline comparison
   run: |
     pytest tests/ -q
@@ -401,7 +401,7 @@ git cherry-pick <good-commit-hash>
 |-------------|-------------|
 | `run.py` の 25+ 引数を編集 | `CollisionStepContext` に 1 フィールド追加 |
 | `collisions_smol.py` 全体を読解 | `dynamics.py` に新関数追加のみ |
-| Phase テストの名前から意図を推測 | `tests/unit/test_collision_velocity.py` で明確 |
+| Phase テストの名前から意図を推測 | `tests/unit/test_collisions_ei_feedback.py` で明確 |
 | `tmp_debug/` のどれが最新か不明 | 削除済みでクリーン |
 
 ---
@@ -424,7 +424,7 @@ git cherry-pick <good-commit-hash>
 |--------|------|------|
 | `CollisionStepContext` 導入 | 2 時間 | 5グループに分類したdataclass実装 + 呼び出し元更新 |
 | 基準テスト出力の保存 | 15 分 | baseline_summary.json 作成 |
-| `marsdisk/tests/` 統合 | 45 分 | `tests/unit/` へ移動（選択肢 A 確定） |
+| `tests/` 統合 | 45 分 | `tests/unit/` へ移動（選択肢 A 確定） |
 
 **完了基準**: 
 - `step_collisions_smol_0d` が `CollisionStepContext` を受け取るように変更
@@ -482,8 +482,8 @@ gantt
 ### Phase 2 完了条件
 - [x] `CollisionStepContext` が導入され、`step_collisions_smol_0d` の呼び出しが簡素化
 - [x] `tests/fixtures/baseline_summary.json` が作成されている
-- [x] `marsdisk/tests/` が `tests/unit/` に統合されている
-- [x] 全テストが通過（`pytest tests/ marsdisk/tests/` 成功）
+- [x] `tests/` が `tests/unit/` に統合されている
+- [x] 全テストが通過（`pytest tests/ tests/` 成功）
 
 ### Phase 3 完了条件
 - [x] `ProgressReporter`, `StreamingState`, `ZeroDHistory` が抽出されている
@@ -565,4 +565,4 @@ gantt
 
 ## 関連ドキュメント
 
-- [ストリーミング既定 ON への移行](./20251217_streaming_default_on_migration.md): テスト時の明示 OFF 設定を含む
+- [ストリーミング既定 ON への移行](.docs/plan/20251217_streaming_default_on_migration.md): テスト時の明示 OFF 設定を含む

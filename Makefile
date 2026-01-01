@@ -96,3 +96,6 @@ analysis-unknown-refs:
 # --strict で CI fail-fast にする場合
 analysis-unknown-refs-strict:
 	python tools/check_unknown_refs.py --strict
+
+plan-lint:
+	python tools/plan_lint.py

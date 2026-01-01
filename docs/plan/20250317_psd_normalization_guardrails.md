@@ -2,7 +2,7 @@
 
 > **文書種別**: 検討メモ（Diátaxis: Explanation）
 
-本文書は、粒径分布（PSD）の数値オーバーフロー問題とその対策を検討するメモです。**火星月形成円盤シミュレーション**（[analysis/overview.md](file://analysis/overview.md)）のコンテキストで、PSD 状態変数の不安定化がシミュレーション全体に波及する問題の原因と対策を整理します。
+本文書は、粒径分布（PSD）の数値オーバーフロー問題とその対策を検討するメモです。**火星月形成円盤シミュレーション**（[analysis/overview.md](analysis/overview.md)）のコンテキストで、PSD 状態変数の不安定化がシミュレーション全体に波及する問題の原因と対策を整理します。
 
 ---
 
@@ -10,26 +10,26 @@
 
 | 用語 | 説明 | 関連コード・式 |
 |------|------|----------------|
-| **PSD** (Particle Size Distribution) | 粒径分布。各サイズビンの粒子個数 `number` を保持する状態辞書 `psd_state` で表現 | [psd.py#update_psd_state](file://marsdisk/physics/psd.py#L43-L131) |
-| **κ (kappa)** | 質量不透明度 [m² kg⁻¹]。PSD から面積/質量比として計算 | [psd.py#compute_kappa](file://marsdisk/physics/psd.py#L134-L159), (E.015) |
-| **κ_eff** | 有効不透明度。自遮蔽係数 Φ を掛けた補正後の κ | [shielding.py#effective_kappa](file://marsdisk/physics/shielding.py#L81-L120), (E.015) |
-| **Σ_τ=1** | 光学深度 τ=1 となる表層面密度 [kg m⁻²]。κ_eff の逆数 | [shielding.py#sigma_tau1](file://marsdisk/physics/shielding.py#L123-L130), (E.016) |
-| **τ** | 光学深度（無次元）。遮蔽判断やクリップに使用 | (E.017), [glossary.md](file://analysis/glossary.md) |
-| **wavy PSD** | 衝突カスケードで生じる波状の粒径分布パターン | [equations.md#E.010](file://analysis/equations.md) |
+| **PSD** (Particle Size Distribution) | 粒径分布。各サイズビンの粒子個数 `number` を保持する状態辞書 `psd_state` で表現 | [psd.py#update_psd_state](marsdisk/physics/psd.py#L43-L131) |
+| **κ (kappa)** | 質量不透明度 [m² kg⁻¹]。PSD から面積/質量比として計算 | [psd.py#compute_kappa](marsdisk/physics/psd.py#L134-L159), (E.015) |
+| **κ_eff** | 有効不透明度。自遮蔽係数 Φ を掛けた補正後の κ | [shielding.py#effective_kappa](marsdisk/physics/shielding.py#L81-L120), (E.015) |
+| **Σ_τ=1** | 光学深度 τ=1 となる表層面密度 [kg m⁻²]。κ_eff の逆数 | [shielding.py#sigma_tau1](marsdisk/physics/shielding.py#L123-L130), (E.016) |
+| **τ** | 光学深度（無次元）。遮蔽判断やクリップに使用 | (E.017), [glossary.md](analysis/glossary.md) |
+| **wavy PSD** | 衝突カスケードで生じる波状の粒径分布パターン | [equations.md#E.010](analysis/equations.md) |
 
-> **参考**: 用語の詳細は [analysis/glossary.md](file://analysis/glossary.md) を参照してください。
+> **参考**: 用語の詳細は [analysis/glossary.md](analysis/glossary.md) を参照してください。
 
 ---
 
 ## 関連するコードと式
 
-- **PSD 状態管理**: `psd_state` 辞書は `sizes`, `widths`, `number`, `rho` 等を保持し、[update_psd_state](file://marsdisk/physics/psd.py#L43-L131) で初期化・更新
-- **不透明度計算**: [compute_kappa](file://marsdisk/physics/psd.py#L134-L159) は `number` 配列から質量不透明度を算出
+- **PSD 状態管理**: `psd_state` 辞書は `sizes`, `widths`, `number`, `rho` 等を保持し、[update_psd_state](marsdisk/physics/psd.py#L43-L131) で初期化・更新
+- **不透明度計算**: [compute_kappa](marsdisk/physics/psd.py#L134-L159) は `number` 配列から質量不透明度を算出
   ```
   κ = ∫ π s² n(s) ds / ∫ (4/3) π ρ s³ n(s) ds
   ```
 - **自遮蔽と τ=1 クリップ**: (E.015)–(E.017) で定義される遮蔽処理。κ_eff = Φ(τ) κ_surf から Σ_τ=1 = 1/κ_eff を算出
-- **サイズドリフト**: [apply_uniform_size_drift](file://marsdisk/physics/psd.py#L283-L398) で昇華による粒径縮小を処理
+- **サイズドリフト**: [apply_uniform_size_drift](marsdisk/physics/psd.py#L283-L398) で昇華による粒径縮小を処理
 
 ---
 
@@ -67,23 +67,23 @@
 
 ### 関連ドキュメント
 
-- [analysis/equations.md](file://analysis/equations.md): 物理式の唯一の定義源（特に E.015–E.017 が関連）
-- [analysis/overview.md](file://analysis/overview.md): モジュール責務とデータフローの概要
-- [analysis/glossary.md](file://analysis/glossary.md): 用語定義と命名規約
-- [analysis/physics_flow.md](file://analysis/physics_flow.md): 物理処理フローの mermaid 図
+- [analysis/equations.md](analysis/equations.md): 物理式の唯一の定義源（特に E.015–E.017 が関連）
+- [analysis/overview.md](analysis/overview.md): モジュール責務とデータフローの概要
+- [analysis/glossary.md](analysis/glossary.md): 用語定義と命名規約
+- [analysis/physics_flow.md](analysis/physics_flow.md): 物理処理フローの mermaid 図
 
 ### 関連コード
 
 | ファイル | 関数 | 役割 |
 |----------|------|------|
-| [marsdisk/physics/psd.py](file://marsdisk/physics/psd.py) | `update_psd_state` | 三勾配 PSD の初期化・更新 |
-| [marsdisk/physics/psd.py](file://marsdisk/physics/psd.py) | `compute_kappa` | 質量不透明度 κ の算出 |
-| [marsdisk/physics/psd.py](file://marsdisk/physics/psd.py) | `apply_uniform_size_drift` | 昇華による粒径縮小処理 |
-| [marsdisk/physics/shielding.py](file://marsdisk/physics/shielding.py) | `effective_kappa` | 有効不透明度 κ_eff の計算 |
-| [marsdisk/physics/shielding.py](file://marsdisk/physics/shielding.py) | `sigma_tau1` | Σ_τ=1 の算出 |
+| [marsdisk/physics/psd.py](marsdisk/physics/psd.py) | `update_psd_state` | 三勾配 PSD の初期化・更新 |
+| [marsdisk/physics/psd.py](marsdisk/physics/psd.py) | `compute_kappa` | 質量不透明度 κ の算出 |
+| [marsdisk/physics/psd.py](marsdisk/physics/psd.py) | `apply_uniform_size_drift` | 昇華による粒径縮小処理 |
+| [marsdisk/physics/shielding.py](marsdisk/physics/shielding.py) | `effective_kappa` | 有効不透明度 κ_eff の計算 |
+| [marsdisk/physics/shielding.py](marsdisk/physics/shielding.py) | `sigma_tau1` | Σ_τ=1 の算出 |
 
 ### 関連テスト
 
-- [tests/integration/test_psd_kappa.py](file://tests/integration/test_psd_kappa.py): `compute_kappa` の単体テスト
-- [tests/integration/test_opacity_guardrails.py](file://tests/integration/test_opacity_guardrails.py): 不透明度ガードレールのテスト
+- [tests/integration/test_psd_kappa.py](tests/integration/test_psd_kappa.py): `compute_kappa` の単体テスト
+- [tests/integration/test_opacity_guardrails.py](tests/integration/test_opacity_guardrails.py): 不透明度ガードレールのテスト
 

@@ -25,7 +25,7 @@
 | **IMEX積分** | 純NumPy | `np.einsum` がホットスポット |
 
 > [!NOTE]
-> Numba のバージョンを固定する場合は `requirements.txt` に `numba>=0.60` を追記し、CI でのインストール手順を `.github/workflows/` に明記すること。
+> Numba のバージョンを固定する場合は `requirements.txt` に `numba>=0.60` を追記し、CI でのインストール手順を `..github/workflows/` に明記すること。
 
 ### ボトルネック箇所
 
@@ -70,7 +70,7 @@ sizes:
 **効果**: コア数に比例（4〜16倍）
 
 > [!NOTE]
-> 現行の `sweep_heatmaps.py` は `ThreadPoolExecutor` を使用しているが、各ケースは `subprocess.run([python, -m, marsdisk.run, ...])` で別プロセスを起動するため（[sweep_heatmaps.py:1222-1228](file://scripts/sweeps/sweep_heatmaps.py#L1222-1228)）、**実計算は既に GIL の影響外で並列化されている**。`ProcessPoolExecutor` への変更は pickling オーバーヘッドを増やすだけで効果がない。
+> 現行の `sweep_heatmaps.py` は `ThreadPoolExecutor` を使用しているが、各ケースは `subprocess.run([python, -m, marsdisk.run, ...])` で別プロセスを起動するため（[sweep_heatmaps.py:1222-1228](scripts/sweeps/sweep_heatmaps.py#L1222-1228)）、**実計算は既に GIL の影響外で並列化されている**。`ProcessPoolExecutor` への変更は pickling オーバーヘッドを増やすだけで効果がない。
 >
 > 並列度向上には `--jobs N` の増加と、より多くのコアを持つ実行環境（Codespaces 等）の活用が有効。
 
@@ -97,7 +97,7 @@ python scripts/sweeps/sweep_heatmaps.py --map 1 --jobs 16 --outdir sweeps/map1_f
 
 CI で分散実行する場合:
 ```yaml
-# .github/workflows/<sweep>.yml
+# ..github/workflows/<sweep>.yml
 jobs:
   sweep:
     strategy:
@@ -137,7 +137,7 @@ def compute_gain_numba(C: np.ndarray, Y: np.ndarray) -> np.ndarray:
 #### 3b. 衝突カーネル構築の JIT 化
 
 > [!IMPORTANT]
-> 既存の `compute_collision_kernel_C1`（[collide.py:18-65](file://marsdisk/physics/collide.py#L18-65)）は `v_rel` としてスカラーまたは `(n, n)` 行列を受け付ける。Numba 版も同等の柔軟性を維持し、数値一致ベンチマーク（小規模 `n_bins`）で検証すること。
+> 既存の `compute_collision_kernel_C1`（[collide.py:18-65](marsdisk/physics/collide.py#L18-65)）は `v_rel` としてスカラーまたは `(n, n)` 行列を受け付ける。Numba 版も同等の柔軟性を維持し、数値一致ベンチマーク（小規模 `n_bins`）で検証すること。
 
 ```python
 # marsdisk/physics/_numba_kernels.py に追加
@@ -212,7 +212,7 @@ def compute_collision_kernel_C1_numba_wrapper(
 ### 施策4: タイムステップ戦略の最適化（実験的）
 
 > [!CAUTION]
-> この施策は受入条件「Δt ≤ 0.1·min t_coll,k で収束」および既定レシピ（`configs/base.yml`, `analysis/run-recipes` で `dt_over_t_blow_max: 0.05–0.1` 推奨）と矛盾する可能性がある。**本番設定には適用せず、別ブランチで実験的に検証する**こと。
+> この施策は受入条件「Δt ≤ 0.1·min t_coll,k で収束」および既定レシピ（`configs/base.yml`, `analysis/run-recipes.md` で `dt_over_t_blow_max: 0.05–0.1` 推奨）と矛盾する可能性がある。**本番設定には適用せず、別ブランチで実験的に検証する**こと。
 
 **工数**: 設定変更 + 検証  
 **効果**: ~2倍高速化（質量誤差増大リスクあり）
@@ -223,7 +223,7 @@ def compute_collision_kernel_C1_numba_wrapper(
 2. 以下の設定で実行し、質量誤差ログを収集:
 
 ```yaml
-# configs/experiment_dt_relaxed.yml
+# configs/<experiment_dt_relaxed>.yml
 numerics:
   dt_init: auto
   dt_over_t_blow_max: 0.3   # 現状 0.1 → 緩和（段階的に試行）
@@ -235,7 +235,7 @@ numerics:
    - `tests/integration/test_mass_conservation.py` が PASS するか
    - IMEX 収束テストが合格するか
 
-4. 結果を `docs/experiments/dt_relaxation_results.md` に記録
+4. 結果を `docs/<experiments>/dt_relaxation_results.md` に記録
 
 > [!WARNING]
 > 質量誤差が 0.5% を超える場合、この施策は採用しない。
@@ -277,15 +277,15 @@ time python -m marsdisk.run --config configs/base.yml
 
 | リソース | 用途 | 設定方法 |
 |---------|------|---------|
-| **Codespaces** | 16-32コア並列実行 | `.devcontainer/devcontainer.json` |
+| **Codespaces** | 16-32コア並列実行 | `..devcontainer/<devcontainer>.json` |
 | **Azure for Students** | GPU計算 or HPC | Azure Portal からサブスクリプション作成 |
-| **Actions** | CI分散ジョブ | `.github/workflows/*.yml` |
+| **Actions** | CI分散ジョブ | `..github/workflows/*.yml` |
 
 ---
 
 ## 関連ドキュメント
 
-- [analysis/run-recipes.md](file://analysis/run-recipes.md) — 実行レシピ（dt 推奨値の根拠）
-- [scripts/sweeps/sweep_heatmaps.py](file://scripts/sweeps/sweep_heatmaps.py) — スイープスクリプト
-- [marsdisk/physics/_numba_kernels.py](file://marsdisk/physics/_numba_kernels.py) — Numba カーネル
-- [marsdisk/physics/collide.py](file://marsdisk/physics/collide.py) — 既存衝突カーネル実装（v_rel 行列対応）
+- [analysis/run-recipes.md](analysis/run-recipes.md) — 実行レシピ（dt 推奨値の根拠）
+- [scripts/sweeps/sweep_heatmaps.py](scripts/sweeps/sweep_heatmaps.py) — スイープスクリプト
+- [marsdisk/physics/_numba_kernels.py](marsdisk/physics/_numba_kernels.py) — Numba カーネル
+- [marsdisk/physics/collide.py](marsdisk/physics/collide.py) — 既存衝突カーネル実装（v_rel 行列対応）

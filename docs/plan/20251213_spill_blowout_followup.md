@@ -9,9 +9,9 @@
 **火星月形成円盤**モデルでは、外部から供給された質量が表層に蓄積し、放射圧によるブローアウト（小粒子の系外脱出）と衝突カスケード（破砕連鎖）を通じて質量損失を引き起こします。しかし、**ヘッドルームポリシーが `spill` の場合**、光学深度 $\tau=1$ を超える供給分が即座にスピル（溢れ流出）として系外へ排出され、表層に「燃料」が残らない状態が発生しました。
 
 ### この文書で扱う物理
-- **ブローアウト**: $\beta \geq 0.5$ の小粒子が放射圧で系外へ脱出（式 [E.013](file://analysis/equations.md#E013), [E.014](file://analysis/equations.md#E014)）
+- **ブローアウト**: $\beta \geq 0.5$ の小粒子が放射圧で系外へ脱出（式 [E.013](analysis/equations.md#E013), [E.014](analysis/equations.md#E014)）
 - **スピル**: $\tau > 1$ 超過時に供給を表層に入れず系外へ逃がす経路
-- **光学深度クリップ**: $\Sigma_{\rm surf}$ を $\Sigma_{\tau=1}$ 以下に制限する処理（式 [E.016](file://analysis/equations.md#E016)）
+- **光学深度クリップ**: $\Sigma_{\rm surf}$ を $\Sigma_{\tau=1}$ 以下に制限する処理（式 [E.016](analysis/equations.md#E016)）
 
 ---
 
@@ -35,10 +35,10 @@
 
 | モジュール | 役割 |
 |------------|------|
-| [marsdisk/run.py](file://marsdisk/run.py) | メインループ `run_zero_d`、昇華→ブローアウト振替ロジック |
-| [marsdisk/physics/supply.py](file://marsdisk/physics/supply.py) | 供給率計算、headroom_policy の適用 |
-| [marsdisk/physics/shielding.py](file://marsdisk/physics/shielding.py) | 遮蔽と $\Sigma_{\tau=1}$ クリップ |
-| [marsdisk/schema.py](file://marsdisk/schema.py) | YAML 設定のバリデーション |
+| [marsdisk/run.py](marsdisk/run.py) | メインループ `run_zero_d`、昇華→ブローアウト振替ロジック |
+| [marsdisk/physics/supply.py](marsdisk/physics/supply.py) | 供給率計算、headroom_policy の適用 |
+| [marsdisk/physics/shielding.py](marsdisk/physics/shielding.py) | 遮蔽と $\Sigma_{\tau=1}$ クリップ |
+| [marsdisk/schema.py](marsdisk/schema.py) | YAML 設定のバリデーション |
 
 ---
 
@@ -57,7 +57,7 @@
   - 昇華で削れた質量を sink ではなくブローアウトに振り替え、`outflux_surface` と `M_loss_cum` に積算。
 
 ## 直近の問題
-- スピル有効時は供給が全量 `mass_loss_rate_spill` に回り、表層に在庫が残らず `M_out_dot=0` が継続していた（例: `/Volumes/KIOXIA/marsdisk_out/temp_supply_sweep/20251213-204205__a7763f697__seed2041193009`）。
+- スピル有効時は供給が全量 `mass_loss_rate_spill` に回り、表層に在庫が残らず `M_out_dot=0` が継続していた（例: `out/<run_id>`）。
 - `s_min_effective` は 1e-7 に下げられたが、`headroom_policy="spill"` により供給が燃料にならず衝突カスケードが立たなかった。
 
 ## 対応方針
@@ -86,8 +86,7 @@
 
 | ドキュメント | 内容 |
 |--------------|------|
-| [analysis/equations.md](file://analysis/equations.md) | β, s_blow, 遮蔽 (E.013–E.017) の数式定義 |
-| [analysis/AI_USAGE.md](file://analysis/AI_USAGE.md) | 出力ファイルのカラム定義 |
-| [analysis/glossary.md](file://analysis/glossary.md) | 用語集と変数命名規約 |
-| [docs/plan/20251221_temp_supply_external_supply.md](file://docs/plan/20251221_temp_supply_external_supply.md) | 外部供給スイープの環境変数リファレンス |
-
+| [analysis/equations.md](analysis/equations.md) | β, s_blow, 遮蔽 (E.013–E.017) の数式定義 |
+| [analysis/AI_USAGE.md](analysis/AI_USAGE.md) | 出力ファイルのカラム定義 |
+| [analysis/glossary.md](analysis/glossary.md) | 用語集と変数命名規約 |
+| [docs/plan/20251221_temp_supply_external_supply.md](docs/plan/20251221_temp_supply_external_supply.md) | 外部供給スイープの環境変数リファレンス |

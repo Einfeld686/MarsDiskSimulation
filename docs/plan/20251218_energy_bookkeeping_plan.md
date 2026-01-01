@@ -1,7 +1,7 @@
 # 衝突エネルギー簿記・反発係数対応 導入計画
 
 > 作成日: 2025-12-18  
-> 出典: [collision_energy_conservation_requirements.md](file://docs/plan/collision_energy_conservation_requirements.md)
+> 出典: [collision_energy_conservation_requirements.md](docs/plan/collision_energy_conservation_requirements.md)
 
 ---
 

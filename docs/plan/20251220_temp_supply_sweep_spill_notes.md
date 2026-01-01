@@ -11,10 +11,10 @@
 
 本リポジトリ（MarsDiskSimulation / `marsshearingsheet`）は、**火星ロッシュ限界内の高密度ダストディスク**を対象に、放射圧によるブローアウトと衝突破砕カスケードを2年間シミュレーションして質量損失・流出率を定量化するものです。詳細は以下を参照してください：
 
-- **全体仕様**: [analysis/overview.md](../../analysis/overview.md)
-- **物理モデル式**: [analysis/equations.md](../../analysis/equations.md)
-- **実行レシピ**: [analysis/run-recipes.md](../../analysis/run-recipes.md)
-- **AI向け利用ガイド**: [analysis/AI_USAGE.md](../../analysis/AI_USAGE.md)
+- **全体仕様**: [analysis/overview.md](analysis/overview.md)
+- **物理モデル式**: [analysis/equations.md](analysis/equations.md)
+- **実行レシピ**: [analysis/run-recipes.md](analysis/run-recipes.md)
+- **AI向け利用ガイド**: [analysis/AI_USAGE.md](analysis/AI_USAGE.md)
 
 ### 用語定義
 
@@ -25,9 +25,9 @@
 | $\Sigma_{\tau=1}$ (`sigma_tau1`) | 光学的深さ τ = 1 となる臨界面密度 | (E.016), (E.017) |
 | **headroom** | $\Sigma_{\tau=1} - \Sigma_{\rm surf}$。供給ゲートの開閉を決定 | (E.031) |
 | **clip モード** | headroom がゼロになると供給を遮断する方式（従来動作） | — |
-| **spill モード** | 供給は止めず、τ=1 超過分を系外ロスとして除去する方式 | [20251220_supply_headroom_policy_spill.md](./20251220_supply_headroom_policy_spill.md) |
-| `supply.headroom_policy` | headroom 処理のモード設定（`clip` / `spill`） | [schema.py](../../marsdisk/schema.py) |
-| **deep_mixing** | 深部→表層の物質輸送モード。`t_mix_orbits` で時定数を指定 | [supply.py](../../marsdisk/physics/supply.py) |
+| **spill モード** | 供給は止めず、τ=1 超過分を系外ロスとして除去する方式 | [20251220_supply_headroom_policy_spill.md](.docs/plan/20251220_supply_headroom_policy_spill.md) |
+| `supply.headroom_policy` | headroom 処理のモード設定（`clip` / `spill`） | [schema.py](marsdisk/schema.py) |
+| **deep_mixing** | 深部→表層の物質輸送モード。`t_mix_orbits` で時定数を指定 | [supply.py](marsdisk/physics/supply.py) |
 | **headroom gate** | deep_mixing 時に headroom に応じて供給を制御する機構 | — |
 
 ### ドキュメントの位置付け
@@ -35,9 +35,9 @@
 `docs/plan/` 内のドキュメントは開発プラン・イシュー整理・振り返りを管理します。本メモは **run_temp_supply_sweep.sh スクリプトで spill モードを使用する際の設定・注意点**をまとめた運用ガイドです。
 
 関連ドキュメント：
-- [20251220_supply_headroom_policy_spill.md](./20251220_supply_headroom_policy_spill.md) — spill モードの実装仕様
-- [20251219_tau_clip_gate_review.md](./20251219_tau_clip_gate_review.md) — τクリップと供給ゲートの現状整理
-- [20251216_temp_supply_sigma_tau1_headroom.md](./20251216_temp_supply_sigma_tau1_headroom.md) — 供給クリップ事象の報告
+- [20251220_supply_headroom_policy_spill.md](.docs/plan/20251220_supply_headroom_policy_spill.md) — spill モードの実装仕様
+- [20251219_tau_clip_gate_review.md](.docs/plan/20251219_tau_clip_gate_review.md) — τクリップと供給ゲートの現状整理
+- [20251216_temp_supply_sigma_tau1_headroom.md](.docs/plan/20251216_temp_supply_sigma_tau1_headroom.md) — 供給クリップ事象の報告
 
 ---
 
@@ -128,13 +128,13 @@ spill 量の可視化を行う場合は、以下のカラムをプロットに�
 ## 参考
 
 ### 関連ドキュメント
-- 実装仕様: [20251220_supply_headroom_policy_spill.md](./20251220_supply_headroom_policy_spill.md)
-- 物理式の詳細: [analysis/equations.md](../../analysis/equations.md)
-- AI向け利用ガイド: [analysis/AI_USAGE.md](../../analysis/AI_USAGE.md)
+- 実装仕様: [20251220_supply_headroom_policy_spill.md](.docs/plan/20251220_supply_headroom_policy_spill.md)
+- 物理式の詳細: [analysis/equations.md](analysis/equations.md)
+- AI向け利用ガイド: [analysis/AI_USAGE.md](analysis/AI_USAGE.md)
 
 ### コード参照
 | 機能 | ファイル | 備考 |
 |------|----------|------|
-| スイープスクリプト | [run_temp_supply_sweep.sh](../../scripts/research/run_temp_supply_sweep.sh) | 環境変数で制御 |
-| headroom 処理 | [collisions_smol.py](../../marsdisk/physics/collisions_smol.py) | spill 適用ロジック |
-| 設定スキーマ | [schema.py](../../marsdisk/schema.py) | `headroom_policy` 定義 |
+| スイープスクリプト | [run_temp_supply_sweep.sh](scripts/research/run_temp_supply_sweep.sh) | 環境変数で制御 |
+| headroom 処理 | [collisions_smol.py](marsdisk/physics/collisions_smol.py) | spill 適用ロジック |
+| 設定スキーマ | [schema.py](marsdisk/schema.py) | `headroom_policy` 定義 |

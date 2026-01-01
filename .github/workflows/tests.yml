@@ -18,6 +18,9 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt pytest
+      - name: Run plan lint
+        run: |
+          python tools/plan_lint.py
       - name: Run 1D integration tests
         run: |
           pytest -q \

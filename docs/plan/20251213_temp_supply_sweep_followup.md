@@ -9,7 +9,7 @@
 - `scripts/research/run_temp_supply_sweep.sh` は temp_supply スイープを回すバッチスクリプト。  
   - 供給: `supply.mode=const` を前提に `supply.enabled=true`, `supply.const.prod_area_rate_kg_m2_s=${SUPPLY_RATE}`, `supply.mixing.epsilon_mix=${MU}` を override。  
   - 遮蔽: `shielding.mode=${SHIELDING_MODE}`、固定 Στ=1 は `SHIELDING_SIGMA`（デフォルト 1e-2）で指定。  
-  - 出力: 外付け SSD (`/Volumes/KIOXIA/marsdisk_out`) を優先、plots は overview/supply_surface を生成。  
+  - 出力: 外付け SSD (`<external_out_root>`) を優先、plots は overview/supply_surface を生成。  
   - 乱数: `BATCH_SEED` と各ケースの `dynamics.rng_seed` を分離。  
   - Streaming: オプションで `io.streaming.*` override をサポート。
 - 近期の変更点: `supply.mixing.mu` から `supply.mixing.epsilon_mix` 明示に変更済み。供給パスは有効化され、const×epsilon_mix が run_config に記録される。
@@ -50,10 +50,10 @@
 
 | ドキュメント | 役割 |
 |-------------|------|
-| [20251212_temp_supply_tau_unity_fix.md](file://docs/plan/20251212_temp_supply_tau_unity_fix.md) | 本方針案の前提となる原因調査・実装済み機構の詳細 |
-| [20251211_temp_supply_runflow.md](file://docs/plan/20251211_temp_supply_runflow.md) | temp_supply 実行フロー整理 |
-| [run_temp_supply_sweep.sh](file://scripts/research/run_temp_supply_sweep.sh) | スイープ実行スクリプト |
-| [evaluate_tau_supply.py](file://scripts/research/evaluate_tau_supply.py) | 成功判定スクリプト |
+| [20251212_temp_supply_tau_unity_fix.md](docs/plan/20251212_temp_supply_tau_unity_fix.md) | 本方針案の前提となる原因調査・実装済み機構の詳細 |
+| [20251211_temp_supply_runflow.md](docs/plan/20251211_temp_supply_runflow.md) | temp_supply 実行フロー整理 |
+| [run_temp_supply_sweep.sh](scripts/research/run_temp_supply_sweep.sh) | スイープ実行スクリプト |
+| [evaluate_tau_supply.py](scripts/research/evaluate_tau_supply.py) | 成功判定スクリプト |
 
 ---
 
@@ -73,7 +73,7 @@
 
 ## 成功判定の基準
 
-[evaluate_tau_supply.py](file://scripts/research/evaluate_tau_supply.py) で定義されている判定基準：
+[evaluate_tau_supply.py](scripts/research/evaluate_tau_supply.py) で定義されている判定基準：
 
 | 条件 | デフォルト値 | 説明 |
 |------|-------------|------|

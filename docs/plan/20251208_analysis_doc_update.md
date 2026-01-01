@@ -5,7 +5,7 @@
 - DocSync と coverage の基準（function_reference_rate >=0.75, anchor_consistency_rate >=0.98）を維持したまま evaluation_system まで流す手順を固定する。
 
 スコープ
-- 含む: analysis/run-recipes.md・analysis/equations.md・analysis/assumption_trace.md・analysis/slides_outline.md の記述更新、analysis/outputs/* のサンプル再生成、DocSyncAgent→analysis-doc-tests→evaluation_system の実行とログ化。
+- 含む: `analysis/run-recipes.md`, `analysis/equations.md`, `analysis/assumption_trace.md`, `analysis/slides_outline.md` の記述更新、`analysis/outputs/*` のサンプル再生成、DocSyncAgent→analysis-doc-tests→evaluation_system の実行とログ化。
 - 含まない: コード側の新機能追加、計算結果の大量再生成（必要最低限のサンプル差し替えのみ）。
 
 タスクと順序

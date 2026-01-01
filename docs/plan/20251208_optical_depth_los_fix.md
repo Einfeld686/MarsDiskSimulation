@@ -8,12 +8,12 @@
 ## 目的・スコープ
 - 火星視線方向の光路長を定義し、`tau_los_mars`（放射圧の LOS 光学深さ）と `tau_vert`（面直衝突用）を区別して扱う。
 - シールド計算・表層クリップ・`tau_gate`・出力カラムを `tau_los_mars` 基準へ再配線する。
-- スキーマ/YAML に LOS 幾何を外出しし、ガス貧ディスクの既定値（面直=LOS 近似）を維持しつつ、感度掃引で係数を調整できるようにする。
+- スキーマと YAML に LOS 幾何を外出しし、ガス貧ディスクの既定値（面直=LOS 近似）を維持しつつ、感度掃引で係数を調整できるようにする。
 - 0D ドライバと既存テストを破壊しない範囲で実施し、1D 拡散 (C5) は今回は対象外。
 
 ## 作業フェーズ
 1) **幾何と設定の追加**
-   - `schema.py`/YAML に LOS 幾何用パラメータを追加（例: `shielding.los_geometry: {"mode": "aspect_ratio_factor", "h_over_r": ..., "path_multiplier": ...}`）。既定は 1.0 で従来挙動を温存。
+   - `schema.py` と YAML に LOS 幾何用パラメータを追加（例: `shielding.los_geometry: {"mode": "aspect_ratio_factor", "h_over_r": ..., "path_multiplier": ...}`）。既定は 1.0 で従来挙動を温存。
    - `analysis/equations.md` へ τ の定義を「面直 τ_vert」「火星 LOS τ_los_mars」に分けて明文化し、換算式 (E.#) を追記。
 
 2) **コードの経路分離**

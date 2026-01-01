@@ -6,8 +6,8 @@
 
 ## 役割と基本フロー
 - 0D 円盤で温度・混合効率・初期光学的厚さを掃引し、各ケースを `python -m marsdisk.run` で 2 年間回すバッチランナー。base config は `configs/sweep_temp_supply/temp_supply_T4000_eps1.yml`。
-- 実行前に `.venv` が無ければ作成し、`requirements.txt` をインストール。完了後は外付け SSD（存在し書込可なら `/Volumes/KIOXIA/marsdisk_out`）を優先し、なければ `out/` へ保存。
-- 出力ルートは `OUT_ROOT`（未設定なら上記ルール）配下に `temp_supply_sweep/<YYYYMMDD-HHMMSS>__<gitsha>__seed<BATCH_SEED>/` を作成。各ケースは `T${T}_eps${EPS_TITLE}_tau${TAU_TITLE}` ディレクトリにまとまり、`series/`, `checks/`, `plots/`, `out/<run_id>/summary.json`, `out/<run_id>/run_config.json` を生成する。
+- 実行前に `.venv` が無ければ作成し、`requirements.txt` をインストール。完了後は外付け SSD（存在し書込可なら `<external_out_root>`）を優先し、なければ `out/` へ保存。
+- 出力ルートは `OUT_ROOT`（未設定なら上記ルール）配下に `temp_supply_sweep/<YYYYMMDD-HHMMSS>__<gitsha>__seed<BATCH_SEED>/` を作成。各ケースは `T${T}_eps${EPS_TITLE}_tau${TAU_TITLE}` ディレクトリにまとまり、`out/<run_id>/series/`, `out/<run_id>/checks/`, `out/<run_id>/plots/`, `out/<run_id>/summary.json`, `out/<run_id>/run_config.json` を生成する。
 - 各 run 後に quick-look プロット（`plots/overview.png`, `plots/supply_surface.png`）を自動生成。`EVAL=1`（デフォルト）なら `scripts/research/evaluate_tau_supply.py` で τ・供給維持の簡易評価を行い、`out/<run_id>/checks/tau_supply_eval.json` に記録する。
 
 ## スイープ軸（固定グリッド）

@@ -217,7 +217,7 @@ def verify_equation_code_mapping(
 
 ### 5.1 自動テスト
 
-#### 既存テストの拡張: `tests/test_doc_sync_agent.py`
+#### 既存テストの拡張: `tests/integration/test_doc_sync_agent.py`
 
 ```python
 def test_equation_parsing():
@@ -232,7 +232,7 @@ def test_equation_coverage_report():
 
 **実行コマンド**:
 ```bash
-pytest tests/test_doc_sync_agent.py -v -k equation
+pytest tests/integration/test_doc_sync_agent.py -v -k equation
 ```
 
 ### 5.2 統合テスト
@@ -300,5 +300,5 @@ cat analysis/equation_code_map.json | jq '.stats'
 |----------|----------|------|
 | `marsdisk/ops/doc_sync_agent.py` | MODIFY | 式パーサーと検証ロジック追加 |
 | `analysis/equation_code_map.json` | NEW | 式↔コード対応マップ |
-| `tests/test_doc_sync_agent.py` | MODIFY | 式検証テスト追加 |
+| `tests/integration/test_doc_sync_agent.py` | MODIFY | 式検証テスト追加 |
 | `Makefile` | MODIFY | `analysis-update` に equations ステップ追加 |

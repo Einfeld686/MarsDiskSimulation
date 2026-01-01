@@ -1,6 +1,6 @@
 # 放射圧・外部供給・昇華の式と設定まとめ（T6000_mu0p5_phi20）
 
-> **本資料について**: 本ドキュメントは火星デブリ円盤シミュレーション（marsdisk）の特定実行パラメータを記録したものです。プロジェクト全体の概要は [analysis/overview.md](../../analysis/overview.md) および [README.md](../../README.md) を参照してください。
+> **本資料について**: 本ドキュメントは火星デブリ円盤シミュレーション（marsdisk）の特定実行パラメータを記録したものです。プロジェクト全体の概要は [analysis/overview.md](analysis/overview.md) および [README.md](../../README.md) を参照してください。
 
 ## 背景：火星衝撃形成デブリ円盤
 本シミュレーションは、原始火星への巨大衝突により形成されたと考えられるデブリ円盤（SiO₂ 主体の高密度・ガス希薄円盤）の時間発展を追跡します。特に以下の物理過程を 0D（半径無次元）モデルでカップリングしています：
@@ -31,7 +31,7 @@
 
 ## 現行設定
 
-> **出典**: [`scripts/research/run_temp_supply_sweep.sh`](../../scripts/research/run_temp_supply_sweep.sh)
+> **出典**: [`scripts/research/run_temp_supply_sweep.sh`](scripts/research/run_temp_supply_sweep.sh)
 > 
 > このスクリプトは温度・供給・遮蔽のパラメータスイープを自動実行します。デフォルト値と環境変数によるオーバーライドを以下に整理します。
 
@@ -98,8 +98,8 @@
 
 | 資料 | 内容 |
 | ---- | ---- |
-| [analysis/overview.md](../../analysis/overview.md) | プロジェクト全体の構造とモジュール責務 |
-| [analysis/equations.md](../../analysis/equations.md) | 全物理式の定義（唯一の仕様源） |
-| [analysis/glossary.md](../../analysis/glossary.md) | 用語・記号の定義一覧 |
-| [analysis/AI_USAGE.md](../../analysis/AI_USAGE.md) | AI・自動化ツール向けの実行ガイド |
-| [analysis/run-recipes.md](../../analysis/run-recipes.md) | 代表的な実行レシピ集 |
+| [analysis/overview.md](analysis/overview.md) | プロジェクト全体の構造とモジュール責務 |
+| [analysis/equations.md](analysis/equations.md) | 全物理式の定義（唯一の仕様源） |
+| [analysis/glossary.md](analysis/glossary.md) | 用語・記号の定義一覧 |
+| [analysis/AI_USAGE.md](analysis/AI_USAGE.md) | AI・自動化ツール向けの実行ガイド |
+| [analysis/run-recipes.md](analysis/run-recipes.md) | 代表的な実行レシピ集 |

@@ -12,7 +12,7 @@ set "SCRIPT_DIR=%~dp0"
 set "PYTHON_EXE_DIR="
 
 if not defined PYTHON_EXE (
-  for %%P in (python3.11 python) do (
+  for %%P in (python3.13 python3.12 python3.11 python) do (
     if not defined PYTHON_EXE (
       where %%P >nul 2>&1
       if !errorlevel! lss 1 set "PYTHON_EXE=%%P"
@@ -37,7 +37,9 @@ if not defined PYTHON_EXE (
     )
   )
   if not defined PYTHON_EXE (
-    for %%I in ("%LOCALAPPDATA%\Programs\Python\Python311\python.exe" "%LOCALAPPDATA%\Programs\Python\Python312\python.exe" "%LOCALAPPDATA%\Programs\Python\Python313\python.exe" "%ProgramFiles%\Python311\python.exe" "%ProgramFiles%\Python312\python.exe" "%ProgramFiles%\Python313\python.exe" "%ProgramFiles(x86)%\Python311\python.exe" "%ProgramFiles(x86)%\Python312\python.exe" "%ProgramFiles(x86)%\Python313\python.exe") do (
+    set "LOCAL_APPDATA_HINT=%LOCALAPPDATA%"
+    if not defined LOCAL_APPDATA_HINT if defined USERPROFILE set "LOCAL_APPDATA_HINT=%USERPROFILE%\AppData\Local"
+    for %%I in ("!LOCAL_APPDATA_HINT!\Programs\Python\Python311\python.exe" "!LOCAL_APPDATA_HINT!\Programs\Python\Python312\python.exe" "!LOCAL_APPDATA_HINT!\Programs\Python\Python313\python.exe" "%ProgramW6432%\Python311\python.exe" "%ProgramW6432%\Python312\python.exe" "%ProgramW6432%\Python313\python.exe" "%ProgramFiles%\Python311\python.exe" "%ProgramFiles%\Python312\python.exe" "%ProgramFiles%\Python313\python.exe" "%ProgramFiles(x86)%\Python311\python.exe" "%ProgramFiles(x86)%\Python312\python.exe" "%ProgramFiles(x86)%\Python313\python.exe" "C:\Python311\python.exe" "C:\Python312\python.exe" "C:\Python313\python.exe") do (
       if not defined PYTHON_EXE if exist "%%~fI" set "PYTHON_EXE=%%~fI"
     )
     if defined PYTHON_EXE (
@@ -115,7 +117,7 @@ if /i "!PYTHON_EXE!"=="." (
   set "PYTHON_EXE="
 )
 if not defined PYTHON_EXE (
-  for %%P in (python3.11 python) do (
+  for %%P in (python3.13 python3.12 python3.11 python) do (
     if not defined PYTHON_EXE (
       where %%P >nul 2>&1
       if !errorlevel! lss 1 set "PYTHON_EXE=%%P"
@@ -203,40 +205,22 @@ set "PYTHON_CMD=!PYTHON_EXE_QUOTED!"
 if not "!PYTHON_ARGS!"=="" set "PYTHON_CMD=!PYTHON_EXE_QUOTED! !PYTHON_ARGS!"
 
 set "PYTHON_VERSION_OK=0"
-!PYTHON_CMD! -c "import sys; raise SystemExit(0 if sys.version_info >= (3,11) else 1)" >nul 2>&1
-if !errorlevel! lss 1 set "PYTHON_VERSION_OK=1"
+call :check_python_version
 
 if "!PYTHON_VERSION_OK!"=="0" (
-  set "PYTHON_311_FOUND="
-  for /f "delims=" %%P in ('where python3.11 2^>nul') do (
-    if not defined PYTHON_311_FOUND set "PYTHON_311_FOUND=%%P"
-  )
-  if defined PYTHON_311_FOUND (
-    set "PYTHON_EXE=!PYTHON_311_FOUND!"
-    set "PYTHON_ARGS="
-    set "PYTHON_EXE_QUOTED="!PYTHON_EXE!""
-    set "PYTHON_CMD=!PYTHON_EXE_QUOTED!"
-    !PYTHON_CMD! -c "import sys; raise SystemExit(0 if sys.version_info >= (3,11) else 1)" >nul 2>&1
-    if !errorlevel! lss 1 set "PYTHON_VERSION_OK=1"
-  )
-)
-
-if "!PYTHON_VERSION_OK!"=="0" if "!PYTHON_ALLOW_LAUNCHER!"=="1" (
-  set "PYTHON_311_FOUND="
-  for /f "delims=" %%P in ('py -3.11 -c "import sys; print(sys.executable)" 2^>nul') do (
-    if not defined PYTHON_311_FOUND set "PYTHON_311_FOUND=%%P"
-  )
-  if defined PYTHON_311_FOUND (
-    set "PYTHON_EXE=!PYTHON_311_FOUND!"
-    set "PYTHON_ARGS="
-    set "PYTHON_EXE_QUOTED="!PYTHON_EXE!""
-    set "PYTHON_CMD=!PYTHON_EXE_QUOTED!"
-    !PYTHON_CMD! -c "import sys; raise SystemExit(0 if sys.version_info >= (3,11) else 1)" >nul 2>&1
-    if !errorlevel! lss 1 set "PYTHON_VERSION_OK=1"
-  )
+  if "%DEBUG_RESOLVE%"=="1" echo.[DEBUG] resolve_python: version check failed for !PYTHON_EXE!
+  call :find_python311
+  set "PYTHON_EXE_QUOTED="!PYTHON_EXE!""
+  set "PYTHON_CMD=!PYTHON_EXE_QUOTED!"
+  if not "!PYTHON_ARGS!"=="" set "PYTHON_CMD=!PYTHON_EXE_QUOTED! !PYTHON_ARGS!"
+  call :check_python_version
 )
 
 if "!PYTHON_VERSION_OK!"=="0" (
+  if "%DEBUG_RESOLVE%"=="1" (
+    echo.[DEBUG] resolve_python: final PYTHON_EXE=!PYTHON_EXE!
+    echo.[DEBUG] resolve_python: final PYTHON_ARGS=!PYTHON_ARGS!
+  )
   echo.[error] python 3.11+ is required. Install Python 3.11 or set PYTHON_EXE.
   exit /b 1
 )
@@ -249,7 +233,10 @@ if exist "!PYTHON_EXE!" (
     if not defined PYTHON_EXE_ABS set "PYTHON_EXE_ABS=%%P"
   )
 )
-if defined PYTHON_EXE_ABS set "PYTHON_EXE=!PYTHON_EXE_ABS!"
+if defined PYTHON_EXE_ABS (
+  set "PYTHON_EXE=!PYTHON_EXE_ABS!"
+  if not defined PYTHON_EXE_DIR for %%I in ("!PYTHON_EXE_ABS!") do set "PYTHON_EXE_DIR=%%~dpI"
+)
 
 set "PYTHON_EXE_QUOTED="!PYTHON_EXE!""
 set "PYTHON_CMD=!PYTHON_EXE_QUOTED!"
@@ -260,4 +247,52 @@ if "%DEBUG_RESOLVE%"=="1" echo.[DEBUG] resolve_python: PYTHON_ARGS=!PYTHON_ARGS!
 
 endlocal & set "PYTHON_EXE=%PYTHON_EXE%" & set "PYTHON_ARGS=%PYTHON_ARGS%" & set "PYTHON_CMD=%PYTHON_CMD%" & set "PYTHON_ALLOW_LAUNCHER=%PYTHON_ALLOW_LAUNCHER%" & set "PYTHON_EXE_DIR=%PYTHON_EXE_DIR%"
 if not "%PYTHON_EXE_DIR%"=="" set "PATH=%PYTHON_EXE_DIR%;%PATH%" & set "PYTHON_EXE_DIR="
+exit /b 0
+
+:check_python_version
+setlocal DisableDelayedExpansion
+set "CHECK_RC=1"
+if "%PYTHON_EXE%"=="" goto :check_python_version_done
+if "%PYTHON_ARGS%"=="" (
+  "%PYTHON_EXE%" -c "import sys; raise SystemExit(0 if sys.version_info >= (3,11) else 1)" >nul 2>&1
+) else (
+  "%PYTHON_EXE%" %PYTHON_ARGS% -c "import sys; raise SystemExit(0 if sys.version_info >= (3,11) else 1)" >nul 2>&1
+)
+set "CHECK_RC=%errorlevel%"
+:check_python_version_done
+endlocal & if %CHECK_RC% lss 1 set "PYTHON_VERSION_OK=1"
+exit /b 0
+
+:find_python311
+set "PYTHON_311_FOUND="
+for /f "delims=" %%P in ('where python3.13 2^>nul') do (
+  if not defined PYTHON_311_FOUND set "PYTHON_311_FOUND=%%P"
+)
+for /f "delims=" %%P in ('where python3.12 2^>nul') do (
+  if not defined PYTHON_311_FOUND set "PYTHON_311_FOUND=%%P"
+)
+for /f "delims=" %%P in ('where python3.11 2^>nul') do (
+  if not defined PYTHON_311_FOUND set "PYTHON_311_FOUND=%%P"
+)
+for /f "delims=" %%P in ('py -3.13 -c "import sys; print(sys.executable)" 2^>nul') do (
+  if not defined PYTHON_311_FOUND set "PYTHON_311_FOUND=%%P"
+)
+for /f "delims=" %%P in ('py -3.12 -c "import sys; print(sys.executable)" 2^>nul') do (
+  if not defined PYTHON_311_FOUND set "PYTHON_311_FOUND=%%P"
+)
+for /f "delims=" %%P in ('py -3.11 -c "import sys; print(sys.executable)" 2^>nul') do (
+  if not defined PYTHON_311_FOUND set "PYTHON_311_FOUND=%%P"
+)
+set "LOCAL_APPDATA_HINT=%LOCALAPPDATA%"
+if not defined LOCAL_APPDATA_HINT if defined USERPROFILE set "LOCAL_APPDATA_HINT=%USERPROFILE%\AppData\Local"
+if not defined PYTHON_311_FOUND (
+  for %%I in ("%LOCAL_APPDATA_HINT%\Programs\Python\Python313\python.exe" "%LOCAL_APPDATA_HINT%\Programs\Python\Python312\python.exe" "%LOCAL_APPDATA_HINT%\Programs\Python\Python311\python.exe" "%ProgramW6432%\Python313\python.exe" "%ProgramW6432%\Python312\python.exe" "%ProgramW6432%\Python311\python.exe" "%ProgramFiles%\Python313\python.exe" "%ProgramFiles%\Python312\python.exe" "%ProgramFiles%\Python311\python.exe" "%ProgramFiles(x86)%\Python313\python.exe" "%ProgramFiles(x86)%\Python312\python.exe" "%ProgramFiles(x86)%\Python311\python.exe" "C:\Python313\python.exe" "C:\Python312\python.exe" "C:\Python311\python.exe") do (
+    if not defined PYTHON_311_FOUND if exist "%%~fI" set "PYTHON_311_FOUND=%%~fI"
+  )
+)
+if defined PYTHON_311_FOUND (
+  set "PYTHON_EXE=%PYTHON_311_FOUND%"
+  set "PYTHON_ARGS="
+  for %%I in ("%PYTHON_EXE%") do set "PYTHON_EXE_DIR=%%~dpI"
+)
 exit /b 0

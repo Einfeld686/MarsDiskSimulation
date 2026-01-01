@@ -11,10 +11,10 @@
 
 本リポジトリ（MarsDiskSimulation / `marsshearingsheet`）は、**火星ロッシュ限界内の高密度ダストディスク**を対象に、放射圧によるブローアウトと衝突破砕カスケードを2年間シミュレーションして質量損失・流出率を定量化するものです。詳細は以下を参照してください：
 
-- **全体仕様**: [analysis/overview.md](../../analysis/overview.md)
-- **物理モデル式**: [analysis/equations.md](../../analysis/equations.md)
-- **実行レシピ**: [analysis/run-recipes.md](../../analysis/run-recipes.md)
-- **AI向け利用ガイド**: [analysis/AI_USAGE.md](../../analysis/AI_USAGE.md)
+- **全体仕様**: [analysis/overview.md](analysis/overview.md)
+- **物理モデル式**: [analysis/equations.md](analysis/equations.md)
+- **実行レシピ**: [analysis/run-recipes.md](analysis/run-recipes.md)
+- **AI向け利用ガイド**: [analysis/AI_USAGE.md](analysis/AI_USAGE.md)
 
 ### 用語定義
 
@@ -28,9 +28,9 @@
 | **供給ゲート (supply gate)** | headroom に応じて深部→表層への供給をオン/オフする制御機構 | — |
 | `prod_subblow_area_rate` | ブローアウト未満に破砕で供給される面積率 $\dot{\Sigma}^{(<a_{\rm blow})}_{\rm prod}$ | (E.027), (E.035) |
 | `supply_rate_applied` | headroom クリップ後に実際に表層へ適用された供給率 | — |
-| **shielding.mode** | 遮蔽モード。`psitau`=Φテーブル適用、`fixed_tau1`=固定τ=1、`off`=無効 | [schema.py#Shielding](../../marsdisk/schema.py) |
+| **shielding.mode** | 遮蔽モード。`psitau`=Φテーブル適用、`fixed_tau1`=固定τ=1、`off`=無効 | [schema.py#Shielding](marsdisk/schema.py) |
 | **shielding.fixed_tau1_sigma** | `fixed_tau1` モード時に使用する $\Sigma_{\tau=1}$ の固定値。`auto` で自動決定 | — |
-| **deep_mixing** | 深部→表層の物質輸送モード。`t_mix_orbits` で混合時定数を指定 | [supply.py](../../marsdisk/physics/supply.py) |
+| **deep_mixing** | 深部→表層の物質輸送モード。`t_mix_orbits` で混合時定数を指定 | [supply.py](marsdisk/physics/supply.py) |
 | **hard gate** | headroom がゼロの場合に供給を完全遮断する現行ゲート方式（soft gate は未実装） | — |
 | $\Phi(\tau)$ | 自遮蔽係数（放射輸送補正）。光学的に厚い層での吸収低減を近似 | (E.015), (E.017) |
 | **init_tau1.scale_to_tau1** | 初期 $\Sigma_{\rm surf}$ を $\Sigma_{\tau=1}$ 以下にクランプするオプション | — |
@@ -40,7 +40,7 @@
 `docs/plan/` 内のドキュメントは開発プラン・イシュー整理・振り返りを管理します。本メモは **τクリップと供給ゲートの現状整理および deep_mixing 挙動**に関する調査結果と対応方針をまとめたものです。
 
 関連ドキュメント：
-- [20251216_temp_supply_sigma_tau1_headroom.md](./20251216_temp_supply_sigma_tau1_headroom.md) — Σ_τ1 固定による供給クリップ事象の初回報告
+- [20251216_temp_supply_sigma_tau1_headroom.md](.docs/plan/20251216_temp_supply_sigma_tau1_headroom.md) — Σ_τ1 固定による供給クリップ事象の初回報告
 
 ---
 
@@ -86,15 +86,15 @@
 ## 参考
 
 ### 関連ドキュメント
-- 先行メモ: [20251216_temp_supply_sigma_tau1_headroom.md](./20251216_temp_supply_sigma_tau1_headroom.md)（Sigma_tau1 固定で供給が長時間ゼロになった事例）
-- 物理式の詳細: [analysis/equations.md](../../analysis/equations.md)
-- シミュレーション実行方法: [analysis/run-recipes.md](../../analysis/run-recipes.md)
-- AI向け利用ガイド: [analysis/AI_USAGE.md](../../analysis/AI_USAGE.md)
+- 先行メモ: [20251216_temp_supply_sigma_tau1_headroom.md](.docs/plan/20251216_temp_supply_sigma_tau1_headroom.md)（Sigma_tau1 固定で供給が長時間ゼロになった事例）
+- 物理式の詳細: [analysis/equations.md](analysis/equations.md)
+- シミュレーション実行方法: [analysis/run-recipes.md](analysis/run-recipes.md)
+- AI向け利用ガイド: [analysis/AI_USAGE.md](analysis/AI_USAGE.md)
 
 ### コード参照
 | 機能 | ファイル | 行範囲 |
 |------|----------|--------|
-| headroom クリップ実装 | [collisions_smol.py](../../marsdisk/physics/collisions_smol.py) | L308–352 |
-| τ=1 初期化・自動決定 | [run.py](../../marsdisk/run.py) | L2290–2345 |
-| deep_mixing 供給制御 | [supply.py](../../marsdisk/physics/supply.py) | `split_supply_with_deep_buffer()` |
-| 遮蔽モード定義 | [schema.py](../../marsdisk/schema.py) | `Shielding` クラス |
+| headroom クリップ実装 | [collisions_smol.py](marsdisk/physics/collisions_smol.py) | L308–352 |
+| τ=1 初期化・自動決定 | [run.py](marsdisk/run.py) | L2290–2345 |
+| deep_mixing 供給制御 | [supply.py](marsdisk/physics/supply.py) | `split_supply_with_deep_buffer()` |
+| 遮蔽モード定義 | [schema.py](marsdisk/schema.py) | `Shielding` クラス |

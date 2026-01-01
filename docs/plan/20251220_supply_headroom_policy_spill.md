@@ -11,10 +11,10 @@
 
 本リポジトリ（MarsDiskSimulation / `marsshearingsheet`）は、**火星ロッシュ限界内の高密度ダストディスク**を対象に、放射圧によるブローアウトと衝突破砕カスケードを2年間シミュレーションして質量損失・流出率を定量化するものです。詳細は以下を参照してください：
 
-- **全体仕様**: [analysis/overview.md](../../analysis/overview.md)
-- **物理モデル式**: [analysis/equations.md](../../analysis/equations.md)
-- **実行レシピ**: [analysis/run-recipes.md](../../analysis/run-recipes.md)
-- **AI向け利用ガイド**: [analysis/AI_USAGE.md](../../analysis/AI_USAGE.md)
+- **全体仕様**: [analysis/overview.md](analysis/overview.md)
+- **物理モデル式**: [analysis/equations.md](analysis/equations.md)
+- **実行レシピ**: [analysis/run-recipes.md](analysis/run-recipes.md)
+- **AI向け利用ガイド**: [analysis/AI_USAGE.md](analysis/AI_USAGE.md)
 
 ### 用語定義
 
@@ -26,17 +26,17 @@
 | **headroom** | $\Sigma_{\tau=1} - \Sigma_{\rm surf}$。表層が τ=1 を超えないための余裕 | (E.031) |
 | **clip モード（従来）** | headroom がゼロになると供給自体を遮断する方式 | — |
 | **spill モード（提案）** | 供給は止めず、τ=1 超過分のみをステップ後に除去する方式 | — |
-| `supply.headroom_policy` | headroom 処理のモード設定（`clip` / `spill`） | [schema.py](../../marsdisk/schema.py) |
-| **deep_mixing** | 深部→表層の物質輸送モード | [supply.py](../../marsdisk/physics/supply.py) |
-| **Smol** | Smoluchowski 衝突＋破砕を扱う内部ソルバー | [collisions_smol.py](../../marsdisk/physics/collisions_smol.py) |
+| `supply.headroom_policy` | headroom 処理のモード設定（`clip` / `spill`） | [schema.py](marsdisk/schema.py) |
+| **deep_mixing** | 深部→表層の物質輸送モード | [supply.py](marsdisk/physics/supply.py) |
+| **Smol** | Smoluchowski 衝突＋破砕を扱う内部ソルバー | [collisions_smol.py](marsdisk/physics/collisions_smol.py) |
 
 ### ドキュメントの位置付け
 
 `docs/plan/` 内のドキュメントは開発プラン・イシュー整理・振り返りを管理します。本メモは **headroom 超過時の処理方針に関する新モード（spill）の実装提案**です。
 
 関連ドキュメント：
-- [20251219_tau_clip_gate_review.md](./20251219_tau_clip_gate_review.md) — τクリップと供給ゲートの現状整理
-- [20251216_temp_supply_sigma_tau1_headroom.md](./20251216_temp_supply_sigma_tau1_headroom.md) — 供給クリップ事象の報告
+- [20251219_tau_clip_gate_review.md](.docs/plan/20251219_tau_clip_gate_review.md) — τクリップと供給ゲートの現状整理
+- [20251216_temp_supply_sigma_tau1_headroom.md](.docs/plan/20251216_temp_supply_sigma_tau1_headroom.md) — 供給クリップ事象の報告
 
 ---
 
@@ -104,13 +104,13 @@ supply:
 ## 参考
 
 ### 関連ドキュメント
-- 物理式の詳細: [analysis/equations.md](../../analysis/equations.md)
-- シミュレーション実行方法: [analysis/run-recipes.md](../../analysis/run-recipes.md)
-- AI向け利用ガイド: [analysis/AI_USAGE.md](../../analysis/AI_USAGE.md)
+- 物理式の詳細: [analysis/equations.md](analysis/equations.md)
+- シミュレーション実行方法: [analysis/run-recipes.md](analysis/run-recipes.md)
+- AI向け利用ガイド: [analysis/AI_USAGE.md](analysis/AI_USAGE.md)
 
 ### コード参照
 | 機能 | ファイル | 備考 |
 |------|----------|------|
-| headroom クリップ実装 | [collisions_smol.py](../../marsdisk/physics/collisions_smol.py) | L308–352 |
-| deep_mixing 供給制御 | [supply.py](../../marsdisk/physics/supply.py) | `split_supply_with_deep_buffer()` |
-| 設定スキーマ | [schema.py](../../marsdisk/schema.py) | `headroom_policy` 追加予定 |
+| headroom クリップ実装 | [collisions_smol.py](marsdisk/physics/collisions_smol.py) | L308–352 |
+| deep_mixing 供給制御 | [supply.py](marsdisk/physics/supply.py) | `split_supply_with_deep_buffer()` |
+| 設定スキーマ | [schema.py](marsdisk/schema.py) | `headroom_policy` 追加予定 |

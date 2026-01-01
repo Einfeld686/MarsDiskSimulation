@@ -24,10 +24,10 @@
 
 本リポジトリ（MarsDiskSimulation / `marsshearingsheet`）は、**火星ロッシュ限界内の高密度ダストディスク**を対象に、放射圧によるブローアウトと衝突破砕カスケードをシミュレーションして質量損失・流出率を定量化するものです。詳細は以下を参照してください：
 
-- **全体仕様**: [analysis/overview.md](../../analysis/overview.md)
-- **物理モデル式**: [analysis/equations.md](../../analysis/equations.md)
-- **実行レシピ**: [analysis/run-recipes.md](../../analysis/run-recipes.md)
-- **AI向け利用ガイド**: [analysis/AI_USAGE.md](../../analysis/AI_USAGE.md)
+- **全体仕様**: [analysis/overview.md](analysis/overview.md)
+- **物理モデル式**: [analysis/equations.md](analysis/equations.md)
+- **実行レシピ**: [analysis/run-recipes.md](analysis/run-recipes.md)
+- **AI向け利用ガイド**: [analysis/AI_USAGE.md](analysis/AI_USAGE.md)
 
 ### 用語定義
 
@@ -37,7 +37,7 @@
 | **セグメント分割** | 長時間シミュレーションを複数の短い区間に分けて実行する手法 | — |
 | `sigma_surf` | 表面密度 [kg m⁻²] | — |
 | `psd_state` | 粒径分布の状態（ビンサイズ、数密度等） | — |
-| `run_zero_d()` | メインのシミュレーションドライバー関数 | [run.py](../../marsdisk/run.py) |
+| `run_zero_d()` | メインのシミュレーションドライバー関数 | [run.py](marsdisk/run.py) |
 
 ---
 
@@ -171,7 +171,7 @@ python -m marsdisk.run --config config.yml \
 
 ### 自動テスト
 
-新規テストファイル: `tests/test_checkpoint_restart.py`
+新規テストファイル: `tests/integration/test_checkpoint_io.py`
 
 | テスト名 | 検証内容 |
 |----------|----------|
@@ -183,7 +183,7 @@ python -m marsdisk.run --config config.yml \
 
 **実行コマンド**:
 ```bash
-pytest tests/test_checkpoint_restart.py -v
+pytest tests/integration/test_checkpoint_io.py -v
 ```
 
 ### 統合テスト
@@ -194,7 +194,7 @@ pytest tests/test_checkpoint_restart.py -v
 # 短時間テスト（30日分を2セグメントに分割）
 COOL_TO_K=4500 \
 CHECKPOINT_INTERVAL_YEARS=0.04 \
-python -m marsdisk.run --config configs/test_checkpoint.yml
+python -m marsdisk.run --config configs/<test_checkpoint>.yml
 ```
 
 ### 手動検証項目
@@ -261,14 +261,14 @@ python -m marsdisk.run --config configs/test_checkpoint.yml
 ## 参考
 
 ### 関連ドキュメント
-- 物理式の詳細: [analysis/equations.md](../../analysis/equations.md)
-- シミュレーション実行方法: [analysis/run-recipes.md](../../analysis/run-recipes.md)
-- AI向け利用ガイド: [analysis/AI_USAGE.md](../../analysis/AI_USAGE.md)
+- 物理式の詳細: [analysis/equations.md](analysis/equations.md)
+- シミュレーション実行方法: [analysis/run-recipes.md](analysis/run-recipes.md)
+- AI向け利用ガイド: [analysis/AI_USAGE.md](analysis/AI_USAGE.md)
 
 ### コード参照
 | 機能 | ファイル | 備考 |
 |------|----------|------|
-| メインドライバー | [run.py](../../marsdisk/run.py) | `run_zero_d()` L1081〜 |
-| 状態管理 | [run.py](../../marsdisk/run.py) | `ZeroDHistory` L672〜 |
-| ストリーミング | [run.py](../../marsdisk/run.py) | `StreamingState` L696〜 |
-| 設定スキーマ | [schema.py](../../marsdisk/schema.py) | 拡張予定 |
+| メインドライバー | [run.py](marsdisk/run.py) | `run_zero_d()` L1081〜 |
+| 状態管理 | [run.py](marsdisk/run.py) | `ZeroDHistory` L672〜 |
+| ストリーミング | [run.py](marsdisk/run.py) | `StreamingState` L696〜 |
+| 設定スキーマ | [schema.py](marsdisk/schema.py) | 拡張予定 |

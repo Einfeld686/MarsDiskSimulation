@@ -120,6 +120,9 @@ if !errorlevel! geq 1 (
   call :popd_safe
   exit /b 1
 )
+set "PYTHON_EXE_BASE=%PYTHON_EXE%"
+set "PYTHON_ARGS_BASE=%PYTHON_ARGS%"
+set "PYTHON_CMD_BASE=%PYTHON_CMD%"
 
 rem Optional dry-run for syntax tests (skip all heavy work)
 if /i "%~1"=="--dry-run" (
@@ -225,7 +228,16 @@ if !errorlevel! geq 1 (
 )
 %LOG_SETUP% Output root: %BATCH_ROOT%
 
-if not exist "%VENV_DIR%\Scripts\python.exe" (
+set "VENV_PY=%VENV_DIR%\Scripts\python.exe"
+set "VENV_OK=0"
+if exist "%VENV_PY%" (
+  for /f %%V in ('"%VENV_PY%" -c "import sys; print(1 if sys.version_info >= (3,11) else 0)"') do set "VENV_OK=%%V"
+)
+if not "%VENV_OK%"=="1" (
+  if exist "%VENV_DIR%" (
+    echo.[warn] venv python is missing or <3.11; recreating: %VENV_DIR%
+    rmdir /s /q "%VENV_DIR%"
+  )
   %LOG_SETUP% Creating virtual environment in %VENV_DIR%...
   call "%PYTHON_EXEC_CMD%" -m venv "%VENV_DIR%"
 )

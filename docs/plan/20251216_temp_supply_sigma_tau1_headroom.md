@@ -9,9 +9,9 @@
 
 本リポジトリ（MarsDiskSimulation / `marsshearingsheet`）は、**火星ロッシュ限界内の高密度ダストディスク**を対象に、放射圧によるブローアウトと衝突破砕カスケードを2年間シミュレーションして質量損失・流出率を定量化するものです。詳細は以下を参照してください：
 
-- **全体仕様**: [analysis/overview.md](../../analysis/overview.md)
-- **物理モデル式**: [analysis/equations.md](../../analysis/equations.md)
-- **実行レシピ**: [analysis/run-recipes.md](../../analysis/run-recipes.md)
+- **全体仕様**: [analysis/overview.md](analysis/overview.md)
+- **物理モデル式**: [analysis/equations.md](analysis/equations.md)
+- **実行レシピ**: [analysis/run-recipes.md](analysis/run-recipes.md)
 
 ### 用語定義
 
@@ -20,7 +20,7 @@
 | $\Sigma_{\tau=1}$ (`sigma_tau1`) | 光学的深さ τ = 1 となる臨界面密度。$\kappa_{\rm eff}^{-1}$ として計算される | (E.016), (E.017) |
 | **headroom** | $\Sigma_{\tau=1} - \Sigma_{\rm surf}$。表層がτ=1を超えないための「余裕」 | (E.031) |
 | `prod_subblow_area_rate` | ブローアウト未満に破砕で供給される面積率 $\dot{\Sigma}^{(<a_{\rm blow})}_{\rm prod}$ | (E.027), (E.035) |
-| **shielding.mode** | 遮蔽モード。`psitau`=Φテーブル適用、`fixed_tau1`=固定τ=1、`off`=無効 | [schema.py#Shielding](../../marsdisk/schema.py) |
+| **shielding.mode** | 遮蔽モード。`psitau`=Φテーブル適用、`fixed_tau1`=固定τ=1、`off`=無効 | [schema.py#Shielding](marsdisk/schema.py) |
 | $\Phi(\tau)$ | 自遮蔽係数（放射輸送補正）。光学的に厚い層での吸収低減を近似 | (E.015), (E.017) |
 
 ### 本ドキュメントの位置付け
@@ -30,7 +30,7 @@
 ---
 
 ## 何が起きたか
-- 対象: `/Volumes/KIOXIA/marsdisk_out/temp_supply_sweep/20251212-222756__36a427291__seed599704065/T6000_mu1p0_phi20`
+- 対象: `out/<run_id>`
 - 現象: `prod_subblow_area_rate` が
   - 実行開始〜約260 s のみ ~1.0e-2 kg m^-2 s^-1 で立ち上がり、
   - その後 3.4e6 s（約39.4日）まで 0 に張り付く。
@@ -70,6 +70,6 @@
 - 連続して `supply_rate_scaled>0` かつ `applied==0` が続くと warn を出し、ログに time・Sigma_surf・Sigma_tau1・headroom・温度/フィードバックスケールを必ず含める。初期 headroom も起動時に一行でログ出力する。
 - `run_temp_supply_sweep.sh` のデフォルトで温度スケールを無効化し（feedback は従来どおり off）、起動時に有効な倍率・遮蔽設定を echo。クイックプロットに supply 内訳と headroom/clip factor を載せ、summary の clip 時間割合をタイトルに含めた。
 ## 参考
-- 対象 run: `/Volumes/KIOXIA/marsdisk_out/temp_supply_sweep/20251212-222756__36a427291__seed599704065/T6000_mu1p0_phi20`
+- 対象 run: `out/<run_id>`
 - 実装ヘッドルーム判定: [marsdisk/physics/collisions_smol.py:308–352]
 - Στ=1 固定の適用箇所: [marsdisk/run.py:2290–2345]

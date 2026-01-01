@@ -71,7 +71,7 @@
 - `tests/integration/test_qpr_lookup.py` に Numba 経路の一致テストを追加。
   - `qpr_lookup_array` の NumPy 経路と Numba 経路を `np.allclose` で比較。
   - Numba が無い環境は skip。
-- `tests/unit/test_numba_helpers.py` または新規 `tests/unit/test_radiation_numba.py` に
+- `tests/unit/test_numba_helpers.py` または新規 `tests/unit/test_radiation_shielding.py` に
   `blowout_radius_numba` の一致テストを追加。
   - `MARSDISK_DISABLE_NUMBA=1` / `_NUMBA_FAILED` によるフォールバックも確認。
 

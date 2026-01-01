@@ -11,10 +11,10 @@
 
 本リポジトリ（MarsDiskSimulation / `marsshearingsheet`）は、**火星ロッシュ限界内の高密度ダストディスク**を対象に、放射圧によるブローアウトと衝突破砕カスケードを2年間シミュレーションして質量損失・流出率を定量化するものです。詳細は以下を参照してください：
 
-- **全体仕様**: [analysis/overview.md](../../analysis/overview.md)
-- **物理モデル式**: [analysis/equations.md](../../analysis/equations.md)
-- **実行レシピ**: [analysis/run-recipes.md](../../analysis/run-recipes.md)
-- **AI向け利用ガイド**: [analysis/AI_USAGE.md](../../analysis/AI_USAGE.md)
+- **全体仕様**: [analysis/overview.md](analysis/overview.md)
+- **物理モデル式**: [analysis/equations.md](analysis/equations.md)
+- **実行レシピ**: [analysis/run-recipes.md](analysis/run-recipes.md)
+- **AI向け利用ガイド**: [analysis/AI_USAGE.md](analysis/AI_USAGE.md)
 
 ### 用語定義
 
@@ -30,17 +30,17 @@
 | $\Phi(\tau)$ | **自遮蔽係数** (self-shielding factor)。光学的に厚い円盤での放射減衰を表す [0–1] の係数 | (E.015), (E.028) |
 | $\kappa_{\rm eff}$ | **有効不透明度** (effective opacity)。$\kappa_{\rm eff} = \Phi(\tau) \cdot \kappa_{\rm surf}$ | (E.015) |
 | **headroom** | $\Sigma_{\tau=1} - \Sigma_{\rm surf}$。表層が τ=1 を超えないための「余裕」 | (E.031) |
-| **spill** | headroom 超過分を即時除去するモード | [supply_headroom_policy_spill](./20251220_supply_headroom_policy_spill.md) |
-| **deep_mixing** | 深部リザーバ→表層への物質輸送モード | [supply.py](../../marsdisk/physics/supply.py) |
+| **spill** | headroom 超過分を即時除去するモード | [supply_headroom_policy_spill](.docs/plan/20251220_supply_headroom_policy_spill.md) |
+| **deep_mixing** | 深部リザーバ→表層への物質輸送モード | [supply.py](marsdisk/physics/supply.py) |
 
 ### ドキュメントの位置付け
 
 `docs/plan/` 内のドキュメントは開発プラン・イシュー整理・運用ノートを管理します。本メモは **光学的厚さ τ が高止まりするケースの調整方法**を示す運用ガイドです。
 
 関連ドキュメント：
-- [20251219_tau_clip_gate_review.md](./20251219_tau_clip_gate_review.md) — τクリップと供給ゲートの現状整理
-- [20251220_supply_headroom_policy_spill.md](./20251220_supply_headroom_policy_spill.md) — headroom 処理の spill モード提案
-- [20251216_temp_supply_sigma_tau1_headroom.md](./20251216_temp_supply_sigma_tau1_headroom.md) — 供給クリップ事象の報告
+- [20251219_tau_clip_gate_review.md](.docs/plan/20251219_tau_clip_gate_review.md) — τクリップと供給ゲートの現状整理
+- [20251220_supply_headroom_policy_spill.md](.docs/plan/20251220_supply_headroom_policy_spill.md) — headroom 処理の spill モード提案
+- [20251216_temp_supply_sigma_tau1_headroom.md](.docs/plan/20251216_temp_supply_sigma_tau1_headroom.md) — 供給クリップ事象の報告
 
 ---
 
@@ -74,7 +74,7 @@ init_tau1:
   scale_to_tau1: true
 ```
 
-**コード参照**: [marsdisk/run_zero_d.py#L1599–L1700](../../marsdisk/run.py) — `init_tau1` 処理
+**コード参照**: [marsdisk/run_zero_d.py#L1599–L1700](marsdisk/run.py) — `init_tau1` 処理
 
 ### 2. 供給を絞る (`supply.const`)
 
@@ -105,7 +105,7 @@ supply:
     response_time_years: 0.4
 ```
 
-**コード参照**: [marsdisk/physics/supply.py#L147](../../marsdisk/physics/supply.py) — フィードバック制御
+**コード参照**: [marsdisk/physics/supply.py#L147](marsdisk/physics/supply.py) — フィードバック制御
 
 ### 4. ヘッドルームポリシーを spill に (`supply.headroom_policy`)
 
@@ -119,7 +119,7 @@ supply:
 > [!WARNING]
 > spill モードでは超過質量が系外ロスとして扱われる。質量保存検証時には `supply_tau_clip_spill_rate` カラムに注意。
 
-**詳細**: [20251220_supply_headroom_policy_spill.md](./20251220_supply_headroom_policy_spill.md)
+**詳細**: [20251220_supply_headroom_policy_spill.md](.docs/plan/20251220_supply_headroom_policy_spill.md)
 
 ### 5. 深層バッファを使う (`supply.transport.mode`)
 
@@ -132,7 +132,7 @@ supply:
     t_mix_orbits: 20
 ```
 
-**コード参照**: [marsdisk/schema.py#L300–L320](../../marsdisk/schema.py) — `deep_mixing` スキーマ
+**コード参照**: [marsdisk/schema.py#L300–L320](marsdisk/schema.py) — `deep_mixing` スキーマ
 
 ### 6. 昇華シンクを強める (`sinks.sub_params`)
 
@@ -164,18 +164,18 @@ sinks:
 
 ### 関連ドキュメント
 
-- 物理式の詳細: [analysis/equations.md](../../analysis/equations.md) — (E.015)–(E.017) 遮蔽、(E.031) τ=1 クリップ
-- シミュレーション実行方法: [analysis/run-recipes.md](../../analysis/run-recipes.md)
-- 設定ガイド: [analysis/config_guide.md](../../analysis/config_guide.md) — §3.9 shielding、§3.5 supply
-- 用語集: [analysis/glossary.md](../../analysis/glossary.md)
+- 物理式の詳細: [analysis/equations.md](analysis/equations.md) — (E.015)–(E.017) 遮蔽、(E.031) τ=1 クリップ
+- シミュレーション実行方法: [analysis/run-recipes.md](analysis/run-recipes.md)
+- 設定ガイド: [analysis/config_guide.md](analysis/config_guide.md) — §3.9 shielding、§3.5 supply
+- 用語集: [analysis/glossary.md](analysis/glossary.md)
 
 ### コード参照
 
 | 機能 | ファイル | 備考 |
 |------|----------|------|
-| 遮蔽係数 Φ 適用 | [shielding.py#effective_kappa](../../marsdisk/physics/shielding.py) | L81–120 |
-| Σ_{τ=1} 計算 | [shielding.py#sigma_tau1](../../marsdisk/physics/shielding.py) | L123–130 |
-| τ=1 クリップ | [shielding.py#clip_to_tau1](../../marsdisk/physics/shielding.py) | L219–261 |
-| 初期 τ クリップ | [run.py](../../marsdisk/run.py) | L1599–1700 (`init_tau1`) |
-| 供給フィードバック | [supply.py](../../marsdisk/physics/supply.py) | L147 (`feedback_tau_field`) |
-| headroom ポリシー | [collisions_smol.py](../../marsdisk/physics/collisions_smol.py) | L476–480 |
+| 遮蔽係数 Φ 適用 | [shielding.py#effective_kappa](marsdisk/physics/shielding.py) | L81–120 |
+| Σ_{τ=1} 計算 | [shielding.py#sigma_tau1](marsdisk/physics/shielding.py) | L123–130 |
+| τ=1 クリップ | [shielding.py#clip_to_tau1](marsdisk/physics/shielding.py) | L219–261 |
+| 初期 τ クリップ | [run.py](marsdisk/run.py) | L1599–1700 (`init_tau1`) |
+| 供給フィードバック | [supply.py](marsdisk/physics/supply.py) | L147 (`feedback_tau_field`) |
+| headroom ポリシー | [collisions_smol.py](marsdisk/physics/collisions_smol.py) | L476–480 |

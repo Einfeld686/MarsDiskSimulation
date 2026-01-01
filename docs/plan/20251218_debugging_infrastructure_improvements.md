@@ -1,7 +1,7 @@
 # デバッグ基盤改善計画
 
 > **作成日**: 2025-12-18  
-> **関連**: [20251217_code_improvements_followup.md](./20251217_code_improvements_followup.md)（主に完了済み）
+> **関連**: [20251217_code_improvements_followup.md](.docs/plan/20251217_code_improvements_followup.md)（主に完了済み）
 
 ---
 
@@ -15,8 +15,8 @@
 |------|------|------|
 | `errors.py` | `MarsDiskError` のみ（10行） | - |
 | `warnings.warn()` 使用箇所 | 14箇所（構造化なし） | `rg "warnings.warn" marsdisk/` |
-| Provenance coverage | 7/44 式（15.9%） | [provenance_report.md L58-67](file://analysis/provenance_report.md) |
-| TODO(REF:...) 残存 | 37件（report値）／ファイルは0件（要再生成） | [analysis/UNKNOWN_REF_REQUESTS.jsonl](file://analysis/UNKNOWN_REF_REQUESTS.jsonl) |
+| Provenance coverage | 7/44 式（15.9%） | [provenance_report.md L58-67](analysis/provenance_report.md) |
+| TODO(REF:...) 残存 | 37件（report値）／ファイルは0件（要再生成） | [analysis/UNKNOWN_REF_REQUESTS.jsonl](analysis/UNKNOWN_REF_REQUESTS.jsonl) |
 | `run.py` 行数 | 4,489行（目標 4,000行） | `wc -l marsdisk/run.py` |
 | テストルート残存 | 2ファイル | - |
 
