@@ -918,7 +918,8 @@ call :wait_for_slot
 if "%DEBUG%"=="1" echo.[DEBUG] launch_job: after wait_for_slot
 set "JOB_PID="
 rem Build JOB_CMD with delayed expansion
-set "JOB_CMD=set RUN_TS=!RUN_TS!&& set BATCH_SEED=!BATCH_SEED!&& set RUN_ONE_T=!JOB_T!&& set RUN_ONE_EPS=!JOB_EPS!&& set RUN_ONE_TAU=!JOB_TAU!&& set RUN_ONE_SEED=!JOB_SEED!&& set AUTO_JOBS=0&& set PARALLEL_JOBS=1&& set SKIP_PIP=1&& call ""!SCRIPT_SELF_USE!"" --run-one"
+rem Include BASE_CONFIG, GEOMETRY_MODE, SWEEP_TAG, BATCH_ROOT, PYTHON_EXE, PYTHON_ARGS for child process
+set "JOB_CMD=set RUN_TS=!RUN_TS!&& set BATCH_SEED=!BATCH_SEED!&& set RUN_ONE_T=!JOB_T!&& set RUN_ONE_EPS=!JOB_EPS!&& set RUN_ONE_TAU=!JOB_TAU!&& set RUN_ONE_SEED=!JOB_SEED!&& set AUTO_JOBS=0&& set PARALLEL_JOBS=1&& set SKIP_PIP=1&& set BASE_CONFIG=!BASE_CONFIG!&& set GEOMETRY_MODE=!GEOMETRY_MODE!&& set SWEEP_TAG=!SWEEP_TAG!&& set BATCH_ROOT=!BATCH_ROOT!&& set PYTHON_EXE=!PYTHON_EXE!&& set PYTHON_ARGS=!PYTHON_ARGS!&& call ""!SCRIPT_SELF_USE!"" --run-one"
 set "JOB_PID_TMP="
 if "%DEBUG%"=="1" echo.[DEBUG] launch_job: TMP_ROOT=!TMP_ROOT!
 if "%DEBUG%"=="1" echo.[DEBUG] launch_job: temp file=!TMP_ROOT!\marsdisk_pid_!JOB_T!_!JOB_EPS!_!JOB_TAU!.tmp

@@ -5231,48 +5231,55 @@
   {
     "file_path": "marsdisk/physics/psd.py",
     "line_no": 224,
+    "symbol": "ensure_psd_state_contract",
+    "signature": "ensure_psd_state_contract(psd_state: Dict[str, np.ndarray | float]) -> Dict[str, np.ndarray | float]",
+    "brief_usage": "Ensure alias keys and version markers remain in sync."
+  },
+  {
+    "file_path": "marsdisk/physics/psd.py",
+    "line_no": 241,
     "symbol": "compute_kappa",
     "signature": "compute_kappa(psd_state: Dict[str, np.ndarray | float]) -> float",
     "brief_usage": "Compute the mass opacity ``\\kappa`` from a PSD state (P1)."
   },
   {
     "file_path": "marsdisk/physics/psd.py",
-    "line_no": 260,
+    "line_no": 277,
     "symbol": "mass_weights_lognormal_mixture",
     "signature": "mass_weights_lognormal_mixture(sizes: np.ndarray, widths: np.ndarray, *, f_fine: float, s_fine: float, s_meter: float, width_dex: float, s_cut: float | None=None) -> np.ndarray",
     "brief_usage": "Return per-bin mass weights for a two-component melt mixture."
   },
   {
     "file_path": "marsdisk/physics/psd.py",
-    "line_no": 303,
+    "line_no": 320,
     "symbol": "mass_weights_truncated_powerlaw",
     "signature": "mass_weights_truncated_powerlaw(sizes: np.ndarray, widths: np.ndarray, *, alpha_solid: float, s_min_solid: float, s_max_solid: float, s_cut: float | None=None) -> np.ndarray",
     "brief_usage": "Return per-bin mass weights for a truncated power-law melt PSD."
   },
   {
     "file_path": "marsdisk/physics/psd.py",
-    "line_no": 337,
+    "line_no": 354,
     "symbol": "apply_mass_weights",
     "signature": "apply_mass_weights(psd_state: Dict[str, np.ndarray | float], mass_weights: np.ndarray, *, rho: float | None=None) -> Dict[str, np.ndarray | float]",
     "brief_usage": "Map mass weights to the PSD's number array while preserving total mass."
   },
   {
     "file_path": "marsdisk/physics/psd.py",
-    "line_no": 382,
+    "line_no": 399,
     "symbol": "_size_drift_rebin_numpy",
     "signature": "_size_drift_rebin_numpy(sizes: np.ndarray, number: np.ndarray, edges: np.ndarray, ds_step: float, floor_val: float) -> tuple[np.ndarray, np.ndarray]",
     "brief_usage": "Vectorised rebinning helper for :func:`apply_uniform_size_drift`."
   },
   {
     "file_path": "marsdisk/physics/psd.py",
-    "line_no": 407,
+    "line_no": 424,
     "symbol": "apply_uniform_size_drift",
     "signature": "apply_uniform_size_drift(psd_state: Dict[str, np.ndarray | float], *, ds_dt: float, dt: float, floor: float, sigma_surf: float) -> tuple[float, float, Dict[str, float]]",
     "brief_usage": "Erode all PSD bins by a uniform ``ds/dt`` and update ``Sigma_surf``."
   },
   {
     "file_path": "marsdisk/physics/psd.py",
-    "line_no": 548,
+    "line_no": 565,
     "symbol": "evolve_min_size",
     "signature": "evolve_min_size(s_min_prev: float, *, dt: float, model: Optional[str]=None, params: Optional[Mapping[str, float]]=None, T: Optional[float]=None, rho: Optional[float]=None, s_floor: Optional[float]=None, sublimation_params: Optional[SublimationParams]=None) -> float",
     "brief_usage": "Return the evolved minimum grain size after a time step ``dt``."
@@ -6427,525 +6434,574 @@
   },
   {
     "file_path": "marsdisk/physics_step.py",
-    "line_no": 36,
+    "line_no": 37,
     "symbol": "TAU_MIN",
     "signature": "TAU_MIN = 1e-12",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/physics_step.py",
-    "line_no": 37,
+    "line_no": 38,
     "symbol": "KAPPA_MIN",
     "signature": "KAPPA_MIN = 1e-12",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/physics_step.py",
-    "line_no": 41,
+    "line_no": 42,
     "symbol": "RadiationResult",
     "signature": "class RadiationResult",
     "brief_usage": "Results from radiation pressure calculations (R1-R3)."
   },
   {
     "file_path": "marsdisk/physics_step.py",
-    "line_no": 62,
+    "line_no": 63,
     "symbol": "ShieldingResult",
     "signature": "class ShieldingResult",
     "brief_usage": "Results from optical depth and shielding calculations (S0)."
   },
   {
     "file_path": "marsdisk/physics_step.py",
-    "line_no": 83,
+    "line_no": 84,
+    "symbol": "ShieldingStepResult",
+    "signature": "class ShieldingStepResult",
+    "brief_usage": "Step-level shielding outputs used by the zero-D orchestrator."
+  },
+  {
+    "file_path": "marsdisk/physics_step.py",
+    "line_no": 95,
     "symbol": "SublimationResult",
     "signature": "class SublimationResult",
     "brief_usage": "Results from sublimation calculations."
   },
   {
     "file_path": "marsdisk/physics_step.py",
-    "line_no": 104,
+    "line_no": 116,
     "symbol": "SurfaceStepResult",
     "signature": "class SurfaceStepResult",
     "brief_usage": "Results from surface layer evolution (S1)."
   },
   {
     "file_path": "marsdisk/physics_step.py",
-    "line_no": 128,
+    "line_no": 140,
+    "symbol": "SurfaceUpdateResult",
+    "signature": "class SurfaceUpdateResult",
+    "brief_usage": "Normalized surface update result shared across collision solvers."
+  },
+  {
+    "file_path": "marsdisk/physics_step.py",
+    "line_no": 153,
     "symbol": "PhysicsStepResult",
     "signature": "class PhysicsStepResult",
     "brief_usage": "Aggregated results from a full physics step."
   },
   {
     "file_path": "marsdisk/physics_step.py",
-    "line_no": 157,
+    "line_no": 182,
     "symbol": "compute_radiation_parameters",
-    "signature": "compute_radiation_parameters(s_min: float, rho: float, T_M: float, *, qpr_override: Optional[float]=None) -> RadiationResult",
+    "signature": "compute_radiation_parameters(s_min: float, rho: float, T_M: float, *, qpr_override: Optional[float]=None, qpr_lookup_fn: Optional[Callable[[float, float], float]]=None, initial: Optional[float]=None, a_blow_override: Optional[float]=None, iterations: int=6) -> RadiationResult",
     "brief_usage": "Compute radiation pressure parameters for the current step."
   },
   {
     "file_path": "marsdisk/physics_step.py",
-    "line_no": 219,
+    "line_no": 258,
     "symbol": "compute_shielding",
     "signature": "compute_shielding(kappa_surf: float, sigma_surf: float, *, mode: str='psitau', phi_tau_fn: Any=None, tau_fixed: Optional[float]=None, sigma_tau1_fixed: Optional[float]=None, los_factor: float=1.0) -> ShieldingResult",
     "brief_usage": "Compute optical depth and shielding correction."
   },
   {
     "file_path": "marsdisk/physics_step.py",
-    "line_no": 322,
+    "line_no": 359,
+    "symbol": "compute_shielding_step",
+    "signature": "compute_shielding_step(kappa_surf: float, sigma_surf: float, *, collisions_active: bool, shielding_mode: str, phi_tau_fn: Optional[Callable[[float], float]], tau_fixed: Optional[float], sigma_tau1_fixed: Optional[float], los_factor: float, use_tcoll: bool) -> ShieldingStepResult",
+    "brief_usage": "Compute shielding and optional τ_for_coll for a single step."
+  },
+  {
+    "file_path": "marsdisk/physics_step.py",
+    "line_no": 414,
     "symbol": "compute_sublimation",
     "signature": "compute_sublimation(T_M: float, r: float, rho: float, sub_params: Any, *, phase_state: str='solid', enabled: bool=True) -> SublimationResult",
     "brief_usage": "Compute sublimation erosion rate."
   },
   {
     "file_path": "marsdisk/physics_step.py",
-    "line_no": 383,
+    "line_no": 475,
     "symbol": "step_surface_layer",
     "signature": "step_surface_layer(sigma_surf: float, prod_rate: float, dt: float, Omega: float, *, tau: Optional[float]=None, t_sink: Optional[float]=None, sigma_tau1: Optional[float]=None, enable_blowout: bool=True, chi_blow: float=1.0) -> SurfaceStepResult",
     "brief_usage": "Advance the surface layer by one time step."
   },
   {
-    "file_path": "marsdisk/physics_step.py",
-    "line_no": 466,
-    "symbol": "fast_blowout_correction_factor",
-    "signature": "fast_blowout_correction_factor(ratio: float) -> float",
-    "brief_usage": "Compute the effective loss fraction for fast blowout."
-  },
-  {
-    "file_path": "marsdisk/physics_step.py",
-    "line_no": 490,
-    "symbol": "compute_gate_factor",
-    "signature": "compute_gate_factor(t_blow: Optional[float], t_solid: Optional[float]) -> float",
-    "brief_usage": "Compute blowout gate coefficient."
-  },
-  {
     "file_path": "marsdisk/run_one_d.py",
-    "line_no": 62,
+    "line_no": 65,
     "symbol": "SECONDS_PER_YEAR",
     "signature": "SECONDS_PER_YEAR = 365.25 * 24 * 3600.0",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/run_one_d.py",
-    "line_no": 63,
+    "line_no": 66,
     "symbol": "MAX_STEPS",
     "signature": "MAX_STEPS = 50000000",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/run_one_d.py",
-    "line_no": 64,
+    "line_no": 67,
     "symbol": "TAU_MIN",
     "signature": "TAU_MIN = 1e-12",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/run_one_d.py",
-    "line_no": 65,
+    "line_no": 68,
     "symbol": "KAPPA_MIN",
     "signature": "KAPPA_MIN = 1e-12",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/run_one_d.py",
-    "line_no": 66,
+    "line_no": 69,
     "symbol": "DEFAULT_SEED",
     "signature": "DEFAULT_SEED = 12345",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/run_one_d.py",
-    "line_no": 67,
+    "line_no": 70,
     "symbol": "MASS_BUDGET_TOLERANCE_PERCENT",
     "signature": "MASS_BUDGET_TOLERANCE_PERCENT = 0.5",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/run_one_d.py",
-    "line_no": 68,
+    "line_no": 71,
     "symbol": "SINK_REF_SIZE",
     "signature": "SINK_REF_SIZE = 1e-06",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/run_one_d.py",
-    "line_no": 69,
+    "line_no": 72,
     "symbol": "FAST_BLOWOUT_RATIO_THRESHOLD",
     "signature": "FAST_BLOWOUT_RATIO_THRESHOLD = 3.0",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/run_one_d.py",
-    "line_no": 70,
+    "line_no": 73,
     "symbol": "FAST_BLOWOUT_RATIO_STRICT",
     "signature": "FAST_BLOWOUT_RATIO_STRICT = 10.0",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/run_one_d.py",
-    "line_no": 73,
+    "line_no": 76,
     "symbol": "MassBudgetViolationError",
     "signature": "class MassBudgetViolationError(NumericalError)",
     "brief_usage": "Raised when the mass budget tolerance is exceeded."
   },
   {
     "file_path": "marsdisk/run_one_d.py",
-    "line_no": 77,
+    "line_no": 80,
     "symbol": "SUM_OUT_MASS",
     "signature": "SUM_OUT_MASS = 0",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/run_one_d.py",
-    "line_no": 78,
+    "line_no": 81,
     "symbol": "SUM_SINK_MASS",
     "signature": "SUM_SINK_MASS = 1",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/run_one_d.py",
-    "line_no": 79,
+    "line_no": 82,
     "symbol": "SUM_SUBLIMATION_MASS",
     "signature": "SUM_SUBLIMATION_MASS = 2",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/run_one_d.py",
-    "line_no": 80,
+    "line_no": 83,
     "symbol": "SUM_AREA",
     "signature": "SUM_AREA = 3",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/run_one_d.py",
-    "line_no": 81,
+    "line_no": 84,
     "symbol": "SUM_SUPPLY_RATE_NOMINAL",
     "signature": "SUM_SUPPLY_RATE_NOMINAL = 4",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/run_one_d.py",
-    "line_no": 82,
+    "line_no": 85,
     "symbol": "SUM_SUPPLY_RATE_SCALED",
     "signature": "SUM_SUPPLY_RATE_SCALED = 5",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/run_one_d.py",
-    "line_no": 83,
+    "line_no": 86,
     "symbol": "SUM_SUPPLY_RATE_APPLIED",
     "signature": "SUM_SUPPLY_RATE_APPLIED = 6",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/run_one_d.py",
-    "line_no": 84,
+    "line_no": 87,
     "symbol": "SUM_SUPPLY_HEADROOM",
     "signature": "SUM_SUPPLY_HEADROOM = 7",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/run_one_d.py",
-    "line_no": 85,
+    "line_no": 88,
     "symbol": "SUM_SUPPLY_CLIP_FACTOR",
     "signature": "SUM_SUPPLY_CLIP_FACTOR = 8",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/run_one_d.py",
-    "line_no": 86,
+    "line_no": 89,
     "symbol": "SUM_SUPPLY_VISIBILITY",
     "signature": "SUM_SUPPLY_VISIBILITY = 9",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/run_one_d.py",
-    "line_no": 87,
+    "line_no": 90,
     "symbol": "SUM_SUPPLY_SPILL_RATE",
     "signature": "SUM_SUPPLY_SPILL_RATE = 10",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/run_one_d.py",
-    "line_no": 88,
+    "line_no": 91,
     "symbol": "SUM_SUPPLY_FEEDBACK",
     "signature": "SUM_SUPPLY_FEEDBACK = 11",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/run_one_d.py",
-    "line_no": 89,
+    "line_no": 92,
     "symbol": "SUM_SUPPLY_TEMPERATURE",
     "signature": "SUM_SUPPLY_TEMPERATURE = 12",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/run_one_d.py",
-    "line_no": 90,
+    "line_no": 93,
     "symbol": "SUM_SUPPLY_RESERVOIR",
     "signature": "SUM_SUPPLY_RESERVOIR = 13",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/run_one_d.py",
-    "line_no": 91,
+    "line_no": 94,
     "symbol": "SUM_DT_OVER_T_BLOW",
     "signature": "SUM_DT_OVER_T_BLOW = 14",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/run_one_d.py",
-    "line_no": 92,
+    "line_no": 95,
     "symbol": "SUM_SUPPLY_BLOCKED_AREA",
     "signature": "SUM_SUPPLY_BLOCKED_AREA = 15",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/run_one_d.py",
-    "line_no": 93,
+    "line_no": 96,
     "symbol": "SUM_SUPPLY_MIXING_AREA",
     "signature": "SUM_SUPPLY_MIXING_AREA = 16",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/run_one_d.py",
-    "line_no": 94,
+    "line_no": 97,
     "symbol": "STEP_SUM_COUNT",
     "signature": "STEP_SUM_COUNT = 17",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/run_one_d.py",
-    "line_no": 97,
+    "line_no": 100,
     "symbol": "CellStepPayload",
     "signature": "class CellStepPayload(NamedTuple)",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/run_one_d.py",
-    "line_no": 107,
+    "line_no": 110,
     "symbol": "_resolve_los_factor",
     "signature": "_resolve_los_factor(los_geom: Optional[object]) -> float",
     "brief_usage": "Return the multiplicative factor f_los scaling τ_vert to τ_los."
   },
   {
     "file_path": "marsdisk/run_one_d.py",
-    "line_no": 123,
+    "line_no": 126,
     "symbol": "_clamp_sigma_surf",
     "signature": "_clamp_sigma_surf(value: float, *, label: str='sigma_surf') -> float",
     "brief_usage": "Return a non-negative finite surface density (clamped to 0 on invalid)."
   },
   {
     "file_path": "marsdisk/run_one_d.py",
-    "line_no": 137,
+    "line_no": 140,
     "symbol": "_auto_chi_blow",
     "signature": "_auto_chi_blow(beta: float, qpr: float) -> float",
     "brief_usage": "Return an automatic chi_blow scaling based on β and ⟨Q_pr⟩."
   },
   {
     "file_path": "marsdisk/run_one_d.py",
-    "line_no": 152,
-    "symbol": "_fast_blowout_correction_factor",
-    "signature": "_fast_blowout_correction_factor(ratio: float) -> float",
-    "brief_usage": "Return the effective loss fraction ``f_fast = 1 - exp(-Δt/t_blow)``."
-  },
-  {
-    "file_path": "marsdisk/run_one_d.py",
-    "line_no": 165,
+    "line_no": 155,
     "symbol": "_env_flag",
     "signature": "_env_flag(name: str) -> Optional[bool]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/run_one_d.py",
-    "line_no": 177,
+    "line_no": 167,
     "symbol": "_env_int",
     "signature": "_env_int(name: str) -> Optional[int]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/run_one_d.py",
-    "line_no": 187,
+    "line_no": 177,
     "symbol": "_resolve_cell_parallel_config",
     "signature": "_resolve_cell_parallel_config(*, os_name: str, n_cells: int, cell_parallel_requested: bool, cell_jobs_requested: int, cell_min_cells: int, cell_min_cells_per_job: int, cell_chunk_size_raw: int, cell_coupling_enabled: bool, allow_non_windows: bool=False) -> Dict[str, object]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/run_one_d.py",
-    "line_no": 252,
+    "line_no": 242,
     "symbol": "run_one_d",
     "signature": "run_one_d(cfg: Config, *, enforce_mass_budget: bool=False, physics_mode_override: Optional[str]=None, physics_mode_source_override: Optional[str]=None) -> None",
     "brief_usage": "Execute the 1D radial Mars disk simulation."
   },
   {
     "file_path": "marsdisk/run_zero_d.py",
-    "line_no": 90,
+    "line_no": 91,
     "symbol": "SECONDS_PER_YEAR",
     "signature": "SECONDS_PER_YEAR = 365.25 * 24 * 3600.0",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/run_zero_d.py",
-    "line_no": 91,
+    "line_no": 92,
     "symbol": "MAX_STEPS",
     "signature": "MAX_STEPS = 50000000",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/run_zero_d.py",
-    "line_no": 92,
+    "line_no": 93,
     "symbol": "AUTO_MAX_MARGIN",
     "signature": "AUTO_MAX_MARGIN = 0.05",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/run_zero_d.py",
-    "line_no": 93,
+    "line_no": 94,
     "symbol": "TAU_MIN",
     "signature": "TAU_MIN = 1e-12",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/run_zero_d.py",
-    "line_no": 94,
+    "line_no": 95,
     "symbol": "KAPPA_MIN",
     "signature": "KAPPA_MIN = 1e-12",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/run_zero_d.py",
-    "line_no": 95,
+    "line_no": 96,
     "symbol": "DEFAULT_SEED",
     "signature": "DEFAULT_SEED = 12345",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/run_zero_d.py",
-    "line_no": 96,
+    "line_no": 97,
     "symbol": "MASS_BUDGET_TOLERANCE_PERCENT",
     "signature": "MASS_BUDGET_TOLERANCE_PERCENT = 0.5",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/run_zero_d.py",
-    "line_no": 97,
+    "line_no": 98,
     "symbol": "SINK_REF_SIZE",
     "signature": "SINK_REF_SIZE = 1e-06",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/run_zero_d.py",
-    "line_no": 98,
+    "line_no": 99,
     "symbol": "FAST_BLOWOUT_RATIO_THRESHOLD",
     "signature": "FAST_BLOWOUT_RATIO_THRESHOLD = 3.0",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/run_zero_d.py",
-    "line_no": 99,
+    "line_no": 100,
     "symbol": "FAST_BLOWOUT_RATIO_STRICT",
     "signature": "FAST_BLOWOUT_RATIO_STRICT = 10.0",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/run_zero_d.py",
-    "line_no": 100,
+    "line_no": 101,
     "symbol": "EXTENDED_DIAGNOSTICS_VERSION",
     "signature": "EXTENDED_DIAGNOSTICS_VERSION = 'extended-minimal-v1'",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/run_zero_d.py",
-    "line_no": 107,
+    "line_no": 109,
     "symbol": "SmolSinkWorkspace",
     "signature": "class SmolSinkWorkspace",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/run_zero_d.py",
-    "line_no": 116,
+    "line_no": 119,
+    "symbol": "SupplyStepResult",
+    "signature": "class SupplyStepResult",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "marsdisk/run_zero_d.py",
+    "line_no": 128,
+    "symbol": "SurfaceSupplyStepResult",
+    "signature": "class SurfaceSupplyStepResult",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "marsdisk/run_zero_d.py",
+    "line_no": 135,
     "symbol": "_get_smol_sink_workspace",
     "signature": "_get_smol_sink_workspace(workspace: SmolSinkWorkspace | None, n_bins: int) -> SmolSinkWorkspace",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/run_zero_d.py",
-    "line_no": 136,
+    "line_no": 155,
+    "symbol": "_apply_supply_step",
+    "signature": "_apply_supply_step(*, time_now: float, r: float, dt: float, supply_spec: 'supply.Supply', area: float, supply_state: 'supply.SupplyRuntimeState | None', tau_for_feedback: float | None, temperature_K: float, allow_supply: bool, sigma_surf: float, sigma_tau1: float | None, sigma_deep: float, t_mix: float | None, deep_enabled: bool, transport_mode: str, headroom_gate: str, headroom_policy: str, t_blow: float | None) -> SupplyStepResult",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "marsdisk/run_zero_d.py",
+    "line_no": 212,
+    "symbol": "_apply_shielding_and_supply",
+    "signature": "_apply_shielding_and_supply(*, time_now: float, r: float, dt: float, sigma_surf: float, kappa_surf: float, collisions_active_step: bool, shielding_mode: str, phi_tau_fn: Callable[[float], float] | None, tau_fixed_target: float | None, sigma_tau1_fixed_target: float | None, los_factor: float, use_tcoll: bool, enable_blowout_step: bool, sink_timescale_active: bool, t_sink_step_effective: float | None, supply_spec: 'supply.SupplySpec', area: float, supply_state: 'supply.SupplyRuntimeState', temperature_K: float, allow_supply: bool, sigma_deep: float, t_mix: float | None, deep_enabled: bool, transport_mode: str, headroom_gate: str, headroom_policy: str, t_blow: float | None) -> SurfaceSupplyStepResult",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "marsdisk/run_zero_d.py",
+    "line_no": 283,
+    "symbol": "_apply_blowout_correction",
+    "signature": "_apply_blowout_correction(outflux_surface: float, *, factor: float, apply: bool) -> tuple[float, bool]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "marsdisk/run_zero_d.py",
+    "line_no": 294,
+    "symbol": "_apply_blowout_gate",
+    "signature": "_apply_blowout_gate(blow_surface_total: float, outflux_surface: float, *, enable_blowout: bool, gate_enabled: bool, gate_factor: float) -> tuple[float, float]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "marsdisk/run_zero_d.py",
+    "line_no": 307,
+    "symbol": "_resolve_t_coll_step",
+    "signature": "_resolve_t_coll_step(*, collision_solver_mode: str, collisions_active: bool, tau_los_last: float | None, los_factor: float, Omega: float, t_coll_kernel_last: float | None) -> float | None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "marsdisk/run_zero_d.py",
+    "line_no": 334,
+    "symbol": "_reset_collision_runtime_state",
+    "signature": "_reset_collision_runtime_state() -> None",
+    "brief_usage": "Clear per-run collision caches and warning state."
+  },
+  {
+    "file_path": "marsdisk/run_zero_d.py",
+    "line_no": 341,
     "symbol": "_get_max_steps",
     "signature": "_get_max_steps() -> int",
     "brief_usage": "Return MAX_STEPS, honoring overrides applied to the marsdisk.run shim."
   },
   {
     "file_path": "marsdisk/run_zero_d.py",
-    "line_no": 150,
+    "line_no": 355,
     "symbol": "_log_stage",
     "signature": "_log_stage(label: str, *, extra: Mapping[str, Any] | None=None) -> None",
     "brief_usage": "Emit coarse progress markers for debugging long runs."
   },
   {
     "file_path": "marsdisk/run_zero_d.py",
-    "line_no": 156,
+    "line_no": 361,
     "symbol": "_model_fields_set",
     "signature": "_model_fields_set(model: Any) -> set[str]",
     "brief_usage": "Return explicitly-set fields for a Pydantic model (v1/v2 compatible)."
   },
   {
     "file_path": "marsdisk/run_zero_d.py",
-    "line_no": 167,
+    "line_no": 372,
     "symbol": "_resolve_los_factor",
     "signature": "_resolve_los_factor(los_geom: Optional[object]) -> float",
     "brief_usage": "Return the multiplicative factor f_los scaling τ_vert to τ_los."
   },
   {
     "file_path": "marsdisk/run_zero_d.py",
-    "line_no": 183,
+    "line_no": 388,
     "symbol": "_surface_energy_floor",
     "signature": "_surface_energy_floor(gamma_J_m2: float, eta: float, alpha: float, rho: float, v_rel: float, s0: float, s_max: float) -> float",
     "brief_usage": "Return surface-energy-limited minimum size (Krijt & Kama general form)."
   },
   {
     "file_path": "marsdisk/run_zero_d.py",
-    "line_no": 222,
+    "line_no": 427,
     "symbol": "_auto_chi_blow",
     "signature": "_auto_chi_blow(beta: float, qpr: float) -> float",
     "brief_usage": "Return an automatic chi_blow scaling based on β and ⟨Q_pr⟩."
   },
   {
     "file_path": "marsdisk/run_zero_d.py",
-    "line_no": 237,
-    "symbol": "_fast_blowout_correction_factor",
-    "signature": "_fast_blowout_correction_factor(ratio: float) -> float",
-    "brief_usage": "Return the effective loss fraction ``f_fast = 1 - exp(-Δt/t_blow)``."
-  },
-  {
-    "file_path": "marsdisk/run_zero_d.py",
-    "line_no": 260,
+    "line_no": 447,
     "symbol": "load_config",
     "signature": "load_config(path: Path, overrides: Optional[Sequence[str]]=None) -> Config",
     "brief_usage": "Load a YAML configuration file into a :class:`Config` instance."
   },
   {
     "file_path": "marsdisk/run_zero_d.py",
-    "line_no": 285,
+    "line_no": 472,
     "symbol": "_gather_git_info",
     "signature": "_gather_git_info() -> Dict[str, Any]",
     "brief_usage": "Return basic git metadata for provenance recording."
   },
   {
     "file_path": "marsdisk/run_zero_d.py",
-    "line_no": 312,
+    "line_no": 499,
     "symbol": "MassBudgetViolationError",
     "signature": "class MassBudgetViolationError(NumericalError)",
     "brief_usage": "Raised when the mass budget tolerance is exceeded."
   },
   {
     "file_path": "marsdisk/run_zero_d.py",
-    "line_no": 318,
+    "line_no": 505,
     "symbol": "run_zero_d",
     "signature": "run_zero_d(cfg: Config, *, enforce_mass_budget: bool=False, physics_mode_override: Optional[str]=None, physics_mode_source_override: Optional[str]=None) -> None",
     "brief_usage": "Execute the full-feature zero-dimensional simulation."
   },
   {
     "file_path": "marsdisk/run_zero_d.py",
-    "line_no": 5221,
+    "line_no": 5389,
     "symbol": "main",
     "signature": "main(argv: Optional[List[str]]=None) -> None",
     "brief_usage": "Command line entry point."
@@ -7072,34 +7128,41 @@
   {
     "file_path": "marsdisk/runtime/helpers.py",
     "line_no": 57,
+    "symbol": "fast_blowout_correction_factor",
+    "signature": "fast_blowout_correction_factor(ratio: float) -> float",
+    "brief_usage": "Return the effective loss fraction ``f_fast = 1 - exp(-dt/t_blow)``."
+  },
+  {
+    "file_path": "marsdisk/runtime/helpers.py",
+    "line_no": 70,
     "symbol": "ensure_finite_kappa",
     "signature": "ensure_finite_kappa(kappa: Any, *, label: str | None=None) -> float",
     "brief_usage": "Return finite, non-negative kappa; replace NaN/inf/negative with 0."
   },
   {
     "file_path": "marsdisk/runtime/helpers.py",
-    "line_no": 70,
+    "line_no": 83,
     "symbol": "safe_float",
     "signature": "safe_float(value: Any, default: float=0.0) -> float",
     "brief_usage": "Return float(value) or default if conversion fails or is non-finite."
   },
   {
     "file_path": "marsdisk/runtime/helpers.py",
-    "line_no": 82,
+    "line_no": 95,
     "symbol": "float_or_nan",
     "signature": "float_or_nan(value: Any) -> float",
     "brief_usage": "Return float(value) or NaN if conversion fails or is non-finite."
   },
   {
     "file_path": "marsdisk/runtime/helpers.py",
-    "line_no": 92,
+    "line_no": 105,
     "symbol": "format_exception_short",
     "signature": "format_exception_short(exc: BaseException) -> str",
     "brief_usage": "Return a concise exception string."
   },
   {
     "file_path": "marsdisk/runtime/helpers.py",
-    "line_no": 99,
+    "line_no": 112,
     "symbol": "log_stage",
     "signature": "log_stage(logger_obj, label: str, *, extra: dict | None=None) -> None",
     "brief_usage": "Lightweight stage logger wrapper."
@@ -9073,14 +9136,14 @@
   },
   {
     "file_path": "scripts/runsets/common/build_overrides.py",
-    "line_no": 29,
+    "line_no": 37,
     "symbol": "_merge_pairs",
     "signature": "_merge_pairs(pairs: Iterable[tuple[str, str]]) -> tuple[list[str], dict[str, str]]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "scripts/runsets/common/build_overrides.py",
-    "line_no": 43,
+    "line_no": 51,
     "symbol": "main",
     "signature": "main() -> None",
     "brief_usage": "No description available."
@@ -9327,12 +9390,103 @@
     "file_path": "scripts/runsets/common/read_study_overrides.py",
     "line_no": 16,
     "symbol": "_emit",
-    "signature": "_emit(key: str, value: Any) -> None",
+    "signature": "_emit(lines: list[str], key: str, value: Any) -> None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "scripts/runsets/common/read_study_overrides.py",
     "line_no": 23,
+    "symbol": "_write_lines",
+    "signature": "_write_lines(path: Path, lines: list[str]) -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/runsets/common/read_study_overrides.py",
+    "line_no": 31,
+    "symbol": "main",
+    "signature": "main() -> int",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/runsets/common/run_one.py",
+    "line_no": 13,
+    "symbol": "_env",
+    "signature": "_env(name: str, default: str | None=None) -> str | None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/runsets/common/run_one.py",
+    "line_no": 17,
+    "symbol": "_is_true",
+    "signature": "_is_true(value: str | None) -> bool",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/runsets/common/run_one.py",
+    "line_no": 23,
+    "symbol": "_split_args",
+    "signature": "_split_args(value: str | None) -> list[str]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/runsets/common/run_one.py",
+    "line_no": 29,
+    "symbol": "_sanitize_run_ts",
+    "signature": "_sanitize_run_ts(value: str) -> str",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/runsets/common/run_one.py",
+    "line_no": 37,
+    "symbol": "_sanitize_sweep_tag",
+    "signature": "_sanitize_sweep_tag(value: str) -> str",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/runsets/common/run_one.py",
+    "line_no": 45,
+    "symbol": "_format_title_token",
+    "signature": "_format_title_token(raw: str) -> str",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/runsets/common/run_one.py",
+    "line_no": 53,
+    "symbol": "_run_command",
+    "signature": "_run_command(cmd: list[str], *, capture: bool=False, text: bool=True, quiet: bool=False) -> subprocess.CompletedProcess",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/runsets/common/run_one.py",
+    "line_no": 65,
+    "symbol": "main",
+    "signature": "main() -> int",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/runsets/common/sanitize_token.py",
+    "line_no": 14,
+    "symbol": "_INVALID_RE",
+    "signature": "_INVALID_RE = re.compile('[=!&|<>?*\\\\t\\\\r\\\\n]')",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "scripts/runsets/common/sanitize_token.py",
+    "line_no": 17,
+    "symbol": "_sanitize",
+    "signature": "_sanitize(value: str) -> str",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/runsets/common/sanitize_token.py",
+    "line_no": 25,
+    "symbol": "_timestamp",
+    "signature": "_timestamp(ts_script: Path) -> str",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/runsets/common/sanitize_token.py",
+    "line_no": 42,
     "symbol": "main",
     "signature": "main() -> int",
     "brief_usage": "No description available."
@@ -9451,707 +9605,1092 @@
   },
   {
     "file_path": "scripts/runsets/windows/preflight_checks.py",
-    "line_no": 17,
+    "line_no": 35,
     "symbol": "REQUIRED_ARCHIVE_KEYS",
     "signature": "REQUIRED_ARCHIVE_KEYS = {'io.archive.enabled': 'true', 'io.archive.dir': None, 'io.archive.merge_target': 'external', 'io.archive.verify_level': 'standard_plus', 'io.archive.keep_local': 'metadata'}",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "scripts/runsets/windows/preflight_checks.py",
-    "line_no": 25,
+    "line_no": 43,
     "symbol": "PATH_ENV_VARS",
     "signature": "PATH_ENV_VARS = ('TEMP', 'TMP', 'USERPROFILE', 'HOMEDRIVE', 'HOMEPATH', 'COMSPEC')",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "scripts/runsets/windows/preflight_checks.py",
-    "line_no": 26,
+    "line_no": 44,
     "symbol": "MAX_WARN_PATH_LEN",
     "signature": "MAX_WARN_PATH_LEN = 240",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "scripts/runsets/windows/preflight_checks.py",
-    "line_no": 27,
+    "line_no": 45,
     "symbol": "WINDOWS_PATH_INVALID_CHARS",
     "signature": "WINDOWS_PATH_INVALID_CHARS = set('<>:\"|?*')",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "scripts/runsets/windows/preflight_checks.py",
-    "line_no": 28,
+    "line_no": 46,
     "symbol": "CMD_META_CHARS",
     "signature": "CMD_META_CHARS = '&<>|^()'",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "scripts/runsets/windows/preflight_checks.py",
-    "line_no": 29,
+    "line_no": 47,
     "symbol": "CMD_META_CHARS_DISPLAY",
     "signature": "CMD_META_CHARS_DISPLAY = '&<>|^()'",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "scripts/runsets/windows/preflight_checks.py",
-    "line_no": 30,
+    "line_no": 48,
     "symbol": "POSIX_PATH_MARKERS",
     "signature": "POSIX_PATH_MARKERS = ('/Users/', '/Volumes/', '/home/', '~/')",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "scripts/runsets/windows/preflight_checks.py",
-    "line_no": 31,
+    "line_no": 49,
     "symbol": "UNC_SHARED_PREFIXES",
     "signature": "UNC_SHARED_PREFIXES = ('\\\\\\\\psf\\\\', '\\\\\\\\mac\\\\', '\\\\\\\\vmware-host\\\\shared folders\\\\')",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "scripts/runsets/windows/preflight_checks.py",
-    "line_no": 32,
+    "line_no": 50,
     "symbol": "DEFAULT_SCAN_EXCLUDE_DIRS",
     "signature": "DEFAULT_SCAN_EXCLUDE_DIRS = {'.git', '.venv', '__pycache__', '.mypy_cache', '.pytest_cache', '.ruff_cache', 'node_modules', 'out', 'tmp', 'venv'}",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "scripts/runsets/windows/preflight_checks.py",
-    "line_no": 44,
+    "line_no": 62,
     "symbol": "MAX_PATH_CLASSIC",
     "signature": "MAX_PATH_CLASSIC = 260",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "scripts/runsets/windows/preflight_checks.py",
-    "line_no": 45,
+    "line_no": 63,
     "symbol": "CMD_LINE_MAX",
     "signature": "CMD_LINE_MAX = 8191",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "scripts/runsets/windows/preflight_checks.py",
-    "line_no": 46,
+    "line_no": 64,
     "symbol": "CMD_LINE_WARN_LEN",
     "signature": "CMD_LINE_WARN_LEN = 7000",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "scripts/runsets/windows/preflight_checks.py",
-    "line_no": 47,
+    "line_no": 65,
     "symbol": "PATH_WARN_LEN",
     "signature": "PATH_WARN_LEN = 7000",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "scripts/runsets/windows/preflight_checks.py",
-    "line_no": 48,
+    "line_no": 66,
     "symbol": "PATHEXT_REQUIRED",
     "signature": "PATHEXT_REQUIRED = {'.COM', '.EXE', '.BAT', '.CMD'}",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "scripts/runsets/windows/preflight_checks.py",
-    "line_no": 49,
+    "line_no": 67,
     "symbol": "CHCP_SCAN_LINES",
     "signature": "CHCP_SCAN_LINES = 25",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "scripts/runsets/windows/preflight_checks.py",
-    "line_no": 50,
+    "line_no": 68,
+    "symbol": "CWD_SCAN_LINES",
+    "signature": "CWD_SCAN_LINES = 30",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "scripts/runsets/windows/preflight_checks.py",
+    "line_no": 69,
     "symbol": "DELAYED_SETLOCAL_RE",
     "signature": "DELAYED_SETLOCAL_RE = re.compile('\\\\bsetlocal\\\\b.*\\\\benabledelayedexpansion\\\\b', re.I)",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "scripts/runsets/windows/preflight_checks.py",
-    "line_no": 51,
-    "symbol": "DELAYED_CMD_RE",
-    "signature": "DELAYED_CMD_RE = re.compile('\\\\bcmd(?:\\\\.exe)?\\\\b.*?/v\\\\s*:\\\\s*on\\\\b', re.I)",
-    "brief_usage": "Module constant"
-  },
-  {
-    "file_path": "scripts/runsets/windows/preflight_checks.py",
-    "line_no": 52,
+    "line_no": 70,
     "symbol": "DELAYED_SETLOCAL_OFF_RE",
     "signature": "DELAYED_SETLOCAL_OFF_RE = re.compile('\\\\bsetlocal\\\\b.*\\\\bdisabledelayedexpansion\\\\b', re.I)",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "scripts/runsets/windows/preflight_checks.py",
-    "line_no": 53,
+    "line_no": 71,
     "symbol": "DISABLE_EXT_RE",
     "signature": "DISABLE_EXT_RE = re.compile('\\\\bsetlocal\\\\b.*\\\\bdisableextensions\\\\b', re.I)",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "scripts/runsets/windows/preflight_checks.py",
-    "line_no": 54,
+    "line_no": 72,
     "symbol": "ENABLE_EXT_RE",
     "signature": "ENABLE_EXT_RE = re.compile('\\\\bsetlocal\\\\b.*\\\\benableextensions\\\\b', re.I)",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "scripts/runsets/windows/preflight_checks.py",
-    "line_no": 55,
+    "line_no": 73,
     "symbol": "DISABLE_EXT_CMD_RE",
     "signature": "DISABLE_EXT_CMD_RE = re.compile('\\\\bcmd(?:\\\\.exe)?\\\\b.*?/e\\\\s*:\\\\s*off\\\\b', re.I)",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "scripts/runsets/windows/preflight_checks.py",
-    "line_no": 56,
+    "line_no": 74,
     "symbol": "BANG_TOKEN_RE",
     "signature": "BANG_TOKEN_RE = re.compile('![^!]+!')",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "scripts/runsets/windows/preflight_checks.py",
-    "line_no": 57,
+    "line_no": 75,
     "symbol": "CHCP_CMD_RE",
     "signature": "CHCP_CMD_RE = re.compile('^\\\\s*@?(?:call\\\\s+)?chcp\\\\b', re.I)",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "scripts/runsets/windows/preflight_checks.py",
-    "line_no": 58,
+    "line_no": 76,
     "symbol": "EXEC_CMD_RE",
     "signature": "EXEC_CMD_RE = re.compile('^\\\\s*@?(?:\"[^\"]+\"|[^\"\\\\s]+)\\\\.(cmd|bat)\\\\b', re.I)",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "scripts/runsets/windows/preflight_checks.py",
-    "line_no": 59,
+    "line_no": 77,
     "symbol": "START_QUOTED_RE",
     "signature": "START_QUOTED_RE = re.compile('^\\\\s*@?start\\\\s+\"(?!\")', re.I)",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "scripts/runsets/windows/preflight_checks.py",
-    "line_no": 60,
+    "line_no": 78,
     "symbol": "START_CMD_RE",
     "signature": "START_CMD_RE = re.compile('^\\\\s*@?start\\\\b', re.I)",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "scripts/runsets/windows/preflight_checks.py",
-    "line_no": 61,
+    "line_no": 79,
     "symbol": "CMD_C_QUOTED_RE",
     "signature": "CMD_C_QUOTED_RE = re.compile('\\\\bcmd(?:\\\\.exe)?\\\\b\\\\s+/c\\\\s+\"([^\"]+)\"', re.I)",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "scripts/runsets/windows/preflight_checks.py",
-    "line_no": 62,
-    "symbol": "CMD_INVOKE_RE",
-    "signature": "CMD_INVOKE_RE = re.compile('^\\\\s*@?(?:call\\\\s+)?cmd(?:\\\\.exe)?\\\\b', re.I)",
-    "brief_usage": "Module constant"
-  },
-  {
-    "file_path": "scripts/runsets/windows/preflight_checks.py",
-    "line_no": 63,
+    "line_no": 80,
     "symbol": "CMD_SWITCH_C_RE",
     "signature": "CMD_SWITCH_C_RE = re.compile('(?:^|\\\\s)/c(?:\\\\s|$)', re.I)",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "scripts/runsets/windows/preflight_checks.py",
-    "line_no": 64,
+    "line_no": 81,
     "symbol": "CMD_SWITCH_K_RE",
     "signature": "CMD_SWITCH_K_RE = re.compile('(?:^|\\\\s)/k(?:\\\\s|$)', re.I)",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "scripts/runsets/windows/preflight_checks.py",
-    "line_no": 65,
+    "line_no": 82,
+    "symbol": "CMD_SWITCH_V_ON_RE",
+    "signature": "CMD_SWITCH_V_ON_RE = re.compile('(?:^|\\\\s)/v\\\\s*:\\\\s*on(?:\\\\s|$)', re.I)",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "scripts/runsets/windows/preflight_checks.py",
+    "line_no": 83,
+    "symbol": "SCRIPT_DIR_RE",
+    "signature": "SCRIPT_DIR_RE = re.compile('%~dp0', re.I)",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "scripts/runsets/windows/preflight_checks.py",
+    "line_no": 84,
     "symbol": "SET_INTERACTIVE_RE",
     "signature": "SET_INTERACTIVE_RE = re.compile('\\\\bset\\\\s+/p\\\\b', re.I)",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "scripts/runsets/windows/preflight_checks.py",
-    "line_no": 66,
+    "line_no": 85,
     "symbol": "EXIT_CMD_RE",
     "signature": "EXIT_CMD_RE = re.compile('^\\\\s*@?exit(?:\\\\s+|$)', re.I)",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "scripts/runsets/windows/preflight_checks.py",
-    "line_no": 67,
+    "line_no": 86,
     "symbol": "EXIT_B_RE",
     "signature": "EXIT_B_RE = re.compile('\\\\bexit\\\\s+/b\\\\b', re.I)",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "scripts/runsets/windows/preflight_checks.py",
-    "line_no": 68,
+    "line_no": 87,
     "symbol": "FOR_CMD_RE",
     "signature": "FOR_CMD_RE = re.compile('^\\\\s*@?for\\\\b', re.I)",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "scripts/runsets/windows/preflight_checks.py",
-    "line_no": 69,
+    "line_no": 88,
     "symbol": "FOR_VAR_RE",
     "signature": "FOR_VAR_RE = re.compile('^%{1,2}[A-Za-z]$')",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "scripts/runsets/windows/preflight_checks.py",
-    "line_no": 70,
+    "line_no": 89,
     "symbol": "SETLOCAL_RE",
     "signature": "SETLOCAL_RE = re.compile('^\\\\s*@?setlocal\\\\b', re.I)",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "scripts/runsets/windows/preflight_checks.py",
-    "line_no": 71,
+    "line_no": 90,
     "symbol": "ENDLOCAL_RE",
     "signature": "ENDLOCAL_RE = re.compile('^\\\\s*@?endlocal\\\\b', re.I)",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "scripts/runsets/windows/preflight_checks.py",
-    "line_no": 72,
+    "line_no": 91,
     "symbol": "PUSHD_RE",
     "signature": "PUSHD_RE = re.compile('^\\\\s*@?pushd\\\\b', re.I)",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "scripts/runsets/windows/preflight_checks.py",
-    "line_no": 73,
+    "line_no": 92,
     "symbol": "POPD_RE",
     "signature": "POPD_RE = re.compile('^\\\\s*@?popd\\\\b', re.I)",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "scripts/runsets/windows/preflight_checks.py",
-    "line_no": 74,
+    "line_no": 93,
     "symbol": "PAUSE_RE",
     "signature": "PAUSE_RE = re.compile('^\\\\s*@?pause\\\\b', re.I)",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "scripts/runsets/windows/preflight_checks.py",
-    "line_no": 75,
+    "line_no": 94,
     "symbol": "CHOICE_RE",
     "signature": "CHOICE_RE = re.compile('^\\\\s*@?choice\\\\b', re.I)",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "scripts/runsets/windows/preflight_checks.py",
-    "line_no": 76,
+    "line_no": 95,
     "symbol": "SETX_RE",
     "signature": "SETX_RE = re.compile('^\\\\s*@?setx\\\\b', re.I)",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "scripts/runsets/windows/preflight_checks.py",
-    "line_no": 77,
+    "line_no": 96,
     "symbol": "ERRORLEVEL_RE",
     "signature": "ERRORLEVEL_RE = re.compile('^\\\\s*@?if\\\\s+(not\\\\s+)?errorlevel\\\\s+(-?\\\\d+)\\\\b', re.I)",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "scripts/runsets/windows/preflight_checks.py",
-    "line_no": 78,
+    "line_no": 97,
+    "symbol": "ERRORLEVEL_ANY_RE",
+    "signature": "ERRORLEVEL_ANY_RE = re.compile('\\\\bif\\\\s+(not\\\\s+)?errorlevel\\\\s+(-?\\\\d+)\\\\b', re.I)",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "scripts/runsets/windows/preflight_checks.py",
+    "line_no": 98,
+    "symbol": "ERRORLEVEL_CMP_RE",
+    "signature": "ERRORLEVEL_CMP_RE = re.compile('(?:%|!)errorlevel(?:%|!)\\\\s+(geq|gtr|leq|lss)\\\\s+(-?\\\\d+)', re.I)",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "scripts/runsets/windows/preflight_checks.py",
+    "line_no": 102,
+    "symbol": "PERCENT_ERRORLEVEL_RE",
+    "signature": "PERCENT_ERRORLEVEL_RE = re.compile('%errorlevel%', re.I)",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "scripts/runsets/windows/preflight_checks.py",
+    "line_no": 103,
     "symbol": "CMD_QUOTED_META_CHARS",
     "signature": "CMD_QUOTED_META_CHARS = '&<>|^()@'",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "scripts/runsets/windows/preflight_checks.py",
-    "line_no": 79,
+    "line_no": 104,
+    "symbol": "CMD_ENV_VAR_RE",
+    "signature": "CMD_ENV_VAR_RE = re.compile('%([^%]+)%')",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "scripts/runsets/windows/preflight_checks.py",
+    "line_no": 105,
+    "symbol": "VAR_NAME_RE",
+    "signature": "VAR_NAME_RE = re.compile('^[A-Za-z0-9_]+$')",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "scripts/runsets/windows/preflight_checks.py",
+    "line_no": 106,
+    "symbol": "PY_LAUNCHER_VERSION_RE",
+    "signature": "PY_LAUNCHER_VERSION_RE = re.compile('^-\\\\d+(?:\\\\.\\\\d+)*(?:-[0-9A-Za-z]+)?$')",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "scripts/runsets/windows/preflight_checks.py",
+    "line_no": 107,
+    "symbol": "PY_LAUNCHER_ALLOWED_ARGS",
+    "signature": "PY_LAUNCHER_ALLOWED_ARGS = {'-V', '-h', '-?'}",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "scripts/runsets/windows/preflight_checks.py",
+    "line_no": 108,
+    "symbol": "PYTHON_PROBE_ERROR_RE",
+    "signature": "PYTHON_PROBE_ERROR_RE = re.compile('(usage:|unknown option|unrecognized option|invalid option|unknown switch)', re.I)",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "scripts/runsets/windows/preflight_checks.py",
+    "line_no": 112,
+    "symbol": "DASH_OPTION_CMD_NAMES",
+    "signature": "DASH_OPTION_CMD_NAMES = {'where', 'findstr'}",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "scripts/runsets/windows/preflight_checks.py",
+    "line_no": 113,
+    "symbol": "XCOPY_CMD_NAMES",
+    "signature": "XCOPY_CMD_NAMES = {'xcopy', 'xcopy.exe'}",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "scripts/runsets/windows/preflight_checks.py",
+    "line_no": 114,
+    "symbol": "ROBOCOPY_CMD_NAMES",
+    "signature": "ROBOCOPY_CMD_NAMES = {'robocopy', 'robocopy.exe'}",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "scripts/runsets/windows/preflight_checks.py",
+    "line_no": 115,
     "symbol": "RESERVED_DEVICE_NAMES",
     "signature": "RESERVED_DEVICE_NAMES = {'CON', 'PRN', 'AUX', 'NUL', 'COM1', 'COM2', 'COM3', 'COM4', 'COM5', 'COM6', 'COM7', 'COM8', 'COM9', 'LPT1', 'LPT2', 'LPT3', 'LPT4', 'LPT5', 'LPT6', 'LPT7', 'LPT8', 'LPT9'}",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "scripts/runsets/windows/preflight_checks.py",
-    "line_no": 106,
+    "line_no": 140,
+    "symbol": "CMD_ALLOWLIST_RULES",
+    "signature": "CMD_ALLOWLIST_RULES = {'cmd.autorun.missing_d', 'cmd.block.percent_errorlevel', 'cmd.block.percent_var_after_set', 'cmd.call.missing', 'cmd.call.pipe_or_redirect', 'cmd.call.unquoted_space', 'cmd.caret.trailing_space', 'cmd.cd.missing_d', 'cmd.cd.unc', 'cmd.cd.unquoted_space', 'cmd.cmd_c.quote_meta', 'cmd.delayed_expansion.before_enabled', 'cmd.delayed_expansion.cmd_v_on', 'cmd.delayed_expansion.enabled', 'cmd.delayed_expansion.token', 'cmd.cwd.relative_paths', 'cmd.encoding.bom', 'cmd.encoding.no_chcp', 'cmd.encoding.non_ascii', 'cmd.encoding.nul', 'cmd.encoding.utf16', 'cmd.env.setx', 'cmd.errorlevel.ascending', 'cmd.errorlevel.zero', 'cmd.exit.missing_b', 'cmd.extensions.disabled_in_script', 'cmd.for.single_percent', 'cmd.if_errorlevel_equal_misuse', 'cmd.interactive.choice', 'cmd.interactive.cmd', 'cmd.interactive.pause', 'cmd.interactive.set_p', 'cmd.line_endings.lf_only', 'cmd.line_endings.mixed', 'cmd.line_length.limit', 'cmd.line_length.near', 'cmd.option.dash', 'cmd.posix_path', 'cmd.pushd_popd.unbalanced', 'cmd.pushd.unquoted_space', 'cmd.read_failed', 'cmd.robocopy.exitcode', 'cmd.robocopy.retries_default', 'cmd.set.space_around_equals', 'cmd.set.posix_path', 'cmd.setlocal.missing', 'cmd.setlocal.order', 'cmd.setlocal.unbalanced', 'cmd.start.no_wait', 'cmd.start.quoted_title', 'cmd.unsafe.bang', 'cmd.unsafe.meta', 'cmd.unsafe.percent', 'cmd.xcopy.interactive', 'cmd.xcopy.missing_i', 'cmd.xcopy.missing_y', 'path.invalid_chars', 'path.reserved_device', 'path.trailing_space_dot', 'path.unc', 'path.value_length', 'path.value_non_ascii'}",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "scripts/runsets/windows/preflight_checks.py",
+    "line_no": 206,
+    "symbol": "FIXABLE_RULES",
+    "signature": "FIXABLE_RULES = {'cmd.encoding.bom': 'Remove UTF-8 BOM from file', 'cmd.line_endings.lf_only': 'Convert LF to CRLF line endings', 'cmd.line_endings.mixed': 'Normalize to CRLF line endings'}",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "scripts/runsets/windows/preflight_checks.py",
+    "line_no": 213,
+    "symbol": "RULE_DESCRIPTIONS",
+    "signature": "RULE_DESCRIPTIONS: dict[str, str] = {'cmd.autorun.missing_d': 'cmd invocation missing /d when AutoRun is enabled in registry', 'cmd.block.percent_errorlevel': 'Percent expansion of ERRORLEVEL inside (...) block (may be stale)', 'cmd.block.percent_var_after_set': 'Percent expansion inside (...) block with set variable (use delayed expansion)', 'cmd.call.missing': \"Batch file invoked without 'call' keyword\", 'cmd.call.pipe_or_redirect': 'call combined with pipe or redirection (cmd parsing can break)', 'cmd.call.unquoted_space': 'call command path contains unquoted spaces', 'cmd.caret.trailing_space': 'Line continuation caret (^) has trailing whitespace', 'cmd.cd.missing_d': 'cd command without /d flag for cross-drive paths', 'cmd.cd.unc': 'cd command uses UNC path (prefer pushd)', 'cmd.cd.unquoted_space': 'cd command path has unquoted spaces', 'cmd.cmd_c.quote_meta': 'cmd /c quoted string contains meta characters', 'cmd.delayed_expansion.before_enabled': '!VAR! syntax used before enabling delayed expansion', 'cmd.delayed_expansion.cmd_v_on': 'Delayed expansion enabled via cmd /v:on', 'cmd.delayed_expansion.enabled': 'Script enables delayed expansion', 'cmd.delayed_expansion.token': 'Script uses !VAR! token syntax', 'cmd.cwd.relative_paths': 'Script uses relative paths without early script-dir anchor (e.g., %~dp0)', 'cmd.encoding.bom': 'File has UTF-8 BOM (fixable)', 'cmd.encoding.no_chcp': 'Non-ASCII content without chcp directive near top', 'cmd.encoding.non_ascii': 'File contains non-ASCII characters', 'cmd.encoding.nul': 'File contains many NUL bytes (possible wrong encoding)', 'cmd.encoding.utf16': 'File is UTF-16 encoded (save as UTF-8)', 'cmd.env.setx': 'setx command modifies persistent environment', 'cmd.errorlevel.ascending': 'if errorlevel checks in ascending order (should be descending)', 'cmd.errorlevel.zero': 'if errorlevel 0 always matches (errorlevel is >= comparison)', 'cmd.exit.missing_b': 'exit command without /b (will exit cmd.exe)', 'cmd.extensions.disabled_in_script': 'Script disables command extensions', 'cmd.for.single_percent': 'for loop uses single % variable (use %% in .cmd)', 'cmd.if_errorlevel_equal_misuse': 'if errorlevel uses >= comparison (order comparisons carefully)', 'cmd.interactive.choice': 'choice command is interactive', 'cmd.interactive.cmd': 'cmd invoked without /c or with /k (interactive)', 'cmd.interactive.pause': 'pause command is interactive', 'cmd.interactive.set_p': 'set /p is interactive (prompts for input)', 'cmd.line_endings.lf_only': 'File uses LF-only line endings (fixable)', 'cmd.line_endings.mixed': 'File has mixed line endings (fixable)', 'cmd.line_length.limit': 'Line exceeds cmd.exe limit (8191 chars)', 'cmd.line_length.near': 'Line near cmd.exe limit', 'cmd.option.dash': 'Command uses dash-style options (prefer /style)', 'cmd.posix_path': 'POSIX-style path detected in cmd script', 'cmd.pushd_popd.unbalanced': 'Unbalanced pushd/popd commands', 'cmd.pushd.unquoted_space': 'pushd path has unquoted spaces', 'cmd.read_failed': 'Failed to read cmd file', 'cmd.robocopy.exitcode': 'robocopy used without handling success codes (0-7 are success)', 'cmd.robocopy.retries_default': 'robocopy used without /r: and /w: (defaults can be very long)', 'cmd.set.space_around_equals': \"set command has spaces around '='\", 'cmd.set.posix_path': 'set command assigns POSIX-style path', 'cmd.setlocal.missing': 'Environment modified without setlocal', 'cmd.setlocal.order': 'endlocal used before setlocal', 'cmd.setlocal.unbalanced': 'Unbalanced setlocal/endlocal', 'cmd.start.no_wait': 'start without /wait in CI profile', 'cmd.start.quoted_title': 'start with quoted arg missing empty title', 'cmd.unsafe.bang': \"Path/value contains '!' (conflicts with delayed expansion)\", 'cmd.unsafe.meta': 'Path/value contains cmd meta characters (&<>|^)', 'cmd.unsafe.percent': \"Path/value contains '%' (may cause expansion issues)\", 'cmd.xcopy.interactive': 'xcopy uses interactive flags (/w or /p)', 'cmd.xcopy.missing_i': 'xcopy without /i may prompt for file/dir destination', 'cmd.xcopy.missing_y': 'xcopy without /y may prompt for overwrite confirmation', 'env.copycmd.present': 'COPYCMD is set (xcopy overwrite prompt behavior may change)', 'path.invalid_chars': 'Path contains invalid Windows characters', 'path.reserved_device': 'Path contains Windows reserved device name', 'path.trailing_space_dot': 'Path ends with space or dot', 'path.unc': 'UNC network path detected', 'path.value_length': 'Path length near or exceeds limits', 'path.value_non_ascii': 'Path contains non-ASCII characters'}",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "scripts/runsets/windows/preflight_checks.py",
+    "line_no": 280,
+    "symbol": "SARIF_VERSION",
+    "signature": "SARIF_VERSION = '2.1.0'",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "scripts/runsets/windows/preflight_checks.py",
+    "line_no": 281,
+    "symbol": "SARIF_SCHEMA",
+    "signature": "SARIF_SCHEMA = 'https://raw.githubusercontent.com/oasis-tcs/sarif-spec/master/Schemata/sarif-schema-2.1.0.json'",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "scripts/runsets/windows/preflight_checks.py",
+    "line_no": 282,
+    "symbol": "TOOL_NAME",
+    "signature": "TOOL_NAME = 'preflight_checks'",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "scripts/runsets/windows/preflight_checks.py",
+    "line_no": 283,
+    "symbol": "TOOL_VERSION",
+    "signature": "TOOL_VERSION = '1.1.0'",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "scripts/runsets/windows/preflight_checks.py",
+    "line_no": 286,
+    "symbol": "CONFIG_FILE_NAMES",
+    "signature": "CONFIG_FILE_NAMES = ['.preflightrc.yml', '.preflightrc.yaml', '.preflightrc.json', 'preflight.config.yml']",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "scripts/runsets/windows/preflight_checks.py",
+    "line_no": 290,
     "symbol": "Issue",
     "signature": "class Issue",
     "brief_usage": "No description available."
   },
   {
     "file_path": "scripts/runsets/windows/preflight_checks.py",
-    "line_no": 115,
+    "line_no": 299,
     "symbol": "AllowlistEntry",
     "signature": "class AllowlistEntry",
     "brief_usage": "No description available."
   },
   {
     "file_path": "scripts/runsets/windows/preflight_checks.py",
-    "line_no": 120,
+    "line_no": 304,
     "symbol": "_add_issue",
     "signature": "_add_issue(bucket: list[Issue], level: str, rule: str, message: str, path: Path | str | None=None, line: int | None=None) -> None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "scripts/runsets/windows/preflight_checks.py",
-    "line_no": 134,
+    "line_no": 318,
     "symbol": "_error",
     "signature": "_error(bucket: list[Issue], rule: str, message: str, path: Path | str | None=None, line: int | None=None) -> None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "scripts/runsets/windows/preflight_checks.py",
-    "line_no": 144,
+    "line_no": 328,
     "symbol": "_warn",
     "signature": "_warn(bucket: list[Issue], rule: str, message: str, path: Path | str | None=None, line: int | None=None) -> None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "scripts/runsets/windows/preflight_checks.py",
-    "line_no": 154,
+    "line_no": 338,
     "symbol": "_info",
     "signature": "_info(bucket: list[Issue], rule: str, message: str, path: Path | str | None=None, line: int | None=None) -> None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "scripts/runsets/windows/preflight_checks.py",
-    "line_no": 164,
+    "line_no": 353,
+    "symbol": "PreflightConfig",
+    "signature": "class PreflightConfig",
+    "brief_usage": "Configuration loaded from .preflightrc.yml or similar."
+  },
+  {
+    "file_path": "scripts/runsets/windows/preflight_checks.py",
+    "line_no": 367,
+    "symbol": "_find_config_file",
+    "signature": "_find_config_file(repo_root: Path) -> Path | None",
+    "brief_usage": "Search for a config file in the repo root."
+  },
+  {
+    "file_path": "scripts/runsets/windows/preflight_checks.py",
+    "line_no": 376,
+    "symbol": "_load_config_file",
+    "signature": "_load_config_file(path: Path) -> PreflightConfig",
+    "brief_usage": "Load configuration from YAML or JSON file."
+  },
+  {
+    "file_path": "scripts/runsets/windows/preflight_checks.py",
+    "line_no": 426,
+    "symbol": "_get_git_changed_files",
+    "signature": "_get_git_changed_files(repo_root: Path, extensions: set[str]) -> list[Path]",
+    "brief_usage": "Get list of changed files (staged + unstaged) from git."
+  },
+  {
+    "file_path": "scripts/runsets/windows/preflight_checks.py",
+    "line_no": 486,
+    "symbol": "FixResult",
+    "signature": "class FixResult",
+    "brief_usage": "Result of an auto-fix operation."
+  },
+  {
+    "file_path": "scripts/runsets/windows/preflight_checks.py",
+    "line_no": 494,
+    "symbol": "_fix_bom",
+    "signature": "_fix_bom(path: Path) -> FixResult",
+    "brief_usage": "Remove UTF-8 BOM from a file."
+  },
+  {
+    "file_path": "scripts/runsets/windows/preflight_checks.py",
+    "line_no": 506,
+    "symbol": "_fix_line_endings",
+    "signature": "_fix_line_endings(path: Path) -> FixResult",
+    "brief_usage": "Convert line endings to CRLF."
+  },
+  {
+    "file_path": "scripts/runsets/windows/preflight_checks.py",
+    "line_no": 521,
+    "symbol": "_apply_fixes",
+    "signature": "_apply_fixes(path: Path, rules_to_fix: set[str]) -> list[FixResult]",
+    "brief_usage": "Apply all applicable fixes to a file."
+  },
+  {
+    "file_path": "scripts/runsets/windows/preflight_checks.py",
+    "line_no": 534,
+    "symbol": "_collect_fixable_issues",
+    "signature": "_collect_fixable_issues(issues: list[Issue]) -> dict[Path, set[str]]",
+    "brief_usage": "Collect fixable issues grouped by file path."
+  },
+  {
+    "file_path": "scripts/runsets/windows/preflight_checks.py",
+    "line_no": 550,
+    "symbol": "_issue_to_sarif_result",
+    "signature": "_issue_to_sarif_result(issue: Issue, repo_root: Path) -> dict[str, Any]",
+    "brief_usage": "Convert an Issue to a SARIF result object."
+  },
+  {
+    "file_path": "scripts/runsets/windows/preflight_checks.py",
+    "line_no": 583,
+    "symbol": "_build_sarif_output",
+    "signature": "_build_sarif_output(errors: list[Issue], warnings: list[Issue], infos: list[Issue], repo_root: Path) -> dict[str, Any]",
+    "brief_usage": "Build SARIF 2.1.0 compliant output."
+  },
+  {
+    "file_path": "scripts/runsets/windows/preflight_checks.py",
+    "line_no": 634,
+    "symbol": "_should_report_rule",
+    "signature": "_should_report_rule(rule: str, disable_rules: set[str], enable_only: set[str]) -> bool",
+    "brief_usage": "Determine if a rule should be reported based on filters."
+  },
+  {
+    "file_path": "scripts/runsets/windows/preflight_checks.py",
+    "line_no": 647,
+    "symbol": "_filter_issues",
+    "signature": "_filter_issues(issues: list[Issue], disable_rules: set[str], enable_only: set[str]) -> list[Issue]",
+    "brief_usage": "Filter issues based on rule enable/disable settings."
+  },
+  {
+    "file_path": "scripts/runsets/windows/preflight_checks.py",
+    "line_no": 663,
+    "symbol": "_print_rules_list",
+    "signature": "_print_rules_list() -> None",
+    "brief_usage": "Print all available rules with descriptions."
+  },
+  {
+    "file_path": "scripts/runsets/windows/preflight_checks.py",
+    "line_no": 689,
     "symbol": "_load_overrides",
     "signature": "_load_overrides(path: Path) -> tuple[dict[str, str], list[str]]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "scripts/runsets/windows/preflight_checks.py",
-    "line_no": 183,
+    "line_no": 708,
     "symbol": "_contains_non_ascii",
     "signature": "_contains_non_ascii(text: str) -> bool",
     "brief_usage": "No description available."
   },
   {
     "file_path": "scripts/runsets/windows/preflight_checks.py",
-    "line_no": 187,
+    "line_no": 712,
     "symbol": "_is_windows_abs",
     "signature": "_is_windows_abs(path_str: str) -> bool",
     "brief_usage": "No description available."
   },
   {
     "file_path": "scripts/runsets/windows/preflight_checks.py",
-    "line_no": 194,
+    "line_no": 719,
     "symbol": "_normalize_windows",
     "signature": "_normalize_windows(path_str: str) -> str",
     "brief_usage": "No description available."
   },
   {
     "file_path": "scripts/runsets/windows/preflight_checks.py",
-    "line_no": 198,
+    "line_no": 723,
     "symbol": "_is_windows",
     "signature": "_is_windows() -> bool",
     "brief_usage": "No description available."
   },
   {
     "file_path": "scripts/runsets/windows/preflight_checks.py",
-    "line_no": 202,
+    "line_no": 727,
     "symbol": "_maybe_reexec_with_python311",
     "signature": "_maybe_reexec_with_python311() -> None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "scripts/runsets/windows/preflight_checks.py",
-    "line_no": 224,
+    "line_no": 751,
     "symbol": "_contains_posix_path",
     "signature": "_contains_posix_path(text: str) -> bool",
     "brief_usage": "No description available."
   },
   {
     "file_path": "scripts/runsets/windows/preflight_checks.py",
-    "line_no": 228,
+    "line_no": 755,
     "symbol": "_looks_like_windows_path",
     "signature": "_looks_like_windows_path(value: str) -> bool",
     "brief_usage": "No description available."
   },
   {
     "file_path": "scripts/runsets/windows/preflight_checks.py",
-    "line_no": 234,
+    "line_no": 761,
     "symbol": "_has_reserved_windows_name",
     "signature": "_has_reserved_windows_name(value: str) -> bool",
     "brief_usage": "No description available."
   },
   {
     "file_path": "scripts/runsets/windows/preflight_checks.py",
-    "line_no": 247,
+    "line_no": 774,
     "symbol": "_contains_cmd_meta",
     "signature": "_contains_cmd_meta(text: str) -> bool",
     "brief_usage": "No description available."
   },
   {
     "file_path": "scripts/runsets/windows/preflight_checks.py",
-    "line_no": 251,
+    "line_no": 778,
     "symbol": "_has_expansion_token",
     "signature": "_has_expansion_token(value: str) -> bool",
     "brief_usage": "No description available."
   },
   {
     "file_path": "scripts/runsets/windows/preflight_checks.py",
-    "line_no": 259,
+    "line_no": 786,
     "symbol": "_has_unsafe_bang",
     "signature": "_has_unsafe_bang(value: str, allow_expansion: bool) -> bool",
     "brief_usage": "No description available."
   },
   {
     "file_path": "scripts/runsets/windows/preflight_checks.py",
-    "line_no": 268,
+    "line_no": 795,
     "symbol": "_cmd_unsafe_issue",
     "signature": "_cmd_unsafe_issue(label: str, value: str, errors: list[Issue], warnings: list[Issue], cmd_unsafe_error: bool, allow_expansion: bool, meta_as_error: bool=False, skip_rules: set[str] | None=None) -> None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "scripts/runsets/windows/preflight_checks.py",
-    "line_no": 312,
+    "line_no": 839,
     "symbol": "_check_shared_path",
     "signature": "_check_shared_path(label: str, value: str, warnings: list[Issue]) -> None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "scripts/runsets/windows/preflight_checks.py",
-    "line_no": 329,
+    "line_no": 856,
     "symbol": "_check_name_component",
     "signature": "_check_name_component(name: str, rel_display: str, errors: list[Issue]) -> None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "scripts/runsets/windows/preflight_checks.py",
-    "line_no": 341,
+    "line_no": 868,
     "symbol": "_check_cmd",
     "signature": "_check_cmd(name: str, errors: list[Issue], warnings: list[Issue], warn_only: bool) -> None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "scripts/runsets/windows/preflight_checks.py",
-    "line_no": 355,
+    "line_no": 882,
+    "symbol": "_split_cmdline_tokens",
+    "signature": "_split_cmdline_tokens(raw: str) -> list[str]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/runsets/windows/preflight_checks.py",
+    "line_no": 889,
+    "symbol": "_expand_cmd_vars",
+    "signature": "_expand_cmd_vars(raw: str) -> tuple[str, bool]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/runsets/windows/preflight_checks.py",
+    "line_no": 901,
+    "symbol": "_normalize_exe_token",
+    "signature": "_normalize_exe_token(token: str) -> str",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/runsets/windows/preflight_checks.py",
+    "line_no": 905,
+    "symbol": "_python_exe_basename",
+    "signature": "_python_exe_basename(token: str) -> str",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/runsets/windows/preflight_checks.py",
+    "line_no": 911,
+    "symbol": "_validate_python_exe_tokens",
+    "signature": "_validate_python_exe_tokens(label: str, exe_token: str, args: list[str], errors: list[Issue], warnings: list[Issue], warn_only: bool) -> bool",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/runsets/windows/preflight_checks.py",
+    "line_no": 969,
+    "symbol": "_probe_python_exe",
+    "signature": "_probe_python_exe(exe_token: str, args: list[str], errors: list[Issue], warnings: list[Issue], warn_only: bool) -> bool",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/runsets/windows/preflight_checks.py",
+    "line_no": 1014,
     "symbol": "_check_python",
     "signature": "_check_python(errors: list[Issue], warnings: list[Issue], warn_only: bool, python_exe: str | None) -> None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "scripts/runsets/windows/preflight_checks.py",
-    "line_no": 400,
+    "line_no": 1097,
     "symbol": "_coerce_registry_bool",
     "signature": "_coerce_registry_bool(value: object) -> bool | None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "scripts/runsets/windows/preflight_checks.py",
-    "line_no": 414,
+    "line_no": 1111,
     "symbol": "_read_cmd_registry_value",
     "signature": "_read_cmd_registry_value(root, name: str) -> object | None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "scripts/runsets/windows/preflight_checks.py",
-    "line_no": 430,
+    "line_no": 1127,
     "symbol": "_read_cmd_autorun_values",
     "signature": "_read_cmd_autorun_values() -> dict[str, object]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "scripts/runsets/windows/preflight_checks.py",
-    "line_no": 443,
+    "line_no": 1140,
     "symbol": "_read_cmd_extensions_enabled",
     "signature": "_read_cmd_extensions_enabled() -> tuple[bool | None, str | None, object | None]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "scripts/runsets/windows/preflight_checks.py",
-    "line_no": 459,
+    "line_no": 1156,
     "symbol": "_read_cmd_code_page",
     "signature": "_read_cmd_code_page() -> str | None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "scripts/runsets/windows/preflight_checks.py",
-    "line_no": 476,
+    "line_no": 1173,
     "symbol": "_check_powershell",
     "signature": "_check_powershell(errors: list[Issue], warnings: list[Issue], warn_only: bool) -> None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "scripts/runsets/windows/preflight_checks.py",
-    "line_no": 512,
+    "line_no": 1209,
     "symbol": "_check_temp_dir",
-    "signature": "_check_temp_dir(temp_dir: str | None, errors: list[Issue], warnings: list[Issue], cmd_unsafe_error: bool) -> None",
+    "signature": "_check_temp_dir(temp_dir: str | None, errors: list[Issue], warnings: list[Issue], cmd_unsafe_error: bool, allow_non_ascii: bool=False) -> None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "scripts/runsets/windows/preflight_checks.py",
-    "line_no": 538,
+    "line_no": 1236,
     "symbol": "_check_env_paths",
-    "signature": "_check_env_paths(errors: list[Issue], warnings: list[Issue], cmd_unsafe_error: bool) -> None",
+    "signature": "_check_env_paths(errors: list[Issue], warnings: list[Issue], cmd_unsafe_error: bool, allow_non_ascii: bool=False) -> None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "scripts/runsets/windows/preflight_checks.py",
-    "line_no": 575,
+    "line_no": 1277,
     "symbol": "_check_path_env_length",
     "signature": "_check_path_env_length(warnings: list[Issue]) -> None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "scripts/runsets/windows/preflight_checks.py",
-    "line_no": 594,
+    "line_no": 1296,
     "symbol": "_check_pathext",
     "signature": "_check_pathext(errors: list[Issue], warnings: list[Issue], profile: str) -> None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "scripts/runsets/windows/preflight_checks.py",
-    "line_no": 617,
+    "line_no": 1319,
     "symbol": "_check_path_value",
-    "signature": "_check_path_value(label: str, value: str, errors: list[Issue], warnings: list[Issue], cmd_unsafe_error: bool, allow_expansion: bool, warn_unc: bool=True, meta_as_error: bool=False, skip_rules: set[str] | None=None) -> None",
+    "signature": "_check_path_value(label: str, value: str, errors: list[Issue], warnings: list[Issue], cmd_unsafe_error: bool, allow_expansion: bool, warn_unc: bool=True, meta_as_error: bool=False, skip_rules: set[str] | None=None, allow_non_ascii: bool=False) -> None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "scripts/runsets/windows/preflight_checks.py",
-    "line_no": 682,
+    "line_no": 1385,
     "symbol": "_has_invalid_windows_chars",
     "signature": "_has_invalid_windows_chars(value: str) -> bool",
     "brief_usage": "No description available."
   },
   {
     "file_path": "scripts/runsets/windows/preflight_checks.py",
-    "line_no": 701,
+    "line_no": 1404,
     "symbol": "_extract_for_var_token",
     "signature": "_extract_for_var_token(line_body: str) -> str | None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "scripts/runsets/windows/preflight_checks.py",
-    "line_no": 720,
+    "line_no": 1423,
     "symbol": "_parse_set_value",
     "signature": "_parse_set_value(line: str) -> str | None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "scripts/runsets/windows/preflight_checks.py",
-    "line_no": 734,
+    "line_no": 1437,
     "symbol": "_detect_delayed_expansion_lines",
     "signature": "_detect_delayed_expansion_lines(text: str) -> list[int]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "scripts/runsets/windows/preflight_checks.py",
-    "line_no": 753,
+    "line_no": 1458,
     "symbol": "_detect_delayed_expansion",
     "signature": "_detect_delayed_expansion(text: str) -> bool",
     "brief_usage": "No description available."
   },
   {
     "file_path": "scripts/runsets/windows/preflight_checks.py",
-    "line_no": 757,
+    "line_no": 1478,
     "symbol": "_decode_cmd_text",
     "signature": "_decode_cmd_text(data: bytes) -> str",
     "brief_usage": "No description available."
   },
   {
     "file_path": "scripts/runsets/windows/preflight_checks.py",
-    "line_no": 763,
+    "line_no": 1484,
     "symbol": "_read_cmd_text",
     "signature": "_read_cmd_text(path: Path, errors: list[Issue]) -> str | None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "scripts/runsets/windows/preflight_checks.py",
-    "line_no": 772,
+    "line_no": 1493,
     "symbol": "_normalize_allowlist_path",
     "signature": "_normalize_allowlist_path(value: str) -> str",
     "brief_usage": "No description available."
   },
   {
     "file_path": "scripts/runsets/windows/preflight_checks.py",
-    "line_no": 776,
+    "line_no": 1497,
     "symbol": "_load_cmd_allowlist",
-    "signature": "_load_cmd_allowlist(path: Path) -> list[AllowlistEntry]",
+    "signature": "_load_cmd_allowlist(path: Path, warnings: list[Issue]) -> list[AllowlistEntry]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "scripts/runsets/windows/preflight_checks.py",
-    "line_no": 804,
+    "line_no": 1576,
     "symbol": "_allowlist_rules_for",
     "signature": "_allowlist_rules_for(path: Path, repo_root: Path, entries: list[AllowlistEntry]) -> set[str] | None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "scripts/runsets/windows/preflight_checks.py",
-    "line_no": 829,
+    "line_no": 1603,
     "symbol": "_format_issue",
     "signature": "_format_issue(issue: Issue) -> str",
     "brief_usage": "No description available."
   },
   {
     "file_path": "scripts/runsets/windows/preflight_checks.py",
-    "line_no": 838,
+    "line_no": 1612,
     "symbol": "_issue_to_dict",
     "signature": "_issue_to_dict(issue: Issue) -> dict[str, object]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "scripts/runsets/windows/preflight_checks.py",
-    "line_no": 851,
+    "line_no": 1625,
     "symbol": "_rule_counts",
     "signature": "_rule_counts(issues: list[Issue]) -> dict[str, dict[str, int]]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "scripts/runsets/windows/preflight_checks.py",
-    "line_no": 859,
+    "line_no": 1633,
     "symbol": "_build_json_payload",
     "signature": "_build_json_payload(errors: list[Issue], warnings: list[Issue], infos: list[Issue], exit_code: int) -> dict[str, object]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "scripts/runsets/windows/preflight_checks.py",
-    "line_no": 889,
+    "line_no": 1663,
     "symbol": "_has_chcp_directive",
     "signature": "_has_chcp_directive(lines: list[str], limit: int=CHCP_SCAN_LINES) -> bool",
     "brief_usage": "No description available."
   },
   {
     "file_path": "scripts/runsets/windows/preflight_checks.py",
-    "line_no": 911,
-    "symbol": "_scan_cmd_file",
-    "signature": "_scan_cmd_file(path: Path, errors: list[Issue], warnings: list[Issue], infos: list[Issue], cmd_unsafe_error: bool, profile: str, allowlist_rules: set[str] | None) -> None",
+    "line_no": 1685,
+    "symbol": "_join_caret_lines",
+    "signature": "_join_caret_lines(lines: list[str]) -> list[tuple[int, str]]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "scripts/runsets/windows/preflight_checks.py",
-    "line_no": 1354,
+    "line_no": 1706,
+    "symbol": "_split_cmd_segments",
+    "signature": "_split_cmd_segments(line: str) -> list[str]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/runsets/windows/preflight_checks.py",
+    "line_no": 1738,
+    "symbol": "_BlockState",
+    "signature": "class _BlockState",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/runsets/windows/preflight_checks.py",
+    "line_no": 1745,
+    "symbol": "_has_unquoted_meta",
+    "signature": "_has_unquoted_meta(line: str, meta_chars: set[str]) -> bool",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/runsets/windows/preflight_checks.py",
+    "line_no": 1763,
+    "symbol": "_count_parens",
+    "signature": "_count_parens(line: str) -> tuple[int, int]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/runsets/windows/preflight_checks.py",
+    "line_no": 1787,
+    "symbol": "_token_is_relative_path",
+    "signature": "_token_is_relative_path(token: str) -> bool",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/runsets/windows/preflight_checks.py",
+    "line_no": 1808,
+    "symbol": "_line_has_relative_path",
+    "signature": "_line_has_relative_path(line_body: str) -> bool",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/runsets/windows/preflight_checks.py",
+    "line_no": 1820,
+    "symbol": "_detect_script_dir_anchor",
+    "signature": "_detect_script_dir_anchor(lines: list[tuple[int, str]], limit: int) -> bool",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/runsets/windows/preflight_checks.py",
+    "line_no": 1842,
+    "symbol": "_iter_named_commands",
+    "signature": "_iter_named_commands(line: str, names: set[str]) -> list[tuple[str, list[str]]]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/runsets/windows/preflight_checks.py",
+    "line_no": 1873,
+    "symbol": "_parse_xcopy_flags",
+    "signature": "_parse_xcopy_flags(tokens: list[str]) -> tuple[bool, bool, bool, bool, bool]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/runsets/windows/preflight_checks.py",
+    "line_no": 1902,
+    "symbol": "_extract_set_name",
+    "signature": "_extract_set_name(line_body: str) -> str | None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/runsets/windows/preflight_checks.py",
+    "line_no": 1920,
+    "symbol": "_is_cmd_token",
+    "signature": "_is_cmd_token(token: str) -> bool",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/runsets/windows/preflight_checks.py",
+    "line_no": 1930,
+    "symbol": "_iter_cmd_invocations",
+    "signature": "_iter_cmd_invocations(line: str) -> list[tuple[bool, bool, bool, bool]]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/runsets/windows/preflight_checks.py",
+    "line_no": 1987,
+    "symbol": "_line_has_cmd_v_on",
+    "signature": "_line_has_cmd_v_on(line_body: str) -> bool",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/runsets/windows/preflight_checks.py",
+    "line_no": 1991,
+    "symbol": "_dash_option_cmd",
+    "signature": "_dash_option_cmd(line_body: str) -> str | None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/runsets/windows/preflight_checks.py",
+    "line_no": 2010,
+    "symbol": "_scan_cmd_file",
+    "signature": "_scan_cmd_file(path: Path, errors: list[Issue], warnings: list[Issue], infos: list[Issue], cmd_unsafe_error: bool, profile: str, allowlist_rules: set[str] | None, autorun_detected: bool, debug: bool=False) -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/runsets/windows/preflight_checks.py",
+    "line_no": 2666,
     "symbol": "_collect_cmd_paths",
     "signature": "_collect_cmd_paths(cmd_files: list[str], cmd_roots: list[str], errors: list[Issue], cmd_exclude: list[str]) -> list[Path]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "scripts/runsets/windows/preflight_checks.py",
-    "line_no": 1417,
+    "line_no": 2729,
     "symbol": "_scan_repo_root",
-    "signature": "_scan_repo_root(root: Path, errors: list[Issue], warnings: list[Issue], cmd_unsafe_error: bool, exclude_dirs: set[str]) -> tuple[str, int]",
+    "signature": "_scan_repo_root(root: Path, errors: list[Issue], warnings: list[Issue], cmd_unsafe_error: bool, exclude_dirs: set[str], allow_non_ascii: bool=False) -> tuple[str, int]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "scripts/runsets/windows/preflight_checks.py",
-    "line_no": 1467,
+    "line_no": 2780,
     "symbol": "_estimate_path_len",
     "signature": "_estimate_path_len(base: str, rel_win: str) -> int",
     "brief_usage": "No description available."
   },
   {
     "file_path": "scripts/runsets/windows/preflight_checks.py",
-    "line_no": 1473,
+    "line_no": 2786,
     "symbol": "_read_long_paths_enabled",
     "signature": "_read_long_paths_enabled() -> bool | None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "scripts/runsets/windows/preflight_checks.py",
-    "line_no": 1491,
+    "line_no": 2804,
     "symbol": "_read_git_longpaths",
     "signature": "_read_git_longpaths(repo_root: Path) -> bool | None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "scripts/runsets/windows/preflight_checks.py",
-    "line_no": 1512,
+    "line_no": 2825,
     "symbol": "main",
     "signature": "main() -> int",
     "brief_usage": "No description available."
@@ -11389,6 +11928,181 @@
     "brief_usage": "No description available."
   },
   {
+    "file_path": "scripts/tests/test_win_parallel.py",
+    "line_no": 13,
+    "symbol": "REPO_ROOT",
+    "signature": "REPO_ROOT = Path(__file__).resolve().parent.parent.parent",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "scripts/tests/test_win_parallel.py",
+    "line_no": 16,
+    "symbol": "test_win_process_launch_basic",
+    "signature": "test_win_process_launch_basic()",
+    "brief_usage": "Test 1: Basic win_process.py launch with a simple echo command."
+  },
+  {
+    "file_path": "scripts/tests/test_win_parallel.py",
+    "line_no": 56,
+    "symbol": "test_win_process_launch_cmdfile",
+    "signature": "test_win_process_launch_cmdfile()",
+    "brief_usage": "Test 2: win_process.py launch with --cmd-file."
+  },
+  {
+    "file_path": "scripts/tests/test_win_parallel.py",
+    "line_no": 104,
+    "symbol": "test_win_process_launch_cmdfile_cp932",
+    "signature": "test_win_process_launch_cmdfile_cp932()",
+    "brief_usage": "Test 3: win_process.py launch with --cmd-file in CP932 encoding."
+  },
+  {
+    "file_path": "scripts/tests/test_win_parallel.py",
+    "line_no": 147,
+    "symbol": "test_cmd_echo_redirect",
+    "signature": "test_cmd_echo_redirect()",
+    "brief_usage": "Test 4: Test stdin command passing (replaces echo > file test)."
+  },
+  {
+    "file_path": "scripts/tests/test_win_parallel.py",
+    "line_no": 184,
+    "symbol": "test_parallel_job_simulation",
+    "signature": "test_parallel_job_simulation()",
+    "brief_usage": "Test 5: Simulate launching multiple parallel jobs."
+  },
+  {
+    "file_path": "scripts/tests/test_win_parallel.py",
+    "line_no": 247,
+    "symbol": "test_env_var_inheritance",
+    "signature": "test_env_var_inheritance()",
+    "brief_usage": "Test 6: Check if environment variables are inherited by subprocesses."
+  },
+  {
+    "file_path": "scripts/tests/test_win_parallel.py",
+    "line_no": 307,
+    "symbol": "test_batch_file_encoding_simulation",
+    "signature": "test_batch_file_encoding_simulation()",
+    "brief_usage": "Test 7: Simulate batch file JOB_CMD writing with Japanese path."
+  },
+  {
+    "file_path": "scripts/tests/test_win_parallel.py",
+    "line_no": 350,
+    "symbol": "main",
+    "signature": "main()",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/tests/test_win_process_py.py",
+    "line_no": 22,
+    "symbol": "_launch",
+    "signature": "_launch(name: str, args: list, input_data: str=None)",
+    "brief_usage": "Run win_process.py with given args and optional stdin input."
+  },
+  {
+    "file_path": "scripts/tests/test_win_process_py.py",
+    "line_no": 59,
+    "symbol": "main",
+    "signature": "main()",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/tools/compare_zero_d_outputs.py",
+    "line_no": 13,
+    "symbol": "SUMMARY_KEYS",
+    "signature": "SUMMARY_KEYS = ['M_loss', 'M_out_cum', 'M_sink_cum', 'mass_budget_max_error_percent', 'dt_over_t_blow_median', 'beta_at_smin_config', 'beta_at_smin_effective']",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "scripts/tools/compare_zero_d_outputs.py",
+    "line_no": 23,
+    "symbol": "SUMMARY_RTOL",
+    "signature": "SUMMARY_RTOL = 1e-06",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "scripts/tools/compare_zero_d_outputs.py",
+    "line_no": 24,
+    "symbol": "SUMMARY_ATOL",
+    "signature": "SUMMARY_ATOL = 1e-12",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "scripts/tools/compare_zero_d_outputs.py",
+    "line_no": 25,
+    "symbol": "SERIES_RTOL",
+    "signature": "SERIES_RTOL = 1e-06",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "scripts/tools/compare_zero_d_outputs.py",
+    "line_no": 26,
+    "symbol": "SERIES_ATOL",
+    "signature": "SERIES_ATOL = 1e-10",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "scripts/tools/compare_zero_d_outputs.py",
+    "line_no": 27,
+    "symbol": "MASS_BUDGET_TOL",
+    "signature": "MASS_BUDGET_TOL = 0.5",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "scripts/tools/compare_zero_d_outputs.py",
+    "line_no": 30,
+    "symbol": "_read_json",
+    "signature": "_read_json(path: Path) -> dict[str, Any]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/tools/compare_zero_d_outputs.py",
+    "line_no": 35,
+    "symbol": "_compare_numeric",
+    "signature": "_compare_numeric(ref: np.ndarray, new: np.ndarray, *, rtol: float, atol: float) -> tuple[float, bool]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/tools/compare_zero_d_outputs.py",
+    "line_no": 59,
+    "symbol": "_compare_series",
+    "signature": "_compare_series(ref_df: pd.DataFrame, new_df: pd.DataFrame, *, series_rtol: float, series_atol: float, include_cols: list[str] | None, exclude_cols: set[str], include_non_numeric: bool) -> tuple[dict[str, float], bool, list[str], list[str], list[str]]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/tools/compare_zero_d_outputs.py",
+    "line_no": 116,
+    "symbol": "_compare_summary",
+    "signature": "_compare_summary(ref: dict[str, Any], new: dict[str, Any], *, summary_rtol: float, summary_atol: float, summary_keys: list[str]) -> tuple[dict[str, float], bool, list[str]]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/tools/compare_zero_d_outputs.py",
+    "line_no": 150,
+    "symbol": "_read_mass_budget",
+    "signature": "_read_mass_budget(path: Path) -> tuple[float, bool]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/tools/compare_zero_d_outputs.py",
+    "line_no": 158,
+    "symbol": "_write_json",
+    "signature": "_write_json(path: Path, payload: dict[str, Any]) -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/tools/compare_zero_d_outputs.py",
+    "line_no": 164,
+    "symbol": "_write_md",
+    "signature": "_write_md(path: Path, payload: dict[str, Any]) -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/tools/compare_zero_d_outputs.py",
+    "line_no": 194,
+    "symbol": "main",
+    "signature": "main() -> int",
+    "brief_usage": "No description available."
+  },
+  {
     "file_path": "siO2_disk_cooling/io_utils.py",
     "line_no": 13,
     "symbol": "ensure_outputs_dir",
@@ -11789,30 +12503,79 @@
   },
   {
     "file_path": "tests/integration/test_columnar_output_parity.py",
-    "line_no": 28,
+    "line_no": 31,
+    "symbol": "_assert_column_equal",
+    "signature": "_assert_column_equal(left: pd.DataFrame, right: pd.DataFrame, name: str) -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_columnar_output_parity.py",
+    "line_no": 38,
+    "symbol": "_assert_time_order",
+    "signature": "_assert_time_order(df: pd.DataFrame) -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_columnar_output_parity.py",
+    "line_no": 43,
+    "symbol": "_assert_cell_index_order",
+    "signature": "_assert_cell_index_order(df: pd.DataFrame) -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_columnar_output_parity.py",
+    "line_no": 49,
+    "symbol": "_assert_nan_masks_equal",
+    "signature": "_assert_nan_masks_equal(left: pd.DataFrame, right: pd.DataFrame, columns: list[str]) -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_columnar_output_parity.py",
+    "line_no": 58,
+    "symbol": "_assert_mass_budget_equal",
+    "signature": "_assert_mass_budget_equal(row_dir: Path, col_dir: Path) -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_columnar_output_parity.py",
+    "line_no": 74,
     "symbol": "test_columnar_zero_d_schema_parity",
     "signature": "test_columnar_zero_d_schema_parity(tmp_path: Path) -> None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tests/integration/test_columnar_output_parity.py",
-    "line_no": 57,
+    "line_no": 108,
     "symbol": "test_columnar_one_d_schema_parity",
     "signature": "test_columnar_one_d_schema_parity(tmp_path: Path) -> None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tests/integration/test_columnar_output_parity.py",
-    "line_no": 89,
+    "line_no": 148,
     "symbol": "test_columnar_mass_budget_streaming",
     "signature": "test_columnar_mass_budget_streaming(tmp_path: Path, monkeypatch) -> None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tests/integration/test_columnar_output_parity.py",
-    "line_no": 106,
+    "line_no": 165,
+    "symbol": "test_columnar_zero_d_streaming_order",
+    "signature": "test_columnar_zero_d_streaming_order(tmp_path: Path, monkeypatch) -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_columnar_output_parity.py",
+    "line_no": 190,
     "symbol": "test_columnar_one_d_mass_budget_streaming",
     "signature": "test_columnar_one_d_mass_budget_streaming(tmp_path: Path, monkeypatch) -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_columnar_output_parity.py",
+    "line_no": 208,
+    "symbol": "test_columnar_one_d_streaming_order",
+    "signature": "test_columnar_one_d_streaming_order(tmp_path: Path, monkeypatch) -> None",
     "brief_usage": "No description available."
   },
   {
@@ -12604,6 +13367,48 @@
     "line_no": 24,
     "symbol": "test_phi_table_monotonic_effects",
     "signature": "test_phi_table_monotonic_effects(mock_phi_table)",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_preflight_cmds.py",
+    "line_no": 10,
+    "symbol": "REPO_ROOT",
+    "signature": "REPO_ROOT = Path(__file__).resolve().parents[2]",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "tests/integration/test_preflight_cmds.py",
+    "line_no": 11,
+    "symbol": "PREFLIGHT_PATH",
+    "signature": "PREFLIGHT_PATH = REPO_ROOT / 'scripts' / 'runsets' / 'windows' / 'preflight_checks.py'",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "tests/integration/test_preflight_cmds.py",
+    "line_no": 14,
+    "symbol": "_load_module",
+    "signature": "_load_module() -> object",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_preflight_cmds.py",
+    "line_no": 22,
+    "symbol": "_python311_cmd",
+    "signature": "_python311_cmd() -> list[str]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_preflight_cmds.py",
+    "line_no": 35,
+    "symbol": "_run_preflight",
+    "signature": "_run_preflight(argv: list[str], monkeypatch, capsys) -> tuple[int, str]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_preflight_cmds.py",
+    "line_no": 53,
+    "symbol": "test_preflight_cmds_required",
+    "signature": "test_preflight_cmds_required(monkeypatch, capsys) -> None",
     "brief_usage": "No description available."
   },
   {
@@ -14388,224 +15193,294 @@
     "file_path": "tests/unit/test_preflight_checks.py",
     "line_no": 40,
     "symbol": "_scan_cmd_text",
-    "signature": "_scan_cmd_text(module: object, tmp_path: Path, text: str, cmd_unsafe_error: bool=False, profile: str='default')",
+    "signature": "_scan_cmd_text(module: object, tmp_path: Path, text: str, cmd_unsafe_error: bool=False, profile: str='default', autorun_detected: bool=False, debug: bool=False)",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tests/unit/test_preflight_checks.py",
-    "line_no": 56,
+    "line_no": 68,
     "symbol": "_run_main",
     "signature": "_run_main(module: object, argv: list[str], monkeypatch) -> int",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tests/unit/test_preflight_checks.py",
-    "line_no": 61,
+    "line_no": 73,
     "symbol": "test_unc_warning_not_duplicated",
     "signature": "test_unc_warning_not_duplicated(tmp_path: Path, monkeypatch, capsys) -> None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tests/unit/test_preflight_checks.py",
-    "line_no": 92,
+    "line_no": 104,
     "symbol": "test_comment_only_delayed_expansion_is_ignored",
     "signature": "test_comment_only_delayed_expansion_is_ignored(tmp_path: Path, monkeypatch, capsys) -> None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tests/unit/test_preflight_checks.py",
-    "line_no": 135,
+    "line_no": 147,
+    "symbol": "test_cmd_v_on_triggers_cmd_unsafe_error",
+    "signature": "test_cmd_v_on_triggers_cmd_unsafe_error(tmp_path: Path, monkeypatch, capsys) -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/unit/test_preflight_checks.py",
+    "line_no": 177,
+    "symbol": "test_validate_python_exe_tokens_rejects_dash_arg",
+    "signature": "test_validate_python_exe_tokens_rejects_dash_arg(tmp_path: Path) -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/unit/test_preflight_checks.py",
+    "line_no": 195,
+    "symbol": "test_validate_python_exe_tokens_rejects_version_arg_non_py",
+    "signature": "test_validate_python_exe_tokens_rejects_version_arg_non_py(tmp_path: Path) -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/unit/test_preflight_checks.py",
+    "line_no": 213,
+    "symbol": "test_allowlist_missing_rules_warns",
+    "signature": "test_allowlist_missing_rules_warns(tmp_path: Path) -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/unit/test_preflight_checks.py",
+    "line_no": 225,
     "symbol": "test_collect_cmd_paths_includes_bat_and_uppercase",
     "signature": "test_collect_cmd_paths_includes_bat_and_uppercase(tmp_path: Path) -> None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tests/unit/test_preflight_checks.py",
-    "line_no": 153,
+    "line_no": 243,
     "symbol": "test_scan_cmd_file_handles_bom_first_line",
     "signature": "test_scan_cmd_file_handles_bom_first_line(tmp_path: Path) -> None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tests/unit/test_preflight_checks.py",
-    "line_no": 175,
+    "line_no": 266,
     "symbol": "test_cmd_utf16_bom_errors",
     "signature": "test_cmd_utf16_bom_errors(tmp_path: Path) -> None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tests/unit/test_preflight_checks.py",
-    "line_no": 196,
+    "line_no": 288,
     "symbol": "test_cmd_nul_bytes_warns",
     "signature": "test_cmd_nul_bytes_warns(tmp_path: Path) -> None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tests/unit/test_preflight_checks.py",
-    "line_no": 217,
+    "line_no": 310,
     "symbol": "test_for_single_percent_is_error",
     "signature": "test_for_single_percent_is_error(tmp_path: Path) -> None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tests/unit/test_preflight_checks.py",
-    "line_no": 229,
+    "line_no": 322,
     "symbol": "test_set_space_around_equals_warns",
     "signature": "test_set_space_around_equals_warns(tmp_path: Path) -> None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tests/unit/test_preflight_checks.py",
-    "line_no": 241,
+    "line_no": 334,
     "symbol": "test_setlocal_missing_warns",
     "signature": "test_setlocal_missing_warns(tmp_path: Path) -> None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tests/unit/test_preflight_checks.py",
-    "line_no": 253,
+    "line_no": 346,
     "symbol": "test_interactive_pause_in_ci_is_error",
     "signature": "test_interactive_pause_in_ci_is_error(tmp_path: Path) -> None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tests/unit/test_preflight_checks.py",
-    "line_no": 266,
+    "line_no": 359,
     "symbol": "test_delayed_expansion_info",
     "signature": "test_delayed_expansion_info(tmp_path: Path) -> None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tests/unit/test_preflight_checks.py",
-    "line_no": 279,
+    "line_no": 372,
+    "symbol": "test_delayed_expansion_debug_info",
+    "signature": "test_delayed_expansion_debug_info(tmp_path: Path) -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/unit/test_preflight_checks.py",
+    "line_no": 387,
     "symbol": "test_pathext_missing_is_error_in_ci",
     "signature": "test_pathext_missing_is_error_in_ci(monkeypatch) -> None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tests/unit/test_preflight_checks.py",
-    "line_no": 290,
+    "line_no": 398,
     "symbol": "test_delayed_expansion_before_enabled_warns",
     "signature": "test_delayed_expansion_before_enabled_warns(tmp_path: Path) -> None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tests/unit/test_preflight_checks.py",
-    "line_no": 301,
+    "line_no": 409,
     "symbol": "test_errorlevel_zero_warns",
     "signature": "test_errorlevel_zero_warns(tmp_path: Path) -> None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tests/unit/test_preflight_checks.py",
-    "line_no": 312,
+    "line_no": 420,
     "symbol": "test_errorlevel_ascending_warns",
     "signature": "test_errorlevel_ascending_warns(tmp_path: Path) -> None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tests/unit/test_preflight_checks.py",
-    "line_no": 323,
+    "line_no": 431,
     "symbol": "test_setx_ci_is_error",
     "signature": "test_setx_ci_is_error(tmp_path: Path) -> None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tests/unit/test_preflight_checks.py",
-    "line_no": 335,
+    "line_no": 443,
     "symbol": "test_endlocal_before_setlocal_warns",
     "signature": "test_endlocal_before_setlocal_warns(tmp_path: Path) -> None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tests/unit/test_preflight_checks.py",
-    "line_no": 346,
+    "line_no": 454,
     "symbol": "test_popd_more_than_pushd_warns",
     "signature": "test_popd_more_than_pushd_warns(tmp_path: Path) -> None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tests/unit/test_preflight_checks.py",
-    "line_no": 357,
+    "line_no": 465,
     "symbol": "test_cmd_unsafe_issue_flags_literal_bang_even_with_percent",
     "signature": "test_cmd_unsafe_issue_flags_literal_bang_even_with_percent() -> None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tests/unit/test_preflight_checks.py",
-    "line_no": 374,
+    "line_no": 482,
     "symbol": "test_cmd_unsafe_issue_allows_bang_tokens",
     "signature": "test_cmd_unsafe_issue_allows_bang_tokens() -> None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tests/unit/test_preflight_checks.py",
-    "line_no": 391,
+    "line_no": 499,
     "symbol": "test_check_python_accepts_py",
     "signature": "test_check_python_accepts_py(monkeypatch) -> None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tests/unit/test_preflight_checks.py",
-    "line_no": 411,
+    "line_no": 519,
     "symbol": "test_check_cmd_warn_only",
     "signature": "test_check_cmd_warn_only(monkeypatch) -> None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tests/unit/test_preflight_checks.py",
-    "line_no": 427,
+    "line_no": 535,
     "symbol": "test_has_invalid_windows_chars_allows_extended_prefix",
     "signature": "test_has_invalid_windows_chars_allows_extended_prefix() -> None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tests/unit/test_preflight_checks.py",
-    "line_no": 433,
+    "line_no": 541,
     "symbol": "test_check_name_component_rejects_backslash",
     "signature": "test_check_name_component_rejects_backslash() -> None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tests/unit/test_preflight_checks.py",
-    "line_no": 442,
+    "line_no": 550,
     "symbol": "test_cmd_non_ascii_without_chcp_warns",
     "signature": "test_cmd_non_ascii_without_chcp_warns(tmp_path: Path) -> None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tests/unit/test_preflight_checks.py",
-    "line_no": 449,
+    "line_no": 557,
     "symbol": "test_cmd_non_ascii_with_chcp_suppresses_warning",
     "signature": "test_cmd_non_ascii_with_chcp_suppresses_warning(tmp_path: Path) -> None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tests/unit/test_preflight_checks.py",
-    "line_no": 456,
+    "line_no": 564,
     "symbol": "test_cmd_cd_checks",
     "signature": "test_cmd_cd_checks(tmp_path: Path) -> None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tests/unit/test_preflight_checks.py",
-    "line_no": 475,
+    "line_no": 583,
     "symbol": "test_cmd_start_title_warning",
     "signature": "test_cmd_start_title_warning(tmp_path: Path) -> None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tests/unit/test_preflight_checks.py",
-    "line_no": 494,
+    "line_no": 602,
     "symbol": "test_cmd_call_missing_warning",
     "signature": "test_cmd_call_missing_warning(tmp_path: Path) -> None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tests/unit/test_preflight_checks.py",
-    "line_no": 512,
+    "line_no": 620,
     "symbol": "test_cmd_line_length_warning",
     "signature": "test_cmd_line_length_warning(tmp_path: Path) -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/unit/test_preflight_checks.py",
+    "line_no": 628,
+    "symbol": "test_cmd_line_length_with_caret_continuation_warns",
+    "signature": "test_cmd_line_length_with_caret_continuation_warns(tmp_path: Path) -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/unit/test_preflight_checks.py",
+    "line_no": 639,
+    "symbol": "test_cmd_dash_option_warning_and_error",
+    "signature": "test_cmd_dash_option_warning_and_error(tmp_path: Path) -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/unit/test_preflight_checks.py",
+    "line_no": 655,
+    "symbol": "test_cmd_invocation_ignores_cmd_flags",
+    "signature": "test_cmd_invocation_ignores_cmd_flags(tmp_path: Path) -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/unit/test_preflight_checks.py",
+    "line_no": 665,
+    "symbol": "test_cmd_invocation_detects_cmd_without_c",
+    "signature": "test_cmd_invocation_detects_cmd_without_c(tmp_path: Path) -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/unit/test_preflight_checks.py",
+    "line_no": 672,
+    "symbol": "test_cmd_autorun_missing_d_warns",
+    "signature": "test_cmd_autorun_missing_d_warns(tmp_path: Path) -> None",
     "brief_usage": "No description available."
   },
   {
@@ -14834,35 +15709,35 @@
   },
   {
     "file_path": "tests/unit/test_surface_outflux.py",
-    "line_no": 9,
+    "line_no": 10,
     "symbol": "_run",
     "signature": "_run(prod_rate: float, Omega: float, steps: int=200)",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tests/unit/test_surface_outflux.py",
-    "line_no": 25,
+    "line_no": 26,
     "symbol": "test_supply_limited_outflux",
     "signature": "test_supply_limited_outflux()",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tests/unit/test_surface_outflux.py",
-    "line_no": 33,
+    "line_no": 34,
     "symbol": "test_saturation_limited_outflux",
     "signature": "test_saturation_limited_outflux()",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tests/unit/test_surface_outflux.py",
-    "line_no": 41,
+    "line_no": 42,
     "symbol": "test_sink_increases_mass_loss",
     "signature": "test_sink_increases_mass_loss()",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tests/unit/test_surface_outflux.py",
-    "line_no": 69,
+    "line_no": 70,
     "symbol": "test_los_factor_increases_tau_los",
     "signature": "test_los_factor_increases_tau_los(tmp_path)",
     "brief_usage": "LOS係数を伸ばしたときに tau_los_mars が記録されることを確認する。"
@@ -15754,6 +16629,97 @@
     "line_no": 40,
     "symbol": "main",
     "signature": "main(argv: Sequence[str] | None=None) -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tools/plan_lint.py",
+    "line_no": 14,
+    "symbol": "Finding",
+    "signature": "class Finding",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tools/plan_lint.py",
+    "line_no": 23,
+    "symbol": "DEFAULT_PREFIXES",
+    "signature": "DEFAULT_PREFIXES = ['analysis/', 'analysis/outputs/', 'configs/', 'data/', 'docs/', 'marsdisk/', 'scripts/', 'siO2_disk_cooling/', 'slides/', 'tables/', 'tests/', 'tools/', 'out/', 'paper/', 'agent_test/', 'tmp/', '_configs/', '.github/', '.devcontainer/', 'devcontainer/', 'github/', './', '../']",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "tools/plan_lint.py",
+    "line_no": 49,
+    "symbol": "FILE_URL_RE",
+    "signature": "FILE_URL_RE = re.compile('file://[^\\\\s`\\\\\"\\'()<>\\\\[\\\\]]+')",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "tools/plan_lint.py",
+    "line_no": 50,
+    "symbol": "WIN_ABS_RE",
+    "signature": "WIN_ABS_RE = re.compile('(?<![A-Za-z0-9])[A-Za-z]:[\\\\\\\\/][^\\\\s`\\\\\"\\'()<>\\\\[\\\\]]+')",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "tools/plan_lint.py",
+    "line_no": 51,
+    "symbol": "TILDE_ABS_RE",
+    "signature": "TILDE_ABS_RE = re.compile('(?<![A-Za-z0-9])~/(?:[^\\\\s`\\\\\"\\'()<>\\\\[\\\\]]+)')",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "tools/plan_lint.py",
+    "line_no": 52,
+    "symbol": "POSIX_ABS_RE",
+    "signature": "POSIX_ABS_RE = re.compile('(?<![A-Za-z0-9])/(?:[A-Za-z0-9_.-]+(?:/[A-Za-z0-9_.<>%{}$*+,:-]+)*)')",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "tools/plan_lint.py",
+    "line_no": 55,
+    "symbol": "OUTDIR_PREFIX_RE",
+    "signature": "OUTDIR_PREFIX_RE = re.compile('out/[^\\\\s`\\\\\"\\'()\\\\[\\\\]]+/$')",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "tools/plan_lint.py",
+    "line_no": 58,
+    "symbol": "build_prefix_regex",
+    "signature": "build_prefix_regex(prefixes: list[str]) -> re.Pattern[str]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tools/plan_lint.py",
+    "line_no": 65,
+    "symbol": "normalize_token",
+    "signature": "normalize_token(token: str) -> str",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tools/plan_lint.py",
+    "line_no": 75,
+    "symbol": "is_placeholder",
+    "signature": "is_placeholder(token: str) -> bool",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tools/plan_lint.py",
+    "line_no": 79,
+    "symbol": "iter_absolute_matches",
+    "signature": "iter_absolute_matches(line: str) -> list[str]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tools/plan_lint.py",
+    "line_no": 96,
+    "symbol": "scan_file",
+    "signature": "scan_file(path: Path, root: Path, rel_re: re.Pattern[str]) -> list[Finding]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tools/plan_lint.py",
+    "line_no": 138,
+    "symbol": "main",
+    "signature": "main() -> int",
     "brief_usage": "No description available."
   },
   {

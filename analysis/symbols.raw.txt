@@ -504,13 +504,14 @@ marsdisk/physics/phase.py:594:def hydro_escape_timescale(cfg: Optional[HydroEsca
 marsdisk/physics/psd.py:62:def _set_psd_edges(psd_state: Dict[str, np.ndarray | float], edges: np.ndarray, *, bump_version: bool=True) -> None
 marsdisk/physics/psd.py:83:def update_psd_state(*, s_min: float, s_max: float, alpha: float, wavy_strength: float, n_bins: int=40, rho: float=3000.0, wavy_decay: float=0.0, alpha_mode: str='size') -> Dict[str, np.ndarray | float]
 marsdisk/physics/psd.py:178:def sanitize_and_normalize_number(psd_state: Dict[str, np.ndarray | float], clip_max: float=1e+200, *, normalize: bool=True) -> Dict[str, np.ndarray | float]
-marsdisk/physics/psd.py:224:def compute_kappa(psd_state: Dict[str, np.ndarray | float]) -> float
-marsdisk/physics/psd.py:260:def mass_weights_lognormal_mixture(sizes: np.ndarray, widths: np.ndarray, *, f_fine: float, s_fine: float, s_meter: float, width_dex: float, s_cut: float | None=None) -> np.ndarray
-marsdisk/physics/psd.py:303:def mass_weights_truncated_powerlaw(sizes: np.ndarray, widths: np.ndarray, *, alpha_solid: float, s_min_solid: float, s_max_solid: float, s_cut: float | None=None) -> np.ndarray
-marsdisk/physics/psd.py:337:def apply_mass_weights(psd_state: Dict[str, np.ndarray | float], mass_weights: np.ndarray, *, rho: float | None=None) -> Dict[str, np.ndarray | float]
-marsdisk/physics/psd.py:382:def _size_drift_rebin_numpy(sizes: np.ndarray, number: np.ndarray, edges: np.ndarray, ds_step: float, floor_val: float) -> tuple[np.ndarray, np.ndarray]
-marsdisk/physics/psd.py:407:def apply_uniform_size_drift(psd_state: Dict[str, np.ndarray | float], *, ds_dt: float, dt: float, floor: float, sigma_surf: float) -> tuple[float, float, Dict[str, float]]
-marsdisk/physics/psd.py:548:def evolve_min_size(s_min_prev: float, *, dt: float, model: Optional[str]=None, params: Optional[Mapping[str, float]]=None, T: Optional[float]=None, rho: Optional[float]=None, s_floor: Optional[float]=None, sublimation_params: Optional[SublimationParams]=None) -> float
+marsdisk/physics/psd.py:224:def ensure_psd_state_contract(psd_state: Dict[str, np.ndarray | float]) -> Dict[str, np.ndarray | float]
+marsdisk/physics/psd.py:241:def compute_kappa(psd_state: Dict[str, np.ndarray | float]) -> float
+marsdisk/physics/psd.py:277:def mass_weights_lognormal_mixture(sizes: np.ndarray, widths: np.ndarray, *, f_fine: float, s_fine: float, s_meter: float, width_dex: float, s_cut: float | None=None) -> np.ndarray
+marsdisk/physics/psd.py:320:def mass_weights_truncated_powerlaw(sizes: np.ndarray, widths: np.ndarray, *, alpha_solid: float, s_min_solid: float, s_max_solid: float, s_cut: float | None=None) -> np.ndarray
+marsdisk/physics/psd.py:354:def apply_mass_weights(psd_state: Dict[str, np.ndarray | float], mass_weights: np.ndarray, *, rho: float | None=None) -> Dict[str, np.ndarray | float]
+marsdisk/physics/psd.py:399:def _size_drift_rebin_numpy(sizes: np.ndarray, number: np.ndarray, edges: np.ndarray, ds_step: float, floor_val: float) -> tuple[np.ndarray, np.ndarray]
+marsdisk/physics/psd.py:424:def apply_uniform_size_drift(psd_state: Dict[str, np.ndarray | float], *, ds_dt: float, dt: float, floor: float, sigma_surf: float) -> tuple[float, float, Dict[str, float]]
+marsdisk/physics/psd.py:565:def evolve_min_size(s_min_prev: float, *, dt: float, model: Optional[str]=None, params: Optional[Mapping[str, float]]=None, T: Optional[float]=None, rho: Optional[float]=None, s_floor: Optional[float]=None, sublimation_params: Optional[SublimationParams]=None) -> float
 marsdisk/physics/qstar.py:92:def set_coeff_unit_system(units: CoeffUnits) -> CoeffUnits
 marsdisk/physics/qstar.py:105:def get_coeff_unit_system() -> CoeffUnits
 marsdisk/physics/qstar.py:111:def get_coefficient_table() -> Dict[float, Tuple[float, float, float, float]]
@@ -623,41 +624,48 @@ marsdisk/physics/tempdriver.py:483:def autogenerate_temperature_table_if_needed(
 marsdisk/physics/tempdriver.py:565:def estimate_autogen_horizon_years(rad_cfg: Any, *, T_stop_K: Optional[float], margin_years: float=0.0, fallback_years: float=0.0) -> Optional[float]
 marsdisk/physics/viscosity.py:19:def _solve_tridiagonal(a: np.ndarray, b: np.ndarray, c: np.ndarray, d: np.ndarray) -> np.ndarray
 marsdisk/physics/viscosity.py:58:def step_viscous_diffusion_C5(sigma: Iterable[float], nu: Iterable[float], grid: RadialGrid, dt: float, *, theta: float=0.5) -> np.ndarray
-marsdisk/physics_step.py:41:class RadiationResult
-marsdisk/physics_step.py:62:class ShieldingResult
-marsdisk/physics_step.py:83:class SublimationResult
-marsdisk/physics_step.py:104:class SurfaceStepResult
-marsdisk/physics_step.py:128:class PhysicsStepResult
-marsdisk/physics_step.py:157:def compute_radiation_parameters(s_min: float, rho: float, T_M: float, *, qpr_override: Optional[float]=None) -> RadiationResult
-marsdisk/physics_step.py:219:def compute_shielding(kappa_surf: float, sigma_surf: float, *, mode: str='psitau', phi_tau_fn: Any=None, tau_fixed: Optional[float]=None, sigma_tau1_fixed: Optional[float]=None, los_factor: float=1.0) -> ShieldingResult
-marsdisk/physics_step.py:322:def compute_sublimation(T_M: float, r: float, rho: float, sub_params: Any, *, phase_state: str='solid', enabled: bool=True) -> SublimationResult
-marsdisk/physics_step.py:383:def step_surface_layer(sigma_surf: float, prod_rate: float, dt: float, Omega: float, *, tau: Optional[float]=None, t_sink: Optional[float]=None, sigma_tau1: Optional[float]=None, enable_blowout: bool=True, chi_blow: float=1.0) -> SurfaceStepResult
-marsdisk/physics_step.py:466:def fast_blowout_correction_factor(ratio: float) -> float
-marsdisk/physics_step.py:490:def compute_gate_factor(t_blow: Optional[float], t_solid: Optional[float]) -> float
-marsdisk/run_one_d.py:73:class MassBudgetViolationError(NumericalError)
-marsdisk/run_one_d.py:97:class CellStepPayload(NamedTuple)
-marsdisk/run_one_d.py:107:def _resolve_los_factor(los_geom: Optional[object]) -> float
-marsdisk/run_one_d.py:123:def _clamp_sigma_surf(value: float, *, label: str='sigma_surf') -> float
-marsdisk/run_one_d.py:137:def _auto_chi_blow(beta: float, qpr: float) -> float
-marsdisk/run_one_d.py:152:def _fast_blowout_correction_factor(ratio: float) -> float
-marsdisk/run_one_d.py:165:def _env_flag(name: str) -> Optional[bool]
-marsdisk/run_one_d.py:177:def _env_int(name: str) -> Optional[int]
-marsdisk/run_one_d.py:187:def _resolve_cell_parallel_config(*, os_name: str, n_cells: int, cell_parallel_requested: bool, cell_jobs_requested: int, cell_min_cells: int, cell_min_cells_per_job: int, cell_chunk_size_raw: int, cell_coupling_enabled: bool, allow_non_windows: bool=False) -> Dict[str, object]
-marsdisk/run_one_d.py:252:def run_one_d(cfg: Config, *, enforce_mass_budget: bool=False, physics_mode_override: Optional[str]=None, physics_mode_source_override: Optional[str]=None) -> None
-marsdisk/run_zero_d.py:107:class SmolSinkWorkspace
-marsdisk/run_zero_d.py:116:def _get_smol_sink_workspace(workspace: SmolSinkWorkspace | None, n_bins: int) -> SmolSinkWorkspace
-marsdisk/run_zero_d.py:136:def _get_max_steps() -> int
-marsdisk/run_zero_d.py:150:def _log_stage(label: str, *, extra: Mapping[str, Any] | None=None) -> None
-marsdisk/run_zero_d.py:156:def _model_fields_set(model: Any) -> set[str]
-marsdisk/run_zero_d.py:167:def _resolve_los_factor(los_geom: Optional[object]) -> float
-marsdisk/run_zero_d.py:183:def _surface_energy_floor(gamma_J_m2: float, eta: float, alpha: float, rho: float, v_rel: float, s0: float, s_max: float) -> float
-marsdisk/run_zero_d.py:222:def _auto_chi_blow(beta: float, qpr: float) -> float
-marsdisk/run_zero_d.py:237:def _fast_blowout_correction_factor(ratio: float) -> float
-marsdisk/run_zero_d.py:260:def load_config(path: Path, overrides: Optional[Sequence[str]]=None) -> Config
-marsdisk/run_zero_d.py:285:def _gather_git_info() -> Dict[str, Any]
-marsdisk/run_zero_d.py:312:class MassBudgetViolationError(NumericalError)
-marsdisk/run_zero_d.py:318:def run_zero_d(cfg: Config, *, enforce_mass_budget: bool=False, physics_mode_override: Optional[str]=None, physics_mode_source_override: Optional[str]=None) -> None
-marsdisk/run_zero_d.py:5221:def main(argv: Optional[List[str]]=None) -> None
+marsdisk/physics_step.py:42:class RadiationResult
+marsdisk/physics_step.py:63:class ShieldingResult
+marsdisk/physics_step.py:84:class ShieldingStepResult
+marsdisk/physics_step.py:95:class SublimationResult
+marsdisk/physics_step.py:116:class SurfaceStepResult
+marsdisk/physics_step.py:140:class SurfaceUpdateResult
+marsdisk/physics_step.py:153:class PhysicsStepResult
+marsdisk/physics_step.py:182:def compute_radiation_parameters(s_min: float, rho: float, T_M: float, *, qpr_override: Optional[float]=None, qpr_lookup_fn: Optional[Callable[[float, float], float]]=None, initial: Optional[float]=None, a_blow_override: Optional[float]=None, iterations: int=6) -> RadiationResult
+marsdisk/physics_step.py:258:def compute_shielding(kappa_surf: float, sigma_surf: float, *, mode: str='psitau', phi_tau_fn: Any=None, tau_fixed: Optional[float]=None, sigma_tau1_fixed: Optional[float]=None, los_factor: float=1.0) -> ShieldingResult
+marsdisk/physics_step.py:359:def compute_shielding_step(kappa_surf: float, sigma_surf: float, *, collisions_active: bool, shielding_mode: str, phi_tau_fn: Optional[Callable[[float], float]], tau_fixed: Optional[float], sigma_tau1_fixed: Optional[float], los_factor: float, use_tcoll: bool) -> ShieldingStepResult
+marsdisk/physics_step.py:414:def compute_sublimation(T_M: float, r: float, rho: float, sub_params: Any, *, phase_state: str='solid', enabled: bool=True) -> SublimationResult
+marsdisk/physics_step.py:475:def step_surface_layer(sigma_surf: float, prod_rate: float, dt: float, Omega: float, *, tau: Optional[float]=None, t_sink: Optional[float]=None, sigma_tau1: Optional[float]=None, enable_blowout: bool=True, chi_blow: float=1.0) -> SurfaceStepResult
+marsdisk/run_one_d.py:76:class MassBudgetViolationError(NumericalError)
+marsdisk/run_one_d.py:100:class CellStepPayload(NamedTuple)
+marsdisk/run_one_d.py:110:def _resolve_los_factor(los_geom: Optional[object]) -> float
+marsdisk/run_one_d.py:126:def _clamp_sigma_surf(value: float, *, label: str='sigma_surf') -> float
+marsdisk/run_one_d.py:140:def _auto_chi_blow(beta: float, qpr: float) -> float
+marsdisk/run_one_d.py:155:def _env_flag(name: str) -> Optional[bool]
+marsdisk/run_one_d.py:167:def _env_int(name: str) -> Optional[int]
+marsdisk/run_one_d.py:177:def _resolve_cell_parallel_config(*, os_name: str, n_cells: int, cell_parallel_requested: bool, cell_jobs_requested: int, cell_min_cells: int, cell_min_cells_per_job: int, cell_chunk_size_raw: int, cell_coupling_enabled: bool, allow_non_windows: bool=False) -> Dict[str, object]
+marsdisk/run_one_d.py:242:def run_one_d(cfg: Config, *, enforce_mass_budget: bool=False, physics_mode_override: Optional[str]=None, physics_mode_source_override: Optional[str]=None) -> None
+marsdisk/run_zero_d.py:109:class SmolSinkWorkspace
+marsdisk/run_zero_d.py:119:class SupplyStepResult
+marsdisk/run_zero_d.py:128:class SurfaceSupplyStepResult
+marsdisk/run_zero_d.py:135:def _get_smol_sink_workspace(workspace: SmolSinkWorkspace | None, n_bins: int) -> SmolSinkWorkspace
+marsdisk/run_zero_d.py:155:def _apply_supply_step(*, time_now: float, r: float, dt: float, supply_spec: 'supply.Supply', area: float, supply_state: 'supply.SupplyRuntimeState | None', tau_for_feedback: float | None, temperature_K: float, allow_supply: bool, sigma_surf: float, sigma_tau1: float | None, sigma_deep: float, t_mix: float | None, deep_enabled: bool, transport_mode: str, headroom_gate: str, headroom_policy: str, t_blow: float | None) -> SupplyStepResult
+marsdisk/run_zero_d.py:212:def _apply_shielding_and_supply(*, time_now: float, r: float, dt: float, sigma_surf: float, kappa_surf: float, collisions_active_step: bool, shielding_mode: str, phi_tau_fn: Callable[[float], float] | None, tau_fixed_target: float | None, sigma_tau1_fixed_target: float | None, los_factor: float, use_tcoll: bool, enable_blowout_step: bool, sink_timescale_active: bool, t_sink_step_effective: float | None, supply_spec: 'supply.SupplySpec', area: float, supply_state: 'supply.SupplyRuntimeState', temperature_K: float, allow_supply: bool, sigma_deep: float, t_mix: float | None, deep_enabled: bool, transport_mode: str, headroom_gate: str, headroom_policy: str, t_blow: float | None) -> SurfaceSupplyStepResult
+marsdisk/run_zero_d.py:283:def _apply_blowout_correction(outflux_surface: float, *, factor: float, apply: bool) -> tuple[float, bool]
+marsdisk/run_zero_d.py:294:def _apply_blowout_gate(blow_surface_total: float, outflux_surface: float, *, enable_blowout: bool, gate_enabled: bool, gate_factor: float) -> tuple[float, float]
+marsdisk/run_zero_d.py:307:def _resolve_t_coll_step(*, collision_solver_mode: str, collisions_active: bool, tau_los_last: float | None, los_factor: float, Omega: float, t_coll_kernel_last: float | None) -> float | None
+marsdisk/run_zero_d.py:334:def _reset_collision_runtime_state() -> None
+marsdisk/run_zero_d.py:341:def _get_max_steps() -> int
+marsdisk/run_zero_d.py:355:def _log_stage(label: str, *, extra: Mapping[str, Any] | None=None) -> None
+marsdisk/run_zero_d.py:361:def _model_fields_set(model: Any) -> set[str]
+marsdisk/run_zero_d.py:372:def _resolve_los_factor(los_geom: Optional[object]) -> float
+marsdisk/run_zero_d.py:388:def _surface_energy_floor(gamma_J_m2: float, eta: float, alpha: float, rho: float, v_rel: float, s0: float, s_max: float) -> float
+marsdisk/run_zero_d.py:427:def _auto_chi_blow(beta: float, qpr: float) -> float
+marsdisk/run_zero_d.py:447:def load_config(path: Path, overrides: Optional[Sequence[str]]=None) -> Config
+marsdisk/run_zero_d.py:472:def _gather_git_info() -> Dict[str, Any]
+marsdisk/run_zero_d.py:499:class MassBudgetViolationError(NumericalError)
+marsdisk/run_zero_d.py:505:def run_zero_d(cfg: Config, *, enforce_mass_budget: bool=False, physics_mode_override: Optional[str]=None, physics_mode_source_override: Optional[str]=None) -> None
+marsdisk/run_zero_d.py:5389:def main(argv: Optional[List[str]]=None) -> None
 marsdisk/runtime/autotune.py:22:class MachineState
 marsdisk/runtime/autotune.py:43:class AutoTuneDecision
 marsdisk/runtime/autotune.py:56:def _safe_int(value: Any, fallback: int) -> int
@@ -674,11 +682,12 @@ marsdisk/runtime/autotune.py:237:def apply_auto_tune(*, profile: str='auto', env
 marsdisk/runtime/helpers.py:8:def compute_phase_tau_fields(kappa_surf: float, sigma_for_tau: float, los_factor: float, phase_tau_field: str) -> Tuple[float, float]
 marsdisk/runtime/helpers.py:22:def resolve_feedback_tau_field(tau_field: Optional[str]) -> str
 marsdisk/runtime/helpers.py:35:def compute_gate_factor(t_blow: Optional[float], t_solid: Optional[float]) -> float
-marsdisk/runtime/helpers.py:57:def ensure_finite_kappa(kappa: Any, *, label: str | None=None) -> float
-marsdisk/runtime/helpers.py:70:def safe_float(value: Any, default: float=0.0) -> float
-marsdisk/runtime/helpers.py:82:def float_or_nan(value: Any) -> float
-marsdisk/runtime/helpers.py:92:def format_exception_short(exc: BaseException) -> str
-marsdisk/runtime/helpers.py:99:def log_stage(logger_obj, label: str, *, extra: dict | None=None) -> None
+marsdisk/runtime/helpers.py:57:def fast_blowout_correction_factor(ratio: float) -> float
+marsdisk/runtime/helpers.py:70:def ensure_finite_kappa(kappa: Any, *, label: str | None=None) -> float
+marsdisk/runtime/helpers.py:83:def safe_float(value: Any, default: float=0.0) -> float
+marsdisk/runtime/helpers.py:95:def float_or_nan(value: Any) -> float
+marsdisk/runtime/helpers.py:105:def format_exception_short(exc: BaseException) -> str
+marsdisk/runtime/helpers.py:112:def log_stage(logger_obj, label: str, *, extra: dict | None=None) -> None
 marsdisk/runtime/history.py:11:class ColumnarBuffer
 marsdisk/runtime/history.py:117:class ZeroDHistory
 marsdisk/runtime/legacy_steps.py:22:class RunConfig
@@ -914,8 +923,8 @@ scripts/runs/run_inner_disk_suite.py:228:def build_cases(*, phi_values: Iterable
 scripts/runs/run_inner_disk_suite.py:264:def parse_args(argv: Sequence[str] | None=None) -> argparse.Namespace
 scripts/runs/run_inner_disk_suite.py:319:def main(argv: Sequence[str] | None=None) -> None
 scripts/runsets/common/build_overrides.py:13:def _iter_pairs(paths: Iterable[Path]) -> Iterator[tuple[str, str]]
-scripts/runsets/common/build_overrides.py:29:def _merge_pairs(pairs: Iterable[tuple[str, str]]) -> tuple[list[str], dict[str, str]]
-scripts/runsets/common/build_overrides.py:43:def main() -> None
+scripts/runsets/common/build_overrides.py:37:def _merge_pairs(pairs: Iterable[tuple[str, str]]) -> tuple[list[str], dict[str, str]]
+scripts/runsets/common/build_overrides.py:51:def main() -> None
 scripts/runsets/common/calc_cell_jobs.py:11:def _parse_fraction(name: str, default: float) -> float
 scripts/runsets/common/calc_cell_jobs.py:22:def _get_cpu_logical() -> int
 scripts/runsets/common/calc_cell_jobs.py:35:def _get_mem_total_gb() -> int
@@ -949,8 +958,20 @@ scripts/runsets/common/next_seed.py:8:def main() -> int
 scripts/runsets/common/read_overrides_cmd.py:18:def _load_overrides(path: Path) -> dict[str, str]
 scripts/runsets/common/read_overrides_cmd.py:33:def main() -> int
 scripts/runsets/common/read_study_overrides.py:10:def _join_list(value: Any) -> str
-scripts/runsets/common/read_study_overrides.py:16:def _emit(key: str, value: Any) -> None
-scripts/runsets/common/read_study_overrides.py:23:def main() -> int
+scripts/runsets/common/read_study_overrides.py:16:def _emit(lines: list[str], key: str, value: Any) -> None
+scripts/runsets/common/read_study_overrides.py:23:def _write_lines(path: Path, lines: list[str]) -> None
+scripts/runsets/common/read_study_overrides.py:31:def main() -> int
+scripts/runsets/common/run_one.py:13:def _env(name: str, default: str | None=None) -> str | None
+scripts/runsets/common/run_one.py:17:def _is_true(value: str | None) -> bool
+scripts/runsets/common/run_one.py:23:def _split_args(value: str | None) -> list[str]
+scripts/runsets/common/run_one.py:29:def _sanitize_run_ts(value: str) -> str
+scripts/runsets/common/run_one.py:37:def _sanitize_sweep_tag(value: str) -> str
+scripts/runsets/common/run_one.py:45:def _format_title_token(raw: str) -> str
+scripts/runsets/common/run_one.py:53:def _run_command(cmd: list[str], *, capture: bool=False, text: bool=True, quiet: bool=False) -> subprocess.CompletedProcess
+scripts/runsets/common/run_one.py:65:def main() -> int
+scripts/runsets/common/sanitize_token.py:17:def _sanitize(value: str) -> str
+scripts/runsets/common/sanitize_token.py:25:def _timestamp(ts_script: Path) -> str
+scripts/runsets/common/sanitize_token.py:42:def main() -> int
 scripts/runsets/common/timestamp.py:9:def main() -> int
 scripts/runsets/common/win_process.py:21:def _parse_pids(raw: str) -> list[int]
 scripts/runsets/common/win_process.py:33:def _tasklist_has_pid(pid: int) -> bool
@@ -966,62 +987,97 @@ scripts/runsets/common/write_base_overrides.py:28:def append_literal(lines: list
 scripts/runsets/common/write_base_overrides.py:32:def main() -> int
 scripts/runsets/common/write_sweep_list.py:11:def _parse_list(raw: str) -> list[str]
 scripts/runsets/common/write_sweep_list.py:25:def main() -> int
-scripts/runsets/windows/preflight_checks.py:106:class Issue
-scripts/runsets/windows/preflight_checks.py:115:class AllowlistEntry
-scripts/runsets/windows/preflight_checks.py:120:def _add_issue(bucket: list[Issue], level: str, rule: str, message: str, path: Path | str | None=None, line: int | None=None) -> None
-scripts/runsets/windows/preflight_checks.py:134:def _error(bucket: list[Issue], rule: str, message: str, path: Path | str | None=None, line: int | None=None) -> None
-scripts/runsets/windows/preflight_checks.py:144:def _warn(bucket: list[Issue], rule: str, message: str, path: Path | str | None=None, line: int | None=None) -> None
-scripts/runsets/windows/preflight_checks.py:154:def _info(bucket: list[Issue], rule: str, message: str, path: Path | str | None=None, line: int | None=None) -> None
-scripts/runsets/windows/preflight_checks.py:164:def _load_overrides(path: Path) -> tuple[dict[str, str], list[str]]
-scripts/runsets/windows/preflight_checks.py:183:def _contains_non_ascii(text: str) -> bool
-scripts/runsets/windows/preflight_checks.py:187:def _is_windows_abs(path_str: str) -> bool
-scripts/runsets/windows/preflight_checks.py:194:def _normalize_windows(path_str: str) -> str
-scripts/runsets/windows/preflight_checks.py:198:def _is_windows() -> bool
-scripts/runsets/windows/preflight_checks.py:202:def _maybe_reexec_with_python311() -> None
-scripts/runsets/windows/preflight_checks.py:224:def _contains_posix_path(text: str) -> bool
-scripts/runsets/windows/preflight_checks.py:228:def _looks_like_windows_path(value: str) -> bool
-scripts/runsets/windows/preflight_checks.py:234:def _has_reserved_windows_name(value: str) -> bool
-scripts/runsets/windows/preflight_checks.py:247:def _contains_cmd_meta(text: str) -> bool
-scripts/runsets/windows/preflight_checks.py:251:def _has_expansion_token(value: str) -> bool
-scripts/runsets/windows/preflight_checks.py:259:def _has_unsafe_bang(value: str, allow_expansion: bool) -> bool
-scripts/runsets/windows/preflight_checks.py:268:def _cmd_unsafe_issue(label: str, value: str, errors: list[Issue], warnings: list[Issue], cmd_unsafe_error: bool, allow_expansion: bool, meta_as_error: bool=False, skip_rules: set[str] | None=None) -> None
-scripts/runsets/windows/preflight_checks.py:312:def _check_shared_path(label: str, value: str, warnings: list[Issue]) -> None
-scripts/runsets/windows/preflight_checks.py:329:def _check_name_component(name: str, rel_display: str, errors: list[Issue]) -> None
-scripts/runsets/windows/preflight_checks.py:341:def _check_cmd(name: str, errors: list[Issue], warnings: list[Issue], warn_only: bool) -> None
-scripts/runsets/windows/preflight_checks.py:355:def _check_python(errors: list[Issue], warnings: list[Issue], warn_only: bool, python_exe: str | None) -> None
-scripts/runsets/windows/preflight_checks.py:400:def _coerce_registry_bool(value: object) -> bool | None
-scripts/runsets/windows/preflight_checks.py:414:def _read_cmd_registry_value(root, name: str) -> object | None
-scripts/runsets/windows/preflight_checks.py:430:def _read_cmd_autorun_values() -> dict[str, object]
-scripts/runsets/windows/preflight_checks.py:443:def _read_cmd_extensions_enabled() -> tuple[bool | None, str | None, object | None]
-scripts/runsets/windows/preflight_checks.py:459:def _read_cmd_code_page() -> str | None
-scripts/runsets/windows/preflight_checks.py:476:def _check_powershell(errors: list[Issue], warnings: list[Issue], warn_only: bool) -> None
-scripts/runsets/windows/preflight_checks.py:512:def _check_temp_dir(temp_dir: str | None, errors: list[Issue], warnings: list[Issue], cmd_unsafe_error: bool) -> None
-scripts/runsets/windows/preflight_checks.py:538:def _check_env_paths(errors: list[Issue], warnings: list[Issue], cmd_unsafe_error: bool) -> None
-scripts/runsets/windows/preflight_checks.py:575:def _check_path_env_length(warnings: list[Issue]) -> None
-scripts/runsets/windows/preflight_checks.py:594:def _check_pathext(errors: list[Issue], warnings: list[Issue], profile: str) -> None
-scripts/runsets/windows/preflight_checks.py:617:def _check_path_value(label: str, value: str, errors: list[Issue], warnings: list[Issue], cmd_unsafe_error: bool, allow_expansion: bool, warn_unc: bool=True, meta_as_error: bool=False, skip_rules: set[str] | None=None) -> None
-scripts/runsets/windows/preflight_checks.py:682:def _has_invalid_windows_chars(value: str) -> bool
-scripts/runsets/windows/preflight_checks.py:701:def _extract_for_var_token(line_body: str) -> str | None
-scripts/runsets/windows/preflight_checks.py:720:def _parse_set_value(line: str) -> str | None
-scripts/runsets/windows/preflight_checks.py:734:def _detect_delayed_expansion_lines(text: str) -> list[int]
-scripts/runsets/windows/preflight_checks.py:753:def _detect_delayed_expansion(text: str) -> bool
-scripts/runsets/windows/preflight_checks.py:757:def _decode_cmd_text(data: bytes) -> str
-scripts/runsets/windows/preflight_checks.py:763:def _read_cmd_text(path: Path, errors: list[Issue]) -> str | None
-scripts/runsets/windows/preflight_checks.py:772:def _normalize_allowlist_path(value: str) -> str
-scripts/runsets/windows/preflight_checks.py:776:def _load_cmd_allowlist(path: Path) -> list[AllowlistEntry]
-scripts/runsets/windows/preflight_checks.py:804:def _allowlist_rules_for(path: Path, repo_root: Path, entries: list[AllowlistEntry]) -> set[str] | None
-scripts/runsets/windows/preflight_checks.py:829:def _format_issue(issue: Issue) -> str
-scripts/runsets/windows/preflight_checks.py:838:def _issue_to_dict(issue: Issue) -> dict[str, object]
-scripts/runsets/windows/preflight_checks.py:851:def _rule_counts(issues: list[Issue]) -> dict[str, dict[str, int]]
-scripts/runsets/windows/preflight_checks.py:859:def _build_json_payload(errors: list[Issue], warnings: list[Issue], infos: list[Issue], exit_code: int) -> dict[str, object]
-scripts/runsets/windows/preflight_checks.py:889:def _has_chcp_directive(lines: list[str], limit: int=CHCP_SCAN_LINES) -> bool
-scripts/runsets/windows/preflight_checks.py:911:def _scan_cmd_file(path: Path, errors: list[Issue], warnings: list[Issue], infos: list[Issue], cmd_unsafe_error: bool, profile: str, allowlist_rules: set[str] | None) -> None
-scripts/runsets/windows/preflight_checks.py:1354:def _collect_cmd_paths(cmd_files: list[str], cmd_roots: list[str], errors: list[Issue], cmd_exclude: list[str]) -> list[Path]
-scripts/runsets/windows/preflight_checks.py:1417:def _scan_repo_root(root: Path, errors: list[Issue], warnings: list[Issue], cmd_unsafe_error: bool, exclude_dirs: set[str]) -> tuple[str, int]
-scripts/runsets/windows/preflight_checks.py:1467:def _estimate_path_len(base: str, rel_win: str) -> int
-scripts/runsets/windows/preflight_checks.py:1473:def _read_long_paths_enabled() -> bool | None
-scripts/runsets/windows/preflight_checks.py:1491:def _read_git_longpaths(repo_root: Path) -> bool | None
-scripts/runsets/windows/preflight_checks.py:1512:def main() -> int
+scripts/runsets/windows/preflight_checks.py:290:class Issue
+scripts/runsets/windows/preflight_checks.py:299:class AllowlistEntry
+scripts/runsets/windows/preflight_checks.py:304:def _add_issue(bucket: list[Issue], level: str, rule: str, message: str, path: Path | str | None=None, line: int | None=None) -> None
+scripts/runsets/windows/preflight_checks.py:318:def _error(bucket: list[Issue], rule: str, message: str, path: Path | str | None=None, line: int | None=None) -> None
+scripts/runsets/windows/preflight_checks.py:328:def _warn(bucket: list[Issue], rule: str, message: str, path: Path | str | None=None, line: int | None=None) -> None
+scripts/runsets/windows/preflight_checks.py:338:def _info(bucket: list[Issue], rule: str, message: str, path: Path | str | None=None, line: int | None=None) -> None
+scripts/runsets/windows/preflight_checks.py:353:class PreflightConfig
+scripts/runsets/windows/preflight_checks.py:367:def _find_config_file(repo_root: Path) -> Path | None
+scripts/runsets/windows/preflight_checks.py:376:def _load_config_file(path: Path) -> PreflightConfig
+scripts/runsets/windows/preflight_checks.py:426:def _get_git_changed_files(repo_root: Path, extensions: set[str]) -> list[Path]
+scripts/runsets/windows/preflight_checks.py:486:class FixResult
+scripts/runsets/windows/preflight_checks.py:494:def _fix_bom(path: Path) -> FixResult
+scripts/runsets/windows/preflight_checks.py:506:def _fix_line_endings(path: Path) -> FixResult
+scripts/runsets/windows/preflight_checks.py:521:def _apply_fixes(path: Path, rules_to_fix: set[str]) -> list[FixResult]
+scripts/runsets/windows/preflight_checks.py:534:def _collect_fixable_issues(issues: list[Issue]) -> dict[Path, set[str]]
+scripts/runsets/windows/preflight_checks.py:550:def _issue_to_sarif_result(issue: Issue, repo_root: Path) -> dict[str, Any]
+scripts/runsets/windows/preflight_checks.py:583:def _build_sarif_output(errors: list[Issue], warnings: list[Issue], infos: list[Issue], repo_root: Path) -> dict[str, Any]
+scripts/runsets/windows/preflight_checks.py:634:def _should_report_rule(rule: str, disable_rules: set[str], enable_only: set[str]) -> bool
+scripts/runsets/windows/preflight_checks.py:647:def _filter_issues(issues: list[Issue], disable_rules: set[str], enable_only: set[str]) -> list[Issue]
+scripts/runsets/windows/preflight_checks.py:663:def _print_rules_list() -> None
+scripts/runsets/windows/preflight_checks.py:689:def _load_overrides(path: Path) -> tuple[dict[str, str], list[str]]
+scripts/runsets/windows/preflight_checks.py:708:def _contains_non_ascii(text: str) -> bool
+scripts/runsets/windows/preflight_checks.py:712:def _is_windows_abs(path_str: str) -> bool
+scripts/runsets/windows/preflight_checks.py:719:def _normalize_windows(path_str: str) -> str
+scripts/runsets/windows/preflight_checks.py:723:def _is_windows() -> bool
+scripts/runsets/windows/preflight_checks.py:727:def _maybe_reexec_with_python311() -> None
+scripts/runsets/windows/preflight_checks.py:751:def _contains_posix_path(text: str) -> bool
+scripts/runsets/windows/preflight_checks.py:755:def _looks_like_windows_path(value: str) -> bool
+scripts/runsets/windows/preflight_checks.py:761:def _has_reserved_windows_name(value: str) -> bool
+scripts/runsets/windows/preflight_checks.py:774:def _contains_cmd_meta(text: str) -> bool
+scripts/runsets/windows/preflight_checks.py:778:def _has_expansion_token(value: str) -> bool
+scripts/runsets/windows/preflight_checks.py:786:def _has_unsafe_bang(value: str, allow_expansion: bool) -> bool
+scripts/runsets/windows/preflight_checks.py:795:def _cmd_unsafe_issue(label: str, value: str, errors: list[Issue], warnings: list[Issue], cmd_unsafe_error: bool, allow_expansion: bool, meta_as_error: bool=False, skip_rules: set[str] | None=None) -> None
+scripts/runsets/windows/preflight_checks.py:839:def _check_shared_path(label: str, value: str, warnings: list[Issue]) -> None
+scripts/runsets/windows/preflight_checks.py:856:def _check_name_component(name: str, rel_display: str, errors: list[Issue]) -> None
+scripts/runsets/windows/preflight_checks.py:868:def _check_cmd(name: str, errors: list[Issue], warnings: list[Issue], warn_only: bool) -> None
+scripts/runsets/windows/preflight_checks.py:882:def _split_cmdline_tokens(raw: str) -> list[str]
+scripts/runsets/windows/preflight_checks.py:889:def _expand_cmd_vars(raw: str) -> tuple[str, bool]
+scripts/runsets/windows/preflight_checks.py:901:def _normalize_exe_token(token: str) -> str
+scripts/runsets/windows/preflight_checks.py:905:def _python_exe_basename(token: str) -> str
+scripts/runsets/windows/preflight_checks.py:911:def _validate_python_exe_tokens(label: str, exe_token: str, args: list[str], errors: list[Issue], warnings: list[Issue], warn_only: bool) -> bool
+scripts/runsets/windows/preflight_checks.py:969:def _probe_python_exe(exe_token: str, args: list[str], errors: list[Issue], warnings: list[Issue], warn_only: bool) -> bool
+scripts/runsets/windows/preflight_checks.py:1014:def _check_python(errors: list[Issue], warnings: list[Issue], warn_only: bool, python_exe: str | None) -> None
+scripts/runsets/windows/preflight_checks.py:1097:def _coerce_registry_bool(value: object) -> bool | None
+scripts/runsets/windows/preflight_checks.py:1111:def _read_cmd_registry_value(root, name: str) -> object | None
+scripts/runsets/windows/preflight_checks.py:1127:def _read_cmd_autorun_values() -> dict[str, object]
+scripts/runsets/windows/preflight_checks.py:1140:def _read_cmd_extensions_enabled() -> tuple[bool | None, str | None, object | None]
+scripts/runsets/windows/preflight_checks.py:1156:def _read_cmd_code_page() -> str | None
+scripts/runsets/windows/preflight_checks.py:1173:def _check_powershell(errors: list[Issue], warnings: list[Issue], warn_only: bool) -> None
+scripts/runsets/windows/preflight_checks.py:1209:def _check_temp_dir(temp_dir: str | None, errors: list[Issue], warnings: list[Issue], cmd_unsafe_error: bool, allow_non_ascii: bool=False) -> None
+scripts/runsets/windows/preflight_checks.py:1236:def _check_env_paths(errors: list[Issue], warnings: list[Issue], cmd_unsafe_error: bool, allow_non_ascii: bool=False) -> None
+scripts/runsets/windows/preflight_checks.py:1277:def _check_path_env_length(warnings: list[Issue]) -> None
+scripts/runsets/windows/preflight_checks.py:1296:def _check_pathext(errors: list[Issue], warnings: list[Issue], profile: str) -> None
+scripts/runsets/windows/preflight_checks.py:1319:def _check_path_value(label: str, value: str, errors: list[Issue], warnings: list[Issue], cmd_unsafe_error: bool, allow_expansion: bool, warn_unc: bool=True, meta_as_error: bool=False, skip_rules: set[str] | None=None, allow_non_ascii: bool=False) -> None
+scripts/runsets/windows/preflight_checks.py:1385:def _has_invalid_windows_chars(value: str) -> bool
+scripts/runsets/windows/preflight_checks.py:1404:def _extract_for_var_token(line_body: str) -> str | None
+scripts/runsets/windows/preflight_checks.py:1423:def _parse_set_value(line: str) -> str | None
+scripts/runsets/windows/preflight_checks.py:1437:def _detect_delayed_expansion_lines(text: str) -> list[int]
+scripts/runsets/windows/preflight_checks.py:1458:def _detect_delayed_expansion(text: str) -> bool
+scripts/runsets/windows/preflight_checks.py:1478:def _decode_cmd_text(data: bytes) -> str
+scripts/runsets/windows/preflight_checks.py:1484:def _read_cmd_text(path: Path, errors: list[Issue]) -> str | None
+scripts/runsets/windows/preflight_checks.py:1493:def _normalize_allowlist_path(value: str) -> str
+scripts/runsets/windows/preflight_checks.py:1497:def _load_cmd_allowlist(path: Path, warnings: list[Issue]) -> list[AllowlistEntry]
+scripts/runsets/windows/preflight_checks.py:1576:def _allowlist_rules_for(path: Path, repo_root: Path, entries: list[AllowlistEntry]) -> set[str] | None
+scripts/runsets/windows/preflight_checks.py:1603:def _format_issue(issue: Issue) -> str
+scripts/runsets/windows/preflight_checks.py:1612:def _issue_to_dict(issue: Issue) -> dict[str, object]
+scripts/runsets/windows/preflight_checks.py:1625:def _rule_counts(issues: list[Issue]) -> dict[str, dict[str, int]]
+scripts/runsets/windows/preflight_checks.py:1633:def _build_json_payload(errors: list[Issue], warnings: list[Issue], infos: list[Issue], exit_code: int) -> dict[str, object]
+scripts/runsets/windows/preflight_checks.py:1663:def _has_chcp_directive(lines: list[str], limit: int=CHCP_SCAN_LINES) -> bool
+scripts/runsets/windows/preflight_checks.py:1685:def _join_caret_lines(lines: list[str]) -> list[tuple[int, str]]
+scripts/runsets/windows/preflight_checks.py:1706:def _split_cmd_segments(line: str) -> list[str]
+scripts/runsets/windows/preflight_checks.py:1738:class _BlockState
+scripts/runsets/windows/preflight_checks.py:1745:def _has_unquoted_meta(line: str, meta_chars: set[str]) -> bool
+scripts/runsets/windows/preflight_checks.py:1763:def _count_parens(line: str) -> tuple[int, int]
+scripts/runsets/windows/preflight_checks.py:1787:def _token_is_relative_path(token: str) -> bool
+scripts/runsets/windows/preflight_checks.py:1808:def _line_has_relative_path(line_body: str) -> bool
+scripts/runsets/windows/preflight_checks.py:1820:def _detect_script_dir_anchor(lines: list[tuple[int, str]], limit: int) -> bool
+scripts/runsets/windows/preflight_checks.py:1842:def _iter_named_commands(line: str, names: set[str]) -> list[tuple[str, list[str]]]
+scripts/runsets/windows/preflight_checks.py:1873:def _parse_xcopy_flags(tokens: list[str]) -> tuple[bool, bool, bool, bool, bool]
+scripts/runsets/windows/preflight_checks.py:1902:def _extract_set_name(line_body: str) -> str | None
+scripts/runsets/windows/preflight_checks.py:1920:def _is_cmd_token(token: str) -> bool
+scripts/runsets/windows/preflight_checks.py:1930:def _iter_cmd_invocations(line: str) -> list[tuple[bool, bool, bool, bool]]
+scripts/runsets/windows/preflight_checks.py:1987:def _line_has_cmd_v_on(line_body: str) -> bool
+scripts/runsets/windows/preflight_checks.py:1991:def _dash_option_cmd(line_body: str) -> str | None
+scripts/runsets/windows/preflight_checks.py:2010:def _scan_cmd_file(path: Path, errors: list[Issue], warnings: list[Issue], infos: list[Issue], cmd_unsafe_error: bool, profile: str, allowlist_rules: set[str] | None, autorun_detected: bool, debug: bool=False) -> None
+scripts/runsets/windows/preflight_checks.py:2666:def _collect_cmd_paths(cmd_files: list[str], cmd_roots: list[str], errors: list[Issue], cmd_exclude: list[str]) -> list[Path]
+scripts/runsets/windows/preflight_checks.py:2729:def _scan_repo_root(root: Path, errors: list[Issue], warnings: list[Issue], cmd_unsafe_error: bool, exclude_dirs: set[str], allow_non_ascii: bool=False) -> tuple[str, int]
+scripts/runsets/windows/preflight_checks.py:2780:def _estimate_path_len(base: str, rel_win: str) -> int
+scripts/runsets/windows/preflight_checks.py:2786:def _read_long_paths_enabled() -> bool | None
+scripts/runsets/windows/preflight_checks.py:2804:def _read_git_longpaths(repo_root: Path) -> bool | None
+scripts/runsets/windows/preflight_checks.py:2825:def main() -> int
 scripts/sweeps/sweep_beta_map.py:30:def _parse_grid(start: float, stop: float, count: int, label: str) -> np.ndarray
 scripts/sweeps/sweep_beta_map.py:39:def _load_config(path: Path) -> Config
 scripts/sweeps/sweep_beta_map.py:50:def _write_json(path: Path, payload: dict) -> None
@@ -1163,6 +1219,24 @@ scripts/tests/temp_supply_parallel_smoke.py:43:def _parse_outdir(output: str) ->
 scripts/tests/temp_supply_parallel_smoke.py:52:def _run_case(*, case_id: str, t_value: str, eps_value: str, tau_value: str, script_path: Path, env: Dict[str, str], log_dir: Path) -> Dict[str, object]
 scripts/tests/temp_supply_parallel_smoke.py:94:def _build_case_id(t_value: str, eps_value: str, tau_value: str) -> str
 scripts/tests/temp_supply_parallel_smoke.py:98:def main() -> int
+scripts/tests/test_win_parallel.py:16:def test_win_process_launch_basic()
+scripts/tests/test_win_parallel.py:56:def test_win_process_launch_cmdfile()
+scripts/tests/test_win_parallel.py:104:def test_win_process_launch_cmdfile_cp932()
+scripts/tests/test_win_parallel.py:147:def test_cmd_echo_redirect()
+scripts/tests/test_win_parallel.py:184:def test_parallel_job_simulation()
+scripts/tests/test_win_parallel.py:247:def test_env_var_inheritance()
+scripts/tests/test_win_parallel.py:307:def test_batch_file_encoding_simulation()
+scripts/tests/test_win_parallel.py:350:def main()
+scripts/tests/test_win_process_py.py:22:def _launch(name: str, args: list, input_data: str=None)
+scripts/tests/test_win_process_py.py:59:def main()
+scripts/tools/compare_zero_d_outputs.py:30:def _read_json(path: Path) -> dict[str, Any]
+scripts/tools/compare_zero_d_outputs.py:35:def _compare_numeric(ref: np.ndarray, new: np.ndarray, *, rtol: float, atol: float) -> tuple[float, bool]
+scripts/tools/compare_zero_d_outputs.py:59:def _compare_series(ref_df: pd.DataFrame, new_df: pd.DataFrame, *, series_rtol: float, series_atol: float, include_cols: list[str] | None, exclude_cols: set[str], include_non_numeric: bool) -> tuple[dict[str, float], bool, list[str], list[str], list[str]]
+scripts/tools/compare_zero_d_outputs.py:116:def _compare_summary(ref: dict[str, Any], new: dict[str, Any], *, summary_rtol: float, summary_atol: float, summary_keys: list[str]) -> tuple[dict[str, float], bool, list[str]]
+scripts/tools/compare_zero_d_outputs.py:150:def _read_mass_budget(path: Path) -> tuple[float, bool]
+scripts/tools/compare_zero_d_outputs.py:158:def _write_json(path: Path, payload: dict[str, Any]) -> None
+scripts/tools/compare_zero_d_outputs.py:164:def _write_md(path: Path, payload: dict[str, Any]) -> None
+scripts/tools/compare_zero_d_outputs.py:194:def main() -> int
 siO2_disk_cooling/io_utils.py:13:def ensure_outputs_dir() -> Path
 siO2_disk_cooling/io_utils.py:21:def write_csv(r_over_Rmars: np.ndarray, arrival_glass_s: np.ndarray, arrival_liquidus_s: np.ndarray, path: Path) -> None
 siO2_disk_cooling/io_utils.py:40:def _format_stat(values: Iterable[float]) -> str
@@ -1215,10 +1289,17 @@ tests/integration/test_collision_solver_modes.py:18:def test_collision_solver_sm
 tests/integration/test_collision_solver_modes.py:57:def test_surface_and_smol_series_columns_match(tmp_path: Path) -> None
 tests/integration/test_collision_solver_modes.py:113:def test_surface_ode_emits_deprecation_warning(tmp_path: Path) -> None
 tests/integration/test_columnar_output_parity.py:19:def _assert_numeric_close(left: pd.DataFrame, right: pd.DataFrame, columns: list[str]) -> None
-tests/integration/test_columnar_output_parity.py:28:def test_columnar_zero_d_schema_parity(tmp_path: Path) -> None
-tests/integration/test_columnar_output_parity.py:57:def test_columnar_one_d_schema_parity(tmp_path: Path) -> None
-tests/integration/test_columnar_output_parity.py:89:def test_columnar_mass_budget_streaming(tmp_path: Path, monkeypatch) -> None
-tests/integration/test_columnar_output_parity.py:106:def test_columnar_one_d_mass_budget_streaming(tmp_path: Path, monkeypatch) -> None
+tests/integration/test_columnar_output_parity.py:31:def _assert_column_equal(left: pd.DataFrame, right: pd.DataFrame, name: str) -> None
+tests/integration/test_columnar_output_parity.py:38:def _assert_time_order(df: pd.DataFrame) -> None
+tests/integration/test_columnar_output_parity.py:43:def _assert_cell_index_order(df: pd.DataFrame) -> None
+tests/integration/test_columnar_output_parity.py:49:def _assert_nan_masks_equal(left: pd.DataFrame, right: pd.DataFrame, columns: list[str]) -> None
+tests/integration/test_columnar_output_parity.py:58:def _assert_mass_budget_equal(row_dir: Path, col_dir: Path) -> None
+tests/integration/test_columnar_output_parity.py:74:def test_columnar_zero_d_schema_parity(tmp_path: Path) -> None
+tests/integration/test_columnar_output_parity.py:108:def test_columnar_one_d_schema_parity(tmp_path: Path) -> None
+tests/integration/test_columnar_output_parity.py:148:def test_columnar_mass_budget_streaming(tmp_path: Path, monkeypatch) -> None
+tests/integration/test_columnar_output_parity.py:165:def test_columnar_zero_d_streaming_order(tmp_path: Path, monkeypatch) -> None
+tests/integration/test_columnar_output_parity.py:190:def test_columnar_one_d_mass_budget_streaming(tmp_path: Path, monkeypatch) -> None
+tests/integration/test_columnar_output_parity.py:208:def test_columnar_one_d_streaming_order(tmp_path: Path, monkeypatch) -> None
 tests/integration/test_deep_mixing_mass_budget.py:17:def test_deep_mixing_mass_budget_with_supply(tmp_path: Path) -> None
 tests/integration/test_derive_supply_rate.py:15:def run_cli(argv: list[str]) -> str
 tests/integration/test_derive_supply_rate.py:22:def test_compute_r_base_scalar()
@@ -1327,6 +1408,10 @@ tests/integration/test_phase_tau_field_selection.py:8:def test_compute_phase_tau
 tests/integration/test_phase_tau_field_selection.py:19:def test_log_stage_extra_is_keyword_only() -> None
 tests/integration/test_phi_table.py:12:def mock_phi_table(tmp_path)
 tests/integration/test_phi_table.py:24:def test_phi_table_monotonic_effects(mock_phi_table)
+tests/integration/test_preflight_cmds.py:14:def _load_module() -> object
+tests/integration/test_preflight_cmds.py:22:def _python311_cmd() -> list[str]
+tests/integration/test_preflight_cmds.py:35:def _run_preflight(argv: list[str], monkeypatch, capsys) -> tuple[int, str]
+tests/integration/test_preflight_cmds.py:53:def test_preflight_cmds_required(monkeypatch, capsys) -> None
 tests/integration/test_psd_kappa.py:11:def test_compute_kappa_single_bin_matches_geometry() -> None
 tests/integration/test_psd_kappa.py:29:def test_compute_kappa_stays_finite_with_wavy_modulation() -> None
 tests/integration/test_qpr_loader_h5datasets.py:18:def _write_three_dataset(path, qpr, log10s, temperatures)
@@ -1566,38 +1651,48 @@ tests/unit/test_numerical_anomaly_watchlist_additional.py:316:def test_clamp_sig
 tests/unit/test_preflight_checks.py:12:def _load_module() -> object
 tests/unit/test_preflight_checks.py:20:def _write_text(path: Path, text: str) -> None
 tests/unit/test_preflight_checks.py:24:def _write_overrides(path: Path, archive_dir: str) -> None
-tests/unit/test_preflight_checks.py:40:def _scan_cmd_text(module: object, tmp_path: Path, text: str, cmd_unsafe_error: bool=False, profile: str='default')
-tests/unit/test_preflight_checks.py:56:def _run_main(module: object, argv: list[str], monkeypatch) -> int
-tests/unit/test_preflight_checks.py:61:def test_unc_warning_not_duplicated(tmp_path: Path, monkeypatch, capsys) -> None
-tests/unit/test_preflight_checks.py:92:def test_comment_only_delayed_expansion_is_ignored(tmp_path: Path, monkeypatch, capsys) -> None
-tests/unit/test_preflight_checks.py:135:def test_collect_cmd_paths_includes_bat_and_uppercase(tmp_path: Path) -> None
-tests/unit/test_preflight_checks.py:153:def test_scan_cmd_file_handles_bom_first_line(tmp_path: Path) -> None
-tests/unit/test_preflight_checks.py:175:def test_cmd_utf16_bom_errors(tmp_path: Path) -> None
-tests/unit/test_preflight_checks.py:196:def test_cmd_nul_bytes_warns(tmp_path: Path) -> None
-tests/unit/test_preflight_checks.py:217:def test_for_single_percent_is_error(tmp_path: Path) -> None
-tests/unit/test_preflight_checks.py:229:def test_set_space_around_equals_warns(tmp_path: Path) -> None
-tests/unit/test_preflight_checks.py:241:def test_setlocal_missing_warns(tmp_path: Path) -> None
-tests/unit/test_preflight_checks.py:253:def test_interactive_pause_in_ci_is_error(tmp_path: Path) -> None
-tests/unit/test_preflight_checks.py:266:def test_delayed_expansion_info(tmp_path: Path) -> None
-tests/unit/test_preflight_checks.py:279:def test_pathext_missing_is_error_in_ci(monkeypatch) -> None
-tests/unit/test_preflight_checks.py:290:def test_delayed_expansion_before_enabled_warns(tmp_path: Path) -> None
-tests/unit/test_preflight_checks.py:301:def test_errorlevel_zero_warns(tmp_path: Path) -> None
-tests/unit/test_preflight_checks.py:312:def test_errorlevel_ascending_warns(tmp_path: Path) -> None
-tests/unit/test_preflight_checks.py:323:def test_setx_ci_is_error(tmp_path: Path) -> None
-tests/unit/test_preflight_checks.py:335:def test_endlocal_before_setlocal_warns(tmp_path: Path) -> None
-tests/unit/test_preflight_checks.py:346:def test_popd_more_than_pushd_warns(tmp_path: Path) -> None
-tests/unit/test_preflight_checks.py:357:def test_cmd_unsafe_issue_flags_literal_bang_even_with_percent() -> None
-tests/unit/test_preflight_checks.py:374:def test_cmd_unsafe_issue_allows_bang_tokens() -> None
-tests/unit/test_preflight_checks.py:391:def test_check_python_accepts_py(monkeypatch) -> None
-tests/unit/test_preflight_checks.py:411:def test_check_cmd_warn_only(monkeypatch) -> None
-tests/unit/test_preflight_checks.py:427:def test_has_invalid_windows_chars_allows_extended_prefix() -> None
-tests/unit/test_preflight_checks.py:433:def test_check_name_component_rejects_backslash() -> None
-tests/unit/test_preflight_checks.py:442:def test_cmd_non_ascii_without_chcp_warns(tmp_path: Path) -> None
-tests/unit/test_preflight_checks.py:449:def test_cmd_non_ascii_with_chcp_suppresses_warning(tmp_path: Path) -> None
-tests/unit/test_preflight_checks.py:456:def test_cmd_cd_checks(tmp_path: Path) -> None
-tests/unit/test_preflight_checks.py:475:def test_cmd_start_title_warning(tmp_path: Path) -> None
-tests/unit/test_preflight_checks.py:494:def test_cmd_call_missing_warning(tmp_path: Path) -> None
-tests/unit/test_preflight_checks.py:512:def test_cmd_line_length_warning(tmp_path: Path) -> None
+tests/unit/test_preflight_checks.py:40:def _scan_cmd_text(module: object, tmp_path: Path, text: str, cmd_unsafe_error: bool=False, profile: str='default', autorun_detected: bool=False, debug: bool=False)
+tests/unit/test_preflight_checks.py:68:def _run_main(module: object, argv: list[str], monkeypatch) -> int
+tests/unit/test_preflight_checks.py:73:def test_unc_warning_not_duplicated(tmp_path: Path, monkeypatch, capsys) -> None
+tests/unit/test_preflight_checks.py:104:def test_comment_only_delayed_expansion_is_ignored(tmp_path: Path, monkeypatch, capsys) -> None
+tests/unit/test_preflight_checks.py:147:def test_cmd_v_on_triggers_cmd_unsafe_error(tmp_path: Path, monkeypatch, capsys) -> None
+tests/unit/test_preflight_checks.py:177:def test_validate_python_exe_tokens_rejects_dash_arg(tmp_path: Path) -> None
+tests/unit/test_preflight_checks.py:195:def test_validate_python_exe_tokens_rejects_version_arg_non_py(tmp_path: Path) -> None
+tests/unit/test_preflight_checks.py:213:def test_allowlist_missing_rules_warns(tmp_path: Path) -> None
+tests/unit/test_preflight_checks.py:225:def test_collect_cmd_paths_includes_bat_and_uppercase(tmp_path: Path) -> None
+tests/unit/test_preflight_checks.py:243:def test_scan_cmd_file_handles_bom_first_line(tmp_path: Path) -> None
+tests/unit/test_preflight_checks.py:266:def test_cmd_utf16_bom_errors(tmp_path: Path) -> None
+tests/unit/test_preflight_checks.py:288:def test_cmd_nul_bytes_warns(tmp_path: Path) -> None
+tests/unit/test_preflight_checks.py:310:def test_for_single_percent_is_error(tmp_path: Path) -> None
+tests/unit/test_preflight_checks.py:322:def test_set_space_around_equals_warns(tmp_path: Path) -> None
+tests/unit/test_preflight_checks.py:334:def test_setlocal_missing_warns(tmp_path: Path) -> None
+tests/unit/test_preflight_checks.py:346:def test_interactive_pause_in_ci_is_error(tmp_path: Path) -> None
+tests/unit/test_preflight_checks.py:359:def test_delayed_expansion_info(tmp_path: Path) -> None
+tests/unit/test_preflight_checks.py:372:def test_delayed_expansion_debug_info(tmp_path: Path) -> None
+tests/unit/test_preflight_checks.py:387:def test_pathext_missing_is_error_in_ci(monkeypatch) -> None
+tests/unit/test_preflight_checks.py:398:def test_delayed_expansion_before_enabled_warns(tmp_path: Path) -> None
+tests/unit/test_preflight_checks.py:409:def test_errorlevel_zero_warns(tmp_path: Path) -> None
+tests/unit/test_preflight_checks.py:420:def test_errorlevel_ascending_warns(tmp_path: Path) -> None
+tests/unit/test_preflight_checks.py:431:def test_setx_ci_is_error(tmp_path: Path) -> None
+tests/unit/test_preflight_checks.py:443:def test_endlocal_before_setlocal_warns(tmp_path: Path) -> None
+tests/unit/test_preflight_checks.py:454:def test_popd_more_than_pushd_warns(tmp_path: Path) -> None
+tests/unit/test_preflight_checks.py:465:def test_cmd_unsafe_issue_flags_literal_bang_even_with_percent() -> None
+tests/unit/test_preflight_checks.py:482:def test_cmd_unsafe_issue_allows_bang_tokens() -> None
+tests/unit/test_preflight_checks.py:499:def test_check_python_accepts_py(monkeypatch) -> None
+tests/unit/test_preflight_checks.py:519:def test_check_cmd_warn_only(monkeypatch) -> None
+tests/unit/test_preflight_checks.py:535:def test_has_invalid_windows_chars_allows_extended_prefix() -> None
+tests/unit/test_preflight_checks.py:541:def test_check_name_component_rejects_backslash() -> None
+tests/unit/test_preflight_checks.py:550:def test_cmd_non_ascii_without_chcp_warns(tmp_path: Path) -> None
+tests/unit/test_preflight_checks.py:557:def test_cmd_non_ascii_with_chcp_suppresses_warning(tmp_path: Path) -> None
+tests/unit/test_preflight_checks.py:564:def test_cmd_cd_checks(tmp_path: Path) -> None
+tests/unit/test_preflight_checks.py:583:def test_cmd_start_title_warning(tmp_path: Path) -> None
+tests/unit/test_preflight_checks.py:602:def test_cmd_call_missing_warning(tmp_path: Path) -> None
+tests/unit/test_preflight_checks.py:620:def test_cmd_line_length_warning(tmp_path: Path) -> None
+tests/unit/test_preflight_checks.py:628:def test_cmd_line_length_with_caret_continuation_warns(tmp_path: Path) -> None
+tests/unit/test_preflight_checks.py:639:def test_cmd_dash_option_warning_and_error(tmp_path: Path) -> None
+tests/unit/test_preflight_checks.py:655:def test_cmd_invocation_ignores_cmd_flags(tmp_path: Path) -> None
+tests/unit/test_preflight_checks.py:665:def test_cmd_invocation_detects_cmd_without_c(tmp_path: Path) -> None
+tests/unit/test_preflight_checks.py:672:def test_cmd_autorun_missing_d_warns(tmp_path: Path) -> None
 tests/unit/test_progress_eta.py:8:def _fake_monotonic(times)
 tests/unit/test_progress_eta.py:17:def test_progress_eta_prefers_recent_steps(monkeypatch, capsys)
 tests/unit/test_progress_eta.py:30:def test_progress_snapshot_restore(monkeypatch)
@@ -1628,11 +1723,11 @@ tests/unit/test_sublimation.py:16:def test_s_sub_boundary_fallback_warning()
 tests/unit/test_sublimation.py:22:def test_compute_s_min_F2_uses_max()
 tests/unit/test_sublimation.py:35:def test_sublimation_sink_scalar_matches_array()
 tests/unit/test_supply_injection_powerlaw_slope.py:9:def test_powerlaw_injection_matches_number_slope() -> None
-tests/unit/test_surface_outflux.py:9:def _run(prod_rate: float, Omega: float, steps: int=200)
-tests/unit/test_surface_outflux.py:25:def test_supply_limited_outflux()
-tests/unit/test_surface_outflux.py:33:def test_saturation_limited_outflux()
-tests/unit/test_surface_outflux.py:41:def test_sink_increases_mass_loss()
-tests/unit/test_surface_outflux.py:69:def test_los_factor_increases_tau_los(tmp_path)
+tests/unit/test_surface_outflux.py:10:def _run(prod_rate: float, Omega: float, steps: int=200)
+tests/unit/test_surface_outflux.py:26:def test_supply_limited_outflux()
+tests/unit/test_surface_outflux.py:34:def test_saturation_limited_outflux()
+tests/unit/test_surface_outflux.py:42:def test_sink_increases_mass_loss()
+tests/unit/test_surface_outflux.py:70:def test_los_factor_increases_tau_los(tmp_path)
 tests/unit/test_timegrid_and_budget.py:13:def _tiny_config(outdir: Path, dt_init: float, n_steps: int) -> schema.Config
 tests/unit/test_timegrid_and_budget.py:64:def test_time_grid_and_mass_budget(tmp_path)
 tests/unit/test_viscosity.py:7:def _run(N: int, dt: float)
@@ -1733,6 +1828,13 @@ tools/pipeline/run_analysis_doc_tests.py:72:def main(argv: List[str]) -> int
 tools/pipeline/run_analysis_pipeline.py:21:def _run_step(label: str, command: Sequence[str]) -> None
 tools/pipeline/run_analysis_pipeline.py:28:def _write_stamp(outdir: str, steps: Sequence[str]) -> None
 tools/pipeline/run_analysis_pipeline.py:40:def main(argv: Sequence[str] | None=None) -> None
+tools/plan_lint.py:14:class Finding
+tools/plan_lint.py:58:def build_prefix_regex(prefixes: list[str]) -> re.Pattern[str]
+tools/plan_lint.py:65:def normalize_token(token: str) -> str
+tools/plan_lint.py:75:def is_placeholder(token: str) -> bool
+tools/plan_lint.py:79:def iter_absolute_matches(line: str) -> list[str]
+tools/plan_lint.py:96:def scan_file(path: Path, root: Path, rel_re: re.Pattern[str]) -> list[Finding]
+tools/plan_lint.py:138:def main() -> int
 tools/plotting/base.py:19:def _temperature_edges(temperatures: np.ndarray) -> np.ndarray
 tools/plotting/base.py:34:def save_heatmap_frames(outdir: Path, times: Sequence[float], temperatures: np.ndarray, size_edges: np.ndarray, log_counts_cube: np.ndarray, s_min_eff_curve: np.ndarray, cmap: str='viridis', dpi: int=DEFAULT_DPI) -> list[Path]
 tools/plotting/base.py:109:def save_keyframe_montage(out_path: Path, times: Sequence[float], temperatures: np.ndarray, size_edges: np.ndarray, log_counts_cube: np.ndarray, s_min_eff_curve: np.ndarray, indices: Iterable[int] | None=None, cmap: str='viridis', dpi: int=DEFAULT_DPI) -> None

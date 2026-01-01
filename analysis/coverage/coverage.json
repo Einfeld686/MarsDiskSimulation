@@ -1,13 +1,13 @@
 {
   "function_reference_rate": {
-    "numerator": 111,
-    "denominator": 134,
-    "rate": 0.8283582089552238
+    "numerator": 109,
+    "denominator": 135,
+    "rate": 0.8074074074074075
   },
   "anchor_consistency_rate": {
-    "numerator": 710,
+    "numerator": 707,
     "denominator": 710,
-    "rate": 1.0
+    "rate": 0.995774647887324
   },
   "equation_unit_coverage": {
     "numerator": 41,

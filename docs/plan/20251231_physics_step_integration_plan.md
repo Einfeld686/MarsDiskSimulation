@@ -601,6 +601,17 @@ psd_state の実参照（現行コードが触っているキー）
 - **I/O互換性破壊**: 出力列と単位は現行を優先し、schemaの変更は後回し
 - **グローバル状態の副作用**: RunContextでの初期化/復元を必須化
 
+## 長期実行の推奨点（運用ガイド）
+
+- **実行環境**: Python 3.11+ での実行を前提とする（長期 run の標準）
+- **I/O**: `io.streaming.enable=true` を維持し、`FORCE_STREAMING_OFF` / `IO_STREAMING=off` を使わない
+- **出力ディレクトリ**: `out/<YYYYMMDD-HHMM>_<title>__<shortsha>__seed<n>/` を必ず指定
+- **0D/1Dの整合**: `geometry.mode` を意図に合わせて明示（0D/1Dの取り違えを防止）
+- **ガス貧設定**: `ALLOW_TL2003=false` を既定とし、gas-rich感度試験でのみ切替
+- **事前スモーク**: 短期（`t_end_years` 短縮）で `summary.json` / `checks/mass_budget.csv` / `series` の列整合を確認
+- **再現性**: `rng_seed` を固定し、同条件の再実行と比較を担保
+- **run_card**: `run_card.md` の生成を必須とし、run記録を残す
+
 ---
 
 ## 受入条件（最小）

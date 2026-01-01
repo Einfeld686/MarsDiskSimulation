@@ -52,6 +52,7 @@ TILDE_ABS_RE = re.compile(r"(?<![A-Za-z0-9])~/(?:[^\s`\"'()<>\[\]]+)")
 POSIX_ABS_RE = re.compile(
     r"(?<![A-Za-z0-9])/(?:[A-Za-z0-9_.-]+(?:/[A-Za-z0-9_.<>%{}$*+,:-]+)*)"
 )
+OUTDIR_PREFIX_RE = re.compile(r"out/[^\s`\"'()\[\]]+/$")
 
 
 def build_prefix_regex(prefixes: list[str]) -> re.Pattern[str]:
@@ -105,6 +106,8 @@ def scan_file(path: Path, root: Path, rel_re: re.Pattern[str]) -> list[Finding]:
             if not token:
                 continue
             if is_placeholder(token):
+                continue
+            if OUTDIR_PREFIX_RE.search(line[: match.start()]):
                 continue
             resolved = (root / token).resolve(strict=False)
             if not resolved.is_relative_to(root):
