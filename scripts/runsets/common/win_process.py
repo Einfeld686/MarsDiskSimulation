@@ -32,17 +32,28 @@ def _parse_pids(raw: str) -> list[int]:
 
 def _tasklist_has_pid(pid: int) -> bool:
     try:
+        # Use bytes mode to avoid encoding issues with Windows tasklist on Japanese locales
         result = subprocess.run(
             ["tasklist", "/FI", f"PID eq {pid}"],
             capture_output=True,
-            text=True,
             check=False,
         )
     except OSError:
         return False
     if result.returncode != 0:
         return False
-    return str(pid) in result.stdout
+    if result.stdout is None:
+        return False
+    # Try multiple encodings since Windows cmd output varies by locale
+    for enc in ("utf-8", "cp932", "cp1252", "latin-1"):
+        try:
+            stdout_text = result.stdout.decode(enc)
+            return str(pid) in stdout_text
+        except (UnicodeDecodeError, LookupError):
+            continue
+    # Last resort: decode with errors='replace'
+    stdout_text = result.stdout.decode("utf-8", errors="replace")
+    return str(pid) in stdout_text
 
 
 def _alive_pids(pids: Iterable[int]) -> list[int]:
