@@ -970,19 +970,12 @@ if "%DEBUG%"=="1" echo.[DEBUG] launch_job: JOB_SEED=!JOB_SEED!
 call :wait_for_slot
 if "%DEBUG%"=="1" echo.[DEBUG] launch_job: after wait_for_slot
 set "JOB_PID="
-rem Build JOB_CMD with delayed expansion
-rem Environment variables for child process are inherited from the parent environment.
-rem We only need to set the job-specific parameters and the basic command.
-set "RUN_ONE_T=!JOB_T!"
-set "RUN_ONE_EPS=!JOB_EPS!"
-set "RUN_ONE_TAU=!JOB_TAU!"
-set "RUN_ONE_SEED=!JOB_SEED!"
-set "AUTO_JOBS=0"
-set "PARALLEL_JOBS=1"
-set "SKIP_PIP=1"
-set "REQUIREMENTS_INSTALLED=1"
-set "SKIP_VENV=!SKIP_VENV!"
-set "JOB_CMD=call "!SCRIPT_SELF_USE!" --run-one"
+rem Build JOB_CMD with all required environment variables embedded inline
+rem This ensures child cmd.exe process receives the correct values even when launched via win_process.py
+set "JOB_ENV_VARS=set RUN_ONE_T=!JOB_T!^& set RUN_ONE_EPS=!JOB_EPS!^& set RUN_ONE_TAU=!JOB_TAU!^& set RUN_ONE_SEED=!JOB_SEED!^& set RUN_ONE_MODE=1^& set AUTO_JOBS=0^& set PARALLEL_JOBS=1^& set SKIP_PIP=1^& set REQUIREMENTS_INSTALLED=1^& set QUIET_MODE=!QUIET_MODE!^& set DEBUG=!DEBUG!^& set PYTHON_EXE=!PYTHON_EXE!^& set PYTHON_ARGS=!PYTHON_ARGS!^& set BASE_CONFIG=!BASE_CONFIG!^& set BATCH_ROOT=!BATCH_ROOT!^& set BATCH_SEED=!BATCH_SEED!^& set RUN_TS=!RUN_TS!^& set SWEEP_TAG=!SWEEP_TAG!^& set GIT_SHA=!GIT_SHA!^& set TMP_ROOT=!TMP_ROOT!^& set VENV_DIR=!VENV_DIR!^& set BASE_OVERRIDES_FILE=!BASE_OVERRIDES_FILE!^& set EXTRA_OVERRIDES_FILE=!EXTRA_OVERRIDES_FILE!^& set COOL_MODE=!COOL_MODE!^& set COOL_TO_K=!COOL_TO_K!^& set COOL_MARGIN_YEARS=!COOL_MARGIN_YEARS!^& set HOOKS_ENABLE=!HOOKS_ENABLE!^& set PLOT_ENABLE=!PLOT_ENABLE!^& set GEOMETRY_MODE=!GEOMETRY_MODE!^& set SUPPLY_MODE=!SUPPLY_MODE!^& set SHIELDING_MODE=!SHIELDING_MODE!^& set SUPPLY_INJECTION_MODE=!SUPPLY_INJECTION_MODE!^& set SUPPLY_TRANSPORT_MODE=!SUPPLY_TRANSPORT_MODE!"
+if defined SKIP_VENV set "JOB_ENV_VARS=!JOB_ENV_VARS!^& set SKIP_VENV=!SKIP_VENV!"
+set "JOB_CMD=!JOB_ENV_VARS!^& call \"!SCRIPT_SELF_USE!\" --run-one"
+
 set "JOB_PID_TMP="
 if "%DEBUG%"=="1" echo.[DEBUG] launch_job: TMP_ROOT=!TMP_ROOT!
 if "%DEBUG%"=="1" echo.[DEBUG] launch_job: temp file=!TMP_ROOT!\marsdisk_pid_!JOB_T!_!JOB_EPS!_!JOB_TAU!.tmp
