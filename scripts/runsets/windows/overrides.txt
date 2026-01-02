@@ -15,6 +15,15 @@ io.archive.keep_local=metadata
 io.archive.record_volume_info=true
 io.archive.warn_slow_mb_s=40.0
 io.archive.warn_slow_min_gb=5.0
+# --- Optional: streaming chunk offload (EXPERIMENTAL) ---
+# Uncomment to offload older streaming chunks to external storage.
+# dir omitted => use io.archive.dir/<run_id>/series_chunks (runtime default)
+# io.streaming.offload.enabled=false
+# io.streaming.offload.dir=E:\marsdisk_archive\series_chunks
+# io.streaming.offload.keep_last_n=2
+# io.streaming.offload.mode=move
+# io.streaming.offload.verify=size
+# io.streaming.offload.skip_if_same_device=true
 numerics.dt_init=20
 numerics.checkpoint.enabled=true
 numerics.checkpoint.interval_years=0.083

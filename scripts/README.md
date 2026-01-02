@@ -52,6 +52,7 @@ scripts/runsets/mac/run_one.sh --t 4000 --eps 1.0 --tau 1.0
 | `scripts/tests/run_sweep_parallel_smoke_check.sh` | スイープ並列の構造スモーク（bash） | `.venv` を使って `sweep_parallel_smoke_check.py` を実行し、出力整合を検証します。 |
 | `scripts/tests/run_temp_supply_parallel_smoke.sh` | temp_supply 並列スモーク（bash） | `.venv` を使って `temp_supply_parallel_smoke.py` を実行します。 |
 | `scripts/tests/run_overparallel_benchmark.cmd` | 過剰並列の簡易ベンチ（Windows） | `.venv` を作成し、並列数を振って短時間の1D実行を計測し、各runに `perf.json` と `perf_summary.json` を残します。 |
+| `scripts/tests/numba_on_off_benchmark.py` | Numba on/off の簡易ベンチ | 0D の短時間実行を 2 回行い、`bench_summary.json` に速度比を記録します。 |
 | `scripts/plots/render_figures_from_tasks.py` | 図タスクの一括生成 | 解析タスク定義から `plot_from_runs.py` を呼び出して図を生成します。 |
 | `scripts/runs/run_autotuned.py` | auto-tune 既定のランナー | `python -m marsdisk.run` に `--auto-tune` を付与します。 |
 | `scripts/runs/run_axis_r_sweep.py` | r–T–M グリッドの大量実行 | `analysis/agent_runs/AXIS_r_sweep` に YAML／結果を生成し、ケースを実行します。 |
