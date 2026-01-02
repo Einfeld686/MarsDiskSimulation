@@ -1821,6 +1821,47 @@ class Progress(BaseModel):
     )
 
 
+class StreamingOffload(BaseModel):
+    """Controls for offloading streaming chunk files to external storage."""
+
+    enabled: bool = Field(
+        False,
+        description="Enable offloading of older streaming chunks to external storage.",
+    )
+    dir: Optional[Path] = Field(
+        None,
+        description=(
+            "Absolute path for offloaded chunk storage; when unset, defaults to "
+            "io.archive.dir/<run_id>/series_chunks if available."
+        ),
+    )
+    keep_last_n: int = Field(
+        2,
+        ge=0,
+        description="Number of most recent chunks to keep locally before offloading.",
+    )
+    mode: Literal["copy", "move"] = Field(
+        "move",
+        description="Transfer mode used when offloading chunks.",
+    )
+    verify: Literal["size", "hash"] = Field(
+        "size",
+        description="Verification method for offloaded chunks.",
+    )
+    skip_if_same_device: bool = Field(
+        True,
+        description="Skip offload when target storage is on the same device as outdir.",
+    )
+
+    @field_validator("dir")
+    def _check_offload_dir(cls, value: Optional[Path]) -> Optional[Path]:
+        if value is None:
+            return value
+        if not value.is_absolute():
+            raise ConfigurationError("io.streaming.offload.dir must be an absolute path")
+        return value
+
+
 class Streaming(BaseModel):
     """Streaming write controls for large zero-D runs."""
 
@@ -1853,6 +1894,10 @@ class Streaming(BaseModel):
     cleanup_chunks: bool = Field(
         True,
         description="Delete Parquet chunk files after a successful merge_at_end.",
+    )
+    offload: StreamingOffload = Field(
+        default_factory=StreamingOffload,
+        description="Optional offload settings for moving old chunks to external storage.",
     )
 
     @field_validator("memory_limit_gb")

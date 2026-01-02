@@ -1012,6 +1012,28 @@ def run_one_d(
             archive_root_resolved = None
             archive_dest_dir = None
 
+    offload_cfg = getattr(streaming_cfg, "offload", None) if streaming_cfg else None
+    offload_enabled_cfg = bool(offload_cfg and getattr(offload_cfg, "enabled", False))
+    offload_dir_raw = getattr(offload_cfg, "dir", None) if offload_cfg else None
+    offload_dir = Path(offload_dir_raw).expanduser() if offload_dir_raw else None
+    archive_root_available = bool(archive_root_resolved is not None and archive_root_resolved.exists())
+    if offload_dir is None and archive_root_available and archive_dest_dir is not None:
+        offload_dir = archive_dest_dir / "series_chunks"
+    offload_dir_resolved: Optional[Path] = None
+    if offload_dir is not None:
+        try:
+            offload_dir_resolved = offload_dir.expanduser().resolve()
+        except Exception:
+            offload_dir_resolved = offload_dir
+    offload_keep_last_n = int(getattr(offload_cfg, "keep_last_n", 2) or 2) if offload_cfg else 2
+    if offload_keep_last_n < 0:
+        offload_keep_last_n = 0
+    offload_mode = str(getattr(offload_cfg, "mode", "move") or "move").lower()
+    offload_verify = str(getattr(offload_cfg, "verify", "size") or "size").lower()
+    offload_skip_if_same_device = bool(getattr(offload_cfg, "skip_if_same_device", True)) if offload_cfg else True
+    offload_enabled = streaming_enabled and offload_enabled_cfg
+    offload_dir_final = offload_dir_resolved if offload_dir_resolved is not None else offload_dir
+
     streaming_merge_outdir: Optional[Path] = None
     if archive_enabled and archive_merge_target == "external" and archive_dest_dir is not None:
         streaming_merge_outdir = archive_dest_dir
@@ -1047,6 +1069,12 @@ def run_one_d(
         cleanup_chunks=streaming_cleanup_chunks,
         series_columns=series_columns,
         diagnostic_columns=diagnostic_columns,
+        offload_enabled=offload_enabled,
+        offload_dir=offload_dir_final,
+        offload_keep_last_n=offload_keep_last_n,
+        offload_mode=offload_mode,
+        offload_verify=offload_verify,
+        offload_skip_if_same_device=offload_skip_if_same_device,
     )
     steps_since_flush = 0
 
@@ -2855,6 +2883,16 @@ def run_one_d(
             "merge_at_end": streaming_merge_at_end if streaming_state.enabled else False,
             "cleanup_chunks": streaming_cleanup_chunks if streaming_state.enabled else None,
             "merge_outdir": str(streaming_state.merge_outdir) if streaming_state.enabled else None,
+            "offload": {
+                "enabled": offload_enabled if streaming_state.enabled else False,
+                "enabled_config": offload_enabled_cfg,
+                "dir": str(offload_dir_raw) if offload_dir_raw is not None else None,
+                "dir_resolved": str(offload_dir_final) if offload_dir_final is not None else None,
+                "keep_last_n": offload_keep_last_n if streaming_state.enabled else None,
+                "mode": offload_mode if streaming_state.enabled else None,
+                "verify": offload_verify if streaming_state.enabled else None,
+                "skip_if_same_device": offload_skip_if_same_device if streaming_state.enabled else None,
+            },
         },
         "archive": {
             "enabled": archive_enabled,
