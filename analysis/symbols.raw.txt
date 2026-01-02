@@ -294,7 +294,7 @@ marsdisk/io/checkpoint.py:119:def find_latest_checkpoint(dir_path: Path) -> Opti
 marsdisk/io/checkpoint.py:130:def prune_checkpoints(dir_path: Path, keep_last_n: int) -> None
 marsdisk/io/diagnostics.py:16:def safe_float(value: Any) -> Optional[float]
 marsdisk/io/diagnostics.py:28:def write_zero_d_history(cfg: Config, df: pd.DataFrame, history: ZeroDHistory, *, step_diag_enabled: bool, step_diag_format: str, step_diag_path_cfg: Optional[Path], step_diag_path: Optional[Path], orbit_rollup_enabled: bool, extended_diag_enabled: bool, series_columns: Optional[list[str]]=None, diagnostic_columns: Optional[list[str]]=None) -> None
-marsdisk/io/streaming.py:23:class StreamingState
+marsdisk/io/streaming.py:29:class StreamingState
 marsdisk/io/tables.py:40:def _approx_phi(tau: float, w0: float, g: float) -> float
 marsdisk/io/tables.py:46:class QPrTable
 marsdisk/io/tables.py:128:class PhiTable
@@ -646,22 +646,36 @@ marsdisk/run_one_d.py:214:def run_one_d(cfg: Config, *, enforce_mass_budget: boo
 marsdisk/run_zero_d.py:112:class SmolSinkWorkspace
 marsdisk/run_zero_d.py:122:class SupplyStepResult
 marsdisk/run_zero_d.py:131:class SurfaceSupplyStepResult
-marsdisk/run_zero_d.py:138:def _get_smol_sink_workspace(workspace: SmolSinkWorkspace | None, n_bins: int) -> SmolSinkWorkspace
-marsdisk/run_zero_d.py:158:def _apply_supply_step(*, time_now: float, r: float, dt: float, supply_spec: 'supply.Supply', area: float, supply_state: 'supply.SupplyRuntimeState | None', tau_for_feedback: float | None, temperature_K: float, allow_supply: bool, sigma_surf: float, sigma_tau1: float | None, sigma_deep: float, t_mix: float | None, deep_enabled: bool, transport_mode: str, headroom_gate: str, headroom_policy: str, t_blow: float | None) -> SupplyStepResult
-marsdisk/run_zero_d.py:215:def _apply_shielding_and_supply(*, time_now: float, r: float, dt: float, sigma_surf: float, kappa_surf: float, collisions_active_step: bool, shielding_mode: str, phi_tau_fn: Callable[[float], float] | None, tau_fixed_target: float | None, sigma_tau1_fixed_target: float | None, los_factor: float, use_tcoll: bool, enable_blowout_step: bool, sink_timescale_active: bool, t_sink_step_effective: float | None, supply_spec: 'supply.SupplySpec', area: float, supply_state: 'supply.SupplyRuntimeState', temperature_K: float, allow_supply: bool, sigma_deep: float, t_mix: float | None, deep_enabled: bool, transport_mode: str, headroom_gate: str, headroom_policy: str, t_blow: float | None) -> SurfaceSupplyStepResult
-marsdisk/run_zero_d.py:286:def _apply_blowout_correction(outflux_surface: float, *, factor: float, apply: bool) -> tuple[float, bool]
-marsdisk/run_zero_d.py:297:def _apply_blowout_gate(blow_surface_total: float, outflux_surface: float, *, enable_blowout: bool, gate_enabled: bool, gate_factor: float) -> tuple[float, float]
-marsdisk/run_zero_d.py:310:def _resolve_t_coll_step(*, collision_solver_mode: str, collisions_active: bool, tau_los_last: float | None, los_factor: float, Omega: float, t_coll_kernel_last: float | None) -> float | None
-marsdisk/run_zero_d.py:337:def _reset_collision_runtime_state() -> None
-marsdisk/run_zero_d.py:344:def _get_max_steps() -> int
-marsdisk/run_zero_d.py:358:def _log_stage(label: str, *, extra: Mapping[str, Any] | None=None) -> None
-marsdisk/run_zero_d.py:364:def _model_fields_set(model: Any) -> set[str]
-marsdisk/run_zero_d.py:375:def _surface_energy_floor(gamma_J_m2: float, eta: float, alpha: float, rho: float, v_rel: float, s0: float, s_max: float) -> float
-marsdisk/run_zero_d.py:419:def load_config(path: Path, overrides: Optional[Sequence[str]]=None) -> Config
-marsdisk/run_zero_d.py:444:def _gather_git_info() -> Dict[str, Any]
-marsdisk/run_zero_d.py:471:class MassBudgetViolationError(NumericalError)
-marsdisk/run_zero_d.py:477:def run_zero_d(cfg: Config, *, enforce_mass_budget: bool=False, physics_mode_override: Optional[str]=None, physics_mode_source_override: Optional[str]=None) -> None
-marsdisk/run_zero_d.py:5350:def main(argv: Optional[List[str]]=None) -> None
+marsdisk/run_zero_d.py:138:class RunZeroDConfigStage
+marsdisk/run_zero_d.py:176:class RunZeroDDynamicsStage
+marsdisk/run_zero_d.py:189:class RunZeroDRadiationStage
+marsdisk/run_zero_d.py:199:class RunZeroDShieldingPhaseStage
+marsdisk/run_zero_d.py:219:class RunZeroDPsdStage
+marsdisk/run_zero_d.py:243:class RunZeroDSupplyStage
+marsdisk/run_zero_d.py:295:class RunZeroDTimeGridStage
+marsdisk/run_zero_d.py:375:def _get_smol_sink_workspace(workspace: SmolSinkWorkspace | None, n_bins: int) -> SmolSinkWorkspace
+marsdisk/run_zero_d.py:395:def _apply_supply_step(*, time_now: float, r: float, dt: float, supply_spec: 'supply.Supply', area: float, supply_state: 'supply.SupplyRuntimeState | None', tau_for_feedback: float | None, temperature_K: float, allow_supply: bool, sigma_surf: float, sigma_tau1: float | None, sigma_deep: float, t_mix: float | None, deep_enabled: bool, transport_mode: str, headroom_gate: str, headroom_policy: str, t_blow: float | None) -> SupplyStepResult
+marsdisk/run_zero_d.py:452:def _apply_shielding_and_supply(*, time_now: float, r: float, dt: float, sigma_surf: float, kappa_surf: float, collisions_active_step: bool, shielding_mode: str, phi_tau_fn: Callable[[float], float] | None, tau_fixed_target: float | None, sigma_tau1_fixed_target: float | None, los_factor: float, use_tcoll: bool, enable_blowout_step: bool, sink_timescale_active: bool, t_sink_step_effective: float | None, supply_spec: 'supply.SupplySpec', area: float, supply_state: 'supply.SupplyRuntimeState', temperature_K: float, allow_supply: bool, sigma_deep: float, t_mix: float | None, deep_enabled: bool, transport_mode: str, headroom_gate: str, headroom_policy: str, t_blow: float | None) -> SurfaceSupplyStepResult
+marsdisk/run_zero_d.py:523:def _apply_blowout_correction(outflux_surface: float, *, factor: float, apply: bool) -> tuple[float, bool]
+marsdisk/run_zero_d.py:534:def _apply_blowout_gate(blow_surface_total: float, outflux_surface: float, *, enable_blowout: bool, gate_enabled: bool, gate_factor: float) -> tuple[float, float]
+marsdisk/run_zero_d.py:547:def _resolve_t_coll_step(*, collision_solver_mode: str, collisions_active: bool, tau_los_last: float | None, los_factor: float, Omega: float, t_coll_kernel_last: float | None) -> float | None
+marsdisk/run_zero_d.py:574:def _reset_collision_runtime_state() -> None
+marsdisk/run_zero_d.py:581:def _get_max_steps() -> int
+marsdisk/run_zero_d.py:595:def _log_stage(label: str, *, extra: Mapping[str, Any] | None=None) -> None
+marsdisk/run_zero_d.py:601:def _model_fields_set(model: Any) -> set[str]
+marsdisk/run_zero_d.py:612:def _surface_energy_floor(gamma_J_m2: float, eta: float, alpha: float, rho: float, v_rel: float, s0: float, s_max: float) -> float
+marsdisk/run_zero_d.py:656:def load_config(path: Path, overrides: Optional[Sequence[str]]=None) -> Config
+marsdisk/run_zero_d.py:681:def _gather_git_info() -> Dict[str, Any]
+marsdisk/run_zero_d.py:708:class MassBudgetViolationError(NumericalError)
+marsdisk/run_zero_d.py:713:def _prepare_run_configuration(cfg: Config, *, physics_mode_override: Optional[str], physics_mode_source_override: Optional[str]) -> RunZeroDConfigStage
+marsdisk/run_zero_d.py:928:def _prepare_dynamics_initial_conditions(cfg: Config, *, rng: np.random.Generator) -> RunZeroDDynamicsStage
+marsdisk/run_zero_d.py:1029:def _prepare_radiation_and_temperature(cfg: Config, *, t_orb: float) -> RunZeroDRadiationStage
+marsdisk/run_zero_d.py:1102:def _prepare_shielding_phase_setup(cfg: Config, *, r: float, t_orb: float, Omega: float) -> RunZeroDShieldingPhaseStage
+marsdisk/run_zero_d.py:1187:def _prepare_psd_initial_state(cfg: Config, *, rho_used: float, T_use: float, qpr_override: Optional[float], blowout_enabled: bool, e0_effective: float, r: float, Omega: float) -> RunZeroDPsdStage
+marsdisk/run_zero_d.py:1383:def _prepare_supply_transport_init(cfg: Config, *, psd_state: Dict[str, Any], optical_depth_enabled: bool, sigma_tau1_cap_init: Optional[float], kappa_surf_initial: float, phi_tau_fn: Optional[Callable[[float], float]], los_factor: float, t_orb: float, area: float) -> RunZeroDSupplyStage
+marsdisk/run_zero_d.py:1749:def _prepare_time_grid_and_runtime(cfg: Config, *, Omega: float, t_orb: float, temp_runtime: Any, rng: np.random.Generator, pending_deprecation_warnings: Sequence[str], supply_state: Any, psd_state: Dict[str, Any], sigma_surf: float, sigma_deep: float, s_min_effective: float, s_min_floor_dynamic: float, s_min_evolved_value: float, M_loss_cum: float, M_sink_cum: float, M_spill_cum: float, M_sublimation_cum: float, M_hydro_cum: float) -> RunZeroDTimeGridStage
+marsdisk/run_zero_d.py:2145:def run_zero_d(cfg: Config, *, enforce_mass_budget: bool=False, physics_mode_override: Optional[str]=None, physics_mode_source_override: Optional[str]=None) -> None
+marsdisk/run_zero_d.py:6163:def main(argv: Optional[List[str]]=None) -> None
 marsdisk/runtime/autotune.py:22:class MachineState
 marsdisk/runtime/autotune.py:43:class AutoTuneDecision
 marsdisk/runtime/autotune.py:56:def _safe_int(value: Any, fallback: int) -> int
@@ -750,13 +764,14 @@ marsdisk/schema.py:1654:class Resume(BaseModel)
 marsdisk/schema.py:1667:class Numerics(BaseModel)
 marsdisk/schema.py:1793:class StepDiagnostics(BaseModel)
 marsdisk/schema.py:1810:class Progress(BaseModel)
-marsdisk/schema.py:1824:class Streaming(BaseModel)
-marsdisk/schema.py:1871:class Archive(BaseModel)
-marsdisk/schema.py:1965:class IO(BaseModel)
-marsdisk/schema.py:2029:class ExtendedDiagnostics(BaseModel)
-marsdisk/schema.py:2042:class EnergyBookkeeping(BaseModel)
-marsdisk/schema.py:2055:class Diagnostics(BaseModel)
-marsdisk/schema.py:2062:class Config(BaseModel)
+marsdisk/schema.py:1824:class StreamingOffload(BaseModel)
+marsdisk/schema.py:1865:class Streaming(BaseModel)
+marsdisk/schema.py:1916:class Archive(BaseModel)
+marsdisk/schema.py:2010:class IO(BaseModel)
+marsdisk/schema.py:2074:class ExtendedDiagnostics(BaseModel)
+marsdisk/schema.py:2087:class EnergyBookkeeping(BaseModel)
+marsdisk/schema.py:2100:class Diagnostics(BaseModel)
+marsdisk/schema.py:2107:class Config(BaseModel)
 marsdisk/warnings.py:7:class MarsDiskWarning(UserWarning)
 marsdisk/warnings.py:11:class PhysicsWarning(MarsDiskWarning)
 marsdisk/warnings.py:15:class NumericalWarning(MarsDiskWarning)
@@ -1177,6 +1192,13 @@ scripts/tests/measure_case_output_size.py:45:def _dir_stats(path: Path) -> Tuple
 scripts/tests/measure_case_output_size.py:61:def _build_outdir(*, batch_root: Path, sweep_tag: str, run_ts: str, git_sha: str, batch_seed: int, t_value: str, eps_value: str, tau_value: str) -> Path
 scripts/tests/measure_case_output_size.py:79:def _write_report(path: Path, payload: Dict[str, object]) -> None
 scripts/tests/measure_case_output_size.py:83:def main() -> int
+scripts/tests/numba_on_off_benchmark.py:18:class RunResult
+scripts/tests/numba_on_off_benchmark.py:26:def _repo_root() -> Path
+scripts/tests/numba_on_off_benchmark.py:30:def _default_env() -> Dict[str, str]
+scripts/tests/numba_on_off_benchmark.py:48:def _build_overrides(args: argparse.Namespace, outdir: Path) -> List[str]
+scripts/tests/numba_on_off_benchmark.py:63:def _run_case(args: argparse.Namespace, label: str, disable_numba: bool, outdir: Path) -> RunResult
+scripts/tests/numba_on_off_benchmark.py:98:def _summarize(results: Sequence[RunResult]) -> dict
+scripts/tests/numba_on_off_benchmark.py:110:def main() -> int
 scripts/tests/overparallel_benchmark.py:32:def _utc_now() -> str
 scripts/tests/overparallel_benchmark.py:36:def _env_snapshot(env: dict[str, str]) -> dict[str, str | None]
 scripts/tests/overparallel_benchmark.py:40:def _write_json(path: Path, payload: dict[str, Any]) -> None
@@ -1498,8 +1520,12 @@ tests/integration/test_smol_supply_source.py:52:def test_smol_source_mass_budget
 tests/integration/test_smol_supply_source.py:83:def test_powerlaw_injection_distributes_mass() -> None
 tests/integration/test_step_diagnostics.py:12:def _build_config(outdir: Path, fmt: str) -> schema.Config
 tests/integration/test_step_diagnostics.py:56:def test_step_diagnostics_file_and_mass_budget(tmp_path: Path, fmt: str) -> None
-tests/integration/test_streaming_merge.py:8:def test_streaming_flush_and_merge(tmp_path)
-tests/integration/test_streaming_merge.py:40:def test_merge_with_schema_mismatch(tmp_path)
+tests/integration/test_streaming_merge.py:10:def _write_chunk(path, times)
+tests/integration/test_streaming_merge.py:19:def test_streaming_flush_and_merge(tmp_path)
+tests/integration/test_streaming_merge.py:51:def test_merge_with_schema_mismatch(tmp_path)
+tests/integration/test_streaming_merge.py:109:def test_streaming_offload_move_merge(tmp_path)
+tests/integration/test_streaming_merge.py:147:def test_streaming_discover_offload_chunks(tmp_path)
+tests/integration/test_streaming_merge.py:183:def test_streaming_discover_duplicate_prefers_local(tmp_path)
 tests/integration/test_sublimation_liquid_branch.py:8:def test_p_sat_switches_to_liquid_branch() -> None
 tests/integration/test_sublimation_mass_conserving.py:9:def test_mass_conserving_sublimation_redirects_to_blowout() -> None
 tests/integration/test_sublimation_phase_gate.py:14:def _run_phase_case(tmp_path: Path, entrypoint: str, *, enable_step_diag: bool=True, extra_overrides: list[str] | None=None) -> tuple[pd.Series, pd.DataFrame | None]

@@ -27,34 +27,46 @@ AIエージェントがコード検索を効率化するためのマップを提
 | `SmolSinkWorkspace` | L112 | クラス | No description available. |
 | `SupplyStepResult` | L122 | クラス | No description available. |
 | `SurfaceSupplyStepResult` | L131 | クラス | No description available. |
-| `_get_smol_sink_workspace` | L138 | ヘルパー | No description available. |
-| `_apply_supply_step` | L158 | ヘルパー | No description available. |
-| `_apply_shielding_and_supply` | L215 | ヘルパー | No description available. |
-| `_apply_blowout_correction` | L286 | ヘルパー | No description available. |
-| `_apply_blowout_gate` | L297 | ヘルパー | No description available. |
-| `_resolve_t_coll_step` | L310 | ヘルパー | No description available. |
-| `_reset_collision_runtime_state` | L337 | ヘルパー | Clear per-run collision caches and warning state. |
-| `_get_max_steps` | L344 | ヘルパー | Return MAX_STEPS, honoring overrides applied to th... |
-| `_log_stage` | L358 | ヘルパー | Emit coarse progress markers for debugging long ru... |
-| `_model_fields_set` | L364 | ヘルパー | Return explicitly-set fields for a Pydantic model ... |
-| `_surface_energy_floor` | L375 | ヘルパー | Return surface-energy-limited minimum size (Krijt ... |
-| `load_config` | L419 | 関数 | Load a YAML configuration file into a :class:`Conf... |
-| `_gather_git_info` | L444 | ヘルパー | Return basic git metadata for provenance recording... |
-| `MassBudgetViolationError` | L471 | クラス | Raised when the mass budget tolerance is exceeded. |
-| `run_zero_d` | L477 | メイン | Execute the full-feature zero-dimensional simulati... |
-| `main` | L5350 | 関数 | Command line entry point. |
+| `RunZeroDConfigStage` | L138 | クラス | No description available. |
+| `RunZeroDDynamicsStage` | L176 | クラス | No description available. |
+| `RunZeroDRadiationStage` | L189 | クラス | No description available. |
+| `RunZeroDShieldingPhaseStage` | L199 | クラス | No description available. |
+| `RunZeroDPsdStage` | L219 | クラス | No description available. |
+| `RunZeroDSupplyStage` | L243 | クラス | No description available. |
+| `_get_smol_sink_workspace` | L295 | ヘルパー | No description available. |
+| `_apply_supply_step` | L315 | ヘルパー | No description available. |
+| `_apply_shielding_and_supply` | L372 | ヘルパー | No description available. |
+| `_apply_blowout_correction` | L443 | ヘルパー | No description available. |
+| `_apply_blowout_gate` | L454 | ヘルパー | No description available. |
+| `_resolve_t_coll_step` | L467 | ヘルパー | No description available. |
+| `_reset_collision_runtime_state` | L494 | ヘルパー | Clear per-run collision caches and warning state. |
+| `_get_max_steps` | L501 | ヘルパー | Return MAX_STEPS, honoring overrides applied to th... |
+| `_log_stage` | L515 | ヘルパー | Emit coarse progress markers for debugging long ru... |
+| `_model_fields_set` | L521 | ヘルパー | Return explicitly-set fields for a Pydantic model ... |
+| `_surface_energy_floor` | L532 | ヘルパー | Return surface-energy-limited minimum size (Krijt ... |
+| `load_config` | L576 | 関数 | Load a YAML configuration file into a :class:`Conf... |
+| `_gather_git_info` | L601 | ヘルパー | Return basic git metadata for provenance recording... |
+| `MassBudgetViolationError` | L628 | クラス | Raised when the mass budget tolerance is exceeded. |
+| `_prepare_run_configuration` | L633 | ヘルパー | No description available. |
+| `_prepare_dynamics_initial_conditions` | L848 | ヘルパー | No description available. |
+| `_prepare_radiation_and_temperature` | L949 | ヘルパー | No description available. |
+| `_prepare_shielding_phase_setup` | L1022 | ヘルパー | No description available. |
+| `_prepare_psd_initial_state` | L1107 | ヘルパー | No description available. |
+| `_prepare_supply_transport_init` | L1303 | ヘルパー | No description available. |
+| `run_zero_d` | L1669 | メイン | Execute the full-feature zero-dimensional simulati... |
+| `main` | L5880 | 関数 | Command line entry point. |
 
 ## 3. 主要セクション（目安）
 
 > 以下の行範囲はコード変更により変動します。`inventory.json` を基に自動更新されます。
 
-- **`run_zero_d()`**: L477–? (メイン実行ドライバ)
-- **`main()`**: L5350–? (CLI エントリポイント)
+- **`run_zero_d()`**: L1669–? (メイン実行ドライバ)
+- **`main()`**: L5880–? (CLI エントリポイント)
 ## 4. 探索ガイド
 
 | 調べたいこと | 参照シンボル | 備考 |
 |-------------|-------------|------|
-| 設定ロード | [`load_config`](L419) | YAML→Config変換 |
+| 設定ロード | [`load_config`](L576) | YAML→Config変換 |
 | 時間グリッド | `resolve_time_grid` | dt, n_steps決定 (未検出) |
 | シード解決 | `resolve_seed` | RNG初期化 (未検出) |
 | 高速ブローアウト補正 | `fast_blowout_correction_factor` | dt/t_blow補正 (未検出) |

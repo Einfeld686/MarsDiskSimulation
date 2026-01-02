@@ -2997,28 +2997,35 @@
   },
   {
     "file_path": "marsdisk/io/streaming.py",
-    "line_no": 18,
+    "line_no": 22,
     "symbol": "MEMORY_RUN_ROW_BYTES",
     "signature": "MEMORY_RUN_ROW_BYTES = 2200.0",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/io/streaming.py",
-    "line_no": 19,
+    "line_no": 23,
     "symbol": "MEMORY_PSD_ROW_BYTES",
     "signature": "MEMORY_PSD_ROW_BYTES = 320.0",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/io/streaming.py",
-    "line_no": 20,
+    "line_no": 24,
     "symbol": "MEMORY_DIAG_ROW_BYTES",
     "signature": "MEMORY_DIAG_ROW_BYTES = 1400.0",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/io/streaming.py",
-    "line_no": 23,
+    "line_no": 26,
+    "symbol": "CHUNK_PATTERN",
+    "signature": "CHUNK_PATTERN = re.compile('.*_chunk_(\\\\d+)_(\\\\d+)\\\\.parquet$')",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "marsdisk/io/streaming.py",
+    "line_no": 29,
     "symbol": "StreamingState",
     "signature": "class StreamingState",
     "brief_usage": "Manage streaming flush of large histories to Parquet/CSV chunks."
@@ -6897,111 +6904,209 @@
   {
     "file_path": "marsdisk/run_zero_d.py",
     "line_no": 138,
+    "symbol": "RunZeroDConfigStage",
+    "signature": "class RunZeroDConfigStage",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "marsdisk/run_zero_d.py",
+    "line_no": 176,
+    "symbol": "RunZeroDDynamicsStage",
+    "signature": "class RunZeroDDynamicsStage",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "marsdisk/run_zero_d.py",
+    "line_no": 189,
+    "symbol": "RunZeroDRadiationStage",
+    "signature": "class RunZeroDRadiationStage",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "marsdisk/run_zero_d.py",
+    "line_no": 199,
+    "symbol": "RunZeroDShieldingPhaseStage",
+    "signature": "class RunZeroDShieldingPhaseStage",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "marsdisk/run_zero_d.py",
+    "line_no": 219,
+    "symbol": "RunZeroDPsdStage",
+    "signature": "class RunZeroDPsdStage",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "marsdisk/run_zero_d.py",
+    "line_no": 243,
+    "symbol": "RunZeroDSupplyStage",
+    "signature": "class RunZeroDSupplyStage",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "marsdisk/run_zero_d.py",
+    "line_no": 295,
+    "symbol": "RunZeroDTimeGridStage",
+    "signature": "class RunZeroDTimeGridStage",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "marsdisk/run_zero_d.py",
+    "line_no": 375,
     "symbol": "_get_smol_sink_workspace",
     "signature": "_get_smol_sink_workspace(workspace: SmolSinkWorkspace | None, n_bins: int) -> SmolSinkWorkspace",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/run_zero_d.py",
-    "line_no": 158,
+    "line_no": 395,
     "symbol": "_apply_supply_step",
     "signature": "_apply_supply_step(*, time_now: float, r: float, dt: float, supply_spec: 'supply.Supply', area: float, supply_state: 'supply.SupplyRuntimeState | None', tau_for_feedback: float | None, temperature_K: float, allow_supply: bool, sigma_surf: float, sigma_tau1: float | None, sigma_deep: float, t_mix: float | None, deep_enabled: bool, transport_mode: str, headroom_gate: str, headroom_policy: str, t_blow: float | None) -> SupplyStepResult",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/run_zero_d.py",
-    "line_no": 215,
+    "line_no": 452,
     "symbol": "_apply_shielding_and_supply",
     "signature": "_apply_shielding_and_supply(*, time_now: float, r: float, dt: float, sigma_surf: float, kappa_surf: float, collisions_active_step: bool, shielding_mode: str, phi_tau_fn: Callable[[float], float] | None, tau_fixed_target: float | None, sigma_tau1_fixed_target: float | None, los_factor: float, use_tcoll: bool, enable_blowout_step: bool, sink_timescale_active: bool, t_sink_step_effective: float | None, supply_spec: 'supply.SupplySpec', area: float, supply_state: 'supply.SupplyRuntimeState', temperature_K: float, allow_supply: bool, sigma_deep: float, t_mix: float | None, deep_enabled: bool, transport_mode: str, headroom_gate: str, headroom_policy: str, t_blow: float | None) -> SurfaceSupplyStepResult",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/run_zero_d.py",
-    "line_no": 286,
+    "line_no": 523,
     "symbol": "_apply_blowout_correction",
     "signature": "_apply_blowout_correction(outflux_surface: float, *, factor: float, apply: bool) -> tuple[float, bool]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/run_zero_d.py",
-    "line_no": 297,
+    "line_no": 534,
     "symbol": "_apply_blowout_gate",
     "signature": "_apply_blowout_gate(blow_surface_total: float, outflux_surface: float, *, enable_blowout: bool, gate_enabled: bool, gate_factor: float) -> tuple[float, float]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/run_zero_d.py",
-    "line_no": 310,
+    "line_no": 547,
     "symbol": "_resolve_t_coll_step",
     "signature": "_resolve_t_coll_step(*, collision_solver_mode: str, collisions_active: bool, tau_los_last: float | None, los_factor: float, Omega: float, t_coll_kernel_last: float | None) -> float | None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/run_zero_d.py",
-    "line_no": 337,
+    "line_no": 574,
     "symbol": "_reset_collision_runtime_state",
     "signature": "_reset_collision_runtime_state() -> None",
     "brief_usage": "Clear per-run collision caches and warning state."
   },
   {
     "file_path": "marsdisk/run_zero_d.py",
-    "line_no": 344,
+    "line_no": 581,
     "symbol": "_get_max_steps",
     "signature": "_get_max_steps() -> int",
     "brief_usage": "Return MAX_STEPS, honoring overrides applied to the marsdisk.run shim."
   },
   {
     "file_path": "marsdisk/run_zero_d.py",
-    "line_no": 358,
+    "line_no": 595,
     "symbol": "_log_stage",
     "signature": "_log_stage(label: str, *, extra: Mapping[str, Any] | None=None) -> None",
     "brief_usage": "Emit coarse progress markers for debugging long runs."
   },
   {
     "file_path": "marsdisk/run_zero_d.py",
-    "line_no": 364,
+    "line_no": 601,
     "symbol": "_model_fields_set",
     "signature": "_model_fields_set(model: Any) -> set[str]",
     "brief_usage": "Return explicitly-set fields for a Pydantic model (v1/v2 compatible)."
   },
   {
     "file_path": "marsdisk/run_zero_d.py",
-    "line_no": 375,
+    "line_no": 612,
     "symbol": "_surface_energy_floor",
     "signature": "_surface_energy_floor(gamma_J_m2: float, eta: float, alpha: float, rho: float, v_rel: float, s0: float, s_max: float) -> float",
     "brief_usage": "Return surface-energy-limited minimum size (Krijt & Kama general form)."
   },
   {
     "file_path": "marsdisk/run_zero_d.py",
-    "line_no": 419,
+    "line_no": 656,
     "symbol": "load_config",
     "signature": "load_config(path: Path, overrides: Optional[Sequence[str]]=None) -> Config",
     "brief_usage": "Load a YAML configuration file into a :class:`Config` instance."
   },
   {
     "file_path": "marsdisk/run_zero_d.py",
-    "line_no": 444,
+    "line_no": 681,
     "symbol": "_gather_git_info",
     "signature": "_gather_git_info() -> Dict[str, Any]",
     "brief_usage": "Return basic git metadata for provenance recording."
   },
   {
     "file_path": "marsdisk/run_zero_d.py",
-    "line_no": 471,
+    "line_no": 708,
     "symbol": "MassBudgetViolationError",
     "signature": "class MassBudgetViolationError(NumericalError)",
     "brief_usage": "Raised when the mass budget tolerance is exceeded."
   },
   {
     "file_path": "marsdisk/run_zero_d.py",
-    "line_no": 477,
+    "line_no": 713,
+    "symbol": "_prepare_run_configuration",
+    "signature": "_prepare_run_configuration(cfg: Config, *, physics_mode_override: Optional[str], physics_mode_source_override: Optional[str]) -> RunZeroDConfigStage",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "marsdisk/run_zero_d.py",
+    "line_no": 928,
+    "symbol": "_prepare_dynamics_initial_conditions",
+    "signature": "_prepare_dynamics_initial_conditions(cfg: Config, *, rng: np.random.Generator) -> RunZeroDDynamicsStage",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "marsdisk/run_zero_d.py",
+    "line_no": 1029,
+    "symbol": "_prepare_radiation_and_temperature",
+    "signature": "_prepare_radiation_and_temperature(cfg: Config, *, t_orb: float) -> RunZeroDRadiationStage",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "marsdisk/run_zero_d.py",
+    "line_no": 1102,
+    "symbol": "_prepare_shielding_phase_setup",
+    "signature": "_prepare_shielding_phase_setup(cfg: Config, *, r: float, t_orb: float, Omega: float) -> RunZeroDShieldingPhaseStage",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "marsdisk/run_zero_d.py",
+    "line_no": 1187,
+    "symbol": "_prepare_psd_initial_state",
+    "signature": "_prepare_psd_initial_state(cfg: Config, *, rho_used: float, T_use: float, qpr_override: Optional[float], blowout_enabled: bool, e0_effective: float, r: float, Omega: float) -> RunZeroDPsdStage",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "marsdisk/run_zero_d.py",
+    "line_no": 1383,
+    "symbol": "_prepare_supply_transport_init",
+    "signature": "_prepare_supply_transport_init(cfg: Config, *, psd_state: Dict[str, Any], optical_depth_enabled: bool, sigma_tau1_cap_init: Optional[float], kappa_surf_initial: float, phi_tau_fn: Optional[Callable[[float], float]], los_factor: float, t_orb: float, area: float) -> RunZeroDSupplyStage",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "marsdisk/run_zero_d.py",
+    "line_no": 1749,
+    "symbol": "_prepare_time_grid_and_runtime",
+    "signature": "_prepare_time_grid_and_runtime(cfg: Config, *, Omega: float, t_orb: float, temp_runtime: Any, rng: np.random.Generator, pending_deprecation_warnings: Sequence[str], supply_state: Any, psd_state: Dict[str, Any], sigma_surf: float, sigma_deep: float, s_min_effective: float, s_min_floor_dynamic: float, s_min_evolved_value: float, M_loss_cum: float, M_sink_cum: float, M_spill_cum: float, M_sublimation_cum: float, M_hydro_cum: float) -> RunZeroDTimeGridStage",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "marsdisk/run_zero_d.py",
+    "line_no": 2145,
     "symbol": "run_zero_d",
     "signature": "run_zero_d(cfg: Config, *, enforce_mass_budget: bool=False, physics_mode_override: Optional[str]=None, physics_mode_source_override: Optional[str]=None) -> None",
     "brief_usage": "Execute the full-feature zero-dimensional simulation."
   },
   {
     "file_path": "marsdisk/run_zero_d.py",
-    "line_no": 5350,
+    "line_no": 6163,
     "symbol": "main",
     "signature": "main(argv: Optional[List[str]]=None) -> None",
     "brief_usage": "Command line entry point."
@@ -7688,48 +7793,55 @@
   {
     "file_path": "marsdisk/schema.py",
     "line_no": 1824,
+    "symbol": "StreamingOffload",
+    "signature": "class StreamingOffload(BaseModel)",
+    "brief_usage": "Controls for offloading streaming chunk files to external storage."
+  },
+  {
+    "file_path": "marsdisk/schema.py",
+    "line_no": 1865,
     "symbol": "Streaming",
     "signature": "class Streaming(BaseModel)",
     "brief_usage": "Streaming write controls for large zero-D runs."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 1871,
+    "line_no": 1916,
     "symbol": "Archive",
     "signature": "class Archive(BaseModel)",
     "brief_usage": "Archive controls for offloading completed runs to external storage."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 1965,
+    "line_no": 2010,
     "symbol": "IO",
     "signature": "class IO(BaseModel)",
     "brief_usage": "Output directories."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 2029,
+    "line_no": 2074,
     "symbol": "ExtendedDiagnostics",
     "signature": "class ExtendedDiagnostics(BaseModel)",
     "brief_usage": "Optional extended diagnostics controls."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 2042,
+    "line_no": 2087,
     "symbol": "EnergyBookkeeping",
     "signature": "class EnergyBookkeeping(BaseModel)",
     "brief_usage": "Controls for collision energy bookkeeping outputs."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 2055,
+    "line_no": 2100,
     "symbol": "Diagnostics",
     "signature": "class Diagnostics(BaseModel)",
     "brief_usage": "Diagnostics toggles grouped by feature phase."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 2062,
+    "line_no": 2107,
     "symbol": "Config",
     "signature": "class Config(BaseModel)",
     "brief_usage": "Top-level configuration object."
@@ -11648,6 +11760,55 @@
     "brief_usage": "No description available."
   },
   {
+    "file_path": "scripts/tests/numba_on_off_benchmark.py",
+    "line_no": 18,
+    "symbol": "RunResult",
+    "signature": "class RunResult",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/tests/numba_on_off_benchmark.py",
+    "line_no": 26,
+    "symbol": "_repo_root",
+    "signature": "_repo_root() -> Path",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/tests/numba_on_off_benchmark.py",
+    "line_no": 30,
+    "symbol": "_default_env",
+    "signature": "_default_env() -> Dict[str, str]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/tests/numba_on_off_benchmark.py",
+    "line_no": 48,
+    "symbol": "_build_overrides",
+    "signature": "_build_overrides(args: argparse.Namespace, outdir: Path) -> List[str]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/tests/numba_on_off_benchmark.py",
+    "line_no": 63,
+    "symbol": "_run_case",
+    "signature": "_run_case(args: argparse.Namespace, label: str, disable_numba: bool, outdir: Path) -> RunResult",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/tests/numba_on_off_benchmark.py",
+    "line_no": 98,
+    "symbol": "_summarize",
+    "signature": "_summarize(results: Sequence[RunResult]) -> dict",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/tests/numba_on_off_benchmark.py",
+    "line_no": 110,
+    "symbol": "main",
+    "signature": "main() -> int",
+    "brief_usage": "No description available."
+  },
+  {
     "file_path": "scripts/tests/overparallel_benchmark.py",
     "line_no": 18,
     "symbol": "_ENV_SNAPSHOT_KEYS",
@@ -14127,17 +14288,45 @@
   },
   {
     "file_path": "tests/integration/test_streaming_merge.py",
-    "line_no": 8,
+    "line_no": 10,
+    "symbol": "_write_chunk",
+    "signature": "_write_chunk(path, times)",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_streaming_merge.py",
+    "line_no": 19,
     "symbol": "test_streaming_flush_and_merge",
     "signature": "test_streaming_flush_and_merge(tmp_path)",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tests/integration/test_streaming_merge.py",
-    "line_no": 40,
+    "line_no": 51,
     "symbol": "test_merge_with_schema_mismatch",
     "signature": "test_merge_with_schema_mismatch(tmp_path)",
     "brief_usage": "Test that merging chunks with different schemas works correctly."
+  },
+  {
+    "file_path": "tests/integration/test_streaming_merge.py",
+    "line_no": 109,
+    "symbol": "test_streaming_offload_move_merge",
+    "signature": "test_streaming_offload_move_merge(tmp_path)",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_streaming_merge.py",
+    "line_no": 147,
+    "symbol": "test_streaming_discover_offload_chunks",
+    "signature": "test_streaming_discover_offload_chunks(tmp_path)",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_streaming_merge.py",
+    "line_no": 183,
+    "symbol": "test_streaming_discover_duplicate_prefers_local",
+    "signature": "test_streaming_discover_duplicate_prefers_local(tmp_path)",
+    "brief_usage": "No description available."
   },
   {
     "file_path": "tests/integration/test_sublimation_liquid_branch.py",
