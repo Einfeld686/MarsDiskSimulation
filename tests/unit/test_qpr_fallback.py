@@ -3,6 +3,7 @@ import pytest
 
 from marsdisk.io import tables
 from marsdisk.physics import radiation
+from marsdisk.warnings import TableWarning
 
 
 @pytest.fixture(autouse=True)
@@ -20,14 +21,16 @@ def _clear_qpr_tables(monkeypatch: pytest.MonkeyPatch) -> None:
 
 def test_planck_mean_qpr_fallback_default(monkeypatch: pytest.MonkeyPatch) -> None:
     _clear_qpr_tables(monkeypatch)
-    val = radiation.planck_mean_qpr(1.0e-6, 2000.0)
+    with pytest.warns(TableWarning, match="Q_pr table not found"):
+        val = radiation.planck_mean_qpr(1.0e-6, 2000.0)
     assert val == pytest.approx(radiation.DEFAULT_Q_PR)
 
 
 def test_qpr_lookup_array_fallback(monkeypatch: pytest.MonkeyPatch) -> None:
     _clear_qpr_tables(monkeypatch)
     sizes = np.array([1.0e-6, 2.0e-6], dtype=float)
-    vals = radiation.qpr_lookup_array(sizes, 2000.0)
+    with pytest.warns(TableWarning, match="Q_pr table not found"):
+        vals = radiation.qpr_lookup_array(sizes, 2000.0)
     assert np.allclose(vals, radiation.DEFAULT_Q_PR)
 
 

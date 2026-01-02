@@ -12,6 +12,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 STREAMING_OVERRIDES = {"io.streaming.enable": False}
+TESTS_ROOT = ROOT / "tests"
 
 
 def _env_flag(value: str | None) -> bool | None:
@@ -25,6 +26,19 @@ def _env_flag(value: str | None) -> bool | None:
     return None
 
 
+def _classify_test_path(path: Path) -> str | None:
+    try:
+        rel = path.relative_to(TESTS_ROOT)
+    except ValueError:
+        return None
+    if not rel.parts:
+        return None
+    top = rel.parts[0]
+    if top in {"unit", "integration", "research", "legacy"}:
+        return top
+    return None
+
+
 def pytest_addoption(parser: pytest.Parser) -> None:
     parser.addoption(
         "--no-streaming",
@@ -32,6 +46,14 @@ def pytest_addoption(parser: pytest.Parser) -> None:
         default=False,
         help="Force FORCE_STREAMING_OFF=1 during tests to keep streaming disabled.",
     )
+
+
+def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item]) -> None:
+    for item in items:
+        category = _classify_test_path(Path(str(item.fspath)))
+        if category is None:
+            continue
+        item.add_marker(getattr(pytest.mark, category))
 
 
 @pytest.fixture(autouse=True)

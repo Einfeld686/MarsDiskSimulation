@@ -29,7 +29,7 @@ def test_phase_map_entrypoint_and_hydro_timescale() -> None:
     cfg = PhaseConfig(
         enabled=True,
         source="map",
-        entrypoint="tests.phase_map_stub:lookup_phase_state",
+        entrypoint="tests.fixtures.phase_map_stub:lookup_phase_state",
     )
     evaluator = phase.PhaseEvaluator(cfg)
     decision = evaluator.evaluate(temperature_K=1850.0, pressure_Pa=0.0, tau=0.1)
@@ -68,7 +68,7 @@ def test_phase_map_fraction_clamped_to_physical_range() -> None:
     cfg = PhaseConfig(
         enabled=True,
         source="map",
-        entrypoint="tests.phase_map_stub:lookup_unphysical_fraction",
+        entrypoint="tests.fixtures.phase_map_stub:lookup_unphysical_fraction",
     )
     evaluator = phase.PhaseEvaluator(cfg)
     decision = evaluator.evaluate(temperature_K=2000.0)

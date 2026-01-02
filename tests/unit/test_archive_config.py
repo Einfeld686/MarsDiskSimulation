@@ -8,7 +8,7 @@ from marsdisk.run_zero_d import load_config
 
 
 def _base_config_path() -> Path:
-    return Path(__file__).resolve().parents[1] / "configs" / "base.yml"
+    return Path(__file__).resolve().parents[2] / "configs" / "base.yml"
 
 
 def test_archive_requires_dir_when_enabled() -> None:

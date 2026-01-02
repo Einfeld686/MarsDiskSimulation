@@ -10,6 +10,7 @@ import numpy as np
 import pytest
 
 from marsdisk import constants, grid, schema
+from marsdisk.warnings import NumericalWarning, TableWarning
 
 
 def _reload_with_env(module_name: str, disable_numba: bool = False):
@@ -298,7 +299,8 @@ def test_qpr_interp_numba_fallback(monkeypatch) -> None:
     monkeypatch.setattr(tables, "_NUMBA_FAILED", False, raising=False)
     monkeypatch.setattr(tables, "qpr_interp_scalar_numba", _boom, raising=False)
 
-    got = table.interp(s, T)
+    with pytest.warns(TableWarning, match="Q_pr numba interpolation failed"):
+        got = table.interp(s, T)
     assert np.isclose(got, expected)
     assert tables._NUMBA_FAILED is True
 
@@ -336,7 +338,8 @@ def test_blowout_radius_numba_fallback(monkeypatch) -> None:
         3.0 * constants.SIGMA_SB * (T**4) * (constants.R_MARS**2) * qpr
         / (2.0 * constants.G * constants.M_MARS * constants.C * rho)
     )
-    got = radiation.blowout_radius(rho, T, Q_pr=qpr)
+    with pytest.warns(NumericalWarning, match="blowout radius numba kernel failed"):
+        got = radiation.blowout_radius(rho, T, Q_pr=qpr)
     assert np.isclose(got, expected)
     assert radiation._NUMBA_FAILED is True
 

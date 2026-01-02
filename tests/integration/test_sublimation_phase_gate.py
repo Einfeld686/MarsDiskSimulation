@@ -53,7 +53,7 @@ def _run_phase_case(
 def test_liquid_phase_blocks_sublimation(tmp_path: Path) -> None:
     row, diag_df = _run_phase_case(
         tmp_path / "liquid",
-        "tests.phase_map_stub:lookup_phase_liquid",
+        "tests.fixtures.phase_map_stub:lookup_phase_liquid",
         extra_overrides=[
             "phase.allow_liquid_hkl=false",
             "sinks.sub_params.enable_liquid_branch=false",
@@ -73,7 +73,7 @@ def test_liquid_phase_blocks_sublimation(tmp_path: Path) -> None:
 
 
 def test_solid_phase_uses_raw_sublimation(tmp_path: Path) -> None:
-    row, diag_df = _run_phase_case(tmp_path / "solid", "tests.phase_map_stub:lookup_phase_solid")
+    row, diag_df = _run_phase_case(tmp_path / "solid", "tests.fixtures.phase_map_stub:lookup_phase_solid")
     assert row["phase_bulk_state"] == "solid_dominated"
     assert row["ds_dt_sublimation_raw"] == pytest.approx(row["ds_dt_sublimation"])
     assert row["ds_dt_sublimation_raw"] < 0.0
@@ -99,7 +99,7 @@ def test_liquid_phase_allows_hkl_when_enabled(tmp_path: Path) -> None:
     ]
     row, diag_df = _run_phase_case(
         tmp_path / "liquid_hkl",
-        "tests.phase_map_stub:lookup_phase_liquid",
+        "tests.fixtures.phase_map_stub:lookup_phase_liquid",
         extra_overrides=extra,
     )
     assert row["phase_bulk_state"] == "liquid_dominated"
