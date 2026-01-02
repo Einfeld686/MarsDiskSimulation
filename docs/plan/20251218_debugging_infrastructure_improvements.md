@@ -1,6 +1,7 @@
 # デバッグ基盤改善計画
 
 > **作成日**: 2025-12-18  
+> **ステータス**: 計画  
 > **関連**: [20251217_code_improvements_followup.md](docs/plan/20251217_code_improvements_followup.md)（主に完了済み）
 
 ---

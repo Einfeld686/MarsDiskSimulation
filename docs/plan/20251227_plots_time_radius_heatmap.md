@@ -89,8 +89,8 @@
 - [x] `scripts/plots/plot_time_radius_heatmap.py` を新設  
   - `--run-dir` / `--metrics` / `--out` / `--time-stride` / `--radius-stride`
   - 1D を既定として設計
-- [ ] 既存 `plot_*` は **legacy** として残置し、README に 1D/0D 対応を明記
-- [ ] `plot_from_runs.py` は 1D 既定の panels を呼ぶフロントに再構成
+- [x] 既存 `plot_*` は **legacy** として残置し、README に 1D/0D 対応を明記
+- [x] `plot_from_runs.py` は 1D 既定の panels を呼ぶフロントに再構成
 
 ## 受け入れ基準
 - すべての plot が **時間 [yr]** と **r/R_Mars** の軸を持つ。

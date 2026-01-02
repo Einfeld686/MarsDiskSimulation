@@ -1,8 +1,10 @@
 # シミュレーションコードの保守性分析レポート
 
+ステータス: 調査完了・提案
+
 本レポートは、`marsdisk/` パッケージの保守性に関する問題点を網羅的に調査した結果をまとめたものです。
 
-スナップショット: 2026-01-02 11:12 (commit 138449df8, branch=main, dirty=true, TZ=JST)
+スナップショット: 2026-01-02 20:38 (commit f056463fa, branch=main, dirty=true, TZ=JST)
 
 計測ルール（固定）:
 - 行数は `def` 開始〜次の `def` 直前までを1関数として数える
@@ -28,8 +30,8 @@
 
 | ファイル | 関数名 | 行数 | 問題 |
 |---------|-------|------|------|
-| `run_zero_d.py` | `run_zero_d()` | **4,884行** (L505–L5388) | 1つの関数が5000行近く。テスト・デバッグ・拡張が極めて困難 |
-| `run_one_d.py` | `run_one_d()` | **2,714行** (L242–L2955) | 同様にモノリシック |
+| `run_zero_d.py` | `run_zero_d()` | **4,669行** (L843–L5511) | 1つの関数が5000行近く。テスト・デバッグ・拡張が極めて困難 |
+| `run_one_d.py` | `run_one_d()` | **2,741行** (L214–L2954) | 同様にモノリシック |
 
 > [!CAUTION]
 > これらの関数は循環的複雑度（Cyclomatic Complexity）が非常に高い可能性があるため、次回スナップショットで `radon cc` 等により計測を行う。
@@ -104,7 +106,7 @@ marsdisk/orchestrator.py:67  → 50_000_000
 
 | ファイル | 行数 | クラス数 | 問題 |
 |---------|------|---------|------|
-| `schema.py` | 2,223行 | 60クラス | 単一ファイルに全設定モデルが集中 |
+| `schema.py` | 2,268行 | 61クラス | 単一ファイルに全設定モデルが集中 |
 
 **推奨対策:**
 - ドメインごとにスキーマを分割（例: `schema/supply.py`, `schema/physics.py`, `schema/io.py`）
@@ -115,7 +117,7 @@ marsdisk/orchestrator.py:67  → 50_000_000
 
 ### 5. 非推奨（Deprecated）APIの蓄積
 
-deprecated 指摘は 45 件でした（`rg -n "deprecated" marsdisk | wc -l`）:
+deprecated 指摘は 25 件でした（`rg -n "deprecated" marsdisk | wc -l`）:
 
 #### schema.py内の deprecated 項目
 - `temps.T_M` → `radiation.TM_K` へ移行推奨（L583-586）
@@ -153,11 +155,11 @@ deprecated 指摘は 45 件でした（`rg -n "deprecated" marsdisk | wc -l`）:
 
 | ファイル | 行数 | コメント |
 |---------|------|---------|
-| `collisions_smol.py` | 1,537行 | キャッシュ管理と衝突計算の分離を検討 |
+| `collisions_smol.py` | 1,528行 | キャッシュ管理と衝突計算の分離を検討 |
 | `sublimation.py` | 733行 | 適正範囲内 |
 | `tempdriver.py` | 606行 | 適正範囲内 |
 | `supply.py` | 546行 | 適正範囲内 |
-| `psd.py` | 665行 | 適正範囲内 |
+| `psd.py` | 663行 | 適正範囲内 |
 
 ---
 
@@ -167,7 +169,7 @@ deprecated 指摘は 45 件でした（`rg -n "deprecated" marsdisk | wc -l`）:
 ```
 tests/
 ├── integration/  (164ファイル)
-├── unit/         (61ファイル)
+├── unit/         (67ファイル)
 ├── research/     (6ファイル)
 ├── legacy/       (2ファイル)
 └── conftest.py
@@ -215,6 +217,25 @@ tests/
 - `schema.py` 分割後も JSON schema の一致を確認し、再エクスポートで import 互換を維持する
 - `radon`/`jscpd` は初回は非ブロックで導入し、基準値を記録してから閾値を調整する
 
+run_zero_d 分割手順（フェーズ抽出）:
+- 既存の軽量回帰ベースライン（`configs/maintainability_regression.yml`）で `summary.json` 主要キーを固定し、比較元を確定する
+- `run_zero_d` のフェーズ境界を棚卸し（設定解決/初期化/ループ内1ステップ/出力集計/後処理）し、抽出対象を明示する
+- 抽出関数の入出力（context/state）を最小化して固定し、`ZeroDHistory`/`StreamingState` を再利用してデータ契約を維持する
+- まず副作用の少ない初期化フェーズから関数化し、`run_zero_d` は orchestration に寄せる
+- 各フェーズ抽出ごとに軽量回帰を実行し、主要キー一致を確認してから次の抽出に進む
+- 最終的に `summary.json`/`run_card.md`/`series` の互換性を再確認し、必要ならチェック項目を追加する
+
+run_zero_d フェーズ境界（タスク化）:
+- [x] 設定解決と実行前準備: config source/outdir、run_config の pre_run、physics_mode/スコープ解決、qstar 設定、放射キャッシュ初期化（`[stage] config_resolved`）
+- [x] 力学初期条件: 参照半径・Ω・t_orb、e/i の再評価とサンプリング、e/i mode の分岐
+- [x] 放射/温度ドライバ準備: Q_pr テーブル解決、温度テーブル自動生成、温度ドライバ確定（`[stage] temperature_driver_ready`）
+- [x] 遮蔽/位相/昇華セットアップ: shielding/LOS/phi、SublimationParams、phase evaluator、tau gate 設定
+- [x] PSD 初期化: s_min/a_blow 計算、PSD 状態生成、初期質量分配（`[stage] psd_init`）
+- [x] 供給/輸送初期化: supply spec/runtime state、reservoir/feedback/transport の初期化（`[stage] supply_ready`）
+- [x] 数値時間グリッド準備: dt/n_steps 決定、StreamingState/History/Progress 初期化（`[stage] time_grid_ready`）
+- [x] 時間発展ループ: 放射・位相・昇華・供給・衝突/表層の更新、質量収支/診断、ストリーミング flush
+- [x] 後処理/出力: ストリーミング merge、rollup 補完、summary/run_card/energy/mass_budget 出力、アーカイブ
+
 計測値（初回）:
 - 計測コマンド: `python -m tools.maintainability_metrics`
 - jscpd: duplication 4.1%（33361/813687 lines, ignore: .venv と tmp_debug/agent_test（out 配下））
@@ -228,7 +249,14 @@ tests/
 - [x] 0D/1D 共通ロジックの候補を棚卸しし、受入条件（責務境界）に沿って抽出する
 - [x] deprecation スケジュールと移行ガイドを整備し、期限超過の削除まで完了する
 - [x] 回帰検出用の軽量設定 `configs/maintainability_regression.yml` を追加する
-- [ ] baseline 回帰検出（`configs/maintainability_regression.yml` の `summary.json` 主要キー一致）を実行し、`run_zero_d` の分割前後で結果が一致することを確認する
+- [x] baseline 回帰検出（`configs/maintainability_regression.yml` の `summary.json` 主要キー一致）を実行し、`run_zero_d` の分割前後で結果が一致することを確認する
+  - 実行: `out/20260102-1914_maint_regression__f056463fa__seed0`（IO_STREAMING=off、`M_loss=1.2889e-08`, `case_status=ok`, `mass_budget_max_error_percent=3.69e-14`）
+  - 実行: `out/20260102-2354_maint_regression__f056463fa__seed0`（IO_STREAMING=off、series/diagnostics は既存オフ基準と一致）
+  - 実行: `out/20260103-0017_maint_regression__f056463fa__seed0`（IO_STREAMING=off、summary の差分は streaming のみ、series/diagnostics は既存オフ基準と一致）
+- [x] ストリーミング回帰の基準受理: `out/20260102-2241_maint_regression_stream__f056463fa__seed0` を基準結果として扱う合意を記録する
+  - 実行: `out/20260102-2355_maint_regression_stream__f056463fa__seed0`（IO_STREAMING=on、summary 主要キー一致）
+  - series/diagnostics: `out/20260102-1914_maint_regression__f056463fa__seed0` と比較して差分なし
+  - 実行: `out/20260103-0017_maint_regression_stream__f056463fa__seed0`（IO_STREAMING=on、summary/series/diagnostics は既存オフ基準と一致）
 - [ ] `run_one_d` をフェーズ単位で分割し、回帰検出を通す
 - [ ] `schema.py` を分割し、再エクスポート互換と JSON schema 一致を確認する
 - [ ] `collisions_smol.py` を分割し、キャッシュ管理と衝突計算を分離する
@@ -239,19 +267,19 @@ tests/
 
 ```
 marsdisk/
-├── run_zero_d.py      261,406 bytes (5,548 lines) ⚠️
-├── run_one_d.py       151,555 bytes (2,955 lines) ⚠️
-├── schema.py           82,179 bytes (2,223 lines) ⚠️
+├── run_zero_d.py      266,196 bytes (5,673 lines) ⚠️
+├── run_one_d.py       152,690 bytes (2,957 lines) ⚠️
+├── schema.py           83,703 bytes (2,268 lines) ⚠️
 ├── physics/
-│   ├── collisions_smol.py  56,189 bytes (1,537 lines)
+│   ├── collisions_smol.py  56,067 bytes (1,528 lines)
 │   ├── sublimation.py      28,204 bytes (733 lines)
-│   ├── psd.py              23,697 bytes (665 lines)
-│   ├── supply.py           22,329 bytes (546 lines)
+│   ├── psd.py              23,725 bytes (663 lines)
+│   ├── supply.py           22,335 bytes (546 lines)
 │   └── ...
-├── orchestrator.py     19,974 bytes (601 lines)
+├── orchestrator.py     19,989 bytes (601 lines)
 ├── io/
 │   ├── writer.py       31,357 bytes (580 lines)
 │   ├── archive.py      22,351 bytes (663 lines)
 │   └── ...
-└── constants.py         1,474 bytes (51 lines)
+└── constants.py         1,766 bytes (61 lines)
 ```

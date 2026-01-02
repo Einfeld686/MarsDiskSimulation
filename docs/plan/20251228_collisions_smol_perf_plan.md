@@ -169,4 +169,4 @@
 - [x] Q_D* 行列キャッシュ（scalar v_rel）
 - [x] `_gain_tensor` の前計算ワークスペース
 - [x] 供給分配重みのキャッシュ
-- [ ] 追加テストと cProfile 再測定
+- [x] 追加テストと cProfile 再測定
