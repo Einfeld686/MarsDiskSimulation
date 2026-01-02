@@ -106,9 +106,9 @@ Known tags presently include `Hyodo2018_ApJ860_150`, `StrubbeChiang2006_ApJ648_6
 
 ## Resolved items (2025-12-15 update - τ_LOS=1 initialization)
 
-7. **`init_tau1_los_default_v1`** — `tau_field` デフォルトを `vertical` から `los` に変更。init_tau1, phase, supply_feedback の全箇所で統一。[schema.py, run.py, supply.py]
+7. **`init_tau1_los_default_v1`** — `tau_field` デフォルトを `vertical` から `los` に変更。init_tau1, phase, supply_feedback の全箇所で統一。[schema.py, run_zero_d.py, supply.py]
 8. **`inner_disk_mass_null_override_v1`** — `run_temp_supply_sweep.sh` で `inner_disk_mass=null` を追加し、init_tau1 のみで σ_surf を決定するよう修正。[run_temp_supply_sweep.sh L338]
-9. **`kappa_consistency_init_tau1_v1`** — inner_disk_mass=null 時の κ 不整合を修正：shielding.effective_kappa を削除し、raw kappa_surf を使用。これにより τ_initial = κ×σ = 1.0 が正しく達成される。[run.py L1677-1679]
+9. **`kappa_consistency_init_tau1_v1`** — inner_disk_mass=null 時の κ 不整合を修正：shielding.effective_kappa を削除し、raw kappa_surf を使用。これにより τ_initial = κ×σ = 1.0 が正しく達成される。[run_zero_d.py]
 
 ## Resolved items (2025-12-15 update)
 

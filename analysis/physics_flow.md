@@ -1,6 +1,12 @@
 # 物理計算フローのシーケンス図
 
 > **文書種別**: リファレンス（Diátaxis: Reference）
+> **自動生成**: このドキュメントは `tools/make_physics_flow.py` により自動生成されます。
+> 手動編集しないでください。
+> **情報源**:
+> - run.py セクション表: `analysis/run_py_sections.md`
+> - schema 参照: `marsdisk/schema.py`
+> - dataflow 参照: `analysis/overview.md`
 
 本ドキュメントは火星ダスト円盤シミュレーションの物理計算フローを Mermaid 図で可視化し、
 モジュール間の依存関係と計算順序を明確化します。
@@ -397,7 +403,7 @@ flowchart TB
 ```mermaid
 graph TD
     subgraph CLI
-        RUN[run.py]
+        RUN[run_zero_d.py]
     end
     
     subgraph PHYSICS["physics/"]

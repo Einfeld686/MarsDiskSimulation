@@ -1,25 +1,25 @@
 {
   "function_reference_rate": {
-    "numerator": 112,
-    "denominator": 135,
-    "rate": 0.8296296296296296
+    "numerator": 110,
+    "denominator": 140,
+    "rate": 0.7857142857142857
   },
   "anchor_consistency_rate": {
-    "numerator": 713,
-    "denominator": 713,
+    "numerator": 705,
+    "denominator": 705,
     "rate": 1.0
   },
   "equation_unit_coverage": {
-    "numerator": 41,
-    "denominator": 43,
-    "rate": 0.9534883720930233
+    "numerator": 35,
+    "denominator": 37,
+    "rate": 0.9459459459459459
   },
   "sinks_callgraph_documented": true,
   "readme_sync": {
-    "in_sync": false,
+    "in_sync": true,
     "block_count": 6,
     "unknown_blocks": [],
-    "detail": "out of sync"
+    "detail": "in sync"
   },
   "holes": [
     "marsdisk/io/_numba_tables.py#NUMBA_AVAILABLE",

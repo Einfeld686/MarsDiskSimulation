@@ -41,9 +41,9 @@
 - 1行のヒートマップを作るには **時間方向のダウンサンプリング必須**（全時刻×32セルで 1600万点超）。
 
 反映すべき改善:
-- [ ] **time binning** を既定にする（例: `max_time_bins=2000`）。
-- [ ] r方向は 32セルなので既定は **stride=1**（全セル）。
-- [ ] 計算は `pyarrow.dataset` でバッチ読み込みし、2D グリッドへ集約（mean/median）。
+- [x] **time binning** を既定にする（例: `max_time_bins=2000`）。
+- [x] r方向は 32セルなので既定は **stride=1**（全セル）。
+- [x] 計算は `pyarrow.dataset` でバッチ読み込みし、2D グリッドへ集約（mean/median）。
 
 ## 代表パラメータ（初期セット）
 ※ headroom は除外。
@@ -86,7 +86,7 @@
   1図あたり最大6パネル（2×3）。超過時は自動分割で複数ページにする。
 
 ## 実装案（スクリプト構成）
-- [ ] `scripts/plots/plot_time_radius_heatmap.py` を新設  
+- [x] `scripts/plots/plot_time_radius_heatmap.py` を新設  
   - `--run-dir` / `--metrics` / `--out` / `--time-stride` / `--radius-stride`
   - 1D を既定として設計
 - [ ] 既存 `plot_*` は **legacy** として残置し、README に 1D/0D 対応を明記

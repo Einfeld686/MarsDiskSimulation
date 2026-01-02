@@ -317,7 +317,7 @@
 - [x] 1D: `out/<run_id>/series/run.parquet` に `e_value`（セルごとの適用値）を追加する。
 - [x] `out/<run_id>/run_config.json` の `init_ei` に以下を記録する: `e_profile_mode`, `e_profile_r_kind`, `e_profile_table_path`, `e_profile_formula`（`mars_pericenter` 時のみ）, `e_profile_applied`
 - [x] テスト: テーブル補間の一致、0D で `e_profile` が `e0` を置換、1D でセルごとに `e_kernel_base` が変わることを確認。
-- [ ] ドキュメント: `analysis/overview.md` と `analysis/run-recipes.md` に設定例を追加（本変更実装後に更新）。
+- [x] ドキュメント: `analysis/overview.md` と `analysis/run-recipes.md` に設定例を追加（本変更実装後に更新）。
 
 ### gas-poor 前提・火星円盤背景
 | Key | 文献 | DOI | 主な関係先 |

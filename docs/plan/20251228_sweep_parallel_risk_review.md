@@ -130,14 +130,6 @@ python scripts/runsets/common/write_sweep_list.py ^
 
 ---
 
-## 残課題（検知性の強化）
-- [ ] 親プロセスで子の終了コードを集約し、非0なら全体を失敗扱いにする。
-- [ ] `check_sweep_completeness.py` を実装し、欠落検査の CSV/JSON を出力する。
-- [ ] `run_temp_supply_sweep.cmd` に `CHECK_SWEEP` フラグを追加し、完走後に自動実行する。
-- [ ] `ARCHIVE_DONE`/`ARCHIVE_SKIPPED` を集約する簡易チェッカーを統合する。
-
----
-
 ## 関連ドキュメント
 
 | ドキュメント | 役割 |

@@ -1,6 +1,6 @@
 # GEMINI.md
 
-本ファイルの内容は AGENTS.md に統合しました。最新の指示・完了条件・DocSyncAgent 手順は必ず `AGENTS.md` を参照してください（作業前に `analysis/AI_USAGE.md` を読むことも同じく必須です）。
+本ファイルの内容は AGENTS.md に統合しました。最新の指示・完了条件・DocSyncAgent 手順は必ず `AGENTS.md` を参照してください（作業前に `analysis/AI_USAGE.md` を読むことも同じく必須です）。出力は日本語で行ってください。
 
 - 追加の更新や修正は AGENTS.md 側で行い、本 stub には詳細を書かないでください。
 - 参照先の移動やポインタ変更が必要な場合のみ、このファイルを更新します。

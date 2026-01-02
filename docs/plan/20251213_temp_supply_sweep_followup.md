@@ -5,6 +5,9 @@
 
 ---
 
+> [!WARNING]
+> 非推奨/legacy: 現行の外部供給デフォルトは `docs/plan/20251220_optical_depth_external_supply_impl_plan.md` の optical_depth + tau_stop 方式で、headroom クリップや `init_tau1.scale_to_tau1` 前提の運用はベースラインに適用しない。比較試験に限定する。
+
 ## 現状（スクリプト実装）
 - `scripts/research/run_temp_supply_sweep.sh` は temp_supply スイープを回すバッチスクリプト。  
   - 供給: `supply.mode=const` を前提に `supply.enabled=true`, `supply.const.prod_area_rate_kg_m2_s=${SUPPLY_RATE}`, `supply.mixing.epsilon_mix=${MU}` を override。  
@@ -116,7 +119,7 @@ python scripts/research/evaluate_tau_supply.py \
 - [x] ログに実効供給・遮蔽モード・Στ=1 採用値を出力
 
 ### 検証
-- [ ] auto + scale_to_tau1 で headroom>0 となることを確認（prod_subblow>0）
+- [x] auto + scale_to_tau1 で headroom>0 となることを確認（prod_subblow>0）
 - [ ] 成功判定（τ中央値 0.5–2、供給維持≥90%）を満たすケースが存在
 - [x] auto_max 使用時は「デバッグ専用」の警告ログが出力される
 

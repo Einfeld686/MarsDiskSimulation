@@ -98,13 +98,13 @@
 - [x] **整合性検証**: アーカイブ後に `out/<run_id>/run_card.md` へ `archive_path` と `manifest_hash` を記録。
 
 # テスト計画
-- [ ] 単体: `archive.py` の copy/move/verify を小規模ディレクトリで検証。
-- [ ] 結合: streaming ON の短尺 run を実行し、アーカイブ後に外部HDD側で `out/<run_id>/summary.json`/`out/<run_id>/checks/mass_budget.csv`/`series` が揃うことを確認。
-- [ ] 二重持ち回避: `merge_target=external` でローカルに統合Parquetが残らないことを検証。
-- [ ] 失敗時: 外部パスが存在しない場合に `ARCHIVE_SKIPPED` が生成され、ローカルにデータが残ることを確認。
+- [x] 単体: `archive.py` の copy/move/verify を小規模ディレクトリで検証（ローカル一時ディレクトリで実施）。
+- [x] 結合: streaming ON の短尺 run を実行し、アーカイブ後に外部HDD側で `out/<run_id>/summary.json`/`out/<run_id>/checks/mass_budget.csv`/`series` が揃うことを確認（ローカルアーカイブ先で検証）。
+- [x] 二重持ち回避: `merge_target=external` でローカルに統合Parquetが残らないことを検証（短尺 run で確認）。
+- [x] 失敗時: 外部パスが存在しない場合に `ARCHIVE_SKIPPED` が生成され、ローカルにデータが残ることを確認（短尺 run で確認）。
 - [x] 設定検証: `io.archive.enabled=true` かつ `io.archive.dir` 未指定で設定エラーになることを確認。
 
 # 完了条件（案）
-- [ ] パターン実行後、最終フェーズで自動アーカイブが走り、外部HDDにフルセットが移行される。
-- [ ] ローカル側は `keep_local` 設定に従って最小化され、内部SSDの占有が抑制される。
-- [ ] 外部未接続/失敗時に安全にローカル保持へフォールバックする。
+- [x] パターン実行後、最終フェーズで自動アーカイブが走り、外部HDDにフルセットが移行される（短尺 run でフローを確認）。
+- [x] ローカル側は `keep_local` 設定に従って最小化され、内部SSDの占有が抑制される（keep_local=metadata で確認）。
+- [x] 外部未接続/失敗時に安全にローカル保持へフォールバックする（`ARCHIVE_SKIPPED` で確認）。

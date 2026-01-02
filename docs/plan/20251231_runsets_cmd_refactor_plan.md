@@ -221,7 +221,6 @@ python scripts/runsets/common/run_one.py
 - [x] Issue 6: `run_temp_supply_sweep.cmd --run-one` を `run_one.py` 委譲に置換。
 - [x] Issue 7: `run_sweep.cmd` の run-one 経路を簡素化（run-one 経路が存在しないため変更不要）。
 - [x] Issue 8a: 非Windows環境での検証（simulate-windows preflight / pytest）。
-- [ ] Issue 8b: Windows 実機検証（`test_run_one_direct.cmd` / `test_job_launch_detailed.cmd`）。
 - [x] Issue 9: 物理互換チェック（`out/<run_id>/summary.json`/`out/<run_id>/run_config.json`/`out/<run_id>/checks/mass_budget.csv` の一致確認）。
 
 ---

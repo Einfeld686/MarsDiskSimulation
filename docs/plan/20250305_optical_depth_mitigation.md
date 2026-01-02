@@ -5,6 +5,9 @@
 
 ---
 
+> [!WARNING]
+> 非推奨/legacy: 現行の外部供給デフォルトは `docs/plan/20251220_optical_depth_external_supply_impl_plan.md` の optical_depth + tau_stop 方式で、headroom/spill/feedback/deep_mixing 前提の調整はベースラインには適用しない。必要なら比較試験に限定する。
+
 ## 本プロジェクト・ドキュメントについて
 
 ### プロジェクト概要

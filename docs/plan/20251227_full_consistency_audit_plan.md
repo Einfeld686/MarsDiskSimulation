@@ -86,9 +86,9 @@
 
 ## 7. 不一致発見時の対応（実装タスク）
 - [x] `20251227_spec_impl_literature_map.md` の「問題点・ギャップ」へ記録
-- [ ] 仕様修正 or 実装修正の方針を明記し、該当箇所を修正
-- [ ] 必要なテストを追加/更新
-- [ ] `analysis/` 更新時は DocSyncAgent → analysis-doc-tests → evaluation_system を実行
+- [x] 仕様修正 or 実装修正の方針を明記し、該当箇所を修正（不一致なしのため修正不要と記録）
+- [x] 必要なテストを追加/更新（既存テストでカバー済み）
+- [x] `analysis/` 更新時は DocSyncAgent → analysis-doc-tests → evaluation_system を実行
 
 ## 8. リスクと緩和
 - **定義差の見落とし**: 状態量（数密度/質量密度）・正規化条件まで確認する

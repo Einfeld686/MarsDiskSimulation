@@ -111,8 +111,8 @@ python -m cProfile -o profile.out -m marsdisk.run \
 - [x] `qpr_interp_array_numba` の追加と `qpr_lookup_array` への導入
 - [x] `blowout_radius_numba` の追加と `blowout_radius` への導入
 - [x] Numba 経路の一致テスト追加（`qpr_lookup_array` / `blowout_radius`）
-- [ ] `profile.out` を再計測して効果を確認
-- [ ] 実装完了後に既存プランのチェックボックスを更新
+- [x] `profile.out` を再計測して効果を確認
+- [x] 実装完了後に既存プランのチェックボックスを更新
 
 ---
 

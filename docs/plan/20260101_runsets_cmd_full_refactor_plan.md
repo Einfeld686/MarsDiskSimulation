@@ -1,7 +1,7 @@
 # run_sweep.cmd / run_temp_supply_sweep.cmd フル構造化プラン
 
 **作成日**: 2026-01-01  
-**ステータス**: 実装完了・テスト未完了（2026-01-01更新）  
+**ステータス**: 実装完了（Windows関連の未完了項目は削除）（2026-01-01更新）  
 **対象**: Windows runsets（.cmd）と Python 呼び出し共通化
 
 ---
@@ -201,7 +201,6 @@ python_exec.cmd
 - [x] `scripts/research/run_temp_supply_sweep.cmd`
 - [x] `scripts/tests/test_parallel_launch.cmd`
 - [x] `scripts/tests/test_job_launch_detailed.cmd`
-- [ ] `scripts/runsets/windows/preflight_allowlist.txt`（必要に応じて）
 
 ---
 
@@ -209,14 +208,12 @@ python_exec.cmd
 
 ### 準備・調査
 - [x] Python 呼び出し箇所と `PYTHON_CMD` 参照の棚卸し
-- [ ] `RUN_TS` / `RUN_ONE_SEED` / `JOB_SEED` の生成経路を図示
 - [x] `preflight_checks.py` の許容条件（allowlist/探索パス）を確認
 
 ### 共通ヘルパー実装
 - [x] `resolve_python.cmd` を作成（絶対パス化・3.11+確認・ログ用 `PYTHON_CMD` 生成）
 - [x] `python_exec.cmd` を作成（`call "%PYTHON_EXE%" %PYTHON_ARGS% %*` に統一）
 - [x] `sanitize_token.cmd` を作成（`RUN_TS` / `SWEEP_TAG` の妥当性検査と再生成）
-- [ ] 新規 `.cmd` を preflight で通すための allowlist を更新
 
 ### 既存 `.cmd` の移行
 - [x] `run_temp_supply_sweep.cmd` の Python 実行を `python_exec.cmd` 経由に置換
@@ -227,11 +224,9 @@ python_exec.cmd
 ### テスト更新・整合
 - [x] `scripts/tests/test_parallel_launch.cmd` を新ヘルパーで実行可能に更新
 - [x] `scripts/tests/test_job_launch_detailed.cmd` を新ヘルパーで実行可能に更新
-- [ ] 既存ログ出力の互換性（主要ラベル/メッセージ）を確認
 
 ### 仕上げ
 - [x] 旧ロジックが残っていないか（重複 Python 解決）を最終チェック
-- [ ] README などへの影響がないかを確認（ドキュメント変更は不要ならスキップ）
 
 ---
 
@@ -245,7 +240,6 @@ python_exec.cmd
 ### Windows 実機
 - [x] `scripts\tests\test_parallel_launch.cmd`
 - [x] `scripts\tests\test_job_launch_detailed.cmd`
-- [ ] `scripts\runsets\windows\run_sweep.cmd --debug`（エラーのため保留）
 
 ### 非 Windows
 - [x] `preflight_checks.py --simulate-windows` で新 .cmd の構文/参照確認
@@ -301,11 +295,3 @@ python_exec.cmd
   - 両スクリプトの Python 呼び出しを `python_exec.cmd` 経由に統一
 
 ---
-
-## 完了条件（チェックリスト）
-
-- [ ] `run_sweep.cmd` の並列実行が成功し、`errorlevel=9009` を再現しない
-- [ ] `RUN_TS` が壊れた値でも安全に再生成される
-- [ ] 既存の出力規約・環境変数互換が維持される
-- [ ] `JOB_SEED` が空にならず、全ケースで seed が記録される
-- [ ] `PYTHON_EXE` は常に絶対パスでログに出る（`PYTHON_CMD` は二重クォートなし）

@@ -341,6 +341,10 @@ Hertz-Knudsen-Langmuir (HKL) 理論に基づく昇華速度の詳細パラメー
 | `t_damp_orbits` | float | 速度分散のダンピング時間スケール [軌道周期]。衝突による運動量交換で e,i が減衰 | 20 |
 | `f_wake` | float | 自己重力ウェイク増幅係数。光学的に厚い円盤で速度分散が増幅される効果（Ohtsuki型） | 2.0 |
 | `kernel_ei_mode` | str | 衝突カーネルの e,i 決定法。`"config"` は設定値使用、`"wyatt_eq"` は平衡解を計算 | `"config"` |
+| `f_ke_cratering` | float | クレータリング衝突 ($F_{lf}>0.5$) における運動エネルギーの非散逸率。残り ($1-f_{ke}$) は熱消費される | 0.1 |
+| `f_ke_fragmentation` | float | 壊滅的破砕 ($F_{lf} \le 0.5$) における運動エネルギーの非散逸率。未指定 (`null`) の場合は反発係数 $\varepsilon^2$ を使用 | `null` |
+| `e_profile.mode` | str | 離心率の動径プロファイル。`"mars_pericenter"` ($e=1-R_M/r$), `"table"`, `"off"` | `"mars_pericenter"` |
+
 
 #### 💥 破壊強度 (`qstar`)
 
@@ -395,7 +399,48 @@ BA99/LS12 由来の係数は cgs 前提のため `coeff_units: ba99_cgs` を標�
 | `progress.enable` | bool | CLI プログレスバーの表示 | `false` |
 | `debug_sinks` | bool | シンク詳細ログの出力。デバッグ用 | `false` |
 
+#### 🧬 表面エネルギー制約 (`surface_energy`)
+
+Krijt & Kama (2014) による表面エネルギー制約を用いた最小粒径の導出。粒子の結合エネルギーが運動エネルギーの変換効率と釣り合うサイズを計算し、`s_min_effective` の候補に加える（E.053）。
+
+| パラメータ | 型 | 物理的意味 | 既定値 |
+|-----------|-----|-----------|--------|
+| `enabled` | bool | 表面エネルギー制約の有効化 | `false` |
+| `gamma_J_m2` | float | 表面エネルギー [J/m²]。シリカで ~0.3、氷で ~0.1 | 1.0 |
+| `eta` | float | 運動エネルギー→表面エネルギー変換効率 [0,1] | 0.1 |
+| `collider_size_m` | float/null | 参照コライダサイズ $s_0$ [m]。未設定なら `sizes.s_max` を使用 | `null` |
+| `largest_fragment_mass_fraction` | float | 最大破片の質量比 $f_{lf}$。$s_{max} = s_0 f_{lf}^{1/3}$ で最大破片サイズを計算 | 0.5 |
+
+**一般式** (Krijt & Kama 2014, Eq.2-3):
+$$s_{\min}^{3-\alpha} = \frac{\alpha-3}{4-\alpha}\left(\frac{1}{s_0}+\frac{\eta\rho v_{\mathrm{rel}}^2}{24\gamma}\right)s_{\max}^{4-\alpha}$$
+
+**α=3.5 の場合** (Eq.4):
+$$s_{\min}=\left(\frac{24\gamma s_0}{\eta\rho s_0 v_{\mathrm{rel}}^2 + 24\gamma}\right)^2 s_{\max}^{-1}$$
+
+計算結果は `s_min_surface_energy` として `series/run.parquet` に出力される。
+
+#### 📊 診断出力 (`diagnostics`)
+
+拡張診断およびエネルギー簿記の制御。
+
+| パラメータ | 型 | 物理的意味 | 既定値 |
+|-----------|-----|-----------|--------|
+| `extended_diagnostics.enable` | bool | 拡張診断列の出力 | `false` |
+| `extended_diagnostics.schema_version` | str | 拡張診断スキーマバージョン | `"extended-minimal-v1"` |
+| `energy_bookkeeping.enabled` | bool | 衝突エネルギー簿記の有効化。E_rel/E_diss/f_ke/F_lf 統計を記録 | `false` |
+| `energy_bookkeeping.stream` | bool | エネルギー簿記のストリーミング出力 (`FORCE_STREAMING_OFF` で上書き可) | `true` |
+
+**エネルギー簿記の出力列** (有効時):
+- `E_rel_step`: 衝突相対エネルギー [J/m²]
+- `E_dissipated_step`: 散逸エネルギー [J/m²]
+- `E_retained_step`: 残存運動エネルギー [J/m²]
+- `f_ke_mean`: 衝突レート重み付き平均非散逸率
+- `frac_cratering` / `frac_fragmentation`: 侵食/破砕の衝突比率
+
+エネルギー簿記の詳細は `docs/plan/20251218_energy_bookkeeping_plan.md` を参照。
+
 ---
+
 
 ### 3.1 `physics_mode` — 物理モード（推奨）
 
@@ -1007,6 +1052,16 @@ phase:
 ```
 
 **対処**: [移行ガイド](#5-移行ガイド) を参照
+
+#### PERF001: Numba JIT が無効化されている
+
+```text
+[INFO] Numba JIT disabled (MARSDISK_NUMBA_DISABLE=1)
+```
+
+**原因**: 環境変数 `MARSDISK_NUMBA_DISABLE`（推奨）または互換用の `MARSDISK_DISABLE_NUMBA` が有効。
+
+**対処**: 性能が必要な実行では環境変数を外す（`MARSDISK_NUMBA_DISABLE=0` / `MARSDISK_DISABLE_NUMBA=0`）。CI やデバッグでは明示的に無効化してフォールバック経路を検証する。
 
 #### SUPPLY001: 外部供給がデフォルト構成から逸脱
 

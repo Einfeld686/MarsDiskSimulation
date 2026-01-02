@@ -162,11 +162,11 @@
 
 ## 実装タスク
 
-- [ ] `edges_version` の導入と更新（PSD 更新時）
-- [ ] weights_table のキャッシュ（edges_version + alpha）
-- [ ] `_FRAG_CACHE` キー軽量化（sizes_version/edges_version）
-- [ ] サイズ依存ワークスペースの thread-local 化
-- [ ] Q_D* 行列キャッシュ（scalar v_rel）
-- [ ] `_gain_tensor` の前計算ワークスペース
-- [ ] 供給分配重みのキャッシュ
+- [x] `edges_version` の導入と更新（PSD 更新時）
+- [x] weights_table のキャッシュ（edges_version + alpha）
+- [x] `_FRAG_CACHE` キー軽量化（sizes_version/edges_version）
+- [x] サイズ依存ワークスペースの thread-local 化
+- [x] Q_D* 行列キャッシュ（scalar v_rel）
+- [x] `_gain_tensor` の前計算ワークスペース
+- [x] 供給分配重みのキャッシュ
 - [ ] 追加テストと cProfile 再測定

@@ -1,10 +1,10 @@
-# run.py 内部セクション対応表
+# run_zero_d.py 内部セクション対応表
 
 > **文書種別**: リファレンス（Diátaxis: Reference）
 > **自動生成**: このドキュメントは `analysis/tools/make_run_sections.py` により自動生成されます。
 > 手動編集しないでください。
 
-本ドキュメントは `marsdisk/run.py` の内部構造をセクション別に分類し、
+本ドキュメントは `marsdisk/run_zero_d.py` の内部構造をセクション別に分類し、
 AIエージェントがコード検索を効率化するためのマップを提供します。
 
 ---
@@ -13,42 +13,50 @@ AIエージェントがコード検索を効率化するためのマップを提
 
 | シンボル | 行 | 種別 | 概要 |
 |---------|-----|------|------|
-| `SECONDS_PER_YEAR` | L66 | クラス | Module constant |
-| `MAX_STEPS` | L67 | クラス | Module constant |
-| `TAU_MIN` | L68 | クラス | Module constant |
-| `KAPPA_MIN` | L69 | クラス | Module constant |
-| `DEFAULT_SEED` | L70 | クラス | Module constant |
-| `MASS_BUDGET_TOLERANCE_PERCENT` | L71 | クラス | Module constant |
-| `SINK_REF_SIZE` | L72 | クラス | Module constant |
-| `FAST_BLOWOUT_RATIO_THRESHOLD` | L73 | クラス | Module constant |
-| `FAST_BLOWOUT_RATIO_STRICT` | L74 | クラス | Module constant |
-| `EXTENDED_DIAGNOSTICS_VERSION` | L75 | クラス | Module constant |
-| `TimeGridInfo` | L83 | クラス | Information about the simulation time grid. |
-| `SimulationState` | L114 | クラス | Mutable state variables during simulation. |
-| `PhysicsFlags` | L162 | クラス | Boolean flags controlling physics behavior. |
-| `OrchestrationContext` | L179 | クラス | Context object holding all simulation parameters a... |
-| `resolve_time_grid` | L210 | 関数 | Resolve (t_end, dt_nominal, dt_step, n_steps, info... |
-| `resolve_orbital_radius` | L313 | 関数 | Resolve orbital radius from configuration. |
-| `resolve_physics_flags` | L320 | 関数 | Resolve physics control flags from configuration. |
-| `derive_seed_components` | L412 | 関数 | Return a deterministic seed basis string from conf... |
-| `resolve_seed` | L439 | 関数 | Return the RNG seed, seed expression description, ... |
-| `human_bytes` | L454 | 関数 | Return a human-readable byte string. |
-| `memory_estimate` | L466 | 関数 | Return short and long memory hints estimated from ... |
-| `safe_float` | L536 | 関数 | Return value cast to float when finite, otherwise ... |
-| `human_bytes` | L558 | 関数 | Return a human-readable byte string. |
-| `series_stats` | L580 | 関数 | Compute min, median, max of a list of values. |
+| `SECONDS_PER_YEAR` | L94 | クラス | Module constant |
+| `MAX_STEPS` | L95 | クラス | Module constant |
+| `AUTO_MAX_MARGIN` | L96 | クラス | Module constant |
+| `TAU_MIN` | L97 | クラス | Module constant |
+| `KAPPA_MIN` | L98 | クラス | Module constant |
+| `DEFAULT_SEED` | L99 | クラス | Module constant |
+| `MASS_BUDGET_TOLERANCE_PERCENT` | L100 | クラス | Module constant |
+| `SINK_REF_SIZE` | L101 | クラス | Module constant |
+| `FAST_BLOWOUT_RATIO_THRESHOLD` | L102 | クラス | Module constant |
+| `FAST_BLOWOUT_RATIO_STRICT` | L103 | クラス | Module constant |
+| `EXTENDED_DIAGNOSTICS_VERSION` | L104 | クラス | Module constant |
+| `SmolSinkWorkspace` | L112 | クラス | No description available. |
+| `SupplyStepResult` | L122 | クラス | No description available. |
+| `SurfaceSupplyStepResult` | L131 | クラス | No description available. |
+| `_get_smol_sink_workspace` | L138 | ヘルパー | No description available. |
+| `_apply_supply_step` | L158 | ヘルパー | No description available. |
+| `_apply_shielding_and_supply` | L215 | ヘルパー | No description available. |
+| `_apply_blowout_correction` | L286 | ヘルパー | No description available. |
+| `_apply_blowout_gate` | L297 | ヘルパー | No description available. |
+| `_resolve_t_coll_step` | L310 | ヘルパー | No description available. |
+| `_reset_collision_runtime_state` | L337 | ヘルパー | Clear per-run collision caches and warning state. |
+| `_get_max_steps` | L344 | ヘルパー | Return MAX_STEPS, honoring overrides applied to th... |
+| `_log_stage` | L358 | ヘルパー | Emit coarse progress markers for debugging long ru... |
+| `_model_fields_set` | L364 | ヘルパー | Return explicitly-set fields for a Pydantic model ... |
+| `_surface_energy_floor` | L375 | ヘルパー | Return surface-energy-limited minimum size (Krijt ... |
+| `load_config` | L419 | 関数 | Load a YAML configuration file into a :class:`Conf... |
+| `_gather_git_info` | L444 | ヘルパー | Return basic git metadata for provenance recording... |
+| `MassBudgetViolationError` | L471 | クラス | Raised when the mass budget tolerance is exceeded. |
+| `run_zero_d` | L477 | メイン | Execute the full-feature zero-dimensional simulati... |
+| `main` | L5350 | 関数 | Command line entry point. |
 
 ## 3. 主要セクション（目安）
 
 > 以下の行範囲はコード変更により変動します。`inventory.json` を基に自動更新されます。
 
+- **`run_zero_d()`**: L477–? (メイン実行ドライバ)
+- **`main()`**: L5350–? (CLI エントリポイント)
 ## 4. 探索ガイド
 
 | 調べたいこと | 参照シンボル | 備考 |
 |-------------|-------------|------|
-| 設定ロード | `load_config` | YAML→Config変換 (未検出) |
-| 時間グリッド | [`resolve_time_grid`](L210) | dt, n_steps決定 |
-| シード解決 | [`resolve_seed`](L439) | RNG初期化 |
+| 設定ロード | [`load_config`](L419) | YAML→Config変換 |
+| 時間グリッド | `resolve_time_grid` | dt, n_steps決定 (未検出) |
+| シード解決 | `resolve_seed` | RNG初期化 (未検出) |
 | 高速ブローアウト補正 | `fast_blowout_correction_factor` | dt/t_blow補正 (未検出) |
 | 進捗表示 | `ProgressReporter` | プログレスバー (未検出) |
 | 履歴書き出し | `_write_zero_d_history` | Parquet/CSV出力 (未検出) |

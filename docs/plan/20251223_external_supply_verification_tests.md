@@ -45,8 +45,8 @@
 - 期待値: `prod_subblow_area_rate`/`supply_rate_nominal`/`supply_rate_scaled`/`supply_rate_applied` が全行ゼロ。
 
 ## 実装タスク
-- [ ] `tests/integration/test_external_supply_pipeline.py` を新規作成し、T1/T2 を追加。
-- [ ] テストは `collision_solver=smol` で統一し、`io.streaming.enable=false` を強制。
+- [x] `tests/integration/test_external_supply_pipeline.py` を新規作成し、T1/T2 を追加。
+- [x] テストは `collision_solver=smol` で統一し、`io.streaming.enable=false` を強制。
 
 ## 影響範囲
 - テスト追加のみ（実装コード変更なし）。

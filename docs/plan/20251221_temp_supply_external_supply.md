@@ -5,6 +5,9 @@
 
 ---
 
+> [!WARNING]
+> 非推奨/legacy: 現行の外部供給デフォルトは `docs/plan/20251220_optical_depth_external_supply_impl_plan.md` の optical_depth + tau_stop 方式で、headroom/feedback/transport/reservoir/temperature など旧系スイッチは非推奨。旧スイープ運用は比較試験に限定する。
+
 ## 背景と目的
 
 本スクリプトは**火星月形成円盤**モデルにおける**外部質量供給**のパラメータ感度試験を自動化します。巨大衝突後の円盤に外部から物質が供給される状況をシミュレートし、光学的厚さ $\tau$ が $\tau=1$ を超えないよう遮蔽条件を適用しながら時間発展を追跡します。

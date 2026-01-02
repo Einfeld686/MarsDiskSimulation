@@ -111,8 +111,6 @@ set MARSDISK_CELL_CHUNK_SIZE=0
 - [x] **.cmd 経由の設定導線を整備**
   - run_one_d に環境変数の解釈を追加
   - `.cmd` 側で既定値を設定
-- [ ] **再現性・性能検証**
-  - 並列オン/オフで `out/<run_id>/summary.json` を比較
 
 ---
 

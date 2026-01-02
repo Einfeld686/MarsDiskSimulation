@@ -4,11 +4,11 @@ Baseline thresholds: function reference rate ≥ 70%, anchor consistency rate = 
 
 | Metric | Value | Target |
 | --- | --- | --- |
-| Function reference rate | 83.0% (112/135) | ≥ 70% |
-| Anchor consistency rate | 100.0% (713/713) | = 100% |
-| Equation unit coverage | 95.3% (41/43) | — |
+| Function reference rate | 78.6% (110/140) | ≥ 70% |
+| Anchor consistency rate | 100.0% (705/705) | = 100% |
+| Equation unit coverage | 94.6% (35/37) | — |
 | Sinks callgraph documented | Yes | run→surface→sinks→sublimation |
-| README sync status | Out of sync | sync required |
+| README sync status | In sync | sync required |
 
 ## Top Coverage Gaps
 - marsdisk/io/_numba_tables.py#NUMBA_AVAILABLE

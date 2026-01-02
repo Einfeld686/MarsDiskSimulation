@@ -5,6 +5,9 @@
 
 ---
 
+> [!WARNING]
+> 非推奨/legacy: 現行の外部供給デフォルトは `docs/plan/20251220_optical_depth_external_supply_impl_plan.md` の optical_depth + tau_stop 方式で、headroom 系の再導入は物理的に不自然な挙動を招く可能性があるため、比較/回帰の参考に限定する。
+
 ## 本プロジェクト・ドキュメントについて
 
 ### プロジェクト概要
@@ -87,7 +90,7 @@ supply:
 - [x] spill モードで供給がゼロに貼り付かないこと
 - [x] $\Sigma_{\rm surf} \le \Sigma_{\tau=1}$ が常に維持されること
 - [x] spill 関連カラムが正値で記録されること
-- [ ] 質量収支が維持されること（spill 分を含めて誤差 < 0.5%）
+- [x] 質量収支が維持されること（spill 分を含めて誤差 < 0.5%）
 
 ---
 

@@ -199,7 +199,7 @@ nσv 型カーネル (E.024) を用い、相対速度は Rayleigh 分布 (E.020)
 
 ### 3.2 エネルギー簿記
 
-`diagnostics.energy_bookkeeping.enabled=true` で簿記モードを有効化し、`diagnostics.energy_bookkeeping.stream` が true かつ `FORCE_STREAMING_OFF` が未設定なら `series/energy.parquet`・`checks/energy_budget.csv` をストリーミングで書き出す（オフ時は最後にまとめて保存）。サマリには `energy_bookkeeping.{E_rel_total,E_dissipated_total,E_retained_total,f_ke_mean_last,f_ke_energy_last,frac_*_last}` が追加され、`run_card.md` にも同じ統計が残る。[marsdisk/run_zero_d.py:3996–4058]
+`diagnostics.energy_bookkeeping.enabled=true` で簿記モードを有効化し、`diagnostics.energy_bookkeeping.stream` が true かつ `FORCE_STREAMING_OFF` が未設定なら `series/energy.parquet`・`checks/energy_budget.csv` をストリーミングで書き出す（オフ時は最後にまとめて保存）。サマリには `energy_bookkeeping.{E_rel_total,E_dissipated_total,E_retained_total,f_ke_mean_last,f_ke_energy_last,frac_*_last}` が追加され、`run_card.md` にも同じ統計が残る。[marsdisk/run_zero_d.py]
 
 | 出力カラム | 意味 | 単位 |
 |-----------|------|------|
@@ -224,7 +224,7 @@ $$
 | `dynamics.f_ke_fragmentation` | 破砕時の非散逸率 | None（$\varepsilon^2$ 使用） |
 | `diagnostics.energy_bookkeeping.stream` | energy 系列/簿記をストリーム出力 | true（`FORCE_STREAMING_OFF` で無効化） |
 
-> **詳細**: docs/plan/collision_energy_conservation_requirements.md
+> **詳細**: analysis/equations.md (E.045a), (E.051), (E.052)
 
 ## 4. 放射圧・ブローアウト
 
@@ -232,7 +232,7 @@ $$
 
 - 外向流束は $t_{\rm blow}=1/\Omega$（E.006）を用い、`chi_blow` と `fast_blowout_factor` の補正状況を `dt_over_t_blow`・`fast_blowout_flag_gt3/gt10` とともに診断列へ出力する。
 
-> **詳細**: analysis/equations.md (E.012)–(E.014)  
+> **詳細**: analysis/equations.md (E.012)–(E.014), (E.039)  
 > **用語**: analysis/glossary.md G.A04 (β), G.A05 (s_blow)  
 > **設定**: analysis/config_guide.md §3.2 "Radiation"
 

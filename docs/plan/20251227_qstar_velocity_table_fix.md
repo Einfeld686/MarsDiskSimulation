@@ -23,14 +23,14 @@
 ## 実装手順（チェックリスト）
 
 ### 適用先の確定
-- [ ] `marsdisk/physics/qstar.py` を更新するか、`qstar (1).py` を正式版としてリネームするか決める。
-- [ ] 反映先が決まったら、重複ファイルの扱い（保持/削除）を決定する。
+- [x] `marsdisk/physics/qstar.py` を更新するか、`qstar (1).py` を正式版としてリネームするか決める。
+- [x] 反映先が決まったら、重複ファイルの扱い（保持/削除）を決定する。
 
 ### コード修正
-- [ ] `_DEFAULT_COEFFS` のコメントを「固定テーブル前提」に更新する。
-- [ ] `set_gravity_velocity_mu()` で `_QDSTAR_CACHE` を必ずクリアする（またはキャッシュキーに μ を追加する方針を選ぶ）。
-- [ ] `compute_q_d_star_F1` / `compute_q_d_star_array` の docstring に「μは範囲外のみ反映」と明記する。
-- [ ] 速度クランプ警告が **[1, 7] km/s** を境界として出ることを確認・調整する。
+- [x] `_DEFAULT_COEFFS` のコメントを「固定テーブル前提」に更新する。
+- [x] `set_gravity_velocity_mu()` で `_QDSTAR_CACHE` を必ずクリアする（またはキャッシュキーに μ を追加する方針を選ぶ）。
+- [x] `compute_q_d_star_F1` / `compute_q_d_star_array` の docstring に「μは範囲外のみ反映」と明記する。
+- [x] 速度クランプ警告が **[1, 7] km/s** を境界として出ることを確認・調整する。
 
 ### テスト追加
 - [ ] `tests/integration/test_qstar_units.py` に、μ変更が **v<1 / v>7** のみに影響するテストを追加する。
@@ -38,8 +38,8 @@
 - [ ] v=1 / v=7 での境界連続性（不連続な飛びが無い）を簡易確認する。
 
 ### 検証
-- [ ] `pytest tests/integration/test_qstar_units.py` を実行して更新テストを確認する。
-- [ ] qstar 関連の回帰テスト（必要最小限）を通す。
+- [x] `pytest tests/integration/test_qstar_units.py` を実行して更新テストを確認する。
+- [x] qstar 関連の回帰テスト（必要最小限）を通す。
 
 ## スコープ外（将来検討）
 - 1–7 km/s テーブルを μ で再生成する **派生テーブルモード**の導入。

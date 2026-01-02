@@ -5,6 +5,9 @@
 
 ---
 
+> [!WARNING]
+> 非推奨/legacy: 現行の外部供給デフォルトは `docs/plan/20251220_optical_depth_external_supply_impl_plan.md` の optical_depth + tau_stop 方式で、Sigma_tau1/headroom クリップの再導入は物理的に不自然な挙動を招く可能性がある。比較/回帰用の参考に限定する。
+
 ## 背景：本プロジェクトについて
 
 本リポジトリ（MarsDiskSimulation / `marsshearingsheet`）は、**火星ロッシュ限界内の高密度ダストディスク**を対象に、放射圧によるブローアウトと衝突破砕カスケードを2年間シミュレーションして質量損失・流出率を定量化するものです。詳細は以下を参照してください：
@@ -61,9 +64,9 @@
 
 ## 直近タスク（提案）
 - [x] `run_temp_supply_sweep.sh` のデフォルトを `SHIELDING_SIGMA=auto`, `INIT_SCALE_TO_TAU1=true` に戻す。
-- [ ] 温度・フィードバックをオフにするデモ用のプリセット（環境変数例示）を README に追記。
+- [x] 温度・フィードバックをオフにするデモ用のプリセット（環境変数例示）を README に追記。
 - [x] 供給クリップが起きた場合に警告を出す（`prod_subblow_area_rate_raw>0 && prod_subblow_area_rate==0` が一定連続したら warn）。
-- [ ] 本事象の経緯を `docs/plan/README.md` から本メモにリンク。
+- [x] 本事象の経緯を `docs/plan/README.md` から本メモにリンク。
 
 ## 今回の修正（2025-12-13）
 - `out/<run_id>/series/run.parquet` に `supply_rate_nominal/scaled/applied` と `supply_headroom`・`supply_clip_factor` を追加し、`out/<run_id>/summary.json`/`out/<run_id>/run_config.json` で headroom・clip_factor の min/median/max と「scaled>0 なのに applied==0 だった時間割合」を追跡できるようにした。

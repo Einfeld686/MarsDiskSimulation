@@ -1,5 +1,12 @@
 # Changelog
 
+## [2026-01-02] Analysis Documentation Refresh
+- **Documentation Consistency**: Comprehensive update of `analysis/` documents to reflect the transition from `marsdisk/run.py` to `marsdisk/run_zero_d.py` as the primary simulation driver.
+  - Updated code references in `introduction.md`, `methods.md`, `overview.md`, `physics_flow.md`, `sinks_callgraph.md`, `assumption_registry.jsonl`, and `equations.md`.
+  - Refined `analysis/tools/make_run_sections.py` and `scan_assumptions.py` to target `run_zero_d.py`.
+  - Verified consistency of `run-recipes.md` and `provenance_report.md`.
+
+
 ## [2025-12-19] Energy Bookkeeping & Collision Physics Refinement
 - **Energy Bookkeeping**: Implemented collision energy accounting (E.047–E.052) with outputs:
   - `E_rel_step`, `E_dissipated_step`, `E_retained_step` in `series/run.parquet`

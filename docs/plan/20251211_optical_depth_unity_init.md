@@ -1,5 +1,8 @@
 # 表面初期τ≈1 に合わせるための調整メモ
 
+> [!WARNING]
+> 非推奨/legacy: 現行の外部供給デフォルトは `docs/plan/20251220_optical_depth_external_supply_impl_plan.md` の optical_depth + tau_stop 方式で、`init_tau1.scale_to_tau1` と排他のため本手順の常用は避ける。適用は旧設定の比較試験に限定する。
+
 ## 背景・目的
 - temp_supply スイープは初期質量 1e-5 M_Mars を均一配置しており、初期光学的厚さ τ は数十以上になる。遮蔽クリップで Σ_τ=1=1e-2 kg/m² に落としているが、初期状態から τ≈1 としたい要望が出たため、調整方針を整理する。
 - 詳細な式・面積換算は analysis/ に集約し、ここでは段取りのみ記す。
@@ -15,10 +18,10 @@
 - 後方互換スイッチ: デフォルトは旧挙動を維持し、新モードは明示トグル（例: `init_tau1.enabled: false` を既定）でオンにする。破壊的変更を避けるため、旧設定をそのまま選べる形を必ず残す。
 
 ## 簡易チェックリスト
-- [ ] κ_surf（現PSD, s_min=1e-7〜3 m, n_bins=40）の初期値を取得し、Σ_τ=1=1/κ_surf を算出。
-- [ ] その Σ_τ=1 を `surface.sigma_surf_init_override` に設定し、`initial.mass_total` も同値に合わせたときの τ を確認。
-- [ ] temp_supply_* YAML と base.yml に値を反映し、試験実行で初期ステップ τ≈1 を確認。
-- [ ] DocSyncAgent／analysis-doc-tests／evaluation_system を必要に応じて実行（config変更のみならスキップ可とする）。
+- [x] κ_surf（現PSD, s_min=1e-7〜3 m, n_bins=40）の初期値を取得し、Σ_τ=1=1/κ_surf を算出。
+- [x] その Σ_τ=1 を `surface.sigma_surf_init_override` に設定し、`initial.mass_total` も同値に合わせたときの τ を確認。
+- [x] temp_supply_* YAML と base.yml に値を反映し、試験実行で初期ステップ τ≈1 を確認。
+- [x] DocSyncAgent／analysis-doc-tests／evaluation_system を必要に応じて実行（config変更のみならスキップ可とする）。
 
 ## リスク・注意
 - Σ_τ=1 が極端に小さい場合、初期質量が減りすぎて出力スケールが変わるため、スイープ結果の比較軸が変わる点に注意。旧 `initial.mass_total` はログに残す、出力IDに「tau1init」等のフラグを付けて区別するなどの運用を検討。

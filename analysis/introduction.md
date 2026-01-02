@@ -9,7 +9,7 @@
 ## 0. 本資料の位置づけと参照先
 
 - 本書は背景・意図をまとめた「解説」レイヤーであり、数式やモジュール責務の正規形は `analysis/equations.md` と `analysis/overview.md` を唯一の仕様源とする。実行レシピは `analysis/run-recipes.md` と `analysis/AI_USAGE.md` を参照し、ここでは前提と文脈だけを示す。
-- 標準の0Dベースラインは `python -m marsdisk.run --config configs/base.yml` で起動し、`out/series/run.parquet`・`out/summary.json` と質量収支ログ `out/checks/mass_budget.csv` を生成する。質量誤差は (E.011) の許容 |error| ≤ 0.5% を `compute_mass_budget_error_C4` が検査し、`writer.write_*` が成果物にシリアライズする。[marsdisk/run.py:8–8][marsdisk/io/writer.py:41–305]
+- 標準の0Dベースラインは `python -m marsdisk.run --config configs/base.yml` で起動し、`out/series/run.parquet`・`out/summary.json` と質量収支ログ `out/checks/mass_budget.csv` を生成する。質量誤差は (E.011) の許容 |error| ≤ 0.5% を `compute_mass_budget_error_C4` が検査し、`writer.write_*` が成果物にシリアライズする。[marsdisk/run_zero_d.py#run_zero_d [L477–L5347]][marsdisk/io/writer.py#write_parquet [L412–L438]]
 - スコープは gas-poor を既定とするロッシュ内0D円盤で、TL2003 型表層 ODE は `ALLOW_TL2003=false` のまま無効。gas-rich 感度を試す場合のみ環境変数を `true` にし、`surface.collision_solver=surface_ode` を使うレシピへ切り替える（詳細は `analysis/run-recipes.md`）。
 - 数値仕様の目安は対数サイズビン30–60（既定40, $s\in[10^{-6},3]$ m）、IMEX-BDF(1) で $\Delta t \le 0.1 \min t_{\rm coll}$ を保ったまま2年間を積分し、$t_{\rm blow}=1/\Omega$ を解像する（(E.006),(E.010)）。既定パラメータとスイッチは `configs/base.yml:1–172` に集約している。
 
@@ -136,14 +136,14 @@ $$
 | **侵食（Cratering）** | $F_{LF} > 0.5$ | ターゲットが大部分残存し、クレーター形成と小破片のみ生成 |
 | **壊滅的破砕（Catastrophic Fragmentation）** | $F_{LF} \le 0.5$ | ターゲットが半分以上破壊され、多数の破片を生成 |
 
-**最大残存率** (Leinhardt & Stewart 2012):
+**最大残存率** (Leinhardt & Stewart 2012) (E.033):
 
 $$
 \frac{M_{LR}}{M_{tot}} \approx 0.5 \left(2 - \frac{Q_R}{Q_{RD}^*}\right)
 $$
 
-- $Q_R = \frac{1}{2}\frac{\mu v^2}{M_{tot}}$: 比衝突エネルギー（重心系）
-- $Q_{RD}^*$: 破壊閾値（Catastrophic Disruption Threshold）
+- $Q_R = \frac{1}{2}\frac{\mu v^2}{M_{tot}}$: 比衝突エネルギー（重心系）(E.032)
+- $Q_{RD}^*$: 破壊閾値（Catastrophic Disruption Threshold）(E.026)
 
 **破壊閾値 $Q_D^*$** (Benz & Asphaug 1999):
 
@@ -157,10 +157,10 @@ $$
 
 #### エネルギー散逸
 
-衝突では運動エネルギーの一部が熱・音・新表面生成へ散逸します。散逸率は **非散逸率 $f_{ke}$** で定義されます：
+衝突では運動エネルギーの一部が熱・音・新表面生成へ散逸します。散逸率は **非散逸率 $f_{ke}$** で定義されます（詳細は (E.045a–c) を参照）：
 
-- **侵食時**: $f_{ke} \approx 0.1$（Thébault et al. 2003）
-- **壊滅的破砕時**: $f_{ke} \approx \varepsilon^2$（反発係数 $\varepsilon$ から推定）
+- **侵食時** ($F_{LF} > 0.5$): $f_{ke} \approx 0.1$（Thébault et al. 2003）
+- **壊滅的破砕時** ($F_{LF} \le 0.5$): $f_{ke} \approx \varepsilon^2$（反発係数 $\varepsilon$ から推定）
 
 $$
 E_{diss} = (1 - f_{ke})\,E_{rel}, \quad E_{rel} = \frac{1}{2}\mu v^2

@@ -73,7 +73,7 @@
 │  🔬 研究者・詳細を知りたい方                                          │
 │     analysis/equations.md ────→ 物理式の一元管理（唯一のソース）       │
 │     analysis/literature_map.md → 先行研究との対応                     │
-│     analysis/physics_flow.md ──→ 計算フロー図（Mermaid）              │
+│     analysis/physics_flow.md ──→ 計算フロー図（Mermaid, 自動生成）    │
 ├─────────────────────────────────────────────────────────────────────┤
 │  🛠️ 開発者                                                           │
 │     analysis/overview.md ──────→ アーキテクチャ・データフロー          │
@@ -96,7 +96,7 @@
 | `analysis/equations.md` | 研究者 | **物理式の唯一のソース**（式番号 E.xxx） |
 | `analysis/run-recipes.md` | ユーザー | 実行レシピ・感度解析手順 |
 | `analysis/overview.md` | 開発者 | アーキテクチャ・データフロー・3層分離 |
-| `analysis/physics_flow.md` | 研究者/開発者 | 計算順序の Mermaid 図 |
+| `analysis/physics_flow.md` | 研究者/開発者 | 計算順序の Mermaid 図（自動生成） |
 | `analysis/sinks_callgraph.md` | 開発者 | シンク物理のコールグラフ |
 | `analysis/literature_map.md` | 研究者 | 文献索引・先行研究との対応 |
 | `analysis/bibliography.md` | 研究者 | 参考文献一覧（BibTeX対応） |
@@ -169,7 +169,7 @@ ls out/summary.json out/series/run.parquet out/checks/mass_budget.csv
 | 標準シナリオ（旧fiducial） | `python -m marsdisk.run --config configs/scenarios/fiducial.yml` |
 | 高温シナリオ | `python -m marsdisk.run --config configs/scenarios/high_temp.yml` |
 | 質量損失スイープベース | `python -m marsdisk.run --config _configs/05_massloss_base.yml` |
-| サブリメーション+冷却（Windows向け） | `scripts/runsets/windows/legacy/run_sublim_cooling_win.cmd` / `scripts/runsets/windows/legacy/run_sublim_cooling.cmd` ※ストリーミング出力ON（io.streaming.*, merge_at_end=true） |
+| サブリメーション+冷却（Windows向け） | `scripts/runsets/windows/run_sweep.cmd` ※リファクタリング済み。ストリーミング出力ON（io.streaming.*, merge_at_end=true） |
 <!-- AUTOGEN:README_CLI_EXAMPLES END -->
 
 > 💡 設定の上書き: `--override radiation.TM_K=5000`
