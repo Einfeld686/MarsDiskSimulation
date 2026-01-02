@@ -32,12 +32,14 @@ clean:
 analysis-sync:
 	python -m analysis.tools.render_assumptions
 	python -m analysis.tools.make_run_sections --write
+	python tools/make_physics_flow.py --write
 	python -m tools.doc_sync_agent --all --write
 	python tools/readme_sync.py --write
 
 
 analysis-sync-commit:
 	python -m analysis.tools.render_assumptions
+	python tools/make_physics_flow.py --write
 	python -m tools.doc_sync_agent --all --write --commit
 
 analysis-coverage-guard:

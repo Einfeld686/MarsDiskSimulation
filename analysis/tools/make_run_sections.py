@@ -23,8 +23,8 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 ANALYSIS_DIR = REPO_ROOT / "analysis"
 INVENTORY_PATH = ANALYSIS_DIR / "inventory.json"
 TARGET_DOC = ANALYSIS_DIR / "run_py_sections.md"
-RUN_PY_PATH = "marsdisk/orchestrator.py"
-RUN_ZERO_D_PATH = "marsdisk/run_zero_d.py"
+RUN_PY_PATH = "marsdisk/run_zero_d.py"
+RUN_ORCHESTRATOR_PATH = "marsdisk/orchestrator.py"
 
 
 AUTOGEN_START = "<!-- AUTOGEN:RUN_SECTIONS START -->"
@@ -64,11 +64,11 @@ def load_inventory() -> Dict[str, List[SymbolInfo]]:
 
 
 def get_run_py_symbols(inventory: Dict[str, List[SymbolInfo]]) -> List[SymbolInfo]:
-    """Extract and sort symbols from run.py (orchestrator or run_zero_d)."""
-    # Prefer orchestrator symbols for the overview
+    """Extract and sort symbols from run_zero_d.py."""
+    # Prefer run_zero_d symbols for the overview
     symbols = inventory.get(RUN_PY_PATH, [])
     if not symbols:
-        symbols = inventory.get(RUN_ZERO_D_PATH, [])
+        symbols = inventory.get(RUN_ORCHESTRATOR_PATH, [])
     return sorted(symbols, key=lambda s: s.line_no)
 
 
@@ -195,13 +195,13 @@ def build_exploration_guide(symbols: List[SymbolInfo]) -> str:
 
 def build_full_document(symbols: List[SymbolInfo]) -> str:
     """Build the complete markdown document."""
-    header = """# run.py 内部セクション対応表
+    header = """# run_zero_d.py 内部セクション対応表
 
 > **文書種別**: リファレンス（Diátaxis: Reference）
 > **自動生成**: このドキュメントは `analysis/tools/make_run_sections.py` により自動生成されます。
 > 手動編集しないでください。
 
-本ドキュメントは `marsdisk/run.py` の内部構造をセクション別に分類し、
+本ドキュメントは `marsdisk/run_zero_d.py` の内部構造をセクション別に分類し、
 AIエージェントがコード検索を効率化するためのマップを提供します。
 
 ---

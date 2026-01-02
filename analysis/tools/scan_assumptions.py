@@ -34,7 +34,7 @@ SOURCE_MAP = ANALYSIS / "source_map.json"
 INVENTORY = ANALYSIS / "inventory.json"
 REGISTRY_PATH = ANALYSIS / "assumption_registry.jsonl"
 
-# run.py 段階との対応を固定（フェーズ1用の初期マップ）
+# run_zero_d.py 段階との対応を固定（フェーズ1用の初期マップ）
 RUN_STAGE_HINTS = [
     ("init_ei", "init_ei"),
     ("time_grid", "time_grid"),

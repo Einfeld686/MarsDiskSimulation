@@ -119,7 +119,9 @@ DEFAULT_DOCS_FOR_REFS: list[Path] = [
 EQUATION_HEADING_PATTERN = re.compile(r"^### (?:\((E\.\d{3}[a-z]?)\)\s*)?(.*)$")
 EQUATION_ID_PATTERN = re.compile(r"^### \(E\.(\d{3}[a-z]?)\)\s*(.*)$")
 CODE_REF_PATTERN = re.compile(
-    r"\[(marsdisk/[^\]]+\.py)#([A-Za-z0-9_]+)\s+\[L(\d+)[–—-]L?(\d+)?\]\]"
+    r"\[(?P<path>(?:marsdisk|tools|siO2_disk_cooling)/[^\]]+\.py)"
+    r"(?:(?:#(?P<symbol>[A-Za-z0-9_]+)\s+\[L(?P<start>\d+)[–—-]L?(?P<end>\d+)?\])"
+    r"|(?::(?P<start_colon>\d+)(?:[–—-](?P<end_colon>\d+))?))\]"
 )
 LINE_ANCHOR_INLINE_PATTERN = re.compile(r"[（(]#L\d+(?:[–—-]L?\d+)?[）)]")
 
@@ -1428,7 +1430,13 @@ def _build_equation_entry(meta: Tuple[str, str], block: str) -> EquationEntry:
     eq_id, title = meta
     code_refs: list[CodeRef] = []
     for ref_match in CODE_REF_PATTERN.finditer(block):
-        file_path, symbol, start, end = ref_match.groups()
+        groups = ref_match.groupdict()
+        file_path = groups["path"]
+        symbol = groups.get("symbol") or ""
+        start = groups.get("start") or groups.get("start_colon")
+        end = groups.get("end") or groups.get("end_colon") or start
+        if start is None:
+            continue
         line_start = int(start)
         line_end = int(end) if end else line_start
         code_refs.append(
@@ -1452,6 +1460,12 @@ def _compute_equation_code_map(
         for record in inventory
         if record.kind in {"function", "async_function", "class", "method"}
     }
+    records_by_file: Dict[str, List[InventoryRecord]] = defaultdict(list)
+    for record in inventory:
+        if record.kind in {"function", "async_function", "class", "method"}:
+            records_by_file[record.file_path].append(record)
+    for records in records_by_file.values():
+        records.sort(key=lambda rec: rec.line_no)
     referenced: set[Tuple[str, str]] = set()
     equations_payload: list[Dict[str, Any]] = []
     warnings: list[str] = []
@@ -1460,15 +1474,25 @@ def _compute_equation_code_map(
         refs_payload: list[Dict[str, Any]] = []
         has_valid = False
         for ref in entry.code_refs:
-            key = (ref.file_path, ref.symbol)
-            is_valid = key in index
+            resolved_symbol = ref.symbol
+            record = None
+            if resolved_symbol:
+                record = index.get((ref.file_path, resolved_symbol))
+            if record is None:
+                candidates = records_by_file.get(ref.file_path)
+                if candidates:
+                    match = _match_symbol_by_span(candidates, ref.line_start, ref.line_end)
+                    if match:
+                        record = match
+                        resolved_symbol = match.symbol
+            is_valid = record is not None
             if is_valid:
                 has_valid = True
-                referenced.add(key)
+                referenced.add((record.file_path, record.symbol))
             refs_payload.append(
                 {
                     "file": ref.file_path,
-                    "symbol": ref.symbol,
+                    "symbol": resolved_symbol,
                     "line_start": ref.line_start,
                     "line_end": ref.line_end,
                     "valid": is_valid,
