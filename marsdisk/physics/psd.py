@@ -21,12 +21,12 @@ from __future__ import annotations
 from typing import Dict, Mapping, Optional
 
 import logging
-import os
 import warnings
 
 import numpy as np
 
 from ..errors import MarsDiskError
+from ..runtime.numba_config import numba_disabled_env
 from ..warnings import NumericalWarning
 from . import sizes as size_models
 from .sublimation import SublimationParams
@@ -37,12 +37,7 @@ try:
 except ImportError:  # pragma: no cover - optional dependency
     _NUMBA_AVAILABLE = False
 
-_NUMBA_DISABLED_ENV = os.environ.get("MARSDISK_DISABLE_NUMBA", "").lower() in {
-    "1",
-    "true",
-    "yes",
-    "on",
-}
+_NUMBA_DISABLED_ENV = numba_disabled_env()
 _USE_NUMBA = _NUMBA_AVAILABLE and not _NUMBA_DISABLED_ENV
 _NUMBA_FAILED = False
 
@@ -498,7 +493,10 @@ def apply_uniform_size_drift(
         except Exception as exc:  # pragma: no cover - fallback
             use_jit = False
             _NUMBA_FAILED = True
-            logger.warning("size_drift_rebin_numba failed (%r); falling back to NumPy.", exc)
+            warnings.warn(
+                f"size_drift_rebin_numba failed ({exc!r}); falling back to NumPy.",
+                NumericalWarning,
+            )
     if not use_jit:
         new_counts, accum_sizes = _size_drift_rebin_numpy(sizes, counts, edges, ds_step, floor_val)
 

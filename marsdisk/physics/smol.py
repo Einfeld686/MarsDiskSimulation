@@ -2,7 +2,6 @@ from __future__ import annotations
 
 """Smoluchowski coagulation/fragmentation solver (C3--C4)."""
 
-import os
 import logging
 import warnings
 from dataclasses import dataclass
@@ -11,6 +10,7 @@ from typing import Iterable, MutableMapping
 import numpy as np
 
 from ..errors import MarsDiskError
+from ..runtime.numba_config import numba_disabled_env, numba_status
 from ..warnings import NumericalWarning
 from .collide import compute_collision_kernel_C1, compute_prod_subblow_area_rate_C2
 try:
@@ -26,7 +26,7 @@ try:
 except ImportError:  # pragma: no cover - optional dependency
     _NUMBA_AVAILABLE = False
 
-_NUMBA_DISABLED_ENV = os.environ.get("MARSDISK_DISABLE_NUMBA", "").lower() in {"1", "true", "yes", "on"}
+_NUMBA_DISABLED_ENV = numba_disabled_env()
 _USE_NUMBA = _NUMBA_AVAILABLE and not _NUMBA_DISABLED_ENV
 _NUMBA_FAILED = False
 
@@ -58,12 +58,7 @@ logger = logging.getLogger(__name__)
 def get_numba_status() -> dict[str, object]:
     """Return Numba availability and runtime usage flags."""
 
-    return {
-        "available": bool(_NUMBA_AVAILABLE),
-        "disabled_env": bool(_NUMBA_DISABLED_ENV),
-        "use_numba": bool(_USE_NUMBA),
-        "numba_failed": bool(_NUMBA_FAILED),
-    }
+    return numba_status(_NUMBA_AVAILABLE, _NUMBA_DISABLED_ENV, _USE_NUMBA, _NUMBA_FAILED)
 
 
 def _sizes_fingerprint(sizes: np.ndarray) -> tuple[int, float, float]:

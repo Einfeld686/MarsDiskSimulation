@@ -10,7 +10,6 @@ defined here still requires a valid table.
 from __future__ import annotations
 
 from dataclasses import dataclass
-import os
 from pathlib import Path
 from typing import Iterable, Optional, Callable, Sequence
 import warnings
@@ -19,6 +18,7 @@ import numpy as np
 import pandas as pd
 
 from .. import constants
+from ..runtime.numba_config import numba_disabled_env
 from ..warnings import TableWarning
 try:
     from ._numba_tables import NUMBA_AVAILABLE, qpr_interp_scalar_numba
@@ -27,7 +27,7 @@ try:
 except ImportError:  # pragma: no cover - optional dependency
     _NUMBA_AVAILABLE = False
 
-_NUMBA_DISABLED_ENV = os.environ.get("MARSDISK_DISABLE_NUMBA", "").lower() in {"1", "true", "yes", "on"}
+_NUMBA_DISABLED_ENV = numba_disabled_env()
 _USE_NUMBA = _NUMBA_AVAILABLE and not _NUMBA_DISABLED_ENV
 _NUMBA_FAILED = False
 

@@ -63,8 +63,8 @@ logger = logging.getLogger(__name__)
 # ===========================================================================
 # Constants
 # ===========================================================================
-SECONDS_PER_YEAR = 365.25 * 24 * 3600.0
-MAX_STEPS = 50_000_000
+SECONDS_PER_YEAR = constants.SECONDS_PER_YEAR
+MAX_STEPS = constants.MAX_STEPS
 TAU_MIN = 1e-12
 KAPPA_MIN = 1e-12
 DEFAULT_SEED = 12345

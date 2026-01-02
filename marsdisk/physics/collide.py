@@ -2,7 +2,6 @@ from __future__ import annotations
 
 """Collision kernel and sub-blowout production rate (C1--C2)."""
 
-import os
 import logging
 import warnings
 from dataclasses import dataclass
@@ -11,6 +10,7 @@ from typing import Iterable
 import numpy as np
 
 from ..errors import MarsDiskError
+from ..runtime.numba_config import numba_disabled_env
 from ..warnings import NumericalWarning
 from .dynamics import v_ij as v_ij_D1  # alias to the relative velocity (D1)
 try:
@@ -25,7 +25,7 @@ try:
 except ImportError:  # pragma: no cover - optional dependency
     _NUMBA_AVAILABLE = False
 
-_NUMBA_DISABLED_ENV = os.environ.get("MARSDISK_DISABLE_NUMBA", "").lower() in {"1", "true", "yes", "on"}
+_NUMBA_DISABLED_ENV = numba_disabled_env()
 _USE_NUMBA = _NUMBA_AVAILABLE and not _NUMBA_DISABLED_ENV
 _NUMBA_FAILED = False
 

@@ -2,7 +2,9 @@
 from __future__ import annotations
 
 import math
-from typing import Any, Optional, Tuple
+from typing import Any, Optional, Sequence, Tuple
+
+import numpy as np
 
 
 def compute_phase_tau_fields(
@@ -30,6 +32,22 @@ def resolve_feedback_tau_field(tau_field: Optional[str]) -> str:
     raise ValueError(
         f"Unknown supply.feedback.tau_field={tau_field!r}; expected 'tau_los'"
     )
+
+
+def resolve_los_factor(los_geom: Optional[object]) -> float:
+    """Return the multiplicative factor f_los scaling tau_vert to tau_los."""
+
+    if los_geom is None:
+        return 1.0
+    mode = getattr(los_geom, "mode", "aspect_ratio_factor")
+    if mode == "none":
+        return 1.0
+    h_over_r = float(getattr(los_geom, "h_over_r", 1.0) or 1.0)
+    path_multiplier = float(getattr(los_geom, "path_multiplier", 1.0) or 1.0)
+    if h_over_r <= 0.0 or path_multiplier <= 0.0:
+        return 1.0
+    factor = path_multiplier / h_over_r
+    return float(factor if factor > 1.0 else 1.0)
 
 
 def compute_gate_factor(t_blow: Optional[float], t_solid: Optional[float]) -> float:
@@ -65,6 +83,35 @@ def fast_blowout_correction_factor(ratio: float) -> float:
     if value > 1.0:
         return 1.0
     return value
+
+
+def auto_chi_blow(beta: float, qpr: float) -> float:
+    """Return an automatic chi_blow scaling based on beta and Q_pr."""
+
+    if not math.isfinite(beta) or beta <= 0.0:
+        beta = 0.5
+    if not math.isfinite(qpr) or qpr <= 0.0:
+        qpr = 1.0
+    beta_ratio = beta / 0.5
+    chi_beta = 1.0 / (1.0 + 0.5 * (beta_ratio - 1.0))
+    chi_beta = max(0.1, chi_beta)
+    chi_qpr = min(max(qpr, 0.5), 1.5)
+    chi = chi_beta * chi_qpr
+    return float(min(max(chi, 0.5), 2.0))
+
+
+def series_stats(values: Sequence[float]) -> tuple[float, float, float]:
+    """Return min/median/max for finite values (or NaNs if empty)."""
+
+    if not values:
+        nan = float("nan")
+        return nan, nan, nan
+    arr = np.asarray(values, dtype=float)
+    arr = arr[np.isfinite(arr)]
+    if arr.size == 0:
+        nan = float("nan")
+        return nan, nan, nan
+    return float(np.min(arr)), float(np.median(arr)), float(np.max(arr))
 
 
 def ensure_finite_kappa(kappa: Any, *, label: str | None = None) -> float:
@@ -123,8 +170,11 @@ def log_stage(logger_obj, label: str, *, extra: dict | None = None) -> None:
 __all__ = [
     "compute_phase_tau_fields",
     "resolve_feedback_tau_field",
+    "resolve_los_factor",
     "compute_gate_factor",
     "fast_blowout_correction_factor",
+    "auto_chi_blow",
+    "series_stats",
     "ensure_finite_kappa",
     "safe_float",
     "float_or_nan",

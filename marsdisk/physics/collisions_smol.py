@@ -13,6 +13,7 @@ from typing import MutableMapping, TYPE_CHECKING
 import numpy as np
 import logging
 from ..errors import MarsDiskError
+from ..runtime.numba_config import numba_disabled_env, numba_status
 from ..warnings import NumericalWarning, PhysicsWarning
 from . import collide, dynamics, qstar, smol
 from .fragments import largest_remnant_fraction_array, q_r_array
@@ -35,12 +36,7 @@ except ImportError:
     _NUMBA_AVAILABLE = False
 
 # Honour opt-out via environment variable to aid debugging or CI sandboxes.
-_NUMBA_DISABLED_ENV = os.environ.get("MARSDISK_DISABLE_NUMBA", "").lower() in {
-    "1",
-    "true",
-    "yes",
-    "on",
-}
+_NUMBA_DISABLED_ENV = numba_disabled_env()
 _USE_NUMBA = _NUMBA_AVAILABLE and not _NUMBA_DISABLED_ENV
 # Honour opt-out for collision caches to ease A/B comparisons.
 _CACHE_DISABLED_ENV = os.environ.get("MARSDISK_DISABLE_COLLISION_CACHE", "").lower() in {
@@ -67,12 +63,7 @@ _SUPPLY_EPS = 1.0e-30
 def get_numba_status() -> dict[str, object]:
     """Return Numba availability and runtime usage flags."""
 
-    return {
-        "available": bool(_NUMBA_AVAILABLE),
-        "disabled_env": bool(_NUMBA_DISABLED_ENV),
-        "use_numba": bool(_USE_NUMBA),
-        "numba_failed": bool(_NUMBA_FAILED),
-    }
+    return numba_status(_NUMBA_AVAILABLE, _NUMBA_DISABLED_ENV, _USE_NUMBA, _NUMBA_FAILED)
 
 
 @dataclass

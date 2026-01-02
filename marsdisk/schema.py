@@ -115,8 +115,14 @@ class InnerDiskMass(BaseModel):
 
         if not isinstance(data, dict):
             return data
-        if "M_over_Mmars" in data and "M_in_ratio" not in data:
-            data["M_in_ratio"] = data["M_over_Mmars"]
+        if "M_over_Mmars" in data:
+            warnings.warn(
+                "inner_disk_mass.M_over_Mmars is deprecated; use inner_disk_mass.M_in_ratio",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+            if "M_in_ratio" not in data:
+                data["M_in_ratio"] = data["M_over_Mmars"]
         return data
 
 
@@ -217,10 +223,21 @@ class SupplyReservoir(BaseModel):
 
         if not isinstance(data, dict):
             return data
-        if "smooth_fraction" in data and "taper_fraction" not in data:
-            data["taper_fraction"] = data["smooth_fraction"]
+        if "smooth_fraction" in data:
+            warnings.warn(
+                "supply.reservoir.smooth_fraction is deprecated; use supply.reservoir.taper_fraction",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+            if "taper_fraction" not in data:
+                data["taper_fraction"] = data["smooth_fraction"]
         mode = data.get("depletion_mode")
         if mode == "smooth":
+            warnings.warn(
+                "supply.reservoir.depletion_mode='smooth' is deprecated; use 'taper'",
+                DeprecationWarning,
+                stacklevel=2,
+            )
             data["depletion_mode"] = "taper"
         if data.get("enabled") is None and data.get("mass_total_Mmars") is not None:
             data["enabled"] = True
@@ -545,7 +562,15 @@ class Supply(BaseModel):
         # Allow deep_reservoir_tmix_orbits (legacy) to populate transport.t_mix_orbits when unset.
         deep_tmix_alias = None
         if isinstance(injection_cfg, dict):
-            deep_tmix_alias = injection_cfg.get("deep_reservoir_tmix_orbits")
+            if "deep_reservoir_tmix_orbits" in injection_cfg:
+                deep_tmix_alias = injection_cfg.get("deep_reservoir_tmix_orbits")
+                if deep_tmix_alias is not None:
+                    warnings.warn(
+                        "supply.injection.deep_reservoir_tmix_orbits is deprecated; "
+                        "use supply.transport.t_mix_orbits",
+                        DeprecationWarning,
+                        stacklevel=2,
+                    )
         if transport_cfg is None:
             transport_cfg = {}
         if isinstance(transport_cfg, dict):
@@ -1555,6 +1580,16 @@ class Shielding(BaseModel):
     )
     los_geometry: LOSGeometry = LOSGeometry()
 
+    @field_validator("mode")
+    def _warn_table_mode(cls, value: str) -> str:
+        if str(value).lower() == "table":
+            warnings.warn(
+                "shielding.mode='table' is deprecated; use 'psitau' with shielding.table_path",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+        return value
+
     @property
     def table_path_resolved(self) -> Optional[Path]:
         """Return the preferred Φ(τ) table path."""
@@ -1982,6 +2017,11 @@ class IO(BaseModel):
     @model_validator(mode="after")
     def _resolve_record_storage_mode(self) -> "IO":
         if self.columnar_records is not None:
+            warnings.warn(
+                "io.columnar_records is deprecated; use io.record_storage_mode",
+                DeprecationWarning,
+                stacklevel=2,
+            )
             self.record_storage_mode = "columnar" if self.columnar_records else "row"
         return self
 

@@ -51,8 +51,11 @@ from .runtime import (
 from .runtime.helpers import (
     compute_phase_tau_fields,
     resolve_feedback_tau_field as _resolve_feedback_tau_field,
+    resolve_los_factor as _resolve_los_factor,
     compute_gate_factor,
     fast_blowout_correction_factor,
+    auto_chi_blow as _auto_chi_blow,
+    series_stats as _series_stats,
 )
 from .runtime.legacy_steps import RunConfig, RunState, step, run_n_steps
 from .physics import (
@@ -88,8 +91,8 @@ from . import constants
 from .errors import ConfigurationError, PhysicsError, NumericalError, MarsDiskError
 
 logger = logging.getLogger(__name__)
-SECONDS_PER_YEAR = 365.25 * 24 * 3600.0
-MAX_STEPS = 50000000
+SECONDS_PER_YEAR = constants.SECONDS_PER_YEAR
+MAX_STEPS = constants.MAX_STEPS
 AUTO_MAX_MARGIN = 0.05
 TAU_MIN = 1e-12
 KAPPA_MIN = 1e-12
@@ -369,22 +372,6 @@ def _model_fields_set(model: Any) -> set[str]:
     return set(fields_set or set())
 
 
-def _resolve_los_factor(los_geom: Optional[object]) -> float:
-    """Return the multiplicative factor f_los scaling τ_vert to τ_los."""
-
-    if los_geom is None:
-        return 1.0
-    mode = getattr(los_geom, "mode", "aspect_ratio_factor")
-    if mode == "none":
-        return 1.0
-    h_over_r = float(getattr(los_geom, "h_over_r", 1.0) or 1.0)
-    path_multiplier = float(getattr(los_geom, "path_multiplier", 1.0) or 1.0)
-    if h_over_r <= 0.0 or path_multiplier <= 0.0:
-        return 1.0
-    factor = path_multiplier / h_over_r
-    return float(factor if factor > 1.0 else 1.0)
-
-
 def _surface_energy_floor(
     gamma_J_m2: float,
     eta: float,
@@ -422,21 +409,6 @@ def _surface_energy_floor(
     if s_floor > s_max:
         return float(s_max)
     return float(max(s_floor, 0.0))
-
-
-def _auto_chi_blow(beta: float, qpr: float) -> float:
-    """Return an automatic chi_blow scaling based on β and ⟨Q_pr⟩."""
-
-    if not math.isfinite(beta) or beta <= 0.0:
-        beta = 0.5
-    if not math.isfinite(qpr) or qpr <= 0.0:
-        qpr = 1.0
-    beta_ratio = beta / 0.5
-    chi_beta = 1.0 / (1.0 + 0.5 * (beta_ratio - 1.0))
-    chi_beta = max(0.1, chi_beta)
-    chi_qpr = min(max(qpr, 0.5), 1.5)
-    chi = chi_beta * chi_qpr
-    return float(min(max(chi, 0.5), 2.0))
 
 
 # ---------------------------------------------------------------------------
@@ -4292,17 +4264,6 @@ def run_zero_d(
     dt_over_t_blow_median = float("nan")
     if dt_over_t_blow_values:
         dt_over_t_blow_median = float(np.median(np.asarray(dt_over_t_blow_values, dtype=float)))
-
-    def _series_stats(values: List[float]) -> tuple[float, float, float]:
-        if not values:
-            nan = float("nan")
-            return nan, nan, nan
-        arr = np.asarray(values, dtype=float)
-        arr = arr[np.isfinite(arr)]
-        if arr.size == 0:
-            nan = float("nan")
-            return nan, nan, nan
-        return float(np.min(arr)), float(np.median(arr)), float(np.max(arr))
 
     def _first_finite(values: List[Optional[float]]) -> Optional[float]:
         for val in values:

@@ -22,7 +22,7 @@ from ..errors import MarsDiskError
 from ..schema import Supply, SupplyPiece
 
 _EPS = 1.0e-12
-SECONDS_PER_YEAR = 365.25 * 24 * 3600.0
+SECONDS_PER_YEAR = constants.SECONDS_PER_YEAR
 
 
 @dataclass

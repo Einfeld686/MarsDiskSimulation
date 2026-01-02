@@ -12,7 +12,6 @@ from __future__ import annotations
 
 import logging
 import math
-import os
 import threading
 import warnings
 from collections import OrderedDict
@@ -25,6 +24,7 @@ import numpy as np
 from .. import constants
 from ..io import tables
 from ..errors import PhysicsError
+from ..runtime.numba_config import numba_disabled_env
 from ..warnings import NumericalWarning, TableWarning
 
 try:
@@ -59,12 +59,7 @@ BLOWOUT_BETA_THRESHOLD: float = 0.5  # [@StrubbeChiang2006_ApJ648_652]
 
 logger = logging.getLogger(__name__)
 
-_NUMBA_DISABLED_ENV = os.environ.get("MARSDISK_DISABLE_NUMBA", "").lower() in {
-    "1",
-    "true",
-    "yes",
-    "on",
-}
+_NUMBA_DISABLED_ENV = numba_disabled_env()
 _USE_NUMBA_TABLES = _NUMBA_TABLES_AVAILABLE and not _NUMBA_DISABLED_ENV
 _USE_NUMBA_RADIATION = _NUMBA_RADIATION_AVAILABLE and not _NUMBA_DISABLED_ENV
 _NUMBA_FAILED = False

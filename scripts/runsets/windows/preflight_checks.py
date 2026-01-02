@@ -189,6 +189,8 @@ CMD_ALLOWLIST_RULES = {
     "cmd.robocopy.retries_default",
     "cmd.set.space_around_equals",
     "cmd.set.posix_path",
+    "cmd.set.escaped_quote",
+    "cmd.set.inline_ampersand_chain",
     "cmd.setlocal.missing",
     "cmd.setlocal.order",
     "cmd.setlocal.unbalanced",
@@ -206,6 +208,7 @@ CMD_ALLOWLIST_RULES = {
     "path.unc",
     "path.value_length",
     "path.value_non_ascii",
+    "py.subprocess.missing_encoding",
 }
 
 # Rules that can be automatically fixed
@@ -263,6 +266,8 @@ RULE_DESCRIPTIONS: dict[str, str] = {
     "cmd.robocopy.retries_default": "robocopy used without /r: and /w: (defaults can be very long)",
     "cmd.set.space_around_equals": "set command has spaces around '='",
     "cmd.set.posix_path": "set command assigns POSIX-style path",
+    "cmd.set.escaped_quote": "set command uses backslash-quote which is interpreted literally in cmd.exe",
+    "cmd.set.inline_ampersand_chain": "Long ^& chain in set command is fragile and hard to debug",
     "cmd.setlocal.missing": "Environment modified without setlocal",
     "cmd.setlocal.order": "endlocal used before setlocal",
     "cmd.setlocal.unbalanced": "Unbalanced setlocal/endlocal",
@@ -282,6 +287,7 @@ RULE_DESCRIPTIONS: dict[str, str] = {
     "path.value_length": "Path length near or exceeds limits",
     "path.value_non_ascii": "Path contains non-ASCII characters",
     "infra.common_scripts.missing": "Required core common script missing from scripts/runsets/common/",
+    "py.subprocess.missing_encoding": "subprocess.run with text=True missing explicit encoding (defaults vary by locale)",
 }
 
 # SARIF format constants
@@ -1444,6 +1450,13 @@ def _parse_set_value(line: str) -> str | None:
 
 def _check_common_scripts(repo_root: Path, errors: list[Issue]) -> None:
     common_dir = repo_root / "scripts" / "runsets" / "common"
+    if not common_dir.exists():
+        markers = [
+            repo_root / "AGENTS.md",
+            repo_root / "marsdisk",
+        ]
+        if not any(path.exists() for path in markers):
+            return
     required = [
         "resolve_python.cmd",
         "python_exec.cmd",
@@ -2620,6 +2633,21 @@ def _scan_cmd_file(
                 if value:
                     if _contains_posix_path(value):
                         report_error("cmd.set.posix_path", "cmd set uses POSIX path", line_no)
+                    # Check for backslash-quote pattern (interpreted literally in cmd.exe)
+                    if '\\"' in value:
+                        report_warn(
+                            "cmd.set.escaped_quote",
+                            "cmd set uses backslash-quote which is literal in cmd.exe",
+                            line_no,
+                        )
+                    # Check for long ^& chains (fragile pattern)
+                    ampersand_chain_count = value.count("^&")
+                    if ampersand_chain_count >= 5:
+                        report_warn(
+                            "cmd.set.inline_ampersand_chain",
+                            f"cmd set has long ^& chain ({ampersand_chain_count} occurrences); consider using temp file",
+                            line_no,
+                        )
                     if ("\\" in value or "/" in value) and not _contains_posix_path(value):
                         _check_path_value(
                             f"{path}:{line_no}",
@@ -2631,6 +2659,7 @@ def _scan_cmd_file(
                             meta_as_error=extensions_disabled,
                             skip_rules=allowlist_rules,
                         )
+
         for _ in range(closes):
             if block_stack:
                 block_stack.pop()

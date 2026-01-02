@@ -6,8 +6,10 @@ import math
 import sys
 import time
 
+from .. import constants
+
 # Keep a local constant to avoid depending on the orchestrator module.
-SECONDS_PER_YEAR = 365.25 * 24 * 3600.0
+SECONDS_PER_YEAR = constants.SECONDS_PER_YEAR
 ETA_EWMA_ALPHA = 0.1
 ETA_MIN_SAMPLES = 3
 

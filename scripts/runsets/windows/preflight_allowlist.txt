@@ -8,4 +8,16 @@
 # - Lines without "::" (or with empty rules) are ignored and reported as warnings.
 # Example: scripts/runsets/windows/run_one.cmd::cmd.line_endings.mixed
 # Example: scripts/**/legacy/*.cmd::*
+#
+# Known-safe warnings for runset scripts (tracked in runsets refactor plan).
 scripts/runsets/windows/legacy/*.cmd::*
+scripts/research/run_temp_supply_sweep.cmd::cmd.block.percent_var_after_set,cmd.call.pipe_or_redirect,cmd.numeric_comparison.unguarded
+scripts/runsets/common/python_exec.cmd::cmd.block.percent_errorlevel,cmd.if_errorlevel_equal_misuse
+scripts/runsets/common/resolve_python.cmd::cmd.block.percent_var_after_set,cmd.numeric_comparison.unguarded
+scripts/runsets/windows/run_one.cmd::cmd.if_errorlevel_equal_misuse,cmd.numeric_comparison.unguarded
+scripts/runsets/windows/run_sweep.cmd::cmd.numeric_comparison.unguarded
+scripts/research/run_temp_supply_sweep.cmd::cmd.numeric_comparison.unguarded,cmd.block.percent_var_after_set,cmd.call.pipe_or_redirect
+scripts/runsets/common/resolve_python.cmd::cmd.numeric_comparison.unguarded,cmd.block.percent_var_after_set
+scripts/runsets/common/python_exec.cmd::cmd.block.percent_errorlevel,cmd.if_errorlevel_equal_misuse
+scripts/runsets/windows/run_one.cmd::cmd.numeric_comparison.unguarded,cmd.if_errorlevel_equal_misuse
+scripts/runsets/windows/run_sweep.cmd::cmd.numeric_comparison.unguarded

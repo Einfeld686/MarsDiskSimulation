@@ -31,8 +31,8 @@ from ..schema import (
 
 logger = logging.getLogger(__name__)
 
-SECONDS_PER_DAY = 86400.0
-SECONDS_PER_YEAR = 365.25 * SECONDS_PER_DAY
+SECONDS_PER_DAY = constants.SECONDS_PER_DAY
+SECONDS_PER_YEAR = constants.SECONDS_PER_YEAR
 
 T_MIN, T_MAX = 1000.0, 6500.0
 

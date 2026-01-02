@@ -30,6 +30,9 @@ from .runtime.helpers import (
     compute_gate_factor,
     fast_blowout_correction_factor,
     ensure_finite_kappa,
+    resolve_los_factor as _resolve_los_factor,
+    auto_chi_blow as _auto_chi_blow,
+    series_stats as _series_stats,
     safe_float as _safe_float,
     float_or_nan as _float_or_nan,
 )
@@ -62,8 +65,8 @@ _fast_blowout_correction_factor = fast_blowout_correction_factor
 
 logger = logging.getLogger(__name__)
 
-SECONDS_PER_YEAR = 365.25 * 24 * 3600.0
-MAX_STEPS = 50_000_000
+SECONDS_PER_YEAR = constants.SECONDS_PER_YEAR
+MAX_STEPS = constants.MAX_STEPS
 TAU_MIN = 1.0e-12
 KAPPA_MIN = 1.0e-12
 DEFAULT_SEED = 12345
@@ -107,22 +110,6 @@ class CellStepPayload(NamedTuple):
     sums: np.ndarray
 
 
-def _resolve_los_factor(los_geom: Optional[object]) -> float:
-    """Return the multiplicative factor f_los scaling τ_vert to τ_los."""
-
-    if los_geom is None:
-        return 1.0
-    mode = getattr(los_geom, "mode", "aspect_ratio_factor")
-    if mode == "none":
-        return 1.0
-    h_over_r = float(getattr(los_geom, "h_over_r", 1.0) or 1.0)
-    path_multiplier = float(getattr(los_geom, "path_multiplier", 1.0) or 1.0)
-    if h_over_r <= 0.0 or path_multiplier <= 0.0:
-        return 1.0
-    factor = path_multiplier / h_over_r
-    return float(factor if factor > 1.0 else 1.0)
-
-
 def _clamp_sigma_surf(value: float, *, label: str = "sigma_surf") -> float:
     """Return a non-negative finite surface density (clamped to 0 on invalid)."""
 
@@ -135,21 +122,6 @@ def _clamp_sigma_surf(value: float, *, label: str = "sigma_surf") -> float:
         logger.warning("%s is non-finite or negative; clamping to 0", label)
         return 0.0
     return sigma_val
-
-
-def _auto_chi_blow(beta: float, qpr: float) -> float:
-    """Return an automatic chi_blow scaling based on β and ⟨Q_pr⟩."""
-
-    if not math.isfinite(beta) or beta <= 0.0:
-        beta = 0.5
-    if not math.isfinite(qpr) or qpr <= 0.0:
-        qpr = 1.0
-    beta_ratio = beta / 0.5
-    chi_beta = 1.0 / (1.0 + 0.5 * (beta_ratio - 1.0))
-    chi_beta = max(0.1, chi_beta)
-    chi_qpr = min(max(qpr, 0.5), 1.5)
-    chi = chi_beta * chi_qpr
-    return float(min(max(chi, 0.5), 2.0))
 
 
 def _env_flag(name: str) -> Optional[bool]:
@@ -2589,14 +2561,6 @@ def run_one_d(
         orbits_completed = max(orbits_completed, 1)
     if orbit_rollup_enabled:
         writer.write_orbit_rollup(orbit_rollup_rows, outdir / "orbit_rollup.csv")
-
-    def _series_stats(values: List[float]) -> tuple[float, float, float]:
-        arr = np.asarray(values, dtype=float)
-        arr = arr[np.isfinite(arr)]
-        if arr.size == 0:
-            nan = float("nan")
-            return nan, nan, nan
-        return float(np.min(arr)), float(np.median(arr)), float(np.max(arr))
 
     T_min, T_median, T_max = _series_stats(temperature_track)
     beta_min, beta_median, beta_max = _series_stats(beta_track)

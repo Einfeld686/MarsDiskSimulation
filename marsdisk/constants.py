@@ -31,6 +31,13 @@ RHO_RANGE: Tuple[float, float] = (1000.0, 5000.0)
 # Default melt temperature range of Mars materials (K)
 T_M_RANGE: Tuple[float, float] = (1500.0, 2500.0)
 
+# Time unit conversions
+SECONDS_PER_DAY: float = 86400.0
+SECONDS_PER_YEAR: float = 365.25 * SECONDS_PER_DAY
+
+# Default numerical guardrails
+MAX_STEPS: int = 50_000_000
+
 
 @dataclass(frozen=True)
 class MarsConstants:
@@ -49,3 +56,6 @@ class MarsConstants:
     R_MARS: float = R_MARS
     RHO_RANGE: Tuple[float, float] = RHO_RANGE
     T_M_RANGE: Tuple[float, float] = T_M_RANGE
+    SECONDS_PER_DAY: float = SECONDS_PER_DAY
+    SECONDS_PER_YEAR: float = SECONDS_PER_YEAR
+    MAX_STEPS: int = MAX_STEPS
