@@ -92,6 +92,7 @@ ocr-update:
 	python -m tools.ocr_output_migration
 	pytest -q tests/integration/test_eqn_placeholder_guard.py
 	pytest -q tests/integration/test_eqn_external_audit_guard.py
+	pytest -q tests/integration/test_eqn_placeholder_reconciliation_guard.py
 
 # 任意: 参照レジストリとの差分検出（標準フローには含まない）
 analysis-refs:

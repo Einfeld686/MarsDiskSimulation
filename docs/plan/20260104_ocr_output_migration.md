@@ -127,6 +127,7 @@
 - 問題があれば当該Keyは保留リストへ移動し、再OCRまたは再整形を優先する
 - 置換後にジャンク検出と段落連結の統計を自動で集計し、変換ログへ反映する
 - 通常運用: `python -m tools.ocr_output_migration` 実行後に `pytest -q tests/integration/test_eqn_placeholder_guard.py` を流す（`make ocr-update` で一括）
+- `make ocr-update` は `test_eqn_placeholder_reconciliation_guard.py` まで含めて実行する
 
 自動検査の出力フォーマット
 ------------------------
