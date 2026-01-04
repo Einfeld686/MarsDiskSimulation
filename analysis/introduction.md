@@ -40,12 +40,12 @@ Kuramoto (2024) の整理に沿って、物性・組成と力学特性を分け�
 
 | 観測される物性値（代表値） | 捕獲起源と整合しやすい読み | 巨大衝突起源と整合しやすい読み |
 | --- | --- | --- |
-| VIS-NIR 反射スペクトルが D/T 型小惑星に近く、2.8 um 帯に弱い吸収が見られる（Fraeman et al. 2012; Fraeman et al. 2014; Pajola et al. 2013） | 炭素質小惑星由来の表層・含水鉱物の可能性（Pajola et al. 2013; Pieters et al. 2014） | 衝突蒸気の凝縮微粒子（~0.1 um）が D 型様の赤いスペクトルを再現し得る（Ronnet et al. 2016; Hyodo et al. 2017a） |
-| 低アルベド（ボンド ~0.02、幾何 ~0.07; Pieters et al. 2014; Kuramoto 2024） | 暗い D 型小惑星と整合（Pajola et al. 2013; Pieters et al. 2014） | 衝突蒸気由来の暗色凝縮物や宇宙風化による暗化でも説明可能（Pignatale et al. 2018; Pieters et al. 2014） |
-| 低バルク密度（Phobos ~1.86、Deimos ~1.51 g/cm^3; Andert et al. 2010; Kuramoto 2024） | 多孔質・氷含有体の捕獲を示唆（Rosenblatt 2011; Kuramoto 2024） | 衝突デブリの再集積によるラブルパイル構造と整合（Andert et al. 2010; Rosenblatt 2011） |
-| MID-IR 放射率が炭素質隕石と一致しない（Giuranna et al. 2011; Glotch et al. 2018） | 捕獲説単独では説明が難しい観測（Giuranna et al. 2011; Kuramoto 2024） | フィロケイ酸塩・玄武岩など火星由来材料の可能性（Giuranna et al. 2011; Glotch et al. 2018） |
-| 低熱慣性（20-85 J m^-2 K^-1 s^-1/2 と細粒レゴリス; Kuzmin & Zabalueva 2003; Wada et al. 2018） | 表層進化（インパクト・ガーデニング/放射圧選別）で説明可能で判別力が弱い（Wada et al. 2018） | 衝突破砕による細粒供給でも整合するが決定的ではない（Hyodo et al. 2017a; Wada et al. 2018） |
-| 形状・内部構造（不規則形状/高空隙; Thomas 1989; Andert et al. 2010） | 捕獲前の形状保持と整合（Thomas 1989） | ロシュ限界近傍での集積・潮汐整形と両立（Hu et al. 2020; Rosenblatt & Charnoz 2012） |
+| VIS-NIR 反射スペクトルが D/T 型小惑星に近く、2.8 um 帯に弱い吸収が見られる（Fraeman et al. 2012; Fraeman et al. 2014） | 炭素質小惑星由来の表層・含水鉱物の可能性（Fraeman et al. 2012; Fraeman et al. 2014; Pajola et al. 2013） | 衝突蒸気の凝縮微粒子（~0.1 um）が D 型様の赤いスペクトルを再現し得る（Ronnet et al. 2016; Hyodo et al. 2017a） |
+| 低アルベド（ボンド ~0.02、幾何 ~0.07; Kuramoto 2024） | 暗い D 型小惑星と整合（Pajola et al. 2013） | 衝突蒸気由来の暗色凝縮物や宇宙風化による暗化でも説明可能（Pignatale et al. 2018; Pieters et al. 2014） |
+| 低バルク密度（Phobos ~1.86、Deimos ~1.51 g/cm^3; Kuramoto 2024） | 多孔質・氷含有体の捕獲を示唆（Kuramoto 2024） | 衝突デブリの再集積によるラブルパイル構造と整合（Andert et al. 2010; Rosenblatt et al. 2016） |
+| MID-IR 放射率が炭素質隕石と一致しない（Giuranna et al. 2011; Glotch et al. 2018） | 捕獲説単独では説明が難しい観測（Kuramoto 2024） | フィロケイ酸塩・玄武岩など火星由来材料の可能性（Giuranna et al. 2011; Glotch et al. 2018） |
+| 低熱慣性（20-85 J m^-2 K^-1 s^-1/2 と細粒レゴリス; Kuzmin & Zabalueva 2003; Wada et al. 2018; Kuramoto 2024） | 表層進化（インパクト・ガーデニング/放射圧選別）で説明可能で判別力が弱い（Kuramoto 2024） | 衝突破砕による細粒供給でも整合するが決定的ではない（Kuramoto 2024） |
+| 形状（不規則形状; Thomas 1989）/内部構造（高空隙; Andert et al. 2010） | 捕獲前の形状保持と整合（Thomas 1989） | ロシュ限界近傍での集積・潮汐整形と両立（Hu et al. 2020; Rosenblatt & Charnoz 2012） |
 
 以上より、VIS-NIR とアルベドは捕獲説に整合しやすい一方で、MID-IR 放射率や密度・形状は衝突起源の再集積とも整合し、観測のみでは決着しにくい。MMX のサンプルリターンが決定的な検証になると期待されている（Kuramoto 2024）。
 
