@@ -82,7 +82,7 @@ flowchart TB
         PSDSTEP["PSD/κ 評価"]
         SHIELD["光学深度・遮蔽 Φ"]
         PHASE["相判定/τゲート"]
-        SUPPLY["外部供給/輸送"]
+        SUPPLY["表層再供給/輸送"]
         SINKTIME["シンク時間 t_sink"]
         EVOLVE["表層/Smol 更新<br/>IMEX-BDF(1)"]
         CHECK["質量収支・停止判定"]
@@ -117,7 +117,7 @@ flowchart LR
         S4["4. PSD/κ 評価<br/>τ 計算"]
         S5["5. 遮蔽 Φ 適用<br/>κ_eff, Σ_tau1"]
         S6["6. 相判定/τゲート<br/>sink 選択"]
-        S7["7. 供給/輸送<br/>deep mixing"]
+        S7["7. 表層再供給/輸送<br/>deep mixing"]
         S8["8. シンク時間<br/>t_sink 評価"]
         S9["9. Smol/Surface 積分<br/>衝突 + 供給 + 損失"]
         S10["10. 診断・停止判定・出力"]
@@ -159,7 +159,7 @@ graph LR
     end
     
     subgraph SUPPLY_BOX["供給"]
-        EXT["外部供給率"]
+        EXT["表層再供給率"]
         DEEP["深層リザーバ"]
         FB["τフィードバック"]
     end
@@ -430,9 +430,9 @@ HKL（Hertz–Knudsen–Langmuir）フラックス (E.018) と飽和蒸気圧 (E
 
 ---
 
-## 6. 外部供給と輸送
+## 6. 表層再供給と輸送
 
-外部供給（supply）は表層への面密度生成率として与え、サイズ分布と深層輸送を通じて PSD に注入する。定常値・べき乗・テーブル・区分定義の各モードを用意し、温度・$\tau$ フィードバック・有限リザーバを組み合わせて非定常性を表現する。
+表層再供給（supply）は表層への面密度生成率として与え、サイズ分布と深層輸送を通じて PSD に注入する。ここでの表層再供給は外側からの流入を精密に表すものではなく、深部↔表層の入れ替わりを粗く表現するためのパラメータ化である。定常値・べき乗・テーブル・区分定義の各モードを用意し、温度・$\tau$ フィードバック・有限リザーバを組み合わせて非定常性を表現する。
 
 `const` / `powerlaw` / `table` / `piecewise` モードで表層への供給率を指定する。`const` は `mu_orbit10pct` を基準に、参照光学的厚さ (`mu_reference_tau`) に対応する表層密度の `orbit_fraction_at_mu1` を 1 公転で供給する定義に統一する。旧 μ (E.027a) は診断・ツール用の導出値としてのみ扱う。ここでの μ（供給式の指標）は衝突速度外挿の μ と別であり、混同しないよう区別して扱う。
 
@@ -496,7 +496,7 @@ S7 に対応する供給処理では、`supply_rate_nominal` を基準に `suppl
 
 ### 7.1 IMEX-BDF(1)
 
-Smoluchowski 衝突カスケードの時間積分には IMEX（implicit-explicit）と BDF(1)（backward differentiation formula）の一次組合せを採用する。状態ベクトルはサイズビン $k$ ごとの数密度（または面密度）で表現し、衝突ゲイン・ロスと外部供給・シンクを同時に組み込む。剛性の強いロス項を陰的に扱うことで安定性を確保し、生成・供給・表層流出は陽的に更新する。
+Smoluchowski 衝突カスケードの時間積分には IMEX（implicit-explicit）と BDF(1)（backward differentiation formula）の一次組合せを採用する。状態ベクトルはサイズビン $k$ ごとの数密度（または面密度）で表現し、衝突ゲイン・ロスと表層再供給・シンクを同時に組み込む。剛性の強いロス項を陰的に扱うことで安定性を確保し、生成・供給・表層流出は陽的に更新する。
 
 - **剛性項（損失）**: 陰的処理
 - **非剛性項（生成・供給）**: 陽的処理
@@ -685,7 +685,7 @@ scripts\runsets\windows\run_sweep.cmd --config scripts\runsets\common\base.yml -
 | `shielding.mode` | 遮蔽 Φ | config_guide §3.4 |
 | `sinks.mode` | 昇華/ガス抗力 | config_guide §3.6 |
 | `blowout.enabled` | ブローアウト損失 | config_guide §3.9 |
-| `supply.mode` | 外部供給 | config_guide §3.7 |
+| `supply.mode` | 表層再供給 | config_guide §3.7 |
 | `supply.feedback.*` | τフィードバック制御 | config_guide §3.7 |
 | `supply.temperature.*` | 温度カップリング | config_guide §3.7 |
 | `supply.reservoir.*` | 有限質量リザーバ | config_guide §3.7 |
