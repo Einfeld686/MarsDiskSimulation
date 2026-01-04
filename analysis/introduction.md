@@ -97,13 +97,15 @@ flowchart LR
 
 **図中の代表文献**
 
-- IN1: [@Citron2015_Icarus252_334; @Hyodo2017a_ApJ845_125; @Hyodo2018_ApJ860_150]
-- IN2: [@Citron2015_Icarus252_334; @Rosenblatt2016_NatGeo9_8]
-- MID1: [@SalmonCharnozBrahic2010_Icarus209_771; @CridaCharnoz2012_Science338_1196]
-- MID2: [@CanupSalmon2018_SciAdv4_eaar6887]
-- MID3: [@Rosenblatt2012_Icarus221_806; @Rosenblatt2016_NatGeo9_8]
-- GAP: [@Hyodo2018_ApJ860_150]
-- OUT1: [@CanupSalmon2018_SciAdv4_eaar6887]
+| 区分 | 代表文献 |
+| --- | --- |
+| IN1 | [@Citron2015_Icarus252_334; @Hyodo2017a_ApJ845_125; @Hyodo2018_ApJ860_150] |
+| IN2 | [@Citron2015_Icarus252_334; @Rosenblatt2016_NatGeo9_8] |
+| MID1 | [@SalmonCharnozBrahic2010_Icarus209_771; @CridaCharnoz2012_Science338_1196] |
+| MID2 | [@CanupSalmon2018_SciAdv4_eaar6887] |
+| MID3 | [@Rosenblatt2012_Icarus221_806; @Rosenblatt2016_NatGeo9_8] |
+| GAP | [@Hyodo2018_ApJ860_150] |
+| OUT1 | [@CanupSalmon2018_SciAdv4_eaar6887] |
 
 ### 1.3 ガスが少ない円盤という前提と意味
 
@@ -172,13 +174,13 @@ Phobos・Deimos の形成モデルで最大の課題は、現在の小さい質�
 ```mermaid
 flowchart TD
     subgraph Origin["初期条件 (SPH)"]
-        Debris[高温デブリ円盤]
+        Debris["高温デブリ円盤"]
     end
 
     subgraph Loss["短期損失過程 (本研究)"]
-        Collision[衝突カスケード\n(微粒子生成)]
-        Sublimation[高温昇華\n(粒径縮小・ガス化)]
-        Radiation[放射圧\n(ブローアウト)]
+        Collision["衝突カスケード<br/>(微粒子生成)"]
+        Sublimation["高温昇華<br/>(粒径縮小・ガス化)"]
+        Radiation["放射圧<br/>(ブローアウト)"]
         Sink((Loss))
 
         Collision -->|微粒子供給| Radiation
@@ -188,7 +190,7 @@ flowchart TD
     end
 
     subgraph Formation["長期進化 (先行研究)"]
-        Accretion[衛星集積\n(Canup+2018)]
+        Accretion["衛星集積<br/>(Canup+2018)"]
     end
 
     Debris --> Collision

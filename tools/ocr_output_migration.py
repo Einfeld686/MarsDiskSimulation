@@ -26,16 +26,33 @@ EQ_NUMBER_TRAIL_RE = re.compile(rf"\((?P<num>{EQ_LABEL_PATTERN})\)\s*[.,]?\s*$")
 EQ_NUMBER_ONLY_RE = re.compile(rf"^\s*\((?P<num>{EQ_LABEL_PATTERN})\)\s*[.,]?\s*$")
 EQUATION_REF_RE = re.compile(r"\bEq\.|\bEqs\.|\bEqn\.|\bEqns\.|\bEquation\b", re.IGNORECASE)
 EQ_REF_HEAD_RE = re.compile(rf"\bEq(?:s|n)?\.?\s*\((?P<label>{EQ_LABEL_PATTERN})\)", re.IGNORECASE)
-EQ_REF_EXTRA_RE = re.compile(rf"(?:,|and|or|&|–|-)\s*\((?P<label>{EQ_LABEL_PATTERN})\)", re.IGNORECASE)
+EQ_REF_EXTRA_RE = re.compile(
+    rf"\s*(?:,|and|or|&|\u2013|-)\s*\((?P<label>{EQ_LABEL_PATTERN})\)", re.IGNORECASE
+)
 YEAR_RE = re.compile(r"\b(18|19|20)\d{2}\b")
 AUTHOR_RE = re.compile(r"\b[A-Z][A-Za-z\-]+\b")
 ET_AL_RE = re.compile(r"\bet\s+al\.?\b", re.IGNORECASE)
 EQ_EXTERNAL_HINT_RE = re.compile(r"\b(of|from|in)\b", re.IGNORECASE)
 CITATION_BRACKET_RE = re.compile(r"\[[0-9][0-9,\s\-]*\]")
-AUTHOR_YEAR_PAREN_RE = re.compile(r"\([A-Z][A-Za-z\-]+(?:\s+et\s+al\.)?(?:,|\s+)?(18|19|20)\d{2}\)")
-AUTHOR_YEAR_INLINE_RE = re.compile(r"\b[A-Z][A-Za-z\-]+(?:\s+et\s+al\.)?,?\s*(18|19|20)\d{2}\b")
+AUTHOR_YEAR_PAREN_RE = re.compile(r"\([A-Z][A-Za-z\-]+(?:\s+et\s+al\.)?,?\s*(18|19|20)\d{2}\)")
+AUTHOR_YEAR_INLINE_RE = re.compile(r"\b[A-Z][A-Za-z\-]+(?:\s+et\s+al\.)?,\s*(18|19|20)\d{2}\b")
+AUTHOR_YEAR_TRAILING_PAREN_RE = re.compile(
+    r"\b[A-Z][A-Za-z\-]+(?:\s+et\s+al\.)?\s*\((18|19|20)\d{2}\)"
+)
+AUTHOR_YEAR_BARE_RE = re.compile(
+    r"\b[A-Z][A-Za-z\-]+(?:\s+et\s+al\.)?\s+(18|19|20)\d{2}\b"
+)
 INTERNAL_LOC_RE = re.compile(r"\b(Appendix|Section|Sect\.|Sec\.|Fig\.|Figure|Table|Chapter)\b", re.IGNORECASE)
 INTERNAL_SELF_RE = re.compile(r"\b(this|present|current)\s+(paper|work|study|section|appendix)\b", re.IGNORECASE)
+EQ_EXTERNAL_IMMEDIATE_RE = re.compile(
+    r"^\s*[,;:]\s*"
+    r"(?:\[[0-9][0-9,\s\-]*\]"
+    r"|\([A-Z][A-Za-z\-]+(?:\s+et\s+al\.)?,?\s*(18|19|20)\d{2}\)"
+    r"|[A-Z][A-Za-z\-]+(?:\s+et\s+al\.)?,\s*(18|19|20)\d{2}"
+    r"|[A-Z][A-Za-z\-]+(?:\s+et\s+al\.)?\s*\((18|19|20)\d{2}\))"
+)
+EQ_EXTERNAL_LINK_RE = re.compile(r"^\s*(?:,?\s*)?(?:of|from|in)\b", re.IGNORECASE)
+EQ_EXTERNAL_PRONOUN_RE = re.compile(r"\b(their|his|her|its)\s*$", re.IGNORECASE)
 MATH_TOKEN_RE = re.compile(
     r"(\\[a-zA-Z]+|[_^]|=|\\cdot|\\times|\\pm|\\propto|\\sqrt|\\frac|[\u00b7\u00b1\u00d7])"
 )
@@ -632,38 +649,55 @@ def _is_math_candidate_line(line: str) -> bool:
 
 def _extract_eq_labels(line: str) -> List[str]:
     labels: List[str] = []
-    for match in EQ_REF_HEAD_RE.finditer(line):
-        labels.append(match.group("label"))
-        head = match.group(0)
-        if re.search(r"\bEqs\b|\bEqns\b", head, re.IGNORECASE):
-            tail = line[match.end():]
-            for extra in EQ_REF_EXTRA_RE.finditer(tail):
-                labels.append(extra.group("label"))
+    for _, group_labels, _ in _iter_eq_reference_groups(line):
+        labels.extend(group_labels)
     return labels
 
 
-def _is_external_eq_reference(line: str) -> bool:
-    match = EQ_REF_HEAD_RE.search(line)
-    if not match:
+def _iter_eq_reference_groups(line: str) -> List[Tuple[re.Match[str], List[str], int]]:
+    groups: List[Tuple[re.Match[str], List[str], int]] = []
+    for match in EQ_REF_HEAD_RE.finditer(line):
+        labels = [match.group("label")]
+        end = match.end()
+        if re.search(r"\bEqs\b|\bEqns\b", match.group(0), re.IGNORECASE):
+            pos = end
+            while True:
+                extra_match = EQ_REF_EXTRA_RE.match(line[pos:])
+                if not extra_match:
+                    break
+                labels.append(extra_match.group("label"))
+                pos += extra_match.end()
+            end = pos
+        groups.append((match, labels, end))
+    return groups
+
+
+def _has_citation(text: str) -> bool:
+    return bool(
+        CITATION_BRACKET_RE.search(text)
+        or AUTHOR_YEAR_PAREN_RE.search(text)
+        or AUTHOR_YEAR_INLINE_RE.search(text)
+        or AUTHOR_YEAR_TRAILING_PAREN_RE.search(text)
+    )
+
+
+def _is_external_eq_reference(line: str, match: re.Match[str], group_end: int) -> bool:
+    head_window = line[max(0, match.start() - 50):match.start()]
+    tail_window = line[group_end:group_end + 140]
+
+    if EQ_EXTERNAL_PRONOUN_RE.search(head_window):
+        return True
+    if EQ_EXTERNAL_IMMEDIATE_RE.match(tail_window):
+        return True
+    link_match = EQ_EXTERNAL_LINK_RE.search(tail_window)
+    if link_match:
+        link_tail = tail_window[link_match.end():]
+        if _has_citation(link_tail) or AUTHOR_YEAR_BARE_RE.search(link_tail):
+            return True
+    if INTERNAL_LOC_RE.search(head_window) or INTERNAL_LOC_RE.search(tail_window):
         return False
-    tail = line[match.end():]
-    tail_window = tail[:160]
-    if INTERNAL_LOC_RE.search(tail_window) or INTERNAL_SELF_RE.search(tail_window):
+    if INTERNAL_SELF_RE.search(head_window) or INTERNAL_SELF_RE.search(tail_window):
         return False
-    if re.match(r"^\s*\[[0-9][0-9,\s\-]*\]", tail_window):
-        return True
-    if AUTHOR_YEAR_PAREN_RE.search(tail_window):
-        return True
-    if YEAR_RE.search(tail_window) and (ET_AL_RE.search(tail_window) or AUTHOR_RE.search(tail_window)):
-        return True
-    if EQ_EXTERNAL_HINT_RE.search(tail_window) and (
-        YEAR_RE.search(tail_window) or CITATION_BRACKET_RE.search(tail_window)
-    ):
-        return True
-    if re.search(r"\b(see|as in|as shown in)\b", tail_window, re.IGNORECASE) and (
-        YEAR_RE.search(tail_window) or CITATION_BRACKET_RE.search(tail_window)
-    ):
-        return True
     return False
 
 
@@ -677,20 +711,19 @@ def _supplement_placeholders_from_eq_refs(lines: Sequence[str]) -> Tuple[List[st
     inserted = 0
     for line in lines:
         output.append(line)
-        if not EQ_REF_HEAD_RE.search(line):
+        groups = _iter_eq_reference_groups(line)
+        if not groups:
             continue
-        if _is_external_eq_reference(line):
-            continue
-        labels = _extract_eq_labels(line)
-        if not labels:
-            continue
-        for label in labels:
-            if label in existing_labels or label in inserted_labels:
+        for match, labels, group_end in groups:
+            if _is_external_eq_reference(line, match, group_end):
                 continue
-            output.append(f"[[EQN:({label})]]")
-            output.append("")
-            inserted_labels.add(label)
-            inserted += 1
+            for label in labels:
+                if label in existing_labels or label in inserted_labels:
+                    continue
+                output.append(f"[[EQN:({label})]]")
+                output.append("")
+                inserted_labels.add(label)
+                inserted += 1
     return output, inserted
 
 
