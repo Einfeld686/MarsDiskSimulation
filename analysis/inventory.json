@@ -16093,6 +16093,104 @@
     "brief_usage": "No description available."
   },
   {
+    "file_path": "tmp/replace_birnstiel_eqs.py",
+    "line_no": 7,
+    "symbol": "MODULE_PATH",
+    "signature": "MODULE_PATH = Path('tmp/update_birnstiel_equations.py')",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "tmp/replace_birnstiel_eqs.py",
+    "line_no": 8,
+    "symbol": "RESULT_PATH",
+    "signature": "RESULT_PATH = Path('paper/pdf_extractor/outputs/Birnstiel2011_AA525_A11/result.md')",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "tmp/replace_birnstiel_eqs.py",
+    "line_no": 16,
+    "symbol": "EQUATIONS",
+    "signature": "EQUATIONS = mod.EQUATIONS",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "tmp/replace_birnstiel_eqs.py",
+    "line_no": 19,
+    "symbol": "EQ_REF_RE",
+    "signature": "EQ_REF_RE = re.compile('\\\\bEq\\\\.?\\\\b', re.IGNORECASE)",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "tmp/replace_birnstiel_eqs.py",
+    "line_no": 22,
+    "symbol": "find_eq_line",
+    "signature": "find_eq_line(lines: list[str], eq_id: str) -> int | None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tmp/replace_birnstiel_eqs.py",
+    "line_no": 34,
+    "symbol": "build_block",
+    "signature": "build_block(eq_id: str, old: str) -> list[str]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tmp/replace_birnstiel_eqs.py",
+    "line_no": 41,
+    "symbol": "replace_block",
+    "signature": "replace_block(lines: list[str], idx: int, block: list[str]) -> list[str]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tmp/replace_birnstiel_eqs.py",
+    "line_no": 48,
+    "symbol": "main",
+    "signature": "main() -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tmp/update_birnstiel_equations.py",
+    "line_no": 11,
+    "symbol": "EQUATIONS",
+    "signature": "EQUATIONS = [('1', 'm=\\\\frac{4\\\\pi}{3},\\\\rho_s,a^3'), ('2', 'C_{m_1,m_2},n(m_1),n(m_2),dm_1,dm_2'), ('3', 'C_{m_1,m_2}=m_1^{\\\\nu},h!\\\\left(\\\\frac{m_2}{m_1}\\\\right)'), ('4', 'n(m)=A,m^{-\\\\alpha}'), ('5', '\\\\frac{\\\\partial,(m,n(m))}{\\\\partial t}+\\\\frac{\\\\partial F(m)}{\\\\partial m}=0'), ('6', 'F(m)=\\\\int_{m_0}^{m}dm_1\\\\int_{m-m_1}^{m_f}dm_2;m_1,C_{m_1,m_2},n(m_1),n(m_2)'), ('7', 'F(m)=m^{\\\\nu-2\\\\alpha+3};\\\\underbrace{\\\\int_{x_0}^{1}dx_1\\\\int_{1-x_1}^{x_f}dx_2;x_1^{\\\\nu+1-\\\\alpha},x_2^{-\\\\alpha},h!\\\\left(\\\\frac{x_2}{x_1}\\\\right)}_{=:K}'), ('8', 'F(m)\\\\propto m^{\\\\nu-2\\\\alpha+3}=\\\\mathrm{const.}'), ('9', '\\\\alpha=\\\\frac{\\\\nu+3}{2}'), ('10', '\\\\dot n_f(m)=N,m^{-\\\\xi}'), ('11', 'F(m_f)=K,m_f^{\\\\nu-2\\\\alpha+3}'), ('12', '\\\\frac{\\\\partial F_f(m)}{\\\\partial m}=-m,\\\\dot n_f'), ('13', 'F_f(m)=-N\\\\cdot\\\\frac{1}{2-\\\\xi}\\\\left(m^{2-\\\\xi}-m_0^{2-\\\\xi}\\\\right)'), ('14', 'F_f(m_f)=-F(m_f)'), ('15', 'N=(2-\\\\xi),K,\\\\frac{m_f^{\\\\nu-2\\\\alpha+3}}{m_f^{2-\\\\xi}-m_0^{2-\\\\xi}}'), ('16', 'K,m^{\\\\nu-2\\\\alpha+3}=-N\\\\cdot\\\\frac{1}{2-\\\\xi}\\\\cdot m_0^{2-\\\\xi}'), ('17', 'K,m^{\\\\nu-2\\\\alpha+3}\\\\simeq N\\\\cdot\\\\frac{1}{2-\\\\xi}\\\\cdot m^{2-\\\\xi}'), ('18', '\\\\alpha=\\\\frac{\\\\nu+\\\\xi+1}{2}'), ('19', '\\\\nu-\\\\gamma-\\\\alpha+1<0'), ('20', '\\\\gamma-\\\\alpha+2>0'), ('21', 'h!\\\\left(\\\\frac{m_2}{m_1}\\\\right)=h_0\\\\cdot\\\\begin{cases}\\\\left(\\\\dfrac{m_2}{m_1}\\\\right)^{\\\\gamma} & \\\\text{for } \\\\dfrac{m_2}{m_1}\\\\ll 1[6pt]\\\\left(\\\\dfrac{m_2}{m_1}\\\\right)^{\\\\nu-\\\\gamma} & \\\\text{for } \\\\dfrac{m_2}{m_1}\\\\gg 1\\\\end{cases}'), ('22', '\\\\begin{aligned}\\nF(m)=;&\\\\int_{m_0}^{m/2}dm_1\\\\int_{m-m_1}^{m_f}dm_2;m_1,C_{m_1,m_2},n(m_1),n(m_2)\\\\\\n&+\\\\int_{m/2}^{m}dm_1\\\\int_{m-m_1}^{m_1}dm_2;m_1,C_{m_1,m_2},n(m_1),n(m_2)\\\\\\n&+\\\\int_{m/2}^{m}dm_1\\\\int_{m_1}^{m_f}dm_2;m_1,C_{m_1,m_2},n(m_1),n(m_2)\\n\\\\end{aligned}'), ('23', '\\\\alpha=\\\\xi+\\\\gamma'), ('24', '\\\\alpha=\\\\begin{cases}\\\\dfrac{\\\\nu+3}{2} & \\\\text{Case A: }\\\\xi>2[6pt]\\\\dfrac{\\\\nu+\\\\xi+1}{2} & \\\\text{Case B: }\\\\nu-2\\\\gamma+1<\\\\xi<2[6pt]\\\\xi+\\\\gamma & \\\\text{Case C: }\\\\xi<\\\\nu-2\\\\gamma+1\\\\end{cases}'), ('25', '\\\\frac{H_d}{H_g}=\\\\sqrt{\\\\frac{\\\\alpha_t}{\\\\mathrm{St}}}\\\\qquad \\\\text{for }\\\\mathrm{St}>\\\\alpha_t'), ('26', '\\\\mathrm{St}=\\\\Omega_k,\\\\tau_{st}\\\\simeq \\\\frac{\\\\pi}{2},\\\\frac{a,\\\\rho_s}{\\\\Sigma_g}'), ('27', 'a_{\\\\mathrm{sett}}=\\\\frac{2,\\\\alpha_t,\\\\Sigma_g}{\\\\pi,\\\\rho_s}'), ('28', 'N(m)=\\\\int_{-\\\\infty}^{\\\\infty}n(m,z),dz'), ('29', '\\\\tilde C_{m_1,m_2},N(m_1),N(m_2),dm_1,dm_2'), ('30', '\\\\tilde C_{m_1,m_2}=\\\\frac{C_{m_1,m_2}}{\\\\sqrt{2\\\\pi\\\\left(H_1^2+H_2^2\\\\right)}}'), ('31', '\\\\begin{aligned}\\n\\\\tilde C_{m_1,m_2}\\n&=\\\\frac{C_{m_1,m_2}}{\\\\sqrt{2\\\\pi\\\\left(H_1^2+H_2^2\\\\right)}}\\\\\\n&=C_{m_1,m_2}\\\\cdot H_1^{-1}\\\\cdot\\\\left(1+\\\\frac{H_2^2}{H_1^2}\\\\right)^{-1/2}\\\\\\n&=C_{m_1,m_2}\\\\cdot m_1^{1/6}\\\\cdot h!\\\\left(\\\\frac{m_2}{m_1}\\\\right)\\n\\\\end{aligned}'), ('32', '\\\\Delta u_{\\\\mathrm{BM}}=\\\\sqrt{\\\\frac{8,k_b,T,(m_1+m_2)}{\\\\pi,m_1,m_2}}'), ('33', '\\\\Delta u_{\\\\mathrm{I}}\\\\propto\\\\left|\\\\mathrm{St}_1-\\\\mathrm{St}_2\\\\right|'), ('34', '\\\\Delta u_{\\\\mathrm{II}}\\\\propto\\\\sqrt{\\\\mathrm{St}_{\\\\max}}'), ('35', 'p_f=\\\\begin{cases}0 & \\\\text{if } \\\\Delta u<u_f-\\\\delta u\\\\1 & \\\\text{if } \\\\Delta u\\\\ge u_f\\\\1-\\\\dfrac{u_f-\\\\Delta u}{\\\\delta u} & \\\\text{else}\\\\end{cases}'), ('36', '\\\\int_{m_0}^{m_{\\\\mathrm{imp}}}n(m),m,dm=2,m_{\\\\mathrm{imp}}'), ('37', 'a_{\\\\mathrm{BT}}\\\\approx\\\\left[\\\\frac{8,\\\\Sigma_g}{\\\\pi,\\\\rho_s}\\\\cdot \\\\mathrm{Re}^{-1/4}\\\\cdot\\\\sqrt{\\\\frac{\\\\mu m_p}{3\\\\pi,\\\\alpha_t}}\\\\cdot\\\\left(\\\\frac{4\\\\pi}{3}\\\\rho_s\\\\right)^{-1/2}\\\\right]^{2/5}'), ('38', '\\\\mathrm{Re}\\\\approx \\\\frac{\\\\alpha_t,\\\\Sigma_g,\\\\sigma_{\\\\mathrm{H_2}}}{2,\\\\mu,m_p}'), ('39', '\\\\mathrm{St}*{12}=\\\\frac{1}{y_a}\\\\cdot\\\\frac{t*{\\\\eta}}{t_L}=\\\\frac{1}{y_a}\\\\cdot \\\\mathrm{Re}^{-1/2}'), ('40', 'a_{12}=\\\\frac{1}{y_a}\\\\cdot\\\\frac{2,\\\\Sigma_g}{\\\\pi,\\\\rho_s}\\\\cdot \\\\mathrm{Re}^{-1/2}'), ('41', 'c_s=\\\\sqrt{\\\\frac{k_b,T}{\\\\mu,m_p}}'), ('42', '\\\\Delta u_{\\\\max}>u_f'), ('43', 'a_{\\\\max}\\\\simeq \\\\frac{2,\\\\Sigma_g}{\\\\pi,\\\\alpha_t,\\\\rho_s}\\\\cdot\\\\frac{u_f^2}{c_s^2}'), ('44', '5,\\\\mu\\\\mathrm{m}<a_{12}<a_{\\\\max}'), ('45', '\\\\Delta u_i^{\\\\mathrm{mon}}=\\\\begin{cases}\\\\mathrm{Re}^{1/4}\\\\cdot(\\\\mathrm{St}_i-\\\\mathrm{St}_0) & \\\\text{for } a_i<a*{12}[6pt]u*{\\\\mathrm{gas}}\\\\cdot\\\\Bigl((1-\\\\epsilon)\\\\cdot \\\\mathrm{Re}^{1/4}\\\\cdot(\\\\mathrm{St}_i-\\\\mathrm{St}_0)+\\\\epsilon\\\\cdot(\\\\mathrm{St}*i-\\\\mathrm{St}*0)\\\\cdot\\\\sqrt{3\\\\cdot \\\\mathrm{St}*i}\\\\Bigr) & \\\\text{for } a*{12}\\\\le a_i<5,a*{12}[6pt]u*{\\\\mathrm{gas}}\\\\cdot\\\\sqrt{3\\\\cdot \\\\mathrm{St}*i} & \\\\text{for } a_i\\\\ge 5,a*{12}\\\\end{cases}'), ('46', 'u_{\\\\mathrm{gas}}=c_s,\\\\sqrt{\\\\frac{3}{2}\\\\alpha_t}'), ('47', '\\\\epsilon=\\\\frac{a_i-a_{12}}{4,a_{12}}'), ('48', '\\\\Delta u_i^{\\\\mathrm{eq}}=\\\\begin{cases}0 & \\\\text{for } a_i<a_{12}[6pt]\\\\sqrt{\\\\dfrac{2}{3}}\\\\cdot \\\\Delta u_i^{\\\\mathrm{mon}} & \\\\text{for } a_i>a_{12}\\\\end{cases}'), ('49', 'V=c_s\\\\left(\\\\frac{8,\\\\mu m_p,\\\\Sigma_g}{\\\\alpha_t,\\\\sigma_{\\\\mathrm{H_2}}}\\\\right)^{1/4}\\\\sqrt{\\\\frac{3}{4},\\\\frac{\\\\alpha_t}{\\\\Sigma_g,y_a}}'), ('50', 'J=\\\\left(2.5^{-9}+\\\\left(1.1^9+\\\\left(1+2\\\\sqrt{3},\\\\frac{V}{u_f}\\\\right)^9\\\\right)^{-1}\\\\right)^{-1/9}'), ('51', 'f(a_i)\\\\rightarrow f(a_i)\\\\cdot\\\\left(2-\\\\frac{a_i-a_P}{a_{\\\\mathrm{inc}}-a_P}\\\\right)'), ('52', 'a_{\\\\mathrm{inc}}=0.3,a_P'), ('53', 'b(a_i)=2\\\\cdot f(a_L)\\\\cdot \\\\exp!\\\\left(-\\\\frac{(a_i-a_P)^2}{\\\\sigma^2}\\\\right)'), ('54', '\\\\sigma=\\\\frac{\\\\min\\\\left(\\\\lvert a_R-a_P\\\\rvert,\\\\lvert a_L-a_P\\\\rvert\\\\right)}{\\\\sqrt{\\\\ln(2)}}'), ('55', '\\\\sigma>0.1,a_P'), ('56', '\\\\mathcal{F}(a_i)=\\\\begin{cases}f(a_i) & \\\\text{if } a_i\\\\le a_L\\\\max\\\\bigl(f(a_i),b(a_i)\\\\bigr) & \\\\text{if } a_L\\\\le a_i\\\\le a_P\\\\b(a_i) & \\\\text{if } a_P\\\\le a_i\\\\le a_R\\\\0 & \\\\text{else.}\\\\end{cases}'), ('57', 'N(a)=\\\\frac{\\\\Sigma_d}{\\\\int_{a_0}^{\\\\infty}\\\\mathcal{F}(a),d\\\\ln a}\\\\cdot\\\\frac{\\\\mathcal{F}(a)}{m\\\\cdot a}'), ('A.1', 'F(m)\\\\equiv I_1+I_2+I_3'), ('A.2', 'I_1=\\\\frac{A^2\\\\cdot h_0}{\\\\nu-\\\\gamma-\\\\alpha+1}\\\\cdot\\\\int_{m_0}^{m/2}dm_1,m_1^{\\\\gamma-\\\\alpha+1}\\\\cdot\\\\left[m_f^{\\\\nu-\\\\gamma-\\\\alpha+1}-(m-m_1)^{\\\\nu-\\\\gamma-\\\\alpha+1}\\\\right]'), ('A.3', '\\\\nu-\\\\gamma-\\\\alpha+1>0'), ('A.4', 'I_1=\\\\frac{A^2\\\\cdot h_0\\\\cdot m_f^{\\\\nu-\\\\gamma-\\\\alpha+1}}{(\\\\nu-\\\\gamma-\\\\alpha+1)\\\\cdot(\\\\gamma-\\\\alpha+2)}\\\\cdot\\\\left[\\\\left(\\\\frac{m}{2}\\\\right)^{\\\\gamma-\\\\alpha+2}-m_0^{\\\\gamma-\\\\alpha+2}\\\\right]'), ('A.5', 'I_1=\\\\frac{A^2\\\\cdot h_0\\\\cdot m_f^{\\\\nu-\\\\gamma-\\\\alpha+1}}{(\\\\nu-\\\\gamma-\\\\alpha+1)\\\\cdot(\\\\gamma-\\\\alpha+2)}\\\\cdot\\\\left(\\\\frac{m}{2}\\\\right)^{\\\\gamma-\\\\alpha+2}'), ('A.6', 'I_2=A^2\\\\cdot h_0\\\\cdot m^{3+\\\\nu-2\\\\alpha}\\\\int_{1/2}^{1}dx_1\\\\int_{1-x_1}^{x_1}dx_2;x_1^{1+\\\\nu-\\\\gamma-\\\\alpha}\\\\cdot x_2^{\\\\gamma-\\\\alpha}'), ('A.7', 'I_2=\\\\underbrace{\\\\frac{A^2\\\\cdot h_0\\\\cdot m^{3+\\\\nu-2\\\\alpha}}{\\\\gamma-\\\\alpha+1}}*{=:D}\\\\cdot\\\\int*{1/2}^{1}dx_1,x_1^{1+\\\\nu-\\\\gamma-\\\\alpha}\\\\cdot\\\\left[x_1^{\\\\gamma-\\\\alpha+1}-(1-x_1)^{\\\\gamma-\\\\alpha+1}\\\\right]'), ('A.8', '\\\\frac{I_2}{D}=\\\\frac{1-\\\\left(\\\\frac{1}{2}\\\\right)^{3+\\\\nu-2\\\\alpha}}{\\\\nu-2\\\\alpha+3}-\\\\int_{1/2}^{1}dx_1;x_1^{,1+\\\\nu-\\\\gamma-\\\\alpha}\\\\cdot(1-x_1)^{,\\\\gamma-\\\\alpha+1}'), ('A.9', '\\\\frac{I_2}{D}=\\\\frac{1-\\\\left(\\\\frac{1}{2}\\\\right)^{a+b-1}}{a+b-1}-\\\\left(B(a,b)-B_{1/2}(a,b)\\\\right)'), ('A.10', 'a=2+\\\\nu-\\\\gamma-\\\\alpha>0'), ('A.11', 'b=2+\\\\gamma-\\\\alpha>0'), ('A.12', '\\\\begin{aligned}\\nI_3&=A^2\\\\cdot h_0\\\\cdot \\\\int_{m/2}^{m}dm_1\\\\int_{m_1}^{m_f}dm_2;m_1^{1+\\\\gamma-\\\\alpha}\\\\cdot m_2^{\\\\nu-\\\\gamma-\\\\alpha}\\\\\\n&=\\\\frac{A^2\\\\cdot h_0}{\\\\nu-\\\\gamma-\\\\alpha+1}\\\\cdot \\\\int_{m/2}^{m}dm_1,m_1^{1+\\\\gamma-\\\\alpha}\\\\cdot\\\\left(m_f^{\\\\nu-\\\\gamma-\\\\alpha+1}-\\\\left(\\\\frac{m}{2}\\\\right)^{\\\\nu-\\\\gamma-\\\\alpha+1}\\\\right)\\n\\\\end{aligned}'), ('A.13', 'I_3=\\\\frac{A^2\\\\cdot h_0\\\\cdot m_f^{\\\\nu-\\\\gamma-\\\\alpha+1}}{(\\\\nu-\\\\gamma-\\\\alpha+1)\\\\cdot(\\\\gamma-\\\\alpha+2)}\\\\cdot\\\\left(1-\\\\left(\\\\frac{1}{2}\\\\right)^{\\\\gamma-\\\\alpha+2}\\\\right)\\\\cdot m^{\\\\gamma-\\\\alpha+2}'), ('A.14', '\\\\frac{I_1+I_3}{A^2\\\\cdot h_0}\\\\propto m_f^{\\\\nu-\\\\gamma-\\\\alpha+1}\\\\cdot m^{\\\\gamma-\\\\alpha+2}'), ('A.15', '\\\\frac{I_2}{A^2\\\\cdot h_0}\\\\propto m^{3+\\\\nu-2\\\\alpha}\\\\propto\\\\left(\\\\frac{m}{m_f}\\\\right)^{\\\\nu-\\\\alpha-\\\\gamma+1},m_f^{\\\\nu-\\\\gamma-\\\\alpha+1},m^{\\\\gamma-\\\\alpha+2}'), ('A.16', '\\\\frac{I_2}{I_1+I_3}\\\\propto \\\\left(\\\\frac{m}{m_f}\\\\right)^{\\\\nu-\\\\alpha-\\\\gamma+1}'), ('A.17', '\\\\alpha=\\\\gamma+\\\\xi'), ('B.1', 'C^{\\\\mathrm{BM}}*{m_1,m_2}\\\\propto (a_1+a_2)^2\\\\cdot\\\\sqrt{\\\\frac{m_1+m_2}{m_1m_2}}\\\\propto m_1^{1/6}\\\\cdot\\\\underbrace{(1+\\\\theta^{1/3})^2,(1+\\\\theta^{-1})^{1/2}}*{=h(\\\\theta)}'), ('B.2', 'C^{\\\\mathrm{I}}*{m_1,m_2}\\\\propto (a_1+a_2)^2\\\\cdot|a_1-a_2|\\\\propto m_1\\\\cdot\\\\underbrace{(1+\\\\theta^{1/3})^2\\\\cdot|1-\\\\theta^{1/3}|}*{=h(\\\\theta)}'), ('B.3', '\\\\begin{aligned}\\nC^{\\\\mathrm{II}}*{m_1,m_2}&\\\\propto (a_1+a_2)^2\\\\cdot \\\\lim*{N\\\\to\\\\infty}\\\\sqrt{(a_1^N+a_2^N)^{1/N}}\\\\\\n&\\\\propto m_1^{5/6}\\\\cdot\\\\underbrace{(1+\\\\theta^{1/3})^2\\\\cdot \\\\lim_{N\\\\to\\\\infty}(1+\\\\theta^{N/3})^{1/(2N)}}_{=h(\\\\theta)}\\n\\\\end{aligned}'), ('C.1', '\\\\frac{da}{dt}=\\\\frac{1}{4\\\\pi\\\\rho_s a^2}\\\\cdot\\\\frac{dm}{dt}\\\\simeq \\\\frac{1}{4\\\\pi\\\\rho_s a^2}\\\\cdot\\\\frac{m}{\\\\tau_{\\\\mathrm{coll}}}'), ('C.2', 't_{\\\\mathrm{BM}}(a_1,a_2)=\\\\frac{1}{5,\\\\Sigma_d,\\\\Omega_k},\\\\sqrt{\\\\frac{2(\\\\pi\\\\rho_s)^3}{3,\\\\mu m_p}},\\\\left(a_2^{5/2}-a_1^{5/2}\\\\right)'), ('C.3', 't_{\\\\mathrm{IIa}}(a_1,a_2)=\\\\frac{4}{\\\\Sigma_d,\\\\Omega_k},\\\\sqrt{\\\\frac{\\\\Sigma_g,\\\\rho_s}{3,\\\\alpha_t}},\\\\left(\\\\sqrt{a_2}-\\\\sqrt{a_1}\\\\right)'), ('C.4', 't_{\\\\mathrm{IIb}}(a_1,a_2)=\\\\frac{\\\\Sigma_g}{\\\\Sigma_d,\\\\Omega_k},\\\\sqrt{\\\\frac{8}{3\\\\pi}},\\\\ln!\\\\left(\\\\frac{a_2}{a_1}\\\\right)'), ('C.5', '\\\\tau_{\\\\mathrm{BM}}=t_{\\\\mathrm{BM}}(a_0,a_{\\\\mathrm{BT}})'), ('C.6', '\\\\tau_{\\\\mathrm{II}}=t_{\\\\mathrm{IIb}}(a_{12},a_{\\\\max})'), ('C.7', '\\\\tau_{\\\\mathrm{II}}=t_{\\\\mathrm{IIa}}(a_{12},a_{\\\\max})'), ('C.8', '\\\\tau_{\\\\mathrm{II}}=t_{\\\\mathrm{IIa}}(a_{12},a_{\\\\mathrm{sett}})+t_{\\\\mathrm{IIb}}(a_{\\\\mathrm{sett}},a_{\\\\max})'), ('C.9', '\\\\tau_{\\\\mathrm{equil}}=8\\\\cdot(\\\\tau_{\\\\mathrm{BM}}+\\\\tau_{\\\\mathrm{II}})')]",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "tmp/update_birnstiel_equations.py",
+    "line_no": 118,
+    "symbol": "PLACEHOLDER",
+    "signature": "PLACEHOLDER = '<<COMMA>>'",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "tmp/update_birnstiel_equations.py",
+    "line_no": 121,
+    "symbol": "protect_func",
+    "signature": "protect_func(expr: str, func: str) -> str",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tmp/update_birnstiel_equations.py",
+    "line_no": 152,
+    "symbol": "convert_formula",
+    "signature": "convert_formula(old: str) -> str",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tmp/update_birnstiel_equations.py",
+    "line_no": 174,
+    "symbol": "make_pattern",
+    "signature": "make_pattern(old: str) -> re.Pattern",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tmp/update_birnstiel_equations.py",
+    "line_no": 180,
+    "symbol": "main",
+    "signature": "main() -> None",
+    "brief_usage": "No description available."
+  },
+  {
     "file_path": "tools/analyze_tau_los_feedback.py",
     "line_no": 36,
     "symbol": "SECONDS_PER_YEAR",
@@ -16797,6 +16895,496 @@
     "line_no": 100,
     "symbol": "main",
     "signature": "main(argv: Iterable[str] | None=None) -> int",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tools/ocr_output_migration.py",
+    "line_no": 22,
+    "symbol": "TABLE_PLACEHOLDER_RE",
+    "signature": "TABLE_PLACEHOLDER_RE = re.compile('^\\\\s*\\\\[\\\\[TABLE:(?P<label>[^]]+)\\\\]\\\\]\\\\s*$')",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "tools/ocr_output_migration.py",
+    "line_no": 23,
+    "symbol": "EQ_PLACEHOLDER_RE",
+    "signature": "EQ_PLACEHOLDER_RE = re.compile('\\\\[\\\\[EQN:\\\\((?P<num>[^)]+)\\\\)\\\\]\\\\]')",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "tools/ocr_output_migration.py",
+    "line_no": 24,
+    "symbol": "EQ_NUMBER_TRAIL_RE",
+    "signature": "EQ_NUMBER_TRAIL_RE = re.compile('\\\\((?P<num>\\\\d+[A-Za-z]?)\\\\)\\\\s*[.,]?\\\\s*$')",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "tools/ocr_output_migration.py",
+    "line_no": 25,
+    "symbol": "EQ_NUMBER_ONLY_RE",
+    "signature": "EQ_NUMBER_ONLY_RE = re.compile('^\\\\s*\\\\((?P<num>\\\\d+[A-Za-z]?)\\\\)\\\\s*[.,]?\\\\s*$')",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "tools/ocr_output_migration.py",
+    "line_no": 26,
+    "symbol": "EQUATION_REF_RE",
+    "signature": "EQUATION_REF_RE = re.compile('\\\\bEq\\\\.|\\\\bEqs\\\\.|\\\\bEqn\\\\.|\\\\bEqns\\\\.|\\\\bEquation\\\\b', re.IGNORECASE)",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "tools/ocr_output_migration.py",
+    "line_no": 27,
+    "symbol": "MATH_TOKEN_RE",
+    "signature": "MATH_TOKEN_RE = re.compile('(\\\\\\\\[a-zA-Z]+|[_^]|=|\\\\\\\\cdot|\\\\\\\\times|\\\\\\\\pm|\\\\\\\\propto|\\\\\\\\sqrt|\\\\\\\\frac|[\\\\u00b7\\\\u00b1\\\\u00d7])')",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "tools/ocr_output_migration.py",
+    "line_no": 30,
+    "symbol": "MATH_BLOCK_START_RE",
+    "signature": "MATH_BLOCK_START_RE = re.compile('^\\\\s*(\\\\\\\\\\\\[|\\\\\\\\begin\\\\{equation\\\\*?\\\\}|\\\\$\\\\$)\\\\s*$')",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "tools/ocr_output_migration.py",
+    "line_no": 31,
+    "symbol": "MATH_BLOCK_END_RE",
+    "signature": "MATH_BLOCK_END_RE = re.compile('^\\\\s*(\\\\\\\\\\\\]|\\\\\\\\end\\\\{equation\\\\*?\\\\}|\\\\$\\\\$)\\\\s*$')",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "tools/ocr_output_migration.py",
+    "line_no": 32,
+    "symbol": "IMAGE_REF_INLINE_RE",
+    "signature": "IMAGE_REF_INLINE_RE = re.compile('!\\\\[\\\\]\\\\[image\\\\d+\\\\]', re.IGNORECASE)",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "tools/ocr_output_migration.py",
+    "line_no": 33,
+    "symbol": "IMAGE_LABEL_RE",
+    "signature": "IMAGE_LABEL_RE = re.compile('^\\\\s*\\\\[image\\\\d+\\\\]\\\\s*$', re.IGNORECASE)",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "tools/ocr_output_migration.py",
+    "line_no": 34,
+    "symbol": "IMAGE_DEF_BASE64_RE",
+    "signature": "IMAGE_DEF_BASE64_RE = re.compile('^\\\\s*\\\\[image\\\\d+\\\\]:\\\\s*<data:image/[^>]+>\\\\s*$', re.IGNORECASE)",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "tools/ocr_output_migration.py",
+    "line_no": 35,
+    "symbol": "DATA_URI_RE",
+    "signature": "DATA_URI_RE = re.compile('^\\\\s*<data:image/[^>]+>\\\\s*$', re.IGNORECASE)",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "tools/ocr_output_migration.py",
+    "line_no": 36,
+    "symbol": "INLINE_IMAGE_TOKEN_RE",
+    "signature": "INLINE_IMAGE_TOKEN_RE = re.compile('!\\\\[\\\\]\\\\[image\\\\d+\\\\]|\\\\[image\\\\d+\\\\]', re.IGNORECASE)",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "tools/ocr_output_migration.py",
+    "line_no": 37,
+    "symbol": "PAGE_MARKER_RE",
+    "signature": "PAGE_MARKER_RE = re.compile('\\\\bpage\\\\s+\\\\d+\\\\s+of\\\\s+\\\\d+\\\\b', re.IGNORECASE)",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "tools/ocr_output_migration.py",
+    "line_no": 38,
+    "symbol": "PAGE_FRACTION_RE",
+    "signature": "PAGE_FRACTION_RE = re.compile('^\\\\s*\\\\d+\\\\s*/\\\\s*\\\\d+\\\\s*$')",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "tools/ocr_output_migration.py",
+    "line_no": 39,
+    "symbol": "PAGE_ALPHA_RE",
+    "signature": "PAGE_ALPHA_RE = re.compile('^[A-Z]\\\\d+,\\\\s*page\\\\s+\\\\d+\\\\s+of\\\\s+\\\\d+', re.IGNORECASE)",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "tools/ocr_output_migration.py",
+    "line_no": 40,
+    "symbol": "PAGE_ALPHA_TRAIL_RE",
+    "signature": "PAGE_ALPHA_TRAIL_RE = re.compile('\\\\b[A-Z]\\\\d+,\\\\s*page\\\\s+\\\\d+\\\\s+of\\\\s+\\\\d+\\\\b', re.IGNORECASE)",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "tools/ocr_output_migration.py",
+    "line_no": 41,
+    "symbol": "ROMAN_RE",
+    "signature": "ROMAN_RE = re.compile('^\\\\s*[IVXLCDM]+\\\\s*$')",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "tools/ocr_output_migration.py",
+    "line_no": 42,
+    "symbol": "DIGITS_RE",
+    "signature": "DIGITS_RE = re.compile('^\\\\s*\\\\d+\\\\s*$')",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "tools/ocr_output_migration.py",
+    "line_no": 43,
+    "symbol": "PUNCT_ONLY_RE",
+    "signature": "PUNCT_ONLY_RE = re.compile('^\\\\s*[\\\\W_]+\\\\s*$')",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "tools/ocr_output_migration.py",
+    "line_no": 44,
+    "symbol": "MATH_GUARD_RE",
+    "signature": "MATH_GUARD_RE = re.compile('(\\\\\\\\[a-zA-Z]+|\\\\\\\\\\\\[|\\\\\\\\\\\\]|[_^])')",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "tools/ocr_output_migration.py",
+    "line_no": 46,
+    "symbol": "META_PATTERNS",
+    "signature": "META_PATTERNS = [re.compile('\\\\b(Received|Accepted|Revised|Available online)\\\\b', re.IGNORECASE), re.compile('\\\\bDOI:\\\\s*\\\\S+', re.IGNORECASE), re.compile('\\\\bdoi:\\\\s*\\\\S+', re.IGNORECASE), re.compile('\\\\bhttps?://\\\\S+'), re.compile('\\\\bArticle ID\\\\b', re.IGNORECASE)]",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "tools/ocr_output_migration.py",
+    "line_no": 54,
+    "symbol": "BANNER_PATTERNS",
+    "signature": "BANNER_PATTERNS = [re.compile('Downloaded from .*personal use only', re.IGNORECASE), re.compile('Downloaded from .*', re.IGNORECASE), re.compile('^Article published by .*available at\\\\b', re.IGNORECASE), re.compile('^Preprint typeset using\\\\b', re.IGNORECASE), re.compile('^\\\\W*(Other articles in this volume|Top cited articles|Top downloaded articles|Our comprehensive search)\\\\b', re.IGNORECASE), re.compile('^Click here for quick links\\\\b', re.IGNORECASE), re.compile('^Annual Reviews content online\\\\b', re.IGNORECASE), re.compile('^including:\\\\s*$', re.IGNORECASE), re.compile('All rights reserved', re.IGNORECASE), re.compile('Macmillan Publishers Limited', re.IGNORECASE)]",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "tools/ocr_output_migration.py",
+    "line_no": 67,
+    "symbol": "LABEL_ADJACENT_RE",
+    "signature": "LABEL_ADJACENT_RE = re.compile('\\\\b(Fig\\\\.?|Figure|Table|Eq\\\\.?|Equation)\\\\b', re.IGNORECASE)",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "tools/ocr_output_migration.py",
+    "line_no": 68,
+    "symbol": "HEADER_FOOTER_PATTERNS",
+    "signature": "HEADER_FOOTER_PATTERNS = [re.compile('^[A-Z][A-Za-z&.\\\\- ]+\\\\s+\\\\d+\\\\s*,\\\\s*[A-Z]?\\\\d+\\\\s*\\\\(\\\\d{4}\\\\)\\\\s*$'), re.compile('^A\\\\\\\\?&A\\\\s+\\\\d+\\\\s*,\\\\s*[A-Z]?\\\\d+\\\\s*\\\\(\\\\d{4}\\\\)\\\\s*$', re.IGNORECASE), re.compile('^MNRAS\\\\s+\\\\*{0,2}\\\\d+\\\\*{0,2},\\\\s*\\\\d+[^0-9A-Za-z]+\\\\d+\\\\s*\\\\(\\\\d{4}\\\\)\\\\s*$', re.IGNORECASE), re.compile('^The Astrophysical Journal(?: Letters)?,\\\\s*\\\\d+:\\\\S+\\\\s*\\\\(\\\\d+pp\\\\),\\\\s*\\\\d{4}\\\\s+[A-Za-z]+\\\\s+\\\\d{1,2}\\\\s+.+$', re.IGNORECASE), re.compile('^ApJ Letters,\\\\s*in press,\\\\s*[A-Za-z]+\\\\s+\\\\d{1,2},\\\\s*\\\\d{4}$', re.IGNORECASE)]",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "tools/ocr_output_migration.py",
+    "line_no": 78,
+    "symbol": "CleanupCounts",
+    "signature": "class CleanupCounts",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tools/ocr_output_migration.py",
+    "line_no": 87,
+    "symbol": "_read_text",
+    "signature": "_read_text(path: Path) -> str",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tools/ocr_output_migration.py",
+    "line_no": 91,
+    "symbol": "_write_text",
+    "signature": "_write_text(path: Path, text: str) -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tools/ocr_output_migration.py",
+    "line_no": 95,
+    "symbol": "_iter_nonempty_neighbors",
+    "signature": "_iter_nonempty_neighbors(lines: Sequence[str], idx: int) -> Tuple[Optional[str], Optional[str]]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tools/ocr_output_migration.py",
+    "line_no": 109,
+    "symbol": "_strip_inline_image_tokens",
+    "signature": "_strip_inline_image_tokens(line: str) -> Tuple[str, int]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tools/ocr_output_migration.py",
+    "line_no": 116,
+    "symbol": "_strip_page_markers",
+    "signature": "_strip_page_markers(line: str) -> Tuple[str, bool]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tools/ocr_output_migration.py",
+    "line_no": 126,
+    "symbol": "_is_header_footer_candidate",
+    "signature": "_is_header_footer_candidate(line: str) -> bool",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tools/ocr_output_migration.py",
+    "line_no": 134,
+    "symbol": "_is_adjacent_label",
+    "signature": "_is_adjacent_label(lines: Sequence[str], idx: int) -> bool",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tools/ocr_output_migration.py",
+    "line_no": 144,
+    "symbol": "_normalize_for_table_label",
+    "signature": "_normalize_for_table_label(line: str) -> str",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tools/ocr_output_migration.py",
+    "line_no": 148,
+    "symbol": "_extract_table_label",
+    "signature": "_extract_table_label(line: str) -> Optional[str]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tools/ocr_output_migration.py",
+    "line_no": 160,
+    "symbol": "_is_table_start_line",
+    "signature": "_is_table_start_line(line: str, prev_line: Optional[str]=None, next_line: Optional[str]=None) -> bool",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tools/ocr_output_migration.py",
+    "line_no": 173,
+    "symbol": "_is_markdown_table_line",
+    "signature": "_is_markdown_table_line(line: str) -> bool",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tools/ocr_output_migration.py",
+    "line_no": 184,
+    "symbol": "_is_markdown_table_start",
+    "signature": "_is_markdown_table_start(lines: Sequence[str], idx: int) -> bool",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tools/ocr_output_migration.py",
+    "line_no": 193,
+    "symbol": "_is_table_note_line",
+    "signature": "_is_table_note_line(line: str) -> bool",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tools/ocr_output_migration.py",
+    "line_no": 205,
+    "symbol": "_is_table_like_line_strict",
+    "signature": "_is_table_like_line_strict(line: str) -> bool",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tools/ocr_output_migration.py",
+    "line_no": 225,
+    "symbol": "_is_table_like_line_loose",
+    "signature": "_is_table_like_line_loose(line: str) -> bool",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tools/ocr_output_migration.py",
+    "line_no": 249,
+    "symbol": "_looks_like_table_fragment",
+    "signature": "_looks_like_table_fragment(line: str) -> bool",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tools/ocr_output_migration.py",
+    "line_no": 267,
+    "symbol": "_is_math_line",
+    "signature": "_is_math_line(line: str) -> bool",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tools/ocr_output_migration.py",
+    "line_no": 278,
+    "symbol": "_line_has_page_marker",
+    "signature": "_line_has_page_marker(line: str) -> bool",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tools/ocr_output_migration.py",
+    "line_no": 289,
+    "symbol": "_is_table_block_end",
+    "signature": "_is_table_block_end(line: str) -> bool",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tools/ocr_output_migration.py",
+    "line_no": 312,
+    "symbol": "_skip_table_block",
+    "signature": "_skip_table_block(lines: Sequence[str], start_idx: int, counts: Dict[str, int]) -> int",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tools/ocr_output_migration.py",
+    "line_no": 337,
+    "symbol": "_has_recent_table_placeholder",
+    "signature": "_has_recent_table_placeholder(lines: Sequence[str], idx: int, window: int=60) -> bool",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tools/ocr_output_migration.py",
+    "line_no": 345,
+    "symbol": "_has_recent_table_label",
+    "signature": "_has_recent_table_label(lines: Sequence[str], idx: int, window: int=6) -> bool",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tools/ocr_output_migration.py",
+    "line_no": 355,
+    "symbol": "_compress_blank_lines",
+    "signature": "_compress_blank_lines(lines: Sequence[str], max_blank: int=2) -> List[str]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tools/ocr_output_migration.py",
+    "line_no": 369,
+    "symbol": "_count_paragraphs",
+    "signature": "_count_paragraphs(lines: Sequence[str]) -> int",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tools/ocr_output_migration.py",
+    "line_no": 382,
+    "symbol": "_max_blank_run",
+    "signature": "_max_blank_run(lines: Sequence[str]) -> int",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tools/ocr_output_migration.py",
+    "line_no": 394,
+    "symbol": "_scan_remaining_suspects",
+    "signature": "_scan_remaining_suspects(lines: Sequence[str]) -> List[Dict[str, str]]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tools/ocr_output_migration.py",
+    "line_no": 412,
+    "symbol": "_scan_meta_flags",
+    "signature": "_scan_meta_flags(lines: Sequence[str]) -> List[Dict[str, str]]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tools/ocr_output_migration.py",
+    "line_no": 422,
+    "symbol": "_remove_junk_and_tables",
+    "signature": "_remove_junk_and_tables(lines: Sequence[str]) -> Tuple[List[str], CleanupCounts]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tools/ocr_output_migration.py",
+    "line_no": 576,
+    "symbol": "_calc_placeholder_counts",
+    "signature": "_calc_placeholder_counts(lines: Sequence[str]) -> Tuple[int, int, int]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tools/ocr_output_migration.py",
+    "line_no": 593,
+    "symbol": "_detect_equation_number",
+    "signature": "_detect_equation_number(line: str, in_block: bool=False) -> Optional[str]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tools/ocr_output_migration.py",
+    "line_no": 606,
+    "symbol": "_is_math_candidate_line",
+    "signature": "_is_math_candidate_line(line: str) -> bool",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tools/ocr_output_migration.py",
+    "line_no": 621,
+    "symbol": "_replace_equation_placeholders",
+    "signature": "_replace_equation_placeholders(lines: Sequence[str]) -> Tuple[List[str], int]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tools/ocr_output_migration.py",
+    "line_no": 685,
+    "symbol": "_ensure_dir",
+    "signature": "_ensure_dir(path: Path) -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tools/ocr_output_migration.py",
+    "line_no": 689,
+    "symbol": "_format_status",
+    "signature": "_format_status(line_count_before: int, line_count_after: int, paragraph_count_after: int, remaining_suspects: int, page_markers: int) -> str",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tools/ocr_output_migration.py",
+    "line_no": 699,
+    "symbol": "_load_cleanup_report",
+    "signature": "_load_cleanup_report(path: Path) -> Dict[str, object]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tools/ocr_output_migration.py",
+    "line_no": 708,
+    "symbol": "_update_report",
+    "signature": "_update_report(key: str, source_path: Path, target_path: Path, before_counts: Dict[str, int], lines_after: Sequence[str], new_counts: CleanupCounts, existing_report: Dict[str, object]) -> Dict[str, object]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tools/ocr_output_migration.py",
+    "line_no": 779,
+    "symbol": "_before_counts_from_source",
+    "signature": "_before_counts_from_source(source_path: Path) -> Dict[str, int]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tools/ocr_output_migration.py",
+    "line_no": 790,
+    "symbol": "_write_diff",
+    "signature": "_write_diff(old_lines: Sequence[str], new_lines: Sequence[str], diff_path: Path) -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tools/ocr_output_migration.py",
+    "line_no": 801,
+    "symbol": "_collect_keys",
+    "signature": "_collect_keys(source_root: Path, output_root: Path) -> Dict[str, Dict[str, bool]]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tools/ocr_output_migration.py",
+    "line_no": 817,
+    "symbol": "_write_key_inventory",
+    "signature": "_write_key_inventory(keys: Dict[str, Dict[str, bool]], output_root: Path) -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tools/ocr_output_migration.py",
+    "line_no": 839,
+    "symbol": "_write_cleanup_summary",
+    "signature": "_write_cleanup_summary(reports: Dict[str, Dict[str, object]], output_root: Path) -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tools/ocr_output_migration.py",
+    "line_no": 892,
+    "symbol": "_append_convert_log",
+    "signature": "_append_convert_log(log_path: Path, key: str, source_path: Path, target_path: Path, raw_backup_path: Optional[Path], diff_path: Path, junk_removed_total: int, format_status: str, cleanup_report_path: Path) -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tools/ocr_output_migration.py",
+    "line_no": 920,
+    "symbol": "_process_key",
+    "signature": "_process_key(key: str, source_path: Path, output_dir: Path, timestamp: str) -> Optional[Dict[str, object]]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tools/ocr_output_migration.py",
+    "line_no": 986,
+    "symbol": "main",
+    "signature": "main(argv: Optional[Sequence[str]]=None) -> int",
     "brief_usage": "No description available."
   },
   {
@@ -17846,124 +18434,124 @@
     "file_path": "tools/reference_tracker.py",
     "line_no": 52,
     "symbol": "INFORMAL_TO_KEY",
-    "signature": "INFORMAL_TO_KEY = {('Strubbe', 'Chiang', '2006'): 'StrubbeChiang2006_ApJ648_652', ('Hyodo', '2018'): 'Hyodo2018_ApJ860_150', ('Hyodo', '2017'): 'Hyodo2017a_ApJ845_125', ('Pignatale', '2018'): 'Pignatale2018_ApJ853_118', ('Ronnet', '2016'): 'Ronnet2016_ApJ828_109', ('Canup', 'Salmon', '2018'): 'CanupSalmon2018_SciAdv4_eaar6887', ('Takeuchi', 'Lin', '2003'): 'TakeuchiLin2003_ApJ593_524', ('Takeuchi', 'Lin', '2002'): 'TakeuchiLin2002_ApJ581_1344', ('Crida', 'Charnoz', '2012'): 'CridaCharnoz2012_Science338_1196', ('Wyatt', '2008'): 'Wyatt2008', ('Ohtsuki', '2002'): 'Ohtsuki2002_Icarus155_436', ('Benz', 'Asphaug', '1999'): 'BenzAsphaug1999_Icarus142_5', ('Leinhardt', 'Stewart', '2012'): 'LeinhardtStewart2012_ApJ745_79', ('Stewart', 'Leinhardt', '2009'): 'StewartLeinhardt2009_ApJ691_L133', ('Krivov', '2006'): 'Krivov2006_AA455_509', ('Dohnanyi', '1969'): 'Dohnanyi1969_JGR74_2531', ('Burns', '1979'): 'Burns1979_Icarus40_1', ('Murray', 'Dermott', '1999'): 'MurrayDermott1999_SSD', ('Kubaschewski', '1974'): 'Kubaschewski1974', ('Shadmehri', '2008'): 'Shadmehri2008_ApSS314_217', ('Fegley', 'Schaefer', '2012'): 'FegleySchaefer2012_arXiv', ('Kuramoto', '2024'): 'Kuramoto2024'}",
+    "signature": "INFORMAL_TO_KEY = {('Strubbe', 'Chiang', '2006'): 'StrubbeChiang2006_ApJ648_652', ('Hyodo', '2018'): 'Hyodo2018_ApJ860_150', ('Hyodo', '2017'): 'Hyodo2017a_ApJ845_125', ('Pignatale', '2018'): 'Pignatale2018_ApJ853_118', ('Ronnet', '2016'): 'Ronnet2016_ApJ828_109', ('Canup', 'Salmon', '2018'): 'CanupSalmon2018_SciAdv4_eaar6887', ('Takeuchi', 'Lin', '2003'): 'TakeuchiLin2003_ApJ593_524', ('Takeuchi', 'Lin', '2002'): 'TakeuchiLin2002_ApJ581_1344', ('Crida', 'Charnoz', '2012'): 'CridaCharnoz2012_Science338_1196', ('Wyatt', '2008'): 'Wyatt2008', ('Ohtsuki', '2002'): 'Ohtsuki2002_Icarus155_436', ('Benz', 'Asphaug', '1999'): 'BenzAsphaug1999_Icarus142_5', ('Leinhardt', 'Stewart', '2012'): 'LeinhardtStewart2012_ApJ745_79', ('Stewart', 'Leinhardt', '2009'): 'StewartLeinhardt2009_ApJ691_L133', ('Krivov', '2006'): 'Krivov2006_AA455_509', ('Dohnanyi', '1969'): 'Dohnanyi1969_JGR74_2531', ('Burns', '1979'): 'Burns1979_Icarus40_1', ('Kubaschewski', '1974'): 'Kubaschewski1974', ('Shadmehri', '2008'): 'Shadmehri2008_ApSS314_217', ('Fegley', 'Schaefer', '2012'): 'FegleySchaefer2012_arXiv', ('Kuramoto', '2024'): 'Kuramoto2024'}",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "tools/reference_tracker.py",
-    "line_no": 84,
+    "line_no": 83,
     "symbol": "ReferenceLocation",
     "signature": "class ReferenceLocation",
     "brief_usage": "A single occurrence of a reference in code."
   },
   {
     "file_path": "tools/reference_tracker.py",
-    "line_no": 95,
+    "line_no": 94,
     "symbol": "FunctionReference",
     "signature": "class FunctionReference",
     "brief_usage": "References associated with a specific function."
   },
   {
     "file_path": "tools/reference_tracker.py",
-    "line_no": 108,
+    "line_no": 107,
     "symbol": "RegistryEntry",
     "signature": "class RegistryEntry",
     "brief_usage": "A reference from the registry."
   },
   {
     "file_path": "tools/reference_tracker.py",
-    "line_no": 121,
+    "line_no": 120,
     "symbol": "ReferenceReport",
     "signature": "class ReferenceReport",
     "brief_usage": "Complete reference analysis report."
   },
   {
     "file_path": "tools/reference_tracker.py",
-    "line_no": 139,
+    "line_no": 138,
     "symbol": "load_registry",
     "signature": "load_registry() -> Dict[str, RegistryEntry]",
     "brief_usage": "Load the canonical reference registry."
   },
   {
     "file_path": "tools/reference_tracker.py",
-    "line_no": 168,
+    "line_no": 167,
     "symbol": "iter_python_files",
     "signature": "iter_python_files() -> List[Path]",
     "brief_usage": "Yield all Python files in the code directories."
   },
   {
     "file_path": "tools/reference_tracker.py",
-    "line_no": 181,
+    "line_no": 180,
     "symbol": "extract_references_from_file",
     "signature": "extract_references_from_file(file_path: Path) -> List[ReferenceLocation]",
     "brief_usage": "Extract all reference citations from a Python file."
   },
   {
     "file_path": "tools/reference_tracker.py",
-    "line_no": 236,
+    "line_no": 235,
     "symbol": "_resolve_informal_key",
     "signature": "_resolve_informal_key(author1: str, year: str, author2: str=None) -> str",
     "brief_usage": "Attempt to resolve an informal reference to a registry key."
   },
   {
     "file_path": "tools/reference_tracker.py",
-    "line_no": 258,
+    "line_no": 257,
     "symbol": "extract_function_references",
     "signature": "extract_function_references(file_path: Path) -> List[FunctionReference]",
     "brief_usage": "Extract references grouped by function/class."
   },
   {
     "file_path": "tools/reference_tracker.py",
-    "line_no": 320,
+    "line_no": 319,
     "symbol": "_extract_refs_from_docstring",
     "signature": "_extract_refs_from_docstring(lines: List[str]) -> Dict[str, List[str]]",
     "brief_usage": "Extract reference keys and equation numbers from function lines."
   },
   {
     "file_path": "tools/reference_tracker.py",
-    "line_no": 347,
+    "line_no": 346,
     "symbol": "generate_report",
     "signature": "generate_report() -> ReferenceReport",
     "brief_usage": "Generate a complete reference analysis report."
   },
   {
     "file_path": "tools/reference_tracker.py",
-    "line_no": 379,
+    "line_no": 378,
     "symbol": "print_scan_results",
     "signature": "print_scan_results(report: ReferenceReport) -> None",
     "brief_usage": "Print scan results showing all references found."
   },
   {
     "file_path": "tools/reference_tracker.py",
-    "line_no": 403,
+    "line_no": 402,
     "symbol": "print_validation_results",
     "signature": "print_validation_results(report: ReferenceReport) -> None",
     "brief_usage": "Print validation results comparing code vs registry."
   },
   {
     "file_path": "tools/reference_tracker.py",
-    "line_no": 433,
+    "line_no": 432,
     "symbol": "print_function_mapping",
     "signature": "print_function_mapping(report: ReferenceReport) -> None",
     "brief_usage": "Print function-to-reference mapping."
   },
   {
     "file_path": "tools/reference_tracker.py",
-    "line_no": 448,
+    "line_no": 447,
     "symbol": "export_bibtex",
     "signature": "export_bibtex(report: ReferenceReport, output_path: Optional[Path]=None) -> str",
     "brief_usage": "Export BibTeX entries for all referenced works."
   },
   {
     "file_path": "tools/reference_tracker.py",
-    "line_no": 469,
+    "line_no": 468,
     "symbol": "print_full_report",
     "signature": "print_full_report(report: ReferenceReport) -> None",
     "brief_usage": "Print comprehensive reference report."
   },
   {
     "file_path": "tools/reference_tracker.py",
-    "line_no": 502,
+    "line_no": 501,
     "symbol": "main",
     "signature": "main()",
     "brief_usage": "No description available."

@@ -1768,6 +1768,14 @@ tests/unit/test_timegrid_and_budget.py:64:def test_time_grid_and_mass_budget(tmp
 tests/unit/test_viscosity.py:7:def _run(N: int, dt: float)
 tests/unit/test_viscosity.py:18:def test_viscous_diffusion_converges_and_conserves_mass()
 tests/unit/test_wyatt_scaling.py:6:def test_wyatt_scaling_inverse_tau()
+tmp/replace_birnstiel_eqs.py:22:def find_eq_line(lines: list[str], eq_id: str) -> int | None
+tmp/replace_birnstiel_eqs.py:34:def build_block(eq_id: str, old: str) -> list[str]
+tmp/replace_birnstiel_eqs.py:41:def replace_block(lines: list[str], idx: int, block: list[str]) -> list[str]
+tmp/replace_birnstiel_eqs.py:48:def main() -> None
+tmp/update_birnstiel_equations.py:121:def protect_func(expr: str, func: str) -> str
+tmp/update_birnstiel_equations.py:152:def convert_formula(old: str) -> str
+tmp/update_birnstiel_equations.py:174:def make_pattern(old: str) -> re.Pattern
+tmp/update_birnstiel_equations.py:180:def main() -> None
 tools/analyze_tau_los_feedback.py:38:def _coalesce(*values)
 tools/analyze_tau_los_feedback.py:82:def _load_json(path: Path) -> Dict
 tools/analyze_tau_los_feedback.py:89:def _resolve_diagnostics_paths(run_dir: Path, summary: Dict, max_chunks: Optional[int]) -> List[Path]
@@ -1851,6 +1859,51 @@ tools/merge_streaming_chunks.py:47:def _probe_compression(path: Path) -> str
 tools/merge_streaming_chunks.py:59:def _merge_chunks(chunks: List[Path], destination: Path, *, force: bool) -> Tuple[bool, str]
 tools/merge_streaming_chunks.py:84:def merge_series_dir(series_dir: Path, *, force: bool=False) -> List[str]
 tools/merge_streaming_chunks.py:100:def main(argv: Iterable[str] | None=None) -> int
+tools/ocr_output_migration.py:78:class CleanupCounts
+tools/ocr_output_migration.py:87:def _read_text(path: Path) -> str
+tools/ocr_output_migration.py:91:def _write_text(path: Path, text: str) -> None
+tools/ocr_output_migration.py:95:def _iter_nonempty_neighbors(lines: Sequence[str], idx: int) -> Tuple[Optional[str], Optional[str]]
+tools/ocr_output_migration.py:109:def _strip_inline_image_tokens(line: str) -> Tuple[str, int]
+tools/ocr_output_migration.py:116:def _strip_page_markers(line: str) -> Tuple[str, bool]
+tools/ocr_output_migration.py:126:def _is_header_footer_candidate(line: str) -> bool
+tools/ocr_output_migration.py:134:def _is_adjacent_label(lines: Sequence[str], idx: int) -> bool
+tools/ocr_output_migration.py:144:def _normalize_for_table_label(line: str) -> str
+tools/ocr_output_migration.py:148:def _extract_table_label(line: str) -> Optional[str]
+tools/ocr_output_migration.py:160:def _is_table_start_line(line: str, prev_line: Optional[str]=None, next_line: Optional[str]=None) -> bool
+tools/ocr_output_migration.py:173:def _is_markdown_table_line(line: str) -> bool
+tools/ocr_output_migration.py:184:def _is_markdown_table_start(lines: Sequence[str], idx: int) -> bool
+tools/ocr_output_migration.py:193:def _is_table_note_line(line: str) -> bool
+tools/ocr_output_migration.py:205:def _is_table_like_line_strict(line: str) -> bool
+tools/ocr_output_migration.py:225:def _is_table_like_line_loose(line: str) -> bool
+tools/ocr_output_migration.py:249:def _looks_like_table_fragment(line: str) -> bool
+tools/ocr_output_migration.py:267:def _is_math_line(line: str) -> bool
+tools/ocr_output_migration.py:278:def _line_has_page_marker(line: str) -> bool
+tools/ocr_output_migration.py:289:def _is_table_block_end(line: str) -> bool
+tools/ocr_output_migration.py:312:def _skip_table_block(lines: Sequence[str], start_idx: int, counts: Dict[str, int]) -> int
+tools/ocr_output_migration.py:337:def _has_recent_table_placeholder(lines: Sequence[str], idx: int, window: int=60) -> bool
+tools/ocr_output_migration.py:345:def _has_recent_table_label(lines: Sequence[str], idx: int, window: int=6) -> bool
+tools/ocr_output_migration.py:355:def _compress_blank_lines(lines: Sequence[str], max_blank: int=2) -> List[str]
+tools/ocr_output_migration.py:369:def _count_paragraphs(lines: Sequence[str]) -> int
+tools/ocr_output_migration.py:382:def _max_blank_run(lines: Sequence[str]) -> int
+tools/ocr_output_migration.py:394:def _scan_remaining_suspects(lines: Sequence[str]) -> List[Dict[str, str]]
+tools/ocr_output_migration.py:412:def _scan_meta_flags(lines: Sequence[str]) -> List[Dict[str, str]]
+tools/ocr_output_migration.py:422:def _remove_junk_and_tables(lines: Sequence[str]) -> Tuple[List[str], CleanupCounts]
+tools/ocr_output_migration.py:576:def _calc_placeholder_counts(lines: Sequence[str]) -> Tuple[int, int, int]
+tools/ocr_output_migration.py:593:def _detect_equation_number(line: str, in_block: bool=False) -> Optional[str]
+tools/ocr_output_migration.py:606:def _is_math_candidate_line(line: str) -> bool
+tools/ocr_output_migration.py:621:def _replace_equation_placeholders(lines: Sequence[str]) -> Tuple[List[str], int]
+tools/ocr_output_migration.py:685:def _ensure_dir(path: Path) -> None
+tools/ocr_output_migration.py:689:def _format_status(line_count_before: int, line_count_after: int, paragraph_count_after: int, remaining_suspects: int, page_markers: int) -> str
+tools/ocr_output_migration.py:699:def _load_cleanup_report(path: Path) -> Dict[str, object]
+tools/ocr_output_migration.py:708:def _update_report(key: str, source_path: Path, target_path: Path, before_counts: Dict[str, int], lines_after: Sequence[str], new_counts: CleanupCounts, existing_report: Dict[str, object]) -> Dict[str, object]
+tools/ocr_output_migration.py:779:def _before_counts_from_source(source_path: Path) -> Dict[str, int]
+tools/ocr_output_migration.py:790:def _write_diff(old_lines: Sequence[str], new_lines: Sequence[str], diff_path: Path) -> None
+tools/ocr_output_migration.py:801:def _collect_keys(source_root: Path, output_root: Path) -> Dict[str, Dict[str, bool]]
+tools/ocr_output_migration.py:817:def _write_key_inventory(keys: Dict[str, Dict[str, bool]], output_root: Path) -> None
+tools/ocr_output_migration.py:839:def _write_cleanup_summary(reports: Dict[str, Dict[str, object]], output_root: Path) -> None
+tools/ocr_output_migration.py:892:def _append_convert_log(log_path: Path, key: str, source_path: Path, target_path: Path, raw_backup_path: Optional[Path], diff_path: Path, junk_removed_total: int, format_status: str, cleanup_report_path: Path) -> None
+tools/ocr_output_migration.py:920:def _process_key(key: str, source_path: Path, output_dir: Path, timestamp: str) -> Optional[Dict[str, object]]
+tools/ocr_output_migration.py:986:def main(argv: Optional[Sequence[str]]=None) -> int
 tools/paper_manifest.py:30:class PaperCheckSettings(BaseModel)
 tools/paper_manifest.py:36:class PaperSettings(BaseModel)
 tools/paper_manifest.py:47:class RunEntry(BaseModel)
@@ -1956,23 +2009,23 @@ tools/readme_sync.py:56:def load_source(spec: SourceSpec) -> str
 tools/readme_sync.py:64:def render_readme(text: str) -> tuple[str, list[str], int]
 tools/readme_sync.py:84:def diff_lines(before: str, after: str) -> str
 tools/readme_sync.py:96:def main() -> int
-tools/reference_tracker.py:84:class ReferenceLocation
-tools/reference_tracker.py:95:class FunctionReference
-tools/reference_tracker.py:108:class RegistryEntry
-tools/reference_tracker.py:121:class ReferenceReport
-tools/reference_tracker.py:139:def load_registry() -> Dict[str, RegistryEntry]
-tools/reference_tracker.py:168:def iter_python_files() -> List[Path]
-tools/reference_tracker.py:181:def extract_references_from_file(file_path: Path) -> List[ReferenceLocation]
-tools/reference_tracker.py:236:def _resolve_informal_key(author1: str, year: str, author2: str=None) -> str
-tools/reference_tracker.py:258:def extract_function_references(file_path: Path) -> List[FunctionReference]
-tools/reference_tracker.py:320:def _extract_refs_from_docstring(lines: List[str]) -> Dict[str, List[str]]
-tools/reference_tracker.py:347:def generate_report() -> ReferenceReport
-tools/reference_tracker.py:379:def print_scan_results(report: ReferenceReport) -> None
-tools/reference_tracker.py:403:def print_validation_results(report: ReferenceReport) -> None
-tools/reference_tracker.py:433:def print_function_mapping(report: ReferenceReport) -> None
-tools/reference_tracker.py:448:def export_bibtex(report: ReferenceReport, output_path: Optional[Path]=None) -> str
-tools/reference_tracker.py:469:def print_full_report(report: ReferenceReport) -> None
-tools/reference_tracker.py:502:def main()
+tools/reference_tracker.py:83:class ReferenceLocation
+tools/reference_tracker.py:94:class FunctionReference
+tools/reference_tracker.py:107:class RegistryEntry
+tools/reference_tracker.py:120:class ReferenceReport
+tools/reference_tracker.py:138:def load_registry() -> Dict[str, RegistryEntry]
+tools/reference_tracker.py:167:def iter_python_files() -> List[Path]
+tools/reference_tracker.py:180:def extract_references_from_file(file_path: Path) -> List[ReferenceLocation]
+tools/reference_tracker.py:235:def _resolve_informal_key(author1: str, year: str, author2: str=None) -> str
+tools/reference_tracker.py:257:def extract_function_references(file_path: Path) -> List[FunctionReference]
+tools/reference_tracker.py:319:def _extract_refs_from_docstring(lines: List[str]) -> Dict[str, List[str]]
+tools/reference_tracker.py:346:def generate_report() -> ReferenceReport
+tools/reference_tracker.py:378:def print_scan_results(report: ReferenceReport) -> None
+tools/reference_tracker.py:402:def print_validation_results(report: ReferenceReport) -> None
+tools/reference_tracker.py:432:def print_function_mapping(report: ReferenceReport) -> None
+tools/reference_tracker.py:447:def export_bibtex(report: ReferenceReport, output_path: Optional[Path]=None) -> str
+tools/reference_tracker.py:468:def print_full_report(report: ReferenceReport) -> None
+tools/reference_tracker.py:501:def main()
 tools/research/common.py:14:def _read_parquet_safe(path: Path, columns: Iterable[str] | None=None) -> pd.DataFrame
 tools/research/common.py:35:def _downsample(df: pd.DataFrame, max_points: int | None) -> pd.DataFrame
 tools/research/common.py:42:def load_series(run_dir: Path, columns: Iterable[str] | None=None, max_points: int | None=None) -> pd.DataFrame
