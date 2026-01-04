@@ -21,9 +21,21 @@ from typing import Dict, Iterable, List, Optional, Sequence, Tuple
 
 TABLE_PLACEHOLDER_RE = re.compile(r"^\s*\[\[TABLE:(?P<label>[^]]+)\]\]\s*$")
 EQ_PLACEHOLDER_RE = re.compile(r"\[\[EQN:\((?P<num>[^)]+)\)\]\]")
-EQ_NUMBER_TRAIL_RE = re.compile(r"\((?P<num>\d+[A-Za-z]?)\)\s*[.,]?\s*$")
-EQ_NUMBER_ONLY_RE = re.compile(r"^\s*\((?P<num>\d+[A-Za-z]?)\)\s*[.,]?\s*$")
+EQ_LABEL_PATTERN = r"(?:[A-Za-z]\.?)?\d+(?:\.\d+)*[A-Za-z]?"
+EQ_NUMBER_TRAIL_RE = re.compile(rf"\((?P<num>{EQ_LABEL_PATTERN})\)\s*[.,]?\s*$")
+EQ_NUMBER_ONLY_RE = re.compile(rf"^\s*\((?P<num>{EQ_LABEL_PATTERN})\)\s*[.,]?\s*$")
 EQUATION_REF_RE = re.compile(r"\bEq\.|\bEqs\.|\bEqn\.|\bEqns\.|\bEquation\b", re.IGNORECASE)
+EQ_REF_HEAD_RE = re.compile(rf"\bEq(?:s|n)?\.?\s*\((?P<label>{EQ_LABEL_PATTERN})\)", re.IGNORECASE)
+EQ_REF_EXTRA_RE = re.compile(rf"(?:,|and|or|&|–|-)\s*\((?P<label>{EQ_LABEL_PATTERN})\)", re.IGNORECASE)
+YEAR_RE = re.compile(r"\b(18|19|20)\d{2}\b")
+AUTHOR_RE = re.compile(r"\b[A-Z][A-Za-z\-]+\b")
+ET_AL_RE = re.compile(r"\bet\s+al\.?\b", re.IGNORECASE)
+EQ_EXTERNAL_HINT_RE = re.compile(r"\b(of|from|in)\b", re.IGNORECASE)
+CITATION_BRACKET_RE = re.compile(r"\[[0-9][0-9,\s\-]*\]")
+AUTHOR_YEAR_PAREN_RE = re.compile(r"\([A-Z][A-Za-z\-]+(?:\s+et\s+al\.)?(?:,|\s+)?(18|19|20)\d{2}\)")
+AUTHOR_YEAR_INLINE_RE = re.compile(r"\b[A-Z][A-Za-z\-]+(?:\s+et\s+al\.)?,?\s*(18|19|20)\d{2}\b")
+INTERNAL_LOC_RE = re.compile(r"\b(Appendix|Section|Sect\.|Sec\.|Fig\.|Figure|Table|Chapter)\b", re.IGNORECASE)
+INTERNAL_SELF_RE = re.compile(r"\b(this|present|current)\s+(paper|work|study|section|appendix)\b", re.IGNORECASE)
 MATH_TOKEN_RE = re.compile(
     r"(\\[a-zA-Z]+|[_^]|=|\\cdot|\\times|\\pm|\\propto|\\sqrt|\\frac|[\u00b7\u00b1\u00d7])"
 )
@@ -618,6 +630,70 @@ def _is_math_candidate_line(line: str) -> bool:
     return False
 
 
+def _extract_eq_labels(line: str) -> List[str]:
+    labels: List[str] = []
+    for match in EQ_REF_HEAD_RE.finditer(line):
+        labels.append(match.group("label"))
+        head = match.group(0)
+        if re.search(r"\bEqs\b|\bEqns\b", head, re.IGNORECASE):
+            tail = line[match.end():]
+            for extra in EQ_REF_EXTRA_RE.finditer(tail):
+                labels.append(extra.group("label"))
+    return labels
+
+
+def _is_external_eq_reference(line: str) -> bool:
+    match = EQ_REF_HEAD_RE.search(line)
+    if not match:
+        return False
+    tail = line[match.end():]
+    tail_window = tail[:160]
+    if INTERNAL_LOC_RE.search(tail_window) or INTERNAL_SELF_RE.search(tail_window):
+        return False
+    if re.match(r"^\s*\[[0-9][0-9,\s\-]*\]", tail_window):
+        return True
+    if AUTHOR_YEAR_PAREN_RE.search(tail_window):
+        return True
+    if YEAR_RE.search(tail_window) and (ET_AL_RE.search(tail_window) or AUTHOR_RE.search(tail_window)):
+        return True
+    if EQ_EXTERNAL_HINT_RE.search(tail_window) and (
+        YEAR_RE.search(tail_window) or CITATION_BRACKET_RE.search(tail_window)
+    ):
+        return True
+    if re.search(r"\b(see|as in|as shown in)\b", tail_window, re.IGNORECASE) and (
+        YEAR_RE.search(tail_window) or CITATION_BRACKET_RE.search(tail_window)
+    ):
+        return True
+    return False
+
+
+def _supplement_placeholders_from_eq_refs(lines: Sequence[str]) -> Tuple[List[str], int]:
+    existing_labels = set()
+    for line in lines:
+        for match in EQ_PLACEHOLDER_RE.finditer(line):
+            existing_labels.add(match.group("num"))
+    inserted_labels = set()
+    output: List[str] = []
+    inserted = 0
+    for line in lines:
+        output.append(line)
+        if not EQ_REF_HEAD_RE.search(line):
+            continue
+        if _is_external_eq_reference(line):
+            continue
+        labels = _extract_eq_labels(line)
+        if not labels:
+            continue
+        for label in labels:
+            if label in existing_labels or label in inserted_labels:
+                continue
+            output.append(f"[[EQN:({label})]]")
+            output.append("")
+            inserted_labels.add(label)
+            inserted += 1
+    return output, inserted
+
+
 def _replace_equation_placeholders(lines: Sequence[str]) -> Tuple[List[str], int]:
     replaced = 0
     output: List[str] = []
@@ -948,6 +1024,7 @@ def _process_key(
     old_lines = old_text.split("\n")
     cleaned_lines, counts = _remove_junk_and_tables(source_text.split("\n"))
     equation_lines, _eq_replaced = _replace_equation_placeholders(cleaned_lines)
+    equation_lines, _eq_ref_inserted = _supplement_placeholders_from_eq_refs(equation_lines)
     equation_lines = _compress_blank_lines(equation_lines, max_blank=2)
     new_text = "\n".join(equation_lines).rstrip() + "\n"
     _write_text(result_path, new_text)

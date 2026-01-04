@@ -16914,475 +16914,580 @@
   {
     "file_path": "tools/ocr_output_migration.py",
     "line_no": 24,
-    "symbol": "EQ_NUMBER_TRAIL_RE",
-    "signature": "EQ_NUMBER_TRAIL_RE = re.compile('\\\\((?P<num>\\\\d+[A-Za-z]?)\\\\)\\\\s*[.,]?\\\\s*$')",
+    "symbol": "EQ_LABEL_PATTERN",
+    "signature": "EQ_LABEL_PATTERN = '(?:[A-Za-z]\\\\.?)?\\\\d+(?:\\\\.\\\\d+)*[A-Za-z]?'",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "tools/ocr_output_migration.py",
     "line_no": 25,
-    "symbol": "EQ_NUMBER_ONLY_RE",
-    "signature": "EQ_NUMBER_ONLY_RE = re.compile('^\\\\s*\\\\((?P<num>\\\\d+[A-Za-z]?)\\\\)\\\\s*[.,]?\\\\s*$')",
+    "symbol": "EQ_NUMBER_TRAIL_RE",
+    "signature": "EQ_NUMBER_TRAIL_RE = re.compile(f'\\\\((?P<num>{EQ_LABEL_PATTERN})\\\\)\\\\s*[.,]?\\\\s*$')",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "tools/ocr_output_migration.py",
     "line_no": 26,
+    "symbol": "EQ_NUMBER_ONLY_RE",
+    "signature": "EQ_NUMBER_ONLY_RE = re.compile(f'^\\\\s*\\\\((?P<num>{EQ_LABEL_PATTERN})\\\\)\\\\s*[.,]?\\\\s*$')",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "tools/ocr_output_migration.py",
+    "line_no": 27,
     "symbol": "EQUATION_REF_RE",
     "signature": "EQUATION_REF_RE = re.compile('\\\\bEq\\\\.|\\\\bEqs\\\\.|\\\\bEqn\\\\.|\\\\bEqns\\\\.|\\\\bEquation\\\\b', re.IGNORECASE)",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "tools/ocr_output_migration.py",
-    "line_no": 27,
+    "line_no": 28,
+    "symbol": "EQ_REF_HEAD_RE",
+    "signature": "EQ_REF_HEAD_RE = re.compile(f'\\\\bEq(?:s|n)?\\\\.?\\\\s*\\\\((?P<label>{EQ_LABEL_PATTERN})\\\\)', re.IGNORECASE)",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "tools/ocr_output_migration.py",
+    "line_no": 29,
+    "symbol": "EQ_REF_EXTRA_RE",
+    "signature": "EQ_REF_EXTRA_RE = re.compile(f'(?:,|and|or|&|–|-)\\\\s*\\\\((?P<label>{EQ_LABEL_PATTERN})\\\\)', re.IGNORECASE)",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "tools/ocr_output_migration.py",
+    "line_no": 30,
+    "symbol": "YEAR_RE",
+    "signature": "YEAR_RE = re.compile('\\\\b(18|19|20)\\\\d{2}\\\\b')",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "tools/ocr_output_migration.py",
+    "line_no": 31,
+    "symbol": "AUTHOR_RE",
+    "signature": "AUTHOR_RE = re.compile('\\\\b[A-Z][A-Za-z\\\\-]+\\\\b')",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "tools/ocr_output_migration.py",
+    "line_no": 32,
+    "symbol": "ET_AL_RE",
+    "signature": "ET_AL_RE = re.compile('\\\\bet\\\\s+al\\\\.?\\\\b', re.IGNORECASE)",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "tools/ocr_output_migration.py",
+    "line_no": 33,
+    "symbol": "EQ_EXTERNAL_HINT_RE",
+    "signature": "EQ_EXTERNAL_HINT_RE = re.compile('\\\\b(of|from|in)\\\\b', re.IGNORECASE)",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "tools/ocr_output_migration.py",
+    "line_no": 34,
+    "symbol": "CITATION_BRACKET_RE",
+    "signature": "CITATION_BRACKET_RE = re.compile('\\\\[[0-9][0-9,\\\\s\\\\-]*\\\\]')",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "tools/ocr_output_migration.py",
+    "line_no": 35,
+    "symbol": "AUTHOR_YEAR_PAREN_RE",
+    "signature": "AUTHOR_YEAR_PAREN_RE = re.compile('\\\\([A-Z][A-Za-z\\\\-]+(?:\\\\s+et\\\\s+al\\\\.)?(?:,|\\\\s+)?(18|19|20)\\\\d{2}\\\\)')",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "tools/ocr_output_migration.py",
+    "line_no": 36,
+    "symbol": "AUTHOR_YEAR_INLINE_RE",
+    "signature": "AUTHOR_YEAR_INLINE_RE = re.compile('\\\\b[A-Z][A-Za-z\\\\-]+(?:\\\\s+et\\\\s+al\\\\.)?,?\\\\s*(18|19|20)\\\\d{2}\\\\b')",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "tools/ocr_output_migration.py",
+    "line_no": 37,
+    "symbol": "INTERNAL_LOC_RE",
+    "signature": "INTERNAL_LOC_RE = re.compile('\\\\b(Appendix|Section|Sect\\\\.|Sec\\\\.|Fig\\\\.|Figure|Table|Chapter)\\\\b', re.IGNORECASE)",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "tools/ocr_output_migration.py",
+    "line_no": 38,
+    "symbol": "INTERNAL_SELF_RE",
+    "signature": "INTERNAL_SELF_RE = re.compile('\\\\b(this|present|current)\\\\s+(paper|work|study|section|appendix)\\\\b', re.IGNORECASE)",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "tools/ocr_output_migration.py",
+    "line_no": 39,
     "symbol": "MATH_TOKEN_RE",
     "signature": "MATH_TOKEN_RE = re.compile('(\\\\\\\\[a-zA-Z]+|[_^]|=|\\\\\\\\cdot|\\\\\\\\times|\\\\\\\\pm|\\\\\\\\propto|\\\\\\\\sqrt|\\\\\\\\frac|[\\\\u00b7\\\\u00b1\\\\u00d7])')",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "tools/ocr_output_migration.py",
-    "line_no": 30,
+    "line_no": 42,
     "symbol": "MATH_BLOCK_START_RE",
     "signature": "MATH_BLOCK_START_RE = re.compile('^\\\\s*(\\\\\\\\\\\\[|\\\\\\\\begin\\\\{equation\\\\*?\\\\}|\\\\$\\\\$)\\\\s*$')",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "tools/ocr_output_migration.py",
-    "line_no": 31,
+    "line_no": 43,
     "symbol": "MATH_BLOCK_END_RE",
     "signature": "MATH_BLOCK_END_RE = re.compile('^\\\\s*(\\\\\\\\\\\\]|\\\\\\\\end\\\\{equation\\\\*?\\\\}|\\\\$\\\\$)\\\\s*$')",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "tools/ocr_output_migration.py",
-    "line_no": 32,
+    "line_no": 44,
     "symbol": "IMAGE_REF_INLINE_RE",
     "signature": "IMAGE_REF_INLINE_RE = re.compile('!\\\\[\\\\]\\\\[image\\\\d+\\\\]', re.IGNORECASE)",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "tools/ocr_output_migration.py",
-    "line_no": 33,
+    "line_no": 45,
     "symbol": "IMAGE_LABEL_RE",
     "signature": "IMAGE_LABEL_RE = re.compile('^\\\\s*\\\\[image\\\\d+\\\\]\\\\s*$', re.IGNORECASE)",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "tools/ocr_output_migration.py",
-    "line_no": 34,
+    "line_no": 46,
     "symbol": "IMAGE_DEF_BASE64_RE",
     "signature": "IMAGE_DEF_BASE64_RE = re.compile('^\\\\s*\\\\[image\\\\d+\\\\]:\\\\s*<data:image/[^>]+>\\\\s*$', re.IGNORECASE)",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "tools/ocr_output_migration.py",
-    "line_no": 35,
+    "line_no": 47,
     "symbol": "DATA_URI_RE",
     "signature": "DATA_URI_RE = re.compile('^\\\\s*<data:image/[^>]+>\\\\s*$', re.IGNORECASE)",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "tools/ocr_output_migration.py",
-    "line_no": 36,
+    "line_no": 48,
     "symbol": "INLINE_IMAGE_TOKEN_RE",
     "signature": "INLINE_IMAGE_TOKEN_RE = re.compile('!\\\\[\\\\]\\\\[image\\\\d+\\\\]|\\\\[image\\\\d+\\\\]', re.IGNORECASE)",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "tools/ocr_output_migration.py",
-    "line_no": 37,
+    "line_no": 49,
     "symbol": "PAGE_MARKER_RE",
     "signature": "PAGE_MARKER_RE = re.compile('\\\\bpage\\\\s+\\\\d+\\\\s+of\\\\s+\\\\d+\\\\b', re.IGNORECASE)",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "tools/ocr_output_migration.py",
-    "line_no": 38,
+    "line_no": 50,
     "symbol": "PAGE_FRACTION_RE",
     "signature": "PAGE_FRACTION_RE = re.compile('^\\\\s*\\\\d+\\\\s*/\\\\s*\\\\d+\\\\s*$')",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "tools/ocr_output_migration.py",
-    "line_no": 39,
+    "line_no": 51,
     "symbol": "PAGE_ALPHA_RE",
     "signature": "PAGE_ALPHA_RE = re.compile('^[A-Z]\\\\d+,\\\\s*page\\\\s+\\\\d+\\\\s+of\\\\s+\\\\d+', re.IGNORECASE)",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "tools/ocr_output_migration.py",
-    "line_no": 40,
+    "line_no": 52,
     "symbol": "PAGE_ALPHA_TRAIL_RE",
     "signature": "PAGE_ALPHA_TRAIL_RE = re.compile('\\\\b[A-Z]\\\\d+,\\\\s*page\\\\s+\\\\d+\\\\s+of\\\\s+\\\\d+\\\\b', re.IGNORECASE)",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "tools/ocr_output_migration.py",
-    "line_no": 41,
+    "line_no": 53,
     "symbol": "ROMAN_RE",
     "signature": "ROMAN_RE = re.compile('^\\\\s*[IVXLCDM]+\\\\s*$')",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "tools/ocr_output_migration.py",
-    "line_no": 42,
+    "line_no": 54,
     "symbol": "DIGITS_RE",
     "signature": "DIGITS_RE = re.compile('^\\\\s*\\\\d+\\\\s*$')",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "tools/ocr_output_migration.py",
-    "line_no": 43,
+    "line_no": 55,
     "symbol": "PUNCT_ONLY_RE",
     "signature": "PUNCT_ONLY_RE = re.compile('^\\\\s*[\\\\W_]+\\\\s*$')",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "tools/ocr_output_migration.py",
-    "line_no": 44,
+    "line_no": 56,
     "symbol": "MATH_GUARD_RE",
     "signature": "MATH_GUARD_RE = re.compile('(\\\\\\\\[a-zA-Z]+|\\\\\\\\\\\\[|\\\\\\\\\\\\]|[_^])')",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "tools/ocr_output_migration.py",
-    "line_no": 46,
+    "line_no": 58,
     "symbol": "META_PATTERNS",
     "signature": "META_PATTERNS = [re.compile('\\\\b(Received|Accepted|Revised|Available online)\\\\b', re.IGNORECASE), re.compile('\\\\bDOI:\\\\s*\\\\S+', re.IGNORECASE), re.compile('\\\\bdoi:\\\\s*\\\\S+', re.IGNORECASE), re.compile('\\\\bhttps?://\\\\S+'), re.compile('\\\\bArticle ID\\\\b', re.IGNORECASE)]",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "tools/ocr_output_migration.py",
-    "line_no": 54,
+    "line_no": 66,
     "symbol": "BANNER_PATTERNS",
     "signature": "BANNER_PATTERNS = [re.compile('Downloaded from .*personal use only', re.IGNORECASE), re.compile('Downloaded from .*', re.IGNORECASE), re.compile('^Article published by .*available at\\\\b', re.IGNORECASE), re.compile('^Preprint typeset using\\\\b', re.IGNORECASE), re.compile('^\\\\W*(Other articles in this volume|Top cited articles|Top downloaded articles|Our comprehensive search)\\\\b', re.IGNORECASE), re.compile('^Click here for quick links\\\\b', re.IGNORECASE), re.compile('^Annual Reviews content online\\\\b', re.IGNORECASE), re.compile('^including:\\\\s*$', re.IGNORECASE), re.compile('All rights reserved', re.IGNORECASE), re.compile('Macmillan Publishers Limited', re.IGNORECASE)]",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "tools/ocr_output_migration.py",
-    "line_no": 67,
+    "line_no": 79,
     "symbol": "LABEL_ADJACENT_RE",
     "signature": "LABEL_ADJACENT_RE = re.compile('\\\\b(Fig\\\\.?|Figure|Table|Eq\\\\.?|Equation)\\\\b', re.IGNORECASE)",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "tools/ocr_output_migration.py",
-    "line_no": 68,
+    "line_no": 80,
     "symbol": "HEADER_FOOTER_PATTERNS",
     "signature": "HEADER_FOOTER_PATTERNS = [re.compile('^[A-Z][A-Za-z&.\\\\- ]+\\\\s+\\\\d+\\\\s*,\\\\s*[A-Z]?\\\\d+\\\\s*\\\\(\\\\d{4}\\\\)\\\\s*$'), re.compile('^A\\\\\\\\?&A\\\\s+\\\\d+\\\\s*,\\\\s*[A-Z]?\\\\d+\\\\s*\\\\(\\\\d{4}\\\\)\\\\s*$', re.IGNORECASE), re.compile('^MNRAS\\\\s+\\\\*{0,2}\\\\d+\\\\*{0,2},\\\\s*\\\\d+[^0-9A-Za-z]+\\\\d+\\\\s*\\\\(\\\\d{4}\\\\)\\\\s*$', re.IGNORECASE), re.compile('^The Astrophysical Journal(?: Letters)?,\\\\s*\\\\d+:\\\\S+\\\\s*\\\\(\\\\d+pp\\\\),\\\\s*\\\\d{4}\\\\s+[A-Za-z]+\\\\s+\\\\d{1,2}\\\\s+.+$', re.IGNORECASE), re.compile('^ApJ Letters,\\\\s*in press,\\\\s*[A-Za-z]+\\\\s+\\\\d{1,2},\\\\s*\\\\d{4}$', re.IGNORECASE)]",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "tools/ocr_output_migration.py",
-    "line_no": 78,
+    "line_no": 90,
     "symbol": "CleanupCounts",
     "signature": "class CleanupCounts",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/ocr_output_migration.py",
-    "line_no": 87,
+    "line_no": 99,
     "symbol": "_read_text",
     "signature": "_read_text(path: Path) -> str",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/ocr_output_migration.py",
-    "line_no": 91,
+    "line_no": 103,
     "symbol": "_write_text",
     "signature": "_write_text(path: Path, text: str) -> None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/ocr_output_migration.py",
-    "line_no": 95,
+    "line_no": 107,
     "symbol": "_iter_nonempty_neighbors",
     "signature": "_iter_nonempty_neighbors(lines: Sequence[str], idx: int) -> Tuple[Optional[str], Optional[str]]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/ocr_output_migration.py",
-    "line_no": 109,
+    "line_no": 121,
     "symbol": "_strip_inline_image_tokens",
     "signature": "_strip_inline_image_tokens(line: str) -> Tuple[str, int]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/ocr_output_migration.py",
-    "line_no": 116,
+    "line_no": 128,
     "symbol": "_strip_page_markers",
     "signature": "_strip_page_markers(line: str) -> Tuple[str, bool]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/ocr_output_migration.py",
-    "line_no": 126,
+    "line_no": 138,
     "symbol": "_is_header_footer_candidate",
     "signature": "_is_header_footer_candidate(line: str) -> bool",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/ocr_output_migration.py",
-    "line_no": 134,
+    "line_no": 146,
     "symbol": "_is_adjacent_label",
     "signature": "_is_adjacent_label(lines: Sequence[str], idx: int) -> bool",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/ocr_output_migration.py",
-    "line_no": 144,
+    "line_no": 156,
     "symbol": "_normalize_for_table_label",
     "signature": "_normalize_for_table_label(line: str) -> str",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/ocr_output_migration.py",
-    "line_no": 148,
+    "line_no": 160,
     "symbol": "_extract_table_label",
     "signature": "_extract_table_label(line: str) -> Optional[str]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/ocr_output_migration.py",
-    "line_no": 160,
+    "line_no": 172,
     "symbol": "_is_table_start_line",
     "signature": "_is_table_start_line(line: str, prev_line: Optional[str]=None, next_line: Optional[str]=None) -> bool",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/ocr_output_migration.py",
-    "line_no": 173,
+    "line_no": 185,
     "symbol": "_is_markdown_table_line",
     "signature": "_is_markdown_table_line(line: str) -> bool",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/ocr_output_migration.py",
-    "line_no": 184,
+    "line_no": 196,
     "symbol": "_is_markdown_table_start",
     "signature": "_is_markdown_table_start(lines: Sequence[str], idx: int) -> bool",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/ocr_output_migration.py",
-    "line_no": 193,
+    "line_no": 205,
     "symbol": "_is_table_note_line",
     "signature": "_is_table_note_line(line: str) -> bool",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/ocr_output_migration.py",
-    "line_no": 205,
+    "line_no": 217,
     "symbol": "_is_table_like_line_strict",
     "signature": "_is_table_like_line_strict(line: str) -> bool",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/ocr_output_migration.py",
-    "line_no": 225,
+    "line_no": 237,
     "symbol": "_is_table_like_line_loose",
     "signature": "_is_table_like_line_loose(line: str) -> bool",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/ocr_output_migration.py",
-    "line_no": 249,
+    "line_no": 261,
     "symbol": "_looks_like_table_fragment",
     "signature": "_looks_like_table_fragment(line: str) -> bool",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/ocr_output_migration.py",
-    "line_no": 267,
+    "line_no": 279,
     "symbol": "_is_math_line",
     "signature": "_is_math_line(line: str) -> bool",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/ocr_output_migration.py",
-    "line_no": 278,
+    "line_no": 290,
     "symbol": "_line_has_page_marker",
     "signature": "_line_has_page_marker(line: str) -> bool",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/ocr_output_migration.py",
-    "line_no": 289,
+    "line_no": 301,
     "symbol": "_is_table_block_end",
     "signature": "_is_table_block_end(line: str) -> bool",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/ocr_output_migration.py",
-    "line_no": 312,
+    "line_no": 324,
     "symbol": "_skip_table_block",
     "signature": "_skip_table_block(lines: Sequence[str], start_idx: int, counts: Dict[str, int]) -> int",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/ocr_output_migration.py",
-    "line_no": 337,
+    "line_no": 349,
     "symbol": "_has_recent_table_placeholder",
     "signature": "_has_recent_table_placeholder(lines: Sequence[str], idx: int, window: int=60) -> bool",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/ocr_output_migration.py",
-    "line_no": 345,
+    "line_no": 357,
     "symbol": "_has_recent_table_label",
     "signature": "_has_recent_table_label(lines: Sequence[str], idx: int, window: int=6) -> bool",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/ocr_output_migration.py",
-    "line_no": 355,
+    "line_no": 367,
     "symbol": "_compress_blank_lines",
     "signature": "_compress_blank_lines(lines: Sequence[str], max_blank: int=2) -> List[str]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/ocr_output_migration.py",
-    "line_no": 369,
+    "line_no": 381,
     "symbol": "_count_paragraphs",
     "signature": "_count_paragraphs(lines: Sequence[str]) -> int",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/ocr_output_migration.py",
-    "line_no": 382,
+    "line_no": 394,
     "symbol": "_max_blank_run",
     "signature": "_max_blank_run(lines: Sequence[str]) -> int",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/ocr_output_migration.py",
-    "line_no": 394,
+    "line_no": 406,
     "symbol": "_scan_remaining_suspects",
     "signature": "_scan_remaining_suspects(lines: Sequence[str]) -> List[Dict[str, str]]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/ocr_output_migration.py",
-    "line_no": 412,
+    "line_no": 424,
     "symbol": "_scan_meta_flags",
     "signature": "_scan_meta_flags(lines: Sequence[str]) -> List[Dict[str, str]]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/ocr_output_migration.py",
-    "line_no": 422,
+    "line_no": 434,
     "symbol": "_remove_junk_and_tables",
     "signature": "_remove_junk_and_tables(lines: Sequence[str]) -> Tuple[List[str], CleanupCounts]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/ocr_output_migration.py",
-    "line_no": 576,
+    "line_no": 588,
     "symbol": "_calc_placeholder_counts",
     "signature": "_calc_placeholder_counts(lines: Sequence[str]) -> Tuple[int, int, int]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/ocr_output_migration.py",
-    "line_no": 593,
+    "line_no": 605,
     "symbol": "_detect_equation_number",
     "signature": "_detect_equation_number(line: str, in_block: bool=False) -> Optional[str]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/ocr_output_migration.py",
-    "line_no": 606,
+    "line_no": 618,
     "symbol": "_is_math_candidate_line",
     "signature": "_is_math_candidate_line(line: str) -> bool",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/ocr_output_migration.py",
-    "line_no": 621,
+    "line_no": 633,
+    "symbol": "_extract_eq_labels",
+    "signature": "_extract_eq_labels(line: str) -> List[str]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tools/ocr_output_migration.py",
+    "line_no": 645,
+    "symbol": "_is_external_eq_reference",
+    "signature": "_is_external_eq_reference(line: str) -> bool",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tools/ocr_output_migration.py",
+    "line_no": 670,
+    "symbol": "_supplement_placeholders_from_eq_refs",
+    "signature": "_supplement_placeholders_from_eq_refs(lines: Sequence[str]) -> Tuple[List[str], int]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tools/ocr_output_migration.py",
+    "line_no": 697,
     "symbol": "_replace_equation_placeholders",
     "signature": "_replace_equation_placeholders(lines: Sequence[str]) -> Tuple[List[str], int]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/ocr_output_migration.py",
-    "line_no": 685,
+    "line_no": 761,
     "symbol": "_ensure_dir",
     "signature": "_ensure_dir(path: Path) -> None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/ocr_output_migration.py",
-    "line_no": 689,
+    "line_no": 765,
     "symbol": "_format_status",
     "signature": "_format_status(line_count_before: int, line_count_after: int, paragraph_count_after: int, remaining_suspects: int, page_markers: int) -> str",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/ocr_output_migration.py",
-    "line_no": 699,
+    "line_no": 775,
     "symbol": "_load_cleanup_report",
     "signature": "_load_cleanup_report(path: Path) -> Dict[str, object]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/ocr_output_migration.py",
-    "line_no": 708,
+    "line_no": 784,
     "symbol": "_update_report",
     "signature": "_update_report(key: str, source_path: Path, target_path: Path, before_counts: Dict[str, int], lines_after: Sequence[str], new_counts: CleanupCounts, existing_report: Dict[str, object]) -> Dict[str, object]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/ocr_output_migration.py",
-    "line_no": 779,
+    "line_no": 855,
     "symbol": "_before_counts_from_source",
     "signature": "_before_counts_from_source(source_path: Path) -> Dict[str, int]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/ocr_output_migration.py",
-    "line_no": 790,
+    "line_no": 866,
     "symbol": "_write_diff",
     "signature": "_write_diff(old_lines: Sequence[str], new_lines: Sequence[str], diff_path: Path) -> None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/ocr_output_migration.py",
-    "line_no": 801,
+    "line_no": 877,
     "symbol": "_collect_keys",
     "signature": "_collect_keys(source_root: Path, output_root: Path) -> Dict[str, Dict[str, bool]]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/ocr_output_migration.py",
-    "line_no": 817,
+    "line_no": 893,
     "symbol": "_write_key_inventory",
     "signature": "_write_key_inventory(keys: Dict[str, Dict[str, bool]], output_root: Path) -> None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/ocr_output_migration.py",
-    "line_no": 839,
+    "line_no": 915,
     "symbol": "_write_cleanup_summary",
     "signature": "_write_cleanup_summary(reports: Dict[str, Dict[str, object]], output_root: Path) -> None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/ocr_output_migration.py",
-    "line_no": 892,
+    "line_no": 968,
     "symbol": "_append_convert_log",
     "signature": "_append_convert_log(log_path: Path, key: str, source_path: Path, target_path: Path, raw_backup_path: Optional[Path], diff_path: Path, junk_removed_total: int, format_status: str, cleanup_report_path: Path) -> None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/ocr_output_migration.py",
-    "line_no": 920,
+    "line_no": 996,
     "symbol": "_process_key",
     "signature": "_process_key(key: str, source_path: Path, output_dir: Path, timestamp: str) -> Optional[Dict[str, object]]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/ocr_output_migration.py",
-    "line_no": 986,
+    "line_no": 1063,
     "symbol": "main",
     "signature": "main(argv: Optional[Sequence[str]]=None) -> int",
     "brief_usage": "No description available."
