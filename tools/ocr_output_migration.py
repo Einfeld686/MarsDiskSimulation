@@ -21,6 +21,7 @@ from typing import Dict, Iterable, List, Optional, Sequence, Tuple
 
 TABLE_PLACEHOLDER_RE = re.compile(r"^\s*\[\[TABLE:(?P<label>[^]]+)\]\]\s*$")
 EQ_PLACEHOLDER_RE = re.compile(r"\[\[EQN:\((?P<num>[^)]+)\)\]\]")
+EQ_EXT_PLACEHOLDER_RE = re.compile(r"\[\[EQN_EXT:\((?P<num>[^)]+)\)\]\]")
 EQ_LABEL_PATTERN = r"(?:[A-Za-z]\.?)?\d+(?:\.\d+)*[A-Za-z]?"
 EQ_LABEL_RE = re.compile(EQ_LABEL_PATTERN)
 EQ_NUMBER_TRAIL_RE = re.compile(rf"\((?P<num>{EQ_LABEL_PATTERN})\)\s*[.,]?\s*$")
@@ -641,7 +642,7 @@ def _calc_placeholder_counts(lines: Sequence[str]) -> Tuple[int, int, int]:
 
 
 def _detect_equation_number(line: str, in_block: bool = False) -> Optional[str]:
-    if EQ_PLACEHOLDER_RE.search(line):
+    if EQ_PLACEHOLDER_RE.search(line) or EQ_EXT_PLACEHOLDER_RE.search(line):
         return None
     match = EQ_NUMBER_TRAIL_RE.search(line)
     if not match:
@@ -659,7 +660,7 @@ def _is_math_candidate_line(line: str) -> bool:
         return False
     if EQUATION_REF_RE.search(stripped):
         return False
-    if EQ_PLACEHOLDER_RE.search(stripped):
+    if EQ_PLACEHOLDER_RE.search(stripped) or EQ_EXT_PLACEHOLDER_RE.search(stripped):
         return False
     if MATH_TOKEN_RE.search(stripped):
         return True
@@ -914,12 +915,77 @@ def _write_external_audit_report(output_root: Path) -> None:
     )
 
 
+def _build_eq_placeholder_reconciliation(output_root: Path) -> List[List[str]]:
+    rows: List[List[str]] = []
+    for result_path in sorted(output_root.glob("*/result.md")):
+        text = _read_text(result_path)
+        lines = text.splitlines()
+        placeholders = {m.group("num") for m in EQ_PLACEHOLDER_RE.finditer(text)}
+        external_placeholders = {m.group("num") for m in EQ_EXT_PLACEHOLDER_RE.finditer(text)}
+        internal_labels = _collect_internal_eq_labels(lines)
+        for line_no, line in enumerate(lines, start=1):
+            groups = _iter_eq_reference_groups(line)
+            if not groups:
+                continue
+            for match, labels, group_end in groups:
+                is_external = _is_external_eq_reference(
+                    line,
+                    match,
+                    group_end,
+                    labels=labels,
+                    internal_labels=internal_labels,
+                )
+                for label in labels:
+                    if is_external:
+                        if label in external_placeholders:
+                            status = "present"
+                            action = "external_placeholder"
+                        else:
+                            status = "missing"
+                            action = "external_placeholder_missing"
+                    else:
+                        if label in placeholders:
+                            status = "present"
+                            action = "none"
+                        else:
+                            status = "missing"
+                            action = "insert"
+                    rows.append(
+                        [
+                            str(result_path.resolve()),
+                            str(line_no),
+                            label,
+                            status,
+                            action,
+                            line.replace("\t", " ").strip(),
+                        ]
+                    )
+    return rows
+
+
+def _write_eq_placeholder_reconciliation(output_root: Path) -> None:
+    checks_dir = output_root / "_checks"
+    _ensure_dir(checks_dir)
+    path = checks_dir / "eqn_placeholder_reconciliation.tsv"
+    header = ["file", "line_no", "label", "status", "action", "text"]
+    rows = _build_eq_placeholder_reconciliation(output_root)
+    path.write_text(
+        "\t".join(header) + "\n" + "\n".join("\t".join(row) for row in rows) + "\n",
+        encoding="utf-8",
+    )
+
+
 def _supplement_placeholders_from_eq_refs(lines: Sequence[str]) -> Tuple[List[str], int]:
     existing_labels = set()
     for line in lines:
         for match in EQ_PLACEHOLDER_RE.finditer(line):
             existing_labels.add(match.group("num"))
+    existing_external_labels = set()
+    for line in lines:
+        for match in EQ_EXT_PLACEHOLDER_RE.finditer(line):
+            existing_external_labels.add(match.group("num"))
     inserted_labels = set()
+    inserted_external_labels = set()
     internal_labels = _collect_internal_eq_labels(lines)
     output: List[str] = []
     inserted = 0
@@ -929,21 +995,28 @@ def _supplement_placeholders_from_eq_refs(lines: Sequence[str]) -> Tuple[List[st
         if not groups:
             continue
         for match, labels, group_end in groups:
-            if _is_external_eq_reference(
+            is_external = _is_external_eq_reference(
                 line,
                 match,
                 group_end,
                 labels=labels,
                 internal_labels=internal_labels,
-            ):
-                continue
+            )
             for label in labels:
-                if label in existing_labels or label in inserted_labels:
-                    continue
-                output.append(f"[[EQN:({label})]]")
-                output.append("")
-                inserted_labels.add(label)
-                inserted += 1
+                if is_external:
+                    if label in existing_external_labels or label in inserted_external_labels:
+                        continue
+                    output.append(f"[[EQN_EXT:({label})]]")
+                    output.append("")
+                    inserted_external_labels.add(label)
+                    inserted += 1
+                else:
+                    if label in existing_labels or label in inserted_labels:
+                        continue
+                    output.append(f"[[EQN:({label})]]")
+                    output.append("")
+                    inserted_labels.add(label)
+                    inserted += 1
     return output, inserted
 
 
@@ -1358,6 +1431,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
 
     _write_cleanup_summary(reports, output_root)
     _write_external_audit_report(output_root)
+    _write_eq_placeholder_reconciliation(output_root)
     return 0
 
 

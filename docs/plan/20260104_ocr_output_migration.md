@@ -34,6 +34,7 @@
 - ブロック数式・インライン数式ともに `[[EQN:(番号)]]` へ置換
 - 式番号が明示されていない場合は `[[EQN:unnumbered]]` を使用
 - 本文中の参照（例: “Eq. (2)”）はそのまま保持
+- 外部参照と判定された式番号は `[[EQN_EXT:(番号)]]` を挿入して区別する
 - 置換時にOCR式を残したい場合は、直後に `<!-- OCR_EQN_RAW: ... -->` を追加（任意）
 - 未番号の数式は **自動置換しない**。目視確認で `[[EQN:unnumbered]]` を挿入し、必要に応じてOCR原文をコメントで残す
 - 表は `[[TABLE:(番号)]]` に置換し、表本文は削除する
@@ -132,10 +133,12 @@
 - 出力先（Keyごと）: `paper/pdf_extractor/outputs/<Key>/checks/cleanup_report.json`
 - 集計（任意）: `paper/pdf_extractor/outputs/_checks/cleanup_summary.csv`
 - 監査（外部判定）: `paper/pdf_extractor/outputs/_checks/eqn_external_audit.tsv`
+- 突合（式参照）: `paper/pdf_extractor/outputs/_checks/eqn_placeholder_reconciliation.tsv`
 - cleanup_report.json の必須キー: `key`, `source_path`, `target_path`, `stats`, `junk`, `format_status`
 - stats の必須キー: `line_count_before`, `line_count_after`, `paragraph_count_before`, `paragraph_count_after`, `paragraph_merge_count`, `hyphen_join_count`, `max_consecutive_blank_lines_before`, `max_consecutive_blank_lines_after`, `eq_placeholder_numbered`, `table_placeholder_numbered`, `table_placeholder_unnumbered`
 - junk の必須キー: `found_by_pattern`, `removed_by_pattern`, `remaining_suspect_lines`, `repeated_header_footer_lines`, `repeated_header_footer_removed`, `page_marker_removed`, `page_marker_remaining`, `meta_flagged_lines`
 - format_status は `clean` / `needs_review` / `blocked` を使用する
+- `eqn_placeholder_reconciliation.tsv` の `status` は `present` / `missing`、外部参照は `action=external_placeholder` で区別する
 
 整形判定（format_status）基準
 --------------------------
