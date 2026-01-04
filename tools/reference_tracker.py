@@ -67,7 +67,6 @@ INFORMAL_TO_KEY = {
     ("Krivov", "2006"): "Krivov2006_AA455_509",
     ("Dohnanyi", "1969"): "Dohnanyi1969_JGR74_2531",
     ("Burns", "1979"): "Burns1979_Icarus40_1",
-    ("Murray", "Dermott", "1999"): "MurrayDermott1999_SSD",
     ("Kubaschewski", "1974"): "Kubaschewski1974",
     ("Shadmehri", "2008"): "Shadmehri2008_ApSS314_217",
     ("Fegley", "Schaefer", "2012"): "FegleySchaefer2012_arXiv",
