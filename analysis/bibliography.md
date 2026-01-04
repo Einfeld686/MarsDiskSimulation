@@ -108,7 +108,7 @@
 ## 2. 放射圧・Blow-out・デブリディスク物理
 
 放射圧による粒子排出（blow-out）とデブリディスクの力学を扱う論文群。
-**Analysis参照**: `analysis/equations.md` (E.012–E.014) の β・blow-out、(E.006) の Wyatt 型 t_coll、(E.015–E.017, E.028, E.031) の遮蔽・Φ を参照。
+**Analysis参照**: `analysis/equations.md` (E.012–E.014) の β・blow-out、(E.006) の Wyatt 型 t_coll を参照。遮蔽・Φ は §9 で整理。
 
 ### Strubbe & Chiang (2006) ⭐⭐
 - **Key**: `StrubbeChiang2006_ApJ648_652`
@@ -190,6 +190,16 @@
 - **主張**:
   - 定常カスケードの基準傾き（Dohnanyi slope）の出典
   - α 初期値設定の根拠
+
+### Thébault et al. (2003)
+- **Key**: `Thebault2003_AA408_775`
+- **Title**: Dust production from collisions in extrasolar planetary systems
+- **Journal**: A&A, 408, 775–788
+- **DOI**: [10.1051/0004-6361:20031017](https://doi.org/10.1051/0004-6361:20031017)
+- **使用箇所**: Smoluchowski 実装の参照文脈、衝突・破砕・エネルギー簿記の背景
+- **主張**:
+  - 衝突カスケードの定式化と破砕・侵食の分類指標
+  - デブリディスクにおける粒径分布の時間発展
 
 ### Thébault & Augereau (2007)
 - **Key**: `ThebaultAugereau2007_AA472_169`
@@ -275,6 +285,15 @@
   - レイリー近似の相対速度式 (E.020) の出典
   - 衝突冷却 vs シア加熱のスケール比較
 
+### Ida & Makino (1992)
+- **Key**: `IdaMakino1992_Icarus96_107`
+- **Title**: N-body simulation of gravitational interaction between planetesimals and a protoplanet
+- **Journal**: Icarus, 96, 107–120
+- **DOI**: [10.1016/0019-1035(92)90008-U](https://doi.org/10.1016/0019-1035(92)90008-U)
+- **使用箇所**: 相対速度の $e$–$i$ 関係（$\langle e^{2}\rangle=2\langle i^{2}\rangle$）の仮定根拠
+- **主張**:
+  - 低 e, i 系での速度分散関係の採用根拠
+
 ### Lissauer & Stewart (1993)
 - **Key**: `LissauerStewart1993_PP3`
 - **Title**: Growth of Planets from Planetesimals
@@ -294,6 +313,16 @@
 - **使用箇所**: 衝突率計算
 - **主張**:
   - 低 e, i での衝突率スケール設定の参照
+
+### Imaz Blanco et al. (2023)
+- **Key**: `ImazBlanco2023_MNRAS522_6150`
+- **Title**: Inner edges of planetesimal belts: collisionally eroded or truncated?
+- **Journal**: MNRAS, 522, 6150–6169
+- **DOI**: [10.1093/mnras/stad1221](https://doi.org/10.1093/mnras/stad1221)
+- **使用箇所**: 相対速度スケーリングの係数 1.25 の採用例 (E.020)
+- **主張**:
+  - 衝突進化による内縁位置の再評価
+  - 低 e, i 系での相対速度近似の採用例
 
 ---
 

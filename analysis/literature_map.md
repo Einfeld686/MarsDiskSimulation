@@ -14,3 +14,4 @@
 | TakeuchiLin2003 | Takeuchi & Lin 2003, ApJ 593, 524 | 2003 | gas-disk:surface-outflow | partial | A | me+ai | full | TL2003 surface outflow | 光学的に厚いガス円盤の表層ダスト外流を与える TL2003 方程式の出典。gas-rich 感度試験でのみ有効化するオプションモードの根拠として使う。 |
 | StrubbeChiang2006 | Strubbe & Chiang 2006, ApJ 648, 652 | 2006 | debris-disk:collisional-outflow | implemented | A | me+ai | full | collisional cascade + outflow | PR drag と blow-out 時間尺度、Smol カーネルの e,i スケーリング整合確認に使う。Wyatt 型 t_coll とも突き合わせる。 |
 | Wyatt2008 | Wyatt 2008, ARA&A 46, 339 | 2008 | debris-disk:collisional-timescale | reference-only | A | me+ai | light | collisional lifetime scaling | Wyatt型 $t_{\rm coll}=1/(\Omega\tau)$ 近似の出典。Smol カーネル時の比較・表層 ODE (S1) の参照に利用。 |
+| IdaMakino1992 | Ida & Makino 1992, Icarus 96, 107 | 1992 | planetesimal-dynamics:velocity-dispersion | reference-only | A | me+ai | light | e–i relation in low-e regime | 低離心率の $\langle e^{2}\rangle=2\langle i^{2}\rangle$ 関係を与える一次文献。相対速度近似の前提整理に用いる。 |

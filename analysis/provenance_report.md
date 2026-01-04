@@ -1,6 +1,6 @@
 # Provenance Report
 
-- **Equation coverage**: 14 / 53 headings in `analysis/equations.md` carry confirmed tags (≈26.4%). Key anchors include (E.006) for the Strubbe–Chiang surface lifetime, (E.042)/(E.043) for the Hyodo et al. cooling/greybody laws, (E.045) for the Smoluchowski source injection via Birnstiel/Krivov, and (E.047)–(E.053) for energy bookkeeping and collision regime classification via Thébault/Krivov/Krijt&Kama. [@StrubbeChiang2006_ApJ648_652; @Hyodo2018_ApJ860_150; @Birnstiel2011_AA525_A11; @Krivov2006_AA455_509; @Thebault2003_AA410_685; @KrijtKama2014_AA566_L2]
+- **Equation coverage**: 14 / 53 headings in `analysis/equations.md` carry confirmed tags (≈26.4%). Key anchors include (E.006) for the Strubbe–Chiang surface lifetime, (E.042)/(E.043) for the Hyodo et al. cooling/greybody laws, (E.045) for the Smoluchowski source injection via Birnstiel/Krivov, and (E.047)–(E.053) for energy bookkeeping and collision regime classification via Thébault/Krivov/Krijt&Kama. [@StrubbeChiang2006_ApJ648_652; @Hyodo2018_ApJ860_150; @Birnstiel2011_AA525_A11; @Krivov2006_AA455_509; @Thebault2003_AA408_775; @KrijtKama2014_AA566_L2]
 - **Code mappings**: 26 anchors in `analysis/source_map.json` link the registry keys across radiation, surface, sublimation, siO₂ cooling, energy bookkeeping, and the gas-poor guidance in `analysis/overview.md` / `analysis/run-recipes.md`. All entries reference normalized keys from `analysis/references.registry.json`.
 - **Assumption clusters resolved**: 13 件の主要仮定クラスタが既存登録論文と紐付け完了し、`assumption_trace.md` で status=**confirmed** に更新済み。
 
@@ -96,12 +96,12 @@ graph TD
 - `marsdisk/physics/collide.py#prepare_collision_kernel_workspace`
 - `marsdisk/physics/radiation.py#qpr_lookup_array`
 
-Known tags presently include `Hyodo2018_ApJ860_150`, `StrubbeChiang2006_ApJ648_652`, `Pignatale2018_ApJ853_118`, `Ronnet2016_ApJ828_109`, `CridaCharnoz2012_Science338_1196`, `CanupSalmon2018_SciAdv4_eaar6887`, `Kuramoto2024`, `Burns1979_Icarus40_1`, `Wyatt2008`, `Chandrasekhar1960_RadiativeTransfer`, `Joseph1976_JAS33_2452`, `HansenTravis1974_SSR16_527`, `ThebaultAugereau2007_AA472_169`, `Krivov2006_AA455_509`, `Dohnanyi1969_JGR74_2531`, `Ohtsuki2002_Icarus155_436`, `Olofsson2022_MNRAS513_713`, `SalmonCanup2012_ApJ760_83`, `BohrenHuffman1983_Wiley`, `Thebault2003_AA410_685`, and `KrijtKama2014_AA566_L2`. These anchor the thermal history, β/blow-out relations, sublimation chemistry, condensation sinks, viscous spreading regimes, disk-mass/tidal constraints, radiative transfer fundamentals, PSD structure, collision timescales, energy bookkeeping, and the MMX-era review baseline.
+Known tags presently include `Hyodo2018_ApJ860_150`, `StrubbeChiang2006_ApJ648_652`, `Pignatale2018_ApJ853_118`, `Ronnet2016_ApJ828_109`, `CridaCharnoz2012_Science338_1196`, `CanupSalmon2018_SciAdv4_eaar6887`, `Kuramoto2024`, `Burns1979_Icarus40_1`, `Wyatt2008`, `Chandrasekhar1960_RadiativeTransfer`, `Joseph1976_JAS33_2452`, `HansenTravis1974_SSR16_527`, `ThebaultAugereau2007_AA472_169`, `Krivov2006_AA455_509`, `Dohnanyi1969_JGR74_2531`, `Ohtsuki2002_Icarus155_436`, `IdaMakino1992_Icarus96_107`, `ImazBlanco2023_MNRAS522_6150`, `Olofsson2022_MNRAS513_713`, `SalmonCanup2012_ApJ760_83`, `BohrenHuffman1983_Wiley`, `Thebault2003_AA408_775`, and `KrijtKama2014_AA566_L2`. These anchor the thermal history, β/blow-out relations, sublimation chemistry, condensation sinks, viscous spreading regimes, disk-mass/tidal constraints, radiative transfer fundamentals, PSD structure, collision timescales, energy bookkeeping, and the MMX-era review baseline.
 
 ## Resolved items (2025-12-19 update - Energy Bookkeeping)
 
-10. **`energy_bookkeeping_core_v1`** — E.047–E.050 でエネルギー簿記（相対運動エネルギー、散逸/残存エネルギー、非散逸率）を Thébault et al. (2003), Krivov et al. (2006) と紐付け完了。[collide.py, run_zero_d.py] [@Thebault2003_AA410_685; @Krivov2006_AA455_509]
-11. **`collision_regime_split_v1`** — E.051 で侵食/壊滅的破砕の分岐条件（$F_{LF} > 0.5$ / $\le 0.5$）を Thébault et al. (2003), Krivov et al. (2006) と紐付け。[collide.py, fragments.py] [@Thebault2003_AA410_685; @Krivov2006_AA455_509]
+10. **`energy_bookkeeping_core_v1`** — E.047–E.050 でエネルギー簿記（相対運動エネルギー、散逸/残存エネルギー、非散逸率）を Thébault et al. (2003), Krivov et al. (2006) と紐付け完了。[collide.py, run_zero_d.py] [@Thebault2003_AA408_775; @Krivov2006_AA455_509]
+11. **`collision_regime_split_v1`** — E.051 で侵食/壊滅的破砕の分岐条件（$F_{LF} > 0.5$ / $\le 0.5$）を Thébault et al. (2003), Krivov et al. (2006) と紐付け。[collide.py, fragments.py] [@Thebault2003_AA408_775; @Krivov2006_AA455_509]
 12. **`surface_energy_floor_v1`** — E.053 で Krijt & Kama (2014) の表面エネルギー制約による最小粒径を実装。[run_zero_d.py] [@KrijtKama2014_AA566_L2]
 
 ## Resolved items (2025-12-15 update - τ_LOS=1 initialization)

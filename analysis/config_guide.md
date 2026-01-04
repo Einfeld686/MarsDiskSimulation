@@ -571,9 +571,8 @@ Wyatt, Clarke & Booth (2011) が提示するサイズ別源・損失の解析式
 
 | キー | 型 | 説明 | 典型値 |
 |------|-----|------|--------|
-| `mode` | `"direct"` / `"deep_mixing"` | 輸送モード。`direct` は表層へ直接注入（headroom クリップは legacy で、上限判定は `tau_stop` に移行）。`deep_mixing` は一旦深部リザーバーへ蓄え、`t_mix_orbits` で表層へ混合する | `"direct"` |
+| `mode` | `"direct"` / `"deep_mixing"` | 輸送モード。`direct` は表層へ直接注入。`deep_mixing` は一旦深部リザーバーへ蓄え、`t_mix_orbits` で表層へ混合する | `"direct"` |
 | `t_mix_orbits` | float | 深部→表層の混合時間スケール [軌道周期]。`mode="deep_mixing"` のとき必須（正値） | 50 |
-| `headroom_gate` | `"hard"` / `"soft"` | 深部→表層フラックスの headroom 制限（legacy）。光学的厚さの上限は `tau_stop` で停止判定するため、現行フローでは診断用途に留める | `"hard"` |
 
 **例（deep_mixing モード）:**
 
@@ -585,7 +584,6 @@ supply:
   transport:
     mode: "deep_mixing"
     t_mix_orbits: 50
-    headroom_gate: "soft"
 ```
 
 > [!TIP]

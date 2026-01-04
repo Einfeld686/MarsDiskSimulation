@@ -40,7 +40,7 @@
 ### 物理式サマリ（analysis/equations.md から自動同期）
 
 <!-- AUTOGEN:README_PHYSICS_SUMMARY START -->
-- 放射圧ブローアウト: β(E.013), a_blow(E.014), 表層流出 Ṁ_out(E.009)
+- 放射圧ブローアウト: β(E.013), s_blow(E.014), 表層流出 Ṁ_out(E.009)
 - 昇華シンク: HKL 質量フラックス(E.018) → シンク時間(E.019)
 - 光学的厚さ・遮蔽: κ_eff(E.015), Σ_τ=1(E.016), Φ(E.017)
 - 衝突・破砕供給: IMEX-BDF1 Smoluchowski (E.010), 有効最小粒径 s_min(E.008)

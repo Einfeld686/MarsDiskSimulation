@@ -363,6 +363,29 @@
       ]
     },
     {
+      "key": "IdaMakino1992_Icarus96_107",
+      "short": "Ida & Makino (1992)",
+      "title": "N-body simulation of gravitational interaction between planetesimals and a protoplanet",
+      "doi": "10.1016/0019-1035(92)90008-U",
+      "bibtex": "@article{IdaMakino1992_Icarus96_107, journal = {Icarus}, volume = {96}, pages = {107-120}, year = {1992}}",
+      "adopted_scope": "Low-eccentricity planetesimal dynamics and the e-i relation used in relative-velocity estimates.",
+      "claims": [
+        "Adopts the low-e, low-i relation \u27e8e^2\u27e9 = 2\u27e8i^2\u27e9 that underpins the relative-velocity coefficient."
+      ]
+    },
+    {
+      "key": "ImazBlanco2023_MNRAS522_6150",
+      "short": "Imaz Blanco et al. (2023)",
+      "title": "Inner edges of planetesimal belts: collisionally eroded or truncated?",
+      "doi": "10.1093/mnras/stad1221",
+      "bibtex": "@article{ImazBlanco2023_MNRAS522_6150, journal = {MNRAS}, volume = {522}, pages = {6150-6169}, year = {2023}}",
+      "adopted_scope": "Debris-belt modelling that adopts the low-e, low-i relative-velocity scaling used in the code.",
+      "claims": [
+        "Uses v_rel = v_K sqrt(1.25 e^2 + i^2) under Rayleigh-distributed eccentricities and inclinations.",
+        "Provides a modern usage example for the relative-velocity coefficient in collisional belt evolution."
+      ]
+    },
+    {
       "key": "Krivov2006_AA455_509",
       "short": "Krivov et al. (2006)",
       "title": "Dust distributions in debris disks: effects of gravity, radiation pressure and collisions",
@@ -372,6 +395,18 @@
       "claims": [
         "Derives collision kernels proportional to cross section times relative speed divided by the combined scale height.",
         "Uses adaptive time stepping and mass conservation checks for Smoluchowski solvers in debris-disk contexts."
+      ]
+    },
+    {
+      "key": "Thebault2003_AA408_775",
+      "short": "Thebault et al. (2003)",
+      "title": "Dust production from collisions in extrasolar planetary systems",
+      "doi": "10.1051/0004-6361:20031017",
+      "bibtex": "@article{Thebault2003_AA408_775, journal = {A&A}, volume = {408}, pages = {775-788}, year = {2003}}",
+      "adopted_scope": "Collisional-cascade modelling in debris disks, including erosion/fragmentation diagnostics.",
+      "claims": [
+        "Details collisional cascade modelling with fragmentation and cratering regimes in debris disks.",
+        "Supplies context for collision/fragmentation bookkeeping used in Smoluchowski steps."
       ]
     },
     {

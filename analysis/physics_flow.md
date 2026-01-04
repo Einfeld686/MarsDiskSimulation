@@ -55,7 +55,7 @@ flowchart TB
 
 AGENTS.md で規定された結合順序:
 
-> ⟨Q_pr⟩ → β → a_blow → sublimation ds/dt → τ & Φ → phase → supply → surface sink fluxes
+> ⟨Q_pr⟩ → β → s_blow → sublimation ds/dt → τ & Φ → phase → supply → surface sink fluxes
 
 ```mermaid
 sequenceDiagram
@@ -86,14 +86,14 @@ sequenceDiagram
         M->>RAD: beta(s, ρ, T_M, Q_pr)
         RAD-->>M: β
         M->>RAD: blowout_radius(ρ, T_M, Q_pr)
-        RAD-->>M: a_blow
+        RAD-->>M: s_blow
     end
     
     rect rgb(240, 255, 240)
         Note right of M: 3. サイズ下限更新
         M->>SZ: eval_ds_dt_sublimation(T_grain, ρ)
         SZ-->>M: ds/dt
-        M->>M: s_min_effective = max(s_min_config, a_blow)
+        M->>M: s_min_effective = max(s_min_config, s_blow)
     end
     
     rect rgb(255, 245, 238)
@@ -282,22 +282,20 @@ flowchart TB
     end
     
     subgraph DIRECT["direct モード"]
-        D1["headroom = Σ_τ1 - Σ_surf"]
-        D2["clip by headroom"]
-        D3["prod_rate_applied"]
+        D1["prod_rate_applied"]
     end
     
     subgraph DEEP["deep_mixing モード"]
         E1["σ_deep リザーバ蓄積"]
         E2["t_mix_orbits で混合"]
         E3["deep→surf flux"]
-        E4["headroom_gate で制限"]
+        E4["prod_rate_applied"]
     end
     
     A --> B --> C
-    C -->|"direct"| D --> D1 --> D2 --> D3
+    C -->|"direct"| D --> D1
     C -->|"deep_mixing"| E --> E1 --> E2 --> E3 --> E4
-    D3 --> F["表層 Σ_surf 更新"]
+    D1 --> F["表層 Σ_surf 更新"]
     E4 --> F
 ```
 
@@ -320,7 +318,6 @@ flowchart LR
         E["t_coll = 1/(Ω×τ)"]
         F["λ = 1/t_blow + I_coll/t_coll + I_sink/t_sink"]
         G["Σ^{n+1} = (Σ^n + Δt×prod) / (1 + Δt×λ)"]
-        H["Σ^{n+1} = min(Σ^{n+1}, Σ_τ=1)"]
     end
     
     subgraph OUTPUT["出力"]
@@ -333,9 +330,10 @@ flowchart LR
     C --> D & E & F
     D & E --> F
     F --> G
-    G --> H
-    H --> I & J
+    G --> I & J
 ```
+
+補足: `Σ_{τ=1}` は診断用に保持し、表層 ODE の更新式で `Σ_surf` を直接クリップしない。
 
 ---
 
@@ -379,7 +377,7 @@ flowchart TB
 
 ```mermaid
 flowchart TB
-    A[粒径 s] --> B{s < a_blow?}
+    A[粒径 s] --> B{s < s_blow?}
     B -->|Yes| C[β > 0.5]
     B -->|No| D[β ≤ 0.5]
     
@@ -509,7 +507,7 @@ flowchart LR
 | (E.010) | IMEX-BDF(1) | smol.py | `step_imex_bdf1_C3` L18-101 |
 | (E.011) | mass_budget_error | smol.py | `compute_mass_budget_error_C4` L104-131 |
 | (E.013) | β | radiation.py | `beta` L220-241 |
-| (E.014) | a_blow | radiation.py | `blowout_radius` L274-288 |
+| (E.014) | s_blow | radiation.py | `blowout_radius` L274-288 |
 | (E.015) | effective_kappa | shielding.py | `effective_kappa` L90-120 |
 | (E.016) | sigma_tau1 | shielding.py | `sigma_tau1` L123-130 |
 | (E.018) | mass_flux_hkl | sublimation.py | `mass_flux_hkl` L534-584 |
