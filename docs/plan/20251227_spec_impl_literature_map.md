@@ -204,7 +204,7 @@
 | --- | --- | --- |
 | FegleySchaefer2012_arXiv | DOI 未登録 | 溶融 SiO2 蒸気圧の根拠が曖昧になる |
 | LissauerStewart1993_PP3 | DOI 空欄 | 低 e, i 速度スケーリングの引用が曖昧になる |
-| Thebault2003_AA410_685 | レジストリ未登録 | PSD/エネルギー簿記の引用整合が崩れる |
+| Thebault2003_AA408_775 | レジストリ登録済み | PSD/エネルギー簿記の引用整合を回復 |
 
 ### 9.4 仕様と文献の整合が未確定（要確認）
 
@@ -227,7 +227,7 @@
 - [x] 0D 統合ループ（`analysis/run-recipes.md`）: 一致
 
 **監査完了（不一致: 文献レジストリ）**
-- [x] 文献レジストリの DOI 欠落補完: `FegleySchaefer2012_arXiv`, `LissauerStewart1993_PP3`, `Thebault2003_AA410_685`
+- [x] 文献レジストリの DOI 欠落補完: `FegleySchaefer2012_arXiv`, `LissauerStewart1993_PP3`, `Thebault2003_AA408_775`
 
 ## 10. テストと検証の入口
 
