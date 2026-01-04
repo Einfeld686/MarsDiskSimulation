@@ -7848,7 +7848,7 @@
   },
   {
     "file_path": "paper/pdf_extractor/main.py",
-    "line_no": 76,
+    "line_no": 119,
     "symbol": "get_safe_path",
     "signature": "get_safe_path(path_str)",
     "brief_usage": "No description available."
@@ -7856,27 +7856,41 @@
   {
     "file_path": "paper/pdf_extractor/src/ai_handler.py",
     "line_no": 5,
+    "symbol": "_get_model",
+    "signature": "_get_model()",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "paper/pdf_extractor/src/ai_handler.py",
+    "line_no": 10,
+    "symbol": "_generation_config",
+    "signature": "_generation_config()",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "paper/pdf_extractor/src/ai_handler.py",
+    "line_no": 21,
     "symbol": "configure_gemini",
     "signature": "configure_gemini()",
     "brief_usage": "No description available."
   },
   {
     "file_path": "paper/pdf_extractor/src/ai_handler.py",
-    "line_no": 13,
+    "line_no": 29,
     "symbol": "refine_text_with_gemini",
     "signature": "refine_text_with_gemini(text_chunk)",
     "brief_usage": "Sends raw text to Gemini for formatting and correction."
   },
   {
     "file_path": "paper/pdf_extractor/src/ai_handler.py",
-    "line_no": 33,
+    "line_no": 50,
     "symbol": "derive_caption_for_image",
     "signature": "derive_caption_for_image(image_path)",
     "brief_usage": "Experimental: Sends image to Gemini to get a description/caption."
   },
   {
     "file_path": "paper/pdf_extractor/src/ai_handler.py",
-    "line_no": 59,
+    "line_no": 82,
     "symbol": "generate_markdown_from_page_image",
     "signature": "generate_markdown_from_page_image(image_data, mime_type='image/png')",
     "brief_usage": "Sends a page image to Gemini to transcribe and format as Markdown."
@@ -7884,15 +7898,43 @@
   {
     "file_path": "paper/pdf_extractor/src/extractor.py",
     "line_no": 6,
+    "symbol": "_normalize_text",
+    "signature": "_normalize_text(raw_text)",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "paper/pdf_extractor/src/extractor.py",
+    "line_no": 14,
+    "symbol": "_alpha_ratio",
+    "signature": "_alpha_ratio(text)",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "paper/pdf_extractor/src/extractor.py",
+    "line_no": 22,
+    "symbol": "_should_use_ocr",
+    "signature": "_should_use_ocr(raw_text, word_count, min_text_chars, min_words, min_alpha_ratio)",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "paper/pdf_extractor/src/extractor.py",
+    "line_no": 34,
+    "symbol": "_render_page_bytes",
+    "signature": "_render_page_bytes(page, render_dpi)",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "paper/pdf_extractor/src/extractor.py",
+    "line_no": 42,
     "symbol": "extract_content_hybrid",
-    "signature": "extract_content_hybrid(doc, output_dir, force_ocr=False)",
+    "signature": "extract_content_hybrid(doc, output_dir, force_ocr=False, render_dpi=300, min_text_chars=80, min_words=10, min_alpha_ratio=0.2, save_page_images=False)",
     "brief_usage": "Iterates through pages, extracting images and generating text (via Code or AI)."
   },
   {
     "file_path": "paper/pdf_extractor/src/extractor.py",
-    "line_no": 67,
+    "line_no": 145,
     "symbol": "process_pdf",
-    "signature": "process_pdf(pdf_path, output_base_dir='outputs', force_ocr=False)",
+    "signature": "process_pdf(pdf_path, output_base_dir='outputs', force_ocr=False, render_dpi=300, min_text_chars=80, min_words=10, min_alpha_ratio=0.2, save_page_images=False)",
     "brief_usage": "Main entry point."
   },
   {
