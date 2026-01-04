@@ -63,6 +63,7 @@ set "REPO_ROOT=%SCRIPT_DIR%..\\..\\.."
 
 for %%I in ("%REPO_ROOT%") do set "REPO_ROOT=%%~fI"
 
+rem ::REF:DEPENDENCIES
 rem --- Auto-install dependencies (skip with SKIP_PIP=1) ---
 if not defined SKIP_PIP set "SKIP_PIP=0"
 if /i "!SKIP_PIP!"=="1" (
@@ -104,6 +105,7 @@ if /i "!SKIP_PIP!"=="1" (
 
 
 
+rem ::REF:DEFAULT_PATHS
 set "CONFIG_PATH=%REPO_ROOT%\scripts\runsets\common\base.yml"
 
 
@@ -151,6 +153,7 @@ if not defined QUIET_MODE set "QUIET_MODE=1"
 
 
 
+rem ::REF:CLI_ARGS
 :parse_args
 
 
@@ -315,6 +318,7 @@ if /i "%~1"=="--no-eval" (
 
 
 
+rem ::REF:PREFLIGHT_ARGS
 if /i "%~1"=="--no-preflight" (
 
   echo.[error] preflight checks are mandatory; remove --no-preflight
@@ -507,6 +511,7 @@ if "%QUIET_MODE%"=="1" (
 
 
 
+rem ::REF:OUT_ROOT
 if not defined AUTO_OUT_ROOT set "AUTO_OUT_ROOT=1"
 if not defined INTERNAL_OUT_ROOT (
   set "INTERNAL_OUT_ROOT=out"
@@ -578,6 +583,7 @@ if not exist "%OVERRIDES_PATH%" (
   exit /b 1
 )
 
+rem ::REF:ARCHIVE_CHECKS
 rem If archive dir is missing/unavailable, fall back to OUT_ROOT\archive.
 set "OVERRIDES_PATH_EFFECTIVE=%OVERRIDES_PATH%"
 set "ARCHIVE_DIR_CFG="
@@ -616,6 +622,7 @@ if "%ARCHIVE_DIR_OK%"=="0" (
 
 
 
+rem ::REF:HOOKS
 if not defined HOOKS_ENABLE set "HOOKS_ENABLE=plot,eval,archive"
 
 
@@ -735,6 +742,7 @@ set "EXTRA_OVERRIDES_FILE=%OVERRIDES_PATH%"
 
 
 
+rem ::REF:SWEEP_DEFAULTS
 if not defined SWEEP_TAG set "SWEEP_TAG=temp_supply_sweep_1d"
 
 
@@ -775,6 +783,7 @@ if not defined SUPPLY_TRANSPORT_HEADROOM set "SUPPLY_TRANSPORT_HEADROOM=hard"
 
 
 
+rem ::REF:TEMPERATURE_STOP
 rem Temperature stop is the default (COOL_TO_K=1000) unless overridden.
 
 
@@ -787,6 +796,7 @@ rem To force a fixed horizon, set COOL_TO_K=none and T_END_YEARS explicitly.
 
 rem Default parallel settings: 6 sweep jobs on internal disk.
 if not defined AUTO_JOBS set "AUTO_JOBS=0"
+rem ::REF:PARALLEL
 if not defined PARALLEL_JOBS set "PARALLEL_JOBS=6"
 if not defined PARALLEL_JOBS_DEFAULT set "PARALLEL_JOBS_DEFAULT=0"
 if not defined SWEEP_PARALLEL set "SWEEP_PARALLEL=1"
@@ -1028,6 +1038,7 @@ if "%DEBUG%"=="1" (
 
 
 
+rem ::REF:PREFLIGHT
 %LOG_INFO% preflight checks
 
 rem preflight_checks.py is a Mac-only analysis tool; skip on Windows by default
@@ -1552,6 +1563,7 @@ if "%PARALLEL_JOBS_DEFAULT%"=="1" if "!PARALLEL_JOBS!"=="1" (
 
 if "%DEBUG%"=="1" call :debug_log "parallel_final: mode=!PARALLEL_MODE! sweep_parallel=!SWEEP_PARALLEL! parallel_jobs=!PARALLEL_JOBS! cell_parallel=!MARSDISK_CELL_PARALLEL! cell_jobs=!MARSDISK_CELL_JOBS! cell_thread_limit=!CELL_THREAD_LIMIT! numba_threads=!NUMBA_NUM_THREADS! omp_threads=!OMP_NUM_THREADS!"
 
+rem ::REF:CHILD_RUN
 %LOG_INFO% launching run_temp_supply_sweep.cmd
 if "%DEBUG%"=="1" call :debug_log "run_temp_supply: start cmd=scripts\research\run_temp_supply_sweep.cmd"
 
