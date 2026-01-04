@@ -83,6 +83,36 @@
   - 外縁ガス層での凝縮がPhobos/Deimosスペクトルと整合
   - マグマオーシャン由来物質だけでは観測制約を再現不可
 
+### Rosenblatt & Charnoz (2012)
+- **Key**: `Rosenblatt2012_Icarus221_806`
+- **Title**: On the formation of the martian moons from a circum-martian accretion disk
+- **Journal**: Icarus, 221, 806–815
+- **DOI**: [10.1016/j.icarus.2012.09.009](https://doi.org/10.1016/j.icarus.2012.09.009)
+- **使用箇所**: 火星衛星形成の円盤進化モデルの背景整理
+- **主張**:
+  - ロッシュ限界内円盤の粘性拡散と衛星形成の関係を整理
+  - 初期円盤条件の違いが形成効率に影響することを示す
+
+### Citron et al. (2015)
+- **Key**: `Citron2015_Icarus252_334`
+- **Title**: Formation of Phobos and Deimos via a giant impact
+- **Journal**: Icarus, 252, 334–338
+- **DOI**: [10.1016/j.icarus.2015.02.011](https://doi.org/10.1016/j.icarus.2015.02.011)
+- **使用箇所**: 火星衛星巨大衝突起源の補強文献
+- **主張**:
+  - 巨大衝突由来の周回円盤から小衛星が形成されるシナリオを提示
+  - ディスク質量と角運動量の制約を整理
+
+### Rosenblatt et al. (2016)
+- **Key**: `Rosenblatt2016_NatGeo9_8`
+- **Title**: Accretion of Phobos and Deimos in an extended debris disc stirred by transient moons
+- **Journal**: Nature Geoscience, 9, 581–583
+- **DOI**: [10.1038/ngeo2742](https://doi.org/10.1038/ngeo2742)
+- **使用箇所**: 外側ディスク攪乱シナリオの参照
+- **主張**:
+  - 一時的に形成された内側衛星が外側デブリを攪乱して小衛星を成長させる
+  - 拡張ディスクモデルがPhobos/Deimosの形成に有効であることを示す
+
 ### Canup & Salmon (2018)
 - **Key**: `CanupSalmon2018_SciAdv4_eaar6887`
 - **Title**: Origin of Phobos and Deimos by the impact of a Vesta-to-Ceres-sized body with Mars
@@ -341,6 +371,16 @@
 - **主張**:
   - 遅い拡散 → 複数衛星列
   - 速い拡散 → 単一主衛星
+
+### Charnoz et al. (2011)
+- **Key**: `CharnozCridaCastilloRogez2011_Icarus216_535`
+- **Title**: Accretion of Saturn's mid-sized moons during the viscous spreading of young massive rings: Solving the paradox of silicate-poor rings versus silicate-rich moons
+- **Journal**: Icarus, 216, 535–550
+- **DOI**: [10.1016/j.icarus.2011.09.017](https://doi.org/10.1016/j.icarus.2011.09.017)
+- **使用箇所**: ロッシュ限界内リング拡散の比較事例
+- **主張**:
+  - 高密度リングの粘性拡散が衛星形成を駆動する
+  - リング組成と生成衛星の組成差の解釈を提示
 
 ### Salmon, Charnoz & Brahic (2010)
 - **Key**: `SalmonCharnozBrahic2010_Icarus209_771`

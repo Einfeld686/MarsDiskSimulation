@@ -8,9 +8,9 @@
       "bibtex": "@article{Hyodo2018_ApJ860_150, journal = {ApJ}, volume = {860}, pages = {150}, year = {2018}}",
       "adopted_scope": "Post-impact radiative cooling and volatile loss for gas-poor Martian debris disks.",
       "claims": [
-        "Equations (2)\u2013(4) provide the radiative-slab cooling law used for Mars surface temperatures (E.042).",
-        "Equations (5)\u2013(6) relate particle temperature, \u27e8Q_abs\u27e9, and the dilution factor \u221a(R_p/2r) (E.043).",
-        "Discusses the few-orbit volatile escape and \u03b2-threshold regimes adopted by the simulation.",
+        "Equations (2)–(4) provide the radiative-slab cooling law used for Mars surface temperatures (E.042).",
+        "Equations (5)–(6) relate particle temperature, ⟨Q_abs⟩, and the dilution factor √(R_p/2r) (E.043).",
+        "Discusses the few-orbit volatile escape and β-threshold regimes adopted by the simulation.",
         "Serves as the primary citation for siO2_disk_cooling.tmars/tp_of_rt and radiation.grain_temperature_graybody."
       ]
     },
@@ -23,7 +23,7 @@
       "adopted_scope": "Initial conditions of Martian debris disks immediately after the giant impact (molten-rich).",
       "claims": [
         "Shows the disk consists of >95 wt% melt and <5 wt% vapor at ~2000 K right after impact.",
-        "Links eccentric orbits and particle-size cascades from meter-scale fragments down to 100 \u00b5m\u20130.1 \u00b5m grains."
+        "Links eccentric orbits and particle-size cascades from meter-scale fragments down to 100 µm–0.1 µm grains."
       ]
     },
     {
@@ -58,7 +58,7 @@
       "bibtex": "@article{FegleySchaefer2012_arXiv, journal = {arXiv}, year = {2012}}",
       "adopted_scope": "Provides MAGMA equilibrium vapour pressures for molten SiO2; supplies the Clausius fit log10 P[Pa] = 13.203 - 25898.9/T used as the HKL liquid branch.",
       "claims": [
-        "Reports equilibrium vapour pressures for molten silica and coexisting gas over 2000\u20133000 K.",
+        "Reports equilibrium vapour pressures for molten silica and coexisting gas over 2000–3000 K.",
         "Shows SiO dominates the vapour composition in the hot melt regime, justifying reuse of the SiO molar mass in HKL."
       ]
     },
@@ -104,9 +104,9 @@
       "title": "Long-term and large-scale viscous evolution of dense planetary rings",
       "doi": "10.1016/j.icarus.2010.05.030",
       "bibtex": "@article{SalmonCanup2010_Icarus208_33, journal = {Icarus}, volume = {208}, pages = {33-48}, year = {2010}}",
-      "adopted_scope": "Viscous diffusion of Roche-interior fluid disks with \u03bd \u221d \u03a3\u00b2 scaling relevant to massive inner rings.",
+      "adopted_scope": "Viscous diffusion of Roche-interior fluid disks with ν ∝ Σ² scaling relevant to massive inner rings.",
       "claims": [
-        "Shows how initial \u03a3(r) choices control spreading time and mass delivery beyond the Roche limit.",
+        "Shows how initial Σ(r) choices control spreading time and mass delivery beyond the Roche limit.",
         "Provides analytic normalisations for mapping total ring mass to surface density profiles."
       ]
     },
@@ -118,7 +118,7 @@
       "bibtex": "@article{SalmonCanup2012_ApJ760_83, journal = {ApJ}, volume = {760}, pages = {83}, year = {2012}}",
       "adopted_scope": "Satellite growth fed by viscously spreading Roche-interior disks.",
       "claims": [
-        "Uses uniform/power-law \u03a3(r) prescriptions tied to total disk mass when initializing fluid disks.",
+        "Uses uniform/power-law Σ(r) prescriptions tied to total disk mass when initializing fluid disks.",
         "Links disk mass fraction to moon-forming mass fluxes across the Roche limit."
       ]
     },
@@ -130,7 +130,7 @@
       "bibtex": "@article{CanupSalmon2018_SciAdv4_eaar6887, journal = {Science Advances}, volume = {4}, pages = {eaar6887}, year = {2018}}",
       "adopted_scope": "Constraints on disk mass and planetary tidal parameters required for Phobos/Deimos survival.",
       "claims": [
-        "Small moons survive only when M_disk \u2264 3\u00d710\u207b\u2075 M_Mars and the tidal parameter (Q/k\u2082) < 80 (Fig. 2).",
+        "Small moons survive only when M_disk ≤ 3×10⁻⁵ M_Mars and the tidal parameter (Q/k₂) < 80 (Fig. 2).",
         "Establishes the low-mass, low-gas default assumed in configs and analysis recipes."
       ]
     },
@@ -142,15 +142,15 @@
       "bibtex": "@article{StrubbeChiang2006_ApJ648_652, journal = {ApJ}, volume = {648}, pages = {652-665}, year = {2006}}",
       "adopted_scope": "Optically thin, gas-poor debris disks where radiation pressure and CPR drag set the small-grain budget.",
       "claims": [
-        "Equation (1) gives the collisional time-scale t_c = 1/(\u03a9 \u03c4_\u22a5) adopted in S1 surface updates and (E.006).",
-        "Defines \u03b2(s), the \u03b2 = 0.5 blow-out limit, and the type A/B regimes with \u03c4(r) \u221d r^{-5/2} or r^{-3/2}.",
+        "Equation (1) gives the collisional time-scale t_c = 1/(Ω τ_⊥) adopted in S1 surface updates and (E.006).",
+        "Defines β(s), the β = 0.5 blow-out limit, and the type A/B regimes with τ(r) ∝ r^{-5/2} or r^{-3/2}.",
         "Provides the gas-poor baseline for radiation.beta, blowout_radius, and related diagnostics; Wyatt (2008) is retained as a review-only cross-check."
       ]
     },
     {
       "key": "PawellekKrivov2015_MNRAS454_3207",
       "short": "Pawellek & Krivov (2015)",
-      "title": "The dust grain size\u2013stellar luminosity trend in debris discs",
+      "title": "The dust grain size–stellar luminosity trend in debris discs",
       "doi": "10.1093/mnras/stv2142",
       "bibtex": "@article{PawellekKrivov2015_MNRAS454_3207, journal = {MNRAS}, volume = {454}, pages = {3207-3221}, year = {2015}}",
       "adopted_scope": "Observationally calibrated blow-out sizes that apply the Burns beta expression with measured Q_pr and beta=0.5 as the bound/unbound threshold.",
@@ -201,9 +201,9 @@
       "title": "The vertical structure of debris discs and the impact of gas",
       "doi": "10.1093/mnras/stac455",
       "bibtex": "@article{Olofsson2022_MNRAS513_713, journal = {MNRAS}, volume = {513}, pages = {713-731}, year = {2022}}",
-      "adopted_scope": "Gas\u2013dust coupling in debris disks at low gas surface densities.",
+      "adopted_scope": "Gas–dust coupling in debris disks at low gas surface densities.",
       "claims": [
-        "Shows that when gas \u03a3 is low, drag times exceed collisional times and radiation pressure dominates small-grain dynamics.",
+        "Shows that when gas Σ is low, drag times exceed collisional times and radiation pressure dominates small-grain dynamics.",
         "Provides the gas-poor baseline justifying enable_gas_drag=false unless dense gas is imposed."
       ]
     },
@@ -215,7 +215,7 @@
       "bibtex": "@article{Kuramoto2024, journal = {Annual Review of Earth and Planetary Sciences}, volume = {52}, pages = {495-519}, year = {2024}}",
       "adopted_scope": "Mission context for MMX and the comparative analysis of capture vs impact hypotheses.",
       "claims": [
-        "Summarises observational requirements feeding \u03b2/mass-loss scans.",
+        "Summarises observational requirements feeding β/mass-loss scans.",
         "Sets expectations for gas-poor vs capture interpretations."
       ]
     },
@@ -227,7 +227,7 @@
       "bibtex": "@article{Wyatt2008, journal = {ARA&A}, volume = {46}, pages = {339-383}, year = {2008}}",
       "adopted_scope": "Collisional cascades in optically thin debris disks.",
       "claims": [
-        "Provides historical context for t_coll \u2248 T_orb/(4\u03c0 \u03c4) scaling used before adopting Strubbe & Chiang.",
+        "Provides historical context for t_coll ≈ T_orb/(4π τ) scaling used before adopting Strubbe & Chiang.",
         "Governs qualitative stability tests in surface-layer IMEX steps."
       ]
     },
@@ -252,13 +252,13 @@
       "bibtex": "@article{Birnstiel2011_AA525_A11, journal = {A&A}, volume = {525}, pages = {A11}, year = {2011}}",
       "adopted_scope": "Grid-resolution and slope requirements for coagulation/fragmentation equilibria in disks.",
       "claims": [
-        "Recommends logarithmic spacing with a_{i+1}/a_i \u2272 1.1\u20131.2 to resolve steady-state PSDs without bias.",
-        "Demonstrates how coarse binning suppresses small-grain production, motivating \u226540 bins over 6\u20137 decades."
+        "Recommends logarithmic spacing with a_{i+1}/a_i ≲ 1.1–1.2 to resolve steady-state PSDs without bias.",
+        "Demonstrates how coarse binning suppresses small-grain production, motivating ≥40 bins over 6–7 decades."
       ]
     },
     {
       "key": "ThebaultAugereau2007_AA472_169",
-      "short": "Th\u00e9bault & Augereau (2007)",
+      "short": "Thébault & Augereau (2007)",
       "title": "Collisional processes and size distribution in spatially extended debris discs",
       "doi": "10.1051/0004-6361:20077709",
       "bibtex": "@article{ThebaultAugereau2007_AA472_169, journal = {A&A}, volume = {472}, pages = {169-185}, year = {2007}}",
@@ -274,10 +274,10 @@
       "title": "Collisional Model of Asteroids and Their Debris",
       "doi": "10.1029/JB074i010p02531",
       "bibtex": "@article{Dohnanyi1969_JGR74_2531, journal = {J. Geophys. Res.}, volume = {74}, pages = {2531-2554}, year = {1969}}",
-      "adopted_scope": "Self-similar collisional cascades yielding the canonical n(a) \u221d a^{-3.5} slope.",
+      "adopted_scope": "Self-similar collisional cascades yielding the canonical n(a) ∝ a^{-3.5} slope.",
       "claims": [
         "Derives the steady-state differential size distribution with slope q = 3.5 used as the PSD baseline.",
-        "Provides the reference exponent for \u03b1\u22481.83 in the configuration defaults."
+        "Provides the reference exponent for α≈1.83 in the configuration defaults."
       ]
     },
     {
@@ -359,7 +359,7 @@
       "bibtex": "@article{WetherillStewart1993_Icarus106_190, journal = {Icarus}, volume = {106}, pages = {190-209}, year = {1993}}",
       "adopted_scope": "Planetesimal collision rates and relative velocities in the low-e, low-i regime.",
       "claims": [
-        "Uses the v_rel \u2248 v_K sqrt(1.25 e^2 + i^2) scaling for Rayleigh-distributed eccentricities and inclinations."
+        "Uses the v_rel ≈ v_K sqrt(1.25 e^2 + i^2) scaling for Rayleigh-distributed eccentricities and inclinations."
       ]
     },
     {
@@ -370,7 +370,7 @@
       "bibtex": "@article{IdaMakino1992_Icarus96_107, journal = {Icarus}, volume = {96}, pages = {107-120}, year = {1992}}",
       "adopted_scope": "Low-eccentricity planetesimal dynamics and the e-i relation used in relative-velocity estimates.",
       "claims": [
-        "Adopts the low-e, low-i relation \u27e8e^2\u27e9 = 2\u27e8i^2\u27e9 that underpins the relative-velocity coefficient."
+        "Adopts the low-e, low-i relation ⟨e^2⟩ = 2⟨i^2⟩ that underpins the relative-velocity coefficient."
       ]
     },
     {
@@ -391,7 +391,7 @@
       "title": "Dust distributions in debris disks: effects of gravity, radiation pressure and collisions",
       "doi": "10.1051/0004-6361:20064907",
       "bibtex": "@article{Krivov2006_AA455_509, journal = {A&A}, volume = {455}, pages = {509-519}, year = {2006}}",
-      "adopted_scope": "n\u03c3v-style collisional cascades with Gaussian vertical structure and adaptive time stepping.",
+      "adopted_scope": "nσv-style collisional cascades with Gaussian vertical structure and adaptive time stepping.",
       "claims": [
         "Derives collision kernels proportional to cross section times relative speed divided by the combined scale height.",
         "Uses adaptive time stepping and mass conservation checks for Smoluchowski solvers in debris-disk contexts."
@@ -439,8 +439,8 @@
       "bibtex": "@article{StewartLeinhardt2009_ApJ691_L133, journal = {ApJ}, volume = {691}, pages = {L133-L137}, year = {2009}}",
       "adopted_scope": "Universal largest-remnant scaling and the reduced specific impact energy Q_R formalism.",
       "claims": [
-        "Introduces Q_R = 0.5 \u03bc v^2 / M_tot and the piecewise largest-remnant fraction used for disruptive impacts.",
-        "Calibrates the \u03c6<1 linear branch and \u03c6\u22651 power-law branch adopted in our F2 fragment model."
+        "Introduces Q_R = 0.5 μ v^2 / M_tot and the piecewise largest-remnant fraction used for disruptive impacts.",
+        "Calibrates the φ<1 linear branch and φ≥1 power-law branch adopted in our F2 fragment model."
       ]
     },
     {
@@ -451,7 +451,7 @@
       "bibtex": "@article{Ohtsuki2002_Icarus155_436, journal = {Icarus}, volume = {155}, pages = {436-453}, year = {2002}}",
       "adopted_scope": "Three-body orbital integration study of relative velocity evolution and gravitational stirring in low-e, low-i planetesimal disks.",
       "claims": [
-        "Provides the v_rel \u2248 v_K sqrt(1.25 e^2 + i^2) scaling used for mutual velocities.",
+        "Provides the v_rel ≈ v_K sqrt(1.25 e^2 + i^2) scaling used for mutual velocities.",
         "Describes collisional cooling vs. shear heating balance that motivates the fixed-point iteration for c_eq."
       ]
     },
@@ -487,8 +487,8 @@
       "bibtex": "@incollection{LesherSpera2015_EncyclopediaVolcanoes, booktitle = {The Encyclopedia of Volcanoes, 2nd ed.}, pages = {113-141}, year = {2015}, author = {Lesher, C. E. and Spera, F. J.}}",
       "adopted_scope": "Representative high-temperature properties for basaltic/silicate melts.",
       "claims": [
-        "Reports melt densities around 2600 kg m^{-3}, specific heats \u22481450 J kg^{-1} K^{-1}, and thermal conductivity \u22480.6 W m^{-1} K^{-1}.",
-        "Provides the property ranges used for slab depth, \u03c1, and c_p choices in the Mars cooling model."
+        "Reports melt densities around 2600 kg m^{-3}, specific heats ≈1450 J kg^{-1} K^{-1}, and thermal conductivity ≈0.6 W m^{-1} K^{-1}.",
+        "Provides the property ranges used for slab depth, ρ, and c_p choices in the Mars cooling model."
       ]
     },
     {
@@ -499,7 +499,7 @@
       "bibtex": "@techreport{Robertson1988_USGS_OFR88_441, institution = {U.S. Geological Survey}, number = {88-441}, year = {1988}, author = {Robertson, E. C.}}",
       "adopted_scope": "Compiled density, specific heat, and conductivity for crustal and mantle rocks.",
       "claims": [
-        "Lists basaltic to ultramafic rocks with \u03c1 \u2248 2800\u20133300 kg m^{-3} and c_p \u2248 700\u20131200 J kg^{-1} K^{-1} near room to elevated temperatures.",
+        "Lists basaltic to ultramafic rocks with ρ ≈ 2800–3300 kg m^{-3} and c_p ≈ 700–1200 J kg^{-1} K^{-1} near room to elevated temperatures.",
         "Supports the order-of-magnitude thermal capacity used for the post-impact Martian surface layer."
       ]
     },
@@ -511,8 +511,8 @@
       "bibtex": "@book{BohrenHuffman1983_Wiley, title = {Absorption and Scattering of Light by Small Particles}, publisher = {Wiley}, year = {1983}, author = {Bohren, C. F. and Huffman, D. R.}}",
       "adopted_scope": "Mie-theory baseline for Q_abs, Q_pr, and scattering efficiencies across grain sizes and compositions.",
       "claims": [
-        "Provides the formalism for calculating Q_abs(\u03bb,a) and Planck-mean efficiencies used in debris-disk grain heating.",
-        "Serves as the theoretical source behind size- and composition-dependent \u27e8Q_abs\u27e9 tables."
+        "Provides the formalism for calculating Q_abs(λ,a) and Planck-mean efficiencies used in debris-disk grain heating.",
+        "Serves as the theoretical source behind size- and composition-dependent ⟨Q_abs⟩ tables."
       ]
     },
     {
@@ -523,7 +523,7 @@
       "bibtex": "@article{Blanco1976_ApSS41_447, journal = {Ap\\&SS}, volume = {41}, pages = {447-463}, year = {1976}}",
       "adopted_scope": "Tabulated Planck-mean absorption efficiencies for common grain materials vs. size.",
       "claims": [
-        "Computes Planck-mean Q_abs for graphite, iron, ice, olivine, amorphous quartz, and lunar silicate over sub-\u00b5m to multi-\u00b5m sizes.",
+        "Computes Planck-mean Q_abs for graphite, iron, ice, olivine, amorphous quartz, and lunar silicate over sub-µm to multi-µm sizes.",
         "Provides reference values to replace the placeholder q_abs_mean=1.0 in radiative equilibrium calculations."
       ]
     },
@@ -535,7 +535,7 @@
       "bibtex": "@incollection{Draine2003_SaasFee32, booktitle = {Saas-Fee Advanced Course 32}, year = {2003}, author = {Draine, B. T.}}",
       "adopted_scope": "Optical constants and efficiency tables for astronomical silicates/graphite with Planck-mean treatments.",
       "claims": [
-        "Provides Q_abs(\u03bb,a) data and methodology to compute \u27e8Q_abs\u27e9(T,a,composition) used for grain temperature estimates.",
+        "Provides Q_abs(λ,a) data and methodology to compute ⟨Q_abs⟩(T,a,composition) used for grain temperature estimates.",
         "Supplies canonical optical constants for astronomical silicate and graphite that inform future table generation."
       ]
     },
@@ -547,7 +547,7 @@
       "bibtex": "@article{Hocuk2017_AA604_A58, journal = {A\\&A}, volume = {604}, pages = {A58}, year = {2017}}",
       "adopted_scope": "Parametrisation of dust temperature and Planck-mean absorption efficiency in ISM environments.",
       "claims": [
-        "Gives fitted \u27e8Q_abs\u27e9 and temperature relations illustrating size/composition dependence beyond the q_abs_mean=1.0 placeholder.",
+        "Gives fitted ⟨Q_abs⟩ and temperature relations illustrating size/composition dependence beyond the q_abs_mean=1.0 placeholder.",
         "Demonstrates the impact of grain material on radiative equilibrium temperatures."
       ]
     },
@@ -557,10 +557,10 @@
       "title": "The delta-Eddington approximation for radiative flux transfer",
       "doi": "10.1175/1520-0469(1976)033<2452:TDEAFR>2.0.CO;2",
       "bibtex": "@article{Joseph1976_JAS33_2452, journal = {J. Atmos. Sci.}, volume = {33}, pages = {2452-2459}, year = {1976}}",
-      "adopted_scope": "Delta-Eddington treatment of slab reflectance/transmittance for given \u03c4, \u03c9\u2080, and g.",
+      "adopted_scope": "Delta-Eddington treatment of slab reflectance/transmittance for given τ, ω₀, and g.",
       "claims": [
-        "Provides analytic flux solutions tabulated as functions of \u03c4, single-scattering albedo, and asymmetry factor.",
-        "Motivates using precomputed \u03a6(\u03c4,\u03c9\u2080,g) tables as shielding inputs."
+        "Provides analytic flux solutions tabulated as functions of τ, single-scattering albedo, and asymmetry factor.",
+        "Motivates using precomputed Φ(τ,ω₀,g) tables as shielding inputs."
       ]
     },
     {
@@ -569,10 +569,10 @@
       "title": "Light scattering in planetary atmospheres",
       "doi": "10.1007/BF00168069",
       "bibtex": "@article{HansenTravis1974_SSR16_527, journal = {Space Science Reviews}, volume = {16}, pages = {527-610}, year = {1974}}",
-      "adopted_scope": "Multiple-scattering treatments with Henyey\u2013Greenstein phase functions applied to planetary atmospheres.",
+      "adopted_scope": "Multiple-scattering treatments with Henyey–Greenstein phase functions applied to planetary atmospheres.",
       "claims": [
-        "Details reflectance and transmittance computation versus \u03c4, \u03c9\u2080, and g using doubling and related methods.",
-        "Serves as a reference for generating \u03a6 tables that depend on optical depth and asymmetry."
+        "Details reflectance and transmittance computation versus τ, ω₀, and g using doubling and related methods.",
+        "Serves as a reference for generating Φ tables that depend on optical depth and asymmetry."
       ]
     },
     {
@@ -581,10 +581,10 @@
       "title": "Numerical results for the thermal scattering functions",
       "doi": "10.1016/0022-4073(79)90017-7",
       "bibtex": "@article{CogleyBergstrom1979_JQSRT22_267, journal = {J. Quant. Spectrosc. Radiat. Transf.}, volume = {22}, pages = {267-280}, year = {1979}}",
-      "adopted_scope": "Tabulated scattering functions for plane-parallel layers parameterised by \u03c4, \u03c9\u2080, and g.",
+      "adopted_scope": "Tabulated scattering functions for plane-parallel layers parameterised by τ, ω₀, and g.",
       "claims": [
-        "Supplies numerical reflectance/exitance values used as templates for \u03a6(\u03c4,\u03c9\u2080,g) lookup tables.",
-        "Confirms saturation of direct beam transmission for \u03c4\u22731 motivating \u03c4-clipping."
+        "Supplies numerical reflectance/exitance values used as templates for Φ(τ,ω₀,g) lookup tables.",
+        "Confirms saturation of direct beam transmission for τ≳1 motivating τ-clipping."
       ]
     },
     {
@@ -593,10 +593,10 @@
       "title": "Radiative Transfer",
       "doi": null,
       "bibtex": "@book{Chandrasekhar1960_RadiativeTransfer, publisher = {Dover}, year = {1960}}",
-      "adopted_scope": "Classic treatment of radiative transfer and \u03c4\u22481 effective photospheres.",
+      "adopted_scope": "Classic treatment of radiative transfer and τ≈1 effective photospheres.",
       "claims": [
-        "Defines the \u03c4\u22481 surface as the effective emission/absorption layer for plane-parallel media.",
-        "Supports clipping \u03a3 at \u03c4=1 when computing shielding in optically thick slabs."
+        "Defines the τ≈1 surface as the effective emission/absorption layer for plane-parallel media.",
+        "Supports clipping Σ at τ=1 when computing shielding in optically thick slabs."
       ]
     },
     {
@@ -608,7 +608,7 @@
       "adopted_scope": "Experimental DTA constraints on glass transition behavior of vitreous silica.",
       "claims": [
         "Finds glass transition onset near 1247 K with relaxed supercooled liquid behavior around 1475 K for high-purity SiO2.",
-        "Supports using T_glass \u2248 1475 K as the transition proxy in phase maps."
+        "Supports using T_glass ≈ 1475 K as the transition proxy in phase maps."
       ]
     },
     {
@@ -657,6 +657,54 @@
       "claims": [
         "Derives mass-loss rates and temperature evolution for icy/rocky grains using Hertz-Knudsen sublimation and latent-heat coupling.",
         "Shows sublimation-driven erosion and fragmentation of mm-cm grains on short time-scales, supporting ds/dt floors when sublimation dominates."
+      ]
+    },
+    {
+      "key": "CharnozCridaCastilloRogez2011_Icarus216_535",
+      "short": "Charnoz et al. (2011)",
+      "title": "Accretion of Saturn's mid-sized moons during the viscous spreading of young massive rings: Solving the paradox of silicate-poor rings versus silicate-rich moons",
+      "doi": "10.1016/j.icarus.2011.09.017",
+      "bibtex": "@article{CharnozCridaCastilloRogez2011_Icarus216_535, journal = {Icarus}, volume = {216}, pages = {535-550}, year = {2011}}",
+      "adopted_scope": "Context for viscous spreading of massive rings and satellite accretion outcomes.",
+      "claims": [
+        "Shows how viscous spreading of dense rings can feed satellite accretion outside the Roche limit.",
+        "Provides a comparative ring-evolution framework referenced when discussing Roche-interior disk evolution."
+      ]
+    },
+    {
+      "key": "Rosenblatt2012_Icarus221_806",
+      "short": "Rosenblatt & Charnoz (2012)",
+      "title": "On the formation of the martian moons from a circum-martian accretion disk",
+      "doi": "10.1016/j.icarus.2012.09.009",
+      "bibtex": "@article{Rosenblatt2012_Icarus221_806, journal = {Icarus}, volume = {221}, pages = {806-815}, year = {2012}}",
+      "adopted_scope": "Mars moon formation scenarios based on circum-Martian accretion disk evolution.",
+      "claims": [
+        "Frames Phobos/Deimos formation in terms of disk spreading and accretion efficiency.",
+        "Discusses sensitivity of outcomes to initial disk mass and surface density profiles."
+      ]
+    },
+    {
+      "key": "Citron2015_Icarus252_334",
+      "short": "Citron et al. (2015)",
+      "title": "Formation of Phobos and Deimos via a giant impact",
+      "doi": "10.1016/j.icarus.2015.02.011",
+      "bibtex": "@article{Citron2015_Icarus252_334, journal = {Icarus}, volume = {252}, pages = {334-338}, year = {2015}}",
+      "adopted_scope": "Giant-impact origin scenario for the Martian moons and resulting debris disk context.",
+      "claims": [
+        "Supports a giant-impact origin for Phobos/Deimos with a circum-Martian debris disk.",
+        "Summarizes constraints on disk mass and angular momentum relevant to Mars moon formation."
+      ]
+    },
+    {
+      "key": "Rosenblatt2016_NatGeo9_8",
+      "short": "Rosenblatt et al. (2016)",
+      "title": "Accretion of Phobos and Deimos in an extended debris disc stirred by transient moons",
+      "doi": "10.1038/ngeo2742",
+      "bibtex": "@article{Rosenblatt2016_NatGeo9_8, journal = {Nature Geoscience}, volume = {9}, pages = {581-583}, year = {2016}}",
+      "adopted_scope": "Transient-moon stirring of an extended debris disk as a Mars-moon formation pathway.",
+      "claims": [
+        "Shows that transient inner moons can stir and shepherd outer debris to form Phobos/Deimos analogs.",
+        "Motivates extended-disk scenarios distinct from purely compact-ring models."
       ]
     }
   ]
