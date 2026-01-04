@@ -668,6 +668,64 @@ def _is_math_candidate_line(line: str) -> bool:
     return False
 
 
+def _collect_internal_eq_labels(lines: Sequence[str]) -> set[str]:
+    labels: set[str] = set()
+    for line in lines:
+        for match in EQ_PLACEHOLDER_RE.finditer(line):
+            labels.add(match.group("num"))
+
+    idx = 0
+    while idx < len(lines):
+        line = lines[idx]
+        if MATH_BLOCK_START_RE.match(line):
+            block = [line]
+            idx += 1
+            while idx < len(lines):
+                block.append(lines[idx])
+                if MATH_BLOCK_END_RE.match(lines[idx]):
+                    idx += 1
+                    break
+                idx += 1
+            for block_line in block:
+                eq_num = _detect_equation_number(block_line, in_block=True)
+                if eq_num:
+                    labels.add(eq_num)
+                    break
+            continue
+
+        eq_num = _detect_equation_number(line)
+        if eq_num:
+            labels.add(eq_num)
+            idx += 1
+            continue
+
+        if _is_math_candidate_line(line):
+            j = idx
+            eq_num = None
+            while j < len(lines):
+                candidate = lines[j]
+                number_match = EQ_NUMBER_ONLY_RE.match(candidate)
+                if number_match:
+                    eq_num = number_match.group("num")
+                    j += 1
+                    break
+                if not candidate.strip():
+                    j += 1
+                    continue
+                if _is_math_candidate_line(candidate):
+                    j += 1
+                    continue
+                break
+            if eq_num:
+                labels.add(eq_num)
+                idx = j
+                continue
+
+        idx += 1
+
+    return labels
+
+
 def _extract_eq_labels(line: str) -> List[str]:
     labels: List[str] = []
     for _, group_labels, _ in _iter_eq_reference_groups(line):
@@ -762,7 +820,7 @@ def _external_reference_reason(
         return ("strong", "pronoun", pronoun_match.group(0))
     immediate_match = EQ_EXTERNAL_IMMEDIATE_RE.match(tail_window)
     if immediate_match:
-        return ("strong", "immediate_citation", immediate_match.group(0).strip())
+        return ("strong", "citation_only", immediate_match.group(0).strip())
     link_match = EQ_EXTERNAL_LINK_RE.search(tail_window)
     if link_match:
         link_tail = tail_window[link_match.end():]
@@ -779,8 +837,21 @@ def _external_reference_reason(
     return None
 
 
-def _is_external_eq_reference(line: str, match: re.Match[str], group_end: int) -> bool:
-    if _external_reference_reason(line, match, group_end):
+def _is_external_eq_reference(
+    line: str,
+    match: re.Match[str],
+    group_end: int,
+    labels: Optional[Sequence[str]] = None,
+    internal_labels: Optional[set[str]] = None,
+) -> bool:
+    reason = _external_reference_reason(line, match, group_end)
+    if reason:
+        strength, reason_tag, _ = reason
+        if strength != "strong":
+            return False
+        if reason_tag == "citation_only" and internal_labels and labels:
+            if any(label in internal_labels for label in labels):
+                return False
         return True
     head_window = line[max(0, match.start() - 50):match.start()]
     tail_window = line[group_end:group_end + 140]
@@ -795,12 +866,19 @@ def _build_external_audit_rows(output_root: Path) -> List[List[str]]:
     rows: List[List[str]] = []
     for result_path in sorted(output_root.glob("*/result.md")):
         text = _read_text(result_path)
+        internal_labels = _collect_internal_eq_labels(text.splitlines())
         for line_no, line in enumerate(text.splitlines(), start=1):
             groups = _iter_eq_reference_groups(line)
             if not groups:
                 continue
             for match, labels, group_end in groups:
-                if not _is_external_eq_reference(line, match, group_end):
+                if not _is_external_eq_reference(
+                    line,
+                    match,
+                    group_end,
+                    labels=labels,
+                    internal_labels=internal_labels,
+                ):
                     continue
                 reason = _external_reference_reason(line, match, group_end)
                 if reason:
@@ -842,6 +920,7 @@ def _supplement_placeholders_from_eq_refs(lines: Sequence[str]) -> Tuple[List[st
         for match in EQ_PLACEHOLDER_RE.finditer(line):
             existing_labels.add(match.group("num"))
     inserted_labels = set()
+    internal_labels = _collect_internal_eq_labels(lines)
     output: List[str] = []
     inserted = 0
     for line in lines:
@@ -850,7 +929,13 @@ def _supplement_placeholders_from_eq_refs(lines: Sequence[str]) -> Tuple[List[st
         if not groups:
             continue
         for match, labels, group_end in groups:
-            if _is_external_eq_reference(line, match, group_end):
+            if _is_external_eq_reference(
+                line,
+                match,
+                group_end,
+                labels=labels,
+                internal_labels=internal_labels,
+            ):
                 continue
             for label in labels:
                 if label in existing_labels or label in inserted_labels:

@@ -20,10 +20,17 @@ def test_eqn_placeholders_cover_internal_refs() -> None:
     for result_path in sorted(OUTPUTS_DIR.glob("*/result.md")):
         text = result_path.read_text(encoding="utf-8")
         placeholders = {m.group("num") for m in ocr.EQ_PLACEHOLDER_RE.finditer(text)}
+        internal_labels = ocr._collect_internal_eq_labels(text.splitlines())
         for line_no, line in enumerate(text.splitlines(), start=1):
             groups = ocr._iter_eq_reference_groups(line)
             for match, labels, group_end in groups:
-                if ocr._is_external_eq_reference(line, match, group_end):
+                if ocr._is_external_eq_reference(
+                    line,
+                    match,
+                    group_end,
+                    labels=labels,
+                    internal_labels=internal_labels,
+                ):
                     continue
                 for label in labels:
                     if label not in placeholders:

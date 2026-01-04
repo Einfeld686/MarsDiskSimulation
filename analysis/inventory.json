@@ -17516,167 +17516,174 @@
   {
     "file_path": "tools/ocr_output_migration.py",
     "line_no": 671,
+    "symbol": "_collect_internal_eq_labels",
+    "signature": "_collect_internal_eq_labels(lines: Sequence[str]) -> set[str]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tools/ocr_output_migration.py",
+    "line_no": 729,
     "symbol": "_extract_eq_labels",
     "signature": "_extract_eq_labels(line: str) -> List[str]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/ocr_output_migration.py",
-    "line_no": 678,
+    "line_no": 736,
     "symbol": "_label_from_match",
     "signature": "_label_from_match(match: re.Match[str]) -> str",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/ocr_output_migration.py",
-    "line_no": 682,
+    "line_no": 740,
     "symbol": "_iter_eq_reference_groups",
     "signature": "_iter_eq_reference_groups(line: str) -> List[Tuple[re.Match[str], List[str], int]]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/ocr_output_migration.py",
-    "line_no": 705,
+    "line_no": 763,
     "symbol": "_normalize_eq_reference_line",
     "signature": "_normalize_eq_reference_line(line: str) -> str",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/ocr_output_migration.py",
-    "line_no": 740,
+    "line_no": 798,
     "symbol": "_normalize_eq_references",
     "signature": "_normalize_eq_references(lines: Sequence[str]) -> List[str]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/ocr_output_migration.py",
-    "line_no": 744,
+    "line_no": 802,
     "symbol": "_has_citation",
     "signature": "_has_citation(text: str) -> bool",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/ocr_output_migration.py",
-    "line_no": 754,
+    "line_no": 812,
     "symbol": "_external_reference_reason",
     "signature": "_external_reference_reason(line: str, match: re.Match[str], group_end: int) -> Optional[Tuple[str, str, str]]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/ocr_output_migration.py",
-    "line_no": 782,
+    "line_no": 840,
     "symbol": "_is_external_eq_reference",
-    "signature": "_is_external_eq_reference(line: str, match: re.Match[str], group_end: int) -> bool",
+    "signature": "_is_external_eq_reference(line: str, match: re.Match[str], group_end: int, labels: Optional[Sequence[str]]=None, internal_labels: Optional[set[str]]=None) -> bool",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/ocr_output_migration.py",
-    "line_no": 794,
+    "line_no": 865,
     "symbol": "_build_external_audit_rows",
     "signature": "_build_external_audit_rows(output_root: Path) -> List[List[str]]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/ocr_output_migration.py",
-    "line_no": 827,
+    "line_no": 905,
     "symbol": "_write_external_audit_report",
     "signature": "_write_external_audit_report(output_root: Path) -> None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/ocr_output_migration.py",
-    "line_no": 839,
+    "line_no": 917,
     "symbol": "_supplement_placeholders_from_eq_refs",
     "signature": "_supplement_placeholders_from_eq_refs(lines: Sequence[str]) -> Tuple[List[str], int]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/ocr_output_migration.py",
-    "line_no": 865,
+    "line_no": 950,
     "symbol": "_replace_equation_placeholders",
     "signature": "_replace_equation_placeholders(lines: Sequence[str]) -> Tuple[List[str], int]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/ocr_output_migration.py",
-    "line_no": 929,
+    "line_no": 1014,
     "symbol": "_ensure_dir",
     "signature": "_ensure_dir(path: Path) -> None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/ocr_output_migration.py",
-    "line_no": 933,
+    "line_no": 1018,
     "symbol": "_format_status",
     "signature": "_format_status(line_count_before: int, line_count_after: int, paragraph_count_after: int, remaining_suspects: int, page_markers: int) -> str",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/ocr_output_migration.py",
-    "line_no": 943,
+    "line_no": 1028,
     "symbol": "_load_cleanup_report",
     "signature": "_load_cleanup_report(path: Path) -> Dict[str, object]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/ocr_output_migration.py",
-    "line_no": 952,
+    "line_no": 1037,
     "symbol": "_update_report",
     "signature": "_update_report(key: str, source_path: Path, target_path: Path, before_counts: Dict[str, int], lines_after: Sequence[str], new_counts: CleanupCounts, existing_report: Dict[str, object]) -> Dict[str, object]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/ocr_output_migration.py",
-    "line_no": 1023,
+    "line_no": 1108,
     "symbol": "_before_counts_from_source",
     "signature": "_before_counts_from_source(source_path: Path) -> Dict[str, int]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/ocr_output_migration.py",
-    "line_no": 1034,
+    "line_no": 1119,
     "symbol": "_write_diff",
     "signature": "_write_diff(old_lines: Sequence[str], new_lines: Sequence[str], diff_path: Path) -> None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/ocr_output_migration.py",
-    "line_no": 1045,
+    "line_no": 1130,
     "symbol": "_collect_keys",
     "signature": "_collect_keys(source_root: Path, output_root: Path) -> Dict[str, Dict[str, bool]]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/ocr_output_migration.py",
-    "line_no": 1061,
+    "line_no": 1146,
     "symbol": "_write_key_inventory",
     "signature": "_write_key_inventory(keys: Dict[str, Dict[str, bool]], output_root: Path) -> None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/ocr_output_migration.py",
-    "line_no": 1083,
+    "line_no": 1168,
     "symbol": "_write_cleanup_summary",
     "signature": "_write_cleanup_summary(reports: Dict[str, Dict[str, object]], output_root: Path) -> None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/ocr_output_migration.py",
-    "line_no": 1136,
+    "line_no": 1221,
     "symbol": "_append_convert_log",
     "signature": "_append_convert_log(log_path: Path, key: str, source_path: Path, target_path: Path, raw_backup_path: Optional[Path], diff_path: Path, junk_removed_total: int, format_status: str, cleanup_report_path: Path) -> None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/ocr_output_migration.py",
-    "line_no": 1164,
+    "line_no": 1249,
     "symbol": "_process_key",
     "signature": "_process_key(key: str, source_path: Path, output_dir: Path, timestamp: str) -> Optional[Dict[str, object]]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/ocr_output_migration.py",
-    "line_no": 1232,
+    "line_no": 1317,
     "symbol": "main",
     "signature": "main(argv: Optional[Sequence[str]]=None) -> int",
     "brief_usage": "No description available."
