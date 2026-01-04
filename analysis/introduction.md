@@ -357,6 +357,7 @@ Burns, J. A., Lamy, P. L., & Soter, S. (1979). *Icarus*, 40, 1–48. doi:10.1016
 Canup, R. M., & Salmon, J. (2018). *Science Advances*, 4(4), eaar6887. doi:10.1126/sciadv.aar6887  
 Citron, R., Genda, H., & Ida, S. (2015). *Icarus*, 252, 334–338. doi:10.1016/j.icarus.2015.02.011  
 Crida, A., & Charnoz, S. (2012). *Science*, 338, 1196–1199. doi:10.1126/science.1228006  
+Dohnanyi, J. S. (1969). *J. Geophys. Res.*, 74, 2531–2554. doi:10.1029/JB074i010p02531  
 Fraeman et al. (2012). *J. Geophys. Res. Planets*, 117, E00J15. doi:10.1029/2012JE004137  
 Fraeman et al. (2014). *Icarus*, 229, 196–205. doi:10.1016/j.icarus.2013.11.021  
 Giuranna et al. (2011). *Planetary and Space Science*, 59, 1308–1325. doi:10.1016/j.pss.2011.01.019  
@@ -369,6 +370,7 @@ Kimura, H., Okamoto, H., & Mukai, T. (2002). *Icarus*, 157, 349–361. doi:10.10
 Krivov, A. (2010). *Research in Astronomy and Astrophysics*, 10(5), 383–414. doi:10.1088/1674-4527/10/5/001  
 Kuramoto, K. (2024). *Annual Review of Earth and Planetary Sciences*, 52, 495–519. doi:10.1146/annurev-earth-031621-064742  
 Kuzmin, R. O., & Zabalueva, E. V. (2003). *Solar System Research*, 37, 480–488. doi:10.1023/B:SOLS.0000007946.02888.BD  
+Markkanen, J., & Agarwal, J. (2020). *A&A*, 643, A16. doi:10.1051/0004-6361/202039092  
 Pajola et al. (2013). *The Astrophysical Journal*, 777, 127. doi:10.1088/0004-637X/777/2/127  
 Pieters et al. (2014). *Planetary and Space Science*, 102, 144–151. doi:10.1016/j.pss.2014.02.008  
 Pignatale, F. C. F., Charnoz, S., Chaussidon, M., & Tosi, N. (2018). *The Astrophysical Journal*, 853, 118. doi:10.3847/1538-4357/aaa23e  
@@ -378,6 +380,7 @@ Rosenblatt, P., Charnoz, S., Dunseath, K., Terao-Dunseath, M., Trinh, A., Hyodo,
 Rosenblatt, P., Hyodo, R., Pignatale, F. C. F., Trinh, A., Charnoz, S., Dunseath, K. M., Terao-Dunseath, M., & Genda, H. (2019). *The formation of the Martian moons*. arXiv:1909.03996.  
 Ronnet, T., Bourrier, V., Leinhardt, Z. M., & Charnoz, S. (2016). *The Astrophysical Journal*, 828, 109. doi:10.3847/0004-637X/828/2/109  
 Salmon, J., Charnoz, S., Crida, A., & Brahic, A. (2010). *Icarus*, 209(2), 771–785. doi:10.1016/j.icarus.2010.05.030  
+Salmon, J., & Canup, R. M. (2012). *The Astrophysical Journal*, 760, 83. doi:10.1088/0004-637X/760/1/83  
 Strubbe, L. E., & Chiang, E. I. (2006). *The Astrophysical Journal*, 648, 652–665. doi:10.1086/505736  
 Takeuchi, T., & Lin, D. N. C. (2003). *The Astrophysical Journal*, 593, 524. doi:10.1086/376496  
 Thebault, P., & Augereau, J.-C. (2007). *A&A*, 472, 169–185. doi:10.1051/0004-6361:20077789  
