@@ -181,7 +181,7 @@ graph LR
 | `blowout.gate_mode`, `blowout.layer`, `blowout.target_phase` | 衝突支配ディスクで表層（τ≲1）の小粒子を優先的に吹き飛ばす設定を基準とし、昇華・衝突で既に損失している場合にゲートで抑制 | [@StrubbeChiang2006_ApJ648_652; @WyattClarkeBooth2011_CeMDA111_1; @KrijtKama2014_AA566_L2] |
 | `sizes.n_bins`, `psd.alpha`, `psd.wavy_strength`, `psd.floor.*` | Dohnanyi 型カスケードの平衡傾き $q\simeq3.5$（α≈1.83）を基準に、blow-out 起源の “wavy” を感度パラメータ化しつつ、粒径比 $(a_{i+1}/a_i)\lesssim1.1$–1.3 を維持するビン分解能を採用 | [@Dohnanyi1969_JGR74_2531; @Birnstiel2011_AA525_A11; @Krivov2006_AA455_509; @ThebaultAugereau2007_AA472_169] |
 | `dynamics.f_wake`, `e0/i0`, `t_damp_orbits`, `kernel_ei_mode` | Ohtsuki 型の速度分散平衡 $c_{\rm eq}$ と高さスケール $H\simeq ia$ をベースに wake 係数で調整 | [@Ohtsuki2002_Icarus155_436] |
-| `qstar.*` (`Qs`, `a_s`, `B`, `b_g`, `v_ref_kms`, `coeff_units`, `mu_grav`) | バザルト衝突の $Q_D^*$ を Benz & Asphaug (1999) から採用し、**1–7 km/s の固定係数テーブル**を既定として速度補間する。範囲外では LS09 型の重力項外挿（$v^{-3\mu+2}$, `mu_grav` 既定0.45）のみを適用。`coeff_units` で BA99 cgs/ SI を切替（`v_ref_kms` は override 時のみ参照） | [@BenzAsphaug1999_Icarus142_5; @StewartLeinhardt2009_ApJ691_L133; @LeinhardtStewart2012_ApJ745_79] |
+| `qstar.*` (`Qs`, `a_s`, `B`, `b_g`, `v_ref_kms`, `coeff_units`, `mu_grav`) | バザルト衝突の $Q_D^*$ を [@BenzAsphaug1999_Icarus142_5] から採用し、**1–7 km/s の固定係数テーブル**を既定として速度補間する。範囲外では LS09 型の重力項外挿（$v^{-3\mu+2}$, `mu_grav` 既定0.45）のみを適用。`coeff_units` で BA99 cgs/ SI を切替（`v_ref_kms` は override 時のみ参照） | [@BenzAsphaug1999_Icarus142_5; @StewartLeinhardt2009_ApJ691_L133; @LeinhardtStewart2012_ApJ745_79] |
 | `supply.*`, `mixing.epsilon_mix` | 表層再供給をサイズ別源項 S(a,r,t) として与え、バリスティック混合効率を ε_mix でパラメータ化 | [@WyattClarkeBooth2011_CeMDA111_1; @Wyatt2008; @EstradaDurisen2015_Icarus252_415; @CuzziEstrada1998_Icarus132_1] |
 | `shielding.mode`, `shielding.table_path`, `shielding.fixed_tau1_*` | Φ(τ,ω₀,g) テーブルを δ–Eddington/HG 近似から取得し、Σ_{τ=1} は診断として記録（上限判定は `tau_stop` で停止） | [@Joseph1976_JAS33_2452; @HansenTravis1974_SSR16_527; @CogleyBergstrom1979_JQSRT21_265] |
 | `sinks.sub_params.*`, `sinks.T_sub`, `sinks.mu`, `sinks.alpha_evap` | SiO/SiO₂ の HKL 昇華係数と閾値を Hyodo18 の温度域・Pignatale18 の組成・Melosh/Bruning/Ojovan の相変化データに合わせる | [@Hyodo2018_ApJ860_150; @Pignatale2018_ApJ853_118; @Melosh2007_MPS42_2079; @Bruning2003_JNCS330_13; @Ojovan2021_Materials14_5235] |
@@ -238,7 +238,7 @@ graph LR
 | `sinks.T_sub` | float | 昇華が顕著になる閾値温度 [K]。これ以上で急速な質量損失が始まる | 1300 |
 | `sinks.enable_gas_drag` | bool | ガスドラッグの有効化。gas-poor 条件では通常 `false` | `false` |
 
-gas-poor を前提とする基準設定では、ガス密度 ρ_g が衝突寿命より十分低く、Olofsson et al. (2022) が示すように drag 時間が衝突時間を超える場合は `enable_gas_drag=false` とする [@Olofsson2022_MNRAS513_713; @Kuramoto2024]。一方、Pollack, Burns & Tauber (1979) や Hunten (1979) が扱う原始ガス包絡・厚い大気のように drag 捕獲が起こる密度域では、別途 ρ_g を指定した感度試験で有効化する [@PollackBurnsTauber1979_Icarus37_587; @Hunten1979_Icarus37_113]。
+gas-poor を前提とする基準設定では、ガス密度 ρ_g が衝突寿命より十分低く、[@Olofsson2022_MNRAS513_713] が示すように drag 時間が衝突時間を超える場合は `enable_gas_drag=false` とする [@Olofsson2022_MNRAS513_713; @Kuramoto2024]。一方、Pollack, [@PollackBurnsTauber1979_Icarus37_587] や [@Hunten1979_Icarus37_113] が扱う原始ガス包絡・厚い大気のように drag 捕獲が起こる密度域では、別途 ρ_g を指定した感度試験で有効化する [@PollackBurnsTauber1979_Icarus37_587; @Hunten1979_Icarus37_113]。
 
 ##### 昇華パラメータ (`sinks.sub_params`)
 
@@ -270,7 +270,7 @@ Hertz-Knudsen-Langmuir (HKL) 理論に基づく昇華速度の詳細パラメー
 | `layer` | `"surface_tau_le_1"` / `"full_surface"` | どの表層リザーバーを削減するか | `"surface_tau_le_1"` |
 | `gate_mode` | `"none"` / `"sublimation_competition"` / `"collision_competition"` | 他シンクとの競合による抑制 | `"none"` |
 
-衝突支配の gas-poor 円盤では、Strubbe & Chiang (2006) が示す type B（衝突支配）像にならい、ブローアウトは表層の τ≲1 スキンで最も強く効くため `layer="surface_tau_le_1"` を基準とし、固相の微粒子だけを対象にする [@StrubbeChiang2006_ApJ648_652]。`gate_mode` は Wyatt, Clarke & Booth (2011) の源・損失バランスを踏まえ、昇華や衝突で既に削られている場合は表層吹き飛びを抑えるための競合ゲートであり、最小粒径がブローアウトで決まる条件を Krijt & Kama (2014) に合わせて切り替える [@WyattClarkeBooth2011_CeMDA111_1; @KrijtKama2014_AA566_L2]。
+衝突支配の gas-poor 円盤では、[@StrubbeChiang2006_ApJ648_652] が示す type B（衝突支配）像にならい、ブローアウトは表層の τ≲1 スキンで最も強く効くため `layer="surface_tau_le_1"` を基準とし、固相の微粒子だけを対象にする [@StrubbeChiang2006_ApJ648_652]。`gate_mode` は Wyatt, [@WyattClarkeBooth2011_CeMDA111_1] の源・損失バランスを踏まえ、昇華や衝突で既に削られている場合は表層吹き飛びを抑えるための競合ゲートであり、最小粒径がブローアウトで決まる条件を [@KrijtKama2014_AA566_L2] に合わせて切り替える [@WyattClarkeBooth2011_CeMDA111_1; @KrijtKama2014_AA566_L2]。
 
 #### 🔵 円盤ジオメトリ (`disk.geometry`)
 
@@ -313,10 +313,10 @@ Hertz-Knudsen-Langmuir (HKL) 理論に基づく昇華速度の詳細パラメー
 | `s_min` | float | 追跡する最小粒径 [m]。blow-out サイズ $a_{\rm blow}$ 以下の粒子は即座に系外へ | 1.0e-6 |
 | `s_max` | float | 追跡する最大粒径 [m]。衝突カスケードの上限。大きいほど計算コスト増 | 3.0 |
 | `n_bins` | int | 対数空間でのサイズビン数。解像度と計算コストのトレードオフ。30–60 が推奨 | 40 |
-| `alpha` | float | 定常 PSD のべき指数。Dohnanyi (1969) の衝突平衡では α≈1.83（n(s)∝s^(-2-3α)） | 1.83 |
-| `wavy_strength` | float | "wavy" PSD 補正の強度。blow-out 境界付近での波状構造（Campo Bagatin 1994）を再現 | 0.0（基準） / 0.2（感度） |
+| `alpha` | float | 定常 PSD のべき指数。[@Dohnanyi1969_JGR74_2531] の衝突平衡では α≈1.83（n(s)∝s^(-2-3α)） | 1.83 |
+| `wavy_strength` | float | "wavy" PSD 補正の強度。blow-out 境界付近での波状構造（[@CampoBagatin1994_PSS42_1079]）を再現 | 0.0（基準） / 0.2（感度） |
 
-`s_min=1.0e-6` m, `s_max=3` m, `n_bins=40` では隣接粒径比 $(a_{i+1}/a_i)\approx1.26$ となり、Birnstiel et al. が推奨する $(a_{i+1}/a_i\lesssim1.1$–1.2) や Krivov et al. が用いた ≈1.3 の格子幅の範囲に収まるため、wavy を明示的に解像しない設定でも衝突カスケードの滑らかな斜面を確保できる [@Birnstiel2011_AA525_A11; @Krivov2006_AA455_509]。wavy_strength=0.0 を基準とし、wavy を再現する感度試験では Thébault & Augereau (2007) が示す blow-out 付近の波状構造を意識してビン数を増減させる。基準の傾き α は Dohnanyi (1969) の自己相似カスケードに合わせている [@ThebaultAugereau2007_AA472_169; @Dohnanyi1969_JGR74_2531]。
+`s_min=1.0e-6` m, `s_max=3` m, `n_bins=40` では隣接粒径比 $(a_{i+1}/a_i)\approx1.26$ となり、Birnstiel et al. が推奨する $(a_{i+1}/a_i\lesssim1.1$–1.2) や Krivov et al. が用いた ≈1.3 の格子幅の範囲に収まるため、wavy を明示的に解像しない設定でも衝突カスケードの滑らかな斜面を確保できる [@Birnstiel2011_AA525_A11; @Krivov2006_AA455_509]。wavy_strength=0.0 を基準とし、wavy を再現する感度試験では Thébault & [@ThebaultAugereau2007_AA472_169] が示す blow-out 付近の波状構造を意識してビン数を増減させる。基準の傾き α は [@Dohnanyi1969_JGR74_2531] の自己相似カスケードに合わせている [@ThebaultAugereau2007_AA472_169; @Dohnanyi1969_JGR74_2531]。
 
 #### 🚀 初期条件 (`initial`, `inner_disk_mass`)
 
@@ -328,7 +328,7 @@ Hertz-Knudsen-Langmuir (HKL) 理論に基づく昇華速度の詳細パラメー
 | `s0_mode` | str | 初期 PSD の形状。`"upper"` は大粒子に集中、`"mono"` は単一サイズ | `"upper"` |
 | `M_in_ratio` | float | 内部円盤質量と火星質量の比。Σ の正規化に使用 | 3.0e-5 |
 
-`map_to_sigma="analytic"` は、Crida & Charnoz (2012) のロッシュ内リング拡散モデルや Salmon et al. (2010) / Salmon & Canup (2012) の流体ディスク近似を簡略化し、M_in_ratio で与えた総質量を一様または冪分布の Σ(r) に割り付ける [@CridaCharnoz2012_Science338_1196; @SalmonCharnozBrahic2010_Icarus209_771; @SalmonCanup2012_ApJ760_83]。Kuramoto (2024) が整理した gas-poor リサイクルシナリオ（M_disk/M_Mars ≲ 10⁻⁴）に合うよう、基準値を 10⁻⁵–10⁻⁴ の範囲で設定する [@Kuramoto2024]。
+`map_to_sigma="analytic"` は、[@CridaCharnoz2012_Science338_1196] のロッシュ内リング拡散モデルや [@SalmonCharnozBrahic2010_Icarus209_771] / [@SalmonCanup2012_ApJ760_83] の流体ディスク近似を簡略化し、M_in_ratio で与えた総質量を一様または冪分布の Σ(r) に割り付ける [@CridaCharnoz2012_Science338_1196; @SalmonCharnozBrahic2010_Icarus209_771; @SalmonCanup2012_ApJ760_83]。[@Kuramoto2024] が整理した gas-poor リサイクルシナリオ（M_disk/M_Mars ≲ 10⁻⁴）に合うよう、基準値を 10⁻⁵–10⁻⁴ の範囲で設定する [@Kuramoto2024]。
 
 #### ⚡ 力学 (`dynamics`)
 
@@ -348,7 +348,7 @@ Hertz-Knudsen-Langmuir (HKL) 理論に基づく昇華速度の詳細パラメー
 
 #### 💥 破壊強度 (`qstar`)
 
-衝突破壊の閾値を決める強度法則。Leinhardt & Stewart (2012) に基づく。
+衝突破壊の閾値を決める強度法則。[@LeinhardtStewart2012_ApJ745_79] に基づく。
 
 | パラメータ | 型 | 物理的意味 | 典型値 |
 |-----------|-----|-----------|--------|
@@ -401,7 +401,7 @@ BA99/LS12 由来の係数は cgs 前提のため `coeff_units: ba99_cgs` を標�
 
 #### 🧬 表面エネルギー制約 (`surface_energy`)
 
-Krijt & Kama (2014) による表面エネルギー制約を用いた最小粒径の導出。粒子の結合エネルギーが運動エネルギーの変換効率と釣り合うサイズを計算し、`s_min_effective` の候補に加える（E.053）。
+[@KrijtKama2014_AA566_L2] による表面エネルギー制約を用いた最小粒径の導出。粒子の結合エネルギーが運動エネルギーの変換効率と釣り合うサイズを計算し、`s_min_effective` の候補に加える（E.053）。
 
 | パラメータ | 型 | 物理的意味 | 既定値 |
 |-----------|-----|-----------|--------|
@@ -411,7 +411,7 @@ Krijt & Kama (2014) による表面エネルギー制約を用いた最小粒径
 | `collider_size_m` | float/null | 参照コライダサイズ $s_0$ [m]。未設定なら `sizes.s_max` を使用 | `null` |
 | `largest_fragment_mass_fraction` | float | 最大破片の質量比 $f_{lf}$。$s_{max} = s_0 f_{lf}^{1/3}$ で最大破片サイズを計算 | 0.5 |
 
-**一般式** (Krijt & Kama 2014, Eq.2-3):
+**一般式** ([@KrijtKama2014_AA566_L2], Eq.2-3):
 $$s_{\min}^{3-\alpha} = \frac{\alpha-3}{4-\alpha}\left(\frac{1}{s_0}+\frac{\eta\rho v_{\mathrm{rel}}^2}{24\gamma}\right)s_{\max}^{4-\alpha}$$
 
 **α=3.5 の場合** (Eq.4):
@@ -563,7 +563,7 @@ supply:
         index: -0.5
 ```
 
-Wyatt, Clarke & Booth (2011) が提示するサイズ別源・損失の解析式を一般化した形で、`mode` によって表層再供給 $S(a,r,t)$ を任意の関数として与えられるようにしている [@WyattClarkeBooth2011_CeMDA111_1; @Wyatt2008]。`mixing.epsilon_mix` は、微小隕石供給をバリスティック輸送で拡げるリングモデル（Estrada & Durisen 2015）や Cuzzi & Estrada (1998) の混合係数の扱いに倣い、外部由来の粒子がどの程度空間的・サイズ的に均質化するかをパラメータ化する [@EstradaDurisen2015_Icarus252_415; @CuzziEstrada1998_Icarus132_1]。
+Wyatt, [@WyattClarkeBooth2011_CeMDA111_1] が提示するサイズ別源・損失の解析式を一般化した形で、`mode` によって表層再供給 $S(a,r,t)$ を任意の関数として与えられるようにしている [@WyattClarkeBooth2011_CeMDA111_1; @Wyatt2008]。`mixing.epsilon_mix` は、微小隕石供給をバリスティック輸送で拡げるリングモデル（[@EstradaDurisen2015_Icarus252_415]）や [@CuzziEstrada1998_Icarus132_1] の混合係数の扱いに倣い、外部由来の粒子がどの程度空間的・サイズ的に均質化するかをパラメータ化する [@EstradaDurisen2015_Icarus252_415; @CuzziEstrada1998_Icarus132_1]。
 
 #### 📦 供給輸送経路 (`supply.transport`)
 
@@ -747,7 +747,7 @@ radiation:
 | `fixed_tau1_tau` | float | `mode="fixed_tau1"` のときに使う光学的厚さ τ | `null` |
 | `fixed_tau1_sigma` | float | `mode="fixed_tau1"` で Σ_{τ=1} を直接与える場合 | `null` |
 
-Φ(τ,ω₀,g) の反射・透過は、δ–Eddington 近似や Henyey–Greenstein 位相関数に基づく平板多重散乱計算を Joseph et al. (1976), Hansen & Travis (1974) などの方法で事前計算したテーブルを読み込む形を基本とする [@Joseph1976_JAS33_2452; @HansenTravis1974_SSR16_527; @CogleyBergstrom1979_JQSRT21_265]。τ≳1 では一次光がほぼ減衰するため、Σ_{τ=1} は診断用に記録し、表層が光学的に厚くなった場合は `tau_stop` 超過で停止判定する。
+Φ(τ,ω₀,g) の反射・透過は、δ–Eddington 近似や Henyey–Greenstein 位相関数に基づく平板多重散乱計算を [@Joseph1976_JAS33_2452], [@HansenTravis1974_SSR16_527] などの方法で事前計算したテーブルを読み込む形を基本とする [@Joseph1976_JAS33_2452; @HansenTravis1974_SSR16_527; @CogleyBergstrom1979_JQSRT21_265]。τ≳1 では一次光がほぼ減衰するため、Σ_{τ=1} は診断用に記録し、表層が光学的に厚くなった場合は `tau_stop` 超過で停止判定する。
 
 ---
 
@@ -1132,11 +1132,11 @@ python -m marsdisk.config_validator --quiet configs/scenarios/fiducial.yml
 
 ### 9.1 文献
 
-- **Hyodo et al. (2017, 2018)**: gas-poor 仮定の根拠
-- **Leinhardt & Stewart (2012)**: 破砕強度モデル Q*D
-- **Campo Bagatin et al. (1994)**: wavy PSD 構造
-- **Strubbe & Chiang (2006)**: 放射圧支配の描像
-- **Canup & Salmon (2018)**: 衛星形成シナリオ
+- **[@Hyodo2017a_ApJ845_125], 2018)**: gas-poor 仮定の根拠
+- **[@LeinhardtStewart2012_ApJ745_79]**: 破砕強度モデル Q*D
+- **Campo [@CampoBagatin1994_PSS42_1079]**: wavy PSD 構造
+- **[@StrubbeChiang2006_ApJ648_652]**: 放射圧支配の描像
+- **[@CanupSalmon2018_SciAdv4_eaar6887]**: 衛星形成シナリオ
 
 ### 9.2 関連ドキュメント
 

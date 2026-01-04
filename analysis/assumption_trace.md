@@ -271,7 +271,7 @@ last_checked: YYYY-MM-DD
   - 火星衝突円盤が溶融主体で蒸気≲数%となり得るという gas-poor の見通しは [@Hyodo2017a_ApJ845_125] が示す。
   - 小衛星を残すには低質量円盤が要るという方向性は [@CanupSalmon2018_SciAdv4_eaar6887] が Science Advances で議論する。
   - 放射圧を揮発散逸に組み込む前提は [@Hyodo2018_ApJ860_150] で扱われ、昇華速度はヘルツ＝クヌーセン式（例: [@Markkanen2020_AA643_A16] の彗星ダスト熱物理モデル）が広く使われる。
-- 文献で見つからなかった部分: TL2003 をいつ有効化するか、ガス抗力をどの密度でオンにするかといった閾値は先行研究に明示がなく、無次元比（放射圧加速と抗力減速の比較など）で仕様化する必要がある。`sinks.mode` や `rp_blowout.enable` の優先順位も設計判断。Pollack–Burns–Tauber (1979) はガス抗力側の参照であり、昇華の ds/dt 根拠に使う場合は出典ずれに注意する。
+- 文献で見つからなかった部分: TL2003 をいつ有効化するか、ガス抗力をどの密度でオンにするかといった閾値は先行研究に明示がなく、無次元比（放射圧加速と抗力減速の比較など）で仕様化する必要がある。`sinks.mode` や `rp_blowout.enable` の優先順位も設計判断。Pollack–Burns–[@PollackBurnsTauber1979_Icarus37_587] はガス抗力側の参照であり、昇華の ds/dt 根拠に使う場合は出典ずれに注意する。
 - 欠落情報: 昇華式の (E.xxx) ひも付け、TL2003 無効の根拠引用位置、gas-rich 感度試験時の手順、昇華 ds/dt に紐付く参照（[@Markkanen2020_AA643_A16] など）を registry へ登録するかどうかの判断。
 - 次に確認する資料: `assumption_trace_data_sources.md` の設定パース手順、`analysis/equations.md` の昇華式、`analysis/UNKNOWN_REF_REQUESTS.jsonl` での TL2003 slug 登録。
 - 先行研究メモ: gas-poor を前提に放射圧と衝突・昇華を扱う枠組みはレビュー [@Krivov2006_AA455_509] で整理され、gas-drag を含む遷移円盤の解析は [@TakeuchiLin2002_ApJ581_1344; @TakeuchiLin2003_ApJ593_524]、drag が支配的になる密度域の例は [@PollackBurnsTauber1979_Icarus37_587; @Olofsson2022_MNRAS513_713] にみられる。TL2003/gas_drag フラグのオン/オフ条件を定量規定する文献は見当たらない。
@@ -329,7 +329,7 @@ assumption_id と provenance 情報を機械可読で持たせる仕組みは、
 - activity（生成スクリプト）と agent（担当者/CI）を CodeMeta/RO-Crate 互換で外部化する余地を残しつつ、当面は registry と run_card のメタデータで代替する。
 
 ## 3. 先行研究の有無まとめ
-- blowout_core_eid_v1 (E.007/E.013/E.014): β・a_blow・t_blow≃Ω^-1 は [@Burns1979_Icarus40_1; @Wyatt2008; @Hyodo2018_ApJ860_150]（β=0.5境界は Pawellek & Krivov 2015 が Burns 式として明示）で支えられるが、`fast_blowout` 補正や `use_solar_rp`、Q_pr テーブルの来歴は設計判断。
+- blowout_core_eid_v1 (E.007/E.013/E.014): β・a_blow・t_blow≃Ω^-1 は [@Burns1979_Icarus40_1; @Wyatt2008; @Hyodo2018_ApJ860_150]（β=0.5境界は [@PawellekKrivov2015_MNRAS454_3207]が Burns 式として明示）で支えられるが、`fast_blowout` 補正や `use_solar_rp`、Q_pr テーブルの来歴は設計判断。
 - shielding_gate_order_v1 (E.015/E.016/E.017/E.031): 表層の遮蔽・アウトフローは [@TakeuchiLin2003_ApJ593_524] が根拠、Φテーブル出典や two-stream/delta-Eddington などの近似名、ゲート順序は実装規約。
 - psd_wavy_floor_scope_v1 (E.008): ブローアウト近傍の wavy PSD は [@Krivov2006_AA455_509; @ThebaultAugereau2007_AA472_169] で確認され、`wavy_strength` と s_min クリップ優先順位は設計判断。
 - tcoll_regime_switch_v1 (E.006/E.007): t_coll∝(Ωτ)^-1 の整理は [@Wyatt2008; @ThebaultAugereau2007_AA472_169; @Ohtsuki2002_Icarus155_436] で裏付けられ、Wyatt/Ohtsuki 切替や Ω^-1 への上限設定、Smol 併用条件は実装判断。

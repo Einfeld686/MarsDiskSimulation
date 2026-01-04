@@ -30,7 +30,7 @@
 - 標準の物理経路は Smoluchowski 経路（C3/C4）を各半径セルで解く 1D 手法で、実装の計算順序は図 2.2 に従う。放射圧〜流出の依存関係のみを抜粋すると ⟨$Q_{\rm pr}$⟩→β→$s_{\rm blow}$→遮蔽Φ→Smol IMEX→外向流束となる。半径方向の粘性拡散（radial viscous diffusion; C5）は演算子分割で追加可能とする。  
   > **参照**: analysis/overview.md §1, analysis/physics_flow.md §2「各タイムステップの物理計算順序」
 - 運用スイープの既定は `GEOMETRY_MODE=1D` とし、`scripts/runsets/windows/run_sweep.cmd` を運用基準として採用する。1D の C5 は既定で無効であり、必要時のみ `numerics.enable_viscosity=true` を指定する。運用実行の詳細は付録 A、設定→物理対応は付録 B、関連ドキュメントは付録 C を参照する。
-- Takeuchi & Lin (2003) に基づく gas-rich 表層 ODE は `ALLOW_TL2003=false` が既定で無効。gas-rich 感度試験では環境変数を `true` にして `surface.collision_solver=surface_ode`（例: `configs/scenarios/gas_rich.yml`）を選ぶ。  
+- [@TakeuchiLin2003_ApJ593_524] に基づく gas-rich 表層 ODE は `ALLOW_TL2003=false` が既定で無効。gas-rich 感度試験では環境変数を `true` にして `surface.collision_solver=surface_ode`（例: `configs/scenarios/gas_rich.yml`）を選ぶ。  
   > **参照**: analysis/equations.md（冒頭注記）, analysis/overview.md §1「gas-poor 既定」
 
 1D は $r_{\rm in}$–$r_{\rm out}$ を $N_r$ セルに分割し、各セルの代表半径 $r_i$ で局所量を評価する。角速度 $\Omega(r_i)$ とケプラー速度 $v_K(r_i)$ は (E.001)–(E.002) に従い、$t_{\rm blow}$ や $t_{\rm coll}$ の基準時間に用いる。C5 を無効化した場合はセル間結合を行わず、半径方向の流束を解かない局所進化として扱う。
@@ -293,7 +293,7 @@ $\tau_{\rm los}$ は遮蔽（$\Phi$）の入力として使われるほか、放
 
 nσv 型カーネル (E.024) を用い、相対速度は Rayleigh 分布 (E.020) から導出する。
 
-- 破壊閾値 $Q_D^*$: Leinhardt & Stewart (2012) 補間 (E.026)
+- 破壊閾値 $Q_D^*$: [@LeinhardtStewart2012_ApJ745_79] 補間 (E.026)
 - 速度分散: せん断加熱と減衰の釣り合いから $c_{\rm eq}$ を固定点反復で求め、相対速度に反映する (E.021)
 - 速度外挿: 重力項のみ LS09 型 $v^{-3\mu+2}$ で拡張
 - ここでの $\mu$ は衝突速度外挿（LS09）の係数であり、供給式で使う $\mu$（`mu_reference_tau` 由来）とは別物として扱う。
@@ -315,7 +315,7 @@ S9 の衝突更新では、$C_{ij}$ から各ビンの衝突寿命 $t_{\\rm coll
 | **壊滅的破砕（fragmentation）** | $F_{LF} \le 0.5$ | 完全破壊、破片分布 $g(m) \propto m^{-\eta}$ |
 
 - Thébault et al. (2003) に基づく侵食モデル
-- Krivov et al. (2006) に基づく壊滅的破砕モデル
+- [@Krivov2006_AA455_509] に基づく壊滅的破砕モデル
 - 破片分布はビン内積分で質量保存を満たすように正規化し、供給・破砕由来の面密度が一貫するように設計する。
 
 破砕生成物はフラグメント分布テンソル $Y$ を通じて各ビンに再配分され、Smoluchowski 解法の gain 項として更新される。侵食レジームでは質量が大粒径側に残存し、小粒径への供給は限定的となる。

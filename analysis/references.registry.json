@@ -884,6 +884,40 @@
       "claims": [
         "Provides n,k data for basalt/basaltic glass over 0.21–50 μm (ARIA data source)."
       ]
+    },
+    {
+      "key": "Rosenblatt2011_ApARv19_44",
+      "short": "Rosenblatt (2011)",
+      "title": "The origin of the Martian moons revisited",
+      "doi": "10.1007/s00159-011-0044-6",
+      "bibtex": "@article{Rosenblatt2011_ApARv19_44, journal = {Astron. Astrophys. Rev.}, volume = {19}, pages = {44}, year = {2011}}",
+      "adopted_scope": "Review of Martian moon origin scenarios and observational constraints.",
+      "claims": [
+        "Reviews capture vs impact-origin scenarios for Phobos/Deimos and their observational constraints."
+      ]
+    },
+    {
+      "key": "Jutzi2010_Icarus207_54",
+      "short": "Jutzi et al. (2010)",
+      "title": "Fragment properties at the catastrophic disruption threshold: The effect of the parent body’s internal structure",
+      "doi": "10.1016/j.icarus.2009.11.016",
+      "bibtex": "@article{Jutzi2010_Icarus207_54, journal = {Icarus}, volume = {207}, pages = {54-65}, year = {2010}}",
+      "adopted_scope": "Catastrophic disruption thresholds at higher impact velocities.",
+      "claims": [
+        "Provides Q*_D behavior for 7–10 km/s impact regimes used to guide high-velocity extrapolation."
+      ]
+    },
+    {
+      "key": "Genge2017_MAPS52_1000",
+      "short": "Genge (2017)",
+      "title": "The entry heating and abundances of basaltic micrometeorites",
+      "doi": "10.1111/maps.12830",
+      "bibtex": "@article{Genge2017_MAPS52_1000, journal = {Meteoritics & Planetary Science}, volume = {52}, number = {5}, pages = {1000-1013}, year = {2017}}",
+      "adopted_scope": "Basaltic micrometeorite entry heating and abundance constraints for basaltic material context.",
+      "claims": [
+        "Reports entry heating conditions and abundance estimates for basaltic micrometeorites.",
+        "Provides observational constraints useful when discussing basaltic material survival and loss."
+      ]
     }
   ]
 }

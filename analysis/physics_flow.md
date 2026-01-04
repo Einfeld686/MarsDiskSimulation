@@ -303,7 +303,7 @@ flowchart TB
 
 ## 6. 表層進化ステップ (S1) の詳細
 
-Strubbe & Chiang (2006) / Wyatt (2008) に基づく表層 ODE:
+[@StrubbeChiang2006_ApJ648_652] / [@Wyatt2008] に基づく表層 ODE:
 
 ```mermaid
 flowchart LR
@@ -609,9 +609,9 @@ flowchart LR
 
 ## 参考文献
 
-- Strubbe & Chiang (2006): ApJ 648, 652 — 衝突時間スケール t_coll
-- Wyatt (2008): ARA&A 46, 339 — デブリ円盤の衝突カスケード
-- Burns et al. (1979): Icarus 40, 1 — 放射圧効率 Q_pr と β の定義
-- Hyodo et al. (2017, 2018): ApJ — 火星月形成円盤の放射冷却
-- Pignatale et al. (2018): ApJ 853, 118 — HKL昇華フラックス
-- Ronnet et al. (2016): ApJ 828, 109 — 外縁ガス包絡での凝縮
+- [@StrubbeChiang2006_ApJ648_652]: ApJ 648, 652 — 衝突時間スケール t_coll
+- [@Wyatt2008]: ARA&A 46, 339 — デブリ円盤の衝突カスケード
+- [@Burns1979_Icarus40_1]: Icarus 40, 1 — 放射圧効率 Q_pr と β の定義
+- [@Hyodo2017a_ApJ845_125], 2018): ApJ — 火星月形成円盤の放射冷却
+- [@Pignatale2018_ApJ853_118]: ApJ 853, 118 — HKL昇華フラックス
+- [@Ronnet2016_ApJ828_109]: ApJ 828, 109 — 外縁ガス包絡での凝縮

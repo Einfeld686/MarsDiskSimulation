@@ -1,6 +1,6 @@
 > **文書種別**: リファレンス（Diátaxis: Reference）
 
-> **注記（gas‑poor）**: 本解析は **ガスに乏しい衝突起源デブリ円盤**を前提とします。従って、**光学的に厚いガス円盤**を仮定する Takeuchi & Lin (2003) の表層塵アウトフロー式は**適用外**とし、既定では評価から外しています（必要時のみ明示的に有効化）。この判断は、衝突直後の円盤が溶融主体かつ蒸気≲数%で、初期周回で揮発が散逸しやすいこと、および小衛星を残すには低質量・低ガスの円盤条件が要ることに基づきます。参考: [@Hyodo2017a_ApJ845_125; @Hyodo2017b_ApJ851_122; @Hyodo2018_ApJ860_150; @CanupSalmon2018_SciAdv4_eaar6887]。
+> **注記（gas‑poor）**: 本解析は **ガスに乏しい衝突起源デブリ円盤**を前提とします。従って、**光学的に厚いガス円盤**を仮定する [@TakeuchiLin2003_ApJ593_524] の表層塵アウトフロー式は**適用外**とし、既定では評価から外しています（必要時のみ明示的に有効化）。この判断は、衝突直後の円盤が溶融主体かつ蒸気≲数%で、初期周回で揮発が散逸しやすいこと、および小衛星を残すには低質量・低ガスの円盤条件が要ることに基づきます。参考: [@Hyodo2017a_ApJ845_125; @Hyodo2017b_ApJ851_122; @Hyodo2018_ApJ860_150; @CanupSalmon2018_SciAdv4_eaar6887]。
 
 ## Material Model Assumptions
 
@@ -184,7 +184,7 @@ Wyatt 型の $t_{\mathrm{coll}} = 1/(\Omega\tau_{\perp})$ 減衰を用いて表�
 > [!IMPORTANT]
 > **適用範囲の注意（既定は Smol）**  
 > この ODE は `surface.collision_solver="surface_ode"` を明示した場合のみ使う。  
-> Takeuchi & Lin (2003) のガスリッチ表層アウトフロー式[@TakeuchiLin2003_ApJ593_524]を下敷きにしているため、gas‑poor を標準とする本プロジェクトでは `ALLOW_TL2003=false` を維持し、対照的な gas-rich 仮定を試すときだけ有効化する。
+> [@TakeuchiLin2003_ApJ593_524] のガスリッチ表層アウトフロー式[@TakeuchiLin2003_ApJ593_524]を下敷きにしているため、gas‑poor を標準とする本プロジェクトでは `ALLOW_TL2003=false` を維持し、対照的な gas-rich 仮定を試すときだけ有効化する。
 > 現行の `surface_ode` は Wyatt/Strubbe–Chiang 型の簡略 ODE であり、TL2003 の詳細式は標準実行では用いない（gas‑poor 既定）。
 ```latex
 \begin{aligned}
@@ -225,7 +225,7 @@ Wyatt 型の $t_{\mathrm{coll}} = 1/(\Omega\tau_{\perp})$ 減衰を用いて表�
 
 `surface.collision_solver="surface_ode"` を選んだ場合にのみ呼び出され、`t_{\mathrm{sink}}` が `None` または非正（`sinks.mode="none"` のときなど）ならシンク指標を落として吹き飛びと Wyatt/Strubbe–Chiang 型衝突寿命のみを損失項に残す。[marsdisk/run_zero_d.py#run_zero_d [L1364–L5824]][marsdisk/physics/sinks.py#total_sink_timescale [L83–L160]][marsdisk/physics/surface.py#step_surface_density_S1 [L110–L192]] その構成では `sink_flux` は常に0となる。
 
-**参考**: [無効: gas‑poor 既定] Takeuchi & Lin (2003); Hyodo et al. (2017); Hyodo et al. (2018); Canup & Salmon (2018); Strubbe & Chiang (2006); Kuramoto (2024); Wyatt (2008)
+**参考**: [無効: gas‑poor 既定] [@TakeuchiLin2003_ApJ593_524]; [@Hyodo2017a_ApJ845_125]; [@Hyodo2018_ApJ860_150]; [@CanupSalmon2018_SciAdv4_eaar6887]; [@StrubbeChiang2006_ApJ648_652]; [@Kuramoto2024]; [@Wyatt2008]
 
 ### (E.008) marsdisk/run_zero_d.py: effective minimum grain size and beta diagnostics (lines 229-488)
 ブローアウト境界と設定下限の最大を取り、β 診断を併記する手順。ブローアウトの閾値 β=0.5 とその定義は [@Burns1979_Icarus40_1; @StrubbeChiang2006_ApJ648_652] に従う。
@@ -299,9 +299,9 @@ Case classification follows the configuration beta: `case_status = "blowout"` wh
 ```latex
 \dot{N}_k = \sum_{i\le j} C_{ij}\,\frac{m_i+m_j}{m_k}\,Y_{kij} - \left(\sum_j C_{kj} + C_{kk}\right) + F_k - S_k N_k,
 ```
-として記述する（$C_{ij}$ は面密度込みの衝突率、$Y_{kij}$ は質量配分）。`collisions_smol` が `prod_subblow_mass_rate`（ソース）と昇華/外部シンク（負の項）を束ねて $F_k$ と $S_k$ を組み立て、Wyatt 型 $t_{\rm coll}\approx T_{\rm orb}/(4\pi\tau)$ スケール [@Wyatt2008] と Strubbe & Chiang (2006) の PR drag/衝突寿命整合を踏まえた $e,i,H$ を `compute_kernel_e_i_H` で評価したカーネル $K_{ij}(e,v_{\mathrm{rel}},H)$ を与える。[marsdisk/physics/collisions_smol.py:L1–L220][marsdisk/physics/collisions_smol.py#compute_kernel_e_i_H [L949–L1026]]
+として記述する（$C_{ij}$ は面密度込みの衝突率、$Y_{kij}$ は質量配分）。`collisions_smol` が `prod_subblow_mass_rate`（ソース）と昇華/外部シンク（負の項）を束ねて $F_k$ と $S_k$ を組み立て、Wyatt 型 $t_{\rm coll}\approx T_{\rm orb}/(4\pi\tau)$ スケール [@Wyatt2008] と [@StrubbeChiang2006_ApJ648_652] の PR drag/衝突寿命整合を踏まえた $e,i,H$ を `compute_kernel_e_i_H` で評価したカーネル $K_{ij}(e,v_{\mathrm{rel}},H)$ を与える。[marsdisk/physics/collisions_smol.py:L1–L220][marsdisk/physics/collisions_smol.py#compute_kernel_e_i_H [L949–L1026]]
 
-補足（ビン分解能）: coagulation/fragmentation 平衡の解析解に基づき、Birnstiel et al. (2011) は隣接粒径比 $a_{i+1}/a_i \lesssim 1.1$–1.2 を推奨しており、基準格子 $s_{\min}=1.0\times10^{-6}$ m, $s_{\max}=3$ m, $n_{\mathrm{bins}}=40$ では $(a_{i+1}/a_i)\approx1.26$ となるため、wavy 再現時はビン数を増やす感度試験を併用する [@Birnstiel2011_AA525_A11]。
+補足（ビン分解能）: coagulation/fragmentation 平衡の解析解に基づき、[@Birnstiel2011_AA525_A11] は隣接粒径比 $a_{i+1}/a_i \lesssim 1.1$–1.2 を推奨しており、基準格子 $s_{\min}=1.0\times10^{-6}$ m, $s_{\max}=3$ m, $n_{\mathrm{bins}}=40$ では $(a_{i+1}/a_i)\approx1.26$ となるため、wavy 再現時はビン数を増やす感度試験を併用する [@Birnstiel2011_AA525_A11]。
 
 ```latex
 \begin{aligned}
@@ -544,29 +544,29 @@ P_{\mathrm{sat}}(T) =
 |Symbol|Meaning|Units|Defaults/Notes|
 |---|---|---|---|
 |$J(T)$|Sublimation mass flux|kg m$^{-2}$ s$^{-1}$|Return value|
-|$\alpha_{\mathrm{evap}}$|Evaporation coefficient|dimensionless|`params.alpha_evap`; default 0.007 (Ferguson & Nuth 2012)|
-|$P_{\mathrm{sat}}$|Saturation vapour pressure|Pa|Clausius (Kubaschewski 1974) or tabulated (Visscher & Fegley 2013)|
-|$P_{\mathrm{gas}}$|Ambient vapour pressure|Pa|`params.P_gas`; default 0 (gas-poor disk; Hyodo et al. 2017, Canup & Salmon 2018)|
+|$\alpha_{\mathrm{evap}}$|Evaporation coefficient|dimensionless|`params.alpha_evap`; default 0.007 ([@FergusonNuth2012_JCED57_721]|
+|$P_{\mathrm{sat}}$|Saturation vapour pressure|Pa|Clausius ([@Kubaschewski1974_Book]) or tabulated ([@VisscherFegley2013_ApJL767_L12]|
+|$P_{\mathrm{gas}}$|Ambient vapour pressure|Pa|`params.P_gas`; default 0 (gas-poor disk; [@Hyodo2017a_ApJ845_125], [@CanupSalmon2018_SciAdv4_eaar6887]|
 |$\mu$|Molar mass|kg mol$^{-1}$|`params.mu`; default 0.0440849 (NIST WebBook, SiO)|
 |$R$|Universal gas constant|J mol$^{-1}$ K$^{-1}$|Fixed $8.314462618$|
 |$T$|Grain temperature|K|Function argument|
 |$T_{\mathrm{sub}}$|Logistic midpoint temperature|K|`params.T_sub`; default 1300|
 |$dT$|Logistic width parameter|K|`params.dT`; floored at 1 K|
-|$A,B$|Clausius–Clapeyron coefficients|dimensionless / K|Defaults $(13.613, 17850)$ valid for $1270$–$1600$ K (Kubaschewski 1974)|
+|$A,B$|Clausius–Clapeyron coefficients|dimensionless / K|Defaults $(13.613, 17850)$ valid for $1270$–$1600$ K ([@Kubaschewski1974_Book])|
 |$[T_{\min},T_{\max}]$|HKL validity window|K|`params.valid_K`; warning if $T$ outside|
 |table|Tabulated $\log_{10}P$ source|—|CSV/JSON with columns `T[K]`, `log10P[Pa]`; monotone PCHIP interpolation|
 
 **Numerics**
 - HKL 式は表面からの分子出入フラックスを気体運動論で与える普遍形で、固体でも液体でも同じ $J=\alpha_{\mathrm{evap}}\bigl(P_{\mathrm{sat}}(T)-P_{\mathrm{gas}}\bigr)\sqrt{\mu/(2\pi R T)}$ を用い、相依存性は飽和蒸気圧 $P_{\mathrm{sat}}^{(\mathrm{solid}/\mathrm{liquid})}$ と表面状態に依存する $\alpha_{\mathrm{evap}}$ に吸収される。水氷の昇華や金属融液の蒸発もこの形の HKL 式で扱うのが標準であり、本実装も同じ立て付けを取る。
-- Defaults to a silicon-monoxide HKL branch (SiO dominates the vapour over silicate melts; Melosh 2007) with Clausius coefficients $A=13.613$, $B=17850$ and validity $1270$–$1600$ K; values outside that interval trigger a warning but proceed.
-- Liquid branch (default-on): Fegley & Schaefer (2012) / Visscher & Fegley (2013) [@FegleySchaefer2012_arXiv; @VisscherFegley2013_ApJL767_L12] give for molten SiO$_2$ a vapour-pressure fit $\log_{10} P_{\mathrm{vap}}[\mathrm{Pa}] = 13.203 - 25898.9/T$ ($\sim$2000–3000 K). `sinks.sub_params.enable_liquid_branch=true`（既定）と `psat_liquid_switch_K`（既定 1900 K）で $(A_{\rm liq},B_{\rm liq})$ に切り替え、$\alpha_{\mathrm{evap}}=0.007$ は固液共通とする。[marsdisk/physics/sublimation.py#mass_flux_hkl [L606–L664]]
+- Defaults to a silicon-monoxide HKL branch (SiO dominates the vapour over silicate melts; [@Melosh2007_MPS42_2079]) with Clausius coefficients $A=13.613$, $B=17850$ and validity $1270$–$1600$ K; values outside that interval trigger a warning but proceed.
+- Liquid branch (default-on): [@FegleySchaefer2012_arXiv] / [@VisscherFegley2013_ApJL767_L12] [@FegleySchaefer2012_arXiv; @VisscherFegley2013_ApJL767_L12] give for molten SiO$_2$ a vapour-pressure fit $\log_{10} P_{\mathrm{vap}}[\mathrm{Pa}] = 13.203 - 25898.9/T$ ($\sim$2000–3000 K). `sinks.sub_params.enable_liquid_branch=true`（既定）と `psat_liquid_switch_K`（既定 1900 K）で $(A_{\rm liq},B_{\rm liq})$ に切り替え、$\alpha_{\mathrm{evap}}=0.007$ は固液共通とする。[marsdisk/physics/sublimation.py#mass_flux_hkl [L606–L664]]
 - Enables alternative `psat_model="tabulated"` sourced from CSV/JSON; the loader expects monotonically increasing temperatures and uses a shape-preserving cubic (`scipy.interpolate.PchipInterpolator`) to ensure a smooth, non-oscillatory $\log_{10}P$.
 - Chooses HKL branch when the selected `psat_model` is available; otherwise falls back to the logistic placeholder.
 - In HKL branch, negative $(P_{\mathrm{sat}}-P_{\mathrm{gas}})$ is clamped to zero before evaluation.
 - **仕様**: 凝結（再付着）は扱わない。負の $(P_{\mathrm{sat}}-P_{\mathrm{gas}})$ は 0 にクランプし、gas‑rich 感度試験で凝結を扱う場合は別モードとして整理する。
 - Logistic branch guards against $dT\to0$ via `max(dT, 1.0)`.
 - Stores provenance in `run_config.json` under `sublimation_provenance`, capturing {`sublimation_formula`, `psat_model`, `A`, `B`, `mu`, `alpha_evap`, `P_gas`, `valid_K`, optional `psat_table_path`} for reproducibility.
-- Ambient vapour pressure $P_{\mathrm{gas}}$ (特に Si を含む蒸気分圧) は Ronnet et al. (2016) 同様に自由パラメータとして扱い、化学平衡は計算しない。既定は gas‑poor 前提で $P_{\mathrm{gas}}=0$ とし、感度試験では YAML `sinks.sub_params.P_gas` を明示調整すること（HKL フラックスの最大不確定要素）。[marsdisk/physics/sublimation.py#p_sat [L588–L603]], [marsdisk/schema.py#Supply [L472–L586]]
+- Ambient vapour pressure $P_{\mathrm{gas}}$ (特に Si を含む蒸気分圧) は [@Ronnet2016_ApJ828_109] 同様に自由パラメータとして扱い、化学平衡は計算しない。既定は gas‑poor 前提で $P_{\mathrm{gas}}=0$ とし、感度試験では YAML `sinks.sub_params.P_gas` を明示調整すること（HKL フラックスの最大不確定要素）。[marsdisk/physics/sublimation.py#p_sat [L588–L603]], [marsdisk/schema.py#Supply [L472–L586]]
 - `sub_params.mass_conserving=true` の場合、昇華由来の ds/dt は粒径のみを縮小し、1 ステップ内に $s<a_{\rm blow}$ を跨いだ分だけをブローアウト損失として処理する（質量シンクには入れない）。false で従来どおり昇華シンクとして質量減算。[marsdisk/physics/collisions_smol.py#step_collisions_smol_0d [L1070–L1528]][marsdisk/run_zero_d.py#run_zero_d [L1364–L5824]]
 
 ### (E.019) marsdisk/physics/sublimation.py: sink_timescale (implemented by s_sink_from_timescale, lines 116-129)
@@ -596,7 +596,7 @@ P_{\mathrm{sat}}(T) =
 
 ### (E.020) marsdisk/physics/dynamics.py: v_ij (lines 18–45)
 低離心率・低傾斜のレイリー分布を仮定した平均相対速度近似で、惑星形成論レビュー [@LissauerStewart1993_PP3; @WetherillStewart1993_Icarus106_190] や Ohtsuki らの解析解 [@Ohtsuki2002_Icarus155_436] に基づく。
-係数 1.25 は Imaz Blanco et al. (2023) が同形を採用しており、そこでの $\langle e^{2}\rangle=2\langle i^{2}\rangle$ 仮定は Ida & Makino (1992) に従う。[@ImazBlanco2023_MNRAS522_6150; @IdaMakino1992_Icarus96_107]
+係数 1.25 は Imaz [@ImazBlanco2023_MNRAS522_6150] が同形を採用しており、そこでの $\langle e^{2}\rangle=2\langle i^{2}\rangle$ 仮定は [@IdaMakino1992_Icarus96_107] に従う。[@ImazBlanco2023_MNRAS522_6150; @IdaMakino1992_Icarus96_107]
 
 ```latex
 v_{ij} = v_{K}\,\sqrt{1.25\,e^{2} + i^{2}}
@@ -712,7 +712,7 @@ e_{n+1} = e_{\mathrm{eq}} + \left(e_n - e_{\mathrm{eq}}\right)\exp\!\left(-\frac
 - Returns a Python closure that evaluates $\Sigma(r)$ for downstream use. [marsdisk/physics/initfields.py#sigma_from_Minner [L19–L49]]
 
 ### (E.024) marsdisk/physics/collide.py: compute_collision_kernel_C1 (lines 18–77)
-nσv 形式の衝突**率**を薄い円盤・ガウス鉛直分布に特化して離散サイズビンへ適用したもので、$1/\sqrt{2\pi}H$ の補正を含む。Krivov (2006) の枠組みを鉛直分布とビン離散化の仮定で具体化した形であり、細部は実装依存。[@Krivov2006_AA455_509]
+nσv 形式の衝突**率**を薄い円盤・ガウス鉛直分布に特化して離散サイズビンへ適用したもので、$1/\sqrt{2\pi}H$ の補正を含む。[@Krivov2006_AA455_509] の枠組みを鉛直分布とビン離散化の仮定で具体化した形であり、細部は実装依存。[@Krivov2006_AA455_509]
 $C_{ij}$ は **$N_iN_j$ を含む衝突率**であり、密度抜きカーネルは $K_{ij}=C_{ij}/(N_iN_j)$ として区別する。
 
 ```latex
@@ -768,7 +768,7 @@ with $\Sigma_{\tau=1}=1/\kappa_{\mathrm{eff}}$ when $\kappa_{\mathrm{eff}}>0$.
 ### (E.026) marsdisk/physics/qstar.py: compute_q_d_star_F1 (lines 31–73)
 バザルトの破壊閾値 $Q_D^*$ を **1–7 km/s の固定係数テーブル**で評価し、範囲内は隣接速度間で線形補間する。テーブル範囲外では係数 lookup を端点にクランプし、重力側の項だけを LS09 の $v^{-3\mu+2}$（既定 $\mu=0.45$）で外挿する。強度項は端点値のまま据え置き、重力項だけを速度依存で拡張することで、小粒子（強度支配）を過剰にスケールさせない。基準式は [@BenzAsphaug1999_Icarus142_5]、補間は [@LeinhardtStewart2012_ApJ745_79]、重力側外挿の根拠は [@StewartLeinhardt2009_ApJ691_L133] と Jutzi 2010（7–10 km/s 適用）に従う。既定テーブルの 1–7 km/s の係数は固定データとして扱い、$\mu$ は範囲外のみで作用する。
 
-既定の `coeff_units="ba99_cgs"` は Benz & Asphaug (1999) の cgs 前提を保持し、$s_{\rm cm}=100\,s$ [cm] と $\rho_{\rm g/cm^3}=\rho/1000$ を使って erg g$^{-1}$ で評価し、$1\times10^{-4}$ を掛けて J kg$^{-1}$ に戻す。`coeff_units="si"` を選ぶとメートル・kg・J 入力をそのまま用いるレガシー挙動になる。
+既定の `coeff_units="ba99_cgs"` は [@BenzAsphaug1999_Icarus142_5] の cgs 前提を保持し、$s_{\rm cm}=100\,s$ [cm] と $\rho_{\rm g/cm^3}=\rho/1000$ を使って erg g$^{-1}$ で評価し、$1\times10^{-4}$ を掛けて J kg$^{-1}$ に戻す。`coeff_units="si"` を選ぶとメートル・kg・J 入力をそのまま用いるレガシー挙動になる。
 ※ この式の係数は BA99 の cgs 単位（cm, g/cm$^3$, erg/g）として解釈し、内部で J/kg に正規化している。設定 `coeff_units` を変えない限り常にこの解釈が適用される。
 
 ```latex
@@ -800,7 +800,7 @@ where $\mu$ follows LS09 (既定 0.45) and $Q_{s},a_s,B,b_g$ use the BA99 basalt
 |$\rho$|Bulk density|kg m$^{-3}$|Input `rho`, must be $>0$|
 |$v$|Impact velocity|km s$^{-1}$|Input `v_kms`;係数は既定で[1,7] km/s を用い、範囲外では重力項だけ $v^{-3\mu+2}$ で外挿|
 |$\mu$|Gravity-regime velocity exponent|—|`qstar.mu_grav`（既定 0.45, LS09/Jutzi に基づく）。範囲外の重力項のみをスケール|
-|$Q_{s}, a_s, B, b_g$|Material coefficients|—|Taken from Leinhardt & Stewart (2012) for basalt|
+|$Q_{s}, a_s, B, b_g$|Material coefficients|—|Taken from [@LeinhardtStewart2012_ApJ745_79] for basalt|
 |`coeff_units`|Coefficient unit system|—|`\"ba99_cgs\"` (cm, g/cm$^3$, erg/g $\to$ J/kg; default) or `\"si\"`|
 
 **Numerics**
@@ -1278,7 +1278,7 @@ E_{\mathrm{error}} = \frac{\left|E_{\mathrm{diss,step}} + E_{\mathrm{ret,step}} 
 
 ### (E.053) marsdisk/run_zero_d.py: _surface_energy_floor (lines 139–160)
 
-Krijt & Kama (2014) は表面エネルギー制約から最小粒径を導き、3<α<4 の一般形は
+[@KrijtKama2014_AA566_L2] は表面エネルギー制約から最小粒径を導き、3<α<4 の一般形は
 ```latex
 s_{\min}^{3-\alpha} = \frac{\alpha-3}{4-\alpha}\left(\frac{1}{s_0}+\frac{\eta\,\rho\,v_{\mathrm{rel}}^2}{24\gamma}\right)s_{\max}^{4-\alpha},
 ```

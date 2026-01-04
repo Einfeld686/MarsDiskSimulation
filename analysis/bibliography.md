@@ -83,6 +83,15 @@
   - 外縁ガス層での凝縮がPhobos/Deimosスペクトルと整合
   - マグマオーシャン由来物質だけでは観測制約を再現不可
 
+### Rosenblatt (2011)
+- **Key**: `Rosenblatt2011_ApARv19_44`
+- **Title**: The origin of the Martian moons revisited
+- **Journal**: Astron. Astrophys. Rev., 19, 44
+- **DOI**: [10.1007/s00159-011-0044-6](https://doi.org/10.1007/s00159-011-0044-6)
+- **使用箇所**: 起源仮説の総説整理
+- **主張**:
+  - 捕獲説と巨大衝突説の整理と観測制約の概観
+
 ### Rosenblatt & Charnoz (2012)
 - **Key**: `Rosenblatt2012_Icarus221_806`
 - **Title**: On the formation of the martian moons from a circum-martian accretion disk
@@ -173,6 +182,15 @@
   - 放射圧/重力比 β の古典的定義
   - Q_pr と blow-out サイズの関係
 
+### Kimura et al. (2002)
+- **Key**: `KimuraOkamotoMukai2002_Icarus157_349`
+- **Title**: Radiation Pressure and the Poynting–Robertson Effect for Fluffy Dust Particles
+- **Journal**: Icarus, 157, 349–361
+- **DOI**: [10.1006/icar.2002.6849](https://doi.org/10.1006/icar.2002.6849)
+- **使用箇所**: β の材質・構造依存の根拠
+- **主張**:
+  - ポーラス粒子の放射圧/PR 効果を整理し、β の粒径依存を示す
+
 ### Pawellek & Krivov (2015)
 - **Key**: `PawellekKrivov2015_MNRAS454_3207`
 - **Title**: The dust grain size–stellar luminosity trend in debris discs
@@ -260,6 +278,15 @@
 - **主張**:
   - blow-out カットオフによる振動的 "wavy" パターン
   - 細かいビニングの必要性
+
+### Campo Bagatin et al. (1994)
+- **Key**: `CampoBagatin1994_PSS42_1079`
+- **Title**: Wavy size distributions for collisional systems with a small-size cutoff
+- **Journal**: Planet. Space Sci., 42, 1079–1092
+- **DOI**: [10.1016/0032-0633(94)90008-6](https://doi.org/10.1016/0032-0633(94)90008-6)
+- **使用箇所**: wavy PSD の基本根拠
+- **主張**:
+  - 最小サイズのカットオフが PSD の波状構造を生むことを示す
 
 ### Birnstiel et al. (2011)
 - **Key**: `Birnstiel2011_AA525_A11`
@@ -353,6 +380,15 @@
 - **使用箇所**: 相対速度スケーリング
 - **主張**:
   - Rayleigh分布を仮定した相対速度スケーリングの根拠 (E.020)
+
+### Mustill & Wyatt (2009)
+- **Key**: `MustillWyatt2009_MNRAS399_1403`
+- **Title**: Debris disc stirring by secular perturbations from giant planets
+- **Journal**: MNRAS, 399, 1403–1414
+- **DOI**: [10.1111/j.1365-2966.2009.15360.x](https://doi.org/10.1111/j.1365-2966.2009.15360.x)
+- **使用箇所**: 相対速度係数 c の補助根拠
+- **主張**:
+  - レイリー分布の相対速度で c=√(5/4) を採用する根拠
 
 ### Wetherill & Stewart (1993)
 - **Key**: `WetherillStewart1993_Icarus106_190`
@@ -475,6 +511,67 @@
   - Hertz-Knudsen 式を熱収支と結合し、mm–cm 粒子の昇華・破砕時間を算出
   - 昇華が支配的な場合の ds/dt 床や outflux 設定のアナログとして利用
 
+### Kubaschewski (1974)
+- **Key**: `Kubaschewski1974_Book`
+- **Title**: Thermochemical data compilation (Clausius–Clapeyron coefficients)
+- **Publisher**: 未確認
+- **使用箇所**: Clausius 型蒸気圧係数の既定値
+- **主張**:
+  - SiO の Clausius 係数を与え、P_sat の既定値に利用する
+
+### Love & Brownlee (1991)
+- **Key**: `LoveBrownlee1991_Icarus89_26`
+- **Title**: Heating and thermal transformation of micrometeoroids entering the Earth's atmosphere
+- **Journal**: Icarus, 89, 26–43
+- **DOI**: [10.1016/0019-1035(91)90085-8](https://doi.org/10.1016/0019-1035(91)90085-8)
+- **使用箇所**: 固相蒸気圧のプロキシ
+- **主張**:
+  - log P = A − B/T の係数を micrometeoroid の近似として提示
+
+### Genge (2017)
+- **Key**: `Genge2017_MAPS52_1000`
+- **Title**: The entry heating and abundances of basaltic micrometeorites
+- **Journal**: Meteoritics & Planetary Science, 52, 1000–1013
+- **DOI**: [10.1111/maps.12830](https://doi.org/10.1111/maps.12830)
+- **使用箇所**: `docs/plan/20260102_basalt_unified_mode_plan.md` の参考文献候補
+- **主張**:
+  - 大気突入に伴う玄武岩質 micrometeorite の加熱過程と存在量を整理
+  - 玄武岩質粒子の残存・損失議論の補助に利用
+
+### Kimura et al. (1997)
+- **Key**: `KimuraIshimotoMukai1997_AA326_263`
+- **Title**: A study on solar dust ring formation based on fractal dust models
+- **Journal**: A&A, 326, 263
+- **使用箇所**: 固相蒸気圧の参考（silicate/carbon）
+- **主張**:
+  - silicate/carbon dust の昇華パラメータ整理（Eq.6 の形）
+
+### Kobayashi et al. (2011)
+- **Key**: `Kobayashi2011_EPS63_1067`
+- **Title**: Sublimation temperature of circumstellar dust particles and its importance for dust ring formation
+- **Journal**: Earth, Planets and Space, 63, 1067–1075
+- **DOI**: [10.5047/eps.2011.03.012](https://doi.org/10.5047/eps.2011.03.012)
+- **使用箇所**: 固相の昇華温度整理
+- **主張**:
+  - 組成別の昇華温度と温度依存の整理を提供
+
+### Ferguson & Nuth (2012)
+- **Key**: `FergusonNuth2012_JCED57_721`
+- **Title**: Vapor Pressure and Evaporation Coefficient of Silicon Monoxide over a Mixture of Silicon and Silica
+- **Journal**: J. Chem. Eng. Data, 57, 721–728
+- **DOI**: [10.1021/je200693d](https://doi.org/10.1021/je200693d)
+- **使用箇所**: 蒸発係数 α_evap の既定値
+- **主張**:
+  - SiO の蒸気圧と蒸発係数を実験的に評価
+
+### Briani et al. (2013)
+- **Key**: `Briani2013_arXiv`
+- **Title**: Simulations of micrometeoroid interactions with the Earth atmosphere
+- **Journal**: arXiv:1302.3666
+- **使用箇所**: micrometeoroid 蒸気圧係数の補助
+- **主張**:
+  - Love & Brownlee 係数の log10 運用例を示す
+
 ---
 
 ## 8. 光学特性・Mie理論
@@ -521,6 +618,33 @@
   - 1026–1640 A の反射率と Kramers-Kronig 解析から n, k を推定
   - シリケート試料の UV 光学特性を整理
 
+### Egan et al. (1975)
+- **Key**: `Egan1975_Icarus25_344`
+- **Title**: Ultraviolet complex refractive index of Martian dust: Laboratory measurements of terrestrial analogs
+- **Journal**: Icarus, 25, 344–355
+- **DOI**: [10.1016/0019-1035(75)90029-9](https://doi.org/10.1016/0019-1035(75)90029-9)
+- **使用箇所**: 0.10 μm 未満の UV n,k 補完候補
+- **主張**:
+  - Martian dust の UV 屈折率（地上アナログ測定）を提供
+
+### Pollack et al. (1973)
+- **Key**: `PollackToonKhare1973_Icarus19_372`
+- **Title**: Optical properties of some terrestrial rocks and glasses
+- **Journal**: Icarus, 19, 372–389
+- **DOI**: [10.1016/0019-1035(73)90115-2](https://doi.org/10.1016/0019-1035(73)90115-2)
+- **使用箇所**: 玄武岩/玄武岩質ガラスの n,k 補完候補
+- **主張**:
+  - 岩石・ガラスの光学定数を可視〜中赤外で整理
+
+### Arakawa et al. (1991)
+- **Key**: `Arakawa1991_IAUC126_102`
+- **Title**: Optical Constants of Basaltic Glass from 0.0173 To 50 μm
+- **Journal**: IAU Colloquium 126, 102–104
+- **DOI**: [10.1017/S0252921100066574](https://doi.org/10.1017/S0252921100066574)
+- **使用箇所**: 玄武岩質ガラスの n,k 補完候補
+- **主張**:
+  - 0.0173–50 μm の光学定数を示す（数表の有無は要確認）
+
 ### Demyk et al. (2022)
 - **Key**: `Demyk2022_AA666_A192`
 - **Title**: Low-temperature optical constants of amorphous silicate dust analogues
@@ -548,6 +672,14 @@
 
 光学的深さと遮蔽効果の計算。
 **Analysis参照**: `analysis/equations.md` (E.015–E.017, E.028, E.031) の Φ 適用と τ=1 クリップを参照。
+
+### Chandrasekhar (1960)
+- **Key**: `Chandrasekhar1960_Book`
+- **Title**: Radiative Transfer
+- **Publisher**: 未確認
+- **使用箇所**: 放射輸送の基本式（Φ テーブルの前提）
+- **主張**:
+  - 伝達方程式の古典的定式化を与える
 
 ### Joseph et al. (1976)
 - **Key**: `Joseph1976_JAS33_2452`

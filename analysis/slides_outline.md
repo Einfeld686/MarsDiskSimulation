@@ -14,10 +14,10 @@
 
 | slide_id | title | source_section | type | goal | key_points | eq_refs | fig_refs | run_refs |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| S01 | 火星衛星 Phobos・Deimos の謎 | intro §1.1 | framing | 2つの衛星の起源問題と仮説を一目で示す | 捕獲 vs 巨大衝突仮説の対比表; 軌道特性（ほぼ円軌道、赤道面）が巨大衝突を示唆; Rosenblatt 2011, Canup & Salmon 2018 | - | - | - |
+| S01 | 火星衛星 Phobos・Deimos の謎 | intro §1.1 | framing | 2つの衛星の起源問題と仮説を一目で示す | 捕獲 vs 巨大衝突仮説の対比表; 軌道特性（ほぼ円軌道、赤道面）が巨大衝突を示唆; Rosenblatt 2011, [@CanupSalmon2018_SciAdv4_eaar6887]| - | - | - |
 | S02 | 巨大衝突と Gas-poor 円盤 | intro §1.2-1.3 | background | gas-poor 前提の根拠を整理する | intro §1.2 の Mermaid フロー図を転用; Hyodo+2017/2018 の蒸気比≲数%; TL2003 が適用外の理由 | - | - | RUN_MARS_GASPOOR_v01 |
 | S03 | 研究目的と主要出力 | intro §2 | goal | シミュレーションで何を計算するかを明示 | 4つの物理過程リスト; 主要出力テーブル（Ṁ_out, M_loss, PSD, a_blow）; 2年間の質量損失履歴 | - | - | RUN_TEMP_SUPPLY_SWEEP_v01 |
-| S04 | 放射圧ブローアウト | intro §3.1 | physics | β と a_blow の定義とパラメータ依存性 | β 式を図示; β > 0.5 → 脱出; T_M, ⟨Q_pr⟩, ρ の影響; Burns+1979, Strubbe & Chiang 2006 | E.013,E.014 | FIG_BETA_SERIES_01 | RUN_TEMP_DRIVER_v01 |
+| S04 | 放射圧ブローアウト | intro §3.1 | physics | β と a_blow の定義とパラメータ依存性 | β 式を図示; β > 0.5 → 脱出; T_M, ⟨Q_pr⟩, ρ の影響; Burns+1979, [@StrubbeChiang2006_ApJ648_652]| E.013,E.014 | FIG_BETA_SERIES_01 | RUN_TEMP_DRIVER_v01 |
 | S05 | 衝突カスケード | intro §3.2 | physics | Smoluchowski 方程式と衝突寿命の概要 | Smoluchowski 式の直感的説明; K_ij（断面積×速度）と Y_kij（破片分配）; t_coll = 1/(Ωτ) | E.006,E.010 | - | RUN_WAVY_PSD_v01 |
 | S06 | 昇華と自遮蔽 | intro §3.3-3.4 | physics | 高温環境での質量損失と光学的厚さの効果 | HKL 式と p_sat; gas-poor では P_gas ≈ 0; Σ_surf ≤ Σ_{τ=1} クリップ | E.015,E.016,E.017,E.018 | FIG_SHIELDING_SERIES_01 | - |
 | S07 | 物理過程の相互作用 | intro §4 | model | 全体フローを俯瞰図で示す | intro §4 の ASCII 図をビジュアル化した Mermaid flowchart; 衝突→供給→相判定→シンク→収支の流れ | - | - | - |

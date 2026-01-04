@@ -17,14 +17,14 @@
   - $F_{LF} > 0.5$: Cratering mode with `f_ke_cratering` (default 0.1)
   - $F_{LF} \le 0.5$: Fragmentation mode with `f_ke_fragmentation` (default $\varepsilon^2$)
   - Diagnostics: `n_cratering`, `n_fragmentation`, `frac_cratering`, `frac_fragmentation`
-- **Surface Energy Floor**: Implemented Krijt & Kama (2014) constraint (E.053):
+- **Surface Energy Floor**: Implemented [@KrijtKama2014_AA566_L2] constraint (E.053):
   - New configuration `surface_energy.enabled`, `gamma_J_m2`, `eta`
   - Output column `s_min_surface_energy` in `series/run.parquet`
   - Integrated into `s_min_effective` candidate selection
 - **CollisionStepContext Refactoring**: Grouped 27+ collision step arguments into 5 dataclasses:
   - `TimeOrbitParams`, `MaterialParams`, `DynamicsParams`, `SupplyParams`, `CollisionControlFlags`
   - Simplified `step_collisions_smol_0d` call signature
-- **Provenance Report Update**: Extended Traceability Graph with Thébault (2003), Krivov (2006), Krijt & Kama (2014)
+- **Provenance Report Update**: Extended Traceability Graph with Thébault (2003), [@Krivov2006_AA455_509], [@KrijtKama2014_AA566_L2]
 - **Documentation**: Updated `analysis/equations.md` with E.047–E.053; updated `analysis/methods.md` §3.2
 
 ## [2025-12-18] Physics Flow Document Upgrade
