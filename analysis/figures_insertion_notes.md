@@ -147,3 +147,19 @@
   - HKL式の感度説明に使うため、飽和蒸気圧の対数軸を推奨。
 
 ---
+
+### 6.3 `paper/references/` 欠落PDFメモ（introduction.md 1.1 追加文献）
+
+`analysis/introduction.md` の 1.1 節で追加した参照について、`paper/references/` に PDF が未配置のものを列挙する。
+
+- `Fraeman2012_JGR117_E00J15`
+- `Fraeman2014_Icarus229_196`
+- `Pajola2013_ApJ777_127`
+- `Pieters2014_PSS102_144`
+- `Andert2010_GRL37_9`
+- `Giuranna2011_PSS59_1308`
+- `Glotch2018_JGRPlanets123_2467`
+- `KuzminZabalueva2003_SSR37_480`
+- `Wada2018_PEPS5_82`
+- `Thomas1989_Icarus77_248`
+- `Hu2020_GRL47_e2019GL085958`

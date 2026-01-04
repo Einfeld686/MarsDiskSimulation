@@ -152,6 +152,105 @@
   - 捕獲 vs 衝突仮説の観測要件整理
   - gas-poor vs gas-rich の位置付け
 
+### Fraeman et al. (2012)
+- **Key**: `Fraeman2012_JGR117_E00J15`
+- **Title**: Analysis of disk-resolved OMEGA and CRISM spectral observations of Phobos and Deimos
+- **Journal**: J. Geophys. Res. Planets, 117, E00J15
+- **DOI**: [10.1029/2012JE004137](https://doi.org/10.1029/2012JE004137)
+- **使用箇所**: VIS-NIR 反射スペクトル・2.8 um 帯の弱吸収
+- **主張**:
+  - CRISM/OMEGA の反射スペクトルを整理し、弱い吸収帯と赤いスペクトル傾斜を報告
+
+### Fraeman et al. (2014)
+- **Key**: `Fraeman2014_Icarus229_196`
+- **Title**: Spectral absorptions on Phobos and Deimos in the visible/near infrared wavelengths and their compositional constraints
+- **Journal**: Icarus, 229, 196–205
+- **DOI**: [10.1016/j.icarus.2013.11.021](https://doi.org/10.1016/j.icarus.2013.11.021)
+- **使用箇所**: VIS-NIR 吸収帯の検出と組成制約
+- **主張**:
+  - 0.6–0.7 um と 2.8 um 付近の弱い吸収を報告し、含水鉱物の可能性を議論
+
+### Pajola et al. (2013)
+- **Key**: `Pajola2013_ApJ777_127`
+- **Title**: Phobos as a D-type captured asteroid, spectral modeling from 0.25 to 4.0 microns
+- **Journal**: ApJ, 777, 127
+- **DOI**: [10.1088/0004-637X/777/2/127](https://doi.org/10.1088/0004-637X/777/2/127)
+- **使用箇所**: D 型小惑星とのスペクトル整合
+- **主張**:
+  - Phobos スペクトルが D 型小惑星モデルで再現可能であることを示す
+
+### Pieters et al. (2014)
+- **Key**: `Pieters2014_PSS102_144`
+- **Title**: Composition of surface materials on the moons of Mars
+- **Journal**: Planetary and Space Science, 102, 144–151
+- **DOI**: [10.1016/j.pss.2014.02.008](https://doi.org/10.1016/j.pss.2014.02.008)
+- **使用箇所**: 低アルベド・スペクトル解釈・空間風化の整理
+- **主張**:
+  - 低アルベドとスペクトル解釈の不確かさを整理し、空間風化の影響を議論
+
+### Andert et al. (2010)
+- **Key**: `Andert2010_GRL37_9`
+- **Title**: Precise mass determination and the nature of Phobos
+- **Journal**: Geophysical Research Letters, 37(9)
+- **DOI**: [10.1029/2009GL041829](https://doi.org/10.1029/2009GL041829)
+- **使用箇所**: Phobos の低密度・高空隙率の根拠
+- **主張**:
+  - 追跡データから Phobos の低密度を示し、内部の高空隙率を示唆
+
+### Giuranna et al. (2011)
+- **Key**: `Giuranna2011_PSS59_1308`
+- **Title**: Compositional interpretation of PFS/MEx and TES/MGS thermal infrared spectra of Phobos
+- **Journal**: Planetary and Space Science, 59, 1308–1325
+- **DOI**: [10.1016/j.pss.2011.01.019](https://doi.org/10.1016/j.pss.2011.01.019)
+- **使用箇所**: MID-IR 放射率スペクトルの解釈
+- **主張**:
+  - 炭素質隕石と一致しない放射率を示し、シリケート成分を示唆
+
+### Glotch et al. (2018)
+- **Key**: `Glotch2018_JGRPlanets123_2467`
+- **Title**: MGS-TES spectra suggest a basaltic component in the regolith of Phobos
+- **Journal**: J. Geophys. Res. Planets, 123, 2467–2484
+- **DOI**: [10.1029/2018JE005647](https://doi.org/10.1029/2018JE005647)
+- **使用箇所**: MID-IR 放射率の玄武岩成分の根拠
+- **主張**:
+  - TES スペクトルに玄武岩成分が含まれる可能性を示す
+
+### Kuzmin & Zabalueva (2003)
+- **Key**: `KuzminZabalueva2003_SSR37_480`
+- **Title**: The temperature regime of the surface layer of the Phobos regolith in the region of the potential Fobos-Grunt space station landing site
+- **Journal**: Solar System Research, 37, 480–488
+- **DOI**: [10.1023/b:sols.0000007946.02888.bd](https://doi.org/10.1023/b:sols.0000007946.02888.bd)
+- **使用箇所**: 低熱慣性・表層温度の根拠
+- **主張**:
+  - Phobos 表層の温度・熱慣性が低いことを示す
+
+### Wada et al. (2018)
+- **Key**: `Wada2018_PEPS5_82`
+- **Title**: Asteroid Ryugu before the Hayabusa2 encounter
+- **Journal**: Progress in Earth and Planetary Science, 5, 82
+- **DOI**: [10.1186/s40645-018-0237-y](https://doi.org/10.1186/s40645-018-0237-y)
+- **使用箇所**: 熱慣性と粒径の関係（細粒レゴリス）
+- **主張**:
+  - 低熱慣性がサブミリ粒径のレゴリスと整合することを示す
+
+### Thomas (1989)
+- **Key**: `Thomas1989_Icarus77_248`
+- **Title**: The shapes of small satellites
+- **Journal**: Icarus, 77, 248–274
+- **DOI**: [10.1016/0019-1035(89)90089-4](https://doi.org/10.1016/0019-1035(89)90089-4)
+- **使用箇所**: 小衛星の形状・不規則形状の根拠
+- **主張**:
+  - 小衛星の不規則形状と形状パラメータを整理
+
+### Hu et al. (2020)
+- **Key**: `Hu2020_GRL47_e2019GL085958`
+- **Title**: Equipotential figure of Phobos suggests its late accretion near 3.3 Mars radii
+- **Journal**: Geophysical Research Letters, 47, e2019GL085958
+- **DOI**: [10.1029/2019GL085958](https://doi.org/10.1029/2019GL085958)
+- **使用箇所**: ロシュ限界近傍での集積形状の根拠
+- **主張**:
+  - Phobos の形状が 3.3 R_M 近傍の等ポテンシャル形状と整合することを示す
+
 ---
 
 ## 2. 放射圧・Blow-out・デブリディスク物理
