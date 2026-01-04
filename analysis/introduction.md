@@ -32,7 +32,15 @@
 | 捕獲起源 | 小天体が火星に捕獲されたとする。 |
 | 巨大衝突起源 | 火星への巨大衝突で生じた円盤から集積したとする。 |
 
-捕獲起源は、スペクトルが小天体に似る点と整合し得る一方、ほぼ円軌道で赤道面に近い軌道をどのように作るかが論点になる。巨大衝突起源は、赤道面に近い円盤からの集積で軌道の特徴を説明しやすい（[@CanupSalmon2018_SciAdv4_eaar6887]; [@Hyodo2018_ApJ860_150]）。一方で、起源自体は未確定であり、in situ 形成と捕獲の双方が残ることが整理されている（Kuramoto, 2024）。同レビューは、in situ の中では巨大衝突が最も成功しているシナリオであるとも述べている。したがって本研究は、巨大衝突起源を仮定した場合の円盤散逸に焦点を当てる。起源論の整理としては、[@Rosenblatt2019_arXiv] も参照できる。
+捕獲起源は、スペクトルが小天体に似る点と整合し得る一方、ほぼ円軌道で赤道面に近い軌道をどのように作るかが論点になる。巨大衝突起源は、赤道面に近い円盤からの集積で軌道の特徴を説明しやすい（[@CanupSalmon2018_SciAdv4_eaar6887]; [@Hyodo2018_ApJ860_150]）。一方で、起源自体は未確定であり、in situ 形成と捕獲の双方が残ることが整理されている（[@Kuramoto2024]）。同レビューは、捕獲起源と巨大衝突起源の観測要件を整理し、gas-poor / gas-rich の円盤条件の位置付けを明確化している（[@Kuramoto2024]）。同レビューは、in situ の中では巨大衝突が最も成功しているシナリオであるとも述べている。したがって本研究は、巨大衝突起源を仮定した場合の円盤散逸に焦点を当てる。起源論の整理としては、[@Rosenblatt2019_arXiv] も参照できる。
+
+[@Kuramoto2024] に基づくと、物性値の整合は次のように整理できる。
+
+| 観測される物性値 | 巨大衝突起源と整合しやすい読み | 捕獲起源と整合しやすい読み |
+| --- | --- | --- |
+| 低密度（C型小惑星に近い密度帯、岩石平均 ~3 g/cm^3 より低い） | 高い空隙率＝ラブルパイル的な再集積は、衝突デブリの集積と相性がよい | 内部氷が寄与する場合は低温域起源を示唆し、捕獲説と整合 |
+| 低アルベド (~0.02) とC/D/T型に近い反射スペクトル | 衝突で蒸発・凝縮した微細粒が低アルベド・弱吸収を与え得る | 炭素質小惑星に似た反射特性は捕獲説の主要根拠 |
+| 低熱慣性（20-85 J m^-2 K^-1 s^-1/2）と細粒レゴリス | 衝突園芸で細粒が蓄積する描像と整合 | 表層進化で説明可能で、単独では判別力が弱い |
 
 ### 1.2 巨大衝突円盤と本研究が扱う範囲
 
@@ -122,14 +130,14 @@ flowchart LR
 
 ### 2.3 砕ける 吹き飛ぶ 蒸発するを同時に扱う理由
 
-ガスが少ないデブリ円盤では、衝突カスケードで生じた最小破片が放射圧で吹き飛び、ブローアウトが主要な質量損失経路になり得るという一般的な整理がある（Krivov, 2010）。ただし火星周回円盤は放射源や時間スケールが異なるため、同じ因果の型がどの程度成り立つかは本研究で定量的に評価する。
+ガスが少ないデブリ円盤では、衝突カスケードで生じた最小破片が放射圧で吹き飛び、ブローアウトが主要な質量損失経路になり得るという一般的な整理がある（[@Krivov2010_arXiv]）。ただし火星周回円盤は放射源や時間スケールが異なるため、同じ因果の型がどの程度成り立つかは本研究で定量的に評価する。
 
 ここで本研究が問題として扱うのは、放射による吹き飛ばしの効率が、放射の強さだけで一意には決まらないという点である。
 
 放射圧と重力の比 $\beta$ は粒子の大きさや材質に依存し、吹き飛びやすい粒径帯を与える指標になる（[@KimuraOkamotoMukai2002_Icarus157_349]）。しかし「どれだけの質量が失われるか」は、吹き飛びの閾値に加えて、吹き飛びやすい粒子がどれだけ表層に存在するかで変わる。表層の微粒子は、次の三つの過程の競合で決まる。
 
-- **供給**: 大きな粒が衝突で砕けて小粒子を作り続ける。これを衝突カスケードと呼ぶ。衝突カスケードは、質量をより小さな粒径へ流す（Wyatt, 2008; (E.010)）。
-- **除去**: 小粒子は放射圧で力学的時間スケールで除去され得る。衝突カスケードの最小粒子側に急な切断が生じる、という整理もある（Wyatt, 2008; (E.013), (E.014), (E.009)）。
+- **供給**: 大きな粒が衝突で砕けて小粒子を作り続ける。これを衝突カスケードと呼ぶ。衝突カスケードは、質量をより小さな粒径へ流す（[@Wyatt2008]; (E.010)）。
+- **除去**: 小粒子は放射圧で力学的時間スケールで除去され得る。衝突カスケードの最小粒子側に急な切断が生じる、という整理もある（[@Wyatt2008]; (E.013), (E.014), (E.009)）。
 - **表層の制限**: 円盤が光学的に厚い場合、放射を直接受けるのは表層に限られる。表層での外向き流出を扱った [@TakeuchiLin2003_ApJ593_524] も、流出が「光が当たる薄い表層」で起きることを強調している（(E.015)–(E.017)）。
 
 さらに、衝突が支配的かどうかで、微粒子が内側領域に残るかどうかが変わることも示されている（[@StrubbeChiang2006_ApJ648_652]）。また、巨大衝突直後の高温環境では昇華が粒径を連続的に変え、吹き飛びやすい粒径帯へ粒子を押し込んだり、吹き飛ぶ前に消したりし得る（[@Hyodo2018_ApJ860_150]）。このため本研究では、吹き飛びだけを独立に見積もるのではなく、衝突による粒径分布の時間発展と昇華を同じ時間積分の中で扱い、表層質量から外向き流束を積分して累積損失を見積もる。
@@ -289,7 +297,7 @@ flowchart LR
 | section | figure                           | status    | insert_position           | insert_text                                                                                                        | caption                                                                     | source_link_or_hint                                                    | notes                                                     |
 | ------- | -------------------------------- | --------- | ------------------------- | ------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------- | ---------------------------------------------------------------------- | --------------------------------------------------------- |
 | 3.2（補強） | [@Krivov2010_arXiv] Fig.2 | confirmed | 3.2後半（“供給と除去の結合”へ話をつなぐ直前） | デブリ円盤の一般論として、衝突カスケードで作られる粒径分布にブローアウト由来の切れ目が生じることが示されている。火星円盤では数値は異なるが、因果の型を示す参考図として使える。 | 衝突カスケードで形成される粒径分布と、ブローアウトサイズ付近の“ノッチ”を示すモデル結果。除去条件が分布形状を変えることの一般例。 | `https://arxiv.org/pdf/1003.5229.pdf` | **注意**：中心星周りデブリ円盤の一般論。数値は火星円盤へ直接適用しない。 |
-| 3.2（補強） | Thébault & [@ThebaultAugereau2007_AA472_169] Fig.7 | confirmed | 4章冒頭へ回しても可（相互作用総括の直前）     | 放射圧の“カットオフサイズ”が変わるだけで、系全体の粒径分布の形が系統的に変わる。 したがって、吹き飛び条件は“粒が飛ぶ/飛ばない”だけでなく、供給された質量がどこで止まるかを通じて質量流束を変えうる。              | 放射圧カットオフサイズの違いが、粒径分布（とくに小粒側）をどの程度変えるかを示す。除去の閾値が分布形状を決める例。                   | `paper/pdf_extractor/outputs/ThebaultAugereau2007_AA472_169/images` | **注意**：中心星デブリ円盤で時間スケールが長い。因果の形の参照に限定する旨をキャプションで明記する。 |
+| 3.2（補強） | [@ThebaultAugereau2007_AA472_169] Fig.7 | confirmed | 4章冒頭へ回しても可（相互作用総括の直前）     | 放射圧の“カットオフサイズ”が変わるだけで、系全体の粒径分布の形が系統的に変わる。 したがって、吹き飛び条件は“粒が飛ぶ/飛ばない”だけでなく、供給された質量がどこで止まるかを通じて質量流束を変えうる。              | 放射圧カットオフサイズの違いが、粒径分布（とくに小粒側）をどの程度変えるかを示す。除去の閾値が分布形状を決める例。                   | `paper/pdf_extractor/outputs/ThebaultAugereau2007_AA472_169/images` | **注意**：中心星デブリ円盤で時間スケールが長い。因果の形の参照に限定する旨をキャプションで明記する。 |
 
 ---
 
@@ -317,8 +325,8 @@ flowchart LR
 | section | figure                           | status    | insert_position             | insert_text                                                                                | caption                                                        | source_link_or_hint                                                    | notes                                                       |
 | ------- | -------------------------------- | --------- | --------------------------- | ------------------------------------------------------------------------------------------ | -------------------------------------------------------------- | ---------------------------------------------------------------------- | ----------------------------------------------------------- |
 | 4       | [@Hyodo2017a_ApJ845_125] Fig.6        | confirmed | 4章冒頭（相互作用フロー直後）             | 相互作用の出発点は「細粒が供給されるか」であり、これは衝突直後の軌道・速度分布から必然的に決まる。 まず供給側の根拠を図で固定してから、除去側へ進む。                | 高離心→高相対速度→高比エネルギーという流れを、初期条件として示す。衝突カスケードが成立しうる根拠を与える。         | `paper/pdf_extractor/outputs/Hyodo2017a_ApJ845_125/images`                                     | 4章では“供給→除去→総質量”を一本の因果として見せたいので、Fig.6は右パネル中心が良い。             |
-| 4       | [@Hyodo2018_ApJ860_150] Fig.6        | confirmed | 同上（Hyodo2017 Fig.6の右隣など、並置） | 供給された細粒が外へ出るかは、β（光の押す力と重力の比）と凝縮条件で決まる。 したがって「砕ける→飛ぶ」を同じ時間発展でつなぐ必要がある。                      | βと凝縮温度で、除去される領域が決まることを示す。供給された細粒が“いつでも飛ぶ”わけではないことが分かる。         | `paper/pdf_extractor/outputs/Hyodo2018_ApJ860_150/images`             | ここは “条件の地図”なので、次に“量”へ進む導線（下の補助図提案）を置くと筋が強くなる。               |
-| 4       | Thébault & [@ThebaultAugereau2007_AA472_169] Fig.7 | confirmed | 同上（右端に並置）                   | 除去の閾値（ブローアウトサイズ）が変わると、粒径分布が系統的に変わり、供給・除去のバランス点も変わる。 したがって損失項は、粒が飛ぶかどうかだけでなく、総質量の時間発展を変えうる。 | 放射圧カットオフサイズの違いが、粒径分布の形をどう変えるかを示す。除去の設定が分布（ひいては質量流束）を変え得る根拠になる。 | `paper/pdf_extractor/outputs/ThebaultAugereau2007_AA472_169/images` | **注意**：ここも“因果の形”の参照に留める（数値適用しない）。その注意書きをキャプション末尾へ1文で入れると安全。 |
+| 4       | [@Hyodo2018_ApJ860_150] Fig.6        | confirmed | 同上（[@Hyodo2017a_ApJ845_125] Fig.6の右隣など、並置） | 供給された細粒が外へ出るかは、β（光の押す力と重力の比）と凝縮条件で決まる。 したがって「砕ける→飛ぶ」を同じ時間発展でつなぐ必要がある。                      | βと凝縮温度で、除去される領域が決まることを示す。供給された細粒が“いつでも飛ぶ”わけではないことが分かる。         | `paper/pdf_extractor/outputs/Hyodo2018_ApJ860_150/images`             | ここは “条件の地図”なので、次に“量”へ進む導線（下の補助図提案）を置くと筋が強くなる。               |
+| 4       | [@ThebaultAugereau2007_AA472_169] Fig.7 | confirmed | 同上（右端に並置）                   | 除去の閾値（ブローアウトサイズ）が変わると、粒径分布が系統的に変わり、供給・除去のバランス点も変わる。 したがって損失項は、粒が飛ぶかどうかだけでなく、総質量の時間発展を変えうる。 | 放射圧カットオフサイズの違いが、粒径分布の形をどう変えるかを示す。除去の設定が分布（ひいては質量流束）を変え得る根拠になる。 | `paper/pdf_extractor/outputs/ThebaultAugereau2007_AA472_169/images` | **注意**：ここも“因果の形”の参照に留める（数値適用しない）。その注意書きをキャプション末尾へ1文で入れると安全。 |
 
 ---
 
@@ -332,7 +340,7 @@ flowchart LR
 
 ### 6.1 最小セット（背骨3枚）の完成度チェック＋補助図1枚提案
 
-あなたが挙げた背骨3枚（Fig.2 → Hyodo2017 Fig.6 → Hyodo2018 Fig.6 + Thébault Fig.7）は、
+あなたが挙げた背骨3枚（[@CanupSalmon2018_SciAdv4_eaar6887] Fig.2 → [@Hyodo2017a_ApJ845_125] Fig.6 → [@Hyodo2018_ApJ860_150] Fig.6 + [@ThebaultAugereau2007_AA472_169] Fig.7）は、
 「円盤質量が効く」→「砕けて細粒が供給される」→「飛ぶ条件があり、分布も変わる」までを繋げられています。
 
 ただしご指摘どおり、“総質量が動く”を一段強くするには、**除去条件（Fig.6）が“量としてどれくらい除去するか”へ接続**されている方が客観性が上がります。そこで補助図は1枚だけ、次を推します。
@@ -359,27 +367,27 @@ flowchart LR
 
 ## 参考文献
 
-Benz, W., & Asphaug, E. (1999). *Icarus*, 142, 5–20. doi:10.1006/icar.1999.6204  
-Burns, J. A., Lamy, P. L., & Soter, S. (1979). *Icarus*, 40, 1–48. doi:10.1016/0019-1035(79)90050-2  
-Canup, R. M., & Salmon, J. (2018). *Science Advances*, 4(4), eaar6887. doi:10.1126/sciadv.aar6887  
-Citron, R., Genda, H., & Ida, S. (2015). *Icarus*, 252, 334–338. doi:10.1016/j.icarus.2015.02.011  
-Crida, A., & Charnoz, S. (2012). *Science*, 338, 1196–1199. doi:10.1126/science.1228006  
-Hyodo, R., Genda, H., Charnoz, S., & Rosenblatt, P. (2017). *The Astrophysical Journal*, 845, 125. doi:10.3847/1538-4357/aa81c4  
-Hyodo, R., Genda, H., Rosenblatt, P., & Charnoz, S. (2017). *The Astrophysical Journal*, 851, 122. doi:10.3847/1538-4357/aa9984  
-Hyodo, R., Genda, H., Charnoz, S., Pignatale, F. C. F., & Rosenblatt, P. (2018). *The Astrophysical Journal*, 860, 150. doi:10.3847/1538-4357/aac024  
-Kimura, H., Okamoto, H., & Mukai, T. (2002). *Icarus*, 157, 349–361. doi:10.1006/icar.2002.6849  
-Krivov, A. (2010). *Research in Astronomy and Astrophysics*, 10(5), 383–414. doi:10.1088/1674-4527/10/5/001  
-Kuramoto, K. (2024). *Annual Review of Earth and Planetary Sciences*, 52, 495–519. doi:10.1146/annurev-earth-040522-110615  
-Pignatale, F. C. F., Charnoz, S., Chaussidon, M., & Tosi, N. (2018). arXiv:1712.05154.  
-Rosenblatt, P., & Charnoz, S. (2012). *Icarus*, 221(2), 806–815. doi:10.1016/j.icarus.2012.09.009  
-Rosenblatt, P., Charnoz, S., Dunseath, K., Terao-Dunseath, M., Trinh, A., Hyodo, R., Genda, H., & Toupin, S. (2016). *Nature Geoscience*, 9(8), 581–583. doi:10.1038/ngeo2742  
-Rosenblatt, P., Hyodo, R., Pignatale, F. C. F., Trinh, A., Charnoz, S., Dunseath, K. M., Terao-Dunseath, M., & Genda, H. (2019). *The formation of the Martian moons*. arXiv:1909.03996.  
-Ronnet, T., Bourrier, V., Leinhardt, Z. M., & Charnoz, S. (2016). *The Astrophysical Journal*, 828, 109. doi:10.3847/0004-637X/828/2/109  
-Salmon, J., Charnoz, S., Crida, A., & Brahic, A. (2010). *Icarus*, 209(2), 771–785. doi:10.1016/j.icarus.2010.05.030  
-Strubbe, L. E., & Chiang, E. I. (2006). *The Astrophysical Journal*, 648, 652–665. doi:10.1086/505736  
-Takeuchi, T., & Lin, D. N. C. (2003). *The Astrophysical Journal*, 593, 524. doi:10.1086/376496  
-Thebault, P., & Augereau, J.-C. (2007). *A&A*, 472, 169–185. doi:10.1051/0004-6361:20077789  
-Wyatt, M. C. (2008). *Annual Review of Astronomy and Astrophysics*, 46, 339–383. doi:10.1146/annurev.astro.45.051806.110525  
+[@BenzAsphaug1999_Icarus142_5] Benz, W., & Asphaug, E. (1999). *Icarus*, 142, 5–20. doi:10.1006/icar.1999.6204  
+[@Burns1979_Icarus40_1] Burns, J. A., Lamy, P. L., & Soter, S. (1979). *Icarus*, 40, 1–48. doi:10.1016/0019-1035(79)90050-2  
+[@CanupSalmon2018_SciAdv4_eaar6887] Canup, R. M., & Salmon, J. (2018). *Science Advances*, 4(4), eaar6887. doi:10.1126/sciadv.aar6887  
+[@Citron2015_Icarus252_334] Citron, R., Genda, H., & Ida, S. (2015). *Icarus*, 252, 334–338. doi:10.1016/j.icarus.2015.02.011  
+[@CridaCharnoz2012_Science338_1196] Crida, A., & Charnoz, S. (2012). *Science*, 338, 1196–1199. doi:10.1126/science.1228006  
+[@Hyodo2017a_ApJ845_125] Hyodo, R., Genda, H., Charnoz, S., & Rosenblatt, P. (2017). *The Astrophysical Journal*, 845, 125. doi:10.3847/1538-4357/aa81c4  
+[@Hyodo2017b_ApJ851_122] Hyodo, R., Genda, H., Rosenblatt, P., & Charnoz, S. (2017). *The Astrophysical Journal*, 851, 122. doi:10.3847/1538-4357/aa9984  
+[@Hyodo2018_ApJ860_150] Hyodo, R., Genda, H., Charnoz, S., Pignatale, F. C. F., & Rosenblatt, P. (2018). *The Astrophysical Journal*, 860, 150. doi:10.3847/1538-4357/aac024  
+[@KimuraOkamotoMukai2002_Icarus157_349] Kimura, H., Okamoto, H., & Mukai, T. (2002). *Icarus*, 157, 349–361. doi:10.1006/icar.2002.6849  
+[@Krivov2010_arXiv] Krivov, A. (2010). *Research in Astronomy and Astrophysics*, 10(5), 383–414. doi:10.1088/1674-4527/10/5/001  
+[@Kuramoto2024] Kuramoto, K. (2024). *Annual Review of Earth and Planetary Sciences*, 52, 495–519. doi:10.1146/annurev-earth-040522-110615  
+[@Pignatale2018_ApJ853_118] Pignatale, F. C. F., Charnoz, S., Chaussidon, M., & Tosi, N. (2018). arXiv:1712.05154.  
+[@Rosenblatt2012_Icarus221_806] Rosenblatt, P., & Charnoz, S. (2012). *Icarus*, 221(2), 806–815. doi:10.1016/j.icarus.2012.09.009  
+[@Rosenblatt2016_NatGeo9_8] Rosenblatt, P., Charnoz, S., Dunseath, K., Terao-Dunseath, M., Trinh, A., Hyodo, R., Genda, H., & Toupin, S. (2016). *Nature Geoscience*, 9(8), 581–583. doi:10.1038/ngeo2742  
+[@Rosenblatt2019_arXiv] Rosenblatt, P., Hyodo, R., Pignatale, F. C. F., Trinh, A., Charnoz, S., Dunseath, K. M., Terao-Dunseath, M., & Genda, H. (2019). *The formation of the Martian moons*. arXiv:1909.03996.  
+[@Ronnet2016_ApJ828_109] Ronnet, T., Bourrier, V., Leinhardt, Z. M., & Charnoz, S. (2016). *The Astrophysical Journal*, 828, 109. doi:10.3847/0004-637X/828/2/109  
+[@SalmonCharnozBrahic2010_Icarus209_771] Salmon, J., Charnoz, S., Crida, A., & Brahic, A. (2010). *Icarus*, 209(2), 771–785. doi:10.1016/j.icarus.2010.05.030  
+[@StrubbeChiang2006_ApJ648_652] Strubbe, L. E., & Chiang, E. I. (2006). *The Astrophysical Journal*, 648, 652–665. doi:10.1086/505736  
+[@TakeuchiLin2003_ApJ593_524] Takeuchi, T., & Lin, D. N. C. (2003). *The Astrophysical Journal*, 593, 524. doi:10.1086/376496  
+[@ThebaultAugereau2007_AA472_169] Thebault, P., & Augereau, J.-C. (2007). *A&A*, 472, 169–185. doi:10.1051/0004-6361:20077789  
+[@Wyatt2008] Wyatt, M. C. (2008). *Annual Review of Astronomy and Astrophysics*, 46, 339–383. doi:10.1146/annurev.astro.45.051806.110525  
 
 > **数式定義**: `analysis/equations.md`  
 > **実装スコープと計算フロー**: `analysis/overview.md`  
