@@ -1,35 +1,74 @@
 .DS_Store
+Thumbs.db
 .vscode/
-*.o
+.idea/
+*.swp
+*.swo
+*~
+
+# Python virtualenvs
+.venv/
+venv/
+env/
+marsdisk/.venv/
+
+# Python bytecode / cache artifacts
+__pycache__/
+**/__pycache__/
+*.py[cod]
+*.pyd
+*.so
+*.dylib
+
+# Python tooling caches
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+.hypothesis/
+*.egg-info/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Build artifacts
 bin/
 build/
-output/
-/output/
-.venv/
-marsdisk/.venv/
-# Python bytecode / cache artifacts
-**/__pycache__/
-__pycache__/
-*.py[cod]
-.ipynb_checkpoints/
-.DS_Store
+dist/
+*.o
+
+# Archives
 *.zip
-.venv/
-__pycache__/
+
+# Outputs/logs
 out/
+output/
 results/
-.ipynb_checkpoints/
-simulation_results
-.venv/
-__pycache__/
-out/
-results/
-.ipynb_checkpoints/
-simulation_results
-out/
-results/
-__pycache__/
+simulation_results/
+_logs/
+logs/
+*.log
+profile*.out
+*.prof
+*.pstats
+
+# Temp/debug artifacts
+tmp/
+tmp*/
+tmp_debug*/
+tmp*.tar.gz
+tmp*.txt
+*.tmp
+*.bak
+
+# Slides (local renders)
 slides/
+
+# Keep analysis docs tracked, except pipeline stamp
 !analysis/
 !analysis/**/
 !analysis/**/*.md
@@ -37,6 +76,8 @@ slides/
 !analysis/**/*.ipynb
 !analysis/**/*.png
 analysis/.analysis_pipeline_stamp
+
+# agent_test outputs
 !agent_test/
 !agent_test/**
 agent_test/**/__pycache__/
@@ -44,4 +85,3 @@ agent_test/**/*.py[cod]
 agent_test/**/.DS_Store
 agent_test/agent_runs/
 agent_test/tmp*/
-tmp_debug*/
