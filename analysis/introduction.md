@@ -69,49 +69,57 @@ Kuramoto (2024) の整理に沿って、物性・組成と力学特性を分け�
 
 本研究が更新するのは、粘性進化が始まる前の内側貯蔵庫 $M_{\rm in}$ である。この更新は、遮蔽された表層での供給（衝突カスケード）と変質（昇華）と除去（放射圧）の競合、および表層再供給の速さで決まる。
 
-以下の図は、先行研究を入力・接続・出力の役割に分け、接続の欠損（未解決点）と本研究の位置を示したものである。まず全体像を図 1.2a に示し、欠けたリンクの中身は図 1.2b で拡大する。図中は機能名を短く示し、代表文献は図の下に整理する。図 1.2b に付記した代表値（2000 K、蒸気<5%、1.5 m、10-40% など）は Hyodo et al. (2017a, 2018) の結果に基づく。
+以下の図は、先行研究を入力・接続・出力の役割に分け、接続の欠損（未解決点）と本研究の位置を示したものである。まず全体像を図 1.2a に示し、欠けたリンクの中身は図 1.2b で拡大する。図 1.2a は時間発展（左→右）と受け渡しの役割を一本化し、代表文献は図中に併記する。図 1.2b に付記した代表値（2000 K、蒸気<5%、1.5 m、10-40% など）は Hyodo et al. (2017a, 2018) の結果に基づく。
 
 （図 1.2a）
 
 ```mermaid
 flowchart LR
-    %% ===== 入力 =====
-    subgraph IN["入力：巨大衝突直後の内側円盤（初期条件）"]
-        IN1["SPH初期条件<br/>質量分布・温度・相・粒径"]
-        IN2["内側への質量集中／外側の低密度化"]
+    %% ===== 見た目（任意：レンダラ依存） =====
+    classDef input fill:#e1f5fe,stroke:#01579b,stroke-width:2px;
+    classDef update fill:#fff3e0,stroke:#e65100,stroke-width:3px,stroke-dasharray: 5 5;
+    classDef connect fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px;
+    classDef output fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px;
+
+    %% ===== Phase 1: SPH（初期条件） =====
+    subgraph P1["Phase 1: 衝突直後の物理状態 (t ≲ 数十時間)"]
+        direction TB
+        SPH["<b>SPH衝突シミュレーション</b><br/>(Citron et al. 2015; Hyodo et al. 2017a)"]:::input
+        D0["<b>初期入力値</b><br/>・2000K 高温溶融状態 (>95%)<br/>・揮発性蒸気分率 (<5%)<br/>・初期粒径: ~1.5m 溶融滴<br/>(Hyodo et al. 2017a)"]:::input
+        SPH --> D0
     end
 
-    %% ===== 接続 =====
-    subgraph MID["接続：内側→外側へ効く経路（モデルの受け渡し）"]
-        MID1["粘性拡散：内側落下／ロッシュ限界通過供給"]
-        MID2["連続円盤＋N体集積の接続"]
-        MID3["長期進化・移動／共鳴の議論"]
-        GAP["未解決：短期損失（砕ける→飛ぶ）が M_in 更新に未反映"]
-        OUR["本研究：遮蔽された表層での供給×除去×昇華を時間積分し、ΔM_in を推定"]
+    %% ===== Phase 2: 本研究（短期損失で更新） =====
+    subgraph P2["Phase 2: 本研究の計算範囲 (t ≲ 数年)"]
+        direction TB
+        PROC["<b>短期損失の物理的競合</b><br/>・ガス流体力学的逃げ (Hyodo et al. 2018)<br/>・衝突粉砕/カスケード (Dohnanyi 1969; Benz & Asphaug 1999)<br/>・高温昇華 (Markkanen & Agarwal 2020)<br/>・放射圧排除 (Burns et al. 1979; Hyodo et al. 2018)<br/>・表層遮蔽/垂直補充 (Takeuchi & Lin 2003)"]:::update
+        DM["<b>出力：累積質量損失 ΔM_in</b><br/>・粒径分布の時間発展<br/>・光学的厚さによる制限ノブ<br/>(本研究)"]:::update
+        D1["<b>更新された実行入力質量</b><br/>M_in^eff = M_in^0 - ΔM_in"]:::update
+        PROC --> DM --> D1
     end
 
-    %% ===== 出力 =====
-    subgraph OUT["出力：外側の集積・生存条件（衛星形成の結果）"]
-        OUT1["外側の集積・生存条件<br/>内側円盤質量M_inと供給履歴に敏感"]
+    %% ===== Phase 3: 長期進化（形成モデル） =====
+    subgraph P3["Phase 3: 衛星形成と動的進化 (t ≳ 10^3 年〜)"]
+        direction TB
+        HYB["<b>ハイブリッド集積計算</b><br/>・熱調節された粘性拡散 (Salmon & Canup 2012)<br/>・ロッシュ限界外での胚形成 (Crida & Charnoz 2012)<br/>・共鳴掃引による集積 (Rosenblatt et al. 2016)<br/>・生存質量制限 ≦ 3e-5 M_Mars (Canup & Salmon 2018)"]:::connect
+        SAT["<b>形成帰結</b><br/>・最終的な衛星の質量・軌道配置"]:::connect
+        HYB --> SAT
     end
 
-    IN1 --> MID1 --> MID2 --> OUT1
-    IN2 --> MID1
-    GAP --> OUR --> OUT1
-    IN1 --> OUR
+    %% ===== Phase 4: 観測（最終結果） =====
+    subgraph P4["Phase 4: 現在の観測制約"]
+        direction TB
+        OBS["<b>観測事実の再現確認</b><br/>・Phobos/Deimos の低密度・組成<br/>・円軌道および潮汐進化履歴<br/>(Rosenblatt et al. 2019; Kuramoto 2024)"]:::output
+    end
+
+    %% ===== 主流（本研究を挟む） =====
+    D0 --> PROC
+    D1 --> HYB
+    SAT --> OBS
+
+    %% ===== 従来の直結（短期損失を無視） =====
+    D0 -. "従来モデル：短期損失を無視<br/>(SPHから直接N体へ)" .-> HYB
 ```
-
-**図 1.2a の代表文献**
-
-| 区分 | 代表文献 |
-| --- | --- |
-| IN1 | Citron et al. (2015); Hyodo et al. (2017a); Hyodo et al. (2018) |
-| IN2 | Citron et al. (2015); Rosenblatt et al. (2016) |
-| MID1 | Salmon et al. (2010); Crida & Charnoz (2012) |
-| MID2 | Canup & Salmon (2018) |
-| MID3 | Rosenblatt & Charnoz (2012); Rosenblatt et al. (2016) |
-| GAP | Hyodo et al. (2018) |
-| OUT1 | Canup & Salmon (2018) |
 
 （図 1.2b）
 
