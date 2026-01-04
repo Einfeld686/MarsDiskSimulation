@@ -75,7 +75,7 @@ configs/<scenario>.yml
 ├── disk              # 円盤幾何（0D では必須）
 ├── inner_disk_mass   # 質量正規化
 ├── surface           # 表層モデル
-├── supply            # 外部供給（modeごとに分岐）
+├── supply            # 表層再供給（modeごとに分岐）
 ├── sinks             # 消失過程（昇華・ガス抗力）
 ├── radiation         # 放射圧（温度パラメータの統一先）
 ├── shielding         # 自遮蔽
@@ -182,7 +182,7 @@ graph LR
 | `sizes.n_bins`, `psd.alpha`, `psd.wavy_strength`, `psd.floor.*` | Dohnanyi 型カスケードの平衡傾き $q\simeq3.5$（α≈1.83）を基準に、blow-out 起源の “wavy” を感度パラメータ化しつつ、粒径比 $(a_{i+1}/a_i)\lesssim1.1$–1.3 を維持するビン分解能を採用 | [@Dohnanyi1969_JGR74_2531; @Birnstiel2011_AA525_A11; @Krivov2006_AA455_509; @ThebaultAugereau2007_AA472_169] |
 | `dynamics.f_wake`, `e0/i0`, `t_damp_orbits`, `kernel_ei_mode` | Ohtsuki 型の速度分散平衡 $c_{\rm eq}$ と高さスケール $H\simeq ia$ をベースに wake 係数で調整 | [@Ohtsuki2002_Icarus155_436] |
 | `qstar.*` (`Qs`, `a_s`, `B`, `b_g`, `v_ref_kms`, `coeff_units`, `mu_grav`) | バザルト衝突の $Q_D^*$ を Benz & Asphaug (1999) から採用し、**1–7 km/s の固定係数テーブル**を既定として速度補間する。範囲外では LS09 型の重力項外挿（$v^{-3\mu+2}$, `mu_grav` 既定0.45）のみを適用。`coeff_units` で BA99 cgs/ SI を切替（`v_ref_kms` は override 時のみ参照） | [@BenzAsphaug1999_Icarus142_5; @StewartLeinhardt2009_ApJ691_L133; @LeinhardtStewart2012_ApJ745_79] |
-| `supply.*`, `mixing.epsilon_mix` | 外部供給をサイズ別源項 S(a,r,t) として与え、バリスティック混合効率を ε_mix でパラメータ化 | [@WyattClarkeBooth2011_CeMDA111_1; @Wyatt2008; @EstradaDurisen2015_Icarus252_415; @CuzziEstrada1998_Icarus132_1] |
+| `supply.*`, `mixing.epsilon_mix` | 表層再供給をサイズ別源項 S(a,r,t) として与え、バリスティック混合効率を ε_mix でパラメータ化 | [@WyattClarkeBooth2011_CeMDA111_1; @Wyatt2008; @EstradaDurisen2015_Icarus252_415; @CuzziEstrada1998_Icarus132_1] |
 | `shielding.mode`, `shielding.table_path`, `shielding.fixed_tau1_*` | Φ(τ,ω₀,g) テーブルを δ–Eddington/HG 近似から取得し、Σ_{τ=1} は診断として記録（上限判定は `tau_stop` で停止） | [@Joseph1976_JAS33_2452; @HansenTravis1974_SSR16_527; @CogleyBergstrom1979_JQSRT22_267; @Chandrasekhar1960_RadiativeTransfer] |
 | `sinks.sub_params.*`, `sinks.T_sub`, `sinks.mu`, `sinks.alpha_evap` | SiO/SiO₂ の HKL 昇華係数と閾値を Hyodo18 の温度域・Pignatale18 の組成・Melosh/Bruning/Ojovan の相変化データに合わせる | [@Hyodo2018_ApJ860_150; @Pignatale2018_ApJ853_118; @Melosh2007_MPS42_2079; @Bruning2003_JNCS330_13; @Ojovan2021_Materials14_5235] |
 | `phase.thresholds.*`, `phase.entrypoint` | ガラス転移と液相線 1475/1986 K を閾値にした SiO₂ 状態判定 | [@Bruning2003_JNCS330_13; @Ojovan2021_Materials14_5235] |
@@ -484,9 +484,9 @@ disk:
     r_out_RM: 2.5
 ```
 
-### 3.4 `supply` — 外部供給（簡略化済み）
+### 3.4 `supply` — 表層再供給（簡略化済み）
 
-外部供給のデフォルト参照は `docs/plan/20251220_optical_depth_external_supply_impl_plan.md` と `~/.codex/plans/marsdisk-tau-sweep-phi-off.md` に限定し、それ以外の外部供給スイッチは非推奨・削除候補として扱います。`supply.mode` の非 `const` 設定や `supply.injection` / `supply.injection.velocity` の非デフォルト値は互換維持のため残していますが、**非デフォルト使用時のみ警告**（SUPPLY001）となります。
+表層再供給のデフォルト参照は `docs/plan/20251220_optical_depth_external_supply_impl_plan.md` と `~/.codex/plans/marsdisk-tau-sweep-phi-off.md` に限定し、それ以外の表層再供給スイッチは非推奨・削除候補として扱います。`supply.mode` の非 `const` 設定や `supply.injection` / `supply.injection.velocity` の非デフォルト値は互換維持のため残していますが、**非デフォルト使用時のみ警告**（SUPPLY001）となります。
 
 選択したモードのパラメータのみ記述すれば OK。他はデフォルト値が使用されます。`mode` は `"const"` / `"table"` / `"powerlaw"` / `"piecewise"` から選択でき、全モードに共通で `mixing.epsilon_mix` を指定可能です。
 
@@ -563,7 +563,7 @@ supply:
         index: -0.5
 ```
 
-Wyatt, Clarke & Booth (2011) が提示するサイズ別源・損失の解析式を一般化した形で、`mode` によって外部供給 $S(a,r,t)$ を任意の関数として与えられるようにしている [@WyattClarkeBooth2011_CeMDA111_1; @Wyatt2008]。`mixing.epsilon_mix` は、微小隕石供給をバリスティック輸送で拡げるリングモデル（Estrada & Durisen 2015）や Cuzzi & Estrada (1998) の混合係数の扱いに倣い、外部由来の粒子がどの程度空間的・サイズ的に均質化するかをパラメータ化する [@EstradaDurisen2015_Icarus252_415; @CuzziEstrada1998_Icarus132_1]。
+Wyatt, Clarke & Booth (2011) が提示するサイズ別源・損失の解析式を一般化した形で、`mode` によって表層再供給 $S(a,r,t)$ を任意の関数として与えられるようにしている [@WyattClarkeBooth2011_CeMDA111_1; @Wyatt2008]。`mixing.epsilon_mix` は、微小隕石供給をバリスティック輸送で拡げるリングモデル（Estrada & Durisen 2015）や Cuzzi & Estrada (1998) の混合係数の扱いに倣い、外部由来の粒子がどの程度空間的・サイズ的に均質化するかをパラメータ化する [@EstradaDurisen2015_Icarus252_415; @CuzziEstrada1998_Icarus132_1]。
 
 #### 📦 供給輸送経路 (`supply.transport`)
 
@@ -1061,10 +1061,10 @@ phase:
 
 **対処**: 性能が必要な実行では環境変数を外す（`MARSDISK_NUMBA_DISABLE=0` / `MARSDISK_DISABLE_NUMBA=0`）。CI やデバッグでは明示的に無効化してフォールバック経路を検証する。
 
-#### SUPPLY001: 外部供給がデフォルト構成から逸脱
+#### SUPPLY001: 表層再供給がデフォルト構成から逸脱
 
 ```text
-[WARNING] SUPPLY001: 外部供給設定がデフォルト構成から逸脱しています
+[WARNING] SUPPLY001: 表層再供給設定がデフォルト構成から逸脱しています
 ```
 
 **意味**: `optical_depth + mu_orbit10pct` のデフォルト構成から外れた供給スイッチが有効
@@ -1124,7 +1124,7 @@ python -m marsdisk.config_validator --quiet configs/scenarios/fiducial.yml
 | GAS001 | WARNING | gas_drag と rho_g の不整合 | 両方を一致させる |
 | DISK001 | WARNING | 内縁がロッシュ限界外 | r_in_RM を調整 |
 | MIGRATE001–006 | WARNING | 非推奨フィールド使用 | 新フィールドへ移行 |
-| SUPPLY001 | WARNING | 外部供給がデフォルト構成から逸脱 | デフォルト参照へ寄せる |
+| SUPPLY001 | WARNING | 表層再供給がデフォルト構成から逸脱 | デフォルト参照へ寄せる |
 
 ---
 
