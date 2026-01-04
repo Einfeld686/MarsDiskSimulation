@@ -51,13 +51,13 @@ flowchart TD
     A[巨大衝突] --> B[ロッシュ限界内<br/>高温デブリ円盤]
     A --> C[ロッシュ限界外<br/>拡散・集積領域]
 
-    B --> B1[先行研究: SPH初期条件<br/>温度/相/質量分布/粒径帯<br/>(Hyodo et al., 2017; 2018; Citron et al., 2015; Rosenblatt et al., 2016)]
-    B1 --> B2[既知: 内側質量集中<br/>外側は低密度<br/>(Citron et al., 2015; Rosenblatt et al., 2016)]
+    B --> B1[先行研究: SPH初期条件<br/>温度/相/質量分布/粒径帯<br/>(Hyodo et al., 2017, 2018, Citron et al., 2015, Rosenblatt et al., 2016)]
+    B1 --> B2[既知: 内側質量集中<br/>外側は低密度<br/>(Citron et al., 2015, Rosenblatt et al., 2016)]
     B --> B3[未解決: 短期損失の積算<br/>衝突カスケード/放射圧/昇華/遮蔽<br/>(Hyodo et al., 2017b で必要性指摘)]
     B3 --> D[本研究: 内側短期損失の定量化]
 
-    C --> C1[先行研究: 粘性拡散+N体集積<br/>(Rosenblatt & Charnoz, 2012; Canup & Salmon, 2018)]
-    C1 --> C2[既知: 生存条件の感度<br/>M_in と拡散速度<br/>(Canup & Salmon, 2018; Crida & Charnoz, 2012; Salmon et al., 2010)]
+    C --> C1[先行研究: 粘性拡散+N体集積<br/>(Rosenblatt & Charnoz, 2012, Canup & Salmon, 2018)]
+    C1 --> C2[既知: 生存条件の感度<br/>M_in と拡散速度<br/>(Canup & Salmon, 2018, Crida & Charnoz, 2012, Salmon et al., 2010)]
     D --> C2
     C2 --> F[Phobos/Deimos形成・生存評価]
 ```
