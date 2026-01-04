@@ -79,25 +79,25 @@ python -m marsdisk.run \
 ## 出典候補の洗い出し（Q_pr / HKL）
 
 ### ⟨Q_pr⟩ テーブル（玄武岩）
-- **Mie 理論の基礎**: Bohren & Huffman (1983)  
+- **Mie 理論の基礎**: [@BohrenHuffman1983_Wiley]  
   参考キー: `BohrenHuffman1983_Wiley`（`analysis/references.registry.json`）
-- **Planck 平均の参考値**: Blanco et al. (1976)  
+- **Planck 平均の参考値**: [@Blanco1976_ApSS41_447]  
   参考キー: `Blanco1976_ApSS41_447`（`analysis/references.registry.json`）
-- **光学定数のプロキシ候補**: Draine (2003) の astronomical silicate  
+- **光学定数のプロキシ候補**: [@Draine2003_SaasFee32] の astronomical silicate  
   参考キー: `Draine2003_SaasFee32`（`analysis/references.registry.json`）
 - **ギャップ**: 玄武岩（basaltic glass/rock）の **n,k データセット**がリポジトリ内に未登録。  
   ⟨Q_pr⟩作成のために、玄武岩の複素屈折率データ（波長依存）が必要。
 
 ### HKL パラメータ（玄武岩蒸気圧）
 - **既存の HKL 立て付け（SiO/SiO2 系）**:
-  - Kubaschewski (1974) の Clausius 係数（`analysis/equations.md`）
-  - Fegley & Schaefer (2012), Visscher & Fegley (2013) の液相蒸気圧フィット  
+  - [@Kubaschewski1974_Book] の Clausius 係数（`analysis/equations.md`）
+  - [@FegleySchaefer2012_arXiv], [@VisscherFegley2013_ApJL767_L12] の液相蒸気圧フィット  
     参考キー: `FegleySchaefer2012_arXiv`, `VisscherFegley2013_ApJL767_L12`
-  - Melosh (2007) の SiO 蒸気優勢の位置付け  
+  - [@Melosh2007_MPS42_2079] の SiO 蒸気優勢の位置付け  
     参考キー: `Melosh2007_MPS42_2079`
-  - Pignatale et al. (2018) の衝突円盤組成  
+  - [@Pignatale2018_ApJ853_118] の衝突円盤組成  
     参考キー: `Pignatale2018_ApJ853_118`
-- **HKL フラックスの一般形**: Markkanen & Agarwal (2020)  
+- **HKL フラックスの一般形**: [@Markkanen2020_AA643_A16]  
   参考キー: `Markkanen2020_AA643_A16`
 - **ギャップ**: 玄武岩組成に特化した **蒸気圧（P_sat）と支配蒸気種**の出典が未登録。  
   玄武岩モードでは SiO/SiO2 の既存係数を **暫定プロキシ** とするか、  
@@ -162,9 +162,9 @@ ChatGPT には以下の形式でまとめさせる:
 
 | 検証状況 | データセット名 | 著者/年 | DOI/URL | 材料 | 波長範囲と分解能 | 提供形式 | データが「数表」か「図のみ」か | 不足波長域（0.1–1000 μm 要件） | 使用上の注意 |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| **検証済み（取得可）** | ARIA: **Basalt** n,k（Pollack et al. 1973） | Pollack et al., 1973 | DOI: 10.1016/0019-1035(73)90115-2<br>ARIAデータ（原データ）: `https://eodg.atm.ox.ac.uk/ARIA/data_files/Rocks_and_Conglomerates/Basalt/Basalt_(Pollack_et_al._1973)/original/basalt_Pollack_1973.ri`<br>ARIAデータ（補間版）: `https://eodg.atm.ox.ac.uk/ARIA/data_files/Rocks_and_Conglomerates/Basalt/Basalt_(Pollack_et_al._1973)/interpolated/basalt_Pollack_1973_R.ri` | Basalt（岩石） | **0.21–50 μm**（離散点。Δλは不均一で、ARIAファイルの波長リスト依存） | **ARIAの .ri（テキスト）**。ヘッダに `#FORMAT=WAVL N K` とあり、以降は「波長 n k」の反復並び（1行に詰めて記載） | **数表（ARIAの数値テーブルとして取得可）** | **短波長側** 0.10–0.21 μm が欠ける。<br>**長波長側** 50–1000 μm が欠ける。 | **欠損（NaN）が残る**：原データでは 0.21–0.30 μm 付近で k が NaN。補間版でも NaN が残る箇所があるため、前処理（補間・除外・外挿方針）が必要。 |
-| **検証済み（取得可）** | ARIA: **Basaltic glass** n,k（Pollack et al. 1973） | Pollack et al., 1973 | DOI: 10.1016/0019-1035(73)90115-2<br>ARIAデータ（原データ）: `https://eodg.atm.ox.ac.uk/ARIA/data_files/Rocks_and_Conglomerates/Basalt/Basaltic_glass_(Pollack_et_al._1973)/original/basaltic_glass_Pollack_1973_R.ri`<br>ARIAデータ（補間版）: `https://eodg.atm.ox.ac.uk/ARIA/data_files/Rocks_and_Conglomerates/Basalt/Basaltic_glass_(Pollack_et_al._1973)/interpolated/basaltic_glass_Pollack_1973.ri` | Basaltic glass（玄武岩質ガラス） | **0.21–50 μm**（離散点。Δλは不均一） | **ARIAの .ri（テキスト）**。`#FORMAT=WAVL N K`。 | **数表（ARIAの数値テーブルとして取得可）** | **短波長側** 0.10–0.21 μm が欠ける。<br>**長波長側** 50–1000 μm が欠ける。 | 原データは n に NaN が散見され、補間版は n を埋めている一方、短波長側の k に NaN が残る（例: 0.21–0.38 μm 付近）。どちらを使うかは欠損処理方針次第。 |
-| **一部検証（論文実在は確認、ただし数表は未取得）** | “Optical Constants of Basaltic Glass from 0.0173 to 50 μm” | Arakawa et al., 1991 | DOI: 10.1017/S0252921100066574<br>PDF: `https://resolve.cambridge.org/core/services/aop-cambridge-core/content/view/1B4FCE2DEE719CEDB23A0249FD04464B/S0252921100066574a.pdf/optical_constants_of_basaltic_glass_from_00173_to_50_m.pdf` | Basaltic glass | **0.0173–50 μm**（タイトル表記） | 論文PDF（Cambridge Core） | **図のみ（Fig.1）**：本文中に「Table」を確認できず、少なくとも公開PDFでは **数表が見当たらない**。したがって取り込みには digitize が必要になる可能性が高い。 | **長波長側** 50–1000 μm が欠ける。 | 本文から、短波長側は Lamy(1978)、長波長側は Pollack(1973) を参照して「つないだ」構成である可能性が高い（独立測定の単独セットではない点に注意）。 |
+| **検証済み（取得可）** | ARIA: **Basalt** n,k（[@PollackToonKhare1973_Icarus19_372]） | [@PollackToonKhare1973_Icarus19_372]| DOI: 10.1016/0019-1035(73)90115-2<br>ARIAデータ（原データ）: `https://eodg.atm.ox.ac.uk/ARIA/data_files/Rocks_and_Conglomerates/Basalt/Basalt_(Pollack_et_al._1973)/original/basalt_Pollack_1973.ri`<br>ARIAデータ（補間版）: `https://eodg.atm.ox.ac.uk/ARIA/data_files/Rocks_and_Conglomerates/Basalt/Basalt_(Pollack_et_al._1973)/interpolated/basalt_Pollack_1973_R.ri` | Basalt（岩石） | **0.21–50 μm**（離散点。Δλは不均一で、ARIAファイルの波長リスト依存） | **ARIAの .ri（テキスト）**。ヘッダに `#FORMAT=WAVL N K` とあり、以降は「波長 n k」の反復並び（1行に詰めて記載） | **数表（ARIAの数値テーブルとして取得可）** | **短波長側** 0.10–0.21 μm が欠ける。<br>**長波長側** 50–1000 μm が欠ける。 | **欠損（NaN）が残る**：原データでは 0.21–0.30 μm 付近で k が NaN。補間版でも NaN が残る箇所があるため、前処理（補間・除外・外挿方針）が必要。 |
+| **検証済み（取得可）** | ARIA: **Basaltic glass** n,k（[@PollackToonKhare1973_Icarus19_372]） | [@PollackToonKhare1973_Icarus19_372]| DOI: 10.1016/0019-1035(73)90115-2<br>ARIAデータ（原データ）: `https://eodg.atm.ox.ac.uk/ARIA/data_files/Rocks_and_Conglomerates/Basalt/Basaltic_glass_(Pollack_et_al._1973)/original/basaltic_glass_Pollack_1973_R.ri`<br>ARIAデータ（補間版）: `https://eodg.atm.ox.ac.uk/ARIA/data_files/Rocks_and_Conglomerates/Basalt/Basaltic_glass_(Pollack_et_al._1973)/interpolated/basaltic_glass_Pollack_1973.ri` | Basaltic glass（玄武岩質ガラス） | **0.21–50 μm**（離散点。Δλは不均一） | **ARIAの .ri（テキスト）**。`#FORMAT=WAVL N K`。 | **数表（ARIAの数値テーブルとして取得可）** | **短波長側** 0.10–0.21 μm が欠ける。<br>**長波長側** 50–1000 μm が欠ける。 | 原データは n に NaN が散見され、補間版は n を埋めている一方、短波長側の k に NaN が残る（例: 0.21–0.38 μm 付近）。どちらを使うかは欠損処理方針次第。 |
+| **一部検証（論文実在は確認、ただし数表は未取得）** | “Optical Constants of Basaltic Glass from 0.0173 to 50 μm” | [@Arakawa1991_IAUC126_102]| DOI: 10.1017/S0252921100066574<br>PDF: `https://resolve.cambridge.org/core/services/aop-cambridge-core/content/view/1B4FCE2DEE719CEDB23A0249FD04464B/S0252921100066574a.pdf/optical_constants_of_basaltic_glass_from_00173_to_50_m.pdf` | Basaltic glass | **0.0173–50 μm**（タイトル表記） | 論文PDF（Cambridge Core） | **図のみ（Fig.1）**：本文中に「Table」を確認できず、少なくとも公開PDFでは **数表が見当たらない**。したがって取り込みには digitize が必要になる可能性が高い。 | **長波長側** 50–1000 μm が欠ける。 | 本文から、短波長側は [@Lamy1978_Icarus34_68]、長波長側は [@PollackToonKhare1973_Icarus19_372] を参照して「つないだ」構成である可能性が高い（独立測定の単独セットではない点に注意）。 |
 | **検証済み（本文/表確認）** | “Optical properties of silicates in the far ultraviolet” | Lamy, 1978 | DOI: 10.1016/0019-1035(78)90126-4 | Obsidian / **Basaltic glass** / **Basalt** / Andesite | **0.100–0.44 μm**（Table II の n,k） | 論文PDF（Icarus） | **数表（Table II）**（図は Figs. 3-4） | **短波長側** 0.10 μm 未満が欠ける。<br>**長波長側** 0.44–1000 μm が欠ける。 | Table II は Basaltic glass と Basalt を**別列**で提示。短波長専用で、長波長側は他データで補完が必要。 |
 
 ---
@@ -179,7 +179,7 @@ ChatGPT には以下の形式でまとめさせる:
 | **検証済み（Table 7）** | Basalt（Alkalis、**全蒸気圧**・溶融系） | **未確定**（全蒸気圧のため単一 μ はモデル仮定） | **A=4.716, B=-16037**（`log10 Pvap(bar)=A+B/T`） | **1700–2400 K（図示範囲）**<br>※フィット適用域の明示なし | **液相前提**（MAGMA code が完全溶融系を仮定）。**Tliq=1504 K**（Table 5） | DOI: 10.1016/j.icarus.2003.06.016（Table 7） |
 | **不成立（提示URLが別文書）** | （tektite相関のはず、という md 記載） | 未確認 | 未確認 | 未確認 | 未確認 | 添付.md が示す NASA NTRS `20200001785` は、実際には **隕石（chassignites/nakhlites）のSnに関するLPSC要旨**で、蒸気圧相関（Eq.(29)）とは一致しない。 |
 
-**注意（Schaefer & Fegley 2004 Table 10）**
+**注意（[@SchaeferFegley2004_Icarus169_216]Table 10）**
 - Table 10 は **蒸発（蒸気化）係数 αs** の一覧で、**P_sat(T) の A/B フィットではない**。  
   HKL の前係数（蒸発係数）としては参考になるが、**固相の蒸気圧フィットの代替にはならない**。
 
@@ -187,11 +187,11 @@ ChatGPT には以下の形式でまとめさせる:
 
 | 文献 | DOI/URL | 対象 | 相 | 式（本文記載） | 係数・単位・注意 |
 | --- | --- | --- | --- | --- | --- |
-| Love & Brownlee (1991, Icarus) | DOI: 10.1016/0019-1035(91)90085-8 | stony micrometeoroids（chondritic 想定） | 固相ベース（固液で近いと記述） | **log Pv = A − B/T** | A=10.6, B=13500。Pv は **dyn/cm^2**。**log の底は本文で明示なし**。mmol=45 g/mol（chondritic）を推定。 |
-| Briani et al. (2013, arXiv) | https://arxiv.org/abs/1302.3666 | micrometeoroid（石質想定） | ―（蒸発モデル） | **log10(psat) = A − B/T** | A=10.6, B=13500、μ=45 amu。Love & Brownlee 由来の係数を **log10 として運用**。玄武岩固相の実測ではない。 |
+| [@LoveBrownlee1991_Icarus89_26], Icarus) | DOI: 10.1016/0019-1035(91)90085-8 | stony micrometeoroids（chondritic 想定） | 固相ベース（固液で近いと記述） | **log Pv = A − B/T** | A=10.6, B=13500。Pv は **dyn/cm^2**。**log の底は本文で明示なし**。mmol=45 g/mol（chondritic）を推定。 |
+| [@Briani2013_arXiv], arXiv) | https://arxiv.org/abs/1302.3666 | micrometeoroid（石質想定） | ―（蒸発モデル） | **log10(psat) = A − B/T** | A=10.6, B=13500、μ=45 amu。Love & Brownlee 由来の係数を **log10 として運用**。玄武岩固相の実測ではない。 |
 | Genge (2017, MAPS) | DOI: 10.1111/maps.12830 | basaltic micrometeorites | 固体→部分溶融→溶融（蒸発は簡略） | **exp(A − B/T)** を含む蒸発項 | A=9.6, B=26700、mmol=45。**dimensionless Langmuir constants** と表記。玄武岩固相の実測フィットではない。 |
-| Kobayashi et al. (2011, EPS) | DOI: 10.5047/eps.2011.03.012 | obsidian / pyroxene / olivine / iron | 固相（昇華） | **Pv = P0(T) exp( − μ m_u H / (kB T) )**（Eq. 5） | Table 1 に μ(m_u), H(K), P0(dyn/cm^2)。例：Obsidian μ=37, H=34690, P0=8.18e11。**固相プロキシ候補**。 |
-| Kimura et al. (1997, A&A 326) | https://ui.adsabs.harvard.edu/abs/1997A%26A...326..263K/abstract | silicate / carbon dust | 固相（昇華） | **pi(T) = exp( − μ_i m_u/(kB T) · L_i + b_i )**（Eq. 6） | Table 1 に ρ, μ, L, b。例：Silicate ρ=3.5, μ=169, L=3.2e10, b=35（単位定義は本文に従う）。**玄武岩の直接値ではない**。 |
+| [@Kobayashi2011_EPS63_1067], EPS) | DOI: 10.5047/eps.2011.03.012 | obsidian / pyroxene / olivine / iron | 固相（昇華） | **Pv = P0(T) exp( − μ m_u H / (kB T) )**（Eq. 5） | Table 1 に μ(m_u), H(K), P0(dyn/cm^2)。例：Obsidian μ=37, H=34690, P0=8.18e11。**固相プロキシ候補**。 |
+| [@KimuraIshimotoMukai1997_AA326_263], A&A 326) | https://ui.adsabs.harvard.edu/abs/1997A%26A...326..263K/abstract | silicate / carbon dust | 固相（昇華） | **pi(T) = exp( − μ_i m_u/(kB T) · L_i + b_i )**（Eq. 6） | Table 1 に ρ, μ, L, b。例：Silicate ρ=3.5, μ=169, L=3.2e10, b=35（単位定義は本文に従う）。**玄武岩の直接値ではない**。 |
 
 #### 単位と Pa 換算（一般式としての整理）
 
@@ -205,11 +205,11 @@ ChatGPT には以下の形式でまとめさせる:
 
 #### ⟨Q_pr⟩の波長ギャップ（0.10 μm 未満と 50–1000 μm）
 
-- **短波長側の補完候補（0.10 μm 未満）**として、ARIA 内に **Egan et al. (1975)** を出典とする「Basalt」の屈折率データがあることは確認できる（DOI あり）。ただし、**波長範囲とデータファイル名はこの場で未取得**。  
+- **短波長側の補完候補（0.10 μm 未満）**として、ARIA 内に **[@Egan1975_Icarus25_344]** を出典とする「Basalt」の屈折率データがあることは確認できる（DOI あり）。ただし、**波長範囲とデータファイル名はこの場で未取得**。  
   DOI: 10.1016/0019-1035(75)90029-9（ARIA の記載）
-- **長波長側（50–1000 μm）**は、玄武岩直系の一次データが未確定だが、**Demyk 2022 STOPCODA（Mg-Fe silicate proxy）**の数表で埋められることを確認済み。方針は次の2段構え。  
+- **長波長側（50–1000 μm）**は、玄武岩直系の一次データが未確定だが、**[@Demyk2022_AA666_A192] STOPCODA（Mg-Fe silicate proxy）**の数表で埋められることを確認済み。方針は次の2段構え。  
   1. **basalt/basaltic glass で 50 μm 超の n,k を持つ一次データ**を引き続き探索（未確認）。  
-  2. 当面は **Demyk 2022 STOPCODA をプロキシ採用**し、プロキシであることを明文化する。
+  2. 当面は **[@Demyk2022_AA666_A192] STOPCODA をプロキシ採用**し、プロキシであることを明文化する。
 
 ---
 
@@ -217,8 +217,8 @@ ChatGPT には以下の形式でまとめさせる:
 
 #### 1) 玄武岩 n,k（⟨Q_pr⟩）側のギャップ
 
-1. **0.10 μm 未満**: Lamy(1978) Table II で **0.100–0.44 μm** の n,k は確認済み。**0.10 μm 未満**は別データが必要。
-2. **50–1000 μm**: Demyk 2022 STOPCODA（Mg-Fe silicate proxy）で埋められるが、**玄武岩直系の一次データは未確定**。
+1. **0.10 μm 未満**: [@Lamy1978_Icarus34_68] Table II で **0.100–0.44 μm** の n,k は確認済み。**0.10 μm 未満**は別データが必要。
+2. **50–1000 μm**: [@Demyk2022_AA666_A192] STOPCODA（Mg-Fe silicate proxy）で埋められるが、**玄武岩直系の一次データは未確定**。
 3. **欠損値（NaN）処理**: ARIA の basalt/basaltic glass いずれも NaN が残るため、補間方針（除外・線形補間・端点外挿など）を決める必要がある。
 
 #### 2) HKL（A,B,μ,valid_K）側のギャップ
@@ -233,11 +233,11 @@ ChatGPT には以下の形式でまとめさせる:
 
 ### 長波長 (>50 µm) 代替データ探索（検証メモ）
 
-以下、添付 `.md` の要件（例：⟨Q_pr⟩ 用に「n,k の出典・波長範囲・提供形式」を確定し、0.1–1000 µm のギャップを明示する）に沿って、指定 3 点（Demyk 2022 / Schaefer & Fegley 2004 / Lamy 1978）を **本文・Table を根拠に**確認したうえで、**最終採用セット（n,k + HKL）と連結ルール**を推奨確定案として整理する。
+以下、添付 `.md` の要件（例：⟨Q_pr⟩ 用に「n,k の出典・波長範囲・提供形式」を確定し、0.1–1000 µm のギャップを明示する）に沿って、指定 3 点（[@Demyk2022_AA666_A192] / [@SchaeferFegley2004_Icarus169_216]/ [@Lamy1978_Icarus34_68]）を **本文・Table を根拠に**確認したうえで、**最終採用セット（n,k + HKL）と連結ルール**を推奨確定案として整理する。
 
 ---
 
-#### 1) Demyk et al. 2022（STOPCODA/SSHADE）
+#### 1) [@Demyk2022_AA666_A192]（STOPCODA/SSHADE）
 
 **1.1 論文側レンジ・外挿方針**
 
@@ -295,7 +295,7 @@ ChatGPT には以下の形式でまとめさせる:
 
 ---
 
-#### 2) Schaefer & Fegley (2004) Table 7（HKL）
+#### 2) [@SchaeferFegley2004_Icarus169_216] Table 7（HKL）
 
 **2.1 Table 7 の式・単位（確定）**
 
@@ -329,7 +329,7 @@ ChatGPT には以下の形式でまとめさせる:
 
 ---
 
-#### 3) Lamy (1978)（短波長補完）
+#### 3) [@Lamy1978_Icarus34_68]（短波長補完）
 
 - 試料: **Obsidian / Basaltic glass / Basalt / Andesite** を扱う。
 - **Table II** に Basaltic glass / Basalt / Obsidian の **n,k 数表**が掲載。
@@ -342,15 +342,15 @@ ChatGPT には以下の形式でまとめさせる:
 
 **(A) 光学定数 n,k（0.10–1000 µm）**
 
-- **短波長（0.10–0.21 µm）**: Lamy 1978 **Basaltic glass** Table II
+- **短波長（0.10–0.21 µm）**: [@Lamy1978_Icarus34_68] **Basaltic glass** Table II
 - **重複域（0.21–0.44 µm）**: 基本は **ARIA basaltic glass**、ARIA の NaN は **Lamy で置換**
 - **中赤外（0.44–50 µm）**: ARIA basaltic glass
-- **遠赤外（50–1000 µm）**: Demyk 2022 STOPCODA の **Fe-rich 系（例：E20/E20R 相当、300 K）**
+- **遠赤外（50–1000 µm）**: [@Demyk2022_AA666_A192] STOPCODA の **Fe-rich 系（例：E20/E20R 相当、300 K）**
   - λ_FIR=1000 のサンプルを優先（測定域の最大化を優先）
 
 **(B) HKL（蒸気圧近似）**
 
-- **Schaefer & Fegley 2004 Table 7** を採用  
+- **[@SchaeferFegley2004_Icarus169_216]Table 7** を採用  
   Basalt 組成は **Tholeiites** をデフォルトとする。
 
 **連結ルール（実装仕様）**
@@ -373,7 +373,7 @@ ChatGPT には以下の形式でまとめさせる:
 #### 5) DOI/URL（まとめ）
 
 ```
-Demyk et al. 2022 (A&A) doi:10.1051/0004-6361/202243815
+[@Demyk2022_AA666_A192] doi:10.1051/0004-6361/202243815
 https://doi.org/10.1051/0004-6361/202243815
 
 STOPCODA / SSHADE (data landing)
@@ -384,25 +384,25 @@ SSHADE experiment (Demyk optical constants)
 doi:10.26302/SSHADE/EXPERIMENT_KD_20220525_002
 https://doi.org/10.26302/SSHADE/EXPERIMENT_KD_20220525_002
 
-Schaefer & Fegley 2004 (Icarus) doi:10.1016/j.icarus.2003.06.016
+[@SchaeferFegley2004_Icarus169_216] doi:10.1016/j.icarus.2003.06.016
 https://doi.org/10.1016/j.icarus.2003.06.016
 
-Lamy 1978 (Icarus) doi:10.1016/0019-1035(78)90126-4
+[@Lamy1978_Icarus34_68] doi:10.1016/0019-1035(78)90126-4
 https://doi.org/10.1016/0019-1035(78)90126-4
 
-Love & Brownlee 1991 (Icarus) doi:10.1016/0019-1035(91)90085-8
+[@LoveBrownlee1991_Icarus89_26] doi:10.1016/0019-1035(91)90085-8
 https://doi.org/10.1016/0019-1035(91)90085-8
 
-Briani et al. 2013 (arXiv)
+[@Briani2013_arXiv]
 https://arxiv.org/abs/1302.3666
 
-Genge 2017 (MAPS) doi:10.1111/maps.12830
+[@Genge2017_MAPS52_1000] doi:10.1111/maps.12830
 https://doi.org/10.1111/maps.12830
 
-Kobayashi et al. 2011 (EPS) doi:10.5047/eps.2011.03.012
+[@Kobayashi2011_EPS63_1067] doi:10.5047/eps.2011.03.012
 https://doi.org/10.5047/eps.2011.03.012
 
-Kimura et al. 1997 (A&A 326) ADS
+[@KimuraIshimotoMukai1997_AA326_263] ADS
 https://ui.adsabs.harvard.edu/abs/1997A%26A...326..263K/abstract
 ```
 
@@ -411,7 +411,7 @@ https://ui.adsabs.harvard.edu/abs/1997A%26A...326..263K/abstract
 #### 6) 追加で確定が必要な点
 
 - STOPCODA の列定義は確認済みだが、`real_intensity` / `imaginary_intensity` を **m の実部/虚部（= n/k 相当）として扱う前提**を run_card に明記する運用を決める。
-- Schaefer & Fegley (2004) Table 7 の **valid_K は明示されていない**ため、**運用上 1700–2400 K（図示範囲）を採用**したことと、根拠が図示範囲である点を記録する。
+- [@SchaeferFegley2004_Icarus169_216] Table 7 の **valid_K は明示されていない**ため、**運用上 1700–2400 K（図示範囲）を採用**したことと、根拠が図示範囲である点を記録する。
 - HKL の **μ（有効分子量）**を単一値で置く場合の定義（Na 代表 or 混合平均）を確定する。
 - **固相側の扱い**（液相のみ/外挿/別文献）を仕様として固定する。
 - **Tliq 運用**（Table 5 の 1433 K / 1504 K を採用するか）を決めて run_card に明記する。

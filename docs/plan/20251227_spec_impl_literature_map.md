@@ -242,39 +242,39 @@
 ### 放射圧・ブローアウト
 | Key | 文献 | DOI | 主な関係先 |
 | --- | --- | --- | --- |
-| Burns1979_Icarus40_1 | Burns et al. (1979) *Radiation forces on small particles in the solar system* | 10.1016/0019-1035(79)90050-2 | beta, a_blow（E.012-E.014） |
-| StrubbeChiang2006_ApJ648_652 | Strubbe & Chiang (2006) *Dust Dynamics in Debris Disks* | 10.1086/505736 | t_coll, beta=0.5（E.006-E.007） |
-| PawellekKrivov2015_MNRAS454_3207 | Pawellek & Krivov (2015) *Dust grain size-luminosity trend* | 10.1093/mnras/stv2142 | Q_pr テーブルの使用例 |
+| Burns1979_Icarus40_1 | [@Burns1979_Icarus40_1] *Radiation forces on small particles in the solar system* | 10.1016/0019-1035(79)90050-2 | beta, a_blow（E.012-E.014） |
+| StrubbeChiang2006_ApJ648_652 | [@StrubbeChiang2006_ApJ648_652] *Dust Dynamics in Debris Disks* | 10.1086/505736 | t_coll, beta=0.5（E.006-E.007） |
+| PawellekKrivov2015_MNRAS454_3207 | [@PawellekKrivov2015_MNRAS454_3207] *Dust grain size-luminosity trend* | 10.1093/mnras/stv2142 | Q_pr テーブルの使用例 |
 
 ### 衝突・Smoluchowski
 | Key | 文献 | DOI | 主な関係先 |
 | --- | --- | --- | --- |
-| Krivov2006_AA455_509 | Krivov et al. (2006) *Dust distributions in debris disks* | 10.1051/0004-6361:20064907 | C_ij と IMEX（E.010-E.011, E.024） |
-| Wyatt2008 | Wyatt (2008) *Evolution of Debris Disks* | 10.1146/annurev.astro.45.051806.110525 | t_coll スケール |
-| Birnstiel2011_AA525_A11 | Birnstiel et al. (2011) *Dust size distributions in coagulation/fragmentation equilibrium* | 10.1051/0004-6361/201015228 | ビン分解能 |
+| Krivov2006_AA455_509 | [@Krivov2006_AA455_509] *Dust distributions in debris disks* | 10.1051/0004-6361:20064907 | C_ij と IMEX（E.010-E.011, E.024） |
+| Wyatt2008 | [@Wyatt2008] *Evolution of Debris Disks* | 10.1146/annurev.astro.45.051806.110525 | t_coll スケール |
+| Birnstiel2011_AA525_A11 | [@Birnstiel2011_AA525_A11] *Dust size distributions in coagulation/fragmentation equilibrium* | 10.1051/0004-6361/201015228 | ビン分解能 |
 
 ### 破砕・残骸分率
 | Key | 文献 | DOI | 主な関係先 |
 | --- | --- | --- | --- |
-| BenzAsphaug1999_Icarus142_5 | Benz & Asphaug (1999) *Catastrophic Disruptions Revisited* | 10.1006/icar.1999.6204 | Q_D* 係数 |
-| LeinhardtStewart2012_ApJ745_79 | Leinhardt & Stewart (2012) *Collisions between gravity-dominated bodies* | 10.1088/0004-637X/745/1/79 | 破壊スケーリング |
-| StewartLeinhardt2009_ApJ691_L133 | Stewart & Leinhardt (2009) *Velocity-dependent catastrophic disruption criteria* | 10.1088/0004-637X/691/2/L133 | Q_R / 残骸分率 |
+| BenzAsphaug1999_Icarus142_5 | [@BenzAsphaug1999_Icarus142_5] *Catastrophic Disruptions Revisited* | 10.1006/icar.1999.6204 | Q_D* 係数 |
+| LeinhardtStewart2012_ApJ745_79 | [@LeinhardtStewart2012_ApJ745_79] *Collisions between gravity-dominated bodies* | 10.1088/0004-637X/745/1/79 | 破壊スケーリング |
+| StewartLeinhardt2009_ApJ691_L133 | [@StewartLeinhardt2009_ApJ691_L133] *Velocity-dependent catastrophic disruption criteria* | 10.1088/0004-637X/691/2/L133 | Q_R / 残骸分率 |
 
 ### PSD 形状・最小粒径
 | Key | 文献 | DOI | 主な関係先 |
 | --- | --- | --- | --- |
-| Dohnanyi1969_JGR74_2531 | Dohnanyi (1969) *Collisional Model of Asteroids and Their Debris* | 10.1029/JB074i010p02531 | PSD スロープ |
-| ThebaultAugereau2007_AA472_169 | Thebault & Augereau (2007) *Collisional processes and size distribution in debris discs* | 10.1051/0004-6361:20077709 | wavy PSD |
-| KrijtKama2014_AA566_L2 | Krijt & Kama (2014) *A dearth of small particles in debris disks* | 10.1051/0004-6361/201423862 | s_min 上昇 |
+| Dohnanyi1969_JGR74_2531 | [@Dohnanyi1969_JGR74_2531] *Collisional Model of Asteroids and Their Debris* | 10.1029/JB074i010p02531 | PSD スロープ |
+| ThebaultAugereau2007_AA472_169 | [@ThebaultAugereau2007_AA472_169] *Collisional processes and size distribution in debris discs* | 10.1051/0004-6361:20077709 | wavy PSD |
+| KrijtKama2014_AA566_L2 | [@KrijtKama2014_AA566_L2] *A dearth of small particles in debris disks* | 10.1051/0004-6361/201423862 | s_min 上昇 |
 
 ### 昇華・熱物性
 | Key | 文献 | DOI | 主な関係先 |
 | --- | --- | --- | --- |
-| Pignatale2018_ApJ853_118 | Pignatale et al. (2018) *On the Impact Origin of Phobos and Deimos III* | 10.3847/1538-4357/aaa5b2 | SiO 蒸気優勢 |
-| Ronnet2016_ApJ828_109 | Ronnet et al. (2016) *Reconciling the orbital and physical properties of the Martian moons* | 10.3847/0004-637X/828/2/109 | gas-poor 条件 |
-| VisscherFegley2013_ApJL767_L12 | Visscher & Fegley (2013) *Chemistry of impact-generated silicate melt-vapor debris disks* | 10.1088/2041-8205/767/1/L12 | 溶融 SiO2 蒸気圧 |
-| Bruning2003_JNCS330_13 | Bruning (2003) *On the glass transition in vitreous silica* | 10.1016/j.jnoncrysol.2003.08.051 | ガラス転移 |
-| Ojovan2021_Materials14_5235 | Ojovan (2021) *On Structural Rearrangements Near the Glass Transition Temperature in Amorphous Silica* | 10.3390/ma14185235 | 融解温度 |
+| Pignatale2018_ApJ853_118 | [@Pignatale2018_ApJ853_118] *On the Impact Origin of Phobos and Deimos III* | 10.3847/1538-4357/aaa5b2 | SiO 蒸気優勢 |
+| Ronnet2016_ApJ828_109 | [@Ronnet2016_ApJ828_109] *Reconciling the orbital and physical properties of the Martian moons* | 10.3847/0004-637X/828/2/109 | gas-poor 条件 |
+| VisscherFegley2013_ApJL767_L12 | [@VisscherFegley2013_ApJL767_L12] *Chemistry of impact-generated silicate melt-vapor debris disks* | 10.1088/2041-8205/767/1/L12 | 溶融 SiO2 蒸気圧 |
+| Bruning2003_JNCS330_13 | [@Bruning2003_JNCS330_13] *On the glass transition in vitreous silica* | 10.1016/j.jnoncrysol.2003.08.051 | ガラス転移 |
+| Ojovan2021_Materials14_5235 | [@Ojovan2021_Materials14_5235] *On Structural Rearrangements Near the Glass Transition Temperature in Amorphous Silica* | 10.3390/ma14185235 | 融解温度 |
 
 ## 12. 調査結果に基づく実装タスク（動的更新）
 
@@ -322,22 +322,22 @@
 ### gas-poor 前提・火星円盤背景
 | Key | 文献 | DOI | 主な関係先 |
 | --- | --- | --- | --- |
-| Hyodo2017a_ApJ845_125 | Hyodo et al. (2017a) *On the Impact Origin of Phobos and Deimos I* | 10.3847/1538-4357/aa80e4 | 初期条件 |
-| Hyodo2017b_ApJ851_122 | Hyodo et al. (2017b) *On the Impact Origin of Phobos and Deimos II* | 10.3847/1538-4357/aa9cec | 円盤緩和 |
-| Hyodo2018_ApJ860_150 | Hyodo et al. (2018) *On the Impact Origin of Phobos and Deimos IV* | 10.3847/1538-4357/aac024 | 放射冷却 |
-| CanupSalmon2018_SciAdv4_eaar6887 | Canup & Salmon (2018) *Origin of Phobos and Deimos...* | 10.1126/sciadv.aar6887 | 低質量円盤 |
-| Kuramoto2024 | Kuramoto (2024) *Origin of Phobos and Deimos Awaiting Direct Exploration* | 10.1146/annurev-earth-031621-064742 | 総説 |
+| Hyodo2017a_ApJ845_125 | [@Hyodo2017a_ApJ845_125] *On the Impact Origin of Phobos and Deimos I* | 10.3847/1538-4357/aa80e4 | 初期条件 |
+| Hyodo2017b_ApJ851_122 | [@Hyodo2017b_ApJ851_122] *On the Impact Origin of Phobos and Deimos II* | 10.3847/1538-4357/aa9cec | 円盤緩和 |
+| Hyodo2018_ApJ860_150 | [@Hyodo2018_ApJ860_150] *On the Impact Origin of Phobos and Deimos IV* | 10.3847/1538-4357/aac024 | 放射冷却 |
+| CanupSalmon2018_SciAdv4_eaar6887 | [@CanupSalmon2018_SciAdv4_eaar6887] *Origin of Phobos and Deimos...* | 10.1126/sciadv.aar6887 | 低質量円盤 |
+| Kuramoto2024 | [@Kuramoto2024] *Origin of Phobos and Deimos Awaiting Direct Exploration* | 10.1146/annurev-earth-031621-064742 | 総説 |
 
 ### 軌道力学・速度スケーリング
 | Key | 文献 | DOI | 主な関係先 |
 | --- | --- | --- | --- |
-| Ohtsuki2002_Icarus155_436 | Ohtsuki et al. (2002) *Evolution of Planetesimal Velocities...* | 10.1006/icar.2001.6741 | v_rel, c_eq |
-| WetherillStewart1993_Icarus106_190 | Wetherill & Stewart (1993) *Formation of planetary embryos* | 10.1006/icar.1993.1161 | v_rel レイリー |
+| Ohtsuki2002_Icarus155_436 | [@Ohtsuki2002_Icarus155_436] *Evolution of Planetesimal Velocities...* | 10.1006/icar.2001.6741 | v_rel, c_eq |
+| WetherillStewart1993_Icarus106_190 | [@WetherillStewart1993_Icarus106_190] *Formation of planetary embryos* | 10.1006/icar.1993.1161 | v_rel レイリー |
 
 ### gas-rich 参考（既定は無効）
 | Key | 文献 | DOI | 主な関係先 |
 | --- | --- | --- | --- |
-| TakeuchiLin2003_ApJ593_524 | Takeuchi & Lin (2003) *Dust Outflows in Optically Thick Gas Disks* | 10.1086/376496 | TL2003 表層 ODE |
+| TakeuchiLin2003_ApJ593_524 | [@TakeuchiLin2003_ApJ593_524] *Dust Outflows in Optically Thick Gas Disks* | 10.1086/376496 | TL2003 表層 ODE |
 
 ## 14. 更新時の注意
 

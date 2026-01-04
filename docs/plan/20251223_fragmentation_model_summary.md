@@ -38,8 +38,8 @@
 | 用語 | 英語 | 説明 |
 |------|------|------|
 | **Smoluchowski 方程式** | Smoluchowski coagulation equation | 粒子同士の衝突による個数密度変化を記述する積分微分方程式 |
-| **LS12** | Leinhardt & Stewart (2012) | 衝突破壊の最大残存核質量を与えるスケーリング則 |
-| **BA99** | Benz & Asphaug (1999) | 玄武岩様物質の破壊閾値エネルギー $Q_D^*$ の係数 |
+| **LS12** | [@LeinhardtStewart2012_ApJ745_79] | 衝突破壊の最大残存核質量を与えるスケーリング則 |
+| **BA99** | [@BenzAsphaug1999_Icarus142_5] | 玄武岩様物質の破壊閾値エネルギー $Q_D^*$ の係数 |
 | **IMEX-BDF1** | Implicit-Explicit Backward Differentiation Formula (order 1) | 硬い方程式を安定に解くための時間積分法。損失項（陰的）と生成項（陽的）を分離 |
 | **blow-out** | Radiation pressure blow-out | 放射圧が重力を上回り、粒子が軌道から脱出する現象 |
 | **PSD** | Particle Size Distribution | 粒径分布。通常パワー則 $n(s) \propto s^{-\alpha}$ で近似 |
@@ -107,7 +107,7 @@ flowchart TD
 
 - 衝突頻度カーネル C_ij: 幾何学断面 π(s_i+s_j)^2 と相対速度 v_rel、スケール高さ H_k に基づく対称行列。`marsdisk/physics/collide.py:18–110`
 - 相対速度とカーネル用 e/i: 設定値ベースか、Wyatt 型の自己調整 c_eq を用いる。`marsdisk/physics/collisions_smol.py:380–448`
-- 破壊閾値 Q_D*: Benz & Asphaug 1999 の係数（3, 5 km/s）を LS12 に従い速度補間し、範囲外では重力項を v^{-3μ+2} でスケール（μ=0.45 デフォルト）。`marsdisk/physics/qstar.py:30–249`
+- 破壊閾値 Q_D*: [@BenzAsphaug1999_Icarus142_5]の係数（3, 5 km/s）を LS12 に従い速度補間し、範囲外では重力項を v^{-3μ+2} でスケール（μ=0.45 デフォルト）。`marsdisk/physics/qstar.py:30–249`
 - 衝突エネルギーと最大残存核: 還元比エネルギー Q_R を評価し、LS12 近似で M_LR/M_tot を算出してクリップ。`marsdisk/physics/fragments.py:39–145`
 - 破片分布 Y[k,i,j]: 最大残存核をビン max(i,j) に割り当て、残余質量を k≤k_lr にパワー則 s^{-alpha_frag}（デフォルト 3.5）で正規化配分。Numba が有効なら JIT、スカラー v_rel ではキャッシュあり。`marsdisk/physics/collisions_smol.py:178–299`
 - シンク/ソース結合: ブローアウトシンク（サイズ≤a_blow は Ω で除去）、任意シンク t_sink、昇華 ds/dt を同時適用。供給質量流は `supply_mass_rate_to_number_source` でビンへマッピング（`min_bin` または `powerlaw_bins`）。`marsdisk/physics/collisions_smol.py:301–744`
@@ -119,7 +119,7 @@ flowchart TD
 
 | パラメータ | デフォルト値 | 単位 | 物理的意味 | 設定方法 |
 |-----------|-------------|------|-----------|----------|
-| `alpha_frag` | 3.5 | — | 破片分布のパワー則指数。Dohnanyi (1969) の衝突平衡値 ≈ 3.5 | 関数引数 |
+| `alpha_frag` | 3.5 | — | 破片分布のパワー則指数。[@Dohnanyi1969_JGR74_2531] の衝突平衡値 ≈ 3.5 | 関数引数 |
 | `μ` (gravity_velocity_mu) | 0.45 | — | 重力項の速度依存指数。LS09 の推奨値 | `set_gravity_velocity_mu()` |
 | `v_rel_mode` | `pericenter` | — | 相対速度の計算方式 | YAML 設定 |
 | `kernel_H_mode` | `ia` | — | スケール高さの計算方式 | YAML 設定 |

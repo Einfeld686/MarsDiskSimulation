@@ -527,8 +527,8 @@ gantt
 ### 8.6 追加の具体化事項
 - 反発係数との整合: `f_ke_effective = min(1, max(0, eps_restitution**2))` をデフォルトの近似とし、設定で上書き可能にする。侵食では Thébault の \(f_{\mathrm{ke}}\) を優先し、壊滅的破砕では `f_ke_fragmentation`（既定 0.1 など）を導入するか、設定が無い場合は eps² でフォールバックする。
 - e/i 更新: `dynamics.update_e_i` に減衰タイムスケール \(t_{\mathrm{damp}}=t_{\mathrm{coll}}/\varepsilon^{2}\) を組み込み、散逸ログと同じ eps/f_ke を共有する。`CollisionStepContext` に `eps_restitution`（または `f_ke_effective`）を渡し、速度分散更新とエネルギー簿記が一致するようにする。
-- 表面エネルギー制約: Krijt & Kama (2014) による \(s_{\min}\) をオプションで計算し、`psd.floor` との min/ max で下限を決定するフックを追加する（デフォルト off）。採用した場合は `out/<run_id>/series/run.parquet` に `s_min_surface_energy` を出力。
-- 壊滅的破砕での熱化係数: §3.2/§6 の指摘に対応し、Krivov 2006 の破砕でも `f_ke_fragmentation` を明示的に適用し、`analysis/overview.md` にフローを記載する。
+- 表面エネルギー制約: [@KrijtKama2014_AA566_L2] による \(s_{\min}\) をオプションで計算し、`psd.floor` との min/ max で下限を決定するフックを追加する（デフォルト off）。採用した場合は `out/<run_id>/series/run.parquet` に `s_min_surface_energy` を出力。
+- 壊滅的破砕での熱化係数: §3.2/§6 の指摘に対応し、[@Krivov2006_AA455_509] の破砕でも `f_ke_fragmentation` を明示的に適用し、`analysis/overview.md` にフローを記載する。
 - checks/energy_budget.csv カラム案（固定名）:
   - `time`, `dt`
   - `E_rel_step`（衝突総相対エネルギー）
@@ -543,7 +543,7 @@ gantt
   - 収束テスト: `Δt` を `t_coll_min` の {0.1, 0.05, 0.025} 倍で走らせ、`E_error_percent` が一様縮小（少なくとも単調非増）することを確認。
 
 ### 8.7 現時点で対応しないこと（混乱防止のため明記）
-- 新規衝突モデルの追加（Krivov 2006 / Thébault 2003 以外）は行わない。TL2003 は既定で無効のまま。
+- 新規衝突モデルの追加（[@Krivov2006_AA455_509] / Thébault 2003 以外）は行わない。TL2003 は既定で無効のまま。
 - 1D 半径拡張へのエネルギー簿記適用は今回スコープ外（0D のみに限定）。
 - 放射圧・PRドラッグ等による運動エネルギー搬出の詳細モデル化は行わず、必要なら後続タスクで検討する。
 - 熱力学的温度計算や融解・蒸発のエネルギー連成は扱わず、運動エネルギー散逸の簿記に留める。

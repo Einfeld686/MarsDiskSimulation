@@ -35,8 +35,8 @@
   - 配列版: `marsdisk/physics/fragments.py`（`largest_remnant_fraction_array`）
   - スカラー版: `marsdisk/physics/fragments.py`（`compute_largest_remnant_mass_fraction_F2`）
 - 参考:
-  - Stewart & Leinhardt (2009), DOI: 10.1088/0004-637X/691/2/L133
-  - Leinhardt & Stewart (2012), DOI: 10.1088/0004-637X/745/1/79
+  - [@StewartLeinhardt2009_ApJ691_L133], DOI: 10.1088/0004-637X/691/2/L133
+  - [@LeinhardtStewart2012_ApJ745_79], DOI: 10.1088/0004-637X/745/1/79
 - 対応案:
   1) コード側を piecewise に戻す（equations 準拠）。
   2) もし線形式を採用する意図なら、equations 側を更新して根拠を追記。
@@ -53,7 +53,7 @@
 - 実装位置（内部参照用）:
   - Numba: `marsdisk/physics/_numba_kernels.py`（`compute_kernel_e_i_H_numba`）
   - Python: `marsdisk/physics/collisions_smol.py`（`compute_kernel_ei_state`）
-- 参考: Ohtsuki et al. (2002), DOI: 10.1006/icar.2001.6741
+- 参考: [@Ohtsuki2002_Icarus155_436], DOI: 10.1006/icar.2001.6741
 - 対応案:
   1) Numba 側のフォールバックを Python と同じ次元で統一する。
   2) フォールバックの挙動を仕様化して equations に追記する（必要なら）。
@@ -72,7 +72,7 @@
 - 実装位置（内部参照用）:
   - 反復式: `marsdisk/physics/dynamics.py`（`solve_c_eq`）
   - 使用箇所: `marsdisk/physics/collisions_smol.py`（`compute_kernel_ei_state`）
-- 参考: Ohtsuki et al. (2002), DOI: 10.1006/icar.2001.6741
+- 参考: [@Ohtsuki2002_Icarus155_436], DOI: 10.1006/icar.2001.6741
 - 対応案:
   1) $c$ を無次元と明記し、$e=c/v_K$ を明文化。
   2) あるいは式に $v_K$ を入れて速度次元の $c$ を定義し直す。
@@ -88,8 +88,8 @@
 - 実装位置（内部参照用）:
   - `marsdisk/physics/surface.py`（`step_surface_density_S1`）
 - 参考:
-  - Wyatt (2008), DOI: 10.1146/annurev.astro.45.051806.110525
-  - Strubbe & Chiang (2006), DOI: 10.1086/505736
+  - [@Wyatt2008], DOI: 10.1146/annurev.astro.45.051806.110525
+  - [@StrubbeChiang2006_ApJ648_652], DOI: 10.1086/505736
 - 対応案:
   1) equations を現実装の方針（クリップは上流で扱う）に合わせて修正。
   2) もしくは surface ODE 内にクリップを復活させる。
@@ -109,8 +109,8 @@
 - 実装位置（内部参照用）:
   - `marsdisk/physics/radiation.py`（`_resolve_qpr`）
 - 参考:
-  - Burns et al. (1979), DOI: 10.1016/0019-1035(79)90050-2
-  - Strubbe & Chiang (2006), DOI: 10.1086/505736
+  - [@Burns1979_Icarus40_1], DOI: 10.1016/0019-1035(79)90050-2
+  - [@StrubbeChiang2006_ApJ648_652], DOI: 10.1086/505736
 - 対応案:
   1) equations を「テーブル必須」に修正。
   2) あるいはコードに $Q_{pr}=1$ フォールバックを追加。
@@ -125,8 +125,8 @@
   - ビン端点を用いた冪積分で `weights_table` を作成し、$k_{\mathrm{LR}}$ へ $f_{\mathrm{LR}}$ を置き、残余を $k\le k_{\mathrm{LR}}$ に配分。
 - 確認結果: 仕様と一致。
 - 参考:
-  - Krivov (2006), DOI: 10.1051/0004-6361:20077709
-  - Birnstiel et al. (2011), DOI: 10.1051/0004-6361/201015228
+  - [@Krivov2006_AA455_509], DOI: 10.1051/0004-6361:20077709
+  - [@Birnstiel2011_AA525_A11], DOI: 10.1051/0004-6361/201015228
 
 ## 供給パワー則分配（$dN/ds$）
 - 一致内容: 供給を $dN/ds \propto s^{-q}$ でビンに分配する重み付けと正規化。
@@ -138,8 +138,8 @@
   - 注入範囲との重なりを評価し、冪積分で重みを計算、質量正規化して $F_k$ を構成。
 - 確認結果: 仕様と一致。
 - 参考:
-  - Birnstiel et al. (2011), DOI: 10.1051/0004-6361/201015228
-  - Krivov (2006), DOI: 10.1051/0004-6361:20077709
+  - [@Birnstiel2011_AA525_A11], DOI: 10.1051/0004-6361/201015228
+  - [@Krivov2006_AA455_509], DOI: 10.1051/0004-6361:20077709
 
 ## 衝突カーネル $C_{ij}$
 - 一致内容: $n\sigma v$ 形式のカーネルとガウス厚さ補正。
@@ -149,7 +149,7 @@
 - 実装（現状のコード）:
   - 対角成分は 1/2 で二重計数を回避し、上式どおりに計算。
 - 確認結果: 仕様と一致。
-- 参考: Krivov (2006), DOI: 10.1051/0004-6361:20077709
+- 参考: [@Krivov2006_AA455_509], DOI: 10.1051/0004-6361:20077709
 
 ## 比衝突エネルギー $Q_R$
 - 一致内容: $Q_R$ の定義（縮約質量を用いる）。
@@ -158,7 +158,7 @@
 - 実装（現状のコード）:
   - `compute_q_r_F2` / `q_r_array` が同式で評価。
 - 確認結果: 仕様と一致。
-- 参考: Stewart & Leinhardt (2009), DOI: 10.1088/0004-637X/691/2/L133
+- 参考: [@StewartLeinhardt2009_ApJ691_L133], DOI: 10.1088/0004-637X/691/2/L133
 
 ## サブブローアウト生成率
 - 一致内容: 上三角和による生成率の定義。
@@ -167,4 +167,4 @@
 - 実装（現状のコード）:
   - 上三角インデックスで積算（Numba/NumPy とも同じ）。
 - 確認結果: 仕様と一致。
-- 参考: Krivov (2006), DOI: 10.1051/0004-6361:20077709
+- 参考: [@Krivov2006_AA455_509], DOI: 10.1051/0004-6361:20077709
