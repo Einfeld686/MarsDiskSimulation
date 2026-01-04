@@ -706,6 +706,30 @@
         "Shows that transient inner moons can stir and shepherd outer debris to form Phobos/Deimos analogs.",
         "Motivates extended-disk scenarios distinct from purely compact-ring models."
       ]
+    },
+    {
+      "key": "Krivov2010_arXiv",
+      "short": "Krivov (2010)",
+      "title": "Debris Disks: Seeing Dust, Thinking of Planetesimals and Planets",
+      "doi": null,
+      "bibtex": "@article{Krivov2010_arXiv, journal = {arXiv}, year = {2010}}",
+      "adopted_scope": "Review of debris-disk physics (collisional cascades and radiation-pressure blowout) used as general context for PSD and loss processes.",
+      "claims": [
+        "Summarizes collisional-cascade physics and radiation-pressure blowout as key small-grain removal channels.",
+        "Reviews how blowout truncation introduces deficits near the minimum size, motivating qualitative wavy PSD structure."
+      ]
+    },
+    {
+      "key": "Rosenblatt2019_arXiv",
+      "short": "Rosenblatt et al. (2019)",
+      "title": "The formation of the Martian moons",
+      "doi": null,
+      "bibtex": "@article{Rosenblatt2019_arXiv, journal = {arXiv}, year = {2019}}",
+      "adopted_scope": "Review of Martian-moon formation scenarios and giant-impact debris-disk evolution used for contextual discussion.",
+      "claims": [
+        "Surveys capture versus giant-impact origin scenarios for Phobos and Deimos and their observational constraints.",
+        "Summarizes extended debris-disk evolution and transient-moon stirring as pathways to small-satellite formation."
+      ]
     }
   ]
 }

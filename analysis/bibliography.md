@@ -123,6 +123,16 @@
   - M_disk ≤ 3×10⁻⁵ M_Mars かつ Q/k₂ < 80 で小衛星生存
   - 低質量・低ガス円盤の必要性
 
+### Rosenblatt et al. (2019)
+- **Key**: `Rosenblatt2019_arXiv`
+- **Title**: The formation of the Martian moons
+- **Journal**: arXiv
+- **Online**: [arXiv:1909.03996](https://arxiv.org/abs/1909.03996)
+- **使用箇所**: 火星衛星形成の総説
+- **主張**:
+  - 捕獲 vs 巨大衝突のシナリオ整理と観測制約の概観
+  - 巨大衝突起源ディスクの進化シナリオをまとめる
+
 ### Kuramoto (2024)
 - **Key**: `Kuramoto2024`
 - **Title**: Origin of Phobos and Deimos Awaiting Direct Exploration
@@ -182,6 +192,16 @@
 - **主張**:
   - Wyatt型 t_coll スケーリング (E.006) の検証ベンチマーク
   - IMEX安定性テストの参照
+
+### Krivov (2010)
+- **Key**: `Krivov2010_arXiv`
+- **Title**: Debris Disks: Seeing Dust, Thinking of Planetesimals and Planets
+- **Journal**: arXiv
+- **Online**: [arXiv:1003.5229](https://arxiv.org/abs/1003.5229)
+- **使用箇所**: デブリ円盤の総説（衝突カスケードとブローアウトの一般論）
+- **主張**:
+  - 衝突カスケードと放射圧ブローアウトの基本的枠組みを整理
+  - 最小粒径近傍のカットオフがPSD形状に影響することを概説
 
 ### Wyatt, Clarke & Booth (2011)
 - **Key**: `WyattClarkeBooth2011_CeMDA111_1`
