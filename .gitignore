@@ -1,10 +1,17 @@
 .DS_Store
 Thumbs.db
+.codex/
 .vscode/
 .idea/
 *.swp
 *.swo
 *~
+
+# Local agent instruction files
+AGENTS.md
+CLAUDE.md
+CLUADE.md
+GEMINI.md
 
 # Python virtualenvs
 .venv/
@@ -76,6 +83,7 @@ slides/
 !analysis/**/*.ipynb
 !analysis/**/*.png
 analysis/.analysis_pipeline_stamp
+analysis/AI_USAGE.md
 
 # agent_test outputs
 !agent_test/
