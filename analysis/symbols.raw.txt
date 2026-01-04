@@ -1343,6 +1343,9 @@ tests/integration/test_e_profile.py:14:def test_e_profile_mars_pericenter_clamps
 tests/integration/test_e_profile.py:28:def test_e_profile_table_interpolates(tmp_path: Path) -> None
 tests/integration/test_e_profile.py:49:def test_run_zero_d_applies_e_profile(tmp_path: Path) -> None
 tests/integration/test_e_profile.py:94:def test_run_one_d_records_e_value(tmp_path: Path) -> None
+tests/integration/test_eqn_external_audit_guard.py:16:def _format_audit(rows: list[list[str]]) -> str
+tests/integration/test_eqn_external_audit_guard.py:21:def test_external_refs_have_strong_evidence() -> None
+tests/integration/test_eqn_external_audit_guard.py:30:def test_external_audit_report_up_to_date() -> None
 tests/integration/test_eqn_placeholder_guard.py:15:def test_eqn_placeholders_cover_internal_refs() -> None
 tests/integration/test_evaluation_system.py:13:def _build_series_frame() -> pd.DataFrame
 tests/integration/test_evaluation_system.py:54:def _write_json(path: Path, payload: dict) -> None
@@ -1895,21 +1898,24 @@ tools/ocr_output_migration.py:635:def _is_math_candidate_line(line: str) -> bool
 tools/ocr_output_migration.py:650:def _extract_eq_labels(line: str) -> List[str]
 tools/ocr_output_migration.py:657:def _iter_eq_reference_groups(line: str) -> List[Tuple[re.Match[str], List[str], int]]
 tools/ocr_output_migration.py:675:def _has_citation(text: str) -> bool
-tools/ocr_output_migration.py:684:def _is_external_eq_reference(line: str, match: re.Match[str], group_end: int) -> bool
-tools/ocr_output_migration.py:704:def _supplement_placeholders_from_eq_refs(lines: Sequence[str]) -> Tuple[List[str], int]
-tools/ocr_output_migration.py:730:def _replace_equation_placeholders(lines: Sequence[str]) -> Tuple[List[str], int]
-tools/ocr_output_migration.py:794:def _ensure_dir(path: Path) -> None
-tools/ocr_output_migration.py:798:def _format_status(line_count_before: int, line_count_after: int, paragraph_count_after: int, remaining_suspects: int, page_markers: int) -> str
-tools/ocr_output_migration.py:808:def _load_cleanup_report(path: Path) -> Dict[str, object]
-tools/ocr_output_migration.py:817:def _update_report(key: str, source_path: Path, target_path: Path, before_counts: Dict[str, int], lines_after: Sequence[str], new_counts: CleanupCounts, existing_report: Dict[str, object]) -> Dict[str, object]
-tools/ocr_output_migration.py:888:def _before_counts_from_source(source_path: Path) -> Dict[str, int]
-tools/ocr_output_migration.py:899:def _write_diff(old_lines: Sequence[str], new_lines: Sequence[str], diff_path: Path) -> None
-tools/ocr_output_migration.py:910:def _collect_keys(source_root: Path, output_root: Path) -> Dict[str, Dict[str, bool]]
-tools/ocr_output_migration.py:926:def _write_key_inventory(keys: Dict[str, Dict[str, bool]], output_root: Path) -> None
-tools/ocr_output_migration.py:948:def _write_cleanup_summary(reports: Dict[str, Dict[str, object]], output_root: Path) -> None
-tools/ocr_output_migration.py:1001:def _append_convert_log(log_path: Path, key: str, source_path: Path, target_path: Path, raw_backup_path: Optional[Path], diff_path: Path, junk_removed_total: int, format_status: str, cleanup_report_path: Path) -> None
-tools/ocr_output_migration.py:1029:def _process_key(key: str, source_path: Path, output_dir: Path, timestamp: str) -> Optional[Dict[str, object]]
-tools/ocr_output_migration.py:1096:def main(argv: Optional[Sequence[str]]=None) -> int
+tools/ocr_output_migration.py:685:def _external_reference_reason(line: str, match: re.Match[str], group_end: int) -> Optional[Tuple[str, str, str]]
+tools/ocr_output_migration.py:713:def _is_external_eq_reference(line: str, match: re.Match[str], group_end: int) -> bool
+tools/ocr_output_migration.py:725:def _build_external_audit_rows(output_root: Path) -> List[List[str]]
+tools/ocr_output_migration.py:758:def _write_external_audit_report(output_root: Path) -> None
+tools/ocr_output_migration.py:770:def _supplement_placeholders_from_eq_refs(lines: Sequence[str]) -> Tuple[List[str], int]
+tools/ocr_output_migration.py:796:def _replace_equation_placeholders(lines: Sequence[str]) -> Tuple[List[str], int]
+tools/ocr_output_migration.py:860:def _ensure_dir(path: Path) -> None
+tools/ocr_output_migration.py:864:def _format_status(line_count_before: int, line_count_after: int, paragraph_count_after: int, remaining_suspects: int, page_markers: int) -> str
+tools/ocr_output_migration.py:874:def _load_cleanup_report(path: Path) -> Dict[str, object]
+tools/ocr_output_migration.py:883:def _update_report(key: str, source_path: Path, target_path: Path, before_counts: Dict[str, int], lines_after: Sequence[str], new_counts: CleanupCounts, existing_report: Dict[str, object]) -> Dict[str, object]
+tools/ocr_output_migration.py:954:def _before_counts_from_source(source_path: Path) -> Dict[str, int]
+tools/ocr_output_migration.py:965:def _write_diff(old_lines: Sequence[str], new_lines: Sequence[str], diff_path: Path) -> None
+tools/ocr_output_migration.py:976:def _collect_keys(source_root: Path, output_root: Path) -> Dict[str, Dict[str, bool]]
+tools/ocr_output_migration.py:992:def _write_key_inventory(keys: Dict[str, Dict[str, bool]], output_root: Path) -> None
+tools/ocr_output_migration.py:1014:def _write_cleanup_summary(reports: Dict[str, Dict[str, object]], output_root: Path) -> None
+tools/ocr_output_migration.py:1067:def _append_convert_log(log_path: Path, key: str, source_path: Path, target_path: Path, raw_backup_path: Optional[Path], diff_path: Path, junk_removed_total: int, format_status: str, cleanup_report_path: Path) -> None
+tools/ocr_output_migration.py:1095:def _process_key(key: str, source_path: Path, output_dir: Path, timestamp: str) -> Optional[Dict[str, object]]
+tools/ocr_output_migration.py:1162:def main(argv: Optional[Sequence[str]]=None) -> int
 tools/paper_manifest.py:30:class PaperCheckSettings(BaseModel)
 tools/paper_manifest.py:36:class PaperSettings(BaseModel)
 tools/paper_manifest.py:47:class RunEntry(BaseModel)

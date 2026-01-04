@@ -2,7 +2,7 @@
 
 # シミュレーション手法
 
-本資料は火星ロッシュ限界内の高温ダスト円盤を対象とする数値手法を、論文の Methods 相当の水準で記述する。gas-poor 条件下での粒径分布（particle size distribution; PSD）進化と、表層（surface layer）の放射圧起因アウトフロー（outflux）を**同一タイムループで結合**し、2 年スケールの $\dot{M}_{\rm out}(t)$ と $M_{\rm loss}$ を評価する。数式の定義は analysis/equations.md の (E.###) を唯一ソースとし、本書では離散化・数値解法・運用フロー・検証条件を整理する。
+本資料は火星ロッシュ限界内の高温ダスト円盤を対象とする数値手法を、論文の Methods 相当の水準で記述する。gas-poor 条件下での粒径分布（particle size distribution; PSD）進化と、表層（surface layer）の放射圧起因アウトフロー（outflux）を**同一タイムループで結合**し、2 年スケールの $\dot{M}_{\rm out}(t)$ と $M_{\rm loss}$ を評価する。数式の定義は analysis/equations.md の (E.###) を正とし、本書では主要式を必要最小限に再掲したうえで、離散化・数値解法・運用フロー・検証条件を整理する。
 
 序論（analysis/introduction.md §3）で提示した 3 つの問いと、本手法が直接生成する量・出力の対応を先に示す。
 
@@ -19,6 +19,8 @@
 - その後、放射圧・供給・衝突・昇華・遮蔽の各過程を個別に読む。
 - 最後に運用（run_sweep）と再現性（出力・検証）を確認する。
 
+本文では物理的な因果と時間発展の説明を優先し、設定キーや実装パスは付録に整理する。式は必要最小限に再掲し、詳細な定義と記号表は analysis/equations.md を正とする。
+
 本書で用いる略語は以下に統一する。光学的厚さ（optical depth; $\tau$）、視線方向（line of sight; LOS）、常微分方程式（ordinary differential equation; ODE）、implicit-explicit（IMEX）、backward differentiation formula（BDF）、放射圧効率（radiation pressure efficiency; $Q_{\rm pr}$）、破壊閾値（critical specific energy; $Q_D^*$）、Hertz–Knudsen–Langmuir（HKL）フラックス、1D（one-dimensional）。
 
 ---
@@ -29,7 +31,7 @@
 
 - 標準の物理経路は Smoluchowski 経路（C3/C4）を各半径セルで解く 1D 手法で、実装の計算順序は図 2.2 に従う。放射圧〜流出の依存関係のみを抜粋すると ⟨$Q_{\rm pr}$⟩→β→$s_{\rm blow}$→遮蔽Φ→Smol IMEX→外向流束となる。半径方向の粘性拡散（radial viscous diffusion; C5）は演算子分割で追加可能とする。  
   > **参照**: analysis/overview.md §1, analysis/physics_flow.md §2「各タイムステップの物理計算順序」
-- 運用スイープの既定は `GEOMETRY_MODE=1D` とし、`scripts/runsets/windows/run_sweep.cmd` を運用基準として採用する。1D の C5 は既定で無効であり、必要時のみ `numerics.enable_viscosity=true` を指定する。運用実行の詳細は付録 A、設定→物理対応は付録 B、関連ドキュメントは付録 C を参照する。
+- 運用スイープの既定は 1D とし、C5 は必要時のみ有効化する。具体的な run_sweep 手順と環境変数は付録 A、設定→物理対応は付録 B を参照する。
 - [@TakeuchiLin2003_ApJ593_524] に基づく gas-rich 表層 ODE は `ALLOW_TL2003=false` が既定で無効。gas-rich 感度試験では環境変数を `true` にして `surface.collision_solver=surface_ode`（例: `configs/scenarios/gas_rich.yml`）を選ぶ。  
   > **参照**: analysis/equations.md（冒頭注記）, analysis/overview.md §1「gas-poor 既定」
 
@@ -56,6 +58,17 @@ $\langle Q_{\rm pr}\rangle$ はテーブル入力（CSV/NPZ）を標準とし、
 - **$\Sigma_{\tau=1}$**: 診断用の面密度で、標準では $\Sigma_{\rm surf}$ を直接クリップしない。
 - **$\tau_0=1$**: 初期化スケーリングの目標で、`init_tau1.scale_to_tau1=true` のときに用いる。
 - **$s_{\min,\mathrm{eff}}$**: PSD グリッドの下限に反映する有効最小粒径。既定は $s_{\min,\mathrm{eff}}=\max(s_{\min,\mathrm{cfg}}, s_{\mathrm{blow,eff}})$ で、$s_{\rm sub}$ は ds/dt としてのみ扱う（床を動かすのは `psd.floor.mode` を明示した場合のみ）。
+
+### 2.0 支配方程式の位置づけ
+
+本書では主要式を抜粋して再掲し、式番号・記号定義は analysis/equations.md を正とする。
+
+- **軌道力学と時間尺度**: (E.001)–(E.002) で $\Omega$, $v_K$ を定義し、$t_{\rm blow}$ の基準は (E.007) に従う。放射圧の整理は [@Burns1979_Icarus40_1] を採用する。
+- **衝突カスケード**: PSD の時間発展は Smoluchowski 方程式 (E.010) を用い、質量収支は (E.011) で検査する。枠組みは [@Krivov2006_AA455_509; @Dohnanyi1969_JGR74_2531] に基づく。
+- **破砕強度と破片生成**: 破壊閾値 $Q_D^*$ の補間 (E.026) は [@BenzAsphaug1999_Icarus142_5; @LeinhardtStewart2012_ApJ745_79] を参照する。
+- **放射圧ブローアウト**: β と $s_{\rm blow}$ の定義は (E.013)–(E.014)、表層流出は (E.009) に依拠する。
+- **昇華と追加シンク**: HKL フラックス (E.018) と飽和蒸気圧 (E.036) に基づき、昇華モデルの位置づけは [@Markkanen2020_AA643_A16] を参照する。
+- **遮蔽と表層**: 自遮蔽係数 $\Phi$ は (E.015)–(E.017) により表層に適用し、gas-rich 条件の参照枠は [@TakeuchiLin2003_ApJ593_524] で位置づける。
 
 以下の図は、入力（YAML/テーブル）から初期化・時間発展・診断出力に至る主経路を示す。**実装順序は analysis/physics_flow.md を正**とし、ここでは概念的な依存関係の整理として示す。
 
@@ -245,6 +258,8 @@ flowchart TB
 
 ### 3.1 粒径分布 (PSD) グリッド
 
+PSD は衝突カスケードの統計的記述に基づき、自己相似分布の枠組み [@Dohnanyi1969_JGR74_2531] と離散化の実装例 [@Krivov2006_AA455_509] を踏まえて対数ビンで表す。ブローアウト近傍の波状構造（wavy）はビン幅に敏感であるため、格子幅の指針 [@Birnstiel2011_AA525_A11] を参照して分解能を選ぶ。
+
 PSD は $n(s)$ を対数等間隔のサイズビンで離散化し、面密度・光学的厚さ・衝突率の評価を一貫したグリッド上で行う。隣接比 $s_{i+1}/s_i \lesssim 1.2$ を推奨し、供給注入と破片分布の双方がビン分解能に依存しないように設計する。
 
 | 設定キー | 既定値 | glossary 参照 |
@@ -289,9 +304,25 @@ $\tau_{\rm los}$ は遮蔽（$\Phi$）の入力として使われるほか、放
 
 ## 4. 衝突カスケードと破片生成
 
+衝突カスケードは小粒子供給の主因であり、PSD の形状と供給率を同時に決める。統計的な衝突解法は Smoluchowski 方程式の枠組み [@Krivov2006_AA455_509] を基礎に置き、破砕強度は玄武岩モデル [@BenzAsphaug1999_Icarus142_5] と LS12 補間 [@LeinhardtStewart2012_ApJ745_79] に従って定義する。
+
+主要な PSD の時間発展は次式で与える（再掲: E.010）。
+
+```latex
+\dot{N}_k = \sum_{i\le j} C_{ij}\,\frac{m_i+m_j}{m_k}\,Y_{kij} - \left(\sum_j C_{kj} + C_{kk}\right) + F_k - S_k N_k,
+```
+
+右辺第1項が破片生成、第2項が衝突ロス、$F_k$ が供給ソース、$S_k$ が追加シンク（昇華・ガス抗力など）を表す。
+
 ### 4.1 衝突カーネル
 
 nσv 型カーネル (E.024) を用い、相対速度は Rayleigh 分布 (E.020) から導出する。
+
+```latex
+C_{ij} = \frac{N_i N_j}{1+\delta_{ij}}\,
+\frac{\pi\,(s_i+s_j)^{2}\,v_{ij}}{\sqrt{2\pi}\,H_{ij}},
+\qquad H_{ij} = \sqrt{H_i^{2}+H_j^{2}}
+```
 
 - 破壊閾値 $Q_D^*$: [@LeinhardtStewart2012_ApJ745_79] 補間 (E.026)
 - 速度分散: せん断加熱と減衰の釣り合いから $c_{\rm eq}$ を固定点反復で求め、相対速度に反映する (E.021)
@@ -355,6 +386,8 @@ $$
 
 ## 5. 熱・放射・表層損失
 
+放射圧と昇華は粒子の軽さ指標 β と表層質量の時間変化を通じて短期損失を支配する。放射圧の整理は古典的な定式化 [@Burns1979_Icarus40_1] に基づき、光学特性は Mie 理論の整理 [@BohrenHuffman1983_Wiley] を踏まえて $\langle Q_{\rm pr}\rangle$ テーブルを用いる。遮蔽の参照枠は gas-rich 表層流出の議論 [@TakeuchiLin2003_ApJ593_524] に置きつつ、gas-poor 条件を既定とする。
+
 ### 5.1 温度ドライバ
 
 火星表面温度の時間変化を `constant` / `table` / `autogen` で選択する。
@@ -383,6 +416,28 @@ $$
 - β の閾値判定により `case_status` を分類し、ブローアウト境界と PSD 床の関係を `s_min_components` に記録する。
 - 表層流出率 $\dot{M}_{\rm out}$ の定義は (E.009) を参照し、表層 ODE を使う場合は $t_{\rm blow}$ を (E.007) の形で評価する。
 
+放射圧の軽さ指標とブローアウト粒径は次式で定義する（再掲: E.013, E.014）。
+
+```latex
+\begin{equation}
+ \beta = \frac{3\,\sigma_{\mathrm{SB}}\,T_{\mathrm{M}}^{4}\,R_{\mathrm{M}}^{2}\,\langle Q_{\mathrm{pr}}\rangle}{4\,G\,M_{\mathrm{M}}\,c\,\rho\,s}
+\end{equation}
+```
+
+```latex
+\begin{equation}
+ s_{\mathrm{blow}} = \frac{3\,\sigma_{\mathrm{SB}}\,T_{\mathrm{M}}^{4}\,R_{\mathrm{M}}^{2}\,\langle Q_{\mathrm{pr}}\rangle}{2\,G\,M_{\mathrm{M}}\,c\,\rho}
+\end{equation}
+```
+
+表層の外向流束は次式で評価する（再掲: E.009）。
+
+```latex
+\begin{equation}
+ \dot{M}_{\mathrm{out}} = \Sigma_{\mathrm{surf}}\,\Omega
+\end{equation}
+```
+
 ブローアウト境界は β=0.5 を閾値とする非束縛条件に対応し、$s_{\rm blow}$ と $s_{\min,\mathrm{eff}}$ の関係が PSD 形状と流出率を支配する。ゲート有効時は $\tau$ によって outflux が抑制される。
 
 > **詳細**: analysis/equations.md (E.009), (E.012)–(E.014), (E.039)  
@@ -392,6 +447,22 @@ $$
 ### 5.3 遮蔽 (Shielding)
 
 $\Phi(\tau,\omega_0,g)$ テーブル補間で有効不透明度を評価し、$\Sigma_{\tau=1}=1/\kappa_{\rm eff}$ を診断として記録する。表層が光学的に厚くなり $\tau_{\rm los}>\tau_{\rm stop}$ となった場合は停止し、クリップは行わない。
+
+遮蔽による有効不透明度と光学的厚さ 1 の表層面密度は次式で与える（再掲: E.015, E.016）。
+
+```latex
+\begin{equation}
+ \kappa_{\mathrm{eff}} = \Phi(\tau)\,\kappa_{\mathrm{surf}}
+\end{equation}
+```
+
+```latex
+\Sigma_{\tau=1} =
+\begin{cases}
+ \kappa_{\mathrm{eff}}^{-1}, & \kappa_{\mathrm{eff}} > 0,\\
+ \infty, & \kappa_{\mathrm{eff}} \le 0.
+\end{cases}
+```
 
 - Φテーブルは既定で外部入力とし、双線形補間で $\Phi$ を評価する。
 - `shielding.mode` により `psitau` / `fixed_tau1` / `off` を切り替える。
@@ -416,7 +487,27 @@ SiO₂ 冷却マップまたは閾値から相（phase）を `solid`/`vapor` に
 
 ### 5.5 昇華 (Sublimation) と追加シンク
 
-HKL（Hertz–Knudsen–Langmuir）フラックス (E.018) と飽和蒸気圧 (E.036) で質量損失を評価する。SiO 既定パラメータを用いる。
+HKL（Hertz–Knudsen–Langmuir）フラックス (E.018) と飽和蒸気圧 (E.036) で質量損失を評価する（[@Markkanen2020_AA643_A16]）。SiO 既定パラメータを用いる。
+
+HKL フラックスは次式で与える（再掲: E.018）。
+
+```latex
+J(T) =
+\begin{cases}
+ \alpha_{\mathrm{evap}}\max\!\bigl(P_{\mathrm{sat}}(T) - P_{\mathrm{gas}},\,0\bigr)
+ \sqrt{\dfrac{\mu}{2\pi R T}}, &
+ \text{if mode}\in\{\text{``hkl'', ``hkl\_timescale''}\} \text{ and HKL activated},\\[10pt]
+ \exp\!\left(\dfrac{T - T_{\mathrm{sub}}}{\max(dT, 1)}\right), & \text{otherwise.}
+\end{cases}
+```
+
+```latex
+P_{\mathrm{sat}}(T) =
+\begin{cases}
+ 10^{A - B/T}, & \text{if }\texttt{psat\_model} = \text{``clausius''},\\[6pt]
+ 10^{\mathrm{PCHIP}_{\log_{10}P}(T)}, & \text{if }\texttt{psat\_model} = \text{``tabulated''}.
+\end{cases}
+```
 
 - `sub_params.mass_conserving=true` の場合は ds/dt だけを適用し、$s<s_{\rm blow}$ を跨いだ分をブローアウト損失へ振り替えてシンク質量を維持する。
 - `sinks.mode` を `none` にすると追加シンクを無効化し、表層 ODE/Smol へのロス項を停止する。
@@ -433,6 +524,12 @@ HKL（Hertz–Knudsen–Langmuir）フラックス (E.018) と飽和蒸気圧 (E
 ## 6. 表層再供給と輸送
 
 表層再供給（supply）は表層への面密度生成率として与え、サイズ分布と深層輸送を通じて PSD に注入する。ここでの表層再供給は外側からの流入を精密に表すものではなく、深部↔表層の入れ替わりを粗く表現するためのパラメータ化である。定常値・べき乗・テーブル・区分定義の各モードを用意し、温度・$\tau$ フィードバック・有限リザーバを組み合わせて非定常性を表現する。
+
+供給の基礎率は次式で定義する（再掲: E.027）。
+
+```latex
+\dot{\Sigma}_{\mathrm{prod}}(t,r) = \max\!\left(\epsilon_{\mathrm{mix}}\;R_{\mathrm{base}}(t,r),\,0\right)
+```
 
 `const` / `powerlaw` / `table` / `piecewise` モードで表層への供給率を指定する。`const` は `mu_orbit10pct` を基準に、参照光学的厚さ (`mu_reference_tau`) に対応する表層密度の `orbit_fraction_at_mu1` を 1 公転で供給する定義に統一する。旧 μ (E.027a) は診断・ツール用の導出値としてのみ扱う。ここでの μ（供給式の指標）は衝突速度外挿の μ と別であり、混同しないよう区別して扱う。
 

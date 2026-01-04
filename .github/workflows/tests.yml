@@ -30,4 +30,6 @@ jobs:
             tests/integration/test_run_one_d_output_parity.py \
             tests/integration/test_run_one_d_streaming_schema.py \
             tests/integration/test_mass_budget_cells.py \
-            tests/integration/test_preflight_cmds.py
+            tests/integration/test_preflight_cmds.py \
+            tests/integration/test_eqn_external_audit_guard.py \
+            tests/integration/test_eqn_placeholder_guard.py

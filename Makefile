@@ -87,6 +87,12 @@ analysis-update: analysis-sync
 	@echo "[analysis-update] evaluation_system requires --outdir; run manually:"
 	@echo "  python -m tools.evaluation_system --outdir <run_dir>"
 
+# OCR output migration and eq placeholder checks
+ocr-update:
+	python -m tools.ocr_output_migration
+	pytest -q tests/integration/test_eqn_placeholder_guard.py
+	pytest -q tests/integration/test_eqn_external_audit_guard.py
+
 # 任意: 参照レジストリとの差分検出（標準フローには含まない）
 analysis-refs:
 	python tools/reference_tracker.py validate

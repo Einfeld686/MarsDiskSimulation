@@ -678,27 +678,93 @@ def _has_citation(text: str) -> bool:
         or AUTHOR_YEAR_PAREN_RE.search(text)
         or AUTHOR_YEAR_INLINE_RE.search(text)
         or AUTHOR_YEAR_TRAILING_PAREN_RE.search(text)
+        or AUTHOR_YEAR_BARE_RE.search(text)
     )
 
 
-def _is_external_eq_reference(line: str, match: re.Match[str], group_end: int) -> bool:
+def _external_reference_reason(
+    line: str, match: re.Match[str], group_end: int
+) -> Optional[Tuple[str, str, str]]:
     head_window = line[max(0, match.start() - 50):match.start()]
     tail_window = line[group_end:group_end + 140]
 
-    if EQ_EXTERNAL_PRONOUN_RE.search(head_window):
-        return True
-    if EQ_EXTERNAL_IMMEDIATE_RE.match(tail_window):
-        return True
+    pronoun_match = EQ_EXTERNAL_PRONOUN_RE.search(head_window)
+    if pronoun_match:
+        return ("strong", "pronoun", pronoun_match.group(0))
+    immediate_match = EQ_EXTERNAL_IMMEDIATE_RE.match(tail_window)
+    if immediate_match:
+        return ("strong", "immediate_citation", immediate_match.group(0).strip())
     link_match = EQ_EXTERNAL_LINK_RE.search(tail_window)
     if link_match:
         link_tail = tail_window[link_match.end():]
-        if _has_citation(link_tail) or AUTHOR_YEAR_BARE_RE.search(link_tail):
-            return True
+        for pattern in (
+            CITATION_BRACKET_RE,
+            AUTHOR_YEAR_PAREN_RE,
+            AUTHOR_YEAR_INLINE_RE,
+            AUTHOR_YEAR_TRAILING_PAREN_RE,
+            AUTHOR_YEAR_BARE_RE,
+        ):
+            citation_match = pattern.search(link_tail)
+            if citation_match:
+                return ("strong", "link_with_citation", citation_match.group(0))
+    return None
+
+
+def _is_external_eq_reference(line: str, match: re.Match[str], group_end: int) -> bool:
+    if _external_reference_reason(line, match, group_end):
+        return True
+    head_window = line[max(0, match.start() - 50):match.start()]
+    tail_window = line[group_end:group_end + 140]
     if INTERNAL_LOC_RE.search(head_window) or INTERNAL_LOC_RE.search(tail_window):
         return False
     if INTERNAL_SELF_RE.search(head_window) or INTERNAL_SELF_RE.search(tail_window):
         return False
     return False
+
+
+def _build_external_audit_rows(output_root: Path) -> List[List[str]]:
+    rows: List[List[str]] = []
+    for result_path in sorted(output_root.glob("*/result.md")):
+        text = _read_text(result_path)
+        for line_no, line in enumerate(text.splitlines(), start=1):
+            groups = _iter_eq_reference_groups(line)
+            if not groups:
+                continue
+            for match, labels, group_end in groups:
+                if not _is_external_eq_reference(line, match, group_end):
+                    continue
+                reason = _external_reference_reason(line, match, group_end)
+                if reason:
+                    strength, reason_tag, evidence = reason
+                else:
+                    strength = "weak"
+                    reason_tag = "unclassified"
+                    evidence = ""
+                for label in labels:
+                    rows.append(
+                        [
+                            str(result_path.resolve()),
+                            str(line_no),
+                            label,
+                            strength,
+                            reason_tag,
+                            evidence.replace("\t", " ").strip(),
+                            line.replace("\t", " ").strip(),
+                        ]
+                    )
+    return rows
+
+
+def _write_external_audit_report(output_root: Path) -> None:
+    checks_dir = output_root / "_checks"
+    _ensure_dir(checks_dir)
+    path = checks_dir / "eqn_external_audit.tsv"
+    header = ["file", "line_no", "label", "strength", "reason", "evidence", "text"]
+    rows = _build_external_audit_rows(output_root)
+    path.write_text(
+        "\t".join(header) + "\n" + "\n".join("\t".join(row) for row in rows) + "\n",
+        encoding="utf-8",
+    )
 
 
 def _supplement_placeholders_from_eq_refs(lines: Sequence[str]) -> Tuple[List[str], int]:
@@ -1136,6 +1202,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
             reports[key] = report
 
     _write_cleanup_summary(reports, output_root)
+    _write_external_audit_report(output_root)
     return 0
 
 

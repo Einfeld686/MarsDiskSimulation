@@ -124,11 +124,13 @@
 - 自動サンプル検査は「重要文献」＋「ランダム」から最低5件を選び、ログに記録する
 - 問題があれば当該Keyは保留リストへ移動し、再OCRまたは再整形を優先する
 - 置換後にジャンク検出と段落連結の統計を自動で集計し、変換ログへ反映する
+- 通常運用: `python -m tools.ocr_output_migration` 実行後に `pytest -q tests/integration/test_eqn_placeholder_guard.py` を流す（`make ocr-update` で一括）
 
 自動検査の出力フォーマット
 ------------------------
 - 出力先（Keyごと）: `paper/pdf_extractor/outputs/<Key>/checks/cleanup_report.json`
 - 集計（任意）: `paper/pdf_extractor/outputs/_checks/cleanup_summary.csv`
+- 監査（外部判定）: `paper/pdf_extractor/outputs/_checks/eqn_external_audit.tsv`
 - cleanup_report.json の必須キー: `key`, `source_path`, `target_path`, `stats`, `junk`, `format_status`
 - stats の必須キー: `line_count_before`, `line_count_after`, `paragraph_count_before`, `paragraph_count_after`, `paragraph_merge_count`, `hyphen_join_count`, `max_consecutive_blank_lines_before`, `max_consecutive_blank_lines_after`, `eq_placeholder_numbered`, `table_placeholder_numbered`, `table_placeholder_unnumbered`
 - junk の必須キー: `found_by_pattern`, `removed_by_pattern`, `remaining_suspect_lines`, `repeated_header_footer_lines`, `repeated_header_footer_removed`, `page_marker_removed`, `page_marker_remaining`, `meta_flagged_lines`
