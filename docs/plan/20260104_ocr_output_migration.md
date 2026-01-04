@@ -15,6 +15,7 @@
 非対象範囲
 ----------
 - 数式の内容復元（後日手入力のため本プランでは実施しない）
+- 表データの復元（後日手入力のため本プランでは実施しない）
 - 画像抽出の再処理（`images/` は現状維持）
 - 文献の正誤・内容の事実確認（OCR整形のみ）
 
@@ -35,6 +36,8 @@
 - 本文中の参照（例: “Eq. (2)”）はそのまま保持
 - 置換時にOCR式を残したい場合は、直後に `<!-- OCR_EQN_RAW: ... -->` を追加（任意）
 - 未番号の数式は **自動置換しない**。目視確認で `[[EQN:unnumbered]]` を挿入し、必要に応じてOCR原文をコメントで残す
+- 表は `[[TABLE:(番号)]]` に置換し、表本文は削除する
+- 表番号が明示されていない場合は `[[TABLE:unnumbered]]` を使用する
 
 本文整形ルール（最小限・保守的）
 --------------------------------
@@ -42,6 +45,7 @@
 - ハイフン改行の復元と段落の連結整理（意味変更を伴わない範囲）
 - 文字化けやOCR誤認の修正は「原文で確認できる場合のみ」
 - 数式はプレースホルダ化（上記方針）
+- 表本文は削除し、表番号プレースホルダのみ残す
 
 ジャンク除去ルール（追加）
 -----------------------
@@ -50,6 +54,7 @@
 - 章節・段落と無関係な「孤立番号」（単独行の数字やページ番号の残骸）は削除する
 - 図表/式番号の直前・直後にある単独数字/ローマ数字は除去対象外とする（例: Figure/Fig./Table/Eq. と連続する場合）
 - ページ番号の単独行（例: `1`, `2`）は前後の空行条件を撤廃して除去対象とする（式行・図表行の番号補完と判断できる場合のみ保持）
+- 5桁以上の単独数値は無条件で除去対象とする
 - ジャーナル名・巻号・ページ範囲などが各ページで繰り返されるヘッダ/フッタは削除する（ただし1ページ目の表記は保持）
 - ダウンロード/利用条件のバナー（例: `Downloaded from ... For personal use only`）やウェブ導線の定型文は除去する
 - 出版社サイト案内の定型文（例: `Article published by ... and available at ...`）は除去する
@@ -63,8 +68,10 @@
 - `^\[image\d+\]:\s*<data:image/[^>]+>\s*$` : base64 参照定義
 - `^<data:image/[^>]+>\s*$` : data URI 行
 - `^\s*\d+\s*$` : 単独の数字（ページ番号として優先除去。前後空行条件は撤廃し、式/図表行が数字を含まず補完が必要な場合のみ除外）
+- `^\s*\d{5,}\s*$` : 5桁以上の単独数値（無条件で除去）
 - `^\s*[IVXLCDM]+\s*$` : 単独ローマ数字（前後が空行の場合に除去対象）
 - `^\s*[\W_]+\s*$` : 記号のみの行
+- `^\s*table\s+\S+` : 表の開始行（表番号プレースホルダ化のトリガ）
 - `.*Downloaded from .*personal use only.*` : アクセス/利用条件バナー
 - `.*Downloaded from .*` : ダウンロード元の残骸
 - `^\W*(Other articles in this volume|Top cited articles|Top downloaded articles|Our comprehensive search)\b` : Web導線のメニュー
@@ -123,7 +130,7 @@
 - 出力先（Keyごと）: `paper/pdf_extractor/outputs/<Key>/checks/cleanup_report.json`
 - 集計（任意）: `paper/pdf_extractor/outputs/_checks/cleanup_summary.csv`
 - cleanup_report.json の必須キー: `key`, `source_path`, `target_path`, `stats`, `junk`, `format_status`
-- stats の必須キー: `line_count_before`, `line_count_after`, `paragraph_count_before`, `paragraph_count_after`, `paragraph_merge_count`, `hyphen_join_count`, `max_consecutive_blank_lines_before`, `max_consecutive_blank_lines_after`
+- stats の必須キー: `line_count_before`, `line_count_after`, `paragraph_count_before`, `paragraph_count_after`, `paragraph_merge_count`, `hyphen_join_count`, `max_consecutive_blank_lines_before`, `max_consecutive_blank_lines_after`, `eq_placeholder_numbered`, `table_placeholder_numbered`, `table_placeholder_unnumbered`
 - junk の必須キー: `found_by_pattern`, `removed_by_pattern`, `remaining_suspect_lines`, `repeated_header_footer_lines`, `repeated_header_footer_removed`, `page_marker_removed`, `page_marker_remaining`, `meta_flagged_lines`
 - format_status は `clean` / `needs_review` / `blocked` を使用する
 
@@ -184,7 +191,8 @@
 - 変換ログ: 置換前後の差分ログ、修正箇所の根拠/判断理由メモ、`result.raw.md` の退避有無、ジャンク除去件数、整形判定、`logs/convert_log.jsonl` と `logs/result.diff` の保存
 - 数式プレースホルダ仕様: `[[EQN:(番号)]]` の表記統一、番号不明時は `[[EQN:unnumbered]]`
 - 文章修正の境界: 意味が変わる修正は禁止、OCR誤認が明白な場合のみ修正
-- 図表/脚注の扱い: キャプション維持、脚注番号は残し本文と整合
+- 表プレースホルダ仕様: `[[TABLE:(番号)]]` の表記統一、番号不明時は `[[TABLE:unnumbered]]` を使用する
+- 図表/脚注の扱い: 表本文は削除し、表番号のみ維持する。脚注番号は残し本文と整合
 - 置換対象外の扱い: outputsのみは保留リスト化、OCRのみは新規作成方針を明記
 - サンプル検査: 代表5件（重要文献+ランダム）の**自動**点検項目（段落連結/式位置/見出し）
 - 削除タイミング: `paper/ocr_references/` は検査完了・バックアップ後に削除
@@ -192,8 +200,8 @@
 - トレーサビリティ: 変換ログに元ファイル/日付/ハッシュを記録し、追跡可能にする
 - 原文退避/復元性: `result.raw.md` を保存し、追加の退避は `result.raw.<YYYYMMDD-HHMM>.md` を作成する
 - 正規化: UTF-8/NFC、改行コードLF、連続空白の扱いを統一する
-- 表・図・脚注: 表ブロックは保持、脚注番号は維持し本文と整合させる
-- 数式置換の棚卸し: `[[EQN:...]]` 一覧をKey単位で記録する
+- 表・図・脚注: 表ブロックは削除し、表番号のみ維持する。脚注番号は維持し本文と整合させる
+- 数式置換の棚卸し: `[[EQN:...]]` と `[[TABLE:...]]` 一覧をKey単位で記録する
 - 品質ステータス: Keyごとに `clean`/`needs_review`/`blocked` を付与する
 - 混在検出: タイトル/著者/誌名の不一致があれば保留リスト化する
 - ページ欠落検知: 参考文献/末尾セクション有無で欠落を簡易検知する
@@ -208,11 +216,12 @@
 - [ ] 4. OCR本文を読み込み、ヘッダ/フッタ/ページ番号を削除する
 - [ ] 5. ハイフン改行・段落分断を整形し、明確なOCR誤認のみ修正する
 - [ ] 6. 数式を `[[EQN:(番号)]]` または `[[EQN:unnumbered]]` に置換する
-- [ ] 7. `outputs/<Key>/result.md` を置換し、差分ログを記録する
-- [ ] 8. 追加分から代表5件を自動サンプル検査（段落連結/式位置/見出し/脚注）する
-- [ ] 9. OCRのみ/outputsのみのKeyを保留リストに整理する
-- [ ] 10. 追加作業が落ち着いた時点で `paper/ocr_references/` 削除を判断する
-- [ ] 11. `python tools/plan_lint.py` を実行し、結果を記録する
+- [ ] 7. 表を `[[TABLE:(番号)]]` または `[[TABLE:unnumbered]]` に置換し、表本文を削除する
+- [ ] 8. `outputs/<Key>/result.md` を置換し、差分ログを記録する
+- [ ] 9. 追加分から代表5件を自動サンプル検査（段落連結/式位置/見出し/脚注）する
+- [ ] 10. OCRのみ/outputsのみのKeyを保留リストに整理する
+- [ ] 11. 追加作業が落ち着いた時点で `paper/ocr_references/` 削除を判断する
+- [ ] 12. `python tools/plan_lint.py` を実行し、結果を記録する
 
 進捗ログ
 --------

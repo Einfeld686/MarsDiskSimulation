@@ -114,7 +114,7 @@
 - **実装**: `marsdisk/physics/dynamics.py`, `marsdisk/physics/collisions_smol.py`
 - **主な設定**: `dynamics.v_rel_mode`, `dynamics.f_wake`, `dynamics.e0`, `dynamics.i0`
 - **主な出力**: `v_rel`, `c_eq`, `t_coll` 関連診断
-- **文献**: Ohtsuki2002_Icarus155_436 (10.1006/icar.2001.6741), WetherillStewart1993_Icarus106_190 (10.1006/icar.1993.1161), MurrayDermott1999_SSD (10.1017/CBO9781139174817)
+- **文献**: Ohtsuki2002_Icarus155_436 (10.1006/icar.2001.6741), WetherillStewart1993_Icarus106_190 (10.1006/icar.1993.1161)
 
 ### H. gas-poor 前提と Mars 円盤の背景
 - **仕様**: `analysis/overview.md`, `analysis/AI_USAGE.md`
@@ -333,7 +333,6 @@
 | --- | --- | --- | --- |
 | Ohtsuki2002_Icarus155_436 | Ohtsuki et al. (2002) *Evolution of Planetesimal Velocities...* | 10.1006/icar.2001.6741 | v_rel, c_eq |
 | WetherillStewart1993_Icarus106_190 | Wetherill & Stewart (1993) *Formation of planetary embryos* | 10.1006/icar.1993.1161 | v_rel レイリー |
-| MurrayDermott1999_SSD | Murray & Dermott (1999) *Solar System Dynamics* | 10.1017/CBO9781139174817 | v_K, Omega |
 
 ### gas-rich 参考（既定は無効）
 | Key | 文献 | DOI | 主な関係先 |
