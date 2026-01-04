@@ -72,7 +72,7 @@ graph TD
 
 
 ### (E.001) v_kepler — ケプラー速度 v_K(r)
-ケプラー運動の基本式に従い、教科書的な円軌道速度を評価する [@MurrayDermott1999_SSD]。
+ケプラー運動の基本式に従い、教科書的な円軌道速度を評価する。[@Burns1979_Icarus40_1]
 
 円盤半径に応じた公転速度を、火星重力パラメータから即時に算出する関数です。
 - 用語：ケプラー速度（Keplerian orbital speed）
@@ -82,7 +82,7 @@ graph TD
 - 数値処理：NumPy の平方根を評価し `float` に変換するのみで、負値入力は未定義として利用者側で防ぐ。
 
 ### (E.002) omega — ケプラー角速度 Ω(r)
-ケプラー角速度の標準式をそのまま返すラッパーで、出典は円運動の基本解 [@MurrayDermott1999_SSD]。
+ケプラー角速度の標準式をそのまま返すラッパーで、出典は円運動の基本解に従う。[@Burns1979_Icarus40_1]
 
 0D 半径の局所角速度を、ケプラー解をそのまま返すラッパーです。
 - 用語：ケプラー角速度（Keplerian angular frequency）
@@ -102,7 +102,7 @@ graph TD
 
 
 ### (E.003) v_keplerian — ケプラー速度（同義関数）
-円軌道速度の別名を公開し API の揺れに備えるもので、式自体は (E.001) と同じ [@MurrayDermott1999_SSD]。
+円軌道速度の別名を公開し API の揺れに備えるもので、式自体は (E.001) と同じ。[@Burns1979_Icarus40_1]
 
 `v_kepler` と同一計算を別名で公開し、外部 API の記述ゆれに備えます。
 - 用語：ケプラー速度別名（Keplerian speed alias）
@@ -471,7 +471,7 @@ IMEX 更新後の質量差分を測るための診断式。衝突カスケード
 - Clamps $\Phi$ to $[0,1]$ after lookup and logs when clipping occurs. [marsdisk/physics/shielding.py#effective_kappa [L82–L121]]
 
 ### (E.016) marsdisk/physics/shielding.py: sigma_tau1 (lines 123-130)
-有効不透明度から $\tau=1$ となる表層質量を算出するクリップ条件。$\tau\approx1$ を光球面とみなす古典的近似を援用するが、クリップ条件自体は実装上の近似。[@Chandrasekhar1960_RadiativeTransfer]
+有効不透明度から $\tau=1$ となる表層質量を算出するクリップ条件。$\tau\approx1$ を光球面とみなす古典的近似を援用するが、クリップ条件自体は実装上の近似。[@Joseph1976_JAS33_2452; @HansenTravis1974_SSR16_527]
 
 ```latex
 \Sigma_{\tau=1} =
@@ -737,7 +737,7 @@ C_{ij} = \frac{N_i N_j}{1+\delta_{ij}}\,
 - Emits diagnostic logs with the number of size bins. [marsdisk/physics/collide.py#compute_collision_kernel_C1 [L71–L208]]
 
 ### (E.025) marsdisk/physics/initfields.py: surf_sigma_init (lines 47–79)
-表層の初期値をミッドプレーンの $\Sigma$ からスケーリングし、$\tau\approx1$ を上限とする近似でクリップする。光球面近似の発想は放射輸送の古典的扱いに基づくが、初期化の分岐は実装固有。[@Chandrasekhar1960_RadiativeTransfer]
+表層の初期値をミッドプレーンの $\Sigma$ からスケーリングし、$\tau\approx1$ を上限とする近似でクリップする。光球面近似の発想は放射輸送の古典的扱いに基づくが、初期化の分岐は実装固有。[@Joseph1976_JAS33_2452; @HansenTravis1974_SSR16_527]
 初期化の分岐とクリップは実装固有の規約で、同一形を提示する文献はない。
 
 ```latex
@@ -868,7 +868,7 @@ Loads a single-parameter self-shielding table $\Phi(\tau)$ from disk and logs th
 
 
 ### (E.031) marsdisk/physics/shielding.py: clip_to_tau1 (lines 219–261)
-有効不透明度から $\Sigma_{\tau=1}$ を算出し、表層密度を上限クリップする処理。$\tau\approx1$ 近似に基づくが、クリップの分岐と許容値は実装固有。[@Chandrasekhar1960_RadiativeTransfer]
+有効不透明度から $\Sigma_{\tau=1}$ を算出し、表層密度を上限クリップする処理。$\tau\approx1$ 近似に基づくが、クリップの分岐と許容値は実装固有。[@Joseph1976_JAS33_2452; @HansenTravis1974_SSR16_527]
 クリップの分岐や許容値の設定は実装固有で、同一形を掲げる文献はない。
 
 

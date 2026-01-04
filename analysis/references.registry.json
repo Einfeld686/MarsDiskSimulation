@@ -99,11 +99,11 @@
       ]
     },
     {
-      "key": "SalmonCanup2010_Icarus208_33",
-      "short": "Salmon & Canup (2010)",
+      "key": "SalmonCharnozBrahic2010_Icarus209_771",
+      "short": "Salmon et al. (2010)",
       "title": "Long-term and large-scale viscous evolution of dense planetary rings",
       "doi": "10.1016/j.icarus.2010.05.030",
-      "bibtex": "@article{SalmonCanup2010_Icarus208_33, journal = {Icarus}, volume = {208}, pages = {33-48}, year = {2010}}",
+      "bibtex": "@article{SalmonCharnozBrahic2010_Icarus209_771, journal = {Icarus}, volume = {209}, pages = {771-785}, year = {2010}}",
       "adopted_scope": "Viscous diffusion of Roche-interior fluid disks with ν ∝ Σ² scaling relevant to massive inner rings.",
       "claims": [
         "Shows how initial Σ(r) choices control spreading time and mass delivery beyond the Roche limit.",
@@ -326,18 +326,6 @@
       "claims": [
         "Defines the radiation-to-gravity ratio beta and connects it to blow-out limits and the Planck-mean efficiency Q_pr.",
         "Provides the baseline beta(s) expression reused for the gas-poor, optically thin limit."
-      ]
-    },
-    {
-      "key": "MurrayDermott1999_SSD",
-      "short": "Murray & Dermott (1999)",
-      "title": "Solar System Dynamics",
-      "doi": "10.1017/CBO9781139174817",
-      "bibtex": "@book{MurrayDermott1999_SSD, title = {Solar System Dynamics}, publisher = {Cambridge University Press}, year = {1999}, author = {Murray, C. D. and Dermott, S. F.}}",
-      "adopted_scope": "Keplerian orbital relations and circular-orbit kinematics for planetary systems.",
-      "claims": [
-        "Derives v_K = sqrt(GM/r) and Omega = sqrt(GM/r^3) for circular orbits from Newtonian gravity.",
-        "Provides canonical notation for v_K and Omega used throughout the repository."
       ]
     },
     {
@@ -576,27 +564,15 @@
       ]
     },
     {
-      "key": "CogleyBergstrom1979_JQSRT22_267",
+      "key": "CogleyBergstrom1979_JQSRT21_265",
       "short": "Cogley & Bergstrom (1979)",
       "title": "Numerical results for the thermal scattering functions",
       "doi": "10.1016/0022-4073(79)90017-7",
-      "bibtex": "@article{CogleyBergstrom1979_JQSRT22_267, journal = {J. Quant. Spectrosc. Radiat. Transf.}, volume = {22}, pages = {267-280}, year = {1979}}",
+      "bibtex": "@article{CogleyBergstrom1979_JQSRT21_265, journal = {J. Quant. Spectrosc. Radiat. Transf.}, volume = {21}, pages = {265-276}, year = {1979}}",
       "adopted_scope": "Tabulated scattering functions for plane-parallel layers parameterised by τ, ω₀, and g.",
       "claims": [
         "Supplies numerical reflectance/exitance values used as templates for Φ(τ,ω₀,g) lookup tables.",
         "Confirms saturation of direct beam transmission for τ≳1 motivating τ-clipping."
-      ]
-    },
-    {
-      "key": "Chandrasekhar1960_RadiativeTransfer",
-      "short": "Chandrasekhar (1960)",
-      "title": "Radiative Transfer",
-      "doi": null,
-      "bibtex": "@book{Chandrasekhar1960_RadiativeTransfer, publisher = {Dover}, year = {1960}}",
-      "adopted_scope": "Classic treatment of radiative transfer and τ≈1 effective photospheres.",
-      "claims": [
-        "Defines the τ≈1 surface as the effective emission/absorption layer for plane-parallel media.",
-        "Supports clipping Σ at τ=1 when computing shielding in optically thick slabs."
       ]
     },
     {
@@ -729,6 +705,184 @@
       "claims": [
         "Surveys capture versus giant-impact origin scenarios for Phobos and Deimos and their observational constraints.",
         "Summarizes extended debris-disk evolution and transient-moon stirring as pathways to small-satellite formation."
+      ]
+    },
+    {
+      "key": "Demyk2022_AA666_A192",
+      "short": "Demyk et al. (2022)",
+      "title": "Low-temperature optical constants of amorphous silicate dust analogues",
+      "doi": "10.1051/0004-6361/202243815",
+      "bibtex": "@article{Demyk2022_AA666_A192, journal = {A\\&A}, volume = {666}, pages = {A192}, year = {2022}}",
+      "adopted_scope": "Optical constants for amorphous silicate analogues across UV–mm wavelengths and 10–300 K.",
+      "claims": [
+        "Provides n,k datasets for Mg-rich and Mg-Fe silicate analogues over 5–800/1000 µm with temperature coverage 10–300 K.",
+        "Publishes extrapolated optical constants and temperature interpolation guidance via STOPCODA/SSHADE."
+      ]
+    },
+    {
+      "key": "Lamy1978_Icarus34_68",
+      "short": "Lamy (1978)",
+      "title": "Optical Properties of Silicates in the Far Ultraviolet",
+      "bibtex": "@article{Lamy1978_Icarus34_68, journal = {Icarus}, volume = {34}, pages = {68-75}, year = {1978}}",
+      "adopted_scope": "Far-UV optical constants for silicate samples used to extend short-wavelength n,k.",
+      "claims": [
+        "Tabulates n,k for obsidian, basaltic glass, basalt, and andesite over 0.10–0.44 µm.",
+        "Uses Kramers–Kronig analysis of reflectance to derive optical constants."
+      ]
+    },
+    {
+      "key": "SchaeferFegley2004_Icarus169_216",
+      "short": "Schaefer & Fegley (2004)",
+      "title": "A thermodynamic model of high temperature lava vaporization on Io",
+      "doi": "10.1016/j.icarus.2003.08.023",
+      "bibtex": "@article{SchaeferFegley2004_Icarus169_216, journal = {Icarus}, volume = {169}, pages = {216-241}, year = {2004}}",
+      "adopted_scope": "High-temperature silicate vaporization modeling and equilibrium vapor pressures.",
+      "claims": [
+        "Computes melt–vapor equilibrium with MAGMA and reports vapor pressure/composition from 1700–2400 K.",
+        "Provides context for HKL-style vapor loss treatments in silicate disks."
+      ]
+    },
+    {
+      "key": "Arakawa1991_IAUC126_102",
+      "short": "Arakawa et al. (1991)",
+      "title": "Optical Constants of Basaltic Glass from 0.0173 To 50 μm",
+      "doi": "10.1017/S0252921100066574",
+      "bibtex": "@inproceedings{Arakawa1991_IAUC126_102, booktitle = {IAU Colloquium 126}, pages = {102-104}, year = {1991}}",
+      "adopted_scope": "Basaltic glass optical constants used to extend Q_pr inputs at short wavelengths.",
+      "claims": [
+        "Reports n,k for basaltic glass over 0.0173–50 μm (IAU Colloquium 126)."
+      ]
+    },
+    {
+      "key": "CampoBagatin1994_PSS42_1079",
+      "short": "Campo Bagatin et al. (1994)",
+      "title": "Wavy size distributions for collisional systems with a small-size cutoff",
+      "doi": "10.1016/0032-0633(94)90008-6",
+      "bibtex": "@article{CampoBagatin1994_PSS42_1079, journal = {Planet. Space Sci.}, volume = {42}, pages = {1079-1092}, year = {1994}}",
+      "adopted_scope": "Wavy PSD structure induced by a small-size cutoff in collisional cascades.",
+      "claims": [
+        "Shows that a minimum-size cutoff yields oscillatory (wavy) size distributions in collisional systems."
+      ]
+    },
+    {
+      "key": "Briani2013_arXiv",
+      "short": "Briani et al. (2013)",
+      "title": "Simulations of micrometeoroid interactions with the Earth atmosphere",
+      "doi": "",
+      "bibtex": "@article{Briani2013_arXiv, title = {Simulations of micrometeoroid interactions with the Earth atmosphere}, year = {2013}, eprint = {1302.3666}, archivePrefix = {arXiv}}",
+      "adopted_scope": "Micrometeoroid heating/sublimation parameters used as a solid-phase proxy.",
+      "claims": [
+        "Uses log10(P_sat)=A−B/T with A=10.6, B=13500 for micrometeoroid vapor pressure (via Love & Brownlee coefficients)."
+      ]
+    },
+    {
+      "key": "Chandrasekhar1960_Book",
+      "short": "Chandrasekhar (1960)",
+      "title": "Radiative Transfer",
+      "doi": "",
+      "bibtex": "@book{Chandrasekhar1960_Book, title = {Radiative Transfer}, year = {1960}}",
+      "adopted_scope": "Classical radiative transfer foundations referenced for shielding/transfer formulations.",
+      "claims": [
+        "Provides the classical radiative transfer formalism underpinning H/X/Y function treatments."
+      ]
+    },
+    {
+      "key": "Egan1975_Icarus25_344",
+      "short": "Egan et al. (1975)",
+      "title": "Ultraviolet complex refractive index of Martian dust: Laboratory measurements of terrestrial analogs",
+      "doi": "10.1016/0019-1035(75)90029-9",
+      "bibtex": "@article{Egan1975_Icarus25_344, journal = {Icarus}, volume = {25}, pages = {344-355}, year = {1975}}",
+      "adopted_scope": "Ultraviolet refractive index data for Martian dust analogs and basaltic materials.",
+      "claims": [
+        "Provides UV n,k measurements for terrestrial analog dust used to bridge short-wavelength gaps."
+      ]
+    },
+    {
+      "key": "FergusonNuth2012_JCED57_721",
+      "short": "Ferguson & Nuth (2012)",
+      "title": "Vapor Pressure and Evaporation Coefficient of Silicon Monoxide over a Mixture of Silicon and Silica",
+      "doi": "10.1021/je200693d",
+      "bibtex": "@article{FergusonNuth2012_JCED57_721, journal = {J. Chem. Eng. Data}, volume = {57}, pages = {721-728}, year = {2012}}",
+      "adopted_scope": "Evaporation coefficient and vapor-pressure measurements for SiO over Si/SiO2 mixtures.",
+      "claims": [
+        "Reports SiO vapor pressure and evaporation coefficient used to justify alpha_evap defaults."
+      ]
+    },
+    {
+      "key": "KimuraIshimotoMukai1997_AA326_263",
+      "short": "Kimura et al. (1997)",
+      "title": "A study on solar dust ring formation based on fractal dust models",
+      "doi": "",
+      "bibtex": "@article{KimuraIshimotoMukai1997_AA326_263, journal = {A&A}, volume = {326}, pages = {263}, year = {1997}}",
+      "adopted_scope": "Fractal dust model and sublimation parameterization for silicate/carbon grains.",
+      "claims": [
+        "Provides sublimation-related parameters for silicate/carbon dust used in HKL-style fits."
+      ]
+    },
+    {
+      "key": "KimuraOkamotoMukai2002_Icarus157_349",
+      "short": "Kimura et al. (2002)",
+      "title": "Radiation Pressure and the Poynting–Robertson Effect for Fluffy Dust Particles",
+      "doi": "10.1006/icar.2002.6849",
+      "bibtex": "@article{KimuraOkamotoMukai2002_Icarus157_349, journal = {Icarus}, volume = {157}, pages = {349-361}, year = {2002}}",
+      "adopted_scope": "Radiation pressure and PR-drag efficiency for porous/aggregate dust grains.",
+      "claims": [
+        "Quantifies β and PR-drag behavior for fluffy grains, supporting size/material dependence."
+      ]
+    },
+    {
+      "key": "Kobayashi2011_EPS63_1067",
+      "short": "Kobayashi et al. (2011)",
+      "title": "Sublimation temperature of circumstellar dust particles and its importance for dust ring formation",
+      "doi": "10.5047/eps.2011.03.012",
+      "bibtex": "@article{Kobayashi2011_EPS63_1067, journal = {Earth Planets Space}, volume = {63}, pages = {1067-1075}, year = {2011}}",
+      "adopted_scope": "Sublimation temperature estimates for dust compositions (obsidian/pyroxene/olivine/iron).",
+      "claims": [
+        "Presents sublimation temperature estimates used for solid-phase HKL proxies."
+      ]
+    },
+    {
+      "key": "Kubaschewski1974_Book",
+      "short": "Kubaschewski (1974)",
+      "title": "Thermochemical data compilation (Clausius–Clapeyron coefficients)",
+      "doi": "",
+      "bibtex": "@book{Kubaschewski1974_Book, title = {Thermochemical data compilation}, year = {1974}}",
+      "adopted_scope": "Clausius–Clapeyron coefficients adopted for default SiO saturation vapor pressure.",
+      "claims": [
+        "Supplies Clausius-type coefficients used for the default P_sat fit in HKL parameters."
+      ]
+    },
+    {
+      "key": "LoveBrownlee1991_Icarus89_26",
+      "short": "Love & Brownlee (1991)",
+      "title": "Heating and thermal transformation of micrometeoroids entering the Earth's atmosphere",
+      "doi": "10.1016/0019-1035(91)90085-8",
+      "bibtex": "@article{LoveBrownlee1991_Icarus89_26, journal = {Icarus}, volume = {89}, pages = {26-43}, year = {1991}}",
+      "adopted_scope": "Micrometeoroid heating and vapor-pressure proxy coefficients for solid-phase HKL fits.",
+      "claims": [
+        "Reports log P = A − B/T coefficients used as a solid-phase vapor-pressure proxy."
+      ]
+    },
+    {
+      "key": "MustillWyatt2009_MNRAS399_1403",
+      "short": "Mustill & Wyatt (2009)",
+      "title": "Debris disc stirring by secular perturbations from giant planets",
+      "doi": "10.1111/j.1365-2966.2009.15360.x",
+      "bibtex": "@article{MustillWyatt2009_MNRAS399_1403, journal = {MNRAS}, volume = {399}, pages = {1403-1414}, year = {2009}}",
+      "adopted_scope": "Relative velocity scaling in low-eccentricity debris disks (Rayleigh distributions).",
+      "claims": [
+        "States c=√(5/4) for Rayleigh-distributed relative velocities in low-e ensembles."
+      ]
+    },
+    {
+      "key": "PollackToonKhare1973_Icarus19_372",
+      "short": "Pollack et al. (1973)",
+      "title": "Optical properties of some terrestrial rocks and glasses",
+      "doi": "10.1016/0019-1035(73)90115-2",
+      "bibtex": "@article{PollackToonKhare1973_Icarus19_372, journal = {Icarus}, volume = {19}, pages = {372-389}, year = {1973}}",
+      "adopted_scope": "Optical constants for basalt and basaltic glass used in Q_pr table construction.",
+      "claims": [
+        "Provides n,k data for basalt/basaltic glass over 0.21–50 μm (ARIA data source)."
       ]
     }
   ]

@@ -437,6 +437,16 @@
 - **主張**:
   - 溶融SiO₂の平衡蒸気圧フィット（HKL 液体枝、(E.018) に集約）
 
+### Schaefer & Fegley (2004)
+- **Key**: `SchaeferFegley2004_Icarus169_216`
+- **Title**: A thermodynamic model of high temperature lava vaporization on Io
+- **Journal**: Icarus, 169, 216–241
+- **DOI**: [10.1016/j.icarus.2003.08.023](https://doi.org/10.1016/j.icarus.2003.08.023)
+- **使用箇所**: `docs/plan/20260102_basalt_unified_mode_plan.md` の HKL 候補（Table 7/10 の適用範囲整理）
+- **主張**:
+  - MAGMA コードで溶融物-蒸気平衡を計算し、1700–2400 K の蒸気圧・組成を評価
+  - SiO など主要ガス種の温度依存性を示す
+
 ### Visscher & Fegley (2013)
 - **Key**: `VisscherFegley2013_ApJL767_L12`
 - **Title**: Chemistry of Impact-Generated Silicate Melt-Vapor Debris Disks
@@ -502,6 +512,25 @@
   - 天文学的シリケイト/グラファイトの Q_abs データ
 
 
+### Lamy (1978)
+- **Key**: `Lamy1978_Icarus34_68`
+- **Title**: Optical Properties of Silicates in the Far Ultraviolet
+- **Journal**: Icarus, 34, 68–75
+- **使用箇所**: `docs/plan/20260102_basalt_unified_mode_plan.md` の UV 側 n,k 補完候補（Table II）
+- **主張**:
+  - 1026–1640 A の反射率と Kramers-Kronig 解析から n, k を推定
+  - シリケート試料の UV 光学特性を整理
+
+### Demyk et al. (2022)
+- **Key**: `Demyk2022_AA666_A192`
+- **Title**: Low-temperature optical constants of amorphous silicate dust analogues
+- **Journal**: A&A, 666, A192
+- **DOI**: [10.1051/0004-6361/202243815](https://doi.org/10.1051/0004-6361/202243815)
+- **使用箇所**: `docs/plan/20260102_basalt_unified_mode_plan.md` の長波長 n,k 補完候補、`paper/STOPCODA/EXPERIMENT_KD_20220331` / `paper/STOPCODA/EXPERIMENT_KD_20220525_002` のデータ収録
+- **主張**:
+  - 10–300 K の光学定数を 5–800/1000 um で提供
+  - 組成別の温度依存性を整理
+
 ### Hocuk et al. (2017)
 - **Key**: `Hocuk2017_AA604_A58`
 - **Title**: Parameterizing the interstellar dust temperature
@@ -519,17 +548,6 @@
 
 光学的深さと遮蔽効果の計算。
 **Analysis参照**: `analysis/equations.md` (E.015–E.017, E.028, E.031) の Φ 適用と τ=1 クリップを参照。
-
-### Chandrasekhar (1960)
-- **Key**: `Chandrasekhar1960_RadiativeTransfer`
-- **Title**: Radiative Transfer
-- **Publisher**: Dover Publications
-- **ISBN**: 978-0-486-60590-6
-- **Online**: [Internet Archive](https://archive.org/details/radiativetransfe00chan)
-- **使用箇所**: τ≈1 光球面クリッピングの背景
-- **主張**:
-  - 有効光球面を τ≈1 とみなす古典的扱い（E.017 の基盤）
-
 
 ### Joseph et al. (1976)
 - **Key**: `Joseph1976_JAS33_2452`
@@ -614,19 +632,6 @@ SiO₂ の相転移温度と物性パラメータ。
 
 ケプラー運動と軌道パラメータの標準参照。
 **Analysis参照**: `analysis/equations.md` (E.001–E.003) の v_K・Ω 定義を参照。
-
-### Murray & Dermott (1999)
-- **Key**: `MurrayDermott1999_SSD`
-- **Title**: Solar System Dynamics
-- **Publisher**: Cambridge University Press
-- **DOI**: [10.1017/CBO9781139174817](https://doi.org/10.1017/CBO9781139174817)
-- **ISBN**: 0-521-57295-9
-- **Online**: [Cambridge Core](https://www.cambridge.org/core/books/solar-system-dynamics/108745034742B5A6F0793FA0B3B673CC)
-- **使用箇所**: v_K, Ω の定義（E.001–E.002）
-- **主張**:
-  - ケプラー速度・角速度の標準式の参照元（E.001–E.002）
-
----
 
 ## 12. ガスドラッグ・大気捕獲
 

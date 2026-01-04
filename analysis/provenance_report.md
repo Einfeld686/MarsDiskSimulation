@@ -96,7 +96,7 @@ graph TD
 - `marsdisk/physics/collide.py#prepare_collision_kernel_workspace`
 - `marsdisk/physics/radiation.py#qpr_lookup_array`
 
-Known tags presently include `Hyodo2018_ApJ860_150`, `StrubbeChiang2006_ApJ648_652`, `Pignatale2018_ApJ853_118`, `Ronnet2016_ApJ828_109`, `CridaCharnoz2012_Science338_1196`, `CanupSalmon2018_SciAdv4_eaar6887`, `Kuramoto2024`, `Burns1979_Icarus40_1`, `Wyatt2008`, `Chandrasekhar1960_RadiativeTransfer`, `Joseph1976_JAS33_2452`, `HansenTravis1974_SSR16_527`, `ThebaultAugereau2007_AA472_169`, `Krivov2006_AA455_509`, `Dohnanyi1969_JGR74_2531`, `Ohtsuki2002_Icarus155_436`, `IdaMakino1992_Icarus96_107`, `ImazBlanco2023_MNRAS522_6150`, `Olofsson2022_MNRAS513_713`, `SalmonCanup2012_ApJ760_83`, `BohrenHuffman1983_Wiley`, `Thebault2003_AA408_775`, and `KrijtKama2014_AA566_L2`. These anchor the thermal history, β/blow-out relations, sublimation chemistry, condensation sinks, viscous spreading regimes, disk-mass/tidal constraints, radiative transfer fundamentals, PSD structure, collision timescales, energy bookkeeping, and the MMX-era review baseline.
+Known tags presently include `Hyodo2018_ApJ860_150`, `StrubbeChiang2006_ApJ648_652`, `Pignatale2018_ApJ853_118`, `Ronnet2016_ApJ828_109`, `CridaCharnoz2012_Science338_1196`, `CanupSalmon2018_SciAdv4_eaar6887`, `Kuramoto2024`, `Burns1979_Icarus40_1`, `Wyatt2008`, `Joseph1976_JAS33_2452`, `HansenTravis1974_SSR16_527`, `ThebaultAugereau2007_AA472_169`, `Krivov2006_AA455_509`, `Dohnanyi1969_JGR74_2531`, `Ohtsuki2002_Icarus155_436`, `IdaMakino1992_Icarus96_107`, `ImazBlanco2023_MNRAS522_6150`, `Olofsson2022_MNRAS513_713`, `SalmonCanup2012_ApJ760_83`, `BohrenHuffman1983_Wiley`, `Thebault2003_AA408_775`, and `KrijtKama2014_AA566_L2`. These anchor the thermal history, β/blow-out relations, sublimation chemistry, condensation sinks, viscous spreading regimes, disk-mass/tidal constraints, radiative transfer fundamentals, PSD structure, collision timescales, energy bookkeeping, and the MMX-era review baseline.
 
 ## Resolved items (2025-12-19 update - Energy Bookkeeping)
 
@@ -113,7 +113,7 @@ Known tags presently include `Hyodo2018_ApJ860_150`, `StrubbeChiang2006_ApJ648_6
 ## Resolved items (2025-12-15 update)
 
 1. **`blowout_core_eid_v1`** — β・a_blow・t_blow=1/Ω の式が Burns et al. (1979), Strubbe & Chiang (2006), Wyatt (2008) と紐付け完了。[@Burns1979_Icarus40_1; @StrubbeChiang2006_ApJ648_652; @Wyatt2008]
-2. **`shielding_gate_order_v1`** — Φテーブル・τ=1クリップの根拠を Chandrasekhar (1960), Joseph et al. (1976), Hansen & Travis (1974) で裏付け。[@Chandrasekhar1960_RadiativeTransfer; @Joseph1976_JAS33_2452; @HansenTravis1974_SSR16_527]
+2. **`shielding_gate_order_v1`** — Φテーブル・τ=1クリップの根拠を Joseph et al. (1976), Hansen & Travis (1974) で裏付け。[@Joseph1976_JAS33_2452; @HansenTravis1974_SSR16_527]
 3. **`psd_wavy_floor_scope_v1`** — wavy PSD と s_min クリップの優先順位を Thébault & Augereau (2007), Krivov et al. (2006), Dohnanyi (1969) で裏付け。[@ThebaultAugereau2007_AA472_169; @Krivov2006_AA455_509; @Dohnanyi1969_JGR74_2531]
 4. **`tcoll_regime_switch_v1`** — Wyatt/Ohtsuki 間の t_coll スケーリングを Strubbe & Chiang (2006), Wyatt (2008), Ohtsuki et al. (2002) と紐付け。[@StrubbeChiang2006_ApJ648_652; @Wyatt2008; @Ohtsuki2002_Icarus155_436]
 5. **`sublimation_gasdrag_scope_v1`** — gas-poor 既定と TL2003 無効化を Hyodo et al. (2017a, 2018), Canup & Salmon (2018), Olofsson et al. (2022) で裏付け。[@Hyodo2017a_ApJ845_125; @Hyodo2018_ApJ860_150; @CanupSalmon2018_SciAdv4_eaar6887; @Olofsson2022_MNRAS513_713]

@@ -183,11 +183,11 @@ graph LR
 | `dynamics.f_wake`, `e0/i0`, `t_damp_orbits`, `kernel_ei_mode` | Ohtsuki 型の速度分散平衡 $c_{\rm eq}$ と高さスケール $H\simeq ia$ をベースに wake 係数で調整 | [@Ohtsuki2002_Icarus155_436] |
 | `qstar.*` (`Qs`, `a_s`, `B`, `b_g`, `v_ref_kms`, `coeff_units`, `mu_grav`) | バザルト衝突の $Q_D^*$ を Benz & Asphaug (1999) から採用し、**1–7 km/s の固定係数テーブル**を既定として速度補間する。範囲外では LS09 型の重力項外挿（$v^{-3\mu+2}$, `mu_grav` 既定0.45）のみを適用。`coeff_units` で BA99 cgs/ SI を切替（`v_ref_kms` は override 時のみ参照） | [@BenzAsphaug1999_Icarus142_5; @StewartLeinhardt2009_ApJ691_L133; @LeinhardtStewart2012_ApJ745_79] |
 | `supply.*`, `mixing.epsilon_mix` | 表層再供給をサイズ別源項 S(a,r,t) として与え、バリスティック混合効率を ε_mix でパラメータ化 | [@WyattClarkeBooth2011_CeMDA111_1; @Wyatt2008; @EstradaDurisen2015_Icarus252_415; @CuzziEstrada1998_Icarus132_1] |
-| `shielding.mode`, `shielding.table_path`, `shielding.fixed_tau1_*` | Φ(τ,ω₀,g) テーブルを δ–Eddington/HG 近似から取得し、Σ_{τ=1} は診断として記録（上限判定は `tau_stop` で停止） | [@Joseph1976_JAS33_2452; @HansenTravis1974_SSR16_527; @CogleyBergstrom1979_JQSRT22_267; @Chandrasekhar1960_RadiativeTransfer] |
+| `shielding.mode`, `shielding.table_path`, `shielding.fixed_tau1_*` | Φ(τ,ω₀,g) テーブルを δ–Eddington/HG 近似から取得し、Σ_{τ=1} は診断として記録（上限判定は `tau_stop` で停止） | [@Joseph1976_JAS33_2452; @HansenTravis1974_SSR16_527; @CogleyBergstrom1979_JQSRT21_265] |
 | `sinks.sub_params.*`, `sinks.T_sub`, `sinks.mu`, `sinks.alpha_evap` | SiO/SiO₂ の HKL 昇華係数と閾値を Hyodo18 の温度域・Pignatale18 の組成・Melosh/Bruning/Ojovan の相変化データに合わせる | [@Hyodo2018_ApJ860_150; @Pignatale2018_ApJ853_118; @Melosh2007_MPS42_2079; @Bruning2003_JNCS330_13; @Ojovan2021_Materials14_5235] |
 | `phase.thresholds.*`, `phase.entrypoint` | ガラス転移と液相線 1475/1986 K を閾値にした SiO₂ 状態判定 | [@Bruning2003_JNCS330_13; @Ojovan2021_Materials14_5235] |
 | `disk.geometry.r_in_RM`, `r_out_RM` | base.yml 既定は 1.0–2.5 R_Mars。ロッシュ限界内の低質量リング想定では 2.2–2.7 R_Mars を採用 | [@CridaCharnoz2012_Science338_1196; @CanupSalmon2018_SciAdv4_eaar6887] |
-| `inner_disk_mass.use_Mmars_ratio`, `inner_disk_mass.map_to_sigma` | ロッシュ内リングの質量を M_disk/M_Mars から Σ(r) へ写像する簡略モデル | [@CridaCharnoz2012_Science338_1196; @SalmonCanup2010_Icarus208_33; @SalmonCanup2012_ApJ760_83; @Kuramoto2024] |
+| `inner_disk_mass.use_Mmars_ratio`, `inner_disk_mass.map_to_sigma` | ロッシュ内リングの質量を M_disk/M_Mars から Σ(r) へ写像する簡略モデル | [@CridaCharnoz2012_Science338_1196; @SalmonCharnozBrahic2010_Icarus209_771; @SalmonCanup2012_ApJ760_83; @Kuramoto2024] |
 | `sinks.enable_gas_drag`, `ALLOW_TL2003` | gas-poor を既定とし、gas-rich 感度試験時のみ TL2003 表層流出や drag を検討 | [@Hyodo2018_ApJ860_150; @CanupSalmon2018_SciAdv4_eaar6887; @TakeuchiLin2003_ApJ593_524; @PollackBurnsTauber1979_Icarus37_587; @Hunten1979_Icarus37_113; @Olofsson2022_MNRAS513_713] |
 
 #### 🌡️ 放射・温度関連 (`radiation`)
@@ -328,7 +328,7 @@ Hertz-Knudsen-Langmuir (HKL) 理論に基づく昇華速度の詳細パラメー
 | `s0_mode` | str | 初期 PSD の形状。`"upper"` は大粒子に集中、`"mono"` は単一サイズ | `"upper"` |
 | `M_in_ratio` | float | 内部円盤質量と火星質量の比。Σ の正規化に使用 | 3.0e-5 |
 
-`map_to_sigma="analytic"` は、Crida & Charnoz (2012) のロッシュ内リング拡散モデルや Salmon & Canup (2010, 2012) の流体ディスク近似を簡略化し、M_in_ratio で与えた総質量を一様または冪分布の Σ(r) に割り付ける [@CridaCharnoz2012_Science338_1196; @SalmonCanup2010_Icarus208_33; @SalmonCanup2012_ApJ760_83]。Kuramoto (2024) が整理した gas-poor リサイクルシナリオ（M_disk/M_Mars ≲ 10⁻⁴）に合うよう、基準値を 10⁻⁵–10⁻⁴ の範囲で設定する [@Kuramoto2024]。
+`map_to_sigma="analytic"` は、Crida & Charnoz (2012) のロッシュ内リング拡散モデルや Salmon et al. (2010) / Salmon & Canup (2012) の流体ディスク近似を簡略化し、M_in_ratio で与えた総質量を一様または冪分布の Σ(r) に割り付ける [@CridaCharnoz2012_Science338_1196; @SalmonCharnozBrahic2010_Icarus209_771; @SalmonCanup2012_ApJ760_83]。Kuramoto (2024) が整理した gas-poor リサイクルシナリオ（M_disk/M_Mars ≲ 10⁻⁴）に合うよう、基準値を 10⁻⁵–10⁻⁴ の範囲で設定する [@Kuramoto2024]。
 
 #### ⚡ 力学 (`dynamics`)
 
@@ -747,7 +747,7 @@ radiation:
 | `fixed_tau1_tau` | float | `mode="fixed_tau1"` のときに使う光学的厚さ τ | `null` |
 | `fixed_tau1_sigma` | float | `mode="fixed_tau1"` で Σ_{τ=1} を直接与える場合 | `null` |
 
-Φ(τ,ω₀,g) の反射・透過は、δ–Eddington 近似や Henyey–Greenstein 位相関数に基づく平板多重散乱計算を Joseph et al. (1976), Hansen & Travis (1974) などの方法で事前計算したテーブルを読み込む形を基本とする [@Joseph1976_JAS33_2452; @HansenTravis1974_SSR16_527; @CogleyBergstrom1979_JQSRT22_267]。τ≳1 では一次光がほぼ減衰するため、Σ_{τ=1} は診断用に記録し、表層が光学的に厚くなった場合は `tau_stop` 超過で停止判定する [@Chandrasekhar1960_RadiativeTransfer]。
+Φ(τ,ω₀,g) の反射・透過は、δ–Eddington 近似や Henyey–Greenstein 位相関数に基づく平板多重散乱計算を Joseph et al. (1976), Hansen & Travis (1974) などの方法で事前計算したテーブルを読み込む形を基本とする [@Joseph1976_JAS33_2452; @HansenTravis1974_SSR16_527; @CogleyBergstrom1979_JQSRT21_265]。τ≳1 では一次光がほぼ減衰するため、Σ_{τ=1} は診断用に記録し、表層が光学的に厚くなった場合は `tau_stop` 超過で停止判定する。
 
 ---
 
