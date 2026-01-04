@@ -22,12 +22,33 @@ from typing import Dict, Iterable, List, Optional, Sequence, Tuple
 TABLE_PLACEHOLDER_RE = re.compile(r"^\s*\[\[TABLE:(?P<label>[^]]+)\]\]\s*$")
 EQ_PLACEHOLDER_RE = re.compile(r"\[\[EQN:\((?P<num>[^)]+)\)\]\]")
 EQ_LABEL_PATTERN = r"(?:[A-Za-z]\.?)?\d+(?:\.\d+)*[A-Za-z]?"
+EQ_LABEL_RE = re.compile(EQ_LABEL_PATTERN)
 EQ_NUMBER_TRAIL_RE = re.compile(rf"\((?P<num>{EQ_LABEL_PATTERN})\)\s*[.,]?\s*$")
 EQ_NUMBER_ONLY_RE = re.compile(rf"^\s*\((?P<num>{EQ_LABEL_PATTERN})\)\s*[.,]?\s*$")
-EQUATION_REF_RE = re.compile(r"\bEq\.|\bEqs\.|\bEqn\.|\bEqns\.|\bEquation\b", re.IGNORECASE)
-EQ_REF_HEAD_RE = re.compile(rf"\bEq(?:s|n)?\.?\s*\((?P<label>{EQ_LABEL_PATTERN})\)", re.IGNORECASE)
+EQUATION_REF_RE = re.compile(r"\bEq(?:s|n)?\.?\b|\bEquations?\b", re.IGNORECASE)
+EQ_REF_HEAD_RE = re.compile(
+    rf"\b(?:Eq(?:s|n)?|Equations?)\.?\s*(?:\(\s*(?P<label>{EQ_LABEL_PATTERN})\s*\)|(?P<label_plain>{EQ_LABEL_PATTERN}))",
+    re.IGNORECASE,
+)
 EQ_REF_EXTRA_RE = re.compile(
-    rf"\s*(?:,|and|or|&|\u2013|-)\s*\((?P<label>{EQ_LABEL_PATTERN})\)", re.IGNORECASE
+    rf"\s*(?:,|and|or|&|\u2013|-)\s*(?:\(\s*(?P<label>{EQ_LABEL_PATTERN})\s*\)|(?P<label_plain>{EQ_LABEL_PATTERN}))",
+    re.IGNORECASE,
+)
+EQ_REF_RANGE_RE = re.compile(
+    rf"\b(?:Eq(?:ns?|s)?|Equations?)\.?\s*(?:\(\s*(?P<start>{EQ_LABEL_PATTERN})\s*\)|(?P<start_plain>{EQ_LABEL_PATTERN}))\s*[\u2013-]\s*(?:\(\s*(?P<end>{EQ_LABEL_PATTERN})\s*\)|(?P<end_plain>{EQ_LABEL_PATTERN}))",
+    re.IGNORECASE,
+)
+EQ_REF_LIST_RE = re.compile(
+    rf"\b(?:Eq(?:ns?|s)?|Equations?)\.?\s+(?P<rest>(?:\(?{EQ_LABEL_PATTERN}\)?\s*(?:,|and|or|&)\s*)+\(?{EQ_LABEL_PATTERN}\)?)",
+    re.IGNORECASE,
+)
+EQ_REF_PLURAL_SINGLE_RE = re.compile(
+    rf"\b(?:Eqs|Eqns|Equations)\.?\s*(?:\(\s*(?P<label>{EQ_LABEL_PATTERN})\s*\)|(?P<label_plain>{EQ_LABEL_PATTERN}))",
+    re.IGNORECASE,
+)
+EQ_REF_SINGLE_RE = re.compile(
+    rf"\b(?:Eq|Eqn|Equation)\.?\s*(?:\(\s*(?P<label>{EQ_LABEL_PATTERN})\s*\)|(?P<label_plain>{EQ_LABEL_PATTERN}))",
+    re.IGNORECASE,
 )
 YEAR_RE = re.compile(r"\b(18|19|20)\d{2}\b")
 AUTHOR_RE = re.compile(r"\b[A-Z][A-Za-z\-]+\b")
@@ -654,22 +675,70 @@ def _extract_eq_labels(line: str) -> List[str]:
     return labels
 
 
+def _label_from_match(match: re.Match[str]) -> str:
+    return match.group("label") or match.group("label_plain") or ""
+
+
 def _iter_eq_reference_groups(line: str) -> List[Tuple[re.Match[str], List[str], int]]:
     groups: List[Tuple[re.Match[str], List[str], int]] = []
     for match in EQ_REF_HEAD_RE.finditer(line):
-        labels = [match.group("label")]
+        label = _label_from_match(match)
+        if not label:
+            continue
+        labels = [label]
         end = match.end()
-        if re.search(r"\bEqs\b|\bEqns\b", match.group(0), re.IGNORECASE):
+        if re.search(r"\bEqs\b|\bEqns\b|\bEquations\b", match.group(0), re.IGNORECASE):
             pos = end
             while True:
                 extra_match = EQ_REF_EXTRA_RE.match(line[pos:])
                 if not extra_match:
                     break
-                labels.append(extra_match.group("label"))
+                extra_label = _label_from_match(extra_match)
+                if extra_label:
+                    labels.append(extra_label)
                 pos += extra_match.end()
             end = pos
         groups.append((match, labels, end))
     return groups
+
+
+def _normalize_eq_reference_line(line: str) -> str:
+    if EQ_PLACEHOLDER_RE.search(line):
+        return line
+    if not EQUATION_REF_RE.search(line):
+        return line
+
+    def range_repl(match: re.Match[str]) -> str:
+        start = match.group("start") or match.group("start_plain") or ""
+        end = match.group("end") or match.group("end_plain") or ""
+        if not start or not end:
+            return match.group(0)
+        return f"Eqs. ({start})-({end})"
+
+    def list_repl(match: re.Match[str]) -> str:
+        rest = match.group("rest")
+        if "-" in rest or "\u2013" in rest:
+            return match.group(0)
+        labels = EQ_LABEL_RE.findall(rest)
+        if not labels:
+            return match.group(0)
+        return "Eqs. " + ", ".join(f"({label})" for label in labels)
+
+    def single_label(match: re.Match[str]) -> str:
+        label = match.group("label") or match.group("label_plain") or ""
+        if not label:
+            return match.group(0)
+        return f"Eq. ({label})"
+
+    line = EQ_REF_PLURAL_SINGLE_RE.sub(single_label, line)
+    line = EQ_REF_RANGE_RE.sub(range_repl, line)
+    line = EQ_REF_LIST_RE.sub(list_repl, line)
+    line = EQ_REF_SINGLE_RE.sub(single_label, line)
+    return line
+
+
+def _normalize_eq_references(lines: Sequence[str]) -> List[str]:
+    return [_normalize_eq_reference_line(line) for line in lines]
 
 
 def _has_citation(text: str) -> bool:
@@ -1122,6 +1191,7 @@ def _process_key(
 
     old_lines = old_text.split("\n")
     cleaned_lines, counts = _remove_junk_and_tables(source_text.split("\n"))
+    cleaned_lines = _normalize_eq_references(cleaned_lines)
     equation_lines, _eq_replaced = _replace_equation_placeholders(cleaned_lines)
     equation_lines, _eq_ref_inserted = _supplement_placeholders_from_eq_refs(equation_lines)
     equation_lines = _compress_blank_lines(equation_lines, max_blank=2)
