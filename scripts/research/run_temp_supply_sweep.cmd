@@ -433,7 +433,7 @@ rem Sweep-parallel primary: keep cell-parallel off to avoid nested parallelism.
 if "%SWEEP_PARALLEL%"=="1" (
   set "MARSDISK_CELL_PARALLEL=0"
   set "MARSDISK_CELL_JOBS=1"
-  if not defined CELL_THREAD_LIMIT set "CELL_THREAD_LIMIT=1"
+  if not defined CELL_THREAD_LIMIT set "CELL_THREAD_LIMIT=3"
 ) else (
   if not defined MARSDISK_CELL_PARALLEL set "MARSDISK_CELL_PARALLEL=1"
   if not defined MARSDISK_CELL_JOBS set "MARSDISK_CELL_JOBS=auto"
