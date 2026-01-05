@@ -71,48 +71,54 @@ Kuramoto (2024) の整理に沿って、物性・組成と力学特性を分け�
 
 以下の図は、先行研究を入力・接続・出力の役割に分け、接続の欠損（未解決点）と本研究の位置を示したものである。まず全体像を図 1.2a に示し、欠けたリンクの中身は図 1.2b で拡大する。図 1.2a は時間発展（左→右）と受け渡しの役割を一本化し、代表文献は図中に併記する。図の箱では数値を最小限にし、代表値（2000 K、蒸気 <5%、~1.5 m、~100 μm、~0.1 μm など）と解像度（SPH の粒子数など）は、図外補足として後述する。代表値の根拠は Hyodo et al. (2017a, 2018) に置く。
 
-**図 1.2a（全体像）**  
-- 矢印の凡例：`==>`（太実線）＝先行研究で定量的に示された関係、`-->`（実線）＝本研究が計算でつなぐ関係、`-.->`（点線）＝仮定・未解決の接続（本研究では直接は証明しない）
+（図 1.2a）
 
 ```mermaid
 flowchart LR
-    %% ===== styles =====
-    classDef prior fill:#e1f5fe,stroke:#1565c0,stroke-width:2px,color:#000;
-    classDef assume fill:#fff3e0,stroke:#ef6c00,stroke-width:2px,stroke-dasharray: 6 4,color:#000;
-    classDef this fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px,color:#000;
-    classDef downstream fill:#f3e5f5,stroke:#6a1b9a,stroke-width:2px,color:#000;
-    classDef legend fill:#ffffff,stroke:#999,stroke-width:1px,color:#000;
+    %% ===== 見た目（任意：レンダラ依存） =====
+    classDef input fill:#e1f5fe,stroke:#01579b,stroke-width:2px,color:#000;
+    classDef update fill:#fff3e0,stroke:#e65100,stroke-width:3px,stroke-dasharray: 5 5,color:#000;
+    classDef connect fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px,color:#000;
+    classDef output fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px,color:#000;
 
-    %% ===== Legend =====
-    subgraph LEG["凡例（矢印＝論理の強さ）"]
-      direction TB
-      LG1["先行研究で定量"]:::legend ==> LG2["（例）"]:::legend
-      LG3["本研究が計算で接続"]:::legend --> LG4["（例）"]:::legend
-      LG5["仮定・未解決"]:::legend -.-> LG6["（例）"]:::legend
+    %% ===== Phase 1: SPH（初期条件） =====
+    subgraph P1["Phase 1: 衝突直後の物理状態 (t ≲ 数十時間)"]
+        direction TB
+        SPH["<b>SPH衝突シミュレーション</b><br/>(Citron et al. 2015; Hyodo et al. 2017a)"]:::input
+        D0["<b>初期条件（Phase 1 の出力）</b><br/>・総質量 M_disk と内側質量 M_in^0<br/>・外縁 r_d^0（/角運動量）<br/>・温度 T0 と相（溶融/蒸気）<br/>・粒径帯（m〜μm）"]:::input
+        SPH --> D0
     end
 
-    %% ===== Main flow =====
-    SPH["Phase 1（先行研究）<br/>衝突直後の SPH<br/>出力：M_in^0, r_d^0, 温度, 相, 粒径帯"]:::prior
-    LIT["先行研究が示す短期損失の候補<br/>蒸気の脱出／放射圧による微粒子除去 など"]:::prior
+    %% ===== Phase 2: 本研究（短期損失で更新） =====
+    subgraph P2["Phase 2: 本研究の計算範囲 (t ≲ 数年)"]
+        direction TB
+        PROC["<b>短期損失の物理的競合</b><br/>・ガス流体力学的逃げ (Hyodo et al. 2018)<br/>・衝突粉砕/カスケード (Dohnanyi 1969; Benz & Asphaug 1999)<br/>・高温昇華 (Markkanen & Agarwal 2020)<br/>・放射圧排除 (Burns et al. 1979; Hyodo et al. 2018)<br/>・表層遮蔽/垂直補充 (Takeuchi & Lin 2003)"]:::update
+        DM["<b>出力：累積質量損失 ΔM_in</b><br/>・粒径分布の時間発展<br/>・光学的厚さによる制限ノブ<br/>(本研究)"]:::update
+        D1["<b>更新された実行入力質量</b><br/>M_in^eff = M_in^0 - ΔM_in"]:::update
+        PROC --> DM --> D1
+    end
 
-    P2A["本研究の仮定<br/>時間スケール分離／遮蔽（表層）など"]:::assume
-    P2["Phase 2（本研究）<br/>短期損失を定量化して<br/>M_in を更新"]:::this
-    OUT2["本研究の出力<br/>ΔM_in と M_in'（＋必要なら粒径分布）"]:::this
+    %% ===== Phase 3: 長期進化（形成モデル） =====
+    subgraph P3["Phase 3: 衛星形成と動的進化 (t ≳ 10^3 年〜)"]
+        direction TB
+        HYB["<b>ハイブリッド集積計算</b><br/>・熱調節された粘性拡散 (Salmon & Canup 2012)<br/>・ロッシュ限界外での胚形成 (Crida & Charnoz 2012)<br/>・共鳴掃引による集積 (Rosenblatt et al. 2016)<br/>・生存質量制限 ≦ 3e-5 M_Mars (Canup & Salmon 2018)"]:::connect
+        SAT["<b>形成帰結</b><br/>・最終的な衛星の質量・軌道配置"]:::connect
+        HYB --> SAT
+    end
 
-    P3["Phase 3（先行研究）<br/>長期形成モデル（内側連続円盤＋外側多体計算）<br/>代表文献：Salmon et al. 2010; Crida & Charnoz 2012; Salmon & Canup 2012; Canup & Salmon 2018"]:::prior
-    OUT3["出力：衛星の数・質量・軌道"]:::downstream
+    %% ===== Phase 4: 観測（最終結果） =====
+    subgraph P4["Phase 4: 現在の観測制約"]
+        direction TB
+        OBS["<b>観測事実の再現確認</b><br/>・Phobos/Deimos の低密度・組成<br/>・円軌道および潮汐進化履歴<br/>(Rosenblatt et al. 2019; Kuramoto 2024)"]:::output
+    end
 
-    %% links
-    SPH ==> LIT
-    SPH --> P2
-    LIT --> P2
-    P2A -.-> P2
-    P2 --> OUT2
-    OUT2 ==> P3
-    P3 ==> OUT3
+    %% ===== 主流（本研究を挟む） =====
+    D0 --> PROC
+    D1 --> HYB
+    SAT --> OBS
 
-    %% conventional shortcut
-    SPH -.->|短期損失を無視| P3
+    %% ===== 従来の直結（短期損失を無視） =====
+    D0 -. "従来モデル：短期損失を無視<br/>(SPHから直接N体へ)" .-> HYB
 ```
 
 ### 1.2.2 本研究が仮定すること
