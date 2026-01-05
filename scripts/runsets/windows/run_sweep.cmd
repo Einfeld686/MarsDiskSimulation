@@ -794,10 +794,10 @@ if not defined COOL_TO_K set "COOL_TO_K=1000"
 
 rem To force a fixed horizon, set COOL_TO_K=none and T_END_YEARS explicitly.
 
-rem Default parallel settings: 6 sweep jobs on internal disk.
+rem Default parallel settings: 10 sweep jobs on internal disk.
 if not defined AUTO_JOBS set "AUTO_JOBS=0"
 rem ::REF:PARALLEL
-if not defined PARALLEL_JOBS set "PARALLEL_JOBS=6"
+if not defined PARALLEL_JOBS set "PARALLEL_JOBS=10"
 if not defined PARALLEL_JOBS_DEFAULT set "PARALLEL_JOBS_DEFAULT=0"
 if not defined SWEEP_PARALLEL set "SWEEP_PARALLEL=1"
 if not defined SWEEP_PARALLEL_DEFAULT set "SWEEP_PARALLEL_DEFAULT=0"
@@ -883,9 +883,9 @@ if not defined SIZE_PROBE_HOOKS set "SIZE_PROBE_HOOKS=plot,eval"
 
 
 
-rem Per-process thread cap (sweep-parallel uses 3, cell-parallel uses 2).
+rem Per-process thread cap (sweep-parallel uses 2, cell-parallel uses 2).
 if "%SWEEP_PARALLEL%"=="1" (
-  set "CELL_THREAD_LIMIT=3"
+  set "CELL_THREAD_LIMIT=2"
   set "CELL_THREAD_LIMIT_DEFAULT=1"
 ) else (
   set "CELL_THREAD_LIMIT=2"
