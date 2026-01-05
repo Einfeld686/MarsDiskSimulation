@@ -416,6 +416,7 @@ rem STREAM_MEM_GB intentionally left undefined by default
 rem STREAM_STEP_INTERVAL intentionally left undefined by default
 if not defined ENABLE_PROGRESS set "ENABLE_PROGRESS=1"
 if not defined SWEEP_PROGRESS set "SWEEP_PROGRESS=1"
+if not defined SWEEP_PROGRESS_MILESTONE_STEP set "SWEEP_PROGRESS_MILESTONE_STEP=25"
 if not defined AUTO_JOBS set "AUTO_JOBS=0"
 if not defined PARALLEL_JOBS (
   set "PARALLEL_JOBS=1"
@@ -434,7 +435,7 @@ rem Sweep-parallel primary: keep cell-parallel off to avoid nested parallelism.
 if "%SWEEP_PARALLEL%"=="1" (
   set "MARSDISK_CELL_PARALLEL=0"
   set "MARSDISK_CELL_JOBS=1"
-  if not defined CELL_THREAD_LIMIT set "CELL_THREAD_LIMIT=3"
+  if not defined CELL_THREAD_LIMIT set "CELL_THREAD_LIMIT=2"
 ) else (
   if not defined MARSDISK_CELL_PARALLEL set "MARSDISK_CELL_PARALLEL=1"
   if not defined MARSDISK_CELL_JOBS set "MARSDISK_CELL_JOBS=auto"
@@ -947,8 +948,9 @@ set "PROGRESS_LAUNCHED=0"
 set "PROGRESS_FAILED=0"
 set "PROGRESS_LAST_DONE=-1"
 set "PROGRESS_LAST_LAUNCHED=-1"
+set "PROGRESS_MILESTONE_NEXT=%SWEEP_PROGRESS_MILESTONE_STEP%"
 if "%SWEEP_PROGRESS%"=="1" (
-  for /f "usebackq tokens=2 delims=:" %%C in (`find /c /v "" "!SWEEP_LIST_FILE!"`) do set "PROGRESS_TOTAL=%%C"
+  for /f "usebackq tokens=3 delims=:" %%C in (`find /c /v "" "!SWEEP_LIST_FILE!"`) do set "PROGRESS_TOTAL=%%C"
   call :normalize_int PROGRESS_TOTAL 0
   if "!PROGRESS_TOTAL!"=="0" (
     echo.[warn] sweep progress: case count unavailable for "!SWEEP_LIST_FILE!"
@@ -1111,6 +1113,19 @@ call :normalize_int PROGRESS_FAILED 0
 if !PROGRESS_FAILED! GTR 0 set "PROGRESS_SUFFIX= failed=!PROGRESS_FAILED!"
 set /a PROGRESS_PCT=0
 if !PROGRESS_TOTAL! GTR 0 set /a PROGRESS_PCT=100*PROGRESS_DONE/PROGRESS_TOTAL
+call :normalize_int SWEEP_PROGRESS_MILESTONE_STEP 25
+if !SWEEP_PROGRESS_MILESTONE_STEP! LSS 1 set "SWEEP_PROGRESS_MILESTONE_STEP=25"
+call :normalize_int PROGRESS_MILESTONE_NEXT 0
+:progress_milestone_loop
+if !PROGRESS_MILESTONE_NEXT! LEQ 0 goto progress_milestone_done
+if !PROGRESS_PCT! GEQ !PROGRESS_MILESTONE_NEXT! (
+  if !PROGRESS_MILESTONE_NEXT! LEQ 100 (
+    echo.[info] sweep milestone: !PROGRESS_MILESTONE_NEXT!%% complete (!PROGRESS_DONE!/!PROGRESS_TOTAL!)
+  )
+  set /a PROGRESS_MILESTONE_NEXT+=SWEEP_PROGRESS_MILESTONE_STEP
+  goto progress_milestone_loop
+)
+:progress_milestone_done
 echo.[info] sweep progress: !PROGRESS_DONE!/!PROGRESS_TOTAL! complete (!PROGRESS_PCT!%%) running=!PROGRESS_RUNNING!!PROGRESS_SUFFIX!
 exit /b 0
 
