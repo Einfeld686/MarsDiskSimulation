@@ -121,67 +121,105 @@ flowchart LR
     D0 -. "従来モデル：短期損失を無視<br/>(SPHから直接N体へ)" .-> HYB
 ```
 
-### 1.2.2 本研究が仮定すること
-
-本研究は、上の「未整備」部分だけを狙って埋める。そのために、次を本研究の仮定（＝本研究の外側にある不確実性を押し込める場所）として宣言する。
-
-- **時間スケール分離**：SPH が扱う数十時間と、長期形成モデルが扱う ≳10^3 年の間にある「短期損失」を独立に評価し、長期モデル開始時の $M_{\rm in}$ を $M_{\rm in}'$ に更新する。短期損失の評価区間は、高温期（運用上は火星表面温度が 1000 K を下回るまで）を基準に置く。
-- **損失の定義**：ここでいう「損失」は、放射圧除去や昇華などにより、ロッシュ限界内の固体質量が「のちの粘性拡散・ロッシュ限界通過の供給」に寄与しなくなることを指す。必ずしも火星重力圏の外へ出ること（系外への脱出）と同義ではない。
-- **遮蔽と二層化**：円盤が光学的に厚いことを踏まえ、放射が届くのは表層に限られるとみなし、深部（貯蔵庫）と表層（反応層）の 2 層で表す。表層への再供給（深部→表層の交換）は、直接計算せずパラメータとして与える。
-- **小粒子供給の不確実性をパラメータ化する**：放射圧が効く粒径帯は小さいため、表層でどれだけ小粒子が作られるか（粉砕・再溶融・凝縮など）は結果を左右する。本研究では、この供給速度と昇華の競合を同じ時間積分の中で扱い、感度を評価する。
-
-なお、放射圧の強さは「放射圧と重力の比」で表すのが標準であり（Burns et al. 1979）、本研究でもこの定義に従う。また、微粒子供給を記述する際は、衝突カスケードの定常解が典型的なべき則分布を与えることが古典的に示されている（Dohnanyi 1969）。さらに昇華では、温度から平衡蒸気圧を与える必要があり、溶融ケイ酸塩と平衡にある蒸気の圧力計算がその根拠になる（Visscher & Fegley 2013）。ただし巨大衝突直後の円盤が衝突カスケードの定常状態に達しているとは限らないため、本研究では供給率をパラメータとして探索する。
-
-**図 1.2b（Phase 2 の内部構造）**  
-- 矢印の凡例は図 1.2a と同じ。
+（図 1.2b）
 
 ```mermaid
 flowchart LR
-    classDef prior fill:#e1f5fe,stroke:#1565c0,stroke-width:2px,color:#000;
-    classDef assume fill:#fff3e0,stroke:#ef6c00,stroke-width:2px,stroke-dasharray: 6 4,color:#000;
-    classDef this fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px,color:#000;
-    classDef out fill:#ede7f6,stroke:#4527a0,stroke-width:2px,color:#000;
-    classDef sink fill:#ffebee,stroke:#c62828,stroke-width:2px,color:#000;
-    classDef legend fill:#ffffff,stroke:#999,stroke-width:1px,color:#000;
+    %% ========= style =========
+    classDef input fill:#e1f5fe,stroke:#01579b,stroke-width:2px,color:#000;
+    classDef connect fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px,color:#000;
+    classDef state fill:#ffffff,stroke:#424242,stroke-width:1px,color:#000;
+    classDef proc fill:#fff9c4,stroke:#fbc02d,stroke-width:1px,color:#000;
+    classDef sink fill:#ffcdd2,stroke:#c62828,stroke-width:2px,color:#000;
+    classDef driver fill:#f3e5f5,stroke:#7b1fa2,stroke-width:1px,stroke-dasharray: 3 3,color:#000;
+    classDef calc fill:#fff3e0,stroke:#e65100,stroke-width:2px,color:#000;
 
-    subgraph LEG["凡例（矢印＝論理の強さ）"]
-      direction TB
-      LG1["先行研究で定量"]:::legend ==> LG2["（例）"]:::legend
-      LG3["本研究が計算で接続"]:::legend --> LG4["（例）"]:::legend
-      LG5["仮定・未解決"]:::legend -.-> LG6["（例）"]:::legend
+    %% ========= anchors (Phase1 / Phase3) =========
+    IN["Phase 1 (Input)<br/>SPH初期条件<br/>M_in, T0, 初期粒径分布"]:::input
+    OUT["Phase 3 (Connection)<br/>長期進化モデルへ<br/>更新後 M_in'（＋分布）"]:::connect
+
+    %% ========= Phase2 zoom =========
+    subgraph P2["Phase 2 (This Study) の内部：短期損失で M_in を更新"]
+        direction LR
+
+        %% --- vertical structure = shielding ---
+        subgraph V["遮蔽による二層構造"]
+            direction TB
+            Deep["深部貯蔵庫<br/>(放射が直接届かない)"]:::state
+            Surf["表層アクティブ層<br/>(放射が届く薄い層)"]:::state
+            Deep <-->|"表層再供給<br/>(混合・傾斜減衰をパラメタ化)"| Surf
+        end
+
+        %% --- central state variable ---
+        Surf --> PSD["表層の在庫（状態変数）<br/>粒径分布 N(s) / Σ_surf"]:::state
+
+        %% --- competing processes (parallel) ---
+        PSD --> Coll["供給：衝突粉砕<br/>(Wyatt 2008; Thébault & Augereau 2007)"]:::proc
+        Coll -->|"小粒子を増やす"| PSD
+
+        PSD --> Sub["変質：高温昇華<br/>(E.018)"]:::proc
+        Sub -->|"粒径を小さく（→吹き飛び帯へ）"| PSD
+        Sub --> Vap["蒸気成分"]:::state
+
+        PSD --> Blow["除去：放射圧ブローアウト<br/>(Burns et al. 1979; Kimura et al. 2002)"]:::proc
+        Blow --> LossS["損失（固体）"]:::sink
+        Vap --> LossV["損失（蒸気）<br/>(Hyodo et al. 2018)"]:::sink
+
+        %% --- drivers / constraints ---
+        Tdrv["外部条件（共通ドライバ）<br/>火星放射・冷却 T_M(t)<br/>→ 昇華率 J(T), β, a_blow"]:::driver
+        Tdrv --> Sub
+        Tdrv --> Blow
+
+        Shield["遮蔽の意味<br/>『損失は表層でしか起きない』<br/>(Takeuchi & Lin 2003)"]:::driver -.-> Surf
+
+        %% --- time integration / output ---
+        LossS --> Int["累積損失 ΔM_in<br/>= ∫(Ṁ_blow + Ṁ_sub) dt"]:::calc
+        LossV --> Int
+        Int --> Upd["更新後の内側質量<br/>M_in' = M_in − ΔM_in"]:::calc
     end
 
-    IN["SPH 初期条件（先行研究）<br/>M_in^0, 温度, 粒径帯 など"]:::prior
-
-    subgraph DISK["本研究：ロッシュ限界内の二層モデル"]
-      direction TB
-      DEEP["深部（貯蔵庫）<br/>遮蔽される固体質量"]:::assume
-      SURF["表層（反応層）<br/>粒径分布 n(s,t) / 表層在庫"]:::this
-      DEEP -.->|再供給（パラメータ）| SURF
-    end
-
-    PROC["表層で結合して扱う過程（本研究）<br/>粉砕（小粒子生成）／昇華（粒径縮小）／放射圧（除去）<br/>代表文献：Dohnanyi 1969; Burns et al. 1979; Visscher & Fegley 2013"]:::this
-    LOSS["損失（本研究の定義）<br/>長期拡散に寄与しない固体質量"]:::sink
-    OUT["出力：ṁ_loss(t), ΔM_in, M_in'"]:::out
-
-    IN --> DEEP
-    IN --> SURF
-    SURF --> PROC --> SURF
-    PROC --> LOSS
-    LOSS --> OUT
+    %% ========= wiring =========
+    IN --> Deep
+    Upd --> OUT
 ```
 
-### 1.2.3 本研究が出す量
+#### 図 1.2a / 1.2b 図外補足：Phase 1 と Phase 3 の手法と入出力
 
-本研究が直接に出す量は、長期形成モデルが入力として要求する「内側貯蔵庫の有効な初期値」に限る。具体的には、短期過程の時間積分から
+図 1.2a/1.2b は「どこで何が受け渡されるか」を見せるための図であり、箱の中の数値と手法説明は意図的に省いている。ここでは、上流（Phase 1）と下流（Phase 3）の先行研究について、計算手法と入出力をもう一段だけ具体化する。目的は、本研究が更新する変数が何で、どのモデルへ引き渡されるのかを曖昧にしないことである。
 
-- 損失率 $\dot M_{\rm loss}(t)$ とその積算 $\Delta M_{\rm in}$  
-- 長期形成モデル開始時点の更新後質量 $M_{\rm in}' = M_{\rm in}^0 - \Delta M_{\rm in}$（必要なら、代表的な粒径分布や表層在庫）
+##### Phase 1（上流）：衝突直後の初期状態（SPH）
 
-を与える。衛星の最終的な数や軌道は、ここで更新した $M_{\rm in}'$ を既存の長期形成モデルへ渡した先で決まる量であり、本研究はその入力を「何を根拠に、どこまで更新したか」が追跡できる形に整えることを目的とする。
+巨大衝突直後のデブリ円盤は、破片の運動と流体の圧力を「多数の粒」で近似し、同時に時間発展させる計算で推定されてきた。滑らかな粒子流体力学（Smoothed Particle Hydrodynamics; SPH）がその代表である。Hyodo et al. (2017a) は高解像度の SPH 計算（粒子数 $N=3\times10^6$。確認用に $N=3\times10^5$）を行い、衝突後に形成された円盤の質量分布と熱状態を評価している。
 
----
-## 1.3 ガスが少ない円盤という前提と意味
+| Phase 1 が返す量（Phase 1 → Phase 2） | 代表値（例） | 本研究での位置づけ |
+|---|---|---|
+| 円盤総質量 $M_{\rm disk}$ | $5.34\times10^{20}$ kg | $M_{\rm in}^0$ の上限・目安（どこまでが内側貯蔵庫になり得るか） |
+| 質量分布（内外比） | 質量の大半は $4\,R_{\rm Mars}$ 以内。$4\,R_{\rm Mars}$ 以遠は 45 粒子で未解像 | 外側（ロッシュ限界外）の分布は SPH 出力だけでは決めにくく、長期モデル側で再構成が入る |
+| 熱状態（温度・エントロピー） | 代表温度は約 2000 K、エントロピー増大 $\Delta s\sim1500\,{\rm J\,K^{-1}\,kg^{-1}}$ | 昇華率や蒸気圧（ひいては粒径変化）を決める入力になる |
+| 相（溶融/蒸気） | 溶融が主体で、蒸気分率は $<5\,$wt% | 「ガスが少ない条件」を採る根拠の一つになる |
+| 粒径帯 | 初期の溶融滴は $r_p\sim1.5$ m。高速度衝突で $\sim100\,\mu$m まで砕かれ得る。蒸気は $\sim0.1\,\mu$m 粒子として凝縮し得る | 放射圧（粒径依存）と短期損失が効き始める粒径帯を決める |
+
+重要なのは、Phase 1 が「内側の総量」と「粒径帯」を与える一方で、外側（ロッシュ限界外）の質量分布は粒子数が少なく、そのまま長期モデルへ渡すには不確かさが残る点である。したがって本研究は、Phase 1 出力をそのまま外側集積へ直結するのではなく、まずロッシュ限界内の貯蔵庫 $M_{\rm in}^0$ が短期にどれだけ削られるかを評価し、長期モデルに渡す「内側の残量」を更新する。
+
+##### Phase 3（下流）：長期形成モデル（内側 1 次元 + 外側 N 体）
+
+長期形成モデルでは、ロッシュ限界内を連続体として扱い、ロッシュ限界外を多数の天体として追う形で、内外の受け渡しを数値的に結合する。内側の連続円盤と外側の多体計算を組み合わせる混成計算（ハイブリッド・コード）が、その典型である（例：Salmon & Canup 2012; Canup & Salmon 2018）。Canup & Salmon (2018) では、内側円盤を「一様面密度の連続円盤」として表し、その状態を $M_{\rm in}$ と外縁 $r_{\rm d}$ で要約して時間発展させる。円盤は衝突に由来する粘性で広がり、内側へ広がった分は惑星へ落下し、外側へ広がってロッシュ限界を越えた分は、外側の多体計算へ「新しい小天体」として追加される。
+
+| Phase 3 の変数（Phase 3 の入力） | 先行研究での意味 | 本研究が書き換えるところ |
+|---|---|---|
+| $M_{\rm in}$ と $r_{\rm d}$ | 内側連続円盤を「質量 $M_{\rm in}$ と外縁 $r_{\rm d}$」で表し、粘性と外側天体との相互作用で進化させる | Phase 2 で更新した $M_{\rm in}^{\rm eff}$ を初期値として渡す（$r_{\rm d}$ は Phase 1 出力または従来の置き方を踏襲） |
+| ロッシュ限界通過の供給 | ロッシュ限界を越えた物質を、外側計算へ小天体として加える。これを微小天体（moonlet）と呼ぶ | $M_{\rm in}^{\rm eff}$ が小さければ、ロッシュ限界を越える供給量とその時間変化（供給履歴）が変わる |
+| 粘性（広がりの時間スケール） | 内側円盤がどれだけ速く内外へ広がるかを決める | 本研究は粘性律そのものは変更せず、「粘性進化に入る前の目減り」を別に入れる |
+
+##### 本研究が Phase 3 に渡す量（本研究の「出力」）
+
+- 累積損失量 $\Delta M_{\rm in}(t)$（固体と蒸気の内訳を含む）
+- 更新後の内側質量 $M_{\rm in}^{\rm eff}=M_{\rm in}^0-\Delta M_{\rm in}$
+- Phase 2 期間の粒径分布 $N(s,t)$（少なくとも「放射圧に敏感な帯」の質量の時間変化）
+
+
+
+### 1.3 ガスが少ない円盤という前提と意味
 
 本研究は、ガスが少ない衝突起源円盤を標準前提とする。本資料では、このような条件を「ガスが少ない条件」と書く。
 
@@ -391,7 +429,6 @@ Strubbe, L. E., & Chiang, E. I. (2006). *The Astrophysical Journal*, 648, 652–
 Takeuchi, T., & Lin, D. N. C. (2003). *The Astrophysical Journal*, 593, 524. doi:10.1086/376496  
 Thebault, P., & Augereau, J.-C. (2007). *A&A*, 472, 169–185. doi:10.1051/0004-6361:20077789  
 Thomas, P. (1989). *Icarus*, 77, 248–274. doi:10.1016/0019-1035(89)90089-4  
-Visscher, C., & Fegley, B. Jr. (2013). *The Astrophysical Journal Letters*, 767, L12. doi:10.1088/2041-8205/767/1/L12  
 Wada et al. (2018). *Progress in Earth and Planetary Science*, 5, 82. doi:10.1186/s40645-018-0237-y  
 Wyatt, M. C. (2008). *Annual Review of Astronomy and Astrophysics*, 46, 339–383. doi:10.1146/annurev.astro.45.051806.110525  
 
