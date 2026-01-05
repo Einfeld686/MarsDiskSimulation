@@ -125,54 +125,62 @@ flowchart LR
 
 ```mermaid
 flowchart LR
-    %% ===== 入力：初期熱力学的状態（SPH） =====
-    subgraph IN["入力：衝突直後の物理状態（SPH）"]
-        IN1["高温状態：T~2000 K, 蒸気<5%"]
-        IN2["初期貯蔵庫 M_in：溶融滴主体（~1.5 m）"]
-    end
+    %% ========= style =========
+    classDef input fill:#e1f5fe,stroke:#01579b,stroke-width:2px;
+    classDef connect fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px;
+    classDef state fill:#ffffff,stroke:#424242,stroke-width:1px;
+    classDef proc fill:#fff9c4,stroke:#fbc02d,stroke-width:1px;
+    classDef sink fill:#ffcdd2,stroke:#c62828,stroke-width:2px;
+    classDef driver fill:#f3e5f5,stroke:#7b1fa2,stroke-width:1px,stroke-dasharray: 3 3;
+    classDef calc fill:#fff3e0,stroke:#e65100,stroke-width:2px;
 
-    %% ===== 本研究：短期損失の物理競合（欠けたリンク） =====
-    subgraph OUR["本研究：短期損失で M_in を更新（欠けたリンク）"]
-        direction TB
+    %% ========= anchors (Phase1 / Phase3) =========
+    IN["Phase 1 (Input)<br/>SPH初期条件<br/>M_in, T0, 初期粒径分布"]:::input
+    OUT["Phase 3 (Connection)<br/>長期進化モデルへ<br/>更新後 M_in'（＋分布）"]:::connect
 
-        subgraph Shield["表層物理：遮蔽と再供給"]
-            SH["自遮蔽 (E.015-E.017)：放射圧は表層のみ"]
-            REP["表層再供給（感度ノブ）：歳差・衝突減衰で入れ替わり"]
-            SURF["表層在庫 Σ_surf"]
+    %% ========= Phase2 zoom =========
+    subgraph P2["Phase 2 (This Study) の内部：短期損失で M_in を更新"]
+        direction LR
 
-            SH & REP --> SURF
+        %% --- vertical structure = shielding ---
+        subgraph V["遮蔽による二層構造"]
+            direction TB
+            Deep["深部貯蔵庫<br/>(放射が直接届かない)"]:::state
+            Surf["表層アクティブ層<br/>(放射が届く薄い層)"]:::state
+            Deep <-->|"表層再供給<br/>(混合・傾斜減衰をパラメタ化)"| Surf
         end
 
-        subgraph Micro["粒径進化と排出の競合"]
-            COL["供給：衝突カスケード (E.010)：m級→100 μm級"]
-            SUB["変質：高温昇華 (E.018)：粒径縮小／ガス化"]
-            RAD["除去：放射圧ブローアウト (E.013)：サブミクロン排出"]
+        %% --- central state variable ---
+        Surf --> PSD["表層の在庫（状態変数）<br/>粒径分布 N(s) / Σ_surf"]:::state
 
-            SURF --> COL --> SUB --> RAD
-        end
+        %% --- competing processes (parallel) ---
+        PSD --> Coll["供給：衝突粉砕<br/>(Wyatt 2008; Thébault & Augereau 2007)"]:::proc
+        Coll -->|"小粒子を増やす"| PSD
 
-        GAS["蒸気：流体脱出（1周回で10-40%）"]
-        SUM["累積損失 ΔM_in（固体＋蒸気）"]
+        PSD --> Sub["変質：高温昇華<br/>(E.018)"]:::proc
+        Sub -->|"粒径を小さく（→吹き飛び帯へ）"| PSD
+        Sub --> Vap["蒸気成分"]:::state
 
-        RAD --> SUM
-        SUB --> SUM
-        GAS --> SUM
+        PSD --> Blow["除去：放射圧ブローアウト<br/>(Burns et al. 1979; Kimura et al. 2002)"]:::proc
+        Blow --> LossS["損失（固体）"]:::sink
+        Vap --> LossV["損失（蒸気）<br/>(Hyodo et al. 2018)"]:::sink
+
+        %% --- drivers / constraints ---
+        Tdrv["外部条件（共通ドライバ）<br/>火星放射・冷却 T_M(t)<br/>→ 昇華率 J(T), β, a_blow"]:::driver
+        Tdrv --> Sub
+        Tdrv --> Blow
+
+        Shield["遮蔽の意味<br/>『損失は表層でしか起きない』<br/>(Takeuchi & Lin 2003)"]:::driver -.-> Surf
+
+        %% --- time integration / output ---
+        LossS --> Int["累積損失 ΔM_in<br/>= ∫(Ṁ_blow + Ṁ_sub) dt"]:::calc
+        LossV --> Int
+        Int --> Upd["更新後の内側質量<br/>M_in' = M_in − ΔM_in"]:::calc
     end
 
-    %% ===== 接続：長期進化モデルへ =====
-    subgraph MID["接続：長期進化モデルへ受け渡し"]
-        UPD["更新後の内側質量：M_in' = M_in - ΔM_in"]
-        VIS["粘性拡散：内側落下／ロッシュ限界通過供給"]
-        HYB["連続円盤＋N体集積（ハイブリッド）"]
-        UPD --> VIS --> HYB
-    end
-
-    %% ===== 出力：衛星形成側の要求（生存条件） =====
-    subgraph OUT["出力：外側の集積・生存条件"]
-        OUT1["外側の集積・生存が M_in と供給履歴に敏感"]
-    end
-
-    IN1 --> IN2 --> OUR --> UPD --> MID --> OUT1
+    %% ========= wiring =========
+    IN --> Deep
+    Upd --> OUT
 ```
 
 ### 1.3 ガスが少ない円盤という前提と意味
