@@ -111,69 +111,65 @@ flowchart LR
     SPH -.->|短期損失を無視| P3
 ```
 
-（図 1.2b）
+### 1.2.2 本研究が仮定すること
+
+本研究は、上の「未整備」部分だけを狙って埋める。そのために、次を本研究の仮定（＝本研究の外側にある不確実性を押し込める場所）として宣言する。
+
+- **時間スケール分離**：SPH が扱う数十時間と、長期形成モデルが扱う ≳10^3 年の間にある「短期損失」を独立に評価し、長期モデル開始時の $M_{\rm in}$ を $M_{\rm in}'$ に更新する。短期損失の評価区間は、高温期（運用上は火星表面温度が 1000 K を下回るまで）を基準に置く。
+- **損失の定義**：ここでいう「損失」は、放射圧除去や昇華などにより、ロッシュ限界内の固体質量が「のちの粘性拡散・ロッシュ限界通過の供給」に寄与しなくなることを指す。必ずしも火星重力圏の外へ出ること（系外への脱出）と同義ではない。
+- **遮蔽と二層化**：円盤が光学的に厚いことを踏まえ、放射が届くのは表層に限られるとみなし、深部（貯蔵庫）と表層（反応層）の 2 層で表す。表層への再供給（深部→表層の交換）は、直接計算せずパラメータとして与える。
+- **小粒子供給の不確実性をパラメータ化する**：放射圧が効く粒径帯は小さいため、表層でどれだけ小粒子が作られるか（粉砕・再溶融・凝縮など）は結果を左右する。本研究では、この供給速度と昇華の競合を同じ時間積分の中で扱い、感度を評価する。
+
+**図 1.2b（Phase 2 の内部構造）**  
+- 矢印の凡例は図 1.2a と同じ。
 
 ```mermaid
 flowchart LR
-    %% ========= style =========
-    classDef input fill:#e1f5fe,stroke:#01579b,stroke-width:2px;
-    classDef connect fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px;
-    classDef state fill:#ffffff,stroke:#424242,stroke-width:1px;
-    classDef proc fill:#fff9c4,stroke:#fbc02d,stroke-width:1px;
-    classDef sink fill:#ffcdd2,stroke:#c62828,stroke-width:2px;
-    classDef driver fill:#f3e5f5,stroke:#7b1fa2,stroke-width:1px,stroke-dasharray: 3 3;
-    classDef calc fill:#fff3e0,stroke:#e65100,stroke-width:2px;
+    classDef prior fill:#e1f5fe,stroke:#1565c0,stroke-width:2px;
+    classDef assume fill:#fff3e0,stroke:#ef6c00,stroke-width:2px,stroke-dasharray: 6 4;
+    classDef this fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px;
+    classDef out fill:#ede7f6,stroke:#4527a0,stroke-width:2px;
+    classDef sink fill:#ffebee,stroke:#c62828,stroke-width:2px;
+    classDef legend fill:#ffffff,stroke:#999,stroke-width:1px;
 
-    %% ========= anchors (Phase1 / Phase3) =========
-    IN["Phase 1 (Input)<br/>SPH初期条件<br/>M_in, T0, 初期粒径分布"]:::input
-    OUT["Phase 3 (Connection)<br/>長期進化モデルへ<br/>更新後 M_in'（＋分布）"]:::connect
-
-    %% ========= Phase2 zoom =========
-    subgraph P2["Phase 2 (This Study) の内部：短期損失で M_in を更新"]
-        direction LR
-
-        %% --- vertical structure = shielding ---
-        subgraph V["遮蔽による二層構造"]
-            direction TB
-            Deep["深部貯蔵庫<br/>(放射が直接届かない)"]:::state
-            Surf["表層アクティブ層<br/>(放射が届く薄い層)"]:::state
-            Deep <-->|"表層再供給<br/>(混合・傾斜減衰をパラメタ化)"| Surf
-        end
-
-        %% --- central state variable ---
-        Surf --> PSD["表層の在庫（状態変数）<br/>粒径分布 N(s) / Σ_surf"]:::state
-
-        %% --- competing processes (parallel) ---
-        PSD --> Coll["供給：衝突粉砕<br/>(Wyatt 2008; Thébault & Augereau 2007)"]:::proc
-        Coll -->|"小粒子を増やす"| PSD
-
-        PSD --> Sub["変質：高温昇華<br/>(E.018)"]:::proc
-        Sub -->|"粒径を小さく（→吹き飛び帯へ）"| PSD
-        Sub --> Vap["蒸気成分"]:::state
-
-        PSD --> Blow["除去：放射圧ブローアウト<br/>(Burns et al. 1979; Kimura et al. 2002)"]:::proc
-        Blow --> LossS["損失（固体）"]:::sink
-        Vap --> LossV["損失（蒸気）<br/>(Hyodo et al. 2018)"]:::sink
-
-        %% --- drivers / constraints ---
-        Tdrv["外部条件（共通ドライバ）<br/>火星放射・冷却 T_M(t)<br/>→ 昇華率 J(T), β, a_blow"]:::driver
-        Tdrv --> Sub
-        Tdrv --> Blow
-
-        Shield["遮蔽の意味<br/>『損失は表層でしか起きない』<br/>(Takeuchi & Lin 2003)"]:::driver -.-> Surf
-
-        %% --- time integration / output ---
-        LossS --> Int["累積損失 ΔM_in<br/>= ∫(Ṁ_blow + Ṁ_sub) dt"]:::calc
-        LossV --> Int
-        Int --> Upd["更新後の内側質量<br/>M_in' = M_in − ΔM_in"]:::calc
+    subgraph LEG["凡例（矢印＝論理の強さ）"]
+      direction TB
+      LG1["先行研究で定量"]:::legend ==> LG2["（例）"]:::legend
+      LG3["本研究が計算で接続"]:::legend --> LG4["（例）"]:::legend
+      LG5["仮定・未解決"]:::legend -.-> LG6["（例）"]:::legend
     end
 
-    %% ========= wiring =========
-    IN --> Deep
-    Upd --> OUT
+    IN["SPH 初期条件（先行研究）<br/>M_in^0, 温度, 粒径帯 など"]:::prior
+
+    subgraph DISK["本研究：ロッシュ限界内の二層モデル"]
+      direction TB
+      DEEP["深部（貯蔵庫）<br/>遮蔽される固体質量"]:::assume
+      SURF["表層（反応層）<br/>粒径分布 n(s,t) / 表層在庫"]:::this
+      DEEP -.->|再供給（パラメータ）| SURF
+    end
+
+    PROC["表層で結合して扱う過程（本研究）<br/>粉砕（小粒子生成）／昇華（粒径縮小）／放射圧（除去）"]:::this
+    LOSS["損失（本研究の定義）<br/>長期拡散に寄与しない固体質量"]:::sink
+    OUT["出力：ṁ_loss(t), ΔM_in, M_in'"]:::out
+
+    IN --> DEEP
+    IN --> SURF
+    SURF --> PROC --> SURF
+    PROC --> LOSS
+    LOSS --> OUT
 ```
 
-### 1.3 ガスが少ない円盤という前提と意味
+### 1.2.3 本研究が出す量
+
+本研究が直接に出す量は、長期形成モデルが入力として要求する「内側貯蔵庫の有効な初期値」に限る。具体的には、短期過程の時間積分から
+
+- 損失率 $\dot M_{\rm loss}(t)$ とその積算 $\Delta M_{\rm in}$  
+- 長期形成モデル開始時点の更新後質量 $M_{\rm in}' = M_{\rm in}^0 - \Delta M_{\rm in}$（必要なら、代表的な粒径分布や表層在庫）
+
+を与える。衛星の最終的な数や軌道は、ここで更新した $M_{\rm in}'$ を既存の長期形成モデルへ渡した先で決まる量であり、本研究はその入力を「何を根拠に、どこまで更新したか」が追跡できる形に整えることを目的とする。
+
+---
+## 1.3 ガスが少ない円盤という前提と意味
 
 本研究は、ガスが少ない衝突起源円盤を標準前提とする。本資料では、このような条件を「ガスが少ない条件」と書く。
 
