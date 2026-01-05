@@ -63,7 +63,11 @@ Kuramoto (2024) の整理に沿って、物性・組成と力学特性を分け�
 
 熱的・微視的な過程については、衝突直後の円盤は高温であり、蒸気の脱出や微粒子の放射圧除去が「最初の 1 周回」のような短時間で起こり得ることが示されている（Hyodo et al. 2018）。同研究は、火星表面は数千 K まで加熱され得て、1000 K まで冷えるのに年スケールを要する一方、デブリは数十日で円盤化する、と時間スケールが分離している点も述べている（Hyodo et al. 2018）。また Hyodo et al. (2017a) は、軌道が歳差で乱れた後には粒子同士が交差して 1–5 km/s 程度の相対速度で衝突し得ること、衝突によりメートルサイズから 100 μm 程度の粒子が作られ得ること、さらに蒸気から 0.1 μm 程度の凝縮粒子が生じ得ることを議論している（Hyodo et al. 2017a）。一方で、衝突頻度（小粒子の供給速度）がどれだけ速いかは、円盤の密度分布や軌道状態に依存し、先行研究だけから一意には決まらない（Hyodo et al. 2017a）。
 
-長期（≳10^3 年）の形成段階では、ロッシュ限界内の連続円盤（粘性拡散）と、ロッシュ限界外の集積（多体計算）を結合したモデルが用いられる。Canup & Salmon (2018) の枠組みは、内側円盤質量 $M_{\rm in}$ と外縁 $r_{\rm d}$ を状態変数として時間発展を解き、ロッシュ限界を越える供給履歴が外側の集積結果に強く影響することを明示している（Canup & Salmon 2018）。したがって、**長期モデルに渡す入力としての $M_{\rm in}$ は、衛星形成結果の感度が高い量**である。
+また、溶融物と蒸気が共存する高温円盤では、昇華を支配する平衡蒸気圧やガス組成は温度と組成で決まるため、化学平衡計算にもとづく見積もりが必要になる。Visscher & Fegley (2013) は、溶融ケイ酸塩と平衡にある蒸気の圧力と組成を 2000–4000 K で計算し、Earth/Moon/Mars を含む複数の組成で、低温側では Na などが、より高温では SiO・O2・O が卓越することを示している。
+
+長期（≳10^3 年）の形成段階では、潮汐で束縛された円盤が粘性で広がり、ロッシュ限界を越えた外縁で衛星が集積していく、という枠組みが整理されている（Crida & Charnoz 2012）。
+
+この段階を数値的に扱う代表例として、ロッシュ限界内を連続円盤として、外側を多体計算として扱い、境界で物質を受け渡すハイブリッド手法がある（Salmon & Canup 2012; Canup & Salmon 2018）。Canup & Salmon (2018) の枠組みは、内側円盤質量 $M_{\rm in}$ と外縁 $r_{\rm d}$ を状態変数として時間発展を追い、外側の集積・生存条件が $M_{\rm in}$ と供給履歴に敏感であることを明示している。したがって、**長期モデルに渡す入力としての $M_{\rm in}$ は、衛星形成結果の感度が高い量**である。
 
 以上をまとめると、先行研究は「SPH が短時間の初期状態を与える」「長期モデルは $M_{\rm in}$ と供給履歴に敏感である」「衝突直後には短期の損失機構があり得る」という三点を与えている。一方で、「短期損失がロッシュ限界内の固体貯蔵庫 $M_{\rm in}$ をどれだけ減らすか」を、長期モデルの入力として整形する部分は未整備である。
 
@@ -73,11 +77,11 @@ Kuramoto (2024) の整理に沿って、物性・組成と力学特性を分け�
 ```mermaid
 flowchart LR
     %% ===== styles =====
-    classDef prior fill:#e1f5fe,stroke:#1565c0,stroke-width:2px;
-    classDef assume fill:#fff3e0,stroke:#ef6c00,stroke-width:2px,stroke-dasharray: 6 4;
-    classDef this fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px;
-    classDef downstream fill:#f3e5f5,stroke:#6a1b9a,stroke-width:2px;
-    classDef legend fill:#ffffff,stroke:#999,stroke-width:1px;
+    classDef prior fill:#e1f5fe,stroke:#1565c0,stroke-width:2px,color:#000;
+    classDef assume fill:#fff3e0,stroke:#ef6c00,stroke-width:2px,stroke-dasharray: 6 4,color:#000;
+    classDef this fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px,color:#000;
+    classDef downstream fill:#f3e5f5,stroke:#6a1b9a,stroke-width:2px,color:#000;
+    classDef legend fill:#ffffff,stroke:#999,stroke-width:1px,color:#000;
 
     %% ===== Legend =====
     subgraph LEG["凡例（矢印＝論理の強さ）"]
@@ -95,7 +99,7 @@ flowchart LR
     P2["Phase 2（本研究）<br/>短期損失を定量化して<br/>M_in を更新"]:::this
     OUT2["本研究の出力<br/>ΔM_in と M_in'（＋必要なら粒径分布）"]:::this
 
-    P3["Phase 3（先行研究）<br/>長期形成モデル<br/>（内側連続円盤＋外側多体計算）"]:::prior
+    P3["Phase 3（先行研究）<br/>長期形成モデル（内側連続円盤＋外側多体計算）<br/>代表文献：Salmon et al. 2010; Crida & Charnoz 2012; Salmon & Canup 2012; Canup & Salmon 2018"]:::prior
     OUT3["出力：衛星の数・質量・軌道"]:::downstream
 
     %% links
@@ -120,17 +124,19 @@ flowchart LR
 - **遮蔽と二層化**：円盤が光学的に厚いことを踏まえ、放射が届くのは表層に限られるとみなし、深部（貯蔵庫）と表層（反応層）の 2 層で表す。表層への再供給（深部→表層の交換）は、直接計算せずパラメータとして与える。
 - **小粒子供給の不確実性をパラメータ化する**：放射圧が効く粒径帯は小さいため、表層でどれだけ小粒子が作られるか（粉砕・再溶融・凝縮など）は結果を左右する。本研究では、この供給速度と昇華の競合を同じ時間積分の中で扱い、感度を評価する。
 
+なお、放射圧の強さは「放射圧と重力の比」で表すのが標準であり（Burns et al. 1979）、本研究でもこの定義に従う。また、微粒子供給を記述する際は、衝突カスケードの定常解が典型的なべき則分布を与えることが古典的に示されている（Dohnanyi 1969）。さらに昇華では、温度から平衡蒸気圧を与える必要があり、溶融ケイ酸塩と平衡にある蒸気の圧力計算がその根拠になる（Visscher & Fegley 2013）。ただし巨大衝突直後の円盤が衝突カスケードの定常状態に達しているとは限らないため、本研究では供給率をパラメータとして探索する。
+
 **図 1.2b（Phase 2 の内部構造）**  
 - 矢印の凡例は図 1.2a と同じ。
 
 ```mermaid
 flowchart LR
-    classDef prior fill:#e1f5fe,stroke:#1565c0,stroke-width:2px;
-    classDef assume fill:#fff3e0,stroke:#ef6c00,stroke-width:2px,stroke-dasharray: 6 4;
-    classDef this fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px;
-    classDef out fill:#ede7f6,stroke:#4527a0,stroke-width:2px;
-    classDef sink fill:#ffebee,stroke:#c62828,stroke-width:2px;
-    classDef legend fill:#ffffff,stroke:#999,stroke-width:1px;
+    classDef prior fill:#e1f5fe,stroke:#1565c0,stroke-width:2px,color:#000;
+    classDef assume fill:#fff3e0,stroke:#ef6c00,stroke-width:2px,stroke-dasharray: 6 4,color:#000;
+    classDef this fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px,color:#000;
+    classDef out fill:#ede7f6,stroke:#4527a0,stroke-width:2px,color:#000;
+    classDef sink fill:#ffebee,stroke:#c62828,stroke-width:2px,color:#000;
+    classDef legend fill:#ffffff,stroke:#999,stroke-width:1px,color:#000;
 
     subgraph LEG["凡例（矢印＝論理の強さ）"]
       direction TB
@@ -148,7 +154,7 @@ flowchart LR
       DEEP -.->|再供給（パラメータ）| SURF
     end
 
-    PROC["表層で結合して扱う過程（本研究）<br/>粉砕（小粒子生成）／昇華（粒径縮小）／放射圧（除去）"]:::this
+    PROC["表層で結合して扱う過程（本研究）<br/>粉砕（小粒子生成）／昇華（粒径縮小）／放射圧（除去）<br/>代表文献：Dohnanyi 1969; Burns et al. 1979; Visscher & Fegley 2013"]:::this
     LOSS["損失（本研究の定義）<br/>長期拡散に寄与しない固体質量"]:::sink
     OUT["出力：ṁ_loss(t), ΔM_in, M_in'"]:::out
 
@@ -379,6 +385,7 @@ Strubbe, L. E., & Chiang, E. I. (2006). *The Astrophysical Journal*, 648, 652–
 Takeuchi, T., & Lin, D. N. C. (2003). *The Astrophysical Journal*, 593, 524. doi:10.1086/376496  
 Thebault, P., & Augereau, J.-C. (2007). *A&A*, 472, 169–185. doi:10.1051/0004-6361:20077789  
 Thomas, P. (1989). *Icarus*, 77, 248–274. doi:10.1016/0019-1035(89)90089-4  
+Visscher, C., & Fegley, B. Jr. (2013). *The Astrophysical Journal Letters*, 767, L12. doi:10.1088/2041-8205/767/1/L12  
 Wada et al. (2018). *Progress in Earth and Planetary Science*, 5, 82. doi:10.1186/s40645-018-0237-y  
 Wyatt, M. C. (2008). *Annual Review of Astronomy and Astrophysics*, 46, 339–383. doi:10.1146/annurev.astro.45.051806.110525  
 
