@@ -415,6 +415,7 @@ if not defined SUPPLY_VEL_WEIGHT set "SUPPLY_VEL_WEIGHT=delta_sigma"
 rem STREAM_MEM_GB intentionally left undefined by default
 rem STREAM_STEP_INTERVAL intentionally left undefined by default
 if not defined ENABLE_PROGRESS set "ENABLE_PROGRESS=1"
+if not defined SWEEP_PROGRESS set "SWEEP_PROGRESS=1"
 if not defined AUTO_JOBS set "AUTO_JOBS=0"
 if not defined PARALLEL_JOBS (
   set "PARALLEL_JOBS=1"
@@ -941,6 +942,20 @@ if not exist "%SWEEP_LIST_FILE%" (
   echo.[error] sweep list missing: "!SWEEP_LIST_FILE!"
   exit /b 1
 )
+set "PROGRESS_TOTAL=0"
+set "PROGRESS_LAUNCHED=0"
+set "PROGRESS_FAILED=0"
+set "PROGRESS_LAST_DONE=-1"
+set "PROGRESS_LAST_LAUNCHED=-1"
+if "%SWEEP_PROGRESS%"=="1" (
+  for /f "usebackq tokens=2 delims=:" %%C in (`find /c /v "" "!SWEEP_LIST_FILE!"`) do set "PROGRESS_TOTAL=%%C"
+  call :normalize_int PROGRESS_TOTAL 0
+  if "!PROGRESS_TOTAL!"=="0" (
+    echo.[warn] sweep progress: case count unavailable for "!SWEEP_LIST_FILE!"
+  ) else (
+    call :progress_update
+  )
+)
 for /f "usebackq tokens=1-3 delims= " %%A in ("!SWEEP_LIST_FILE!") do (
   call :launch_job %%A %%B %%C
 )
@@ -1026,12 +1041,19 @@ if defined JOB_PID (
     if !errorlevel! geq 1 (
         echo.[warn] failed to launch job for T=!JOB_T! eps=!JOB_EPS! tau=!JOB_TAU! - output: !JOB_PID!
         set "JOB_PID="
+        if "%SWEEP_PROGRESS%"=="1" set /a PROGRESS_FAILED+=1
     ) else (
         set "JOB_PIDS=!JOB_PIDS! !JOB_PID!"
+        set /a JOB_COUNT+=1
         echo.[info] launched job T=!JOB_T! eps=!JOB_EPS! tau=!JOB_TAU! PID=!JOB_PID!
     )
 ) else (
     echo.[warn] failed to launch job for T=!JOB_T! eps=!JOB_EPS! tau=!JOB_TAU! - no PID returned
+    if "%SWEEP_PROGRESS%"=="1" set /a PROGRESS_FAILED+=1
+)
+if "%SWEEP_PROGRESS%"=="1" (
+  set /a PROGRESS_LAUNCHED+=1
+  call :progress_update
 )
 exit /b 0
 
@@ -1039,6 +1061,7 @@ exit /b 0
 call :refresh_jobs
 call :normalize_int JOB_COUNT 0
 call :normalize_int PARALLEL_JOBS 1
+call :progress_update
 if !JOB_COUNT! GEQ !PARALLEL_JOBS! (
   timeout /t %PARALLEL_SLEEP_SEC% /nobreak >nul
   goto :wait_for_slot
@@ -1063,9 +1086,33 @@ exit /b 0
 
 :wait_all
 call :refresh_jobs
+call :normalize_int JOB_COUNT 0
+call :progress_update
 if "%JOB_COUNT%"=="0" exit /b 0
 timeout /t %PARALLEL_SLEEP_SEC% /nobreak >nul
 goto :wait_all
+
+:progress_update
+if not "%SWEEP_PROGRESS%"=="1" exit /b 0
+call :normalize_int PROGRESS_TOTAL 0
+if "!PROGRESS_TOTAL!"=="0" exit /b 0
+call :normalize_int PROGRESS_LAUNCHED 0
+call :normalize_int JOB_COUNT 0
+set /a PROGRESS_DONE=!PROGRESS_LAUNCHED!-!JOB_COUNT!
+if !PROGRESS_DONE! LSS 0 set "PROGRESS_DONE=0"
+if !PROGRESS_DONE! GTR !PROGRESS_TOTAL! set "PROGRESS_DONE=!PROGRESS_TOTAL!"
+set /a PROGRESS_RUNNING=!JOB_COUNT!
+if !PROGRESS_RUNNING! LSS 0 set "PROGRESS_RUNNING=0"
+if "!PROGRESS_LAST_DONE!"=="!PROGRESS_DONE!" if "!PROGRESS_LAST_LAUNCHED!"=="!PROGRESS_LAUNCHED!" exit /b 0
+set "PROGRESS_LAST_DONE=!PROGRESS_DONE!"
+set "PROGRESS_LAST_LAUNCHED=!PROGRESS_LAUNCHED!"
+set "PROGRESS_SUFFIX="
+call :normalize_int PROGRESS_FAILED 0
+if !PROGRESS_FAILED! GTR 0 set "PROGRESS_SUFFIX= failed=!PROGRESS_FAILED!"
+set /a PROGRESS_PCT=0
+if !PROGRESS_TOTAL! GTR 0 set /a PROGRESS_PCT=100*PROGRESS_DONE/PROGRESS_TOTAL
+echo.[info] sweep progress: !PROGRESS_DONE!/!PROGRESS_TOTAL! complete (!PROGRESS_PCT!%%) running=!PROGRESS_RUNNING!!PROGRESS_SUFFIX!
+exit /b 0
 
 :normalize_int
 set "NORM_NAME=%~1"
