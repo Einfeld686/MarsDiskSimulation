@@ -247,6 +247,7 @@ class RunZeroDTimeGridStage:
     archive_min_free_gb: Optional[float]
     psd_history_enabled: bool
     psd_history_stride: int
+    diagnostics_stride: int
     record_storage_mode: str
     columnar_enabled: bool
     series_columns: List[str]
@@ -987,6 +988,9 @@ def _prepare_time_grid_and_runtime(
         psd_history_stride_hint = int(getattr(cfg.io, "psd_history_stride", 1) or 1)
         if psd_history_stride_hint < 1:
             psd_history_stride_hint = 1
+        diagnostics_stride_hint = int(getattr(cfg.io, "diagnostics_stride", 1) or 1)
+        if diagnostics_stride_hint < 1:
+            diagnostics_stride_hint = 1
         step_diag_cfg_hint = getattr(cfg.io, "step_diagnostics", None)
         step_diag_enabled_hint = (
             bool(getattr(step_diag_cfg_hint, "enable", False)) if step_diag_cfg_hint else False
@@ -998,6 +1002,7 @@ def _prepare_time_grid_and_runtime(
             psd_history_enabled=psd_history_enabled_hint,
             psd_history_stride=psd_history_stride_hint,
             diagnostics_enabled=True,
+            diagnostics_stride=diagnostics_stride_hint,
             mass_budget_enabled=True,
             mass_budget_cells_enabled=False,
             step_diag_enabled=step_diag_enabled_hint,
@@ -1188,6 +1193,9 @@ def _prepare_time_grid_and_runtime(
     psd_history_stride = int(getattr(cfg.io, "psd_history_stride", 1) or 1)
     if psd_history_stride < 1:
         psd_history_stride = 1
+    diagnostics_stride = int(getattr(cfg.io, "diagnostics_stride", 1) or 1)
+    if diagnostics_stride < 1:
+        diagnostics_stride = 1
     streaming_merge_completed: Optional[bool] = None
     series_columns = list(ZERO_D_SERIES_KEYS)
     diagnostic_columns = list(ZERO_D_DIAGNOSTIC_KEYS)
@@ -1278,6 +1286,7 @@ def _prepare_time_grid_and_runtime(
         archive_min_free_gb=archive_min_free_gb,
         psd_history_enabled=psd_history_enabled,
         psd_history_stride=psd_history_stride,
+        diagnostics_stride=diagnostics_stride,
         record_storage_mode=record_storage_mode,
         columnar_enabled=columnar_enabled,
         series_columns=series_columns,
@@ -2451,6 +2460,7 @@ def run_zero_d(
     archive_min_free_gb = time_grid_stage.archive_min_free_gb
     psd_history_enabled = time_grid_stage.psd_history_enabled
     psd_history_stride = time_grid_stage.psd_history_stride
+    diagnostics_stride = time_grid_stage.diagnostics_stride
     record_storage_mode = time_grid_stage.record_storage_mode
     columnar_enabled = time_grid_stage.columnar_enabled
     series_columns = time_grid_stage.series_columns
@@ -2662,6 +2672,7 @@ def run_zero_d(
         for step_no in range(start_step, n_steps):
             time_start = time_offset + step_no * dt
             time = time_start
+            diagnostics_write = diagnostics_stride <= 1 or step_no % diagnostics_stride == 0
             T_use = temp_runtime.evaluate(time)
             temperature_track.append(T_use)
             rad_flux_step = constants.SIGMA_SB * (T_use**4)
@@ -4470,7 +4481,8 @@ def run_zero_d(
                 if key in diag_entry:
                     val = diag_entry.get(key)
                     diag_entry[key] = "" if val is None else str(val)
-            diagnostics.append(diag_entry)
+            if diagnostics_write:
+                diagnostics.append(diag_entry)
 
             mass_initial = cfg.initial.mass_total
             mass_remaining = mass_initial - (M_loss_cum + M_sink_cum)

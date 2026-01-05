@@ -2032,6 +2032,11 @@ class IO(BaseModel):
         ge=1,
         description="Stride for PSD history output (1 = every step).",
     )
+    diagnostics_stride: int = Field(
+        1,
+        ge=1,
+        description="Stride for diagnostics output (1 = every step).",
+    )
     mass_budget_cells: bool = Field(
         True,
         description="Write per-cell mass budget to checks/mass_budget_cells.csv.",
