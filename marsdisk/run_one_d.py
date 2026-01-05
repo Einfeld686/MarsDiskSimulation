@@ -1043,6 +1043,9 @@ def run_one_d(
     psd_history_stride = int(getattr(cfg.io, "psd_history_stride", 1) or 1)
     if psd_history_stride < 1:
         psd_history_stride = 1
+    series_stride = int(getattr(cfg.io, "series_stride", 1) or 1)
+    if series_stride < 1:
+        series_stride = 1
     diagnostics_stride = int(getattr(cfg.io, "diagnostics_stride", 1) or 1)
     if diagnostics_stride < 1:
         diagnostics_stride = 1
@@ -1085,6 +1088,7 @@ def run_one_d(
         n_steps,
         n_bins,
         n_cells=n_cells,
+        series_stride=series_stride,
         psd_history_enabled=psd_history_enabled,
         psd_history_stride=psd_history_stride,
         diagnostics_enabled=True,
@@ -1120,7 +1124,16 @@ def run_one_d(
                 loop_exit_reason = "t_end_reached"
                 break
 
-            diagnostics_write = diagnostics_stride <= 1 or step_no % diagnostics_stride == 0
+            series_write = (
+                series_stride <= 1
+                or step_no % series_stride == 0
+                or step_no == n_steps - 1
+            )
+            diagnostics_write = (
+                diagnostics_stride <= 1
+                or step_no % diagnostics_stride == 0
+                or step_no == n_steps - 1
+            )
             T_use = float(temp_runtime.evaluate(time))
             rad_flux_step = constants.SIGMA_SB * (T_use ** 4)
             qpr_blow_step, a_blow_step, a_blow_effective_step = _resolve_blowout(s_min_config, T_use)
@@ -1372,7 +1385,8 @@ def run_one_d(
                                 "cell_stop_time": float(cell_stop_time[idx]) if math.isfinite(cell_stop_time[idx]) else None,
                                 "cell_stop_tau": float(cell_stop_tau[idx]) if math.isfinite(cell_stop_tau[idx]) else None,
                             }
-                        local_step_records.append(record)
+                        if series_write:
+                            local_step_records.append(record)
                         tau_los_inactive = record.get("tau_los_mars")
                         if diagnostics_write:
                             diag_entry = {
@@ -2090,7 +2104,8 @@ def run_one_d(
                         "cell_stop_time": float(cell_stop_time[idx]) if math.isfinite(cell_stop_time[idx]) else None,
                         "cell_stop_tau": float(cell_stop_tau[idx]) if math.isfinite(cell_stop_tau[idx]) else None,
                     }
-                    local_step_records.append(record)
+                    if series_write:
+                        local_step_records.append(record)
                     F_abs_geom = rad_flux_step * (constants.R_MARS / r_val) ** 2
                     F_abs_geom_qpr = F_abs_geom * qpr_mean_step
                     tau_eff = kappa_eff * sigma_val if math.isfinite(kappa_eff) else None
@@ -2882,8 +2897,10 @@ def run_one_d(
     }
     run_config_snapshot["io"] = {
         "outdir": str(outdir),
+        "series_stride": series_stride,
         "psd_history": psd_history_enabled,
         "psd_history_stride": psd_history_stride,
+        "diagnostics_stride": diagnostics_stride,
         "mass_budget_cells": mass_budget_cells_enabled,
         "streaming": {
             "enabled": streaming_state.enabled,

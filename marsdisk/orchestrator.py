@@ -470,6 +470,7 @@ def memory_estimate(
     psd_row_bytes: float = MEMORY_PSD_ROW_BYTES,
     *,
     n_cells: int = 1,
+    series_stride: int = 1,
     psd_history_enabled: bool = True,
     psd_history_stride: int = 1,
     diagnostics_enabled: bool = True,
@@ -485,9 +486,11 @@ def memory_estimate(
     steps = max(int(n_steps), 0)
     bins = max(int(n_bins), 0)
     cells = max(int(n_cells), 1)
+    series_stride_val = max(int(series_stride), 1)
     stride = max(int(psd_history_stride), 1)
 
-    run_rows = steps * cells
+    run_steps = (steps + series_stride_val - 1) // series_stride_val if steps > 0 else 0
+    run_rows = run_steps * cells
     diag_stride = max(int(diagnostics_stride), 1)
     if diagnostics_enabled:
         diag_steps = (steps + diag_stride - 1) // diag_stride if steps > 0 else 0

@@ -2023,6 +2023,11 @@ class IO(BaseModel):
         None,
         description="Deprecated alias for record_storage_mode; overrides when set.",
     )
+    series_stride: int = Field(
+        1,
+        ge=1,
+        description="Stride for series/run.parquet output (1 = every step).",
+    )
     psd_history: bool = Field(
         True,
         description="Write per-bin PSD history to series/psd_hist.parquet.",

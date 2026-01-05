@@ -245,6 +245,7 @@ class RunZeroDTimeGridStage:
     archive_warn_slow_mb_s: float
     archive_warn_slow_min_gb: float
     archive_min_free_gb: Optional[float]
+    series_stride: int
     psd_history_enabled: bool
     psd_history_stride: int
     diagnostics_stride: int
@@ -988,6 +989,9 @@ def _prepare_time_grid_and_runtime(
         psd_history_stride_hint = int(getattr(cfg.io, "psd_history_stride", 1) or 1)
         if psd_history_stride_hint < 1:
             psd_history_stride_hint = 1
+        series_stride_hint = int(getattr(cfg.io, "series_stride", 1) or 1)
+        if series_stride_hint < 1:
+            series_stride_hint = 1
         diagnostics_stride_hint = int(getattr(cfg.io, "diagnostics_stride", 1) or 1)
         if diagnostics_stride_hint < 1:
             diagnostics_stride_hint = 1
@@ -999,6 +1003,7 @@ def _prepare_time_grid_and_runtime(
             n_steps,
             n_bins_cfg,
             n_cells=1,
+            series_stride=series_stride_hint,
             psd_history_enabled=psd_history_enabled_hint,
             psd_history_stride=psd_history_stride_hint,
             diagnostics_enabled=True,
@@ -1193,6 +1198,9 @@ def _prepare_time_grid_and_runtime(
     psd_history_stride = int(getattr(cfg.io, "psd_history_stride", 1) or 1)
     if psd_history_stride < 1:
         psd_history_stride = 1
+    series_stride = int(getattr(cfg.io, "series_stride", 1) or 1)
+    if series_stride < 1:
+        series_stride = 1
     diagnostics_stride = int(getattr(cfg.io, "diagnostics_stride", 1) or 1)
     if diagnostics_stride < 1:
         diagnostics_stride = 1
@@ -1284,6 +1292,7 @@ def _prepare_time_grid_and_runtime(
         archive_warn_slow_mb_s=archive_warn_slow_mb_s,
         archive_warn_slow_min_gb=archive_warn_slow_min_gb,
         archive_min_free_gb=archive_min_free_gb,
+        series_stride=series_stride,
         psd_history_enabled=psd_history_enabled,
         psd_history_stride=psd_history_stride,
         diagnostics_stride=diagnostics_stride,
@@ -2458,6 +2467,7 @@ def run_zero_d(
     archive_warn_slow_mb_s = time_grid_stage.archive_warn_slow_mb_s
     archive_warn_slow_min_gb = time_grid_stage.archive_warn_slow_min_gb
     archive_min_free_gb = time_grid_stage.archive_min_free_gb
+    series_stride = time_grid_stage.series_stride
     psd_history_enabled = time_grid_stage.psd_history_enabled
     psd_history_stride = time_grid_stage.psd_history_stride
     diagnostics_stride = time_grid_stage.diagnostics_stride
@@ -2672,7 +2682,16 @@ def run_zero_d(
         for step_no in range(start_step, n_steps):
             time_start = time_offset + step_no * dt
             time = time_start
-            diagnostics_write = diagnostics_stride <= 1 or step_no % diagnostics_stride == 0
+            series_write = (
+                series_stride <= 1
+                or step_no % series_stride == 0
+                or step_no == n_steps - 1
+            )
+            diagnostics_write = (
+                diagnostics_stride <= 1
+                or step_no % diagnostics_stride == 0
+                or step_no == n_steps - 1
+            )
             T_use = temp_runtime.evaluate(time)
             temperature_track.append(T_use)
             rad_flux_step = constants.SIGMA_SB * (T_use**4)
@@ -4249,7 +4268,8 @@ def run_zero_d(
                     supply_temperature_scale_track.append(float(supply_diag_last.temperature_scale))
                 if supply_diag_last.reservoir_remaining_Mmars is not None:
                     supply_reservoir_remaining_track.append(float(supply_diag_last.reservoir_remaining_Mmars))
-            records.append(record)
+            if series_write:
+                records.append(record)
 
             if psd_history_enabled and (psd_history_stride <= 1 or step_no % psd_history_stride == 0):
                 try:
@@ -5664,6 +5684,10 @@ def run_zero_d(
         run_config["temperature_driver"] = temp_prov
         run_config["io"] = {
             "outdir": str(outdir),
+            "series_stride": series_stride,
+            "psd_history": psd_history_enabled,
+            "psd_history_stride": psd_history_stride,
+            "diagnostics_stride": diagnostics_stride,
             "streaming": {
                 "enabled": streaming_state.enabled,
                 "merge_at_end": streaming_merge_at_end if streaming_state.enabled else False,
