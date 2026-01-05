@@ -422,10 +422,10 @@ marsdisk/orchestrator.py:320:def resolve_physics_flags(cfg: Config, physics_mode
 marsdisk/orchestrator.py:412:def derive_seed_components(cfg: Config) -> str
 marsdisk/orchestrator.py:439:def resolve_seed(cfg: Config) -> tuple[int, str, str]
 marsdisk/orchestrator.py:454:def human_bytes(value: float) -> str
-marsdisk/orchestrator.py:466:def memory_estimate(n_steps: int, n_bins: int, run_row_bytes: float=MEMORY_RUN_ROW_BYTES, psd_row_bytes: float=MEMORY_PSD_ROW_BYTES, *, n_cells: int=1, psd_history_enabled: bool=True, psd_history_stride: int=1, diagnostics_enabled: bool=True, mass_budget_enabled: bool=True, mass_budget_cells_enabled: bool=False, step_diag_enabled: bool=False, diag_row_bytes: float=MEMORY_DIAG_ROW_BYTES, smol_value_bytes: float=8.0) -> tuple[str, str]
-marsdisk/orchestrator.py:536:def safe_float(value: Any) -> Optional[float]
-marsdisk/orchestrator.py:558:def human_bytes(value: float) -> str
-marsdisk/orchestrator.py:580:def series_stats(values: List[float]) -> tuple[float, float, float]
+marsdisk/orchestrator.py:466:def memory_estimate(n_steps: int, n_bins: int, run_row_bytes: float=MEMORY_RUN_ROW_BYTES, psd_row_bytes: float=MEMORY_PSD_ROW_BYTES, *, n_cells: int=1, series_stride: int=1, psd_history_enabled: bool=True, psd_history_stride: int=1, diagnostics_enabled: bool=True, diagnostics_stride: int=1, mass_budget_enabled: bool=True, mass_budget_cells_enabled: bool=False, step_diag_enabled: bool=False, diag_row_bytes: float=MEMORY_DIAG_ROW_BYTES, smol_value_bytes: float=8.0) -> tuple[str, str]
+marsdisk/orchestrator.py:545:def safe_float(value: Any) -> Optional[float]
+marsdisk/orchestrator.py:567:def human_bytes(value: float) -> str
+marsdisk/orchestrator.py:589:def series_stats(values: List[float]) -> tuple[float, float, float]
 marsdisk/output_schema.py:314:def _ensure_keys(record: Dict[str, object], keys: Iterable[str]) -> None
 marsdisk/output_schema.py:326:def ensure_series_keys(record: Dict[str, object], *, include_1d: bool=True) -> None
 marsdisk/output_schema.py:332:def ensure_diagnostic_keys(record: Dict[str, object], *, include_1d: bool=True) -> None
@@ -648,24 +648,24 @@ marsdisk/run_zero_d.py:122:class SupplyStepResult
 marsdisk/run_zero_d.py:131:class SurfaceSupplyStepResult
 marsdisk/run_zero_d.py:139:class RunZeroDSupplyStage
 marsdisk/run_zero_d.py:191:class RunZeroDTimeGridStage
-marsdisk/run_zero_d.py:270:def _get_smol_sink_workspace(workspace: SmolSinkWorkspace | None, n_bins: int) -> SmolSinkWorkspace
-marsdisk/run_zero_d.py:290:def _apply_supply_step(*, time_now: float, r: float, dt: float, supply_spec: 'supply.Supply', area: float, supply_state: 'supply.SupplyRuntimeState | None', tau_for_feedback: float | None, temperature_K: float, allow_supply: bool, sigma_surf: float, sigma_tau1: float | None, sigma_deep: float, t_mix: float | None, deep_enabled: bool, transport_mode: str, headroom_gate: str, headroom_policy: str, t_blow: float | None) -> SupplyStepResult
-marsdisk/run_zero_d.py:347:def _apply_shielding_and_supply(*, time_now: float, r: float, dt: float, sigma_surf: float, kappa_surf: float, collisions_active_step: bool, shielding_mode: str, phi_tau_fn: Callable[[float], float] | None, tau_fixed_target: float | None, sigma_tau1_fixed_target: float | None, los_factor: float, use_tcoll: bool, enable_blowout_step: bool, sink_timescale_active: bool, t_sink_step_effective: float | None, supply_spec: 'supply.SupplySpec', area: float, supply_state: 'supply.SupplyRuntimeState', temperature_K: float, allow_supply: bool, sigma_deep: float, t_mix: float | None, deep_enabled: bool, transport_mode: str, headroom_gate: str, headroom_policy: str, t_blow: float | None) -> SurfaceSupplyStepResult
-marsdisk/run_zero_d.py:418:def _apply_blowout_correction(outflux_surface: float, *, factor: float, apply: bool) -> tuple[float, bool]
-marsdisk/run_zero_d.py:429:def _apply_blowout_gate(blow_surface_total: float, outflux_surface: float, *, enable_blowout: bool, gate_enabled: bool, gate_factor: float) -> tuple[float, float]
-marsdisk/run_zero_d.py:442:def _resolve_t_coll_step(*, collision_solver_mode: str, collisions_active: bool, tau_los_last: float | None, los_factor: float, Omega: float, t_coll_kernel_last: float | None) -> float | None
-marsdisk/run_zero_d.py:469:def _reset_collision_runtime_state() -> None
-marsdisk/run_zero_d.py:476:def _get_max_steps() -> int
-marsdisk/run_zero_d.py:490:def _log_stage(label: str, *, extra: Mapping[str, Any] | None=None) -> None
-marsdisk/run_zero_d.py:496:def _model_fields_set(model: Any) -> set[str]
-marsdisk/run_zero_d.py:507:def _surface_energy_floor(gamma_J_m2: float, eta: float, alpha: float, rho: float, v_rel: float, s0: float, s_max: float) -> float
-marsdisk/run_zero_d.py:548:def _prepare_supply_transport_init(cfg: Config, *, psd_state: Dict[str, Any], optical_depth_enabled: bool, sigma_tau1_cap_init: float | None, kappa_surf_initial: float, phi_tau_fn: Callable[[float], float] | None, los_factor: float, t_orb: float, area: float) -> RunZeroDSupplyStage
-marsdisk/run_zero_d.py:913:def _prepare_time_grid_and_runtime(cfg: Config, *, Omega: float, t_orb: float, temp_runtime: tempdriver.RuntimeDriver, rng: np.random.Generator, pending_deprecation_warnings: List[str], supply_state: Any, psd_state: Dict[str, Any], sigma_surf: float, sigma_deep: float, s_min_effective: float, s_min_floor_dynamic: float, s_min_evolved_value: float, M_loss_cum: float, M_sink_cum: float, M_spill_cum: float, M_sublimation_cum: float, M_hydro_cum: float) -> RunZeroDTimeGridStage
-marsdisk/run_zero_d.py:1306:def load_config(path: Path, overrides: Optional[Sequence[str]]=None) -> Config
-marsdisk/run_zero_d.py:1331:def _gather_git_info() -> Dict[str, Any]
-marsdisk/run_zero_d.py:1358:class MassBudgetViolationError(NumericalError)
-marsdisk/run_zero_d.py:1364:def run_zero_d(cfg: Config, *, enforce_mass_budget: bool=False, physics_mode_override: Optional[str]=None, physics_mode_source_override: Optional[str]=None) -> None
-marsdisk/run_zero_d.py:5827:def main(argv: Optional[List[str]]=None) -> None
+marsdisk/run_zero_d.py:272:def _get_smol_sink_workspace(workspace: SmolSinkWorkspace | None, n_bins: int) -> SmolSinkWorkspace
+marsdisk/run_zero_d.py:292:def _apply_supply_step(*, time_now: float, r: float, dt: float, supply_spec: 'supply.Supply', area: float, supply_state: 'supply.SupplyRuntimeState | None', tau_for_feedback: float | None, temperature_K: float, allow_supply: bool, sigma_surf: float, sigma_tau1: float | None, sigma_deep: float, t_mix: float | None, deep_enabled: bool, transport_mode: str, headroom_gate: str, headroom_policy: str, t_blow: float | None) -> SupplyStepResult
+marsdisk/run_zero_d.py:349:def _apply_shielding_and_supply(*, time_now: float, r: float, dt: float, sigma_surf: float, kappa_surf: float, collisions_active_step: bool, shielding_mode: str, phi_tau_fn: Callable[[float], float] | None, tau_fixed_target: float | None, sigma_tau1_fixed_target: float | None, los_factor: float, use_tcoll: bool, enable_blowout_step: bool, sink_timescale_active: bool, t_sink_step_effective: float | None, supply_spec: 'supply.SupplySpec', area: float, supply_state: 'supply.SupplyRuntimeState', temperature_K: float, allow_supply: bool, sigma_deep: float, t_mix: float | None, deep_enabled: bool, transport_mode: str, headroom_gate: str, headroom_policy: str, t_blow: float | None) -> SurfaceSupplyStepResult
+marsdisk/run_zero_d.py:420:def _apply_blowout_correction(outflux_surface: float, *, factor: float, apply: bool) -> tuple[float, bool]
+marsdisk/run_zero_d.py:431:def _apply_blowout_gate(blow_surface_total: float, outflux_surface: float, *, enable_blowout: bool, gate_enabled: bool, gate_factor: float) -> tuple[float, float]
+marsdisk/run_zero_d.py:444:def _resolve_t_coll_step(*, collision_solver_mode: str, collisions_active: bool, tau_los_last: float | None, los_factor: float, Omega: float, t_coll_kernel_last: float | None) -> float | None
+marsdisk/run_zero_d.py:471:def _reset_collision_runtime_state() -> None
+marsdisk/run_zero_d.py:478:def _get_max_steps() -> int
+marsdisk/run_zero_d.py:492:def _log_stage(label: str, *, extra: Mapping[str, Any] | None=None) -> None
+marsdisk/run_zero_d.py:498:def _model_fields_set(model: Any) -> set[str]
+marsdisk/run_zero_d.py:509:def _surface_energy_floor(gamma_J_m2: float, eta: float, alpha: float, rho: float, v_rel: float, s0: float, s_max: float) -> float
+marsdisk/run_zero_d.py:550:def _prepare_supply_transport_init(cfg: Config, *, psd_state: Dict[str, Any], optical_depth_enabled: bool, sigma_tau1_cap_init: float | None, kappa_surf_initial: float, phi_tau_fn: Callable[[float], float] | None, los_factor: float, t_orb: float, area: float) -> RunZeroDSupplyStage
+marsdisk/run_zero_d.py:915:def _prepare_time_grid_and_runtime(cfg: Config, *, Omega: float, t_orb: float, temp_runtime: tempdriver.RuntimeDriver, rng: np.random.Generator, pending_deprecation_warnings: List[str], supply_state: Any, psd_state: Dict[str, Any], sigma_surf: float, sigma_deep: float, s_min_effective: float, s_min_floor_dynamic: float, s_min_evolved_value: float, M_loss_cum: float, M_sink_cum: float, M_spill_cum: float, M_sublimation_cum: float, M_hydro_cum: float) -> RunZeroDTimeGridStage
+marsdisk/run_zero_d.py:1324:def load_config(path: Path, overrides: Optional[Sequence[str]]=None) -> Config
+marsdisk/run_zero_d.py:1349:def _gather_git_info() -> Dict[str, Any]
+marsdisk/run_zero_d.py:1376:class MassBudgetViolationError(NumericalError)
+marsdisk/run_zero_d.py:1382:def run_zero_d(cfg: Config, *, enforce_mass_budget: bool=False, physics_mode_override: Optional[str]=None, physics_mode_source_override: Optional[str]=None) -> None
+marsdisk/run_zero_d.py:5863:def main(argv: Optional[List[str]]=None) -> None
 marsdisk/runtime/autotune.py:22:class MachineState
 marsdisk/runtime/autotune.py:43:class AutoTuneDecision
 marsdisk/runtime/autotune.py:56:def _safe_int(value: Any, fallback: int) -> int
@@ -758,10 +758,10 @@ marsdisk/schema.py:1824:class StreamingOffload(BaseModel)
 marsdisk/schema.py:1865:class Streaming(BaseModel)
 marsdisk/schema.py:1916:class Archive(BaseModel)
 marsdisk/schema.py:2010:class IO(BaseModel)
-marsdisk/schema.py:2074:class ExtendedDiagnostics(BaseModel)
-marsdisk/schema.py:2087:class EnergyBookkeeping(BaseModel)
-marsdisk/schema.py:2100:class Diagnostics(BaseModel)
-marsdisk/schema.py:2107:class Config(BaseModel)
+marsdisk/schema.py:2084:class ExtendedDiagnostics(BaseModel)
+marsdisk/schema.py:2097:class EnergyBookkeeping(BaseModel)
+marsdisk/schema.py:2110:class Diagnostics(BaseModel)
+marsdisk/schema.py:2117:class Config(BaseModel)
 marsdisk/warnings.py:7:class MarsDiskWarning(UserWarning)
 marsdisk/warnings.py:11:class PhysicsWarning(MarsDiskWarning)
 marsdisk/warnings.py:15:class NumericalWarning(MarsDiskWarning)
@@ -1000,98 +1000,98 @@ scripts/runsets/common/write_base_overrides.py:28:def append_literal(lines: list
 scripts/runsets/common/write_base_overrides.py:32:def main() -> int
 scripts/runsets/common/write_sweep_list.py:11:def _parse_list(raw: str) -> list[str]
 scripts/runsets/common/write_sweep_list.py:25:def main() -> int
-scripts/runsets/windows/preflight_checks.py:304:class Issue
-scripts/runsets/windows/preflight_checks.py:313:class AllowlistEntry
-scripts/runsets/windows/preflight_checks.py:318:def _add_issue(bucket: list[Issue], level: str, rule: str, message: str, path: Path | str | None=None, line: int | None=None) -> None
-scripts/runsets/windows/preflight_checks.py:332:def _error(bucket: list[Issue], rule: str, message: str, path: Path | str | None=None, line: int | None=None) -> None
-scripts/runsets/windows/preflight_checks.py:342:def _warn(bucket: list[Issue], rule: str, message: str, path: Path | str | None=None, line: int | None=None) -> None
-scripts/runsets/windows/preflight_checks.py:352:def _info(bucket: list[Issue], rule: str, message: str, path: Path | str | None=None, line: int | None=None) -> None
-scripts/runsets/windows/preflight_checks.py:367:class PreflightConfig
-scripts/runsets/windows/preflight_checks.py:381:def _find_config_file(repo_root: Path) -> Path | None
-scripts/runsets/windows/preflight_checks.py:390:def _load_config_file(path: Path) -> PreflightConfig
-scripts/runsets/windows/preflight_checks.py:440:def _get_git_changed_files(repo_root: Path, extensions: set[str]) -> list[Path]
-scripts/runsets/windows/preflight_checks.py:500:class FixResult
-scripts/runsets/windows/preflight_checks.py:508:def _fix_bom(path: Path) -> FixResult
-scripts/runsets/windows/preflight_checks.py:520:def _fix_line_endings(path: Path) -> FixResult
-scripts/runsets/windows/preflight_checks.py:535:def _apply_fixes(path: Path, rules_to_fix: set[str]) -> list[FixResult]
-scripts/runsets/windows/preflight_checks.py:548:def _collect_fixable_issues(issues: list[Issue]) -> dict[Path, set[str]]
-scripts/runsets/windows/preflight_checks.py:564:def _issue_to_sarif_result(issue: Issue, repo_root: Path) -> dict[str, Any]
-scripts/runsets/windows/preflight_checks.py:597:def _build_sarif_output(errors: list[Issue], warnings: list[Issue], infos: list[Issue], repo_root: Path) -> dict[str, Any]
-scripts/runsets/windows/preflight_checks.py:648:def _should_report_rule(rule: str, disable_rules: set[str], enable_only: set[str]) -> bool
-scripts/runsets/windows/preflight_checks.py:661:def _filter_issues(issues: list[Issue], disable_rules: set[str], enable_only: set[str]) -> list[Issue]
-scripts/runsets/windows/preflight_checks.py:677:def _print_rules_list() -> None
-scripts/runsets/windows/preflight_checks.py:703:def _load_overrides(path: Path) -> tuple[dict[str, str], list[str]]
-scripts/runsets/windows/preflight_checks.py:722:def _contains_non_ascii(text: str) -> bool
-scripts/runsets/windows/preflight_checks.py:726:def _is_windows_abs(path_str: str) -> bool
-scripts/runsets/windows/preflight_checks.py:733:def _normalize_windows(path_str: str) -> str
-scripts/runsets/windows/preflight_checks.py:737:def _is_windows() -> bool
-scripts/runsets/windows/preflight_checks.py:741:def _maybe_reexec_with_python311() -> None
-scripts/runsets/windows/preflight_checks.py:765:def _contains_posix_path(text: str) -> bool
-scripts/runsets/windows/preflight_checks.py:769:def _looks_like_windows_path(value: str) -> bool
-scripts/runsets/windows/preflight_checks.py:775:def _has_reserved_windows_name(value: str) -> bool
-scripts/runsets/windows/preflight_checks.py:788:def _contains_cmd_meta(text: str) -> bool
-scripts/runsets/windows/preflight_checks.py:792:def _has_expansion_token(value: str) -> bool
-scripts/runsets/windows/preflight_checks.py:800:def _has_unsafe_bang(value: str, allow_expansion: bool) -> bool
-scripts/runsets/windows/preflight_checks.py:809:def _cmd_unsafe_issue(label: str, value: str, errors: list[Issue], warnings: list[Issue], cmd_unsafe_error: bool, allow_expansion: bool, meta_as_error: bool=False, skip_rules: set[str] | None=None) -> None
-scripts/runsets/windows/preflight_checks.py:853:def _check_shared_path(label: str, value: str, warnings: list[Issue]) -> None
-scripts/runsets/windows/preflight_checks.py:870:def _check_name_component(name: str, rel_display: str, errors: list[Issue]) -> None
-scripts/runsets/windows/preflight_checks.py:882:def _check_cmd(name: str, errors: list[Issue], warnings: list[Issue], warn_only: bool) -> None
-scripts/runsets/windows/preflight_checks.py:896:def _split_cmdline_tokens(raw: str) -> list[str]
-scripts/runsets/windows/preflight_checks.py:903:def _expand_cmd_vars(raw: str) -> tuple[str, bool]
-scripts/runsets/windows/preflight_checks.py:915:def _normalize_exe_token(token: str) -> str
-scripts/runsets/windows/preflight_checks.py:919:def _python_exe_basename(token: str) -> str
-scripts/runsets/windows/preflight_checks.py:925:def _validate_python_exe_tokens(label: str, exe_token: str, args: list[str], errors: list[Issue], warnings: list[Issue], warn_only: bool) -> bool
-scripts/runsets/windows/preflight_checks.py:983:def _probe_python_exe(exe_token: str, args: list[str], errors: list[Issue], warnings: list[Issue], warn_only: bool) -> bool
-scripts/runsets/windows/preflight_checks.py:1028:def _check_python(errors: list[Issue], warnings: list[Issue], warn_only: bool, python_exe: str | None) -> None
-scripts/runsets/windows/preflight_checks.py:1111:def _coerce_registry_bool(value: object) -> bool | None
-scripts/runsets/windows/preflight_checks.py:1125:def _read_cmd_registry_value(root, name: str) -> object | None
-scripts/runsets/windows/preflight_checks.py:1141:def _read_cmd_autorun_values() -> dict[str, object]
-scripts/runsets/windows/preflight_checks.py:1154:def _read_cmd_extensions_enabled() -> tuple[bool | None, str | None, object | None]
-scripts/runsets/windows/preflight_checks.py:1170:def _read_cmd_code_page() -> str | None
-scripts/runsets/windows/preflight_checks.py:1187:def _check_powershell(errors: list[Issue], warnings: list[Issue], warn_only: bool) -> None
-scripts/runsets/windows/preflight_checks.py:1223:def _check_temp_dir(temp_dir: str | None, errors: list[Issue], warnings: list[Issue], cmd_unsafe_error: bool, allow_non_ascii: bool=False) -> None
-scripts/runsets/windows/preflight_checks.py:1250:def _check_env_paths(errors: list[Issue], warnings: list[Issue], cmd_unsafe_error: bool, allow_non_ascii: bool=False) -> None
-scripts/runsets/windows/preflight_checks.py:1291:def _check_path_env_length(warnings: list[Issue]) -> None
-scripts/runsets/windows/preflight_checks.py:1310:def _check_pathext(errors: list[Issue], warnings: list[Issue], profile: str) -> None
-scripts/runsets/windows/preflight_checks.py:1333:def _check_path_value(label: str, value: str, errors: list[Issue], warnings: list[Issue], cmd_unsafe_error: bool, allow_expansion: bool, warn_unc: bool=True, meta_as_error: bool=False, skip_rules: set[str] | None=None, allow_non_ascii: bool=False) -> None
-scripts/runsets/windows/preflight_checks.py:1399:def _has_invalid_windows_chars(value: str) -> bool
-scripts/runsets/windows/preflight_checks.py:1418:def _extract_for_var_token(line_body: str) -> str | None
-scripts/runsets/windows/preflight_checks.py:1437:def _parse_set_value(line: str) -> str | None
-scripts/runsets/windows/preflight_checks.py:1451:def _check_common_scripts(repo_root: Path, errors: list[Issue]) -> None
-scripts/runsets/windows/preflight_checks.py:1477:def _detect_delayed_expansion_lines(text: str) -> list[int]
-scripts/runsets/windows/preflight_checks.py:1498:def _detect_delayed_expansion(text: str) -> bool
-scripts/runsets/windows/preflight_checks.py:1518:def _decode_cmd_text(data: bytes) -> str
-scripts/runsets/windows/preflight_checks.py:1524:def _read_cmd_text(path: Path, errors: list[Issue]) -> str | None
-scripts/runsets/windows/preflight_checks.py:1533:def _normalize_allowlist_path(value: str) -> str
-scripts/runsets/windows/preflight_checks.py:1537:def _load_cmd_allowlist(path: Path, warnings: list[Issue]) -> list[AllowlistEntry]
-scripts/runsets/windows/preflight_checks.py:1616:def _allowlist_rules_for(path: Path, repo_root: Path, entries: list[AllowlistEntry]) -> set[str] | None
-scripts/runsets/windows/preflight_checks.py:1643:def _format_issue(issue: Issue) -> str
-scripts/runsets/windows/preflight_checks.py:1652:def _issue_to_dict(issue: Issue) -> dict[str, object]
-scripts/runsets/windows/preflight_checks.py:1665:def _rule_counts(issues: list[Issue]) -> dict[str, dict[str, int]]
-scripts/runsets/windows/preflight_checks.py:1673:def _build_json_payload(errors: list[Issue], warnings: list[Issue], infos: list[Issue], exit_code: int) -> dict[str, object]
-scripts/runsets/windows/preflight_checks.py:1703:def _has_chcp_directive(lines: list[str], limit: int=CHCP_SCAN_LINES) -> bool
-scripts/runsets/windows/preflight_checks.py:1725:def _join_caret_lines(lines: list[str]) -> list[tuple[int, str]]
-scripts/runsets/windows/preflight_checks.py:1746:def _split_cmd_segments(line: str) -> list[str]
-scripts/runsets/windows/preflight_checks.py:1778:class _BlockState
-scripts/runsets/windows/preflight_checks.py:1785:def _has_unquoted_meta(line: str, meta_chars: set[str]) -> bool
-scripts/runsets/windows/preflight_checks.py:1803:def _count_parens(line: str) -> tuple[int, int]
-scripts/runsets/windows/preflight_checks.py:1827:def _token_is_relative_path(token: str) -> bool
-scripts/runsets/windows/preflight_checks.py:1848:def _line_has_relative_path(line_body: str) -> bool
-scripts/runsets/windows/preflight_checks.py:1860:def _detect_script_dir_anchor(lines: list[tuple[int, str]], limit: int) -> bool
-scripts/runsets/windows/preflight_checks.py:1882:def _iter_named_commands(line: str, names: set[str]) -> list[tuple[str, list[str]]]
-scripts/runsets/windows/preflight_checks.py:1913:def _parse_xcopy_flags(tokens: list[str]) -> tuple[bool, bool, bool, bool, bool]
-scripts/runsets/windows/preflight_checks.py:1942:def _extract_set_name(line_body: str) -> str | None
-scripts/runsets/windows/preflight_checks.py:1960:def _is_cmd_token(token: str) -> bool
-scripts/runsets/windows/preflight_checks.py:1970:def _iter_cmd_invocations(line: str) -> list[tuple[bool, bool, bool, bool]]
-scripts/runsets/windows/preflight_checks.py:2027:def _line_has_cmd_v_on(line_body: str) -> bool
-scripts/runsets/windows/preflight_checks.py:2031:def _dash_option_cmd(line_body: str) -> str | None
-scripts/runsets/windows/preflight_checks.py:2050:def _scan_cmd_file(path: Path, errors: list[Issue], warnings: list[Issue], infos: list[Issue], cmd_unsafe_error: bool, profile: str, allowlist_rules: set[str] | None, autorun_detected: bool, debug: bool=False) -> None
-scripts/runsets/windows/preflight_checks.py:2730:def _collect_cmd_paths(cmd_files: list[str], cmd_roots: list[str], errors: list[Issue], cmd_exclude: list[str]) -> list[Path]
-scripts/runsets/windows/preflight_checks.py:2793:def _scan_repo_root(root: Path, errors: list[Issue], warnings: list[Issue], cmd_unsafe_error: bool, exclude_dirs: set[str], allow_non_ascii: bool=False) -> tuple[str, int]
-scripts/runsets/windows/preflight_checks.py:2844:def _estimate_path_len(base: str, rel_win: str) -> int
-scripts/runsets/windows/preflight_checks.py:2850:def _read_long_paths_enabled() -> bool | None
-scripts/runsets/windows/preflight_checks.py:2868:def _read_git_longpaths(repo_root: Path) -> bool | None
-scripts/runsets/windows/preflight_checks.py:2889:def main() -> int
+scripts/runsets/windows/preflight_checks.py:305:class Issue
+scripts/runsets/windows/preflight_checks.py:314:class AllowlistEntry
+scripts/runsets/windows/preflight_checks.py:319:def _add_issue(bucket: list[Issue], level: str, rule: str, message: str, path: Path | str | None=None, line: int | None=None) -> None
+scripts/runsets/windows/preflight_checks.py:333:def _error(bucket: list[Issue], rule: str, message: str, path: Path | str | None=None, line: int | None=None) -> None
+scripts/runsets/windows/preflight_checks.py:343:def _warn(bucket: list[Issue], rule: str, message: str, path: Path | str | None=None, line: int | None=None) -> None
+scripts/runsets/windows/preflight_checks.py:353:def _info(bucket: list[Issue], rule: str, message: str, path: Path | str | None=None, line: int | None=None) -> None
+scripts/runsets/windows/preflight_checks.py:368:class PreflightConfig
+scripts/runsets/windows/preflight_checks.py:382:def _find_config_file(repo_root: Path) -> Path | None
+scripts/runsets/windows/preflight_checks.py:391:def _load_config_file(path: Path) -> PreflightConfig
+scripts/runsets/windows/preflight_checks.py:441:def _get_git_changed_files(repo_root: Path, extensions: set[str]) -> list[Path]
+scripts/runsets/windows/preflight_checks.py:501:class FixResult
+scripts/runsets/windows/preflight_checks.py:509:def _fix_bom(path: Path) -> FixResult
+scripts/runsets/windows/preflight_checks.py:521:def _fix_line_endings(path: Path) -> FixResult
+scripts/runsets/windows/preflight_checks.py:536:def _apply_fixes(path: Path, rules_to_fix: set[str]) -> list[FixResult]
+scripts/runsets/windows/preflight_checks.py:549:def _collect_fixable_issues(issues: list[Issue]) -> dict[Path, set[str]]
+scripts/runsets/windows/preflight_checks.py:565:def _issue_to_sarif_result(issue: Issue, repo_root: Path) -> dict[str, Any]
+scripts/runsets/windows/preflight_checks.py:598:def _build_sarif_output(errors: list[Issue], warnings: list[Issue], infos: list[Issue], repo_root: Path) -> dict[str, Any]
+scripts/runsets/windows/preflight_checks.py:649:def _should_report_rule(rule: str, disable_rules: set[str], enable_only: set[str]) -> bool
+scripts/runsets/windows/preflight_checks.py:662:def _filter_issues(issues: list[Issue], disable_rules: set[str], enable_only: set[str]) -> list[Issue]
+scripts/runsets/windows/preflight_checks.py:678:def _print_rules_list() -> None
+scripts/runsets/windows/preflight_checks.py:704:def _load_overrides(path: Path) -> tuple[dict[str, str], list[str]]
+scripts/runsets/windows/preflight_checks.py:723:def _contains_non_ascii(text: str) -> bool
+scripts/runsets/windows/preflight_checks.py:727:def _is_windows_abs(path_str: str) -> bool
+scripts/runsets/windows/preflight_checks.py:734:def _normalize_windows(path_str: str) -> str
+scripts/runsets/windows/preflight_checks.py:738:def _is_windows() -> bool
+scripts/runsets/windows/preflight_checks.py:742:def _maybe_reexec_with_python311() -> None
+scripts/runsets/windows/preflight_checks.py:766:def _contains_posix_path(text: str) -> bool
+scripts/runsets/windows/preflight_checks.py:770:def _looks_like_windows_path(value: str) -> bool
+scripts/runsets/windows/preflight_checks.py:776:def _has_reserved_windows_name(value: str) -> bool
+scripts/runsets/windows/preflight_checks.py:789:def _contains_cmd_meta(text: str) -> bool
+scripts/runsets/windows/preflight_checks.py:793:def _has_expansion_token(value: str) -> bool
+scripts/runsets/windows/preflight_checks.py:801:def _has_unsafe_bang(value: str, allow_expansion: bool) -> bool
+scripts/runsets/windows/preflight_checks.py:810:def _cmd_unsafe_issue(label: str, value: str, errors: list[Issue], warnings: list[Issue], cmd_unsafe_error: bool, allow_expansion: bool, meta_as_error: bool=False, skip_rules: set[str] | None=None) -> None
+scripts/runsets/windows/preflight_checks.py:854:def _check_shared_path(label: str, value: str, warnings: list[Issue]) -> None
+scripts/runsets/windows/preflight_checks.py:871:def _check_name_component(name: str, rel_display: str, errors: list[Issue]) -> None
+scripts/runsets/windows/preflight_checks.py:883:def _check_cmd(name: str, errors: list[Issue], warnings: list[Issue], warn_only: bool) -> None
+scripts/runsets/windows/preflight_checks.py:897:def _split_cmdline_tokens(raw: str) -> list[str]
+scripts/runsets/windows/preflight_checks.py:904:def _expand_cmd_vars(raw: str) -> tuple[str, bool]
+scripts/runsets/windows/preflight_checks.py:916:def _normalize_exe_token(token: str) -> str
+scripts/runsets/windows/preflight_checks.py:920:def _python_exe_basename(token: str) -> str
+scripts/runsets/windows/preflight_checks.py:926:def _validate_python_exe_tokens(label: str, exe_token: str, args: list[str], errors: list[Issue], warnings: list[Issue], warn_only: bool) -> bool
+scripts/runsets/windows/preflight_checks.py:984:def _probe_python_exe(exe_token: str, args: list[str], errors: list[Issue], warnings: list[Issue], warn_only: bool) -> bool
+scripts/runsets/windows/preflight_checks.py:1029:def _check_python(errors: list[Issue], warnings: list[Issue], warn_only: bool, python_exe: str | None) -> None
+scripts/runsets/windows/preflight_checks.py:1112:def _coerce_registry_bool(value: object) -> bool | None
+scripts/runsets/windows/preflight_checks.py:1126:def _read_cmd_registry_value(root, name: str) -> object | None
+scripts/runsets/windows/preflight_checks.py:1142:def _read_cmd_autorun_values() -> dict[str, object]
+scripts/runsets/windows/preflight_checks.py:1155:def _read_cmd_extensions_enabled() -> tuple[bool | None, str | None, object | None]
+scripts/runsets/windows/preflight_checks.py:1171:def _read_cmd_code_page() -> str | None
+scripts/runsets/windows/preflight_checks.py:1188:def _check_powershell(errors: list[Issue], warnings: list[Issue], warn_only: bool) -> None
+scripts/runsets/windows/preflight_checks.py:1224:def _check_temp_dir(temp_dir: str | None, errors: list[Issue], warnings: list[Issue], cmd_unsafe_error: bool, allow_non_ascii: bool=False) -> None
+scripts/runsets/windows/preflight_checks.py:1251:def _check_env_paths(errors: list[Issue], warnings: list[Issue], cmd_unsafe_error: bool, allow_non_ascii: bool=False) -> None
+scripts/runsets/windows/preflight_checks.py:1292:def _check_path_env_length(warnings: list[Issue]) -> None
+scripts/runsets/windows/preflight_checks.py:1311:def _check_pathext(errors: list[Issue], warnings: list[Issue], profile: str) -> None
+scripts/runsets/windows/preflight_checks.py:1334:def _check_path_value(label: str, value: str, errors: list[Issue], warnings: list[Issue], cmd_unsafe_error: bool, allow_expansion: bool, warn_unc: bool=True, meta_as_error: bool=False, skip_rules: set[str] | None=None, allow_non_ascii: bool=False) -> None
+scripts/runsets/windows/preflight_checks.py:1400:def _has_invalid_windows_chars(value: str) -> bool
+scripts/runsets/windows/preflight_checks.py:1419:def _extract_for_var_token(line_body: str) -> str | None
+scripts/runsets/windows/preflight_checks.py:1438:def _parse_set_value(line: str) -> str | None
+scripts/runsets/windows/preflight_checks.py:1452:def _check_common_scripts(repo_root: Path, errors: list[Issue]) -> None
+scripts/runsets/windows/preflight_checks.py:1478:def _detect_delayed_expansion_lines(text: str) -> list[int]
+scripts/runsets/windows/preflight_checks.py:1499:def _detect_delayed_expansion(text: str) -> bool
+scripts/runsets/windows/preflight_checks.py:1519:def _decode_cmd_text(data: bytes) -> str
+scripts/runsets/windows/preflight_checks.py:1525:def _read_cmd_text(path: Path, errors: list[Issue]) -> str | None
+scripts/runsets/windows/preflight_checks.py:1534:def _normalize_allowlist_path(value: str) -> str
+scripts/runsets/windows/preflight_checks.py:1538:def _load_cmd_allowlist(path: Path, warnings: list[Issue]) -> list[AllowlistEntry]
+scripts/runsets/windows/preflight_checks.py:1617:def _allowlist_rules_for(path: Path, repo_root: Path, entries: list[AllowlistEntry]) -> set[str] | None
+scripts/runsets/windows/preflight_checks.py:1644:def _format_issue(issue: Issue) -> str
+scripts/runsets/windows/preflight_checks.py:1653:def _issue_to_dict(issue: Issue) -> dict[str, object]
+scripts/runsets/windows/preflight_checks.py:1666:def _rule_counts(issues: list[Issue]) -> dict[str, dict[str, int]]
+scripts/runsets/windows/preflight_checks.py:1674:def _build_json_payload(errors: list[Issue], warnings: list[Issue], infos: list[Issue], exit_code: int) -> dict[str, object]
+scripts/runsets/windows/preflight_checks.py:1704:def _has_chcp_directive(lines: list[str], limit: int=CHCP_SCAN_LINES) -> bool
+scripts/runsets/windows/preflight_checks.py:1726:def _join_caret_lines(lines: list[str]) -> list[tuple[int, str]]
+scripts/runsets/windows/preflight_checks.py:1747:def _split_cmd_segments(line: str) -> list[str]
+scripts/runsets/windows/preflight_checks.py:1779:class _BlockState
+scripts/runsets/windows/preflight_checks.py:1786:def _has_unquoted_meta(line: str, meta_chars: set[str]) -> bool
+scripts/runsets/windows/preflight_checks.py:1804:def _count_parens(line: str) -> tuple[int, int]
+scripts/runsets/windows/preflight_checks.py:1828:def _token_is_relative_path(token: str) -> bool
+scripts/runsets/windows/preflight_checks.py:1849:def _line_has_relative_path(line_body: str) -> bool
+scripts/runsets/windows/preflight_checks.py:1861:def _detect_script_dir_anchor(lines: list[tuple[int, str]], limit: int) -> bool
+scripts/runsets/windows/preflight_checks.py:1883:def _iter_named_commands(line: str, names: set[str]) -> list[tuple[str, list[str]]]
+scripts/runsets/windows/preflight_checks.py:1914:def _parse_xcopy_flags(tokens: list[str]) -> tuple[bool, bool, bool, bool, bool]
+scripts/runsets/windows/preflight_checks.py:1943:def _extract_set_name(line_body: str) -> str | None
+scripts/runsets/windows/preflight_checks.py:1961:def _is_cmd_token(token: str) -> bool
+scripts/runsets/windows/preflight_checks.py:1971:def _iter_cmd_invocations(line: str) -> list[tuple[bool, bool, bool, bool]]
+scripts/runsets/windows/preflight_checks.py:2028:def _line_has_cmd_v_on(line_body: str) -> bool
+scripts/runsets/windows/preflight_checks.py:2032:def _dash_option_cmd(line_body: str) -> str | None
+scripts/runsets/windows/preflight_checks.py:2051:def _scan_cmd_file(path: Path, errors: list[Issue], warnings: list[Issue], infos: list[Issue], cmd_unsafe_error: bool, profile: str, allowlist_rules: set[str] | None, autorun_detected: bool, debug: bool=False) -> None
+scripts/runsets/windows/preflight_checks.py:2731:def _collect_cmd_paths(cmd_files: list[str], cmd_roots: list[str], errors: list[Issue], cmd_exclude: list[str]) -> list[Path]
+scripts/runsets/windows/preflight_checks.py:2794:def _scan_repo_root(root: Path, errors: list[Issue], warnings: list[Issue], cmd_unsafe_error: bool, exclude_dirs: set[str], allow_non_ascii: bool=False) -> tuple[str, int]
+scripts/runsets/windows/preflight_checks.py:2845:def _estimate_path_len(base: str, rel_win: str) -> int
+scripts/runsets/windows/preflight_checks.py:2851:def _read_long_paths_enabled() -> bool | None
+scripts/runsets/windows/preflight_checks.py:2869:def _read_git_longpaths(repo_root: Path) -> bool | None
+scripts/runsets/windows/preflight_checks.py:2890:def main() -> int
 scripts/sweeps/sweep_beta_map.py:30:def _parse_grid(start: float, stop: float, count: int, label: str) -> np.ndarray
 scripts/sweeps/sweep_beta_map.py:39:def _load_config(path: Path) -> Config
 scripts/sweeps/sweep_beta_map.py:50:def _write_json(path: Path, payload: dict) -> None
@@ -1177,10 +1177,32 @@ scripts/sweeps/sweep_massloss_map.py:421:def _write_json(path: Path, payload: Di
 scripts/sweeps/sweep_massloss_map.py:427:def _collect_validation(records: Sequence[Dict[str, Any]], *, tolerance: float) -> Dict[str, Any]
 scripts/sweeps/sweep_massloss_map.py:455:def parse_args() -> argparse.Namespace
 scripts/sweeps/sweep_massloss_map.py:503:def main() -> None
+scripts/tests/benchmark_speed_profiles.py:38:def _repo_root() -> Path
+scripts/tests/benchmark_speed_profiles.py:42:def _timestamp() -> str
+scripts/tests/benchmark_speed_profiles.py:46:def _parse_list(raw: Optional[str]) -> List[str]
+scripts/tests/benchmark_speed_profiles.py:53:def _load_base_overrides(path: Path, *, strip_archive: bool) -> List[str]
+scripts/tests/benchmark_speed_profiles.py:65:def _write_overrides(path: Path, lines: Iterable[str]) -> None
+scripts/tests/benchmark_speed_profiles.py:71:def _run_case(*, config_path: Path, overrides_path: Path, log_path: Path, env: Dict[str, str]) -> Dict[str, object]
+scripts/tests/benchmark_speed_profiles.py:107:def main() -> int
 scripts/tests/cell_parallel_speed_check.py:16:def _repo_root() -> Path
 scripts/tests/cell_parallel_speed_check.py:20:def _load_json(path: Path) -> Dict[str, Any]
 scripts/tests/cell_parallel_speed_check.py:24:def _run_case(*, label: str, config_path: Path, outdir: Path, overrides: list[str], env: Dict[str, str], quiet: bool) -> Dict[str, Any]
 scripts/tests/cell_parallel_speed_check.py:62:def main() -> int
+scripts/tests/check_run_sweep_cpu_bound.py:26:def _repo_root() -> Path
+scripts/tests/check_run_sweep_cpu_bound.py:30:def _timestamp() -> str
+scripts/tests/check_run_sweep_cpu_bound.py:34:def _write_text(path: Path, text: str) -> None
+scripts/tests/check_run_sweep_cpu_bound.py:39:def _write_json(path: Path, payload: Dict[str, Any]) -> None
+scripts/tests/check_run_sweep_cpu_bound.py:43:def _format_list(values: Iterable[float]) -> str
+scripts/tests/check_run_sweep_cpu_bound.py:47:def _write_study(path: Path, sweep_tag: str) -> None
+scripts/tests/check_run_sweep_cpu_bound.py:57:def _format_override_value(value: Optional[float]) -> str
+scripts/tests/check_run_sweep_cpu_bound.py:63:def _build_overrides(base_overrides: Path, extra_overrides: Iterable[str], out_path: Path) -> None
+scripts/tests/check_run_sweep_cpu_bound.py:77:def _run_cmd(cmd: list[str], env: Dict[str, str], cwd: Path) -> subprocess.CompletedProcess
+scripts/tests/check_run_sweep_cpu_bound.py:83:def _parse_parallel_final(log_path: Path) -> Dict[str, str]
+scripts/tests/check_run_sweep_cpu_bound.py:102:def _coerce_int(value: Optional[str], default: int) -> int
+scripts/tests/check_run_sweep_cpu_bound.py:111:def _thread_budget(parallel_config: Dict[str, str], cpu_logical: int) -> Dict[str, Any]
+scripts/tests/check_run_sweep_cpu_bound.py:135:def _update_cpu_times(root: Optional['psutil.Process'], seen: Dict[int, float]) -> None
+scripts/tests/check_run_sweep_cpu_bound.py:153:def _monitor_cpu(proc: subprocess.Popen, interval: float) -> tuple[list[float], Dict[int, float]]
+scripts/tests/check_run_sweep_cpu_bound.py:172:def main() -> int
 scripts/tests/measure_case_output_size.py:17:def _repo_root() -> Path
 scripts/tests/measure_case_output_size.py:21:def _sanitize_token(value: str) -> str
 scripts/tests/measure_case_output_size.py:29:def _git_short_sha(repo_root: Path) -> str
@@ -1233,6 +1255,19 @@ scripts/tests/sweep_parallel_speed_check.py:28:def _load_status_counts(path: Pat
 scripts/tests/sweep_parallel_speed_check.py:40:def _run_case(*, label: str, map_id: str, base_config: str, outdir: Path, jobs: int, rrm_spec: Tuple[float, float, int], tm_spec: Tuple[float, float, int], qpr_table: str, env: Dict[str, str]) -> Dict[str, Any]
 scripts/tests/sweep_parallel_speed_check.py:93:def _parse_triplet(values: Iterable[str], default: Tuple[float, float, int]) -> Tuple[float, float, int]
 scripts/tests/sweep_parallel_speed_check.py:100:def main() -> int
+scripts/tests/sweep_vs_cell_parallel_speed_check.py:16:def _repo_root() -> Path
+scripts/tests/sweep_vs_cell_parallel_speed_check.py:20:def _timestamp() -> str
+scripts/tests/sweep_vs_cell_parallel_speed_check.py:24:def _write_text(path: Path, text: str) -> None
+scripts/tests/sweep_vs_cell_parallel_speed_check.py:29:def _write_json(path: Path, payload: Dict[str, Any]) -> None
+scripts/tests/sweep_vs_cell_parallel_speed_check.py:33:def _parse_number_list(raw: str) -> List[float]
+scripts/tests/sweep_vs_cell_parallel_speed_check.py:38:def _format_yaml_list(values: Iterable[float]) -> str
+scripts/tests/sweep_vs_cell_parallel_speed_check.py:42:def _write_study(path: Path, *, t_list: List[float], eps_list: List[float], tau_list: List[float], sweep_tag: str) -> None
+scripts/tests/sweep_vs_cell_parallel_speed_check.py:52:def _build_overrides(base_path: Path, extra_lines: List[str], out_path: Path) -> None
+scripts/tests/sweep_vs_cell_parallel_speed_check.py:61:def _parse_parallel_final(log_path: Path) -> Dict[str, str]
+scripts/tests/sweep_vs_cell_parallel_speed_check.py:80:def _run_cmd(cmd: List[str], *, env: Dict[str, str], cwd: Path) -> subprocess.CompletedProcess
+scripts/tests/sweep_vs_cell_parallel_speed_check.py:84:def _build_cmd(cmd_path: Path, *, overrides_path: Path, out_root: Path, study_path: Path, config_path: Path | None, with_plot: bool, with_eval: bool) -> List[str]
+scripts/tests/sweep_vs_cell_parallel_speed_check.py:105:def _run_case(*, label: str, cmd_path: Path, overrides_path: Path, out_root: Path, study_path: Path, config_path: Path | None, env: Dict[str, str], debug_log: Path, trace_log: Path, with_plot: bool, with_eval: bool) -> Dict[str, Any]
+scripts/tests/sweep_vs_cell_parallel_speed_check.py:148:def main() -> int
 scripts/tests/temp_supply_parallel_smoke.py:20:def _repo_root() -> Path
 scripts/tests/temp_supply_parallel_smoke.py:24:def _normalize_temp_token(value: str) -> str
 scripts/tests/temp_supply_parallel_smoke.py:31:def _validate_cases(repo_root: Path, cases: Iterable[Tuple[str, str, str]]) -> None
