@@ -883,9 +883,9 @@ if not defined SIZE_PROBE_HOOKS set "SIZE_PROBE_HOOKS=plot,eval"
 
 
 
-rem Per-process thread cap (sweep-parallel uses 1, cell-parallel uses 2).
+rem Per-process thread cap (sweep-parallel uses 3, cell-parallel uses 2).
 if "%SWEEP_PARALLEL%"=="1" (
-  set "CELL_THREAD_LIMIT=1"
+  set "CELL_THREAD_LIMIT=3"
   set "CELL_THREAD_LIMIT_DEFAULT=1"
 ) else (
   set "CELL_THREAD_LIMIT=2"
