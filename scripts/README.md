@@ -53,6 +53,7 @@ scripts/runsets/mac/run_one.sh --t 4000 --eps 1.0 --tau 1.0
 | `scripts/tests/run_temp_supply_parallel_smoke.sh` | temp_supply 並列スモーク（bash） | `.venv` を使って `temp_supply_parallel_smoke.py` を実行します。 |
 | `scripts/tests/run_overparallel_benchmark.cmd` | 過剰並列の簡易ベンチ（Windows） | `.venv` を作成し、並列数を振って短時間の1D実行を計測し、各runに `perf.json` と `perf_summary.json` を残します。 |
 | `scripts/tests/check_run_sweep_cpu_bound.py` | run_sweep のCPU負荷/スレッド予算チェック | dry-run で並列設定を取得し、任意で短縮スイープを実行してCPU使用率を評価します。 |
+| `scripts/tests/sweep_vs_cell_parallel_speed_check.py` | スイープ並列 vs セル並列の速度比較 | run_sweep.cmd を2回実行し、wall time を比較して `speed_check_summary.json` を出力します（Windows専用）。 |
 | `scripts/tests/numba_on_off_benchmark.py` | Numba on/off の簡易ベンチ | 0D の短時間実行を 2 回行い、`bench_summary.json` に速度比を記録します。 |
 | `scripts/plots/render_figures_from_tasks.py` | 図タスクの一括生成 | 解析タスク定義から `plot_from_runs.py` を呼び出して図を生成します。 |
 | `scripts/runs/run_autotuned.py` | auto-tune 既定のランナー | `python -m marsdisk.run` に `--auto-tune` を付与します。 |
