@@ -29,36 +29,36 @@ AIエージェントがコード検索を効率化するためのマップを提
 | `SurfaceSupplyStepResult` | L131 | クラス | No description available. |
 | `RunZeroDSupplyStage` | L139 | クラス | No description available. |
 | `RunZeroDTimeGridStage` | L191 | クラス | No description available. |
-| `_get_smol_sink_workspace` | L270 | ヘルパー | No description available. |
-| `_apply_supply_step` | L290 | ヘルパー | No description available. |
-| `_apply_shielding_and_supply` | L347 | ヘルパー | No description available. |
-| `_apply_blowout_correction` | L418 | ヘルパー | No description available. |
-| `_apply_blowout_gate` | L429 | ヘルパー | No description available. |
-| `_resolve_t_coll_step` | L442 | ヘルパー | No description available. |
-| `_reset_collision_runtime_state` | L469 | ヘルパー | Clear per-run collision caches and warning state. |
-| `_get_max_steps` | L476 | ヘルパー | Return MAX_STEPS, honoring overrides applied to th... |
-| `_log_stage` | L490 | ヘルパー | Emit coarse progress markers for debugging long ru... |
-| `_model_fields_set` | L496 | ヘルパー | Return explicitly-set fields for a Pydantic model ... |
-| `_surface_energy_floor` | L507 | ヘルパー | Return surface-energy-limited minimum size (Krijt ... |
-| `_prepare_supply_transport_init` | L548 | ヘルパー | No description available. |
-| `_prepare_time_grid_and_runtime` | L913 | ヘルパー | No description available. |
-| `load_config` | L1306 | 関数 | Load a YAML configuration file into a :class:`Conf... |
-| `_gather_git_info` | L1331 | ヘルパー | Return basic git metadata for provenance recording... |
-| `MassBudgetViolationError` | L1358 | クラス | Raised when the mass budget tolerance is exceeded. |
-| `run_zero_d` | L1364 | メイン | Execute the full-feature zero-dimensional simulati... |
-| `main` | L5827 | 関数 | Command line entry point. |
+| `_get_smol_sink_workspace` | L272 | ヘルパー | No description available. |
+| `_apply_supply_step` | L292 | ヘルパー | No description available. |
+| `_apply_shielding_and_supply` | L349 | ヘルパー | No description available. |
+| `_apply_blowout_correction` | L420 | ヘルパー | No description available. |
+| `_apply_blowout_gate` | L431 | ヘルパー | No description available. |
+| `_resolve_t_coll_step` | L444 | ヘルパー | No description available. |
+| `_reset_collision_runtime_state` | L471 | ヘルパー | Clear per-run collision caches and warning state. |
+| `_get_max_steps` | L478 | ヘルパー | Return MAX_STEPS, honoring overrides applied to th... |
+| `_log_stage` | L492 | ヘルパー | Emit coarse progress markers for debugging long ru... |
+| `_model_fields_set` | L498 | ヘルパー | Return explicitly-set fields for a Pydantic model ... |
+| `_surface_energy_floor` | L509 | ヘルパー | Return surface-energy-limited minimum size (Krijt ... |
+| `_prepare_supply_transport_init` | L550 | ヘルパー | No description available. |
+| `_prepare_time_grid_and_runtime` | L915 | ヘルパー | No description available. |
+| `load_config` | L1324 | 関数 | Load a YAML configuration file into a :class:`Conf... |
+| `_gather_git_info` | L1349 | ヘルパー | Return basic git metadata for provenance recording... |
+| `MassBudgetViolationError` | L1376 | クラス | Raised when the mass budget tolerance is exceeded. |
+| `run_zero_d` | L1382 | メイン | Execute the full-feature zero-dimensional simulati... |
+| `main` | L5863 | 関数 | Command line entry point. |
 
 ## 3. 主要セクション（目安）
 
 > 以下の行範囲はコード変更により変動します。`inventory.json` を基に自動更新されます。
 
-- **`run_zero_d()`**: L1364–? (メイン実行ドライバ)
-- **`main()`**: L5827–? (CLI エントリポイント)
+- **`run_zero_d()`**: L1382–? (メイン実行ドライバ)
+- **`main()`**: L5863–? (CLI エントリポイント)
 ## 4. 探索ガイド
 
 | 調べたいこと | 参照シンボル | 備考 |
 |-------------|-------------|------|
-| 設定ロード | [`load_config`](L1306) | YAML→Config変換 |
+| 設定ロード | [`load_config`](L1324) | YAML→Config変換 |
 | 時間グリッド | `resolve_time_grid` | dt, n_steps決定 (未検出) |
 | シード解決 | `resolve_seed` | RNG初期化 (未検出) |
 | 高速ブローアウト補正 | `fast_blowout_correction_factor` | dt/t_blow補正 (未検出) |
