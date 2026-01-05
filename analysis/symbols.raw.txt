@@ -1810,6 +1810,12 @@ tests/unit/test_timegrid_and_budget.py:64:def test_time_grid_and_mass_budget(tmp
 tests/unit/test_viscosity.py:7:def _run(N: int, dt: float)
 tests/unit/test_viscosity.py:18:def test_viscous_diffusion_converges_and_conserves_mass()
 tests/unit/test_wyatt_scaling.py:6:def test_wyatt_scaling_inverse_tau()
+tmp/pyspy_run_sweep_sim_driver.py:17:def _repo_root() -> Path
+tmp/pyspy_run_sweep_sim_driver.py:21:def _token(value: float) -> str
+tmp/pyspy_run_sweep_sim_driver.py:28:def _case_id(t_val: float, eps_val: float, tau_val: float) -> str
+tmp/pyspy_run_sweep_sim_driver.py:32:def _write_json(path: Path, payload: dict) -> None
+tmp/pyspy_run_sweep_sim_driver.py:36:def _run_case(*, base_config: Path, out_root: Path, t_val: float, eps_val: float, tau_val: float, common_overrides: Iterable[str], env: dict[str, str], repo_root: Path) -> dict
+tmp/pyspy_run_sweep_sim_driver.py:97:def main() -> int
 tmp/replace_birnstiel_eqs.py:22:def find_eq_line(lines: list[str], eq_id: str) -> int | None
 tmp/replace_birnstiel_eqs.py:34:def build_block(eq_id: str, old: str) -> list[str]
 tmp/replace_birnstiel_eqs.py:41:def replace_block(lines: list[str], idx: int, block: list[str]) -> list[str]

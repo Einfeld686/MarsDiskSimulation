@@ -16471,6 +16471,48 @@
     "brief_usage": "No description available."
   },
   {
+    "file_path": "tmp/pyspy_run_sweep_sim_driver.py",
+    "line_no": 17,
+    "symbol": "_repo_root",
+    "signature": "_repo_root() -> Path",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tmp/pyspy_run_sweep_sim_driver.py",
+    "line_no": 21,
+    "symbol": "_token",
+    "signature": "_token(value: float) -> str",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tmp/pyspy_run_sweep_sim_driver.py",
+    "line_no": 28,
+    "symbol": "_case_id",
+    "signature": "_case_id(t_val: float, eps_val: float, tau_val: float) -> str",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tmp/pyspy_run_sweep_sim_driver.py",
+    "line_no": 32,
+    "symbol": "_write_json",
+    "signature": "_write_json(path: Path, payload: dict) -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tmp/pyspy_run_sweep_sim_driver.py",
+    "line_no": 36,
+    "symbol": "_run_case",
+    "signature": "_run_case(*, base_config: Path, out_root: Path, t_val: float, eps_val: float, tau_val: float, common_overrides: Iterable[str], env: dict[str, str], repo_root: Path) -> dict",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tmp/pyspy_run_sweep_sim_driver.py",
+    "line_no": 97,
+    "symbol": "main",
+    "signature": "main() -> int",
+    "brief_usage": "No description available."
+  },
+  {
     "file_path": "tmp/replace_birnstiel_eqs.py",
     "line_no": 7,
     "symbol": "MODULE_PATH",
