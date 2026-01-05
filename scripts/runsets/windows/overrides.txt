@@ -6,6 +6,7 @@ io.streaming.merge_at_end=true
 io.streaming.cleanup_chunks=true
 io.psd_history=true
 io.psd_history_stride=10000
+io.diagnostics_stride=10000
 io.mass_budget_cells=false
 # Archive (Windows production defaults)
 io.archive.enabled=true
