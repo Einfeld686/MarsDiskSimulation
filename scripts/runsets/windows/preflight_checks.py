@@ -56,6 +56,7 @@ DEFAULT_SCAN_EXCLUDE_DIRS = {
     ".ruff_cache",
     "node_modules",
     "out",
+    "paper",
     "tmp",
     "venv",
 }
