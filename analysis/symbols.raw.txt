@@ -982,6 +982,21 @@ scripts/runsets/common/run_one.py:37:def _sanitize_sweep_tag(value: str) -> str
 scripts/runsets/common/run_one.py:45:def _format_title_token(raw: str) -> str
 scripts/runsets/common/run_one.py:53:def _run_command(cmd: list[str], *, capture: bool=False, text: bool=True, quiet: bool=False) -> subprocess.CompletedProcess
 scripts/runsets/common/run_one.py:65:def main() -> int
+scripts/runsets/common/run_sweep_worker.py:16:def _env(name: str, default: str | None=None) -> str | None
+scripts/runsets/common/run_sweep_worker.py:20:def _is_true(value: str | None) -> bool
+scripts/runsets/common/run_sweep_worker.py:26:def _split_args(value: str | None) -> list[str]
+scripts/runsets/common/run_sweep_worker.py:32:def _sanitize_run_ts(value: str) -> str
+scripts/runsets/common/run_sweep_worker.py:40:def _sanitize_sweep_tag(value: str) -> str
+scripts/runsets/common/run_sweep_worker.py:48:def _format_title_token(raw: str) -> str
+scripts/runsets/common/run_sweep_worker.py:56:def _read_text(path: Path) -> str
+scripts/runsets/common/run_sweep_worker.py:66:def _iter_pairs_from_text(text: str) -> Iterator[tuple[str, str]]
+scripts/runsets/common/run_sweep_worker.py:81:def _iter_pairs_from_lines(lines: Iterable[str]) -> Iterator[tuple[str, str]]
+scripts/runsets/common/run_sweep_worker.py:96:def _merge_pairs(pairs: Iterable[tuple[str, str]]) -> tuple[list[str], dict[str, str]]
+scripts/runsets/common/run_sweep_worker.py:110:def _write_overrides(order: list[str], values: dict[str, str], path: Path) -> None
+scripts/runsets/common/run_sweep_worker.py:119:def _run_command(cmd: list[str], *, capture: bool=False, text: bool=True, quiet: bool=False) -> subprocess.CompletedProcess
+scripts/runsets/common/run_sweep_worker.py:131:def _parse_int(value: str | None, default: int) -> int
+scripts/runsets/common/run_sweep_worker.py:140:def _load_sweep_list(path: Path) -> list[tuple[str, str, str]]
+scripts/runsets/common/run_sweep_worker.py:154:def main(argv: list[str] | None=None) -> int
 scripts/runsets/common/sanitize_token.py:17:def _sanitize(value: str) -> str
 scripts/runsets/common/sanitize_token.py:25:def _timestamp(ts_script: Path) -> str
 scripts/runsets/common/sanitize_token.py:42:def main() -> int
@@ -1342,6 +1357,8 @@ tests/integration/test_blowout_gate.py:120:def test_gate_reduces_outflux_with_co
 tests/integration/test_checkpoint_io.py:10:def _sample_state() -> checkpoint.CheckpointState
 tests/integration/test_checkpoint_io.py:41:def test_checkpoint_pickle_roundtrip(tmp_path: Path) -> None
 tests/integration/test_checkpoint_io.py:51:def test_checkpoint_json_roundtrip(tmp_path: Path) -> None
+tests/integration/test_checkpoint_write.py:14:def _checkpoint_config(outdir: Path) -> schema.Config
+tests/integration/test_checkpoint_write.py:62:def test_checkpoint_written(tmp_path: Path) -> None
 tests/integration/test_ci_guard_analysis.py:8:def _write_coverage(tmp_path, **overrides)
 tests/integration/test_ci_guard_analysis.py:33:def test_ci_guard_analysis_pass(tmp_path) -> None
 tests/integration/test_ci_guard_analysis.py:41:def test_ci_guard_analysis_anchor_failure(tmp_path) -> None
@@ -1810,6 +1827,18 @@ tests/unit/test_timegrid_and_budget.py:64:def test_time_grid_and_mass_budget(tmp
 tests/unit/test_viscosity.py:7:def _run(N: int, dt: float)
 tests/unit/test_viscosity.py:18:def test_viscous_diffusion_converges_and_conserves_mass()
 tests/unit/test_wyatt_scaling.py:6:def test_wyatt_scaling_inverse_tau()
+tmp/hypothesis_perf_check.py:17:class Scenario
+tmp/hypothesis_perf_check.py:22:def _repo_root() -> Path
+tmp/hypothesis_perf_check.py:26:def _write_json(path: Path, payload: dict) -> None
+tmp/hypothesis_perf_check.py:30:def _run_case(*, scenario: Scenario, run_idx: int, base_config: Path, out_root: Path, common_overrides: Iterable[str], env: dict[str, str], repo_root: Path) -> dict
+tmp/hypothesis_perf_check.py:62:def main() -> int
+tmp/inprocess_vs_subprocess.py:18:class CaseSpec
+tmp/inprocess_vs_subprocess.py:32:def _repo_root() -> Path
+tmp/inprocess_vs_subprocess.py:36:def _write_json(path: Path, payload: dict) -> None
+tmp/inprocess_vs_subprocess.py:40:def _build_argv(base_config: Path, overrides: Iterable[str]) -> List[str]
+tmp/inprocess_vs_subprocess.py:48:def _run_subprocess(*, base_config: Path, cases: List[CaseSpec], out_root: Path, common_overrides: List[str], env: dict[str, str], repo_root: Path) -> dict
+tmp/inprocess_vs_subprocess.py:86:def _run_inprocess(*, base_config: Path, cases: List[CaseSpec], out_root: Path, common_overrides: List[str]) -> dict
+tmp/inprocess_vs_subprocess.py:129:def main() -> int
 tmp/pyspy_run_sweep_sim_driver.py:17:def _repo_root() -> Path
 tmp/pyspy_run_sweep_sim_driver.py:21:def _token(value: float) -> str
 tmp/pyspy_run_sweep_sim_driver.py:28:def _case_id(t_val: float, eps_val: float, tau_val: float) -> str

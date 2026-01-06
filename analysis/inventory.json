@@ -9611,6 +9611,111 @@
     "brief_usage": "No description available."
   },
   {
+    "file_path": "scripts/runsets/common/run_sweep_worker.py",
+    "line_no": 16,
+    "symbol": "_env",
+    "signature": "_env(name: str, default: str | None=None) -> str | None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/runsets/common/run_sweep_worker.py",
+    "line_no": 20,
+    "symbol": "_is_true",
+    "signature": "_is_true(value: str | None) -> bool",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/runsets/common/run_sweep_worker.py",
+    "line_no": 26,
+    "symbol": "_split_args",
+    "signature": "_split_args(value: str | None) -> list[str]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/runsets/common/run_sweep_worker.py",
+    "line_no": 32,
+    "symbol": "_sanitize_run_ts",
+    "signature": "_sanitize_run_ts(value: str) -> str",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/runsets/common/run_sweep_worker.py",
+    "line_no": 40,
+    "symbol": "_sanitize_sweep_tag",
+    "signature": "_sanitize_sweep_tag(value: str) -> str",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/runsets/common/run_sweep_worker.py",
+    "line_no": 48,
+    "symbol": "_format_title_token",
+    "signature": "_format_title_token(raw: str) -> str",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/runsets/common/run_sweep_worker.py",
+    "line_no": 56,
+    "symbol": "_read_text",
+    "signature": "_read_text(path: Path) -> str",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/runsets/common/run_sweep_worker.py",
+    "line_no": 66,
+    "symbol": "_iter_pairs_from_text",
+    "signature": "_iter_pairs_from_text(text: str) -> Iterator[tuple[str, str]]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/runsets/common/run_sweep_worker.py",
+    "line_no": 81,
+    "symbol": "_iter_pairs_from_lines",
+    "signature": "_iter_pairs_from_lines(lines: Iterable[str]) -> Iterator[tuple[str, str]]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/runsets/common/run_sweep_worker.py",
+    "line_no": 96,
+    "symbol": "_merge_pairs",
+    "signature": "_merge_pairs(pairs: Iterable[tuple[str, str]]) -> tuple[list[str], dict[str, str]]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/runsets/common/run_sweep_worker.py",
+    "line_no": 110,
+    "symbol": "_write_overrides",
+    "signature": "_write_overrides(order: list[str], values: dict[str, str], path: Path) -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/runsets/common/run_sweep_worker.py",
+    "line_no": 119,
+    "symbol": "_run_command",
+    "signature": "_run_command(cmd: list[str], *, capture: bool=False, text: bool=True, quiet: bool=False) -> subprocess.CompletedProcess",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/runsets/common/run_sweep_worker.py",
+    "line_no": 131,
+    "symbol": "_parse_int",
+    "signature": "_parse_int(value: str | None, default: int) -> int",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/runsets/common/run_sweep_worker.py",
+    "line_no": 140,
+    "symbol": "_load_sweep_list",
+    "signature": "_load_sweep_list(path: Path) -> list[tuple[str, str, str]]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/runsets/common/run_sweep_worker.py",
+    "line_no": 154,
+    "symbol": "main",
+    "signature": "main(argv: list[str] | None=None) -> int",
+    "brief_usage": "No description available."
+  },
+  {
     "file_path": "scripts/runsets/common/sanitize_token.py",
     "line_no": 14,
     "symbol": "_INVALID_RE",
@@ -12968,6 +13073,20 @@
     "line_no": 51,
     "symbol": "test_checkpoint_json_roundtrip",
     "signature": "test_checkpoint_json_roundtrip(tmp_path: Path) -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_checkpoint_write.py",
+    "line_no": 14,
+    "symbol": "_checkpoint_config",
+    "signature": "_checkpoint_config(outdir: Path) -> schema.Config",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tests/integration/test_checkpoint_write.py",
+    "line_no": 62,
+    "symbol": "test_checkpoint_written",
+    "signature": "test_checkpoint_written(tmp_path: Path) -> None",
     "brief_usage": "No description available."
   },
   {
@@ -16468,6 +16587,90 @@
     "line_no": 6,
     "symbol": "test_wyatt_scaling_inverse_tau",
     "signature": "test_wyatt_scaling_inverse_tau()",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tmp/hypothesis_perf_check.py",
+    "line_no": 17,
+    "symbol": "Scenario",
+    "signature": "class Scenario",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tmp/hypothesis_perf_check.py",
+    "line_no": 22,
+    "symbol": "_repo_root",
+    "signature": "_repo_root() -> Path",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tmp/hypothesis_perf_check.py",
+    "line_no": 26,
+    "symbol": "_write_json",
+    "signature": "_write_json(path: Path, payload: dict) -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tmp/hypothesis_perf_check.py",
+    "line_no": 30,
+    "symbol": "_run_case",
+    "signature": "_run_case(*, scenario: Scenario, run_idx: int, base_config: Path, out_root: Path, common_overrides: Iterable[str], env: dict[str, str], repo_root: Path) -> dict",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tmp/hypothesis_perf_check.py",
+    "line_no": 62,
+    "symbol": "main",
+    "signature": "main() -> int",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tmp/inprocess_vs_subprocess.py",
+    "line_no": 18,
+    "symbol": "CaseSpec",
+    "signature": "class CaseSpec",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tmp/inprocess_vs_subprocess.py",
+    "line_no": 32,
+    "symbol": "_repo_root",
+    "signature": "_repo_root() -> Path",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tmp/inprocess_vs_subprocess.py",
+    "line_no": 36,
+    "symbol": "_write_json",
+    "signature": "_write_json(path: Path, payload: dict) -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tmp/inprocess_vs_subprocess.py",
+    "line_no": 40,
+    "symbol": "_build_argv",
+    "signature": "_build_argv(base_config: Path, overrides: Iterable[str]) -> List[str]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tmp/inprocess_vs_subprocess.py",
+    "line_no": 48,
+    "symbol": "_run_subprocess",
+    "signature": "_run_subprocess(*, base_config: Path, cases: List[CaseSpec], out_root: Path, common_overrides: List[str], env: dict[str, str], repo_root: Path) -> dict",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tmp/inprocess_vs_subprocess.py",
+    "line_no": 86,
+    "symbol": "_run_inprocess",
+    "signature": "_run_inprocess(*, base_config: Path, cases: List[CaseSpec], out_root: Path, common_overrides: List[str]) -> dict",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tmp/inprocess_vs_subprocess.py",
+    "line_no": 129,
+    "symbol": "main",
+    "signature": "main() -> int",
     "brief_usage": "No description available."
   },
   {
