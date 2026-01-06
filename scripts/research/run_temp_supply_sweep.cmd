@@ -431,6 +431,8 @@ if not defined SWEEP_PARALLEL (
 ) else (
   if not defined SWEEP_PARALLEL_DEFAULT set "SWEEP_PARALLEL_DEFAULT=0"
 )
+if not defined SWEEP_PERSISTENT_WORKERS set "SWEEP_PERSISTENT_WORKERS=0"
+rem SWEEP_WORKER_JOBS intentionally left undefined by default
 rem Sweep-parallel primary: keep cell-parallel off to avoid nested parallelism.
 if "%SWEEP_PARALLEL%"=="1" (
   set "MARSDISK_CELL_PARALLEL=0"
@@ -748,7 +750,22 @@ if not exist "!SWEEP_LIST_FILE!" (
 )
 
 call :trace_detail "parallel check"
-echo.[DEBUG] Parallel check: SWEEP_PARALLEL=%SWEEP_PARALLEL% PARALLEL_JOBS=%PARALLEL_JOBS% RUN_ONE_MODE=%RUN_ONE_MODE%
+echo.[DEBUG] Parallel check: SWEEP_PARALLEL=%SWEEP_PARALLEL% PARALLEL_JOBS=%PARALLEL_JOBS% RUN_ONE_MODE=%RUN_ONE_MODE% SWEEP_PERSISTENT_WORKERS=%SWEEP_PERSISTENT_WORKERS%
+if "%SWEEP_PERSISTENT_WORKERS%"=="1" (
+  call :trace_detail "persistent workers enabled"
+  if "%SWEEP_PARALLEL%"=="1" if not "%PARALLEL_JOBS%"=="1" (
+    echo.[DEBUG] Branch: SWEEP_PERSISTENT_WORKERS=1 and SWEEP_PARALLEL=1 -^> parallel worker mode
+    call :run_parallel_workers
+    call :popd_safe
+    exit /b 0
+  ) else (
+    echo.[DEBUG] Branch: SWEEP_PERSISTENT_WORKERS=1 -^> single worker mode
+    call :run_worker_single
+    set "WORKER_RC=!errorlevel!"
+    call :popd_safe
+    exit /b !WORKER_RC!
+  )
+)
 if "%SWEEP_PARALLEL%"=="0" (
   call :trace_detail "sweep parallel disabled"
   echo.[DEBUG] Branch: SWEEP_PARALLEL=0 -^> sequential mode
@@ -927,6 +944,104 @@ if /i "%HOOK%"=="archive" (
   exit /b !errorlevel!
 )
 echo.[warn] unknown hook: %HOOK%
+exit /b 0
+
+:run_worker_single
+call :trace "run_worker_single: enter"
+set "SWEEP_PART_INDEX=1"
+set "SWEEP_PART_COUNT=1"
+set "SWEEP_WORKER=1"
+call "%PYTHON_EXEC_CMD%" scripts\\runsets\\common\\run_sweep_worker.py --sweep-list "!SWEEP_LIST_FILE!" --part-index 1 --part-count 1
+exit /b !errorlevel!
+
+:run_parallel_workers
+call :trace "run_parallel_workers: enter"
+set "JOB_PIDS="
+set "JOB_COUNT=0"
+set "WORKER_JOBS=%PARALLEL_JOBS%"
+if defined SWEEP_WORKER_JOBS set "WORKER_JOBS=%SWEEP_WORKER_JOBS%"
+call :normalize_int WORKER_JOBS 1
+if "%WORKER_JOBS%"=="0" set "WORKER_JOBS=1"
+if "%WORKER_JOBS%"=="1" (
+  call :run_worker_single
+  exit /b !errorlevel!
+)
+%LOG_INFO% persistent worker mode: jobs=%WORKER_JOBS% sleep=%PARALLEL_SLEEP_SEC%s
+set "SWEEP_PART_COUNT=%WORKER_JOBS%"
+for /L %%W in (1,1,%WORKER_JOBS%) do (
+  call :launch_worker_job %%W %WORKER_JOBS%
+)
+call :wait_all
+echo.[done] Parallel sweep completed [batch=!BATCH_SEED!, dir=!BATCH_DIR!].
+exit /b 0
+
+:launch_worker_job
+set "WORKER_INDEX=%~1"
+set "WORKER_COUNT=%~2"
+if "%DEBUG%"=="1" echo.[DEBUG] launch_worker_job: worker=!WORKER_INDEX!/!WORKER_COUNT!
+set "JOB_CMD_FILE=!TMP_ROOT!\marsdisk_worker_!WORKER_INDEX!.cmd"
+set "WORKER_TMP_ROOT=!TMP_ROOT_BASE!\marsdisk_tmp_!RUN_TS!_!BATCH_SEED!_worker!WORKER_INDEX!"
+> "!JOB_CMD_FILE!" echo @echo off
+>> "!JOB_CMD_FILE!" echo set "SWEEP_WORKER=1"
+>> "!JOB_CMD_FILE!" echo set "SWEEP_PART_INDEX=!WORKER_INDEX!"
+>> "!JOB_CMD_FILE!" echo set "SWEEP_PART_COUNT=!WORKER_COUNT!"
+>> "!JOB_CMD_FILE!" echo set "SWEEP_LIST_FILE=!SWEEP_LIST_FILE!"
+>> "!JOB_CMD_FILE!" echo set "TMP_ROOT=!WORKER_TMP_ROOT!"
+>> "!JOB_CMD_FILE!" echo set "BASE_OVERRIDES_FILE=!WORKER_TMP_ROOT!\marsdisk_overrides_base_!RUN_TS!_!BATCH_SEED!_worker!WORKER_INDEX!.txt"
+>> "!JOB_CMD_FILE!" echo set "CASE_OVERRIDES_FILE=!WORKER_TMP_ROOT!\marsdisk_overrides_case_!RUN_TS!_!BATCH_SEED!_worker!WORKER_INDEX!.txt"
+>> "!JOB_CMD_FILE!" echo set "MERGED_OVERRIDES_FILE=!WORKER_TMP_ROOT!\marsdisk_overrides_merged_!RUN_TS!_!BATCH_SEED!_worker!WORKER_INDEX!.txt"
+>> "!JOB_CMD_FILE!" echo set "AUTO_JOBS=0"
+>> "!JOB_CMD_FILE!" echo set "PARALLEL_JOBS=1"
+>> "!JOB_CMD_FILE!" echo set "SKIP_PIP=1"
+>> "!JOB_CMD_FILE!" echo set "REQUIREMENTS_INSTALLED=1"
+>> "!JOB_CMD_FILE!" echo set "QUIET_MODE=!QUIET_MODE!"
+>> "!JOB_CMD_FILE!" echo set "DEBUG=!DEBUG!"
+>> "!JOB_CMD_FILE!" echo set "PYTHON_EXE=!PYTHON_EXE!"
+>> "!JOB_CMD_FILE!" echo set "PYTHON_ARGS=!PYTHON_ARGS!"
+>> "!JOB_CMD_FILE!" echo set "PYTHON_EXEC_CMD=!PYTHON_EXEC_CMD!"
+>> "!JOB_CMD_FILE!" echo set "BASE_CONFIG=!BASE_CONFIG!"
+>> "!JOB_CMD_FILE!" echo set "BATCH_ROOT=!BATCH_ROOT!"
+>> "!JOB_CMD_FILE!" echo set "BATCH_DIR=!BATCH_DIR!"
+>> "!JOB_CMD_FILE!" echo set "BATCH_SEED=!BATCH_SEED!"
+>> "!JOB_CMD_FILE!" echo set "RUN_TS=!RUN_TS!"
+>> "!JOB_CMD_FILE!" echo set "SWEEP_TAG=!SWEEP_TAG!"
+>> "!JOB_CMD_FILE!" echo set "GIT_SHA=!GIT_SHA!"
+>> "!JOB_CMD_FILE!" echo set "VENV_DIR=!VENV_DIR!"
+>> "!JOB_CMD_FILE!" echo set "EXTRA_OVERRIDES_FILE=!EXTRA_OVERRIDES_FILE!"
+>> "!JOB_CMD_FILE!" echo set "COOL_MODE=!COOL_MODE!"
+>> "!JOB_CMD_FILE!" echo set "COOL_TO_K=!COOL_TO_K!"
+>> "!JOB_CMD_FILE!" echo set "COOL_MARGIN_YEARS=!COOL_MARGIN_YEARS!"
+>> "!JOB_CMD_FILE!" echo set "COOL_SEARCH_YEARS=!COOL_SEARCH_YEARS!"
+>> "!JOB_CMD_FILE!" echo set "HOOKS_ENABLE=!HOOKS_ENABLE!"
+>> "!JOB_CMD_FILE!" echo set "PLOT_ENABLE=!PLOT_ENABLE!"
+>> "!JOB_CMD_FILE!" echo set "GEOMETRY_MODE=!GEOMETRY_MODE!"
+>> "!JOB_CMD_FILE!" echo set "SUPPLY_MODE=!SUPPLY_MODE!"
+>> "!JOB_CMD_FILE!" echo set "SHIELDING_MODE=!SHIELDING_MODE!"
+>> "!JOB_CMD_FILE!" echo set "SUPPLY_INJECTION_MODE=!SUPPLY_INJECTION_MODE!"
+>> "!JOB_CMD_FILE!" echo set "SUPPLY_TRANSPORT_MODE=!SUPPLY_TRANSPORT_MODE!"
+>> "!JOB_CMD_FILE!" echo set "SUBSTEP_FAST_BLOWOUT=!SUBSTEP_FAST_BLOWOUT!"
+>> "!JOB_CMD_FILE!" echo set "SUBSTEP_MAX_RATIO=!SUBSTEP_MAX_RATIO!"
+>> "!JOB_CMD_FILE!" echo set "STREAM_MEM_GB=!STREAM_MEM_GB!"
+>> "!JOB_CMD_FILE!" echo set "ENABLE_PROGRESS=!ENABLE_PROGRESS!"
+if defined SKIP_VENV >> "!JOB_CMD_FILE!" echo set "SKIP_VENV=!SKIP_VENV!"
+>> "!JOB_CMD_FILE!" echo call "!PYTHON_EXEC_CMD!" scripts\\runsets\\common\\run_sweep_worker.py --sweep-list "!SWEEP_LIST_FILE!" --part-index !WORKER_INDEX! --part-count !WORKER_COUNT!
+set "JOB_PID_TMP="
+for /f "usebackq delims=" %%P in (`call "%PYTHON_EXEC_CMD%" "!WIN_PROCESS_PY!" launch --cmd "!JOB_CMD_FILE!" --window-style "!PARALLEL_WINDOW_STYLE!" --cwd "!JOB_CWD_USE!"`) do set "JOB_PID_TMP=%%P"
+set "JOB_PID=!JOB_PID_TMP!"
+
+if defined JOB_PID (
+    echo !JOB_PID!| findstr /r "^[0-9][0-9]*$" >nul
+    if !errorlevel! geq 1 (
+        echo.[warn] failed to launch worker !WORKER_INDEX! - output: !JOB_PID!
+        set "JOB_PID="
+    ) else (
+        set "JOB_PIDS=!JOB_PIDS! !JOB_PID!"
+        set /a JOB_COUNT+=1
+        echo.[info] launched worker !WORKER_INDEX! PID=!JOB_PID!
+    )
+) else (
+    echo.[warn] failed to launch worker !WORKER_INDEX! - no PID returned
+)
 exit /b 0
 
 :run_parallel
