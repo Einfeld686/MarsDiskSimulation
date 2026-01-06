@@ -56,7 +56,7 @@ Kuramoto (2024) の整理に沿って、物性・組成と力学特性を分け�
 
 ### 1.2 巨大衝突円盤と本研究が扱う範囲
 
-火星衛星の巨大衝突起源説は、単一の計算で完結しない。衝突直後の円盤形成、短期の高温期、粘性拡散と集積、そして観測制約の照合が、**異なる時間スケール**と**異なる数値手法**で分担されている。本研究がやりたいのは、この分担の間に残っている「手続きの空白」を、先行研究と矛盾しない形で埋めることである。
+火星衛星の巨大衝突起源説は、単一の計算で完結しない。衝突直後（数十時間）の円盤形成、高温期の短期損失（年スケール）、粘性拡散と外側での集積（10^2–10^3 年）、そして観測制約との照合（Myr–現在）が、**異なる時間スケール**と**異なる数値手法**で分担されている。本研究がやりたいのは、この分担の間に残っている「手続きの空白」を、先行研究と矛盾しない形で埋めることである。
 
 ここでは、円盤進化を「時間の流れ」と「モデル上の役割（Input/Update/Connection/Output）」を同じ軸に重ねて整理する（図 1.2a）。左から右へ時間が進むにつれて、(i) SPH が与える初期状態（Input）が決まり、(ii) 高温期の短期損失で内側貯蔵庫が更新され（Update）、(iii) 更新後の内側円盤を状態量として長期進化モデルに渡し（Connection）、(iv) 最終的な衛星の生存・組成が観測と比較される（Output）という流れになる。
 
@@ -69,10 +69,10 @@ Kuramoto (2024) の整理に沿って、物性・組成と力学特性を分け�
 ```mermaid
 flowchart LR
     %% ===== 見た目（任意：レンダラ依存） =====
-    classDef input fill:#e1f5fe,stroke:#01579b,stroke-width:2px;
-    classDef update fill:#fff3e0,stroke:#e65100,stroke-width:3px,stroke-dasharray: 5 5;
-    classDef connect fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px;
-    classDef output fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px;
+    classDef input fill:#e1f5fe,stroke:#01579b,stroke-width:2px,color:#000;
+    classDef update fill:#fff3e0,stroke:#e65100,stroke-width:3px,stroke-dasharray: 5 5,color:#000;
+    classDef connect fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px,color:#000;
+    classDef output fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px,color:#000;
 
     %% ===== Phase 1: SPH（初期条件） =====
     subgraph P1["Phase 1: 衝突直後の物理状態 (t ≲ 数十時間)"]
@@ -120,13 +120,13 @@ flowchart LR
 ```mermaid
 flowchart LR
     %% ========= style =========
-    classDef input fill:#e1f5fe,stroke:#01579b,stroke-width:2px;
-    classDef connect fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px;
-    classDef state fill:#ffffff,stroke:#424242,stroke-width:1px;
-    classDef proc fill:#fff9c4,stroke:#fbc02d,stroke-width:1px;
-    classDef sink fill:#ffcdd2,stroke:#c62828,stroke-width:2px;
-    classDef driver fill:#f3e5f5,stroke:#7b1fa2,stroke-width:1px,stroke-dasharray: 3 3;
-    classDef calc fill:#fff3e0,stroke:#e65100,stroke-width:2px;
+    classDef input fill:#e1f5fe,stroke:#01579b,stroke-width:2px,color:#000;
+    classDef connect fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px,color:#000;
+    classDef state fill:#ffffff,stroke:#424242,stroke-width:1px,color:#000;
+    classDef proc fill:#fff9c4,stroke:#fbc02d,stroke-width:1px,color:#000;
+    classDef sink fill:#ffcdd2,stroke:#c62828,stroke-width:2px,color:#000;
+    classDef driver fill:#f3e5f5,stroke:#7b1fa2,stroke-width:1px,stroke-dasharray: 3 3,color:#000;
+    classDef calc fill:#fff3e0,stroke:#e65100,stroke-width:2px,color:#000;
 
     %% ========= Phase 1 anchor =========
     subgraph P1["Phase 1: Input (SPH)"]
@@ -219,7 +219,9 @@ Citron et al. (2015) は Borealis 級の衝突計算を系統的に行い、$t\a
 
 Hyodo et al. (2017a) は、火星周回の衝突起源円盤が高温（\(\sim2000\,\rm K\)）で、物質の大半が溶融（>95%）である一方、蒸気は少量（<5%）であることを示した。また溶融物は放出直後にメートル級の溶融滴へ断片化し得ることを議論し、粒径帯を初期条件として与えている。これらは Phase 2 で「どの粒径帯が表層で供給され得るか」を議論する出発点になる。
 
-一方で、衝突直後のデブリは高離心・高傾斜で生成されるため、**円盤が「薄い円盤」に落ち着くまでの衝突減衰**が重要になる。Hyodo et al. (2017b) は、$J_2$ による歳差と非弾性衝突により離心率・傾斜角が減衰すること、また内側円盤では粒子数密度と相対速度が大きく衝突時間が短いことを述べ、衝突破砕を含む詳細な時間発展が未解決である点を指摘している。Rosenblatt et al. (2016) も、外側円盤は低密度で SPH の分解能が限られるため、外側の初期条件は「再構成」が必要であると整理している。
+さらに Hyodo et al. (2017a) は、溶融滴が放射冷却で短時間に冷えることを示しており、例えば 2000 K から 1500 K への冷却は分〜十数分程度で起こり得る。衝突直後の段階で固体粒子が形成され得るため、以後の衝突・破砕へ移る物理的素地が整う。
+
+一方で、衝突直後のデブリは高離心・高傾斜で生成されるため、**円盤が「薄い円盤」に落ち着くまでの衝突減衰**が重要になる。Hyodo et al. (2017b) は、$J_2$ による歳差と非弾性衝突により離心率・傾斜角が減衰すること、また内側円盤では粒子数密度と相対速度が大きく衝突時間が短いことを述べ、衝突破砕を含む詳細な時間発展が未解決である点を指摘している。Canup & Salmon (2018) は、衝突後 10 h 時点でもロッシュ限界外側の縁が少数の SPH 粒子で表現されることを明記しており、外側円盤の詳細分布が不確かである点を補強する。Rosenblatt et al. (2016) も、外側円盤は低密度で SPH の分解能が限られるため、外側の初期条件は「再構成」が必要であると整理している。
 
 ここまでをまとめると、Phase 1 研究は **内側貯蔵庫 $M_{\rm in}$ の初期値**をかなり具体的に与える一方で、(i) 衝突後の衝突破砕・微粒子生成、(ii) 高温期の損失の積算、(iii) それを反映した $M_{\rm in}$ の更新、までは閉じていない。
 
@@ -228,6 +230,8 @@ Hyodo et al. (2017a) は、火星周回の衝突起源円盤が高温（\(\sim20
 Phase 2 は、衝突直後の高温・非平衡な状態から、粘性拡散でゆっくり広がる「準定常な円盤」へ移るまでの期間に相当する。本研究が扱う中心問題は、この期間に **内側貯蔵庫 $M_{\rm in}$ がどれだけ削られるか**である。
 
 Hyodo et al. (2018) は、巨大衝突後の火星表面が高温になり得ることを示し、その放射により (i) 蒸気が流体力学的に散逸し得ること、(ii) 蒸気から凝縮したサブミクロン粒子が放射圧で除去され得ることを議論した。とくに「最初の 1 周回」という力学的に短い時間でも損失が起こり得る点は、長期モデルに対して独立な損失項を導入する動機になる。
+
+同研究では、蒸気成分の 10–40% が最初の 1 周回の間に逃げ得ること、またサブミクロン（~0.1 μm）級の凝縮粒子が同じ時間スケールで除去され得ることが示されている。さらに、メートル級 droplet を仮定した光学的厚み評価により、火星に近い高密度アームでは $\tau>1$ となって遮蔽される一方、アームの上下や外側（例：$15\,R_{\rm Mars}$ 以遠）では $\tau<1$ となり得ることが示される。したがって短期損失は、遮蔽されない成分（表層・疎領域）に集中し、表層供給との競合で決まる。
 
 ただし Hyodo et al. (2018) の議論だけでは、次の点が残る。第一に、放射圧で除去されるのは「すでに微粒子が存在する」部分であり、その微粒子が **どの速度で供給され続けるか**（衝突破砕・衝突カスケード）が別途必要になる。第二に、昇華は微粒子の質量を直接減らすだけでなく、粒径を連続的に変えて「吹き飛びやすい粒径帯」へ供給するため、放射圧除去と結びつく。第三に、円盤が光学的に厚い場合、放射が届くのは表層に限られるため、損失は表層の在庫と補給速度で律速され得る。
 
