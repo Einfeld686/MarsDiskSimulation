@@ -2671,7 +2671,7 @@ def run_zero_d(
             sigma_tau1_limit_last_finite = float(value)
 
     def _run_time_evolution_loop() -> None:
-        nonlocal a_blow_effective_step, a_blow_step, beta_at_smin_effective, blowout_effective_warned, early_stop_reason, early_stop_step, early_stop_time_s
+        nonlocal a_blow_effective_step, a_blow_step, beta_at_smin_effective, blowout_effective_warned, checkpoint_next_time, early_stop_reason, early_stop_step, early_stop_time_s
         nonlocal energy_count, energy_last_row, energy_sum_diss, energy_sum_rel, energy_sum_ret, e0_effective
         nonlocal i0_effective, last_mass_budget_entry, last_step_index, last_time_value, mass_budget_max_error, M_hydro_cum
         nonlocal M_loss_cum, M_sink_cum, M_spill_cum, M_sublimation_cum, Omega_step, orbit_loss_blow
