@@ -1359,6 +1359,11 @@ set "TEMP=%TEMP_ROOT%"
 
 
 
+rem Local Numba cache (gitignored under repo tmp).
+if not defined NUMBA_CACHE_DIR set "NUMBA_CACHE_DIR=%REPO_ROOT%\tmp\numba_cache"
+if not exist "%NUMBA_CACHE_DIR%" mkdir "%NUMBA_CACHE_DIR%" >nul 2>&1
+
+
 %LOG_SETUP% repo_root=%REPO_ROOT%
 
 
