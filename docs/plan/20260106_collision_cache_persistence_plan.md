@@ -63,19 +63,19 @@
 
 ## 実装タスク
 
-1. **設定スキーマ拡張**
-   - `marsdisk/schema.py` の `Numerics` に `collision_cache.persist` フラグを追加
-2. **シグネチャ生成ユーティリティ**
-   - `collisions_smol` に `make_collision_cache_signature(sizes, edges, rho, alpha_frag, qstar_sig)` を追加
-3. **リセット条件の改修**
-   - `run_zero_d._reset_collision_runtime_state()` で
-     - `persist_collisions=false` → 従来どおり常時リセット
-     - `persist_collisions=true` → シグネチャ差分時のみリセット
-4. **サイズバージョンの安定化**
-   - 保持有効時に限って `psd_state["sizes_version"]` / `edges_version` を
-     安定ハッシュで初期化
-5. **ワーカースイープ連携**
-   - `run_sweep_worker.py` で持続ワーカー使用時は `persist_collisions=true` を既定にする
+- [ ] **設定スキーマ拡張**
+  - `marsdisk/schema.py` の `Numerics` に `collision_cache.persist` フラグを追加
+- [ ] **シグネチャ生成ユーティリティ**
+  - `collisions_smol` に `make_collision_cache_signature(sizes, edges, rho, alpha_frag, qstar_sig)` を追加
+- [ ] **リセット条件の改修**
+  - `run_zero_d._reset_collision_runtime_state()` で
+    - `persist=false` → 従来どおり常時リセット
+    - `persist=true` → シグネチャ差分時のみリセット
+- [ ] **サイズバージョンの安定化**
+  - 保持有効時に限って `psd_state["sizes_version"]` / `edges_version` を
+    安定ハッシュで初期化
+- [ ] **ワーカースイープ連携**
+  - `run_sweep_worker.py` で持続ワーカー使用時は `persist=true` を既定にする
 
 ---
 
@@ -84,6 +84,36 @@
 - **同一グリッド2連続**で結果一致し、キャッシュ再利用ログが出ること
 - **異なるグリッド連続**でキャッシュがリセットされること
 - 既存の `mass_budget`/`summary` の差分がないこと
+
+---
+
+## 実装手順（チェックリスト）
+
+- [ ] `collision_cache.persist` を追加し、設定読み込みで既定 `false` を保証
+- [ ] シグネチャ生成で `sizes/edges` を `float64` かつ `C_CONTIGUOUS` に正規化
+- [ ] 連続実行の先頭でシグネチャ比較 → 変更時のみ `reset_collision_caches()`
+- [ ] キャッシュ再利用/破棄のログを `INFO` で1回だけ出力
+- [ ] 既存の `MARSDISK_DISABLE_COLLISION_CACHE=1` の動作を維持
+
+---
+
+## 実装完了指標（チェックリスト）
+
+- [ ] `persist=false` で従来挙動と完全一致（bitwise か許容差以内）
+- [ ] `persist=true` で同一グリッド連続実行の結果が `persist=false` と一致
+- [ ] 異なるグリッド連続実行でキャッシュがリセットされるログが出る
+- [ ] `checks/mass_budget.csv` の `error_percent` が既定の許容内（≤0.5%）
+- [ ] 連続ケースで実行時間が短縮される（ベンチマークで観測）
+
+---
+
+## テスト計画（チェックリスト）
+
+- [ ] **A/B テスト**: `persist=false/true` の結果一致を確認（同一設定）
+- [ ] **グリッド差分テスト**: `n_bins` や `s_min` を変えた2ケース連続でキャッシュリセット確認
+- [ ] **Q_D* 変更テスト**: `qstar` 係数表/単位系の変更が結果に反映されること
+- [ ] **サイズ進化テスト**: `s_min` 進化や drift を含む設定で A/B 一致を確認
+- [ ] **メモリ監視**: 長時間実行で RSS の線形増加がないこと
 
 ---
 
