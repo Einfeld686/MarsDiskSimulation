@@ -221,6 +221,10 @@ if not exist "!TMP_TEST!" (
 )
 del "!TMP_TEST!"
 
+rem Local Numba cache (gitignored under repo tmp).
+if not defined NUMBA_CACHE_DIR set "NUMBA_CACHE_DIR=!JOB_CWD_USE!\tmp\numba_cache"
+if not exist "!NUMBA_CACHE_DIR!" mkdir "!NUMBA_CACHE_DIR!" >nul 2>&1
+
 rem Output root defaults to out/ unless BATCH_ROOT/OUT_ROOT is set.
 if not defined BATCH_ROOT if defined OUT_ROOT set "BATCH_ROOT=%OUT_ROOT%"
 if not defined BATCH_ROOT set "BATCH_ROOT=out"
