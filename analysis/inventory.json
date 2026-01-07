@@ -18796,91 +18796,105 @@
   },
   {
     "file_path": "tools/plan_lint.py",
-    "line_no": 49,
+    "line_no": 48,
+    "symbol": "ALLOW_MISSING_PREFIXES",
+    "signature": "ALLOW_MISSING_PREFIXES = ['out/', 'paper/', 'siO2_disk_cooling/outputs/']",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "tools/plan_lint.py",
+    "line_no": 53,
+    "symbol": "ALLOW_MISSING_PATHS",
+    "signature": "ALLOW_MISSING_PATHS = {'analysis/AI_USAGE.md'}",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "tools/plan_lint.py",
+    "line_no": 57,
     "symbol": "FILE_URL_RE",
     "signature": "FILE_URL_RE = re.compile('file://[^\\\\s`\\\\\"\\'()<>\\\\[\\\\]]+')",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "tools/plan_lint.py",
-    "line_no": 50,
+    "line_no": 58,
     "symbol": "WIN_ABS_RE",
     "signature": "WIN_ABS_RE = re.compile('(?<![A-Za-z0-9])[A-Za-z]:[\\\\\\\\/][^\\\\s`\\\\\"\\'()<>\\\\[\\\\]]+')",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "tools/plan_lint.py",
-    "line_no": 51,
+    "line_no": 59,
     "symbol": "TILDE_ABS_RE",
     "signature": "TILDE_ABS_RE = re.compile('(?<![A-Za-z0-9])~/(?:[^\\\\s`\\\\\"\\'()<>\\\\[\\\\]]+)')",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "tools/plan_lint.py",
-    "line_no": 52,
+    "line_no": 60,
     "symbol": "POSIX_ABS_RE",
     "signature": "POSIX_ABS_RE = re.compile('(?<![A-Za-z0-9])/(?:[A-Za-z0-9_.-]+(?:/[A-Za-z0-9_.<>%{}$*+,:-]+)*)')",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "tools/plan_lint.py",
-    "line_no": 55,
+    "line_no": 63,
     "symbol": "OUTDIR_PREFIX_RE",
     "signature": "OUTDIR_PREFIX_RE = re.compile('out/[^\\\\s`\\\\\"\\'()\\\\[\\\\]]+/$')",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "tools/plan_lint.py",
-    "line_no": 56,
+    "line_no": 64,
     "symbol": "LINK_RE",
     "signature": "LINK_RE = re.compile('\\\\[([^\\\\]]+)\\\\]\\\\(([^)]+)\\\\)')",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "tools/plan_lint.py",
-    "line_no": 57,
+    "line_no": 65,
     "symbol": "ANCHOR_RE",
     "signature": "ANCHOR_RE = re.compile('#L(?P<start>\\\\d+)(?:-L?(?P<end>\\\\d+))?')",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "tools/plan_lint.py",
-    "line_no": 60,
+    "line_no": 68,
     "symbol": "build_prefix_regex",
     "signature": "build_prefix_regex(prefixes: list[str]) -> re.Pattern[str]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/plan_lint.py",
-    "line_no": 67,
+    "line_no": 75,
     "symbol": "normalize_token",
     "signature": "normalize_token(token: str) -> str",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/plan_lint.py",
-    "line_no": 77,
+    "line_no": 85,
     "symbol": "is_placeholder",
     "signature": "is_placeholder(token: str) -> bool",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/plan_lint.py",
-    "line_no": 81,
+    "line_no": 89,
     "symbol": "iter_absolute_matches",
     "signature": "iter_absolute_matches(line: str) -> list[str]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/plan_lint.py",
-    "line_no": 98,
+    "line_no": 106,
     "symbol": "scan_file",
     "signature": "scan_file(path: Path, root: Path, rel_re: re.Pattern[str], line_counts: dict[Path, int]) -> list[Finding]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/plan_lint.py",
-    "line_no": 213,
+    "line_no": 225,
     "symbol": "main",
     "signature": "main() -> int",
     "brief_usage": "No description available."
@@ -19300,42 +19314,42 @@
   },
   {
     "file_path": "tools/readme_sync.py",
-    "line_no": 28,
+    "line_no": 29,
     "symbol": "SOURCES",
-    "signature": "SOURCES: dict[str, SourceSpec] = {'README_PHYSICS_SUMMARY': SourceSpec(ANALYSIS_DIR / 'equations.md', 'README_PHYSICS_SUMMARY'), 'README_QUICKSTART': SourceSpec(ANALYSIS_DIR / 'run-recipes.md', 'README_QUICKSTART'), 'README_CLI_DRIVER_RULE': SourceSpec(ANALYSIS_DIR / 'run-recipes.md', 'README_CLI_DRIVER_RULE'), 'README_SMOKE_COMMAND': SourceSpec(ANALYSIS_DIR / 'run-recipes.md', 'README_SMOKE_COMMAND'), 'README_CLI_EXAMPLES': SourceSpec(ANALYSIS_DIR / 'run-recipes.md', 'README_CLI_EXAMPLES'), 'README_OUTPUT_COLUMNS': SourceSpec(ANALYSIS_DIR / 'AI_USAGE.md', 'README_OUTPUT_COLUMNS')}",
+    "signature": "SOURCES: dict[str, SourceSpec] = {'README_PHYSICS_SUMMARY': SourceSpec(ANALYSIS_DIR / 'equations.md', 'README_PHYSICS_SUMMARY'), 'README_QUICKSTART': SourceSpec(ANALYSIS_DIR / 'run-recipes.md', 'README_QUICKSTART'), 'README_CLI_DRIVER_RULE': SourceSpec(ANALYSIS_DIR / 'run-recipes.md', 'README_CLI_DRIVER_RULE'), 'README_SMOKE_COMMAND': SourceSpec(ANALYSIS_DIR / 'run-recipes.md', 'README_SMOKE_COMMAND'), 'README_CLI_EXAMPLES': SourceSpec(ANALYSIS_DIR / 'run-recipes.md', 'README_CLI_EXAMPLES'), 'README_OUTPUT_COLUMNS': SourceSpec(ANALYSIS_DIR / 'AI_USAGE.md', 'README_OUTPUT_COLUMNS', allow_missing=True)}",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "tools/readme_sync.py",
-    "line_no": 38,
+    "line_no": 43,
     "symbol": "extract_marked_block",
     "signature": "extract_marked_block(text: str, marker: str, source: Path) -> str",
     "brief_usage": "Extract a marker block from text."
   },
   {
     "file_path": "tools/readme_sync.py",
-    "line_no": 56,
+    "line_no": 61,
     "symbol": "load_source",
     "signature": "load_source(spec: SourceSpec) -> str",
     "brief_usage": "Load content from a marker or full snippet file."
   },
   {
     "file_path": "tools/readme_sync.py",
-    "line_no": 64,
+    "line_no": 69,
     "symbol": "render_readme",
     "signature": "render_readme(text: str) -> tuple[str, list[str], int]",
     "brief_usage": "Render README content by replacing AUTOGEN blocks."
   },
   {
     "file_path": "tools/readme_sync.py",
-    "line_no": 84,
+    "line_no": 97,
     "symbol": "diff_lines",
     "signature": "diff_lines(before: str, after: str) -> str",
     "brief_usage": "Return a unified diff for display."
   },
   {
     "file_path": "tools/readme_sync.py",
-    "line_no": 96,
+    "line_no": 109,
     "symbol": "main",
     "signature": "main() -> int",
     "brief_usage": "No description available."

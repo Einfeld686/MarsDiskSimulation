@@ -2048,12 +2048,12 @@ tools/pipeline/run_analysis_pipeline.py:21:def _run_step(label: str, command: Se
 tools/pipeline/run_analysis_pipeline.py:28:def _write_stamp(outdir: str, steps: Sequence[str]) -> None
 tools/pipeline/run_analysis_pipeline.py:40:def main(argv: Sequence[str] | None=None) -> None
 tools/plan_lint.py:14:class Finding
-tools/plan_lint.py:60:def build_prefix_regex(prefixes: list[str]) -> re.Pattern[str]
-tools/plan_lint.py:67:def normalize_token(token: str) -> str
-tools/plan_lint.py:77:def is_placeholder(token: str) -> bool
-tools/plan_lint.py:81:def iter_absolute_matches(line: str) -> list[str]
-tools/plan_lint.py:98:def scan_file(path: Path, root: Path, rel_re: re.Pattern[str], line_counts: dict[Path, int]) -> list[Finding]
-tools/plan_lint.py:213:def main() -> int
+tools/plan_lint.py:68:def build_prefix_regex(prefixes: list[str]) -> re.Pattern[str]
+tools/plan_lint.py:75:def normalize_token(token: str) -> str
+tools/plan_lint.py:85:def is_placeholder(token: str) -> bool
+tools/plan_lint.py:89:def iter_absolute_matches(line: str) -> list[str]
+tools/plan_lint.py:106:def scan_file(path: Path, root: Path, rel_re: re.Pattern[str], line_counts: dict[Path, int]) -> list[Finding]
+tools/plan_lint.py:225:def main() -> int
 tools/plotting/base.py:19:def _temperature_edges(temperatures: np.ndarray) -> np.ndarray
 tools/plotting/base.py:34:def save_heatmap_frames(outdir: Path, times: Sequence[float], temperatures: np.ndarray, size_edges: np.ndarray, log_counts_cube: np.ndarray, s_min_eff_curve: np.ndarray, cmap: str='viridis', dpi: int=DEFAULT_DPI) -> list[Path]
 tools/plotting/base.py:109:def save_keyframe_montage(out_path: Path, times: Sequence[float], temperatures: np.ndarray, size_edges: np.ndarray, log_counts_cube: np.ndarray, s_min_eff_curve: np.ndarray, indices: Iterable[int] | None=None, cmap: str='viridis', dpi: int=DEFAULT_DPI) -> None
@@ -2103,11 +2103,11 @@ tools/plotting/plot_mass_loss_map.py:43:def parse_args() -> argparse.Namespace
 tools/plotting/plot_mass_loss_map.py:93:def _make_annotation(df: pd.DataFrame, contour_levels: Iterable[float]) -> str
 tools/plotting/plot_mass_loss_map.py:111:def main() -> None
 tools/readme_sync.py:23:class SourceSpec
-tools/readme_sync.py:38:def extract_marked_block(text: str, marker: str, source: Path) -> str
-tools/readme_sync.py:56:def load_source(spec: SourceSpec) -> str
-tools/readme_sync.py:64:def render_readme(text: str) -> tuple[str, list[str], int]
-tools/readme_sync.py:84:def diff_lines(before: str, after: str) -> str
-tools/readme_sync.py:96:def main() -> int
+tools/readme_sync.py:43:def extract_marked_block(text: str, marker: str, source: Path) -> str
+tools/readme_sync.py:61:def load_source(spec: SourceSpec) -> str
+tools/readme_sync.py:69:def render_readme(text: str) -> tuple[str, list[str], int]
+tools/readme_sync.py:97:def diff_lines(before: str, after: str) -> str
+tools/readme_sync.py:109:def main() -> int
 tools/reference_tracker.py:83:class ReferenceLocation
 tools/reference_tracker.py:94:class FunctionReference
 tools/reference_tracker.py:107:class RegistryEntry
