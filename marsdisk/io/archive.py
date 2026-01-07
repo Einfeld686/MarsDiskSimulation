@@ -14,7 +14,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, List, Mapping, Optional, Sequence
 
-import pandas as pd
+import pyarrow as pa
+import pyarrow.ipc as ipc
 import pyarrow.parquet as pq
 
 logger = logging.getLogger(__name__)
@@ -87,14 +88,20 @@ def _hash_file(path: Path) -> str:
     return hasher.hexdigest()
 
 
-def _hash_dataframe(df: pd.DataFrame) -> str:
-    hashed = pd.util.hash_pandas_object(df, index=True).values
-    return hashlib.sha256(hashed.tobytes()).hexdigest()
+def _hash_schema(schema: pa.Schema) -> str:
+    return hashlib.sha256(str(schema).encode("utf-8")).hexdigest()
+
+
+def _hash_arrow_table(table: pa.Table) -> str:
+    sink = pa.BufferOutputStream()
+    with ipc.new_stream(sink, table.schema) as writer:
+        writer.write_table(table)
+    return hashlib.sha256(sink.getvalue().to_pybytes()).hexdigest()
 
 
 def _parquet_metadata(path: Path) -> Dict[str, int | str]:
     parquet = pq.ParquetFile(path)
-    schema_hash = hashlib.sha256(str(parquet.schema_arrow).encode("utf-8")).hexdigest()
+    schema_hash = _hash_schema(parquet.schema_arrow)
     return {
         "row_count": int(parquet.metadata.num_rows),
         "row_group_count": int(parquet.metadata.num_row_groups),
@@ -108,8 +115,24 @@ def _parquet_row_group_checksum(path: Path, group_index: int) -> Optional[str]:
         return None
     group_index = max(0, min(group_index, parquet.metadata.num_row_groups - 1))
     table = parquet.read_row_group(group_index)
-    df = table.to_pandas()
-    return _hash_dataframe(df)
+    return _hash_arrow_table(table)
+
+
+def _unify_chunk_schema_hash(paths: Sequence[Path]) -> Optional[str]:
+    schemas: List[pa.Schema] = []
+    for path in paths:
+        try:
+            schemas.append(pq.read_schema(path))
+        except Exception as exc:
+            logger.warning("Failed to read chunk schema %s: %s", path, exc)
+    if not schemas:
+        return None
+    try:
+        unified = pa.unify_schemas(schemas, promote_options="permissive")
+    except pa.ArrowInvalid as exc:
+        logger.warning("Schema unification failed, falling back to first schema: %s", exc)
+        unified = schemas[0]
+    return _hash_schema(unified)
 
 
 def _sum_chunk_rows(paths: Sequence[Path]) -> int:
@@ -612,11 +635,8 @@ def _verify_parquet_sets(
                     f"{name} row_count mismatch: chunks={total_rows} merged={meta['row_count']}"
                 )
             try:
-                chunk_parquet = pq.ParquetFile(chunk_paths[0])
-                chunk_hash = hashlib.sha256(
-                    str(chunk_parquet.schema_arrow).encode("utf-8")
-                ).hexdigest()
-                if chunk_hash != meta["schema_hash"]:
+                unified_hash = _unify_chunk_schema_hash(chunk_paths)
+                if unified_hash is not None and unified_hash != meta["schema_hash"]:
                     errors.append(f"{name} schema_hash mismatch")
             except Exception as exc:
                 errors.append(f"{name} chunk schema read failed: {exc}")
