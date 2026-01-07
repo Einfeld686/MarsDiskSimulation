@@ -2710,217 +2710,231 @@
   },
   {
     "file_path": "marsdisk/io/archive.py",
-    "line_no": 22,
+    "line_no": 23,
     "symbol": "CHUNK_GLOBS",
     "signature": "CHUNK_GLOBS = ('series/run_chunk_*.parquet', 'series/psd_hist_chunk_*.parquet', 'series/diagnostics_chunk_*.parquet')",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/io/archive.py",
-    "line_no": 28,
+    "line_no": 29,
     "symbol": "SERIES_MERGED",
     "signature": "SERIES_MERGED = {'run': ('series/run.parquet', 'series/run_chunk_*.parquet'), 'psd_hist': ('series/psd_hist.parquet', 'series/psd_hist_chunk_*.parquet'), 'diagnostics': ('series/diagnostics.parquet', 'series/diagnostics_chunk_*.parquet')}",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/io/archive.py",
-    "line_no": 34,
+    "line_no": 35,
     "symbol": "METADATA_KEEP",
     "signature": "METADATA_KEEP = {'summary.json', 'run_config.json', 'run_card.md', 'ARCHIVE_DONE', 'ARCHIVE_SKIPPED', 'INCOMPLETE'}",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/io/archive.py",
-    "line_no": 45,
+    "line_no": 46,
     "symbol": "ArchiveSettings",
     "signature": "class ArchiveSettings",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/io/archive.py",
-    "line_no": 61,
+    "line_no": 62,
     "symbol": "ArchiveResult",
     "signature": "class ArchiveResult",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/io/archive.py",
-    "line_no": 68,
+    "line_no": 69,
     "symbol": "resolve_archive_dest",
     "signature": "resolve_archive_dest(archive_root: Path, run_dir: Path) -> Path",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/io/archive.py",
-    "line_no": 72,
+    "line_no": 73,
     "symbol": "_human_bytes",
     "signature": "_human_bytes(value: float) -> str",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/io/archive.py",
-    "line_no": 82,
+    "line_no": 83,
     "symbol": "_hash_file",
     "signature": "_hash_file(path: Path) -> str",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/io/archive.py",
-    "line_no": 90,
-    "symbol": "_hash_dataframe",
-    "signature": "_hash_dataframe(df: pd.DataFrame) -> str",
+    "line_no": 91,
+    "symbol": "_hash_schema",
+    "signature": "_hash_schema(schema: pa.Schema) -> str",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/io/archive.py",
     "line_no": 95,
+    "symbol": "_hash_arrow_table",
+    "signature": "_hash_arrow_table(table: pa.Table) -> str",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "marsdisk/io/archive.py",
+    "line_no": 102,
     "symbol": "_parquet_metadata",
     "signature": "_parquet_metadata(path: Path) -> Dict[str, int | str]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/io/archive.py",
-    "line_no": 105,
+    "line_no": 112,
     "symbol": "_parquet_row_group_checksum",
     "signature": "_parquet_row_group_checksum(path: Path, group_index: int) -> Optional[str]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/io/archive.py",
-    "line_no": 115,
+    "line_no": 121,
+    "symbol": "_unify_chunk_schema_hash",
+    "signature": "_unify_chunk_schema_hash(paths: Sequence[Path]) -> Optional[str]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "marsdisk/io/archive.py",
+    "line_no": 138,
     "symbol": "_sum_chunk_rows",
     "signature": "_sum_chunk_rows(paths: Sequence[Path]) -> int",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/io/archive.py",
-    "line_no": 127,
+    "line_no": 150,
     "symbol": "_is_chunk",
     "signature": "_is_chunk(rel_path: Path) -> bool",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/io/archive.py",
-    "line_no": 134,
+    "line_no": 157,
     "symbol": "_is_metadata",
     "signature": "_is_metadata(rel_path: Path) -> bool",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/io/archive.py",
-    "line_no": 142,
+    "line_no": 165,
     "symbol": "_collect_copy_files",
     "signature": "_collect_copy_files(run_dir: Path) -> List[Path]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/io/archive.py",
-    "line_no": 154,
+    "line_no": 177,
     "symbol": "_collect_hash_targets",
     "signature": "_collect_hash_targets(run_dir: Path) -> List[Path]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/io/archive.py",
-    "line_no": 169,
+    "line_no": 192,
     "symbol": "_write_marker",
     "signature": "_write_marker(path: Path, message: str) -> None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/io/archive.py",
-    "line_no": 176,
+    "line_no": 199,
     "symbol": "_update_run_card",
     "signature": "_update_run_card(run_card: Path, archive_path: Path, manifest_path: Optional[Path], manifest_hash: Optional[str], level: str, *, volume_info: Optional[Mapping[str, Optional[str]]]=None, copy_stats: Optional[Mapping[str, float]]=None, slow_warning: Optional[str]=None) -> None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/io/archive.py",
-    "line_no": 227,
+    "line_no": 250,
     "symbol": "_check_writable",
     "signature": "_check_writable(path: Path) -> bool",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/io/archive.py",
-    "line_no": 235,
+    "line_no": 258,
     "symbol": "_verify_level_settings",
     "signature": "_verify_level_settings(level: str) -> str",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/io/archive.py",
-    "line_no": 242,
+    "line_no": 265,
     "symbol": "_resolve_mount_point",
     "signature": "_resolve_mount_point(path: Path) -> Path",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/io/archive.py",
-    "line_no": 261,
+    "line_no": 284,
     "symbol": "_windows_volume_info",
     "signature": "_windows_volume_info(mount_point: Path) -> Dict[str, Optional[str]]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/io/archive.py",
-    "line_no": 304,
+    "line_no": 327,
     "symbol": "_mac_volume_info",
     "signature": "_mac_volume_info(path: Path) -> Dict[str, Optional[str]]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/io/archive.py",
-    "line_no": 331,
+    "line_no": 354,
     "symbol": "_linux_volume_info",
     "signature": "_linux_volume_info(mount_point: Path) -> Dict[str, Optional[str]]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/io/archive.py",
-    "line_no": 371,
+    "line_no": 394,
     "symbol": "_resolve_volume_info",
     "signature": "_resolve_volume_info(path: Path) -> Dict[str, Optional[str]]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/io/archive.py",
-    "line_no": 383,
+    "line_no": 406,
     "symbol": "archive_run",
     "signature": "archive_run(run_dir: Path, *, archive_root: Path, settings: ArchiveSettings) -> ArchiveResult",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/io/archive.py",
-    "line_no": 512,
+    "line_no": 535,
     "symbol": "_build_manifest",
     "signature": "_build_manifest(root: Path, *, exclude: Optional[set[str]]=None) -> Dict[str, object]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/io/archive.py",
-    "line_no": 536,
+    "line_no": 559,
     "symbol": "_hash_manifest",
     "signature": "_hash_manifest(manifest: Mapping[str, object]) -> str",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/io/archive.py",
-    "line_no": 541,
+    "line_no": 564,
     "symbol": "_verify_archive",
     "signature": "_verify_archive(*, run_dir: Path, dest_dir: Path, verify_level: str) -> List[str]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/io/archive.py",
-    "line_no": 591,
+    "line_no": 614,
     "symbol": "_verify_parquet_sets",
     "signature": "_verify_parquet_sets(run_dir: Path, dest_dir: Path, errors: List[str], level: str) -> None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/io/archive.py",
-    "line_no": 647,
+    "line_no": 667,
     "symbol": "_cleanup_local",
     "signature": "_cleanup_local(run_dir: Path, keep_local: str) -> None",
     "brief_usage": "No description available."

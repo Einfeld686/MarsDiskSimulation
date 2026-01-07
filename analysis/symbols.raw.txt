@@ -256,34 +256,36 @@ marsdisk/grid.py:97:def v_keplerian(r: float) -> float
 marsdisk/io/_numba_tables.py:24:def NUMBA_AVAILABLE() -> bool
 marsdisk/io/_numba_tables.py:30:def qpr_interp_scalar_numba(s_vals: np.ndarray, T_vals: np.ndarray, q_vals: np.ndarray, s: float, T: float) -> float
 marsdisk/io/_numba_tables.py:72:def qpr_interp_array_numba(s_vals: np.ndarray, T_vals: np.ndarray, q_vals: np.ndarray, s_arr: np.ndarray, T: float) -> np.ndarray
-marsdisk/io/archive.py:45:class ArchiveSettings
-marsdisk/io/archive.py:61:class ArchiveResult
-marsdisk/io/archive.py:68:def resolve_archive_dest(archive_root: Path, run_dir: Path) -> Path
-marsdisk/io/archive.py:72:def _human_bytes(value: float) -> str
-marsdisk/io/archive.py:82:def _hash_file(path: Path) -> str
-marsdisk/io/archive.py:90:def _hash_dataframe(df: pd.DataFrame) -> str
-marsdisk/io/archive.py:95:def _parquet_metadata(path: Path) -> Dict[str, int | str]
-marsdisk/io/archive.py:105:def _parquet_row_group_checksum(path: Path, group_index: int) -> Optional[str]
-marsdisk/io/archive.py:115:def _sum_chunk_rows(paths: Sequence[Path]) -> int
-marsdisk/io/archive.py:127:def _is_chunk(rel_path: Path) -> bool
-marsdisk/io/archive.py:134:def _is_metadata(rel_path: Path) -> bool
-marsdisk/io/archive.py:142:def _collect_copy_files(run_dir: Path) -> List[Path]
-marsdisk/io/archive.py:154:def _collect_hash_targets(run_dir: Path) -> List[Path]
-marsdisk/io/archive.py:169:def _write_marker(path: Path, message: str) -> None
-marsdisk/io/archive.py:176:def _update_run_card(run_card: Path, archive_path: Path, manifest_path: Optional[Path], manifest_hash: Optional[str], level: str, *, volume_info: Optional[Mapping[str, Optional[str]]]=None, copy_stats: Optional[Mapping[str, float]]=None, slow_warning: Optional[str]=None) -> None
-marsdisk/io/archive.py:227:def _check_writable(path: Path) -> bool
-marsdisk/io/archive.py:235:def _verify_level_settings(level: str) -> str
-marsdisk/io/archive.py:242:def _resolve_mount_point(path: Path) -> Path
-marsdisk/io/archive.py:261:def _windows_volume_info(mount_point: Path) -> Dict[str, Optional[str]]
-marsdisk/io/archive.py:304:def _mac_volume_info(path: Path) -> Dict[str, Optional[str]]
-marsdisk/io/archive.py:331:def _linux_volume_info(mount_point: Path) -> Dict[str, Optional[str]]
-marsdisk/io/archive.py:371:def _resolve_volume_info(path: Path) -> Dict[str, Optional[str]]
-marsdisk/io/archive.py:383:def archive_run(run_dir: Path, *, archive_root: Path, settings: ArchiveSettings) -> ArchiveResult
-marsdisk/io/archive.py:512:def _build_manifest(root: Path, *, exclude: Optional[set[str]]=None) -> Dict[str, object]
-marsdisk/io/archive.py:536:def _hash_manifest(manifest: Mapping[str, object]) -> str
-marsdisk/io/archive.py:541:def _verify_archive(*, run_dir: Path, dest_dir: Path, verify_level: str) -> List[str]
-marsdisk/io/archive.py:591:def _verify_parquet_sets(run_dir: Path, dest_dir: Path, errors: List[str], level: str) -> None
-marsdisk/io/archive.py:647:def _cleanup_local(run_dir: Path, keep_local: str) -> None
+marsdisk/io/archive.py:46:class ArchiveSettings
+marsdisk/io/archive.py:62:class ArchiveResult
+marsdisk/io/archive.py:69:def resolve_archive_dest(archive_root: Path, run_dir: Path) -> Path
+marsdisk/io/archive.py:73:def _human_bytes(value: float) -> str
+marsdisk/io/archive.py:83:def _hash_file(path: Path) -> str
+marsdisk/io/archive.py:91:def _hash_schema(schema: pa.Schema) -> str
+marsdisk/io/archive.py:95:def _hash_arrow_table(table: pa.Table) -> str
+marsdisk/io/archive.py:102:def _parquet_metadata(path: Path) -> Dict[str, int | str]
+marsdisk/io/archive.py:112:def _parquet_row_group_checksum(path: Path, group_index: int) -> Optional[str]
+marsdisk/io/archive.py:121:def _unify_chunk_schema_hash(paths: Sequence[Path]) -> Optional[str]
+marsdisk/io/archive.py:138:def _sum_chunk_rows(paths: Sequence[Path]) -> int
+marsdisk/io/archive.py:150:def _is_chunk(rel_path: Path) -> bool
+marsdisk/io/archive.py:157:def _is_metadata(rel_path: Path) -> bool
+marsdisk/io/archive.py:165:def _collect_copy_files(run_dir: Path) -> List[Path]
+marsdisk/io/archive.py:177:def _collect_hash_targets(run_dir: Path) -> List[Path]
+marsdisk/io/archive.py:192:def _write_marker(path: Path, message: str) -> None
+marsdisk/io/archive.py:199:def _update_run_card(run_card: Path, archive_path: Path, manifest_path: Optional[Path], manifest_hash: Optional[str], level: str, *, volume_info: Optional[Mapping[str, Optional[str]]]=None, copy_stats: Optional[Mapping[str, float]]=None, slow_warning: Optional[str]=None) -> None
+marsdisk/io/archive.py:250:def _check_writable(path: Path) -> bool
+marsdisk/io/archive.py:258:def _verify_level_settings(level: str) -> str
+marsdisk/io/archive.py:265:def _resolve_mount_point(path: Path) -> Path
+marsdisk/io/archive.py:284:def _windows_volume_info(mount_point: Path) -> Dict[str, Optional[str]]
+marsdisk/io/archive.py:327:def _mac_volume_info(path: Path) -> Dict[str, Optional[str]]
+marsdisk/io/archive.py:354:def _linux_volume_info(mount_point: Path) -> Dict[str, Optional[str]]
+marsdisk/io/archive.py:394:def _resolve_volume_info(path: Path) -> Dict[str, Optional[str]]
+marsdisk/io/archive.py:406:def archive_run(run_dir: Path, *, archive_root: Path, settings: ArchiveSettings) -> ArchiveResult
+marsdisk/io/archive.py:535:def _build_manifest(root: Path, *, exclude: Optional[set[str]]=None) -> Dict[str, object]
+marsdisk/io/archive.py:559:def _hash_manifest(manifest: Mapping[str, object]) -> str
+marsdisk/io/archive.py:564:def _verify_archive(*, run_dir: Path, dest_dir: Path, verify_level: str) -> List[str]
+marsdisk/io/archive.py:614:def _verify_parquet_sets(run_dir: Path, dest_dir: Path, errors: List[str], level: str) -> None
+marsdisk/io/archive.py:667:def _cleanup_local(run_dir: Path, keep_local: str) -> None
 marsdisk/io/checkpoint.py:16:def _b64_pack(payload: Any) -> str
 marsdisk/io/checkpoint.py:20:def _b64_unpack(payload: str) -> Any
 marsdisk/io/checkpoint.py:25:class CheckpointState
