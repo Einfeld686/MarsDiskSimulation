@@ -1624,6 +1624,15 @@ class Blowout(BaseModel):
     )
 
 
+class CollisionCache(BaseModel):
+    """Runtime controls for collision cache persistence."""
+
+    persist: bool = Field(
+        False,
+        description="Persist collision caches across runs in the same process (0D only).",
+    )
+
+
 class Checkpoint(BaseModel):
     """Checkpointing and restart controls."""
 
@@ -1723,6 +1732,7 @@ class Numerics(BaseModel):
             "(dt >= ratio * min t_coll); set null to disable in 1D runs."
         ),
     )
+    collision_cache: CollisionCache = CollisionCache()
     checkpoint: Checkpoint = Checkpoint()
     resume: Resume = Resume()
 
@@ -2270,6 +2280,7 @@ __all__ = [
     "Radiation",
     "Shielding",
     "Blowout",
+    "CollisionCache",
     "Numerics",
     "IO",
     "RPBlowoutConfig",

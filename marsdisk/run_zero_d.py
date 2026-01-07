@@ -107,6 +107,7 @@ EXTENDED_DIAGNOSTICS_VERSION = "extended-minimal-v1"
 _compute_gate_factor = compute_gate_factor
 _fast_blowout_correction_factor = fast_blowout_correction_factor
 
+_LAST_COLLISION_CACHE_SIGNATURE: str | None = None
 
 @dataclass
 class SmolSinkWorkspace:
@@ -468,11 +469,20 @@ def _resolve_t_coll_step(
     return None
 
 
-def _reset_collision_runtime_state() -> None:
-    """Clear per-run collision caches and warning state."""
+def _reset_collision_runtime_state(*, persist: bool, signature: str | None) -> bool:
+    """Clear per-run collision caches and warning state when needed."""
 
+    global _LAST_COLLISION_CACHE_SIGNATURE
+    if persist and signature:
+        if _LAST_COLLISION_CACHE_SIGNATURE == signature:
+            collisions_smol._F_KE_MISMATCH_WARNED = False
+            return True
+        _LAST_COLLISION_CACHE_SIGNATURE = signature
+    else:
+        _LAST_COLLISION_CACHE_SIGNATURE = None
     collisions_smol.reset_collision_caches()
     collisions_smol._F_KE_MISMATCH_WARNED = False
+    return False
 
 
 def _get_max_steps() -> int:
@@ -2646,7 +2656,58 @@ def run_zero_d(
     energy_sum_ret = 0.0
     energy_last_row: Optional[Dict[str, float]] = None
     energy_count = 0
-    _reset_collision_runtime_state()
+    collision_cache_cfg = getattr(cfg.numerics, "collision_cache", None)
+    persist_collision_cache = bool(
+        getattr(collision_cache_cfg, "persist", False) if collision_cache_cfg is not None else False
+    )
+    if persist_collision_cache and sublimation_active_flag and sublimation_to_surface:
+        logger.info("collision cache persistence disabled: surface sublimation updates PSD sizes")
+        persist_collision_cache = False
+    collision_cache_signature: str | None = None
+    if persist_collision_cache:
+        sizes_arr = np.asarray(psd_state.get("sizes"), dtype=float)
+        widths_arr = np.asarray(psd_state.get("widths"), dtype=float)
+        edges_state = psd_state.get("edges")
+        edges_arr = np.asarray(edges_state, dtype=float) if edges_state is not None else None
+        if sizes_arr.size == 0 or widths_arr.shape != sizes_arr.shape:
+            logger.warning("collision cache persistence disabled: invalid PSD sizes/widths")
+            persist_collision_cache = False
+        elif edges_arr is None or edges_arr.shape != (sizes_arr.size + 1,):
+            left_edges = np.maximum(sizes_arr - 0.5 * widths_arr, 0.0)
+            edges_arr = np.empty(sizes_arr.size + 1, dtype=float)
+            edges_arr[:-1] = left_edges
+            edges_arr[-1] = sizes_arr[-1] + 0.5 * widths_arr[-1]
+        if persist_collision_cache:
+            alpha_frag = float(getattr(cfg.psd, "alpha_frag", 3.5))
+            qstar_sig = qstar.get_qdstar_signature()
+            try:
+                (
+                    collision_cache_signature,
+                    sizes_hash,
+                    edges_hash,
+                ) = collisions_smol.make_collision_cache_signature(
+                    sizes_arr,
+                    edges_arr,
+                    rho_used,
+                    alpha_frag,
+                    qstar_sig,
+                )
+                psd_state["sizes_version"] = int(sizes_hash)
+                psd_state["edges_version"] = int(edges_hash)
+            except Exception as exc:
+                logger.warning("collision cache persistence disabled: signature failed (%s)", exc)
+                persist_collision_cache = False
+                collision_cache_signature = None
+    collision_cache_reused = _reset_collision_runtime_state(
+        persist=persist_collision_cache,
+        signature=collision_cache_signature,
+    )
+    if persist_collision_cache:
+        sig_short = collision_cache_signature[:12] if collision_cache_signature else "none"
+        if collision_cache_reused:
+            logger.info("collision cache: reuse (signature=%s)", sig_short)
+        else:
+            logger.info("collision cache: reset (signature=%s)", sig_short)
     smol_sink_workspace: SmolSinkWorkspace | None = None
 
     def _mark_reservoir_depletion(current_time: float) -> None:

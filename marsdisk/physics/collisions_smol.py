@@ -2,8 +2,10 @@ from __future__ import annotations
 
 """Smoluchowski collision+fragmentation step specialised for the 0D loop."""
 
+import hashlib
 import math
 import os
+import struct
 import threading
 import warnings
 from collections import OrderedDict
@@ -161,6 +163,47 @@ def _versioned_key(version: int | None, arr: np.ndarray, *, tag: str) -> tuple:
     if version is not None:
         return (tag, int(version))
     return (tag,) + _array_fingerprint(arr)
+
+
+def _stable_array_hash64(arr: np.ndarray) -> int:
+    arr = np.ascontiguousarray(np.asarray(arr, dtype=np.float64))
+    hasher = hashlib.sha1()
+    hasher.update(struct.pack("<Q", int(arr.size)))
+    hasher.update(arr.tobytes())
+    digest = hasher.digest()
+    return int.from_bytes(digest[:8], "little", signed=False)
+
+
+def _qstar_sig_bytes(sig: tuple) -> bytes:
+    try:
+        version, unit_system, mu_val = sig
+    except ValueError:
+        return repr(sig).encode("ascii", errors="replace")
+    return f"{int(version)}|{unit_system}|{float(mu_val):.9g}".encode("ascii", errors="replace")
+
+
+def make_collision_cache_signature(
+    sizes: np.ndarray,
+    edges: np.ndarray,
+    rho: float,
+    alpha_frag: float,
+    qstar_sig: tuple,
+) -> tuple[str, int, int]:
+    """Return a stable signature and size/edge hashes for collision cache reuse."""
+
+    sizes_arr = np.ascontiguousarray(np.asarray(sizes, dtype=np.float64))
+    edges_arr = np.ascontiguousarray(np.asarray(edges, dtype=np.float64))
+    sizes_hash = _stable_array_hash64(sizes_arr)
+    edges_hash = _stable_array_hash64(edges_arr)
+    hasher = hashlib.sha1()
+    hasher.update(b"collcache-v1")
+    hasher.update(struct.pack("<Q", sizes_hash))
+    hasher.update(struct.pack("<Q", edges_hash))
+    hasher.update(struct.pack("<d", float(rho)))
+    hasher.update(struct.pack("<d", float(alpha_frag)))
+    hasher.update(_qstar_sig_bytes(qstar_sig))
+    signature = hasher.hexdigest()
+    return signature, sizes_hash, edges_hash
 
 
 def _get_thread_cache(name: str) -> "OrderedDict[tuple, object]":

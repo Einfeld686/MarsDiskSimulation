@@ -9,6 +9,7 @@ References
 """
 
 import logging
+import math
 import threading
 from collections import OrderedDict
 from typing import Dict, Tuple, Literal
@@ -93,6 +94,8 @@ def set_coeff_unit_system(units: CoeffUnits) -> CoeffUnits:
     """Set the coefficient unit system used during :math:`Q_D^*` evaluation."""
 
     global _COEFF_UNIT_SYSTEM, _COEFF_VERSION
+    if units == _COEFF_UNIT_SYSTEM:
+        return _COEFF_UNIT_SYSTEM
     if units not in _COEFF_UNIT_CHOICES:
         raise MarsDiskError(f"unknown coeff_units={units!r}; expected one of {_COEFF_UNIT_CHOICES}")
     _COEFF_UNIT_SYSTEM = units
@@ -150,6 +153,8 @@ def set_coefficient_table(
 
     global _COEFFS, _V_KEYS, _V_MIN, _V_MAX, _COEFF_VERSION
     cleaned = _normalise_coeff_table(table)
+    if cleaned == _COEFFS:
+        return dict(_COEFFS)
     _COEFFS = dict(cleaned)
     _V_KEYS = tuple(sorted(_COEFFS.keys()))
     _V_MIN = _V_KEYS[0]
@@ -188,6 +193,8 @@ def set_gravity_velocity_mu(mu: float) -> float:
     global _GRAVITY_VELOCITY_MU, _COEFF_VERSION
     if mu <= 0.0:
         raise MarsDiskError("gravity velocity exponent mu must be positive")
+    if math.isclose(float(mu), _GRAVITY_VELOCITY_MU, rel_tol=0.0, abs_tol=0.0):
+        return _GRAVITY_VELOCITY_MU
     _GRAVITY_VELOCITY_MU = float(mu)
     _COEFF_VERSION += 1
     with _QDSTAR_CACHE_LOCK:

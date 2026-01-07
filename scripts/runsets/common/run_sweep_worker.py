@@ -311,8 +311,10 @@ def main(argv: list[str] | None = None) -> int:
     substep_fast_blowout = _env("SUBSTEP_FAST_BLOWOUT")
     substep_max_ratio = _env("SUBSTEP_MAX_RATIO")
     stream_mem_gb = _env("STREAM_MEM_GB")
+    persist_collision_cache_env = _env("PERSIST_COLLISION_CACHE")
 
     seed_override = _env("SEED_OVERRIDE")
+    existing_override_keys = {key for key, _ in [*base_pairs, *extra_pairs]}
 
     exit_code = 0
     from marsdisk import run_zero_d
@@ -343,6 +345,14 @@ def main(argv: list[str] | None = None) -> int:
             f"supply.mixing.epsilon_mix={eps_val}",
             f"optical_depth.tau0_target={tau_val}",
         ]
+        persist_collision_cache_value = persist_collision_cache_env
+        if persist_collision_cache_value is None:
+            persist_collision_cache_value = "1"
+        if (
+            _is_true(persist_collision_cache_value)
+            and "numerics.collision_cache.persist" not in existing_override_keys
+        ):
+            case_lines.append("numerics.collision_cache.persist=true")
         if cool_mode != "hyodo":
             case_lines.append(f"radiation.mars_temperature_driver.table.path={t_table}")
         if cool_to_k:
