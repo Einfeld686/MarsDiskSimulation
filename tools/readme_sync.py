@@ -23,6 +23,7 @@ AUTOGEN_PATTERN = re.compile(
 class SourceSpec:
     path: Path
     marker: str | None = None
+    allow_missing: bool = False
 
 
 SOURCES: dict[str, SourceSpec] = {
@@ -31,7 +32,11 @@ SOURCES: dict[str, SourceSpec] = {
     "README_CLI_DRIVER_RULE": SourceSpec(ANALYSIS_DIR / "run-recipes.md", "README_CLI_DRIVER_RULE"),
     "README_SMOKE_COMMAND": SourceSpec(ANALYSIS_DIR / "run-recipes.md", "README_SMOKE_COMMAND"),
     "README_CLI_EXAMPLES": SourceSpec(ANALYSIS_DIR / "run-recipes.md", "README_CLI_EXAMPLES"),
-    "README_OUTPUT_COLUMNS": SourceSpec(ANALYSIS_DIR / "AI_USAGE.md", "README_OUTPUT_COLUMNS"),
+    "README_OUTPUT_COLUMNS": SourceSpec(
+        ANALYSIS_DIR / "AI_USAGE.md",
+        "README_OUTPUT_COLUMNS",
+        allow_missing=True,
+    ),
 }
 
 
@@ -65,6 +70,7 @@ def render_readme(text: str) -> tuple[str, list[str], int]:
     """Render README content by replacing AUTOGEN blocks."""
     unknown: list[str] = []
     matches = list(AUTOGEN_PATTERN.finditer(text))
+    missing_sources: set[str] = set()
 
     def replace(match: re.Match[str]) -> str:
         name = match.group("name")
@@ -72,6 +78,13 @@ def render_readme(text: str) -> tuple[str, list[str], int]:
         if spec is None:
             unknown.append(name)
             return match.group(0)
+        if not spec.path.exists():
+            if spec.allow_missing:
+                if name not in missing_sources:
+                    print(f"[WARN] Source missing for {name}: {spec.path}", file=sys.stderr)
+                    missing_sources.add(name)
+                return match.group(0)
+            raise FileNotFoundError(f"Missing README source for {name}: {spec.path}")
         body = load_source(spec)
         return f"{match.group(1)}\n{body}\n{match.group(4)}"
 

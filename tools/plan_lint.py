@@ -45,6 +45,14 @@ DEFAULT_PREFIXES = [
     "./",
     "../",
 ]
+ALLOW_MISSING_PREFIXES = [
+    "out/",
+    "paper/",
+    "siO2_disk_cooling/outputs/",
+]
+ALLOW_MISSING_PATHS = {
+    "analysis/AI_USAGE.md",
+}
 
 FILE_URL_RE = re.compile(r"file://[^\s`\"'()<>\[\]]+")
 WIN_ABS_RE = re.compile(r"(?<![A-Za-z0-9])[A-Za-z]:[\\/][^\s`\"'()<>\[\]]+")
@@ -113,6 +121,10 @@ def scan_file(
             if not token:
                 continue
             if is_placeholder(token):
+                continue
+            if token in ALLOW_MISSING_PATHS:
+                continue
+            if any(token.startswith(prefix) for prefix in ALLOW_MISSING_PREFIXES):
                 continue
             if OUTDIR_PREFIX_RE.search(line[: match.start()]):
                 continue
