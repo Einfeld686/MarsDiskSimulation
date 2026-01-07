@@ -477,7 +477,7 @@ def test_surface_ode_emits_deprecation_warning():
 # Keep these commented unless offload is required.
 # dir omitted => use io.archive.dir/<run_id>/series_chunks (runtime default)
 # io.streaming.offload.enabled=false
-# io.streaming.offload.dir=E:\marsdisk_archive\series_chunks
+# io.streaming.offload.dir=${EXTERNAL_ARCHIVE_ROOT}/series_chunks
 # io.streaming.offload.keep_last_n=2
 # io.streaming.offload.mode=move
 # io.streaming.offload.verify=size
