@@ -250,13 +250,13 @@ run_zero_d フェーズ境界（タスク化）:
 - [x] deprecation スケジュールと移行ガイドを整備し、期限超過の削除まで完了する
 - [x] 回帰検出用の軽量設定 `configs/maintainability_regression.yml` を追加する
 - [x] baseline 回帰検出（`configs/maintainability_regression.yml` の `summary.json` 主要キー一致）を実行し、`run_zero_d` の分割前後で結果が一致することを確認する
-  - 実行: `out/20260102-1914_maint_regression__f056463fa__seed0`（IO_STREAMING=off、`M_loss=1.2889e-08`, `case_status=ok`, `mass_budget_max_error_percent=3.69e-14`）
-  - 実行: `out/20260102-2354_maint_regression__f056463fa__seed0`（IO_STREAMING=off、series/diagnostics は既存オフ基準と一致）
-  - 実行: `out/20260103-0017_maint_regression__f056463fa__seed0`（IO_STREAMING=off、summary の差分は streaming のみ、series/diagnostics は既存オフ基準と一致）
-- [x] ストリーミング回帰の基準受理: `out/20260102-2241_maint_regression_stream__f056463fa__seed0` を基準結果として扱う合意を記録する
-  - 実行: `out/20260102-2355_maint_regression_stream__f056463fa__seed0`（IO_STREAMING=on、summary 主要キー一致）
-  - series/diagnostics: `out/20260102-1914_maint_regression__f056463fa__seed0` と比較して差分なし
-  - 実行: `out/20260103-0017_maint_regression_stream__f056463fa__seed0`（IO_STREAMING=on、summary/series/diagnostics は既存オフ基準と一致）
+  - 実行: `out/` 配下の `20260102-1914_maint_regression__f056463fa__seed0`（IO_STREAMING=off、`M_loss=1.2889e-08`, `case_status=ok`, `mass_budget_max_error_percent=3.69e-14`）
+  - 実行: `out/` 配下の `20260102-2354_maint_regression__f056463fa__seed0`（IO_STREAMING=off、series/diagnostics は既存オフ基準と一致）
+  - 実行: `out/` 配下の `20260103-0017_maint_regression__f056463fa__seed0`（IO_STREAMING=off、summary の差分は streaming のみ、series/diagnostics は既存オフ基準と一致）
+- [x] ストリーミング回帰の基準受理: `out/` 配下の `20260102-2241_maint_regression_stream__f056463fa__seed0` を基準結果として扱う合意を記録する
+  - 実行: `out/` 配下の `20260102-2355_maint_regression_stream__f056463fa__seed0`（IO_STREAMING=on、summary 主要キー一致）
+  - series/diagnostics: `out/` 配下の `20260102-1914_maint_regression__f056463fa__seed0` と比較して差分なし
+  - 実行: `out/` 配下の `20260103-0017_maint_regression_stream__f056463fa__seed0`（IO_STREAMING=on、summary/series/diagnostics は既存オフ基準と一致）
 - [ ] `run_one_d` をフェーズ単位で分割し、回帰検出を通す
 - [ ] `schema.py` を分割し、再エクスポート互換と JSON schema 一致を確認する
 - [ ] `collisions_smol.py` を分割し、キャッシュ管理と衝突計算を分離する

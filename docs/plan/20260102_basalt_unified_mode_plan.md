@@ -50,13 +50,13 @@
 ```
 python -m marsdisk.run \
   --config configs/base.yml \
-  --overrides-file configs/overrides/material_basalt.override
+  --overrides-file configs/<overrides/material_basalt.override>
 ```
 
 **理由**: ベース設定の差分が明確になり、SiO2 モード追加時も差分管理が容易。
 
 ### 方針 B（代替）
-`configs/material_basalt.yml` を新規作成し、`base.yml` 相当を複製して差分を上書きする。  
+`material_basalt.yml` を新規作成し、`configs/` 配下で `base.yml` 相当を複製して差分を上書きする。  
 （重複が増えるため原則は方針 A を採用）
 
 ---
@@ -65,7 +65,7 @@ python -m marsdisk.run \
 
 1) **玄武岩 ⟨Q_pr⟩ テーブルの生成**
 - 既存ユーティリティ（`marsdisk/ops/make_qpr_table.py`）で作成。
-- 出力先候補: `marsdisk/io/data/qpr_planck_basalt_<source>.csv`
+- 出力先候補: `marsdisk/io/data/` の `qpr_planck_basalt_<source>.csv`
 
 2) **玄武岩の蒸気圧（HKL）パラメータ**
 - `sinks.sub_params` の `mu`, `A`, `B`, `A_liq`, `B_liq`, `valid_K` を確定する。
@@ -271,8 +271,8 @@ ChatGPT には以下の形式でまとめさせる:
 #### 1.5 STOPCODA 実データ点検（列定義・500–1000 µm 埋まり・E20優先）
 
 **対象ファイル（実データ）**
-- `paper/STOPCODA/EXPERIMENT_KD_20220525/OptCte_Mg(1-x)FexSiO3_E20_5-1000mic_300K_extrapol/OptCte_Mg(1-x)FexSiO3_E20_5-1000mic_300K_extrapol.data.txt`
-- `paper/STOPCODA/EXPERIMENT_KD_20220525_002/OptCte_Mg(1-x)FexSiO3_E20R_5-1000mic_300K_extrapol/OptCte_Mg(1-x)FexSiO3_E20R_5-1000mic_300K_extrapol.data.txt`
+- `paper/STOPCODA/EXPERIMENT_KD_20220525/` 配下の `OptCte_Mg(1-x)FexSiO3_E20_5-1000mic_300K_extrapol.data.txt`
+- `paper/STOPCODA/EXPERIMENT_KD_20220525_002/` 配下の `OptCte_Mg(1-x)FexSiO3_E20R_5-1000mic_300K_extrapol.data.txt`
 
 **列定義（共通）**
 - `wavelength(micron)`, `real_intensity`, `imaginary_intensity`, `real_intensity_error_minus`, `imaginary_intensity_error_minus`, `real_intensity_error_plus`, `imaginary_intensity_error_plus`
@@ -434,7 +434,7 @@ https://ui.adsabs.harvard.edu/abs/1997A%26A...326..263K/abstract
 - [ ] 確定事項を本プランの「確定仕様」へ昇格し、未決事項を整理する  
 - [ ] 玄武岩モードの設定スイッチ設計（固相昇華 ON/OFF、valid_K 外フラグ、Tliq 判定）を YAML 仕様として定義する  
 - [ ] ⟨Q_pr⟩ テーブル生成の実行計画を確定（Lamy + ARIA + Demyk の連結ルール、E20 優先）  
-- [ ] 0D 最小検証の準備と実行（`configs/overrides/material_basalt.override` 作成、`summary.json` / `checks/mass_budget.csv` の確認）
+- [ ] 0D 最小検証の準備と実行（`configs/` 配下に `overrides/material_basalt.override` を作成し、`summary.json` / `checks/mass_budget.csv` を確認）
 - [ ] `docs/plan/20251226_material_properties_current_defaults.md` に「玄武岩統一モード追加」の追記  
 
 ---
