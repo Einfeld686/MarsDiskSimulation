@@ -1,0 +1,59 @@
+{
+  "material": {
+    "name": "forsterite",
+    "formula": "Mg2SiO4",
+    "phase": "liquid"
+  },
+  "quantity": "saturation_vapor_pressure_total",
+  "equation": {
+    "id": "FegleySchaefer2012_Eq5",
+    "raw_text": "log P_vap(Mg2SiO4, liq) = 6.08 - 22409/T",
+    "notes": [
+      "The source text uses 'log' notation. For simulation, we treat this as log10 (see provenance notes).",
+      "Pressure is in bar in the source; temperature is in Kelvin."
+    ],
+    "log_base_assumed": 10,
+    "pressure_unit_source": "bar",
+    "temperature_unit": "K",
+    "is_total_pressure": true,
+    "valid_T_K": {
+      "min": 2163,
+      "max": 3690
+    },
+    "coefficients_source_units": {
+      "A": 6.08,
+      "B": 22409,
+      "form": "log10(P_bar) = A - B/T"
+    },
+    "converted_for_simulation": {
+      "pressure_unit": "Pa",
+      "coefficients": {
+        "A": 11.08,
+        "B": 22409,
+        "form": "log10(P_Pa) = A - B/T"
+      },
+      "conversion_rules": [
+        "1 bar = 1e5 Pa",
+        "log10(P_Pa) = log10(P_bar) + 5"
+      ]
+    }
+  },
+  "provenance": [
+    {
+      "type": "arXiv",
+      "title": "Chemistry of the Earth's Earliest Atmosphere",
+      "authors": [
+        "Bruce Fegley Jr.",
+        "Laura Schaefer"
+      ],
+      "year": 2012,
+      "arxiv_id": "1210.0270",
+      "url_pdf": "https://arxiv.org/pdf/1210.0270",
+      "equation_number": "Eq. (5)",
+      "notes": [
+        "Source explicitly states derived vapor pressure equation (2163–3690 K) for molten forsterite and that Eq.(5) gives total pressure (bar).",
+        "The base of 'log' is not explicitly written as log10 in the equation line; we assume log10 for simulation."
+      ]
+    }
+  ]
+}

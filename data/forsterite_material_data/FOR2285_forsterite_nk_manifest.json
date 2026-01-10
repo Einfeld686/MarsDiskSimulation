@@ -1,0 +1,313 @@
+{
+  "dataset": "FOR2285 forsterite optical constants",
+  "source_url": "https://www2.astro.uni-jena.de/FOR2285/en/forsterite_optical.php",
+  "format_note": "Data tables (3-column ASCII): λ(µm), n, k. Files for axes a/b/c at temperatures 50,75,100,150,200,295 K.",
+  "files": [
+    {
+      "file_dat": "fors_a_100_nk.dat",
+      "file_csv": "fors_a_100_nk.csv",
+      "temperature_K": 100,
+      "axis": "a",
+      "columns": [
+        "wavelength_um",
+        "n",
+        "k"
+      ],
+      "wavelength_range_um": [
+        0.08,
+        1000.0
+      ],
+      "n_rows": 2136,
+      "format": "3-column ASCII (space-separated) in .dat; CSV with header in .csv"
+    },
+    {
+      "file_dat": "fors_a_150_nk.dat",
+      "file_csv": "fors_a_150_nk.csv",
+      "temperature_K": 150,
+      "axis": "a",
+      "columns": [
+        "wavelength_um",
+        "n",
+        "k"
+      ],
+      "wavelength_range_um": [
+        0.08,
+        1000.0
+      ],
+      "n_rows": 2136,
+      "format": "3-column ASCII (space-separated) in .dat; CSV with header in .csv"
+    },
+    {
+      "file_dat": "fors_a_200_nk.dat",
+      "file_csv": "fors_a_200_nk.csv",
+      "temperature_K": 200,
+      "axis": "a",
+      "columns": [
+        "wavelength_um",
+        "n",
+        "k"
+      ],
+      "wavelength_range_um": [
+        0.08,
+        1000.0
+      ],
+      "n_rows": 2136,
+      "format": "3-column ASCII (space-separated) in .dat; CSV with header in .csv"
+    },
+    {
+      "file_dat": "fors_a_295_nk.dat",
+      "file_csv": "fors_a_295_nk.csv",
+      "temperature_K": 295,
+      "axis": "a",
+      "columns": [
+        "wavelength_um",
+        "n",
+        "k"
+      ],
+      "wavelength_range_um": [
+        0.08,
+        1000.0
+      ],
+      "n_rows": 2136,
+      "format": "3-column ASCII (space-separated) in .dat; CSV with header in .csv"
+    },
+    {
+      "file_dat": "fors_a_50_nk.dat",
+      "file_csv": "fors_a_50_nk.csv",
+      "temperature_K": 50,
+      "axis": "a",
+      "columns": [
+        "wavelength_um",
+        "n",
+        "k"
+      ],
+      "wavelength_range_um": [
+        0.08,
+        1000.0
+      ],
+      "n_rows": 2136,
+      "format": "3-column ASCII (space-separated) in .dat; CSV with header in .csv"
+    },
+    {
+      "file_dat": "fors_a_75_nk.dat",
+      "file_csv": "fors_a_75_nk.csv",
+      "temperature_K": 75,
+      "axis": "a",
+      "columns": [
+        "wavelength_um",
+        "n",
+        "k"
+      ],
+      "wavelength_range_um": [
+        0.08,
+        1000.0
+      ],
+      "n_rows": 2136,
+      "format": "3-column ASCII (space-separated) in .dat; CSV with header in .csv"
+    },
+    {
+      "file_dat": "fors_b_100_nk.dat",
+      "file_csv": "fors_b_100_nk.csv",
+      "temperature_K": 100,
+      "axis": "b",
+      "columns": [
+        "wavelength_um",
+        "n",
+        "k"
+      ],
+      "wavelength_range_um": [
+        0.08,
+        1000.0
+      ],
+      "n_rows": 2136,
+      "format": "3-column ASCII (space-separated) in .dat; CSV with header in .csv"
+    },
+    {
+      "file_dat": "fors_b_150_nk.dat",
+      "file_csv": "fors_b_150_nk.csv",
+      "temperature_K": 150,
+      "axis": "b",
+      "columns": [
+        "wavelength_um",
+        "n",
+        "k"
+      ],
+      "wavelength_range_um": [
+        0.08,
+        1000.0
+      ],
+      "n_rows": 2136,
+      "format": "3-column ASCII (space-separated) in .dat; CSV with header in .csv"
+    },
+    {
+      "file_dat": "fors_b_200_nk.dat",
+      "file_csv": "fors_b_200_nk.csv",
+      "temperature_K": 200,
+      "axis": "b",
+      "columns": [
+        "wavelength_um",
+        "n",
+        "k"
+      ],
+      "wavelength_range_um": [
+        0.08,
+        1000.0
+      ],
+      "n_rows": 2136,
+      "format": "3-column ASCII (space-separated) in .dat; CSV with header in .csv"
+    },
+    {
+      "file_dat": "fors_b_295_nk.dat",
+      "file_csv": "fors_b_295_nk.csv",
+      "temperature_K": 295,
+      "axis": "b",
+      "columns": [
+        "wavelength_um",
+        "n",
+        "k"
+      ],
+      "wavelength_range_um": [
+        0.08,
+        1000.0
+      ],
+      "n_rows": 2136,
+      "format": "3-column ASCII (space-separated) in .dat; CSV with header in .csv"
+    },
+    {
+      "file_dat": "fors_b_50_nk.dat",
+      "file_csv": "fors_b_50_nk.csv",
+      "temperature_K": 50,
+      "axis": "b",
+      "columns": [
+        "wavelength_um",
+        "n",
+        "k"
+      ],
+      "wavelength_range_um": [
+        0.08,
+        1000.0
+      ],
+      "n_rows": 2136,
+      "format": "3-column ASCII (space-separated) in .dat; CSV with header in .csv"
+    },
+    {
+      "file_dat": "fors_b_75_nk.dat",
+      "file_csv": "fors_b_75_nk.csv",
+      "temperature_K": 75,
+      "axis": "b",
+      "columns": [
+        "wavelength_um",
+        "n",
+        "k"
+      ],
+      "wavelength_range_um": [
+        0.08,
+        1000.0
+      ],
+      "n_rows": 2136,
+      "format": "3-column ASCII (space-separated) in .dat; CSV with header in .csv"
+    },
+    {
+      "file_dat": "fors_c_100_nk.dat",
+      "file_csv": "fors_c_100_nk.csv",
+      "temperature_K": 100,
+      "axis": "c",
+      "columns": [
+        "wavelength_um",
+        "n",
+        "k"
+      ],
+      "wavelength_range_um": [
+        0.08,
+        1000.0
+      ],
+      "n_rows": 2136,
+      "format": "3-column ASCII (space-separated) in .dat; CSV with header in .csv"
+    },
+    {
+      "file_dat": "fors_c_150_nk.dat",
+      "file_csv": "fors_c_150_nk.csv",
+      "temperature_K": 150,
+      "axis": "c",
+      "columns": [
+        "wavelength_um",
+        "n",
+        "k"
+      ],
+      "wavelength_range_um": [
+        0.08,
+        1000.0
+      ],
+      "n_rows": 2136,
+      "format": "3-column ASCII (space-separated) in .dat; CSV with header in .csv"
+    },
+    {
+      "file_dat": "fors_c_200_nk.dat",
+      "file_csv": "fors_c_200_nk.csv",
+      "temperature_K": 200,
+      "axis": "c",
+      "columns": [
+        "wavelength_um",
+        "n",
+        "k"
+      ],
+      "wavelength_range_um": [
+        0.08,
+        1000.0
+      ],
+      "n_rows": 2136,
+      "format": "3-column ASCII (space-separated) in .dat; CSV with header in .csv"
+    },
+    {
+      "file_dat": "fors_c_295_nk.dat",
+      "file_csv": "fors_c_295_nk.csv",
+      "temperature_K": 295,
+      "axis": "c",
+      "columns": [
+        "wavelength_um",
+        "n",
+        "k"
+      ],
+      "wavelength_range_um": [
+        0.08,
+        1000.0
+      ],
+      "n_rows": 2136,
+      "format": "3-column ASCII (space-separated) in .dat; CSV with header in .csv"
+    },
+    {
+      "file_dat": "fors_c_50_nk.dat",
+      "file_csv": "fors_c_50_nk.csv",
+      "temperature_K": 50,
+      "axis": "c",
+      "columns": [
+        "wavelength_um",
+        "n",
+        "k"
+      ],
+      "wavelength_range_um": [
+        0.08,
+        1000.0
+      ],
+      "n_rows": 2136,
+      "format": "3-column ASCII (space-separated) in .dat; CSV with header in .csv"
+    },
+    {
+      "file_dat": "fors_c_75_nk.dat",
+      "file_csv": "fors_c_75_nk.csv",
+      "temperature_K": 75,
+      "axis": "c",
+      "columns": [
+        "wavelength_um",
+        "n",
+        "k"
+      ],
+      "wavelength_range_um": [
+        0.08,
+        1000.0
+      ],
+      "n_rows": 2136,
+      "format": "3-column ASCII (space-separated) in .dat; CSV with header in .csv"
+    }
+  ]
+}

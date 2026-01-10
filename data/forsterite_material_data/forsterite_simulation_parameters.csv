@@ -1,0 +1,25 @@
+item_id,phase,parameter,value,units,valid_K,source,notes
+rho_forsterite,both,rho,3270.0,kg m-3,,van Lieshout et al. (2014) arXiv:1410.3494 Table 2,ρd = 3.27 g cm−3 for Cryst. forsterite (Mg2SiO4)
+nk_dataset,solid+liquid,nk_dataset,FOR2285 (Jena database) forsterite optical constants,,,FOR2285 page,See nk_provenance block in JSON
+nk_wavelength_min_um,solid+liquid,wavelength_um_min,0.08,um,,,
+nk_wavelength_max_um,solid+liquid,wavelength_um_max,1000.0,um,,,
+nk_temperatures_K,solid+liquid,temperatures_K,50;75;100;150;200;295,K,,,
+nk_axes,solid+liquid,axes,a;b;c,,,,
+nk_combined_table,solid+liquid,file,FOR2285_forsterite_nk_long.csv,,,,
+nk_manifest,solid+liquid,file,FOR2285_forsterite_nk_manifest.json,,,,
+pvap_solid_eq,solid,equation,pv = exp( −A/T + B ) dyn cm−2,,"[1673, 2133]",van Lieshout et al. (2014) arXiv:1410.3494 Eq. (13) Table 3,
+pvap_solid_A,solid,A,65308.0,K,"[1673, 2133]",,
+pvap_solid_B,solid,B,34.1,dimensionless,"[1673, 2133]",,
+pvap_solid_units,solid,pvap_units,dyn cm−2,,"[1673, 2133]",,
+pvap_solid_A_fit_log10Pa,solid,A_fit,13.809441832900886,log10(Pa),"[1673, 2133]",,log10 P(Pa) = A_fit − B_fit/T
+pvap_solid_B_fit,solid,B_fit,28362.904024137566,K,"[1673, 2133]",,
+pvap_liquid_eq,liquid,equation,log Pvap(bar) = 6.08 − 22409/T,,"[2163, 3690]",Fegley & Schaefer (2012) arXiv:1210.0270 Eq. (5),
+pvap_liquid_log_base,liquid,log_base,UNKNOWN (paper prints 'log' but does not define its base; natural log is explicitly written as 'ln' elsewhere),,"[2163, 3690]",,
+pvap_liquid_A,liquid,A,6.08,log(Pvap[bar]),"[2163, 3690]",,
+pvap_liquid_B,liquid,B,22409.0,K,"[2163, 3690]",,
+pvap_liquid_A_fit_log10Pa_assuming_log10,liquid,A_fit,11.08,log10(Pa),"[2163, 3690]",,CONDITIONAL: only if log=log10
+pvap_liquid_B_fit,liquid,B_fit,22409.0,K,"[2163, 3690]",,CONDITIONAL: only if log=log10
+alpha,both,alpha,0.1,,,van Lieshout et al. (2014) arXiv:1410.3494 Table 3 (for α and μ),
+mu_kg_mol,both,mu,0.140694,kg mol-1,,van Lieshout et al. (2014) arXiv:1410.3494 Table 3 (for α and μ),Table 3 lists μ as molecular weight of the dust compound; van Lieshout et al. note this is an approximation.
+T_switch_K,both,T_switch,2163,K,,,Use solid HKL below; liquid HKL at/above.
+T_condense_solid_K,both,T_condense_solid_K,2163,K,,,Operational choice: set equal to T_melt_K (no hysteresis) to satisfy simulation requirement; not claimed as a physical condensation temperature.

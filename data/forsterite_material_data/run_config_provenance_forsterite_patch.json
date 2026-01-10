@@ -1,0 +1,80 @@
+{
+  "radiation_provenance": {
+    "nk": {
+      "dataset": "FOR2285",
+      "url": "https://www2.astro.uni-jena.de/FOR2285/en/forsterite_optical.php",
+      "retrieved_utc": "2026-01-10T13:27:52.460672+00:00",
+      "files": [
+        "data/forsterite_material_data/nk_FOR2285/fors_a_50_nk.dat",
+        "data/forsterite_material_data/nk_FOR2285/fors_b_50_nk.dat",
+        "data/forsterite_material_data/nk_FOR2285/fors_c_50_nk.dat",
+        "... (see manifest for full list)"
+      ],
+      "file_manifest": "data/forsterite_material_data/FOR2285_forsterite_nk_manifest.json",
+      "combined_table": "data/forsterite_material_data/FOR2285_forsterite_nk_long.csv",
+      "columns": [
+        "wavelength_um",
+        "n",
+        "k"
+      ],
+      "wavelength_um_min": 0.08,
+      "wavelength_um_max": 1000.0,
+      "anisotropy_handling": {
+        "method": "axis-wise Mie then 1/3 average",
+        "evidence": "Zeidler et al. (2015) Eq.(7), DOI: 10.1088/0004-637X/798/2/125",
+        "status": "planned (not implemented here)"
+      },
+      "license": "UNKNOWN (no explicit license on FOR2285 page; cite URL and original papers)"
+    }
+  },
+  "sublimation_provenance": {
+    "solid_pvap": {
+      "equation_printed": "van Lieshout et al. (2014) Eq.(13): pv = exp( −A/T + B ) dyn cm−2",
+      "A": 65308.0,
+      "B": 34.1,
+      "valid_K": [
+        1673,
+        2133
+      ],
+      "source": "arXiv:1410.3494v1 (van Lieshout et al. 2014), Eq.(13) and Table 3",
+      "converted_to_log10Pa": {
+        "target_form": "log10 P(Pa) = A_fit − B_fit/T",
+        "A_fit": 13.809441832900886,
+        "B_fit": 28362.904024137566,
+        "note": "Includes dyn cm−2 → Pa conversion (1 dyn cm−2 = 0.1 Pa)."
+      }
+    },
+    "liquid_pvap": {
+      "equation_printed": "Fegley & Schaefer (2012) Eq.(5): log Pvap(bar) = 6.08 − 22409/T",
+      "A": 6.08,
+      "B": 22409.0,
+      "valid_K": [
+        2163,
+        3690
+      ],
+      "unit": "bar",
+      "log_base": "UNKNOWN (not explicitly stated in paper)",
+      "source": "arXiv:1210.0270 (Fegley & Schaefer 2012), Eq.(5)",
+      "converted_to_log10Pa_if_log_is_log10": {
+        "target_form": "log10 P(Pa) = A_fit − B_fit/T",
+        "A_fit": 11.08,
+        "B_fit": 22409.0,
+        "note": "Conditional: only if log is interpreted as log10. Uses 1 bar = 1e5 Pa."
+      }
+    },
+    "alpha": {
+      "value": 0.1,
+      "source": "van Lieshout et al. (2014) Table 3 (note b: from Gail 2010)"
+    },
+    "mu_kg_mol": {
+      "value": 0.140694,
+      "source": "van Lieshout et al. (2014) Table 3 (Cryst. forsterite)"
+    },
+    "phase_thresholds": {
+      "T_switch_K": 2163,
+      "T_vaporize_liquid_K": 2163,
+      "T_condense_solid_K": 2163,
+      "note": "Operational (no hysteresis). T_switch set to lower bound of molten-forsterite fit; treat as phase boundary for the simulation."
+    }
+  }
+}

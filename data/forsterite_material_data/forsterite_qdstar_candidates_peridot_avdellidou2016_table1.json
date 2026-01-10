@@ -1,0 +1,73 @@
+{
+  "material": {
+    "name": "Mg-rich olivine (peridot)",
+    "used_as": "forsterite proxy for disruption threshold (Q_D*)",
+    "note": "Projectile material described as peridot / Mg-rich olivine in the source; used here as the forsterite (Fo-rich olivine) disruption-threshold proxy."
+  },
+  "quantity": "catastrophic_disruption_specific_energy_threshold",
+  "symbol": "Q_D*",
+  "units": "J/kg",
+  "definition": {
+    "catastrophic_limit": "M_largest_fragment / M_initial = 0.5",
+    "impact_energy_density": "Q_im = 0.5 * v^2 (with v in m/s)",
+    "source_note": "Table 1 reports Q* after fitting a power law to experimental data."
+  },
+  "candidates": [
+    {
+      "run_id": "Run#1",
+      "Q_D_star_J_per_kg": 646000.0,
+      "target": {
+        "material": "water-ice",
+        "porosity_percent": 0,
+        "label": "non-porous (baseline in prior work)"
+      },
+      "fit_parameters": {
+        "A": 0.000689,
+        "c": 0.49
+      }
+    },
+    {
+      "run_id": "Run#2",
+      "Q_D_star_J_per_kg": 240000.0,
+      "target": {
+        "material": "water-ice",
+        "porosity_percent": 35,
+        "label": "moderate porosity (text: ~40%)"
+      },
+      "fit_parameters": {
+        "A": 0.014,
+        "c": 0.28
+      }
+    },
+    {
+      "run_id": "Run#3",
+      "Q_D_star_J_per_kg": 2580000.0,
+      "target": {
+        "material": "CaCO3 powder",
+        "porosity_percent": 70,
+        "label": "high porosity (regolith analogue in text)"
+      },
+      "fit_parameters": {
+        "A": 1.8e-12,
+        "c": 1.78
+      }
+    }
+  ],
+  "provenance": [
+    {
+      "type": "arXiv",
+      "title": "Survival of the impactor during hypervelocity collisions II",
+      "authors": [
+        "C. Avdellidou",
+        "et al."
+      ],
+      "year": 2016,
+      "arxiv_id": "1612.05060",
+      "url_pdf": "https://arxiv.org/pdf/1612.05060",
+      "table_number": "Table 1",
+      "notes": [
+        "Table 1 lists energy density at catastrophic disruption limit for peridot projectile (Q*p [J/kg]) with fit parameters A and c."
+      ]
+    }
+  ]
+}

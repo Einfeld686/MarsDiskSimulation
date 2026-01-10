@@ -1,0 +1,2 @@
+equation_id,phase,log_base_assumed,P_unit_source,A_source,B_source,form_source,P_unit_sim,A_sim,B_sim,form_sim,Tmin_K,Tmax_K,is_total_pressure,source_url
+FegleySchaefer2012_Eq5,liquid,10,bar,6.08,22409,log10(P_bar)=A-B/T,Pa,11.08,22409,log10(P_Pa)=A-B/T,2163,3690,True,https://arxiv.org/pdf/1210.0270

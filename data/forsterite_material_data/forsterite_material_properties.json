@@ -1,0 +1,150 @@
+{
+  "material": "forsterite",
+  "chemical_formula": "Mg2SiO4",
+  "created_utc": "2026-01-10T11:06:10.571621+00:00",
+  "density": {
+    "rho_kg_m3": 3270.0,
+    "source": {
+      "paper": "van Lieshout et al. (2014) arXiv:1410.3494",
+      "table": "Table 2",
+      "value_in_paper": "ρd = 3.27 g cm−3 for Cryst. forsterite (Mg2SiO4)"
+    }
+  },
+  "optical_constants": {
+    "dataset": "FOR2285 (Jena database) forsterite optical constants",
+    "coverage_wavelength_um": [
+      0.08,
+      1000.0
+    ],
+    "temperatures_K": [
+      50,
+      75,
+      100,
+      150,
+      200,
+      295
+    ],
+    "axes": [
+      "a",
+      "b",
+      "c"
+    ],
+    "file_manifest": "FOR2285_forsterite_nk_manifest.json",
+    "combined_table": "FOR2285_forsterite_nk_long.csv",
+    "files_dir": "nk_FOR2285",
+    "columns": [
+      "wavelength_um",
+      "n",
+      "k"
+    ],
+    "format": "ASCII .dat (space-separated, 3 columns) and CSV copies (comma-separated with header)."
+  },
+  "hkl_vapor_pressure": {
+    "solid": {
+      "phase": "solid",
+      "type": "total vapor pressure / phase-equilibrium vapor pressure pv",
+      "original_equation": {
+        "equation": "pv = exp( −A/T + B ) dyn cm−2",
+        "eq_number": "Eq. (13)",
+        "A": 65308.0,
+        "B": 34.1,
+        "units": {
+          "pv": "dyn cm−2",
+          "T": "K",
+          "A": "K",
+          "B": "dimensionless"
+        },
+        "valid_K": [
+          1673,
+          2133
+        ],
+        "reference": {
+          "paper": "van Lieshout et al. (2014) arXiv:1410.3494",
+          "table": "Table 3",
+          "notes": "Temp. range is listed as the range for which A and B were determined."
+        }
+      },
+      "hkl_mass_flux": {
+        "equation": "J(T) = α pv(T) sqrt( μ m_u / (2π k_B T) )",
+        "eq_number": "Eq. (12)",
+        "alpha": 0.1,
+        "mu_g_mol": 140.694,
+        "mu_kg_mol": 0.140694,
+        "mu_note": "Table 3 lists μ as molecular weight of the dust compound; van Lieshout et al. note this is an approximation.",
+        "units": {
+          "J": "g cm−2 s−1 (as in paper)",
+          "alpha": "dimensionless",
+          "mu": "g mol−1",
+          "m_u": "atomic mass unit",
+          "k_B": "Boltzmann constant",
+          "T": "K"
+        },
+        "reference": {
+          "paper": "van Lieshout et al. (2014) arXiv:1410.3494",
+          "equation": "Eq. (12)",
+          "table": "Table 3 (for α and μ)"
+        }
+      },
+      "converted_for_simulation": {
+        "target_form": "log10 P(Pa) = A_fit − B_fit/T",
+        "assumptions": [
+          "Conversion uses 1 dyn cm−2 = 0.1 Pa.",
+          "log10 is base-10 logarithm."
+        ],
+        "A_fit": 13.809441832900886,
+        "B_fit": 28362.904024137566,
+        "valid_K": [
+          1673,
+          2133
+        ],
+        "derivation": "From pv = exp(−A/T + B) dyn cm−2; P(Pa)=0.1 pv; log10 P = ((B − ln 10) − A/T)/ln 10."
+      }
+    },
+    "liquid": {
+      "phase": "liquid",
+      "type": "total vapor pressure (saturated vapor) in equilibrium with molten forsterite",
+      "original_equation": {
+        "equation": "log Pvap(bar) = 6.08 − 22409/T",
+        "eq_number": "Eq. (5)",
+        "A": 6.08,
+        "B": 22409.0,
+        "units": {
+          "Pvap": "bar",
+          "T": "K"
+        },
+        "valid_K": [
+          2163,
+          3690
+        ],
+        "log_base": "UNKNOWN (paper text says 'log' without explicit base)",
+        "reference": {
+          "paper": "Fegley & Schaefer (2012) arXiv:1210.0270",
+          "eq_number": "Eq. (5)",
+          "notes": "Text states Eq. (5) gives the total pressure (bar) of the saturated vapor in equilibrium with molten forsterite."
+        }
+      },
+      "converted_for_simulation": {
+        "target_form": "log10 P(Pa) = A_fit − B_fit/T",
+        "assumptions": [
+          "Assumes 'log' in Eq. (5) is log10.",
+          "1 bar = 1e5 Pa so log10 P(Pa) = log10 P(bar) + 5."
+        ],
+        "A_fit": 11.08,
+        "B_fit": 22409.0,
+        "valid_K": [
+          2163,
+          3690
+        ],
+        "note": "If Eq. (5) uses natural log, this conversion is not valid; in that case keep the original equation."
+      }
+    }
+  },
+  "phase_switch": {
+    "T_melt_K": 2163,
+    "T_condense_solid_K": 1673,
+    "notes": [
+      "T_melt_K is the melting point used by Fegley & Schaefer (2012) in the context of forsterite (see discussion around Eq. (5)).",
+      "T_condense_solid_K is a user-chosen operational threshold in the original plan; no new literature check performed here."
+    ]
+  }
+}
