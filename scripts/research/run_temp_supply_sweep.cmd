@@ -354,7 +354,14 @@ if not defined QSTAR_UNITS set "QSTAR_UNITS=ba99_cgs"
 if not defined GEOMETRY_MODE set "GEOMETRY_MODE=0D"
 if not defined GEOMETRY_NR set "GEOMETRY_NR=32"
 rem Cooling defaults (stop when Mars T_M reaches 1000 K, slab law unless overridden)
-set "COOL_TO_K=1000"
+if not defined END_MODE set "END_MODE=fixed"
+if not defined T_END_YEARS set "T_END_YEARS=10.0"
+if /i "%END_MODE%"=="temperature" (
+  if not defined COOL_TO_K set "COOL_TO_K=1000"
+) else (
+  if defined COOL_TO_K if not "%COOL_TO_K%"=="" echo.[warn] END_MODE=fixed ignores COOL_TO_K=%COOL_TO_K%
+  set "COOL_TO_K="
+)
 if not defined COOL_MARGIN_YEARS set "COOL_MARGIN_YEARS=0"
 if not defined COOL_SEARCH_YEARS set "COOL_SEARCH_YEARS="
 set "COOL_MODE=slab"
@@ -565,6 +572,15 @@ if defined STUDY_FILE (
   )
 )
 
+if not defined END_MODE set "END_MODE=fixed"
+if not defined T_END_YEARS set "T_END_YEARS=10.0"
+if /i "%END_MODE%"=="temperature" (
+  if not defined COOL_TO_K set "COOL_TO_K=1000"
+) else (
+  if defined COOL_TO_K if not "%COOL_TO_K%"=="" echo.[warn] END_MODE=fixed ignores COOL_TO_K=%COOL_TO_K%
+  set "COOL_TO_K="
+)
+
 call :sanitize_list T_LIST
 call :sanitize_list EPS_LIST
 call :sanitize_list TAU_LIST
@@ -581,10 +597,10 @@ set "COOL_SEARCH_DISPLAY=!COOL_SEARCH_YEARS!"
 if not defined COOL_SEARCH_DISPLAY set "COOL_SEARCH_DISPLAY=none"
 
 set "COOL_STATUS="
-if defined COOL_TO_K (
-  set "COOL_STATUS=dynamic horizon: stop when Mars T_M reaches !COOL_TO_K! K (margin !COOL_MARGIN_YEARS! yr, search_cap=!COOL_SEARCH_DISPLAY!)"
+if /i "%END_MODE%"=="temperature" (
+  set "COOL_STATUS=end_mode=temperature: stop when Mars T_M reaches !COOL_TO_K! K (margin !COOL_MARGIN_YEARS! yr, search_cap=!COOL_SEARCH_DISPLAY!)"
 ) else (
-  set "COOL_STATUS=dynamic horizon disabled (using numerics.t_end_* from config)"
+  set "COOL_STATUS=end_mode=fixed: t_end_years=!T_END_YEARS!"
 )
 
 set "TOTAL_GB="
@@ -836,12 +852,24 @@ for /f "usebackq tokens=1-3 delims= " %%A in ("%SWEEP_LIST_FILE%") do (
       if /i "!COOL_MODE!" NEQ "hyodo" (
         >>"!CASE_OVERRIDES_FILE!" echo radiation.mars_temperature_driver.table.path=!T_TABLE!
       )
-      if defined COOL_TO_K (
+      if /i "%END_MODE%"=="temperature" (
+        >>"!CASE_OVERRIDES_FILE!" echo numerics.t_end_years=null
+        >>"!CASE_OVERRIDES_FILE!" echo numerics.t_end_orbits=null
         >>"!CASE_OVERRIDES_FILE!" echo numerics.t_end_until_temperature_K=!COOL_TO_K!
         >>"!CASE_OVERRIDES_FILE!" echo numerics.t_end_temperature_margin_years=!COOL_MARGIN_YEARS!
         if defined COOL_SEARCH_YEARS (
           >>"!CASE_OVERRIDES_FILE!" echo numerics.t_end_temperature_search_years=!COOL_SEARCH_YEARS!
+        ) else (
+          >>"!CASE_OVERRIDES_FILE!" echo numerics.t_end_temperature_search_years=null
         )
+        >>"!CASE_OVERRIDES_FILE!" echo scope.analysis_years=10
+      ) else (
+        >>"!CASE_OVERRIDES_FILE!" echo numerics.t_end_years=!T_END_YEARS!
+        >>"!CASE_OVERRIDES_FILE!" echo numerics.t_end_orbits=null
+        >>"!CASE_OVERRIDES_FILE!" echo numerics.t_end_until_temperature_K=null
+        >>"!CASE_OVERRIDES_FILE!" echo numerics.t_end_temperature_margin_years=null
+        >>"!CASE_OVERRIDES_FILE!" echo numerics.t_end_temperature_search_years=null
+        >>"!CASE_OVERRIDES_FILE!" echo scope.analysis_years=!T_END_YEARS!
       )
       if "!SUBSTEP_FAST_BLOWOUT!" NEQ "0" (
         >>"!CASE_OVERRIDES_FILE!" echo io.substep_fast_blowout=true

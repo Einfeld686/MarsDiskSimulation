@@ -784,11 +784,13 @@ if not defined SUPPLY_TRANSPORT_HEADROOM set "SUPPLY_TRANSPORT_HEADROOM=hard"
 
 
 rem ::REF:TEMPERATURE_STOP
-rem Temperature stop is the default (COOL_TO_K=1000) unless overridden.
-
-
-
-if not defined COOL_TO_K set "COOL_TO_K=1000"
+rem END_MODE selects either fixed years or temperature-based stop.
+if not defined END_MODE set "END_MODE=fixed"
+if /i "%END_MODE%"=="temperature" (
+  if not defined COOL_TO_K set "COOL_TO_K=1000"
+) else (
+  set "COOL_TO_K="
+)
 
 
 

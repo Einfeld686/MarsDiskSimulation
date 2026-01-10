@@ -57,6 +57,7 @@ def main() -> int:
     _emit(lines, "EPS_LIST", data.get("EPS_LIST_RAW", data.get("EPS_LIST")))
     _emit(lines, "TAU_LIST", data.get("TAU_LIST_RAW", data.get("TAU_LIST")))
     _emit(lines, "SWEEP_TAG", data.get("SWEEP_TAG"))
+    _emit(lines, "END_MODE", data.get("END_MODE"))
     _emit(lines, "COOL_TO_K", data.get("COOL_TO_K"))
     _emit(lines, "COOL_MARGIN_YEARS", data.get("COOL_MARGIN_YEARS"))
     _emit(lines, "COOL_SEARCH_YEARS", data.get("COOL_SEARCH_YEARS"))

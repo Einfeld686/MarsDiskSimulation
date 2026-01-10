@@ -113,6 +113,7 @@ emit("T_LIST_RAW", data.get("T_LIST_RAW", data.get("T_LIST")))
 emit("EPS_LIST_RAW", data.get("EPS_LIST_RAW", data.get("EPS_LIST")))
 emit("TAU_LIST_RAW", data.get("TAU_LIST_RAW", data.get("TAU_LIST")))
 emit("SWEEP_TAG", data.get("SWEEP_TAG"))
+emit("END_MODE", data.get("END_MODE"))
 emit("COOL_TO_K", data.get("COOL_TO_K"))
 emit("COOL_MARGIN_YEARS", data.get("COOL_MARGIN_YEARS"))
 emit("COOL_SEARCH_YEARS", data.get("COOL_SEARCH_YEARS"))
@@ -161,7 +162,8 @@ mkdir -p "${BATCH_DIR}"
 read -r -a T_LIST <<<"${T_LIST_RAW}"
 read -r -a EPS_LIST <<<"${EPS_LIST_RAW}"
 read -r -a TAU_LIST <<<"${TAU_LIST_RAW}"
-T_END_YEARS="${T_END_YEARS:-2.0}"              # fixed integration horizon when COOL_TO_K is unset [yr]
+END_MODE="${END_MODE:-fixed}"                  # fixed|temperature
+T_END_YEARS="${T_END_YEARS:-10.0}"             # fixed integration horizon when END_MODE=fixed [yr]
 # 短縮テスト用に T_END_SHORT_YEARS=0.001 を指定すると強制上書き
 if [[ -n "${T_END_SHORT_YEARS:-}" ]]; then
   T_END_YEARS="${T_END_SHORT_YEARS}"
@@ -173,11 +175,17 @@ SUBSTEP_FAST_BLOWOUT="${SUBSTEP_FAST_BLOWOUT:-0}"
 SUBSTEP_MAX_RATIO="${SUBSTEP_MAX_RATIO:-}"
 
 # Cooling stop condition (dynamic horizon based on Mars cooling time)
-COOL_TO_K="${COOL_TO_K-2000}"                  # stop when Mars T_M reaches this [K]; default=2000 K (set empty/none to disable)
-if [[ "${COOL_TO_K}" == "none" ]]; then
+if [[ "${END_MODE}" == "temperature" ]]; then
+  COOL_TO_K="${COOL_TO_K:-1000}"               # stop when Mars T_M reaches this [K]
+  if [[ "${COOL_TO_K}" == "none" ]]; then
+    COOL_TO_K=""
+  fi
+else
+  if [[ -n "${COOL_TO_K:-}" ]]; then
+    echo "[warn] END_MODE=fixed ignores COOL_TO_K=${COOL_TO_K}"
+  fi
   COOL_TO_K=""
 fi
-T_END_YEARS="${T_END_YEARS:-2.0}"              # fixed integration horizon when COOL_TO_K is unset [yr]
 COOL_MARGIN_YEARS="${COOL_MARGIN_YEARS:-0}"    # padding after reaching COOL_TO_K
 COOL_SEARCH_YEARS="${COOL_SEARCH_YEARS:-}"     # optional search cap (years)
 # Cooling driver mode: slab (T^-3 analytic slab) or hyodo (linear cooling)
@@ -286,10 +294,10 @@ echo "[config] optical_depth: tau0_target_list=${TAU_LIST_RAW} tau_stop=${OPTICA
 echo "[config] fast blowout substep: enabled=${SUBSTEP_FAST_BLOWOUT} substep_max_ratio=${SUBSTEP_MAX_RATIO:-default}"
 echo "[config] phase temperature input: ${PHASE_TEMP_INPUT} (q_abs_mean=${PHASE_QABS_MEAN}, tau_field=${PHASE_TAU_FIELD})"
 echo "[config] geometry: mode=${GEOMETRY_MODE} Nr=${GEOMETRY_NR} r_in_m=${GEOMETRY_R_IN_M:-disk.geometry} r_out_m=${GEOMETRY_R_OUT_M:-disk.geometry}"
-if [[ -n "${COOL_TO_K}" ]]; then
-  echo "[config] dynamic horizon: stop when Mars T_M <= ${COOL_TO_K} K (margin ${COOL_MARGIN_YEARS} yr, search_cap=${COOL_SEARCH_YEARS:-none})"
+if [[ "${END_MODE}" == "temperature" ]]; then
+  echo "[config] end_mode=temperature: stop when Mars T_M <= ${COOL_TO_K} K (margin ${COOL_MARGIN_YEARS} yr, search_cap=${COOL_SEARCH_YEARS:-none})"
 else
-  echo "[config] fixed horizon: t_end_years=${T_END_YEARS} (temperature stop disabled)"
+  echo "[config] end_mode=fixed: t_end_years=${T_END_YEARS}"
 fi
 echo "[config] cooling driver mode: ${COOL_MODE} (slab: T^-3, hyodo: linear flux)"
 
@@ -508,7 +516,7 @@ PY
         append_override "${CASE_OVERRIDES_FILE}" "shielding.fixed_tau1_sigma" "${SHIELDING_SIGMA}"
         append_override "${CASE_OVERRIDES_FILE}" "shielding.auto_max_margin" "${SHIELDING_AUTO_MAX_MARGIN}"
       fi
-      if [[ -n "${COOL_TO_K}" ]]; then
+      if [[ "${END_MODE}" == "temperature" ]]; then
         append_override "${CASE_OVERRIDES_FILE}" "numerics.t_end_years" "null"
         append_override "${CASE_OVERRIDES_FILE}" "numerics.t_end_orbits" "null"
         append_override "${CASE_OVERRIDES_FILE}" "numerics.t_end_until_temperature_K" "${COOL_TO_K}"
@@ -523,6 +531,8 @@ PY
         append_override "${CASE_OVERRIDES_FILE}" "numerics.t_end_years" "${T_END_YEARS}"
         append_override "${CASE_OVERRIDES_FILE}" "numerics.t_end_orbits" "null"
         append_override "${CASE_OVERRIDES_FILE}" "numerics.t_end_until_temperature_K" "null"
+        append_override "${CASE_OVERRIDES_FILE}" "numerics.t_end_temperature_margin_years" "null"
+        append_override "${CASE_OVERRIDES_FILE}" "numerics.t_end_temperature_search_years" "null"
         append_override "${CASE_OVERRIDES_FILE}" "scope.analysis_years" "${T_END_YEARS}"
       fi
       if [[ "${SUBSTEP_FAST_BLOWOUT}" != "0" ]]; then

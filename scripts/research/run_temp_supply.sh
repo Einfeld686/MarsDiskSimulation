@@ -56,7 +56,8 @@ QSTAR_UNITS="${QSTAR_UNITS:-ba99_cgs}"
 T_LIST=("5000" "4000" "3000")
 EPS_LIST=("1.0" "0.5" "0.1")
 TAU_LIST=("1.0" "0.5" "0.1")
-T_END_YEARS="${T_END_YEARS:-2.0}"              # fixed integration horizon when COOL_TO_K is unset [yr]
+END_MODE="${END_MODE:-fixed}"                  # fixed|temperature
+T_END_YEARS="${T_END_YEARS:-10.0}"             # fixed integration horizon when END_MODE=fixed [yr]
 # 短縮テスト用に T_END_SHORT_YEARS=0.001 を指定すると強制上書き
 if [[ -n "${T_END_SHORT_YEARS:-}" ]]; then
   T_END_YEARS="${T_END_SHORT_YEARS}"
@@ -68,8 +69,14 @@ SUBSTEP_FAST_BLOWOUT="${SUBSTEP_FAST_BLOWOUT:-0}"
 SUBSTEP_MAX_RATIO="${SUBSTEP_MAX_RATIO:-}"
 
 # Cooling stop condition (dynamic horizon based on Mars cooling time)
-COOL_TO_K="${COOL_TO_K:-2000}"                 # stop when Mars T_M reaches this [K]; default=2000 K
-T_END_YEARS="${T_END_YEARS:-2.0}"              # fixed integration horizon when COOL_TO_K is unset [yr]
+if [[ "${END_MODE}" == "temperature" ]]; then
+  COOL_TO_K="${COOL_TO_K:-1000}"               # stop when Mars T_M reaches this [K]
+else
+  if [[ -n "${COOL_TO_K:-}" ]]; then
+    echo "[warn] END_MODE=fixed ignores COOL_TO_K=${COOL_TO_K}"
+  fi
+  COOL_TO_K=""
+fi
 COOL_MARGIN_YEARS="${COOL_MARGIN_YEARS:-0}"    # padding after reaching COOL_TO_K
 COOL_SEARCH_YEARS="${COOL_SEARCH_YEARS:-}"     # optional search cap (years)
 # Cooling driver mode: slab (T^-3 analytic slab) or hyodo (linear cooling)
@@ -150,10 +157,10 @@ echo "[config] external supply: mu_orbit10pct=${SUPPLY_MU_ORBIT10PCT} orbit_frac
 echo "[config] optical_depth: tau0_target_list=${TAU_LIST[*]} tau_stop=${OPTICAL_TAU_STOP} tau_stop_tol=${OPTICAL_TAU_STOP_TOL}"
 echo "[config] fast blowout substep: enabled=${SUBSTEP_FAST_BLOWOUT} substep_max_ratio=${SUBSTEP_MAX_RATIO:-default}"
 echo "[config] phase temperature input: ${PHASE_TEMP_INPUT} (q_abs_mean=${PHASE_QABS_MEAN}, tau_field=${PHASE_TAU_FIELD})"
-if [[ -n "${COOL_TO_K}" ]]; then
-  echo "[config] dynamic horizon: stop when Mars T_M <= ${COOL_TO_K} K (margin ${COOL_MARGIN_YEARS} yr, search_cap=${COOL_SEARCH_YEARS:-none})"
+if [[ "${END_MODE}" == "temperature" ]]; then
+  echo "[config] end_mode=temperature: stop when Mars T_M <= ${COOL_TO_K} K (margin ${COOL_MARGIN_YEARS} yr, search_cap=${COOL_SEARCH_YEARS:-none})"
 else
-  echo "[config] fixed horizon: t_end_years=${T_END_YEARS} (temperature stop disabled)"
+  echo "[config] end_mode=fixed: t_end_years=${T_END_YEARS}"
 fi
 echo "[config] cooling driver mode: ${COOL_MODE} (slab: T^-3, hyodo: linear flux)"
 
@@ -335,20 +342,19 @@ PY
         --override "optical_depth.tau_stop_tol=${OPTICAL_TAU_STOP_TOL}"
         --override "inner_disk_mass=null"
       )
-      if [[ -n "${COOL_TO_K}" ]]; then
+      if [[ "${END_MODE}" == "temperature" ]]; then
         cmd+=(--override "numerics.t_end_years=null")
         cmd+=(--override "numerics.t_end_orbits=null")
         cmd+=(--override "numerics.t_end_until_temperature_K=${COOL_TO_K}")
         cmd+=(--override "numerics.t_end_temperature_margin_years=${COOL_MARGIN_YEARS}")
         cmd+=(--override "numerics.t_end_temperature_search_years=${COOL_SEARCH_YEARS:-null}")
         cmd+=(--override "scope.analysis_years=10")
-        if [[ -n "${COOL_SEARCH_YEARS}" ]]; then
-          cmd+=(--override "numerics.t_end_temperature_search_years=${COOL_SEARCH_YEARS}")
-        fi
       else
         cmd+=(--override "numerics.t_end_years=${T_END_YEARS}")
         cmd+=(--override "numerics.t_end_orbits=null")
         cmd+=(--override "numerics.t_end_until_temperature_K=null")
+        cmd+=(--override "numerics.t_end_temperature_margin_years=null")
+        cmd+=(--override "numerics.t_end_temperature_search_years=null")
         cmd+=(--override "scope.analysis_years=${T_END_YEARS}")
       fi
       if [[ "${SUBSTEP_FAST_BLOWOUT}" != "0" ]]; then
