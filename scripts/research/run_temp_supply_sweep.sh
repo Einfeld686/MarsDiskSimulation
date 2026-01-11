@@ -3,7 +3,7 @@
 #   T_M = {2000, 4000, 6000} K
 #   epsilon_mix = {0.1, 0.5, 1.0}
 #   mu_orbit10pct = 1.0 (1 orbit supplies 5% of Sigma_ref(tau=1); scaled by orbit_fraction_at_mu1)
-#   optical_depth.tau0_target = {1.0, 0.5, 0.1}
+#   optical_depth.tau0_target = {1.0, 0.5}
 # 出力は out/temp_supply_sweep/<ts>__<sha>__seed<batch>/T{T}_eps{eps}_tau{tau}/ に配置。
 # 供給は supply.* による外部源（温度・τフィードバック・有限リザーバ対応）。
 
@@ -139,7 +139,7 @@ fi
 #   T_LIST_RAW="4000 3000", EPS_LIST_RAW="1.0", TAU_LIST_RAW="1.0 0.5"
 T_LIST_RAW="${T_LIST_RAW:-4000 3000}"
 EPS_LIST_RAW="${EPS_LIST_RAW:-1.0 0.5 0.1}"
-TAU_LIST_RAW="${TAU_LIST_RAW:-1.0 0.5 0.1}"
+TAU_LIST_RAW="${TAU_LIST_RAW:-1.0 0.5}"
 SEED_OVERRIDE=""
 if [[ "${RUN_ONE_MODE}" == "1" || -n "${RUN_ONE_T:-}" || -n "${RUN_ONE_EPS:-}" || -n "${RUN_ONE_TAU:-}" ]]; then
   if [[ -z "${RUN_ONE_T:-}" || -z "${RUN_ONE_EPS:-}" || -z "${RUN_ONE_TAU:-}" ]]; then

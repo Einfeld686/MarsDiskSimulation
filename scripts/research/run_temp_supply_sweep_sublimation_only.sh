@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
 # Run temp supply sweep (sublimation only)
-# T_M = {2000, 4000, 6000}
+# T_M = {4000, 3000} K
 # epsilon_mix = {0.1, 0.5, 1.0}
 # mu_orbit10pct = 1.0 (1 orbit supplies 5% of Sigma_ref(tau=1); scaled by orbit_fraction_at_mu1)
-# tau0_target = {1.0, 0.5, 0.1}
+# tau0_target = {1.0, 0.5}
+# material defaults: forsterite via configs/overrides/material_forsterite.override
 # Outputs under: out/temp_supply_sweep/<ts>__<sha>__seed<BATCH>/T{T}_eps{eps}_tau{tau}_mode-sublimation_only/
 
 set -euo pipefail
@@ -50,7 +51,7 @@ if [[ -n "${EXTRA_OVERRIDES_FILE:-}" ]]; then
 fi
 T_LIST=("4000" "3000")
 EPS_LIST=("0.1" "0.5" "1.0")
-TAU_LIST=("1.0" "0.5" "0.1")
+TAU_LIST=("1.0" "0.5")
 MODE="sublimation_only"
 SUPPLY_MU_ORBIT10PCT="${SUPPLY_MU_ORBIT10PCT:-1.0}"
 SUPPLY_ORBIT_FRACTION="${SUPPLY_ORBIT_FRACTION:-0.05}"

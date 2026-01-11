@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
 # Run temp supply parameter sweep:
-#   T_M = {2000, 4000, 6000} K
+#   T_M = {4000, 3000} K
 #   epsilon_mix = {0.1, 0.5, 1.0}
 #   mu_orbit10pct = 1.0 (1 orbit supplies 5% of Sigma_ref(tau=1); scaled by orbit_fraction_at_mu1)
-#   optical_depth.tau0_target = {1.0, 0.5, 0.1}
+#   optical_depth.tau0_target = {1.0, 0.5}
+#   material defaults: forsterite via configs/overrides/material_forsterite.override
 # 出力は out/temp_supply_sweep/<ts>__<sha>__seed<batch>/T{T}_eps{eps}_tau{tau}/ に配置。
 # 供給は supply.* による外部源（温度・τフィードバック・有限リザーバ対応）。
 
@@ -67,7 +68,7 @@ fi
 # Parameter grids (run hotter cases first)
 T_LIST=("4000" "3000")
 EPS_LIST=("1.0" "0.5" "0.1")
-TAU_LIST=("1.0" "0.5" "0.1")
+TAU_LIST=("1.0" "0.5")
 END_MODE="${END_MODE:-fixed}"                  # fixed|temperature
 T_END_YEARS="${T_END_YEARS:-10.0}"             # fixed integration horizon when END_MODE=fixed [yr]
 # 短縮テスト用に T_END_SHORT_YEARS=0.001 を指定すると強制上書き
