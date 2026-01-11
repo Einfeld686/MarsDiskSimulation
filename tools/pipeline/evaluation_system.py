@@ -282,10 +282,30 @@ def _check_s_min_components(ctx: EvaluationContext) -> Tuple[bool, str]:
         effective = float(s_effective)
     except (TypeError, ValueError) as exc:
         return False, f"invalid numeric values in s_min components: {exc}"
-    expected = max(config_val, blow_val)
+    if not math.isclose(effective, float(components["effective"]), rel_tol=1e-6, abs_tol=1e-12):
+        return False, "s_min_effective disagrees with s_min_components.effective"
+    floor_mode = components.get("floor_mode")
+    floor_dynamic = components.get("floor_dynamic")
+    if floor_mode == "none":
+        expected = config_val
+        expected_label = "config (psd.floor.mode=none)"
+    elif floor_mode == "evolve_smin":
+        if floor_dynamic is None:
+            expected = max(config_val, blow_val)
+            expected_label = "max(config, blowout)"
+        else:
+            try:
+                floor_dynamic_val = float(floor_dynamic)
+            except (TypeError, ValueError) as exc:
+                return False, f"invalid floor_dynamic in s_min components: {exc}"
+            expected = max(config_val, blow_val, floor_dynamic_val)
+            expected_label = "max(config, blowout, floor_dynamic)"
+    else:
+        expected = max(config_val, blow_val)
+        expected_label = "max(config, blowout)"
     if not math.isclose(effective, expected, rel_tol=1e-6, abs_tol=1e-12):
-        return False, f"s_min_effective={effective} differs from max(config, blowout)={expected}"
-    return True, "s_min components consistent with max(config, blowout)"
+        return False, f"s_min_effective={effective} differs from {expected_label}={expected}"
+    return True, f"s_min components consistent with {expected_label}"
 
 
 def _check_mass_budget(ctx: EvaluationContext) -> Tuple[bool, str]:
@@ -355,7 +375,7 @@ DEFAULT_CHECKS: Sequence[EvaluationCheck] = [
     ),
     EvaluationCheck(
         name="s_min_components",
-        description="s_min_components のキーと max(config, blowout)",
+        description="s_min_components のキーと floor_mode に応じた s_min_effective 整合",
         reference=S_MIN_REF,
         func=_check_s_min_components,
     ),
