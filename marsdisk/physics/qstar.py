@@ -21,6 +21,7 @@ from ..errors import MarsDiskError
 __all__ = [
     "compute_q_d_star_F1",
     "compute_q_d_star_array",
+    "configure_qdstar_cache",
     "get_coeff_unit_system",
     "get_coefficient_table",
     "get_qdstar_signature",
@@ -243,7 +244,7 @@ def _qdstar_cache_key(s: np.ndarray, rho: float, v_kms: float) -> tuple | None:
 
 
 def _qdstar_cache_get(key: tuple | None) -> np.ndarray | None:
-    if key is None:
+    if key is None or _QDSTAR_CACHE_MAXSIZE <= 0:
         return None
     with _QDSTAR_CACHE_LOCK:
         cached = _QDSTAR_CACHE.get(key)
@@ -254,13 +255,28 @@ def _qdstar_cache_get(key: tuple | None) -> np.ndarray | None:
 
 
 def _qdstar_cache_put(key: tuple | None, value: np.ndarray) -> None:
-    if key is None:
+    if key is None or _QDSTAR_CACHE_MAXSIZE <= 0:
         return
     with _QDSTAR_CACHE_LOCK:
         _QDSTAR_CACHE[key] = np.array(value, copy=True)
         _QDSTAR_CACHE.move_to_end(key)
         while len(_QDSTAR_CACHE) > _QDSTAR_CACHE_MAXSIZE:
             _QDSTAR_CACHE.popitem(last=False)
+
+
+def configure_qdstar_cache(*, maxsize: int = 8) -> int:
+    """Configure LRU capacity for cached Q_D* array lookups."""
+
+    global _QDSTAR_CACHE_MAXSIZE
+    new_max = max(int(maxsize), 0)
+    with _QDSTAR_CACHE_LOCK:
+        _QDSTAR_CACHE_MAXSIZE = new_max
+        if new_max <= 0:
+            _QDSTAR_CACHE.clear()
+        else:
+            while len(_QDSTAR_CACHE) > new_max:
+                _QDSTAR_CACHE.popitem(last=False)
+    return _QDSTAR_CACHE_MAXSIZE
 
 
 def _q_d_star(

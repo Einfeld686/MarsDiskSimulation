@@ -773,7 +773,7 @@ def _prepare_supply_transport_init(
         if supply_const_tfill is not None:
             deprecated_supply_messages.append("supply.const.auto_from_tau1_tfill_years set")
         if supply_orbit_fraction is not None and math.isfinite(float(supply_orbit_fraction)):
-            if abs(float(supply_orbit_fraction) - 0.10) > 1.0e-6:
+            if abs(float(supply_orbit_fraction) - 0.05) > 1.0e-6:
                 deprecated_supply_messages.append(
                     f"supply.const.orbit_fraction_at_mu1={float(supply_orbit_fraction):.3g}"
                 )
@@ -1516,6 +1516,11 @@ def run_zero_d(
     if qstar_cfg is not None and "coeff_units" in qstar_fields_set:
         qstar_coeff_units_source = "config"
     qstar_mu_gravity_used = getattr(qstar_cfg, "mu_grav", qstar.get_gravity_velocity_mu()) if qstar_cfg is not None else qstar.get_gravity_velocity_mu()
+    qstar_cache_maxsize = getattr(qstar_cfg, "cache_maxsize", 8) if qstar_cfg is not None else 8
+    try:
+        qstar.configure_qdstar_cache(maxsize=int(qstar_cache_maxsize))
+    except Exception as exc:
+        logger.warning("qstar.cache_maxsize ignored: %s", exc)
     qstar_mu_gravity_source = "default"
     if qstar_cfg is not None and "mu_grav" in qstar_fields_set:
         qstar_mu_gravity_source = "config"

@@ -23,7 +23,7 @@ def test_supply_positive_with_wide_tau_cap(tmp_path: Path) -> None:
             "supply.enabled=true",
             "supply.mode=const",
             "supply.const.mu_orbit10pct=1.0",
-            "supply.const.orbit_fraction_at_mu1=0.10",
+            "supply.const.orbit_fraction_at_mu1=0.05",
             "supply.mixing.epsilon_mix=1.0",
             "shielding.mode=fixed_tau1",
             "shielding.fixed_tau1_sigma=1000",
@@ -56,7 +56,7 @@ def test_reservoir_depletes_and_records_metadata(tmp_path: Path) -> None:
             "supply.enabled=true",
             "supply.mode=const",
             "supply.const.mu_orbit10pct=1.0",
-            "supply.const.orbit_fraction_at_mu1=0.10",
+            "supply.const.orbit_fraction_at_mu1=0.05",
             "supply.reservoir.enabled=true",
             f"supply.reservoir.mass_total_Mmars={reservoir_mass}",
             "supply.reservoir.depletion_mode=taper",
@@ -145,7 +145,7 @@ def test_mu_orbit10pct_scales_supply(tmp_path: Path) -> None:
 
     outdir = tmp_path / "out_mu_scale"
     mu_value = 2.0
-    orbit_fraction = 0.10
+    orbit_fraction = 0.05
     cfg = run.load_config(
         Path("configs/mars_0d_supply_sweep.yaml"),
         overrides=[

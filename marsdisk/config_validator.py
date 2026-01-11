@@ -326,7 +326,7 @@ def _check_external_supply_defaults(config: "Config") -> List[ValidationMessage]
                 non_default.append("supply.const.mu_orbit10pct not set")
         orbit_fraction = getattr(const_cfg, "orbit_fraction_at_mu1", None)
         if orbit_fraction is not None and math.isfinite(float(orbit_fraction)):
-            if abs(float(orbit_fraction) - 0.10) > 1.0e-6:
+            if abs(float(orbit_fraction) - 0.05) > 1.0e-6:
                 non_default.append(f"supply.const.orbit_fraction_at_mu1={float(orbit_fraction):.3g}")
         mu_reference_tau = getattr(const_cfg, "mu_reference_tau", None)
         if mu_reference_tau is not None and math.isfinite(float(mu_reference_tau)):

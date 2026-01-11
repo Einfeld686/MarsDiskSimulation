@@ -1228,11 +1228,23 @@ def step_collisions_smol_0d(
         )
 
     kernel_workspace = None
-    kernel_workspace_sizes_id = getattr(_THREAD_LOCAL, "kernel_ws_sizes_id", None)
+    kernel_workspace_key = getattr(_THREAD_LOCAL, "kernel_ws_key", None)
     kernel_workspace_cached = getattr(_THREAD_LOCAL, "kernel_ws", None)
-    sizes_ref = psd_state.get("sizes", None)
-    sizes_ref_id = id(sizes_ref) if sizes_ref is not None else None
-    if sizes_ref_id is not None and sizes_ref_id == kernel_workspace_sizes_id:
+    sizes_key = None
+    sizes_version = psd_state.get("sizes_version")
+    if isinstance(sizes_version, int):
+        try:
+            sizes_hash = _stable_array_hash64(sizes_arr)
+        except Exception:
+            sizes_hash = None
+        if sizes_hash is not None and sizes_version == sizes_hash:
+            sizes_key = ("hash", sizes_version)
+    if sizes_key is None:
+        sizes_ref = psd_state.get("sizes", None)
+        sizes_ref_id = id(sizes_ref) if sizes_ref is not None else None
+        if sizes_ref_id is not None:
+            sizes_key = ("id", sizes_ref_id)
+    if sizes_key is not None and sizes_key == kernel_workspace_key:
         kernel_workspace = kernel_workspace_cached
         if kernel_workspace is not None:
             expected_shape = (sizes_arr.size, sizes_arr.size)
@@ -1245,11 +1257,11 @@ def step_collisions_smol_0d(
         try:
             kernel_workspace = collide.prepare_collision_kernel_workspace(sizes_arr)
             _THREAD_LOCAL.kernel_ws = kernel_workspace
-            _THREAD_LOCAL.kernel_ws_sizes_id = sizes_ref_id
+            _THREAD_LOCAL.kernel_ws_key = sizes_key
         except Exception:
             kernel_workspace = None
             _THREAD_LOCAL.kernel_ws = None
-            _THREAD_LOCAL.kernel_ws_sizes_id = None
+            _THREAD_LOCAL.kernel_ws_key = None
 
     imex_workspace = getattr(_THREAD_LOCAL, "imex_ws", None)
     imex_workspace_key = getattr(_THREAD_LOCAL, "imex_ws_key", None)

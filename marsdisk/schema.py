@@ -145,7 +145,7 @@ class SupplyConst(BaseModel):
         ),
     )
     orbit_fraction_at_mu1: float = Field(
-        0.10,
+        0.05,
         gt=0.0,
         description="Fraction of Sigma_ref supplied per orbit when mu_orbit10pct=1.0.",
     )
@@ -957,6 +957,17 @@ class QStar(BaseModel):
         gt=0.0,
         description="Gravity-regime velocity exponent mu used for v^{-3mu+2} scaling applied to the gravity term when extrapolating Q_D^* beyond the tabulated velocities (LS09/Jutzi-style).",
     )
+    cache_maxsize: int = Field(
+        8,
+        ge=0,
+        description="Maximum memoised entries for Q_D* array lookups (0 disables caching).",
+    )
+
+    @field_validator("cache_maxsize")
+    def _check_cache_maxsize(cls, value: int) -> int:
+        if value < 0:
+            raise ConfigurationError("qstar.cache_maxsize must be >= 0")
+        return int(value)
 
     @field_validator("coeff_table")
     def _check_coeff_table(cls, value: Optional[Dict[float, List[float]]]) -> Optional[Dict[float, List[float]]]:
