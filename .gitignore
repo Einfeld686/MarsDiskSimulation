@@ -99,3 +99,6 @@ agent_test/tmp*/
 # CSV data (prefer parquet/npz; ignore even under unignored dirs)
 **/*.csv
 **/*.CSV
+
+# Large directional database (local only)
+data/forsterite_material_data/directional-database/*.hdf5
