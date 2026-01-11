@@ -71,7 +71,7 @@
 |等方化の根拠|異方性結晶の吸収断面積（または効率）を **a/b/c 軸で計算して 1/3 平均**する考え方が、Zeidler et al. (2015) の式（Eq.(7)）で明示されている。Phase 1 は「軸別に Mie を回して Q_pr を 1/3 平均」を採用する。|
 |利用条件（明文化されている範囲）|FOR2285 配布ページ本文には明示ライセンス条文が見当たらない。Jena の OCDB 一般ページでは「please cite ...」の引用要請があるため、**配布ページURLと原典論文の引用**を provenance に残す（ライセンス条文は未確認）。|
 
-補足（温度依存）: FOR2285 は 50–295 K の温度グリッド（50/75/100/150/200/295 K）を提供しているが、**溶融域（>295 K）の光学定数は直接与えない**。今回、**高温 n,k の実ファイル（CSV）を取得済み**で、`data/forsterite_material_data/candidates.csv` にメタデータ、`data/forsterite_material_data/nk_data.csv` に数表を集約した。内容は **(a) Zeidler 2015 の低Feオリビン（Mg1.72Fe0.21SiO4, 300/551/738/928 K, 6.7–50 µm, a/b/c 軸）**、**(b) Jäger 2003 の amorphous Mg2SiO4（0.196–948.5 µm, T=UNKNOWNだが室温測定の記述あり）** が取得済み。  
+補足（温度依存）: FOR2285 は 50–295 K の温度グリッド（50/75/100/150/200/295 K）を提供しているが、**溶融域（>295 K）の光学定数は直接与えない**。今回、**高温 n,k の実ファイル（CSV）を取得済み**で、`data/forsterite_material_data/candidates.csv` にメタデータ、`data/forsterite_material_data/nk_data.csv` に数表を集約した。内容は **(a) Zeidler 2015 の低Feオリビン（Mg1.72Fe0.21SiO4, 300/551/738/928 K, 6.7–50 µm, a/b/c 軸）**、**(b) Jäger 2003 の amorphous Mg2SiO4（0.196–948.5 µm, T=295 K と仮定; 室温記述のみで数値Kは明示なし）** が取得済み。  
 さらに、**純フォルステライト結晶の高温 n,k（Eckes 2013, 295–1948 K, 2.5–30 µm）は POSEIDON optional の Zenodo 配布から取得済み**で、`data/forsterite_material_data/POSEIDON/` に txt を保存した。POSEIDON のドキュメントでは **refractive index txt は 3 列（`wl, n, k`）で、`wl` は µm** と明記されている（`λ[µm] = 10000/ν[cm^-1]` の換算記述もあり）。方向ラベルは **B1U=E||c, B2U=E||b, B3U=E||a**（Opacity Database に "pers. comm." 注記）である。配布元は Zenodo で **ライセンスは CC BY 4.0**。さらに `Directionality_Table.pdf`（Table 1）でも **Mg2SiO4 の各温度/方向データが 2.5–30 µm**と整理されており、同 PDF の注記に **precomputed aerosol database の最小/最大波長が 0.2–30 µm** とある。  
 一方で、**手元の txt 実体は 2.5–5117.5 µm を含む**。該当節には「一部は他データから外挿」との注記があり、**>30 µm の provenance は本文から特定できないため UNKNOWN 扱い**とする。`data/forsterite_material_data/directional-database/aerosol_directional_database.hdf5` は **eff_*（有効断面積・g など）のテーブルであり n,k そのものは含まれない**。グループ一覧は `data/forsterite_material_data/poseidon_mg2sio4_index.csv` に抽出済み。**Eckes データは `data/forsterite_material_data/nk_data.csv` に統合済み**。Phase 1 では FOR2285（295 K）を継続使用し、これら高温データは Phase 2 で統合ルールに従って反映する。
 
@@ -80,7 +80,7 @@
 |source_id|材料/相|温度(K)|波長範囲(µm)|軸|入手状況|ファイル|
 |---|---|---|---|---|---|---|
 |zeidler2015_olivine_lowFe_ARIA|低Feオリビン単結晶（Mg1.72Fe0.21SiO4）|300/551/738/928|6.7–50|E\|\|c/x, E\|\|b/y, E\|\|a/z|取得済み|`data/forsterite_material_data/nk_data.csv`|
-|jager2003_mg2sio4_amorph_DOCCD|amorphous Mg2SiO4（sol-gel）|UNKNOWN（室温の記述あり）|0.196–948.5|isotropic|取得済み|`data/forsterite_material_data/nk_data.csv`|
+|jager2003_mg2sio4_amorph_DOCCD|amorphous Mg2SiO4（sol-gel）|295（室温とみなす仮定）|0.196–948.5|isotropic|取得済み|`data/forsterite_material_data/nk_data.csv`|
 |eckes2013_forsterite_highT_POSEIDON_optional|forsterite 結晶（B1U/B2U/B3U）|295–1948（リスト値）|2.5–30（docs / Directionality_Table）/ 2.5–5117.5（実ファイル）|B1U/B2U/B3U + averaged|取得済み（POSEIDON optional, CC BY 4.0）|`data/forsterite_material_data/nk_data.csv`|
 
 注記: これらは **高温依存を取り込むための候補データ**であり、Phase 1 の Q_pr テーブルには未使用。統合時は「組成差（Fe含有/アモルファス）・温度範囲・軸平均の扱い」をルール化して run_config/run_card に明記する。POSEIDON/Eckes の txt は **(wl_um, n, k)** 3列で、B1U/B2U/B3U の軸対応は上記の通り。Eckes の **>30 µm は provenance が不明**なため、Phase 2 では 2.5–30 µm のみ採用し、残りは **UNKNOWN として除外**する（Directionality_Table.pdf の整理範囲とも一致）。Eckes データは `data/forsterite_material_data/nk_data.csv` に統合済み。
@@ -90,6 +90,7 @@
 - `data/forsterite_material_data/nk_sources_updated.csv`：n,k ソースの **列定義・軸対応・ライセンス・波長域**の根拠を CSV で集約（POSEIDON docs の確認内容を反映）。  
 - `data/forsterite_material_data/measurement_conditions_updated.csv`：測定条件（Jäger 2003 の「室温」記述を含む）を集約。  
 - `data/forsterite_material_data/qdstar_params_updated.csv`：Q_D* proxy の定義・式・係数・対象条件の整理版（peridot proxy 明記）。  
+- `data/forsterite_material_data/POSEIDON/Mg2SiO4_Eckes2013_Tgt295K_nk_wl_um_doc_range.csv`：**Directionality_Table に合わせた 2.5–30 µm のみ抽出版**（`doc_range_valid=true` のみ）。Phase 2 統合は **この doc_range 版を正**とする。  
 
 ### 1c) Phase 2 統合ルール（POSEIDON/Eckes; 温度・軸平均）
 
@@ -97,6 +98,7 @@
 - **温度補間**: 温度は **線形補間**（n, k をそれぞれ T に対して線形補間）とし、外挿は **両端でクランプ**（T<295 は 295、T>1948 は 1948）に固定する。  
 - **軸平均**: B1U/B2U/B3U を **軸別に Mie → 1/3 平均**で Q_pr を作る。`*_averaged.txt` は **QA 用（差分チェック）**にのみ使い、実運用の入力には使わない。  
 - **波長域の合成**: 2.5–30 µm 以外は **FOR2285（295 K）を温度固定で使用**する。手元の Eckes txt は 30 µm 超の値も含むが、**>30 µm は provenance が不明なため使用しない**（Directionality_Table.pdf の整理範囲と合わせる）。T≤295 は FOR2285 の温度グリッド（50–295 K）から最近傍/線形補間で選択する。  
+- **doc_range の採用**: POSEIDON/Eckes の統合入力は **doc_range 版（wl<=30 µm）**のみを使用する。`doc_range_valid=false` 行は **統合対象外**として除外する。  
 - **優先順位**: `Eckes (pure forsterite) > FOR2285` を基本とし、Zeidler/Jäger は **proxy オプション**扱い（既定OFF）。  
 - **provenance**: run_config/run_card に **(i) Eckes の適用波長域、(ii) T 補間/クランプ、(iii) B1U/B2U/B3U の軸対応と 1/3 平均、(iv) 2.5–30 µm 外の FOR2285 代用、(v) CC BY 4.0** を記録する。  
 
@@ -313,7 +315,7 @@
 - [ ] **Q_D* 直系化の調査/反映**：forsterite 直系の Q_D* 文献・係数（サイズ/速度依存）を確定し、`qstar` 係数表へ反映する（確定までは peridot proxy を維持）  
 - [ ] **溶融相 n,k の導入**：melt/glass/液相の n,k が見つかった場合、Phase 2 の統合ルールに組み込み、適用温度域を明示する  
 - [ ] **FOR2285 ライセンス条文の確定**：明示ライセンスを確認し、provenance と run_card に条文/URL を記録する  
-- [ ] **Jäger 2003 測定温度の確定**：amorphous Mg2SiO4 の測定温度を原典で確定し、`nk_data.csv` の温度を更新する  
+- [ ] **Jäger 2003 測定温度の確定**：室温=295 K と仮定して運用中。原典で数値温度が明記されていれば確認し、必要に応じて更新する  
 - [ ] **Zeidler 2015 proxy 採否**：低Feオリビンを proxy として採用するかを決定し、採用時は適用条件と組成差リスクを run_card に明記する  
 
 ---
@@ -379,7 +381,7 @@ flowchart LR
 
 - **FOR2285 利用条件**：明示ライセンス条項が見当たらないため、配布元/README の確認が必要  
 - **forsterite 直系の Q_D***：peridot proxy ではなく forsterite 専用値を採用する場合は追加文献が必要  
-- **Jäger 2003 amorphous Mg2SiO4**：本文で「室温測定」の記述は確認済みだが、数値温度（K）が明示されていないため原典での数値確認が必要  
+- **Jäger 2003 amorphous Mg2SiO4**：室温=295 K と仮定して運用中。本文で数値温度（K）が明示されていないため、必要に応じて原典で数値確認  
 - **Zeidler 2015 低Feオリビンの proxy 採用判断**：組成差（Fe含有）を proxy として許容するかの運用判断が必要（採用する場合は provenance に明記）
 
 ### 文献参照なしで確定できる項目（今回確定）
@@ -414,7 +416,7 @@ flowchart LR
 4. **光学定数の温度依存・組成依存**  
    FOR2285 は 50–295 K の純 forsterite（a/b/c 軸）。高温・不純物（Fe含有）での光学定数は別途扱いが必要。  
    現時点で `data/forsterite_material_data/nk_data.csv` に高温候補（Zeidler 2015 低Feオリビン、Jäger 2003 amorphous）が取得済みだが、**Phase 1 の Q_pr テーブルには未統合**。純 forsterite 高温データ（Eckes 2013）は **POSEIDON optional から取得済み**（`data/forsterite_material_data/POSEIDON/`, 2.5–30 µm, B1U/B2U/B3U, CC BY 4.0）だが、統合ルールは Phase 2 で定義する。
-   なお、Eckes txt には **30 µm 超の値**が含まれるが、docs では 2.5–30 µm と記載され、**>30 µm の provenance は不明**のため現行統合では除外する。
+   なお、Eckes txt には **30 µm 超の値**が含まれるが、docs では 2.5–30 µm と記載され、**>30 µm の provenance は不明**のため現行統合では除外する。高温側でも **T_M=4000 K** の Mars 放射では >30 µm の寄与が小さいため、**Phase 2 の影響は限定的**と見込む。
 
 5. **Q_D* の proxy 依存**  
    Avdellidou et al. (2016) Table 1 の peridot projectile 値を使う場合、  
@@ -429,8 +431,8 @@ flowchart LR
 |---|---|---|
 |FOR2285 の明示ライセンス条文|配布ページ本文に明示条文は見当たらない。OCDB 一般ページの「please cite」要請のみ確認済み|Jena 側の利用条件ページ/README があるか、または配布元へ確認（現状は「引用要請のみ確認」を provenance に残す）|
 |forsterite の Q_D*（破壊強度）|peridot proxy 候補は入手済みだが、forsterite 直系の値は未確定|forsterite 専用の Q_D*(R) 形式の文献があれば確認|
-|Jäger 2003 amorphous Mg2SiO4 の測定温度|nk_data.csv には温度情報が無く UNKNOWN|原典で測定温度（もしくは温度範囲）を確認|
-|Eckes 2013（POSEIDON）>30 µm の provenance|ファイル実体は 2.5–5117.5 µm を含むが、docs 表記と Directionality_Table は 2.5–30 µm。外挿元が不明|>30 µm がどのデータから外挿されたか（出典/根拠）を確認|
+|Jäger 2003 amorphous Mg2SiO4 の測定温度|室温=295 K と仮定して運用（本文で数値Kは明示なし）|必要なら原典で数値確認|
+|Eckes 2013（POSEIDON）>30 µm の provenance|ファイル実体は 2.5–5117.5 µm を含むが、docs 表記と Directionality_Table は 2.5–30 µm。外挿元が不明|>30 µm を利用する場合のみ、外挿元（出典/根拠）を確認|
 
 ---
 
