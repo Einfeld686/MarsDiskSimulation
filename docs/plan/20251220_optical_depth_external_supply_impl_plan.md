@@ -3,13 +3,13 @@
 ステータス: 部分実装完了（ドキュメント更新待ち）
 
 ## 目的
-光学的厚さ τ を表層モデルの適用限界として扱い、τ=1 クリップを「停止判定」に置き換える。外部供給は μ を「1公転で初期表層の10%」に固定し、`epsilon_mix` と分離して定常供給を実装する。
+光学的厚さ τ を表層モデルの適用限界として扱い、τ=1 クリップを「停止判定」に置き換える。外部供給は μ を「1公転で初期表層の5%」に固定し、`epsilon_mix` と分離して定常供給を実装する。
 
 ## 要件
 - 初期 `Sigma_surf0` を `tau0_target` と `kappa_eff0` から決定できること。
 - `kappa_eff0` は `tau_field` で選んだ τ に `tau0_target` を代入して `Phi` を評価し、`kappa_eff0 = Phi(tau0_target) * kappa_surf0`（E.017）で固定すること。
 - `tau_los` が `tau_stop` を超過したら停止し、`Sigma_surf` のクリップは行わないこと。
-- μの定義を固定（1公転で初期表層の10%）し、`epsilon_mix` と混同しないこと。
+- μの定義を固定（1公転で初期表層の5%）し、`epsilon_mix` と混同しないこと。
 - 既存の式（E.015–E.017, E.016, E.027）を流用し、新規物理式は導入しないこと。
 - `series` と `summary` に必要診断を出力すること。
 - 出力列名は既存仕様に合わせ、`tau_los_mars` と `Sigma_tau1` を使う（`Sigma_tau1_los` は導入しない）。
@@ -104,7 +104,7 @@
 - 停止判定の動作確認（`out/<run_id>`）では `stop_reason="tau_exceeded"`、`stop_tau_los=2.3057`、`early_stop_time_s=8.379e3`（約 2.33 時間）。`tau_stop=2.302585...` と `tau_stop_tol=1e-6` を反映して閾値超過で停止（run_id 例: `tau_stop_check`）。
 - 供給ゲートは相判定に連動し、`phase_state="solid"` かつ `liquid_dominated` でない場合のみ供給を許可（グローバル1ステップ遅延あり）。液体優勢では衝突カスケードもブロック。
 - 0D の `tau_los` は角度分解ではなくスカラー診断で、`tau_los = kappa * Sigma * los_factor`（`los_factor` は `h_over_r` と `path_multiplier` から決まる）。垂直構造は明示的に解かない。
-- 初期 `Sigma_surf0` は `optical_depth.tau0_target` と `kappa_eff0` から決まり、`mu_orbit10pct` は「表層の何割を1公転で供給するか」のスケールであって、内側円盤総質量の10%を表層に割り当てる意味ではない。
+- 初期 `Sigma_surf0` は `optical_depth.tau0_target` と `kappa_eff0` から決まり、`mu_orbit10pct` は「表層の何割を1公転で供給するか」のスケールであって、内側円盤総質量の5%を表層に割り当てる意味ではない。
 - 検証ランの例（`r_in=1.0 R_Mars`, `r_out=2.7 R_Mars`）では、面積 `2.27024e14 m^2`、`Sigma_surf0=10088.9 kg/m^2`、表層質量 `2.29e18 kg`（`3.57e-6 M_Mars`）。
 - 垂直厚みは衝突カーネルのスケールハイト `H = H_factor * i * r` でのみ表現（例: `i=0.05`, `r=1.85 R_Mars` で `H≈3.14e5 m`）。`i0=0` はエラーにならないが `H` は最小値にクランプされ、衝突率が過大になりうる。
 
@@ -133,7 +133,7 @@
 - `T_orb = 2*pi / Omega`、`Omega = sqrt(G*M_Mars / r^3)`
 - `dotSigma_prod = mu_orbit10pct * orbit_fraction_at_mu1 * Sigma_surf0 / T_orb`
 - `supply.const.prod_area_rate_kg_m2_s = dotSigma_prod / epsilon_mix`
-- ここでの「10%」は *表層の何割を1公転で供給するか* の意味であり、内側円盤総質量の10%を表層に割り当てる意味ではない。
+- ここでの「5%」は *表層の何割を1公転で供給するか* の意味であり、内側円盤総質量の5%を表層に割り当てる意味ではない。
 
 ### 表層質量（環の総質量）
 - 面積: `A = pi * (r_out^2 - r_in^2)`

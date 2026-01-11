@@ -99,20 +99,20 @@
 
 ---
 
-## 4. 外部供給（定常）の定義：μ=1 を「1公転で初期表層の10%」に固定
+## 4. 外部供給（定常）の定義：μ=1 を「1公転で初期表層の5%」に固定
 
 ### 4.1 μの定義（解析しやすさを優先）
 
 ユーザ方針に合わせ、供給量パラメータ μ は次の意味に固定します。
 
-* **μ=1：1公転あたり、初期表層面密度 (\Sigma_{\mathrm{surf,0}}) の 10% を供給する**
+* **μ=1：1公転あたり、初期表層面密度 (\Sigma_{\mathrm{surf,0}}) の 5% を供給する**
 
 公転周期を (T_{\mathrm{orb}} = 2\pi/\Omega) とすると、μ=1 の供給率（面密度率）は
 
 [
 \dot{\Sigma}*{\mathrm{prod}}(\mu=1)
-= 0.1,\frac{\Sigma*{\mathrm{surf,0}}}{T_{\mathrm{orb}}}
-= 0.1,\Sigma_{\mathrm{surf,0}},\frac{\Omega}{2\pi}
+= 0.05,\frac{\Sigma*{\mathrm{surf,0}}}{T_{\mathrm{orb}}}
+= 0.05,\Sigma_{\mathrm{surf,0}},\frac{\Omega}{2\pi}
 ]
 
 一般の μ では
@@ -186,9 +186,9 @@ shielding:
 supply:
   mode: const
   const:
-    # μ=1 → 1公転で初期表層の10%供給、という定義
+    # μ=1 → 1公転で初期表層の5%供給、という定義
     mu_orbit10pct: 1.0
-    orbit_fraction_at_mu1: 0.10
+    orbit_fraction_at_mu1: 0.05
   mixing:
     epsilon_mix: 0.3     # 混合効率（表記固定）
   # 温度スケール、τフィードバック、有限リザーバは新規実装の初期版では無効

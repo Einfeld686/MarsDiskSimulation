@@ -11,22 +11,23 @@
 - 各 run 後に quick-look プロット（`plots/overview.png`, `plots/supply_surface.png`）を自動生成。`EVAL=1`（デフォルト）なら `scripts/research/evaluate_tau_supply.py` で τ・供給維持の簡易評価を行い、`out/<run_id>/checks/tau_supply_eval.json` に記録する。
 
 ## スイープ軸（固定グリッド）
-- 温度 `T_LIST`: 6000 / 4000 / 2000 K（高温順に実行）。各ケースで `radiation.TM_K` と `data/mars_temperature_T${T}p0K.csv` を適用。
+- 温度 `T_LIST`: 4000 / 3000 K（高温順に実行）。各ケースで `radiation.TM_K` と `data/mars_temperature_T${T}p0K.csv` を適用。
 - 混合効率 `EPS_LIST`: 1.0 / 0.5 / 0.1 → `supply.mixing.epsilon_mix` に代入（実効供給は const×epsilon_mix をログ表示）。
 - 初期光学的厚さ `TAU_LIST`: 1.0 / 0.5 / 0.1 → `optical_depth.tau0_target` に代入。
-- 出力ディレクトリは上記 3 軸の直積で 27 ケース作成。
+- 出力ディレクトリは上記 3 軸の直積で 18 ケース作成。
 
 ## ベース config（要点）
 - 幾何: 0D、`r_in=1.0 R_M`, `r_out=2.7 R_M`、`n_bins=40`、`s_min=1e-7 m`, `s_max=3 m`。
 - 初期質量: `mass_total=1e-5 M_Mars`、melt ログ正規混合（細粒率 0.25、`s_fine=1e-4 m`、`s_meter=1.5 m`）。
 - 衝突・PSD: `collision_solver=smol`, `e0=0.5`, `i0=0.05`, `wavy_strength=0`。`chi_blow=auto`、`blowout.layer=surface_tau_le_1`。
-- 供給: `supply.mode=const`、`const.mu_orbit10pct=1.0`、`orbit_fraction_at_mu1=0.1`、`headroom_policy=clip`。`optical_depth.tau0_target` で初期 Σ を定義し、`init_tau1.scale_to_tau1` は optical_depth と排他のため使わない。
+- 供給: `supply.mode=const`、`const.mu_orbit10pct=1.0`、`orbit_fraction_at_mu1=0.05`、`headroom_policy=clip`。`optical_depth.tau0_target` で初期 Σ を定義し、`init_tau1.scale_to_tau1` は optical_depth と排他のため使わない。
 - 遮蔽: `shielding.mode=off`（Φ=1）を既定とし、テーブルは使わない。
-- 放射: `use_mars_rp=true`, `use_solar_rp=false`, `qpr_table_path=marsdisk/io/data/qpr_planck.csv`。
+- 放射: `use_mars_rp=true`, `use_solar_rp=false`。`qpr_table_path` は既定で `configs/overrides/material_forsterite.override` を読み、`data/qpr_planck_forsterite_mie.csv` を参照。
 - シンク: `sinks.mode=sublimation`, `sublimation_location=smol`, `mass_conserving=true`（昇華で a_blow を跨ぐ分はブローアウト側に合算）。
 - 数値: `t_end_years=2`, `dt_init=2 s`, `dt_over_t_blow_max=0.1`, streaming snappy 有効（20 GB リミット, flush 10000 step）。
 
 ## スクリプトが毎回付与する override（デフォルト値）
+- 材料: `EXTRA_OVERRIDES_FILE` 未指定時は `configs/overrides/material_forsterite.override` を読み込み、ρ/Q_pr/HKL/Q_D* をフォルステライトに差し替える。
 - 時間刻み: `numerics.dt_init=20` に引き上げ。
 - 出力: `io.outdir=<ケースごとの OUTDIR>`（`RUN_TS`/`GIT_SHA`/`BATCH_SEED` で一意化）。
 - 乱数: `dynamics.rng_seed=<ケースごとに secrets.randbelow>`。

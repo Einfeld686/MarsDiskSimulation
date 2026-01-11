@@ -51,7 +51,7 @@
 
 ## 必須の前提・入力
 - **ベース設定**: `BASE_CONFIG`（既定 `configs/sweep_temp_supply/temp_supply_T4000_eps1.yml`）を基準に環境変数で上書きする。
-- **温度テーブル**: `data/mars_temperature_T{T}p0K.csv` が存在していること（T_LIST に合わせて 2000/4000/6000K を用意）。
+- **温度テーブル**: `data/mars_temperature_T{T}p0K.csv` が存在していること（T_LIST に合わせて 4000/3000K を用意）。
 - **遮蔽**: 既定は `shielding.mode=off`（Φ=1）。テーブルを使う場合のみ `shielding.table_path` を明示する。
 - **出力ルート**: `OUT_ROOT` 未指定なら `out/<run_id>/...`、外付け SSD があれば `<external_out_root>/<run_id>/...` を既定にする。書き込み権限を確認。
 - **仮想環境**: `.venv` が無ければ自動生成し、`requirements.txt` で依存を入れる前提。pyarrow 必須。

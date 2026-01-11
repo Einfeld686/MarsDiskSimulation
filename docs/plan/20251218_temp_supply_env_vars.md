@@ -7,6 +7,7 @@
 ## ベース設定
 - `BASE_CONFIG` (既定: `configs/sweep_temp_supply/temp_supply_T4000_eps1.yml`)
 - `QSTAR_UNITS` (既定: `ba99_cgs`)
+- `EXTRA_OVERRIDES_FILE` (既定: `configs/overrides/material_forsterite.override`、空/未設定で無効化可能)
 - `T_LIST` / `EPS_LIST` / `TAU_LIST` … 温度・混合効率・初期光学的厚さのスイープ軸
 - `BATCH_ROOT` / `OUT_ROOT` … 出力ルート（未指定なら `out/<run_id>/...`、外付け SSD があれば `<external_out_root>/<run_id>/...`）
 - `EVAL` … 1 なら各ケース後に評価スクリプトを呼ぶフック（0 でスキップ）
