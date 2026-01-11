@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
 # Run temp supply parameter sweep:
 #   T_M = {4000, 3000} K
-#   epsilon_mix = {0.1, 0.5, 1.0}
+#   epsilon_mix = {1.0, 0.5}
 #   mu_orbit10pct = 1.0 (1 orbit supplies 5% of Sigma_ref(tau=1); scaled by orbit_fraction_at_mu1)
 #   optical_depth.tau0_target = {1.0, 0.5}
+#   extra cases: (T, epsilon_mix, tau0_target) = (4000, 1.5, 1.0), (3000, 1.5, 1.0)
 #   material defaults: forsterite via configs/overrides/material_forsterite.override
 # 出力は out/temp_supply_sweep/<ts>__<sha>__seed<batch>/T{T}_eps{eps}_tau{tau}/ に配置。
 # 供給は supply.* による外部源（温度・τフィードバック・有限リザーバ対応）。
@@ -67,8 +68,74 @@ fi
 
 # Parameter grids (run hotter cases first)
 T_LIST=("4000" "3000")
-EPS_LIST=("1.0" "0.5" "0.1")
+EPS_LIST=("1.0" "0.5")
 TAU_LIST=("1.0" "0.5")
+EXTRA_CASES_DEFAULT="4000 1.5 1.0 3000 1.5 1.0"
+if [[ -n "${EXTRA_CASES+x}" ]]; then
+  EXTRA_CASES_VALUE="${EXTRA_CASES}"
+else
+  EXTRA_CASES_VALUE="${EXTRA_CASES_DEFAULT}"
+fi
+case "${EXTRA_CASES_VALUE}" in
+  [Nn][Oo][Nn][Ee]|[Oo][Ff][Ff]|[Ff][Aa][Ll][Ss][Ee]|0)
+    EXTRA_CASES_VALUE=""
+    ;;
+esac
+CASE_KEYS=()
+CASE_T=()
+CASE_EPS=()
+CASE_TAU=()
+
+add_case() {
+  local t="$1"
+  local eps="$2"
+  local tau="$3"
+  local key="${t}|${eps}|${tau}"
+  local existing
+  for existing in "${CASE_KEYS[@]}"; do
+    if [[ "${existing}" == "${key}" ]]; then
+      return 1
+    fi
+  done
+  CASE_KEYS+=("${key}")
+  CASE_T+=("${t}")
+  CASE_EPS+=("${eps}")
+  CASE_TAU+=("${tau}")
+  return 0
+}
+
+append_extra_cases() {
+  local raw="$1"
+  local cleaned="${raw//;/ }"
+  cleaned="${cleaned//,/ }"
+  cleaned="${cleaned//:/ }"
+  cleaned="${cleaned//|/ }"
+  local tokens=()
+  read -r -a tokens <<< "${cleaned}"
+  local count=${#tokens[@]}
+  if (( count == 0 )); then
+    return 0
+  fi
+  if (( count % 3 != 0 )); then
+    echo "[warn] EXTRA_CASES expects triples; got ${count} tokens"
+  fi
+  local idx=0
+  while (( idx + 2 < count )); do
+    add_case "${tokens[idx]}" "${tokens[idx + 1]}" "${tokens[idx + 2]}" || true
+    idx=$((idx + 3))
+  done
+}
+
+for T in "${T_LIST[@]}"; do
+  for EPS in "${EPS_LIST[@]}"; do
+    for TAU in "${TAU_LIST[@]}"; do
+      add_case "${T}" "${EPS}" "${TAU}" || true
+    done
+  done
+done
+if [[ -n "${EXTRA_CASES_VALUE}" ]]; then
+  append_extra_cases "${EXTRA_CASES_VALUE}"
+fi
 END_MODE="${END_MODE:-fixed}"                  # fixed|temperature
 T_END_YEARS="${T_END_YEARS:-10.0}"             # fixed integration horizon when END_MODE=fixed [yr]
 # 短縮テスト用に T_END_SHORT_YEARS=0.001 を指定すると強制上書き
@@ -168,6 +235,9 @@ echo "[config] injection: mode=${SUPPLY_INJECTION_MODE} q=${SUPPLY_INJECTION_Q} 
 echo "[config] transport: mode=${SUPPLY_TRANSPORT_MODE} t_mix=${SUPPLY_TRANSPORT_TMIX_ORBITS:-${SUPPLY_DEEP_TMIX_ORBITS:-disabled}} headroom_gate=${SUPPLY_TRANSPORT_HEADROOM} velocity=${SUPPLY_VEL_MODE}"
 echo "[config] external supply: mu_orbit10pct=${SUPPLY_MU_ORBIT10PCT} orbit_fraction_at_mu1=${SUPPLY_ORBIT_FRACTION} (epsilon_mix swept per EPS_LIST)"
 echo "[config] optical_depth: tau0_target_list=${TAU_LIST[*]} tau_stop=${OPTICAL_TAU_STOP} tau_stop_tol=${OPTICAL_TAU_STOP_TOL}"
+if [[ -n "${EXTRA_CASES_VALUE}" ]]; then
+  echo "[config] extra cases: ${EXTRA_CASES_VALUE}"
+fi
 echo "[config] fast blowout substep: enabled=${SUBSTEP_FAST_BLOWOUT} substep_max_ratio=${SUBSTEP_MAX_RATIO:-default}"
 echo "[config] phase temperature input: ${PHASE_TEMP_INPUT} (q_abs_mean=${PHASE_QABS_MEAN}, tau_field=${PHASE_TAU_FIELD})"
 if [[ "${END_MODE}" == "temperature" ]]; then
@@ -289,12 +359,13 @@ fi
 SUPPLY_OVERRIDES+=(--override "supply.injection.velocity.blend_mode=${SUPPLY_VEL_BLEND}")
 SUPPLY_OVERRIDES+=(--override "supply.injection.velocity.weight_mode=${SUPPLY_VEL_WEIGHT}")
 
-for T in "${T_LIST[@]}"; do
+for idx in "${!CASE_T[@]}"; do
+  T="${CASE_T[$idx]}"
+  EPS="${CASE_EPS[$idx]}"
+  TAU="${CASE_TAU[$idx]}"
   T_TABLE="data/mars_temperature_T${T}p0K.csv"
-  for EPS in "${EPS_LIST[@]}"; do
     EPS_TITLE="${EPS/0./0p}"
     EPS_TITLE="${EPS_TITLE/./p}"
-    for TAU in "${TAU_LIST[@]}"; do
       TAU_TITLE="${TAU/0./0p}"
       TAU_TITLE="${TAU_TITLE/./p}"
       SEED=$(python - <<'PY'
@@ -749,21 +820,19 @@ fig3.savefig(plots_dir / "optical_depth.png", dpi=180)
 plt.close(fig3)
 print(f"[plot] saved plots to {plots_dir}")
 PY
-      if [[ "${EVAL}" != "0" ]]; then
-        eval_out="${final_dir}/checks/tau_supply_eval.json"
-        mkdir -p "$(dirname "${eval_out}")"
-        set +e
-        python scripts/research/evaluate_tau_supply.py --run-dir "${final_dir}" --window-spans "0.5-1.0" --min-duration-days 0.1 --threshold-factor 0.9 > "${eval_out}"
-        eval_rc=$?
-        set -e
-        if [[ ${eval_rc} -ne 0 ]]; then
-          echo "[warn] evaluate_tau_supply failed (rc=${eval_rc}) for ${final_dir}"
-        else
-          echo "[info] evaluate_tau_supply -> ${eval_out}"
-        fi
-      fi
-    done
-  done
+  if [[ "${EVAL}" != "0" ]]; then
+    eval_out="${final_dir}/checks/tau_supply_eval.json"
+    mkdir -p "$(dirname "${eval_out}")"
+    set +e
+    python scripts/research/evaluate_tau_supply.py --run-dir "${final_dir}" --window-spans "0.5-1.0" --min-duration-days 0.1 --threshold-factor 0.9 > "${eval_out}"
+    eval_rc=$?
+    set -e
+    if [[ ${eval_rc} -ne 0 ]]; then
+      echo "[warn] evaluate_tau_supply failed (rc=${eval_rc}) for ${final_dir}"
+    else
+      echo "[info] evaluate_tau_supply -> ${eval_out}"
+    fi
+  fi
 done
 
 echo "[done] Sweep completed (batch=${BATCH_SEED}, dir=${BATCH_DIR})."

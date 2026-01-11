@@ -553,6 +553,13 @@ if /i "%SUPPLY_TRANSPORT_TMIX_ORBITS%"=="off" set "SUPPLY_TRANSPORT_TMIX_ORBITS=
 set "T_LIST=4000 3000"
 set "EPS_LIST=1.0 0.5"
 set "TAU_LIST=1.0 0.5"
+if not defined EXTRA_CASES (
+  if defined STUDY_FILE (
+    set "EXTRA_CASES="
+  ) else (
+    set "EXTRA_CASES=4000,1.5,1.0;3000,1.5,1.0"
+  )
+)
 
 if defined STUDY_FILE (
   if exist "!STUDY_FILE!" (
@@ -686,6 +693,7 @@ if defined CPU_UTIL_TARGET_PERCENT if /i not "%PARALLEL_MODE%"=="numba" (
 %LOG_CONFIG% geometry: mode=%GEOMETRY_MODE% Nr=%GEOMETRY_NR% r_in_m=%GEOMETRY_R_IN_M% r_out_m=%GEOMETRY_R_OUT_M%
 %LOG_CONFIG% external supply: mu_orbit10pct=%SUPPLY_MU_ORBIT10PCT% mu_reference_tau=%SUPPLY_MU_REFERENCE_TAU% orbit_fraction_at_mu1=%SUPPLY_ORBIT_FRACTION% (epsilon_mix swept per EPS_LIST)
 %LOG_CONFIG% optical_depth: tau0_target_list=%TAU_LIST% tau_stop=%OPTICAL_TAU_STOP% tau_stop_tol=%OPTICAL_TAU_STOP_TOL%
+if defined EXTRA_CASES %LOG_CONFIG% extra cases: %EXTRA_CASES%
 %LOG_CONFIG% fast blowout substep: enabled=%SUBSTEP_FAST_BLOWOUT% substep_max_ratio=%SUBSTEP_MAX_RATIO%
 %LOG_CONFIG% !COOL_STATUS!
 %LOG_CONFIG% cooling driver mode: %COOL_MODE% (slab: T^-3, hyodo: linear flux)

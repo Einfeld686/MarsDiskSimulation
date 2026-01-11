@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
 # Run temp supply sweep (sublimation only)
 # T_M = {4000, 3000} K
-# epsilon_mix = {0.1, 0.5, 1.0}
+# epsilon_mix = {1.0, 0.5}
 # mu_orbit10pct = 1.0 (1 orbit supplies 5% of Sigma_ref(tau=1); scaled by orbit_fraction_at_mu1)
 # tau0_target = {1.0, 0.5}
+# extra cases: (T, epsilon_mix, tau0_target) = (4000, 1.5, 1.0), (3000, 1.5, 1.0)
 # material defaults: forsterite via configs/overrides/material_forsterite.override
 # Outputs under: out/temp_supply_sweep/<ts>__<sha>__seed<BATCH>/T{T}_eps{eps}_tau{tau}_mode-sublimation_only/
 
@@ -50,8 +51,74 @@ if [[ -n "${EXTRA_OVERRIDES_FILE:-}" ]]; then
   fi
 fi
 T_LIST=("4000" "3000")
-EPS_LIST=("0.1" "0.5" "1.0")
+EPS_LIST=("1.0" "0.5")
 TAU_LIST=("1.0" "0.5")
+EXTRA_CASES_DEFAULT="4000 1.5 1.0 3000 1.5 1.0"
+if [[ -n "${EXTRA_CASES+x}" ]]; then
+  EXTRA_CASES_VALUE="${EXTRA_CASES}"
+else
+  EXTRA_CASES_VALUE="${EXTRA_CASES_DEFAULT}"
+fi
+case "${EXTRA_CASES_VALUE}" in
+  [Nn][Oo][Nn][Ee]|[Oo][Ff][Ff]|[Ff][Aa][Ll][Ss][Ee]|0)
+    EXTRA_CASES_VALUE=""
+    ;;
+esac
+CASE_KEYS=()
+CASE_T=()
+CASE_EPS=()
+CASE_TAU=()
+
+add_case() {
+  local t="$1"
+  local eps="$2"
+  local tau="$3"
+  local key="${t}|${eps}|${tau}"
+  local existing
+  for existing in "${CASE_KEYS[@]}"; do
+    if [[ "${existing}" == "${key}" ]]; then
+      return 1
+    fi
+  done
+  CASE_KEYS+=("${key}")
+  CASE_T+=("${t}")
+  CASE_EPS+=("${eps}")
+  CASE_TAU+=("${tau}")
+  return 0
+}
+
+append_extra_cases() {
+  local raw="$1"
+  local cleaned="${raw//;/ }"
+  cleaned="${cleaned//,/ }"
+  cleaned="${cleaned//:/ }"
+  cleaned="${cleaned//|/ }"
+  local tokens=()
+  read -r -a tokens <<< "${cleaned}"
+  local count=${#tokens[@]}
+  if (( count == 0 )); then
+    return 0
+  fi
+  if (( count % 3 != 0 )); then
+    echo "[warn] EXTRA_CASES expects triples; got ${count} tokens"
+  fi
+  local idx=0
+  while (( idx + 2 < count )); do
+    add_case "${tokens[idx]}" "${tokens[idx + 1]}" "${tokens[idx + 2]}" || true
+    idx=$((idx + 3))
+  done
+}
+
+for T in "${T_LIST[@]}"; do
+  for EPS in "${EPS_LIST[@]}"; do
+    for TAU in "${TAU_LIST[@]}"; do
+      add_case "${T}" "${EPS}" "${TAU}" || true
+    done
+  done
+done
+if [[ -n "${EXTRA_CASES_VALUE}" ]]; then
+  append_extra_cases "${EXTRA_CASES_VALUE}"
+fi
 MODE="sublimation_only"
 SUPPLY_MU_ORBIT10PCT="${SUPPLY_MU_ORBIT10PCT:-1.0}"
 SUPPLY_ORBIT_FRACTION="${SUPPLY_ORBIT_FRACTION:-0.05}"
@@ -68,38 +135,39 @@ else
   PROGRESS_FLAG=()
 fi
 
-for T in "${T_LIST[@]}"; do
+for idx in "${!CASE_T[@]}"; do
+  T="${CASE_T[$idx]}"
+  EPS="${CASE_EPS[$idx]}"
+  TAU="${CASE_TAU[$idx]}"
   T_TABLE="data/mars_temperature_T${T}p0K.csv"
-  for EPS in "${EPS_LIST[@]}"; do
-    EPS_TITLE="${EPS/0./0p}"
-    EPS_TITLE="${EPS_TITLE/./p}"
-    for TAU in "${TAU_LIST[@]}"; do
-      TAU_TITLE="${TAU/0./0p}"
-      TAU_TITLE="${TAU_TITLE/./p}"
-      SEED=$(python - <<'PY'
+  EPS_TITLE="${EPS/0./0p}"
+  EPS_TITLE="${EPS_TITLE/./p}"
+  TAU_TITLE="${TAU/0./0p}"
+  TAU_TITLE="${TAU_TITLE/./p}"
+  SEED=$(python - <<'PY'
 import secrets
 print(secrets.randbelow(2**31))
 PY
 )
-      TITLE="T${T}_eps${EPS_TITLE}_tau${TAU_TITLE}_mode-${MODE}"
-      OUTDIR="${BATCH_DIR}/${TITLE}"
-      echo "[run] mode=${MODE} T=${T} eps=${EPS} tau=${TAU} -> ${OUTDIR} (batch=${BATCH_SEED}, seed=${SEED})"
-      python -m marsdisk.run \
-        --config "${BASE_CONFIG}" \
-        "${EXTRA_OVERRIDE_ARGS[@]}" \
-        --quiet \
-        "${PROGRESS_FLAG[@]}" \
-        --override numerics.dt_init=20 \
-        --override "io.outdir=${OUTDIR}" \
-        --override "dynamics.rng_seed=${SEED}" \
-        --override "radiation.TM_K=${T}" \
-        --override "radiation.mars_temperature_driver.table.path=${T_TABLE}" \
-        --override "supply.mixing.epsilon_mix=${EPS}" \
-        --override "supply.const.mu_orbit10pct=${SUPPLY_MU_ORBIT10PCT}" \
-        --override "supply.const.orbit_fraction_at_mu1=${SUPPLY_ORBIT_FRACTION}" \
-        --override "optical_depth.tau0_target=${TAU}" \
-        --override "shielding.mode=off" \
-        --override "physics_mode=${MODE}"
+  TITLE="T${T}_eps${EPS_TITLE}_tau${TAU_TITLE}_mode-${MODE}"
+  OUTDIR="${BATCH_DIR}/${TITLE}"
+  echo "[run] mode=${MODE} T=${T} eps=${EPS} tau=${TAU} -> ${OUTDIR} (batch=${BATCH_SEED}, seed=${SEED})"
+  python -m marsdisk.run \
+    --config "${BASE_CONFIG}" \
+    "${EXTRA_OVERRIDE_ARGS[@]}" \
+    --quiet \
+    "${PROGRESS_FLAG[@]}" \
+    --override numerics.dt_init=20 \
+    --override "io.outdir=${OUTDIR}" \
+    --override "dynamics.rng_seed=${SEED}" \
+    --override "radiation.TM_K=${T}" \
+    --override "radiation.mars_temperature_driver.table.path=${T_TABLE}" \
+    --override "supply.mixing.epsilon_mix=${EPS}" \
+    --override "supply.const.mu_orbit10pct=${SUPPLY_MU_ORBIT10PCT}" \
+    --override "supply.const.orbit_fraction_at_mu1=${SUPPLY_ORBIT_FRACTION}" \
+    --override "optical_depth.tau0_target=${TAU}" \
+    --override "shielding.mode=off" \
+    --override "physics_mode=${MODE}"
 
       RUN_DIR="${OUTDIR}" python - <<'PY'
 import os
@@ -217,8 +285,6 @@ fig2.savefig(plots_dir / "supply_surface.png", dpi=180)
 plt.close(fig2)
 print(f"[plot] saved plots to {plots_dir}")
 PY
-    done
-  done
 done
 
 echo "[done] Sweep (sublimation_only) completed (batch=${BATCH_SEED}, dir=${BATCH_DIR})."

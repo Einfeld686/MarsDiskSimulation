@@ -20,6 +20,22 @@ def _emit(lines: list[str], key: str, value: Any) -> None:
     lines.append(f'set "{key}={val}"')
 
 
+def _format_extra_cases(value: Any) -> str | None:
+    if value is None:
+        return None
+    if isinstance(value, (list, tuple)):
+        parts = []
+        for item in value:
+            if isinstance(item, (list, tuple)):
+                if len(item) < 3:
+                    continue
+                parts.append(",".join(str(v) for v in item[:3]))
+            else:
+                parts.append(str(item))
+        return ";".join(parts)
+    return str(value)
+
+
 def _write_lines(path: Path, lines: list[str]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     text = "\n".join(lines)
@@ -56,6 +72,9 @@ def main() -> int:
     _emit(lines, "T_LIST", data.get("T_LIST_RAW", data.get("T_LIST")))
     _emit(lines, "EPS_LIST", data.get("EPS_LIST_RAW", data.get("EPS_LIST")))
     _emit(lines, "TAU_LIST", data.get("TAU_LIST_RAW", data.get("TAU_LIST")))
+    extra_cases = _format_extra_cases(data.get("EXTRA_CASES_RAW", data.get("EXTRA_CASES")))
+    if extra_cases is not None:
+        _emit(lines, "EXTRA_CASES", extra_cases)
     _emit(lines, "SWEEP_TAG", data.get("SWEEP_TAG"))
     _emit(lines, "END_MODE", data.get("END_MODE"))
     _emit(lines, "COOL_TO_K", data.get("COOL_TO_K"))

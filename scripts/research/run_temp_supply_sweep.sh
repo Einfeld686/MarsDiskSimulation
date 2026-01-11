@@ -1,9 +1,11 @@
 #!/usr/bin/env bash
 # Run temp supply parameter sweep:
-#   T_M = {2000, 4000, 6000} K
-#   epsilon_mix = {0.1, 0.5, 1.0}
+#   T_M = {4000, 3000} K
+#   epsilon_mix = {1.0, 0.5}
 #   mu_orbit10pct = 1.0 (1 orbit supplies 5% of Sigma_ref(tau=1); scaled by orbit_fraction_at_mu1)
 #   optical_depth.tau0_target = {1.0, 0.5}
+#   extra cases: (T, epsilon_mix, tau0_target) = (4000, 1.5, 1.0), (3000, 1.5, 1.0)
+#   material defaults: forsterite via configs/overrides/material_forsterite.override
 # 出力は out/temp_supply_sweep/<ts>__<sha>__seed<batch>/T{T}_eps{eps}_tau{tau}/ に配置。
 # 供給は supply.* による外部源（温度・τフィードバック・有限リザーバ対応）。
 
@@ -104,6 +106,21 @@ def _join_list(value):
         return " ".join(str(v) for v in value)
     return str(value)
 
+def _format_extra_cases(value):
+    if value is None:
+        return None
+    if isinstance(value, (list, tuple)):
+        parts = []
+        for item in value:
+            if isinstance(item, (list, tuple)):
+                if len(item) < 3:
+                    continue
+                parts.append(",".join(str(v) for v in item[:3]))
+            else:
+                parts.append(str(item))
+        return ";".join(parts)
+    return str(value)
+
 def emit(key, value):
     if value is None:
         return
@@ -112,6 +129,7 @@ def emit(key, value):
 emit("T_LIST_RAW", data.get("T_LIST_RAW", data.get("T_LIST")))
 emit("EPS_LIST_RAW", data.get("EPS_LIST_RAW", data.get("EPS_LIST")))
 emit("TAU_LIST_RAW", data.get("TAU_LIST_RAW", data.get("TAU_LIST")))
+emit("EXTRA_CASES", _format_extra_cases(data.get("EXTRA_CASES_RAW", data.get("EXTRA_CASES"))))
 emit("SWEEP_TAG", data.get("SWEEP_TAG"))
 emit("END_MODE", data.get("END_MODE"))
 emit("COOL_TO_K", data.get("COOL_TO_K"))
@@ -136,10 +154,26 @@ PY
 fi
 
 # Parameter grids (run hotter cases first). Override via env:
-#   T_LIST_RAW="4000 3000", EPS_LIST_RAW="1.0", TAU_LIST_RAW="1.0 0.5"
+#   T_LIST_RAW="4000 3000", EPS_LIST_RAW="1.0 0.5", TAU_LIST_RAW="1.0 0.5"
 T_LIST_RAW="${T_LIST_RAW:-4000 3000}"
-EPS_LIST_RAW="${EPS_LIST_RAW:-1.0 0.5 0.1}"
+EPS_LIST_RAW="${EPS_LIST_RAW:-1.0 0.5}"
 TAU_LIST_RAW="${TAU_LIST_RAW:-1.0 0.5}"
+EXTRA_CASES_DEFAULT="4000 1.5 1.0 3000 1.5 1.0"
+if [[ -n "${STUDY_FILE:-}" ]]; then
+  EXTRA_CASES_DEFAULT=""
+fi
+if [[ -n "${EXTRA_CASES_RAW+x}" ]]; then
+  EXTRA_CASES_VALUE="${EXTRA_CASES_RAW}"
+elif [[ -n "${EXTRA_CASES+x}" ]]; then
+  EXTRA_CASES_VALUE="${EXTRA_CASES}"
+else
+  EXTRA_CASES_VALUE="${EXTRA_CASES_DEFAULT}"
+fi
+case "${EXTRA_CASES_VALUE}" in
+  [Nn][Oo][Nn][Ee]|[Oo][Ff][Ff]|[Ff][Aa][Ll][Ss][Ee]|0)
+    EXTRA_CASES_VALUE=""
+    ;;
+esac
 SEED_OVERRIDE=""
 if [[ "${RUN_ONE_MODE}" == "1" || -n "${RUN_ONE_T:-}" || -n "${RUN_ONE_EPS:-}" || -n "${RUN_ONE_TAU:-}" ]]; then
   if [[ -z "${RUN_ONE_T:-}" || -z "${RUN_ONE_EPS:-}" || -z "${RUN_ONE_TAU:-}" ]]; then
@@ -155,6 +189,7 @@ if [[ "${RUN_ONE_MODE}" == "1" || -n "${RUN_ONE_T:-}" || -n "${RUN_ONE_EPS:-}" |
   if [[ -n "${RUN_ONE_SEED:-}" ]]; then
     SEED_OVERRIDE="${RUN_ONE_SEED}"
   fi
+  EXTRA_CASES_VALUE=""
   echo "[info] run-one mode: T=${RUN_ONE_T} eps=${RUN_ONE_EPS} tau=${RUN_ONE_TAU} seed=${RUN_ONE_SEED:-auto}"
 fi
 BATCH_DIR="${BATCH_ROOT}/${SWEEP_TAG}/${RUN_TS}__${GIT_SHA}__seed${BATCH_SEED}"
@@ -162,6 +197,61 @@ mkdir -p "${BATCH_DIR}"
 read -r -a T_LIST <<<"${T_LIST_RAW}"
 read -r -a EPS_LIST <<<"${EPS_LIST_RAW}"
 read -r -a TAU_LIST <<<"${TAU_LIST_RAW}"
+CASE_KEYS=()
+CASE_T=()
+CASE_EPS=()
+CASE_TAU=()
+
+add_case() {
+  local t="$1"
+  local eps="$2"
+  local tau="$3"
+  local key="${t}|${eps}|${tau}"
+  local existing
+  for existing in "${CASE_KEYS[@]}"; do
+    if [[ "${existing}" == "${key}" ]]; then
+      return 1
+    fi
+  done
+  CASE_KEYS+=("${key}")
+  CASE_T+=("${t}")
+  CASE_EPS+=("${eps}")
+  CASE_TAU+=("${tau}")
+  return 0
+}
+
+append_extra_cases() {
+  local raw="$1"
+  local cleaned="${raw//;/ }"
+  cleaned="${cleaned//,/ }"
+  cleaned="${cleaned//:/ }"
+  cleaned="${cleaned//|/ }"
+  local tokens=()
+  read -r -a tokens <<< "${cleaned}"
+  local count=${#tokens[@]}
+  if (( count == 0 )); then
+    return 0
+  fi
+  if (( count % 3 != 0 )); then
+    echo "[warn] EXTRA_CASES expects triples; got ${count} tokens"
+  fi
+  local idx=0
+  while (( idx + 2 < count )); do
+    add_case "${tokens[idx]}" "${tokens[idx + 1]}" "${tokens[idx + 2]}" || true
+    idx=$((idx + 3))
+  done
+}
+
+for T in "${T_LIST[@]}"; do
+  for EPS in "${EPS_LIST[@]}"; do
+    for TAU in "${TAU_LIST[@]}"; do
+      add_case "${T}" "${EPS}" "${TAU}" || true
+    done
+  done
+done
+if [[ -n "${EXTRA_CASES_VALUE}" ]]; then
+  append_extra_cases "${EXTRA_CASES_VALUE}"
+fi
 END_MODE="${END_MODE:-fixed}"                  # fixed|temperature
 T_END_YEARS="${T_END_YEARS:-10.0}"             # fixed integration horizon when END_MODE=fixed [yr]
 # 短縮テスト用に T_END_SHORT_YEARS=0.001 を指定すると強制上書き
@@ -295,6 +385,9 @@ echo "[config] injection: mode=${SUPPLY_INJECTION_MODE} q=${SUPPLY_INJECTION_Q} 
 echo "[config] transport: mode=${SUPPLY_TRANSPORT_MODE} t_mix=${SUPPLY_TRANSPORT_TMIX_ORBITS:-${SUPPLY_DEEP_TMIX_ORBITS:-disabled}} headroom_gate=${SUPPLY_TRANSPORT_HEADROOM} velocity=${SUPPLY_VEL_MODE}"
 echo "[config] external supply: mu_orbit10pct=${SUPPLY_MU_ORBIT10PCT} mu_reference_tau=${SUPPLY_MU_REFERENCE_TAU} orbit_fraction_at_mu1=${SUPPLY_ORBIT_FRACTION} (epsilon_mix swept per EPS_LIST)"
 echo "[config] optical_depth: tau0_target_list=${TAU_LIST_RAW} tau_stop=${OPTICAL_TAU_STOP} tau_stop_tol=${OPTICAL_TAU_STOP_TOL}"
+if [[ -n "${EXTRA_CASES_VALUE}" ]]; then
+  echo "[config] extra cases: ${EXTRA_CASES_VALUE}"
+fi
 echo "[config] fast blowout substep: enabled=${SUBSTEP_FAST_BLOWOUT} substep_max_ratio=${SUBSTEP_MAX_RATIO:-default}"
 echo "[config] phase temperature input: ${PHASE_TEMP_INPUT} (q_abs_mean=${PHASE_QABS_MEAN}, tau_field=${PHASE_TAU_FIELD})"
 echo "[config] geometry: mode=${GEOMETRY_MODE} Nr=${GEOMETRY_NR} r_in_m=${GEOMETRY_R_IN_M:-disk.geometry} r_out_m=${GEOMETRY_R_OUT_M:-disk.geometry}"
@@ -480,70 +573,71 @@ if [[ "${SHIELDING_SIGMA}" == "auto_max" ]]; then
   echo "[warn] fixed_tau1_sigma=auto_max is debug-only; exclude from production figures"
 fi
 
-for T in "${T_LIST[@]}"; do
+for idx in "${!CASE_T[@]}"; do
+  T="${CASE_T[$idx]}"
+  EPS="${CASE_EPS[$idx]}"
+  TAU="${CASE_TAU[$idx]}"
   T_TABLE="data/mars_temperature_T${T}p0K.csv"
-  for EPS in "${EPS_LIST[@]}"; do
-    EPS_TITLE="${EPS/0./0p}"
-    EPS_TITLE="${EPS_TITLE/./p}"
-    for TAU in "${TAU_LIST[@]}"; do
-      TAU_TITLE="${TAU/0./0p}"
-      TAU_TITLE="${TAU_TITLE/./p}"
-      if [[ -n "${SEED_OVERRIDE}" ]]; then
-        SEED="${SEED_OVERRIDE}"
-      else
-        SEED=$(python - <<'PY'
+  EPS_TITLE="${EPS/0./0p}"
+  EPS_TITLE="${EPS_TITLE/./p}"
+  TAU_TITLE="${TAU/0./0p}"
+  TAU_TITLE="${TAU_TITLE/./p}"
+  if [[ -n "${SEED_OVERRIDE}" ]]; then
+    SEED="${SEED_OVERRIDE}"
+  else
+    SEED=$(python - <<'PY'
 import secrets
 print(secrets.randbelow(2**31))
 PY
 )
-      fi
-      TITLE="T${T}_eps${EPS_TITLE}_tau${TAU_TITLE}"
-      OUTDIR="${BATCH_DIR}/${TITLE}"
-      echo "[run] T=${T} eps=${EPS} tau=${TAU} -> ${OUTDIR} (batch=${BATCH_SEED}, seed=${SEED})"
-      echo "[info] epsilon_mix=${EPS}; mu_orbit10pct=${SUPPLY_MU_ORBIT10PCT} orbit_fraction_at_mu1=${SUPPLY_ORBIT_FRACTION}"
-      echo "[info] shielding: mode=${SHIELDING_MODE} fixed_tau1_sigma=${SHIELDING_SIGMA} auto_max_margin=${SHIELDING_AUTO_MAX_MARGIN}"
-      if [[ "${EPS}" == "0.1" ]]; then
-        echo "[info] epsilon_mix=0.1 is a low-supply extreme case; expect weak blowout/sinks"
-      fi
-      : > "${CASE_OVERRIDES_FILE}"
-      append_override "${CASE_OVERRIDES_FILE}" "io.outdir" "${OUTDIR}"
-      append_override "${CASE_OVERRIDES_FILE}" "dynamics.rng_seed" "${SEED}"
-      append_override "${CASE_OVERRIDES_FILE}" "radiation.TM_K" "${T}"
-      append_override "${CASE_OVERRIDES_FILE}" "supply.mixing.epsilon_mix" "${EPS}"
-      append_override "${CASE_OVERRIDES_FILE}" "optical_depth.tau0_target" "${TAU}"
-      if [[ "${COOL_MODE}" != "hyodo" ]]; then
-        append_override "${CASE_OVERRIDES_FILE}" "radiation.mars_temperature_driver.table.path" "${T_TABLE}"
-      fi
-      append_override "${CASE_OVERRIDES_FILE}" "shielding.mode" "${SHIELDING_MODE}"
-      if [[ "${SHIELDING_MODE}" == "fixed_tau1" ]]; then
-        append_override "${CASE_OVERRIDES_FILE}" "shielding.fixed_tau1_sigma" "${SHIELDING_SIGMA}"
-        append_override "${CASE_OVERRIDES_FILE}" "shielding.auto_max_margin" "${SHIELDING_AUTO_MAX_MARGIN}"
-      fi
-      if [[ "${END_MODE}" == "temperature" ]]; then
-        append_override "${CASE_OVERRIDES_FILE}" "numerics.t_end_years" "null"
-        append_override "${CASE_OVERRIDES_FILE}" "numerics.t_end_orbits" "null"
-        append_override "${CASE_OVERRIDES_FILE}" "numerics.t_end_until_temperature_K" "${COOL_TO_K}"
-        append_override "${CASE_OVERRIDES_FILE}" "numerics.t_end_temperature_margin_years" "${COOL_MARGIN_YEARS}"
-        if [[ -n "${COOL_SEARCH_YEARS}" ]]; then
-          append_override "${CASE_OVERRIDES_FILE}" "numerics.t_end_temperature_search_years" "${COOL_SEARCH_YEARS}"
-        else
-          append_override "${CASE_OVERRIDES_FILE}" "numerics.t_end_temperature_search_years" "null"
-        fi
-        append_override "${CASE_OVERRIDES_FILE}" "scope.analysis_years" "10"
-      else
-        append_override "${CASE_OVERRIDES_FILE}" "numerics.t_end_years" "${T_END_YEARS}"
-        append_override "${CASE_OVERRIDES_FILE}" "numerics.t_end_orbits" "null"
-        append_override "${CASE_OVERRIDES_FILE}" "numerics.t_end_until_temperature_K" "null"
-        append_override "${CASE_OVERRIDES_FILE}" "numerics.t_end_temperature_margin_years" "0.0"
-        append_override "${CASE_OVERRIDES_FILE}" "numerics.t_end_temperature_search_years" "null"
-        append_override "${CASE_OVERRIDES_FILE}" "scope.analysis_years" "${T_END_YEARS}"
-      fi
-      if [[ "${SUBSTEP_FAST_BLOWOUT}" != "0" ]]; then
-        append_override "${CASE_OVERRIDES_FILE}" "io.substep_fast_blowout" "true"
-        if [[ -n "${SUBSTEP_MAX_RATIO}" ]]; then
-          append_override "${CASE_OVERRIDES_FILE}" "io.substep_max_ratio" "${SUBSTEP_MAX_RATIO}"
-        fi
-      fi
+  fi
+  TITLE="T${T}_eps${EPS_TITLE}_tau${TAU_TITLE}"
+  OUTDIR="${BATCH_DIR}/${TITLE}"
+  echo "[run] T=${T} eps=${EPS} tau=${TAU} -> ${OUTDIR} (batch=${BATCH_SEED}, seed=${SEED})"
+  echo "[info] epsilon_mix=${EPS}; mu_orbit10pct=${SUPPLY_MU_ORBIT10PCT} orbit_fraction_at_mu1=${SUPPLY_ORBIT_FRACTION}"
+  echo "[info] shielding: mode=${SHIELDING_MODE} fixed_tau1_sigma=${SHIELDING_SIGMA} auto_max_margin=${SHIELDING_AUTO_MAX_MARGIN}"
+  if [[ "${EPS}" == "0.1" ]]; then
+    echo "[info] epsilon_mix=0.1 is a low-supply extreme case; expect weak blowout/sinks"
+  fi
+  : > "${CASE_OVERRIDES_FILE}"
+  append_override "${CASE_OVERRIDES_FILE}" "io.outdir" "${OUTDIR}"
+  append_override "${CASE_OVERRIDES_FILE}" "dynamics.rng_seed" "${SEED}"
+  append_override "${CASE_OVERRIDES_FILE}" "radiation.TM_K" "${T}"
+  append_override "${CASE_OVERRIDES_FILE}" "supply.mixing.epsilon_mix" "${EPS}"
+  append_override "${CASE_OVERRIDES_FILE}" "optical_depth.tau0_target" "${TAU}"
+  if [[ "${COOL_MODE}" != "hyodo" ]]; then
+    append_override "${CASE_OVERRIDES_FILE}" "radiation.mars_temperature_driver.table.path" "${T_TABLE}"
+  fi
+  append_override "${CASE_OVERRIDES_FILE}" "shielding.mode" "${SHIELDING_MODE}"
+  if [[ "${SHIELDING_MODE}" == "fixed_tau1" ]]; then
+    append_override "${CASE_OVERRIDES_FILE}" "shielding.fixed_tau1_sigma" "${SHIELDING_SIGMA}"
+    append_override "${CASE_OVERRIDES_FILE}" "shielding.auto_max_margin" "${SHIELDING_AUTO_MAX_MARGIN}"
+  fi
+  if [[ "${END_MODE}" == "temperature" ]]; then
+    append_override "${CASE_OVERRIDES_FILE}" "numerics.t_end_years" "null"
+    append_override "${CASE_OVERRIDES_FILE}" "numerics.t_end_orbits" "null"
+    append_override "${CASE_OVERRIDES_FILE}" "numerics.t_end_until_temperature_K" "${COOL_TO_K}"
+    append_override "${CASE_OVERRIDES_FILE}" "numerics.t_end_temperature_margin_years" "${COOL_MARGIN_YEARS}"
+    if [[ -n "${COOL_SEARCH_YEARS}" ]]; then
+      append_override "${CASE_OVERRIDES_FILE}" "numerics.t_end_temperature_search_years" "${COOL_SEARCH_YEARS}"
+    else
+      append_override "${CASE_OVERRIDES_FILE}" "numerics.t_end_temperature_search_years" "null"
+    fi
+    append_override "${CASE_OVERRIDES_FILE}" "scope.analysis_years" "10"
+  else
+    append_override "${CASE_OVERRIDES_FILE}" "numerics.t_end_years" "${T_END_YEARS}"
+    append_override "${CASE_OVERRIDES_FILE}" "numerics.t_end_orbits" "null"
+    append_override "${CASE_OVERRIDES_FILE}" "numerics.t_end_until_temperature_K" "null"
+    append_override "${CASE_OVERRIDES_FILE}" "numerics.t_end_temperature_margin_years" "0.0"
+    append_override "${CASE_OVERRIDES_FILE}" "numerics.t_end_temperature_search_years" "null"
+    append_override "${CASE_OVERRIDES_FILE}" "scope.analysis_years" "${T_END_YEARS}"
+  fi
+  if [[ "${SUBSTEP_FAST_BLOWOUT}" != "0" ]]; then
+    append_override "${CASE_OVERRIDES_FILE}" "io.substep_fast_blowout" "true"
+    if [[ -n "${SUBSTEP_MAX_RATIO}" ]]; then
+      append_override "${CASE_OVERRIDES_FILE}" "io.substep_max_ratio" "${SUBSTEP_MAX_RATIO}"
+    fi
+  fi
 
       # Override priority: base defaults < EXTRA_OVERRIDES_FILE < per-case overrides.
       # Avoid empty array expansion under `set -u` (bash 3.2 treats it as unbound).
@@ -1209,8 +1303,6 @@ PY
           fi
         fi
       fi
-    done
-  done
 done
 
 echo "[done] Sweep completed (batch=${BATCH_SEED}, dir=${BATCH_DIR})."

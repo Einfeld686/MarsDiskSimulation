@@ -12,9 +12,10 @@
 
 ## スイープ軸（固定グリッド）
 - 温度 `T_LIST`: 4000 / 3000 K（高温順に実行）。各ケースで `radiation.TM_K` と `data/mars_temperature_T${T}p0K.csv` を適用。
-- 混合効率 `EPS_LIST`: 1.0 / 0.5 / 0.1 → `supply.mixing.epsilon_mix` に代入（実効供給は const×epsilon_mix をログ表示）。
+- 混合効率 `EPS_LIST`: 1.0 / 0.5 → `supply.mixing.epsilon_mix` に代入（実効供給は const×epsilon_mix をログ表示）。
 - 初期光学的厚さ `TAU_LIST`: 1.0 / 0.5 → `optical_depth.tau0_target` に代入。
-- 出力ディレクトリは上記 3 軸の直積で 12 ケース作成。
+- 追加ケース: `(T, EPS, TAU) = (4000, 1.5, 1.0), (3000, 1.5, 1.0)` を末尾に追加。
+- 出力ディレクトリは上記 8 ケース + 追加 2 ケースで合計 10 ケース作成。
 
 ## ベース config（要点）
 - 幾何: 0D、`r_in=1.0 R_M`, `r_out=2.7 R_M`、`n_bins=40`、`s_min=1e-7 m`, `s_max=3 m`。
