@@ -51,6 +51,20 @@ REQUIRED_OUTPUTS = [
 ]
 
 
+def _resolve_table_path(path: Path) -> Path:
+    suffix = path.suffix.lower()
+    if suffix == ".csv":
+        parquet_path = path.with_suffix(".parquet")
+        if parquet_path.exists():
+            if not path.exists() or parquet_path.stat().st_mtime >= path.stat().st_mtime:
+                return parquet_path
+    elif suffix in {".parquet", ".pq"} and not path.exists():
+        csv_path = path.with_suffix(".csv")
+        if csv_path.exists():
+            return csv_path
+    return path
+
+
 @dataclass(frozen=True)
 class CaseSpec:
     """Description of a single (Φ, T_M) run."""
@@ -107,7 +121,7 @@ def ensure_required_outputs(case: CaseSpec) -> None:
 
     missing: List[Path] = []
     for rel in REQUIRED_OUTPUTS:
-        path = case.outdir / rel
+        path = _resolve_table_path(case.outdir / rel)
         if not path.exists():
             missing.append(path)
     if missing:
@@ -185,10 +199,13 @@ def make_gif(frame_paths: Sequence[Path], gif_path: Path) -> None:
 def export_orbit_summary(case: CaseSpec) -> Path:
     """Create a compact CSV with orbit-level blow-out losses."""
 
-    source = case.outdir / "orbit_rollup.csv"
+    source = _resolve_table_path(case.outdir / "orbit_rollup.csv")
     if not source.exists():
         raise RuntimeError(f"orbit_rollup.csv not found for {case.outdir}")
-    df = pd.read_csv(source)
+    if source.suffix.lower() in {".parquet", ".pq"}:
+        df = pd.read_parquet(source)
+    else:
+        df = pd.read_csv(source)
     keep_cols = [
         "orbit_index",
         "time_s",
@@ -242,7 +259,7 @@ def build_cases(
     r_m, t_orb = compute_orbit(r_rm)
     for phi in phi_values:
         phi_tag = format_phi_tag(phi)
-        phi_table = phi_table_root / f"phi_const_{phi_tag}.csv"
+        phi_table = _resolve_table_path(phi_table_root / f"phi_const_{phi_tag}.csv")
         if not phi_table.exists():
             raise FileNotFoundError(f"Φ table not found: {phi_table}")
         for temperature in temperature_values:

@@ -40,6 +40,7 @@ from pathlib import Path
 from typing import Iterable, Sequence
 
 import numpy as np
+import pandas as pd
 
 # Physical constants in SI units
 PLANCK = 6.62607015e-34  # J s
@@ -79,13 +80,31 @@ def _calibrate_amplitude(exponent: float, x_cal: float, qpr_cal: float) -> float
 
 
 def _read_grid_from_csv(path: Path) -> tuple[np.ndarray, np.ndarray]:
-    data = np.genfromtxt(path, delimiter=",", names=True, dtype=None, encoding=None)
-    if data.size == 0:
-        raise ValueError("Input CSV is empty")
-    if "T_M" not in data.dtype.names or "s" not in data.dtype.names:
-        raise ValueError("Input CSV must have columns: T_M, s")
-    T_values = np.unique(data["T_M"].astype(float))
-    s_values = np.unique(data["s"].astype(float))
+    table_path = Path(path)
+    suffix = table_path.suffix.lower()
+    if suffix == ".csv":
+        parquet_path = table_path.with_suffix(".parquet")
+        if parquet_path.exists():
+            if not table_path.exists() or parquet_path.stat().st_mtime >= table_path.stat().st_mtime:
+                table_path = parquet_path
+    elif suffix in {".parquet", ".pq"} and not table_path.exists():
+        csv_path = table_path.with_suffix(".csv")
+        if csv_path.exists():
+            table_path = csv_path
+    if table_path.suffix.lower() in {".parquet", ".pq"}:
+        df = pd.read_parquet(table_path, columns=["T_M", "s"])
+        if df.empty:
+            raise ValueError("Input table is empty")
+        T_values = np.unique(df["T_M"].to_numpy(dtype=float))
+        s_values = np.unique(df["s"].to_numpy(dtype=float))
+    else:
+        data = np.genfromtxt(table_path, delimiter=",", names=True, dtype=None, encoding=None)
+        if data.size == 0:
+            raise ValueError("Input CSV is empty")
+        if "T_M" not in data.dtype.names or "s" not in data.dtype.names:
+            raise ValueError("Input CSV must have columns: T_M, s")
+        T_values = np.unique(data["T_M"].astype(float))
+        s_values = np.unique(data["s"].astype(float))
     T_values.sort()
     s_values.sort()
     return T_values, s_values

@@ -35,7 +35,21 @@ class _TableData:
 
     @classmethod
     def load(cls, path: Path) -> "_TableData":
-        df = pd.read_csv(path)
+        table_path = Path(path)
+        suffix = table_path.suffix.lower()
+        if suffix == ".csv":
+            parquet_path = table_path.with_suffix(".parquet")
+            if parquet_path.exists():
+                if not table_path.exists() or parquet_path.stat().st_mtime >= table_path.stat().st_mtime:
+                    table_path = parquet_path
+        elif suffix in {".parquet", ".pq"} and not table_path.exists():
+            csv_path = table_path.with_suffix(".csv")
+            if csv_path.exists():
+                table_path = csv_path
+        if table_path.suffix.lower() in {".parquet", ".pq"}:
+            df = pd.read_parquet(table_path)
+        else:
+            df = pd.read_csv(table_path)
         if {"t", "r", "rate"}.issubset(df.columns):
             t_vals = np.unique(df["t"].to_numpy(dtype=float))
             r_vals = np.unique(df["r"].to_numpy(dtype=float))
@@ -86,7 +100,21 @@ class _TemperatureTable:
 
     @classmethod
     def load(cls, path: Path, column_temperature: str, column_value: str) -> "_TemperatureTable":
-        df = pd.read_csv(path)
+        table_path = Path(path)
+        suffix = table_path.suffix.lower()
+        if suffix == ".csv":
+            parquet_path = table_path.with_suffix(".parquet")
+            if parquet_path.exists():
+                if not table_path.exists() or parquet_path.stat().st_mtime >= table_path.stat().st_mtime:
+                    table_path = parquet_path
+        elif suffix in {".parquet", ".pq"} and not table_path.exists():
+            csv_path = table_path.with_suffix(".csv")
+            if csv_path.exists():
+                table_path = csv_path
+        if table_path.suffix.lower() in {".parquet", ".pq"}:
+            df = pd.read_parquet(table_path)
+        else:
+            df = pd.read_csv(table_path)
         if column_temperature not in df.columns or column_value not in df.columns:
             raise KeyError(f"temperature table {path} must contain '{column_temperature}' and '{column_value}' columns")
         temp_sorted = df.sort_values(column_temperature)

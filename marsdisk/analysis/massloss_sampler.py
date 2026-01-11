@@ -25,6 +25,20 @@ from ..physics import radiation
 __all__ = ["sample_mass_loss_one_orbit"]
 
 
+def _resolve_table_path(path: Path) -> Path:
+    suffix = path.suffix.lower()
+    if suffix == ".csv":
+        parquet_path = path.with_suffix(".parquet")
+        if parquet_path.exists():
+            if not path.exists() or parquet_path.stat().st_mtime >= path.stat().st_mtime:
+                return parquet_path
+    elif suffix in {".parquet", ".pq"} and not path.exists():
+        csv_path = path.with_suffix(".csv")
+        if csv_path.exists():
+            return csv_path
+    return path
+
+
 def _prepare_config(
     base_cfg: Config,
     *,
@@ -143,7 +157,7 @@ def sample_mass_loss_one_orbit(
     base_path = Path(base_yaml)
     if not base_path.exists():
         raise FileNotFoundError(f"Base YAML configuration not found: {base_path}")
-    table_path = Path(qpr_table)
+    table_path = _resolve_table_path(Path(qpr_table))
     if not table_path.exists():
         raise FileNotFoundError(f"⟨Q_pr⟩ table not found: {table_path}")
 
@@ -213,9 +227,16 @@ def sample_mass_loss_one_orbit(
                 steps_per_orbit = int(n_steps_recorded)
 
         mass_budget_path = outdir / "checks" / "mass_budget.csv"
+        parquet_path = mass_budget_path.with_suffix(".parquet")
+        if parquet_path.exists():
+            if not mass_budget_path.exists() or parquet_path.stat().st_mtime >= mass_budget_path.stat().st_mtime:
+                mass_budget_path = parquet_path
         mass_budget_max_error = float("nan")
         if mass_budget_path.exists():
-            mb_df = pd.read_csv(mass_budget_path)
+            if mass_budget_path.suffix == ".parquet":
+                mb_df = pd.read_parquet(mass_budget_path)
+            else:
+                mb_df = pd.read_csv(mass_budget_path)
             if "error_percent" in mb_df.columns:
                 mass_budget_max_error = float(np.nanmax(np.abs(mb_df["error_percent"].to_numpy(dtype=float))))
 

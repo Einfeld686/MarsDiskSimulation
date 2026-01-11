@@ -96,9 +96,26 @@ def resolve_config_for_run(run_dir: Path, config_dir: Path) -> Path:
     )
 
 
+def _resolve_table_path(path: Path) -> Path:
+    suffix = path.suffix.lower()
+    if suffix == ".csv":
+        parquet_path = path.with_suffix(".parquet")
+        if parquet_path.exists():
+            if not path.exists() or parquet_path.stat().st_mtime >= path.stat().st_mtime:
+                return parquet_path
+    elif suffix in {".parquet", ".pq"} and not path.exists():
+        csv_path = path.with_suffix(".csv")
+        if csv_path.exists():
+            return csv_path
+    return path
+
+
 def read_csv(path: Path) -> pd.DataFrame:
+    path = _resolve_table_path(path)
     if not path.exists():
         raise FileNotFoundError(f"CSV not found: {path}")
+    if path.suffix.lower() in {".parquet", ".pq"}:
+        return pd.read_parquet(path)
     return pd.read_csv(path)
 
 

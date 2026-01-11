@@ -33,6 +33,20 @@ from paper.plot_style import apply_default_style
 REDUCE_MODES = {"cell_median", "cell_mean", "cell_max", "none"}
 
 
+def _resolve_table_path(path: Path) -> Path:
+    suffix = path.suffix.lower()
+    if suffix == ".csv":
+        parquet_path = path.with_suffix(".parquet")
+        if parquet_path.exists():
+            if not path.exists() or parquet_path.stat().st_mtime >= path.stat().st_mtime:
+                return parquet_path
+    elif suffix in {".parquet", ".pq"} and not path.exists():
+        csv_path = path.with_suffix(".csv")
+        if csv_path.exists():
+            return csv_path
+    return path
+
+
 def _normalize_reduce_mode(value: Any, *, default: str) -> str:
     if value is None:
         return default
@@ -71,9 +85,12 @@ def _reduce_1d_series(
 
 
 def _load_mass_budget(run: Path, reduce_mode: str) -> Optional[pd.DataFrame]:
-    cells_path = run / "checks" / "mass_budget_cells.csv"
+    cells_path = _resolve_table_path(run / "checks" / "mass_budget_cells.csv")
     if cells_path.exists():
-        df = pd.read_csv(cells_path)
+        if cells_path.suffix.lower() in {".parquet", ".pq"}:
+            df = pd.read_parquet(cells_path)
+        else:
+            df = pd.read_csv(cells_path)
         if "cell_active" in df.columns:
             df = df[df["cell_active"].fillna(False)]
         if reduce_mode == "none":
@@ -85,9 +102,11 @@ def _load_mass_budget(run: Path, reduce_mode: str) -> Optional[pd.DataFrame]:
             return group.median()
         return group.max()
 
-    csv_path = run / "checks" / "mass_budget.csv"
+    csv_path = _resolve_table_path(run / "checks" / "mass_budget.csv")
     if not csv_path.exists():
         return None
+    if csv_path.suffix.lower() in {".parquet", ".pq"}:
+        return pd.read_parquet(csv_path)
     return pd.read_csv(csv_path)
 
 

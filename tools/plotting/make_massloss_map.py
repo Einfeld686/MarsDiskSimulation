@@ -12,6 +12,20 @@ import numpy as np
 import pandas as pd
 
 
+def _resolve_table_path(path: Path) -> Path:
+    suffix = path.suffix.lower()
+    if suffix == ".csv":
+        parquet_path = path.with_suffix(".parquet")
+        if parquet_path.exists():
+            if not path.exists() or parquet_path.stat().st_mtime >= path.stat().st_mtime:
+                return parquet_path
+    elif suffix in {".parquet", ".pq"} and not path.exists():
+        csv_path = path.with_suffix(".csv")
+        if csv_path.exists():
+            return csv_path
+    return path
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Visualise loss_frac = (M_out_cum + M_sink_cum) / M_init over (r/R_M, T_M)."
@@ -62,9 +76,13 @@ def _build_grid(df: pd.DataFrame, column: str, r_vals: np.ndarray, T_vals: np.nd
 
 def main() -> None:
     args = parse_args()
-    if not args.map.exists():
-        raise FileNotFoundError(f"CSV file not found: {args.map}")
-    df = pd.read_csv(args.map)
+    map_path = _resolve_table_path(args.map)
+    if not map_path.exists():
+        raise FileNotFoundError(f"CSV file not found: {map_path}")
+    if map_path.suffix.lower() in {".parquet", ".pq"}:
+        df = pd.read_parquet(map_path)
+    else:
+        df = pd.read_csv(map_path)
     required_cols = {"r_RM", "T_M", "loss_frac", "sink_frac", "qpr_table_path", "dt_over_t_blow_median"}
     missing = sorted(required_cols - set(df.columns))
     if missing:

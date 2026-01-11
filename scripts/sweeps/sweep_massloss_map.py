@@ -229,10 +229,28 @@ def _read_series(path: Path) -> pd.DataFrame:
     return pd.read_parquet(path)
 
 
+def _resolve_table_path(path: Path) -> Path:
+    suffix = path.suffix.lower()
+    if suffix == ".csv":
+        parquet_path = path.with_suffix(".parquet")
+        if parquet_path.exists():
+            if not path.exists() or parquet_path.stat().st_mtime >= path.stat().st_mtime:
+                return parquet_path
+    elif suffix in {".parquet", ".pq"} and not path.exists():
+        csv_path = path.with_suffix(".csv")
+        if csv_path.exists():
+            return csv_path
+    return path
+
+
 def _read_mass_budget(path: Path) -> Dict[str, float]:
+    path = _resolve_table_path(path)
     if not path.exists():
         raise FileNotFoundError(f"Mass budget log missing at {path}")
-    df = pd.read_csv(path)
+    if path.suffix.lower() in {".parquet", ".pq"}:
+        df = pd.read_parquet(path)
+    else:
+        df = pd.read_csv(path)
     if df.empty:
         raise ValueError(f"Mass budget log at {path} is empty")
     last = df.iloc[-1]
@@ -504,7 +522,7 @@ def main() -> None:
     args = parse_args()
 
     base_cfg_path = args.base_config
-    qpr_table_path = args.qpr_table
+    qpr_table_path = _resolve_table_path(args.qpr_table)
     outdir = args.outdir
     map_dir = outdir / MAP_SUBDIR
     logs_dir = outdir / LOG_SUBDIR

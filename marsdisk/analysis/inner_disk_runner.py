@@ -40,9 +40,16 @@ def _read_json(path: Path) -> Dict[str, Any]:
 
 def _read_mass_budget(outdir: Path) -> Optional[pd.DataFrame]:
     path = outdir / "checks" / "mass_budget.csv"
+    parquet_path = path.with_suffix(".parquet")
+    if parquet_path.exists():
+        if not path.exists() or parquet_path.stat().st_mtime >= path.stat().st_mtime:
+            path = parquet_path
     if not path.exists():
         return None
-    df = pd.read_csv(path)
+    if path.suffix == ".parquet":
+        df = pd.read_parquet(path)
+    else:
+        df = pd.read_csv(path)
     if df.empty:
         return None
     return df
@@ -55,6 +62,7 @@ def _read_step_diagnostics(outdir: Path, format_hint: Optional[str]) -> Optional
         candidates.append(outdir / "series" / f"step_diagnostics.{ext}")
     candidates.extend(
         [
+            outdir / "series" / "step_diagnostics.parquet",
             outdir / "series" / "step_diagnostics.csv",
             outdir / "series" / "step_diagnostics.jsonl",
         ]
@@ -66,7 +74,9 @@ def _read_step_diagnostics(outdir: Path, format_hint: Optional[str]) -> Optional
         seen.add(path)
         if not path.exists():
             continue
-        if path.suffix == ".csv":
+        if path.suffix == ".parquet":
+            df = pd.read_parquet(path)
+        elif path.suffix == ".csv":
             df = pd.read_csv(path)
         else:
             df = pd.read_json(path, lines=True)

@@ -13,6 +13,8 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, Iterable, Tuple
 
+import pandas as pd
+
 
 def _repo_root() -> Path:
     return Path(__file__).resolve().parents[2]
@@ -25,10 +27,30 @@ def _output_stub(map_id: str) -> str:
     return f"map{key}"
 
 
+def _resolve_table_path(path: Path) -> Path:
+    suffix = path.suffix.lower()
+    if suffix == ".csv":
+        parquet_path = path.with_suffix(".parquet")
+        if parquet_path.exists():
+            if not path.exists() or parquet_path.stat().st_mtime >= path.stat().st_mtime:
+                return parquet_path
+    elif suffix in {".parquet", ".pq"} and not path.exists():
+        csv_path = path.with_suffix(".csv")
+        if csv_path.exists():
+            return csv_path
+    return path
+
+
 def _load_status_counts(path: Path) -> Dict[str, int]:
+    path = _resolve_table_path(path)
     if not path.exists():
         return {}
     counts: Dict[str, int] = {}
+    if path.suffix.lower() in {".parquet", ".pq"}:
+        df = pd.read_parquet(path)
+        for status in df.get("run_status", pd.Series(dtype=str)).astype(str).str.strip().str.lower():
+            counts[status] = counts.get(status, 0) + 1
+        return counts
     with path.open("r", encoding="utf-8", newline="") as handle:
         reader = csv.DictReader(handle)
         for row in reader:
@@ -131,7 +153,7 @@ def main() -> int:
         base_config_path = (repo_root / base_config_path).resolve()
     if not base_config_path.exists():
         raise FileNotFoundError(f"Base config not found: {base_config_path}")
-    qpr_table_path = Path(args.qpr_table)
+    qpr_table_path = _resolve_table_path(Path(args.qpr_table))
     if not qpr_table_path.is_absolute():
         qpr_table_path = (repo_root / qpr_table_path).resolve()
     if not qpr_table_path.exists():

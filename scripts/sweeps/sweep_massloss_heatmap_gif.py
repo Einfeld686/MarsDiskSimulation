@@ -67,6 +67,20 @@ class SimulationFailure(RuntimeError):
     """Raised when a single-case simulation fails validation."""
 
 
+def _resolve_table_path(path: Path) -> Path:
+    suffix = path.suffix.lower()
+    if suffix == ".csv":
+        parquet_path = path.with_suffix(".parquet")
+        if parquet_path.exists():
+            if not path.exists() or parquet_path.stat().st_mtime >= path.stat().st_mtime:
+                return parquet_path
+    elif suffix in {".parquet", ".pq"} and not path.exists():
+        csv_path = path.with_suffix(".csv")
+        if csv_path.exists():
+            return csv_path
+    return path
+
+
 def _build_temperature_grid(T_min: float, T_max: float, spacing: float) -> np.ndarray:
     if spacing <= 0.0:
         raise ValueError("Temperature spacing must be positive.")
@@ -181,10 +195,13 @@ def _run_single_case(
         with summary_path.open("r", encoding="utf-8") as fh:
             summary = json.load(fh)
 
-        orbit_path = tmpdir / "orbit_rollup.csv"
+        orbit_path = _resolve_table_path(tmpdir / "orbit_rollup.csv")
         orbit_df: pd.DataFrame | None = None
         if orbit_path.exists():
-            tmp_df = pd.read_csv(orbit_path)
+            if orbit_path.suffix.lower() in {".parquet", ".pq"}:
+                tmp_df = pd.read_parquet(orbit_path)
+            else:
+                tmp_df = pd.read_csv(orbit_path)
             if not tmp_df.empty:
                 orbit_df = tmp_df
 
@@ -353,7 +370,8 @@ def run_sweep(
     for phi_label, phi_path in phi_tables.items():
         if phi_label not in PHI_CASE_VALUES:
             raise ValueError(f"Unexpected Φ case label: {phi_label}")
-        if not phi_path.exists():
+        resolved_phi = _resolve_table_path(phi_path)
+        if not resolved_phi.exists():
             raise FileNotFoundError(f"Φ table not found: {phi_path}")
 
         case_outdir = outdir / f"phi{phi_label}"
@@ -374,7 +392,7 @@ def run_sweep(
                     base_cfg,
                     r_rm=float(r_rm),
                     T_M=float(T_M),
-                    phi_table=phi_path,
+                    phi_table=resolved_phi,
                     phi_label=phi_label,
                 )
                 orbits_recorded = int(summary.get("orbits_completed", 0))
@@ -447,7 +465,7 @@ def run_sweep(
             "phi_label": phi_label,
             "phi_value": PHI_CASE_VALUES[phi_label],
             "config": str(base_config_path),
-            "phi_table": str(phi_path),
+            "phi_table": str(resolved_phi),
             "temperatures_K": [float(T_values[0]), float(T_values[-1]), len(T_values)],
             "radii_RM": [float(r_values[0]), float(r_values[-1]), len(r_values)],
             "total_cases": grid_total,

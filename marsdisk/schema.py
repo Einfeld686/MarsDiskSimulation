@@ -1631,6 +1631,17 @@ class CollisionCache(BaseModel):
         False,
         description="Persist collision caches across runs in the same process (0D only).",
     )
+    size_scale: float = Field(
+        1.0,
+        gt=0.0,
+        description="Scale factor applied to collision cache LRU sizes (fragment/weights/qstar/supply).",
+    )
+
+    @field_validator("size_scale")
+    def _check_size_scale(cls, value: float) -> float:
+        if not math.isfinite(value) or value <= 0.0:
+            raise ConfigurationError("numerics.collision_cache.size_scale must be positive and finite")
+        return float(value)
 
 
 class Checkpoint(BaseModel):

@@ -8,6 +8,20 @@ import matplotlib.pyplot as plt
 import pandas as pd
 
 
+def _resolve_table_path(path: Path) -> Path:
+    suffix = path.suffix.lower()
+    if suffix == ".csv":
+        parquet_path = path.with_suffix(".parquet")
+        if parquet_path.exists():
+            if not path.exists() or parquet_path.stat().st_mtime >= path.stat().st_mtime:
+                return parquet_path
+    elif suffix in {".parquet", ".pq"} and not path.exists():
+        csv_path = path.with_suffix(".csv")
+        if csv_path.exists():
+            return csv_path
+    return path
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Plot M_loss(M_Mars) versus radius from AXIS_r_sweep/summary.csv."
@@ -29,9 +43,13 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> None:
     args = parse_args()
-    if not args.summary.exists():
-        raise FileNotFoundError(f"Summary CSV not found: {args.summary}")
-    df = pd.read_csv(args.summary)
+    summary_path = _resolve_table_path(args.summary)
+    if not summary_path.exists():
+        raise FileNotFoundError(f"Summary CSV not found: {summary_path}")
+    if summary_path.suffix.lower() in {".parquet", ".pq"}:
+        df = pd.read_parquet(summary_path)
+    else:
+        df = pd.read_csv(summary_path)
 
     required = {"r_RM", "M_loss_MMars", "T_M_K"}
     missing = sorted(required.difference(df.columns))
@@ -83,4 +101,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-

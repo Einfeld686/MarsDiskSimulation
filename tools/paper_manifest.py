@@ -101,6 +101,20 @@ def _model_dump(model: BaseModel) -> Dict[str, Any]:
     return model.dict()
 
 
+def _resolve_table_path(path: Path) -> Path:
+    suffix = path.suffix.lower()
+    if suffix == ".csv":
+        parquet_path = path.with_suffix(".parquet")
+        if parquet_path.exists():
+            if not path.exists() or parquet_path.stat().st_mtime >= path.stat().st_mtime:
+                return parquet_path
+    elif suffix in {".parquet", ".pq"} and not path.exists():
+        csv_path = path.with_suffix(".csv")
+        if csv_path.exists():
+            return csv_path
+    return path
+
+
 def _resolve_outdir(run: RunEntry, base_dir: Path) -> Tuple[Optional[Path], List[Path]]:
     """Return chosen outdir and all matches considered."""
     candidates: List[Path] = []
@@ -124,9 +138,13 @@ def _read_summary(path: Path) -> Dict[str, Any]:
 
 
 def _evaluate_mass_budget(csv_path: Path, tolerance_percent: float) -> Tuple[Optional[Dict[str, Any]], Optional[Dict[str, Any]]]:
+    csv_path = _resolve_table_path(csv_path)
     if not csv_path.exists():
         return None, None
-    df = pd.read_csv(csv_path)
+    if csv_path.suffix.lower() in {".parquet", ".pq"}:
+        df = pd.read_parquet(csv_path)
+    else:
+        df = pd.read_csv(csv_path)
     if df.empty or "error_percent" not in df.columns:
         return None, None
     df["abs_error"] = df["error_percent"].abs()
@@ -193,7 +211,7 @@ def _collect_run(run: RunEntry, base_dir: Path, checks_cfg: PaperCheckSettings, 
         path = abs_path(rel)
         resolved_paths[f"series_{key}"] = str(path) if path.exists() else None
     for key, rel in run.checks.items():
-        path = abs_path(rel)
+        path = _resolve_table_path(abs_path(rel))
         resolved_paths[f"check_{key}"] = str(path) if path.exists() else None
     resolved["paths"] = resolved_paths
 

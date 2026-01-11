@@ -14,6 +14,8 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional, Tuple
 
+import pandas as pd
+
 ALLOWED_STATUSES = {"success", "cached"}
 REQUIRED_KEYS = {"case_status", "M_loss"}
 
@@ -27,6 +29,20 @@ def _output_stub(map_id: str) -> str:
     if key.startswith("map"):
         return key
     return f"map{key}"
+
+
+def _resolve_table_path(path: Path) -> Path:
+    suffix = path.suffix.lower()
+    if suffix == ".csv":
+        parquet_path = path.with_suffix(".parquet")
+        if parquet_path.exists():
+            if not path.exists() or parquet_path.stat().st_mtime >= path.stat().st_mtime:
+                return parquet_path
+    elif suffix in {".parquet", ".pq"} and not path.exists():
+        csv_path = path.with_suffix(".csv")
+        if csv_path.exists():
+            return csv_path
+    return path
 
 
 def _parse_triplet(values: Iterable[str], default: Tuple[float, float, int]) -> Tuple[float, float, int]:
@@ -145,8 +161,17 @@ def _run_case(
 
 
 def _load_rows(path: Path) -> List[Dict[str, str]]:
+    path = _resolve_table_path(path)
     if not path.exists():
         return []
+    if path.suffix.lower() in {".parquet", ".pq"}:
+        df = pd.read_parquet(path)
+        if df.empty:
+            return []
+        records: List[Dict[str, str]] = []
+        for row in df.to_dict(orient="records"):
+            records.append({k: "" if pd.isna(v) else str(v) for k, v in row.items()})
+        return records
     with path.open("r", encoding="utf-8", newline="") as handle:
         reader = csv.DictReader(handle)
         return list(reader)
@@ -173,15 +198,24 @@ def _fallback_expected_row_count(rows: List[Dict[str, str]]) -> int:
 
 
 def _check_mass_budget(path: Path) -> Optional[str]:
+    path = _resolve_table_path(path)
     if not path.exists():
-        return "mass_budget.csv missing"
+        return "mass_budget log missing"
+    if path.suffix.lower() in {".parquet", ".pq"}:
+        try:
+            df = pd.read_parquet(path)
+        except Exception as exc:
+            return f"mass_budget log read failed: {exc}"
+        if df.empty:
+            return "mass_budget log has no data rows"
+        return None
     try:
         with path.open("r", encoding="utf-8") as handle:
             lines = handle.readlines()
     except OSError as exc:
-        return f"mass_budget.csv read failed: {exc}"
+        return f"mass_budget log read failed: {exc}"
     if len(lines) < 2:
-        return "mass_budget.csv has no data rows"
+        return "mass_budget log has no data rows"
     return None
 
 
@@ -332,7 +366,7 @@ def main() -> int:
         base_config_path = (repo_root / base_config_path).resolve()
     if not base_config_path.exists():
         raise FileNotFoundError(f"Base config not found: {base_config_path}")
-    qpr_table_path = Path(args.qpr_table)
+    qpr_table_path = _resolve_table_path(Path(args.qpr_table))
     if not qpr_table_path.is_absolute():
         qpr_table_path = (repo_root / qpr_table_path).resolve()
     if not qpr_table_path.exists():

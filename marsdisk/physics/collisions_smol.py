@@ -441,11 +441,15 @@ def supply_mass_rate_to_number_source(
 
 
 _FRAG_CACHE: dict[tuple, np.ndarray] = {}
-_FRAG_CACHE_MAX = 32
+_DEFAULT_FRAG_CACHE_MAX = 32
+_DEFAULT_WEIGHTS_CACHE_MAX = 16
+_DEFAULT_QSTAR_CACHE_MAX = 8
+_DEFAULT_SUPPLY_CACHE_MAX = 16
+_FRAG_CACHE_MAX = _DEFAULT_FRAG_CACHE_MAX
 _FRAG_CACHE_LOCK = threading.Lock()
-_WEIGHTS_CACHE_MAX = 16
-_QSTAR_CACHE_MAX = 8
-_SUPPLY_CACHE_MAX = 16
+_WEIGHTS_CACHE_MAX = _DEFAULT_WEIGHTS_CACHE_MAX
+_QSTAR_CACHE_MAX = _DEFAULT_QSTAR_CACHE_MAX
+_SUPPLY_CACHE_MAX = _DEFAULT_SUPPLY_CACHE_MAX
 
 # Cache keys cover size/edge versions (or fingerprints), rho, scalar v_rel, alpha_frag,
 # and the Q_D* signature to prevent cross-cell contamination in 1D runs.
@@ -462,6 +466,32 @@ def reset_collision_caches() -> None:
             cache.clear()
     if hasattr(_THREAD_LOCAL, "frag_ws"):
         _THREAD_LOCAL.frag_ws = None
+
+
+def configure_collision_cache_limits(*, scale: float | None = None) -> None:
+    """Configure LRU limits for collision caches."""
+
+    global _FRAG_CACHE_MAX, _WEIGHTS_CACHE_MAX, _QSTAR_CACHE_MAX, _SUPPLY_CACHE_MAX
+    scale_value = 1.0 if scale is None else float(scale)
+    if not math.isfinite(scale_value) or scale_value <= 0.0:
+        raise MarsDiskError("collision cache size_scale must be positive and finite")
+    _FRAG_CACHE_MAX = max(1, int(round(_DEFAULT_FRAG_CACHE_MAX * scale_value)))
+    _WEIGHTS_CACHE_MAX = max(1, int(round(_DEFAULT_WEIGHTS_CACHE_MAX * scale_value)))
+    _QSTAR_CACHE_MAX = max(1, int(round(_DEFAULT_QSTAR_CACHE_MAX * scale_value)))
+    _SUPPLY_CACHE_MAX = max(1, int(round(_DEFAULT_SUPPLY_CACHE_MAX * scale_value)))
+    with _FRAG_CACHE_LOCK:
+        while len(_FRAG_CACHE) > _FRAG_CACHE_MAX:
+            _FRAG_CACHE.pop(next(iter(_FRAG_CACHE)))
+    for name, limit in (
+        ("weights_cache", _WEIGHTS_CACHE_MAX),
+        ("qstar_cache", _QSTAR_CACHE_MAX),
+        ("supply_cache", _SUPPLY_CACHE_MAX),
+    ):
+        cache = getattr(_THREAD_LOCAL, name, None)
+        if cache is None:
+            continue
+        while len(cache) > limit:
+            cache.popitem(last=False)
 
 
 def _get_fragment_workspace(

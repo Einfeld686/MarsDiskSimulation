@@ -2657,6 +2657,11 @@ def run_zero_d(
     energy_last_row: Optional[Dict[str, float]] = None
     energy_count = 0
     collision_cache_cfg = getattr(cfg.numerics, "collision_cache", None)
+    cache_scale = float(getattr(collision_cache_cfg, "size_scale", 1.0)) if collision_cache_cfg is not None else 1.0
+    try:
+        collisions_smol.configure_collision_cache_limits(scale=cache_scale)
+    except Exception as exc:
+        logger.warning("collision cache size_scale ignored: %s", exc)
     persist_collision_cache = bool(
         getattr(collision_cache_cfg, "persist", False) if collision_cache_cfg is not None else False
     )

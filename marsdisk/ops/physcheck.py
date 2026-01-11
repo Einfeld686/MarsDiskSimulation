@@ -109,11 +109,19 @@ def _mass_budget_check() -> CheckResult:
     detail = f"synthetic mass budget error={err:.3e}"
     if abs(err) > 1e-12:
         return CheckResult("mass_budget:C4", "FAIL", detail)
-    if MASS_BUDGET_LOG.exists():
+    mass_budget_path = MASS_BUDGET_LOG
+    parquet_path = MASS_BUDGET_LOG.with_suffix(".parquet")
+    if parquet_path.exists():
+        if not mass_budget_path.exists() or parquet_path.stat().st_mtime >= mass_budget_path.stat().st_mtime:
+            mass_budget_path = parquet_path
+    if mass_budget_path.exists():
         try:
             import pandas as pd
 
-            df = pd.read_csv(MASS_BUDGET_LOG)
+            if mass_budget_path.suffix == ".parquet":
+                df = pd.read_parquet(mass_budget_path)
+            else:
+                df = pd.read_csv(mass_budget_path)
             max_err = df["mass_budget_error_percent"].abs().max()
             if max_err > 0.5:
                 return CheckResult(

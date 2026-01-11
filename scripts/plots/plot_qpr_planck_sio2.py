@@ -22,9 +22,27 @@ if str(ROOT) not in sys.path:
 from paper.plot_style import apply_default_style
 
 
+def _resolve_table_path(path: Path) -> Path:
+    suffix = path.suffix.lower()
+    if suffix == ".csv":
+        parquet_path = path.with_suffix(".parquet")
+        if parquet_path.exists():
+            if not path.exists() or parquet_path.stat().st_mtime >= path.stat().st_mtime:
+                return parquet_path
+    elif suffix in {".parquet", ".pq"} and not path.exists():
+        csv_path = path.with_suffix(".csv")
+        if csv_path.exists():
+            return csv_path
+    return path
+
+
 def _load_table(path: Path) -> pd.DataFrame:
     """Load and sort the Q_pr table."""
-    df = pd.read_csv(path)
+    path = _resolve_table_path(path)
+    if path.suffix.lower() in {".parquet", ".pq"}:
+        df = pd.read_parquet(path)
+    else:
+        df = pd.read_csv(path)
     expected = {"T_M", "s", "Q_pr"}
     missing = expected.difference(df.columns)
     if missing:

@@ -27,6 +27,9 @@ logger = logging.getLogger(__name__)
 def _read_tau_range(table_path: Path) -> tuple[float, float] | None:
     """Extract τ range from a CSV file. Self-shielding Φ."""
 
+    if table_path.suffix.lower() not in {".csv"}:
+        return None
+
     try:
         with table_path.open("r", encoding="utf-8") as fh:
             reader = csv.DictReader(fh)
@@ -54,6 +57,16 @@ def load_phi_table(path: Path | str) -> Callable[[float], float]:
     """Load a τ-only Φ lookup table with logging. Self-shielding Φ."""
 
     table_path = Path(path)
+    suffix = table_path.suffix.lower()
+    if suffix == ".csv":
+        parquet_path = table_path.with_suffix(".parquet")
+        if parquet_path.exists():
+            if not table_path.exists() or parquet_path.stat().st_mtime >= table_path.stat().st_mtime:
+                table_path = parquet_path
+    elif suffix in {".parquet", ".pq"} and not table_path.exists():
+        csv_path = table_path.with_suffix(".csv")
+        if csv_path.exists():
+            table_path = csv_path
     phi_fn = tables.load_phi_table(table_path)
     tau_range = _read_tau_range(table_path)
     if tau_range is not None:

@@ -19,8 +19,25 @@ from marsdisk.physics import radiation
 from paper.plot_style import apply_default_style
 
 
+def _resolve_table_path(path: Path) -> Path:
+    suffix = path.suffix.lower()
+    if suffix == ".csv":
+        parquet_path = path.with_suffix(".parquet")
+        if parquet_path.exists():
+            if not path.exists() or parquet_path.stat().st_mtime >= path.stat().st_mtime:
+                return parquet_path
+    elif suffix in {".parquet", ".pq"} and not path.exists():
+        csv_path = path.with_suffix(".csv")
+        if csv_path.exists():
+            return csv_path
+    return path
+
+
 def _load_temperatures(path: Path) -> np.ndarray:
-    df = pd.read_csv(path)
+    if path.suffix.lower() in {".parquet", ".pq"}:
+        df = pd.read_parquet(path)
+    else:
+        df = pd.read_csv(path)
     if "T_M" not in df.columns:
         raise ValueError(f"{path} must contain a T_M column")
     temps = np.unique(df["T_M"].astype(float))
@@ -58,7 +75,7 @@ def parse_args(argv: Iterable[str] | None = None) -> argparse.Namespace:
 
 def main(argv: Iterable[str] | None = None) -> None:
     args = parse_args(argv)
-    table_path = args.table
+    table_path = _resolve_table_path(args.table)
     if not table_path.exists():
         raise FileNotFoundError(f"Q_pr table not found: {table_path}")
 

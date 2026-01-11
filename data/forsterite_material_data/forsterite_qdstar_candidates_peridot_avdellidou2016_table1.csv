@@ -1,4 +1,0 @@
-run_id,Q_D_star_J_per_kg,target_material,target_porosity_percent,fit_A,fit_c,source
-Run#1,646000.0,water-ice,0,0.000689,0.49,arXiv:1612.05060 Table 1
-Run#2,240000.0,water-ice,35,0.014,0.28,arXiv:1612.05060 Table 1
-Run#3,2580000.0,CaCO3 powder,70,1.8e-12,1.78,arXiv:1612.05060 Table 1

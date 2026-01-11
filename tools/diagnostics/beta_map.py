@@ -54,6 +54,20 @@ TAU_FLOOR = 1.0e-12
 REL_T_VARIANCE_THRESHOLD = 0.01
 
 
+def _resolve_table_path(path: Path) -> Path:
+    suffix = path.suffix.lower()
+    if suffix == ".csv":
+        parquet_path = path.with_suffix(".parquet")
+        if parquet_path.exists():
+            if not path.exists() or parquet_path.stat().st_mtime >= path.stat().st_mtime:
+                return parquet_path
+    elif suffix in {".parquet", ".pq"} and not path.exists():
+        csv_path = path.with_suffix(".csv")
+        if csv_path.exists():
+            return csv_path
+    return path
+
+
 class QPrCounter:
     """Wrapper counting successful/failed Q_pr interpolations."""
 
@@ -223,7 +237,11 @@ def resolve_phi_function(
     default_g = 0.0
 
     def _from_three_d_table(path: Path) -> Tuple[Callable[[float], float], str]:
-        df = pd.read_csv(path)
+        path = _resolve_table_path(path)
+        if path.suffix.lower() in {".parquet", ".pq"}:
+            df = pd.read_parquet(path)
+        else:
+            df = pd.read_csv(path)
         table_obj = tables.PhiTable.from_frame(df)
 
         def phi_fn(tau: float) -> float:
@@ -565,7 +583,7 @@ def main() -> None:
     logger = setup_logger(args.log_path)
     cfg = load_config(args.config)
 
-    qpr_table = args.qpr_table.resolve()
+    qpr_table = _resolve_table_path(args.qpr_table).resolve()
     if not qpr_table.exists():
         raise FileNotFoundError(f"Q_pr table not found: {qpr_table}")
     qpr_lookup_fn = tables.load_qpr_table(qpr_table)

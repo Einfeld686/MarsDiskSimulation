@@ -27,6 +27,20 @@ SERIES_ATOL = 1.0e-10
 MASS_BUDGET_TOL = 0.5
 
 
+def _resolve_table_path(path: Path) -> Path:
+    suffix = path.suffix.lower()
+    if suffix == ".csv":
+        parquet_path = path.with_suffix(".parquet")
+        if parquet_path.exists():
+            if not path.exists() or parquet_path.stat().st_mtime >= path.stat().st_mtime:
+                return parquet_path
+    elif suffix in {".parquet", ".pq"} and not path.exists():
+        csv_path = path.with_suffix(".csv")
+        if csv_path.exists():
+            return csv_path
+    return path
+
+
 def _read_json(path: Path) -> dict[str, Any]:
     with path.open("r", encoding="utf-8") as fh:
         return json.load(fh)
@@ -148,7 +162,11 @@ def _compare_summary(
 
 
 def _read_mass_budget(path: Path) -> tuple[float, bool]:
-    df = pd.read_csv(path)
+    path = _resolve_table_path(path)
+    if path.suffix.lower() in {".parquet", ".pq"}:
+        df = pd.read_parquet(path)
+    else:
+        df = pd.read_csv(path)
     if "error_percent" not in df.columns:
         return float("inf"), False
     max_err = float(df["error_percent"].max()) if not df.empty else 0.0
@@ -216,8 +234,8 @@ def main() -> int:
     summary_new_path = new_dir / "summary.json"
     series_ref_path = ref_dir / "series" / "run.parquet"
     series_new_path = new_dir / "series" / "run.parquet"
-    budget_ref_path = ref_dir / "checks" / "mass_budget.csv"
-    budget_new_path = new_dir / "checks" / "mass_budget.csv"
+    budget_ref_path = _resolve_table_path(ref_dir / "checks" / "mass_budget.csv")
+    budget_new_path = _resolve_table_path(new_dir / "checks" / "mass_budget.csv")
 
     for path in [summary_ref_path, summary_new_path, series_ref_path, series_new_path, budget_ref_path, budget_new_path]:
         if not path.exists():

@@ -33,6 +33,10 @@ def _validate_cases(repo_root: Path, cases: Iterable[Tuple[str, str, str]]) -> N
     for t_raw, _, _ in cases:
         t_token = _normalize_temp_token(t_raw)
         table = repo_root / "data" / f"mars_temperature_T{t_token}p0K.csv"
+        parquet_path = table.with_suffix(".parquet")
+        if parquet_path.exists():
+            if not table.exists() or parquet_path.stat().st_mtime >= table.stat().st_mtime:
+                table = parquet_path
         if not table.exists():
             missing.append(str(table))
     if missing:

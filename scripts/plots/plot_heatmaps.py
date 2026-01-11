@@ -22,6 +22,20 @@ BETA_METRIC_LABELS = {
 }
 
 
+def _resolve_table_path(path: Path) -> Path:
+    suffix = path.suffix.lower()
+    if suffix == ".csv":
+        parquet_path = path.with_suffix(".parquet")
+        if parquet_path.exists():
+            if not path.exists() or parquet_path.stat().st_mtime >= path.stat().st_mtime:
+                return parquet_path
+    elif suffix in {".parquet", ".pq"} and not path.exists():
+        csv_path = path.with_suffix(".csv")
+        if csv_path.exists():
+            return csv_path
+    return path
+
+
 def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     """コマンドライン引数を解釈する。"""
 
@@ -65,10 +79,13 @@ def _normalise_map_key(map_arg: str) -> Tuple[str, str]:
 def load_csv(map_stub: str) -> pd.DataFrame:
     """指定マップIDのCSVを読み込む。"""
 
-    csv_path = Path("results") / f"{map_stub}.csv"
+    csv_path = _resolve_table_path(Path("results") / f"{map_stub}.csv")
     if not csv_path.exists():
         raise FileNotFoundError(f"CSVファイルが見つかりません: {csv_path}")
-    df = pd.read_csv(csv_path)
+    if csv_path.suffix.lower() in {".parquet", ".pq"}:
+        df = pd.read_parquet(csv_path)
+    else:
+        df = pd.read_csv(csv_path)
     required_columns = {
         "map_id",
         "case_id",

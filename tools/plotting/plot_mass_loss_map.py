@@ -16,6 +16,20 @@ DEFAULT_CONTOURS = (0.1, 0.3, 0.5)
 DEFAULT_CMAP = "magma"
 
 
+def _resolve_table_path(path: Path) -> Path:
+    suffix = path.suffix.lower()
+    if suffix == ".csv":
+        parquet_path = path.with_suffix(".parquet")
+        if parquet_path.exists():
+            if not path.exists() or parquet_path.stat().st_mtime >= path.stat().st_mtime:
+                return parquet_path
+    elif suffix in {".parquet", ".pq"} and not path.exists():
+        csv_path = path.with_suffix(".csv")
+        if csv_path.exists():
+            return csv_path
+    return path
+
+
 def _parse_contours(values: Sequence[float]) -> Sequence[float]:
     levels = [float(value) for value in values if value is not None]
     return [level for level in levels if level >= 0.0]
@@ -110,10 +124,13 @@ def _make_annotation(
 
 def main() -> None:
     args = parse_args()
-    csv_path = args.csv
+    csv_path = _resolve_table_path(args.csv)
     if not csv_path.exists():
         raise FileNotFoundError(f"CSV file not found: {csv_path}")
-    df = pd.read_csv(csv_path)
+    if csv_path.suffix.lower() in {".parquet", ".pq"}:
+        df = pd.read_parquet(csv_path)
+    else:
+        df = pd.read_csv(csv_path)
     required = {"r_RM", "T_M", "mass_loss_frac_per_orbit"}
     missing = sorted(required - set(df.columns))
     if missing:

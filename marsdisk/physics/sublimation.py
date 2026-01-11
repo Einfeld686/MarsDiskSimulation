@@ -213,11 +213,23 @@ def _load_psat_table(params: SublimationParams) -> Callable[[float], float]:
         raise PhysicsError("psat_table_path must be provided when psat_model='tabulated'")
 
     path = Path(params.psat_table_path).expanduser()
+    suffix = path.suffix.lower()
+    if suffix == ".csv":
+        parquet_path = path.with_suffix(".parquet")
+        if parquet_path.exists():
+            if not path.exists() or parquet_path.stat().st_mtime >= path.stat().st_mtime:
+                path = parquet_path
+    elif suffix in {".parquet", ".pq"} and not path.exists():
+        csv_path = path.with_suffix(".csv")
+        if csv_path.exists():
+            path = csv_path
     if not path.exists():
         raise FileNotFoundError(f"psat table {path} does not exist")
     suffix = path.suffix.lower()
     if suffix in {".csv", ".txt"}:
         df = pd.read_csv(path)
+    elif suffix in {".parquet", ".pq"}:
+        df = pd.read_parquet(path)
     elif suffix in {".json"}:
         df = pd.read_json(path)
     else:

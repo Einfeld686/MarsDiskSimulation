@@ -43,6 +43,20 @@ ALT_EXPORT_FIELDS = (
 )
 
 
+def _resolve_table_path(path: Path) -> Path:
+    suffix = path.suffix.lower()
+    if suffix == ".csv":
+        parquet_path = path.with_suffix(".parquet")
+        if parquet_path.exists():
+            if not path.exists() or parquet_path.stat().st_mtime >= path.stat().st_mtime:
+                return parquet_path
+    elif suffix in {".parquet", ".pq"} and not path.exists():
+        csv_path = path.with_suffix(".csv")
+        if csv_path.exists():
+            return csv_path
+    return path
+
+
 def _parse_grid(spec: Sequence[float], label: str) -> np.ndarray:
     if len(spec) != 3:
         raise ValueError(f"{label} requires three numbers: start stop count")
@@ -302,7 +316,7 @@ def parse_args() -> argparse.Namespace:
 def main() -> None:
     args = parse_args()
     base_config = args.base_config
-    qpr_table = args.qpr_table
+    qpr_table = _resolve_table_path(args.qpr_table)
     outdir = args.outdir
     outdir.mkdir(parents=True, exist_ok=True)
 

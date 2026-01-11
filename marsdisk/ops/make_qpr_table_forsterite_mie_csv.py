@@ -160,12 +160,27 @@ def _load_eckes_tables(
     lam_min_um: float,
     lam_max_um: float,
 ) -> tuple[np.ndarray, dict[str, NKTemperatureGrid]]:
-    df = pd.read_csv(
-        csv_path,
-        usecols=["source_id", "temperature_K", "wavelength_um", "n", "k", "axis"],
-        dtype=str,
-        low_memory=False,
-    )
+    table_path = Path(csv_path)
+    suffix = table_path.suffix.lower()
+    if suffix == ".csv":
+        parquet_path = table_path.with_suffix(".parquet")
+        if parquet_path.exists():
+            if not table_path.exists() or parquet_path.stat().st_mtime >= table_path.stat().st_mtime:
+                table_path = parquet_path
+    elif suffix in {".parquet", ".pq"} and not table_path.exists():
+        fallback_csv = table_path.with_suffix(".csv")
+        if fallback_csv.exists():
+            table_path = fallback_csv
+    columns = ["source_id", "temperature_K", "wavelength_um", "n", "k", "axis"]
+    if table_path.suffix.lower() in {".parquet", ".pq"}:
+        df = pd.read_parquet(table_path, columns=columns)
+    else:
+        df = pd.read_csv(
+            table_path,
+            usecols=columns,
+            dtype=str,
+            low_memory=False,
+        )
     df = df[df["source_id"] == source_id].copy()
     if df.empty:
         raise ValueError(f"No rows found for source_id={source_id} in {csv_path}")

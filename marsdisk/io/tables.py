@@ -232,6 +232,16 @@ def load_e_profile_table(path: str | Path, *, r_column: str) -> EccentricityProf
     """Read a CSV table and return the eccentricity profile interpolator."""
 
     table_path = Path(path)
+    suffix = table_path.suffix.lower()
+    if suffix == ".csv":
+        parquet_path = table_path.with_suffix(".parquet")
+        if parquet_path.exists():
+            if not table_path.exists() or parquet_path.stat().st_mtime >= table_path.stat().st_mtime:
+                table_path = parquet_path
+    elif suffix in {".parquet", ".pq"} and not table_path.exists():
+        csv_path = table_path.with_suffix(".csv")
+        if csv_path.exists():
+            table_path = csv_path
     if not table_path.exists():
         raise ValueError(f"Eccentricity profile table does not exist: {table_path}")
 
@@ -241,7 +251,10 @@ def load_e_profile_table(path: str | Path, *, r_column: str) -> EccentricityProf
         return cached
 
     try:
-        df = pd.read_csv(resolved)
+        if resolved.suffix.lower() in {".parquet", ".pq"}:
+            df = pd.read_parquet(resolved)
+        else:
+            df = pd.read_csv(resolved)
     except Exception as exc:  # pragma: no cover - pandas already tested
         raise ValueError(f"Failed to read eccentricity profile table from {resolved}: {exc}") from exc
 
@@ -310,6 +323,8 @@ def _read_qpr_frame(path: Path) -> pd.DataFrame:
     try:
         if path.suffix in {".h5", ".hdf", ".hdf5"}:
             df = pd.read_hdf(path)
+        elif path.suffix in {".parquet", ".pq"}:
+            df = pd.read_parquet(path)
         else:
             df = pd.read_csv(path)
     except Exception:  # pragma: no cover - handled by fallback
@@ -322,7 +337,9 @@ def _read_qpr_frame(path: Path) -> pd.DataFrame:
 
 
 _EXPECTED_QPR_LOCATIONS: Sequence[Path] = (
+    REPO_DATA_DIR / "qpr_table.parquet",
     REPO_DATA_DIR / "qpr_table.csv",
+    PACKAGE_DATA_DIR / "qpr_planck.parquet",
     PACKAGE_DATA_DIR / "qpr_planck.h5",
     PACKAGE_DATA_DIR / "qpr_planck.csv",
 )
@@ -355,7 +372,17 @@ if _QPR_TABLE is None:
 
 try:
     phi_path = DATA_DIR / "phi.csv"
-    _PHI_TABLE = PhiTable.from_frame(pd.read_csv(phi_path)) if phi_path.exists() else None
+    if not phi_path.exists():
+        parquet_path = phi_path.with_suffix(".parquet")
+        if parquet_path.exists():
+            phi_path = parquet_path
+    if phi_path.exists():
+        if phi_path.suffix.lower() in {".parquet", ".pq"}:
+            _PHI_TABLE = PhiTable.from_frame(pd.read_parquet(phi_path))
+        else:
+            _PHI_TABLE = PhiTable.from_frame(pd.read_csv(phi_path))
+    else:
+        _PHI_TABLE = None
     if _PHI_TABLE is None:
         warnings.warn("Phi table not found; using analytic approximation", TableWarning)
 except Exception as exc:  # pragma: no cover - defensive
@@ -393,6 +420,16 @@ def load_qpr_table(path: str | Path) -> Callable[[float, float], float]:
     global _QPR_TABLE, _QPR_TABLE_PATH
 
     table_path = Path(path)
+    suffix = table_path.suffix.lower()
+    if suffix == ".csv":
+        parquet_path = table_path.with_suffix(".parquet")
+        if parquet_path.exists():
+            if not table_path.exists() or parquet_path.stat().st_mtime >= table_path.stat().st_mtime:
+                table_path = parquet_path
+    elif suffix in {".parquet", ".pq"} and not table_path.exists():
+        csv_path = table_path.with_suffix(".csv")
+        if csv_path.exists():
+            table_path = csv_path
     if not table_path.exists():
         raise ValueError(f"Q_pr table file does not exist: {table_path}")
 
@@ -406,11 +443,24 @@ def load_phi_table(path: str | Path) -> Callable[[float], float]:
     """Create a clamped interpolator from a Φ(τ) CSV file. Self-shielding Φ."""
 
     table_path = Path(path)
+    suffix = table_path.suffix.lower()
+    if suffix == ".csv":
+        parquet_path = table_path.with_suffix(".parquet")
+        if parquet_path.exists():
+            if not table_path.exists() or parquet_path.stat().st_mtime >= table_path.stat().st_mtime:
+                table_path = parquet_path
+    elif suffix in {".parquet", ".pq"} and not table_path.exists():
+        csv_path = table_path.with_suffix(".csv")
+        if csv_path.exists():
+            table_path = csv_path
     if not table_path.exists():
         raise ValueError(f"Phi table file does not exist: {table_path}")
 
     try:
-        df = pd.read_csv(table_path)
+        if table_path.suffix.lower() in {".parquet", ".pq"}:
+            df = pd.read_parquet(table_path)
+        else:
+            df = pd.read_csv(table_path)
     except Exception as exc:  # pragma: no cover - pandas already tested
         raise ValueError(f"Failed to read Phi table from {table_path}: {exc}") from exc
 

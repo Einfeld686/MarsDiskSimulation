@@ -47,6 +47,20 @@ DEFAULT_TOL_MASS_PER_R2 = 0.10
 DEFAULT_BASE_CONFIG = Path("configs/map_sweep_base.yml")
 
 
+def _resolve_table_path(path: Path) -> Path:
+    suffix = path.suffix.lower()
+    if suffix == ".csv":
+        parquet_path = path.with_suffix(".parquet")
+        if parquet_path.exists():
+            if not path.exists() or parquet_path.stat().st_mtime >= path.stat().st_mtime:
+                return parquet_path
+    elif suffix in {".parquet", ".pq"} and not path.exists():
+        csv_path = path.with_suffix(".csv")
+        if csv_path.exists():
+            return csv_path
+    return path
+
+
 @dataclass(frozen=True)
 class ParamSpec:
     """Definition of a sweep parameter axis."""
@@ -1441,10 +1455,14 @@ def main(argv: Optional[Iterable[str]] = None) -> None:
         all_present = True
         for idx in range(1, num_parts + 1):
             candidate = parts_dir / f"{map_def.output_stub}_part{idx:02d}_of{num_parts:02d}.csv"
+            candidate = _resolve_table_path(candidate)
             if not candidate.exists():
                 all_present = False
                 break
-            combined_frames.append(pd.read_csv(candidate))
+            if candidate.suffix.lower() in {".parquet", ".pq"}:
+                combined_frames.append(pd.read_parquet(candidate))
+            else:
+                combined_frames.append(pd.read_csv(candidate))
         if all_present and combined_frames:
             combined = pd.concat(combined_frames, ignore_index=True)
             if "case_id" in combined.columns:

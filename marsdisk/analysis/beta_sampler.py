@@ -57,6 +57,20 @@ from ..physics import radiation
 from ..run import run_zero_d
 
 
+def _resolve_table_path(path: Path) -> Path:
+    suffix = path.suffix.lower()
+    if suffix == ".csv":
+        parquet_path = path.with_suffix(".parquet")
+        if parquet_path.exists():
+            if not path.exists() or parquet_path.stat().st_mtime >= path.stat().st_mtime:
+                return parquet_path
+    elif suffix in {".parquet", ".pq"} and not path.exists():
+        csv_path = path.with_suffix(".csv")
+        if csv_path.exists():
+            return csv_path
+    return path
+
+
 @dataclass
 class BetaSamplingConfig:
     """Configuration bundle for :func:`sample_beta_over_orbit`.
@@ -98,8 +112,10 @@ class BetaSamplingConfig:
     def __post_init__(self) -> None:
         if not isinstance(self.base_config, Config):
             raise TypeError("base_config must be an instance of marsdisk.schema.Config")
-        if not Path(self.qpr_table_path).exists():
-            raise FileNotFoundError(f"Q_pr table not found: {self.qpr_table_path}")
+        resolved_qpr = _resolve_table_path(Path(self.qpr_table_path))
+        self.qpr_table_path = resolved_qpr
+        if not resolved_qpr.exists():
+            raise FileNotFoundError(f"Q_pr table not found: {resolved_qpr}")
         if self.jobs < 1:
             raise ValueError("jobs must be at least 1")
         if self.min_steps < 1:

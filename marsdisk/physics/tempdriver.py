@@ -71,18 +71,44 @@ def _time_unit_scale(unit: str, t_orb: Optional[float]) -> float:
 
 
 def _load_table(path: Path) -> pd.DataFrame:
-    if not path.exists():
-        raise FileNotFoundError(f"Mars temperature driver table '{path}' not found")
-    suffix = path.suffix.lower()
+    table_path = Path(path)
+    suffix = table_path.suffix.lower()
+    if suffix == ".csv":
+        parquet_path = table_path.with_suffix(".parquet")
+        if parquet_path.exists():
+            if not table_path.exists() or parquet_path.stat().st_mtime >= table_path.stat().st_mtime:
+                table_path = parquet_path
+    elif suffix in {".parquet", ".pq"} and not table_path.exists():
+        csv_path = table_path.with_suffix(".csv")
+        if csv_path.exists():
+            table_path = csv_path
+    if not table_path.exists():
+        raise FileNotFoundError(f"Mars temperature driver table '{table_path}' not found")
+    suffix = table_path.suffix.lower()
     if suffix in {".parquet", ".pq"}:
-        df = pd.read_parquet(path)
+        df = pd.read_parquet(table_path)
     elif suffix in {".json"}:
-        df = pd.read_json(path)
+        df = pd.read_json(table_path)
     else:
-        df = pd.read_csv(path)
+        df = pd.read_csv(table_path)
     if df.empty:
-        raise PhysicsError(f"Mars temperature driver table '{path}' is empty")
+        raise PhysicsError(f"Mars temperature driver table '{table_path}' is empty")
     return df
+
+
+def _table_exists(path: Path) -> bool:
+    table_path = Path(path)
+    suffix = table_path.suffix.lower()
+    if suffix == ".csv":
+        parquet_path = table_path.with_suffix(".parquet")
+        if parquet_path.exists():
+            if not table_path.exists() or parquet_path.stat().st_mtime >= table_path.stat().st_mtime:
+                return True
+    elif suffix in {".parquet", ".pq"} and not table_path.exists():
+        csv_path = table_path.with_suffix(".csv")
+        if csv_path.exists():
+            return True
+    return table_path.exists()
 
 
 def _prepare_table_driver(
@@ -499,7 +525,7 @@ def autogenerate_temperature_table_if_needed(
         and getattr(driver_cfg, "mode", "table") == "table"
         and getattr(driver_cfg, "table", None) is not None
         and getattr(driver_cfg.table, "path", None) is not None
-        and Path(driver_cfg.table.path).exists()
+        and _table_exists(Path(driver_cfg.table.path))
     ):
         return None
 

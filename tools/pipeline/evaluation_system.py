@@ -144,17 +144,31 @@ class EvaluationContext:
         self._orbit_rollup: Optional[pd.DataFrame] = None
         self._run_config: Optional[dict] = None
 
+    @staticmethod
+    def _resolve_table_path(path: Path) -> Path:
+        suffix = path.suffix.lower()
+        if suffix == ".csv":
+            parquet_path = path.with_suffix(".parquet")
+            if parquet_path.exists():
+                if not path.exists() or parquet_path.stat().st_mtime >= path.stat().st_mtime:
+                    return parquet_path
+        elif suffix in {".parquet", ".pq"} and not path.exists():
+            csv_path = path.with_suffix(".csv")
+            if csv_path.exists():
+                return csv_path
+        return path
+
     @property
     def summary_path(self) -> Path:
         return self.outdir / "summary.json"
 
     @property
     def mass_budget_path(self) -> Path:
-        return self.outdir / "checks" / "mass_budget.csv"
+        return self._resolve_table_path(self.outdir / "checks" / "mass_budget.csv")
 
     @property
     def orbit_rollup_path(self) -> Path:
-        return self.outdir / "orbit_rollup.csv"
+        return self._resolve_table_path(self.outdir / "orbit_rollup.csv")
 
     @property
     def run_config_path(self) -> Path:
@@ -191,13 +205,21 @@ class EvaluationContext:
     @property
     def mass_budget(self) -> pd.DataFrame:
         if self._mass_budget is None:
-            self._mass_budget = pd.read_csv(self.mass_budget_path)
+            path = self.mass_budget_path
+            if path.suffix.lower() in {".parquet", ".pq"}:
+                self._mass_budget = pd.read_parquet(path)
+            else:
+                self._mass_budget = pd.read_csv(path)
         return self._mass_budget
 
     @property
     def orbit_rollup(self) -> pd.DataFrame:
         if self._orbit_rollup is None:
-            self._orbit_rollup = pd.read_csv(self.orbit_rollup_path)
+            path = self.orbit_rollup_path
+            if path.suffix.lower() in {".parquet", ".pq"}:
+                self._orbit_rollup = pd.read_parquet(path)
+            else:
+                self._orbit_rollup = pd.read_csv(path)
         return self._orbit_rollup
 
     @property
