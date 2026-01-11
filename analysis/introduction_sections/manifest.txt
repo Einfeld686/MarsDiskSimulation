@@ -1,0 +1,9 @@
+# Ordered list of section files to build analysis/introduction.md.
+00_frontmatter.md
+01_terms.md
+02_prior_work.md
+03_objectives.md
+04_temperature_phase.md
+05_method.md
+06_outputs.md
+07_references.md

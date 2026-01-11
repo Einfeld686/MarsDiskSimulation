@@ -36,6 +36,9 @@ analysis-sync:
 	python -m tools.doc_sync_agent --all --write
 	python tools/readme_sync.py --write
 
+analysis-intro-sync:
+	python -m analysis.tools.merge_introduction_sections --write
+
 
 analysis-sync-commit:
 	python -m analysis.tools.render_assumptions
