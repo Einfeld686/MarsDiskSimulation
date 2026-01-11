@@ -219,16 +219,16 @@ marsdisk/archive.py:26:def _load_run_config(run_dir: Path) -> Dict[str, Any]
 marsdisk/archive.py:33:def _extract_archive_payload(payload: Dict[str, Any]) -> Dict[str, Any]
 marsdisk/archive.py:44:def _build_settings(archive_payload: Dict[str, Any], *, overrides: Dict[str, Any]) -> archive_mod.ArchiveSettings
 marsdisk/archive.py:69:def main(argv: Optional[list[str]]=None) -> int
-marsdisk/config_utils.py:18:def resolve_reference_radius(cfg: Config) -> Tuple[float, float, str]
-marsdisk/config_utils.py:44:def ensure_disk_geometry(cfg: Config, r_rm: float) -> None
-marsdisk/config_utils.py:58:def resolve_temperature_field(cfg: Config) -> Tuple[float, str]
-marsdisk/config_utils.py:70:def parse_override_value(raw: str) -> Any
-marsdisk/config_utils.py:97:def read_overrides_file(path: Path) -> List[str]
-marsdisk/config_utils.py:118:def apply_overrides_dict(payload: Dict[str, Any], overrides: Sequence[str]) -> Dict[str, Any]
-marsdisk/config_utils.py:156:def merge_physics_section(payload: Dict[str, Any]) -> Dict[str, Any]
-marsdisk/config_utils.py:175:def normalise_physics_mode(value: Any) -> str
-marsdisk/config_utils.py:191:def gather_git_info() -> Dict[str, Any]
-marsdisk/config_utils.py:218:def configure_logging(level: int, suppress_warnings: bool=False) -> None
+marsdisk/config_utils.py:20:def resolve_reference_radius(cfg: Config) -> Tuple[float, float, str]
+marsdisk/config_utils.py:46:def ensure_disk_geometry(cfg: Config, r_rm: float) -> None
+marsdisk/config_utils.py:60:def resolve_temperature_field(cfg: Config) -> Tuple[float, str]
+marsdisk/config_utils.py:72:def parse_override_value(raw: str) -> Any
+marsdisk/config_utils.py:107:def read_overrides_file(path: Path) -> List[str]
+marsdisk/config_utils.py:128:def apply_overrides_dict(payload: Dict[str, Any], overrides: Sequence[str]) -> Dict[str, Any]
+marsdisk/config_utils.py:166:def merge_physics_section(payload: Dict[str, Any]) -> Dict[str, Any]
+marsdisk/config_utils.py:185:def normalise_physics_mode(value: Any) -> str
+marsdisk/config_utils.py:201:def gather_git_info() -> Dict[str, Any]
+marsdisk/config_utils.py:228:def configure_logging(level: int, suppress_warnings: bool=False) -> None
 marsdisk/config_validator.py:22:class Severity(Enum)
 marsdisk/config_validator.py:30:class ValidationMessage
 marsdisk/config_validator.py:45:class ValidationResult
@@ -393,6 +393,18 @@ marsdisk/ops/make_qpr_table.py:81:def _parse_temperatures(raw: str) -> np.ndarra
 marsdisk/ops/make_qpr_table.py:95:def _build_size_grid(s_min: float, s_max: float, count: int) -> np.ndarray
 marsdisk/ops/make_qpr_table.py:106:def _write_hdf5(path: Path, qpr: np.ndarray, log10s: np.ndarray, temperatures: np.ndarray) -> None
 marsdisk/ops/make_qpr_table.py:120:def main(argv: Sequence[str] | None=None) -> None
+marsdisk/ops/make_qpr_table_forsterite_mie_csv.py:33:def _load_miepython(use_jit: bool)
+marsdisk/ops/make_qpr_table_forsterite_mie_csv.py:48:def _parse_temperatures(raw: str) -> np.ndarray
+marsdisk/ops/make_qpr_table_forsterite_mie_csv.py:58:def _build_size_grid(s_min: float, s_max: float, count: int) -> np.ndarray
+marsdisk/ops/make_qpr_table_forsterite_mie_csv.py:68:def _planck_lambda(wavelength_m: np.ndarray, temperature: float) -> np.ndarray
+marsdisk/ops/make_qpr_table_forsterite_mie_csv.py:74:def _load_nk_axis(path: Path) -> tuple[np.ndarray, np.ndarray, np.ndarray]
+marsdisk/ops/make_qpr_table_forsterite_mie_csv.py:88:def _merge_wavelength_grid(lam_axes: Sequence[np.ndarray], nk_axes: Sequence[tuple[np.ndarray, np.ndarray]], lam_min_um: float | None, lam_max_um: float | None) -> tuple[np.ndarray, list[tuple[np.ndarray, np.ndarray]]]
+marsdisk/ops/make_qpr_table_forsterite_mie_csv.py:119:def _resample_wavelength_grid(lam_um: np.ndarray, nk_axes: Sequence[tuple[np.ndarray, np.ndarray]], samples: int) -> tuple[np.ndarray, list[tuple[np.ndarray, np.ndarray]]]
+marsdisk/ops/make_qpr_table_forsterite_mie_csv.py:137:def _mie_qpr(m_complex: complex, x: float) -> float
+marsdisk/ops/make_qpr_table_forsterite_mie_csv.py:144:def _compute_qpr_lambda(lam_m: np.ndarray, s_values: np.ndarray, nk_axes: Sequence[tuple[np.ndarray, np.ndarray]], x_max: float | None=None) -> np.ndarray
+marsdisk/ops/make_qpr_table_forsterite_mie_csv.py:177:def compute_planck_mean_qpr(s_values: Sequence[float], temperatures: Sequence[float], lam_um: np.ndarray, nk_axes: Sequence[tuple[np.ndarray, np.ndarray]], x_max: float | None=None) -> np.ndarray
+marsdisk/ops/make_qpr_table_forsterite_mie_csv.py:199:def _resolve_temperature_tag(value: float) -> int
+marsdisk/ops/make_qpr_table_forsterite_mie_csv.py:206:def main(argv: Sequence[str] | None=None) -> None
 marsdisk/ops/make_qpr_table_sio2_abbas_calibrated_lowT_csv.py:62:def _planck_lambda(wavelength_m: np.ndarray, temperature: float) -> np.ndarray
 marsdisk/ops/make_qpr_table_sio2_abbas_calibrated_lowT_csv.py:68:def _qpr_model(size_parameter: np.ndarray, amplitude: float, exponent: float) -> np.ndarray
 marsdisk/ops/make_qpr_table_sio2_abbas_calibrated_lowT_csv.py:74:def _calibrate_amplitude(exponent: float, x_cal: float, qpr_cal: float) -> float

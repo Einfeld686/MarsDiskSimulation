@@ -2374,70 +2374,70 @@
   },
   {
     "file_path": "marsdisk/config_utils.py",
-    "line_no": 18,
+    "line_no": 20,
     "symbol": "resolve_reference_radius",
     "signature": "resolve_reference_radius(cfg: Config) -> Tuple[float, float, str]",
     "brief_usage": "Return (r_m, r_RM, source_label) for the representative orbital radius."
   },
   {
     "file_path": "marsdisk/config_utils.py",
-    "line_no": 44,
+    "line_no": 46,
     "symbol": "ensure_disk_geometry",
     "signature": "ensure_disk_geometry(cfg: Config, r_rm: float) -> None",
     "brief_usage": "Populate ``cfg.disk.geometry`` with a single-radius annulus centred on ``r_rm``."
   },
   {
     "file_path": "marsdisk/config_utils.py",
-    "line_no": 58,
+    "line_no": 60,
     "symbol": "resolve_temperature_field",
     "signature": "resolve_temperature_field(cfg: Config) -> Tuple[float, str]",
     "brief_usage": "Return (T_M, source_label) from the radiation block."
   },
   {
     "file_path": "marsdisk/config_utils.py",
-    "line_no": 70,
+    "line_no": 72,
     "symbol": "parse_override_value",
     "signature": "parse_override_value(raw: str) -> Any",
     "brief_usage": "Parse a CLI override value into a Python object."
   },
   {
     "file_path": "marsdisk/config_utils.py",
-    "line_no": 97,
+    "line_no": 107,
     "symbol": "read_overrides_file",
     "signature": "read_overrides_file(path: Path) -> List[str]",
     "brief_usage": "Load override entries from a file (one PATH=VALUE per line)."
   },
   {
     "file_path": "marsdisk/config_utils.py",
-    "line_no": 118,
+    "line_no": 128,
     "symbol": "apply_overrides_dict",
     "signature": "apply_overrides_dict(payload: Dict[str, Any], overrides: Sequence[str]) -> Dict[str, Any]",
     "brief_usage": "Apply dotted-path overrides to a configuration dictionary."
   },
   {
     "file_path": "marsdisk/config_utils.py",
-    "line_no": 156,
+    "line_no": 166,
     "symbol": "merge_physics_section",
     "signature": "merge_physics_section(payload: Dict[str, Any]) -> Dict[str, Any]",
     "brief_usage": "Inline an optional ``physics`` mapping into the root config tree."
   },
   {
     "file_path": "marsdisk/config_utils.py",
-    "line_no": 175,
+    "line_no": 185,
     "symbol": "normalise_physics_mode",
     "signature": "normalise_physics_mode(value: Any) -> str",
     "brief_usage": "Return the canonical physics.mode string."
   },
   {
     "file_path": "marsdisk/config_utils.py",
-    "line_no": 191,
+    "line_no": 201,
     "symbol": "gather_git_info",
     "signature": "gather_git_info() -> Dict[str, Any]",
     "brief_usage": "Return basic git metadata for provenance recording."
   },
   {
     "file_path": "marsdisk/config_utils.py",
-    "line_no": 218,
+    "line_no": 228,
     "symbol": "configure_logging",
     "signature": "configure_logging(level: int, suppress_warnings: bool=False) -> None",
     "brief_usage": "Configure root logging and optionally silence Python warnings."
@@ -4030,6 +4030,125 @@
     "symbol": "main",
     "signature": "main(argv: Sequence[str] | None=None) -> None",
     "brief_usage": "コマンドライン引数でQ_prテーブルを生成する。Planck 平均⟨Q_pr⟩."
+  },
+  {
+    "file_path": "marsdisk/ops/make_qpr_table_forsterite_mie_csv.py",
+    "line_no": 30,
+    "symbol": "MIE",
+    "signature": "MIE = None",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "marsdisk/ops/make_qpr_table_forsterite_mie_csv.py",
+    "line_no": 33,
+    "symbol": "_load_miepython",
+    "signature": "_load_miepython(use_jit: bool)",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "marsdisk/ops/make_qpr_table_forsterite_mie_csv.py",
+    "line_no": 42,
+    "symbol": "PLANCK",
+    "signature": "PLANCK = 6.62607015e-34",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "marsdisk/ops/make_qpr_table_forsterite_mie_csv.py",
+    "line_no": 43,
+    "symbol": "LIGHT_SPEED",
+    "signature": "LIGHT_SPEED = 299792458.0",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "marsdisk/ops/make_qpr_table_forsterite_mie_csv.py",
+    "line_no": 44,
+    "symbol": "BOLTZMANN",
+    "signature": "BOLTZMANN = 1.380649e-23",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "marsdisk/ops/make_qpr_table_forsterite_mie_csv.py",
+    "line_no": 45,
+    "symbol": "HC_OVER_K",
+    "signature": "HC_OVER_K = PLANCK * LIGHT_SPEED / BOLTZMANN",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "marsdisk/ops/make_qpr_table_forsterite_mie_csv.py",
+    "line_no": 48,
+    "symbol": "_parse_temperatures",
+    "signature": "_parse_temperatures(raw: str) -> np.ndarray",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "marsdisk/ops/make_qpr_table_forsterite_mie_csv.py",
+    "line_no": 58,
+    "symbol": "_build_size_grid",
+    "signature": "_build_size_grid(s_min: float, s_max: float, count: int) -> np.ndarray",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "marsdisk/ops/make_qpr_table_forsterite_mie_csv.py",
+    "line_no": 68,
+    "symbol": "_planck_lambda",
+    "signature": "_planck_lambda(wavelength_m: np.ndarray, temperature: float) -> np.ndarray",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "marsdisk/ops/make_qpr_table_forsterite_mie_csv.py",
+    "line_no": 74,
+    "symbol": "_load_nk_axis",
+    "signature": "_load_nk_axis(path: Path) -> tuple[np.ndarray, np.ndarray, np.ndarray]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "marsdisk/ops/make_qpr_table_forsterite_mie_csv.py",
+    "line_no": 88,
+    "symbol": "_merge_wavelength_grid",
+    "signature": "_merge_wavelength_grid(lam_axes: Sequence[np.ndarray], nk_axes: Sequence[tuple[np.ndarray, np.ndarray]], lam_min_um: float | None, lam_max_um: float | None) -> tuple[np.ndarray, list[tuple[np.ndarray, np.ndarray]]]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "marsdisk/ops/make_qpr_table_forsterite_mie_csv.py",
+    "line_no": 119,
+    "symbol": "_resample_wavelength_grid",
+    "signature": "_resample_wavelength_grid(lam_um: np.ndarray, nk_axes: Sequence[tuple[np.ndarray, np.ndarray]], samples: int) -> tuple[np.ndarray, list[tuple[np.ndarray, np.ndarray]]]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "marsdisk/ops/make_qpr_table_forsterite_mie_csv.py",
+    "line_no": 137,
+    "symbol": "_mie_qpr",
+    "signature": "_mie_qpr(m_complex: complex, x: float) -> float",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "marsdisk/ops/make_qpr_table_forsterite_mie_csv.py",
+    "line_no": 144,
+    "symbol": "_compute_qpr_lambda",
+    "signature": "_compute_qpr_lambda(lam_m: np.ndarray, s_values: np.ndarray, nk_axes: Sequence[tuple[np.ndarray, np.ndarray]], x_max: float | None=None) -> np.ndarray",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "marsdisk/ops/make_qpr_table_forsterite_mie_csv.py",
+    "line_no": 177,
+    "symbol": "compute_planck_mean_qpr",
+    "signature": "compute_planck_mean_qpr(s_values: Sequence[float], temperatures: Sequence[float], lam_um: np.ndarray, nk_axes: Sequence[tuple[np.ndarray, np.ndarray]], x_max: float | None=None) -> np.ndarray",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "marsdisk/ops/make_qpr_table_forsterite_mie_csv.py",
+    "line_no": 199,
+    "symbol": "_resolve_temperature_tag",
+    "signature": "_resolve_temperature_tag(value: float) -> int",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "marsdisk/ops/make_qpr_table_forsterite_mie_csv.py",
+    "line_no": 206,
+    "symbol": "main",
+    "signature": "main(argv: Sequence[str] | None=None) -> None",
+    "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/ops/make_qpr_table_sio2_abbas_calibrated_lowT_csv.py",

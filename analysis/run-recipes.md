@@ -400,7 +400,7 @@ Python から直接呼ぶ場合は `sample_mass_loss_one_orbit(..., sinks_mode="
 5) 確認項目  
 - `sample_mass_loss_one_orbit` は一時 outdir に `summary.json` と `series/run.parquet` を生成し、累積 `M_out_cum`,`M_sink_cum` が欠損した場合は最終行の `mass_lost_by_*` を読み出す。`checks/mass_budget.csv` の `|error_percent|` 最大値が 0.5% 未満であることを `mass_budget_max_error_percent` から確認する。[marsdisk/analysis/massloss_sampler.py#sample_mass_loss_one_orbit [L110–L259]]  
 - `dt_over_t_blow_requirement_pass` が `True` でも、中央値・p90 が `--dt-over-tblow-max` を超えないか `map_massloss.csv` 側で再確認する。  
-- `--override` は `PATH=VALUE` をスペース区切りで並べる書式で、`PATH` は `radiation.TM_K` や `disk.geometry.r_in_RM` のようなドット区切り、`VALUE` は bool/数値/quoted string を自動解釈する。複数指定する場合は `--override ... --override ...` と繰り返すか、単一フラグに複数パラメータを与える。解析側では `_apply_overrides_dict` が YAML dict にマージするため、r/T の固定や追加のシンク係数を安全に上書きできる。[scripts/sweeps/sweep_mass_loss_map.py#main [L302–L364]][marsdisk/config_utils.py#apply_overrides_dict [L118–L153]]  
+- `--override` は `PATH=VALUE` をスペース区切りで並べる書式で、`PATH` は `radiation.TM_K` や `disk.geometry.r_in_RM` のようなドット区切り、`VALUE` は bool/数値/quoted string を自動解釈する。複数指定する場合は `--override ... --override ...` と繰り返すか、単一フラグに複数パラメータを与える。解析側では `_apply_overrides_dict` が YAML dict にマージするため、r/T の固定や追加のシンク係数を安全に上書きできる。[scripts/sweeps/sweep_mass_loss_map.py#main [L302–L364]][marsdisk/config_utils.py#apply_overrides_dict [L128–L163]]  
 - gas drag 感度を取る場合は Python サンプリングで `enable_gas_drag=True` を渡し、`result["sinks_mode"]` が意図どおり変わっているか `map_massloss.csv` もしくは辞書出力で確認する。  
 
 6) 根拠  
@@ -515,7 +515,7 @@ supply:
 
 6) 根拠
 - Parquet書き出しが `pyarrow` 依存である。[marsdisk/io/writer.py#_ensure_parent [L20–L21]]
-- 0D実行は `disk.geometry` 未指定時に例外を送出する。[marsdisk/config_utils.py#normalise_physics_mode [L175–L188]]
+- 0D実行は `disk.geometry` 未指定時に例外を送出する。[marsdisk/config_utils.py#normalise_physics_mode [L185–L198]]
 - 供給テーブル読込は `pd.read_csv` でパスが必要。[marsdisk/physics/supply.py#_TableData [L29–L75]]
 
 ## F. SiO psat auto-selector と HKLフラックスの最小検証

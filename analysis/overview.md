@@ -90,7 +90,7 @@ C4Component
 ## 4. 主要モジュール別の責務と依存
 - `marsdisk/run_zero_d.py`はPSD、放射、破片、供給、遮蔽、シンク各モジュールをインポートし、順に呼び出して時間積分とファイル出力を実行する。主要関数として `load_config` が YAML を解析し、`main` が CLI エントリポイント、`run_zero_d` がループ制御を担う。`compute_phase_tau_fields` は相判定用のτフィールドを担当する。[marsdisk/run_zero_d.py]
 - `marsdisk/grid.py`は `omega_kepler` と `v_kepler` を公開し、指定半径からケプラー角速度と周速度を取得する共通ユーティリティとなる。[marsdisk/grid.py#omega_kepler [L17–L33]][marsdisk/grid.py#v_kepler [L36–L52]]
-- `marsdisk/config_utils.py` は設定解決のヘルパーを提供し、`ensure_disk_geometry` がジオメトリ検証、`resolve_reference_radius` が代表半径、`resolve_temperature_field` が温度フィールド解決を担う。[marsdisk/config_utils.py#ensure_disk_geometry [L44–L55]][marsdisk/config_utils.py#resolve_reference_radius [L18–L41]][marsdisk/config_utils.py#resolve_temperature_field [L58–L67]]
+- `marsdisk/config_utils.py` は設定解決のヘルパーを提供し、`ensure_disk_geometry` がジオメトリ検証、`resolve_reference_radius` が代表半径、`resolve_temperature_field` が温度フィールド解決を担う。[marsdisk/config_utils.py#ensure_disk_geometry [L46–L57]][marsdisk/config_utils.py#resolve_reference_radius [L20–L43]][marsdisk/config_utils.py#resolve_temperature_field [L60–L69]]
 - `marsdisk/runtime/helpers.py` はオーケストレータ層から利用する共通ユーティリティをまとめ、κを有限・非負にクリップする `ensure_finite_kappa`、Parquet出力向けの `safe_float` と `float_or_nan`、ログ短縮化の `format_exception_short`、フェーズ診断マーカー `log_stage`、Φゲート係数の `compute_gate_factor`、τフィードバックの正規化 `resolve_feedback_tau_field` を提供する。[marsdisk/runtime/helpers.py#ensure_finite_kappa [L117–L127]][marsdisk/runtime/helpers.py#safe_float [L130–L139]][marsdisk/runtime/helpers.py#float_or_nan [L142–L149]][marsdisk/runtime/helpers.py#format_exception_short [L152–L156]][marsdisk/runtime/helpers.py#log_stage [L159–L167]][marsdisk/runtime/helpers.py#compute_gate_factor [L53–L72]][marsdisk/runtime/helpers.py#resolve_feedback_tau_field [L24–L34]]
 - `marsdisk/config_validator.py` は設定の検証を担当し、`validate_config` がスキーマ検証、`load_and_validate` がロード＋検証の一括処理を提供する。[marsdisk/config_validator.py#validate_config [L71–L96]][marsdisk/config_validator.py#load_and_validate [L429–L450]][marsdisk/config_validator.py#main [L456–L507]]
 - `marsdisk/orchestrator.py` はオーケストレーション層のヘルパーを提供し、`resolve_time_grid` が時間グリッド、`resolve_orbital_radius` が軌道半径、`resolve_physics_flags` が物理スイッチを解決する。[marsdisk/orchestrator.py#resolve_time_grid [L210–L306]][marsdisk/orchestrator.py#resolve_orbital_radius [L313–L317]][marsdisk/orchestrator.py#resolve_physics_flags [L320–L405]]
@@ -128,7 +128,7 @@ C4Component
 | config | Config | 必須 | トップレベルで全セクションを保持 | [marsdisk/schema.py#IO [L2020–L2091]] |
 | geometry | Geometry | mode="0D" | mode∈{"0D","1D"}; 半径は任意入力 | [marsdisk/schema.py#Geometry [L25–L45]] |
 | material | Material | rho=3000.0 | rho∈[1000,5000]kg/m³ | [marsdisk/schema.py#Material [L589–L601]] |
-| temps (removed) | – | – | 旧 `temps.T_M` は無効化。`radiation.TM_K` または温度ドライバで必須入力を与える。 | [marsdisk/config_utils.py#ensure_disk_geometry [L44–L55]][marsdisk/schema.py#SupplyReservoir [L199–L252]] |
+| temps (removed) | – | – | 旧 `temps.T_M` は無効化。`radiation.TM_K` または温度ドライバで必須入力を与える。 | [marsdisk/config_utils.py#ensure_disk_geometry [L46–L57]][marsdisk/schema.py#SupplyReservoir [L199–L252]] |
 | sizes | Sizes | n_bins=40 | s_min,s_max必須; n_bins≥1 | [marsdisk/schema.py#Sizes [L631–L664]] |
 | initial | Initial | s0_mode="upper" | mass_total必須; s0_mode∈{"mono","upper"} | [marsdisk/schema.py#Initial [L667–L739]] |
 | dynamics | Dynamics | f_wake=1.0, e_profile.mode="mars_pericenter" | e0,i0,t_damp_orbits必須 | [marsdisk/schema.py:779–876] |
@@ -190,7 +190,7 @@ C4Component
 - 旧来の表層ODE（S1）は Wyatt の 1/t_coll 近似による簡易モデルで、`surface.collision_solver="surface_ode"` を明示したときのみ使うレガシー経路。光学的に薄い近似で `step_surface_density_S1` が Σ を直接更新するため、標準モードとは診断精度が異なる点に留意する。[marsdisk/physics/surface.py:L120–L196]
 
 ## 7. 温度・放射の上書きと出力フィールド
-- `T_M_used` は放射計算に採用された火星面温度で、`T_M_source` が `radiation.TM_K` / `mars_temperature_driver.constant` / `mars_temperature_driver.table` を区別する（`temps.T_M` は廃止）。[marsdisk/config_utils.py#ensure_disk_geometry [L44–L55]][marsdisk/physics/tempdriver.py#resolve_temperature_driver [L383–L480]][marsdisk/run_zero_d.py#run_zero_d [L1392–L5921]]
+- `T_M_used` は放射計算に採用された火星面温度で、`T_M_source` が `radiation.TM_K` / `mars_temperature_driver.constant` / `mars_temperature_driver.table` を区別する（`temps.T_M` は廃止）。[marsdisk/config_utils.py#ensure_disk_geometry [L46–L57]][marsdisk/physics/tempdriver.py#resolve_temperature_driver [L383–L480]][marsdisk/run_zero_d.py#run_zero_d [L1392–L5921]]
 - `mass_lost_by_blowout` は放射圧剥離による累積損失、`mass_lost_by_sinks` は昇華・ガス抗力による累積損失を示す。`sinks.mode="none"` では後者が全ステップで0になり、Smol 経路でも `checks/mass_budget.csv` の誤差0.5%以下が維持される。[marsdisk/run_zero_d.py#run_zero_d [L1392–L5921]][marsdisk/run_zero_d.py#run_zero_d [L1392–L5921]][marsdisk/io/writer.py#write_parquet [L412–L438]](tests/integration/test_sinks_none.py)
 
 ## 8. I/O 仕様（出力ファイル種別、カラム/フィールドの最低限）
