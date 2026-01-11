@@ -30,6 +30,7 @@ def plot_arrival_map(
     mode: Literal["arrival", "phase"] = "arrival",
     cooling_model: str | None = None,
     time_axis_max_years: float | None = None,
+    material_label: str = "SiO2",
 ) -> None:
     """Render the arrival map or phase-fraction map to a PNG file.
 
@@ -42,6 +43,9 @@ def plot_arrival_map(
     if mode not in ("arrival", "phase"):
         raise ValueError(f"Unsupported mode: {mode}")
     model_label = (cooling_model or "slab").lower()
+    label = material_label.strip() if isinstance(material_label, str) else "material"
+    if not label:
+        label = "material"
     time_years = time_arr / YEAR_SECONDS
     time_min = float(time_years.min())
     time_span_max = float(time_years.max())
@@ -65,8 +69,8 @@ def plot_arrival_map(
             vmin=0.0,
             vmax=1.0,
         )
-        cbar = fig.colorbar(mesh, ax=ax, label="Solid fraction (SiO2)")
-        ax.set_title(f"SiO2 phase map ({model_label}, T0={T0:g} K)")
+        cbar = fig.colorbar(mesh, ax=ax, label=f"Solid fraction ({label})")
+        ax.set_title(f"{label} phase map ({model_label}, T0={T0:g} K)")
     else:
         glass_field = _arrival_field(time_arr, arrival_glass_s)
         glass_vals = glass_field[np.isfinite(glass_field)]
@@ -122,7 +126,7 @@ def plot_arrival_map(
             color="#161616",
             bbox={"facecolor": "white", "alpha": 0.8, "boxstyle": "round,pad=0.25", "linewidth": 0.0},
         )
-        ax.set_title(f"SiO2 cooling map ({model_label}, T0={T0:g} K)")
+        ax.set_title(f"{label} cooling map ({model_label}, T0={T0:g} K)")
 
     cbar.ax.tick_params(labelsize=9)
 

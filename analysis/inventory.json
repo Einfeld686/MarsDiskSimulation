@@ -1988,6 +1988,83 @@
     "brief_usage": "No description available."
   },
   {
+    "file_path": "analysis/tools/merge_methods_sections.py",
+    "line_no": 8,
+    "symbol": "REPO_ROOT",
+    "signature": "REPO_ROOT = Path(__file__).resolve().parents[2]",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "analysis/tools/merge_methods_sections.py",
+    "line_no": 9,
+    "symbol": "SECTIONS_DIR",
+    "signature": "SECTIONS_DIR = REPO_ROOT / 'analysis' / 'methods_sections'",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "analysis/tools/merge_methods_sections.py",
+    "line_no": 10,
+    "symbol": "OUTPUT_PATH",
+    "signature": "OUTPUT_PATH = REPO_ROOT / 'analysis' / 'methods.md'",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "analysis/tools/merge_methods_sections.py",
+    "line_no": 11,
+    "symbol": "MANIFEST_PATH",
+    "signature": "MANIFEST_PATH = SECTIONS_DIR / 'manifest.txt'",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "analysis/tools/merge_methods_sections.py",
+    "line_no": 12,
+    "symbol": "SECTION_PATTERN",
+    "signature": "SECTION_PATTERN = re.compile('^\\\\d{2}_.+\\\\.md$')",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "analysis/tools/merge_methods_sections.py",
+    "line_no": 15,
+    "symbol": "_manifest_entries",
+    "signature": "_manifest_entries(manifest_path: Path) -> list[str]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "analysis/tools/merge_methods_sections.py",
+    "line_no": 25,
+    "symbol": "_validate_entry",
+    "signature": "_validate_entry(entry: str) -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "analysis/tools/merge_methods_sections.py",
+    "line_no": 30,
+    "symbol": "_paths_from_manifest",
+    "signature": "_paths_from_manifest(sections_dir: Path, manifest_path: Path) -> list[Path]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "analysis/tools/merge_methods_sections.py",
+    "line_no": 51,
+    "symbol": "collect_sections",
+    "signature": "collect_sections(sections_dir: Path, manifest_path: Path | None=None) -> list[Path]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "analysis/tools/merge_methods_sections.py",
+    "line_no": 63,
+    "symbol": "build_document",
+    "signature": "build_document(section_paths: list[Path]) -> str",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "analysis/tools/merge_methods_sections.py",
+    "line_no": 70,
+    "symbol": "main",
+    "signature": "main(argv: list[str] | None=None) -> int",
+    "brief_usage": "No description available."
+  },
+  {
     "file_path": "analysis/tools/render_assumptions.py",
     "line_no": 26,
     "symbol": "ROOT",
@@ -13093,7 +13170,7 @@
     "file_path": "siO2_disk_cooling/plotting.py",
     "line_no": 21,
     "symbol": "plot_arrival_map",
-    "signature": "plot_arrival_map(r_over_Rmars: np.ndarray, time_s: np.ndarray, arrival_glass_s: np.ndarray, arrival_liquidus_s: np.ndarray, output_path: Path, *, T0: float, params: CoolingParams, mode: Literal['arrival', 'phase']='arrival', cooling_model: str | None=None, time_axis_max_years: float | None=None) -> None",
+    "signature": "plot_arrival_map(r_over_Rmars: np.ndarray, time_s: np.ndarray, arrival_glass_s: np.ndarray, arrival_liquidus_s: np.ndarray, output_path: Path, *, T0: float, params: CoolingParams, mode: Literal['arrival', 'phase']='arrival', cooling_model: str | None=None, time_axis_max_years: float | None=None, material_label: str='SiO2') -> None",
     "brief_usage": "Render the arrival map or phase-fraction map to a PNG file."
   },
   {
@@ -13105,42 +13182,63 @@
   },
   {
     "file_path": "siO2_disk_cooling/siO2_cooling_map.py",
-    "line_no": 16,
+    "line_no": 20,
     "symbol": "_parse_args",
     "signature": "_parse_args() -> argparse.Namespace",
     "brief_usage": "No description available."
   },
   {
     "file_path": "siO2_disk_cooling/siO2_cooling_map.py",
-    "line_no": 77,
+    "line_no": 107,
     "symbol": "_build_grids",
     "signature": "_build_grids(t_max_years: float, dt_hours: float, r_min: float, r_max: float, n_r: int, cell_width_Rmars: Optional[float]=None) -> tuple[np.ndarray, np.ndarray]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "siO2_disk_cooling/siO2_cooling_map.py",
-    "line_no": 111,
-    "symbol": "_format_tag",
-    "signature": "_format_tag(T0: float) -> str",
+    "line_no": 141,
+    "symbol": "_sanitize_label",
+    "signature": "_sanitize_label(label: str) -> str",
     "brief_usage": "No description available."
   },
   {
     "file_path": "siO2_disk_cooling/siO2_cooling_map.py",
-    "line_no": 115,
+    "line_no": 146,
+    "symbol": "_format_tag",
+    "signature": "_format_tag(T0: float, material_label: str) -> str",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "siO2_disk_cooling/siO2_cooling_map.py",
+    "line_no": 154,
     "symbol": "_infer_cell_width_from_config",
     "signature": "_infer_cell_width_from_config(config_path: Path | None) -> Optional[float]",
     "brief_usage": "Try to infer marsdisk cell width (R_Mars units) from a YAML config."
   },
   {
     "file_path": "siO2_disk_cooling/siO2_cooling_map.py",
-    "line_no": 152,
+    "line_no": 191,
+    "symbol": "_coerce_threshold",
+    "signature": "_coerce_threshold(value: float, name: str) -> float",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "siO2_disk_cooling/siO2_cooling_map.py",
+    "line_no": 201,
+    "symbol": "_thresholds_from_overrides",
+    "signature": "_thresholds_from_overrides(path: Path) -> tuple[Optional[float], Optional[float]]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "siO2_disk_cooling/siO2_cooling_map.py",
+    "line_no": 219,
     "symbol": "lookup_phase_state",
     "signature": "lookup_phase_state(temperature_K: float, pressure_Pa: Optional[float]=None, tau: Optional[float]=None) -> Mapping[str, Any]",
     "brief_usage": "Lightweight phase map compatible with ``marsdisk.physics.phase``."
   },
   {
     "file_path": "siO2_disk_cooling/siO2_cooling_map.py",
-    "line_no": 196,
+    "line_no": 263,
     "symbol": "main",
     "signature": "main() -> None",
     "brief_usage": "Run the SiO₂ cooling simulation and update documentation."

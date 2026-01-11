@@ -175,6 +175,12 @@ analysis/tools/merge_introduction_sections.py:29:def _paths_from_manifest(sectio
 analysis/tools/merge_introduction_sections.py:50:def collect_sections(sections_dir: Path, manifest_path: Path | None=None) -> list[Path]
 analysis/tools/merge_introduction_sections.py:62:def build_document(section_paths: list[Path]) -> str
 analysis/tools/merge_introduction_sections.py:69:def main(argv: list[str] | None=None) -> int
+analysis/tools/merge_methods_sections.py:15:def _manifest_entries(manifest_path: Path) -> list[str]
+analysis/tools/merge_methods_sections.py:25:def _validate_entry(entry: str) -> None
+analysis/tools/merge_methods_sections.py:30:def _paths_from_manifest(sections_dir: Path, manifest_path: Path) -> list[Path]
+analysis/tools/merge_methods_sections.py:51:def collect_sections(sections_dir: Path, manifest_path: Path | None=None) -> list[Path]
+analysis/tools/merge_methods_sections.py:63:def build_document(section_paths: list[Path]) -> str
+analysis/tools/merge_methods_sections.py:70:def main(argv: list[str] | None=None) -> int
 analysis/tools/render_assumptions.py:35:def _render_table(records: Iterable[AssumptionRecord]) -> list[str]
 analysis/tools/render_assumptions.py:57:def render_overview(records: list[AssumptionRecord], report: CoverageReport) -> str
 analysis/tools/render_assumptions.py:87:def render_trace_block(records: list[AssumptionRecord]) -> str
@@ -1353,14 +1359,17 @@ siO2_disk_cooling/model.py:116:def dust_temperature(radius_m: float | np.ndarray
 siO2_disk_cooling/model.py:142:def arrival_time_for_threshold(radius_m: float, time_s: np.ndarray, T_dust: np.ndarray, threshold_K: float) -> float
 siO2_disk_cooling/model.py:159:def compute_arrival_times(T0: float, params: CoolingParams, r_over_Rmars: np.ndarray, time_s: np.ndarray, *, temperature_model: str='slab') -> Tuple[np.ndarray, np.ndarray]
 siO2_disk_cooling/plotting.py:13:def _arrival_field(time_s: np.ndarray, arrival_s: np.ndarray) -> np.ndarray
-siO2_disk_cooling/plotting.py:21:def plot_arrival_map(r_over_Rmars: np.ndarray, time_s: np.ndarray, arrival_glass_s: np.ndarray, arrival_liquidus_s: np.ndarray, output_path: Path, *, T0: float, params: CoolingParams, mode: Literal['arrival', 'phase']='arrival', cooling_model: str | None=None, time_axis_max_years: float | None=None) -> None
+siO2_disk_cooling/plotting.py:21:def plot_arrival_map(r_over_Rmars: np.ndarray, time_s: np.ndarray, arrival_glass_s: np.ndarray, arrival_liquidus_s: np.ndarray, output_path: Path, *, T0: float, params: CoolingParams, mode: Literal['arrival', 'phase']='arrival', cooling_model: str | None=None, time_axis_max_years: float | None=None, material_label: str='SiO2') -> None
 siO2_disk_cooling/siO2_better_visualization.py:24:def main() -> None
-siO2_disk_cooling/siO2_cooling_map.py:16:def _parse_args() -> argparse.Namespace
-siO2_disk_cooling/siO2_cooling_map.py:77:def _build_grids(t_max_years: float, dt_hours: float, r_min: float, r_max: float, n_r: int, cell_width_Rmars: Optional[float]=None) -> tuple[np.ndarray, np.ndarray]
-siO2_disk_cooling/siO2_cooling_map.py:111:def _format_tag(T0: float) -> str
-siO2_disk_cooling/siO2_cooling_map.py:115:def _infer_cell_width_from_config(config_path: Path | None) -> Optional[float]
-siO2_disk_cooling/siO2_cooling_map.py:152:def lookup_phase_state(temperature_K: float, pressure_Pa: Optional[float]=None, tau: Optional[float]=None) -> Mapping[str, Any]
-siO2_disk_cooling/siO2_cooling_map.py:196:def main() -> None
+siO2_disk_cooling/siO2_cooling_map.py:20:def _parse_args() -> argparse.Namespace
+siO2_disk_cooling/siO2_cooling_map.py:107:def _build_grids(t_max_years: float, dt_hours: float, r_min: float, r_max: float, n_r: int, cell_width_Rmars: Optional[float]=None) -> tuple[np.ndarray, np.ndarray]
+siO2_disk_cooling/siO2_cooling_map.py:141:def _sanitize_label(label: str) -> str
+siO2_disk_cooling/siO2_cooling_map.py:146:def _format_tag(T0: float, material_label: str) -> str
+siO2_disk_cooling/siO2_cooling_map.py:154:def _infer_cell_width_from_config(config_path: Path | None) -> Optional[float]
+siO2_disk_cooling/siO2_cooling_map.py:191:def _coerce_threshold(value: float, name: str) -> float
+siO2_disk_cooling/siO2_cooling_map.py:201:def _thresholds_from_overrides(path: Path) -> tuple[Optional[float], Optional[float]]
+siO2_disk_cooling/siO2_cooling_map.py:219:def lookup_phase_state(temperature_K: float, pressure_Pa: Optional[float]=None, tau: Optional[float]=None) -> Mapping[str, Any]
+siO2_disk_cooling/siO2_cooling_map.py:263:def main() -> None
 tests/conftest.py:18:def _env_flag(value: str | None) -> bool | None
 tests/conftest.py:29:def _classify_test_path(path: Path) -> str | None
 tests/conftest.py:42:def pytest_addoption(parser: pytest.Parser) -> None

@@ -3,10 +3,14 @@ from __future__ import annotations
 
 import argparse
 import sys
+from dataclasses import replace
 from pathlib import Path
+import re
 from typing import Any, Mapping, Optional
 
 import numpy as np
+
+from marsdisk import config_utils
 
 from .io_utils import ensure_outputs_dir, write_csv, write_log
 from .model import CoolingParams, YEAR_SECONDS, compute_arrival_times, cooling_time_to_temperature
@@ -71,6 +75,32 @@ def _parse_args() -> argparse.Namespace:
         default=None,
         help="Optional upper limit for the plot time axis [years]; defaults to the simulated span.",
     )
+    parser.add_argument(
+        "--overrides-file",
+        type=str,
+        default=None,
+        help="Path to an overrides file for phase.thresholds.* values.",
+    )
+    parser.add_argument(
+        "--material-label",
+        type=str,
+        default=None,
+        help="Label used in plot titles and colorbars (defaults to SiO2).",
+    )
+    parser.add_argument(
+        "--T-glass",
+        type=float,
+        default=None,
+        dest="T_glass",
+        help="Override the lower temperature threshold [K].",
+    )
+    parser.add_argument(
+        "--T-liquidus",
+        type=float,
+        default=None,
+        dest="T_liquidus",
+        help="Override the upper temperature threshold [K].",
+    )
     return parser.parse_args()
 
 
@@ -108,8 +138,17 @@ def _build_grids(
     return time_s, r_over_Rmars
 
 
-def _format_tag(T0: float) -> str:
-    return f"T0{int(round(T0)):04d}K"
+def _sanitize_label(label: str) -> str:
+    text = re.sub(r"[^A-Za-z0-9]+", "_", label.strip())
+    return text.strip("_")
+
+
+def _format_tag(T0: float, material_label: str) -> str:
+    base = f"T0{int(round(T0)):04d}K"
+    label = _sanitize_label(material_label)
+    if label and label.lower() not in {"sio2", "silica"}:
+        return f"{label}_{base}"
+    return base
 
 
 def _infer_cell_width_from_config(config_path: Path | None) -> Optional[float]:
@@ -147,6 +186,34 @@ def _infer_cell_width_from_config(config_path: Path | None) -> Optional[float]:
     if span <= 0.0 or n_val <= 0.0:
         return None
     return span / n_val
+
+
+def _coerce_threshold(value: float, name: str) -> float:
+    try:
+        val = float(value)
+    except (TypeError, ValueError) as exc:
+        raise ValueError(f"{name} must be a number") from exc
+    if not np.isfinite(val) or val <= 0.0:
+        raise ValueError(f"{name} must be positive and finite")
+    return val
+
+
+def _thresholds_from_overrides(path: Path) -> tuple[Optional[float], Optional[float]]:
+    t_cond: Optional[float] = None
+    t_vap: Optional[float] = None
+    overrides = config_utils.read_overrides_file(path)
+    for item in overrides:
+        key, sep, raw_value = item.partition("=")
+        if not sep:
+            continue
+        key = key.strip()
+        if key.startswith("physics."):
+            key = key[len("physics.") :]
+        if key == "phase.thresholds.T_condense_K":
+            t_cond = _coerce_threshold(config_utils.parse_override_value(raw_value), "T_condense_K")
+        elif key == "phase.thresholds.T_vaporize_K":
+            t_vap = _coerce_threshold(config_utils.parse_override_value(raw_value), "T_vaporize_K")
+    return t_cond, t_vap
 
 
 def lookup_phase_state(
@@ -196,6 +263,23 @@ def lookup_phase_state(
 def main() -> None:
     args = _parse_args()
     params = CoolingParams()
+    T_glass = params.T_glass
+    T_liquidus = params.T_liquidus
+    if args.overrides_file:
+        t_cond, t_vap = _thresholds_from_overrides(Path(args.overrides_file))
+        if t_cond is not None:
+            T_glass = t_cond
+        if t_vap is not None:
+            T_liquidus = t_vap
+    if args.T_glass is not None:
+        T_glass = _coerce_threshold(args.T_glass, "T_glass")
+    if args.T_liquidus is not None:
+        T_liquidus = _coerce_threshold(args.T_liquidus, "T_liquidus")
+    if T_liquidus <= T_glass:
+        raise ValueError("Upper temperature threshold must exceed the lower threshold")
+    if T_glass != params.T_glass or T_liquidus != params.T_liquidus:
+        params = replace(params, T_glass=T_glass, T_liquidus=T_liquidus)
+    material_label = args.material_label if args.material_label is not None else "SiO2"
     default_cfg = Path(__file__).resolve().parents[1] / "configs" / "base.yml"
     cfg_path = Path(args.marsdisk_config) if args.marsdisk_config else default_cfg
     t_max_years = float(args.t_max_years)
@@ -221,7 +305,7 @@ def main() -> None:
     )
 
     outdir = ensure_outputs_dir()
-    tag = _format_tag(args.T0)
+    tag = _format_tag(args.T0, material_label)
     csv_path = outdir / f"siO2_cooling_map_{tag}.csv"
     png_path = outdir / f"siO2_cooling_map_{tag}.png"
     log_path = outdir / f"log_{tag}.txt"
@@ -239,6 +323,7 @@ def main() -> None:
             mode=args.plot_mode,
             cooling_model=args.cooling_model,
             time_axis_max_years=args.plot_time_max_years,
+            material_label=material_label,
         )
     if not args.no_log:
         write_log(args.T0, r_over_Rmars, arrival_glass_s, arrival_liquidus_s, log_path)
