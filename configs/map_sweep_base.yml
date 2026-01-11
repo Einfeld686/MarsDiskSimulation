@@ -14,7 +14,7 @@ psd: {alpha: 3.5, wavy_strength: 0.3}
 qstar: {Qs: 3.5e7, a_s: 0.38, B: 0.3, b_g: 1.36, v_ref_kms: [3.0, 5.0], 
     coeff_units: ba99_cgs}
 supply: {mode: const, const: {prod_area_rate_kg_m2_s: 0.0, mu_orbit10pct: 1.0, 
-      orbit_fraction_at_mu1: 0.1}, mixing: {epsilon_mix: 1.0}, feedback: {
+      orbit_fraction_at_mu1: 0.05}, mixing: {epsilon_mix: 1.0}, feedback: {
       enabled: false}, reservoir: {enabled: false}, temperature: {enabled: false},
   transport: {mode: direct}}
 sinks:

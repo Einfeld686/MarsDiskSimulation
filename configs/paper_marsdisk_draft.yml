@@ -90,7 +90,7 @@ supply:
   const:
     prod_area_rate_kg_m2_s: 0.0
     mu_orbit10pct: 1.0
-    orbit_fraction_at_mu1: 0.1
+    orbit_fraction_at_mu1: 0.05
   mixing:
     epsilon_mix: 1.0
   feedback:

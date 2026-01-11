@@ -87,7 +87,7 @@ supply:
     prod_area_rate_kg_m2_s: 0.0
     mu_orbit10pct: 1.0
     mu_reference_tau: *tau0_target
-    orbit_fraction_at_mu1: 0.1
+    orbit_fraction_at_mu1: 0.05
   powerlaw:
     A_kg_m2_s:
     t0_s: 0.0
