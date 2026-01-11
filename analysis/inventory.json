@@ -1911,6 +1911,83 @@
     "brief_usage": "No description available."
   },
   {
+    "file_path": "analysis/tools/merge_introduction_sections.py",
+    "line_no": 8,
+    "symbol": "REPO_ROOT",
+    "signature": "REPO_ROOT = Path(__file__).resolve().parents[2]",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "analysis/tools/merge_introduction_sections.py",
+    "line_no": 9,
+    "symbol": "SECTIONS_DIR",
+    "signature": "SECTIONS_DIR = REPO_ROOT / 'analysis' / 'introduction_sections'",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "analysis/tools/merge_introduction_sections.py",
+    "line_no": 10,
+    "symbol": "OUTPUT_PATH",
+    "signature": "OUTPUT_PATH = REPO_ROOT / 'analysis' / 'introduction.md'",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "analysis/tools/merge_introduction_sections.py",
+    "line_no": 11,
+    "symbol": "MANIFEST_PATH",
+    "signature": "MANIFEST_PATH = SECTIONS_DIR / 'manifest.txt'",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "analysis/tools/merge_introduction_sections.py",
+    "line_no": 12,
+    "symbol": "SECTION_PATTERN",
+    "signature": "SECTION_PATTERN = re.compile('^\\\\d{2}_.+\\\\.md$')",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "analysis/tools/merge_introduction_sections.py",
+    "line_no": 14,
+    "symbol": "_manifest_entries",
+    "signature": "_manifest_entries(manifest_path: Path) -> list[str]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "analysis/tools/merge_introduction_sections.py",
+    "line_no": 24,
+    "symbol": "_validate_entry",
+    "signature": "_validate_entry(entry: str) -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "analysis/tools/merge_introduction_sections.py",
+    "line_no": 29,
+    "symbol": "_paths_from_manifest",
+    "signature": "_paths_from_manifest(sections_dir: Path, manifest_path: Path) -> list[Path]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "analysis/tools/merge_introduction_sections.py",
+    "line_no": 50,
+    "symbol": "collect_sections",
+    "signature": "collect_sections(sections_dir: Path, manifest_path: Path | None=None) -> list[Path]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "analysis/tools/merge_introduction_sections.py",
+    "line_no": 62,
+    "symbol": "build_document",
+    "signature": "build_document(section_paths: list[Path]) -> str",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "analysis/tools/merge_introduction_sections.py",
+    "line_no": 69,
+    "symbol": "main",
+    "signature": "main(argv: list[str] | None=None) -> int",
+    "brief_usage": "No description available."
+  },
+  {
     "file_path": "analysis/tools/render_assumptions.py",
     "line_no": 26,
     "symbol": "ROOT",
@@ -4033,119 +4110,161 @@
   },
   {
     "file_path": "marsdisk/ops/make_qpr_table_forsterite_mie_csv.py",
-    "line_no": 30,
+    "line_no": 36,
     "symbol": "MIE",
     "signature": "MIE = None",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/ops/make_qpr_table_forsterite_mie_csv.py",
-    "line_no": 33,
+    "line_no": 40,
+    "symbol": "NKTemperatureGrid",
+    "signature": "class NKTemperatureGrid",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "marsdisk/ops/make_qpr_table_forsterite_mie_csv.py",
+    "line_no": 46,
     "symbol": "_load_miepython",
     "signature": "_load_miepython(use_jit: bool)",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/ops/make_qpr_table_forsterite_mie_csv.py",
-    "line_no": 42,
+    "line_no": 55,
     "symbol": "PLANCK",
     "signature": "PLANCK = 6.62607015e-34",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/ops/make_qpr_table_forsterite_mie_csv.py",
-    "line_no": 43,
+    "line_no": 56,
     "symbol": "LIGHT_SPEED",
     "signature": "LIGHT_SPEED = 299792458.0",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/ops/make_qpr_table_forsterite_mie_csv.py",
-    "line_no": 44,
+    "line_no": 57,
     "symbol": "BOLTZMANN",
     "signature": "BOLTZMANN = 1.380649e-23",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/ops/make_qpr_table_forsterite_mie_csv.py",
-    "line_no": 45,
+    "line_no": 58,
     "symbol": "HC_OVER_K",
     "signature": "HC_OVER_K = PLANCK * LIGHT_SPEED / BOLTZMANN",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/ops/make_qpr_table_forsterite_mie_csv.py",
-    "line_no": 48,
+    "line_no": 61,
     "symbol": "_parse_temperatures",
     "signature": "_parse_temperatures(raw: str) -> np.ndarray",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/ops/make_qpr_table_forsterite_mie_csv.py",
-    "line_no": 58,
+    "line_no": 71,
     "symbol": "_build_size_grid",
     "signature": "_build_size_grid(s_min: float, s_max: float, count: int) -> np.ndarray",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/ops/make_qpr_table_forsterite_mie_csv.py",
-    "line_no": 68,
+    "line_no": 81,
     "symbol": "_planck_lambda",
     "signature": "_planck_lambda(wavelength_m: np.ndarray, temperature: float) -> np.ndarray",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/ops/make_qpr_table_forsterite_mie_csv.py",
-    "line_no": 74,
+    "line_no": 87,
     "symbol": "_load_nk_axis",
     "signature": "_load_nk_axis(path: Path) -> tuple[np.ndarray, np.ndarray, np.ndarray]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/ops/make_qpr_table_forsterite_mie_csv.py",
-    "line_no": 88,
+    "line_no": 101,
+    "symbol": "_discover_for2285_temperatures",
+    "signature": "_discover_for2285_temperatures(data_dir: Path) -> list[int]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "marsdisk/ops/make_qpr_table_forsterite_mie_csv.py",
+    "line_no": 119,
+    "symbol": "_load_for2285_tables",
+    "signature": "_load_for2285_tables(data_dir: Path, lam_min_um: float | None, lam_max_um: float | None) -> tuple[np.ndarray, dict[str, NKTemperatureGrid]]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "marsdisk/ops/make_qpr_table_forsterite_mie_csv.py",
+    "line_no": 157,
+    "symbol": "_load_eckes_tables",
+    "signature": "_load_eckes_tables(csv_path: Path, source_id: str, lam_min_um: float, lam_max_um: float) -> tuple[np.ndarray, dict[str, NKTemperatureGrid]]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "marsdisk/ops/make_qpr_table_forsterite_mie_csv.py",
+    "line_no": 229,
     "symbol": "_merge_wavelength_grid",
     "signature": "_merge_wavelength_grid(lam_axes: Sequence[np.ndarray], nk_axes: Sequence[tuple[np.ndarray, np.ndarray]], lam_min_um: float | None, lam_max_um: float | None) -> tuple[np.ndarray, list[tuple[np.ndarray, np.ndarray]]]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/ops/make_qpr_table_forsterite_mie_csv.py",
-    "line_no": 119,
+    "line_no": 260,
     "symbol": "_resample_wavelength_grid",
     "signature": "_resample_wavelength_grid(lam_um: np.ndarray, nk_axes: Sequence[tuple[np.ndarray, np.ndarray]], samples: int) -> tuple[np.ndarray, list[tuple[np.ndarray, np.ndarray]]]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/ops/make_qpr_table_forsterite_mie_csv.py",
-    "line_no": 137,
+    "line_no": 278,
+    "symbol": "_interp_temperature_grid",
+    "signature": "_interp_temperature_grid(temps: np.ndarray, values: np.ndarray, target: float) -> np.ndarray",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "marsdisk/ops/make_qpr_table_forsterite_mie_csv.py",
+    "line_no": 292,
     "symbol": "_mie_qpr",
     "signature": "_mie_qpr(m_complex: complex, x: float) -> float",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/ops/make_qpr_table_forsterite_mie_csv.py",
-    "line_no": 144,
+    "line_no": 299,
     "symbol": "_compute_qpr_lambda",
     "signature": "_compute_qpr_lambda(lam_m: np.ndarray, s_values: np.ndarray, nk_axes: Sequence[tuple[np.ndarray, np.ndarray]], x_max: float | None=None) -> np.ndarray",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/ops/make_qpr_table_forsterite_mie_csv.py",
-    "line_no": 177,
+    "line_no": 332,
     "symbol": "compute_planck_mean_qpr",
     "signature": "compute_planck_mean_qpr(s_values: Sequence[float], temperatures: Sequence[float], lam_um: np.ndarray, nk_axes: Sequence[tuple[np.ndarray, np.ndarray]], x_max: float | None=None) -> np.ndarray",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/ops/make_qpr_table_forsterite_mie_csv.py",
-    "line_no": 199,
+    "line_no": 354,
+    "symbol": "compute_planck_mean_qpr_by_temperature",
+    "signature": "compute_planck_mean_qpr_by_temperature(s_values: Sequence[float], temperatures: Sequence[float], lam_um: np.ndarray, nk_axes_by_temp: Sequence[Sequence[tuple[np.ndarray, np.ndarray]]], x_max: float | None=None) -> np.ndarray",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "marsdisk/ops/make_qpr_table_forsterite_mie_csv.py",
+    "line_no": 378,
     "symbol": "_resolve_temperature_tag",
     "signature": "_resolve_temperature_tag(value: float) -> int",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/ops/make_qpr_table_forsterite_mie_csv.py",
-    "line_no": 206,
+    "line_no": 385,
     "symbol": "main",
     "signature": "main(argv: Sequence[str] | None=None) -> None",
     "brief_usage": "No description available."
@@ -7211,7 +7330,7 @@
   },
   {
     "file_path": "marsdisk/run_zero_d.py",
-    "line_no": 5924,
+    "line_no": 5980,
     "symbol": "main",
     "signature": "main(argv: Optional[List[str]]=None) -> None",
     "brief_usage": "Command line entry point."
@@ -18761,56 +18880,56 @@
   },
   {
     "file_path": "tools/pipeline/evaluation_system.py",
-    "line_no": 291,
+    "line_no": 311,
     "symbol": "_check_mass_budget",
     "signature": "_check_mass_budget(ctx: EvaluationContext) -> Tuple[bool, str]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/pipeline/evaluation_system.py",
-    "line_no": 306,
+    "line_no": 326,
     "symbol": "_check_orbit_rollup",
     "signature": "_check_orbit_rollup(ctx: EvaluationContext) -> Tuple[bool, str]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/pipeline/evaluation_system.py",
-    "line_no": 316,
+    "line_no": 336,
     "symbol": "_check_run_config",
     "signature": "_check_run_config(ctx: EvaluationContext) -> Tuple[bool, str]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/pipeline/evaluation_system.py",
-    "line_no": 331,
+    "line_no": 351,
     "symbol": "DEFAULT_CHECKS",
-    "signature": "DEFAULT_CHECKS: Sequence[EvaluationCheck] = [EvaluationCheck(name='required_outputs', description='出力 artefacts (series/summary/checks/orbit_rollup/run_config) の存在確認', reference='analysis/run-recipes.md:37-41', func=_check_required_outputs), EvaluationCheck(name='series_columns', description='タイムシリーズの必須列チェック', reference=SERIES_COLUMNS_REF, func=_check_series_columns), EvaluationCheck(name='summary_fields', description='summary.json の基本フィールド検証', reference=SUMMARY_FIELDS_REF, func=_check_summary_fields), EvaluationCheck(name='case_status', description='β比較に基づく case_status 一貫性', reference='analysis/run-recipes.md:45', func=_check_case_status), EvaluationCheck(name='s_min_components', description='s_min_components のキーと max(config, blowout)', reference=S_MIN_REF, func=_check_s_min_components), EvaluationCheck(name='mass_budget', description='質量保存ログの閾値確認', reference=MASS_BUDGET_REF, func=_check_mass_budget), EvaluationCheck(name='orbit_rollup', description='公転集計ファイルと列の存在確認', reference=ORBIT_ROLLUP_REF, func=_check_orbit_rollup), EvaluationCheck(name='run_config_meta', description='run_config.json の昇華由来メタデータ検証', reference=RUN_CONFIG_REF, func=_check_run_config)]",
+    "signature": "DEFAULT_CHECKS: Sequence[EvaluationCheck] = [EvaluationCheck(name='required_outputs', description='出力 artefacts (series/summary/checks/orbit_rollup/run_config) の存在確認', reference='analysis/run-recipes.md:37-41', func=_check_required_outputs), EvaluationCheck(name='series_columns', description='タイムシリーズの必須列チェック', reference=SERIES_COLUMNS_REF, func=_check_series_columns), EvaluationCheck(name='summary_fields', description='summary.json の基本フィールド検証', reference=SUMMARY_FIELDS_REF, func=_check_summary_fields), EvaluationCheck(name='case_status', description='β比較に基づく case_status 一貫性', reference='analysis/run-recipes.md:45', func=_check_case_status), EvaluationCheck(name='s_min_components', description='s_min_components のキーと floor_mode に応じた s_min_effective 整合', reference=S_MIN_REF, func=_check_s_min_components), EvaluationCheck(name='mass_budget', description='質量保存ログの閾値確認', reference=MASS_BUDGET_REF, func=_check_mass_budget), EvaluationCheck(name='orbit_rollup', description='公転集計ファイルと列の存在確認', reference=ORBIT_ROLLUP_REF, func=_check_orbit_rollup), EvaluationCheck(name='run_config_meta', description='run_config.json の昇華由来メタデータ検証', reference=RUN_CONFIG_REF, func=_check_run_config)]",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "tools/pipeline/evaluation_system.py",
-    "line_no": 383,
+    "line_no": 403,
     "symbol": "EvaluationSystem",
     "signature": "class EvaluationSystem",
     "brief_usage": "Orchestrate evaluation checks for a given output directory."
   },
   {
     "file_path": "tools/pipeline/evaluation_system.py",
-    "line_no": 411,
+    "line_no": 431,
     "symbol": "_render_table",
     "signature": "_render_table(results: Iterable[CheckResult]) -> str",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/pipeline/evaluation_system.py",
-    "line_no": 419,
+    "line_no": 439,
     "symbol": "_build_parser",
     "signature": "_build_parser() -> argparse.ArgumentParser",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/pipeline/evaluation_system.py",
-    "line_no": 435,
+    "line_no": 455,
     "symbol": "main",
     "signature": "main(argv: Sequence[str] | None=None) -> int",
     "brief_usage": "No description available."

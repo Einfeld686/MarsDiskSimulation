@@ -57,7 +57,7 @@ $\langle Q_{\rm pr}\rangle$ はテーブル入力（CSV/NPZ）を標準とし、
 - **$\tau_{\rm stop}$**: 停止閾値であり、$\tau=1$ と同義ではない（停止判定専用）。
 - **$\Sigma_{\tau=1}$**: 診断用の面密度で、標準では $\Sigma_{\rm surf}$ を直接クリップしない。
 - **$\tau_0=1$**: 初期化スケーリングの目標で、`init_tau1.scale_to_tau1=true` のときに用いる。
-- **$s_{\min,\mathrm{eff}}$**: PSD グリッドの下限に反映する有効最小粒径。既定は $s_{\min,\mathrm{eff}}=\max(s_{\min,\mathrm{cfg}}, s_{\mathrm{blow,eff}})$ で、$s_{\rm sub}$ は ds/dt としてのみ扱う（床を動かすのは `psd.floor.mode` を明示した場合のみ）。
+- **$s_{\min,\mathrm{eff}}$**: PSD グリッドの下限に反映する有効最小粒径。既定は $s_{\min,\mathrm{eff}}=\max(s_{\min,\mathrm{cfg}}, s_{\mathrm{blow,eff}})$ だが、`psd.floor.mode="none"` では $s_{\min,\mathrm{eff}}=s_{\min,\mathrm{cfg}}$ を維持する。$s_{\rm sub}$ は ds/dt としてのみ扱う（床を動かすのは `psd.floor.mode` を明示した場合のみ）。
 
 ### 2.0 支配方程式の位置づけ
 

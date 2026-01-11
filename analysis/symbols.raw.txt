@@ -169,6 +169,12 @@ analysis/tools/make_sinks_callgraph.py:54:def build_mermaid(inv: Dict[SymbolKey,
 analysis/tools/make_sinks_callgraph.py:94:def inject_autogen_block(original: str, block: str) -> str
 analysis/tools/make_sinks_callgraph.py:116:def parse_args(argv: Optional[Sequence[str]]) -> argparse.Namespace
 analysis/tools/make_sinks_callgraph.py:128:def main(argv: Optional[Sequence[str]]=None) -> int
+analysis/tools/merge_introduction_sections.py:14:def _manifest_entries(manifest_path: Path) -> list[str]
+analysis/tools/merge_introduction_sections.py:24:def _validate_entry(entry: str) -> None
+analysis/tools/merge_introduction_sections.py:29:def _paths_from_manifest(sections_dir: Path, manifest_path: Path) -> list[Path]
+analysis/tools/merge_introduction_sections.py:50:def collect_sections(sections_dir: Path, manifest_path: Path | None=None) -> list[Path]
+analysis/tools/merge_introduction_sections.py:62:def build_document(section_paths: list[Path]) -> str
+analysis/tools/merge_introduction_sections.py:69:def main(argv: list[str] | None=None) -> int
 analysis/tools/render_assumptions.py:35:def _render_table(records: Iterable[AssumptionRecord]) -> list[str]
 analysis/tools/render_assumptions.py:57:def render_overview(records: list[AssumptionRecord], report: CoverageReport) -> str
 analysis/tools/render_assumptions.py:87:def render_trace_block(records: list[AssumptionRecord]) -> str
@@ -393,18 +399,24 @@ marsdisk/ops/make_qpr_table.py:81:def _parse_temperatures(raw: str) -> np.ndarra
 marsdisk/ops/make_qpr_table.py:95:def _build_size_grid(s_min: float, s_max: float, count: int) -> np.ndarray
 marsdisk/ops/make_qpr_table.py:106:def _write_hdf5(path: Path, qpr: np.ndarray, log10s: np.ndarray, temperatures: np.ndarray) -> None
 marsdisk/ops/make_qpr_table.py:120:def main(argv: Sequence[str] | None=None) -> None
-marsdisk/ops/make_qpr_table_forsterite_mie_csv.py:33:def _load_miepython(use_jit: bool)
-marsdisk/ops/make_qpr_table_forsterite_mie_csv.py:48:def _parse_temperatures(raw: str) -> np.ndarray
-marsdisk/ops/make_qpr_table_forsterite_mie_csv.py:58:def _build_size_grid(s_min: float, s_max: float, count: int) -> np.ndarray
-marsdisk/ops/make_qpr_table_forsterite_mie_csv.py:68:def _planck_lambda(wavelength_m: np.ndarray, temperature: float) -> np.ndarray
-marsdisk/ops/make_qpr_table_forsterite_mie_csv.py:74:def _load_nk_axis(path: Path) -> tuple[np.ndarray, np.ndarray, np.ndarray]
-marsdisk/ops/make_qpr_table_forsterite_mie_csv.py:88:def _merge_wavelength_grid(lam_axes: Sequence[np.ndarray], nk_axes: Sequence[tuple[np.ndarray, np.ndarray]], lam_min_um: float | None, lam_max_um: float | None) -> tuple[np.ndarray, list[tuple[np.ndarray, np.ndarray]]]
-marsdisk/ops/make_qpr_table_forsterite_mie_csv.py:119:def _resample_wavelength_grid(lam_um: np.ndarray, nk_axes: Sequence[tuple[np.ndarray, np.ndarray]], samples: int) -> tuple[np.ndarray, list[tuple[np.ndarray, np.ndarray]]]
-marsdisk/ops/make_qpr_table_forsterite_mie_csv.py:137:def _mie_qpr(m_complex: complex, x: float) -> float
-marsdisk/ops/make_qpr_table_forsterite_mie_csv.py:144:def _compute_qpr_lambda(lam_m: np.ndarray, s_values: np.ndarray, nk_axes: Sequence[tuple[np.ndarray, np.ndarray]], x_max: float | None=None) -> np.ndarray
-marsdisk/ops/make_qpr_table_forsterite_mie_csv.py:177:def compute_planck_mean_qpr(s_values: Sequence[float], temperatures: Sequence[float], lam_um: np.ndarray, nk_axes: Sequence[tuple[np.ndarray, np.ndarray]], x_max: float | None=None) -> np.ndarray
-marsdisk/ops/make_qpr_table_forsterite_mie_csv.py:199:def _resolve_temperature_tag(value: float) -> int
-marsdisk/ops/make_qpr_table_forsterite_mie_csv.py:206:def main(argv: Sequence[str] | None=None) -> None
+marsdisk/ops/make_qpr_table_forsterite_mie_csv.py:40:class NKTemperatureGrid
+marsdisk/ops/make_qpr_table_forsterite_mie_csv.py:46:def _load_miepython(use_jit: bool)
+marsdisk/ops/make_qpr_table_forsterite_mie_csv.py:61:def _parse_temperatures(raw: str) -> np.ndarray
+marsdisk/ops/make_qpr_table_forsterite_mie_csv.py:71:def _build_size_grid(s_min: float, s_max: float, count: int) -> np.ndarray
+marsdisk/ops/make_qpr_table_forsterite_mie_csv.py:81:def _planck_lambda(wavelength_m: np.ndarray, temperature: float) -> np.ndarray
+marsdisk/ops/make_qpr_table_forsterite_mie_csv.py:87:def _load_nk_axis(path: Path) -> tuple[np.ndarray, np.ndarray, np.ndarray]
+marsdisk/ops/make_qpr_table_forsterite_mie_csv.py:101:def _discover_for2285_temperatures(data_dir: Path) -> list[int]
+marsdisk/ops/make_qpr_table_forsterite_mie_csv.py:119:def _load_for2285_tables(data_dir: Path, lam_min_um: float | None, lam_max_um: float | None) -> tuple[np.ndarray, dict[str, NKTemperatureGrid]]
+marsdisk/ops/make_qpr_table_forsterite_mie_csv.py:157:def _load_eckes_tables(csv_path: Path, source_id: str, lam_min_um: float, lam_max_um: float) -> tuple[np.ndarray, dict[str, NKTemperatureGrid]]
+marsdisk/ops/make_qpr_table_forsterite_mie_csv.py:229:def _merge_wavelength_grid(lam_axes: Sequence[np.ndarray], nk_axes: Sequence[tuple[np.ndarray, np.ndarray]], lam_min_um: float | None, lam_max_um: float | None) -> tuple[np.ndarray, list[tuple[np.ndarray, np.ndarray]]]
+marsdisk/ops/make_qpr_table_forsterite_mie_csv.py:260:def _resample_wavelength_grid(lam_um: np.ndarray, nk_axes: Sequence[tuple[np.ndarray, np.ndarray]], samples: int) -> tuple[np.ndarray, list[tuple[np.ndarray, np.ndarray]]]
+marsdisk/ops/make_qpr_table_forsterite_mie_csv.py:278:def _interp_temperature_grid(temps: np.ndarray, values: np.ndarray, target: float) -> np.ndarray
+marsdisk/ops/make_qpr_table_forsterite_mie_csv.py:292:def _mie_qpr(m_complex: complex, x: float) -> float
+marsdisk/ops/make_qpr_table_forsterite_mie_csv.py:299:def _compute_qpr_lambda(lam_m: np.ndarray, s_values: np.ndarray, nk_axes: Sequence[tuple[np.ndarray, np.ndarray]], x_max: float | None=None) -> np.ndarray
+marsdisk/ops/make_qpr_table_forsterite_mie_csv.py:332:def compute_planck_mean_qpr(s_values: Sequence[float], temperatures: Sequence[float], lam_um: np.ndarray, nk_axes: Sequence[tuple[np.ndarray, np.ndarray]], x_max: float | None=None) -> np.ndarray
+marsdisk/ops/make_qpr_table_forsterite_mie_csv.py:354:def compute_planck_mean_qpr_by_temperature(s_values: Sequence[float], temperatures: Sequence[float], lam_um: np.ndarray, nk_axes_by_temp: Sequence[Sequence[tuple[np.ndarray, np.ndarray]]], x_max: float | None=None) -> np.ndarray
+marsdisk/ops/make_qpr_table_forsterite_mie_csv.py:378:def _resolve_temperature_tag(value: float) -> int
+marsdisk/ops/make_qpr_table_forsterite_mie_csv.py:385:def main(argv: Sequence[str] | None=None) -> None
 marsdisk/ops/make_qpr_table_sio2_abbas_calibrated_lowT_csv.py:62:def _planck_lambda(wavelength_m: np.ndarray, temperature: float) -> np.ndarray
 marsdisk/ops/make_qpr_table_sio2_abbas_calibrated_lowT_csv.py:68:def _qpr_model(size_parameter: np.ndarray, amplitude: float, exponent: float) -> np.ndarray
 marsdisk/ops/make_qpr_table_sio2_abbas_calibrated_lowT_csv.py:74:def _calibrate_amplitude(exponent: float, x_cal: float, qpr_cal: float) -> float
@@ -684,7 +696,7 @@ marsdisk/run_zero_d.py:1334:def load_config(path: Path, overrides: Optional[Sequ
 marsdisk/run_zero_d.py:1359:def _gather_git_info() -> Dict[str, Any]
 marsdisk/run_zero_d.py:1386:class MassBudgetViolationError(NumericalError)
 marsdisk/run_zero_d.py:1392:def run_zero_d(cfg: Config, *, enforce_mass_budget: bool=False, physics_mode_override: Optional[str]=None, physics_mode_source_override: Optional[str]=None) -> None
-marsdisk/run_zero_d.py:5924:def main(argv: Optional[List[str]]=None) -> None
+marsdisk/run_zero_d.py:5980:def main(argv: Optional[List[str]]=None) -> None
 marsdisk/runtime/autotune.py:22:class MachineState
 marsdisk/runtime/autotune.py:43:class AutoTuneDecision
 marsdisk/runtime/autotune.py:56:def _safe_int(value: Any, fallback: int) -> int
@@ -2043,13 +2055,13 @@ tools/pipeline/evaluation_system.py:233:def _check_series_columns(ctx: Evaluatio
 tools/pipeline/evaluation_system.py:245:def _check_summary_fields(ctx: EvaluationContext) -> Tuple[bool, str]
 tools/pipeline/evaluation_system.py:253:def _check_case_status(ctx: EvaluationContext) -> Tuple[bool, str]
 tools/pipeline/evaluation_system.py:268:def _check_s_min_components(ctx: EvaluationContext) -> Tuple[bool, str]
-tools/pipeline/evaluation_system.py:291:def _check_mass_budget(ctx: EvaluationContext) -> Tuple[bool, str]
-tools/pipeline/evaluation_system.py:306:def _check_orbit_rollup(ctx: EvaluationContext) -> Tuple[bool, str]
-tools/pipeline/evaluation_system.py:316:def _check_run_config(ctx: EvaluationContext) -> Tuple[bool, str]
-tools/pipeline/evaluation_system.py:383:class EvaluationSystem
-tools/pipeline/evaluation_system.py:411:def _render_table(results: Iterable[CheckResult]) -> str
-tools/pipeline/evaluation_system.py:419:def _build_parser() -> argparse.ArgumentParser
-tools/pipeline/evaluation_system.py:435:def main(argv: Sequence[str] | None=None) -> int
+tools/pipeline/evaluation_system.py:311:def _check_mass_budget(ctx: EvaluationContext) -> Tuple[bool, str]
+tools/pipeline/evaluation_system.py:326:def _check_orbit_rollup(ctx: EvaluationContext) -> Tuple[bool, str]
+tools/pipeline/evaluation_system.py:336:def _check_run_config(ctx: EvaluationContext) -> Tuple[bool, str]
+tools/pipeline/evaluation_system.py:403:class EvaluationSystem
+tools/pipeline/evaluation_system.py:431:def _render_table(results: Iterable[CheckResult]) -> str
+tools/pipeline/evaluation_system.py:439:def _build_parser() -> argparse.ArgumentParser
+tools/pipeline/evaluation_system.py:455:def main(argv: Sequence[str] | None=None) -> int
 tools/pipeline/run_analysis_doc_tests.py:15:class SummaryPlugin
 tools/pipeline/run_analysis_doc_tests.py:29:def _build_args(argv: List[str]) -> List[str]
 tools/pipeline/run_analysis_doc_tests.py:43:def _expand_globs(args: List[str]) -> List[str]
