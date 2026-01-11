@@ -2,7 +2,7 @@
 rem 0D Mars disk sweep over Mars surface temperature (T_M) and supply mixing (epsilon_mix).
 rem Combines T_M in {2000, 4000, 6000} with epsilon_mix in {1.0, 0.1} for 6 runs.
 rem Uses configs\temp_supply_sweep.yml (sublimation ON, gas-poor, Smol collisions) and enables the Mars temperature driver for radiative cooling.
-rem External supply uses mu_orbit10pct (1 orbit supplies 10% of Sigma_surf0).
+rem External supply uses mu_orbit10pct (1 orbit supplies 5% of Sigma_surf0).
 
 setlocal enabledelayedexpansion
 set "PYTHONUTF8=1"
@@ -12,7 +12,7 @@ set "SCRIPT_DIR=%~dp0"
 set CONFIG=configs\temp_supply_sweep.yml
 set OUTROOT=out\temp_supply_grid
 set SUPPLY_MU_ORBIT10PCT=1.0
-set SUPPLY_ORBIT_FRACTION=0.10
+set SUPPLY_ORBIT_FRACTION=0.05
 set OPTICAL_TAU0_TARGET=1.0
 set OPTICAL_TAU_STOP=2.302585092994046
 set OPTICAL_TAU_STOP_TOL=1.0e-6

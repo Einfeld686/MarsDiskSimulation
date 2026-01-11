@@ -2,7 +2,7 @@
 # Run temp supply parameter sweep:
 #   T_M = {2000, 4000, 6000} K
 #   epsilon_mix = {0.1, 0.5, 1.0}
-#   mu_orbit10pct = 1.0 (1 orbit supplies 10% of Sigma_ref(tau=1); scaled by orbit_fraction_at_mu1)
+#   mu_orbit10pct = 1.0 (1 orbit supplies 5% of Sigma_ref(tau=1); scaled by orbit_fraction_at_mu1)
 #   optical_depth.tau0_target = {1.0, 0.5, 0.1}
 # 出力は out/temp_supply_sweep/<ts>__<sha>__seed<batch>/T{T}_eps{eps}_tau{tau}/ に配置。
 # 供給は supply.* による外部源（温度・τフィードバック・有限リザーバ対応）。
@@ -137,7 +137,7 @@ fi
 
 # Parameter grids (run hotter cases first). Override via env:
 #   T_LIST_RAW="4000 3000", EPS_LIST_RAW="1.0", TAU_LIST_RAW="1.0 0.5"
-T_LIST_RAW="${T_LIST_RAW:-5000 4000 3000}"
+T_LIST_RAW="${T_LIST_RAW:-4000 3000}"
 EPS_LIST_RAW="${EPS_LIST_RAW:-1.0 0.5 0.1}"
 TAU_LIST_RAW="${TAU_LIST_RAW:-1.0 0.5 0.1}"
 SEED_OVERRIDE=""
@@ -209,6 +209,10 @@ trap 'rm -rf "${OVERRIDE_TMP_DIR}"' EXIT
 BASE_OVERRIDES_FILE="${OVERRIDE_TMP_DIR}/base_overrides.txt"
 CASE_OVERRIDES_FILE="${OVERRIDE_TMP_DIR}/case_overrides.txt"
 MERGED_OVERRIDES_FILE="${OVERRIDE_TMP_DIR}/merged_overrides.txt"
+DEFAULT_MATERIAL_OVERRIDES="${DEFAULT_MATERIAL_OVERRIDES:-configs/overrides/material_forsterite.override}"
+if [[ -z "${EXTRA_OVERRIDES_FILE+x}" ]]; then
+  EXTRA_OVERRIDES_FILE="${DEFAULT_MATERIAL_OVERRIDES}"
+fi
 EXTRA_OVERRIDE_FILE_ARGS=()
 if [[ -n "${EXTRA_OVERRIDES_FILE:-}" ]]; then
   if [[ -f "${EXTRA_OVERRIDES_FILE}" ]]; then
@@ -232,7 +236,7 @@ SUPPLY_MODE="${SUPPLY_MODE:-const}"
 # External supply scaling (mu_orbit10pct=1.0 injects orbit_fraction_at_mu1 of Sigma_surf0 per orbit).
 SUPPLY_MU_ORBIT10PCT="${SUPPLY_MU_ORBIT10PCT:-1.0}"
 SUPPLY_MU_REFERENCE_TAU="${SUPPLY_MU_REFERENCE_TAU:-1.0}"
-SUPPLY_ORBIT_FRACTION="${SUPPLY_ORBIT_FRACTION:-0.10}"
+SUPPLY_ORBIT_FRACTION="${SUPPLY_ORBIT_FRACTION:-0.05}"
 # optical_depth の Sigma_surf0 を使うため、初期質量は形状用の最小限に抑える。
 INIT_MASS_TOTAL="${INIT_MASS_TOTAL:-1.0e-7}"
 SHIELDING_MODE="${SHIELDING_MODE:-off}"
@@ -346,7 +350,6 @@ append_override "${BASE_OVERRIDES_FILE}" "phase.temperature_input" "${PHASE_TEMP
 append_override "${BASE_OVERRIDES_FILE}" "phase.q_abs_mean" "${PHASE_QABS_MEAN}"
 append_override "${BASE_OVERRIDES_FILE}" "phase.tau_field" "${PHASE_TAU_FIELD}"
 append_override "${BASE_OVERRIDES_FILE}" "qstar.coeff_units" "${QSTAR_UNITS}"
-append_override "${BASE_OVERRIDES_FILE}" "radiation.qpr_table_path" "marsdisk/io/data/qpr_planck_sio2_abbas_calibrated_lowT.csv"
 append_override "${BASE_OVERRIDES_FILE}" "radiation.mars_temperature_driver.enabled" "true"
 append_override "${BASE_OVERRIDES_FILE}" "initial.mass_total" "${INIT_MASS_TOTAL}"
 append_override "${BASE_OVERRIDES_FILE}" "supply.enabled" "true"
@@ -531,7 +534,7 @@ PY
         append_override "${CASE_OVERRIDES_FILE}" "numerics.t_end_years" "${T_END_YEARS}"
         append_override "${CASE_OVERRIDES_FILE}" "numerics.t_end_orbits" "null"
         append_override "${CASE_OVERRIDES_FILE}" "numerics.t_end_until_temperature_K" "null"
-        append_override "${CASE_OVERRIDES_FILE}" "numerics.t_end_temperature_margin_years" "null"
+        append_override "${CASE_OVERRIDES_FILE}" "numerics.t_end_temperature_margin_years" "0.0"
         append_override "${CASE_OVERRIDES_FILE}" "numerics.t_end_temperature_search_years" "null"
         append_override "${CASE_OVERRIDES_FILE}" "scope.analysis_years" "${T_END_YEARS}"
       fi

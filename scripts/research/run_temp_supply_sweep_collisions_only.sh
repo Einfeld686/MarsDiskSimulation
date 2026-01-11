@@ -2,7 +2,7 @@
 # Run temp supply sweep (collisions only)
 # T_M = {2000, 4000, 6000}
 # epsilon_mix = {0.1, 0.5, 1.0}
-# mu_orbit10pct = 1.0 (1 orbit supplies 10% of Sigma_ref(tau=1); scaled by orbit_fraction_at_mu1)
+# mu_orbit10pct = 1.0 (1 orbit supplies 5% of Sigma_ref(tau=1); scaled by orbit_fraction_at_mu1)
 # tau0_target = {1.0, 0.5, 0.1}
 # Outputs under: out/temp_supply_sweep/<ts>__<sha>__seed<BATCH>/T{T}_eps{eps}_tau{tau}_mode-collisions_only/
 
@@ -36,12 +36,24 @@ else
 fi
 
 BASE_CONFIG="configs/sweep_temp_supply/temp_supply_T4000_eps1.yml"
-T_LIST=("2000" "4000" "6000")
+DEFAULT_MATERIAL_OVERRIDES="${DEFAULT_MATERIAL_OVERRIDES:-configs/overrides/material_forsterite.override}"
+if [[ -z "${EXTRA_OVERRIDES_FILE+x}" ]]; then
+  EXTRA_OVERRIDES_FILE="${DEFAULT_MATERIAL_OVERRIDES}"
+fi
+EXTRA_OVERRIDE_ARGS=()
+if [[ -n "${EXTRA_OVERRIDES_FILE:-}" ]]; then
+  if [[ -f "${EXTRA_OVERRIDES_FILE}" ]]; then
+    EXTRA_OVERRIDE_ARGS=(--overrides-file "${EXTRA_OVERRIDES_FILE}")
+  else
+    echo "[warn] EXTRA_OVERRIDES_FILE not found: ${EXTRA_OVERRIDES_FILE}"
+  fi
+fi
+T_LIST=("4000" "3000")
 EPS_LIST=("0.1" "0.5" "1.0")
 TAU_LIST=("1.0" "0.5" "0.1")
 MODE="collisions_only"
 SUPPLY_MU_ORBIT10PCT="${SUPPLY_MU_ORBIT10PCT:-1.0}"
-SUPPLY_ORBIT_FRACTION="${SUPPLY_ORBIT_FRACTION:-0.10}"
+SUPPLY_ORBIT_FRACTION="${SUPPLY_ORBIT_FRACTION:-0.05}"
 
 PROGRESS_FLAG=()
 if [[ -t 1 ]]; then
@@ -73,6 +85,7 @@ PY
       echo "[run] mode=${MODE} T=${T} eps=${EPS} tau=${TAU} -> ${OUTDIR} (batch=${BATCH_SEED}, seed=${SEED})"
       python -m marsdisk.run \
         --config "${BASE_CONFIG}" \
+        "${EXTRA_OVERRIDE_ARGS[@]}" \
         --quiet \
         "${PROGRESS_FLAG[@]}" \
         --override numerics.dt_init=20 \

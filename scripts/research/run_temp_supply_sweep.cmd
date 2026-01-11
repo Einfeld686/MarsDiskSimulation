@@ -379,7 +379,7 @@ if not defined SUPPLY_HEADROOM_POLICY set "SUPPLY_HEADROOM_POLICY=clip"
 if not defined SUPPLY_MODE set "SUPPLY_MODE=const"
 if not defined SUPPLY_MU_ORBIT10PCT set "SUPPLY_MU_ORBIT10PCT=1.0"
 if not defined SUPPLY_MU_REFERENCE_TAU set "SUPPLY_MU_REFERENCE_TAU=1.0"
-if not defined SUPPLY_ORBIT_FRACTION set "SUPPLY_ORBIT_FRACTION=0.10"
+if not defined SUPPLY_ORBIT_FRACTION set "SUPPLY_ORBIT_FRACTION=0.05"
 if not defined SHIELDING_MODE set "SHIELDING_MODE=off"
 if not defined SHIELDING_SIGMA set "SHIELDING_SIGMA=auto"
 if not defined SHIELDING_AUTO_MAX_MARGIN set "SHIELDING_AUTO_MAX_MARGIN=0.05"
@@ -550,7 +550,7 @@ if /i "%SUPPLY_HEADROOM_POLICY%"=="off" set "SUPPLY_HEADROOM_POLICY="
 if /i "%SUPPLY_TRANSPORT_TMIX_ORBITS%"=="none" set "SUPPLY_TRANSPORT_TMIX_ORBITS="
 if /i "%SUPPLY_TRANSPORT_TMIX_ORBITS%"=="off" set "SUPPLY_TRANSPORT_TMIX_ORBITS="
 
-set "T_LIST=5000 3000"
+set "T_LIST=4000 3000"
 set "EPS_LIST=1.0 0.5"
 set "TAU_LIST=1.0 0.5"
 
@@ -867,7 +867,7 @@ for /f "usebackq tokens=1-3 delims= " %%A in ("%SWEEP_LIST_FILE%") do (
         >>"!CASE_OVERRIDES_FILE!" echo numerics.t_end_years=!T_END_YEARS!
         >>"!CASE_OVERRIDES_FILE!" echo numerics.t_end_orbits=null
         >>"!CASE_OVERRIDES_FILE!" echo numerics.t_end_until_temperature_K=null
-        >>"!CASE_OVERRIDES_FILE!" echo numerics.t_end_temperature_margin_years=null
+        >>"!CASE_OVERRIDES_FILE!" echo numerics.t_end_temperature_margin_years=0.0
         >>"!CASE_OVERRIDES_FILE!" echo numerics.t_end_temperature_search_years=null
         >>"!CASE_OVERRIDES_FILE!" echo scope.analysis_years=!T_END_YEARS!
       )

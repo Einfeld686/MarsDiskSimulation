@@ -2,7 +2,7 @@
 # Run temp supply parameter sweep:
 #   T_M = {2000, 4000, 6000} K
 #   epsilon_mix = {0.1, 0.5, 1.0}
-#   mu_orbit10pct = 1.0 (1 orbit supplies 10% of Sigma_ref(tau=1); scaled by orbit_fraction_at_mu1)
+#   mu_orbit10pct = 1.0 (1 orbit supplies 5% of Sigma_ref(tau=1); scaled by orbit_fraction_at_mu1)
 #   optical_depth.tau0_target = {1.0, 0.5, 0.1}
 # 出力は out/temp_supply_sweep/<ts>__<sha>__seed<batch>/T{T}_eps{eps}_tau{tau}/ に配置。
 # 供給は supply.* による外部源（温度・τフィードバック・有限リザーバ対応）。
@@ -51,9 +51,21 @@ fi
 BASE_CONFIG="${BASE_CONFIG:-configs/sweep_temp_supply/temp_supply_T4000_eps1.yml}"
 # qstar unit system (ba99_cgs: cm/g/cm^3/erg/g → J/kg, si: legacy meter/kg)
 QSTAR_UNITS="${QSTAR_UNITS:-ba99_cgs}"
+DEFAULT_MATERIAL_OVERRIDES="${DEFAULT_MATERIAL_OVERRIDES:-configs/overrides/material_forsterite.override}"
+if [[ -z "${EXTRA_OVERRIDES_FILE+x}" ]]; then
+  EXTRA_OVERRIDES_FILE="${DEFAULT_MATERIAL_OVERRIDES}"
+fi
+EXTRA_OVERRIDE_ARGS=()
+if [[ -n "${EXTRA_OVERRIDES_FILE:-}" ]]; then
+  if [[ -f "${EXTRA_OVERRIDES_FILE}" ]]; then
+    EXTRA_OVERRIDE_ARGS=(--overrides-file "${EXTRA_OVERRIDES_FILE}")
+  else
+    echo "[warn] EXTRA_OVERRIDES_FILE not found: ${EXTRA_OVERRIDES_FILE}"
+  fi
+fi
 
 # Parameter grids (run hotter cases first)
-T_LIST=("5000" "4000" "3000")
+T_LIST=("4000" "3000")
 EPS_LIST=("1.0" "0.5" "0.1")
 TAU_LIST=("1.0" "0.5" "0.1")
 END_MODE="${END_MODE:-fixed}"                  # fixed|temperature
@@ -96,7 +108,7 @@ SUPPLY_HEADROOM_POLICY="${SUPPLY_HEADROOM_POLICY:-clip}"
 SUPPLY_MODE="${SUPPLY_MODE:-const}"
 # External supply scaling (mu_orbit10pct=1.0 injects orbit_fraction_at_mu1 of Sigma_ref(tau=1) per orbit).
 SUPPLY_MU_ORBIT10PCT="${SUPPLY_MU_ORBIT10PCT:-1.0}"
-SUPPLY_ORBIT_FRACTION="${SUPPLY_ORBIT_FRACTION:-0.10}"
+SUPPLY_ORBIT_FRACTION="${SUPPLY_ORBIT_FRACTION:-0.05}"
 # Pattern A: τ=1 キャップに任せるため、初期質量は形状用の最小限に抑える。
 INIT_MASS_TOTAL="${INIT_MASS_TOTAL:-1.0e-7}"
 SHIELDING_MODE="${SHIELDING_MODE:-off}"
@@ -301,6 +313,9 @@ PY
         python -m marsdisk.run
         --config "${BASE_CONFIG}"
       )
+      if (( ${#EXTRA_OVERRIDE_ARGS[@]} )); then
+        cmd+=("${EXTRA_OVERRIDE_ARGS[@]}")
+      fi
       # 強制的に progress を有効化しつつ、ログは静かめに
       cmd+=(--progress --quiet)
         cmd+=(
@@ -314,7 +329,6 @@ PY
         --override "phase.tau_field=${PHASE_TAU_FIELD}"
         --override "radiation.TM_K=${T}"
           --override "qstar.coeff_units=${QSTAR_UNITS}"
-          --override "radiation.qpr_table_path=marsdisk/io/data/qpr_planck_sio2_abbas_calibrated_lowT.csv"
           --override "radiation.mars_temperature_driver.enabled=true"
           --override "initial.mass_total=${INIT_MASS_TOTAL}"
         )
@@ -353,7 +367,7 @@ PY
         cmd+=(--override "numerics.t_end_years=${T_END_YEARS}")
         cmd+=(--override "numerics.t_end_orbits=null")
         cmd+=(--override "numerics.t_end_until_temperature_K=null")
-        cmd+=(--override "numerics.t_end_temperature_margin_years=null")
+        cmd+=(--override "numerics.t_end_temperature_margin_years=0.0")
         cmd+=(--override "numerics.t_end_temperature_search_years=null")
         cmd+=(--override "scope.analysis_years=${T_END_YEARS}")
       fi

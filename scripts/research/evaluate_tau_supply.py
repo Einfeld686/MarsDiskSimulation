@@ -110,7 +110,7 @@ def evaluate_run(
             data = {}
         supply_cfg = data.get("supply", {}) or {}
         mu_orbit = supply_cfg.get("mu_orbit10pct")
-        orbit_fraction = supply_cfg.get("orbit_fraction_at_mu1", 0.10)
+        orbit_fraction = supply_cfg.get("orbit_fraction_at_mu1", 0.05)
         if mu_orbit is not None and "Sigma_surf0" in df.columns and "t_orb_s" in df.columns:
             sigma0 = float(df["Sigma_surf0"].iloc[0])
             t_orb = float(df["t_orb_s"].iloc[0])
