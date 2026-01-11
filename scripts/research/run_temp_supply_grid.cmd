@@ -32,7 +32,7 @@ if not exist "%VENV_BOOTSTRAP_CMD%" (
   exit /b 1
 )
 call "%VENV_BOOTSTRAP_CMD%"
-if !errorlevel! geq 1 (
+if not "!errorlevel!"=="0" (
   set "BOOTSTRAP_RC=!errorlevel!"
   echo [error] Failed to initialize Python environment.
   exit /b !BOOTSTRAP_RC!
@@ -105,7 +105,7 @@ for %%T in (4000 2000 6000) do (
       --progress ^
       --quiet
 
-    if !errorlevel! geq 1 (
+    if not "!errorlevel!"=="0" (
       echo [error] Run failed for T_M=%%T, epsilon_mix=%%M
       exit /b !errorlevel!
     )

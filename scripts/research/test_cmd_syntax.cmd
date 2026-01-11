@@ -16,7 +16,7 @@ if not exist "%COMMON_DIR%\resolve_python.cmd" (
   exit /b 1
 )
 call "%COMMON_DIR%\resolve_python.cmd"
-if !errorlevel! geq 1 exit /b 1
+if not "!errorlevel!"=="0" exit /b 1
 
 set PASS=0
 set FAIL=0
@@ -40,7 +40,7 @@ echo ========================================
 echo Test Summary: PASS=%PASS% FAIL=%FAIL%
 echo ========================================
 set "EXIT_CODE=0"
-if %FAIL% gtr 0 set "EXIT_CODE=1"
+if not "%FAIL%"=="0" set "EXIT_CODE=1"
 goto :exit_main
 
 :test_one
@@ -57,23 +57,23 @@ if not exist "%FILE%" (
 
 rem Check 2: Line endings (Python)
 !PYTHON_CMD! -c "import pathlib,sys; data=pathlib.Path(r'%FILE%').read_bytes(); sys.exit(0 if b'\r\n' in data else 1)" 2>nul
-if !errorlevel! geq 1 (
+if not "!errorlevel!"=="0" (
   echo   [WARN] File may have Unix line endings (LF instead of CRLF)
 )
 
 rem Check 3: Check for common problematic patterns
 findstr /r /c:"pushd.*\.\.\\\.\." "%FILE%" >nul 2>&1
-if !errorlevel! lss 1 (
+if "!errorlevel!"=="0" (
   echo   [WARN] Found 'pushd ..\..' pattern - may cause path issues
 )
 
 findstr /r /c:"\\NUL" "%FILE%" >nul 2>&1
-if !errorlevel! lss 1 (
+if "!errorlevel!"=="0" (
   echo   [WARN] Found '\NUL' pattern - deprecated on Windows 10+
 )
 
 findstr /r /c:"|| *(" "%FILE%" >nul 2>&1
-if !errorlevel! lss 1 (
+if "!errorlevel!"=="0" (
   echo   [WARN] Found '^|^| ^(' pattern - unreliable with call in cmd.exe
 )
 
@@ -82,12 +82,12 @@ rem Check 4: Very long lines (>1000 chars, may cause issues)
 
 rem Check 5: Dry-run if script supports it
 findstr /c:"--dry-run" "%FILE%" >nul 2>&1
-if !errorlevel! lss 1 (
+if "!errorlevel!"=="0" (
   echo   [info] Script supports --dry-run, attempting dry-run test...
   pushd "%REPO_ROOT%"
   set "MARSDISK_POPD_ACTIVE=1"
   cmd /c ""%FILE%" --dry-run >nul 2>&1"
-  if !errorlevel! geq 1 (
+  if not "!errorlevel!"=="0" (
     echo   [FAIL] Dry-run failed with errorlevel !errorlevel!
     set /a FAIL+=1
     call :popd_safe
