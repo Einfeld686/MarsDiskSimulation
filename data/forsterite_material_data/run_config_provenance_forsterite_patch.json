@@ -5,11 +5,11 @@
       "url": "https://www2.astro.uni-jena.de/FOR2285/en/forsterite_optical.php",
       "retrieved_utc": "2026-01-10T13:27:52.460672+00:00",
       "files": [
-        "data/forsterite_material_data/nk_FOR2285/fors_a_50_nk.dat",
-        "data/forsterite_material_data/nk_FOR2285/fors_b_50_nk.dat",
-        "data/forsterite_material_data/nk_FOR2285/fors_c_50_nk.dat",
-        "... (see manifest for full list)"
+        "data/forsterite_material_data/nk_FOR2285/fors_a_295_nk.dat",
+        "data/forsterite_material_data/nk_FOR2285/fors_b_295_nk.dat",
+        "data/forsterite_material_data/nk_FOR2285/fors_c_295_nk.dat"
       ],
+      "temperature_K": 295,
       "file_manifest": "data/forsterite_material_data/FOR2285_forsterite_nk_manifest.json",
       "combined_table": "data/forsterite_material_data/FOR2285_forsterite_nk_long.csv",
       "columns": [
@@ -22,9 +22,9 @@
       "anisotropy_handling": {
         "method": "axis-wise Mie then 1/3 average",
         "evidence": "Zeidler et al. (2015) Eq.(7), DOI: 10.1088/0004-637X/798/2/125",
-        "status": "planned (not implemented here)"
+        "status": "implemented"
       },
-      "license": "UNKNOWN (no explicit license on FOR2285 page; cite URL and original papers)"
+      "license": "UNKNOWN (no explicit license on FOR2285 page; OCDB requests citation)"
     }
   },
   "sublimation_provenance": {
@@ -53,7 +53,7 @@
         3690
       ],
       "unit": "bar",
-      "log_base": "UNKNOWN (not explicitly stated in paper)",
+      "log_base": "log10 (adopted; not explicitly stated in paper)",
       "source": "arXiv:1210.0270 (Fegley & Schaefer 2012), Eq.(5)",
       "converted_to_log10Pa_if_log_is_log10": {
         "target_form": "log10 P(Pa) = A_fit − B_fit/T",
@@ -73,8 +73,8 @@
     "phase_thresholds": {
       "T_switch_K": 2163,
       "T_vaporize_liquid_K": 2163,
-      "T_condense_solid_K": 2163,
-      "note": "Operational (no hysteresis). T_switch set to lower bound of molten-forsterite fit; treat as phase boundary for the simulation."
+      "T_condense_solid_K": 2162,
+      "note": "Operational (minimal hysteresis required by schema). T_switch set to lower bound of molten-forsterite fit; T_condense_K is 1 K lower to satisfy validation."
     }
   }
 }

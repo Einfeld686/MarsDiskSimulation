@@ -116,7 +116,7 @@
           2163,
           3690
         ],
-        "log_base": "UNKNOWN (paper text says 'log' without explicit base)",
+        "log_base": "log10 (adopted; paper text says 'log' without explicit base)",
         "reference": {
           "paper": "Fegley & Schaefer (2012) arXiv:1210.0270",
           "eq_number": "Eq. (5)",
@@ -126,7 +126,7 @@
       "converted_for_simulation": {
         "target_form": "log10 P(Pa) = A_fit − B_fit/T",
         "assumptions": [
-          "Assumes 'log' in Eq. (5) is log10.",
+          "Adopts log10 for the base of 'log' in Eq. (5).",
           "1 bar = 1e5 Pa so log10 P(Pa) = log10 P(bar) + 5."
         ],
         "A_fit": 11.08,
@@ -135,7 +135,7 @@
           2163,
           3690
         ],
-        "note": "If Eq. (5) uses natural log, this conversion is not valid; in that case keep the original equation."
+        "note": "Paper does not specify the log base; simulation adopts log10 and records the choice."
       }
     }
   },

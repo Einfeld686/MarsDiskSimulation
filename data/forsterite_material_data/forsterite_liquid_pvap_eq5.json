@@ -9,7 +9,7 @@
     "id": "FegleySchaefer2012_Eq5",
     "raw_text": "log P_vap(Mg2SiO4, liq) = 6.08 - 22409/T",
     "notes": [
-      "The source text uses 'log' notation. For simulation, we treat this as log10 (see provenance notes).",
+      "The source text uses 'log' notation. For simulation, we adopt log10 (see provenance notes).",
       "Pressure is in bar in the source; temperature is in Kelvin."
     ],
     "log_base_assumed": 10,
@@ -52,7 +52,7 @@
       "equation_number": "Eq. (5)",
       "notes": [
         "Source explicitly states derived vapor pressure equation (2163–3690 K) for molten forsterite and that Eq.(5) gives total pressure (bar).",
-        "The base of 'log' is not explicitly written as log10 in the equation line; we assume log10 for simulation."
+        "The base of 'log' is not explicitly written as log10 in the equation line; we adopt log10 for simulation."
       ]
     }
   ]
