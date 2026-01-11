@@ -8,6 +8,8 @@ import warnings
 from pathlib import Path
 from typing import Any, Dict, List, Sequence, Tuple
 
+from ruamel.yaml import YAML
+
 from . import constants
 from .errors import ConfigurationError
 from .schema import Config, Disk, DiskGeometry
@@ -71,6 +73,14 @@ def parse_override_value(raw: str) -> Any:
     """Parse a CLI override value into a Python object."""
 
     text = raw.strip()
+    if text and text[0] in "[{":
+        try:
+            yaml = YAML(typ="safe")
+            parsed = yaml.load(text)
+            if parsed is not None:
+                return parsed
+        except Exception:
+            pass
     lower = text.lower()
     if lower in {"true", "false"}:
         return lower == "true"

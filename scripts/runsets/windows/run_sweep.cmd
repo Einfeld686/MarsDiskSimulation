@@ -110,6 +110,7 @@ set "CONFIG_PATH=%REPO_ROOT%\scripts\runsets\common\base.yml"
 
 
 
+rem Overrides include forsterite material parameters; see overrides.txt for details.
 set "OVERRIDES_PATH=%REPO_ROOT%\scripts\runsets\windows\overrides.txt"
 
 
