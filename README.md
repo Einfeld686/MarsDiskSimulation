@@ -152,8 +152,9 @@ ls out/summary.json out/series/run.parquet out/checks/mass_budget.csv
 <!-- AUTOGEN:README_CLI_DRIVER_RULE START -->
 - CLI ドライバは `python -m marsdisk.run --config <yaml>`
 <!-- AUTOGEN:README_CLI_DRIVER_RULE END -->
-- ⟨Q_pr⟩ テーブルが必須（例: `data/qpr_table.csv`）
+- ⟨Q_pr⟩ テーブルが必須（例: `data/qpr_planck_forsterite_mie.csv`）。forsterite 既定は `configs/overrides/material_forsterite.override` を参照。
 - SiO2 用の生成テーブルは `marsdisk/io/data/qpr_planck_sio2_generated.csv`（`marsdisk/ops/make_qpr_table_sio2_csv.py`, c_abs=0.10）。再生成時は生成日・担当・パラメータを README/analysis に記録。
+- forsterite 用の Planck 平均テーブルは `marsdisk/ops/make_qpr_table_forsterite_mie_csv.py` で生成する。
 - `io.streaming` は既定 ON（`memory_limit_gb=10`, `step_flush_interval=10000`, `merge_at_end=true`）。短時間/CI ランは `FORCE_STREAMING_OFF=1` または `IO_STREAMING=off` で明示的に OFF に切り替え可能。
 
 ---
@@ -210,7 +211,7 @@ ls out/summary.json out/series/run.parquet out/checks/mass_budget.csv
 |-----------|------|--------|
 | `radiation.TM_K` | 火星表面温度 [K] | 4000 |
 | `radiation.source` | 放射源（`"mars"` / `"off"`） | `"mars"` |
-| `radiation.qpr_table_path` | ⟨Q_pr⟩テーブルのパス | `"data/qpr_table.csv"` |
+| `radiation.qpr_table_path` | ⟨Q_pr⟩テーブルのパス | `"data/qpr_planck_forsterite_mie.csv"` |
 
 ### 時変温度ドライバ (`radiation.mars_temperature_driver`)
 

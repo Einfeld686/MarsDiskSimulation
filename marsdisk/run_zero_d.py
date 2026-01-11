@@ -5358,74 +5358,6 @@ def run_zero_d(
             if energy_budget:
                 writer.write_mass_budget(energy_budget, energy_budget_path)
 
-        # Lightweight run_card with energy bookkeeping rollup
-        run_card_path = outdir / "run_card.md"
-        try:
-            eb = summary.get("energy_bookkeeping", {})
-            try:
-                current_git_sha = (
-                    subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=Path.cwd())
-                    .decode()
-                    .strip()
-                )
-            except Exception:
-                current_git_sha = "unknown"
-            command_invoked = " ".join(sys.argv)
-            rng_seed_resolved = getattr(cfg.initial, "rng_seed", None)
-            numpy_version = np.__version__
-            pandas_version = pd.__version__
-            auto_tune_info = getattr(cfg, "_auto_tune_info", None)
-            lines = [
-                "# MarsDisk run card",
-                "",
-                "## Artifacts",
-                f"- summary: {summary_path.name}",
-                f"- series: series/run.parquet",
-                f"- energy_series: series/energy.parquet",
-                f"- mass_budget: checks/mass_budget.csv",
-                f"- energy_budget: checks/energy_budget.csv",
-                "",
-                "## Configuration",
-                f"- physics_mode: {physics_mode}",
-                f"- collisions_active: {collisions_active}",
-                f"- sinks_active: {sinks_active}",
-                f"- energy_bookkeeping: {'enabled' if eb else 'disabled'}",
-                "",
-                "## Energy bookkeeping (totals)",
-                f"- E_rel_total [J/m^2]: {eb.get('E_rel_total', 0.0):.6e}",
-                f"- E_dissipated_total [J/m^2]: {eb.get('E_dissipated_total', 0.0):.6e}",
-                f"- E_retained_total [J/m^2]: {eb.get('E_retained_total', 0.0):.6e}",
-                f"- frac_fragmentation_last: {eb.get('frac_fragmentation_last', 0.0):.4f}",
-                f"- frac_cratering_last: {eb.get('frac_cratering_last', 0.0):.4f}",
-                f"- f_ke_mean_last: {eb.get('f_ke_mean_last', 0.0):.4f}",
-                f"- f_ke_energy_last: {eb.get('f_ke_energy_last', 0.0):.4f}",
-                "",
-                "## Environment",
-                f"- python: {sys.version.split()[0]}",
-                f"- platform: {sys.platform}",
-                f"- git_commit: {current_git_sha}",
-                f"- run_command: {command_invoked}",
-                f"- seed: {rng_seed_resolved}",
-                f"- numpy: {numpy_version}",
-                f"- pandas: {pandas_version}",
-            ]
-            if auto_tune_info is not None:
-                decision = auto_tune_info.get("decision", {})
-                lines.extend(
-                    [
-                        "",
-                        "## Auto-tune",
-                        f"- enabled: true",
-                        f"- profile: {decision.get('profile_resolved', 'unknown')}",
-                        f"- numba_threads: {decision.get('numba_threads', 'unknown')}",
-                        f"- numba_thread_source: {decision.get('numba_thread_source', 'unknown')}",
-                        f"- suggested_sweep_jobs: {decision.get('suggested_sweep_jobs', 'unknown')}",
-                    ]
-                )
-            run_card_path.write_text("\n".join(lines), encoding="utf-8")
-        except Exception as exc:  # pragma: no cover - best effort
-            logger.warning("Failed to write run_card.md: %s", exc)
-
         # Quiet でも完了ステータスを一行で把握できるよう、進捗バーの完了後に短いメッセージを出す。
         if progress_enabled and merge_status_message is not None:
             progress._print(f"[info] {merge_status_message}")
@@ -5793,6 +5725,14 @@ def run_zero_d(
             qpr_source = "table"
         else:
             qpr_source = "fallback"
+        qpr_meta = None
+        if qpr_table_path_resolved is not None:
+            meta_path = Path(qpr_table_path_resolved).with_suffix(".meta.json")
+            if meta_path.exists():
+                try:
+                    qpr_meta = json.loads(meta_path.read_text())
+                except Exception as exc:
+                    logger.warning("Failed to read Q_pr metadata %s: %s", meta_path, exc)
         run_config["radiation_provenance"] = {
             "qpr_table_path": str(qpr_table_path_resolved) if qpr_table_path_resolved is not None else None,
             "Q_pr_override": qpr_override,
@@ -5803,6 +5743,7 @@ def run_zero_d(
             "temperature_source": temp_runtime.source,
             "use_mars_rp": mars_rp_enabled_cfg,
             "use_solar_rp": solar_rp_requested,
+            "qpr_table_meta": qpr_meta,
         }
         run_config["blowout_provenance"] = {
             "s_blow_raw_m": float(a_blow),
@@ -5883,6 +5824,121 @@ def run_zero_d(
             "allow_liquid_hkl": allow_liquid_hkl,
         }
         writer.write_run_config(run_config, outdir / "run_config.json")
+
+        # Lightweight run_card with energy bookkeeping rollup
+        run_card_path = outdir / "run_card.md"
+        try:
+            eb = summary.get("energy_bookkeeping", {})
+            try:
+                current_git_sha = (
+                    subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=Path.cwd())
+                    .decode()
+                    .strip()
+                )
+            except Exception:
+                current_git_sha = "unknown"
+            command_invoked = " ".join(sys.argv)
+            rng_seed_resolved = getattr(cfg.initial, "rng_seed", None)
+            numpy_version = np.__version__
+            pandas_version = pd.__version__
+            auto_tune_info = getattr(cfg, "_auto_tune_info", None)
+            qpr_meta = None
+            qpr_table_path = None
+            qpr_meta_path = None
+            radiation_prov = run_config.get("radiation_provenance", {})
+            if isinstance(radiation_prov, dict):
+                qpr_meta = radiation_prov.get("qpr_table_meta")
+                qpr_table_path = radiation_prov.get("qpr_table_path")
+            if qpr_table_path:
+                meta_path = Path(qpr_table_path).with_suffix(".meta.json")
+                if meta_path.exists():
+                    qpr_meta_path = meta_path
+
+            lines = [
+                "# MarsDisk run card",
+                "",
+                "## Artifacts",
+                f"- summary: {summary_path.name}",
+                f"- series: series/run.parquet",
+                f"- energy_series: series/energy.parquet",
+                f"- mass_budget: checks/mass_budget.csv",
+                f"- energy_budget: checks/energy_budget.csv",
+                "",
+                "## Configuration",
+                f"- physics_mode: {physics_mode}",
+                f"- collisions_active: {collisions_active}",
+                f"- sinks_active: {sinks_active}",
+                f"- energy_bookkeeping: {'enabled' if eb else 'disabled'}",
+                "",
+                "## Energy bookkeeping (totals)",
+                f"- E_rel_total [J/m^2]: {eb.get('E_rel_total', 0.0):.6e}",
+                f"- E_dissipated_total [J/m^2]: {eb.get('E_dissipated_total', 0.0):.6e}",
+                f"- E_retained_total [J/m^2]: {eb.get('E_retained_total', 0.0):.6e}",
+                f"- frac_fragmentation_last: {eb.get('frac_fragmentation_last', 0.0):.4f}",
+                f"- frac_cratering_last: {eb.get('frac_cratering_last', 0.0):.4f}",
+                f"- f_ke_mean_last: {eb.get('f_ke_mean_last', 0.0):.4f}",
+                f"- f_ke_energy_last: {eb.get('f_ke_energy_last', 0.0):.4f}",
+                "",
+                "## Environment",
+                f"- python: {sys.version.split()[0]}",
+                f"- platform: {sys.platform}",
+                f"- git_commit: {current_git_sha}",
+                f"- run_command: {command_invoked}",
+                f"- seed: {rng_seed_resolved}",
+                f"- numpy: {numpy_version}",
+                f"- pandas: {pandas_version}",
+            ]
+            if qpr_meta is not None and qpr_table_path is not None:
+                for2285 = qpr_meta.get("for2285", {}) if isinstance(qpr_meta, dict) else {}
+                eckes = qpr_meta.get("eckes_poseidon", {}) if isinstance(qpr_meta, dict) else {}
+                axis_average = qpr_meta.get("axis_average") if isinstance(qpr_meta, dict) else None
+                lines.extend(
+                    [
+                        "",
+                        "## Q_pr provenance",
+                        f"- qpr_table_path: {qpr_table_path}",
+                        f"- qpr_table_meta: {qpr_meta_path}",
+                        f"- axis_average: {axis_average}",
+                        (
+                            "- for2285: data_dir={data_dir}, T_grid={temps}, lambda_um={lam_min}-{lam_max}, "
+                            "T_interp={t_interp}, outside_eckes={outside_eckes}"
+                        ).format(
+                            data_dir=for2285.get("data_dir"),
+                            temps=",".join(str(int(t)) for t in for2285.get("temperatures_K", [])),
+                            lam_min=for2285.get("wavelength_um_min"),
+                            lam_max=for2285.get("wavelength_um_max"),
+                            t_interp=for2285.get("temperature_interpolation"),
+                            outside_eckes=for2285.get("outside_eckes_policy"),
+                        ),
+                        (
+                            "- eckes_poseidon: source_id={source_id}, lambda_um={lam_min}-{lam_max}, "
+                            "T_interp={t_interp}, axis_map={axis_map}, license={license}"
+                        ).format(
+                            source_id=eckes.get("source_id"),
+                            lam_min=eckes.get("wavelength_um_min"),
+                            lam_max=eckes.get("wavelength_um_max"),
+                            t_interp=eckes.get("temperature_interpolation"),
+                            axis_map=eckes.get("axis_map"),
+                            license=eckes.get("license"),
+                        ),
+                    ]
+                )
+            if auto_tune_info is not None:
+                decision = auto_tune_info.get("decision", {})
+                lines.extend(
+                    [
+                        "",
+                        "## Auto-tune",
+                        f"- enabled: true",
+                        f"- profile: {decision.get('profile_resolved', 'unknown')}",
+                        f"- numba_threads: {decision.get('numba_threads', 'unknown')}",
+                        f"- numba_thread_source: {decision.get('numba_thread_source', 'unknown')}",
+                        f"- suggested_sweep_jobs: {decision.get('suggested_sweep_jobs', 'unknown')}",
+                    ]
+                )
+            run_card_path.write_text("\n".join(lines), encoding="utf-8")
+        except Exception as exc:  # pragma: no cover - best effort
+            logger.warning("Failed to write run_card.md: %s", exc)
 
         if archive_enabled and archive_trigger == "post_merge":
             if archive_root_resolved is None and archive_dir is None:

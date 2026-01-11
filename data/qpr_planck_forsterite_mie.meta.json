@@ -1,0 +1,32 @@
+{
+  "qpr_table": "forsterite_phase2_ready",
+  "for2285": {
+    "data_dir": "data/forsterite_material_data/nk_FOR2285",
+    "temperatures_K": [
+      50.0,
+      75.0,
+      100.0,
+      150.0,
+      200.0,
+      295.0
+    ],
+    "wavelength_um_min": 0.08,
+    "wavelength_um_max": 1000.0,
+    "temperature_interpolation": "linear with clamp to grid",
+    "outside_eckes_policy": "use_for2285"
+  },
+  "eckes_poseidon": {
+    "nk_data_csv": "data/forsterite_material_data/nk_data.csv",
+    "source_id": "eckes2013_forsterite_highT_POSEIDON_optional",
+    "wavelength_um_min": 2.5,
+    "wavelength_um_max": 30.0,
+    "temperature_interpolation": "linear with clamp to [295,1948]",
+    "axis_map": {
+      "B1U": "c",
+      "B2U": "b",
+      "B3U": "a"
+    },
+    "license": "CC BY 4.0"
+  },
+  "axis_average": "axis-wise Mie -> 1/3 mean"
+}
