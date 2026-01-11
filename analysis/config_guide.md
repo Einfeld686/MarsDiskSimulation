@@ -516,7 +516,7 @@ supply:
   const:
     mu_orbit10pct: 1.0
     mu_reference_tau: 1.0
-    orbit_fraction_at_mu1: 0.10
+    orbit_fraction_at_mu1: 0.05
   mixing:
     epsilon_mix: 0.3
 ```

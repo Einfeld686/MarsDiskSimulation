@@ -4,7 +4,7 @@
 
 | fig_id | file_path | kind | run_refs | eq_refs | caption_ja | status | notes_for_AI |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| FIG_TEMP_SUPPLY_OVERVIEW | temp_supply_sweep/\*/T\*_eps\*_tau\*/plots/overview.png | summary | RUN_TEMP_SUPPLY_SWEEP_v01 | E.027,E.042,E.043 | 温度×供給スイープの各ケース概要図。τ, M_loss, 供給レートの時系列を一覧表示。 | active | 18ケースすべてに生成される。代表的なケース（T4000_eps1p0_tau1p0）をスライドで使用。 |
+| FIG_TEMP_SUPPLY_OVERVIEW | temp_supply_sweep/\*/T\*_eps\*_tau\*/plots/overview.png | summary | RUN_TEMP_SUPPLY_SWEEP_v01 | E.027,E.042,E.043 | 温度×供給スイープの各ケース概要図。τ, M_loss, 供給レートの時系列を一覧表示。 | active | 10ケースすべてに生成される。代表的なケース（T4000_eps1p0_tau1p0）をスライドで使用。 |
 | FIG_SUPPLY_SURFACE | temp_supply_sweep/\*/T\*_eps\*_tau\*/plots/supply_surface.png | time_series | RUN_TEMP_SUPPLY_SWEEP_v01 | E.027 | 供給レートと表層密度の時間発展。deep_mixing 経路の効果を可視化。 | active | deep→surf フラックスの診断に使用。 |
 | FIG_OPTICAL_DEPTH | temp_supply_sweep/\*/T\*_eps\*_tau\*/plots/optical_depth.png | time_series | RUN_TEMP_SUPPLY_SWEEP_v01 | E.015,E.016 | 光学的厚さ τ_vertical と τ_los の時間発展。τ≈1 維持条件の検証に使用。 | active | τ 条件（0.5-2）の評価区間をハイライト。 |
 | FIG_MLOSS_HEATMAP | analysis/outputs/fig_mloss_heatmap.png | heatmap | RUN_TEMP_SUPPLY_SWEEP_v01 | E.011 | T×ε×τ パラメータ空間での M_loss 感度マップ。 | planned | スイープ完了後に生成予定。感度分析スライドの中心図。 |

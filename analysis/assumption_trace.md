@@ -40,7 +40,7 @@ run_stage:
   - surface loop
 inputs:
   - Omega [1/s]  # from [marsdisk/grid.py#omega_kepler [L17–L33]]
-  - Q_pr         # from tables via [marsdisk/io/tables.py#load_qpr_table [L390–L402]]
+  - Q_pr         # from tables via [marsdisk/io/tables.py#load_qpr_table [L417–L439]]
 outputs:
   - series.a_blow
   - series.t_blow
@@ -89,15 +89,15 @@ config_keys:
   - blowout.gate_mode
   - surface.freeze_sigma
 code_path:
-  - [marsdisk/physics/shielding.py#apply_shielding [L134–L217]]
+  - [marsdisk/physics/shielding.py#apply_shielding [L147–L230]]
   - [marsdisk/io/diagnostics.py#write_zero_d_history [L28–L142]]
-  - [marsdisk/run_zero_d.py#run_zero_d [L1392–L5977]]
+  - [marsdisk/run_zero_d.py#run_zero_d [L1392–L5987]]
 run_stage:
   - shielding application
   - surface loop (gate evaluation)
 inputs:
   - tau  # from PSD κ and Σ_surf
-  - Phi(τ, w0, g) table  # from [marsdisk/io/tables.py#load_phi_table [L405–L482]]
+  - Phi(τ, w0, g) table  # from [marsdisk/io/tables.py#load_phi_table [L442–L532]]
 outputs:
   - series.kappa_eff
   - series.sigma_tau1
@@ -143,7 +143,7 @@ config_keys:
 code_path:
   - [marsdisk/physics/psd.py#update_psd_state [L78–L170]]
   - [marsdisk/physics/psd.py#apply_uniform_size_drift [L419–L560]]
-  - [marsdisk/run_zero_d.py#run_zero_d [L1392–L5977]]
+  - [marsdisk/run_zero_d.py#run_zero_d [L1392–L5987]]
 run_stage:
   - PSD initialisation
   - PSD evolution hooks
@@ -195,7 +195,7 @@ config_keys:
   - numerics.dt_init
 code_path:
   - [marsdisk/physics/surface.py#step_surface_density_S1 [L110–L192]]
-  - [marsdisk/run_zero_d.py#run_zero_d [L1392–L5977]]
+  - [marsdisk/run_zero_d.py#run_zero_d [L1392–L5987]]
 run_stage:
   - surface loop
 inputs:
@@ -244,8 +244,8 @@ config_keys:
   - radiation.use_mars_rp
 code_path:
   - [marsdisk/physics/sinks.py#total_sink_timescale [L83–L160]]
-  - [marsdisk/physics/sublimation.py#choose_psat_backend [L434–L555]]
-  - [marsdisk/run_zero_d.py#run_zero_d [L1392–L5977]]
+  - [marsdisk/physics/sublimation.py#choose_psat_backend [L446–L567]]
+  - [marsdisk/run_zero_d.py#run_zero_d [L1392–L5987]]
 run_stage:
   - sink selection
   - surface loop
