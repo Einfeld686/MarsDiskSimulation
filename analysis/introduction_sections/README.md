@@ -1,6 +1,7 @@
 # introduction.md 分割ソース
 
 このディレクトリの `*.md` は `analysis/introduction.md` の編集用ソースです。
+番号付きの分割ファイル（`[0-9][0-9]_*.md`）はローカル運用のために Git から除外します。
 `analysis/introduction_sections/manifest.txt` がある場合はその順序で結合し、なければ番号順で結合します。
 
 再生成:

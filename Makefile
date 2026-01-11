@@ -4,6 +4,7 @@ CC      := gcc
 MODE    ?= A
 CFLAGS  := -std=c17 -Irebound -Isrc -Wall -Wextra -Werror
 OUTDIR  ?= out
+EVAL_OUTDIR ?= out/analysis_eval_run
 
 SRC     := $(wildcard rebound/src/*.c)
 SRC     += src/smoluchowski.c
@@ -38,6 +39,10 @@ analysis-sync:
 
 analysis-intro-sync:
 	python -m analysis.tools.merge_introduction_sections --write
+
+analysis-intro-update: analysis-intro-sync
+	$(MAKE) analysis-update
+	python -m tools.evaluation_system --outdir $(EVAL_OUTDIR)
 
 
 analysis-sync-commit:

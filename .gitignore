@@ -84,6 +84,8 @@ slides/
 !analysis/**/*.png
 analysis/.analysis_pipeline_stamp
 analysis/AI_USAGE.md
+analysis/introduction_sections/[0-9][0-9]_*.md
+analysis/methods_sections/[0-9][0-9]_*.md
 
 # agent_test outputs
 !agent_test/

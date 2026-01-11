@@ -34,6 +34,11 @@ Citron et al. (2015) → Hyodo et al. (2017a) → Canup & Salmon (2018) の順�
 - コード: https://github.com/Einfeld686/MarsDiskSimulation  
 - 数式と記号定義: `analysis/equations.md`  
 
+### 先行研究リンク
+- [Citron et al. (2015)](../../paper/pdf_extractor/outputs/Citron2015_Icarus252_334/result.md)
+- [Hyodo et al. (2017a)](../../paper/pdf_extractor/outputs/Hyodo2017a_ApJ845_125/result.md)
+- [Canup & Salmon (2018)](../../paper/pdf_extractor/outputs/CanupSalmon2018_SciAdv4_eaar6887/result.md)
+
 ---
 ## 1. 用語の固定：準定常な円盤と遷移期
 
@@ -56,6 +61,10 @@ Canup & Salmon (2018) は、潮汐のせいで塊ができにくい境界距離�
 - 衝突散逸で軌道傾斜が減衰し、赤道面へ収束する（赤道化）
 
 Hyodo et al. (2017b) は、衝突後に粒子の軌道が円に近づく時間が数十日、火星の \(J_2\) による歳差で軌道面の向きが混ざる時間が \(e\sim0.5\)–0.6、\(a\sim3\)–\(7R_{\rm Mars}\) で **1–100 年**になり得ると見積もります。したがって遷移期は「ゼロ」とは見なせず、日〜年の幅を持ち得ます。
+
+### 先行研究リンク
+- [Canup & Salmon (2018)](../../paper/pdf_extractor/outputs/CanupSalmon2018_SciAdv4_eaar6887/result.md)
+- [Hyodo et al. (2017b)](../../paper/pdf_extractor/outputs/Hyodo2017b_ApJ851_122/result.md)
 
 ---
 ## 2. 先行研究がしている接続：衝突直後計算 → 長期形成モデル
@@ -120,6 +129,12 @@ Salmon & Canup (2012) は、ロッシュ限界内側を連続円盤、外側を�
 | 角運動量指標（\(L_d\)、\(L_d/M_d\)、\(L_d^\*\) など）と相・粒径 | 長期モデルの初期条件を規定し、損失（放射・昇華・蒸気散逸）の入力にもなる | 例：Citron et al. (2015) は \(L_d^\*=L_d/(M_d\sqrt{GM_{\rm Mars}R_{\rm Roche}})\) を用いる。蒸気割合は Hyodo et al. (2017a) のレバー則で見積もる。粒径分布は衝突直後計算や破砕モデルで与える | \(L\) は「どの距離に質量が残れるか」を決める。相と粒径は、光学的厚み \(\tau\) と放射圧・昇華の効き方を変える |
 
 この表のうち、特に \(dM/da_{\rm eq}\)、\(a_{\rm eq,max}\)、蒸気割合・粒径分布は、入力の不確かさがそのまま結果へ出やすい量です。Canup & Salmon (2018) は外縁の粗い解像を指摘していますし、Hyodo et al. (2017a) は外側円盤（\(>4R_{\rm Mars}\)）が少数粒子で表現されることを示しています。したがって本研究では、これらを「固定値」ではなく、遷移期の損失評価と合わせて感度解析の対象として扱います。
+
+### 先行研究リンク
+- [Citron et al. (2015)](../../paper/pdf_extractor/outputs/Citron2015_Icarus252_334/result.md)
+- [Hyodo et al. (2017a)](../../paper/pdf_extractor/outputs/Hyodo2017a_ApJ845_125/result.md)
+- [Canup & Salmon (2018)](../../paper/pdf_extractor/outputs/CanupSalmon2018_SciAdv4_eaar6887/result.md)
+- [Salmon & Canup (2012)](../../paper/pdf_extractor/outputs/SalmonCanup2012_ApJ760_83/result.md)
 
 
 ---
@@ -186,6 +201,14 @@ Hyodo et al. (2018) と同じ代表値（\(\rho=3000\,{\rm kg\,m^{-3}}\)、\(C_p
 
 この差は、「どれくらいの期間、火星起源の強い放射が円盤表層へ作用し得るか」という入力を変えます。そこで本研究では、火星表面温度 \(T_{\rm Mars}(t)\) の扱いを感度要因として明示し、短い年スケール（割り算型）と長い数十年スケール（積分型）の両方で \(\Delta M_{\rm in}\) を評価します。
 
+### 先行研究リンク
+- [Hyodo et al. (2017a)](../../paper/pdf_extractor/outputs/Hyodo2017a_ApJ845_125/result.md)
+- [Hyodo et al. (2017b)](../../paper/pdf_extractor/outputs/Hyodo2017b_ApJ851_122/result.md)
+- [Hyodo et al. (2018)](../../paper/pdf_extractor/outputs/Hyodo2018_ApJ860_150/result.md)
+- [Canup & Salmon (2018)](../../paper/pdf_extractor/outputs/CanupSalmon2018_SciAdv4_eaar6887/result.md)
+- [Salmon & Canup (2012)](../../paper/pdf_extractor/outputs/SalmonCanup2012_ApJ760_83/result.md)
+- [Takeuchi & Lin (2003)](../../paper/pdf_extractor/outputs/TakeuchiLin2003_ApJ593_524/result.md)
+
 ---
 ## 4. 温度と相の不確かさ：2000 K 固定の枠組みと「固体が残る」枠組みをどう同居させるか
 
@@ -205,6 +228,11 @@ Salmon & Canup (2012) は、ロッシュ限界内側の円盤が短時間で広�
 Salmon & Canup (2012) の放射で制限される粘性は内側円盤の拡散時間を数十年と見積もり、遷移期（数十日〜1–100 年）や表面冷却の時間幅と重なり得ます。この重なりが、相・温度の不確かさを長期モデル入力の更新に直結させます。
 
 つまり本研究は、固体の存在を前提にするのではなく、**固体が存在できる窓の幅を不確かさとして持ち込み、その不確かさが \(\Delta M_{\rm in}\) にどう効くか**を評価します。
+
+### 先行研究リンク
+- [Salmon & Canup (2012)](../../paper/pdf_extractor/outputs/SalmonCanup2012_ApJ760_83/result.md)
+- [Hyodo et al. (2017a)](../../paper/pdf_extractor/outputs/Hyodo2017a_ApJ845_125/result.md)
+- [Hyodo et al. (2018)](../../paper/pdf_extractor/outputs/Hyodo2018_ApJ860_150/result.md)
 
 ---
 ## 5. 手法の骨格：表層と内部に分け、再供給で損失を決める
@@ -230,6 +258,9 @@ Salmon & Canup (2012) の放射で制限される粘性は内側円盤の拡散�
 
 Takeuchi & Lin (2003) の原始惑星系円盤では、ガスの鉛直構造や乱流が供給に効きます。しかし火星デブリ円盤はガスが少ない可能性があるため、同じ供給経路は前提にせず、**表層供給を傾斜角分布の減衰で表現**します。
 
+### 先行研究リンク
+- [Takeuchi & Lin (2003)](../../paper/pdf_extractor/outputs/TakeuchiLin2003_ApJ593_524/result.md)
+
 ---
 ## 6. 長期モデルへ渡せる出力（5点）
 
@@ -244,13 +275,19 @@ Takeuchi & Lin (2003) の原始惑星系円盤では、ガスの鉛直構造や�
 
 この 5 点がそろうと、Salmon & Canup (2012) 型の「内側円盤＝連続体」進化や、Canup & Salmon (2018) の火星版長期形成モデルに対して、入力 \(M_{\rm in}\) と外側円盤初期条件を更新したときに結果がどれほど変わるかを、再現性のある形で議論できます。
 
+### 先行研究リンク
+- [Salmon & Canup (2012)](../../paper/pdf_extractor/outputs/SalmonCanup2012_ApJ760_83/result.md)
+- [Canup & Salmon (2018)](../../paper/pdf_extractor/outputs/CanupSalmon2018_SciAdv4_eaar6887/result.md)
+
 ---
 ## 参考文献（本文で言及した主要なもの）
 
-- Canup, R. M., & Salmon, J. (2018). *Science Advances*, 4, eaar6887.  
-- Citron, R. I., Genda, H., & Ida, S. (2015). *Icarus*, 252, 334.  
-- Hyodo, R., et al. (2017a). *ApJ*, 845, 125.  
-- Hyodo, R., et al. (2017b). *ApJ*, 851, 122.  
-- Hyodo, R., et al. (2018). *ApJ*, 860, 150.  
-- Salmon, J., & Canup, R. M. (2012). *ApJ*, 760, 83.  
-- Takeuchi, T., & Lin, D. N. C. (2003). *ApJ*, 593, 524.  
+- [Canup & Salmon (2018)](../../paper/pdf_extractor/outputs/CanupSalmon2018_SciAdv4_eaar6887/result.md)  
+- [Citron et al. (2015)](../../paper/pdf_extractor/outputs/Citron2015_Icarus252_334/result.md)  
+- [Hyodo et al. (2017a)](../../paper/pdf_extractor/outputs/Hyodo2017a_ApJ845_125/result.md)  
+- [Hyodo et al. (2017b)](../../paper/pdf_extractor/outputs/Hyodo2017b_ApJ851_122/result.md)  
+- [Hyodo et al. (2018)](../../paper/pdf_extractor/outputs/Hyodo2018_ApJ860_150/result.md)  
+- [Salmon & Canup (2012)](../../paper/pdf_extractor/outputs/SalmonCanup2012_ApJ760_83/result.md)  
+- [Takeuchi & Lin (2003)](../../paper/pdf_extractor/outputs/TakeuchiLin2003_ApJ593_524/result.md)  
+
+参照インデックス: [paper/abstracts/index.md](../../paper/abstracts/index.md)
