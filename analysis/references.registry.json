@@ -1050,6 +1050,138 @@
         "Shows Phobos shape is consistent with an equipotential figure near ~3.3 R_M.",
         "Supports late accretion near the Roche limit."
       ]
+    },
+    {
+      "key": "Nagahara1994_GCA58_1951",
+      "short": "Nagahara et al. (1994)",
+      "title": "Evaporation of olivine: Low pressure phase relations of the olivine system and its implication for the origin of chondritic components in the solar nebula",
+      "doi": "10.1016/0016-7037(94)90426-X",
+      "bibtex": "@article{Nagahara1994_GCA58_1951, journal = {Geochim. Cosmochim. Acta}, volume = {58}, pages = {1951-1963}, year = {1994}}",
+      "adopted_scope": "Low-pressure phase relations and vapor pressures for olivine endmembers; thermochemical constraints for evaporation.",
+      "claims": [
+        "Reports low-pressure phase relations and vapor pressures for forsterite/fayalite using Knudsen-method experiments.",
+        "Derives evaporation enthalpy/entropy for forsterite and fayalite over 1400-1860 K."
+      ]
+    },
+    {
+      "key": "Nagahara1996_GCA60_1445",
+      "short": "Nagahara & Ozawa (1996)",
+      "title": "Evaporation of forsterite in H2 gas",
+      "doi": "10.1016/0016-7037(96)00014-2",
+      "bibtex": "@article{Nagahara1996_GCA60_1445, journal = {Geochim. Cosmochim. Acta}, volume = {60}, pages = {1445-1459}, year = {1996}}",
+      "adopted_scope": "Evaporation kinetics of forsterite in H2 gas; rate law and condensation coefficient.",
+      "claims": [
+        "Fits forsterite evaporation rate as a function of H2 pressure under nebular conditions.",
+        "Shows the condensation coefficient increases with H2 pressure, indicating kinetic control."
+      ]
+    },
+    {
+      "key": "Tsuchiyama1999_GCA63_2451",
+      "short": "Tsuchiyama et al. (1999)",
+      "title": "Evaporation of forsterite in the primordial solar nebula; rates and accompanied isotopic fractionation",
+      "doi": "10.1016/S0016-7037(99)00190-8",
+      "bibtex": "@article{Tsuchiyama1999_GCA63_2451, journal = {Geochim. Cosmochim. Acta}, volume = {63}, pages = {2451-2466}, year = {1999}}",
+      "adopted_scope": "Forsterite evaporation regimes and isotopic fractionation in nebular conditions.",
+      "claims": [
+        "Defines FED/HRD/HBD evaporation regimes for forsterite as a function of temperature and total pressure.",
+        "Models isotopic fractionation tied to evaporation rates and Peclet number."
+      ]
+    },
+    {
+      "key": "Costa2017_Icarus289_42",
+      "short": "Costa et al. (2017)",
+      "title": "Vaporization and thermodynamics of forsterite-rich olivine and some implications for silicate atmospheres of hot rocky exoplanets",
+      "doi": "10.1016/j.icarus.2017.02.006",
+      "bibtex": "@article{Costa2017_Icarus289_42, journal = {Icarus}, volume = {289}, pages = {42-55}, year = {2017}}",
+      "adopted_scope": "Thermodynamic properties and vapor species for Fo-rich olivine from KEMS measurements.",
+      "claims": [
+        "Measures vapor species and partial pressures for Fo95Fa5 olivine between ~1750-2250 K.",
+        "Derives activities and partial molar thermodynamic properties for MgO, FeO, and SiO2 components."
+      ]
+    },
+    {
+      "key": "Avdellidou2016_MNRAS464_734",
+      "short": "Avdellidou et al. (2016)",
+      "title": "Survival of the impactor during hypervelocity collisions - II. An analogue for high-porosity targets",
+      "doi": "10.1093/mnras/stw2381",
+      "bibtex": "@article{Avdellidou2016_MNRAS464_734, journal = {MNRAS}, volume = {464}, pages = {734-738}, year = {2016}}",
+      "adopted_scope": "Laboratory impact experiments on high-porosity targets; projectile survival and fragment distribution.",
+      "claims": [
+        "Reports that higher target porosity increases implanted projectile mass.",
+        "Finds steeper size-frequency distributions for projectile fragments at higher porosity."
+      ]
+    },
+    {
+      "key": "Hashimoto1990_Nature347_53",
+      "short": "Hashimoto (1990)",
+      "title": "Evaporation kinetics of forsterite and implications for the early solar nebula",
+      "doi": "10.1038/347053a0",
+      "bibtex": "@article{Hashimoto1990_Nature347_53, journal = {Nature}, volume = {347}, pages = {53-55}, year = {1990}}",
+      "adopted_scope": "Evaporation kinetics of forsterite and kinetic inhibition relative to equilibrium.",
+      "claims": [
+        "Shows forsterite evaporation rates are about an order of magnitude slower than equilibrium predictions.",
+        "Attributes slow evaporation to kinetic barriers involving transient SiO2 production."
+      ]
+    },
+    {
+      "key": "Craddock2011_EPSCDPS1108",
+      "short": "Craddock (2011)",
+      "title": "The Origin Of Phobos And Deimos By A Giant Impact",
+      "doi": null,
+      "bibtex": "@misc{Craddock2011_EPSCDPS1108, title = {The Origin Of Phobos And Deimos By A Giant Impact}, author = {Craddock, R. A.}, howpublished = {EPSC-DPS Joint Meeting 2011, EPSC Abstracts Vol. 6, EPSC-DPS2011-1108-1}, year = {2011}}",
+      "adopted_scope": "Conference abstract summarizing a giant-impact origin scenario for Phobos/Deimos.",
+      "claims": [
+        "Argues a giant impact can produce an accretion disk that forms small satellites.",
+        "Highlights dynamical challenges for capture scenarios relative to disk accretion."
+      ]
+    },
+    {
+      "key": "Muir2020_PCM47_55",
+      "short": "Muir et al. (2020)",
+      "title": "Explaining the dependence of M-site diffusion in forsterite on silica activity: a density functional theory approach",
+      "doi": "10.1007/s00269-020-01123-5",
+      "bibtex": "@article{Muir2020_PCM47_55, journal = {Phys. Chem. Minerals}, volume = {47}, pages = {55}, year = {2020}}",
+      "adopted_scope": "DFT-based model for M-site diffusion in forsterite under varying silica activity.",
+      "claims": [
+        "Shows elevated aSiO2 and Al/Fe defects raise Mg vacancy concentrations and diffusivity.",
+        "Finds diffusion sensitivity to temperature with little pressure dependence."
+      ]
+    },
+    {
+      "key": "Zeidler2015_ApJ798_125",
+      "short": "Zeidler et al. (2015)",
+      "title": "Temperature-dependent infrared optical constants of olivine and enstatite",
+      "doi": "10.1088/0004-637X/798/2/125",
+      "bibtex": "@article{Zeidler2015_ApJ798_125, journal = {ApJ}, volume = {798}, pages = {125}, year = {2015}}",
+      "adopted_scope": "Temperature-dependent infrared optical constants for olivine and enstatite.",
+      "claims": [
+        "Provides complex refractive indices for olivine and enstatite from 10-973 K.",
+        "Computes temperature-dependent absorption cross sections for dust emission modeling."
+      ]
+    },
+    {
+      "key": "Jager2003_AA408_193",
+      "short": "Jager et al. (2003)",
+      "title": "Steps toward interstellar silicate mineralogy VII. Spectral properties and crystallization behaviour of magnesium silicates produced by the sol-gel method",
+      "doi": "10.1051/0004-6361:20030916",
+      "bibtex": "@article{Jager2003_AA408_193, journal = {A&A}, volume = {408}, pages = {193-204}, year = {2003}}",
+      "adopted_scope": "Optical constants and crystallization behavior of amorphous Mg silicates (sol-gel).",
+      "claims": [
+        "Provides optical constants from 0.2-500 um for amorphous Mg silicates.",
+        "Shows reduced Si-OH content lowers crystallization temperature and timescales."
+      ]
+    },
+    {
+      "key": "Eckes2013_PCM40_287",
+      "short": "Eckes et al. (2013)",
+      "title": "High-temperature infrared properties of forsterite",
+      "doi": "10.1007/s00269-013-0570-z",
+      "bibtex": "@article{Eckes2013_PCM40_287, journal = {Phys. Chem. Minerals}, volume = {40}, pages = {287-298}, year = {2013}}",
+      "adopted_scope": "High-temperature infrared emittance and absorption coefficients for forsterite.",
+      "claims": [
+        "Measures polarized emittance spectra of forsterite up to near melting.",
+        "Derives temperature dependence of absorption coefficients and phonon parameters."
+      ]
     }
   ]
 }
