@@ -567,7 +567,7 @@ marsdisk/physics/qstar.py:218:def _track_velocity_clamp(v_values: np.ndarray) ->
 marsdisk/physics/qstar.py:238:def _qdstar_cache_key(s: np.ndarray, rho: float, v_kms: float) -> tuple | None
 marsdisk/physics/qstar.py:246:def _qdstar_cache_get(key: tuple | None) -> np.ndarray | None
 marsdisk/physics/qstar.py:257:def _qdstar_cache_put(key: tuple | None, value: np.ndarray) -> None
-marsdisk/physics/qstar.py:267:def configure_qdstar_cache(*, maxsize: int=8) -> int
+marsdisk/physics/qstar.py:267:def configure_qdstar_cache(*, maxsize: int=128) -> int
 marsdisk/physics/qstar.py:282:def _q_d_star(s: np.ndarray, rho: float, coeffs: Tuple[float, float, float, float], coeff_units: CoeffUnits) -> Tuple[np.ndarray, np.ndarray]
 marsdisk/physics/qstar.py:310:def _gravity_velocity_scale(v_kms: np.ndarray) -> np.ndarray
 marsdisk/physics/qstar.py:321:def compute_q_d_star_array(s: np.ndarray, rho: float, v_kms: np.ndarray) -> np.ndarray
@@ -581,7 +581,7 @@ marsdisk/physics/radiation.py:144:def _quantize(value: float, step: float | None
 marsdisk/physics/radiation.py:152:def _qpr_cache_key(s: float, T_M: float) -> tuple[float, float]
 marsdisk/physics/radiation.py:156:def _qpr_cache_get(s: float, T_M: float) -> float | None
 marsdisk/physics/radiation.py:168:def _qpr_cache_set(s: float, T_M: float, value: float) -> None
-marsdisk/physics/radiation.py:179:def configure_qpr_cache(*, enabled: bool, maxsize: int=256, round_tol: float | None=None) -> None
+marsdisk/physics/radiation.py:179:def configure_qpr_cache(*, enabled: bool, maxsize: int=1024, round_tol: float | None=None) -> None
 marsdisk/physics/radiation.py:190:def configure_qpr_fallback(*, strict: bool=False) -> None
 marsdisk/physics/radiation.py:198:def _fallback_qpr() -> float
 marsdisk/physics/radiation.py:214:def grain_temperature_graybody(T_M: float, radius_m: float, *, q_abs: float=1.0) -> float

@@ -86,7 +86,7 @@ _VEL_CLAMP_WARNED = False
 _VEL_CLAMP_LOCK = threading.Lock()
 # Gravitational-regime velocity exponent μ from LS09; used as v^{-3μ+2} outside [v_min, v_max].
 _GRAVITY_VELOCITY_MU = 0.45
-_QDSTAR_CACHE_MAXSIZE = 8
+_QDSTAR_CACHE_MAXSIZE = 128
 _QDSTAR_CACHE: "OrderedDict[tuple, np.ndarray]" = OrderedDict()
 _QDSTAR_CACHE_LOCK = threading.Lock()
 
@@ -264,7 +264,7 @@ def _qdstar_cache_put(key: tuple | None, value: np.ndarray) -> None:
             _QDSTAR_CACHE.popitem(last=False)
 
 
-def configure_qdstar_cache(*, maxsize: int = 8) -> int:
+def configure_qdstar_cache(*, maxsize: int = 128) -> int:
     """Configure LRU capacity for cached Q_D* array lookups."""
 
     global _QDSTAR_CACHE_MAXSIZE

@@ -1516,7 +1516,7 @@ def run_zero_d(
     if qstar_cfg is not None and "coeff_units" in qstar_fields_set:
         qstar_coeff_units_source = "config"
     qstar_mu_gravity_used = getattr(qstar_cfg, "mu_grav", qstar.get_gravity_velocity_mu()) if qstar_cfg is not None else qstar.get_gravity_velocity_mu()
-    qstar_cache_maxsize = getattr(qstar_cfg, "cache_maxsize", 8) if qstar_cfg is not None else 8
+    qstar_cache_maxsize = getattr(qstar_cfg, "cache_maxsize", 128) if qstar_cfg is not None else 128
     try:
         qstar.configure_qdstar_cache(maxsize=int(qstar_cache_maxsize))
     except Exception as exc:
@@ -1566,7 +1566,7 @@ def run_zero_d(
         round_tol_cfg = getattr(qpr_cache_cfg, "round_tol", None) if qpr_cache_cfg is not None else None
         radiation.configure_qpr_cache(
             enabled=bool(getattr(qpr_cache_cfg, "enabled", True)) if qpr_cache_cfg is not None else True,
-            maxsize=int(getattr(qpr_cache_cfg, "maxsize", 256)) if qpr_cache_cfg is not None else 256,
+            maxsize=int(getattr(qpr_cache_cfg, "maxsize", 1024)) if qpr_cache_cfg is not None else 1024,
             round_tol=float(round_tol_cfg) if round_tol_cfg is not None and float(round_tol_cfg) > 0.0 else None,
         )
         radiation.configure_qpr_fallback(
@@ -2662,7 +2662,7 @@ def run_zero_d(
     energy_last_row: Optional[Dict[str, float]] = None
     energy_count = 0
     collision_cache_cfg = getattr(cfg.numerics, "collision_cache", None)
-    cache_scale = float(getattr(collision_cache_cfg, "size_scale", 1.0)) if collision_cache_cfg is not None else 1.0
+    cache_scale = float(getattr(collision_cache_cfg, "size_scale", 3.0)) if collision_cache_cfg is not None else 3.0
     try:
         collisions_smol.configure_collision_cache_limits(scale=cache_scale)
     except Exception as exc:

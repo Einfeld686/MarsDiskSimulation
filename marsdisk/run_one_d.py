@@ -433,7 +433,7 @@ def run_one_d(
     if qstar_cfg is not None and "coeff_units" in qstar_fields_set:
         qstar_coeff_units_source = "config"
     qstar_mu_gravity_used = getattr(qstar_cfg, "mu_grav", qstar.get_gravity_velocity_mu()) if qstar_cfg is not None else qstar.get_gravity_velocity_mu()
-    qstar_cache_maxsize = getattr(qstar_cfg, "cache_maxsize", 8) if qstar_cfg is not None else 8
+    qstar_cache_maxsize = getattr(qstar_cfg, "cache_maxsize", 128) if qstar_cfg is not None else 128
     try:
         qstar.configure_qdstar_cache(maxsize=int(qstar_cache_maxsize))
     except Exception as exc:

@@ -44,7 +44,7 @@ type_QPr = Callable[[float, float], float]
 
 _QPR_LOOKUP: type_QPr | None = tables.interp_qpr
 _QPR_CACHE_ENABLED: bool = True
-_QPR_CACHE_MAXSIZE: int = 256
+_QPR_CACHE_MAXSIZE: int = 1024
 _QPR_CACHE_ROUND: Optional[float] = None
 _QPR_CACHE: "OrderedDict[tuple[float, float], float]" = OrderedDict()
 _QPR_CACHE_LOCK = threading.Lock()
@@ -176,7 +176,7 @@ def _qpr_cache_set(s: float, T_M: float, value: float) -> None:
             _QPR_CACHE.popitem(last=False)
 
 
-def configure_qpr_cache(*, enabled: bool, maxsize: int = 256, round_tol: float | None = None) -> None:
+def configure_qpr_cache(*, enabled: bool, maxsize: int = 1024, round_tol: float | None = None) -> None:
     """Configure memoisation for ⟨Q_pr⟩ lookups."""
 
     global _QPR_CACHE_ENABLED, _QPR_CACHE_MAXSIZE, _QPR_CACHE_ROUND

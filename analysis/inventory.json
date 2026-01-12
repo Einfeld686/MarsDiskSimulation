@@ -5841,7 +5841,7 @@
     "file_path": "marsdisk/physics/qstar.py",
     "line_no": 89,
     "symbol": "_QDSTAR_CACHE_MAXSIZE",
-    "signature": "_QDSTAR_CACHE_MAXSIZE = 8",
+    "signature": "_QDSTAR_CACHE_MAXSIZE = 128",
     "brief_usage": "Module constant"
   },
   {
@@ -5967,7 +5967,7 @@
     "file_path": "marsdisk/physics/qstar.py",
     "line_no": 267,
     "symbol": "configure_qdstar_cache",
-    "signature": "configure_qdstar_cache(*, maxsize: int=8) -> int",
+    "signature": "configure_qdstar_cache(*, maxsize: int=128) -> int",
     "brief_usage": "Configure LRU capacity for cached Q_D* array lookups."
   },
   {
@@ -6016,7 +6016,7 @@
     "file_path": "marsdisk/physics/radiation.py",
     "line_no": 47,
     "symbol": "_QPR_CACHE_MAXSIZE",
-    "signature": "_QPR_CACHE_MAXSIZE: int = 256",
+    "signature": "_QPR_CACHE_MAXSIZE: int = 1024",
     "brief_usage": "Module constant"
   },
   {
@@ -6184,7 +6184,7 @@
     "file_path": "marsdisk/physics/radiation.py",
     "line_no": 179,
     "symbol": "configure_qpr_cache",
-    "signature": "configure_qpr_cache(*, enabled: bool, maxsize: int=256, round_tol: float | None=None) -> None",
+    "signature": "configure_qpr_cache(*, enabled: bool, maxsize: int=1024, round_tol: float | None=None) -> None",
     "brief_usage": "Configure memoisation for ⟨Q_pr⟩ lookups."
   },
   {

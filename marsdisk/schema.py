@@ -958,7 +958,7 @@ class QStar(BaseModel):
         description="Gravity-regime velocity exponent mu used for v^{-3mu+2} scaling applied to the gravity term when extrapolating Q_D^* beyond the tabulated velocities (LS09/Jutzi-style).",
     )
     cache_maxsize: int = Field(
-        8,
+        128,
         ge=0,
         description="Maximum memoised entries for Q_D* array lookups (0 disables caching).",
     )
@@ -1468,7 +1468,7 @@ class QPrCache(BaseModel):
 
     enabled: bool = True
     maxsize: int = Field(
-        256,
+        1024,
         ge=0,
         description="Maximum memoised entries for ⟨Q_pr⟩ lookups (0 disables caching).",
     )
@@ -1643,7 +1643,7 @@ class CollisionCache(BaseModel):
         description="Persist collision caches across runs in the same process (0D only).",
     )
     size_scale: float = Field(
-        1.0,
+        3.0,
         gt=0.0,
         description="Scale factor applied to collision cache LRU sizes (fragment/weights/qstar/supply).",
     )
