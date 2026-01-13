@@ -92,30 +92,6 @@ def _hash_schema(schema: pa.Schema) -> str:
     return hashlib.sha256(str(schema).encode("utf-8")).hexdigest()
 
 
-def _unique_types(types: Sequence[pa.DataType]) -> List[pa.DataType]:
-    unique: List[pa.DataType] = []
-    for entry in types:
-        if not any(entry.equals(existing) for existing in unique):
-            unique.append(entry)
-    return unique
-
-
-def _choose_type(types: Sequence[pa.DataType]) -> pa.DataType:
-    non_null = [entry for entry in types if not pa.types.is_null(entry)]
-    if not non_null:
-        return pa.null()
-    unique = _unique_types(non_null)
-    if len(unique) == 1:
-        return unique[0]
-    if any(pa.types.is_string(entry) or pa.types.is_large_string(entry) for entry in unique):
-        return pa.string()
-    if all(pa.types.is_integer(entry) or pa.types.is_floating(entry) for entry in unique):
-        return pa.float64()
-    if all(pa.types.is_boolean(entry) for entry in unique):
-        return pa.bool_()
-    return pa.string()
-
-
 def _hash_arrow_table(table: pa.Table) -> str:
     sink = pa.BufferOutputStream()
     with ipc.new_stream(sink, table.schema) as writer:
@@ -143,23 +119,25 @@ def _parquet_row_group_checksum(path: Path, group_index: int) -> Optional[str]:
 
 
 def _unify_chunk_schema_hash(paths: Sequence[Path]) -> Optional[str]:
-    order: List[str] = []
-    types_by_name: Dict[str, List[pa.DataType]] = {}
+    schemas: List[pa.Schema] = []
     for path in paths:
         try:
             schema = pq.read_schema(path)
         except Exception as exc:
             logger.warning("Failed to read chunk schema %s: %s", path, exc)
             continue
-        for field in schema:
-            if field.name not in types_by_name:
-                order.append(field.name)
-                types_by_name[field.name] = []
-            types_by_name[field.name].append(field.type)
-    if not types_by_name:
+        schemas.append(schema)
+    if not schemas:
         return None
-    fields = [pa.field(name, _choose_type(types_by_name[name])) for name in order]
-    return _hash_schema(pa.schema(fields))
+    try:
+        unified_schema = pa.unify_schemas(schemas, promote_options="permissive")
+    except pa.ArrowInvalid as exc:
+        logger.warning(
+            "Schema unification failed for chunk verification, using first schema: %s",
+            exc,
+        )
+        unified_schema = schemas[0]
+    return _hash_schema(unified_schema)
 
 
 def _sum_chunk_rows(paths: Sequence[Path]) -> int:
