@@ -10,7 +10,7 @@
 
 **関連ドキュメント**:
 - [analysis/equations.md](analysis/equations.md) — 物理式の正式定義（式番号 E.xxx）
-- [analysis/introduction.md](analysis/introduction.md) — 科学的背景と研究目的
+- [analysis/thesis/introduction.md](analysis/thesis/introduction.md) — 科学的背景と研究目的
 - [analysis/glossary.md](analysis/glossary.md) — 用語集・記号規約
 - [analysis/bibliography.md](analysis/bibliography.md) — 参考文献一覧
 

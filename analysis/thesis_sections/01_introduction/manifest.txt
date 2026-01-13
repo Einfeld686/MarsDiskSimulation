@@ -1,0 +1,7 @@
+# Ordered list of section files to build analysis/thesis/introduction.md.
+00_frontmatter.md
+01_background.md
+02_prior_work_summary.md
+03_problem_statement.md
+04_objectives.md
+05_structure.md

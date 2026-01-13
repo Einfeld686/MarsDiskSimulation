@@ -150,7 +150,7 @@
 
 ### 6.3 `paper/references/` 欠落PDFメモ（introduction.md 1.1 追加文献）
 
-`analysis/introduction.md` の 1.1 節で追加した参照について、`paper/references/` に PDF が未配置のものを列挙する。
+`analysis/thesis/introduction.md` の 1.1 節で追加した参照について、`paper/references/` に PDF が未配置のものを列挙する。
 
 - `Fraeman2012_JGR117_E00J15`
 - `Fraeman2014_Icarus229_196`

@@ -201,8 +201,8 @@ Key metrics (A vs B):
 
 Documentation updates
 ---------------------
-- Add an explicit statement in analysis/introduction.md or
-  analysis/introduction_sections/02_prior_work.md that surface thickness is a
+- Add an explicit statement in analysis/thesis/introduction.md or
+  analysis/thesis_sections/02_related_work/00_prior_work.md that surface thickness is a
   sensitivity parameter and is represented via the proxies above.
 - If needed, state explicitly that tau0_target refers to tau_los (not tau_eff).
 - If needed, register i0=0.05 as an unknown reference in

@@ -15,7 +15,7 @@
 - 出力列名は既存仕様に合わせ、`tau_los_mars` と `Sigma_tau1` を使う（`Sigma_tau1_los` は導入しない）。
 - 定常供給は既存の供給ゲート（相/ステップ0遅延/液相ブロック等）を維持し、その範囲内でのみ有効とする。
 - `optical_depth` の有効化と `init_tau1.scale_to_tau1` は排他とし、同時指定は設定エラーにする。
-- ドキュメント（`analysis/methods.md` など）に「τ=1 クリップは旧挙動、現行は停止判定」と明記して整合させる。
+- ドキュメント（`analysis/thesis/methods.md` など）に「τ=1 クリップは旧挙動、現行は停止判定」と明記して整合させる。
 
 ## 対象範囲
 - In: 0D `run_zero_d` 初期化・遮蔽・供給・停止条件・診断出力・テスト
@@ -78,7 +78,7 @@
 [x] `out/<run_id>/summary.json` に `stop_reason`, `stop_tau_los` を追加。
 [x] `tools/derive_supply_rate.py` など旧 μ を扱う箇所を「診断用導出値」と明示し、設定キーとの混同が起きないよう更新。
 [x] テスト追加（μスケール、停止条件）と既存テスト（ヘッドルーム/遮蔽/質量収支）の更新。
-[ ] `analysis/methods.md` と関連ドキュメントの「Σ_tau1 でクリップ」記述を「停止判定」へ更新し、旧挙動は注記として残す。
+[ ] `analysis/thesis/methods.md` と関連ドキュメントの「Σ_tau1 でクリップ」記述を「停止判定」へ更新し、旧挙動は注記として残す。
 [ ] 外部供給の旧モードを段階的に非推奨化（警告→エラー）し、新方式をデフォルトに切り替える移行手順を明記する。
 [ ] 非推奨項目（feedback/transport/headroom/temperature/reservoir/scale_to_tau1）を明示し、ドキュメントの既定例を全て新方式へ切り替える。
 

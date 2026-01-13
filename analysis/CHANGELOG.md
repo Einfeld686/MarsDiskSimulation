@@ -25,7 +25,7 @@
   - `TimeOrbitParams`, `MaterialParams`, `DynamicsParams`, `SupplyParams`, `CollisionControlFlags`
   - Simplified `step_collisions_smol_0d` call signature
 - **Provenance Report Update**: Extended Traceability Graph with Thébault (2003), [@Krivov2006_AA455_509], [@KrijtKama2014_AA566_L2]
-- **Documentation**: Updated `analysis/equations.md` with E.047–E.053; updated `analysis/methods.md` §3.2
+- **Documentation**: Updated `analysis/equations.md` with E.047–E.053; updated `analysis/thesis/methods.md` §3.2
 
 ## [2025-12-18] Physics Flow Document Upgrade
 - **Physics Flow Document Upgrade**: Expanded `analysis/physics_flow.md` with new Mermaid diagrams:
@@ -51,4 +51,3 @@
 - **Temperature Driver**: Introduced `mars_temperature_driver` to decouple T_M source logic; deprecated `temps.T_M` in favor of `radiation.TM_K` or driver tables.
 - **Phase Evaluation**: Centralized phase state logic into `PhaseEvaluator`. `checks_psat_auto_01` validates `psat_model="auto"` behavior (tabulated/local-fit/Clausius fallback).
 - **Visualization Docs**: Updated `analysis/tools/visualizations.md` to reflect `tools/plotting/` structure.
-

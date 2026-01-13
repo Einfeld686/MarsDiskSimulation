@@ -1,5 +1,10 @@
 > **文書種別**: 議論（Diátaxis: Discussion）
 
+<!--
+NOTE: このファイルは analysis/thesis_sections/04_discussion/*.md の結合で生成する。
+編集は分割ファイル側で行い、統合は `python -m analysis.tools.merge_discussion_sections --write` を使う。
+-->
+
 # 制約と今後の展開
 
 本節では導入で扱わない制約と今後の展開を整理する。

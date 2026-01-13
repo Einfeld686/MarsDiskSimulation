@@ -1,0 +1,3 @@
+# Ordered list of section files to build analysis/thesis/related_work.md.
+00_prior_work.md
+90_references.md
