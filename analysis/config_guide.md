@@ -337,7 +337,7 @@ Hertz-Knudsen-Langmuir (HKL) 理論に基づく昇華速度の詳細パラメー
 | パラメータ | 型 | 物理的意味 | 典型値 |
 |-----------|-----|-----------|--------|
 | `e0` | float | 初期軌道離心率。衝突速度 $v_{\rm rel} \sim e \cdot v_K$ を決定。高いほど破壊的衝突が増加 | 0.5 |
-| `i0` | float | 初期軌道傾斜角 [rad]。円盤の幾何学的厚さ H ∼ i·r を決定 | 0.05 |
+| `i0` | float | 初期軌道傾斜角 [rad]。円盤の幾何学的厚さ H ∼ i·r を決定 | 0.05 TODO(REF:i0_default_0p05_origin_v1) |
 | `t_damp_orbits` | float | 速度分散のダンピング時間スケール [軌道周期]。衝突による運動量交換で e,i が減衰 | 20 |
 | `f_wake` | float | 自己重力ウェイク増幅係数。光学的に厚い円盤で速度分散が増幅される効果（Ohtsuki型） | 2.0 |
 | `kernel_ei_mode` | str | 衝突カーネルの e,i 決定法。`"config"` は設定値使用、`"wyatt_eq"` は平衡解を計算 | `"config"` |
