@@ -39,11 +39,20 @@ def _format_yaml_list(values: Iterable[float]) -> str:
     return "[" + ", ".join(str(v) for v in values) + "]"
 
 
-def _write_study(path: Path, *, t_list: List[float], eps_list: List[float], tau_list: List[float], sweep_tag: str) -> None:
+def _write_study(
+    path: Path,
+    *,
+    t_list: List[float],
+    eps_list: List[float],
+    tau_list: List[float],
+    i0_list: List[float],
+    sweep_tag: str,
+) -> None:
     lines = [
         f"T_LIST: {_format_yaml_list(t_list)}",
         f"EPS_LIST: {_format_yaml_list(eps_list)}",
         f"TAU_LIST: {_format_yaml_list(tau_list)}",
+        f"I0_LIST: {_format_yaml_list(i0_list)}",
         f"SWEEP_TAG: {sweep_tag}",
     ]
     _write_text(path, "\n".join(lines) + "\n")
@@ -161,6 +170,7 @@ def main() -> int:
     ap.add_argument("--t-list", default="4000,3000", help="Comma/space-separated T list.")
     ap.add_argument("--eps-list", default="1.0,0.5", help="Comma/space-separated epsilon list.")
     ap.add_argument("--tau-list", default="1.0", help="Comma/space-separated tau list.")
+    ap.add_argument("--i0-list", default="0.05", help="Comma/space-separated i0 list.")
     ap.add_argument("--t-end-years", type=float, default=0.02, help="numerics.t_end_years override.")
     ap.add_argument("--dt-init", default="20", help="numerics.dt_init override.")
     ap.add_argument("--with-plot", action="store_true", help="Run plot hook.")
@@ -188,6 +198,7 @@ def main() -> int:
     t_list = _parse_number_list(args.t_list)
     eps_list = _parse_number_list(args.eps_list)
     tau_list = _parse_number_list(args.tau_list)
+    i0_list = _parse_number_list(args.i0_list)
 
     timestamp = _timestamp()
     base_out = Path(args.out_root).resolve() / f"sweep_vs_cell_parallel_{timestamp}"
@@ -201,6 +212,7 @@ def main() -> int:
             t_list=t_list,
             eps_list=eps_list,
             tau_list=tau_list,
+            i0_list=i0_list,
             sweep_tag="sweep_vs_cell_parallel",
         )
 
@@ -246,6 +258,7 @@ def main() -> int:
         "t_list": t_list,
         "eps_list": eps_list,
         "tau_list": tau_list,
+        "i0_list": i0_list,
         "cases": [],
     }
 

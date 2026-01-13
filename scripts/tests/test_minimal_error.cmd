@@ -16,7 +16,7 @@ if not exist "!COMMON_DIR!\resolve_python.cmd" (
     exit /b 1
 )
 call "!COMMON_DIR!\resolve_python.cmd"
-if errorlevel 1 exit /b 1
+if not "!errorlevel!"=="0" exit /b 1
 
 echo.[info] REPO_ROOT=!REPO_ROOT!
 echo.[info] TEMP=!TEMP!

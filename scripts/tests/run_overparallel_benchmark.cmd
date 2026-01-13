@@ -1,7 +1,7 @@
 @echo off
 rem Run over-parallelism benchmark on Windows.
 
-setlocal EnableExtensions
+setlocal EnableExtensions EnableDelayedExpansion
 
 set "SCRIPT_DIR=%~dp0"
 for %%I in ("%SCRIPT_DIR%..\\..") do set "REPO_ROOT=%%~fI"
@@ -14,19 +14,20 @@ set "RUNSETS_COMMON_DIR=%REPO_ROOT%\scripts\runsets\common"
 set "VENV_BOOTSTRAP_CMD=%RUNSETS_COMMON_DIR%\venv_bootstrap.cmd"
 if not exist "%VENV_BOOTSTRAP_CMD%" (
   echo [error] venv_bootstrap helper not found: "%VENV_BOOTSTRAP_CMD%"
-  call :popd_safe
-  exit /b 1
+  call :popd_safe 1
+  goto :eof
 )
 call "%VENV_BOOTSTRAP_CMD%"
-if errorlevel 1 (
-  set "BOOTSTRAP_RC=%errorlevel%"
+set "BOOTSTRAP_RC=!errorlevel!"
+if not "!BOOTSTRAP_RC!"=="0" (
   echo [error] Failed to initialize Python environment.
-  call :popd_safe
-  exit /b %BOOTSTRAP_RC%
+  call :popd_safe !BOOTSTRAP_RC!
+  goto :eof
 )
 
 "%PYTHON_EXE%" -m pip install psutil
-if errorlevel 1 (
+set "PSUTIL_RC=!errorlevel!"
+if not "!PSUTIL_RC!"=="0" (
   echo [warn] psutil install failed; perf logging will be limited.
 )
 
@@ -66,15 +67,16 @@ echo [sys] mem_total_gb=%TOTAL_GB% cpu_logical=%CPU_LOGICAL% parallel_jobs=%PARA
 set "BENCH_ARGS=--parallel-jobs %PARALLEL_JOBS% --cell-jobs %MARSDISK_CELL_JOBS% --n-cells %BENCH_N_CELLS% --t-end-orbits %BENCH_T_END_ORBITS% --dt-init %BENCH_DT_INIT%"
 echo [info] Benchmark defaults: %BENCH_ARGS%
 "%PYTHON_EXE%" scripts\tests\overparallel_benchmark.py %BENCH_ARGS% %*
-set "RC=%errorlevel%"
+set "RC=!errorlevel!"
 
-call :popd_safe
-exit /b %RC%
+call :popd_safe !RC!
+goto :eof
 
 :popd_safe
-set "MARSDISK_POPD_ERRORLEVEL=%ERRORLEVEL%"
+set "MARSDISK_POPD_ERRORLEVEL=%~1"
+if "%MARSDISK_POPD_ERRORLEVEL%"=="" set "MARSDISK_POPD_ERRORLEVEL=!errorlevel!"
 if defined MARSDISK_POPD_ACTIVE (
   popd
   set "MARSDISK_POPD_ACTIVE="
 )
-exit /b %MARSDISK_POPD_ERRORLEVEL%
+endlocal & exit /b %MARSDISK_POPD_ERRORLEVEL%

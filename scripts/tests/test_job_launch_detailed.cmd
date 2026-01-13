@@ -35,7 +35,8 @@ if not exist "!RESOLVE_PYTHON_CMD!" (
     exit /b 1
 )
 call "!RESOLVE_PYTHON_CMD!"
-if errorlevel 1 (
+set "RESOLVE_RC=!errorlevel!"
+if not "!RESOLVE_RC!"=="0" (
     echo.[error] Python resolution failed
     exit /b 1
 )
@@ -97,11 +98,12 @@ set "BATCH_SEED=0"
 set "JOB_T=5000"
 set "JOB_EPS=1.0"
 set "JOB_TAU=1.0"
+set "JOB_I0=0.05"
 set "JOB_SEED=12345"
 set "SCRIPT_SELF=!REPO_ROOT!\scripts\research\run_temp_supply_sweep.cmd"
 
 rem Build command exactly like in run_temp_supply_sweep.cmd
-set "JOB_CMD=set RUN_TS=!RUN_TS!&& set BATCH_SEED=!BATCH_SEED!&& set RUN_ONE_T=!JOB_T!&& set RUN_ONE_EPS=!JOB_EPS!&& set RUN_ONE_TAU=!JOB_TAU!&& set RUN_ONE_SEED=!JOB_SEED!&& echo JOB_CMD executed && echo RUN_ONE_T=%%RUN_ONE_T%% && echo RUN_ONE_EPS=%%RUN_ONE_EPS%% && pause"
+set "JOB_CMD=set RUN_TS=!RUN_TS!&& set BATCH_SEED=!BATCH_SEED!&& set RUN_ONE_T=!JOB_T!&& set RUN_ONE_EPS=!JOB_EPS!&& set RUN_ONE_TAU=!JOB_TAU!&& set RUN_ONE_I0=!JOB_I0!&& set RUN_ONE_SEED=!JOB_SEED!&& echo JOB_CMD executed && echo RUN_ONE_T=%%RUN_ONE_T%% && echo RUN_ONE_EPS=%%RUN_ONE_EPS%% && echo RUN_ONE_I0=%%RUN_ONE_I0%% && pause"
 
 echo.[debug] JOB_CMD=!JOB_CMD!
 set "CMD_FILE=!TMP_ROOT!\test_d_cmd.tmp"
@@ -112,7 +114,7 @@ type "!CMD_FILE!"
 echo.
 echo.[action] Launching...
 call "!PYTHON_EXEC_CMD!" "!WIN_PROCESS_PY!" launch --cmd-file "!CMD_FILE!" --window-style normal --cwd "!REPO_ROOT!"
-echo.[result] Window should show RUN_ONE_T=5000, RUN_ONE_EPS=1.0
+echo.[result] Window should show RUN_ONE_T=5000, RUN_ONE_EPS=1.0, RUN_ONE_I0=0.05
 del "!CMD_FILE!" >nul 2>&1
 echo.
 
@@ -149,15 +151,16 @@ if exist "!SCRIPT_SELF_USE!" (
     echo.[error] Script NOT found!
 )
 
-set "FULL_JOB_CMD=set RUN_TS=!RUN_TS!&& set BATCH_SEED=!BATCH_SEED!&& set RUN_ONE_T=!JOB_T!&& set RUN_ONE_EPS=!JOB_EPS!&& set RUN_ONE_TAU=!JOB_TAU!&& set RUN_ONE_SEED=!JOB_SEED!&& set AUTO_JOBS=0&& set PARALLEL_JOBS=1&& set SKIP_PIP=1&& call ""!SCRIPT_SELF_USE!"" --run-one"
+set "FULL_JOB_CMD=set RUN_TS=!RUN_TS!&& set BATCH_SEED=!BATCH_SEED!&& set RUN_ONE_T=!JOB_T!&& set RUN_ONE_EPS=!JOB_EPS!&& set RUN_ONE_TAU=!JOB_TAU!&& set RUN_ONE_I0=!JOB_I0!&& set RUN_ONE_SEED=!JOB_SEED!&& set AUTO_JOBS=0&& set PARALLEL_JOBS=1&& set SKIP_PIP=1&& call ""!SCRIPT_SELF_USE!"" --run-one"
 
 echo.[debug] FULL_JOB_CMD=!FULL_JOB_CMD!
 echo.
 echo.[question] Do you want to launch the actual script? (This will start a real simulation)
 echo.[question] Press Y to continue, any other key to skip...
 choice /c YN /m "Launch actual script"
-if errorlevel 2 goto :skip_f
-if errorlevel 1 (
+set "CHOICE_RC=!errorlevel!"
+if "!CHOICE_RC!"=="2" goto :skip_f
+if "!CHOICE_RC!"=="1" (
     set "CMD_FILE=!TMP_ROOT!\test_f_cmd.tmp"
     > "!CMD_FILE!" echo !FULL_JOB_CMD!
     echo.[action] Launching actual --run-one...

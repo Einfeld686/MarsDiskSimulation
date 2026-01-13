@@ -136,6 +136,65 @@ def _aggregate_1d(df, columns):
     return rows
 
 
+def _select_ring_cells(df):
+    if "cell_index" not in df.columns or "r_RM" not in df.columns:
+        return []
+    cells = (
+        df[["cell_index", "r_RM"]]
+        .dropna()
+        .drop_duplicates()
+        .sort_values("r_RM")
+    )
+    if cells.empty:
+        return []
+    inner = cells.iloc[0]
+    outer = cells.iloc[-1]
+    rings = [("inner", int(inner["cell_index"]), float(inner["r_RM"]))]
+    if int(outer["cell_index"]) != int(inner["cell_index"]):
+        rings.append(("outer", int(outer["cell_index"]), float(outer["r_RM"])))
+    return rings
+
+
+def _series_label(tag, r_rm):
+    if r_rm is None or r_rm != r_rm:
+        return tag
+    return f"{tag} r_RM={r_rm:.3f}"
+
+
+def _prepare_series_sets(df, columns, max_rows):
+    is_1d = "cell_index" in df.columns
+    if is_1d and "r_RM" in df.columns:
+        rings = _select_ring_cells(df)
+        if rings:
+            series_sets = []
+            for tag, cell_index, r_rm in rings:
+                ring_df = df[df["cell_index"] == cell_index].copy()
+                if "time" in ring_df.columns:
+                    ring_df = ring_df.sort_values("time")
+                    ring_df = ring_df.groupby("time", as_index=False).first()
+                for col in columns:
+                    if col not in ring_df.columns:
+                        ring_df[col] = float("nan")
+                ring_df = ring_df.reindex(columns=columns)
+                ring_df = _downsample(ring_df, max_rows)
+                if "time" in ring_df.columns:
+                    ring_df["time_days"] = ring_df["time"] / 86400.0
+                series_sets.append((tag, r_rm, ring_df))
+            return series_sets
+    if is_1d:
+        rows = _aggregate_1d(df, columns)
+        import pandas as pd
+
+        df = pd.DataFrame(rows)
+        tag = "avg"
+    else:
+        tag = "0D"
+    df = _downsample(df, max_rows)
+    if "time" in df.columns:
+        df["time_days"] = df["time"] / 86400.0
+    return [(tag, None, df)]
+
+
 def _load_series(run_dir: Path, columns):
     series_dir = run_dir / "series"
     run_path = series_dir / "run.parquet"
@@ -191,39 +250,71 @@ def _downsample(df, max_rows):
     return df.iloc[::step].copy()
 
 
-def _plot_quicklook(df, plots_dir: Path):
+def _plot_quicklook(series_sets, plots_dir: Path):
     import matplotlib
     import matplotlib.pyplot as plt
 
     matplotlib.use("Agg")
-    years = df["time"] / 3.15576e7
+
+    def _label(base, tag, r_rm):
+        suffix = _series_label(tag, r_rm)
+        if len(series_sets) == 1 and suffix in ("0D", "avg"):
+            return base
+        return f"{base} ({suffix})"
+
     fig, axes = plt.subplots(3, 1, figsize=(10, 8), sharex=True)
     ax_rates, ax_cum, ax_tau = axes
 
-    for col in ("M_out_dot", "M_sink_dot"):
-        if col in df:
-            ax_rates.plot(years, df[col], label=col)
+    for tag, r_rm, df in series_sets:
+        years = df["time"] / 3.15576e7
+        for col in ("M_out_dot", "M_sink_dot"):
+            if col in df:
+                ax_rates.plot(years, df[col], label=_label(col, tag, r_rm))
     ax_rates.set_ylabel("loss rate [M_Mars s^-1]")
     ax_rates.legend()
     ax_rates.grid(True, alpha=0.3)
 
-    for col in ("mass_lost_by_blowout", "mass_lost_by_sinks", "mass_total_bins"):
-        if col in df:
-            ax_cum.plot(years, df[col], label=col)
+    for tag, r_rm, df in series_sets:
+        years = df["time"] / 3.15576e7
+        for col in ("mass_lost_by_blowout", "mass_lost_by_sinks", "mass_total_bins"):
+            if col in df:
+                ax_cum.plot(years, df[col], label=_label(col, tag, r_rm))
     ax_cum.set_ylabel("mass [M_Mars]")
     ax_cum.legend()
     ax_cum.grid(True, alpha=0.3)
 
-    tau_col = "tau_los_mars" if "tau_los_mars" in df else "tau"
-    if tau_col in df:
-        ax_tau.plot(years, df[tau_col], label=tau_col, color="tab:blue")
-    if "tau_eff" in df:
-        ax_tau.plot(years, df["tau_eff"], label="tau_eff", color="tab:cyan")
+    for tag, r_rm, df in series_sets:
+        years = df["time"] / 3.15576e7
+        tau_col = "tau_los_mars" if "tau_los_mars" in df else "tau"
+        if tau_col in df:
+            ax_tau.plot(
+                years,
+                df[tau_col],
+                label=_label(tau_col, tag, r_rm),
+                color="tab:blue",
+                alpha=0.7,
+            )
+        if "tau_eff" in df:
+            ax_tau.plot(
+                years,
+                df["tau_eff"],
+                label=_label("tau_eff", tag, r_rm),
+                color="tab:cyan",
+                alpha=0.7,
+            )
     ax_tau.set_ylabel("tau")
     ax_tau.grid(True, alpha=0.3)
     ax_supply = ax_tau.twinx()
-    if "prod_subblow_area_rate" in df:
-        ax_supply.plot(years, df["prod_subblow_area_rate"], label="prod_subblow_area_rate", color="tab:orange")
+    for tag, r_rm, df in series_sets:
+        years = df["time"] / 3.15576e7
+        if "prod_subblow_area_rate" in df:
+            ax_supply.plot(
+                years,
+                df["prod_subblow_area_rate"],
+                label=_label("prod_subblow_area_rate", tag, r_rm),
+                color="tab:orange",
+                alpha=0.7,
+            )
     ax_supply.set_ylabel("prod_subblow [kg m^-2 s^-1]")
     handles, labels = ax_tau.get_legend_handles_labels()
     h2, l2 = ax_supply.get_legend_handles_labels()
@@ -283,6 +374,7 @@ def main(run_dir: Path) -> int:
         "supply_reservoir_remaining_Mmars",
         "cell_index",
         "r_m",
+        "r_RM",
     ]
     df = _load_series(run_dir, plot_cols)
     if df is None or df.empty:
@@ -291,46 +383,86 @@ def main(run_dir: Path) -> int:
     is_1d = "cell_index" in df.columns
     out_dir = run_dir / ("figures" if is_1d else "plots")
     out_dir.mkdir(parents=True, exist_ok=True)
-    if is_1d:
-        rows = _aggregate_1d(df, plot_cols)
-        import pandas as pd
-
-        df = pd.DataFrame(rows)
-
-    if "tau_los_mars" not in df.columns and "tau" in df.columns:
-        df["tau_los_mars"] = df["tau"]
-    if "tau" not in df.columns and "tau_los_mars" in df.columns:
-        df["tau"] = df["tau_los_mars"]
-
     max_rows = int(os.environ.get("PLOT_MAX_ROWS", "4000") or "4000")
-    df = _downsample(df, max_rows)
-    df["time_days"] = df["time"] / 86400.0
+    series_sets = _prepare_series_sets(df, plot_cols, max_rows)
+    for idx, (tag, r_rm, sdf) in enumerate(series_sets):
+        if "tau_los_mars" not in sdf.columns and "tau" in sdf.columns:
+            sdf["tau_los_mars"] = sdf["tau"]
+        if "tau" not in sdf.columns and "tau_los_mars" in sdf.columns:
+            sdf["tau"] = sdf["tau_los_mars"]
+        series_sets[idx] = (tag, r_rm, sdf)
+
+    def _label(base, tag, r_rm):
+        suffix = _series_label(tag, r_rm)
+        if len(series_sets) == 1 and suffix in ("0D", "avg"):
+            return base
+        return f"{base} ({suffix})"
 
     import matplotlib.pyplot as plt
 
     fig, axes = plt.subplots(3, 1, figsize=(10, 12), sharex=True)
-    if "M_out_dot" in df:
-        axes[0].plot(df["time_days"], df["M_out_dot"], label="M_out_dot", lw=1.2)
-    if "M_sink_dot" in df:
-        axes[0].plot(df["time_days"], df["M_sink_dot"], label="M_sink_dot", lw=1.0, alpha=0.7)
+    for tag, r_rm, sdf in series_sets:
+        if "M_out_dot" in sdf:
+            axes[0].plot(
+                sdf["time_days"],
+                sdf["M_out_dot"],
+                label=_label("M_out_dot", tag, r_rm),
+                lw=1.2,
+            )
+        if "M_sink_dot" in sdf:
+            axes[0].plot(
+                sdf["time_days"],
+                sdf["M_sink_dot"],
+                label=_label("M_sink_dot", tag, r_rm),
+                lw=1.0,
+                alpha=0.7,
+            )
     axes[0].set_ylabel("M_Mars / s")
     axes[0].legend(loc="upper right")
     axes[0].set_title("Mass loss rates")
 
-    if "M_loss_cum" in df:
-        axes[1].plot(df["time_days"], df["M_loss_cum"], label="M_loss_cum", lw=1.2)
-    if "mass_lost_by_blowout" in df:
-        axes[1].plot(df["time_days"], df["mass_lost_by_blowout"], label="mass_lost_by_blowout", lw=1.0)
-    if "mass_lost_by_sinks" in df:
-        axes[1].plot(df["time_days"], df["mass_lost_by_sinks"], label="mass_lost_by_sinks", lw=1.0)
+    for tag, r_rm, sdf in series_sets:
+        if "M_loss_cum" in sdf:
+            axes[1].plot(
+                sdf["time_days"],
+                sdf["M_loss_cum"],
+                label=_label("M_loss_cum", tag, r_rm),
+                lw=1.2,
+            )
+        if "mass_lost_by_blowout" in sdf:
+            axes[1].plot(
+                sdf["time_days"],
+                sdf["mass_lost_by_blowout"],
+                label=_label("mass_lost_by_blowout", tag, r_rm),
+                lw=1.0,
+            )
+        if "mass_lost_by_sinks" in sdf:
+            axes[1].plot(
+                sdf["time_days"],
+                sdf["mass_lost_by_sinks"],
+                label=_label("mass_lost_by_sinks", tag, r_rm),
+                lw=1.0,
+            )
     axes[1].set_ylabel("M_Mars")
     axes[1].legend(loc="upper left")
     axes[1].set_title("Cumulative losses")
 
-    if "s_min" in df:
-        axes[2].plot(df["time_days"], df["s_min"], label="s_min", lw=1.0)
-    if "a_blow" in df:
-        axes[2].plot(df["time_days"], df["a_blow"], label="a_blow", lw=1.0, alpha=0.8)
+    for tag, r_rm, sdf in series_sets:
+        if "s_min" in sdf:
+            axes[2].plot(
+                sdf["time_days"],
+                sdf["s_min"],
+                label=_label("s_min", tag, r_rm),
+                lw=1.0,
+            )
+        if "a_blow" in sdf:
+            axes[2].plot(
+                sdf["time_days"],
+                sdf["a_blow"],
+                label=_label("a_blow", tag, r_rm),
+                lw=1.0,
+                alpha=0.8,
+            )
     axes[2].set_ylabel("m")
     axes[2].set_xlabel("days")
     axes[2].set_yscale("log")
@@ -350,26 +482,35 @@ def main(run_dir: Path) -> int:
     plt.close(fig)
 
     fig2, ax2 = plt.subplots(2, 1, figsize=(10, 8), sharex=True)
-    if "prod_subblow_area_rate" in df:
-        ax2[0].plot(
-            df["time_days"],
-            df["prod_subblow_area_rate"],
-            label="prod_subblow_area_rate",
-            color="tab:blue",
-        )
+    for tag, r_rm, sdf in series_sets:
+        if "prod_subblow_area_rate" in sdf:
+            ax2[0].plot(
+                sdf["time_days"],
+                sdf["prod_subblow_area_rate"],
+                label=_label("prod_subblow_area_rate", tag, r_rm),
+                color="tab:blue",
+                alpha=0.7,
+            )
     ax2[0].set_ylabel("kg m^-2 s^-1")
     ax2[0].set_title("Sub-blow supply rate")
 
-    if "Sigma_surf" in df:
-        ax2[1].plot(df["time_days"], df["Sigma_surf"], label="Sigma_surf", color="tab:green")
-    if "outflux_surface" in df:
-        ax2[1].plot(
-            df["time_days"],
-            df["outflux_surface"],
-            label="outflux_surface",
-            color="tab:red",
-            alpha=0.8,
-        )
+    for tag, r_rm, sdf in series_sets:
+        if "Sigma_surf" in sdf:
+            ax2[1].plot(
+                sdf["time_days"],
+                sdf["Sigma_surf"],
+                label=_label("Sigma_surf", tag, r_rm),
+                color="tab:green",
+                alpha=0.7,
+            )
+        if "outflux_surface" in sdf:
+            ax2[1].plot(
+                sdf["time_days"],
+                sdf["outflux_surface"],
+                label=_label("outflux_surface", tag, r_rm),
+                color="tab:red",
+                alpha=0.7,
+            )
     ax2[1].set_ylabel("kg m^-2 / M_Mars s^-1")
     ax2[1].set_xlabel("days")
     ax2[1].legend(loc="upper right")
@@ -381,11 +522,24 @@ def main(run_dir: Path) -> int:
     plt.close(fig2)
 
     fig3, ax3 = plt.subplots(1, 1, figsize=(10, 4))
-    tau_col = "tau_los_mars" if "tau_los_mars" in df else "tau"
-    if tau_col in df:
-        ax3.plot(df["time_days"], df[tau_col], label=tau_col, color="tab:red", alpha=0.8)
-    if "tau_eff" in df:
-        ax3.plot(df["time_days"], df["tau_eff"], label="tau_eff", color="tab:blue", alpha=0.7)
+    for tag, r_rm, sdf in series_sets:
+        tau_col = "tau_los_mars" if "tau_los_mars" in sdf else "tau"
+        if tau_col in sdf:
+            ax3.plot(
+                sdf["time_days"],
+                sdf[tau_col],
+                label=_label(tau_col, tag, r_rm),
+                color="tab:red",
+                alpha=0.7,
+            )
+        if "tau_eff" in sdf:
+            ax3.plot(
+                sdf["time_days"],
+                sdf["tau_eff"],
+                label=_label("tau_eff", tag, r_rm),
+                color="tab:blue",
+                alpha=0.7,
+            )
     ax3.axhline(1.0, color="gray", linestyle=":", alpha=0.5, label="tau=1")
     ax3.set_ylabel("optical depth")
     ax3.set_xlabel("days")
@@ -395,7 +549,7 @@ def main(run_dir: Path) -> int:
     fig3.savefig(out_dir / "optical_depth.png", dpi=180)
     plt.close(fig3)
 
-    _plot_quicklook(df, out_dir)
+    _plot_quicklook(series_sets, out_dir)
 
     print(f"[plot] saved plots to {out_dir}")
     return 0

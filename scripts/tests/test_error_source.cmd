@@ -20,7 +20,7 @@ if not exist "!COMMON_DIR!\resolve_python.cmd" (
     exit /b 1
 )
 call "!COMMON_DIR!\resolve_python.cmd"
-if errorlevel 1 exit /b 1
+if not "!errorlevel!"=="0" exit /b 1
 
 echo.[info] PYTHON_CMD=!PYTHON_CMD!
 echo.[info] REPO_ROOT=!REPO_ROOT!
@@ -48,6 +48,7 @@ echo.------------------------------------------------------------
 set "JOB_T=5000"
 set "JOB_EPS=1.0"
 set "JOB_TAU=1.0"
+set "JOB_I0=0.05"
 set "TEST2_FILE=!TMP_ROOT!\marsdisk_pid_!JOB_T!_!JOB_EPS!_!JOB_TAU!.tmp"
 echo.[action] Writing to: !TEST2_FILE!
 echo test > "!TEST2_FILE!"
@@ -65,7 +66,7 @@ echo.------------------------------------------------------------
 set "RUN_TS=20251231_120000"
 set "BATCH_SEED=0"
 set "JOB_SEED=12345"
-set "JOB_CMD=set RUN_TS=!RUN_TS!&& set BATCH_SEED=!BATCH_SEED!&& set RUN_ONE_T=!JOB_T!&& set RUN_ONE_EPS=!JOB_EPS!&& set RUN_ONE_TAU=!JOB_TAU!&& set RUN_ONE_SEED=!JOB_SEED!&& echo done"
+set "JOB_CMD=set RUN_TS=!RUN_TS!&& set BATCH_SEED=!BATCH_SEED!&& set RUN_ONE_T=!JOB_T!&& set RUN_ONE_EPS=!JOB_EPS!&& set RUN_ONE_TAU=!JOB_TAU!&& set RUN_ONE_I0=!JOB_I0!&& set RUN_ONE_SEED=!JOB_SEED!&& echo done"
 set "CMD_FILE=!TMP_ROOT!\marsdisk_cmd_!JOB_T!_!JOB_EPS!_!JOB_TAU!.tmp"
 echo.[action] Writing JOB_CMD to: !CMD_FILE!
 echo.[debug] JOB_CMD=!JOB_CMD!
@@ -95,10 +96,10 @@ if exist "!PID_FILE!" (
     echo.[debug] PID file contents:
     type "!PID_FILE!"
     echo.
-    set /p PID_VAL=<"!PID_FILE!"
+    for /f "usebackq delims=" %%P in ("!PID_FILE!") do set "PID_VAL=%%P"
     echo.[debug] PID_VAL=!PID_VAL!
     echo !PID_VAL! | findstr /r "^[0-9][0-9]*$" >nul
-    if errorlevel 1 (
+    if not "!errorlevel!"=="0" (
         echo.[WARN] PID is not a number - may contain error message
     ) else (
         echo.[PASS] Valid PID returned: !PID_VAL!
@@ -137,7 +138,7 @@ if not exist "!SCRIPT_SELF_USE!" (
     goto :end
 )
 
-set "FULL_CMD=set RUN_TS=!RUN_TS!&& set BATCH_SEED=!BATCH_SEED!&& set RUN_ONE_T=!JOB_T!&& set RUN_ONE_EPS=!JOB_EPS!&& set RUN_ONE_TAU=!JOB_TAU!&& set RUN_ONE_SEED=!JOB_SEED!&& set AUTO_JOBS=0&& set PARALLEL_JOBS=1&& set SKIP_PIP=1&& call ""!SCRIPT_SELF_USE!"" --run-one"
+set "FULL_CMD=set RUN_TS=!RUN_TS!&& set BATCH_SEED=!BATCH_SEED!&& set RUN_ONE_T=!JOB_T!&& set RUN_ONE_EPS=!JOB_EPS!&& set RUN_ONE_TAU=!JOB_TAU!&& set RUN_ONE_I0=!JOB_I0!&& set RUN_ONE_SEED=!JOB_SEED!&& set AUTO_JOBS=0&& set PARALLEL_JOBS=1&& set SKIP_PIP=1&& call ""!SCRIPT_SELF_USE!"" --run-one"
 echo.[debug] FULL_CMD=!FULL_CMD!
 echo.
 echo.[action] Writing full command to file and launching with VISIBLE window
@@ -150,7 +151,7 @@ echo.
 
 echo.[question] Launch with visible window to see what happens? (Y/N)
 choice /c YN /m "Launch"
-if errorlevel 2 goto :skip6
+if "!errorlevel!"=="2" goto :skip6
 !PYTHON_CMD! "!WIN_PROCESS_PY!" launch --cmd-file "!FULL_CMD_FILE!" --window-style normal --cwd "!REPO_ROOT!"
 :skip6
 del "!FULL_CMD_FILE!" >nul 2>&1

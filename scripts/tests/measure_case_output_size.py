@@ -68,10 +68,12 @@ def _build_outdir(
     t_value: str,
     eps_value: str,
     tau_value: str,
+    i0_value: str,
 ) -> Path:
     eps_title = _sanitize_token(eps_value)
     tau_title = _sanitize_token(tau_value)
-    title = f"T{t_value}_eps{eps_title}_tau{tau_title}"
+    i0_title = _sanitize_token(i0_value)
+    title = f"T{t_value}_eps{eps_title}_tau{tau_title}_i0{i0_title}"
     batch_dir = batch_root / sweep_tag / f"{run_ts}__{git_sha}__seed{batch_seed}"
     return batch_dir / title
 
@@ -87,6 +89,7 @@ def main() -> int:
     ap.add_argument("--t", default="5000", help="RUN_ONE_T value.")
     ap.add_argument("--eps", default="1.0", help="RUN_ONE_EPS value.")
     ap.add_argument("--tau", default="1.0", help="RUN_ONE_TAU value.")
+    ap.add_argument("--i0", default="0.05", help="RUN_ONE_I0 value.")
     ap.add_argument("--batch-seed", type=int, default=0, help="BATCH_SEED value.")
     ap.add_argument("--run-ts", default="", help="RUN_TS value (defaults to timestamp).")
     ap.add_argument(
@@ -166,6 +169,7 @@ def main() -> int:
         t_value=args.t,
         eps_value=args.eps,
         tau_value=args.tau,
+        i0_value=args.i0,
     )
 
     outdir = Path(args.outdir).expanduser() if args.outdir else computed_outdir
@@ -180,6 +184,7 @@ def main() -> int:
                 "RUN_ONE_T": str(args.t),
                 "RUN_ONE_EPS": str(args.eps),
                 "RUN_ONE_TAU": str(args.tau),
+                "RUN_ONE_I0": str(args.i0),
                 "RUN_TS": run_ts,
                 "BATCH_SEED": str(args.batch_seed),
                 "BATCH_ROOT": str(batch_root),

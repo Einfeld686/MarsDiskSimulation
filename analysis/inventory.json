@@ -9375,48 +9375,69 @@
   {
     "file_path": "scripts/research/plot_sweep_run.py",
     "line_no": 139,
+    "symbol": "_select_ring_cells",
+    "signature": "_select_ring_cells(df)",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/research/plot_sweep_run.py",
+    "line_no": 158,
+    "symbol": "_series_label",
+    "signature": "_series_label(tag, r_rm)",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/research/plot_sweep_run.py",
+    "line_no": 164,
+    "symbol": "_prepare_series_sets",
+    "signature": "_prepare_series_sets(df, columns, max_rows)",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/research/plot_sweep_run.py",
+    "line_no": 198,
     "symbol": "_load_series",
     "signature": "_load_series(run_dir: Path, columns)",
     "brief_usage": "No description available."
   },
   {
     "file_path": "scripts/research/plot_sweep_run.py",
-    "line_no": 153,
+    "line_no": 212,
     "symbol": "_concat_frames",
     "signature": "_concat_frames(frames)",
     "brief_usage": "No description available."
   },
   {
     "file_path": "scripts/research/plot_sweep_run.py",
-    "line_no": 160,
+    "line_no": 219,
     "symbol": "_pd_concat",
     "signature": "_pd_concat(frames)",
     "brief_usage": "No description available."
   },
   {
     "file_path": "scripts/research/plot_sweep_run.py",
-    "line_no": 166,
+    "line_no": 225,
     "symbol": "_read_parquet",
     "signature": "_read_parquet(path: Path, columns)",
     "brief_usage": "No description available."
   },
   {
     "file_path": "scripts/research/plot_sweep_run.py",
-    "line_no": 185,
+    "line_no": 244,
     "symbol": "_downsample",
     "signature": "_downsample(df, max_rows)",
     "brief_usage": "No description available."
   },
   {
     "file_path": "scripts/research/plot_sweep_run.py",
-    "line_no": 194,
+    "line_no": 253,
     "symbol": "_plot_quicklook",
-    "signature": "_plot_quicklook(df, plots_dir: Path)",
+    "signature": "_plot_quicklook(series_sets, plots_dir: Path)",
     "brief_usage": "No description available."
   },
   {
     "file_path": "scripts/research/plot_sweep_run.py",
-    "line_no": 237,
+    "line_no": 328,
     "symbol": "main",
     "signature": "main(run_dir: Path) -> int",
     "brief_usage": "Generate overview plots for a single run directory."
@@ -10342,7 +10363,7 @@
     "file_path": "scripts/runsets/common/write_sweep_list.py",
     "line_no": 25,
     "symbol": "_parse_extra_cases",
-    "signature": "_parse_extra_cases(raw: str) -> list[tuple[str, str, str]]",
+    "signature": "_parse_extra_cases(raw: str) -> list[tuple[str, str, str, str]]",
     "brief_usage": "No description available."
   },
   {
@@ -12391,105 +12412,112 @@
   },
   {
     "file_path": "scripts/tests/check_run_sweep_cpu_bound.py",
-    "line_no": 26,
+    "line_no": 24,
+    "symbol": "DEFAULT_I0_LIST",
+    "signature": "DEFAULT_I0_LIST = [0.05]",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "scripts/tests/check_run_sweep_cpu_bound.py",
+    "line_no": 27,
     "symbol": "_repo_root",
     "signature": "_repo_root() -> Path",
     "brief_usage": "No description available."
   },
   {
     "file_path": "scripts/tests/check_run_sweep_cpu_bound.py",
-    "line_no": 30,
+    "line_no": 31,
     "symbol": "_timestamp",
     "signature": "_timestamp() -> str",
     "brief_usage": "No description available."
   },
   {
     "file_path": "scripts/tests/check_run_sweep_cpu_bound.py",
-    "line_no": 34,
+    "line_no": 35,
     "symbol": "_write_text",
     "signature": "_write_text(path: Path, text: str) -> None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "scripts/tests/check_run_sweep_cpu_bound.py",
-    "line_no": 39,
+    "line_no": 40,
     "symbol": "_write_json",
     "signature": "_write_json(path: Path, payload: Dict[str, Any]) -> None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "scripts/tests/check_run_sweep_cpu_bound.py",
-    "line_no": 43,
+    "line_no": 44,
     "symbol": "_format_list",
     "signature": "_format_list(values: Iterable[float]) -> str",
     "brief_usage": "No description available."
   },
   {
     "file_path": "scripts/tests/check_run_sweep_cpu_bound.py",
-    "line_no": 47,
+    "line_no": 48,
     "symbol": "_write_study",
     "signature": "_write_study(path: Path, sweep_tag: str) -> None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "scripts/tests/check_run_sweep_cpu_bound.py",
-    "line_no": 57,
+    "line_no": 59,
     "symbol": "_format_override_value",
     "signature": "_format_override_value(value: Optional[float]) -> str",
     "brief_usage": "No description available."
   },
   {
     "file_path": "scripts/tests/check_run_sweep_cpu_bound.py",
-    "line_no": 63,
+    "line_no": 65,
     "symbol": "_build_overrides",
     "signature": "_build_overrides(base_overrides: Path, extra_overrides: Iterable[str], out_path: Path) -> None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "scripts/tests/check_run_sweep_cpu_bound.py",
-    "line_no": 77,
+    "line_no": 79,
     "symbol": "_run_cmd",
     "signature": "_run_cmd(cmd: list[str], env: Dict[str, str], cwd: Path) -> subprocess.CompletedProcess",
     "brief_usage": "No description available."
   },
   {
     "file_path": "scripts/tests/check_run_sweep_cpu_bound.py",
-    "line_no": 83,
+    "line_no": 85,
     "symbol": "_parse_parallel_final",
     "signature": "_parse_parallel_final(log_path: Path) -> Dict[str, str]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "scripts/tests/check_run_sweep_cpu_bound.py",
-    "line_no": 102,
+    "line_no": 104,
     "symbol": "_coerce_int",
     "signature": "_coerce_int(value: Optional[str], default: int) -> int",
     "brief_usage": "No description available."
   },
   {
     "file_path": "scripts/tests/check_run_sweep_cpu_bound.py",
-    "line_no": 111,
+    "line_no": 113,
     "symbol": "_thread_budget",
     "signature": "_thread_budget(parallel_config: Dict[str, str], cpu_logical: int) -> Dict[str, Any]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "scripts/tests/check_run_sweep_cpu_bound.py",
-    "line_no": 135,
+    "line_no": 137,
     "symbol": "_update_cpu_times",
     "signature": "_update_cpu_times(root: Optional['psutil.Process'], seen: Dict[int, float]) -> None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "scripts/tests/check_run_sweep_cpu_bound.py",
-    "line_no": 153,
+    "line_no": 155,
     "symbol": "_monitor_cpu",
     "signature": "_monitor_cpu(proc: subprocess.Popen, interval: float) -> tuple[list[float], Dict[int, float]]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "scripts/tests/check_run_sweep_cpu_bound.py",
-    "line_no": 172,
+    "line_no": 174,
     "symbol": "main",
     "signature": "main() -> int",
     "brief_usage": "No description available."
@@ -12526,19 +12554,19 @@
     "file_path": "scripts/tests/measure_case_output_size.py",
     "line_no": 61,
     "symbol": "_build_outdir",
-    "signature": "_build_outdir(*, batch_root: Path, sweep_tag: str, run_ts: str, git_sha: str, batch_seed: int, t_value: str, eps_value: str, tau_value: str) -> Path",
+    "signature": "_build_outdir(*, batch_root: Path, sweep_tag: str, run_ts: str, git_sha: str, batch_seed: int, t_value: str, eps_value: str, tau_value: str, i0_value: str) -> Path",
     "brief_usage": "No description available."
   },
   {
     "file_path": "scripts/tests/measure_case_output_size.py",
-    "line_no": 79,
+    "line_no": 81,
     "symbol": "_write_report",
     "signature": "_write_report(path: Path, payload: Dict[str, object]) -> None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "scripts/tests/measure_case_output_size.py",
-    "line_no": 83,
+    "line_no": 85,
     "symbol": "main",
     "signature": "main() -> int",
     "brief_usage": "No description available."
@@ -12953,47 +12981,47 @@
     "file_path": "scripts/tests/sweep_vs_cell_parallel_speed_check.py",
     "line_no": 42,
     "symbol": "_write_study",
-    "signature": "_write_study(path: Path, *, t_list: List[float], eps_list: List[float], tau_list: List[float], sweep_tag: str) -> None",
+    "signature": "_write_study(path: Path, *, t_list: List[float], eps_list: List[float], tau_list: List[float], i0_list: List[float], sweep_tag: str) -> None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "scripts/tests/sweep_vs_cell_parallel_speed_check.py",
-    "line_no": 52,
+    "line_no": 61,
     "symbol": "_build_overrides",
     "signature": "_build_overrides(base_path: Path, extra_lines: List[str], out_path: Path) -> None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "scripts/tests/sweep_vs_cell_parallel_speed_check.py",
-    "line_no": 61,
+    "line_no": 70,
     "symbol": "_parse_parallel_final",
     "signature": "_parse_parallel_final(log_path: Path) -> Dict[str, str]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "scripts/tests/sweep_vs_cell_parallel_speed_check.py",
-    "line_no": 80,
+    "line_no": 89,
     "symbol": "_run_cmd",
     "signature": "_run_cmd(cmd: List[str], *, env: Dict[str, str], cwd: Path) -> subprocess.CompletedProcess",
     "brief_usage": "No description available."
   },
   {
     "file_path": "scripts/tests/sweep_vs_cell_parallel_speed_check.py",
-    "line_no": 84,
+    "line_no": 93,
     "symbol": "_build_cmd",
     "signature": "_build_cmd(cmd_path: Path, *, overrides_path: Path, out_root: Path, study_path: Path, config_path: Path | None, with_plot: bool, with_eval: bool) -> List[str]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "scripts/tests/sweep_vs_cell_parallel_speed_check.py",
-    "line_no": 105,
+    "line_no": 114,
     "symbol": "_run_case",
     "signature": "_run_case(*, label: str, cmd_path: Path, overrides_path: Path, out_root: Path, study_path: Path, config_path: Path | None, env: Dict[str, str], debug_log: Path, trace_log: Path, with_plot: bool, with_eval: bool) -> Dict[str, Any]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "scripts/tests/sweep_vs_cell_parallel_speed_check.py",
-    "line_no": 148,
+    "line_no": 157,
     "symbol": "main",
     "signature": "main() -> int",
     "brief_usage": "No description available."
@@ -13037,19 +13065,19 @@
     "file_path": "scripts/tests/temp_supply_parallel_smoke.py",
     "line_no": 56,
     "symbol": "_run_case",
-    "signature": "_run_case(*, case_id: str, t_value: str, eps_value: str, tau_value: str, script_path: Path, env: Dict[str, str], log_dir: Path) -> Dict[str, object]",
+    "signature": "_run_case(*, case_id: str, t_value: str, eps_value: str, tau_value: str, i0_value: str, script_path: Path, env: Dict[str, str], log_dir: Path) -> Dict[str, object]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "scripts/tests/temp_supply_parallel_smoke.py",
-    "line_no": 98,
+    "line_no": 100,
     "symbol": "_build_case_id",
-    "signature": "_build_case_id(t_value: str, eps_value: str, tau_value: str) -> str",
+    "signature": "_build_case_id(t_value: str, eps_value: str, tau_value: str, i0_value: str) -> str",
     "brief_usage": "No description available."
   },
   {
     "file_path": "scripts/tests/temp_supply_parallel_smoke.py",
-    "line_no": 102,
+    "line_no": 104,
     "symbol": "main",
     "signature": "main() -> int",
     "brief_usage": "No description available."
@@ -17514,6 +17542,321 @@
     "brief_usage": "No description available."
   },
   {
+    "file_path": "tools/build_thesis_draft.py",
+    "line_no": 13,
+    "symbol": "EXCLUDE_START",
+    "signature": "EXCLUDE_START = '<!-- TEX_EXCLUDE_START -->'",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "tools/build_thesis_draft.py",
+    "line_no": 14,
+    "symbol": "EXCLUDE_END",
+    "signature": "EXCLUDE_END = '<!-- TEX_EXCLUDE_END -->'",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "tools/build_thesis_draft.py",
+    "line_no": 16,
+    "symbol": "HEADING_RE",
+    "signature": "HEADING_RE = re.compile('^(#{1,6})\\\\s+(.*)$')",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "tools/build_thesis_draft.py",
+    "line_no": 17,
+    "symbol": "LIST_UNORDERED_RE",
+    "signature": "LIST_UNORDERED_RE = re.compile('^(\\\\s*)[-*+]\\\\s+(.*)$')",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "tools/build_thesis_draft.py",
+    "line_no": 18,
+    "symbol": "LIST_ORDERED_RE",
+    "signature": "LIST_ORDERED_RE = re.compile('^(\\\\s*)\\\\d+\\\\.\\\\s+(.*)$')",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "tools/build_thesis_draft.py",
+    "line_no": 19,
+    "symbol": "TABLE_SEP_RE",
+    "signature": "TABLE_SEP_RE = re.compile('^:?-{3,}:?$')",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "tools/build_thesis_draft.py",
+    "line_no": 20,
+    "symbol": "INLINE_CODE_RE",
+    "signature": "INLINE_CODE_RE = re.compile('`([^`]+)`')",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "tools/build_thesis_draft.py",
+    "line_no": 21,
+    "symbol": "INLINE_MATH_PAREN_RE",
+    "signature": "INLINE_MATH_PAREN_RE = re.compile('\\\\\\\\\\\\((.+?)\\\\\\\\\\\\)')",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "tools/build_thesis_draft.py",
+    "line_no": 22,
+    "symbol": "INLINE_MATH_DOLLAR_RE",
+    "signature": "INLINE_MATH_DOLLAR_RE = re.compile('(?<!\\\\\\\\)\\\\$([^$]+?)\\\\$')",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "tools/build_thesis_draft.py",
+    "line_no": 23,
+    "symbol": "LATEX_CMD_RE",
+    "signature": "LATEX_CMD_RE = re.compile('\\\\\\\\(cite|ref|eqref|label)\\\\{[^}]+\\\\}')",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "tools/build_thesis_draft.py",
+    "line_no": 24,
+    "symbol": "CITE_BRACKET_RE",
+    "signature": "CITE_BRACKET_RE = re.compile('\\\\[@([^\\\\]]+)\\\\]')",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "tools/build_thesis_draft.py",
+    "line_no": 26,
+    "symbol": "SUBSCRIPT_MAP",
+    "signature": "SUBSCRIPT_MAP = {'₀': '0', '₁': '1', '₂': '2', '₃': '3', '₄': '4', '₅': '5', '₆': '6', '₇': '7', '₈': '8', '₉': '9'}",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "tools/build_thesis_draft.py",
+    "line_no": 39,
+    "symbol": "UNICODE_SYMBOLS",
+    "signature": "UNICODE_SYMBOLS = {'→': '\\\\ensuremath{\\\\rightarrow}', '←': '\\\\ensuremath{\\\\leftarrow}', '↔': '\\\\ensuremath{\\\\leftrightarrow}', '≤': '\\\\ensuremath{\\\\le}', '≥': '\\\\ensuremath{\\\\ge}', '≲': '\\\\ensuremath{\\\\lesssim}', '≳': '\\\\ensuremath{\\\\gtrsim}', '×': '\\\\ensuremath{\\\\times}'}",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "tools/build_thesis_draft.py",
+    "line_no": 50,
+    "symbol": "INTRO_START",
+    "signature": "INTRO_START = '% === AUTOGEN INTRODUCTION START ==='",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "tools/build_thesis_draft.py",
+    "line_no": 51,
+    "symbol": "INTRO_END",
+    "signature": "INTRO_END = '% === AUTOGEN INTRODUCTION END ==='",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "tools/build_thesis_draft.py",
+    "line_no": 52,
+    "symbol": "METHODS_START",
+    "signature": "METHODS_START = '% === AUTOGEN METHODS START ==='",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "tools/build_thesis_draft.py",
+    "line_no": 53,
+    "symbol": "METHODS_END",
+    "signature": "METHODS_END = '% === AUTOGEN METHODS END ==='",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "tools/build_thesis_draft.py",
+    "line_no": 57,
+    "symbol": "Block",
+    "signature": "class Block",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tools/build_thesis_draft.py",
+    "line_no": 62,
+    "symbol": "strip_yaml_frontmatter",
+    "signature": "strip_yaml_frontmatter(text: str) -> str",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tools/build_thesis_draft.py",
+    "line_no": 72,
+    "symbol": "strip_html_comments",
+    "signature": "strip_html_comments(text: str) -> str",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tools/build_thesis_draft.py",
+    "line_no": 86,
+    "symbol": "strip_tex_exclude_blocks",
+    "signature": "strip_tex_exclude_blocks(text: str) -> str",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tools/build_thesis_draft.py",
+    "line_no": 103,
+    "symbol": "split_table_row",
+    "signature": "split_table_row(line: str) -> list[str]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tools/build_thesis_draft.py",
+    "line_no": 107,
+    "symbol": "is_table_separator",
+    "signature": "is_table_separator(line: str) -> bool",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tools/build_thesis_draft.py",
+    "line_no": 117,
+    "symbol": "is_latex_block_start",
+    "signature": "is_latex_block_start(line: str) -> bool",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tools/build_thesis_draft.py",
+    "line_no": 126,
+    "symbol": "parse_latex_block",
+    "signature": "parse_latex_block(lines: list[str], start: int) -> tuple[Block, int]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tools/build_thesis_draft.py",
+    "line_no": 162,
+    "symbol": "parse_code_block",
+    "signature": "parse_code_block(lines: list[str], start: int) -> tuple[Block, int]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tools/build_thesis_draft.py",
+    "line_no": 175,
+    "symbol": "parse_table",
+    "signature": "parse_table(lines: list[str], start: int) -> tuple[Block | None, int]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tools/build_thesis_draft.py",
+    "line_no": 196,
+    "symbol": "parse_list",
+    "signature": "parse_list(lines: list[str], start: int) -> tuple[Block, int]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tools/build_thesis_draft.py",
+    "line_no": 255,
+    "symbol": "parse_blockquote",
+    "signature": "parse_blockquote(lines: list[str], start: int) -> tuple[Block, int]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tools/build_thesis_draft.py",
+    "line_no": 268,
+    "symbol": "parse_paragraph",
+    "signature": "parse_paragraph(lines: list[str], start: int) -> tuple[Block, int]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tools/build_thesis_draft.py",
+    "line_no": 292,
+    "symbol": "parse_blocks",
+    "signature": "parse_blocks(lines: list[str]) -> list[Block]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tools/build_thesis_draft.py",
+    "line_no": 334,
+    "symbol": "strip_numbered_prefix",
+    "signature": "strip_numbered_prefix(text: str) -> str",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tools/build_thesis_draft.py",
+    "line_no": 338,
+    "symbol": "convert_cite_brackets",
+    "signature": "convert_cite_brackets(text: str) -> str",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tools/build_thesis_draft.py",
+    "line_no": 355,
+    "symbol": "escape_latex",
+    "signature": "escape_latex(text: str) -> str",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tools/build_thesis_draft.py",
+    "line_no": 373,
+    "symbol": "escape_latex_code",
+    "signature": "escape_latex_code(text: str) -> str",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tools/build_thesis_draft.py",
+    "line_no": 394,
+    "symbol": "convert_inline",
+    "signature": "convert_inline(text: str) -> str",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tools/build_thesis_draft.py",
+    "line_no": 434,
+    "symbol": "needs_texorpdfstring",
+    "signature": "needs_texorpdfstring(text: str) -> bool",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tools/build_thesis_draft.py",
+    "line_no": 444,
+    "symbol": "latex_to_plain",
+    "signature": "latex_to_plain(text: str) -> str",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tools/build_thesis_draft.py",
+    "line_no": 463,
+    "symbol": "replace_unicode_subscripts",
+    "signature": "replace_unicode_subscripts(text: str) -> str",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tools/build_thesis_draft.py",
+    "line_no": 471,
+    "symbol": "replace_unicode_symbols",
+    "signature": "replace_unicode_symbols(text: str) -> str",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tools/build_thesis_draft.py",
+    "line_no": 477,
+    "symbol": "MarkdownToLatexConverter",
+    "signature": "class MarkdownToLatexConverter",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tools/build_thesis_draft.py",
+    "line_no": 545,
+    "symbol": "replace_between_markers",
+    "signature": "replace_between_markers(text: str, start: str, end: str, replacement: str) -> str",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tools/build_thesis_draft.py",
+    "line_no": 555,
+    "symbol": "run",
+    "signature": "run(cmd: list[str], cwd: Path, env: dict[str, str] | None=None) -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tools/build_thesis_draft.py",
+    "line_no": 559,
+    "symbol": "build_pdf",
+    "signature": "build_pdf(tex_path: Path, out_dir: Path, repo_root: Path) -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tools/build_thesis_draft.py",
+    "line_no": 613,
+    "symbol": "main",
+    "signature": "main() -> int",
+    "brief_usage": "No description available."
+  },
+  {
     "file_path": "tools/check_unknown_refs.py",
     "line_no": 10,
     "symbol": "REQUESTS_PATH",
@@ -17756,6 +18099,76 @@
     "line_no": 581,
     "symbol": "main",
     "signature": "main() -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tools/filter_tex_exclude.py",
+    "line_no": 10,
+    "symbol": "EXCLUDE_START",
+    "signature": "EXCLUDE_START = '<!-- TEX_EXCLUDE_START -->'",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "tools/filter_tex_exclude.py",
+    "line_no": 11,
+    "symbol": "EXCLUDE_END",
+    "signature": "EXCLUDE_END = '<!-- TEX_EXCLUDE_END -->'",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "tools/filter_tex_exclude.py",
+    "line_no": 12,
+    "symbol": "MD_HEADING_RE",
+    "signature": "MD_HEADING_RE = re.compile('^(#{1,6})\\\\s+(.*)$')",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "tools/filter_tex_exclude.py",
+    "line_no": 13,
+    "symbol": "TEX_HEADING_RE",
+    "signature": "TEX_HEADING_RE = re.compile('^\\\\\\\\(section|subsection|subsubsection|paragraph)\\\\*?\\\\{(.+)\\\\}\\\\s*$')",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "tools/filter_tex_exclude.py",
+    "line_no": 16,
+    "symbol": "CHAPTER_RE",
+    "signature": "CHAPTER_RE = re.compile('^\\\\\\\\chapter\\\\{(.+)\\\\}\\\\s*$')",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "tools/filter_tex_exclude.py",
+    "line_no": 17,
+    "symbol": "HEADING_LEVEL",
+    "signature": "HEADING_LEVEL = {'section': 2, 'subsection': 3, 'subsubsection': 4, 'paragraph': 5}",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "tools/filter_tex_exclude.py",
+    "line_no": 25,
+    "symbol": "extract_excluded_titles",
+    "signature": "extract_excluded_titles(markdown_text: str) -> list[str]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tools/filter_tex_exclude.py",
+    "line_no": 46,
+    "symbol": "find_chapter_range",
+    "signature": "find_chapter_range(lines: list[str], chapter_title: str | None) -> tuple[int, int]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tools/filter_tex_exclude.py",
+    "line_no": 65,
+    "symbol": "strip_tex_blocks",
+    "signature": "strip_tex_blocks(lines: list[str], titles: set[str], start_idx: int, end_idx: int) -> tuple[list[str], list[str]]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tools/filter_tex_exclude.py",
+    "line_no": 100,
+    "symbol": "main",
+    "signature": "main() -> int",
     "brief_usage": "No description available."
   },
   {
@@ -20211,6 +20624,34 @@
   {
     "file_path": "tools/research/plot_supply_chain.py",
     "line_no": 151,
+    "symbol": "main",
+    "signature": "main() -> int",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tools/resolve_pdf_links.py",
+    "line_no": 11,
+    "symbol": "_as_float_or_null",
+    "signature": "_as_float_or_null(value)",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tools/resolve_pdf_links.py",
+    "line_no": 17,
+    "symbol": "_dest_to_array",
+    "signature": "_dest_to_array(dest) -> ArrayObject",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tools/resolve_pdf_links.py",
+    "line_no": 26,
+    "symbol": "resolve_links",
+    "signature": "resolve_links(input_path: Path, output_path: Path) -> int",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tools/resolve_pdf_links.py",
+    "line_no": 117,
     "symbol": "main",
     "signature": "main() -> int",
     "brief_usage": "No description available."

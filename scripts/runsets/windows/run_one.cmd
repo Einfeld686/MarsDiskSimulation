@@ -27,6 +27,7 @@ set "OUT_ROOT="
 set "RUN_ONE_T="
 set "RUN_ONE_EPS="
 set "RUN_ONE_TAU="
+set "RUN_ONE_I0="
 set "RUN_ONE_SEED="
 set "GEOMETRY_MODE=1D"
 set "DRY_RUN=0"
@@ -50,6 +51,12 @@ if /i "%~1"=="--eps" (
 )
 if /i "%~1"=="--tau" (
   set "RUN_ONE_TAU=%~2"
+  shift
+  shift
+  goto :parse_args
+)
+if /i "%~1"=="--i0" (
+  set "RUN_ONE_I0=%~2"
   shift
   shift
   goto :parse_args
@@ -112,7 +119,7 @@ if /i "%~1"=="-h" goto :usage
 
 echo.[error] Unknown option: %~1
 :usage
-echo Usage: run_one.cmd --t ^<K^> --eps ^<float^> --tau ^<float^> [--seed ^<int^>]
+echo Usage: run_one.cmd --t ^<K^> --eps ^<float^> --tau ^<float^> --i0 ^<float^> [--seed ^<int^>]
  echo.            [--config ^<path^>] [--overrides ^<path^>] [--out-root ^<path^>]
  echo.            [--0d] [--dry-run] [--no-plot] [--no-eval] [--preflight-only]
 exit /b 1
@@ -128,6 +135,10 @@ if not defined RUN_ONE_EPS (
 )
 if not defined RUN_ONE_TAU (
   echo.[error] --tau is required
+  goto :usage
+)
+if not defined RUN_ONE_I0 (
+  echo.[error] --i0 is required
   goto :usage
 )
 
@@ -164,6 +175,7 @@ set "EXTRA_OVERRIDES_FILE=%OVERRIDES_PATH%"
 set "RUN_ONE_T=%RUN_ONE_T%"
 set "RUN_ONE_EPS=%RUN_ONE_EPS%"
 set "RUN_ONE_TAU=%RUN_ONE_TAU%"
+set "RUN_ONE_I0=%RUN_ONE_I0%"
 if not defined SWEEP_TAG set "SWEEP_TAG=temp_supply_run_one"
 set "GEOMETRY_MODE=%GEOMETRY_MODE%"
 if not defined GEOMETRY_NR set "GEOMETRY_NR=32"

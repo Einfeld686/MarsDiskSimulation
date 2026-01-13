@@ -553,12 +553,9 @@ if /i "%SUPPLY_TRANSPORT_TMIX_ORBITS%"=="off" set "SUPPLY_TRANSPORT_TMIX_ORBITS=
 set "T_LIST=4000 3000"
 set "EPS_LIST=1.0 0.5"
 set "TAU_LIST=1.0 0.5"
+set "I0_LIST=0.05 0.10"
 if not defined EXTRA_CASES (
-  if defined STUDY_FILE (
-    set "EXTRA_CASES="
-  ) else (
-    set "EXTRA_CASES=4000,1.5,1.0;3000,1.5,1.0"
-  )
+  set "EXTRA_CASES="
 )
 
 if defined STUDY_FILE (
@@ -591,6 +588,7 @@ if /i "%END_MODE%"=="temperature" (
 call :sanitize_list T_LIST
 call :sanitize_list EPS_LIST
 call :sanitize_list TAU_LIST
+call :sanitize_list I0_LIST
 
 set "BATCH_DIR=!BATCH_ROOT!\!SWEEP_TAG!\!RUN_TS!__!GIT_SHA!__seed!BATCH_SEED!"
 if not exist "!BATCH_DIR!" mkdir "!BATCH_DIR!" >nul 2>&1
@@ -693,6 +691,7 @@ if defined CPU_UTIL_TARGET_PERCENT if /i not "%PARALLEL_MODE%"=="numba" (
 %LOG_CONFIG% geometry: mode=%GEOMETRY_MODE% Nr=%GEOMETRY_NR% r_in_m=%GEOMETRY_R_IN_M% r_out_m=%GEOMETRY_R_OUT_M%
 %LOG_CONFIG% external supply: mu_orbit10pct=%SUPPLY_MU_ORBIT10PCT% mu_reference_tau=%SUPPLY_MU_REFERENCE_TAU% orbit_fraction_at_mu1=%SUPPLY_ORBIT_FRACTION% (epsilon_mix swept per EPS_LIST)
 %LOG_CONFIG% optical_depth: tau0_target_list=%TAU_LIST% tau_stop=%OPTICAL_TAU_STOP% tau_stop_tol=%OPTICAL_TAU_STOP_TOL%
+%LOG_CONFIG% dynamics: i0_list=%I0_LIST%
 if defined EXTRA_CASES %LOG_CONFIG% extra cases: %EXTRA_CASES%
 %LOG_CONFIG% fast blowout substep: enabled=%SUBSTEP_FAST_BLOWOUT% substep_max_ratio=%SUBSTEP_MAX_RATIO%
 %LOG_CONFIG% !COOL_STATUS!
@@ -723,7 +722,12 @@ if defined RUN_ONE_MODE (
     call :popd_safe
     exit /b 1
   )
-  %LOG_INFO% run-one mode: T=%RUN_ONE_T% eps=%RUN_ONE_EPS% tau=%RUN_ONE_TAU% seed=%RUN_ONE_SEED%
+  if not defined RUN_ONE_I0 (
+    echo.[error] RUN_ONE_I0 is required for --run-one
+    call :popd_safe
+    exit /b 1
+  )
+  %LOG_INFO% run-one mode: T=%RUN_ONE_T% eps=%RUN_ONE_EPS% tau=%RUN_ONE_TAU% i0=%RUN_ONE_I0% seed=%RUN_ONE_SEED%
   call :trace_detail "run-one: dispatch to run_one.py"
   call "%PYTHON_EXEC_CMD%" scripts\\runsets\\common\\run_one.py
   set "RUN_ONE_RC=!errorlevel!"
@@ -815,18 +819,21 @@ rem ---------- main loops ----------
 echo.[DEBUG] Entering main loops (sequential execution)
 call :trace "entering main loops"
 set "HAS_CASE=0"
-for /f "usebackq tokens=1-3 delims= " %%A in ("%SWEEP_LIST_FILE%") do (
+for /f "usebackq tokens=1-4 delims= " %%A in ("%SWEEP_LIST_FILE%") do (
   set "HAS_CASE=1"
   set "T=%%A"
   set "EPS=%%B"
   set "TAU=%%C"
+  set "I0=%%D"
   call :validate_token T "!T!"
   if !errorlevel! geq 1 goto :abort
   call :validate_token EPS "!EPS!"
   if !errorlevel! geq 1 goto :abort
   call :validate_token TAU "!TAU!"
   if !errorlevel! geq 1 goto :abort
-  call :trace "case start T=%%A EPS=%%B TAU=%%C"
+  call :validate_token I0 "!I0!"
+  if !errorlevel! geq 1 goto :abort
+  call :trace "case start T=%%A EPS=%%B TAU=%%C I0=%%D"
   set "T_TABLE=data/mars_temperature_T!T!p0K.csv"
   set "EPS_TITLE=!EPS!"
   set "EPS_TITLE=!EPS_TITLE:0.=0p!"
@@ -834,16 +841,19 @@ for /f "usebackq tokens=1-3 delims= " %%A in ("%SWEEP_LIST_FILE%") do (
   set "TAU_TITLE=!TAU!"
   set "TAU_TITLE=!TAU_TITLE:0.=0p!"
   set "TAU_TITLE=!TAU_TITLE:.=p!"
+  set "I0_TITLE=!I0!"
+  set "I0_TITLE=!I0_TITLE:0.=0p!"
+  set "I0_TITLE=!I0_TITLE:.=p!"
   if defined SEED_OVERRIDE (
     set "SEED=%SEED_OVERRIDE%"
   ) else (
     for /f %%S in ('call "%PYTHON_EXEC_CMD%" scripts\\runsets\\common\\next_seed.py') do set "SEED=%%S"
   )
-  set "TITLE=T!T!_eps!EPS_TITLE!_tau!TAU_TITLE!"
+  set "TITLE=T!T!_eps!EPS_TITLE!_tau!TAU_TITLE!_i0!I0_TITLE!"
   set "OUTDIR_REL=!BATCH_DIR!\!TITLE!"
   rem Convert to absolute path to avoid double-backslash issues
   for %%I in ("!OUTDIR_REL!") do set "OUTDIR=%%~fI"
-  %LOG_RUN% T=!T! eps=!EPS! tau=!TAU! -^> !OUTDIR! ^(batch=!BATCH_SEED!, seed=!SEED!^)
+  %LOG_RUN% T=!T! eps=!EPS! tau=!TAU! i0=!I0! -^> !OUTDIR! ^(batch=!BATCH_SEED!, seed=!SEED!^)
       rem Show supply rate info (skip Python calc to avoid cmd.exe delayed expansion issues)
       %LOG_INFO% epsilon_mix=!EPS!; mu_orbit10pct=%SUPPLY_MU_ORBIT10PCT% orbit_fraction_at_mu1=%SUPPLY_ORBIT_FRACTION%
       %LOG_INFO% shielding: mode=%SHIELDING_MODE% fixed_tau1_sigma=%SHIELDING_SIGMA% auto_max_margin=%SHIELDING_AUTO_MAX_MARGIN%
@@ -857,6 +867,7 @@ for /f "usebackq tokens=1-3 delims= " %%A in ("%SWEEP_LIST_FILE%") do (
       >>"!CASE_OVERRIDES_FILE!" echo radiation.TM_K=!T!
       >>"!CASE_OVERRIDES_FILE!" echo supply.mixing.epsilon_mix=!EPS!
       >>"!CASE_OVERRIDES_FILE!" echo optical_depth.tau0_target=!TAU!
+      >>"!CASE_OVERRIDES_FILE!" echo dynamics.i0=!I0!
       if /i "!COOL_MODE!" NEQ "hyodo" (
         >>"!CASE_OVERRIDES_FILE!" echo radiation.mars_temperature_driver.table.path=!T_TABLE!
       )
@@ -1113,8 +1124,8 @@ if "%SWEEP_PROGRESS%"=="1" (
     call :progress_update
   )
 )
-for /f "usebackq tokens=1-3 delims= " %%A in ("!SWEEP_LIST_FILE!") do (
-  call :launch_job %%A %%B %%C
+for /f "usebackq tokens=1-4 delims= " %%A in ("!SWEEP_LIST_FILE!") do (
+  call :launch_job %%A %%B %%C %%D
 )
 
 call :wait_all
@@ -1125,6 +1136,7 @@ exit /b 0
 set "JOB_T=%~1"
 set "JOB_EPS=%~2"
 set "JOB_TAU=%~3"
+set "JOB_I0=%~4"
 set "JOB_SEED_TMP="
 if "%DEBUG%"=="1" echo.[DEBUG] launch_job: PYTHON_CMD=!PYTHON_CMD!
 if "%DEBUG%"=="1" echo.[DEBUG] launch_job: NEXT_SEED_PY=!NEXT_SEED_PY!
@@ -1143,11 +1155,12 @@ call :wait_for_slot
 if "%DEBUG%"=="1" echo.[DEBUG] launch_job: after wait_for_slot
 set "JOB_PID="
 rem Generate a proper batch file with env vars on separate lines (avoids escaping issues)
-set "JOB_CMD_FILE=!TMP_ROOT!\marsdisk_job_!JOB_T!_!JOB_EPS!_!JOB_TAU!.cmd"
+set "JOB_CMD_FILE=!TMP_ROOT!\marsdisk_job_!JOB_T!_!JOB_EPS!_!JOB_TAU!_!JOB_I0!.cmd"
 > "!JOB_CMD_FILE!" echo @echo off
 >> "!JOB_CMD_FILE!" echo set "RUN_ONE_T=!JOB_T!"
 >> "!JOB_CMD_FILE!" echo set "RUN_ONE_EPS=!JOB_EPS!"
 >> "!JOB_CMD_FILE!" echo set "RUN_ONE_TAU=!JOB_TAU!"
+>> "!JOB_CMD_FILE!" echo set "RUN_ONE_I0=!JOB_I0!"
 >> "!JOB_CMD_FILE!" echo set "RUN_ONE_SEED=!JOB_SEED!"
 >> "!JOB_CMD_FILE!" echo set "RUN_ONE_MODE=1"
 >> "!JOB_CMD_FILE!" echo set "AUTO_JOBS=0"
@@ -1196,16 +1209,16 @@ if defined JOB_PID (
     rem Check if JOB_PID is a number
     echo !JOB_PID!| findstr /r "^[0-9][0-9]*$" >nul
     if !errorlevel! geq 1 (
-        echo.[warn] failed to launch job for T=!JOB_T! eps=!JOB_EPS! tau=!JOB_TAU! - output: !JOB_PID!
+        echo.[warn] failed to launch job for T=!JOB_T! eps=!JOB_EPS! tau=!JOB_TAU! i0=!JOB_I0! - output: !JOB_PID!
         set "JOB_PID="
         if "%SWEEP_PROGRESS%"=="1" set /a PROGRESS_FAILED+=1
     ) else (
         set "JOB_PIDS=!JOB_PIDS! !JOB_PID!"
         set /a JOB_COUNT+=1
-        echo.[info] launched job T=!JOB_T! eps=!JOB_EPS! tau=!JOB_TAU! PID=!JOB_PID!
+        echo.[info] launched job T=!JOB_T! eps=!JOB_EPS! tau=!JOB_TAU! i0=!JOB_I0! PID=!JOB_PID!
     )
 ) else (
-    echo.[warn] failed to launch job for T=!JOB_T! eps=!JOB_EPS! tau=!JOB_TAU! - no PID returned
+    echo.[warn] failed to launch job for T=!JOB_T! eps=!JOB_EPS! tau=!JOB_TAU! i0=!JOB_I0! - no PID returned
     if "%SWEEP_PROGRESS%"=="1" set /a PROGRESS_FAILED+=1
 )
 if "%SWEEP_PROGRESS%"=="1" (

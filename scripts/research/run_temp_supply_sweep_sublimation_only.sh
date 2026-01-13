@@ -4,9 +4,10 @@
 # epsilon_mix = {1.0, 0.5}
 # mu_orbit10pct = 1.0 (1 orbit supplies 5% of Sigma_ref(tau=1); scaled by orbit_fraction_at_mu1)
 # tau0_target = {1.0, 0.5}
-# extra cases: (T, epsilon_mix, tau0_target) = (4000, 1.5, 1.0), (3000, 1.5, 1.0)
+# dynamics.i0 = {0.05, 0.10}
+# extra cases: none (set EXTRA_CASES for optional quadruples)
 # material defaults: forsterite via configs/overrides/material_forsterite.override
-# Outputs under: out/temp_supply_sweep/<ts>__<sha>__seed<BATCH>/T{T}_eps{eps}_tau{tau}_mode-sublimation_only/
+# Outputs under: out/temp_supply_sweep/<ts>__<sha>__seed<BATCH>/T{T}_eps{eps}_tau{tau}_i0{i0}_mode-sublimation_only/
 
 set -euo pipefail
 
@@ -53,7 +54,8 @@ fi
 T_LIST=("4000" "3000")
 EPS_LIST=("1.0" "0.5")
 TAU_LIST=("1.0" "0.5")
-EXTRA_CASES_DEFAULT="4000 1.5 1.0 3000 1.5 1.0"
+I0_LIST=("0.05" "0.10")
+EXTRA_CASES_DEFAULT=""
 if [[ -n "${EXTRA_CASES+x}" ]]; then
   EXTRA_CASES_VALUE="${EXTRA_CASES}"
 else
@@ -68,22 +70,27 @@ CASE_KEYS=()
 CASE_T=()
 CASE_EPS=()
 CASE_TAU=()
+CASE_I0=()
 
 add_case() {
   local t="$1"
   local eps="$2"
   local tau="$3"
-  local key="${t}|${eps}|${tau}"
+  local i0="$4"
+  local key="${t}|${eps}|${tau}|${i0}"
   local existing
-  for existing in "${CASE_KEYS[@]}"; do
-    if [[ "${existing}" == "${key}" ]]; then
-      return 1
-    fi
-  done
+  if (( ${#CASE_KEYS[@]} )); then
+    for existing in "${CASE_KEYS[@]}"; do
+      if [[ "${existing}" == "${key}" ]]; then
+        return 1
+      fi
+    done
+  fi
   CASE_KEYS+=("${key}")
   CASE_T+=("${t}")
   CASE_EPS+=("${eps}")
   CASE_TAU+=("${tau}")
+  CASE_I0+=("${i0}")
   return 0
 }
 
@@ -99,20 +106,22 @@ append_extra_cases() {
   if (( count == 0 )); then
     return 0
   fi
-  if (( count % 3 != 0 )); then
-    echo "[warn] EXTRA_CASES expects triples; got ${count} tokens"
+  if (( count % 4 != 0 )); then
+    echo "[warn] EXTRA_CASES expects quadruples; got ${count} tokens"
   fi
   local idx=0
-  while (( idx + 2 < count )); do
-    add_case "${tokens[idx]}" "${tokens[idx + 1]}" "${tokens[idx + 2]}" || true
-    idx=$((idx + 3))
+  while (( idx + 3 < count )); do
+    add_case "${tokens[idx]}" "${tokens[idx + 1]}" "${tokens[idx + 2]}" "${tokens[idx + 3]}" || true
+    idx=$((idx + 4))
   done
 }
 
 for T in "${T_LIST[@]}"; do
   for EPS in "${EPS_LIST[@]}"; do
     for TAU in "${TAU_LIST[@]}"; do
-      add_case "${T}" "${EPS}" "${TAU}" || true
+      for I0 in "${I0_LIST[@]}"; do
+        add_case "${T}" "${EPS}" "${TAU}" "${I0}" || true
+      done
     done
   done
 done
@@ -139,19 +148,22 @@ for idx in "${!CASE_T[@]}"; do
   T="${CASE_T[$idx]}"
   EPS="${CASE_EPS[$idx]}"
   TAU="${CASE_TAU[$idx]}"
+  I0="${CASE_I0[$idx]}"
   T_TABLE="data/mars_temperature_T${T}p0K.csv"
   EPS_TITLE="${EPS/0./0p}"
   EPS_TITLE="${EPS_TITLE/./p}"
   TAU_TITLE="${TAU/0./0p}"
   TAU_TITLE="${TAU_TITLE/./p}"
+  I0_TITLE="${I0/0./0p}"
+  I0_TITLE="${I0_TITLE/./p}"
   SEED=$(python - <<'PY'
 import secrets
 print(secrets.randbelow(2**31))
 PY
 )
-  TITLE="T${T}_eps${EPS_TITLE}_tau${TAU_TITLE}_mode-${MODE}"
+  TITLE="T${T}_eps${EPS_TITLE}_tau${TAU_TITLE}_i0${I0_TITLE}_mode-${MODE}"
   OUTDIR="${BATCH_DIR}/${TITLE}"
-  echo "[run] mode=${MODE} T=${T} eps=${EPS} tau=${TAU} -> ${OUTDIR} (batch=${BATCH_SEED}, seed=${SEED})"
+  echo "[run] mode=${MODE} T=${T} eps=${EPS} tau=${TAU} i0=${I0} -> ${OUTDIR} (batch=${BATCH_SEED}, seed=${SEED})"
   python -m marsdisk.run \
     --config "${BASE_CONFIG}" \
     "${EXTRA_OVERRIDE_ARGS[@]}" \
@@ -166,6 +178,7 @@ PY
     --override "supply.const.mu_orbit10pct=${SUPPLY_MU_ORBIT10PCT}" \
     --override "supply.const.orbit_fraction_at_mu1=${SUPPLY_ORBIT_FRACTION}" \
     --override "optical_depth.tau0_target=${TAU}" \
+    --override "dynamics.i0=${I0}" \
     --override "shielding.mode=off" \
     --override "physics_mode=${MODE}"
 
@@ -218,6 +231,8 @@ series_cols = [
     "prod_subblow_area_rate",
     "Sigma_surf",
     "outflux_surface",
+    "cell_index",
+    "r_RM",
 ]
 
 summary = {}
@@ -228,27 +243,69 @@ if summary_path.exists():
         summary = {}
 
 df = pd.read_parquet(series_path, columns=series_cols)
-n = len(df)
-step = max(n // 4000, 1)
-df = df.iloc[::step].copy()
-df["time_days"] = df["time"] / 86400.0
+
+def _series_label(tag, r_rm):
+    if r_rm is None:
+        return tag
+    return f"{tag} r_RM={r_rm:.3f}"
+
+
+def _series_sets(df):
+    if "cell_index" not in df.columns or "r_RM" not in df.columns:
+        return [("0D", None, df)]
+    cells = (
+        df[["cell_index", "r_RM"]]
+        .dropna()
+        .drop_duplicates()
+        .sort_values("r_RM")
+    )
+    if cells.empty:
+        return [("0D", None, df)]
+    inner = cells.iloc[0]
+    outer = cells.iloc[-1]
+    rings = [("inner", int(inner["cell_index"]), float(inner["r_RM"]))]
+    if int(outer["cell_index"]) != int(inner["cell_index"]):
+        rings.append(("outer", int(outer["cell_index"]), float(outer["r_RM"])))
+    series_sets = []
+    for tag, cell_idx, r_rm in rings:
+        ring_df = df[df["cell_index"] == cell_idx].copy()
+        if "time" in ring_df.columns:
+            ring_df = ring_df.sort_values("time")
+            ring_df = ring_df.groupby("time", as_index=False).first()
+        series_sets.append((tag, r_rm, ring_df))
+    return series_sets
+
+
+series_sets = []
+for tag, r_rm, sdf in _series_sets(df):
+    n = len(sdf)
+    step = max(n // 4000, 1)
+    sdf = sdf.iloc[::step].copy()
+    sdf["time_days"] = sdf["time"] / 86400.0
+    series_sets.append((tag, r_rm, sdf))
 
 fig, axes = plt.subplots(3, 1, figsize=(10, 12), sharex=True)
-axes[0].plot(df["time_days"], df["M_out_dot"], label="M_out_dot (blowout)", lw=1.2)
-axes[0].plot(df["time_days"], df["M_sink_dot"], label="M_sink_dot (sinks)", lw=1.0, alpha=0.7)
+for tag, r_rm, sdf in series_sets:
+    label = _series_label(tag, r_rm)
+    axes[0].plot(sdf["time_days"], sdf["M_out_dot"], label=f"M_out_dot (blowout) ({label})", lw=1.2)
+    axes[0].plot(sdf["time_days"], sdf["M_sink_dot"], label=f"M_sink_dot (sinks) ({label})", lw=1.0, alpha=0.7)
 axes[0].set_ylabel("M_Mars / s")
 axes[0].legend(loc="upper right")
 axes[0].set_title("Mass loss rates")
 
-axes[1].plot(df["time_days"], df["M_loss_cum"], label="M_loss_cum (total)", lw=1.2)
-axes[1].plot(df["time_days"], df["mass_lost_by_blowout"], label="mass_lost_by_blowout", lw=1.0)
-axes[1].plot(df["time_days"], df["mass_lost_by_sinks"], label="mass_lost_by_sinks", lw=1.0)
+for tag, r_rm, sdf in series_sets:
+    label = _series_label(tag, r_rm)
+    axes[1].plot(sdf["time_days"], sdf["M_loss_cum"], label=f"M_loss_cum (total) ({label})", lw=1.2)
+    axes[1].plot(sdf["time_days"], sdf["mass_lost_by_blowout"], label=f"mass_lost_by_blowout ({label})", lw=1.0)
+    axes[1].plot(sdf["time_days"], sdf["mass_lost_by_sinks"], label=f"mass_lost_by_sinks ({label})", lw=1.0)
 axes[1].set_ylabel("M_Mars")
 axes[1].legend(loc="upper left")
 axes[1].set_title("Cumulative losses")
 
-axes[2].plot(df["time_days"], df["s_min"], label="s_min", lw=1.0)
-axes[2].plot(df["time_days"], df["a_blow"], label="a_blow", lw=1.0, alpha=0.8)
+for tag, r_rm, sdf in series_sets:
+    label = _series_label(tag, r_rm)
+    axes[2].plot(sdf["time_days"], sdf["s_min"], label=f"s_min ({label})", lw=1.0)
+    axes[2].plot(sdf["time_days"], sdf["a_blow"], label=f"a_blow ({label})", lw=1.0, alpha=0.8)
 axes[2].set_ylabel("m")
 axes[2].set_xlabel("days")
 axes[2].set_yscale("log")

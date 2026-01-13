@@ -17,7 +17,8 @@ rem --- Initial setup ---
 if not defined PYTHON_EXE (
     set "RUNSETS_COMMON_DIR=!REPO_ROOT!\scripts\runsets\common"
     call "!RUNSETS_COMMON_DIR!\resolve_python.cmd"
-    if !errorlevel! neq 0 (
+    set "PYTHON_RC=!errorlevel!"
+    if defined PYTHON_RC if !PYTHON_RC! neq 0 (
         echo.[error] Python resolution failed
         exit /b 1
     )
@@ -31,6 +32,7 @@ set "BATCH_SEED=0"
 set "RUN_ONE_T=3000"
 set "RUN_ONE_EPS=1.0"
 set "RUN_ONE_TAU=1.0"
+set "RUN_ONE_I0=0.05"
 set "RUN_ONE_SEED=12345"
 set "SWEEP_TAG=debug_parallel"
 set "GEOMETRY_MODE=1D"
@@ -50,6 +52,7 @@ echo.[info] Test parameters:
 echo.  RUN_ONE_T=!RUN_ONE_T!
 echo.  RUN_ONE_EPS=!RUN_ONE_EPS!
 echo.  RUN_ONE_TAU=!RUN_ONE_TAU!
+echo.  RUN_ONE_I0=!RUN_ONE_I0!
 echo.  BASE_CONFIG=!BASE_CONFIG!
 echo.  BATCH_ROOT=!BATCH_ROOT!
 echo.
@@ -69,7 +72,9 @@ echo.[status] Starting simulation...
 echo.         This may take a few minutes. Check !LOG_FILE! for live progress.
 echo.
 
-call scripts\research\run_temp_supply_sweep.cmd --run-one >> "!LOG_FILE!" 2>&1
+(
+    call scripts\research\run_temp_supply_sweep.cmd --run-one
+) >> "!LOG_FILE!" 2>&1
 set "RC=!errorlevel!"
 
 echo. >> "!LOG_FILE!" 2>&1

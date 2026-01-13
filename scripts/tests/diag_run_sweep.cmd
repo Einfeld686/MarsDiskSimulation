@@ -65,8 +65,9 @@ rem --- Step 5: Python resolution ---
 echo.[Step 5] Python Resolution
 echo.  Calling resolve_python.cmd...
 call "!COMMON_DIR!\resolve_python.cmd"
-if !errorlevel! neq 0 (
-    echo.  [FAIL] resolve_python.cmd failed with errorlevel=!errorlevel!
+set "STEP5_RC=!errorlevel!"
+if not "!STEP5_RC!"=="0" (
+    echo.  [FAIL] resolve_python.cmd failed with errorlevel=!STEP5_RC!
     goto :summary
 )
 echo.  [OK] resolve_python.cmd succeeded
@@ -81,7 +82,8 @@ if defined PYTHON_ARGS (
 ) else (
     "!PYTHON_EXE!" --version
 )
-if !errorlevel! neq 0 (
+set "STEP6_RC=!errorlevel!"
+if not "!STEP6_RC!"=="0" (
     echo.  [FAIL] Python version check failed
     goto :summary
 )
@@ -104,13 +106,13 @@ rem --- Step 8: Import marsdisk ---
 echo.[Step 8] Import marsdisk Module
 pushd "!REPO_ROOT!"
 call "!PYTHON_EXEC_CMD!" -c "import marsdisk; print('marsdisk version:', getattr(marsdisk, '__version__', 'unknown'))"
-if !errorlevel! neq 0 (
+set "STEP8_RC=!errorlevel!"
+popd
+if not "!STEP8_RC!"=="0" (
     echo.  [FAIL] Cannot import marsdisk
-    popd
     goto :summary
 )
 echo.  [OK] marsdisk import succeeded
-popd
 echo.
 
 rem --- Step 9: Check config file ---
@@ -118,13 +120,13 @@ echo.[Step 9] Config File Validation
 set "CONFIG_PATH=!COMMON_DIR!\base.yml"
 pushd "!REPO_ROOT!"
 call "!PYTHON_EXEC_CMD!" -c "import yaml; yaml.safe_load(open(r'!CONFIG_PATH!'))"
-if !errorlevel! neq 0 (
+set "STEP9_RC=!errorlevel!"
+popd
+if not "!STEP9_RC!"=="0" (
     echo.  [FAIL] Config file invalid or cannot be parsed
-    popd
     goto :summary
 )
 echo.  [OK] Config file is valid YAML
-popd
 echo.
 
 rem --- Step 10: Check Python helper scripts ---

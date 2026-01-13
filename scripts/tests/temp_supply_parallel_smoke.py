@@ -59,6 +59,7 @@ def _run_case(
     t_value: str,
     eps_value: str,
     tau_value: str,
+    i0_value: str,
     script_path: Path,
     env: Dict[str, str],
     log_dir: Path,
@@ -87,6 +88,7 @@ def _run_case(
         "t": t_value,
         "eps": eps_value,
         "tau": tau_value,
+        "i0": i0_value,
         "returncode": result.returncode,
         "outdir": str(outdir) if outdir else None,
         "summary_exists": summary_ok,
@@ -95,8 +97,8 @@ def _run_case(
     }
 
 
-def _build_case_id(t_value: str, eps_value: str, tau_value: str) -> str:
-    return f"T{t_value}_eps{eps_value}_tau{tau_value}".replace(".", "p")
+def _build_case_id(t_value: str, eps_value: str, tau_value: str, i0_value: str) -> str:
+    return f"T{t_value}_eps{eps_value}_tau{tau_value}_i0{i0_value}".replace(".", "p")
 
 
 def main() -> int:
@@ -115,6 +117,7 @@ def main() -> int:
     )
     ap.add_argument("--jobs", type=int, default=2, help="Concurrent jobs to run.")
     ap.add_argument("--t-end-years", type=float, default=2.0e-4, help="Short integration span.")
+    ap.add_argument("--i0", default="0.05", help="dynamics.i0 for run-one cases.")
     ap.add_argument(
         "--case",
         action="append",
@@ -168,13 +171,14 @@ def main() -> int:
     with ThreadPoolExecutor(max_workers=max(1, args.jobs)) as executor:
         future_map = {}
         for t_value, eps_value, tau_value in cases:
-            case_id = _build_case_id(t_value, eps_value, tau_value)
+            case_id = _build_case_id(t_value, eps_value, tau_value, str(args.i0))
             env = dict(common_env)
             env.update(
                 {
                     "RUN_ONE_T": t_value,
                     "RUN_ONE_EPS": eps_value,
                     "RUN_ONE_TAU": tau_value,
+                    "RUN_ONE_I0": str(args.i0),
                 }
             )
             future = executor.submit(
@@ -183,6 +187,7 @@ def main() -> int:
                 t_value=t_value,
                 eps_value=eps_value,
                 tau_value=tau_value,
+                i0_value=str(args.i0),
                 script_path=script_path,
                 env=env,
                 log_dir=log_dir,

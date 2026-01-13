@@ -6,7 +6,7 @@ set -euo pipefail
 usage() {
   cat <<'USAGE'
 Usage:
-  run_one.sh --t <K> --eps <float> --tau <float> [--seed <int>]
+  run_one.sh --t <K> --eps <float> --tau <float> --i0 <float> [--seed <int>]
              [--config <path>] [--overrides <path>] [--out-root <path>]
              [--0d] [--dry-run] [--no-plot] [--no-eval] [--no-preflight]
 USAGE
@@ -21,6 +21,7 @@ OUT_ROOT=""
 RUN_ONE_T=""
 RUN_ONE_EPS=""
 RUN_ONE_TAU=""
+RUN_ONE_I0=""
 RUN_ONE_SEED=""
 GEOMETRY_MODE="1D"
 DRY_RUN=0
@@ -40,6 +41,10 @@ while [[ $# -gt 0 ]]; do
       ;;
     --tau)
       RUN_ONE_TAU="$2"
+      shift 2
+      ;;
+    --i0)
+      RUN_ONE_I0="$2"
       shift 2
       ;;
     --seed)
@@ -90,8 +95,8 @@ while [[ $# -gt 0 ]]; do
   esac
  done
 
-if [[ -z "${RUN_ONE_T}" || -z "${RUN_ONE_EPS}" || -z "${RUN_ONE_TAU}" ]]; then
-  echo "[error] --t, --eps, --tau are required" >&2
+if [[ -z "${RUN_ONE_T}" || -z "${RUN_ONE_EPS}" || -z "${RUN_ONE_TAU}" || -z "${RUN_ONE_I0}" ]]; then
+  echo "[error] --t, --eps, --tau, --i0 are required" >&2
   usage
   exit 1
 fi
@@ -148,6 +153,7 @@ export EXTRA_OVERRIDES_FILE="${OVERRIDES_PATH}"
 export RUN_ONE_T="${RUN_ONE_T}"
 export RUN_ONE_EPS="${RUN_ONE_EPS}"
 export RUN_ONE_TAU="${RUN_ONE_TAU}"
+export RUN_ONE_I0="${RUN_ONE_I0}"
 export SWEEP_TAG="${SWEEP_TAG:-temp_supply_run_one}"
 export GEOMETRY_MODE="${GEOMETRY_MODE}"
 export GEOMETRY_NR="${GEOMETRY_NR:-32}"

@@ -10,12 +10,12 @@ echo ============================================
 echo.
 
 rem Get script directory
-for %%I in ("%~f0") do set "SCRIPT_DIR=%%~dpI"
-echo [DEBUG] SCRIPT_DIR=%SCRIPT_DIR%
+set "SCRIPT_DIR=%~dp0"
+echo [DEBUG] SCRIPT_DIR=!SCRIPT_DIR!
 rem scripts\tests\ -> go up 2 levels to repo root
-cd /d "%SCRIPT_DIR%"
-cd ..\..
+pushd "!SCRIPT_DIR!\..\.." >nul
 set "REPO_ROOT=%CD%"
+set "POPD_ACTIVE=1"
 echo [INFO] Repo root: %REPO_ROOT%
 set "COMMON_DIR=%REPO_ROOT%\scripts\runsets\common"
 if not exist "%COMMON_DIR%\resolve_python.cmd" (
@@ -23,13 +23,13 @@ if not exist "%COMMON_DIR%\resolve_python.cmd" (
     exit /b 1
 )
 call "%COMMON_DIR%\resolve_python.cmd"
-if errorlevel 1 exit /b 1
+if not "!errorlevel!"=="0" exit /b 1
 echo [INFO] Python: !PYTHON_CMD!
 
 set "WIN_PROCESS_PY=%REPO_ROOT%\scripts\runsets\common\win_process.py"
 echo [INFO] win_process.py: %WIN_PROCESS_PY%
 
-if not exist "%WIN_PROCESS_PY%" (
+if not exist "!WIN_PROCESS_PY!" (
     echo [DEBUG] Trying alternative path detection...
     rem Try finding from current directory
     if exist "scripts\runsets\common\win_process.py" (
@@ -97,8 +97,9 @@ set "BATCH_SEED=0"
 set "JOB_T=5000"
 set "JOB_EPS=1.0"
 set "JOB_TAU=1.0"
+set "JOB_I0=0.05"
 set "JOB_SEED=12345"
-set "JOB_CMD=set RUN_TS=!RUN_TS!&& set BATCH_SEED=!BATCH_SEED!&& set RUN_ONE_T=!JOB_T!&& set RUN_ONE_EPS=!JOB_EPS!&& set RUN_ONE_TAU=!JOB_TAU!&& set RUN_ONE_SEED=!JOB_SEED!&& echo SIMULATED_JOB_LAUNCH"
+set "JOB_CMD=set RUN_TS=!RUN_TS!&& set BATCH_SEED=!BATCH_SEED!&& set RUN_ONE_T=!JOB_T!&& set RUN_ONE_EPS=!JOB_EPS!&& set RUN_ONE_TAU=!JOB_TAU!&& set RUN_ONE_I0=!JOB_I0!&& set RUN_ONE_SEED=!JOB_SEED!&& echo SIMULATED_JOB_LAUNCH"
 echo [INFO] JOB_CMD=!JOB_CMD!
 
 set "PID_FILE=!TMP_ROOT!\test_pid_!JOB_T!_!JOB_EPS!_!JOB_TAU!.tmp"
@@ -108,13 +109,13 @@ echo !JOB_CMD!| !PYTHON_CMD! "!WIN_PROCESS_PY!" launch --cmd-stdin > "!PID_FILE!
 echo [INFO] Command exit code: !errorlevel!
 
 if exist "!PID_FILE!" (
-    set /p JOB_PID_TMP=<"!PID_FILE!"
+    for /f "usebackq delims=" %%P in ("!PID_FILE!") do set "JOB_PID_TMP=%%P"
     echo [INFO] PID file content: !JOB_PID_TMP!
     del "!PID_FILE!" >nul 2>&1
     
     rem Check if it's a number
     echo !JOB_PID_TMP!| findstr /r "^[0-9][0-9]*$" >nul
-    if errorlevel 1 (
+    if not "!errorlevel!"=="0" (
         echo [FAIL] Not a valid PID: !JOB_PID_TMP!
     ) else (
         echo [PASS] Valid PID: !JOB_PID_TMP!
@@ -133,10 +134,10 @@ for %%T in (5000 4000 3000) do (
     set "PID_FILE=!TMP_ROOT!\test_pid_%%T.tmp"
     echo !JOB_CMD!| !PYTHON_CMD! "!WIN_PROCESS_PY!" launch --cmd-stdin > "!PID_FILE!" 2>&1
     if exist "!PID_FILE!" (
-        set /p TEMP_PID=<"!PID_FILE!"
+        for /f "usebackq delims=" %%P in ("!PID_FILE!") do set "TEMP_PID=%%P"
         del "!PID_FILE!" >nul 2>&1
         echo !TEMP_PID!| findstr /r "^[0-9][0-9]*$" >nul
-        if not errorlevel 1 (
+        if "!errorlevel!"=="0" (
             set "PIDS=!PIDS! !TEMP_PID!"
             echo [INFO] Launched T=%%T with PID=!TEMP_PID!
         ) else (
@@ -153,4 +154,8 @@ echo ============================================
 echo All tests completed
 echo ============================================
 
+if defined POPD_ACTIVE (
+    popd
+    set "POPD_ACTIVE="
+)
 endlocal

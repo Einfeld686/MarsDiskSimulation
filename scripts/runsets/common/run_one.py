@@ -68,6 +68,7 @@ def main() -> int:
     ap.add_argument("--t", dest="t_value", default=None)
     ap.add_argument("--eps", dest="eps_value", default=None)
     ap.add_argument("--tau", dest="tau_value", default=None)
+    ap.add_argument("--i0", dest="i0_value", default=None)
     ap.add_argument("--seed", dest="seed_value", default=None)
     ap.add_argument("--run-ts", default=None)
     ap.add_argument("--batch-seed", default=None)
@@ -108,6 +109,7 @@ def main() -> int:
     run_one_t = args.t_value or _env("RUN_ONE_T")
     run_one_eps = args.eps_value or _env("RUN_ONE_EPS")
     run_one_tau = args.tau_value or _env("RUN_ONE_TAU")
+    run_one_i0 = args.i0_value or _env("RUN_ONE_I0")
     if not run_one_t:
         log_error("RUN_ONE_T is required for run_one.py")
         return 1
@@ -116,6 +118,9 @@ def main() -> int:
         return 1
     if not run_one_tau:
         log_error("RUN_ONE_TAU is required for run_one.py")
+        return 1
+    if not run_one_i0:
+        log_error("RUN_ONE_I0 is required for run_one.py")
         return 1
 
     run_one_seed = args.seed_value or _env("RUN_ONE_SEED")
@@ -202,7 +207,8 @@ def main() -> int:
 
     eps_title = _format_title_token(run_one_eps)
     tau_title = _format_title_token(run_one_tau)
-    title = f"T{run_one_t}_eps{eps_title}_tau{tau_title}"
+    i0_title = _format_title_token(run_one_i0)
+    title = f"T{run_one_t}_eps{eps_title}_tau{tau_title}_i0{i0_title}"
     outdir_rel = batch_dir / title
     outdir = outdir_rel.resolve()
     (outdir / "series").mkdir(parents=True, exist_ok=True)
@@ -257,6 +263,7 @@ def main() -> int:
         f"radiation.TM_K={run_one_t}",
         f"supply.mixing.epsilon_mix={run_one_eps}",
         f"optical_depth.tau0_target={run_one_tau}",
+        f"dynamics.i0={run_one_i0}",
     ]
     if cool_mode.lower() != "hyodo":
         case_lines.append(f"radiation.mars_temperature_driver.table.path={t_table}")

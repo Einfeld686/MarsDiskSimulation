@@ -21,3 +21,10 @@ scripts/runsets/common/resolve_python.cmd::cmd.numeric_comparison.unguarded,cmd.
 scripts/runsets/common/python_exec.cmd::cmd.block.percent_errorlevel,cmd.if_errorlevel_equal_misuse
 scripts/runsets/windows/run_one.cmd::cmd.numeric_comparison.unguarded,cmd.if_errorlevel_equal_misuse
 scripts/runsets/windows/run_sweep.cmd::cmd.numeric_comparison.unguarded
+
+# Interactive/debug scripts allowlist
+scripts/tests/test_error_source.cmd::cmd.interactive.choice
+scripts/tests/test_job_launch_detailed.cmd::cmd.interactive.choice
+scripts/tests/test_minimal_error.cmd::cmd.interactive.pause
+scripts/tests/test_spawn_run_one.cmd::cmd.interactive.pause
+scripts/tests/test_win_parallel_batch.cmd::cmd.unsafe.meta

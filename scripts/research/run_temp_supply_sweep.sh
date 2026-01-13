@@ -4,9 +4,9 @@
 #   epsilon_mix = {1.0, 0.5}
 #   mu_orbit10pct = 1.0 (1 orbit supplies 5% of Sigma_ref(tau=1); scaled by orbit_fraction_at_mu1)
 #   optical_depth.tau0_target = {1.0, 0.5}
-#   extra cases: (T, epsilon_mix, tau0_target) = (4000, 1.5, 1.0), (3000, 1.5, 1.0)
+#   dynamics.i0 = {0.05, 0.10}
 #   material defaults: forsterite via configs/overrides/material_forsterite.override
-# 出力は out/temp_supply_sweep/<ts>__<sha>__seed<batch>/T{T}_eps{eps}_tau{tau}/ に配置。
+# 出力は out/temp_supply_sweep/<ts>__<sha>__seed<batch>/T{T}_eps{eps}_tau{tau}_i0{i0}/ に配置。
 # 供給は supply.* による外部源（温度・τフィードバック・有限リザーバ対応）。
 
 set -euo pipefail
@@ -129,6 +129,7 @@ def emit(key, value):
 emit("T_LIST_RAW", data.get("T_LIST_RAW", data.get("T_LIST")))
 emit("EPS_LIST_RAW", data.get("EPS_LIST_RAW", data.get("EPS_LIST")))
 emit("TAU_LIST_RAW", data.get("TAU_LIST_RAW", data.get("TAU_LIST")))
+emit("I0_LIST_RAW", data.get("I0_LIST_RAW", data.get("I0_LIST")))
 emit("EXTRA_CASES", _format_extra_cases(data.get("EXTRA_CASES_RAW", data.get("EXTRA_CASES"))))
 emit("SWEEP_TAG", data.get("SWEEP_TAG"))
 emit("END_MODE", data.get("END_MODE"))
@@ -154,11 +155,12 @@ PY
 fi
 
 # Parameter grids (run hotter cases first). Override via env:
-#   T_LIST_RAW="4000 3000", EPS_LIST_RAW="1.0 0.5", TAU_LIST_RAW="1.0 0.5"
+#   T_LIST_RAW="4000 3000", EPS_LIST_RAW="1.0 0.5", TAU_LIST_RAW="1.0 0.5", I0_LIST_RAW="0.05 0.10"
 T_LIST_RAW="${T_LIST_RAW:-4000 3000}"
 EPS_LIST_RAW="${EPS_LIST_RAW:-1.0 0.5}"
 TAU_LIST_RAW="${TAU_LIST_RAW:-1.0 0.5}"
-EXTRA_CASES_DEFAULT="4000 1.5 1.0 3000 1.5 1.0"
+I0_LIST_RAW="${I0_LIST_RAW:-0.05 0.10}"
+EXTRA_CASES_DEFAULT=""
 if [[ -n "${STUDY_FILE:-}" ]]; then
   EXTRA_CASES_DEFAULT=""
 fi
@@ -175,14 +177,15 @@ case "${EXTRA_CASES_VALUE}" in
     ;;
 esac
 SEED_OVERRIDE=""
-if [[ "${RUN_ONE_MODE}" == "1" || -n "${RUN_ONE_T:-}" || -n "${RUN_ONE_EPS:-}" || -n "${RUN_ONE_TAU:-}" ]]; then
-  if [[ -z "${RUN_ONE_T:-}" || -z "${RUN_ONE_EPS:-}" || -z "${RUN_ONE_TAU:-}" ]]; then
-    echo "[error] RUN_ONE_T/RUN_ONE_EPS/RUN_ONE_TAU are required for run-one mode" >&2
+if [[ "${RUN_ONE_MODE}" == "1" || -n "${RUN_ONE_T:-}" || -n "${RUN_ONE_EPS:-}" || -n "${RUN_ONE_TAU:-}" || -n "${RUN_ONE_I0:-}" ]]; then
+  if [[ -z "${RUN_ONE_T:-}" || -z "${RUN_ONE_EPS:-}" || -z "${RUN_ONE_TAU:-}" || -z "${RUN_ONE_I0:-}" ]]; then
+    echo "[error] RUN_ONE_T/RUN_ONE_EPS/RUN_ONE_TAU/RUN_ONE_I0 are required for run-one mode" >&2
     exit 1
   fi
   T_LIST_RAW="${RUN_ONE_T}"
   EPS_LIST_RAW="${RUN_ONE_EPS}"
   TAU_LIST_RAW="${RUN_ONE_TAU}"
+  I0_LIST_RAW="${RUN_ONE_I0}"
   if [[ -z "${SWEEP_TAG:-}" ]]; then
     SWEEP_TAG="run_one"
   fi
@@ -190,33 +193,39 @@ if [[ "${RUN_ONE_MODE}" == "1" || -n "${RUN_ONE_T:-}" || -n "${RUN_ONE_EPS:-}" |
     SEED_OVERRIDE="${RUN_ONE_SEED}"
   fi
   EXTRA_CASES_VALUE=""
-  echo "[info] run-one mode: T=${RUN_ONE_T} eps=${RUN_ONE_EPS} tau=${RUN_ONE_TAU} seed=${RUN_ONE_SEED:-auto}"
+  echo "[info] run-one mode: T=${RUN_ONE_T} eps=${RUN_ONE_EPS} tau=${RUN_ONE_TAU} i0=${RUN_ONE_I0} seed=${RUN_ONE_SEED:-auto}"
 fi
 BATCH_DIR="${BATCH_ROOT}/${SWEEP_TAG}/${RUN_TS}__${GIT_SHA}__seed${BATCH_SEED}"
 mkdir -p "${BATCH_DIR}"
 read -r -a T_LIST <<<"${T_LIST_RAW}"
 read -r -a EPS_LIST <<<"${EPS_LIST_RAW}"
 read -r -a TAU_LIST <<<"${TAU_LIST_RAW}"
+read -r -a I0_LIST <<<"${I0_LIST_RAW}"
 CASE_KEYS=()
 CASE_T=()
 CASE_EPS=()
 CASE_TAU=()
+CASE_I0=()
 
 add_case() {
   local t="$1"
   local eps="$2"
   local tau="$3"
-  local key="${t}|${eps}|${tau}"
+  local i0="$4"
+  local key="${t}|${eps}|${tau}|${i0}"
   local existing
-  for existing in "${CASE_KEYS[@]}"; do
-    if [[ "${existing}" == "${key}" ]]; then
-      return 1
-    fi
-  done
+  if (( ${#CASE_KEYS[@]} )); then
+    for existing in "${CASE_KEYS[@]}"; do
+      if [[ "${existing}" == "${key}" ]]; then
+        return 1
+      fi
+    done
+  fi
   CASE_KEYS+=("${key}")
   CASE_T+=("${t}")
   CASE_EPS+=("${eps}")
   CASE_TAU+=("${tau}")
+  CASE_I0+=("${i0}")
   return 0
 }
 
@@ -232,20 +241,22 @@ append_extra_cases() {
   if (( count == 0 )); then
     return 0
   fi
-  if (( count % 3 != 0 )); then
-    echo "[warn] EXTRA_CASES expects triples; got ${count} tokens"
+  if (( count % 4 != 0 )); then
+    echo "[warn] EXTRA_CASES expects quadruples; got ${count} tokens"
   fi
   local idx=0
-  while (( idx + 2 < count )); do
-    add_case "${tokens[idx]}" "${tokens[idx + 1]}" "${tokens[idx + 2]}" || true
-    idx=$((idx + 3))
+  while (( idx + 3 < count )); do
+    add_case "${tokens[idx]}" "${tokens[idx + 1]}" "${tokens[idx + 2]}" "${tokens[idx + 3]}" || true
+    idx=$((idx + 4))
   done
 }
 
 for T in "${T_LIST[@]}"; do
   for EPS in "${EPS_LIST[@]}"; do
     for TAU in "${TAU_LIST[@]}"; do
-      add_case "${T}" "${EPS}" "${TAU}" || true
+      for I0 in "${I0_LIST[@]}"; do
+        add_case "${T}" "${EPS}" "${TAU}" "${I0}" || true
+      done
     done
   done
 done
@@ -385,6 +396,7 @@ echo "[config] injection: mode=${SUPPLY_INJECTION_MODE} q=${SUPPLY_INJECTION_Q} 
 echo "[config] transport: mode=${SUPPLY_TRANSPORT_MODE} t_mix=${SUPPLY_TRANSPORT_TMIX_ORBITS:-${SUPPLY_DEEP_TMIX_ORBITS:-disabled}} headroom_gate=${SUPPLY_TRANSPORT_HEADROOM} velocity=${SUPPLY_VEL_MODE}"
 echo "[config] external supply: mu_orbit10pct=${SUPPLY_MU_ORBIT10PCT} mu_reference_tau=${SUPPLY_MU_REFERENCE_TAU} orbit_fraction_at_mu1=${SUPPLY_ORBIT_FRACTION} (epsilon_mix swept per EPS_LIST)"
 echo "[config] optical_depth: tau0_target_list=${TAU_LIST_RAW} tau_stop=${OPTICAL_TAU_STOP} tau_stop_tol=${OPTICAL_TAU_STOP_TOL}"
+echo "[config] dynamics: i0_list=${I0_LIST_RAW}"
 if [[ -n "${EXTRA_CASES_VALUE}" ]]; then
   echo "[config] extra cases: ${EXTRA_CASES_VALUE}"
 fi
@@ -577,11 +589,14 @@ for idx in "${!CASE_T[@]}"; do
   T="${CASE_T[$idx]}"
   EPS="${CASE_EPS[$idx]}"
   TAU="${CASE_TAU[$idx]}"
+  I0="${CASE_I0[$idx]}"
   T_TABLE="data/mars_temperature_T${T}p0K.csv"
   EPS_TITLE="${EPS/0./0p}"
   EPS_TITLE="${EPS_TITLE/./p}"
   TAU_TITLE="${TAU/0./0p}"
   TAU_TITLE="${TAU_TITLE/./p}"
+  I0_TITLE="${I0/0./0p}"
+  I0_TITLE="${I0_TITLE/./p}"
   if [[ -n "${SEED_OVERRIDE}" ]]; then
     SEED="${SEED_OVERRIDE}"
   else
@@ -591,9 +606,9 @@ print(secrets.randbelow(2**31))
 PY
 )
   fi
-  TITLE="T${T}_eps${EPS_TITLE}_tau${TAU_TITLE}"
+  TITLE="T${T}_eps${EPS_TITLE}_tau${TAU_TITLE}_i0${I0_TITLE}"
   OUTDIR="${BATCH_DIR}/${TITLE}"
-  echo "[run] T=${T} eps=${EPS} tau=${TAU} -> ${OUTDIR} (batch=${BATCH_SEED}, seed=${SEED})"
+  echo "[run] T=${T} eps=${EPS} tau=${TAU} i0=${I0} -> ${OUTDIR} (batch=${BATCH_SEED}, seed=${SEED})"
   echo "[info] epsilon_mix=${EPS}; mu_orbit10pct=${SUPPLY_MU_ORBIT10PCT} orbit_fraction_at_mu1=${SUPPLY_ORBIT_FRACTION}"
   echo "[info] shielding: mode=${SHIELDING_MODE} fixed_tau1_sigma=${SHIELDING_SIGMA} auto_max_margin=${SHIELDING_AUTO_MAX_MARGIN}"
   if [[ "${EPS}" == "0.1" ]]; then
@@ -602,6 +617,7 @@ PY
   : > "${CASE_OVERRIDES_FILE}"
   append_override "${CASE_OVERRIDES_FILE}" "io.outdir" "${OUTDIR}"
   append_override "${CASE_OVERRIDES_FILE}" "dynamics.rng_seed" "${SEED}"
+  append_override "${CASE_OVERRIDES_FILE}" "dynamics.i0" "${I0}"
   append_override "${CASE_OVERRIDES_FILE}" "radiation.TM_K" "${T}"
   append_override "${CASE_OVERRIDES_FILE}" "supply.mixing.epsilon_mix" "${EPS}"
   append_override "${CASE_OVERRIDES_FILE}" "optical_depth.tau0_target" "${TAU}"
@@ -824,7 +840,8 @@ def load_downsampled_df(path: Path, columns, *, target_rows: int, batch_size: in
     missing_cols = [c for c in columns if c not in schema_names and c not in alias_map]
     total_rows = pf.metadata.num_rows if pf.metadata is not None else 0
     if not available_cols or total_rows == 0:
-        return _empty_df(columns), missing_cols, total_rows, 0.0
+        tag = "avg" if is_1d else "0D"
+        return [(tag, None, _empty_df(columns))], missing_cols, total_rows, {tag: 0.0}
 
     if not is_1d:
         step = max(total_rows // target_rows, 1) if target_rows > 0 else 1
@@ -855,18 +872,146 @@ def load_downsampled_df(path: Path, columns, *, target_rows: int, batch_size: in
         df = df.reindex(columns=columns)
         df.attrs["is_1d"] = False
         prod_mean = (prod_sum / prod_count) if prod_count else 0.0
-        return df, missing_cols, total_rows, prod_mean
+        return [("0D", None, df)], missing_cols, total_rows, {"0D": prod_mean}
 
     required_cols = list(available_cols)
     for col in alias_map.values():
         if col not in required_cols and col in schema_names:
             required_cols.append(col)
-    for extra in ("time", "cell_index", "r_m", "dt"):
+    for extra in ("time", "cell_index", "r_m", "r_RM", "dt"):
         if extra in schema_names and extra not in required_cols:
             required_cols.append(extra)
 
     if not required_cols:
-        return _empty_df(columns), missing_cols, total_rows, 0.0
+        return [("avg", None, _empty_df(columns))], missing_cols, total_rows, {"avg": 0.0}
+
+    if "r_RM" in schema_names:
+        batch_iter = pf.iter_batches(columns=required_cols, batch_size=batch_size, use_threads=True)
+        first_batch = next(batch_iter, None)
+        if first_batch is None:
+            return [("avg", None, _empty_df(columns))], missing_cols, total_rows, {"avg": 0.0}
+        first_pdf = first_batch.to_pandas()
+        n_cells = int(first_pdf["cell_index"].nunique()) if "cell_index" in first_pdf else 0
+        total_steps = total_rows // max(n_cells, 1) if total_rows else 0
+        step = max(total_steps // target_rows, 1) if target_rows > 0 and total_steps > 0 else 1
+
+        rows_by_ring: dict[str, list[dict[str, float]]] = {}
+        prod_sum: dict[str, float] = {}
+        prod_count: dict[str, int] = {}
+        ring_cells: dict[str, int] | None = None
+        ring_rms: dict[str, float] | None = None
+
+        current_time = None
+        buffer: list[pd.DataFrame] = []
+        time_index = 0
+
+        def _resolve_rings(group_df: pd.DataFrame) -> list[tuple[str, int, float]] | None:
+            if "cell_index" not in group_df or "r_RM" not in group_df:
+                return None
+            cells = (
+                group_df[["cell_index", "r_RM"]]
+                .dropna()
+                .drop_duplicates()
+                .sort_values("r_RM")
+            )
+            if cells.empty:
+                return None
+            inner = cells.iloc[0]
+            outer = cells.iloc[-1]
+            rings = [("inner", int(inner["cell_index"]), float(inner["r_RM"]))]
+            if int(outer["cell_index"]) != int(inner["cell_index"]):
+                rings.append(("outer", int(outer["cell_index"]), float(outer["r_RM"])))
+            return rings
+
+        def flush_group(group_df: pd.DataFrame) -> None:
+            nonlocal time_index, ring_cells, ring_rms
+            if group_df.empty:
+                return
+            keep = (step == 1) or (time_index % step == 0)
+            time_index += 1
+            if not keep:
+                return
+            if ring_cells is None:
+                rings = _resolve_rings(group_df)
+                if not rings:
+                    return
+                ring_cells = {tag: cell for tag, cell, _ in rings}
+                ring_rms = {tag: r_rm for tag, _, r_rm in rings}
+                for tag in ring_cells:
+                    rows_by_ring[tag] = []
+                    prod_sum[tag] = 0.0
+                    prod_count[tag] = 0
+
+            for tag, cell_idx in ring_cells.items():
+                ring_df = group_df[group_df["cell_index"] == cell_idx]
+                if ring_df.empty and "r_RM" in group_df and ring_rms is not None:
+                    target_r = ring_rms.get(tag)
+                    if target_r is not None and np.isfinite(target_r):
+                        ring_df = group_df.iloc[
+                            (group_df["r_RM"] - target_r).abs().argsort()[:1]
+                        ]
+                if ring_df.empty:
+                    ring_df = group_df.iloc[:1]
+
+                row: dict[str, float] = {}
+                for col in columns:
+                    if col == "time":
+                        row[col] = float(group_df["time"].iloc[0])
+                        continue
+                    if col == "dt" and "dt" in group_df:
+                        row[col] = float(group_df["dt"].iloc[0])
+                        continue
+                    if col in ring_df:
+                        series = pd.to_numeric(ring_df[col], errors="coerce").dropna()
+                        row[col] = float(series.iloc[0]) if not series.empty else float("nan")
+                    else:
+                        row[col] = float("nan")
+
+                for target, source in alias_map.items():
+                    if target in columns and (target not in row or not math.isfinite(row[target])):
+                        if source in ring_df:
+                            series = pd.to_numeric(ring_df[source], errors="coerce").dropna()
+                            row[target] = float(series.iloc[0]) if not series.empty else float("nan")
+
+                if "prod_subblow_area_rate" in row and math.isfinite(row["prod_subblow_area_rate"]):
+                    prod_sum[tag] += float(row["prod_subblow_area_rate"])
+                    prod_count[tag] += 1
+                rows_by_ring[tag].append(row)
+
+        def process_pdf(pdf: pd.DataFrame) -> None:
+            nonlocal current_time, buffer
+            if pdf.empty:
+                return
+            for time_val, group in pdf.groupby("time", sort=False):
+                if current_time is None:
+                    current_time = time_val
+                if time_val != current_time:
+                    flush_group(pd.concat(buffer, ignore_index=True))
+                    buffer = []
+                    current_time = time_val
+                buffer.append(group)
+
+        process_pdf(first_pdf)
+        for batch in batch_iter:
+            process_pdf(batch.to_pandas())
+        if buffer:
+            flush_group(pd.concat(buffer, ignore_index=True))
+
+        series_sets = []
+        prod_means: dict[str, float] = {}
+        ring_rms = ring_rms or {}
+        for tag, rows in rows_by_ring.items():
+            df = pd.DataFrame(rows) if rows else _empty_df(columns)
+            for col in columns:
+                if col not in df:
+                    df[col] = np.nan
+            df = df.reindex(columns=columns)
+            df.attrs["is_1d"] = True
+            series_sets.append((tag, ring_rms.get(tag), df))
+            prod_means[tag] = (prod_sum[tag] / prod_count[tag]) if prod_count.get(tag) else 0.0
+        if not series_sets:
+            return [("avg", None, _empty_df(columns))], missing_cols, total_rows, {"avg": 0.0}
+        return series_sets, missing_cols, total_rows, prod_means
 
     sum_cols = {
         "M_out_dot",
@@ -909,7 +1054,7 @@ def load_downsampled_df(path: Path, columns, *, target_rows: int, batch_size: in
     batch_iter = pf.iter_batches(columns=required_cols, batch_size=batch_size, use_threads=True)
     first_batch = next(batch_iter, None)
     if first_batch is None:
-        return _empty_df(columns), missing_cols, total_rows, 0.0
+        return [("avg", None, _empty_df(columns))], missing_cols, total_rows, {"avg": 0.0}
     first_pdf = first_batch.to_pandas()
     n_cells = int(first_pdf["cell_index"].nunique()) if "cell_index" in first_pdf else 0
     total_steps = total_rows // max(n_cells, 1) if total_rows else 0
@@ -998,7 +1143,7 @@ def load_downsampled_df(path: Path, columns, *, target_rows: int, batch_size: in
     df = df.reindex(columns=columns)
     df.attrs["is_1d"] = True
     prod_mean = (prod_sum / prod_count) if prod_count else 0.0
-    return df, missing_cols, total_rows, prod_mean
+    return [("avg", None, df)], missing_cols, total_rows, {"avg": prod_mean}
 
 
 run_dir = Path(os.environ["RUN_DIR"])
@@ -1071,7 +1216,7 @@ if summary_path.exists():
     except Exception:
         summary = {}
 
-df, missing_cols, total_rows, prod_mean = load_downsampled_df(
+series_sets, missing_cols, total_rows, prod_means = load_downsampled_df(
     series_path,
     series_cols,
     target_rows=MAX_PLOT_ROWS,
@@ -1080,13 +1225,25 @@ df, missing_cols, total_rows, prod_mean = load_downsampled_df(
 if missing_cols:
     print(f"[warn] missing columns in run.parquet: {missing_cols}")
 if total_rows > MAX_PLOT_ROWS:
-    print(f"[info] downsampled series from {total_rows} rows to {len(df)} rows for plotting")
-df["time_days"] = df["time"] / 86400.0
-t_coll_series = df["t_coll"] if "t_coll" in df else pd.Series(np.nan, index=df.index)
-t_blow_series = df["t_blow_s"] if "t_blow_s" in df else pd.Series(np.nan, index=df.index)
-df["t_coll_years"] = (t_coll_series.clip(lower=1e-6)) / 31557600.0
-df["t_blow_hours"] = (t_blow_series.clip(lower=1e-12)) / 3600.0
-tau_los_series = df["tau_los_mars"].fillna(df["tau"])
+    max_len = max((len(df) for _, _, df in series_sets), default=0)
+    print(f"[info] downsampled series from {total_rows} rows to {max_len} rows for plotting")
+for idx, (tag, r_rm, df) in enumerate(series_sets):
+    df["time_days"] = df["time"] / 86400.0
+    t_coll_series = df["t_coll"] if "t_coll" in df else pd.Series(np.nan, index=df.index)
+    t_blow_series = df["t_blow_s"] if "t_blow_s" in df else pd.Series(np.nan, index=df.index)
+    df["t_coll_years"] = (t_coll_series.clip(lower=1e-6)) / 31557600.0
+    df["t_blow_hours"] = (t_blow_series.clip(lower=1e-12)) / 3600.0
+    if "tau_los_mars" not in df.columns and "tau" in df.columns:
+        df["tau_los_mars"] = df["tau"]
+    if "tau" not in df.columns and "tau_los_mars" in df.columns:
+        df["tau"] = df["tau_los_mars"]
+    series_sets[idx] = (tag, r_rm, df)
+
+
+def _series_label(tag: str, r_rm: float | None) -> str:
+    if r_rm is None or not np.isfinite(r_rm):
+        return tag
+    return f"{tag} r_RM={r_rm:.3f}"
 
 
 def _finite_array(series_list):
@@ -1148,31 +1305,59 @@ def _auto_scale(ax, series_list, *, log_ratio=20.0, linthresh_min=1e-12, pad_fra
 
 
 fig, axes = plt.subplots(3, 1, figsize=(10, 12), sharex=True)
-headroom_ratio = (df["Sigma_tau1"] - df["Sigma_surf"]).clip(lower=0) / df["Sigma_tau1"].clip(lower=1e-20)
 
-axes[0].plot(df["time_days"], df["Sigma_surf"], label="Sigma_surf", lw=1.2, color="tab:green")
-axes[0].plot(df["time_days"], df["Sigma_tau1"], label="Sigma_tau1", lw=1.0, color="tab:orange", alpha=0.8)
-axes[0].plot(df["time_days"], headroom_ratio, label="headroom_ratio", lw=0.9, color="tab:red", linestyle="--", alpha=0.7)
+scale_series = []
+for tag, r_rm, df in series_sets:
+    label = _series_label(tag, r_rm)
+    if "Sigma_tau1" in df and "Sigma_surf" in df:
+        headroom_ratio = (df["Sigma_tau1"] - df["Sigma_surf"]).clip(lower=0) / df["Sigma_tau1"].clip(lower=1e-20)
+    else:
+        headroom_ratio = pd.Series(np.nan, index=df.index)
+    if "Sigma_surf" in df:
+        axes[0].plot(df["time_days"], df["Sigma_surf"], label=f"Sigma_surf ({label})", lw=1.2, color="tab:green", alpha=0.7)
+        scale_series.append(df["Sigma_surf"])
+    if "Sigma_tau1" in df:
+        axes[0].plot(df["time_days"], df["Sigma_tau1"], label=f"Sigma_tau1 ({label})", lw=1.0, color="tab:orange", alpha=0.6)
+        scale_series.append(df["Sigma_tau1"])
+    if headroom_ratio is not None:
+        axes[0].plot(df["time_days"], headroom_ratio, label=f"headroom_ratio ({label})", lw=0.9, color="tab:red", linestyle="--", alpha=0.6)
+        scale_series.append(headroom_ratio)
 axes[0].set_ylabel("kg m^-2")
 axes[0].legend(loc="upper right")
 axes[0].set_title("Surface density and τ=1 cap")
-_auto_scale(axes[0], [df["Sigma_surf"], df["Sigma_tau1"], headroom_ratio], log_ratio=10.0, linthresh_min=1e-12)
+_auto_scale(axes[0], scale_series, log_ratio=10.0, linthresh_min=1e-12)
 
-axes[1].plot(df["time_days"], df["M_loss_cum"], label="M_loss_cum (total)", lw=1.2, color="tab:blue")
-axes[1].plot(df["time_days"], df["mass_lost_by_blowout"], label="mass_lost_by_blowout", lw=1.0, color="tab:red", alpha=0.8)
-axes[1].plot(df["time_days"], df["M_sink_cum"], label="M_sink_cum", lw=1.0, color="tab:purple", alpha=0.8)
+scale_series = []
+for tag, r_rm, df in series_sets:
+    label = _series_label(tag, r_rm)
+    if "M_loss_cum" in df:
+        axes[1].plot(df["time_days"], df["M_loss_cum"], label=f"M_loss_cum (total) ({label})", lw=1.2, color="tab:blue", alpha=0.7)
+        scale_series.append(df["M_loss_cum"])
+    if "mass_lost_by_blowout" in df:
+        axes[1].plot(df["time_days"], df["mass_lost_by_blowout"], label=f"mass_lost_by_blowout ({label})", lw=1.0, color="tab:red", alpha=0.6)
+        scale_series.append(df["mass_lost_by_blowout"])
+    if "M_sink_cum" in df:
+        axes[1].plot(df["time_days"], df["M_sink_cum"], label=f"M_sink_cum ({label})", lw=1.0, color="tab:purple", alpha=0.6)
+        scale_series.append(df["M_sink_cum"])
 axes[1].set_ylabel("M_Mars")
 axes[1].legend(loc="upper left")
 axes[1].set_title("Cumulative losses")
-_auto_scale(axes[1], [df["M_loss_cum"], df["mass_lost_by_blowout"], df["M_sink_cum"]], log_ratio=10.0)
+_auto_scale(axes[1], scale_series, log_ratio=10.0)
 
-axes[2].plot(df["time_days"], df["s_min"], label="s_min_effective", lw=1.0, color="tab:blue")
-axes[2].plot(df["time_days"], df["a_blow"], label="a_blow", lw=1.0, color="tab:orange", alpha=0.8)
+scale_series = []
+for tag, r_rm, df in series_sets:
+    label = _series_label(tag, r_rm)
+    if "s_min" in df:
+        axes[2].plot(df["time_days"], df["s_min"], label=f"s_min_effective ({label})", lw=1.0, color="tab:blue", alpha=0.7)
+        scale_series.append(df["s_min"])
+    if "a_blow" in df:
+        axes[2].plot(df["time_days"], df["a_blow"], label=f"a_blow ({label})", lw=1.0, color="tab:orange", alpha=0.6)
+        scale_series.append(df["a_blow"])
 axes[2].set_ylabel("m")
 axes[2].set_xlabel("days")
 axes[2].legend(loc="upper right")
 axes[2].set_title("Minimum size vs blow-out size")
-_auto_scale(axes[2], [df["s_min"], df["a_blow"]], log_ratio=10.0, linthresh_min=1e-18)
+_auto_scale(axes[2], scale_series, log_ratio=10.0, linthresh_min=1e-18)
 
 mloss = summary.get("M_loss")
 mass_err = summary.get("mass_budget_max_error_percent")
@@ -1189,74 +1374,189 @@ if clip_frac is None:
     clip_frac = summary.get("supply_clipping", {}).get("clip_time_fraction")
 if clip_frac is not None:
     title_lines.append(f"clip_zero_frac={float(clip_frac):.2%}")
-title_lines.append(f"prod_mean={prod_mean:.3e}")
+if prod_means:
+    if len(prod_means) == 1:
+        tag, value = next(iter(prod_means.items()))
+        if tag in ("0D", "avg"):
+            title_lines.append(f"prod_mean={value:.3e}")
+        else:
+            title_lines.append(f"prod_mean[{tag}]={value:.3e}")
+    else:
+        for tag in ("inner", "outer"):
+            if tag in prod_means:
+                title_lines.append(f"prod_mean[{tag}]={prod_means[tag]:.3e}")
+        for tag, value in prod_means.items():
+            if tag not in ("inner", "outer"):
+                title_lines.append(f"prod_mean[{tag}]={value:.3e}")
 fig.suptitle(" | ".join(title_lines))
 fig.tight_layout(rect=(0, 0, 1, 0.96))
 fig.savefig(plots_dir / "overview.png", dpi=180)
 plt.close(fig)
 
 fig2, ax2 = plt.subplots(5, 1, figsize=(10, 16), sharex=True)
-ax2[0].plot(df["time_days"], df["supply_rate_nominal"], label="nominal (raw×mix)", color="tab:gray", alpha=0.9)
-ax2[0].plot(df["time_days"], df["supply_rate_scaled"], label="scaled (temp/feedback/reservoir)", color="tab:blue")
-ax2[0].plot(df["time_days"], df["supply_rate_applied"], label="applied (after headroom)", color="tab:red", alpha=0.8)
-ax2[0].plot(df["time_days"], df["prod_rate_applied_to_surf"], label="applied (deep-mixed)", color="tab:orange", alpha=0.8, linestyle="--")
-ax2[0].plot(
-    df["time_days"],
-    df["prod_subblow_area_rate"],
-    label="prod_subblow_area_rate (legacy)",
-    color="tab:purple",
-    linestyle="--",
-    alpha=0.5,
-)
+scale_series = []
+for tag, r_rm, df in series_sets:
+    label = _series_label(tag, r_rm)
+    if "supply_rate_nominal" in df:
+        ax2[0].plot(
+            df["time_days"],
+            df["supply_rate_nominal"],
+            label=f"nominal (raw×mix) ({label})",
+            color="tab:gray",
+            alpha=0.7,
+        )
+        scale_series.append(df["supply_rate_nominal"])
+    if "supply_rate_scaled" in df:
+        ax2[0].plot(
+            df["time_days"],
+            df["supply_rate_scaled"],
+            label=f"scaled (temp/feedback/reservoir) ({label})",
+            color="tab:blue",
+            alpha=0.7,
+        )
+        scale_series.append(df["supply_rate_scaled"])
+    if "supply_rate_applied" in df:
+        ax2[0].plot(
+            df["time_days"],
+            df["supply_rate_applied"],
+            label=f"applied (after headroom) ({label})",
+            color="tab:red",
+            alpha=0.7,
+        )
+        scale_series.append(df["supply_rate_applied"])
+    if "prod_rate_applied_to_surf" in df:
+        ax2[0].plot(
+            df["time_days"],
+            df["prod_rate_applied_to_surf"],
+            label=f"applied (deep-mixed) ({label})",
+            color="tab:orange",
+            alpha=0.7,
+            linestyle="--",
+        )
+        scale_series.append(df["prod_rate_applied_to_surf"])
+    if "prod_subblow_area_rate" in df:
+        ax2[0].plot(
+            df["time_days"],
+            df["prod_subblow_area_rate"],
+            label=f"prod_subblow_area_rate (legacy) ({label})",
+            color="tab:purple",
+            linestyle="--",
+            alpha=0.5,
+        )
+        scale_series.append(df["prod_subblow_area_rate"])
 ax2[0].set_ylabel("kg m^-2 s^-1")
 ax2[0].legend(loc="upper right")
 ax2[0].set_title("Supply rates (nominal → scaled → applied)")
 _auto_scale(
     ax2[0],
-    [
-        df["supply_rate_nominal"],
-        df["supply_rate_scaled"],
-        df["supply_rate_applied"],
-        df["prod_rate_applied_to_surf"],
-        df["prod_subblow_area_rate"],
-    ],
+    scale_series,
     log_ratio=10.0,
     linthresh_min=1e-14,
 )
 
-ax2[1].plot(df["time_days"], df["prod_rate_diverted_to_deep"], label="diverted→deep", color="tab:brown", alpha=0.8)
-ax2[1].plot(df["time_days"], df["deep_to_surf_flux"], label="deep→surf flux", color="tab:olive", alpha=0.9)
-ax2[1].plot(df["time_days"], df["sigma_deep"], label="sigma_deep", color="tab:gray", alpha=0.7)
+scale_series = []
+for tag, r_rm, df in series_sets:
+    label = _series_label(tag, r_rm)
+    if "prod_rate_diverted_to_deep" in df:
+        ax2[1].plot(
+            df["time_days"],
+            df["prod_rate_diverted_to_deep"],
+            label=f"diverted→deep ({label})",
+            color="tab:brown",
+            alpha=0.7,
+        )
+        scale_series.append(df["prod_rate_diverted_to_deep"])
+    if "deep_to_surf_flux" in df:
+        ax2[1].plot(
+            df["time_days"],
+            df["deep_to_surf_flux"],
+            label=f"deep→surf flux ({label})",
+            color="tab:olive",
+            alpha=0.7,
+        )
+        scale_series.append(df["deep_to_surf_flux"])
+    if "sigma_deep" in df:
+        ax2[1].plot(
+            df["time_days"],
+            df["sigma_deep"],
+            label=f"sigma_deep ({label})",
+            color="tab:gray",
+            alpha=0.7,
+        )
+        scale_series.append(df["sigma_deep"])
 ax2[1].set_ylabel("kg m^-2 / s")
 ax2[1].legend(loc="upper right")
 ax2[1].set_title("Deep reservoir routing")
-_auto_scale(ax2[1], [df["prod_rate_diverted_to_deep"], df["deep_to_surf_flux"], df["sigma_deep"]], log_ratio=10.0, linthresh_min=1e-14)
+_auto_scale(ax2[1], scale_series, log_ratio=10.0, linthresh_min=1e-14)
 
-ax2[2].plot(df["time_days"], df["Sigma_surf"], label="Sigma_surf", color="tab:green")
-ax2[2].plot(df["time_days"], df["Sigma_tau1"], label="Sigma_tau1", color="tab:orange", alpha=0.8)
-ax2[2].plot(df["time_days"], df["supply_headroom"], label="headroom (legacy)", color="tab:brown", alpha=0.7)
-ax2[2].plot(df["time_days"], df["headroom"], label="headroom (applied)", color="tab:blue", alpha=0.7, linestyle="--")
+scale_series = []
+for tag, r_rm, df in series_sets:
+    label = _series_label(tag, r_rm)
+    if "Sigma_surf" in df:
+        ax2[2].plot(df["time_days"], df["Sigma_surf"], label=f"Sigma_surf ({label})", color="tab:green", alpha=0.7)
+        scale_series.append(df["Sigma_surf"])
+    if "Sigma_tau1" in df:
+        ax2[2].plot(df["time_days"], df["Sigma_tau1"], label=f"Sigma_tau1 ({label})", color="tab:orange", alpha=0.6)
+        scale_series.append(df["Sigma_tau1"])
+    if "supply_headroom" in df:
+        ax2[2].plot(df["time_days"], df["supply_headroom"], label=f"headroom (legacy) ({label})", color="tab:brown", alpha=0.6)
+        scale_series.append(df["supply_headroom"])
+    if "headroom" in df:
+        ax2[2].plot(df["time_days"], df["headroom"], label=f"headroom (applied) ({label})", color="tab:blue", alpha=0.6, linestyle="--")
+        scale_series.append(df["headroom"])
 ax2[2].set_ylabel("kg m^-2")
 ax2[2].legend(loc="upper right")
 ax2[2].set_title("Surface density vs tau=1 cap")
-_auto_scale(ax2[2], [df["Sigma_surf"], df["Sigma_tau1"], df["headroom"], df["supply_headroom"]], log_ratio=10.0, linthresh_min=1e-12)
+_auto_scale(ax2[2], scale_series, log_ratio=10.0, linthresh_min=1e-12)
 
-ax2[3].plot(df["time_days"], df["outflux_surface"], label="outflux_surface (M_Mars/s)", color="tab:red", alpha=0.9)
-ax2[3].plot(df["time_days"], tau_los_series, label="tau_los_mars", color="tab:purple", alpha=0.7)
+scale_series = []
+for tag, r_rm, df in series_sets:
+    label = _series_label(tag, r_rm)
+    if "outflux_surface" in df:
+        ax2[3].plot(df["time_days"], df["outflux_surface"], label=f"outflux_surface (M_Mars/s) ({label})", color="tab:red", alpha=0.7)
+        scale_series.append(df["outflux_surface"])
+    tau_series = None
+    if "tau_los_mars" in df:
+        tau_series = df["tau_los_mars"]
+    elif "tau" in df:
+        tau_series = df["tau"]
+    if tau_series is not None:
+        ax2[3].plot(df["time_days"], tau_series, label=f"tau_los_mars ({label})", color="tab:purple", alpha=0.6)
+        scale_series.append(tau_series)
 ax2[3].axhline(1.0, color="gray", linestyle=":", alpha=0.6, label="τ=1 reference")
 ax2[3].set_ylabel("outflux / tau")
 ax2[3].set_xlabel("days")
 ax2[3].legend(loc="upper right")
 ax2[3].set_title("Surface outflux and optical depth")
-_auto_scale(ax2[3], [df["outflux_surface"], tau_los_series], log_ratio=10.0, linthresh_min=1e-20)
+_auto_scale(ax2[3], scale_series, log_ratio=10.0, linthresh_min=1e-20)
 
-ax2[4].plot(df["time_days"], df["supply_feedback_scale"], label="feedback scale", color="tab:cyan")
-ax2[4].plot(df["time_days"], df["supply_temperature_scale"], label="temperature scale", color="tab:gray")
-ax2[4].plot(df["time_days"], df["supply_reservoir_remaining_Mmars"], label="reservoir M_Mars", color="tab:pink")
-ax2[4].plot(df["time_days"], df["supply_clip_factor"], label="clip factor", color="tab:olive", alpha=0.8)
-# Add headroom ratio (Sigma_tau1 - Sigma_surf) / Sigma_tau1 for clip context
-headroom_ratio = (df["Sigma_tau1"] - df["Sigma_surf"]).clip(lower=0) / df["Sigma_tau1"].clip(lower=1e-20)
-ax2[4].plot(df["time_days"], headroom_ratio, label="headroom ratio", color="tab:red", alpha=0.5, linestyle="--")
+scale_series = []
+for tag, r_rm, df in series_sets:
+    label = _series_label(tag, r_rm)
+    if "supply_feedback_scale" in df:
+        ax2[4].plot(df["time_days"], df["supply_feedback_scale"], label=f"feedback scale ({label})", color="tab:cyan", alpha=0.7)
+        scale_series.append(df["supply_feedback_scale"])
+    if "supply_temperature_scale" in df:
+        ax2[4].plot(df["time_days"], df["supply_temperature_scale"], label=f"temperature scale ({label})", color="tab:gray", alpha=0.7)
+        scale_series.append(df["supply_temperature_scale"])
+    if "supply_reservoir_remaining_Mmars" in df:
+        ax2[4].plot(
+            df["time_days"],
+            df["supply_reservoir_remaining_Mmars"],
+            label=f"reservoir M_Mars ({label})",
+            color="tab:pink",
+            alpha=0.7,
+        )
+        scale_series.append(df["supply_reservoir_remaining_Mmars"])
+    if "supply_clip_factor" in df:
+        ax2[4].plot(df["time_days"], df["supply_clip_factor"], label=f"clip factor ({label})", color="tab:olive", alpha=0.7)
+        scale_series.append(df["supply_clip_factor"])
+    if "Sigma_tau1" in df and "Sigma_surf" in df:
+        headroom_ratio = (df["Sigma_tau1"] - df["Sigma_surf"]).clip(lower=0) / df["Sigma_tau1"].clip(lower=1e-20)
+    else:
+        headroom_ratio = pd.Series(np.nan, index=df.index)
+    ax2[4].plot(df["time_days"], headroom_ratio, label=f"headroom ratio ({label})", color="tab:red", alpha=0.5, linestyle="--")
+    scale_series.append(headroom_ratio)
 ax2[4].axhline(0.0, color="gray", linestyle=":", alpha=0.4)
 ax2[4].set_ylabel("scale / ratio")
 ax2[4].legend(loc="upper right")
@@ -1274,15 +1574,43 @@ def _plot_if_available(ax, x, y, label, **kwargs):
     ax.plot(x, y, label=label, **kwargs)
 
 fig3, ax3 = plt.subplots(1, 1, figsize=(10, 4))
-_plot_if_available(ax3, df["time_days"], tau_los_series, label="tau_los_mars", color="tab:red", alpha=0.8)
-headroom_ratio = (df["Sigma_tau1"] - df["Sigma_surf"]).clip(lower=0) / df["Sigma_tau1"].clip(lower=1e-20)
-ax3.plot(df["time_days"], headroom_ratio, label="headroom ratio", color="tab:orange", alpha=0.6, linestyle=":")
+scale_series = []
+for tag, r_rm, df in series_sets:
+    label = _series_label(tag, r_rm)
+    tau_series = None
+    if "tau_los_mars" in df:
+        tau_series = df["tau_los_mars"]
+    elif "tau" in df:
+        tau_series = df["tau"]
+    if tau_series is not None:
+        _plot_if_available(
+            ax3,
+            df["time_days"],
+            tau_series,
+            label=f"tau_los_mars ({label})",
+            color="tab:red",
+            alpha=0.6,
+        )
+        scale_series.append(tau_series)
+    if "Sigma_tau1" in df and "Sigma_surf" in df:
+        headroom_ratio = (df["Sigma_tau1"] - df["Sigma_surf"]).clip(lower=0) / df["Sigma_tau1"].clip(lower=1e-20)
+    else:
+        headroom_ratio = pd.Series(np.nan, index=df.index)
+    ax3.plot(
+        df["time_days"],
+        headroom_ratio,
+        label=f"headroom ratio ({label})",
+        color="tab:orange",
+        alpha=0.6,
+        linestyle=":",
+    )
+    scale_series.append(headroom_ratio)
 ax3.axhline(1.0, color="gray", linestyle=":", alpha=0.5, label="τ=1 reference")
 ax3.set_ylabel("optical depth")
 ax3.set_xlabel("days")
 ax3.set_title("Optical depth evolution")
 ax3.legend(loc="upper right")
-_auto_scale(ax3, [tau_los_series, headroom_ratio], log_ratio=10.0, linthresh_min=1e-12)
+_auto_scale(ax3, scale_series, log_ratio=10.0, linthresh_min=1e-12)
 fig3.tight_layout()
 fig3.savefig(plots_dir / "optical_depth.png", dpi=180)
 plt.close(fig3)

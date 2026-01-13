@@ -27,9 +27,9 @@ def _format_extra_cases(value: Any) -> str | None:
         parts = []
         for item in value:
             if isinstance(item, (list, tuple)):
-                if len(item) < 3:
+                if len(item) < 4:
                     continue
-                parts.append(",".join(str(v) for v in item[:3]))
+                parts.append(",".join(str(v) for v in item[:4]))
             else:
                 parts.append(str(item))
         return ";".join(parts)
@@ -72,6 +72,7 @@ def main() -> int:
     _emit(lines, "T_LIST", data.get("T_LIST_RAW", data.get("T_LIST")))
     _emit(lines, "EPS_LIST", data.get("EPS_LIST_RAW", data.get("EPS_LIST")))
     _emit(lines, "TAU_LIST", data.get("TAU_LIST_RAW", data.get("TAU_LIST")))
+    _emit(lines, "I0_LIST", data.get("I0_LIST_RAW", data.get("I0_LIST")))
     extra_cases = _format_extra_cases(data.get("EXTRA_CASES_RAW", data.get("EXTRA_CASES")))
     if extra_cases is not None:
         _emit(lines, "EXTRA_CASES", extra_cases)

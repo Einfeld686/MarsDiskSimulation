@@ -19,7 +19,7 @@ if not exist "!COMMON_DIR!\resolve_python.cmd" (
     exit /b 1
 )
 call "!COMMON_DIR!\resolve_python.cmd"
-if errorlevel 1 exit /b 1
+if not "!errorlevel!"=="0" exit /b 1
 
 echo.[info] REPO_ROOT=!REPO_ROOT!
 echo.[info] PYTHON_CMD=!PYTHON_CMD!
@@ -34,10 +34,11 @@ set "BATCH_SEED=0"
 set "JOB_T=5000"
 set "JOB_EPS=1.0"
 set "JOB_TAU=1.0"
+set "JOB_I0=0.05"
 set "JOB_SEED=12345"
 
 rem This is the exact format from run_temp_supply_sweep.cmd :launch_job
-set "JOB_CMD=set RUN_TS=!RUN_TS!&& set BATCH_SEED=!BATCH_SEED!&& set RUN_ONE_T=!JOB_T!&& set RUN_ONE_EPS=!JOB_EPS!&& set RUN_ONE_TAU=!JOB_TAU!&& set RUN_ONE_SEED=!JOB_SEED!&& set AUTO_JOBS=0&& set PARALLEL_JOBS=1&& set SKIP_PIP=1&& set DEBUG=1&& call ""!SCRIPT_SELF_USE!"" --run-one"
+set "JOB_CMD=set RUN_TS=!RUN_TS!&& set BATCH_SEED=!BATCH_SEED!&& set RUN_ONE_T=!JOB_T!&& set RUN_ONE_EPS=!JOB_EPS!&& set RUN_ONE_TAU=!JOB_TAU!&& set RUN_ONE_I0=!JOB_I0!&& set RUN_ONE_SEED=!JOB_SEED!&& set AUTO_JOBS=0&& set PARALLEL_JOBS=1&& set SKIP_PIP=1&& set DEBUG=1&& call ""!SCRIPT_SELF_USE!"" --run-one"
 
 echo.[info] JOB_CMD=!JOB_CMD!
 echo.

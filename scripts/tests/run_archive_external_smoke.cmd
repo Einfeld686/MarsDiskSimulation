@@ -46,15 +46,15 @@ echo.[error] Unknown option: %~1
 :usage
 echo Usage: run_archive_external_smoke.cmd [--archive-dir ^<path^>] [--config ^<path^>]
 echo.       [--t-end-years ^<years^>] [--dt-init ^<seconds^>]
-call :popd_safe
-exit /b 1
+call :popd_safe 1
+goto :eof
 
 :args_done
 
 if not exist "%ARCHIVE_DIR%\\" (
   echo.[error] ARCHIVE_DIR not found: %ARCHIVE_DIR%
-  call :popd_safe
-  exit /b 2
+  call :popd_safe 2
+  goto :eof
 )
 
 set "VENV_DIR=.venv"
@@ -63,15 +63,15 @@ set "RUNSETS_COMMON_DIR=%REPO_ROOT%\\scripts\\runsets\\common"
 set "VENV_BOOTSTRAP_CMD=%RUNSETS_COMMON_DIR%\\venv_bootstrap.cmd"
 if not exist "%VENV_BOOTSTRAP_CMD%" (
   echo [error] venv_bootstrap helper not found: "%VENV_BOOTSTRAP_CMD%"
-  call :popd_safe
-  exit /b 1
+  call :popd_safe 1
+  goto :eof
 )
 call "%VENV_BOOTSTRAP_CMD%"
-if errorlevel 1 (
-  set "BOOTSTRAP_RC=%errorlevel%"
+set "BOOTSTRAP_RC=!errorlevel!"
+if not "!BOOTSTRAP_RC!"=="0" (
   echo [error] Failed to initialize Python environment.
-  call :popd_safe
-  exit /b %BOOTSTRAP_RC%
+  call :popd_safe !BOOTSTRAP_RC!
+  goto :eof
 )
 
 set "RUN_TS="
@@ -110,49 +110,50 @@ echo [run] ARCHIVE_DEST=%ARCHIVE_DEST%
 set "RC=%errorlevel%"
 if not "%RC%"=="0" (
   echo [error] Run failed with exit code %RC%.
-  call :popd_safe
-  exit /b %RC%
+  call :popd_safe %RC%
+  goto :eof
 )
 
 if exist "%OUTDIR%\\INCOMPLETE" (
   echo [error] Archive marked INCOMPLETE; check %OUTDIR%\INCOMPLETE
-  call :popd_safe
-  exit /b 3
+  call :popd_safe 3
+  goto :eof
 )
 if exist "%OUTDIR%\\ARCHIVE_SKIPPED" (
   echo [error] Archive skipped; check %OUTDIR%\ARCHIVE_SKIPPED
-  call :popd_safe
-  exit /b 4
+  call :popd_safe 4
+  goto :eof
 )
 if not exist "%ARCHIVE_DEST%\\ARCHIVE_DONE" (
   echo [error] Archive marker missing: %ARCHIVE_DEST%\ARCHIVE_DONE
-  call :popd_safe
-  exit /b 5
+  call :popd_safe 5
+  goto :eof
 )
 if not exist "%ARCHIVE_DEST%\\summary.json" (
   echo [error] summary.json missing in archive: %ARCHIVE_DEST%\summary.json
-  call :popd_safe
-  exit /b 6
+  call :popd_safe 6
+  goto :eof
 )
 if not exist "%ARCHIVE_DEST%\\checks\\mass_budget.csv" (
   echo [error] mass_budget.csv missing in archive: %ARCHIVE_DEST%\checks\mass_budget.csv
-  call :popd_safe
-  exit /b 7
+  call :popd_safe 7
+  goto :eof
 )
 if not exist "%ARCHIVE_DEST%\\series\\run.parquet" (
   echo [error] run.parquet missing in archive: %ARCHIVE_DEST%\series\run.parquet
-  call :popd_safe
-  exit /b 8
+  call :popd_safe 8
+  goto :eof
 )
 
 echo [done] Archive smoke test passed: %ARCHIVE_DEST%
-call :popd_safe
-exit /b 0
+call :popd_safe 0
+goto :eof
 
 :popd_safe
-set "MARSDISK_POPD_ERRORLEVEL=%ERRORLEVEL%"
+set "MARSDISK_POPD_ERRORLEVEL=%~1"
+if "%MARSDISK_POPD_ERRORLEVEL%"=="" set "MARSDISK_POPD_ERRORLEVEL=!errorlevel!"
 if defined MARSDISK_POPD_ACTIVE (
   popd
   set "MARSDISK_POPD_ACTIVE="
 )
-exit /b %MARSDISK_POPD_ERRORLEVEL%
+endlocal & exit /b %MARSDISK_POPD_ERRORLEVEL%

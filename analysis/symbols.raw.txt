@@ -941,13 +941,16 @@ scripts/research/plot_sweep_run.py:15:def _load_summary(run_dir: Path) -> dict
 scripts/research/plot_sweep_run.py:25:def _compute_cell_weights(df)
 scripts/research/plot_sweep_run.py:61:def _weighted_mean(values, weights)
 scripts/research/plot_sweep_run.py:77:def _aggregate_1d(df, columns)
-scripts/research/plot_sweep_run.py:139:def _load_series(run_dir: Path, columns)
-scripts/research/plot_sweep_run.py:153:def _concat_frames(frames)
-scripts/research/plot_sweep_run.py:160:def _pd_concat(frames)
-scripts/research/plot_sweep_run.py:166:def _read_parquet(path: Path, columns)
-scripts/research/plot_sweep_run.py:185:def _downsample(df, max_rows)
-scripts/research/plot_sweep_run.py:194:def _plot_quicklook(df, plots_dir: Path)
-scripts/research/plot_sweep_run.py:237:def main(run_dir: Path) -> int
+scripts/research/plot_sweep_run.py:139:def _select_ring_cells(df)
+scripts/research/plot_sweep_run.py:158:def _series_label(tag, r_rm)
+scripts/research/plot_sweep_run.py:164:def _prepare_series_sets(df, columns, max_rows)
+scripts/research/plot_sweep_run.py:198:def _load_series(run_dir: Path, columns)
+scripts/research/plot_sweep_run.py:212:def _concat_frames(frames)
+scripts/research/plot_sweep_run.py:219:def _pd_concat(frames)
+scripts/research/plot_sweep_run.py:225:def _read_parquet(path: Path, columns)
+scripts/research/plot_sweep_run.py:244:def _downsample(df, max_rows)
+scripts/research/plot_sweep_run.py:253:def _plot_quicklook(series_sets, plots_dir: Path)
+scripts/research/plot_sweep_run.py:328:def main(run_dir: Path) -> int
 scripts/research/preflight_streaming_check.py:19:def check_streaming_chunks(run_dir: Path) -> int
 scripts/research/preflight_streaming_check.py:95:def check_required_columns(run_dir: Path) -> int
 scripts/research/preflight_streaming_check.py:128:def main()
@@ -1064,7 +1067,7 @@ scripts/runsets/common/write_base_overrides.py:22:def append(lines: list[str], k
 scripts/runsets/common/write_base_overrides.py:28:def append_literal(lines: list[str], literal: str) -> None
 scripts/runsets/common/write_base_overrides.py:32:def main() -> int
 scripts/runsets/common/write_sweep_list.py:11:def _parse_list(raw: str) -> list[str]
-scripts/runsets/common/write_sweep_list.py:25:def _parse_extra_cases(raw: str) -> list[tuple[str, str, str]]
+scripts/runsets/common/write_sweep_list.py:25:def _parse_extra_cases(raw: str) -> list[tuple[str, str, str, str]]
 scripts/runsets/common/write_sweep_list.py:47:def main() -> int
 scripts/runsets/windows/preflight_checks.py:305:class Issue
 scripts/runsets/windows/preflight_checks.py:314:class AllowlistEntry
@@ -1258,28 +1261,28 @@ scripts/tests/cell_parallel_speed_check.py:16:def _repo_root() -> Path
 scripts/tests/cell_parallel_speed_check.py:20:def _load_json(path: Path) -> Dict[str, Any]
 scripts/tests/cell_parallel_speed_check.py:24:def _run_case(*, label: str, config_path: Path, outdir: Path, overrides: list[str], env: Dict[str, str], quiet: bool) -> Dict[str, Any]
 scripts/tests/cell_parallel_speed_check.py:62:def main() -> int
-scripts/tests/check_run_sweep_cpu_bound.py:26:def _repo_root() -> Path
-scripts/tests/check_run_sweep_cpu_bound.py:30:def _timestamp() -> str
-scripts/tests/check_run_sweep_cpu_bound.py:34:def _write_text(path: Path, text: str) -> None
-scripts/tests/check_run_sweep_cpu_bound.py:39:def _write_json(path: Path, payload: Dict[str, Any]) -> None
-scripts/tests/check_run_sweep_cpu_bound.py:43:def _format_list(values: Iterable[float]) -> str
-scripts/tests/check_run_sweep_cpu_bound.py:47:def _write_study(path: Path, sweep_tag: str) -> None
-scripts/tests/check_run_sweep_cpu_bound.py:57:def _format_override_value(value: Optional[float]) -> str
-scripts/tests/check_run_sweep_cpu_bound.py:63:def _build_overrides(base_overrides: Path, extra_overrides: Iterable[str], out_path: Path) -> None
-scripts/tests/check_run_sweep_cpu_bound.py:77:def _run_cmd(cmd: list[str], env: Dict[str, str], cwd: Path) -> subprocess.CompletedProcess
-scripts/tests/check_run_sweep_cpu_bound.py:83:def _parse_parallel_final(log_path: Path) -> Dict[str, str]
-scripts/tests/check_run_sweep_cpu_bound.py:102:def _coerce_int(value: Optional[str], default: int) -> int
-scripts/tests/check_run_sweep_cpu_bound.py:111:def _thread_budget(parallel_config: Dict[str, str], cpu_logical: int) -> Dict[str, Any]
-scripts/tests/check_run_sweep_cpu_bound.py:135:def _update_cpu_times(root: Optional['psutil.Process'], seen: Dict[int, float]) -> None
-scripts/tests/check_run_sweep_cpu_bound.py:153:def _monitor_cpu(proc: subprocess.Popen, interval: float) -> tuple[list[float], Dict[int, float]]
-scripts/tests/check_run_sweep_cpu_bound.py:172:def main() -> int
+scripts/tests/check_run_sweep_cpu_bound.py:27:def _repo_root() -> Path
+scripts/tests/check_run_sweep_cpu_bound.py:31:def _timestamp() -> str
+scripts/tests/check_run_sweep_cpu_bound.py:35:def _write_text(path: Path, text: str) -> None
+scripts/tests/check_run_sweep_cpu_bound.py:40:def _write_json(path: Path, payload: Dict[str, Any]) -> None
+scripts/tests/check_run_sweep_cpu_bound.py:44:def _format_list(values: Iterable[float]) -> str
+scripts/tests/check_run_sweep_cpu_bound.py:48:def _write_study(path: Path, sweep_tag: str) -> None
+scripts/tests/check_run_sweep_cpu_bound.py:59:def _format_override_value(value: Optional[float]) -> str
+scripts/tests/check_run_sweep_cpu_bound.py:65:def _build_overrides(base_overrides: Path, extra_overrides: Iterable[str], out_path: Path) -> None
+scripts/tests/check_run_sweep_cpu_bound.py:79:def _run_cmd(cmd: list[str], env: Dict[str, str], cwd: Path) -> subprocess.CompletedProcess
+scripts/tests/check_run_sweep_cpu_bound.py:85:def _parse_parallel_final(log_path: Path) -> Dict[str, str]
+scripts/tests/check_run_sweep_cpu_bound.py:104:def _coerce_int(value: Optional[str], default: int) -> int
+scripts/tests/check_run_sweep_cpu_bound.py:113:def _thread_budget(parallel_config: Dict[str, str], cpu_logical: int) -> Dict[str, Any]
+scripts/tests/check_run_sweep_cpu_bound.py:137:def _update_cpu_times(root: Optional['psutil.Process'], seen: Dict[int, float]) -> None
+scripts/tests/check_run_sweep_cpu_bound.py:155:def _monitor_cpu(proc: subprocess.Popen, interval: float) -> tuple[list[float], Dict[int, float]]
+scripts/tests/check_run_sweep_cpu_bound.py:174:def main() -> int
 scripts/tests/measure_case_output_size.py:17:def _repo_root() -> Path
 scripts/tests/measure_case_output_size.py:21:def _sanitize_token(value: str) -> str
 scripts/tests/measure_case_output_size.py:29:def _git_short_sha(repo_root: Path) -> str
 scripts/tests/measure_case_output_size.py:45:def _dir_stats(path: Path) -> Tuple[int, int, int]
-scripts/tests/measure_case_output_size.py:61:def _build_outdir(*, batch_root: Path, sweep_tag: str, run_ts: str, git_sha: str, batch_seed: int, t_value: str, eps_value: str, tau_value: str) -> Path
-scripts/tests/measure_case_output_size.py:79:def _write_report(path: Path, payload: Dict[str, object]) -> None
-scripts/tests/measure_case_output_size.py:83:def main() -> int
+scripts/tests/measure_case_output_size.py:61:def _build_outdir(*, batch_root: Path, sweep_tag: str, run_ts: str, git_sha: str, batch_seed: int, t_value: str, eps_value: str, tau_value: str, i0_value: str) -> Path
+scripts/tests/measure_case_output_size.py:81:def _write_report(path: Path, payload: Dict[str, object]) -> None
+scripts/tests/measure_case_output_size.py:85:def main() -> int
 scripts/tests/numba_on_off_benchmark.py:18:class RunResult
 scripts/tests/numba_on_off_benchmark.py:26:def _repo_root() -> Path
 scripts/tests/numba_on_off_benchmark.py:30:def _default_env() -> Dict[str, str]
@@ -1333,20 +1336,20 @@ scripts/tests/sweep_vs_cell_parallel_speed_check.py:24:def _write_text(path: Pat
 scripts/tests/sweep_vs_cell_parallel_speed_check.py:29:def _write_json(path: Path, payload: Dict[str, Any]) -> None
 scripts/tests/sweep_vs_cell_parallel_speed_check.py:33:def _parse_number_list(raw: str) -> List[float]
 scripts/tests/sweep_vs_cell_parallel_speed_check.py:38:def _format_yaml_list(values: Iterable[float]) -> str
-scripts/tests/sweep_vs_cell_parallel_speed_check.py:42:def _write_study(path: Path, *, t_list: List[float], eps_list: List[float], tau_list: List[float], sweep_tag: str) -> None
-scripts/tests/sweep_vs_cell_parallel_speed_check.py:52:def _build_overrides(base_path: Path, extra_lines: List[str], out_path: Path) -> None
-scripts/tests/sweep_vs_cell_parallel_speed_check.py:61:def _parse_parallel_final(log_path: Path) -> Dict[str, str]
-scripts/tests/sweep_vs_cell_parallel_speed_check.py:80:def _run_cmd(cmd: List[str], *, env: Dict[str, str], cwd: Path) -> subprocess.CompletedProcess
-scripts/tests/sweep_vs_cell_parallel_speed_check.py:84:def _build_cmd(cmd_path: Path, *, overrides_path: Path, out_root: Path, study_path: Path, config_path: Path | None, with_plot: bool, with_eval: bool) -> List[str]
-scripts/tests/sweep_vs_cell_parallel_speed_check.py:105:def _run_case(*, label: str, cmd_path: Path, overrides_path: Path, out_root: Path, study_path: Path, config_path: Path | None, env: Dict[str, str], debug_log: Path, trace_log: Path, with_plot: bool, with_eval: bool) -> Dict[str, Any]
-scripts/tests/sweep_vs_cell_parallel_speed_check.py:148:def main() -> int
+scripts/tests/sweep_vs_cell_parallel_speed_check.py:42:def _write_study(path: Path, *, t_list: List[float], eps_list: List[float], tau_list: List[float], i0_list: List[float], sweep_tag: str) -> None
+scripts/tests/sweep_vs_cell_parallel_speed_check.py:61:def _build_overrides(base_path: Path, extra_lines: List[str], out_path: Path) -> None
+scripts/tests/sweep_vs_cell_parallel_speed_check.py:70:def _parse_parallel_final(log_path: Path) -> Dict[str, str]
+scripts/tests/sweep_vs_cell_parallel_speed_check.py:89:def _run_cmd(cmd: List[str], *, env: Dict[str, str], cwd: Path) -> subprocess.CompletedProcess
+scripts/tests/sweep_vs_cell_parallel_speed_check.py:93:def _build_cmd(cmd_path: Path, *, overrides_path: Path, out_root: Path, study_path: Path, config_path: Path | None, with_plot: bool, with_eval: bool) -> List[str]
+scripts/tests/sweep_vs_cell_parallel_speed_check.py:114:def _run_case(*, label: str, cmd_path: Path, overrides_path: Path, out_root: Path, study_path: Path, config_path: Path | None, env: Dict[str, str], debug_log: Path, trace_log: Path, with_plot: bool, with_eval: bool) -> Dict[str, Any]
+scripts/tests/sweep_vs_cell_parallel_speed_check.py:157:def main() -> int
 scripts/tests/temp_supply_parallel_smoke.py:20:def _repo_root() -> Path
 scripts/tests/temp_supply_parallel_smoke.py:24:def _normalize_temp_token(value: str) -> str
 scripts/tests/temp_supply_parallel_smoke.py:31:def _validate_cases(repo_root: Path, cases: Iterable[Tuple[str, str, str]]) -> None
 scripts/tests/temp_supply_parallel_smoke.py:47:def _parse_outdir(output: str) -> Optional[Path]
-scripts/tests/temp_supply_parallel_smoke.py:56:def _run_case(*, case_id: str, t_value: str, eps_value: str, tau_value: str, script_path: Path, env: Dict[str, str], log_dir: Path) -> Dict[str, object]
-scripts/tests/temp_supply_parallel_smoke.py:98:def _build_case_id(t_value: str, eps_value: str, tau_value: str) -> str
-scripts/tests/temp_supply_parallel_smoke.py:102:def main() -> int
+scripts/tests/temp_supply_parallel_smoke.py:56:def _run_case(*, case_id: str, t_value: str, eps_value: str, tau_value: str, i0_value: str, script_path: Path, env: Dict[str, str], log_dir: Path) -> Dict[str, object]
+scripts/tests/temp_supply_parallel_smoke.py:100:def _build_case_id(t_value: str, eps_value: str, tau_value: str, i0_value: str) -> str
+scripts/tests/temp_supply_parallel_smoke.py:104:def main() -> int
 scripts/tests/test_win_parallel.py:16:def test_win_process_launch_basic()
 scripts/tests/test_win_parallel.py:56:def test_win_process_launch_cmdfile()
 scripts/tests/test_win_parallel.py:104:def test_win_process_launch_cmdfile_cp932()
@@ -1931,6 +1934,34 @@ tools/analyze_tau_los_feedback.py:201:def _render_placeholder(path: Path, title:
 tools/analyze_tau_los_feedback.py:211:def analyze(args: argparse.Namespace) -> Dict
 tools/analyze_tau_los_feedback.py:423:def _rows_from_result(result: Dict) -> List[Dict[str, object]]
 tools/analyze_tau_los_feedback.py:459:def main() -> None
+tools/build_thesis_draft.py:57:class Block
+tools/build_thesis_draft.py:62:def strip_yaml_frontmatter(text: str) -> str
+tools/build_thesis_draft.py:72:def strip_html_comments(text: str) -> str
+tools/build_thesis_draft.py:86:def strip_tex_exclude_blocks(text: str) -> str
+tools/build_thesis_draft.py:103:def split_table_row(line: str) -> list[str]
+tools/build_thesis_draft.py:107:def is_table_separator(line: str) -> bool
+tools/build_thesis_draft.py:117:def is_latex_block_start(line: str) -> bool
+tools/build_thesis_draft.py:126:def parse_latex_block(lines: list[str], start: int) -> tuple[Block, int]
+tools/build_thesis_draft.py:162:def parse_code_block(lines: list[str], start: int) -> tuple[Block, int]
+tools/build_thesis_draft.py:175:def parse_table(lines: list[str], start: int) -> tuple[Block | None, int]
+tools/build_thesis_draft.py:196:def parse_list(lines: list[str], start: int) -> tuple[Block, int]
+tools/build_thesis_draft.py:255:def parse_blockquote(lines: list[str], start: int) -> tuple[Block, int]
+tools/build_thesis_draft.py:268:def parse_paragraph(lines: list[str], start: int) -> tuple[Block, int]
+tools/build_thesis_draft.py:292:def parse_blocks(lines: list[str]) -> list[Block]
+tools/build_thesis_draft.py:334:def strip_numbered_prefix(text: str) -> str
+tools/build_thesis_draft.py:338:def convert_cite_brackets(text: str) -> str
+tools/build_thesis_draft.py:355:def escape_latex(text: str) -> str
+tools/build_thesis_draft.py:373:def escape_latex_code(text: str) -> str
+tools/build_thesis_draft.py:394:def convert_inline(text: str) -> str
+tools/build_thesis_draft.py:434:def needs_texorpdfstring(text: str) -> bool
+tools/build_thesis_draft.py:444:def latex_to_plain(text: str) -> str
+tools/build_thesis_draft.py:463:def replace_unicode_subscripts(text: str) -> str
+tools/build_thesis_draft.py:471:def replace_unicode_symbols(text: str) -> str
+tools/build_thesis_draft.py:477:class MarkdownToLatexConverter
+tools/build_thesis_draft.py:545:def replace_between_markers(text: str, start: str, end: str, replacement: str) -> str
+tools/build_thesis_draft.py:555:def run(cmd: list[str], cwd: Path, env: dict[str, str] | None=None) -> None
+tools/build_thesis_draft.py:559:def build_pdf(tex_path: Path, out_dir: Path, repo_root: Path) -> None
+tools/build_thesis_draft.py:613:def main() -> int
 tools/check_unknown_refs.py:13:def load_requests(path: Path) -> list[dict]
 tools/check_unknown_refs.py:24:def main() -> int
 tools/derive_supply_rate.py:51:class SupplyInputs
@@ -1961,6 +1992,10 @@ tools/diagnostics/beta_map.py:460:def build_heatmap(data: np.ndarray, r_values: 
 tools/diagnostics/beta_map.py:497:def summarise_variation(matrix: np.ndarray, axis: int) -> np.ndarray
 tools/diagnostics/beta_map.py:508:def write_readme(outdir: Path, ctx: RuntimeContext, config_path: Path, qpr_table_path: Path, phi_origin: str, beta_raw_map: np.ndarray, beta_eff_map: np.ndarray, r_values: np.ndarray, T_values: np.ndarray, dt_warning_cells: int, total_cells: int, qpr_counter: QPrCounter) -> None
 tools/diagnostics/beta_map.py:581:def main() -> None
+tools/filter_tex_exclude.py:25:def extract_excluded_titles(markdown_text: str) -> list[str]
+tools/filter_tex_exclude.py:46:def find_chapter_range(lines: list[str], chapter_title: str | None) -> tuple[int, int]
+tools/filter_tex_exclude.py:65:def strip_tex_blocks(lines: list[str], titles: set[str], start_idx: int, end_idx: int) -> tuple[list[str], list[str]]
+tools/filter_tex_exclude.py:100:def main() -> int
 tools/maintainability_metrics.py:15:def _run(cmd: list[str], *, cwd: Path) -> subprocess.CompletedProcess[str] | None
 tools/maintainability_metrics.py:28:def _rank_complexity(value: int) -> str
 tools/maintainability_metrics.py:42:def _summarize_radon(data: dict[str, Any]) -> dict[str, Any]
@@ -2206,6 +2241,10 @@ tools/research/plot_standard.py:137:def main() -> int
 tools/research/plot_supply_chain.py:18:def _axis(run_dir: Path, df, use_time: bool)
 tools/research/plot_supply_chain.py:27:def plot_supply_chain(run_dir: Path, out: Path | None=None, max_points: int | None=4000, use_time: bool=False) -> Path
 tools/research/plot_supply_chain.py:151:def main() -> int
+tools/resolve_pdf_links.py:11:def _as_float_or_null(value)
+tools/resolve_pdf_links.py:17:def _dest_to_array(dest) -> ArrayObject
+tools/resolve_pdf_links.py:26:def resolve_links(input_path: Path, output_path: Path) -> int
+tools/resolve_pdf_links.py:117:def main() -> int
 tools/utilities/memory_probe.py:23:def _human_bytes(value: float) -> str
 tools/utilities/memory_probe.py:35:def _resolve_radius(cfg: object) -> Tuple[float, str]
 tools/utilities/memory_probe.py:52:def _estimate_memory(rows: int, bytes_per_row: float) -> float

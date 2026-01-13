@@ -21,6 +21,7 @@ except Exception:
 DEFAULT_T_LIST = [4000]
 DEFAULT_EPS_LIST = [1.0]
 DEFAULT_TAU_LIST = [1.0]
+DEFAULT_I0_LIST = [0.05]
 
 
 def _repo_root() -> Path:
@@ -49,6 +50,7 @@ def _write_study(path: Path, sweep_tag: str) -> None:
         f"T_LIST: {_format_list(DEFAULT_T_LIST)}",
         f"EPS_LIST: {_format_list(DEFAULT_EPS_LIST)}",
         f"TAU_LIST: {_format_list(DEFAULT_TAU_LIST)}",
+        f"I0_LIST: {_format_list(DEFAULT_I0_LIST)}",
         f"SWEEP_TAG: {sweep_tag}",
     ]
     _write_text(path, "\n".join(lines) + "\n")

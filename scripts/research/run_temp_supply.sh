@@ -4,9 +4,9 @@
 #   epsilon_mix = {1.0, 0.5}
 #   mu_orbit10pct = 1.0 (1 orbit supplies 5% of Sigma_ref(tau=1); scaled by orbit_fraction_at_mu1)
 #   optical_depth.tau0_target = {1.0, 0.5}
-#   extra cases: (T, epsilon_mix, tau0_target) = (4000, 1.5, 1.0), (3000, 1.5, 1.0)
+#   dynamics.i0 = {0.05, 0.10}
 #   material defaults: forsterite via configs/overrides/material_forsterite.override
-# 出力は out/temp_supply_sweep/<ts>__<sha>__seed<batch>/T{T}_eps{eps}_tau{tau}/ に配置。
+# 出力は out/temp_supply_sweep/<ts>__<sha>__seed<batch>/T{T}_eps{eps}_tau{tau}_i0{i0}/ に配置。
 # 供給は supply.* による外部源（温度・τフィードバック・有限リザーバ対応）。
 
 set -euo pipefail
@@ -70,7 +70,8 @@ fi
 T_LIST=("4000" "3000")
 EPS_LIST=("1.0" "0.5")
 TAU_LIST=("1.0" "0.5")
-EXTRA_CASES_DEFAULT="4000 1.5 1.0 3000 1.5 1.0"
+I0_LIST=("0.05" "0.10")
+EXTRA_CASES_DEFAULT=""
 if [[ -n "${EXTRA_CASES+x}" ]]; then
   EXTRA_CASES_VALUE="${EXTRA_CASES}"
 else
@@ -85,22 +86,27 @@ CASE_KEYS=()
 CASE_T=()
 CASE_EPS=()
 CASE_TAU=()
+CASE_I0=()
 
 add_case() {
   local t="$1"
   local eps="$2"
   local tau="$3"
-  local key="${t}|${eps}|${tau}"
+  local i0="$4"
+  local key="${t}|${eps}|${tau}|${i0}"
   local existing
-  for existing in "${CASE_KEYS[@]}"; do
-    if [[ "${existing}" == "${key}" ]]; then
-      return 1
-    fi
-  done
+  if (( ${#CASE_KEYS[@]} )); then
+    for existing in "${CASE_KEYS[@]}"; do
+      if [[ "${existing}" == "${key}" ]]; then
+        return 1
+      fi
+    done
+  fi
   CASE_KEYS+=("${key}")
   CASE_T+=("${t}")
   CASE_EPS+=("${eps}")
   CASE_TAU+=("${tau}")
+  CASE_I0+=("${i0}")
   return 0
 }
 
@@ -116,20 +122,22 @@ append_extra_cases() {
   if (( count == 0 )); then
     return 0
   fi
-  if (( count % 3 != 0 )); then
-    echo "[warn] EXTRA_CASES expects triples; got ${count} tokens"
+  if (( count % 4 != 0 )); then
+    echo "[warn] EXTRA_CASES expects quadruples; got ${count} tokens"
   fi
   local idx=0
-  while (( idx + 2 < count )); do
-    add_case "${tokens[idx]}" "${tokens[idx + 1]}" "${tokens[idx + 2]}" || true
-    idx=$((idx + 3))
+  while (( idx + 3 < count )); do
+    add_case "${tokens[idx]}" "${tokens[idx + 1]}" "${tokens[idx + 2]}" "${tokens[idx + 3]}" || true
+    idx=$((idx + 4))
   done
 }
 
 for T in "${T_LIST[@]}"; do
   for EPS in "${EPS_LIST[@]}"; do
     for TAU in "${TAU_LIST[@]}"; do
-      add_case "${T}" "${EPS}" "${TAU}" || true
+      for I0 in "${I0_LIST[@]}"; do
+        add_case "${T}" "${EPS}" "${TAU}" "${I0}" || true
+      done
     done
   done
 done
@@ -363,19 +371,22 @@ for idx in "${!CASE_T[@]}"; do
   T="${CASE_T[$idx]}"
   EPS="${CASE_EPS[$idx]}"
   TAU="${CASE_TAU[$idx]}"
+  I0="${CASE_I0[$idx]}"
   T_TABLE="data/mars_temperature_T${T}p0K.csv"
     EPS_TITLE="${EPS/0./0p}"
     EPS_TITLE="${EPS_TITLE/./p}"
       TAU_TITLE="${TAU/0./0p}"
       TAU_TITLE="${TAU_TITLE/./p}"
+      I0_TITLE="${I0/0./0p}"
+      I0_TITLE="${I0_TITLE/./p}"
       SEED=$(python - <<'PY'
 import secrets
 print(secrets.randbelow(2**31))
 PY
 )
-      TITLE="T${T}_eps${EPS_TITLE}_tau${TAU_TITLE}"
+      TITLE="T${T}_eps${EPS_TITLE}_tau${TAU_TITLE}_i0${I0_TITLE}"
       OUTDIR="${BATCH_DIR}/${TITLE}"
-      echo "[run] T=${T} eps=${EPS} tau=${TAU} -> ${OUTDIR} (batch=${BATCH_SEED}, seed=${SEED})"
+      echo "[run] T=${T} eps=${EPS} tau=${TAU} i0=${I0} -> ${OUTDIR} (batch=${BATCH_SEED}, seed=${SEED})"
       echo "[info] epsilon_mix=${EPS}; mu_orbit10pct=${SUPPLY_MU_ORBIT10PCT} orbit_fraction_at_mu1=${SUPPLY_ORBIT_FRACTION}"
       echo "[info] shielding: mode=${SHIELDING_MODE} fixed_tau1_sigma=${SHIELDING_SIGMA} auto_max_margin=${SHIELDING_AUTO_MAX_MARGIN}"
       if [[ "${EPS}" == "0.1" ]]; then
@@ -395,6 +406,7 @@ PY
           --override "numerics.stop_on_blowout_below_smin=${STOP_ON_BLOWOUT_BELOW_SMIN}"
           --override "io.outdir=${OUTDIR}"
           --override "dynamics.rng_seed=${SEED}"
+          --override "dynamics.i0=${I0}"
         --override "phase.enabled=true"
         --override "phase.temperature_input=${PHASE_TEMP_INPUT}"
         --override "phase.q_abs_mean=${PHASE_QABS_MEAN}"

@@ -15,9 +15,12 @@ echo.[info] REPO_ROOT: !REPO_ROOT!
 echo.[info] CONFIG_PATH: !CONFIG_PATH!
 echo.
 
+set "EXIT_CODE=0"
+
 rem Check if file exists
 if not exist "!CONFIG_PATH!" (
     echo.[FAIL] Config file does not exist: !CONFIG_PATH!
+    set "EXIT_CODE=1"
     goto :end
 )
 echo.[OK] Config file exists
@@ -25,8 +28,10 @@ echo.
 
 rem Resolve Python
 call "!COMMON_DIR!\resolve_python.cmd"
-if !errorlevel! neq 0 (
+set "RESOLVE_RC=!errorlevel!"
+if not "!RESOLVE_RC!"=="0" (
     echo.[FAIL] Python resolution failed
+    set "EXIT_CODE=1"
     goto :end
 )
 echo.[OK] Python resolved: !PYTHON_EXE! !PYTHON_ARGS!
@@ -34,6 +39,7 @@ echo.
 
 rem Change to repo root
 pushd "!REPO_ROOT!"
+set "POPD_ACTIVE=1"
 
 rem Test 1: Check if yaml module is available
 echo.[Test 1] Checking PyYAML installation...
@@ -42,13 +48,14 @@ if defined PYTHON_ARGS (
 ) else (
     "!PYTHON_EXE!" -c "import yaml; print('PyYAML version:', yaml.__version__)"
 )
-if !errorlevel! neq 0 (
+set "TEST1_RC=!errorlevel!"
+if not "!TEST1_RC!"=="0" (
     echo.[FAIL] PyYAML is not installed
     echo.
     echo.To fix, run:
     echo.  pip install pyyaml
-    popd
-    goto :end
+    set "EXIT_CODE=1"
+    goto :cleanup
 )
 echo.
 
@@ -59,7 +66,8 @@ if defined PYTHON_ARGS (
 ) else (
     "!PYTHON_EXE!" -c "import yaml; import sys; f=open(r'!CONFIG_PATH!', encoding='utf-8'); data=yaml.safe_load(f); print('Config loaded successfully'); print('Top-level keys:', list(data.keys())[:5])"
 )
-if !errorlevel! neq 0 (
+set "TEST2_RC=!errorlevel!"
+if not "!TEST2_RC!"=="0" (
     echo.
     echo.[FAIL] Config file parsing failed. See error above.
     echo.
@@ -67,8 +75,8 @@ if !errorlevel! neq 0 (
     echo.  1. YAML syntax error in the file
     echo.  2. File encoding issue (should be UTF-8)
     echo.  3. Invalid characters in file path
-    popd
-    goto :end
+    set "EXIT_CODE=1"
+    goto :cleanup
 )
 echo.
 
@@ -79,7 +87,8 @@ if defined PYTHON_ARGS (
 ) else (
     "!PYTHON_EXE!" -c "from ruamel.yaml import YAML; print('ruamel.yaml is available')"
 )
-if !errorlevel! neq 0 (
+set "TEST3_RC=!errorlevel!"
+if not "!TEST3_RC!"=="0" (
     echo.[WARN] ruamel.yaml is not installed (marsdisk may require it)
     echo.
     echo.To fix, run:
@@ -87,12 +96,18 @@ if !errorlevel! neq 0 (
 )
 echo.
 
-popd
+:cleanup
+if defined POPD_ACTIVE (
+    popd
+    set "POPD_ACTIVE="
+)
 
-echo.
-echo.============================================================
-echo. All config validation tests passed!
-echo.============================================================
+if "!EXIT_CODE!"=="0" (
+    echo.
+    echo.============================================================
+    echo. All config validation tests passed!
+    echo.============================================================
+)
 
 :end
-endlocal
+endlocal & exit /b %EXIT_CODE%
