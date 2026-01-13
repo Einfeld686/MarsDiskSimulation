@@ -169,6 +169,12 @@ analysis/tools/make_sinks_callgraph.py:54:def build_mermaid(inv: Dict[SymbolKey,
 analysis/tools/make_sinks_callgraph.py:94:def inject_autogen_block(original: str, block: str) -> str
 analysis/tools/make_sinks_callgraph.py:116:def parse_args(argv: Optional[Sequence[str]]) -> argparse.Namespace
 analysis/tools/make_sinks_callgraph.py:128:def main(argv: Optional[Sequence[str]]=None) -> int
+analysis/tools/merge_discussion_sections.py:15:def _manifest_entries(manifest_path: Path) -> list[str]
+analysis/tools/merge_discussion_sections.py:25:def _validate_entry(entry: str) -> None
+analysis/tools/merge_discussion_sections.py:30:def _paths_from_manifest(sections_dir: Path, manifest_path: Path) -> list[Path]
+analysis/tools/merge_discussion_sections.py:51:def collect_sections(sections_dir: Path, manifest_path: Path | None=None) -> list[Path]
+analysis/tools/merge_discussion_sections.py:63:def build_document(section_paths: list[Path]) -> str
+analysis/tools/merge_discussion_sections.py:70:def main(argv: list[str] | None=None) -> int
 analysis/tools/merge_introduction_sections.py:14:def _manifest_entries(manifest_path: Path) -> list[str]
 analysis/tools/merge_introduction_sections.py:24:def _validate_entry(entry: str) -> None
 analysis/tools/merge_introduction_sections.py:29:def _paths_from_manifest(sections_dir: Path, manifest_path: Path) -> list[Path]
@@ -181,6 +187,18 @@ analysis/tools/merge_methods_sections.py:30:def _paths_from_manifest(sections_di
 analysis/tools/merge_methods_sections.py:51:def collect_sections(sections_dir: Path, manifest_path: Path | None=None) -> list[Path]
 analysis/tools/merge_methods_sections.py:63:def build_document(section_paths: list[Path]) -> str
 analysis/tools/merge_methods_sections.py:70:def main(argv: list[str] | None=None) -> int
+analysis/tools/merge_related_work_sections.py:15:def _manifest_entries(manifest_path: Path) -> list[str]
+analysis/tools/merge_related_work_sections.py:25:def _validate_entry(entry: str) -> None
+analysis/tools/merge_related_work_sections.py:30:def _paths_from_manifest(sections_dir: Path, manifest_path: Path) -> list[Path]
+analysis/tools/merge_related_work_sections.py:51:def collect_sections(sections_dir: Path, manifest_path: Path | None=None) -> list[Path]
+analysis/tools/merge_related_work_sections.py:63:def build_document(section_paths: list[Path]) -> str
+analysis/tools/merge_related_work_sections.py:70:def main(argv: list[str] | None=None) -> int
+analysis/tools/merge_results_sections.py:15:def _manifest_entries(manifest_path: Path) -> list[str]
+analysis/tools/merge_results_sections.py:25:def _validate_entry(entry: str) -> None
+analysis/tools/merge_results_sections.py:30:def _paths_from_manifest(sections_dir: Path, manifest_path: Path) -> list[Path]
+analysis/tools/merge_results_sections.py:51:def collect_sections(sections_dir: Path, manifest_path: Path | None=None) -> list[Path]
+analysis/tools/merge_results_sections.py:63:def build_document(section_paths: list[Path]) -> str
+analysis/tools/merge_results_sections.py:70:def main(argv: list[str] | None=None) -> int
 analysis/tools/render_assumptions.py:35:def _render_table(records: Iterable[AssumptionRecord]) -> list[str]
 analysis/tools/render_assumptions.py:57:def render_overview(records: list[AssumptionRecord], report: CoverageReport) -> str
 analysis/tools/render_assumptions.py:87:def render_trace_block(records: list[AssumptionRecord]) -> str
@@ -276,32 +294,30 @@ marsdisk/io/archive.py:69:def resolve_archive_dest(archive_root: Path, run_dir: 
 marsdisk/io/archive.py:73:def _human_bytes(value: float) -> str
 marsdisk/io/archive.py:83:def _hash_file(path: Path) -> str
 marsdisk/io/archive.py:91:def _hash_schema(schema: pa.Schema) -> str
-marsdisk/io/archive.py:95:def _unique_types(types: Sequence[pa.DataType]) -> List[pa.DataType]
-marsdisk/io/archive.py:103:def _choose_type(types: Sequence[pa.DataType]) -> pa.DataType
-marsdisk/io/archive.py:119:def _hash_arrow_table(table: pa.Table) -> str
-marsdisk/io/archive.py:126:def _parquet_metadata(path: Path) -> Dict[str, int | str]
-marsdisk/io/archive.py:136:def _parquet_row_group_checksum(path: Path, group_index: int) -> Optional[str]
-marsdisk/io/archive.py:145:def _unify_chunk_schema_hash(paths: Sequence[Path]) -> Optional[str]
-marsdisk/io/archive.py:165:def _sum_chunk_rows(paths: Sequence[Path]) -> int
-marsdisk/io/archive.py:177:def _is_chunk(rel_path: Path) -> bool
-marsdisk/io/archive.py:184:def _is_metadata(rel_path: Path) -> bool
-marsdisk/io/archive.py:192:def _collect_copy_files(run_dir: Path) -> List[Path]
-marsdisk/io/archive.py:204:def _collect_hash_targets(run_dir: Path) -> List[Path]
-marsdisk/io/archive.py:219:def _write_marker(path: Path, message: str) -> None
-marsdisk/io/archive.py:226:def _update_run_card(run_card: Path, archive_path: Path, manifest_path: Optional[Path], manifest_hash: Optional[str], level: str, *, volume_info: Optional[Mapping[str, Optional[str]]]=None, copy_stats: Optional[Mapping[str, float]]=None, slow_warning: Optional[str]=None) -> None
-marsdisk/io/archive.py:277:def _check_writable(path: Path) -> bool
-marsdisk/io/archive.py:285:def _verify_level_settings(level: str) -> str
-marsdisk/io/archive.py:292:def _resolve_mount_point(path: Path) -> Path
-marsdisk/io/archive.py:311:def _windows_volume_info(mount_point: Path) -> Dict[str, Optional[str]]
-marsdisk/io/archive.py:354:def _mac_volume_info(path: Path) -> Dict[str, Optional[str]]
-marsdisk/io/archive.py:381:def _linux_volume_info(mount_point: Path) -> Dict[str, Optional[str]]
-marsdisk/io/archive.py:421:def _resolve_volume_info(path: Path) -> Dict[str, Optional[str]]
-marsdisk/io/archive.py:433:def archive_run(run_dir: Path, *, archive_root: Path, settings: ArchiveSettings) -> ArchiveResult
-marsdisk/io/archive.py:562:def _build_manifest(root: Path, *, exclude: Optional[set[str]]=None) -> Dict[str, object]
-marsdisk/io/archive.py:586:def _hash_manifest(manifest: Mapping[str, object]) -> str
-marsdisk/io/archive.py:591:def _verify_archive(*, run_dir: Path, dest_dir: Path, verify_level: str) -> List[str]
-marsdisk/io/archive.py:641:def _verify_parquet_sets(run_dir: Path, dest_dir: Path, errors: List[str], level: str) -> None
-marsdisk/io/archive.py:694:def _cleanup_local(run_dir: Path, keep_local: str) -> None
+marsdisk/io/archive.py:95:def _hash_arrow_table(table: pa.Table) -> str
+marsdisk/io/archive.py:102:def _parquet_metadata(path: Path) -> Dict[str, int | str]
+marsdisk/io/archive.py:112:def _parquet_row_group_checksum(path: Path, group_index: int) -> Optional[str]
+marsdisk/io/archive.py:121:def _unify_chunk_schema_hash(paths: Sequence[Path]) -> Optional[str]
+marsdisk/io/archive.py:143:def _sum_chunk_rows(paths: Sequence[Path]) -> int
+marsdisk/io/archive.py:155:def _is_chunk(rel_path: Path) -> bool
+marsdisk/io/archive.py:162:def _is_metadata(rel_path: Path) -> bool
+marsdisk/io/archive.py:170:def _collect_copy_files(run_dir: Path) -> List[Path]
+marsdisk/io/archive.py:182:def _collect_hash_targets(run_dir: Path) -> List[Path]
+marsdisk/io/archive.py:197:def _write_marker(path: Path, message: str) -> None
+marsdisk/io/archive.py:204:def _update_run_card(run_card: Path, archive_path: Path, manifest_path: Optional[Path], manifest_hash: Optional[str], level: str, *, volume_info: Optional[Mapping[str, Optional[str]]]=None, copy_stats: Optional[Mapping[str, float]]=None, slow_warning: Optional[str]=None) -> None
+marsdisk/io/archive.py:255:def _check_writable(path: Path) -> bool
+marsdisk/io/archive.py:263:def _verify_level_settings(level: str) -> str
+marsdisk/io/archive.py:270:def _resolve_mount_point(path: Path) -> Path
+marsdisk/io/archive.py:289:def _windows_volume_info(mount_point: Path) -> Dict[str, Optional[str]]
+marsdisk/io/archive.py:332:def _mac_volume_info(path: Path) -> Dict[str, Optional[str]]
+marsdisk/io/archive.py:359:def _linux_volume_info(mount_point: Path) -> Dict[str, Optional[str]]
+marsdisk/io/archive.py:399:def _resolve_volume_info(path: Path) -> Dict[str, Optional[str]]
+marsdisk/io/archive.py:411:def archive_run(run_dir: Path, *, archive_root: Path, settings: ArchiveSettings) -> ArchiveResult
+marsdisk/io/archive.py:540:def _build_manifest(root: Path, *, exclude: Optional[set[str]]=None) -> Dict[str, object]
+marsdisk/io/archive.py:564:def _hash_manifest(manifest: Mapping[str, object]) -> str
+marsdisk/io/archive.py:569:def _verify_archive(*, run_dir: Path, dest_dir: Path, verify_level: str) -> List[str]
+marsdisk/io/archive.py:619:def _verify_parquet_sets(run_dir: Path, dest_dir: Path, errors: List[str], level: str) -> None
+marsdisk/io/archive.py:672:def _cleanup_local(run_dir: Path, keep_local: str) -> None
 marsdisk/io/checkpoint.py:16:def _b64_pack(payload: Any) -> str
 marsdisk/io/checkpoint.py:20:def _b64_unpack(payload: str) -> Any
 marsdisk/io/checkpoint.py:25:class CheckpointState
@@ -356,44 +372,44 @@ marsdisk/ops/assumption_trace.py:264:def write_jsonl(records: Iterable[Assumptio
 marsdisk/ops/assumption_trace.py:273:def write_markdown(records: Iterable[AssumptionRecord], path: Path) -> None
 marsdisk/ops/assumption_trace.py:297:def _parse_args(argv: Optional[list[str]]=None) -> argparse.Namespace
 marsdisk/ops/assumption_trace.py:323:def main(argv: Optional[list[str]]=None) -> int
-marsdisk/ops/doc_sync_agent.py:130:class SymbolInfo
-marsdisk/ops/doc_sync_agent.py:144:class FileChange
-marsdisk/ops/doc_sync_agent.py:175:class CodeRef
-marsdisk/ops/doc_sync_agent.py:183:class EquationEntry
-marsdisk/ops/doc_sync_agent.py:191:class InventoryRecord
-marsdisk/ops/doc_sync_agent.py:227:class DocSyncAgent
-marsdisk/ops/doc_sync_agent.py:783:def _legacy_main(argv: Optional[Sequence[str]]=None) -> int
-marsdisk/ops/doc_sync_agent.py:857:def _collect_inventory_records(root: Path) -> List[InventoryRecord]
-marsdisk/ops/doc_sync_agent.py:897:def _resolve_cli_path(value: str) -> Path
-marsdisk/ops/doc_sync_agent.py:904:def _rel_to_repo(path: Path) -> str
-marsdisk/ops/doc_sync_agent.py:911:def _cmd_scan(args: argparse.Namespace) -> int
-marsdisk/ops/doc_sync_agent.py:927:def _collect_doc_references(doc_paths: Sequence[Path]) -> Dict[str, Any]
-marsdisk/ops/doc_sync_agent.py:1053:def _cmd_refs(args: argparse.Namespace) -> int
-marsdisk/ops/doc_sync_agent.py:1076:def _load_inventory_records(path: Path) -> List[InventoryRecord]
-marsdisk/ops/doc_sync_agent.py:1114:def _match_symbol_by_span(symbols: Sequence[InventoryRecord], start: int, end: int) -> Optional[InventoryRecord]
-marsdisk/ops/doc_sync_agent.py:1126:def _compute_coverage(inventory: Sequence[InventoryRecord], docs_payload: Dict[str, Any]) -> Dict[str, Any]
-marsdisk/ops/doc_sync_agent.py:1273:def _parse_gap_identifier(identifier: str) -> Optional[Tuple[str, str]]
-marsdisk/ops/doc_sync_agent.py:1285:def _collect_unreferenced_from_coverage(coverage_data: Dict[str, Any]) -> List[Tuple[str, str]]
-marsdisk/ops/doc_sync_agent.py:1310:def _load_suggestions_index(path: Path) -> Dict[Tuple[str, str], Dict[str, Any]]
-marsdisk/ops/doc_sync_agent.py:1333:def _format_code_anchor(record: InventoryRecord) -> str
-marsdisk/ops/doc_sync_agent.py:1340:def _strip_line_anchor_annotations(text: str) -> str
-marsdisk/ops/doc_sync_agent.py:1344:def ensure_equation_ids(equations_path: Path) -> None
-marsdisk/ops/doc_sync_agent.py:1405:def _parse_equations_md(path: Path) -> List[EquationEntry]
-marsdisk/ops/doc_sync_agent.py:1429:def _build_equation_entry(meta: Tuple[str, str], block: str) -> EquationEntry
-marsdisk/ops/doc_sync_agent.py:1454:def _compute_equation_code_map(equations: Sequence[EquationEntry], inventory: Sequence[InventoryRecord]) -> Dict[str, Any]
-marsdisk/ops/doc_sync_agent.py:1539:def _render_coverage_markdown(data: Dict[str, Any]) -> str
-marsdisk/ops/doc_sync_agent.py:1596:def _is_stub_already_present(text: str, record: InventoryRecord) -> bool
-marsdisk/ops/doc_sync_agent.py:1601:def _render_stub_block(record: InventoryRecord, doc_kind: str) -> str
-marsdisk/ops/doc_sync_agent.py:1633:def _append_to_section(text: str, heading_pattern: re.Pattern[str], stub: str) -> str
-marsdisk/ops/doc_sync_agent.py:1648:def _append_to_end(text: str, stub: str) -> str
-marsdisk/ops/doc_sync_agent.py:1654:def _determine_autostub_target(record: InventoryRecord, suggestions: Dict[Tuple[str, str], Dict[str, Any]], overview_path: Path, equations_path: Path, run_recipes_path: Path) -> Tuple[Path, Optional[re.Pattern[str]], str]
-marsdisk/ops/doc_sync_agent.py:1701:def _cmd_coverage(args: argparse.Namespace) -> int
-marsdisk/ops/doc_sync_agent.py:1734:def _cmd_equations(args: argparse.Namespace) -> int
-marsdisk/ops/doc_sync_agent.py:1797:def _cmd_autostub(args: argparse.Namespace) -> int
-marsdisk/ops/doc_sync_agent.py:1873:def _cmd_update(args: argparse.Namespace) -> int
-marsdisk/ops/doc_sync_agent.py:2017:def _run_new_cli(argv: Sequence[str]) -> int
-marsdisk/ops/doc_sync_agent.py:2306:def main(argv: Optional[Sequence[str]]=None) -> int
-marsdisk/ops/doc_sync_agent.py:2314:def _git_commit(changes: Iterable[FileChange]) -> None
+marsdisk/ops/doc_sync_agent.py:133:class SymbolInfo
+marsdisk/ops/doc_sync_agent.py:147:class FileChange
+marsdisk/ops/doc_sync_agent.py:178:class CodeRef
+marsdisk/ops/doc_sync_agent.py:186:class EquationEntry
+marsdisk/ops/doc_sync_agent.py:194:class InventoryRecord
+marsdisk/ops/doc_sync_agent.py:230:class DocSyncAgent
+marsdisk/ops/doc_sync_agent.py:786:def _legacy_main(argv: Optional[Sequence[str]]=None) -> int
+marsdisk/ops/doc_sync_agent.py:860:def _collect_inventory_records(root: Path) -> List[InventoryRecord]
+marsdisk/ops/doc_sync_agent.py:900:def _resolve_cli_path(value: str) -> Path
+marsdisk/ops/doc_sync_agent.py:907:def _rel_to_repo(path: Path) -> str
+marsdisk/ops/doc_sync_agent.py:914:def _cmd_scan(args: argparse.Namespace) -> int
+marsdisk/ops/doc_sync_agent.py:930:def _collect_doc_references(doc_paths: Sequence[Path]) -> Dict[str, Any]
+marsdisk/ops/doc_sync_agent.py:1056:def _cmd_refs(args: argparse.Namespace) -> int
+marsdisk/ops/doc_sync_agent.py:1079:def _load_inventory_records(path: Path) -> List[InventoryRecord]
+marsdisk/ops/doc_sync_agent.py:1117:def _match_symbol_by_span(symbols: Sequence[InventoryRecord], start: int, end: int) -> Optional[InventoryRecord]
+marsdisk/ops/doc_sync_agent.py:1129:def _compute_coverage(inventory: Sequence[InventoryRecord], docs_payload: Dict[str, Any]) -> Dict[str, Any]
+marsdisk/ops/doc_sync_agent.py:1276:def _parse_gap_identifier(identifier: str) -> Optional[Tuple[str, str]]
+marsdisk/ops/doc_sync_agent.py:1288:def _collect_unreferenced_from_coverage(coverage_data: Dict[str, Any]) -> List[Tuple[str, str]]
+marsdisk/ops/doc_sync_agent.py:1313:def _load_suggestions_index(path: Path) -> Dict[Tuple[str, str], Dict[str, Any]]
+marsdisk/ops/doc_sync_agent.py:1336:def _format_code_anchor(record: InventoryRecord) -> str
+marsdisk/ops/doc_sync_agent.py:1343:def _strip_line_anchor_annotations(text: str) -> str
+marsdisk/ops/doc_sync_agent.py:1347:def ensure_equation_ids(equations_path: Path) -> None
+marsdisk/ops/doc_sync_agent.py:1408:def _parse_equations_md(path: Path) -> List[EquationEntry]
+marsdisk/ops/doc_sync_agent.py:1432:def _build_equation_entry(meta: Tuple[str, str], block: str) -> EquationEntry
+marsdisk/ops/doc_sync_agent.py:1457:def _compute_equation_code_map(equations: Sequence[EquationEntry], inventory: Sequence[InventoryRecord]) -> Dict[str, Any]
+marsdisk/ops/doc_sync_agent.py:1542:def _render_coverage_markdown(data: Dict[str, Any]) -> str
+marsdisk/ops/doc_sync_agent.py:1599:def _is_stub_already_present(text: str, record: InventoryRecord) -> bool
+marsdisk/ops/doc_sync_agent.py:1604:def _render_stub_block(record: InventoryRecord, doc_kind: str) -> str
+marsdisk/ops/doc_sync_agent.py:1636:def _append_to_section(text: str, heading_pattern: re.Pattern[str], stub: str) -> str
+marsdisk/ops/doc_sync_agent.py:1651:def _append_to_end(text: str, stub: str) -> str
+marsdisk/ops/doc_sync_agent.py:1657:def _determine_autostub_target(record: InventoryRecord, suggestions: Dict[Tuple[str, str], Dict[str, Any]], overview_path: Path, equations_path: Path, run_recipes_path: Path) -> Tuple[Path, Optional[re.Pattern[str]], str]
+marsdisk/ops/doc_sync_agent.py:1704:def _cmd_coverage(args: argparse.Namespace) -> int
+marsdisk/ops/doc_sync_agent.py:1737:def _cmd_equations(args: argparse.Namespace) -> int
+marsdisk/ops/doc_sync_agent.py:1800:def _cmd_autostub(args: argparse.Namespace) -> int
+marsdisk/ops/doc_sync_agent.py:1876:def _cmd_update(args: argparse.Namespace) -> int
+marsdisk/ops/doc_sync_agent.py:2020:def _run_new_cli(argv: Sequence[str]) -> int
+marsdisk/ops/doc_sync_agent.py:2309:def main(argv: Optional[Sequence[str]]=None) -> int
+marsdisk/ops/doc_sync_agent.py:2317:def _git_commit(changes: Iterable[FileChange]) -> None
 marsdisk/ops/equation_matcher.py:19:class MatchSuggestion
 marsdisk/ops/equation_matcher.py:28:def _normalize_text(text: str) -> str
 marsdisk/ops/equation_matcher.py:32:def _equation_text(entry: EquationEntry) -> str
@@ -1934,34 +1950,34 @@ tools/analyze_tau_los_feedback.py:201:def _render_placeholder(path: Path, title:
 tools/analyze_tau_los_feedback.py:211:def analyze(args: argparse.Namespace) -> Dict
 tools/analyze_tau_los_feedback.py:423:def _rows_from_result(result: Dict) -> List[Dict[str, object]]
 tools/analyze_tau_los_feedback.py:459:def main() -> None
-tools/build_thesis_draft.py:57:class Block
-tools/build_thesis_draft.py:62:def strip_yaml_frontmatter(text: str) -> str
-tools/build_thesis_draft.py:72:def strip_html_comments(text: str) -> str
-tools/build_thesis_draft.py:86:def strip_tex_exclude_blocks(text: str) -> str
-tools/build_thesis_draft.py:103:def split_table_row(line: str) -> list[str]
-tools/build_thesis_draft.py:107:def is_table_separator(line: str) -> bool
-tools/build_thesis_draft.py:117:def is_latex_block_start(line: str) -> bool
-tools/build_thesis_draft.py:126:def parse_latex_block(lines: list[str], start: int) -> tuple[Block, int]
-tools/build_thesis_draft.py:162:def parse_code_block(lines: list[str], start: int) -> tuple[Block, int]
-tools/build_thesis_draft.py:175:def parse_table(lines: list[str], start: int) -> tuple[Block | None, int]
-tools/build_thesis_draft.py:196:def parse_list(lines: list[str], start: int) -> tuple[Block, int]
-tools/build_thesis_draft.py:255:def parse_blockquote(lines: list[str], start: int) -> tuple[Block, int]
-tools/build_thesis_draft.py:268:def parse_paragraph(lines: list[str], start: int) -> tuple[Block, int]
-tools/build_thesis_draft.py:292:def parse_blocks(lines: list[str]) -> list[Block]
-tools/build_thesis_draft.py:334:def strip_numbered_prefix(text: str) -> str
-tools/build_thesis_draft.py:338:def convert_cite_brackets(text: str) -> str
-tools/build_thesis_draft.py:355:def escape_latex(text: str) -> str
-tools/build_thesis_draft.py:373:def escape_latex_code(text: str) -> str
-tools/build_thesis_draft.py:394:def convert_inline(text: str) -> str
-tools/build_thesis_draft.py:434:def needs_texorpdfstring(text: str) -> bool
-tools/build_thesis_draft.py:444:def latex_to_plain(text: str) -> str
-tools/build_thesis_draft.py:463:def replace_unicode_subscripts(text: str) -> str
-tools/build_thesis_draft.py:471:def replace_unicode_symbols(text: str) -> str
-tools/build_thesis_draft.py:477:class MarkdownToLatexConverter
-tools/build_thesis_draft.py:545:def replace_between_markers(text: str, start: str, end: str, replacement: str) -> str
-tools/build_thesis_draft.py:555:def run(cmd: list[str], cwd: Path, env: dict[str, str] | None=None) -> None
-tools/build_thesis_draft.py:559:def build_pdf(tex_path: Path, out_dir: Path, repo_root: Path) -> None
-tools/build_thesis_draft.py:613:def main() -> int
+tools/build_thesis_draft.py:63:class Block
+tools/build_thesis_draft.py:68:def strip_yaml_frontmatter(text: str) -> str
+tools/build_thesis_draft.py:78:def strip_html_comments(text: str) -> str
+tools/build_thesis_draft.py:92:def strip_tex_exclude_blocks(text: str) -> str
+tools/build_thesis_draft.py:109:def split_table_row(line: str) -> list[str]
+tools/build_thesis_draft.py:113:def is_table_separator(line: str) -> bool
+tools/build_thesis_draft.py:123:def is_latex_block_start(line: str) -> bool
+tools/build_thesis_draft.py:132:def parse_latex_block(lines: list[str], start: int) -> tuple[Block, int]
+tools/build_thesis_draft.py:168:def parse_code_block(lines: list[str], start: int) -> tuple[Block, int]
+tools/build_thesis_draft.py:181:def parse_table(lines: list[str], start: int) -> tuple[Block | None, int]
+tools/build_thesis_draft.py:202:def parse_list(lines: list[str], start: int) -> tuple[Block, int]
+tools/build_thesis_draft.py:261:def parse_blockquote(lines: list[str], start: int) -> tuple[Block, int]
+tools/build_thesis_draft.py:274:def parse_paragraph(lines: list[str], start: int) -> tuple[Block, int]
+tools/build_thesis_draft.py:298:def parse_blocks(lines: list[str]) -> list[Block]
+tools/build_thesis_draft.py:340:def strip_numbered_prefix(text: str) -> str
+tools/build_thesis_draft.py:344:def convert_cite_brackets(text: str) -> str
+tools/build_thesis_draft.py:361:def escape_latex(text: str) -> str
+tools/build_thesis_draft.py:379:def escape_latex_code(text: str) -> str
+tools/build_thesis_draft.py:400:def convert_inline(text: str) -> str
+tools/build_thesis_draft.py:440:def needs_texorpdfstring(text: str) -> bool
+tools/build_thesis_draft.py:450:def latex_to_plain(text: str) -> str
+tools/build_thesis_draft.py:469:def replace_unicode_subscripts(text: str) -> str
+tools/build_thesis_draft.py:477:def replace_unicode_symbols(text: str) -> str
+tools/build_thesis_draft.py:483:class MarkdownToLatexConverter
+tools/build_thesis_draft.py:551:def replace_between_markers(text: str, start: str, end: str, replacement: str) -> str
+tools/build_thesis_draft.py:561:def run(cmd: list[str], cwd: Path, env: dict[str, str] | None=None) -> None
+tools/build_thesis_draft.py:565:def build_pdf(tex_path: Path, out_dir: Path, repo_root: Path) -> None
+tools/build_thesis_draft.py:629:def main() -> int
 tools/check_unknown_refs.py:13:def load_requests(path: Path) -> list[dict]
 tools/check_unknown_refs.py:24:def main() -> int
 tools/derive_supply_rate.py:51:class SupplyInputs

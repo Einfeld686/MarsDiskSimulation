@@ -1,4 +1,4 @@
-このファイルは、`analysis/introduction.md` と `analysis/methods.md` を可視化するためのスライド骨格を定義する。数式は `analysis/equations.md`、詳細実装は `analysis/overview.md` を唯一のソースとし、ここではスライド単位の目的と参照先のみを保持する。
+このファイルは、`analysis/thesis/introduction.md` と `analysis/thesis/methods.md` を可視化するためのスライド骨格を定義する。数式は `analysis/equations.md`、詳細実装は `analysis/overview.md` を唯一のソースとし、ここではスライド単位の目的と参照先のみを保持する。
 
 ## 構成方針
 

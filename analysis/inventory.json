@@ -1911,6 +1911,83 @@
     "brief_usage": "No description available."
   },
   {
+    "file_path": "analysis/tools/merge_discussion_sections.py",
+    "line_no": 8,
+    "symbol": "REPO_ROOT",
+    "signature": "REPO_ROOT = Path(__file__).resolve().parents[2]",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "analysis/tools/merge_discussion_sections.py",
+    "line_no": 9,
+    "symbol": "SECTIONS_DIR",
+    "signature": "SECTIONS_DIR = REPO_ROOT / 'analysis' / 'thesis_sections' / '04_discussion'",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "analysis/tools/merge_discussion_sections.py",
+    "line_no": 10,
+    "symbol": "OUTPUT_PATH",
+    "signature": "OUTPUT_PATH = REPO_ROOT / 'analysis' / 'thesis' / 'discussion.md'",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "analysis/tools/merge_discussion_sections.py",
+    "line_no": 11,
+    "symbol": "MANIFEST_PATH",
+    "signature": "MANIFEST_PATH = SECTIONS_DIR / 'manifest.txt'",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "analysis/tools/merge_discussion_sections.py",
+    "line_no": 12,
+    "symbol": "SECTION_PATTERN",
+    "signature": "SECTION_PATTERN = re.compile('^\\\\d{2}_.+\\\\.md$')",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "analysis/tools/merge_discussion_sections.py",
+    "line_no": 15,
+    "symbol": "_manifest_entries",
+    "signature": "_manifest_entries(manifest_path: Path) -> list[str]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "analysis/tools/merge_discussion_sections.py",
+    "line_no": 25,
+    "symbol": "_validate_entry",
+    "signature": "_validate_entry(entry: str) -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "analysis/tools/merge_discussion_sections.py",
+    "line_no": 30,
+    "symbol": "_paths_from_manifest",
+    "signature": "_paths_from_manifest(sections_dir: Path, manifest_path: Path) -> list[Path]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "analysis/tools/merge_discussion_sections.py",
+    "line_no": 51,
+    "symbol": "collect_sections",
+    "signature": "collect_sections(sections_dir: Path, manifest_path: Path | None=None) -> list[Path]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "analysis/tools/merge_discussion_sections.py",
+    "line_no": 63,
+    "symbol": "build_document",
+    "signature": "build_document(section_paths: list[Path]) -> str",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "analysis/tools/merge_discussion_sections.py",
+    "line_no": 70,
+    "symbol": "main",
+    "signature": "main(argv: list[str] | None=None) -> int",
+    "brief_usage": "No description available."
+  },
+  {
     "file_path": "analysis/tools/merge_introduction_sections.py",
     "line_no": 8,
     "symbol": "REPO_ROOT",
@@ -1921,14 +1998,14 @@
     "file_path": "analysis/tools/merge_introduction_sections.py",
     "line_no": 9,
     "symbol": "SECTIONS_DIR",
-    "signature": "SECTIONS_DIR = REPO_ROOT / 'analysis' / 'introduction_sections'",
+    "signature": "SECTIONS_DIR = REPO_ROOT / 'analysis' / 'thesis_sections' / '01_introduction'",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "analysis/tools/merge_introduction_sections.py",
     "line_no": 10,
     "symbol": "OUTPUT_PATH",
-    "signature": "OUTPUT_PATH = REPO_ROOT / 'analysis' / 'introduction.md'",
+    "signature": "OUTPUT_PATH = REPO_ROOT / 'analysis' / 'thesis' / 'introduction.md'",
     "brief_usage": "Module constant"
   },
   {
@@ -1998,14 +2075,14 @@
     "file_path": "analysis/tools/merge_methods_sections.py",
     "line_no": 9,
     "symbol": "SECTIONS_DIR",
-    "signature": "SECTIONS_DIR = REPO_ROOT / 'analysis' / 'methods_sections'",
+    "signature": "SECTIONS_DIR = REPO_ROOT / 'analysis' / 'thesis_sections' / '02_methods'",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "analysis/tools/merge_methods_sections.py",
     "line_no": 10,
     "symbol": "OUTPUT_PATH",
-    "signature": "OUTPUT_PATH = REPO_ROOT / 'analysis' / 'methods.md'",
+    "signature": "OUTPUT_PATH = REPO_ROOT / 'analysis' / 'thesis' / 'methods.md'",
     "brief_usage": "Module constant"
   },
   {
@@ -2059,6 +2136,160 @@
   },
   {
     "file_path": "analysis/tools/merge_methods_sections.py",
+    "line_no": 70,
+    "symbol": "main",
+    "signature": "main(argv: list[str] | None=None) -> int",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "analysis/tools/merge_related_work_sections.py",
+    "line_no": 8,
+    "symbol": "REPO_ROOT",
+    "signature": "REPO_ROOT = Path(__file__).resolve().parents[2]",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "analysis/tools/merge_related_work_sections.py",
+    "line_no": 9,
+    "symbol": "SECTIONS_DIR",
+    "signature": "SECTIONS_DIR = REPO_ROOT / 'analysis' / 'thesis_sections' / '02_related_work'",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "analysis/tools/merge_related_work_sections.py",
+    "line_no": 10,
+    "symbol": "OUTPUT_PATH",
+    "signature": "OUTPUT_PATH = REPO_ROOT / 'analysis' / 'thesis' / 'related_work.md'",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "analysis/tools/merge_related_work_sections.py",
+    "line_no": 11,
+    "symbol": "MANIFEST_PATH",
+    "signature": "MANIFEST_PATH = SECTIONS_DIR / 'manifest.txt'",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "analysis/tools/merge_related_work_sections.py",
+    "line_no": 12,
+    "symbol": "SECTION_PATTERN",
+    "signature": "SECTION_PATTERN = re.compile('^\\\\d{2}_.+\\\\.md$')",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "analysis/tools/merge_related_work_sections.py",
+    "line_no": 15,
+    "symbol": "_manifest_entries",
+    "signature": "_manifest_entries(manifest_path: Path) -> list[str]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "analysis/tools/merge_related_work_sections.py",
+    "line_no": 25,
+    "symbol": "_validate_entry",
+    "signature": "_validate_entry(entry: str) -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "analysis/tools/merge_related_work_sections.py",
+    "line_no": 30,
+    "symbol": "_paths_from_manifest",
+    "signature": "_paths_from_manifest(sections_dir: Path, manifest_path: Path) -> list[Path]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "analysis/tools/merge_related_work_sections.py",
+    "line_no": 51,
+    "symbol": "collect_sections",
+    "signature": "collect_sections(sections_dir: Path, manifest_path: Path | None=None) -> list[Path]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "analysis/tools/merge_related_work_sections.py",
+    "line_no": 63,
+    "symbol": "build_document",
+    "signature": "build_document(section_paths: list[Path]) -> str",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "analysis/tools/merge_related_work_sections.py",
+    "line_no": 70,
+    "symbol": "main",
+    "signature": "main(argv: list[str] | None=None) -> int",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "analysis/tools/merge_results_sections.py",
+    "line_no": 8,
+    "symbol": "REPO_ROOT",
+    "signature": "REPO_ROOT = Path(__file__).resolve().parents[2]",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "analysis/tools/merge_results_sections.py",
+    "line_no": 9,
+    "symbol": "SECTIONS_DIR",
+    "signature": "SECTIONS_DIR = REPO_ROOT / 'analysis' / 'thesis_sections' / '03_results'",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "analysis/tools/merge_results_sections.py",
+    "line_no": 10,
+    "symbol": "OUTPUT_PATH",
+    "signature": "OUTPUT_PATH = REPO_ROOT / 'analysis' / 'thesis' / 'results.md'",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "analysis/tools/merge_results_sections.py",
+    "line_no": 11,
+    "symbol": "MANIFEST_PATH",
+    "signature": "MANIFEST_PATH = SECTIONS_DIR / 'manifest.txt'",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "analysis/tools/merge_results_sections.py",
+    "line_no": 12,
+    "symbol": "SECTION_PATTERN",
+    "signature": "SECTION_PATTERN = re.compile('^\\\\d{2}_.+\\\\.md$')",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "analysis/tools/merge_results_sections.py",
+    "line_no": 15,
+    "symbol": "_manifest_entries",
+    "signature": "_manifest_entries(manifest_path: Path) -> list[str]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "analysis/tools/merge_results_sections.py",
+    "line_no": 25,
+    "symbol": "_validate_entry",
+    "signature": "_validate_entry(entry: str) -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "analysis/tools/merge_results_sections.py",
+    "line_no": 30,
+    "symbol": "_paths_from_manifest",
+    "signature": "_paths_from_manifest(sections_dir: Path, manifest_path: Path) -> list[Path]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "analysis/tools/merge_results_sections.py",
+    "line_no": 51,
+    "symbol": "collect_sections",
+    "signature": "collect_sections(sections_dir: Path, manifest_path: Path | None=None) -> list[Path]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "analysis/tools/merge_results_sections.py",
+    "line_no": 63,
+    "symbol": "build_document",
+    "signature": "build_document(section_paths: list[Path]) -> str",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "analysis/tools/merge_results_sections.py",
     "line_no": 70,
     "symbol": "main",
     "signature": "main(argv: list[str] | None=None) -> int",
@@ -2942,181 +3173,167 @@
   {
     "file_path": "marsdisk/io/archive.py",
     "line_no": 95,
-    "symbol": "_unique_types",
-    "signature": "_unique_types(types: Sequence[pa.DataType]) -> List[pa.DataType]",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "marsdisk/io/archive.py",
-    "line_no": 103,
-    "symbol": "_choose_type",
-    "signature": "_choose_type(types: Sequence[pa.DataType]) -> pa.DataType",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "marsdisk/io/archive.py",
-    "line_no": 119,
     "symbol": "_hash_arrow_table",
     "signature": "_hash_arrow_table(table: pa.Table) -> str",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/io/archive.py",
-    "line_no": 126,
+    "line_no": 102,
     "symbol": "_parquet_metadata",
     "signature": "_parquet_metadata(path: Path) -> Dict[str, int | str]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/io/archive.py",
-    "line_no": 136,
+    "line_no": 112,
     "symbol": "_parquet_row_group_checksum",
     "signature": "_parquet_row_group_checksum(path: Path, group_index: int) -> Optional[str]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/io/archive.py",
-    "line_no": 145,
+    "line_no": 121,
     "symbol": "_unify_chunk_schema_hash",
     "signature": "_unify_chunk_schema_hash(paths: Sequence[Path]) -> Optional[str]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/io/archive.py",
-    "line_no": 165,
+    "line_no": 143,
     "symbol": "_sum_chunk_rows",
     "signature": "_sum_chunk_rows(paths: Sequence[Path]) -> int",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/io/archive.py",
-    "line_no": 177,
+    "line_no": 155,
     "symbol": "_is_chunk",
     "signature": "_is_chunk(rel_path: Path) -> bool",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/io/archive.py",
-    "line_no": 184,
+    "line_no": 162,
     "symbol": "_is_metadata",
     "signature": "_is_metadata(rel_path: Path) -> bool",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/io/archive.py",
-    "line_no": 192,
+    "line_no": 170,
     "symbol": "_collect_copy_files",
     "signature": "_collect_copy_files(run_dir: Path) -> List[Path]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/io/archive.py",
-    "line_no": 204,
+    "line_no": 182,
     "symbol": "_collect_hash_targets",
     "signature": "_collect_hash_targets(run_dir: Path) -> List[Path]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/io/archive.py",
-    "line_no": 219,
+    "line_no": 197,
     "symbol": "_write_marker",
     "signature": "_write_marker(path: Path, message: str) -> None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/io/archive.py",
-    "line_no": 226,
+    "line_no": 204,
     "symbol": "_update_run_card",
     "signature": "_update_run_card(run_card: Path, archive_path: Path, manifest_path: Optional[Path], manifest_hash: Optional[str], level: str, *, volume_info: Optional[Mapping[str, Optional[str]]]=None, copy_stats: Optional[Mapping[str, float]]=None, slow_warning: Optional[str]=None) -> None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/io/archive.py",
-    "line_no": 277,
+    "line_no": 255,
     "symbol": "_check_writable",
     "signature": "_check_writable(path: Path) -> bool",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/io/archive.py",
-    "line_no": 285,
+    "line_no": 263,
     "symbol": "_verify_level_settings",
     "signature": "_verify_level_settings(level: str) -> str",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/io/archive.py",
-    "line_no": 292,
+    "line_no": 270,
     "symbol": "_resolve_mount_point",
     "signature": "_resolve_mount_point(path: Path) -> Path",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/io/archive.py",
-    "line_no": 311,
+    "line_no": 289,
     "symbol": "_windows_volume_info",
     "signature": "_windows_volume_info(mount_point: Path) -> Dict[str, Optional[str]]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/io/archive.py",
-    "line_no": 354,
+    "line_no": 332,
     "symbol": "_mac_volume_info",
     "signature": "_mac_volume_info(path: Path) -> Dict[str, Optional[str]]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/io/archive.py",
-    "line_no": 381,
+    "line_no": 359,
     "symbol": "_linux_volume_info",
     "signature": "_linux_volume_info(mount_point: Path) -> Dict[str, Optional[str]]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/io/archive.py",
-    "line_no": 421,
+    "line_no": 399,
     "symbol": "_resolve_volume_info",
     "signature": "_resolve_volume_info(path: Path) -> Dict[str, Optional[str]]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/io/archive.py",
-    "line_no": 433,
+    "line_no": 411,
     "symbol": "archive_run",
     "signature": "archive_run(run_dir: Path, *, archive_root: Path, settings: ArchiveSettings) -> ArchiveResult",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/io/archive.py",
-    "line_no": 562,
+    "line_no": 540,
     "symbol": "_build_manifest",
     "signature": "_build_manifest(root: Path, *, exclude: Optional[set[str]]=None) -> Dict[str, object]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/io/archive.py",
-    "line_no": 586,
+    "line_no": 564,
     "symbol": "_hash_manifest",
     "signature": "_hash_manifest(manifest: Mapping[str, object]) -> str",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/io/archive.py",
-    "line_no": 591,
+    "line_no": 569,
     "symbol": "_verify_archive",
     "signature": "_verify_archive(*, run_dir: Path, dest_dir: Path, verify_level: str) -> List[str]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/io/archive.py",
-    "line_no": 641,
+    "line_no": 619,
     "symbol": "_verify_parquet_sets",
     "signature": "_verify_parquet_sets(run_dir: Path, dest_dir: Path, errors: List[str], level: str) -> None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/io/archive.py",
-    "line_no": 694,
+    "line_no": 672,
     "symbol": "_cleanup_local",
     "signature": "_cleanup_local(run_dir: Path, keep_local: str) -> None",
     "brief_usage": "No description available."
@@ -3629,432 +3846,432 @@
     "file_path": "marsdisk/ops/doc_sync_agent.py",
     "line_no": 23,
     "symbol": "_ANALYSIS_MD_DOCS",
-    "signature": "_ANALYSIS_MD_DOCS: list[str] = ['equations.md', 'overview.md', 'slides_outline.md', 'run_catalog.md', 'figures_catalog.md', 'glossary.md', 'literature_map.md', 'run-recipes.md', 'sinks_callgraph.md', 'AI_USAGE.md', 'CHANGELOG.md', 'physics_flow.md', 'introduction.md', 'methods.md', 'bibliography.md', 'assumption_trace.md', 'config_guide.md', 'provenance_report.md']",
+    "signature": "_ANALYSIS_MD_DOCS: list[str] = ['equations.md', 'overview.md', 'slides_outline.md', 'run_catalog.md', 'figures_catalog.md', 'glossary.md', 'literature_map.md', 'run-recipes.md', 'sinks_callgraph.md', 'AI_USAGE.md', 'CHANGELOG.md', 'physics_flow.md', 'thesis/introduction.md', 'thesis/related_work.md', 'thesis/methods.md', 'thesis/results.md', 'thesis/discussion.md', 'bibliography.md', 'assumption_trace.md', 'config_guide.md', 'provenance_report.md']",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/ops/doc_sync_agent.py",
-    "line_no": 47,
+    "line_no": 50,
     "symbol": "_ANALYSIS_DATA_FILES",
     "signature": "_ANALYSIS_DATA_FILES: list[str] = ['inventory.json', 'symbols.raw.txt', 'symbols.rg.txt']",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/ops/doc_sync_agent.py",
-    "line_no": 55,
+    "line_no": 58,
     "symbol": "DEFAULT_DOC_PATHS",
     "signature": "DEFAULT_DOC_PATHS: list[str] = [f'analysis/{name}' for name in _ANALYSIS_MD_DOCS] + [f'analysis/{name}' for name in _ANALYSIS_DATA_FILES]",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/ops/doc_sync_agent.py",
-    "line_no": 59,
+    "line_no": 62,
     "symbol": "RG_PATTERN",
     "signature": "RG_PATTERN = 'beta_at_smin|beta_threshold|s_min'",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/ops/doc_sync_agent.py",
-    "line_no": 60,
+    "line_no": 63,
     "symbol": "SUMMARY_DEFAULT_PATHS",
     "signature": "SUMMARY_DEFAULT_PATHS = [REPO_ROOT / 'analysis' / 'outputs' / 'baseline_blowout_only' / 'summary.json', REPO_ROOT / 'analysis' / 'outputs' / 'summary.json']",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/ops/doc_sync_agent.py",
-    "line_no": 66,
+    "line_no": 69,
     "symbol": "REF_PATTERN",
     "signature": "REF_PATTERN = re.compile('((?:marsdisk|tests|configs|scripts)/[A-Za-z0-9_/\\\\.-]+\\\\.(?:py|yml|yaml)):(\\\\d+)(?:([–-])(\\\\d+))?')",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/ops/doc_sync_agent.py",
-    "line_no": 71,
+    "line_no": 74,
     "symbol": "HASH_ANCHOR_LINE_PATTERN",
     "signature": "HASH_ANCHOR_LINE_PATTERN = re.compile('\\\\[((?:marsdisk|tests|configs|scripts)/[A-Za-z0-9_/\\\\.-]+\\\\.(?:py|yml|yaml))#([A-Za-z0-9_]+)\\\\s+\\\\[L(\\\\d+)(?:[–—-]L?(\\\\d+))?\\\\]\\\\]')",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/ops/doc_sync_agent.py",
-    "line_no": 75,
+    "line_no": 78,
     "symbol": "SKIP_DIR_NAMES",
     "signature": "SKIP_DIR_NAMES = {'.git', '.venv', 'venv', 'env', '__pycache__', '.mypy_cache', '.pytest_cache', '.idea', '.vscode', 'node_modules', 'build', 'dist'}",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/ops/doc_sync_agent.py",
-    "line_no": 90,
+    "line_no": 93,
     "symbol": "DOC_COLON_REF_PATTERN",
     "signature": "DOC_COLON_REF_PATTERN = re.compile('((?:marsdisk|tests|configs|scripts)/[A-Za-z0-9_/\\\\.-]+\\\\.(?:py|yml|yaml)):(\\\\d+)(?:[–—-](\\\\d+))?')",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/ops/doc_sync_agent.py",
-    "line_no": 93,
+    "line_no": 96,
     "symbol": "DOC_INLINE_LINE_ANCHOR_PATTERN",
     "signature": "DOC_INLINE_LINE_ANCHOR_PATTERN = re.compile('\\\\s*[（(]\\\\s*#L(\\\\d+)(?:[–—-](\\\\d+))?\\\\s*[）)]', re.IGNORECASE)",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/ops/doc_sync_agent.py",
-    "line_no": 97,
+    "line_no": 100,
     "symbol": "DOC_LINE_ANCHOR_PATTERN",
     "signature": "DOC_LINE_ANCHOR_PATTERN = re.compile('((?:marsdisk|tests|configs|scripts)/[A-Za-z0-9_/\\\\.-]+\\\\.(?:py|yml|yaml))#L(\\\\d+)(?:[–—-](\\\\d+))?', re.IGNORECASE)",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/ops/doc_sync_agent.py",
-    "line_no": 101,
+    "line_no": 104,
     "symbol": "DOC_SYMBOL_ANCHOR_PATTERN",
     "signature": "DOC_SYMBOL_ANCHOR_PATTERN = re.compile('((?:marsdisk|tests|configs|scripts)/[A-Za-z0-9_/\\\\.-]+\\\\.(?:py|yml|yaml))#(?!L)([A-Za-z0-9_]+)')",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/ops/doc_sync_agent.py",
-    "line_no": 105,
+    "line_no": 108,
     "symbol": "HEADING_IO_PATTERN",
     "signature": "HEADING_IO_PATTERN = re.compile('^## [^\\\\n]*I/O[^\\\\n]*$', re.MULTILINE)",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/ops/doc_sync_agent.py",
-    "line_no": 106,
+    "line_no": 109,
     "symbol": "HEADING_RESPONSIBILITIES_PATTERN",
     "signature": "HEADING_RESPONSIBILITIES_PATTERN = re.compile('^## [^\\\\n]*責務[^\\\\n]*$', re.MULTILINE)",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/ops/doc_sync_agent.py",
-    "line_no": 108,
+    "line_no": 111,
     "symbol": "SUGGESTIONS_DEFAULT_PATH",
     "signature": "SUGGESTIONS_DEFAULT_PATH = REPO_ROOT / 'analysis' / 'suggestions_index.json'",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/ops/doc_sync_agent.py",
-    "line_no": 109,
+    "line_no": 112,
     "symbol": "ML_CACHE_PATH",
     "signature": "ML_CACHE_PATH = REPO_ROOT / '.cache' / 'doc_sync' / 'equation_matcher.pkl'",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/ops/doc_sync_agent.py",
-    "line_no": 110,
+    "line_no": 113,
     "symbol": "EQUATIONS_PATH_DEFAULT",
     "signature": "EQUATIONS_PATH_DEFAULT = REPO_ROOT / 'analysis' / 'equations.md'",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/ops/doc_sync_agent.py",
-    "line_no": 111,
+    "line_no": 114,
     "symbol": "OVERVIEW_PATH_DEFAULT",
     "signature": "OVERVIEW_PATH_DEFAULT = REPO_ROOT / 'analysis' / 'overview.md'",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/ops/doc_sync_agent.py",
-    "line_no": 112,
+    "line_no": 115,
     "symbol": "RUN_RECIPES_PATH_DEFAULT",
     "signature": "RUN_RECIPES_PATH_DEFAULT = REPO_ROOT / 'analysis' / 'run-recipes.md'",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/ops/doc_sync_agent.py",
-    "line_no": 115,
+    "line_no": 118,
     "symbol": "DEFAULT_DOCS_FOR_REFS",
     "signature": "DEFAULT_DOCS_FOR_REFS: list[Path] = [REPO_ROOT / 'analysis' / name for name in _ANALYSIS_MD_DOCS]",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/ops/doc_sync_agent.py",
-    "line_no": 119,
+    "line_no": 122,
     "symbol": "EQUATION_HEADING_PATTERN",
     "signature": "EQUATION_HEADING_PATTERN = re.compile('^### (?:\\\\((E\\\\.\\\\d{3}[a-z]?)\\\\)\\\\s*)?(.*)$')",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/ops/doc_sync_agent.py",
-    "line_no": 120,
+    "line_no": 123,
     "symbol": "EQUATION_ID_PATTERN",
     "signature": "EQUATION_ID_PATTERN = re.compile('^### \\\\(E\\\\.(\\\\d{3}[a-z]?)\\\\)\\\\s*(.*)$')",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/ops/doc_sync_agent.py",
-    "line_no": 121,
+    "line_no": 124,
     "symbol": "CODE_REF_PATTERN",
     "signature": "CODE_REF_PATTERN = re.compile('\\\\[(?P<path>(?:marsdisk|tools|siO2_disk_cooling)/[^\\\\]]+\\\\.py)(?:(?:#(?P<symbol>[A-Za-z0-9_]+)\\\\s+\\\\[L(?P<start>\\\\d+)[–—-]L?(?P<end>\\\\d+)?\\\\])|(?::(?P<start_colon>\\\\d+)(?:[–—-](?P<end_colon>\\\\d+))?))\\\\]')",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/ops/doc_sync_agent.py",
-    "line_no": 126,
+    "line_no": 129,
     "symbol": "LINE_ANCHOR_INLINE_PATTERN",
     "signature": "LINE_ANCHOR_INLINE_PATTERN = re.compile('[（(]#L\\\\d+(?:[–—-]L?\\\\d+)?[）)]')",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "marsdisk/ops/doc_sync_agent.py",
-    "line_no": 130,
+    "line_no": 133,
     "symbol": "SymbolInfo",
     "signature": "class SymbolInfo",
     "brief_usage": "Container describing code symbols detected in the repository."
   },
   {
     "file_path": "marsdisk/ops/doc_sync_agent.py",
-    "line_no": 144,
+    "line_no": 147,
     "symbol": "FileChange",
     "signature": "class FileChange",
     "brief_usage": "Track a prospective file update."
   },
   {
     "file_path": "marsdisk/ops/doc_sync_agent.py",
-    "line_no": 175,
+    "line_no": 178,
     "symbol": "CodeRef",
     "signature": "class CodeRef",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/ops/doc_sync_agent.py",
-    "line_no": 183,
+    "line_no": 186,
     "symbol": "EquationEntry",
     "signature": "class EquationEntry",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/ops/doc_sync_agent.py",
-    "line_no": 191,
+    "line_no": 194,
     "symbol": "InventoryRecord",
     "signature": "class InventoryRecord",
     "brief_usage": "Normalized record describing a top-level symbol."
   },
   {
     "file_path": "marsdisk/ops/doc_sync_agent.py",
-    "line_no": 227,
+    "line_no": 230,
     "symbol": "DocSyncAgent",
     "signature": "class DocSyncAgent",
     "brief_usage": "Synchronise analysis documentation artefacts with repository sources."
   },
   {
     "file_path": "marsdisk/ops/doc_sync_agent.py",
-    "line_no": 783,
+    "line_no": 786,
     "symbol": "_legacy_main",
     "signature": "_legacy_main(argv: Optional[Sequence[str]]=None) -> int",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/ops/doc_sync_agent.py",
-    "line_no": 857,
+    "line_no": 860,
     "symbol": "_collect_inventory_records",
     "signature": "_collect_inventory_records(root: Path) -> List[InventoryRecord]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/ops/doc_sync_agent.py",
-    "line_no": 897,
+    "line_no": 900,
     "symbol": "_resolve_cli_path",
     "signature": "_resolve_cli_path(value: str) -> Path",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/ops/doc_sync_agent.py",
-    "line_no": 904,
+    "line_no": 907,
     "symbol": "_rel_to_repo",
     "signature": "_rel_to_repo(path: Path) -> str",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/ops/doc_sync_agent.py",
-    "line_no": 911,
+    "line_no": 914,
     "symbol": "_cmd_scan",
     "signature": "_cmd_scan(args: argparse.Namespace) -> int",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/ops/doc_sync_agent.py",
-    "line_no": 927,
+    "line_no": 930,
     "symbol": "_collect_doc_references",
     "signature": "_collect_doc_references(doc_paths: Sequence[Path]) -> Dict[str, Any]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/ops/doc_sync_agent.py",
-    "line_no": 1053,
+    "line_no": 1056,
     "symbol": "_cmd_refs",
     "signature": "_cmd_refs(args: argparse.Namespace) -> int",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/ops/doc_sync_agent.py",
-    "line_no": 1076,
+    "line_no": 1079,
     "symbol": "_load_inventory_records",
     "signature": "_load_inventory_records(path: Path) -> List[InventoryRecord]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/ops/doc_sync_agent.py",
-    "line_no": 1114,
+    "line_no": 1117,
     "symbol": "_match_symbol_by_span",
     "signature": "_match_symbol_by_span(symbols: Sequence[InventoryRecord], start: int, end: int) -> Optional[InventoryRecord]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/ops/doc_sync_agent.py",
-    "line_no": 1126,
+    "line_no": 1129,
     "symbol": "_compute_coverage",
     "signature": "_compute_coverage(inventory: Sequence[InventoryRecord], docs_payload: Dict[str, Any]) -> Dict[str, Any]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/ops/doc_sync_agent.py",
-    "line_no": 1273,
+    "line_no": 1276,
     "symbol": "_parse_gap_identifier",
     "signature": "_parse_gap_identifier(identifier: str) -> Optional[Tuple[str, str]]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/ops/doc_sync_agent.py",
-    "line_no": 1285,
+    "line_no": 1288,
     "symbol": "_collect_unreferenced_from_coverage",
     "signature": "_collect_unreferenced_from_coverage(coverage_data: Dict[str, Any]) -> List[Tuple[str, str]]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/ops/doc_sync_agent.py",
-    "line_no": 1310,
+    "line_no": 1313,
     "symbol": "_load_suggestions_index",
     "signature": "_load_suggestions_index(path: Path) -> Dict[Tuple[str, str], Dict[str, Any]]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/ops/doc_sync_agent.py",
-    "line_no": 1333,
+    "line_no": 1336,
     "symbol": "_format_code_anchor",
     "signature": "_format_code_anchor(record: InventoryRecord) -> str",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/ops/doc_sync_agent.py",
-    "line_no": 1340,
+    "line_no": 1343,
     "symbol": "_strip_line_anchor_annotations",
     "signature": "_strip_line_anchor_annotations(text: str) -> str",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/ops/doc_sync_agent.py",
-    "line_no": 1344,
+    "line_no": 1347,
     "symbol": "ensure_equation_ids",
     "signature": "ensure_equation_ids(equations_path: Path) -> None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/ops/doc_sync_agent.py",
-    "line_no": 1405,
+    "line_no": 1408,
     "symbol": "_parse_equations_md",
     "signature": "_parse_equations_md(path: Path) -> List[EquationEntry]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/ops/doc_sync_agent.py",
-    "line_no": 1429,
+    "line_no": 1432,
     "symbol": "_build_equation_entry",
     "signature": "_build_equation_entry(meta: Tuple[str, str], block: str) -> EquationEntry",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/ops/doc_sync_agent.py",
-    "line_no": 1454,
+    "line_no": 1457,
     "symbol": "_compute_equation_code_map",
     "signature": "_compute_equation_code_map(equations: Sequence[EquationEntry], inventory: Sequence[InventoryRecord]) -> Dict[str, Any]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/ops/doc_sync_agent.py",
-    "line_no": 1539,
+    "line_no": 1542,
     "symbol": "_render_coverage_markdown",
     "signature": "_render_coverage_markdown(data: Dict[str, Any]) -> str",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/ops/doc_sync_agent.py",
-    "line_no": 1596,
+    "line_no": 1599,
     "symbol": "_is_stub_already_present",
     "signature": "_is_stub_already_present(text: str, record: InventoryRecord) -> bool",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/ops/doc_sync_agent.py",
-    "line_no": 1601,
+    "line_no": 1604,
     "symbol": "_render_stub_block",
     "signature": "_render_stub_block(record: InventoryRecord, doc_kind: str) -> str",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/ops/doc_sync_agent.py",
-    "line_no": 1633,
+    "line_no": 1636,
     "symbol": "_append_to_section",
     "signature": "_append_to_section(text: str, heading_pattern: re.Pattern[str], stub: str) -> str",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/ops/doc_sync_agent.py",
-    "line_no": 1648,
+    "line_no": 1651,
     "symbol": "_append_to_end",
     "signature": "_append_to_end(text: str, stub: str) -> str",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/ops/doc_sync_agent.py",
-    "line_no": 1654,
+    "line_no": 1657,
     "symbol": "_determine_autostub_target",
     "signature": "_determine_autostub_target(record: InventoryRecord, suggestions: Dict[Tuple[str, str], Dict[str, Any]], overview_path: Path, equations_path: Path, run_recipes_path: Path) -> Tuple[Path, Optional[re.Pattern[str]], str]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/ops/doc_sync_agent.py",
-    "line_no": 1701,
+    "line_no": 1704,
     "symbol": "_cmd_coverage",
     "signature": "_cmd_coverage(args: argparse.Namespace) -> int",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/ops/doc_sync_agent.py",
-    "line_no": 1734,
+    "line_no": 1737,
     "symbol": "_cmd_equations",
     "signature": "_cmd_equations(args: argparse.Namespace) -> int",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/ops/doc_sync_agent.py",
-    "line_no": 1797,
+    "line_no": 1800,
     "symbol": "_cmd_autostub",
     "signature": "_cmd_autostub(args: argparse.Namespace) -> int",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/ops/doc_sync_agent.py",
-    "line_no": 1873,
+    "line_no": 1876,
     "symbol": "_cmd_update",
     "signature": "_cmd_update(args: argparse.Namespace) -> int",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/ops/doc_sync_agent.py",
-    "line_no": 2017,
+    "line_no": 2020,
     "symbol": "_run_new_cli",
     "signature": "_run_new_cli(argv: Sequence[str]) -> int",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/ops/doc_sync_agent.py",
-    "line_no": 2306,
+    "line_no": 2309,
     "symbol": "main",
     "signature": "main(argv: Optional[Sequence[str]]=None) -> int",
     "brief_usage": "No description available."
   },
   {
     "file_path": "marsdisk/ops/doc_sync_agent.py",
-    "line_no": 2314,
+    "line_no": 2317,
     "symbol": "_git_commit",
     "signature": "_git_commit(changes: Iterable[FileChange]) -> None",
     "brief_usage": "No description available."
@@ -17649,209 +17866,251 @@
   {
     "file_path": "tools/build_thesis_draft.py",
     "line_no": 52,
+    "symbol": "RELATED_WORK_START",
+    "signature": "RELATED_WORK_START = '% === AUTOGEN RELATED WORK START ==='",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "tools/build_thesis_draft.py",
+    "line_no": 53,
+    "symbol": "RELATED_WORK_END",
+    "signature": "RELATED_WORK_END = '% === AUTOGEN RELATED WORK END ==='",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "tools/build_thesis_draft.py",
+    "line_no": 54,
     "symbol": "METHODS_START",
     "signature": "METHODS_START = '% === AUTOGEN METHODS START ==='",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "tools/build_thesis_draft.py",
-    "line_no": 53,
+    "line_no": 55,
     "symbol": "METHODS_END",
     "signature": "METHODS_END = '% === AUTOGEN METHODS END ==='",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "tools/build_thesis_draft.py",
+    "line_no": 56,
+    "symbol": "RESULTS_START",
+    "signature": "RESULTS_START = '% === AUTOGEN RESULTS START ==='",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "tools/build_thesis_draft.py",
     "line_no": 57,
+    "symbol": "RESULTS_END",
+    "signature": "RESULTS_END = '% === AUTOGEN RESULTS END ==='",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "tools/build_thesis_draft.py",
+    "line_no": 58,
+    "symbol": "DISCUSSION_START",
+    "signature": "DISCUSSION_START = '% === AUTOGEN DISCUSSION START ==='",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "tools/build_thesis_draft.py",
+    "line_no": 59,
+    "symbol": "DISCUSSION_END",
+    "signature": "DISCUSSION_END = '% === AUTOGEN DISCUSSION END ==='",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "tools/build_thesis_draft.py",
+    "line_no": 63,
     "symbol": "Block",
     "signature": "class Block",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/build_thesis_draft.py",
-    "line_no": 62,
+    "line_no": 68,
     "symbol": "strip_yaml_frontmatter",
     "signature": "strip_yaml_frontmatter(text: str) -> str",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/build_thesis_draft.py",
-    "line_no": 72,
+    "line_no": 78,
     "symbol": "strip_html_comments",
     "signature": "strip_html_comments(text: str) -> str",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/build_thesis_draft.py",
-    "line_no": 86,
+    "line_no": 92,
     "symbol": "strip_tex_exclude_blocks",
     "signature": "strip_tex_exclude_blocks(text: str) -> str",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/build_thesis_draft.py",
-    "line_no": 103,
+    "line_no": 109,
     "symbol": "split_table_row",
     "signature": "split_table_row(line: str) -> list[str]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/build_thesis_draft.py",
-    "line_no": 107,
+    "line_no": 113,
     "symbol": "is_table_separator",
     "signature": "is_table_separator(line: str) -> bool",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/build_thesis_draft.py",
-    "line_no": 117,
+    "line_no": 123,
     "symbol": "is_latex_block_start",
     "signature": "is_latex_block_start(line: str) -> bool",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/build_thesis_draft.py",
-    "line_no": 126,
+    "line_no": 132,
     "symbol": "parse_latex_block",
     "signature": "parse_latex_block(lines: list[str], start: int) -> tuple[Block, int]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/build_thesis_draft.py",
-    "line_no": 162,
+    "line_no": 168,
     "symbol": "parse_code_block",
     "signature": "parse_code_block(lines: list[str], start: int) -> tuple[Block, int]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/build_thesis_draft.py",
-    "line_no": 175,
+    "line_no": 181,
     "symbol": "parse_table",
     "signature": "parse_table(lines: list[str], start: int) -> tuple[Block | None, int]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/build_thesis_draft.py",
-    "line_no": 196,
+    "line_no": 202,
     "symbol": "parse_list",
     "signature": "parse_list(lines: list[str], start: int) -> tuple[Block, int]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/build_thesis_draft.py",
-    "line_no": 255,
+    "line_no": 261,
     "symbol": "parse_blockquote",
     "signature": "parse_blockquote(lines: list[str], start: int) -> tuple[Block, int]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/build_thesis_draft.py",
-    "line_no": 268,
+    "line_no": 274,
     "symbol": "parse_paragraph",
     "signature": "parse_paragraph(lines: list[str], start: int) -> tuple[Block, int]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/build_thesis_draft.py",
-    "line_no": 292,
+    "line_no": 298,
     "symbol": "parse_blocks",
     "signature": "parse_blocks(lines: list[str]) -> list[Block]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/build_thesis_draft.py",
-    "line_no": 334,
+    "line_no": 340,
     "symbol": "strip_numbered_prefix",
     "signature": "strip_numbered_prefix(text: str) -> str",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/build_thesis_draft.py",
-    "line_no": 338,
+    "line_no": 344,
     "symbol": "convert_cite_brackets",
     "signature": "convert_cite_brackets(text: str) -> str",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/build_thesis_draft.py",
-    "line_no": 355,
+    "line_no": 361,
     "symbol": "escape_latex",
     "signature": "escape_latex(text: str) -> str",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/build_thesis_draft.py",
-    "line_no": 373,
+    "line_no": 379,
     "symbol": "escape_latex_code",
     "signature": "escape_latex_code(text: str) -> str",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/build_thesis_draft.py",
-    "line_no": 394,
+    "line_no": 400,
     "symbol": "convert_inline",
     "signature": "convert_inline(text: str) -> str",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/build_thesis_draft.py",
-    "line_no": 434,
+    "line_no": 440,
     "symbol": "needs_texorpdfstring",
     "signature": "needs_texorpdfstring(text: str) -> bool",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/build_thesis_draft.py",
-    "line_no": 444,
+    "line_no": 450,
     "symbol": "latex_to_plain",
     "signature": "latex_to_plain(text: str) -> str",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/build_thesis_draft.py",
-    "line_no": 463,
+    "line_no": 469,
     "symbol": "replace_unicode_subscripts",
     "signature": "replace_unicode_subscripts(text: str) -> str",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/build_thesis_draft.py",
-    "line_no": 471,
+    "line_no": 477,
     "symbol": "replace_unicode_symbols",
     "signature": "replace_unicode_symbols(text: str) -> str",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/build_thesis_draft.py",
-    "line_no": 477,
+    "line_no": 483,
     "symbol": "MarkdownToLatexConverter",
     "signature": "class MarkdownToLatexConverter",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/build_thesis_draft.py",
-    "line_no": 545,
+    "line_no": 551,
     "symbol": "replace_between_markers",
     "signature": "replace_between_markers(text: str, start: str, end: str, replacement: str) -> str",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/build_thesis_draft.py",
-    "line_no": 555,
+    "line_no": 561,
     "symbol": "run",
     "signature": "run(cmd: list[str], cwd: Path, env: dict[str, str] | None=None) -> None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/build_thesis_draft.py",
-    "line_no": 559,
+    "line_no": 565,
     "symbol": "build_pdf",
     "signature": "build_pdf(tex_path: Path, out_dir: Path, repo_root: Path) -> None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/build_thesis_draft.py",
-    "line_no": 613,
+    "line_no": 629,
     "symbol": "main",
     "signature": "main() -> int",
     "brief_usage": "No description available."
