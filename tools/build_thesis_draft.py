@@ -49,8 +49,14 @@ UNICODE_SYMBOLS = {
 
 INTRO_START = "% === AUTOGEN INTRODUCTION START ==="
 INTRO_END = "% === AUTOGEN INTRODUCTION END ==="
+RELATED_WORK_START = "% === AUTOGEN RELATED WORK START ==="
+RELATED_WORK_END = "% === AUTOGEN RELATED WORK END ==="
 METHODS_START = "% === AUTOGEN METHODS START ==="
 METHODS_END = "% === AUTOGEN METHODS END ==="
+RESULTS_START = "% === AUTOGEN RESULTS START ==="
+RESULTS_END = "% === AUTOGEN RESULTS END ==="
+DISCUSSION_START = "% === AUTOGEN DISCUSSION START ==="
+DISCUSSION_END = "% === AUTOGEN DISCUSSION END ==="
 
 
 @dataclass
@@ -574,7 +580,17 @@ def build_pdf(tex_path: Path, out_dir: Path, repo_root: Path) -> None:
     bibtex_env["BIBINPUTS"] = (
         str(tex_path.parent) + os.pathsep + bibtex_env.get("BIBINPUTS", "")
     )
-    run(["bibtex", stem], cwd=out_dir, env=bibtex_env)
+    aux_path = out_dir / f"{stem}.aux"
+    needs_bibtex = False
+    if aux_path.exists():
+        aux_text = aux_path.read_text(encoding="utf-8", errors="ignore")
+        needs_bibtex = any(
+            token in aux_text for token in ("\\bibdata", "\\bibstyle", "\\citation")
+        )
+    if needs_bibtex:
+        run(["bibtex", stem], cwd=out_dir, env=bibtex_env)
+    else:
+        print("build_pdf: skipping bibtex (no citation/bibliography markers found)")
     run(
         [
             "platex",
@@ -612,8 +628,19 @@ def build_pdf(tex_path: Path, out_dir: Path, repo_root: Path) -> None:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Build thesis_draft.tex from Markdown.")
-    parser.add_argument("--intro", default="analysis/introduction.md", help="Intro markdown path.")
-    parser.add_argument("--methods", default="analysis/methods.md", help="Methods markdown path.")
+    parser.add_argument("--intro", default="analysis/thesis/introduction.md", help="Intro markdown path.")
+    parser.add_argument(
+        "--related-work",
+        default="analysis/thesis/related_work.md",
+        help="Related work markdown path.",
+    )
+    parser.add_argument("--methods", default="analysis/thesis/methods.md", help="Methods markdown path.")
+    parser.add_argument("--results", default="analysis/thesis/results.md", help="Results markdown path.")
+    parser.add_argument(
+        "--discussion",
+        default="analysis/thesis/discussion.md",
+        help="Discussion markdown path.",
+    )
     parser.add_argument("--tex", default="paper/thesis_draft.tex", help="TeX file to update.")
     parser.add_argument("--out", default=None, help="Output TeX path (defaults to --tex).")
     parser.add_argument("--pdf", action="store_true", help="Build PDF after updating TeX.")
@@ -624,7 +651,10 @@ def main() -> int:
 
     repo_root = Path(__file__).resolve().parents[1]
     intro_path = (repo_root / args.intro).resolve()
+    related_work_path = (repo_root / args.related_work).resolve()
     methods_path = (repo_root / args.methods).resolve()
+    results_path = (repo_root / args.results).resolve()
+    discussion_path = (repo_root / args.discussion).resolve()
     tex_path = (repo_root / args.tex).resolve()
     out_path = (repo_root / args.out).resolve() if args.out else tex_path
     out_dir = (repo_root / args.outdir).resolve()
@@ -640,14 +670,27 @@ def main() -> int:
     converter = MarkdownToLatexConverter(heading_map)
 
     intro_text = intro_path.read_text(encoding="utf-8")
+    related_work_text = related_work_path.read_text(encoding="utf-8")
     methods_text = methods_path.read_text(encoding="utf-8")
+    results_text = results_path.read_text(encoding="utf-8")
+    discussion_text = discussion_path.read_text(encoding="utf-8")
 
     intro_tex = converter.convert(intro_text)
+    related_work_tex = converter.convert(related_work_text)
     methods_tex = converter.convert(methods_text)
+    results_tex = converter.convert(results_text)
+    discussion_tex = converter.convert(discussion_text)
 
     tex_text = tex_path.read_text(encoding="utf-8")
     tex_text = replace_between_markers(tex_text, INTRO_START, INTRO_END, intro_tex)
+    tex_text = replace_between_markers(
+        tex_text, RELATED_WORK_START, RELATED_WORK_END, related_work_tex
+    )
     tex_text = replace_between_markers(tex_text, METHODS_START, METHODS_END, methods_tex)
+    tex_text = replace_between_markers(tex_text, RESULTS_START, RESULTS_END, results_tex)
+    tex_text = replace_between_markers(
+        tex_text, DISCUSSION_START, DISCUSSION_END, discussion_tex
+    )
     out_path.write_text(tex_text, encoding="utf-8")
 
     if args.pdf:

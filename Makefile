@@ -44,6 +44,27 @@ analysis-intro-update: analysis-intro-sync
 	$(MAKE) analysis-update
 	python -m tools.evaluation_system --outdir $(EVAL_OUTDIR)
 
+analysis-related-work-sync:
+	python -m analysis.tools.merge_related_work_sections --write
+
+analysis-related-work-update: analysis-related-work-sync
+	$(MAKE) analysis-update
+	python -m tools.evaluation_system --outdir $(EVAL_OUTDIR)
+
+analysis-results-sync:
+	python -m analysis.tools.merge_results_sections --write
+
+analysis-results-update: analysis-results-sync
+	$(MAKE) analysis-update
+	python -m tools.evaluation_system --outdir $(EVAL_OUTDIR)
+
+analysis-discussion-sync:
+	python -m analysis.tools.merge_discussion_sections --write
+
+analysis-discussion-update: analysis-discussion-sync
+	$(MAKE) analysis-update
+	python -m tools.evaluation_system --outdir $(EVAL_OUTDIR)
+
 
 analysis-sync-commit:
 	python -m analysis.tools.render_assumptions

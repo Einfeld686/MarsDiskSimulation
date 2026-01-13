@@ -35,8 +35,11 @@ _ANALYSIS_MD_DOCS: list[str] = [
     "CHANGELOG.md",
     # Additional docs with code references requiring line number sync
     "physics_flow.md",
-    "introduction.md",
-    "methods.md",
+    "thesis/introduction.md",
+    "thesis/related_work.md",
+    "thesis/methods.md",
+    "thesis/results.md",
+    "thesis/discussion.md",
     "bibliography.md",
     "assumption_trace.md",
     "config_guide.md",

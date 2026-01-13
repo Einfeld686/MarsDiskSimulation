@@ -103,7 +103,7 @@ def main() -> int:
     )
     parser.add_argument(
         "--markdown",
-        default="analysis/introduction.md",
+        default="analysis/thesis/introduction.md",
         help="Markdown source containing TEX_EXCLUDE markers.",
     )
     parser.add_argument(

@@ -6,8 +6,8 @@ import sys
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-SECTIONS_DIR = REPO_ROOT / "analysis" / "thesis_sections" / "02_methods"
-OUTPUT_PATH = REPO_ROOT / "analysis" / "thesis" / "methods.md"
+SECTIONS_DIR = REPO_ROOT / "analysis" / "thesis_sections" / "03_results"
+OUTPUT_PATH = REPO_ROOT / "analysis" / "thesis" / "results.md"
 MANIFEST_PATH = SECTIONS_DIR / "manifest.txt"
 SECTION_PATTERN = re.compile(r"^\d{2}_.+\.md$")
 
@@ -69,7 +69,7 @@ def build_document(section_paths: list[Path]) -> str:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
-        description="Merge methods section files into analysis/thesis/methods.md."
+        description="Merge results section files into analysis/thesis/results.md."
     )
     parser.add_argument(
         "--sections-dir",
@@ -87,7 +87,7 @@ def main(argv: list[str] | None = None) -> int:
         "--output",
         type=Path,
         default=OUTPUT_PATH,
-        help="Output path for the merged methods document.",
+        help="Output path for the merged results document.",
     )
     parser.add_argument(
         "--write",
@@ -113,7 +113,7 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.write:
         args.output.write_text(content, encoding="utf-8")
-        print(f"merge_methods_sections: wrote {args.output}")
+        print(f"merge_results_sections: wrote {args.output}")
         return 0
 
     sys.stdout.write(content)

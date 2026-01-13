@@ -6,8 +6,8 @@ import sys
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-SECTIONS_DIR = REPO_ROOT / "analysis" / "introduction_sections"
-OUTPUT_PATH = REPO_ROOT / "analysis" / "introduction.md"
+SECTIONS_DIR = REPO_ROOT / "analysis" / "thesis_sections" / "01_introduction"
+OUTPUT_PATH = REPO_ROOT / "analysis" / "thesis" / "introduction.md"
 MANIFEST_PATH = SECTIONS_DIR / "manifest.txt"
 SECTION_PATTERN = re.compile(r"^\d{2}_.+\.md$")
 
@@ -68,7 +68,7 @@ def build_document(section_paths: list[Path]) -> str:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
-        description="Merge introduction section files into analysis/introduction.md."
+        description="Merge introduction section files into analysis/thesis/introduction.md."
     )
     parser.add_argument(
         "--sections-dir",
