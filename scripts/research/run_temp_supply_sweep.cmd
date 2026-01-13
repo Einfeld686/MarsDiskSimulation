@@ -781,6 +781,11 @@ if not exist "!SWEEP_LIST_FILE!" (
   exit /b 1
 )
 
+set "SWEEP_TOTAL=0"
+for /f "usebackq tokens=3 delims=:" %%C in (`find /c /v "" "!SWEEP_LIST_FILE!"`) do set "SWEEP_TOTAL=%%C"
+call :normalize_int SWEEP_TOTAL 0
+call :get_monotonic_seconds SWEEP_START_SECS
+
 call :trace_detail "parallel check"
 echo.[DEBUG] Parallel check: SWEEP_PARALLEL=%SWEEP_PARALLEL% PARALLEL_JOBS=%PARALLEL_JOBS% RUN_ONE_MODE=%RUN_ONE_MODE% SWEEP_PERSISTENT_WORKERS=%SWEEP_PERSISTENT_WORKERS%
 if "%SWEEP_PERSISTENT_WORKERS%"=="1" (
@@ -819,8 +824,12 @@ rem ---------- main loops ----------
 echo.[DEBUG] Entering main loops (sequential execution)
 call :trace "entering main loops"
 set "HAS_CASE=0"
+set "SEQ_CASE_INDEX=0"
 for /f "usebackq tokens=1-4 delims= " %%A in ("%SWEEP_LIST_FILE%") do (
   set "HAS_CASE=1"
+  set /a SEQ_CASE_INDEX+=1
+  set /a SEQ_DONE=SEQ_CASE_INDEX-1
+  call :calc_eta_suffix !SEQ_DONE! !SWEEP_TOTAL!
   set "T=%%A"
   set "EPS=%%B"
   set "TAU=%%C"
@@ -855,7 +864,7 @@ for /f "usebackq tokens=1-4 delims= " %%A in ("%SWEEP_LIST_FILE%") do (
   for %%I in ("!OUTDIR_REL!") do set "OUTDIR=%%~fI"
   %LOG_RUN% T=!T! eps=!EPS! tau=!TAU! i0=!I0! -^> !OUTDIR! ^(batch=!BATCH_SEED!, seed=!SEED!^)
       rem Show supply rate info (skip Python calc to avoid cmd.exe delayed expansion issues)
-      %LOG_INFO% epsilon_mix=!EPS!; mu_orbit10pct=%SUPPLY_MU_ORBIT10PCT% orbit_fraction_at_mu1=%SUPPLY_ORBIT_FRACTION%
+      %LOG_INFO% epsilon_mix=!EPS!; mu_orbit10pct=%SUPPLY_MU_ORBIT10PCT% orbit_fraction_at_mu1=%SUPPLY_ORBIT_FRACTION% !ETA_SUFFIX!
       %LOG_INFO% shielding: mode=%SHIELDING_MODE% fixed_tau1_sigma=%SHIELDING_SIGMA% auto_max_margin=%SHIELDING_AUTO_MAX_MARGIN%
       if "!EPS!"=="0.1" %LOG_INFO% epsilon_mix=0.1 is a low-supply extreme case; expect weak blowout/sinks
 
@@ -1281,6 +1290,7 @@ call :normalize_int PROGRESS_FAILED 0
 if !PROGRESS_FAILED! GTR 0 set "PROGRESS_SUFFIX= failed=!PROGRESS_FAILED!"
 set /a PROGRESS_PCT=0
 if !PROGRESS_TOTAL! GTR 0 set /a PROGRESS_PCT=100*PROGRESS_DONE/PROGRESS_TOTAL
+call :calc_eta_suffix !PROGRESS_DONE! !PROGRESS_TOTAL!
 call :normalize_int SWEEP_PROGRESS_MILESTONE_STEP 25
 if !SWEEP_PROGRESS_MILESTONE_STEP! LSS 1 set "SWEEP_PROGRESS_MILESTONE_STEP=25"
 call :normalize_int PROGRESS_MILESTONE_NEXT 0
@@ -1288,13 +1298,65 @@ call :normalize_int PROGRESS_MILESTONE_NEXT 0
 if !PROGRESS_MILESTONE_NEXT! LEQ 0 goto progress_milestone_done
 if !PROGRESS_PCT! GEQ !PROGRESS_MILESTONE_NEXT! (
   if !PROGRESS_MILESTONE_NEXT! LEQ 100 (
-    echo.[info] sweep milestone: !PROGRESS_MILESTONE_NEXT!%% complete (!PROGRESS_DONE!/!PROGRESS_TOTAL!)
+    echo.[info] sweep milestone: !PROGRESS_MILESTONE_NEXT!%% complete (!PROGRESS_DONE!/!PROGRESS_TOTAL!) !ETA_SUFFIX!
   )
   set /a PROGRESS_MILESTONE_NEXT+=SWEEP_PROGRESS_MILESTONE_STEP
   goto progress_milestone_loop
 )
 :progress_milestone_done
-echo.[info] sweep progress: !PROGRESS_DONE!/!PROGRESS_TOTAL! complete (!PROGRESS_PCT!%%) running=!PROGRESS_RUNNING!!PROGRESS_SUFFIX!
+echo.[info] sweep progress: !PROGRESS_DONE!/!PROGRESS_TOTAL! complete (!PROGRESS_PCT!%%) running=!PROGRESS_RUNNING!!PROGRESS_SUFFIX! !ETA_SUFFIX!
+exit /b 0
+
+:calc_eta_suffix
+set "ETA_DONE=%~1"
+set "ETA_TOTAL=%~2"
+set "ETA_SUFFIX="
+call :normalize_int ETA_DONE 0
+call :normalize_int ETA_TOTAL 0
+if "!ETA_TOTAL!"=="0" exit /b 0
+if "!ETA_DONE!"=="0" exit /b 0
+if not defined SWEEP_START_SECS exit /b 0
+if "!SWEEP_START_SECS!"=="0" exit /b 0
+call :get_monotonic_seconds NOW_SECS
+set /a ETA_ELAPSED=NOW_SECS-SWEEP_START_SECS
+if !ETA_ELAPSED! LSS 0 set "ETA_ELAPSED=0"
+set /a ETA_REMAIN=ETA_TOTAL-ETA_DONE
+if !ETA_REMAIN! LSS 0 set "ETA_REMAIN=0"
+set /a ETA_SEC=ETA_ELAPSED*ETA_REMAIN/ETA_DONE
+call :format_duration ETA_SEC ETA_STR
+set "ETA_SUFFIX=eta=!ETA_STR!"
+exit /b 0
+
+:get_monotonic_seconds
+set "MONO_NAME=%~1"
+set "MONO_VAL="
+for /f "usebackq delims=" %%A in (`call "%PYTHON_EXEC_CMD%" -c "import time;print(int(time.monotonic()))"`) do set "MONO_VAL=%%A"
+set "%MONO_NAME%=%MONO_VAL%"
+call :normalize_int !MONO_NAME! 0
+exit /b 0
+
+:format_duration
+set "DUR_SEC=%~1"
+set "DUR_OUT_NAME=%~2"
+call :normalize_int DUR_SEC 0
+set /a DUR_DAYS=DUR_SEC/86400
+set /a DUR_REM=DUR_SEC%%86400
+set /a DUR_H=DUR_REM/3600
+set /a DUR_REM=DUR_REM%%3600
+set /a DUR_M=DUR_REM/60
+set /a DUR_S=DUR_REM%%60
+set "DUR_H_PAD=0%DUR_H%"
+set "DUR_M_PAD=0%DUR_M%"
+set "DUR_S_PAD=0%DUR_S%"
+set "DUR_H_PAD=!DUR_H_PAD:~-2!"
+set "DUR_M_PAD=!DUR_M_PAD:~-2!"
+set "DUR_S_PAD=!DUR_S_PAD:~-2!"
+if !DUR_DAYS! GTR 0 (
+  set "DUR_STR=!DUR_DAYS!d !DUR_H_PAD!:!DUR_M_PAD!:!DUR_S_PAD!"
+) else (
+  set "DUR_STR=!DUR_H_PAD!:!DUR_M_PAD!:!DUR_S_PAD!"
+)
+set "%DUR_OUT_NAME%=%DUR_STR%"
 exit /b 0
 
 :normalize_int
