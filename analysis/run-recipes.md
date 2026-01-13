@@ -673,7 +673,7 @@ pytest tests/integration/test_analysis_coverage_guard.py -q
 3) 内容  
 - `make analysis-coverage-guard` は `python -m agent_test.ci_guard_analysis --coverage analysis/coverage/coverage.json --refs analysis/doc_refs.json --inventory analysis/inventory.json --fail-under 0.75 --require-clean-anchors` をラップし、関数参照率とアンカー整合性を同時に検証する。[Makefile:analysis-coverage-guard [L21–L24]][agent_test/ci_guard_analysis.py:1–224]
 - 同じコマンドを `tests/integration/test_analysis_coverage_guard.py` が実行するため、`pytest` を回すだけで coverage 低下や未参照関数が検出される。[tests/integration/test_analysis_coverage_guard.py#test_analysis_coverage_guard [L7–L11]]
-- 失敗時は標準出力で不足シンボル（例: `marsdisk/io/writer.py#write_orbit_rollup [L381–L389]`）が列挙されるので、`analysis/overview.md` や `analysis/run-recipes.md` に参照を追加したうえで `python analysis/tools/make_coverage.py` を再実行し、`analysis/coverage/coverage.json` を更新する。[analysis/tools/make_coverage.py:1–210]
+- 失敗時は標準出力で不足シンボル（例: `marsdisk/io/writer.py#write_orbit_rollup [L521–L529]`）が列挙されるので、`analysis/overview.md` や `analysis/run-recipes.md` に参照を追加したうえで `python analysis/tools/make_coverage.py` を再実行し、`analysis/coverage/coverage.json` を更新する。[analysis/tools/make_coverage.py:1–210]
 - DocSyncAgent から `analysis/doc_refs.json` を再生成する際は `python -m tools.doc_sync_agent --all --write` を併用し、coverage 作成前後で参照情報を整合させる。
 
 ### update_psd_state — PSD初期化の流れ

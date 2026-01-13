@@ -3,7 +3,7 @@
 ## 適用範囲
 - 対象: `analysis/thesis/` と `analysis/thesis_sections/`。
 - 目的: `paper/out/` に出力する修士論文の体裁を統一する。
-- 未解決参照の記法は AI_USAGE の方式を採用せず、出典未確定は本文に「（要確認：...）」と明記する。
+- 未解決参照は AI_USAGE の方式に従い、本文には `TODO(REF:slug)` を付し、`analysis/UNKNOWN_REF_REQUESTS.jsonl` に登録する。
 
 ## 原稿の正/生成
 - セクション素材は `analysis/thesis_sections/` を正とする。

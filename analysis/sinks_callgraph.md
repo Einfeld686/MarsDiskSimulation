@@ -5,8 +5,8 @@
 ## Key Interfaces
 
 <!-- Required anchors for sinks_callgraph_documented check:
-     marsdisk/run_zero_d.py#run_zero_d [L242–L4419], marsdisk/physics/surface.py#step_surface [L189–L221],
-     marsdisk/physics/sinks.py#total_sink_timescale [L83–L160], marsdisk/physics/sublimation.py#mass_flux_hkl [L606–L662] -->
+     marsdisk/run_zero_d.py#run_zero_d [L1392–L5987], marsdisk/physics/surface.py#step_surface [L229–L263],
+     marsdisk/physics/sinks.py#total_sink_timescale [L83–L160], marsdisk/physics/sublimation.py#mass_flux_hkl [L618–L676] -->
 
 - [marsdisk/physics/sublimation.py#mass_flux_hkl [L618–L676]] / `[marsdisk/physics/sublimation.py#SublimationParams [L55–L134]]`: `SublimationParams(...)` と HKL パラメータ群。`run_zero_d` は YAML `sinks.sub_params` から `SublimationParams(**cfg.sinks.sub_params.model_dump())` を構築する。
 - [marsdisk/physics/sinks.py#total_sink_timescale [L83–L160]] / `[marsdisk/physics/sinks.py#SinkOptions [L35–L45]]`: `SinkOptions` と `total_sink_timescale`。`sinks.mode="none"` では `SinkTimescaleResult(t_sink=None, ...)` を返し、昇華・gas drag の有効化時のみ最短寿命を採用する。
