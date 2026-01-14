@@ -1718,6 +1718,14 @@ class Numerics(BaseModel):
         ge=0.0,
         description="Padding added after reaching t_end_until_temperature_K [years].",
     )
+    min_duration_years: Optional[float] = Field(
+        None,
+        gt=0.0,
+        description=(
+            "Minimum simulation duration in years. Early-stop conditions other than optical_depth.tau_stop "
+            "are ignored until this time."
+        ),
+    )
     stop_on_blowout_below_smin: bool = Field(
         False,
         description="Stop the run early if the blow-out grain size falls below the configured minimum size.",

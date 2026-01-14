@@ -1694,13 +1694,21 @@ def run_zero_d(
         logger.warning("⟨Q_pr⟩ lookup table not initialised; using DEFAULT_Q_PR=1.")
     numerics_cfg = getattr(cfg, "numerics", None)
     t_end_years_cfg = 0.0
+    min_duration_years_cfg = None
     if numerics_cfg is not None:
+        min_duration_years_cfg = getattr(numerics_cfg, "min_duration_years", None)
+        if min_duration_years_cfg is not None:
+            min_duration_years_cfg = float(min_duration_years_cfg)
+            if not math.isfinite(min_duration_years_cfg) or min_duration_years_cfg <= 0.0:
+                raise ConfigurationError("numerics.min_duration_years must be positive when specified")
         if getattr(numerics_cfg, "t_end_years", None) is not None:
             t_end_years_cfg = float(getattr(numerics_cfg, "t_end_years", 0.0) or 0.0)
         elif getattr(numerics_cfg, "t_end_orbits", None) is not None:
             t_end_years_cfg = (
                 float(getattr(numerics_cfg, "t_end_orbits", 0.0) or 0.0) * t_orb / SECONDS_PER_YEAR
             )
+        if min_duration_years_cfg is not None:
+            t_end_years_cfg = max(t_end_years_cfg, min_duration_years_cfg)
         temp_stop_target = getattr(numerics_cfg, "t_end_until_temperature_K", None)
         temp_pad_years = float(getattr(numerics_cfg, "t_end_temperature_margin_years", 0.0) or 0.0)
         if temp_stop_target is not None:
@@ -2593,6 +2601,10 @@ def run_zero_d(
     monitor_dt_ratio = math.isfinite(dt_over_t_blow_max) and dt_over_t_blow_max > 0.0
     stop_on_blowout_below_smin = bool(getattr(cfg.numerics, "stop_on_blowout_below_smin", False))
     blowout_stop_threshold = float(s_min_config)
+    min_duration_years = getattr(cfg.numerics, "min_duration_years", None)
+    min_duration_s = 0.0
+    if min_duration_years is not None:
+        min_duration_s = float(min_duration_years) * SECONDS_PER_YEAR
 
     orbit_time_accum = 0.0
     orbit_loss_blow = 0.0
@@ -2880,18 +2892,19 @@ def run_zero_d(
             ablow_track.append(a_blow_step)
 
             if stop_on_blowout_below_smin and a_blow_step <= blowout_stop_threshold:
-                early_stop_reason = "a_blow_below_s_min_config"
-                early_stop_step = step_no
-                early_stop_time_s = time
-                total_time_elapsed = time
-                logger.info(
-                    "Early stop triggered: a_blow=%.3e m dropped below s_min_config=%.3e m at t=%.3e s (step %d)",
-                    a_blow_step,
-                    blowout_stop_threshold,
-                    time,
-                    step_no,
-                )
-                break
+                if min_duration_s <= 0.0 or time >= min_duration_s:
+                    early_stop_reason = "a_blow_below_s_min_config"
+                    early_stop_step = step_no
+                    early_stop_time_s = time
+                    total_time_elapsed = time
+                    logger.info(
+                        "Early stop triggered: a_blow=%.3e m dropped below s_min_config=%.3e m at t=%.3e s (step %d)",
+                        a_blow_step,
+                        blowout_stop_threshold,
+                        time,
+                        step_no,
+                    )
+                    break
 
             t_blow_step = chi_blow_eff / Omega_step if Omega_step > 0.0 else float("inf")
 

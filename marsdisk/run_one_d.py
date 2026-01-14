@@ -924,6 +924,10 @@ def run_one_d(
         temp_runtime=temp_runtime,
     )
     dt = float(dt_initial_step)
+    min_duration_years = getattr(cfg.numerics, "min_duration_years", None)
+    min_duration_s = 0.0
+    if min_duration_years is not None:
+        min_duration_s = float(min_duration_years) * SECONDS_PER_YEAR
     max_steps = MAX_STEPS
     if n_steps > max_steps:
         n_steps = max_steps
@@ -1165,7 +1169,11 @@ def run_one_d(
             a_blow_last = a_blow_step
             s_min_effective_last = s_min_effective
             step_end_time = time + dt
-            if bool(getattr(cfg.numerics, "stop_on_blowout_below_smin", False)) and a_blow_step <= s_min_config:
+            if (
+                bool(getattr(cfg.numerics, "stop_on_blowout_below_smin", False))
+                and a_blow_step <= s_min_config
+                and (min_duration_s <= 0.0 or time >= min_duration_s)
+            ):
                 early_stop_reason = "a_blow_below_s_min_config"
                 break
 

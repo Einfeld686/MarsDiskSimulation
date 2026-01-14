@@ -223,6 +223,8 @@ def resolve_time_grid(
     temp_stop = getattr(numerics, "t_end_until_temperature_K", None)
     temp_pad_years = float(getattr(numerics, "t_end_temperature_margin_years", 0.0) or 0.0)
     temp_search_years = getattr(numerics, "t_end_temperature_search_years", None)
+    min_duration_years = getattr(numerics, "min_duration_years", None)
+    min_duration_s = None
 
     if temp_stop is not None:
         if temp_runtime is None:
@@ -255,6 +257,17 @@ def resolve_time_grid(
 
     if not math.isfinite(t_end) or t_end <= 0.0:
         raise ConfigurationError("Resolved integration duration must be positive and finite")
+
+    if min_duration_years is not None:
+        min_duration_years = float(min_duration_years)
+        if not math.isfinite(min_duration_years) or min_duration_years <= 0.0:
+            raise ConfigurationError("min_duration_years must be positive when specified")
+        min_duration_s = min_duration_years * SECONDS_PER_YEAR
+
+    t_end_seconds_pre_min = None
+    if min_duration_s is not None and min_duration_s > t_end:
+        t_end_seconds_pre_min = t_end
+        t_end = min_duration_s
 
     dt_input = numerics.dt_init
     dt_mode = "auto" if isinstance(dt_input, str) and dt_input.lower() == "auto" else "explicit"
@@ -299,6 +312,8 @@ def resolve_time_grid(
         "dt_step": dt_step,
         "t_blow_nominal": t_blow_nominal if math.isfinite(t_blow_nominal) else None,
         "n_steps": n_steps,
+        "min_duration_years": min_duration_years,
+        "t_end_seconds_pre_min_duration": t_end_seconds_pre_min,
         "temperature_stop_K": float(temp_stop) if temp_stop is not None else None,
         "t_end_seconds_from_temperature": t_end_seconds_from_temperature,
         "t_end_temperature_search_years": float(temp_search_years) if temp_search_years is not None else None,
