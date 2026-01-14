@@ -165,7 +165,7 @@ def main() -> int:
     ax.set_xlabel("Time [yr]")
     ax.set_ylabel(f"Cumulative mass / {args.ref_mass:.1e} M_Mars")
     ax.set_yscale("log")
-    ticks = [1e-2, 1e-1, 1e0, 1e1]
+    ticks = [1e-5, 1e-4, 1e-3, 1e-2, 1e-1, 1e0, 1e1]
     ax.set_ylim(ticks[0], ticks[-1])
     ax.set_yticks(ticks)
     ax.yaxis.set_major_formatter(LogFormatterMathtext(base=10.0))
