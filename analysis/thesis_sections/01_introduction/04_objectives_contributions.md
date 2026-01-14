@@ -92,12 +92,12 @@ Hyodo et al. (2018) と同じ代表値（\(\rho=3000\,{\rm kg\,m^{-3}}\)、\(C_p
 
 <!-- TEX_EXCLUDE_START -->
 ##### 先行研究リンク
-- [Hyodo et al. (2017a)](../../paper/pdf_extractor/outputs/Hyodo2017a_ApJ845_125/result.md)
-- [Hyodo et al. (2017b)](../../paper/pdf_extractor/outputs/Hyodo2017b_ApJ851_122/result.md)
-- [Hyodo et al. (2018)](../../paper/pdf_extractor/outputs/Hyodo2018_ApJ860_150/result.md)
-- [Canup & Salmon (2018)](../../paper/pdf_extractor/outputs/CanupSalmon2018_SciAdv4_eaar6887/result.md)
-- [Salmon & Canup (2012)](../../paper/pdf_extractor/outputs/SalmonCanup2012_ApJ760_83/result.md)
-- [Takeuchi & Lin (2003)](../../paper/pdf_extractor/outputs/TakeuchiLin2003_ApJ593_524/result.md)
+- [Hyodo et al. (2017a)](../../paper/references/Hyodo2017a_ApJ845_125.pdf)
+- [Hyodo et al. (2017b)](../../paper/references/Hyodo2017b_ApJ851_122.pdf)
+- [Hyodo et al. (2018)](../../paper/references/Hyodo2018_ApJ860_150.pdf)
+- [Canup & Salmon (2018)](../../paper/references/CanupSalmon2018_SciAdv4_eaar6887.pdf)
+- [Salmon & Canup (2012)](../../paper/references/SalmonCanup2012_ApJ760_83.pdf)
+- [Takeuchi & Lin (2003)](../../paper/references/TakeuchiLin2003_ApJ593_524.pdf)
 
 <!-- TEX_EXCLUDE_END -->
 
@@ -123,9 +123,9 @@ Salmon & Canup (2012) の放射で制限される粘性は内側円盤の拡散�
 
 <!-- TEX_EXCLUDE_START -->
 #### 先行研究リンク
-- [Salmon & Canup (2012)](../../paper/pdf_extractor/outputs/SalmonCanup2012_ApJ760_83/result.md)
-- [Hyodo et al. (2017a)](../../paper/pdf_extractor/outputs/Hyodo2017a_ApJ845_125/result.md)
-- [Hyodo et al. (2018)](../../paper/pdf_extractor/outputs/Hyodo2018_ApJ860_150/result.md)
+- [Salmon & Canup (2012)](../../paper/references/SalmonCanup2012_ApJ760_83.pdf)
+- [Hyodo et al. (2017a)](../../paper/references/Hyodo2017a_ApJ845_125.pdf)
+- [Hyodo et al. (2018)](../../paper/references/Hyodo2018_ApJ860_150.pdf)
 
 <!-- TEX_EXCLUDE_END -->
 ---

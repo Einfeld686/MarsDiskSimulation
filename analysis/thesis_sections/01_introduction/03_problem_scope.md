@@ -86,3 +86,15 @@ M_{\rm in}' = M_{\rm in}(t_0) - \Delta M_{\rm in}
 出力は、遷移期の不可逆損失 \(\Delta M_{\rm in}\) と、更新後の内側質量 \(M_{\rm in}'\) である。これを長期形成モデルへ渡すことで、従来の「惑星への落下＋粘性拡散」に閉じた質量収支（Salmon & Canup, 2012; Canup & Salmon, 2018）に対し、遷移期の追加シンクを手続きとして接続できる。
 
 次章では、衝突直後計算の出力を長期モデルの入力へ写像する既存の方法と、その写像が曖昧になりやすい遷移期の扱いを、文献に沿って整理する。
+
+<!-- TEX_EXCLUDE_START -->
+### 先行研究リンク
+- [Takeuchi & Lin (2003)](../../paper/references/TakeuchiLin2003_ApJ593_524.pdf)
+- [Salmon & Canup (2012)](../../paper/references/SalmonCanup2012_ApJ760_83.pdf)
+- [Citron et al. (2015)](../../paper/references/Citron2015_Icarus252_334.pdf)
+- [Ronnet et al. (2016)](../../paper/references/Ronnet2016_ApJ828_109.pdf)
+- [Hyodo et al. (2017a)](../../paper/references/Hyodo2017a_ApJ845_125.pdf)
+- [Hyodo et al. (2017b)](../../paper/references/Hyodo2017b_ApJ851_122.pdf)
+- [Canup & Salmon (2018)](../../paper/references/CanupSalmon2018_SciAdv4_eaar6887.pdf)
+- [Hyodo et al. (2018)](../../paper/references/Hyodo2018_ApJ860_150.pdf)
+<!-- TEX_EXCLUDE_END -->

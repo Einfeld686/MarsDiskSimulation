@@ -648,6 +648,18 @@
       ]
     },
     {
+      "key": "Rosenblatt2010_RAA10_713",
+      "short": "Rosenblatt & Dehant (2010)",
+      "title": "Mars geodesy, rotation and gravity",
+      "doi": null,
+      "bibtex": "@article{Rosenblatt2010_RAA10_713, journal = {Res. Astron. Astrophys.}, volume = {10}, pages = {713-736}, year = {2010}}",
+      "adopted_scope": "Review of Mars geodesy, rotation, and gravity parameters used for background context.",
+      "claims": [
+        "Reviews Mars geodesy and rotation state parameters available circa 2010.",
+        "Summarizes gravity-field constraints and their implications for Mars interior studies."
+      ]
+    },
+    {
       "key": "Rosenblatt2012_Icarus221_806",
       "short": "Rosenblatt & Charnoz (2012)",
       "title": "On the formation of the martian moons from a circum-martian accretion disk",
@@ -989,6 +1001,18 @@
       "claims": [
         "Shows emissivity spectra inconsistent with carbonaceous meteorites.",
         "Finds spectral features consistent with silicate/tectosilicate materials."
+      ]
+    },
+    {
+      "key": "Giuranna2019_NatGeo12_326",
+      "short": "Giuranna et al. (2019)",
+      "title": "Independent confirmation of a methane spike on Mars and a source region east of Gale Crater",
+      "doi": "10.1038/s41561-019-0331-9",
+      "bibtex": "@article{Giuranna2019_NatGeo12_326, journal = {Nature Geoscience}, volume = {12}, pages = {326-332}, year = {2019}}",
+      "adopted_scope": "Mars atmospheric methane detection and inferred source region near Gale Crater.",
+      "claims": [
+        "Reports an independent confirmation of a transient methane spike in the Martian atmosphere.",
+        "Identifies a candidate source region east of Gale Crater based on observations."
       ]
     },
     {

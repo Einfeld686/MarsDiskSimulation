@@ -27,13 +27,15 @@
 
 #### 先行研究リンク（ローカル）
 
-- [Citron et al. (2015)](../../paper/pdf_extractor/outputs/Citron2015_Icarus252_334/result.md)
-- [Hyodo et al. (2017a)](../../paper/pdf_extractor/outputs/Hyodo2017a_ApJ845_125/result.md)
-- [Hyodo et al. (2017b)](../../paper/pdf_extractor/outputs/Hyodo2017b_ApJ851_122/result.md)
-- [Ronnet et al. (2016)](../../paper/pdf_extractor/outputs/Ronnet2016_ApJ828_109/result.md)
-- [Canup & Salmon (2018)](../../paper/pdf_extractor/outputs/CanupSalmon2018_SciAdv4_eaar6887/result.md)
-- [Salmon & Canup (2012)](../../paper/pdf_extractor/outputs/SalmonCanup2012_ApJ760_83/result.md)
+- [Canup & Salmon (2018)](../../paper/references/CanupSalmon2018_SciAdv4_eaar6887.pdf)
+- [Citron et al. (2015)](../../paper/references/Citron2015_Icarus252_334.pdf)
+- [Craddock (2011)](../../paper/references/Craddock2011_EPSCDPS1108.pdf)
+- [Hyodo et al. (2017a)](../../paper/references/Hyodo2017a_ApJ845_125.pdf)
+- [Hyodo et al. (2017b)](../../paper/references/Hyodo2017b_ApJ851_122.pdf)
+- [Ronnet et al. (2016)](../../paper/references/Ronnet2016_ApJ828_109.pdf)
+- [Rosenblatt & Charnoz (2012)](../../paper/references/Rosenblatt2012_Icarus221_806.pdf)
+- [Rosenblatt et al. (2016)](../../paper/references/Rosenblatt2016_NatGeo9_8.pdf)
+- [Salmon & Canup (2012)](../../paper/references/SalmonCanup2012_ApJ760_83.pdf)
 
 <!-- TEX_EXCLUDE_END -->
 ---
-
