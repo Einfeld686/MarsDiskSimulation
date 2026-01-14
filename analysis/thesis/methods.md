@@ -1015,7 +1015,7 @@ title: 記号一覧（遷移期・長期モデル接続：暫定）
     $\Delta M_{\rm in}$ &
     遷移期における内側円盤の不可逆損失（表層散逸・不可逆落下等の総和） &
     $\mathrm{kg}$ &
-    本研究で評価対象（落下分の扱いは TODO(REF:delta_min_infall_policy_v1)） \\
+    本研究で評価対象（落下分の扱いは TODO(REF:delta\_min\_infall\_policy\_v1)） \\
     $M_{\rm in,0}$ &
     長期モデル開始時刻 $t_0$ における内側円盤の有効質量（接続後の入力） &
     $\mathrm{kg}$ &
@@ -1031,7 +1031,7 @@ title: 記号一覧（遷移期・長期モデル接続：暫定）
     $a_{\rm eq,max}$ &
     円盤が赤道面へ緩和した後の「最大半長軸」等を表す候補記号 &
     未定 &
-    定義関係は TODO(REF:aeqmax_rd_relation_v1) \\
+    定義関係は TODO(REF:aeqmax\_rd\_relation\_v1) \\
     $J_2$ &
     火星重力場の扁平項（第 2 帯状調和係数） &
     -- &
@@ -1043,6 +1043,6 @@ title: 記号一覧（遷移期・長期モデル接続：暫定）
 ## 補足：記号不整合（現状の把握）
 
 - 「外縁」が $r_d$ と $a_{\rm eq,max}$ で混在している。現時点では、両者の定義関係が文書内で確定できないため、表\ref{tab:symbols_transition} では別項目として残している。  
-- 先行研究（特に Canup \& Salmon (2018)）の該当箇所を確認し、(i) 同一概念ならどちらかに統一する、(ii) 別概念なら本文で初出定義を与える、のいずれかを行う必要がある。TODO(REF:transition_symbols_pending_refs_v1)
+- 先行研究（特に Canup & Salmon (2018)）の該当箇所を確認し、(i) 同一概念ならどちらかに統一する、(ii) 別概念なら本文で初出定義を与える、のいずれかを行う必要がある。TODO(REF:transition_symbols_pending_refs_v1)
 
 ---
