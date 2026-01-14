@@ -68,6 +68,7 @@ def test_mass_budget_and_timestep_overrides() -> None:
     assert Path(qpr_path).name in {
         "qpr_table.csv",
         "qpr_planck_sio2_abbas_calibrated_lowT.csv",
+        "qpr_planck_forsterite_mie.csv",
     }
 
     required_cols = {

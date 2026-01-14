@@ -276,9 +276,9 @@ SiO₂ 冷却マップを用いて固体/蒸気の相を判定し、シンク選
 |-----------|------|--------|
 | `sinks.mode` | シンク有効化（`"none"` / `"sublimation"`） | `"sublimation"` |
 | `sinks.sub_params.mode` | 昇華モデル（`"logistic"` / `"hkl"`） | `"hkl"` |
-| `sinks.sub_params.alpha_evap` | 蒸発係数 | 0.007 |
-| `sinks.sub_params.mu` | 分子量 [kg/mol] | 0.044 |
-| `sinks.sub_params.A` / `.B` | Clausius-Clapeyron係数 | 13.613 / 17850 |
+| `sinks.sub_params.alpha_evap` | 蒸発係数 | 0.1 |
+| `sinks.sub_params.mu` | 分子量 [kg/mol] | 0.140694 |
+| `sinks.sub_params.A` / `.B` | Clausius-Clapeyron係数 | 13.809 / 28362.9 |
 
 ### 円盤ジオメトリ (`disk.geometry`)
 
@@ -291,7 +291,7 @@ SiO₂ 冷却マップを用いて固体/蒸気の相を判定し、シンク選
 
 | カテゴリ | パラメータ | 説明 | 典型値 |
 |---------|-----------|------|--------|
-| 物質 | `material.rho` | バルク密度 [kg/m³] | 3000 |
+| 物質 | `material.rho` | バルク密度 [kg/m³] | 3270 |
 | サイズ | `sizes.s_min` / `s_max` | 粒径範囲 [m] | 1e-6 / 3.0 |
 | サイズ | `sizes.n_bins` | 対数ビン数 | 40 |
 | PSD | `psd.alpha` | べき指数 | 1.83 |
