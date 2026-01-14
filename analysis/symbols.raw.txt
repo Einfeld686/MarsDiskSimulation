@@ -1623,13 +1623,13 @@ tests/integration/test_run_regressions.py:19:def _merge_overrides(overrides: lis
 tests/integration/test_run_regressions.py:26:def _run_case(overrides: list[str]) -> tuple[dict, pd.DataFrame]
 tests/integration/test_run_regressions.py:40:def _run_case_with_series(overrides: list[str]) -> tuple[dict, pd.DataFrame, pd.DataFrame]
 tests/integration/test_run_regressions.py:55:def test_mass_budget_and_timestep_overrides() -> None
-tests/integration/test_run_regressions.py:86:def test_sublimation_not_double_counted() -> None
-tests/integration/test_run_regressions.py:109:def test_extended_diagnostics_toggle() -> None
-tests/integration/test_run_regressions.py:155:def test_tau_gate_blocks_blowout() -> None
-tests/integration/test_run_regressions.py:173:def test_gate_factor_collision_competition_reduces_flux() -> None
-tests/integration/test_run_regressions.py:190:def _write_inline_combined_config(config_path: Path, outdir: Path) -> None
-tests/integration/test_run_regressions.py:254:def test_combined_mass_flux_balance(tmp_path: Path) -> None
-tests/integration/test_run_regressions.py:281:def test_gate_factor_sublimation_competition_reduces_flux() -> None
+tests/integration/test_run_regressions.py:87:def test_sublimation_not_double_counted() -> None
+tests/integration/test_run_regressions.py:110:def test_extended_diagnostics_toggle() -> None
+tests/integration/test_run_regressions.py:156:def test_tau_gate_blocks_blowout() -> None
+tests/integration/test_run_regressions.py:174:def test_gate_factor_collision_competition_reduces_flux() -> None
+tests/integration/test_run_regressions.py:191:def _write_inline_combined_config(config_path: Path, outdir: Path) -> None
+tests/integration/test_run_regressions.py:255:def test_combined_mass_flux_balance(tmp_path: Path) -> None
+tests/integration/test_run_regressions.py:282:def test_gate_factor_sublimation_competition_reduces_flux() -> None
 tests/integration/test_runsets_dry_run.py:10:def test_run_one_dry_run_skips_setup(tmp_path: Path) -> None
 tests/integration/test_scalings.py:16:def test_strubbe_chiang_collisional_timescale_matches_orbit_scaling(tau: float) -> None
 tests/integration/test_scalings.py:26:def _expected_smol_to_wyatt_ratio(e_kernel: float, i_kernel: float, H_factor: float) -> float

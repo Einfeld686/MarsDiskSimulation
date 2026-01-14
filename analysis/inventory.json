@@ -15338,49 +15338,49 @@
   },
   {
     "file_path": "tests/integration/test_run_regressions.py",
-    "line_no": 86,
+    "line_no": 87,
     "symbol": "test_sublimation_not_double_counted",
     "signature": "test_sublimation_not_double_counted() -> None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tests/integration/test_run_regressions.py",
-    "line_no": 109,
+    "line_no": 110,
     "symbol": "test_extended_diagnostics_toggle",
     "signature": "test_extended_diagnostics_toggle() -> None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tests/integration/test_run_regressions.py",
-    "line_no": 155,
+    "line_no": 156,
     "symbol": "test_tau_gate_blocks_blowout",
     "signature": "test_tau_gate_blocks_blowout() -> None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tests/integration/test_run_regressions.py",
-    "line_no": 173,
+    "line_no": 174,
     "symbol": "test_gate_factor_collision_competition_reduces_flux",
     "signature": "test_gate_factor_collision_competition_reduces_flux() -> None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tests/integration/test_run_regressions.py",
-    "line_no": 190,
+    "line_no": 191,
     "symbol": "_write_inline_combined_config",
     "signature": "_write_inline_combined_config(config_path: Path, outdir: Path) -> None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tests/integration/test_run_regressions.py",
-    "line_no": 254,
+    "line_no": 255,
     "symbol": "test_combined_mass_flux_balance",
     "signature": "test_combined_mass_flux_balance(tmp_path: Path) -> None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tests/integration/test_run_regressions.py",
-    "line_no": 281,
+    "line_no": 282,
     "symbol": "test_gate_factor_sublimation_competition_reduces_flux",
     "signature": "test_gate_factor_sublimation_competition_reduces_flux() -> None",
     "brief_usage": "No description available."
