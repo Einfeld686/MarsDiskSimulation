@@ -28,6 +28,7 @@ io.archive.warn_slow_min_gb=5.0
 # io.streaming.offload.verify=size
 # io.streaming.offload.skip_if_same_device=true
 numerics.dt_init=20
+numerics.min_duration_years=2.0
 numerics.checkpoint.enabled=false
 numerics.checkpoint.interval_years=0.083
 numerics.checkpoint.keep_last_n=3
