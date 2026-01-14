@@ -1,4 +1,4 @@
-## 付録 A. 運用実行（run_sweep.cmd を正とする）
+### 付録 A. 運用実行（run_sweep.cmd を正とする）
 
 代表的な実行コマンドとシナリオは analysis/run-recipes.md に集約する。運用スイープは `scripts/runsets/windows/run_sweep.cmd` を正とし、既定の `CONFIG_PATH`/`OVERRIDES_PATH` と引数の扱いは同スクリプトに従う。  
 > **参照**: `scripts/runsets/windows/run_sweep.cmd` の `::REF:DEFAULT_PATHS` / `::REF:CLI_ARGS`
@@ -23,7 +23,7 @@ scripts\runsets\windows\run_sweep.cmd --config scripts\runsets\common\base.yml -
 - スイープ並列は既定で有効 (`SWEEP_PARALLEL=1`) で、ネスト回避のため `MARSDISK_CELL_PARALLEL=0` によりセル並列は無効化される。サイズプローブで `PARALLEL_JOBS` が調整される場合がある。  
   > **参照**: `scripts/runsets/windows/run_sweep.cmd` の `::REF:PARALLEL`
 
-### run_sweep.cmd の主要環境変数
+#### run_sweep.cmd の主要環境変数
 
 既定値は `run_sweep.cmd` のデフォルト設定に従う。主要環境変数は表\ref{tab:run_sweep_env}に示す。  
 > **参照**: `scripts/runsets/windows/run_sweep.cmd` の `::REF:SWEEP_DEFAULTS`
@@ -54,5 +54,6 @@ scripts\runsets\windows\run_sweep.cmd --config scripts\runsets\common\base.yml -
 
 - 固定地平で動かす場合は `COOL_TO_K=none` と `T_END_YEARS` を指定する。  
   > **参照**: `scripts/runsets/windows/run_sweep.cmd` の `::REF:TEMPERATURE_STOP`
+
 
 ---

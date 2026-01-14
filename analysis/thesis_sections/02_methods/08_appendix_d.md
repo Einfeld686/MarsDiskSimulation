@@ -1,4 +1,4 @@
-## 付録 D. 略語索引
+### 付録 D. 略語索引
 
 略語は表\ref{tab:abbreviations}にまとめる。
 
@@ -23,3 +23,5 @@
     \hline
   \end{tabular}
 \end{table}
+
+

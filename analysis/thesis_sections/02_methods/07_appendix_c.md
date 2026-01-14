@@ -1,4 +1,4 @@
-## 付録 C. 関連ドキュメント
+### 付録 C. 関連ドキュメント
 
 関連ドキュメントの役割を表\ref{tab:related_docs}に整理する。
 
@@ -19,5 +19,6 @@
     \hline
   \end{tabular}
 \end{table}
+
 
 ---

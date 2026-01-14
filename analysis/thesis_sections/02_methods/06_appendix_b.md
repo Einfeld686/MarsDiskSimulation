@@ -1,4 +1,4 @@
-## 付録 B. 設定→物理対応クイックリファレンス
+### 付録 B. 設定→物理対応クイックリファレンス
 
 設定と物理の対応を表\ref{tab:config_physics_map}にまとめる。
 
@@ -31,5 +31,6 @@
 \end{table}
 
 完全な設定キー一覧は analysis/config_guide.md を参照。
+
 
 ---
