@@ -138,7 +138,9 @@ Hyodo et al. (2018) は、衝突直後計算の粒子分布をグリッドへ落
 
 ここで注意したいのは、この \(\tau\) が「鉛直方向の表層構造」を直接与えるものではない点である。円盤が平均的に光学的に厚くても、直接照射されるのは表層であり、「内部が厚い」ことと「表層が照射されない」ことは同義ではない。そこで本研究では、\(\tau\) を「火星から見た半径方向」と「表層を切る鉛直方向」に分け、放射圧は後者で定義した表層にのみ直接作用すると置く。
 
+<!-- TEX_EXCLUDE_START -->
 （計算の置き場：表層質量の最小見積もり）
+<!-- TEX_EXCLUDE_END -->
 表層の面密度 \(\Sigma_{\rm surf}\) を「鉛直方向で \(\tau_\perp\approx1\)」で定義すると、式\ref{eq:tau_perp_sigma}となる。
 \begin{equation}
 \label{eq:tau_perp_sigma}
@@ -179,7 +181,9 @@ Canup & Salmon (2018) の \(a_{\rm eq}\) 写像は、衝突直後の粒子群を
 \end{equation}
 ここで \(t_{\rm ss}\) は遷移期の終点、\(\dot{M}_{\rm loss}(t)\) は不可逆損失率であり、衝突直後計算の終端を \(t=0\) として積分する。
 
+<!-- TEX_EXCLUDE_START -->
 （計算の置き場：遷移期の幅 \(t_{\rm ss}\) の与え方）
+<!-- TEX_EXCLUDE_END -->
 最も単純には式\ref{eq:tss_max}と置く。
 \begin{equation}
 \label{eq:tss_max}
