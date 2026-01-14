@@ -217,6 +217,12 @@ analysis/tools/scan_assumptions.py:185:def compute_coverage(records: list[Assump
 analysis/tools/scan_assumptions.py:228:def align_code_paths(records: list[AssumptionRecord], source_map: dict) -> list[AssumptionRecord]
 analysis/tools/scan_assumptions.py:279:def _print_report(report: CoverageReport) -> None
 analysis/tools/scan_assumptions.py:285:def main(argv: Optional[Sequence[str]]=None) -> int
+figures/temp/plot_temp_supply_sweep_cumulative_mass.py:14:def _collect_series_paths(series_dir: Path) -> list[Path]
+figures/temp/plot_temp_supply_sweep_cumulative_mass.py:21:def _read_parquet(path: Path, columns: list[str])
+figures/temp/plot_temp_supply_sweep_cumulative_mass.py:37:def _aggregate_series(run_dir: Path)
+figures/temp/plot_temp_supply_sweep_cumulative_mass.py:69:def _downsample(df, max_points: int)
+figures/temp/plot_temp_supply_sweep_cumulative_mass.py:76:def _format_label(name: str) -> str
+figures/temp/plot_temp_supply_sweep_cumulative_mass.py:96:def main() -> int
 marsdisk/analysis/beta_sampler.py:31:def _apply_thread_guard() -> None
 marsdisk/analysis/beta_sampler.py:60:def _resolve_table_path(path: Path) -> Path
 marsdisk/analysis/beta_sampler.py:75:class BetaSamplingConfig
@@ -885,6 +891,17 @@ scripts/plots/plot_heatmaps.py:294:def sanitize_metric_name(metric: str) -> str
 scripts/plots/plot_heatmaps.py:300:def metric_axis_label(metric: str) -> str
 scripts/plots/plot_heatmaps.py:308:def maybe_plot_mass_per_r2_scatter(df: pd.DataFrame, map_stub: str, map_label: str) -> None
 scripts/plots/plot_heatmaps.py:366:def main(argv: Iterable[str] | None=None) -> None
+scripts/plots/plot_mars_surface_temperature.py:38:def _resolve_table_path(path: Path) -> Path
+scripts/plots/plot_mars_surface_temperature.py:52:def _infer_columns(df: pd.DataFrame) -> Tuple[str, str]
+scripts/plots/plot_mars_surface_temperature.py:62:def _time_to_years(values: pd.Series, column: str) -> pd.Series
+scripts/plots/plot_mars_surface_temperature.py:71:def _infer_label(path: Path) -> str
+scripts/plots/plot_mars_surface_temperature.py:79:def _load_table_series(path: Path) -> pd.DataFrame
+scripts/plots/plot_mars_surface_temperature.py:91:def _truncate_at_temperature(data: pd.DataFrame, cutoff_K: float) -> pd.DataFrame
+scripts/plots/plot_mars_surface_temperature.py:117:def _load_density_from_json(path: Path) -> float
+scripts/plots/plot_mars_surface_temperature.py:127:def _compute_blowout_temperature(size_m: float, qpr_table: Path, rho_kg_m3: float) -> float | None
+scripts/plots/plot_mars_surface_temperature.py:158:def _ensure_hyodo_grid(time_s: np.ndarray, t_stop_s: float) -> np.ndarray
+scripts/plots/plot_mars_surface_temperature.py:171:def parse_args(argv: Iterable[str] | None=None) -> argparse.Namespace
+scripts/plots/plot_mars_surface_temperature.py:254:def main(argv: Iterable[str] | None=None) -> None
 scripts/plots/plot_qpr_planck_sio2.py:25:def _resolve_table_path(path: Path) -> Path
 scripts/plots/plot_qpr_planck_sio2.py:39:def _load_table(path: Path) -> pd.DataFrame
 scripts/plots/plot_qpr_planck_sio2.py:53:def _plot_curves(ax: plt.Axes, df: pd.DataFrame, temps: np.ndarray, cmap, norm: Normalize, marker_size: float, label_inset: bool=False) -> None
