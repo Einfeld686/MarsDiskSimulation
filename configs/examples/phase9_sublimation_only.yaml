@@ -8,7 +8,7 @@ geometry:
   mode: 0D
 
 material:
-  rho: 3000.0
+  rho: 3270.0
 
 sizes:
   s_min: 1.0e-7
@@ -39,6 +39,44 @@ qstar:
   v_ref_kms: [3.0, 5.0]
   coeff_units: ba99_cgs
 
+  override_coeffs: true
+  coeff_scale: 5.574
+  coeff_table:
+    1.0:
+    - 195090000.0
+    - 0.38
+    - 0.8187652527440811
+    - 1.36
+    2.0:
+    - 195090000.0
+    - 0.38
+    - 1.28478039442684
+    - 1.36
+    3.0:
+    - 195090000.0
+    - 0.38
+    - 1.6722
+    - 1.36
+    4.0:
+    - 292635000.0
+    - 0.38
+    - 2.2296
+    - 1.36
+    5.0:
+    - 390180000.0
+    - 0.38
+    - 2.787
+    - 1.36
+    6.0:
+    - 390180000.0
+    - 0.38
+    - 3.137652034251613
+    - 1.36
+    7.0:
+    - 390180000.0
+    - 0.38
+    - 3.4683282387928047
+    - 1.36
 surface:
   init_policy: none
 disk:
@@ -70,12 +108,29 @@ sinks:
   enable_sublimation: true
   enable_gas_drag: false
 
+  sub_params:
+    mode: hkl
+    psat_model: clausius
+    alpha_evap: 0.1
+    mu: 0.140694
+    A: 13.809441833
+    B: 28362.904024
+    valid_K:
+    - 1673.0
+    - 2133.0
+    enable_liquid_branch: true
+    psat_liquid_switch_K: 2163.0
+    A_liq: 11.08
+    B_liq: 22409.0
+    valid_liquid_K:
+    - 2163.0
+    - 3690.0
 radiation:
   source: mars
   use_mars_rp: true
   use_solar_rp: false
   TM_K: 2000.0
-  qpr_table_path: data/qpr_table.csv
+  qpr_table_path: data/qpr_planck_forsterite_mie.csv
 
 shielding:
   mode: off
@@ -99,3 +154,7 @@ optical_depth:
   tau_stop: 2.302585092994046
   tau_stop_tol: 1e-06
   tau_field: tau_los
+phase:
+  thresholds:
+    T_condense_K: 2162.0
+    T_vaporize_K: 2163.0

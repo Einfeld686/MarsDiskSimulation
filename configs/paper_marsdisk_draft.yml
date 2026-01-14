@@ -2,12 +2,12 @@ paper:
   id: PAPER_MARSDISK_DRAFT
   title: 火星ロッシュ円盤のブローアウト・剥離カップリング草稿（自動生成パイプライン試作）
   authors:
-    - Daichi (仮)
+  - Daichi (仮)
   keywords:
-    - Mars
-    - debris disk
-    - blowout
-    - sublimation
+  - Mars
+  - debris disk
+  - blowout
+  - sublimation
   template_set: baseline_v1
   output_root: out/paper_inputs
   checks:
@@ -19,60 +19,60 @@ paper:
     conclusion: paper/manual/conclusion.md
 
 runs:
-  - run_id: RUN_MARS_GASPOOR_v01
-    label: ガス希薄基準（既存0D出力）
-    outdir: out/01_inner1RM_blowout
-    run_card: run_config.json
-    summary: summary.json
-    series:
-      main: series/run.parquet
-      diagnostics: series/diagnostics.parquet
-    checks:
-      mass_budget: checks/mass_budget.csv
-    tags: [baseline, gas-poor]
+- run_id: RUN_MARS_GASPOOR_v01
+  label: ガス希薄基準（既存0D出力）
+  outdir: out/01_inner1RM_blowout
+  run_card: run_config.json
+  summary: summary.json
+  series:
+    main: series/run.parquet
+    diagnostics: series/diagnostics.parquet
+  checks:
+    mass_budget: checks/mass_budget.csv
+  tags: [baseline, gas-poor]
 
-  - run_id: RUN_SINKS_SUBLIM_v01
-    label: 昇華オン基準
-    outdir: out/02_inner1RM_sublimation
-    run_card: run_config.json
-    summary: summary.json
-    series:
-      main: series/run.parquet
-      diagnostics: series/diagnostics.parquet
-    checks:
-      mass_budget: checks/mass_budget.csv
-    tags: [sinks, sublimation]
+- run_id: RUN_SINKS_SUBLIM_v01
+  label: 昇華オン基準
+  outdir: out/02_inner1RM_sublimation
+  run_card: run_config.json
+  summary: summary.json
+  series:
+    main: series/run.parquet
+    diagnostics: series/diagnostics.parquet
+  checks:
+    mass_budget: checks/mass_budget.csv
+  tags: [sinks, sublimation]
 
-  - run_id: RUN_WAVY_PSD_v01
-    label: PSD波状構造テスト
-    outdir: out/20251022-0501_chi05_r1RM_dtOrb100__0fdd14772
-    run_card: run_config.json
-    summary: summary.json
-    series:
-      main: series/run.parquet
-      diagnostics: series/diagnostics.parquet
-    checks:
-      mass_budget: checks/mass_budget.csv
-    tags: [psd, wavy]
+- run_id: RUN_WAVY_PSD_v01
+  label: PSD波状構造テスト
+  outdir: out/20251022-0501_chi05_r1RM_dtOrb100__0fdd14772
+  run_card: run_config.json
+  summary: summary.json
+  series:
+    main: series/run.parquet
+    diagnostics: series/diagnostics.parquet
+  checks:
+    mass_budget: checks/mass_budget.csv
+  tags: [psd, wavy]
 
 figures:
-  - fig_id: FIG_BETA_SERIES_01
-    script: scripts/plots/plot_from_runs.py
-    runs: [RUN_MARS_GASPOOR_v01, RUN_SINKS_SUBLIM_v01]
-    params:
-      mode: beta_timeseries
+- fig_id: FIG_BETA_SERIES_01
+  script: scripts/plots/plot_from_runs.py
+  runs: [RUN_MARS_GASPOOR_v01, RUN_SINKS_SUBLIM_v01]
+  params:
+    mode: beta_timeseries
 
-  - fig_id: FIG_MASS_BUDGET_01
-    script: scripts/plots/plot_from_runs.py
-    runs: [RUN_MARS_GASPOOR_v01]
-    params:
-      mode: mass_budget
+- fig_id: FIG_MASS_BUDGET_01
+  script: scripts/plots/plot_from_runs.py
+  runs: [RUN_MARS_GASPOOR_v01]
+  params:
+    mode: mass_budget
 
-  - fig_id: FIG_PSD_WAVY_01
-    script: scripts/plots/plot_from_runs.py
-    runs: [RUN_WAVY_PSD_v01]
-    params:
-      mode: psd_wavy
+- fig_id: FIG_PSD_WAVY_01
+  script: scripts/plots/plot_from_runs.py
+  runs: [RUN_WAVY_PSD_v01]
+  params:
+    mode: psd_wavy
 surface:
   init_policy: none
 init_tau1:
@@ -101,3 +101,29 @@ supply:
     enabled: false
   transport:
     mode: direct
+material:
+  rho: 3270.0
+radiation:
+  qpr_table_path: data/qpr_planck_forsterite_mie.csv
+sinks:
+  sub_params:
+    mode: hkl
+    psat_model: clausius
+    alpha_evap: 0.1
+    mu: 0.140694
+    A: 13.809441833
+    B: 28362.904024
+    valid_K:
+    - 1673.0
+    - 2133.0
+    enable_liquid_branch: true
+    psat_liquid_switch_K: 2163.0
+    A_liq: 11.08
+    B_liq: 22409.0
+    valid_liquid_K:
+    - 2163.0
+    - 3690.0
+phase:
+  thresholds:
+    T_condense_K: 2162.0
+    T_vaporize_K: 2163.0
