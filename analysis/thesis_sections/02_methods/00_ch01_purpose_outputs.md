@@ -1,4 +1,4 @@
-> **文書種別**: リファレンス（Diátaxis: Reference）
+文書種別: リファレンス（Diátaxis: Reference）
 
 <!--
 NOTE: このファイルは analysis/thesis_sections/02_methods/*.md の結合で生成する。
@@ -9,13 +9,13 @@ NOTE: このファイルは analysis/thesis_sections/02_methods/*.md の結合�
 実装(.py): marsdisk/run.py, marsdisk/run_zero_d.py, marsdisk/run_one_d.py, marsdisk/io/writer.py, marsdisk/io/streaming.py, marsdisk/io/diagnostics.py
 -->
 
-<!-- TEX_EXCLUDE_START
+<!-- TEX_EXCLUDE_START -->
 reference_links:
 - @CanupSalmon2018_SciAdv4_eaar6887 -> paper/references/CanupSalmon2018_SciAdv4_eaar6887.pdf | 用途: 火星円盤の物理的前提（低質量円盤の文脈）
 - @Hyodo2017a_ApJ845_125 -> paper/references/Hyodo2017a_ApJ845_125.pdf | 用途: 衝突起源円盤の前提条件と対象設定
 - @Krivov2006_AA455_509 -> paper/references/Krivov2006_AA455_509.pdf | 用途: Smoluchowski衝突カスケードの枠組み
 - @StrubbeChiang2006_ApJ648_652 -> paper/references/StrubbeChiang2006_ApJ648_652.pdf | 用途: 表層ブローアウトと衝突寿命の整理
-TEX_EXCLUDE_END -->
+<!-- TEX_EXCLUDE_END -->
 
 # シミュレーション手法
 
@@ -39,18 +39,31 @@ TEX_EXCLUDE_END -->
     \hline
     問1: 高温期（1000 K まで／固定地平 2 年）の総損失量 &
     時間依存の流出率と累積損失 &
-    \texttt{series/run.parquet} の \texttt{M\_out\_dot}, \texttt{mass\_lost\_by\_blowout}, \texttt{mass\_lost\_by\_sinks}／\texttt{summary.json} の \texttt{M\_loss} \\
+    \texttt{series/run.parquet} の\newline
+    \texttt{M\_out\_dot}\newline
+    \texttt{mass\_lost\_by\_blowout}\newline
+    \texttt{mass\_lost\_by\_sinks}\newline
+    \texttt{summary.json} の \texttt{M\_loss} \\
     問2: 粒径分布の時間変化と吹き飛びやすい粒径帯 &
     粒径ビンごとの数密度履歴と下限粒径 &
-    \texttt{series/psd\_hist.parquet} の \texttt{bin\_index}, \texttt{s\_bin\_center}, \texttt{N\_bin}, \texttt{Sigma\_surf}／\texttt{series/run.parquet} の \texttt{s\_min} \\
+    \texttt{series/psd\_hist.parquet} の\newline
+    \texttt{bin\_index}\newline
+    \texttt{s\_bin\_center}\newline
+    \texttt{N\_bin}\newline
+    \texttt{Sigma\_surf}\newline
+    \texttt{series/run.parquet} の \texttt{s\_min} \\
     問3: 短期損失を踏まえた残存質量の評価 &
     累積損失と質量収支の時系列 &
-    \texttt{summary.json} の \texttt{M\_loss}（初期条件との差分で残存量を評価）／\texttt{series/run.parquet} の \texttt{mass\_lost\_by\_blowout}, \texttt{mass\_lost\_by\_sinks} \\
+    \texttt{summary.json} の \texttt{M\_loss}\newline
+    （初期条件との差分で残存量を評価）\newline
+    \texttt{series/run.parquet} の\newline
+    \texttt{mass\_lost\_by\_blowout}\newline
+    \texttt{mass\_lost\_by\_sinks} \\
     \hline
   \end{tabular}
 \end{table}
 
-手法の記述は、まず入力パラメータと出力（時系列・要約量）を明確にする。次に 1 ステップの処理順序を示す。続いて、放射圧、物質供給、衝突、昇華、遮蔽を順に定式化する。最後に、一括実行（\texttt{run\_sweep}）と再現性確保のための出力・検証手続きを述べる。
+手法の記述は、まず入力パラメータと出力（時系列・要約量）を明確にする。次に 1 ステップの処理順序を示す。続いて、放射圧、物質供給、衝突、昇華、遮蔽を順に定式化する。最後に、一括実行（`run_sweep`）と再現性確保のための出力・検証手続きを述べる。
 
 設定キーや実装パスのような実装依存の情報は付録に整理し、本文では物理モデルと時間発展の説明を優先する。本文で頻出する略語は次の表にまとめる。
 

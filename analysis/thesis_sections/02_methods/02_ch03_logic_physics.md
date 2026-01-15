@@ -4,35 +4,31 @@
 実装(.py): marsdisk/run_zero_d.py, marsdisk/run_one_d.py, marsdisk/io/tables.py, marsdisk/physics/tempdriver.py, marsdisk/physics/radiation.py, marsdisk/physics/shielding.py, marsdisk/physics/phase.py, marsdisk/physics/psd.py, marsdisk/physics/collide.py, marsdisk/physics/collisions_smol.py, marsdisk/physics/smol.py, marsdisk/physics/fragments.py, marsdisk/physics/qstar.py, marsdisk/physics/dynamics.py, marsdisk/physics/surface.py, marsdisk/physics/supply.py, marsdisk/physics/sublimation.py, marsdisk/physics/sinks.py, marsdisk/physics/viscosity.py
 -->
 
-<!-- TEX_EXCLUDE_START
+<!-- TEX_EXCLUDE_START -->
 reference_links:
 - @BenzAsphaug1999_Icarus142_5 -> paper/references/BenzAsphaug1999_Icarus142_5.pdf | 用途: Q_D* の基準（破砕強度モデル）
 - @BohrenHuffman1983_Wiley -> paper/references/BohrenHuffman1983_Wiley.pdf | 用途: Mie理論/Q_pr平均
 - @Burns1979_Icarus40_1 -> paper/references/Burns1979_Icarus40_1.pdf | 用途: 放射圧βの定式化
-- @CogleyBergstrom1979_JQSRT21_265 -> paper/references/CogleyBergstrom1979_JQSRT21_265.pdf | 用途: Φテーブル（二流近似、遮蔽有効時）
 - @Dohnanyi1969_JGR74_2531 -> paper/references/Dohnanyi1969_JGR74_2531.pdf | 用途: 衝突カスケードの自己相似PSD
-- @FegleySchaefer2012_arXiv -> paper/references/FegleySchaefer2012_arXiv.pdf | 用途: 蒸気圧の液相枝パラメータ
-- @HansenTravis1974_SSR16_527 -> paper/references/HansenTravis1974_SSR16_527.pdf | 用途: Φテーブル（δ-Eddington近似、遮蔽有効時）
+- @FegleySchaefer2012_arXiv -> paper/references/FegleySchaefer2012_arXiv.pdf | 用途: 蒸気圧の液相枝パラメータ（フォルステライト入力に適用）
 - @Hyodo2018_ApJ860_150 -> paper/references/Hyodo2018_ApJ860_150.pdf | 用途: 温度ドライバ/冷却モデル
 - @IdaMakino1992_Icarus96_107 -> paper/references/IdaMakino1992_Icarus96_107.pdf | 用途: 相対速度分布の基礎
 - @ImazBlanco2023_MNRAS522_6150 -> paper/references/ImazBlanco2023_MNRAS522_6150.pdf | 用途: 相対速度分布の実装参照
-- @Joseph1976_JAS33_2452 -> paper/references/Joseph1976_JAS33_2452.pdf | 用途: Φテーブル（二流・δ-Eddington基礎、遮蔽有効時）
 - @Jutzi2010_Icarus207_54 -> paper/references/Jutzi2010_Icarus207_54.pdf (missing) | 用途: 速度外挿の係数（LS09型）
 - @Krivov2006_AA455_509 -> paper/references/Krivov2006_AA455_509.pdf | 用途: Smoluchowski方程式/破片生成枠組み
-- @Kubaschewski1974_Book -> paper/references/Kubaschewski1974_Book.pdf (missing) | 用途: Clausius蒸気圧係数
+- @Kubaschewski1974_Book -> paper/references/Kubaschewski1974_Book.pdf (missing) | 用途: Clausius蒸気圧係数（フォルステライト入力に適用）
 - @LeinhardtStewart2012_ApJ745_79 -> paper/references/LeinhardtStewart2012_ApJ745_79.pdf | 用途: Q_D* 補間と破砕境界
 - @LissauerStewart1993_PP3 -> paper/references/LissauerStewart1993_PP3.pdf | 用途: 相対速度分布の整理
-- @Markkanen2020_AA643_A16 -> paper/references/Markkanen2020_AA643_A16.pdf | 用途: HKL昇華フラックス
+- @Markkanen2020_AA643_A16 -> paper/references/Markkanen2020_AA643_A16.pdf | 用途: HKL昇華フラックス（フォルステライト入力に適用）
 - @Ohtsuki2002_Icarus155_436 -> paper/references/Ohtsuki2002_Icarus155_436.pdf | 用途: c_eq と相対速度評価
-- @Pignatale2018_ApJ853_118 -> paper/references/Pignatale2018_ApJ853_118.pdf | 用途: 昇華の適用範囲/粒径収縮
-- @Ronnet2016_ApJ828_109 -> paper/references/Ronnet2016_ApJ828_109.pdf | 用途: hydrodynamic escape スケーリング/ガス圧扱い
+- @Pignatale2018_ApJ853_118 -> paper/references/Pignatale2018_ApJ853_118.pdf | 用途: 昇華の適用範囲/粒径収縮（フォルステライト入力に適用）
 - @StewartLeinhardt2009_ApJ691_L133 -> paper/references/StewartLeinhardt2009_ApJ691_L133.pdf | 用途: 破砕境界/速度外挿
 - @TakeuchiLin2003_ApJ593_524 -> paper/references/TakeuchiLin2003_ApJ593_524.pdf | 用途: gas-rich表層流出の参照枠
 - @Thebault2003_AA408_775 -> paper/references/Thebault2003_AA408_775.pdf | 用途: 侵食レジームと破片生成
-- @VisscherFegley2013_ApJL767_L12 -> paper/references/VisscherFegley2013_ApJL767_L12.pdf | 用途: 蒸気圧の液相枝
+- @VisscherFegley2013_ApJL767_L12 -> paper/references/VisscherFegley2013_ApJL767_L12.pdf | 用途: 蒸気圧の液相枝（フォルステライト入力に適用）
 - @WetherillStewart1993_Icarus106_190 -> paper/references/WetherillStewart1993_Icarus106_190.pdf | 用途: 相対速度分布
 - @WyattClarkeBooth2011_CeMDA111_1 -> paper/references/WyattClarkeBooth2011_CeMDA111_1.pdf | 用途: 供給率のパラメータ化
-TEX_EXCLUDE_END -->
+<!-- TEX_EXCLUDE_END -->
 
 ---
 ### 3. 時間発展アルゴリズム
@@ -92,7 +88,8 @@ flowchart TB
     CONFIG --> INIT
     TABLES --> INIT
     INIT --> LOOP
-    DRIVER --> RAD --> SUBL --> PSDSTEP --> SHIELD --> PHASE --> SUPPLY --> SINKTIME --> EVOLVE --> CHECK
+    DRIVER --> RAD --> SUBL --> PSDSTEP --> SHIELD
+    SHIELD --> PHASE --> SUPPLY --> SINKTIME --> EVOLVE --> CHECK
     CHECK -->|"t < t_end"| DRIVER
     CHECK -->|"t ≥ t_end or T_M ≤ T_stop"| OUTPUT
 ```
@@ -115,7 +112,8 @@ flowchart LR
         S9["9. Smol/Surface 積分<br/>衝突 + 供給 + 損失"]
         S10["10. 診断・停止判定・出力"]
         
-        S1 --> S2 --> S3 --> S4 --> S5 --> S6 --> S7 --> S8 --> S9 --> S10
+        S1 --> S2 --> S3 --> S4 --> S5
+        S5 --> S6 --> S7 --> S8 --> S9 --> S10
     end
 ```
 
@@ -182,7 +180,14 @@ flowchart TB
     E --> F[S10: diagnostics & mass budget]
 ```
 
-S3 では昇華 ds/dt を評価し、S6 で相判定と $\\tau$ ゲートにより有効な損失経路を選択する。S7 で名目供給 `supply_rate_nominal` にフィードバックと温度補正を適用して `supply_rate_scaled` を得た後、深層輸送を含めた表層注入量を決定する。S8 でシンク時間 $t_{\\rm sink}$ を評価し、S9 で衝突カーネルから loss/gain を構成して IMEX 更新を実施する。S10 で `smol_gain_mass_rate` / `smol_loss_mass_rate` / `ds_dt_sublimation` / `M_out_dot` を含む診断と質量収支を保存する。
+S3〜S10 の要点は次の通りである。
+
+- S3: 昇華 ds/dt を評価する。
+- S6: 相判定と $\\tau$ ゲートにより有効な損失経路を選択する。
+- S7: 名目供給 `supply_rate_nominal` にフィードバックと温度補正を適用し、`supply_rate_scaled` を得る。\newline 深層輸送を含めた表層注入量を決定する。
+- S8: シンク時間 $t_{\\rm sink}$ を評価する。
+- S9: 衝突カーネルから loss/gain を構成し、IMEX 更新を実施する。
+- S10: 診断列は `smol_gain_mass_rate`, `smol_loss_mass_rate`, `ds_dt_sublimation`, `M_out_dot` を含む。\newline 質量収支を保存する。
 
 ##### 3.4.1 供給フロー（Supply）
 
@@ -198,7 +203,8 @@ flowchart TB
     H --> F
 ```
 
-- 対応する診断列は `supply_rate_nominal` → `supply_rate_scaled` → `supply_rate_applied`、深層経路は `prod_rate_diverted_to_deep` / `deep_to_surf_flux` / `prod_rate_applied_to_surf` に記録される（[@WyattClarkeBooth2011_CeMDA111_1]）。
+- 診断列は `supply_rate_nominal` → `supply_rate_scaled` → `supply_rate_applied` に記録する（[@WyattClarkeBooth2011_CeMDA111_1]）。
+- 深層経路は `prod_rate_diverted_to_deep`, `deep_to_surf_flux`, `prod_rate_applied_to_surf` に記録する。
 - 供給の有効化は phase（solid）と液相ブロックで決まり、$\\tau_{\\rm gate}$ はブローアウトのみをゲートする。停止判定（$\\tau_{\\rm stop}$）とは区別して扱う。
 
 ##### 3.4.2 衝突フロー（Collision）
@@ -214,7 +220,8 @@ flowchart TB
 ```
 
 - 相対速度は $e,i$ と $c_{\\rm eq}$ から評価し、カーネル $C_{ij}$ を構成する（[@Ohtsuki2002_Icarus155_436; @WetherillStewart1993_Icarus106_190]）。
-- loss/gain は `smol_loss_mass_rate` / `smol_gain_mass_rate` として診断され、最小衝突時間 $t_{\\rm coll,\\,min}$ が $\\Delta t$ の上限に用いられる。
+- loss は `smol_loss_mass_rate`、gain は `smol_gain_mass_rate` として診断される。
+- 最小衝突時間 $t_{\\rm coll,\\,min}$ が $\\Delta t$ の上限に用いられる。
 - 破片分布 $Y$ は PSD グリッド上で再配分され、質量保存は C4 により検査される（[@Krivov2006_AA455_509; @Thebault2003_AA408_775]）。
 
 ##### 3.4.3 昇華フロー（Sublimation）
@@ -230,7 +237,7 @@ flowchart TB
 
 - HKL フラックスから ds/dt を評価し、必要に応じて再ビニングで PSD を更新する（[@Markkanen2020_AA643_A16; @Pignatale2018_ApJ853_118]）。
 - `sub_params.mass_conserving=true` の場合は $s<s_{\\rm blow}$ を跨いだ質量をブローアウトへ振り替える。
-- 昇華由来の損失は `ds_dt_sublimation` / `mass_lost_sublimation_step` として出力される。
+- 昇華由来の損失は `ds_dt_sublimation` と `mass_lost_sublimation_step` に出力される。
 
 
 ---
@@ -269,8 +276,8 @@ C_{ij} = \frac{N_i N_j}{1+\delta_{ij}}\,
 
 S9 の衝突更新では、$C_{ij}$ から各ビンの衝突寿命 $t_{\rm coll}$ と loss/gain を算定し、破片分布テンソル $Y$ に基づいて生成項を配分する。$t_{\rm coll}$ の最小値は $\Delta t$ の上限制御に用いられ、ビンごとの質量収支が C4 検査で追跡される。破片生成は PSD 下限のビン境界条件と整合させ、供給注入と同一のビン系で質量保存を保証する。
 
-> **詳細**: analysis/equations.md (E.020)–(E.021), (E.024), (E.026)  
-> **設定**: analysis/config_guide.md §3.5 "QStar"
+- **詳細**: analysis/equations.md (E.020)–(E.021), (E.024), (E.026)  
+- **設定**: analysis/config_guide.md §3.5 "QStar"
 
 ##### 4.1.2 衝突レジーム分類
 
@@ -301,7 +308,11 @@ S9 の衝突更新では、$C_{ij}$ から各ビンの衝突寿命 $t_{\rm coll}
 
 衝突エネルギーの診断は、デブリ円盤の衝突カスケード研究で用いられる散逸・残存の整理に倣う（[@Thebault2003_AA408_775]）。
 
-`diagnostics.energy_bookkeeping.enabled=true` で簿記モードを有効化し、`diagnostics.energy_bookkeeping.stream` が true かつ `FORCE_STREAMING_OFF` が未設定なら `series/energy.parquet`・`checks/energy_budget.csv` をストリーミングで書き出す（オフ時は最後にまとめて保存）。サマリには `energy_bookkeeping.{E_rel_total,E_dissipated_total,E_retained_total,f_ke_mean_last,f_ke_energy_last,frac_*_last}` が追加され、同じ統計を run_card に残す。出力カラムの一覧は次の表に示す。
+- `diagnostics.energy_bookkeeping.enabled=true` で簿記モードを有効化する。
+- `diagnostics.energy_bookkeeping.stream` が true かつ `FORCE_STREAMING_OFF` が未設定なら `series/energy.parquet` と `checks/energy_budget.csv` をストリーミングで書き出す（オフ時は最後にまとめて保存）。
+- サマリには `energy_bookkeeping.{E_rel_total,E_dissipated_total,E_retained_total}` を追加する。
+- 同じ統計として `energy_bookkeeping.{f_ke_mean_last,f_ke_energy_last,frac_*_last}` を run_card に残す。
+- 出力カラムの一覧は次の表に示す。
 
 \begin{table}[t]
   \centering
@@ -342,14 +353,14 @@ E_{diss} = (1 - f_{ke})\,E_{rel}
     \texttt{dynamics.eps\_restitution} & 反発係数（$f_{ke,\mathrm{frag}}$ のデフォルトに使用） & 0.5 \\
     \texttt{dynamics.f\_ke\_cratering} & 侵食時の非散逸率 & 0.1 \\
     \texttt{dynamics.f\_ke\_fragmentation} & 破砕時の非散逸率 & None（$\varepsilon^2$ 使用） \\
-    \texttt{diagnostics.energy\_bookkeeping.stream} & energy 系列/簿記をストリーム出力 & true（\texttt{FORCE\_STREAMING\_OFF} で無効化） \\
+    \texttt{diagnostics.energy\_bookkeeping.stream} & energy 系列/簿記をストリーム出力\newline (\texttt{FORCE\_STREAMING\_OFF} で無効化) & true \\
     \hline
   \end{tabular}
 \end{table}
 
 エネルギー簿記は数値安定性と物理整合性の診断を目的とし、時間発展のフィードバックには用いない。記録された散逸・残存エネルギーは衝突速度場の妥当性評価に用いる。
 
-> **詳細**: analysis/equations.md (E.045a), (E.051), (E.052)
+- **詳細**: analysis/equations.md (E.045a), (E.051), (E.052)
 
 ---
 #### 4.2 熱・放射・表層損失
@@ -370,18 +381,19 @@ E_{diss} = (1 - f_{ke})\,E_{rel}
     \hline
     モード & 内容 & 設定参照 \\
     \hline
-    \texttt{table} & 外部 CSV テーブル補間 & \texttt{radiation.mars\_temperature\_driver.table.*} \\
+    \texttt{table} & 外部 CSV テーブル補間 & \texttt{radiation.mars\_temperature\_driver.table}\newline \texttt{.*} \\
     \texttt{slab} & 解析的 $T^{-3}$ 冷却 (Stefan--Boltzmann) & 内蔵式 \\
-    \texttt{hyodo} & 線形熱流束に基づく冷却 & \texttt{radiation.mars\_temperature\_driver.hyodo.*} \\
+    \texttt{hyodo} & 線形熱流束に基づく冷却 & \texttt{radiation.mars\_temperature\_driver.hyodo}\newline \texttt{.*} \\
     \hline
   \end{tabular}
 \end{table}
 
-温度は放射圧効率 $\langle Q_{\rm pr}\rangle$、昇華フラックス、相判定に同時に入力され、`T_M_used` と `T_M_source` が診断に記録される。遮蔽係数 $\Phi$ は温度ドライバにはフィードバックせず、放射圧評価・相判定（粒子平衡温度の推定）でのみ用いる。
+温度は放射圧効率 $\langle Q_{\rm pr}\rangle$、昇華フラックス、相判定に同時に入力される。`T_M_used` と `T_M_source` が診断に記録され、遮蔽係数 $\Phi$ は温度ドライバにはフィードバックしない。
+遮蔽は放射圧評価と相判定（粒子平衡温度の推定）でのみ用いる。
 
-> **詳細**: analysis/equations.md (E.042)–(E.043)  
-> **フロー図**: analysis/physics_flow.md §3 "温度ドライバ解決フロー"  
-> **設定**: analysis/config_guide.md §3.2 "mars_temperature_driver"
+- **詳細**: analysis/equations.md (E.042)–(E.043)  
+- **フロー図**: analysis/physics_flow.md §3 "温度ドライバ解決フロー"  
+- **設定**: analysis/config_guide.md §3.2 "mars_temperature_driver"
 
 ##### 4.2.2 放射圧・ブローアウト
 
@@ -389,7 +401,8 @@ E_{diss} = (1 - f_{ke})\,E_{rel}
 
 - $\langle Q_{\rm pr}\rangle$ はテーブル入力（CSV/NPZ）を既定とし、Planck 平均から β と $s_{\rm blow}$ を導出する。
 - ブローアウト（blow-out）損失は **phase=solid かつ $\tau$ ゲートが開放**（$\tau_{\rm los}<\tau_{\rm gate}$）のときのみ有効化し、それ以外は outflux=0 とする。
-- 外向流束は $t_{\rm blow}=1/\Omega$（E.007）を基準とし、実装では `chi_blow_eff` を掛けた $t_{\rm blow}=\chi_{\rm blow}/\Omega$ を用いる。補正状況は `dt_over_t_blow`・`fast_blowout_flag_gt3/gt10` とともに診断列へ出力する。
+- 外向流束は $t_{\rm blow}=1/\Omega$（E.007）を基準とし、実装では `chi_blow_eff` を掛けた $t_{\rm blow}=\chi_{\rm blow}/\Omega$ を用いる。
+- 補正状況は `dt_over_t_blow` と `fast_blowout_flag_gt3/gt10` を診断列へ出力する。
 - β の閾値判定により `case_status` を分類し、ブローアウト境界と PSD 床の関係を `s_min_components` に記録する。
 - 表層流出率 $\dot{M}_{\rm out}$ の定義は (E.009) を参照し、表層 ODE を使う場合は $t_{\rm blow}$ を (E.007) の形で評価する。
 
@@ -414,9 +427,9 @@ s_{\mathrm{blow}} = \frac{3\,\sigma_{\mathrm{SB}}\,T_{\mathrm{M}}^{4}\,R_{\mathr
 
 ブローアウト境界は β=0.5 を閾値とする非束縛条件に対応し、$s_{\rm blow}$ と $s_{\min,\mathrm{eff}}$ の関係が PSD 形状と流出率を支配する。ゲート有効時は $\tau$ によって outflux が抑制される。
 
-> **詳細**: analysis/equations.md (E.009), (E.012)–(E.014), (E.039)  
-> **用語**: analysis/glossary.md G.A04 (β), G.A05 (s_blow)  
-> **設定**: analysis/config_guide.md §3.2 "Radiation"
+- **詳細**: analysis/equations.md (E.009), (E.012)–(E.014), (E.039)  
+- **用語**: analysis/glossary.md G.A04 (β), G.A05 (s_blow)  
+- **設定**: analysis/config_guide.md §3.2 "Radiation"
 
 ##### 4.2.3 遮蔽 (Shielding)
 
@@ -445,8 +458,8 @@ $\Phi(\tau,\omega_0,g)$ テーブル補間で有効不透明度を評価し、$\
 
 遮蔽係数は放射圧評価と供給フィードバックに入るため、$\tau_{\rm los}$ の定義とゲート順序は実装上の重要な仕様となる。$\tau_{\rm stop}$ は停止判定のみを担い、供給抑制や状態量クリップとは区別する。
 
-> **詳細**: analysis/equations.md (E.015)–(E.017)  
-> **設定**: analysis/config_guide.md §3.4 "Shielding"
+- **詳細**: analysis/equations.md (E.015)–(E.017)  
+- **設定**: analysis/config_guide.md §3.4 "Shielding"
 
 ##### 4.2.4 相判定 (Phase)
 
@@ -454,16 +467,17 @@ $\Phi(\tau,\omega_0,g)$ テーブル補間で有効不透明度を評価し、$\
 
 - 判定には火星温度と遮蔽後の光学的厚さを用い、`phase_state` と `sink_selected` を診断に記録する。
 
-固体相では放射圧ブローアウトが主要な損失経路となり、蒸気相では水素流体逃亡（hydrodynamic escape）スケーリングを用いた損失に切り替わる（[@Hyodo2018_ApJ860_150; @Ronnet2016_ApJ828_109]）。蒸気相では `hydro_escape_timescale` から $t_{\rm sink}$ を評価し、`sink_selected="hydro_escape"` として記録する。相判定は表層 ODE とシンク選択のゲートとして機能し、同一ステップ内でブローアウトと流体力学的損失が併用されることはない。
+固体相では放射圧ブローアウトが主要な損失経路となる。相判定は表層 ODE とシンク選択のゲートとして機能し、同一ステップ内でブローアウトと追加シンクが併用されることはない。
 
-> **フロー図**: analysis/physics_flow.md §4 "相判定フロー"  
-> **設定**: analysis/config_guide.md §3.8 "Phase"
+- **フロー図**: analysis/physics_flow.md §4 "相判定フロー"  
+- **設定**: analysis/config_guide.md §3.8 "Phase"
 
 ##### 4.2.5 昇華 (Sublimation) と追加シンク
 
-HKL（Hertz–Knudsen–Langmuir）フラックス (E.018) と飽和蒸気圧 (E.036) で質量損失を評価する（[@Markkanen2020_AA643_A16]）。Clausius 係数は [@Kubaschewski1974_Book] を基準とし、液相枝は [@FegleySchaefer2012_arXiv; @VisscherFegley2013_ApJL767_L12] を採用する。フォルステライトの蒸気圧パラメータはモデル入力として与え、$P_{\mathrm{gas}}$ の扱いは [@Ronnet2016_ApJ828_109] と同様に自由パラメータとして扱う。昇華フラックスの適用範囲は [@Pignatale2018_ApJ853_118] を参照する。
+HKL（Hertz–Knudsen–Langmuir）フラックス (E.018) と飽和蒸気圧 (E.036) で質量損失を評価する（[@Markkanen2020_AA643_A16]）。Clausius 係数は [@Kubaschewski1974_Book] を基準とし、液相枝は [@FegleySchaefer2012_arXiv; @VisscherFegley2013_ApJL767_L12] を採用する。フォルステライトの蒸気圧パラメータはモデル入力として与え、今回の設定では $P_{\mathrm{gas}}=0$ として扱う。昇華フラックスの適用範囲は [@Pignatale2018_ApJ853_118] を参照する。
 
-HKL フラックスは式\ref{eq:hkl_flux}で与える（再掲: E.018）。飽和蒸気圧は式\ref{eq:psat_definition}で定義する（再掲: E.036）。
+HKL フラックスは式\ref{eq:hkl_flux}で与える（再掲: E.018）。HKL 有効時（mode が `hkl` / `hkl_timescale`）は上段、無効時は下段を用いる。
+飽和蒸気圧は式\ref{eq:psat_definition}で定義する（再掲: E.036）。`psat_model=clausius` で上段、`psat_model=tabulated` で下段を用いる。
 
 \begin{equation}
 \label{eq:hkl_flux}
@@ -471,7 +485,7 @@ J(T) =
 \begin{cases}
  \alpha_{\mathrm{evap}}\max\!\bigl(P_{\mathrm{sat}}(T) - P_{\mathrm{gas}},\,0\bigr)
  \sqrt{\dfrac{\mu}{2\pi R T}}, &
- \text{if mode}\in\{\text{``hkl'', ``hkl\_timescale''}\} \text{ and HKL activated},\\[10pt]
+ \text{if HKL enabled},\\[10pt]
  \exp\!\left(\dfrac{T - T_{\mathrm{sub}}}{\max(dT, 1)}\right), & \text{otherwise.}
 \end{cases}
 \end{equation}
@@ -480,8 +494,8 @@ J(T) =
 \label{eq:psat_definition}
 P_{\mathrm{sat}}(T) =
 \begin{cases}
- 10^{A - B/T}, & \text{if }\texttt{psat\_model} = \text{``clausius''},\\[6pt]
- 10^{\mathrm{PCHIP}_{\log_{10}P}(T)}, & \text{if }\texttt{psat\_model} = \text{``tabulated''}.
+ 10^{A - B/T}, & \text{if clausius},\\[6pt]
+ 10^{\mathrm{PCHIP}_{\log_{10}P}(T)}, & \text{if tabulated}.
 \end{cases}
 \end{equation}
 
@@ -492,8 +506,8 @@ P_{\mathrm{sat}}(T) =
 
 昇華は PSD をサイズ方向にドリフトさせる過程として実装し、必要に応じて再ビニング（rebinning）を行う。損失項は IMEX の陰的ロスに含め、衝突ロスと同様に時間積分の安定性を確保する。
 
-> **詳細**: analysis/equations.md (E.018)–(E.019), (E.036)–(E.038)  
-> **設定**: analysis/config_guide.md §3.6 "Sinks"
+- **詳細**: analysis/equations.md (E.018)–(E.019), (E.036)–(E.038)  
+- **設定**: analysis/config_guide.md §3.6 "Sinks"
 
 ---
 #### 4.3 表層再供給と輸送
@@ -507,15 +521,20 @@ P_{\mathrm{sat}}(T) =
 \dot{\Sigma}_{\mathrm{prod}}(t,r) = \max\!\left(\epsilon_{\mathrm{mix}}\;R_{\mathrm{base}}(t,r),\,0\right)
 \end{equation}
 
-`const` / `powerlaw` / `table` / `piecewise` モードで表層への供給率を指定する。`const` は `mu_orbit10pct` を基準に、参照光学的厚さ (`mu_reference_tau`) に対応する表層密度の `orbit_fraction_at_mu1` を 1 公転で供給する定義に統一する。旧 μ (E.027a) は診断・ツール用の導出値としてのみ扱う。ここでの μ（供給式の指標）は衝突速度外挿の μ と別であり、混同しないよう区別して扱う。
+- 供給率は `const` / `powerlaw` / `table` / `piecewise` モードで指定する。
+- `const` は `mu_orbit10pct` を基準に、参照光学的厚さ (`mu_reference_tau`) に対応する表層密度の `orbit_fraction_at_mu1` を 1 公転で供給する定義に統一する。
+- 旧 μ (E.027a) は診断・ツール用の導出値としてのみ扱う。
+- ここでの μ（供給式の指標）は衝突速度外挿の μ と別であり、混同しないよう区別して扱う。
 
 供給は「名目供給→フィードバック補正→温度スケール→ゲート判定→深層/表層への配分」の順に評価される。供給が深層へ迂回した場合でも、表層面密度と PSD の更新は同一タイムステップ内で整合的に行われる。
 
-S7 に対応する供給処理では、`supply_rate_nominal` を基準に `supply_rate_scaled`（フィードバック・温度補正後）を評価し、ゲート判定後の `supply_rate_applied` を表層へ注入する。deep mixing が有効な場合は `prod_rate_diverted_to_deep` と `deep_to_surf_flux` により深層からの再注入を記録し、表層面密度への寄与は `prod_rate_applied_to_surf` として診断される。これらの列は supply の順序が図 3.2 と一致していることの検算に用いる。
+- S7 に対応する供給処理では、`supply_rate_nominal` を基準に `supply_rate_scaled`（フィードバック・温度補正後）を評価し、ゲート判定後の `supply_rate_applied` を表層へ注入する。
+- deep mixing が有効な場合は `prod_rate_diverted_to_deep` と `deep_to_surf_flux` で深層からの再注入を記録し、表層面密度への寄与は `prod_rate_applied_to_surf` として診断する。
+- これらの列は supply の順序が図 3.2 と一致していることの検算に用いる。
 
-> **詳細**: analysis/equations.md (E.027), (E.027a)  
-> **用語**: analysis/glossary.md G.A11 (epsilon_mix)  
-> **設定**: analysis/config_guide.md §3.7 "Supply"
+- **詳細**: analysis/equations.md (E.027), (E.027a)  
+- **用語**: analysis/glossary.md G.A11 (epsilon_mix)  
+- **設定**: analysis/config_guide.md §3.7 "Supply"
 
 ##### 4.3.1 フィードバック制御 (Supply Feedback)
 
@@ -531,9 +550,9 @@ S7 に対応する供給処理では、`supply_rate_nominal` を基準に `suppl
     \hline
     \texttt{supply.feedback.target\_tau} & 目標光学的厚さ & 0.9 \\
     \texttt{supply.feedback.gain} & 比例ゲイン & 1.2 \\
-    \texttt{supply.feedback.response\_time\_years} & 応答時定数 [yr] & 0.4 \\
+    \texttt{supply.feedback.response}\newline \texttt{\_time\_years} & 応答時定数 [yr] & 0.4 \\
     \texttt{supply.feedback.tau\_field} & $\tau$ 評価フィールド (\texttt{tau\_los}) & \texttt{tau\_los} \\
-    \texttt{supply.feedback.min\_scale} / \texttt{max\_scale} & スケール係数の上下限 & 1e-6 / 10.0 \\
+    \texttt{supply.feedback.min\_scale}\newline \texttt{supply.feedback.max\_scale} & スケール係数の上下限 & 1e-6 / 10.0 \\
     \hline
   \end{tabular}
 \end{table}
@@ -543,7 +562,7 @@ S7 に対応する供給処理では、`supply_rate_nominal` を基準に `suppl
 
 ##### 4.3.2 温度カップリング (Supply Temperature)
 
-`supply.temperature.enabled=true` で火星温度に連動した供給スケーリングを有効化する。温度カップリングの設定項目は次の表にまとめる。
+`supply.temperature.enabled=true` で火星温度に連動した供給スケーリングを有効化する。\newline 温度カップリングの設定項目は次の表にまとめる。
 
 - `mode=scale`: べき乗スケーリング $(T/T_{\rm ref})^{\alpha}$
 - `mode=table`: 外部 CSV テーブルから補間
@@ -558,14 +577,14 @@ S7 に対応する供給処理では、`supply_rate_nominal` を基準に `suppl
     \hline
     \texttt{supply.temperature.reference\_K} & 基準温度 [K] \\
     \texttt{supply.temperature.exponent} & べき指数 $\alpha$ \\
-    \texttt{supply.temperature.floor} / \texttt{cap} & スケール係数の下限・上限 \\
+    \texttt{supply.temperature.floor}\newline \texttt{supply.temperature.cap} & スケール係数の下限・上限 \\
     \hline
   \end{tabular}
 \end{table}
 
 ##### 4.3.3 リザーバと深層ミキシング
 
-`supply.reservoir.enabled=true` で有限質量リザーバを追跡し、`supply.transport.mode=deep_mixing` を選択すると、供給は深層リザーバに蓄積された後、ミキシング時間 `t_mix_orbits` 公転で表層へ放出される。$\tau=1$ 超過は停止判定で扱う。
+`supply.reservoir.enabled=true` で有限質量リザーバを追跡する。\newline `supply.transport.mode=deep_mixing` を選択すると、供給は深層リザーバに蓄積された後、ミキシング時間 `t_mix_orbits` 公転で表層へ放出される。$\tau=1$ 超過は停止判定で扱う。
 
 - `depletion_mode=hard_stop`: リザーバ枯渇で供給ゼロ
 - `depletion_mode=taper`: 残量に応じて漸減（`taper_fraction` で制御）
@@ -582,10 +601,10 @@ S7 に対応する供給処理では、`supply_rate_nominal` を基準に `suppl
     \hline
     設定キー & 意味 & 既定値 \\
     \hline
-    \texttt{supply.injection.mode} & \texttt{min\_bin} / \texttt{powerlaw\_bins} & \texttt{powerlaw\_bins} \\
+    \texttt{supply.injection.mode} & \texttt{min\_bin}\newline \texttt{powerlaw\_bins} & \texttt{powerlaw\_bins} \\
     \texttt{supply.injection.q} & べき指数（衝突カスケード断片） & 3.5 \\
-    \texttt{supply.injection.s\_inj\_min} / \texttt{s\_inj\_max} & 注入サイズ範囲 [m] & 自動 \\
-    \texttt{supply.injection.velocity.mode} & \texttt{inherit} / \texttt{fixed\_ei} / \texttt{factor} & \texttt{inherit} \\
+    \texttt{supply.injection.s\_inj\_min}\newline \texttt{supply.injection.s\_inj\_max} & 注入サイズ範囲 [m] & 自動 \\
+    \texttt{supply.injection.velocity.mode} & \texttt{inherit} / \texttt{fixed\_ei}\newline \texttt{/ factor} & \texttt{inherit} \\
     \hline
   \end{tabular}
 \end{table}

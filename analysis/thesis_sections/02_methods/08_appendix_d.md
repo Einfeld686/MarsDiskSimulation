@@ -4,7 +4,7 @@
 実装(.py): marsdisk/physics/psd.py, marsdisk/physics/surface.py, marsdisk/physics/smol.py, marsdisk/physics/radiation.py, marsdisk/physics/qstar.py, marsdisk/physics/sublimation.py, marsdisk/physics/viscosity.py
 -->
 
-略語は表\ref{tab:abbreviations}にまとめる。
+略語は次の表にまとめる。
 
 \begin{table}[t]
   \centering
