@@ -6,10 +6,10 @@
 
 <!-- TEX_EXCLUDE_START
 reference_links:
-- @Krivov2006_AA455_509 -> paper/references/Krivov2006_AA455_509.pdf
-- @StrubbeChiang2006_ApJ648_652 -> paper/references/StrubbeChiang2006_ApJ648_652.pdf
-- @ThebaultAugereau2007_AA472_169 -> paper/references/ThebaultAugereau2007_AA472_169.pdf
-- @Wyatt2008 -> paper/references/Wyatt2008.pdf
+- @Krivov2006_AA455_509 -> paper/references/Krivov2006_AA455_509.pdf | 用途: 衝突カスケード検証と出力診断の基準
+- @StrubbeChiang2006_ApJ648_652 -> paper/references/StrubbeChiang2006_ApJ648_652.pdf | 用途: t_collスケール検証
+- @ThebaultAugereau2007_AA472_169 -> paper/references/ThebaultAugereau2007_AA472_169.pdf | 用途: wavy PSD の検証
+- @Wyatt2008 -> paper/references/Wyatt2008.pdf | 用途: 衝突寿命スケール検証
 TEX_EXCLUDE_END -->
 
 ---

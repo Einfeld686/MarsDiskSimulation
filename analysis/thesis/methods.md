@@ -11,11 +11,11 @@ NOTE: このファイルは analysis/thesis_sections/02_methods/*.md の結合�
 
 <!-- TEX_EXCLUDE_START
 reference_links:
-- @CanupSalmon2018_SciAdv4_eaar6887 -> paper/references/CanupSalmon2018_SciAdv4_eaar6887.pdf
-- @Hyodo2017a_ApJ845_125 -> paper/references/Hyodo2017a_ApJ845_125.pdf
-- @Krivov2006_AA455_509 -> paper/references/Krivov2006_AA455_509.pdf
-- @StrubbeChiang2006_ApJ648_652 -> paper/references/StrubbeChiang2006_ApJ648_652.pdf
-- @Wyatt2008 -> paper/references/Wyatt2008.pdf
+- @CanupSalmon2018_SciAdv4_eaar6887 -> paper/references/CanupSalmon2018_SciAdv4_eaar6887.pdf | 用途: 火星円盤の物理的前提（低質量円盤の文脈）
+- @Hyodo2017a_ApJ845_125 -> paper/references/Hyodo2017a_ApJ845_125.pdf | 用途: 衝突起源円盤の前提条件と対象設定
+- @Krivov2006_AA455_509 -> paper/references/Krivov2006_AA455_509.pdf | 用途: Smoluchowski衝突カスケードの枠組み
+- @StrubbeChiang2006_ApJ648_652 -> paper/references/StrubbeChiang2006_ApJ648_652.pdf | 用途: 表層ブローアウトと衝突寿命の整理
+- @Wyatt2008 -> paper/references/Wyatt2008.pdf | 用途: デブリ円盤の衝突スケーリング
 TEX_EXCLUDE_END -->
 
 # シミュレーション手法
@@ -65,23 +65,23 @@ TEX_EXCLUDE_END -->
 
 <!-- TEX_EXCLUDE_START
 reference_links:
-- @Birnstiel2011_AA525_A11 -> paper/references/Birnstiel2011_AA525_A11.pdf
-- @BohrenHuffman1983_Wiley -> paper/references/BohrenHuffman1983_Wiley.pdf
-- @CanupSalmon2018_SciAdv4_eaar6887 -> paper/references/CanupSalmon2018_SciAdv4_eaar6887.pdf
-- @CogleyBergstrom1979_JQSRT21_265 -> paper/references/CogleyBergstrom1979_JQSRT21_265.pdf
-- @Dohnanyi1969_JGR74_2531 -> paper/references/Dohnanyi1969_JGR74_2531.pdf
-- @HansenTravis1974_SSR16_527 -> paper/references/HansenTravis1974_SSR16_527.pdf
-- @Hyodo2017a_ApJ845_125 -> paper/references/Hyodo2017a_ApJ845_125.pdf
-- @Joseph1976_JAS33_2452 -> paper/references/Joseph1976_JAS33_2452.pdf
-- @Jutzi2010_Icarus207_54 -> paper/references/Jutzi2010_Icarus207_54.pdf (missing)
-- @Krivov2006_AA455_509 -> paper/references/Krivov2006_AA455_509.pdf
-- @LeinhardtStewart2012_ApJ745_79 -> paper/references/LeinhardtStewart2012_ApJ745_79.pdf
-- @Olofsson2022_MNRAS513_713 -> paper/references/Olofsson2022_MNRAS513_713.pdf
-- @StrubbeChiang2006_ApJ648_652 -> paper/references/StrubbeChiang2006_ApJ648_652.pdf
-- @TakeuchiLin2003_ApJ593_524 -> paper/references/TakeuchiLin2003_ApJ593_524.pdf
-- @ThebaultAugereau2007_AA472_169 -> paper/references/ThebaultAugereau2007_AA472_169.pdf
-- @Wyatt2008 -> paper/references/Wyatt2008.pdf
-- @WyattClarkeBooth2011_CeMDA111_1 -> paper/references/WyattClarkeBooth2011_CeMDA111_1.pdf
+- @Birnstiel2011_AA525_A11 -> paper/references/Birnstiel2011_AA525_A11.pdf | 用途: PSDビン幅の指針（wavy再現の分解能）
+- @BohrenHuffman1983_Wiley -> paper/references/BohrenHuffman1983_Wiley.pdf | 用途: Mie理論に基づくQ_pr平均の背景
+- @CanupSalmon2018_SciAdv4_eaar6887 -> paper/references/CanupSalmon2018_SciAdv4_eaar6887.pdf | 用途: 火星円盤の背景条件（軸対称1Dの前提）
+- @CogleyBergstrom1979_JQSRT21_265 -> paper/references/CogleyBergstrom1979_JQSRT21_265.pdf | 用途: Φ(τ,ω0,g)の二流近似
+- @Dohnanyi1969_JGR74_2531 -> paper/references/Dohnanyi1969_JGR74_2531.pdf | 用途: 自己相似PSDの基準
+- @HansenTravis1974_SSR16_527 -> paper/references/HansenTravis1974_SSR16_527.pdf | 用途: δ-Eddington遮蔽近似
+- @Hyodo2017a_ApJ845_125 -> paper/references/Hyodo2017a_ApJ845_125.pdf | 用途: 初期PSDの溶融滴成分と円盤前提
+- @Joseph1976_JAS33_2452 -> paper/references/Joseph1976_JAS33_2452.pdf | 用途: Φテーブル（二流・δ-Eddington基礎）
+- @Jutzi2010_Icarus207_54 -> paper/references/Jutzi2010_Icarus207_54.pdf (missing) | 用途: 初期PSDのべき指数（衝突起源）
+- @Krivov2006_AA455_509 -> paper/references/Krivov2006_AA455_509.pdf | 用途: PSD離散化とSmoluchowski解法
+- @LeinhardtStewart2012_ApJ745_79 -> paper/references/LeinhardtStewart2012_ApJ745_79.pdf | 用途: Q_D*補間（LS12）
+- @Olofsson2022_MNRAS513_713 -> paper/references/Olofsson2022_MNRAS513_713.pdf | 用途: 高密度デブリ円盤の文脈
+- @StrubbeChiang2006_ApJ648_652 -> paper/references/StrubbeChiang2006_ApJ648_652.pdf | 用途: 光学的厚さと表層t_coll定義
+- @TakeuchiLin2003_ApJ593_524 -> paper/references/TakeuchiLin2003_ApJ593_524.pdf | 用途: gas-rich表層ODEの参照枠（既定無効）
+- @ThebaultAugereau2007_AA472_169 -> paper/references/ThebaultAugereau2007_AA472_169.pdf | 用途: blowout起因のwavy PSD
+- @Wyatt2008 -> paper/references/Wyatt2008.pdf | 用途: 衝突寿命スケーリング
+- @WyattClarkeBooth2011_CeMDA111_1 -> paper/references/WyattClarkeBooth2011_CeMDA111_1.pdf | 用途: s_min床・供給注入の基準
 TEX_EXCLUDE_END -->
 
 ---
@@ -170,33 +170,33 @@ $\tau_{\rm los}$ は遮蔽（$\Phi$）の入力として使われるほか、放
 
 <!-- TEX_EXCLUDE_START
 reference_links:
-- @BenzAsphaug1999_Icarus142_5 -> paper/references/BenzAsphaug1999_Icarus142_5.pdf
-- @BohrenHuffman1983_Wiley -> paper/references/BohrenHuffman1983_Wiley.pdf
-- @Burns1979_Icarus40_1 -> paper/references/Burns1979_Icarus40_1.pdf
-- @CogleyBergstrom1979_JQSRT21_265 -> paper/references/CogleyBergstrom1979_JQSRT21_265.pdf
-- @Dohnanyi1969_JGR74_2531 -> paper/references/Dohnanyi1969_JGR74_2531.pdf
-- @FegleySchaefer2012_arXiv -> paper/references/FegleySchaefer2012_arXiv.pdf
-- @HansenTravis1974_SSR16_527 -> paper/references/HansenTravis1974_SSR16_527.pdf
-- @Hyodo2018_ApJ860_150 -> paper/references/Hyodo2018_ApJ860_150.pdf
-- @IdaMakino1992_Icarus96_107 -> paper/references/IdaMakino1992_Icarus96_107.pdf
-- @ImazBlanco2023_MNRAS522_6150 -> paper/references/ImazBlanco2023_MNRAS522_6150.pdf
-- @Joseph1976_JAS33_2452 -> paper/references/Joseph1976_JAS33_2452.pdf
-- @Jutzi2010_Icarus207_54 -> paper/references/Jutzi2010_Icarus207_54.pdf (missing)
-- @Krivov2006_AA455_509 -> paper/references/Krivov2006_AA455_509.pdf
-- @Kubaschewski1974_Book -> paper/references/Kubaschewski1974_Book.pdf (missing)
-- @LeinhardtStewart2012_ApJ745_79 -> paper/references/LeinhardtStewart2012_ApJ745_79.pdf
-- @LissauerStewart1993_PP3 -> paper/references/LissauerStewart1993_PP3.pdf
-- @Markkanen2020_AA643_A16 -> paper/references/Markkanen2020_AA643_A16.pdf
-- @Ohtsuki2002_Icarus155_436 -> paper/references/Ohtsuki2002_Icarus155_436.pdf
-- @Pignatale2018_ApJ853_118 -> paper/references/Pignatale2018_ApJ853_118.pdf
-- @Ronnet2016_ApJ828_109 -> paper/references/Ronnet2016_ApJ828_109.pdf
-- @StewartLeinhardt2009_ApJ691_L133 -> paper/references/StewartLeinhardt2009_ApJ691_L133.pdf
-- @TakeuchiLin2003_ApJ593_524 -> paper/references/TakeuchiLin2003_ApJ593_524.pdf
-- @Thebault2003_AA408_775 -> paper/references/Thebault2003_AA408_775.pdf
-- @VisscherFegley2013_ApJL767_L12 -> paper/references/VisscherFegley2013_ApJL767_L12.pdf
-- @WetherillStewart1993_Icarus106_190 -> paper/references/WetherillStewart1993_Icarus106_190.pdf
-- @Wyatt2008 -> paper/references/Wyatt2008.pdf
-- @WyattClarkeBooth2011_CeMDA111_1 -> paper/references/WyattClarkeBooth2011_CeMDA111_1.pdf
+- @BenzAsphaug1999_Icarus142_5 -> paper/references/BenzAsphaug1999_Icarus142_5.pdf | 用途: Q_D* の基準（破砕強度モデル）
+- @BohrenHuffman1983_Wiley -> paper/references/BohrenHuffman1983_Wiley.pdf | 用途: Mie理論/Q_pr平均
+- @Burns1979_Icarus40_1 -> paper/references/Burns1979_Icarus40_1.pdf | 用途: 放射圧βの定式化
+- @CogleyBergstrom1979_JQSRT21_265 -> paper/references/CogleyBergstrom1979_JQSRT21_265.pdf | 用途: Φテーブル（二流近似）
+- @Dohnanyi1969_JGR74_2531 -> paper/references/Dohnanyi1969_JGR74_2531.pdf | 用途: 衝突カスケードの自己相似PSD
+- @FegleySchaefer2012_arXiv -> paper/references/FegleySchaefer2012_arXiv.pdf | 用途: 蒸気圧の液相枝パラメータ
+- @HansenTravis1974_SSR16_527 -> paper/references/HansenTravis1974_SSR16_527.pdf | 用途: Φテーブル（δ-Eddington近似）
+- @Hyodo2018_ApJ860_150 -> paper/references/Hyodo2018_ApJ860_150.pdf | 用途: 温度ドライバ/冷却モデル
+- @IdaMakino1992_Icarus96_107 -> paper/references/IdaMakino1992_Icarus96_107.pdf | 用途: 相対速度分布の基礎
+- @ImazBlanco2023_MNRAS522_6150 -> paper/references/ImazBlanco2023_MNRAS522_6150.pdf | 用途: 相対速度分布の実装参照
+- @Joseph1976_JAS33_2452 -> paper/references/Joseph1976_JAS33_2452.pdf | 用途: Φテーブル（二流・δ-Eddington基礎）
+- @Jutzi2010_Icarus207_54 -> paper/references/Jutzi2010_Icarus207_54.pdf (missing) | 用途: 速度外挿の係数（LS09型）
+- @Krivov2006_AA455_509 -> paper/references/Krivov2006_AA455_509.pdf | 用途: Smoluchowski方程式/破片生成枠組み
+- @Kubaschewski1974_Book -> paper/references/Kubaschewski1974_Book.pdf (missing) | 用途: Clausius蒸気圧係数
+- @LeinhardtStewart2012_ApJ745_79 -> paper/references/LeinhardtStewart2012_ApJ745_79.pdf | 用途: Q_D* 補間と破砕境界
+- @LissauerStewart1993_PP3 -> paper/references/LissauerStewart1993_PP3.pdf | 用途: 相対速度分布の整理
+- @Markkanen2020_AA643_A16 -> paper/references/Markkanen2020_AA643_A16.pdf | 用途: HKL昇華フラックス
+- @Ohtsuki2002_Icarus155_436 -> paper/references/Ohtsuki2002_Icarus155_436.pdf | 用途: c_eq と相対速度評価
+- @Pignatale2018_ApJ853_118 -> paper/references/Pignatale2018_ApJ853_118.pdf | 用途: 昇華の適用範囲/粒径収縮
+- @Ronnet2016_ApJ828_109 -> paper/references/Ronnet2016_ApJ828_109.pdf | 用途: hydrodynamic escape スケーリング/ガス圧扱い
+- @StewartLeinhardt2009_ApJ691_L133 -> paper/references/StewartLeinhardt2009_ApJ691_L133.pdf | 用途: 破砕境界/速度外挿
+- @TakeuchiLin2003_ApJ593_524 -> paper/references/TakeuchiLin2003_ApJ593_524.pdf | 用途: gas-rich表層流出の参照枠
+- @Thebault2003_AA408_775 -> paper/references/Thebault2003_AA408_775.pdf | 用途: 侵食レジームと破片生成
+- @VisscherFegley2013_ApJL767_L12 -> paper/references/VisscherFegley2013_ApJL767_L12.pdf | 用途: 蒸気圧の液相枝
+- @WetherillStewart1993_Icarus106_190 -> paper/references/WetherillStewart1993_Icarus106_190.pdf | 用途: 相対速度分布
+- @Wyatt2008 -> paper/references/Wyatt2008.pdf | 用途: 衝突寿命スケール
+- @WyattClarkeBooth2011_CeMDA111_1 -> paper/references/WyattClarkeBooth2011_CeMDA111_1.pdf | 用途: 供給率のパラメータ化
 TEX_EXCLUDE_END -->
 
 ---
@@ -764,10 +764,10 @@ S7 に対応する供給処理では、`supply_rate_nominal` を基準に `suppl
 
 <!-- TEX_EXCLUDE_START
 reference_links:
-- @Hyodo2018_ApJ860_150 -> paper/references/Hyodo2018_ApJ860_150.pdf
-- @Krivov2006_AA455_509 -> paper/references/Krivov2006_AA455_509.pdf
-- @StrubbeChiang2006_ApJ648_652 -> paper/references/StrubbeChiang2006_ApJ648_652.pdf
-- @Wyatt2008 -> paper/references/Wyatt2008.pdf
+- @Hyodo2018_ApJ860_150 -> paper/references/Hyodo2018_ApJ860_150.pdf | 用途: 温度停止条件の基準
+- @Krivov2006_AA455_509 -> paper/references/Krivov2006_AA455_509.pdf | 用途: IMEX-BDF1での衝突カスケード解法
+- @StrubbeChiang2006_ApJ648_652 -> paper/references/StrubbeChiang2006_ApJ648_652.pdf | 用途: 初期τ=1スケーリング/表層t_coll尺度
+- @Wyatt2008 -> paper/references/Wyatt2008.pdf | 用途: 衝突寿命スケールと時間刻み指標
 TEX_EXCLUDE_END -->
 
 ---
@@ -871,10 +871,10 @@ numerics:
 
 <!-- TEX_EXCLUDE_START
 reference_links:
-- @Krivov2006_AA455_509 -> paper/references/Krivov2006_AA455_509.pdf
-- @StrubbeChiang2006_ApJ648_652 -> paper/references/StrubbeChiang2006_ApJ648_652.pdf
-- @ThebaultAugereau2007_AA472_169 -> paper/references/ThebaultAugereau2007_AA472_169.pdf
-- @Wyatt2008 -> paper/references/Wyatt2008.pdf
+- @Krivov2006_AA455_509 -> paper/references/Krivov2006_AA455_509.pdf | 用途: 衝突カスケード検証と出力診断の基準
+- @StrubbeChiang2006_ApJ648_652 -> paper/references/StrubbeChiang2006_ApJ648_652.pdf | 用途: t_collスケール検証
+- @ThebaultAugereau2007_AA472_169 -> paper/references/ThebaultAugereau2007_AA472_169.pdf | 用途: wavy PSD の検証
+- @Wyatt2008 -> paper/references/Wyatt2008.pdf | 用途: 衝突寿命スケール検証
 TEX_EXCLUDE_END -->
 
 ---

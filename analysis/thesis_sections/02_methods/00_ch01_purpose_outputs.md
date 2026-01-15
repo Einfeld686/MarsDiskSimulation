@@ -11,11 +11,11 @@ NOTE: このファイルは analysis/thesis_sections/02_methods/*.md の結合�
 
 <!-- TEX_EXCLUDE_START
 reference_links:
-- @CanupSalmon2018_SciAdv4_eaar6887 -> paper/references/CanupSalmon2018_SciAdv4_eaar6887.pdf
-- @Hyodo2017a_ApJ845_125 -> paper/references/Hyodo2017a_ApJ845_125.pdf
-- @Krivov2006_AA455_509 -> paper/references/Krivov2006_AA455_509.pdf
-- @StrubbeChiang2006_ApJ648_652 -> paper/references/StrubbeChiang2006_ApJ648_652.pdf
-- @Wyatt2008 -> paper/references/Wyatt2008.pdf
+- @CanupSalmon2018_SciAdv4_eaar6887 -> paper/references/CanupSalmon2018_SciAdv4_eaar6887.pdf | 用途: 火星円盤の物理的前提（低質量円盤の文脈）
+- @Hyodo2017a_ApJ845_125 -> paper/references/Hyodo2017a_ApJ845_125.pdf | 用途: 衝突起源円盤の前提条件と対象設定
+- @Krivov2006_AA455_509 -> paper/references/Krivov2006_AA455_509.pdf | 用途: Smoluchowski衝突カスケードの枠組み
+- @StrubbeChiang2006_ApJ648_652 -> paper/references/StrubbeChiang2006_ApJ648_652.pdf | 用途: 表層ブローアウトと衝突寿命の整理
+- @Wyatt2008 -> paper/references/Wyatt2008.pdf | 用途: デブリ円盤の衝突スケーリング
 TEX_EXCLUDE_END -->
 
 # シミュレーション手法

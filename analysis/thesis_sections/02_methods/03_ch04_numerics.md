@@ -6,10 +6,10 @@
 
 <!-- TEX_EXCLUDE_START
 reference_links:
-- @Hyodo2018_ApJ860_150 -> paper/references/Hyodo2018_ApJ860_150.pdf
-- @Krivov2006_AA455_509 -> paper/references/Krivov2006_AA455_509.pdf
-- @StrubbeChiang2006_ApJ648_652 -> paper/references/StrubbeChiang2006_ApJ648_652.pdf
-- @Wyatt2008 -> paper/references/Wyatt2008.pdf
+- @Hyodo2018_ApJ860_150 -> paper/references/Hyodo2018_ApJ860_150.pdf | 用途: 温度停止条件の基準
+- @Krivov2006_AA455_509 -> paper/references/Krivov2006_AA455_509.pdf | 用途: IMEX-BDF1での衝突カスケード解法
+- @StrubbeChiang2006_ApJ648_652 -> paper/references/StrubbeChiang2006_ApJ648_652.pdf | 用途: 初期τ=1スケーリング/表層t_coll尺度
+- @Wyatt2008 -> paper/references/Wyatt2008.pdf | 用途: 衝突寿命スケールと時間刻み指標
 TEX_EXCLUDE_END -->
 
 ---
@@ -105,4 +105,3 @@ numerics:
 
 - クラッシュ時に最新チェックポイントから `--resume` で再開。
 - `keep_last_n` でディスク使用量を制限。
-

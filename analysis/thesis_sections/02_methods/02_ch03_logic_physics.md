@@ -6,33 +6,33 @@
 
 <!-- TEX_EXCLUDE_START
 reference_links:
-- @BenzAsphaug1999_Icarus142_5 -> paper/references/BenzAsphaug1999_Icarus142_5.pdf
-- @BohrenHuffman1983_Wiley -> paper/references/BohrenHuffman1983_Wiley.pdf
-- @Burns1979_Icarus40_1 -> paper/references/Burns1979_Icarus40_1.pdf
-- @CogleyBergstrom1979_JQSRT21_265 -> paper/references/CogleyBergstrom1979_JQSRT21_265.pdf
-- @Dohnanyi1969_JGR74_2531 -> paper/references/Dohnanyi1969_JGR74_2531.pdf
-- @FegleySchaefer2012_arXiv -> paper/references/FegleySchaefer2012_arXiv.pdf
-- @HansenTravis1974_SSR16_527 -> paper/references/HansenTravis1974_SSR16_527.pdf
-- @Hyodo2018_ApJ860_150 -> paper/references/Hyodo2018_ApJ860_150.pdf
-- @IdaMakino1992_Icarus96_107 -> paper/references/IdaMakino1992_Icarus96_107.pdf
-- @ImazBlanco2023_MNRAS522_6150 -> paper/references/ImazBlanco2023_MNRAS522_6150.pdf
-- @Joseph1976_JAS33_2452 -> paper/references/Joseph1976_JAS33_2452.pdf
-- @Jutzi2010_Icarus207_54 -> paper/references/Jutzi2010_Icarus207_54.pdf (missing)
-- @Krivov2006_AA455_509 -> paper/references/Krivov2006_AA455_509.pdf
-- @Kubaschewski1974_Book -> paper/references/Kubaschewski1974_Book.pdf (missing)
-- @LeinhardtStewart2012_ApJ745_79 -> paper/references/LeinhardtStewart2012_ApJ745_79.pdf
-- @LissauerStewart1993_PP3 -> paper/references/LissauerStewart1993_PP3.pdf
-- @Markkanen2020_AA643_A16 -> paper/references/Markkanen2020_AA643_A16.pdf
-- @Ohtsuki2002_Icarus155_436 -> paper/references/Ohtsuki2002_Icarus155_436.pdf
-- @Pignatale2018_ApJ853_118 -> paper/references/Pignatale2018_ApJ853_118.pdf
-- @Ronnet2016_ApJ828_109 -> paper/references/Ronnet2016_ApJ828_109.pdf
-- @StewartLeinhardt2009_ApJ691_L133 -> paper/references/StewartLeinhardt2009_ApJ691_L133.pdf
-- @TakeuchiLin2003_ApJ593_524 -> paper/references/TakeuchiLin2003_ApJ593_524.pdf
-- @Thebault2003_AA408_775 -> paper/references/Thebault2003_AA408_775.pdf
-- @VisscherFegley2013_ApJL767_L12 -> paper/references/VisscherFegley2013_ApJL767_L12.pdf
-- @WetherillStewart1993_Icarus106_190 -> paper/references/WetherillStewart1993_Icarus106_190.pdf
-- @Wyatt2008 -> paper/references/Wyatt2008.pdf
-- @WyattClarkeBooth2011_CeMDA111_1 -> paper/references/WyattClarkeBooth2011_CeMDA111_1.pdf
+- @BenzAsphaug1999_Icarus142_5 -> paper/references/BenzAsphaug1999_Icarus142_5.pdf | 用途: Q_D* の基準（破砕強度モデル）
+- @BohrenHuffman1983_Wiley -> paper/references/BohrenHuffman1983_Wiley.pdf | 用途: Mie理論/Q_pr平均
+- @Burns1979_Icarus40_1 -> paper/references/Burns1979_Icarus40_1.pdf | 用途: 放射圧βの定式化
+- @CogleyBergstrom1979_JQSRT21_265 -> paper/references/CogleyBergstrom1979_JQSRT21_265.pdf | 用途: Φテーブル（二流近似）
+- @Dohnanyi1969_JGR74_2531 -> paper/references/Dohnanyi1969_JGR74_2531.pdf | 用途: 衝突カスケードの自己相似PSD
+- @FegleySchaefer2012_arXiv -> paper/references/FegleySchaefer2012_arXiv.pdf | 用途: 蒸気圧の液相枝パラメータ
+- @HansenTravis1974_SSR16_527 -> paper/references/HansenTravis1974_SSR16_527.pdf | 用途: Φテーブル（δ-Eddington近似）
+- @Hyodo2018_ApJ860_150 -> paper/references/Hyodo2018_ApJ860_150.pdf | 用途: 温度ドライバ/冷却モデル
+- @IdaMakino1992_Icarus96_107 -> paper/references/IdaMakino1992_Icarus96_107.pdf | 用途: 相対速度分布の基礎
+- @ImazBlanco2023_MNRAS522_6150 -> paper/references/ImazBlanco2023_MNRAS522_6150.pdf | 用途: 相対速度分布の実装参照
+- @Joseph1976_JAS33_2452 -> paper/references/Joseph1976_JAS33_2452.pdf | 用途: Φテーブル（二流・δ-Eddington基礎）
+- @Jutzi2010_Icarus207_54 -> paper/references/Jutzi2010_Icarus207_54.pdf (missing) | 用途: 速度外挿の係数（LS09型）
+- @Krivov2006_AA455_509 -> paper/references/Krivov2006_AA455_509.pdf | 用途: Smoluchowski方程式/破片生成枠組み
+- @Kubaschewski1974_Book -> paper/references/Kubaschewski1974_Book.pdf (missing) | 用途: Clausius蒸気圧係数
+- @LeinhardtStewart2012_ApJ745_79 -> paper/references/LeinhardtStewart2012_ApJ745_79.pdf | 用途: Q_D* 補間と破砕境界
+- @LissauerStewart1993_PP3 -> paper/references/LissauerStewart1993_PP3.pdf | 用途: 相対速度分布の整理
+- @Markkanen2020_AA643_A16 -> paper/references/Markkanen2020_AA643_A16.pdf | 用途: HKL昇華フラックス
+- @Ohtsuki2002_Icarus155_436 -> paper/references/Ohtsuki2002_Icarus155_436.pdf | 用途: c_eq と相対速度評価
+- @Pignatale2018_ApJ853_118 -> paper/references/Pignatale2018_ApJ853_118.pdf | 用途: 昇華の適用範囲/粒径収縮
+- @Ronnet2016_ApJ828_109 -> paper/references/Ronnet2016_ApJ828_109.pdf | 用途: hydrodynamic escape スケーリング/ガス圧扱い
+- @StewartLeinhardt2009_ApJ691_L133 -> paper/references/StewartLeinhardt2009_ApJ691_L133.pdf | 用途: 破砕境界/速度外挿
+- @TakeuchiLin2003_ApJ593_524 -> paper/references/TakeuchiLin2003_ApJ593_524.pdf | 用途: gas-rich表層流出の参照枠
+- @Thebault2003_AA408_775 -> paper/references/Thebault2003_AA408_775.pdf | 用途: 侵食レジームと破片生成
+- @VisscherFegley2013_ApJL767_L12 -> paper/references/VisscherFegley2013_ApJL767_L12.pdf | 用途: 蒸気圧の液相枝
+- @WetherillStewart1993_Icarus106_190 -> paper/references/WetherillStewart1993_Icarus106_190.pdf | 用途: 相対速度分布
+- @Wyatt2008 -> paper/references/Wyatt2008.pdf | 用途: 衝突寿命スケール
+- @WyattClarkeBooth2011_CeMDA111_1 -> paper/references/WyattClarkeBooth2011_CeMDA111_1.pdf | 用途: 供給率のパラメータ化
 TEX_EXCLUDE_END -->
 
 ---
