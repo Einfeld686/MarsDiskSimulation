@@ -37,6 +37,13 @@ analysis-sync:
 	python -m tools.doc_sync_agent --all --write
 	python tools/readme_sync.py --write
 
+analysis-abstract-sync:
+	python -m analysis.tools.merge_abstract_sections --write
+
+analysis-abstract-update: analysis-abstract-sync
+	$(MAKE) analysis-update
+	python -m tools.evaluation_system --outdir $(EVAL_OUTDIR)
+
 analysis-intro-sync:
 	python -m analysis.tools.merge_introduction_sections --write
 

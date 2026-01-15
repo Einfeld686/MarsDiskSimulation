@@ -4,6 +4,7 @@ from __future__ import annotations
 import argparse
 import os
 import re
+import shutil
 import subprocess
 import sys
 from dataclasses import dataclass
@@ -49,6 +50,8 @@ UNICODE_SYMBOLS = {
 
 INTRO_START = "% === AUTOGEN INTRODUCTION START ==="
 INTRO_END = "% === AUTOGEN INTRODUCTION END ==="
+ABSTRACT_START = "% === AUTOGEN ABSTRACT START ==="
+ABSTRACT_END = "% === AUTOGEN ABSTRACT END ==="
 RELATED_WORK_START = "% === AUTOGEN RELATED WORK START ==="
 RELATED_WORK_END = "% === AUTOGEN RELATED WORK END ==="
 METHODS_START = "% === AUTOGEN METHODS START ==="
@@ -563,21 +566,31 @@ def replace_between_markers(text: str, start: str, end: str, replacement: str) -
     return before + "\n" + replacement.rstrip() + "\n" + after
 
 
+def replace_between_markers_optional(
+    text: str, start: str, end: str, replacement: str
+) -> str:
+    start_idx = text.find(start)
+    end_idx = text.find(end)
+    if start_idx == -1 or end_idx == -1 or end_idx <= start_idx:
+        return text
+    return replace_between_markers(text, start, end, replacement)
+
+
 def run(cmd: list[str], cwd: Path, env: dict[str, str] | None = None) -> None:
     subprocess.run(cmd, cwd=str(cwd), check=True, env=env)
 
 
 def build_pdf(tex_path: Path, out_dir: Path, repo_root: Path) -> None:
     out_dir.mkdir(parents=True, exist_ok=True)
-    tex_name = tex_path.name
     stem = tex_path.stem
+    tex_arg = str(tex_path)
     run(
         [
             "platex",
             "-interaction=nonstopmode",
             "-halt-on-error",
             f"-output-directory={out_dir}",
-            tex_name,
+            tex_arg,
         ],
         cwd=tex_path.parent,
     )
@@ -593,29 +606,57 @@ def build_pdf(tex_path: Path, out_dir: Path, repo_root: Path) -> None:
             token in aux_text for token in ("\\bibdata", "\\bibstyle", "\\citation")
         )
     if needs_bibtex:
-        run(["bibtex", stem], cwd=out_dir, env=bibtex_env)
+        bibtex_cmds: list[str] = []
+        if shutil.which("upbibtex"):
+            bibtex_cmds.append("upbibtex")
+        if shutil.which("bibtex"):
+            bibtex_cmds.append("bibtex")
+        if not bibtex_cmds:
+            raise FileNotFoundError("bibtex command not found (upbibtex/bibtex)")
+        last_error: subprocess.CalledProcessError | None = None
+        for cmd in bibtex_cmds:
+            try:
+                run([cmd, stem], cwd=out_dir, env=bibtex_env)
+                last_error = None
+                break
+            except subprocess.CalledProcessError as exc:
+                print(f"build_pdf: {cmd} failed (exit {exc.returncode}), trying fallback")
+                last_error = exc
+        if last_error is not None:
+            bbl_path = out_dir / f"{stem}.bbl"
+            if bbl_path.exists():
+                print("build_pdf: bibtex failed, using existing .bbl")
+            else:
+                raise last_error
     else:
         print("build_pdf: skipping bibtex (no citation/bibliography markers found)")
-    run(
-        [
-            "platex",
-            "-interaction=nonstopmode",
-            "-halt-on-error",
-            f"-output-directory={out_dir}",
-            tex_name,
-        ],
-        cwd=tex_path.parent,
-    )
-    run(
-        [
-            "platex",
-            "-interaction=nonstopmode",
-            "-halt-on-error",
-            f"-output-directory={out_dir}",
-            tex_name,
-        ],
-        cwd=tex_path.parent,
-    )
+    try:
+        run(
+            [
+                "platex",
+                "-interaction=nonstopmode",
+                "-halt-on-error",
+                f"-output-directory={out_dir}",
+                tex_arg,
+            ],
+            cwd=tex_path.parent,
+        )
+        run(
+            [
+                "platex",
+                "-interaction=nonstopmode",
+                "-halt-on-error",
+                f"-output-directory={out_dir}",
+                tex_arg,
+            ],
+            cwd=tex_path.parent,
+        )
+    except subprocess.CalledProcessError:
+        dvi_path = out_dir / f"{stem}.dvi"
+        if dvi_path.exists():
+            print("build_pdf: platex rerun failed, using existing .dvi")
+        else:
+            raise
     native_pdf = out_dir / f"{stem}_native.pdf"
     run(["dvipdfmx", "-o", str(native_pdf), str(out_dir / f"{stem}.dvi")], cwd=tex_path.parent)
     run(
@@ -633,6 +674,9 @@ def build_pdf(tex_path: Path, out_dir: Path, repo_root: Path) -> None:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Build thesis_draft.tex from Markdown.")
+    parser.add_argument(
+        "--abstract", default="analysis/thesis/abstract.md", help="Abstract markdown path."
+    )
     parser.add_argument("--intro", default="analysis/thesis/introduction.md", help="Intro markdown path.")
     parser.add_argument(
         "--related-work",
@@ -655,6 +699,7 @@ def main() -> int:
     args = parser.parse_args()
 
     repo_root = Path(__file__).resolve().parents[1]
+    abstract_path = (repo_root / args.abstract).resolve()
     intro_path = (repo_root / args.intro).resolve()
     related_work_path = (repo_root / args.related_work).resolve()
     methods_path = (repo_root / args.methods).resolve()
@@ -674,12 +719,14 @@ def main() -> int:
     }
     converter = MarkdownToLatexConverter(heading_map)
 
+    abstract_text = abstract_path.read_text(encoding="utf-8")
     intro_text = intro_path.read_text(encoding="utf-8")
     related_work_text = related_work_path.read_text(encoding="utf-8")
     methods_text = methods_path.read_text(encoding="utf-8")
     results_text = results_path.read_text(encoding="utf-8")
     discussion_text = discussion_path.read_text(encoding="utf-8")
 
+    abstract_tex = converter.convert(abstract_text)
     intro_tex = converter.convert(intro_text)
     related_work_tex = converter.convert(related_work_text)
     methods_tex = converter.convert(methods_text)
@@ -687,8 +734,11 @@ def main() -> int:
     discussion_tex = converter.convert(discussion_text)
 
     tex_text = tex_path.read_text(encoding="utf-8")
-    tex_text = replace_between_markers(tex_text, INTRO_START, INTRO_END, intro_tex)
     tex_text = replace_between_markers(
+        tex_text, ABSTRACT_START, ABSTRACT_END, abstract_tex
+    )
+    tex_text = replace_between_markers(tex_text, INTRO_START, INTRO_END, intro_tex)
+    tex_text = replace_between_markers_optional(
         tex_text, RELATED_WORK_START, RELATED_WORK_END, related_work_tex
     )
     tex_text = replace_between_markers(tex_text, METHODS_START, METHODS_END, methods_tex)

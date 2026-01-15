@@ -169,6 +169,12 @@ analysis/tools/make_sinks_callgraph.py:54:def build_mermaid(inv: Dict[SymbolKey,
 analysis/tools/make_sinks_callgraph.py:94:def inject_autogen_block(original: str, block: str) -> str
 analysis/tools/make_sinks_callgraph.py:116:def parse_args(argv: Optional[Sequence[str]]) -> argparse.Namespace
 analysis/tools/make_sinks_callgraph.py:128:def main(argv: Optional[Sequence[str]]=None) -> int
+analysis/tools/merge_abstract_sections.py:15:def _manifest_entries(manifest_path: Path) -> list[str]
+analysis/tools/merge_abstract_sections.py:25:def _validate_entry(entry: str) -> None
+analysis/tools/merge_abstract_sections.py:30:def _paths_from_manifest(sections_dir: Path, manifest_path: Path) -> list[Path]
+analysis/tools/merge_abstract_sections.py:51:def collect_sections(sections_dir: Path, manifest_path: Path | None=None) -> list[Path]
+analysis/tools/merge_abstract_sections.py:63:def build_document(section_paths: list[Path]) -> str
+analysis/tools/merge_abstract_sections.py:70:def main(argv: list[str] | None=None) -> int
 analysis/tools/merge_discussion_sections.py:15:def _manifest_entries(manifest_path: Path) -> list[str]
 analysis/tools/merge_discussion_sections.py:25:def _validate_entry(entry: str) -> None
 analysis/tools/merge_discussion_sections.py:30:def _paths_from_manifest(sections_dir: Path, manifest_path: Path) -> list[Path]
@@ -1967,34 +1973,35 @@ tools/analyze_tau_los_feedback.py:201:def _render_placeholder(path: Path, title:
 tools/analyze_tau_los_feedback.py:211:def analyze(args: argparse.Namespace) -> Dict
 tools/analyze_tau_los_feedback.py:423:def _rows_from_result(result: Dict) -> List[Dict[str, object]]
 tools/analyze_tau_los_feedback.py:459:def main() -> None
-tools/build_thesis_draft.py:63:class Block
-tools/build_thesis_draft.py:68:def strip_yaml_frontmatter(text: str) -> str
-tools/build_thesis_draft.py:78:def strip_html_comments(text: str) -> str
-tools/build_thesis_draft.py:92:def strip_tex_exclude_blocks(text: str) -> str
-tools/build_thesis_draft.py:109:def split_table_row(line: str) -> list[str]
-tools/build_thesis_draft.py:113:def is_table_separator(line: str) -> bool
-tools/build_thesis_draft.py:123:def is_latex_block_start(line: str) -> bool
-tools/build_thesis_draft.py:132:def parse_latex_block(lines: list[str], start: int) -> tuple[Block, int]
-tools/build_thesis_draft.py:168:def parse_code_block(lines: list[str], start: int) -> tuple[Block, int]
-tools/build_thesis_draft.py:181:def parse_table(lines: list[str], start: int) -> tuple[Block | None, int]
-tools/build_thesis_draft.py:202:def parse_list(lines: list[str], start: int) -> tuple[Block, int]
-tools/build_thesis_draft.py:261:def parse_blockquote(lines: list[str], start: int) -> tuple[Block, int]
-tools/build_thesis_draft.py:274:def parse_paragraph(lines: list[str], start: int) -> tuple[Block, int]
-tools/build_thesis_draft.py:298:def parse_blocks(lines: list[str]) -> list[Block]
-tools/build_thesis_draft.py:340:def strip_numbered_prefix(text: str) -> str
-tools/build_thesis_draft.py:344:def convert_cite_brackets(text: str) -> str
-tools/build_thesis_draft.py:361:def escape_latex(text: str) -> str
-tools/build_thesis_draft.py:384:def escape_latex_code(text: str) -> str
-tools/build_thesis_draft.py:405:def convert_inline(text: str) -> str
-tools/build_thesis_draft.py:445:def needs_texorpdfstring(text: str) -> bool
-tools/build_thesis_draft.py:455:def latex_to_plain(text: str) -> str
-tools/build_thesis_draft.py:474:def replace_unicode_subscripts(text: str) -> str
-tools/build_thesis_draft.py:482:def replace_unicode_symbols(text: str) -> str
-tools/build_thesis_draft.py:488:class MarkdownToLatexConverter
-tools/build_thesis_draft.py:556:def replace_between_markers(text: str, start: str, end: str, replacement: str) -> str
-tools/build_thesis_draft.py:566:def run(cmd: list[str], cwd: Path, env: dict[str, str] | None=None) -> None
-tools/build_thesis_draft.py:570:def build_pdf(tex_path: Path, out_dir: Path, repo_root: Path) -> None
-tools/build_thesis_draft.py:634:def main() -> int
+tools/build_thesis_draft.py:66:class Block
+tools/build_thesis_draft.py:71:def strip_yaml_frontmatter(text: str) -> str
+tools/build_thesis_draft.py:81:def strip_html_comments(text: str) -> str
+tools/build_thesis_draft.py:95:def strip_tex_exclude_blocks(text: str) -> str
+tools/build_thesis_draft.py:112:def split_table_row(line: str) -> list[str]
+tools/build_thesis_draft.py:116:def is_table_separator(line: str) -> bool
+tools/build_thesis_draft.py:126:def is_latex_block_start(line: str) -> bool
+tools/build_thesis_draft.py:135:def parse_latex_block(lines: list[str], start: int) -> tuple[Block, int]
+tools/build_thesis_draft.py:171:def parse_code_block(lines: list[str], start: int) -> tuple[Block, int]
+tools/build_thesis_draft.py:184:def parse_table(lines: list[str], start: int) -> tuple[Block | None, int]
+tools/build_thesis_draft.py:205:def parse_list(lines: list[str], start: int) -> tuple[Block, int]
+tools/build_thesis_draft.py:264:def parse_blockquote(lines: list[str], start: int) -> tuple[Block, int]
+tools/build_thesis_draft.py:277:def parse_paragraph(lines: list[str], start: int) -> tuple[Block, int]
+tools/build_thesis_draft.py:301:def parse_blocks(lines: list[str]) -> list[Block]
+tools/build_thesis_draft.py:343:def strip_numbered_prefix(text: str) -> str
+tools/build_thesis_draft.py:347:def convert_cite_brackets(text: str) -> str
+tools/build_thesis_draft.py:364:def escape_latex(text: str) -> str
+tools/build_thesis_draft.py:387:def escape_latex_code(text: str) -> str
+tools/build_thesis_draft.py:408:def convert_inline(text: str) -> str
+tools/build_thesis_draft.py:448:def needs_texorpdfstring(text: str) -> bool
+tools/build_thesis_draft.py:458:def latex_to_plain(text: str) -> str
+tools/build_thesis_draft.py:477:def replace_unicode_subscripts(text: str) -> str
+tools/build_thesis_draft.py:485:def replace_unicode_symbols(text: str) -> str
+tools/build_thesis_draft.py:491:class MarkdownToLatexConverter
+tools/build_thesis_draft.py:559:def replace_between_markers(text: str, start: str, end: str, replacement: str) -> str
+tools/build_thesis_draft.py:569:def replace_between_markers_optional(text: str, start: str, end: str, replacement: str) -> str
+tools/build_thesis_draft.py:579:def run(cmd: list[str], cwd: Path, env: dict[str, str] | None=None) -> None
+tools/build_thesis_draft.py:583:def build_pdf(tex_path: Path, out_dir: Path, repo_root: Path) -> None
+tools/build_thesis_draft.py:675:def main() -> int
 tools/check_unknown_refs.py:13:def load_requests(path: Path) -> list[dict]
 tools/check_unknown_refs.py:24:def main() -> int
 tools/derive_supply_rate.py:51:class SupplyInputs
