@@ -33,22 +33,32 @@ reference_links:
   \centering
   \caption{序論の問いと手法で直接生成する量の対応}
   \label{tab:methods_questions_outputs}
-  \begin{tabular}{p{0.22\textwidth} p{0.36\textwidth} p{0.38\textwidth}}
+  \begin{tabular}{p{0.20\textwidth} p{0.32\textwidth} p{0.38\textwidth}}
     \hline
     序論の問い & 手法で直接生成する量 & 対応する出力 \\
     \hline
     問1: 高温期（1000 K まで／固定地平 2 年）の総損失量 &
     時間依存の流出率と累積損失 &
-    \texttt{series/run.parquet} の \texttt{M\_out\_dot}, \texttt{mass\_lost\_by\_blowout}, \texttt{mass\_lost\_by\_sinks}\newline
+    \texttt{series/run.parquet} の\newline
+    \texttt{M\_out\_dot}\newline
+    \texttt{mass\_lost\_by\_blowout}\newline
+    \texttt{mass\_lost\_by\_sinks}\newline
     \texttt{summary.json} の \texttt{M\_loss} \\
     問2: 粒径分布の時間変化と吹き飛びやすい粒径帯 &
     粒径ビンごとの数密度履歴と下限粒径 &
-    \texttt{series/psd\_hist.parquet} の \texttt{bin\_index}, \texttt{s\_bin\_center}, \texttt{N\_bin}, \texttt{Sigma\_surf}\newline
+    \texttt{series/psd\_hist.parquet} の\newline
+    \texttt{bin\_index}\newline
+    \texttt{s\_bin\_center}\newline
+    \texttt{N\_bin}\newline
+    \texttt{Sigma\_surf}\newline
     \texttt{series/run.parquet} の \texttt{s\_min} \\
     問3: 短期損失を踏まえた残存質量の評価 &
     累積損失と質量収支の時系列 &
-    \texttt{summary.json} の \texttt{M\_loss}（初期条件との差分で残存量を評価）\newline
-    \texttt{series/run.parquet} の \texttt{mass\_lost\_by\_blowout}, \texttt{mass\_lost\_by\_sinks} \\
+    \texttt{summary.json} の \texttt{M\_loss}\newline
+    （初期条件との差分で残存量を評価）\newline
+    \texttt{series/run.parquet} の\newline
+    \texttt{mass\_lost\_by\_blowout}\newline
+    \texttt{mass\_lost\_by\_sinks} \\
     \hline
   \end{tabular}
 \end{table}
@@ -109,7 +119,7 @@ reference_links:
 - 標準の物理経路は Smoluchowski 経路（C3/C4）を各半径セルで解く 1D 手法で、実装の計算順序は図 3.2 に従う。放射圧〜流出の依存関係のみを抜粋すると ⟨$Q_{\rm pr}$⟩→β→$s_{\rm blow}$→遮蔽Φ→Smol IMEX→外向流束となる。半径方向の粘性拡散（radial viscous diffusion; C5）は演算子分割で追加可能とする（[@Krivov2006_AA455_509]）。  
   > **参照**: analysis/overview.md §1, analysis/physics_flow.md §2「各タイムステップの物理計算順序」
 - 運用スイープの既定は 1D とし、C5 は必要時のみ有効化する。具体的な run_sweep 手順と環境変数は付録 A、設定→物理対応は付録 B を参照する。
-- [@TakeuchiLin2003_ApJ593_524] に基づく gas-rich 表層 ODE は `ALLOW_TL2003=false` が既定で無効。gas-rich 感度試験では環境変数を `true` にして `surface.collision_solver=surface_ode`（例: `configs/scenarios/gas_rich.yml`）を選ぶ。\newline **参照**: analysis/equations.md（冒頭注記）, analysis/overview.md §1「gas-poor 既定」
+- [@TakeuchiLin2003_ApJ593_524] に基づく gas-rich 表層 ODE は `ALLOW_TL2003=false` が既定で無効。gas-rich 感度試験では環境変数を `true` にして `surface.collision_solver=surface_ode` を選ぶ。\newline 例: `configs/scenarios/gas_rich.yml`。\newline **参照**: analysis/equations.md（冒頭注記）, analysis/overview.md §1「gas-poor 既定」
 
 1D は $r_{\rm in}$–$r_{\rm out}$ を $N_r$ セルに分割し、各セルの代表半径 $r_i$ で局所量を評価する。角速度 $\Omega(r_i)$ とケプラー速度 $v_K(r_i)$ は (E.001)–(E.002) に従い、$t_{\rm blow}$ や $t_{\rm coll}$ の基準時間に用いる。C5 を無効化した場合はセル間結合を行わず、半径方向の流束を解かない局所進化として扱う。
 
@@ -366,7 +376,7 @@ S3〜S10 の要点は次の通りである。
 
 - S3: 昇華 ds/dt を評価する。
 - S6: 相判定と $\\tau$ ゲートにより有効な損失経路を選択する。
-- S7: 名目供給 `supply_rate_nominal` にフィードバックと温度補正を適用し、`supply_rate_scaled` を得る。\newline 深層輸送を含めた表層注入量を決定する。
+- S7: 名目供給 `supply_rate_nominal` にフィードバックと温度補正を適用し、\newline `supply_rate_scaled` を得る。深層輸送を含めた表層注入量を決定する。
 - S8: シンク時間 $t_{\\rm sink}$ を評価する。
 - S9: 衝突カーネルから loss/gain を構成し、IMEX 更新を実施する。
 - S10: 診断列は `smol_gain_mass_rate`, `smol_loss_mass_rate`, `ds_dt_sublimation`, `M_out_dot` を含む。\newline 質量収支を保存する。
@@ -386,7 +396,7 @@ flowchart TB
 ```
 
 - 診断列は `supply_rate_nominal` → `supply_rate_scaled` → `supply_rate_applied` に記録する（[@WyattClarkeBooth2011_CeMDA111_1]）。
-- 深層経路は `prod_rate_diverted_to_deep`, `deep_to_surf_flux`, `prod_rate_applied_to_surf` に記録する。
+- 深層経路は `prod_rate_diverted_to_deep`\newline `deep_to_surf_flux`\newline `prod_rate_applied_to_surf` に記録する。
 - 供給の有効化は phase（solid）と液相ブロックで決まり、$\\tau_{\\rm gate}$ はブローアウトのみをゲートする。停止判定（$\\tau_{\\rm stop}$）とは区別して扱う。
 
 ##### 3.4.2 衝突フロー（Collision）
@@ -528,14 +538,14 @@ E_{diss} = (1 - f_{ke})\,E_{rel}
   \centering
   \caption{エネルギー簿記に関連する設定キー}
   \label{tab:energy_settings}
-  \begin{tabular}{p{0.38\textwidth} p{0.38\textwidth} p{0.14\textwidth}}
+  \begin{tabular}{p{0.36\textwidth} p{0.38\textwidth} l}
     \hline
     設定キー & 意味 & 既定値 \\
     \hline
     \texttt{dynamics.eps\_restitution} & 反発係数（$f_{ke,\mathrm{frag}}$ のデフォルトに使用） & 0.5 \\
     \texttt{dynamics.f\_ke\_cratering} & 侵食時の非散逸率 & 0.1 \\
     \texttt{dynamics.f\_ke\_fragmentation} & 破砕時の非散逸率 & None（$\varepsilon^2$ 使用） \\
-    \texttt{diagnostics.energy\_bookkeeping.stream} & energy 系列/簿記をストリーム出力\newline (\texttt{FORCE\_STREAMING\_OFF} で無効化) & true \\
+    \texttt{diagnostics.energy}\newline \texttt{\_bookkeeping}\newline \texttt{.stream} & energy 系列/簿記をストリーム出力\newline (\texttt{FORCE\_STREAMING}\newline \texttt{\_OFF} で無効化) & true \\
     \hline
   \end{tabular}
 \end{table}
@@ -559,13 +569,13 @@ E_{diss} = (1 - f_{ke})\,E_{rel}
   \centering
   \caption{温度ドライバのモード}
   \label{tab:temp_driver_modes}
-  \begin{tabular}{p{0.2\textwidth} p{0.4\textwidth} p{0.32\textwidth}}
+  \begin{tabular}{p{0.2\textwidth} p{0.38\textwidth} p{0.32\textwidth}}
     \hline
     モード & 内容 & 設定参照 \\
     \hline
-    \texttt{table} & 外部 CSV テーブル補間 & \texttt{radiation.mars\_temperature\_driver.table}\newline \texttt{.*} \\
+    \texttt{table} & 外部 CSV テーブル補間 & \texttt{radiation.mars}\newline \texttt{\_temperature\_driver}\newline \texttt{.table}\newline \texttt{.*} \\
     \texttt{slab} & 解析的 $T^{-3}$ 冷却 (Stefan--Boltzmann) & 内蔵式 \\
-    \texttt{hyodo} & 線形熱流束に基づく冷却 & \texttt{radiation.mars\_temperature\_driver.hyodo}\newline \texttt{.*} \\
+    \texttt{hyodo} & 線形熱流束に基づく冷却 & \texttt{radiation.mars}\newline \texttt{\_temperature\_driver}\newline \texttt{.hyodo}\newline \texttt{.*} \\
     \hline
   \end{tabular}
 \end{table}
@@ -711,7 +721,7 @@ P_{\mathrm{sat}}(T) =
 供給は「名目供給→フィードバック補正→温度スケール→ゲート判定→深層/表層への配分」の順に評価される。供給が深層へ迂回した場合でも、表層面密度と PSD の更新は同一タイムステップ内で整合的に行われる。
 
 - S7 に対応する供給処理では、`supply_rate_nominal` を基準に `supply_rate_scaled`（フィードバック・温度補正後）を評価し、ゲート判定後の `supply_rate_applied` を表層へ注入する。
-- deep mixing が有効な場合は `prod_rate_diverted_to_deep` と `deep_to_surf_flux` で深層からの再注入を記録し、表層面密度への寄与は `prod_rate_applied_to_surf` として診断する。
+- deep mixing が有効な場合は\newline `prod_rate_diverted_to_deep`\newline `deep_to_surf_flux` で深層からの再注入を記録し、\newline 表層面密度への寄与は `prod_rate_applied_to_surf` として診断する。
 - これらの列は supply の順序が図 3.2 と一致していることの検算に用いる。
 
 - **詳細**: analysis/equations.md (E.027), (E.027a)  
@@ -779,14 +789,14 @@ P_{\mathrm{sat}}(T) =
   \centering
   \caption{注入パラメータの設定}
   \label{tab:supply_injection_settings}
-  \begin{tabular}{p{0.42\textwidth} p{0.34\textwidth} p{0.16\textwidth}}
+  \begin{tabular}{p{0.40\textwidth} p{0.32\textwidth} p{0.18\textwidth}}
     \hline
     設定キー & 意味 & 既定値 \\
     \hline
     \texttt{supply.injection.mode} & \texttt{min\_bin}\newline \texttt{powerlaw\_bins} & \texttt{powerlaw\_bins} \\
     \texttt{supply.injection.q} & べき指数（衝突カスケード断片） & 3.5 \\
-    \texttt{supply.injection.s\_inj\_min}\newline \texttt{supply.injection.s\_inj\_max} & 注入サイズ範囲 [m] & 自動 \\
-    \texttt{supply.injection.velocity.mode} & \texttt{inherit} / \texttt{fixed\_ei}\newline \texttt{/ factor} & \texttt{inherit} \\
+    \texttt{supply.injection.s\_inj}\newline \texttt{\_min}\newline \texttt{supply.injection.s\_inj}\newline \texttt{\_max} & 注入サイズ範囲 [m] & 自動 \\
+    \texttt{supply.injection.velocity}\newline \texttt{.mode} & \texttt{inherit} / \texttt{fixed\_ei}\newline \texttt{/ factor} & \texttt{inherit} \\
     \hline
   \end{tabular}
 \end{table}
@@ -837,7 +847,7 @@ S9 の数値更新では、衝突ロス・ブローアウト・追加シンク�
 
 #### 5.2 1D（C5）挿入位置・境界条件・$\Delta t$ 制約
 
-run_sweep 既定では `geometry.mode=1D`（`Nr=32`）で半径方向セルを持つが、`numerics.enable_viscosity` は未指定のため C5 は無効で、セル間の結合は行わない。\newline
+run_sweep 既定では `geometry.mode=1D`（`Nr=32`）で半径方向セルを持つが、\newline `numerics.enable_viscosity` は未指定のため C5 は無効で、セル間の結合は行わない。\newline
 C5 を有効化する場合は、各ステップの局所更新後に半径方向の粘性拡散 `step_viscous_diffusion_C5` を**演算子分割で挿入**する設計とする。
 
 - **境界条件**: 内外端ともにゼロフラックス（Neumann）境界を採用する。
@@ -958,12 +968,18 @@ pytest tests/ -q
 
 - Strubbe–Chiang 衝突寿命スケール: `pytest tests/integration/test_scalings.py`\newline
   `::test_strubbe_chiang_collisional_timescale_matches_orbit_scaling`（[@StrubbeChiang2006_ApJ648_652]）
-- Blow-out 起因 “wavy” PSD の再現: `pytest tests/integration/test_surface_outflux_wavy.py`\newline
-  `::test_blowout_driven_wavy_pattern_emerges`（[@ThebaultAugereau2007_AA472_169]）
-- IMEX-BDF(1) の $\Delta t$ 制限と質量保存: `pytest tests/integration/test_mass_conservation.py`\newline
-  `::test_imex_bdf1_limits_timestep_and_preserves_mass`（[@Krivov2006_AA455_509]）
-- 1D セル並列の on/off 一致確認（Windowsのみ）: `pytest tests/integration/test_numerical_anomaly_watchlist.py`\newline
-  `::test_cell_parallel_on_off_consistency`
+- Blow-out 起因 “wavy” PSD の再現: `pytest tests/integration/`\newline
+  `test_surface_outflux_wavy.py`\newline
+  `::test_blowout_driven_wavy`\newline
+  `_pattern_emerges`（[@ThebaultAugereau2007_AA472_169]）
+- IMEX-BDF(1) の $\Delta t$ 制限と質量保存: `pytest tests/integration/`\newline
+  `test_mass_conservation.py`\newline
+  `::test_imex_bdf1_limits_timestep`\newline
+  `_and_preserves_mass`（[@Krivov2006_AA455_509]）
+- 1D セル並列の on/off 一致確認（Windowsのみ）: `pytest tests/integration/`\newline
+  `test_numerical_anomaly_watchlist.py`\newline
+  `::test_cell_parallel_on_off`\newline
+  `_consistency`
 - 質量収支ログ: `out/checks/mass_budget.csv` で |error| ≤ 0.5% を確認（C4）
 
 検証では、$t_{\rm coll}$ スケールが理論式のオーダーと一致すること、$\Delta t$ の制約が安定性を満たすこと、ブローアウト近傍で wavy 構造が再現されることを確認する。これらの基準は設定変更後の回帰検証にも適用する。
@@ -1041,7 +1057,7 @@ python -m tools.evaluation_system --outdir <run_dir>  # Doc 更新後に直近�
 -->
 
 代表的な実行コマンドとシナリオは analysis/run-recipes.md に集約する。運用スイープは `scripts/runsets/windows/run_sweep.cmd` を正とし、既定の `CONFIG_PATH`/`OVERRIDES_PATH` と引数の扱いは同スクリプトに従う。  
-- **参照**: `scripts/runsets/windows/run_sweep.cmd` の `::REF:DEFAULT_PATHS` / `::REF:CLI_ARGS`
+- **参照**: `scripts/runsets/windows/run_sweep.cmd` の `::REF:DEFAULT_PATHS`\newline `::REF:CLI_ARGS`
 
 ```cmd
 rem Windows: sweep
@@ -1051,13 +1067,13 @@ scripts\runsets\windows\run_sweep.cmd ^
   --out-root out
 ```
 
-- `--no-preflight` は拒否される。既定では `SKIP_PREFLIGHT=1` でスキップされるため、事前チェックを走らせる場合は `SKIP_PREFLIGHT=0` を指定する。`--preflight-only` で事前チェックのみ実行。\newline **参照**: `scripts/runsets/windows/run_sweep.cmd` の `::REF:PREFLIGHT_ARGS` / `::REF:PREFLIGHT`
-- `--no-plot` / `--no-eval` は hook を抑制し、`HOOKS_ENABLE` のフィルタに反映される。\newline **参照**: `scripts/runsets/windows/run_sweep.cmd` の `::REF:CLI_ARGS` / `::REF:HOOKS`
-- 依存関係は `requirements.txt` から自動導入され、`SKIP_PIP=1` または `REQUIREMENTS_INSTALLED=1` で無効化できる。\newline **参照**: `scripts/runsets/windows/run_sweep.cmd` の `::REF:DEPENDENCIES`
-- `OUT_ROOT` は内部/外部の自動選択が働き、`io.archive.dir` が未設定/無効なら `OUT_ROOT\\archive` を付加した overrides を生成する。\newline **参照**: `scripts/runsets/windows/run_sweep.cmd` の `::REF:OUT_ROOT` / `::REF:ARCHIVE_CHECKS`
+- `--no-preflight` は拒否される。既定では `SKIP_PREFLIGHT=1` でスキップされるため、事前チェックを走らせる場合は `SKIP_PREFLIGHT=0` を指定する。\newline `--preflight-only` で事前チェックのみ実行。\newline **参照**: `scripts/runsets/windows/run_sweep.cmd` の `::REF:PREFLIGHT_ARGS`\newline `::REF:PREFLIGHT`
+- `--no-plot` と `--no-eval` は hook を抑制し、`HOOKS_ENABLE` のフィルタに反映される。\newline **参照**: `scripts/runsets/windows/run_sweep.cmd` の `::REF:CLI_ARGS` / `::REF:HOOKS`
+- 依存関係は `requirements.txt` から自動導入され、\newline `SKIP_PIP=1` または `REQUIREMENTS_INSTALLED=1` で無効化できる。\newline **参照**: `scripts/runsets/windows/run_sweep.cmd` の `::REF:DEPENDENCIES`
+- `OUT_ROOT` は内部/外部の自動選択が働き、\newline `io.archive.dir` が未設定/無効なら `OUT_ROOT\\archive` を付加した overrides を生成する。\newline **参照**: `scripts/runsets/windows/run_sweep.cmd` の `::REF:OUT_ROOT`\newline `::REF:ARCHIVE_CHECKS`
 - `io.archive.*` の要件を満たさない場合は実行中断。\newline **参照**: `scripts/runsets/windows/run_sweep.cmd` の `::REF:ARCHIVE_CHECKS`
 - 実行本体は `run_temp_supply_sweep.cmd` を子として起動する。\newline **参照**: `scripts/runsets/windows/run_sweep.cmd` の `::REF:CHILD_RUN`
-- スイープ並列は既定で有効 (`SWEEP_PARALLEL=1`) で、ネスト回避のため `MARSDISK_CELL_PARALLEL=0` によりセル並列は無効化される。\newline サイズプローブで `PARALLEL_JOBS` が調整される場合がある。**参照**: `scripts/runsets/windows/run_sweep.cmd` の `::REF:PARALLEL`
+- スイープ並列は既定で有効 (`SWEEP_PARALLEL=1`) で、\newline ネスト回避のため `MARSDISK_CELL_PARALLEL=0` によりセル並列は無効化される。\newline サイズプローブで `PARALLEL_JOBS` が調整される場合がある。\newline **参照**: `scripts/runsets/windows/run_sweep.cmd` の `::REF:PARALLEL`
 
 #### run_sweep.cmd の主要環境変数
 
@@ -1072,7 +1088,7 @@ scripts\runsets\windows\run_sweep.cmd ^
     \hline
     変数 & 意味 & 既定値 \\
     \hline
-    \texttt{SWEEP\_TAG} & 出力タグ & \texttt{temp\_supply\_sweep\_1d} \\
+    \texttt{SWEEP\_TAG} & 出力タグ & \texttt{temp\_supply}\newline \texttt{\_sweep}\newline \texttt{\_1d} \\
     \texttt{GEOMETRY\_MODE} & 形状モード & \texttt{1D} \\
     \texttt{GEOMETRY\_NR} & 半径セル数 & 32 \\
     \texttt{SHIELDING\_MODE} & 遮蔽モード & \texttt{off} \\
@@ -1095,7 +1111,7 @@ scripts\runsets\windows\run_sweep.cmd ^
 
 `run_sweep.cmd` は `run_temp_supply_sweep.cmd` を呼び出し、**ベース設定 + 追加 overrides + ケース overrides** の 3 層をマージして各ケースを実行する。優先順位は「base defaults < overrides file < per-case overrides」で、各ケースの設定は一時ファイルに出力して `marsdisk.run` に渡される。
 
-- **ベース設定**: `scripts/runsets/common/base.yml` を基準とし、Windows 既定の `scripts/runsets/windows/overrides.txt` を追加する。
+- **ベース設定**: `scripts/runsets/common/base.yml` を基準とし、\newline Windows 既定の `scripts/runsets/windows/overrides.txt` を追加する。
 - **ケース生成**: `T_LIST`, `EPS_LIST`, `TAU_LIST`, `I0_LIST` の直積でスイープを作る。\newline `--study` を指定した場合は、`read_study_overrides.py` でリストや環境変数を上書きできる。
 - **既定のスイープ値**（run_sweep 既定値）:
 
@@ -1148,7 +1164,7 @@ scripts\runsets\windows\run_sweep.cmd ^
     設定キー & 物理 & 詳細参照 \\
     \hline
     \texttt{radiation.TM\_K} & 火星温度 & config\_guide §3.2 \\
-    \texttt{radiation.mars\_temperature\_driver}\newline \texttt{.*} & 冷却ドライバ & config\_guide §3.2 \\
+    \texttt{radiation.mars\_temperature}\newline \texttt{\_driver}\newline \texttt{.*} & 冷却ドライバ & config\_guide §3.2 \\
     \texttt{shielding.mode} & 遮蔽 $\Phi$ & config\_guide §3.4 \\
     \texttt{sinks.mode} & 昇華/ガス抗力 & config\_guide §3.6 \\
     \texttt{blowout.enabled} & ブローアウト損失 & config\_guide §3.9 \\
@@ -1160,7 +1176,7 @@ scripts\runsets\windows\run_sweep.cmd ^
     \texttt{init\_tau1.*} & 初期$\tau=1$スケーリング & config\_guide §3.3 \\
     \texttt{phase.*} & 相判定 & config\_guide §3.8 \\
     \texttt{numerics.checkpoint.*} & チェックポイント & config\_guide §3.1 \\
-    \texttt{numerics.t\_end\_until}\newline \texttt{\_temperature\_K} & 温度停止条件 & config\_guide §3.1 \\
+    \texttt{numerics.t\_end\_until}\newline \texttt{\_temperature}\newline \texttt{\_K} & 温度停止条件 & config\_guide §3.1 \\
     \texttt{ALLOW\_TL2003} & gas-rich 表層 ODE トグル & config\_guide §3.6, §3.9 \\
     \texttt{psd.wavy\_strength} & "wavy" 強度（0 で無効） & config\_guide §3.3 \\
     \hline
@@ -1183,16 +1199,16 @@ scripts\runsets\windows\run_sweep.cmd ^
   \centering
   \caption{関連ドキュメントと参照用途}
   \label{tab:related_docs}
-  \begin{tabular}{p{0.3\textwidth} p{0.28\textwidth} p{0.36\textwidth}}
+  \begin{tabular}{p{0.28\textwidth} p{0.28\textwidth} p{0.34\textwidth}}
     \hline
     ドキュメント & 役割 & 参照時のユースケース \\
     \hline
-    \texttt{analysis/equations.md} & 物理式の定義（E.xxx） & 式の導出・記号・単位の確認 \\
-    \texttt{analysis/physics}\newline \texttt{\_flow.md} & 計算フロー Mermaid 図 & モジュール間依存と実行順序の把握 \\
-    \texttt{analysis/config}\newline \texttt{\_guide.md} & 設定キー詳細 & YAML パラメータの意味と許容範囲 \\
-    \texttt{analysis/glossary.md} & 用語・略語・単位規約 & 変数命名と単位接尾辞の確認 \\
-    \texttt{analysis/overview.md} & アーキテクチャ・データフロー & モジュール責務と 3 層分離の理解 \\
-    \texttt{analysis/run}\newline \texttt{-recipes.md} & 実行レシピ・感度掃引 & シナリオ別の実行手順と検証方法 \\
+    \texttt{analysis/}\newline \texttt{equations.md} & 物理式の定義（E.xxx） & 式の導出・記号・単位の確認 \\
+    \texttt{analysis/}\newline \texttt{physics}\newline \texttt{\_flow.md} & 計算フロー Mermaid 図 & モジュール間依存と実行順序の把握 \\
+    \texttt{analysis/}\newline \texttt{config}\newline \texttt{\_guide.md} & 設定キー詳細 & YAML パラメータの意味と許容範囲 \\
+    \texttt{analysis/}\newline \texttt{glossary.md} & 用語・略語・単位規約 & 変数命名と単位接尾辞の確認 \\
+    \texttt{analysis/}\newline \texttt{overview.md} & アーキテクチャ・データフロー & モジュール責務と 3 層分離の理解 \\
+    \texttt{analysis/}\newline \texttt{run}\newline \texttt{-recipes.md} & 実行レシピ・感度掃引 & シナリオ別の実行手順と検証方法 \\
     \hline
   \end{tabular}
 \end{table}
@@ -1245,7 +1261,7 @@ title: 記号一覧（遷移期・長期モデル接続：暫定）
   \centering
   \caption{記号一覧（遷移期・長期モデル接続：暫定）}
   \label{tab:symbols_transition}
-  \begin{tabular}{p{0.20\linewidth}p{0.46\linewidth}p{0.12\linewidth}p{0.18\linewidth}}
+  \begin{tabular}{p{0.17\linewidth}p{0.40\linewidth}p{0.09\linewidth}p{0.20\linewidth}}
     \hline
     記号 & 意味 & 単位 & 注記 \\
     \hline
@@ -1260,23 +1276,23 @@ title: 記号一覧（遷移期・長期モデル接続：暫定）
     $\Delta M_{\rm in}$ &
     遷移期における内側円盤の不可逆損失（表層散逸・不可逆落下等の総和） &
     $\mathrm{kg}$ &
-    本研究で評価対象。\newline 落下分の扱いは TODO(REF:delta\_min\_infall\_policy\_v1) \\
+    本研究で評価対象。落下分の扱いは\newline \texttt{TODO(REF:}\newline \texttt{delta}\newline \texttt{\_min\_infall}\newline \texttt{\_policy\_v1)} \\
     $M_{\rm in,0}$ &
     長期モデル開始時刻 $t_0$ における内側円盤の有効質量（接続後の入力） &
     $\mathrm{kg}$ &
     $M_{\rm in,0}=M_{\rm in}^{\rm SPH}-\Delta M_{\rm in}$ \\
     $t_0$ &
     長期モデルの開始時刻（遷移期が終わったと見なす時刻） &
-    $\mathrm{s}$（または $\mathrm{h}$） &
-    定義は文献確認中 \\
+    $\mathrm{s}$ &
+    定義は文献確認中（または $\mathrm{h}$） \\
     $r_d$ &
     内側円盤の外縁（半径） &
-    $\mathrm{m}$（または $R_{\rm Mars}$） &
-    定義は文献確認中 \\
+    $\mathrm{m}$ &
+    定義は文献確認中（または $R_{\rm Mars}$） \\
     $a_{\rm eq,max}$ &
     円盤が赤道面へ緩和した後の「最大半長軸」等を表す候補記号 &
     未定 &
-    定義関係は\newline TODO(REF:aeqmax\_rd\_relation\_v1) \\
+    定義関係は\newline \texttt{TODO(REF:}\newline \texttt{aeqmax}\newline \texttt{\_rd\_relation}\newline \texttt{\_v1)} \\
     $J_2$ &
     火星重力場の扁平項（第 2 帯状調和係数） &
     -- &
@@ -1288,6 +1304,6 @@ title: 記号一覧（遷移期・長期モデル接続：暫定）
 ## 補足：記号不整合（現状の把握）
 
 - 「外縁」が $r_d$ と $a_{\rm eq,max}$ で混在している。現時点では、両者の定義関係が文書内で確定できないため、次の表では別項目として残している。  
-- 先行研究（特に Canup & Salmon (2018)）の該当箇所を確認し、(i) 同一概念ならどちらかに統一する、(ii) 別概念なら本文で初出定義を与える、のいずれかを行う必要がある。\newline TODO(REF:transition_symbols_pending_refs_v1)
+- 先行研究（特に Canup & Salmon (2018)）の該当箇所を確認し、(i) 同一概念ならどちらかに統一する、(ii) 別概念なら本文で初出定義を与える、のいずれかを行う必要がある。\newline `TODO(REF:transition_symbols_pending_refs_v1)`
 
 ---

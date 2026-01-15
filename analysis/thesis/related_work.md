@@ -97,14 +97,14 @@ Run 34 の図7は、内側円盤由来の供給が「いつ始まり」「いつ
 \centering
 \caption{衝突直後計算から長期モデルへ渡す入力量と感度の整理}
 \label{tab:transition_inputs_rw}
-\begin{tabular}{p{0.22\textwidth} p{0.22\textwidth} p{0.30\textwidth} p{0.22\textwidth}}
+\begin{tabular}{p{0.16\textwidth} p{0.20\textwidth} p{0.26\textwidth} p{0.22\textwidth}}
 \toprule
 衝突直後計算から作る量 & 長期モデルでの使い方 & 定義（代表例） & 感度が高い理由 \\
 \midrule
 等価円軌道半径 \(a_{\rm eq}\) とその分布 &
 半径分布を作り、ロッシュ限界内外の質量（\(M_{\rm in}\), \(M_{\rm out}\)）を分ける &
 Canup \& Salmon (2018): \(a_{\rm eq}=a(1-e^2)\)。\newline Hyodo et al. (2017a): \(a_{\rm eq}=a(1-e^2)\cos^2 i\) &
-外側円盤の分布や外縁 \(a_{\rm eq,max}\) をこの変数で読むため、外側の少数粒子に引きずられやすい \\
+外側円盤の分布や外縁 \(a_{\rm eq,max}\) をこの変数で読むため、\newline 外側の少数粒子に引きずられやすい \\
 ロッシュ限界内側質量 \(M_{\rm in}\) &
 連続体として粘性拡散し、落下と外側供給で質量が変わる（Salmon \& Canup 2012 型） &
 \(M_{\rm in}=\sum m_i\ (a_{\rm eq,i}<a_{\rm R})\) &
