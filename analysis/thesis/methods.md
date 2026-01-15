@@ -57,7 +57,7 @@ NOTE: このファイルは analysis/thesis_sections/02_methods/*.md の結合�
 ---
 ### 1. 研究対象と基本仮定
 
-本モデルは gas-poor 条件下の**軸対称・鉛直積分**ディスクを対象とし、半径方向に分割した 1D 計算を基準とする（[@Hyodo2017a_ApJ845_125; @CanupSalmon2018_SciAdv4_eaar6887; @Olofsson2022_MNRAS513_713]）。粒径分布 $n(s)$ をサイズビンで離散化し、Smoluchowski 衝突カスケード（collisional cascade）と表層の放射圧・昇華による流出を同一ループで結合する（[@Dohnanyi1969_JGR74_2531; @Krivov2006_AA455_509; @StrubbeChiang2006_ApJ648_652]）。
+本モデルは gas-poor 条件下の**軸対称ディスク**を対象とし、鉛直方向は面密度へ積分して扱う。半径方向に分割した 1D 計算を基準とし（[@Hyodo2017a_ApJ845_125; @CanupSalmon2018_SciAdv4_eaar6887; @Olofsson2022_MNRAS513_713]）、光学的厚さは主に火星視線方向の $\tau_{\rm los}$ を用いる。必要に応じて $\tau_{\rm los}=\tau_{\perp}\times\mathrm{los\_factor}$ から $\tau_{\perp}$ を導出し、表層 ODE の $t_{\rm coll}$ 評価に使う。粒径分布 $n(s)$ をサイズビンで離散化し、Smoluchowski 衝突カスケード（collisional cascade）と表層の放射圧・昇華による流出を同一ループで結合する（[@Dohnanyi1969_JGR74_2531; @Krivov2006_AA455_509; @StrubbeChiang2006_ApJ648_652]）。
 
 - 標準の物理経路は Smoluchowski 経路（C3/C4）を各半径セルで解く 1D 手法で、実装の計算順序は図 3.2 に従う。放射圧〜流出の依存関係のみを抜粋すると ⟨$Q_{\rm pr}$⟩→β→$s_{\rm blow}$→遮蔽Φ→Smol IMEX→外向流束となる。半径方向の粘性拡散（radial viscous diffusion; C5）は演算子分割で追加可能とする（[@Krivov2006_AA455_509; @Wyatt2008]）。  
   > **参照**: analysis/overview.md §1, analysis/physics_flow.md §2「各タイムステップの物理計算順序」
@@ -67,13 +67,13 @@ NOTE: このファイルは analysis/thesis_sections/02_methods/*.md の結合�
 
 1D は $r_{\rm in}$–$r_{\rm out}$ を $N_r$ セルに分割し、各セルの代表半径 $r_i$ で局所量を評価する。角速度 $\Omega(r_i)$ とケプラー速度 $v_K(r_i)$ は (E.001)–(E.002) に従い、$t_{\rm blow}$ や $t_{\rm coll}$ の基準時間に用いる。C5 を無効化した場合はセル間結合を行わず、半径方向の流束を解かない局所進化として扱う。
 
-#### 1.1 物性モデル (Hybrid Basalt/SiO₂)
+#### 1.1 物性モデル (フォルステライト)
 
-物性は **Hybrid Basalt/SiO₂** を採用する。力学パラメータ（密度・$Q_D^*$）は玄武岩、放射圧効率 $\langle Q_{\rm pr}\rangle$ は SiO₂ テーブル、昇華は SiO 蒸気圧を用いる（[@BenzAsphaug1999_Icarus142_5; @LeinhardtStewart2012_ApJ745_79; @BohrenHuffman1983_Wiley; @Melosh2007_MPS42_2079]）。混合物近似であるため、$\rho$ と $\langle Q_{\rm pr}\rangle$ の感度掃引を想定し、実行時の採用値は `run_config.json` に保存する。
+物性は **フォルステライト** を採用する。力学パラメータ（密度・$Q_D^*$）はフォルステライト想定の係数を用い、放射圧効率 $\langle Q_{\rm pr}\rangle$ はフォルステライトのテーブルを参照する（[@LeinhardtStewart2012_ApJ745_79; @BohrenHuffman1983_Wiley]）。昇華はフォルステライトの蒸気圧パラメータを用いる。$\rho$ と $\langle Q_{\rm pr}\rangle$ の感度掃引を想定し、実行時の採用値は `run_config.json` に保存する。
 
 $\langle Q_{\rm pr}\rangle$ はテーブル入力（CSV/NPZ）を標準とし、Planck 平均の評価に用いる（[@BohrenHuffman1983_Wiley]）。遮蔽係数 $\Phi(\tau,\omega_0,g)$ もテーブル入力を基本とし、双線形補間で適用する（[@Joseph1976_JAS33_2452; @HansenTravis1974_SSR16_527; @CogleyBergstrom1979_JQSRT21_265]）。これらのテーブルは `run_config.json` にパスが保存され、再現実行時の参照点となる。
 
-> **参照**: analysis/equations.md（Hybrid Basalt/SiO₂ の前提）
+> **参照**: analysis/equations.md（物性前提）
 
 
 ---
@@ -135,7 +135,7 @@ $\tau_{\rm los}$ は遮蔽（$\Phi$）の入力として使われるほか、放
 ## 3. モデルのロジック（時間発展と物理過程）
 
 <!--
-実装(.py): marsdisk/run_zero_d.py, marsdisk/run_one_d.py, marsdisk/io/tables.py, marsdisk/physics/tempdriver.py, marsdisk/physics/radiation.py, marsdisk/physics/shielding.py, marsdisk/physics/phase.py, marsdisk/physics/psd.py, marsdisk/physics/collide.py, marsdisk/physics/collisions_smol.py, marsdisk/physics/smol.py, marsdisk/physics/fragments.py, marsdisk/physics/qstar.py, marsdisk/physics/dynamics.py, marsdisk/physics/surface.py, marsdisk/physics/supply.py, marsdisk/physics/sublimation.py, marsdisk/physics/sinks.py, marsdisk/physics/viscosity.py, siO2_disk_cooling/siO2_cooling_map.py
+実装(.py): marsdisk/run_zero_d.py, marsdisk/run_one_d.py, marsdisk/io/tables.py, marsdisk/physics/tempdriver.py, marsdisk/physics/radiation.py, marsdisk/physics/shielding.py, marsdisk/physics/phase.py, marsdisk/physics/psd.py, marsdisk/physics/collide.py, marsdisk/physics/collisions_smol.py, marsdisk/physics/smol.py, marsdisk/physics/fragments.py, marsdisk/physics/qstar.py, marsdisk/physics/dynamics.py, marsdisk/physics/surface.py, marsdisk/physics/supply.py, marsdisk/physics/sublimation.py, marsdisk/physics/sinks.py, marsdisk/physics/viscosity.py
 -->
 
 ---
@@ -342,7 +342,7 @@ flowchart TB
 
 #### 4.1 衝突カスケードと破片生成
 
-衝突カスケードは小粒子供給の主因であり、PSD の形状と供給率を同時に決める。統計的な衝突解法は Smoluchowski 方程式の枠組み [@Krivov2006_AA455_509] を基礎に置き、破砕強度は玄武岩モデル [@BenzAsphaug1999_Icarus142_5] と LS12 補間 [@LeinhardtStewart2012_ApJ745_79] に従って定義する。
+衝突カスケードは小粒子供給の主因であり、PSD の形状と供給率を同時に決める。統計的な衝突解法は Smoluchowski 方程式の枠組み [@Krivov2006_AA455_509] を基礎に置き、破砕強度は LS12 補間 [@LeinhardtStewart2012_ApJ745_79] を採用し、係数はフォルステライト想定で与える。
 
 主要な PSD の時間発展は式\ref{eq:psd_smol}で与える（再掲: E.010）。
 
@@ -554,7 +554,7 @@ $\Phi(\tau,\omega_0,g)$ テーブル補間で有効不透明度を評価し、$\
 
 ##### 4.2.4 相判定 (Phase)
 
-SiO₂ 冷却マップまたは閾値から相（phase）を `solid`/`vapor` に分類し、シンク経路を自動選択する。
+フォルステライト冷却マップまたは閾値から相（phase）を `solid`/`vapor` に分類し、シンク経路を自動選択する。
 
 - 判定には火星温度と遮蔽後の光学的厚さを用い、`phase_state` と `sink_selected` を診断に記録する。
 
@@ -565,7 +565,7 @@ SiO₂ 冷却マップまたは閾値から相（phase）を `solid`/`vapor` に
 
 ##### 4.2.5 昇華 (Sublimation) と追加シンク
 
-HKL（Hertz–Knudsen–Langmuir）フラックス (E.018) と飽和蒸気圧 (E.036) で質量損失を評価する（[@Markkanen2020_AA643_A16]）。Clausius 係数は [@Kubaschewski1974_Book] を基準とし、液相枝は [@FegleySchaefer2012_arXiv; @VisscherFegley2013_ApJL767_L12] を採用する。SiO 既定パラメータと支配的蒸気種の整理は [@Melosh2007_MPS42_2079] を参照し、$P_{\mathrm{gas}}$ の扱いは [@Ronnet2016_ApJ828_109] と同様に自由パラメータとして扱う。昇華フラックスの適用範囲は [@Pignatale2018_ApJ853_118] を参照する。
+HKL（Hertz–Knudsen–Langmuir）フラックス (E.018) と飽和蒸気圧 (E.036) で質量損失を評価する（[@Markkanen2020_AA643_A16]）。Clausius 係数は [@Kubaschewski1974_Book] を基準とし、液相枝は [@FegleySchaefer2012_arXiv; @VisscherFegley2013_ApJL767_L12] を採用する。フォルステライトの蒸気圧パラメータはモデル入力として与え、$P_{\mathrm{gas}}$ の扱いは [@Ronnet2016_ApJ828_109] と同様に自由パラメータとして扱う。昇華フラックスの適用範囲は [@Pignatale2018_ApJ853_118] を参照する。
 
 HKL フラックスは式\ref{eq:hkl_flux}で与える（再掲: E.018）。飽和蒸気圧は式\ref{eq:psat_definition}で定義する（再掲: E.036）。
 

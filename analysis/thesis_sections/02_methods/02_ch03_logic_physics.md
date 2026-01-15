@@ -1,7 +1,7 @@
 ## 3. モデルのロジック（時間発展と物理過程）
 
 <!--
-実装(.py): marsdisk/run_zero_d.py, marsdisk/run_one_d.py, marsdisk/io/tables.py, marsdisk/physics/tempdriver.py, marsdisk/physics/radiation.py, marsdisk/physics/shielding.py, marsdisk/physics/phase.py, marsdisk/physics/psd.py, marsdisk/physics/collide.py, marsdisk/physics/collisions_smol.py, marsdisk/physics/smol.py, marsdisk/physics/fragments.py, marsdisk/physics/qstar.py, marsdisk/physics/dynamics.py, marsdisk/physics/surface.py, marsdisk/physics/supply.py, marsdisk/physics/sublimation.py, marsdisk/physics/sinks.py, marsdisk/physics/viscosity.py, siO2_disk_cooling/siO2_cooling_map.py
+実装(.py): marsdisk/run_zero_d.py, marsdisk/run_one_d.py, marsdisk/io/tables.py, marsdisk/physics/tempdriver.py, marsdisk/physics/radiation.py, marsdisk/physics/shielding.py, marsdisk/physics/phase.py, marsdisk/physics/psd.py, marsdisk/physics/collide.py, marsdisk/physics/collisions_smol.py, marsdisk/physics/smol.py, marsdisk/physics/fragments.py, marsdisk/physics/qstar.py, marsdisk/physics/dynamics.py, marsdisk/physics/surface.py, marsdisk/physics/supply.py, marsdisk/physics/sublimation.py, marsdisk/physics/sinks.py, marsdisk/physics/viscosity.py
 -->
 
 ---
@@ -208,7 +208,7 @@ flowchart TB
 
 #### 4.1 衝突カスケードと破片生成
 
-衝突カスケードは小粒子供給の主因であり、PSD の形状と供給率を同時に決める。統計的な衝突解法は Smoluchowski 方程式の枠組み [@Krivov2006_AA455_509] を基礎に置き、破砕強度は玄武岩モデル [@BenzAsphaug1999_Icarus142_5] と LS12 補間 [@LeinhardtStewart2012_ApJ745_79] に従って定義する。
+衝突カスケードは小粒子供給の主因であり、PSD の形状と供給率を同時に決める。統計的な衝突解法は Smoluchowski 方程式の枠組み [@Krivov2006_AA455_509] を基礎に置き、破砕強度は LS12 補間 [@LeinhardtStewart2012_ApJ745_79] を採用し、係数はフォルステライト想定で与える。
 
 主要な PSD の時間発展は式\ref{eq:psd_smol}で与える（再掲: E.010）。
 
@@ -420,7 +420,7 @@ $\Phi(\tau,\omega_0,g)$ テーブル補間で有効不透明度を評価し、$\
 
 ##### 4.2.4 相判定 (Phase)
 
-SiO₂ 冷却マップまたは閾値から相（phase）を `solid`/`vapor` に分類し、シンク経路を自動選択する。
+フォルステライト冷却マップまたは閾値から相（phase）を `solid`/`vapor` に分類し、シンク経路を自動選択する。
 
 - 判定には火星温度と遮蔽後の光学的厚さを用い、`phase_state` と `sink_selected` を診断に記録する。
 
@@ -431,7 +431,7 @@ SiO₂ 冷却マップまたは閾値から相（phase）を `solid`/`vapor` に
 
 ##### 4.2.5 昇華 (Sublimation) と追加シンク
 
-HKL（Hertz–Knudsen–Langmuir）フラックス (E.018) と飽和蒸気圧 (E.036) で質量損失を評価する（[@Markkanen2020_AA643_A16]）。Clausius 係数は [@Kubaschewski1974_Book] を基準とし、液相枝は [@FegleySchaefer2012_arXiv; @VisscherFegley2013_ApJL767_L12] を採用する。SiO 既定パラメータと支配的蒸気種の整理は [@Melosh2007_MPS42_2079] を参照し、$P_{\mathrm{gas}}$ の扱いは [@Ronnet2016_ApJ828_109] と同様に自由パラメータとして扱う。昇華フラックスの適用範囲は [@Pignatale2018_ApJ853_118] を参照する。
+HKL（Hertz–Knudsen–Langmuir）フラックス (E.018) と飽和蒸気圧 (E.036) で質量損失を評価する（[@Markkanen2020_AA643_A16]）。Clausius 係数は [@Kubaschewski1974_Book] を基準とし、液相枝は [@FegleySchaefer2012_arXiv; @VisscherFegley2013_ApJL767_L12] を採用する。フォルステライトの蒸気圧パラメータはモデル入力として与え、$P_{\mathrm{gas}}$ の扱いは [@Ronnet2016_ApJ828_109] と同様に自由パラメータとして扱う。昇華フラックスの適用範囲は [@Pignatale2018_ApJ853_118] を参照する。
 
 HKL フラックスは式\ref{eq:hkl_flux}で与える（再掲: E.018）。飽和蒸気圧は式\ref{eq:psat_definition}で定義する（再掲: E.036）。
 
@@ -561,4 +561,3 @@ S7 に対応する供給処理では、`supply_rate_nominal` を基準に `suppl
 \end{table}
 
 注入モードは PSD 形状の境界条件として働くため、供給率とビン解像度の整合が重要である。感度試験では注入指数 $q$ と最小注入サイズを変化させ、ブローアウト近傍の wavy 構造や質量収支への影響を評価する。
-
