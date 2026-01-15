@@ -39,16 +39,16 @@ Canup & Salmon (2018) は、衝突直後計算の結果を長期形成計算へ�
 
 衝突直後計算の粒子群は高離心・高傾斜になりやすい。長期モデルへ渡す前に、この“軌道要素の散らばり”を、円軌道化後の半径分布へ写像する操作が使われる。
 
-Canup & Salmon (2018) は、各粒子の \((a,e)\) から、角運動量が等しい円軌道半径を式\ref{eq:aeq_map_canup}で定義し、衝突で円軌道化した後の半径分布の目安にした。これは、円軌道化・赤道化を「速い過程」として外付けで取り込む操作に相当する。
+Canup & Salmon (2018) は、各粒子の \((a,e)\) から、角運動量が等しい円軌道半径を式\ref{eq:aeq_map_canup_rw}で定義し、衝突で円軌道化した後の半径分布の目安にした。これは、円軌道化・赤道化を「速い過程」として外付けで取り込む操作に相当する。
 \begin{equation}
-\label{eq:aeq_map_canup}
+\label{eq:aeq_map_canup_rw}
 a_{\rm eq} = a(1-e^2)
 \end{equation}
 ここで \(a\) は半長軸、\(e\) は離心率であり、角運動量保存と急速な円軌道化を仮定する。
 
-ただし、この写像が与えるのは「落ち着き先」であり、途中で失われる質量の積算を自動では含まない。したがって、本研究が扱う「遷移期の不可逆損失」を入れるなら、写像で作った初期条件へ入る前に式\ref{eq:min0_transition_update}のように更新する必要がある。
+ただし、この写像が与えるのは「落ち着き先」であり、途中で失われる質量の積算を自動では含まない。したがって、本研究が扱う「遷移期の不可逆損失」を入れるなら、写像で作った初期条件へ入る前に式\ref{eq:min0_transition_update_rw}のように更新する必要がある。
 \begin{equation}
-\label{eq:min0_transition_update}
+\label{eq:min0_transition_update_rw}
 M_{\rm in,0} \rightarrow M_{\rm in,0} - \Delta M_{\rm in}
 \end{equation}
 ここで \(M_{\rm in,0}\) は長期モデルへ渡す内側円盤質量、\(\Delta M_{\rm in}\) は遷移期に失われた不可逆損失である。
@@ -92,18 +92,18 @@ Run 34 の図7は、内側円盤由来の供給が「いつ始まり」「いつ
 
 ### 長期モデルへ渡す入力量と感度：式との対応
 
-衝突直後計算の粒子群を長期モデルへ渡すときは、「粒子の集合」を少数の入力へまとめる。ここでは、先行研究が実際に使っている（または強く依存している）入力を、式とともに対応づける。表\ref{tab:transition_inputs}に整理する。
+衝突直後計算の粒子群を長期モデルへ渡すときは、「粒子の集合」を少数の入力へまとめる。ここでは、先行研究が実際に使っている（または強く依存している）入力を、式とともに対応づける。表\ref{tab:transition_inputs_rw}に整理する。
 \begin{table}[tb]
 \centering
 \caption{衝突直後計算から長期モデルへ渡す入力量と感度の整理}
-\label{tab:transition_inputs}
+\label{tab:transition_inputs_rw}
 \begin{tabular}{p{0.22\textwidth} p{0.22\textwidth} p{0.30\textwidth} p{0.22\textwidth}}
 \toprule
 衝突直後計算から作る量 & 長期モデルでの使い方 & 定義（代表例） & 感度が高い理由 \\
 \midrule
 等価円軌道半径 \(a_{\rm eq}\) とその分布 &
 半径分布を作り、ロッシュ限界内外の質量（\(M_{\rm in}\), \(M_{\rm out}\)）を分ける &
-Canup \& Salmon (2018): \(a_{\rm eq}=a(1-e^2)\)。Hyodo et al. (2017a): \(a_{\rm eq}=a(1-e^2)\cos^2 i\) &
+Canup \& Salmon (2018): \(a_{\rm eq}=a(1-e^2)\)。\newline Hyodo et al. (2017a): \(a_{\rm eq}=a(1-e^2)\cos^2 i\) &
 外側円盤の分布や外縁 \(a_{\rm eq,max}\) をこの変数で読むため、外側の少数粒子に引きずられやすい \\
 ロッシュ限界内側質量 \(M_{\rm in}\) &
 連続体として粘性拡散し、落下と外側供給で質量が変わる（Salmon \& Canup 2012 型） &
@@ -111,7 +111,7 @@ Canup \& Salmon (2018): \(a_{\rm eq}=a(1-e^2)\)。Hyodo et al. (2017a): \(a_{\rm
 遷移期に追加シンクがあると \(M_{\rm in}\) が減り、外側へ供給できる量も減る \\
 ロッシュ限界外側質量 \(M_{\rm out}\) と表面密度形状 &
 外側で集積し、内側円盤との相互作用や最終質量に効く &
-\(M_{\rm out}=\sum m_i\ (a_{\rm eq,i}\ge a_{\rm R})\)。初期 \(\Sigma(a)\) を \(\Sigma\propto a^{-q}\) などで与える &
+\(M_{\rm out}=\sum m_i\ (a_{\rm eq,i}\ge a_{\rm R})\)。\newline 初期 \(\Sigma(a)\) を \(\Sigma\propto a^{-q}\) などで与える &
 \(\Sigma\) の傾きや外縁は、どこでどれだけ集積できるかを直接決める \\
 外縁 \(a_{\rm eq,max}\) &
 外側円盤の端として \(a_{\rm max}\) を与える &
@@ -119,7 +119,7 @@ Canup \& Salmon (2018): \(a_{\rm eq}=a(1-e^2)\)。Hyodo et al. (2017a): \(a_{\rm
 外側端は粒子数が少なく粗い。粗さが結果へ直結する \\
 角運動量指標と相・粒径 &
 長期モデルの初期条件と、損失（放射・昇華など）の入力になる &
-例：Citron et al. (2015) の \(L_d^*\)。蒸気割合はレバー則で見積もる。粒径分布は衝突直後計算や破砕モデルで与える &
+例：Citron et al. (2015) の \(L_d^*\)。\newline 蒸気割合はレバー則で見積もる。粒径分布は衝突直後計算や破砕モデルで与える &
 \(L\) は「どの距離に質量が残れるか」を決める。相と粒径は光学的厚みと損失の効き方を変える \\
 \bottomrule
 \end{tabular}
@@ -142,9 +142,9 @@ Hyodo et al. (2018) は、衝突直後計算の粒子分布をグリッドへ落
 ここで注意したいのは、この \(\tau\) が「鉛直方向の表層構造」を直接与えるものではない点である。円盤が平均的に光学的に厚くても、直接照射されるのは表層であり、「内部が厚い」ことと「表層が照射されない」ことは同義ではない。そこで本研究では、\(\tau\) を「火星から見た半径方向」と「表層を切る鉛直方向」に分け、放射圧は後者で定義した表層にのみ直接作用すると置く。
 
 （計算の置き場：表層質量の最小見積もり）
-表層の面密度 \(\Sigma_{\rm surf}\) を「鉛直方向で \(\tau_\perp\approx1\)」で定義すると、式\ref{eq:tau_perp_sigma}となる。
+表層の面密度 \(\Sigma_{\rm surf}\) を「鉛直方向で \(\tau_\perp\approx1\)」で定義すると、式\ref{eq:tau_perp_sigma_rw}となる。
 \begin{equation}
-\label{eq:tau_perp_sigma}
+\label{eq:tau_perp_sigma_rw}
 \begin{aligned}
 \tau_\perp &\equiv \kappa\Sigma,\\
 \Sigma_{\rm surf} &\approx \frac{1}{\kappa}
@@ -152,40 +152,40 @@ Hyodo et al. (2018) は、衝突直後計算の粒子分布をグリッドへ落
 \end{equation}
 ここで \(\tau_\perp\) は鉛直方向の光学的厚み、\(\kappa\) は質量吸収係数、\(\Sigma\) は円盤の面密度であり、表層は \(\tau_\perp\approx1\) を満たす層として定義する。
 
-単一粒径 \(r_p\)、内部密度 \(\rho_s\) の固体球で幾何学的断面積が支配的なら、質量吸収係数は式\ref{eq:kappa_geom}で近似できる。
+単一粒径 \(r_p\)、内部密度 \(\rho_s\) の固体球で幾何学的断面積が支配的なら、質量吸収係数は式\ref{eq:kappa_geom_rw}で近似できる。
 \begin{equation}
-\label{eq:kappa_geom}
+\label{eq:kappa_geom_rw}
 \kappa \approx \frac{\pi r_p^2}{\frac{4}{3}\pi r_p^3\rho_s}=\frac{3}{4\rho_s r_p}
 \end{equation}
 ここでは散乱・吸収の効率因子を 1 とみなし、幾何学断面積が支配的であると仮定する。
 
-この仮定のもとでは表層面密度は式\ref{eq:sigma_surf_geom}となる。
+この仮定のもとでは表層面密度は式\ref{eq:sigma_surf_geom_rw}となる。
 \begin{equation}
-\label{eq:sigma_surf_geom}
+\label{eq:sigma_surf_geom_rw}
 \Sigma_{\rm surf}\approx \frac{4\rho_s r_p}{3}
 \end{equation}
-式\ref{eq:sigma_surf_geom}は、粒径が大きいほど表層面密度が大きくなることを示す。
+式\ref{eq:sigma_surf_geom_rw}は、粒径が大きいほど表層面密度が大きくなることを示す。
 
-したがって表層が占める質量割合は式\ref{eq:fsurf_def}で与えられる。
+したがって表層が占める質量割合は式\ref{eq:fsurf_def_rw}で与えられる。
 \begin{equation}
-\label{eq:fsurf_def}
+\label{eq:fsurf_def_rw}
 f_{\rm surf}\sim \min\!\left(1,\frac{\Sigma_{\rm surf}}{\Sigma}\right)
 \end{equation}
 ここで \(f_{\rm surf}\) は表層の質量比であり、\(\Sigma_{\rm surf}\le\Sigma\) を保つために \(\min\) を用いる。粒径が小さいほど \(\kappa\propto r_p^{-1}\) が増えて \(\Sigma_{\rm surf}\) が減るため、同じ \(\Sigma\) でも照射され得る質量割合は増える。
 
 #### \(a_{\rm eq}\) 写像は「落ち着き先」を与えるが、遷移期の損失は積算されない
 
-Canup & Salmon (2018) の \(a_{\rm eq}\) 写像は、衝突直後の粒子群を軸対称円盤へ写像する上で有効である。しかし写像が与えるのは「最終的に落ち着く半径」であり、遷移期に起こり得る不可逆損失を自動では積算しない。遷移期は少なくとも（i）高離心の緩和（円軌道化）と、（ii）差動歳差と衝突による平面化（赤道化）が揃うまで続く。したがって長期モデルへ渡す直前の \(M_{\rm in}\) は、遷移期損失を式\ref{eq:delta_min_tss}で定義して更新してから渡す必要がある。
+Canup & Salmon (2018) の \(a_{\rm eq}\) 写像は、衝突直後の粒子群を軸対称円盤へ写像する上で有効である。しかし写像が与えるのは「最終的に落ち着く半径」であり、遷移期に起こり得る不可逆損失を自動では積算しない。遷移期は少なくとも（i）高離心の緩和（円軌道化）と、（ii）差動歳差と衝突による平面化（赤道化）が揃うまで続く。したがって長期モデルへ渡す直前の \(M_{\rm in}\) は、遷移期損失を式\ref{eq:delta_min_tss_rw}で定義して更新してから渡す必要がある。
 \begin{equation}
-\label{eq:delta_min_tss}
+\label{eq:delta_min_tss_rw}
 \Delta M_{\rm in}\equiv \int_0^{t_{\rm ss}} \dot{M}_{\rm loss}(t)\,dt
 \end{equation}
 ここで \(t_{\rm ss}\) は遷移期の終点、\(\dot{M}_{\rm loss}(t)\) は不可逆損失率であり、衝突直後計算の終端を \(t=0\) として積分する。
 
 （計算の置き場：遷移期の幅 \(t_{\rm ss}\) の与え方）
-最も単純には式\ref{eq:tss_max}と置く。
+最も単純には式\ref{eq:tss_max_rw}と置く。
 \begin{equation}
-\label{eq:tss_max}
+\label{eq:tss_max_rw}
 t_{\rm ss}\sim \max(t_{\rm circ},\ t_{\rm prec/flat})
 \end{equation}
 ここで \(t_{\rm circ}\) は円軌道化時間、\(t_{\rm prec/flat}\) は差動歳差と平面化の時間であり、遷移期はより遅い過程で決まると仮定する。
@@ -194,18 +194,18 @@ t_{\rm ss}\sim \max(t_{\rm circ},\ t_{\rm prec/flat})
 
 放射圧による表層損失を評価するには、火星からの放射入力が十分に強い期間（火星表面温度が高い期間）を見積もる必要がある。Hyodo et al. (2018) は、放射損失率と熱容量から「割り算型」の冷却時間スケールを導入している。代表値 \(D=100\,\rm km\)、\(\rho=3000\,\rm kg\,m^{-3}\)、\(C_p=1000\,\rm J\,kg^{-1}\,K^{-1}\)、\(T_{\rm pla}=4000\,\rm K\) を代入すると、\(t_{\rm cool}\simeq717\) 日という値が得られる（Hyodo et al. 2018, Eq.4）。
 
-ただし放射冷却は \(T\) の低下に伴って急速に弱まる（\(\propto T^4\)）。同じ仮定（黒体放射・一定の \(\rho,C_p,D\)）のまま、温度低下の過程を含めて積分すると時間は長くなり得る。熱収支を式\ref{eq:cooling_ode_prior}で書き、
+ただし放射冷却は \(T\) の低下に伴って急速に弱まる（\(\propto T^4\)）。同じ仮定（黒体放射・一定の \(\rho,C_p,D\)）のまま、温度低下の過程を含めて積分すると時間は長くなり得る。熱収支を式\ref{eq:cooling_ode_prior_rw}で書き、
 \begin{equation}
-\label{eq:cooling_ode_prior}
+\label{eq:cooling_ode_prior_rw}
 \rho C_p D\frac{dT}{dt}=-\sigma_{\rm SB}T^4
 \end{equation}
-ここで \(\rho\) は密度、\(C_p\) は比熱、\(D\) は加熱層厚さであり、黒体放射と一定物性を仮定する。これを \(T_0\to T_1\) で積分すると式\ref{eq:cooling_integral_prior}となる。
+ここで \(\rho\) は密度、\(C_p\) は比熱、\(D\) は加熱層厚さであり、黒体放射と一定物性を仮定する。これを \(T_0\to T_1\) で積分すると式\ref{eq:cooling_integral_prior_rw}となる。
 \begin{equation}
-\label{eq:cooling_integral_prior}
+\label{eq:cooling_integral_prior_rw}
 t(T_0\rightarrow T_1)=\frac{\rho C_p D}{3\sigma_{\rm SB}}
 \left(\frac{1}{T_1^3}-\frac{1}{T_0^3}\right)
 \end{equation}
-式\ref{eq:cooling_integral_prior}は、温度低下に伴う放射損失の減衰を織り込んだ冷却時間を与える。代表値（\(T_0=4000\,\rm K\)、\(T_1=1000\,\rm K\)）では約55年であり、割り算型（年スケール）と比べて放射入力の有効期間を一桁以上伸ばし得る。
+式\ref{eq:cooling_integral_prior_rw}は、温度低下に伴う放射損失の減衰を織り込んだ冷却時間を与える。代表値（\(T_0=4000\,\rm K\)、\(T_1=1000\,\rm K\)）では約55年であり、割り算型（年スケール）と比べて放射入力の有効期間を一桁以上伸ばし得る。
 
 この差は、遷移期における \(\Delta M_{\rm in}\) の積算（どれくらい長く \(\dot M_{\rm loss}\) を積分するか）を直接変える。そこで本研究では、火星表面温度 \(T_{\rm Mars}(t)\) の扱いを感度要因として明示し、割り算型（年スケール）と積分型（数十年スケール）の両方で \(\Delta M_{\rm in}\) を評価する。
 
