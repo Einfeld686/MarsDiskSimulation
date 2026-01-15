@@ -5055,63 +5055,63 @@
   },
   {
     "file_path": "marsdisk/orchestrator.py",
-    "line_no": 313,
+    "line_no": 328,
     "symbol": "resolve_orbital_radius",
     "signature": "resolve_orbital_radius(cfg: Config) -> tuple[float, str]",
     "brief_usage": "Resolve orbital radius from configuration."
   },
   {
     "file_path": "marsdisk/orchestrator.py",
-    "line_no": 320,
+    "line_no": 335,
     "symbol": "resolve_physics_flags",
     "signature": "resolve_physics_flags(cfg: Config, physics_mode: str) -> PhysicsFlags",
     "brief_usage": "Resolve physics control flags from configuration."
   },
   {
     "file_path": "marsdisk/orchestrator.py",
-    "line_no": 412,
+    "line_no": 427,
     "symbol": "derive_seed_components",
     "signature": "derive_seed_components(cfg: Config) -> str",
     "brief_usage": "Return a deterministic seed basis string from configuration inputs."
   },
   {
     "file_path": "marsdisk/orchestrator.py",
-    "line_no": 439,
+    "line_no": 454,
     "symbol": "resolve_seed",
     "signature": "resolve_seed(cfg: Config) -> tuple[int, str, str]",
     "brief_usage": "Return the RNG seed, seed expression description, and basis."
   },
   {
     "file_path": "marsdisk/orchestrator.py",
-    "line_no": 454,
+    "line_no": 469,
     "symbol": "human_bytes",
     "signature": "human_bytes(value: float) -> str",
     "brief_usage": "Return a human-readable byte string."
   },
   {
     "file_path": "marsdisk/orchestrator.py",
-    "line_no": 466,
+    "line_no": 481,
     "symbol": "memory_estimate",
     "signature": "memory_estimate(n_steps: int, n_bins: int, run_row_bytes: float=MEMORY_RUN_ROW_BYTES, psd_row_bytes: float=MEMORY_PSD_ROW_BYTES, *, n_cells: int=1, series_stride: int=1, psd_history_enabled: bool=True, psd_history_stride: int=1, diagnostics_enabled: bool=True, diagnostics_stride: int=1, mass_budget_enabled: bool=True, mass_budget_cells_enabled: bool=False, step_diag_enabled: bool=False, diag_row_bytes: float=MEMORY_DIAG_ROW_BYTES, smol_value_bytes: float=8.0) -> tuple[str, str]",
     "brief_usage": "Return short and long memory hints estimated from expected row counts."
   },
   {
     "file_path": "marsdisk/orchestrator.py",
-    "line_no": 545,
+    "line_no": 560,
     "symbol": "safe_float",
     "signature": "safe_float(value: Any) -> Optional[float]",
     "brief_usage": "Return value cast to float when finite, otherwise None."
   },
   {
     "file_path": "marsdisk/orchestrator.py",
-    "line_no": 567,
+    "line_no": 582,
     "symbol": "human_bytes",
     "signature": "human_bytes(value: float) -> str",
     "brief_usage": "Return a human-readable byte string."
   },
   {
     "file_path": "marsdisk/orchestrator.py",
-    "line_no": 589,
+    "line_no": 604,
     "symbol": "series_stats",
     "signature": "series_stats(values: List[float]) -> tuple[float, float, float]",
     "brief_usage": "Compute min, median, max of a list of values."
@@ -7743,7 +7743,7 @@
   },
   {
     "file_path": "marsdisk/run_zero_d.py",
-    "line_no": 5990,
+    "line_no": 6003,
     "symbol": "main",
     "signature": "main(argv: Optional[List[str]]=None) -> None",
     "brief_usage": "Command line entry point."
@@ -8422,70 +8422,70 @@
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 1825,
+    "line_no": 1833,
     "symbol": "StepDiagnostics",
     "signature": "class StepDiagnostics(BaseModel)",
     "brief_usage": "Per-step loss channel diagnostics output control."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 1842,
+    "line_no": 1850,
     "symbol": "Progress",
     "signature": "class Progress(BaseModel)",
     "brief_usage": "Console progress display controls."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 1856,
+    "line_no": 1864,
     "symbol": "StreamingOffload",
     "signature": "class StreamingOffload(BaseModel)",
     "brief_usage": "Controls for offloading streaming chunk files to external storage."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 1897,
+    "line_no": 1905,
     "symbol": "Streaming",
     "signature": "class Streaming(BaseModel)",
     "brief_usage": "Streaming write controls for large zero-D runs."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 1948,
+    "line_no": 1956,
     "symbol": "Archive",
     "signature": "class Archive(BaseModel)",
     "brief_usage": "Archive controls for offloading completed runs to external storage."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 2042,
+    "line_no": 2050,
     "symbol": "IO",
     "signature": "class IO(BaseModel)",
     "brief_usage": "Output directories."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 2116,
+    "line_no": 2124,
     "symbol": "ExtendedDiagnostics",
     "signature": "class ExtendedDiagnostics(BaseModel)",
     "brief_usage": "Optional extended diagnostics controls."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 2129,
+    "line_no": 2137,
     "symbol": "EnergyBookkeeping",
     "signature": "class EnergyBookkeeping(BaseModel)",
     "brief_usage": "Controls for collision energy bookkeeping outputs."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 2142,
+    "line_no": 2150,
     "symbol": "Diagnostics",
     "signature": "class Diagnostics(BaseModel)",
     "brief_usage": "Diagnostics toggles grouped by feature phase."
   },
   {
     "file_path": "marsdisk/schema.py",
-    "line_no": 2149,
+    "line_no": 2157,
     "symbol": "Config",
     "signature": "class Config(BaseModel)",
     "brief_usage": "Top-level configuration object."

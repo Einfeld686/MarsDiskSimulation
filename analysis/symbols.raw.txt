@@ -475,15 +475,15 @@ marsdisk/orchestrator.py:114:class SimulationState
 marsdisk/orchestrator.py:162:class PhysicsFlags
 marsdisk/orchestrator.py:179:class OrchestrationContext
 marsdisk/orchestrator.py:210:def resolve_time_grid(numerics: Any, Omega: float, t_orb: float, *, temp_runtime: Optional[tempdriver.TemperatureDriverRuntime]=None) -> tuple[float, float, float, int, Dict[str, Any]]
-marsdisk/orchestrator.py:313:def resolve_orbital_radius(cfg: Config) -> tuple[float, str]
-marsdisk/orchestrator.py:320:def resolve_physics_flags(cfg: Config, physics_mode: str) -> PhysicsFlags
-marsdisk/orchestrator.py:412:def derive_seed_components(cfg: Config) -> str
-marsdisk/orchestrator.py:439:def resolve_seed(cfg: Config) -> tuple[int, str, str]
-marsdisk/orchestrator.py:454:def human_bytes(value: float) -> str
-marsdisk/orchestrator.py:466:def memory_estimate(n_steps: int, n_bins: int, run_row_bytes: float=MEMORY_RUN_ROW_BYTES, psd_row_bytes: float=MEMORY_PSD_ROW_BYTES, *, n_cells: int=1, series_stride: int=1, psd_history_enabled: bool=True, psd_history_stride: int=1, diagnostics_enabled: bool=True, diagnostics_stride: int=1, mass_budget_enabled: bool=True, mass_budget_cells_enabled: bool=False, step_diag_enabled: bool=False, diag_row_bytes: float=MEMORY_DIAG_ROW_BYTES, smol_value_bytes: float=8.0) -> tuple[str, str]
-marsdisk/orchestrator.py:545:def safe_float(value: Any) -> Optional[float]
-marsdisk/orchestrator.py:567:def human_bytes(value: float) -> str
-marsdisk/orchestrator.py:589:def series_stats(values: List[float]) -> tuple[float, float, float]
+marsdisk/orchestrator.py:328:def resolve_orbital_radius(cfg: Config) -> tuple[float, str]
+marsdisk/orchestrator.py:335:def resolve_physics_flags(cfg: Config, physics_mode: str) -> PhysicsFlags
+marsdisk/orchestrator.py:427:def derive_seed_components(cfg: Config) -> str
+marsdisk/orchestrator.py:454:def resolve_seed(cfg: Config) -> tuple[int, str, str]
+marsdisk/orchestrator.py:469:def human_bytes(value: float) -> str
+marsdisk/orchestrator.py:481:def memory_estimate(n_steps: int, n_bins: int, run_row_bytes: float=MEMORY_RUN_ROW_BYTES, psd_row_bytes: float=MEMORY_PSD_ROW_BYTES, *, n_cells: int=1, series_stride: int=1, psd_history_enabled: bool=True, psd_history_stride: int=1, diagnostics_enabled: bool=True, diagnostics_stride: int=1, mass_budget_enabled: bool=True, mass_budget_cells_enabled: bool=False, step_diag_enabled: bool=False, diag_row_bytes: float=MEMORY_DIAG_ROW_BYTES, smol_value_bytes: float=8.0) -> tuple[str, str]
+marsdisk/orchestrator.py:560:def safe_float(value: Any) -> Optional[float]
+marsdisk/orchestrator.py:582:def human_bytes(value: float) -> str
+marsdisk/orchestrator.py:604:def series_stats(values: List[float]) -> tuple[float, float, float]
 marsdisk/output_schema.py:314:def _ensure_keys(record: Dict[str, object], keys: Iterable[str]) -> None
 marsdisk/output_schema.py:326:def ensure_series_keys(record: Dict[str, object], *, include_1d: bool=True) -> None
 marsdisk/output_schema.py:332:def ensure_diagnostic_keys(record: Dict[str, object], *, include_1d: bool=True) -> None
@@ -729,7 +729,7 @@ marsdisk/run_zero_d.py:1334:def load_config(path: Path, overrides: Optional[Sequ
 marsdisk/run_zero_d.py:1359:def _gather_git_info() -> Dict[str, Any]
 marsdisk/run_zero_d.py:1386:class MassBudgetViolationError(NumericalError)
 marsdisk/run_zero_d.py:1392:def run_zero_d(cfg: Config, *, enforce_mass_budget: bool=False, physics_mode_override: Optional[str]=None, physics_mode_source_override: Optional[str]=None) -> None
-marsdisk/run_zero_d.py:5990:def main(argv: Optional[List[str]]=None) -> None
+marsdisk/run_zero_d.py:6003:def main(argv: Optional[List[str]]=None) -> None
 marsdisk/runtime/autotune.py:22:class MachineState
 marsdisk/runtime/autotune.py:43:class AutoTuneDecision
 marsdisk/runtime/autotune.py:56:def _safe_int(value: Any, fallback: int) -> int
@@ -817,16 +817,16 @@ marsdisk/schema.py:1638:class CollisionCache(BaseModel)
 marsdisk/schema.py:1658:class Checkpoint(BaseModel)
 marsdisk/schema.py:1685:class Resume(BaseModel)
 marsdisk/schema.py:1698:class Numerics(BaseModel)
-marsdisk/schema.py:1825:class StepDiagnostics(BaseModel)
-marsdisk/schema.py:1842:class Progress(BaseModel)
-marsdisk/schema.py:1856:class StreamingOffload(BaseModel)
-marsdisk/schema.py:1897:class Streaming(BaseModel)
-marsdisk/schema.py:1948:class Archive(BaseModel)
-marsdisk/schema.py:2042:class IO(BaseModel)
-marsdisk/schema.py:2116:class ExtendedDiagnostics(BaseModel)
-marsdisk/schema.py:2129:class EnergyBookkeeping(BaseModel)
-marsdisk/schema.py:2142:class Diagnostics(BaseModel)
-marsdisk/schema.py:2149:class Config(BaseModel)
+marsdisk/schema.py:1833:class StepDiagnostics(BaseModel)
+marsdisk/schema.py:1850:class Progress(BaseModel)
+marsdisk/schema.py:1864:class StreamingOffload(BaseModel)
+marsdisk/schema.py:1905:class Streaming(BaseModel)
+marsdisk/schema.py:1956:class Archive(BaseModel)
+marsdisk/schema.py:2050:class IO(BaseModel)
+marsdisk/schema.py:2124:class ExtendedDiagnostics(BaseModel)
+marsdisk/schema.py:2137:class EnergyBookkeeping(BaseModel)
+marsdisk/schema.py:2150:class Diagnostics(BaseModel)
+marsdisk/schema.py:2157:class Config(BaseModel)
 marsdisk/warnings.py:7:class MarsDiskWarning(UserWarning)
 marsdisk/warnings.py:11:class PhysicsWarning(MarsDiskWarning)
 marsdisk/warnings.py:15:class NumericalWarning(MarsDiskWarning)
