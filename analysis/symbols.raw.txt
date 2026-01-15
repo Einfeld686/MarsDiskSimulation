@@ -1984,17 +1984,17 @@ tools/build_thesis_draft.py:298:def parse_blocks(lines: list[str]) -> list[Block
 tools/build_thesis_draft.py:340:def strip_numbered_prefix(text: str) -> str
 tools/build_thesis_draft.py:344:def convert_cite_brackets(text: str) -> str
 tools/build_thesis_draft.py:361:def escape_latex(text: str) -> str
-tools/build_thesis_draft.py:379:def escape_latex_code(text: str) -> str
-tools/build_thesis_draft.py:400:def convert_inline(text: str) -> str
-tools/build_thesis_draft.py:440:def needs_texorpdfstring(text: str) -> bool
-tools/build_thesis_draft.py:450:def latex_to_plain(text: str) -> str
-tools/build_thesis_draft.py:469:def replace_unicode_subscripts(text: str) -> str
-tools/build_thesis_draft.py:477:def replace_unicode_symbols(text: str) -> str
-tools/build_thesis_draft.py:483:class MarkdownToLatexConverter
-tools/build_thesis_draft.py:551:def replace_between_markers(text: str, start: str, end: str, replacement: str) -> str
-tools/build_thesis_draft.py:561:def run(cmd: list[str], cwd: Path, env: dict[str, str] | None=None) -> None
-tools/build_thesis_draft.py:565:def build_pdf(tex_path: Path, out_dir: Path, repo_root: Path) -> None
-tools/build_thesis_draft.py:629:def main() -> int
+tools/build_thesis_draft.py:384:def escape_latex_code(text: str) -> str
+tools/build_thesis_draft.py:405:def convert_inline(text: str) -> str
+tools/build_thesis_draft.py:445:def needs_texorpdfstring(text: str) -> bool
+tools/build_thesis_draft.py:455:def latex_to_plain(text: str) -> str
+tools/build_thesis_draft.py:474:def replace_unicode_subscripts(text: str) -> str
+tools/build_thesis_draft.py:482:def replace_unicode_symbols(text: str) -> str
+tools/build_thesis_draft.py:488:class MarkdownToLatexConverter
+tools/build_thesis_draft.py:556:def replace_between_markers(text: str, start: str, end: str, replacement: str) -> str
+tools/build_thesis_draft.py:566:def run(cmd: list[str], cwd: Path, env: dict[str, str] | None=None) -> None
+tools/build_thesis_draft.py:570:def build_pdf(tex_path: Path, out_dir: Path, repo_root: Path) -> None
+tools/build_thesis_draft.py:634:def main() -> int
 tools/check_unknown_refs.py:13:def load_requests(path: Path) -> list[dict]
 tools/check_unknown_refs.py:24:def main() -> int
 tools/derive_supply_rate.py:51:class SupplyInputs
