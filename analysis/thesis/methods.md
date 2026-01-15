@@ -15,16 +15,19 @@ reference_links:
 - @Hyodo2017a_ApJ845_125 -> paper/references/Hyodo2017a_ApJ845_125.pdf | 用途: 衝突起源円盤の前提条件と対象設定
 - @Krivov2006_AA455_509 -> paper/references/Krivov2006_AA455_509.pdf | 用途: Smoluchowski衝突カスケードの枠組み
 - @StrubbeChiang2006_ApJ648_652 -> paper/references/StrubbeChiang2006_ApJ648_652.pdf | 用途: 表層ブローアウトと衝突寿命の整理
-- @Wyatt2008 -> paper/references/Wyatt2008.pdf | 用途: デブリ円盤の衝突スケーリング
 TEX_EXCLUDE_END -->
 
 # シミュレーション手法
 
 ## 1. 目的・出力・問いとの対応
 
-本資料は火星ロッシュ限界内の高温ダスト円盤を対象とする数値手法を、論文の Methods 相当の水準で記述する（[@Hyodo2017a_ApJ845_125; @CanupSalmon2018_SciAdv4_eaar6887]）。gas-poor 条件下での粒径分布（particle size distribution; PSD）進化と、表層（surface layer）の放射圧起因アウトフロー（outflux）を**同一タイムループで結合**し、2 年スケールの $\dot{M}_{\rm out}(t)$ と $M_{\rm loss}$ を評価する（[@Krivov2006_AA455_509; @StrubbeChiang2006_ApJ648_652; @Wyatt2008]）。数式の定義は analysis/equations.md の (E.###) を正とし、本書では主要式を必要最小限に再掲したうえで、離散化・数値解法・運用フロー・検証条件を整理する。
+本節では、火星のロッシュ限界内に形成される高温ダスト円盤を対象として、本研究で用いる数値シミュレーション手法の目的と出力を定義する。序論で掲げた研究課題に対し、本手法が直接算出する物理量と出力ファイルの対応を明確にする。
 
-序論（analysis/thesis/introduction.md）で提示した 3 つの問いと、本手法が直接生成する量・出力の対応を表\ref{tab:methods_questions_outputs}に示す。
+本手法はガスが希薄な条件（gas-poor）を仮定する（[@Hyodo2017a_ApJ845_125; @CanupSalmon2018_SciAdv4_eaar6887]）。粒径分布（particle size distribution; PSD）の時間発展と、表層の放射圧起因アウトフロー（outflux）を、同一のタイムループで結合して計算する。これにより、2 年スケールでの質量流出率 $\dot{M}_{\rm out}(t)$ と累積損失 $M_{\rm loss}$ を評価する。放射圧に起因する粒子運動と粒径分布進化は、既存の枠組みに従う（[@Krivov2006_AA455_509; @StrubbeChiang2006_ApJ648_652]）。
+
+数式と記号の定義は付録にまとめた式番号 (E.###) を正とする。本文では、計算手順と出力仕様の理解に必要な範囲で、主要式のみを再掲する。以降では、離散化、数値解法、運用フロー、ならびに検証条件を、物理過程の因果関係が追える順序で記述する。
+
+序論で提示した 3 つの問いと、本手法が直接生成する量・出力の対応を次の表に示す。
 
 \begin{table}[t]
   \centering
@@ -47,16 +50,32 @@ TEX_EXCLUDE_END -->
   \end{tabular}
 \end{table}
 
-読み進め方は次の順序を推奨する。
+手法の記述は、まず入力パラメータと出力（時系列・要約量）を明確にする。次に 1 ステップの処理順序を示す。続いて、放射圧、物質供給、衝突、昇華、遮蔽を順に定式化する。最後に、一括実行（\texttt{run\_sweep}）と再現性確保のための出力・検証手続きを述べる。
 
-- まず入力と出力（何を与え、何が返るか）を確認する。
-- 次に 1 ステップの処理順序（図 3.1–3.2）を把握する。
-- その後、放射圧・供給・衝突・昇華・遮蔽の各過程を個別に読む。
-- 最後に運用（run_sweep）と再現性（出力・検証）を確認する。
+設定キーや実装パスのような実装依存の情報は付録に整理し、本文では物理モデルと時間発展の説明を優先する。本文で頻出する略語は次の表にまとめる。
 
-本文では物理的な因果と時間発展の説明を優先し、設定キーや実装パスは付録に整理する。式は必要最小限に再掲し、詳細な定義と記号表は analysis/equations.md を正とする。
+\begin{table}[t]
+  \centering
+  \caption{本文で用いる主要略語}
+  \label{tab:methods_abbrev}
+  \begin{tabular}{p{0.18\textwidth} p{0.76\textwidth}}
+    \hline
+    略語・記号 & 意味 \\
+    \hline
+    $\tau$ & 光学的厚さ（optical depth） \\
+    LOS & 視線方向（line of sight） \\
+    ODE & 常微分方程式（ordinary differential equation） \\
+    IMEX & implicit--explicit 法 \\
+    BDF & backward differentiation formula \\
+    $Q_{\rm pr}$ & 放射圧効率（radiation pressure efficiency） \\
+    $Q_D^*$ & 破壊閾値（critical specific energy） \\
+    HKL & Hertz--Knudsen--Langmuir フラックス \\
+    1D & one-dimensional \\
+    \hline
+  \end{tabular}
+\end{table}
 
-本書で用いる略語は以下に統一する。光学的厚さ（optical depth; $\tau$）、視線方向（line of sight; LOS）、常微分方程式（ordinary differential equation; ODE）、implicit-explicit（IMEX）、backward differentiation formula（BDF）、放射圧効率（radiation pressure efficiency; $Q_{\rm pr}$）、破壊閾値（critical specific energy; $Q_D^*$）、Hertz–Knudsen–Langmuir（HKL）フラックス、1D（one-dimensional）。
+以上により、本節では研究課題と出力の対応を定義した。次節以降では、これらの出力を規定する物理過程と数値解法を順に述べる。
 ## 2. モデルの範囲と基本仮定
 
 <!--
@@ -65,22 +84,21 @@ TEX_EXCLUDE_END -->
 
 <!-- TEX_EXCLUDE_START
 reference_links:
-- @Birnstiel2011_AA525_A11 -> paper/references/Birnstiel2011_AA525_A11.pdf | 用途: PSDビン幅の指針（wavy再現の分解能）
+- @Birnstiel2011_AA525_A11 -> paper/references/Birnstiel2011_AA525_A11.pdf | 用途: PSDビン分解能の指針（隣接粒径比）
 - @BohrenHuffman1983_Wiley -> paper/references/BohrenHuffman1983_Wiley.pdf | 用途: Mie理論に基づくQ_pr平均の背景
 - @CanupSalmon2018_SciAdv4_eaar6887 -> paper/references/CanupSalmon2018_SciAdv4_eaar6887.pdf | 用途: 火星円盤の背景条件（軸対称1Dの前提）
-- @CogleyBergstrom1979_JQSRT21_265 -> paper/references/CogleyBergstrom1979_JQSRT21_265.pdf | 用途: Φ(τ,ω0,g)の二流近似
+- @CogleyBergstrom1979_JQSRT21_265 -> paper/references/CogleyBergstrom1979_JQSRT21_265.pdf | 用途: Φ(τ,ω0,g)の二流近似（遮蔽有効時）
 - @Dohnanyi1969_JGR74_2531 -> paper/references/Dohnanyi1969_JGR74_2531.pdf | 用途: 自己相似PSDの基準
-- @HansenTravis1974_SSR16_527 -> paper/references/HansenTravis1974_SSR16_527.pdf | 用途: δ-Eddington遮蔽近似
+- @HansenTravis1974_SSR16_527 -> paper/references/HansenTravis1974_SSR16_527.pdf | 用途: δ-Eddington遮蔽近似（遮蔽有効時）
 - @Hyodo2017a_ApJ845_125 -> paper/references/Hyodo2017a_ApJ845_125.pdf | 用途: 初期PSDの溶融滴成分と円盤前提
-- @Joseph1976_JAS33_2452 -> paper/references/Joseph1976_JAS33_2452.pdf | 用途: Φテーブル（二流・δ-Eddington基礎）
+- @Joseph1976_JAS33_2452 -> paper/references/Joseph1976_JAS33_2452.pdf | 用途: Φテーブル（二流・δ-Eddington基礎、遮蔽有効時）
 - @Jutzi2010_Icarus207_54 -> paper/references/Jutzi2010_Icarus207_54.pdf (missing) | 用途: 初期PSDのべき指数（衝突起源）
 - @Krivov2006_AA455_509 -> paper/references/Krivov2006_AA455_509.pdf | 用途: PSD離散化とSmoluchowski解法
 - @LeinhardtStewart2012_ApJ745_79 -> paper/references/LeinhardtStewart2012_ApJ745_79.pdf | 用途: Q_D*補間（LS12）
 - @Olofsson2022_MNRAS513_713 -> paper/references/Olofsson2022_MNRAS513_713.pdf | 用途: 高密度デブリ円盤の文脈
 - @StrubbeChiang2006_ApJ648_652 -> paper/references/StrubbeChiang2006_ApJ648_652.pdf | 用途: 光学的厚さと表層t_coll定義
 - @TakeuchiLin2003_ApJ593_524 -> paper/references/TakeuchiLin2003_ApJ593_524.pdf | 用途: gas-rich表層ODEの参照枠（既定無効）
-- @ThebaultAugereau2007_AA472_169 -> paper/references/ThebaultAugereau2007_AA472_169.pdf | 用途: blowout起因のwavy PSD
-- @Wyatt2008 -> paper/references/Wyatt2008.pdf | 用途: 衝突寿命スケーリング
+- @ThebaultAugereau2007_AA472_169 -> paper/references/ThebaultAugereau2007_AA472_169.pdf | 用途: blowout起因のwavy PSD（wavy有効時）
 - @WyattClarkeBooth2011_CeMDA111_1 -> paper/references/WyattClarkeBooth2011_CeMDA111_1.pdf | 用途: s_min床・供給注入の基準
 TEX_EXCLUDE_END -->
 
@@ -89,7 +107,7 @@ TEX_EXCLUDE_END -->
 
 本モデルは gas-poor 条件下の**軸対称ディスク**を対象とし、鉛直方向は面密度へ積分して扱う。半径方向に分割した 1D 計算を基準とし（[@Hyodo2017a_ApJ845_125; @CanupSalmon2018_SciAdv4_eaar6887; @Olofsson2022_MNRAS513_713]）、光学的厚さは主に火星視線方向の $\tau_{\rm los}$ を用いる。必要に応じて $\tau_{\rm los}=\tau_{\perp}\times\mathrm{los\_factor}$ から $\tau_{\perp}$ を導出し、表層 ODE の $t_{\rm coll}$ 評価に使う。粒径分布 $n(s)$ をサイズビンで離散化し、Smoluchowski 衝突カスケード（collisional cascade）と表層の放射圧・昇華による流出を同一ループで結合する（[@Dohnanyi1969_JGR74_2531; @Krivov2006_AA455_509; @StrubbeChiang2006_ApJ648_652]）。
 
-- 標準の物理経路は Smoluchowski 経路（C3/C4）を各半径セルで解く 1D 手法で、実装の計算順序は図 3.2 に従う。放射圧〜流出の依存関係のみを抜粋すると ⟨$Q_{\rm pr}$⟩→β→$s_{\rm blow}$→遮蔽Φ→Smol IMEX→外向流束となる。半径方向の粘性拡散（radial viscous diffusion; C5）は演算子分割で追加可能とする（[@Krivov2006_AA455_509; @Wyatt2008]）。  
+- 標準の物理経路は Smoluchowski 経路（C3/C4）を各半径セルで解く 1D 手法で、実装の計算順序は図 3.2 に従う。放射圧〜流出の依存関係のみを抜粋すると ⟨$Q_{\rm pr}$⟩→β→$s_{\rm blow}$→遮蔽Φ→Smol IMEX→外向流束となる。半径方向の粘性拡散（radial viscous diffusion; C5）は演算子分割で追加可能とする（[@Krivov2006_AA455_509]）。  
   > **参照**: analysis/overview.md §1, analysis/physics_flow.md §2「各タイムステップの物理計算順序」
 - 運用スイープの既定は 1D とし、C5 は必要時のみ有効化する。具体的な run_sweep 手順と環境変数は付録 A、設定→物理対応は付録 B を参照する。
 - [@TakeuchiLin2003_ApJ593_524] に基づく gas-rich 表層 ODE は `ALLOW_TL2003=false` が既定で無効。gas-rich 感度試験では環境変数を `true` にして `surface.collision_solver=surface_ode`（例: `configs/scenarios/gas_rich.yml`）を選ぶ。  
@@ -111,10 +129,10 @@ $\langle Q_{\rm pr}\rangle$ はテーブル入力（CSV/NPZ）を標準とし、
 
 #### 2.1 粒径分布 (PSD) グリッド
 
-PSD は衝突カスケードの統計的記述に基づき、自己相似分布の枠組み [@Dohnanyi1969_JGR74_2531] と離散化の実装例 [@Krivov2006_AA455_509] を踏まえて対数ビンで表す。ブローアウト近傍の波状構造（wavy）はビン幅に敏感であるため、格子幅の指針 [@Birnstiel2011_AA525_A11] を参照して分解能を選ぶ。
+PSD は衝突カスケードの統計的記述に基づき、自己相似分布の枠組み [@Dohnanyi1969_JGR74_2531] と離散化の実装例 [@Krivov2006_AA455_509] を踏まえて対数ビンで表す。ビン分解能は隣接粒径比 $a_{i+1}/a_i \lesssim 1.1$–1.2 を目安に調整する（[@Birnstiel2011_AA525_A11]）。ブローアウト近傍の波状構造（wavy）はビン幅に敏感であるため、数値的に解像できる分解能を確保する。
 初期 PSD の既定は、衝突直後の溶融滴優勢と微粒子尾を持つ分布 [@Hyodo2017a_ApJ845_125] を反映し、溶融滴由来のべき分布は衝突起源の傾きを [@Jutzi2010_Icarus207_54] に合わせて設定する。
 
-PSD は $n(s)$ を対数等間隔のサイズビンで離散化し、面密度・光学的厚さ・衝突率の評価を一貫したグリッド上で行う。隣接比 $s_{i+1}/s_i \lesssim 1.2$ を推奨し、供給注入と破片分布の双方がビン分解能に依存しないように設計する。PSD グリッドの既定値は表\ref{tab:psd_grid_defaults}に示す。
+PSD は $n(s)$ を対数等間隔のサイズビンで離散化し、面密度・光学的厚さ・衝突率の評価を一貫したグリッド上で行う。隣接比 $s_{i+1}/s_i \lesssim 1.2$ を推奨し、供給注入と破片分布の双方がビン分解能に依存しないように設計する。PSD グリッドの既定値は次の表に示す。
 
 \begin{table}[t]
   \centering
@@ -133,11 +151,11 @@ PSD は $n(s)$ を対数等間隔のサイズビンで離散化し、面密度�
 
 - PSD は正規化分布 $n_k$ を保持し、表層面密度 $\Sigma_{\rm surf}$ を用いて実数の数密度 $N_k$（#/m$^2$）へスケールする。スケーリングは $\sum_k m_k N_k = \Sigma_{\rm surf}$ を満たすように行う。
 - Smol 経路の時間積分は $N_k$ を主状態として実行し、`psd_state_to_number_density` → IMEX 更新 → `number_density_to_psd_state` の順に $n_k$ へ戻す。したがって、$n_k$ は形状情報として保持され、時間積分そのものは $N_k$ に対して行われる。
-- **有効最小粒径**は (E.008) の $s_{\min,\mathrm{eff}}=\max(s_{\min,\mathrm{cfg}}, s_{\mathrm{blow,eff}})$ を標準とする。昇華境界 $s_{\rm sub}$ は ds/dt のみで扱い、PSD 床はデフォルトでは上げない（動的床を明示的に有効化した場合のみ適用）（[@WyattClarkeBooth2011_CeMDA111_1; @Wyatt2008]）。
+- **有効最小粒径**は (E.008) の $s_{\min,\mathrm{eff}}=\max(s_{\min,\mathrm{cfg}}, s_{\mathrm{blow,eff}})$ を標準とする。昇華境界 $s_{\rm sub}$ は ds/dt のみで扱い、PSD 床はデフォルトでは上げない（動的床を明示的に有効化した場合のみ適用）（[@WyattClarkeBooth2011_CeMDA111_1]）。
 - `psd.floor.mode` は (E.008) の $s_{\min,\mathrm{eff}}$ を固定/動的に切り替える。`sizes.evolve_min_size` は昇華 ds/dt などに基づく **診断用** の $s_{\min}$ を追跡し、既定では PSD 床を上書きしない。
 - 供給注入は PSD 下限（$s_{\min}$）より大きい最小ビンに集約し、質量保存と面積率の一貫性を保つ（[@WyattClarkeBooth2011_CeMDA111_1; @Krivov2006_AA455_509]）。
 - `wavy_strength>0` で blow-out 近傍の波状（wavy）構造を付加し、`tests/integration/test_surface_outflux_wavy.py::test_blowout_driven_wavy_pattern_emerges` で定性的再現を確認する（[@ThebaultAugereau2007_AA472_169]）。
-- 既定の 40 ビンでは隣接比が約 1.45 となるため、高解像（$\lesssim 1.2$）が必要な場合は `sizes.n_bins` を増やす。
+- 既定の 40 ビンでは隣接比が約 1.45 となるため、Birnstiel らの目安（$\lesssim 1.2$）を満たすには `sizes.n_bins` を増やす（[@Birnstiel2011_AA525_A11]）。
 
 PSD は形状（$n_k$）と規格化（$\Sigma_{\rm surf}$）を分離して扱うため、衝突解法と供給注入は同一のビン定義を共有しつつ、面密度の時間発展は独立に制御できる。これにより、供給・昇華・ブローアウトによる総質量変化と、衝突による分布形状の再配分を明示的に分離する（[@Krivov2006_AA455_509]）。
 
@@ -146,7 +164,7 @@ PSD は形状（$n_k$）と規格化（$\Sigma_{\rm surf}$）を分離して扱�
 
 #### 2.2 光学的厚さ $\tau$ の定義
 
-光学的厚さは用途ごとに以下を使い分ける（[@StrubbeChiang2006_ApJ648_652; @Wyatt2008]）。
+光学的厚さは用途ごとに以下を使い分ける（[@StrubbeChiang2006_ApJ648_652]）。
 
 - **垂直方向**: $\tau_{\perp}$ は表層 ODE の $t_{\rm coll}=1/(\Omega\tau_{\perp})$ に用いる。実装では $\tau_{\rm los}$ から $\tau_{\perp}=\tau_{\rm los}/\mathrm{los\_factor}$ を逆算して適用する。
 - **火星視線方向**: $\tau_{\rm los}=\tau_{\perp}\times\mathrm{los\_factor}$ を遮蔽・温度停止・供給フィードバックに用いる。
@@ -173,14 +191,14 @@ reference_links:
 - @BenzAsphaug1999_Icarus142_5 -> paper/references/BenzAsphaug1999_Icarus142_5.pdf | 用途: Q_D* の基準（破砕強度モデル）
 - @BohrenHuffman1983_Wiley -> paper/references/BohrenHuffman1983_Wiley.pdf | 用途: Mie理論/Q_pr平均
 - @Burns1979_Icarus40_1 -> paper/references/Burns1979_Icarus40_1.pdf | 用途: 放射圧βの定式化
-- @CogleyBergstrom1979_JQSRT21_265 -> paper/references/CogleyBergstrom1979_JQSRT21_265.pdf | 用途: Φテーブル（二流近似）
+- @CogleyBergstrom1979_JQSRT21_265 -> paper/references/CogleyBergstrom1979_JQSRT21_265.pdf | 用途: Φテーブル（二流近似、遮蔽有効時）
 - @Dohnanyi1969_JGR74_2531 -> paper/references/Dohnanyi1969_JGR74_2531.pdf | 用途: 衝突カスケードの自己相似PSD
 - @FegleySchaefer2012_arXiv -> paper/references/FegleySchaefer2012_arXiv.pdf | 用途: 蒸気圧の液相枝パラメータ
-- @HansenTravis1974_SSR16_527 -> paper/references/HansenTravis1974_SSR16_527.pdf | 用途: Φテーブル（δ-Eddington近似）
+- @HansenTravis1974_SSR16_527 -> paper/references/HansenTravis1974_SSR16_527.pdf | 用途: Φテーブル（δ-Eddington近似、遮蔽有効時）
 - @Hyodo2018_ApJ860_150 -> paper/references/Hyodo2018_ApJ860_150.pdf | 用途: 温度ドライバ/冷却モデル
 - @IdaMakino1992_Icarus96_107 -> paper/references/IdaMakino1992_Icarus96_107.pdf | 用途: 相対速度分布の基礎
 - @ImazBlanco2023_MNRAS522_6150 -> paper/references/ImazBlanco2023_MNRAS522_6150.pdf | 用途: 相対速度分布の実装参照
-- @Joseph1976_JAS33_2452 -> paper/references/Joseph1976_JAS33_2452.pdf | 用途: Φテーブル（二流・δ-Eddington基礎）
+- @Joseph1976_JAS33_2452 -> paper/references/Joseph1976_JAS33_2452.pdf | 用途: Φテーブル（二流・δ-Eddington基礎、遮蔽有効時）
 - @Jutzi2010_Icarus207_54 -> paper/references/Jutzi2010_Icarus207_54.pdf (missing) | 用途: 速度外挿の係数（LS09型）
 - @Krivov2006_AA455_509 -> paper/references/Krivov2006_AA455_509.pdf | 用途: Smoluchowski方程式/破片生成枠組み
 - @Kubaschewski1974_Book -> paper/references/Kubaschewski1974_Book.pdf (missing) | 用途: Clausius蒸気圧係数
@@ -195,7 +213,6 @@ reference_links:
 - @Thebault2003_AA408_775 -> paper/references/Thebault2003_AA408_775.pdf | 用途: 侵食レジームと破片生成
 - @VisscherFegley2013_ApJL767_L12 -> paper/references/VisscherFegley2013_ApJL767_L12.pdf | 用途: 蒸気圧の液相枝
 - @WetherillStewart1993_Icarus106_190 -> paper/references/WetherillStewart1993_Icarus106_190.pdf | 用途: 相対速度分布
-- @Wyatt2008 -> paper/references/Wyatt2008.pdf | 用途: 衝突寿命スケール
 - @WyattClarkeBooth2011_CeMDA111_1 -> paper/references/WyattClarkeBooth2011_CeMDA111_1.pdf | 用途: 供給率のパラメータ化
 TEX_EXCLUDE_END -->
 
@@ -439,7 +456,7 @@ S9 の衝突更新では、$C_{ij}$ から各ビンの衝突寿命 $t_{\rm coll}
 
 ##### 4.1.2 衝突レジーム分類
 
-衝突は **最大残存率 $F_{LF}$** に基づいて2つのレジームに分類する。レジームの条件と処理は表\ref{tab:collision_regimes}にまとめる。
+衝突は **最大残存率 $F_{LF}$** に基づいて2つのレジームに分類する。レジームの条件と処理は次の表にまとめる。
 
 \begin{table}[t]
   \centering
@@ -464,9 +481,9 @@ S9 の衝突更新では、$C_{ij}$ から各ビンの衝突寿命 $t_{\rm coll}
 
 ##### 4.1.3 エネルギー簿記
 
-衝突エネルギーの診断は、デブリ円盤の衝突カスケード研究で用いられる散逸・残存の整理に倣う（[@Thebault2003_AA408_775; @Wyatt2008]）。
+衝突エネルギーの診断は、デブリ円盤の衝突カスケード研究で用いられる散逸・残存の整理に倣う（[@Thebault2003_AA408_775]）。
 
-`diagnostics.energy_bookkeeping.enabled=true` で簿記モードを有効化し、`diagnostics.energy_bookkeeping.stream` が true かつ `FORCE_STREAMING_OFF` が未設定なら `series/energy.parquet`・`checks/energy_budget.csv` をストリーミングで書き出す（オフ時は最後にまとめて保存）。サマリには `energy_bookkeeping.{E_rel_total,E_dissipated_total,E_retained_total,f_ke_mean_last,f_ke_energy_last,frac_*_last}` が追加され、同じ統計を run_card に残す。出力カラムの一覧は表\ref{tab:energy_columns}に示す。
+`diagnostics.energy_bookkeeping.enabled=true` で簿記モードを有効化し、`diagnostics.energy_bookkeeping.stream` が true かつ `FORCE_STREAMING_OFF` が未設定なら `series/energy.parquet`・`checks/energy_budget.csv` をストリーミングで書き出す（オフ時は最後にまとめて保存）。サマリには `energy_bookkeeping.{E_rel_total,E_dissipated_total,E_retained_total,f_ke_mean_last,f_ke_energy_last,frac_*_last}` が追加され、同じ統計を run_card に残す。出力カラムの一覧は次の表に示す。
 
 \begin{table}[t]
   \centering
@@ -494,7 +511,7 @@ S9 の衝突更新では、$C_{ij}$ から各ビンの衝突寿命 $t_{\rm coll}
 E_{diss} = (1 - f_{ke})\,E_{rel}
 \end{equation}
 
-関連する設定キーは表\ref{tab:energy_settings}にまとめる。
+関連する設定キーは次の表にまとめる。
 
 \begin{table}[t]
   \centering
@@ -523,7 +540,7 @@ E_{diss} = (1 - f_{ke})\,E_{rel}
 
 ##### 4.2.1 温度ドライバ
 
-火星表面温度の時間変化を `constant` / `table` / `autogen` で選択する。各モードの概要は表\ref{tab:temp_driver_modes}に示す。
+火星表面温度の時間変化を `constant` / `table` / `autogen` で選択する。各モードの概要は次の表に示す。
 
 - `autogen` は解析的冷却（slab）や Hyodo 型などの内蔵ドライバを選択し、温度停止条件と連動する（[@Hyodo2018_ApJ860_150]）。
 
@@ -663,7 +680,7 @@ P_{\mathrm{sat}}(T) =
 ---
 #### 4.3 表層再供給と輸送
 
-表層再供給（supply）は表層への面密度生成率として与え、サイズ分布と深層輸送を通じて PSD に注入する。ここでの表層再供給は外側からの流入を精密に表すものではなく、深部↔表層の入れ替わりを粗く表現するためのパラメータ化である。定常値・べき乗・テーブル・区分定義の各モードを用意し、温度・$\tau$ フィードバック・有限リザーバを組み合わせて非定常性を表現する（[@WyattClarkeBooth2011_CeMDA111_1; @Wyatt2008]）。
+表層再供給（supply）は表層への面密度生成率として与え、サイズ分布と深層輸送を通じて PSD に注入する。ここでの表層再供給は外側からの流入を精密に表すものではなく、深部↔表層の入れ替わりを粗く表現するためのパラメータ化である。定常値・べき乗・テーブル・区分定義の各モードを用意し、温度・$\tau$ フィードバック・有限リザーバを組み合わせて非定常性を表現する（[@WyattClarkeBooth2011_CeMDA111_1]）。
 
 供給の基礎率は式\ref{eq:prod_rate_definition}で定義する（再掲: E.027）（[@WyattClarkeBooth2011_CeMDA111_1]）。
 
@@ -684,7 +701,7 @@ S7 に対応する供給処理では、`supply_rate_nominal` を基準に `suppl
 
 ##### 4.3.1 フィードバック制御 (Supply Feedback)
 
-`supply.feedback.enabled=true` で $\tau$ 目標に追従する比例制御を有効化する。設定項目は表\ref{tab:supply_feedback_settings}に示す。
+`supply.feedback.enabled=true` で $\tau$ 目標に追従する比例制御を有効化する。設定項目は次の表に示す。
 
 \begin{table}[t]
   \centering
@@ -708,7 +725,7 @@ S7 に対応する供給処理では、`supply_rate_nominal` を基準に `suppl
 
 ##### 4.3.2 温度カップリング (Supply Temperature)
 
-`supply.temperature.enabled=true` で火星温度に連動した供給スケーリングを有効化する。温度カップリングの設定項目は表\ref{tab:supply_temperature_settings}にまとめる。
+`supply.temperature.enabled=true` で火星温度に連動した供給スケーリングを有効化する。温度カップリングの設定項目は次の表にまとめる。
 
 - `mode=scale`: べき乗スケーリング $(T/T_{\rm ref})^{\alpha}$
 - `mode=table`: 外部 CSV テーブルから補間
@@ -737,7 +754,7 @@ S7 に対応する供給処理では、`supply_rate_nominal` を基準に `suppl
 
 ##### 4.3.4 注入パラメータ
 
-注入パラメータは表\ref{tab:supply_injection_settings}に示す。
+注入パラメータは次の表に示す。
 
 \begin{table}[t]
   \centering
@@ -767,7 +784,6 @@ reference_links:
 - @Hyodo2018_ApJ860_150 -> paper/references/Hyodo2018_ApJ860_150.pdf | 用途: 温度停止条件の基準
 - @Krivov2006_AA455_509 -> paper/references/Krivov2006_AA455_509.pdf | 用途: IMEX-BDF1での衝突カスケード解法
 - @StrubbeChiang2006_ApJ648_652 -> paper/references/StrubbeChiang2006_ApJ648_652.pdf | 用途: 初期τ=1スケーリング/表層t_coll尺度
-- @Wyatt2008 -> paper/references/Wyatt2008.pdf | 用途: 衝突寿命スケールと時間刻み指標
 TEX_EXCLUDE_END -->
 
 ---
@@ -775,7 +791,7 @@ TEX_EXCLUDE_END -->
 
 #### 5.1 IMEX-BDF(1)
 
-Smoluchowski 衝突カスケードの時間積分には IMEX（implicit-explicit）と BDF(1)（backward differentiation formula）の一次組合せを採用する（[@Krivov2006_AA455_509; @Wyatt2008]）。状態ベクトルはサイズビン $k$ ごとの数密度（または面密度）で表現し、衝突ゲイン・ロスと表層再供給・シンクを同時に組み込む。剛性の強いロス項を陰的に扱うことで安定性を確保し、生成・供給・表層流出は陽的に更新する。
+Smoluchowski 衝突カスケードの時間積分には IMEX（implicit-explicit）と BDF(1)（backward differentiation formula）の一次組合せを採用する（[@Krivov2006_AA455_509]）。状態ベクトルはサイズビン $k$ ごとの数密度（または面密度）で表現し、衝突ゲイン・ロスと表層再供給・シンクを同時に組み込む。剛性の強いロス項を陰的に扱うことで安定性を確保し、生成・供給・表層流出は陽的に更新する。
 
 - **剛性項（損失）**: 陰的処理
 - **非剛性項（生成・供給）**: 陽的処理
@@ -810,7 +826,7 @@ C5 は半径方向の面密度拡散を解くため、1D 実行のセル間結�
 
 ##### 5.3.1 初期 $\tau=1$ スケーリング
 
-`init_tau1.scale_to_tau1=true` で、初期 PSD を $\tau=1$ になるようスケーリングする（[@StrubbeChiang2006_ApJ648_652; @Wyatt2008]）。関連設定は表\ref{tab:init_tau1_settings}に示す。
+`init_tau1.scale_to_tau1=true` で、初期 PSD を $\tau=1$ になるようスケーリングする（[@StrubbeChiang2006_ApJ648_652]）。関連設定は次の表に示す。
 
 \begin{table}[t]
   \centering
@@ -873,8 +889,7 @@ numerics:
 reference_links:
 - @Krivov2006_AA455_509 -> paper/references/Krivov2006_AA455_509.pdf | 用途: 衝突カスケード検証と出力診断の基準
 - @StrubbeChiang2006_ApJ648_652 -> paper/references/StrubbeChiang2006_ApJ648_652.pdf | 用途: t_collスケール検証
-- @ThebaultAugereau2007_AA472_169 -> paper/references/ThebaultAugereau2007_AA472_169.pdf | 用途: wavy PSD の検証
-- @Wyatt2008 -> paper/references/Wyatt2008.pdf | 用途: 衝突寿命スケール検証
+- @ThebaultAugereau2007_AA472_169 -> paper/references/ThebaultAugereau2007_AA472_169.pdf | 用途: wavy PSD の検証（wavy有効時）
 TEX_EXCLUDE_END -->
 
 ---
@@ -882,7 +897,7 @@ TEX_EXCLUDE_END -->
 
 #### 6.1 出力・I/O・再現性
 
-時間発展の各ステップは Parquet/JSON/CSV へ記録し、後段の解析・可視化で再構成可能な形で保存する（[@Krivov2006_AA455_509; @Wyatt2008]）。必須の出力は `series/run.parquet`、`series/psd_hist.parquet`、`summary.json`、`checks/mass_budget.csv` で、追加診断は設定に応じて `diagnostics.parquet` や `energy.parquet` を生成する。
+時間発展の各ステップは Parquet/JSON/CSV へ記録し、後段の解析・可視化で再構成可能な形で保存する（[@Krivov2006_AA455_509]）。必須の出力は `series/run.parquet`、`series/psd_hist.parquet`、`summary.json`、`checks/mass_budget.csv` で、追加診断は設定に応じて `diagnostics.parquet` や `energy.parquet` を生成する。
 
 **必須出力**
 - `series/run.parquet` は時系列の `time`, `dt`, `tau`, `a_blow`（コード上の名称、物理量は $s_{\rm blow}$）, `s_min`, `prod_subblow_area_rate`, `M_out_dot`, `mass_lost_by_blowout`, `mass_lost_by_sinks` などを保持する。衝突・時間刻みの診断は `smol_dt_eff`, `t_coll_kernel_min`, `dt_over_t_blow` を参照する。
@@ -913,7 +928,7 @@ pytest tests/ -q
 
 主要テストは analysis/run-recipes.md §検証チェックリスト を参照。特に以下でスケールと安定性を確認する。
 
-- Wyatt/Strubbe–Chiang 衝突寿命スケール: `pytest tests/integration/test_scalings.py::test_strubbe_chiang_collisional_timescale_matches_orbit_scaling`（[@Wyatt2008; @StrubbeChiang2006_ApJ648_652]）
+- Strubbe–Chiang 衝突寿命スケール: `pytest tests/integration/test_scalings.py::test_strubbe_chiang_collisional_timescale_matches_orbit_scaling`（[@StrubbeChiang2006_ApJ648_652]）
 - Blow-out 起因 “wavy” PSD の再現: `pytest tests/integration/test_surface_outflux_wavy.py::test_blowout_driven_wavy_pattern_emerges`（[@ThebaultAugereau2007_AA472_169]）
 - IMEX-BDF(1) の $\Delta t$ 制限と質量保存: `pytest tests/integration/test_mass_conservation.py::test_imex_bdf1_limits_timestep_and_preserves_mass`（[@Krivov2006_AA455_509]）
 - 1D セル並列の on/off 一致確認（Windowsのみ）: `pytest tests/integration/test_numerical_anomaly_watchlist.py::test_cell_parallel_on_off_consistency`
@@ -943,8 +958,8 @@ python -m tools.evaluation_system --outdir <run_dir>  # Doc 更新後に直近�
 
 - 温度ドライバ: [Hyodo et al. (2018)](../paper/pdf_extractor/outputs/Hyodo2018_ApJ860_150/result.md)
 - gas-poor/衝突起源円盤の文脈: [Hyodo et al. (2017a)](../paper/pdf_extractor/outputs/Hyodo2017a_ApJ845_125/result.md), [Canup & Salmon (2018)](../paper/pdf_extractor/outputs/CanupSalmon2018_SciAdv4_eaar6887/result.md), [Olofsson et al. (2022)](../paper/pdf_extractor/outputs/Olofsson2022_MNRAS513_713/result.md)
-- 放射圧・ブローアウト: [Burns et al. (1979)](../paper/pdf_extractor/outputs/Burns1979_Icarus40_1/result.md), [Strubbe & Chiang (2006)](../paper/pdf_extractor/outputs/StrubbeChiang2006_ApJ648_652/result.md), [Wyatt (2008)](../paper/pdf_extractor/outputs/Wyatt2008/result.md), [Takeuchi & Lin (2002)](../paper/pdf_extractor/outputs/TakeuchiLin2002_ApJ581_1344/result.md), [Takeuchi & Lin (2003)](../paper/pdf_extractor/outputs/TakeuchiLin2003_ApJ593_524/result.md), [Shadmehri (2008)](../paper/pdf_extractor/outputs/Shadmehri2008_ApSS314_217/result.md)
-- PSD/衝突カスケード: [Dohnanyi (1969)](../paper/pdf_extractor/outputs/Dohnanyi1969_JGR74_2531/result.md), [Krivov et al. (2006)](../paper/pdf_extractor/outputs/Krivov2006_AA455_509/result.md), [Birnstiel et al. (2011)](../paper/pdf_extractor/outputs/Birnstiel2011_AA525_A11/result.md), [Thébault & Augereau (2007)](../paper/pdf_extractor/outputs/ThebaultAugereau2007_AA472_169/result.md)
+- 放射圧・ブローアウト: [Burns et al. (1979)](../paper/pdf_extractor/outputs/Burns1979_Icarus40_1/result.md), [Strubbe & Chiang (2006)](../paper/pdf_extractor/outputs/StrubbeChiang2006_ApJ648_652/result.md), [Takeuchi & Lin (2002)](../paper/pdf_extractor/outputs/TakeuchiLin2002_ApJ581_1344/result.md), [Takeuchi & Lin (2003)](../paper/pdf_extractor/outputs/TakeuchiLin2003_ApJ593_524/result.md), [Shadmehri (2008)](../paper/pdf_extractor/outputs/Shadmehri2008_ApSS314_217/result.md)
+- PSD/衝突カスケード: [Dohnanyi (1969)](../paper/pdf_extractor/outputs/Dohnanyi1969_JGR74_2531/result.md), [Krivov et al. (2006)](../paper/pdf_extractor/outputs/Krivov2006_AA455_509/result.md), [Thébault & Augereau (2007)](../paper/pdf_extractor/outputs/ThebaultAugereau2007_AA472_169/result.md)
 - 供給・ソース/損失バランス: [Wyatt, Clarke & Booth (2011)](../paper/pdf_extractor/outputs/WyattClarkeBooth2011_CeMDA111_1/result.md)
 - 初期 PSD: [Hyodo et al. (2017a)](../paper/pdf_extractor/outputs/Hyodo2017a_ApJ845_125/result.md), [Jutzi et al. (2010)](../paper/pdf_extractor/outputs/Jutzi2010_Icarus207_54/result.md)
 - 速度分散: [Ohtsuki et al. (2002)](../paper/pdf_extractor/outputs/Ohtsuki2002_Icarus155_436/result.md), [Lissauer & Stewart (1993)](../paper/pdf_extractor/outputs/LissauerStewart1993_PP3/result.md), [Wetherill & Stewart (1993)](../paper/pdf_extractor/outputs/WetherillStewart1993_Icarus106_190/result.md), [Ida & Makino (1992)](../paper/pdf_extractor/outputs/IdaMakino1992_Icarus96_107/result.md), [Imaz Blanco et al. (2023)](../paper/pdf_extractor/outputs/ImazBlanco2023_MNRAS522_6150/result.md)
@@ -988,7 +1003,7 @@ scripts\runsets\windows\run_sweep.cmd --config scripts\runsets\common\base.yml -
 
 #### run_sweep.cmd の主要環境変数
 
-既定値は `run_sweep.cmd` のデフォルト設定に従う。主要環境変数は表\ref{tab:run_sweep_env}に示す。  
+既定値は `run_sweep.cmd` のデフォルト設定に従う。主要環境変数は次の表に示す。  
 > **参照**: `scripts/runsets/windows/run_sweep.cmd` の `::REF:SWEEP_DEFAULTS`
 
 \begin{table}[t]
@@ -1064,7 +1079,7 @@ scripts\runsets\windows\run_sweep.cmd --config scripts\runsets\common\base.yml -
 実装(.py): marsdisk/schema.py, marsdisk/config_utils.py, marsdisk/run_zero_d.py, marsdisk/run_one_d.py, marsdisk/physics/radiation.py, marsdisk/physics/shielding.py, marsdisk/physics/supply.py, marsdisk/physics/sinks.py, marsdisk/physics/phase.py, marsdisk/physics/psd.py, marsdisk/physics/viscosity.py
 -->
 
-設定と物理の対応を表\ref{tab:config_physics_map}にまとめる。
+設定と物理の対応を次の表にまとめる。
 
 \begin{table}[t]
   \centering
@@ -1104,7 +1119,7 @@ scripts\runsets\windows\run_sweep.cmd --config scripts\runsets\common\base.yml -
 実装(.py): marsdisk/run.py, marsdisk/physics/radiation.py, marsdisk/physics/shielding.py, marsdisk/physics/collisions_smol.py, marsdisk/physics/supply.py, marsdisk/physics/sinks.py, marsdisk/physics/tempdriver.py
 -->
 
-関連ドキュメントの役割を表\ref{tab:related_docs}に整理する。
+関連ドキュメントの役割を次の表に整理する。
 
 \begin{table}[t]
   \centering
@@ -1132,7 +1147,7 @@ scripts\runsets\windows\run_sweep.cmd --config scripts\runsets\common\base.yml -
 実装(.py): marsdisk/physics/psd.py, marsdisk/physics/surface.py, marsdisk/physics/smol.py, marsdisk/physics/radiation.py, marsdisk/physics/qstar.py, marsdisk/physics/sublimation.py, marsdisk/physics/viscosity.py
 -->
 
-略語は表\ref{tab:abbreviations}にまとめる。
+略語は次の表にまとめる。
 
 \begin{table}[t]
   \centering
@@ -1214,7 +1229,7 @@ title: 記号一覧（遷移期・長期モデル接続：暫定）
 
 ## 補足：記号不整合（現状の把握）
 
-- 「外縁」が $r_d$ と $a_{\rm eq,max}$ で混在している。現時点では、両者の定義関係が文書内で確定できないため、表\ref{tab:symbols_transition} では別項目として残している。  
+- 「外縁」が $r_d$ と $a_{\rm eq,max}$ で混在している。現時点では、両者の定義関係が文書内で確定できないため、次の表では別項目として残している。  
 - 先行研究（特に Canup & Salmon (2018)）の該当箇所を確認し、(i) 同一概念ならどちらかに統一する、(ii) 別概念なら本文で初出定義を与える、のいずれかを行う必要がある。TODO(REF:transition_symbols_pending_refs_v1)
 
 ---

@@ -15,16 +15,19 @@ reference_links:
 - @Hyodo2017a_ApJ845_125 -> paper/references/Hyodo2017a_ApJ845_125.pdf | 用途: 衝突起源円盤の前提条件と対象設定
 - @Krivov2006_AA455_509 -> paper/references/Krivov2006_AA455_509.pdf | 用途: Smoluchowski衝突カスケードの枠組み
 - @StrubbeChiang2006_ApJ648_652 -> paper/references/StrubbeChiang2006_ApJ648_652.pdf | 用途: 表層ブローアウトと衝突寿命の整理
-- @Wyatt2008 -> paper/references/Wyatt2008.pdf | 用途: デブリ円盤の衝突スケーリング
 TEX_EXCLUDE_END -->
 
 # シミュレーション手法
 
 ## 1. 目的・出力・問いとの対応
 
-本資料は火星ロッシュ限界内の高温ダスト円盤を対象とする数値手法を、論文の Methods 相当の水準で記述する（[@Hyodo2017a_ApJ845_125; @CanupSalmon2018_SciAdv4_eaar6887]）。gas-poor 条件下での粒径分布（particle size distribution; PSD）進化と、表層（surface layer）の放射圧起因アウトフロー（outflux）を**同一タイムループで結合**し、2 年スケールの $\dot{M}_{\rm out}(t)$ と $M_{\rm loss}$ を評価する（[@Krivov2006_AA455_509; @StrubbeChiang2006_ApJ648_652; @Wyatt2008]）。数式の定義は analysis/equations.md の (E.###) を正とし、本書では主要式を必要最小限に再掲したうえで、離散化・数値解法・運用フロー・検証条件を整理する。
+本節では、火星のロッシュ限界内に形成される高温ダスト円盤を対象として、本研究で用いる数値シミュレーション手法の目的と出力を定義する。序論で掲げた研究課題に対し、本手法が直接算出する物理量と出力ファイルの対応を明確にする。
 
-序論（analysis/thesis/introduction.md）で提示した 3 つの問いと、本手法が直接生成する量・出力の対応を表\ref{tab:methods_questions_outputs}に示す。
+本手法はガスが希薄な条件（gas-poor）を仮定する（[@Hyodo2017a_ApJ845_125; @CanupSalmon2018_SciAdv4_eaar6887]）。粒径分布（particle size distribution; PSD）の時間発展と、表層の放射圧起因アウトフロー（outflux）を、同一のタイムループで結合して計算する。これにより、2 年スケールでの質量流出率 $\dot{M}_{\rm out}(t)$ と累積損失 $M_{\rm loss}$ を評価する。放射圧に起因する粒子運動と粒径分布進化は、既存の枠組みに従う（[@Krivov2006_AA455_509; @StrubbeChiang2006_ApJ648_652]）。
+
+数式と記号の定義は付録にまとめた式番号 (E.###) を正とする。本文では、計算手順と出力仕様の理解に必要な範囲で、主要式のみを再掲する。以降では、離散化、数値解法、運用フロー、ならびに検証条件を、物理過程の因果関係が追える順序で記述する。
+
+序論で提示した 3 つの問いと、本手法が直接生成する量・出力の対応を次の表に示す。
 
 \begin{table}[t]
   \centering
@@ -47,13 +50,29 @@ TEX_EXCLUDE_END -->
   \end{tabular}
 \end{table}
 
-読み進め方は次の順序を推奨する。
+手法の記述は、まず入力パラメータと出力（時系列・要約量）を明確にする。次に 1 ステップの処理順序を示す。続いて、放射圧、物質供給、衝突、昇華、遮蔽を順に定式化する。最後に、一括実行（\texttt{run\_sweep}）と再現性確保のための出力・検証手続きを述べる。
 
-- まず入力と出力（何を与え、何が返るか）を確認する。
-- 次に 1 ステップの処理順序（図 3.1–3.2）を把握する。
-- その後、放射圧・供給・衝突・昇華・遮蔽の各過程を個別に読む。
-- 最後に運用（run_sweep）と再現性（出力・検証）を確認する。
+設定キーや実装パスのような実装依存の情報は付録に整理し、本文では物理モデルと時間発展の説明を優先する。本文で頻出する略語は次の表にまとめる。
 
-本文では物理的な因果と時間発展の説明を優先し、設定キーや実装パスは付録に整理する。式は必要最小限に再掲し、詳細な定義と記号表は analysis/equations.md を正とする。
+\begin{table}[t]
+  \centering
+  \caption{本文で用いる主要略語}
+  \label{tab:methods_abbrev}
+  \begin{tabular}{p{0.18\textwidth} p{0.76\textwidth}}
+    \hline
+    略語・記号 & 意味 \\
+    \hline
+    $\tau$ & 光学的厚さ（optical depth） \\
+    LOS & 視線方向（line of sight） \\
+    ODE & 常微分方程式（ordinary differential equation） \\
+    IMEX & implicit--explicit 法 \\
+    BDF & backward differentiation formula \\
+    $Q_{\rm pr}$ & 放射圧効率（radiation pressure efficiency） \\
+    $Q_D^*$ & 破壊閾値（critical specific energy） \\
+    HKL & Hertz--Knudsen--Langmuir フラックス \\
+    1D & one-dimensional \\
+    \hline
+  \end{tabular}
+\end{table}
 
-本書で用いる略語は以下に統一する。光学的厚さ（optical depth; $\tau$）、視線方向（line of sight; LOS）、常微分方程式（ordinary differential equation; ODE）、implicit-explicit（IMEX）、backward differentiation formula（BDF）、放射圧効率（radiation pressure efficiency; $Q_{\rm pr}$）、破壊閾値（critical specific energy; $Q_D^*$）、Hertz–Knudsen–Langmuir（HKL）フラックス、1D（one-dimensional）。
+以上により、本節では研究課題と出力の対応を定義した。次節以降では、これらの出力を規定する物理過程と数値解法を順に述べる。

@@ -9,7 +9,6 @@ reference_links:
 - @Hyodo2018_ApJ860_150 -> paper/references/Hyodo2018_ApJ860_150.pdf | 用途: 温度停止条件の基準
 - @Krivov2006_AA455_509 -> paper/references/Krivov2006_AA455_509.pdf | 用途: IMEX-BDF1での衝突カスケード解法
 - @StrubbeChiang2006_ApJ648_652 -> paper/references/StrubbeChiang2006_ApJ648_652.pdf | 用途: 初期τ=1スケーリング/表層t_coll尺度
-- @Wyatt2008 -> paper/references/Wyatt2008.pdf | 用途: 衝突寿命スケールと時間刻み指標
 TEX_EXCLUDE_END -->
 
 ---
@@ -17,7 +16,7 @@ TEX_EXCLUDE_END -->
 
 #### 5.1 IMEX-BDF(1)
 
-Smoluchowski 衝突カスケードの時間積分には IMEX（implicit-explicit）と BDF(1)（backward differentiation formula）の一次組合せを採用する（[@Krivov2006_AA455_509; @Wyatt2008]）。状態ベクトルはサイズビン $k$ ごとの数密度（または面密度）で表現し、衝突ゲイン・ロスと表層再供給・シンクを同時に組み込む。剛性の強いロス項を陰的に扱うことで安定性を確保し、生成・供給・表層流出は陽的に更新する。
+Smoluchowski 衝突カスケードの時間積分には IMEX（implicit-explicit）と BDF(1)（backward differentiation formula）の一次組合せを採用する（[@Krivov2006_AA455_509]）。状態ベクトルはサイズビン $k$ ごとの数密度（または面密度）で表現し、衝突ゲイン・ロスと表層再供給・シンクを同時に組み込む。剛性の強いロス項を陰的に扱うことで安定性を確保し、生成・供給・表層流出は陽的に更新する。
 
 - **剛性項（損失）**: 陰的処理
 - **非剛性項（生成・供給）**: 陽的処理
@@ -52,7 +51,7 @@ C5 は半径方向の面密度拡散を解くため、1D 実行のセル間結�
 
 ##### 5.3.1 初期 $\tau=1$ スケーリング
 
-`init_tau1.scale_to_tau1=true` で、初期 PSD を $\tau=1$ になるようスケーリングする（[@StrubbeChiang2006_ApJ648_652; @Wyatt2008]）。関連設定は表\ref{tab:init_tau1_settings}に示す。
+`init_tau1.scale_to_tau1=true` で、初期 PSD を $\tau=1$ になるようスケーリングする（[@StrubbeChiang2006_ApJ648_652]）。関連設定は次の表に示す。
 
 \begin{table}[t]
   \centering

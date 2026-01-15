@@ -9,14 +9,14 @@ reference_links:
 - @BenzAsphaug1999_Icarus142_5 -> paper/references/BenzAsphaug1999_Icarus142_5.pdf | 用途: Q_D* の基準（破砕強度モデル）
 - @BohrenHuffman1983_Wiley -> paper/references/BohrenHuffman1983_Wiley.pdf | 用途: Mie理論/Q_pr平均
 - @Burns1979_Icarus40_1 -> paper/references/Burns1979_Icarus40_1.pdf | 用途: 放射圧βの定式化
-- @CogleyBergstrom1979_JQSRT21_265 -> paper/references/CogleyBergstrom1979_JQSRT21_265.pdf | 用途: Φテーブル（二流近似）
+- @CogleyBergstrom1979_JQSRT21_265 -> paper/references/CogleyBergstrom1979_JQSRT21_265.pdf | 用途: Φテーブル（二流近似、遮蔽有効時）
 - @Dohnanyi1969_JGR74_2531 -> paper/references/Dohnanyi1969_JGR74_2531.pdf | 用途: 衝突カスケードの自己相似PSD
 - @FegleySchaefer2012_arXiv -> paper/references/FegleySchaefer2012_arXiv.pdf | 用途: 蒸気圧の液相枝パラメータ
-- @HansenTravis1974_SSR16_527 -> paper/references/HansenTravis1974_SSR16_527.pdf | 用途: Φテーブル（δ-Eddington近似）
+- @HansenTravis1974_SSR16_527 -> paper/references/HansenTravis1974_SSR16_527.pdf | 用途: Φテーブル（δ-Eddington近似、遮蔽有効時）
 - @Hyodo2018_ApJ860_150 -> paper/references/Hyodo2018_ApJ860_150.pdf | 用途: 温度ドライバ/冷却モデル
 - @IdaMakino1992_Icarus96_107 -> paper/references/IdaMakino1992_Icarus96_107.pdf | 用途: 相対速度分布の基礎
 - @ImazBlanco2023_MNRAS522_6150 -> paper/references/ImazBlanco2023_MNRAS522_6150.pdf | 用途: 相対速度分布の実装参照
-- @Joseph1976_JAS33_2452 -> paper/references/Joseph1976_JAS33_2452.pdf | 用途: Φテーブル（二流・δ-Eddington基礎）
+- @Joseph1976_JAS33_2452 -> paper/references/Joseph1976_JAS33_2452.pdf | 用途: Φテーブル（二流・δ-Eddington基礎、遮蔽有効時）
 - @Jutzi2010_Icarus207_54 -> paper/references/Jutzi2010_Icarus207_54.pdf (missing) | 用途: 速度外挿の係数（LS09型）
 - @Krivov2006_AA455_509 -> paper/references/Krivov2006_AA455_509.pdf | 用途: Smoluchowski方程式/破片生成枠組み
 - @Kubaschewski1974_Book -> paper/references/Kubaschewski1974_Book.pdf (missing) | 用途: Clausius蒸気圧係数
@@ -31,7 +31,6 @@ reference_links:
 - @Thebault2003_AA408_775 -> paper/references/Thebault2003_AA408_775.pdf | 用途: 侵食レジームと破片生成
 - @VisscherFegley2013_ApJL767_L12 -> paper/references/VisscherFegley2013_ApJL767_L12.pdf | 用途: 蒸気圧の液相枝
 - @WetherillStewart1993_Icarus106_190 -> paper/references/WetherillStewart1993_Icarus106_190.pdf | 用途: 相対速度分布
-- @Wyatt2008 -> paper/references/Wyatt2008.pdf | 用途: 衝突寿命スケール
 - @WyattClarkeBooth2011_CeMDA111_1 -> paper/references/WyattClarkeBooth2011_CeMDA111_1.pdf | 用途: 供給率のパラメータ化
 TEX_EXCLUDE_END -->
 
@@ -275,7 +274,7 @@ S9 の衝突更新では、$C_{ij}$ から各ビンの衝突寿命 $t_{\rm coll}
 
 ##### 4.1.2 衝突レジーム分類
 
-衝突は **最大残存率 $F_{LF}$** に基づいて2つのレジームに分類する。レジームの条件と処理は表\ref{tab:collision_regimes}にまとめる。
+衝突は **最大残存率 $F_{LF}$** に基づいて2つのレジームに分類する。レジームの条件と処理は次の表にまとめる。
 
 \begin{table}[t]
   \centering
@@ -300,9 +299,9 @@ S9 の衝突更新では、$C_{ij}$ から各ビンの衝突寿命 $t_{\rm coll}
 
 ##### 4.1.3 エネルギー簿記
 
-衝突エネルギーの診断は、デブリ円盤の衝突カスケード研究で用いられる散逸・残存の整理に倣う（[@Thebault2003_AA408_775; @Wyatt2008]）。
+衝突エネルギーの診断は、デブリ円盤の衝突カスケード研究で用いられる散逸・残存の整理に倣う（[@Thebault2003_AA408_775]）。
 
-`diagnostics.energy_bookkeeping.enabled=true` で簿記モードを有効化し、`diagnostics.energy_bookkeeping.stream` が true かつ `FORCE_STREAMING_OFF` が未設定なら `series/energy.parquet`・`checks/energy_budget.csv` をストリーミングで書き出す（オフ時は最後にまとめて保存）。サマリには `energy_bookkeeping.{E_rel_total,E_dissipated_total,E_retained_total,f_ke_mean_last,f_ke_energy_last,frac_*_last}` が追加され、同じ統計を run_card に残す。出力カラムの一覧は表\ref{tab:energy_columns}に示す。
+`diagnostics.energy_bookkeeping.enabled=true` で簿記モードを有効化し、`diagnostics.energy_bookkeeping.stream` が true かつ `FORCE_STREAMING_OFF` が未設定なら `series/energy.parquet`・`checks/energy_budget.csv` をストリーミングで書き出す（オフ時は最後にまとめて保存）。サマリには `energy_bookkeeping.{E_rel_total,E_dissipated_total,E_retained_total,f_ke_mean_last,f_ke_energy_last,frac_*_last}` が追加され、同じ統計を run_card に残す。出力カラムの一覧は次の表に示す。
 
 \begin{table}[t]
   \centering
@@ -330,7 +329,7 @@ S9 の衝突更新では、$C_{ij}$ から各ビンの衝突寿命 $t_{\rm coll}
 E_{diss} = (1 - f_{ke})\,E_{rel}
 \end{equation}
 
-関連する設定キーは表\ref{tab:energy_settings}にまとめる。
+関連する設定キーは次の表にまとめる。
 
 \begin{table}[t]
   \centering
@@ -359,7 +358,7 @@ E_{diss} = (1 - f_{ke})\,E_{rel}
 
 ##### 4.2.1 温度ドライバ
 
-火星表面温度の時間変化を `constant` / `table` / `autogen` で選択する。各モードの概要は表\ref{tab:temp_driver_modes}に示す。
+火星表面温度の時間変化を `constant` / `table` / `autogen` で選択する。各モードの概要は次の表に示す。
 
 - `autogen` は解析的冷却（slab）や Hyodo 型などの内蔵ドライバを選択し、温度停止条件と連動する（[@Hyodo2018_ApJ860_150]）。
 
@@ -499,7 +498,7 @@ P_{\mathrm{sat}}(T) =
 ---
 #### 4.3 表層再供給と輸送
 
-表層再供給（supply）は表層への面密度生成率として与え、サイズ分布と深層輸送を通じて PSD に注入する。ここでの表層再供給は外側からの流入を精密に表すものではなく、深部↔表層の入れ替わりを粗く表現するためのパラメータ化である。定常値・べき乗・テーブル・区分定義の各モードを用意し、温度・$\tau$ フィードバック・有限リザーバを組み合わせて非定常性を表現する（[@WyattClarkeBooth2011_CeMDA111_1; @Wyatt2008]）。
+表層再供給（supply）は表層への面密度生成率として与え、サイズ分布と深層輸送を通じて PSD に注入する。ここでの表層再供給は外側からの流入を精密に表すものではなく、深部↔表層の入れ替わりを粗く表現するためのパラメータ化である。定常値・べき乗・テーブル・区分定義の各モードを用意し、温度・$\tau$ フィードバック・有限リザーバを組み合わせて非定常性を表現する（[@WyattClarkeBooth2011_CeMDA111_1]）。
 
 供給の基礎率は式\ref{eq:prod_rate_definition}で定義する（再掲: E.027）（[@WyattClarkeBooth2011_CeMDA111_1]）。
 
@@ -520,7 +519,7 @@ S7 に対応する供給処理では、`supply_rate_nominal` を基準に `suppl
 
 ##### 4.3.1 フィードバック制御 (Supply Feedback)
 
-`supply.feedback.enabled=true` で $\tau$ 目標に追従する比例制御を有効化する。設定項目は表\ref{tab:supply_feedback_settings}に示す。
+`supply.feedback.enabled=true` で $\tau$ 目標に追従する比例制御を有効化する。設定項目は次の表に示す。
 
 \begin{table}[t]
   \centering
@@ -544,7 +543,7 @@ S7 に対応する供給処理では、`supply_rate_nominal` を基準に `suppl
 
 ##### 4.3.2 温度カップリング (Supply Temperature)
 
-`supply.temperature.enabled=true` で火星温度に連動した供給スケーリングを有効化する。温度カップリングの設定項目は表\ref{tab:supply_temperature_settings}にまとめる。
+`supply.temperature.enabled=true` で火星温度に連動した供給スケーリングを有効化する。温度カップリングの設定項目は次の表にまとめる。
 
 - `mode=scale`: べき乗スケーリング $(T/T_{\rm ref})^{\alpha}$
 - `mode=table`: 外部 CSV テーブルから補間
@@ -573,7 +572,7 @@ S7 に対応する供給処理では、`supply_rate_nominal` を基準に `suppl
 
 ##### 4.3.4 注入パラメータ
 
-注入パラメータは表\ref{tab:supply_injection_settings}に示す。
+注入パラメータは次の表に示す。
 
 \begin{table}[t]
   \centering
