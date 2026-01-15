@@ -52,7 +52,7 @@
 \centering
 \caption{捕獲小惑星説と巨大衝突起源説の比較（観測制約との対応）}
 \label{tab:origin_hypotheses_compare}
-\begin{tabular}{p{0.18\linewidth}p{0.38\linewidth}p{0.38\linewidth}}
+\begin{tabular}{p{0.18\linewidth}p{0.36\linewidth}p{0.36\linewidth}}
 \hline
 観点 & 捕獲小惑星説 & 巨大衝突起源説\\
 \hline

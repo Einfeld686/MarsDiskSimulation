@@ -43,7 +43,7 @@ S9 の数値更新では、衝突ロス・ブローアウト・追加シンク�
 
 #### 5.2 1D（C5）挿入位置・境界条件・$\Delta t$ 制約
 
-run_sweep 既定では `geometry.mode=1D`（`Nr=32`）で半径方向セルを持つが、`numerics.enable_viscosity` は未指定のため C5 は無効で、セル間の結合は行わない。\newline
+run_sweep 既定では `geometry.mode=1D`（`Nr=32`）で半径方向セルを持つが、\newline `numerics.enable_viscosity` は未指定のため C5 は無効で、セル間の結合は行わない。\newline
 C5 を有効化する場合は、各ステップの局所更新後に半径方向の粘性拡散 `step_viscous_diffusion_C5` を**演算子分割で挿入**する設計とする。
 
 - **境界条件**: 内外端ともにゼロフラックス（Neumann）境界を採用する。

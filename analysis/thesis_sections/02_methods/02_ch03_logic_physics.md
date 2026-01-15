@@ -184,7 +184,7 @@ S3〜S10 の要点は次の通りである。
 
 - S3: 昇華 ds/dt を評価する。
 - S6: 相判定と $\\tau$ ゲートにより有効な損失経路を選択する。
-- S7: 名目供給 `supply_rate_nominal` にフィードバックと温度補正を適用し、`supply_rate_scaled` を得る。\newline 深層輸送を含めた表層注入量を決定する。
+- S7: 名目供給 `supply_rate_nominal` にフィードバックと温度補正を適用し、\newline `supply_rate_scaled` を得る。深層輸送を含めた表層注入量を決定する。
 - S8: シンク時間 $t_{\\rm sink}$ を評価する。
 - S9: 衝突カーネルから loss/gain を構成し、IMEX 更新を実施する。
 - S10: 診断列は `smol_gain_mass_rate`, `smol_loss_mass_rate`, `ds_dt_sublimation`, `M_out_dot` を含む。\newline 質量収支を保存する。
@@ -204,7 +204,7 @@ flowchart TB
 ```
 
 - 診断列は `supply_rate_nominal` → `supply_rate_scaled` → `supply_rate_applied` に記録する（[@WyattClarkeBooth2011_CeMDA111_1]）。
-- 深層経路は `prod_rate_diverted_to_deep`, `deep_to_surf_flux`, `prod_rate_applied_to_surf` に記録する。
+- 深層経路は `prod_rate_diverted_to_deep`\newline `deep_to_surf_flux`\newline `prod_rate_applied_to_surf` に記録する。
 - 供給の有効化は phase（solid）と液相ブロックで決まり、$\\tau_{\\rm gate}$ はブローアウトのみをゲートする。停止判定（$\\tau_{\\rm stop}$）とは区別して扱う。
 
 ##### 3.4.2 衝突フロー（Collision）
@@ -346,14 +346,14 @@ E_{diss} = (1 - f_{ke})\,E_{rel}
   \centering
   \caption{エネルギー簿記に関連する設定キー}
   \label{tab:energy_settings}
-  \begin{tabular}{p{0.38\textwidth} p{0.38\textwidth} p{0.14\textwidth}}
+  \begin{tabular}{p{0.36\textwidth} p{0.38\textwidth} l}
     \hline
     設定キー & 意味 & 既定値 \\
     \hline
     \texttt{dynamics.eps\_restitution} & 反発係数（$f_{ke,\mathrm{frag}}$ のデフォルトに使用） & 0.5 \\
     \texttt{dynamics.f\_ke\_cratering} & 侵食時の非散逸率 & 0.1 \\
     \texttt{dynamics.f\_ke\_fragmentation} & 破砕時の非散逸率 & None（$\varepsilon^2$ 使用） \\
-    \texttt{diagnostics.energy\_bookkeeping.stream} & energy 系列/簿記をストリーム出力\newline (\texttt{FORCE\_STREAMING\_OFF} で無効化) & true \\
+    \texttt{diagnostics.energy}\newline \texttt{\_bookkeeping}\newline \texttt{.stream} & energy 系列/簿記をストリーム出力\newline (\texttt{FORCE\_STREAMING}\newline \texttt{\_OFF} で無効化) & true \\
     \hline
   \end{tabular}
 \end{table}
@@ -377,13 +377,13 @@ E_{diss} = (1 - f_{ke})\,E_{rel}
   \centering
   \caption{温度ドライバのモード}
   \label{tab:temp_driver_modes}
-  \begin{tabular}{p{0.2\textwidth} p{0.4\textwidth} p{0.32\textwidth}}
+  \begin{tabular}{p{0.2\textwidth} p{0.38\textwidth} p{0.32\textwidth}}
     \hline
     モード & 内容 & 設定参照 \\
     \hline
-    \texttt{table} & 外部 CSV テーブル補間 & \texttt{radiation.mars\_temperature\_driver.table}\newline \texttt{.*} \\
+    \texttt{table} & 外部 CSV テーブル補間 & \texttt{radiation.mars}\newline \texttt{\_temperature\_driver}\newline \texttt{.table}\newline \texttt{.*} \\
     \texttt{slab} & 解析的 $T^{-3}$ 冷却 (Stefan--Boltzmann) & 内蔵式 \\
-    \texttt{hyodo} & 線形熱流束に基づく冷却 & \texttt{radiation.mars\_temperature\_driver.hyodo}\newline \texttt{.*} \\
+    \texttt{hyodo} & 線形熱流束に基づく冷却 & \texttt{radiation.mars}\newline \texttt{\_temperature\_driver}\newline \texttt{.hyodo}\newline \texttt{.*} \\
     \hline
   \end{tabular}
 \end{table}
@@ -529,7 +529,7 @@ P_{\mathrm{sat}}(T) =
 供給は「名目供給→フィードバック補正→温度スケール→ゲート判定→深層/表層への配分」の順に評価される。供給が深層へ迂回した場合でも、表層面密度と PSD の更新は同一タイムステップ内で整合的に行われる。
 
 - S7 に対応する供給処理では、`supply_rate_nominal` を基準に `supply_rate_scaled`（フィードバック・温度補正後）を評価し、ゲート判定後の `supply_rate_applied` を表層へ注入する。
-- deep mixing が有効な場合は `prod_rate_diverted_to_deep` と `deep_to_surf_flux` で深層からの再注入を記録し、表層面密度への寄与は `prod_rate_applied_to_surf` として診断する。
+- deep mixing が有効な場合は\newline `prod_rate_diverted_to_deep`\newline `deep_to_surf_flux` で深層からの再注入を記録し、\newline 表層面密度への寄与は `prod_rate_applied_to_surf` として診断する。
 - これらの列は supply の順序が図 3.2 と一致していることの検算に用いる。
 
 - **詳細**: analysis/equations.md (E.027), (E.027a)  
@@ -597,14 +597,14 @@ P_{\mathrm{sat}}(T) =
   \centering
   \caption{注入パラメータの設定}
   \label{tab:supply_injection_settings}
-  \begin{tabular}{p{0.42\textwidth} p{0.34\textwidth} p{0.16\textwidth}}
+  \begin{tabular}{p{0.40\textwidth} p{0.32\textwidth} p{0.18\textwidth}}
     \hline
     設定キー & 意味 & 既定値 \\
     \hline
     \texttt{supply.injection.mode} & \texttt{min\_bin}\newline \texttt{powerlaw\_bins} & \texttt{powerlaw\_bins} \\
     \texttt{supply.injection.q} & べき指数（衝突カスケード断片） & 3.5 \\
-    \texttt{supply.injection.s\_inj\_min}\newline \texttt{supply.injection.s\_inj\_max} & 注入サイズ範囲 [m] & 自動 \\
-    \texttt{supply.injection.velocity.mode} & \texttt{inherit} / \texttt{fixed\_ei}\newline \texttt{/ factor} & \texttt{inherit} \\
+    \texttt{supply.injection.s\_inj}\newline \texttt{\_min}\newline \texttt{supply.injection.s\_inj}\newline \texttt{\_max} & 注入サイズ範囲 [m] & 自動 \\
+    \texttt{supply.injection.velocity}\newline \texttt{.mode} & \texttt{inherit} / \texttt{fixed\_ei}\newline \texttt{/ factor} & \texttt{inherit} \\
     \hline
   \end{tabular}
 \end{table}

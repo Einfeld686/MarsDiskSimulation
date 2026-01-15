@@ -52,12 +52,18 @@ pytest tests/ -q
 
 - Strubbe–Chiang 衝突寿命スケール: `pytest tests/integration/test_scalings.py`\newline
   `::test_strubbe_chiang_collisional_timescale_matches_orbit_scaling`（[@StrubbeChiang2006_ApJ648_652]）
-- Blow-out 起因 “wavy” PSD の再現: `pytest tests/integration/test_surface_outflux_wavy.py`\newline
-  `::test_blowout_driven_wavy_pattern_emerges`（[@ThebaultAugereau2007_AA472_169]）
-- IMEX-BDF(1) の $\Delta t$ 制限と質量保存: `pytest tests/integration/test_mass_conservation.py`\newline
-  `::test_imex_bdf1_limits_timestep_and_preserves_mass`（[@Krivov2006_AA455_509]）
-- 1D セル並列の on/off 一致確認（Windowsのみ）: `pytest tests/integration/test_numerical_anomaly_watchlist.py`\newline
-  `::test_cell_parallel_on_off_consistency`
+- Blow-out 起因 “wavy” PSD の再現: `pytest tests/integration/`\newline
+  `test_surface_outflux_wavy.py`\newline
+  `::test_blowout_driven_wavy`\newline
+  `_pattern_emerges`（[@ThebaultAugereau2007_AA472_169]）
+- IMEX-BDF(1) の $\Delta t$ 制限と質量保存: `pytest tests/integration/`\newline
+  `test_mass_conservation.py`\newline
+  `::test_imex_bdf1_limits_timestep`\newline
+  `_and_preserves_mass`（[@Krivov2006_AA455_509]）
+- 1D セル並列の on/off 一致確認（Windowsのみ）: `pytest tests/integration/`\newline
+  `test_numerical_anomaly_watchlist.py`\newline
+  `::test_cell_parallel_on_off`\newline
+  `_consistency`
 - 質量収支ログ: `out/checks/mass_budget.csv` で |error| ≤ 0.5% を確認（C4）
 
 検証では、$t_{\rm coll}$ スケールが理論式のオーダーと一致すること、$\Delta t$ の制約が安定性を満たすこと、ブローアウト近傍で wavy 構造が再現されることを確認する。これらの基準は設定変更後の回帰検証にも適用する。

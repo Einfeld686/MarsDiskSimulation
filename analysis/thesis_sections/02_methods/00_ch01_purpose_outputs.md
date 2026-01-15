@@ -33,7 +33,7 @@ reference_links:
   \centering
   \caption{序論の問いと手法で直接生成する量の対応}
   \label{tab:methods_questions_outputs}
-  \begin{tabular}{p{0.22\textwidth} p{0.36\textwidth} p{0.38\textwidth}}
+  \begin{tabular}{p{0.20\textwidth} p{0.32\textwidth} p{0.38\textwidth}}
     \hline
     序論の問い & 手法で直接生成する量 & 対応する出力 \\
     \hline

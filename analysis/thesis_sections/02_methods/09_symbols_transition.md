@@ -15,7 +15,7 @@ title: 記号一覧（遷移期・長期モデル接続：暫定）
   \centering
   \caption{記号一覧（遷移期・長期モデル接続：暫定）}
   \label{tab:symbols_transition}
-  \begin{tabular}{p{0.20\linewidth}p{0.46\linewidth}p{0.12\linewidth}p{0.18\linewidth}}
+  \begin{tabular}{p{0.17\linewidth}p{0.40\linewidth}p{0.09\linewidth}p{0.20\linewidth}}
     \hline
     記号 & 意味 & 単位 & 注記 \\
     \hline
@@ -30,23 +30,23 @@ title: 記号一覧（遷移期・長期モデル接続：暫定）
     $\Delta M_{\rm in}$ &
     遷移期における内側円盤の不可逆損失（表層散逸・不可逆落下等の総和） &
     $\mathrm{kg}$ &
-    本研究で評価対象。\newline 落下分の扱いは TODO(REF:delta\_min\_infall\_policy\_v1) \\
+    本研究で評価対象。落下分の扱いは\newline \texttt{TODO(REF:}\newline \texttt{delta}\newline \texttt{\_min\_infall}\newline \texttt{\_policy\_v1)} \\
     $M_{\rm in,0}$ &
     長期モデル開始時刻 $t_0$ における内側円盤の有効質量（接続後の入力） &
     $\mathrm{kg}$ &
     $M_{\rm in,0}=M_{\rm in}^{\rm SPH}-\Delta M_{\rm in}$ \\
     $t_0$ &
     長期モデルの開始時刻（遷移期が終わったと見なす時刻） &
-    $\mathrm{s}$（または $\mathrm{h}$） &
-    定義は文献確認中 \\
+    $\mathrm{s}$ &
+    定義は文献確認中（または $\mathrm{h}$） \\
     $r_d$ &
     内側円盤の外縁（半径） &
-    $\mathrm{m}$（または $R_{\rm Mars}$） &
-    定義は文献確認中 \\
+    $\mathrm{m}$ &
+    定義は文献確認中（または $R_{\rm Mars}$） \\
     $a_{\rm eq,max}$ &
     円盤が赤道面へ緩和した後の「最大半長軸」等を表す候補記号 &
     未定 &
-    定義関係は\newline TODO(REF:aeqmax\_rd\_relation\_v1) \\
+    定義関係は\newline \texttt{TODO(REF:}\newline \texttt{aeqmax}\newline \texttt{\_rd\_relation}\newline \texttt{\_v1)} \\
     $J_2$ &
     火星重力場の扁平項（第 2 帯状調和係数） &
     -- &
@@ -58,6 +58,6 @@ title: 記号一覧（遷移期・長期モデル接続：暫定）
 ## 補足：記号不整合（現状の把握）
 
 - 「外縁」が $r_d$ と $a_{\rm eq,max}$ で混在している。現時点では、両者の定義関係が文書内で確定できないため、次の表では別項目として残している。  
-- 先行研究（特に Canup & Salmon (2018)）の該当箇所を確認し、(i) 同一概念ならどちらかに統一する、(ii) 別概念なら本文で初出定義を与える、のいずれかを行う必要がある。\newline TODO(REF:transition_symbols_pending_refs_v1)
+- 先行研究（特に Canup & Salmon (2018)）の該当箇所を確認し、(i) 同一概念ならどちらかに統一する、(ii) 別概念なら本文で初出定義を与える、のいずれかを行う必要がある。\newline `TODO(REF:transition_symbols_pending_refs_v1)`
 
 ---

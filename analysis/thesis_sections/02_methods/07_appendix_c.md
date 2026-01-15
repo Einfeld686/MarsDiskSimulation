@@ -10,16 +10,16 @@
   \centering
   \caption{関連ドキュメントと参照用途}
   \label{tab:related_docs}
-  \begin{tabular}{p{0.3\textwidth} p{0.28\textwidth} p{0.36\textwidth}}
+  \begin{tabular}{p{0.28\textwidth} p{0.28\textwidth} p{0.34\textwidth}}
     \hline
     ドキュメント & 役割 & 参照時のユースケース \\
     \hline
-    \texttt{analysis/equations.md} & 物理式の定義（E.xxx） & 式の導出・記号・単位の確認 \\
-    \texttt{analysis/physics}\newline \texttt{\_flow.md} & 計算フロー Mermaid 図 & モジュール間依存と実行順序の把握 \\
-    \texttt{analysis/config}\newline \texttt{\_guide.md} & 設定キー詳細 & YAML パラメータの意味と許容範囲 \\
-    \texttt{analysis/glossary.md} & 用語・略語・単位規約 & 変数命名と単位接尾辞の確認 \\
-    \texttt{analysis/overview.md} & アーキテクチャ・データフロー & モジュール責務と 3 層分離の理解 \\
-    \texttt{analysis/run}\newline \texttt{-recipes.md} & 実行レシピ・感度掃引 & シナリオ別の実行手順と検証方法 \\
+    \texttt{analysis/}\newline \texttt{equations.md} & 物理式の定義（E.xxx） & 式の導出・記号・単位の確認 \\
+    \texttt{analysis/}\newline \texttt{physics}\newline \texttt{\_flow.md} & 計算フロー Mermaid 図 & モジュール間依存と実行順序の把握 \\
+    \texttt{analysis/}\newline \texttt{config}\newline \texttt{\_guide.md} & 設定キー詳細 & YAML パラメータの意味と許容範囲 \\
+    \texttt{analysis/}\newline \texttt{glossary.md} & 用語・略語・単位規約 & 変数命名と単位接尾辞の確認 \\
+    \texttt{analysis/}\newline \texttt{overview.md} & アーキテクチャ・データフロー & モジュール責務と 3 層分離の理解 \\
+    \texttt{analysis/}\newline \texttt{run}\newline \texttt{-recipes.md} & 実行レシピ・感度掃引 & シナリオ別の実行手順と検証方法 \\
     \hline
   \end{tabular}
 \end{table}
