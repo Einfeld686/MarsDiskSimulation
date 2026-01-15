@@ -4,6 +4,14 @@
 実装(.py): marsdisk/run.py, marsdisk/run_zero_d.py, marsdisk/run_one_d.py, marsdisk/io/writer.py, marsdisk/io/streaming.py, marsdisk/io/diagnostics.py, marsdisk/io/checkpoint.py, marsdisk/io/archive.py, marsdisk/archive.py
 -->
 
+<!-- TEX_EXCLUDE_START
+reference_links:
+- @Krivov2006_AA455_509 -> paper/references/Krivov2006_AA455_509.pdf
+- @StrubbeChiang2006_ApJ648_652 -> paper/references/StrubbeChiang2006_ApJ648_652.pdf
+- @ThebaultAugereau2007_AA472_169 -> paper/references/ThebaultAugereau2007_AA472_169.pdf
+- @Wyatt2008 -> paper/references/Wyatt2008.pdf
+TEX_EXCLUDE_END -->
+
 ---
 ### 6. 出力と検証
 

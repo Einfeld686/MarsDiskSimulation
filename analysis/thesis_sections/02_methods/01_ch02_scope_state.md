@@ -4,6 +4,27 @@
 実装(.py): marsdisk/run_zero_d.py, marsdisk/run_one_d.py, marsdisk/grid.py, marsdisk/io/tables.py, marsdisk/physics/psd.py, marsdisk/physics/sizes.py, marsdisk/physics/radiation.py, marsdisk/physics/shielding.py, marsdisk/physics/initfields.py
 -->
 
+<!-- TEX_EXCLUDE_START
+reference_links:
+- @Birnstiel2011_AA525_A11 -> paper/references/Birnstiel2011_AA525_A11.pdf
+- @BohrenHuffman1983_Wiley -> paper/references/BohrenHuffman1983_Wiley.pdf
+- @CanupSalmon2018_SciAdv4_eaar6887 -> paper/references/CanupSalmon2018_SciAdv4_eaar6887.pdf
+- @CogleyBergstrom1979_JQSRT21_265 -> paper/references/CogleyBergstrom1979_JQSRT21_265.pdf
+- @Dohnanyi1969_JGR74_2531 -> paper/references/Dohnanyi1969_JGR74_2531.pdf
+- @HansenTravis1974_SSR16_527 -> paper/references/HansenTravis1974_SSR16_527.pdf
+- @Hyodo2017a_ApJ845_125 -> paper/references/Hyodo2017a_ApJ845_125.pdf
+- @Joseph1976_JAS33_2452 -> paper/references/Joseph1976_JAS33_2452.pdf
+- @Jutzi2010_Icarus207_54 -> paper/references/Jutzi2010_Icarus207_54.pdf (missing)
+- @Krivov2006_AA455_509 -> paper/references/Krivov2006_AA455_509.pdf
+- @LeinhardtStewart2012_ApJ745_79 -> paper/references/LeinhardtStewart2012_ApJ745_79.pdf
+- @Olofsson2022_MNRAS513_713 -> paper/references/Olofsson2022_MNRAS513_713.pdf
+- @StrubbeChiang2006_ApJ648_652 -> paper/references/StrubbeChiang2006_ApJ648_652.pdf
+- @TakeuchiLin2003_ApJ593_524 -> paper/references/TakeuchiLin2003_ApJ593_524.pdf
+- @ThebaultAugereau2007_AA472_169 -> paper/references/ThebaultAugereau2007_AA472_169.pdf
+- @Wyatt2008 -> paper/references/Wyatt2008.pdf
+- @WyattClarkeBooth2011_CeMDA111_1 -> paper/references/WyattClarkeBooth2011_CeMDA111_1.pdf
+TEX_EXCLUDE_END -->
+
 ---
 ### 1. 研究対象と基本仮定
 

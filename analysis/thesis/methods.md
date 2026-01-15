@@ -9,6 +9,15 @@ NOTE: このファイルは analysis/thesis_sections/02_methods/*.md の結合�
 実装(.py): marsdisk/run.py, marsdisk/run_zero_d.py, marsdisk/run_one_d.py, marsdisk/io/writer.py, marsdisk/io/streaming.py, marsdisk/io/diagnostics.py
 -->
 
+<!-- TEX_EXCLUDE_START
+reference_links:
+- @CanupSalmon2018_SciAdv4_eaar6887 -> paper/references/CanupSalmon2018_SciAdv4_eaar6887.pdf
+- @Hyodo2017a_ApJ845_125 -> paper/references/Hyodo2017a_ApJ845_125.pdf
+- @Krivov2006_AA455_509 -> paper/references/Krivov2006_AA455_509.pdf
+- @StrubbeChiang2006_ApJ648_652 -> paper/references/StrubbeChiang2006_ApJ648_652.pdf
+- @Wyatt2008 -> paper/references/Wyatt2008.pdf
+TEX_EXCLUDE_END -->
+
 # シミュレーション手法
 
 ## 1. 目的・出力・問いとの対応
@@ -53,6 +62,27 @@ NOTE: このファイルは analysis/thesis_sections/02_methods/*.md の結合�
 <!--
 実装(.py): marsdisk/run_zero_d.py, marsdisk/run_one_d.py, marsdisk/grid.py, marsdisk/io/tables.py, marsdisk/physics/psd.py, marsdisk/physics/sizes.py, marsdisk/physics/radiation.py, marsdisk/physics/shielding.py, marsdisk/physics/initfields.py
 -->
+
+<!-- TEX_EXCLUDE_START
+reference_links:
+- @Birnstiel2011_AA525_A11 -> paper/references/Birnstiel2011_AA525_A11.pdf
+- @BohrenHuffman1983_Wiley -> paper/references/BohrenHuffman1983_Wiley.pdf
+- @CanupSalmon2018_SciAdv4_eaar6887 -> paper/references/CanupSalmon2018_SciAdv4_eaar6887.pdf
+- @CogleyBergstrom1979_JQSRT21_265 -> paper/references/CogleyBergstrom1979_JQSRT21_265.pdf
+- @Dohnanyi1969_JGR74_2531 -> paper/references/Dohnanyi1969_JGR74_2531.pdf
+- @HansenTravis1974_SSR16_527 -> paper/references/HansenTravis1974_SSR16_527.pdf
+- @Hyodo2017a_ApJ845_125 -> paper/references/Hyodo2017a_ApJ845_125.pdf
+- @Joseph1976_JAS33_2452 -> paper/references/Joseph1976_JAS33_2452.pdf
+- @Jutzi2010_Icarus207_54 -> paper/references/Jutzi2010_Icarus207_54.pdf (missing)
+- @Krivov2006_AA455_509 -> paper/references/Krivov2006_AA455_509.pdf
+- @LeinhardtStewart2012_ApJ745_79 -> paper/references/LeinhardtStewart2012_ApJ745_79.pdf
+- @Olofsson2022_MNRAS513_713 -> paper/references/Olofsson2022_MNRAS513_713.pdf
+- @StrubbeChiang2006_ApJ648_652 -> paper/references/StrubbeChiang2006_ApJ648_652.pdf
+- @TakeuchiLin2003_ApJ593_524 -> paper/references/TakeuchiLin2003_ApJ593_524.pdf
+- @ThebaultAugereau2007_AA472_169 -> paper/references/ThebaultAugereau2007_AA472_169.pdf
+- @Wyatt2008 -> paper/references/Wyatt2008.pdf
+- @WyattClarkeBooth2011_CeMDA111_1 -> paper/references/WyattClarkeBooth2011_CeMDA111_1.pdf
+TEX_EXCLUDE_END -->
 
 ---
 ### 1. 研究対象と基本仮定
@@ -137,6 +167,37 @@ $\tau_{\rm los}$ は遮蔽（$\Phi$）の入力として使われるほか、放
 <!--
 実装(.py): marsdisk/run_zero_d.py, marsdisk/run_one_d.py, marsdisk/io/tables.py, marsdisk/physics/tempdriver.py, marsdisk/physics/radiation.py, marsdisk/physics/shielding.py, marsdisk/physics/phase.py, marsdisk/physics/psd.py, marsdisk/physics/collide.py, marsdisk/physics/collisions_smol.py, marsdisk/physics/smol.py, marsdisk/physics/fragments.py, marsdisk/physics/qstar.py, marsdisk/physics/dynamics.py, marsdisk/physics/surface.py, marsdisk/physics/supply.py, marsdisk/physics/sublimation.py, marsdisk/physics/sinks.py, marsdisk/physics/viscosity.py
 -->
+
+<!-- TEX_EXCLUDE_START
+reference_links:
+- @BenzAsphaug1999_Icarus142_5 -> paper/references/BenzAsphaug1999_Icarus142_5.pdf
+- @BohrenHuffman1983_Wiley -> paper/references/BohrenHuffman1983_Wiley.pdf
+- @Burns1979_Icarus40_1 -> paper/references/Burns1979_Icarus40_1.pdf
+- @CogleyBergstrom1979_JQSRT21_265 -> paper/references/CogleyBergstrom1979_JQSRT21_265.pdf
+- @Dohnanyi1969_JGR74_2531 -> paper/references/Dohnanyi1969_JGR74_2531.pdf
+- @FegleySchaefer2012_arXiv -> paper/references/FegleySchaefer2012_arXiv.pdf
+- @HansenTravis1974_SSR16_527 -> paper/references/HansenTravis1974_SSR16_527.pdf
+- @Hyodo2018_ApJ860_150 -> paper/references/Hyodo2018_ApJ860_150.pdf
+- @IdaMakino1992_Icarus96_107 -> paper/references/IdaMakino1992_Icarus96_107.pdf
+- @ImazBlanco2023_MNRAS522_6150 -> paper/references/ImazBlanco2023_MNRAS522_6150.pdf
+- @Joseph1976_JAS33_2452 -> paper/references/Joseph1976_JAS33_2452.pdf
+- @Jutzi2010_Icarus207_54 -> paper/references/Jutzi2010_Icarus207_54.pdf (missing)
+- @Krivov2006_AA455_509 -> paper/references/Krivov2006_AA455_509.pdf
+- @Kubaschewski1974_Book -> paper/references/Kubaschewski1974_Book.pdf (missing)
+- @LeinhardtStewart2012_ApJ745_79 -> paper/references/LeinhardtStewart2012_ApJ745_79.pdf
+- @LissauerStewart1993_PP3 -> paper/references/LissauerStewart1993_PP3.pdf
+- @Markkanen2020_AA643_A16 -> paper/references/Markkanen2020_AA643_A16.pdf
+- @Ohtsuki2002_Icarus155_436 -> paper/references/Ohtsuki2002_Icarus155_436.pdf
+- @Pignatale2018_ApJ853_118 -> paper/references/Pignatale2018_ApJ853_118.pdf
+- @Ronnet2016_ApJ828_109 -> paper/references/Ronnet2016_ApJ828_109.pdf
+- @StewartLeinhardt2009_ApJ691_L133 -> paper/references/StewartLeinhardt2009_ApJ691_L133.pdf
+- @TakeuchiLin2003_ApJ593_524 -> paper/references/TakeuchiLin2003_ApJ593_524.pdf
+- @Thebault2003_AA408_775 -> paper/references/Thebault2003_AA408_775.pdf
+- @VisscherFegley2013_ApJL767_L12 -> paper/references/VisscherFegley2013_ApJL767_L12.pdf
+- @WetherillStewart1993_Icarus106_190 -> paper/references/WetherillStewart1993_Icarus106_190.pdf
+- @Wyatt2008 -> paper/references/Wyatt2008.pdf
+- @WyattClarkeBooth2011_CeMDA111_1 -> paper/references/WyattClarkeBooth2011_CeMDA111_1.pdf
+TEX_EXCLUDE_END -->
 
 ---
 ### 3. 時間発展アルゴリズム
@@ -701,6 +762,14 @@ S7 に対応する供給処理では、`supply_rate_nominal` を基準に `suppl
 実装(.py): marsdisk/run_zero_d.py, marsdisk/run_one_d.py, marsdisk/physics/smol.py, marsdisk/physics/collisions_smol.py, marsdisk/physics/surface.py, marsdisk/physics/viscosity.py, marsdisk/io/checkpoint.py, marsdisk/io/streaming.py
 -->
 
+<!-- TEX_EXCLUDE_START
+reference_links:
+- @Hyodo2018_ApJ860_150 -> paper/references/Hyodo2018_ApJ860_150.pdf
+- @Krivov2006_AA455_509 -> paper/references/Krivov2006_AA455_509.pdf
+- @StrubbeChiang2006_ApJ648_652 -> paper/references/StrubbeChiang2006_ApJ648_652.pdf
+- @Wyatt2008 -> paper/references/Wyatt2008.pdf
+TEX_EXCLUDE_END -->
+
 ---
 ### 5. 数値解法と停止条件
 
@@ -799,6 +868,14 @@ numerics:
 <!--
 実装(.py): marsdisk/run.py, marsdisk/run_zero_d.py, marsdisk/run_one_d.py, marsdisk/io/writer.py, marsdisk/io/streaming.py, marsdisk/io/diagnostics.py, marsdisk/io/checkpoint.py, marsdisk/io/archive.py, marsdisk/archive.py
 -->
+
+<!-- TEX_EXCLUDE_START
+reference_links:
+- @Krivov2006_AA455_509 -> paper/references/Krivov2006_AA455_509.pdf
+- @StrubbeChiang2006_ApJ648_652 -> paper/references/StrubbeChiang2006_ApJ648_652.pdf
+- @ThebaultAugereau2007_AA472_169 -> paper/references/ThebaultAugereau2007_AA472_169.pdf
+- @Wyatt2008 -> paper/references/Wyatt2008.pdf
+TEX_EXCLUDE_END -->
 
 ---
 ### 6. 出力と検証

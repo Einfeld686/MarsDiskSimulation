@@ -4,6 +4,14 @@
 実装(.py): marsdisk/run_zero_d.py, marsdisk/run_one_d.py, marsdisk/physics/smol.py, marsdisk/physics/collisions_smol.py, marsdisk/physics/surface.py, marsdisk/physics/viscosity.py, marsdisk/io/checkpoint.py, marsdisk/io/streaming.py
 -->
 
+<!-- TEX_EXCLUDE_START
+reference_links:
+- @Hyodo2018_ApJ860_150 -> paper/references/Hyodo2018_ApJ860_150.pdf
+- @Krivov2006_AA455_509 -> paper/references/Krivov2006_AA455_509.pdf
+- @StrubbeChiang2006_ApJ648_652 -> paper/references/StrubbeChiang2006_ApJ648_652.pdf
+- @Wyatt2008 -> paper/references/Wyatt2008.pdf
+TEX_EXCLUDE_END -->
+
 ---
 ### 5. 数値解法と停止条件
 
@@ -97,5 +105,4 @@ numerics:
 
 - クラッシュ時に最新チェックポイントから `--resume` で再開。
 - `keep_last_n` でディスク使用量を制限。
-
 

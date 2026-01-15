@@ -9,6 +9,15 @@ NOTE: このファイルは analysis/thesis_sections/02_methods/*.md の結合�
 実装(.py): marsdisk/run.py, marsdisk/run_zero_d.py, marsdisk/run_one_d.py, marsdisk/io/writer.py, marsdisk/io/streaming.py, marsdisk/io/diagnostics.py
 -->
 
+<!-- TEX_EXCLUDE_START
+reference_links:
+- @CanupSalmon2018_SciAdv4_eaar6887 -> paper/references/CanupSalmon2018_SciAdv4_eaar6887.pdf
+- @Hyodo2017a_ApJ845_125 -> paper/references/Hyodo2017a_ApJ845_125.pdf
+- @Krivov2006_AA455_509 -> paper/references/Krivov2006_AA455_509.pdf
+- @StrubbeChiang2006_ApJ648_652 -> paper/references/StrubbeChiang2006_ApJ648_652.pdf
+- @Wyatt2008 -> paper/references/Wyatt2008.pdf
+TEX_EXCLUDE_END -->
+
 # シミュレーション手法
 
 ## 1. 目的・出力・問いとの対応
