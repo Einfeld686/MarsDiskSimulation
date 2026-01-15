@@ -1,5 +1,9 @@
 ## 5. 再現性（出力・検証・運用）
 
+<!--
+実装(.py): marsdisk/run.py, marsdisk/run_zero_d.py, marsdisk/run_one_d.py, marsdisk/io/writer.py, marsdisk/io/streaming.py, marsdisk/io/diagnostics.py, marsdisk/io/checkpoint.py, marsdisk/io/archive.py, marsdisk/archive.py
+-->
+
 ---
 ### 6. 出力と検証
 
@@ -20,6 +24,7 @@
 I/O は `io.streaming` を既定で ON とし（`memory_limit_gb=10`, `step_flush_interval=10000`, `merge_at_end=true`）、大規模スイープでは逐次フラッシュでメモリを抑える。CI/pytest など軽量ケースでは `FORCE_STREAMING_OFF=1` または `IO_STREAMING=off` を明示してストリーミングを無効化する。`checks/mass_budget.csv` はストリーミング設定に関わらず生成する。
 
 - 実行結果は `out/<YYYYMMDD-HHMM>_<short-title>__<shortsha>__seed<n>/` に格納し、`run_card.md` へコマンド・環境・主要パラメータ・生成物ハッシュを記録して再現性を担保する。
+- `run_sweep.cmd` のスイープ実行では `BATCH_ROOT`（`OUT_ROOT` があればそれを使用）配下に `SWEEP_TAG/<RUN_TS>__<GIT_SHA>__seed<BATCH_SEED>/<case_title>/` を作成し、各ケース内に `run_card.md` と主要生成物を保存する。
 - `run_config.json` には採用した $\rho$, $Q_{\rm pr}$, $s_{\rm blow}$, 物理トグル、温度ドライバの出典が保存され、再解析時の基準となる。
 
 > **参照**: analysis/run-recipes.md §出力, analysis/AI_USAGE.md (I/O 規約)

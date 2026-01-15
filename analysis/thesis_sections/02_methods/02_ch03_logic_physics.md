@@ -1,5 +1,9 @@
 ## 3. モデルのロジック（時間発展と物理過程）
 
+<!--
+実装(.py): marsdisk/run_zero_d.py, marsdisk/run_one_d.py, marsdisk/io/tables.py, marsdisk/physics/tempdriver.py, marsdisk/physics/radiation.py, marsdisk/physics/shielding.py, marsdisk/physics/phase.py, marsdisk/physics/psd.py, marsdisk/physics/collide.py, marsdisk/physics/collisions_smol.py, marsdisk/physics/smol.py, marsdisk/physics/fragments.py, marsdisk/physics/qstar.py, marsdisk/physics/dynamics.py, marsdisk/physics/surface.py, marsdisk/physics/supply.py, marsdisk/physics/sublimation.py, marsdisk/physics/sinks.py, marsdisk/physics/viscosity.py, siO2_disk_cooling/siO2_cooling_map.py
+-->
+
 ---
 ### 3. 時間発展アルゴリズム
 
@@ -557,6 +561,4 @@ S7 に対応する供給処理では、`supply_rate_nominal` を基準に `suppl
 \end{table}
 
 注入モードは PSD 形状の境界条件として働くため、供給率とビン解像度の整合が重要である。感度試験では注入指数 $q$ と最小注入サイズを変化させ、ブローアウト近傍の wavy 構造や質量収支への影響を評価する。
-
-
 

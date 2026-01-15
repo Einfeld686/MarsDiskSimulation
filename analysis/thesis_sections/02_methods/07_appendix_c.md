@@ -1,5 +1,9 @@
 ### 付録 C. 関連ドキュメント
 
+<!--
+実装(.py): marsdisk/run.py, marsdisk/physics/radiation.py, marsdisk/physics/shielding.py, marsdisk/physics/collisions_smol.py, marsdisk/physics/supply.py, marsdisk/physics/sinks.py, marsdisk/physics/tempdriver.py
+-->
+
 関連ドキュメントの役割を表\ref{tab:related_docs}に整理する。
 
 \begin{table}[t]

@@ -5,6 +5,9 @@ NOTE: このファイルは analysis/thesis_sections/02_methods/*.md の結合�
 編集は分割ファイル側で行い、統合は `python -m analysis.tools.merge_methods_sections --write` を使う。
 -->
 
+<!--
+実装(.py): marsdisk/run.py, marsdisk/run_zero_d.py, marsdisk/run_one_d.py, marsdisk/io/writer.py, marsdisk/io/streaming.py, marsdisk/io/diagnostics.py
+-->
 
 # シミュレーション手法
 
@@ -46,6 +49,10 @@ NOTE: このファイルは analysis/thesis_sections/02_methods/*.md の結合�
 
 本書で用いる略語は以下に統一する。光学的厚さ（optical depth; $\tau$）、視線方向（line of sight; LOS）、常微分方程式（ordinary differential equation; ODE）、implicit-explicit（IMEX）、backward differentiation formula（BDF）、放射圧効率（radiation pressure efficiency; $Q_{\rm pr}$）、破壊閾値（critical specific energy; $Q_D^*$）、Hertz–Knudsen–Langmuir（HKL）フラックス、1D（one-dimensional）。
 ## 2. モデルの範囲と基本仮定
+
+<!--
+実装(.py): marsdisk/run_zero_d.py, marsdisk/run_one_d.py, marsdisk/grid.py, marsdisk/io/tables.py, marsdisk/physics/psd.py, marsdisk/physics/sizes.py, marsdisk/physics/radiation.py, marsdisk/physics/shielding.py, marsdisk/physics/initfields.py
+-->
 
 ---
 ### 1. 研究対象と基本仮定
@@ -126,6 +133,10 @@ $\tau_{\rm los}$ は遮蔽（$\Phi$）の入力として使われるほか、放
 
 > **参照**: analysis/equations.md（$\tau_{\perp}$ と $\tau_{\rm los}$ の定義）, analysis/physics_flow.md §6
 ## 3. モデルのロジック（時間発展と物理過程）
+
+<!--
+実装(.py): marsdisk/run_zero_d.py, marsdisk/run_one_d.py, marsdisk/io/tables.py, marsdisk/physics/tempdriver.py, marsdisk/physics/radiation.py, marsdisk/physics/shielding.py, marsdisk/physics/phase.py, marsdisk/physics/psd.py, marsdisk/physics/collide.py, marsdisk/physics/collisions_smol.py, marsdisk/physics/smol.py, marsdisk/physics/fragments.py, marsdisk/physics/qstar.py, marsdisk/physics/dynamics.py, marsdisk/physics/surface.py, marsdisk/physics/supply.py, marsdisk/physics/sublimation.py, marsdisk/physics/sinks.py, marsdisk/physics/viscosity.py, siO2_disk_cooling/siO2_cooling_map.py
+-->
 
 ---
 ### 3. 時間発展アルゴリズム
@@ -686,6 +697,10 @@ S7 に対応する供給処理では、`supply_rate_nominal` を基準に `suppl
 注入モードは PSD 形状の境界条件として働くため、供給率とビン解像度の整合が重要である。感度試験では注入指数 $q$ と最小注入サイズを変化させ、ブローアウト近傍の wavy 構造や質量収支への影響を評価する。
 ## 4. 数値解法・離散化・停止条件
 
+<!--
+実装(.py): marsdisk/run_zero_d.py, marsdisk/run_one_d.py, marsdisk/physics/smol.py, marsdisk/physics/collisions_smol.py, marsdisk/physics/surface.py, marsdisk/physics/viscosity.py, marsdisk/io/checkpoint.py, marsdisk/io/streaming.py
+-->
+
 ---
 ### 5. 数値解法と停止条件
 
@@ -781,6 +796,10 @@ numerics:
 - `keep_last_n` でディスク使用量を制限。
 ## 5. 再現性（出力・検証・運用）
 
+<!--
+実装(.py): marsdisk/run.py, marsdisk/run_zero_d.py, marsdisk/run_one_d.py, marsdisk/io/writer.py, marsdisk/io/streaming.py, marsdisk/io/diagnostics.py, marsdisk/io/checkpoint.py, marsdisk/io/archive.py, marsdisk/archive.py
+-->
+
 ---
 ### 6. 出力と検証
 
@@ -801,6 +820,7 @@ numerics:
 I/O は `io.streaming` を既定で ON とし（`memory_limit_gb=10`, `step_flush_interval=10000`, `merge_at_end=true`）、大規模スイープでは逐次フラッシュでメモリを抑える。CI/pytest など軽量ケースでは `FORCE_STREAMING_OFF=1` または `IO_STREAMING=off` を明示してストリーミングを無効化する。`checks/mass_budget.csv` はストリーミング設定に関わらず生成する。
 
 - 実行結果は `out/<YYYYMMDD-HHMM>_<short-title>__<shortsha>__seed<n>/` に格納し、`run_card.md` へコマンド・環境・主要パラメータ・生成物ハッシュを記録して再現性を担保する。
+- `run_sweep.cmd` のスイープ実行では `BATCH_ROOT`（`OUT_ROOT` があればそれを使用）配下に `SWEEP_TAG/<RUN_TS>__<GIT_SHA>__seed<BATCH_SEED>/<case_title>/` を作成し、各ケース内に `run_card.md` と主要生成物を保存する。
 - `run_config.json` には採用した $\rho$, $Q_{\rm pr}$, $s_{\rm blow}$, 物理トグル、温度ドライバの出典が保存され、再解析時の基準となる。
 
 > **参照**: analysis/run-recipes.md §出力, analysis/AI_USAGE.md (I/O 規約)
@@ -862,6 +882,10 @@ python -m tools.evaluation_system --outdir <run_dir>  # Doc 更新後に直近�
 ---
 ### 付録 A. 運用実行（run_sweep.cmd を正とする）
 
+<!--
+実装(.py): scripts/runsets/windows/preflight_checks.py, scripts/runsets/common/read_overrides_cmd.py, scripts/runsets/common/read_study_overrides.py, scripts/runsets/common/write_base_overrides.py, scripts/runsets/common/write_sweep_list.py, scripts/runsets/common/build_overrides.py, scripts/runsets/common/next_seed.py, scripts/runsets/common/calc_parallel_jobs.py, scripts/runsets/common/calc_cell_jobs.py, scripts/runsets/common/calc_cpu_target_jobs.py, scripts/runsets/common/calc_thread_limit.py, scripts/tests/measure_case_output_size.py, scripts/runsets/common/run_one.py, scripts/runsets/common/run_sweep_worker.py, scripts/runsets/common/hooks/plot_sweep_run.py, scripts/runsets/common/hooks/evaluate_tau_supply.py, scripts/runsets/common/hooks/archive_run.py, scripts/runsets/common/hooks/preflight_streaming.py, marsdisk/run.py
+-->
+
 代表的な実行コマンドとシナリオは analysis/run-recipes.md に集約する。運用スイープは `scripts/runsets/windows/run_sweep.cmd` を正とし、既定の `CONFIG_PATH`/`OVERRIDES_PATH` と引数の扱いは同スクリプトに従う。  
 > **参照**: `scripts/runsets/windows/run_sweep.cmd` の `::REF:DEFAULT_PATHS` / `::REF:CLI_ARGS`
 
@@ -917,9 +941,51 @@ scripts\runsets\windows\run_sweep.cmd --config scripts\runsets\common\base.yml -
 - 固定地平で動かす場合は `COOL_TO_K=none` と `T_END_YEARS` を指定する。  
   > **参照**: `scripts/runsets/windows/run_sweep.cmd` の `::REF:TEMPERATURE_STOP`
 
+#### run_sweep のスイープ定義（run_temp_supply_sweep.cmd 経由）
+
+`run_sweep.cmd` は `run_temp_supply_sweep.cmd` を呼び出し、**ベース設定 + 追加 overrides + ケース overrides** の 3 層をマージして各ケースを実行する。優先順位は「base defaults < overrides file < per-case overrides」で、各ケースの設定は一時ファイルに出力して `marsdisk.run` に渡される。
+
+- **ベース設定**: `scripts/runsets/common/base.yml` を基準とし、Windows 既定の `scripts/runsets/windows/overrides.txt` を追加する。
+- **ケース生成**: `T_LIST`, `EPS_LIST`, `TAU_LIST`, `I0_LIST` の直積でスイープを作る。`--study` を指定した場合は、`read_study_overrides.py` でリストや環境変数を上書きできる。
+- **既定のスイープ値**（run_sweep 既定値）:
+
+  \begin{table}[t]
+    \centering
+    \caption{run\_sweep 既定のスイープパラメータ}
+    \label{tab:run_sweep_defaults}
+    \begin{tabular}{p{0.24\textwidth} p{0.2\textwidth} p{0.46\textwidth}}
+      \hline
+      変数 & 既定値 & 意味 \\
+      \hline
+      \texttt{T\_LIST} & 4000, 3000 & 火星温度 $T_M$ [K] \\
+      \texttt{EPS\_LIST} & 1.0, 0.5 & 混合係数 $\epsilon_{\rm mix}$ \\
+      \texttt{TAU\_LIST} & 1.0, 0.5 & 初期光学的厚さ $\tau_0$ \\
+      \texttt{I0\_LIST} & 0.05, 0.10 & 初期傾斜角 $i_0$ \\
+      \hline
+    \end{tabular}
+  \end{table}
+
+- **ケースごとの overrides**:
+  - `io.outdir`: 出力先（後述のケースディレクトリ）
+  - `dynamics.rng_seed`: 乱数シード
+  - `radiation.TM_K`: 火星温度（`T_LIST`）
+  - `supply.mixing.epsilon_mix`: 混合係数（`EPS_LIST`）
+  - `optical_depth.tau0_target`: 初期光学的厚さ（`TAU_LIST`）
+  - `dynamics.i0`: 初期傾斜角（`I0_LIST`）
+  - `radiation.mars_temperature_driver.table.path`: `COOL_MODE!=hyodo` のとき `data/mars_temperature_T{T}p0K.csv` を使用
+  - `numerics.t_end_*` と `scope.analysis_years`: `END_MODE` に応じて温度停止または固定年数に切り替え
+
+- **出力ディレクトリ構造**（run_sweep 既定）:
+  `out/<SWEEP_TAG>/<RUN_TS>__<GIT_SHA>__seed<BATCH_SEED>/<TITLE>/`
+  ここで `TITLE` は `T{T}_eps{EPS}_tau{TAU}_i0{I0}` の形式（小数点は `p` 置換）。
+
 
 ---
 ### 付録 B. 設定→物理対応クイックリファレンス
+
+<!--
+実装(.py): marsdisk/schema.py, marsdisk/config_utils.py, marsdisk/run_zero_d.py, marsdisk/run_one_d.py, marsdisk/physics/radiation.py, marsdisk/physics/shielding.py, marsdisk/physics/supply.py, marsdisk/physics/sinks.py, marsdisk/physics/phase.py, marsdisk/physics/psd.py, marsdisk/physics/viscosity.py
+-->
 
 設定と物理の対応を表\ref{tab:config_physics_map}にまとめる。
 
@@ -957,6 +1023,10 @@ scripts\runsets\windows\run_sweep.cmd --config scripts\runsets\common\base.yml -
 ---
 ### 付録 C. 関連ドキュメント
 
+<!--
+実装(.py): marsdisk/run.py, marsdisk/physics/radiation.py, marsdisk/physics/shielding.py, marsdisk/physics/collisions_smol.py, marsdisk/physics/supply.py, marsdisk/physics/sinks.py, marsdisk/physics/tempdriver.py
+-->
+
 関連ドキュメントの役割を表\ref{tab:related_docs}に整理する。
 
 \begin{table}[t]
@@ -980,6 +1050,10 @@ scripts\runsets\windows\run_sweep.cmd --config scripts\runsets\common\base.yml -
 
 ---
 ### 付録 D. 略語索引
+
+<!--
+実装(.py): marsdisk/physics/psd.py, marsdisk/physics/surface.py, marsdisk/physics/smol.py, marsdisk/physics/radiation.py, marsdisk/physics/qstar.py, marsdisk/physics/sublimation.py, marsdisk/physics/viscosity.py
+-->
 
 略語は表\ref{tab:abbreviations}にまとめる。
 
@@ -1008,6 +1082,10 @@ scripts\runsets\windows\run_sweep.cmd --config scripts\runsets\common\base.yml -
 document_type: reference
 title: 記号一覧（遷移期・長期モデル接続：暫定）
 ---
+
+<!--
+実装(.py): marsdisk/schema.py, marsdisk/physics/initfields.py, marsdisk/run_zero_d.py, marsdisk/run_one_d.py
+-->
 
 # 記号一覧（遷移期・長期モデル接続：暫定）
 

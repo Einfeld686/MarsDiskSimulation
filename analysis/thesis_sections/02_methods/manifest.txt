@@ -1,4 +1,5 @@
 # Ordered list of section files to build analysis/thesis/methods.md.
+# 実装(.py): marsdisk/run.py, marsdisk/run_zero_d.py, marsdisk/run_one_d.py
 00_ch01_purpose_outputs.md
 01_ch02_scope_state.md
 02_ch03_logic_physics.md

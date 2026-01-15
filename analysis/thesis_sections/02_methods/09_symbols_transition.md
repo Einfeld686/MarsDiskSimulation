@@ -3,6 +3,10 @@ document_type: reference
 title: 記号一覧（遷移期・長期モデル接続：暫定）
 ---
 
+<!--
+実装(.py): marsdisk/schema.py, marsdisk/physics/initfields.py, marsdisk/run_zero_d.py, marsdisk/run_one_d.py
+-->
+
 # 記号一覧（遷移期・長期モデル接続：暫定）
 
 本ファイルは、現時点の導入（遷移期）文書に現れる記号を、TeX 化に先立って一時的に整理したものである。定義が先行研究依存で確定できない項目は文献確認中として残している。

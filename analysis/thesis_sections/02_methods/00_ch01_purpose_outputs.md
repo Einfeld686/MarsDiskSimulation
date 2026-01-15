@@ -5,6 +5,9 @@ NOTE: このファイルは analysis/thesis_sections/02_methods/*.md の結合�
 編集は分割ファイル側で行い、統合は `python -m analysis.tools.merge_methods_sections --write` を使う。
 -->
 
+<!--
+実装(.py): marsdisk/run.py, marsdisk/run_zero_d.py, marsdisk/run_one_d.py, marsdisk/io/writer.py, marsdisk/io/streaming.py, marsdisk/io/diagnostics.py
+-->
 
 # シミュレーション手法
 
@@ -45,4 +48,3 @@ NOTE: このファイルは analysis/thesis_sections/02_methods/*.md の結合�
 本文では物理的な因果と時間発展の説明を優先し、設定キーや実装パスは付録に整理する。式は必要最小限に再掲し、詳細な定義と記号表は analysis/equations.md を正とする。
 
 本書で用いる略語は以下に統一する。光学的厚さ（optical depth; $\tau$）、視線方向（line of sight; LOS）、常微分方程式（ordinary differential equation; ODE）、implicit-explicit（IMEX）、backward differentiation formula（BDF）、放射圧効率（radiation pressure efficiency; $Q_{\rm pr}$）、破壊閾値（critical specific energy; $Q_D^*$）、Hertz–Knudsen–Langmuir（HKL）フラックス、1D（one-dimensional）。
-

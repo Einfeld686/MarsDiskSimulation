@@ -1,5 +1,9 @@
 ### 付録 B. 設定→物理対応クイックリファレンス
 
+<!--
+実装(.py): marsdisk/schema.py, marsdisk/config_utils.py, marsdisk/run_zero_d.py, marsdisk/run_one_d.py, marsdisk/physics/radiation.py, marsdisk/physics/shielding.py, marsdisk/physics/supply.py, marsdisk/physics/sinks.py, marsdisk/physics/phase.py, marsdisk/physics/psd.py, marsdisk/physics/viscosity.py
+-->
+
 設定と物理の対応を表\ref{tab:config_physics_map}にまとめる。
 
 \begin{table}[t]
