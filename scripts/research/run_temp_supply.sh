@@ -67,10 +67,10 @@ if [[ -n "${EXTRA_OVERRIDES_FILE:-}" ]]; then
 fi
 
 # Parameter grids (run hotter cases first)
-T_LIST=("4000" "3000")
+T_LIST=("5000" "4000" "3000")
 EPS_LIST=("1.0" "0.5")
 TAU_LIST=("1.0" "0.5")
-I0_LIST=("0.05" "0.10")
+I0_LIST=("0.05" "0.01" "0.005")
 EXTRA_CASES_DEFAULT=""
 if [[ -n "${EXTRA_CASES+x}" ]]; then
   EXTRA_CASES_VALUE="${EXTRA_CASES}"
