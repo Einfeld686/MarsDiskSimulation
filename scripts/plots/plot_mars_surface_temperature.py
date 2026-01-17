@@ -69,7 +69,17 @@ def _time_to_years(values: pd.Series, column: str) -> pd.Series:
 
 
 def _infer_label(path: Path) -> str:
-    match = re.search(r"T(?P<value>\\d+(?:p\\d+)?)K", path.stem)
+    match = re.search(r"mars_temperature_T(?P<value>\d+(?:p\d+)?)K", path.stem)
+    if match:
+        raw = match.group("value").replace("p", ".")
+        try:
+            value = float(raw)
+        except ValueError:
+            value = raw
+        if isinstance(value, float) and abs(value - round(value)) < 1.0e-6:
+            return f"火星表面温度 {int(round(value))}K"
+        return f"火星表面温度 {value}K"
+    match = re.search(r"T(?P<value>\d+(?:p\d+)?)K", path.stem)
     if match:
         raw = match.group("value").replace("p", ".")
         return f"Slab T0={raw} K"
@@ -297,7 +307,7 @@ def main(argv: Iterable[str] | None = None) -> None:
         ax.plot(
             hyodo_data["time_years"],
             hyodo_data["temperature_K"],
-            label=f"Hyodo linear T0={args.hyodo_T0:g} K to {args.hyodo_floor:g} K",
+            label="Hyodo et al., 2018",
             linestyle="--",
             color="#d95f02",
         )
@@ -321,7 +331,7 @@ def main(argv: Iterable[str] | None = None) -> None:
                 color="#6a3d9a",
                 linestyle=":",
                 linewidth=1.4,
-                label=f"{args.blowout_size_um:g} um blowout (T~{T_blow:.0f} K)",
+                label=f"{args.blowout_size_um:g} um blowout",
             )
     ax.set_xlabel("Time [yr]")
     ax.set_ylabel("Mars surface temperature [K]")
