@@ -30,6 +30,7 @@ if not defined TRACE_ECHO set "TRACE_ECHO=0"
 if not defined DEBUG_DOC_ALWAYS set "DEBUG_DOC_ALWAYS=0"
 
 if not defined PYTHON_ALLOW_LAUNCHER set "PYTHON_ALLOW_LAUNCHER=0"
+if not defined IO_ARCHIVE set "IO_ARCHIVE=off"
 if "%DEBUG_ARG%"=="1" echo.[DEBUG] checkpoint 2: before PYTHON_EXE detection
 
 
@@ -632,6 +633,13 @@ if not defined HOOKS_STRICT set "HOOKS_STRICT=0"
 
 
 
+set "ARCHIVE_HOOK_ENABLED=1"
+if /i "%IO_ARCHIVE%"=="off" set "ARCHIVE_HOOK_ENABLED=0"
+if /i "%IO_ARCHIVE%"=="false" set "ARCHIVE_HOOK_ENABLED=0"
+if /i "%IO_ARCHIVE%"=="0" set "ARCHIVE_HOOK_ENABLED=0"
+
+
+
 if not defined PLOT_ENABLE set "PLOT_ENABLE=1"
 
 
@@ -669,6 +677,10 @@ for %%H in (%HOOKS_RAW:,= %) do (
 
 
   if /i "!HOOK!"=="eval" if "%NO_EVAL%"=="1" set "SKIP=1"
+
+
+
+  if /i "!HOOK!"=="archive" if "%ARCHIVE_HOOK_ENABLED%"=="0" set "SKIP=1"
 
 
 
