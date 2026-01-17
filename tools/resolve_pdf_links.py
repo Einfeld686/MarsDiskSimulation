@@ -23,6 +23,35 @@ def _dest_to_array(dest) -> ArrayObject:
     return arr
 
 
+def _rebuild_outlines(reader: PdfReader, writer: PdfWriter) -> int:
+    try:
+        outlines = reader.outline
+    except Exception:
+        return 0
+
+    def walk(items, parent=None):
+        count = 0
+        last = None
+        for item in items:
+            if isinstance(item, list):
+                if last is not None:
+                    count += walk(item, parent=last)
+                continue
+            title = getattr(item, "title", None)
+            if title is None:
+                title = str(item)
+            try:
+                page_index = reader.get_destination_page_number(item)
+            except Exception:
+                last = None
+                continue
+            last = writer.add_outline_item(title, page_index, parent=parent)
+            count += 1
+        return count
+
+    return walk(outlines)
+
+
 def resolve_links(input_path: Path, output_path: Path) -> int:
     reader = PdfReader(str(input_path))
     writer = PdfWriter()
@@ -35,12 +64,6 @@ def resolve_links(input_path: Path, output_path: Path) -> int:
         root[NameObject("/PageMode")] = reader_root["/PageMode"]
     if "/PageLabels" in reader_root:
         root[NameObject("/PageLabels")] = reader_root["/PageLabels"].clone(writer)
-    if "/Names" in reader_root:
-        root[NameObject("/Names")] = reader_root["/Names"].get_object().clone(writer)
-    if "/Outlines" in reader_root:
-        root[NameObject("/Outlines")] = (
-            reader_root["/Outlines"].get_object().clone(writer)
-        )
 
     root[NameObject("/OpenAction")] = ArrayObject(
         [writer.pages[0].indirect_reference, NameObject("/Fit")]
@@ -100,6 +123,10 @@ def resolve_links(input_path: Path, output_path: Path) -> int:
                     )
                     annot[NameObject("/Dest")] = dest_array
                     updated += 1
+
+    outline_total = _rebuild_outlines(reader, writer)
+    if outline_total == 0:
+        print("resolve_links: warning: no outlines rebuilt")
 
     tmp_path = output_path
     if input_path.resolve() == output_path.resolve():
