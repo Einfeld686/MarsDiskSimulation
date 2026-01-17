@@ -901,13 +901,13 @@ scripts/plots/plot_mars_surface_temperature.py:38:def _resolve_table_path(path: 
 scripts/plots/plot_mars_surface_temperature.py:52:def _infer_columns(df: pd.DataFrame) -> Tuple[str, str]
 scripts/plots/plot_mars_surface_temperature.py:62:def _time_to_years(values: pd.Series, column: str) -> pd.Series
 scripts/plots/plot_mars_surface_temperature.py:71:def _infer_label(path: Path) -> str
-scripts/plots/plot_mars_surface_temperature.py:79:def _load_table_series(path: Path) -> pd.DataFrame
-scripts/plots/plot_mars_surface_temperature.py:91:def _truncate_at_temperature(data: pd.DataFrame, cutoff_K: float) -> pd.DataFrame
-scripts/plots/plot_mars_surface_temperature.py:117:def _load_density_from_json(path: Path) -> float
-scripts/plots/plot_mars_surface_temperature.py:127:def _compute_blowout_temperature(size_m: float, qpr_table: Path, rho_kg_m3: float) -> float | None
-scripts/plots/plot_mars_surface_temperature.py:158:def _ensure_hyodo_grid(time_s: np.ndarray, t_stop_s: float) -> np.ndarray
-scripts/plots/plot_mars_surface_temperature.py:171:def parse_args(argv: Iterable[str] | None=None) -> argparse.Namespace
-scripts/plots/plot_mars_surface_temperature.py:254:def main(argv: Iterable[str] | None=None) -> None
+scripts/plots/plot_mars_surface_temperature.py:89:def _load_table_series(path: Path) -> pd.DataFrame
+scripts/plots/plot_mars_surface_temperature.py:101:def _truncate_at_temperature(data: pd.DataFrame, cutoff_K: float) -> pd.DataFrame
+scripts/plots/plot_mars_surface_temperature.py:127:def _load_density_from_json(path: Path) -> float
+scripts/plots/plot_mars_surface_temperature.py:137:def _compute_blowout_temperature(size_m: float, qpr_table: Path, rho_kg_m3: float) -> float | None
+scripts/plots/plot_mars_surface_temperature.py:168:def _ensure_hyodo_grid(time_s: np.ndarray, t_stop_s: float) -> np.ndarray
+scripts/plots/plot_mars_surface_temperature.py:181:def parse_args(argv: Iterable[str] | None=None) -> argparse.Namespace
+scripts/plots/plot_mars_surface_temperature.py:264:def main(argv: Iterable[str] | None=None) -> None
 scripts/plots/plot_qpr_planck_sio2.py:25:def _resolve_table_path(path: Path) -> Path
 scripts/plots/plot_qpr_planck_sio2.py:39:def _load_table(path: Path) -> pd.DataFrame
 scripts/plots/plot_qpr_planck_sio2.py:53:def _plot_curves(ax: plt.Axes, df: pd.DataFrame, temps: np.ndarray, cmap, norm: Normalize, marker_size: float, label_inset: bool=False) -> None
@@ -2283,8 +2283,9 @@ tools/research/plot_supply_chain.py:27:def plot_supply_chain(run_dir: Path, out:
 tools/research/plot_supply_chain.py:151:def main() -> int
 tools/resolve_pdf_links.py:11:def _as_float_or_null(value)
 tools/resolve_pdf_links.py:17:def _dest_to_array(dest) -> ArrayObject
-tools/resolve_pdf_links.py:26:def resolve_links(input_path: Path, output_path: Path) -> int
-tools/resolve_pdf_links.py:117:def main() -> int
+tools/resolve_pdf_links.py:26:def _rebuild_outlines(reader: PdfReader, writer: PdfWriter) -> int
+tools/resolve_pdf_links.py:55:def resolve_links(input_path: Path, output_path: Path) -> int
+tools/resolve_pdf_links.py:144:def main() -> int
 tools/utilities/memory_probe.py:23:def _human_bytes(value: float) -> str
 tools/utilities/memory_probe.py:35:def _resolve_radius(cfg: object) -> Tuple[float, str]
 tools/utilities/memory_probe.py:52:def _estimate_memory(rows: int, bytes_per_row: float) -> float

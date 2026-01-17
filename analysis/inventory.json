@@ -9157,49 +9157,49 @@
   },
   {
     "file_path": "scripts/plots/plot_mars_surface_temperature.py",
-    "line_no": 79,
+    "line_no": 89,
     "symbol": "_load_table_series",
     "signature": "_load_table_series(path: Path) -> pd.DataFrame",
     "brief_usage": "No description available."
   },
   {
     "file_path": "scripts/plots/plot_mars_surface_temperature.py",
-    "line_no": 91,
+    "line_no": 101,
     "symbol": "_truncate_at_temperature",
     "signature": "_truncate_at_temperature(data: pd.DataFrame, cutoff_K: float) -> pd.DataFrame",
     "brief_usage": "No description available."
   },
   {
     "file_path": "scripts/plots/plot_mars_surface_temperature.py",
-    "line_no": 117,
+    "line_no": 127,
     "symbol": "_load_density_from_json",
     "signature": "_load_density_from_json(path: Path) -> float",
     "brief_usage": "No description available."
   },
   {
     "file_path": "scripts/plots/plot_mars_surface_temperature.py",
-    "line_no": 127,
+    "line_no": 137,
     "symbol": "_compute_blowout_temperature",
     "signature": "_compute_blowout_temperature(size_m: float, qpr_table: Path, rho_kg_m3: float) -> float | None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "scripts/plots/plot_mars_surface_temperature.py",
-    "line_no": 158,
+    "line_no": 168,
     "symbol": "_ensure_hyodo_grid",
     "signature": "_ensure_hyodo_grid(time_s: np.ndarray, t_stop_s: float) -> np.ndarray",
     "brief_usage": "No description available."
   },
   {
     "file_path": "scripts/plots/plot_mars_surface_temperature.py",
-    "line_no": 171,
+    "line_no": 181,
     "symbol": "parse_args",
     "signature": "parse_args(argv: Iterable[str] | None=None) -> argparse.Namespace",
     "brief_usage": "No description available."
   },
   {
     "file_path": "scripts/plots/plot_mars_surface_temperature.py",
-    "line_no": 254,
+    "line_no": 264,
     "symbol": "main",
     "signature": "main(argv: Iterable[str] | None=None) -> None",
     "brief_usage": "No description available."
@@ -21156,13 +21156,20 @@
   {
     "file_path": "tools/resolve_pdf_links.py",
     "line_no": 26,
+    "symbol": "_rebuild_outlines",
+    "signature": "_rebuild_outlines(reader: PdfReader, writer: PdfWriter) -> int",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tools/resolve_pdf_links.py",
+    "line_no": 55,
     "symbol": "resolve_links",
     "signature": "resolve_links(input_path: Path, output_path: Path) -> int",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/resolve_pdf_links.py",
-    "line_no": 117,
+    "line_no": 144,
     "symbol": "main",
     "signature": "main() -> int",
     "brief_usage": "No description available."
