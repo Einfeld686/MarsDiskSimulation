@@ -920,6 +920,18 @@
       ]
     },
     {
+      "key": "JutziMichelBenz2010_AA509_L2",
+      "short": "Jutzi et al. (2010)",
+      "title": "A large crater as a probe of the internal structure of the E-type asteroid Steins",
+      "doi": "10.1051/0004-6361/200913549",
+      "bibtex": "@article{JutziMichelBenz2010_AA509_L2, journal = {A&A}, volume = {509}, pages = {L2}, year = {2010}}",
+      "adopted_scope": "Impact simulations of the large crater on asteroid Steins, used to constrain internal structure assumptions.",
+      "claims": [
+        "Uses numerical impact simulations to reproduce the ~2 km crater on Steins.",
+        "Compares monolithic vs rubble-pile internal structures with and without microporosity."
+      ]
+    },
+    {
       "key": "Genge2017_MAPS52_1000",
       "short": "Genge (2017)",
       "title": "The entry heating and abundances of basaltic micrometeorites",
