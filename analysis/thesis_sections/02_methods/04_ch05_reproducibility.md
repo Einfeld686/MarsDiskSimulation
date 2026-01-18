@@ -12,9 +12,9 @@ reference_links:
 <!-- TEX_EXCLUDE_END -->
 
 ---
-### 6. 出力と検証
+### 5.1 出力と検証
 
-#### 6.1 出力・I/O・再現性
+#### 5.1.1 出力・I/O・再現性
 
 時間発展の各ステップは Parquet/JSON/CSV へ記録し、後段の解析・可視化で再構成可能な形で保存する（[@Krivov2006_AA455_509]）。必須の出力は `series/run.parquet`、`series/psd_hist.parquet`、`summary.json`、`checks/mass_budget.csv` で、追加診断は設定に応じて `diagnostics.parquet` や `energy.parquet` を生成する。
 
@@ -40,9 +40,9 @@ CI/pytest など軽量ケースでは `FORCE_STREAMING_OFF=1` または `IO_STRE
 - **参照**: analysis/AI_USAGE.md (I/O 規約)
 
 ---
-#### 6.2 検証手順
+#### 5.1.2 検証手順
 
-##### 6.2.1 ユニットテスト
+##### 5.1.2.1 ユニットテスト
 
 ```bash
 pytest tests/ -q
@@ -68,13 +68,13 @@ pytest tests/ -q
 
 検証では、$t_{\rm coll}$ スケールが理論式のオーダーと一致すること、$\Delta t$ の制約が安定性を満たすこと、ブローアウト近傍で wavy 構造が再現されることを確認する。これらの基準は設定変更後の回帰検証にも適用する。
 
-##### 6.2.2 実行後の数値チェック（推奨）
+##### 5.1.2.2 実行後の数値チェック（推奨）
 
 - `summary.json` の `mass_budget_max_error_percent` が 0.5% 以内であること。
 - `series/run.parquet` の `dt_over_t_blow` が 1 未満に収まっているかを確認する。\newline 超過時は `fast_blowout_flag_*` と併せて評価する。
 - 衝突が有効なケースでは `smol_dt_eff < dt` が成立し、`t_coll_kernel_min` と一貫しているかを確認する。
 
-##### 6.2.3 ドキュメント整合性
+##### 5.1.2.3 ドキュメント整合性
 
 ```bash
 make analysis-sync      # DocSync
@@ -86,7 +86,7 @@ python -m tools.evaluation_system --outdir <run_dir>  # Doc 更新後に直近�
 
 
 ---
-### 11. 先行研究リンク
+### 5.2 先行研究リンク
 
 - 温度ドライバ: [Hyodo et al. (2018)](../paper/pdf_extractor/outputs/Hyodo2018_ApJ860_150/result.md)
 - gas-poor/衝突起源円盤の文脈:\newline
