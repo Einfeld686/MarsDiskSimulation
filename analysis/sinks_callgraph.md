@@ -53,7 +53,7 @@ flowchart TD
 ## HK Boundary → `ds/dt` diagnostics
 
 1. `fragments.s_sub_boundary` は灰色体温度と `s_sink_from_timescale` を用いた HKL 境界を計算するが、床粒径の決定には使わない（診断用のみ）。[marsdisk/physics/fragments.py#s_sub_boundary [L160–L226]]
-2. Runtimeでは `psd.apply_uniform_size_drift` が `ds/dt` を PSD バケットへ反映し、欠損を `mass_lost_sublimation_step` と `dSigma_dt_sublimation` に出力しつつ床粒径は `max(s_min_cfg, a_blow)` を維持する。[marsdisk/physics/psd.py#apply_uniform_size_drift [L419–L560]]
+2. Runtimeでは `psd.apply_uniform_size_drift` が `ds/dt` を PSD バケットへ反映し、欠損を `mass_lost_sublimation_step` と `dSigma_dt_sublimation` に出力しつつ床粒径は `max(s_min_cfg, a_blow)` を維持する。[marsdisk/physics/psd.py#apply_uniform_size_drift [L430–L571]]
 3. `compute_s_min_F2` は現在ブローアウトサイズのみ返し、警告を発する互換用ヘルパー。[marsdisk/physics/fragments.py#s_sub_boundary [L160–L226]]
 
 ## 0D Loop Call Order (t<sub>sink</sub> Propagation)
@@ -85,7 +85,7 @@ Additional flags `enable_sublimation`, `enable_gas_drag`, `rho_g`, and `sublimat
 
 ## Output Columns and Provenance
 
-- **Time-series parquet** – 各ステップのフラックスと β/床診断を記録。`mass_lost_by_sinks` は `sink_flux_surface` の累積で、`mass_lost_sublimation_step` は HKL 由来の部分だけを抜き出す。Smol ルートでの `mass_loss_rate_sublimation` もここに合算される。[marsdisk/run_zero_d.py#run_zero_d [L1392–L6000]][marsdisk/physics/psd.py#apply_uniform_size_drift [L419–L560]][marsdisk/physics/collisions_smol.py#step_collisions_smol_0d [L1143–L1613]][marsdisk/io/writer.py#write_parquet [L412–L438]]
+- **Time-series parquet** – 各ステップのフラックスと β/床診断を記録。`mass_lost_by_sinks` は `sink_flux_surface` の累積で、`mass_lost_sublimation_step` は HKL 由来の部分だけを抜き出す。Smol ルートでの `mass_loss_rate_sublimation` もここに合算される。[marsdisk/run_zero_d.py#run_zero_d [L1392–L6000]][marsdisk/physics/psd.py#apply_uniform_size_drift [L430–L571]][marsdisk/physics/collisions_smol.py#step_collisions_smol_0d [L1143–L1613]][marsdisk/io/writer.py#write_parquet [L412–L438]]
 - 追加で `dt_over_t_blow`（`Δt / t_{\rm blow}`，無次元）と `fast_blowout_factor`（`1 - \exp(-Δt / t_{\rm blow})`，無次元）が出力され、時間ステップがブローアウト頻度に対して十分細かいか、および補正が適用されたかを判定できる。`case_status ≠ "blowout"` の行では `fast_blowout_factor` と旧互換カラム `fast_blowout_ratio` が 0.0 に設定される点に注意する。`fast_blowout_flag_gt3` / `fast_blowout_flag_gt10` は `dt/t_{\rm blow}` が 3 / 10 を超える場合に `true` になり、`fast_blowout_corrected` は補正が実際に乗算されたステップのみ `true` になる。既定では `io.correct_fast_blowout=false` のため補正は適用されず、列は診断目的で保持される。[marsdisk/run_zero_d.py#run_zero_d [L1392–L6000]][marsdisk/io/writer.py#write_parquet [L412–L438]]
 - **Summary JSON** – 累積損失、β診断、`s_min_components`、温度ソース、`M_hydro_cum` を集計。[marsdisk/run_zero_d.py#run_zero_d [L1392–L6000]]
 - **Mass-budget checks** – `checks/mass_budget.csv` に質量保存ログを逐次書き出し。[marsdisk/run_zero_d.py#run_zero_d [L1392–L6000]][marsdisk/io/writer.py#write_parquet [L412–L438]]

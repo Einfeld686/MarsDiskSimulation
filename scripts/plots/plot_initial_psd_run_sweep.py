@@ -159,29 +159,22 @@ def main() -> int:
     if sizes.size == 0 or number.size != sizes.size or widths.size != sizes.size:
         raise RuntimeError("PSD state is empty or inconsistent")
 
-    rho_used = float(psd_state.get("rho", 3000.0))
-    mass_per_particle = (4.0 / 3.0) * np.pi * rho_used * (sizes**3)
     mass_proxy = number * (sizes**3) * widths
     total_mass = float(np.sum(mass_proxy))
     if not np.isfinite(total_mass) or total_mass <= 0.0:
         raise RuntimeError("Initial PSD mass weights are invalid")
     mass_fraction = mass_proxy / total_mass
 
-    mask = (
-        np.isfinite(mass_per_particle)
-        & np.isfinite(mass_fraction)
-        & (mass_per_particle > 0.0)
-        & (mass_fraction > 0.0)
-    )
-    mass_per_particle = mass_per_particle[mask]
+    mask = np.isfinite(sizes) & np.isfinite(mass_fraction) & (sizes > 0.0) & (mass_fraction > 0.0)
+    sizes = sizes[mask]
     mass_fraction = mass_fraction[mask]
 
     apply_default_style({"figure.figsize": (6.5, 4.0)})
     fig, ax = plt.subplots()
-    ax.plot(mass_per_particle, mass_fraction, color="#1f4e79")
+    ax.plot(sizes, mass_fraction, color="#1f4e79")
     ax.set_xscale("log")
     ax.set_yscale("log")
-    ax.set_xlabel("m [kg]")
+    ax.set_xlabel("size s [m]")
     ax.set_ylabel("mass fraction per bin [arb]")
     ax.grid(True, which="both", alpha=0.25)
 

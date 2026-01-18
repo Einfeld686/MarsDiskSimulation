@@ -6049,35 +6049,35 @@
   },
   {
     "file_path": "marsdisk/physics/psd.py",
-    "line_no": 315,
+    "line_no": 326,
     "symbol": "mass_weights_truncated_powerlaw",
     "signature": "mass_weights_truncated_powerlaw(sizes: np.ndarray, widths: np.ndarray, *, alpha_solid: float, s_min_solid: float, s_max_solid: float, s_cut: float | None=None) -> np.ndarray",
     "brief_usage": "Return per-bin mass weights for a truncated power-law melt PSD."
   },
   {
     "file_path": "marsdisk/physics/psd.py",
-    "line_no": 349,
+    "line_no": 360,
     "symbol": "apply_mass_weights",
     "signature": "apply_mass_weights(psd_state: Dict[str, np.ndarray | float], mass_weights: np.ndarray, *, rho: float | None=None) -> Dict[str, np.ndarray | float]",
     "brief_usage": "Map mass weights to the PSD's number array while preserving total mass."
   },
   {
     "file_path": "marsdisk/physics/psd.py",
-    "line_no": 394,
+    "line_no": 405,
     "symbol": "_size_drift_rebin_numpy",
     "signature": "_size_drift_rebin_numpy(sizes: np.ndarray, number: np.ndarray, edges: np.ndarray, ds_step: float, floor_val: float) -> tuple[np.ndarray, np.ndarray]",
     "brief_usage": "Vectorised rebinning helper for :func:`apply_uniform_size_drift`."
   },
   {
     "file_path": "marsdisk/physics/psd.py",
-    "line_no": 419,
+    "line_no": 430,
     "symbol": "apply_uniform_size_drift",
     "signature": "apply_uniform_size_drift(psd_state: Dict[str, np.ndarray | float], *, ds_dt: float, dt: float, floor: float, sigma_surf: float) -> tuple[float, float, Dict[str, float]]",
     "brief_usage": "Erode all PSD bins by a uniform ``ds/dt`` and update ``Sigma_surf``."
   },
   {
     "file_path": "marsdisk/physics/psd.py",
-    "line_no": 563,
+    "line_no": 574,
     "symbol": "evolve_min_size",
     "signature": "evolve_min_size(s_min_prev: float, *, dt: float, model: Optional[str]=None, params: Optional[Mapping[str, float]]=None, T: Optional[float]=None, rho: Optional[float]=None, s_floor: Optional[float]=None, sublimation_params: Optional[SublimationParams]=None) -> float",
     "brief_usage": "Return the evolved minimum grain size after a time step ``dt``."
@@ -8926,28 +8926,35 @@
   },
   {
     "file_path": "scripts/plots/plot_forsterite_phase_heatmap.py",
-    "line_no": 12,
+    "line_no": 13,
     "symbol": "REPO_ROOT",
     "signature": "REPO_ROOT = Path(__file__).resolve().parents[2]",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "scripts/plots/plot_forsterite_phase_heatmap.py",
-    "line_no": 19,
+    "line_no": 20,
+    "symbol": "_parse_args",
+    "signature": "_parse_args() -> argparse.Namespace",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/plots/plot_forsterite_phase_heatmap.py",
+    "line_no": 26,
     "symbol": "_load_forsterite_properties",
     "signature": "_load_forsterite_properties(path: Path) -> dict",
     "brief_usage": "No description available."
   },
   {
     "file_path": "scripts/plots/plot_forsterite_phase_heatmap.py",
-    "line_no": 24,
+    "line_no": 31,
     "symbol": "_load_base_config",
     "signature": "_load_base_config(path: Path) -> tuple[float, float, float]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "scripts/plots/plot_forsterite_phase_heatmap.py",
-    "line_no": 53,
+    "line_no": 60,
     "symbol": "main",
     "signature": "main() -> int",
     "brief_usage": "No description available."
@@ -9132,6 +9139,48 @@
     "line_no": 366,
     "symbol": "main",
     "signature": "main(argv: Iterable[str] | None=None) -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/plots/plot_initial_psd_run_sweep.py",
+    "line_no": 11,
+    "symbol": "REPO_ROOT",
+    "signature": "REPO_ROOT = Path(__file__).resolve().parents[2]",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "scripts/plots/plot_initial_psd_run_sweep.py",
+    "line_no": 20,
+    "symbol": "_parse_args",
+    "signature": "_parse_args() -> argparse.Namespace",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/plots/plot_initial_psd_run_sweep.py",
+    "line_no": 45,
+    "symbol": "_load_config",
+    "signature": "_load_config(config_path: Path, overrides_path: Path) -> run_zero_d.Config",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/plots/plot_initial_psd_run_sweep.py",
+    "line_no": 50,
+    "symbol": "_prepare_qpr_lookup",
+    "signature": "_prepare_qpr_lookup(cfg: run_zero_d.Config) -> float | None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/plots/plot_initial_psd_run_sweep.py",
+    "line_no": 68,
+    "symbol": "_initial_psd_state",
+    "signature": "_initial_psd_state(cfg: run_zero_d.Config) -> dict",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/plots/plot_initial_psd_run_sweep.py",
+    "line_no": 151,
+    "symbol": "main",
+    "signature": "main() -> int",
     "brief_usage": "No description available."
   },
   {

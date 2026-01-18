@@ -303,12 +303,23 @@ def mass_weights_lognormal_mixture(
         return np.exp(-0.5 * (log_ratio / sigma_ln) ** 2)
 
     f_fine_clipped = min(max(float(f_fine), 0.0), 1.0)
-    weights_fine = _lognormal(float(s_fine))
-    weights_meter = _lognormal(float(s_meter))
-    weights = (1.0 - f_fine_clipped) * weights_meter + f_fine_clipped * weights_fine
-    weights *= widths_arr
+    weights_fine = _lognormal(float(s_fine)) * widths_arr
+    weights_meter = _lognormal(float(s_meter)) * widths_arr
     if s_cut is not None and np.isfinite(s_cut):
-        weights = np.where(sizes_arr >= float(s_cut), weights, 0.0)
+        mask = sizes_arr >= float(s_cut)
+        weights_fine = np.where(mask, weights_fine, 0.0)
+        weights_meter = np.where(mask, weights_meter, 0.0)
+    weights_fine_sum = float(np.sum(weights_fine))
+    if weights_fine_sum > 0.0:
+        weights_fine /= weights_fine_sum
+    else:
+        weights_fine = np.zeros_like(weights_fine, dtype=float)
+    weights_meter_sum = float(np.sum(weights_meter))
+    if weights_meter_sum > 0.0:
+        weights_meter /= weights_meter_sum
+    else:
+        weights_meter = np.zeros_like(weights_meter, dtype=float)
+    weights = (1.0 - f_fine_clipped) * weights_meter + f_fine_clipped * weights_fine
     return weights
 
 

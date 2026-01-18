@@ -142,7 +142,7 @@ config_keys:
   - sizes.apply_evolved_min_size
 code_path:
   - [marsdisk/physics/psd.py#update_psd_state [L78–L170]]
-  - [marsdisk/physics/psd.py#apply_uniform_size_drift [L419–L560]]
+  - [marsdisk/physics/psd.py#apply_uniform_size_drift [L430–L571]]
   - [marsdisk/run_zero_d.py#run_zero_d [L1392–L6000]]
 run_stage:
   - PSD initialisation

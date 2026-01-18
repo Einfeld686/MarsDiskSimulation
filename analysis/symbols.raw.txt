@@ -575,11 +575,11 @@ marsdisk/physics/psd.py:173:def sanitize_and_normalize_number(psd_state: Dict[st
 marsdisk/physics/psd.py:219:def ensure_psd_state_contract(psd_state: Dict[str, np.ndarray | float]) -> Dict[str, np.ndarray | float]
 marsdisk/physics/psd.py:236:def compute_kappa(psd_state: Dict[str, np.ndarray | float]) -> float
 marsdisk/physics/psd.py:272:def mass_weights_lognormal_mixture(sizes: np.ndarray, widths: np.ndarray, *, f_fine: float, s_fine: float, s_meter: float, width_dex: float, s_cut: float | None=None) -> np.ndarray
-marsdisk/physics/psd.py:315:def mass_weights_truncated_powerlaw(sizes: np.ndarray, widths: np.ndarray, *, alpha_solid: float, s_min_solid: float, s_max_solid: float, s_cut: float | None=None) -> np.ndarray
-marsdisk/physics/psd.py:349:def apply_mass_weights(psd_state: Dict[str, np.ndarray | float], mass_weights: np.ndarray, *, rho: float | None=None) -> Dict[str, np.ndarray | float]
-marsdisk/physics/psd.py:394:def _size_drift_rebin_numpy(sizes: np.ndarray, number: np.ndarray, edges: np.ndarray, ds_step: float, floor_val: float) -> tuple[np.ndarray, np.ndarray]
-marsdisk/physics/psd.py:419:def apply_uniform_size_drift(psd_state: Dict[str, np.ndarray | float], *, ds_dt: float, dt: float, floor: float, sigma_surf: float) -> tuple[float, float, Dict[str, float]]
-marsdisk/physics/psd.py:563:def evolve_min_size(s_min_prev: float, *, dt: float, model: Optional[str]=None, params: Optional[Mapping[str, float]]=None, T: Optional[float]=None, rho: Optional[float]=None, s_floor: Optional[float]=None, sublimation_params: Optional[SublimationParams]=None) -> float
+marsdisk/physics/psd.py:326:def mass_weights_truncated_powerlaw(sizes: np.ndarray, widths: np.ndarray, *, alpha_solid: float, s_min_solid: float, s_max_solid: float, s_cut: float | None=None) -> np.ndarray
+marsdisk/physics/psd.py:360:def apply_mass_weights(psd_state: Dict[str, np.ndarray | float], mass_weights: np.ndarray, *, rho: float | None=None) -> Dict[str, np.ndarray | float]
+marsdisk/physics/psd.py:405:def _size_drift_rebin_numpy(sizes: np.ndarray, number: np.ndarray, edges: np.ndarray, ds_step: float, floor_val: float) -> tuple[np.ndarray, np.ndarray]
+marsdisk/physics/psd.py:430:def apply_uniform_size_drift(psd_state: Dict[str, np.ndarray | float], *, ds_dt: float, dt: float, floor: float, sigma_surf: float) -> tuple[float, float, Dict[str, float]]
+marsdisk/physics/psd.py:574:def evolve_min_size(s_min_prev: float, *, dt: float, model: Optional[str]=None, params: Optional[Mapping[str, float]]=None, T: Optional[float]=None, rho: Optional[float]=None, s_floor: Optional[float]=None, sublimation_params: Optional[SublimationParams]=None) -> float
 marsdisk/physics/qstar.py:94:def set_coeff_unit_system(units: CoeffUnits) -> CoeffUnits
 marsdisk/physics/qstar.py:109:def get_coeff_unit_system() -> CoeffUnits
 marsdisk/physics/qstar.py:115:def get_coefficient_table() -> Dict[float, Tuple[float, float, float, float]]
@@ -876,9 +876,10 @@ scripts/debug/debug_supply_powerlaw_slope.py:13:def main(argv: list[str] | None=
 scripts/plots/plot_axis_r_sweep.py:11:def _resolve_table_path(path: Path) -> Path
 scripts/plots/plot_axis_r_sweep.py:25:def parse_args() -> argparse.Namespace
 scripts/plots/plot_axis_r_sweep.py:44:def main() -> None
-scripts/plots/plot_forsterite_phase_heatmap.py:19:def _load_forsterite_properties(path: Path) -> dict
-scripts/plots/plot_forsterite_phase_heatmap.py:24:def _load_base_config(path: Path) -> tuple[float, float, float]
-scripts/plots/plot_forsterite_phase_heatmap.py:53:def main() -> int
+scripts/plots/plot_forsterite_phase_heatmap.py:20:def _parse_args() -> argparse.Namespace
+scripts/plots/plot_forsterite_phase_heatmap.py:26:def _load_forsterite_properties(path: Path) -> dict
+scripts/plots/plot_forsterite_phase_heatmap.py:31:def _load_base_config(path: Path) -> tuple[float, float, float]
+scripts/plots/plot_forsterite_phase_heatmap.py:60:def main() -> int
 scripts/plots/plot_from_runs.py:36:def _resolve_table_path(path: Path) -> Path
 scripts/plots/plot_from_runs.py:50:def _normalize_reduce_mode(value: Any, *, default: str) -> str
 scripts/plots/plot_from_runs.py:61:def _reduce_1d_series(df: pd.DataFrame, reduce_mode: str, *, sum_columns: Optional[Iterable[str]]=None) -> pd.DataFrame
@@ -900,6 +901,11 @@ scripts/plots/plot_heatmaps.py:294:def sanitize_metric_name(metric: str) -> str
 scripts/plots/plot_heatmaps.py:300:def metric_axis_label(metric: str) -> str
 scripts/plots/plot_heatmaps.py:308:def maybe_plot_mass_per_r2_scatter(df: pd.DataFrame, map_stub: str, map_label: str) -> None
 scripts/plots/plot_heatmaps.py:366:def main(argv: Iterable[str] | None=None) -> None
+scripts/plots/plot_initial_psd_run_sweep.py:20:def _parse_args() -> argparse.Namespace
+scripts/plots/plot_initial_psd_run_sweep.py:45:def _load_config(config_path: Path, overrides_path: Path) -> run_zero_d.Config
+scripts/plots/plot_initial_psd_run_sweep.py:50:def _prepare_qpr_lookup(cfg: run_zero_d.Config) -> float | None
+scripts/plots/plot_initial_psd_run_sweep.py:68:def _initial_psd_state(cfg: run_zero_d.Config) -> dict
+scripts/plots/plot_initial_psd_run_sweep.py:151:def main() -> int
 scripts/plots/plot_mars_surface_temperature.py:38:def _resolve_table_path(path: Path) -> Path
 scripts/plots/plot_mars_surface_temperature.py:52:def _infer_columns(df: pd.DataFrame) -> Tuple[str, str]
 scripts/plots/plot_mars_surface_temperature.py:62:def _time_to_years(values: pd.Series, column: str) -> pd.Series

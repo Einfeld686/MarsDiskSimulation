@@ -21,11 +21,11 @@ initial:
   s0_mode: melt_lognormal_mixture
   melt_psd:
     mode: lognormal_mixture
-    f_fine: 0.25
-    s_fine: 1.0e-4
+    f_fine: 0.03
+    s_fine: 1.0e-7
     s_meter: 1.5
     width_dex: 0.3
-    s_cut_condensation: 1.0e-6
+    s_cut_condensation: 1.0e-7
     s_min_solid: 1.0e-4
     s_max_solid: 3.0
     alpha_solid: 3.5
