@@ -34,7 +34,7 @@ flowchart TB
     F --> G[case overrides生成]
     G --> H["overrides merge: base + overrides + case"]
     H --> I["python -m marsdisk.run"]
-    I --> J["run_one_d（1D; run_sweep既定）"]
+    I --> J["run_one_d（1D・run_sweep既定）"]
     J --> K["per-step physics (Section 2)"]
     I --> L["hooks: plot or eval (optional)"]
 ```
@@ -60,7 +60,7 @@ flowchart TB
         D -->|0D（補助）| F[run_zero_d]
     end
 
-    subgraph RUN1D["run_one_d（1D; 主経路）"]
+    subgraph RUN1D["run_one_d（1D・主経路）"]
         E --> I0[半径格子の初期化（Nrセル）]
         I0 --> I1[セル状態の初期化（Σ_surf, PSD, …）]
         I1 --> I2{time < t_end?}
@@ -85,7 +85,7 @@ flowchart TB
 `run_sweep.cmd` 既定（**1D + smol**）の結合順序（概略）:
 
 > **global**: 温度 → 放射圧（β, a_blow, s_min）  
-> **per-cell**: κ → τ → phase → sublimation(ds/dt) → sinks(t_sink) → shielding(Φ; offが既定) → supply → smol(IMEX)
+> **per-cell**: κ → τ → phase → sublimation(ds/dt) → sinks(t_sink) → shielding(Φ: offが既定) → supply → smol(IMEX)
 
 読み方の注記:
 - 縦方向が時間の進行で、横方向は登場モジュール（参加者）の並び。
@@ -105,7 +105,7 @@ sequenceDiagram
     participant SP as supply
     participant SM as collisions_smol
 
-    Note over R: Step n 開始（1D; run_sweep既定）
+    Note over R: Step n 開始（1D・run_sweep既定）
 
     rect rgb(240, 248, 255)
         Note right of R: 1) global: 温度と放射圧（E.042-043, β, a_blow）
@@ -123,7 +123,7 @@ sequenceDiagram
             CELL->>CELL: τ = κ_surf × Σ_surf × los_factor
             CELL->>PH: evaluate_with_bulk(T, τ)
             PH-->>CELL: phase_state
-            CELL->>SZ: ds/dt (HKL; grain T)
+            CELL->>SZ: ds/dt (HKL, grain T)
             SZ-->>CELL: ds/dt
             CELL->>SK: total_sink_timescale(T, ρ, Ω)
             SK-->>CELL: t_sink
