@@ -33,7 +33,7 @@ flowchart TB
     H --> I["python -m marsdisk.run"]
     I --> J["run_zero_d / run_one_d"]
     J --> K["per-step physics (Section 2)"]
-    I --> L[hooks: plot/eval (optional)]
+    I --> L["hooks: plot or eval (optional)"]
 ```
 
 **ケースごとに変わる主な入力（run_sweep 既定）**
