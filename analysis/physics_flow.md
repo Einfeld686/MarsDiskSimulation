@@ -13,6 +13,38 @@
 
 ---
 
+## 0. run_sweep.cmd 実行時の物理フロー（Windows・簡略版）
+
+`scripts/runsets/windows/run_sweep.cmd` は **スイープの実行ラッパー**であり、
+物理計算そのものは `python -m marsdisk.run` に委譲されます。
+各ケースは「base config + overrides + case overrides」をマージしてから実行され、
+タイムステップ内の物理計算は **本書の 2章と同じ**です。
+
+```mermaid
+flowchart TB
+    A["run_sweep.cmd"] --> B[Python解決・依存導入]
+    B --> C{preflight?}
+    C -->|skip| D[archive/paths準備]
+    C -->|run| D
+    D --> E["run_temp_supply_sweep.cmd"]
+    E --> F[case list作成: T, eps, tau, i0]
+    F --> G[case overrides生成]
+    G --> H["overrides merge: base + overrides + case"]
+    H --> I["python -m marsdisk.run"]
+    I --> J["run_zero_d / run_one_d"]
+    J --> K["per-step physics (Section 2)"]
+    I --> L[hooks: plot/eval (optional)]
+```
+
+**ケースごとに変わる主な入力（run_sweep 既定）**
+- `radiation.TM_K`, `mars_temperature_driver.table.path`（温度）
+- `supply.mixing.epsilon_mix`（供給効率）
+- `optical_depth.tau0_target`（光学深度）
+- `dynamics.i0`, `dynamics.rng_seed`
+- `io.outdir`（出力先）
+
+---
+
 ## 1. 全体アーキテクチャ概観
 
 ```mermaid
