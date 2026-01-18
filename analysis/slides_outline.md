@@ -43,7 +43,7 @@
 
 | slide_id | title | purpose | insert_after |
 | --- | --- | --- | --- |
-| S07a | 供給輸送モード (deep_mixing) | deep_mixing の詳細フロー（physics_flow.md §5.1 から転用） | S07 |
+| S07a | 供給輸送モード (direct) | run_sweep 既定（direct）の外観（physics_flow.md §5.1 を転用） | S07 |
 | S10a | パラメータスイープ結果 | temp_supply_sweep の M_loss ヒートマップ | S10 |
 | S11a | τ≈1 維持条件 | evaluate_tau_supply.py の成功判定ロジック | S11 |
 
