@@ -23,6 +23,96 @@ scripts\runsets\windows\run_sweep.cmd ^
 - 実行本体は `run_temp_supply_sweep.cmd` を子として起動する。\newline **参照**: `scripts/runsets/windows/run_sweep.cmd` の `::REF:CHILD_RUN`
 - スイープ並列は既定で有効 (`SWEEP_PARALLEL=1`) で、\newline ネスト回避のため `MARSDISK_CELL_PARALLEL=0` によりセル並列は無効化される。\newline サイズプローブで `PARALLEL_JOBS` が調整される場合がある。\newline **参照**: `scripts/runsets/windows/run_sweep.cmd` の `::REF:PARALLEL`
 
+#### run_sweep の物性値（既定）
+
+`run_sweep.cmd` の既定設定（`scripts/runsets/common/base.yml` と `scripts/runsets/windows/overrides.txt` のマージ）で採用する物性値を表\ref{tab:run_sweep_material_properties}にまとめる。密度・放射圧効率・昇華係数はフォルステライト値を採用し、$Q_D^*$ は peridot projectile 実験の $Q^*$ を参照して BA99 係数をスケーリングした proxy を用いる（1.1節参照）。\newline
+なお、`qstar.coeff_table` が与えられている場合、実行時には `qstar.coeff_scale` を追加で乗算せず、表の値をそのまま用いる（`coeff_scale` は table 生成時に用いた倍率として保存する）。
+
+\begin{table}[t]
+  \centering
+  \caption{run\_sweep 既定で用いる物性値（フォルステライト基準）}
+  \label{tab:run_sweep_material_properties}
+  \begin{tabular}{p{0.18\textwidth} p{0.38\textwidth} p{0.22\textwidth} p{0.16\textwidth}}
+    \hline
+    記号 & 意味 & 値 & 出典 \\
+    \hline
+    $\rho$ &
+    粒子密度 [kg\,m$^{-3}$] &
+    3270 &
+    TODO(REF:van_lieshout_2014_forsterite_material_params_v1) \\
+    $\langle Q_{\rm pr}\rangle$ &
+    Planck平均放射圧効率（テーブル） &
+    \texttt{data/qpr\_planck\_forsterite\_mie.csv} &
+    [@BohrenHuffman1983_Wiley; @Zeidler2015_ApJ798_125] \\
+    $\alpha$ &
+    HKL 蒸発係数 &
+    0.1 &
+    TODO(REF:van_lieshout_2014_forsterite_material_params_v1) \\
+    $\mu$ &
+    分子量 [kg\,mol$^{-1}$] &
+    0.140694 &
+    TODO(REF:van_lieshout_2014_forsterite_material_params_v1) \\
+    $A_{\rm solid}$ &
+    固相飽和蒸気圧フィット $\log_{10}P(\mathrm{Pa})=A_{\rm solid}-B_{\rm solid}/T$ &
+    13.809441833 &
+    TODO(REF:van_lieshout_2014_forsterite_material_params_v1) \\
+    $B_{\rm solid}$ &
+    同上（$T$ は K） &
+    28362.904024 &
+    TODO(REF:van_lieshout_2014_forsterite_material_params_v1) \\
+    $T_{\rm solid}^{\rm valid}$ &
+    固相フィットの適用温度範囲 [K] &
+    1673--2133 &
+    TODO(REF:van_lieshout_2014_forsterite_material_params_v1) \\
+    $A_{\rm liq}$ &
+    液相飽和蒸気圧フィット $\log_{10}P(\mathrm{Pa})=A_{\rm liq}-B_{\rm liq}/T$ &
+    11.08 &
+    [@FegleySchaefer2012_arXiv] \\
+    $B_{\rm liq}$ &
+    同上（$T$ は K） &
+    22409.0 &
+    [@FegleySchaefer2012_arXiv] \\
+    $T_{\rm liq}^{\rm valid}$ &
+    液相フィットの適用温度範囲 [K] &
+    2163--3690 &
+    [@FegleySchaefer2012_arXiv] \\
+    $T_{\rm switch}$ &
+    固相$\to$液相フィット切替温度 [K] &
+    2163 &
+    [@FegleySchaefer2012_arXiv] \\
+    $T_{\rm condense}$, $T_{\rm vaporize}$ &
+    相判定のヒステリシス閾値 [K]（運用値） &
+    2162, 2163 &
+    本研究（スキーマ要件）, 基準: [@FegleySchaefer2012_arXiv] \\
+    $f_{Q^*}$ &
+    $Q_D^*$ 係数スケール（peridot proxy） &
+    5.574 &
+    [@Avdellidou2016_MNRAS464_734; @BenzAsphaug1999_Icarus142_5] \\
+    \hline
+  \end{tabular}
+\end{table}
+
+\begin{table}[t]
+  \centering
+  \caption{run\_sweep 既定の $Q_D^*$ 係数テーブル（\texttt{qstar.coeff\_table}）}
+  \label{tab:run_sweep_qdstar_coeff_table}
+  \begin{tabular}{p{0.14\textwidth} p{0.20\textwidth} p{0.14\textwidth} p{0.20\textwidth} p{0.14\textwidth}}
+    \hline
+    $v_{\rm ref}$ [km/s] & $Q_s$ & $a_s$ & $B$ & $b_g$ \\
+    \hline
+    1 & 1.9509e8 & 0.38 & 0.8187652527440811 & 1.36 \\
+    2 & 1.9509e8 & 0.38 & 1.28478039442684 & 1.36 \\
+    3 & 1.9509e8 & 0.38 & 1.6722 & 1.36 \\
+    4 & 2.92635e8 & 0.38 & 2.2296 & 1.36 \\
+    5 & 3.9018e8 & 0.38 & 2.787 & 1.36 \\
+    6 & 3.9018e8 & 0.38 & 3.137652034251613 & 1.36 \\
+    7 & 3.9018e8 & 0.38 & 3.4683282387928047 & 1.36 \\
+    \hline
+  \end{tabular}
+\end{table}
+
+表\ref{tab:run_sweep_qdstar_coeff_table} の係数は BA99 の基準テーブル [@BenzAsphaug1999_Icarus142_5] を基準に、$f_{Q^*}=5.574$（表\ref{tab:run_sweep_material_properties}）で $Q_s,B$ のみをスケーリングして作成している（peridot proxy: [@Avdellidou2016_MNRAS464_734]）。
+
 #### run_sweep.cmd の主要環境変数
 
 既定値は `run_sweep.cmd` のデフォルト設定に従う。主要環境変数は次の表に示す。  

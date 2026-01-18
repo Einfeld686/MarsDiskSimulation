@@ -67,12 +67,12 @@ flowchart TB
         direction TB
         DRIVER["温度ドライバ更新"]
         RAD["放射圧評価<br/>β, s_blow"]
-        SUBL["昇華/下限更新<br/>ds/dt, s_min"]
-        PSDSTEP["PSD/κ 評価"]
-        SHIELD["光学深度・遮蔽 Φ"]
+        PSDSTEP["PSD/κ 評価<br/>κ_surf, τ_los"]
         PHASE["相判定/τゲート"]
-        SUPPLY["表層再供給/輸送"]
+        SUBL["昇華 ds/dt 評価"]
         SINKTIME["シンク時間 t_sink"]
+        SHIELD["遮蔽 Φ 適用<br/>κ_eff, Σ_tau1"]
+        SUPPLY["表層再供給/輸送"]
         EVOLVE["表層/Smol 更新<br/>IMEX-BDF(1)"]
         CHECK["質量収支・停止判定"]
     end
@@ -88,8 +88,7 @@ flowchart TB
     CONFIG --> INIT
     TABLES --> INIT
     INIT --> LOOP
-    DRIVER --> RAD --> SUBL --> PSDSTEP --> SHIELD
-    SHIELD --> PHASE --> SUPPLY --> SINKTIME --> EVOLVE --> CHECK
+    DRIVER --> RAD --> PSDSTEP --> PHASE --> SUBL --> SINKTIME --> SHIELD --> SUPPLY --> EVOLVE --> CHECK
     CHECK -->|"t < t_end"| DRIVER
     CHECK -->|"t ≥ t_end or T_M ≤ T_stop"| OUTPUT
 ```
@@ -98,30 +97,40 @@ flowchart TB
 
 ```mermaid
 flowchart LR
-    subgraph STEP["1ステップの処理"]
+    subgraph STEP["1ステップの処理（3ブロック）"]
         direction TB
-        
-        S1["1. 温度ドライバ更新<br/>T_M(t) → 冷却モデル"]
-        S2["2. 放射圧計算<br/>⟨Q_pr⟩ → β → s_blow"]
-        S3["3. 昇華/下限更新<br/>ds/dt, s_min"]
-        S4["4. PSD/κ 評価<br/>τ 計算"]
-        S5["5. 遮蔽 Φ 適用<br/>κ_eff, Σ_tau1"]
-        S6["6. 相判定/τゲート<br/>sink 選択"]
-        S7["7. 表層再供給/輸送<br/>deep mixing"]
-        S8["8. シンク時間<br/>t_sink 評価"]
-        S9["9. Smol/Surface 積分<br/>衝突 + 供給 + 損失"]
-        S10["10. 診断・停止判定・出力"]
-        
-        S1 --> S2 --> S3 --> S4 --> S5
-        S5 --> S6 --> S7 --> S8 --> S9 --> S10
+
+        subgraph A["円盤表層状態の更新"]
+            direction TB
+            S1["1. 温度ドライバ更新（global）<br/>T_M(t)"]
+            S2["2. 放射圧計算（global）<br/>⟨Q_pr⟩ → β → s_blow"]
+            S3["3. PSD/κ 評価（cell）<br/>κ_surf, τ_los"]
+            S4["4. 相判定/ゲート（cell）<br/>phase, τ_gate, allow_supply"]
+            S5["5. 昇華 ds/dt 評価（cell）<br/>HKL → ds/dt"]
+            S6["6. シンク時間（cell）<br/>t_sink"]
+        end
+
+        subgraph B["表層への質量供給"]
+            direction TB
+            S7["7. 遮蔽 Φ 適用（cell）<br/>κ_eff, Σ_tau1"]
+            S8["8. 表層再供給/輸送（cell）<br/>prod_rate_applied, deep mixing"]
+        end
+
+        subgraph C["微細化シミュレーション"]
+            direction TB
+            S9["9. Smol/Surface 積分（cell）<br/>衝突 + 供給 + 損失"]
+            S10["10. 診断・停止判定・出力"]
+        end
+
+        S1 --> S2 --> S3 --> S4 --> S5 --> S6 --> S7 --> S8 --> S9 --> S10
     end
 ```
 
-補足: 損失項（ブローアウト・追加シンク）は S9 の IMEX 更新に含まれ、S6 は相判定とゲート選択、S8 は $t_{\rm sink}$ の評価、S10 は診断集計と出力を担当する。
+補足: 損失項（ブローアウト・追加シンク）は S9 の IMEX 更新に含まれる。S4 は相判定とゲート（$\\tau_{\\rm gate}$, `allow_supply`）を決め、S6 は $t_{\\rm sink}$ を評価し、S10 は診断集計と出力を担当する。
 
-各ステップでは温度ドライバの出力から $T_M$ を更新し、放射圧関連量（$\langle Q_{\rm pr}\rangle$, β, $s_{\rm blow}$）と遮蔽量（$\Phi$, $\kappa_{\rm eff}$, $\tau_{\rm los}$）を再評価する。供給はフィードバックや温度スケールを通して表層に注入され、必要に応じて深層リザーバを経由する。表層 ODE または Smoluchowski 更新の後に、ブローアウトと追加シンクによる損失を加味し、質量収支と停止条件を評価する。
+図 3.2 は run_sweep 既定（1D + Smol）の順序に合わせ、analysis/physics_flow.md §2 と整合するように記述する。まず「円盤表層状態の更新」（S1–S6）で $T_M$、β、$s_{\rm blow}$、$\\kappa_{\\rm surf}$、$\\tau_{\\rm los}$、相状態、昇華 ds/dt、$t_{\\rm sink}$ を評価する。次に「表層への質量供給」（S7–S8）で遮蔽係数 $\\Phi$ から $\\kappa_{\\rm eff}$ と $\\Sigma_{\\tau=1}$ を得て、供給を表層/深層へ配分し `prod_rate_applied` を確定する。最後に「微細化シミュレーション」（S9–S10）で Smol/Surface の更新により PSD と $\\Sigma_{\\rm surf}$ を $\\Delta t$ だけ進め、損失と診断を集約する。
 
-図 3.2 の手順と実装の対応は次の通りである。S1 は温度ドライバの評価と $T_M$ の更新、S2 は $Q_{\rm pr}$ テーブルから β と $s_{\rm blow}$ を評価する。S3 は昇華 ds/dt と $s_{\\rm min}$ を評価し、S4 で PSD と $\\kappa$ を更新して $\\tau$ を計算する。S5 は $\\Phi$ を適用して $\\kappa_{\\rm eff}$ と $\\Sigma_{\\tau=1}$ を評価し、S6 で相判定と $\\tau$ ゲートにより有効な損失経路を選択する。S7 は供給率の名目値を計算し、フィードバック・温度スケール・深層輸送を適用する。S8 はシンク時間 $t_{\\rm sink}$ を評価し、S9 で衝突カーネルに基づく gain/loss と供給・シンクを含めた IMEX 更新を行う。S10 は $\\dot{M}_{\\rm out}$ などの診断集計、$\\tau_{\\rm stop}$ 超過の停止判定、C4 質量収支検査、および出力書き込みに対応する。
+図 3.2 の手順と実装の対応は次の通りである。S1 は温度ドライバの評価と $T_M$ の更新、S2 は $Q_{\rm pr}$ テーブルから β と $s_{\rm blow}$ を評価する。S3 は PSD から $\\kappa_{\\rm surf}$ を評価して $\\tau_{\\rm los}$ を計算する。S4 は相判定とゲート（$\\tau_{\\rm gate}$、液相ブロック、`allow_supply`）により有効な経路を選択する。S5 は HKL に基づく昇華 ds/dt を評価する。S6 は追加シンクの代表時間 $t_{\\rm sink}$ を評価する。S7 は $\\Phi$ を適用して $\\kappa_{\\rm eff}$ と $\\Sigma_{\\tau=1}$ を評価する。S8 は供給率の名目値を計算し、温度スケール・$\\tau$ フィードバック・有限リザーバ・深層輸送を適用して `prod_rate_applied` を決定する。S9 は衝突カーネルに基づく gain/loss と供給・シンクを含めた IMEX 更新を行う。S10 は $\\dot{M}_{\\rm out}$ などの診断集計、$\\tau_{\\rm stop}$ 超過の停止判定、C4 質量収支検査、および出力書き込みに対応する。
 
 #### 3.3 物理過程の相互作用
 
@@ -169,43 +178,51 @@ graph LR
 
 #### 3.4 供給・衝突・昇華の時系列因果
 
-供給（supply）・衝突（collision）・昇華（sublimation）は同一ステップ内で相互依存するため、因果順序を以下の通り固定する。図 3.2 の S3（昇華）、S6（相判定/ゲート）、S7（供給）、S8（シンク時間）、S9（衝突/IMEX 更新）に対応する内部順序を明示し、診断列と対応させる（[@WyattClarkeBooth2011_CeMDA111_1; @Krivov2006_AA455_509; @Markkanen2020_AA643_A16]）。
+供給（supply）・衝突（collision）・昇華（sublimation）は同一ステップ内で相互依存するため、因果順序を図 3.2 の 3 ブロックに沿って固定する。すなわち「円盤表層状態の更新」（S1–S6）で $\\tau_{\\rm los}$・相状態・昇華 ds/dt・$t_{\\rm sink}$ を評価し、「表層への質量供給」（S7–S8）で遮蔽 $\\Phi$ と深層輸送を含む `prod_rate_applied` を確定し、最後に「微細化シミュレーション」（S9–S10）で IMEX 更新と診断集計を行う（[@WyattClarkeBooth2011_CeMDA111_1; @Krivov2006_AA455_509; @Markkanen2020_AA643_A16]）。
 
 ```mermaid
 flowchart TB
-    A[S3: ds/dt evaluation] --> B[S6: phase / tau gate]
-    B --> C[S7: supply scaling & transport]
-    C --> D[S8: sink timescale]
-    D --> E[S9: collision kernel + IMEX update]
-    E --> F[S10: diagnostics & mass budget]
+    A["円盤表層状態の更新<br/>S1–S6"] --> B["表層への質量供給<br/>S7–S8"] --> C["微細化シミュレーション<br/>S9–S10"]
+```
+
+セル内の評価順序（概念）は次の通りである。
+
+```mermaid
+flowchart TB
+    S3["S3: κ_surf, τ_los"] --> S4["S4: phase / gates"] --> S5["S5: ds/dt"] --> S6["S6: t_sink"]
+    S6 --> S7["S7: shielding Φ"] --> S8["S8: supply split"] --> S9["S9: Smol IMEX"] --> S10["S10: diagnostics"]
 ```
 
 S3〜S10 の要点は次の通りである。
 
-- S3: 昇華 ds/dt を評価する。
-- S6: 相判定と $\\tau$ ゲートにより有効な損失経路を選択する。
-- S7: 名目供給 `supply_rate_nominal` にフィードバックと温度補正を適用し、\newline `supply_rate_scaled` を得る。深層輸送を含めた表層注入量を決定する。
-- S8: シンク時間 $t_{\\rm sink}$ を評価する。
-- S9: 衝突カーネルから loss/gain を構成し、IMEX 更新を実施する。
-- S10: 診断列は `smol_gain_mass_rate`, `smol_loss_mass_rate`, `ds_dt_sublimation`, `M_out_dot` を含む。\newline 質量収支を保存する。
+- S3: PSD から $\\kappa_{\\rm surf}$ を評価し、$\\tau_{\\rm los}$ を計算する。
+- S4: 相判定とゲート（$\\tau_{\\rm gate}$、液相ブロック、`allow_supply`）を評価し、各経路を有効化する。
+- S5: HKL に基づく昇華 ds/dt を評価する。
+- S6: シンク時間 $t_{\\rm sink}$ を評価する。
+- S7: 遮蔽 $\\Phi$ を適用して $\\kappa_{\\rm eff}$ と $\\Sigma_{\\tau=1}$ を評価する。
+- S8: 名目供給に温度スケール・$\\tau$ フィードバック・有限リザーバ・深層輸送を適用し、表層への注入量 `prod_rate_applied` を決定する。
+- S9: 衝突カーネルから loss/gain を構成し、供給と損失を含めた IMEX 更新を実施する。
+- S10: 診断列は `smol_gain_mass_rate`, `smol_loss_mass_rate`, `ds_dt_sublimation`, `M_out_dot` を含む。質量収支を保存する。
 
 ##### 3.4.1 供給フロー（Supply）
 
 ```mermaid
 flowchart TB
-    A["nominal supply"] --> B["feedback scale"]
-    B --> C["temperature scale"]
-    C --> D["tau gate / phase gate"]
-    D --> E["split: surface vs deep"]
-    E --> F["surface injection"]
-    E --> G["deep reservoir"]
-    G --> H["deep-to-surface flux"]
-    H --> F
+    BASE["R_base(t,r)"] --> MIX["mixing ε_mix"]
+    MIX --> TEMP["temperature coupling (optional)"]
+    TEMP --> FB["τ-feedback (optional)"]
+    FB --> RES["reservoir clip (optional)"]
+    RES --> RATE["prod_rate_raw (allow_supply gate)"]
+
+    TAU1["Σ_tau1 from shielding"] --> SPLIT["split: surface vs deep (transport)"]
+    RATE --> SPLIT
+    SPLIT --> SURF["prod_rate_applied_to_surf"]
+    SPLIT --> DEEP["sigma_deep / deep_to_surf_flux"]
 ```
 
 - 診断列は `supply_rate_nominal` → `supply_rate_scaled` → `supply_rate_applied` に記録する（[@WyattClarkeBooth2011_CeMDA111_1]）。
 - 深層経路は `prod_rate_diverted_to_deep`\newline `deep_to_surf_flux`\newline `prod_rate_applied_to_surf` に記録する。
-- 供給の有効化は phase（solid）と液相ブロックで決まり、$\\tau_{\\rm gate}$ はブローアウトのみをゲートする。停止判定（$\\tau_{\\rm stop}$）とは区別して扱う。
+- 供給の有効化は phase（solid）と液相ブロックで決まり、$\\tau_{\\rm gate}$ はブローアウトのみをゲートする。供給側のフィードバックは $\\tau_{\\rm los}$ を参照し、停止判定（$\\tau_{\\rm stop}$）とは区別して扱う。
 
 ##### 3.4.2 衝突フロー（Collision）
 
@@ -526,9 +543,8 @@ P_{\mathrm{sat}}(T) =
 - 旧 μ (E.027a) は診断・ツール用の導出値としてのみ扱う。
 - ここでの μ（供給式の指標）は衝突速度外挿の μ と別であり、混同しないよう区別して扱う。
 
-供給は「名目供給→フィードバック補正→温度スケール→ゲート判定→深層/表層への配分」の順に評価される。供給が深層へ迂回した場合でも、表層面密度と PSD の更新は同一タイムステップ内で整合的に行われる。
-
-- S7 に対応する供給処理では、`supply_rate_nominal` を基準に `supply_rate_scaled`（フィードバック・温度補正後）を評価し、ゲート判定後の `supply_rate_applied` を表層へ注入する。
+供給は「名目供給→混合（$\\epsilon_{\\mathrm{mix}}$）→温度スケール→$\\tau$ フィードバック→有限リザーバ→深層/表層への配分」の順に評価される。供給が深層へ迂回した場合でも、表層面密度と PSD の更新は同一タイムステップ内で整合的に行われる。
+- S8 に対応する供給処理では、`supply_rate_nominal` を基準に `supply_rate_scaled`（温度・$\\tau$ フィードバック後）を評価し、相状態による `allow_supply` ゲートと深層輸送を経て `supply_rate_applied` を表層へ注入する。
 - deep mixing が有効な場合は\newline `prod_rate_diverted_to_deep`\newline `deep_to_surf_flux` で深層からの再注入を記録し、\newline 表層面密度への寄与は `prod_rate_applied_to_surf` として診断する。
 - これらの列は supply の順序が図 3.2 と一致していることの検算に用いる。
 

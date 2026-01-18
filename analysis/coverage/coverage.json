@@ -5,8 +5,8 @@
     "rate": 0.7692307692307693
   },
   "anchor_consistency_rate": {
-    "numerator": 703,
-    "denominator": 703,
+    "numerator": 702,
+    "denominator": 702,
     "rate": 1.0
   },
   "equation_unit_coverage": {

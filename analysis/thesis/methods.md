@@ -97,6 +97,8 @@ reference_links:
 
 <!-- TEX_EXCLUDE_START -->
 reference_links:
+- @Avdellidou2016_MNRAS464_734 -> paper/references/Avdellidou2016_MNRAS464_734.pdf | 用途: Q_D* スケーリングの proxy（peridot projectile）
+- @BenzAsphaug1999_Icarus142_5 -> paper/references/BenzAsphaug1999_Icarus142_5.pdf | 用途: Q_D* の基準（BA99 係数）
 - @Birnstiel2011_AA525_A11 -> paper/references/Birnstiel2011_AA525_A11.pdf | 用途: PSDビン分解能の指針（隣接粒径比）
 - @BohrenHuffman1983_Wiley -> paper/references/BohrenHuffman1983_Wiley.pdf | 用途: Mie理論に基づくQ_pr平均の背景
 - @CanupSalmon2018_SciAdv4_eaar6887 -> paper/references/CanupSalmon2018_SciAdv4_eaar6887.pdf | 用途: 火星円盤の背景条件（軸対称1Dの前提）
@@ -116,7 +118,7 @@ reference_links:
 
 本モデルは gas-poor 条件下の**軸対称ディスク**を対象とし、鉛直方向は面密度へ積分して扱う。半径方向に分割した 1D 計算を基準とし（[@Hyodo2017a_ApJ845_125; @CanupSalmon2018_SciAdv4_eaar6887; @Olofsson2022_MNRAS513_713]）、光学的厚さは主に火星視線方向の $\tau_{\rm los}$ を用いる。必要に応じて $\tau_{\rm los}=\tau_{\perp}\times\mathrm{los\_factor}$ から $\tau_{\perp}$ を導出し、表層 ODE の $t_{\rm coll}$ 評価に使う。粒径分布 $n(s)$ をサイズビンで離散化し、Smoluchowski 衝突カスケード（collisional cascade）と表層の放射圧・昇華による流出を同一ループで結合する（[@Dohnanyi1969_JGR74_2531; @Krivov2006_AA455_509; @StrubbeChiang2006_ApJ648_652]）。
 
-- 標準の物理経路は Smoluchowski 経路（C3/C4）を各半径セルで解く 1D 手法で、実装の計算順序は図 3.2 に従う。放射圧〜流出の依存関係のみを抜粋すると ⟨$Q_{\rm pr}$⟩→β→$s_{\rm blow}$→遮蔽Φ→Smol IMEX→外向流束となる。半径方向の粘性拡散（radial viscous diffusion; C5）は演算子分割で追加可能とする（[@Krivov2006_AA455_509]）。  
+- 標準の物理経路は Smoluchowski 経路（C3/C4）を各半径セルで解く 1D 手法で、実装の計算順序は図 3.2 に従う。放射圧〜流出の依存関係のみを抜粋すると ⟨$Q_{\rm pr}$⟩→β→$s_{\rm blow}$→遮蔽Φ→供給→Smol IMEX→外向流束となる。半径方向の粘性拡散（radial viscous diffusion; C5）は演算子分割で追加可能とする（[@Krivov2006_AA455_509]）。  
   > **参照**: analysis/overview.md §1, analysis/physics_flow.md §2「各タイムステップの物理計算順序」
 - 運用スイープの既定は 1D とし、C5 は必要時のみ有効化する。具体的な run_sweep 手順と環境変数は付録 A、設定→物理対応は付録 B を参照する。
 - [@TakeuchiLin2003_ApJ593_524] に基づく gas-rich 表層 ODE は `ALLOW_TL2003=false` が既定で無効。gas-rich 感度試験では環境変数を `true` にして `surface.collision_solver=surface_ode` を選ぶ。\newline 例: `configs/scenarios/gas_rich.yml`。\newline **参照**: analysis/equations.md（冒頭注記）, analysis/overview.md §1「gas-poor 既定」
@@ -125,7 +127,7 @@ reference_links:
 
 #### 1.1 物性モデル (フォルステライト)
 
-物性は **フォルステライト** を採用する。力学パラメータ（密度・$Q_D^*$）はフォルステライト想定の係数を用い、放射圧効率 $\langle Q_{\rm pr}\rangle$ はフォルステライトのテーブルを参照する（[@LeinhardtStewart2012_ApJ745_79; @BohrenHuffman1983_Wiley]）。昇華はフォルステライトの蒸気圧パラメータを用いる。$\rho$ と $\langle Q_{\rm pr}\rangle$ の感度掃引を想定し、実行時の採用値は `run_config.json` に保存する。
+物性は **フォルステライト** を基準として与える。密度・放射圧効率 $\langle Q_{\rm pr}\rangle$・昇華（HKL）の係数はフォルステライト値を採用する。一方、破壊閾値 $Q_D^*$ は BA99 の基準則を LS12 の速度補間で扱い、フォルステライト直系の $Q_D^*$ が未確定なため peridot projectile 実験の $Q^*$ を参照した係数スケーリングで proxy 化している（[@BenzAsphaug1999_Icarus142_5; @LeinhardtStewart2012_ApJ745_79; @Avdellidou2016_MNRAS464_734]）。$\rho$ と $\langle Q_{\rm pr}\rangle$ の感度掃引を想定し、実行時の採用値は `run_config.json` に保存する。
 
 $\langle Q_{\rm pr}\rangle$ はテーブル入力（CSV/NPZ）を標準とし、Planck 平均の評価に用いる（[@BohrenHuffman1983_Wiley]）。遮蔽係数 $\Phi(\tau,\omega_0,g)$ もテーブル入力を基本とし、双線形補間で適用する（[@Joseph1976_JAS33_2452; @HansenTravis1974_SSR16_527; @CogleyBergstrom1979_JQSRT21_265]）。これらのテーブルは `run_config.json` にパスが保存され、再現実行時の参照点となる。
 
@@ -259,12 +261,12 @@ flowchart TB
         direction TB
         DRIVER["温度ドライバ更新"]
         RAD["放射圧評価<br/>β, s_blow"]
-        SUBL["昇華/下限更新<br/>ds/dt, s_min"]
-        PSDSTEP["PSD/κ 評価"]
-        SHIELD["光学深度・遮蔽 Φ"]
+        PSDSTEP["PSD/κ 評価<br/>κ_surf, τ_los"]
         PHASE["相判定/τゲート"]
-        SUPPLY["表層再供給/輸送"]
+        SUBL["昇華 ds/dt 評価"]
         SINKTIME["シンク時間 t_sink"]
+        SHIELD["遮蔽 Φ 適用<br/>κ_eff, Σ_tau1"]
+        SUPPLY["表層再供給/輸送"]
         EVOLVE["表層/Smol 更新<br/>IMEX-BDF(1)"]
         CHECK["質量収支・停止判定"]
     end
@@ -280,8 +282,7 @@ flowchart TB
     CONFIG --> INIT
     TABLES --> INIT
     INIT --> LOOP
-    DRIVER --> RAD --> SUBL --> PSDSTEP --> SHIELD
-    SHIELD --> PHASE --> SUPPLY --> SINKTIME --> EVOLVE --> CHECK
+    DRIVER --> RAD --> PSDSTEP --> PHASE --> SUBL --> SINKTIME --> SHIELD --> SUPPLY --> EVOLVE --> CHECK
     CHECK -->|"t < t_end"| DRIVER
     CHECK -->|"t ≥ t_end or T_M ≤ T_stop"| OUTPUT
 ```
@@ -290,30 +291,40 @@ flowchart TB
 
 ```mermaid
 flowchart LR
-    subgraph STEP["1ステップの処理"]
+    subgraph STEP["1ステップの処理（3ブロック）"]
         direction TB
-        
-        S1["1. 温度ドライバ更新<br/>T_M(t) → 冷却モデル"]
-        S2["2. 放射圧計算<br/>⟨Q_pr⟩ → β → s_blow"]
-        S3["3. 昇華/下限更新<br/>ds/dt, s_min"]
-        S4["4. PSD/κ 評価<br/>τ 計算"]
-        S5["5. 遮蔽 Φ 適用<br/>κ_eff, Σ_tau1"]
-        S6["6. 相判定/τゲート<br/>sink 選択"]
-        S7["7. 表層再供給/輸送<br/>deep mixing"]
-        S8["8. シンク時間<br/>t_sink 評価"]
-        S9["9. Smol/Surface 積分<br/>衝突 + 供給 + 損失"]
-        S10["10. 診断・停止判定・出力"]
-        
-        S1 --> S2 --> S3 --> S4 --> S5
-        S5 --> S6 --> S7 --> S8 --> S9 --> S10
+
+        subgraph A["円盤表層状態の更新"]
+            direction TB
+            S1["1. 温度ドライバ更新（global）<br/>T_M(t)"]
+            S2["2. 放射圧計算（global）<br/>⟨Q_pr⟩ → β → s_blow"]
+            S3["3. PSD/κ 評価（cell）<br/>κ_surf, τ_los"]
+            S4["4. 相判定/ゲート（cell）<br/>phase, τ_gate, allow_supply"]
+            S5["5. 昇華 ds/dt 評価（cell）<br/>HKL → ds/dt"]
+            S6["6. シンク時間（cell）<br/>t_sink"]
+        end
+
+        subgraph B["表層への質量供給"]
+            direction TB
+            S7["7. 遮蔽 Φ 適用（cell）<br/>κ_eff, Σ_tau1"]
+            S8["8. 表層再供給/輸送（cell）<br/>prod_rate_applied, deep mixing"]
+        end
+
+        subgraph C["微細化シミュレーション"]
+            direction TB
+            S9["9. Smol/Surface 積分（cell）<br/>衝突 + 供給 + 損失"]
+            S10["10. 診断・停止判定・出力"]
+        end
+
+        S1 --> S2 --> S3 --> S4 --> S5 --> S6 --> S7 --> S8 --> S9 --> S10
     end
 ```
 
-補足: 損失項（ブローアウト・追加シンク）は S9 の IMEX 更新に含まれ、S6 は相判定とゲート選択、S8 は $t_{\rm sink}$ の評価、S10 は診断集計と出力を担当する。
+補足: 損失項（ブローアウト・追加シンク）は S9 の IMEX 更新に含まれる。S4 は相判定とゲート（$\\tau_{\\rm gate}$, `allow_supply`）を決め、S6 は $t_{\\rm sink}$ を評価し、S10 は診断集計と出力を担当する。
 
-各ステップでは温度ドライバの出力から $T_M$ を更新し、放射圧関連量（$\langle Q_{\rm pr}\rangle$, β, $s_{\rm blow}$）と遮蔽量（$\Phi$, $\kappa_{\rm eff}$, $\tau_{\rm los}$）を再評価する。供給はフィードバックや温度スケールを通して表層に注入され、必要に応じて深層リザーバを経由する。表層 ODE または Smoluchowski 更新の後に、ブローアウトと追加シンクによる損失を加味し、質量収支と停止条件を評価する。
+図 3.2 は run_sweep 既定（1D + Smol）の順序に合わせ、analysis/physics_flow.md §2 と整合するように記述する。まず「円盤表層状態の更新」（S1–S6）で $T_M$、β、$s_{\rm blow}$、$\\kappa_{\\rm surf}$、$\\tau_{\\rm los}$、相状態、昇華 ds/dt、$t_{\\rm sink}$ を評価する。次に「表層への質量供給」（S7–S8）で遮蔽係数 $\\Phi$ から $\\kappa_{\\rm eff}$ と $\\Sigma_{\\tau=1}$ を得て、供給を表層/深層へ配分し `prod_rate_applied` を確定する。最後に「微細化シミュレーション」（S9–S10）で Smol/Surface の更新により PSD と $\\Sigma_{\\rm surf}$ を $\\Delta t$ だけ進め、損失と診断を集約する。
 
-図 3.2 の手順と実装の対応は次の通りである。S1 は温度ドライバの評価と $T_M$ の更新、S2 は $Q_{\rm pr}$ テーブルから β と $s_{\rm blow}$ を評価する。S3 は昇華 ds/dt と $s_{\\rm min}$ を評価し、S4 で PSD と $\\kappa$ を更新して $\\tau$ を計算する。S5 は $\\Phi$ を適用して $\\kappa_{\\rm eff}$ と $\\Sigma_{\\tau=1}$ を評価し、S6 で相判定と $\\tau$ ゲートにより有効な損失経路を選択する。S7 は供給率の名目値を計算し、フィードバック・温度スケール・深層輸送を適用する。S8 はシンク時間 $t_{\\rm sink}$ を評価し、S9 で衝突カーネルに基づく gain/loss と供給・シンクを含めた IMEX 更新を行う。S10 は $\\dot{M}_{\\rm out}$ などの診断集計、$\\tau_{\\rm stop}$ 超過の停止判定、C4 質量収支検査、および出力書き込みに対応する。
+図 3.2 の手順と実装の対応は次の通りである。S1 は温度ドライバの評価と $T_M$ の更新、S2 は $Q_{\rm pr}$ テーブルから β と $s_{\rm blow}$ を評価する。S3 は PSD から $\\kappa_{\\rm surf}$ を評価して $\\tau_{\\rm los}$ を計算する。S4 は相判定とゲート（$\\tau_{\\rm gate}$、液相ブロック、`allow_supply`）により有効な経路を選択する。S5 は HKL に基づく昇華 ds/dt を評価する。S6 は追加シンクの代表時間 $t_{\\rm sink}$ を評価する。S7 は $\\Phi$ を適用して $\\kappa_{\\rm eff}$ と $\\Sigma_{\\tau=1}$ を評価する。S8 は供給率の名目値を計算し、温度スケール・$\\tau$ フィードバック・有限リザーバ・深層輸送を適用して `prod_rate_applied` を決定する。S9 は衝突カーネルに基づく gain/loss と供給・シンクを含めた IMEX 更新を行う。S10 は $\\dot{M}_{\\rm out}$ などの診断集計、$\\tau_{\\rm stop}$ 超過の停止判定、C4 質量収支検査、および出力書き込みに対応する。
 
 #### 3.3 物理過程の相互作用
 
@@ -361,43 +372,51 @@ graph LR
 
 #### 3.4 供給・衝突・昇華の時系列因果
 
-供給（supply）・衝突（collision）・昇華（sublimation）は同一ステップ内で相互依存するため、因果順序を以下の通り固定する。図 3.2 の S3（昇華）、S6（相判定/ゲート）、S7（供給）、S8（シンク時間）、S9（衝突/IMEX 更新）に対応する内部順序を明示し、診断列と対応させる（[@WyattClarkeBooth2011_CeMDA111_1; @Krivov2006_AA455_509; @Markkanen2020_AA643_A16]）。
+供給（supply）・衝突（collision）・昇華（sublimation）は同一ステップ内で相互依存するため、因果順序を図 3.2 の 3 ブロックに沿って固定する。すなわち「円盤表層状態の更新」（S1–S6）で $\\tau_{\\rm los}$・相状態・昇華 ds/dt・$t_{\\rm sink}$ を評価し、「表層への質量供給」（S7–S8）で遮蔽 $\\Phi$ と深層輸送を含む `prod_rate_applied` を確定し、最後に「微細化シミュレーション」（S9–S10）で IMEX 更新と診断集計を行う（[@WyattClarkeBooth2011_CeMDA111_1; @Krivov2006_AA455_509; @Markkanen2020_AA643_A16]）。
 
 ```mermaid
 flowchart TB
-    A[S3: ds/dt evaluation] --> B[S6: phase / tau gate]
-    B --> C[S7: supply scaling & transport]
-    C --> D[S8: sink timescale]
-    D --> E[S9: collision kernel + IMEX update]
-    E --> F[S10: diagnostics & mass budget]
+    A["円盤表層状態の更新<br/>S1–S6"] --> B["表層への質量供給<br/>S7–S8"] --> C["微細化シミュレーション<br/>S9–S10"]
+```
+
+セル内の評価順序（概念）は次の通りである。
+
+```mermaid
+flowchart TB
+    S3["S3: κ_surf, τ_los"] --> S4["S4: phase / gates"] --> S5["S5: ds/dt"] --> S6["S6: t_sink"]
+    S6 --> S7["S7: shielding Φ"] --> S8["S8: supply split"] --> S9["S9: Smol IMEX"] --> S10["S10: diagnostics"]
 ```
 
 S3〜S10 の要点は次の通りである。
 
-- S3: 昇華 ds/dt を評価する。
-- S6: 相判定と $\\tau$ ゲートにより有効な損失経路を選択する。
-- S7: 名目供給 `supply_rate_nominal` にフィードバックと温度補正を適用し、\newline `supply_rate_scaled` を得る。深層輸送を含めた表層注入量を決定する。
-- S8: シンク時間 $t_{\\rm sink}$ を評価する。
-- S9: 衝突カーネルから loss/gain を構成し、IMEX 更新を実施する。
-- S10: 診断列は `smol_gain_mass_rate`, `smol_loss_mass_rate`, `ds_dt_sublimation`, `M_out_dot` を含む。\newline 質量収支を保存する。
+- S3: PSD から $\\kappa_{\\rm surf}$ を評価し、$\\tau_{\\rm los}$ を計算する。
+- S4: 相判定とゲート（$\\tau_{\\rm gate}$、液相ブロック、`allow_supply`）を評価し、各経路を有効化する。
+- S5: HKL に基づく昇華 ds/dt を評価する。
+- S6: シンク時間 $t_{\\rm sink}$ を評価する。
+- S7: 遮蔽 $\\Phi$ を適用して $\\kappa_{\\rm eff}$ と $\\Sigma_{\\tau=1}$ を評価する。
+- S8: 名目供給に温度スケール・$\\tau$ フィードバック・有限リザーバ・深層輸送を適用し、表層への注入量 `prod_rate_applied` を決定する。
+- S9: 衝突カーネルから loss/gain を構成し、供給と損失を含めた IMEX 更新を実施する。
+- S10: 診断列は `smol_gain_mass_rate`, `smol_loss_mass_rate`, `ds_dt_sublimation`, `M_out_dot` を含む。質量収支を保存する。
 
 ##### 3.4.1 供給フロー（Supply）
 
 ```mermaid
 flowchart TB
-    A["nominal supply"] --> B["feedback scale"]
-    B --> C["temperature scale"]
-    C --> D["tau gate / phase gate"]
-    D --> E["split: surface vs deep"]
-    E --> F["surface injection"]
-    E --> G["deep reservoir"]
-    G --> H["deep-to-surface flux"]
-    H --> F
+    BASE["R_base(t,r)"] --> MIX["mixing ε_mix"]
+    MIX --> TEMP["temperature coupling (optional)"]
+    TEMP --> FB["τ-feedback (optional)"]
+    FB --> RES["reservoir clip (optional)"]
+    RES --> RATE["prod_rate_raw (allow_supply gate)"]
+
+    TAU1["Σ_tau1 from shielding"] --> SPLIT["split: surface vs deep (transport)"]
+    RATE --> SPLIT
+    SPLIT --> SURF["prod_rate_applied_to_surf"]
+    SPLIT --> DEEP["sigma_deep / deep_to_surf_flux"]
 ```
 
 - 診断列は `supply_rate_nominal` → `supply_rate_scaled` → `supply_rate_applied` に記録する（[@WyattClarkeBooth2011_CeMDA111_1]）。
 - 深層経路は `prod_rate_diverted_to_deep`\newline `deep_to_surf_flux`\newline `prod_rate_applied_to_surf` に記録する。
-- 供給の有効化は phase（solid）と液相ブロックで決まり、$\\tau_{\\rm gate}$ はブローアウトのみをゲートする。停止判定（$\\tau_{\\rm stop}$）とは区別して扱う。
+- 供給の有効化は phase（solid）と液相ブロックで決まり、$\\tau_{\\rm gate}$ はブローアウトのみをゲートする。供給側のフィードバックは $\\tau_{\\rm los}$ を参照し、停止判定（$\\tau_{\\rm stop}$）とは区別して扱う。
 
 ##### 3.4.2 衝突フロー（Collision）
 
@@ -718,9 +737,8 @@ P_{\mathrm{sat}}(T) =
 - 旧 μ (E.027a) は診断・ツール用の導出値としてのみ扱う。
 - ここでの μ（供給式の指標）は衝突速度外挿の μ と別であり、混同しないよう区別して扱う。
 
-供給は「名目供給→フィードバック補正→温度スケール→ゲート判定→深層/表層への配分」の順に評価される。供給が深層へ迂回した場合でも、表層面密度と PSD の更新は同一タイムステップ内で整合的に行われる。
-
-- S7 に対応する供給処理では、`supply_rate_nominal` を基準に `supply_rate_scaled`（フィードバック・温度補正後）を評価し、ゲート判定後の `supply_rate_applied` を表層へ注入する。
+供給は「名目供給→混合（$\\epsilon_{\\mathrm{mix}}$）→温度スケール→$\\tau$ フィードバック→有限リザーバ→深層/表層への配分」の順に評価される。供給が深層へ迂回した場合でも、表層面密度と PSD の更新は同一タイムステップ内で整合的に行われる。
+- S8 に対応する供給処理では、`supply_rate_nominal` を基準に `supply_rate_scaled`（温度・$\\tau$ フィードバック後）を評価し、相状態による `allow_supply` ゲートと深層輸送を経て `supply_rate_applied` を表層へ注入する。
 - deep mixing が有効な場合は\newline `prod_rate_diverted_to_deep`\newline `deep_to_surf_flux` で深層からの再注入を記録し、\newline 表層面密度への寄与は `prod_rate_applied_to_surf` として診断する。
 - これらの列は supply の順序が図 3.2 と一致していることの検算に用いる。
 
@@ -1075,6 +1093,96 @@ scripts\runsets\windows\run_sweep.cmd ^
 - 実行本体は `run_temp_supply_sweep.cmd` を子として起動する。\newline **参照**: `scripts/runsets/windows/run_sweep.cmd` の `::REF:CHILD_RUN`
 - スイープ並列は既定で有効 (`SWEEP_PARALLEL=1`) で、\newline ネスト回避のため `MARSDISK_CELL_PARALLEL=0` によりセル並列は無効化される。\newline サイズプローブで `PARALLEL_JOBS` が調整される場合がある。\newline **参照**: `scripts/runsets/windows/run_sweep.cmd` の `::REF:PARALLEL`
 
+#### run_sweep の物性値（既定）
+
+`run_sweep.cmd` の既定設定（`scripts/runsets/common/base.yml` と `scripts/runsets/windows/overrides.txt` のマージ）で採用する物性値を表\ref{tab:run_sweep_material_properties}にまとめる。密度・放射圧効率・昇華係数はフォルステライト値を採用し、$Q_D^*$ は peridot projectile 実験の $Q^*$ を参照して BA99 係数をスケーリングした proxy を用いる（1.1節参照）。\newline
+なお、`qstar.coeff_table` が与えられている場合、実行時には `qstar.coeff_scale` を追加で乗算せず、表の値をそのまま用いる（`coeff_scale` は table 生成時に用いた倍率として保存する）。
+
+\begin{table}[t]
+  \centering
+  \caption{run\_sweep 既定で用いる物性値（フォルステライト基準）}
+  \label{tab:run_sweep_material_properties}
+  \begin{tabular}{p{0.18\textwidth} p{0.38\textwidth} p{0.22\textwidth} p{0.16\textwidth}}
+    \hline
+    記号 & 意味 & 値 & 出典 \\
+    \hline
+    $\rho$ &
+    粒子密度 [kg\,m$^{-3}$] &
+    3270 &
+    TODO(REF:van_lieshout_2014_forsterite_material_params_v1) \\
+    $\langle Q_{\rm pr}\rangle$ &
+    Planck平均放射圧効率（テーブル） &
+    \texttt{data/qpr\_planck\_forsterite\_mie.csv} &
+    [@BohrenHuffman1983_Wiley; @Zeidler2015_ApJ798_125] \\
+    $\alpha$ &
+    HKL 蒸発係数 &
+    0.1 &
+    TODO(REF:van_lieshout_2014_forsterite_material_params_v1) \\
+    $\mu$ &
+    分子量 [kg\,mol$^{-1}$] &
+    0.140694 &
+    TODO(REF:van_lieshout_2014_forsterite_material_params_v1) \\
+    $A_{\rm solid}$ &
+    固相飽和蒸気圧フィット $\log_{10}P(\mathrm{Pa})=A_{\rm solid}-B_{\rm solid}/T$ &
+    13.809441833 &
+    TODO(REF:van_lieshout_2014_forsterite_material_params_v1) \\
+    $B_{\rm solid}$ &
+    同上（$T$ は K） &
+    28362.904024 &
+    TODO(REF:van_lieshout_2014_forsterite_material_params_v1) \\
+    $T_{\rm solid}^{\rm valid}$ &
+    固相フィットの適用温度範囲 [K] &
+    1673--2133 &
+    TODO(REF:van_lieshout_2014_forsterite_material_params_v1) \\
+    $A_{\rm liq}$ &
+    液相飽和蒸気圧フィット $\log_{10}P(\mathrm{Pa})=A_{\rm liq}-B_{\rm liq}/T$ &
+    11.08 &
+    [@FegleySchaefer2012_arXiv] \\
+    $B_{\rm liq}$ &
+    同上（$T$ は K） &
+    22409.0 &
+    [@FegleySchaefer2012_arXiv] \\
+    $T_{\rm liq}^{\rm valid}$ &
+    液相フィットの適用温度範囲 [K] &
+    2163--3690 &
+    [@FegleySchaefer2012_arXiv] \\
+    $T_{\rm switch}$ &
+    固相$\to$液相フィット切替温度 [K] &
+    2163 &
+    [@FegleySchaefer2012_arXiv] \\
+    $T_{\rm condense}$, $T_{\rm vaporize}$ &
+    相判定のヒステリシス閾値 [K]（運用値） &
+    2162, 2163 &
+    本研究（スキーマ要件）, 基準: [@FegleySchaefer2012_arXiv] \\
+    $f_{Q^*}$ &
+    $Q_D^*$ 係数スケール（peridot proxy） &
+    5.574 &
+    [@Avdellidou2016_MNRAS464_734; @BenzAsphaug1999_Icarus142_5] \\
+    \hline
+  \end{tabular}
+\end{table}
+
+\begin{table}[t]
+  \centering
+  \caption{run\_sweep 既定の $Q_D^*$ 係数テーブル（\texttt{qstar.coeff\_table}）}
+  \label{tab:run_sweep_qdstar_coeff_table}
+  \begin{tabular}{p{0.14\textwidth} p{0.20\textwidth} p{0.14\textwidth} p{0.20\textwidth} p{0.14\textwidth}}
+    \hline
+    $v_{\rm ref}$ [km/s] & $Q_s$ & $a_s$ & $B$ & $b_g$ \\
+    \hline
+    1 & 1.9509e8 & 0.38 & 0.8187652527440811 & 1.36 \\
+    2 & 1.9509e8 & 0.38 & 1.28478039442684 & 1.36 \\
+    3 & 1.9509e8 & 0.38 & 1.6722 & 1.36 \\
+    4 & 2.92635e8 & 0.38 & 2.2296 & 1.36 \\
+    5 & 3.9018e8 & 0.38 & 2.787 & 1.36 \\
+    6 & 3.9018e8 & 0.38 & 3.137652034251613 & 1.36 \\
+    7 & 3.9018e8 & 0.38 & 3.4683282387928047 & 1.36 \\
+    \hline
+  \end{tabular}
+\end{table}
+
+表\ref{tab:run_sweep_qdstar_coeff_table} の係数は BA99 の基準テーブル [@BenzAsphaug1999_Icarus142_5] を基準に、$f_{Q^*}=5.574$（表\ref{tab:run_sweep_material_properties}）で $Q_s,B$ のみをスケーリングして作成している（peridot proxy: [@Avdellidou2016_MNRAS464_734]）。
+
 #### run_sweep.cmd の主要環境変数
 
 既定値は `run_sweep.cmd` のデフォルト設定に従う。主要環境変数は次の表に示す。  
@@ -1268,11 +1376,11 @@ title: 記号一覧（遷移期・長期モデル接続：暫定）
     $M_{\rm in}$ &
     ロッシュ限界内側に存在する内側円盤の質量（長期モデルの主要入力） &
     $\mathrm{kg}$ &
-    文献確認中 \\
+    定義は文献確認中\newline \texttt{TODO(REF:}\newline \texttt{canup2018}\newline \texttt{\_min\_definition}\newline \texttt{\_v1)} \\
     $M_{\rm in}^{\rm SPH}$ &
     SPH 終端時刻におけるロッシュ限界内側の円盤質量（接続前の推定値） &
     $\mathrm{kg}$ &
-    SPH 出力から集計（方法は文献確認中） \\
+    SPH 出力から集計（方法は文献確認中）\newline \texttt{TODO(REF:}\newline \texttt{sph}\newline \texttt{\_mass\_aggregation\_method}\newline \texttt{\_v1)} \\
     $\Delta M_{\rm in}$ &
     遷移期における内側円盤の不可逆損失（表層散逸・不可逆落下等の総和） &
     $\mathrm{kg}$ &
@@ -1284,11 +1392,11 @@ title: 記号一覧（遷移期・長期モデル接続：暫定）
     $t_0$ &
     長期モデルの開始時刻（遷移期が終わったと見なす時刻） &
     $\mathrm{s}$ &
-    定義は文献確認中（または $\mathrm{h}$） \\
+    定義は文献確認中（または $\mathrm{h}$）\newline \texttt{TODO(REF:}\newline \texttt{transition}\newline \texttt{\_start\_time\_definition}\newline \texttt{\_v1)} \\
     $r_d$ &
     内側円盤の外縁（半径） &
     $\mathrm{m}$ &
-    定義は文献確認中（または $R_{\rm Mars}$） \\
+    定義は文献確認中（または $R_{\rm Mars}$）\newline \texttt{TODO(REF:}\newline \texttt{canup2018}\newline \texttt{\_rd\_definition}\newline \texttt{\_v1)} \\
     $a_{\rm eq,max}$ &
     円盤が赤道面へ緩和した後の「最大半長軸」等を表す候補記号 &
     未定 &

@@ -22,11 +22,11 @@ title: 記号一覧（遷移期・長期モデル接続：暫定）
     $M_{\rm in}$ &
     ロッシュ限界内側に存在する内側円盤の質量（長期モデルの主要入力） &
     $\mathrm{kg}$ &
-    文献確認中 \\
+    定義は文献確認中\newline \texttt{TODO(REF:}\newline \texttt{canup2018}\newline \texttt{\_min\_definition}\newline \texttt{\_v1)} \\
     $M_{\rm in}^{\rm SPH}$ &
     SPH 終端時刻におけるロッシュ限界内側の円盤質量（接続前の推定値） &
     $\mathrm{kg}$ &
-    SPH 出力から集計（方法は文献確認中） \\
+    SPH 出力から集計（方法は文献確認中）\newline \texttt{TODO(REF:}\newline \texttt{sph}\newline \texttt{\_mass\_aggregation\_method}\newline \texttt{\_v1)} \\
     $\Delta M_{\rm in}$ &
     遷移期における内側円盤の不可逆損失（表層散逸・不可逆落下等の総和） &
     $\mathrm{kg}$ &
@@ -38,11 +38,11 @@ title: 記号一覧（遷移期・長期モデル接続：暫定）
     $t_0$ &
     長期モデルの開始時刻（遷移期が終わったと見なす時刻） &
     $\mathrm{s}$ &
-    定義は文献確認中（または $\mathrm{h}$） \\
+    定義は文献確認中（または $\mathrm{h}$）\newline \texttt{TODO(REF:}\newline \texttt{transition}\newline \texttt{\_start\_time\_definition}\newline \texttt{\_v1)} \\
     $r_d$ &
     内側円盤の外縁（半径） &
     $\mathrm{m}$ &
-    定義は文献確認中（または $R_{\rm Mars}$） \\
+    定義は文献確認中（または $R_{\rm Mars}$）\newline \texttt{TODO(REF:}\newline \texttt{canup2018}\newline \texttt{\_rd\_definition}\newline \texttt{\_v1)} \\
     $a_{\rm eq,max}$ &
     円盤が赤道面へ緩和した後の「最大半長軸」等を表す候補記号 &
     未定 &
