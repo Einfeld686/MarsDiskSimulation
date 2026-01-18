@@ -876,6 +876,9 @@ scripts/debug/debug_supply_powerlaw_slope.py:13:def main(argv: list[str] | None=
 scripts/plots/plot_axis_r_sweep.py:11:def _resolve_table_path(path: Path) -> Path
 scripts/plots/plot_axis_r_sweep.py:25:def parse_args() -> argparse.Namespace
 scripts/plots/plot_axis_r_sweep.py:44:def main() -> None
+scripts/plots/plot_forsterite_phase_heatmap.py:19:def _load_forsterite_properties(path: Path) -> dict
+scripts/plots/plot_forsterite_phase_heatmap.py:24:def _load_base_config(path: Path) -> tuple[float, float, float]
+scripts/plots/plot_forsterite_phase_heatmap.py:53:def main() -> int
 scripts/plots/plot_from_runs.py:36:def _resolve_table_path(path: Path) -> Path
 scripts/plots/plot_from_runs.py:50:def _normalize_reduce_mode(value: Any, *, default: str) -> str
 scripts/plots/plot_from_runs.py:61:def _reduce_1d_series(df: pd.DataFrame, reduce_mode: str, *, sum_columns: Optional[Iterable[str]]=None) -> pd.DataFrame
