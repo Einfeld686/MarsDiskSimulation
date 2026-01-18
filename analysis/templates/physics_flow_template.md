@@ -82,14 +82,20 @@ flowchart TB
 
 ## 2. 各タイムステップの物理計算順序
 
-`run_sweep.cmd` 既定（**1D + smol**）の結合順序（概略）:
+`run_sweep.cmd` 既定（**1D + smol**）の 1 ステップ（Δt）を、理解のために 3 つに分けて示します。
 
-> **global**: 温度 → 放射圧（β, a_blow, s_min）  
-> **per-cell**: κ → τ → phase → sublimation(ds/dt) → sinks(t_sink) → shielding(Φ: offが既定) → supply → smol(IMEX)
+> 1) 何を時間発展させるか（状態と格子）  
+> 2) その時刻の条件を決める（環境・レート評価）  
+> 3) 時間を 1 ステップ進める（更新式・ソルバ）
+
+> 1) 状態と格子: rセル（1D）と size bins（固定）と、各セルの状態 `Σ_surf[i]`, `psd_state[i]`, 損失累積など  
+> 2) 条件・レート評価: 温度 → 放射圧（β, a_blow, s_min）→（各セルで）κ/τ/相/昇華 ds/dt/シンク時間/供給レート  
+> 3) 更新: `collisions_smol`（IMEX-BDF1）で PSD と `Σ_surf` を Δt 更新し、損失（blowout/sinks）を積算
 
 読み方の注記:
-- 縦方向が時間の進行で、横方向は登場モジュール（参加者）の並び。
-- `R->>RAD` は「run_one_d が radiation に計算を依頼」、`RAD-->>R` は結果の返却。
+- 縦方向が時間の進行で、横方向は登場モジュール（参加者）の並び（物理空間の軸ではない）。
+- 矢印は「計算の依頼」と「結果の返却」で、上から下へ順に追います（左から右へ流れる図ではない）。
+- `rect` は概念上の区分で、実装では同一タイムステップ内で連続して実行されます。
 - `loop` は「半径セルごとの反復」を表し、実装上はセル並列化される場合があります。
 
 ```mermaid
@@ -107,16 +113,18 @@ sequenceDiagram
 
     Note over R: Step n 開始（1D・run_sweep既定）
 
-    rect rgb(240, 248, 255)
-        Note right of R: 1) global: 温度と放射圧（E.042-043, β, a_blow）
-        R->>TD: evaluate(time)
-        TD-->>R: T_M(time)
-        R->>RAD: blowout_radius / beta at s_min
-        RAD-->>R: a_blow, beta, s_min_effective
+    rect rgb(255, 250, 240)
+        Note right of R: 1) 状態と格子（このΔtで更新するもの）
+        Note right of R: state: Σ_surf[i], psd_state[i], losses_cum など
+        Note right of R: grid: radial cells, size bins（いずれも固定）
     end
 
-    rect rgb(245, 255, 250)
-        Note right of R: 2) per-cell: 局所物理 + Smol（collision_solver=smol）
+    rect rgb(240, 248, 255)
+        Note right of R: 2) 条件・レート評価（E.042-043, β, a_blow）
+        R->>TD: evaluate(time)
+        TD-->>R: T_M(time)
+        R->>RAD: blowout_radius と beta(s_min)
+        RAD-->>R: a_blow, beta, s_min_effective
         loop for each radial cell i
             R->>CELL: load Σ_surf[i], psd_state[i]
             CELL->>CELL: κ_surf = psd.compute_kappa(psd_state)
@@ -133,8 +141,11 @@ sequenceDiagram
             end
             CELL->>SP: evaluate_supply(time, r, τ, ε_mix, ...)
             SP-->>CELL: prod_rate
-            CELL->>SM: step_collisions_smol_0d(...)
-            SM-->>CELL: psd_state', Σ_surf', losses
+            rect rgb(245, 255, 250)
+                Note right of CELL: 3) 更新（Smol IMEXでΔt進める）
+                CELL->>SM: step_collisions(...)
+                SM-->>CELL: psd_state', Σ_surf', losses
+            end
             CELL-->>R: record row(s)
         end
     end
