@@ -405,17 +405,17 @@ PSD は形状（$n_k$）と規格化（$\Sigma_{\rm surf}$）を分離して扱�
 光学的厚さは用途ごとに以下を使い分ける（[@StrubbeChiang2006_ApJ648_652]）。
 
 - **垂直方向**: $\tau_{\perp}$ は表層 ODE の $t_{\rm coll}=1/(\Omega\tau_{\perp})$ に用いる。実装では $\tau_{\rm los}$ から $\tau_{\perp}=\tau_{\rm los}/\mathrm{los\_factor}$ を逆算して適用する。
-- **火星視線方向**: $\tau_{\rm los}=\tau_{\perp}\times\mathrm{los\_factor}$ を遮蔽・温度停止・供給フィードバックに用いる。
+- **火星視線方向**: $\tau_{\rm los}=\tau_{\perp}\times\mathrm{los\_factor}$ を遮蔽（有効時）・停止判定・供給フィードバックに用いる。
 - Smol 経路では $t_{\rm coll}$ をカーネル側で評価し、$\tau_{\rm los}$ は遮蔽とゲート判定の診断量として扱う。
 
 $\tau$ に関するゲート・停止・診断量は次のように区別する。
 
-- **$\tau_{\rm gate}$**: ブローアウト有効化のゲート。$\tau_{\rm los}\ge\tau_{\rm gate}$ の場合は放射圧アウトフローを抑制する（停止しない）。
+- **$\tau_{\rm gate}$**: ブローアウト有効化のゲート。$\tau_{\rm los}\ge\tau_{\rm gate}$ の場合は放射圧アウトフローを抑制する（停止しない）。既定の run\_sweep では `radiation.tau_gate.enable=false` のため無効。
 - **$\tau_{\rm stop}$**: 計算停止の閾値。$\tau_{\rm los}>\tau_{\rm stop}$ でシミュレーションを終了する。
 - **$\Sigma_{\tau=1}$**: $\kappa_{\rm eff}$ から導出する診断量。初期化や診断の参照に使うが、標準の時間発展では $\Sigma_{\rm surf}$ を直接クリップしない。
 - **$\tau_0=1$**: 初期化のスケーリング目標で、`init_tau1.scale_to_tau1=true` のときに $\tau_{\rm los}$ または $\tau_{\perp}$ を指定して用いる。
 
-$\tau_{\rm los}$ は遮蔽（$\Phi$）の入力として使われるほか、放射圧ゲート（$\tau_{\rm gate}$）や停止条件（$\tau_{\rm stop}$）の判定に用いる。$\Sigma_{\tau=1}$ は診断量として保存し、初期化や診断に参照するが、標準の時間発展では $\Sigma_{\rm surf}$ を直接クリップしない。
+$\tau_{\rm los}$ は遮蔽（$\Phi$）の入力として使われるほか、放射圧ゲート（$\tau_{\rm gate}$）や停止条件（$\tau_{\rm stop}$）の判定に用いる。$\Sigma_{\tau=1}$ は診断量として保存し、初期化や診断に参照するが、標準の時間発展では $\Sigma_{\rm surf}$ を直接クリップしない。既定の run\_sweep では `shielding.mode=off` のため $\Phi$ は適用せず、$\kappa_{\rm eff}=\kappa_{\rm surf}$ として扱う。
 
 - **参照**: analysis/equations.md（$\tau_{\perp}$ と $\tau_{\rm los}$ の定義）, analysis/physics_flow.md §6
 
@@ -446,7 +446,7 @@ $\tau_{\rm los}$ は遮蔽（$\Phi$）の入力として使われるほか、放
 \end{table}
 
 温度は放射圧効率 $\langle Q_{\rm pr}\rangle$、昇華フラックス、相判定に同時に入力される。`T_M_used` と `T_M_source` が診断に記録され、遮蔽係数 $\Phi$ は温度ドライバにはフィードバックしない。
-遮蔽は放射圧評価と相判定（粒子平衡温度の推定）でのみ用いる。
+遮蔽は $\kappa_{\rm eff}$ と $\Sigma_{\tau=1}$ の評価、供給の headroom 判定、停止判定に用いる。相判定は $\kappa_{\rm surf}$ から評価した $\tau_{\rm los}$ を用い、$\Phi$ は介在しない。
 
 - **詳細**: analysis/equations.md (E.042)–(E.043)  
 - **フロー図**: analysis/physics_flow.md §3 "温度ドライバ解決フロー"  
@@ -457,7 +457,7 @@ $\tau_{\rm los}$ は遮蔽（$\Phi$）の入力として使われるほか、放
 軽さ指標 β (E.013) とブローアウト粒径 $s_{\rm blow}$ (E.014) を $\langle Q_{\rm pr}\rangle$ テーブルから評価する。本書では粒径を $s_{\rm blow}$ と表記し、コードや出力列では `a_blow` が同義の名称として残る。
 
 - $\langle Q_{\rm pr}\rangle$ はテーブル入力（CSV/NPZ）を既定とし、Planck 平均から β と $s_{\rm blow}$ を導出する。
-- ブローアウト（blow-out）損失は **phase=solid かつ $\tau$ ゲートが開放**（$\tau_{\rm los}<\tau_{\rm gate}$）のときのみ有効化し、それ以外は outflux=0 とする。
+- ブローアウト（blow-out）損失は **phase=solid**、β閾値を満たす、`blowout.enabled=true`、かつ $\tau$ ゲートが開放（`radiation.tau_gate.enable=true` の場合に $\tau_{\rm los}<\tau_{\rm gate}$）のときのみ有効化する。既定の run\_sweep では $\tau$ ゲートは無効であり、位相と β 判定のみで可否が決まる。
 - 外向流束は $t_{\rm blow}=1/\Omega$（E.007）を基準とし、実装では `chi_blow_eff` を掛けた $t_{\rm blow}=\chi_{\rm blow}/\Omega$ を用いる。
 - 補正状況は `dt_over_t_blow` と `fast_blowout_flag_gt3/gt10` を診断列へ出力する。
 - β の閾値判定により `case_status` を分類し、ブローアウト境界と PSD 床の関係を `s_min_components` に記録する。
@@ -475,7 +475,7 @@ $\tau_{\rm los}$ は遮蔽（$\Phi$）の入力として使われるほか、放
 s_{\mathrm{blow}} = \frac{3\,\sigma_{\mathrm{SB}}\,T_{\mathrm{M}}^{4}\,R_{\mathrm{M}}^{2}\,\langle Q_{\mathrm{pr}}\rangle}{2\,G\,M_{\mathrm{M}}\,c\,\rho}
 \end{equation}
 
-表層の外向流束は式\ref{eq:surface_outflux}で評価する（再掲: E.009）。
+表層の外向流束は表層 ODE の場合に式\ref{eq:surface_outflux}で評価する（再掲: E.009）。Smol 経路では $s \le a_{\rm blow}$ のビンに対して $S_{\rm blow}=1/t_{\rm blow}$ のシンクを適用し、$\dot{\Sigma}_{\rm blow}=\sum_k m_k S_{{\rm blow},k} N_k$ を outflux として記録する。
 
 \begin{equation}
 \label{eq:surface_outflux}
@@ -573,6 +573,8 @@ P_{\mathrm{sat}}(T) =
 
 <!-- TEX_EXCLUDE_START -->
 reference_links:
+- @CanupSalmon2018_SciAdv4_eaar6887 -> paper/references/CanupSalmon2018_SciAdv4_eaar6887.pdf | 用途: 衝突条件と衝突角の範囲
+- @Hyodo2017b_ApJ851_122 -> paper/references/Hyodo2017b_ApJ851_122.pdf | 用途: 非赤道円盤とJ2歳差スケール
 - @WyattClarkeBooth2011_CeMDA111_1 -> paper/references/WyattClarkeBooth2011_CeMDA111_1.pdf | 用途: 供給率のパラメータ化
 <!-- TEX_EXCLUDE_END -->
 
@@ -580,6 +582,12 @@ reference_links:
 ### 3.1 表層再供給と輸送
 
 表層再供給（supply）は表層への面密度生成率として与え、サイズ分布と深層輸送を通じて PSD に注入する。ここでの表層再供給は外側からの流入を精密に表すものではなく、深部↔表層の入れ替わりを粗く表現するためのパラメータ化である。定常値・べき乗・テーブル・区分定義の各モードを用意し、温度・$\tau$ フィードバック・有限リザーバを組み合わせて非定常性を表現する（[@WyattClarkeBooth2011_CeMDA111_1]）。
+
+先行研究は、Phobos/Deimos を形成しうる衝突条件として、Vesta-Ceres 級の衝突体による斜め衝突が必要であり、成功例が衝突角 30-60$^{\circ}$ に分布することを示している（[@CanupSalmon2018_SciAdv4_eaar6887]）。衝突前の火星が無視できない自転を持ち、その自転軸が衝突で与えられる角運動量ベクトルと一致しない場合、生成円盤の平均軌道面は火星赤道面から傾いた非赤道円盤になりうるため、粒子の軌道傾斜角（inclination, $i$）には平均値とばらつきが生じる（[@Hyodo2017b_ApJ851_122]）。さらに火星の扁平率 $J_2$ による節点歳差を考えると、$a\sim2-10\,R_{\rm Mars}$、$e\sim0.5-0.9$ の範囲では歳差の時間スケールが 1-100 年程度であり、傾斜角に依存する見積もりが与えられている（[@Hyodo2017b_ApJ851_122]）。したがって本研究が対象とする数年-10年の時間範囲では、衝突直後に生じた傾斜角のばらつきが残存し、その鉛直方向の運動が内部の物質を光が比較的通りやすい表層へ運び続ける過程が起こりうると考え、本研究ではこれを表層再供給としてパラメータ化して取り込む。具体的には、光学的厚さ $\tau\simeq1$ に対応する初期表層面密度 $\Sigma_{\tau=1,0}(r)$ を質量スケール、局所公転周期 $T_{\rm orb}(r)$ を時間スケールとして、1 公転あたりに $\Sigma_{\tau=1,0}$ の $f_{\rm orb}$ を補充する規格化を
+\[
+\dot{\Sigma}_{\rm target}(r)=\mu_{\rm orb} f_{\rm orb}\,\frac{\Sigma_{\tau=1,0}(r)}{T_{\rm orb}(r)}
+\]
+と置く（$\mu_{\rm orb}$ は強度の不確かさを吸収する無次元パラメータ）。以下では $\Sigma_{\tau=1,0}$ を $\Sigma_{\rm ref}$ として扱い、式\ref{eq:supply_mu_orbit}の実装に接続する。
 
 供給の基礎率は式\ref{eq:prod_rate_definition}で定義する（再掲: E.027）（[@WyattClarkeBooth2011_CeMDA111_1]）。
 
@@ -592,6 +600,20 @@ reference_links:
 - `const` は `mu_orbit10pct` を基準に、参照光学的厚さ (`mu_reference_tau`) に対応する表層密度の `orbit_fraction_at_mu1` を 1 公転で供給する定義に統一する。
 - 旧 μ (E.027a) は診断・ツール用の導出値としてのみ扱う。
 - ここでの μ（供給式の指標）は衝突速度外挿の μ と別であり、混同しないよう区別して扱う。
+
+`run_sweep.cmd`（`run_temp_supply_sweep.cmd` 経由）の既定では `supply.mode=const` を採り、`mu_orbit10pct` による正規化で名目供給率を決める。参照光学的厚さ $\mu_{\rm ref}=\texttt{mu_reference_tau}$ を用いて、表層の基準面密度は
+\begin{equation}
+\label{eq:supply_sigma_ref_mu}
+\Sigma_{\rm ref}=\frac{\mu_{\rm ref}}{\kappa_{\rm eff,ref}\,\mathrm{los\_factor}},
+\qquad
+\kappa_{\rm eff,ref}=\Phi(\mu_{\rm ref})\,\kappa_{\rm surf}
+\end{equation}
+と置く（$\Phi$ は遮蔽係数、遮蔽無効時は $\Phi=1$）。この $\Sigma_{\rm ref}$ に対して、1 公転あたりの補充率 $f_{\rm orb}=\texttt{orbit_fraction_at_mu1}$ と $\mu_{\rm orbit10pct}$ を掛けた目標供給率は
+\begin{equation}
+\label{eq:supply_mu_orbit}
+\dot{\Sigma}_{\rm target}=\mu_{\rm orbit10pct}\,f_{\rm orb}\,\frac{\Sigma_{\rm ref}}{T_{\rm orb}}
+\end{equation}
+となる。実装では `supply.const.prod_area_rate_kg_m2_s` を $\dot{\Sigma}_{\rm target}/\epsilon_{\rm mix}$ に設定するため、式\ref{eq:prod_rate_definition}の混合後に $\dot{\Sigma}_{\rm prod}=\dot{\Sigma}_{\rm target}$ が回復する。`EPS_LIST` で与える $\epsilon_{\rm mix}$ はケースごとに上書きされる。
 
 供給は「名目供給→混合（$\\epsilon_{\\mathrm{mix}}$）→温度スケール→$\\tau$ フィードバック→有限リザーバ→深層/表層への配分」の順に評価される。供給が深層へ迂回した場合でも、表層面密度と PSD の更新は同一タイムステップ内で整合的に行われる。
 - S8 に対応する供給処理では、`supply_rate_nominal` を基準に `supply_rate_scaled`（温度・$\\tau$ フィードバック後）を評価し、相状態による `allow_supply` ゲートと深層輸送を経て `supply_rate_applied` を表層へ注入する。
