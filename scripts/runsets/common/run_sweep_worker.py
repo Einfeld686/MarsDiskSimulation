@@ -137,9 +137,9 @@ def _parse_int(value: str | None, default: int) -> int:
         return default
 
 
-def _load_sweep_list(path: Path) -> list[tuple[str, str, str]]:
+def _load_sweep_list(path: Path) -> list[tuple[str, str, str, str | None, str | None]]:
     text = _read_text(path)
-    cases: list[tuple[str, str, str]] = []
+    cases: list[tuple[str, str, str, str | None, str | None]] = []
     for line in text.splitlines():
         raw = line.strip()
         if not raw or raw.startswith("#"):
@@ -147,7 +147,12 @@ def _load_sweep_list(path: Path) -> list[tuple[str, str, str]]:
         tokens = raw.split()
         if len(tokens) < 3:
             continue
-        cases.append((tokens[0], tokens[1], tokens[2]))
+        if len(tokens) >= 5:
+            cases.append((tokens[0], tokens[1], tokens[2], tokens[3], tokens[4]))
+        elif len(tokens) == 4:
+            cases.append((tokens[0], tokens[1], tokens[2], tokens[3], None))
+        else:
+            cases.append((tokens[0], tokens[1], tokens[2], None, None))
     return cases
 
 
@@ -319,24 +324,36 @@ def main(argv: list[str] | None = None) -> int:
     exit_code = 0
     from marsdisk import run_zero_d
 
-    for idx, (t_val, eps_val, tau_val) in enumerate(cases):
+    for idx, (t_val, eps_val, tau_val, i0_val, mu_val) in enumerate(cases):
         if part_count > 1 and idx % part_count != (part_index - 1):
             continue
 
         t_table = f"data/mars_temperature_T{t_val}p0K.csv"
         eps_title = _format_title_token(eps_val)
         tau_title = _format_title_token(tau_val)
+        i0_title = _format_title_token(i0_val) if i0_val else None
+        mu_title = _format_title_token(mu_val) if mu_val else None
         if seed_override:
             seed_value = seed_override
         else:
             seed_value = str(secrets.randbelow(2**31))
 
-        title = f"T{t_val}_eps{eps_title}_tau{tau_title}"
+        title_parts = [f"T{t_val}", f"eps{eps_title}", f"tau{tau_title}"]
+        if i0_title:
+            title_parts.append(f"i0{i0_title}")
+        if mu_title:
+            title_parts.append(f"mu{mu_title}")
+        title = "_".join(title_parts)
         outdir = (batch_dir / title).resolve()
         (outdir / "series").mkdir(parents=True, exist_ok=True)
         (outdir / "checks").mkdir(parents=True, exist_ok=True)
 
-        log_info(f"case start T={t_val} eps={eps_val} tau={tau_val} -> {outdir}")
+        case_label = f"T={t_val} eps={eps_val} tau={tau_val}"
+        if i0_val:
+            case_label += f" i0={i0_val}"
+        if mu_val:
+            case_label += f" mu={mu_val}"
+        log_info(f"case start {case_label} -> {outdir}")
 
         case_lines = [
             f"io.outdir={outdir}",
@@ -345,6 +362,10 @@ def main(argv: list[str] | None = None) -> int:
             f"supply.mixing.epsilon_mix={eps_val}",
             f"optical_depth.tau0_target={tau_val}",
         ]
+        if i0_val:
+            case_lines.append(f"dynamics.i0={i0_val}")
+        if mu_val:
+            case_lines.append(f"supply.const.mu_orbit10pct={mu_val}")
         persist_collision_cache_value = persist_collision_cache_env
         if persist_collision_cache_value is None:
             persist_collision_cache_value = "1"

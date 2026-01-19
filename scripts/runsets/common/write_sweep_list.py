@@ -22,7 +22,7 @@ def _parse_list(raw: str) -> list[str]:
     return tokens
 
 
-def _parse_extra_cases(raw: str) -> list[tuple[str, str, str, str]]:
+def _parse_extra_cases(raw: str, *, expected_columns: int) -> list[tuple[str, ...]]:
     if not raw:
         return []
     cleaned = raw.strip()
@@ -33,14 +33,33 @@ def _parse_extra_cases(raw: str) -> list[tuple[str, str, str, str]]:
     tokens = _parse_list(cleaned)
     if not tokens:
         return []
-    if len(tokens) % 4 != 0:
-        print(
-            f"[warn] EXTRA_CASES expects quadruples; got tokens={len(tokens)}",
-            file=sys.stderr,
-        )
-    cases: list[tuple[str, str, str, str]] = []
-    for idx in range(0, len(tokens) - 3, 4):
-        cases.append((tokens[idx], tokens[idx + 1], tokens[idx + 2], tokens[idx + 3]))
+    if expected_columns == 5:
+        stride = 5
+        if len(tokens) % 5 == 0:
+            stride = 5
+        elif len(tokens) % 4 == 0:
+            stride = 4
+            print(
+                "[warn] EXTRA_CASES expects quintuples when MU_LIST is set; "
+                "treating entries as quadruples.",
+                file=sys.stderr,
+            )
+        else:
+            print(
+                f"[warn] EXTRA_CASES expects quintuples; got tokens={len(tokens)}",
+                file=sys.stderr,
+            )
+            stride = 5
+    else:
+        stride = 4
+        if len(tokens) % 4 != 0:
+            print(
+                f"[warn] EXTRA_CASES expects quadruples; got tokens={len(tokens)}",
+                file=sys.stderr,
+            )
+    cases: list[tuple[str, ...]] = []
+    for idx in range(0, len(tokens) - (stride - 1), stride):
+        cases.append(tuple(tokens[idx : idx + stride]))
     return cases
 
 
@@ -51,6 +70,7 @@ def main() -> int:
     ap.add_argument("--eps-list", default=os.environ.get("EPS_LIST", ""), help="Epsilon list")
     ap.add_argument("--tau-list", default=os.environ.get("TAU_LIST", ""), help="Tau list")
     ap.add_argument("--i0-list", default=os.environ.get("I0_LIST", ""), help="Inclination list")
+    ap.add_argument("--mu-list", default=os.environ.get("MU_LIST", ""), help="Mu list")
     ap.add_argument(
         "--extra-cases",
         default=os.environ.get("EXTRA_CASES", ""),
@@ -62,6 +82,9 @@ def main() -> int:
     eps_list = _parse_list(args.eps_list)
     tau_list = _parse_list(args.tau_list)
     i0_list = _parse_list(args.i0_list)
+    mu_list = _parse_list(args.mu_list)
+    if len(mu_list) == 1 and mu_list[0].lower() in {"off", "none", "false"}:
+        mu_list = []
 
     if not t_list:
         print("[error] T_LIST is empty", file=sys.stderr)
@@ -75,28 +98,56 @@ def main() -> int:
     if not i0_list:
         print("[error] I0_LIST is empty", file=sys.stderr)
         return 2
+    include_mu = bool(mu_list)
 
     args.out.parent.mkdir(parents=True, exist_ok=True)
     rows = 0
-    seen: set[tuple[str, str, str, str]] = set()
+    if include_mu:
+        seen: set[tuple[str, str, str, str, str]] = set()
+    else:
+        seen: set[tuple[str, str, str, str]] = set()
+    extra_cases = _parse_extra_cases(args.extra_cases, expected_columns=5 if include_mu else 4)
     with args.out.open("w", encoding="utf-8") as f:
         for t_val in t_list:
             for eps_val in eps_list:
                 for tau_val in tau_list:
                     for i0_val in i0_list:
-                        key = (t_val, eps_val, tau_val, i0_val)
-                        if key in seen:
-                            continue
-                        seen.add(key)
-                        f.write(f"{t_val} {eps_val} {tau_val} {i0_val}\n")
-                        rows += 1
-        for t_val, eps_val, tau_val, i0_val in _parse_extra_cases(args.extra_cases):
-            key = (t_val, eps_val, tau_val, i0_val)
-            if key in seen:
-                continue
-            seen.add(key)
-            f.write(f"{t_val} {eps_val} {tau_val} {i0_val}\n")
-            rows += 1
+                        if include_mu:
+                            for mu_val in mu_list:
+                                key = (t_val, eps_val, tau_val, i0_val, mu_val)
+                                if key in seen:
+                                    continue
+                                seen.add(key)
+                                f.write(f"{t_val} {eps_val} {tau_val} {i0_val} {mu_val}\n")
+                                rows += 1
+                        else:
+                            key = (t_val, eps_val, tau_val, i0_val)
+                            if key in seen:
+                                continue
+                            seen.add(key)
+                            f.write(f"{t_val} {eps_val} {tau_val} {i0_val}\n")
+                            rows += 1
+        for extra in extra_cases:
+            if include_mu:
+                if len(extra) == 4:
+                    mu_val = mu_list[0]
+                    t_val, eps_val, tau_val, i0_val = extra
+                else:
+                    t_val, eps_val, tau_val, i0_val, mu_val = extra[:5]
+                key = (t_val, eps_val, tau_val, i0_val, mu_val)
+                if key in seen:
+                    continue
+                seen.add(key)
+                f.write(f"{t_val} {eps_val} {tau_val} {i0_val} {mu_val}\n")
+                rows += 1
+            else:
+                t_val, eps_val, tau_val, i0_val = extra[:4]
+                key = (t_val, eps_val, tau_val, i0_val)
+                if key in seen:
+                    continue
+                seen.add(key)
+                f.write(f"{t_val} {eps_val} {tau_val} {i0_val}\n")
+                rows += 1
     print(f"[info] sweep list rows={rows} out={args.out}")
     return 0
 
