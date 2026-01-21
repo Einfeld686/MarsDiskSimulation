@@ -3,4 +3,3 @@
 02_prior_work.md
 03_problem_scope.md
 04_objectives_contributions.md
-05_thesis_structure.md
