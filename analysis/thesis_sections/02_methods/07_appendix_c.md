@@ -4,7 +4,7 @@
 実装(.py): marsdisk/run.py, marsdisk/physics/radiation.py, marsdisk/physics/shielding.py, marsdisk/physics/collisions_smol.py, marsdisk/physics/supply.py, marsdisk/physics/sinks.py, marsdisk/physics/tempdriver.py
 -->
 
-本モデルは、物性や放射輸送に関する外部テーブルを読み込み、本文中の式で用いる物理量（$T_M$, $\langle Q_{\rm pr}\rangle$, $\Phi$ など）を与える。論文ではテーブルの数値そのものを列挙せず、役割と参照先を表\ref{tab:external_inputs}にまとめる。実行時に採用したテーブルのパスと補間範囲は `run_config.json` に保存され、再解析時の基準となる。
+本モデルは，物性や放射輸送に関する外部テーブルを読み込み，本文中の式で用いる物理量（$T_M$, $\langle Q_{\rm pr}\rangle$, $\Phi$ など）を与える．論文ではテーブルの数値そのものを列挙せず，役割と参照先を表\ref{tab:external_inputs}にまとめる．実行時に採用したテーブルの出典と補間範囲（有効温度域など）は実行ログに保存し，再解析時の基準とする（付録A）．
 
 \begin{table}[t]
   \centering

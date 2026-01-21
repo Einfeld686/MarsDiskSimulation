@@ -1,7 +1,7 @@
 <!-- TEX_EXCLUDE_START -->
 ### （資料）式一覧（内部参照用：PDF除外）
 
-このファイルは `analysis/equations.md` の式番号 (E.###) を一覧表示するための作業用メモであり、論文PDFには含めない。本文中では式は各節に掲示し、記号定義は付録E（記号表）を参照する。
+このファイルは `analysis/equations.md` の式番号 (E.###) を一覧表示するための作業用メモであり，論文PDFには含めない．本文中では式は各節に掲示し，記号定義は付録E（記号表）を参照する．
 
 ---
 #### F.1 軌道力学と時間尺度
@@ -57,7 +57,7 @@ s_{\mathrm{blow}} = \frac{3\,\sigma_{\mathrm{SB}}\,T_{\mathrm{M}}^{4}\,R_{\mathr
 \begin{equation}
 \tag{E.016}
 \label{eq:E016}
-\Sigma_{\tau=1} =
+\Sigma_{\tau_{\perp}=1} =
 \begin{cases}
  \kappa_{\mathrm{eff}}^{-1}, & \kappa_{\mathrm{eff}} > 0,\\
  \infty, & \kappa_{\mathrm{eff}} \le 0.
@@ -76,7 +76,7 @@ s_{\mathrm{blow}} = \frac{3\,\sigma_{\mathrm{SB}}\,T_{\mathrm{M}}^{4}\,R_{\mathr
 \begin{equation}
 \tag{E.009}
 \label{eq:E009}
-\dot{M}_{\mathrm{out}} = \Sigma_{\mathrm{surf}}\,\Omega
+\dot{\Sigma}_{\mathrm{out}} = \frac{\Sigma_{\mathrm{surf}}}{t_{\mathrm{blow}}}
 \end{equation}
 
 ---
@@ -92,9 +92,9 @@ s_{\mathrm{blow}} = \frac{3\,\sigma_{\mathrm{SB}}\,T_{\mathrm{M}}^{4}\,R_{\mathr
 \tag{E.011}
 \label{eq:E011}
 \begin{aligned}
- M^{n} &= \sum_k m_k N_k^{n}, & M^{n+1} &= \sum_k m_k N_k^{n+1},\\
- \Delta M &= M^{n+1} + \Delta t\,\dot{m}_{\mathrm{extra}} - \left(M^{n} + \Delta t\,\dot{m}_{<a_{\mathrm{blow}}}\right),\\
- \epsilon_{\mathrm{mass}} &= \frac{|\Delta M|}{M^{n}}.
+ \Sigma^{n} &= \sum_k m_k N_k^{n}, & \Sigma^{n+1} &= \sum_k m_k N_k^{n+1},\\
+ \Delta\Sigma &= \Sigma^{n+1} + \Delta t\,\dot{\Sigma}_{\mathrm{extra}} - \left(\Sigma^{n} + \Delta t\,\dot{\Sigma}_{\mathrm{prod}}^{(<s_{\mathrm{blow}})}\right),\\
+ \epsilon_{\mathrm{mass}} &= \frac{|\Delta\Sigma|}{\Sigma^{n}}.
 \end{aligned}
 \end{equation}
 
@@ -143,7 +143,7 @@ Q_{D}^{*}(s,\rho,v) = Q_{\mathrm{str}}(v) + Q_{\mathrm{grav}}(v)\,S(v)
 \begin{equation}
 \tag{E.027a}
 \label{eq:E027a}
-R_{\mathrm{base}} = \frac{\mu\,\Sigma_{\tau=1}}{\epsilon_{\mathrm{mix}}\,t_{\mathrm{blow}}}
+R_{\mathrm{base}} = \frac{\mu\,\Sigma_{\tau_{\perp}=1}}{\epsilon_{\mathrm{mix}}\,t_{\mathrm{blow}}}
 \end{equation}
 
 ---
