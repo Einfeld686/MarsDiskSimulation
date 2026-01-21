@@ -1,6 +1,6 @@
 ## 付録 D. 略語索引
 
-略語は表\ref{tab:abbreviations}にまとめる。
+略語は表\ref{tab:abbreviations}にまとめる．
 
 \begin{table}[t]
   \centering

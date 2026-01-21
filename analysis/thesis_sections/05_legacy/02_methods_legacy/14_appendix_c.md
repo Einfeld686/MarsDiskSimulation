@@ -1,6 +1,6 @@
 ## 付録 C. 関連ドキュメント
 
-関連ドキュメントの役割を表\ref{tab:related_docs}に整理する。
+関連ドキュメントの役割を表\ref{tab:related_docs}に整理する．
 
 \begin{table}[t]
   \centering
