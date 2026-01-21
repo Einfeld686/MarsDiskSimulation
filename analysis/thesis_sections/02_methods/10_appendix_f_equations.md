@@ -1,0 +1,173 @@
+<!-- TEX_EXCLUDE_START -->
+### （資料）式一覧（内部参照用：PDF除外）
+
+このファイルは `analysis/equations.md` の式番号 (E.###) を一覧表示するための作業用メモであり、論文PDFには含めない。本文中では式は各節に掲示し、記号定義は付録E（記号表）を参照する。
+
+---
+#### F.1 軌道力学と時間尺度
+
+\begin{equation}
+\tag{E.001}
+\label{eq:E001}
+v_K(r)=\sqrt{\frac{G\,M_{\mathrm{M}}}{r}}
+\end{equation}
+
+\begin{equation}
+\tag{E.002}
+\label{eq:E002}
+\Omega(r)=\sqrt{\frac{G\,M_{\mathrm{M}}}{r^{3}}}
+\end{equation}
+
+\begin{equation}
+\tag{E.007}
+\label{eq:E007}
+t_{\mathrm{blow}}=\frac{1}{\Omega}
+\end{equation}
+
+---
+#### F.2 粒径境界とブローアウト
+
+\begin{equation}
+\tag{E.008}
+\label{eq:E008}
+s_{\min,\mathrm{eff}}=\max\!\left(s_{\min,\mathrm{cfg}},\,s_{\mathrm{blow,eff}}\right)
+\end{equation}
+
+\begin{equation}
+\tag{E.013}
+\label{eq:E013}
+\beta = \frac{3\,\sigma_{\mathrm{SB}}\,T_{\mathrm{M}}^{4}\,R_{\mathrm{M}}^{2}\,\langle Q_{\mathrm{pr}}\rangle}{4\,G\,M_{\mathrm{M}}\,c\,\rho\,s}
+\end{equation}
+
+\begin{equation}
+\tag{E.014}
+\label{eq:E014}
+s_{\mathrm{blow}} = \frac{3\,\sigma_{\mathrm{SB}}\,T_{\mathrm{M}}^{4}\,R_{\mathrm{M}}^{2}\,\langle Q_{\mathrm{pr}}\rangle}{2\,G\,M_{\mathrm{M}}\,c\,\rho}
+\end{equation}
+
+---
+#### F.3 遮蔽と光学的厚さ
+
+\begin{equation}
+\tag{E.015}
+\label{eq:E015}
+\kappa_{\mathrm{eff}}=\Phi(\tau)\,\kappa_{\mathrm{surf}}
+\end{equation}
+
+\begin{equation}
+\tag{E.016}
+\label{eq:E016}
+\Sigma_{\tau=1} =
+\begin{cases}
+ \kappa_{\mathrm{eff}}^{-1}, & \kappa_{\mathrm{eff}} > 0,\\
+ \infty, & \kappa_{\mathrm{eff}} \le 0.
+\end{cases}
+\end{equation}
+
+\begin{equation}
+\tag{E.017}
+\label{eq:E017}
+\Phi=\Phi(\tau,\omega_0,g)
+\end{equation}
+
+---
+#### F.4 表層流出（ブローアウト）
+
+\begin{equation}
+\tag{E.009}
+\label{eq:E009}
+\dot{M}_{\mathrm{out}} = \Sigma_{\mathrm{surf}}\,\Omega
+\end{equation}
+
+---
+#### F.5 Smoluchowski 方程式と質量収支
+
+\begin{equation}
+\tag{E.010}
+\label{eq:E010}
+\dot{N}_k = \sum_{i\le j} C_{ij}\,\frac{m_i+m_j}{m_k}\,Y_{kij} - \left(\sum_j C_{kj} + C_{kk}\right) + F_k - S_k N_k
+\end{equation}
+
+\begin{equation}
+\tag{E.011}
+\label{eq:E011}
+\begin{aligned}
+ M^{n} &= \sum_k m_k N_k^{n}, & M^{n+1} &= \sum_k m_k N_k^{n+1},\\
+ \Delta M &= M^{n+1} + \Delta t\,\dot{m}_{\mathrm{extra}} - \left(M^{n} + \Delta t\,\dot{m}_{<a_{\mathrm{blow}}}\right),\\
+ \epsilon_{\mathrm{mass}} &= \frac{|\Delta M|}{M^{n}}.
+\end{aligned}
+\end{equation}
+
+---
+#### F.6 衝突（速度・カーネル・破砕強度）
+
+\begin{equation}
+\tag{E.020}
+\label{eq:E020}
+v_{ij}=v_{K}\,\sqrt{1.25\,e^{2}+i^{2}}
+\end{equation}
+
+\begin{equation}
+\tag{E.021}
+\label{eq:E021}
+\begin{aligned}
+\varepsilon_n &= \mathrm{clip}\!\left(\varepsilon(c_n),\,0,\,1-10^{-6}\right),\\
+c_{n+1} &= \sqrt{\frac{f_{\mathrm{wake}}\,\tau}{\max(1-\varepsilon_n^{2},\,10^{-12})}},\\
+c_{n+1} &\leftarrow \tfrac12\left(c_{n+1} + c_n\right)
+\end{aligned}
+\end{equation}
+
+\begin{equation}
+\tag{E.024}
+\label{eq:E024}
+C_{ij} = \frac{N_i N_j}{1+\delta_{ij}}\,
+\frac{\pi\,(s_i+s_j)^{2}\,v_{ij}}{\sqrt{2\pi}\,H_{ij}},
+\qquad H_{ij} = \sqrt{H_i^{2}+H_j^{2}}
+\end{equation}
+
+\begin{equation}
+\tag{E.026}
+\label{eq:E026}
+Q_{D}^{*}(s,\rho,v) = Q_{\mathrm{str}}(v) + Q_{\mathrm{grav}}(v)\,S(v)
+\end{equation}
+
+---
+#### F.7 表層再供給（supply）
+
+\begin{equation}
+\tag{E.027}
+\label{eq:E027}
+\dot{\Sigma}_{\mathrm{prod}}(t,r) = \max\!\left(\epsilon_{\mathrm{mix}}\;R_{\mathrm{base}}(t,r),\,0\right)
+\end{equation}
+
+\begin{equation}
+\tag{E.027a}
+\label{eq:E027a}
+R_{\mathrm{base}} = \frac{\mu\,\Sigma_{\tau=1}}{\epsilon_{\mathrm{mix}}\,t_{\mathrm{blow}}}
+\end{equation}
+
+---
+#### F.8 昇華（HKL）と飽和蒸気圧
+
+\begin{equation}
+\tag{E.018}
+\label{eq:E018}
+J(T) =
+\begin{cases}
+ \alpha_{\mathrm{evap}}\max\!\bigl(P_{\mathrm{sat}}(T) - P_{\mathrm{gas}},\,0\bigr)
+ \sqrt{\dfrac{\mu}{2\pi R T}}, &
+ \text{if HKL enabled},\\[10pt]
+ \exp\!\left(\dfrac{T - T_{\mathrm{sub}}}{\max(dT, 1)}\right), & \text{otherwise.}
+\end{cases}
+\end{equation}
+
+\begin{equation}
+\tag{E.036}
+\label{eq:E036}
+P_{\mathrm{sat}}(T) =
+\begin{cases}
+ 10^{A - B/T}, & \text{if clausius},\\[6pt]
+ 10^{\mathrm{PCHIP}_{\log_{10}P}(T)}, & \text{if tabulated}.
+\end{cases}
+\end{equation}
+<!-- TEX_EXCLUDE_END -->

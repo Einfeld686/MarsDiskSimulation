@@ -1,25 +1,28 @@
-### 付録 C. 関連ドキュメント
+### 付録 C. 外部入力（テーブル）一覧
 
 <!--
 実装(.py): marsdisk/run.py, marsdisk/physics/radiation.py, marsdisk/physics/shielding.py, marsdisk/physics/collisions_smol.py, marsdisk/physics/supply.py, marsdisk/physics/sinks.py, marsdisk/physics/tempdriver.py
 -->
 
-関連ドキュメントの役割を次の表に整理する。
+本モデルは、物性や放射輸送に関する外部テーブルを読み込み、本文中の式で用いる物理量（$T_M$, $\langle Q_{\rm pr}\rangle$, $\Phi$ など）を与える。論文ではテーブルの数値そのものを列挙せず、役割と参照先を表\ref{tab:external_inputs}にまとめる。実行時に採用したテーブルのパスと補間範囲は `run_config.json` に保存され、再解析時の基準となる。
 
 \begin{table}[t]
   \centering
-  \caption{関連ドキュメントと参照用途}
-  \label{tab:related_docs}
-  \begin{tabular}{p{0.28\textwidth} p{0.28\textwidth} p{0.34\textwidth}}
+  \caption{外部入力（テーブル）とモデル内での役割}
+  \label{tab:external_inputs}
+  \begin{tabular}{p{0.22\textwidth} p{0.46\textwidth} p{0.24\textwidth}}
     \hline
-    ドキュメント & 役割 & 参照時のユースケース \\
+    外部入力 & 役割 & 本文参照（代表） \\
     \hline
-    \texttt{analysis/}\newline \texttt{equations.md} & 物理式の定義（E.xxx） & 式の導出・記号・単位の確認 \\
-    \texttt{analysis/}\newline \texttt{physics}\newline \texttt{\_flow.md} & 計算フロー Mermaid 図 & モジュール間依存と実行順序の把握 \\
-    \texttt{analysis/}\newline \texttt{config}\newline \texttt{\_guide.md} & 設定キー詳細 & YAML パラメータの意味と許容範囲 \\
-    \texttt{analysis/}\newline \texttt{glossary.md} & 用語・略語・単位規約 & 変数命名と単位接尾辞の確認 \\
-    \texttt{analysis/}\newline \texttt{overview.md} & アーキテクチャ・データフロー & モジュール責務と 3 層分離の理解 \\
-    \texttt{analysis/}\newline \texttt{run}\newline \texttt{-recipes.md} & 実行レシピ・感度掃引 & シナリオ別の実行手順と検証方法 \\
+    火星温度履歴 $T_M(t)$ &
+    放射圧（β, $s_{\rm blow}$）・昇華・相判定の入力となる温度ドライバ &
+    §2.2.1 \\
+    Planck 平均 $\langle Q_{\rm pr}\rangle$ &
+    放射圧効率として β と $s_{\rm blow}$ を決める（灰色体近似は例外） &
+    §2.2.2 \\
+    遮蔽係数 $\Phi(\tau,\omega_0,g)$ &
+    有効不透明度 $\kappa_{\rm eff}$ を通じて遮蔽と供給フィードバックに入る &
+    §2.2.3 \\
     \hline
   \end{tabular}
 \end{table}

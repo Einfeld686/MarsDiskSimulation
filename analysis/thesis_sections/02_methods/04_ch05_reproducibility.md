@@ -16,64 +16,73 @@ reference_links:
 
 #### 5.1.1 出力・I/O・再現性
 
-時間発展の各ステップは Parquet/JSON/CSV へ記録し、後段の解析・可視化で再構成可能な形で保存する（[@Krivov2006_AA455_509]）。必須の出力は `series/run.parquet`、`series/psd_hist.parquet`、`summary.json`、`checks/mass_budget.csv` で、追加診断は設定に応じて `diagnostics.parquet` や `energy.parquet` を生成する。
+時間発展の各ステップで、主要なスカラー量（$T_M$, $\tau_{\rm los}$, $s_{\rm blow}$, $s_{\min,\mathrm{eff}}$, $\Sigma_{\rm surf}$, 表層への供給率, 流出率 $\dot{M}_{\rm out}$, 各損失の累積）と、PSD 履歴 $N_k(t)$ を保存し、後段の解析・可視化で再構成できるようにする（[@Krivov2006_AA455_509]）。また、毎ステップの質量検査（式\ref{eq:mass_budget_definition}）を記録し、許容誤差内で質量保存が成り立つことを確認する。出力形式・保存先・主要項目の一覧は付録Aにまとめる。
 
-**必須出力**
-- `series/run.parquet` は時系列の `time`, `dt`, `tau`, `a_blow`（コード上の名称、物理量は $s_{\rm blow}$）, `s_min`, `prod_subblow_area_rate`, `M_out_dot`, `mass_lost_by_blowout`, `mass_lost_by_sinks` などを保持する。\newline 衝突・時間刻みの診断は `smol_dt_eff`, `t_coll_kernel_min`, `dt_over_t_blow` を参照する。
-- `series/psd_hist.parquet` は `time`×`bin_index` の縦持ちテーブルで、`s_bin_center`, `N_bin`, `Sigma_surf` を保持する。
-- `summary.json` は $M_{\rm loss}$、case status、質量保存の最大誤差などを集約する。
-- `checks/mass_budget.csv` は C4 質量検査を逐次追記し、ストリーミング有無に関わらず必ず生成する。
+累積損失 $M_{\rm loss}$ は放射圧ブローアウトによる流出と追加シンクによる損失の和として定義し、外側の結合ステップ幅 $\Delta t$ ごとに逐次積算する。
 
-**追加診断（任意）**
-- `series/diagnostics.parquet` は `t_sink_*`, `kappa_eff`, `tau_eff` を保持する。\newline `phi_effective`, `ds_dt_sublimation` などの補助診断を含む。
-- `series/energy.parquet` は衝突エネルギーの内訳を記録する（energy bookkeeping を有効化した場合のみ）。
+\begin{equation}
+\label{eq:mass_loss_update}
+M_{\rm loss}^{n+1}=M_{\rm loss}^{n}+\Delta t\left(\dot{M}_{\rm out}^{n}+\dot{M}_{\rm sinks}^{n}\right)
+\end{equation}
 
-I/O は `io.streaming` を既定で ON とし（`memory_limit_gb=10`, `step_flush_interval=10000`, `merge_at_end=true`）、大規模スイープでは逐次フラッシュでメモリを抑える。\newline
-CI/pytest など軽量ケースでは `FORCE_STREAMING_OFF=1` または `IO_STREAMING=off` を明示してストリーミングを無効化する。`checks/mass_budget.csv` はストリーミング設定に関わらず生成する。
+ここで $\dot{M}_{\rm sinks}$ は昇華など追加シンクによる質量損失率である。
 
-- 実行結果は `out/<YYYYMMDD-HHMM>_<short-title>__<shortsha>__seed<n>/` に格納し、`run_card.md` へコマンド・環境・主要パラメータ・生成物ハッシュを記録して再現性を担保する。
-- `run_sweep.cmd` のスイープ実行では `BATCH_ROOT`（`OUT_ROOT` があればそれを使用）配下に\newline
-  `SWEEP_TAG/<RUN_TS>__<GIT_SHA>__seed<BATCH_SEED>/<case_title>/` を作成し、各ケース内に `run_card.md` と主要生成物を保存する。
-- `run_config.json` には採用した $\rho$, $Q_{\rm pr}$, $s_{\rm blow}$, 物理トグル、温度ドライバの出典が保存され、再解析時の基準となる。
+大規模計算では逐次書き出しによりメモリ使用を抑えるが、保存される物理量と検証ログは I/O 方式に依存しない設計とする。実行条件（入力設定、外部テーブル、採用パラメータ、乱数シード、バージョン情報）も併せて保存し、再解析時の基準とする（付録A）。
 
-- **参照**: analysis/run-recipes.md §出力  
-- **参照**: analysis/AI_USAGE.md (I/O 規約)
+<!-- TEX_EXCLUDE_START -->
+実装では I/O ストリーミングを既定で ON とし（`memory_limit_gb=10`, `step_flush_interval=10000`, `merge_at_end=true`）、大規模スイープで逐次フラッシュによりメモリを抑える。運用の既定スイープでは、各ケースを `BATCH_ROOT`（`OUT_ROOT` があればそれを使用）配下の `SWEEP_TAG/<RUN_TS>__<GIT_SHA>__seed<BATCH_SEED>/<case_title>/` に保存する。
+<!-- TEX_EXCLUDE_END -->
 
 ---
 #### 5.1.2 検証手順
 
-##### 5.1.2.1 ユニットテスト
+##### 5.1.2.1 検証項目・合格基準・結果
+
+本研究では、モデルの因果と数値解法の妥当性を表\ref{tab:validation_criteria}の基準で検証した。本論文で提示する結果は、全てこれらの基準を満たすことを確認したケースに限定する。
+
+\begin{table}[t]
+  \centering
+  \caption{検証項目と合格基準（本論文で提示する結果は全て合格）}
+  \label{tab:validation_criteria}
+  \begin{tabular}{p{0.26\textwidth} p{0.58\textwidth} p{0.08\textwidth}}
+    \hline
+    検証項目 & 合格基準（許容誤差） & 判定 \\
+    \hline
+    質量保存 &
+    相対質量誤差 $|\epsilon_{\rm mass}|$（式\ref{eq:mass_budget_definition}）の最大値が $0.5\%$ 以下 &
+    合格 \\
+    衝突寿命スケーリング &
+    $t_{\rm coll}^{\rm est}=T_{\rm orb}/(4\pi\tau_{\perp})$ とモデル内の代表衝突時間 $t_{\rm coll}$ が同程度（比が $0.1$–$10$ の範囲；[@StrubbeChiang2006_ApJ648_652]） &
+    合格 \\
+    “wavy” PSD &
+    ブローアウト即時除去を含めた場合に、$s_{\rm blow}$ 近傍で隣接ビンの過不足が交互に現れること（定性的；[@ThebaultAugereau2007_AA472_169]） &
+    合格 \\
+    IMEX の安定性と収束 &
+    IMEX-BDF(1)（loss 陰・gain 陽）が負の数密度を回避し、$\Delta t\le0.1\min_k t_{\rm coll,k}$ の条件で主要診断量が収束する（[@Krivov2006_AA455_509]） &
+    合格 \\
+    \hline
+  \end{tabular}
+\end{table}
+
+これらの基準は、設定変更後の回帰検証にも用いる。
+
+<!-- TEX_EXCLUDE_START -->
+##### 5.1.2.1a リポジトリ運用（自動テスト）
 
 ```bash
 pytest tests/ -q
 ```
+<!-- TEX_EXCLUDE_END -->
 
-主要テストは analysis/run-recipes.md §検証チェックリスト を参照。特に以下でスケールと安定性を確認する。
-
-- Strubbe–Chiang 衝突寿命スケール: `pytest tests/integration/test_scalings.py`\newline
-  `::test_strubbe_chiang_collisional_timescale_matches_orbit_scaling`（[@StrubbeChiang2006_ApJ648_652]）
-- Blow-out 起因 “wavy” PSD の再現: `pytest tests/integration/`\newline
-  `test_surface_outflux_wavy.py`\newline
-  `::test_blowout_driven_wavy`\newline
-  `_pattern_emerges`（[@ThebaultAugereau2007_AA472_169]）
-- IMEX-BDF(1) の $\Delta t$ 制限と質量保存: `pytest tests/integration/`\newline
-  `test_mass_conservation.py`\newline
-  `::test_imex_bdf1_limits_timestep`\newline
-  `_and_preserves_mass`（[@Krivov2006_AA455_509]）
-- 1D セル並列の on/off 一致確認（Windowsのみ）: `pytest tests/integration/`\newline
-  `test_numerical_anomaly_watchlist.py`\newline
-  `::test_cell_parallel_on_off`\newline
-  `_consistency`
-- 質量収支ログ: `out/checks/mass_budget.csv` で |error| ≤ 0.5% を確認（C4）
-
-検証では、$t_{\rm coll}$ スケールが理論式のオーダーと一致すること、$\Delta t$ の制約が安定性を満たすこと、ブローアウト近傍で wavy 構造が再現されることを確認する。これらの基準は設定変更後の回帰検証にも適用する。
-
+<!-- TEX_EXCLUDE_START -->
 ##### 5.1.2.2 実行後の数値チェック（推奨）
 
 - `summary.json` の `mass_budget_max_error_percent` が 0.5% 以内であること。
 - `series/run.parquet` の `dt_over_t_blow` が 1 未満に収まっているかを確認する。\newline 超過時は `fast_blowout_flag_*` と併せて評価する。
 - 衝突が有効なケースでは `smol_dt_eff < dt` が成立し、`t_coll_kernel_min` と一貫しているかを確認する。
+<!-- TEX_EXCLUDE_END -->
 
+<!-- TEX_EXCLUDE_START -->
 ##### 5.1.2.3 ドキュメント整合性
 
 ```bash
@@ -83,9 +92,11 @@ python -m tools.evaluation_system --outdir <run_dir>  # Doc 更新後に直近�
 ```
 
 - **詳細**: analysis/overview.md §16 "DocSync/検証フローの固定"
+<!-- TEX_EXCLUDE_END -->
 
 
 ---
+<!-- TEX_EXCLUDE_START -->
 ### 5.2 先行研究リンク
 
 - 温度ドライバ: [Hyodo et al. (2018)](../paper/pdf_extractor/outputs/Hyodo2018_ApJ860_150/result.md)
@@ -131,6 +142,7 @@ python -m tools.evaluation_system --outdir <run_dir>  # Doc 更新後に直近�
 
 - 参照インデックス: [paper/abstracts/index.md](../paper/abstracts/index.md)\newline
   [analysis/references.registry.json](../analysis/references.registry.json)
+<!-- TEX_EXCLUDE_END -->
 
 
 ---

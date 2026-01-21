@@ -1,8 +1,66 @@
-### 付録 A. 運用実行（run_sweep.cmd を正とする）
+### 付録 A. 再現実行と保存情報
 
 <!--
 実装(.py): scripts/runsets/windows/preflight_checks.py, scripts/runsets/common/read_overrides_cmd.py, scripts/runsets/common/read_study_overrides.py, scripts/runsets/common/write_base_overrides.py, scripts/runsets/common/write_sweep_list.py, scripts/runsets/common/build_overrides.py, scripts/runsets/common/next_seed.py, scripts/runsets/common/calc_parallel_jobs.py, scripts/runsets/common/calc_cell_jobs.py, scripts/runsets/common/calc_cpu_target_jobs.py, scripts/runsets/common/calc_thread_limit.py, scripts/tests/measure_case_output_size.py, scripts/runsets/common/run_one.py, scripts/runsets/common/run_sweep_worker.py, scripts/runsets/common/hooks/plot_sweep_run.py, scripts/runsets/common/hooks/evaluate_tau_supply.py, scripts/runsets/common/hooks/archive_run.py, scripts/runsets/common/hooks/preflight_streaming.py, marsdisk/run.py
 -->
+
+本研究の再現性は、(i) 入力（設定ファイルとテーブル）を固定し、(ii) 実行時に採用された値と条件を保存し、(iii) 時系列・要約・検証ログを保存することで担保する。本付録では、論文として最低限必要な「保存すべき情報」をまとめる。
+
+#### A.1 固定する入力（再現の前提）
+
+- **設定（YAML）**: 物理スイッチ、初期条件、時間刻み、停止条件、感度掃引の対象パラメータ。
+- **テーブル（CSV/NPZ）**: $\langle Q_{\rm pr}\rangle$ や遮蔽係数 $\Phi$ などの外部テーブル。
+- **乱数シード**: 乱数を用いる過程がある場合はシードを固定する。
+
+#### A.2 保存する出力（再解析の最小セット）
+
+本論文で示す結果は、以下の情報を保存して再解析できる形で管理した。
+
+- **実行条件の記録**: `run_card.md`（実行コマンド、環境、主要パラメータ、生成物ハッシュ）。
+- **採用値の記録**: `run_config.json`（$\rho$、$\langle Q_{\rm pr}\rangle$ テーブル、物理トグル、$s_{\rm blow}$ など、実行時に採用した値と出典）。
+- **時系列**: `series/run.parquet`（主要スカラー量の時系列）。
+- **PSD 履歴**: `series/psd_hist.parquet`（$N_k(t)$ と $\Sigma_{\rm surf}(t)$ の履歴）。
+- **要約**: `summary.json`（2 年累積量などの集約）。
+- **検証ログ**: `checks/mass_budget.csv`（式\ref{eq:mass_budget_definition} に基づく質量検査）。
+
+\begin{table}[t]
+  \centering
+  \caption{主要出力量と本文の参照先}
+  \label{tab:appendix_outputs_map}
+  \begin{tabular}{p{0.24\textwidth} p{0.36\textwidth} p{0.30\textwidth}}
+    \hline
+    量 & 本文での定義 & 保存先 \\
+    \hline
+    $s_{\rm blow}$ & 式\ref{eq:s_blow_definition} & \texttt{series/run.parquet} \\
+    $s_{\min,\mathrm{eff}}$ & 式\ref{eq:smin_eff_definition} & \texttt{series/run.parquet} \\
+    $\dot{M}_{\rm out}$ & 式\ref{eq:surface_outflux} & \texttt{series/run.parquet} \\
+    $M_{\rm loss}$ & 式\ref{eq:mass_loss_update} & \texttt{summary.json} \\
+    $\epsilon_{\rm mass}$ & 式\ref{eq:mass_budget_definition} & \texttt{checks/mass\_budget.csv} \\
+    $N_k(t)$ & 式\ref{eq:sigma_surf_definition} & \texttt{series/psd\_hist.parquet} \\
+    \hline
+  \end{tabular}
+\end{table}
+
+#### A.3 感度掃引で用いる代表パラメータ（例）
+
+\begin{table}[t]
+  \centering
+  \caption{感度掃引で用いる代表パラメータ（例）}
+  \label{tab:methods_sweep_defaults}
+  \begin{tabular}{p{0.24\textwidth} p{0.2\textwidth} p{0.46\textwidth}}
+    \hline
+    変数 & 代表値 & 意味 \\
+    \hline
+    $T_M$ & 4000, 3000 & 火星温度 [K] \\
+    $\epsilon_{\rm mix}$ & 1.0, 0.5 & 混合係数（供給の有効度） \\
+    $\tau_0$ & 1.0, 0.5 & 初期光学的厚さ \\
+    $i_0$ & 0.05, 0.10 & 初期傾斜角 \\
+    \hline
+  \end{tabular}
+\end{table}
+
+<!-- TEX_EXCLUDE_START -->
+以下は運用スクリプトや OS 依存の実行方法、リポジトリ内部の詳細（環境変数・hook・ファイル一覧）であり、論文PDFでは除外する。
 
 代表的な実行コマンドとシナリオは analysis/run-recipes.md に集約する。運用スイープは `scripts/runsets/windows/run_sweep.cmd` を正とし、既定の `CONFIG_PATH`/`OVERRIDES_PATH` と引数の扱いは同スクリプトに従う。  
 - **参照**: `scripts/runsets/windows/run_sweep.cmd` の `::REF:DEFAULT_PATHS`\newline `::REF:CLI_ARGS`
@@ -39,55 +97,55 @@ scripts\runsets\windows\run_sweep.cmd ^
     $\rho$ &
     粒子密度 [kg\,m$^{-3}$] &
     3270 &
-    TODO(REF:van_lieshout_2014_forsterite_material_params_v1) \\
+    TODO(REF:van\_lieshout\_2014\_forsterite\_material\_params\_v1) \\
     $\langle Q_{\rm pr}\rangle$ &
     Planck平均放射圧効率（テーブル） &
     \texttt{data/qpr\_planck\_forsterite\_mie.csv} &
-    [@BohrenHuffman1983_Wiley; @Zeidler2015_ApJ798_125] \\
+    \cite{BohrenHuffman1983_Wiley,Zeidler2015_ApJ798_125} \\
     $\alpha$ &
     HKL 蒸発係数 &
     0.1 &
-    TODO(REF:van_lieshout_2014_forsterite_material_params_v1) \\
+    TODO(REF:van\_lieshout\_2014\_forsterite\_material\_params\_v1) \\
     $\mu$ &
     分子量 [kg\,mol$^{-1}$] &
     0.140694 &
-    TODO(REF:van_lieshout_2014_forsterite_material_params_v1) \\
+    TODO(REF:van\_lieshout\_2014\_forsterite\_material\_params\_v1) \\
     $A_{\rm solid}$ &
     固相飽和蒸気圧フィット $\log_{10}P(\mathrm{Pa})=A_{\rm solid}-B_{\rm solid}/T$ &
     13.809441833 &
-    TODO(REF:van_lieshout_2014_forsterite_material_params_v1) \\
+    TODO(REF:van\_lieshout\_2014\_forsterite\_material\_params\_v1) \\
     $B_{\rm solid}$ &
     同上（$T$ は K） &
     28362.904024 &
-    TODO(REF:van_lieshout_2014_forsterite_material_params_v1) \\
+    TODO(REF:van\_lieshout\_2014\_forsterite\_material\_params\_v1) \\
     $T_{\rm solid}^{\rm valid}$ &
     固相フィットの適用温度範囲 [K] &
     1673--2133 &
-    TODO(REF:van_lieshout_2014_forsterite_material_params_v1) \\
+    TODO(REF:van\_lieshout\_2014\_forsterite\_material\_params\_v1) \\
     $A_{\rm liq}$ &
     液相飽和蒸気圧フィット $\log_{10}P(\mathrm{Pa})=A_{\rm liq}-B_{\rm liq}/T$ &
     11.08 &
-    [@FegleySchaefer2012_arXiv] \\
+    \cite{FegleySchaefer2012_arXiv} \\
     $B_{\rm liq}$ &
     同上（$T$ は K） &
     22409.0 &
-    [@FegleySchaefer2012_arXiv] \\
+    \cite{FegleySchaefer2012_arXiv} \\
     $T_{\rm liq}^{\rm valid}$ &
     液相フィットの適用温度範囲 [K] &
     2163--3690 &
-    [@FegleySchaefer2012_arXiv] \\
+    \cite{FegleySchaefer2012_arXiv} \\
     $T_{\rm switch}$ &
     固相$\to$液相フィット切替温度 [K] &
     2163 &
-    [@FegleySchaefer2012_arXiv] \\
+    \cite{FegleySchaefer2012_arXiv} \\
     $T_{\rm condense}$, $T_{\rm vaporize}$ &
     相判定のヒステリシス閾値 [K]（運用値） &
     2162, 2163 &
-    本研究（スキーマ要件）, 基準: [@FegleySchaefer2012_arXiv] \\
+    本研究（スキーマ要件）, 基準: \cite{FegleySchaefer2012_arXiv} \\
     $f_{Q^*}$ &
     $Q_D^*$ 係数スケール（peridot proxy） &
     5.574 &
-    [@Avdellidou2016_MNRAS464_734; @BenzAsphaug1999_Icarus142_5] \\
+    \cite{Avdellidou2016_MNRAS464_734,BenzAsphaug1999_Icarus142_5} \\
     \hline
   \end{tabular}
 \end{table}
@@ -185,3 +243,4 @@ scripts\runsets\windows\run_sweep.cmd ^
 
 
 ---
+<!-- TEX_EXCLUDE_END -->
