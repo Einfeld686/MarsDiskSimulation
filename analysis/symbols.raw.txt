@@ -119,6 +119,13 @@ analysis/tools/check_docs.py:123:def format_rate(value: float) -> str
 analysis/tools/check_docs.py:127:def parse_args(argv: Optional[Sequence[str]]) -> argparse.Namespace
 analysis/tools/check_docs.py:144:def summarize_anchors(mismatches: Sequence[AnchorOccurrence], limit: int=3) -> str
 analysis/tools/check_docs.py:164:def main(argv: Optional[Sequence[str]]=None) -> int
+analysis/tools/check_methods_gate.py:21:class Finding
+analysis/tools/check_methods_gate.py:28:def parse_args(argv: Optional[Sequence[str]]=None) -> argparse.Namespace
+analysis/tools/check_methods_gate.py:44:def strip_tex_exclude_blocks(text: str) -> str
+analysis/tools/check_methods_gate.py:60:def strip_html_comments(text: str) -> str
+analysis/tools/check_methods_gate.py:65:def iter_findings(path: Path, text: str, patterns: Iterable[str]) -> List[Finding]
+analysis/tools/check_methods_gate.py:82:def require_substrings(text: str, required: Iterable[str]) -> List[str]
+analysis/tools/check_methods_gate.py:90:def main(argv: Optional[Sequence[str]]=None) -> int
 analysis/tools/list_equations_todo.py:22:class InventoryEntry
 analysis/tools/list_equations_todo.py:28:def load_inventory() -> Dict[str, List[InventoryEntry]]
 analysis/tools/list_equations_todo.py:50:def iter_sections(text: str) -> Iterable[Tuple[str, str]]
@@ -917,6 +924,21 @@ scripts/plots/plot_mars_surface_temperature.py:137:def _compute_blowout_temperat
 scripts/plots/plot_mars_surface_temperature.py:168:def _ensure_hyodo_grid(time_s: np.ndarray, t_stop_s: float) -> np.ndarray
 scripts/plots/plot_mars_surface_temperature.py:181:def parse_args(argv: Iterable[str] | None=None) -> argparse.Namespace
 scripts/plots/plot_mars_surface_temperature.py:264:def main(argv: Iterable[str] | None=None) -> None
+scripts/plots/plot_optical_depth_heatmaps.py:14:def _collect_series_paths(series_dir: Path) -> list[Path]
+scripts/plots/plot_optical_depth_heatmaps.py:21:def _read_parquet(path: Path, columns: list[str])
+scripts/plots/plot_optical_depth_heatmaps.py:37:def _load_tau_frame(run_dir: Path)
+scripts/plots/plot_optical_depth_heatmaps.py:61:def _edges(values: np.ndarray) -> np.ndarray
+scripts/plots/plot_optical_depth_heatmaps.py:73:def _format_title(name: str) -> str
+scripts/plots/plot_optical_depth_heatmaps.py:97:def _pivot_tau(df)
+scripts/plots/plot_optical_depth_heatmaps.py:111:def _parse_args() -> argparse.Namespace
+scripts/plots/plot_optical_depth_heatmaps.py:136:def main() -> int
+scripts/plots/plot_psd_final_from_runs.py:26:def _parse_args() -> argparse.Namespace
+scripts/plots/plot_psd_final_from_runs.py:59:def _read_config(run_dir: Path) -> Dict[str, Any]
+scripts/plots/plot_psd_final_from_runs.py:70:def _select_runs(run_root: Path, name_filter: str) -> Iterable[Path]
+scripts/plots/plot_psd_final_from_runs.py:81:def _final_s_min(run_dir: Path, reduce_mode: str) -> Tuple[float, float]
+scripts/plots/plot_psd_final_from_runs.py:98:def _build_psd(cfg: Dict[str, Any], s_min: float) -> Dict[str, np.ndarray]
+scripts/plots/plot_psd_final_from_runs.py:131:def _plot_psd(out_path: Path, sizes: np.ndarray, mass_fraction: np.ndarray, title: str) -> None
+scripts/plots/plot_psd_final_from_runs.py:152:def main() -> int
 scripts/plots/plot_qpr_planck_sio2.py:25:def _resolve_table_path(path: Path) -> Path
 scripts/plots/plot_qpr_planck_sio2.py:39:def _load_table(path: Path) -> pd.DataFrame
 scripts/plots/plot_qpr_planck_sio2.py:53:def _plot_curves(ax: plt.Axes, df: pd.DataFrame, temps: np.ndarray, cmap, norm: Normalize, marker_size: float, label_inset: bool=False) -> None
@@ -1096,8 +1118,8 @@ scripts/runsets/common/run_sweep_worker.py:96:def _merge_pairs(pairs: Iterable[t
 scripts/runsets/common/run_sweep_worker.py:110:def _write_overrides(order: list[str], values: dict[str, str], path: Path) -> None
 scripts/runsets/common/run_sweep_worker.py:119:def _run_command(cmd: list[str], *, capture: bool=False, text: bool=True, quiet: bool=False) -> subprocess.CompletedProcess
 scripts/runsets/common/run_sweep_worker.py:131:def _parse_int(value: str | None, default: int) -> int
-scripts/runsets/common/run_sweep_worker.py:140:def _load_sweep_list(path: Path) -> list[tuple[str, str, str]]
-scripts/runsets/common/run_sweep_worker.py:154:def main(argv: list[str] | None=None) -> int
+scripts/runsets/common/run_sweep_worker.py:140:def _load_sweep_list(path: Path) -> list[tuple[str, str, str, str | None, str | None]]
+scripts/runsets/common/run_sweep_worker.py:159:def main(argv: list[str] | None=None) -> int
 scripts/runsets/common/sanitize_token.py:17:def _sanitize(value: str) -> str
 scripts/runsets/common/sanitize_token.py:25:def _timestamp(ts_script: Path) -> str
 scripts/runsets/common/sanitize_token.py:42:def main() -> int
@@ -1115,8 +1137,8 @@ scripts/runsets/common/write_base_overrides.py:22:def append(lines: list[str], k
 scripts/runsets/common/write_base_overrides.py:28:def append_literal(lines: list[str], literal: str) -> None
 scripts/runsets/common/write_base_overrides.py:32:def main() -> int
 scripts/runsets/common/write_sweep_list.py:11:def _parse_list(raw: str) -> list[str]
-scripts/runsets/common/write_sweep_list.py:25:def _parse_extra_cases(raw: str) -> list[tuple[str, str, str, str]]
-scripts/runsets/common/write_sweep_list.py:47:def main() -> int
+scripts/runsets/common/write_sweep_list.py:25:def _parse_extra_cases(raw: str, *, expected_columns: int) -> list[tuple[str, ...]]
+scripts/runsets/common/write_sweep_list.py:66:def main() -> int
 scripts/runsets/windows/preflight_checks.py:305:class Issue
 scripts/runsets/windows/preflight_checks.py:314:class AllowlistEntry
 scripts/runsets/windows/preflight_checks.py:319:def _add_issue(bucket: list[Issue], level: str, rule: str, message: str, path: Path | str | None=None, line: int | None=None) -> None

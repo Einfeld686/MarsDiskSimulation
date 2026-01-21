@@ -1316,6 +1316,83 @@
     "brief_usage": "No description available."
   },
   {
+    "file_path": "analysis/tools/check_methods_gate.py",
+    "line_no": 12,
+    "symbol": "REPO_ROOT",
+    "signature": "REPO_ROOT = Path(__file__).resolve().parents[2]",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "analysis/tools/check_methods_gate.py",
+    "line_no": 14,
+    "symbol": "DEFAULT_METHODS_PATH",
+    "signature": "DEFAULT_METHODS_PATH = REPO_ROOT / 'analysis' / 'thesis' / 'methods.md'",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "analysis/tools/check_methods_gate.py",
+    "line_no": 16,
+    "symbol": "TEX_EXCLUDE_START",
+    "signature": "TEX_EXCLUDE_START = '<!-- TEX_EXCLUDE_START -->'",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "analysis/tools/check_methods_gate.py",
+    "line_no": 17,
+    "symbol": "TEX_EXCLUDE_END",
+    "signature": "TEX_EXCLUDE_END = '<!-- TEX_EXCLUDE_END -->'",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "analysis/tools/check_methods_gate.py",
+    "line_no": 21,
+    "symbol": "Finding",
+    "signature": "class Finding",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "analysis/tools/check_methods_gate.py",
+    "line_no": 28,
+    "symbol": "parse_args",
+    "signature": "parse_args(argv: Optional[Sequence[str]]=None) -> argparse.Namespace",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "analysis/tools/check_methods_gate.py",
+    "line_no": 44,
+    "symbol": "strip_tex_exclude_blocks",
+    "signature": "strip_tex_exclude_blocks(text: str) -> str",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "analysis/tools/check_methods_gate.py",
+    "line_no": 60,
+    "symbol": "strip_html_comments",
+    "signature": "strip_html_comments(text: str) -> str",
+    "brief_usage": "Drop HTML comment blocks (e.g., implementation notes) from the scan target."
+  },
+  {
+    "file_path": "analysis/tools/check_methods_gate.py",
+    "line_no": 65,
+    "symbol": "iter_findings",
+    "signature": "iter_findings(path: Path, text: str, patterns: Iterable[str]) -> List[Finding]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "analysis/tools/check_methods_gate.py",
+    "line_no": 82,
+    "symbol": "require_substrings",
+    "signature": "require_substrings(text: str, required: Iterable[str]) -> List[str]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "analysis/tools/check_methods_gate.py",
+    "line_no": 90,
+    "symbol": "main",
+    "signature": "main(argv: Optional[Sequence[str]]=None) -> int",
+    "brief_usage": "No description available."
+  },
+  {
     "file_path": "analysis/tools/list_equations_todo.py",
     "line_no": 11,
     "symbol": "REPO_ROOT",
@@ -9282,6 +9359,125 @@
     "brief_usage": "No description available."
   },
   {
+    "file_path": "scripts/plots/plot_optical_depth_heatmaps.py",
+    "line_no": 11,
+    "symbol": "SECONDS_PER_YEAR",
+    "signature": "SECONDS_PER_YEAR = 31557600.0",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "scripts/plots/plot_optical_depth_heatmaps.py",
+    "line_no": 14,
+    "symbol": "_collect_series_paths",
+    "signature": "_collect_series_paths(series_dir: Path) -> list[Path]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/plots/plot_optical_depth_heatmaps.py",
+    "line_no": 21,
+    "symbol": "_read_parquet",
+    "signature": "_read_parquet(path: Path, columns: list[str])",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/plots/plot_optical_depth_heatmaps.py",
+    "line_no": 37,
+    "symbol": "_load_tau_frame",
+    "signature": "_load_tau_frame(run_dir: Path)",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/plots/plot_optical_depth_heatmaps.py",
+    "line_no": 61,
+    "symbol": "_edges",
+    "signature": "_edges(values: np.ndarray) -> np.ndarray",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/plots/plot_optical_depth_heatmaps.py",
+    "line_no": 73,
+    "symbol": "_format_title",
+    "signature": "_format_title(name: str) -> str",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/plots/plot_optical_depth_heatmaps.py",
+    "line_no": 97,
+    "symbol": "_pivot_tau",
+    "signature": "_pivot_tau(df)",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/plots/plot_optical_depth_heatmaps.py",
+    "line_no": 111,
+    "symbol": "_parse_args",
+    "signature": "_parse_args() -> argparse.Namespace",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/plots/plot_optical_depth_heatmaps.py",
+    "line_no": 136,
+    "symbol": "main",
+    "signature": "main() -> int",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/plots/plot_psd_final_from_runs.py",
+    "line_no": 15,
+    "symbol": "REPO_ROOT",
+    "signature": "REPO_ROOT = Path(__file__).resolve().parents[2]",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "scripts/plots/plot_psd_final_from_runs.py",
+    "line_no": 26,
+    "symbol": "_parse_args",
+    "signature": "_parse_args() -> argparse.Namespace",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/plots/plot_psd_final_from_runs.py",
+    "line_no": 59,
+    "symbol": "_read_config",
+    "signature": "_read_config(run_dir: Path) -> Dict[str, Any]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/plots/plot_psd_final_from_runs.py",
+    "line_no": 70,
+    "symbol": "_select_runs",
+    "signature": "_select_runs(run_root: Path, name_filter: str) -> Iterable[Path]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/plots/plot_psd_final_from_runs.py",
+    "line_no": 81,
+    "symbol": "_final_s_min",
+    "signature": "_final_s_min(run_dir: Path, reduce_mode: str) -> Tuple[float, float]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/plots/plot_psd_final_from_runs.py",
+    "line_no": 98,
+    "symbol": "_build_psd",
+    "signature": "_build_psd(cfg: Dict[str, Any], s_min: float) -> Dict[str, np.ndarray]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/plots/plot_psd_final_from_runs.py",
+    "line_no": 131,
+    "symbol": "_plot_psd",
+    "signature": "_plot_psd(out_path: Path, sizes: np.ndarray, mass_fraction: np.ndarray, title: str) -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/plots/plot_psd_final_from_runs.py",
+    "line_no": 152,
+    "symbol": "main",
+    "signature": "main() -> int",
+    "brief_usage": "No description available."
+  },
+  {
     "file_path": "scripts/plots/plot_qpr_planck_sio2.py",
     "line_no": 18,
     "symbol": "ROOT",
@@ -10741,12 +10937,12 @@
     "file_path": "scripts/runsets/common/run_sweep_worker.py",
     "line_no": 140,
     "symbol": "_load_sweep_list",
-    "signature": "_load_sweep_list(path: Path) -> list[tuple[str, str, str]]",
+    "signature": "_load_sweep_list(path: Path) -> list[tuple[str, str, str, str | None, str | None]]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "scripts/runsets/common/run_sweep_worker.py",
-    "line_no": 154,
+    "line_no": 159,
     "symbol": "main",
     "signature": "main(argv: list[str] | None=None) -> int",
     "brief_usage": "No description available."
@@ -10888,12 +11084,12 @@
     "file_path": "scripts/runsets/common/write_sweep_list.py",
     "line_no": 25,
     "symbol": "_parse_extra_cases",
-    "signature": "_parse_extra_cases(raw: str) -> list[tuple[str, str, str, str]]",
+    "signature": "_parse_extra_cases(raw: str, *, expected_columns: int) -> list[tuple[str, ...]]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "scripts/runsets/common/write_sweep_list.py",
-    "line_no": 47,
+    "line_no": 66,
     "symbol": "main",
     "signature": "main() -> int",
     "brief_usage": "No description available."
