@@ -1912,7 +1912,6 @@ tests/unit/test_preflight_checks.py:639:def test_cmd_dash_option_warning_and_err
 tests/unit/test_preflight_checks.py:655:def test_cmd_invocation_ignores_cmd_flags(tmp_path: Path) -> None
 tests/unit/test_preflight_checks.py:665:def test_cmd_invocation_detects_cmd_without_c(tmp_path: Path) -> None
 tests/unit/test_preflight_checks.py:672:def test_cmd_autorun_missing_d_warns(tmp_path: Path) -> None
-tests/unit/test_profile_thesis_build.py:9:def test_profile_thesis_build_smoke(tmp_path: Path, capsys) -> None
 tests/unit/test_progress_eta.py:8:def _fake_monotonic(times)
 tests/unit/test_progress_eta.py:17:def test_progress_eta_prefers_recent_steps(monkeypatch, capsys)
 tests/unit/test_progress_eta.py:30:def test_progress_snapshot_restore(monkeypatch)
@@ -2322,13 +2321,3 @@ tools/utilities/memory_probe.py:23:def _human_bytes(value: float) -> str
 tools/utilities/memory_probe.py:35:def _resolve_radius(cfg: object) -> Tuple[float, str]
 tools/utilities/memory_probe.py:52:def _estimate_memory(rows: int, bytes_per_row: float) -> float
 tools/utilities/memory_probe.py:56:def main(argv: Iterable[str] | None=None) -> int
-tools/utilities/profile_thesis_build.py:32:class StepTiming
-tools/utilities/profile_thesis_build.py:37:def _now() -> float
-tools/utilities/profile_thesis_build.py:41:def _format_seconds(value: float) -> str
-tools/utilities/profile_thesis_build.py:49:def _merge_sections(chapters: list[str]) -> list[StepTiming]
-tools/utilities/profile_thesis_build.py:78:def _resolve_paths() -> dict[str, Path]
-tools/utilities/profile_thesis_build.py:89:def _convert_markdown_to_tex(*, chapter: str, markdown_text: str) -> str
-tools/utilities/profile_thesis_build.py:103:def _update_tex_template(*, template_tex: str, abstract_tex: str | None, intro_tex: str | None, related_work_tex: str | None, methods_tex: str | None, appendix_tex: str | None, results_tex: str | None, discussion_tex: str | None) -> str
-tools/utilities/profile_thesis_build.py:167:def _profile_md2tex(*, chapters: list[str], appendix_placement: str, template_path: Path, out_tex_path: Path, profile_top: int, pstats_path: Path | None) -> tuple[list[StepTiming], dict[str, str]]
-tools/utilities/profile_thesis_build.py:278:def _print_timings(title: str, timings: list[StepTiming]) -> None
-tools/utilities/profile_thesis_build.py:286:def main(argv: Iterable[str] | None=None) -> int

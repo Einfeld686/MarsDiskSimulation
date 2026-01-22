@@ -17549,13 +17549,6 @@
     "brief_usage": "No description available."
   },
   {
-    "file_path": "tests/unit/test_profile_thesis_build.py",
-    "line_no": 9,
-    "symbol": "test_profile_thesis_build_smoke",
-    "signature": "test_profile_thesis_build_smoke(tmp_path: Path, capsys) -> None",
-    "brief_usage": "No description available."
-  },
-  {
     "file_path": "tests/unit/test_progress_eta.py",
     "line_no": 8,
     "symbol": "_fake_monotonic",
@@ -21499,83 +21492,6 @@
   {
     "file_path": "tools/utilities/memory_probe.py",
     "line_no": 56,
-    "symbol": "main",
-    "signature": "main(argv: Iterable[str] | None=None) -> int",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tools/utilities/profile_thesis_build.py",
-    "line_no": 28,
-    "symbol": "REPO_ROOT",
-    "signature": "REPO_ROOT = Path(__file__).resolve().parents[2]",
-    "brief_usage": "Module constant"
-  },
-  {
-    "file_path": "tools/utilities/profile_thesis_build.py",
-    "line_no": 32,
-    "symbol": "StepTiming",
-    "signature": "class StepTiming",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tools/utilities/profile_thesis_build.py",
-    "line_no": 37,
-    "symbol": "_now",
-    "signature": "_now() -> float",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tools/utilities/profile_thesis_build.py",
-    "line_no": 41,
-    "symbol": "_format_seconds",
-    "signature": "_format_seconds(value: float) -> str",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tools/utilities/profile_thesis_build.py",
-    "line_no": 49,
-    "symbol": "_merge_sections",
-    "signature": "_merge_sections(chapters: list[str]) -> list[StepTiming]",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tools/utilities/profile_thesis_build.py",
-    "line_no": 78,
-    "symbol": "_resolve_paths",
-    "signature": "_resolve_paths() -> dict[str, Path]",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tools/utilities/profile_thesis_build.py",
-    "line_no": 89,
-    "symbol": "_convert_markdown_to_tex",
-    "signature": "_convert_markdown_to_tex(*, chapter: str, markdown_text: str) -> str",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tools/utilities/profile_thesis_build.py",
-    "line_no": 103,
-    "symbol": "_update_tex_template",
-    "signature": "_update_tex_template(*, template_tex: str, abstract_tex: str | None, intro_tex: str | None, related_work_tex: str | None, methods_tex: str | None, appendix_tex: str | None, results_tex: str | None, discussion_tex: str | None) -> str",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tools/utilities/profile_thesis_build.py",
-    "line_no": 167,
-    "symbol": "_profile_md2tex",
-    "signature": "_profile_md2tex(*, chapters: list[str], appendix_placement: str, template_path: Path, out_tex_path: Path, profile_top: int, pstats_path: Path | None) -> tuple[list[StepTiming], dict[str, str]]",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tools/utilities/profile_thesis_build.py",
-    "line_no": 278,
-    "symbol": "_print_timings",
-    "signature": "_print_timings(title: str, timings: list[StepTiming]) -> None",
-    "brief_usage": "No description available."
-  },
-  {
-    "file_path": "tools/utilities/profile_thesis_build.py",
-    "line_no": 286,
     "symbol": "main",
     "signature": "main(argv: Iterable[str] | None=None) -> int",
     "brief_usage": "No description available."

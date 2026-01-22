@@ -1,4 +1,4 @@
-## 5. 再現性（出力・検証・運用）
+## 5. 再現性（出力・検証）
 
 <!--
 実装(.py): marsdisk/run.py, marsdisk/run_zero_d.py, marsdisk/run_one_d.py, marsdisk/io/writer.py, marsdisk/io/streaming.py, marsdisk/io/diagnostics.py, marsdisk/io/checkpoint.py, marsdisk/io/archive.py, marsdisk/archive.py
@@ -16,7 +16,11 @@ reference_links:
 
 #### 5.1.1 出力・I/O・再現性
 
-時間発展計算の再解析可能性を確保するため，時間発展の各ステップ $t^n$ ごとに主要な診断量と粒径分布（particle size distribution; PSD）の状態を保存する．保存すべき情報は，（i）実行条件（入力設定，外部テーブル，採用パラメータ，乱数シード，バージョン情報），（ii）時系列で記録する診断量（$T_M$, $\tau_{\rm los}$, $s_{\rm blow}$, $s_{\min,\mathrm{eff}}$, $\Sigma_{\rm surf}$, 表層への供給率，表層流出 $\dot{\Sigma}_{\rm out}$，総流出率 $\dot{M}_{\rm out}$，損失機構ごとの累積量），（iii）PSD 状態（各粒径ビン $k$ の数面密度 $N_k(t)$），（iv）検証ログ（質量収支）に分けて整理する（[@Krivov2006_AA455_509]）．ここで $\dot{\Sigma}_{\rm out}$ は面密度流出率（表層流出フラックス）であり，$\dot{M}_{\rm out}$ は $\dot{\Sigma}_{\rm out}$ を計算領域で面積積分した総流出率として定義する．また，各ステップで質量検査（式\ref{eq:mass_budget_definition}）を評価し，相対質量誤差 $\epsilon_{\rm mass}(t)$ を検証ログとして保存する．保存ファイルでは扱いやすさのため，質量と質量流出率を $M_{\rm Mars}$ で規格化した値も併記する（付録E）．出力形式・保存先・主要項目の一覧は付録Aにまとめる．
+再解析と再現実行を可能にするため，1 回の実行（case）ごとに，入力設定（YAML），外部テーブル，採用パラメータ，乱数シード，およびコードのバージョン情報を実行条件として保存する．これらは時不変の前提情報であり，時系列出力とは別に一度だけ記録する．
+
+時間発展では，第4章で定義した外側の結合ステップを $t^n$（$t^{n+1}=t^n+\Delta t$）とし，Smoluchowski/表層 ODE の内部積分は必要に応じて内部ステップ $dt_{\rm eff}$ で分割する．本論文で解析に用いる時系列の基準は外側ステップ $t^n$ であり，主要診断量・PSD 状態・質量収支ログは各 $t^n$ ごとに保存する（PSD 履歴は必要に応じて一定間隔で間引く）．
+
+再構成に必須な状態変数は，各粒径ビン（および 1D の場合は各半径セル）の数面密度 $N_k(t^n)$（あるいは $N_{i,k}(t^n)$）と，対応するサイズグリッド $s_k$ である（2.1.1節）．表層流出の面密度フラックス $\dot{\Sigma}_{\rm out}$ は式\ref{eq:surface_outflux}，円盤全体の質量流出率 $\dot{M}_{\rm out}$ は式\ref{eq:mdot_out_definition}で定義する（0D の面積近似は式\ref{eq:annulus_area_definition}）．また，各ステップで質量検査（式\ref{eq:mass_budget_definition}）を評価し，相対質量誤差 $\epsilon_{\rm mass}(t)$ を検証ログとして保存する．保存ファイルでは扱いやすさのため，質量と質量流出率を $M_{\rm Mars}$ で規格化した値も併記する（記号表：付録E）．出力形式・保存先・主要項目の一覧は付録Aにまとめる．
 
 累積損失 $M_{\rm loss}$ は放射圧ブローアウトによる流出と追加シンクによる損失の和として定義し，外側の結合ステップ幅 $\Delta t$ ごとに逐次積算する．
 
@@ -26,6 +30,7 @@ M_{\rm loss}^{n+1}=M_{\rm loss}^{n}+\Delta t\left(\dot{M}_{\rm out}^{n}+\dot{M}_
 \end{equation}
 
 ここで $\dot{M}_{\rm sinks}$ は昇華など追加シンクによる質量損失率である．
+式\ref{eq:mass_loss_update}では $\dot{M}^n$ を区間 $[t^n,t^{n+1}]$ における代表値として評価し，区分一定の近似で積算する．
 
 大規模計算ではメモリ使用量を抑えるため，時系列および PSD 履歴を逐次書き出す．ただし逐次／一括のいずれの方式でも，保存する物理量の定義と検証ログ（質量収支など）が一致するよう，出力インタフェースを分離して実装する．
 
@@ -38,28 +43,24 @@ M_{\rm loss}^{n+1}=M_{\rm loss}^{n}+\Delta t\left(\dot{M}_{\rm out}^{n}+\dot{M}_
 
 ##### 5.1.2.1 検証項目・合格基準・結果
 
-本研究では，モデルの因果と数値解法の妥当性を表\ref{tab:validation_criteria}の基準で検証した．本論文で提示する結果は，全てこれらの基準を満たすことを確認したケースに限定する．
+本研究では，保存則（質量保存），スケール検証（衝突寿命），既知現象の定性的再現（wavy PSD），数値解法の安定性と収束（IMEX）の4観点から，表\ref{tab:validation_criteria}の基準で検証した．本論文で提示する結果は，全てこれらの基準を満たすことを確認したケースに限定する．
 
 \begin{table}[t]
   \centering
   \caption{検証項目と合格基準（本論文で提示する結果は全て合格）}
   \label{tab:validation_criteria}
-  \begin{tabular}{p{0.26\textwidth} p{0.58\textwidth} p{0.08\textwidth}}
+  \begin{tabular}{p{0.27\textwidth} p{0.69\textwidth}}
     \hline
-    検証項目 & 合格基準（許容誤差） & 判定 \\
+    検証項目 & 合格基準（許容誤差） \\
     \hline
     質量保存 &
-    相対質量誤差 $|\epsilon_{\rm mass}|$（式\ref{eq:mass_budget_definition}）の最大値が $0.5\%$ 以下 &
-    合格 \\
+    相対質量誤差 $|\epsilon_{\rm mass}(t)|$（式\ref{eq:mass_budget_definition}）の最大値が $0.5\%$ 以下 \\
     衝突寿命スケーリング &
-    推定衝突時間 $t_{\rm coll}^{\rm est}=T_{\rm orb}/(4\pi\tau_{\perp})$ に対し，モデル内の代表衝突時間 $t_{\rm coll}$ の比が $0.1$–$10$ の範囲に入る（[@StrubbeChiang2006_ApJ648_652]） &
-    合格 \\
+    推定衝突時間 $t_{\rm coll}^{\rm est}=T_{\rm orb}/(4\pi\tau_{\perp})$ に対し，モデル内の代表衝突時間 $t_{\rm coll}$ の比が $0.1$–$10$ の範囲に入る（[@StrubbeChiang2006_ApJ648_652]） \\
     “wavy” PSD &
-    ブローアウト即時除去を含めた場合に，$s_{\rm blow}$ 近傍で隣接ビンの過不足が交互に現れることを確認する（実装健全性の定性チェック；[@ThebaultAugereau2007_AA472_169]） &
-    合格 \\
+    ブローアウト即時除去を含めた場合に，$s_{\rm blow}$ 近傍で隣接ビンの過不足が交互に現れることを確認する（実装健全性の定性チェック；[@ThebaultAugereau2007_AA472_169]） \\
     IMEX の安定性と収束 &
-    IMEX-BDF(1)（loss 陰・gain 陽）が数密度 $N_k$ の非負性を保ち，$\Delta t\le0.1\min_k t_{\rm coll,k}$ の条件で主要診断量が収束する（[@Krivov2006_AA455_509]） &
-    合格 \\
+    IMEX-BDF(1)（loss 陰・gain 陽）が数密度 $N_k$ の非負性を保ち，$\Delta t\le0.1\min_k t_{\rm coll,k}$ の条件で主要診断量（$\Sigma_{\rm surf}(t)$，$\dot{M}_{\rm out}(t)$，$M_{\rm loss}(t)$）が収束する（[@Krivov2006_AA455_509]） \\
     \hline
   \end{tabular}
 \end{table}
