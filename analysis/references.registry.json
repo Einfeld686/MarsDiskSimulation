@@ -237,7 +237,7 @@
       "short": "Wyatt (2008)",
       "title": "Evolution of Debris Disks",
       "doi": "10.1146/annurev.astro.45.051806.110525",
-      "bibtex": "@article{Wyatt2008, journal = {ARA&A}, volume = {46}, pages = {339-383}, year = {2008}}",
+      "bibtex": "@article{Wyatt2008, journal = {ARA\\\\&A}, volume = {46}, pages = {339-383}, year = {2008}}",
       "adopted_scope": "Collisional cascades in optically thin debris disks.",
       "claims": [
         "Provides historical context for t_coll \u2248 T_orb/(4\u03c0 \u03c4) scaling used before adopting Strubbe & Chiang.",
@@ -262,7 +262,7 @@
       "short": "Birnstiel et al. (2011)",
       "title": "Dust size distributions in coagulation/fragmentation equilibrium: numerical solutions and analytical fits",
       "doi": "10.1051/0004-6361/201015228",
-      "bibtex": "@article{Birnstiel2011_AA525_A11, journal = {A&A}, volume = {525}, pages = {A11}, year = {2011}}",
+      "bibtex": "@article{Birnstiel2011_AA525_A11, journal = {A\\\\&A}, volume = {525}, pages = {A11}, year = {2011}}",
       "adopted_scope": "Grid-resolution and slope requirements for coagulation/fragmentation equilibria in disks.",
       "claims": [
         "Recommends logarithmic spacing with a_{i+1}/a_i \u2272 1.1\u20131.2 to resolve steady-state PSDs without bias.",
@@ -274,7 +274,7 @@
       "short": "Th\u00e9bault & Augereau (2007)",
       "title": "Collisional processes and size distribution in spatially extended debris discs",
       "doi": "10.1051/0004-6361:20077709",
-      "bibtex": "@article{ThebaultAugereau2007_AA472_169, journal = {A&A}, volume = {472}, pages = {169-185}, year = {2007}}",
+      "bibtex": "@article{ThebaultAugereau2007_AA472_169, journal = {A\\\\&A}, volume = {472}, pages = {169-185}, year = {2007}}",
       "adopted_scope": "Wavy PSD structures induced by blow-out and collisional processing in debris disks.",
       "claims": [
         "Shows blow-out cut-offs imprint oscillatory 'wavy' patterns on PSDs that require fine binning to resolve.",
@@ -298,7 +298,7 @@
       "short": "Krijt & Kama (2014)",
       "title": "A dearth of small particles in debris disks",
       "doi": "10.1051/0004-6361/201423862",
-      "bibtex": "@article{KrijtKama2014_AA566_L2, journal = {A&A}, volume = {566}, pages = {L2}, year = {2014}}",
+      "bibtex": "@article{KrijtKama2014_AA566_L2, journal = {A\\\\&A}, volume = {566}, pages = {L2}, year = {2014}}",
       "adopted_scope": "Conditions under which blow-out or collisions truncate the PSD above the nominal blow-out size.",
       "claims": [
         "Shows regimes where collisional grinding or drag outcompetes blow-out, raising the minimum grain size.",
@@ -391,7 +391,7 @@
       "short": "Krivov et al. (2006)",
       "title": "Dust distributions in debris disks: effects of gravity, radiation pressure and collisions",
       "doi": "10.1051/0004-6361:20064907",
-      "bibtex": "@article{Krivov2006_AA455_509, journal = {A&A}, volume = {455}, pages = {509-519}, year = {2006}}",
+      "bibtex": "@article{Krivov2006_AA455_509, journal = {A\\\\&A}, volume = {455}, pages = {509-519}, year = {2006}}",
       "adopted_scope": "n\u03c3v-style collisional cascades with Gaussian vertical structure and adaptive time stepping.",
       "claims": [
         "Derives collision kernels proportional to cross section times relative speed divided by the combined scale height.",
@@ -403,7 +403,7 @@
       "short": "Thebault et al. (2003)",
       "title": "Dust production from collisions in extrasolar planetary systems",
       "doi": "10.1051/0004-6361:20031017",
-      "bibtex": "@article{Thebault2003_AA408_775, journal = {A&A}, volume = {408}, pages = {775-788}, year = {2003}}",
+      "bibtex": "@article{Thebault2003_AA408_775, journal = {A\\\\&A}, volume = {408}, pages = {775-788}, year = {2003}}",
       "adopted_scope": "Collisional-cascade modelling in debris disks, including erosion/fragmentation diagnostics.",
       "claims": [
         "Details collisional cascade modelling with fragmentation and cratering regimes in debris disks.",
@@ -473,7 +473,7 @@
       "short": "Shadmehri (2008)",
       "title": "Dynamics of charged dust particles in protoplanetary discs",
       "doi": "10.1007/s10509-008-9762-2",
-      "bibtex": "@article{Shadmehri2008_ApSS314_217, journal = {Ap\\&SS}, volume = {314}, pages = {217-223}, year = {2008}}",
+      "bibtex": "@article{Shadmehri2008_ApSS314_217, journal = {Ap\\\\&SS}, volume = {314}, pages = {217-223}, year = {2008}}",
       "adopted_scope": "Review and extension of TL2002/2003-style dust flows in gas-rich, optically thick disks.",
       "claims": [
         "Summarises that outward surface drift driven by radiation pressure plus gas drag applies to optically thick, gas-loaded disks.",
@@ -521,7 +521,7 @@
       "short": "Blanco et al. (1976)",
       "title": "Planck mean efficiency factors for six material candidates for interstellar grains",
       "doi": "10.1007/BF00640752",
-      "bibtex": "@article{Blanco1976_ApSS41_447, journal = {Ap\\&SS}, volume = {41}, pages = {447-463}, year = {1976}}",
+      "bibtex": "@article{Blanco1976_ApSS41_447, journal = {Ap\\\\&SS}, volume = {41}, pages = {447-463}, year = {1976}}",
       "adopted_scope": "Tabulated Planck-mean absorption efficiencies for common grain materials vs. size.",
       "claims": [
         "Computes Planck-mean Q_abs for graphite, iron, ice, olivine, amorphous quartz, and lunar silicate over sub-\u00b5m to multi-\u00b5m sizes.",
@@ -545,7 +545,7 @@
       "short": "Hocuk et al. (2017)",
       "title": "Parameterizing the interstellar dust temperature",
       "doi": "10.1051/0004-6361/201629944",
-      "bibtex": "@article{Hocuk2017_AA604_A58, journal = {A\\&A}, volume = {604}, pages = {A58}, year = {2017}}",
+      "bibtex": "@article{Hocuk2017_AA604_A58, journal = {A\\\\&A}, volume = {604}, pages = {A58}, year = {2017}}",
       "adopted_scope": "Parametrisation of dust temperature and Planck-mean absorption efficiency in ISM environments.",
       "claims": [
         "Gives fitted \u27e8Q_abs\u27e9 and temperature relations illustrating size/composition dependence beyond the q_abs_mean=1.0 placeholder.",
@@ -617,7 +617,7 @@
       "short": "Melosh (2007)",
       "title": "A Hydrocode Equation of State for SiO2",
       "doi": "10.1111/j.1945-5100.2007.tb01009.x",
-      "bibtex": "@article{Melosh2007_MPS42_2079, journal = {Meteoritics & Planetary Science}, volume = {42}, pages = {2079-2098}, year = {2007}}",
+      "bibtex": "@article{Melosh2007_MPS42_2079, journal = {Meteoritics \\\\& Planetary Science}, volume = {42}, pages = {2079-2098}, year = {2007}}",
       "adopted_scope": "Equation of state for SiO2 used in high-temperature impact simulations.",
       "claims": [
         "Locates melt/vapor boundaries for SiO2 around the ~2000 K regime used for liquidus thresholds.",
@@ -641,7 +641,7 @@
       "short": "Markkanen & Agarwal (2020)",
       "title": "Thermophysical model for icy cometary dust particles",
       "doi": "10.1051/0004-6361/202039092",
-      "bibtex": "@article{Markkanen2020_AA643_A16, journal = {A&A}, volume = {643}, pages = {A16}, year = {2020}}",
+      "bibtex": "@article{Markkanen2020_AA643_A16, journal = {A\\\\&A}, volume = {643}, pages = {A16}, year = {2020}}",
       "adopted_scope": "Hertz-Knudsen sublimation fluxes and dust thermophysics used as analogs for sublimation-driven mass loss in gas-poor disks.",
       "claims": [
         "Derives mass-loss rates and temperature evolution for icy/rocky grains using Hertz-Knudsen sublimation and latent-heat coupling.",
@@ -737,7 +737,7 @@
       "short": "Demyk et al. (2022)",
       "title": "Low-temperature optical constants of amorphous silicate dust analogues",
       "doi": "10.1051/0004-6361/202243815",
-      "bibtex": "@article{Demyk2022_AA666_A192, journal = {A\\&A}, volume = {666}, pages = {A192}, year = {2022}}",
+      "bibtex": "@article{Demyk2022_AA666_A192, journal = {A\\\\&A}, volume = {666}, pages = {A192}, year = {2022}}",
       "adopted_scope": "Optical constants for amorphous silicate analogues across UV\u2013mm wavelengths and 10\u2013300 K.",
       "claims": [
         "Provides n,k datasets for Mg-rich and Mg-Fe silicate analogues over 5\u2013800/1000 \u00b5m with temperature coverage 10\u2013300 K.",
@@ -838,7 +838,7 @@
       "short": "Kimura et al. (1997)",
       "title": "A study on solar dust ring formation based on fractal dust models",
       "doi": "",
-      "bibtex": "@article{KimuraIshimotoMukai1997_AA326_263, journal = {A&A}, volume = {326}, pages = {263}, year = {1997}}",
+      "bibtex": "@article{KimuraIshimotoMukai1997_AA326_263, journal = {A\\\\&A}, volume = {326}, pages = {263}, year = {1997}}",
       "adopted_scope": "Fractal dust model and sublimation parameterization for silicate/carbon grains.",
       "claims": [
         "Provides sublimation-related parameters for silicate/carbon dust used in HKL-style fits."
@@ -937,7 +937,7 @@
       "short": "Jutzi et al. (2010)",
       "title": "A large crater as a probe of the internal structure of the E-type asteroid Steins",
       "doi": "10.1051/0004-6361/200913549",
-      "bibtex": "@article{JutziMichelBenz2010_AA509_L2, journal = {A&A}, volume = {509}, pages = {L2}, year = {2010}}",
+      "bibtex": "@article{JutziMichelBenz2010_AA509_L2, journal = {A\\\\&A}, volume = {509}, pages = {L2}, year = {2010}}",
       "adopted_scope": "Impact simulations of the large crater on asteroid Steins, used to constrain internal structure assumptions.",
       "claims": [
         "Uses numerical impact simulations to reproduce the ~2 km crater on Steins.",
@@ -949,7 +949,7 @@
       "short": "Genge (2017)",
       "title": "The entry heating and abundances of basaltic micrometeorites",
       "doi": "10.1111/maps.12830",
-      "bibtex": "@article{Genge2017_MAPS52_1000, journal = {Meteoritics & Planetary Science}, volume = {52}, number = {5}, pages = {1000-1013}, year = {2017}}",
+      "bibtex": "@article{Genge2017_MAPS52_1000, journal = {Meteoritics \\\\& Planetary Science}, volume = {52}, number = {5}, pages = {1000-1013}, year = {2017}}",
       "adopted_scope": "Basaltic micrometeorite entry heating and abundance constraints for basaltic material context.",
       "claims": [
         "Reports entry heating conditions and abundance estimates for basaltic micrometeorites.",
@@ -1213,7 +1213,7 @@
       "short": "Jager et al. (2003)",
       "title": "Steps toward interstellar silicate mineralogy VII. Spectral properties and crystallization behaviour of magnesium silicates produced by the sol-gel method",
       "doi": "10.1051/0004-6361:20030916",
-      "bibtex": "@article{Jager2003_AA408_193, journal = {A&A}, volume = {408}, pages = {193-204}, year = {2003}}",
+      "bibtex": "@article{Jager2003_AA408_193, journal = {A\\\\&A}, volume = {408}, pages = {193-204}, year = {2003}}",
       "adopted_scope": "Optical constants and crystallization behavior of amorphous Mg silicates (sol-gel).",
       "claims": [
         "Provides optical constants from 0.2-500 um for amorphous Mg silicates.",
