@@ -39,7 +39,7 @@
 	    $\dot{M}_{\rm out}$ & 式\ref{eq:mdot_out_definition} & \texttt{series/run.parquet} \\
 	    $M_{\rm loss}$ & 式\ref{eq:mass_loss_update} & \texttt{summary.json} \\
 	    $\epsilon_{\rm mass}$ & 式\ref{eq:mass_budget_definition} & \texttt{checks/mass\_budget.csv} \\
-	    $N_k(t)$ & §2.1.1 & \texttt{series/psd\_hist.parquet} \\
+	    $N_k(t)$ & 2.1.1節 & \texttt{series/psd\_hist.parquet} \\
 	    \hline
   \end{tabular}
 \end{table}

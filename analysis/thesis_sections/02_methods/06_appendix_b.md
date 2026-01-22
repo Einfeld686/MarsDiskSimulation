@@ -14,23 +14,23 @@
     \hline
     設定キー & 物理 & 本文参照 \\
     \hline
-    \texttt{radiation.TM\_K} & 火星温度 & §2.2.1 \\
-    \texttt{radiation.mars\_temperature}\newline \texttt{\_driver}\newline \texttt{.*} & 冷却ドライバ & §2.2.1 \\
-	    \texttt{shielding.mode} & 遮蔽 $\Phi$ & §2.2.3 \\
-	    \texttt{shielding.los\_geometry}\newline \texttt{.*} & 視線補正係数 $f_{\rm los}$ & §2.1.2 \\
-	    \texttt{sinks.mode} & 昇華/ガス抗力 & §2.2.5 \\
-	    \texttt{blowout.enabled} & ブローアウト損失 & §2.2.2 \\
-	    \texttt{supply.mode} & 表層再供給 & §3.1 \\
-    \texttt{supply.feedback}\newline \texttt{.*} & $\tau$フィードバック制御 & §3.1.1 \\
-    \texttt{supply.temperature}\newline \texttt{.*} & 温度カップリング & §3.1.2 \\
-    \texttt{supply.reservoir}\newline \texttt{.*} & 有限質量リザーバ & §3.1.3 \\
-    \texttt{supply.transport}\newline \texttt{.*} & 深層ミキシング & §3.1.3 \\
-    \texttt{init\_tau1.*} & 初期$\tau=1$スケーリング & §4.2.3.1 \\
-    \texttt{phase.*} & 相判定 & §2.2.4 \\
-    \texttt{numerics.checkpoint.*} & チェックポイント & §4.2.3.3 \\
-    \texttt{numerics.t\_end\_until}\newline \texttt{\_temperature}\newline \texttt{\_K} & 温度停止条件 & §4.2.3.2 \\
-    \texttt{ALLOW\_TL2003} & gas-rich 表層 ODE トグル & §2.2.3 \\
-    \texttt{psd.wavy\_strength} & "wavy" 強度（0 で無効） & §2.1.1 \\
+    \texttt{radiation.TM\_K} & 火星温度 & 2.2.1節 \\
+    \texttt{radiation.mars\_temperature}\newline \texttt{\_driver}\newline \texttt{.*} & 冷却ドライバ & 2.2.1節 \\
+	    \texttt{shielding.mode} & 遮蔽 $\Phi$ & 2.2.3節 \\
+	    \texttt{shielding.los\_geometry}\newline \texttt{.*} & 視線補正係数 $f_{\rm los}$ & 2.1.2節 \\
+	    \texttt{sinks.mode} & 昇華/ガス抗力 & 2.2.5節 \\
+	    \texttt{blowout.enabled} & ブローアウト損失 & 2.2.2節 \\
+	    \texttt{supply.mode} & 表層再供給 & 3.1節 \\
+    \texttt{supply.feedback}\newline \texttt{.*} & $\tau$フィードバック制御 & 3.1.1節 \\
+    \texttt{supply.temperature}\newline \texttt{.*} & 温度カップリング & 3.1.2節 \\
+    \texttt{supply.reservoir}\newline \texttt{.*} & 有限質量リザーバ & 3.1.3節 \\
+    \texttt{supply.transport}\newline \texttt{.*} & 深層ミキシング & 3.1.3節 \\
+    \texttt{init\_tau1.*} & 初期$\tau=1$スケーリング & 4.2.3.1節 \\
+    \texttt{phase.*} & 相判定 & 2.2.4節 \\
+    \texttt{numerics.checkpoint.*} & チェックポイント & 4.2.3.3節 \\
+    \texttt{numerics.t\_end\_until}\newline \texttt{\_temperature}\newline \texttt{\_K} & 温度停止条件 & 4.2.3.2節 \\
+    \texttt{ALLOW\_TL2003} & gas-rich 表層 ODE トグル & 2.2.3節 \\
+    \texttt{psd.wavy\_strength} & "wavy" 強度（0 で無効） & 2.1.1節 \\
     \hline
   \end{tabular}
 \end{table}
@@ -139,7 +139,7 @@
 
 #### B.5 視線幾何（$f_{\rm los}$）
 
-$f_{\rm los}$ は垂直光学厚 $\tau_\perp$ から火星視線方向光学厚 $\tau_{\rm los}=f_{\rm los}\tau_\perp$ を近似する補正係数である（§2.1.2）．実装では次の設定により
+$f_{\rm los}$ は垂直光学厚 $\tau_\perp$ から火星視線方向光学厚 $\tau_{\rm los}=f_{\rm los}\tau_\perp$ を近似する補正係数である（2.1.2節）．実装では次の設定により
 \[
 f_{\rm los}=
 \begin{cases}

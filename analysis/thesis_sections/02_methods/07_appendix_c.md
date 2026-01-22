@@ -16,13 +16,13 @@
     \hline
     火星温度履歴 $T_M(t)$ &
     放射圧（β, $s_{\rm blow}$）・昇華・相判定の入力となる温度ドライバ &
-    §2.2.1 \\
+    2.2.1節 \\
     Planck 平均 $\langle Q_{\rm pr}\rangle$ &
     放射圧効率として β と $s_{\rm blow}$ を決める（灰色体近似は例外） &
-    §2.2.2 \\
+    2.2.2節 \\
     遮蔽係数 $\Phi(\tau_{\rm los})$（本研究では $\Phi=\exp(-\tau_{\rm los})$） &
     有効不透明度 $\kappa_{\rm eff}$ を通じて遮蔽と供給フィードバックに入る &
-    §2.2.3 \\
+    2.2.3節 \\
     \hline
   \end{tabular}
 \end{table}
