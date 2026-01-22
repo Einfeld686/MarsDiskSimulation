@@ -9,7 +9,7 @@
 \begin{table}[t]
   \centering
   \caption{略語索引}
-  \label{tab:abbreviations}
+  \label{tab:app_abbreviations}
   \begin{tabular}{p{0.18\textwidth} p{0.44\textwidth} p{0.28\textwidth}}
     \hline
     略語 & 日本語 / 英語 & 備考 \\

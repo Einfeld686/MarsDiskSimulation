@@ -9,19 +9,19 @@
 \begin{equation}
 \tag{E.001}
 \label{eq:E001}
-v_K(r)=\sqrt{\frac{G\,M_{\mathrm{M}}}{r}}
+v_K(r)=\sqrt{\frac{G\,M_{\rm Mars}}{r}}
 \end{equation}
 
 \begin{equation}
 \tag{E.002}
 \label{eq:E002}
-\Omega(r)=\sqrt{\frac{G\,M_{\mathrm{M}}}{r^{3}}}
+\Omega(r)=\sqrt{\frac{G\,M_{\rm Mars}}{r^{3}}}
 \end{equation}
 
 \begin{equation}
 \tag{E.007}
 \label{eq:E007}
-t_{\mathrm{blow}}=\frac{1}{\Omega}
+t_{\rm blow}=\frac{1}{\Omega}
 \end{equation}
 
 ---
@@ -30,19 +30,19 @@ t_{\mathrm{blow}}=\frac{1}{\Omega}
 \begin{equation}
 \tag{E.008}
 \label{eq:E008}
-s_{\min,\mathrm{eff}}=\max\!\left(s_{\min,\mathrm{cfg}},\,s_{\mathrm{blow,eff}}\right)
+s_{\min,\rm eff}=\max\!\left(s_{\min,\rm cfg},\,s_{\rm blow,eff}\right)
 \end{equation}
 
 \begin{equation}
 \tag{E.013}
 \label{eq:E013}
-\beta = \frac{3\,\sigma_{\mathrm{SB}}\,T_{\mathrm{M}}^{4}\,R_{\mathrm{M}}^{2}\,\langle Q_{\mathrm{pr}}\rangle}{4\,G\,M_{\mathrm{M}}\,c\,\rho\,s}
+\beta = \frac{3\,\sigma_{\rm SB}\,T_M^{4}\,R_{\rm Mars}^{2}\,\langle Q_{\rm pr}\rangle}{4\,G\,M_{\rm Mars}\,c\,\rho\,s}
 \end{equation}
 
 \begin{equation}
 \tag{E.014}
 \label{eq:E014}
-s_{\mathrm{blow}} = \frac{3\,\sigma_{\mathrm{SB}}\,T_{\mathrm{M}}^{4}\,R_{\mathrm{M}}^{2}\,\langle Q_{\mathrm{pr}}\rangle}{2\,G\,M_{\mathrm{M}}\,c\,\rho}
+s_{\rm blow} = \frac{3\,\sigma_{\rm SB}\,T_M^{4}\,R_{\rm Mars}^{2}\,\langle Q_{\rm pr}\rangle}{2\,G\,M_{\rm Mars}\,c\,\rho}
 \end{equation}
 
 ---
@@ -51,7 +51,7 @@ s_{\mathrm{blow}} = \frac{3\,\sigma_{\mathrm{SB}}\,T_{\mathrm{M}}^{4}\,R_{\mathr
 \begin{equation}
 \tag{E.015}
 \label{eq:E015}
-\kappa_{\mathrm{eff}}=\Phi(\tau)\,\kappa_{\mathrm{surf}}
+\kappa_{\rm eff}=\Phi(\tau)\,\kappa_{\rm surf}
 \end{equation}
 
 \begin{equation}
@@ -59,8 +59,8 @@ s_{\mathrm{blow}} = \frac{3\,\sigma_{\mathrm{SB}}\,T_{\mathrm{M}}^{4}\,R_{\mathr
 \label{eq:E016}
 \Sigma_{\tau_{\perp}=1} =
 \begin{cases}
- \kappa_{\mathrm{eff}}^{-1}, & \kappa_{\mathrm{eff}} > 0,\\
- \infty, & \kappa_{\mathrm{eff}} \le 0.
+ \kappa_{\rm eff}^{-1}, & \kappa_{\rm eff} > 0,\\
+ \infty, & \kappa_{\rm eff} \le 0.
 \end{cases}
 \end{equation}
 
@@ -76,7 +76,7 @@ s_{\mathrm{blow}} = \frac{3\,\sigma_{\mathrm{SB}}\,T_{\mathrm{M}}^{4}\,R_{\mathr
 \begin{equation}
 \tag{E.009}
 \label{eq:E009}
-\dot{\Sigma}_{\mathrm{out}} = \frac{\Sigma_{\mathrm{surf}}}{t_{\mathrm{blow}}}
+\dot{\Sigma}_{\rm out} = \frac{\Sigma_{\rm surf}}{t_{\rm blow}}
 \end{equation}
 
 ---
@@ -93,8 +93,8 @@ s_{\mathrm{blow}} = \frac{3\,\sigma_{\mathrm{SB}}\,T_{\mathrm{M}}^{4}\,R_{\mathr
 \label{eq:E011}
 \begin{aligned}
  \Sigma^{n} &= \sum_k m_k N_k^{n}, & \Sigma^{n+1} &= \sum_k m_k N_k^{n+1},\\
- \Delta\Sigma &= \Sigma^{n+1} + \Delta t\,\dot{\Sigma}_{\mathrm{extra}} - \left(\Sigma^{n} + \Delta t\,\dot{\Sigma}_{\mathrm{prod}}^{(<s_{\mathrm{blow}})}\right),\\
- \epsilon_{\mathrm{mass}} &= \frac{|\Delta\Sigma|}{\Sigma^{n}}.
+ \Delta\Sigma &= \Sigma^{n+1} + \Delta t\,\dot{\Sigma}_{\rm extra} - \left(\Sigma^{n} + \Delta t\,\dot{\Sigma}_{\rm prod}^{(<s_{\rm blow})}\right),\\
+ \epsilon_{\rm mass} &= \frac{|\Delta\Sigma|}{\Sigma^{n}}.
 \end{aligned}
 \end{equation}
 
@@ -111,8 +111,8 @@ v_{ij}=v_{K}\,\sqrt{1.25\,e^{2}+i^{2}}
 \tag{E.021}
 \label{eq:E021}
 \begin{aligned}
-\varepsilon_n &= \mathrm{clip}\!\left(\varepsilon(c_n),\,0,\,1-10^{-6}\right),\\
-c_{n+1} &= \sqrt{\frac{f_{\mathrm{wake}}\,\tau}{\max(1-\varepsilon_n^{2},\,10^{-12})}},\\
+\varepsilon_n &= {\rm clip}\!\left(\varepsilon(c_n),\,0,\,1-10^{-6}\right),\\
+c_{n+1} &= \sqrt{\frac{f_{\rm wake}\,\tau}{\max(1-\varepsilon_n^{2},\,10^{-12})}},\\
 c_{n+1} &\leftarrow \tfrac12\left(c_{n+1} + c_n\right)
 \end{aligned}
 \end{equation}
@@ -128,7 +128,7 @@ C_{ij} = \frac{N_i N_j}{1+\delta_{ij}}\,
 \begin{equation}
 \tag{E.026}
 \label{eq:E026}
-Q_{D}^{*}(s,\rho,v) = Q_{\mathrm{str}}(v) + Q_{\mathrm{grav}}(v)\,S(v)
+Q_{D}^{*}(s,\rho,v) = Q_{\rm str}(v) + Q_{\rm grav}(v)\,S(v)
 \end{equation}
 
 ---
@@ -137,13 +137,13 @@ Q_{D}^{*}(s,\rho,v) = Q_{\mathrm{str}}(v) + Q_{\mathrm{grav}}(v)\,S(v)
 \begin{equation}
 \tag{E.027}
 \label{eq:E027}
-\dot{\Sigma}_{\mathrm{prod}}(t,r) = \max\!\left(\epsilon_{\mathrm{mix}}\;R_{\mathrm{base}}(t,r),\,0\right)
+\dot{\Sigma}_{\rm prod}(t,r) = \max\!\left(\epsilon_{\rm mix}\;R_{\rm base}(t,r),\,0\right)
 \end{equation}
 
 \begin{equation}
 \tag{E.027a}
 \label{eq:E027a}
-R_{\mathrm{base}} = \frac{\mu\,\Sigma_{\tau_{\perp}=1}}{\epsilon_{\mathrm{mix}}\,t_{\mathrm{blow}}}
+R_{\rm base} = \frac{\mu\,\Sigma_{\tau_{\perp}=1}}{\epsilon_{\rm mix}\,t_{\rm blow}}
 \end{equation}
 
 ---
@@ -154,20 +154,20 @@ R_{\mathrm{base}} = \frac{\mu\,\Sigma_{\tau_{\perp}=1}}{\epsilon_{\mathrm{mix}}\
 \label{eq:E018}
 J(T) =
 \begin{cases}
- \alpha_{\mathrm{evap}}\max\!\bigl(P_{\mathrm{sat}}(T) - P_{\mathrm{gas}},\,0\bigr)
+ \alpha_{\rm evap}\max\!\bigl(P_{\rm sat}(T) - P_{\rm gas},\,0\bigr)
  \sqrt{\dfrac{\mu}{2\pi R T}}, &
  \text{if HKL enabled},\\[10pt]
- \exp\!\left(\dfrac{T - T_{\mathrm{sub}}}{\max(dT, 1)}\right), & \text{otherwise.}
+ \exp\!\left(\dfrac{T - T_{\rm sub}}{\max(dT, 1)}\right), & \text{otherwise.}
 \end{cases}
 \end{equation}
 
 \begin{equation}
 \tag{E.036}
 \label{eq:E036}
-P_{\mathrm{sat}}(T) =
+P_{\rm sat}(T) =
 \begin{cases}
  10^{A - B/T}, & \text{if clausius},\\[6pt]
- 10^{\mathrm{PCHIP}_{\log_{10}P}(T)}, & \text{if tabulated}.
+  10^{{\rm PCHIP}_{\log_{10}P}(T)}, & \text{if tabulated}.
 \end{cases}
 \end{equation}
 <!-- TEX_EXCLUDE_END -->

@@ -82,12 +82,12 @@ A=\pi\left(r_{\rm out}^2-r_{\rm in}^2\right)
 
 \begin{equation}
 \label{eq:vK_definition}
-v_K(r)=\sqrt{\frac{G\,M_{\mathrm{M}}}{r}}
+v_K(r)=\sqrt{\frac{G\,M_{\rm Mars}}{r}}
 \end{equation}
 
 \begin{equation}
 \label{eq:omega_definition}
-\Omega(r)=\sqrt{\frac{G\,M_{\mathrm{M}}}{r^{3}}}
+\Omega(r)=\sqrt{\frac{G\,M_{\rm Mars}}{r^{3}}}
 \end{equation}
 
 #### 1.2.1 物性モデル (フォルステライト)
@@ -182,7 +182,7 @@ flowchart TB
 2. $\langle Q_{\rm pr}\rangle$ を評価し，β と $s_{\rm blow}$ を計算する（式\ref{eq:beta_definition}–\ref{eq:s_blow_definition}）．
 3. PSD から $\kappa_{\rm surf}$ を評価し，$\tau_{\rm los}$ を計算する．
 4. 相判定と光学的厚さに基づくゲートを評価し，供給・損失の適用可否を決める．
-5. HKL に基づく昇華 ds/dt を評価し，必要なら PSD 下限 $s_{\min,\mathrm{eff}}$ を更新する．
+5. HKL に基づく昇華 ds/dt を評価し，必要なら PSD 下限 $s_{\min,\rm eff}$ を更新する．
 6. 追加シンクの代表時間 $t_{\rm sink}$ を評価する．
 7. 遮蔽係数 $\Phi$ を適用して $\kappa_{\rm eff}$ と $\Sigma_{\tau=1}$ を評価する（式\ref{eq:kappa_eff_definition}–\ref{eq:sigma_tau1_definition}）．
 8. 表層再供給・深層輸送を適用し，表層に注入するソース項 $F_k$ を確定する．

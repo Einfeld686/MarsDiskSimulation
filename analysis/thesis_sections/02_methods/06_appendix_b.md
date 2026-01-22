@@ -9,7 +9,7 @@
 \begin{table}[t]
   \centering
   \caption{設定キーと物理の対応}
-  \label{tab:config_physics_map}
+  \label{tab:app_config_physics_map}
   \begin{tabular}{p{0.38\textwidth} p{0.26\textwidth} p{0.22\textwidth}}
     \hline
     設定キー & 物理 & 本文参照 \\
@@ -41,26 +41,26 @@
 \begin{table}[t]
   \centering
   \caption{PSD グリッドの既定値}
-  \label{tab:psd_grid_defaults}
+  \label{tab:app_psd_grid_defaults}
   \begin{tabular}{p{0.36\textwidth} p{0.2\textwidth} p{0.32\textwidth}}
     \hline
     設定キー & 既定値 & 意味 \\
     \hline
-    \texttt{sizes.s\_min} & 1e-7 m & 最小粒径 $s_{\min,\mathrm{cfg}}$ \\
+    \texttt{sizes.s\_min} & 1e-7 m & 最小粒径 $s_{\min,\rm cfg}$ \\
     \texttt{sizes.s\_max} & 3.0 m & 最大粒径 \\
     \texttt{sizes.n\_bins} & 40 & サイズビン数 \\
     \hline
   \end{tabular}
 \end{table}
 
-表\ref{tab:psd_grid_defaults}の既定値では $s$ 範囲が広いため，対数等間隔の隣接比 $s_{k+1}/s_k$ は $O(1.5)$ となる．$s_{\rm blow}$ 近傍の解像度が必要な場合は $n_{\rm bins}$ を増やすか，対象とする $s_{\max}$ を再検討する（2.1.1節，5.1.2節）．
+表\ref{tab:app_psd_grid_defaults}の既定値では $s$ 範囲が広いため，対数等間隔の隣接比 $s_{k+1}/s_k$ は $O(1.5)$ となる．$s_{\rm blow}$ 近傍の解像度が必要な場合は $n_{\rm bins}$ を増やすか，対象とする $s_{\max}$ を再検討する（2.1.1節，5.1.2節）．
 
 #### B.2 初期化（$\tau=1$ スケーリング）
 
 \begin{table}[t]
   \centering
   \caption{初期 $\tau=1$ スケーリングの設定}
-  \label{tab:init_tau1_settings}
+  \label{tab:app_init_tau1_settings}
   \begin{tabular}{p{0.42\textwidth} p{0.3\textwidth} p{0.16\textwidth}}
     \hline
     設定キー & 意味 & 既定値 \\
@@ -77,7 +77,7 @@
 \begin{table}[t]
   \centering
   \caption{供給フィードバックの設定}
-  \label{tab:supply_feedback_settings}
+  \label{tab:app_supply_feedback_settings}
   \begin{tabular}{p{0.4\textwidth} p{0.36\textwidth} p{0.14\textwidth}}
     \hline
     設定キー & 意味 & 既定値 \\
@@ -94,7 +94,7 @@
 \begin{table}[t]
   \centering
   \caption{温度カップリングの設定}
-  \label{tab:supply_temperature_settings}
+  \label{tab:app_supply_temperature_settings}
   \begin{tabular}{p{0.46\textwidth} p{0.44\textwidth}}
     \hline
     設定キー & 意味 \\
@@ -109,7 +109,7 @@
 \begin{table}[t]
   \centering
   \caption{注入パラメータの設定}
-  \label{tab:supply_injection_settings}
+  \label{tab:app_supply_injection_settings}
   \begin{tabular}{p{0.40\textwidth} p{0.32\textwidth} p{0.18\textwidth}}
     \hline
     設定キー & 意味 & 既定値 \\
@@ -127,12 +127,12 @@
 	\begin{table}[t]
 	  \centering
 	  \caption{エネルギー簿記に関連する設定キー}
-	  \label{tab:energy_settings}
+	  \label{tab:app_energy_settings}
 	  \begin{tabular}{p{0.36\textwidth} p{0.38\textwidth} l}
 	    \hline
 	    設定キー & 意味 & 既定値 \\
 	    \hline
-	    \texttt{dynamics.eps\_restitution} & 反発係数（$f_{ke,\mathrm{frag}}$ のデフォルトに使用） & 0.5 \\
+	    \texttt{dynamics.eps\_restitution} & 反発係数（$f_{ke,\rm frag}$ のデフォルトに使用） & 0.5 \\
 	    \texttt{dynamics.f\_ke\_cratering} & 侵食時の非散逸率 & 0.1 \\
 	    \texttt{dynamics.f\_ke\_fragmentation} & 破砕時の非散逸率 & None（$\varepsilon^2$ 使用） \\
 	    \texttt{diagnostics.energy}\newline \texttt{\_bookkeeping}\newline \texttt{.stream} & energy 系列/簿記をストリーム出力 & true \\
@@ -146,8 +146,8 @@ $f_{\rm los}$ は垂直光学厚 $\tau_\perp$ から火星視線方向光学厚 
 \[
 f_{\rm los}=
 \begin{cases}
-\max\!\left(1,\dfrac{\mathrm{path\_multiplier}}{H/r}\right), & \mathrm{mode}=\texttt{aspect\_ratio\_factor},\\
-1, & \mathrm{mode}=\texttt{none}
+\max\!\left(1,\dfrac{{\rm path\_multiplier}}{H/r}\right), & {\rm mode}=\texttt{aspect\_ratio\_factor},\\
+1, & {\rm mode}=\texttt{none}
 \end{cases}
 \]
 として与える．

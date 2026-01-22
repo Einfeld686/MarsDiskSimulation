@@ -33,7 +33,7 @@ reference_links:
 
 \begin{equation}
 \label{eq:prod_rate_definition}
-\dot{\Sigma}_{\mathrm{prod}}(t,r) = \max\!\left(\epsilon_{\mathrm{mix}}\;R_{\mathrm{base}}(t,r),\,0\right)
+\dot{\Sigma}_{\rm prod}(t,r) = \max\!\left(\epsilon_{\rm mix}\;R_{\rm base}(t,r),\,0\right)
 \end{equation}
 
 供給率の時間依存形は定常値・べき乗・外部テーブル・区分定義などから選び，温度依存・$\tau$ フィードバック・有限リザーバを組み合わせて非定常性を表現する．ここでの $\mu_{\rm orb}$ は供給強度の不確かさを吸収するパラメータであり，衝突速度外挿で用いる $\mu$ と混同しないよう区別する．
@@ -56,9 +56,9 @@ reference_links:
 
 まず温度と $\tau$ フィードバックを反映した「リザーバ適用前」の候補供給率を
 \begin{equation}
-\dot{\Sigma}_{0}= f_{\tau}\;f_{T}\;\dot{\Sigma}_{\mathrm{prod}}
+\dot{\Sigma}_{0}= f_{\tau}\;f_{T}\;\dot{\Sigma}_{\rm prod}
 \end{equation}
-と定義する（温度テーブルが供給率そのものを返す場合は，$f_T\dot{\Sigma}_{\mathrm{prod}}$ を当該テーブル値で置き換える；§3.1.2）．有限リザーバが有効な場合，1ステップで供給可能な最大面密度生成率 $\dot{\Sigma}_{\max}$ により
+と定義する（温度テーブルが供給率そのものを返す場合は，$f_T\dot{\Sigma}_{\rm prod}$ を当該テーブル値で置き換える；§3.1.2）．有限リザーバが有効な場合，1ステップで供給可能な最大面密度生成率 $\dot{\Sigma}_{\max}$ により
 \begin{equation}
 \dot{\Sigma}_{\rm cand}\equiv \min\!\left(\dot{\Sigma}_{0},\,\dot{\Sigma}_{\max}\right),\qquad
 f_{\rm res}\equiv
@@ -94,7 +94,7 @@ f_{\rm res}\equiv
   \end{tabular}
 \end{table}
 
-また，$\tau_{\rm stop}$ を超える光学的厚さは本研究の想定（表層が「光が比較的通りやすい」状態）を逸脱するため，$\tau_{\rm los}>\tau_{\rm stop}(1+\mathrm{tol})$ を満たした時点でシミュレーションを早期終了する（停止判定）．ここで $\mathrm{tol}$ は停止判定に用いる相対許容であり，停止判定は相状態が固体のステップに対して適用する．供給が深層へ迂回した場合でも，表層面密度と PSD の更新は同一タイムステップ内で整合的に行われる．中間量の保存と再解析手順は付録Aにまとめる．
+また，$\tau_{\rm stop}$ を超える光学的厚さは本研究の想定（表層が「光が比較的通りやすい」状態）を逸脱するため，$\tau_{\rm los}>\tau_{\rm stop}(1+{\rm tol})$ を満たした時点でシミュレーションを早期終了する（停止判定）．ここで ${\rm tol}$ は停止判定に用いる相対許容であり，停止判定は相状態が固体のステップに対して適用する．供給が深層へ迂回した場合でも，表層面密度と PSD の更新は同一タイムステップ内で整合的に行われる．中間量の保存と再解析手順は付録Aにまとめる．
 
 #### 3.1.1 フィードバック制御 (Supply Feedback)
 
@@ -110,19 +110,19 @@ e_{\tau}\equiv\frac{\tau_{\rm tar}-\tau_{\rm los}}{\max(\tau_{\rm tar},\epsilon)
 \end{equation}
 に基づき，供給倍率を各ステップで更新する．ここで $\epsilon$ はゼロ除算回避のための微小量である．ステップ幅を $\Delta t$，応答時間を $t_{\rm resp}$，比例ゲインを $k_{\tau}$ とすると，実装では
 \begin{equation}
-f_{\tau}\leftarrow\mathrm{clip}\!\left(f_{\tau}\left[1+k_{\tau}\frac{\Delta t}{t_{\rm resp}}\,e_{\tau}\right],\,f_{\tau,\min},\,f_{\tau,\max}\right)
+f_{\tau}\leftarrow{\rm clip}\!\left(f_{\tau}\left[1+k_{\tau}\frac{\Delta t}{t_{\rm resp}}\,e_{\tau}\right],\,f_{\tau,\min},\,f_{\tau,\max}\right)
 \end{equation}
-で更新し，更新後の $f_{\tau}$ を当該ステップの供給率（温度スケール後）に乗じる．ここで $\mathrm{clip}(x,a,b)\equiv\min(\max(x,a),b)$ は上下限クリップを表す．$\tau_{\rm los}$ が非有限の場合は $f_{\tau}$ を更新しない．$f_{\tau}$ の初期値は $f_{\tau}(t{=}0)=f_{\tau,0}$ として与える．
+で更新し，更新後の $f_{\tau}$ を当該ステップの供給率（温度スケール後）に乗じる．ここで ${\rm clip}(x,a,b)\equiv\min(\max(x,a),b)$ は上下限クリップを表す．$\tau_{\rm los}$ が非有限の場合は $f_{\tau}$ を更新しない．$f_{\tau}$ の初期値は $f_{\tau}(t{=}0)=f_{\tau,0}$ として与える．
 
 #### 3.1.2 温度カップリング (Supply Temperature)
 
-供給率が火星温度 $T_{\rm M}(t)$ に連動すると仮定する場合，温度倍率 $f_T(t)$ を導入し，混合後の供給率に乗じる．解析式によるスケーリング（scale）では
+供給率が火星温度 $T_M(t)$ に連動すると仮定する場合，温度倍率 $f_T(t)$ を導入し，混合後の供給率に乗じる．解析式によるスケーリング（scale）では
 \begin{equation}
-f_T(t)=\mathrm{clip}\!\left(f_{T,\rm ref}\left(\frac{T_{\rm M}(t)}{T_{\rm ref}}\right)^{\alpha_T},\,f_{T,\min},\,f_{T,\max}\right)
+f_T(t)={\rm clip}\!\left(f_{T,\rm ref}\left(\frac{T_M(t)}{T_{\rm ref}}\right)^{\alpha_T},\,f_{T,\min},\,f_{T,\max}\right)
 \end{equation}
 とし，$T_{\rm ref}$ は基準温度，$\alpha_T$ は温度感度指数，$f_{T,\rm ref}$ は $T_{\rm ref}$ における倍率，$f_{T,\min},f_{T,\max}$ は上下限である．
 
-外部テーブル（table）を用いる場合は，$T_{\rm M}$ をキーとして値 $y(T_{\rm M})$ を線形補間で読み出す．テーブル値の解釈には，(i) $y$ を倍率として扱い，上式の $\mathrm{clip}$ と同様に上下限を適用して $f_T$ を与える（`value_kind=scale`），(ii) $y$ を供給率そのもの（面密度生成率）として用い，$R_{\rm base}$ と $\epsilon_{\rm mix}$ による名目供給を上書きする（`value_kind=rate`），の2通りを区別する．
+外部テーブル（table）を用いる場合は，$T_M$ をキーとして値 $y(T_M)$ を線形補間で読み出す．テーブル値の解釈には，(i) $y$ を倍率として扱い，上式の ${\rm clip}$ と同様に上下限を適用して $f_T$ を与える（`value_kind=scale`），(ii) $y$ を供給率そのもの（面密度生成率）として用い，$R_{\rm base}$ と $\epsilon_{\rm mix}$ による名目供給を上書きする（`value_kind=rate`），の2通りを区別する．
 
 #### 3.1.3 リザーバと深層ミキシング
 
@@ -167,6 +167,6 @@ F_k=\frac{\dot{\Sigma}_{\rm in}\,\tilde{w}_k}{\sum_j m_j\tilde{w}_j}
 
 注入モードは PSD 形状の境界条件として働くため，供給率とビン解像度（特に $s_{\min,\rm eff}$ 近傍）の整合が結果に直接影響する．感度試験では注入指数 $q$ や注入サイズ範囲を変化させ，ブローアウト近傍の wavy 構造や質量収支への影響を評価する．
 
-本節で用いた各パラメータ（$\tau_{\rm tar},k_{\tau},t_{\rm resp},T_{\rm ref},\alpha_T,N_{\rm mix},q,s_{\rm inj,min},s_{\rm inj,max}$ など）と対応する設定項目は，付録Bの表\ref{tab:supply_feedback_settings}〜表\ref{tab:supply_injection_settings}に一覧する．
+本節で用いた各パラメータ（$\tau_{\rm tar},k_{\tau},t_{\rm resp},T_{\rm ref},\alpha_T,N_{\rm mix},q,s_{\rm inj,min},s_{\rm inj,max}$ など）と対応する設定項目は，付録Bの表\ref{tab:app_supply_feedback_settings}〜表\ref{tab:app_supply_injection_settings}に一覧する．
 
 以上により，本節で定義した供給率 $\dot{\Sigma}_{\rm in}(t,r)$ は，式\ref{eq:supply_injection_definition}により PSD 方程式の注入項 $F_k(t,r)$ として与えられる．次章では，衝突カスケードと破片生成の支配式を示し，$F_k$ を含む Smoluchowski 方程式を数値的に時間積分する方法を定義する．
