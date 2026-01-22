@@ -5,12 +5,12 @@
       "short": "Hyodo et al. (2018)",
       "title": "On the Impact Origin of Phobos and Deimos. IV. Volatile Depletion",
       "doi": "10.3847/1538-4357/aac024",
-      "bibtex": "@article{Hyodo2018_ApJ860_150, journal = {ApJ}, volume = {860}, pages = {150}, year = {2018}}",
+      "bibtex": "@article{Hyodo2018_ApJ860_150, title = {On the Impact Origin of Phobos and Deimos. IV. Volatile Depletion}, author = {Hyodo et al.}, journal = {ApJ}, volume = {860}, pages = {150}, year = {2018}}",
       "adopted_scope": "Post-impact radiative cooling and volatile loss for gas-poor Martian debris disks.",
       "claims": [
-        "Equations (2)\u2013(4) provide the radiative-slab cooling law used for Mars surface temperatures (E.042).",
-        "Equations (5)\u2013(6) relate particle temperature, \u27e8Q_abs\u27e9, and the dilution factor \u221a(R_p/2r) (E.043).",
-        "Discusses the few-orbit volatile escape and \u03b2-threshold regimes adopted by the simulation.",
+        "Equations (2)–(4) provide the radiative-slab cooling law used for Mars surface temperatures (E.042).",
+        "Equations (5)–(6) relate particle temperature, ⟨Q_abs⟩, and the dilution factor √(R_p/2r) (E.043).",
+        "Discusses the few-orbit volatile escape and β-threshold regimes adopted by the simulation.",
         "Serves as the primary citation for siO2_disk_cooling.tmars/tp_of_rt and radiation.grain_temperature_graybody."
       ]
     },
@@ -19,11 +19,11 @@
       "short": "Hyodo et al. (2017a)",
       "title": "On the Impact Origin of Phobos and Deimos I: Thermodynamic and Physical Aspects",
       "doi": "10.3847/1538-4357/aa80e4",
-      "bibtex": "@article{Hyodo2017a_ApJ845_125, journal = {ApJ}, volume = {845}, pages = {125}, year = {2017}}",
+      "bibtex": "@article{Hyodo2017a_ApJ845_125, title = {On the Impact Origin of Phobos and Deimos I: Thermodynamic and Physical Aspects}, author = {Hyodo et al.}, journal = {ApJ}, volume = {845}, pages = {125}, year = {2017}}",
       "adopted_scope": "Initial conditions of Martian debris disks immediately after the giant impact (molten-rich).",
       "claims": [
         "Shows the disk consists of >95 wt% melt and <5 wt% vapor at ~2000 K right after impact.",
-        "Links eccentric orbits and particle-size cascades from meter-scale fragments down to 100 \u00b5m\u20130.1 \u00b5m grains."
+        "Links eccentric orbits and particle-size cascades from meter-scale fragments down to 100 µm–0.1 µm grains."
       ]
     },
     {
@@ -31,7 +31,7 @@
       "short": "Hyodo et al. (2017b)",
       "title": "On the Impact Origin of Phobos and Deimos II: True Polar Wander and Disk Evolution",
       "doi": "10.3847/1538-4357/aa9cec",
-      "bibtex": "@article{Hyodo2017b_ApJ851_122, journal = {ApJ}, volume = {851}, pages = {122}, year = {2017}}",
+      "bibtex": "@article{Hyodo2017b_ApJ851_122, title = {On the Impact Origin of Phobos and Deimos II: True Polar Wander and Disk Evolution}, author = {Hyodo et al.}, journal = {ApJ}, volume = {851}, pages = {122}, year = {2017}}",
       "adopted_scope": "Dynamical relaxation of the post-impact disk, including J2-driven precession and inelastic damping.",
       "claims": [
         "Shows how J2 precession coupled with inelastic collisions circularises the disk inside the Roche limit.",
@@ -43,7 +43,7 @@
       "short": "Pignatale et al. (2018)",
       "title": "On the Impact Origin of Phobos and Deimos III: Resulting Composition from Different Impactors",
       "doi": "10.3847/1538-4357/aaa5b2",
-      "bibtex": "@article{Pignatale2018_ApJ853_118, journal = {ApJ}, volume = {853}, pages = {118}, year = {2018}}",
+      "bibtex": "@article{Pignatale2018_ApJ853_118, title = {On the Impact Origin of Phobos and Deimos III: Resulting Composition from Different Impactors}, author = {Pignatale et al.}, journal = {ApJ}, volume = {853}, pages = {118}, year = {2018}}",
       "adopted_scope": "Chemical contrasts between gas-phase condensates and quenched melts in Martian impact disks.",
       "claims": [
         "Explores how vapor condensates and molten-solidified grains diverge compositionally depending on the impactor.",
@@ -55,10 +55,10 @@
       "short": "Fegley & Schaefer (2012)",
       "title": "Chemistry of impact-generated silicate vapors (MAGMA calculations)",
       "doi": "10.1016/j.epsl.2012.06.015",
-      "bibtex": "@article{FegleySchaefer2012_arXiv, journal = {arXiv}, year = {2012}}",
+      "bibtex": "@article{FegleySchaefer2012_arXiv, title = {Chemistry of impact-generated silicate vapors (MAGMA calculations)}, author = {Fegley and Schaefer}, journal = {arXiv}, year = {2012}}",
       "adopted_scope": "Provides MAGMA equilibrium vapour pressures for molten SiO2; supplies the Clausius fit log10 P[Pa] = 13.203 - 25898.9/T used as the HKL liquid branch.",
       "claims": [
-        "Reports equilibrium vapour pressures for molten silica and coexisting gas over 2000\u20133000 K.",
+        "Reports equilibrium vapour pressures for molten silica and coexisting gas over 2000–3000 K.",
         "Shows SiO dominates the vapour composition in the hot melt regime, justifying reuse of the SiO molar mass in HKL."
       ]
     },
@@ -67,11 +67,11 @@
       "short": "van Lieshout et al. (2014)",
       "title": "Dusty tails of evaporating exoplanets: I. Constraints on the dust composition",
       "doi": "10.1051/0004-6361/201424876",
-      "bibtex": "@article{VanLieshoutMinDominik2014_AA572_A76, title = {Dusty tails of evaporating exoplanets: I. Constraints on the dust composition}, author = {van Lieshout, R. and Min, M. and Dominik, C.}, journal = {A\\\\&A}, volume = {572}, pages = {A76}, year = {2014}, doi = {10.1051/0004-6361/201424876}}",
-      "adopted_scope": "Forsterite material density and HKL (Hertz\u2013Knudsen\u2013Langmuir) sublimation parameters used as defaults in run_sweep and sublimation provenance tables.",
+      "bibtex": "@article{VanLieshoutMinDominik2014_AA572_A76, title = {Dusty tails of evaporating exoplanets: I. Constraints on the dust composition}, author = {van Lieshout, R. and Min, M. and Dominik, C.}, journal = {A\\&A}, volume = {572}, pages = {A76}, year = {2014}, doi = {10.1051/0004-6361/201424876}}",
+      "adopted_scope": "Forsterite material density and HKL (Hertz–Knudsen–Langmuir) sublimation parameters used as defaults in run_sweep and sublimation provenance tables.",
       "claims": [
-        "Table 2 lists bulk densities for the dust species considered, including crystalline forsterite with \u03c1d = 3.27 g cm\u22123.",
-        "Table 3 tabulates sublimation characteristics for crystalline forsterite, including \u03bc = 140.694 g mol\u22121, \u03b1 = 0.1, and the vapor-pressure fit pv = exp(\u2212A/T + B) dyn cm\u22122 with A = 65308 and B = 34.1 over 1673\u20132133 K.",
+        "Table 2 lists bulk densities for the dust species considered, including crystalline forsterite with ρd = 3.27 g cm−3.",
+        "Table 3 tabulates sublimation characteristics for crystalline forsterite, including μ = 140.694 g mol−1, α = 0.1, and the vapor-pressure fit pv = exp(−A/T + B) dyn cm−2 with A = 65308 and B = 34.1 over 1673–2133 K.",
         "Equation (12) defines the HKL mass flux J(T) used to convert vapor pressure into a sublimation mass flux."
       ]
     },
@@ -80,7 +80,7 @@
       "short": "Visscher & Fegley (2013)",
       "title": "Chemistry of impact-generated silicate melt-vapor debris disks",
       "doi": "10.1088/2041-8205/767/1/L12",
-      "bibtex": "@article{VisscherFegley2013_arXiv, journal = {arXiv}, year = {2013}}",
+      "bibtex": "@article{VisscherFegley2013_arXiv, title = {Chemistry of impact-generated silicate melt-vapor debris disks}, author = {Visscher and Fegley}, journal = {arXiv}, year = {2013}}",
       "adopted_scope": "Independent MAGMA equilibrium runs for molten silica + vapor; corroborates the molten SiO2 vapour-pressure fit adopted for the HKL liquid branch.",
       "claims": [
         "Derives a Clausius-style fit for the total vapour pressure of molten SiO2 consistent with Fegley & Schaefer (2012).",
@@ -92,7 +92,7 @@
       "short": "Ronnet et al. (2016)",
       "title": "Reconciling the orbital and physical properties of the Martian moons with a giant impact origin",
       "doi": "10.3847/0004-637X/828/2/109",
-      "bibtex": "@article{Ronnet2016_ApJ828_109, journal = {ApJ}, volume = {828}, pages = {109}, year = {2016}}",
+      "bibtex": "@article{Ronnet2016_ApJ828_109, title = {Reconciling the orbital and physical properties of the Martian moons with a giant impact origin}, author = {Ronnet et al.}, journal = {ApJ}, volume = {828}, pages = {109}, year = {2016}}",
       "adopted_scope": "Condensation and spectral signatures of dust condensing in the outer gas envelope of a Martian impact disk.",
       "claims": [
         "Argues that condensation in the outer tenuous gas envelope best matches the observed spectra of Phobos/Deimos.",
@@ -104,7 +104,7 @@
       "short": "Crida & Charnoz (2012)",
       "title": "Formation of Regular Satellites from Ancient Massive Rings",
       "doi": "10.1126/science.1226477",
-      "bibtex": "@article{CridaCharnoz2012_Science338_1196, journal = {Science}, volume = {338}, pages = {1196-1199}, year = {2012}}",
+      "bibtex": "@article{CridaCharnoz2012_Science338_1196, title = {Formation of Regular Satellites from Ancient Massive Rings}, author = {Crida and Charnoz}, journal = {Science}, volume = {338}, pages = {1196-1199}, year = {2012}}",
       "adopted_scope": "Viscous spreading regimes of dense rings near the Roche limit and their satellite-feeding outcomes.",
       "claims": [
         "Slow diffusion leads to trains of growing satellites with mass increasing with orbital distance.",
@@ -116,10 +116,10 @@
       "short": "Salmon et al. (2010)",
       "title": "Long-term and large-scale viscous evolution of dense planetary rings",
       "doi": "10.1016/j.icarus.2010.05.030",
-      "bibtex": "@article{SalmonCharnozBrahic2010_Icarus209_771, journal = {Icarus}, volume = {209}, pages = {771-785}, year = {2010}}",
-      "adopted_scope": "Viscous diffusion of Roche-interior fluid disks with \u03bd \u221d \u03a3\u00b2 scaling relevant to massive inner rings.",
+      "bibtex": "@article{SalmonCharnozBrahic2010_Icarus209_771, title = {Long-term and large-scale viscous evolution of dense planetary rings}, author = {Salmon et al.}, journal = {Icarus}, volume = {209}, pages = {771-785}, year = {2010}}",
+      "adopted_scope": "Viscous diffusion of Roche-interior fluid disks with ν ∝ Σ² scaling relevant to massive inner rings.",
       "claims": [
-        "Shows how initial \u03a3(r) choices control spreading time and mass delivery beyond the Roche limit.",
+        "Shows how initial Σ(r) choices control spreading time and mass delivery beyond the Roche limit.",
         "Provides analytic normalisations for mapping total ring mass to surface density profiles."
       ]
     },
@@ -128,10 +128,10 @@
       "short": "Salmon & Canup (2012)",
       "title": "Lunar accretion from a Roche-interior fluid disk",
       "doi": "10.1088/0004-637X/760/1/83",
-      "bibtex": "@article{SalmonCanup2012_ApJ760_83, journal = {ApJ}, volume = {760}, pages = {83}, year = {2012}}",
+      "bibtex": "@article{SalmonCanup2012_ApJ760_83, title = {Lunar accretion from a Roche-interior fluid disk}, author = {Salmon and Canup}, journal = {ApJ}, volume = {760}, pages = {83}, year = {2012}}",
       "adopted_scope": "Satellite growth fed by viscously spreading Roche-interior disks.",
       "claims": [
-        "Uses uniform/power-law \u03a3(r) prescriptions tied to total disk mass when initializing fluid disks.",
+        "Uses uniform/power-law Σ(r) prescriptions tied to total disk mass when initializing fluid disks.",
         "Links disk mass fraction to moon-forming mass fluxes across the Roche limit."
       ]
     },
@@ -140,10 +140,10 @@
       "short": "Canup & Salmon (2018)",
       "title": "Origin of Phobos and Deimos by the impact of a Vesta-to-Ceres-sized body with Mars",
       "doi": "10.1126/sciadv.aar6887",
-      "bibtex": "@article{CanupSalmon2018_SciAdv4_eaar6887, journal = {Science Advances}, volume = {4}, pages = {eaar6887}, year = {2018}}",
+      "bibtex": "@article{CanupSalmon2018_SciAdv4_eaar6887, title = {Origin of Phobos and Deimos by the impact of a Vesta-to-Ceres-sized body with Mars}, author = {Canup and Salmon}, journal = {Science Advances}, volume = {4}, pages = {eaar6887}, year = {2018}}",
       "adopted_scope": "Constraints on disk mass and planetary tidal parameters required for Phobos/Deimos survival.",
       "claims": [
-        "Small moons survive only when M_disk \u2264 3\u00d710\u207b\u2075 M_Mars and the tidal parameter (Q/k\u2082) < 80 (Fig. 2).",
+        "Small moons survive only when M_disk ≤ 3×10⁻⁵ M_Mars and the tidal parameter (Q/k₂) < 80 (Fig. 2).",
         "Establishes the low-mass, low-gas default assumed in configs and analysis recipes."
       ]
     },
@@ -152,20 +152,20 @@
       "short": "Strubbe & Chiang (2006)",
       "title": "Dust Dynamics, Surface Brightness Profiles, and Thermal Spectra of Debris Disks: The Case of AU Mic",
       "doi": "10.1086/505736",
-      "bibtex": "@article{StrubbeChiang2006_ApJ648_652, journal = {ApJ}, volume = {648}, pages = {652-665}, year = {2006}}",
+      "bibtex": "@article{StrubbeChiang2006_ApJ648_652, title = {Dust Dynamics, Surface Brightness Profiles, and Thermal Spectra of Debris Disks: The Case of AU Mic}, author = {Strubbe and Chiang}, journal = {ApJ}, volume = {648}, pages = {652-665}, year = {2006}}",
       "adopted_scope": "Optically thin, gas-poor debris disks where radiation pressure and CPR drag set the small-grain budget.",
       "claims": [
-        "Equation (1) gives the collisional time-scale t_c = 1/(\u03a9 \u03c4_\u22a5) adopted in S1 surface updates and (E.006).",
-        "Defines \u03b2(s), the \u03b2 = 0.5 blow-out limit, and the type A/B regimes with \u03c4(r) \u221d r^{-5/2} or r^{-3/2}.",
+        "Equation (1) gives the collisional time-scale t_c = 1/(Ω τ_⊥) adopted in S1 surface updates and (E.006).",
+        "Defines β(s), the β = 0.5 blow-out limit, and the type A/B regimes with τ(r) ∝ r^{-5/2} or r^{-3/2}.",
         "Provides the gas-poor baseline for radiation.beta, blowout_radius, and related diagnostics; Wyatt (2008) is retained as a review-only cross-check."
       ]
     },
     {
       "key": "PawellekKrivov2015_MNRAS454_3207",
       "short": "Pawellek & Krivov (2015)",
-      "title": "The dust grain size\u2013stellar luminosity trend in debris discs",
+      "title": "The dust grain size–stellar luminosity trend in debris discs",
       "doi": "10.1093/mnras/stv2142",
-      "bibtex": "@article{PawellekKrivov2015_MNRAS454_3207, journal = {MNRAS}, volume = {454}, pages = {3207-3221}, year = {2015}}",
+      "bibtex": "@article{PawellekKrivov2015_MNRAS454_3207, title = {The dust grain size–stellar luminosity trend in debris discs}, author = {Pawellek and Krivov}, journal = {MNRAS}, volume = {454}, pages = {3207-3221}, year = {2015}}",
       "adopted_scope": "Observationally calibrated blow-out sizes that apply the Burns beta expression with measured Q_pr and beta=0.5 as the bound/unbound threshold.",
       "claims": [
         "Implements the beta=0.5 blow-out size using Q_pr tables across stellar luminosities, matching the Burns (1979) formulation.",
@@ -177,7 +177,7 @@
       "short": "Takeuchi & Lin (2003)",
       "title": "Dust Outflows in Optically Thick Gas Disks",
       "doi": "10.1086/376496",
-      "bibtex": "@article{TakeuchiLin2003_ApJ593_524, journal = {ApJ}, volume = {593}, pages = {524-533}, year = {2003}}",
+      "bibtex": "@article{TakeuchiLin2003_ApJ593_524, title = {Dust Outflows in Optically Thick Gas Disks}, author = {Takeuchi and Lin}, journal = {ApJ}, volume = {593}, pages = {524-533}, year = {2003}}",
       "adopted_scope": "Optically thick, gas-rich disk surfaces where stellar radiation pressure couples with gas drag to drive flows.",
       "claims": [
         "Derives the TL2003 surface-layer ODE referenced only when ALLOW_TL2003=true.",
@@ -189,7 +189,7 @@
       "short": "Pollack, Burns & Tauber (1979)",
       "title": "Gas drag in primordial circumplanetary envelopes: A mechanism for satellite capture",
       "doi": "10.1016/0019-1035(79)90016-2",
-      "bibtex": "@article{PollackBurnsTauber1979_Icarus37_587, journal = {Icarus}, volume = {37}, pages = {587-611}, year = {1979}}",
+      "bibtex": "@article{PollackBurnsTauber1979_Icarus37_587, title = {Gas drag in primordial circumplanetary envelopes: A mechanism for satellite capture}, author = {Pollack, Burns and Tauber}, journal = {Icarus}, volume = {37}, pages = {587-611}, year = {1979}}",
       "adopted_scope": "High-density circumplanetary gas envelopes where drag rapidly damps passing bodies.",
       "claims": [
         "Computes gas densities required for aerodynamic capture of km-scale bodies in proto-satellite envelopes.",
@@ -201,7 +201,7 @@
       "short": "Hunten (1979)",
       "title": "Capture of Phobos and Deimos by protoatmospheric drag",
       "doi": "10.1016/0019-1035(79)90119-2",
-      "bibtex": "@article{Hunten1979_Icarus37_113, journal = {Icarus}, volume = {37}, pages = {113-123}, year = {1979}}",
+      "bibtex": "@article{Hunten1979_Icarus37_113, title = {Capture of Phobos and Deimos by protoatmospheric drag}, author = {Hunten}, journal = {Icarus}, volume = {37}, pages = {113-123}, year = {1979}}",
       "adopted_scope": "Mars protoatmosphere drag capture estimates for small satellites.",
       "claims": [
         "Shows that only dense protoatmospheres (near MMSN levels) can capture Phobos/Deimos by drag.",
@@ -213,10 +213,10 @@
       "short": "Olofsson et al. (2022)",
       "title": "The vertical structure of debris discs and the impact of gas",
       "doi": "10.1093/mnras/stac455",
-      "bibtex": "@article{Olofsson2022_MNRAS513_713, journal = {MNRAS}, volume = {513}, pages = {713-731}, year = {2022}}",
-      "adopted_scope": "Gas\u2013dust coupling in debris disks at low gas surface densities.",
+      "bibtex": "@article{Olofsson2022_MNRAS513_713, title = {The vertical structure of debris discs and the impact of gas}, author = {Olofsson et al.}, journal = {MNRAS}, volume = {513}, pages = {713-731}, year = {2022}}",
+      "adopted_scope": "Gas–dust coupling in debris disks at low gas surface densities.",
       "claims": [
-        "Shows that when gas \u03a3 is low, drag times exceed collisional times and radiation pressure dominates small-grain dynamics.",
+        "Shows that when gas Σ is low, drag times exceed collisional times and radiation pressure dominates small-grain dynamics.",
         "Provides the gas-poor baseline justifying enable_gas_drag=false unless dense gas is imposed."
       ]
     },
@@ -225,10 +225,10 @@
       "short": "Kuramoto (2024)",
       "title": "Origin of Phobos and Deimos Awaiting Direct Exploration",
       "doi": "10.1146/annurev-earth-031621-064742",
-      "bibtex": "@article{Kuramoto2024, journal = {Annual Review of Earth and Planetary Sciences}, volume = {52}, pages = {495-519}, year = {2024}}",
+      "bibtex": "@article{Kuramoto2024, title = {Origin of Phobos and Deimos Awaiting Direct Exploration}, author = {Kuramoto}, journal = {Annual Review of Earth and Planetary Sciences}, volume = {52}, pages = {495-519}, year = {2024}}",
       "adopted_scope": "Mission context for MMX and the comparative analysis of capture vs impact hypotheses.",
       "claims": [
-        "Summarises observational requirements feeding \u03b2/mass-loss scans.",
+        "Summarises observational requirements feeding β/mass-loss scans.",
         "Sets expectations for gas-poor vs capture interpretations."
       ]
     },
@@ -237,10 +237,10 @@
       "short": "Wyatt (2008)",
       "title": "Evolution of Debris Disks",
       "doi": "10.1146/annurev.astro.45.051806.110525",
-      "bibtex": "@article{Wyatt2008, journal = {ARA\\\\&A}, volume = {46}, pages = {339-383}, year = {2008}}",
+      "bibtex": "@article{Wyatt2008, title = {Evolution of Debris Disks}, author = {Wyatt}, journal = {ARA\\&A}, volume = {46}, pages = {339-383}, year = {2008}}",
       "adopted_scope": "Collisional cascades in optically thin debris disks.",
       "claims": [
-        "Provides historical context for t_coll \u2248 T_orb/(4\u03c0 \u03c4) scaling used before adopting Strubbe & Chiang.",
+        "Provides historical context for t_coll ≈ T_orb/(4π τ) scaling used before adopting Strubbe & Chiang.",
         "Governs qualitative stability tests in surface-layer IMEX steps."
       ]
     },
@@ -249,7 +249,7 @@
       "short": "Wyatt, Clarke & Booth (2011)",
       "title": "Debris disk size distributions: steady state collisional evolution with Poynting-Robertson drag and other loss processes",
       "doi": "10.1007/s10569-011-9345-3",
-      "bibtex": "@article{WyattClarkeBooth2011_CeMDA111_1, journal = {Celestial Mechanics and Dynamical Astronomy}, volume = {111}, pages = {1-28}, year = {2011}}",
+      "bibtex": "@article{WyattClarkeBooth2011_CeMDA111_1, title = {Debris disk size distributions: steady state collisional evolution with Poynting-Robertson drag and other loss processes}, author = {Wyatt, Clarke and Booth}, journal = {Celestial Mechanics and Dynamical Astronomy}, volume = {111}, pages = {1-28}, year = {2011}}",
       "adopted_scope": "Analytic steady-state size distributions balancing supply terms against collisional and PR-drag losses.",
       "claims": [
         "Provides source-plus-loss balance equations per size bin that are generalised in supply.mode implementations.",
@@ -262,19 +262,19 @@
       "short": "Birnstiel et al. (2011)",
       "title": "Dust size distributions in coagulation/fragmentation equilibrium: numerical solutions and analytical fits",
       "doi": "10.1051/0004-6361/201015228",
-      "bibtex": "@article{Birnstiel2011_AA525_A11, journal = {A\\\\&A}, volume = {525}, pages = {A11}, year = {2011}}",
+      "bibtex": "@article{Birnstiel2011_AA525_A11, title = {Dust size distributions in coagulation/fragmentation equilibrium: numerical solutions and analytical fits}, author = {Birnstiel et al.}, journal = {A\\&A}, volume = {525}, pages = {A11}, year = {2011}}",
       "adopted_scope": "Grid-resolution and slope requirements for coagulation/fragmentation equilibria in disks.",
       "claims": [
-        "Recommends logarithmic spacing with a_{i+1}/a_i \u2272 1.1\u20131.2 to resolve steady-state PSDs without bias.",
-        "Demonstrates how coarse binning suppresses small-grain production, motivating \u226540 bins over 6\u20137 decades."
+        "Recommends logarithmic spacing with a_{i+1}/a_i ≲ 1.1–1.2 to resolve steady-state PSDs without bias.",
+        "Demonstrates how coarse binning suppresses small-grain production, motivating ≥40 bins over 6–7 decades."
       ]
     },
     {
       "key": "ThebaultAugereau2007_AA472_169",
-      "short": "Th\u00e9bault & Augereau (2007)",
+      "short": "Thébault & Augereau (2007)",
       "title": "Collisional processes and size distribution in spatially extended debris discs",
       "doi": "10.1051/0004-6361:20077709",
-      "bibtex": "@article{ThebaultAugereau2007_AA472_169, journal = {A\\\\&A}, volume = {472}, pages = {169-185}, year = {2007}}",
+      "bibtex": "@article{ThebaultAugereau2007_AA472_169, title = {Collisional processes and size distribution in spatially extended debris discs}, author = {Thébault and Augereau}, journal = {A\\&A}, volume = {472}, pages = {169-185}, year = {2007}}",
       "adopted_scope": "Wavy PSD structures induced by blow-out and collisional processing in debris disks.",
       "claims": [
         "Shows blow-out cut-offs imprint oscillatory 'wavy' patterns on PSDs that require fine binning to resolve.",
@@ -286,11 +286,11 @@
       "short": "Dohnanyi (1969)",
       "title": "Collisional Model of Asteroids and Their Debris",
       "doi": "10.1029/JB074i010p02531",
-      "bibtex": "@article{Dohnanyi1969_JGR74_2531, journal = {J. Geophys. Res.}, volume = {74}, pages = {2531-2554}, year = {1969}}",
-      "adopted_scope": "Self-similar collisional cascades yielding the canonical n(a) \u221d a^{-3.5} slope.",
+      "bibtex": "@article{Dohnanyi1969_JGR74_2531, title = {Collisional Model of Asteroids and Their Debris}, author = {Dohnanyi}, journal = {J. Geophys. Res.}, volume = {74}, pages = {2531-2554}, year = {1969}}",
+      "adopted_scope": "Self-similar collisional cascades yielding the canonical n(a) ∝ a^{-3.5} slope.",
       "claims": [
         "Derives the steady-state differential size distribution with slope q = 3.5 used as the PSD baseline.",
-        "Provides the reference exponent for \u03b1\u22481.83 in the configuration defaults."
+        "Provides the reference exponent for α≈1.83 in the configuration defaults."
       ]
     },
     {
@@ -298,7 +298,7 @@
       "short": "Krijt & Kama (2014)",
       "title": "A dearth of small particles in debris disks",
       "doi": "10.1051/0004-6361/201423862",
-      "bibtex": "@article{KrijtKama2014_AA566_L2, journal = {A\\\\&A}, volume = {566}, pages = {L2}, year = {2014}}",
+      "bibtex": "@article{KrijtKama2014_AA566_L2, title = {A dearth of small particles in debris disks}, author = {Krijt and Kama}, journal = {A\\&A}, volume = {566}, pages = {L2}, year = {2014}}",
       "adopted_scope": "Conditions under which blow-out or collisions truncate the PSD above the nominal blow-out size.",
       "claims": [
         "Shows regimes where collisional grinding or drag outcompetes blow-out, raising the minimum grain size.",
@@ -310,7 +310,7 @@
       "short": "Estrada & Durisen (2015)",
       "title": "Combined structural and compositional evolution of planetary rings due to micrometeoroid impacts and ballistic transport",
       "doi": "10.1016/j.icarus.2015.02.005",
-      "bibtex": "@article{EstradaDurisen2015_Icarus252_415, journal = {Icarus}, volume = {252}, pages = {415-439}, year = {2015}}",
+      "bibtex": "@article{EstradaDurisen2015_Icarus252_415, title = {Combined structural and compositional evolution of planetary rings due to micrometeoroid impacts and ballistic transport}, author = {Estrada and Durisen}, journal = {Icarus}, volume = {252}, pages = {415-439}, year = {2015}}",
       "adopted_scope": "Ballistic transport and mixing of meteoroid ejecta across dense planetary rings.",
       "claims": [
         "Introduces mixing-efficiency factors that motivate epsilon_mix in external supply parameterisations.",
@@ -322,7 +322,7 @@
       "short": "Cuzzi & Estrada (1998)",
       "title": "Compositional Evolution of Saturn's Rings Due to Meteoroid Bombardment",
       "doi": "10.1006/icar.1997.5863",
-      "bibtex": "@article{CuzziEstrada1998_Icarus132_1, journal = {Icarus}, volume = {132}, pages = {1-35}, year = {1998}}",
+      "bibtex": "@article{CuzziEstrada1998_Icarus132_1, title = {Compositional Evolution of Saturn's Rings Due to Meteoroid Bombardment}, author = {Cuzzi and Estrada}, journal = {Icarus}, volume = {132}, pages = {1-35}, year = {1998}}",
       "adopted_scope": "Review of meteoroid supply, ballistic transport, and compositional mixing in dense rings.",
       "claims": [
         "Summarises external flux estimates and redistribution efficiencies used to motivate epsilon_mix.",
@@ -334,7 +334,7 @@
       "short": "Burns et al. (1979)",
       "title": "Radiation forces on small particles in the solar system",
       "doi": "10.1016/0019-1035(79)90050-2",
-      "bibtex": "@article{Burns1979_Icarus40_1, journal = {Icarus}, volume = {40}, pages = {1-48}, year = {1979}}",
+      "bibtex": "@article{Burns1979_Icarus40_1, title = {Radiation forces on small particles in the solar system}, author = {Burns et al.}, journal = {Icarus}, volume = {40}, pages = {1-48}, year = {1979}}",
       "adopted_scope": "Classical treatment of Q_pr, beta, and blow-out sizes for small particles under solar-system radiation forces.",
       "claims": [
         "Defines the radiation-to-gravity ratio beta and connects it to blow-out limits and the Planck-mean efficiency Q_pr.",
@@ -346,7 +346,7 @@
       "short": "Lissauer & Stewart (1993)",
       "title": "Growth of Planets from Planetesimals",
       "doi": "",
-      "bibtex": "@incollection{LissauerStewart1993_PP3, booktitle = {Protostars and Planets III}, year = {1993}, author = {Lissauer, J. J. and Stewart, G. R.}}",
+      "bibtex": "@incollection{LissauerStewart1993_PP3, title = {Growth of Planets from Planetesimals}, booktitle = {Protostars and Planets III}, year = {1993}, author = {Lissauer, J. J. and Stewart, G. R.}}",
       "adopted_scope": "Review of planetesimal dynamics and relative velocities under Rayleigh-distributed eccentricities and inclinations.",
       "claims": [
         "Presents the low-e, low-i relative velocity scaling v_rel = v_K sqrt(1.25 e^2 + i^2) used for debris disks and rings."
@@ -357,10 +357,10 @@
       "short": "Wetherill & Stewart (1993)",
       "title": "Formation of planetary embryos: efficiencies of accretion and fragmentation",
       "doi": "10.1006/icar.1993.1161",
-      "bibtex": "@article{WetherillStewart1993_Icarus106_190, journal = {Icarus}, volume = {106}, pages = {190-209}, year = {1993}}",
+      "bibtex": "@article{WetherillStewart1993_Icarus106_190, title = {Formation of planetary embryos: efficiencies of accretion and fragmentation}, author = {Wetherill and Stewart}, journal = {Icarus}, volume = {106}, pages = {190-209}, year = {1993}}",
       "adopted_scope": "Planetesimal collision rates and relative velocities in the low-e, low-i regime.",
       "claims": [
-        "Uses the v_rel \u2248 v_K sqrt(1.25 e^2 + i^2) scaling for Rayleigh-distributed eccentricities and inclinations."
+        "Uses the v_rel ≈ v_K sqrt(1.25 e^2 + i^2) scaling for Rayleigh-distributed eccentricities and inclinations."
       ]
     },
     {
@@ -368,10 +368,10 @@
       "short": "Ida & Makino (1992)",
       "title": "N-body simulation of gravitational interaction between planetesimals and a protoplanet",
       "doi": "10.1016/0019-1035(92)90008-U",
-      "bibtex": "@article{IdaMakino1992_Icarus96_107, journal = {Icarus}, volume = {96}, pages = {107-120}, year = {1992}}",
+      "bibtex": "@article{IdaMakino1992_Icarus96_107, title = {N-body simulation of gravitational interaction between planetesimals and a protoplanet}, author = {Ida and Makino}, journal = {Icarus}, volume = {96}, pages = {107-120}, year = {1992}}",
       "adopted_scope": "Low-eccentricity planetesimal dynamics and the e-i relation used in relative-velocity estimates.",
       "claims": [
-        "Adopts the low-e, low-i relation \u27e8e^2\u27e9 = 2\u27e8i^2\u27e9 that underpins the relative-velocity coefficient."
+        "Adopts the low-e, low-i relation ⟨e^2⟩ = 2⟨i^2⟩ that underpins the relative-velocity coefficient."
       ]
     },
     {
@@ -379,7 +379,7 @@
       "short": "Imaz Blanco et al. (2023)",
       "title": "Inner edges of planetesimal belts: collisionally eroded or truncated?",
       "doi": "10.1093/mnras/stad1221",
-      "bibtex": "@article{ImazBlanco2023_MNRAS522_6150, journal = {MNRAS}, volume = {522}, pages = {6150-6169}, year = {2023}}",
+      "bibtex": "@article{ImazBlanco2023_MNRAS522_6150, title = {Inner edges of planetesimal belts: collisionally eroded or truncated?}, author = {Imaz Blanco et al.}, journal = {MNRAS}, volume = {522}, pages = {6150-6169}, year = {2023}}",
       "adopted_scope": "Debris-belt modelling that adopts the low-e, low-i relative-velocity scaling used in the code.",
       "claims": [
         "Uses v_rel = v_K sqrt(1.25 e^2 + i^2) under Rayleigh-distributed eccentricities and inclinations.",
@@ -391,8 +391,8 @@
       "short": "Krivov et al. (2006)",
       "title": "Dust distributions in debris disks: effects of gravity, radiation pressure and collisions",
       "doi": "10.1051/0004-6361:20064907",
-      "bibtex": "@article{Krivov2006_AA455_509, journal = {A\\\\&A}, volume = {455}, pages = {509-519}, year = {2006}}",
-      "adopted_scope": "n\u03c3v-style collisional cascades with Gaussian vertical structure and adaptive time stepping.",
+      "bibtex": "@article{Krivov2006_AA455_509, title = {Dust distributions in debris disks: effects of gravity, radiation pressure and collisions}, author = {Krivov et al.}, journal = {A\\&A}, volume = {455}, pages = {509-519}, year = {2006}}",
+      "adopted_scope": "nσv-style collisional cascades with Gaussian vertical structure and adaptive time stepping.",
       "claims": [
         "Derives collision kernels proportional to cross section times relative speed divided by the combined scale height.",
         "Uses adaptive time stepping and mass conservation checks for Smoluchowski solvers in debris-disk contexts."
@@ -403,7 +403,7 @@
       "short": "Thebault et al. (2003)",
       "title": "Dust production from collisions in extrasolar planetary systems",
       "doi": "10.1051/0004-6361:20031017",
-      "bibtex": "@article{Thebault2003_AA408_775, journal = {A\\\\&A}, volume = {408}, pages = {775-788}, year = {2003}}",
+      "bibtex": "@article{Thebault2003_AA408_775, title = {Dust production from collisions in extrasolar planetary systems}, author = {Thebault et al.}, journal = {A\\&A}, volume = {408}, pages = {775-788}, year = {2003}}",
       "adopted_scope": "Collisional-cascade modelling in debris disks, including erosion/fragmentation diagnostics.",
       "claims": [
         "Details collisional cascade modelling with fragmentation and cratering regimes in debris disks.",
@@ -415,7 +415,7 @@
       "short": "Benz & Asphaug (1999)",
       "title": "Catastrophic Disruptions Revisited",
       "doi": "10.1006/icar.1999.6204",
-      "bibtex": "@article{BenzAsphaug1999_Icarus142_5, journal = {Icarus}, volume = {142}, pages = {5-20}, year = {1999}}",
+      "bibtex": "@article{BenzAsphaug1999_Icarus142_5, title = {Catastrophic Disruptions Revisited}, author = {Benz and Asphaug}, journal = {Icarus}, volume = {142}, pages = {5-20}, year = {1999}}",
       "adopted_scope": "Material-dependent catastrophic disruption thresholds for rocky bodies at km/s impact speeds.",
       "claims": [
         "Provides the basalt Q*_D coefficients used in Leinhardt & Stewart style interpolations at 3 and 5 km/s."
@@ -426,7 +426,7 @@
       "short": "Leinhardt & Stewart (2012)",
       "title": "Collisions between gravity-dominated bodies. I. Outcome regimes and scaling laws",
       "doi": "10.1088/0004-637X/745/1/79",
-      "bibtex": "@article{LeinhardtStewart2012_ApJ745_79, journal = {ApJ}, volume = {745}, pages = {79}, year = {2012}}",
+      "bibtex": "@article{LeinhardtStewart2012_ApJ745_79, title = {Collisions between gravity-dominated bodies. I. Outcome regimes and scaling laws}, author = {Leinhardt and Stewart}, journal = {ApJ}, volume = {745}, pages = {79}, year = {2012}}",
       "adopted_scope": "Scaling laws and regime maps for catastrophic disruption across gravity- and strength-dominated impacts.",
       "claims": [
         "Defines the velocity-dependent interpolation between strength and gravity regimes that underpins Q*_D(s, rho, v)."
@@ -437,11 +437,11 @@
       "short": "Stewart & Leinhardt (2009)",
       "title": "Velocity-dependent catastrophic disruption criteria for planetesimals",
       "doi": "10.1088/0004-637X/691/2/L133",
-      "bibtex": "@article{StewartLeinhardt2009_ApJ691_L133, journal = {ApJ}, volume = {691}, pages = {L133-L137}, year = {2009}}",
+      "bibtex": "@article{StewartLeinhardt2009_ApJ691_L133, title = {Velocity-dependent catastrophic disruption criteria for planetesimals}, author = {Stewart and Leinhardt}, journal = {ApJ}, volume = {691}, pages = {L133-L137}, year = {2009}}",
       "adopted_scope": "Universal largest-remnant scaling and the reduced specific impact energy Q_R formalism.",
       "claims": [
-        "Introduces Q_R = 0.5 \u03bc v^2 / M_tot and the piecewise largest-remnant fraction used for disruptive impacts.",
-        "Calibrates the \u03c6<1 linear branch and \u03c6\u22651 power-law branch adopted in our F2 fragment model."
+        "Introduces Q_R = 0.5 μ v^2 / M_tot and the piecewise largest-remnant fraction used for disruptive impacts.",
+        "Calibrates the φ<1 linear branch and φ≥1 power-law branch adopted in our F2 fragment model."
       ]
     },
     {
@@ -449,10 +449,10 @@
       "short": "Ohtsuki et al. (2002)",
       "title": "Evolution of Planetesimal Velocities Based on Three-Body Orbital Integrations and Growth of Protoplanets",
       "doi": "10.1006/icar.2001.6741",
-      "bibtex": "@article{Ohtsuki2002_Icarus155_436, journal = {Icarus}, volume = {155}, pages = {436-453}, year = {2002}}",
+      "bibtex": "@article{Ohtsuki2002_Icarus155_436, title = {Evolution of Planetesimal Velocities Based on Three-Body Orbital Integrations and Growth of Protoplanets}, author = {Ohtsuki et al.}, journal = {Icarus}, volume = {155}, pages = {436-453}, year = {2002}}",
       "adopted_scope": "Three-body orbital integration study of relative velocity evolution and gravitational stirring in low-e, low-i planetesimal disks.",
       "claims": [
-        "Provides the v_rel \u2248 v_K sqrt(1.25 e^2 + i^2) scaling used for mutual velocities.",
+        "Provides the v_rel ≈ v_K sqrt(1.25 e^2 + i^2) scaling used for mutual velocities.",
         "Describes collisional cooling vs. shear heating balance that motivates the fixed-point iteration for c_eq."
       ]
     },
@@ -461,7 +461,7 @@
       "short": "Takeuchi & Lin (2002)",
       "title": "Radial Flow of Dust Particles in Accretion Disks",
       "doi": "10.1086/344430",
-      "bibtex": "@article{TakeuchiLin2002_ApJ581_1344, journal = {ApJ}, volume = {581}, pages = {1344-1355}, year = {2002}}",
+      "bibtex": "@article{TakeuchiLin2002_ApJ581_1344, title = {Radial Flow of Dust Particles in Accretion Disks}, author = {Takeuchi and Lin}, journal = {ApJ}, volume = {581}, pages = {1344-1355}, year = {2002}}",
       "adopted_scope": "Gas-rich, optically thick protoplanetary disks where dust motion is coupled to 2D gas structure.",
       "claims": [
         "Shows dust radial drift is set by gas drag in vertically stratified, optically thick disks and can reverse in surface layers.",
@@ -473,7 +473,7 @@
       "short": "Shadmehri (2008)",
       "title": "Dynamics of charged dust particles in protoplanetary discs",
       "doi": "10.1007/s10509-008-9762-2",
-      "bibtex": "@article{Shadmehri2008_ApSS314_217, journal = {Ap\\\\&SS}, volume = {314}, pages = {217-223}, year = {2008}}",
+      "bibtex": "@article{Shadmehri2008_ApSS314_217, title = {Dynamics of charged dust particles in protoplanetary discs}, author = {Shadmehri}, journal = {Ap\\&SS}, volume = {314}, pages = {217-223}, year = {2008}}",
       "adopted_scope": "Review and extension of TL2002/2003-style dust flows in gas-rich, optically thick disks.",
       "claims": [
         "Summarises that outward surface drift driven by radiation pressure plus gas drag applies to optically thick, gas-loaded disks.",
@@ -485,11 +485,11 @@
       "short": "Lesher & Spera (2015)",
       "title": "Thermodynamic and Transport Properties of Silicate Melts and Magma",
       "doi": null,
-      "bibtex": "@incollection{LesherSpera2015_EncyclopediaVolcanoes, booktitle = {The Encyclopedia of Volcanoes, 2nd ed.}, pages = {113-141}, year = {2015}, author = {Lesher, C. E. and Spera, F. J.}}",
+      "bibtex": "@incollection{LesherSpera2015_EncyclopediaVolcanoes, title = {Thermodynamic and Transport Properties of Silicate Melts and Magma}, booktitle = {The Encyclopedia of Volcanoes, 2nd ed.}, pages = {113-141}, year = {2015}, author = {Lesher, C. E. and Spera, F. J.}}",
       "adopted_scope": "Representative high-temperature properties for basaltic/silicate melts.",
       "claims": [
-        "Reports melt densities around 2600 kg m^{-3}, specific heats \u22481450 J kg^{-1} K^{-1}, and thermal conductivity \u22480.6 W m^{-1} K^{-1}.",
-        "Provides the property ranges used for slab depth, \u03c1, and c_p choices in the Mars cooling model."
+        "Reports melt densities around 2600 kg m^{-3}, specific heats ≈1450 J kg^{-1} K^{-1}, and thermal conductivity ≈0.6 W m^{-1} K^{-1}.",
+        "Provides the property ranges used for slab depth, ρ, and c_p choices in the Mars cooling model."
       ]
     },
     {
@@ -497,10 +497,10 @@
       "short": "Robertson (1988)",
       "title": "Thermal Properties of Rocks",
       "doi": null,
-      "bibtex": "@techreport{Robertson1988_USGS_OFR88_441, institution = {U.S. Geological Survey}, number = {88-441}, year = {1988}, author = {Robertson, E. C.}}",
+      "bibtex": "@techreport{Robertson1988_USGS_OFR88_441, title = {Thermal Properties of Rocks}, institution = {U.S. Geological Survey}, number = {88-441}, year = {1988}, author = {Robertson, E. C.}}",
       "adopted_scope": "Compiled density, specific heat, and conductivity for crustal and mantle rocks.",
       "claims": [
-        "Lists basaltic to ultramafic rocks with \u03c1 \u2248 2800\u20133300 kg m^{-3} and c_p \u2248 700\u20131200 J kg^{-1} K^{-1} near room to elevated temperatures.",
+        "Lists basaltic to ultramafic rocks with ρ ≈ 2800–3300 kg m^{-3} and c_p ≈ 700–1200 J kg^{-1} K^{-1} near room to elevated temperatures.",
         "Supports the order-of-magnitude thermal capacity used for the post-impact Martian surface layer."
       ]
     },
@@ -512,8 +512,8 @@
       "bibtex": "@book{BohrenHuffman1983_Wiley, title = {Absorption and Scattering of Light by Small Particles}, publisher = {Wiley}, year = {1983}, author = {Bohren, C. F. and Huffman, D. R.}}",
       "adopted_scope": "Mie-theory baseline for Q_abs, Q_pr, and scattering efficiencies across grain sizes and compositions.",
       "claims": [
-        "Provides the formalism for calculating Q_abs(\u03bb,a) and Planck-mean efficiencies used in debris-disk grain heating.",
-        "Serves as the theoretical source behind size- and composition-dependent \u27e8Q_abs\u27e9 tables."
+        "Provides the formalism for calculating Q_abs(λ,a) and Planck-mean efficiencies used in debris-disk grain heating.",
+        "Serves as the theoretical source behind size- and composition-dependent ⟨Q_abs⟩ tables."
       ]
     },
     {
@@ -521,10 +521,10 @@
       "short": "Blanco et al. (1976)",
       "title": "Planck mean efficiency factors for six material candidates for interstellar grains",
       "doi": "10.1007/BF00640752",
-      "bibtex": "@article{Blanco1976_ApSS41_447, journal = {Ap\\\\&SS}, volume = {41}, pages = {447-463}, year = {1976}}",
+      "bibtex": "@article{Blanco1976_ApSS41_447, title = {Planck mean efficiency factors for six material candidates for interstellar grains}, author = {Blanco et al.}, journal = {Ap\\&SS}, volume = {41}, pages = {447-463}, year = {1976}}",
       "adopted_scope": "Tabulated Planck-mean absorption efficiencies for common grain materials vs. size.",
       "claims": [
-        "Computes Planck-mean Q_abs for graphite, iron, ice, olivine, amorphous quartz, and lunar silicate over sub-\u00b5m to multi-\u00b5m sizes.",
+        "Computes Planck-mean Q_abs for graphite, iron, ice, olivine, amorphous quartz, and lunar silicate over sub-µm to multi-µm sizes.",
         "Provides reference values to replace the placeholder q_abs_mean=1.0 in radiative equilibrium calculations."
       ]
     },
@@ -533,10 +533,10 @@
       "short": "Draine (2003)",
       "title": "Astrophysics of Dust in Cold Clouds",
       "doi": null,
-      "bibtex": "@incollection{Draine2003_SaasFee32, booktitle = {Saas-Fee Advanced Course 32}, year = {2003}, author = {Draine, B. T.}}",
+      "bibtex": "@incollection{Draine2003_SaasFee32, title = {Astrophysics of Dust in Cold Clouds}, booktitle = {Saas-Fee Advanced Course 32}, year = {2003}, author = {Draine, B. T.}}",
       "adopted_scope": "Optical constants and efficiency tables for astronomical silicates/graphite with Planck-mean treatments.",
       "claims": [
-        "Provides Q_abs(\u03bb,a) data and methodology to compute \u27e8Q_abs\u27e9(T,a,composition) used for grain temperature estimates.",
+        "Provides Q_abs(λ,a) data and methodology to compute ⟨Q_abs⟩(T,a,composition) used for grain temperature estimates.",
         "Supplies canonical optical constants for astronomical silicate and graphite that inform future table generation."
       ]
     },
@@ -545,10 +545,10 @@
       "short": "Hocuk et al. (2017)",
       "title": "Parameterizing the interstellar dust temperature",
       "doi": "10.1051/0004-6361/201629944",
-      "bibtex": "@article{Hocuk2017_AA604_A58, journal = {A\\\\&A}, volume = {604}, pages = {A58}, year = {2017}}",
+      "bibtex": "@article{Hocuk2017_AA604_A58, title = {Parameterizing the interstellar dust temperature}, author = {Hocuk et al.}, journal = {A\\&A}, volume = {604}, pages = {A58}, year = {2017}}",
       "adopted_scope": "Parametrisation of dust temperature and Planck-mean absorption efficiency in ISM environments.",
       "claims": [
-        "Gives fitted \u27e8Q_abs\u27e9 and temperature relations illustrating size/composition dependence beyond the q_abs_mean=1.0 placeholder.",
+        "Gives fitted ⟨Q_abs⟩ and temperature relations illustrating size/composition dependence beyond the q_abs_mean=1.0 placeholder.",
         "Demonstrates the impact of grain material on radiative equilibrium temperatures."
       ]
     },
@@ -557,11 +557,11 @@
       "short": "Joseph et al. (1976)",
       "title": "The delta-Eddington approximation for radiative flux transfer",
       "doi": "10.1175/1520-0469(1976)033<2452:TDEAFR>2.0.CO;2",
-      "bibtex": "@article{Joseph1976_JAS33_2452, journal = {J. Atmos. Sci.}, volume = {33}, pages = {2452-2459}, year = {1976}}",
-      "adopted_scope": "Delta-Eddington treatment of slab reflectance/transmittance for given \u03c4, \u03c9\u2080, and g.",
+      "bibtex": "@article{Joseph1976_JAS33_2452, title = {The delta-Eddington approximation for radiative flux transfer}, author = {Joseph et al.}, journal = {J. Atmos. Sci.}, volume = {33}, pages = {2452-2459}, year = {1976}}",
+      "adopted_scope": "Delta-Eddington treatment of slab reflectance/transmittance for given τ, ω₀, and g.",
       "claims": [
-        "Provides analytic flux solutions tabulated as functions of \u03c4, single-scattering albedo, and asymmetry factor.",
-        "Motivates using precomputed \u03a6(\u03c4,\u03c9\u2080,g) tables as shielding inputs."
+        "Provides analytic flux solutions tabulated as functions of τ, single-scattering albedo, and asymmetry factor.",
+        "Motivates using precomputed Φ(τ,ω₀,g) tables as shielding inputs."
       ]
     },
     {
@@ -569,11 +569,11 @@
       "short": "Hansen & Travis (1974)",
       "title": "Light scattering in planetary atmospheres",
       "doi": "10.1007/BF00168069",
-      "bibtex": "@article{HansenTravis1974_SSR16_527, journal = {Space Science Reviews}, volume = {16}, pages = {527-610}, year = {1974}}",
-      "adopted_scope": "Multiple-scattering treatments with Henyey\u2013Greenstein phase functions applied to planetary atmospheres.",
+      "bibtex": "@article{HansenTravis1974_SSR16_527, title = {Light scattering in planetary atmospheres}, author = {Hansen and Travis}, journal = {Space Science Reviews}, volume = {16}, pages = {527-610}, year = {1974}}",
+      "adopted_scope": "Multiple-scattering treatments with Henyey–Greenstein phase functions applied to planetary atmospheres.",
       "claims": [
-        "Details reflectance and transmittance computation versus \u03c4, \u03c9\u2080, and g using doubling and related methods.",
-        "Serves as a reference for generating \u03a6 tables that depend on optical depth and asymmetry."
+        "Details reflectance and transmittance computation versus τ, ω₀, and g using doubling and related methods.",
+        "Serves as a reference for generating Φ tables that depend on optical depth and asymmetry."
       ]
     },
     {
@@ -581,11 +581,11 @@
       "short": "Cogley & Bergstrom (1979)",
       "title": "Numerical results for the thermal scattering functions",
       "doi": "10.1016/0022-4073(79)90017-7",
-      "bibtex": "@article{CogleyBergstrom1979_JQSRT21_265, journal = {J. Quant. Spectrosc. Radiat. Transf.}, volume = {21}, pages = {265-276}, year = {1979}}",
-      "adopted_scope": "Tabulated scattering functions for plane-parallel layers parameterised by \u03c4, \u03c9\u2080, and g.",
+      "bibtex": "@article{CogleyBergstrom1979_JQSRT21_265, title = {Numerical results for the thermal scattering functions}, author = {Cogley and Bergstrom}, journal = {J. Quant. Spectrosc. Radiat. Transf.}, volume = {21}, pages = {265-276}, year = {1979}}",
+      "adopted_scope": "Tabulated scattering functions for plane-parallel layers parameterised by τ, ω₀, and g.",
       "claims": [
-        "Supplies numerical reflectance/exitance values used as templates for \u03a6(\u03c4,\u03c9\u2080,g) lookup tables.",
-        "Confirms saturation of direct beam transmission for \u03c4\u22731 motivating \u03c4-clipping."
+        "Supplies numerical reflectance/exitance values used as templates for Φ(τ,ω₀,g) lookup tables.",
+        "Confirms saturation of direct beam transmission for τ≳1 motivating τ-clipping."
       ]
     },
     {
@@ -593,11 +593,11 @@
       "short": "Bruning (2003)",
       "title": "On the glass transition in vitreous silica by differential thermal analysis measurements",
       "doi": "10.1016/j.jnoncrysol.2003.08.051",
-      "bibtex": "@article{Bruning2003_JNCS330_13, journal = {Journal of Non-Crystalline Solids}, volume = {330}, pages = {13-22}, year = {2003}}",
+      "bibtex": "@article{Bruning2003_JNCS330_13, title = {On the glass transition in vitreous silica by differential thermal analysis measurements}, author = {Bruning}, journal = {Journal of Non-Crystalline Solids}, volume = {330}, pages = {13-22}, year = {2003}}",
       "adopted_scope": "Experimental DTA constraints on glass transition behavior of vitreous silica.",
       "claims": [
         "Finds glass transition onset near 1247 K with relaxed supercooled liquid behavior around 1475 K for high-purity SiO2.",
-        "Supports using T_glass \u2248 1475 K as the transition proxy in phase maps."
+        "Supports using T_glass ≈ 1475 K as the transition proxy in phase maps."
       ]
     },
     {
@@ -605,7 +605,7 @@
       "short": "Ojovan (2021)",
       "title": "On Structural Rearrangements Near the Glass Transition Temperature in Amorphous Silica",
       "doi": "10.3390/ma14185235",
-      "bibtex": "@article{Ojovan2021_Materials14_5235, journal = {Materials}, volume = {14}, pages = {5235}, year = {2021}}",
+      "bibtex": "@article{Ojovan2021_Materials14_5235, title = {On Structural Rearrangements Near the Glass Transition Temperature in Amorphous Silica}, author = {Ojovan}, journal = {Materials}, volume = {14}, pages = {5235}, year = {2021}}",
       "adopted_scope": "Review of glass-transition physics and melting limits for pure silica at low pressure.",
       "claims": [
         "Quotes the SiO2 melting/liquidus temperature near 1986 K under low-pressure conditions.",
@@ -617,7 +617,7 @@
       "short": "Melosh (2007)",
       "title": "A Hydrocode Equation of State for SiO2",
       "doi": "10.1111/j.1945-5100.2007.tb01009.x",
-      "bibtex": "@article{Melosh2007_MPS42_2079, journal = {Meteoritics \\\\& Planetary Science}, volume = {42}, pages = {2079-2098}, year = {2007}}",
+      "bibtex": "@article{Melosh2007_MPS42_2079, title = {A Hydrocode Equation of State for SiO2}, author = {Melosh}, journal = {Meteoritics \\& Planetary Science}, volume = {42}, pages = {2079-2098}, year = {2007}}",
       "adopted_scope": "Equation of state for SiO2 used in high-temperature impact simulations.",
       "claims": [
         "Locates melt/vapor boundaries for SiO2 around the ~2000 K regime used for liquidus thresholds.",
@@ -629,7 +629,7 @@
       "short": "Visscher & Fegley (2013)",
       "title": "Chemistry of Impact-Generated Silicate Melt-Vapor Debris Disks",
       "doi": "10.1088/2041-8205/767/1/L12",
-      "bibtex": "@article{VisscherFegley2013_ApJL767_L12, journal = {ApJL}, volume = {767}, pages = {L12}, year = {2013}}",
+      "bibtex": "@article{VisscherFegley2013_ApJL767_L12, title = {Chemistry of Impact-Generated Silicate Melt-Vapor Debris Disks}, author = {Visscher and Fegley}, journal = {ApJL}, volume = {767}, pages = {L12}, year = {2013}}",
       "adopted_scope": "Published ApJ Letters analysis of silicate melt-vapor chemistry underpinning HKL-style liquid branches.",
       "claims": [
         "Quantifies equilibrium vapour pressures for molten silica consistent with MAGMA results.",
@@ -641,7 +641,7 @@
       "short": "Markkanen & Agarwal (2020)",
       "title": "Thermophysical model for icy cometary dust particles",
       "doi": "10.1051/0004-6361/202039092",
-      "bibtex": "@article{Markkanen2020_AA643_A16, journal = {A\\\\&A}, volume = {643}, pages = {A16}, year = {2020}}",
+      "bibtex": "@article{Markkanen2020_AA643_A16, title = {Thermophysical model for icy cometary dust particles}, author = {Markkanen and Agarwal}, journal = {A\\&A}, volume = {643}, pages = {A16}, year = {2020}}",
       "adopted_scope": "Hertz-Knudsen sublimation fluxes and dust thermophysics used as analogs for sublimation-driven mass loss in gas-poor disks.",
       "claims": [
         "Derives mass-loss rates and temperature evolution for icy/rocky grains using Hertz-Knudsen sublimation and latent-heat coupling.",
@@ -653,7 +653,7 @@
       "short": "Charnoz et al. (2011)",
       "title": "Accretion of Saturn's mid-sized moons during the viscous spreading of young massive rings: Solving the paradox of silicate-poor rings versus silicate-rich moons",
       "doi": "10.1016/j.icarus.2011.09.017",
-      "bibtex": "@article{CharnozCridaCastilloRogez2011_Icarus216_535, journal = {Icarus}, volume = {216}, pages = {535-550}, year = {2011}}",
+      "bibtex": "@article{CharnozCridaCastilloRogez2011_Icarus216_535, title = {Accretion of Saturn's mid-sized moons during the viscous spreading of young massive rings: Solving the paradox of silicate-poor rings versus silicate-rich moons}, author = {Charnoz et al.}, journal = {Icarus}, volume = {216}, pages = {535-550}, year = {2011}}",
       "adopted_scope": "Context for viscous spreading of massive rings and satellite accretion outcomes.",
       "claims": [
         "Shows how viscous spreading of dense rings can feed satellite accretion outside the Roche limit.",
@@ -665,7 +665,7 @@
       "short": "Rosenblatt & Dehant (2010)",
       "title": "Mars geodesy, rotation and gravity",
       "doi": null,
-      "bibtex": "@article{Rosenblatt2010_RAA10_713, journal = {Res. Astron. Astrophys.}, volume = {10}, pages = {713-736}, year = {2010}}",
+      "bibtex": "@article{Rosenblatt2010_RAA10_713, title = {Mars geodesy, rotation and gravity}, author = {Rosenblatt and Dehant}, journal = {Res. Astron. Astrophys.}, volume = {10}, pages = {713-736}, year = {2010}}",
       "adopted_scope": "Review of Mars geodesy, rotation, and gravity parameters used for background context.",
       "claims": [
         "Reviews Mars geodesy and rotation state parameters available circa 2010.",
@@ -677,7 +677,7 @@
       "short": "Rosenblatt & Charnoz (2012)",
       "title": "On the formation of the martian moons from a circum-martian accretion disk",
       "doi": "10.1016/j.icarus.2012.09.009",
-      "bibtex": "@article{Rosenblatt2012_Icarus221_806, journal = {Icarus}, volume = {221}, pages = {806-815}, year = {2012}}",
+      "bibtex": "@article{Rosenblatt2012_Icarus221_806, title = {On the formation of the martian moons from a circum-martian accretion disk}, author = {Rosenblatt and Charnoz}, journal = {Icarus}, volume = {221}, pages = {806-815}, year = {2012}}",
       "adopted_scope": "Mars moon formation scenarios based on circum-Martian accretion disk evolution.",
       "claims": [
         "Frames Phobos/Deimos formation in terms of disk spreading and accretion efficiency.",
@@ -689,7 +689,7 @@
       "short": "Citron et al. (2015)",
       "title": "Formation of Phobos and Deimos via a giant impact",
       "doi": "10.1016/j.icarus.2015.02.011",
-      "bibtex": "@article{Citron2015_Icarus252_334, journal = {Icarus}, volume = {252}, pages = {334-338}, year = {2015}}",
+      "bibtex": "@article{Citron2015_Icarus252_334, title = {Formation of Phobos and Deimos via a giant impact}, author = {Citron et al.}, journal = {Icarus}, volume = {252}, pages = {334-338}, year = {2015}}",
       "adopted_scope": "Giant-impact origin scenario for the Martian moons and resulting debris disk context.",
       "claims": [
         "Supports a giant-impact origin for Phobos/Deimos with a circum-Martian debris disk.",
@@ -701,7 +701,7 @@
       "short": "Rosenblatt et al. (2016)",
       "title": "Accretion of Phobos and Deimos in an extended debris disc stirred by transient moons",
       "doi": "10.1038/ngeo2742",
-      "bibtex": "@article{Rosenblatt2016_NatGeo9_8, journal = {Nature Geoscience}, volume = {9}, pages = {581-583}, year = {2016}}",
+      "bibtex": "@article{Rosenblatt2016_NatGeo9_8, title = {Accretion of Phobos and Deimos in an extended debris disc stirred by transient moons}, author = {Rosenblatt et al.}, journal = {Nature Geoscience}, volume = {9}, pages = {581-583}, year = {2016}}",
       "adopted_scope": "Transient-moon stirring of an extended debris disk as a Mars-moon formation pathway.",
       "claims": [
         "Shows that transient inner moons can stir and shepherd outer debris to form Phobos/Deimos analogs.",
@@ -713,7 +713,7 @@
       "short": "Krivov (2010)",
       "title": "Debris Disks: Seeing Dust, Thinking of Planetesimals and Planets",
       "doi": null,
-      "bibtex": "@article{Krivov2010_arXiv, journal = {arXiv}, year = {2010}}",
+      "bibtex": "@article{Krivov2010_arXiv, title = {Debris Disks: Seeing Dust, Thinking of Planetesimals and Planets}, author = {Krivov}, journal = {arXiv}, year = {2010}}",
       "adopted_scope": "Review of debris-disk physics (collisional cascades and radiation-pressure blowout) used as general context for PSD and loss processes.",
       "claims": [
         "Summarizes collisional-cascade physics and radiation-pressure blowout as key small-grain removal channels.",
@@ -725,7 +725,7 @@
       "short": "Rosenblatt et al. (2019)",
       "title": "The formation of the Martian moons",
       "doi": null,
-      "bibtex": "@article{Rosenblatt2019_arXiv, journal = {arXiv}, year = {2019}}",
+      "bibtex": "@article{Rosenblatt2019_arXiv, title = {The formation of the Martian moons}, author = {Rosenblatt et al.}, journal = {arXiv}, year = {2019}}",
       "adopted_scope": "Review of Martian-moon formation scenarios and giant-impact debris-disk evolution used for contextual discussion.",
       "claims": [
         "Surveys capture versus giant-impact origin scenarios for Phobos and Deimos and their observational constraints.",
@@ -737,10 +737,10 @@
       "short": "Demyk et al. (2022)",
       "title": "Low-temperature optical constants of amorphous silicate dust analogues",
       "doi": "10.1051/0004-6361/202243815",
-      "bibtex": "@article{Demyk2022_AA666_A192, journal = {A\\\\&A}, volume = {666}, pages = {A192}, year = {2022}}",
-      "adopted_scope": "Optical constants for amorphous silicate analogues across UV\u2013mm wavelengths and 10\u2013300 K.",
+      "bibtex": "@article{Demyk2022_AA666_A192, title = {Low-temperature optical constants of amorphous silicate dust analogues}, author = {Demyk et al.}, journal = {A\\&A}, volume = {666}, pages = {A192}, year = {2022}}",
+      "adopted_scope": "Optical constants for amorphous silicate analogues across UV–mm wavelengths and 10–300 K.",
       "claims": [
-        "Provides n,k datasets for Mg-rich and Mg-Fe silicate analogues over 5\u2013800/1000 \u00b5m with temperature coverage 10\u2013300 K.",
+        "Provides n,k datasets for Mg-rich and Mg-Fe silicate analogues over 5–800/1000 µm with temperature coverage 10–300 K.",
         "Publishes extrapolated optical constants and temperature interpolation guidance via STOPCODA/SSHADE."
       ]
     },
@@ -748,11 +748,11 @@
       "key": "Lamy1978_Icarus34_68",
       "short": "Lamy (1978)",
       "title": "Optical Properties of Silicates in the Far Ultraviolet",
-      "bibtex": "@article{Lamy1978_Icarus34_68, journal = {Icarus}, volume = {34}, pages = {68-75}, year = {1978}}",
+      "bibtex": "@article{Lamy1978_Icarus34_68, title = {Optical Properties of Silicates in the Far Ultraviolet}, author = {Lamy}, journal = {Icarus}, volume = {34}, pages = {68-75}, year = {1978}}",
       "adopted_scope": "Far-UV optical constants for silicate samples used to extend short-wavelength n,k.",
       "claims": [
-        "Tabulates n,k for obsidian, basaltic glass, basalt, and andesite over 0.10\u20130.44 \u00b5m.",
-        "Uses Kramers\u2013Kronig analysis of reflectance to derive optical constants."
+        "Tabulates n,k for obsidian, basaltic glass, basalt, and andesite over 0.10–0.44 µm.",
+        "Uses Kramers–Kronig analysis of reflectance to derive optical constants."
       ]
     },
     {
@@ -760,22 +760,22 @@
       "short": "Schaefer & Fegley (2004)",
       "title": "A thermodynamic model of high temperature lava vaporization on Io",
       "doi": "10.1016/j.icarus.2003.08.023",
-      "bibtex": "@article{SchaeferFegley2004_Icarus169_216, journal = {Icarus}, volume = {169}, pages = {216-241}, year = {2004}}",
+      "bibtex": "@article{SchaeferFegley2004_Icarus169_216, title = {A thermodynamic model of high temperature lava vaporization on Io}, author = {Schaefer and Fegley}, journal = {Icarus}, volume = {169}, pages = {216-241}, year = {2004}}",
       "adopted_scope": "High-temperature silicate vaporization modeling and equilibrium vapor pressures.",
       "claims": [
-        "Computes melt\u2013vapor equilibrium with MAGMA and reports vapor pressure/composition from 1700\u20132400 K.",
+        "Computes melt–vapor equilibrium with MAGMA and reports vapor pressure/composition from 1700–2400 K.",
         "Provides context for HKL-style vapor loss treatments in silicate disks."
       ]
     },
     {
       "key": "Arakawa1991_IAUC126_102",
       "short": "Arakawa et al. (1991)",
-      "title": "Optical Constants of Basaltic Glass from 0.0173 To 50 \u03bcm",
+      "title": "Optical Constants of Basaltic Glass from 0.0173 To 50 μm",
       "doi": "10.1017/S0252921100066574",
-      "bibtex": "@inproceedings{Arakawa1991_IAUC126_102, booktitle = {IAU Colloquium 126}, pages = {102-104}, year = {1991}}",
+      "bibtex": "@inproceedings{Arakawa1991_IAUC126_102, title = {Optical Constants of Basaltic Glass from 0.0173 To 50 μm}, author = {Arakawa et al.}, booktitle = {IAU Colloquium 126}, pages = {102-104}, year = {1991}}",
       "adopted_scope": "Basaltic glass optical constants used to extend Q_pr inputs at short wavelengths.",
       "claims": [
-        "Reports n,k for basaltic glass over 0.0173\u201350 \u03bcm (IAU Colloquium 126)."
+        "Reports n,k for basaltic glass over 0.0173–50 μm (IAU Colloquium 126)."
       ]
     },
     {
@@ -783,7 +783,7 @@
       "short": "Campo Bagatin et al. (1994)",
       "title": "Wavy size distributions for collisional systems with a small-size cutoff",
       "doi": "10.1016/0032-0633(94)90008-6",
-      "bibtex": "@article{CampoBagatin1994_PSS42_1079, journal = {Planet. Space Sci.}, volume = {42}, pages = {1079-1092}, year = {1994}}",
+      "bibtex": "@article{CampoBagatin1994_PSS42_1079, title = {Wavy size distributions for collisional systems with a small-size cutoff}, author = {Campo Bagatin et al.}, journal = {Planet. Space Sci.}, volume = {42}, pages = {1079-1092}, year = {1994}}",
       "adopted_scope": "Wavy PSD structure induced by a small-size cutoff in collisional cascades.",
       "claims": [
         "Shows that a minimum-size cutoff yields oscillatory (wavy) size distributions in collisional systems."
@@ -794,10 +794,10 @@
       "short": "Briani et al. (2013)",
       "title": "Simulations of micrometeoroid interactions with the Earth atmosphere",
       "doi": "",
-      "bibtex": "@article{Briani2013_arXiv, title = {Simulations of micrometeoroid interactions with the Earth atmosphere}, year = {2013}, eprint = {1302.3666}, archivePrefix = {arXiv}}",
+      "bibtex": "@article{Briani2013_arXiv, author = {Briani et al.}, title = {Simulations of micrometeoroid interactions with the Earth atmosphere}, year = {2013}, eprint = {1302.3666}, archivePrefix = {arXiv}}",
       "adopted_scope": "Micrometeoroid heating/sublimation parameters used as a solid-phase proxy.",
       "claims": [
-        "Uses log10(P_sat)=A\u2212B/T with A=10.6, B=13500 for micrometeoroid vapor pressure (via Love & Brownlee coefficients)."
+        "Uses log10(P_sat)=A−B/T with A=10.6, B=13500 for micrometeoroid vapor pressure (via Love & Brownlee coefficients)."
       ]
     },
     {
@@ -805,7 +805,7 @@
       "short": "Chandrasekhar (1960)",
       "title": "Radiative Transfer",
       "doi": "",
-      "bibtex": "@book{Chandrasekhar1960_Book, title = {Radiative Transfer}, year = {1960}}",
+      "bibtex": "@book{Chandrasekhar1960_Book, author = {Chandrasekhar}, title = {Radiative Transfer}, year = {1960}}",
       "adopted_scope": "Classical radiative transfer foundations referenced for shielding/transfer formulations.",
       "claims": [
         "Provides the classical radiative transfer formalism underpinning H/X/Y function treatments."
@@ -816,7 +816,7 @@
       "short": "Egan et al. (1975)",
       "title": "Ultraviolet complex refractive index of Martian dust: Laboratory measurements of terrestrial analogs",
       "doi": "10.1016/0019-1035(75)90029-9",
-      "bibtex": "@article{Egan1975_Icarus25_344, journal = {Icarus}, volume = {25}, pages = {344-355}, year = {1975}}",
+      "bibtex": "@article{Egan1975_Icarus25_344, title = {Ultraviolet complex refractive index of Martian dust: Laboratory measurements of terrestrial analogs}, author = {Egan et al.}, journal = {Icarus}, volume = {25}, pages = {344-355}, year = {1975}}",
       "adopted_scope": "Ultraviolet refractive index data for Martian dust analogs and basaltic materials.",
       "claims": [
         "Provides UV n,k measurements for terrestrial analog dust used to bridge short-wavelength gaps."
@@ -827,7 +827,7 @@
       "short": "Ferguson & Nuth (2012)",
       "title": "Vapor Pressure and Evaporation Coefficient of Silicon Monoxide over a Mixture of Silicon and Silica",
       "doi": "10.1021/je200693d",
-      "bibtex": "@article{FergusonNuth2012_JCED57_721, journal = {J. Chem. Eng. Data}, volume = {57}, pages = {721-728}, year = {2012}}",
+      "bibtex": "@article{FergusonNuth2012_JCED57_721, title = {Vapor Pressure and Evaporation Coefficient of Silicon Monoxide over a Mixture of Silicon and Silica}, author = {Ferguson and Nuth}, journal = {J. Chem. Eng. Data}, volume = {57}, pages = {721-728}, year = {2012}}",
       "adopted_scope": "Evaporation coefficient and vapor-pressure measurements for SiO over Si/SiO2 mixtures.",
       "claims": [
         "Reports SiO vapor pressure and evaporation coefficient used to justify alpha_evap defaults."
@@ -838,7 +838,7 @@
       "short": "Kimura et al. (1997)",
       "title": "A study on solar dust ring formation based on fractal dust models",
       "doi": "",
-      "bibtex": "@article{KimuraIshimotoMukai1997_AA326_263, journal = {A\\\\&A}, volume = {326}, pages = {263}, year = {1997}}",
+      "bibtex": "@article{KimuraIshimotoMukai1997_AA326_263, title = {A study on solar dust ring formation based on fractal dust models}, author = {Kimura et al.}, journal = {A\\&A}, volume = {326}, pages = {263}, year = {1997}}",
       "adopted_scope": "Fractal dust model and sublimation parameterization for silicate/carbon grains.",
       "claims": [
         "Provides sublimation-related parameters for silicate/carbon dust used in HKL-style fits."
@@ -847,12 +847,12 @@
     {
       "key": "KimuraOkamotoMukai2002_Icarus157_349",
       "short": "Kimura et al. (2002)",
-      "title": "Radiation Pressure and the Poynting\u2013Robertson Effect for Fluffy Dust Particles",
+      "title": "Radiation Pressure and the Poynting–Robertson Effect for Fluffy Dust Particles",
       "doi": "10.1006/icar.2002.6849",
-      "bibtex": "@article{KimuraOkamotoMukai2002_Icarus157_349, journal = {Icarus}, volume = {157}, pages = {349-361}, year = {2002}}",
+      "bibtex": "@article{KimuraOkamotoMukai2002_Icarus157_349, title = {Radiation Pressure and the Poynting–Robertson Effect for Fluffy Dust Particles}, author = {Kimura et al.}, journal = {Icarus}, volume = {157}, pages = {349-361}, year = {2002}}",
       "adopted_scope": "Radiation pressure and PR-drag efficiency for porous/aggregate dust grains.",
       "claims": [
-        "Quantifies \u03b2 and PR-drag behavior for fluffy grains, supporting size/material dependence."
+        "Quantifies β and PR-drag behavior for fluffy grains, supporting size/material dependence."
       ]
     },
     {
@@ -860,7 +860,7 @@
       "short": "Kobayashi et al. (2011)",
       "title": "Sublimation temperature of circumstellar dust particles and its importance for dust ring formation",
       "doi": "10.5047/eps.2011.03.012",
-      "bibtex": "@article{Kobayashi2011_EPS63_1067, journal = {Earth Planets Space}, volume = {63}, pages = {1067-1075}, year = {2011}}",
+      "bibtex": "@article{Kobayashi2011_EPS63_1067, title = {Sublimation temperature of circumstellar dust particles and its importance for dust ring formation}, author = {Kobayashi et al.}, journal = {Earth Planets Space}, volume = {63}, pages = {1067-1075}, year = {2011}}",
       "adopted_scope": "Sublimation temperature estimates for dust compositions (obsidian/pyroxene/olivine/iron).",
       "claims": [
         "Presents sublimation temperature estimates used for solid-phase HKL proxies."
@@ -869,10 +869,10 @@
     {
       "key": "Kubaschewski1974_Book",
       "short": "Kubaschewski (1974)",
-      "title": "Thermochemical data compilation (Clausius\u2013Clapeyron coefficients)",
+      "title": "Thermochemical data compilation (Clausius–Clapeyron coefficients)",
       "doi": "",
-      "bibtex": "@book{Kubaschewski1974_Book, title = {Thermochemical data compilation}, year = {1974}}",
-      "adopted_scope": "Clausius\u2013Clapeyron coefficients adopted for default SiO saturation vapor pressure.",
+      "bibtex": "@book{Kubaschewski1974_Book, author = {Kubaschewski}, title = {Thermochemical data compilation}, year = {1974}}",
+      "adopted_scope": "Clausius–Clapeyron coefficients adopted for default SiO saturation vapor pressure.",
       "claims": [
         "Supplies Clausius-type coefficients used for the default P_sat fit in HKL parameters."
       ]
@@ -882,10 +882,10 @@
       "short": "Love & Brownlee (1991)",
       "title": "Heating and thermal transformation of micrometeoroids entering the Earth's atmosphere",
       "doi": "10.1016/0019-1035(91)90085-8",
-      "bibtex": "@article{LoveBrownlee1991_Icarus89_26, journal = {Icarus}, volume = {89}, pages = {26-43}, year = {1991}}",
+      "bibtex": "@article{LoveBrownlee1991_Icarus89_26, title = {Heating and thermal transformation of micrometeoroids entering the Earth's atmosphere}, author = {Love and Brownlee}, journal = {Icarus}, volume = {89}, pages = {26-43}, year = {1991}}",
       "adopted_scope": "Micrometeoroid heating and vapor-pressure proxy coefficients for solid-phase HKL fits.",
       "claims": [
-        "Reports log P = A \u2212 B/T coefficients used as a solid-phase vapor-pressure proxy."
+        "Reports log P = A − B/T coefficients used as a solid-phase vapor-pressure proxy."
       ]
     },
     {
@@ -893,10 +893,10 @@
       "short": "Mustill & Wyatt (2009)",
       "title": "Debris disc stirring by secular perturbations from giant planets",
       "doi": "10.1111/j.1365-2966.2009.15360.x",
-      "bibtex": "@article{MustillWyatt2009_MNRAS399_1403, journal = {MNRAS}, volume = {399}, pages = {1403-1414}, year = {2009}}",
+      "bibtex": "@article{MustillWyatt2009_MNRAS399_1403, title = {Debris disc stirring by secular perturbations from giant planets}, author = {Mustill and Wyatt}, journal = {MNRAS}, volume = {399}, pages = {1403-1414}, year = {2009}}",
       "adopted_scope": "Relative velocity scaling in low-eccentricity debris disks (Rayleigh distributions).",
       "claims": [
-        "States c=\u221a(5/4) for Rayleigh-distributed relative velocities in low-e ensembles."
+        "States c=√(5/4) for Rayleigh-distributed relative velocities in low-e ensembles."
       ]
     },
     {
@@ -904,10 +904,10 @@
       "short": "Pollack et al. (1973)",
       "title": "Optical properties of some terrestrial rocks and glasses",
       "doi": "10.1016/0019-1035(73)90115-2",
-      "bibtex": "@article{PollackToonKhare1973_Icarus19_372, journal = {Icarus}, volume = {19}, pages = {372-389}, year = {1973}}",
+      "bibtex": "@article{PollackToonKhare1973_Icarus19_372, title = {Optical properties of some terrestrial rocks and glasses}, author = {Pollack et al.}, journal = {Icarus}, volume = {19}, pages = {372-389}, year = {1973}}",
       "adopted_scope": "Optical constants for basalt and basaltic glass used in Q_pr table construction.",
       "claims": [
-        "Provides n,k data for basalt/basaltic glass over 0.21\u201350 \u03bcm (ARIA data source)."
+        "Provides n,k data for basalt/basaltic glass over 0.21–50 μm (ARIA data source)."
       ]
     },
     {
@@ -915,7 +915,7 @@
       "short": "Rosenblatt (2011)",
       "title": "The origin of the Martian moons revisited",
       "doi": "10.1007/s00159-011-0044-6",
-      "bibtex": "@article{Rosenblatt2011_ApARv19_44, journal = {Astron. Astrophys. Rev.}, volume = {19}, pages = {44}, year = {2011}}",
+      "bibtex": "@article{Rosenblatt2011_ApARv19_44, title = {The origin of the Martian moons revisited}, author = {Rosenblatt}, journal = {Astron. Astrophys. Rev.}, volume = {19}, pages = {44}, year = {2011}}",
       "adopted_scope": "Review of Martian moon origin scenarios and observational constraints.",
       "claims": [
         "Reviews capture vs impact-origin scenarios for Phobos/Deimos and their observational constraints."
@@ -924,12 +924,12 @@
     {
       "key": "Jutzi2010_Icarus207_54",
       "short": "Jutzi et al. (2010)",
-      "title": "Fragment properties at the catastrophic disruption threshold: The effect of the parent body\u2019s internal structure",
+      "title": "Fragment properties at the catastrophic disruption threshold: The effect of the parent body’s internal structure",
       "doi": "10.1016/j.icarus.2009.11.016",
-      "bibtex": "@article{Jutzi2010_Icarus207_54, journal = {Icarus}, volume = {207}, pages = {54-65}, year = {2010}}",
+      "bibtex": "@article{Jutzi2010_Icarus207_54, title = {Fragment properties at the catastrophic disruption threshold: The effect of the parent body’s internal structure}, author = {Jutzi et al.}, journal = {Icarus}, volume = {207}, pages = {54-65}, year = {2010}}",
       "adopted_scope": "Catastrophic disruption thresholds at higher impact velocities.",
       "claims": [
-        "Provides Q*_D behavior for 7\u201310 km/s impact regimes used to guide high-velocity extrapolation."
+        "Provides Q*_D behavior for 7–10 km/s impact regimes used to guide high-velocity extrapolation."
       ]
     },
     {
@@ -937,7 +937,7 @@
       "short": "Jutzi et al. (2010)",
       "title": "A large crater as a probe of the internal structure of the E-type asteroid Steins",
       "doi": "10.1051/0004-6361/200913549",
-      "bibtex": "@article{JutziMichelBenz2010_AA509_L2, journal = {A\\\\&A}, volume = {509}, pages = {L2}, year = {2010}}",
+      "bibtex": "@article{JutziMichelBenz2010_AA509_L2, title = {A large crater as a probe of the internal structure of the E-type asteroid Steins}, author = {Jutzi et al.}, journal = {A\\&A}, volume = {509}, pages = {L2}, year = {2010}}",
       "adopted_scope": "Impact simulations of the large crater on asteroid Steins, used to constrain internal structure assumptions.",
       "claims": [
         "Uses numerical impact simulations to reproduce the ~2 km crater on Steins.",
@@ -949,7 +949,7 @@
       "short": "Genge (2017)",
       "title": "The entry heating and abundances of basaltic micrometeorites",
       "doi": "10.1111/maps.12830",
-      "bibtex": "@article{Genge2017_MAPS52_1000, journal = {Meteoritics \\\\& Planetary Science}, volume = {52}, number = {5}, pages = {1000-1013}, year = {2017}}",
+      "bibtex": "@article{Genge2017_MAPS52_1000, title = {The entry heating and abundances of basaltic micrometeorites}, author = {Genge}, journal = {Meteoritics \\& Planetary Science}, volume = {52}, number = {5}, pages = {1000-1013}, year = {2017}}",
       "adopted_scope": "Basaltic micrometeorite entry heating and abundance constraints for basaltic material context.",
       "claims": [
         "Reports entry heating conditions and abundance estimates for basaltic micrometeorites.",
@@ -961,7 +961,7 @@
       "short": "Fraeman et al. (2012)",
       "title": "Analysis of disk-resolved OMEGA and CRISM spectral observations of Phobos and Deimos",
       "doi": "10.1029/2012JE004137",
-      "bibtex": "@article{Fraeman2012_JGR117_E00J15, journal = {J. Geophys. Res. Planets}, volume = {117}, pages = {E00J15}, year = {2012}}",
+      "bibtex": "@article{Fraeman2012_JGR117_E00J15, title = {Analysis of disk-resolved OMEGA and CRISM spectral observations of Phobos and Deimos}, author = {Fraeman et al.}, journal = {J. Geophys. Res. Planets}, volume = {117}, pages = {E00J15}, year = {2012}}",
       "adopted_scope": "Disk-resolved VIS-NIR spectra of Phobos and Deimos used for compositional constraints.",
       "claims": [
         "Reports CRISM/OMEGA reflectance spectra and weak absorption features in the 0.6- and 2.8-micron regions.",
@@ -973,7 +973,7 @@
       "short": "Fraeman et al. (2014)",
       "title": "Spectral absorptions on Phobos and Deimos in the visible/near infrared wavelengths and their compositional constraints",
       "doi": "10.1016/j.icarus.2013.11.021",
-      "bibtex": "@article{Fraeman2014_Icarus229_196, journal = {Icarus}, volume = {229}, pages = {196-205}, year = {2014}}",
+      "bibtex": "@article{Fraeman2014_Icarus229_196, title = {Spectral absorptions on Phobos and Deimos in the visible/near infrared wavelengths and their compositional constraints}, author = {Fraeman et al.}, journal = {Icarus}, volume = {229}, pages = {196-205}, year = {2014}}",
       "adopted_scope": "VIS-NIR absorption features and compositional constraints for Phobos/Deimos surfaces.",
       "claims": [
         "Documents weak absorption bands near ~0.65 and ~2.8 microns in Phobos/Deimos spectra.",
@@ -985,7 +985,7 @@
       "short": "Pajola et al. (2013)",
       "title": "Phobos as a D-type captured asteroid, spectral modeling from 0.25 to 4.0 microns",
       "doi": "10.1088/0004-637X/777/2/127",
-      "bibtex": "@article{Pajola2013_ApJ777_127, journal = {ApJ}, volume = {777}, pages = {127}, year = {2013}}",
+      "bibtex": "@article{Pajola2013_ApJ777_127, title = {Phobos as a D-type captured asteroid, spectral modeling from 0.25 to 4.0 microns}, author = {Pajola et al.}, journal = {ApJ}, volume = {777}, pages = {127}, year = {2013}}",
       "adopted_scope": "Spectral modeling that compares Phobos with D-type asteroid analogs.",
       "claims": [
         "Fits Phobos spectra over 0.25-4.0 microns with D-type asteroid models.",
@@ -997,7 +997,7 @@
       "short": "Pieters et al. (2014)",
       "title": "Composition of surface materials on the moons of Mars",
       "doi": "10.1016/j.pss.2014.02.008",
-      "bibtex": "@article{Pieters2014_PSS102_144, journal = {Planet. Space Sci.}, volume = {102}, pages = {144-151}, year = {2014}}",
+      "bibtex": "@article{Pieters2014_PSS102_144, title = {Composition of surface materials on the moons of Mars}, author = {Pieters et al.}, journal = {Planet. Space Sci.}, volume = {102}, pages = {144-151}, year = {2014}}",
       "adopted_scope": "Review of surface composition, albedo, and space-weathering effects on Phobos/Deimos.",
       "claims": [
         "Summarizes low albedo and D/T-type-like reflectance characteristics of the Martian moons.",
@@ -1009,7 +1009,7 @@
       "short": "Andert et al. (2010)",
       "title": "Precise mass determination and the nature of Phobos",
       "doi": "10.1029/2009GL041829",
-      "bibtex": "@article{Andert2010_GRL37_9, journal = {Geophys. Res. Lett.}, volume = {37}, number = {9}, year = {2010}}",
+      "bibtex": "@article{Andert2010_GRL37_9, title = {Precise mass determination and the nature of Phobos}, author = {Andert et al.}, journal = {Geophys. Res. Lett.}, volume = {37}, number = {9}, year = {2010}}",
       "adopted_scope": "Mass and bulk density constraints for Phobos from Mars Express tracking data.",
       "claims": [
         "Provides updated mass estimates implying low bulk density for Phobos.",
@@ -1021,7 +1021,7 @@
       "short": "Giuranna et al. (2011)",
       "title": "Compositional interpretation of PFS/MEx and TES/MGS thermal infrared spectra of Phobos",
       "doi": "10.1016/j.pss.2011.01.019",
-      "bibtex": "@article{Giuranna2011_PSS59_1308, journal = {Planet. Space Sci.}, volume = {59}, pages = {1308-1325}, year = {2011}}",
+      "bibtex": "@article{Giuranna2011_PSS59_1308, title = {Compositional interpretation of PFS/MEx and TES/MGS thermal infrared spectra of Phobos}, author = {Giuranna et al.}, journal = {Planet. Space Sci.}, volume = {59}, pages = {1308-1325}, year = {2011}}",
       "adopted_scope": "MID-IR emissivity spectra of Phobos from MEx PFS and MGS TES.",
       "claims": [
         "Shows emissivity spectra inconsistent with carbonaceous meteorites.",
@@ -1033,7 +1033,7 @@
       "short": "Giuranna et al. (2019)",
       "title": "Independent confirmation of a methane spike on Mars and a source region east of Gale Crater",
       "doi": "10.1038/s41561-019-0331-9",
-      "bibtex": "@article{Giuranna2019_NatGeo12_326, journal = {Nature Geoscience}, volume = {12}, pages = {326-332}, year = {2019}}",
+      "bibtex": "@article{Giuranna2019_NatGeo12_326, title = {Independent confirmation of a methane spike on Mars and a source region east of Gale Crater}, author = {Giuranna et al.}, journal = {Nature Geoscience}, volume = {12}, pages = {326-332}, year = {2019}}",
       "adopted_scope": "Mars atmospheric methane detection and inferred source region near Gale Crater.",
       "claims": [
         "Reports an independent confirmation of a transient methane spike in the Martian atmosphere.",
@@ -1045,7 +1045,7 @@
       "short": "Glotch et al. (2018)",
       "title": "MGS-TES spectra suggest a basaltic component in the regolith of Phobos",
       "doi": "10.1029/2018JE005647",
-      "bibtex": "@article{Glotch2018_JGRPlanets123_2467, journal = {J. Geophys. Res. Planets}, volume = {123}, pages = {2467-2484}, year = {2018}}",
+      "bibtex": "@article{Glotch2018_JGRPlanets123_2467, title = {MGS-TES spectra suggest a basaltic component in the regolith of Phobos}, author = {Glotch et al.}, journal = {J. Geophys. Res. Planets}, volume = {123}, pages = {2467-2484}, year = {2018}}",
       "adopted_scope": "Thermal-emission spectral interpretation indicating basaltic components on Phobos.",
       "claims": [
         "Reports TES spectral peaks consistent with basaltic/tectosilicate materials.",
@@ -1057,7 +1057,7 @@
       "short": "Kuzmin & Zabalueva (2003)",
       "title": "The temperature regime of the surface layer of the Phobos regolith in the region of the potential Fobos-Grunt space station landing site",
       "doi": "10.1023/b:sols.0000007946.02888.bd",
-      "bibtex": "@article{KuzminZabalueva2003_SSR37_480, journal = {Solar Syst. Res.}, volume = {37}, pages = {480-488}, year = {2003}}",
+      "bibtex": "@article{KuzminZabalueva2003_SSR37_480, title = {The temperature regime of the surface layer of the Phobos regolith in the region of the potential Fobos-Grunt space station landing site}, author = {Kuzmin and Zabalueva}, journal = {Solar Syst. Res.}, volume = {37}, pages = {480-488}, year = {2003}}",
       "adopted_scope": "Thermal regime and low thermal inertia constraints for Phobos regolith.",
       "claims": [
         "Reports low thermal inertia consistent with fine-grained regolith on Phobos.",
@@ -1069,7 +1069,7 @@
       "short": "Wada et al. (2018)",
       "title": "Asteroid Ryugu before the Hayabusa2 encounter",
       "doi": "10.1186/s40645-018-0237-y",
-      "bibtex": "@article{Wada2018_PEPS5_82, journal = {Prog. Earth Planet. Sci.}, volume = {5}, pages = {82}, year = {2018}}",
+      "bibtex": "@article{Wada2018_PEPS5_82, title = {Asteroid Ryugu before the Hayabusa2 encounter}, author = {Wada et al.}, journal = {Prog. Earth Planet. Sci.}, volume = {5}, pages = {82}, year = {2018}}",
       "adopted_scope": "Thermal inertia and grain-size modeling used to infer fine regolith.",
       "claims": [
         "Links low thermal inertia to sub-mm regolith grain sizes.",
@@ -1081,7 +1081,7 @@
       "short": "Thomas (1989)",
       "title": "The shapes of small satellites",
       "doi": "10.1016/0019-1035(89)90089-4",
-      "bibtex": "@article{Thomas1989_Icarus77_248, journal = {Icarus}, volume = {77}, pages = {248-274}, year = {1989}}",
+      "bibtex": "@article{Thomas1989_Icarus77_248, title = {The shapes of small satellites}, author = {Thomas}, journal = {Icarus}, volume = {77}, pages = {248-274}, year = {1989}}",
       "adopted_scope": "Shape constraints for small satellites and implications for internal structure.",
       "claims": [
         "Documents irregular shapes of small satellites including Phobos/Deimos.",
@@ -1093,7 +1093,7 @@
       "short": "Hu et al. (2020)",
       "title": "Equipotential figure of Phobos suggests its late accretion near 3.3 Mars radii",
       "doi": "10.1029/2019GL085958",
-      "bibtex": "@article{Hu2020_GRL47_e2019GL085958, journal = {Geophys. Res. Lett.}, volume = {47}, pages = {e2019GL085958}, year = {2020}}",
+      "bibtex": "@article{Hu2020_GRL47_e2019GL085958, title = {Equipotential figure of Phobos suggests its late accretion near 3.3 Mars radii}, author = {Hu et al.}, journal = {Geophys. Res. Lett.}, volume = {47}, pages = {e2019GL085958}, year = {2020}}",
       "adopted_scope": "Equipotential-shape analysis for Phobos and implications for Roche-limit accretion.",
       "claims": [
         "Shows Phobos shape is consistent with an equipotential figure near ~3.3 R_M.",
@@ -1105,7 +1105,7 @@
       "short": "Nagahara et al. (1994)",
       "title": "Evaporation of olivine: Low pressure phase relations of the olivine system and its implication for the origin of chondritic components in the solar nebula",
       "doi": "10.1016/0016-7037(94)90426-X",
-      "bibtex": "@article{Nagahara1994_GCA58_1951, journal = {Geochim. Cosmochim. Acta}, volume = {58}, pages = {1951-1963}, year = {1994}}",
+      "bibtex": "@article{Nagahara1994_GCA58_1951, title = {Evaporation of olivine: Low pressure phase relations of the olivine system and its implication for the origin of chondritic components in the solar nebula}, author = {Nagahara et al.}, journal = {Geochim. Cosmochim. Acta}, volume = {58}, pages = {1951-1963}, year = {1994}}",
       "adopted_scope": "Low-pressure phase relations and vapor pressures for olivine endmembers; thermochemical constraints for evaporation.",
       "claims": [
         "Reports low-pressure phase relations and vapor pressures for forsterite/fayalite using Knudsen-method experiments.",
@@ -1117,7 +1117,7 @@
       "short": "Nagahara & Ozawa (1996)",
       "title": "Evaporation of forsterite in H2 gas",
       "doi": "10.1016/0016-7037(96)00014-2",
-      "bibtex": "@article{Nagahara1996_GCA60_1445, journal = {Geochim. Cosmochim. Acta}, volume = {60}, pages = {1445-1459}, year = {1996}}",
+      "bibtex": "@article{Nagahara1996_GCA60_1445, title = {Evaporation of forsterite in H2 gas}, author = {Nagahara and Ozawa}, journal = {Geochim. Cosmochim. Acta}, volume = {60}, pages = {1445-1459}, year = {1996}}",
       "adopted_scope": "Evaporation kinetics of forsterite in H2 gas; rate law and condensation coefficient.",
       "claims": [
         "Fits forsterite evaporation rate as a function of H2 pressure under nebular conditions.",
@@ -1129,7 +1129,7 @@
       "short": "Tsuchiyama et al. (1999)",
       "title": "Evaporation of forsterite in the primordial solar nebula; rates and accompanied isotopic fractionation",
       "doi": "10.1016/S0016-7037(99)00190-8",
-      "bibtex": "@article{Tsuchiyama1999_GCA63_2451, journal = {Geochim. Cosmochim. Acta}, volume = {63}, pages = {2451-2466}, year = {1999}}",
+      "bibtex": "@article{Tsuchiyama1999_GCA63_2451, title = {Evaporation of forsterite in the primordial solar nebula; rates and accompanied isotopic fractionation}, author = {Tsuchiyama et al.}, journal = {Geochim. Cosmochim. Acta}, volume = {63}, pages = {2451-2466}, year = {1999}}",
       "adopted_scope": "Forsterite evaporation regimes and isotopic fractionation in nebular conditions.",
       "claims": [
         "Defines FED/HRD/HBD evaporation regimes for forsterite as a function of temperature and total pressure.",
@@ -1141,7 +1141,7 @@
       "short": "Costa et al. (2017)",
       "title": "Vaporization and thermodynamics of forsterite-rich olivine and some implications for silicate atmospheres of hot rocky exoplanets",
       "doi": "10.1016/j.icarus.2017.02.006",
-      "bibtex": "@article{Costa2017_Icarus289_42, journal = {Icarus}, volume = {289}, pages = {42-55}, year = {2017}}",
+      "bibtex": "@article{Costa2017_Icarus289_42, title = {Vaporization and thermodynamics of forsterite-rich olivine and some implications for silicate atmospheres of hot rocky exoplanets}, author = {Costa et al.}, journal = {Icarus}, volume = {289}, pages = {42-55}, year = {2017}}",
       "adopted_scope": "Thermodynamic properties and vapor species for Fo-rich olivine from KEMS measurements.",
       "claims": [
         "Measures vapor species and partial pressures for Fo95Fa5 olivine between ~1750-2250 K.",
@@ -1153,7 +1153,7 @@
       "short": "Avdellidou et al. (2016)",
       "title": "Survival of the impactor during hypervelocity collisions - II. An analogue for high-porosity targets",
       "doi": "10.1093/mnras/stw2381",
-      "bibtex": "@article{Avdellidou2016_MNRAS464_734, journal = {MNRAS}, volume = {464}, pages = {734-738}, year = {2016}}",
+      "bibtex": "@article{Avdellidou2016_MNRAS464_734, title = {Survival of the impactor during hypervelocity collisions - II. An analogue for high-porosity targets}, author = {Avdellidou et al.}, journal = {MNRAS}, volume = {464}, pages = {734-738}, year = {2016}}",
       "adopted_scope": "Laboratory impact experiments on high-porosity targets; projectile survival and fragment distribution.",
       "claims": [
         "Reports that higher target porosity increases implanted projectile mass.",
@@ -1165,7 +1165,7 @@
       "short": "Hashimoto (1990)",
       "title": "Evaporation kinetics of forsterite and implications for the early solar nebula",
       "doi": "10.1038/347053a0",
-      "bibtex": "@article{Hashimoto1990_Nature347_53, journal = {Nature}, volume = {347}, pages = {53-55}, year = {1990}}",
+      "bibtex": "@article{Hashimoto1990_Nature347_53, title = {Evaporation kinetics of forsterite and implications for the early solar nebula}, author = {Hashimoto}, journal = {Nature}, volume = {347}, pages = {53-55}, year = {1990}}",
       "adopted_scope": "Evaporation kinetics of forsterite and kinetic inhibition relative to equilibrium.",
       "claims": [
         "Shows forsterite evaporation rates are about an order of magnitude slower than equilibrium predictions.",
@@ -1189,7 +1189,7 @@
       "short": "Muir et al. (2020)",
       "title": "Explaining the dependence of M-site diffusion in forsterite on silica activity: a density functional theory approach",
       "doi": "10.1007/s00269-020-01123-5",
-      "bibtex": "@article{Muir2020_PCM47_55, journal = {Phys. Chem. Minerals}, volume = {47}, pages = {55}, year = {2020}}",
+      "bibtex": "@article{Muir2020_PCM47_55, title = {Explaining the dependence of M-site diffusion in forsterite on silica activity: a density functional theory approach}, author = {Muir et al.}, journal = {Phys. Chem. Minerals}, volume = {47}, pages = {55}, year = {2020}}",
       "adopted_scope": "DFT-based model for M-site diffusion in forsterite under varying silica activity.",
       "claims": [
         "Shows elevated aSiO2 and Al/Fe defects raise Mg vacancy concentrations and diffusivity.",
@@ -1201,7 +1201,7 @@
       "short": "Zeidler et al. (2015)",
       "title": "Temperature-dependent infrared optical constants of olivine and enstatite",
       "doi": "10.1088/0004-637X/798/2/125",
-      "bibtex": "@article{Zeidler2015_ApJ798_125, journal = {ApJ}, volume = {798}, pages = {125}, year = {2015}}",
+      "bibtex": "@article{Zeidler2015_ApJ798_125, title = {Temperature-dependent infrared optical constants of olivine and enstatite}, author = {Zeidler et al.}, journal = {ApJ}, volume = {798}, pages = {125}, year = {2015}}",
       "adopted_scope": "Temperature-dependent infrared optical constants for olivine and enstatite.",
       "claims": [
         "Provides complex refractive indices for olivine and enstatite from 10-973 K.",
@@ -1213,7 +1213,7 @@
       "short": "Jager et al. (2003)",
       "title": "Steps toward interstellar silicate mineralogy VII. Spectral properties and crystallization behaviour of magnesium silicates produced by the sol-gel method",
       "doi": "10.1051/0004-6361:20030916",
-      "bibtex": "@article{Jager2003_AA408_193, journal = {A\\\\&A}, volume = {408}, pages = {193-204}, year = {2003}}",
+      "bibtex": "@article{Jager2003_AA408_193, title = {Steps toward interstellar silicate mineralogy VII. Spectral properties and crystallization behaviour of magnesium silicates produced by the sol-gel method}, author = {Jager et al.}, journal = {A\\&A}, volume = {408}, pages = {193-204}, year = {2003}}",
       "adopted_scope": "Optical constants and crystallization behavior of amorphous Mg silicates (sol-gel).",
       "claims": [
         "Provides optical constants from 0.2-500 um for amorphous Mg silicates.",
@@ -1225,7 +1225,7 @@
       "short": "Eckes et al. (2013)",
       "title": "High-temperature infrared properties of forsterite",
       "doi": "10.1007/s00269-013-0570-z",
-      "bibtex": "@article{Eckes2013_PCM40_287, journal = {Phys. Chem. Minerals}, volume = {40}, pages = {287-298}, year = {2013}}",
+      "bibtex": "@article{Eckes2013_PCM40_287, title = {High-temperature infrared properties of forsterite}, author = {Eckes et al.}, journal = {Phys. Chem. Minerals}, volume = {40}, pages = {287-298}, year = {2013}}",
       "adopted_scope": "High-temperature infrared emittance and absorption coefficients for forsterite.",
       "claims": [
         "Measures polarized emittance spectra of forsterite up to near melting.",
