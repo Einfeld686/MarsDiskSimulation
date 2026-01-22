@@ -34,7 +34,7 @@
     \hline
     停止理由 & $\tau_{\rm los}>\tau_{\rm stop}$（$\tau_{\rm stop}=2.30$） \\
     終端時刻 $t_{\rm end}$ & $1.27\,\mathrm{yr}$ \\
-    累積損失 $M_{\rm loss}(t_{\rm end})$ & $1.56\times 10^{-5}\,M_{\mathrm{M}}$ \\
+    累積損失 $M_{\rm loss}(t_{\rm end})$ & $1.56\times 10^{-5}\,M_{\rm Mars}$ \\
     \hline
   \end{tabular}
 \end{table}
@@ -45,7 +45,7 @@
   \label{tab:results_tau0_comparison}
   \begin{tabular}{cccc}
     \hline
-    $\tau_0$ & 停止理由 & $t_{\rm end}$ [yr] & $M_{\rm loss}$ [$M_{\mathrm{M}}$] \\
+    $\tau_0$ & 停止理由 & $t_{\rm end}$ [yr] & $M_{\rm loss}$ [$M_{\rm Mars}$] \\
     \hline
     0.5 & $T_M=2000\,\mathrm{K}$ 到達 & 6.11 & $7.78\times 10^{-6}$ \\
     1.0 & $\tau_{\rm los}>\tau_{\rm stop}$ & 1.27 & $1.56\times 10^{-5}$ \\

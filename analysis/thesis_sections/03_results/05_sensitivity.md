@@ -19,7 +19,7 @@
   \label{tab:results_sweep_massloss_core}
   \begin{tabular}{ccccc}
     \hline
-    $T_{M,0}$ [K] & $\tau_0$ & 停止理由 & $t_{\rm end}$ [yr] & $M_{\rm loss}$ [$M_{\mathrm{M}}$] \\
+    $T_{M,0}$ [K] & $\tau_0$ & 停止理由 & $t_{\rm end}$ [yr] & $M_{\rm loss}$ [$M_{\rm Mars}$] \\
     \hline
     3000 & 0.5 & $T_M=2000\,\mathrm{K}$ 到達 & 4.92 & $3.14\times 10^{-9}$ \\
     3000 & 1.0 & $\tau_{\rm los}>\tau_{\rm stop}$ & 2.53 & $6.29\times 10^{-9}$ \\
