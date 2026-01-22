@@ -23,6 +23,8 @@
 - **要約**: `summary.json`（2 年累積量などの集約）．
 - **検証ログ**: `checks/mass_budget.csv`（式\ref{eq:mass_budget_definition} に基づく質量検査）．
 
+保存ファイルでは数値の桁を揃えるため，質量と質量流出率を火星質量 $M_{\rm Mars}$ で規格化した値（例：$\dot{M}_{\rm out}/M_{\rm Mars}$）を併記する．定義は付録E（記号表）を参照する．
+
 \begin{table}[t]
   \centering
   \caption{主要出力量と本文の参照先}
@@ -37,7 +39,7 @@
 	    $\dot{M}_{\rm out}$ & 式\ref{eq:mdot_out_definition} & \texttt{series/run.parquet} \\
 	    $M_{\rm loss}$ & 式\ref{eq:mass_loss_update} & \texttt{summary.json} \\
 	    $\epsilon_{\rm mass}$ & 式\ref{eq:mass_budget_definition} & \texttt{checks/mass\_budget.csv} \\
-	    $N_k(t)$ & 式\ref{eq:sigma_surf_definition} & \texttt{series/psd\_hist.parquet} \\
+	    $N_k(t)$ & §2.1.1 & \texttt{series/psd\_hist.parquet} \\
 	    \hline
   \end{tabular}
 \end{table}

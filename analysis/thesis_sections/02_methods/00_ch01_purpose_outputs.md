@@ -20,13 +20,16 @@ reference_links:
 
 ### 1.1 目的・出力・序論の目標との対応
 
-本節では，ロッシュ限界内側に形成される高温ダスト円盤（内側円盤）を対象として，本研究で用いる数値シミュレーション手法の目的と出力を定義する．序論で整理した「遷移期に固有の追加シンク」を長期衛星形成モデルの初期条件へ受け渡すため，本手法が直接算出する物理量と出力ファイルの対応を明確にする．
+本節では，ロッシュ限界内側に形成される高温ダスト円盤（内側円盤）を対象として，本研究で用いる遷移期数値モデルの目的と入出力（I/O）を定義する．序論で整理した「遷移期に固有の追加シンク」を長期衛星形成モデルの初期条件へ受け渡すため，本手法が直接算出する物理量と出力ファイルの対応をここで確定させる．
 
-本手法はガスが希薄な条件（gas-poor）を仮定し（[@Hyodo2017a_ApJ845_125; @CanupSalmon2018_SciAdv4_eaar6887]），粒径分布（particle size distribution; PSD）の時間発展と，表層に作用する放射圧による損失を同一のタイムループで結合して計算する．入力として，衝突直後計算が与える内側円盤質量 $M_{\rm in}(t_0)$（および半径方向分布）と初期粒径分布を受け取り，出力として放射圧損失率 $\dot{M}_{\rm RP}(t)$ と累積損失 $\Delta M_{\rm in}$ を返す．
+本手法はガスが希薄な条件（gas-poor）を仮定し（[@Hyodo2017a_ApJ845_125; @CanupSalmon2018_SciAdv4_eaar6887]），粒径分布（particle size distribution; PSD）の時間発展と表層に作用する放射圧による損失を同一のタイムループで結合して計算する．本節で確定させるスコープと I/O は次のとおりである．
 
-ただし，長期モデルが既に含む除去過程（惑星への落下・ロッシュ限界外への供給）と二重計上しないよう，長期モデルへ渡す補正量は放射圧に起因する不可逆損失に限定する（定義は序論の式\ref{eq:delta_min_def}–\ref{eq:min_update}）．本研究では衝突直後計算の終端時刻を $t=t_0$ とし，以後の時間 $t$ は遷移期モデルの内部時刻として扱う．積分終端 $t_{\rm end}$ は照射の有効期間を表す入力パラメータであり，計算停止条件としても用いる．
+- **対象と時間区間**：衝突直後計算の終端を $t=t_0$ とし，$t_0\le t\le t_{\rm end}$ を遷移期モデルの積分区間とする．$t_{\rm end}$ は照射の有効期間を表す入力であり，計算停止条件としても用いる．
+- **入力**：内側円盤の初期状態として $M_{\rm in}(t_0)$（必要なら半径方向分布）と初期 PSD を受け取り，照射条件を与える火星温度 $T_{\rm Mars}(t)$（以下 $T_M(t)$）を与える．
+- **出力**：放射圧損失率 $\dot{M}_{\rm out}(t)$ と累積損失 $\Delta M_{\rm in}$，および長期モデルへ返す更新後質量 $M_{\rm in}'$（定義は序論の式\ref{eq:delta_min_def}–\ref{eq:min_update}）を得る．加えて，$s_{\rm blow}(t)$，$\tau_{\rm los}(t)$ などの診断時系列と質量保存誤差 $\epsilon_{\rm mass}(t)$（式\ref{eq:mass_budget_definition}）を保存する．
+- **接続規約（非二重計上）**：長期モデルが既に含む除去過程（惑星への落下，ロッシュ限界外への供給）と重複しないよう，長期モデルへ渡す補正量は放射圧に起因する不可逆損失に限定する．
 
-遷移期モデルでは，火星の照射条件（火星温度 $T_{\rm Mars}(t)$；本章では実装上 $T_M(t)$ と略記する）から放射圧パラメータ β とブローアウト粒径 $s_{\rm blow}$ を評価し，PSD と光学的厚さ（とくに火星視線方向の $\tau_{\rm los}$）を更新する．さらに，二層近似に基づく表層の質量分率 $f_{\rm surf}$（序論で定義）と自遮蔽係数 $\Phi$ を通じて，放射圧損失率 $\dot{M}_{\rm RP}(t)$ を求める．PSD の時間発展は Smoluchowski 方程式に基づく衝突カスケードとして扱い（[@Krivov2006_AA455_509; @StrubbeChiang2006_ApJ648_652]），必要に応じて表層への再供給や昇華による粒径下限の更新を組み込む．
+遷移期モデル内部では，$T_M(t)$ と放射圧効率 $\langle Q_{\rm pr}\rangle$ に基づいて放射圧パラメータ β とブローアウト粒径 $s_{\rm blow}$ を評価し，PSD と光学的厚さ（とくに火星視線方向の $\tau_{\rm los}$）を時間発展させる．表層で実際に放射圧が作用する質量は二層近似に基づく表層の質量分率 $f_{\rm surf}$（序論で定義）と自遮蔽係数 $\Phi$ により制限されるため，これらを通じて $\dot{M}_{\rm out}(t)$ を計算する．PSD の時間発展は Smoluchowski 方程式に基づく衝突カスケードとして扱い（[@Krivov2006_AA455_509; @StrubbeChiang2006_ApJ648_652]），必要に応じて表層への再供給や昇華による粒径下限の更新を組み込む．
 
 序論で整理した二つの目標と，本手法が直接生成する量・出力の対応を表\ref{tab:methods_questions_outputs}に示す．ここで「対応する出力」は，物理量そのものに加えて，解析で用いる時系列や終端要約を指す．保存する生成物（ファイル）との対応は付録Aにまとめる．
 
@@ -39,38 +42,34 @@ reference_links:
     序論の目標 & 手法で直接評価する量 & 対応する出力 \\
     \hline
     目標1: 表層PSDと遮蔽に基づく放射圧損失率の評価 &
-    $\tau_{\rm los}(t)$，$f_{\rm surf}(t)$，$\Phi(t)$，$s_{\rm blow}(t)$，および放射圧損失率 $\dot{M}_{\rm RP}(t)$ &
-    時系列（$\dot{M}_{\rm RP}(t)$，$\tau_{\rm los}(t)$，$s_{\rm blow}(t)$ など）と PSD 履歴（$N_k(t)$，$\Sigma_{\rm surf}(t)$） \\
+	    $\tau_{\rm los}(t)$，$f_{\rm surf}(t)$，$\Phi(t)$，$s_{\rm blow}(t)$，および放射圧損失率 $\dot{M}_{\rm out}(t)$ &
+	    時系列（$\dot{M}_{\rm out}(t)$，$\tau_{\rm los}(t)$，$s_{\rm blow}(t)$ など）と PSD 履歴（$N_k(t)$，$\Sigma_{\rm surf}(t)$） \\
     目標2: $\Delta M_{\rm in}$ と $M_{\rm in}'$ の更新 &
-    $\Delta M_{\rm in}(t)=\int_{t_0}^{t}\dot{M}_{\rm RP}(t')dt'$ と終端値 $\Delta M_{\rm in}$，および更新後質量 $M_{\rm in}'$（序論の式\ref{eq:delta_min_def}–\ref{eq:min_update}） &
+	    $\Delta M_{\rm in}(t)=\int_{t_0}^{t}\dot{M}_{\rm out}(t')dt'$ と終端値 $\Delta M_{\rm in}$，および更新後質量 $M_{\rm in}'$（序論の式\ref{eq:delta_min_def}–\ref{eq:min_update}） &
     終端要約（$\Delta M_{\rm in}$，$M_{\rm in}'$）と質量検査 $\epsilon_{\rm mass}(t)$（式\ref{eq:mass_budget_definition}） \\
     \hline
-  \end{tabular}
+\end{tabular}
 \end{table}
 
-本章は，初見の読者がモデルの因果と再現条件を追える順序で記述する．読み進め方は次の順序を推奨する．
-
-- 前提と対象（1.2）
-- 状態変数と定義（2.1）
-- 支配式と物理過程（2.2–4.1）
-- 数値解法と時間刻み制御（4.2）
-- 出力・条件・検証（5.1）
-- 付録（参照情報と補足資料）（付録A–E）
-
-設定キーや運用コマンドのような実装依存の情報は付録に整理し，本文では物理モデルと時間発展の説明を優先する．略語は付録D（表\ref{tab:abbreviations}）にまとめる．
-
-以上により，本節では序論の目標と出力の対応を定義した．次節以降では，これらの出力を規定する物理過程と数値解法を順に述べる．
+以上により，本節では序論の目標と出力の対応を定義した．次節以降では，これらの出力を規定する物理過程と数値解法を順に述べる．章全体は，まず前提と対象（1.2），次に状態変数・支配式・数値解法（2.1–4.2），最後に出力と検証（5.1）を述べる．設定キーや運用コマンドなどの実装依存情報と略語表は付録にまとめる．
 
 ---
 ### 1.2 研究対象と基本仮定
 
 本モデルは gas-poor 条件下の**軸対称ディスク**を対象とし，半径方向に分割した 1D 計算を基準とする（[@Hyodo2017a_ApJ845_125; @CanupSalmon2018_SciAdv4_eaar6887; @Olofsson2022_MNRAS513_713]）．鉛直方向は面密度へ積分して扱うが，照射を受け得る表層と遮蔽された深部を区別する二層近似を採用する．光学的厚さは主に火星視線方向の $\tau_{\rm los}$ を用い，必要に応じて $\tau_{\rm los}=f_{\rm los}\tau_{\perp}$ から鉛直光学厚 $\tau_{\perp}$ を導出して補助的な時間尺度評価に用いる．粒径分布 $n(s)$ はサイズビンで離散化し，Smoluchowski 衝突カスケードと表層の放射圧損失（および補助過程としての昇華）を同一ループで結合する（[@Dohnanyi1969_JGR74_2531; @Krivov2006_AA455_509; @StrubbeChiang2006_ApJ648_652]）．
 
-- 標準の物理経路では，Smoluchowski 方程式の時間発展を各半径セルで解き，毎ステップの質量収支検査によって数値誤差を監視する．計算順序は図\ref{fig:methods_main_loop}に従う．放射圧損失に関わる依存関係のみを抜粋すると，⟨$Q_{\rm pr}$⟩→β→$s_{\rm blow}$→遮蔽（$f_{\rm surf}$, $\Phi$）→供給→IMEX 更新→外向流束となる．
+- 標準の物理経路では，Smoluchowski 方程式の時間発展を各半径セルで解き，毎ステップの質量収支検査によって数値誤差を監視する．計算順序は図\ref{fig:methods_main_loop}に従う．放射圧損失に関わる依存関係のみを抜粋すると，$\langle Q_{\rm pr}\rangle$→β→$s_{\rm blow}$→遮蔽（$f_{\rm surf}$, $\Phi$）→供給→IMEX 更新→外向流束となる．
 - 本研究の基準ケースはセル間結合を行わない 1D 局所進化であり，リング間の粘性拡散は長期モデル側の物理として扱う．したがって，長期モデルへ渡す $\Delta M_{\rm in}$ の評価では粘性拡散を無効化する．拡散項は感度試験としてのみ有効化し，基準結果とは分離して報告する．再現実行で保存する情報は付録A，設定→物理対応は付録Bを参照する．
 - [@TakeuchiLin2003_ApJ593_524] に基づく gas-rich 表層 ODE は gas-poor 前提の標準設定では用いず，gas-rich 想定の感度試験でのみ有効化する（設定は付録Bを参照）．
 
-1D は $r_{\rm in}$–$r_{\rm out}$ を $N_r$ セルに分割し，各セルの代表半径 $r_i$ で局所量を評価する．角速度 $\Omega(r)$ とケプラー速度 $v_K(r)$ は式\ref{eq:omega_definition}と式\ref{eq:vK_definition}で与え，ブローアウト滞在時間は式\ref{eq:t_blow_definition}の $t_{\rm blow}=1/\Omega$ を基準時間に用いる．粘性拡散を無効化した場合はセル間結合を行わず，半径方向の流束を解かない局所進化として扱う．
+1D は $r_{\rm in}$–$r_{\rm out}$ を $N_r$ セルに分割し，各セルの代表半径 $r_i$ で局所量を評価する．角速度 $\Omega(r)$ とケプラー速度 $v_K(r)$ は式\ref{eq:omega_definition}と式\ref{eq:vK_definition}で与える．ブローアウト滞在時間は角速度により定義される基準時間 $\Omega^{-1}$ を用いて $t_{\rm blow}=\chi_{\rm blow}\Omega^{-1}$ とし（式\ref{eq:t_blow_definition}），$\chi_{\rm blow}=1$ を基準とする．粘性拡散を無効化した場合はセル間結合を行わず，半径方向の流束を解かない局所進化として扱う．
+
+0D（1-zone）では計算領域 $[r_{\rm in},r_{\rm out}]$ を平均化した局所モデルとして扱い，面積積分は環状領域の面積
+\begin{equation}
+\label{eq:annulus_area_definition}
+A=\pi\left(r_{\rm out}^2-r_{\rm in}^2\right)
+\end{equation}
+で近似する．
 
 \begin{equation}
 \label{eq:vK_definition}
@@ -82,16 +81,11 @@ v_K(r)=\sqrt{\frac{G\,M_{\mathrm{M}}}{r}}
 \Omega(r)=\sqrt{\frac{G\,M_{\mathrm{M}}}{r^{3}}}
 \end{equation}
 
-\begin{equation}
-\label{eq:t_blow_definition}
-t_{\mathrm{blow}}=\frac{1}{\Omega}
-\end{equation}
-
 #### 1.2.1 物性モデル (フォルステライト)
 
 物性は **フォルステライト** を基準として与える．密度・放射圧効率 $\langle Q_{\rm pr}\rangle$・昇華（HKL）の係数はフォルステライト値を採用する．一方，破壊閾値 $Q_D^*$ は BA99 の基準則を LS12 の速度補間で扱い，フォルステライト直系の $Q_D^*$ が未確定なため peridot projectile 実験の $Q^*$ を参照した係数スケーリングで proxy 化している（[@BenzAsphaug1999_Icarus142_5; @LeinhardtStewart2012_ApJ745_79; @Avdellidou2016_MNRAS464_734]）．$\rho$ と $\langle Q_{\rm pr}\rangle$ の感度掃引を想定し，実行時に採用した物性値・外部テーブル・物理トグルは付録Aの実行条件ログに記録する．
 
-$\langle Q_{\rm pr}\rangle$ はテーブル入力（CSV/NPZ）を標準とし，Planck 平均の評価に用いる（[@BohrenHuffman1983_Wiley]）．遮蔽係数 $\Phi(\tau,\omega_0,g)$ もテーブル入力を基本とし，双線形補間で適用する（[@Joseph1976_JAS33_2452; @HansenTravis1974_SSR16_527; @CogleyBergstrom1979_JQSRT21_265]）．これらの外部入力の出典と採用値は，再現実行時に照合できるよう付録Aの保存情報に含める．
+$\langle Q_{\rm pr}\rangle$ はテーブル入力（CSV/NPZ）を標準とし，Planck 平均の評価に用いる（[@BohrenHuffman1983_Wiley]）．遮蔽係数 $\Phi$ は火星視線方向の光学的厚さ $\tau_{\rm los}$ に対する減衰率として導入し，本研究では吸収減衰の近似として $\Phi=\exp(-\tau_{\rm los})$ を採用する．実装ではこの関数をテーブルとして保持し，補間により適用する．散乱を含むより一般の放射輸送（例：δ-Eddington 近似）は本研究のスコープ外とし，将来拡張として位置づける（[@Joseph1976_JAS33_2452; @HansenTravis1974_SSR16_527; @CogleyBergstrom1979_JQSRT21_265]）．これらの外部入力の出典と採用値は，再現実行時に照合できるよう付録Aの保存情報に含める．
 
 ---
 ### 1.3 時間発展アルゴリズム
@@ -179,9 +173,9 @@ flowchart TB
 4. 相判定と光学的厚さに基づくゲートを評価し，供給・損失の適用可否を決める．
 5. HKL に基づく昇華 ds/dt を評価し，必要なら PSD 下限 $s_{\min,\mathrm{eff}}$ を更新する．
 6. 追加シンクの代表時間 $t_{\rm sink}$ を評価する．
-7. 遮蔽係数 $\Phi$ を適用して $\kappa_{\rm eff}$ と $\Sigma_{\tau=1}$ を評価する（式\ref{eq:kappa_eff_definition}–\ref{eq:sigma_tau1_definition}）．
+7. 遮蔽係数 $\Phi$ を適用して $\kappa_{\rm eff}$ と $\Sigma_{\tau_{\rm los}=1}$ を評価する（式\ref{eq:kappa_eff_definition}–\ref{eq:sigma_tau1_definition}）．
 8. 表層再供給・深層輸送を適用し，表層に注入するソース項 $F_k$ を確定する．
-9. 表層 ODE と Smoluchowski 方程式を IMEX-BDF(1) で時間積分し，PSD と $\Sigma_{\rm surf}$ を $\Delta t$ だけ更新する．
+9. 表層 ODE または Smoluchowski 方程式を IMEX-BDF(1) で時間積分し，PSD と $\Sigma_{\rm surf}$ を $\Delta t$ だけ更新する．
 10. 診断量の集計，質量検査（式\ref{eq:mass_budget_definition}），停止判定を行い，出力を保存する．
 
 <!-- TEX_EXCLUDE_START -->
@@ -219,7 +213,7 @@ flowchart LR
 
 補足: 損失項（ブローアウト・追加シンク）は S9 の IMEX 更新に含める．S4 では相判定と光学的厚さに基づくゲートにより有効な経路を選択し，S6 で追加シンクの代表時間 $t_{\rm sink}$ を評価する．S10 で診断量の集計，停止判定，および出力を行う．
 
-図\ref{fig:methods_main_loop}は 1D + Smol の標準順序に合わせて記述する．まず「円盤表層状態の更新」（S1–S6）で $T_M$，β，$s_{\rm blow}$，$\kappa_{\rm surf}$，$\tau_{\rm los}$，相状態，昇華 ds/dt，$t_{\rm sink}$ を評価する．次に「表層への質量供給」（S7–S8）で遮蔽係数 $\Phi$ から $\kappa_{\rm eff}$ と $\Sigma_{\tau=1}$ を得て，供給を表層/深層へ配分し，表層への実効供給率を確定する．最後に「微細化シミュレーション」（S9–S10）で Smol/Surface の更新により PSD と $\Sigma_{\rm surf}$ を $\Delta t$ だけ進め，損失と診断を集約する．
+図\ref{fig:methods_main_loop}は 1D + Smol の標準順序に合わせて記述する．まず「円盤表層状態の更新」（S1–S6）で $T_M$，β，$s_{\rm blow}$，$\kappa_{\rm surf}$，$\tau_{\rm los}$，相状態，昇華 ds/dt，$t_{\rm sink}$ を評価する．次に「表層への質量供給」（S7–S8）で遮蔽係数 $\Phi$ から $\kappa_{\rm eff}$ と $\Sigma_{\tau_{\rm los}=1}$ を得て，供給を表層/深層へ配分し，表層への実効供給率を確定する．最後に「微細化シミュレーション」（S9–S10）で Smol/Surface の更新により PSD と $\Sigma_{\rm surf}$ を $\Delta t$ だけ進め，損失と診断を集約する．
 以下，各節でこれらの更新に用いる式と仮定を順に述べる．
 
 #### 1.3.3 物理過程の相互作用
@@ -304,7 +298,7 @@ S3〜S10 の要点は次の通りである．
 - S7: 遮蔽 $\\Phi$ を適用して $\\kappa_{\\rm eff}$ と $\\Sigma_{\\tau=1}$ を評価する．
 - S8: 名目供給に温度スケール・$\\tau$ フィードバック・有限リザーバ・深層輸送を適用し，表層への注入量 `prod_rate_applied` を決定する．
 - S9: 衝突カーネルから loss/gain を構成し，供給と損失を含めた IMEX 更新を実施する．
-- S10: 診断列は `smol_gain_mass_rate`, `smol_loss_mass_rate`, `ds_dt_sublimation`, `M_out_dot` を含む．ここで `M_out_dot` は放射圧損失率 $\dot{M}_{\rm RP}$ に対応する．質量収支を保存する．
+- S10: 診断列は `smol_gain_mass_rate`, `smol_loss_mass_rate`, `ds_dt_sublimation`, `M_out_dot` を含む．ここで `M_out_dot` は放射圧損失率 $\dot{M}_{\rm out}$ に対応する．質量収支を保存する．
 
 ##### 1.3.4.1 供給フロー（Supply）
 

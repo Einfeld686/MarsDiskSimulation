@@ -16,10 +16,11 @@
     \hline
     \texttt{radiation.TM\_K} & 火星温度 & §2.2.1 \\
     \texttt{radiation.mars\_temperature}\newline \texttt{\_driver}\newline \texttt{.*} & 冷却ドライバ & §2.2.1 \\
-    \texttt{shielding.mode} & 遮蔽 $\Phi$ & §2.2.3 \\
-    \texttt{sinks.mode} & 昇華/ガス抗力 & §2.2.5 \\
-    \texttt{blowout.enabled} & ブローアウト損失 & §2.2.2 \\
-    \texttt{supply.mode} & 表層再供給 & §3.1 \\
+	    \texttt{shielding.mode} & 遮蔽 $\Phi$ & §2.2.3 \\
+	    \texttt{shielding.los\_geometry}\newline \texttt{.*} & 視線補正係数 $f_{\rm los}$ & §2.1.2 \\
+	    \texttt{sinks.mode} & 昇華/ガス抗力 & §2.2.5 \\
+	    \texttt{blowout.enabled} & ブローアウト損失 & §2.2.2 \\
+	    \texttt{supply.mode} & 表層再供給 & §3.1 \\
     \texttt{supply.feedback}\newline \texttt{.*} & $\tau$フィードバック制御 & §3.1.1 \\
     \texttt{supply.temperature}\newline \texttt{.*} & 温度カップリング & §3.1.2 \\
     \texttt{supply.reservoir}\newline \texttt{.*} & 有限質量リザーバ & §3.1.3 \\
@@ -134,7 +135,34 @@
 	    \texttt{diagnostics.energy}\newline \texttt{\_bookkeeping}\newline \texttt{.stream} & energy 系列/簿記をストリーム出力 & true \\
 	    \hline
 	  \end{tabular}
-	\end{table}
+		\end{table}
+
+#### B.5 視線幾何（$f_{\rm los}$）
+
+$f_{\rm los}$ は垂直光学厚 $\tau_\perp$ から火星視線方向光学厚 $\tau_{\rm los}=f_{\rm los}\tau_\perp$ を近似する補正係数である（§2.1.2）．実装では次の設定により
+\[
+f_{\rm los}=
+\begin{cases}
+\max\!\left(1,\dfrac{\mathrm{path\_multiplier}}{H/r}\right), & \mathrm{mode}=\texttt{aspect\_ratio\_factor},\\
+1, & \mathrm{mode}=\texttt{none}
+\end{cases}
+\]
+として与える．
+
+\begin{table}[t]
+  \centering
+  \caption{視線補正係数 $f_{\rm los}$ の設定（\texttt{shielding.los\_geometry}）}
+  \label{tab:los_geometry_settings}
+  \begin{tabular}{p{0.42\textwidth} p{0.34\textwidth} p{0.16\textwidth}}
+    \hline
+    設定キー & 意味 & 既定値 \\
+    \hline
+    \texttt{shielding.los\_geometry.mode} & \texttt{aspect\_ratio\_factor} / \texttt{none} & \texttt{aspect\_ratio\_factor} \\
+    \texttt{shielding.los\_geometry.h\_over\_r} & アスペクト比 $H/r$ & 1.0 \\
+    \texttt{shielding.los\_geometry.path\_multiplier} & 視線方向の光路長係数 & 1.0 \\
+    \hline
+  \end{tabular}
+\end{table}
 
 
 ---

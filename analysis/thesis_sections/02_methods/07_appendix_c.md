@@ -20,7 +20,7 @@
     Planck 平均 $\langle Q_{\rm pr}\rangle$ &
     放射圧効率として β と $s_{\rm blow}$ を決める（灰色体近似は例外） &
     §2.2.2 \\
-    遮蔽係数 $\Phi(\tau,\omega_0,g)$ &
+    遮蔽係数 $\Phi(\tau_{\rm los})$（本研究では $\Phi=\exp(-\tau_{\rm los})$） &
     有効不透明度 $\kappa_{\rm eff}$ を通じて遮蔽と供給フィードバックに入る &
     §2.2.3 \\
     \hline

@@ -16,7 +16,7 @@ reference_links:
 
 #### 5.1.1 出力・I/O・再現性
 
-時間発展の各ステップで，主要なスカラー量（$T_M$, $\tau_{\rm los}$, $s_{\rm blow}$, $s_{\min,\mathrm{eff}}$, $\Sigma_{\rm surf}$, 表層への供給率, 表層流出 $\dot{\Sigma}_{\rm out}$ と総流出率 $\dot{M}_{\rm out}$, 各損失の累積）と，PSD 履歴 $N_k(t)$ を保存し，後段の解析・可視化で再構成できるようにする（[@Krivov2006_AA455_509]）．また，毎ステップの質量検査（式\ref{eq:mass_budget_definition}）を記録し，許容誤差内で質量保存が成り立つことを確認する．出力形式・保存先・主要項目の一覧は付録Aにまとめる．
+時間発展計算の再解析可能性を確保するため，時間発展の各ステップ $t^n$ ごとに主要な診断量と粒径分布（particle size distribution; PSD）の状態を保存する．保存すべき情報は，（i）実行条件（入力設定，外部テーブル，採用パラメータ，乱数シード，バージョン情報），（ii）時系列で記録する診断量（$T_M$, $\tau_{\rm los}$, $s_{\rm blow}$, $s_{\min,\mathrm{eff}}$, $\Sigma_{\rm surf}$, 表層への供給率，表層流出 $\dot{\Sigma}_{\rm out}$，総流出率 $\dot{M}_{\rm out}$，損失機構ごとの累積量），（iii）PSD 状態（各粒径ビン $k$ の数面密度 $N_k(t)$），（iv）検証ログ（質量収支）に分けて整理する（[@Krivov2006_AA455_509]）．ここで $\dot{\Sigma}_{\rm out}$ は面密度流出率（表層流出フラックス）であり，$\dot{M}_{\rm out}$ は $\dot{\Sigma}_{\rm out}$ を計算領域で面積積分した総流出率として定義する．また，各ステップで質量検査（式\ref{eq:mass_budget_definition}）を評価し，相対質量誤差 $\epsilon_{\rm mass}(t)$ を検証ログとして保存する．保存ファイルでは扱いやすさのため，質量と質量流出率を $M_{\rm Mars}$ で規格化した値も併記する（付録E）．出力形式・保存先・主要項目の一覧は付録Aにまとめる．
 
 累積損失 $M_{\rm loss}$ は放射圧ブローアウトによる流出と追加シンクによる損失の和として定義し，外側の結合ステップ幅 $\Delta t$ ごとに逐次積算する．
 
@@ -27,7 +27,7 @@ M_{\rm loss}^{n+1}=M_{\rm loss}^{n}+\Delta t\left(\dot{M}_{\rm out}^{n}+\dot{M}_
 
 ここで $\dot{M}_{\rm sinks}$ は昇華など追加シンクによる質量損失率である．
 
-大規模計算では逐次書き出しによりメモリ使用を抑えるが，保存される物理量と検証ログは I/O 方式に依存しない設計とする．実行条件（入力設定，外部テーブル，採用パラメータ，乱数シード，バージョン情報）も併せて保存し，再解析時の基準とする（付録A）．
+大規模計算ではメモリ使用量を抑えるため，時系列および PSD 履歴を逐次書き出す．ただし逐次／一括のいずれの方式でも，保存する物理量の定義と検証ログ（質量収支など）が一致するよう，出力インタフェースを分離して実装する．
 
 <!-- TEX_EXCLUDE_START -->
 実装では I/O ストリーミングを既定で ON とし（`memory_limit_gb=10`, `step_flush_interval=10000`, `merge_at_end=true`），大規模スイープで逐次フラッシュによりメモリを抑える．運用の既定スイープでは，各ケースを `BATCH_ROOT`（`OUT_ROOT` があればそれを使用）配下の `SWEEP_TAG/<RUN_TS>__<GIT_SHA>__seed<BATCH_SEED>/<case_title>/` に保存する．
@@ -52,13 +52,13 @@ M_{\rm loss}^{n+1}=M_{\rm loss}^{n}+\Delta t\left(\dot{M}_{\rm out}^{n}+\dot{M}_
     相対質量誤差 $|\epsilon_{\rm mass}|$（式\ref{eq:mass_budget_definition}）の最大値が $0.5\%$ 以下 &
     合格 \\
     衝突寿命スケーリング &
-    $t_{\rm coll}^{\rm est}=T_{\rm orb}/(4\pi\tau_{\perp})$ とモデル内の代表衝突時間 $t_{\rm coll}$ が同程度（比が $0.1$–$10$ の範囲；[@StrubbeChiang2006_ApJ648_652]） &
+    推定衝突時間 $t_{\rm coll}^{\rm est}=T_{\rm orb}/(4\pi\tau_{\perp})$ に対し，モデル内の代表衝突時間 $t_{\rm coll}$ の比が $0.1$–$10$ の範囲に入る（[@StrubbeChiang2006_ApJ648_652]） &
     合格 \\
     “wavy” PSD &
-    ブローアウト即時除去を含めた場合に，$s_{\rm blow}$ 近傍で隣接ビンの過不足が交互に現れること（定性的；[@ThebaultAugereau2007_AA472_169]） &
+    ブローアウト即時除去を含めた場合に，$s_{\rm blow}$ 近傍で隣接ビンの過不足が交互に現れることを確認する（実装健全性の定性チェック；[@ThebaultAugereau2007_AA472_169]） &
     合格 \\
     IMEX の安定性と収束 &
-    IMEX-BDF(1)（loss 陰・gain 陽）が負の数密度を回避し，$\Delta t\le0.1\min_k t_{\rm coll,k}$ の条件で主要診断量が収束する（[@Krivov2006_AA455_509]） &
+    IMEX-BDF(1)（loss 陰・gain 陽）が数密度 $N_k$ の非負性を保ち，$\Delta t\le0.1\min_k t_{\rm coll,k}$ の条件で主要診断量が収束する（[@Krivov2006_AA455_509]） &
     合格 \\
     \hline
   \end{tabular}
