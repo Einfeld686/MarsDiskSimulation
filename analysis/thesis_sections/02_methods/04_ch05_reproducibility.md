@@ -12,13 +12,15 @@ reference_links:
 <!-- TEX_EXCLUDE_END -->
 
 ---
+本章では，計算結果を再解析・再現実行できるようにするため，保存すべき出力の階層（実行条件／時系列／PSD 状態／検証ログ）を定義し，併せて数値解の健全性を確認する検証基準と判定手順をまとめる．以下では，まず出力仕様（5.1.1）を定め，続いて保存ログにもとづく検証（5.1.2）を述べる．
+
 ### 5.1 出力と検証
 
 #### 5.1.1 出力・I/O・再現性
 
 再解析と再現実行を可能にするため，1 回の実行（case）ごとに，入力設定（YAML），外部テーブル，採用パラメータ，乱数シード，およびコードのバージョン情報を実行条件として保存する．これらは時不変の前提情報であり，時系列出力とは別に一度だけ記録する．
 
-時間発展では，第4章で定義した外側の結合ステップを $t^n$（$t^{n+1}=t^n+\Delta t$）とし，Smoluchowski/表層 ODE の内部積分は必要に応じて内部ステップ $dt_{\rm eff}$ で分割する．本論文で解析に用いる時系列の基準は外側ステップ $t^n$ であり，主要診断量・PSD 状態・質量収支ログは各 $t^n$ ごとに保存する（PSD 履歴は必要に応じて一定間隔で間引く）．
+時間発展では，第4章で定義した外側の結合ステップを $t^n$（$t^{n+1}=t^n+\Delta t$）とし，Smoluchowski/表層 ODE の内部積分は $dt_{\rm eff}\le \Delta t$ の内部ステップに分割して行う（第4章）．本論文で解析に用いる時系列の基準は外側ステップ $t^n$ であり，主要診断量（例：$s_{\rm blow}(t)$，$\Sigma_{\rm surf}(t)$，$\dot{M}_{\rm out}(t)$，$M_{\rm loss}(t)$）と質量収支ログは各 $t^n$ ごとに保存する．PSD 履歴 $N_k(t^n)$ は外側ステップの一定の整数間隔で保存し（既定は毎ステップ），その保存間隔も実行条件として保存する．
 
 再構成に必須な状態変数は，各粒径ビン（および 1D の場合は各半径セル）の数面密度 $N_k(t^n)$（あるいは $N_{i,k}(t^n)$）と，対応するサイズグリッド $s_k$ である（2.1.1節）．表層流出の面密度フラックス $\dot{\Sigma}_{\rm out}$ は式\ref{eq:surface_outflux}，円盤全体の質量流出率 $\dot{M}_{\rm out}$ は式\ref{eq:mdot_out_definition}で定義する（0D の面積近似は式\ref{eq:annulus_area_definition}）．また，各ステップで質量検査（式\ref{eq:mass_budget_definition}）を評価し，相対質量誤差 $\epsilon_{\rm mass}(t)$ を検証ログとして保存する．保存ファイルでは扱いやすさのため，質量と質量流出率を $M_{\rm Mars}$ で規格化した値も併記する（記号表：付録E）．出力形式・保存先・主要項目の一覧は付録Aにまとめる．
 
@@ -34,6 +36,8 @@ M_{\rm loss}^{n+1}=M_{\rm loss}^{n}+\Delta t\left(\dot{M}_{\rm out}^{n}+\dot{M}_
 
 大規模計算ではメモリ使用量を抑えるため，時系列および PSD 履歴を逐次書き出す．ただし逐次／一括のいずれの方式でも，保存する物理量の定義と検証ログ（質量収支など）が一致するよう，出力インタフェースを分離して実装する．
 
+以上により，任意の時刻における PSD と主要診断量を後段解析で再構成できる．次節では，保存した検証ログに基づき，計算結果の採用可否を判定する検証手順を示す．
+
 <!-- TEX_EXCLUDE_START -->
 実装では I/O ストリーミングを既定で ON とし（`memory_limit_gb=10`, `step_flush_interval=10000`, `merge_at_end=true`），大規模スイープで逐次フラッシュによりメモリを抑える．運用の既定スイープでは，各ケースを `BATCH_ROOT`（`OUT_ROOT` があればそれを使用）配下の `SWEEP_TAG/<RUN_TS>__<GIT_SHA>__seed<BATCH_SEED>/<case_title>/` に保存する．
 <!-- TEX_EXCLUDE_END -->
@@ -47,23 +51,25 @@ M_{\rm loss}^{n+1}=M_{\rm loss}^{n}+\Delta t\left(\dot{M}_{\rm out}^{n}+\dot{M}_
 
 \begin{table}[t]
   \centering
-  \caption{検証項目と合格基準（本論文で提示する結果は全て合格）}
+  \caption{検証項目と合格基準}
   \label{tab:validation_criteria}
   \begin{tabular}{p{0.27\textwidth} p{0.69\textwidth}}
     \hline
     検証項目 & 合格基準（許容誤差） \\
     \hline
     質量保存 &
-    相対質量誤差 $|\epsilon_{\rm mass}(t)|$（式\ref{eq:mass_budget_definition}）の最大値が $0.5\%$ 以下 \\
-    衝突寿命スケーリング &
-    推定衝突時間 $t_{\rm coll}^{\rm est}=T_{\rm orb}/(4\pi\tau_{\perp})$ に対し，モデル内の代表衝突時間 $t_{\rm coll}$ の比が $0.1$–$10$ の範囲に入る（[@StrubbeChiang2006_ApJ648_652]） \\
+	    相対質量誤差 $|\epsilon_{\rm mass}(t)|$（式\ref{eq:mass_budget_definition}）の最大値が $0.5\%$ 以下 \\
+	    衝突寿命スケーリング &
+	    推定衝突時間 $t_{\rm coll}^{\rm est}=T_{\rm orb}/(2\pi\tau_{\perp})$ に対し，モデル内の代表衝突時間 $t_{\rm coll}$ の比が $0.1$–$10$ の範囲に入る（[@StrubbeChiang2006_ApJ648_652]） \\
     “wavy” PSD &
     ブローアウト即時除去を含めた場合に，$s_{\rm blow}$ 近傍で隣接ビンの過不足が交互に現れることを確認する（実装健全性の定性チェック；[@ThebaultAugereau2007_AA472_169]） \\
     IMEX の安定性と収束 &
     IMEX-BDF(1)（loss 陰・gain 陽）が数密度 $N_k$ の非負性を保ち，$\Delta t\le0.1\min_k t_{\rm coll,k}$ の条件で主要診断量（$\Sigma_{\rm surf}(t)$，$\dot{M}_{\rm out}(t)$，$M_{\rm loss}(t)$）が収束する（[@Krivov2006_AA455_509]） \\
     \hline
-  \end{tabular}
+\end{tabular}
 \end{table}
+
+IMEX の収束は，同一条件で $\Delta t$ を半分にした比較計算を行い，粗い刻みの時刻系列に合わせて $\Sigma_{\rm surf}(t)$，$\dot{M}_{\rm out}(t)$，および終端の $M_{\rm loss}(t_{\rm end})$ を比較して確認する．“wavy” PSD の確認は，保存した $N_k(t^n)$ から $s_{\rm blow}$ 近傍で隣接ビンの比が交互に過不足（例：$N_{k+1}/N_k>1$ と $<1$ のジグザグ）となることを指標として行う．
 
 これらの基準は，設定変更後の回帰検証にも用いる．検証結果の提示形式として，代表ケースにおける質量検査 $\epsilon_{\rm mass}(t)$ の時系列を付録Aの図\ref{fig:validation_mass_budget_example}に示す．
 

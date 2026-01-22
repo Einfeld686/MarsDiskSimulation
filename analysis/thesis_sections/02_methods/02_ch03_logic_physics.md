@@ -108,6 +108,7 @@ M_{\rm res}(t{+}\Delta t)=\max\!\left(M_{\rm res}(t)-\dot{\Sigma}_{\rm in}(t)\,A
 
 表層へ適用された供給率 $\dot{\Sigma}_{\rm in}(t,r)$ は，PSD（粒径分布）の離散ビンに対する質量注入項として配分する．サイズビンの中心 $s_k$ と粒子質量 $m_k$ を用い，ビン $k$ への数密度注入源 $F_k$（単位時間あたりの粒子数）は
 \begin{equation}
+\label{eq:supply_injection_definition}
 F_k=\frac{\dot{\Sigma}_{\rm in}\,w_k}{m_k},\qquad \sum_k m_k F_k=\dot{\Sigma}_{\rm in}
 \end{equation}
 となるよう，非負の重み $w_k$ を定める．ここで $m_k$ は実装上はビン中心に対応する代表質量として評価する．
@@ -120,6 +121,7 @@ F_k=\frac{\dot{\Sigma}_{\rm in}\,w_k}{m_k},\qquad \sum_k m_k F_k=\dot{\Sigma}_{\
 
 powerlaw\_bins の場合，ビン境界を $[s_{k-},s_{k+}]$ とし，下限 $s_{\rm floor}\equiv\max(s_{\min,\rm eff},s_{\rm inj,min})$，上限 $s_{\rm ceil}\equiv s_{\rm inj,max}$ を用いると，実装上は
 \begin{equation}
+\label{eq:supply_injection_powerlaw_bins}
 \tilde{w}_k=\int_{\max(s_{k-},s_{\rm floor})}^{\min(s_{k+},s_{\rm ceil})} s^{-q}\,ds,\qquad
 F_k=\frac{\dot{\Sigma}_{\rm in}\,\tilde{w}_k}{\sum_j m_j\tilde{w}_j}
 \end{equation}
