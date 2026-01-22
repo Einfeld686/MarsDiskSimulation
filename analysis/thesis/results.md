@@ -25,7 +25,7 @@ NOTE: このファイルは analysis/thesis_sections/03_results/*.md の結合�
 
 本章では質量を火星質量 $M_{\mathrm{M}}$ で無次元化し，$M_{\rm loss}$ を $M_{\mathrm{M}}$ 単位で示す．
 
-### 1.1 パラメータ掃引（temp\_supply）
+### 1.1 パラメータ掃引（temp supply）
 
 温度・初期光学的厚さ・供給混合係数を変えた 16 ケースを計算し，$M_{\rm loss}$ と停止条件の違いを比較する．掃引に用いた主な設定を表\ref{tab:results_sweep_setup}に示す．
 
