@@ -78,9 +78,14 @@ v_K(r)=\sqrt{\frac{G\,M_{\rm Mars}}{r}}
 \Omega(r)=\sqrt{\frac{G\,M_{\rm Mars}}{r^{3}}}
 \end{equation}
 
+\begin{equation}
+\label{eq:torb_definition}
+T_{\rm orb}=\frac{2\pi}{\Omega}
+\end{equation}
+
 ### 2.1 放射圧とブローアウト
 
-放射圧と重力の比 $\beta(s)$ は式\ref{eq:beta_definition}で定義し，Planck 平均の $\langle Q_{\rm pr}\rangle$ は外部テーブルから補間する（付録C）．$\beta\ge0.5$ を非束縛条件とし，ブローアウト境界粒径 $s_{\rm blow}$ は式\ref{eq:s_blow_definition}で与える．ブローアウト滞在時間は式\ref{eq:t_blow_definition}とし，既定値は $\chi_{\rm blow}=1$ とする．
+放射圧と重力の比 $\beta(s)$ は式\ref{eq:beta_definition}で定義し，Planck 平均の $\langle Q_{\rm pr}\rangle$ は外部テーブルから補間する（付録C）．$\beta\ge0.5$ を非束縛条件とし，ブローアウト境界粒径 $s_{\rm blow}$ は式\ref{eq:s_blow_definition}で与える．ブローアウト滞在時間は式\ref{eq:t_blow_definition}とし，基準計算では $\chi_{\rm blow}$ を auto とする．auto は $\chi_{\beta}=1/\{1+0.5(\beta/0.5-1)\}$，$\chi_{Q}=\mathrm{clip}(Q_{\rm pr},0.5,1.5)$，$\chi_{\rm blow}=\mathrm{clip}(\chi_{\beta}\chi_{Q},0.5,2)$ で定義し，$\mathrm{clip}(x,a,b)=\min(\max(x,a),b)$ とする．
 
 \begin{equation}
 \label{eq:beta_definition}
@@ -97,7 +102,7 @@ s_{\rm blow} = \frac{3\,\sigma_{\rm SB}\,T_M^{4}\,R_{\rm Mars}^{2}\,\langle Q_{\
 t_{\rm blow}=\chi_{\rm blow}\Omega^{-1}
 \end{equation}
 
-表層流出は Smol 経路の一次シンクとして式\ref{eq:surface_outflux}で与え，ブローアウト対象ビンでは $S_{{\rm blow},k}=1/t_{\rm blow}$ とする．円盤全体の流出率は式\ref{eq:mdot_out_definition}で定義し，0Dでは領域面積 $A$ を用いて近似する．
+表層流出は Smol 経路の一次シンクとして式\ref{eq:surface_outflux}で与え，ブローアウト対象ビンでは $S_{{\rm blow},k}=1/t_{\rm blow}$ とする．ブローアウト対象は $\beta\ge0.5$ に対応する $s_k\le s_{\rm blow}$ のビンとする．円盤全体の流出率は式\ref{eq:mdot_out_definition}で定義し，0Dでは領域面積 $A$ を用いて近似する．
 
 \begin{equation}
 \label{eq:surface_outflux}
@@ -111,7 +116,7 @@ t_{\rm blow}=\chi_{\rm blow}\Omega^{-1}
 
 ### 2.2 遮蔽
 
-遮蔽係数 $\Phi$ は $\tau_{\rm los}$ の関数として与え，本研究では吸収減衰近似 $\Phi=\exp(-\tau_{\rm los})$ を用いる．$\Phi$ から有効不透明度 $\kappa_{\rm eff}$ を定義し，診断量 $\Sigma_{\tau_{\rm eff}=1}$ を式\ref{eq:sigma_tau1_definition}で評価する．
+遮蔽係数 $\Phi$ は $\tau_{\rm los}$ の関数として与え，本研究では吸収減衰近似 $\Phi=\exp(-\tau_{\rm los})$ を用いる．基準計算では遮蔽を無効化し，$\Phi=1$ として扱う．$\Phi$ から有効不透明度 $\kappa_{\rm eff}$ を定義し，診断量 $\Sigma_{\tau_{\rm eff}=1}$ を式\ref{eq:sigma_tau1_definition}で評価する．
 
 \begin{equation}
 \label{eq:phi_definition}
@@ -134,7 +139,7 @@ t_{\rm blow}=\chi_{\rm blow}\Omega^{-1}
 
 ### 2.3 表層への質量供給
 
-表層への供給は面密度生成率として与え，混合係数 $\epsilon_{\rm mix}$ と入力関数 $R_{\rm base}$ から式\ref{eq:prod_rate_definition}で定義する．供給率は PSD のソース項 $F_k$ として式\ref{eq:supply_injection_definition}で注入し，質量保存条件 $\sum_k m_k F_k=\dot{\Sigma}_{\rm in}$ を満たすよう重み $w_k$ を正規化する．標準計算では注入分布を $dN/ds\propto s^{-q}$ とし，$w_k$ は式\ref{eq:supply_injection_powerlaw_bins}で与える．下限は $s_{\min,\rm eff}$ でクリップする．
+表層への供給は面密度生成率として与え，混合係数 $\epsilon_{\rm mix}$ と入力関数 $R_{\rm base}$ から式\ref{eq:prod_rate_definition}で定義する．供給率は PSD のソース項 $F_k$ として式\ref{eq:supply_injection_definition}で注入し，質量保存条件 $\sum_k m_k F_k=\dot{\Sigma}_{\rm in}$ を満たすよう重み $w_k$ を正規化する．基準計算では注入重みを初期 PSD の質量分率に比例させる．べき乗注入を用いる場合は $s_{\rm floor}=\max(s_{\min,\rm eff},s_{\rm inj,min})$，$s_{\rm ceil}=s_{\rm inj,max}$ として式\ref{eq:supply_injection_powerlaw_bins}で $w_k$ を定め，$s_{\rm inj,min},s_{\rm inj,max}$ を注入サイズ範囲の下限・上限とする．
 
 \begin{equation}
 \label{eq:prod_rate_definition}
@@ -166,7 +171,7 @@ PSD の時間発展は Smoluchowski 方程式（式\ref{eq:smoluchowski}）で�
 \sum_k Y_{kij}=1
 \end{equation}
 
-衝突イベント率 $C_{ij}$ は式\ref{eq:collision_kernel}で与え，相対速度 $v_{ij}$ は入力の $e,i$ と $v_K$ から式\ref{eq:vrel_pericenter_definition}で評価する．ビンの衝突寿命は式\ref{eq:t_coll_definition}とし，時間刻みの上限に用いる．破壊閾値 $Q_D^*$ は式\ref{eq:qdstar_definition}の速度補間を用い，最大残存率 $F_{LF}$ と破片分布 $w^{\rm frag}_k$ を通じて式\ref{eq:fragment_tensor_definition}で $Y_{kij}$ を構成する．
+衝突イベント率 $C_{ij}$ は式\ref{eq:collision_kernel}で与え，相対速度 $v_{ij}$ は入力の $e,i$ と $v_K$ から式\ref{eq:vrel_pericenter_definition}で評価する．スケールハイトは $H_k=H_{\rm factor}\,i\,r$ とし，基準計算では $H_{\rm factor}=1$ を採用する．ビンの衝突寿命は式\ref{eq:t_coll_definition}とし，時間刻みの上限に用いる．破壊閾値 $Q_D^*$ は式\ref{eq:qdstar_definition}の速度補間を用い，最大残存率 $F_{LF}$ と破片分布 $w^{\rm frag}_k$ を通じて式\ref{eq:fragment_tensor_definition}で $Y_{kij}$ を構成する．
 
 \begin{equation}
 \label{eq:collision_kernel}
@@ -235,9 +240,9 @@ P_{\rm sat}(T) =
 実装(.py): marsdisk/run_zero_d.py, marsdisk/run_one_d.py, marsdisk/physics/supply.py, marsdisk/physics/phase.py, marsdisk/physics/shielding.py
 -->
 
-初期条件は $t=t_0$ における PSD $N_k(t_0)$ と内側円盤質量 $M_{\rm in}(t_0)$ で与える．初期 PSD は総質量または光学的厚さ $\tau_0$ により規格化し，標準では $\tau_{\rm los}=1$ を満たすように一様スケーリングする．
+初期条件は $t=t_0$ における PSD $N_k(t_0)$ と内側円盤質量 $M_{\rm in}(t_0)$ で与える．初期 PSD は総質量または光学的厚さ $\tau_0$ により規格化し，標準では $\tau_{\rm los}=1$ を満たすように一様スケーリングする．基準計算では melt lognormal mixture を用い，採用値は表\ref{tab:methods_initial_psd_params}に示す．
 
-火星温度 $T_M(t)$ は外部ドライバとして与え，$\langle Q_{\rm pr}\rangle$ と $\Phi$ のテーブルは付録Cの外部入力を用いる．物性値（$\rho$，$\langle Q_{\rm pr}\rangle$ テーブル，HKL 係数など）と基準ケースの採用値は表\ref{tab:methods_baseline_params}と付録Aに整理する．感度掃引に用いる追加パラメータは付録Aにまとめる．
+火星温度 $T_M(t)$ は外部ドライバとして与え，$\langle Q_{\rm pr}\rangle$ と $\Phi$ のテーブルは付録Cの外部入力を用いる．基準計算では $T_M(t)$ を \texttt{data/mars\_temperature\_T4000p0K.csv}（時間単位 day）で補間し，$\langle Q_{\rm pr}\rangle$ は \texttt{data/qpr\_planck\_forsterite\_mie.csv} を用いる．物性値（$\rho$，HKL 係数など）と基準ケースの採用値は表\ref{tab:methods_baseline_params}と表\ref{tab:methods_qdstar_coeffs}に整理する．感度掃引に用いる追加パラメータは付録Aにまとめる．
 
 サイズ境界は $s\in[s_{\min},s_{\max}]$ とし，$s_{\min,\rm eff}$ 未満は存在しない（ブローアウトで即時除去）．0D では計算領域 $[r_{\rm in},r_{\rm out}]$ を面積 $A$ の環状領域として扱い，半径方向拡散は標準計算では無効とする．
 
@@ -248,21 +253,81 @@ A=\pi\left(r_{\rm out}^2-r_{\rm in}^2\right)
 
 \begin{table}[t]
   \centering
-  \caption{基準計算の採用値（主要パラメータ）}
+  \small
+  \setlength{\tabcolsep}{4pt}
+  \caption{基準計算の採用値（幾何・力学・供給）}
   \label{tab:methods_baseline_params}
-  \begin{tabular}{p{0.28\textwidth} p{0.2\textwidth} p{0.16\textwidth} p{0.26\textwidth}}
+  \begin{tabular}{p{0.3\textwidth} p{0.22\textwidth} p{0.12\textwidth} p{0.26\textwidth}}
     \hline
     記号 & 値 & 単位 & 備考 \\
     \hline
-    $s_{\min}$ & $1.0\times10^{-7}$ & m & PSD 下限（付録B） \\
-    $s_{\max}$ & $3.0$ & m & PSD 上限（付録B） \\
-    $n_{\rm bins}$ & 40 & -- & サイズビン数（付録B） \\
-    $\tau_0$ & 1.0 & -- & 初期規格化（本研究） \\
-    $\chi_{\rm blow}$ & 1.0 & -- & $t_{\rm blow}$ 係数（本研究） \\
-    $t_{\rm end}$ & 2.0 & yr & 積分期間（本研究） \\
-    $q$ & 3.5 & -- & 注入べき指数（本研究） \\
-    $\epsilon_{\rm mix}$ & 1.0 & -- & 混合係数（本研究） \\
+    $r_{\rm in}$ & $1.0\,R_{\rm Mars}$ & $R_{\rm Mars}$ & 内端半径 \\
+    $r_{\rm out}$ & $2.7\,R_{\rm Mars}$ & $R_{\rm Mars}$ & 外端半径 \\
+    $M_{\rm in}$ & $3.0\times10^{-5}$ & $M_{\rm Mars}$ & 内側円盤質量 \\
+    $M_{\rm tot,0}$ & $1.0\times10^{-7}$ & $M_{\rm Mars}$ & 初期総質量 \\
+    $s_{\min}$ & $1.0\times10^{-7}$ & m & PSD 下限 \\
+    $s_{\max}$ & $3.0$ & m & PSD 上限 \\
+    $n_{\rm bins}$ & 40 & -- & サイズビン数 \\
+    $\tau_0$ & 1.0 & -- & 初期規格化 \\
+    $\tau_{\rm stop}$ & 2.302585 & -- & 停止判定（$\ln 10$） \\
+    $f_{\rm los}$ & 1.0 & -- & $H/r=1$，path\_multiplier=1 \\
+    $\Phi$ & 1.0 & -- & 基準計算の遮蔽 \\
+    $e_0$ & 0.5 & -- & 離心率 \\
+    $i_0$ & 0.05 & -- & 傾斜角 \\
+    $H_{\rm factor}$ & 1.0 & -- & $H_k=H_{\rm factor} i r$ \\
+    $\chi_{\rm blow}$ & auto & -- & $\beta$ と $Q_{\rm pr}$ から評価 \\
+    $t_{\rm end}$ & 2.0 & yr & 積分期間 \\
+    $\epsilon_{\rm mix}$ & 1.0 & -- & 混合係数 \\
+    $\dot{\Sigma}_{\rm prod}$ & 0.0 & kg\,m$^{-2}$\,s$^{-1}$ & 供給率（定常） \\
+    $\alpha_{\rm frag}$ & 3.5 & -- & 破片分布指数 \\
     $\rho$ & 3270 & kg\,m$^{-3}$ & フォルステライト \cite{VanLieshoutMinDominik2014_AA572_A76} \\
+    \hline
+  \end{tabular}
+\end{table}
+
+$s_{\rm cut}$ は凝縮粒子を除外するためのカットオフ粒径であり，$s_{\rm min,solid}$ と $s_{\rm max,solid}$ は固相 PSD の範囲を定める．${\rm width}_{\rm dex}$ は両成分に共通の対数幅（dex）である．
+
+\begin{table}[t]
+  \centering
+  \small
+  \setlength{\tabcolsep}{4pt}
+  \caption{基準計算の初期 PSD（melt lognormal mixture）}
+  \label{tab:methods_initial_psd_params}
+  \begin{tabular}{p{0.36\textwidth} p{0.22\textwidth} p{0.2\textwidth}}
+    \hline
+    記号 & 値 & 単位 \\
+    \hline
+    $f_{\rm fine}$ & 0.03 & -- \\
+    $s_{\rm fine}$ & $1.0\times10^{-7}$ & m \\
+    $s_{\rm meter}$ & 1.5 & m \\
+    ${\rm width}_{\rm dex}$ & 0.3 & -- \\
+    $s_{\rm cut}$ & $1.0\times10^{-7}$ & m \\
+    $s_{\rm min,solid}$ & $1.0\times10^{-4}$ & m \\
+    $s_{\rm max,solid}$ & 3.0 & m \\
+    $\alpha_{\rm solid}$ & 3.5 & -- \\
+    \hline
+  \end{tabular}
+\end{table}
+
+表\ref{tab:methods_qdstar_coeffs}の係数は $f_{Q^*}=5.574$ のスケールを適用した値であり，$Q_s$ と $B$ に反映されている．速度補間の詳細は衝突カスケード節で用いる補間則に従う．
+
+\begin{table}[t]
+  \centering
+  \small
+  \setlength{\tabcolsep}{4pt}
+  \caption{基準計算の $Q_D^*$ 係数（$v_{\rm ref}$ は km/s，$Q_s$ と $B$ は BA99 cgs 単位）}
+  \label{tab:methods_qdstar_coeffs}
+  \begin{tabular}{p{0.16\textwidth} p{0.2\textwidth} p{0.16\textwidth} p{0.2\textwidth} p{0.16\textwidth}}
+    \hline
+    $v_{\rm ref}$ & $Q_s$ & $a_s$ & $B$ & $b_g$ \\
+    \hline
+    1 & 1.9509e8 & 0.38 & 0.8187652527440811 & 1.36 \\
+    2 & 1.9509e8 & 0.38 & 1.28478039442684 & 1.36 \\
+    3 & 1.9509e8 & 0.38 & 1.6722 & 1.36 \\
+    4 & 2.92635e8 & 0.38 & 2.2296 & 1.36 \\
+    5 & 3.9018e8 & 0.38 & 2.787 & 1.36 \\
+    6 & 3.9018e8 & 0.38 & 3.137652034251613 & 1.36 \\
+    7 & 3.9018e8 & 0.38 & 3.4683282387928047 & 1.36 \\
     \hline
   \end{tabular}
 \end{table}
@@ -291,6 +356,8 @@ N_k^{n+1}=\frac{N_k^{n}+dt_{\rm eff}\left(G_k^{n}+F_k^{n}-S_k^{n}N_k^{n}\right)}
  \epsilon_{\rm mass} &= \frac{|\Delta\Sigma|}{\Sigma^{n}}.
 \end{aligned}
 \end{equation}
+
+$\dot{\Sigma}_{\rm prod}^{(<s_{\rm blow})}$ は衝突カーネルから評価したブローアウト未満粒子の生成率であり，質量検査にのみ用いる．$\dot{\Sigma}_{\rm extra}$ はブローアウト・昇華・追加シンクによる明示的な損失率の和である．
 ## 5. 出力
 
 <!--
@@ -877,6 +944,7 @@ title: 記号表（論文内参照の正）
 	    $\Delta M_{\rm in}$ & 遷移期における放射圧起因の不可逆損失（累積） & $\mathrm{kg}$ & $\Delta M_{\rm in}=\int \dot{M}_{\rm out}(t)\,dt$ \\
 	    $M_{\rm in}'$ & 更新後の内側円盤質量（長期モデルへ渡す量） & $\mathrm{kg}$ & $M_{\rm in}'=M_{\rm in}(t_0)-\Delta M_{\rm in}$ \\
 	    $\Omega$ & ケプラー角速度 & $\mathrm{s^{-1}}$ & 式\ref{eq:omega_definition} \\
+	    $T_{\rm orb}$ & 公転周期 & $\mathrm{s}$ & 式\ref{eq:torb_definition} \\
 	    $v_K$ & ケプラー速度 & $\mathrm{m\,s^{-1}}$ & 式\ref{eq:vK_definition} \\
     $s$ & 粒子半径 & $\mathrm{m}$ & PSD の独立変数 \\
 	    $n(s)$ & 粒径分布（形状） & -- & 正規化された分布として扱う \\
