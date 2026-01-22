@@ -25,7 +25,7 @@ T_{\rm orb}=\frac{2\pi}{\Omega}
 
 ### 2.1 放射圧とブローアウト
 
-放射圧と重力の比 $\beta(s)$ は式\ref{eq:beta_definition}で定義し，Planck 平均の $\langle Q_{\rm pr}\rangle$ は外部テーブルから補間する（付録C）．$\beta\ge0.5$ を非束縛条件とし，ブローアウト境界粒径 $s_{\rm blow}$ は式\ref{eq:s_blow_definition}で与える．ブローアウト滞在時間は式\ref{eq:t_blow_definition}とし，既定値は $\chi_{\rm blow}=1$ とする．
+放射圧と重力の比 $\beta(s)$ は式\ref{eq:beta_definition}で定義し，Planck 平均の $\langle Q_{\rm pr}\rangle$ は外部テーブルから補間する（付録C）．$\beta\ge0.5$ を非束縛条件とし，ブローアウト境界粒径 $s_{\rm blow}$ は式\ref{eq:s_blow_definition}で与える．ブローアウト滞在時間は式\ref{eq:t_blow_definition}とし，基準計算では $\chi_{\rm blow}$ を auto とする．auto は $\chi_{\beta}=1/\{1+0.5(\beta/0.5-1)\}$，$\chi_{Q}=\mathrm{clip}(Q_{\rm pr},0.5,1.5)$，$\chi_{\rm blow}=\mathrm{clip}(\chi_{\beta}\chi_{Q},0.5,2)$ で定義し，$\mathrm{clip}(x,a,b)=\min(\max(x,a),b)$ とする．
 
 \begin{equation}
 \label{eq:beta_definition}
