@@ -970,7 +970,7 @@ reference_links:
 
 #### 5.1.1 出力・I/O・再現性
 
-再解析と再現実行を可能にするため，1 回の実行（case）ごとに，入力設定（YAML），外部テーブル，採用パラメータ，乱数シード，およびコードのバージョン情報を実行条件として保存する．これらは時不変の前提情報であり，時系列出力とは別に一度だけ記録する．
+再解析と再現実行を可能にするため，1 回の実行ごとに，設定ファイル，外部テーブル，採用パラメータ，乱数シード，およびコードのバージョン情報を実行条件として保存する．これらは時不変の前提情報であり，時系列出力とは別に一度だけ記録する．
 
 時間発展では，第4章で定義した外側の結合ステップを $t^n$（$t^{n+1}=t^n+\Delta t$）とし，Smoluchowski/表層 ODE の内部積分は $dt_{\rm eff}\le \Delta t$ の内部ステップに分割して行う（第4章）．本論文で解析に用いる時系列の基準は外側ステップ $t^n$ であり，主要診断量（例：$s_{\rm blow}(t)$，$\Sigma_{\rm surf}(t)$，$\dot{M}_{\rm out}(t)$，$M_{\rm loss}(t)$）と質量収支ログは各 $t^n$ ごとに保存する．PSD 履歴 $N_k(t^n)$ は外側ステップの一定の整数間隔で保存し（既定は毎ステップ），その保存間隔も実行条件として保存する．
 
@@ -999,7 +999,9 @@ M_{\rm loss}^{n+1}=M_{\rm loss}^{n}+\Delta t\left(\dot{M}_{\rm out}^{n}+\dot{M}_
 
 ##### 5.1.2.1 検証項目・合格基準・結果
 
-本研究では，保存則（質量保存），スケール検証（衝突寿命），既知現象の定性的再現（wavy PSD），数値解法の安定性と収束（IMEX）の4観点から，表\ref{tab:validation_criteria}の基準で検証した．本論文で提示する結果は，全てこれらの基準を満たすことを確認したケースに限定する．
+本研究では，保存則（質量保存），スケール検証（衝突寿命），既知現象の定性的再現（wavy PSD），数値解法の安定性と収束（IMEX）の4観点から，表\ref{tab:validation_criteria}の基準で検証した．本論文で提示する結果は，これらの基準を満たすことを確認した計算に限定する．
+
+衝突寿命スケーリングの比較に用いる代表衝突時間 $t_{\rm coll}$ は，Smol 経路では $t_{\rm coll}\equiv\min_k t_{\rm coll,k}$（式\ref{eq:t_coll_definition}）と定める．表層 ODE 経路では $t_{\rm coll}\equiv t_{\rm coll}^{\rm est}$ とする．
 
 \begin{table}[t]
   \centering
@@ -1012,18 +1014,28 @@ M_{\rm loss}^{n+1}=M_{\rm loss}^{n}+\Delta t\left(\dot{M}_{\rm out}^{n}+\dot{M}_
     質量保存 &
 	    相対質量誤差 $|\epsilon_{\rm mass}(t)|$（式\ref{eq:mass_budget_definition}）の最大値が $0.5\%$ 以下 \\
 	    衝突寿命スケーリング &
-	    推定衝突時間 $t_{\rm coll}^{\rm est}=T_{\rm orb}/(2\pi\tau_{\perp})$ に対し，モデル内の代表衝突時間 $t_{\rm coll}$ の比が $0.1$–$10$ の範囲に入る（[@StrubbeChiang2006_ApJ648_652]） \\
+	    推定衝突時間 $t_{\rm coll}^{\rm est}=T_{\rm orb}/(2\pi\tau_{\perp})$ に対し，モデル内の代表衝突時間 $t_{\rm coll}$ の比が $0.1$–$10$ の範囲に入る（\cite{StrubbeChiang2006_ApJ648_652}） \\
     “wavy” PSD &
-    ブローアウト即時除去を含めた場合に，$s_{\rm blow}$ 近傍で隣接ビンの過不足が交互に現れることを確認する（実装健全性の定性チェック；[@ThebaultAugereau2007_AA472_169]） \\
+    ブローアウト即時除去を含めた場合に，$s_{\rm blow}$ 近傍で隣接ビンの過不足が交互に現れることを確認する（実装健全性の定性チェック；\cite{ThebaultAugereau2007_AA472_169}） \\
     IMEX の安定性と収束 &
-    IMEX-BDF(1)（loss 陰・gain 陽）が数密度 $N_k$ の非負性を保ち，$\Delta t\le0.1\min_k t_{\rm coll,k}$ の条件で主要診断量（$\Sigma_{\rm surf}(t)$，$\dot{M}_{\rm out}(t)$，$M_{\rm loss}(t)$）が収束する（[@Krivov2006_AA455_509]） \\
+    IMEX-BDF(1)（衝突ロス陰・破片生成と供給注入および一次シンク陽）が数面密度 $N_k$ の非負性を保ち，$\Delta t\le0.1\min_k t_{\rm coll,k}$ の条件で主要診断量（$\Sigma_{\rm surf}(t)$，$\dot{M}_{\rm out}(t)$，$M_{\rm loss}(t)$）が $1\%$ 以内で収束する（\cite{Krivov2006_AA455_509}） \\
     \hline
 \end{tabular}
 \end{table}
 
-IMEX の収束は，同一条件で $\Delta t$ を半分にした比較計算を行い，粗い刻みの時刻系列に合わせて $\Sigma_{\rm surf}(t)$，$\dot{M}_{\rm out}(t)$，および終端の $M_{\rm loss}(t_{\rm end})$ を比較して確認する．“wavy” PSD の確認は，保存した $N_k(t^n)$ から $s_{\rm blow}$ 近傍で隣接ビンの比が交互に過不足（例：$N_{k+1}/N_k>1$ と $<1$ のジグザグ）となることを指標として行う．
+IMEX の収束判定では，同一条件で外側ステップ幅を $\Delta t$ と $\Delta t/2$ にした2つの計算を行う．粗い刻みの時刻列 $\{t^n\}$ に対し，細かい刻みの結果を線形補間して $\tilde{q}^{(\Delta t/2)}(t^n)$ とし，主要時系列 $q\in\{\Sigma_{\rm surf},\dot{M}_{\rm out}\}$ について最大相対差
+\[
+\delta_q\equiv\frac{\max_n\left|q^{(\Delta t)}(t^n)-\tilde{q}^{(\Delta t/2)}(t^n)\right|}{\max_n \tilde{q}^{(\Delta t/2)}(t^n)}
+\]
+を定義する．さらに終端累積損失について
+\[
+\delta_{M}\equiv\frac{\left|M_{\rm loss}^{(\Delta t)}(t_{\rm end})-M_{\rm loss}^{(\Delta t/2)}(t_{\rm end})\right|}{M_{\rm loss}^{(\Delta t/2)}(t_{\rm end})}
+\]
+を定義する．ただし分母が0の場合は分子が0であることを要求する．本研究では，$\delta_q<0.01$ かつ $\delta_{M}<0.01$ を満たすとき「収束」と判定する．
 
-これらの基準は，設定変更後の回帰検証にも用いる．検証結果の提示形式として，代表ケースにおける質量検査 $\epsilon_{\rm mass}(t)$ の時系列を付録Aの図\ref{fig:validation_mass_budget_example}に示す．
+“wavy” PSD の確認は，保存した $N_k(t^n)$ から $s_{\rm blow}$ 近傍で隣接ビンの比が交互に過不足（例：$N_{k+1}/N_k>1$ と $<1$ のジグザグ）となることを指標として行う．
+
+これらの基準は，設定変更後の回帰検証にも用いる．検証結果の提示形式として，代表計算における質量検査 $\epsilon_{\rm mass}(t)$ の時系列を付録Aの図\ref{fig:validation_mass_budget_example}に示す．
 
 <!-- TEX_EXCLUDE_START -->
 ##### 5.1.2.1a リポジトリ運用（自動テスト）
