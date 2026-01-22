@@ -39,7 +39,7 @@
 	    $\dot{M}_{\rm out}$ & 式\ref{eq:mdot_out_definition} & \texttt{series/run.parquet} \\
 	    $M_{\rm loss}$ & 式\ref{eq:mass_loss_update} & \texttt{summary.json} \\
 	    $\epsilon_{\rm mass}$ & 式\ref{eq:mass_budget_definition} & \texttt{checks/mass\_budget.csv} \\
-	    $N_k(t)$ & 2.1.1節 & \texttt{series/psd\_hist.parquet} \\
+	    $N_k(t)$ & 1節 & \texttt{series/psd\_hist.parquet} \\
 	    \hline
   \end{tabular}
 \end{table}
@@ -80,6 +80,8 @@
 
 \begin{table}[t]
   \centering
+  \small
+  \setlength{\tabcolsep}{3pt}
   \caption{基準ケースで用いる物性値（フォルステライト基準）}
   \label{tab:run_sweep_material_properties}
   \begin{tabular}{p{0.18\textwidth} p{0.38\textwidth} p{0.22\textwidth} p{0.16\textwidth}}
@@ -92,7 +94,7 @@
 	    \cite{VanLieshoutMinDominik2014_AA572_A76} \\
     $\langle Q_{\rm pr}\rangle$ &
     Planck平均放射圧効率（テーブル） &
-    \texttt{data/qpr\_planck\_forsterite\_mie.csv} &
+    \path{data/}\newline\path{qpr_planck_forsterite_mie.csv} &
     \cite{BohrenHuffman1983_Wiley,Zeidler2015_ApJ798_125} \\
 	    $\alpha$ &
 	    HKL 蒸発係数 &
@@ -166,6 +168,8 @@ scripts\runsets\windows\run_sweep.cmd ^
 
 \begin{table}[t]
   \centering
+  \small
+  \setlength{\tabcolsep}{4pt}
   \caption{run\_sweep 既定の $Q_D^*$ 係数テーブル（\texttt{qstar.coeff\_table}）}
   \label{tab:run_sweep_qdstar_coeff_table}
   \begin{tabular}{p{0.14\textwidth} p{0.20\textwidth} p{0.14\textwidth} p{0.20\textwidth} p{0.14\textwidth}}
@@ -183,7 +187,7 @@ scripts\runsets\windows\run_sweep.cmd ^
   \end{tabular}
 \end{table}
 
-表\ref{tab:run_sweep_qdstar_coeff_table} の係数は BA99 の基準テーブル \\cite{BenzAsphaug1999_Icarus142_5} を基準に，$f_{Q^*}=5.574$（表\ref{tab:run_sweep_material_properties}）で $Q_s,B$ のみをスケーリングして作成している（peridot proxy: \\cite{Avdellidou2016_MNRAS464_734}）．
+表\ref{tab:run_sweep_qdstar_coeff_table} の係数は BA99 の基準テーブル \cite{BenzAsphaug1999_Icarus142_5} を基準に，$f_{Q^*}=5.574$（表\ref{tab:run_sweep_material_properties}）で $Q_s,B$ のみをスケーリングして作成している（peridot proxy: \cite{Avdellidou2016_MNRAS464_734}）．
 
 #### run_sweep.cmd の主要環境変数
 
@@ -192,6 +196,8 @@ scripts\runsets\windows\run_sweep.cmd ^
 
 \begin{table}[t]
   \centering
+  \small
+  \setlength{\tabcolsep}{4pt}
   \caption{run\_sweep.cmd の主要環境変数}
   \label{tab:run_sweep_env}
   \begin{tabular}{p{0.28\textwidth} p{0.42\textwidth} p{0.18\textwidth}}

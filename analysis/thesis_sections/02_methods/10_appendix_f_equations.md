@@ -104,7 +104,7 @@ s_{\rm blow} = \frac{3\,\sigma_{\rm SB}\,T_M^{4}\,R_{\rm Mars}^{2}\,\langle Q_{\
 \begin{equation}
 \tag{E.020}
 \label{eq:E020}
-v_{ij}=v_{K}\,\sqrt{1.25\,e^{2}+i^{2}}
+v_{ij}=v_K\,\sqrt{1.25\,e^{2}+i^{2}}
 \end{equation}
 
 \begin{equation}

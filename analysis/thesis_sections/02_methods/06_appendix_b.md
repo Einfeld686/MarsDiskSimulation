@@ -8,30 +8,32 @@
 
 \begin{table}[t]
   \centering
+  \small
+  \setlength{\tabcolsep}{4pt}
   \caption{設定キーと物理の対応}
   \label{tab:app_config_physics_map}
   \begin{tabular}{p{0.38\textwidth} p{0.26\textwidth} p{0.22\textwidth}}
     \hline
     設定キー & 物理 & 本文参照 \\
     \hline
-    \texttt{radiation.TM\_K} & 火星温度 & 2.2.1節 \\
-    \texttt{radiation.mars\_temperature}\newline \texttt{\_driver}\newline \texttt{.*} & 冷却ドライバ & 2.2.1節 \\
-	    \texttt{shielding.mode} & 遮蔽 $\Phi$ & 2.2.3節 \\
-	    \texttt{shielding.los\_geometry}\newline \texttt{.*} & 視線補正係数 $f_{\rm los}$ & 2.1.2節 \\
-	    \texttt{sinks.mode} & 昇華/ガス抗力 & 2.2.5節 \\
-	    \texttt{blowout.enabled} & ブローアウト損失 & 2.2.2節 \\
-	    \texttt{supply.mode} & 表層再供給 & 3.1節 \\
-    \texttt{supply.feedback}\newline \texttt{.*} & $\tau$フィードバック制御 & 3.1.1節 \\
-    \texttt{supply.temperature}\newline \texttt{.*} & 温度カップリング & 3.1.2節 \\
-    \texttt{supply.reservoir}\newline \texttt{.*} & 有限質量リザーバ & 3.1.3節 \\
-    \texttt{supply.transport}\newline \texttt{.*} & 深層ミキシング & 3.1.3節 \\
-    \texttt{init\_tau1.*} & 初期$\tau=1$スケーリング & 4.2.3.1節 \\
-    \texttt{phase.*} & 相判定 & 2.2.4節 \\
-    \texttt{phase.q\_abs\_mean} & $\langle Q_{\rm abs}\rangle$（粒子温度） & 2.2.4節 \\
-    \texttt{numerics.checkpoint.*} & チェックポイント & 4.2.3.3節 \\
-    \texttt{numerics.t\_end\_until}\newline \texttt{\_temperature}\newline \texttt{\_K} & 温度停止条件 & 4.2.3.2節 \\
-    \texttt{ALLOW\_TL2003} & gas-rich 表層 ODE トグル & 2.2.3節 \\
-    \texttt{psd.wavy\_strength} & "wavy" 強度（0 で無効） & 2.1.1節 \\
+    \texttt{radiation.TM\_K} & 火星温度 & 3節 \\
+    \texttt{radiation.mars\_temperature}\newline \texttt{\_driver}\newline \texttt{.*} & 冷却ドライバ & 3節 \\
+	    \texttt{shielding.mode} & 遮蔽 $\Phi$ & 2.2節 \\
+	    \texttt{shielding.los\_geometry}\newline \texttt{.*} & 視線補正係数 $f_{\rm los}$ & 1節 \\
+	    \texttt{sinks.mode} & 昇華/ガス抗力 & 2.5節 \\
+	    \texttt{blowout.enabled} & ブローアウト損失 & 2.1節 \\
+	    \texttt{supply.mode} & 表層再供給 & 2.3節 \\
+    \texttt{supply.feedback}\newline \texttt{.*} & $\tau$フィードバック制御 & 2.3節 \\
+    \texttt{supply.temperature}\newline \texttt{.*} & 温度カップリング & 2.3節 \\
+    \texttt{supply.reservoir}\newline \texttt{.*} & 有限質量リザーバ & 2.3節 \\
+    \texttt{supply.transport}\newline \texttt{.*} & 深層ミキシング & 2.3節 \\
+    \texttt{init\_tau1.*} & 初期$\tau=1$スケーリング & 3節 \\
+    \texttt{phase.*} & 相判定 & 本文では扱わない \\
+    \texttt{phase.q\_abs\_mean} & $\langle Q_{\rm abs}\rangle$（粒子温度） & 本文では扱わない \\
+    \texttt{numerics.checkpoint.*} & チェックポイント & 本文では扱わない \\
+    \texttt{numerics.t\_end\_until}\newline \texttt{\_temperature}\newline \texttt{\_K} & 温度停止条件 & 本文では扱わない \\
+    \texttt{ALLOW\_TL2003} & gas-rich 表層 ODE トグル & 本文では扱わない \\
+    \texttt{psd.wavy\_strength} & "wavy" 強度（0 で無効） & 6節 \\
     \hline
   \end{tabular}
 \end{table}
@@ -40,6 +42,8 @@
 
 \begin{table}[t]
   \centering
+  \small
+  \setlength{\tabcolsep}{4pt}
   \caption{PSD グリッドの既定値}
   \label{tab:app_psd_grid_defaults}
   \begin{tabular}{p{0.36\textwidth} p{0.2\textwidth} p{0.32\textwidth}}
@@ -53,12 +57,14 @@
   \end{tabular}
 \end{table}
 
-表\ref{tab:app_psd_grid_defaults}の既定値では $s$ 範囲が広いため，対数等間隔の隣接比 $s_{k+1}/s_k$ は $O(1.5)$ となる．$s_{\rm blow}$ 近傍の解像度が必要な場合は $n_{\rm bins}$ を増やすか，対象とする $s_{\max}$ を再検討する（2.1.1節，5.1.2節）．
+表\ref{tab:app_psd_grid_defaults}の既定値では $s$ 範囲が広いため，対数等間隔の隣接比 $s_{k+1}/s_k$ は $O(1.5)$ となる．$s_{\rm blow}$ 近傍の解像度が必要な場合は $n_{\rm bins}$ を増やすか，対象とする $s_{\max}$ を再検討する（1節，6節）．
 
 #### B.2 初期化（$\tau=1$ スケーリング）
 
 \begin{table}[t]
   \centering
+  \small
+  \setlength{\tabcolsep}{4pt}
   \caption{初期 $\tau=1$ スケーリングの設定}
   \label{tab:app_init_tau1_settings}
   \begin{tabular}{p{0.42\textwidth} p{0.3\textwidth} p{0.16\textwidth}}
@@ -76,6 +82,8 @@
 
 \begin{table}[t]
   \centering
+  \small
+  \setlength{\tabcolsep}{4pt}
   \caption{供給フィードバックの設定}
   \label{tab:app_supply_feedback_settings}
   \begin{tabular}{p{0.4\textwidth} p{0.36\textwidth} p{0.14\textwidth}}
@@ -93,13 +101,15 @@
 
 \begin{table}[t]
   \centering
+  \small
+  \setlength{\tabcolsep}{4pt}
   \caption{温度カップリングの設定}
   \label{tab:app_supply_temperature_settings}
   \begin{tabular}{p{0.46\textwidth} p{0.44\textwidth}}
     \hline
     設定キー & 意味 \\
     \hline
-    \texttt{supply.temperature.reference\_K} & 基準温度 [K] \\
+    \path{supply.temperature.reference_K} & 基準温度 [K] \\
     \texttt{supply.temperature.exponent} & べき指数 $\alpha$ \\
     \texttt{supply.temperature.floor}\newline \texttt{supply.temperature.cap} & スケール係数の下限・上限 \\
     \hline
@@ -108,6 +118,8 @@
 
 \begin{table}[t]
   \centering
+  \small
+  \setlength{\tabcolsep}{4pt}
   \caption{注入パラメータの設定}
   \label{tab:app_supply_injection_settings}
   \begin{tabular}{p{0.40\textwidth} p{0.32\textwidth} p{0.18\textwidth}}
@@ -124,17 +136,19 @@
 
 #### B.4 診断（エネルギー簿記）
 
-	\begin{table}[t]
-	  \centering
-	  \caption{エネルギー簿記に関連する設定キー}
-	  \label{tab:app_energy_settings}
-	  \begin{tabular}{p{0.36\textwidth} p{0.38\textwidth} l}
+\begin{table}[t]
+  \centering
+  \small
+  \setlength{\tabcolsep}{4pt}
+  \caption{エネルギー簿記に関連する設定キー}
+  \label{tab:app_energy_settings}
+  \begin{tabular}{p{0.36\textwidth} p{0.38\textwidth} l}
 	    \hline
 	    設定キー & 意味 & 既定値 \\
 	    \hline
 	    \texttt{dynamics.eps\_restitution} & 反発係数（$f_{ke,\rm frag}$ のデフォルトに使用） & 0.5 \\
 	    \texttt{dynamics.f\_ke\_cratering} & 侵食時の非散逸率 & 0.1 \\
-	    \texttt{dynamics.f\_ke\_fragmentation} & 破砕時の非散逸率 & None（$\varepsilon^2$ 使用） \\
+    \path{dynamics.f_ke_fragmentation} & 破砕時の非散逸率 & None（$\varepsilon^2$ 使用） \\
 	    \texttt{diagnostics.energy}\newline \texttt{\_bookkeeping}\newline \texttt{.stream} & energy 系列/簿記をストリーム出力 & true \\
 	    \hline
 	  \end{tabular}
@@ -142,7 +156,7 @@
 
 #### B.5 視線幾何（$f_{\rm los}$）
 
-$f_{\rm los}$ は垂直光学厚 $\tau_\perp$ から火星視線方向光学厚 $\tau_{\rm los}=f_{\rm los}\tau_\perp$ を近似する補正係数である（2.1.2節）．実装では次の設定により
+$f_{\rm los}$ は垂直光学厚 $\tau_{\perp}$ から火星視線方向光学厚 $\tau_{\rm los}=f_{\rm los}\tau_{\perp}$ を近似する補正係数である（1節）．実装では次の設定により
 \[
 f_{\rm los}=
 \begin{cases}
@@ -154,15 +168,17 @@ f_{\rm los}=
 
 \begin{table}[t]
   \centering
+  \small
+  \setlength{\tabcolsep}{4pt}
   \caption{視線補正係数 $f_{\rm los}$ の設定（\texttt{shielding.los\_geometry}）}
   \label{tab:los_geometry_settings}
   \begin{tabular}{p{0.42\textwidth} p{0.34\textwidth} p{0.16\textwidth}}
     \hline
     設定キー & 意味 & 既定値 \\
     \hline
-    \texttt{shielding.los\_geometry.mode} & \texttt{aspect\_ratio\_factor} / \texttt{none} & \texttt{aspect\_ratio\_factor} \\
-    \texttt{shielding.los\_geometry.h\_over\_r} & アスペクト比 $H/r$ & 1.0 \\
-    \texttt{shielding.los\_geometry.path\_multiplier} & 視線方向の光路長係数 & 1.0 \\
+    \path{shielding.los_geometry.mode} & \texttt{aspect\_ratio}\newline\texttt{\_factor} / \texttt{none} & \texttt{aspect\_ratio}\newline\texttt{\_factor} \\
+    \path{shielding.los_geometry.h_over_r} & アスペクト比 $H/r$ & 1.0 \\
+    \path{shielding.los_geometry.path_multiplier} & 視線方向の光路長係数 & 1.0 \\
     \hline
   \end{tabular}
 \end{table}
