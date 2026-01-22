@@ -25,8 +25,8 @@ A=\pi\left(r_{\rm out}^2-r_{\rm in}^2\right)
     \hline
     記号 & 値 & 単位 & 備考 \\
     \hline
-    $r_{\rm in}$ & $1.0\,R_{\rm Mars}$ & $R_{\rm Mars}$ & 内端半径 \\
-    $r_{\rm out}$ & $2.7\,R_{\rm Mars}$ & $R_{\rm Mars}$ & 外端半径 \\
+    $r_{\rm in}$ & 1.0 & $R_{\rm Mars}$ & 内端半径 \\
+    $r_{\rm out}$ & 2.7 & $R_{\rm Mars}$ & 外端半径 \\
     $M_{\rm in}$ & $3.0\times10^{-5}$ & $M_{\rm Mars}$ & 内側円盤質量 \\
     $M_{\rm tot,0}$ & $1.0\times10^{-7}$ & $M_{\rm Mars}$ & 初期総質量 \\
     $s_{\min}$ & $1.0\times10^{-7}$ & m & PSD 下限 \\
