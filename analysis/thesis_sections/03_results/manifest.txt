@@ -1,2 +1,8 @@
 # Ordered list of section files to build analysis/thesis/results.md.
 00_frontmatter.md
+01_dataset.md
+02_timeseries.md
+03_psd_evolution.md
+04_validation.md
+05_sensitivity.md
+06_summary.md
