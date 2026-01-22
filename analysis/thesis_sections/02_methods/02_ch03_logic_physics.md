@@ -18,14 +18,16 @@ reference_links:
 
 本節の目的は，表層再供給（supply）を表層への面密度生成率として与え，サイズ分布と深層輸送を通じて PSD に注入する手順を定義することである．ここでの表層再供給は外側からの流入を精密に表すものではなく，深部↔表層の入れ替わりを粗く表現するためのパラメータ化である．定常値・べき乗・テーブル・区分定義の各モードを用意し，温度・$\tau$ フィードバック・有限リザーバを組み合わせて非定常性を表現する（[@WyattClarkeBooth2011_CeMDA111_1]）．
 
-先行研究は，Phobos/Deimos を形成しうる衝突条件として，Vesta-Ceres 級の衝突体による斜め衝突が必要であり，成功例が衝突角 30-60$^{\circ}$ に分布することを示している（[@CanupSalmon2018_SciAdv4_eaar6887]）．衝突前の火星が無視できない自転を持ち，その自転軸が衝突で与えられる角運動量ベクトルと一致しない場合，生成円盤の平均軌道面は火星赤道面から傾いた非赤道円盤になりうるため，粒子の軌道傾斜角（inclination, $i$）には平均値とばらつきが生じる（[@Hyodo2017b_ApJ851_122]）．さらに火星の扁平率 $J_2$ による節点歳差を考えると，$a\sim2-10\,R_{\rm Mars}$，$e\sim0.5-0.9$ の範囲では歳差の時間スケールが 1-100 年程度であり，傾斜角に依存する見積もりが与えられている（[@Hyodo2017b_ApJ851_122]）．したがって本研究が対象とする数年-10年の時間範囲では，衝突直後に生じた傾斜角のばらつきが残存し，その鉛直方向の運動が内部の物質を光が比較的通りやすい表層へ運び続ける過程が起こりうると考え，本研究ではこれを表層再供給としてパラメータ化して取り込む．具体的には，火星視線方向の光学的厚さ $\tau_{\rm los}\simeq1$ に対応する初期表層面密度 $\Sigma_{\tau_{\rm los}=1,0}(r)$ を質量スケール，局所公転周期 $T_{\rm orb}(r)$（$T_{\rm orb}=2\pi/\Omega$）を時間スケールとして，1 公転あたりに $\Sigma_{\tau_{\rm los}=1,0}$ の $f_{\rm orb}$ を補充する規格化を式\ref{eq:supply_target_orbit}で与える．
+衝突起源円盤は，斜め衝突により火星赤道面から傾いた平均軌道面を取りうるため，粒子の軌道傾斜角 $i$ に分散が生じる（[@CanupSalmon2018_SciAdv4_eaar6887]; [@Hyodo2017b_ApJ851_122]）．火星の扁平率 $J_2$ による節点歳差を考えると，$a\sim2-10\,R_{\rm Mars}$，$e\sim0.5-0.9$ の範囲では歳差スケールが 1-100 年程度であり（[@Hyodo2017b_ApJ851_122]），本研究が対象とする数年スケールでは衝突直後に生じた傾斜角分散が残存しうる．この鉛直方向の運動が内部の物質を光が比較的通りやすい表層へ輸送し続ける可能性があるため，本研究ではその効果を表層再供給としてパラメータ化して取り込む．
+
+よって本研究では供給を表層への面密度生成率として定義し，火星線視方向の光学的厚さが $\tau_{\rm los}\simeq1$ となる初期表層面密度 $\Sigma_{\tau_{\rm los}=1,0}(r)$ を質量スケール，局所公転周期 $T_{\rm orb}(r)$（$T_{\rm orb}=2\pi/\Omega$）を時間スケールとして，1 公転あたりに $\Sigma_{\tau_{\rm los}=1,0}$ の $f_{\rm orb}$ を補充する規格化を式\ref{eq:supply_target_orbit}で与える．
 
 \begin{equation}
 \label{eq:supply_target_orbit}
 \dot{\Sigma}_{\rm target}(r)=\mu_{\rm orb} f_{\rm orb}\,\frac{\Sigma_{\tau_{\rm los}=1,0}(r)}{T_{\rm orb}(r)}
 \end{equation}
 
-ここで $\mu_{\rm orb}$ は強度の不確かさを吸収する無次元パラメータである．以下では $\Sigma_{\tau_{\rm los}=1,0}$ を $\Sigma_{\rm ref}$ として扱い，目標供給率 $\dot{\Sigma}_{\rm target}$ の基準面密度として用いる．
+ここで $\mu_{\rm orb}$ は強度の不確かさを吸収する無次元パラメータである．以下では $t=0$ における $\Sigma_{\tau_{\rm los}=1,0}$ を基準面密度 $\Sigma_{\rm ref}$ として固定し，目標供給率 $\dot{\Sigma}_{\rm target}$ の正規化に用いる．
 
 供給の基礎率は式\ref{eq:prod_rate_definition}で定義する（[@WyattClarkeBooth2011_CeMDA111_1]）．
 
@@ -42,21 +44,55 @@ reference_links:
 \label{eq:supply_sigma_ref_mu}
 \begin{aligned}
 \Sigma_{\rm ref} &= \frac{\mu_{\rm ref}}{\kappa_{\rm eff,ref}\,f_{\rm los}},\\
-\kappa_{\rm eff,ref} &= \Phi(\mu_{\rm ref})\,\kappa_{\rm surf}.
+\kappa_{\rm eff,ref} &= \Phi(\mu_{\rm ref})\,\kappa_{\rm surf,ref}.
 \end{aligned}
 \end{equation}
 
+ここで $f_{\rm los}$ は鉛直方向から火星線視方向への換算係数であり，本研究では幾何から与える定数として時間に依らない．上付き（または下付き）eff は遮蔽係数 $\Phi$ を含めた有効不透明度 $\kappa_{\rm eff}\equiv\Phi\kappa_{\rm surf}$ を表す．下付き ref は $t=0$ の参照 PSD で評価した値であり，例えば $\kappa_{\rm surf,ref}$ は初期 PSD から得た表層不透明度である．$\Sigma_{\rm ref}$ は以降この固定値を質量スケールとして用いる一方，$\kappa_{\rm surf}(t,r)$ と $\tau_{\rm los}(t,r)$ は PSD の時間発展に伴って毎ステップ更新する．
+
 混合係数 $\epsilon_{\rm mix}$ は供給の有効度を表し，感度掃引で代表値を変化させて影響を評価する（付録A）．
 
-供給の計算は，名目供給率 $R_{\rm base}(t,r)$（供給モードで与える）から出発し，混合係数・温度依存・$\tau$ フィードバック・有限リザーバ（任意）を順に反映した後，供給ゲートにより適用可否を決め，深層バッファ（任意）を経由して PSD の離散ビンへ注入する，という固定された順序で行う．すなわち，候補となる表層への面密度生成率 $\dot{\Sigma}_{\rm cand}(t,r)$ を
+供給の計算は，名目供給率 $R_{\rm base}(t,r)$（供給モードで与える）から出発し，混合係数，温度依存，$\tau$ フィードバック，有限リザーバ（任意）を順に反映した後，供給ゲートにより適用可否を決め，深層バッファ（任意）を経由して PSD の離散ビンへ注入する，という固定された順序で行う．
+
+まず温度と $\tau$ フィードバックを反映した「リザーバ適用前」の候補供給率を
 \begin{equation}
-\dot{\Sigma}_{\rm cand}= f_{\rm res}\;f_{\tau}\;f_{T}\;\max\!\left(\epsilon_{\mathrm{mix}}R_{\mathrm{base}},\,0\right)
+\dot{\Sigma}_{0}= f_{\tau}\;f_{T}\;\dot{\Sigma}_{\mathrm{prod}}
 \end{equation}
-で定義し，実際に表層へ適用する供給率は
+と定義する（温度テーブルが供給率そのものを返す場合は，$f_T\dot{\Sigma}_{\mathrm{prod}}$ を当該テーブル値で置き換える；§3.1.2）．有限リザーバが有効な場合，1ステップで供給可能な最大面密度生成率 $\dot{\Sigma}_{\max}$ により
+\begin{equation}
+\dot{\Sigma}_{\rm cand}\equiv \min\!\left(\dot{\Sigma}_{0},\,\dot{\Sigma}_{\max}\right),\qquad
+f_{\rm res}\equiv
+\begin{cases}
+\dot{\Sigma}_{\rm cand}/\dot{\Sigma}_{0} & (\dot{\Sigma}_{0}>0),\\
+1 & (\dot{\Sigma}_{0}=0)
+\end{cases}
+\end{equation}
+とおき（リザーバ無効時は $f_{\rm res}=1$ かつ $\dot{\Sigma}_{\rm cand}=\dot{\Sigma}_{0}$），実際に表層へ適用する供給率は
 \begin{equation}
 \dot{\Sigma}_{\rm in}=g_{\rm sup}\,\dot{\Sigma}_{\rm cand}
 \end{equation}
-で与える．ここで $f_T$ は温度倍率，$f_{\tau}$ は $\tau$ 目標に基づくフィードバック倍率，$f_{\rm res}$ は有限リザーバによるクリップ因子（リザーバ無効時は $f_{\rm res}=1$），$g_{\rm sup}\in\{0,1\}$ は供給ゲートである．供給ゲートは数値の立ち上げと相状態の整合のために導入し，本研究では（i）初期ステップでは外部供給を適用しない，（ii）相状態が固体でないステップでは外部供給を停止する，という規則で $g_{\rm sup}$ を定める．
+で与える．ここで $f_T$ は温度倍率，$f_{\tau}$ は $\tau$ 目標に基づくフィードバック倍率，$f_{\rm res}$ は有限リザーバによるクリップ因子，$g_{\rm sup}\in\{0,1\}$ は供給ゲートである．供給ゲートは数値の立ち上げと相状態の整合のために導入し，本研究では（i）初期ステップでは外部供給を適用しない，（ii）相状態が固体でないステップでは外部供給を停止する，という規則で $g_{\rm sup}$ を定める．
+
+\begin{table}[t]
+  \centering
+  \caption{供給モデルのパラメータ分類（物理パラメータ化と数値制御）}
+  \label{tab:supply_param_roles}
+  \begin{tabular}{p{0.26\textwidth} p{0.28\textwidth} p{0.40\textwidth}}
+    \hline
+    分類 & 代表記号 & 役割 \\
+    \hline
+    物理パラメータ化 &
+    $\mu_{\rm orb}, f_{\rm orb}, \epsilon_{\rm mix}, t_{\rm mix}$ &
+    表層への輸送効率と供給強度の不確かさを吸収し，長期平均の供給率スケールを与える \\
+    フィードバック制御 &
+    $f_{\tau}, \tau_{\rm tar}, k_{\tau}, t_{\rm resp}$ &
+    $\tau_{\rm los}$ を目標値へ近づけるための供給倍率を与える（制御則） \\
+    数値・運用のゲート &
+    $g_{\rm sup}$, クリップ上下限, $\tau_{\rm stop}$ &
+    立ち上げ時の過渡や適用範囲外（光学的に厚い条件）への侵入を抑え，解析対象を固定する \\
+    \hline
+  \end{tabular}
+\end{table}
 
 また，$\tau_{\rm stop}$ を超える光学的厚さは本研究の想定（表層が「光が比較的通りやすい」状態）を逸脱するため，$\tau_{\rm los}>\tau_{\rm stop}(1+\mathrm{tol})$ を満たした時点でシミュレーションを早期終了する（停止判定）．ここで $\mathrm{tol}$ は停止判定に用いる相対許容であり，停止判定は相状態が固体のステップに対して適用する．供給が深層へ迂回した場合でも，表層面密度と PSD の更新は同一タイムステップ内で整合的に行われる．中間量の保存と再解析手順は付録Aにまとめる．
 
@@ -64,9 +100,9 @@ reference_links:
 
 本研究では，表層の火星線視光学的厚さ $\tau_{\rm los}(t,r)$ を目標値 $\tau_{\rm tar}$ に近づけるため，供給率に無次元倍率 $f_{\tau}(t,r)$ を掛けて調整する．$\tau_{\rm los}$ は当該ステップの表層面密度 $\Sigma_{\rm surf}$ と，PSD から得た表層不透明度 $\kappa_{\rm surf}$ を用いて
 \begin{equation}
-\tau_{\rm los}=\kappa_{\rm surf}\,\Sigma_{\rm surf}\,\mathrm{los\_factor}
+\tau_{\rm los}=\kappa_{\rm surf}\,\Sigma_{\rm surf}\,f_{\rm los}
 \end{equation}
-で評価する（$\mathrm{los\_factor}$ は鉛直方向から火星線視方向への換算係数）．
+で評価する（$f_{\rm los}$ は鉛直方向から火星線視方向への換算係数で，式\ref{eq:supply_sigma_ref_mu}と同一の定数とする）．
 
 フィードバックは比例制御の誤差
 \begin{equation}
@@ -86,42 +122,42 @@ f_T(t)=\mathrm{clip}\!\left(f_{T,\rm ref}\left(\frac{T_{\rm M}(t)}{T_{\rm ref}}\
 \end{equation}
 とし，$T_{\rm ref}$ は基準温度，$\alpha_T$ は温度感度指数，$f_{T,\rm ref}$ は $T_{\rm ref}$ における倍率，$f_{T,\min},f_{T,\max}$ は上下限である．
 
-外部テーブル（table）を用いる場合は，$T_{\rm M}$ をキーとして値 $y(T_{\rm M})$ を線形補間で読み出す．テーブル値の解釈には，(i) $y$ を倍率として扱い，上式の $\mathrm{clip}$ と同様に上下限を適用して $f_T$ を与える（value\_kind=scale），(ii) $y$ を供給率そのもの（面密度生成率）として用い，$R_{\rm base}$ と $\epsilon_{\rm mix}$ による名目供給を上書きする（value\_kind=rate），の2通りを区別する．
+外部テーブル（table）を用いる場合は，$T_{\rm M}$ をキーとして値 $y(T_{\rm M})$ を線形補間で読み出す．テーブル値の解釈には，(i) $y$ を倍率として扱い，上式の $\mathrm{clip}$ と同様に上下限を適用して $f_T$ を与える（`value_kind=scale`），(ii) $y$ を供給率そのもの（面密度生成率）として用い，$R_{\rm base}$ と $\epsilon_{\rm mix}$ による名目供給を上書きする（`value_kind=rate`），の2通りを区別する．
 
 #### 3.1.3 リザーバと深層ミキシング
 
-外部供給が有限の総量を持つ場合，供給リザーバの残量 $M_{\rm res}(t)$ を追跡し，1ステップで供給可能な最大面密度生成率を
+外部供給が有限の総量を持つ場合，供給リザーバの残量 $M_{\rm res}(t)$（計算領域全体で共有する総量）を追跡する．0D では対象領域の面積を $A$ とし，1ステップで供給可能な最大面密度生成率を
 \begin{equation}
 \dot{\Sigma}_{\max}=\frac{M_{\rm res}(t)}{A\,\Delta t}
 \end{equation}
-（$A$ は対象領域の面積）として，$\dot{\Sigma}_{\rm cand}$ を $\dot{\Sigma}_{\max}$ でクリップする．このとき $M_{\rm res}$ は
+として，$\dot{\Sigma}_{0}$ を $\dot{\Sigma}_{\max}$ でクリップして $\dot{\Sigma}_{\rm cand}$ を得る（式中の $f_{\rm res}$）．このとき $M_{\rm res}$ は
 \begin{equation}
 M_{\rm res}(t{+}\Delta t)=\max\!\left(M_{\rm res}(t)-\dot{\Sigma}_{\rm in}(t)\,A\,\Delta t,\,0\right)
 \end{equation}
-で更新する．リザーバ枯渇近傍の扱いとして，(i) クリップのみで枯渇時に供給が停止する方式（hard\_stop），(ii) 残量比が所定の閾値を下回ったとき $\dot{\Sigma}_{\rm cand}$ を残量比に比例して漸減させる方式（taper），のいずれかを選ぶ．
+で更新する．半径方向に離散化する場合は $A$ をセル面積 $A_j=2\pi r_j\Delta r_j$ とし，右辺の消費項をセル総和（あるいは積分）で置き換える．リザーバ枯渇近傍の扱いとして，(i) クリップのみで枯渇時に供給が停止する方式（`hard_stop`），(ii) 残量比が所定の閾値を下回ったとき $\dot{\Sigma}_{\rm cand}$ を残量比に比例して漸減させる方式（taper），のいずれかを選ぶ．
 
 さらに，深層↔表層の交換を有限の混合時間で表すため，深層バッファ（面密度）$\Sigma_{\rm deep}(t,r)$ を導入する．混合時間は公転数換算で $t_{\rm mix}(r)=N_{\rm mix}T_{\rm orb}(r)$ として与え，深層から表層へのフラックスは
 \begin{equation}
 \dot{\Sigma}_{\rm deep\to surf}=\frac{\Sigma_{\rm deep}}{t_{\rm mix}}
 \end{equation}
-で近似する．実装では，供給を表層へ直接注入する（direct）か，一旦すべて深層へ迂回してから $t_{\rm mix}$ で放出する（deep\_mixing）かを選べる．また，$\Sigma_{\tau_{\rm los}=1}$ に基づく表層の余裕（headroom）で深層$\to$表層フラックスを制限する設定も用意するが，$\tau$ に基づく停止判定（$\tau_{\rm stop}$）を有効化した基準ケースでは，二重の制限を避けるため headroom 制限を用いない．
+で近似する．実装では，供給を表層へ直接注入する（direct）か，一旦すべて深層へ迂回してから $t_{\rm mix}$ で放出する（`deep_mixing`）かを選べる．また，$\Sigma_{\tau=1}$（式\ref{eq:sigma_tau1_definition}）に基づく表層の余裕（headroom）で深層$\to$表層フラックスを制限する設定も用意するが，$\tau$ に基づく停止判定（$\tau_{\rm stop}$）を有効化した基準ケースでは，二重の制限を避けるため headroom 制限を用いない．
 
 #### 3.1.4 注入パラメータ
 
-表層へ適用された供給率 $\dot{\Sigma}_{\rm in}(t,r)$ は，PSD（粒径分布）の離散ビンに対する質量注入項として配分する．サイズビンの中心 $s_k$ と粒子質量 $m_k$ を用い，ビン $k$ への数密度注入源 $F_k$（単位時間あたりの粒子数）は
+表層へ適用された供給率 $\dot{\Sigma}_{\rm in}(t,r)$ は，PSD（粒径分布）の離散ビンに対する質量注入項として配分する．サイズビンの中心 $s_k$ と粒子質量 $m_k$ を用い，ビン $k$ への数面密度注入源 $F_k$（単位面積・単位時間あたりの粒子数）は
 \begin{equation}
 \label{eq:supply_injection_definition}
 F_k=\frac{\dot{\Sigma}_{\rm in}\,w_k}{m_k},\qquad \sum_k m_k F_k=\dot{\Sigma}_{\rm in}
 \end{equation}
-となるよう，非負の重み $w_k$ を定める．ここで $m_k$ は実装上はビン中心に対応する代表質量として評価する．
+となるよう，非負の重み $w_k$ を定める．ここで $N_k$ をビン $k$ の数面密度（#/m$^2$）とすると，$F_k$ は PSD 進化方程式における注入源（#/m$^2$/s）である．また $m_k$ は実装上はビン中心に対応する代表質量として評価する．
 
 注入モード（injection mode）は $w_k$ の与え方を指定するもので，本研究では次を用意する．
 
-- min\_bin: 有効最小サイズ $s_{\min,\rm eff}$ 以上で最小のビン $k_\ast$ に全質量を注入する（$w_k=\delta_{k k_\ast}$）．
-- powerlaw\_bins: ある範囲 $[s_{\rm inj,min},s_{\rm inj,max}]$ に対して $dN/ds\propto s^{-q}$ を仮定し，ビン幅との重なりに応じて $w_k$ を与える．下限は $s_{\min,\rm eff}$ でクリップし，総注入質量が $\dot{\Sigma}_{\rm in}$ に一致するよう正規化する．
-- initial\_psd: 初期 PSD の各ビン質量重みに比例して注入する．
+- `min_bin`: 有効最小サイズ $s_{\min,\rm eff}$ 以上で最小のビン $k_\ast$ に全質量を注入する（$w_k=\delta_{k k_\ast}$）．
+- `powerlaw_bins`: ある範囲 $[s_{\rm inj,min},s_{\rm inj,max}]$ に対して $dN/ds\propto s^{-q}$ を仮定し，ビン幅との重なりに応じて $w_k$ を与える．下限は $s_{\min,\rm eff}$ でクリップし，総注入質量が $\dot{\Sigma}_{\rm in}$ に一致するよう正規化する．
+- `initial_psd`: 初期 PSD の各ビン質量重みに比例して注入する．
 
-powerlaw\_bins の場合，ビン境界を $[s_{k-},s_{k+}]$ とし，下限 $s_{\rm floor}\equiv\max(s_{\min,\rm eff},s_{\rm inj,min})$，上限 $s_{\rm ceil}\equiv s_{\rm inj,max}$ を用いると，実装上は
+`powerlaw_bins` の場合，ビン境界を $[s_{k-},s_{k+}]$ とし，下限 $s_{\rm floor}\equiv\max(s_{\min,\rm eff},s_{\rm inj,min})$，上限 $s_{\rm ceil}\equiv s_{\rm inj,max}$ を用いると，実装上は
 \begin{equation}
 \label{eq:supply_injection_powerlaw_bins}
 \tilde{w}_k=\int_{\max(s_{k-},s_{\rm floor})}^{\min(s_{k+},s_{\rm ceil})} s^{-q}\,ds,\qquad
@@ -133,4 +169,4 @@ F_k=\frac{\dot{\Sigma}_{\rm in}\,\tilde{w}_k}{\sum_j m_j\tilde{w}_j}
 
 本節で用いた各パラメータ（$\tau_{\rm tar},k_{\tau},t_{\rm resp},T_{\rm ref},\alpha_T,N_{\rm mix},q,s_{\rm inj,min},s_{\rm inj,max}$ など）と対応する設定項目は，付録Bの表\ref{tab:supply_feedback_settings}〜表\ref{tab:supply_injection_settings}に一覧する．
 
-次章では，衝突カスケードと破片生成の支配式を示し，供給項を含む Smoluchowski 方程式を数値的に時間積分する方法を定義する．
+以上により，本節で定義した供給率 $\dot{\Sigma}_{\rm in}(t,r)$ は，式\ref{eq:supply_injection_definition}により PSD 方程式の注入項 $F_k(t,r)$ として与えられる．次章では，衝突カスケードと破片生成の支配式を示し，$F_k$ を含む Smoluchowski 方程式を数値的に時間積分する方法を定義する．

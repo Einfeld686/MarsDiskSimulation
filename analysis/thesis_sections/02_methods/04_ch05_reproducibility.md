@@ -41,7 +41,7 @@ M_{\rm loss}^{n+1}=M_{\rm loss}^{n}+\Delta t\left(\dot{M}_{\rm out}^{n}+\dot{M}_
 以上により，任意の時刻における PSD と主要診断量を後段解析で再構成できる．次節では，保存した検証ログに基づき，計算結果の採用可否を判定する検証手順を示す．
 
 <!-- TEX_EXCLUDE_START -->
-実装では I/O ストリーミングを既定で ON とし（`memory_limit_gb=10`, `step_flush_interval=10000`, `merge_at_end=true`），大規模スイープで逐次フラッシュによりメモリを抑える．運用の既定スイープでは，各ケースを `BATCH_ROOT`（`OUT_ROOT` があればそれを使用）配下の `SWEEP_TAG/<RUN_TS>__<GIT_SHA>__seed<BATCH_SEED>/<case_title>/` に保存する．
+実装では I/O ストリーミングを既定で ON とし（`memory_limit_gb=10`, `step_flush_interval=10000`, `merge_at_end=true`），大規模スイープで逐次フラッシュによりメモリを抑える．運用の既定スイープでは，各実行を `BATCH_ROOT`（`OUT_ROOT` があればそれを使用）配下の `SWEEP_TAG/<RUN_TS>__<GIT_SHA>__seed<BATCH_SEED>/<case_title>/` に保存する．
 <!-- TEX_EXCLUDE_END -->
 
 ---
@@ -63,10 +63,10 @@ M_{\rm loss}^{n+1}=M_{\rm loss}^{n}+\Delta t\left(\dot{M}_{\rm out}^{n}+\dot{M}_
     \hline
     質量保存 &
 	    相対質量誤差 $|\epsilon_{\rm mass}(t)|$（式\ref{eq:mass_budget_definition}）の最大値が $0.5\%$ 以下 \\
-	    衝突寿命スケーリング &
-	    推定衝突時間 $t_{\rm coll}^{\rm est}=T_{\rm orb}/(2\pi\tau_{\perp})$ に対し，モデル内の代表衝突時間 $t_{\rm coll}$ の比が $0.1$–$10$ の範囲に入る（\cite{StrubbeChiang2006_ApJ648_652}） \\
+    衝突寿命スケーリング &
+    推定衝突時間 $t_{\rm coll}^{\rm est}=T_{\rm orb}/(2\pi\tau_{\perp})$ に対し，モデル内の代表衝突時間 $t_{\rm coll}$ の比が $0.1$–$10$ の範囲に入る（\cite{StrubbeChiang2006_ApJ648_652}） \\
     “wavy” PSD &
-    ブローアウト即時除去を含めた場合に，$s_{\rm blow}$ 近傍で隣接ビンの過不足が交互に現れることを確認する（実装健全性の定性チェック；\cite{ThebaultAugereau2007_AA472_169}） \\
+    ブローアウト即時除去を含めた場合に，$s_{\rm blow}$ 近傍で $x_k\equiv\log N_k$ の二階差分 $\Delta^2 x_k=x_{k+1}-2x_k+x_{k-1}$ の符号が交互に反転する（隣接ビン比のジグザグ）ことを確認する（実装健全性の定性チェック；\cite{ThebaultAugereau2007_AA472_169}） \\
     IMEX の安定性と収束 &
     IMEX-BDF(1)（衝突ロス陰・破片生成と供給注入および一次シンク陽）が数面密度 $N_k$ の非負性を保ち，$\Delta t\le0.1\min_k t_{\rm coll,k}$ の条件で主要診断量（$\Sigma_{\rm surf}(t)$，$\dot{M}_{\rm out}(t)$，$M_{\rm loss}(t)$）が $1\%$ 以内で収束する（\cite{Krivov2006_AA455_509}） \\
     \hline
@@ -83,7 +83,9 @@ IMEX の収束判定では，同一条件で外側ステップ幅を $\Delta t$ 
 \]
 を定義する．ただし分母が0の場合は分子が0であることを要求する．本研究では，$\delta_q<0.01$ かつ $\delta_{M}<0.01$ を満たすとき「収束」と判定する．
 
-“wavy” PSD の確認は，保存した $N_k(t^n)$ から $s_{\rm blow}$ 近傍で隣接ビンの比が交互に過不足（例：$N_{k+1}/N_k>1$ と $<1$ のジグザグ）となることを指標として行う．
+PSD グリッド解像度についても同様に，$n_{\rm bins}$ を変更した2つの計算（例：$n_{\rm bins}$ と $2n_{\rm bins}$）を行い，同じ判定規則（$\delta_q$ と $\delta_M$）で主要診断量の収束を確認する．
+
+“wavy” PSD の確認は，保存した $N_k(t^n)$ から $s_{\rm blow}$ 近傍のビン（例：$s_{\rm blow}\le s_k\le 30\,s_{\rm blow}$）を取り，$x_k\equiv\log N_k$ の二階差分 $\Delta^2 x_k=x_{k+1}-2x_k+x_{k-1}$ が符号反転を繰り返すことを指標として行う（$N_k\le0$ のビンは除外する）．
 
 これらの基準は，設定変更後の回帰検証にも用いる．検証結果の提示形式として，代表計算における質量検査 $\epsilon_{\rm mass}(t)$ の時系列を付録Aの図\ref{fig:validation_mass_budget_example}に示す．
 
@@ -100,7 +102,7 @@ pytest tests/ -q
 
 - `summary.json` の `mass_budget_max_error_percent` が 0.5% 以内であること．
 - `series/run.parquet` の `dt_over_t_blow` が 1 未満に収まっているかを確認する．\newline 超過時は `fast_blowout_flag_*` と併せて評価する．
-- 衝突が有効なケースでは `smol_dt_eff < dt` が成立し，`t_coll_kernel_min` と一貫しているかを確認する．
+- 衝突が有効な実行では `smol_dt_eff < dt` が成立し，`t_coll_kernel_min` と一貫しているかを確認する．
 <!-- TEX_EXCLUDE_END -->
 
 <!-- TEX_EXCLUDE_START -->

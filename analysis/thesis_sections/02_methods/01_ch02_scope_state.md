@@ -22,9 +22,7 @@ reference_links:
 
 ## 2. 円盤表層状態の評価
 
-本章の目的は，巨大衝突後に形成される火星周回デブリ円盤のうち，放射圧および昇華に直接曝される表層成分を対象として，数値モデルで用いる状態変数と表層質量損失過程の定式化を整理することである．ここでは，まず PSD と光学的厚さの定義（2.1）を与え，次に放射圧ブローアウトと昇華を中心とする表層損失過程（2.2）を導入する．
-
-本研究では，表層の時間発展を（i）表層面密度の常微分方程式（表層 ODE）として近似する経路と，（ii）粒径分布を Smoluchowski 型方程式で追跡する経路（Smol 経路）のいずれかで扱い，採用した経路に応じて同一の記号体系で記述する．標準設定では Smol 経路を用い，gas-rich 想定の感度試験でのみ表層 ODE を有効化する（付録B）．
+本節では，巨大衝突後に形成される火星周回デブリ円盤のうち，放射圧および昇華に直接曝される表層成分を対象として，数値モデルで用いる状態変数と表層質量損失過程の定式化を整理する．具体的には，表層状態を $(N_k,\Sigma_{\rm surf},\tau_\perp,\tau_{\rm los})$ と温度ドライバ $T_M(t)$ により表し，これらから放射圧損失・遮蔽・昇華を評価する．ここでは，まず PSD と光学的厚さの定義（2.1）を与え，次に熱・放射・表層損失過程（2.2）を導入する．標準設定では粒径分布を Smoluchowski 型方程式で追跡し（Smol 経路），gas-rich 想定の感度試験でのみ表層面密度の常微分方程式（表層 ODE）による近似も併用する（付録B）．
 
 ### 2.1 状態変数と定義
 
@@ -32,7 +30,7 @@ reference_links:
 
 #### 2.1.1 粒径分布 (PSD) グリッド
 
-PSD は衝突カスケードの統計的記述に基づき，自己相似分布の枠組み [@Dohnanyi1969_JGR74_2531] と離散化の実装例 [@Krivov2006_AA455_509] を踏まえて対数ビンで表現する．隣接粒径比 $s_{k+1}/s_k \lesssim 1.1$–1.2 を目安に分解能を調整し（[@Birnstiel2011_AA525_A11]），ブローアウト近傍の波状構造（wavy）が数値的に解像できるようにする．
+PSD は衝突カスケードの統計的記述に基づき，自己相似分布の枠組み [@Dohnanyi1969_JGR74_2531] と離散化の実装例 [@Krivov2006_AA455_509] を踏まえて対数ビンで表現する．隣接粒径比 $s_{k+1}/s_k$ は $s_{\rm blow}$ 近傍の勾配や波状構造（wavy）の解像度に直接影響するため，理想的には $s_{k+1}/s_k \lesssim 1.1$–1.2 を目安とする（[@Birnstiel2011_AA525_A11]）．一方，本研究の基準設定（表\ref{tab:psd_grid_defaults}）では計算負荷とのトレードオフから $n_{\rm bins}=40$ を採用し，隣接比は $O(1.5)$ と比較的粗い．このため，必要に応じて $n_{\rm bins}$ を増やした比較計算を行い，主要診断量が許容誤差内で安定であることを確認する（5.1.2節）．
 
 粒径ビン $k$ の代表半径を $s_k$，その粒子質量を $m_k$ とし，数面密度（単位面積当たり個数）を $N_k(t)$（m$^{-2}$）で表す．粒子のバルク密度を $\rho$ とすると，
 \begin{equation}
@@ -86,14 +84,24 @@ s_{\min,\mathrm{eff}}=\max\!\left(s_{\min,\mathrm{cfg}},\,s_{\mathrm{blow,eff}}\
 \end{equation}
 と近似する．$f_{\rm los}$ は，垂直方向の代表光路長に対する los 方向の代表光路長の比を表す無次元量であり，円盤の厚みと視線幾何に依存する．本研究で用いる $f_{\rm los}$ の定義と採用値は付録Bに示す．
 
+ここで $\tau_{\rm los}$ の定義（式\ref{eq:tau_los_definition}）に基づき，$\tau_{\rm los}=1$ に相当する参照面密度を
+\begin{equation}
+\label{eq:sigma_tau_los1_definition}
+\Sigma_{\tau_{\rm los}=1}=\left(f_{\rm los}\kappa_{\rm surf}\right)^{-1}
+\end{equation}
+と定義する．$\Sigma_{\tau_{\rm los}=1}$ は状態量 $\Sigma_{\rm surf}$ から導かれる「比較のための基準量」であり，遮蔽係数 $\Phi$ の定義とは独立に与えられる．
+
+本研究では，$\kappa_{\rm surf}$ と $\tau$ は衝突頻度や遮蔽判定のための幾何学的 proxy として扱い，幾何断面積近似（$Q_{\rm ext}=1$）で評価する．一方，放射圧（力）を決める $\langle Q_{\rm pr}\rangle$ は Mie 計算に基づく外部テーブルとして与える（2.2.2節）．したがって光学量は「幾何（$\kappa_{\rm surf},\tau$）」と「力（$\langle Q_{\rm pr}\rangle$）」で役割分担し，遮蔽を有効化する場合は $\tau_{\rm los}$ を介して $\Phi(\tau_{\rm los})$ を与えることで，火星からの有効放射場（すなわち放射圧・加熱の効き方）を弱める効果のみを取り込む．
+
 表層 ODE を用いる場合，衝突時間は $t_{\rm coll}=1/(\Omega\tau_\perp)$ とおく．ここで $\Omega$ は対象セル（半径 $r$）でのケプラー角速度である．一方，Smol 経路では衝突頻度を衝突カーネルから直接評価するため，$\tau_\perp$ と $\tau_{\rm los}$ は主として診断量として参照する．このうち $\tau_{\rm los}$ は，遮蔽係数 $\Phi$ の評価（式\ref{eq:phi_definition}）および放射圧流出の抑制判定に用いる．
 
-$\tau$ に関する閾値・診断量は，目的を混同しないために次の4種に分類して扱う．
+$\tau$ に関する閾値・診断量は，目的を混同しないために次の5種に分類して扱う．
 - **遮蔽判定閾値 $\tau_{\rm gate}$**：$\tau_{\rm los}\ge\tau_{\rm gate}$ のとき，放射圧による流出項を抑制する（計算は継続する）．標準設定では無効化し，感度試験でのみ導入する．
 - **計算停止閾値 $\tau_{\rm stop}$**：$\tau_{\rm los}>\tau_{\rm stop}$ のとき，シミュレーションを終了する．
-- **診断量 $\Sigma_{\tau_{\rm los}=1}$**：有効不透明度と視線補正因子から導く参照面密度であり（式\ref{eq:sigma_tau1_definition}），初期化および診断に参照するが，標準の時間発展で $\Sigma_{\rm surf}$ を直接クリップしない．
+- **参照面密度 $\Sigma_{\tau_{\rm los}=1}$**：$\tau_{\rm los}=1$ に相当する参照量であり（式\ref{eq:sigma_tau_los1_definition}），表層が光学的に薄い／厚いの目安として用いる（時間発展で直接クリップしない）．
+- **診断量 $\Sigma_{\tau_{\rm eff}=1}$**：遮蔽係数を折り込んだ有効不透明度から導く参照面密度であり（式\ref{eq:sigma_tau1_definition}；出力では `Sigma_tau1`），遮蔽状態の診断や供給の headroom 制御（任意）に参照するが，標準の時間発展で $\Sigma_{\rm surf}$ を直接クリップしない．
 - **規格化目標 $\tau_0(=1)$**：初期化の目標光学的厚さであり，初期 PSD を $\tau_{\rm los}=\tau_0$ に規格化して開始する場合に用いる．
-これらのうち $\tau_{\rm gate}$ と $\tau_{\rm stop}$ は，光学的に厚い領域で表層近似や遮蔽の簡略化などの適用が不確かになることを避けるために導入する適用範囲判定である．したがって結果の議論は，$\tau_{\rm los}\le\tau_{\rm stop}$ を満たすケースに限定する．
+これらのうち $\tau_{\rm gate}$ と $\tau_{\rm stop}$ は，光学的に厚い領域で表層近似や遮蔽の簡略化などの適用が不確かになることを避けるために導入する適用範囲判定である．したがって結果の議論は，$\tau_{\rm los}\le\tau_{\rm stop}$ を満たす計算に限定する．
 
 以上により，本節では PSD と光学的厚さの定義，および $\tau$ に関する閾値・診断量の役割を整理した．次節では，これらの状態量を用いて放射圧ブローアウトと昇華による表層損失を定式化する．
 
@@ -149,7 +157,7 @@ s_{\mathrm{blow}} = \frac{3\,\sigma_{\mathrm{SB}}\,T_{\mathrm{M}}^{4}\,R_{\mathr
 t_{\rm blow}=\chi_{\rm blow}\Omega^{-1}
 \end{equation}
 とし，$\chi_{\rm blow}=1$ を既定とする（感度試験で調整）．
-基準ケースでは $\chi_{\rm blow}$ を 0.5–2 の範囲で変更しても主要診断量（$\Delta M_{\rm in}$ など）が数値丸め誤差以下であることを確認した（表\ref{tab:approx_sensitivity}）．ただし放射圧損失が支配的な条件では $\dot{\Sigma}_{\mathrm{out}}\propto t_{\rm blow}^{-1}$ となるため，$\chi_{\rm blow}$ は感度試験パラメータとして扱う．
+表\ref{tab:approx_sensitivity}の補助チェックでは，代表条件において $\chi_{\rm blow}$ を 0.5–2 の範囲で変更しても主要診断量（$\Delta M_{\rm in}$ など）の差が数値丸め誤差以下であった．ただし放射圧損失が支配的な条件では $\dot{\Sigma}_{\mathrm{out}}\propto t_{\rm blow}^{-1}$ となるため，$\chi_{\rm blow}$ は感度試験パラメータとして扱う．
 
 放射圧ブローアウトによる表層流出（面密度フラックス）$\dot{\Sigma}_{\rm out}$ は，採用する表層更新方式に応じて
 \begin{equation}
@@ -171,29 +179,32 @@ t_{\rm blow}=\chi_{\rm blow}\Omega^{-1}
 
 #### 2.2.3 遮蔽 (Shielding)
 
-遮蔽は，表層が光学的に厚い場合に火星からの放射場が弱められる効果を表す．本研究では吸収減衰の近似として
+遮蔽は，表層が光学的に厚い場合に火星からの放射場が弱められる効果を表す．本研究の基準ケースでは表層が光学的に薄い条件を主対象とするため，遮蔽係数は $\Phi=1$ として遮蔽を無視する．一方，感度試験として吸収減衰の近似
 \begin{equation}
 \label{eq:phi_definition}
 \Phi=\exp(-\tau_{\rm los})
 \end{equation}
-を採用する．実装ではこの関数をテーブルとして保持し，補間により評価する．散乱を含むより一般の放射輸送（$\Phi(\tau,\omega_0,g)$ のテーブル化；例：二流・δ-Eddington 近似）は本研究のスコープ外とし，将来拡張として位置づける．
+を用いて $\Phi(\tau_{\rm los})$ を評価する．実装ではこの関数をテーブルとして保持し，補間により評価する．散乱を含むより一般の放射輸送（$\Phi(\tau,\omega_0,g)$ のテーブル化；例：二流・δ-Eddington 近似）は本研究のスコープ外とする．ここで $\omega_0$ は単一散乱アルベド（single scattering albedo），$g$ は散乱位相関数の非対称因子（平均余弦）である．
 
-有効不透明度と，火星視線方向の光学的厚さ1に相当する参照面密度を
+遮蔽は各ステップで，まず $\tau_{\rm los}$（式\ref{eq:tau_los_definition}）を評価し，次に $\Phi(\tau_{\rm los})$ を用いて有効不透明度を計算する，という順序で明示的に適用する．有効不透明度を
 \begin{equation}
 \label{eq:kappa_eff_definition}
 \kappa_{\mathrm{eff}} = \Phi\,\kappa_{\mathrm{surf}}
 \end{equation}
+で定義する．$\kappa_{\rm eff}$ は遮蔽を折り込んだ\textbf{診断用}の有効不透明度であり，幾何学的に定義される $\tau_{\rm los}$（式\ref{eq:tau_los_definition}）や参照面密度 $\Sigma_{\tau_{\rm los}=1}$（式\ref{eq:sigma_tau_los1_definition}）とは用途を区別する．さらに有効光学的厚さを $\tau_{\rm eff}\equiv\kappa_{\rm eff}\Sigma_{\rm surf}$ として
 \begin{equation}
 \label{eq:sigma_tau1_definition}
-\Sigma_{\tau_{\rm los}=1} =
+\Sigma_{\tau_{\rm eff}=1} =
 \begin{cases}
- (\kappa_{\mathrm{eff}} f_{\rm los})^{-1}, & \kappa_{\mathrm{eff}} > 0,\\
+ \kappa_{\mathrm{eff}}^{-1}, & \kappa_{\mathrm{eff}} > 0,\\
  \infty, & \kappa_{\mathrm{eff}} \le 0
 \end{cases}
 \end{equation}
-で定義し，$\Sigma_{\tau_{\rm los}=1}$ は診断量として記録する．垂直方向の参照面密度は $\Sigma_{\tau_\perp=1}=f_{\rm los}\Sigma_{\tau_{\rm los}=1}$ として与える．標準の時間発展では $\Sigma_{\rm surf}$ を直接クリップしない．
+を導入し，$\Sigma_{\tau_{\rm eff}=1}$ は診断量として記録する（出力では `Sigma_tau1`）．ここで $\tau_{\rm eff}$ は遮蔽の導入後に「どの程度の表層が有効に照射を受け得るか」を表す補助量であり，幾何学的な線視光学厚 $\tau_{\rm los}$（式\ref{eq:tau_los_definition}）とは役割を分けて用いる．標準の時間発展では $\Sigma_{\rm surf}$ を直接クリップしない．
 
-遮蔽の取り扱いは（i）$\Phi=\exp(-\tau_{\rm los})$ を適用する方法，（ii）$\Sigma_{\tau_{\rm los}=1}$ を固定する近似，（iii）遮蔽を無視する近似（$\Phi=1$）から選ぶ（設定は付録B）．基準ケースでは遮蔽の有無による $\Delta M_{\rm in}$ の差が数値丸め誤差以下であることを確認した（表\ref{tab:approx_sensitivity}）．停止条件は $\tau_{\rm los}>\tau_{\rm stop}$ とし，停止と状態量クリップは区別する．
+遮蔽の取り扱いは，（i）基準：遮蔽無視（$\Phi=1$），（ii）感度：吸収減衰（式\ref{eq:phi_definition}），（iii）近似：$\tau$ や $\Sigma_{\tau_{\rm eff}=1}$ を固定する簡略化，から選ぶ（設定は付録B）．停止条件は $\tau_{\rm los}>\tau_{\rm stop}$ とし，停止と状態量クリップは区別する．
+
+表\ref{tab:approx_sensitivity}は，本研究で用いる近似が代表条件で主要診断量を左右しないことを事前に確認するための補助的な感度チェックである．代表計算は，供給を無効（$\dot{\Sigma}_{\rm in}=0$）とした 0D 計算（$t_{\rm end}=2$ yr，$n_{\rm bins}=40$，$T_M$ は 4000 K 冷却テーブル；表\ref{tab:psd_grid_defaults}）を基準として比較した．
 
 \begin{table}[t]
   \centering
@@ -210,7 +221,7 @@ t_{\rm blow}=\chi_{\rm blow}\Omega^{-1}
     on/off &
     $\Delta M_{\rm in}$ の変化は数値丸め誤差以下 \\
     \hline
-  \end{tabular}
+\end{tabular}
 \end{table}
 
 #### 2.2.4 相判定 (Phase)
@@ -220,9 +231,9 @@ t_{\rm blow}=\chi_{\rm blow}\Omega^{-1}
 \label{eq:grain_temperature_definition}
 T_p = T_M\,\langle Q_{\rm abs}\rangle^{1/4}\sqrt{\frac{R_M}{2r}}
 \end{equation}
-を用い，$T_p\le T_{\rm condense}$ を固体，$T_p\ge T_{\rm vaporize}$ を蒸気として分類する（閾値は付録Aの表\ref{tab:run_sweep_material_properties}）．遷移領域では $\tau_{\rm los}$（LOS）により蒸気分率の増加を緩和するが，基準ケースでは温度条件が支配的である．
+を用い，$T_p\le T_{\rm condense}$ を固体，$T_p\ge T_{\rm vaporize}$ を蒸気として分類する（閾値は付録Aの表\ref{tab:run_sweep_material_properties}）．ここで $\langle Q_{\rm abs}\rangle$ は粒子温度評価のための有効吸収効率であり，本研究では厳密な Planck 平均を都度評価せず，定数パラメータ（`phase.q_abs_mean`）として与える（付録B）．遷移領域では $\tau_{\rm los}$（LOS）により蒸気分率の増加を緩和するが，基準ケースでは温度条件が支配的である．
 
-固体相では放射圧ブローアウトが主要な損失経路となる．相判定は表層 ODE とシンク選択の適用条件として機能し，同一ステップ内でブローアウトと追加シンクは併用しない．
+固体相では放射圧ブローアウトが主要な損失経路となる．相判定は放射圧ブローアウトの有効化条件（固体相のみ），衝突のゲート（液相優勢では衝突を無効化），および蒸気相での追加シンク（例：hydrodynamic escape）の選択に用いる．とくに蒸気相シンクを有効化した場合は放射圧ブローアウトと同時に適用しない（排他）．
 
 #### 2.2.5 昇華 (Sublimation) と追加シンク
 

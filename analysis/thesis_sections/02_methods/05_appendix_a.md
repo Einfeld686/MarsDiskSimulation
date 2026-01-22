@@ -58,6 +58,7 @@
     $\epsilon_{\rm mix}$ & 1.0, 0.5 & 混合係数（供給の有効度） \\
     $\tau_0$ & 1.0, 0.5 & 初期光学的厚さ \\
     $i_0$ & 0.05, 0.10 & 初期傾斜角 \\
+    $f_{Q^*}$ & 0.3, 1, 3（$\times$基準値） & $Q_D^*$ の係数スケール（proxy の不確かさの感度） \\
     \hline
   \end{tabular}
 \end{table}
@@ -68,7 +69,7 @@
 
 \begin{figure}[t]
   \centering
-  \includegraphics[width=\linewidth]{figures/thesis/validation_mass_budget_example.pdf}
+  % \includegraphics[width=\linewidth]{figures/thesis/validation_mass_budget_example.pdf}
   \caption{代表ケースにおける質量検査 $\epsilon_{\rm mass}(t)$ の時系列（例）}
   \label{fig:validation_mass_budget_example}
 \end{figure}

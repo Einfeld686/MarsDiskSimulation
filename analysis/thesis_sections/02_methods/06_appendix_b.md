@@ -27,6 +27,7 @@
     \texttt{supply.transport}\newline \texttt{.*} & 深層ミキシング & 3.1.3節 \\
     \texttt{init\_tau1.*} & 初期$\tau=1$スケーリング & 4.2.3.1節 \\
     \texttt{phase.*} & 相判定 & 2.2.4節 \\
+    \texttt{phase.q\_abs\_mean} & $\langle Q_{\rm abs}\rangle$（粒子温度） & 2.2.4節 \\
     \texttt{numerics.checkpoint.*} & チェックポイント & 4.2.3.3節 \\
     \texttt{numerics.t\_end\_until}\newline \texttt{\_temperature}\newline \texttt{\_K} & 温度停止条件 & 4.2.3.2節 \\
     \texttt{ALLOW\_TL2003} & gas-rich 表層 ODE トグル & 2.2.3節 \\
@@ -45,12 +46,14 @@
     \hline
     設定キー & 既定値 & 意味 \\
     \hline
-    \texttt{sizes.s\_min} & 1e-6 m & 最小粒径 $s_{\min,\mathrm{cfg}}$ \\
+    \texttt{sizes.s\_min} & 1e-7 m & 最小粒径 $s_{\min,\mathrm{cfg}}$ \\
     \texttt{sizes.s\_max} & 3.0 m & 最大粒径 \\
     \texttt{sizes.n\_bins} & 40 & サイズビン数 \\
     \hline
   \end{tabular}
 \end{table}
+
+表\ref{tab:psd_grid_defaults}の既定値では $s$ 範囲が広いため，対数等間隔の隣接比 $s_{k+1}/s_k$ は $O(1.5)$ となる．$s_{\rm blow}$ 近傍の解像度が必要な場合は $n_{\rm bins}$ を増やすか，対象とする $s_{\max}$ を再検討する（2.1.1節，5.1.2節）．
 
 #### B.2 初期化（$\tau=1$ スケーリング）
 
