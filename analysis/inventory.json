@@ -18439,203 +18439,238 @@
   },
   {
     "file_path": "tools/build_thesis_draft.py",
-    "line_no": 66,
+    "line_no": 63,
+    "symbol": "APPENDIX_START",
+    "signature": "APPENDIX_START = '% === AUTOGEN APPENDIX START ==='",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "tools/build_thesis_draft.py",
+    "line_no": 64,
+    "symbol": "APPENDIX_END",
+    "signature": "APPENDIX_END = '% === AUTOGEN APPENDIX END ==='",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "tools/build_thesis_draft.py",
+    "line_no": 68,
     "symbol": "Block",
     "signature": "class Block",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/build_thesis_draft.py",
-    "line_no": 71,
+    "line_no": 73,
     "symbol": "strip_yaml_frontmatter",
     "signature": "strip_yaml_frontmatter(text: str) -> str",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/build_thesis_draft.py",
-    "line_no": 81,
+    "line_no": 83,
     "symbol": "strip_html_comments",
     "signature": "strip_html_comments(text: str) -> str",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/build_thesis_draft.py",
-    "line_no": 95,
+    "line_no": 97,
     "symbol": "strip_tex_exclude_blocks",
     "signature": "strip_tex_exclude_blocks(text: str) -> str",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/build_thesis_draft.py",
-    "line_no": 112,
+    "line_no": 114,
     "symbol": "split_table_row",
     "signature": "split_table_row(line: str) -> list[str]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/build_thesis_draft.py",
-    "line_no": 116,
+    "line_no": 118,
     "symbol": "is_table_separator",
     "signature": "is_table_separator(line: str) -> bool",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/build_thesis_draft.py",
-    "line_no": 126,
+    "line_no": 128,
     "symbol": "is_latex_block_start",
     "signature": "is_latex_block_start(line: str) -> bool",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/build_thesis_draft.py",
-    "line_no": 135,
+    "line_no": 137,
     "symbol": "parse_latex_block",
     "signature": "parse_latex_block(lines: list[str], start: int) -> tuple[Block, int]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/build_thesis_draft.py",
-    "line_no": 171,
+    "line_no": 173,
     "symbol": "parse_code_block",
     "signature": "parse_code_block(lines: list[str], start: int) -> tuple[Block, int]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/build_thesis_draft.py",
-    "line_no": 184,
+    "line_no": 186,
     "symbol": "parse_table",
     "signature": "parse_table(lines: list[str], start: int) -> tuple[Block | None, int]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/build_thesis_draft.py",
-    "line_no": 205,
+    "line_no": 207,
     "symbol": "parse_list",
     "signature": "parse_list(lines: list[str], start: int) -> tuple[Block, int]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/build_thesis_draft.py",
-    "line_no": 264,
+    "line_no": 266,
     "symbol": "parse_blockquote",
     "signature": "parse_blockquote(lines: list[str], start: int) -> tuple[Block, int]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/build_thesis_draft.py",
-    "line_no": 277,
+    "line_no": 279,
     "symbol": "parse_paragraph",
     "signature": "parse_paragraph(lines: list[str], start: int) -> tuple[Block, int]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/build_thesis_draft.py",
-    "line_no": 301,
+    "line_no": 303,
     "symbol": "parse_blocks",
     "signature": "parse_blocks(lines: list[str]) -> list[Block]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/build_thesis_draft.py",
-    "line_no": 343,
+    "line_no": 345,
     "symbol": "strip_numbered_prefix",
     "signature": "strip_numbered_prefix(text: str) -> str",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/build_thesis_draft.py",
-    "line_no": 347,
+    "line_no": 349,
     "symbol": "convert_cite_brackets",
     "signature": "convert_cite_brackets(text: str) -> str",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/build_thesis_draft.py",
-    "line_no": 364,
+    "line_no": 366,
     "symbol": "escape_latex",
     "signature": "escape_latex(text: str) -> str",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/build_thesis_draft.py",
-    "line_no": 387,
+    "line_no": 389,
     "symbol": "escape_latex_code",
     "signature": "escape_latex_code(text: str) -> str",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/build_thesis_draft.py",
-    "line_no": 408,
+    "line_no": 410,
     "symbol": "convert_inline",
     "signature": "convert_inline(text: str) -> str",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/build_thesis_draft.py",
-    "line_no": 448,
+    "line_no": 450,
     "symbol": "needs_texorpdfstring",
     "signature": "needs_texorpdfstring(text: str) -> bool",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/build_thesis_draft.py",
-    "line_no": 458,
+    "line_no": 460,
     "symbol": "latex_to_plain",
     "signature": "latex_to_plain(text: str) -> str",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/build_thesis_draft.py",
-    "line_no": 477,
+    "line_no": 479,
     "symbol": "replace_unicode_subscripts",
     "signature": "replace_unicode_subscripts(text: str) -> str",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/build_thesis_draft.py",
-    "line_no": 485,
+    "line_no": 487,
     "symbol": "replace_unicode_symbols",
     "signature": "replace_unicode_symbols(text: str) -> str",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/build_thesis_draft.py",
-    "line_no": 491,
+    "line_no": 493,
     "symbol": "MarkdownToLatexConverter",
     "signature": "class MarkdownToLatexConverter",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/build_thesis_draft.py",
-    "line_no": 559,
+    "line_no": 561,
     "symbol": "replace_between_markers",
     "signature": "replace_between_markers(text: str, start: str, end: str, replacement: str) -> str",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/build_thesis_draft.py",
-    "line_no": 569,
+    "line_no": 571,
     "symbol": "replace_between_markers_optional",
     "signature": "replace_between_markers_optional(text: str, start: str, end: str, replacement: str) -> str",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/build_thesis_draft.py",
-    "line_no": 579,
+    "line_no": 581,
+    "symbol": "APPENDIX_CHAPTER_HEADING_RE",
+    "signature": "APPENDIX_CHAPTER_HEADING_RE = re.compile('^(#{1,6})\\\\s+付録\\\\s*([A-Z])\\\\.\\\\s*(.+?)\\\\s*$')",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "tools/build_thesis_draft.py",
+    "line_no": 586,
+    "symbol": "split_methods_appendices",
+    "signature": "split_methods_appendices(text: str) -> tuple[str, str]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tools/build_thesis_draft.py",
+    "line_no": 596,
+    "symbol": "normalize_appendix_headings",
+    "signature": "normalize_appendix_headings(text: str) -> str",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tools/build_thesis_draft.py",
+    "line_no": 609,
     "symbol": "run",
     "signature": "run(cmd: list[str], cwd: Path, env: dict[str, str] | None=None) -> None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/build_thesis_draft.py",
-    "line_no": 583,
+    "line_no": 613,
     "symbol": "build_pdf",
     "signature": "build_pdf(tex_path: Path, out_dir: Path, repo_root: Path) -> None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/build_thesis_draft.py",
-    "line_no": 675,
+    "line_no": 705,
     "symbol": "main",
     "signature": "main() -> int",
     "brief_usage": "No description available."
@@ -21129,138 +21164,166 @@
     "file_path": "tools/reference_tracker.py",
     "line_no": 46,
     "symbol": "PATTERNS",
-    "signature": "PATTERNS = {'formal': re.compile('\\\\[@([A-Za-z][A-Za-z0-9_]+)\\\\]'), 'informal_etal': re.compile('([A-Z][a-z]+(?:\\\\s+(?:&|and)\\\\s+[A-Z][a-z]+)?)\\\\s+et\\\\s+al\\\\.\\\\s*\\\\((\\\\d{4})\\\\)'), 'informal_pair': re.compile('([A-Z][a-z]+)\\\\s*(?:&|and)\\\\s*([A-Z][a-z]+)\\\\s*\\\\((\\\\d{4})\\\\)'), 'informal_single': re.compile('([A-Z][a-z]{2,})\\\\s*\\\\((\\\\d{4})\\\\)'), 'equation': re.compile('\\\\(E\\\\.(\\\\d{3}[a-z]?)\\\\)')}",
+    "signature": "PATTERNS = {'formal': re.compile('\\\\[(@[^\\\\]]+)\\\\]'), 'tex_cite': re.compile('\\\\\\\\cite[a-zA-Z*]*\\\\s*(?:\\\\[[^\\\\]]*\\\\]\\\\s*){0,2}\\\\{([^}]+)\\\\}'), 'informal_etal': re.compile('([A-Z][a-z]+(?:\\\\s+(?:&|and)\\\\s+[A-Z][a-z]+)?)\\\\s+et\\\\s+al\\\\.\\\\s*\\\\((\\\\d{4})\\\\)'), 'informal_pair': re.compile('([A-Z][a-z]+)\\\\s*(?:&|and)\\\\s*([A-Z][a-z]+)\\\\s*\\\\((\\\\d{4})\\\\)'), 'informal_single': re.compile('([A-Z][a-z]{2,})\\\\s*\\\\((\\\\d{4})\\\\)'), 'equation': re.compile('\\\\(E\\\\.(\\\\d{3}[a-z]?)\\\\)')}",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "tools/reference_tracker.py",
-    "line_no": 64,
+    "line_no": 65,
+    "symbol": "CITE_KEY_RE",
+    "signature": "CITE_KEY_RE = re.compile('^[A-Za-z][A-Za-z0-9_]+$')",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "tools/reference_tracker.py",
+    "line_no": 66,
+    "symbol": "PANDOC_KEY_RE",
+    "signature": "PANDOC_KEY_RE = re.compile('@([A-Za-z][A-Za-z0-9_]+)')",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "tools/reference_tracker.py",
+    "line_no": 67,
+    "symbol": "FORMAL_STYLES",
+    "signature": "FORMAL_STYLES = {'formal', 'tex_cite'}",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "tools/reference_tracker.py",
+    "line_no": 70,
+    "symbol": "_extract_pandoc_keys",
+    "signature": "_extract_pandoc_keys(raw: str) -> List[str]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tools/reference_tracker.py",
+    "line_no": 74,
     "symbol": "INFORMAL_TO_KEY",
     "signature": "INFORMAL_TO_KEY = {('Strubbe', 'Chiang', '2006'): 'StrubbeChiang2006_ApJ648_652', ('Hyodo', '2018'): 'Hyodo2018_ApJ860_150', ('Hyodo', '2017'): 'Hyodo2017a_ApJ845_125', ('Pignatale', '2018'): 'Pignatale2018_ApJ853_118', ('Ronnet', '2016'): 'Ronnet2016_ApJ828_109', ('Canup', 'Salmon', '2018'): 'CanupSalmon2018_SciAdv4_eaar6887', ('Takeuchi', 'Lin', '2003'): 'TakeuchiLin2003_ApJ593_524', ('Takeuchi', 'Lin', '2002'): 'TakeuchiLin2002_ApJ581_1344', ('Crida', 'Charnoz', '2012'): 'CridaCharnoz2012_Science338_1196', ('Wyatt', '2008'): 'Wyatt2008', ('Ohtsuki', '2002'): 'Ohtsuki2002_Icarus155_436', ('Benz', 'Asphaug', '1999'): 'BenzAsphaug1999_Icarus142_5', ('Leinhardt', 'Stewart', '2012'): 'LeinhardtStewart2012_ApJ745_79', ('Stewart', 'Leinhardt', '2009'): 'StewartLeinhardt2009_ApJ691_L133', ('Krivov', '2006'): 'Krivov2006_AA455_509', ('Dohnanyi', '1969'): 'Dohnanyi1969_JGR74_2531', ('Burns', '1979'): 'Burns1979_Icarus40_1', ('Kubaschewski', '1974'): 'Kubaschewski1974', ('Shadmehri', '2008'): 'Shadmehri2008_ApSS314_217', ('Fegley', 'Schaefer', '2012'): 'FegleySchaefer2012_arXiv', ('Kuramoto', '2024'): 'Kuramoto2024'}",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "tools/reference_tracker.py",
-    "line_no": 95,
+    "line_no": 105,
     "symbol": "ReferenceLocation",
     "signature": "class ReferenceLocation",
     "brief_usage": "A single occurrence of a reference in code."
   },
   {
     "file_path": "tools/reference_tracker.py",
-    "line_no": 106,
+    "line_no": 116,
     "symbol": "FunctionReference",
     "signature": "class FunctionReference",
     "brief_usage": "References associated with a specific function."
   },
   {
     "file_path": "tools/reference_tracker.py",
-    "line_no": 119,
+    "line_no": 129,
     "symbol": "RegistryEntry",
     "signature": "class RegistryEntry",
     "brief_usage": "A reference from the registry."
   },
   {
     "file_path": "tools/reference_tracker.py",
-    "line_no": 132,
+    "line_no": 142,
     "symbol": "ReferenceReport",
     "signature": "class ReferenceReport",
     "brief_usage": "Complete reference analysis report."
   },
   {
     "file_path": "tools/reference_tracker.py",
-    "line_no": 150,
+    "line_no": 160,
     "symbol": "load_registry",
     "signature": "load_registry() -> Dict[str, RegistryEntry]",
     "brief_usage": "Load the canonical reference registry."
   },
   {
     "file_path": "tools/reference_tracker.py",
-    "line_no": 179,
+    "line_no": 189,
     "symbol": "iter_python_files",
     "signature": "iter_python_files() -> List[Path]",
     "brief_usage": "Yield all Python files in the code directories."
   },
   {
     "file_path": "tools/reference_tracker.py",
-    "line_no": 192,
+    "line_no": 202,
     "symbol": "iter_markdown_files",
     "signature": "iter_markdown_files() -> List[Path]",
-    "brief_usage": "Yield markdown files that may contain [@Key] citations."
+    "brief_usage": "Yield markdown files that may contain citations."
   },
   {
     "file_path": "tools/reference_tracker.py",
-    "line_no": 205,
+    "line_no": 215,
     "symbol": "extract_references_from_file",
     "signature": "extract_references_from_file(file_path: Path) -> List[ReferenceLocation]",
     "brief_usage": "Extract all reference citations from a text file."
   },
   {
     "file_path": "tools/reference_tracker.py",
-    "line_no": 260,
+    "line_no": 287,
     "symbol": "_resolve_informal_key",
     "signature": "_resolve_informal_key(author1: str, year: str, author2: str=None) -> str",
     "brief_usage": "Attempt to resolve an informal reference to a registry key."
   },
   {
     "file_path": "tools/reference_tracker.py",
-    "line_no": 282,
+    "line_no": 309,
     "symbol": "extract_function_references",
     "signature": "extract_function_references(file_path: Path) -> List[FunctionReference]",
     "brief_usage": "Extract references grouped by function/class."
   },
   {
     "file_path": "tools/reference_tracker.py",
-    "line_no": 344,
+    "line_no": 371,
     "symbol": "_extract_refs_from_docstring",
     "signature": "_extract_refs_from_docstring(lines: List[str]) -> Dict[str, List[str]]",
     "brief_usage": "Extract reference keys and equation numbers from function lines."
   },
   {
     "file_path": "tools/reference_tracker.py",
-    "line_no": 371,
+    "line_no": 405,
     "symbol": "generate_report",
     "signature": "generate_report() -> ReferenceReport",
     "brief_usage": "Generate a complete reference analysis report."
   },
   {
     "file_path": "tools/reference_tracker.py",
-    "line_no": 406,
+    "line_no": 440,
     "symbol": "print_scan_results",
     "signature": "print_scan_results(report: ReferenceReport) -> None",
     "brief_usage": "Print scan results showing all references found."
   },
   {
     "file_path": "tools/reference_tracker.py",
-    "line_no": 430,
+    "line_no": 464,
     "symbol": "print_validation_results",
     "signature": "print_validation_results(report: ReferenceReport) -> None",
     "brief_usage": "Print validation results comparing code vs registry."
   },
   {
     "file_path": "tools/reference_tracker.py",
-    "line_no": 460,
+    "line_no": 496,
     "symbol": "print_function_mapping",
     "signature": "print_function_mapping(report: ReferenceReport) -> None",
     "brief_usage": "Print function-to-reference mapping."
   },
   {
     "file_path": "tools/reference_tracker.py",
-    "line_no": 475,
+    "line_no": 511,
     "symbol": "export_bibtex",
     "signature": "export_bibtex(report: ReferenceReport, output_path: Optional[Path]=None) -> str",
     "brief_usage": "Export BibTeX entries for all referenced works."
   },
   {
     "file_path": "tools/reference_tracker.py",
-    "line_no": 496,
+    "line_no": 532,
     "symbol": "print_full_report",
     "signature": "print_full_report(report: ReferenceReport) -> None",
     "brief_usage": "Print comprehensive reference report."
   },
   {
     "file_path": "tools/reference_tracker.py",
-    "line_no": 529,
+    "line_no": 565,
     "symbol": "main",
     "signature": "main()",
     "brief_usage": "No description available."

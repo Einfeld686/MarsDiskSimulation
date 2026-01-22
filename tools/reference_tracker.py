@@ -44,8 +44,10 @@ EXCLUDED_DIRS = {
 
 # Reference patterns to detect in code
 PATTERNS = {
-    # Formal [@Key] citations
-    "formal": re.compile(r"\[@([A-Za-z][A-Za-z0-9_]+)\]"),
+    # Formal Pandoc citations, including multi-cite clusters like [@Key; @Key2]
+    "formal": re.compile(r"\[(@[^\]]+)\]"),
+    # TeX citations like \cite{Key} or \citet[...]{Key1,Key2}
+    "tex_cite": re.compile(r"\\cite[a-zA-Z*]*\s*(?:\[[^\]]*\]\s*){0,2}\{([^}]+)\}"),
     # Author et al. (Year) style
     "informal_etal": re.compile(
         r"([A-Z][a-z]+(?:\s+(?:&|and)\s+[A-Z][a-z]+)?)\s+et\s+al\.\s*\((\d{4})\)"
@@ -59,6 +61,14 @@ PATTERNS = {
     # Equation references like (E.013)
     "equation": re.compile(r"\(E\.(\d{3}[a-z]?)\)"),
 }
+
+CITE_KEY_RE = re.compile(r"^[A-Za-z][A-Za-z0-9_]+$")
+PANDOC_KEY_RE = re.compile(r"@([A-Za-z][A-Za-z0-9_]+)")
+FORMAL_STYLES = {"formal", "tex_cite"}
+
+
+def _extract_pandoc_keys(raw: str) -> List[str]:
+    return PANDOC_KEY_RE.findall(raw)
 
 # Known informal -> formal key mappings (expand as needed)
 INFORMAL_TO_KEY = {
@@ -98,7 +108,7 @@ class ReferenceLocation:
     file: Path
     line: int
     key: str
-    style: str  # "formal", "informal_etal", etc.
+    style: str  # "formal", "tex_cite", "informal_etal", etc.
     context: str  # surrounding text
 
 
@@ -190,7 +200,7 @@ def iter_python_files() -> List[Path]:
 
 
 def iter_markdown_files() -> List[Path]:
-    """Yield markdown files that may contain [@Key] citations."""
+    """Yield markdown files that may contain citations."""
     files: list[Path] = []
     for doc_dir in DOC_DIRS:
         if not doc_dir.exists():
@@ -213,17 +223,34 @@ def extract_references_from_file(file_path: Path) -> List[ReferenceLocation]:
     lines = content.split("\n")
 
     for i, line in enumerate(lines, start=1):
-        # Formal [@Key] references
+        # Formal Pandoc citations like [@Key; @Key2]
         for match in PATTERNS["formal"].finditer(line):
-            refs.append(
-                ReferenceLocation(
-                    file=file_path,
-                    line=i,
-                    key=match.group(1),
-                    style="formal",
-                    context=line.strip(),
+            for key in _extract_pandoc_keys(match.group(1)):
+                refs.append(
+                    ReferenceLocation(
+                        file=file_path,
+                        line=i,
+                        key=key,
+                        style="formal",
+                        context=line.strip(),
+                    )
                 )
-            )
+
+        # TeX citations like \cite{Key1,Key2}
+        for match in PATTERNS["tex_cite"].finditer(line):
+            for raw_key in match.group(1).split(","):
+                key = raw_key.strip()
+                if not CITE_KEY_RE.match(key):
+                    continue
+                refs.append(
+                    ReferenceLocation(
+                        file=file_path,
+                        line=i,
+                        key=key,
+                        style="tex_cite",
+                        context=line.strip(),
+                    )
+                )
 
         # Informal "et al." references
         for match in PATTERNS["informal_etal"].finditer(line):
@@ -348,7 +375,14 @@ def _extract_refs_from_docstring(lines: List[str]) -> Dict[str, List[str]]:
     equations = []
 
     for match in PATTERNS["formal"].finditer(text):
-        keys.append(match.group(1))
+        keys.extend(_extract_pandoc_keys(match.group(1)))
+
+    for match in PATTERNS["tex_cite"].finditer(text):
+        for raw_key in match.group(1).split(","):
+            key = raw_key.strip()
+            if not CITE_KEY_RE.match(key):
+                continue
+            keys.append(key)
 
     for match in PATTERNS["equation"].finditer(text):
         equations.append(f"E.{match.group(1)}")
@@ -381,10 +415,10 @@ def generate_report() -> ReferenceReport:
     for md_file in iter_markdown_files():
         code_refs.extend(extract_references_from_file(md_file))
 
-    keys_in_code = set(r.key for r in code_refs)
+    keys_in_code = {r.key for r in code_refs if r.style in FORMAL_STYLES}
     keys_in_registry = set(registry.keys())
 
-    informal_refs = [r for r in code_refs if r.style != "formal"]
+    informal_refs = [r for r in code_refs if r.style not in FORMAL_STYLES]
 
     return ReferenceReport(
         code_refs=code_refs,
@@ -411,7 +445,7 @@ def print_scan_results(report: ReferenceReport) -> None:
 
     print(f"\nTotal references found: {len(report.code_refs)}")
     print(f"Unique keys: {len(report.keys_in_code)}")
-    print(f"Formal [@Key] style: {sum(1 for r in report.code_refs if r.style == 'formal')}")
+    print(f"Formal citation style: {sum(1 for r in report.code_refs if r.style in FORMAL_STYLES)}")
     print(f"Informal style: {len(report.informal_refs)}")
 
     print("\n--- References by file ---")
@@ -423,7 +457,7 @@ def print_scan_results(report: ReferenceReport) -> None:
         rel_path = file_path.relative_to(REPO_ROOT)
         print(f"\n{rel_path}:")
         for ref in refs:
-            style_marker = "✓" if ref.style == "formal" else "⚠"
+            style_marker = "✓" if ref.style in FORMAL_STYLES else "⚠"
             print(f"  L{ref.line:4d} {style_marker} [{ref.key}]")
 
 
@@ -449,7 +483,9 @@ def print_validation_results(report: ReferenceReport) -> None:
             print(f"  - {short}")
 
     if report.informal_refs:
-        print(f"\n⚠ Informal references (should use [@Key] format): {len(report.informal_refs)}")
+        print(
+            f"\n⚠ Informal references (should use [@Key] or \\cite{{Key}} format): {len(report.informal_refs)}"
+        )
         for ref in report.informal_refs[:10]:  # Show first 10
             rel_path = ref.file.relative_to(REPO_ROOT)
             print(f"  {rel_path}:{ref.line} -> {ref.key}")

@@ -60,6 +60,8 @@ RESULTS_START = "% === AUTOGEN RESULTS START ==="
 RESULTS_END = "% === AUTOGEN RESULTS END ==="
 DISCUSSION_START = "% === AUTOGEN DISCUSSION START ==="
 DISCUSSION_END = "% === AUTOGEN DISCUSSION END ==="
+APPENDIX_START = "% === AUTOGEN APPENDIX START ==="
+APPENDIX_END = "% === AUTOGEN APPENDIX END ==="
 
 
 @dataclass
@@ -576,6 +578,34 @@ def replace_between_markers_optional(
     return replace_between_markers(text, start, end, replacement)
 
 
+APPENDIX_CHAPTER_HEADING_RE = re.compile(
+    r"^(#{1,6})\s+付録\s*([A-Z])\.\s*(.+?)\s*$"
+)
+
+
+def split_methods_appendices(text: str) -> tuple[str, str]:
+    lines = text.splitlines()
+    for idx, line in enumerate(lines):
+        if re.match(r"^#{1,6}\s+付録\b", line):
+            body = "\n".join(lines[:idx]).rstrip() + "\n"
+            appendix = "\n".join(lines[idx:]).rstrip() + "\n"
+            return body, appendix
+    return text, ""
+
+
+def normalize_appendix_headings(text: str) -> str:
+    lines = text.splitlines()
+    out: list[str] = []
+    for line in lines:
+        match = APPENDIX_CHAPTER_HEADING_RE.match(line)
+        if match:
+            hashes, _letter, title = match.groups()
+            out.append(f"{hashes} {title}")
+            continue
+        out.append(line)
+    return "\n".join(out) + "\n"
+
+
 def run(cmd: list[str], cwd: Path, env: dict[str, str] | None = None) -> None:
     subprocess.run(cmd, cwd=str(cwd), check=True, env=env)
 
@@ -729,9 +759,24 @@ def main() -> int:
     abstract_tex = converter.convert(abstract_text)
     intro_tex = converter.convert(intro_text)
     related_work_tex = converter.convert(related_work_text)
-    methods_tex = converter.convert(methods_text)
+    methods_body_text, methods_appendix_text = split_methods_appendices(methods_text)
+    methods_tex = converter.convert(methods_body_text)
     results_tex = converter.convert(results_text)
     discussion_tex = converter.convert(discussion_text)
+
+    appendix_tex = ""
+    if methods_appendix_text.strip():
+        appendix_heading_map = {
+            1: "chapter",
+            2: "chapter",
+            3: "chapter",
+            4: "section",
+            5: "subsection",
+            6: "subsubsection",
+        }
+        appendix_converter = MarkdownToLatexConverter(appendix_heading_map)
+        appendix_md = normalize_appendix_headings(methods_appendix_text)
+        appendix_tex = "\\appendix\n" + appendix_converter.convert(appendix_md)
 
     tex_text = tex_path.read_text(encoding="utf-8")
     tex_text = replace_between_markers(
@@ -746,6 +791,10 @@ def main() -> int:
     tex_text = replace_between_markers(
         tex_text, DISCUSSION_START, DISCUSSION_END, discussion_tex
     )
+    if appendix_tex:
+        tex_text = replace_between_markers_optional(
+            tex_text, APPENDIX_START, APPENDIX_END, appendix_tex
+        )
     out_path.write_text(tex_text, encoding="utf-8")
 
     if args.pdf:

@@ -2004,35 +2004,37 @@ tools/analyze_tau_los_feedback.py:201:def _render_placeholder(path: Path, title:
 tools/analyze_tau_los_feedback.py:211:def analyze(args: argparse.Namespace) -> Dict
 tools/analyze_tau_los_feedback.py:423:def _rows_from_result(result: Dict) -> List[Dict[str, object]]
 tools/analyze_tau_los_feedback.py:459:def main() -> None
-tools/build_thesis_draft.py:66:class Block
-tools/build_thesis_draft.py:71:def strip_yaml_frontmatter(text: str) -> str
-tools/build_thesis_draft.py:81:def strip_html_comments(text: str) -> str
-tools/build_thesis_draft.py:95:def strip_tex_exclude_blocks(text: str) -> str
-tools/build_thesis_draft.py:112:def split_table_row(line: str) -> list[str]
-tools/build_thesis_draft.py:116:def is_table_separator(line: str) -> bool
-tools/build_thesis_draft.py:126:def is_latex_block_start(line: str) -> bool
-tools/build_thesis_draft.py:135:def parse_latex_block(lines: list[str], start: int) -> tuple[Block, int]
-tools/build_thesis_draft.py:171:def parse_code_block(lines: list[str], start: int) -> tuple[Block, int]
-tools/build_thesis_draft.py:184:def parse_table(lines: list[str], start: int) -> tuple[Block | None, int]
-tools/build_thesis_draft.py:205:def parse_list(lines: list[str], start: int) -> tuple[Block, int]
-tools/build_thesis_draft.py:264:def parse_blockquote(lines: list[str], start: int) -> tuple[Block, int]
-tools/build_thesis_draft.py:277:def parse_paragraph(lines: list[str], start: int) -> tuple[Block, int]
-tools/build_thesis_draft.py:301:def parse_blocks(lines: list[str]) -> list[Block]
-tools/build_thesis_draft.py:343:def strip_numbered_prefix(text: str) -> str
-tools/build_thesis_draft.py:347:def convert_cite_brackets(text: str) -> str
-tools/build_thesis_draft.py:364:def escape_latex(text: str) -> str
-tools/build_thesis_draft.py:387:def escape_latex_code(text: str) -> str
-tools/build_thesis_draft.py:408:def convert_inline(text: str) -> str
-tools/build_thesis_draft.py:448:def needs_texorpdfstring(text: str) -> bool
-tools/build_thesis_draft.py:458:def latex_to_plain(text: str) -> str
-tools/build_thesis_draft.py:477:def replace_unicode_subscripts(text: str) -> str
-tools/build_thesis_draft.py:485:def replace_unicode_symbols(text: str) -> str
-tools/build_thesis_draft.py:491:class MarkdownToLatexConverter
-tools/build_thesis_draft.py:559:def replace_between_markers(text: str, start: str, end: str, replacement: str) -> str
-tools/build_thesis_draft.py:569:def replace_between_markers_optional(text: str, start: str, end: str, replacement: str) -> str
-tools/build_thesis_draft.py:579:def run(cmd: list[str], cwd: Path, env: dict[str, str] | None=None) -> None
-tools/build_thesis_draft.py:583:def build_pdf(tex_path: Path, out_dir: Path, repo_root: Path) -> None
-tools/build_thesis_draft.py:675:def main() -> int
+tools/build_thesis_draft.py:68:class Block
+tools/build_thesis_draft.py:73:def strip_yaml_frontmatter(text: str) -> str
+tools/build_thesis_draft.py:83:def strip_html_comments(text: str) -> str
+tools/build_thesis_draft.py:97:def strip_tex_exclude_blocks(text: str) -> str
+tools/build_thesis_draft.py:114:def split_table_row(line: str) -> list[str]
+tools/build_thesis_draft.py:118:def is_table_separator(line: str) -> bool
+tools/build_thesis_draft.py:128:def is_latex_block_start(line: str) -> bool
+tools/build_thesis_draft.py:137:def parse_latex_block(lines: list[str], start: int) -> tuple[Block, int]
+tools/build_thesis_draft.py:173:def parse_code_block(lines: list[str], start: int) -> tuple[Block, int]
+tools/build_thesis_draft.py:186:def parse_table(lines: list[str], start: int) -> tuple[Block | None, int]
+tools/build_thesis_draft.py:207:def parse_list(lines: list[str], start: int) -> tuple[Block, int]
+tools/build_thesis_draft.py:266:def parse_blockquote(lines: list[str], start: int) -> tuple[Block, int]
+tools/build_thesis_draft.py:279:def parse_paragraph(lines: list[str], start: int) -> tuple[Block, int]
+tools/build_thesis_draft.py:303:def parse_blocks(lines: list[str]) -> list[Block]
+tools/build_thesis_draft.py:345:def strip_numbered_prefix(text: str) -> str
+tools/build_thesis_draft.py:349:def convert_cite_brackets(text: str) -> str
+tools/build_thesis_draft.py:366:def escape_latex(text: str) -> str
+tools/build_thesis_draft.py:389:def escape_latex_code(text: str) -> str
+tools/build_thesis_draft.py:410:def convert_inline(text: str) -> str
+tools/build_thesis_draft.py:450:def needs_texorpdfstring(text: str) -> bool
+tools/build_thesis_draft.py:460:def latex_to_plain(text: str) -> str
+tools/build_thesis_draft.py:479:def replace_unicode_subscripts(text: str) -> str
+tools/build_thesis_draft.py:487:def replace_unicode_symbols(text: str) -> str
+tools/build_thesis_draft.py:493:class MarkdownToLatexConverter
+tools/build_thesis_draft.py:561:def replace_between_markers(text: str, start: str, end: str, replacement: str) -> str
+tools/build_thesis_draft.py:571:def replace_between_markers_optional(text: str, start: str, end: str, replacement: str) -> str
+tools/build_thesis_draft.py:586:def split_methods_appendices(text: str) -> tuple[str, str]
+tools/build_thesis_draft.py:596:def normalize_appendix_headings(text: str) -> str
+tools/build_thesis_draft.py:609:def run(cmd: list[str], cwd: Path, env: dict[str, str] | None=None) -> None
+tools/build_thesis_draft.py:613:def build_pdf(tex_path: Path, out_dir: Path, repo_root: Path) -> None
+tools/build_thesis_draft.py:705:def main() -> int
 tools/check_unknown_refs.py:13:def load_requests(path: Path) -> list[dict]
 tools/check_unknown_refs.py:24:def main() -> int
 tools/derive_supply_rate.py:51:class SupplyInputs
@@ -2272,24 +2274,25 @@ tools/readme_sync.py:61:def load_source(spec: SourceSpec) -> str
 tools/readme_sync.py:69:def render_readme(text: str) -> tuple[str, list[str], int]
 tools/readme_sync.py:97:def diff_lines(before: str, after: str) -> str
 tools/readme_sync.py:109:def main() -> int
-tools/reference_tracker.py:95:class ReferenceLocation
-tools/reference_tracker.py:106:class FunctionReference
-tools/reference_tracker.py:119:class RegistryEntry
-tools/reference_tracker.py:132:class ReferenceReport
-tools/reference_tracker.py:150:def load_registry() -> Dict[str, RegistryEntry]
-tools/reference_tracker.py:179:def iter_python_files() -> List[Path]
-tools/reference_tracker.py:192:def iter_markdown_files() -> List[Path]
-tools/reference_tracker.py:205:def extract_references_from_file(file_path: Path) -> List[ReferenceLocation]
-tools/reference_tracker.py:260:def _resolve_informal_key(author1: str, year: str, author2: str=None) -> str
-tools/reference_tracker.py:282:def extract_function_references(file_path: Path) -> List[FunctionReference]
-tools/reference_tracker.py:344:def _extract_refs_from_docstring(lines: List[str]) -> Dict[str, List[str]]
-tools/reference_tracker.py:371:def generate_report() -> ReferenceReport
-tools/reference_tracker.py:406:def print_scan_results(report: ReferenceReport) -> None
-tools/reference_tracker.py:430:def print_validation_results(report: ReferenceReport) -> None
-tools/reference_tracker.py:460:def print_function_mapping(report: ReferenceReport) -> None
-tools/reference_tracker.py:475:def export_bibtex(report: ReferenceReport, output_path: Optional[Path]=None) -> str
-tools/reference_tracker.py:496:def print_full_report(report: ReferenceReport) -> None
-tools/reference_tracker.py:529:def main()
+tools/reference_tracker.py:70:def _extract_pandoc_keys(raw: str) -> List[str]
+tools/reference_tracker.py:105:class ReferenceLocation
+tools/reference_tracker.py:116:class FunctionReference
+tools/reference_tracker.py:129:class RegistryEntry
+tools/reference_tracker.py:142:class ReferenceReport
+tools/reference_tracker.py:160:def load_registry() -> Dict[str, RegistryEntry]
+tools/reference_tracker.py:189:def iter_python_files() -> List[Path]
+tools/reference_tracker.py:202:def iter_markdown_files() -> List[Path]
+tools/reference_tracker.py:215:def extract_references_from_file(file_path: Path) -> List[ReferenceLocation]
+tools/reference_tracker.py:287:def _resolve_informal_key(author1: str, year: str, author2: str=None) -> str
+tools/reference_tracker.py:309:def extract_function_references(file_path: Path) -> List[FunctionReference]
+tools/reference_tracker.py:371:def _extract_refs_from_docstring(lines: List[str]) -> Dict[str, List[str]]
+tools/reference_tracker.py:405:def generate_report() -> ReferenceReport
+tools/reference_tracker.py:440:def print_scan_results(report: ReferenceReport) -> None
+tools/reference_tracker.py:464:def print_validation_results(report: ReferenceReport) -> None
+tools/reference_tracker.py:496:def print_function_mapping(report: ReferenceReport) -> None
+tools/reference_tracker.py:511:def export_bibtex(report: ReferenceReport, output_path: Optional[Path]=None) -> str
+tools/reference_tracker.py:532:def print_full_report(report: ReferenceReport) -> None
+tools/reference_tracker.py:565:def main()
 tools/research/common.py:14:def _read_parquet_safe(path: Path, columns: Iterable[str] | None=None) -> pd.DataFrame
 tools/research/common.py:35:def _downsample(df: pd.DataFrame, max_points: int | None) -> pd.DataFrame
 tools/research/common.py:42:def load_series(run_dir: Path, columns: Iterable[str] | None=None, max_points: int | None=None) -> pd.DataFrame
