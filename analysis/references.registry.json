@@ -63,6 +63,19 @@
       ]
     },
     {
+      "key": "VanLieshoutMinDominik2014_AA572_A76",
+      "short": "van Lieshout et al. (2014)",
+      "title": "Dusty tails of evaporating exoplanets: I. Constraints on the dust composition",
+      "doi": "10.1051/0004-6361/201424876",
+      "bibtex": "@article{VanLieshoutMinDominik2014_AA572_A76, title = {Dusty tails of evaporating exoplanets: I. Constraints on the dust composition}, author = {van Lieshout, R. and Min, M. and Dominik, C.}, journal = {A\\\\&A}, volume = {572}, pages = {A76}, year = {2014}, doi = {10.1051/0004-6361/201424876}}",
+      "adopted_scope": "Forsterite material density and HKL (Hertz\u2013Knudsen\u2013Langmuir) sublimation parameters used as defaults in run_sweep and sublimation provenance tables.",
+      "claims": [
+        "Table 2 lists bulk densities for the dust species considered, including crystalline forsterite with \u03c1d = 3.27 g cm\u22123.",
+        "Table 3 tabulates sublimation characteristics for crystalline forsterite, including \u03bc = 140.694 g mol\u22121, \u03b1 = 0.1, and the vapor-pressure fit pv = exp(\u2212A/T + B) dyn cm\u22122 with A = 65308 and B = 34.1 over 1673\u20132133 K.",
+        "Equation (12) defines the HKL mass flux J(T) used to convert vapor pressure into a sublimation mass flux."
+      ]
+    },
+    {
       "key": "VisscherFegley2013_arXiv",
       "short": "Visscher & Fegley (2013)",
       "title": "Chemistry of impact-generated silicate melt-vapor debris disks",

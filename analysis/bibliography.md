@@ -572,6 +572,16 @@
 - **主張**:
   - 溶融SiO₂の平衡蒸気圧フィット（HKL 液体枝、(E.018) に集約）
 
+### van Lieshout et al. (2014)
+- **Key**: `VanLieshoutMinDominik2014_AA572_A76`
+- **Title**: Dusty tails of evaporating exoplanets: I. Constraints on the dust composition
+- **Journal**: A&A, 572, A76
+- **DOI**: [10.1051/0004-6361/201424876](https://doi.org/10.1051/0004-6361/201424876)
+- **使用箇所**: フォルステライトの密度（ρ）と固相HKLパラメータ（α, μ, 蒸気圧係数）の既定値
+- **主張**:
+  - Table 2 に主要ダスト種の密度を整理し，結晶フォルステライトの ρd = 3.27 g cm−3 を与える
+  - Table 3 に昇華特性を整理し，結晶フォルステライトの μ, α と蒸気圧近似 pv = exp(−A/T + B) の係数（有効温度範囲を含む）を与える
+
 ### Schaefer & Fegley (2004)
 - **Key**: `SchaeferFegley2004_Icarus169_216`
 - **Title**: A thermodynamic model of high temperature lava vaporization on Io
