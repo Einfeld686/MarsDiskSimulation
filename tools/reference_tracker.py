@@ -28,7 +28,19 @@ from typing import Dict, List, Optional, Set, Tuple
 REPO_ROOT = Path(__file__).resolve().parent.parent
 REGISTRY_PATH = REPO_ROOT / "analysis" / "references.registry.json"
 CODE_DIRS = [REPO_ROOT / "marsdisk"]
-EXCLUDED_DIRS = {"__pycache__", ".git", "out", "agent_test", ".venv", "venv", "site-packages"}
+DOC_DIRS = [
+    REPO_ROOT / "analysis" / "thesis",
+    REPO_ROOT / "analysis" / "thesis_sections",
+]
+EXCLUDED_DIRS = {
+    "__pycache__",
+    ".git",
+    "out",
+    "agent_test",
+    ".venv",
+    "venv",
+    "site-packages",
+}
 
 # Reference patterns to detect in code
 PATTERNS = {
@@ -177,8 +189,21 @@ def iter_python_files() -> List[Path]:
     return files
 
 
+def iter_markdown_files() -> List[Path]:
+    """Yield markdown files that may contain [@Key] citations."""
+    files: list[Path] = []
+    for doc_dir in DOC_DIRS:
+        if not doc_dir.exists():
+            continue
+        for md_file in doc_dir.rglob("*.md"):
+            if any(excl in md_file.parts for excl in EXCLUDED_DIRS):
+                continue
+            files.append(md_file)
+    return files
+
+
 def extract_references_from_file(file_path: Path) -> List[ReferenceLocation]:
-    """Extract all reference citations from a Python file."""
+    """Extract all reference citations from a text file."""
     refs = []
     try:
         content = file_path.read_text(encoding="utf-8")
@@ -352,6 +377,9 @@ def generate_report() -> ReferenceReport:
     for py_file in iter_python_files():
         code_refs.extend(extract_references_from_file(py_file))
         function_refs.extend(extract_function_references(py_file))
+
+    for md_file in iter_markdown_files():
+        code_refs.extend(extract_references_from_file(md_file))
 
     keys_in_code = set(r.key for r in code_refs)
     keys_in_registry = set(registry.keys())

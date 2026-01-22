@@ -2272,23 +2272,24 @@ tools/readme_sync.py:61:def load_source(spec: SourceSpec) -> str
 tools/readme_sync.py:69:def render_readme(text: str) -> tuple[str, list[str], int]
 tools/readme_sync.py:97:def diff_lines(before: str, after: str) -> str
 tools/readme_sync.py:109:def main() -> int
-tools/reference_tracker.py:83:class ReferenceLocation
-tools/reference_tracker.py:94:class FunctionReference
-tools/reference_tracker.py:107:class RegistryEntry
-tools/reference_tracker.py:120:class ReferenceReport
-tools/reference_tracker.py:138:def load_registry() -> Dict[str, RegistryEntry]
-tools/reference_tracker.py:167:def iter_python_files() -> List[Path]
-tools/reference_tracker.py:180:def extract_references_from_file(file_path: Path) -> List[ReferenceLocation]
-tools/reference_tracker.py:235:def _resolve_informal_key(author1: str, year: str, author2: str=None) -> str
-tools/reference_tracker.py:257:def extract_function_references(file_path: Path) -> List[FunctionReference]
-tools/reference_tracker.py:319:def _extract_refs_from_docstring(lines: List[str]) -> Dict[str, List[str]]
-tools/reference_tracker.py:346:def generate_report() -> ReferenceReport
-tools/reference_tracker.py:378:def print_scan_results(report: ReferenceReport) -> None
-tools/reference_tracker.py:402:def print_validation_results(report: ReferenceReport) -> None
-tools/reference_tracker.py:432:def print_function_mapping(report: ReferenceReport) -> None
-tools/reference_tracker.py:447:def export_bibtex(report: ReferenceReport, output_path: Optional[Path]=None) -> str
-tools/reference_tracker.py:468:def print_full_report(report: ReferenceReport) -> None
-tools/reference_tracker.py:501:def main()
+tools/reference_tracker.py:95:class ReferenceLocation
+tools/reference_tracker.py:106:class FunctionReference
+tools/reference_tracker.py:119:class RegistryEntry
+tools/reference_tracker.py:132:class ReferenceReport
+tools/reference_tracker.py:150:def load_registry() -> Dict[str, RegistryEntry]
+tools/reference_tracker.py:179:def iter_python_files() -> List[Path]
+tools/reference_tracker.py:192:def iter_markdown_files() -> List[Path]
+tools/reference_tracker.py:205:def extract_references_from_file(file_path: Path) -> List[ReferenceLocation]
+tools/reference_tracker.py:260:def _resolve_informal_key(author1: str, year: str, author2: str=None) -> str
+tools/reference_tracker.py:282:def extract_function_references(file_path: Path) -> List[FunctionReference]
+tools/reference_tracker.py:344:def _extract_refs_from_docstring(lines: List[str]) -> Dict[str, List[str]]
+tools/reference_tracker.py:371:def generate_report() -> ReferenceReport
+tools/reference_tracker.py:406:def print_scan_results(report: ReferenceReport) -> None
+tools/reference_tracker.py:430:def print_validation_results(report: ReferenceReport) -> None
+tools/reference_tracker.py:460:def print_function_mapping(report: ReferenceReport) -> None
+tools/reference_tracker.py:475:def export_bibtex(report: ReferenceReport, output_path: Optional[Path]=None) -> str
+tools/reference_tracker.py:496:def print_full_report(report: ReferenceReport) -> None
+tools/reference_tracker.py:529:def main()
 tools/research/common.py:14:def _read_parquet_safe(path: Path, columns: Iterable[str] | None=None) -> pd.DataFrame
 tools/research/common.py:35:def _downsample(df: pd.DataFrame, max_points: int | None) -> pd.DataFrame
 tools/research/common.py:42:def load_series(run_dir: Path, columns: Iterable[str] | None=None, max_points: int | None=None) -> pd.DataFrame
