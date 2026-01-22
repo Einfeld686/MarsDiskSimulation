@@ -346,7 +346,7 @@
       "short": "Lissauer & Stewart (1993)",
       "title": "Growth of Planets from Planetesimals",
       "doi": "",
-      "bibtex": "@incollection{LissauerStewart1993_PP3, title = {Growth of Planets from Planetesimals}, booktitle = {Protostars and Planets III}, year = {1993}, author = {Lissauer, J. J. and Stewart, G. R.}}",
+      "bibtex": "@incollection{LissauerStewart1993_PP3, publisher = {University of Arizona Press}, title = {Growth of Planets from Planetesimals}, booktitle = {Protostars and Planets III}, year = {1993}, author = {Lissauer, J. J. and Stewart, G. R.}}",
       "adopted_scope": "Review of planetesimal dynamics and relative velocities under Rayleigh-distributed eccentricities and inclinations.",
       "claims": [
         "Presents the low-e, low-i relative velocity scaling v_rel = v_K sqrt(1.25 e^2 + i^2) used for debris disks and rings."
