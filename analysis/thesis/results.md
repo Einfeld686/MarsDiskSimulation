@@ -23,7 +23,7 @@ NOTE: このファイルは analysis/thesis_sections/03_results/*.md の結合�
 
 本章の結果は，温度と供給条件を掃引した 1D スイープ計算（計 16 ケース）から得た時系列出力に基づく．本節では，計算条件と主要な評価指標を整理する．
 
-本章では質量を火星質量 $M_{\mathrm{M}}$ で無次元化し，$M_{\rm loss}$ を $M_{\mathrm{M}}$ 単位で示す．
+本章では質量を火星質量 $M_{\rm Mars}$ で無次元化し，$M_{\rm loss}$ を $M_{\rm Mars}$ 単位で示す．
 
 ### 1.1 パラメータ掃引（temp supply）
 
@@ -37,7 +37,7 @@ NOTE: このファイルは analysis/thesis_sections/03_results/*.md の結合�
     \hline
     項目 & 値 \\
     \hline
-    幾何 & 1D（リング分割），$N_r=32$，$r/R_M \in [1.0,\,2.7]$ \\
+    幾何 & 1D（リング分割），$N_r=32$，$r/R_{\rm Mars} \in [1.0,\,2.7]$ \\
     温度 & 初期 $T_{M,0}\in\{3000,\,4000\}\,\mathrm{K}$，$T_M=2000\,\mathrm{K}$ 到達で停止 \\
     初期光学的厚さ & $\tau_0\in\{0.5,\,1.0\}$（LOS），$\tau_{\rm stop}=2.30$ を超えると早期停止 \\
     供給混合 & $\epsilon_{\rm mix}\in\{0.5,\,1.0\}$ \\
@@ -95,7 +95,7 @@ NOTE: このファイルは analysis/thesis_sections/03_results/*.md の結合�
     \hline
     停止理由 & $\tau_{\rm los}>\tau_{\rm stop}$（$\tau_{\rm stop}=2.30$） \\
     終端時刻 $t_{\rm end}$ & $1.27\,\mathrm{yr}$ \\
-    累積損失 $M_{\rm loss}(t_{\rm end})$ & $1.56\times 10^{-5}\,M_{\mathrm{M}}$ \\
+    累積損失 $M_{\rm loss}(t_{\rm end})$ & $1.56\times 10^{-5}\,M_{\rm Mars}$ \\
     \hline
   \end{tabular}
 \end{table}
@@ -106,7 +106,7 @@ NOTE: このファイルは analysis/thesis_sections/03_results/*.md の結合�
   \label{tab:results_tau0_comparison}
   \begin{tabular}{cccc}
     \hline
-    $\tau_0$ & 停止理由 & $t_{\rm end}$ [yr] & $M_{\rm loss}$ [$M_{\mathrm{M}}$] \\
+    $\tau_0$ & 停止理由 & $t_{\rm end}$ [yr] & $M_{\rm loss}$ [$M_{\rm Mars}$] \\
     \hline
     0.5 & $T_M=2000\,\mathrm{K}$ 到達 & 6.11 & $7.78\times 10^{-6}$ \\
     1.0 & $\tau_{\rm los}>\tau_{\rm stop}$ & 1.27 & $1.56\times 10^{-5}$ \\
@@ -199,7 +199,7 @@ NOTE: このファイルは analysis/thesis_sections/03_results/*.md の結合�
   \label{tab:results_sweep_massloss_core}
   \begin{tabular}{ccccc}
     \hline
-    $T_{M,0}$ [K] & $\tau_0$ & 停止理由 & $t_{\rm end}$ [yr] & $M_{\rm loss}$ [$M_{\mathrm{M}}$] \\
+    $T_{M,0}$ [K] & $\tau_0$ & 停止理由 & $t_{\rm end}$ [yr] & $M_{\rm loss}$ [$M_{\rm Mars}$] \\
     \hline
     3000 & 0.5 & $T_M=2000\,\mathrm{K}$ 到達 & 4.92 & $3.14\times 10^{-9}$ \\
     3000 & 1.0 & $\tau_{\rm los}>\tau_{\rm stop}$ & 2.53 & $6.29\times 10^{-9}$ \\
@@ -216,8 +216,8 @@ NOTE: このファイルは analysis/thesis_sections/03_results/*.md の結合�
 
 本章では，軸対称 1D モデルを用いたスイープ計算により，放射圧流出に伴う累積損失 $M_{\rm loss}$ の大きさと依存性を示した．時間の都合上，PSD の詳細な時間発展は扱わず，$\tau_{\rm los}(t)$ と $M_{\rm loss}$ の診断に基づいて整理した．得られた主要結果を以下に要約する．
 
-- 代表ケース（$T_{M,0}=4000\,\mathrm{K}$，$\tau_0=1.0$）では，$\tau_{\rm los}$ が $\tau_{\rm stop}=2.30$ に到達して $t_{\rm end}\approx 1.27\,\mathrm{yr}$ で停止し，$M_{\rm loss}\approx 1.56\times 10^{-5}\,M_{\mathrm{M}}$ を得た．
-- スイープ全体では，$M_{\rm loss}$ は $3\times 10^{-9}$ から $1.6\times 10^{-5}\,M_{\mathrm{M}}$ の範囲にあり，温度 $T_{M,0}$ と初期光学的厚さ $\tau_0$ が主要な支配因子である（表\ref{tab:results_sweep_massloss_core}）．
+- 代表ケース（$T_{M,0}=4000\,\mathrm{K}$，$\tau_0=1.0$）では，$\tau_{\rm los}$ が $\tau_{\rm stop}=2.30$ に到達して $t_{\rm end}\approx 1.27\,\mathrm{yr}$ で停止し，$M_{\rm loss}\approx 1.56\times 10^{-5}\,M_{\rm Mars}$ を得た．
+- スイープ全体では，$M_{\rm loss}$ は $3\times 10^{-9}$ から $1.6\times 10^{-5}\,M_{\rm Mars}$ の範囲にあり，温度 $T_{M,0}$ と初期光学的厚さ $\tau_0$ が主要な支配因子である（表\ref{tab:results_sweep_massloss_core}）．
 - 質量保存誤差は最大でも $7\times 10^{-15}\%$ 程度であり，本章の $M_{\rm loss}$ は収支誤差により支配されない．
 
 これらの結果を踏まえ，次章では損失の物理的解釈と，長期衛星形成モデルへの接続に対する含意を議論する．

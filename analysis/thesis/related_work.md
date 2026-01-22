@@ -142,15 +142,15 @@ Hyodo et al. (2018) は，衝突直後計算の粒子分布をグリッドへ落
 ここで注意したいのは，この \(\tau\) が「鉛直方向の表層構造」を直接与えるものではない点である．円盤が平均的に光学的に厚くても，直接照射されるのは表層であり，「内部が厚い」ことと「表層が照射されない」ことは同義ではない．そこで本研究では，\(\tau\) を「火星から見た半径方向」と「表層を切る鉛直方向」に分け，放射圧は後者で定義した表層にのみ直接作用すると置く．
 
 （計算の置き場：表層質量の最小見積もり）
-表層の面密度 \(\Sigma_{\rm surf}\) を「鉛直方向で \(\tau_\perp\approx1\)」で定義すると，式\ref{eq:tau_perp_sigma_rw}となる．
+表層の面密度 \(\Sigma_{\rm surf}\) を「鉛直方向で \(\tau_{\perp}\approx1\)」で定義すると，式\ref{eq:tau_perp_sigma_rw}となる．
 \begin{equation}
 \label{eq:tau_perp_sigma_rw}
 \begin{aligned}
-\tau_\perp &\equiv \kappa\Sigma,\\
+\tau_{\perp} &\equiv \kappa\Sigma,\\
 \Sigma_{\rm surf} &\approx \frac{1}{\kappa}
 \end{aligned}
 \end{equation}
-ここで \(\tau_\perp\) は鉛直方向の光学的厚み，\(\kappa\) は質量吸収係数，\(\Sigma\) は円盤の面密度であり，表層は \(\tau_\perp\approx1\) を満たす層として定義する．
+ここで \(\tau_{\perp}\) は鉛直方向の光学的厚み，\(\kappa\) は質量吸収係数，\(\Sigma\) は円盤の面密度であり，表層は \(\tau_{\perp}\approx1\) を満たす層として定義する．
 
 単一粒径 \(r_p\)，内部密度 \(\rho_s\) の固体球で幾何学的断面積が支配的なら，質量吸収係数は式\ref{eq:kappa_geom_rw}で近似できる．
 \begin{equation}
