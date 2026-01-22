@@ -211,9 +211,9 @@ flowchart LR
 ```
 <!-- TEX_EXCLUDE_END -->
 
-補足: 損失項（ブローアウト・追加シンク）は S9 の IMEX 更新に含める．S4 では相判定と光学的厚さに基づくゲートにより有効な経路を選択し，S6 で追加シンクの代表時間 $t_{\rm sink}$ を評価する．S10 で診断量の集計，停止判定，および出力を行う．
+補足: 損失項（ブローアウト・追加シンク）は手順9の IMEX 更新に含める．手順4では相判定と光学的厚さに基づくゲートにより有効な経路を選択し，手順6で追加シンクの代表時間 $t_{\rm sink}$ を評価する．手順10で診断量の集計，停止判定，および出力を行う．
 
-図\ref{fig:methods_main_loop}は 1D + Smol の標準順序に合わせて記述する．まず「円盤表層状態の更新」（S1–S6）で $T_M$，β，$s_{\rm blow}$，$\kappa_{\rm surf}$，$\tau_{\rm los}$，相状態，昇華 ds/dt，$t_{\rm sink}$ を評価する．次に「表層への質量供給」（S7–S8）で遮蔽係数 $\Phi$ から $\kappa_{\rm eff}$ と $\Sigma_{\tau_{\rm los}=1}$ を得て，供給を表層/深層へ配分し，表層への実効供給率を確定する．最後に「微細化シミュレーション」（S9–S10）で Smol/Surface の更新により PSD と $\Sigma_{\rm surf}$ を $\Delta t$ だけ進め，損失と診断を集約する．
+図\ref{fig:methods_main_loop}は 1D + Smol の標準順序に合わせて記述する．まず「円盤表層状態の更新」（手順1–6）で $T_M$，β，$s_{\rm blow}$，$\kappa_{\rm surf}$，$\tau_{\rm los}$，相状態，昇華 ds/dt，$t_{\rm sink}$ を評価する．次に「表層への質量供給」（手順7–8）で遮蔽係数 $\Phi$ から $\kappa_{\rm eff}$ と $\Sigma_{\tau_{\rm los}=1}$ を得て，供給を表層/深層へ配分し，表層への実効供給率を確定する．最後に「微細化シミュレーション」（手順9–10）で Smol/Surface の更新により PSD と $\Sigma_{\rm surf}$ を $\Delta t$ だけ進め，損失と診断を集約する．
 以下，各節でこれらの更新に用いる式と仮定を順に述べる．
 
 #### 1.3.3 物理過程の相互作用
@@ -273,7 +273,7 @@ graph LR
 
 #### 1.3.4 供給・衝突・昇華の時系列因果
 
-供給（supply）・衝突（collision）・昇華（sublimation）は同一ステップ内で相互依存するため，因果順序を図\ref{fig:methods_main_loop}の 3 ブロックに沿って固定する．すなわち「円盤表層状態の更新」（S1–S6）で $\tau_{\rm los}$・相状態・昇華 ds/dt・$t_{\rm sink}$ を評価し，「表層への質量供給」（S7–S8）で遮蔽 $\Phi$ と深層輸送を含む表層への実効注入量を確定し，最後に「微細化シミュレーション」（S9–S10）で IMEX 更新と診断集計を行う（[@WyattClarkeBooth2011_CeMDA111_1; @Krivov2006_AA455_509; @Markkanen2020_AA643_A16]）．
+供給（supply）・衝突（collision）・昇華（sublimation）は同一ステップ内で相互依存するため，因果順序を図\ref{fig:methods_main_loop}の 3 ブロックに沿って固定する．すなわち「円盤表層状態の更新」（手順1–6）で $\tau_{\rm los}$・相状態・昇華 ds/dt・$t_{\rm sink}$ を評価し，「表層への質量供給」（手順7–8）で遮蔽 $\Phi$ と深層輸送を含む表層への実効注入量を確定し，最後に「微細化シミュレーション」（手順9–10）で IMEX 更新と診断集計を行う（[@WyattClarkeBooth2011_CeMDA111_1; @Krivov2006_AA455_509; @Markkanen2020_AA643_A16]）．
 
 <!-- TEX_EXCLUDE_START -->
 ```mermaid
