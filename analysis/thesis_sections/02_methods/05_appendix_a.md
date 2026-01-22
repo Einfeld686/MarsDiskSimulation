@@ -66,7 +66,7 @@
 
 \begin{figure}[t]
   \centering
-  % \includegraphics[width=\linewidth]{figures/placeholder_validation_mass_budget.pdf}
+  \includegraphics[width=\linewidth]{figures/thesis/validation_mass_budget_example.pdf}
   \caption{代表ケースにおける質量検査 $\epsilon_{\rm mass}(t)$ の時系列（例）}
   \label{fig:validation_mass_budget_example}
 \end{figure}
