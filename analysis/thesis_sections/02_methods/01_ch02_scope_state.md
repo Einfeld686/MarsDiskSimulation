@@ -79,7 +79,7 @@ t_{\rm blow}=\chi_{\rm blow}\Omega^{-1}
 
 ### 2.3 表層への質量供給
 
-表層への供給は面密度生成率として与え，混合係数 $\epsilon_{\rm mix}$ と入力関数 $R_{\rm base}$ から式\ref{eq:prod_rate_definition}で定義する．供給率は PSD のソース項 $F_k$ として式\ref{eq:supply_injection_definition}で注入し，質量保存条件 $\sum_k m_k F_k=\dot{\Sigma}_{\rm in}$ を満たすよう重み $w_k$ を正規化する．基準計算では注入重みを初期 PSD の質量分率に比例させる．べき乗注入を用いる場合は $s_{\rm floor}=\max(s_{\min,\rm eff},s_{\rm inj,min})$，$s_{\rm ceil}=s_{\rm inj,max}$ として式\ref{eq:supply_injection_powerlaw_bins}で $w_k$ を定める．
+表層への供給は面密度生成率として与え，混合係数 $\epsilon_{\rm mix}$ と入力関数 $R_{\rm base}$ から式\ref{eq:prod_rate_definition}で定義する．供給率は PSD のソース項 $F_k$ として式\ref{eq:supply_injection_definition}で注入し，質量保存条件 $\sum_k m_k F_k=\dot{\Sigma}_{\rm in}$ を満たすよう重み $w_k$ を正規化する．基準計算では注入重みを初期 PSD の質量分率に比例させる．べき乗注入を用いる場合は $s_{\rm floor}=\max(s_{\min,\rm eff},s_{\rm inj,min})$，$s_{\rm ceil}=s_{\rm inj,max}$ として式\ref{eq:supply_injection_powerlaw_bins}で $w_k$ を定め，$s_{\rm inj,min},s_{\rm inj,max}$ を注入サイズ範囲の下限・上限とする．
 
 \begin{equation}
 \label{eq:prod_rate_definition}

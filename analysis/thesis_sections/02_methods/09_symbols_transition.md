@@ -31,6 +31,7 @@ title: 記号表（論文内参照の正）
 	    $\Delta M_{\rm in}$ & 遷移期における放射圧起因の不可逆損失（累積） & $\mathrm{kg}$ & $\Delta M_{\rm in}=\int \dot{M}_{\rm out}(t)\,dt$ \\
 	    $M_{\rm in}'$ & 更新後の内側円盤質量（長期モデルへ渡す量） & $\mathrm{kg}$ & $M_{\rm in}'=M_{\rm in}(t_0)-\Delta M_{\rm in}$ \\
 	    $\Omega$ & ケプラー角速度 & $\mathrm{s^{-1}}$ & 式\ref{eq:omega_definition} \\
+	    $T_{\rm orb}$ & 公転周期 & $\mathrm{s}$ & 式\ref{eq:torb_definition} \\
 	    $v_K$ & ケプラー速度 & $\mathrm{m\,s^{-1}}$ & 式\ref{eq:vK_definition} \\
     $s$ & 粒子半径 & $\mathrm{m}$ & PSD の独立変数 \\
 	    $n(s)$ & 粒径分布（形状） & -- & 正規化された分布として扱う \\

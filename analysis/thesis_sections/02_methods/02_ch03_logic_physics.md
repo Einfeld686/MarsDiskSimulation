@@ -25,8 +25,8 @@ A=\pi\left(r_{\rm out}^2-r_{\rm in}^2\right)
     \hline
     記号 & 値 & 単位 & 備考 \\
     \hline
-    $r_{\rm in}$ & $1.0\,R_{\rm Mars}$ & m & 内端半径 \\
-    $r_{\rm out}$ & $2.7\,R_{\rm Mars}$ & m & 外端半径 \\
+    $r_{\rm in}$ & $1.0\,R_{\rm Mars}$ & $R_{\rm Mars}$ & 内端半径 \\
+    $r_{\rm out}$ & $2.7\,R_{\rm Mars}$ & $R_{\rm Mars}$ & 外端半径 \\
     $M_{\rm in}$ & $3.0\times10^{-5}$ & $M_{\rm Mars}$ & 内側円盤質量 \\
     $M_{\rm tot,0}$ & $1.0\times10^{-7}$ & $M_{\rm Mars}$ & 初期総質量 \\
     $s_{\min}$ & $1.0\times10^{-7}$ & m & PSD 下限 \\
@@ -48,6 +48,8 @@ A=\pi\left(r_{\rm out}^2-r_{\rm in}^2\right)
     \hline
   \end{tabular}
 \end{table}
+
+$s_{\rm cut}$ は凝縮粒子を除外するためのカットオフ粒径であり，$s_{\rm min,solid}$ と $s_{\rm max,solid}$ は固相 PSD の範囲を定める．${\rm width}_{\rm dex}$ は両成分に共通の対数幅（dex）である．
 
 \begin{table}[t]
   \centering
@@ -71,11 +73,13 @@ A=\pi\left(r_{\rm out}^2-r_{\rm in}^2\right)
   \end{tabular}
 \end{table}
 
+表\ref{tab:methods_qdstar_coeffs}の係数は $f_{Q^*}=5.574$ のスケールを適用した値であり，$Q_s$ と $B$ に反映されている．速度補間の詳細は衝突カスケード節で用いる補間則に従う．
+
 \begin{table}[t]
   \centering
   \small
   \setlength{\tabcolsep}{4pt}
-  \caption{基準計算の $Q_D^*$ 係数（$v_{\rm ref}$ は km/s）}
+  \caption{基準計算の $Q_D^*$ 係数（$v_{\rm ref}$ は km/s，$Q_s$ と $B$ は BA99 cgs 単位）}
   \label{tab:methods_qdstar_coeffs}
   \begin{tabular}{p{0.16\textwidth} p{0.2\textwidth} p{0.16\textwidth} p{0.2\textwidth} p{0.16\textwidth}}
     \hline
