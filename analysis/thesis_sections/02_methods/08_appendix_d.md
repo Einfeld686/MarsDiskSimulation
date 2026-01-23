@@ -16,14 +16,12 @@
     \hline
     PSD & 粒径分布 / particle size distribution & サイズビン分布 $n(s)$ \\
     LOS & 視線方向 / line of sight & $\tau_{\rm los}$ に対応 \\
-    ODE & 常微分方程式 / ordinary differential equation & 表層 ODE \\
     IMEX & implicit-explicit & IMEX-BDF(1) に使用 \\
     BDF & backward differentiation formula & 一次 BDF \\
     $Q_{\rm pr}$ & 放射圧効率 / radiation pressure efficiency & テーブル入力 \\
     $Q_D^*$ & 破壊閾値 / critical specific energy & 破壊強度 \\
     HKL & Hertz--Knudsen--Langmuir & 昇華フラックス \\
-    C5 & 半径方向拡散 / radial viscous diffusion & 1D 拡張 \\
-    1D & one-dimensional & 幾何モード \\
+    1D & one-dimensional & 半径方向セル分割（リング分割） \\
     \hline
   \end{tabular}
 \end{table}

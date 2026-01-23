@@ -69,55 +69,55 @@
 	    $\rho$ &
 	    粒子密度 [kg\,m$^{-3}$] &
 	    3270 &
-	    \cite{VanLieshoutMinDominik2014_AA572_A76} \\
+	    \citep{VanLieshoutMinDominik2014_AA572_A76} \\
 	    $\langle Q_{\rm pr}\rangle$ &
     Planck 平均放射圧効率（テーブル） &
     フォルステライト（Mie テーブル） &
-    \cite{BohrenHuffman1983_Wiley,Zeidler2015_ApJ798_125} \\
+    \citep{BohrenHuffman1983_Wiley,Zeidler2015_ApJ798_125} \\
 	    $\alpha$ &
 	    HKL 蒸発係数 &
 	    0.1 &
-	    \cite{VanLieshoutMinDominik2014_AA572_A76} \\
+	    \citep{VanLieshoutMinDominik2014_AA572_A76} \\
 	    $\mu$ &
 	    分子量 [kg\,mol$^{-1}$] &
 	    0.140694 &
-	    \cite{VanLieshoutMinDominik2014_AA572_A76} \\
+	    \citep{VanLieshoutMinDominik2014_AA572_A76} \\
 	    $A_{\rm solid}$ &
 	    固相飽和蒸気圧フィット $\log_{10}P(\mathrm{Pa})=A_{\rm solid}-B_{\rm solid}/T$ &
 	    13.809441833 &
-	    \cite{VanLieshoutMinDominik2014_AA572_A76} \\
+	    \citep{VanLieshoutMinDominik2014_AA572_A76} \\
 	    $B_{\rm solid}$ &
 	    同上（$T$ は K） &
 	    28362.904024 &
-	    \cite{VanLieshoutMinDominik2014_AA572_A76} \\
+	    \citep{VanLieshoutMinDominik2014_AA572_A76} \\
 	    $T_{\rm solid}^{\rm valid}$ &
 	    固相フィットの適用温度範囲 [K] &
 	    1673--2133 &
-	    \cite{VanLieshoutMinDominik2014_AA572_A76} \\
+	    \citep{VanLieshoutMinDominik2014_AA572_A76} \\
     $A_{\rm liq}$ &
     液相飽和蒸気圧フィット $\log_{10}P(\mathrm{Pa})=A_{\rm liq}-B_{\rm liq}/T$ &
     11.08 &
-    \cite{FegleySchaefer2012_arXiv} \\
+    \citep{FegleySchaefer2012_arXiv} \\
     $B_{\rm liq}$ &
     同上（$T$ は K） &
     22409.0 &
-    \cite{FegleySchaefer2012_arXiv} \\
+    \citep{FegleySchaefer2012_arXiv} \\
     $T_{\rm liq}^{\rm valid}$ &
     液相フィットの適用温度範囲 [K] &
     2163--3690 &
-    \cite{FegleySchaefer2012_arXiv} \\
+    \citep{FegleySchaefer2012_arXiv} \\
     $T_{\rm switch}$ &
     固相$\to$液相フィット切替温度 [K] &
     2163 &
-    \cite{FegleySchaefer2012_arXiv} \\
+    \citep{FegleySchaefer2012_arXiv} \\
     $T_{\rm condense}$, $T_{\rm vaporize}$ &
     相判定のヒステリシス閾値 [K]（運用値） &
     2162, 2163 &
-    本研究（スキーマ要件），基準: \cite{FegleySchaefer2012_arXiv} \\
+    本研究（スキーマ要件），基準: \citep{FegleySchaefer2012_arXiv} \\
     $f_{Q^*}$ &
     $Q_D^*$ 係数スケール（peridot proxy） &
     5.574 &
-    \cite{Avdellidou2016_MNRAS464_734,BenzAsphaug1999_Icarus142_5} \\
+    \citep{Avdellidou2016_MNRAS464_734,BenzAsphaug1999_Icarus142_5} \\
     \hline
   \end{tabular}
 \end{table}

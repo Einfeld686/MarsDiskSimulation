@@ -39,20 +39,16 @@ title: 記号表（論文内参照の正）
     $m_k$ & ビン $k$ の粒子質量 & $\mathrm{kg}$ & 粒径から球形近似で導出 \\
     $Y_{kij}$ & 衝突 $(i,j)$ による破片生成の質量分率（ビン $k$ への配分） & -- & $\sum_k Y_{kij}=1$（式\ref{eq:fragment_yield_normalization}） \\
     $F_k$ & 供給ソース項（サイズビン $k$ への注入率） & $\mathrm{m^{-2}\,s^{-1}}$ & 式\ref{eq:smoluchowski} \\
-    $S_k$ & 追加シンクの実効ロス率 & $\mathrm{s^{-1}}$ & 式\ref{eq:smoluchowski} \\
-		    $\Sigma_{\rm surf}$ & 表層の面密度 & $\mathrm{kg\,m^{-2}}$ & 放射圧・昇華・衝突が作用する層 \\
-	    $\Sigma_{\rm deep}$ & 深層リザーバ面密度 & $\mathrm{kg\,m^{-2}}$ & 深層ミキシング有効時に追跡 \\
-	    $\kappa_{\rm surf}$ & 表層の質量不透明度 & $\mathrm{m^{2}\,kg^{-1}}$ & PSD から評価 \\
-    $\Phi$ & 自遮蔽係数 & -- & 遮蔽有効時に $\kappa_{\rm eff}=\Phi\kappa_{\rm surf}$ \\
-    $\kappa_{\rm eff}$ & 有効不透明度 & $\mathrm{m^{2}\,kg^{-1}}$ & 式\ref{eq:kappa_eff_definition} \\
-		    $\tau_{\perp}$ & 垂直方向光学的厚さ & -- & 表層衝突寿命の評価に用いる \\
-		    $\tau_{\rm los}$ & 火星視線方向光学的厚さ & -- & 遮蔽・停止判定に用いる \\
-		    $f_{\rm los}$ & 視線補正係数（$\tau_{\rm los}=f_{\rm los}\tau_{\perp}$） & -- & 1節 \\
-		    $\Sigma_{\tau_{\rm los}=1}$ & $\tau_{\rm los}=1$ に対応する表層面密度（幾何学的 proxy） & $\mathrm{kg\,m^{-2}}$ & $\Sigma_{\tau_{\rm los}=1}=(f_{\rm los}\kappa_{\rm surf})^{-1}$ \\
-		    $\Sigma_{\tau_{\perp}=1}$ & $\tau_{\perp}=1$ に対応する表層面密度（幾何学的 proxy） & $\mathrm{kg\,m^{-2}}$ & $\Sigma_{\tau_{\perp}=1}=\kappa_{\rm surf}^{-1}$ \\
-	    $\Sigma_{\tau=1}$ & $\tau_{\rm eff}\equiv\kappa_{\rm eff}\Sigma_{\rm surf}=1$ に対応する表層面密度（診断量） & $\mathrm{kg\,m^{-2}}$ & 式\ref{eq:sigma_tau1_definition} \\
-	    \hline
-  \end{tabular}
+		    $S_k$ & 追加シンクの実効ロス率 & $\mathrm{s^{-1}}$ & 式\ref{eq:smoluchowski} \\
+			    $\Sigma_{\rm surf}$ & 表層の面密度 & $\mathrm{kg\,m^{-2}}$ & 放射圧・昇華・衝突が作用する層 \\
+		    $\kappa_{\rm surf}$ & 表層の質量不透明度 & $\mathrm{m^{2}\,kg^{-1}}$ & PSD から評価 \\
+	    $\Phi$ & 自遮蔽係数 & -- & 遮蔽有効時に $\kappa_{\rm eff}=\Phi\kappa_{\rm surf}$ \\
+	    $\kappa_{\rm eff}$ & 有効不透明度 & $\mathrm{m^{2}\,kg^{-1}}$ & 式\ref{eq:kappa_eff_definition} \\
+			    $\tau_{\rm los}$ & 火星視線方向光学的厚さ & -- & 式\ref{eq:tau_los_definition}; 遮蔽・停止判定に用いる \\
+			    $\Sigma_{\tau_{\rm los}=1}$ & $\tau_{\rm los}=1$ に対応する参照面密度 & $\mathrm{kg\,m^{-2}}$ & 式\ref{eq:sigma_tau_los1_definition}（$\Sigma_{\tau_{\rm los}=1}=\kappa_{\rm surf}^{-1}$） \\
+		    $\Sigma_{\tau=1}$ & $\tau_{\rm eff}\equiv\kappa_{\rm eff}\Sigma_{\rm surf}=1$ に対応する表層面密度（診断量） & $\mathrm{kg\,m^{-2}}$ & 式\ref{eq:sigma_tau1_definition} \\
+		    \hline
+	  \end{tabular}
 \end{table}
 
 \begin{table}[t]
@@ -77,7 +73,6 @@ title: 記号表（論文内参照の正）
 	    $C_{ij}$ & 衝突イベント率（単位面積あたり，$N_iN_j$ を含む） & $\mathrm{m^{-2}\,s^{-1}}$ & 式\ref{eq:collision_kernel} \\
 	    $v_{ij}$ & 相対速度 & $\mathrm{m\,s^{-1}}$ & 式\ref{eq:vrel_pericenter_definition} \\
 	    $e, i$ & 離心率・傾斜角（分散） & -- & 相対速度の評価に用いる \\
-	    $c_{\rm eq}$ & 速度分散（平衡値） & $\mathrm{m\,s^{-1}}$ & 本文では扱わない \\
 	    $Q_D^*$ & 破壊閾値（比エネルギー） & $\mathrm{J\,kg^{-1}}$ & 式\ref{eq:qdstar_definition} \\
 	    \hline
   \end{tabular}

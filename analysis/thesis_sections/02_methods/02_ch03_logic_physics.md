@@ -12,14 +12,14 @@
 
 火星温度 $T_M(t)$ は外部ドライバとして与え，$\langle Q_{\rm pr}\rangle$ と $\Phi$ は外部入力として与える（付録 C，表\ref{tab:app_external_inputs}）．
 
-サイズ境界は $s\in[s_{\min,\rm cfg},s_{\max}]$ とし，$s_{\min,\rm eff}$ 未満は存在しない（ブローアウトで即時除去）．半径方向拡散は標準計算では無効とし，各半径セルは独立に時間発展させる．
+サイズ境界は $s\in[s_{\min,\rm cfg},s_{\max}]$ とし，$s_{\min,\rm eff}$ 未満は存在しない（ブローアウトで即時除去）．
 
 \begin{equation}
 \label{eq:annulus_area_definition}
 A=\pi\left(r_{\rm out}^2-r_{\rm in}^2\right)
 \end{equation}
 
-ここで $A$ は面密度と質量の換算に用いる幾何学的定義であり，環状近似に基づく 0D/1D の取り扱いと整合させる\cite{Wyatt2008}．
+ここで $A$ は面密度と質量の換算に用いる幾何学的定義であり，環状近似に基づく 0D/1D の取り扱いと整合させる\citep{Wyatt2008}．
 
 ### 3.2 物理定数・物性値
 
@@ -69,7 +69,7 @@ A=\pi\left(r_{\rm out}^2-r_{\rm in}^2\right)
     $n_{\rm bins}$ & 40 & -- & サイズビン数 \\
     $\tau_0$ & 1.0 & -- & 初期 $\tau_{\rm los}$ 目標値 \\
     $\tau_{\rm stop}$ & 2.302585 & -- & 停止判定（$\ln 10$） \\
-    $\Phi$ & 1.0 & -- & 遮蔽係数（本章の結果では $\Phi=1$） \\
+    $\Phi$ & 1.0 & -- & 遮蔽無効（$\Phi=1$；3.4節） \\
     $e_0$ & 0.5 & -- & 離心率 \\
     $i_0$ & 0.05 & -- & 傾斜角 \\
     $H_{\rm factor}$ & 1.0 & -- & $H_k=H_{\rm factor} i r$ \\
@@ -104,8 +104,6 @@ $s_{\rm cut}$ は凝縮粒子を除外するためのカットオフ粒径であ
   \end{tabular}
 \end{table}
 
-以上により，初期条件（PSD と $\tau_0$ 規格化），サイズ境界，および基準パラメータを整理した．次節では，これらの設定のもとで PSD を時間発展させる数値解法を述べる．
-
 表\ref{tab:methods_qdstar_coeffs}の係数は $f_{Q^*}=5.574$ のスケールを適用した値であり，$Q_s$ と $B$ に反映されている．速度補間の詳細は衝突カスケード節で用いる補間則に従う．
 
 \begin{table}[t]
@@ -128,3 +126,27 @@ $s_{\rm cut}$ は凝縮粒子を除外するためのカットオフ粒径であ
     \hline
   \end{tabular}
 \end{table}
+
+### 3.4 基準計算（fiducial setup）
+
+本論文で示す標準計算は，表\ref{tab:method-param}–表\ref{tab:methods_qdstar_coeffs}の数値に加え，物理過程の有効/無効を表\ref{tab:method-fiducial-setup}の基準設定で固定する．
+
+\begin{table}[t]
+  \centering
+  \small
+  \setlength{\tabcolsep}{4pt}
+  \caption{基準計算（fiducial setup）の物理スイッチ}
+  \label{tab:method-fiducial-setup}
+  \begin{tabular}{p{0.34\textwidth} p{0.24\textwidth} p{0.34\textwidth}}
+    \hline
+    項目 & 基準設定 & 本文参照 \\
+    \hline
+    遮蔽補正 $\Phi(\tau_{\rm los})$ & 無効（$\Phi=1$） & 2.2節 \\
+    追加シンク（昇華・ガス抗力など） & 本論文のスイープでは無効 & 2.5節 \\
+    ブローアウト損失 & 有効 & 2.1節 \\
+    早期停止（$\tau_{\rm los}>\tau_{\rm stop}$） & 有効（$\tau_{\rm stop}=\ln 10$） & 1.2節, 4.2節 \\
+    \hline
+  \end{tabular}
+\end{table}
+
+以上の初期条件・パラメータと基準設定のもとで，次節では PSD を時間発展させる数値解法を述べる．

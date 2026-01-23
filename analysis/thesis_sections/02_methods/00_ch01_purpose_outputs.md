@@ -26,7 +26,7 @@
 
 半径方向はセル $\ell=1,\dots,N_r$ に分割し，代表半径 $r_\ell$ とセル面積 $A_\ell$ を用いて局所量を評価する．粒径分布は対数ビン $k=1,\dots,n_{\rm bins}$ に離散化し，セル $\ell$ におけるビン $k$ の数面密度（面数密度）を $N_{k,\ell}(t)$ とする（単位 $\mathrm{m^{-2}}$）．以降の式は特定セルにおける局所量として記し，必要に応じて $r$ 依存（あるいは $\ell$ 添字）を省略する．記号と単位の一覧は付録 Eにまとめる．
 
-粒子質量と表層面密度は式\ref{eq:mk_definition}–\ref{eq:sigma_surf_definition}で定義し，必要に応じて質量分率 $n_k$ を用いて分布形状と規格化を分離する\cite{Wyatt2008,Krivov2006_AA455_509}．
+粒子質量と表層面密度は式\ref{eq:mk_definition}–\ref{eq:sigma_surf_definition}で定義し，必要に応じて質量分率 $n_k$ を用いて分布形状と規格化を分離する\citep{Wyatt2008,Krivov2006_AA455_509}．
 
 \begin{equation}
 \label{eq:mk_definition}
@@ -43,14 +43,14 @@ m_k=\frac{4\pi}{3}\rho s_k^3
 n_k(t)=\frac{m_k N_k(t)}{\Sigma_{\rm surf}(t)}
 \end{equation}
 
-PSD 下限は有効最小粒径 $s_{\min,\rm eff}$ により与え，設定下限 $s_{\min,\rm cfg}$ とブローアウト境界 $s_{\rm blow,eff}$ の最大値で定める．$s_{\min,\rm eff}$ は供給注入とサイズ境界条件の下限として用い，時刻ごとに更新する．ブローアウト境界（$\beta=0.5$）に基づく下限クリップの考え方は古典的整理に従うが\cite{Burns1979_Icarus40_1,StrubbeChiang2006_ApJ648_652}，本研究では設定下限との最大値として実装する．
+PSD 下限は有効最小粒径 $s_{\min,\rm eff}$ により与え，設定下限 $s_{\min,\rm cfg}$ とブローアウト境界 $s_{\rm blow,eff}$ の最大値で定める．$s_{\min,\rm eff}$ は供給注入とサイズ境界条件の下限として用い，時刻ごとに更新する．ブローアウト境界（$\beta=0.5$）に基づく下限クリップの考え方は古典的整理に従うが\citep{Burns1979_Icarus40_1,StrubbeChiang2006_ApJ648_652}，本研究では設定下限との最大値として実装する．
 
 \begin{equation}
 \label{eq:smin_eff_definition}
 s_{\min,\rm eff}=\max\!\left(s_{\min,\rm cfg},\,s_{\rm blow,eff}\right)
 \end{equation}
 
-本研究では，火星放射に対する遮蔽・停止判定に用いる光学的厚さを $\tau_{\rm los}$ とする．表層不透明度 $\kappa_{\rm surf}$ を PSD から評価し，$\tau_{\rm los}$ を次で与える．参照面密度 $\Sigma_{\tau_{\rm los}=1}$ は診断量として記録する\cite{Krivov2006_AA455_509,Wyatt2008}．
+本研究では，火星放射に対する遮蔽・停止判定に用いる光学的厚さを $\tau_{\rm los}$ とする．表層不透明度 $\kappa_{\rm surf}$ を PSD から評価し，$\tau_{\rm los}$ を次で与える．参照面密度 $\Sigma_{\tau_{\rm los}=1}$ は診断量として記録する\citep{Krivov2006_AA455_509,Wyatt2008}．
 
 \begin{equation}
 \label{eq:kappa_surf_definition}
@@ -68,13 +68,13 @@ s_{\min,\rm eff}=\max\!\left(s_{\min,\rm cfg},\,s_{\rm blow,eff}\right)
 \Sigma_{\tau_{\rm los}=1}=\kappa_{\rm surf}^{-1}
 \end{equation}
 
-式\ref{eq:sigma_tau_los1_definition} は $\tau_{\rm los}=1$ を満たす参照面密度の定義である\cite{Krivov2006_AA455_509,Wyatt2008}．
+式\ref{eq:sigma_tau_los1_definition} は $\tau_{\rm los}=1$ を満たす参照面密度の定義である\citep{Krivov2006_AA455_509,Wyatt2008}．
 
 以上により，半径セルごとの表層面密度と PSD を状態量として定義した．次節では，これらを時間発展させる物理過程（放射圧・遮蔽・供給・衝突カスケード・追加シンク）を定式化する．
 
 ### 1.4 計算の主経路（更新フロー）
 
-本研究の 1D 計算は半径セルごとに独立に行い，各時刻ステップで次を順に評価する．
+本研究の 1D 計算では，各時刻ステップで次を順に評価する．
 
 1. 温度ドライバ $T_M(t)$ から放射圧比 $\beta(s)$，ブローアウト境界 $s_{\rm blow}$，ブローアウト時間 $t_{\rm blow}$ を計算し，有効最小粒径 $s_{\min,\rm eff}$ を更新する．
 2. 表層への供給率 $\dot{\Sigma}_{\rm in}$ を評価し，サイズビンのソース項 $F_k$ を構成する．
