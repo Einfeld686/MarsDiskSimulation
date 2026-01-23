@@ -136,7 +136,7 @@ if not defined PYTHONPATH (
 
 if not defined MU_LIST set "MU_LIST=1.0"
 
-if not defined PARALLEL_JOBS set "PARALLEL_JOBS=1"
+if not defined PARALLEL_JOBS set "PARALLEL_JOBS=6"
 call :normalize_int PARALLEL_JOBS 1
 if "%PARALLEL_JOBS%"=="0" set "PARALLEL_JOBS=1"
 if "%PARALLEL_JOBS%"=="1" (
@@ -145,6 +145,7 @@ if "%PARALLEL_JOBS%"=="1" (
   set "SWEEP_PARALLEL=1"
 )
 
+if not defined THREAD_LIMIT set "THREAD_LIMIT=3"
 if defined THREAD_LIMIT (
   call :normalize_int THREAD_LIMIT 0
   if "%THREAD_LIMIT%"=="0" set "THREAD_LIMIT="
