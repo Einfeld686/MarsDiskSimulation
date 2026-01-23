@@ -1,6 +1,6 @@
 ## 2. 主要時系列と累積量
 
-本節では，代表ケースの主要時系列をまとめる．とくに，視線方向光学的厚さ $\tau_{\rm los}(t)$ の推移と停止条件，放射圧流出率 $\dot{M}_{\rm out}(t)$，および累積損失 $M_{\rm loss}(t)$ を示す．
+本節では，代表ケースの主要時系列をまとめる．とくに，視線方向光学的厚さ $\tau_{\rm los}(t)$ と有効光学的厚さ $\tau_{\rm eff}(t)$ の推移と停止条件，放射圧流出率 $\dot{M}_{\rm out}(t)$，および累積損失 $M_{\rm loss}(t)$ を示す．
 
 ### 2.1 光学的厚さの推移と停止
 
@@ -11,7 +11,7 @@
   \label{fig:results_tau_los_timeseries}
 \end{figure}
 
-代表ケース（$T_{M,0}=4000\,\mathrm{K}$，$\tau_0=1.0$）では，$\tau_{\rm los}$ は初期の $\tau_{\rm los}\approx 1.0$ から単調に増加し，$\tau_{\rm stop}=2.30$ に到達して $t_{\rm end}\approx 1.27\,\mathrm{yr}$ で早期停止した．一方，$\tau_0=0.5$ の場合は $\tau_{\rm stop}$ に達せず，$T_M=2000\,\mathrm{K}$ 到達まで積分が継続した．
+代表ケース（$T_{M,0}=4000\,\mathrm{K}$，$\tau_0=1.0$）では，初期条件で $\tau_{\rm eff}(t_0)=\tau_0$ となるよう規格化した後，時間発展とともに $\tau_{\rm eff}$ が増加し，$\tau_{\rm eff}>\tau_{\rm stop}=2.30$ を満たして $t_{\rm end}\approx 1.27\,\mathrm{yr}$ で早期停止した（図\ref{fig:results_tau_los_timeseries}は診断量として $\tau_{\rm los}$ の推移を示す）．一方，$\tau_0=0.5$ の場合は $\tau_{\rm eff}$ が $\tau_{\rm stop}$ に達せず，$T_M=2000\,\mathrm{K}$ 到達まで積分が継続した．
 
 ### 2.2 放射圧流出率と累積損失
 
@@ -32,7 +32,7 @@
     \hline
     指標 & 値 \\
     \hline
-    停止理由 & $\tau_{\rm los}>\tau_{\rm stop}$（$\tau_{\rm stop}=2.30$） \\
+    停止理由 & $\tau_{\rm eff}>\tau_{\rm stop}$（$\tau_{\rm stop}=2.30$） \\
     終端時刻 $t_{\rm end}$ & $1.27\,\mathrm{yr}$ \\
     累積損失 $M_{\rm loss}(t_{\rm end})$ & $1.56\times 10^{-5}\,M_{\rm Mars}$ \\
     \hline
@@ -48,7 +48,7 @@
     $\tau_0$ & 停止理由 & $t_{\rm end}$ [yr] & $M_{\rm loss}$ [$M_{\rm Mars}$] \\
     \hline
     0.5 & $T_M=2000\,\mathrm{K}$ 到達 & 6.11 & $7.78\times 10^{-6}$ \\
-    1.0 & $\tau_{\rm los}>\tau_{\rm stop}$ & 1.27 & $1.56\times 10^{-5}$ \\
+    1.0 & $\tau_{\rm eff}>\tau_{\rm stop}$ & 1.27 & $1.56\times 10^{-5}$ \\
     \hline
   \end{tabular}
 \end{table}
