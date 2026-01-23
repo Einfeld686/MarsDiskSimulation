@@ -5,22 +5,13 @@
 第4章では，遮蔽条件や火星の冷却史などの不確かさに対する感度を整理し，更新後の初期条件が長期形成モデルの予測へ与える含意を議論する．第5章では，本研究で得られた知見を総括し，残る課題と今後の検証可能性を述べる．
 
 <!-- TEX_EXCLUDE_START -->
-### 構成メモ
+### 本節で言及した主要文献
 
-- 序論では背景→先行研究→ギャップ（遷移期）→研究目的→構成，の順で閉じる．
-- 詳細な式（写像，光学的厚み，冷却の積分形，遷移期の時間幅の見積もり等）は第2章へ寄せる．
-- 長期モデル入力（内側円盤質量や半径分布）と，本研究で更新する量（ΔM_in）の対応は，第2章冒頭で整理して再掲する．
-
-- コード: https://github.com/Einfeld686/MarsDiskSimulation  
-- 数式と記号定義: `analysis/equations.md`  
-
-### 参考：本節で言及した主要文献
-
-- Canup, R. M., & Salmon, J. (2018), *Science Advances*, 4, eaar6887.
-- Citron, R. I., Genda, H., & Ida, S. (2015), *Icarus*, 252, 334–338.
-- Craddock, R. A. (2011), *Icarus*, 211, 1150–1161.
-- Hyodo, R., Rosenblatt, P., Genda, H., & Charnoz, S. (2017a), *ApJ*, 845, 125.
-- Rosenblatt, P., Charnoz, S., Dunseath, K. M., et al. (2016), *Nature Geoscience*, 9, 581–583.
-- Salmon, J., & Canup, R. M. (2012), *ApJ*, 760, 83.
+- \cite{CanupSalmon2018_SciAdv4_eaar6887}
+- \cite{Citron2015_Icarus252_334}
+- \cite{Craddock2011_EPSCDPS1108}
+- \cite{Hyodo2017a_ApJ845_125}
+- \cite{Rosenblatt2016_NatGeo9_8}
+- \cite{SalmonCanup2012_ApJ760_83}
 
 <!-- TEX_EXCLUDE_END -->
