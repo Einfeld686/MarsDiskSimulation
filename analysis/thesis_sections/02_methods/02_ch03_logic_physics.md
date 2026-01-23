@@ -6,40 +6,44 @@
 
 ### 3.1 初期条件と境界条件
 
-初期条件は $t=t_0$ における PSD $N_k(t_0)$ と，環状領域 $[r_{\rm in},r_{\rm out}]$ の幾何・温度入力で与える．火星放射にさらされる表層について，初期表層面密度 $\Sigma_{\rm surf}(t_0,r)$ は火星方向の有効光学的厚さ $\tau_{\rm eff}(t_0)$ が規格化値 $\tau_0$ となるように一様に定める（$\tau_{\rm eff}$ の定義は式\ref{eq:tau_eff_definition}）．ここで $\tau_{\rm eff}=f_{\rm los}\kappa_{\rm eff}\Sigma_{\rm surf}$ であり，$\kappa_{\rm eff}$ は遮蔽係数 $\Phi$ により $\kappa_{\rm eff}=\Phi\kappa_{\rm surf}$ と定義される（2.2節）．したがって $\tau_0$ を与えると，初期 PSD が与える $\kappa_{\rm surf}(t_0)$ と $\Phi$ の評価値を通じて $\Sigma_{\rm surf}(t_0)$ が定まる．すなわち，
+初期条件は，時刻 $t=t_0$ における粒径ビン $k$ の PSD（particle size distribution）$N_k(t_0)$ と，環状領域 $[r_{\rm in},r_{\rm out}]$ の幾何学的条件（$r_{\rm in},r_{\rm out}$ など）および温度条件（粒子温度・火星温度などの入力）によって与える．火星放射に直接さらされる表層については，火星方向の有効光学的厚さ $\tau_{\rm eff}(t_0,r)$ が規格化値 $\tau_0$ となるように，初期表層面密度 $\Sigma_{\rm surf}(t_0,r)$ を各半径セル内で一様に定める（$\tau_{\rm eff}$ の定義は式\ref{eq:tau_eff_definition}）．
+
+本研究では $\tau_{\rm eff}=f_{\rm los}\kappa_{\rm eff}\Sigma_{\rm surf}$ とおく．ここで $f_{\rm los}$ は火星方向の経路長を鉛直方向の近似へ写像する幾何因子であり（式\ref{eq:tau_los_definition}），$\kappa_{\rm eff}$ は表層の質量不透明度 $\kappa_{\rm surf}$ を遮蔽係数 $\Phi$ で補正した有効量として $\kappa_{\rm eff}=\Phi\kappa_{\rm surf}$ と定義する（2.2節）．したがって，$\tau_0$ を与えると，初期 PSD に基づいて評価される $\kappa_{\rm surf}(t_0)$ と，同一条件下で評価した $\Phi$ を通じて $\kappa_{\rm eff}(t_0,\tau_0)$ が定まり，$\Sigma_{\rm surf}(t_0,r)$ は次式で決定される．
 
 \begin{equation}
 \label{eq:sigma_surf0_from_tau0}
 \Sigma_{\rm surf}(t_0,r)=\frac{\tau_0}{f_{\rm los}\kappa_{\rm eff}(t_0,\tau_0)}
 \end{equation}
 
-とする．ここで $f_{\rm los}$ は火星方向の経路長を鉛直方向の近似へ写像する幾何因子（式\ref{eq:tau_los_definition}）であり，$\kappa_{\rm eff}(t_0,\tau_0)$ は初期 PSD から評価した $\kappa_{\rm surf}(t_0)$ と遮蔽係数 $\Phi$ により与えられる初期有効不透明度である（2.2節）．
+ここで $\kappa_{\rm eff}(t_0,\tau_0)$ は初期 PSD から評価した $\kappa_{\rm surf}(t_0)$ と遮蔽係数 $\Phi$ により与えられる初期有効不透明度である（2.2節）．なお，$\Phi$ が $\tau_{\rm eff}$（ひいては $\Sigma_{\rm surf}$）に依存する実装の場合，$\kappa_{\rm eff}(t_0,\tau_0)$ は「$\tau_{\rm eff}=\tau_0$ を満たす状態」で自己無撞着に評価した値を意味する．
 
-基準計算の初期 PSD は melt lognormal mixture とし，採用値は表\ref{tab:methods_initial_psd_params}に示す．初期 PSD の質量分布形状を $w_{\rm melt}(s)$ として
+基準計算では，巨大衝突直後の円盤物質に想定される「メートル級の溶融滴」成分と「サブミクロン級の微粒子」成分を簡便に表現するため，2成分の対数正規分布混合（lognormal mixture）を初期 PSD の質量分布形状として仮定する．採用値は表\ref{tab:methods_initial_psd_params}に示す．粒径（半径）を $s$ とし，初期 PSD の質量分布形状 $w_{\rm melt}(s)$ を
 
 \begin{equation}
 \label{eq:initial_psd_lognormal_mixture}
 w_{\rm melt}(s)\propto
 (1-f_{\rm fine})\exp\!\left[-\frac{1}{2}\left(\frac{\ln(s/s_{\rm meter})}{\sigma_{\ln}}\right)^2\right]
- +f_{\rm fine}\exp\!\left[-\frac{1}{2}\left(\frac{\ln(s/s_{\rm fine})}{\sigma_{\ln}}\right)^2\right],
++f_{\rm fine}\exp\!\left[-\frac{1}{2}\left(\frac{\ln(s/s_{\rm fine})}{\sigma_{\ln}}\right)^2\right],
 \qquad
 \sigma_{\ln}={\rm width}_{\rm dex}\ln 10
 \end{equation}
 
-で与え，$s<s_{\rm cut}$ の領域は凝縮ダスト成分を除外するため $w_{\rm melt}(s)=0$ とする\citep{Hyodo2017a_ApJ845_125}．離散化では対数ビン $k$ の幅 $\Delta\ln s_k$ に対し $w_k\propto w_{\rm melt}(s_k)\Delta\ln s_k$ を構成し，$m_k N_k\propto w_k$ かつ式\ref{eq:sigma_surf_definition}の $\Sigma_{\rm surf}(t_0)$ を満たすよう規格化する．
+で与える．ここで $f_{\rm fine}$ は微粒子成分の（規格化前の）相対寄与を表す無次元係数であり，$s_{\rm meter}$ と $s_{\rm fine}$ はそれぞれ粗粒子・微粒子成分の代表粒径である．さらに，本研究では数値計算で追跡する最小粒径を $s_{\rm cut}$ として，$s<s_{\rm cut}$ を切断する（$w_{\rm melt}(s)=0$）．この切断は，凝縮微粒子の詳細な生成・成長過程を初期条件に直接は組み込まず，粒径下限を有限に保つためのモデル化である．\citep{Hyodo2017a_ApJ845_125}
+
+離散化では，対数ビン $k$ の幅 $\Delta\ln s_k$ に対して $w_k\propto w_{\rm melt}(s_k)\Delta\ln s_k$ を構成し，$m_k N_k\propto w_k$ を満たすように $N_k(t_0)$ を定める．最後に，式\ref{eq:sigma_surf_definition}で定義した表層面密度 $\Sigma_{\rm surf}(t_0)$ と整合するよう，全ビンを同一係数で規格化する．
 
 火星温度 $T_M(t)$ は外部ドライバとして与え，$\langle Q_{\rm pr}\rangle$ と $\Phi$ は外部入力として与える（付録 C，表\ref{tab:app_external_inputs}）．
 
-サイズ境界は $s\in[s_{\min,\rm cfg},s_{\max}]$ とし，$s_{\min,\rm eff}$ 未満は存在しない（ブローアウトで即時除去）．
+サイズ境界は $s\in[s_{\min,\rm cfg},s_{\max}]$ とする．ただし，放射圧によって重力的に束縛されない領域に対応する $s_{\min,\rm eff}$ 未満の粒子は，生成されても力学的時間で系外へ除去されると近似し，PSD には保持しない（ブローアウトで即時除去）．\citep{Hyodo2018_ApJ860_150}
 
 \begin{equation}
 \label{eq:annulus_area_definition}
 A=\pi\left(r_{\rm out}^2-r_{\rm in}^2\right)
 \end{equation}
 
-ここで $A$ は面密度と質量の換算に用いる幾何学的定義であり，環状近似に基づく 0D/1D の取り扱いと整合させる\citep{Wyatt2008}．
+ここで $A$ は面密度と総質量の換算に用いる環状領域の面積である．本研究の 0D/1D（リング）近似では，環状領域（annulus）内を粒径ビンに分割して統計的に $N_k$ を扱う，いわゆる particle-in-a-box 型の取り扱いと整合させる．\citep{Wyatt2008,Thebault2003_AA408_775}
 
-表\ref{tab:method-param}の $M_{\rm in}$ はロッシュ限界内側の総質量（中層）を表し，初期表層質量 $M_{\rm surf}(t_0)=\int 2\pi r\,\Sigma_{\rm surf}(t_0,r)\,dr$ は式\ref{eq:sigma_surf0_from_tau0}で与えた $\tau_0$ と初期 PSD（$\kappa_{\rm eff}$）から派生する量として扱う．すなわち，$\tau_0$ を指定した場合には $M_{\rm surf}(t_0)\approx \Sigma_{\rm surf}(t_0)A$ が決まり，$M_{\rm in}$ と独立に動かす自由度は持たない（$M_{\rm in}$ は深部供給や中層面密度の基準として保持する）．
+表\ref{tab:method-param}の $M_{\rm in}$ はロッシュ限界内側に存在する中層（深部）円盤の総質量を表す．一方，初期表層質量 $M_{\rm surf}(t_0)=\int 2\pi r\,\Sigma_{\rm surf}(t_0,r)\,dr$ は，式\ref{eq:sigma_surf0_from_tau0}で与えた $\tau_0$ と初期 PSD（$\kappa_{\rm eff}$）から派生する量として扱う．すなわち，$\tau_0$ を指定すると $\Sigma_{\rm surf}(t_0,r)$ が定まり，表層が各セル内で一様である近似の下では $M_{\rm surf}(t_0)\approx \Sigma_{\rm surf}(t_0)A$ が決まる．したがって $M_{\rm surf}(t_0)$ は $\tau_0$ と独立な自由度としては持たず，$M_{\rm in}$ は深部供給や中層面密度の基準として別途保持する．
 
 ### 3.2 物理定数・物性値
 

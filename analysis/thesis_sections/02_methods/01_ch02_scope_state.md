@@ -115,7 +115,9 @@ $\kappa_{\rm eff}$ と $\tau_{\rm eff}$ は，(i) 初期条件における光学
 
 ### 2.3 表層への質量供給
 
-表層への供給率（面密度注入率）を $\dot{\Sigma}_{\rm in}(t,r)$ とし，混合係数 $\epsilon_{\rm mix}$ と入力関数 $R_{\rm base}$ から式\ref{eq:prod_rate_definition}で与える\citep{Wyatt2008}．本研究の基準ケースでは，$R_{\rm base}$ を「参照面密度の一定割合を 1 軌道あたり供給する」定常供給として次で定義する．
+表層への供給率（面密度注入率）を $\dot{\Sigma}_{\rm in}(t,r)$ と定義する．ここで $r$ は半径セルの中心半径であり，$\dot{\Sigma}_{\rm in}$ は表層（$\Sigma_{\rm surf}$）へ単位面積・単位時間あたりに注入される質量を表す．供給過程は，表層と下層（あるいは外部リザーバ）との混合効率を表す無次元係数 $\epsilon_{\rm mix}$ と，基準供給率 $R_{\rm base}(t,r)$ を用いて式\ref{eq:prod_rate_definition}で与える．衝突カスケードのサイズ分布進化モデルでは，質量収支式に外部供給（source）を明示的に導入する定式化が用いられており，本節の $F_k$ はその意味でのソース項に相当する（例：\citealp{Wyatt2008,WyattClarkeBooth2011_CeMDA111_1}）．
+
+本研究の基準ケースでは，$R_{\rm base}$ を「参照面密度の一定割合を 1 軌道あたり供給する」定常供給として式\ref{eq:R_base_definition}で定義する．このとき $R_{\rm base}$ 自体は初期時刻 $t_0$ の参照面密度 $\Sigma_{\tau_{\rm ref}}(t_0,r)$ と公転周期 $T_{\rm orb}(r)$ のみに依存し，時間 $t$ には陽に依存しない（ただし一般形として $R_{\rm base}(t,r)$ と記す）．
 
 \begin{equation}
 \label{eq:R_base_definition}
@@ -126,17 +128,25 @@ R_{\rm base}(t,r)=
 \Sigma_{\tau_{\rm ref}}(t_0,r)=\frac{\tau_{\rm ref}}{f_{\rm los}\kappa_{\rm eff}(t_0,\tau_{\rm ref})}
 \end{equation}
 
-ここで $\mu_{\rm sup}$ は供給スケール（無次元），$f_{\rm orb}$ は $\mu_{\rm sup}=1$ のとき 1 軌道あたりに供給する面密度の比率（無次元），$\tau_{\rm ref}$ は参照有効光学的厚さ（既定 1）である．$\Sigma_{\tau_{\rm ref}}$ は初期 PSD から評価した $\kappa_{\rm eff}$ に基づく参照面密度であり，$\tau_0$ の掃引と独立に「同じ $\mu_{\rm sup}$ が同じ供給量」を指すよう規格化している．供給率は PSD のソース項 $F_k$ として式\ref{eq:supply_injection_definition}で注入し，質量保存条件 $\sum_k m_k F_k=\dot{\Sigma}_{\rm in}$ を満たすよう重み $w_k$ を正規化する．本研究では再供給される表層物質の代表として，注入重みを初期 PSD の質量分率に比例させ（$w_k=n_k(t_0)$），供給によって分布形状は直接は変えずに規格化のみを更新する近似を採用する．
+ここで $\mu_{\rm sup}$ は供給強度を定める無次元パラメータであり，$f_{\rm orb}$ は $\mu_{\rm sup}=1$ のときに「1 軌道あたりに供給される表層面密度」が参照面密度 $\Sigma_{\tau_{\rm ref}}$ に対して占める比率（無次元）である．$\tau_{\rm ref}$ は参照有効光学的厚さ（既定値 1）であり，$\Sigma_{\tau_{\rm ref}}$ は初期 PSD から評価した $\kappa_{\rm eff}$ に基づく参照面密度である．本研究では初期光学的厚さ $\tau_0$ を掃引して初期状態を変えるため，$\Sigma_{\tau_{\rm ref}}(t_0,r)$ を用いて供給率を規格化し，「同じ $\mu_{\rm sup}$ が同程度の供給量」を指すように定義する．なお，式\ref{eq:R_base_definition}に $\epsilon_{\rm mix}$ を含めたのは，式\ref{eq:prod_rate_definition}と合わせて $\dot{\Sigma}_{\rm in}$ が $\mu_{\rm sup}$ と $f_{\rm orb}$ により一意に決まり，$\epsilon_{\rm mix}$ の値に依存しない（$\dot{\Sigma}_{\rm in}=\mu_{\rm sup}f_{\rm orb}\Sigma_{\tau_{\rm ref}}/T_{\rm orb}$ に帰着する）ようにするためである．
+
+供給率は式\ref{eq:supply_injection_definition}により PSD のソース項 $F_k$ として粒径ビン $k$ に注入する．ここで $F_k$ は「単位面積あたりの粒子数密度 $N_k$ の増加率」であり，質量保存条件 $\sum_k m_kF_k=\dot{\Sigma}_{\rm in}$ を満たすよう，無次元重み $w_k$ を $\sum_kw_k=1$ となるように正規化する．
 
 \begin{equation}
 \label{eq:prod_rate_definition}
-\dot{\Sigma}_{\rm in}(t,r) = \max\!\left(\epsilon_{\rm mix}\;R_{\rm base}(t,r),\,0\right)
+\dot{\Sigma}_{\rm in}(t,r) = \max\!\left(\epsilon_{\rm mix}R_{\rm base}(t,r),\,0\right)
 \end{equation}
 
 \begin{equation}
 \label{eq:supply_injection_definition}
-F_k=\frac{\dot{\Sigma}_{\rm in}\,w_k}{m_k},\qquad \sum_k m_k F_k=\dot{\Sigma}_{\rm in}
+F_k=\frac{\dot{\Sigma}_{\rm in}\,w_k}{m_k},
+\qquad
+\sum_k w_k=1,
+\qquad
+\sum_k m_k F_k=\dot{\Sigma}_{\rm in}
 \end{equation}
+
+供給される表層物質の粒径分布は，下層からの混合が初期表層と同程度の組成・粒径分布を持つという近似の下で，初期 PSD の質量分率に比例すると仮定する．具体的には $w_k\propto m_kN_k(t_0,r)$ と置き，$\sum_kw_k=1$ となるように正規化して用いる．この仮定により，供給は分布形状を直接には変えず，規格化（全量）を更新する操作として実装される．
 
 ### 2.4 衝突カスケード
 
