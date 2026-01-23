@@ -34,7 +34,7 @@
     \hline
     幾何 & 1D（リング分割），$N_r=32$，$r/R_{\rm Mars} \in [1.0,\,2.7]$ \\
     温度 & 初期 $T_{M,0}\in\{3000,\,4000\}\,\mathrm{K}$，$T_M=2000\,\mathrm{K}$ 到達で停止 \\
-    初期光学的厚さ & $\tau_0\in\{0.5,\,1.0\}$（LOS），$\tau_{\rm stop}=2.30$ を超えると早期停止 \\
+    初期有効光学的厚さ & $\tau_0\in\{0.5,\,1.0\}$（$\tau_{\rm eff}$ の目標値），$\tau_{\rm eff}>\tau_{\rm stop}=2.30$ で早期停止 \\
     供給混合 & $\epsilon_{\rm mix}\in\{0.5,\,1.0\}$ \\
     速度分散初期値 & $i_0\in\{0.05,\,0.10\}$ \\
     追加シンク & 本章のスイープでは無効（$M_{\rm loss}=M_{\rm out,cum}$） \\
@@ -46,12 +46,12 @@
 
 時系列の代表例として，$T_{M,0}=4000\,\mathrm{K}$，$\tau_0=1.0$ のケース（$\epsilon_{\rm mix}=1.0$，$i_0=0.05$）を用いる．本章で主に参照する量は以下である．
 
-- 視線方向光学的厚さ $\tau_{\rm los}(t)$ と停止条件（$t_{\rm end}$，停止理由）
+- 視線方向光学的厚さ $\tau_{\rm los}(t)$ と有効光学的厚さ $\tau_{\rm eff}(t)$，および停止条件（$t_{\rm end}$，停止理由）
 - 放射圧流出率 $\dot{M}_{\rm out}(t)$ と累積損失 $M_{\rm loss}(t)$
 - 収支検査：質量保存誤差（相対誤差％）
 ## 2. 主要時系列と累積量
 
-本節では，代表ケースの主要時系列をまとめる．とくに，視線方向光学的厚さ $\tau_{\rm los}(t)$ の推移と停止条件，放射圧流出率 $\dot{M}_{\rm out}(t)$，および累積損失 $M_{\rm loss}(t)$ を示す．
+本節では，代表ケースの主要時系列をまとめる．とくに，視線方向光学的厚さ $\tau_{\rm los}(t)$ と有効光学的厚さ $\tau_{\rm eff}(t)$ の推移と停止条件，放射圧流出率 $\dot{M}_{\rm out}(t)$，および累積損失 $M_{\rm loss}(t)$ を示す．
 
 ### 2.1 光学的厚さの推移と停止
 
@@ -62,7 +62,7 @@
   \label{fig:results_tau_los_timeseries}
 \end{figure}
 
-代表ケース（$T_{M,0}=4000\,\mathrm{K}$，$\tau_0=1.0$）では，$\tau_{\rm los}$ は初期の $\tau_{\rm los}\approx 1.0$ から単調に増加し，$\tau_{\rm stop}=2.30$ に到達して $t_{\rm end}\approx 1.27\,\mathrm{yr}$ で早期停止した．一方，$\tau_0=0.5$ の場合は $\tau_{\rm stop}$ に達せず，$T_M=2000\,\mathrm{K}$ 到達まで積分が継続した．
+代表ケース（$T_{M,0}=4000\,\mathrm{K}$，$\tau_0=1.0$）では，初期条件で $\tau_{\rm eff}(t_0)=\tau_0$ となるよう規格化した後，時間発展とともに $\tau_{\rm eff}$ が増加し，$\tau_{\rm eff}>\tau_{\rm stop}=2.30$ を満たして $t_{\rm end}\approx 1.27\,\mathrm{yr}$ で早期停止した（図\ref{fig:results_tau_los_timeseries}は診断量として $\tau_{\rm los}$ の推移を示す）．一方，$\tau_0=0.5$ の場合は $\tau_{\rm eff}$ が $\tau_{\rm stop}$ に達せず，$T_M=2000\,\mathrm{K}$ 到達まで積分が継続した．
 
 ### 2.2 放射圧流出率と累積損失
 
@@ -83,7 +83,7 @@
     \hline
     指標 & 値 \\
     \hline
-    停止理由 & $\tau_{\rm los}>\tau_{\rm stop}$（$\tau_{\rm stop}=2.30$） \\
+    停止理由 & $\tau_{\rm eff}>\tau_{\rm stop}$（$\tau_{\rm stop}=2.30$） \\
     終端時刻 $t_{\rm end}$ & $1.27\,\mathrm{yr}$ \\
     累積損失 $M_{\rm loss}(t_{\rm end})$ & $1.56\times 10^{-5}\,M_{\rm Mars}$ \\
     \hline
@@ -99,7 +99,7 @@
     $\tau_0$ & 停止理由 & $t_{\rm end}$ [yr] & $M_{\rm loss}$ [$M_{\rm Mars}$] \\
     \hline
     0.5 & $T_M=2000\,\mathrm{K}$ 到達 & 6.11 & $7.78\times 10^{-6}$ \\
-    1.0 & $\tau_{\rm los}>\tau_{\rm stop}$ & 1.27 & $1.56\times 10^{-5}$ \\
+    1.0 & $\tau_{\rm eff}>\tau_{\rm stop}$ & 1.27 & $1.56\times 10^{-5}$ \\
     \hline
   \end{tabular}
 \end{table}
@@ -149,7 +149,7 @@
 
 ### 4.2 停止条件の内訳
 
-本章のスイープでは，停止は二種類に分類された．（i）$T_M=2000\,\mathrm{K}$ 到達（$t_{\rm end}$ 到達），（ii）$\tau_{\rm los}$ が $\tau_{\rm stop}=2.30$ を超過したための早期停止である．停止条件の違いは累積損失の積分区間を変えるため，感度解析の解釈に影響する．
+本章のスイープでは，停止は二種類に分類された．（i）$T_M=2000\,\mathrm{K}$ 到達（$t_{\rm end}$ 到達），（ii）$\tau_{\rm eff}$ が $\tau_{\rm stop}=2.30$ を超過したための早期停止である．停止条件の違いは累積損失の積分区間を変えるため，感度解析の解釈に影響する．
 
 \begin{table}[t]
   \centering
@@ -160,7 +160,7 @@
     停止理由 & ケース数 \\
     \hline
     $T_M=2000\,\mathrm{K}$ 到達（$t_{\rm end}$） & 8 \\
-    $\tau_{\rm los}>\tau_{\rm stop}$（早期停止） & 8 \\
+    $\tau_{\rm eff}>\tau_{\rm stop}$（早期停止） & 8 \\
     \hline
   \end{tabular}
 \end{table}
@@ -170,7 +170,7 @@
 
 ### 4.1 累積損失 $M_{\rm loss}$ の温度・$\tau_0$ 依存性
 
-表\ref{tab:results_sweep_massloss_core}に，温度 $T_{M,0}$ と初期光学的厚さ $\tau_0$ ごとに平均した $M_{\rm loss}$ と停止時刻を示す．本スイープでは，$T_{M,0}=4000\,\mathrm{K}$ のケースで $M_{\rm loss}$ が $10^{-5}$ オーダーに達する一方，$T_{M,0}=3000\,\mathrm{K}$ では $10^{-9}$ オーダーと小さく，温度依存性が卓越する．また，$\tau_0=1.0$ のケースでは $\tau_{\rm los}$ が閾値に到達して早期停止し，積分区間が短いにもかかわらず $M_{\rm loss}$ が増大する傾向が見られる．
+表\ref{tab:results_sweep_massloss_core}に，温度 $T_{M,0}$ と初期有効光学的厚さ $\tau_0$ ごとに平均した $M_{\rm loss}$ と停止時刻を示す．本スイープでは，$T_{M,0}=4000\,\mathrm{K}$ のケースで $M_{\rm loss}$ が $10^{-5}$ オーダーに達する一方，$T_{M,0}=3000\,\mathrm{K}$ では $10^{-9}$ オーダーと小さく，温度依存性が卓越する．また，$\tau_0=1.0$ のケースでは $\tau_{\rm eff}$ が閾値に到達して早期停止し，積分区間が短いにもかかわらず $M_{\rm loss}$ が増大する傾向が見られる．
 
 \begin{figure}[t]
   \centering
@@ -188,9 +188,9 @@
     $T_{M,0}$ [K] & $\tau_0$ & 停止理由 & $t_{\rm end}$ [yr] & $M_{\rm loss}$ [$M_{\rm Mars}$] \\
     \hline
     3000 & 0.5 & $T_M=2000\,\mathrm{K}$ 到達 & 4.92 & $3.14\times 10^{-9}$ \\
-    3000 & 1.0 & $\tau_{\rm los}>\tau_{\rm stop}$ & 2.53 & $6.29\times 10^{-9}$ \\
+    3000 & 1.0 & $\tau_{\rm eff}>\tau_{\rm stop}$ & 2.53 & $6.29\times 10^{-9}$ \\
     4000 & 0.5 & $T_M=2000\,\mathrm{K}$ 到達 & 6.11 & $7.78\times 10^{-6}$ \\
-    4000 & 1.0 & $\tau_{\rm los}>\tau_{\rm stop}$ & 1.27 & $1.56\times 10^{-5}$ \\
+    4000 & 1.0 & $\tau_{\rm eff}>\tau_{\rm stop}$ & 1.27 & $1.56\times 10^{-5}$ \\
     \hline
   \end{tabular}
 \end{table}
@@ -200,9 +200,9 @@
 同一の $(T_{M,0},\tau_0)$ に対して $\epsilon_{\rm mix}$ と $i_0$ を変えても，$M_{\rm loss}$ の変動幅は相対的に $\lesssim 3\times 10^{-4}$ と小さかった．したがって，本スイープ設定の範囲では，$M_{\rm loss}$ は主に $T_{M,0}$ と $\tau_0$ によって支配される．
 ## 6. 小結
 
-本章では，軸対称 1D モデルを用いたスイープ計算により，放射圧流出に伴う累積損失 $M_{\rm loss}$ の大きさと依存性を示した．時間の都合上，PSD の詳細な時間発展は扱わず，$\tau_{\rm los}(t)$ と $M_{\rm loss}$ の診断に基づいて整理した．得られた主要結果を以下に要約する．
+本章では，軸対称 1D モデルを用いたスイープ計算により，放射圧流出に伴う累積損失 $M_{\rm loss}$ の大きさと依存性を示した．時間の都合上，PSD の詳細な時間発展は扱わず，$\tau_{\rm los}(t)$ と $\tau_{\rm eff}(t)$，および $M_{\rm loss}$ の診断に基づいて整理した．得られた主要結果を以下に要約する．
 
-- 代表ケース（$T_{M,0}=4000\,\mathrm{K}$，$\tau_0=1.0$）では，$\tau_{\rm los}$ が $\tau_{\rm stop}=2.30$ に到達して $t_{\rm end}\approx 1.27\,\mathrm{yr}$ で停止し，$M_{\rm loss}\approx 1.56\times 10^{-5}\,M_{\rm Mars}$ を得た．
+- 代表ケース（$T_{M,0}=4000\,\mathrm{K}$，$\tau_0=1.0$）では，$\tau_{\rm eff}$ が $\tau_{\rm stop}=2.30$ に到達して $t_{\rm end}\approx 1.27\,\mathrm{yr}$ で停止し，$M_{\rm loss}\approx 1.56\times 10^{-5}\,M_{\rm Mars}$ を得た．
 - スイープ全体では，$M_{\rm loss}$ は $3\times 10^{-9}$ から $1.6\times 10^{-5}\,M_{\rm Mars}$ の範囲にあり，温度 $T_{M,0}$ と初期光学的厚さ $\tau_0$ が主要な支配因子である（表\ref{tab:results_sweep_massloss_core}）．
 - 質量保存誤差は最大でも $7\times 10^{-15}\%$ 程度であり，本章の $M_{\rm loss}$ は収支誤差により支配されない．
 
