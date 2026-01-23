@@ -58,6 +58,13 @@ analysis-related-work-update: analysis-related-work-sync
 	$(MAKE) analysis-update
 	python -m tools.evaluation_system --outdir $(EVAL_OUTDIR)
 
+analysis-methods-sync:
+	python -m analysis.tools.merge_methods_sections --write
+
+analysis-methods-update: analysis-methods-sync
+	$(MAKE) analysis-update
+	python -m tools.evaluation_system --outdir $(EVAL_OUTDIR)
+
 analysis-results-sync:
 	python -m analysis.tools.merge_results_sections --write
 
@@ -144,3 +151,11 @@ analysis-unknown-refs-strict:
 
 plan-lint:
 	python tools/plan_lint.py
+
+# Thesis build (TeX → PDF). Deliverables: paper/out/*.pdf, intermediates: paper/out/build/
+thesis-sync: analysis-abstract-sync analysis-intro-sync analysis-related-work-sync analysis-methods-sync analysis-results-sync analysis-discussion-sync
+
+thesis-pdf: thesis-sync
+	python tools/build_thesis_draft.py --pdf --outdir paper/out/build
+
+thesis: thesis-pdf
