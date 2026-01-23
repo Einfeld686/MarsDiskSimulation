@@ -2004,37 +2004,37 @@ tools/analyze_tau_los_feedback.py:201:def _render_placeholder(path: Path, title:
 tools/analyze_tau_los_feedback.py:211:def analyze(args: argparse.Namespace) -> Dict
 tools/analyze_tau_los_feedback.py:423:def _rows_from_result(result: Dict) -> List[Dict[str, object]]
 tools/analyze_tau_los_feedback.py:459:def main() -> None
-tools/build_thesis_draft.py:68:class Block
-tools/build_thesis_draft.py:73:def strip_yaml_frontmatter(text: str) -> str
-tools/build_thesis_draft.py:83:def strip_html_comments(text: str) -> str
-tools/build_thesis_draft.py:97:def strip_tex_exclude_blocks(text: str) -> str
-tools/build_thesis_draft.py:114:def split_table_row(line: str) -> list[str]
-tools/build_thesis_draft.py:118:def is_table_separator(line: str) -> bool
-tools/build_thesis_draft.py:128:def is_latex_block_start(line: str) -> bool
-tools/build_thesis_draft.py:137:def parse_latex_block(lines: list[str], start: int) -> tuple[Block, int]
-tools/build_thesis_draft.py:173:def parse_code_block(lines: list[str], start: int) -> tuple[Block, int]
-tools/build_thesis_draft.py:186:def parse_table(lines: list[str], start: int) -> tuple[Block | None, int]
-tools/build_thesis_draft.py:207:def parse_list(lines: list[str], start: int) -> tuple[Block, int]
-tools/build_thesis_draft.py:266:def parse_blockquote(lines: list[str], start: int) -> tuple[Block, int]
-tools/build_thesis_draft.py:279:def parse_paragraph(lines: list[str], start: int) -> tuple[Block, int]
-tools/build_thesis_draft.py:303:def parse_blocks(lines: list[str]) -> list[Block]
-tools/build_thesis_draft.py:345:def strip_numbered_prefix(text: str) -> str
-tools/build_thesis_draft.py:349:def convert_cite_brackets(text: str) -> str
-tools/build_thesis_draft.py:366:def escape_latex(text: str) -> str
-tools/build_thesis_draft.py:389:def escape_latex_code(text: str) -> str
-tools/build_thesis_draft.py:410:def convert_inline(text: str) -> str
-tools/build_thesis_draft.py:450:def needs_texorpdfstring(text: str) -> bool
-tools/build_thesis_draft.py:460:def latex_to_plain(text: str) -> str
-tools/build_thesis_draft.py:479:def replace_unicode_subscripts(text: str) -> str
-tools/build_thesis_draft.py:487:def replace_unicode_symbols(text: str) -> str
-tools/build_thesis_draft.py:493:class MarkdownToLatexConverter
-tools/build_thesis_draft.py:561:def replace_between_markers(text: str, start: str, end: str, replacement: str) -> str
-tools/build_thesis_draft.py:571:def replace_between_markers_optional(text: str, start: str, end: str, replacement: str) -> str
-tools/build_thesis_draft.py:586:def split_methods_appendices(text: str) -> tuple[str, str]
-tools/build_thesis_draft.py:596:def normalize_appendix_headings(text: str) -> str
-tools/build_thesis_draft.py:609:def run(cmd: list[str], cwd: Path, env: dict[str, str] | None=None) -> None
-tools/build_thesis_draft.py:613:def build_pdf(tex_path: Path, out_dir: Path, repo_root: Path) -> None
-tools/build_thesis_draft.py:705:def main() -> int
+tools/build_thesis_draft.py:70:class Block
+tools/build_thesis_draft.py:75:def strip_yaml_frontmatter(text: str) -> str
+tools/build_thesis_draft.py:85:def strip_html_comments(text: str) -> str
+tools/build_thesis_draft.py:99:def strip_tex_exclude_blocks(text: str) -> str
+tools/build_thesis_draft.py:116:def split_table_row(line: str) -> list[str]
+tools/build_thesis_draft.py:120:def is_table_separator(line: str) -> bool
+tools/build_thesis_draft.py:130:def is_latex_block_start(line: str) -> bool
+tools/build_thesis_draft.py:139:def parse_latex_block(lines: list[str], start: int) -> tuple[Block, int]
+tools/build_thesis_draft.py:175:def parse_code_block(lines: list[str], start: int) -> tuple[Block, int]
+tools/build_thesis_draft.py:188:def parse_table(lines: list[str], start: int) -> tuple[Block | None, int]
+tools/build_thesis_draft.py:209:def parse_list(lines: list[str], start: int) -> tuple[Block, int]
+tools/build_thesis_draft.py:268:def parse_blockquote(lines: list[str], start: int) -> tuple[Block, int]
+tools/build_thesis_draft.py:281:def parse_paragraph(lines: list[str], start: int) -> tuple[Block, int]
+tools/build_thesis_draft.py:305:def parse_blocks(lines: list[str]) -> list[Block]
+tools/build_thesis_draft.py:347:def strip_numbered_prefix(text: str) -> str
+tools/build_thesis_draft.py:351:def convert_cite_brackets(text: str) -> str
+tools/build_thesis_draft.py:368:def escape_latex(text: str) -> str
+tools/build_thesis_draft.py:391:def escape_latex_code(text: str) -> str
+tools/build_thesis_draft.py:412:def convert_inline(text: str) -> str
+tools/build_thesis_draft.py:452:def needs_texorpdfstring(text: str) -> bool
+tools/build_thesis_draft.py:462:def latex_to_plain(text: str) -> str
+tools/build_thesis_draft.py:481:def replace_unicode_subscripts(text: str) -> str
+tools/build_thesis_draft.py:489:def replace_unicode_symbols(text: str) -> str
+tools/build_thesis_draft.py:495:class MarkdownToLatexConverter
+tools/build_thesis_draft.py:563:def replace_between_markers(text: str, start: str, end: str, replacement: str) -> str
+tools/build_thesis_draft.py:573:def replace_between_markers_optional(text: str, start: str, end: str, replacement: str) -> str
+tools/build_thesis_draft.py:588:def split_methods_appendices(text: str) -> tuple[str, str]
+tools/build_thesis_draft.py:598:def normalize_appendix_headings(text: str) -> str
+tools/build_thesis_draft.py:611:def run(cmd: list[str], cwd: Path, env: dict[str, str] | None=None) -> None
+tools/build_thesis_draft.py:615:def build_pdf(tex_path: Path, out_dir: Path, repo_root: Path) -> None
+tools/build_thesis_draft.py:707:def main() -> int
 tools/check_unknown_refs.py:13:def load_requests(path: Path) -> list[dict]
 tools/check_unknown_refs.py:24:def main() -> int
 tools/derive_supply_rate.py:51:class SupplyInputs
