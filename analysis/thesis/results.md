@@ -2,11 +2,6 @@
 > **文書種別**: 結果（Diátaxis: Explanation）
 <!-- TEX_EXCLUDE_END -->
 
-<!--
-NOTE: このファイルは analysis/thesis_sections/03_results/*.md の結合で生成する．
-編集は分割ファイル側で行い，統合は `python -m analysis.tools.merge_results_sections --write` を使う．
--->
-
 # 結果
 
 本章では，手法章で定義した軸対称 1D（リング分割）モデルに基づく数値結果を整理する．主な関心は，遷移期における放射圧による質量損失の累積量 $M_{\rm loss}$ と，それが温度や光学的厚さにどう依存するかである．粒径分布（PSD）の時間発展は，代表ケースのスナップショットと blow-out 近傍の定性的特徴（“wavy”）に限定し，定量評価は $\tau_{\rm los}(t)$ と $\dot{M}_{\rm out}(t)$，および $M_{\rm loss}$ の時系列・集計値に焦点を当てる．
@@ -54,11 +49,6 @@ NOTE: このファイルは analysis/thesis_sections/03_results/*.md の結合�
 - 視線方向光学的厚さ $\tau_{\rm los}(t)$ と停止条件（$t_{\rm end}$，停止理由）
 - 放射圧流出率 $\dot{M}_{\rm out}(t)$ と累積損失 $M_{\rm loss}(t)$
 - 収支検査：質量保存誤差（相対誤差％）
-
-<!-- TEX_EXCLUDE_START -->
-開発メモ: 数値の転記元は temp_supply スイープ出力（summary.json と series/run.parquet）．
-参照 run: out/temp_supply_sweep_1d/20260113-162712__6031b1edd__seed1709094340
-<!-- TEX_EXCLUDE_END -->
 ## 2. 主要時系列と累積量
 
 本節では，代表ケースの主要時系列をまとめる．とくに，視線方向光学的厚さ $\tau_{\rm los}(t)$ の推移と停止条件，放射圧流出率 $\dot{M}_{\rm out}(t)$，および累積損失 $M_{\rm loss}(t)$ を示す．
@@ -128,16 +118,12 @@ NOTE: このファイルは analysis/thesis_sections/03_results/*.md の結合�
 
 ### 3.2 “wavy” 構造の定性的再現
 
-図\ref{fig:results_psd_snapshots}では，$s_{\rm blow}$ 近傍で隣接ビン間の過不足が交互に現れる傾向（wavy）が見られる．本研究では，この振る舞いを blow-out 即時消滅境界がもたらす定性的な特徴として位置づけ，モデル検証の一項目として扱う．
-
-<!-- TEX_EXCLUDE_START -->
-開発メモ: “wavy 指標” の数値定義と具体値（例：隣接比の標準偏差など）は，検証節の表にまとめて記載する．
-<!-- TEX_EXCLUDE_END -->
+図\ref{fig:results_psd_snapshots}では，$s_{\rm blow}$ 近傍で隣接ビン間の過不足が交互に現れる傾向（wavy）が見られる．本研究では，この振る舞いを blow-out 即時消滅境界がもたらす定性的な特徴として位置づけ，結果の解釈の補助として提示する．
 ## 4. 検証：質量保存と停止条件
 
 本節では，結果の信頼性を担保するために，（i）質量保存，（ii）停止条件の内訳を確認する．
 
-### 3.1 質量保存（質量収支ログ）
+### 4.1 質量保存（質量収支ログ）
 
 \begin{figure}[t]
   \centering
@@ -161,7 +147,7 @@ NOTE: このファイルは analysis/thesis_sections/03_results/*.md の結合�
   \end{tabular}
 \end{table}
 
-### 3.2 停止条件の内訳
+### 4.2 停止条件の内訳
 
 本章のスイープでは，停止は二種類に分類された．（i）$T_M=2000\,\mathrm{K}$ 到達（$t_{\rm end}$ 到達），（ii）$\tau_{\rm los}$ が $\tau_{\rm stop}=2.30$ を超過したための早期停止である．停止条件の違いは累積損失の積分区間を変えるため，感度解析の解釈に影響する．
 
