@@ -69,7 +69,6 @@ A=\pi\left(r_{\rm out}^2-r_{\rm in}^2\right)
     $n_{\rm bins}$ & 40 & -- & サイズビン数 \\
     $\tau_0$ & 1.0 & -- & 初期 $\tau_{\rm los}$ 目標値 \\
     $\tau_{\rm stop}$ & 2.302585 & -- & 停止判定（$\ln 10$） \\
-    $\Phi$ & 1.0 & -- & 遮蔽無効（$\Phi=1$；3.4節） \\
     $e_0$ & 0.5 & -- & 離心率 \\
     $i_0$ & 0.05 & -- & 傾斜角 \\
     $H_{\rm factor}$ & 1.0 & -- & $H_k=H_{\rm factor} i r$ \\
@@ -124,29 +123,7 @@ $s_{\rm cut}$ は凝縮粒子を除外するためのカットオフ粒径であ
     6 & 3.9018e8 & 0.38 & 3.137652034251613 & 1.36 \\
     7 & 3.9018e8 & 0.38 & 3.4683282387928047 & 1.36 \\
     \hline
-  \end{tabular}
+\end{tabular}
 \end{table}
 
-### 3.4 基準計算（fiducial setup）
-
-本論文で示す標準計算は，表\ref{tab:method-param}–表\ref{tab:methods_qdstar_coeffs}の数値に加え，物理過程の有効/無効を表\ref{tab:method-fiducial-setup}の基準設定で固定する．
-
-\begin{table}[t]
-  \centering
-  \small
-  \setlength{\tabcolsep}{4pt}
-  \caption{基準計算（fiducial setup）の物理スイッチ}
-  \label{tab:method-fiducial-setup}
-  \begin{tabular}{p{0.34\textwidth} p{0.24\textwidth} p{0.34\textwidth}}
-    \hline
-    項目 & 基準設定 & 本文参照 \\
-    \hline
-    遮蔽補正 $\Phi(\tau_{\rm los})$ & 無効（$\Phi=1$） & 2.2節 \\
-    追加シンク（昇華・ガス抗力など） & 本論文のスイープでは無効 & 2.5節 \\
-    ブローアウト損失 & 有効 & 2.1節 \\
-    早期停止（$\tau_{\rm los}>\tau_{\rm stop}$） & 有効（$\tau_{\rm stop}=\ln 10$） & 1.2節, 4.2節 \\
-    \hline
-  \end{tabular}
-\end{table}
-
-以上の初期条件・パラメータと基準設定のもとで，次節では PSD を時間発展させる数値解法を述べる．
+以上により，初期条件・境界条件と基準パラメータを整理した．次節では，これらの設定のもとで PSD を時間発展させる数値解法を述べる．
