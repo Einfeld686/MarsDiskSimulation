@@ -33,8 +33,3 @@
 - 視線方向光学的厚さ $\tau_{\rm los}(t)$ と停止条件（$t_{\rm end}$，停止理由）
 - 放射圧流出率 $\dot{M}_{\rm out}(t)$ と累積損失 $M_{\rm loss}(t)$
 - 収支検査：質量保存誤差（相対誤差％）
-
-<!-- TEX_EXCLUDE_START -->
-開発メモ: 数値の転記元は temp_supply スイープ出力（summary.json と series/run.parquet）．
-参照 run: out/temp_supply_sweep_1d/20260113-162712__6031b1edd__seed1709094340
-<!-- TEX_EXCLUDE_END -->
