@@ -1,10 +1,12 @@
 <!-- TEX_EXCLUDE_START -->
 ### （資料）式一覧（内部参照用：PDF除外）
 
-このファイルは `analysis/equations.md` の式番号 (E.###) を一覧表示するための作業用メモであり，論文PDFには含めない．本文中では式は各節に掲示し，記号定義は付録E（記号表）を参照する．
+このファイルは `analysis/equations.md` の式番号 (E.###) を一覧表示するための作業用メモであり，論文PDFには含めない．本文中では式は各節に掲示し，記号定義は付録 E（記号表）を参照する．
 
 ---
-#### F.1 軌道力学と時間尺度
+### F.1 軌道力学と時間尺度
+
+ケプラー運動の基本式に従う\cite{Burns1979_Icarus40_1}．
 
 \begin{equation}
 \tag{E.001}
@@ -25,7 +27,9 @@ t_{\rm blow}=\frac{1}{\Omega}
 \end{equation}
 
 ---
-#### F.2 粒径境界とブローアウト
+### F.2 粒径境界とブローアウト
+
+放射圧比 $\beta$ とブローアウト境界の定義は古典的整理に従う\cite{Burns1979_Icarus40_1,StrubbeChiang2006_ApJ648_652}．$s_{\min,\rm eff}$ のクリップは実装上の境界条件である．
 
 \begin{equation}
 \tag{E.008}
@@ -46,7 +50,9 @@ s_{\rm blow} = \frac{3\,\sigma_{\rm SB}\,T_M^{4}\,R_{\rm Mars}^{2}\,\langle Q_{\
 \end{equation}
 
 ---
-#### F.3 遮蔽と光学的厚さ
+### F.3 遮蔽と光学的厚さ
+
+自遮蔽係数 $\Phi$ と有効不透明度の取り扱いは放射輸送近似（delta-Eddington 等）に基づく\cite{Joseph1976_JAS33_2452,HansenTravis1974_SSR16_527}．
 
 \begin{equation}
 \tag{E.015}
@@ -57,7 +63,7 @@ s_{\rm blow} = \frac{3\,\sigma_{\rm SB}\,T_M^{4}\,R_{\rm Mars}^{2}\,\langle Q_{\
 \begin{equation}
 \tag{E.016}
 \label{eq:E016}
-\Sigma_{\tau_{\perp}=1} =
+\Sigma_{\tau_{\rm eff}=1} =
 \begin{cases}
  \kappa_{\rm eff}^{-1}, & \kappa_{\rm eff} > 0,\\
  \infty, & \kappa_{\rm eff} \le 0.
@@ -71,7 +77,9 @@ s_{\rm blow} = \frac{3\,\sigma_{\rm SB}\,T_M^{4}\,R_{\rm Mars}^{2}\,\langle Q_{\
 \end{equation}
 
 ---
-#### F.4 表層流出（ブローアウト）
+### F.4 表層流出（ブローアウト）
+
+ブローアウト滞在時間スケール $t_{\rm blow}\sim1/\Omega$ と流出評価はデブリ円盤の標準的近似に基づく\cite{StrubbeChiang2006_ApJ648_652,Wyatt2008}．
 
 \begin{equation}
 \tag{E.009}
@@ -80,7 +88,9 @@ s_{\rm blow} = \frac{3\,\sigma_{\rm SB}\,T_M^{4}\,R_{\rm Mars}^{2}\,\langle Q_{\
 \end{equation}
 
 ---
-#### F.5 Smoluchowski 方程式と質量収支
+### F.5 Smoluchowski 方程式と質量収支
+
+衝突カスケードの Smoluchowski 記述と質量収支検査はデブリ円盤モデルの実装例に従う\cite{Krivov2006_AA455_509,Thebault2003_AA408_775,Birnstiel2011_AA525_A11,Wyatt2008}．$\epsilon_{\rm mass}$ の形は実装上の定義である．
 
 \begin{equation}
 \tag{E.010}
@@ -99,7 +109,9 @@ s_{\rm blow} = \frac{3\,\sigma_{\rm SB}\,T_M^{4}\,R_{\rm Mars}^{2}\,\langle Q_{\
 \end{equation}
 
 ---
-#### F.6 衝突（速度・カーネル・破砕強度）
+### F.6 衝突（速度・カーネル・破砕強度）
+
+相対速度近似は低離心率・低傾斜のレイリー分布仮定に基づく\cite{LissauerStewart1993_PP3,WetherillStewart1993_Icarus106_190,Ohtsuki2002_Icarus155_436,IdaMakino1992_Icarus96_107,ImazBlanco2023_MNRAS522_6150}．衝突カーネルは薄い円盤の $n\sigma v$ 形式\cite{Krivov2006_AA455_509}，破壊閾値 $Q_D^*$ は BA99/LS12 の係数補間に基づく\cite{BenzAsphaug1999_Icarus142_5,LeinhardtStewart2012_ApJ745_79,StewartLeinhardt2009_ApJ691_L133}．
 
 \begin{equation}
 \tag{E.020}
@@ -132,22 +144,26 @@ Q_{D}^{*}(s,\rho,v) = Q_{\rm str}(v) + Q_{\rm grav}(v)\,S(v)
 \end{equation}
 
 ---
-#### F.7 表層再供給（supply）
+### F.7 表層再供給（supply）
+
+供給率の定義はデブリ円盤の簡略注入モデルに沿う\cite{Wyatt2008}．$\mu$ から $R_{\rm base}$ への変換（E.027a）は定義に基づく補助式である．
 
 \begin{equation}
 \tag{E.027}
 \label{eq:E027}
-\dot{\Sigma}_{\rm prod}(t,r) = \max\!\left(\epsilon_{\rm mix}\;R_{\rm base}(t,r),\,0\right)
+\dot{\Sigma}_{\rm in}(t,r) = \max\!\left(\epsilon_{\rm mix}\;R_{\rm base}(t,r),\,0\right)
 \end{equation}
 
 \begin{equation}
 \tag{E.027a}
 \label{eq:E027a}
-R_{\rm base} = \frac{\mu\,\Sigma_{\tau_{\perp}=1}}{\epsilon_{\rm mix}\,t_{\rm blow}}
+R_{\rm base} = \frac{\mu\,\Sigma_{\tau_{\rm eff}=1}}{\epsilon_{\rm mix}\,t_{\rm blow}}
 \end{equation}
 
 ---
-#### F.8 昇華（HKL）と飽和蒸気圧
+### F.8 昇華（HKL）と飽和蒸気圧
+
+HKL フラックスと飽和蒸気圧の取り扱いは昇華モデルの標準形に従う\cite{VanLieshoutMinDominik2014_AA572_A76,Kubaschewski1974_Book,VisscherFegley2013_ApJL767_L12,Pignatale2018_ApJ853_118}．
 
 \begin{equation}
 \tag{E.018}

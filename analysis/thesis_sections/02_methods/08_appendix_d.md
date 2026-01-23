@@ -1,4 +1,4 @@
-### 付録 D. 略語索引
+## 付録 D. 略語索引
 
 <!--
 実装(.py): marsdisk/physics/psd.py, marsdisk/physics/surface.py, marsdisk/physics/smol.py, marsdisk/physics/radiation.py, marsdisk/physics/qstar.py, marsdisk/physics/sublimation.py, marsdisk/physics/viscosity.py
@@ -27,4 +27,3 @@
     \hline
   \end{tabular}
 \end{table}
-
