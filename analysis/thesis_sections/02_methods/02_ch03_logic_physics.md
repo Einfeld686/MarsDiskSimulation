@@ -1,21 +1,21 @@
 ## 3. 初期条件・境界条件・パラメータ
 
-<!--
-実装(.py): marsdisk/run_zero_d.py, marsdisk/run_one_d.py, marsdisk/physics/supply.py, marsdisk/physics/phase.py, marsdisk/physics/shielding.py
--->
-
 本節では，1D 計算における初期条件・サイズ境界・停止条件に関わるパラメータを整理し，基準計算で採用した値を表としてまとめる．
+
+本節は，2節で導入した支配方程式に対して，計算領域・初期状態・採用パラメータを与え，実行条件を具体化するための整理である．特に，(i) 環状領域とセル分割，(ii) 初期 PSD の形状と $\tau_0$ による表層規格化，(iii) 力学・供給・衝突パラメータの基準値，を固定し，以降の数値解法（4節）と出力・検証（5節）で共通に参照する．基準計算の採用値は表\ref{tab:method-param}，表\ref{tab:methods_initial_psd_params}，表\ref{tab:methods_qdstar_coeffs}にまとめ，感度掃引で動かす代表パラメータは付録 A（表\ref{tab:app_methods_sweep_defaults}）に整理する．
 
 ### 3.1 初期条件と境界条件
 
-初期条件は $t=t_0$ における PSD $N_k(t_0)$ と，環状領域 $[r_{\rm in},r_{\rm out}]$ の幾何・温度入力で与える．基準計算では初期表層面密度 $\Sigma_{\rm surf}(t_0,r)$ を，火星方向の有効光学的厚さ $\tau_{\rm eff}(t_0)$ が目標値 $\tau_0$ を満たすように一様に規格化する．すなわち，
+初期条件は $t=t_0$ における PSD $N_k(t_0)$ と，環状領域 $[r_{\rm in},r_{\rm out}]$ の幾何・温度入力で与える．火星放射にさらされる表層について，初期表層面密度 $\Sigma_{\rm surf}(t_0,r)$ は火星方向の有効光学的厚さ $\tau_{\rm eff}(t_0)$ が規格化値 $\tau_0$ となるように一様に定める（$\tau_{\rm eff}$ の定義は式\ref{eq:tau_eff_definition}）．ここで $\tau_{\rm eff}=f_{\rm los}\kappa_{\rm eff}\Sigma_{\rm surf}$ であり，$\kappa_{\rm eff}$ は遮蔽係数 $\Phi$ により $\kappa_{\rm eff}=\Phi\kappa_{\rm surf}$ と定義される（2.2節）．したがって $\tau_0$ を与えると，初期 PSD が与える $\kappa_{\rm surf}(t_0)$ と $\Phi$ の評価値を通じて $\Sigma_{\rm surf}(t_0)$ が定まる．すなわち，
 
 \begin{equation}
 \label{eq:sigma_surf0_from_tau0}
 \Sigma_{\rm surf}(t_0,r)=\frac{\tau_0}{f_{\rm los}\kappa_{\rm eff}(t_0,\tau_0)}
 \end{equation}
 
-とする（$f_{\rm los}$ は 1.3節，$\kappa_{\rm eff}$ は 2.2節）．基準計算の初期 PSD は melt lognormal mixture とし，採用値は表\ref{tab:methods_initial_psd_params}に示す．初期 PSD の質量分布形状を $w_{\rm melt}(s)$ として
+とする．ここで $f_{\rm los}$ は火星方向の経路長を鉛直方向の近似へ写像する幾何因子（式\ref{eq:tau_los_definition}）であり，$\kappa_{\rm eff}(t_0,\tau_0)$ は初期 PSD から評価した $\kappa_{\rm surf}(t_0)$ と遮蔽係数 $\Phi$ により与えられる初期有効不透明度である（2.2節）．
+
+基準計算の初期 PSD は melt lognormal mixture とし，採用値は表\ref{tab:methods_initial_psd_params}に示す．初期 PSD の質量分布形状を $w_{\rm melt}(s)$ として
 
 \begin{equation}
 \label{eq:initial_psd_lognormal_mixture}
@@ -88,7 +88,7 @@ A=\pi\left(r_{\rm out}^2-r_{\rm in}^2\right)
 	    $s_{\max}$ & $3.0$ & m & PSD 上限 \\
 	    $n_{\rm bins}$ & 40 & -- & サイズビン数 \\
 	    $f_{\rm los}$ & 1.0 & -- & LOS 幾何因子（式\ref{eq:tau_los_definition}） \\
-	    $\tau_0$ & 1.0 & -- & 初期 $\tau_{\rm eff}$ 目標値（式\ref{eq:sigma_surf0_from_tau0}） \\
+	    $\tau_0$ & 1.0 & -- & 初期 $\tau_{\rm eff}$ 規格化値（式\ref{eq:sigma_surf0_from_tau0}） \\
 	    $\tau_{\rm stop}$ & 2.302585 & -- & 停止判定（$\ln 10$） \\
     $e_0$ & 0.5 & -- & 離心率 \\
     $i_0$ & 0.05 & -- & 傾斜角 \\
