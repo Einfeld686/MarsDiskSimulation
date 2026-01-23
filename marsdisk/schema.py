@@ -189,10 +189,10 @@ class SupplyMixing(BaseModel):
 
     @field_validator("epsilon_mix")
     def _validate_epsilon_mix(cls, value: float) -> float:
-        """Restrict mixing efficiency to the physical interval [0, 1]."""
+        """Restrict mixing efficiency to the configured interval [0, 2]."""
 
-        if value < 0.0 or value > 1.0:
-            raise ConfigurationError("supply.mixing.epsilon_mix must lie within [0, 1]")
+        if value < 0.0 or value > 2.0:
+            raise ConfigurationError("supply.mixing.epsilon_mix must lie within [0, 2]")
         return value
 
 
