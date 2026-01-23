@@ -29,7 +29,7 @@ t_{\rm blow}=\frac{1}{\Omega}
 ---
 ### F.2 粒径境界とブローアウト
 
-放射圧比 $\beta$ とブローアウト境界の定義は古典的整理に従う\citep{Burns1979_Icarus40_1,StrubbeChiang2006_ApJ648_652}．$s_{\min,\rm eff}$ のクリップは実装上の境界条件である．
+放射圧比 $\beta$ とブローアウト境界の定義は古典的整理に従う\citep{Burns1979_Icarus40_1,StrubbeChiang2006_ApJ648_652}．$s_{\min,\rm eff}$ の定義は，本研究で採用する粒径解像範囲を定める境界条件である．
 
 \begin{equation}
 \tag{E.008}
@@ -90,7 +90,7 @@ s_{\rm blow} = \frac{3\,\sigma_{\rm SB}\,T_M^{4}\,R_{\rm Mars}^{2}\,\langle Q_{\
 ---
 ### F.5 Smoluchowski 方程式と質量収支
 
-衝突カスケードの Smoluchowski 記述と質量収支検査はデブリ円盤モデルの実装例に従う\citep{Krivov2006_AA455_509,Thebault2003_AA408_775,Birnstiel2011_AA525_A11,Wyatt2008}．$\epsilon_{\rm mass}$ の形は実装上の定義である．
+衝突カスケードの Smoluchowski 記述と質量収支検査はデブリ円盤モデルの定式化に従う\citep{Krivov2006_AA455_509,Thebault2003_AA408_775,Birnstiel2011_AA525_A11,Wyatt2008}．$\epsilon_{\rm mass}$ は本研究で採用する質量保存の検証指標として定義する．
 
 \begin{equation}
 \tag{E.010}

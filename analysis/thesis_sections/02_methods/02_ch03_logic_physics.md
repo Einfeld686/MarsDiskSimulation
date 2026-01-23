@@ -8,7 +8,25 @@
 
 ### 3.1 初期条件と境界条件
 
-初期条件は $t=t_0$ における PSD $N_k(t_0)$ と，環状領域 $[r_{\rm in},r_{\rm out}]$ の幾何・温度入力で与える．1D 計算では初期表層面密度 $\Sigma_{\rm surf}(t_0,r)$ を，目標光学的厚さ $\tau_0$ を満たすように一様に規格化する．基準計算では melt lognormal mixture を用い，採用値は表\ref{tab:methods_initial_psd_params}に示す．
+初期条件は $t=t_0$ における PSD $N_k(t_0)$ と，環状領域 $[r_{\rm in},r_{\rm out}]$ の幾何・温度入力で与える．基準計算では初期表層面密度 $\Sigma_{\rm surf}(t_0,r)$ を，火星方向の有効光学的厚さ $\tau_{\rm eff}(t_0)$ が目標値 $\tau_0$ を満たすように一様に規格化する．すなわち，
+
+\begin{equation}
+\label{eq:sigma_surf0_from_tau0}
+\Sigma_{\rm surf}(t_0,r)=\frac{\tau_0}{f_{\rm los}\kappa_{\rm eff}(t_0,\tau_0)}
+\end{equation}
+
+とする（$f_{\rm los}$ は 1.3節，$\kappa_{\rm eff}$ は 2.2節）．基準計算の初期 PSD は melt lognormal mixture とし，採用値は表\ref{tab:methods_initial_psd_params}に示す．初期 PSD の質量分布形状を $w_{\rm melt}(s)$ として
+
+\begin{equation}
+\label{eq:initial_psd_lognormal_mixture}
+w_{\rm melt}(s)\propto
+(1-f_{\rm fine})\exp\!\left[-\frac{1}{2}\left(\frac{\ln(s/s_{\rm meter})}{\sigma_{\ln}}\right)^2\right]
+ +f_{\rm fine}\exp\!\left[-\frac{1}{2}\left(\frac{\ln(s/s_{\rm fine})}{\sigma_{\ln}}\right)^2\right],
+\qquad
+\sigma_{\ln}={\rm width}_{\rm dex}\ln 10
+\end{equation}
+
+で与え，$s<s_{\rm cut}$ の領域は凝縮ダスト成分を除外するため $w_{\rm melt}(s)=0$ とする\citep{Hyodo2017a_ApJ845_125}．離散化では対数ビン $k$ の幅 $\Delta\ln s_k$ に対し $w_k\propto w_{\rm melt}(s_k)\Delta\ln s_k$ を構成し，$m_k N_k\propto w_k$ かつ式\ref{eq:sigma_surf_definition}の $\Sigma_{\rm surf}(t_0)$ を満たすよう規格化する．
 
 火星温度 $T_M(t)$ は外部ドライバとして与え，$\langle Q_{\rm pr}\rangle$ と $\Phi$ は外部入力として与える（付録 C，表\ref{tab:app_external_inputs}）．
 
@@ -20,6 +38,8 @@ A=\pi\left(r_{\rm out}^2-r_{\rm in}^2\right)
 \end{equation}
 
 ここで $A$ は面密度と質量の換算に用いる幾何学的定義であり，環状近似に基づく 0D/1D の取り扱いと整合させる\citep{Wyatt2008}．
+
+表\ref{tab:method-param}の $M_{\rm in}$ はロッシュ限界内側の総質量（中層）を表し，初期表層質量 $M_{\rm surf}(t_0)=\int 2\pi r\,\Sigma_{\rm surf}(t_0,r)\,dr$ は式\ref{eq:sigma_surf0_from_tau0}で与えた $\tau_0$ と初期 PSD（$\kappa_{\rm eff}$）から派生する量として扱う．すなわち，$\tau_0$ を指定した場合には $M_{\rm surf}(t_0)\approx \Sigma_{\rm surf}(t_0)A$ が決まり，$M_{\rm in}$ と独立に動かす自由度は持たない（$M_{\rm in}$ は深部供給や中層面密度の基準として保持する）．
 
 ### 3.2 物理定数・物性値
 
@@ -64,18 +84,22 @@ A=\pi\left(r_{\rm out}^2-r_{\rm in}^2\right)
     $r_{\rm out}$ & 2.7 & $R_{\rm Mars}$ & 外端半径 \\
     $N_r$ & 32 & -- & 半径セル数（リング分割） \\
     $M_{\rm in}$ & $3.0\times10^{-5}$ & $M_{\rm Mars}$ & 内側円盤質量 \\
-    $s_{\min,\rm cfg}$ & $1.0\times10^{-7}$ & m & PSD 下限 \\
-    $s_{\max}$ & $3.0$ & m & PSD 上限 \\
-    $n_{\rm bins}$ & 40 & -- & サイズビン数 \\
-    $\tau_0$ & 1.0 & -- & 初期 $\tau_{\rm los}$ 目標値 \\
-    $\tau_{\rm stop}$ & 2.302585 & -- & 停止判定（$\ln 10$） \\
+	    $s_{\min,\rm cfg}$ & $1.0\times10^{-7}$ & m & PSD 下限 \\
+	    $s_{\max}$ & $3.0$ & m & PSD 上限 \\
+	    $n_{\rm bins}$ & 40 & -- & サイズビン数 \\
+	    $f_{\rm los}$ & 1.0 & -- & LOS 幾何因子（式\ref{eq:tau_los_definition}） \\
+	    $\tau_0$ & 1.0 & -- & 初期 $\tau_{\rm eff}$ 目標値（式\ref{eq:sigma_surf0_from_tau0}） \\
+	    $\tau_{\rm stop}$ & 2.302585 & -- & 停止判定（$\ln 10$） \\
     $e_0$ & 0.5 & -- & 離心率 \\
     $i_0$ & 0.05 & -- & 傾斜角 \\
-    $H_{\rm factor}$ & 1.0 & -- & $H_k=H_{\rm factor} i r$ \\
-    $\epsilon_{\rm mix}$ & 1.0 & -- & 混合係数 \\
-    $\alpha_{\rm frag}$ & 3.5 & -- & 破片分布指数 \\
-    $\rho$ & 3270 & kg\,m$^{-3}$ & 粒子密度（表\ref{tab:method-phys}） \\
-    \hline
+	    $H_{\rm factor}$ & 1.0 & -- & $H_k=H_{\rm factor} i r$ \\
+	    $\epsilon_{\rm mix}$ & 1.0 & -- & 混合係数 \\
+	    $\mu_{\rm sup}$ & 1.0 & -- & 供給スケール（式\ref{eq:R_base_definition}） \\
+	    $f_{\rm orb}$ & 0.05 & -- & $\mu_{\rm sup}=1$ のときの 1 軌道あたり供給比率 \\
+		    $\tau_{\rm ref}$ & 1.0 & -- & 供給スケール参照有効光学的厚さ \\
+		    $\alpha_{\rm frag}$ & 3.5 & -- & 破片分布指数 \\
+	    $\rho$ & 3270 & kg\,m$^{-3}$ & 粒子密度（表\ref{tab:method-phys}） \\
+	    \hline
   \end{tabular}
 \end{table}
 
