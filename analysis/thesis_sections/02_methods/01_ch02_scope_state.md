@@ -58,7 +58,7 @@ t_{\rm blow}=\chi_{\rm blow}\Omega^{-1}
 
 ### 2.2 遮蔽
 
-遮蔽係数 $\Phi$ は視線方向光学的厚さ $\tau_{\rm los}$ の関数として与える\citep{Joseph1976_JAS33_2452,HansenTravis1974_SSR16_527}．基準計算では遮蔽補正を無効とし，$\Phi=1$ として扱う（3.4節）．有効不透明度は $\kappa_{\rm eff}=\Phi\kappa_{\rm surf}$ とし，診断量 $\Sigma_{\tau_{\rm eff}=1}$ を式\ref{eq:sigma_tau1_definition}で評価する．
+遮蔽係数 $\Phi$ は視線方向光学的厚さ $\tau_{\rm los}$ の関数として与える\citep{Joseph1976_JAS33_2452,HansenTravis1974_SSR16_527}．有効不透明度は $\kappa_{\rm eff}=\Phi\kappa_{\rm surf}$ とし，診断量 $\Sigma_{\tau_{\rm eff}=1}$ を式\ref{eq:sigma_tau1_definition}で評価する．
 
 \begin{equation}
 \label{eq:phi_definition}
