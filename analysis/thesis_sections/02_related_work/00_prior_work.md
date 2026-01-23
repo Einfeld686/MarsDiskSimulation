@@ -1,8 +1,3 @@
-<!--
-NOTE: このファイルは analysis/thesis_sections/02_related_work/*.md の結合で生成する．
-編集は分割ファイル側で行い，統合は `python -m analysis.tools.merge_related_work_sections --write` を使う．
--->
-
 ## 先行研究：衝突直後計算から長期形成モデルへ
 
 ### 本研究の対象と，地球—月系モデルの位置づけ
@@ -139,18 +134,17 @@ Canup \& Salmon (2018): \(a_{\rm eq}=a(1-e^2)\)．\newline Hyodo et al. (2017a):
 
 \cite{Hyodo2018_ApJ860_150} は，衝突直後計算の粒子分布をグリッドへ落とし，各セルの質量を等価的な光学的厚みへ換算して，火星表面から外向きの放射方向に沿って積算することで，半径方向に積分した光学的厚み（radially integrated optical depth）として \(\tau\) を評価した．この \(\tau\) は「火星から見た遮蔽」を測るには自然だが，同じ場所でも「どの方向から見た \(\tau\) か」で遮蔽の有無が変わる．
 
-ここで注意したいのは，この \(\tau\) が「鉛直方向の表層構造」を直接与えるものではない点である．円盤が平均的に光学的に厚くても，直接照射されるのは表層であり，「内部が厚い」ことと「表層が照射されない」ことは同義ではない．そこで本研究では，\(\tau\) を「火星から見た半径方向」と「表層を切る鉛直方向」に分け，放射圧は後者で定義した表層にのみ直接作用すると置く．
+ここで注意したいのは，この \(\tau\) が「鉛直方向の表層構造」を直接与えるものではない点である．円盤が平均的に光学的に厚くても，直接照射されるのは遮蔽の弱い経路に沿う領域であり，「内部が厚い」ことと「照射が全く届かない」ことは同義ではない．そこで本研究では，遮蔽の指標として火星視線方向の光学的厚さ \(\tau_{\rm los}\) を用い，照射が実効的に作用する面密度スケールを \(\tau_{\rm los}=1\) から定義する．
 
-（計算の置き場：表層質量の最小見積もり）
-表層の面密度 \(\Sigma_{\rm surf}\) を「鉛直方向で \(\tau_{\perp}\approx1\)」で定義すると，式\ref{eq:tau_perp_sigma_rw}となる．
+表層の面密度 \(\Sigma_{\rm surf}\) と質量吸収係数 \(\kappa\) を用いて，\(\tau_{\rm los}\) と参照面密度を式\ref{eq:tau_los_sigma_rw}で定義する．
 \begin{equation}
-\label{eq:tau_perp_sigma_rw}
+\label{eq:tau_los_sigma_rw}
 \begin{aligned}
-\tau_{\perp} &\equiv \kappa\Sigma,\\
-\Sigma_{\rm surf} &\approx \frac{1}{\kappa}
+\tau_{\rm los} &\equiv \kappa\Sigma_{\rm surf},\\
+\Sigma_{\tau_{\rm los}=1} &\equiv \frac{1}{\kappa}
 \end{aligned}
 \end{equation}
-ここで \(\tau_{\perp}\) は鉛直方向の光学的厚み，\(\kappa\) は質量吸収係数，\(\Sigma\) は円盤の面密度であり，表層は \(\tau_{\perp}\approx1\) を満たす層として定義する．
+ここで \(\kappa\) は質量吸収係数である．\(\Sigma_{\tau_{\rm los}=1}\) は \(\tau_{\rm los}=1\) に対応する参照面密度であり，\(\Sigma_{\rm surf}\) がこれを超える場合でも，照射が直接届く面密度は \(\Sigma_{\tau_{\rm los}=1}\) 程度に飽和するとみなせる．
 
 単一粒径 \(r_p\)，内部密度 \(\rho_s\) の固体球で幾何学的断面積が支配的なら，質量吸収係数は式\ref{eq:kappa_geom_rw}で近似できる\cite{BohrenHuffman1983_Wiley}．
 \begin{equation}
@@ -159,19 +153,12 @@ Canup \& Salmon (2018): \(a_{\rm eq}=a(1-e^2)\)．\newline Hyodo et al. (2017a):
 \end{equation}
 ここでは散乱・吸収の効率因子を 1 とみなし，幾何学断面積が支配的であると仮定する．
 
-この仮定のもとでは表層面密度は式\ref{eq:sigma_surf_geom_rw}となる．
+この仮定のもとでは \(\Sigma_{\tau_{\rm los}=1}\) は式\ref{eq:sigma_tau_los1_geom_rw}となる．
 \begin{equation}
-\label{eq:sigma_surf_geom_rw}
-\Sigma_{\rm surf}\approx \frac{4\rho_s r_p}{3}
+\label{eq:sigma_tau_los1_geom_rw}
+\Sigma_{\tau_{\rm los}=1}\approx \frac{4\rho_s r_p}{3}
 \end{equation}
-式\ref{eq:sigma_surf_geom_rw}は，粒径が大きいほど表層面密度が大きくなることを示す．
-
-したがって表層が占める質量割合は式\ref{eq:fsurf_def_rw}で与えられる．
-\begin{equation}
-\label{eq:fsurf_def_rw}
-f_{\rm surf}\sim \min\!\left(1,\frac{\Sigma_{\rm surf}}{\Sigma}\right)
-\end{equation}
-ここで \(f_{\rm surf}\) は表層の質量比であり，\(\Sigma_{\rm surf}\le\Sigma\) を保つために \(\min\) を用いる．粒径が小さいほど \(\kappa\propto r_p^{-1}\) が増えて \(\Sigma_{\rm surf}\) が減るため，同じ \(\Sigma\) でも照射され得る質量割合は増える．
+式\ref{eq:sigma_tau_los1_geom_rw}は，粒径が大きいほど \(\Sigma_{\tau_{\rm los}=1}\) が大きくなることを示す．
 
 #### \(a_{\rm eq}\) 写像は「落ち着き先」を与えるが，遷移期の損失は積算されない
 
@@ -182,8 +169,7 @@ f_{\rm surf}\sim \min\!\left(1,\frac{\Sigma_{\rm surf}}{\Sigma}\right)
 \end{equation}
 ここで \(t_{\rm ss}\) は遷移期の終点，\(\dot{M}_{\rm loss}(t)\) は不可逆損失率であり，衝突直後計算の終端を \(t=0\) として積分する．
 
-（計算の置き場：遷移期の幅 \(t_{\rm ss}\) の与え方）
-最も単純には式\ref{eq:tss_max_rw}と置く．
+遷移期の幅 \(t_{\rm ss}\) は最も単純には式\ref{eq:tss_max_rw}と置く．
 \begin{equation}
 \label{eq:tss_max_rw}
 t_{\rm ss}\sim \max(t_{\rm circ},\ t_{\rm prec/flat})
@@ -218,13 +204,3 @@ t(T_0\rightarrow T_1)=\frac{\rho C_p D}{3\sigma_{\rm SB}}
 この結果は地球—月系の数値だが，ここで参照したいのは「追加のシンクを入れないと，初期の十年規模では内側円盤が大きくは減らず，外側供給に回せる余地が残る」という性質である．もし巨大衝突直後の遷移期に，表層からの不可逆損失（放射圧ブローアウト等）が無視できないなら，長期モデルの開始前に \(M_{\rm in}\) は減少し，外側へ供給できる量も減る．この影響は長期モデル側の質量収支の閉じ方と直結するため，火星系では再検討が必要になる．
 
 本研究は既存の長期モデルを否定するのではなく，長期モデルへ渡す直前の入力 \(M_{\rm in}\) を，遷移期の \(\Delta M_{\rm in}\) を引いた値へ更新することで整合性を高める．必要なら長期モデルの質量収支式に追加シンク項 \(\dot{M}_{\rm loss}\) を与える（少なくとも初期 \(t_{\rm ss}\) の間だけでもよい）．
-
----
-
-### 先行研究リンク
-
-- Citron et al. (2015)
-- Hyodo et al. (2017a)
-- Canup & Salmon (2018)
-- Hyodo et al. (2018)
-- Salmon & Canup (2012)
