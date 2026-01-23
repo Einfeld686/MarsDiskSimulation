@@ -18,13 +18,33 @@
 
 本研究の目的は，遷移期における放射圧起因の質量流出率 $\dot{M}_{\rm out}(t)$ と，その累積損失 $M_{\rm loss}$ を定量化することである．ここで遷移期とは，衝突直後計算が与える非軸対称・高温状態から，長期モデルが仮定する準定常・軸対称円盤へ落ち着くまでの時間帯を指し，この間に生じる不可逆損失を長期モデルへ渡す入力に反映することが狙いである．本論文ではこの累積損失を $M_{\rm loss}$ と記し，序論で導入した $\Delta M_{\rm in}$ と同義である．
 
-解析は火星表面温度 $T_M(t)$ を外部ドライバとして与え（付録 C），各時刻の $T_M$ に対して放射圧指標（$\beta,\,s_{\rm blow}$）や温度依存シンク（昇華など）を評価する．積分終端は，本研究が主に扱う高温期の評価範囲を区切るため $T_M=T_{\rm end}=2000\,\mathrm{K}$ に到達する時刻 $t_{\rm end}$ とし，あわせて火星方向の有効光学的厚さ $\tau_{\rm eff}>\tau_{\rm stop}$ による適用範囲判定（早期停止）も併用する（2.2節，4.2節）．計算からは $\dot{M}_{\rm out}(t)$，$\tau_{\rm los}(t)$，$\tau_{\rm eff}(t)$，$s_{\rm blow}(t)$，$\Sigma_{\rm surf}(t)$ などの時系列（5.1節）と，終端での $M_{\rm loss}$ と内訳を得る．
+以降の節を読み進めるため，ここでは「どこまで積分するか（停止条件）」「何を損失として数えるか（会計）」を先に固定する．本モデルは，外部ドライバである火星表面温度 $T_M(t)$ に応じて放射圧・遮蔽・供給・衝突カスケード・追加シンクを順に評価し，その結果として $\dot{M}_{\rm out}$ と $M_{\rm loss}$ を更新する．このとき衝突項は粒径ビン間の再配分として扱うため，供給・一次シンク・追加シンクと整合する形で質量収支検査を併記し，数値解が会計的に破綻していないことを検証基準として用いる（5.1節）．
+
+**入力**は次のとおりである．
+
+* 火星表面温度 $T_M(t)$（外部ドライバ；付録 C）．
+* 各時刻の $T_M$ に対して評価する放射圧指標（$\beta,\,s_{\rm blow}$）と温度依存シンク（昇華など）．
+* 適用範囲判定に用いる停止条件 $\tau_{\rm eff}>\tau_{\rm stop}$（2.2節，4.2節）．
+
+**出力**は次のとおりである．
+
+* 時系列：$\dot{M}_{\rm out}(t)$，$\tau_{\rm los}(t)$，$\tau_{\rm eff}(t)$，$s_{\rm blow}(t)$，$\Sigma_{\rm surf}(t)$ など（5.1節）．
+* 要約：積分終端での $M_{\rm loss}$ と内訳（5.1節）．
+* 付随ログ：質量収支検査と停止判定の履歴（4.2節，5.1節）．
+
+積分終端は，本研究が主に扱う高温期の評価範囲を区切るため $T_M=T_{\rm end}=2000\,\mathrm{K}$ に到達する時刻 $t_{\rm end}$ とする．また，火星方向の有効光学的厚さ $\tau_{\rm eff}>\tau_{\rm stop}$ による適用範囲判定（早期停止）も併用する（2.2節，4.2節）．
+
+次節では，本研究が対象とする円盤と，基準ケースで採用する近似を整理する．
 
 ### 1.2 研究対象と基本仮定
 
-本研究はガス成分が支配的でない衝突起源ダスト円盤を対象とし，固体粒子の放射圧・供給・衝突カスケードを主要過程として時間発展を計算する．
+本研究はガス成分が支配的でない衝突起源ダスト円盤を対象とする．したがって基準ケースでは，ガス抗力やガス円盤の放射輸送を主効果としては含めず，必要なら追加シンクとして感度評価する（2.5節）．
 
-モデルは軸対称で，方位方向に平均化した面密度・PSD を状態量として扱う．ロッシュ限界内側の環状領域 $[r_{\rm in},r_{\rm out}]$ を半径方向に $N_r$ 個のセルへ分割し，各セルで同一の時間グリッドにより粒径分布（PSD）を時間発展させる（セル間輸送は基準ケースでは含めない）．停止条件として $\tau_{\rm eff}>\tau_{\rm stop}$ を採用し，到達したセルは停止状態として扱う（4.2節）．
+モデルは軸対称で，方位方向に平均化した面密度・PSD を状態量として扱う．ロッシュ限界内側の環状領域 $[r_{\rm in},r_{\rm out}]$ を半径方向に $N_r$ 個のセルへ分割し，各セルで同一の時間グリッドにより粒径分布（PSD）を時間発展させる（セル間輸送は基準ケースでは含めない）．
+
+停止条件として $\tau_{\rm eff}>\tau_{\rm stop}$ を採用し，火星放射が表層へ到達するという近似が破綻する領域は本モデルの適用範囲外として以後の時間発展を追跡しない（4.2節）．ここでの停止は，あくまで「照射近似が成立する範囲でのみ会計する」という計算上の取り扱いであり，物理的に「円盤が停止する」ことを意味しないことに注意する．
+
+次節では，半径セルと粒径ビンで定義した状態量と主要診断量の記法を導入する．
 
 ### 1.3 状態変数（粒径・半径）と記号定義
 
@@ -53,14 +73,16 @@ n_k(t)=\frac{m_k N_k(t)}{\Sigma_{\rm surf}(t)}
 
 PSD 下限は有効最小粒径 $s_{\min,\rm eff}$ により与え，設定下限 $s_{\min,\rm cfg}$ とブローアウト境界 $s_{\rm blow,eff}$ の最大値で定める．$s_{\min,\rm eff}$ は供給注入とサイズ境界条件の下限として用い，時刻ごとに更新する．この下限クリップにより，$s_{\rm blow}$ 未満の粒子は滞在時間 $t_{\rm blow}$ の一次シンクで速やかに失われ，PSD の有効範囲が時間とともに移動することを表現する．
 
-本研究では $s_{\rm blow,eff}$ を式\ref{eq:s_blow_definition}で求めた $s_{\rm blow}$ と同一視し（以下では区別しない）．遮蔽 $\Phi$ はブローアウト境界の計算には含めず，火星放射が表層へ到達するかどうか（自己遮蔽の強さ）の評価にのみ用いる（2.2節，4.2節）．
+本研究では $s_{\rm blow,eff}$ を式\ref{eq:s_blow_definition}で求めた $s_{\rm blow}$ と同一視し（以下では区別しない）．これは，遮蔽 $\Phi$ を放射圧そのものの減衰としては用いず，照射が成立するかどうか（$\tau_{\rm eff}$ による適用範囲判定）と供給規格化に反映するというモデル化に対応する．したがって照射が成立する限り，表層粒子は火星放射を直接受けると仮定し，ブローアウト境界（$\beta=0.5$）に基づく下限クリップの考え方は古典的整理に従う\citep{Burns1979_Icarus40_1,StrubbeChiang2006_ApJ648_652}．
 
 \begin{equation}
 \label{eq:smin_eff_definition}
 s_{\min,\rm eff}=\max\!\left(s_{\min,\rm cfg},\,s_{\rm blow,eff}\right)
 \end{equation}
 
-火星方向の光学的厚さ $\tau_{\rm los}$ は，本来は視線方向に沿った光学的深さ $\tau=\int \kappa\rho\,ds$ で定義されるが，本研究では表層を面密度 $\Sigma_{\rm surf}$ と不透明度 $\kappa_{\rm surf}$ で代表し，幾何因子 $f_{\rm los}$ を用いて式\ref{eq:tau_los_definition}で近似する．
+本研究では，火星放射が表層へ到達するかどうかを評価するため，火星方向の光学的厚さ $\tau_{\rm los}$ を導入する．$\tau_{\rm los}$ は本来，火星から半径 $r$ の円盤表層へ向かう光線に沿った積分 $\tau=\int \kappa\rho,ds$ で定義されるが，3次元構造（スケールハイト $H$ など）と半径方向の自己遮蔽を解かないため，本研究では局所表層面密度 $\Sigma_{\rm surf}$ と表層不透明度 $\kappa_{\rm surf}$ から次の近似で与える．すなわち鉛直光学的厚さ $\tau_\perp\equiv\kappa_{\rm surf}\Sigma_{\rm surf}$ を定義し，火星方向の経路長が鉛直より長い効果を幾何因子 $f_{\rm los}\ge1$ として $\tau_{\rm los}=f_{\rm los}\tau_\perp$ と近似する．
+
+表層不透明度 $\kappa_{\rm surf}$ は PSD の幾何学断面（$\pi s^2$）から評価する表層の「断面積/質量」の近似であり，放射圧効率の波長依存は $\langle Q_{\rm pr}\rangle$ を通じて別途 $\beta$ に反映する（2.1節）．遮蔽は $\Phi(\tau_{\rm los})$ により $\kappa_{\rm eff}$ へ写像して扱い（2.2節），停止判定に用いる有効光学的厚さ $\tau_{\rm eff}$ を定義する（4.2節）．参照面密度 $\Sigma_{\tau_{\rm los}=1}$ は診断量として記録する\citep{Krivov2006_AA455_509,Wyatt2008}．
 
 \begin{equation}
 \label{eq:kappa_surf_definition}
@@ -78,17 +100,19 @@ s_{\min,\rm eff}=\max\!\left(s_{\min,\rm cfg},\,s_{\rm blow,eff}\right)
 \Sigma_{\tau_{\rm los}=1}=\left(f_{\rm los}\kappa_{\rm surf}\right)^{-1}
 \end{equation}
 
-式\ref{eq:sigma_tau_los1_definition} は $\tau_{\rm los}=1$ を満たす参照面密度の定義である．
+式\ref{eq:sigma_tau_los1_definition} は $\tau_{\rm los}=1$ を満たす参照面密度の定義である\citep{Krivov2006_AA455_509,Wyatt2008}．
+
+以上により，半径セルごとの表層面密度と PSD を状態量として定義した．次節（1.4）では更新フローを示し，2節以降で各項を与える．
 
 ### 1.4 計算の主経路（更新フロー）
 
-図\ref{fig:method_overview}に，入力（設定・外部テーブル）から状態量（$\Sigma_{\rm surf},N_k$）を更新し，時系列・要約・検証ログを出力するまでの全体像を示す．
+図\ref{fig:method_overview}に，入力（設定・外部テーブル）から状態量（$\Sigma_{\rm surf},N_k$）を更新し，時系列・要約・検証ログを出力するまでの全体像を示す．ここで重要なのは，停止条件は「適用範囲判定」であり，会計（$M_{\rm loss}$ と質量収支検査）は停止時点まで必ず更新して保持する，という点である（4.2節，5.1節）．
 
 \begin{figure}[t]
-  \centering
-  \includegraphics[width=\linewidth]{figures/thesis/methods_main_loop.pdf}
-  \caption{手法の全体フロー（入力→状態→更新→出力）}
-  \label{fig:method_overview}
+\centering
+\includegraphics[width=\linewidth]{figures/thesis/methods_main_loop.pdf}
+\caption{手法の全体フロー（入力→状態→更新→出力）}
+\label{fig:method_overview}
 \end{figure}
 
 本研究の 1D 計算では，各時刻ステップで次を順に評価する．
@@ -221,7 +245,9 @@ $\kappa_{\rm eff}$ と $\tau_{\rm eff}$ は，(i) 初期条件における光学
 
 ### 2.3 表層への質量供給
 
-表層への供給率（面密度注入率）を $\dot{\Sigma}_{\rm in}(t,r)$ とし，混合係数 $\epsilon_{\rm mix}$ と入力関数 $R_{\rm base}$ から式\ref{eq:prod_rate_definition}で与える\citep{Wyatt2008}．本研究の基準ケースでは，$R_{\rm base}$ を「参照面密度の一定割合を 1 軌道あたり供給する」定常供給として次で定義する．
+表層への供給率（面密度注入率）を $\dot{\Sigma}_{\rm in}(t,r)$ と定義する．ここで $r$ は半径セルの中心半径であり，$\dot{\Sigma}_{\rm in}$ は表層（$\Sigma_{\rm surf}$）へ単位面積・単位時間あたりに注入される質量を表す．供給過程は，表層と下層（あるいは外部リザーバ）との混合効率を表す無次元係数 $\epsilon_{\rm mix}$ と，基準供給率 $R_{\rm base}(t,r)$ を用いて式\ref{eq:prod_rate_definition}で与える．衝突カスケードのサイズ分布進化モデルでは，質量収支式に外部供給（source）を明示的に導入する定式化が用いられており，本節の $F_k$ はその意味でのソース項に相当する（例：\citealp{Wyatt2008,WyattClarkeBooth2011_CeMDA111_1}）．
+
+本研究の基準ケースでは，$R_{\rm base}$ を「参照面密度の一定割合を 1 軌道あたり供給する」定常供給として式\ref{eq:R_base_definition}で定義する．このとき $R_{\rm base}$ 自体は初期時刻 $t_0$ の参照面密度 $\Sigma_{\tau_{\rm ref}}(t_0,r)$ と公転周期 $T_{\rm orb}(r)$ のみに依存し，時間 $t$ には陽に依存しない（ただし一般形として $R_{\rm base}(t,r)$ と記す）．
 
 \begin{equation}
 \label{eq:R_base_definition}
@@ -232,17 +258,25 @@ R_{\rm base}(t,r)=
 \Sigma_{\tau_{\rm ref}}(t_0,r)=\frac{\tau_{\rm ref}}{f_{\rm los}\kappa_{\rm eff}(t_0,\tau_{\rm ref})}
 \end{equation}
 
-ここで $\mu_{\rm sup}$ は供給スケール（無次元），$f_{\rm orb}$ は $\mu_{\rm sup}=1$ のとき 1 軌道あたりに供給する面密度の比率（無次元），$\tau_{\rm ref}$ は参照有効光学的厚さ（既定 1）である．$\Sigma_{\tau_{\rm ref}}$ は初期 PSD から評価した $\kappa_{\rm eff}$ に基づく参照面密度であり，$\tau_0$ の掃引と独立に「同じ $\mu_{\rm sup}$ が同じ供給量」を指すよう規格化している．供給率は PSD のソース項 $F_k$ として式\ref{eq:supply_injection_definition}で注入し，質量保存条件 $\sum_k m_k F_k=\dot{\Sigma}_{\rm in}$ を満たすよう重み $w_k$ を正規化する．本研究では再供給される表層物質の代表として，注入重みを初期 PSD の質量分率に比例させ（$w_k=n_k(t_0)$），供給によって分布形状は直接は変えずに規格化のみを更新する近似を採用する．
+ここで $\mu_{\rm sup}$ は供給強度を定める無次元パラメータであり，$f_{\rm orb}$ は $\mu_{\rm sup}=1$ のときに「1 軌道あたりに供給される表層面密度」が参照面密度 $\Sigma_{\tau_{\rm ref}}$ に対して占める比率（無次元）である．$\tau_{\rm ref}$ は参照有効光学的厚さ（既定値 1）であり，$\Sigma_{\tau_{\rm ref}}$ は初期 PSD から評価した $\kappa_{\rm eff}$ に基づく参照面密度である．本研究では初期光学的厚さ $\tau_0$ を掃引して初期状態を変えるため，$\Sigma_{\tau_{\rm ref}}(t_0,r)$ を用いて供給率を規格化し，「同じ $\mu_{\rm sup}$ が同程度の供給量」を指すように定義する．なお，式\ref{eq:R_base_definition}に $\epsilon_{\rm mix}$ を含めたのは，式\ref{eq:prod_rate_definition}と合わせて $\dot{\Sigma}_{\rm in}$ が $\mu_{\rm sup}$ と $f_{\rm orb}$ により一意に決まり，$\epsilon_{\rm mix}$ の値に依存しない（$\dot{\Sigma}_{\rm in}=\mu_{\rm sup}f_{\rm orb}\Sigma_{\tau_{\rm ref}}/T_{\rm orb}$ に帰着する）ようにするためである．
+
+供給率は式\ref{eq:supply_injection_definition}により PSD のソース項 $F_k$ として粒径ビン $k$ に注入する．ここで $F_k$ は「単位面積あたりの粒子数密度 $N_k$ の増加率」であり，質量保存条件 $\sum_k m_kF_k=\dot{\Sigma}_{\rm in}$ を満たすよう，無次元重み $w_k$ を $\sum_kw_k=1$ となるように正規化する．
 
 \begin{equation}
 \label{eq:prod_rate_definition}
-\dot{\Sigma}_{\rm in}(t,r) = \max\!\left(\epsilon_{\rm mix}\;R_{\rm base}(t,r),\,0\right)
+\dot{\Sigma}_{\rm in}(t,r) = \max\!\left(\epsilon_{\rm mix}R_{\rm base}(t,r),\,0\right)
 \end{equation}
 
 \begin{equation}
 \label{eq:supply_injection_definition}
-F_k=\frac{\dot{\Sigma}_{\rm in}\,w_k}{m_k},\qquad \sum_k m_k F_k=\dot{\Sigma}_{\rm in}
+F_k=\frac{\dot{\Sigma}_{\rm in}\,w_k}{m_k},
+\qquad
+\sum_k w_k=1,
+\qquad
+\sum_k m_k F_k=\dot{\Sigma}_{\rm in}
 \end{equation}
+
+供給される表層物質の粒径分布は，下層からの混合が初期表層と同程度の組成・粒径分布を持つという近似の下で，初期 PSD の質量分率に比例すると仮定する．具体的には $w_k\propto m_kN_k(t_0,r)$ と置き，$\sum_kw_k=1$ となるように正規化して用いる．この仮定により，供給は分布形状を直接には変えず，規格化（全量）を更新する操作として実装される．
 
 ### 2.4 衝突カスケード
 
@@ -384,40 +418,44 @@ S_{{\rm sub},k}=\frac{1}{t_{{\rm sub},k}}=\frac{|ds/dt|}{s_k}
 
 ### 3.1 初期条件と境界条件
 
-初期条件は $t=t_0$ における PSD $N_k(t_0)$ と，環状領域 $[r_{\rm in},r_{\rm out}]$ の幾何・温度入力で与える．火星放射にさらされる表層について，初期表層面密度 $\Sigma_{\rm surf}(t_0,r)$ は火星方向の有効光学的厚さ $\tau_{\rm eff}(t_0)$ が規格化値 $\tau_0$ となるように一様に定める（$\tau_{\rm eff}$ の定義は式\ref{eq:tau_eff_definition}）．ここで $\tau_{\rm eff}=f_{\rm los}\kappa_{\rm eff}\Sigma_{\rm surf}$ であり，$\kappa_{\rm eff}$ は遮蔽係数 $\Phi$ により $\kappa_{\rm eff}=\Phi\kappa_{\rm surf}$ と定義される（2.2節）．したがって $\tau_0$ を与えると，初期 PSD が与える $\kappa_{\rm surf}(t_0)$ と $\Phi$ の評価値を通じて $\Sigma_{\rm surf}(t_0)$ が定まる．すなわち，
+初期条件は，時刻 $t=t_0$ における粒径ビン $k$ の PSD（particle size distribution）$N_k(t_0)$ と，環状領域 $[r_{\rm in},r_{\rm out}]$ の幾何学的条件（$r_{\rm in},r_{\rm out}$ など）および温度条件（粒子温度・火星温度などの入力）によって与える．火星放射に直接さらされる表層については，火星方向の有効光学的厚さ $\tau_{\rm eff}(t_0,r)$ が規格化値 $\tau_0$ となるように，初期表層面密度 $\Sigma_{\rm surf}(t_0,r)$ を各半径セル内で一様に定める（$\tau_{\rm eff}$ の定義は式\ref{eq:tau_eff_definition}）．
+
+本研究では $\tau_{\rm eff}=f_{\rm los}\kappa_{\rm eff}\Sigma_{\rm surf}$ とおく．ここで $f_{\rm los}$ は火星方向の経路長を鉛直方向の近似へ写像する幾何因子であり（式\ref{eq:tau_los_definition}），$\kappa_{\rm eff}$ は表層の質量不透明度 $\kappa_{\rm surf}$ を遮蔽係数 $\Phi$ で補正した有効量として $\kappa_{\rm eff}=\Phi\kappa_{\rm surf}$ と定義する（2.2節）．したがって，$\tau_0$ を与えると，初期 PSD に基づいて評価される $\kappa_{\rm surf}(t_0)$ と，同一条件下で評価した $\Phi$ を通じて $\kappa_{\rm eff}(t_0,\tau_0)$ が定まり，$\Sigma_{\rm surf}(t_0,r)$ は次式で決定される．
 
 \begin{equation}
 \label{eq:sigma_surf0_from_tau0}
 \Sigma_{\rm surf}(t_0,r)=\frac{\tau_0}{f_{\rm los}\kappa_{\rm eff}(t_0,\tau_0)}
 \end{equation}
 
-とする．ここで $f_{\rm los}$ は火星方向の経路長を鉛直方向の近似へ写像する幾何因子（式\ref{eq:tau_los_definition}）であり，$\kappa_{\rm eff}(t_0,\tau_0)$ は初期 PSD から評価した $\kappa_{\rm surf}(t_0)$ と遮蔽係数 $\Phi$ により与えられる初期有効不透明度である（2.2節）．
+ここで $\kappa_{\rm eff}(t_0,\tau_0)$ は初期 PSD から評価した $\kappa_{\rm surf}(t_0)$ と遮蔽係数 $\Phi$ により与えられる初期有効不透明度である（2.2節）．なお，$\Phi$ が $\tau_{\rm eff}$（ひいては $\Sigma_{\rm surf}$）に依存する実装の場合，$\kappa_{\rm eff}(t_0,\tau_0)$ は「$\tau_{\rm eff}=\tau_0$ を満たす状態」で自己無撞着に評価した値を意味する．
 
-基準計算の初期 PSD は melt lognormal mixture とし，採用値は表\ref{tab:methods_initial_psd_params}に示す．初期 PSD の質量分布形状を $w_{\rm melt}(s)$ として
+基準計算では，巨大衝突直後の円盤物質に想定される「メートル級の溶融滴」成分と「サブミクロン級の微粒子」成分を簡便に表現するため，2成分の対数正規分布混合（lognormal mixture）を初期 PSD の質量分布形状として仮定する．採用値は表\ref{tab:methods_initial_psd_params}に示す．粒径（半径）を $s$ とし，初期 PSD の質量分布形状 $w_{\rm melt}(s)$ を
 
 \begin{equation}
 \label{eq:initial_psd_lognormal_mixture}
 w_{\rm melt}(s)\propto
 (1-f_{\rm fine})\exp\!\left[-\frac{1}{2}\left(\frac{\ln(s/s_{\rm meter})}{\sigma_{\ln}}\right)^2\right]
- +f_{\rm fine}\exp\!\left[-\frac{1}{2}\left(\frac{\ln(s/s_{\rm fine})}{\sigma_{\ln}}\right)^2\right],
++f_{\rm fine}\exp\!\left[-\frac{1}{2}\left(\frac{\ln(s/s_{\rm fine})}{\sigma_{\ln}}\right)^2\right],
 \qquad
 \sigma_{\ln}={\rm width}_{\rm dex}\ln 10
 \end{equation}
 
-で与え，$s<s_{\rm cut}$ の領域は凝縮ダスト成分を除外するため $w_{\rm melt}(s)=0$ とする\citep{Hyodo2017a_ApJ845_125}．離散化では対数ビン $k$ の幅 $\Delta\ln s_k$ に対し $w_k\propto w_{\rm melt}(s_k)\Delta\ln s_k$ を構成し，$m_k N_k\propto w_k$ かつ式\ref{eq:sigma_surf_definition}の $\Sigma_{\rm surf}(t_0)$ を満たすよう規格化する．
+で与える．ここで $f_{\rm fine}$ は微粒子成分の（規格化前の）相対寄与を表す無次元係数であり，$s_{\rm meter}$ と $s_{\rm fine}$ はそれぞれ粗粒子・微粒子成分の代表粒径である．さらに，本研究では数値計算で追跡する最小粒径を $s_{\rm cut}$ として，$s<s_{\rm cut}$ を切断する（$w_{\rm melt}(s)=0$）．この切断は，凝縮微粒子の詳細な生成・成長過程を初期条件に直接は組み込まず，粒径下限を有限に保つためのモデル化である．\citep{Hyodo2017a_ApJ845_125}
+
+離散化では，対数ビン $k$ の幅 $\Delta\ln s_k$ に対して $w_k\propto w_{\rm melt}(s_k)\Delta\ln s_k$ を構成し，$m_k N_k\propto w_k$ を満たすように $N_k(t_0)$ を定める．最後に，式\ref{eq:sigma_surf_definition}で定義した表層面密度 $\Sigma_{\rm surf}(t_0)$ と整合するよう，全ビンを同一係数で規格化する．
 
 火星温度 $T_M(t)$ は外部ドライバとして与え，$\langle Q_{\rm pr}\rangle$ と $\Phi$ は外部入力として与える（付録 C，表\ref{tab:app_external_inputs}）．
 
-サイズ境界は $s\in[s_{\min,\rm cfg},s_{\max}]$ とし，$s_{\min,\rm eff}$ 未満は存在しない（ブローアウトで即時除去）．
+サイズ境界は $s\in[s_{\min,\rm cfg},s_{\max}]$ とする．ただし，放射圧によって重力的に束縛されない領域に対応する $s_{\min,\rm eff}$ 未満の粒子は，生成されても力学的時間で系外へ除去されると近似し，PSD には保持しない（ブローアウトで即時除去）．\citep{Hyodo2018_ApJ860_150}
 
 \begin{equation}
 \label{eq:annulus_area_definition}
 A=\pi\left(r_{\rm out}^2-r_{\rm in}^2\right)
 \end{equation}
 
-ここで $A$ は面密度と質量の換算に用いる幾何学的定義であり，環状近似に基づく 0D/1D の取り扱いと整合させる\citep{Wyatt2008}．
+ここで $A$ は面密度と総質量の換算に用いる環状領域の面積である．本研究の 0D/1D（リング）近似では，環状領域（annulus）内を粒径ビンに分割して統計的に $N_k$ を扱う，いわゆる particle-in-a-box 型の取り扱いと整合させる．\citep{Wyatt2008,Thebault2003_AA408_775}
 
-表\ref{tab:method-param}の $M_{\rm in}$ はロッシュ限界内側の総質量（中層）を表し，初期表層質量 $M_{\rm surf}(t_0)=\int 2\pi r\,\Sigma_{\rm surf}(t_0,r)\,dr$ は式\ref{eq:sigma_surf0_from_tau0}で与えた $\tau_0$ と初期 PSD（$\kappa_{\rm eff}$）から派生する量として扱う．すなわち，$\tau_0$ を指定した場合には $M_{\rm surf}(t_0)\approx \Sigma_{\rm surf}(t_0)A$ が決まり，$M_{\rm in}$ と独立に動かす自由度は持たない（$M_{\rm in}$ は深部供給や中層面密度の基準として保持する）．
+表\ref{tab:method-param}の $M_{\rm in}$ はロッシュ限界内側に存在する中層（深部）円盤の総質量を表す．一方，初期表層質量 $M_{\rm surf}(t_0)=\int 2\pi r\,\Sigma_{\rm surf}(t_0,r)\,dr$ は，式\ref{eq:sigma_surf0_from_tau0}で与えた $\tau_0$ と初期 PSD（$\kappa_{\rm eff}$）から派生する量として扱う．すなわち，$\tau_0$ を指定すると $\Sigma_{\rm surf}(t_0,r)$ が定まり，表層が各セル内で一様である近似の下では $M_{\rm surf}(t_0)\approx \Sigma_{\rm surf}(t_0)A$ が決まる．したがって $M_{\rm surf}(t_0)$ は $\tau_0$ と独立な自由度としては持たず，$M_{\rm in}$ は深部供給や中層面密度の基準として別途保持する．
 
 ### 3.2 物理定数・物性値
 
@@ -529,63 +567,73 @@ $s_{\rm cut}$ は凝縮粒子を除外するためのカットオフ粒径であ
 \end{table}
 
 以上により，初期条件・境界条件と基準パラメータを整理した．次節では，これらの設定のもとで PSD を時間発展させる数値解法を述べる．
+## 4. 数値計算法
+
 <!--
 実装(.py): marsdisk/run_zero_d.py, marsdisk/run_one_d.py, marsdisk/physics/smol.py, marsdisk/physics/collisions_smol.py, marsdisk/physics/surface.py, marsdisk/physics/viscosity.py, marsdisk/io/checkpoint.py, marsdisk/io/streaming.py
 -->
 
-## 4. 数値計算法
-
 ### 4.1 離散化
 
-粒径空間 $s\in[s_{\min},\,s_{\max}]$ を対数等間隔のビンに離散化し，ビン $k$ に含まれる粒子の面数密度
-\[
-N_k(t)=\int_{s_{k-1/2}}^{s_{k+1/2}} n(s,t)\,ds
-\]
-を状態量として時間発展させる．対数ビンによる粒径分布の表現は，衝突破砕カスケードの数値計算で広く用いられる\citep{Krivov2006_AA455_509,Thebault2003_AA408_775}．
+**粒径空間の離散化**
+サイズ空間は対数等間隔グリッドで離散化する．有効下限 $s_{\min,\mathrm{eff}}$ は，設定値 $s_{\min}$ と初期時刻のブローアウト粒径 $a_{\mathrm{blow}}(T_{\mathrm{init}})$ の大きい方として定める（実装では $s_{\min,\mathrm{eff}}=\max(s_{\min},a_{\mathrm{blow}})$ を採用する）．上限は $s_{\max}$ とし，$K$ 個のビン数 $K=n_{\mathrm{bins}}$ を与える．
 
-各ビン中心を $s_k$，粒子質量を $m_k$ とし（球形粒子を仮定して $m_k=(4\pi/3)\rho s_k^3$），セル内の表面密度は
-\[
-\Sigma(t)=\sum_k m_k N_k(t)
-\]
-で評価する．衝突による再配分（破片生成）はビン上で行い，破片配分は各衝突における質量保存を満たすように構成する（例：$\sum_k m_k Y_{kij}=m_i+m_j$）．
+ビン境界を $s_{k\pm1/2}$，代表サイズを $s_k=\sqrt{s_{k-1/2}s_{k+1/2}}$ とする．状態量 $N_k$ はビン $k$ に含まれる粒子の面数密度（$\mathrm{m^{-2}}$）であり，各ビンの代表質量を $m_k=\frac{4}{3}\pi\rho s_k^3$ とすると，表層面密度は $\Sigma=\sum_{k=1}^{K} m_k N_k$ で与えられる．以後，注入（供給）・損失（ブローアウト／昇華）・破片再配分はビン上で評価する．
 
-下限側ではブローアウト半径の時間変化を考慮し，有効下限 $s_{\min,\mathrm{eff}}$ を用いる．具体的には，供給の注入下限やブローアウト判定に
-\[
-s_{\min,\mathrm{eff}}=\max\!\left(s_{\min},\,a_{\mathrm{blow,eff}}\right)
-\]
-を用いる（サイズ格子自体は $[s_{\min},s_{\max}]$ に固定し，物理過程の適用下限のみを $s_{\min,\mathrm{eff}}$ で切り替える）．上限 $s_{\max}$ は本研究で追跡する最大粒径であり，供給・初期条件はこの範囲に射影する．半径方向は 1節で定義したセル分割に従う．
+**粒径範囲外の取り扱い**
+$s<s_{\min,\mathrm{eff}}$ の成分は本研究の解像範囲外とし，放射圧による除去等で速やかに失われる成分として明示的な損失項に含める．また，$s>s_{\max}$ の大粒子は未解像成分として直接は追跡せず，必要に応じて「上限側への質量漏れ」を診断量として集計する（要確認：最終的に用いる診断量の定義）．
+
+**半径方向の離散化**
+半径方向は第1節で導入したセル分割に従い，各セル内では物理量を一様とみなす．粒径分布の更新はセルごとに行い，半径方向輸送（存在する場合）は別途のフラックス評価として組み込む（第2章で定義した輸送項に従う）．
 
 ### 4.2 数値解法と停止条件
 
-時間積分は，衝突ロス項の剛性に対処するためロス項のみを陰的に扱い，破片生成・外部供給・一次シンクを陽的に扱う一次精度の IMEX 更新（IMEX-BDF(1)，すなわちロス項に対する陰的 Euler）を用いる．粒径分布の時間発展計算において暗黙（または半暗黙）積分が用いられることは先行研究でも一般的である\citep{Birnstiel2011_AA525_A11}．更新式は
+**採用スキームの位置づけ**
+既存研究では，collisional cascade の時間発展を一次の Euler 法と適応刻みで扱う例がある．一方で，Smoluchowski 型方程式の剛性に対しては陰的積分を用いることで大きな時間刻みを可能にすることが報告されている．本研究ではこれらを踏まえ，衝突ロス項を陰的に扱い，生成・供給・一次シンクを陽的に扱う一次 IMEX（IMEX-BDF(1)）を用いる．
+
+**IMEX-BDF(1) 更新式**
+外側ステップ幅を $\Delta t$ とし，Smoluchowski 更新に実際に用いる内部ステップ幅を $dt_{\mathrm{eff}}\le\Delta t$ とする．ビン $k$ の更新は
 \begin{equation}
 \label{eq:imex_bdf1_update}
 N_k^{n+1}=\frac{N_k^{n}+dt_{\rm eff}\left(G_k^{n}+F_k^{n}-S_k^{n}N_k^{n}\right)}{1+dt_{\rm eff}/t_{{\rm coll},k}^{n}}
 \end{equation}
-で与える．ここで $G_k$ は衝突に伴う破片生成（ゲイン），$t_{{\rm coll},k}$ は衝突ロス時定数，$F_k$ は外部供給に対応する明示的ソース，$S_k$ はブローアウト・昇華・追加シンク等の一次シンク係数である．内部ステップ幅 $dt_{\rm eff}$ は外側ステップ幅 $\Delta t$ 以下とし，数値安定性のため
-\[
-dt_{\rm eff}\leftarrow\min\!\left(\Delta t,\,0.1\min_k t_{{\rm coll},k}\right)
-\]
-を初期値として用いる．その後，非負性と質量収支の検査に基づき必要に応じて $dt_{\rm eff}$ を縮小する．具体的には次の手順で時間刻み制御を行う．
+で与える．ここで $G_k$ は衝突破砕による生成項，$F_k$ は外部供給（注入）項，$S_k$ はブローアウト・昇華等の一次シンク（$\mathrm{s^{-1}}$）である．$t_{{\rm coll},k}$ は衝突カーネルから評価したビン $k$ の衝突時間スケールであり，カーネル行列 $C_{kj}$ と $N_k$ から「単位粒子あたりの衝突ロス率」を構成し，その逆数として定義する（対角成分の扱いはカーネル定義に従う）．本スキームはロス項に起因する剛性を緩和しつつ，計算コストを抑えるために一次の時間精度を選択したものである．
+
+**時間刻み制御（非負性・質量保存）**
+内部ステップ幅 $dt_{\rm eff}$ は，最小衝突時間に対する安全率で上限を設けて初期化し，非負性と質量収支に基づいて半減調整する（実装では $dt_{\max}=0.1\min_k t_{{\rm coll},k}$ を用いる）．手順は次の通りである．
 
 1. $dt_{\rm eff}\leftarrow\min(\Delta t,\,0.1\min_k t_{{\rm coll},k})$ を設定する．
 2. 式\ref{eq:imex_bdf1_update}で $N_k^{n+1}$ を計算する．
 3. $N_k^{n+1}<0$ を含む場合は $dt_{\rm eff}\leftarrow dt_{\rm eff}/2$ として 2 に戻る．
-4. 式\ref{eq:mass_budget_definition}で $\epsilon_{\rm mass}$ を評価し，$\epsilon_{\rm mass}>0.5\%$ の場合は $dt_{\rm eff}\leftarrow dt_{\rm eff}/2$ として 2 に戻る．
-5. 3–4 を満たした $dt_{\rm eff}$ を採用してステップを確定する．
+4. 式\ref{eq:mass_budget_definition}で相対誤差 $\epsilon_{\rm mass}$ を評価し，$\epsilon_{\rm mass}>\epsilon_{\rm tol}$ の場合は $dt_{\rm eff}\leftarrow dt_{\rm eff}/2$ として 2 に戻る．
+5. 条件 3–4 を満たした $dt_{\rm eff}$ を採用してステップを確定する．
 
-質量収支は各ステップで相対誤差 $\epsilon_{\rm mass}$ を評価する．ここでは Smol 更新で実際に用いた $dt_{\rm eff}$ に対して収支を検査する：
+ここで $\epsilon_{\rm tol}$ は質量保存誤差の許容値であり，本研究では $\epsilon_{\rm tol}=5\times10^{-3}$（0.5%）を用いる（要確認：本文・設定表との整合）．なお，質量収支の検査は「実際に採用された $dt_{\rm eff}$」に対して行う．
+
+**質量収支の定義**
+質量保存の検査は次式で定義する．
 \begin{equation}
 \label{eq:mass_budget_definition}
 \begin{aligned}
- \Sigma^{n} &= \sum_k m_k N_k^{n}, & \Sigma^{n+1} &= \sum_k m_k N_k^{n+1},\\
- \Delta\Sigma &= \Sigma^{n+1} + dt_{\rm eff}\,\dot{\Sigma}_{\rm extra} - \left(\Sigma^{n} + dt_{\rm eff}\,\dot{\Sigma}_{\rm prod}\right),\\
- \epsilon_{\rm mass} &= \frac{|\Delta\Sigma|}{\Sigma^{n}}.
+\Sigma^{n} &= \sum_k m_k N_k^{n}, & \Sigma^{n+1} &= \sum_k m_k N_k^{n+1},\\
+\Delta\Sigma &= \Sigma^{n+1} + dt_{\rm eff}\,\dot{\Sigma}_{\rm extra} - \left(\Sigma^{n} + dt_{\rm eff}\,\dot{\Sigma}_{\rm src}\right),\\
+\epsilon_{\rm mass} &= \frac{|\Delta\Sigma|}{\Sigma^{n}}.
 \end{aligned}
 \end{equation}
-ここで，$\dot{\Sigma}_{\rm prod}$ は外部供給により格子へ注入された質量供給率（$F_k$ に対応する全ビンの注入量の和）であり，$\dot{\Sigma}_{\rm extra}$ はブローアウト・昇華・追加シンク等，系外への明示的損失率の和である．本検査は数値誤差の診断として用い，許容範囲に収まる設定でのみ結果を採用する．
+$\dot{\Sigma}_{\rm src}$ は明示的な供給項 $F_k$ が与える質量注入率であり，$\dot{\Sigma}_{\rm src}=\sum_k m_k F_k$ として評価する．$\dot{\Sigma}_{\rm extra}$ は表層から系外へ失われる明示的な損失（ブローアウト・昇華など）を質量率として合算したものである．
 
-停止条件は，(i) 火星温度が所定の閾値 $T_M=T_{\rm end}$ に到達した時刻を積分終端 $t_{\rm end}$ とし（本論文では $T_{\rm end}=2000\,\mathrm{K}$），(ii) 各セルで視線方向の光学的厚さがしきい値 $\tau_{\rm stop}$ を超えた場合にそのセルを早期停止する．判定には，遮蔽が有効で $\kappa_{\rm eff}$ が有限な場合は $\tau_{\rm eff}$，それ以外は $\tau_{\rm los}$ を用いる（2.2節；遮蔽 OFF では $\Phi=1$ となり $\tau_{\rm eff}=\tau_{\rm los}$ に退化する）．$\tau_{\rm stop}=\ln 10$ は入射束の減衰が 1 桁程度となる目安として設定し，到達したセルでは表層へ到達する放射場の近似が破綻するため，以後の時間発展は本モデルの適用範囲外として追跡しない．
+#### 停止条件
+
+**積分終端**
+積分終端 $t_{\rm end}$ は解析対象期間として設定し，本研究では高温期の終端に対応する期間を採用する（例：火星温度モデル $T_{\rm Mars}(t)$ が所定値 $T_{\rm end}$ に到達する時刻を $t_{\rm end}$ とする，など；要確認）．
+
+**光学的厚さに基づくセル停止**
+各セルで線視方向光学的厚さ $\tau_{\rm los}$ が閾値 $\tau_{\rm stop}$ を超えた場合，当該セルの時間発展を早期停止する．実装では，$\tau_{\rm los}\propto \kappa,\Sigma_{\rm surf}$（幾何因子を含む）から評価した量が閾値を超えると停止する．$\tau_{\rm stop}=\ln 10$ は透過率 $\exp(-\tau_{\rm los})$ が $0.1$ 以下となる目安に対応し，この条件を満たすと「火星放射が表層へ到達する」という近似が破綻するため，以後の計算は本モデルの適用範囲外として扱う（停止は円盤の物理的停止を意味しない）．なお，光学的に厚い領域をクリップして擬似的に $\tau\lesssim1$ に保つのではなく，適用限界として停止する方針を採る．
+
+**（任意）ブローアウト粒径が解像下限を下回る場合**
+温度低下により $a_{\rm blow}$ が解像下限 $s_{\min}$ を下回る場合，放射圧除去が解像範囲より小さい粒径で起きるため，モデルの解像上の前提が変化する．実装には，この条件を満たしたときに計算を停止するオプションがあり，一定の最短積分期間を経た後に停止する．本論文では，この条件の採否と採用時の解釈を結果章で明示する（要確認）．
+
+本節では，粒径分布の離散化，IMEX による時間積分，および非負性・質量収支に基づく刻み制御と停止条件を定義した．次節では，これらの設定の下で得られる進化計算の収束判定と結果の整理基準を述べる．
 ## 5. 出力と検証
 
 本節では，計算結果を再解析可能な形で保存するための出力仕様と，本文で採用する計算の合格基準（検証）をまとめる．
@@ -603,13 +651,11 @@ dt_{\rm eff}\leftarrow\min\!\left(\Delta t,\,0.1\min_k t_{{\rm coll},k}\right)
 M_{\rm loss}^{n+1}=M_{\rm loss}^{n}+\Delta t\left(\dot{M}_{\rm out}^{n}+\dot{M}_{\rm sinks}^{n}\right)
 \end{equation}
 
-検証は質量保存，時間刻み収束，および粒径ビン収束（PSD 解像度）の 3 項目で行う．合格基準は表\ref{tab:validation_criteria}に示し，本文で示す結果はすべて基準を満たした計算に限定する．
+検証は，質量保存，時間刻み収束，および粒径ビン（PSD 解像度）収束の 3 項目で行う．合格基準は表\ref{tab:validation_criteria}に示し，本文で示す結果はすべて基準を満たした計算に限定する．質量保存は式\ref{eq:mass_budget_definition}で定義する相対質量誤差 $|\epsilon_{\rm mass}(t)|$ の最大値が $0.5\%$ 以下であることを要求する．
 
-質量保存は式\ref{eq:mass_budget_definition}で定義する相対質量誤差 $\epsilon_{\rm mass}$ の最大値が $0.5\%$ 以下であることを要求する．
+時間刻み収束は，$\Delta t$ と $\Delta t/2$ の計算で，累積損失 $M_{\rm loss}$ の相対差が $1\%$ 以下となることにより確認する．本節では相対差を $|X(\Delta t)-X(\Delta t/2)|/|X(\Delta t/2)|$ と定義する．$M_{\rm loss}$ は式\ref{eq:mass_loss_update}で更新される累積量であり，離散化誤差が時間積分を通じて蓄積した影響を直接反映するため，収束判定の代表指標として採用する．
 
-時間刻み収束は，$\Delta t$ と $\Delta t/2$ の 2 計算を比較し，代表量として累積損失 $M_{\rm loss}$ の相対差が $1\%$ 以下となることにより確認する．
-
-粒径ビン収束（PSD 解像度）は，基準の粒径ビン数とその 2 倍の粒径ビン数で計算した結果を比較し，同じ基準で $M_{\rm loss}$ の相対差が $1\%$ 以下となることを要求する．
+粒径ビン（PSD 解像度）収束は，基準の粒径ビン設定と，粒径ビン幅を 1/2 とした設定（ビン数を 2 倍とした PSD）の計算結果を比較し，時間刻み収束と同一の指標（$M_{\rm loss}$ の相対差）で $1\%$ 以下となることにより確認する．この比較により，粒径離散化に起因する系統誤差が本論文の結論に影響しない範囲であることを担保する．
 
 \begin{table}[t]
   \centering
@@ -623,12 +669,12 @@ M_{\rm loss}^{n+1}=M_{\rm loss}^{n}+\Delta t\left(\dot{M}_{\rm out}^{n}+\dot{M}_
     \hline
     質量保存 & 相対質量誤差 $|\epsilon_{\rm mass}(t)|$ の最大値が $0.5\%$ 以下 \\
     時間刻み収束 & $\Delta t$ と $\Delta t/2$ の $M_{\rm loss}$ の相対差が $1\%$ 以下 \\
-    粒径ビン収束（PSD 解像度） & 基準の粒径ビン数とその 2 倍の粒径ビン数の $M_{\rm loss}$ の相対差が $1\%$ 以下 \\
+    粒径ビン収束（PSD 解像度） & 基準ビンとビン数を 2 倍にした計算の $M_{\rm loss}$ の相対差が $1\%$ 以下 \\
     \hline
 \end{tabular}
 \end{table}
 
-以上の出力仕様と検証基準により，結果の再現性（入力→出力の対応）と数値的健全性（質量保存・時間刻み・粒径ビン（PSD 解像度））を担保したうえで，本論文の結果・議論を構成する．
+以上の出力仕様と検証基準により，結果の再現性（入力→出力の対応）と数値的健全性（質量保存と収束性：時間刻み・粒径ビン（PSD 解像度））を担保したうえで，本論文の結果・議論を構成する．
 ## 付録 A. 再現実行と保存情報
 
 本研究の再現性は，(i) 入力（設定ファイルとテーブル）を固定し，(ii) 実行時に採用された値と条件を保存し，(iii) 時系列・要約・検証ログを保存することで担保する．本付録では，論文として最低限必要な「保存すべき情報」をまとめる．
