@@ -2601,6 +2601,13 @@ def run_zero_d(
     monitor_dt_ratio = math.isfinite(dt_over_t_blow_max) and dt_over_t_blow_max > 0.0
     stop_on_blowout_below_smin = bool(getattr(cfg.numerics, "stop_on_blowout_below_smin", False))
     blowout_stop_threshold = float(s_min_config)
+    loss_rate_stop_threshold = getattr(cfg.numerics, "mass_loss_rate_stop_Mmars_s", None)
+    if loss_rate_stop_threshold is not None:
+        loss_rate_stop_threshold = float(loss_rate_stop_threshold)
+        if not math.isfinite(loss_rate_stop_threshold) or loss_rate_stop_threshold < 0.0:
+            raise ConfigurationError(
+                "numerics.mass_loss_rate_stop_Mmars_s must be non-negative and finite"
+            )
     min_duration_years = getattr(cfg.numerics, "min_duration_years", None)
     min_duration_s = 0.0
     if min_duration_years is not None:
@@ -2822,6 +2829,8 @@ def run_zero_d(
             prod_into_deep_mass_step = 0.0
             sigma_deep_before = sigma_deep
             stop_after_record = False
+            stop_after_record_reason = None
+            stop_after_record_loss_rate = None
 
             if eval_requires_step or step_no == 0:
                 Omega_step = grid.omega_kepler(r)
@@ -3773,6 +3782,16 @@ def run_zero_d(
                 fast_blowout_factor_avg = 0.0
                 fast_blowout_factor_record = 0.0
                 fast_blowout_ratio_alias = 0.0
+            if (
+                loss_rate_stop_threshold is not None
+                and (min_duration_s <= 0.0 or time >= min_duration_s)
+            ):
+                loss_rate_total = max(M_out_dot, 0.0) + max(M_sink_dot, 0.0)
+                if math.isfinite(loss_rate_total) and loss_rate_total <= loss_rate_stop_threshold:
+                    stop_after_record = True
+                    if stop_after_record_reason is None:
+                        stop_after_record_reason = "loss_rate_below_threshold"
+                        stop_after_record_loss_rate = loss_rate_total
             dSigma_dt_sublimation_total = dSigma_dt_sublimation + mass_loss_rate_sublimation_smol
             sigma_loss_total_sub = delta_sigma_sub + sigma_loss_smol
             mass_loss_sublimation_step_diag = mass_loss_sublimation_step_total
@@ -3966,6 +3985,7 @@ def run_zero_d(
                 ):
                     stop_after_record = True
                     tau_stop_los_value = tau_stop_los_current
+                    stop_after_record_reason = "tau_exceeded"
             if supply_headroom_enabled and sigma_tau1_limit is not None and math.isfinite(sigma_tau1_limit):
                 headroom_current = float(max(sigma_tau1_limit - min(sigma_diag, sigma_tau1_limit), 0.0))
             else:
@@ -4705,17 +4725,30 @@ def run_zero_d(
                     break
 
             if stop_after_record:
-                early_stop_reason = "tau_exceeded"
+                if stop_after_record_reason is None:
+                    stop_after_record_reason = "tau_exceeded"
+                early_stop_reason = stop_after_record_reason
                 early_stop_step = step_no
                 early_stop_time_s = time + dt
                 total_time_elapsed = time + dt
-                logger.info(
-                    "Early stop triggered: tau_los=%.3e exceeded tau_stop=%.3e at t=%.3e s (step %d)",
-                    tau_stop_los_value if tau_stop_los_value is not None else float("nan"),
-                    optical_tau_stop,
-                    time + dt,
-                    step_no,
-                )
+                if early_stop_reason == "tau_exceeded":
+                    logger.info(
+                        "Early stop triggered: tau_los=%.3e exceeded tau_stop=%.3e at t=%.3e s (step %d)",
+                        tau_stop_los_value if tau_stop_los_value is not None else float("nan"),
+                        optical_tau_stop,
+                        time + dt,
+                        step_no,
+                    )
+                elif early_stop_reason == "loss_rate_below_threshold":
+                    logger.info(
+                        "Early stop triggered: loss_rate=%.3e M_Mars/s <= threshold=%.3e at t=%.3e s (step %d)",
+                        stop_after_record_loss_rate
+                        if stop_after_record_loss_rate is not None
+                        else float("nan"),
+                        loss_rate_stop_threshold,
+                        time + dt,
+                        step_no,
+                    )
                 break
 
             if not quiet_mode and not progress_enabled and logger.isEnabledFor(logging.INFO):

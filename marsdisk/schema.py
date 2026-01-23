@@ -1730,6 +1730,14 @@ class Numerics(BaseModel):
         False,
         description="Stop the run early if the blow-out grain size falls below the configured minimum size.",
     )
+    mass_loss_rate_stop_Mmars_s: Optional[float] = Field(
+        None,
+        ge=0.0,
+        description=(
+            "Optional early-stop threshold for total mass-loss rate (M_out_dot + M_sink_dot) in M_Mars/s. "
+            "Applied after min_duration_years."
+        ),
+    )
     t_end_temperature_search_years: Optional[float] = Field(
         None,
         gt=0.0,

@@ -928,6 +928,13 @@ def run_one_d(
     min_duration_s = 0.0
     if min_duration_years is not None:
         min_duration_s = float(min_duration_years) * SECONDS_PER_YEAR
+    loss_rate_stop_threshold = getattr(cfg.numerics, "mass_loss_rate_stop_Mmars_s", None)
+    if loss_rate_stop_threshold is not None:
+        loss_rate_stop_threshold = float(loss_rate_stop_threshold)
+        if not math.isfinite(loss_rate_stop_threshold) or loss_rate_stop_threshold < 0.0:
+            raise ConfigurationError(
+                "numerics.mass_loss_rate_stop_Mmars_s must be non-negative and finite"
+            )
     max_steps = MAX_STEPS
     if n_steps > max_steps:
         n_steps = max_steps
@@ -2505,6 +2512,26 @@ def run_one_d(
             if np.all(~cell_active) and all_cells_solid_state:
                 early_stop_reason = "tau_exceeded_all_cells"
                 break
+
+            if (
+                loss_rate_stop_threshold is not None
+                and (min_duration_s <= 0.0 or time >= min_duration_s)
+            ):
+                loss_rate_total = float("nan")
+                if dt > 0.0 and math.isfinite(dt):
+                    loss_rate_total = (
+                        float(step_sums[SUM_OUT_MASS]) + float(step_sums[SUM_SINK_MASS])
+                    ) / dt
+                if math.isfinite(loss_rate_total) and loss_rate_total <= loss_rate_stop_threshold:
+                    early_stop_reason = "loss_rate_below_threshold"
+                    logger.info(
+                        "Early stop triggered: loss_rate=%.3e M_Mars/s <= threshold=%.3e at t=%.3e s (step %d)",
+                        loss_rate_total,
+                        loss_rate_stop_threshold,
+                        time,
+                        step_no,
+                    )
+                    break
 
             if dt_min_tcoll_ratio is not None and math.isfinite(t_coll_min):
                 dt_floor = dt_min_tcoll_ratio * t_coll_min
