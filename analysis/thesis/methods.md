@@ -22,7 +22,9 @@
 
 ### 1.2 研究対象と基本仮定
 
-本研究はガス成分が支配的でない衝突起源ダスト円盤を対象とする．モデルは軸対称で，方位方向に平均化した面密度・PSD を状態量として扱う．ロッシュ限界内側の環状領域 $[r_{\rm in},r_{\rm out}]$ を半径方向に $N_r$ 個のセルへ分割し，各セルで同一の時間グリッドにより粒径分布（PSD）を時間発展させる．停止条件として $\tau_{\rm eff}>\tau_{\rm stop}$ を採用し，到達したセルは停止状態として扱う（4.2節）．
+本研究はガス成分が支配的でない衝突起源ダスト円盤を対象とし，固体粒子の放射圧・供給・衝突カスケードを主要過程として時間発展を計算する．
+
+モデルは軸対称で，方位方向に平均化した面密度・PSD を状態量として扱う．ロッシュ限界内側の環状領域 $[r_{\rm in},r_{\rm out}]$ を半径方向に $N_r$ 個のセルへ分割し，各セルで同一の時間グリッドにより粒径分布（PSD）を時間発展させる（セル間輸送は基準ケースでは含めない）．停止条件として $\tau_{\rm eff}>\tau_{\rm stop}$ を採用し，到達したセルは停止状態として扱う（4.2節）．
 
 ### 1.3 状態変数（粒径・半径）と記号定義
 
@@ -47,18 +49,18 @@ m_k=\frac{4\pi}{3}\rho s_k^3
 n_k(t)=\frac{m_k N_k(t)}{\Sigma_{\rm surf}(t)}
 \end{equation}
 
-PSD 下限は有効最小粒径 $s_{\min,\rm eff}$ により与え，設定下限 $s_{\min,\rm cfg}$ とブローアウト境界 $s_{\rm blow,eff}$ の最大値で定める．$s_{\min,\rm eff}$ は供給注入とサイズ境界条件の下限として用い，時刻ごとに更新する．この下限クリップにより，$s_{\rm blow}$ 未満の粒子は滞在時間 $t_{\rm blow}$ の一次シンクで速やかに失われ，PSD の有効範囲が時間とともに移動することを表現する．本研究では $s_{\rm blow,eff}$ を式\ref{eq:s_blow_definition}で求めた $s_{\rm blow}$ と同一視し（以下では区別しない）．これは，遮蔽 $\Phi$ を放射圧そのものの減衰としては用いず，照射が成立するかどうか（$\tau_{\rm eff}$ による適用範囲判定）と供給規格化に反映するというモデル化に対応する．したがって照射が成立する限り，表層粒子は火星放射を直接受けると仮定し，ブローアウト境界（$\beta=0.5$）に基づく下限クリップの考え方は古典的整理に従う\citep{Burns1979_Icarus40_1,StrubbeChiang2006_ApJ648_652}．
+ここで $\rho$ は粒子密度，$s_k$ はビン $k$ の代表粒径である．また $N_k$ は局所セルにおける数面密度であり，必要に応じて $N_{k,\ell}$ と書き分ける．$n_k$ は表層面密度 $\Sigma_{\rm surf}$ に対するビン $k$ の質量分率である．
+
+PSD 下限は有効最小粒径 $s_{\min,\rm eff}$ により与え，設定下限 $s_{\min,\rm cfg}$ とブローアウト境界 $s_{\rm blow,eff}$ の最大値で定める．$s_{\min,\rm eff}$ は供給注入とサイズ境界条件の下限として用い，時刻ごとに更新する．この下限クリップにより，$s_{\rm blow}$ 未満の粒子は滞在時間 $t_{\rm blow}$ の一次シンクで速やかに失われ，PSD の有効範囲が時間とともに移動することを表現する．
+
+本研究では $s_{\rm blow,eff}$ を式\ref{eq:s_blow_definition}で求めた $s_{\rm blow}$ と同一視し（以下では区別しない）．遮蔽 $\Phi$ はブローアウト境界の計算には含めず，火星放射が表層へ到達するかどうか（自己遮蔽の強さ）の評価にのみ用いる（2.2節，4.2節）．
 
 \begin{equation}
 \label{eq:smin_eff_definition}
 s_{\min,\rm eff}=\max\!\left(s_{\min,\rm cfg},\,s_{\rm blow,eff}\right)
 \end{equation}
 
-本研究では，火星放射が表層へ到達するかどうかを評価するため，火星方向の光学的厚さ $\tau_{\rm los}$ を導入する．$\tau_{\rm los}$ は本来，火星から半径 $r$ の円盤表層へ向かう光線に沿った積分 $\tau=\int \kappa\rho\,ds$ で定義されるが，3次元構造（スケールハイト $H$ など）と半径方向の自己遮蔽を解かないため，本研究では局所表層面密度 $\Sigma_{\rm surf}$ と表層不透明度 $\kappa_{\rm surf}$ から次の近似で与える．すなわち鉛直光学的厚さ $\tau_\perp\equiv\kappa_{\rm surf}\Sigma_{\rm surf}$ を定義し，火星方向の経路長が鉛直より長い効果を幾何因子 $f_{\rm los}\ge1$ として
-\[
-\tau_{\rm los}=f_{\rm los}\tau_\perp
-\]
-と近似する．表層不透明度 $\kappa_{\rm surf}$ は PSD の幾何学断面（$\pi s^2$）から評価する表層の「断面積/質量」の近似であり，放射圧効率の波長依存は $\langle Q_{\rm pr}\rangle$ を通じて別途 $\beta$ に反映する（2.1節）．遮蔽は $\Phi(\tau_{\rm los})$ により $\kappa_{\rm eff}$ へ写像して扱い（2.2節），停止判定に用いる有効光学的厚さ $\tau_{\rm eff}$ を定義する（4.2節）．参照面密度 $\Sigma_{\tau_{\rm los}=1}$ は診断量として記録する\citep{Krivov2006_AA455_509,Wyatt2008}．
+火星方向の光学的厚さ $\tau_{\rm los}$ は，本来は視線方向に沿った光学的深さ $\tau=\int \kappa\rho\,ds$ で定義されるが，本研究では表層を面密度 $\Sigma_{\rm surf}$ と不透明度 $\kappa_{\rm surf}$ で代表し，幾何因子 $f_{\rm los}$ を用いて式\ref{eq:tau_los_definition}で近似する．
 
 \begin{equation}
 \label{eq:kappa_surf_definition}
@@ -76,9 +78,7 @@ s_{\min,\rm eff}=\max\!\left(s_{\min,\rm cfg},\,s_{\rm blow,eff}\right)
 \Sigma_{\tau_{\rm los}=1}=\left(f_{\rm los}\kappa_{\rm surf}\right)^{-1}
 \end{equation}
 
-式\ref{eq:sigma_tau_los1_definition} は $\tau_{\rm los}=1$ を満たす参照面密度の定義である\citep{Krivov2006_AA455_509,Wyatt2008}．
-
-以上により，半径セルごとの表層面密度と PSD を状態量として定義した．次節では，これらを時間発展させる物理過程（放射圧・遮蔽・供給・衝突カスケード・追加シンク）を定式化する．
+式\ref{eq:sigma_tau_los1_definition} は $\tau_{\rm los}=1$ を満たす参照面密度の定義である．
 
 ### 1.4 計算の主経路（更新フロー）
 
@@ -185,9 +185,7 @@ $\chi_{\rm blow}$ はブローアウト滞在時間の係数であり，非束�
 
 ### 2.2 遮蔽
 
-遮蔽係数 $\Phi$ は，火星からの熱放射が円盤表層へ到達する際に受ける減衰を，視線方向光学的厚さ $\tau_{\rm los}$ の関数として表す無次元係数である．ここでいう減衰には，吸収および散乱（多重散乱を含む）に起因する放射フラックスの低下を含める．散乱性媒質における放射輸送と近似法に関する基礎は \citet{Joseph1976_JAS33_2452} および \citet{HansenTravis1974_SSR16_527} を参照する．
-
-本研究では $\Phi(\tau_{\rm los})$ を外部テーブルとして与え（付録C，表\ref{tab:app_external_inputs}），$\tau_{\rm los}$ に対して線形補間で評価する．テーブル範囲外では外挿を避け，端値を代表値として用いる．また数値誤差に起因する逸脱を抑えるため，$\Phi$ は $0\le\Phi\le1$ を満たすようにクリップして扱う．
+遮蔽係数 $\Phi(\tau_{\rm los})$ は，自己遮蔽により火星放射が表層へ到達しにくくなる効果を，視線方向光学的厚さ $\tau_{\rm los}$ の関数として表す無次元係数である（付録C，表\ref{tab:app_external_inputs}）．
 
 遮蔽の効果は，表層の質量不透明度 $\kappa_{\rm surf}$（単位 $\mathrm{m^2\,kg^{-1}}$）を，有効不透明度 $\kappa_{\rm eff}$ に置き換えることで取り込む．本研究では $\kappa_{\rm eff}$ を $\Phi$ によりスケールする近似を採用し，火星方向の有効光学的厚さ $\tau_{\rm eff}$ を以下で定義する．
 
@@ -208,18 +206,18 @@ $\chi_{\rm blow}$ はブローアウト滞在時間の係数であり，非束�
 
 ここで $\Sigma_{\rm surf}$ は表層面密度（単位 $\mathrm{kg\,m^{-2}}$），$f_{\rm los}$ は視線方向に沿った幾何学補正因子である．式\ref{eq:tau_eff_definition} 右辺の等号は，$\tau_{\rm los}\equiv f_{\rm los}\kappa_{\rm surf}\Sigma_{\rm surf}$ を用いた関係式である．
 
-$\tau_{\rm eff}$ に基づき，$\tau_{\rm eff}=1$ に対応する参照面密度 $\Sigma_{\tau_{\rm eff}=1}$ を式\ref{eq:sigma_tau1_definition}で与える．$\kappa_{\rm eff}\ge0$ は定義から期待されるが，数値計算上の除算エラーを避けるために $\kappa_{\rm eff}\le0$ の場合を形式的に分岐して扱う．
+$\kappa_{\rm eff}$ に基づき，光学的厚さが 1 となる参照面密度 $\Sigma_{\tau=1}$ を式\ref{eq:sigma_tau1_definition}で与える．$\kappa_{\rm eff}>0$ のとき $\Sigma_{\tau=1}$ は「$\tau\simeq1$ に対応する表層面密度」の目安であり，$\kappa_{\rm eff}\le0$ の場合は光学的に厚くならない極限として $\Sigma_{\tau=1}=\infty$ と置く．
 
 \begin{equation}
 \label{eq:sigma_tau1_definition}
-\Sigma_{\tau_{\rm eff}=1} =
+\Sigma_{\tau=1} =
 \begin{cases}
-(f_{\rm los}\kappa_{\rm eff})^{-1}, & \kappa_{\rm eff} > 0,\\
+\kappa_{\rm eff}^{-1}, & \kappa_{\rm eff} > 0,\\
 \infty, & \kappa_{\rm eff} \le 0
 \end{cases}
 \end{equation}
 
-$\kappa_{\rm eff}$ と $\tau_{\rm eff}$ は，(i) 初期条件における光学的厚さの規格化，(ii) $\tau_{\rm stop}$ による適用範囲判定（停止判定），(iii) 表層への質量再供給モデルで用いる参照面密度 $\Sigma_{\tau_{\rm eff}=1}$（2.3節）に用いる．
+$\kappa_{\rm eff}$ と $\tau_{\rm eff}$ は，(i) 初期条件における光学的厚さの規格化，(ii) $\tau_{\rm stop}$ による適用範囲判定（停止判定）に用いる．
 
 ### 2.3 表層への質量供給
 
@@ -587,7 +585,7 @@ dt_{\rm eff}\leftarrow\min\!\left(\Delta t,\,0.1\min_k t_{{\rm coll},k}\right)
 \end{equation}
 ここで，$\dot{\Sigma}_{\rm prod}$ は外部供給により格子へ注入された質量供給率（$F_k$ に対応する全ビンの注入量の和）であり，$\dot{\Sigma}_{\rm extra}$ はブローアウト・昇華・追加シンク等，系外への明示的損失率の和である．本検査は数値誤差の診断として用い，許容範囲に収まる設定でのみ結果を採用する．
 
-停止条件は，(i) 火星温度が所定の閾値 $T_M=T_{\rm end}$ に到達した時刻を積分終端 $t_{\rm end}$ とし（本論文では $T_{\rm end}=2000\,\mathrm{K}$），(ii) 各セルで line-of-sight の有効光学的厚さ $\tau_{\rm los}>\tau_{\rm stop}$ を満たした場合にそのセルを早期停止する．$\tau_{\rm stop}=\ln 10$ は透過率 $\exp(-\tau_{\rm los})$ が $0.1$ 以下となる目安に対応し，到達したセルでは表層へ到達する放射場の近似が破綻するため，以後の時間発展は本モデルの適用範囲外として追跡しない．
+停止条件は，(i) 火星温度が所定の閾値 $T_M=T_{\rm end}$ に到達した時刻を積分終端 $t_{\rm end}$ とし（本論文では $T_{\rm end}=2000\,\mathrm{K}$），(ii) 各セルで視線方向の光学的厚さがしきい値 $\tau_{\rm stop}$ を超えた場合にそのセルを早期停止する．判定には，遮蔽が有効で $\kappa_{\rm eff}$ が有限な場合は $\tau_{\rm eff}$，それ以外は $\tau_{\rm los}$ を用いる（2.2節；遮蔽 OFF では $\Phi=1$ となり $\tau_{\rm eff}=\tau_{\rm los}$ に退化する）．$\tau_{\rm stop}=\ln 10$ は入射束の減衰が 1 桁程度となる目安として設定し，到達したセルでは表層へ到達する放射場の近似が破綻するため，以後の時間発展は本モデルの適用範囲外として追跡しない．
 ## 5. 出力と検証
 
 本節では，計算結果を再解析可能な形で保存するための出力仕様と，本文で採用する計算の合格基準（検証）をまとめる．
@@ -605,9 +603,13 @@ dt_{\rm eff}\leftarrow\min\!\left(\Delta t,\,0.1\min_k t_{{\rm coll},k}\right)
 M_{\rm loss}^{n+1}=M_{\rm loss}^{n}+\Delta t\left(\dot{M}_{\rm out}^{n}+\dot{M}_{\rm sinks}^{n}\right)
 \end{equation}
 
-検証は質量保存と時間刻み収束の 2 項目で行う．合格基準は表\ref{tab:validation_criteria}に示し，本文で示す結果はすべて基準を満たした計算に限定する．質量保存は式\ref{eq:mass_budget_definition}の $\epsilon_{\rm mass}$ が $0.5\%$ 以下であることを要求し，その時系列を `checks/mass_budget.csv` として保存して追跡可能にする．
+検証は質量保存，時間刻み収束，および粒径ビン収束（PSD 解像度）の 3 項目で行う．合格基準は表\ref{tab:validation_criteria}に示し，本文で示す結果はすべて基準を満たした計算に限定する．
 
-時間刻み依存性は，$\Delta t$ と $\Delta t/2$ の計算で主要量（$M_{\rm loss}$ など）が一致することにより確認する．収束判定と PSD 解像度の比較は同一基準で行う．
+質量保存は式\ref{eq:mass_budget_definition}で定義する相対質量誤差 $\epsilon_{\rm mass}$ の最大値が $0.5\%$ 以下であることを要求する．
+
+時間刻み収束は，$\Delta t$ と $\Delta t/2$ の 2 計算を比較し，代表量として累積損失 $M_{\rm loss}$ の相対差が $1\%$ 以下となることにより確認する．
+
+粒径ビン収束（PSD 解像度）は，基準の粒径ビン数とその 2 倍の粒径ビン数で計算した結果を比較し，同じ基準で $M_{\rm loss}$ の相対差が $1\%$ 以下となることを要求する．
 
 \begin{table}[t]
   \centering
@@ -621,11 +623,12 @@ M_{\rm loss}^{n+1}=M_{\rm loss}^{n}+\Delta t\left(\dot{M}_{\rm out}^{n}+\dot{M}_
     \hline
     質量保存 & 相対質量誤差 $|\epsilon_{\rm mass}(t)|$ の最大値が $0.5\%$ 以下 \\
     時間刻み収束 & $\Delta t$ と $\Delta t/2$ の $M_{\rm loss}$ の相対差が $1\%$ 以下 \\
+    粒径ビン収束（PSD 解像度） & 基準の粒径ビン数とその 2 倍の粒径ビン数の $M_{\rm loss}$ の相対差が $1\%$ 以下 \\
     \hline
 \end{tabular}
 \end{table}
 
-以上の出力仕様と検証基準により，結果の再現性（入力→出力の対応）と数値的健全性（質量保存・解像度）を担保したうえで，本論文の結果・議論を構成する．
+以上の出力仕様と検証基準により，結果の再現性（入力→出力の対応）と数値的健全性（質量保存・時間刻み・粒径ビン（PSD 解像度））を担保したうえで，本論文の結果・議論を構成する．
 ## 付録 A. 再現実行と保存情報
 
 本研究の再現性は，(i) 入力（設定ファイルとテーブル）を固定し，(ii) 実行時に採用された値と条件を保存し，(iii) 時系列・要約・検証ログを保存することで担保する．本付録では，論文として最低限必要な「保存すべき情報」をまとめる．
@@ -925,7 +928,7 @@ title: 記号表（論文内参照の正）
 			    $\tau_{\rm los}$ & 火星視線方向光学的厚さ（近似） & -- & 式\ref{eq:tau_los_definition}; 遮蔽評価に用いる \\
 			    $\tau_{\rm eff}$ & 火星方向の有効光学的厚さ & -- & 式\ref{eq:tau_eff_definition}; 初期規格化と停止判定に用いる \\
 			    $\Sigma_{\tau_{\rm los}=1}$ & $\tau_{\rm los}=1$ に対応する参照面密度 & $\mathrm{kg\,m^{-2}}$ & 式\ref{eq:sigma_tau_los1_definition}（$\Sigma_{\tau_{\rm los}=1}=(f_{\rm los}\kappa_{\rm surf})^{-1}$） \\
-		    $\Sigma_{\tau=1}$ & $\tau_{\rm eff}=1$ に対応する表層面密度（診断量） & $\mathrm{kg\,m^{-2}}$ & 式\ref{eq:sigma_tau1_definition} \\
+		    $\Sigma_{\tau=1}$ & 光学的厚さ $\tau=1$ に対応する表層面密度（診断量） & $\mathrm{kg\,m^{-2}}$ & 式\ref{eq:sigma_tau1_definition} \\
 		    \hline
 	  \end{tabular}
 \end{table}
