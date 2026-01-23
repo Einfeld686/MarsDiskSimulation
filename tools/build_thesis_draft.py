@@ -8,6 +8,7 @@ import shutil
 import subprocess
 import sys
 from dataclasses import dataclass
+from datetime import datetime
 from pathlib import Path
 
 
@@ -383,8 +384,11 @@ def escape_latex(text: str) -> str:
         "^": r"\textasciicircum{}",
     }
     out = []
-    for ch in text:
-        out.append(replacements.get(ch, ch))
+    for idx, ch in enumerate(text):
+        if ch in replacements and not (idx > 0 and text[idx - 1] == "\\"):
+            out.append(replacements[ch])
+            continue
+        out.append(ch)
     return "".join(out)
 
 
@@ -614,6 +618,9 @@ def run(cmd: list[str], cwd: Path, env: dict[str, str] | None = None) -> None:
 
 def build_pdf(tex_path: Path, out_dir: Path, repo_root: Path) -> None:
     out_dir.mkdir(parents=True, exist_ok=True)
+    bib_src = repo_root / "paper" / "references.bib"
+    if bib_src.exists():
+        shutil.copy2(bib_src, out_dir / "references.bib")
     stem = tex_path.stem
     tex_arg = str(tex_path)
     run(
@@ -624,7 +631,8 @@ def build_pdf(tex_path: Path, out_dir: Path, repo_root: Path) -> None:
             f"-output-directory={out_dir}",
             tex_arg,
         ],
-        cwd=tex_path.parent,
+        # Compile from repo root so paths like `figures/...` resolve consistently.
+        cwd=repo_root,
     )
     bibtex_env = os.environ.copy()
     bibtex_env["BIBINPUTS"] = (
@@ -671,7 +679,7 @@ def build_pdf(tex_path: Path, out_dir: Path, repo_root: Path) -> None:
                 f"-output-directory={out_dir}",
                 tex_arg,
             ],
-            cwd=tex_path.parent,
+            cwd=repo_root,
         )
         run(
             [
@@ -681,7 +689,7 @@ def build_pdf(tex_path: Path, out_dir: Path, repo_root: Path) -> None:
                 f"-output-directory={out_dir}",
                 tex_arg,
             ],
-            cwd=tex_path.parent,
+            cwd=repo_root,
         )
     except subprocess.CalledProcessError:
         dvi_path = out_dir / f"{stem}.dvi"
@@ -690,7 +698,7 @@ def build_pdf(tex_path: Path, out_dir: Path, repo_root: Path) -> None:
         else:
             raise
     native_pdf = out_dir / f"{stem}_native.pdf"
-    run(["dvipdfmx", "-o", str(native_pdf), str(out_dir / f"{stem}.dvi")], cwd=tex_path.parent)
+    run(["dvipdfmx", "-o", str(native_pdf), str(out_dir / f"{stem}.dvi")], cwd=repo_root)
     run(
         [
             sys.executable,
@@ -726,11 +734,32 @@ def main() -> int:
     parser.add_argument("--out", default=None, help="Output TeX path (defaults to --tex).")
     parser.add_argument("--pdf", action="store_true", help="Build PDF after updating TeX.")
     parser.add_argument(
-        "--outdir", default="paper/out", help="Output directory for PDF build."
+        "--outdir",
+        default="paper/out",
+        help=(
+            "Output directory for PDF. If ends with '/build', treat as build dir and publish to its parent; "
+            "otherwise publish to --outdir and write intermediates to --outdir/build."
+        ),
+    )
+    parser.add_argument(
+        "--sync-sections",
+        default="on",
+        choices=("on", "off"),
+        help="Sync analysis/thesis_sections -> analysis/thesis before generating TeX (default: on).",
     )
     args = parser.parse_args()
 
     repo_root = Path(__file__).resolve().parents[1]
+    if args.sync_sections == "on":
+        for module in (
+            "analysis.tools.merge_abstract_sections",
+            "analysis.tools.merge_introduction_sections",
+            "analysis.tools.merge_related_work_sections",
+            "analysis.tools.merge_methods_sections",
+            "analysis.tools.merge_results_sections",
+            "analysis.tools.merge_discussion_sections",
+        ):
+            run([sys.executable, "-m", module, "--write"], cwd=repo_root)
     abstract_path = (repo_root / args.abstract).resolve()
     intro_path = (repo_root / args.intro).resolve()
     related_work_path = (repo_root / args.related_work).resolve()
@@ -739,7 +768,13 @@ def main() -> int:
     discussion_path = (repo_root / args.discussion).resolve()
     tex_path = (repo_root / args.tex).resolve()
     out_path = (repo_root / args.out).resolve() if args.out else tex_path
-    out_dir = (repo_root / args.outdir).resolve()
+    requested_outdir = (repo_root / args.outdir).resolve()
+    if requested_outdir.name == "build":
+        build_dir = requested_outdir
+        publish_dir = requested_outdir.parent
+    else:
+        publish_dir = requested_outdir
+        build_dir = requested_outdir / "build"
 
     heading_map = {
         1: "section*",
@@ -799,8 +834,21 @@ def main() -> int:
         )
     out_path.write_text(tex_text, encoding="utf-8")
 
+    publish_dir.mkdir(parents=True, exist_ok=True)
+    build_dir.mkdir(parents=True, exist_ok=True)
+    if out_path.resolve() != (publish_dir / out_path.name).resolve():
+        shutil.copy2(out_path, publish_dir / out_path.name)
+    if out_path.resolve() != (build_dir / out_path.name).resolve():
+        shutil.copy2(out_path, build_dir / out_path.name)
+
     if args.pdf:
-        build_pdf(out_path, out_dir, repo_root)
+        build_pdf(out_path, build_dir, repo_root)
+        built_pdf = build_dir / f"{out_path.stem}.pdf"
+        if built_pdf.exists():
+            published_pdf = publish_dir / built_pdf.name
+            shutil.copy2(built_pdf, published_pdf)
+            timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
+            shutil.copy2(published_pdf, publish_dir / f"{out_path.stem}_{timestamp}.pdf")
     return 0
 
 
