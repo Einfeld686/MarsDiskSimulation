@@ -145,6 +145,12 @@ if not exist "%BATCH_DIR%" (
   exit /b 1
 )
 
+if not defined PYTHONPATH (
+  set "PYTHONPATH=%REPO_ROOT%"
+) else (
+  set "PYTHONPATH=%REPO_ROOT%;!PYTHONPATH!"
+)
+
 set "SWEEP_LIST_FILE=%BATCH_DIR%\eps1p5_only.txt"
 > "%SWEEP_LIST_FILE%" echo 3000 1.5 1.0 0.05 1.0
 >>"%SWEEP_LIST_FILE%" echo 3000 1.5 0.5 0.05 1.0
@@ -248,6 +254,7 @@ set "JOB_CMD_FILE=!WORKER_CMD_DIR!\eps1p5_worker_!WORKER_INDEX!.cmd"
 >> "!JOB_CMD_FILE!" echo set "SWEEP_TAG=!SWEEP_TAG!"
 >> "!JOB_CMD_FILE!" echo set "QUIET_MODE=!QUIET_MODE!"
 >> "!JOB_CMD_FILE!" echo set "DEBUG=!DEBUG!"
+>> "!JOB_CMD_FILE!" echo set "PYTHONPATH=!PYTHONPATH!"
 if defined THREAD_LIMIT (
   >> "!JOB_CMD_FILE!" echo set "NUMBA_NUM_THREADS=!THREAD_LIMIT!"
   >> "!JOB_CMD_FILE!" echo set "OMP_NUM_THREADS=!THREAD_LIMIT!"
