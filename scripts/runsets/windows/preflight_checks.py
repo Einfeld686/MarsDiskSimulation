@@ -37,8 +37,9 @@ REQUIRED_ARCHIVE_KEYS = {
     "io.archive.dir": None,
     "io.archive.merge_target": "external",
     "io.archive.verify_level": "standard_plus",
-    "io.archive.keep_local": "metadata",
+    "io.archive.keep_local": None,
 }
+ARCHIVE_KEEP_LOCAL_ALLOWED = {"metadata", "all"}
 
 PATH_ENV_VARS = ("TEMP", "TMP", "USERPROFILE", "HOMEDRIVE", "HOMEPATH", "COMSPEC")
 MAX_WARN_PATH_LEN = 240
@@ -3278,6 +3279,15 @@ def main() -> int:
                     errors,
                     "overrides.value_mismatch",
                     f"overrides {key}={overrides[key]} (expected {expected})",
+                )
+        keep_local_value = overrides.get("io.archive.keep_local")
+        if keep_local_value:
+            keep_local_norm = keep_local_value.strip().lower()
+            if keep_local_norm not in ARCHIVE_KEEP_LOCAL_ALLOWED:
+                _error(
+                    errors,
+                    "overrides.value_mismatch",
+                    "overrides io.archive.keep_local must be metadata or all",
                 )
         for key, value in overrides.items():
             _cmd_unsafe_issue(

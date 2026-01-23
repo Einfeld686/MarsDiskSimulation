@@ -30,7 +30,7 @@ if not defined TRACE_ECHO set "TRACE_ECHO=0"
 if not defined DEBUG_DOC_ALWAYS set "DEBUG_DOC_ALWAYS=0"
 
 if not defined PYTHON_ALLOW_LAUNCHER set "PYTHON_ALLOW_LAUNCHER=0"
-if not defined IO_ARCHIVE set "IO_ARCHIVE=off"
+if not defined IO_ARCHIVE set "IO_ARCHIVE=on"
 if "%DEBUG_ARG%"=="1" echo.[DEBUG] checkpoint 2: before PYTHON_EXE detection
 
 
@@ -1278,7 +1278,10 @@ if "%DEBUG%"=="1" %LOG_INFO% archive check verify_level ok
 
 
 
-if /i not "%ARCHIVE_KEEP_LOCAL%"=="metadata" goto :archive_fail_keep
+set "ARCHIVE_KEEP_LOCAL_OK=0"
+if /i "%ARCHIVE_KEEP_LOCAL%"=="metadata" set "ARCHIVE_KEEP_LOCAL_OK=1"
+if /i "%ARCHIVE_KEEP_LOCAL%"=="all" set "ARCHIVE_KEEP_LOCAL_OK=1"
+if "%ARCHIVE_KEEP_LOCAL_OK%"=="0" goto :archive_fail_keep
 
 
 
@@ -1716,7 +1719,7 @@ exit /b 1
 
 
 
-echo.[error] io.archive.keep_local=metadata is required in %OVERRIDES_PATH%
+echo.[error] io.archive.keep_local must be metadata or all in %OVERRIDES_PATH%
 
 
 
