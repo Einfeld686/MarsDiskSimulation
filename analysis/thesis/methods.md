@@ -143,7 +143,7 @@ t_{\rm blow}=\chi_{\rm blow}\Omega^{-1}
 
 ### 2.2 遮蔽
 
-遮蔽係数 $\Phi$ は視線方向光学的厚さ $\tau_{\rm los}$ の関数として与える\citep{Joseph1976_JAS33_2452,HansenTravis1974_SSR16_527}．基準計算では遮蔽補正を無効とし，$\Phi=1$ として扱う（3.4節）．有効不透明度は $\kappa_{\rm eff}=\Phi\kappa_{\rm surf}$ とし，診断量 $\Sigma_{\tau_{\rm eff}=1}$ を式\ref{eq:sigma_tau1_definition}で評価する．
+遮蔽係数 $\Phi$ は視線方向光学的厚さ $\tau_{\rm los}$ の関数として与える\citep{Joseph1976_JAS33_2452,HansenTravis1974_SSR16_527}．有効不透明度は $\kappa_{\rm eff}=\Phi\kappa_{\rm surf}$ とし，診断量 $\Sigma_{\tau_{\rm eff}=1}$ を式\ref{eq:sigma_tau1_definition}で評価する．
 
 \begin{equation}
 \label{eq:phi_definition}
@@ -334,7 +334,6 @@ A=\pi\left(r_{\rm out}^2-r_{\rm in}^2\right)
     $n_{\rm bins}$ & 40 & -- & サイズビン数 \\
     $\tau_0$ & 1.0 & -- & 初期 $\tau_{\rm los}$ 目標値 \\
     $\tau_{\rm stop}$ & 2.302585 & -- & 停止判定（$\ln 10$） \\
-    $\Phi$ & 1.0 & -- & 遮蔽無効（$\Phi=1$；3.4節） \\
     $e_0$ & 0.5 & -- & 離心率 \\
     $i_0$ & 0.05 & -- & 傾斜角 \\
     $H_{\rm factor}$ & 1.0 & -- & $H_k=H_{\rm factor} i r$ \\
@@ -389,32 +388,10 @@ $s_{\rm cut}$ は凝縮粒子を除外するためのカットオフ粒径であ
     6 & 3.9018e8 & 0.38 & 3.137652034251613 & 1.36 \\
     7 & 3.9018e8 & 0.38 & 3.4683282387928047 & 1.36 \\
     \hline
-  \end{tabular}
+\end{tabular}
 \end{table}
 
-### 3.4 基準計算（fiducial setup）
-
-本論文で示す標準計算は，表\ref{tab:method-param}–表\ref{tab:methods_qdstar_coeffs}の数値に加え，物理過程の有効/無効を表\ref{tab:method-fiducial-setup}の基準設定で固定する．
-
-\begin{table}[t]
-  \centering
-  \small
-  \setlength{\tabcolsep}{4pt}
-  \caption{基準計算（fiducial setup）の物理スイッチ}
-  \label{tab:method-fiducial-setup}
-  \begin{tabular}{p{0.34\textwidth} p{0.24\textwidth} p{0.34\textwidth}}
-    \hline
-    項目 & 基準設定 & 本文参照 \\
-    \hline
-    遮蔽補正 $\Phi(\tau_{\rm los})$ & 無効（$\Phi=1$） & 2.2節 \\
-    追加シンク（昇華・ガス抗力など） & 本論文のスイープでは無効 & 2.5節 \\
-    ブローアウト損失 & 有効 & 2.1節 \\
-    早期停止（$\tau_{\rm los}>\tau_{\rm stop}$） & 有効（$\tau_{\rm stop}=\ln 10$） & 1.2節, 4.2節 \\
-    \hline
-  \end{tabular}
-\end{table}
-
-以上の初期条件・パラメータと基準設定のもとで，次節では PSD を時間発展させる数値解法を述べる．
+以上により，初期条件・境界条件と基準パラメータを整理した．次節では，これらの設定のもとで PSD を時間発展させる数値解法を述べる．
 ## 4. 数値計算法
 
 <!--
@@ -486,20 +463,10 @@ M_{\rm loss}^{n+1}=M_{\rm loss}^{n}+\Delta t\left(\dot{M}_{\rm out}^{n}+\dot{M}_
     質量保存 & 相対質量誤差 $|\epsilon_{\rm mass}(t)|$ の最大値が $0.5\%$ 以下 \\
     時間刻み収束 & $\Delta t$ と $\Delta t/2$ の $M_{\rm loss}$ の相対差が $1\%$ 以下 \\
     \hline
-  \end{tabular}
+\end{tabular}
 \end{table}
 
-### 5.2 モデル上の仮定と限界
-
-本研究の結果は，以下の近似のもとで解釈する．
-
-遮蔽については，基準計算では自遮蔽補正を無効（$\Phi=1$）とし（2.2節，表\ref{tab:method-fiducial-setup}），火星放射が直接入射するとみなす．遮蔽を有効化すると放射圧（および昇華）の駆動が弱まり，損失は小さくなる方向に働く．
-
-追加シンクについては，本論文のスイープでは昇華・ガス抗力などを無効とし（表\ref{tab:method-fiducial-setup}），$M_{\rm loss}=M_{\rm out,cum}$ として報告する．追加シンクを有効化した場合は，損失経路の内訳と時間変化が変わりうる．
-
-最後に，本モデルは軸対称・局所平均を仮定し，垂直構造や非軸対称構造を平均化して面密度と PSD を局所量として扱う．
-
-以上の出力仕様と検証基準，および仮定の明示により，結果の再現性（入力→出力の対応）と数値的健全性（質量保存・解像度）を担保したうえで，本論文の結果・議論を構成する．
+以上の出力仕様と検証基準により，結果の再現性（入力→出力の対応）と数値的健全性（質量保存・解像度）を担保したうえで，本論文の結果・議論を構成する．
 ## 付録 A. 再現実行と保存情報
 
 本研究の再現性は，(i) 入力（設定ファイルとテーブル）を固定し，(ii) 実行時に採用された値と条件を保存し，(iii) 時系列・要約・検証ログを保存することで担保する．本付録では，論文として最低限必要な「保存すべき情報」をまとめる．
@@ -660,7 +627,7 @@ M_{\rm loss}^{n+1}=M_{\rm loss}^{n}+\Delta t\left(\dot{M}_{\rm out}^{n}+\dot{M}_
 実装(.py): marsdisk/run.py, marsdisk/physics/radiation.py, marsdisk/physics/shielding.py, marsdisk/physics/collisions_smol.py, marsdisk/physics/supply.py, marsdisk/physics/sinks.py, marsdisk/physics/tempdriver.py
 -->
 
-本モデルは，物性や放射輸送に関する外部テーブルを読み込み，本文中の式で用いる物理量（$T_M$, $\langle Q_{\rm pr}\rangle$, $\Phi$ など）を与える．論文ではテーブルの数値そのものを列挙せず，役割と参照先を表\ref{tab:app_external_inputs}にまとめる．基準計算では遮蔽補正を無効（$\Phi=1$）とする（表\ref{tab:method-fiducial-setup}）．実行時に採用したテーブルの出典と補間範囲（有効温度域など）は実行ログに保存し，再解析時の基準とする（付録 A）．
+本モデルは，物性や放射輸送に関する外部テーブルを読み込み，本文中の式で用いる物理量（$T_M$, $\langle Q_{\rm pr}\rangle$, $\Phi$ など）を与える．論文ではテーブルの数値そのものを列挙せず，役割と参照先を表\ref{tab:app_external_inputs}にまとめる．実行時に採用したテーブルの出典と補間範囲（有効温度域など）は実行ログに保存し，再解析時の基準とする（付録 A）．
 
 \begin{table}[t]
   \centering
@@ -678,7 +645,7 @@ M_{\rm loss}^{n+1}=M_{\rm loss}^{n}+\Delta t\left(\dot{M}_{\rm out}^{n}+\dot{M}_
     Planck 平均 $\langle Q_{\rm pr}\rangle$ &
     放射圧効率として β と $s_{\rm blow}$ を決める（灰色体近似は例外） &
     2.1節 \\
-    遮蔽係数 $\Phi(\tau_{\rm los})$（テーブル補間；遮蔽無効時は $\Phi=1$） &
+    遮蔽係数 $\Phi(\tau_{\rm los})$（テーブル補間） &
     有効不透明度 $\kappa_{\rm eff}$ を通じて遮蔽に入る &
     2.2節 \\
     \hline
