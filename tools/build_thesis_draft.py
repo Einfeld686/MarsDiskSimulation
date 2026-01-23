@@ -21,7 +21,9 @@ TABLE_SEP_RE = re.compile(r"^:?-{3,}:?$")
 INLINE_CODE_RE = re.compile(r"`([^`]+)`")
 INLINE_MATH_PAREN_RE = re.compile(r"\\\((.+?)\\\)")
 INLINE_MATH_DOLLAR_RE = re.compile(r"(?<!\\)\$([^$]+?)\$")
-LATEX_CMD_RE = re.compile(r"\\(cite|ref|eqref|label)\{[^}]+\}")
+# Protect common LaTeX commands so they don't get escaped as plain text.
+# (Natbib cite commands appear in thesis markdown, e.g. \citep{...}.)
+LATEX_CMD_RE = re.compile(r"\\(cite[a-zA-Z]*\*?|ref|eqref|label)\{[^}]+\}")
 CITE_BRACKET_RE = re.compile(r"\[@([^\]]+)\]")
 
 SUBSCRIPT_MAP = {
