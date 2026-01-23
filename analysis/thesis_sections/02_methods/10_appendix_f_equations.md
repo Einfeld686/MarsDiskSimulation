@@ -63,7 +63,7 @@ s_{\rm blow} = \frac{3\,\sigma_{\rm SB}\,T_M^{4}\,R_{\rm Mars}^{2}\,\langle Q_{\
 \begin{equation}
 \tag{E.016}
 \label{eq:E016}
-\Sigma_{\tau_{\rm eff}=1} =
+\Sigma_{\tau=1} =
 \begin{cases}
  \kappa_{\rm eff}^{-1}, & \kappa_{\rm eff} > 0,\\
  \infty, & \kappa_{\rm eff} \le 0.
@@ -157,7 +157,7 @@ Q_{D}^{*}(s,\rho,v) = Q_{\rm str}(v) + Q_{\rm grav}(v)\,S(v)
 \begin{equation}
 \tag{E.027a}
 \label{eq:E027a}
-R_{\rm base} = \frac{\mu\,\Sigma_{\tau_{\rm eff}=1}}{\epsilon_{\rm mix}\,t_{\rm blow}}
+R_{\rm base} = \frac{\mu\,\Sigma_{\tau=1}}{\epsilon_{\rm mix}\,t_{\rm blow}}
 \end{equation}
 
 ---

@@ -22,7 +22,9 @@
 
 ### 1.2 研究対象と基本仮定
 
-本研究はガス成分が支配的でない衝突起源ダスト円盤を対象とする．モデルは軸対称で，方位方向に平均化した面密度・PSD を状態量として扱う．ロッシュ限界内側の環状領域 $[r_{\rm in},r_{\rm out}]$ を半径方向に $N_r$ 個のセルへ分割し，各セルで同一の時間グリッドにより粒径分布（PSD）を時間発展させる．停止条件として $\tau_{\rm eff}>\tau_{\rm stop}$ を採用し，到達したセルは停止状態として扱う（4.2節）．
+本研究はガス成分が支配的でない衝突起源ダスト円盤を対象とし，固体粒子の放射圧・供給・衝突カスケードを主要過程として時間発展を計算する．
+
+モデルは軸対称で，方位方向に平均化した面密度・PSD を状態量として扱う．ロッシュ限界内側の環状領域 $[r_{\rm in},r_{\rm out}]$ を半径方向に $N_r$ 個のセルへ分割し，各セルで同一の時間グリッドにより粒径分布（PSD）を時間発展させる（セル間輸送は基準ケースでは含めない）．停止条件として $\tau_{\rm eff}>\tau_{\rm stop}$ を採用し，到達したセルは停止状態として扱う（4.2節）．
 
 ### 1.3 状態変数（粒径・半径）と記号定義
 
@@ -47,18 +49,18 @@ m_k=\frac{4\pi}{3}\rho s_k^3
 n_k(t)=\frac{m_k N_k(t)}{\Sigma_{\rm surf}(t)}
 \end{equation}
 
-PSD 下限は有効最小粒径 $s_{\min,\rm eff}$ により与え，設定下限 $s_{\min,\rm cfg}$ とブローアウト境界 $s_{\rm blow,eff}$ の最大値で定める．$s_{\min,\rm eff}$ は供給注入とサイズ境界条件の下限として用い，時刻ごとに更新する．この下限クリップにより，$s_{\rm blow}$ 未満の粒子は滞在時間 $t_{\rm blow}$ の一次シンクで速やかに失われ，PSD の有効範囲が時間とともに移動することを表現する．本研究では $s_{\rm blow,eff}$ を式\ref{eq:s_blow_definition}で求めた $s_{\rm blow}$ と同一視し（以下では区別しない）．これは，遮蔽 $\Phi$ を放射圧そのものの減衰としては用いず，照射が成立するかどうか（$\tau_{\rm eff}$ による適用範囲判定）と供給規格化に反映するというモデル化に対応する．したがって照射が成立する限り，表層粒子は火星放射を直接受けると仮定し，ブローアウト境界（$\beta=0.5$）に基づく下限クリップの考え方は古典的整理に従う\citep{Burns1979_Icarus40_1,StrubbeChiang2006_ApJ648_652}．
+ここで $\rho$ は粒子密度，$s_k$ はビン $k$ の代表粒径である．また $N_k$ は局所セルにおける数面密度であり，必要に応じて $N_{k,\ell}$ と書き分ける．$n_k$ は表層面密度 $\Sigma_{\rm surf}$ に対するビン $k$ の質量分率である．
+
+PSD 下限は有効最小粒径 $s_{\min,\rm eff}$ により与え，設定下限 $s_{\min,\rm cfg}$ とブローアウト境界 $s_{\rm blow,eff}$ の最大値で定める．$s_{\min,\rm eff}$ は供給注入とサイズ境界条件の下限として用い，時刻ごとに更新する．この下限クリップにより，$s_{\rm blow}$ 未満の粒子は滞在時間 $t_{\rm blow}$ の一次シンクで速やかに失われ，PSD の有効範囲が時間とともに移動することを表現する．
+
+本研究では $s_{\rm blow,eff}$ を式\ref{eq:s_blow_definition}で求めた $s_{\rm blow}$ と同一視し（以下では区別しない）．遮蔽 $\Phi$ はブローアウト境界の計算には含めず，火星放射が表層へ到達するかどうか（自己遮蔽の強さ）の評価にのみ用いる（2.2節，4.2節）．
 
 \begin{equation}
 \label{eq:smin_eff_definition}
 s_{\min,\rm eff}=\max\!\left(s_{\min,\rm cfg},\,s_{\rm blow,eff}\right)
 \end{equation}
 
-本研究では，火星放射が表層へ到達するかどうかを評価するため，火星方向の光学的厚さ $\tau_{\rm los}$ を導入する．$\tau_{\rm los}$ は本来，火星から半径 $r$ の円盤表層へ向かう光線に沿った積分 $\tau=\int \kappa\rho\,ds$ で定義されるが，3次元構造（スケールハイト $H$ など）と半径方向の自己遮蔽を解かないため，本研究では局所表層面密度 $\Sigma_{\rm surf}$ と表層不透明度 $\kappa_{\rm surf}$ から次の近似で与える．すなわち鉛直光学的厚さ $\tau_\perp\equiv\kappa_{\rm surf}\Sigma_{\rm surf}$ を定義し，火星方向の経路長が鉛直より長い効果を幾何因子 $f_{\rm los}\ge1$ として
-\[
-\tau_{\rm los}=f_{\rm los}\tau_\perp
-\]
-と近似する．表層不透明度 $\kappa_{\rm surf}$ は PSD の幾何学断面（$\pi s^2$）から評価する表層の「断面積/質量」の近似であり，放射圧効率の波長依存は $\langle Q_{\rm pr}\rangle$ を通じて別途 $\beta$ に反映する（2.1節）．遮蔽は $\Phi(\tau_{\rm los})$ により $\kappa_{\rm eff}$ へ写像して扱い（2.2節），停止判定に用いる有効光学的厚さ $\tau_{\rm eff}$ を定義する（4.2節）．参照面密度 $\Sigma_{\tau_{\rm los}=1}$ は診断量として記録する\citep{Krivov2006_AA455_509,Wyatt2008}．
+火星方向の光学的厚さ $\tau_{\rm los}$ は，本来は視線方向に沿った光学的深さ $\tau=\int \kappa\rho\,ds$ で定義されるが，本研究では表層を面密度 $\Sigma_{\rm surf}$ と不透明度 $\kappa_{\rm surf}$ で代表し，幾何因子 $f_{\rm los}$ を用いて式\ref{eq:tau_los_definition}で近似する．
 
 \begin{equation}
 \label{eq:kappa_surf_definition}
@@ -76,9 +78,7 @@ s_{\min,\rm eff}=\max\!\left(s_{\min,\rm cfg},\,s_{\rm blow,eff}\right)
 \Sigma_{\tau_{\rm los}=1}=\left(f_{\rm los}\kappa_{\rm surf}\right)^{-1}
 \end{equation}
 
-式\ref{eq:sigma_tau_los1_definition} は $\tau_{\rm los}=1$ を満たす参照面密度の定義である\citep{Krivov2006_AA455_509,Wyatt2008}．
-
-以上により，半径セルごとの表層面密度と PSD を状態量として定義した．次節では，これらを時間発展させる物理過程（放射圧・遮蔽・供給・衝突カスケード・追加シンク）を定式化する．
+式\ref{eq:sigma_tau_los1_definition} は $\tau_{\rm los}=1$ を満たす参照面密度の定義である．
 
 ### 1.4 計算の主経路（更新フロー）
 

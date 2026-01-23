@@ -15,9 +15,13 @@
 M_{\rm loss}^{n+1}=M_{\rm loss}^{n}+\Delta t\left(\dot{M}_{\rm out}^{n}+\dot{M}_{\rm sinks}^{n}\right)
 \end{equation}
 
-検証は質量保存と時間刻み収束の 2 項目で行う．合格基準は表\ref{tab:validation_criteria}に示し，本文で示す結果はすべて基準を満たした計算に限定する．質量保存は式\ref{eq:mass_budget_definition}の $\epsilon_{\rm mass}$ が $0.5\%$ 以下であることを要求し，その時系列を `checks/mass_budget.csv` として保存して追跡可能にする．
+検証は質量保存，時間刻み収束，および粒径ビン収束（PSD 解像度）の 3 項目で行う．合格基準は表\ref{tab:validation_criteria}に示し，本文で示す結果はすべて基準を満たした計算に限定する．
 
-時間刻み依存性は，$\Delta t$ と $\Delta t/2$ の計算で主要量（$M_{\rm loss}$ など）が一致することにより確認する．収束判定と PSD 解像度の比較は同一基準で行う．
+質量保存は式\ref{eq:mass_budget_definition}で定義する相対質量誤差 $\epsilon_{\rm mass}$ の最大値が $0.5\%$ 以下であることを要求する．
+
+時間刻み収束は，$\Delta t$ と $\Delta t/2$ の 2 計算を比較し，代表量として累積損失 $M_{\rm loss}$ の相対差が $1\%$ 以下となることにより確認する．
+
+粒径ビン収束（PSD 解像度）は，基準の粒径ビン数とその 2 倍の粒径ビン数で計算した結果を比較し，同じ基準で $M_{\rm loss}$ の相対差が $1\%$ 以下となることを要求する．
 
 \begin{table}[t]
   \centering
@@ -31,8 +35,9 @@ M_{\rm loss}^{n+1}=M_{\rm loss}^{n}+\Delta t\left(\dot{M}_{\rm out}^{n}+\dot{M}_
     \hline
     質量保存 & 相対質量誤差 $|\epsilon_{\rm mass}(t)|$ の最大値が $0.5\%$ 以下 \\
     時間刻み収束 & $\Delta t$ と $\Delta t/2$ の $M_{\rm loss}$ の相対差が $1\%$ 以下 \\
+    粒径ビン収束（PSD 解像度） & 基準の粒径ビン数とその 2 倍の粒径ビン数の $M_{\rm loss}$ の相対差が $1\%$ 以下 \\
     \hline
 \end{tabular}
 \end{table}
 
-以上の出力仕様と検証基準により，結果の再現性（入力→出力の対応）と数値的健全性（質量保存・解像度）を担保したうえで，本論文の結果・議論を構成する．
+以上の出力仕様と検証基準により，結果の再現性（入力→出力の対応）と数値的健全性（質量保存・時間刻み・粒径ビン（PSD 解像度））を担保したうえで，本論文の結果・議論を構成する．
