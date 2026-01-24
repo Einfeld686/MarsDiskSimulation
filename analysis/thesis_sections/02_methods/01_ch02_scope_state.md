@@ -4,8 +4,7 @@
 実装(.py): marsdisk/run_zero_d.py, marsdisk/run_one_d.py, marsdisk/grid.py, marsdisk/io/tables.py, marsdisk/physics/psd.py, marsdisk/physics/sizes.py, marsdisk/physics/radiation.py, marsdisk/physics/shielding.py, marsdisk/physics/initfields.py
 -->
 
-本節では，前節で定義した状態変数 $N_k$ および $\Sigma_{\rm surf}$ の時間発展を記述する支配方程式を与える．時間発展には，放射圧による除去（定式化は \citep{Burns1979_Icarus40_1} を基礎とする），遮蔽，表層への供給，衝突カスケード，およびその他の損失過程をまとめた追加シンク項を含める．以下の式は，粒径をビン $k$ に離散化した枠組みで評価される離散量として記述する．
-
+時間発展には，放射圧による除去（定式化は \citep{Burns1979_Icarus40_1} を基礎とする），遮蔽，表層への供給，衝突カスケード，およびその他の損失過程をまとめた追加シンク項を含める．以下では，粒径をビン $k$ に離散化した枠組みで評価される離散量とする．
 軌道力学量は，各半径セルの中心半径 $r$（火星中心からの距離）で評価する．火星質量 $M_{\rm Mars}$ による点質量重力場を仮定し，粒子の軌道運動をケプラー運動で近似すると，ケプラー速度 $v_K(r)$，ケプラー角速度 $\Omega(r)$，および公転周期 $T_{\rm orb}(r)$ は式\ref{eq:vK_definition}–\ref{eq:torb_definition}で定義される．
 
 \begin{equation}
@@ -27,7 +26,7 @@ T_{\rm orb}(r)=\frac{2\pi}{\Omega(r)}
 
 ### 2.1 放射圧とブローアウト
 
-放射圧と重力の比 $\beta(s)$ は式\ref{eq:beta_definition}で定義し，Planck 平均の $\langle Q_{\rm pr}\rangle$ は外部テーブルから与える（付録 C, 表\ref{tab:app_external_inputs}）\citep{Burns1979_Icarus40_1,StrubbeChiang2006_ApJ648_652}．本研究では $\langle Q_{\rm pr}\rangle(s,T_M)$ を $(s,T_M)$ 格子上の双一次補間（$s$ と $T_M$ で線形補間）で評価し，テーブル範囲外では外挿を避けて端値を代表値として用いる．$\beta\ge0.5$ を非束縛条件とし，ブローアウト境界粒径 $s_{\rm blow}$ は $\beta(s_{\rm blow})=0.5$ の解として式\ref{eq:s_blow_definition}で与える\citep{Burns1979_Icarus40_1,StrubbeChiang2006_ApJ648_652}．$\langle Q_{\rm pr}\rangle(s,T_M)$ を粒径依存のテーブル補間で与える場合，式\ref{eq:s_blow_definition}は $s_{\rm blow}$ に関する陰関数であるため，本研究では固定点反復により数値的に解く（$\langle Q_{\rm pr}\rangle$ を代表値で固定する場合は閉形式に帰着する）．ブローアウト滞在時間は式\ref{eq:t_blow_definition}とし\citep{StrubbeChiang2006_ApJ648_652,Wyatt2008}，$\chi_{\rm blow}$ は入力として与える（または \texttt{auto} により $\beta$ と $\langle Q_{\rm pr}\rangle$ から経験的に推定する）．
+放射圧と重力の比 $\beta(s)$ は式\ref{eq:beta_definition}で定義し，Planck 平均の $\langle Q_{\rm pr}\rangle$ は外部テーブルから与える（付録 C, 表\ref{tab:app_external_inputs}）\citep{Burns1979_Icarus40_1,StrubbeChiang2006_ApJ648_652}．本研究では $\langle Q_{\rm pr}\rangle(s,T_M)$ を $(s,T_M)$ 格子上の双一次補間（$s$ と $T_M$ で線形補間）で評価し，テーブル範囲外では外挿を避けて端値を代表値として用いる．$\beta\ge0.5$ を非束縛条件とし，ブローアウト境界粒径 $s_{\rm blow}$ は $\beta(s_{\rm blow})=0.5$ の解として式\ref{eq:s_blow_definition}で与える\citep{Burns1979_Icarus40_1,StrubbeChiang2006_ApJ648_652}．$\langle Q_{\rm pr}\rangle(s,T_M)$ を粒径依存のテーブル補間で与える場合，式\ref{eq:s_blow_definition}は $s_{\rm blow}$ に関する陰関数であるため，本研究では固定点反復により数値的に解く（$\langle Q_{\rm pr}\rangle$ を代表値で固定する場合は閉形式に帰着する）．ブローアウト滞在時間は式\ref{eq:t_blow_definition}とし\citep{StrubbeChiang2006_ApJ648_652,Wyatt2008}，$\chi_{\rm blow}$ は入力として与える．
 
 \begin{equation}
 \label{eq:beta_definition}
@@ -44,7 +43,7 @@ s_{\rm blow} = \frac{3\,\sigma_{\rm SB}\,T_M^{4}\,R_{\rm Mars}^{2}\,\langle Q_{\
 t_{\rm blow}=\chi_{\rm blow}\Omega^{-1}
 \end{equation}
 
-$\chi_{\rm blow}$ はブローアウト滞在時間の係数であり，非束縛となった粒子が表層から除去されるまでの有効滞在時間を $\Omega^{-1}$ で規格化した量と解釈する．ブローアウトは公転位相や放出条件に依存し得るため，本研究では $\chi_{\rm blow}$ を order unity の不確かさを持つ入力パラメータとして扱い，極端な滞在時間を避けるため $0.5$–$2$ の範囲に制限する．\texttt{auto} を選ぶ場合は，$\beta$ と $\langle Q_{\rm pr}\rangle$ を $s=s_{\min,\rm eff}$ で評価した値から次の経験式で推定する（${\rm clip}_{[a,b]}(x)\equiv\min(\max(x,a),b)$）．
+$\chi_{\rm blow}$ はブローアウト滞在時間の係数であり，非束縛となった粒子が表層から除去されるまでの有効滞在時間を $\Omega^{-1}$ で規格化した量であると仮定する．ブローアウトは公転位相や放出条件に依存し得るため，本研究では $\chi_{\rm blow}$ を order unity の不確かさを持つ入力パラメータとして扱い，極端な滞在時間を避けるため $0.5$–$2$ の範囲に制限する．\texttt{auto} を選ぶ場合は，$\beta$ と $\langle Q_{\rm pr}\rangle$ を $s=s_{\min,\rm eff}$ で評価した値から次の経験式で推定する（${\rm clip}_{[a,b]}(x)\equiv\min(\max(x,a),b)$）．
 
 \begin{equation}
 \label{eq:chi_blow_auto_definition}
@@ -55,7 +54,7 @@ $\chi_{\rm blow}$ はブローアウト滞在時間の係数であり，非束�
 \right]
 \end{equation}
 
-表層流出は PSD に作用する一次シンクとして扱い，ブローアウト対象ビンでは $S_{{\rm blow},k}=1/t_{\rm blow}$ とする．ブローアウト対象は $\beta\ge0.5$ に対応する $s_k\le s_{\rm blow}$ のビンとする．表層からの面密度流出（局所フラックス）は式\ref{eq:surface_outflux}で与える\citep{StrubbeChiang2006_ApJ648_652,Wyatt2008}．
+表層からの質量損失は PSD に作用する一次シンクとして扱い，ブローアウト対象ビンでは $S_{{\rm blow},k}=1/t_{\rm blow}$ とする．ブローアウト対象は $\beta\ge0.5$ に対応する $s_k\le s_{\rm blow}$ のビンとする．表層からの面密度流出は式\ref{eq:surface_outflux}で与える\citep{StrubbeChiang2006_ApJ648_652,Wyatt2008}．
 
 \begin{equation}
 \label{eq:surface_outflux}
@@ -99,7 +98,6 @@ $\chi_{\rm blow}$ はブローアウト滞在時間の係数であり，非束�
 \end{equation}
 
 ここで $\Sigma_{\rm surf}$ は表層面密度（単位 $\mathrm{kg\,m^{-2}}$），$f_{\rm los}$ は視線方向に沿った幾何学補正因子である．式\ref{eq:tau_eff_definition} 右辺の等号は，$\tau_{\rm los}\equiv f_{\rm los}\kappa_{\rm surf}\Sigma_{\rm surf}$ を用いた関係式である．
-
 $\kappa_{\rm eff}$ に基づき，光学的厚さが 1 となる参照面密度 $\Sigma_{\tau=1}$ を式\ref{eq:sigma_tau1_definition}で与える．$\kappa_{\rm eff}>0$ のとき $\Sigma_{\tau=1}$ は「$\tau\simeq1$ に対応する表層面密度」の目安であり，$\kappa_{\rm eff}\le0$ の場合は光学的に厚くならない極限として $\Sigma_{\tau=1}=\infty$ と置く．
 
 \begin{equation}
@@ -117,18 +115,18 @@ $\kappa_{\rm eff}$ と $\tau_{\rm eff}$ は，(i) 初期条件における光学
 
 表層への供給率（面密度注入率）を $\dot{\Sigma}_{\rm in}(t,r)$ と定義する．ここで $r$ は半径セルの中心半径であり，$\dot{\Sigma}_{\rm in}$ は表層（$\Sigma_{\rm surf}$）へ単位面積・単位時間あたりに注入される質量を表す．供給過程は，表層と下層（あるいは外部リザーバ）との混合効率を表す無次元係数 $\epsilon_{\rm mix}$ と，基準供給率 $R_{\rm base}(t,r)$ を用いて式\ref{eq:prod_rate_definition}で与える．衝突カスケードのサイズ分布進化モデルでは，質量収支式に外部供給（source）を明示的に導入する定式化が用いられており，本節の $F_k$ はその意味でのソース項に相当する（例：\citealp{Wyatt2008,WyattClarkeBooth2011_CeMDA111_1}）．
 
-本研究の基準ケースでは，$R_{\rm base}$ を「参照面密度の一定割合を 1 軌道あたり供給する」定常供給として式\ref{eq:R_base_definition}で定義する．このとき $R_{\rm base}$ 自体は初期時刻 $t_0$ の参照面密度 $\Sigma_{\tau_{\rm ref}}(t_0,r)$ と公転周期 $T_{\rm orb}(r)$ のみに依存し，時間 $t$ には陽に依存しない（ただし一般形として $R_{\rm base}(t,r)$ と記す）．
+基準ケースでは，$R_{\rm base}$ を「参照面密度の一定割合を 1 軌道あたり供給する」定常供給として式\ref{eq:R_base_definition}で定義する．このとき $R_{\rm base}$ 自体は初期時刻 $t_0$ の参照面密度 $\Sigma_{\tau_{\rm ref}}(t_0,r)$ と公転周期 $T_{\rm orb}(r)$ のみに依存し，時間 $t$ には陽に依存しない．
 
 \begin{equation}
 \label{eq:R_base_definition}
-R_{\rm base}(t,r)=
+R_{\rm base}(r)=
 \frac{\mu_{\rm sup}\,f_{\rm orb}}{\epsilon_{\rm mix}}
 \frac{\Sigma_{\tau_{\rm ref}}(t_0,r)}{T_{\rm orb}(r)},
 \qquad
 \Sigma_{\tau_{\rm ref}}(t_0,r)=\frac{\tau_{\rm ref}}{f_{\rm los}\kappa_{\rm eff}(t_0,\tau_{\rm ref})}
 \end{equation}
 
-ここで $\mu_{\rm sup}$ は供給強度を定める無次元パラメータであり，$f_{\rm orb}$ は $\mu_{\rm sup}=1$ のときに「1 軌道あたりに供給される表層面密度」が参照面密度 $\Sigma_{\tau_{\rm ref}}$ に対して占める比率（無次元）である．$\tau_{\rm ref}$ は参照有効光学的厚さ（既定値 1）であり，$\Sigma_{\tau_{\rm ref}}$ は初期 PSD から評価した $\kappa_{\rm eff}$ に基づく参照面密度である．本研究では初期光学的厚さ $\tau_0$ を掃引して初期状態を変えるため，$\Sigma_{\tau_{\rm ref}}(t_0,r)$ を用いて供給率を規格化し，「同じ $\mu_{\rm sup}$ が同程度の供給量」を指すように定義する．なお，式\ref{eq:R_base_definition}に $\epsilon_{\rm mix}$ を含めたのは，式\ref{eq:prod_rate_definition}と合わせて $\dot{\Sigma}_{\rm in}$ が $\mu_{\rm sup}$ と $f_{\rm orb}$ により一意に決まり，$\epsilon_{\rm mix}$ の値に依存しない（$\dot{\Sigma}_{\rm in}=\mu_{\rm sup}f_{\rm orb}\Sigma_{\tau_{\rm ref}}/T_{\rm orb}$ に帰着する）ようにするためである．
+ここで $\mu_{\rm sup}$ は供給強度を定める無次元パラメータであり，$f_{\rm orb}$ は $\mu_{\rm sup}=1$ のときに 1 軌道あたりに供給される表層面密度が参照面密度 $\Sigma_{\tau_{\rm ref}}$ に対して占める比率（無次元）である．$\tau_{\rm ref}$ は参照有効光学的厚さ（既定値 1）であり，$\Sigma_{\tau_{\rm ref}}$ は初期 PSD から評価した $\kappa_{\rm eff}$ に基づく参照面密度である．本研究では初期光学的厚さ $\tau_0$ を掃引して初期状態を変えるため，$\Sigma_{\tau_{\rm ref}}(t_0,r)$ を用いて供給率を規格化し，「同じ $\mu_{\rm sup}$ が同程度の供給量」を指すように定義する．なお，式\ref{eq:R_base_definition}に $\epsilon_{\rm mix}$ を含めたのは，式\ref{eq:prod_rate_definition}と合わせて $\dot{\Sigma}_{\rm in}$ が $\mu_{\rm sup}$ と $f_{\rm orb}$ により一意に決まり，$\epsilon_{\rm mix}$ の値に依存しない（$\dot{\Sigma}_{\rm in}=\mu_{\rm sup}f_{\rm orb}\Sigma_{\tau_{\rm ref}}/T_{\rm orb}$ に帰着する）ようにするためである．
 
 供給率は式\ref{eq:supply_injection_definition}により PSD のソース項 $F_k$ として粒径ビン $k$ に注入する．ここで $F_k$ は「単位面積あたりの粒子数密度 $N_k$ の増加率」であり，質量保存条件 $\sum_k m_kF_k=\dot{\Sigma}_{\rm in}$ を満たすよう，無次元重み $w_k$ を $\sum_kw_k=1$ となるように正規化する．
 
