@@ -14,7 +14,7 @@ from typing import Any, Dict, List, NamedTuple, Optional
 import numpy as np
 import pandas as pd
 
-from . import config_utils, constants, grid
+from . import config_utils, constants, grid, provenance as provenance_mod
 from .errors import ConfigurationError, NumericalError, PhysicsError
 from .io import tables, writer, archive as archive_mod
 from .io.streaming import StreamingState
@@ -2982,6 +2982,15 @@ def run_one_d(
     run_config_snapshot["numba"] = numba_status
     if auto_tune_info is not None:
         run_config_snapshot["auto_tune"] = auto_tune_info
+    run_config_snapshot.update(
+        provenance_mod.gather_runtime_provenance(
+            external_files=[
+                qpr_table_path_resolved,
+                sublimation_provenance.get("psat_table_path") if sublimation_provenance else None,
+                init_ei_snapshot.get("e_profile_table_path") if init_ei_snapshot else None,
+            ],
+        )
+    )
     writer.write_run_config(run_config_snapshot, run_config_path)
 
     if archive_enabled and archive_trigger == "post_merge":

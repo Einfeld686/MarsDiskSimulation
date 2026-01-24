@@ -24,7 +24,7 @@ import os
 
 import pandas as pd
 import numpy as np
-from . import config_utils, grid
+from . import config_utils, grid, provenance as provenance_mod
 from .config_utils import (
     normalise_physics_mode as _normalise_physics_mode,
     merge_physics_section as _merge_physics_section,
@@ -5879,6 +5879,16 @@ def run_zero_d(
             ),
             "allow_liquid_hkl": allow_liquid_hkl,
         }
+        run_config.update(
+            provenance_mod.gather_runtime_provenance(
+                external_files=[
+                    qpr_table_path_resolved,
+                    phi_table_path_resolved,
+                    psat_table_path,
+                    (temp_autogen_info.get("path") if temp_autogen_info is not None else None),
+                ],
+            )
+        )
         writer.write_run_config(run_config, outdir / "run_config.json")
 
         # Lightweight run_card with energy bookkeeping rollup
