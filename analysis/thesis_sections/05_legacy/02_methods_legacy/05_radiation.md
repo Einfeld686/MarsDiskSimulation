@@ -1,12 +1,12 @@
 ### 4.2 熱・放射・表層損失
 
-放射圧と昇華は粒子の軽さ指標 β と表層質量の時間変化を通じて短期損失を支配する．放射圧の整理は古典的な定式化 [@Burns1979_Icarus40_1] に基づき，光学特性は Mie 理論の整理 [@BohrenHuffman1983_Wiley] を踏まえて $\langle Q_{\rm pr}\rangle$ テーブルを用いる．遮蔽の参照枠は gas-rich 表層流出の議論 [@TakeuchiLin2003_ApJ593_524] に置きつつ，gas-poor 条件を既定とする．
+放射圧と昇華は粒子の軽さ指標 β と表層質量の時間変化を通じて短期損失を支配する．放射圧の整理は古典的な定式化 \citep{Burns1979_Icarus40_1} に基づき，光学特性は Mie 理論の整理 \citep{BohrenHuffman1983_Wiley} を踏まえて $\langle Q_{\rm pr}\rangle$ テーブルを用いる．遮蔽の参照枠は gas-rich 表層流出の議論 \citep{TakeuchiLin2003_ApJ593_524} に置きつつ，gas-poor 条件を既定とする．
 
 #### 4.2.1 温度ドライバ
 
 火星表面温度の時間変化を `constant` / `table` / `autogen` で選択する．各モードの概要は表\ref{tab:temp_driver_modes}に示す．
 
-- `autogen` は解析的冷却（slab）や Hyodo 型などの内蔵ドライバを選択し，温度停止条件と連動する（[@Hyodo2018_ApJ860_150]）．
+- `autogen` は解析的冷却（slab）や Hyodo 型などの内蔵ドライバを選択し，温度停止条件と連動する\citep{Hyodo2018_ApJ860_150}．
 
 \begin{table}[t]
   \centering
@@ -66,7 +66,7 @@ s_{\mathrm{blow}} = \frac{3\,\sigma_{\mathrm{SB}}\,T_{\mathrm{M}}^{4}\,R_{\mathr
 
 #### 4.2.3 遮蔽 (Shielding)
 
-$\Phi(\tau,\omega_0,g)$ テーブル補間で有効不透明度を評価し，$\Sigma_{\tau=1}=1/\kappa_{\rm eff}$ を診断として記録する．表層が光学的に厚くなり $\tau_{\rm los}>\tau_{\rm stop}$ となった場合は停止し，クリップは行わない．Φ テーブルの基礎近似は二流・δ-Eddington 系の解析解に基づく（[@Joseph1976_JAS33_2452; @HansenTravis1974_SSR16_527; @CogleyBergstrom1979_JQSRT21_265]）．
+$\Phi(\tau,\omega_0,g)$ テーブル補間で有効不透明度を評価し，$\Sigma_{\tau=1}=1/\kappa_{\rm eff}$ を診断として記録する．表層が光学的に厚くなり $\tau_{\rm los}>\tau_{\rm stop}$ となった場合は停止し，クリップは行わない．Φ テーブルの基礎近似は二流・δ-Eddington 系の解析解に基づく\citep{Joseph1976_JAS33_2452,HansenTravis1974_SSR16_527,CogleyBergstrom1979_JQSRT21_265}．
 
 遮蔽による有効不透明度と光学的厚さ 1 の表層面密度は式\ref{eq:kappa_eff_definition}と式\ref{eq:sigma_tau1_definition}で与える（再掲: E.015, E.016）．
 
@@ -100,14 +100,14 @@ SiO₂ 冷却マップまたは閾値から相（phase）を `solid`/`vapor` に
 
 - 判定には火星温度と遮蔽後の光学的厚さを用い，`phase_state` と `sink_selected` を診断に記録する．
 
-固体相では放射圧ブローアウトが主要な損失経路となり，蒸気相では水素流体逃亡（hydrodynamic escape）スケーリングを用いた損失に切り替わる（[@Hyodo2018_ApJ860_150; @Ronnet2016_ApJ828_109]）．蒸気相では `hydro_escape_timescale` から $t_{\rm sink}$ を評価し，`sink_selected="hydro_escape"` として記録する．相判定は表層 ODE とシンク選択のゲートとして機能し，同一ステップ内でブローアウトと流体力学的損失が併用されることはない．
+固体相では放射圧ブローアウトが主要な損失経路となり，蒸気相では水素流体逃亡（hydrodynamic escape）スケーリングを用いた損失に切り替わる\citep{Hyodo2018_ApJ860_150,Ronnet2016_ApJ828_109}．蒸気相では `hydro_escape_timescale` から $t_{\rm sink}$ を評価し，`sink_selected="hydro_escape"` として記録する．相判定は表層 ODE とシンク選択のゲートとして機能し，同一ステップ内でブローアウトと流体力学的損失が併用されることはない．
 
 > **フロー図**: analysis/physics_flow.md §4 "相判定フロー"  
 > **設定**: analysis/config_guide.md §3.8 "Phase"
 
 #### 4.2.5 昇華 (Sublimation) と追加シンク
 
-HKL（Hertz–Knudsen–Langmuir）フラックス (E.018) と飽和蒸気圧 (E.036) で質量損失を評価する（[@Markkanen2020_AA643_A16]）．Clausius 係数は [@Kubaschewski1974_Book] を基準とし，液相枝は [@FegleySchaefer2012_arXiv; @VisscherFegley2013_ApJL767_L12] を採用する．SiO 既定パラメータと支配的蒸気種の整理は [@Melosh2007_MPS42_2079] を参照し，$P_{\mathrm{gas}}$ の扱いは [@Ronnet2016_ApJ828_109] と同様に自由パラメータとして扱う．昇華フラックスの適用範囲は [@Pignatale2018_ApJ853_118] を参照する．
+HKL（Hertz–Knudsen–Langmuir）フラックス (E.018) と飽和蒸気圧 (E.036) で質量損失を評価する\citep{Markkanen2020_AA643_A16}．Clausius 係数は \citep{Kubaschewski1974_Book} を基準とし，液相枝は \citep{FegleySchaefer2012_arXiv,VisscherFegley2013_ApJL767_L12} を採用する．SiO 既定パラメータと支配的蒸気種の整理は \citep{Melosh2007_MPS42_2079} を参照し，$P_{\mathrm{gas}}$ の扱いは \citep{Ronnet2016_ApJ828_109} と同様に自由パラメータとして扱う．昇華フラックスの適用範囲は \citep{Pignatale2018_ApJ853_118} を参照する．
 
 HKL フラックスは式\ref{eq:hkl_flux}で与える（再掲: E.018）．飽和蒸気圧は式\ref{eq:psat_definition}で定義する（再掲: E.036）．
 

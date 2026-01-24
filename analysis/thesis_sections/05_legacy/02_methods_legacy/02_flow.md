@@ -6,12 +6,12 @@
 
 本書では主要式を抜粋して再掲し，式番号・記号定義は analysis/equations.md を正とする．
 
-- **軌道力学と時間尺度**: (E.001)–(E.002) で $\Omega$, $v_K$ を定義し，$t_{\rm blow}$ の基準は (E.007) に従う．放射圧の整理は [@Burns1979_Icarus40_1] を採用する．
-- **衝突カスケード**: PSD の時間発展は Smoluchowski 方程式 (E.010) を用い，質量収支は (E.011) で検査する．枠組みは [@Krivov2006_AA455_509; @Dohnanyi1969_JGR74_2531] に基づく．
-- **破砕強度と破片生成**: 破壊閾値 $Q_D^*$ の補間 (E.026) は [@BenzAsphaug1999_Icarus142_5; @LeinhardtStewart2012_ApJ745_79] を参照する．
+- **軌道力学と時間尺度**: (E.001)–(E.002) で $\Omega$, $v_K$ を定義し，$t_{\rm blow}$ の基準は (E.007) に従う．放射圧の整理は \citep{Burns1979_Icarus40_1} を採用する．
+- **衝突カスケード**: PSD の時間発展は Smoluchowski 方程式 (E.010) を用い，質量収支は (E.011) で検査する．枠組みは \citep{Krivov2006_AA455_509,Dohnanyi1969_JGR74_2531} に基づく．
+- **破砕強度と破片生成**: 破壊閾値 $Q_D^*$ の補間 (E.026) は \citep{BenzAsphaug1999_Icarus142_5,LeinhardtStewart2012_ApJ745_79} を参照する．
 - **放射圧ブローアウト**: β と $s_{\rm blow}$ の定義は (E.013)–(E.014)，表層流出は (E.009) に依拠する．
-- **昇華と追加シンク**: HKL フラックス (E.018) と飽和蒸気圧 (E.036) に基づき，昇華モデルの位置づけは [@Markkanen2020_AA643_A16] を参照する．
-- **遮蔽と表層**: 自遮蔽係数 $\Phi$ は (E.015)–(E.017) により表層に適用し，gas-rich 条件の参照枠は [@TakeuchiLin2003_ApJ593_524] で位置づける．
+- **昇華と追加シンク**: HKL フラックス (E.018) と飽和蒸気圧 (E.036) に基づき，昇華モデルの位置づけは \citep{Markkanen2020_AA643_A16} を参照する．
+- **遮蔽と表層**: 自遮蔽係数 $\Phi$ は (E.015)–(E.017) により表層に適用し，gas-rich 条件の参照枠は \citep{TakeuchiLin2003_ApJ593_524} で位置づける．
 
 以下の図は，入力（YAML/テーブル）から初期化・時間発展・診断出力に至る主経路を示す．**実装順序は analysis/physics_flow.md を正**とし，ここでは概念的な依存関係の整理として示す．
 
@@ -130,11 +130,11 @@ graph LR
     QSTAR --> KERNEL
 ```
 
-主要状態変数は PSD 形状 $n_k$（`psd_state.number`），表層面密度 $\Sigma_{\rm surf}$，深層リザーバ面密度 $\Sigma_{\rm deep}$，累積損失量 $M_{\rm out}$/$M_{\rm sink}$ であり，時間発展ごとに同時更新される（[@Krivov2006_AA455_509]）．Smol 更新では $N_k$ を一時的に構成して積分し，更新後に $n_k$ へ写像して `psd_state` に戻す．計算順序と依存関係は analysis/physics_flow.md の結合順序図に従う．
+主要状態変数は PSD 形状 $n_k$（`psd_state.number`），表層面密度 $\Sigma_{\rm surf}$，深層リザーバ面密度 $\Sigma_{\rm deep}$，累積損失量 $M_{\rm out}$/$M_{\rm sink}$ であり，時間発展ごとに同時更新される\citep{Krivov2006_AA455_509}．Smol 更新では $N_k$ を一時的に構成して積分し，更新後に $n_k$ へ写像して `psd_state` に戻す．計算順序と依存関係は analysis/physics_flow.md の結合順序図に従う．
 
 ### 3.4 供給・衝突・昇華の時系列因果
 
-供給（supply）・衝突（collision）・昇華（sublimation）は同一ステップ内で相互依存するため，因果順序を以下の通り固定する．図 3.2 の S3（昇華），S6（相判定/ゲート），S7（供給），S8（シンク時間），S9（衝突/IMEX 更新）に対応する内部順序を明示し，診断列と対応させる（[@WyattClarkeBooth2011_CeMDA111_1; @Krivov2006_AA455_509; @Markkanen2020_AA643_A16]）．
+供給（supply）・衝突（collision）・昇華（sublimation）は同一ステップ内で相互依存するため，因果順序を以下の通り固定する．図 3.2 の S3（昇華），S6（相判定/ゲート），S7（供給），S8（シンク時間），S9（衝突/IMEX 更新）に対応する内部順序を明示し，診断列と対応させる\citep{WyattClarkeBooth2011_CeMDA111_1,Krivov2006_AA455_509,Markkanen2020_AA643_A16}．
 
 ```mermaid
 flowchart TB
@@ -161,7 +161,7 @@ flowchart TB
     H --> F
 ```
 
-- 対応する診断列は `supply_rate_nominal` → `supply_rate_scaled` → `supply_rate_applied`，深層経路は `prod_rate_diverted_to_deep` / `deep_to_surf_flux` / `prod_rate_applied_to_surf` に記録される（[@WyattClarkeBooth2011_CeMDA111_1]）．
+- 対応する診断列は `supply_rate_nominal` → `supply_rate_scaled` → `supply_rate_applied`，深層経路は `prod_rate_diverted_to_deep` / `deep_to_surf_flux` / `prod_rate_applied_to_surf` に記録される\citep{WyattClarkeBooth2011_CeMDA111_1}．
 - 供給の有効化は phase（solid）と液相ブロックで決まり，$\\tau_{\\rm gate}$ はブローアウトのみをゲートする．停止判定（$\\tau_{\\rm stop}$）とは区別して扱う．
 
 #### 3.4.2 衝突フロー（Collision）
@@ -176,9 +176,9 @@ flowchart TB
     F --> G["IMEX update"]
 ```
 
-- 相対速度は $e,i$ と $c_{\\rm eq}$ から評価し，カーネル $C_{ij}$ を構成する（[@Ohtsuki2002_Icarus155_436; @WetherillStewart1993_Icarus106_190]）．
+- 相対速度は $e,i$ と $c_{\\rm eq}$ から評価し，カーネル $C_{ij}$ を構成する\citep{Ohtsuki2002_Icarus155_436,WetherillStewart1993_Icarus106_190}．
 - loss/gain は `smol_loss_mass_rate` / `smol_gain_mass_rate` として診断され，最小衝突時間 $t_{\\rm coll,\\,min}$ が $\\Delta t$ の上限に用いられる．
-- 破片分布 $Y$ は PSD グリッド上で再配分され，質量保存は C4 により検査される（[@Krivov2006_AA455_509; @Thebault2003_AA408_775]）．
+- 破片分布 $Y$ は PSD グリッド上で再配分され，質量保存は C4 により検査される\citep{Krivov2006_AA455_509,Thebault2003_AA408_775}．
 
 #### 3.4.3 昇華フロー（Sublimation）
 
@@ -191,7 +191,7 @@ flowchart TB
     E --> F["IMEX update"]
 ```
 
-- HKL フラックスから ds/dt を評価し，必要に応じて再ビニングで PSD を更新する（[@Markkanen2020_AA643_A16; @Pignatale2018_ApJ853_118]）．
+- HKL フラックスから ds/dt を評価し，必要に応じて再ビニングで PSD を更新する\citep{Markkanen2020_AA643_A16,Pignatale2018_ApJ853_118}．
 - `sub_params.mass_conserving=true` の場合は $s<s_{\\rm blow}$ を跨いだ質量をブローアウトへ振り替える．
 - 昇華由来の損失は `ds_dt_sublimation` / `mass_lost_sublimation_step` として出力される．
 

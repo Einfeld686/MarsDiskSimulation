@@ -2,7 +2,7 @@
 
 ### 6.1 出力・I/O・再現性
 
-時間発展の各ステップは Parquet/JSON/CSV へ記録し，後段の解析・可視化で再構成可能な形で保存する（[@Krivov2006_AA455_509; @Wyatt2008]）．必須の出力は `series/run.parquet`，`series/psd_hist.parquet`，`summary.json`，`checks/mass_budget.csv` で，追加診断は設定に応じて `diagnostics.parquet` や `energy.parquet` を生成する．
+時間発展の各ステップは Parquet/JSON/CSV へ記録し，後段の解析・可視化で再構成可能な形で保存する\citep{Krivov2006_AA455_509,Wyatt2008}．必須の出力は `series/run.parquet`，`series/psd_hist.parquet`，`summary.json`，`checks/mass_budget.csv` で，追加診断は設定に応じて `diagnostics.parquet` や `energy.parquet` を生成する．
 
 **必須出力**
 - `series/run.parquet` は時系列の `time`, `dt`, `tau`, `a_blow`（コード上の名称，物理量は $s_{\rm blow}$）, `s_min`, `prod_subblow_area_rate`, `M_out_dot`, `mass_lost_by_blowout`, `mass_lost_by_sinks` などを保持する．衝突・時間刻みの診断は `smol_dt_eff`, `t_coll_kernel_min`, `dt_over_t_blow` を参照する．

@@ -8,7 +8,7 @@ NOTE: このファイルは analysis/thesis_sections/02_methods/*.md の結合�
 
 # シミュレーション手法
 
-本資料は火星ロッシュ限界内の高温ダスト円盤を対象とする数値手法を，論文の Methods 相当の水準で記述する（[@Hyodo2017a_ApJ845_125; @CanupSalmon2018_SciAdv4_eaar6887]）．gas-poor 条件下での粒径分布（particle size distribution; PSD）進化と，表層（surface layer）の放射圧起因アウトフロー（outflux）を**同一タイムループで結合**し，2 年スケールの $\dot{M}_{\rm out}(t)$ と $M_{\rm loss}$ を評価する（[@Krivov2006_AA455_509; @StrubbeChiang2006_ApJ648_652; @Wyatt2008]）．数式の定義は analysis/equations.md の (E.###) を正とし，本書では主要式を必要最小限に再掲したうえで，離散化・数値解法・運用フロー・検証条件を整理する．
+本資料は火星ロッシュ限界内の高温ダスト円盤を対象とする数値手法を，論文の Methods 相当の水準で記述する\citep{Hyodo2017a_ApJ845_125,CanupSalmon2018_SciAdv4_eaar6887}．gas-poor 条件下での粒径分布（particle size distribution; PSD）進化と，表層（surface layer）の放射圧起因アウトフロー（outflux）を**同一タイムループで結合**し，2 年スケールの $\dot{M}_{\rm out}(t)$ と $M_{\rm loss}$ を評価する\citep{Krivov2006_AA455_509,StrubbeChiang2006_ApJ648_652,Wyatt2008}．数式の定義は analysis/equations.md の (E.###) を正とし，本書では主要式を必要最小限に再掲したうえで，離散化・数値解法・運用フロー・検証条件を整理する．
 
 序論（analysis/thesis/introduction.md）で提示した 3 つの問いと，本手法が直接生成する量・出力の対応を表\ref{tab:methods_questions_outputs}に示す．
 

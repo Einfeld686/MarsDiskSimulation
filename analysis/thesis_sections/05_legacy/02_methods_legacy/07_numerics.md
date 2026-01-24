@@ -2,7 +2,7 @@
 
 ### 5.1 IMEX-BDF(1)
 
-Smoluchowski 衝突カスケードの時間積分には IMEX（implicit-explicit）と BDF(1)（backward differentiation formula）の一次組合せを採用する（[@Krivov2006_AA455_509; @Wyatt2008]）．状態ベクトルはサイズビン $k$ ごとの数密度（または面密度）で表現し，衝突ゲイン・ロスと表層再供給・シンクを同時に組み込む．剛性の強いロス項を陰的に扱うことで安定性を確保し，生成・供給・表層流出は陽的に更新する．
+Smoluchowski 衝突カスケードの時間積分には IMEX（implicit-explicit）と BDF(1)（backward differentiation formula）の一次組合せを採用する\citep{Krivov2006_AA455_509,Wyatt2008}．状態ベクトルはサイズビン $k$ ごとの数密度（または面密度）で表現し，衝突ゲイン・ロスと表層再供給・シンクを同時に組み込む．剛性の強いロス項を陰的に扱うことで安定性を確保し，生成・供給・表層流出は陽的に更新する．
 
 - **剛性項（損失）**: 陰的処理
 - **非剛性項（生成・供給）**: 陽的処理

@@ -2,7 +2,7 @@
 
 #### 5.3.1 初期 $\tau=1$ スケーリング
 
-`init_tau1.scale_to_tau1=true` で，初期 PSD を $\tau=1$ になるようスケーリングする（[@StrubbeChiang2006_ApJ648_652; @Wyatt2008]）．関連設定は表\ref{tab:init_tau1_settings}に示す．
+`init_tau1.scale_to_tau1=true` で，初期 PSD を $\tau=1$ になるようスケーリングする\citep{StrubbeChiang2006_ApJ648_652,Wyatt2008}．関連設定は表\ref{tab:init_tau1_settings}に示す．
 
 \begin{table}[t]
   \centering
@@ -26,7 +26,7 @@
 
 #### 5.3.2 温度停止 (Temperature Stop)
 
-`numerics.t_end_until_temperature_K` を設定すると，火星表面温度が指定値以下になった時点でシミュレーションを終了する（温度ドライバが解決できる場合のみ有効）（[@Hyodo2018_ApJ860_150]）．
+`numerics.t_end_until_temperature_K` を設定すると，火星表面温度が指定値以下になった時点でシミュレーションを終了する（温度ドライバが解決できる場合のみ有効）\citep{Hyodo2018_ApJ860_150}．
 
 ```yaml
 numerics:

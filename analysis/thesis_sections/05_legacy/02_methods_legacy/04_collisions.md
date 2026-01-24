@@ -2,7 +2,7 @@
 
 ### 4.1 衝突カスケードと破片生成
 
-衝突カスケードは小粒子供給の主因であり，PSD の形状と供給率を同時に決める．統計的な衝突解法は Smoluchowski 方程式の枠組み [@Krivov2006_AA455_509] を基礎に置き，破砕強度は玄武岩モデル [@BenzAsphaug1999_Icarus142_5] と LS12 補間 [@LeinhardtStewart2012_ApJ745_79] に従って定義する．
+衝突カスケードは小粒子供給の主因であり，PSD の形状と供給率を同時に決める．統計的な衝突解法は Smoluchowski 方程式の枠組み \citep{Krivov2006_AA455_509} を基礎に置き，破砕強度は玄武岩モデル \citep{BenzAsphaug1999_Icarus142_5} と LS12 補間 \citep{LeinhardtStewart2012_ApJ745_79} に従って定義する．
 
 主要な PSD の時間発展は式\ref{eq:psd_smol}で与える（再掲: E.010）．
 
@@ -15,7 +15,7 @@
 
 #### 4.1.1 衝突カーネル
 
-nσv 型カーネル (E.024) を用い，相対速度は Rayleigh 分布 (E.020) から導出する（[@LissauerStewart1993_PP3; @WetherillStewart1993_Icarus106_190; @Ohtsuki2002_Icarus155_436; @ImazBlanco2023_MNRAS522_6150; @IdaMakino1992_Icarus96_107]）．カーネルの定義は式\ref{eq:collision_kernel}に示す．
+nσv 型カーネル (E.024) を用い，相対速度は Rayleigh 分布 (E.020) から導出する\citep{LissauerStewart1993_PP3,WetherillStewart1993_Icarus106_190,Ohtsuki2002_Icarus155_436,ImazBlanco2023_MNRAS522_6150,IdaMakino1992_Icarus96_107}．カーネルの定義は式\ref{eq:collision_kernel}に示す．
 
 \begin{equation}
 \label{eq:collision_kernel}
@@ -24,9 +24,9 @@ C_{ij} = \frac{N_i N_j}{1+\delta_{ij}}\,
 \qquad H_{ij} = \sqrt{H_i^{2}+H_j^{2}}
 \end{equation}
 
-- 破壊閾値 $Q_D^*$: [@LeinhardtStewart2012_ApJ745_79] 補間 (E.026)
-- 速度分散: せん断加熱と減衰の釣り合いから $c_{\rm eq}$ を固定点反復で求め，相対速度に反映する (E.021; [@Ohtsuki2002_Icarus155_436])
-- 速度外挿: 重力項のみ LS09 型 $v^{-3\mu+2}$ で拡張（[@StewartLeinhardt2009_ApJ691_L133; @Jutzi2010_Icarus207_54]）
+- 破壊閾値 $Q_D^*$: \citet{LeinhardtStewart2012_ApJ745_79} 補間 (E.026)
+- 速度分散: せん断加熱と減衰の釣り合いから $c_{\rm eq}$ を固定点反復で求め，相対速度に反映する (E.021; \citet{Ohtsuki2002_Icarus155_436})
+- 速度外挿: 重力項のみ LS09 型 $v^{-3\mu+2}$ で拡張\citep{StewartLeinhardt2009_ApJ691_L133,Jutzi2010_Icarus207_54}
 - ここでの $\mu$ は衝突速度外挿（LS09）の係数であり，供給式で使う $\mu$（`mu_reference_tau` 由来）とは別物として扱う．
 
 衝突カーネルはサイズビン対ごとに衝突率 $C_{ij}$ を評価し，衝突ロス項と破片生成項を形成する．動力学パラメータ（$e, i$）は表層状態と供給の速度条件を反映して更新され，$C_{ij}$ の評価に反映される．
@@ -54,16 +54,16 @@ S9 の衝突更新では，$C_{ij}$ から各ビンの衝突寿命 $t_{\rm coll}
   \end{tabular}
 \end{table}
 
-- Thébault et al. (2003) に基づく侵食モデル（[@Thebault2003_AA408_775]）
-- [@Krivov2006_AA455_509] に基づく壊滅的破砕モデル
-- 破砕境界と最大残存率の分岐式は [@StewartLeinhardt2009_ApJ691_L133; @LeinhardtStewart2012_ApJ745_79] に従う
+- \citet{Thebault2003_AA408_775} に基づく侵食モデル
+- \citet{Krivov2006_AA455_509} に基づく壊滅的破砕モデル
+- 破砕境界と最大残存率の分岐式は \citep{StewartLeinhardt2009_ApJ691_L133,LeinhardtStewart2012_ApJ745_79} に従う
 - 破片分布はビン内積分で質量保存を満たすように正規化し，供給・破砕由来の面密度が一貫するように設計する．
 
 破砕生成物はフラグメント分布テンソル $Y$ を通じて各ビンに再配分され，Smoluchowski 解法の gain 項として更新される．侵食レジームでは質量が大粒径側に残存し，小粒径への供給は限定的となる．
 
 #### 4.1.3 エネルギー簿記
 
-衝突エネルギーの診断は，デブリ円盤の衝突カスケード研究で用いられる散逸・残存の整理に倣う（[@Thebault2003_AA408_775; @Wyatt2008]）．
+衝突エネルギーの診断は，デブリ円盤の衝突カスケード研究で用いられる散逸・残存の整理に倣う\citep{Thebault2003_AA408_775,Wyatt2008}．
 
 `diagnostics.energy_bookkeeping.enabled=true` で簿記モードを有効化し，`diagnostics.energy_bookkeeping.stream` が true かつ `FORCE_STREAMING_OFF` が未設定なら `series/energy.parquet`・`checks/energy_budget.csv` をストリーミングで書き出す（オフ時は最後にまとめて保存）．サマリには `energy_bookkeeping.{E_rel_total,E_dissipated_total,E_retained_total,f_ke_mean_last,f_ke_energy_last,frac_*_last}` が追加され，同じ統計を run_card に残す．出力カラムの一覧は表\ref{tab:energy_columns}に示す．
 
