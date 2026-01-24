@@ -733,6 +733,90 @@ def _plot_mass_budget_single(run: RunData, outdir: Path) -> bool:
     return True
 
 
+def _tau_token(value: float) -> str:
+    if math.isclose(value, round(value), rel_tol=0.0, abs_tol=1e-9):
+        return f"{int(round(value))}p0"
+    text = f"{value:g}"
+    if "." not in text:
+        text = f"{text}.0"
+    return text.replace(".", "p")
+
+
+def _plot_cumloss_grid_for_tau0(runs: list[RunData], outdir: Path, tau0_value: float) -> bool:
+    subset = [r for r in runs if _match_value(r.params.get("tau0"), tau0_value)]
+    if not subset:
+        _warn(f"no runs matched tau0={tau0_value} for cumloss grid")
+        return False
+    subset = sorted(subset, key=_run_sort_key)
+
+    t_vals = sorted({r.params["T_M"] for r in subset if r.params.get("T_M") is not None})
+    eps_vals = sorted(
+        {r.params["epsilon_mix"] for r in subset if r.params.get("epsilon_mix") is not None}
+    )
+    if not t_vals or not eps_vals:
+        _warn(f"missing T_M/epsilon_mix coverage for tau0={tau0_value}")
+        return False
+
+    all_have_mass = all(r.mass_initial is not None for r in subset)
+    if not all_have_mass:
+        _warn(f"mass_initial missing in some runs; grid tau0={tau0_value} uses raw M_loss_cum")
+
+    fig, axes = plt.subplots(
+        nrows=len(t_vals),
+        ncols=len(eps_vals),
+        figsize=(3.6 * len(eps_vals), 2.8 * len(t_vals)),
+        sharex=True,
+        sharey=True,
+        squeeze=False,
+    )
+    for i, t_val in enumerate(t_vals):
+        for j, eps_val in enumerate(eps_vals):
+            ax = axes[i][j]
+            cell_runs = [
+                r
+                for r in subset
+                if _match_value(r.params.get("T_M"), t_val)
+                and _match_value(r.params.get("epsilon_mix"), eps_val)
+            ]
+            cell_runs = sorted(cell_runs, key=_run_sort_key)
+            if cell_runs:
+                run = cell_runs[0]
+                y_vals = run.series["M_loss_cum"].to_numpy(dtype=float)
+                if all_have_mass and run.mass_initial:
+                    y_vals = y_vals / run.mass_initial
+                y_vals = _clip_log(y_vals, LOG_CLIP_FRACTION)
+                ax.plot(run.series["t_year"], y_vals, color="C0", lw=1.5)
+            else:
+                ax.text(
+                    0.5,
+                    0.5,
+                    "missing",
+                    transform=ax.transAxes,
+                    ha="center",
+                    va="center",
+                    fontsize=10,
+                    color="gray",
+                )
+
+            ax.set_title(f"T_M={_format_value(t_val)} K, eps={_format_value(eps_val)}")
+            ax.set_yscale("log")
+            ax.grid(True, alpha=0.3, linewidth=0.6)
+            if i == len(t_vals) - 1:
+                ax.set_xlabel("Time [yr]")
+            if j == 0:
+                if all_have_mass:
+                    ax.set_ylabel("M_loss_cum / M_in0")
+                else:
+                    ax.set_ylabel("M_loss_cum [M_Mars]")
+
+    fig.suptitle(f"Cumulative loss (tau0={_format_value(tau0_value)})", y=1.02)
+    outdir.mkdir(parents=True, exist_ok=True)
+    out_path = outdir / f"cumloss_grid_tau{_tau_token(tau0_value)}.png"
+    fig.savefig(out_path, bbox_inches="tight")
+    plt.close(fig)
+    return True
+
+
 def _plot_r1(
     runs: list[RunData],
     outdir: Path,
@@ -1099,6 +1183,16 @@ def main(argv: Sequence[str] | None = None) -> int:
         f"{counts['cumloss']}, outflow={counts['outflow']}, "
         f"heatmap={counts['heatmap']}, mass_budget={counts['mass_budget']}"
     )
+
+    tau0_values = sorted(
+        {
+            round(float(r.params["tau0"]), 8)
+            for r in runs_sorted
+            if r.params.get("tau0") is not None and math.isfinite(float(r.params["tau0"]))
+        }
+    )
+    for tau0 in tau0_values:
+        _plot_cumloss_grid_for_tau0(runs_sorted, out_dirs["cumloss"], float(tau0))
 
     return 0
 
