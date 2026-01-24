@@ -874,6 +874,22 @@ SiO₂ の相転移温度と物性パラメータ。
 ケプラー運動と軌道パラメータの標準参照。
 **Analysis参照**: `analysis/equations.md` (E.001–E.003) の v_K・Ω 定義を参照。
 
+### Tiesinga et al. (2021)
+- **Key**: `Tiesinga2021_RMP_CODATA2018`
+- **Title**: CODATA recommended values of the fundamental physical constants: 2018
+- **Journal**: Reviews of Modern Physics, 93, 025010
+- **DOI**: [10.1103/RevModPhys.93.025010](https://doi.org/10.1103/RevModPhys.93.025010)
+- **使用箇所**: 物理定数表（CODATA 2018）
+- **主張**:
+  - CODATA 2018 推奨値にもとづく普遍定数（$G,c,\sigma_{\rm SB},R$）の根拠
+
+### NASA/JPL HORIZONS
+- **Key**: `JPLHorizons`
+- **Title**: JPL HORIZONS On-Line Ephemeris System
+- **使用箇所**: 惑星定数（火星質量・平均半径など）
+- **主張**:
+  - NASA/JPL が提供する惑星物理量（physical data）の参照元
+
 ## 12. ガスドラッグ・大気捕獲
 
 （gas-poor 標準では無効化されているが、感度試験用に参照）

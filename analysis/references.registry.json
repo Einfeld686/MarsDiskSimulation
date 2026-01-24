@@ -1231,6 +1231,30 @@
         "Measures polarized emittance spectra of forsterite up to near melting.",
         "Derives temperature dependence of absorption coefficients and phonon parameters."
       ]
+    },
+    {
+      "key": "Tiesinga2021_RMP_CODATA2018",
+      "short": "Tiesinga et al. (2021)",
+      "title": "CODATA recommended values of the fundamental physical constants: 2018",
+      "doi": "10.1103/RevModPhys.93.025010",
+      "bibtex": "@article{Tiesinga2021_RMP_CODATA2018, title = {CODATA recommended values of the fundamental physical constants: 2018}, author = {Tiesinga et al.}, journal = {Rev. Mod. Phys.}, volume = {93}, pages = {025010}, year = {2021}}",
+      "adopted_scope": "CODATA 2018 recommended values for fundamental physical constants (G, c, σ_SB, R).",
+      "claims": [
+        "Provides the CODATA 2018 recommended values of the fundamental physical constants used in the thesis constants table.",
+        "Serves as provenance for adopted numerical values of G, c, σ_SB, and R in the simulation documentation."
+      ]
+    },
+    {
+      "key": "JPLHorizons",
+      "short": "NASA/JPL HORIZONS",
+      "title": "JPL HORIZONS On-Line Ephemeris System",
+      "doi": null,
+      "bibtex": "@misc{JPLHorizons, title = {JPL HORIZONS On-Line Ephemeris System}, author = {{NASA Jet Propulsion Laboratory}}, howpublished = {https://ssd.jpl.nasa.gov/horizons/}, year = {2026}}",
+      "adopted_scope": "Planetary physical parameters (e.g., Mars mass and mean radius) sourced from the NASA/JPL HORIZONS system.",
+      "claims": [
+        "Provides Solar System ephemerides and physical parameters used as planetary constants in the thesis setup.",
+        "Acts as provenance for M_Mars and R_Mars values when sourced from the HORIZONS physical data."
+      ]
     }
   ]
 }
