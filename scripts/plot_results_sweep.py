@@ -605,14 +605,19 @@ def _plot_cumloss_single(run: RunData, outdir: Path) -> bool:
     fig, ax = plt.subplots(figsize=(6.4, 4.2))
     ax.plot(run.series["t_year"], y_vals, color="C0", lw=1.5)
     ax.set_yscale("log")
-    ax.set_xlabel("Time [yr]")
-    if use_fraction:
-        ax.set_ylabel("M_loss_cum / M_in0")
-    else:
-        ax.set_ylabel("M_loss_cum [M_Mars]")
-    ax.set_title(_run_title(run))
+    # Thesis layout: omit axis labels; keep ticks. Put run parameters inside the panel.
+    ax.text(
+        0.98,
+        0.98,
+        _run_title(run),
+        transform=ax.transAxes,
+        ha="right",
+        va="top",
+        fontsize=8,
+    )
     ax.grid(True, alpha=0.3, linewidth=0.6)
-    fig.savefig(outdir / f"{run.name}.png", bbox_inches="tight")
+    fig.subplots_adjust(left=0.08, right=0.99, top=0.99, bottom=0.08)
+    fig.savefig(outdir / f"{run.name}.png", bbox_inches="tight", dpi=200)
     plt.close(fig)
     return True
 
@@ -625,13 +630,20 @@ def _plot_outflow_tau_cumloss_single(run: RunData, outdir: Path) -> bool:
     out_vals = _clip_log(run.series["M_out_dot"].to_numpy(dtype=float), LOG_CLIP_OUTFLOW)
     ax_out.plot(t_year, out_vals, color="C0", lw=1.5, label=_label_for_run(run))
     ax_out.set_yscale("log")
-    ax_out.set_ylabel("M_out_dot [M_Mars s$^{-1}$]")
     ax_out.legend(loc="upper right", frameon=False)
+    ax_out.text(
+        0.02,
+        0.98,
+        _run_title(run),
+        transform=ax_out.transAxes,
+        ha="left",
+        va="top",
+        fontsize=8,
+    )
 
     ax_tau.plot(t_year, run.series["tau"], color="C0", lw=1.5)
     if run.tau_stop is not None:
         ax_tau.axhline(run.tau_stop, color="gray", linestyle="--", linewidth=1.0, alpha=0.6)
-    ax_tau.set_ylabel("Optical depth tau")
 
     loss_vals = run.series["M_loss_cum"].to_numpy(dtype=float)
     use_fraction = run.mass_initial is not None
@@ -642,17 +654,11 @@ def _plot_outflow_tau_cumloss_single(run: RunData, outdir: Path) -> bool:
     loss_vals = _clip_log(loss_vals, LOG_CLIP_FRACTION)
     ax_cum.plot(t_year, loss_vals, color="C0", lw=1.5)
     ax_cum.set_yscale("log")
-    if use_fraction:
-        ax_cum.set_ylabel("M_loss_cum / M_in0")
-    else:
-        ax_cum.set_ylabel("M_loss_cum [M_Mars]")
-    ax_cum.set_xlabel("Time [yr]")
-
-    fig.suptitle(_run_title(run))
     for ax in axes:
         ax.grid(True, alpha=0.3, linewidth=0.6)
 
-    fig.savefig(outdir / f"{run.name}.png", bbox_inches="tight")
+    fig.subplots_adjust(left=0.08, right=0.99, top=0.99, bottom=0.08, hspace=0.15)
+    fig.savefig(outdir / f"{run.name}.png", bbox_inches="tight", dpi=200)
     plt.close(fig)
     return True
 
@@ -699,13 +705,23 @@ def _plot_heatmap_single(
     ax.set_xticklabels([_format_value(run.params.get("tau0"))])
     ax.set_yticks([0])
     ax.set_yticklabels([_format_value(run.params.get("T_M"))])
-    ax.set_xlabel("tau0")
-    ax.set_ylabel("T_M [K]")
-    ax.set_title(f"epsilon_mix={_format_value(run.params.get('epsilon_mix'))}")
+    ax.text(
+        0.98,
+        0.98,
+        f"eps={_format_value(run.params.get('epsilon_mix'))}\n"
+        f"tau0={_format_value(run.params.get('tau0'))}\n"
+        f"T_M={_format_value(run.params.get('T_M'))} K",
+        transform=ax.transAxes,
+        ha="right",
+        va="top",
+        fontsize=8,
+        color="black",
+    )
     ax.grid(False)
     cbar = fig.colorbar(mesh, ax=ax, pad=0.02)
     cbar.set_label("M_loss / M_in0")
-    fig.savefig(outdir / f"{run.name}.png", bbox_inches="tight")
+    fig.subplots_adjust(left=0.08, right=0.99, top=0.99, bottom=0.08)
+    fig.savefig(outdir / f"{run.name}.png", bbox_inches="tight", dpi=200)
     plt.close(fig)
     return True
 
@@ -724,11 +740,18 @@ def _plot_mass_budget_single(run: RunData, outdir: Path) -> bool:
     df["t_year"] = df["time"] / SECONDS_PER_YEAR
     fig, ax = plt.subplots(figsize=(6.4, 3.6))
     ax.plot(df["t_year"], df["error_percent"], color="black", lw=1.2)
-    ax.set_xlabel("Time [yr]")
-    ax.set_ylabel("Mass budget error [%]")
-    ax.set_title(_run_title(run))
+    ax.text(
+        0.98,
+        0.98,
+        _run_title(run),
+        transform=ax.transAxes,
+        ha="right",
+        va="top",
+        fontsize=8,
+    )
     ax.grid(True, alpha=0.3, linewidth=0.6)
-    fig.savefig(outdir / f"{run.name}.png", bbox_inches="tight")
+    fig.subplots_adjust(left=0.08, right=0.99, top=0.99, bottom=0.08)
+    fig.savefig(outdir / f"{run.name}.png", bbox_inches="tight", dpi=200)
     plt.close(fig)
     return True
 
@@ -742,7 +765,13 @@ def _tau_token(value: float) -> str:
     return text.replace(".", "p")
 
 
-def _plot_cumloss_grid_for_tau0(runs: list[RunData], outdir: Path, tau0_value: float) -> bool:
+def _plot_cumloss_grid_for_tau0(
+    runs: list[RunData],
+    outdir: Path,
+    tau0_value: float,
+    *,
+    exclude_eps: set[float] | None = None,
+) -> bool:
     subset = [r for r in runs if _match_value(r.params.get("tau0"), tau0_value)]
     if not subset:
         _warn(f"no runs matched tau0={tau0_value} for cumloss grid")
@@ -757,62 +786,66 @@ def _plot_cumloss_grid_for_tau0(runs: list[RunData], outdir: Path, tau0_value: f
         _warn(f"missing T_M/epsilon_mix coverage for tau0={tau0_value}")
         return False
 
-    all_have_mass = all(r.mass_initial is not None for r in subset)
-    if not all_have_mass:
-        _warn(f"mass_initial missing in some runs; grid tau0={tau0_value} uses raw M_loss_cum")
+    # The model time series stores mass in units of M_Mars, so the axis can be normalized
+    # by a fixed fraction of Mars' mass (requested: 1e-5 M_Mars).
+    y_scale = 1e-5
+    y_floor = LOG_CLIP_FRACTION / y_scale
 
-    fig, axes = plt.subplots(
-        nrows=len(t_vals),
-        ncols=len(eps_vals),
-        figsize=(3.6 * len(eps_vals), 2.8 * len(t_vals)),
-        sharex=True,
-        sharey=True,
-        squeeze=False,
+    # Collapse the 3x3 grid into a single panel with 9 coloured curves (one per T_M, eps pair).
+    run_map: dict[tuple[float, float], RunData] = {}
+    for run in subset:
+        t_val = run.params.get("T_M")
+        eps_val = run.params.get("epsilon_mix")
+        if t_val is None or eps_val is None:
+            continue
+        if exclude_eps is not None:
+            if any(_match_value(eps_val, ex) for ex in exclude_eps):
+                continue
+        key = (float(t_val), float(eps_val))
+        if key not in run_map:
+            run_map[key] = run
+
+    keys = sorted(run_map.keys(), key=lambda item: (item[0], item[1]))
+    if not keys:
+        _warn(f"no runs with T_M/epsilon_mix values for tau0={tau0_value}")
+        return False
+
+    fig, ax = plt.subplots(figsize=(7.6, 4.8))
+    cmap = plt.get_cmap("tab10")
+    for idx, (t_val, eps_val) in enumerate(keys):
+        run = run_map[(t_val, eps_val)]
+        y_vals = run.series["M_loss_cum"].to_numpy(dtype=float) / y_scale
+        y_vals = _clip_log(y_vals, y_floor)
+        ax.plot(
+            run.series["t_year"],
+            y_vals,
+            lw=1.6,
+            color=cmap(idx % cmap.N),
+            label=f"T_M={_format_value(t_val)} K, eps={_format_value(eps_val)}",
+        )
+
+    ax.set_yscale("log")
+    ax.minorticks_on()
+    ax.grid(True, which="major", alpha=0.35, linewidth=0.6)
+    ax.grid(True, which="minor", alpha=0.18, linewidth=0.5)
+    ax.axhline(1.0, color="gray", linestyle=":", linewidth=1.0, alpha=0.7, zorder=0)
+    ax.set_xlabel("Time [yr]")
+    ax.set_ylabel(r"$M_{\rm loss,cum}/(10^{-5} M_{\rm Mars})$")
+
+    # Legend below the plot (labels moved out of the axes).
+    ax.legend(
+        loc="upper center",
+        bbox_to_anchor=(0.5, -0.18),
+        ncol=3,
+        frameon=False,
+        fontsize=9,
+        handlelength=2.5,
+        columnspacing=1.2,
     )
-    for i, t_val in enumerate(t_vals):
-        for j, eps_val in enumerate(eps_vals):
-            ax = axes[i][j]
-            cell_runs = [
-                r
-                for r in subset
-                if _match_value(r.params.get("T_M"), t_val)
-                and _match_value(r.params.get("epsilon_mix"), eps_val)
-            ]
-            cell_runs = sorted(cell_runs, key=_run_sort_key)
-            if cell_runs:
-                run = cell_runs[0]
-                y_vals = run.series["M_loss_cum"].to_numpy(dtype=float)
-                if all_have_mass and run.mass_initial:
-                    y_vals = y_vals / run.mass_initial
-                y_vals = _clip_log(y_vals, LOG_CLIP_FRACTION)
-                ax.plot(run.series["t_year"], y_vals, color="C0", lw=1.5)
-            else:
-                ax.text(
-                    0.5,
-                    0.5,
-                    "missing",
-                    transform=ax.transAxes,
-                    ha="center",
-                    va="center",
-                    fontsize=10,
-                    color="gray",
-                )
-
-            ax.set_title(f"T_M={_format_value(t_val)} K, eps={_format_value(eps_val)}")
-            ax.set_yscale("log")
-            ax.grid(True, alpha=0.3, linewidth=0.6)
-            if i == len(t_vals) - 1:
-                ax.set_xlabel("Time [yr]")
-            if j == 0:
-                if all_have_mass:
-                    ax.set_ylabel("M_loss_cum / M_in0")
-                else:
-                    ax.set_ylabel("M_loss_cum [M_Mars]")
-
-    fig.suptitle(f"Cumulative loss (tau0={_format_value(tau0_value)})", y=1.02)
+    fig.subplots_adjust(bottom=0.28)
     outdir.mkdir(parents=True, exist_ok=True)
     out_path = outdir / f"cumloss_grid_tau{_tau_token(tau0_value)}.png"
-    fig.savefig(out_path, bbox_inches="tight")
+    fig.savefig(out_path, bbox_inches="tight", dpi=200)
     plt.close(fig)
     return True
 
@@ -1192,7 +1225,12 @@ def main(argv: Sequence[str] | None = None) -> int:
         }
     )
     for tau0 in tau0_values:
-        _plot_cumloss_grid_for_tau0(runs_sorted, out_dirs["cumloss"], float(tau0))
+        _plot_cumloss_grid_for_tau0(
+            runs_sorted,
+            out_dirs["cumloss"],
+            float(tau0),
+            exclude_eps={0.5},
+        )
 
     return 0
 
