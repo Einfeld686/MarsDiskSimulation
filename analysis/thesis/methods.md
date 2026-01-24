@@ -412,6 +412,10 @@ S_{{\rm sub},k}=\frac{1}{t_{{\rm sub},k}}=\frac{|ds/dt|}{s_k}
 以上の定式化により，半径セルごとの PSD と表層面密度を，放射圧流出（ブローアウト）・遮蔽・供給・衝突カスケード・追加シンクの寄与で更新できる．次節では，初期条件・境界条件と，本論文で用いる基準パラメータをまとめる．
 ## 3. 初期条件・境界条件・パラメータ
 
+<!--
+実装(.py): marsdisk/run_zero_d.py, marsdisk/run_one_d.py, marsdisk/grid.py, marsdisk/schema.py, marsdisk/physics/initfields.py, marsdisk/physics/sizes.py, marsdisk/physics/psd.py, marsdisk/physics/qstar.py, marsdisk/io/tables.py
+-->
+
 本節では，1D 計算における初期条件・サイズ境界・停止条件に関わるパラメータを整理し，基準計算で採用した値を表としてまとめる．
 
 本節は，2節で導入した支配方程式に対して，計算領域・初期状態・採用パラメータを与え，実行条件を具体化するための整理である．特に，(i) 環状領域とセル分割，(ii) 初期 PSD の形状と $\tau_0$ による表層規格化，(iii) 力学・供給・衝突パラメータの基準値，を固定し，以降の数値解法（4節）と出力・検証（5節）で共通に参照する．基準計算の採用値は表\ref{tab:method-param}，表\ref{tab:methods_initial_psd_params}，表\ref{tab:methods_qdstar_coeffs}にまとめ，感度掃引で動かす代表パラメータは付録 A（表\ref{tab:app_methods_sweep_defaults}）に整理する．
@@ -459,28 +463,32 @@ A=\pi\left(r_{\rm out}^2-r_{\rm in}^2\right)
 
 ### 3.2 物理定数・物性値
 
-本研究で用いる主要な物理定数と物性値を表\ref{tab:method-phys}にまとめる．密度や蒸気圧係数などの材料依存パラメータは，基準ケースではフォルステライト相当の値を採用する（付録 Aも参照）．
+本研究で用いる主要な物理定数・惑星定数・粒子物性を表\ref{tab:method-phys}にまとめる．普遍定数（$G,c,\sigma_{\rm SB},R$）は CODATA 2018 の推奨値に従い，火星の質量 $M_{\rm Mars}$ と平均半径 $R_{\rm Mars}$ は公表値を採用する．材料依存パラメータは基準ケースではフォルステライト（$\mathrm{Mg_2SiO_4}$）を代表組成として近似し，密度 $\rho$ や飽和蒸気圧式の係数などは付録Aにまとめる．
 
 \begin{table}[t]
-  \centering
-  \small
-  \setlength{\tabcolsep}{4pt}
-  \caption{物理定数・物性値（基準計算）}
-  \label{tab:method-phys}
-  \begin{tabular}{p{0.30\textwidth} p{0.22\textwidth} p{0.12\textwidth} p{0.26\textwidth}}
-    \hline
-    記号 & 値 & 単位 & 備考 \\
-    \hline
-    $G$ & $6.67430\times10^{-11}$ & m$^{3}$\,kg$^{-1}$\,s$^{-2}$ & 万有引力定数 \\
-    $c$ & $2.99792458\times10^{8}$ & m\,s$^{-1}$ & 光速 \\
-    $\sigma_{\rm SB}$ & $5.670374419\times10^{-8}$ & W\,m$^{-2}$\,K$^{-4}$ & ステファン・ボルツマン定数 \\
-    $M_{\rm Mars}$ & $6.4171\times10^{23}$ & kg & 火星質量 \\
-    $R_{\rm Mars}$ & $3.3895\times10^{6}$ & m & 火星半径 \\
-    $\rho$ & 3270 & kg\,m$^{-3}$ & 粒子密度（フォルステライト） \\
-    $R$ & 8.314462618 & J\,mol$^{-1}$\,K$^{-1}$ & 気体定数（HKL に使用） \\
-    \hline
-  \end{tabular}
+\centering
+\small
+\setlength{\tabcolsep}{4pt}
+\caption{物理定数・惑星定数・粒子物性（基準計算）}
+\label{tab:method-phys}
+\begin{tabular}{p{0.30\textwidth} p{0.22\textwidth} p{0.18\textwidth} p{0.22\textwidth}}
+\hline
+記号 & 値 & 単位 & 備考 \\
+\hline
+$G$ & $6.67430\times10^{-11}$ & $\mathrm{m^{3}\,kg^{-1}\,s^{-2}}$ & 万有引力定数 \\
+$c$ & $2.99792458\times10^{8}$ & $\mathrm{m\,s^{-1}}$ & 光速（真空） \\
+$\sigma_{\rm SB}$ & $5.670374419\times10^{-8}$ & $\mathrm{W\,m^{-2}\,K^{-4}}$ & ステファン・ボルツマン定数 \\
+$M_{\rm Mars}$ & $6.4171\times10^{23}$ & $\mathrm{kg}$ & 火星質量 \\
+$R_{\rm Mars}$ & $3.3895\times10^{6}$ & $\mathrm{m}$ & 火星平均半径 \\
+$\rho$ & 3270 & $\mathrm{kg\,m^{-3}}$ & 粒子内部密度（フォルステライト） \\
+$R$ & 8.314462618 & $\mathrm{J\,mol^{-1}\,K^{-1}}$ & 普遍気体定数（Hertz--Knudsen--Langmuir（HKL）式に使用） \\
+\hline
+\end{tabular}
 \end{table}
+
+<!-- TEX_EXCLUDE_START -->
+（注）現行稿（提示文）では，表中の数値の「出典」が本文・表のいずれにも明示されていないため，修士論文としては追跡可能性の観点で不十分になりやすい．上の添削案では，普遍定数と惑星定数について最低限の出典を本文に集約して付し，材料依存値については付録Aに「値＋出典」をまとめる方針を明文化した．
+<!-- TEX_EXCLUDE_END -->
 
 ### 3.3 基準パラメータ
 
@@ -573,15 +581,21 @@ $s_{\rm cut}$ は凝縮粒子を除外するためのカットオフ粒径であ
 実装(.py): marsdisk/run_zero_d.py, marsdisk/run_one_d.py, marsdisk/physics/smol.py, marsdisk/physics/collisions_smol.py, marsdisk/physics/surface.py, marsdisk/physics/viscosity.py, marsdisk/io/checkpoint.py, marsdisk/io/streaming.py
 -->
 
+本章では，支配方程式（式\ref{eq:method-smol}）を数値的に解くための「粒径分布の離散化」と「時間積分」をまとめる．特に，衝突破砕を含む Smoluchowski 型方程式は剛性を持ちやすく，単純な陽的積分では負の個数密度や質量収支の破綻が生じ得る．そこで本研究では，非負性（$N_k\ge 0$）を保ちつつ，質量収支が許容範囲に収まる解のみを採用するという方針で，時間刻み制御と停止条件を明示する．
+
 ### 4.1 離散化
 
 **粒径空間の離散化**
-サイズ空間は対数等間隔グリッドで離散化する．有効下限 $s_{\min,\mathrm{eff}}$ は，設定値 $s_{\min}$ と初期時刻のブローアウト粒径 $a_{\mathrm{blow}}(T_{\mathrm{init}})$ の大きい方として定める（実装では $s_{\min,\mathrm{eff}}=\max(s_{\min},a_{\mathrm{blow}})$ を採用する）．上限は $s_{\max}$ とし，$K$ 個のビン数 $K=n_{\mathrm{bins}}$ を与える．
+サイズ空間 $s\in[s_{\min},\,s_{\max}]$ を対数等間隔グリッドで離散化する．有効下限 $s_{\min,\mathrm{eff}}$ は，設定値 $s_{\min}$ とブローアウト粒径 $a_{\mathrm{blow}}(t)$ の大きい方として定める（実装では $s_{\min,\mathrm{eff}}=\max(s_{\min},a_{\mathrm{blow}})$ を採用する）．上限は $s_{\max}$ とし，ビン数 $K=n_{\mathrm{bins}}$ を与える．
 
-ビン境界を $s_{k\pm1/2}$，代表サイズを $s_k=\sqrt{s_{k-1/2}s_{k+1/2}}$ とする．状態量 $N_k$ はビン $k$ に含まれる粒子の面数密度（$\mathrm{m^{-2}}$）であり，各ビンの代表質量を $m_k=\frac{4}{3}\pi\rho s_k^3$ とすると，表層面密度は $\Sigma=\sum_{k=1}^{K} m_k N_k$ で与えられる．以後，注入（供給）・損失（ブローアウト／昇華）・破片再配分はビン上で評価する．
+ビン境界を $s_{k\pm1/2}$，代表サイズを $s_k=\sqrt{s_{k-1/2}s_{k+1/2}}$ とする．状態量 $N_k$ はビン $k$ に含まれる粒子の面数密度（$\mathrm{m^{-2}}$）であり，各ビンの代表質量を $m_k=\frac{4}{3}\pi\rho s_k^3$ とすると，表層面密度は
+\[
+\Sigma(t)=\sum_{k=1}^{K} m_k N_k(t)
+\]
+で評価する．以後，注入（供給）・損失（ブローアウト／昇華）・破片再配分はビン上で評価する．
 
 **粒径範囲外の取り扱い**
-$s<s_{\min,\mathrm{eff}}$ の成分は本研究の解像範囲外とし，放射圧による除去等で速やかに失われる成分として明示的な損失項に含める．また，$s>s_{\max}$ の大粒子は未解像成分として直接は追跡せず，必要に応じて「上限側への質量漏れ」を診断量として集計する（要確認：最終的に用いる診断量の定義）．
+$s<s_{\min,\mathrm{eff}}$ の成分は本研究の解像範囲外とし，放射圧による除去等で速やかに失われる成分として明示的な損失項に含める．また，$s>s_{\max}$ の大粒子は未解像成分として直接は追跡せず，必要に応じて「上限側への質量漏れ」を診断量として集計する．
 
 **半径方向の離散化**
 半径方向は第1節で導入したセル分割に従い，各セル内では物理量を一様とみなす．粒径分布の更新はセルごとに行い，半径方向輸送（存在する場合）は別途のフラックス評価として組み込む（第2章で定義した輸送項に従う）．
@@ -589,10 +603,10 @@ $s<s_{\min,\mathrm{eff}}$ の成分は本研究の解像範囲外とし，放射
 ### 4.2 数値解法と停止条件
 
 **採用スキームの位置づけ**
-既存研究では，collisional cascade の時間発展を一次の Euler 法と適応刻みで扱う例がある．一方で，Smoluchowski 型方程式の剛性に対しては陰的積分を用いることで大きな時間刻みを可能にすることが報告されている．本研究ではこれらを踏まえ，衝突ロス項を陰的に扱い，生成・供給・一次シンクを陽的に扱う一次 IMEX（IMEX-BDF(1)）を用いる．
+既存研究では，collisional cascade の時間発展を一次の Euler 法と適応刻みで扱う例がある\citep{Thebault2003_AA408_775,Krivov2006_AA455_509}．一方で，Smoluchowski 型方程式の剛性に対しては陰的積分を用いることで大きな時間刻みを可能にすることが報告されている\citep{Krivov2006_AA455_509,Birnstiel2011_AA525_A11}．本研究ではこれらを踏まえ，衝突ロス項を陰的に扱い，生成・供給・一次シンクを陽的に扱う一次 IMEX（IMEX-BDF(1)）を用いる．
 
 **IMEX-BDF(1) 更新式**
-外側ステップ幅を $\Delta t$ とし，Smoluchowski 更新に実際に用いる内部ステップ幅を $dt_{\mathrm{eff}}\le\Delta t$ とする．ビン $k$ の更新は
+外側ステップ幅を $\Delta t$ とし，Smoluchowski 更新に実際に用いる内部ステップ幅を $dt_{\rm eff}\le\Delta t$ とする．ビン $k$ の更新は
 \begin{equation}
 \label{eq:imex_bdf1_update}
 N_k^{n+1}=\frac{N_k^{n}+dt_{\rm eff}\left(G_k^{n}+F_k^{n}-S_k^{n}N_k^{n}\right)}{1+dt_{\rm eff}/t_{{\rm coll},k}^{n}}
@@ -608,7 +622,7 @@ N_k^{n+1}=\frac{N_k^{n}+dt_{\rm eff}\left(G_k^{n}+F_k^{n}-S_k^{n}N_k^{n}\right)}
 4. 式\ref{eq:mass_budget_definition}で相対誤差 $\epsilon_{\rm mass}$ を評価し，$\epsilon_{\rm mass}>\epsilon_{\rm tol}$ の場合は $dt_{\rm eff}\leftarrow dt_{\rm eff}/2$ として 2 に戻る．
 5. 条件 3–4 を満たした $dt_{\rm eff}$ を採用してステップを確定する．
 
-ここで $\epsilon_{\rm tol}$ は質量保存誤差の許容値であり，本研究では $\epsilon_{\rm tol}=5\times10^{-3}$（0.5%）を用いる（要確認：本文・設定表との整合）．なお，質量収支の検査は「実際に採用された $dt_{\rm eff}$」に対して行う．
+ここで $\epsilon_{\rm tol}$ は質量保存誤差の許容値であり，本研究では $\epsilon_{\rm tol}=5\times10^{-3}$（0.5%）を用いる．なお，質量収支の検査は「実際に採用された $dt_{\rm eff}$」に対して行う．
 
 **質量収支の定義**
 質量保存の検査は次式で定義する．
@@ -616,25 +630,27 @@ N_k^{n+1}=\frac{N_k^{n}+dt_{\rm eff}\left(G_k^{n}+F_k^{n}-S_k^{n}N_k^{n}\right)}
 \label{eq:mass_budget_definition}
 \begin{aligned}
 \Sigma^{n} &= \sum_k m_k N_k^{n}, & \Sigma^{n+1} &= \sum_k m_k N_k^{n+1},\\
-\Delta\Sigma &= \Sigma^{n+1} + dt_{\rm eff}\,\dot{\Sigma}_{\rm extra} - \left(\Sigma^{n} + dt_{\rm eff}\,\dot{\Sigma}_{\rm src}\right),\\
+\Delta\Sigma &= \Sigma^{n+1} + dt_{\rm eff}\,\dot{\Sigma}_{\rm extra} - \left(\Sigma^{n} + dt_{\rm eff}\,\dot{\Sigma}_{\rm in}\right),\\
 \epsilon_{\rm mass} &= \frac{|\Delta\Sigma|}{\Sigma^{n}}.
 \end{aligned}
 \end{equation}
-$\dot{\Sigma}_{\rm src}$ は明示的な供給項 $F_k$ が与える質量注入率であり，$\dot{\Sigma}_{\rm src}=\sum_k m_k F_k$ として評価する．$\dot{\Sigma}_{\rm extra}$ は表層から系外へ失われる明示的な損失（ブローアウト・昇華など）を質量率として合算したものである．
-
-#### 停止条件
+$\dot{\Sigma}_{\rm in}$ は明示的な供給項 $F_k$ が与える質量注入率であり，$\dot{\Sigma}_{\rm in}=\sum_k m_k F_k$ として評価する．$\dot{\Sigma}_{\rm extra}$ は表層から系外へ失われる明示的な損失（ブローアウト・昇華など）を質量率として合算したものである．
 
 **積分終端**
-積分終端 $t_{\rm end}$ は解析対象期間として設定し，本研究では高温期の終端に対応する期間を採用する（例：火星温度モデル $T_{\rm Mars}(t)$ が所定値 $T_{\rm end}$ に到達する時刻を $t_{\rm end}$ とする，など；要確認）．
+積分終端 $t_{\rm end}$ は火星表面温度の時間発展と整合する解析対象期間として与える．本論文では，高温期の終端に対応する温度閾値 $T_{\rm end}=2000\,\mathrm{K}$ を定め，$T_M(t)=T_{\rm end}$ に到達する時刻を $t_{\rm end}$ として積分を終了する．
 
 **光学的厚さに基づくセル停止**
-各セルで線視方向光学的厚さ $\tau_{\rm los}$ が閾値 $\tau_{\rm stop}$ を超えた場合，当該セルの時間発展を早期停止する．実装では，$\tau_{\rm los}\propto \kappa,\Sigma_{\rm surf}$（幾何因子を含む）から評価した量が閾値を超えると停止する．$\tau_{\rm stop}=\ln 10$ は透過率 $\exp(-\tau_{\rm los})$ が $0.1$ 以下となる目安に対応し，この条件を満たすと「火星放射が表層へ到達する」という近似が破綻するため，以後の計算は本モデルの適用範囲外として扱う（停止は円盤の物理的停止を意味しない）．なお，光学的に厚い領域をクリップして擬似的に $\tau\lesssim1$ に保つのではなく，適用限界として停止する方針を採る．
+本研究の放射圧評価は，「火星放射が表層へ到達する」ことを前提に組み立てている．したがって，表層が光学的に十分厚くなったセルについては，その後の時間発展を追ってもモデル仮定の下では意味が曖昧になる．そこで各セルについて，有効光学的厚さ $\tau_{\rm eff}$ が閾値 $\tau_{\rm stop}$ を超えた場合に，当該セルの進化計算を停止する．$\tau_{\rm stop}=\ln 10$ は透過率 $\exp(-\tau)$ が $0.1$ 以下となる目安に対応する．なお遮蔽が無効（$\Phi=1$）の場合には $\tau_{\rm eff}=\tau_{\rm los}$ に退化するため，遮蔽の有無にかかわらず同一の形式で停止判定を扱える．ここで重要なのは，この停止が円盤の物理的停止を意味するのではなく，あくまで「本モデルの適用範囲外に入った」ことを示すフラグとして用いる点である．
 
 **（任意）ブローアウト粒径が解像下限を下回る場合**
-温度低下により $a_{\rm blow}$ が解像下限 $s_{\min}$ を下回る場合，放射圧除去が解像範囲より小さい粒径で起きるため，モデルの解像上の前提が変化する．実装には，この条件を満たしたときに計算を停止するオプションがあり，一定の最短積分期間を経た後に停止する．本論文では，この条件の採否と採用時の解釈を結果章で明示する（要確認）．
+温度低下により $a_{\rm blow}$ が解像下限 $s_{\min}$ を下回る場合，放射圧除去が解像範囲より小さい粒径で起きるため，モデルの解像上の前提が変化する．実装には，この条件を満たしたときに計算を停止するオプションがあり，一定の最短積分期間を経た後に停止する．本論文では，この条件の採否と採用時の解釈を結果章で明示する．
 
 本節では，粒径分布の離散化，IMEX による時間積分，および非負性・質量収支に基づく刻み制御と停止条件を定義した．次節では，これらの設定の下で得られる進化計算の収束判定と結果の整理基準を述べる．
 ## 5. 出力と検証
+
+<!--
+実装(.py): marsdisk/run_zero_d.py, marsdisk/run_one_d.py, marsdisk/io/writer.py, marsdisk/io/streaming.py, marsdisk/io/diagnostics.py, scripts/validate_run.py
+-->
 
 本節では，計算結果を再解析可能な形で保存するための出力仕様と，本文で採用する計算の合格基準（検証）をまとめる．
 
@@ -642,7 +658,7 @@ $\dot{\Sigma}_{\rm src}$ は明示的な供給項 $F_k$ が与える質量注入
 
 本研究では，再解析可能性を担保するため，(i) 入力条件（設定・外部テーブル参照）と由来情報，(ii) 主要診断量の時系列，(iii) PSD 履歴，(iv) 終端集計，(v) 検証ログを，実行ごとに保存する（付録 A）．これらが揃えば，後段の図表生成は保存された出力を入力として再構成できる．
 
-保存形式は JSON/Parquet/CSV であり，入力と採用値の記録（`run_config.json`），主要スカラー時系列（`series/run.parquet`），PSD 履歴（`series/psd_hist.parquet`），終端要約（`summary.json`），質量検査ログ（`checks/mass_budget.csv`）を最小セットとして保持する．補助的に，遮蔽や供給クリップなどの追加診断時系列を保存し，実行環境・実行コマンドも併せて記録する．1D 計算では半径セルごとの時系列を保存するため，任意時刻の円盤全体量は半径積分（離散和）により再構成できる．
+保存形式は JSON/Parquet/CSV であり，入力と採用値の記録（`run_config.json`），主要スカラー時系列（`series/run.parquet`），PSD 履歴（`series/psd_hist.parquet`），終端要約（`summary.json`），質量検査ログ（`checks/mass_budget.csv`）を最小セットとして保持する．補助的に，`series/diagnostics.parquet`（遮蔽などの追加診断；存在する場合）や `checks/mass_budget_cells.csv`（1D のセル別質量収支；設定により出力）を保存する．また，収束比較（時間刻み・粒径ビン）の判定結果は，別実行の比較から `checks/validation.json` として出力し，本文の合否判定に用いる．1D 計算では半径セルごとの時系列を保存するため，任意時刻の円盤全体量は半径積分（離散和）により再構成できる．
 
 累積損失は式\ref{eq:mass_loss_update}で更新し，$\dot{M}_{\rm out}$ と追加シンクの寄与を区分一定近似で積算する\citep{Wyatt2008}．本論文では質量を火星質量 $M_{\rm Mars}$ で規格化して示し，$\dot{M}_{\rm out}$ と $M_{\rm loss}$ も同様の規格化量として扱う．
 
@@ -651,11 +667,11 @@ $\dot{\Sigma}_{\rm src}$ は明示的な供給項 $F_k$ が与える質量注入
 M_{\rm loss}^{n+1}=M_{\rm loss}^{n}+\Delta t\left(\dot{M}_{\rm out}^{n}+\dot{M}_{\rm sinks}^{n}\right)
 \end{equation}
 
-検証は，質量保存，時間刻み収束，および粒径ビン（PSD 解像度）収束の 3 項目で行う．合格基準は表\ref{tab:validation_criteria}に示し，本文で示す結果はすべて基準を満たした計算に限定する．質量保存は式\ref{eq:mass_budget_definition}で定義する相対質量誤差 $|\epsilon_{\rm mass}(t)|$ の最大値が $0.5\%$ 以下であることを要求する．
+検証は，質量保存，時間刻み収束，および粒径ビン収束（PSD ビン数）の 3 項目で行う．合格基準は表\ref{tab:validation_criteria}に示し，本文で示す結果はすべて基準を満たした計算に限定する．質量保存は式\ref{eq:mass_budget_definition}で定義する相対質量誤差 $|\epsilon_{\rm mass}(t)|$ の最大値が $0.5\%$ 以下であることを要求する．時間刻み収束と粒径ビン収束（PSD ビン数）に用いる相対差は $|X({\rm coarse})-X({\rm ref})|/|X({\rm ref})|$ と定義する．ref はより細かい離散化（時間刻みなら $\Delta t/2$，粒径ビンならビン数 2 倍）とする．
 
-時間刻み収束は，$\Delta t$ と $\Delta t/2$ の計算で，累積損失 $M_{\rm loss}$ の相対差が $1\%$ 以下となることにより確認する．本節では相対差を $|X(\Delta t)-X(\Delta t/2)|/|X(\Delta t/2)|$ と定義する．$M_{\rm loss}$ は式\ref{eq:mass_loss_update}で更新される累積量であり，離散化誤差が時間積分を通じて蓄積した影響を直接反映するため，収束判定の代表指標として採用する．
+時間刻み収束は，$\Delta t$（coarse）と $\Delta t/2$（ref）の計算で，累積損失 $M_{\rm loss}$ の相対差が $1\%$ 以下となることにより確認する．$M_{\rm loss}$ は式\ref{eq:mass_loss_update}で更新される累積量であり，離散化誤差が時間積分を通じて蓄積した影響を直接反映するため，収束判定の代表指標として採用する．
 
-粒径ビン（PSD 解像度）収束は，基準の粒径ビン設定と，粒径ビン幅を 1/2 とした設定（ビン数を 2 倍とした PSD）の計算結果を比較し，時間刻み収束と同一の指標（$M_{\rm loss}$ の相対差）で $1\%$ 以下となることにより確認する．この比較により，粒径離散化に起因する系統誤差が本論文の結論に影響しない範囲であることを担保する．
+粒径ビン収束（PSD ビン数）は，基準の粒径ビン設定（coarse）と，粒径ビン幅を 1/2 とした設定（ref；ビン数を 2 倍にした PSD）の計算結果を比較し，時間刻み収束と同一の指標（$M_{\rm loss}$ の相対差）で $1\%$ 以下となることにより確認する．この比較により，粒径離散化に起因する系統誤差が本論文の結論に影響しない範囲であることを担保する．
 
 \begin{table}[t]
   \centering
@@ -669,13 +685,17 @@ M_{\rm loss}^{n+1}=M_{\rm loss}^{n}+\Delta t\left(\dot{M}_{\rm out}^{n}+\dot{M}_
     \hline
     質量保存 & 相対質量誤差 $|\epsilon_{\rm mass}(t)|$ の最大値が $0.5\%$ 以下 \\
     時間刻み収束 & $\Delta t$ と $\Delta t/2$ の $M_{\rm loss}$ の相対差が $1\%$ 以下 \\
-    粒径ビン収束（PSD 解像度） & 基準ビンとビン数を 2 倍にした計算の $M_{\rm loss}$ の相対差が $1\%$ 以下 \\
+    粒径ビン収束（PSD ビン数） & 基準ビンとビン数を 2 倍にした計算の $M_{\rm loss}$ の相対差が $1\%$ 以下 \\
     \hline
 \end{tabular}
 \end{table}
 
-以上の出力仕様と検証基準により，結果の再現性（入力→出力の対応）と数値的健全性（質量保存と収束性：時間刻み・粒径ビン（PSD 解像度））を担保したうえで，本論文の結果・議論を構成する．
+以上の出力仕様と検証基準により，結果の再現性（入力→出力の対応）と数値的健全性（質量保存と収束性：時間刻み・粒径ビン）を担保したうえで，本論文の結果・議論を構成する．
 ## 付録 A. 再現実行と保存情報
+
+<!--
+実装(.py): marsdisk/run_zero_d.py, marsdisk/run_one_d.py, marsdisk/io/writer.py, marsdisk/io/streaming.py, marsdisk/io/diagnostics.py, scripts/validate_run.py
+-->
 
 本研究の再現性は，(i) 入力（設定ファイルとテーブル）を固定し，(ii) 実行時に採用された値と条件を保存し，(iii) 時系列・要約・検証ログを保存することで担保する．本付録では，論文として最低限必要な「保存すべき情報」をまとめる．
 
@@ -685,7 +705,7 @@ M_{\rm loss}^{n+1}=M_{\rm loss}^{n}+\Delta t\left(\dot{M}_{\rm out}^{n}+\dot{M}_
 - **外部テーブル**: $\langle Q_{\rm pr}\rangle$ や遮蔽係数 $\Phi$ などの外部入力（付録 C）．
 - **乱数シード**: 乱数を用いる過程がある場合はシードを固定する．
 
-外部入力（テーブル）の役割と本文中での参照先を付録 C（表\ref{tab:app_external_inputs}）にまとめる．実行時に採用したテーブルの出典と補間範囲（有効温度域など）は実行ログに保存し，再解析時の基準とする．
+外部入力（テーブル）の役割と本文中での参照先を付録 C（表\ref{tab:app_external_inputs}）にまとめる．実行時に採用したテーブルの出典と適用範囲（有効温度域など）は実行ログに保存し，再解析時の基準とする．
 
 ### A.2 保存する出力（再解析の最小セット）
 
@@ -696,6 +716,16 @@ M_{\rm loss}^{n+1}=M_{\rm loss}^{n}+\Delta t\left(\dot{M}_{\rm out}^{n}+\dot{M}_
 - **PSD 履歴**: $N_k(t)$ と $\Sigma_{\rm surf}(t)$ の履歴．
 - **要約**: $t_{\rm end}$ までの累積損失 $M_{\rm loss}$ などの集約．
 - **検証ログ**: 式\ref{eq:mass_budget_definition} に基づく質量検査のログ．
+
+実際の成果物は実行ディレクトリ（`OUTDIR/`）配下に保存し，後段の解析はこれらを入力として再構成する．最小セットは次の 5 点である．
+
+- `OUTDIR/run_config.json`（JSON）: 展開後の設定と採用値，実行環境（`python`/`platform`/`argv`/`cwd`/`timestamp_utc`），依存パッケージの版，および外部ファイル（テーブル等）のパスとハッシュ（可能な範囲）．
+- `OUTDIR/series/run.parquet`（Parquet）: 主要スカラー時系列（例: `time`, `dt`, `tau`, `a_blow`, `s_min`, `Sigma_surf`, `outflux_surface`, `prod_subblow_area_rate`, `M_out_dot`, `M_loss_cum`）．
+- `OUTDIR/series/psd_hist.parquet`（Parquet）: PSD 履歴（例: `time`, `bin_index`, `s_bin_center`, `N_bin`, `Sigma_bin`, `f_mass`, `Sigma_surf`）．
+- `OUTDIR/summary.json`（JSON）: 終端要約（例: `M_loss`, `mass_budget_max_error_percent`）．
+- `OUTDIR/checks/mass_budget.csv`（CSV）: 質量検査ログ（例: `time`, `mass_initial`, `mass_remaining`, `mass_lost`, `error_percent`, `tolerance_percent`）．
+
+補助的に，`OUTDIR/series/diagnostics.parquet`（遮蔽などの追加診断；存在する場合）や `OUTDIR/checks/mass_budget_cells.csv`（1D のセル別質量収支；設定により出力）を保存する．また，時間刻み・粒径ビンの収束比較の合否判定は `scripts/validate_run.py` により `OUTDIR/checks/validation.json` として出力し，表\ref{tab:validation_criteria}の確認に用いる．
 
 保存時は質量流出率と累積損失を火星質量 $M_{\rm Mars}$ で規格化した単位で記録し，数値桁を揃える．定義は付録 E（記号表）を参照する．
 
