@@ -240,43 +240,49 @@ Y_{kij}=F_{LF}\delta_{k k_{\rm LR}}+(1-F_{LF})\,w^{\rm frag}_k(k_{\rm LR})
 
 ### 2.5 昇華と追加シンク
 
-昇華は HKL フラックス $J(T)$ を用い\citep{VanLieshoutMinDominik2014_AA572_A76}，粒径縮小を式\ref{eq:dsdt_definition}で与える．昇華で用いる粒子温度は灰色体近似で式\ref{eq:grain_temperature_definition}とし\citep{BohrenHuffman1983_Wiley}，飽和蒸気圧は Clausius 形を用いる（式\ref{eq:psat_definition}）\citep{Kubaschewski1974_Book,VisscherFegley2013_ApJL767_L12}．基準ケースの係数は付録 Aに示す．
+HKL 式（Hertz–Knudsen–Langmuir 式）に基づき，凝縮相（固相／液相）表面から気相へ輸送される**正味の質量フラックス** $J(T)$ を評価し，それに伴う粒径縮小をモデル化する\citep{VanLieshoutMinDominik2014_AA572_A76}．HKL 式は本来，$P_{\rm sat}(T)$ と $P_{\rm gas}$ の差に応じて蒸発／昇華（正）と凝縮（負）の双方を記述するが，本研究では気相の再凝縮・付着成長を追跡しないため，固体粒子の減少に寄与する $J\ge 0$ の範囲のみを用いる（すなわち $P_{\rm sat}(T)\le P_{\rm gas}$ では $J=0$ とする）．
+
+相変化（蒸発・昇華）フラックスの評価に用いる粒子温度 $T_p$ は，火星の熱放射による加熱と粒子自身の熱放射による冷却の釣り合いを灰色体近似で表し，式\ref{eq:grain_temperature_definition}で与える\citep{BohrenHuffman1983_Wiley}．ここで $\langle Q_{\rm abs}\rangle$ は吸収効率の Planck 平均（定義域は本論文の表記に従う）であり，基準ケースでは $\langle Q_{\rm abs}\rangle=1$ を既定値とする（材料依存の放射率を考慮する場合は一定値として与える）．
 
 \begin{equation}
 \label{eq:grain_temperature_definition}
 T_p = T_M\,\langle Q_{\rm abs}\rangle^{1/4}\sqrt{\frac{R_{\rm Mars}}{2r}}
 \end{equation}
 
-灰色体近似として，本研究の基準ケースでは $\langle Q_{\rm abs}\rangle=1$ を既定値とする（材料依存の放射率を考慮する場合は一定値として与える）．
-
-\begin{equation}
-\label{eq:hkl_flux}
-J(T) =
- \alpha_{\rm evap}\max\!\bigl(P_{\rm sat}(T) - P_{\rm gas},\,0\bigr)
- \sqrt{\dfrac{\mu}{2\pi R T}}
-\end{equation}
+飽和蒸気圧 $P_{\rm sat}(T)$ は Clausius 型の近似式（式\ref{eq:psat_definition}）で与え\citep{Kubaschewski1974_Book,VisscherFegley2013_ApJL767_L12}，係数 $A,B$ は材料の相（固相／液相）に応じて切り替える．係数の採用値および $P_{\rm sat}$ の単位系は付録 A に示す（このとき $A,B$ は当該単位系に整合するフィット係数である）．
 
 \begin{equation}
 \label{eq:psat_definition}
 P_{\rm sat}(T)=10^{A - B/T}
 \end{equation}
 
-本研究では材料の相（固相／液相）により $P_{\rm sat}(T)$ のフィット係数 $A,B$ を切り替えて用いる．相境界近傍で温度が往復する場合に，微小な変動で相が頻繁に切り替わることを避けるため，相判定にはヒステリシスを導入し，切替温度とヒステリシス幅は付録 Aに示す採用値で与える．これは相変化の微視的過程を解かない代わりに，固相・液相の寄与を有効パラメータで表現する近似である．
+相境界近傍で温度が往復する場合，微小な温度変動によって相の判定が頻繁に反転すると数値的不安定性を生む．本研究では相変化の微視的過程を解かない代わりに，相判定にヒステリシスを導入し，切替温度とヒステリシス幅は付録 A の採用値で与える．これは固相・液相の寄与を有効パラメータで表現する近似である。
 
-このとき粒径の時間変化は，HKL フラックスと質量保存から $ds/dt=-J(T)/\rho$ と書ける\citep{VanLieshoutMinDominik2014_AA572_A76}．
+以上を用いて，凝縮相表面からの正味の質量フラックス $J(T)$ を HKL 式で与える\citep{VanLieshoutMinDominik2014_AA572_A76}．蒸発（固相では昇華）係数 $\alpha_{\rm evap}$ と周囲気相の分圧 $P_{\rm gas}$ を導入し，粒子の質量減少に寄与する成分のみを反映するため，$P_{\rm sat}(T)-P_{\rm gas}$ の正の部分を採用する．
+
+\begin{equation}
+\label{eq:hkl_flux}
+J(T) =
+\alpha_{\rm evap}\max\!\bigl(P_{\rm sat}(T) - P_{\rm gas},\,0\bigr)
+\sqrt{\dfrac{\mu}{2\pi R T}}
+\end{equation}
+
+ここで $\mu$ は分子（または蒸気種）のモル質量，$R$ は気体定数である．
+
+次に，$J(T)$ を粒径縮小速度へ写像する．粒子を密度 $\rho$ の球とみなすと，質量保存から $dm/dt=-4\pi s^{2}J$ および $m=(4/3)\pi\rho s^{3}$ が成り立つため，$ds/dt=-J/\rho$ を得る\citep{VanLieshoutMinDominik2014_AA572_A76}．したがって粒径の時間変化は式\ref{eq:dsdt_definition}で与える．
 
 \begin{equation}
 \label{eq:dsdt_definition}
 \frac{ds}{dt}=-\frac{J(T)}{\rho}
 \end{equation}
 
-昇華によるサイズ減少速度 $ds/dt$ を各ビンの有効寿命 $t_{{\rm sub},k}=s_k/|ds/dt|$ に写像し，一次シンクとして Smol 方程式に組み込む．すなわち $ds/dt<0$ のとき，
+離散粒径ビンでの実装では，粒径縮小は連続的な「サイズ空間の移流」に相当するが，本研究では表層固体粒子の減少時定数を簡潔に表現するため，各ビンの代表粒径 $s_k$ に対して有効寿命 $t_{{\rm sub},k}=s_k/|ds/dt|$ を定義し，一次シンクとして Smoluchowski 方程式に組み込む．すなわち $ds/dt<0$ のとき，
 
 \begin{equation}
 \label{eq:sublimation_sink_definition}
 S_{{\rm sub},k}=\frac{1}{t_{{\rm sub},k}}=\frac{|ds/dt|}{s_k}
 \end{equation}
 
-とし，式\ref{eq:smoluchowski}の $S_k$ に加算する．
+とし，式\ref{eq:smoluchowski}の $S_k$ に加算する（本研究では添字 ${\rm sub}$ を慣用的に用いるが，固相の昇華に限らず液相での蒸発も包含する）．
 
-以上の定式化により，半径セルごとの PSD と表層面密度を，放射圧流出（ブローアウト）・遮蔽・供給・衝突カスケード・追加シンクの寄与で更新できる．次節では，初期条件・境界条件と，本論文で用いる基準パラメータをまとめる．
+以上の定式化により，半径セルごとの PSD と表層面密度を，放射圧流出（ブローアウト）・遮蔽・供給・衝突カスケード・相変化に伴う質量フラックス（HKL）・追加シンクの寄与で更新できる．次節では，初期条件・境界条件と，本論文で用いる基準パラメータをまとめる．
