@@ -7420,6 +7420,48 @@
     "brief_usage": "Advance the surface layer by one time step."
   },
   {
+    "file_path": "marsdisk/provenance.py",
+    "line_no": 19,
+    "symbol": "_DEFAULT_PACKAGE_DISTS",
+    "signature": "_DEFAULT_PACKAGE_DISTS: tuple[str, ...] = ('numpy', 'pandas', 'pyarrow', 'scipy', 'numba', 'pydantic', 'ruamel.yaml')",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "marsdisk/provenance.py",
+    "line_no": 30,
+    "symbol": "_utc_timestamp_iso",
+    "signature": "_utc_timestamp_iso() -> str",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "marsdisk/provenance.py",
+    "line_no": 35,
+    "symbol": "_safe_package_version",
+    "signature": "_safe_package_version(dist_name: str) -> str | None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "marsdisk/provenance.py",
+    "line_no": 44,
+    "symbol": "_safe_git_commit",
+    "signature": "_safe_git_commit(repo_root: Path | None=None) -> str | None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "marsdisk/provenance.py",
+    "line_no": 59,
+    "symbol": "_safe_sha256",
+    "signature": "_safe_sha256(path: Path, *, max_bytes: int | None=None, chunk_bytes: int=1024 * 1024) -> str | None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "marsdisk/provenance.py",
+    "line_no": 81,
+    "symbol": "gather_runtime_provenance",
+    "signature": "gather_runtime_provenance(*, external_files: Iterable[str | Path | None]=(), package_dists: Sequence[str] | None=None, max_external_file_bytes: int=50 * 1024 * 1024) -> dict[str, Any]",
+    "brief_usage": "Return a JSON-serialisable runtime provenance snapshot."
+  },
+  {
     "file_path": "marsdisk/run_one_d.py",
     "line_no": 68,
     "symbol": "SECONDS_PER_YEAR",
@@ -7897,7 +7939,7 @@
   },
   {
     "file_path": "marsdisk/run_zero_d.py",
-    "line_no": 6036,
+    "line_no": 6046,
     "symbol": "main",
     "signature": "main(argv: Optional[List[str]]=None) -> None",
     "brief_usage": "Command line entry point."
@@ -13990,6 +14032,41 @@
     "line_no": 212,
     "symbol": "main",
     "signature": "main() -> int",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/validate_run.py",
+    "line_no": 18,
+    "symbol": "_read_summary",
+    "signature": "_read_summary(run_dir: Path) -> dict[str, Any]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/validate_run.py",
+    "line_no": 29,
+    "symbol": "_require_float",
+    "signature": "_require_float(summary: dict[str, Any], key: str, *, label: str) -> float",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/validate_run.py",
+    "line_no": 38,
+    "symbol": "_rel_diff",
+    "signature": "_rel_diff(base: float, ref: float) -> float",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/validate_run.py",
+    "line_no": 44,
+    "symbol": "_build_report",
+    "signature": "_build_report(*, base_dir: Path, dt_half_dir: Path | None, psd2x_dir: Path | None, tol_mass_percent: float, tol_rel: float) -> dict[str, Any]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/validate_run.py",
+    "line_no": 110,
+    "symbol": "main",
+    "signature": "main(argv: list[str] | None=None) -> int",
     "brief_usage": "No description available."
   },
   {

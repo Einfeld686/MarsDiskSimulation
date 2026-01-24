@@ -713,6 +713,11 @@ marsdisk/physics_step.py:258:def compute_shielding(kappa_surf: float, sigma_surf
 marsdisk/physics_step.py:359:def compute_shielding_step(kappa_surf: float, sigma_surf: float, *, collisions_active: bool, shielding_mode: str, phi_tau_fn: Optional[Callable[[float], float]], tau_fixed: Optional[float], sigma_tau1_fixed: Optional[float], los_factor: float, use_tcoll: bool) -> ShieldingStepResult
 marsdisk/physics_step.py:414:def compute_sublimation(T_M: float, r: float, rho: float, sub_params: Any, *, phase_state: str='solid', enabled: bool=True) -> SublimationResult
 marsdisk/physics_step.py:475:def step_surface_layer(sigma_surf: float, prod_rate: float, dt: float, Omega: float, *, tau: Optional[float]=None, t_sink: Optional[float]=None, sigma_tau1: Optional[float]=None, enable_blowout: bool=True, chi_blow: float=1.0) -> SurfaceStepResult
+marsdisk/provenance.py:30:def _utc_timestamp_iso() -> str
+marsdisk/provenance.py:35:def _safe_package_version(dist_name: str) -> str | None
+marsdisk/provenance.py:44:def _safe_git_commit(repo_root: Path | None=None) -> str | None
+marsdisk/provenance.py:59:def _safe_sha256(path: Path, *, max_bytes: int | None=None, chunk_bytes: int=1024 * 1024) -> str | None
+marsdisk/provenance.py:81:def gather_runtime_provenance(*, external_files: Iterable[str | Path | None]=(), package_dists: Sequence[str] | None=None, max_external_file_bytes: int=50 * 1024 * 1024) -> dict[str, Any]
 marsdisk/run_one_d.py:79:class MassBudgetViolationError(NumericalError)
 marsdisk/run_one_d.py:103:class CellStepPayload(NamedTuple)
 marsdisk/run_one_d.py:113:def _clamp_sigma_surf(value: float, *, label: str='sigma_surf') -> float
@@ -742,7 +747,7 @@ marsdisk/run_zero_d.py:1334:def load_config(path: Path, overrides: Optional[Sequ
 marsdisk/run_zero_d.py:1359:def _gather_git_info() -> Dict[str, Any]
 marsdisk/run_zero_d.py:1386:class MassBudgetViolationError(NumericalError)
 marsdisk/run_zero_d.py:1392:def run_zero_d(cfg: Config, *, enforce_mass_budget: bool=False, physics_mode_override: Optional[str]=None, physics_mode_source_override: Optional[str]=None) -> None
-marsdisk/run_zero_d.py:6036:def main(argv: Optional[List[str]]=None) -> None
+marsdisk/run_zero_d.py:6046:def main(argv: Optional[List[str]]=None) -> None
 marsdisk/runtime/autotune.py:22:class MachineState
 marsdisk/runtime/autotune.py:43:class AutoTuneDecision
 marsdisk/runtime/autotune.py:56:def _safe_int(value: Any, fallback: int) -> int
@@ -1439,6 +1444,11 @@ scripts/tools/compare_zero_d_outputs.py:164:def _read_mass_budget(path: Path) ->
 scripts/tools/compare_zero_d_outputs.py:176:def _write_json(path: Path, payload: dict[str, Any]) -> None
 scripts/tools/compare_zero_d_outputs.py:182:def _write_md(path: Path, payload: dict[str, Any]) -> None
 scripts/tools/compare_zero_d_outputs.py:212:def main() -> int
+scripts/validate_run.py:18:def _read_summary(run_dir: Path) -> dict[str, Any]
+scripts/validate_run.py:29:def _require_float(summary: dict[str, Any], key: str, *, label: str) -> float
+scripts/validate_run.py:38:def _rel_diff(base: float, ref: float) -> float
+scripts/validate_run.py:44:def _build_report(*, base_dir: Path, dt_half_dir: Path | None, psd2x_dir: Path | None, tol_mass_percent: float, tol_rel: float) -> dict[str, Any]
+scripts/validate_run.py:110:def main(argv: list[str] | None=None) -> int
 siO2_disk_cooling/io_utils.py:13:def ensure_outputs_dir() -> Path
 siO2_disk_cooling/io_utils.py:21:def write_csv(r_over_Rmars: np.ndarray, arrival_glass_s: np.ndarray, arrival_liquidus_s: np.ndarray, path: Path) -> None
 siO2_disk_cooling/io_utils.py:40:def _format_stat(values: Iterable[float]) -> str
