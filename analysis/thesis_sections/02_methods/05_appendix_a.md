@@ -19,7 +19,7 @@
 本論文で示す結果は，以下の情報を保存して再解析できる形で管理した．
 
 - **採用値の記録**: $\rho$，$\langle Q_{\rm pr}\rangle$，物理スイッチ，$s_{\rm blow}$ など，実行時に採用した値と出典を機械可読形式で保存する．
-- **時系列**: 主要スカラー量（$\tau_{\rm los}$，$\tau_{\rm eff}$，$s_{\rm blow}$，$\Sigma_{\rm surf}$，$\dot{M}_{\rm out}$ など）の時系列．
+- **時系列**: 主要スカラー量（$\tau_{\rm los}$，$s_{\rm blow}$，$\Sigma_{\rm surf}$，$\dot{M}_{\rm out}$ など）の時系列．
 - **PSD 履歴**: $N_k(t)$ と $\Sigma_{\rm surf}(t)$ の履歴．
 - **要約**: $t_{\rm end}$ までの累積損失 $M_{\rm loss}$ などの集約．
 - **検証ログ**: 式\ref{eq:mass_budget_definition} に基づく質量検査のログ．
@@ -48,7 +48,7 @@
     \hline
     $T_M$ & 4000, 3000 & 火星温度 [K] \\
     $\epsilon_{\rm mix}$ & 1.0, 0.5 & 混合係数（供給の有効度） \\
-	    $\tau_0$ & 1.0, 0.5 & 初期有効光学的厚さ（$\tau_{\rm eff}$ の規格化値） \\
+	    $\tau_0$ & 1.0, 0.5 & 初期視線方向光学的厚さ（$\tau_{\rm los}$ の規格化値） \\
     $i_0$ & 0.05, 0.10 & 初期傾斜角 \\
     $f_{Q^*}$ & 0.3, 1, 3（$\times$基準値） & $Q_D^*$ の係数スケール（proxy の不確かさの感度） \\
     \hline
@@ -61,7 +61,7 @@
 
 \begin{figure}[t]
   \centering
-  \includegraphics[width=\linewidth]{figures/thesis/validation_mass_budget_example.pdf}
+  % \includegraphics[width=\linewidth]{figures/thesis/validation_mass_budget_example.pdf}
   \caption{代表ケースにおける質量検査 $\epsilon_{\rm mass}(t)$ の時系列（例）}
   \label{fig:app_validation_mass_budget_example}
 \end{figure}

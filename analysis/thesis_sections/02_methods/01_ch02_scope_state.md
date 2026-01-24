@@ -4,7 +4,7 @@
 実装(.py): marsdisk/run_zero_d.py, marsdisk/run_one_d.py, marsdisk/grid.py, marsdisk/io/tables.py, marsdisk/physics/psd.py, marsdisk/physics/sizes.py, marsdisk/physics/radiation.py, marsdisk/physics/shielding.py, marsdisk/physics/initfields.py
 -->
 
-時間発展には，放射圧による除去（定式化は \citep{Burns1979_Icarus40_1} を基礎とする），遮蔽，表層への供給，衝突カスケード，およびその他の損失過程をまとめた追加シンク項を含める．以下では，粒径をビン $k$ に離散化した枠組みで評価される離散量とする．
+時間発展には，放射圧による除去\citep{Burns1979_Icarus40_1}，遮蔽，表層への供給，衝突カスケード，およびその他の損失過程をまとめた追加シンク項を含める．以下では，粒径をビン $k$ に離散化した枠組みで評価される離散量とする．
 軌道力学量は，各半径セルの中心半径 $r$（火星中心からの距離）で評価する．火星質量 $M_{\rm Mars}$ による点質量重力場を仮定し，粒子の軌道運動をケプラー運動で近似すると，ケプラー速度 $v_K(r)$，ケプラー角速度 $\Omega(r)$，および公転周期 $T_{\rm orb}(r)$ は式\ref{eq:vK_definition}–\ref{eq:torb_definition}で定義される．
 
 \begin{equation}
@@ -80,7 +80,7 @@ $\chi_{\rm blow}$ はブローアウト滞在時間の係数であり，非束�
 
 遮蔽係数 $\Phi(\tau_{\rm los})$ は，自己遮蔽により火星放射が表層へ到達しにくくなる効果を，視線方向光学的厚さ $\tau_{\rm los}$ の関数として表す無次元係数である（付録C，表\ref{tab:app_external_inputs}）．
 
-遮蔽の効果は，表層の質量不透明度 $\kappa_{\rm surf}$（単位 $\mathrm{m^2\,kg^{-1}}$）を，有効不透明度 $\kappa_{\rm eff}$ に置き換えることで取り込む．本研究では $\kappa_{\rm eff}$ を $\Phi$ によりスケールする近似を採用し，火星方向の有効光学的厚さ $\tau_{\rm eff}$ を以下で定義する．
+遮蔽の効果は，表層の質量不透明度 $\kappa_{\rm surf}$（単位 $\mathrm{m^2\,kg^{-1}}$）を，有効不透明度 $\kappa_{\rm eff}$ に置き換えることで取り込む．本研究では $\kappa_{\rm eff}$ を $\Phi$ によりスケールする近似を採用し，以下で定義する．
 
 \begin{equation}
 \label{eq:phi_definition}
@@ -92,13 +92,8 @@ $\chi_{\rm blow}$ はブローアウト滞在時間の係数であり，非束�
 \kappa_{\rm eff} = \Phi\,\kappa_{\rm surf}
 \end{equation}
 
-\begin{equation}
-\label{eq:tau_eff_definition}
-\tau_{\rm eff}\equiv f_{\rm los}\kappa_{\rm eff}\Sigma_{\rm surf}=\Phi(\tau_{\rm los})\,\tau_{\rm los}
-\end{equation}
-
-ここで $\Sigma_{\rm surf}$ は表層面密度（単位 $\mathrm{kg\,m^{-2}}$），$f_{\rm los}$ は視線方向に沿った幾何学補正因子である．式\ref{eq:tau_eff_definition} 右辺の等号は，$\tau_{\rm los}\equiv f_{\rm los}\kappa_{\rm surf}\Sigma_{\rm surf}$ を用いた関係式である．
-$\kappa_{\rm eff}$ に基づき，光学的厚さが 1 となる参照面密度 $\Sigma_{\tau=1}$ を式\ref{eq:sigma_tau1_definition}で与える．$\kappa_{\rm eff}>0$ のとき $\Sigma_{\tau=1}$ は「$\tau\simeq1$ に対応する表層面密度」の目安であり，$\kappa_{\rm eff}\le0$ の場合は光学的に厚くならない極限として $\Sigma_{\tau=1}=\infty$ と置く．
+ここで $\tau_{\rm los}$ は式\ref{eq:tau_los_definition}で定義した視線方向光学的厚さであり，$\Phi$ はその関数として与える．
+$\kappa_{\rm eff}$ に基づき，診断量として参照面密度 $\Sigma_{\tau=1}$ を式\ref{eq:sigma_tau1_definition}で定義する．$\kappa_{\rm eff}>0$ のとき $\Sigma_{\tau=1}$ は「$\kappa_{\rm eff}\Sigma_{\rm surf}\simeq1$ に対応する表層面密度」の目安であり，$\kappa_{\rm eff}\le0$ の場合は光学的に厚くならない極限として $\Sigma_{\tau=1}=\infty$ と置く．
 
 \begin{equation}
 \label{eq:sigma_tau1_definition}
@@ -109,7 +104,7 @@ $\kappa_{\rm eff}$ に基づき，光学的厚さが 1 となる参照面密度 
 \end{cases}
 \end{equation}
 
-$\kappa_{\rm eff}$ と $\tau_{\rm eff}$ は，(i) 初期条件における光学的厚さの規格化，(ii) $\tau_{\rm stop}$ による適用範囲判定（停止判定）に用いる．
+$\kappa_{\rm eff}$ は遮蔽を織り込んだ有効不透明度として照射・表層アウトフローの評価に用いる．一方，初期条件の光学的厚さの規格化と，$\tau_{\rm stop}$ による適用範囲判定（停止判定）には $\tau_{\rm los}$ を用いる．
 
 ### 2.3 表層への質量供給
 
@@ -126,7 +121,7 @@ R_{\rm base}(r)=
 \Sigma_{\tau_{\rm ref}}(t_0,r)=\frac{\tau_{\rm ref}}{f_{\rm los}\kappa_{\rm eff}(t_0,\tau_{\rm ref})}
 \end{equation}
 
-ここで $\mu_{\rm sup}$ は供給強度を定める無次元パラメータであり，$f_{\rm orb}$ は $\mu_{\rm sup}=1$ のときに 1 軌道あたりに供給される表層面密度が参照面密度 $\Sigma_{\tau_{\rm ref}}$ に対して占める比率（無次元）である．$\tau_{\rm ref}$ は参照有効光学的厚さ（既定値 1）であり，$\Sigma_{\tau_{\rm ref}}$ は初期 PSD から評価した $\kappa_{\rm eff}$ に基づく参照面密度である．本研究では初期光学的厚さ $\tau_0$ を掃引して初期状態を変えるため，$\Sigma_{\tau_{\rm ref}}(t_0,r)$ を用いて供給率を規格化し，「同じ $\mu_{\rm sup}$ が同程度の供給量」を指すように定義する．なお，式\ref{eq:R_base_definition}に $\epsilon_{\rm mix}$ を含めたのは，式\ref{eq:prod_rate_definition}と合わせて $\dot{\Sigma}_{\rm in}$ が $\mu_{\rm sup}$ と $f_{\rm orb}$ により一意に決まり，$\epsilon_{\rm mix}$ の値に依存しない（$\dot{\Sigma}_{\rm in}=\mu_{\rm sup}f_{\rm orb}\Sigma_{\tau_{\rm ref}}/T_{\rm orb}$ に帰着する）ようにするためである．
+ここで $\mu_{\rm sup}$ は供給強度を定める無次元パラメータであり，$f_{\rm orb}$ は $\mu_{\rm sup}=1$ のときに 1 軌道あたりに供給される表層面密度が参照面密度 $\Sigma_{\tau_{\rm ref}}$ に対して占める比率（無次元）である．$\tau_{\rm ref}$ は参照光学的厚さ（既定値 1；$\tau_{\rm los}$）であり，$\Sigma_{\tau_{\rm ref}}$ は初期 PSD から評価した $\kappa_{\rm eff}$ に基づく参照面密度である．本研究では初期光学的厚さ $\tau_0$ を掃引して初期状態を変えるため，$\Sigma_{\tau_{\rm ref}}(t_0,r)$ を用いて供給率を規格化し，「同じ $\mu_{\rm sup}$ が同程度の供給量」を指すように定義する．なお，式\ref{eq:R_base_definition}に $\epsilon_{\rm mix}$ を含めたのは，式\ref{eq:prod_rate_definition}と合わせて $\dot{\Sigma}_{\rm in}$ が $\mu_{\rm sup}$ と $f_{\rm orb}$ により一意に決まり，$\epsilon_{\rm mix}$ の値に依存しない（$\dot{\Sigma}_{\rm in}=\mu_{\rm sup}f_{\rm orb}\Sigma_{\tau_{\rm ref}}/T_{\rm orb}$ に帰着する）ようにするためである．
 
 供給率は式\ref{eq:supply_injection_definition}により PSD のソース項 $F_k$ として粒径ビン $k$ に注入する．ここで $F_k$ は単位面積あたりの粒子数密度 $N_k$ の増加率であり，質量保存条件 $\sum_k m_kF_k=\dot{\Sigma}_{\rm in}$ を満たすよう，無次元重み $w_k$ を $\sum_kw_k=1$ となるように正規化する．
 
@@ -176,8 +171,6 @@ C_{ij} = \frac{N_i N_j}{1+\delta_{ij}}\,
 v_{ij}=v_K\,\sqrt{1.25\,e^{2}+i^{2}}
 \end{equation}
 
-基準値 $e_0=0.5$ は厳密な「低離心率」域を超えるが，衝突速度の代表スケールを与える簡略式として式\ref{eq:vrel_pericenter_definition}を用い，$e,i$ を時間一定・サイズ非依存とする近似の影響は感度として評価する．
-
 ビンの衝突寿命は式\ref{eq:t_coll_definition}とし，時間刻みの上限に用いる\citep{Wyatt2008,StrubbeChiang2006_ApJ648_652}．
 
 \begin{equation}
@@ -201,7 +194,7 @@ Q_s(v)\,(100s)^{-a_s(v)}+B(v)\,\left(\frac{\rho}{1000}\right)(100s)^{b_g(v)}
 \right]
 \end{equation}
 
-を用いる．速度依存は参照速度 $v_{\rm ref}$ の表（3.3節）に基づき，$v_{ij}$ が表の範囲内では隣接する 2 点の $v_{\rm ref}$ で評価した $Q_D^*$ を線形補間し，範囲外では最近接の係数を採用したうえで重力項のみ $v^{-3\mu_{\rm LS}+2}$ のべきでスケールする（$\mu_{\rm LS}=0.45$）\citep{StewartLeinhardt2009_ApJ691_L133}．これは参照表の範囲外に対する外挿仮定である．
+を用いる．速度依存は参照速度 $v_{\rm ref}$ の表に基づき，$v_{ij}$ が表の範囲内では隣接する 2 点の $v_{\rm ref}$ で評価した $Q_D^*$ を線形補間し，範囲外では最近接の係数を採用したうえで重力項のみ $v^{-3\mu_{\rm LS}+2}$ のべきでスケールする（$\mu_{\rm LS}=0.45$）\citep{StewartLeinhardt2009_ApJ691_L133}．これは参照表の範囲外に対する外挿仮定である．
 
 衝突の比エネルギーは reduced specific kinetic energy $Q_R$ を用い，
 
@@ -210,7 +203,7 @@ Q_s(v)\,(100s)^{-a_s(v)}+B(v)\,\left(\frac{\rho}{1000}\right)(100s)^{b_g(v)}
 Q_R=\frac{1}{2}\frac{\mu_{ij}v_{ij}^{2}}{m_i+m_j},\qquad \mu_{ij}=\frac{m_i m_j}{m_i+m_j}
 \end{equation}
 
-と定義する．最大残存率 $F_{LF}$ は $\phi\equiv Q_R/Q_D^*$ の関数として，Leinhardt \& Stewart (2012) の近似を採用する\citep{LeinhardtStewart2012_ApJ745_79}．
+と定義する．最大残存率 $F_{LF}$ は $\phi\equiv Q_R/Q_D^*$ の関数として，\citet{LeinhardtStewart2012_ApJ745_79} の近似を採用する．
 
 \begin{equation}
 \label{eq:F_LF_definition}
@@ -222,8 +215,7 @@ F_{LF}(\phi)=
 \qquad \phi_{\rm tr}=1.8
 \end{equation}
 
-最大残存体の粒径は $m_{\rm LR}=F_{LF}(m_i+m_j)$ に対応する $s_{\rm LR}=(3m_{\rm LR}/4\pi\rho)^{1/3}$ とし，$s_{\rm LR}$ を含むビンを $k_{\rm LR}$ として割り当てる（$s_{\rm LR}$ が粒径グリッド範囲外に出た場合は，本研究の解像範囲の境界に代表させる）．
-
+最大残存体の粒径は $m_{\rm LR}=F_{LF}(m_i+m_j)$ に対応する $s_{\rm LR}=(3m_{\rm LR}/4\pi\rho)^{1/3}$ とし，$s_{\rm LR}$ を含むビンを $k_{\rm LR}$ として割り当てる．
 最大残存率 $F_{LF}$ と破片分布 $w^{\rm frag}_k$ を通じて式\ref{eq:fragment_tensor_definition}で $Y_{kij}$ を構成する\citep{StewartLeinhardt2009_ApJ691_L133,Thebault2003_AA408_775}．
 
 \begin{equation}
@@ -236,18 +228,18 @@ w^{\rm frag}_k(k_{\rm LR})=\frac{\int_{s_{k-}}^{s_{k+}} s^{-\alpha_{\rm frag}}\,
 Y_{kij}=F_{LF}\delta_{k k_{\rm LR}}+(1-F_{LF})\,w^{\rm frag}_k(k_{\rm LR})
 \end{equation}
 
-### 2.5 昇華と追加シンク
+### 2.5 質量フラックスによる粒径縮小
 
-HKL 式（Hertz–Knudsen–Langmuir 式）に基づき，凝縮相（固相／液相）表面から気相へ輸送される**正味の質量フラックス** $J(T)$ を評価し，それに伴う粒径縮小をモデル化する\citep{VanLieshoutMinDominik2014_AA572_A76}．HKL 式は本来，$P_{\rm sat}(T)$ と $P_{\rm gas}$ の差に応じて蒸発／昇華（正）と凝縮（負）の双方を記述するが，本研究では気相の再凝縮・付着成長を追跡しないため，固体粒子の減少に寄与する $J\ge 0$ の範囲のみを用いる（すなわち $P_{\rm sat}(T)\le P_{\rm gas}$ では $J=0$ とする）．
+HKL 式（Hertz–Knudsen–Langmuir 式）に基づき，凝縮相（固相／液相）表面から気相へ輸送される**正味の質量フラックス** $J(T)$ を評価し，それに伴う粒径縮小をモデル化する\citep{VanLieshoutMinDominik2014_AA572_A76}．HKL 式は本来，$P_{\rm sat}(T)$ と $P_{\rm gas}$ の差に応じて蒸発／昇華と凝縮の双方を記述するが，本研究では気相の再凝縮・付着成長を追跡しないため，固体粒子の減少に寄与する $J\ge 0$ の範囲のみを用いる．すなわち $P_{\rm sat}(T)\le P_{\rm gas}$ では $J=0$ とする．
 
-相変化（蒸発・昇華）フラックスの評価に用いる粒子温度 $T_p$ は，火星の熱放射による加熱と粒子自身の熱放射による冷却の釣り合いを灰色体近似で表し，式\ref{eq:grain_temperature_definition}で与える\citep{BohrenHuffman1983_Wiley}．ここで $\langle Q_{\rm abs}\rangle$ は吸収効率の Planck 平均（定義域は本論文の表記に従う）であり，基準ケースでは $\langle Q_{\rm abs}\rangle=1$ を既定値とする（材料依存の放射率を考慮する場合は一定値として与える）．
+相変化（蒸発・昇華）フラックスの評価に用いる粒子温度 $T_p$ は，火星の熱放射による加熱と粒子自身の熱放射による冷却の釣り合いを灰色体近似で表し，式\ref{eq:grain_temperature_definition}で与える\citep{BohrenHuffman1983_Wiley}．ここで $\langle Q_{\rm abs}\rangle$ は吸収効率の Planck 平均であり，基準ケースでは $\langle Q_{\rm abs}\rangle=1$ を既定値とする．
 
 \begin{equation}
 \label{eq:grain_temperature_definition}
 T_p = T_M\,\langle Q_{\rm abs}\rangle^{1/4}\sqrt{\frac{R_{\rm Mars}}{2r}}
 \end{equation}
 
-飽和蒸気圧 $P_{\rm sat}(T)$ は Clausius 型の近似式（式\ref{eq:psat_definition}）で与え\citep{Kubaschewski1974_Book,VisscherFegley2013_ApJL767_L12}，係数 $A,B$ は材料の相（固相／液相）に応じて切り替える．係数の採用値および $P_{\rm sat}$ の単位系は付録 A に示す（このとき $A,B$ は当該単位系に整合するフィット係数である）．
+飽和蒸気圧 $P_{\rm sat}(T)$ は Clausius 型の近似式（式\ref{eq:psat_definition}）で与え\citep{Kubaschewski1974_Book,VisscherFegley2013_ApJL767_L12}，係数 $A,B$ は材料の相（固相／液相）に応じて切り替える．係数の採用値および $P_{\rm sat}$ の単位系は付録 A に示す．ここで $A,B$ は当該単位系に整合するフィット係数である．
 
 \begin{equation}
 \label{eq:psat_definition}
@@ -255,7 +247,6 @@ P_{\rm sat}(T)=10^{A - B/T}
 \end{equation}
 
 相境界近傍で温度が往復する場合，微小な温度変動によって相の判定が頻繁に反転すると数値的不安定性を生む．本研究では相変化の微視的過程を解かない代わりに，相判定にヒステリシスを導入し，切替温度とヒステリシス幅は付録 A の採用値で与える．これは固相・液相の寄与を有効パラメータで表現する近似である。
-
 以上を用いて，凝縮相表面からの正味の質量フラックス $J(T)$ を HKL 式で与える\citep{VanLieshoutMinDominik2014_AA572_A76}．蒸発（固相では昇華）係数 $\alpha_{\rm evap}$ と周囲気相の分圧 $P_{\rm gas}$ を導入し，粒子の質量減少に寄与する成分のみを反映するため，$P_{\rm sat}(T)-P_{\rm gas}$ の正の部分を採用する．
 
 \begin{equation}
@@ -266,7 +257,6 @@ J(T) =
 \end{equation}
 
 ここで $\mu$ は分子（または蒸気種）のモル質量，$R$ は気体定数である．
-
 次に，$J(T)$ を粒径縮小速度へ写像する．粒子を密度 $\rho$ の球とみなすと，質量保存から $dm/dt=-4\pi s^{2}J$ および $m=(4/3)\pi\rho s^{3}$ が成り立つため，$ds/dt=-J/\rho$ を得る\citep{VanLieshoutMinDominik2014_AA572_A76}．したがって粒径の時間変化は式\ref{eq:dsdt_definition}で与える．
 
 \begin{equation}
@@ -282,5 +272,4 @@ S_{{\rm sub},k}=\frac{1}{t_{{\rm sub},k}}=\frac{|ds/dt|}{s_k}
 \end{equation}
 
 とし，式\ref{eq:smoluchowski}の $S_k$ に加算する（本研究では添字 ${\rm sub}$ を慣用的に用いるが，固相の昇華に限らず液相での蒸発も包含する）．
-
-以上の定式化により，半径セルごとの PSD と表層面密度を，放射圧流出（ブローアウト）・遮蔽・供給・衝突カスケード・相変化に伴う質量フラックス（HKL）・追加シンクの寄与で更新できる．次節では，初期条件・境界条件と，本論文で用いる基準パラメータをまとめる．
+以上の定式化により，半径セルごとの PSD と表層面密度を，放射圧流出（ブローアウト）・遮蔽・供給・衝突カスケード・相変化に伴う質量フラックス（HKL）・追加シンクの寄与で更新できる．

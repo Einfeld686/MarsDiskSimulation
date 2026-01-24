@@ -6,8 +6,8 @@
 
 \begin{figure}[t]
   \centering
-  \includegraphics[width=\linewidth]{figures/results/mass_budget_error/mass_budget_error_grid_tau0p5.png}
-  \includegraphics[width=\linewidth]{figures/results/mass_budget_error/mass_budget_error_grid_tau1p0.png}
+  % \includegraphics[width=\linewidth]{figures/results/mass_budget_error/mass_budget_error_grid_tau0p5.png}
+  % \includegraphics[width=\linewidth]{figures/results/mass_budget_error/mass_budget_error_grid_tau1p0.png}
   \caption{質量保存誤差（相対誤差％）の時系列（上：$\tau_0=0.5$，下：$\tau_0=1.0$）．各パネルは $(T_{M,0},\epsilon_{\rm mix})$ の組に対応し，$i_0=0.05$，$\mu=1.0$ は共通である．}
   \label{fig:results_mass_budget_error_grid}
 \end{figure}
@@ -31,7 +31,9 @@
 
 ### 4.2 停止条件の内訳
 
-本章のスイープでは，停止は二種類に分類された．（i）所定の終了時刻（温度ドライバにより決まる $t_{\rm end}$）への到達（\texttt{t\_end\_reached}），（ii）全円盤の流出率が閾値未満となったための打ち切り（\texttt{loss\_rate\_below\_threshold}）である．手法章で述べた $\tau_{\rm los}>\tau_{\rm stop}$ による早期停止は，本スイープでは発生しなかった．
+本章のスイープでは，停止理由は二種類である．すなわち，所定の終了時刻 $t_{\rm end}$ への到達（\texttt{t\_end\_reached}）と，全円盤の総損失率 $\dot{M}_{\rm out}+\dot{M}_{\rm sinks}$ が閾値 $\dot{M}_{\rm th}$ を下回ったための打ち切り（\texttt{loss\_rate\_below\_threshold}）である．後者は $t\ge t_{\min}$ の範囲で $\dot{M}_{\rm out}+\dot{M}_{\rm sinks}\le \dot{M}_{\rm th}$ を満たした時点で発火し，本スイープでは $t_{\min}=2\,\mathrm{yr}$ と $\dot{M}_{\rm th}=10^{-14}M_{\rm Mars}\,\mathrm{s^{-1}}$ を用いた（表\ref{tab:results_sweep_setup}）．
+
+なお，手法章で述べた $\tau_{\rm los}>\tau_{\rm stop}$ によるセル早期停止は，本スイープでは発生しなかった．
 
 本スイープでは後者はいずれも $t\simeq 2\,\mathrm{yr}$ で停止したが，図\ref{fig:results_cumloss_grid}に示したとおり $M_{\rm loss}(t)$ は初期に飽和する．また，$M_{\rm loss}$ は式\ref{eq:mass_loss_update}で $\dot{M}_{\rm out}$ を積分して更新するため，$\dot{M}_{\rm out}\approx 0$ の区間を延長しても $M_{\rm loss}$ の増分は無視できる．したがって，この打ち切りは $M_{\rm loss}$ の最終値に対する影響が小さい（5節）．
 

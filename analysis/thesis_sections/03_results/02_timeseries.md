@@ -2,14 +2,16 @@
 
 本節では，全円盤の放射圧流出率 $\dot{M}_{\rm out}(t)$（式\ref{eq:mdot_out_definition}）と累積損失 $M_{\rm loss}(t)$（式\ref{eq:mass_loss_update}）の代表的な時間発展を示す．序論で定義した不可逆損失 $\Delta M_{\rm in}(t)$（式\ref{eq:delta_min_def}）は，本論文では $M_{\rm loss}(t)$ と同義である．本章のスイープでは追加シンクを無効化しているため，$M_{\rm loss}$ は $\dot{M}_{\rm out}$ の時間積分（区分一定近似）に一致し，数値出力では $M_{\rm out,cum}$ として記録される．
 
-また，$\tau_{\rm los}$（および $\tau_{\rm eff}$）の時間変化は小さいため，半径依存を含む形で 3 節にまとめて示す．
+ここで温度ドライバとは，火星冷却曲線として $T_M(t)$ を与える外部入力であり，積分終端 $t_{\rm end}$ は $T_M(t_{\rm end})=T_{\rm end}$（$T_{\rm end}=2000\,\mathrm{K}$）によって定義される（表\ref{tab:results_sweep_setup}）．また，追加シンクとは放射圧流出以外の一次損失（昇華など）を表し，本章のスイープでは無効化している．
+
+また，$\tau_{\rm los}$ の時間変化は小さいため，半径依存を含む形で 3 節にまとめて示す．
 
 ### 2.1 放射圧流出率 $\dot{M}_{\rm out}(t)$
 
 \begin{figure}[t]
   \centering
-  \includegraphics[width=\linewidth]{figures/results/moutdot_grid/moutdot_grid_tau0p5.png}
-  \includegraphics[width=\linewidth]{figures/results/moutdot_grid/moutdot_grid_tau1p0.png}
+  % \includegraphics[width=\linewidth]{figures/results/moutdot_grid/moutdot_grid_tau0p5.png}
+  % \includegraphics[width=\linewidth]{figures/results/moutdot_grid/moutdot_grid_tau1p0.png}
   \caption{全円盤の放射圧流出率 $\dot{M}_{\rm out}(t)$ の時系列（上：$\tau_0=0.5$，下：$\tau_0=1.0$）．各曲線は温度 $T_{M,0}$ と供給混合係数 $\epsilon_{\rm mix}$ の組を表す．}
   \label{fig:results_moutdot_grid}
 \end{figure}
@@ -22,8 +24,8 @@
 
 \begin{figure}[t]
   \centering
-  \includegraphics[width=\linewidth]{figures/results/cumloss_grid/cumloss_grid_tau0p5.png}
-  \includegraphics[width=\linewidth]{figures/results/cumloss_grid/cumloss_grid_tau1p0.png}
+  % \includegraphics[width=\linewidth]{figures/results/cumloss_grid/cumloss_grid_tau0p5.png}
+  % \includegraphics[width=\linewidth]{figures/results/cumloss_grid/cumloss_grid_tau1p0.png}
   \caption{累積損失 $M_{\rm loss}(t)$ の時系列（上：$\tau_0=0.5$，下：$\tau_0=1.0$）．曲線の割り当ては図\ref{fig:results_moutdot_grid}と同一である．}
   \label{fig:results_cumloss_grid}
 \end{figure}
