@@ -2,7 +2,7 @@
 00_frontmatter.md
 01_dataset.md
 02_timeseries.md
-03_psd_evolution.md
+03_radius_time_structure.md
 04_validation.md
 05_sensitivity.md
 06_summary.md
