@@ -4,25 +4,32 @@
 実装(.py): marsdisk/run_zero_d.py, marsdisk/run_one_d.py, marsdisk/grid.py, marsdisk/schema.py, marsdisk/physics/initfields.py, marsdisk/physics/sizes.py, marsdisk/physics/psd.py, marsdisk/physics/qstar.py, marsdisk/io/tables.py
 -->
 
-本節では，1D 計算における初期条件・サイズ境界・停止条件に関わるパラメータを整理し，基準計算で採用した値を表としてまとめる．
-
-本節は，2節で導入した支配方程式に対して，計算領域・初期状態・採用パラメータを与え，実行条件を具体化するための整理である．特に，(i) 環状領域とセル分割，(ii) 初期 PSD の形状と $\tau_0$ による表層規格化，(iii) 力学・供給・衝突パラメータの基準値，を固定し，以降の数値解法（4節）と出力・検証（5節）で共通に参照する．基準計算の採用値は表\ref{tab:method-param}，表\ref{tab:methods_initial_psd_params}，表\ref{tab:methods_qdstar_coeffs}にまとめ，感度掃引で動かす代表パラメータは付録 A（表\ref{tab:app_methods_sweep_defaults}）に整理する．
+本節では，2節で定式化した表層粒子群の時間発展方程式に対して，計算領域の幾何と初期状態を与える．とくに，火星放射に直接さらされる「表層」をどのようにモデル化し，どの量で規格化して初期表層面密度を定めるかを先に述べ，続いて基準計算で用いる物理定数・物性値と基準パラメータを表として整理する．
 
 ### 3.1 初期条件と境界条件
 
-初期条件は，時刻 $t=t_0$ における粒径ビン $k$ の PSD（particle size distribution）$N_k(t_0)$ と，環状領域 $[r_{\rm in},r_{\rm out}]$ の幾何学的条件（$r_{\rm in},r_{\rm out}$ など）および温度条件（粒子温度・火星温度などの入力）によって与える．火星放射に直接さらされる表層については，火星方向の有効光学的厚さ $\tau_{\rm eff}(t_0,r)$ が規格化値 $\tau_0$ となるように，初期表層面密度 $\Sigma_{\rm surf}(t_0,r)$ を各半径セル内で一様に定める（$\tau_{\rm eff}$ の定義は式\ref{eq:tau_eff_definition}）．
+初期条件は，時刻 $t=t_0$ における粒径分布（PSD）$N_k(t_0)$ と，環状領域 $r\in[r_{\rm in},r_{\rm out}]$ の幾何・温度条件で与える．ここで $N_k$ は，粒径ビン $k$ に属する粒子の表面数密度（単位面積あたりの個数）として定義し，環状領域内の各半径位置で同様に与える．
 
-本研究では $\tau_{\rm eff}=f_{\rm los}\kappa_{\rm eff}\Sigma_{\rm surf}$ とおく．ここで $f_{\rm los}$ は火星方向の経路長を鉛直方向の近似へ写像する幾何因子であり（式\ref{eq:tau_los_definition}），$\kappa_{\rm eff}$ は表層の質量不透明度 $\kappa_{\rm surf}$ を遮蔽係数 $\Phi$ で補正した有効量として $\kappa_{\rm eff}=\Phi\kappa_{\rm surf}$ と定義する（2.2節）．したがって，$\tau_0$ を与えると，初期 PSD に基づいて評価される $\kappa_{\rm surf}(t_0)$ と，同一条件下で評価した $\Phi$ を通じて $\kappa_{\rm eff}(t_0,\tau_0)$ が定まり，$\Sigma_{\rm surf}(t_0,r)$ は次式で決定される．
+火星放射が表層へ到達する深さは，火星方向の光学的厚さで決まる．本来，光学的厚さは三次元密度分布に対する線積分であるが，本研究では表層を「薄い層」として平均化し，火星方向の光学的厚さを **表層面密度** $\Sigma_{\rm surf}(t,r)$ と **有効不透明度** $\kappa_{\rm eff}(t,r)$ によって近似的に表す．すなわち，火星方向の有効光学的厚さ $\tau_{\rm eff}(t,r)$ を
+\[
+\tau_{\rm eff}=f_{\rm los}\,\kappa_{\rm eff}\,\Sigma_{\rm surf}
+\]
+で表し（$\tau_{\rm eff}$ の定義は式\ref{eq:tau_eff_definition}，$f_{\rm los}$ は式\ref{eq:tau_los_definition}），斜入射や経路長の違いを幾何因子 $f_{\rm los}$ に集約する．この近似は，表層が幾何学的に薄く，放射の減衰が主として表層の面密度と不透明度で支配される，という物理像を採用したものである．
 
+$\kappa_{\rm eff}$ は，PSD が与える質量不透明度 $\kappa_{\rm surf}$ に対し，自己遮蔽や有効照射面積の低下を表す遮蔽係数 $\Phi$ を導入して
+\[
+\kappa_{\rm eff}=\Phi\,\kappa_{\rm surf}
+\]
+と定義する（2.2節）．$\Phi$ は，表層が濃くなるほど実効的に照射される粒子が減る，という効果を平均化して表す無次元補正であり，光学的厚さや幾何に依存し得る．したがって，初期表層の設定は「$\tau_{\rm eff}$ を所与の規格化値に合わせる」という **規格化条件**として理解するのが自然である．
+
+以上を踏まえ，初期表層面密度 $\Sigma_{\rm surf}(t_0,r)$ は，火星方向の有効光学的厚さが $\tau_{\rm eff}(t_0,r)=\tau_0$ となるように，環状領域内で一様に定める．このとき，
 \begin{equation}
 \label{eq:sigma_surf0_from_tau0}
 \Sigma_{\rm surf}(t_0,r)=\frac{\tau_0}{f_{\rm los}\kappa_{\rm eff}(t_0,\tau_0)}
 \end{equation}
+とおく．ここで $\kappa_{\rm eff}(t_0,\tau_0)$ は，初期 PSD から評価した $\kappa_{\rm surf}(t_0)$ と遮蔽係数 $\Phi$ により与えられる初期有効不透明度である（2.2節）．
 
-ここで $\kappa_{\rm eff}(t_0,\tau_0)$ は初期 PSD から評価した $\kappa_{\rm surf}(t_0)$ と遮蔽係数 $\Phi$ により与えられる初期有効不透明度である（2.2節）．なお，$\Phi$ が $\tau_{\rm eff}$（ひいては $\Sigma_{\rm surf}$）に依存する実装の場合，$\kappa_{\rm eff}(t_0,\tau_0)$ は「$\tau_{\rm eff}=\tau_0$ を満たす状態」で自己無撞着に評価した値を意味する．
-
-基準計算では，巨大衝突直後の円盤物質に想定される「メートル級の溶融滴」成分と「サブミクロン級の微粒子」成分を簡便に表現するため，2成分の対数正規分布混合（lognormal mixture）を初期 PSD の質量分布形状として仮定する．採用値は表\ref{tab:methods_initial_psd_params}に示す．粒径（半径）を $s$ とし，初期 PSD の質量分布形状 $w_{\rm melt}(s)$ を
-
+基準計算の初期 PSD は，巨大衝突後に形成される溶融滴成分と微細粒子成分の共存を，2成分の対数正規分布の混合で近似した **melt lognormal mixture** とする\citep{Hyodo2017a_ApJ845_125}．初期 PSD の質量分布形状を $w_{\rm melt}(s)$ として
 \begin{equation}
 \label{eq:initial_psd_lognormal_mixture}
 w_{\rm melt}(s)\propto
@@ -31,62 +38,61 @@ w_{\rm melt}(s)\propto
 \qquad
 \sigma_{\ln}={\rm width}_{\rm dex}\ln 10
 \end{equation}
+で与える．この形は，代表的な粗大粒子（溶融滴）と微細粒子の二峰性を，有限個のパラメータで取り扱うための近似である．採用値は表\ref{tab:methods_initial_psd_params}に示す．
 
-で与える．ここで $f_{\rm fine}$ は微粒子成分の（規格化前の）相対寄与を表す無次元係数であり，$s_{\rm meter}$ と $s_{\rm fine}$ はそれぞれ粗粒子・微粒子成分の代表粒径である．さらに，本研究では数値計算で追跡する最小粒径を $s_{\rm cut}$ として，$s<s_{\rm cut}$ を切断する（$w_{\rm melt}(s)=0$）．この切断は，凝縮微粒子の詳細な生成・成長過程を初期条件に直接は組み込まず，粒径下限を有限に保つためのモデル化である．\citep{Hyodo2017a_ApJ845_125}
+なお，$s<s_{\rm cut}$ の領域は $w_{\rm melt}(s)=0$ とする．これは「凝縮粒子が存在しない」と主張するものではなく，凝縮・凝集・再付着など未解像の微細粒子過程を，最小スケール $s_{\rm cut}$ によってパラメタライズし，初期 PSD の最微小端を有限の自由度として切り出すための近似である\citep{Hyodo2017a_ApJ845_125}．
 
-離散化では，対数ビン $k$ の幅 $\Delta\ln s_k$ に対して $w_k\propto w_{\rm melt}(s_k)\Delta\ln s_k$ を構成し，$m_k N_k\propto w_k$ を満たすように $N_k(t_0)$ を定める．最後に，式\ref{eq:sigma_surf_definition}で定義した表層面密度 $\Sigma_{\rm surf}(t_0)$ と整合するよう，全ビンを同一係数で規格化する．
+$N_k(t_0)$ の設定では，式\ref{eq:initial_psd_lognormal_mixture} が与える質量分布に従って各粒径ビンへ質量を配分し，その全体規格化を「初期表層面密度が式\ref{eq:sigma_surf_definition}の $\Sigma_{\rm surf}(t_0)$ を満たす」ように定める．これにより，初期 PSD は「形状（$w_{\rm melt}$）＋総量（$\Sigma_{\rm surf}$）」として物理的に解釈できる形で与えられる．
 
-火星温度 $T_M(t)$ は外部ドライバとして与え，$\langle Q_{\rm pr}\rangle$ と $\Phi$ は外部入力として与える（付録 C，表\ref{tab:app_external_inputs}）．
+火星温度 $T_M(t)$ は，火星からの熱放射場を規定する外部条件として与える．同様に，放射圧効率の平均量 $\langle Q_{\rm pr}\rangle$ と遮蔽係数 $\Phi$ は，本研究では外部条件（あるいはパラメタライズされた関数）として与え，その定義と採用値を付録Cおよび表\ref{tab:app_external_inputs}にまとめる．
 
-サイズ境界は $s\in[s_{\min,\rm cfg},s_{\max}]$ とする．ただし，放射圧によって重力的に束縛されない領域に対応する $s_{\min,\rm eff}$ 未満の粒子は，生成されても力学的時間で系外へ除去されると近似し，PSD には保持しない（ブローアウトで即時除去）．\citep{Hyodo2018_ApJ860_150}
+粒径の取り扱いは $s\in[s_{\min,\rm cfg},s_{\max}]$ を計算上の範囲とし，放射圧により力学的に束縛されない粒子は，表層から短い力学時間で除去されるものとして PSD に含めない．具体的には，実効ブローアウト粒径 $s_{\min,\rm eff}$ 未満の粒子は「存在しない」として扱い（即時除去），$s_{\min,\rm cfg}$ は数値的に追跡する最小粒径として設定する\citep{Burns1979_Icarus40_1,Hyodo2018_ApJ860_150}．
 
+環状領域で平均化した面密度と総質量の換算には，環状近似に基づく面積
 \begin{equation}
 \label{eq:annulus_area_definition}
 A=\pi\left(r_{\rm out}^2-r_{\rm in}^2\right)
 \end{equation}
+を用いる．これは，衝突カスケードを統計的（particle-in-a-box）に扱う際に一般的な，セル平均量での記述と整合する\citep{Thebault2003_AA408_775,WyattClarkeBooth2011_CeMDA111_1}．
 
-ここで $A$ は面密度と総質量の換算に用いる環状領域の面積である．本研究の 0D/1D（リング）近似では，環状領域（annulus）内を粒径ビンに分割して統計的に $N_k$ を扱う，いわゆる particle-in-a-box 型の取り扱いと整合させる．\citep{Wyatt2008,Thebault2003_AA408_775}
+最後に，表\ref{tab:method-param}の $M_{\rm in}$ はロッシュ限界内側の総質量（中層の厚い円盤成分）を表す．一方，初期表層質量 $M_{\rm surf}(t_0)=\int 2\pi r,\Sigma_{\rm surf}(t_0,r),dr$ は，式\ref{eq:sigma_surf0_from_tau0}で与えた $\tau_0$ と初期 PSD（すなわち $\kappa_{\rm eff}$）から **派生する量**として扱う．したがって，$\tau_0$ を指定した基準設定では $M_{\rm surf}(t_0)\approx \Sigma_{\rm surf}(t_0)A$ が定まり，$M_{\rm in}$ と独立に任意調整できる自由度は持たない．本研究では $M_{\rm in}$ を「深部供給を支える貯蔵層」の基準量として保持し，表層はその上に形成される照射・除去の舞台として区別する．
 
-表\ref{tab:method-param}の $M_{\rm in}$ はロッシュ限界内側に存在する中層（深部）円盤の総質量を表す．一方，初期表層質量 $M_{\rm surf}(t_0)=\int 2\pi r\,\Sigma_{\rm surf}(t_0,r)\,dr$ は，式\ref{eq:sigma_surf0_from_tau0}で与えた $\tau_0$ と初期 PSD（$\kappa_{\rm eff}$）から派生する量として扱う．すなわち，$\tau_0$ を指定すると $\Sigma_{\rm surf}(t_0,r)$ が定まり，表層が各セル内で一様である近似の下では $M_{\rm surf}(t_0)\approx \Sigma_{\rm surf}(t_0)A$ が決まる．したがって $M_{\rm surf}(t_0)$ は $\tau_0$ と独立な自由度としては持たず，$M_{\rm in}$ は深部供給や中層面密度の基準として別途保持する．
+以上により，表層の初期状態は「$\tau_{\rm eff}$ による規格化」と「PSD 形状の仮定」によって一意に定まり，次節以降の時間発展計算の出発点が与えられる．
 
 ### 3.2 物理定数・物性値
 
-本研究で用いる主要な物理定数・惑星定数・粒子物性を表\ref{tab:method-phys}にまとめる．普遍定数（$G,c,\sigma_{\rm SB},R$）は CODATA 2018 の推奨値に従い，火星の質量 $M_{\rm Mars}$ と平均半径 $R_{\rm Mars}$ は公表値を採用する．材料依存パラメータは基準ケースではフォルステライト（$\mathrm{Mg_2SiO_4}$）を代表組成として近似し，密度 $\rho$ や飽和蒸気圧式の係数などは付録Aにまとめる．
+本研究で用いる主要な物理定数と物性値を表\ref{tab:method-phys}にまとめる．普遍定数と火星定数は標準的な推奨値に従い（要出典），密度や蒸気圧係数などの材料依存パラメータは，基準ケースではフォルステライト相当の値を採用する（付録Aも参照）．
 
 \begin{table}[t]
 \centering
 \small
 \setlength{\tabcolsep}{4pt}
-\caption{物理定数・惑星定数・粒子物性（基準計算）}
+\caption{物理定数・物性値（基準計算）}
 \label{tab:method-phys}
-\begin{tabular}{p{0.30\textwidth} p{0.22\textwidth} p{0.18\textwidth} p{0.22\textwidth}}
+\begin{tabular}{p{0.30\textwidth} p{0.22\textwidth} p{0.18\textwidth} p{0.20\textwidth}}
 \hline
 記号 & 値 & 単位 & 備考 \\
 \hline
 $G$ & $6.67430\times10^{-11}$ & $\mathrm{m^{3}\,kg^{-1}\,s^{-2}}$ & 万有引力定数 \\
-$c$ & $2.99792458\times10^{8}$ & $\mathrm{m\,s^{-1}}$ & 光速（真空） \\
+$c$ & $2.99792458\times10^{8}$ & $\mathrm{m\,s^{-1}}$ & 光速 \\
 $\sigma_{\rm SB}$ & $5.670374419\times10^{-8}$ & $\mathrm{W\,m^{-2}\,K^{-4}}$ & ステファン・ボルツマン定数 \\
 $M_{\rm Mars}$ & $6.4171\times10^{23}$ & $\mathrm{kg}$ & 火星質量 \\
-$R_{\rm Mars}$ & $3.3895\times10^{6}$ & $\mathrm{m}$ & 火星平均半径 \\
-$\rho$ & 3270 & $\mathrm{kg\,m^{-3}}$ & 粒子内部密度（フォルステライト） \\
-$R$ & 8.314462618 & $\mathrm{J\,mol^{-1}\,K^{-1}}$ & 普遍気体定数（Hertz--Knudsen--Langmuir（HKL）式に使用） \\
+$R_{\rm Mars}$ & $3.3895\times10^{6}$ & $\mathrm{m}$ & 火星半径 \\
+$\rho$ & 3270 & $\mathrm{kg\,m^{-3}}$ & 粒子密度（フォルステライト） \\
+$R$ & 8.314462618 & $\mathrm{J\,mol^{-1}\,K^{-1}}$ & 気体定数（HKL に使用） \\
 \hline
 \end{tabular}
 \end{table}
 
-<!-- TEX_EXCLUDE_START -->
-（注）現行稿（提示文）では，表中の数値の「出典」が本文・表のいずれにも明示されていないため，修士論文としては追跡可能性の観点で不十分になりやすい．上の添削案では，普遍定数と惑星定数について最低限の出典を本文に集約して付し，材料依存値については付録Aに「値＋出典」をまとめる方針を明文化した．
-<!-- TEX_EXCLUDE_END -->
-
 ### 3.3 基準パラメータ
 
-本節では，1D モデルで用いる計算領域（環状領域近似），粒子の力学的励起度（速度分散），および表層の質量収支（再供給・衝突破砕）を規定する基準パラメータを整理する．基準計算の採用値を表\ref{tab:method-param}に，衝突破砕の破壊閾値比エネルギー $Q_D^*(s)$ の係数を表\ref{tab:methods_qdstar_coeffs}に示す．感度解析で変更する追加パラメータとその範囲は付録 A にまとめる．
+本節では，1D モデルで用いる計算領域（環状領域近似），粒子の力学的励起度（速度分散），および表層の質量収支（再供給・衝突破砕）を規定する基準パラメータを整理する．基準計算の採用値を表\ref{tab:method-param}に，衝突破砕の破壊閾値比エネルギー $Q_D^*(s)$ の係数を表\ref{tab:methods_qdstar_coeffs}に示す．感度解析で変更する追加パラメータとその範囲は付録Aにまとめる．
 
-計算領域は $r\in[r_{\rm in},r_{\rm out}]$ の環状領域とし，巨大衝突により形成されるロッシュ限界内側のデブリ円盤成分を代表させる．火星のロッシュ限界はおよそ $3\,R_{\rm Mars}$ に位置し，巨大衝突起源モデルではロッシュ限界内側に質量の集中した内側円盤が形成されることが示されている \citep{Rosenblatt2016_NatGeo9_8,Hyodo2017b_ApJ851_122}．基準計算では $r_{\rm out}=2.7\,R_{\rm Mars}$ としてロッシュ限界のやや内側に計算領域を取り，外側円盤での衛星胚形成過程は本研究の対象外とする．内側円盤の総質量 $M_{\rm in}$ はロッシュ限界内側の中層（厚い円盤成分）に対応する量として与え，基準値 $M_{\rm in}=3\times10^{-5}\,M_{\rm Mars}$ は，火星周回円盤の初期質量に対する制約と整合する値として採用する \citep{CanupSalmon2018_SciAdv4_eaar6887}．
+計算領域は $r\in[r_{\rm in},r_{\rm out}]$ の環状領域とし，巨大衝突により形成されるロッシュ限界内側のデブリ円盤成分を代表させる．ロッシュ限界はおよそ数 $R_{\rm Mars}$ に位置し\citep{Rosenblatt2016_NatGeo9_8}，岩石質粒子に対しては $a_R\simeq 2.7,R_{\rm Mars}$ 程度が用いられる\citep{CanupSalmon2018_SciAdv4_eaar6887}．基準計算では $r_{\rm out}=2.7,R_{\rm Mars}$ としてロッシュ限界のやや内側に計算領域を取り，ロッシュ限界外側での衛星胚形成過程は本研究の対象外とする．内側円盤の総質量 $M_{\rm in}$ はロッシュ限界内側の中層（厚い円盤成分）に対応する量として与え，基準値 $M_{\rm in}=3\times10^{-5}M_{\rm Mars}$ は，初期円盤質量に対する制約と整合する値として採用する\citep{CanupSalmon2018_SciAdv4_eaar6887}．
 
-粒子の力学状態は代表離心率 $e_0$ と傾斜角 $i_0$ で与える．巨大衝突直後の粒子は高離心率の軌道にあり，歳差運動により軌道が乱された後に衝突が卓越し，相対衝突速度は $1$--$5\,\mathrm{km\,s^{-1}}$ 程度に達し得ることが報告されている \citep{Hyodo2017a_ApJ845_125}．また，傾斜した円盤は衝突を通じて赤道面へ減衰し得る \citep{Hyodo2017b_ApJ851_122}．本研究ではこれらを踏まえ，基準計算として $e_0=0.5$，$i_0=0.05$ を採用する．円盤のスケールハイトは小傾斜角近似に基づき $H=H_{\rm factor} i r$ と表す．
+粒子の力学的励起度は，離心率 $e_0$ と傾斜角 $i_0$ により与える．巨大衝突直後の粒子群は強く励起され得るため，基準計算では比較的大きな $e_0$ を採用し（表\ref{tab:method-param}），その影響は感度解析で評価する．鉛直スケールハイトは $H_k=H_{\rm factor}, i r$ とし，$H_{\rm factor}$ は幾何学的厚みの不確かさを吸収する補正因子として導入する．
 
-表層面密度の初期規格化には，火星方向の有効光学的厚さ $\tau_{\rm eff}$ を用いる（式\ref{eq:sigma_surf0_from_tau0}）．$\tau_{\rm eff}$ は線視方向光学的厚さ $\tau_{\rm los}$ に遮蔽係数を適用した量として定義され（式\ref{eq:tau_eff_definition}），本研究では表層を一様なシートとして表現し，実効不透明度 $\kappa_{\rm eff}$ と表層面密度 $\Sigma_{\rm surf}$ により閉じた形で与える（2.2節，および式\ref{eq:tau_los_definition}）．基準計算では $\tau_0=1$ を目標値として初期 $\Sigma_{\rm surf}$ を定めるが，これは放射場に対して光学的厚さが 1 程度の表層が円盤の放射応答を支配し得るという表層モデルの考え方と対応する．ただし，本研究の $\tau_{\rm los}$ は入射角分布や散乱を含む厳密な放射輸送を平均化した近似であり，この近似の影響は（必要に応じて）感度解析で確認する．
+表層面密度の初期値は 3.1節の規格化条件（$\tau_0$）により定まり，基準計算では $\tau_0=1$ を採用する．この設定は，照射を受ける表層が「光学的厚さ $\sim 1$ の層」で代表されるという物理像（照射面の定義）に対応する\citep{TakeuchiLin2003_ApJ593_524}．
 
 \begin{table}[t]
 \centering
@@ -99,29 +105,29 @@ $R$ & 8.314462618 & $\mathrm{J\,mol^{-1}\,K^{-1}}$ & 普遍気体定数（Hertz-
 記号 & 値 & 単位 & 備考 \\
 \hline
 $r_{\rm in}$ & 1.0 & $R_{\rm Mars}$ & 内端半径 \\
-$r_{\rm out}$ & 2.7 & $R_{\rm Mars}$ & 外端半径（ロッシュ限界内側） \\
-$N_r$ & 32 & -- & 半径方向セル数（リング分割） \\
-$M_{\rm in}$ & $3.0\times10^{-5}$ & $M_{\rm Mars}$ & 内側円盤質量（中層） \\
-$s_{\min,\rm cfg}$ & $1.0\times10^{-7}$ & m & 粒径ビン下限（数値下限） \\
-$s_{\max}$ & $3.0$ & m & 粒径ビン上限 \\
-$n_{\rm bins}$ & 40 & -- & サイズビン数（対数ビン） \\
+$r_{\rm out}$ & 2.7 & $R_{\rm Mars}$ & 外端半径 \\
+$N_r$ & 32 & -- & 半径セル数（リング分割） \\
+$M_{\rm in}$ & $3.0\times10^{-5}$ & $M_{\rm Mars}$ & 内側円盤質量 \\
+$s_{\min,\rm cfg}$ & $1.0\times10^{-7}$ & $\mathrm{m}$ & PSD 下限（計算上） \\
+$s_{\max}$ & $3.0$ & $\mathrm{m}$ & PSD 上限 \\
+$n_{\rm bins}$ & 40 & -- & サイズビン数 \\
 $f_{\rm los}$ & 1.0 & -- & LOS 幾何因子（式\ref{eq:tau_los_definition}） \\
-$\tau_0$ & 1.0 & -- & 初期 $\tau_{\rm eff}$ 目標値（式\ref{eq:sigma_surf0_from_tau0}） \\
-$\tau_{\rm stop}$ & 2.302585 & -- & 停止判定（$=\ln 10$） \\
-$e_0$ & 0.5 & -- & 代表離心率 \\
-$i_0$ & 0.05 & rad & 代表傾斜角 \\
-$H_{\rm factor}$ & 1.0 & -- & $H=H_{\rm factor} i r$ \\
+$\tau_0$ & 1.0 & -- & 初期 $\tau_{\rm eff}$ 規格化値（式\ref{eq:sigma_surf0_from_tau0}） \\
+$\tau_{\rm stop}$ & 2.302585 & -- & 評価の停止指標（$\ln 10$） \\
+$e_0$ & 0.5 & -- & 離心率 \\
+$i_0$ & 0.05 & $\mathrm{rad}$ & 傾斜角 \\
+$H_{\rm factor}$ & 1.0 & -- & $H_k=H_{\rm factor} i r$ \\
 $\epsilon_{\rm mix}$ & 1.0 & -- & 混合係数 \\
 $\mu_{\rm sup}$ & 1.0 & -- & 供給スケール（式\ref{eq:R_base_definition}） \\
 $f_{\rm orb}$ & 0.05 & -- & $\mu_{\rm sup}=1$ のときの 1 軌道あたり供給比率 \\
-$\tau_{\rm ref}$ & 1.0 & -- & 供給スケール参照光学的厚さ \\
+$\tau_{\rm ref}$ & 1.0 & -- & 供給スケール参照有効光学的厚さ \\
 $\alpha_{\rm frag}$ & 3.5 & -- & 破片分布指数 \\
-$\rho$ & 3270 & kg\,m$^{-3}$ & 粒子密度（表\ref{tab:method-phys}） \\
+$\rho$ & 3270 & $\mathrm{kg\,m^{-3}}$ & 粒子密度（表\ref{tab:method-phys}） \\
 \hline
 \end{tabular}
 \end{table}
 
-初期 PSD は，巨大衝突後に形成されるメートル級固体粒子と，蒸気の凝縮により生じるサブミクロン粒子が共存し得るという二段階進化の描像に基づき，対数正規分布の混合（melt lognormal mixture）で与える \citep{Hyodo2017a_ApJ845_125}．\citet{Hyodo2017a_ApJ845_125} は，噴出時のせん断と表面張力によりメートル級滴が形成され得ること，その後の高速度衝突で最小 $\sim100\,\mu\mathrm{m}$ 程度まで微細化され得ること，さらに蒸気の凝縮により $\sim0.1\,\mu\mathrm{m}$ 粒子が形成され得ることを示している．一方で，サブミクロン粒子は質量は小さいが断面積で卓越し得るため \citep{Hyodo2017a_ApJ845_125}，不透明度や放射圧応答に対する寄与が大きい可能性がある．本研究では，凝縮由来の最微細粒子の寄与を制御するためのカットオフとして $s_{\rm cut}$ を導入し，$s<s_{\rm cut}$ の領域を初期 PSD から除外する（式\ref{eq:initial_psd_lognormal_mixture}）．$s_{\rm min,solid}$ と $s_{\rm max,solid}$ は固相 PSD の参照範囲を定め，${\rm width}_{\rm dex}$ は両成分に共通の対数幅（dex）である．また，$\alpha_{\rm frag}=3.5$ は自己相似な破壊カスケードで得られる Dohnanyi 型のサイズ分布（$n(s)\propto s^{-3.5}$）に対応する代表値として採用する \citep{Dohnanyi1969_JGR74_2531,Birnstiel2011_AA525_A11}．
+初期 PSD のパラメータを表\ref{tab:methods_initial_psd_params}に示す．$s_{\rm cut}$ は最微小粒子領域をパラメタライズするカットオフ粒径であり，$s_{\rm min,solid}$ と $s_{\rm max,solid}$ は固相 PSD の範囲を定める．${\rm width}_{\rm dex}$ は両成分に共通の対数幅（dex）である．
 
 \begin{table}[t]
 \centering
@@ -129,31 +135,31 @@ $\rho$ & 3270 & kg\,m$^{-3}$ & 粒子密度（表\ref{tab:method-phys}） \\
 \setlength{\tabcolsep}{4pt}
 \caption{基準計算の初期 PSD（melt lognormal mixture）}
 \label{tab:methods_initial_psd_params}
-\begin{tabular}{p{0.36\textwidth} p{0.22\textwidth} p{0.2\textwidth}}
+\begin{tabular}{p{0.36\textwidth} p{0.22\textwidth} p{0.20\textwidth}}
 \hline
 記号 & 値 & 単位 \\
 \hline
 $f_{\rm fine}$ & 0.03 & -- \\
-$s_{\rm fine}$ & $1.0\times10^{-7}$ & m \\
-$s_{\rm meter}$ & 1.5 & m \\
-${\rm width}_{\rm dex}$ & 0.3 & dex \\
-$s_{\rm cut}$ & $1.0\times10^{-7}$ & m \\
-$s_{\rm min,solid}$ & $1.0\times10^{-4}$ & m \\
-$s_{\rm max,solid}$ & 3.0 & m \\
+$s_{\rm fine}$ & $1.0\times10^{-7}$ & $\mathrm{m}$ \\
+$s_{\rm meter}$ & 1.5 & $\mathrm{m}$ \\
+${\rm width}_{\rm dex}$ & 0.3 & -- \\
+$s_{\rm cut}$ & $1.0\times10^{-7}$ & $\mathrm{m}$ \\
+$s_{\rm min,solid}$ & $1.0\times10^{-4}$ & $\mathrm{m}$ \\
+$s_{\rm max,solid}$ & 3.0 & $\mathrm{m}$ \\
 $\alpha_{\rm solid}$ & 3.5 & -- \\
 \hline
 \end{tabular}
 \end{table}
 
-衝突破砕の破壊閾値比エネルギー $Q_D^*(s)$ は，強度支配項と重力支配項の和として表現し，係数は \citet{BenzAsphaug1999_Icarus142_5} に基づく（この形式は衝突カスケードの標準的取り扱いとして用いられている；例えば \citealt{Thebault2003_AA408_775,Krivov2006_AA455_509}）．衝突速度依存性を取り込むため，基準計算では $v_{\rm ref}=1$--$7\,\mathrm{km\,s^{-1}}$ の離散点で係数を与え，実際の衝突速度に対しては後述の補間則により係数を連続化する．表\ref{tab:methods_qdstar_coeffs}の係数は $f_{Q^*}=5.574$ のスケールを適用した値であり，$Q_s$ と $B$ に反映されている（$f_{Q^*}$ の設定理由と掃引範囲は付録 A に示す）．
+衝突破砕における破片分布指数 $\alpha_{\rm frag}$ は，定常的な衝突カスケードでしばしば用いられる $3.5$ を基準値とする\citep{Dohnanyi1969_JGR74_2531,Birnstiel2011_AA525_A11}．破壊閾値比エネルギー $Q_D^*(s)$ は，強度支配項と重力支配項を併せ持つ経験式に基づき，係数として \citet{BenzAsphaug1999_Icarus142_5} のスケーリングを採用する．衝突速度に依存する係数は代表速度で与え，速度域 $1$--$7,\mathrm{km,s^{-1}}$ に対する採用値を表\ref{tab:methods_qdstar_coeffs}にまとめる．
 
 \begin{table}[t]
 \centering
 \small
 \setlength{\tabcolsep}{4pt}
-\caption{基準計算の $Q_D^*$ 係数（$v_{\rm ref}$ は $\mathrm{km,s^{-1}}$，$Q_s$ と $B$ は BA99 cgs 単位）}
+\caption{基準計算の $Q_D^*$ 係数（$v_{\rm ref}$ は $\mathrm{km,s^{-1}}$，$Q_s$ と $B$ は BA99 の cgs 単位）}
 \label{tab:methods_qdstar_coeffs}
-\begin{tabular}{p{0.16\textwidth} p{0.2\textwidth} p{0.16\textwidth} p{0.2\textwidth} p{0.16\textwidth}}
+\begin{tabular}{p{0.16\textwidth} p{0.20\textwidth} p{0.16\textwidth} p{0.20\textwidth} p{0.16\textwidth}}
 \hline
 $v_{\rm ref}$ & $Q_s$ & $a_s$ & $B$ & $b_g$ \\
 \hline
