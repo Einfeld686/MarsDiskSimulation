@@ -9353,91 +9353,91 @@
   },
   {
     "file_path": "scripts/plot_results_sweep.py",
-    "line_no": 620,
+    "line_no": 625,
     "symbol": "_plot_outflow_tau_cumloss_single",
     "signature": "_plot_outflow_tau_cumloss_single(run: RunData, outdir: Path) -> bool",
     "brief_usage": "No description available."
   },
   {
     "file_path": "scripts/plot_results_sweep.py",
-    "line_no": 660,
+    "line_no": 666,
     "symbol": "_compute_heatmap_values",
     "signature": "_compute_heatmap_values(runs: Iterable[RunData]) -> tuple[dict[str, float], float | None, float | None]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "scripts/plot_results_sweep.py",
-    "line_no": 685,
+    "line_no": 691,
     "symbol": "_plot_heatmap_single",
     "signature": "_plot_heatmap_single(run: RunData, outdir: Path, value: float, vmin: float, vmax: float) -> bool",
     "brief_usage": "No description available."
   },
   {
     "file_path": "scripts/plot_results_sweep.py",
-    "line_no": 713,
+    "line_no": 729,
     "symbol": "_plot_mass_budget_single",
     "signature": "_plot_mass_budget_single(run: RunData, outdir: Path) -> bool",
     "brief_usage": "No description available."
   },
   {
     "file_path": "scripts/plot_results_sweep.py",
-    "line_no": 736,
+    "line_no": 759,
     "symbol": "_tau_token",
     "signature": "_tau_token(value: float) -> str",
     "brief_usage": "No description available."
   },
   {
     "file_path": "scripts/plot_results_sweep.py",
-    "line_no": 745,
+    "line_no": 768,
     "symbol": "_plot_cumloss_grid_for_tau0",
-    "signature": "_plot_cumloss_grid_for_tau0(runs: list[RunData], outdir: Path, tau0_value: float) -> bool",
+    "signature": "_plot_cumloss_grid_for_tau0(runs: list[RunData], outdir: Path, tau0_value: float, *, exclude_eps: set[float] | None=None) -> bool",
     "brief_usage": "No description available."
   },
   {
     "file_path": "scripts/plot_results_sweep.py",
-    "line_no": 820,
+    "line_no": 853,
     "symbol": "_plot_r1",
     "signature": "_plot_r1(runs: list[RunData], outdir: Path, max_lines: int) -> None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "scripts/plot_results_sweep.py",
-    "line_no": 910,
+    "line_no": 943,
     "symbol": "_plot_r2",
     "signature": "_plot_r2(runs: list[RunData], outdir: Path) -> RunData | None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "scripts/plot_results_sweep.py",
-    "line_no": 971,
+    "line_no": 1004,
     "symbol": "_label_for_run",
     "signature": "_label_for_run(run: RunData) -> str",
     "brief_usage": "No description available."
   },
   {
     "file_path": "scripts/plot_results_sweep.py",
-    "line_no": 979,
+    "line_no": 1012,
     "symbol": "_plot_r3",
     "signature": "_plot_r3(runs: list[RunData], outdir: Path) -> None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "scripts/plot_results_sweep.py",
-    "line_no": 1079,
+    "line_no": 1112,
     "symbol": "_plot_v1",
     "signature": "_plot_v1(baseline: RunData | None, outdir: Path) -> None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "scripts/plot_results_sweep.py",
-    "line_no": 1106,
+    "line_no": 1139,
     "symbol": "_load_runs",
     "signature": "_load_runs(run_root: Path) -> list[RunData]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "scripts/plot_results_sweep.py",
-    "line_no": 1134,
+    "line_no": 1167,
     "symbol": "main",
     "signature": "main(argv: Sequence[str] | None=None) -> int",
     "brief_usage": "No description available."

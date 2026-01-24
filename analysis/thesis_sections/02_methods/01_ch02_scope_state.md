@@ -128,7 +128,7 @@ R_{\rm base}(r)=
 
 ここで $\mu_{\rm sup}$ は供給強度を定める無次元パラメータであり，$f_{\rm orb}$ は $\mu_{\rm sup}=1$ のときに 1 軌道あたりに供給される表層面密度が参照面密度 $\Sigma_{\tau_{\rm ref}}$ に対して占める比率（無次元）である．$\tau_{\rm ref}$ は参照有効光学的厚さ（既定値 1）であり，$\Sigma_{\tau_{\rm ref}}$ は初期 PSD から評価した $\kappa_{\rm eff}$ に基づく参照面密度である．本研究では初期光学的厚さ $\tau_0$ を掃引して初期状態を変えるため，$\Sigma_{\tau_{\rm ref}}(t_0,r)$ を用いて供給率を規格化し，「同じ $\mu_{\rm sup}$ が同程度の供給量」を指すように定義する．なお，式\ref{eq:R_base_definition}に $\epsilon_{\rm mix}$ を含めたのは，式\ref{eq:prod_rate_definition}と合わせて $\dot{\Sigma}_{\rm in}$ が $\mu_{\rm sup}$ と $f_{\rm orb}$ により一意に決まり，$\epsilon_{\rm mix}$ の値に依存しない（$\dot{\Sigma}_{\rm in}=\mu_{\rm sup}f_{\rm orb}\Sigma_{\tau_{\rm ref}}/T_{\rm orb}$ に帰着する）ようにするためである．
 
-供給率は式\ref{eq:supply_injection_definition}により PSD のソース項 $F_k$ として粒径ビン $k$ に注入する．ここで $F_k$ は「単位面積あたりの粒子数密度 $N_k$ の増加率」であり，質量保存条件 $\sum_k m_kF_k=\dot{\Sigma}_{\rm in}$ を満たすよう，無次元重み $w_k$ を $\sum_kw_k=1$ となるように正規化する．
+供給率は式\ref{eq:supply_injection_definition}により PSD のソース項 $F_k$ として粒径ビン $k$ に注入する．ここで $F_k$ は単位面積あたりの粒子数密度 $N_k$ の増加率であり，質量保存条件 $\sum_k m_kF_k=\dot{\Sigma}_{\rm in}$ を満たすよう，無次元重み $w_k$ を $\sum_kw_k=1$ となるように正規化する．
 
 \begin{equation}
 \label{eq:prod_rate_definition}
@@ -144,7 +144,7 @@ F_k=\frac{\dot{\Sigma}_{\rm in}\,w_k}{m_k},
 \sum_k m_k F_k=\dot{\Sigma}_{\rm in}
 \end{equation}
 
-供給される表層物質の粒径分布は，下層からの混合が初期表層と同程度の組成・粒径分布を持つという近似の下で，初期 PSD の質量分率に比例すると仮定する．具体的には $w_k\propto m_kN_k(t_0,r)$ と置き，$\sum_kw_k=1$ となるように正規化して用いる．この仮定により，供給は分布形状を直接には変えず，規格化（全量）を更新する操作として実装される．
+供給される表層物質の粒径分布は，下層からの混合が初期表層と同程度の組成・粒径分布を持つという近似の下で，初期 PSD の質量分率に比例すると仮定する．具体的には $w_k\propto m_kN_k(t_0,r)$ と置き，$\sum_kw_k=1$ となるように正規化して用いる．これにより，供給は分布形状を直接には変えず，規格化を更新する操作として実装される．
 
 ### 2.4 衝突カスケード
 
@@ -176,7 +176,7 @@ C_{ij} = \frac{N_i N_j}{1+\delta_{ij}}\,
 v_{ij}=v_K\,\sqrt{1.25\,e^{2}+i^{2}}
 \end{equation}
 
-本研究の基準値 $e_0=0.5$ は厳密な「低離心率」域を超えるが，衝突速度の代表スケールを与える簡略式として式\ref{eq:vrel_pericenter_definition}を用い，$e,i$ を時間一定・サイズ非依存とする近似の影響は感度として評価する．
+基準値 $e_0=0.5$ は厳密な「低離心率」域を超えるが，衝突速度の代表スケールを与える簡略式として式\ref{eq:vrel_pericenter_definition}を用い，$e,i$ を時間一定・サイズ非依存とする近似の影響は感度として評価する．
 
 ビンの衝突寿命は式\ref{eq:t_coll_definition}とし，時間刻みの上限に用いる\citep{Wyatt2008,StrubbeChiang2006_ApJ648_652}．
 

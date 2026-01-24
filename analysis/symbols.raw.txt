@@ -921,19 +921,19 @@ scripts/plot_results_sweep.py:569:def _prepare_style() -> None
 scripts/plot_results_sweep.py:580:def _prepare_output_dirs(outdir: Path) -> dict[str, Path]
 scripts/plot_results_sweep.py:587:def _run_title(run: RunData) -> str
 scripts/plot_results_sweep.py:596:def _plot_cumloss_single(run: RunData, outdir: Path) -> bool
-scripts/plot_results_sweep.py:620:def _plot_outflow_tau_cumloss_single(run: RunData, outdir: Path) -> bool
-scripts/plot_results_sweep.py:660:def _compute_heatmap_values(runs: Iterable[RunData]) -> tuple[dict[str, float], float | None, float | None]
-scripts/plot_results_sweep.py:685:def _plot_heatmap_single(run: RunData, outdir: Path, value: float, vmin: float, vmax: float) -> bool
-scripts/plot_results_sweep.py:713:def _plot_mass_budget_single(run: RunData, outdir: Path) -> bool
-scripts/plot_results_sweep.py:736:def _tau_token(value: float) -> str
-scripts/plot_results_sweep.py:745:def _plot_cumloss_grid_for_tau0(runs: list[RunData], outdir: Path, tau0_value: float) -> bool
-scripts/plot_results_sweep.py:820:def _plot_r1(runs: list[RunData], outdir: Path, max_lines: int) -> None
-scripts/plot_results_sweep.py:910:def _plot_r2(runs: list[RunData], outdir: Path) -> RunData | None
-scripts/plot_results_sweep.py:971:def _label_for_run(run: RunData) -> str
-scripts/plot_results_sweep.py:979:def _plot_r3(runs: list[RunData], outdir: Path) -> None
-scripts/plot_results_sweep.py:1079:def _plot_v1(baseline: RunData | None, outdir: Path) -> None
-scripts/plot_results_sweep.py:1106:def _load_runs(run_root: Path) -> list[RunData]
-scripts/plot_results_sweep.py:1134:def main(argv: Sequence[str] | None=None) -> int
+scripts/plot_results_sweep.py:625:def _plot_outflow_tau_cumloss_single(run: RunData, outdir: Path) -> bool
+scripts/plot_results_sweep.py:666:def _compute_heatmap_values(runs: Iterable[RunData]) -> tuple[dict[str, float], float | None, float | None]
+scripts/plot_results_sweep.py:691:def _plot_heatmap_single(run: RunData, outdir: Path, value: float, vmin: float, vmax: float) -> bool
+scripts/plot_results_sweep.py:729:def _plot_mass_budget_single(run: RunData, outdir: Path) -> bool
+scripts/plot_results_sweep.py:759:def _tau_token(value: float) -> str
+scripts/plot_results_sweep.py:768:def _plot_cumloss_grid_for_tau0(runs: list[RunData], outdir: Path, tau0_value: float, *, exclude_eps: set[float] | None=None) -> bool
+scripts/plot_results_sweep.py:853:def _plot_r1(runs: list[RunData], outdir: Path, max_lines: int) -> None
+scripts/plot_results_sweep.py:943:def _plot_r2(runs: list[RunData], outdir: Path) -> RunData | None
+scripts/plot_results_sweep.py:1004:def _label_for_run(run: RunData) -> str
+scripts/plot_results_sweep.py:1012:def _plot_r3(runs: list[RunData], outdir: Path) -> None
+scripts/plot_results_sweep.py:1112:def _plot_v1(baseline: RunData | None, outdir: Path) -> None
+scripts/plot_results_sweep.py:1139:def _load_runs(run_root: Path) -> list[RunData]
+scripts/plot_results_sweep.py:1167:def main(argv: Sequence[str] | None=None) -> int
 scripts/plots/plot_axis_r_sweep.py:11:def _resolve_table_path(path: Path) -> Path
 scripts/plots/plot_axis_r_sweep.py:25:def parse_args() -> argparse.Namespace
 scripts/plots/plot_axis_r_sweep.py:44:def main() -> None
