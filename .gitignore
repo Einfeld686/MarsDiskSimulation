@@ -93,6 +93,7 @@ analysis/methods_sections/[0-9][0-9]_*.md
 # Thesis scratch copies
 analysis/thesis_sections/02_methods/04_ch05_reproducibility_V1.md
 analysis/thesis_sections/02_methods/02_ch03_logic_physics_v1.md
+analysis/thesis/methods_v2.md
 
 # agent_test outputs
 !agent_test/
