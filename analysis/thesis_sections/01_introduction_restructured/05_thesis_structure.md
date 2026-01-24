@@ -7,11 +7,11 @@
 <!-- TEX_EXCLUDE_START -->
 ### 本節で言及した主要文献
 
-- \cite{CanupSalmon2018_SciAdv4_eaar6887}
-- \cite{Citron2015_Icarus252_334}
-- \cite{Craddock2011_EPSCDPS1108}
-- \cite{Hyodo2017a_ApJ845_125}
-- \cite{Rosenblatt2016_NatGeo9_8}
-- \cite{SalmonCanup2012_ApJ760_83}
+- \citet{CanupSalmon2018_SciAdv4_eaar6887}
+- \citet{Citron2015_Icarus252_334}
+- \citet{Craddock2011_EPSCDPS1108}
+- \citet{Hyodo2017a_ApJ845_125}
+- \citet{Rosenblatt2016_NatGeo9_8}
+- \citet{SalmonCanup2012_ApJ760_83}
 
 <!-- TEX_EXCLUDE_END -->
