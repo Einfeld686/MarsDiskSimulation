@@ -90,6 +90,9 @@ analysis/AI_USAGE.md
 analysis/introduction_sections/[0-9][0-9]_*.md
 analysis/methods_sections/[0-9][0-9]_*.md
 
+# Thesis scratch copies
+analysis/thesis_sections/02_methods/04_ch05_reproducibility_V1.md
+
 # agent_test outputs
 !agent_test/
 !agent_test/**

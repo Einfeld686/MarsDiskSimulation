@@ -1,5 +1,9 @@
 ## 3. 初期条件・境界条件・パラメータ
 
+<!--
+実装(.py): marsdisk/run_zero_d.py, marsdisk/run_one_d.py, marsdisk/grid.py, marsdisk/schema.py, marsdisk/physics/initfields.py, marsdisk/physics/sizes.py, marsdisk/physics/psd.py, marsdisk/physics/qstar.py, marsdisk/io/tables.py
+-->
+
 本節では，1D 計算における初期条件・サイズ境界・停止条件に関わるパラメータを整理し，基準計算で採用した値を表としてまとめる．
 
 本節は，2節で導入した支配方程式に対して，計算領域・初期状態・採用パラメータを与え，実行条件を具体化するための整理である．特に，(i) 環状領域とセル分割，(ii) 初期 PSD の形状と $\tau_0$ による表層規格化，(iii) 力学・供給・衝突パラメータの基準値，を固定し，以降の数値解法（4節）と出力・検証（5節）で共通に参照する．基準計算の採用値は表\ref{tab:method-param}，表\ref{tab:methods_initial_psd_params}，表\ref{tab:methods_qdstar_coeffs}にまとめ，感度掃引で動かす代表パラメータは付録 A（表\ref{tab:app_methods_sweep_defaults}）に整理する．
@@ -47,28 +51,32 @@ A=\pi\left(r_{\rm out}^2-r_{\rm in}^2\right)
 
 ### 3.2 物理定数・物性値
 
-本研究で用いる主要な物理定数と物性値を表\ref{tab:method-phys}にまとめる．密度や蒸気圧係数などの材料依存パラメータは，基準ケースではフォルステライト相当の値を採用する（付録 Aも参照）．
+本研究で用いる主要な物理定数・惑星定数・粒子物性を表\ref{tab:method-phys}にまとめる．普遍定数（$G,c,\sigma_{\rm SB},R$）は CODATA 2018 の推奨値に従い，火星の質量 $M_{\rm Mars}$ と平均半径 $R_{\rm Mars}$ は公表値を採用する．材料依存パラメータは基準ケースではフォルステライト（$\mathrm{Mg_2SiO_4}$）を代表組成として近似し，密度 $\rho$ や飽和蒸気圧式の係数などは付録Aにまとめる．
 
 \begin{table}[t]
-  \centering
-  \small
-  \setlength{\tabcolsep}{4pt}
-  \caption{物理定数・物性値（基準計算）}
-  \label{tab:method-phys}
-  \begin{tabular}{p{0.30\textwidth} p{0.22\textwidth} p{0.12\textwidth} p{0.26\textwidth}}
-    \hline
-    記号 & 値 & 単位 & 備考 \\
-    \hline
-    $G$ & $6.67430\times10^{-11}$ & m$^{3}$\,kg$^{-1}$\,s$^{-2}$ & 万有引力定数 \\
-    $c$ & $2.99792458\times10^{8}$ & m\,s$^{-1}$ & 光速 \\
-    $\sigma_{\rm SB}$ & $5.670374419\times10^{-8}$ & W\,m$^{-2}$\,K$^{-4}$ & ステファン・ボルツマン定数 \\
-    $M_{\rm Mars}$ & $6.4171\times10^{23}$ & kg & 火星質量 \\
-    $R_{\rm Mars}$ & $3.3895\times10^{6}$ & m & 火星半径 \\
-    $\rho$ & 3270 & kg\,m$^{-3}$ & 粒子密度（フォルステライト） \\
-    $R$ & 8.314462618 & J\,mol$^{-1}$\,K$^{-1}$ & 気体定数（HKL に使用） \\
-    \hline
-  \end{tabular}
+\centering
+\small
+\setlength{\tabcolsep}{4pt}
+\caption{物理定数・惑星定数・粒子物性（基準計算）}
+\label{tab:method-phys}
+\begin{tabular}{p{0.30\textwidth} p{0.22\textwidth} p{0.18\textwidth} p{0.22\textwidth}}
+\hline
+記号 & 値 & 単位 & 備考 \\
+\hline
+$G$ & $6.67430\times10^{-11}$ & $\mathrm{m^{3}\,kg^{-1}\,s^{-2}}$ & 万有引力定数 \\
+$c$ & $2.99792458\times10^{8}$ & $\mathrm{m\,s^{-1}}$ & 光速（真空） \\
+$\sigma_{\rm SB}$ & $5.670374419\times10^{-8}$ & $\mathrm{W\,m^{-2}\,K^{-4}}$ & ステファン・ボルツマン定数 \\
+$M_{\rm Mars}$ & $6.4171\times10^{23}$ & $\mathrm{kg}$ & 火星質量 \\
+$R_{\rm Mars}$ & $3.3895\times10^{6}$ & $\mathrm{m}$ & 火星平均半径 \\
+$\rho$ & 3270 & $\mathrm{kg\,m^{-3}}$ & 粒子内部密度（フォルステライト） \\
+$R$ & 8.314462618 & $\mathrm{J\,mol^{-1}\,K^{-1}}$ & 普遍気体定数（Hertz--Knudsen--Langmuir（HKL）式に使用） \\
+\hline
+\end{tabular}
 \end{table}
+
+<!-- TEX_EXCLUDE_START -->
+（注）現行稿（提示文）では，表中の数値の「出典」が本文・表のいずれにも明示されていないため，修士論文としては追跡可能性の観点で不十分になりやすい．上の添削案では，普遍定数と惑星定数について最低限の出典を本文に集約して付し，材料依存値については付録Aに「値＋出典」をまとめる方針を明文化した．
+<!-- TEX_EXCLUDE_END -->
 
 ### 3.3 基準パラメータ
 
