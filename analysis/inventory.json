@@ -9023,6 +9023,426 @@
     "brief_usage": "No description available."
   },
   {
+    "file_path": "scripts/plot_results_sweep.py",
+    "line_no": 38,
+    "symbol": "SECONDS_PER_YEAR",
+    "signature": "SECONDS_PER_YEAR = 365.25 * 24 * 3600",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "scripts/plot_results_sweep.py",
+    "line_no": 39,
+    "symbol": "LOG_CLIP_FRACTION",
+    "signature": "LOG_CLIP_FRACTION = 1e-08",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "scripts/plot_results_sweep.py",
+    "line_no": 40,
+    "symbol": "LOG_CLIP_OUTFLOW",
+    "signature": "LOG_CLIP_OUTFLOW = 1e-30",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "scripts/plot_results_sweep.py",
+    "line_no": 42,
+    "symbol": "PARAM_CANDIDATES",
+    "signature": "PARAM_CANDIDATES = {'T_M': ['T_M', 'T_Mars', 'T0', 'T_init', 'T_mars0'], 'epsilon_mix': ['epsilon_mix', 'eps_mix', 'eps', 'epsilon'], 'tau0': ['tau0', 'tau_init', 'tau_eff0', 'tau_norm'], 'i0': ['i0', 'inc0', 'incl0'], 'f_Q': ['f_Q', 'f_Qstar', 'f_Q*', 'f_q']}",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "scripts/plot_results_sweep.py",
+    "line_no": 50,
+    "symbol": "REGEX_T",
+    "signature": "REGEX_T = re.compile('T(\\\\d+)')",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "scripts/plot_results_sweep.py",
+    "line_no": 51,
+    "symbol": "REGEX_EPS",
+    "signature": "REGEX_EPS = re.compile('eps([0-9]+(?:p[0-9]+)?)')",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "scripts/plot_results_sweep.py",
+    "line_no": 52,
+    "symbol": "REGEX_TAU",
+    "signature": "REGEX_TAU = re.compile('tau([0-9]+(?:p[0-9]+)?)')",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "scripts/plot_results_sweep.py",
+    "line_no": 53,
+    "symbol": "REGEX_I0",
+    "signature": "REGEX_I0 = re.compile('i0?([0-9]+(?:p[0-9]+)?)')",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "scripts/plot_results_sweep.py",
+    "line_no": 54,
+    "symbol": "REGEX_FQ",
+    "signature": "REGEX_FQ = re.compile('fQ([0-9]+(?:p[0-9]+)?)')",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "scripts/plot_results_sweep.py",
+    "line_no": 55,
+    "symbol": "_NO_MATCH",
+    "signature": "_NO_MATCH = object()",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "scripts/plot_results_sweep.py",
+    "line_no": 57,
+    "symbol": "OUTPUT_SUBDIRS",
+    "signature": "OUTPUT_SUBDIRS = {'cumloss': 'cumloss_grid', 'outflow': 'outflow_tau_cumloss_representative', 'heatmap': 'final_cumloss_heatmap', 'mass_budget': 'mass_budget_error'}",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "scripts/plot_results_sweep.py",
+    "line_no": 66,
+    "symbol": "RunData",
+    "signature": "class RunData",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/plot_results_sweep.py",
+    "line_no": 77,
+    "symbol": "_parse_args",
+    "signature": "_parse_args(argv: Sequence[str] | None=None) -> argparse.Namespace",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/plot_results_sweep.py",
+    "line_no": 99,
+    "symbol": "_warn",
+    "signature": "_warn(message: str) -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/plot_results_sweep.py",
+    "line_no": 103,
+    "symbol": "_info",
+    "signature": "_info(message: str) -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/plot_results_sweep.py",
+    "line_no": 107,
+    "symbol": "_read_json",
+    "signature": "_read_json(path: Path) -> dict",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/plot_results_sweep.py",
+    "line_no": 118,
+    "symbol": "_read_csv",
+    "signature": "_read_csv(path: Path) -> pd.DataFrame | None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/plot_results_sweep.py",
+    "line_no": 129,
+    "symbol": "_collect_series_paths",
+    "signature": "_collect_series_paths(series_dir: Path) -> list[Path]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/plot_results_sweep.py",
+    "line_no": 136,
+    "symbol": "_read_parquet",
+    "signature": "_read_parquet(path: Path, columns: list[str]) -> pd.DataFrame | None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/plot_results_sweep.py",
+    "line_no": 157,
+    "symbol": "_compute_cell_weights",
+    "signature": "_compute_cell_weights(df: pd.DataFrame) -> dict[int, float] | None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/plot_results_sweep.py",
+    "line_no": 196,
+    "symbol": "_weighted_mean",
+    "signature": "_weighted_mean(values: pd.Series, weights: np.ndarray | None) -> float",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/plot_results_sweep.py",
+    "line_no": 211,
+    "symbol": "_aggregate_series",
+    "signature": "_aggregate_series(df: pd.DataFrame) -> pd.DataFrame",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/plot_results_sweep.py",
+    "line_no": 231,
+    "symbol": "_load_series",
+    "signature": "_load_series(run_dir: Path) -> pd.DataFrame | None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/plot_results_sweep.py",
+    "line_no": 268,
+    "symbol": "_coerce_float",
+    "signature": "_coerce_float(value: object) -> float | None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/plot_results_sweep.py",
+    "line_no": 279,
+    "symbol": "_search_key_paths",
+    "signature": "_search_key_paths(data: object, key: str) -> list[tuple[str, object]]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/plot_results_sweep.py",
+    "line_no": 298,
+    "symbol": "_find_first_value",
+    "signature": "_find_first_value(config: dict, candidates: Iterable[str]) -> float | None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/plot_results_sweep.py",
+    "line_no": 310,
+    "symbol": "_parse_decimal",
+    "signature": "_parse_decimal(token: str | None) -> float | None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/plot_results_sweep.py",
+    "line_no": 319,
+    "symbol": "_parse_params_from_name",
+    "signature": "_parse_params_from_name(name: str) -> dict[str, float | None]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/plot_results_sweep.py",
+    "line_no": 348,
+    "symbol": "_extract_params",
+    "signature": "_extract_params(run_dir: Path, config: dict) -> tuple[dict[str, float | None], float | None]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/plot_results_sweep.py",
+    "line_no": 360,
+    "symbol": "_sort_value",
+    "signature": "_sort_value(value: float | None) -> tuple[int, float]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/plot_results_sweep.py",
+    "line_no": 366,
+    "symbol": "_run_sort_key",
+    "signature": "_run_sort_key(run: RunData) -> tuple",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/plot_results_sweep.py",
+    "line_no": 377,
+    "symbol": "_value_mode",
+    "signature": "_value_mode(values: list[float]) -> float | None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/plot_results_sweep.py",
+    "line_no": 391,
+    "symbol": "_match_value",
+    "signature": "_match_value(value: float | None, target: float) -> bool",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/plot_results_sweep.py",
+    "line_no": 397,
+    "symbol": "_select_baseline",
+    "signature": "_select_baseline(runs: list[RunData], baseline_i0: float | None, baseline_fq: float | None) -> tuple[list[RunData], dict[str, float | None]]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/plot_results_sweep.py",
+    "line_no": 428,
+    "symbol": "_format_value",
+    "signature": "_format_value(value: float | None, fmt: str='{:g}') -> str",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/plot_results_sweep.py",
+    "line_no": 434,
+    "symbol": "_value_key",
+    "signature": "_value_key(value: float | None) -> float | None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/plot_results_sweep.py",
+    "line_no": 440,
+    "symbol": "_select_representatives",
+    "signature": "_select_representatives(values: list[float | None], max_count: int) -> list[float | None]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/plot_results_sweep.py",
+    "line_no": 464,
+    "symbol": "_assign_colors",
+    "signature": "_assign_colors(values: list[object]) -> dict[object, tuple]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/plot_results_sweep.py",
+    "line_no": 472,
+    "symbol": "_match_from_list",
+    "signature": "_match_from_list(value: float | None, candidates: Iterable[float | None]) -> float | None | object",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/plot_results_sweep.py",
+    "line_no": 483,
+    "symbol": "_clip_log",
+    "signature": "_clip_log(values: np.ndarray, floor: float) -> np.ndarray",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/plot_results_sweep.py",
+    "line_no": 487,
+    "symbol": "_determine_mass_initial",
+    "signature": "_determine_mass_initial(mass_budget: pd.DataFrame | None, run_name: str) -> float | None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/plot_results_sweep.py",
+    "line_no": 505,
+    "symbol": "_select_baseline_run",
+    "signature": "_select_baseline_run(runs: list[RunData]) -> RunData",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/plot_results_sweep.py",
+    "line_no": 526,
+    "symbol": "_select_comparisons",
+    "signature": "_select_comparisons(baseline: RunData, runs: list[RunData]) -> list[RunData]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/plot_results_sweep.py",
+    "line_no": 569,
+    "symbol": "_prepare_style",
+    "signature": "_prepare_style() -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/plot_results_sweep.py",
+    "line_no": 580,
+    "symbol": "_prepare_output_dirs",
+    "signature": "_prepare_output_dirs(outdir: Path) -> dict[str, Path]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/plot_results_sweep.py",
+    "line_no": 587,
+    "symbol": "_run_title",
+    "signature": "_run_title(run: RunData) -> str",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/plot_results_sweep.py",
+    "line_no": 596,
+    "symbol": "_plot_cumloss_single",
+    "signature": "_plot_cumloss_single(run: RunData, outdir: Path) -> bool",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/plot_results_sweep.py",
+    "line_no": 620,
+    "symbol": "_plot_outflow_tau_cumloss_single",
+    "signature": "_plot_outflow_tau_cumloss_single(run: RunData, outdir: Path) -> bool",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/plot_results_sweep.py",
+    "line_no": 660,
+    "symbol": "_compute_heatmap_values",
+    "signature": "_compute_heatmap_values(runs: Iterable[RunData]) -> tuple[dict[str, float], float | None, float | None]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/plot_results_sweep.py",
+    "line_no": 685,
+    "symbol": "_plot_heatmap_single",
+    "signature": "_plot_heatmap_single(run: RunData, outdir: Path, value: float, vmin: float, vmax: float) -> bool",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/plot_results_sweep.py",
+    "line_no": 713,
+    "symbol": "_plot_mass_budget_single",
+    "signature": "_plot_mass_budget_single(run: RunData, outdir: Path) -> bool",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/plot_results_sweep.py",
+    "line_no": 736,
+    "symbol": "_tau_token",
+    "signature": "_tau_token(value: float) -> str",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/plot_results_sweep.py",
+    "line_no": 745,
+    "symbol": "_plot_cumloss_grid_for_tau0",
+    "signature": "_plot_cumloss_grid_for_tau0(runs: list[RunData], outdir: Path, tau0_value: float) -> bool",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/plot_results_sweep.py",
+    "line_no": 820,
+    "symbol": "_plot_r1",
+    "signature": "_plot_r1(runs: list[RunData], outdir: Path, max_lines: int) -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/plot_results_sweep.py",
+    "line_no": 910,
+    "symbol": "_plot_r2",
+    "signature": "_plot_r2(runs: list[RunData], outdir: Path) -> RunData | None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/plot_results_sweep.py",
+    "line_no": 971,
+    "symbol": "_label_for_run",
+    "signature": "_label_for_run(run: RunData) -> str",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/plot_results_sweep.py",
+    "line_no": 979,
+    "symbol": "_plot_r3",
+    "signature": "_plot_r3(runs: list[RunData], outdir: Path) -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/plot_results_sweep.py",
+    "line_no": 1079,
+    "symbol": "_plot_v1",
+    "signature": "_plot_v1(baseline: RunData | None, outdir: Path) -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/plot_results_sweep.py",
+    "line_no": 1106,
+    "symbol": "_load_runs",
+    "signature": "_load_runs(run_root: Path) -> list[RunData]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/plot_results_sweep.py",
+    "line_no": 1134,
+    "symbol": "main",
+    "signature": "main(argv: Sequence[str] | None=None) -> int",
+    "brief_usage": "No description available."
+  },
+  {
     "file_path": "scripts/plots/plot_axis_r_sweep.py",
     "line_no": 11,
     "symbol": "_resolve_table_path",

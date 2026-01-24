@@ -885,6 +885,55 @@ scripts/debug/debug_fragment_tensor_lr.py:13:def main(argv: list[str] | None=Non
 scripts/debug/debug_psd_drift.py:13:def _reference_rebin_dnds(psd_state: dict[str, np.ndarray | float], *, ds_dt: float, dt: float, floor: float) -> tuple[np.ndarray, np.ndarray]
 scripts/debug/debug_psd_drift.py:54:def main(argv: list[str] | None=None) -> int
 scripts/debug/debug_supply_powerlaw_slope.py:13:def main(argv: list[str] | None=None) -> int
+scripts/plot_results_sweep.py:66:class RunData
+scripts/plot_results_sweep.py:77:def _parse_args(argv: Sequence[str] | None=None) -> argparse.Namespace
+scripts/plot_results_sweep.py:99:def _warn(message: str) -> None
+scripts/plot_results_sweep.py:103:def _info(message: str) -> None
+scripts/plot_results_sweep.py:107:def _read_json(path: Path) -> dict
+scripts/plot_results_sweep.py:118:def _read_csv(path: Path) -> pd.DataFrame | None
+scripts/plot_results_sweep.py:129:def _collect_series_paths(series_dir: Path) -> list[Path]
+scripts/plot_results_sweep.py:136:def _read_parquet(path: Path, columns: list[str]) -> pd.DataFrame | None
+scripts/plot_results_sweep.py:157:def _compute_cell_weights(df: pd.DataFrame) -> dict[int, float] | None
+scripts/plot_results_sweep.py:196:def _weighted_mean(values: pd.Series, weights: np.ndarray | None) -> float
+scripts/plot_results_sweep.py:211:def _aggregate_series(df: pd.DataFrame) -> pd.DataFrame
+scripts/plot_results_sweep.py:231:def _load_series(run_dir: Path) -> pd.DataFrame | None
+scripts/plot_results_sweep.py:268:def _coerce_float(value: object) -> float | None
+scripts/plot_results_sweep.py:279:def _search_key_paths(data: object, key: str) -> list[tuple[str, object]]
+scripts/plot_results_sweep.py:298:def _find_first_value(config: dict, candidates: Iterable[str]) -> float | None
+scripts/plot_results_sweep.py:310:def _parse_decimal(token: str | None) -> float | None
+scripts/plot_results_sweep.py:319:def _parse_params_from_name(name: str) -> dict[str, float | None]
+scripts/plot_results_sweep.py:348:def _extract_params(run_dir: Path, config: dict) -> tuple[dict[str, float | None], float | None]
+scripts/plot_results_sweep.py:360:def _sort_value(value: float | None) -> tuple[int, float]
+scripts/plot_results_sweep.py:366:def _run_sort_key(run: RunData) -> tuple
+scripts/plot_results_sweep.py:377:def _value_mode(values: list[float]) -> float | None
+scripts/plot_results_sweep.py:391:def _match_value(value: float | None, target: float) -> bool
+scripts/plot_results_sweep.py:397:def _select_baseline(runs: list[RunData], baseline_i0: float | None, baseline_fq: float | None) -> tuple[list[RunData], dict[str, float | None]]
+scripts/plot_results_sweep.py:428:def _format_value(value: float | None, fmt: str='{:g}') -> str
+scripts/plot_results_sweep.py:434:def _value_key(value: float | None) -> float | None
+scripts/plot_results_sweep.py:440:def _select_representatives(values: list[float | None], max_count: int) -> list[float | None]
+scripts/plot_results_sweep.py:464:def _assign_colors(values: list[object]) -> dict[object, tuple]
+scripts/plot_results_sweep.py:472:def _match_from_list(value: float | None, candidates: Iterable[float | None]) -> float | None | object
+scripts/plot_results_sweep.py:483:def _clip_log(values: np.ndarray, floor: float) -> np.ndarray
+scripts/plot_results_sweep.py:487:def _determine_mass_initial(mass_budget: pd.DataFrame | None, run_name: str) -> float | None
+scripts/plot_results_sweep.py:505:def _select_baseline_run(runs: list[RunData]) -> RunData
+scripts/plot_results_sweep.py:526:def _select_comparisons(baseline: RunData, runs: list[RunData]) -> list[RunData]
+scripts/plot_results_sweep.py:569:def _prepare_style() -> None
+scripts/plot_results_sweep.py:580:def _prepare_output_dirs(outdir: Path) -> dict[str, Path]
+scripts/plot_results_sweep.py:587:def _run_title(run: RunData) -> str
+scripts/plot_results_sweep.py:596:def _plot_cumloss_single(run: RunData, outdir: Path) -> bool
+scripts/plot_results_sweep.py:620:def _plot_outflow_tau_cumloss_single(run: RunData, outdir: Path) -> bool
+scripts/plot_results_sweep.py:660:def _compute_heatmap_values(runs: Iterable[RunData]) -> tuple[dict[str, float], float | None, float | None]
+scripts/plot_results_sweep.py:685:def _plot_heatmap_single(run: RunData, outdir: Path, value: float, vmin: float, vmax: float) -> bool
+scripts/plot_results_sweep.py:713:def _plot_mass_budget_single(run: RunData, outdir: Path) -> bool
+scripts/plot_results_sweep.py:736:def _tau_token(value: float) -> str
+scripts/plot_results_sweep.py:745:def _plot_cumloss_grid_for_tau0(runs: list[RunData], outdir: Path, tau0_value: float) -> bool
+scripts/plot_results_sweep.py:820:def _plot_r1(runs: list[RunData], outdir: Path, max_lines: int) -> None
+scripts/plot_results_sweep.py:910:def _plot_r2(runs: list[RunData], outdir: Path) -> RunData | None
+scripts/plot_results_sweep.py:971:def _label_for_run(run: RunData) -> str
+scripts/plot_results_sweep.py:979:def _plot_r3(runs: list[RunData], outdir: Path) -> None
+scripts/plot_results_sweep.py:1079:def _plot_v1(baseline: RunData | None, outdir: Path) -> None
+scripts/plot_results_sweep.py:1106:def _load_runs(run_root: Path) -> list[RunData]
+scripts/plot_results_sweep.py:1134:def main(argv: Sequence[str] | None=None) -> int
 scripts/plots/plot_axis_r_sweep.py:11:def _resolve_table_path(path: Path) -> Path
 scripts/plots/plot_axis_r_sweep.py:25:def parse_args() -> argparse.Namespace
 scripts/plots/plot_axis_r_sweep.py:44:def main() -> None
