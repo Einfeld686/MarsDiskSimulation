@@ -27,6 +27,9 @@ INLINE_MATH_DOLLAR_RE = re.compile(r"(?<!\\)\$([^$]+?)\$")
 LATEX_CMD_RE = re.compile(r"\\(cite[a-zA-Z]*\*?|ref|eqref|label)\{[^}]+\}")
 CITE_BRACKET_RE = re.compile(r"\[@([^\]]+)\]")
 
+ENDFLOAT_PACKAGE = "endfloat"
+ENDFLOAT_REQUIRED_OPTION = "tablesfirst"
+
 SUBSCRIPT_MAP = {
     "₀": "0",
     "₁": "1",
@@ -496,6 +499,46 @@ def replace_unicode_symbols(text: str) -> str:
     return text
 
 
+def _package_options(tex_text: str, package: str) -> list[str]:
+    pattern = re.compile(
+        rf"\\(?:usepackage|RequirePackage)\s*(?:\[(?P<opts>[^\]]*)\])?\s*\{{\s*{re.escape(package)}\s*\}}"
+    )
+    return [match.group("opts") or "" for match in pattern.finditer(tex_text)]
+
+
+def _has_endfloat_hooks(tex_text: str) -> bool:
+    chapter_hook = re.search(
+        r"\\pretocmd\s*\{\s*\\chapter\s*\}\s*\{\s*\\processdelayedfloats\s*\}\s*\{\s*\}\s*\{\s*\}",
+        tex_text,
+    )
+    bibliography_hook = re.search(
+        r"\\pretocmd\s*\{\s*\\bibliography\s*\}\s*\{\s*\\processdelayedfloats\s*\}\s*\{\s*\}\s*\{\s*\}",
+        tex_text,
+    )
+    return bool(chapter_hook and bibliography_hook)
+
+
+def validate_chapter_endfloat_policy(tex_text: str, tex_path: Path) -> None:
+    options = _package_options(tex_text, ENDFLOAT_PACKAGE)
+    if not options:
+        raise ValueError(
+            f"{tex_path}: 図表の章末出力（表→図）ポリシーが有効ではありません。"
+            f" `\\\\usepackage[{ENDFLOAT_REQUIRED_OPTION}]{{{ENDFLOAT_PACKAGE}}}` を前文に追加してください。"
+        )
+    parsed = {opt.strip() for opt in options[0].split(",") if opt.strip()}
+    if ENDFLOAT_REQUIRED_OPTION not in parsed:
+        raise ValueError(
+            f"{tex_path}: `{ENDFLOAT_PACKAGE}` が `{ENDFLOAT_REQUIRED_OPTION}` なしで読み込まれています。"
+            " 各章末に「表→図」の順で配置するため、オプションを追加してください。"
+        )
+    if not _has_endfloat_hooks(tex_text):
+        raise ValueError(
+            f"{tex_path}: endfloat は有効ですが、章境界でのフラッシュ設定が見つかりません。"
+            " `\\\\pretocmd{\\\\chapter}{\\\\processdelayedfloats}{}{}'"
+            " と `\\\\pretocmd{\\\\bibliography}{\\\\processdelayedfloats}{}{}' を前文に追加してください。"
+        )
+
+
 class MarkdownToLatexConverter:
     def __init__(self, heading_map: dict[int, str]) -> None:
         self.heading_map = heading_map
@@ -710,6 +753,16 @@ def build_pdf(tex_path: Path, out_dir: Path, repo_root: Path) -> None:
         ],
         cwd=repo_root,
     )
+    log_path = out_dir / f"{stem}.log"
+    if log_path.exists():
+        log_text = log_path.read_text(encoding="utf-8", errors="ignore")
+        if "Package: endfloat" not in log_text:
+            raise RuntimeError(
+                f"build_pdf: endfloat がロードされていません（{log_path}）。"
+                " 図表の章末出力（表→図）のポリシーが外れている可能性があります。"
+            )
+    else:
+        raise RuntimeError(f"build_pdf: log ファイルが見つかりません（{log_path}）。")
 
 
 def main() -> int:
@@ -837,6 +890,7 @@ def main() -> int:
         tex_text = replace_between_markers_optional(
             tex_text, APPENDIX_START, APPENDIX_END, appendix_tex
         )
+    validate_chapter_endfloat_policy(tex_text, out_path)
     out_path.write_text(tex_text, encoding="utf-8")
 
     publish_dir.mkdir(parents=True, exist_ok=True)
