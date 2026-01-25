@@ -79,7 +79,7 @@ s_{\min,\rm eff}=\max\!\left(s_{\min,\rm cfg},\,s_{\rm blow,eff}\right)
 
 \begin{figure}[t]
 \centering
-% \includegraphics[width=\linewidth]{figures/thesis/methods_main_loop.pdf}
+\includegraphics[width=\linewidth]{figures/thesis/methods_main_loop.png}
 \caption{手法の全体フロー（入力→状態→更新→出力）}
 \label{fig:method_overview}
 \end{figure}
