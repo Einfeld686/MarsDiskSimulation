@@ -13,9 +13,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-ROOT = Path(__file__).resolve().parents[1]
-if str(ROOT) not in sys.path:
-    sys.path.insert(0, str(ROOT))
+REPO_ROOT = Path(__file__).resolve().parents[2]
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
 
 from marsdisk.physics import radiation
 from paper.plot_style import apply_default_style
@@ -335,7 +335,8 @@ def main(argv: Iterable[str] | None = None) -> None:
             )
     ax.set_xlabel("Time [yr]")
     ax.set_ylabel("Mars surface temperature [K]")
-    ax.set_title(args.title)
+    if args.title and args.title.strip():
+        ax.set_title(args.title)
     ax.set_xlim(left=0.0, right=max_time_years if max_time_years > 0.0 else None)
     ax.grid(True, alpha=0.3)
     ax.legend()
