@@ -97,8 +97,16 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     if not args.sections_dir.exists():
-        print(f"sections dir not found: {args.sections_dir}", file=sys.stderr)
-        return 2
+        msg = f"sections dir not found: {args.sections_dir}"
+        if args.write:
+            if args.output.exists():
+                print(f"merge_related_work_sections: skipped ({msg})")
+                return 0
+            args.output.write_text("", encoding="utf-8")
+            print(f"merge_related_work_sections: wrote empty {args.output} ({msg})")
+            return 0
+        print(msg, file=sys.stderr)
+        return 0
 
     try:
         section_paths = collect_sections(args.sections_dir, args.manifest)
