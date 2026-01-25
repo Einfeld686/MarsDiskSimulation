@@ -1,0 +1,3 @@
+# Ordered list of section files to build analysis/thesis/conclusion.md.
+00_conclusion.md
+
