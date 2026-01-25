@@ -156,6 +156,12 @@ plan-lint:
 thesis-sync: analysis-abstract-sync analysis-intro-sync analysis-related-work-sync analysis-methods-sync analysis-results-sync analysis-discussion-sync
 
 thesis-pdf: thesis-sync
-	python tools/build_thesis_draft.py --pdf --outdir paper/out/build
+	python tools/build_thesis_draft.py --pdf --outdir paper/out/build --sync-sections off
+
+# Build from existing analysis/thesis/*.md without syncing thesis_sections (useful for local manual edits / quick TeX iteration).
+thesis-pdf-nosync:
+	python tools/build_thesis_draft.py --pdf --outdir paper/out/build --sync-sections off
 
 thesis: thesis-pdf
+
+thesis-nosync: thesis-pdf-nosync

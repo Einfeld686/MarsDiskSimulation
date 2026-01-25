@@ -751,6 +751,11 @@ def main() -> int:
 
     repo_root = Path(__file__).resolve().parents[1]
     if args.sync_sections == "on":
+        print(
+            "[build_thesis_draft] --sync-sections=on: analysis/thesis_sections -> analysis/thesis を同期します。"
+            " analysis/thesis/*.md を手動編集している場合は上書きされるため、"
+            "同期せずに PDF を作りたい場合は --sync-sections off を指定してください。"
+        )
         for module in (
             "analysis.tools.merge_abstract_sections",
             "analysis.tools.merge_introduction_sections",
