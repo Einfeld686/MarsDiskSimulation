@@ -2,8 +2,6 @@
 > **文書種別**: 結果（Diátaxis: Explanation）
 <!-- TEX_EXCLUDE_END -->
 
-# 結果
-
 本章の主結果を先に述べる．放射圧ブローアウトによる累積損失 $M_{\rm loss}$ は，12 ケースの掃引で $2.0\times10^{-8}$--$1.1\times10^{-4}\,M_{\rm Mars}$ に分布する．また，$M_{\rm loss}$ の 99\% は $t\lesssim1\,\mathrm{yr}$ で確定し，流出は遷移期のごく初期に集中する．
 
 パラメータ依存として，$M_{\rm loss}$ の支配因子は温度 $T_{M,0}$ と初期光学的厚さ $\tau_0$ であり，$3000\to4000\,\mathrm{K}$ で $M_{\rm loss}$ は約 3 桁増大し，$\tau_0$ を 2 倍にすると $M_{\rm loss}$ も概ね 2 倍となる．一方，供給混合係数 $\epsilon_{\rm mix}$ は本範囲では $M_{\rm loss}$ をほとんど変えない（5 節）．
@@ -12,14 +10,7 @@
 
 本章では，手法章で定義した軸対称 1D（リング分割）モデルに基づく数値結果を整理する．主な関心は，遷移期における放射圧による不可逆損失の累積量 $M_{\rm loss}$（序論の $\Delta M_{\rm in}$；式\ref{eq:delta_min_def}）と，それが温度や光学的厚さにどう依存するかである．この $M_{\rm loss}(t_{\rm end})$ は，長期モデルへ渡す内側円盤質量の更新量（式\ref{eq:min0_update}）に直接入る．本章では放射圧による寄与を分離するため追加シンクを無効化し（放射圧ブローアウトのみ；下限評価），$M_{\rm loss}=M_{\rm out,cum}$ として評価する．以降では，全円盤の $\dot{M}_{\rm out}(t)$（式\ref{eq:mdot_out_definition}）と $M_{\rm loss}(t)$（式\ref{eq:mass_loss_update}），および半径依存を含む $\dot{M}_{\rm out}(r,t)$ に焦点を当て，併せて質量保存と停止条件の内訳を検証する．
 
-## 構成
-
-1. 実行条件とデータセット
-2. 全円盤の流出率 $\dot{M}_{\rm out}(t)$ と累積損失 $M_{\rm loss}(t)$
-3. 半径依存：半径×時間の流出構造
-4. 検証：質量保存と停止条件
-5. 感度解析（温度・$\tau_0$・$\epsilon_{\rm mix}$）
-6. 小結
+以下では，まずスイープ計算の条件とデータセットを整理し（1 節），全円盤積分量 $\dot{M}_{\rm out}(t)$ と $M_{\rm loss}(t)$ の代表的な時間発展を示す（2 節）．続いて，半径方向に分解した $\dot{M}_{\rm out}(r,t)$ の構造を可視化し（3 節），質量保存と停止条件の内訳を検証する（4 節）．最後に $M_{\rm loss}$ の主要パラメータ依存性を要約し（5 節），本章の小結を述べる（6 節）．
 
 ## 1. 実行条件とデータセット
 
@@ -27,6 +18,15 @@
 
 本章では質量を火星質量 $M_{\rm Mars}$ で無次元化し，$M_{\rm loss}$ を $M_{\rm Mars}$ 単位で示す．放射圧ブローアウトの寄与を分離する目的で追加シンクを無効化しており，本章の $M_{\rm loss}$ は $M_{\rm out,cum}$ に一致する（追加シンクを含めた総損失は，本章の値に追加の損失分が加わる）．
 また，$\tau_{\rm los}>\tau_{\rm stop}$ によるセル早期停止は，手法章で述べた照射近似の適用範囲判定であり，物理的にブローアウトが停止することを意味しない．
+
+温度条件（$T_{M,0}$）の違いを直観的に示すため，火星放射冷却に基づいて計算したフォルステライトダスト温度 $T_{\rm dust}(r,t)$ の 2 年間マップを図\ref{fig:results_forsterite_phase_heatmap}に示す（灰色は融点以上の領域）．本章の以降の結果は，この温度ドライバ $T_M(t)$ の系統差が放射圧ブローアウトを通じて $M_{\rm loss}$ をどう変えるかとして整理する．
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\linewidth]{figures/thesis/forsterite_phase_heatmap_T0stack_2yr.png}
+  \caption{火星放射冷却に基づくフォルステライトダスト温度マップ（2 年間）と融点境界．初期火星表面温度 $T_{M,0}$ を 3000/4000/5000 K で変えた 3 ケースを比較する（灰色は融点以上）．}
+  \label{fig:results_forsterite_phase_heatmap}
+\end{figure}
 
 ### 1.1 パラメータ掃引（温度・供給）
 
@@ -76,7 +76,7 @@
 
 \begin{figure}[t]
   \centering
-  % \includegraphics[width=\linewidth]{figures/results/outflow_tau_cumloss_representative/T4000_eps1p0_tau1p0_i00p05_mu1p0.png}
+  \includegraphics[width=\linewidth]{figures/results/outflow_tau_cumloss_representative/T4000_eps1p0_tau1p0_i00p05_mu1p0.png}
   \caption{代表ケースの時系列．上段：全円盤の放射圧流出率 $\dot{M}_{\rm out}(t)$ [$M_{\rm Mars}\,\mathrm{s^{-1}}$]（対数軸）．中段：視線方向光学的厚さ $\tau_{\rm los}(t)$（線形軸，破線は停止判定 $\tau_{\rm stop}=\ln 10$）．下段：累積損失 $M_{\rm loss}(t)$ [$M_{\rm Mars}$]（対数軸）．}
   \label{fig:results_outflow_tau_cumloss_representative}
 \end{figure}
@@ -89,8 +89,8 @@
 
 \begin{figure}[t]
   \centering
-  % \includegraphics[width=\linewidth]{figures/results/moutdot_grid/moutdot_grid_tau0p5.png}
-  % \includegraphics[width=\linewidth]{figures/results/moutdot_grid/moutdot_grid_tau1p0.png}
+  \includegraphics[width=\linewidth]{figures/results/moutdot_grid/moutdot_grid_tau0p5.png}
+  \includegraphics[width=\linewidth]{figures/results/moutdot_grid/moutdot_grid_tau1p0.png}
   \caption{全円盤の放射圧流出率 $\dot{M}_{\rm out}(t)$ の時系列（上：$\tau_0=0.5$，下：$\tau_0=1.0$）．縦軸は $\dot{M}_{\rm out}$ [$M_{\rm Mars}\,\mathrm{s^{-1}}$] の対数，横軸は時間 $t$ [yr] である．各曲線は温度 $T_{M,0}$ と供給混合係数 $\epsilon_{\rm mix}$ の組を表し，線が途中で終わるのは停止条件（4 節）による．}
   \label{fig:results_moutdot_grid}
 \end{figure}
@@ -103,8 +103,8 @@
 
 \begin{figure}[t]
   \centering
-  % \includegraphics[width=\linewidth]{figures/results/cumloss_grid/cumloss_grid_tau0p5.png}
-  % \includegraphics[width=\linewidth]{figures/results/cumloss_grid/cumloss_grid_tau1p0.png}
+  \includegraphics[width=\linewidth]{figures/results/cumloss_grid/cumloss_grid_tau0p5.png}
+  \includegraphics[width=\linewidth]{figures/results/cumloss_grid/cumloss_grid_tau1p0.png}
   \caption{累積損失 $M_{\rm loss}(t)$ の時系列（上：$\tau_0=0.5$，下：$\tau_0=1.0$）．縦軸は $M_{\rm loss}/(10^{-5}M_{\rm Mars})$ の対数，横軸は時間 $t$ [yr] である．各曲線は温度 $T_{M,0}$ と供給混合係数 $\epsilon_{\rm mix}$ の組を表し，線が途中で終わるのは停止条件（4 節）による．}
   \label{fig:results_cumloss_grid}
 \end{figure}
@@ -118,9 +118,11 @@
 
 ### 3.1 $\tau_0=0.5$ の場合
 
+図\ref{fig:results_time_radius_moutdot_tau_tau0p5}に $\tau_0=0.5$ の半径×時間マップを示す．以降では $\tau_0=1.0$ の場合（図\ref{fig:results_time_radius_moutdot_tau_tau1p0}）と比較し，流出の時間集中と半径方向の縮退を議論する．
+
 \begin{figure}[t]
   \centering
-  % \includegraphics[width=\linewidth]{figures/results/result-radius-time-flux/time_radius_M_out_dot_tau_grid_0p5.png}
+  \includegraphics[width=\linewidth]{figures/results/result-radius-time-flux/time_radius_M_out_dot_tau_grid_0p5.png}
   \caption{半径×時間の流出構造（$\tau_0=0.5$）．色は半径セルごとの放射圧流出率 $\dot{M}_{\rm out}(r,t)$ [$M_{\rm Mars}\,\mathrm{s^{-1}}$]（対数カラースケール）を示し，白は $10^{-14}\,M_{\rm Mars}\,\mathrm{s^{-1}}$ 未満である．パネルは (a) $(T_{M,0},\epsilon_{\rm mix})=(3000\,\mathrm{K},1.0)$，(b) $(3000\,\mathrm{K},1.5)$，(c) $(4000\,\mathrm{K},1.0)$，(d) $(4000\,\mathrm{K},1.5)$，(e) $(5000\,\mathrm{K},1.0)$，(f) $(5000\,\mathrm{K},1.5)$ に対応し，$i_0=0.05$，$\mu=1.0$ は共通である．}
   \label{fig:results_time_radius_moutdot_tau_tau0p5}
 \end{figure}
@@ -129,7 +131,7 @@
 
 \begin{figure}[t]
   \centering
-  % \includegraphics[width=\linewidth]{figures/results/result-radius-time-flux/time_radius_M_out_dot_tau_grid_1p0.png}
+  \includegraphics[width=\linewidth]{figures/results/result-radius-time-flux/time_radius_M_out_dot_tau_grid_1p0.png}
   \caption{半径×時間の流出構造（$\tau_0=1.0$）．色は半径セルごとの放射圧流出率 $\dot{M}_{\rm out}(r,t)$ [$M_{\rm Mars}\,\mathrm{s^{-1}}$]（対数カラースケール）を示し，白は $10^{-14}\,M_{\rm Mars}\,\mathrm{s^{-1}}$ 未満である．パネルは (a) $(T_{M,0},\epsilon_{\rm mix})=(3000\,\mathrm{K},1.0)$，(b) $(3000\,\mathrm{K},1.5)$，(c) $(4000\,\mathrm{K},1.0)$，(d) $(4000\,\mathrm{K},1.5)$，(e) $(5000\,\mathrm{K},1.0)$，(f) $(5000\,\mathrm{K},1.5)$ に対応し，$i_0=0.05$，$\mu=1.0$ は共通である．}
   \label{fig:results_time_radius_moutdot_tau_tau1p0}
 \end{figure}
@@ -145,8 +147,8 @@
 
 \begin{figure}[t]
   \centering
-  % \includegraphics[width=\linewidth]{figures/results/mass_budget_error/mass_budget_error_grid_tau0p5.png}
-  % \includegraphics[width=\linewidth]{figures/results/mass_budget_error/mass_budget_error_grid_tau1p0.png}
+  \includegraphics[width=\linewidth]{figures/results/mass_budget_error/mass_budget_error_grid_tau0p5.png}
+  \includegraphics[width=\linewidth]{figures/results/mass_budget_error/mass_budget_error_grid_tau1p0.png}
   \caption{質量保存誤差 $\epsilon_{\rm mass}(t)$（相対誤差％）の時系列（上：$\tau_0=0.5$，下：$\tau_0=1.0$）．縦軸は相対誤差[\%]（線形）であり，表示範囲は $10^{-13}\%$ 程度である．各パネルは $(T_{M,0},\epsilon_{\rm mix})$ の組に対応し，$i_0=0.05$，$\mu=1.0$ は共通である．}
   \label{fig:results_mass_budget_error_grid}
 \end{figure}

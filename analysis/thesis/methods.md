@@ -79,7 +79,7 @@ s_{\min,\rm eff}=\max\!\left(s_{\min,\rm cfg},\,s_{\rm blow,eff}\right)
 
 \begin{figure}[t]
 \centering
-% \includegraphics[width=\linewidth]{figures/thesis/methods_main_loop.pdf}
+\includegraphics[width=\linewidth]{figures/thesis/methods_main_loop.png}
 \caption{手法の全体フロー（入力→状態→更新→出力）}
 \label{fig:method_overview}
 \end{figure}
@@ -197,6 +197,7 @@ $\kappa_{\rm eff}$ に基づき，診断量として参照面密度 $\Sigma_{\ta
 $\kappa_{\rm eff}$ は遮蔽を織り込んだ有効不透明度として照射・表層アウトフローの評価に用いる．一方，初期条件の光学的厚さの規格化と，$\tau_{\rm stop}$ による適用範囲判定（停止判定）には $\tau_{\rm los}$ を用いる．
 
 ### 2.3 表層への質量供給
+\label{sec:method-supply}
 
 表層への供給率（面密度注入率）を $\dot{\Sigma}_{\rm in}(t,r)$ と定義する．ここで $r$ は半径セルの中心半径であり，$\dot{\Sigma}_{\rm in}$ は表層（$\Sigma_{\rm surf}$）へ単位面積・単位時間あたりに注入される質量を表す．供給過程は，表層と下層（あるいは外部リザーバ）との混合効率を表す無次元係数 $\epsilon_{\rm mix}$ と，基準供給率 $R_{\rm base}(t,r)$ を用いて式\ref{eq:prod_rate_definition}で与える．衝突カスケードのサイズ分布進化モデルでは，質量収支式に外部供給（source）を明示的に導入する定式化が用いられており，本節の $F_k$ はその意味でのソース項に相当する（例：\citet{Wyatt2008,WyattClarkeBooth2011_CeMDA111_1}）．
 
@@ -825,7 +826,7 @@ M_{\rm loss}^{n+1}=M_{\rm loss}^{n}+\Delta t\left(\dot{M}_{\rm out}^{n}+\dot{M}_
 
 \begin{figure}[t]
   \centering
-  % \includegraphics[width=\linewidth]{figures/thesis/validation_mass_budget_example.pdf}
+  \includegraphics[width=\linewidth]{figures/thesis/validation_mass_budget_example.pdf}
   \caption{代表ケースにおける質量検査 $\epsilon_{\rm mass}(t)$ の時系列（例）}
   \label{fig:app_validation_mass_budget_example}
 \end{figure}
