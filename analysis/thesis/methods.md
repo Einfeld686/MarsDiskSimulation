@@ -362,7 +362,6 @@ S_{{\rm sub},k}=\frac{1}{t_{{\rm sub},k}}=\frac{|ds/dt|}{s_k}
 \end{equation}
 
 とし，式\ref{eq:smoluchowski}の $S_k$ に加算する（本研究では添字 ${\rm sub}$ を慣用的に用いるが，固相の昇華に限らず液相での蒸発も包含する）．
-以上の定式化により，半径セルごとの PSD と表層面密度を，放射圧流出（ブローアウト）・遮蔽・供給・衝突カスケード・相変化に伴う質量フラックス（HKL）・追加シンクの寄与で更新できる．
 ## 3. パラメータ条件
 
 <!--
@@ -659,7 +658,7 @@ M_{\rm loss}^{n+1}=M_{\rm loss}^{n}+\Delta t\left(\dot{M}_{\rm out}^{n}+\dot{M}_
 
 ### 5.2 仮定と限界
 
-本手法は，いくつかの近似を明示的に導入している．
+本手法は，いくつかの近似を導入している．
 まず，半径方向の輸送過程（粘性拡散や PR ドラッグなど）は支配方程式としては解かず，各半径セルにおける局所進化を独立に評価する．
 次に，衝突速度の評価では，相対速度を与える離心率 $e$ と傾斜角 $i$ を代表値として固定し，低離心率・低傾斜の近似式を速度スケールとして用いる．この近似は，厳密な励起・散乱過程を扱わない代わりに，衝突頻度と破壊効率の主要な依存性を一つのスケールに押し込み，衝突カスケードの時間発展を記述可能にするものである．
 また，自己遮蔽は遮蔽係数 $\Phi$ を有効不透明度 $\kappa_{\rm eff}$ に反映させ，照射・表層アウトフローの評価に用いる．一方，適用範囲判定（早期停止）は視線方向光学的厚さ $\tau_{\rm los}>\tau_{\rm stop}$ により行う．しかし，遮蔽によって放射圧パラメータ $\beta$ 自体が連続的に減衰するような詳細な放射輸送は扱わない．したがって本手法は，遮蔽が強くなり過ぎ，表層という概念が曖昧になる領域では，そもそも適用対象外として計算を停止する設計になっている．
@@ -671,6 +670,11 @@ M_{\rm loss}^{n+1}=M_{\rm loss}^{n}+\Delta t\left(\dot{M}_{\rm out}^{n}+\dot{M}_
 -->
 
 本研究の再現性は，(i) 入力（設定ファイルとテーブル）を固定し，(ii) 実行時に採用された値と条件を保存し，(iii) 時系列・要約・検証ログを保存することで担保する．本付録では，論文として最低限必要な「保存すべき情報」をまとめる．
+本付録は，本文の読み筋を阻害しない範囲で，次の 3 点を一覧として補助する．
+
+- 再現の前提として固定する入力
+- 再解析のために保存する出力（最小セット）
+- 基準ケースの採用値と感度掃引で動かす範囲
 
 ### A.1 固定する入力（再現の前提）
 
@@ -682,57 +686,49 @@ M_{\rm loss}^{n+1}=M_{\rm loss}^{n}+\Delta t\left(\dot{M}_{\rm out}^{n}+\dot{M}_
 
 ### A.2 保存する出力（再解析の最小セット）
 
-本論文で示す結果は，以下の情報を保存して再解析できる形で管理した．
-
-- **採用値の記録**: $\rho$，$\langle Q_{\rm pr}\rangle$，物理スイッチ，$s_{\rm blow}$ など，実行時に採用した値と出典を機械可読形式で保存する．
-- **時系列**: 主要スカラー量（$\tau_{\rm los}$，$s_{\rm blow}$，$\Sigma_{\rm surf}$，$\dot{M}_{\rm out}$ など）の時系列．
-- **PSD 履歴**: $N_k(t)$ と $\Sigma_{\rm surf}(t)$ の履歴．
-- **要約**: $t_{\rm end}$ までの累積損失 $M_{\rm loss}$ などの集約．
-- **検証ログ**: 式\ref{eq:mass_budget_definition} に基づく質量検査のログ．
-
-実際の成果物は実行ディレクトリ（`OUTDIR/`）配下に保存し，後段の解析はこれらを入力として再構成する．最小セットは次の 5 点である．
-
-- `OUTDIR/run_config.json`（JSON）: 展開後の設定と採用値，実行環境（`python`/`platform`/`argv`/`cwd`/`timestamp_utc`），依存パッケージの版，および外部ファイル（テーブル等）のパスとハッシュ（可能な範囲）．
-- `OUTDIR/series/run.parquet`（Parquet）: 主要スカラー時系列（例: `time`, `dt`, `tau`, `a_blow`, `s_min`, `Sigma_surf`, `outflux_surface`, `prod_subblow_area_rate`, `M_out_dot`, `M_loss_cum`）．
-- `OUTDIR/series/psd_hist.parquet`（Parquet）: PSD 履歴（例: `time`, `bin_index`, `s_bin_center`, `N_bin`, `Sigma_bin`, `f_mass`, `Sigma_surf`）．
-- `OUTDIR/summary.json`（JSON）: 終端要約（例: `M_loss`, `mass_budget_max_error_percent`）．
-- `OUTDIR/checks/mass_budget.csv`（CSV）: 質量検査ログ（例: `time`, `mass_initial`, `mass_remaining`, `mass_lost`, `error_percent`, `tolerance_percent`）．
-
-補助的に，`OUTDIR/series/diagnostics.parquet`（遮蔽などの追加診断；存在する場合）や `OUTDIR/checks/mass_budget_cells.csv`（1D のセル別質量収支；設定により出力）を保存する．また，時間刻み・粒径ビンの収束比較の合否判定は `scripts/validate_run.py` により `OUTDIR/checks/validation.json` として出力し，表\ref{tab:validation_criteria}の確認に用いる．
-
-保存時は質量流出率と累積損失を火星質量 $M_{\rm Mars}$ で規格化した単位で記録し，数値桁を揃える．定義は付録 E（記号表）を参照する．
-
-### A.3 感度掃引で用いる代表パラメータ（例）
+本論文で示す結果は，実行条件と採用値，主要スカラー時系列，PSD 履歴，終端要約，および質量検査ログを保存して再解析できる形で管理した．実行ディレクトリ（`OUTDIR/`）配下に保存する最小セットを表\ref{tab:app_repro_outputs}に示す．
 
 \begin{table}[t]
   \centering
-  \caption{感度掃引で用いる代表パラメータ（例）}
-  \label{tab:app_methods_sweep_defaults}
-  \begin{tabular}{p{0.24\textwidth} p{0.2\textwidth} p{0.46\textwidth}}
+  \small
+  \setlength{\tabcolsep}{4pt}
+  \caption{再解析に必要な出力（\texttt{OUTDIR/}）}
+  \label{tab:app_repro_outputs}
+  \begin{tabular}{p{0.30\textwidth} p{0.14\textwidth} p{0.52\textwidth}}
     \hline
-    変数 & 代表値 & 意味 \\
+    相対パス & 形式 & 内容（要点） \\
     \hline
-    $T_M$ & 4000, 3000 & 火星温度 [K] \\
-    $\epsilon_{\rm mix}$ & 1.0, 0.5 & 混合係数（供給の有効度） \\
-	    $\tau_0$ & 1.0, 0.5 & 初期視線方向光学的厚さ（$\tau_{\rm los}$ の規格化値） \\
-    $i_0$ & 0.05, 0.10 & 初期傾斜角 \\
-    $f_{Q^*}$ & 0.3, 1, 3（$\times$基準値） & $Q_D^*$ の係数スケール（proxy の不確かさの感度） \\
+    \texttt{run\_config.json} &
+    JSON &
+    展開後の設定と採用値，実行環境，外部入力（テーブル等）の参照情報 \\
+    \texttt{series/run.parquet} &
+    Parquet &
+    主要スカラー時系列（$t,\Delta t,\tau_{\rm los},s_{\rm blow},s_{\min},\Sigma_{\rm surf},\dot{M}_{\rm out},M_{\rm loss}$ など） \\
+    \texttt{series/psd\_hist.parquet} &
+    Parquet &
+    PSD 履歴（粒径ビンごとの $N_k$，および $\Sigma_{\rm surf}$ など） \\
+    \texttt{summary.json} &
+    JSON &
+    終端要約（$M_{\rm loss}$，停止理由，検証集計など） \\
+    \texttt{checks/mass\_budget.csv} &
+    CSV &
+    質量検査ログ（式\ref{eq:mass_budget_definition}；$\epsilon_{\rm mass}$ の履歴） \\
+    \texttt{series/diagnostics.parquet} &
+    Parquet &
+    （任意）遮蔽などの追加診断（設定により出力） \\
+    \texttt{checks/mass\_budget\_cells.csv} &
+    CSV &
+    （任意, 1D）セル別の質量検査ログ（設定により出力） \\
+    \texttt{checks/validation.json} &
+    JSON &
+    （任意）時間刻み・粒径ビンの収束判定など（設定により出力） \\
     \hline
   \end{tabular}
 \end{table}
 
-### A.4 検証結果の提示（代表ケース）
+保存時は質量流出率と累積損失を火星質量 $M_{\rm Mars}$ で規格化した単位で記録し，数値桁を揃える．定義は付録 E（記号表）を参照する．
 
-本論文では，表\ref{tab:validation_criteria}の合格基準に基づく検証を全ケースで実施し，合格した結果のみを採用する．代表ケースにおける質量検査 $\epsilon_{\rm mass}(t)$ の時系列例を図\ref{fig:app_validation_mass_budget_example}に示す．
-
-\begin{figure}[t]
-  \centering
-  % \includegraphics[width=\linewidth]{figures/thesis/validation_mass_budget_example.pdf}
-  \caption{代表ケースにおける質量検査 $\epsilon_{\rm mass}(t)$ の時系列（例）}
-  \label{fig:app_validation_mass_budget_example}
-\end{figure}
-
-### A.5 基準ケースで用いる物性値
+### A.3 基準ケースで用いる物性値
 
 本研究の基準ケースで採用する物性値（フォルステライト基準）を表\ref{tab:run_sweep_material_properties}にまとめる．密度・放射圧効率・昇華係数はフォルステライト値を採用し，$Q_D^*$ は peridot projectile 実験の $Q^*$ を参照して BA99 係数をスケーリングした proxy を用いる．
 
@@ -793,7 +789,7 @@ M_{\rm loss}^{n+1}=M_{\rm loss}^{n}+\Delta t\left(\dot{M}_{\rm out}^{n}+\dot{M}_
 	    $T_{\rm condense}$, $T_{\rm vaporize}$ &
 	    相判定のヒステリシス閾値 [K]（相境界の切替幅） &
 	    2162, 2163 &
-	    本研究（スキーマ要件），基準: \citep{FegleySchaefer2012_arXiv} \\
+	    本研究（採用値），基準: \citep{FegleySchaefer2012_arXiv} \\
     $f_{Q^*}$ &
     $Q_D^*$ 係数スケール（peridot proxy） &
     5.574 &
@@ -801,6 +797,38 @@ M_{\rm loss}^{n+1}=M_{\rm loss}^{n}+\Delta t\left(\dot{M}_{\rm out}^{n}+\dot{M}_
     \hline
   \end{tabular}
 \end{table}
+
+### A.4 感度掃引で用いる代表パラメータ（例）
+
+感度解析では，モデルの主要な不確かさを代表する少数のパラメータを独立に変化させ，$M_{\rm loss}$ と $\dot{M}_{\rm out}(t)$ の応答を比較する．代表的な掃引パラメータと採用値の例を表\ref{tab:app_methods_sweep_defaults}に示す．
+
+\begin{table}[t]
+  \centering
+  \caption{感度掃引で用いる代表パラメータ（例）}
+  \label{tab:app_methods_sweep_defaults}
+  \begin{tabular}{p{0.24\textwidth} p{0.2\textwidth} p{0.46\textwidth}}
+    \hline
+    変数 & 代表値 & 意味 \\
+    \hline
+    $T_M$ & 4000, 3000 & 火星温度 [K] \\
+    $\epsilon_{\rm mix}$ & 1.0, 0.5 & 混合係数（供給の有効度） \\
+	    $\tau_0$ & 1.0, 0.5 & 初期視線方向光学的厚さ（$\tau_{\rm los}$ の規格化値） \\
+    $i_0$ & 0.05, 0.10 & 初期傾斜角 \\
+    $f_{Q^*}$ & 0.3, 1, 3（$\times$基準値） & $Q_D^*$ の係数スケール（proxy の不確かさの感度） \\
+    \hline
+  \end{tabular}
+\end{table}
+
+### A.5 検証結果の提示（代表ケース）
+
+本論文では，表\ref{tab:validation_criteria}の合格基準に基づく検証を全ケースで実施し，合格した結果のみを採用する．代表ケースにおける質量検査 $\epsilon_{\rm mass}(t)$ の時系列例を図\ref{fig:app_validation_mass_budget_example}に示す．
+
+\begin{figure}[t]
+  \centering
+  % \includegraphics[width=\linewidth]{figures/thesis/validation_mass_budget_example.pdf}
+  \caption{代表ケースにおける質量検査 $\epsilon_{\rm mass}(t)$ の時系列（例）}
+  \label{fig:app_validation_mass_budget_example}
+\end{figure}
 
 <!-- TEX_EXCLUDE_START -->
 ### A.6 再現実行コマンド（Windows: run\_sweep.cmd）
@@ -851,20 +879,49 @@ run_sweep.cmd [--study <path>] [--config <path>] [--overrides <path>]
   \setlength{\tabcolsep}{4pt}
   \caption{設定キーと物理の対応}
   \label{tab:app_config_physics_map}
-  \begin{tabular}{p{0.38\textwidth} p{0.26\textwidth} p{0.22\textwidth}}
+  \begin{tabular}{p{0.42\textwidth} p{0.28\textwidth} p{0.20\textwidth}}
     \hline
     設定キー & 物理 & 本文参照 \\
     \hline
-    \texttt{radiation.TM\_K} & 火星温度 & 3節 \\
-    \texttt{radiation.mars\_temperature}\newline \texttt{\_driver}\newline \texttt{.*} & 冷却ドライバ & 3節 \\
-    \texttt{sizes.*} & 粒径グリッド（$s_{\min,\rm cfg},s_{\max},n_{\rm bins}$） & 3.1節, 3.3節 \\
-    \texttt{shielding.mode} & 遮蔽 $\Phi$ & 2.2節 \\
-    \texttt{sinks.mode} & 昇華/ガス抗力（追加シンク） & 2.5節 \\
-    \texttt{blowout.enabled} & ブローアウト損失 & 2.1節 \\
-    \texttt{supply.mode} & 表層供給 & 2.3節 \\
+    \multicolumn{3}{l}{\textbf{入力・幾何}} \\
+    \texttt{geometry.mode}, \texttt{geometry.Nr} & 0D/1D と半径セル数 & 1.2節, 4.1節 \\
+    \texttt{disk.geometry.r\_in\_RM}, \texttt{disk.geometry.r\_out\_RM} & 計算領域 $[r_{\rm in},r_{\rm out}]$ & 1.2節, 3.1節 \\
+    \texttt{inner\_disk\_mass.*} & 内側円盤質量 $M_{\rm in}$ & 3.1節 \\
+    \texttt{initial.*} & 初期 PSD/表層状態 & 3.1節 \\
+    \hline
+    \multicolumn{3}{l}{\textbf{粒径グリッド・PSD}} \\
+    \texttt{sizes.s\_min}, \texttt{s\_max}, \texttt{n\_bins} & サイズビン範囲と解像度 & 3.1節, 4.1節 \\
+    \texttt{psd.alpha} & PSD の傾き（基準形状） & 2.4節, 3.3節 \\
+    \texttt{psd.wavy\_strength} & ``wavy'' 補正の強さ & 2.4節 \\
+    \texttt{psd.floor.*} & PSD 下限 $s_{\min}$ の扱い & 2.1節, 3.1節 \\
+    \hline
+    \multicolumn{3}{l}{\textbf{衝突（速度・破壊強度）}} \\
+    \texttt{dynamics.e0}, \texttt{i0} & 相対速度スケール（励起） & 2.4節, 3.3節 \\
+    \texttt{dynamics.f\_wake} & wake 係数（速度分散の補正） & 2.4節 \\
+    \texttt{qstar.*} & $Q_D^*(s)$（破壊閾値） & 2.4節, 3.3節 \\
+    \hline
+    \multicolumn{3}{l}{\textbf{放射圧・ブローアウト}} \\
+    \texttt{radiation.TM\_K} & 火星温度（定数入力） & 2.1節 \\
+    \texttt{radiation.mars\_temperature\_driver.*} & 火星温度 $T_M(t)$（非定常） & 2.1節, 付録 C \\
+    \texttt{radiation.qpr\_table\_path} & $\langle Q_{\rm pr}\rangle$ テーブル & 2.1節, 付録 C \\
+    \texttt{chi\_blow}, \texttt{blowout.*} & ブローアウト滞在時間と適用層 & 2.1節 \\
+    \hline
+    \multicolumn{3}{l}{\textbf{遮蔽・光学的厚さ}} \\
+    \texttt{shielding.mode}, \texttt{shielding.table\_path} & 遮蔽 $\Phi$ とテーブル & 2.2節, 付録 C \\
+    \texttt{optical\_depth.tau0\_target} & 初期 $\tau_0$ の規格化 & 3.1節 \\
+    \texttt{optical\_depth.tau\_stop} & 適用範囲判定（停止） & 4.2節, 4.3節 \\
+    \hline
+    \multicolumn{3}{l}{\textbf{供給・追加シンク}} \\
+    \texttt{supply.mode} & 表層供給モデル & 2.3節 \\
     \texttt{supply.mixing.epsilon\_mix} & 混合係数 $\epsilon_{\rm mix}$ & 2.3節, 3.3節 \\
-    \texttt{optical\_depth.*} & 初期$\tau_0$規格化と停止判定 & 3.1節, 4.2節 \\
-    \texttt{numerics.t\_end\_until}\newline \texttt{\_temperature}\newline \texttt{\_K} & 温度停止条件 & 4.2節 \\
+    \texttt{sinks.mode} & 追加シンク（昇華/ガス抗力など） & 2.5節 \\
+    \texttt{sinks.sub\_params.*} & 昇華（HKL）係数と設定 & 2.5節, 3.2節, 付録 C \\
+    \hline
+    \multicolumn{3}{l}{\textbf{数値設定}} \\
+    \texttt{numerics.dt\_init}, \texttt{numerics.safety} & 時間刻みの初期値と安全率 & 4.2節 \\
+    \texttt{numerics.dt\_over\_t\_blow\_max} & $\Delta t/t_{\rm blow}$ 制約 & 4.2節 \\
+    \texttt{numerics.t\_end\_years} & 積分終端（年） & 4.2節 \\
+    \texttt{numerics.t\_end\_until\_temperature\_K} & 積分終端（温度到達） & 4.2節 \\
     \hline
   \end{tabular}
 \end{table}
@@ -874,27 +931,49 @@ run_sweep.cmd [--study <path>] [--config <path>] [--overrides <path>]
 実装(.py): marsdisk/run.py, marsdisk/physics/radiation.py, marsdisk/physics/shielding.py, marsdisk/physics/collisions_smol.py, marsdisk/physics/supply.py, marsdisk/physics/sinks.py, marsdisk/physics/tempdriver.py
 -->
 
-本モデルは，物性や放射輸送に関する外部テーブルを読み込み，本文中の式で用いる物理量（$T_M$, $\langle Q_{\rm pr}\rangle$, $\Phi$ など）を与える．論文ではテーブルの数値そのものを列挙せず，役割と参照先を表\ref{tab:app_external_inputs}にまとめる．実行時に採用したテーブルの出典と補間範囲（有効温度域など）は実行ログに保存し，再解析時の基準とする（付録 A）．
+本モデルは，物性や放射輸送に関する外部テーブルを読み込み，本文中の式で用いる物理量（$T_M$, $\langle Q_{\rm pr}\rangle$, $\Phi$ など）を与える．論文ではテーブルの数値そのものを列挙せず，外部入力の役割と参照先を表として整理する．実行時に採用したテーブルの出典と補間範囲（有効温度域など）は実行ログに保存し，再解析時の基準とする（付録 A）．
+
+主要な外部入力を表\ref{tab:app_external_inputs}に，設定により追加で参照する外部入力を表\ref{tab:app_external_inputs_optional}に示す．
 
 \begin{table}[t]
   \centering
   \small
   \setlength{\tabcolsep}{4pt}
-  \caption{外部入力（テーブル）とモデル内での役割}
+  \caption{外部入力（基本）とモデル内での役割}
   \label{tab:app_external_inputs}
-  \begin{tabular}{p{0.22\textwidth} p{0.46\textwidth} p{0.24\textwidth}}
+  \begin{tabular}{p{0.26\textwidth} p{0.54\textwidth} p{0.16\textwidth}}
     \hline
-    外部入力 & 役割 & 本文参照（代表） \\
+    外部入力 & 役割（モデル内での使い方） & 設定キー（代表） \\
     \hline
     火星温度履歴 $T_M(t)$ &
-    放射圧（β, $s_{\rm blow}$）・昇華の入力となる温度ドライバ &
-    3節 \\
-    Planck 平均 $\langle Q_{\rm pr}\rangle$ &
-    放射圧効率として β と $s_{\rm blow}$ を決める（灰色体近似は例外） &
-    2.1節 \\
-    遮蔽係数 $\Phi(\tau_{\rm los})$（テーブル補間） &
-    有効不透明度 $\kappa_{\rm eff}$ を通じて遮蔽に入る &
-    2.2節 \\
+    放射圧（$\beta,\,s_{\rm blow}$）と昇華の外部ドライバ &
+    \texttt{radiation.mars\_temperature\_driver.*} \\
+    Planck 平均 $\langle Q_{\rm pr}\rangle(s,T_M)$ &
+    放射圧効率として $\beta$ と $s_{\rm blow}$ を決める &
+    \texttt{radiation.qpr\_table\_path} \\
+    遮蔽係数 $\Phi$ &
+    $\kappa_{\rm eff}=\Phi\kappa_{\rm surf}$ を通じて自己遮蔽を表現する（遮蔽有効時） &
+    \texttt{shielding.table\_path} \\
+    \hline
+  \end{tabular}
+\end{table}
+
+\begin{table}[t]
+  \centering
+  \small
+  \setlength{\tabcolsep}{4pt}
+  \caption{外部入力（オプション）}
+  \label{tab:app_external_inputs_optional}
+  \begin{tabular}{p{0.26\textwidth} p{0.54\textwidth} p{0.16\textwidth}}
+    \hline
+    外部入力 & 役割（モデル内での使い方） & 設定キー（代表） \\
+    \hline
+    供給率テーブル $\dot{\Sigma}_{\rm in}(t)$ &
+    表層供給率を外部から与える（\texttt{supply.mode=table} のとき） &
+    \texttt{supply.table.path} \\
+    飽和蒸気圧テーブル $P_{\rm sat}(T)$ &
+    昇華フラックスの入力として飽和蒸気圧をテーブル補間で与える（\texttt{psat\_model=tabulated} のとき） &
+    \texttt{sinks.sub\_params.psat\_table\_path} \\
     \hline
   \end{tabular}
 \end{table}
@@ -921,6 +1000,10 @@ run_sweep.cmd [--study <path>] [--config <path>] [--overrides <path>]
     $Q_{\rm pr}$ & 放射圧効率 / radiation pressure efficiency & テーブル入力 \\
     $Q_D^*$ & 破壊閾値 / critical specific energy & 破壊強度 \\
     HKL & Hertz--Knudsen--Langmuir & 昇華フラックス \\
+    PR & ポインティング--ロバートソン / Poynting--Robertson & PR ドラッグ \\
+    Mie & ミー散乱 / Mie scattering & $Q_{\rm pr}$ テーブル生成に使用 \\
+    RT & 放射輸送 / radiative transfer & 遮蔽 $\Phi$ の近似に関係 \\
+    RM & 火星半径 / Mars radii & $r_{\rm in},r_{\rm out}$ の規格化に使用 \\
     1D & one-dimensional & 半径方向セル分割（リング分割） \\
     \hline
   \end{tabular}
@@ -936,7 +1019,7 @@ title: 記号表（論文内参照の正）
 
 ## 付録 E. 記号表
 
-本論文で用いる記号と，その意味・単位をまとめる．本文中に示す式で用いる記号の定義も，本付録を正とする．主要記号は表\ref{tab:app_symbols_main}と表\ref{tab:app_symbols_main_cont}に示す．
+本論文で用いる記号と，その意味・単位をまとめる．本文中に示す式で用いる記号の定義も，本付録を正とする．主要記号は表\ref{tab:app_symbols_main}と表\ref{tab:app_symbols_main_cont}に示し，主要定数・惑星パラメータは表\ref{tab:app_symbols_constants}にまとめる．
 
 ### E.1 主要記号（本研究のダスト円盤モデル）
 
@@ -955,7 +1038,7 @@ title: 記号表（論文内参照の正）
 	    $r_{\rm in},r_{\rm out}$ & 計算領域の内端・外端半径 & $\mathrm{m}$ & 環状領域 $[r_{\rm in},r_{\rm out}]$ \\
 	    $A$ & 環状領域の面積 & $\mathrm{m^{2}}$ & 式\ref{eq:annulus_area_definition} \\
 	    $A_\ell$ & セル $\ell$ の面積 & $\mathrm{m^{2}}$ & 1D の半径セル（リング）ごとの面積 \\
-	    $M_{\rm in}$ & ロッシュ限界内側の内側円盤質量 & $\mathrm{kg}$ & 入力（3節） \\
+	    $M_{\rm in}$ & ロッシュ限界内側の内側円盤質量 & $\mathrm{kg}$ & 入力（3.1節） \\
 		    $\Delta M_{\rm in}$ & 遷移期における不可逆損失（累積） & $\mathrm{kg}$ & 本論文では $M_{\rm loss}$ と同義 \\
 		    $M_{\rm in}'$ & 更新後の内側円盤質量（長期モデルへ渡す量） & $\mathrm{kg}$ & $M_{\rm in}'=M_{\rm in}(t_0)-M_{\rm loss}(t_{\rm end})$ \\
 	    $\Omega$ & ケプラー角速度 & $\mathrm{s^{-1}}$ & 式\ref{eq:omega_definition} \\
@@ -965,6 +1048,7 @@ title: 記号表（論文内参照の正）
 	    $n(s)$ & 粒径分布（形状） & -- & 正規化された分布として扱う \\
 	    $N_k$ & ビン $k$ の数密度（面数密度） & $\mathrm{m^{-2}}$ & Smol 解法の主状態 \\
     $m_k$ & ビン $k$ の粒子質量 & $\mathrm{kg}$ & 粒径から球形近似で導出 \\
+	    $\rho$ & 粒子密度 & $\mathrm{kg\,m^{-3}}$ & 表\ref{tab:run_sweep_material_properties} \\
     $Y_{kij}$ & 衝突 $(i,j)$ による破片生成の質量分率（ビン $k$ への配分） & -- & $\sum_k Y_{kij}=1$（式\ref{eq:fragment_yield_normalization}） \\
     $F_k$ & 供給ソース項（サイズビン $k$ への注入率） & $\mathrm{m^{-2}\,s^{-1}}$ & 式\ref{eq:smoluchowski} \\
 		    $S_k$ & 追加シンクの実効ロス率 & $\mathrm{s^{-1}}$ & 式\ref{eq:smoluchowski} \\
@@ -975,6 +1059,8 @@ title: 記号表（論文内参照の正）
 	    $\kappa_{\rm eff}$ & 有効不透明度 & $\mathrm{m^{2}\,kg^{-1}}$ & 式\ref{eq:kappa_eff_definition} \\
 			    $f_{\rm los}$ & 鉛直光学的厚さ $\tau_\perp$ を $\tau_{\rm los}$ へ写像する幾何因子 & -- & $\tau_{\rm los}=f_{\rm los}\kappa_{\rm surf}\Sigma_{\rm surf}$ \\
 			    $\tau_{\rm los}$ & 火星視線方向光学的厚さ（近似） & -- & 式\ref{eq:tau_los_definition}; 遮蔽評価・初期規格化・停止判定に用いる \\
+			    $\tau_0$ & 初期視線方向光学的厚さ（規格化値） & -- & 3.1節 \\
+			    $\tau_{\rm stop}$ & 停止判定の閾値（$\tau_{\rm los}>\tau_{\rm stop}$） & -- & 4.2節 \\
 			    $\Sigma_{\tau_{\rm los}=1}$ & $\tau_{\rm los}=1$ に対応する参照面密度 & $\mathrm{kg\,m^{-2}}$ & 式\ref{eq:sigma_tau_los1_definition}（$\Sigma_{\tau_{\rm los}=1}=(f_{\rm los}\kappa_{\rm surf})^{-1}$） \\
 		    $\Sigma_{\tau=1}$ & 光学的厚さ $\tau=1$ に対応する表層面密度（診断量） & $\mathrm{kg\,m^{-2}}$ & 式\ref{eq:sigma_tau1_definition} \\
 		    \hline
@@ -1002,6 +1088,7 @@ title: 記号表（論文内参照の正）
 		    $\dot{M}_{\rm out}$ & 円盤全体の質量流出率 & $\mathrm{kg\,s^{-1}}$ & 式\ref{eq:mdot_out_definition}（出力は $\dot{M}_{\rm out}/M_{\rm Mars}$ を記録） \\
 		    $M_{\rm loss}$ & 累積損失 & $\mathrm{kg}$ & $\dot{M}_{\rm out}$ 等を積分（出力は $M_{\rm loss}/M_{\rm Mars}$ を記録） \\
 		    $R_{\rm base}$ & 供給の基底レート & $\mathrm{kg\,m^{-2}\,s^{-1}}$ & 式\ref{eq:R_base_definition} \\
+		    $\epsilon_{\rm mix}$ & 混合係数（供給の有効度） & -- & 2.3節 \\
 		    $\mu_{\rm sup}$ & 供給スケール（無次元） & -- & 式\ref{eq:R_base_definition} \\
 		    $f_{\rm orb}$ & $\mu_{\rm sup}=1$ のときの 1 軌道あたり供給比率 & -- & 式\ref{eq:R_base_definition} \\
 		    $\tau_{\rm ref}$ & 供給スケール参照光学的厚さ & -- & 式\ref{eq:R_base_definition} \\
@@ -1014,5 +1101,29 @@ title: 記号表（論文内参照の正）
 		    $\mu_{\rm LS}$ & 速度外挿に用いる指数 & -- & $v^{-3\mu_{\rm LS}+2}$（既定 0.45） \\
 		    $\mu$ & 分子量（HKL） & $\mathrm{kg\,mol^{-1}}$ & 式\ref{eq:hkl_flux} \\
 		    \hline
+	  \end{tabular}
+\end{table}
+
+### E.2 主要定数と惑星パラメータ（参照）
+
+本研究で用いる主要定数と惑星パラメータを表\ref{tab:app_symbols_constants}にまとめる．採用値は表\ref{tab:method-phys}を参照する．
+
+\begin{table}[t]
+  \centering
+  \small
+  \setlength{\tabcolsep}{4pt}
+  \caption{主要定数と惑星パラメータ}
+  \label{tab:app_symbols_constants}
+  \begin{tabular}{p{0.18\linewidth}p{0.44\linewidth}p{0.18\linewidth}p{0.12\linewidth}}
+	    \hline
+	    記号 & 意味 & 単位 & 備考 \\
+	    \hline
+	    $G$ & 万有引力定数 & $\mathrm{m^{3}\,kg^{-1}\,s^{-2}}$ & 表\ref{tab:method-phys} \\
+	    $c$ & 光速 & $\mathrm{m\,s^{-1}}$ & 表\ref{tab:method-phys} \\
+	    $\sigma_{\rm SB}$ & ステファン--ボルツマン定数 & $\mathrm{W\,m^{-2}\,K^{-4}}$ & 表\ref{tab:method-phys} \\
+	    $R$ & 気体定数 & $\mathrm{J\,mol^{-1}\,K^{-1}}$ & 表\ref{tab:method-phys} \\
+	    $M_{\rm Mars}$ & 火星質量 & $\mathrm{kg}$ & 表\ref{tab:method-phys} \\
+	    $R_{\rm Mars}$ & 火星半径 & $\mathrm{m}$ & 表\ref{tab:method-phys} \\
+	    \hline
 	  \end{tabular}
 \end{table}

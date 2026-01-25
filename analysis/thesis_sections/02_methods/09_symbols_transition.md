@@ -9,7 +9,7 @@ title: 記号表（論文内参照の正）
 
 ## 付録 E. 記号表
 
-本論文で用いる記号と，その意味・単位をまとめる．本文中に示す式で用いる記号の定義も，本付録を正とする．主要記号は表\ref{tab:app_symbols_main}と表\ref{tab:app_symbols_main_cont}に示す．
+本論文で用いる記号と，その意味・単位をまとめる．本文中に示す式で用いる記号の定義も，本付録を正とする．主要記号は表\ref{tab:app_symbols_main}と表\ref{tab:app_symbols_main_cont}に示し，主要定数・惑星パラメータは表\ref{tab:app_symbols_constants}にまとめる．
 
 ### E.1 主要記号（本研究のダスト円盤モデル）
 
@@ -28,7 +28,7 @@ title: 記号表（論文内参照の正）
 	    $r_{\rm in},r_{\rm out}$ & 計算領域の内端・外端半径 & $\mathrm{m}$ & 環状領域 $[r_{\rm in},r_{\rm out}]$ \\
 	    $A$ & 環状領域の面積 & $\mathrm{m^{2}}$ & 式\ref{eq:annulus_area_definition} \\
 	    $A_\ell$ & セル $\ell$ の面積 & $\mathrm{m^{2}}$ & 1D の半径セル（リング）ごとの面積 \\
-	    $M_{\rm in}$ & ロッシュ限界内側の内側円盤質量 & $\mathrm{kg}$ & 入力（3節） \\
+	    $M_{\rm in}$ & ロッシュ限界内側の内側円盤質量 & $\mathrm{kg}$ & 入力（3.1節） \\
 		    $\Delta M_{\rm in}$ & 遷移期における不可逆損失（累積） & $\mathrm{kg}$ & 本論文では $M_{\rm loss}$ と同義 \\
 		    $M_{\rm in}'$ & 更新後の内側円盤質量（長期モデルへ渡す量） & $\mathrm{kg}$ & $M_{\rm in}'=M_{\rm in}(t_0)-M_{\rm loss}(t_{\rm end})$ \\
 	    $\Omega$ & ケプラー角速度 & $\mathrm{s^{-1}}$ & 式\ref{eq:omega_definition} \\
@@ -38,6 +38,7 @@ title: 記号表（論文内参照の正）
 	    $n(s)$ & 粒径分布（形状） & -- & 正規化された分布として扱う \\
 	    $N_k$ & ビン $k$ の数密度（面数密度） & $\mathrm{m^{-2}}$ & Smol 解法の主状態 \\
     $m_k$ & ビン $k$ の粒子質量 & $\mathrm{kg}$ & 粒径から球形近似で導出 \\
+	    $\rho$ & 粒子密度 & $\mathrm{kg\,m^{-3}}$ & 表\ref{tab:run_sweep_material_properties} \\
     $Y_{kij}$ & 衝突 $(i,j)$ による破片生成の質量分率（ビン $k$ への配分） & -- & $\sum_k Y_{kij}=1$（式\ref{eq:fragment_yield_normalization}） \\
     $F_k$ & 供給ソース項（サイズビン $k$ への注入率） & $\mathrm{m^{-2}\,s^{-1}}$ & 式\ref{eq:smoluchowski} \\
 		    $S_k$ & 追加シンクの実効ロス率 & $\mathrm{s^{-1}}$ & 式\ref{eq:smoluchowski} \\
@@ -48,6 +49,8 @@ title: 記号表（論文内参照の正）
 	    $\kappa_{\rm eff}$ & 有効不透明度 & $\mathrm{m^{2}\,kg^{-1}}$ & 式\ref{eq:kappa_eff_definition} \\
 			    $f_{\rm los}$ & 鉛直光学的厚さ $\tau_\perp$ を $\tau_{\rm los}$ へ写像する幾何因子 & -- & $\tau_{\rm los}=f_{\rm los}\kappa_{\rm surf}\Sigma_{\rm surf}$ \\
 			    $\tau_{\rm los}$ & 火星視線方向光学的厚さ（近似） & -- & 式\ref{eq:tau_los_definition}; 遮蔽評価・初期規格化・停止判定に用いる \\
+			    $\tau_0$ & 初期視線方向光学的厚さ（規格化値） & -- & 3.1節 \\
+			    $\tau_{\rm stop}$ & 停止判定の閾値（$\tau_{\rm los}>\tau_{\rm stop}$） & -- & 4.2節 \\
 			    $\Sigma_{\tau_{\rm los}=1}$ & $\tau_{\rm los}=1$ に対応する参照面密度 & $\mathrm{kg\,m^{-2}}$ & 式\ref{eq:sigma_tau_los1_definition}（$\Sigma_{\tau_{\rm los}=1}=(f_{\rm los}\kappa_{\rm surf})^{-1}$） \\
 		    $\Sigma_{\tau=1}$ & 光学的厚さ $\tau=1$ に対応する表層面密度（診断量） & $\mathrm{kg\,m^{-2}}$ & 式\ref{eq:sigma_tau1_definition} \\
 		    \hline
@@ -75,6 +78,7 @@ title: 記号表（論文内参照の正）
 		    $\dot{M}_{\rm out}$ & 円盤全体の質量流出率 & $\mathrm{kg\,s^{-1}}$ & 式\ref{eq:mdot_out_definition}（出力は $\dot{M}_{\rm out}/M_{\rm Mars}$ を記録） \\
 		    $M_{\rm loss}$ & 累積損失 & $\mathrm{kg}$ & $\dot{M}_{\rm out}$ 等を積分（出力は $M_{\rm loss}/M_{\rm Mars}$ を記録） \\
 		    $R_{\rm base}$ & 供給の基底レート & $\mathrm{kg\,m^{-2}\,s^{-1}}$ & 式\ref{eq:R_base_definition} \\
+		    $\epsilon_{\rm mix}$ & 混合係数（供給の有効度） & -- & 2.3節 \\
 		    $\mu_{\rm sup}$ & 供給スケール（無次元） & -- & 式\ref{eq:R_base_definition} \\
 		    $f_{\rm orb}$ & $\mu_{\rm sup}=1$ のときの 1 軌道あたり供給比率 & -- & 式\ref{eq:R_base_definition} \\
 		    $\tau_{\rm ref}$ & 供給スケール参照光学的厚さ & -- & 式\ref{eq:R_base_definition} \\
@@ -87,5 +91,29 @@ title: 記号表（論文内参照の正）
 		    $\mu_{\rm LS}$ & 速度外挿に用いる指数 & -- & $v^{-3\mu_{\rm LS}+2}$（既定 0.45） \\
 		    $\mu$ & 分子量（HKL） & $\mathrm{kg\,mol^{-1}}$ & 式\ref{eq:hkl_flux} \\
 		    \hline
+	  \end{tabular}
+\end{table}
+
+### E.2 主要定数と惑星パラメータ（参照）
+
+本研究で用いる主要定数と惑星パラメータを表\ref{tab:app_symbols_constants}にまとめる．採用値は表\ref{tab:method-phys}を参照する．
+
+\begin{table}[t]
+  \centering
+  \small
+  \setlength{\tabcolsep}{4pt}
+  \caption{主要定数と惑星パラメータ}
+  \label{tab:app_symbols_constants}
+  \begin{tabular}{p{0.18\linewidth}p{0.44\linewidth}p{0.18\linewidth}p{0.12\linewidth}}
+	    \hline
+	    記号 & 意味 & 単位 & 備考 \\
+	    \hline
+	    $G$ & 万有引力定数 & $\mathrm{m^{3}\,kg^{-1}\,s^{-2}}$ & 表\ref{tab:method-phys} \\
+	    $c$ & 光速 & $\mathrm{m\,s^{-1}}$ & 表\ref{tab:method-phys} \\
+	    $\sigma_{\rm SB}$ & ステファン--ボルツマン定数 & $\mathrm{W\,m^{-2}\,K^{-4}}$ & 表\ref{tab:method-phys} \\
+	    $R$ & 気体定数 & $\mathrm{J\,mol^{-1}\,K^{-1}}$ & 表\ref{tab:method-phys} \\
+	    $M_{\rm Mars}$ & 火星質量 & $\mathrm{kg}$ & 表\ref{tab:method-phys} \\
+	    $R_{\rm Mars}$ & 火星半径 & $\mathrm{m}$ & 表\ref{tab:method-phys} \\
+	    \hline
 	  \end{tabular}
 \end{table}

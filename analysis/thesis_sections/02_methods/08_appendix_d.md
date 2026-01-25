@@ -21,6 +21,10 @@
     $Q_{\rm pr}$ & 放射圧効率 / radiation pressure efficiency & テーブル入力 \\
     $Q_D^*$ & 破壊閾値 / critical specific energy & 破壊強度 \\
     HKL & Hertz--Knudsen--Langmuir & 昇華フラックス \\
+    PR & ポインティング--ロバートソン / Poynting--Robertson & PR ドラッグ \\
+    Mie & ミー散乱 / Mie scattering & $Q_{\rm pr}$ テーブル生成に使用 \\
+    RT & 放射輸送 / radiative transfer & 遮蔽 $\Phi$ の近似に関係 \\
+    RM & 火星半径 / Mars radii & $r_{\rm in},r_{\rm out}$ の規格化に使用 \\
     1D & one-dimensional & 半径方向セル分割（リング分割） \\
     \hline
   \end{tabular}
