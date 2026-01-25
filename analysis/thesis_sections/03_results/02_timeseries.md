@@ -8,7 +8,7 @@
 
 \begin{figure}[t]
   \centering
-  % \includegraphics[width=\linewidth]{figures/results/outflow_tau_cumloss_representative/T4000_eps1p0_tau1p0_i00p05_mu1p0.png}
+  \includegraphics[width=\linewidth]{figures/results/outflow_tau_cumloss_representative/T4000_eps1p0_tau1p0_i00p05_mu1p0.png}
   \caption{代表ケースの時系列．上段：全円盤の放射圧流出率 $\dot{M}_{\rm out}(t)$ [$M_{\rm Mars}\,\mathrm{s^{-1}}$]（対数軸）．中段：視線方向光学的厚さ $\tau_{\rm los}(t)$（線形軸，破線は停止判定 $\tau_{\rm stop}=\ln 10$）．下段：累積損失 $M_{\rm loss}(t)$ [$M_{\rm Mars}$]（対数軸）．}
   \label{fig:results_outflow_tau_cumloss_representative}
 \end{figure}
@@ -21,8 +21,8 @@
 
 \begin{figure}[t]
   \centering
-  % \includegraphics[width=\linewidth]{figures/results/moutdot_grid/moutdot_grid_tau0p5.png}
-  % \includegraphics[width=\linewidth]{figures/results/moutdot_grid/moutdot_grid_tau1p0.png}
+  \includegraphics[width=\linewidth]{figures/results/moutdot_grid/moutdot_grid_tau0p5.png}
+  \includegraphics[width=\linewidth]{figures/results/moutdot_grid/moutdot_grid_tau1p0.png}
   \caption{全円盤の放射圧流出率 $\dot{M}_{\rm out}(t)$ の時系列（上：$\tau_0=0.5$，下：$\tau_0=1.0$）．縦軸は $\dot{M}_{\rm out}$ [$M_{\rm Mars}\,\mathrm{s^{-1}}$] の対数，横軸は時間 $t$ [yr] である．各曲線は温度 $T_{M,0}$ と供給混合係数 $\epsilon_{\rm mix}$ の組を表し，線が途中で終わるのは停止条件（4 節）による．}
   \label{fig:results_moutdot_grid}
 \end{figure}
@@ -35,8 +35,8 @@
 
 \begin{figure}[t]
   \centering
-  % \includegraphics[width=\linewidth]{figures/results/cumloss_grid/cumloss_grid_tau0p5.png}
-  % \includegraphics[width=\linewidth]{figures/results/cumloss_grid/cumloss_grid_tau1p0.png}
+  \includegraphics[width=\linewidth]{figures/results/cumloss_grid/cumloss_grid_tau0p5.png}
+  \includegraphics[width=\linewidth]{figures/results/cumloss_grid/cumloss_grid_tau1p0.png}
   \caption{累積損失 $M_{\rm loss}(t)$ の時系列（上：$\tau_0=0.5$，下：$\tau_0=1.0$）．縦軸は $M_{\rm loss}/(10^{-5}M_{\rm Mars})$ の対数，横軸は時間 $t$ [yr] である．各曲線は温度 $T_{M,0}$ と供給混合係数 $\epsilon_{\rm mix}$ の組を表し，線が途中で終わるのは停止条件（4 節）による．}
   \label{fig:results_cumloss_grid}
 \end{figure}

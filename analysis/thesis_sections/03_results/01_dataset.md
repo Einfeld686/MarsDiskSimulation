@@ -6,6 +6,15 @@
 本章では質量を火星質量 $M_{\rm Mars}$ で無次元化し，$M_{\rm loss}$ を $M_{\rm Mars}$ 単位で示す．放射圧ブローアウトの寄与を分離する目的で追加シンクを無効化しており，本章の $M_{\rm loss}$ は $M_{\rm out,cum}$ に一致する（追加シンクを含めた総損失は，本章の値に追加の損失分が加わる）．
 また，$\tau_{\rm los}>\tau_{\rm stop}$ によるセル早期停止は，手法章で述べた照射近似の適用範囲判定であり，物理的にブローアウトが停止することを意味しない．
 
+温度条件（$T_{M,0}$）の違いを直観的に示すため，火星放射冷却に基づいて計算したフォルステライトダスト温度 $T_{\rm dust}(r,t)$ の 2 年間マップを図\ref{fig:results_forsterite_phase_heatmap}に示す（灰色は融点以上の領域）．本章の以降の結果は，この温度ドライバ $T_M(t)$ の系統差が放射圧ブローアウトを通じて $M_{\rm loss}$ をどう変えるかとして整理する．
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\linewidth]{figures/thesis/forsterite_phase_heatmap_T0stack_2yr.png}
+  \caption{火星放射冷却に基づくフォルステライトダスト温度マップ（2 年間）と融点境界．初期火星表面温度 $T_{M,0}$ を 3000/4000/5000 K で変えた 3 ケースを比較する（灰色は融点以上）．}
+  \label{fig:results_forsterite_phase_heatmap}
+\end{figure}
+
 ### 1.1 パラメータ掃引（温度・供給）
 
 序論では，遷移期の損失評価に対して，(i) 視線方向光学的厚さ $\tau_{\rm los}$ の推定誤差と，(ii) 火星冷却曲線 $T_M(t)$ の形状および有効期間が系統差を与え得ることを指摘した．本章では，これらを代表するパラメータとして初期光学的厚さ $\tau_0$ と初期温度 $T_{M,0}$ を掃引し，$M_{\rm loss}(t_{\rm end})$ の感度として整理する．

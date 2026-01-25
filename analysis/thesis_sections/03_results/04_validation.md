@@ -6,8 +6,8 @@
 
 \begin{figure}[t]
   \centering
-  % \includegraphics[width=\linewidth]{figures/results/mass_budget_error/mass_budget_error_grid_tau0p5.png}
-  % \includegraphics[width=\linewidth]{figures/results/mass_budget_error/mass_budget_error_grid_tau1p0.png}
+  \includegraphics[width=\linewidth]{figures/results/mass_budget_error/mass_budget_error_grid_tau0p5.png}
+  \includegraphics[width=\linewidth]{figures/results/mass_budget_error/mass_budget_error_grid_tau1p0.png}
   \caption{質量保存誤差 $\epsilon_{\rm mass}(t)$（相対誤差％）の時系列（上：$\tau_0=0.5$，下：$\tau_0=1.0$）．縦軸は相対誤差[\%]（線形）であり，表示範囲は $10^{-13}\%$ 程度である．各パネルは $(T_{M,0},\epsilon_{\rm mix})$ の組に対応し，$i_0=0.05$，$\mu=1.0$ は共通である．}
   \label{fig:results_mass_budget_error_grid}
 \end{figure}

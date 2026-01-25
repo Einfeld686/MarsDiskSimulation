@@ -4,9 +4,11 @@
 
 ### 3.1 $\tau_0=0.5$ の場合
 
+図\ref{fig:results_time_radius_moutdot_tau_tau0p5}に $\tau_0=0.5$ の半径×時間マップを示す．以降では $\tau_0=1.0$ の場合（図\ref{fig:results_time_radius_moutdot_tau_tau1p0}）と比較し，流出の時間集中と半径方向の縮退を議論する．
+
 \begin{figure}[t]
   \centering
-  % \includegraphics[width=\linewidth]{figures/results/result-radius-time-flux/time_radius_M_out_dot_tau_grid_0p5.png}
+  \includegraphics[width=\linewidth]{figures/results/result-radius-time-flux/time_radius_M_out_dot_tau_grid_0p5.png}
   \caption{半径×時間の流出構造（$\tau_0=0.5$）．色は半径セルごとの放射圧流出率 $\dot{M}_{\rm out}(r,t)$ [$M_{\rm Mars}\,\mathrm{s^{-1}}$]（対数カラースケール）を示し，白は $10^{-14}\,M_{\rm Mars}\,\mathrm{s^{-1}}$ 未満である．パネルは (a) $(T_{M,0},\epsilon_{\rm mix})=(3000\,\mathrm{K},1.0)$，(b) $(3000\,\mathrm{K},1.5)$，(c) $(4000\,\mathrm{K},1.0)$，(d) $(4000\,\mathrm{K},1.5)$，(e) $(5000\,\mathrm{K},1.0)$，(f) $(5000\,\mathrm{K},1.5)$ に対応し，$i_0=0.05$，$\mu=1.0$ は共通である．}
   \label{fig:results_time_radius_moutdot_tau_tau0p5}
 \end{figure}
@@ -15,7 +17,7 @@
 
 \begin{figure}[t]
   \centering
-  % \includegraphics[width=\linewidth]{figures/results/result-radius-time-flux/time_radius_M_out_dot_tau_grid_1p0.png}
+  \includegraphics[width=\linewidth]{figures/results/result-radius-time-flux/time_radius_M_out_dot_tau_grid_1p0.png}
   \caption{半径×時間の流出構造（$\tau_0=1.0$）．色は半径セルごとの放射圧流出率 $\dot{M}_{\rm out}(r,t)$ [$M_{\rm Mars}\,\mathrm{s^{-1}}$]（対数カラースケール）を示し，白は $10^{-14}\,M_{\rm Mars}\,\mathrm{s^{-1}}$ 未満である．パネルは (a) $(T_{M,0},\epsilon_{\rm mix})=(3000\,\mathrm{K},1.0)$，(b) $(3000\,\mathrm{K},1.5)$，(c) $(4000\,\mathrm{K},1.0)$，(d) $(4000\,\mathrm{K},1.5)$，(e) $(5000\,\mathrm{K},1.0)$，(f) $(5000\,\mathrm{K},1.5)$ に対応し，$i_0=0.05$，$\mu=1.0$ は共通である．}
   \label{fig:results_time_radius_moutdot_tau_tau1p0}
 \end{figure}
