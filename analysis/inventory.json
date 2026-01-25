@@ -2065,6 +2065,83 @@
     "brief_usage": "No description available."
   },
   {
+    "file_path": "analysis/tools/merge_conclusion_sections.py",
+    "line_no": 8,
+    "symbol": "REPO_ROOT",
+    "signature": "REPO_ROOT = Path(__file__).resolve().parents[2]",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "analysis/tools/merge_conclusion_sections.py",
+    "line_no": 9,
+    "symbol": "SECTIONS_DIR",
+    "signature": "SECTIONS_DIR = REPO_ROOT / 'analysis' / 'thesis_sections' / '05_conclusion'",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "analysis/tools/merge_conclusion_sections.py",
+    "line_no": 10,
+    "symbol": "OUTPUT_PATH",
+    "signature": "OUTPUT_PATH = REPO_ROOT / 'analysis' / 'thesis' / 'conclusion.md'",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "analysis/tools/merge_conclusion_sections.py",
+    "line_no": 11,
+    "symbol": "MANIFEST_PATH",
+    "signature": "MANIFEST_PATH = SECTIONS_DIR / 'manifest.txt'",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "analysis/tools/merge_conclusion_sections.py",
+    "line_no": 12,
+    "symbol": "SECTION_PATTERN",
+    "signature": "SECTION_PATTERN = re.compile('^\\\\d{2}_.+\\\\.md$')",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "analysis/tools/merge_conclusion_sections.py",
+    "line_no": 15,
+    "symbol": "_manifest_entries",
+    "signature": "_manifest_entries(manifest_path: Path) -> list[str]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "analysis/tools/merge_conclusion_sections.py",
+    "line_no": 25,
+    "symbol": "_validate_entry",
+    "signature": "_validate_entry(entry: str) -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "analysis/tools/merge_conclusion_sections.py",
+    "line_no": 30,
+    "symbol": "_paths_from_manifest",
+    "signature": "_paths_from_manifest(sections_dir: Path, manifest_path: Path) -> list[Path]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "analysis/tools/merge_conclusion_sections.py",
+    "line_no": 51,
+    "symbol": "collect_sections",
+    "signature": "collect_sections(sections_dir: Path, manifest_path: Path | None=None) -> list[Path]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "analysis/tools/merge_conclusion_sections.py",
+    "line_no": 63,
+    "symbol": "build_document",
+    "signature": "build_document(section_paths: list[Path]) -> str",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "analysis/tools/merge_conclusion_sections.py",
+    "line_no": 70,
+    "symbol": "main",
+    "signature": "main(argv: list[str] | None=None) -> int",
+    "brief_usage": "No description available."
+  },
+  {
     "file_path": "analysis/tools/merge_discussion_sections.py",
     "line_no": 8,
     "symbol": "REPO_ROOT",
@@ -9479,21 +9556,35 @@
   },
   {
     "file_path": "scripts/plots/plot_forsterite_phase_heatmap.py",
-    "line_no": 26,
+    "line_no": 43,
     "symbol": "_load_forsterite_properties",
     "signature": "_load_forsterite_properties(path: Path) -> dict",
     "brief_usage": "No description available."
   },
   {
     "file_path": "scripts/plots/plot_forsterite_phase_heatmap.py",
-    "line_no": 31,
+    "line_no": 48,
     "symbol": "_load_base_config",
     "signature": "_load_base_config(path: Path) -> tuple[float, float, float]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "scripts/plots/plot_forsterite_phase_heatmap.py",
-    "line_no": 60,
+    "line_no": 77,
+    "symbol": "_split_floats",
+    "signature": "_split_floats(text: str) -> list[float]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/plots/plot_forsterite_phase_heatmap.py",
+    "line_no": 87,
+    "symbol": "_compute_temperature_map",
+    "signature": "_compute_temperature_map(*, T0: float, r_over_Rmars: np.ndarray, time_s: np.ndarray, params: CoolingParams) -> np.ndarray",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "scripts/plots/plot_forsterite_phase_heatmap.py",
+    "line_no": 106,
     "symbol": "main",
     "signature": "main() -> int",
     "brief_usage": "No description available."
@@ -9725,8 +9816,8 @@
   {
     "file_path": "scripts/plots/plot_mars_surface_temperature.py",
     "line_no": 16,
-    "symbol": "ROOT",
-    "signature": "ROOT = Path(__file__).resolve().parents[1]",
+    "symbol": "REPO_ROOT",
+    "signature": "REPO_ROOT = Path(__file__).resolve().parents[2]",
     "brief_usage": "Module constant"
   },
   {
@@ -18846,335 +18937,370 @@
   {
     "file_path": "tools/build_thesis_draft.py",
     "line_no": 30,
+    "symbol": "ENDFLOAT_PACKAGE",
+    "signature": "ENDFLOAT_PACKAGE = 'endfloat'",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "tools/build_thesis_draft.py",
+    "line_no": 31,
+    "symbol": "ENDFLOAT_REQUIRED_OPTION",
+    "signature": "ENDFLOAT_REQUIRED_OPTION = 'tablesfirst'",
+    "brief_usage": "Module constant"
+  },
+  {
+    "file_path": "tools/build_thesis_draft.py",
+    "line_no": 33,
     "symbol": "SUBSCRIPT_MAP",
     "signature": "SUBSCRIPT_MAP = {'₀': '0', '₁': '1', '₂': '2', '₃': '3', '₄': '4', '₅': '5', '₆': '6', '₇': '7', '₈': '8', '₉': '9'}",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "tools/build_thesis_draft.py",
-    "line_no": 43,
+    "line_no": 46,
     "symbol": "UNICODE_SYMBOLS",
     "signature": "UNICODE_SYMBOLS = {'→': '\\\\ensuremath{\\\\rightarrow}', '←': '\\\\ensuremath{\\\\leftarrow}', '↔': '\\\\ensuremath{\\\\leftrightarrow}', '≤': '\\\\ensuremath{\\\\le}', '≥': '\\\\ensuremath{\\\\ge}', '≲': '\\\\ensuremath{\\\\lesssim}', '≳': '\\\\ensuremath{\\\\gtrsim}', '×': '\\\\ensuremath{\\\\times}'}",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "tools/build_thesis_draft.py",
-    "line_no": 54,
+    "line_no": 57,
     "symbol": "INTRO_START",
     "signature": "INTRO_START = '% === AUTOGEN INTRODUCTION START ==='",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "tools/build_thesis_draft.py",
-    "line_no": 55,
+    "line_no": 58,
     "symbol": "INTRO_END",
     "signature": "INTRO_END = '% === AUTOGEN INTRODUCTION END ==='",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "tools/build_thesis_draft.py",
-    "line_no": 56,
+    "line_no": 59,
     "symbol": "ABSTRACT_START",
     "signature": "ABSTRACT_START = '% === AUTOGEN ABSTRACT START ==='",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "tools/build_thesis_draft.py",
-    "line_no": 57,
+    "line_no": 60,
     "symbol": "ABSTRACT_END",
     "signature": "ABSTRACT_END = '% === AUTOGEN ABSTRACT END ==='",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "tools/build_thesis_draft.py",
-    "line_no": 58,
+    "line_no": 61,
     "symbol": "RELATED_WORK_START",
     "signature": "RELATED_WORK_START = '% === AUTOGEN RELATED WORK START ==='",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "tools/build_thesis_draft.py",
-    "line_no": 59,
+    "line_no": 62,
     "symbol": "RELATED_WORK_END",
     "signature": "RELATED_WORK_END = '% === AUTOGEN RELATED WORK END ==='",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "tools/build_thesis_draft.py",
-    "line_no": 60,
+    "line_no": 63,
     "symbol": "METHODS_START",
     "signature": "METHODS_START = '% === AUTOGEN METHODS START ==='",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "tools/build_thesis_draft.py",
-    "line_no": 61,
+    "line_no": 64,
     "symbol": "METHODS_END",
     "signature": "METHODS_END = '% === AUTOGEN METHODS END ==='",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "tools/build_thesis_draft.py",
-    "line_no": 62,
+    "line_no": 65,
     "symbol": "RESULTS_START",
     "signature": "RESULTS_START = '% === AUTOGEN RESULTS START ==='",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "tools/build_thesis_draft.py",
-    "line_no": 63,
+    "line_no": 66,
     "symbol": "RESULTS_END",
     "signature": "RESULTS_END = '% === AUTOGEN RESULTS END ==='",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "tools/build_thesis_draft.py",
-    "line_no": 64,
+    "line_no": 67,
     "symbol": "DISCUSSION_START",
     "signature": "DISCUSSION_START = '% === AUTOGEN DISCUSSION START ==='",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "tools/build_thesis_draft.py",
-    "line_no": 65,
+    "line_no": 68,
     "symbol": "DISCUSSION_END",
     "signature": "DISCUSSION_END = '% === AUTOGEN DISCUSSION END ==='",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "tools/build_thesis_draft.py",
-    "line_no": 66,
+    "line_no": 69,
     "symbol": "APPENDIX_START",
     "signature": "APPENDIX_START = '% === AUTOGEN APPENDIX START ==='",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "tools/build_thesis_draft.py",
-    "line_no": 67,
+    "line_no": 70,
     "symbol": "APPENDIX_END",
     "signature": "APPENDIX_END = '% === AUTOGEN APPENDIX END ==='",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "tools/build_thesis_draft.py",
-    "line_no": 71,
+    "line_no": 74,
     "symbol": "Block",
     "signature": "class Block",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/build_thesis_draft.py",
-    "line_no": 76,
+    "line_no": 79,
     "symbol": "strip_yaml_frontmatter",
     "signature": "strip_yaml_frontmatter(text: str) -> str",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/build_thesis_draft.py",
-    "line_no": 86,
+    "line_no": 89,
     "symbol": "strip_html_comments",
     "signature": "strip_html_comments(text: str) -> str",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/build_thesis_draft.py",
-    "line_no": 100,
+    "line_no": 103,
     "symbol": "strip_tex_exclude_blocks",
     "signature": "strip_tex_exclude_blocks(text: str) -> str",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/build_thesis_draft.py",
-    "line_no": 117,
+    "line_no": 120,
     "symbol": "split_table_row",
     "signature": "split_table_row(line: str) -> list[str]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/build_thesis_draft.py",
-    "line_no": 121,
+    "line_no": 124,
     "symbol": "is_table_separator",
     "signature": "is_table_separator(line: str) -> bool",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/build_thesis_draft.py",
-    "line_no": 131,
+    "line_no": 134,
     "symbol": "is_latex_block_start",
     "signature": "is_latex_block_start(line: str) -> bool",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/build_thesis_draft.py",
-    "line_no": 140,
+    "line_no": 143,
     "symbol": "parse_latex_block",
     "signature": "parse_latex_block(lines: list[str], start: int) -> tuple[Block, int]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/build_thesis_draft.py",
-    "line_no": 176,
+    "line_no": 179,
     "symbol": "parse_code_block",
     "signature": "parse_code_block(lines: list[str], start: int) -> tuple[Block, int]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/build_thesis_draft.py",
-    "line_no": 189,
+    "line_no": 192,
     "symbol": "parse_table",
     "signature": "parse_table(lines: list[str], start: int) -> tuple[Block | None, int]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/build_thesis_draft.py",
-    "line_no": 210,
+    "line_no": 213,
     "symbol": "parse_list",
     "signature": "parse_list(lines: list[str], start: int) -> tuple[Block, int]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/build_thesis_draft.py",
-    "line_no": 269,
+    "line_no": 272,
     "symbol": "parse_blockquote",
     "signature": "parse_blockquote(lines: list[str], start: int) -> tuple[Block, int]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/build_thesis_draft.py",
-    "line_no": 282,
+    "line_no": 285,
     "symbol": "parse_paragraph",
     "signature": "parse_paragraph(lines: list[str], start: int) -> tuple[Block, int]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/build_thesis_draft.py",
-    "line_no": 306,
+    "line_no": 309,
     "symbol": "parse_blocks",
     "signature": "parse_blocks(lines: list[str]) -> list[Block]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/build_thesis_draft.py",
-    "line_no": 348,
+    "line_no": 351,
     "symbol": "strip_numbered_prefix",
     "signature": "strip_numbered_prefix(text: str) -> str",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/build_thesis_draft.py",
-    "line_no": 352,
+    "line_no": 355,
     "symbol": "convert_cite_brackets",
     "signature": "convert_cite_brackets(text: str) -> str",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/build_thesis_draft.py",
-    "line_no": 369,
+    "line_no": 372,
     "symbol": "escape_latex",
     "signature": "escape_latex(text: str) -> str",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/build_thesis_draft.py",
-    "line_no": 395,
+    "line_no": 398,
     "symbol": "escape_latex_code",
     "signature": "escape_latex_code(text: str) -> str",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/build_thesis_draft.py",
-    "line_no": 416,
+    "line_no": 419,
     "symbol": "convert_inline",
     "signature": "convert_inline(text: str) -> str",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/build_thesis_draft.py",
-    "line_no": 456,
+    "line_no": 459,
     "symbol": "needs_texorpdfstring",
     "signature": "needs_texorpdfstring(text: str) -> bool",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/build_thesis_draft.py",
-    "line_no": 466,
+    "line_no": 469,
     "symbol": "latex_to_plain",
     "signature": "latex_to_plain(text: str) -> str",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/build_thesis_draft.py",
-    "line_no": 485,
+    "line_no": 488,
     "symbol": "replace_unicode_subscripts",
     "signature": "replace_unicode_subscripts(text: str) -> str",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/build_thesis_draft.py",
-    "line_no": 493,
+    "line_no": 496,
     "symbol": "replace_unicode_symbols",
     "signature": "replace_unicode_symbols(text: str) -> str",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/build_thesis_draft.py",
-    "line_no": 499,
+    "line_no": 502,
+    "symbol": "_package_options",
+    "signature": "_package_options(tex_text: str, package: str) -> list[str]",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tools/build_thesis_draft.py",
+    "line_no": 509,
+    "symbol": "_has_endfloat_hooks",
+    "signature": "_has_endfloat_hooks(tex_text: str) -> bool",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tools/build_thesis_draft.py",
+    "line_no": 521,
+    "symbol": "validate_chapter_endfloat_policy",
+    "signature": "validate_chapter_endfloat_policy(tex_text: str, tex_path: Path) -> None",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tools/build_thesis_draft.py",
+    "line_no": 542,
     "symbol": "MarkdownToLatexConverter",
     "signature": "class MarkdownToLatexConverter",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/build_thesis_draft.py",
-    "line_no": 567,
+    "line_no": 610,
     "symbol": "replace_between_markers",
     "signature": "replace_between_markers(text: str, start: str, end: str, replacement: str) -> str",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/build_thesis_draft.py",
-    "line_no": 577,
+    "line_no": 620,
     "symbol": "replace_between_markers_optional",
     "signature": "replace_between_markers_optional(text: str, start: str, end: str, replacement: str) -> str",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/build_thesis_draft.py",
-    "line_no": 587,
+    "line_no": 630,
     "symbol": "APPENDIX_CHAPTER_HEADING_RE",
     "signature": "APPENDIX_CHAPTER_HEADING_RE = re.compile('^(#{1,6})\\\\s+付録\\\\s*([A-Z])\\\\.\\\\s*(.+?)\\\\s*$')",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "tools/build_thesis_draft.py",
-    "line_no": 592,
+    "line_no": 635,
     "symbol": "split_methods_appendices",
     "signature": "split_methods_appendices(text: str) -> tuple[str, str]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/build_thesis_draft.py",
-    "line_no": 602,
+    "line_no": 645,
     "symbol": "normalize_appendix_headings",
     "signature": "normalize_appendix_headings(text: str) -> str",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/build_thesis_draft.py",
-    "line_no": 615,
+    "line_no": 658,
     "symbol": "run",
     "signature": "run(cmd: list[str], cwd: Path, env: dict[str, str] | None=None) -> None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/build_thesis_draft.py",
-    "line_no": 619,
+    "line_no": 662,
     "symbol": "build_pdf",
     "signature": "build_pdf(tex_path: Path, out_dir: Path, repo_root: Path) -> None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/build_thesis_draft.py",
-    "line_no": 715,
+    "line_no": 768,
     "symbol": "main",
     "signature": "main() -> int",
     "brief_usage": "No description available."

@@ -182,6 +182,12 @@ analysis/tools/merge_abstract_sections.py:30:def _paths_from_manifest(sections_d
 analysis/tools/merge_abstract_sections.py:51:def collect_sections(sections_dir: Path, manifest_path: Path | None=None) -> list[Path]
 analysis/tools/merge_abstract_sections.py:63:def build_document(section_paths: list[Path]) -> str
 analysis/tools/merge_abstract_sections.py:70:def main(argv: list[str] | None=None) -> int
+analysis/tools/merge_conclusion_sections.py:15:def _manifest_entries(manifest_path: Path) -> list[str]
+analysis/tools/merge_conclusion_sections.py:25:def _validate_entry(entry: str) -> None
+analysis/tools/merge_conclusion_sections.py:30:def _paths_from_manifest(sections_dir: Path, manifest_path: Path) -> list[Path]
+analysis/tools/merge_conclusion_sections.py:51:def collect_sections(sections_dir: Path, manifest_path: Path | None=None) -> list[Path]
+analysis/tools/merge_conclusion_sections.py:63:def build_document(section_paths: list[Path]) -> str
+analysis/tools/merge_conclusion_sections.py:70:def main(argv: list[str] | None=None) -> int
 analysis/tools/merge_discussion_sections.py:15:def _manifest_entries(manifest_path: Path) -> list[str]
 analysis/tools/merge_discussion_sections.py:25:def _validate_entry(entry: str) -> None
 analysis/tools/merge_discussion_sections.py:30:def _paths_from_manifest(sections_dir: Path, manifest_path: Path) -> list[Path]
@@ -938,9 +944,11 @@ scripts/plots/plot_axis_r_sweep.py:11:def _resolve_table_path(path: Path) -> Pat
 scripts/plots/plot_axis_r_sweep.py:25:def parse_args() -> argparse.Namespace
 scripts/plots/plot_axis_r_sweep.py:44:def main() -> None
 scripts/plots/plot_forsterite_phase_heatmap.py:20:def _parse_args() -> argparse.Namespace
-scripts/plots/plot_forsterite_phase_heatmap.py:26:def _load_forsterite_properties(path: Path) -> dict
-scripts/plots/plot_forsterite_phase_heatmap.py:31:def _load_base_config(path: Path) -> tuple[float, float, float]
-scripts/plots/plot_forsterite_phase_heatmap.py:60:def main() -> int
+scripts/plots/plot_forsterite_phase_heatmap.py:43:def _load_forsterite_properties(path: Path) -> dict
+scripts/plots/plot_forsterite_phase_heatmap.py:48:def _load_base_config(path: Path) -> tuple[float, float, float]
+scripts/plots/plot_forsterite_phase_heatmap.py:77:def _split_floats(text: str) -> list[float]
+scripts/plots/plot_forsterite_phase_heatmap.py:87:def _compute_temperature_map(*, T0: float, r_over_Rmars: np.ndarray, time_s: np.ndarray, params: CoolingParams) -> np.ndarray
+scripts/plots/plot_forsterite_phase_heatmap.py:106:def main() -> int
 scripts/plots/plot_from_runs.py:36:def _resolve_table_path(path: Path) -> Path
 scripts/plots/plot_from_runs.py:50:def _normalize_reduce_mode(value: Any, *, default: str) -> str
 scripts/plots/plot_from_runs.py:61:def _reduce_1d_series(df: pd.DataFrame, reduce_mode: str, *, sum_columns: Optional[Iterable[str]]=None) -> pd.DataFrame
@@ -2063,37 +2071,40 @@ tools/analyze_tau_los_feedback.py:201:def _render_placeholder(path: Path, title:
 tools/analyze_tau_los_feedback.py:211:def analyze(args: argparse.Namespace) -> Dict
 tools/analyze_tau_los_feedback.py:423:def _rows_from_result(result: Dict) -> List[Dict[str, object]]
 tools/analyze_tau_los_feedback.py:459:def main() -> None
-tools/build_thesis_draft.py:71:class Block
-tools/build_thesis_draft.py:76:def strip_yaml_frontmatter(text: str) -> str
-tools/build_thesis_draft.py:86:def strip_html_comments(text: str) -> str
-tools/build_thesis_draft.py:100:def strip_tex_exclude_blocks(text: str) -> str
-tools/build_thesis_draft.py:117:def split_table_row(line: str) -> list[str]
-tools/build_thesis_draft.py:121:def is_table_separator(line: str) -> bool
-tools/build_thesis_draft.py:131:def is_latex_block_start(line: str) -> bool
-tools/build_thesis_draft.py:140:def parse_latex_block(lines: list[str], start: int) -> tuple[Block, int]
-tools/build_thesis_draft.py:176:def parse_code_block(lines: list[str], start: int) -> tuple[Block, int]
-tools/build_thesis_draft.py:189:def parse_table(lines: list[str], start: int) -> tuple[Block | None, int]
-tools/build_thesis_draft.py:210:def parse_list(lines: list[str], start: int) -> tuple[Block, int]
-tools/build_thesis_draft.py:269:def parse_blockquote(lines: list[str], start: int) -> tuple[Block, int]
-tools/build_thesis_draft.py:282:def parse_paragraph(lines: list[str], start: int) -> tuple[Block, int]
-tools/build_thesis_draft.py:306:def parse_blocks(lines: list[str]) -> list[Block]
-tools/build_thesis_draft.py:348:def strip_numbered_prefix(text: str) -> str
-tools/build_thesis_draft.py:352:def convert_cite_brackets(text: str) -> str
-tools/build_thesis_draft.py:369:def escape_latex(text: str) -> str
-tools/build_thesis_draft.py:395:def escape_latex_code(text: str) -> str
-tools/build_thesis_draft.py:416:def convert_inline(text: str) -> str
-tools/build_thesis_draft.py:456:def needs_texorpdfstring(text: str) -> bool
-tools/build_thesis_draft.py:466:def latex_to_plain(text: str) -> str
-tools/build_thesis_draft.py:485:def replace_unicode_subscripts(text: str) -> str
-tools/build_thesis_draft.py:493:def replace_unicode_symbols(text: str) -> str
-tools/build_thesis_draft.py:499:class MarkdownToLatexConverter
-tools/build_thesis_draft.py:567:def replace_between_markers(text: str, start: str, end: str, replacement: str) -> str
-tools/build_thesis_draft.py:577:def replace_between_markers_optional(text: str, start: str, end: str, replacement: str) -> str
-tools/build_thesis_draft.py:592:def split_methods_appendices(text: str) -> tuple[str, str]
-tools/build_thesis_draft.py:602:def normalize_appendix_headings(text: str) -> str
-tools/build_thesis_draft.py:615:def run(cmd: list[str], cwd: Path, env: dict[str, str] | None=None) -> None
-tools/build_thesis_draft.py:619:def build_pdf(tex_path: Path, out_dir: Path, repo_root: Path) -> None
-tools/build_thesis_draft.py:715:def main() -> int
+tools/build_thesis_draft.py:74:class Block
+tools/build_thesis_draft.py:79:def strip_yaml_frontmatter(text: str) -> str
+tools/build_thesis_draft.py:89:def strip_html_comments(text: str) -> str
+tools/build_thesis_draft.py:103:def strip_tex_exclude_blocks(text: str) -> str
+tools/build_thesis_draft.py:120:def split_table_row(line: str) -> list[str]
+tools/build_thesis_draft.py:124:def is_table_separator(line: str) -> bool
+tools/build_thesis_draft.py:134:def is_latex_block_start(line: str) -> bool
+tools/build_thesis_draft.py:143:def parse_latex_block(lines: list[str], start: int) -> tuple[Block, int]
+tools/build_thesis_draft.py:179:def parse_code_block(lines: list[str], start: int) -> tuple[Block, int]
+tools/build_thesis_draft.py:192:def parse_table(lines: list[str], start: int) -> tuple[Block | None, int]
+tools/build_thesis_draft.py:213:def parse_list(lines: list[str], start: int) -> tuple[Block, int]
+tools/build_thesis_draft.py:272:def parse_blockquote(lines: list[str], start: int) -> tuple[Block, int]
+tools/build_thesis_draft.py:285:def parse_paragraph(lines: list[str], start: int) -> tuple[Block, int]
+tools/build_thesis_draft.py:309:def parse_blocks(lines: list[str]) -> list[Block]
+tools/build_thesis_draft.py:351:def strip_numbered_prefix(text: str) -> str
+tools/build_thesis_draft.py:355:def convert_cite_brackets(text: str) -> str
+tools/build_thesis_draft.py:372:def escape_latex(text: str) -> str
+tools/build_thesis_draft.py:398:def escape_latex_code(text: str) -> str
+tools/build_thesis_draft.py:419:def convert_inline(text: str) -> str
+tools/build_thesis_draft.py:459:def needs_texorpdfstring(text: str) -> bool
+tools/build_thesis_draft.py:469:def latex_to_plain(text: str) -> str
+tools/build_thesis_draft.py:488:def replace_unicode_subscripts(text: str) -> str
+tools/build_thesis_draft.py:496:def replace_unicode_symbols(text: str) -> str
+tools/build_thesis_draft.py:502:def _package_options(tex_text: str, package: str) -> list[str]
+tools/build_thesis_draft.py:509:def _has_endfloat_hooks(tex_text: str) -> bool
+tools/build_thesis_draft.py:521:def validate_chapter_endfloat_policy(tex_text: str, tex_path: Path) -> None
+tools/build_thesis_draft.py:542:class MarkdownToLatexConverter
+tools/build_thesis_draft.py:610:def replace_between_markers(text: str, start: str, end: str, replacement: str) -> str
+tools/build_thesis_draft.py:620:def replace_between_markers_optional(text: str, start: str, end: str, replacement: str) -> str
+tools/build_thesis_draft.py:635:def split_methods_appendices(text: str) -> tuple[str, str]
+tools/build_thesis_draft.py:645:def normalize_appendix_headings(text: str) -> str
+tools/build_thesis_draft.py:658:def run(cmd: list[str], cwd: Path, env: dict[str, str] | None=None) -> None
+tools/build_thesis_draft.py:662:def build_pdf(tex_path: Path, out_dir: Path, repo_root: Path) -> None
+tools/build_thesis_draft.py:768:def main() -> int
 tools/check_unknown_refs.py:13:def load_requests(path: Path) -> list[dict]
 tools/check_unknown_refs.py:24:def main() -> int
 tools/derive_supply_rate.py:51:class SupplyInputs
