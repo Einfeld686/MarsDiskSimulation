@@ -1,19 +1,4 @@
 <!-- TEX_EXCLUDE_START -->
-> **文書種別**: 結果（Diátaxis: Explanation）
-<!-- TEX_EXCLUDE_END -->
-
-本章の主結果を先に述べる．放射圧ブローアウトによる累積損失 $M_{\rm loss}$ は，12 ケースの掃引で $2.0\times10^{-8}$--$1.1\times10^{-4}\,M_{\rm Mars}$ に分布する．また，$M_{\rm loss}$ の 99\% は $t\lesssim1\,\mathrm{yr}$ で確定し，流出は遷移期のごく初期に集中する．
-
-これらは累積曲線（図\ref{fig:results_cumloss_grid}）と最終値一覧（表\ref{tab:results_sweep_massloss_cases}）で確認できる．パラメータ依存として，$M_{\rm loss}$ の支配因子は温度 $T_{M,0}$ と初期光学的厚さ $\tau_0$ であり，$3000\to4000\,\mathrm{K}$ で $M_{\rm loss}$ は約 3 桁増大し，$\tau_0$ を 2 倍にすると $M_{\rm loss}$ も概ね 2 倍となる．一方，供給混合係数 $\epsilon_{\rm mix}$ は本範囲では $M_{\rm loss}$ をほとんど変えない（5 節）．
-
-序論で述べたように，$\Delta M_{\rm in}$ の系統差は (i) $\tau_{\rm los}$ の評価と (ii) $T_M(t)$ の有効期間に支配され得る．本章ではこれらを代表するパラメータとして $(T_{M,0},\tau_0)$ の感度として結果を整理する．
-
-本章では，手法章で定義した軸対称 1D（リング分割）モデルに基づく数値結果を整理する．主な関心は，遷移期における放射圧による不可逆損失の累積量 $M_{\rm loss}$（序論の $\Delta M_{\rm in}$；式\ref{eq:delta_min_def}）と，それが温度や光学的厚さにどう依存するかである．この $M_{\rm loss}(t_{\rm end})$ は，長期モデルへ渡す内側円盤質量の更新量（式\ref{eq:min0_update}）に直接入る．本章では放射圧による寄与を分離するため追加シンクを無効化し（放射圧ブローアウトのみ；下限評価），$M_{\rm loss}=M_{\rm out,cum}$ として評価する．以降では，全円盤の $\dot{M}_{\rm out}(t)$（式\ref{eq:mdot_out_definition}）と $M_{\rm loss}(t)$（式\ref{eq:mass_loss_update}），および半径依存を含む $\dot{M}_{\rm out}(r,t)$ に焦点を当て，併せて質量保存と停止条件の内訳を検証する．
-
-以下では，まずスイープ計算の条件とデータセットを整理し（1 節），全円盤積分量 $\dot{M}_{\rm out}(t)$ と $M_{\rm loss}(t)$ の代表的な時間発展を示す（2 節）．続いて，半径方向に分解した $\dot{M}_{\rm out}(r,t)$ の構造を可視化し（3 節），質量保存と停止条件の内訳を検証する（4 節）．最後に $M_{\rm loss}$ の主要パラメータ依存性を要約し（5 節），本章の小結を述べる（6 節）．
-
-本章の結論として長期モデルへ渡す量は $M_{\rm loss}(t_{\rm end})$ であり（式\ref{eq:mass_loss_update}），以降の構成も「瞬時流出の時間発展（2 節；図\ref{fig:results_moutdot_grid}）→ 半径構造（3 節）→ 検証（4 節）→ 最終的な $M_{\rm loss}$ の回収（5 節；図\ref{fig:results_cumloss_grid}，表\ref{tab:results_sweep_massloss_cases}）」の順に読めるよう整理する．
-<!-- TEX_EXCLUDE_START -->
 出力結果は out/temp_supply_sweep_1d/20260120-131832__b6a734509__seed955316828/ 内に保存されている．
 <!-- TEX_EXCLUDE_END -->
 
@@ -233,14 +218,3 @@ $T_{M,0}$ [K] & $\tau_0$ & $\epsilon_{\rm mix}$ & 停止理由 & $t_{\rm end}$ [
 また，第5.1節で示したとおり $M_{\rm loss}(t)$ は $t\lesssim 1\,\mathrm{yr}$ でほぼ飽和する．そのため，損失率が閾値を下回ったことを理由に $t\simeq 2\,\mathrm{yr}$ で計算を停止したケースでも，$M_{\rm loss}$ は既に最終値に達しており，補助打ち切りの有無が最終値の比較を実質的に左右しない．
 
 小括として，本節のパラメータ範囲では，累積損失 $M_{\rm loss}$ の主要依存性は $T_{M,0}$ と $\tau_0$ により説明できる．一方で $\epsilon_{\rm mix}$ は，式\ref{eq:R_base_definition} による規格化の下では最終値を変えず，パラメタ化の感度として主に停止時刻や過渡応答に影響する．次節では，本章で得られた $M_{\rm loss}$ のスケーリングとその解釈をまとめる．
-## 6. 小結
-
-本章では，軸対称 1D モデルの 12 ケース掃引により，放射圧ブローアウト（追加シンク無効）に伴う累積損失 $M_{\rm loss}$ の大きさと依存性を定量化した．$\dot{M}_{\rm out}(t)$ は計算開始直後に最大となり，その後急速に減衰するため，$M_{\rm loss}(t)$ は 1 年以内にほぼ確定する（全ケースで 99\% 到達時刻は $t\simeq0.19$--$0.84\,\mathrm{yr}$；図\ref{fig:results_moutdot_grid}，図\ref{fig:results_cumloss_grid}）．
-
-最終的な $M_{\rm loss}$ は $2.0\times 10^{-8}$--$1.09\times 10^{-4}\,M_{\rm Mars}$ に分布し，温度 $T_{M,0}$ が最も強い支配因子である（$3000\to4000\,\mathrm{K}$ で約 $10^3$ 倍；表\ref{tab:results_sweep_massloss_cases}）．初期光学的厚さ $\tau_0$ はほぼ線形に効いて $M_{\rm loss}$ を概ね 2 倍変える．一方，供給混合係数 $\epsilon_{\rm mix}$ は供給率の規格化の取り方に関する感度であり（手法章 2.3節），停止時刻の違いを除けば $M_{\rm loss}$ は一致する（表\ref{tab:results_sweep_massloss_cases}）．
-
-半径方向には，流出は初期に外側から先に終息し，半径×時間マップでその構造が確認できる（図\ref{fig:results_time_radius_moutdot_tau_tau0p5}--\ref{fig:results_time_radius_moutdot_tau_tau1p0}）．また，本スイープでは $\tau_{\rm los}>\tau_{\rm stop}$ の早期停止は発生せず，照射近似が成立する範囲で評価できている．質量保存誤差は最大でも $10^{-13}\%$ 未満であり，収支ずれが結果を支配しない（表\ref{tab:results_mass_budget_summary}）．
-
-以上の $M_{\rm loss}(t_{\rm end})$（$\Delta M_{\rm in}$；式\ref{eq:delta_min_def}）は，遷移期の放射圧損失（下限評価）として，長期モデルへ渡す内側円盤質量の更新（式\ref{eq:min0_update}）に直接用いられる．序論で指摘した二つの系統差要因は，結果として $T_{M,0}$（温度条件）と $\tau_0$（照射され得る表層量）の感度として現れ，本章の範囲では温度依存性が卓越する．
-
-これらの結果を踏まえ，次章では損失の物理的解釈と長期衛星形成モデルへの接続に対する含意を議論する．
