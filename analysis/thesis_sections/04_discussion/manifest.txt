@@ -1,8 +1,6 @@
 # Ordered list of section files to build analysis/thesis/discussion.md.
-00_frontmatter.md
 01_dominant_factors.md
 02_supply_flux.md
-03_canup_salmon.md
-04_material_uncertainty.md
-05_temperature_atmosphere.md
-06_limitations_future.md
+03_material_uncertainty.md
+04_temperature_atmosphere.md
+
