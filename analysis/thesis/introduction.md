@@ -186,7 +186,7 @@ t(T_i\rightarrow T_f)=\frac{\rho C_p D}{3\sigma_{\rm SB}}
 \Delta M_{\rm in}(t)\equiv \int_{t_0}^{t}\dot{M}_{\rm out}(t')\,dt'
 \end{equation}
 
-ここで $t_0$ は衝突直後計算の終端時刻である．この損失を反映した内側円盤質量は（例：\citet{Wyatt2008}）
+ここで $t_0$ は衝突直後計算の終端時刻である．この損失を反映した内側円盤質量は
 
 \begin{equation}
 \label{eq:min_update}
