@@ -19195,112 +19195,119 @@
   },
   {
     "file_path": "tools/build_thesis_draft.py",
-    "line_no": 459,
+    "line_no": 460,
     "symbol": "needs_texorpdfstring",
     "signature": "needs_texorpdfstring(text: str) -> bool",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/build_thesis_draft.py",
-    "line_no": 469,
+    "line_no": 470,
     "symbol": "latex_to_plain",
     "signature": "latex_to_plain(text: str) -> str",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/build_thesis_draft.py",
-    "line_no": 488,
+    "line_no": 489,
     "symbol": "replace_unicode_subscripts",
     "signature": "replace_unicode_subscripts(text: str) -> str",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/build_thesis_draft.py",
-    "line_no": 496,
+    "line_no": 497,
     "symbol": "replace_unicode_symbols",
     "signature": "replace_unicode_symbols(text: str) -> str",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/build_thesis_draft.py",
-    "line_no": 502,
+    "line_no": 503,
     "symbol": "_package_options",
     "signature": "_package_options(tex_text: str, package: str) -> list[str]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/build_thesis_draft.py",
-    "line_no": 509,
+    "line_no": 510,
     "symbol": "_has_endfloat_hooks",
     "signature": "_has_endfloat_hooks(tex_text: str) -> bool",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/build_thesis_draft.py",
-    "line_no": 521,
+    "line_no": 522,
     "symbol": "validate_chapter_endfloat_policy",
     "signature": "validate_chapter_endfloat_policy(tex_text: str, tex_path: Path) -> None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/build_thesis_draft.py",
-    "line_no": 542,
+    "line_no": 543,
     "symbol": "MarkdownToLatexConverter",
     "signature": "class MarkdownToLatexConverter",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/build_thesis_draft.py",
-    "line_no": 610,
+    "line_no": 611,
     "symbol": "replace_between_markers",
     "signature": "replace_between_markers(text: str, start: str, end: str, replacement: str) -> str",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/build_thesis_draft.py",
-    "line_no": 620,
+    "line_no": 621,
     "symbol": "replace_between_markers_optional",
     "signature": "replace_between_markers_optional(text: str, start: str, end: str, replacement: str) -> str",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/build_thesis_draft.py",
-    "line_no": 630,
+    "line_no": 631,
+    "symbol": "protect_includegraphics_filenames",
+    "signature": "protect_includegraphics_filenames(tex_text: str) -> str",
+    "brief_usage": "No description available."
+  },
+  {
+    "file_path": "tools/build_thesis_draft.py",
+    "line_no": 646,
     "symbol": "APPENDIX_CHAPTER_HEADING_RE",
     "signature": "APPENDIX_CHAPTER_HEADING_RE = re.compile('^(#{1,6})\\\\s+付録\\\\s*([A-Z])\\\\.\\\\s*(.+?)\\\\s*$')",
     "brief_usage": "Module constant"
   },
   {
     "file_path": "tools/build_thesis_draft.py",
-    "line_no": 635,
+    "line_no": 651,
     "symbol": "split_methods_appendices",
     "signature": "split_methods_appendices(text: str) -> tuple[str, str]",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/build_thesis_draft.py",
-    "line_no": 645,
+    "line_no": 661,
     "symbol": "normalize_appendix_headings",
     "signature": "normalize_appendix_headings(text: str) -> str",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/build_thesis_draft.py",
-    "line_no": 658,
+    "line_no": 674,
     "symbol": "run",
     "signature": "run(cmd: list[str], cwd: Path, env: dict[str, str] | None=None) -> None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/build_thesis_draft.py",
-    "line_no": 662,
+    "line_no": 678,
     "symbol": "build_pdf",
     "signature": "build_pdf(tex_path: Path, out_dir: Path, repo_root: Path) -> None",
     "brief_usage": "No description available."
   },
   {
     "file_path": "tools/build_thesis_draft.py",
-    "line_no": 768,
+    "line_no": 784,
     "symbol": "main",
     "signature": "main() -> int",
     "brief_usage": "No description available."

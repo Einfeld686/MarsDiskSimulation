@@ -2090,21 +2090,22 @@ tools/build_thesis_draft.py:355:def convert_cite_brackets(text: str) -> str
 tools/build_thesis_draft.py:372:def escape_latex(text: str) -> str
 tools/build_thesis_draft.py:398:def escape_latex_code(text: str) -> str
 tools/build_thesis_draft.py:419:def convert_inline(text: str) -> str
-tools/build_thesis_draft.py:459:def needs_texorpdfstring(text: str) -> bool
-tools/build_thesis_draft.py:469:def latex_to_plain(text: str) -> str
-tools/build_thesis_draft.py:488:def replace_unicode_subscripts(text: str) -> str
-tools/build_thesis_draft.py:496:def replace_unicode_symbols(text: str) -> str
-tools/build_thesis_draft.py:502:def _package_options(tex_text: str, package: str) -> list[str]
-tools/build_thesis_draft.py:509:def _has_endfloat_hooks(tex_text: str) -> bool
-tools/build_thesis_draft.py:521:def validate_chapter_endfloat_policy(tex_text: str, tex_path: Path) -> None
-tools/build_thesis_draft.py:542:class MarkdownToLatexConverter
-tools/build_thesis_draft.py:610:def replace_between_markers(text: str, start: str, end: str, replacement: str) -> str
-tools/build_thesis_draft.py:620:def replace_between_markers_optional(text: str, start: str, end: str, replacement: str) -> str
-tools/build_thesis_draft.py:635:def split_methods_appendices(text: str) -> tuple[str, str]
-tools/build_thesis_draft.py:645:def normalize_appendix_headings(text: str) -> str
-tools/build_thesis_draft.py:658:def run(cmd: list[str], cwd: Path, env: dict[str, str] | None=None) -> None
-tools/build_thesis_draft.py:662:def build_pdf(tex_path: Path, out_dir: Path, repo_root: Path) -> None
-tools/build_thesis_draft.py:768:def main() -> int
+tools/build_thesis_draft.py:460:def needs_texorpdfstring(text: str) -> bool
+tools/build_thesis_draft.py:470:def latex_to_plain(text: str) -> str
+tools/build_thesis_draft.py:489:def replace_unicode_subscripts(text: str) -> str
+tools/build_thesis_draft.py:497:def replace_unicode_symbols(text: str) -> str
+tools/build_thesis_draft.py:503:def _package_options(tex_text: str, package: str) -> list[str]
+tools/build_thesis_draft.py:510:def _has_endfloat_hooks(tex_text: str) -> bool
+tools/build_thesis_draft.py:522:def validate_chapter_endfloat_policy(tex_text: str, tex_path: Path) -> None
+tools/build_thesis_draft.py:543:class MarkdownToLatexConverter
+tools/build_thesis_draft.py:611:def replace_between_markers(text: str, start: str, end: str, replacement: str) -> str
+tools/build_thesis_draft.py:621:def replace_between_markers_optional(text: str, start: str, end: str, replacement: str) -> str
+tools/build_thesis_draft.py:631:def protect_includegraphics_filenames(tex_text: str) -> str
+tools/build_thesis_draft.py:651:def split_methods_appendices(text: str) -> tuple[str, str]
+tools/build_thesis_draft.py:661:def normalize_appendix_headings(text: str) -> str
+tools/build_thesis_draft.py:674:def run(cmd: list[str], cwd: Path, env: dict[str, str] | None=None) -> None
+tools/build_thesis_draft.py:678:def build_pdf(tex_path: Path, out_dir: Path, repo_root: Path) -> None
+tools/build_thesis_draft.py:784:def main() -> int
 tools/check_unknown_refs.py:13:def load_requests(path: Path) -> list[dict]
 tools/check_unknown_refs.py:24:def main() -> int
 tools/derive_supply_rate.py:51:class SupplyInputs
