@@ -449,6 +449,7 @@ def convert_inline(text: str) -> str:
             replacement = r"\texttt{" + escape_latex_code(value) + "}"
         elif kind == "math":
             replacement = value.replace(r"\*", "*").replace("\\\\", "\\")
+            replacement = re.sub(r"(?<!\\)%", r"\\%", replacement)
         else:
             replacement = value
         text = text.replace(placeholder, replacement)
@@ -625,6 +626,21 @@ def replace_between_markers_optional(
     if start_idx == -1 or end_idx == -1 or end_idx <= start_idx:
         return text
     return replace_between_markers(text, start, end, replacement)
+
+
+def protect_includegraphics_filenames(tex_text: str) -> str:
+    pattern = re.compile(r"(\\includegraphics(?:\[[^\]]*\])?\{)([^}]*)(\})")
+
+    def repl(match: re.Match[str]) -> str:
+        prefix, filename, suffix = match.groups()
+        stripped = filename.strip()
+        if stripped.startswith(r"\detokenize{"):
+            return match.group(0)
+        if "_" not in filename:
+            return match.group(0)
+        return prefix + r"\detokenize{" + filename + "}" + suffix
+
+    return pattern.sub(repl, tex_text)
 
 
 APPENDIX_CHAPTER_HEADING_RE = re.compile(
@@ -890,6 +906,7 @@ def main() -> int:
         tex_text = replace_between_markers_optional(
             tex_text, APPENDIX_START, APPENDIX_END, appendix_tex
         )
+    tex_text = protect_includegraphics_filenames(tex_text)
     validate_chapter_endfloat_policy(tex_text, out_path)
     out_path.write_text(tex_text, encoding="utf-8")
 
