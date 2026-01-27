@@ -7,17 +7,14 @@ title: 記号表（論文内参照の正）
 実装(.py): marsdisk/schema.py, marsdisk/physics/initfields.py, marsdisk/run_zero_d.py, marsdisk/run_one_d.py
 -->
 
-## 付録 E. 記号表
+## 付録 B. 記号表
 
-本論文で用いる記号と，その意味・単位をまとめる．本文中に示す式で用いる記号の定義も，本付録を正とする．主要記号は表\ref{tab:app_symbols_main}と表\ref{tab:app_symbols_main_cont}に示し，主要定数・惑星パラメータは表\ref{tab:app_symbols_constants}にまとめる．
+### B.1 主要記号（本研究のダスト円盤モデル）
 
-### E.1 主要記号（本研究のダスト円盤モデル）
-
-\begin{table}[t]
-  \centering
+\begin{center}
   \small
   \setlength{\tabcolsep}{4pt}
-  \caption{主要記号表（本研究で用いる記号と単位）}
+  \captionof{table}{主要記号表（本研究で用いる記号と単位）}
   \label{tab:app_symbols_main}
   \begin{tabular}{p{0.18\linewidth}p{0.44\linewidth}p{0.12\linewidth}p{0.18\linewidth}}
 	    \hline
@@ -38,14 +35,16 @@ title: 記号表（論文内参照の正）
 	    $n(s)$ & 粒径分布（形状） & -- & 正規化された分布として扱う \\
 	    $N_k$ & ビン $k$ の数密度（面数密度） & $\mathrm{m^{-2}}$ & Smol 解法の主状態 \\
     $m_k$ & ビン $k$ の粒子質量 & $\mathrm{kg}$ & 粒径から球形近似で導出 \\
-	    $\rho$ & 粒子密度 & $\mathrm{kg\,m^{-3}}$ & 表\ref{tab:run_sweep_material_properties} \\
+	    $\rho$ & 粒子密度 & $\mathrm{kg\,m^{-3}}$ & 表\ref{tab:method-phys} \\
     $Y_{kij}$ & 衝突 $(i,j)$ による破片生成の質量分率（ビン $k$ への配分） & -- & $\sum_k Y_{kij}=1$（式\ref{eq:fragment_yield_normalization}） \\
     $F_k$ & 供給ソース項（サイズビン $k$ への注入率） & $\mathrm{m^{-2}\,s^{-1}}$ & 式\ref{eq:smoluchowski} \\
 		    $S_k$ & 追加シンクの実効ロス率 & $\mathrm{s^{-1}}$ & 式\ref{eq:smoluchowski} \\
 				    $\Sigma_{\rm surf}$ & 表層の面密度 & $\mathrm{kg\,m^{-2}}$ & 放射圧・昇華・衝突が作用する層 \\
 			    $\kappa_{\rm surf}$ & 表層の質量不透明度 & $\mathrm{m^{2}\,kg^{-1}}$ & PSD から評価 \\
 			    $\tau_\perp$ & 鉛直方向の光学的厚さ（近似） & -- & $\tau_\perp=\kappa_{\rm surf}\Sigma_{\rm surf}$ \\
-		    $\Phi$ & 自遮蔽係数 & -- & 遮蔽有効時に $\kappa_{\rm eff}=\Phi\kappa_{\rm surf}$ \\
+			    $\Phi$ & 自遮蔽係数 & -- & 遮蔽有効時に $\kappa_{\rm eff}=\Phi\kappa_{\rm surf}$ \\
+			    $\omega_0$ & 単一散乱アルベド（遮蔽テーブル入力） & -- & $\Phi(\tau,\omega_0,g)$ の入力 \\
+			    $g$ & 非対称因子（遮蔽テーブル入力） & -- & $g=\langle\cos\theta\rangle$；$\Phi(\tau,\omega_0,g)$ の入力 \\
 	    $\kappa_{\rm eff}$ & 有効不透明度 & $\mathrm{m^{2}\,kg^{-1}}$ & 式\ref{eq:kappa_eff_definition} \\
 			    $f_{\rm los}$ & 鉛直光学的厚さ $\tau_\perp$ を $\tau_{\rm los}$ へ写像する幾何因子 & -- & $\tau_{\rm los}=f_{\rm los}\kappa_{\rm surf}\Sigma_{\rm surf}$ \\
 			    $\tau_{\rm los}$ & 火星視線方向光学的厚さ（近似） & -- & 式\ref{eq:tau_los_definition}; 遮蔽評価・初期規格化・停止判定に用いる \\
@@ -55,13 +54,12 @@ title: 記号表（論文内参照の正）
 		    $\Sigma_{\tau=1}$ & 光学的厚さ $\tau=1$ に対応する表層面密度（診断量） & $\mathrm{kg\,m^{-2}}$ & 式\ref{eq:sigma_tau1_definition} \\
 		    \hline
 	  \end{tabular}
-\end{table}
+\end{center}
 
-\begin{table}[t]
-  \centering
+\begin{center}
   \small
   \setlength{\tabcolsep}{4pt}
-  \caption{主要記号表（続き）}
+  \captionof{table}{主要記号表（続き）}
   \label{tab:app_symbols_main_cont}
   \begin{tabular}{p{0.18\linewidth}p{0.44\linewidth}p{0.12\linewidth}p{0.18\linewidth}}
 	    \hline
@@ -87,22 +85,20 @@ title: 記号表（論文内参照の正）
 		    $e, i$ & 離心率・傾斜角（分散） & -- & 相対速度の評価に用いる \\
 		    $Q_D^*$ & 破壊閾値（比エネルギー） & $\mathrm{J\,kg^{-1}}$ & 式\ref{eq:qdstar_definition} \\
 		    $Q_R$ & reduced specific kinetic energy & $\mathrm{J\,kg^{-1}}$ & 式\ref{eq:q_r_definition} \\
-		    $F_{LF}$ & 最大残存率（最大残存体質量/総質量） & -- & 式\ref{eq:F_LF_definition} \\
-		    $\mu_{\rm LS}$ & 速度外挿に用いる指数 & -- & $v^{-3\mu_{\rm LS}+2}$（既定 0.45） \\
-		    $\mu$ & 分子量（HKL） & $\mathrm{kg\,mol^{-1}}$ & 式\ref{eq:hkl_flux} \\
-		    \hline
+			    $F_{LF}$ & 最大残存率（最大残存体質量/総質量） & -- & 式\ref{eq:F_LF_definition} \\
+			    $\mu_{\rm LS}$ & 速度外挿に用いる指数 & -- & $v^{-3\mu_{\rm LS}+2}$（既定 0.45） \\
+			    $\alpha_{\rm evap}$ & 蒸発（固相では昇華）係数（HKL） & -- & 式\ref{eq:hkl_flux} \\
+			    $\mu$ & 分子量（HKL） & $\mathrm{kg\,mol^{-1}}$ & 式\ref{eq:hkl_flux} \\
+			    \hline
 	  \end{tabular}
-\end{table}
+\end{center}
 
-### E.2 主要定数と惑星パラメータ（参照）
+### B.2 主要定数と惑星パラメータ（参照）
 
-本研究で用いる主要定数と惑星パラメータを表\ref{tab:app_symbols_constants}にまとめる．採用値は表\ref{tab:method-phys}を参照する．
-
-\begin{table}[t]
-  \centering
+\begin{center}
   \small
   \setlength{\tabcolsep}{4pt}
-  \caption{主要定数と惑星パラメータ}
+  \captionof{table}{主要定数と惑星パラメータ}
   \label{tab:app_symbols_constants}
   \begin{tabular}{p{0.18\linewidth}p{0.44\linewidth}p{0.18\linewidth}p{0.12\linewidth}}
 	    \hline
@@ -116,4 +112,29 @@ title: 記号表（論文内参照の正）
 	    $R_{\rm Mars}$ & 火星半径 & $\mathrm{m}$ & 表\ref{tab:method-phys} \\
 	    \hline
 	  \end{tabular}
-\end{table}
+\end{center}
+
+### B.3 略語索引
+
+\begin{center}
+  \captionof{table}{略語索引}
+  \label{tab:app_abbreviations}
+  \begin{tabular}{p{0.18\textwidth} p{0.44\textwidth} p{0.28\textwidth}}
+    \hline
+    略語 & 日本語 / 英語 & 備考 \\
+    \hline
+    PSD & 粒径分布 / particle size distribution & サイズビン分布 $n(s)$ \\
+    LOS & 視線方向 / line of sight & $\tau_{\rm los}$ に対応 \\
+    IMEX & implicit-explicit & IMEX-BDF(1) に使用 \\
+    BDF & backward differentiation formula & 一次 BDF \\
+    $Q_{\rm pr}$ & 放射圧効率 / radiation pressure efficiency & テーブル入力 \\
+    $Q_D^*$ & 破壊閾値 / critical specific energy & 破壊強度 \\
+    HKL & Hertz--Knudsen--Langmuir & 昇華フラックス \\
+    PR & ポインティング--ロバートソン / Poynting--Robertson & PR ドラッグ \\
+    Mie & ミー散乱 / Mie scattering & $Q_{\rm pr}$ テーブル生成に使用 \\
+    RT & 放射輸送 / radiative transfer & 遮蔽 $\Phi$ の近似に関係 \\
+    RM & 火星半径 / Mars radii & $r_{\rm in},r_{\rm out}$ の規格化に使用 \\
+    1D & one-dimensional & 半径方向セル分割（リング分割） \\
+    \hline
+  \end{tabular}
+\end{center}

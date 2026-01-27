@@ -5,8 +5,4 @@
 02_ch03_logic_physics.md
 03_ch04_numerics.md
 04_ch05_reproducibility.md
-05_appendix_a.md
-06_appendix_b.md
-07_appendix_c.md
-08_appendix_d.md
 09_symbols_transition.md

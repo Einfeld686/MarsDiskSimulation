@@ -38,7 +38,7 @@ w_{\rm melt}(s)\propto
 
 $N_k(t_0)$ の設定では，式\ref{eq:initial_psd_lognormal_mixture} が与える質量分布に従って各粒径ビンへ質量を配分し，その全体規格化を初期表層面密度が式\ref{eq:sigma_surf_definition}の $\Sigma_{\rm surf}(t_0)$ を満たすように定める．これにより，初期 PSD は形状（$w_{\rm melt}$） + 総量（$\Sigma_{\rm surf}$）として物理的に解釈できる形で与えられる．
 
-火星温度 $T_M(t)$ は，火星からの熱放射場を規定する外部条件として与える．同様に，放射圧効率の平均量 $\langle Q_{\rm pr}\rangle$ と遮蔽係数 $\Phi$ は，本研究では外部条件として与え，その定義と採用値を付録Cおよび表\ref{tab:app_external_inputs}にまとめる．
+火星温度 $T_M(t)$ は，火星からの熱放射場を規定する外部条件として与える．同様に，放射圧効率の平均量 $\langle Q_{\rm pr}\rangle$ と遮蔽係数 $\Phi$ は，本研究では外部条件として与え，その定義と採用値を表\ref{tab:method_external_inputs}にまとめる．
 
 粒径の取り扱いは $s\in[s_{\min,\rm cfg},s_{\max}]$ を計算上の範囲とし，放射圧により力学的に束縛されない粒子は，表層から短い力学時間で除去されるものとして PSD に含めない．具体的には，実効ブローアウト粒径 $s_{\min,\rm eff}$ 未満の粒子は存在しないとして扱い，$s_{\min,\rm cfg}$ は数値的に追跡する最小粒径として設定する\citep{Burns1979_Icarus40_1,Hyodo2018_ApJ860_150}．
 
@@ -47,13 +47,13 @@ $N_k(t_0)$ の設定では，式\ref{eq:initial_psd_lognormal_mixture} が与え
 \label{eq:annulus_area_definition}
 A=\pi\left(r_{\rm out}^2-r_{\rm in}^2\right)
 \end{equation}
-を用いる．これは，衝突カスケードを統計的（particle-in-a-box）に扱う際に一般的な，セル平均量での記述と整合する\citep{Thebault2003_AA408_775,WyattClarkeBooth2011_CeMDA111_1}．
+を用いる．これは，衝突カスケードを particle-in-a-box で扱う際の，セル平均量での記述と整合的である\citep{Thebault2003_AA408_775,WyattClarkeBooth2011_CeMDA111_1}．
 
-最後に，表\ref{tab:method-param}の $M_{\rm in}$ はロッシュ限界内側の総質量を表す．一方，初期表層質量 $M_{\rm surf}(t_0)=\int 2\pi r\,\Sigma_{\rm surf}(t_0,r)\,dr$ は，式\ref{eq:sigma_surf0_from_tau0}で与えた $\tau_0$ と初期 PSD（すなわち $\kappa_{\rm surf}(t_0)$）から **派生する量**として扱う．したがって，$\tau_0$ を指定した基準設定では $M_{\rm surf}(t_0)\approx \Sigma_{\rm surf}(t_0)A$ が定まり，$M_{\rm in}$ と独立に任意調整できる自由度は持たない．本研究では $M_{\rm in}$ を深部供給を支える貯蔵層の基準量として保持し，表層はその上に形成される照射・除去の対象として区別する．
+最後に，表\ref{tab:method-param}の $M_{\rm in}$ はロッシュ限界内側の総質量を表す．一方，初期表層質量 $M_{\rm surf}(t_0)=\int 2\pi r\,\Sigma_{\rm surf}(t_0,r)\,dr$ は，式\ref{eq:sigma_surf0_from_tau0}で与えた $\tau_0$ と初期 PSD から 派生する量として扱う．したがって，$\tau_0$ を指定した基準設定では $M_{\rm surf}(t_0)\approx \Sigma_{\rm surf}(t_0)A$ が定まり，$M_{\rm in}$ と独立に任意調整できる自由度は持たない．本研究では $M_{\rm in}$ を深部供給を支える貯蔵層の基準量として保持し，表層はその上に形成される照射・除去の対象として区別する．
 
 ### 3.2 物理定数・物性値
 
-本研究で用いる主要な物理定数・惑星定数・粒子物性を表\ref{tab:method-phys}にまとめる．定数（$G,c,\sigma_{\rm SB},R$）は 2018 CODATA 推奨値に基づき採用した \citep{Tiesinga2021_RMP_CODATA2018}．火星質量 $M_{\rm Mars}$ と平均半径 $R_{\rm Mars}$ は，NASA/JPL Horizons が提供する惑星物理量（physical data）から採用した \citep{JPLHorizons}．材料依存パラメータは基準ケースではフォルステライト（$\mathrm{Mg_2SiO_4}$）を代表組成として近似し，粒子密度 $\rho$ や飽和蒸気圧式の係数などは，値と出典を対応づけて付録Aにまとめる．
+本研究で用いる主要な物理定数・惑星定数・粒子物性を表\ref{tab:method-phys}にまとめる．定数（$G,c,\sigma_{\rm SB},R$）は 2018 CODATA 推奨値に基づき採用した \citep{Tiesinga2021_RMP_CODATA2018}．火星質量 $M_{\rm Mars}$ と平均半径 $R_{\rm Mars}$ は，NASA/JPL Horizons が提供する惑星物理量（physical data）から採用した \citep{JPLHorizons}．材料依存パラメータは基準ケースではフォルステライト（$\mathrm{Mg_2SiO_4}$）を代表組成として近似し，粒子密度 $\rho$ や飽和蒸気圧式の係数などは文献の実験・コンパイル値に基づいて与える．
 
 \begin{table}[t]
   \centering
@@ -70,7 +70,7 @@ A=\pi\left(r_{\rm out}^2-r_{\rm in}^2\right)
     $\sigma_{\rm SB}$ & $5.670374419\times10^{-8}$ & W\,m$^{-2}$\,K$^{-4}$ & ステファン・ボルツマン定数（CODATA 2018） \\
     $M_{\rm Mars}$ & $6.4171\times10^{23}$ & kg & 火星質量（Horizons physical data） \\
     $R_{\rm Mars}$ & $3.38992\times10^{6}$ & m & 火星体積平均半径（Horizons physical data） \\
-    $\rho$ & 3270 & kg\,m$^{-3}$ & 粒子密度（フォルステライト；付録A） \\
+	    $\rho$ & 3270 & kg\,m$^{-3}$ & 粒子密度（フォルステライト） \\
     $R$ & 8.314462618 & J\,mol$^{-1}$\,K$^{-1}$ & 気体定数（CODATA 2018；HKL に使用） \\
     \hline
   \end{tabular}
@@ -79,8 +79,8 @@ A=\pi\left(r_{\rm out}^2-r_{\rm in}^2\right)
 
 ### 3.3 基準パラメータ
 
-基準計算の採用値を表\ref{tab:method-param}に，衝突破砕の破壊閾値比エネルギー $Q_D^*(s)$ の係数を表\ref{tab:methods_qdstar_coeffs}に示す．感度解析で変更する追加パラメータとその範囲は付録Aにまとめる．
-シミュレーションは $r\in[r_{\rm in},r_{\rm out}]$ の環状領域とし，巨大衝突により形成されるロッシュ限界内側のデブリ円盤成分を代表させる．ロッシュ限界はおよそ数 $R_{\rm Mars}$ に位置し\citep{Rosenblatt2016_NatGeo9_8}，岩石質粒子に対しては $a_R\simeq 2.7\,R_{\rm Mars}$ 程度が用いられる\citep{CanupSalmon2018_SciAdv4_eaar6887}．基準計算では $r_{\rm out}=2.7\,R_{\rm Mars}$ としてロッシュ限界付近まで計算領域を取り，ロッシュ限界外側での衛星胚形成過程は本研究の対象外とする．内側円盤の総質量 $M_{\rm in}$ はロッシュ限界内側の中層（厚い円盤成分）に対応する量として与え，基準値 $M_{\rm in}=3\times10^{-5}M_{\rm Mars}$ は，初期円盤質量に対する制約と整合する値として採用する\citep{CanupSalmon2018_SciAdv4_eaar6887}．
+基準計算の採用値を表\ref{tab:method-param}に，衝突破砕の破壊閾値比エネルギー $Q_D^*(s)$ の係数を表\ref{tab:methods_qdstar_coeffs}に示す．
+シミュレーションは $r\in[r_{\rm in},r_{\rm out}]$ の環状領域とし，巨大衝突により形成されるロッシュ限界内側のデブリ円盤成分を代表させる．ロッシュ限界はおよそ数 $R_{\rm Mars}$ に位置し\citep{Rosenblatt2016_NatGeo9_8}，岩石質粒子に対しては $a_R\simeq 2.7\,R_{\rm Mars}$ 程度が用いられる\citep{CanupSalmon2018_SciAdv4_eaar6887}．基準計算では $r_{\rm out}=2.7\,R_{\rm Mars}$ としてロッシュ限界付近まで計算領域を取り，ロッシュ限界外側での衛星胚形成過程は本研究の対象外とする．
 粒子の力学的励起度は，離心率 $e_0$ と傾斜角 $i_0$ により与える．巨大衝突直後の粒子群は強く励起され得るため，基準計算では比較的大きな $e_0$ を採用し（表\ref{tab:method-param}），その影響は感度解析で評価する．鉛直スケールハイトは $H_k=H_{\rm factor}\, i r$ とし，$H_{\rm factor}$ は幾何学的厚みの不確かさを吸収する補正因子として導入する．
 
 表層面密度の初期値は 3.1節の規格化条件（$\tau_0$）により定まり，基準計算では $\tau_0=1$ を採用する．この設定は，照射を受ける表層が視線方向光学的厚さ $\tau_{\rm los}\sim 1$ の層で代表されるという物理像に対応する\citep{TakeuchiLin2003_ApJ593_524}．
