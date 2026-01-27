@@ -14,20 +14,22 @@
   \label{fig:results_forsterite_phase_heatmap}
 \end{figure}
 
-$T_{M,0}\in\{3000,4000,5000\}\,\mathrm{K}$，$\tau_0\in\{0.5,1.0\}$，および $\epsilon_{\rm mix}\in\{1.0,1.5\}$ を組み合わせた計 $3\times2\times2=12$ ケースを計算し，$M_{\rm loss}(t)$ の終端値と停止条件の挙動を比較した．掃引に用いた主要設定を表\ref{tab:results_sweep_setup}に示す．なお，終端時刻を $T_M(t)=T_{\rm end}$ に到達する時刻として定義するため，積分時間はケースごとに一致しない．
+$T_{M,0}\in\{3000,\allowbreak 4000,\allowbreak 5000\}\,\mathrm{K}$，$\tau_0\in\{0.5,1.0\}$，および $\epsilon_{\rm mix}\in\{1.0,1.5\}$ を組み合わせた計 $3\times2\times2=12$ ケースを計算し，$M_{\rm loss}(t)$ の終端値と停止条件の挙動を比較した．掃引に用いた主要設定を表\ref{tab:results_sweep_setup}に示す．なお，終端時刻を $T_M(t)=T_{\rm end}$ に到達する時刻として定義するため，積分時間はケースごとに一致しない．
 ここで，$\tau_0$ は式\ref{eq:tau_los_definition}で定義した $\tau_{\rm los}$ の初期値を与える無次元パラメータであり，照射を受け得る表層面密度の初期スケールを規格化する．また，温度ドライバ $T_M(t)$ の時間変化は固定し，$T_{M,0}$ のみを変えることで巨大衝突直後の火星放射条件の不確実性を表す．先行研究では，巨大衝突後には火星表面温度が局所的に $5000$--$6000\,\mathrm{K}$ 程度まで上昇し，$3000$--$4000\,\mathrm{K}$ 程度の領域も広がる\citep{Hyodo2018_ApJ860_150}．本章ではこれを踏まえ，$T_{M,0}=3000$--$5000\,\mathrm{K}$ を代表範囲として採用する．
 
 \begin{table}[t]
 \centering
+\small
+\setlength{\tabcolsep}{3pt}
 \caption{本章で用いるパラメータ掃引計算の主要条件}
 \label{tab:results_sweep_setup}
-\begin{tabular}{lll p{0.46\linewidth}}
+\begin{tabular}{@{}L{0.14\linewidth} L{0.10\linewidth} L{0.18\linewidth} L{0.50\linewidth}@{}}
 \hline
 区分 & 記号 & 設定値 & 備考 \\
 \hline
 モデル次元 & --- & 1D & リング分割による半径一次元モデル \\
 空間分割 & $N_r$ & $32$ & $r/R_{\rm Mars}\in[1.0,2.7]$ \\
-温度条件 & $T_{M,0}$ & $\{3000,4000,5000\}\,\mathrm{K}$ & $T_M(t)$ の形状は固定し，初期温度のみを変更 \\
+温度条件 & $T_{M,0}$ & $\{3000,\allowbreak 4000,\allowbreak 5000\}\,\mathrm{K}$ & $T_M(t)$ の形状は固定し，初期温度のみを変更 \\
 初期光学的厚さ & $\tau_0$ & $\{0.5,1.0\}$ & $\tau_{\rm los}(t=0)$（式\ref{eq:tau_los_definition}） \\
 表層供給 & $\epsilon_{\rm mix}$ & $\{1.0,1.5\}$ & 手法章で定義した表層供給モデルの無次元係数 \\
 速度分散初期値 & $i_0$ & $0.05$ & 全ケース共通 \\
@@ -163,9 +165,11 @@ $T_{M,0}\in\{3000,4000,5000\}\,\mathrm{K}$，$\tau_0\in\{0.5,1.0\}$，および 
 
 \begin{table}[t]
 \centering
+\small
+\setlength{\tabcolsep}{3pt}
 \caption{スイープ12ケースにおける累積損失 $M_{\rm loss}(t_{\rm end})$ と停止条件}
 \label{tab:results_sweep_massloss_cases}
-\begin{tabular}{cccccc}
+\begin{tabular}{@{}L{0.11\linewidth} L{0.10\linewidth} L{0.12\linewidth} L{0.20\linewidth} L{0.14\linewidth} L{0.22\linewidth}@{}}
 \hline
 $T_{M,0}$ [K] & $\tau_0$ & $\epsilon_{\rm mix}$ & 停止理由 & $t_{\rm end}$ [yr] & $M_{\rm loss}$ [$M_{\rm Mars}$] \\
 \hline

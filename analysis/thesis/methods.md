@@ -27,25 +27,25 @@ M_{\rm in}'=M_{\rm in}(t_0)-M_{\rm loss}(t_{\rm end})
   \setlength{\tabcolsep}{4pt}
   \caption{外部入力（テーブル）とモデル内での役割}
   \label{tab:method_external_inputs}
-  \begin{tabular}{p{0.28\textwidth} p{0.50\textwidth} p{0.18\textwidth}}
+  \begin{tabular}{@{}L{0.28\textwidth} L{0.50\textwidth} L{0.18\textwidth}@{}}
     \hline
     外部入力 & 役割（モデル内での使い方） & 設定キー（代表） \\
     \hline
     火星温度履歴 $T_M(t)$ &
     放射圧（$\beta,\,s_{\rm blow}$）と昇華の外部ドライバ &
-    \texttt{radiation.mars\_temperature\_driver.*} \\
+    \texttt{radiation.\allowbreak mars\_\allowbreak temperature\_\allowbreak driver.\allowbreak *} \\
     Planck 平均 $\langle Q_{\rm pr}\rangle(s,T_M)$ &
     放射圧効率として $\beta$ と $s_{\rm blow}$ を決める &
-    \texttt{radiation.qpr\_table\_path} \\
+    \texttt{radiation.\allowbreak qpr\_\allowbreak table\_\allowbreak path} \\
     遮蔽係数 $\Phi$ &
     $\kappa_{\rm eff}=\Phi\kappa_{\rm surf}$ を通じて自己遮蔽を表現する（遮蔽有効時） &
-    \texttt{shielding.table\_path} \\
+    \texttt{shielding.\allowbreak table\_\allowbreak path} \\
     供給率テーブル $\dot{\Sigma}_{\rm in}(t)$（任意） &
     表層供給率を外部から与える（\texttt{supply.mode=table} のとき） &
-    \texttt{supply.table.path} \\
+    \texttt{supply.\allowbreak table.\allowbreak path} \\
     飽和蒸気圧テーブル $P_{\rm sat}(T)$（任意） &
     昇華フラックスの入力として飽和蒸気圧をテーブル補間で与える &
-    \texttt{sinks.sub\_params.psat\_table\_path} \\
+    \texttt{sinks.\allowbreak sub\_\allowbreak params.\allowbreak psat\_\allowbreak table\_\allowbreak path} \\
     \hline
   \end{tabular}
 \end{table}
@@ -420,11 +420,12 @@ $\kappa_{\rm eff}$ は，PSD が与える質量不透明度 $\kappa_{\rm surf}$ 
 基準計算の初期 PSD は，巨大衝突後に形成される溶融滴成分と微細粒子成分の共存を，2成分の対数正規分布の混合で近似した melt lognormal mixture とする\citep{Hyodo2017a_ApJ845_125}．初期 PSD の質量分布形状を $w_{\rm melt}(s)$ として
 \begin{equation}
 \label{eq:initial_psd_lognormal_mixture}
-w_{\rm melt}(s)\propto
-(1-f_{\rm fine})\exp\!\left[-\frac{1}{2}\left(\frac{\ln(s/s_{\rm meter})}{\sigma_{\ln}}\right)^2\right]
-+f_{\rm fine}\exp\!\left[-\frac{1}{2}\left(\frac{\ln(s/s_{\rm fine})}{\sigma_{\ln}}\right)^2\right],
-\qquad
-\sigma_{\ln}={\rm width}_{\rm dex}\ln 10
+\begin{aligned}
+w_{\rm melt}(s)\propto {} &
+(1-f_{\rm fine})\exp\!\left[-\frac{1}{2}\left(\frac{\ln(s/s_{\rm meter})}{\sigma_{\ln}}\right)^2\right] \\
+& + f_{\rm fine}\exp\!\left[-\frac{1}{2}\left(\frac{\ln(s/s_{\rm fine})}{\sigma_{\ln}}\right)^2\right], \\
+\sigma_{\ln} = {} & {\rm width}_{\rm dex}\ln 10
+\end{aligned}
 \end{equation}
 で与える．この形は，代表的な溶融滴と微細粒子の二峰性を，有限個のパラメータで取り扱うための近似である．採用値は表\ref{tab:methods_initial_psd_params}に示す．
 
@@ -452,10 +453,10 @@ A=\pi\left(r_{\rm out}^2-r_{\rm in}^2\right)
 \begin{table}[t]
   \centering
   \small
-  \setlength{\tabcolsep}{4pt}
+  \setlength{\tabcolsep}{3pt}
   \caption{物理定数・惑星定数・粒子物性（基準計算）}
   \label{tab:method-phys}
-  \begin{tabular}{p{0.30\textwidth} p{0.22\textwidth} p{0.12\textwidth} p{0.26\textwidth}}
+  \begin{tabular}{@{}L{0.24\textwidth} L{0.18\textwidth} L{0.14\textwidth} L{0.36\textwidth}@{}}
     \hline
     記号 & 値 & 単位 & 備考 \\
     \hline
@@ -464,7 +465,7 @@ A=\pi\left(r_{\rm out}^2-r_{\rm in}^2\right)
     $\sigma_{\rm SB}$ & $5.670374419\times10^{-8}$ & W\,m$^{-2}$\,K$^{-4}$ & ステファン・ボルツマン定数（CODATA 2018） \\
     $M_{\rm Mars}$ & $6.4171\times10^{23}$ & kg & 火星質量（Horizons physical data） \\
     $R_{\rm Mars}$ & $3.38992\times10^{6}$ & m & 火星体積平均半径（Horizons physical data） \\
-	    $\rho$ & 3270 & kg\,m$^{-3}$ & 粒子密度（フォルステライト） \\
+    $\rho$ & 3270 & kg\,m$^{-3}$ & 粒子密度（フォルステライト） \\
     $R$ & 8.314462618 & J\,mol$^{-1}$\,K$^{-1}$ & 気体定数（CODATA 2018；HKL に使用） \\
     \hline
   \end{tabular}
@@ -649,7 +650,7 @@ dt_{\rm eff}\leftarrow \min\!\left(\Delta t,\, f_{\rm safe}\min_k t_{{\rm coll},
   \setlength{\tabcolsep}{4pt}
   \caption{再解析に必要な出力（\texttt{OUTDIR/}）}
   \label{tab:method_repro_outputs}
-  \begin{tabular}{p{0.30\textwidth} p{0.14\textwidth} p{0.52\textwidth}}
+\begin{tabular}{@{}L{0.30\textwidth} L{0.14\textwidth} L{0.52\textwidth}@{}}
     \hline
     相対パス & 形式 & 内容（要点） \\
     \hline
@@ -671,7 +672,7 @@ dt_{\rm eff}\leftarrow \min\!\left(\Delta t,\, f_{\rm safe}\min_k t_{{\rm coll},
     \texttt{series/diagnostics.parquet} &
     Parquet &
     （任意）遮蔽などの追加診断（設定により出力） \\
-    \texttt{checks/mass\_budget\_cells.csv} &
+    \texttt{checks/\allowbreak mass\_budget\_cells.csv} &
     CSV &
     （任意, 1D）セル別の質量検査ログ（設定により出力） \\
     \texttt{checks/validation.json} &
@@ -736,134 +737,913 @@ title: 記号表（論文内参照の正）
 実装(.py): marsdisk/schema.py, marsdisk/physics/initfields.py, marsdisk/run_zero_d.py, marsdisk/run_one_d.py
 -->
 
-## 付録 B. 記号表
+## 付録 A. 記号表
 
-### B.1 主要記号（本研究のダスト円盤モデル）
+### A.1 主要記号（本研究のダスト円盤モデル）
 
-\begin{center}
-  \small
-  \setlength{\tabcolsep}{4pt}
-  \captionof{table}{主要記号表（本研究で用いる記号と単位）}
-  \label{tab:app_symbols_main}
-  \begin{tabular}{p{0.18\linewidth}p{0.44\linewidth}p{0.12\linewidth}p{0.18\linewidth}}
-	    \hline
-	    記号 & 意味 & 単位 & 備考 \\
-	    \hline
-	    $t$ & 時刻 & $\mathrm{s}$ & 解析では年へ換算して表示する場合がある \\
-	    $r$ & 半径（代表半径） & $\mathrm{m}$ & 0D では代表値のみを用いる \\
-	    $r_{\rm in},r_{\rm out}$ & 計算領域の内端・外端半径 & $\mathrm{m}$ & 環状領域 $[r_{\rm in},r_{\rm out}]$ \\
-	    $A$ & 環状領域の面積 & $\mathrm{m^{2}}$ & 式\ref{eq:annulus_area_definition} \\
-	    $A_\ell$ & セル $\ell$ の面積 & $\mathrm{m^{2}}$ & 1D の半径セル（リング）ごとの面積 \\
-	    $M_{\rm in}$ & ロッシュ限界内側の内側円盤質量 & $\mathrm{kg}$ & 入力（3.1節） \\
-		    $\Delta M_{\rm in}$ & 遷移期における不可逆損失（累積） & $\mathrm{kg}$ & 本論文では $M_{\rm loss}$ と同義 \\
-		    $M_{\rm in}'$ & 更新後の内側円盤質量（長期モデルへ渡す量） & $\mathrm{kg}$ & $M_{\rm in}'=M_{\rm in}(t_0)-M_{\rm loss}(t_{\rm end})$ \\
-	    $\Omega$ & ケプラー角速度 & $\mathrm{s^{-1}}$ & 式\ref{eq:omega_definition} \\
-	    $T_{\rm orb}$ & 公転周期 & $\mathrm{s}$ & 式\ref{eq:torb_definition} \\
-	    $v_K$ & ケプラー速度 & $\mathrm{m\,s^{-1}}$ & 式\ref{eq:vK_definition} \\
-    $s$ & 粒子半径 & $\mathrm{m}$ & PSD の独立変数 \\
-	    $n(s)$ & 粒径分布（形状） & -- & 正規化された分布として扱う \\
-	    $N_k$ & ビン $k$ の数密度（面数密度） & $\mathrm{m^{-2}}$ & Smol 解法の主状態 \\
-    $m_k$ & ビン $k$ の粒子質量 & $\mathrm{kg}$ & 粒径から球形近似で導出 \\
-	    $\rho$ & 粒子密度 & $\mathrm{kg\,m^{-3}}$ & 表\ref{tab:method-phys} \\
-    $Y_{kij}$ & 衝突 $(i,j)$ による破片生成の質量分率（ビン $k$ への配分） & -- & $\sum_k Y_{kij}=1$（式\ref{eq:fragment_yield_normalization}） \\
-    $F_k$ & 供給ソース項（サイズビン $k$ への注入率） & $\mathrm{m^{-2}\,s^{-1}}$ & 式\ref{eq:smoluchowski} \\
-		    $S_k$ & 追加シンクの実効ロス率 & $\mathrm{s^{-1}}$ & 式\ref{eq:smoluchowski} \\
-				    $\Sigma_{\rm surf}$ & 表層の面密度 & $\mathrm{kg\,m^{-2}}$ & 放射圧・昇華・衝突が作用する層 \\
-			    $\kappa_{\rm surf}$ & 表層の質量不透明度 & $\mathrm{m^{2}\,kg^{-1}}$ & PSD から評価 \\
-			    $\tau_\perp$ & 鉛直方向の光学的厚さ（近似） & -- & $\tau_\perp=\kappa_{\rm surf}\Sigma_{\rm surf}$ \\
-			    $\Phi$ & 自遮蔽係数 & -- & 遮蔽有効時に $\kappa_{\rm eff}=\Phi\kappa_{\rm surf}$ \\
-			    $\omega_0$ & 単一散乱アルベド（遮蔽テーブル入力） & -- & $\Phi(\tau,\omega_0,g)$ の入力 \\
-			    $g$ & 非対称因子（遮蔽テーブル入力） & -- & $g=\langle\cos\theta\rangle$；$\Phi(\tau,\omega_0,g)$ の入力 \\
-	    $\kappa_{\rm eff}$ & 有効不透明度 & $\mathrm{m^{2}\,kg^{-1}}$ & 式\ref{eq:kappa_eff_definition} \\
-			    $f_{\rm los}$ & 鉛直光学的厚さ $\tau_\perp$ を $\tau_{\rm los}$ へ写像する幾何因子 & -- & $\tau_{\rm los}=f_{\rm los}\kappa_{\rm surf}\Sigma_{\rm surf}$ \\
-			    $\tau_{\rm los}$ & 火星視線方向光学的厚さ（近似） & -- & 式\ref{eq:tau_los_definition}; 遮蔽評価・初期規格化・停止判定に用いる \\
-			    $\tau_0$ & 初期視線方向光学的厚さ（規格化値） & -- & 3.1節 \\
-			    $\tau_{\rm stop}$ & 停止判定の閾値（$\tau_{\rm los}>\tau_{\rm stop}$） & -- & 4.2節 \\
-			    $\Sigma_{\tau_{\rm los}=1}$ & $\tau_{\rm los}=1$ に対応する参照面密度 & $\mathrm{kg\,m^{-2}}$ & 式\ref{eq:sigma_tau_los1_definition}（$\Sigma_{\tau_{\rm los}=1}=(f_{\rm los}\kappa_{\rm surf})^{-1}$） \\
-		    $\Sigma_{\tau=1}$ & 光学的厚さ $\tau=1$ に対応する表層面密度（診断量） & $\mathrm{kg\,m^{-2}}$ & 式\ref{eq:sigma_tau1_definition} \\
-		    \hline
-	  \end{tabular}
-\end{center}
+\begin{longtable}{@{}L{0.17\linewidth}L{0.43\linewidth}L{0.12\linewidth}L{0.18\linewidth}@{}}
+  \caption{主要記号表（本研究で用いる記号と単位）}\label{tab:app_symbols_main}\\
+  \noalign{\small\setlength{\tabcolsep}{3pt}}
+  \hline
+  記号 & 意味 & 単位 & 備考 \\
+  \hline
+  \endfirsthead
+  \hline
+  記号 & 意味 & 単位 & 備考 \\
+  \hline
+  \endhead
+  \hline
+  \multicolumn{4}{r}{次ページへ続く}\\
+  \hline
+  \endfoot
+  \hline
+  \endlastfoot
+  $t$ & 時刻 & $\mathrm{s}$ & 解析では年へ換算して表示する場合がある \\
+  $r$ & 半径（代表半径） & $\mathrm{m}$ & 0D では代表値のみを用いる \\
+  $r_{\rm in},r_{\rm out}$ & 計算領域の内端・外端半径 & $\mathrm{m}$ & 環状領域 $[r_{\rm in},r_{\rm out}]$ \\
+  $A$ & 環状領域の面積 & $\mathrm{m^{2}}$ & 式\ref{eq:annulus_area_definition} \\
+  $A_\ell$ & セル $\ell$ の面積 & $\mathrm{m^{2}}$ & 1D の半径セル（リング）ごとの面積 \\
+  $M_{\rm in}$ & ロッシュ限界内側の内側円盤質量 & $\mathrm{kg}$ & 入力（3.1節） \\
+  $\Delta M_{\rm in}$ & 遷移期における不可逆損失（累積） & $\mathrm{kg}$ & 本論文では $M_{\rm loss}$ と同義 \\
+  $M_{\rm in}'$ & 更新後の内側円盤質量（長期モデルへ渡す量） & $\mathrm{kg}$ & $M_{\rm in}'=M_{\rm in}(t_0)-M_{\rm loss}(t_{\rm end})$ \\
+  $\Omega$ & ケプラー角速度 & $\mathrm{s^{-1}}$ & 式\ref{eq:omega_definition} \\
+  $T_{\rm orb}$ & 公転周期 & $\mathrm{s}$ & 式\ref{eq:torb_definition} \\
+  $v_K$ & ケプラー速度 & $\mathrm{m\,s^{-1}}$ & 式\ref{eq:vK_definition} \\
+  $s$ & 粒子半径 & $\mathrm{m}$ & PSD の独立変数 \\
+  $n(s)$ & 粒径分布（形状） & -- & 正規化された分布として扱う \\
+  $N_k$ & ビン $k$ の数密度（面数密度） & $\mathrm{m^{-2}}$ & Smol 解法の主状態 \\
+  $m_k$ & ビン $k$ の粒子質量 & $\mathrm{kg}$ & 粒径から球形近似で導出 \\
+  $\rho$ & 粒子密度 & $\mathrm{kg\,m^{-3}}$ & 表\ref{tab:method-phys} \\
+  $Y_{kij}$ & 衝突 $(i,j)$ による破片生成の質量分率（ビン $k$ への配分） & -- & $\sum_k Y_{kij}=1$（式\ref{eq:fragment_yield_normalization}） \\
+  $F_k$ & 供給ソース項（サイズビン $k$ への注入率） & $\mathrm{m^{-2}\,s^{-1}}$ & 式\ref{eq:smoluchowski} \\
+  $S_k$ & 追加シンクの実効ロス率 & $\mathrm{s^{-1}}$ & 式\ref{eq:smoluchowski} \\
+  $\Sigma_{\rm surf}$ & 表層の面密度 & $\mathrm{kg\,m^{-2}}$ & 放射圧・昇華・衝突が作用する層 \\
+  $\kappa_{\rm surf}$ & 表層の質量不透明度 & $\mathrm{m^{2}\,kg^{-1}}$ & PSD から評価 \\
+  $\tau_\perp$ & 鉛直方向の光学的厚さ（近似） & -- & $\tau_\perp=\kappa_{\rm surf}\Sigma_{\rm surf}$ \\
+  $\Phi$ & 自遮蔽係数 & -- & 遮蔽有効時に $\kappa_{\rm eff}=\Phi\kappa_{\rm surf}$ \\
+  $\omega_0$ & 単一散乱アルベド（遮蔽テーブル入力） & -- & $\Phi(\tau,\omega_0,g)$ の入力 \\
+  $g$ & 非対称因子（遮蔽テーブル入力） & -- & $g=\langle\cos\theta\rangle$；$\Phi(\tau,\omega_0,g)$ の入力 \\
+  $\kappa_{\rm eff}$ & 有効不透明度 & $\mathrm{m^{2}\,kg^{-1}}$ & 式\ref{eq:kappa_eff_definition} \\
+  $f_{\rm los}$ & 鉛直光学的厚さ $\tau_\perp$ を $\tau_{\rm los}$ へ写像する幾何因子 & -- & $\tau_{\rm los}=f_{\rm los}\kappa_{\rm surf}\Sigma_{\rm surf}$ \\
+  $\tau_{\rm los}$ & 火星視線方向光学的厚さ（近似） & -- & 式\ref{eq:tau_los_definition}; 遮蔽評価・初期規格化・停止判定に用いる \\
+  $\tau_0$ & 初期視線方向光学的厚さ（規格化値） & -- & 3.1節 \\
+  $\tau_{\rm stop}$ & 停止判定の閾値（$\tau_{\rm los}>\tau_{\rm stop}$） & -- & 4.2節 \\
+  $\Sigma_{\tau_{\rm los}=1}$ & $\tau_{\rm los}=1$ に対応する参照面密度 & $\mathrm{kg\,m^{-2}}$ & 式\ref{eq:sigma_tau_los1_definition}（$\Sigma_{\tau_{\rm los}=1}=(f_{\rm los}\kappa_{\rm surf})^{-1}$） \\
+  $\Sigma_{\tau=1}$ & 光学的厚さ $\tau=1$ に対応する表層面密度（診断量） & $\mathrm{kg\,m^{-2}}$ & 式\ref{eq:sigma_tau1_definition} \\
+\end{longtable}
 
-\begin{center}
-  \small
-  \setlength{\tabcolsep}{4pt}
-  \captionof{table}{主要記号表（続き）}
-  \label{tab:app_symbols_main_cont}
-  \begin{tabular}{p{0.18\linewidth}p{0.44\linewidth}p{0.12\linewidth}p{0.18\linewidth}}
-	    \hline
-	    記号 & 意味 & 単位 & 備考 \\
-	    \hline
-	    $T_M$ & 火星表面温度 & $\mathrm{K}$ & 放射・昇華の入力 \\
-	    $\langle Q_{\rm abs}\rangle$ & 粒子温度評価に用いる有効吸収効率 & -- & 式\ref{eq:grain_temperature_definition} \\
-	    $\langle Q_{\rm pr}\rangle$ & Planck 平均放射圧効率 & -- & テーブル入力 \\
-		    $\beta$ & 軽さ指標（放射圧/重力） & -- & 式\ref{eq:beta_definition}; $\beta>0.5$ で非束縛 \\
-		    $s_{\rm blow}$ & ブローアウト粒径 & $\mathrm{m}$ & 式\ref{eq:s_blow_definition} \\
-		    $t_{\rm blow}$ & ブローアウト滞在時間 & $\mathrm{s}$ & 式\ref{eq:t_blow_definition} \\
-		    $\chi_{\rm blow}$ & ブローアウト滞在時間係数 & -- & 式\ref{eq:t_blow_definition}; \texttt{auto} は式\ref{eq:chi_blow_auto_definition} \\
-		    $\dot{\Sigma}_{\rm out}$ & 表層流出（面密度フラックス） & $\mathrm{kg\,m^{-2}\,s^{-1}}$ & 式\ref{eq:surface_outflux} \\
-		    $\dot{M}_{\rm out}$ & 円盤全体の質量流出率 & $\mathrm{kg\,s^{-1}}$ & 式\ref{eq:mdot_out_definition}（出力は $\dot{M}_{\rm out}/M_{\rm Mars}$ を記録） \\
-		    $M_{\rm loss}$ & 累積損失 & $\mathrm{kg}$ & $\dot{M}_{\rm out}$ 等を積分（出力は $M_{\rm loss}/M_{\rm Mars}$ を記録） \\
-		    $R_{\rm base}$ & 供給の基底レート & $\mathrm{kg\,m^{-2}\,s^{-1}}$ & 式\ref{eq:R_base_definition} \\
-		    $\epsilon_{\rm mix}$ & 混合係数（供給の有効度） & -- & 2.3節 \\
-		    $\mu_{\rm sup}$ & 供給スケール（無次元） & -- & 式\ref{eq:R_base_definition} \\
-		    $f_{\rm orb}$ & $\mu_{\rm sup}=1$ のときの 1 軌道あたり供給比率 & -- & 式\ref{eq:R_base_definition} \\
-		    $\tau_{\rm ref}$ & 供給スケール参照光学的厚さ & -- & 式\ref{eq:R_base_definition} \\
-		    $C_{ij}$ & 衝突イベント率（単位面積あたり，$N_iN_j$ を含む） & $\mathrm{m^{-2}\,s^{-1}}$ & 式\ref{eq:collision_kernel} \\
-		    $v_{ij}$ & 相対速度 & $\mathrm{m\,s^{-1}}$ & 式\ref{eq:vrel_pericenter_definition} \\
-		    $e, i$ & 離心率・傾斜角（分散） & -- & 相対速度の評価に用いる \\
-		    $Q_D^*$ & 破壊閾値（比エネルギー） & $\mathrm{J\,kg^{-1}}$ & 式\ref{eq:qdstar_definition} \\
-		    $Q_R$ & reduced specific kinetic energy & $\mathrm{J\,kg^{-1}}$ & 式\ref{eq:q_r_definition} \\
-			    $F_{LF}$ & 最大残存率（最大残存体質量/総質量） & -- & 式\ref{eq:F_LF_definition} \\
-			    $\mu_{\rm LS}$ & 速度外挿に用いる指数 & -- & $v^{-3\mu_{\rm LS}+2}$（既定 0.45） \\
-			    $\alpha_{\rm evap}$ & 蒸発（固相では昇華）係数（HKL） & -- & 式\ref{eq:hkl_flux} \\
-			    $\mu$ & 分子量（HKL） & $\mathrm{kg\,mol^{-1}}$ & 式\ref{eq:hkl_flux} \\
-			    \hline
-	  \end{tabular}
-\end{center}
+\begin{longtable}{@{}L{0.17\linewidth}L{0.43\linewidth}L{0.12\linewidth}L{0.18\linewidth}@{}}
+  \caption{主要記号表（続き）}\label{tab:app_symbols_main_cont}\\
+  \noalign{\small\setlength{\tabcolsep}{3pt}}
+  \hline
+  記号 & 意味 & 単位 & 備考 \\
+  \hline
+  \endfirsthead
+  \hline
+  記号 & 意味 & 単位 & 備考 \\
+  \hline
+  \endhead
+  \hline
+  \multicolumn{4}{r}{次ページへ続く}\\
+  \hline
+  \endfoot
+  \hline
+  \endlastfoot
+  $T_M$ & 火星表面温度 & $\mathrm{K}$ & 放射・昇華の入力 \\
+  $\langle Q_{\rm abs}\rangle$ & 粒子温度評価に用いる有効吸収効率 & -- & 式\ref{eq:grain_temperature_definition} \\
+  $\langle Q_{\rm pr}\rangle$ & Planck 平均放射圧効率 & -- & テーブル入力 \\
+  $\beta$ & 軽さ指標（放射圧/重力） & -- & 式\ref{eq:beta_definition}; $\beta>0.5$ で非束縛 \\
+  $s_{\rm blow}$ & ブローアウト粒径 & $\mathrm{m}$ & 式\ref{eq:s_blow_definition} \\
+  $t_{\rm blow}$ & ブローアウト滞在時間 & $\mathrm{s}$ & 式\ref{eq:t_blow_definition} \\
+  $\chi_{\rm blow}$ & ブローアウト滞在時間係数 & -- & 式\ref{eq:t_blow_definition}; \texttt{auto} は式\ref{eq:chi_blow_auto_definition} \\
+  $\dot{\Sigma}_{\rm out}$ & 表層流出（面密度フラックス） & $\mathrm{kg\,m^{-2}\,s^{-1}}$ & 式\ref{eq:surface_outflux} \\
+  $\dot{M}_{\rm out}$ & 円盤全体の質量流出率 & $\mathrm{kg\,s^{-1}}$ & 式\ref{eq:mdot_out_definition}（出力は $\dot{M}_{\rm out}/M_{\rm Mars}$ を記録） \\
+  $M_{\rm loss}$ & 累積損失 & $\mathrm{kg}$ & $\dot{M}_{\rm out}$ 等を積分（出力は $M_{\rm loss}/M_{\rm Mars}$ を記録） \\
+  $R_{\rm base}$ & 供給の基底レート & $\mathrm{kg\,m^{-2}\,s^{-1}}$ & 式\ref{eq:R_base_definition} \\
+  $\epsilon_{\rm mix}$ & 混合係数（供給の有効度） & -- & 2.3節 \\
+  $\mu_{\rm sup}$ & 供給スケール（無次元） & -- & 式\ref{eq:R_base_definition} \\
+  $f_{\rm orb}$ & $\mu_{\rm sup}=1$ のときの 1 軌道あたり供給比率 & -- & 式\ref{eq:R_base_definition} \\
+  $\tau_{\rm ref}$ & 供給スケール参照光学的厚さ & -- & 式\ref{eq:R_base_definition} \\
+  $C_{ij}$ & 衝突イベント率（単位面積あたり，$N_iN_j$ を含む） & $\mathrm{m^{-2}\,s^{-1}}$ & 式\ref{eq:collision_kernel} \\
+  $v_{ij}$ & 相対速度 & $\mathrm{m\,s^{-1}}$ & 式\ref{eq:vrel_pericenter_definition} \\
+  $e, i$ & 離心率・傾斜角（分散） & -- & 相対速度の評価に用いる \\
+  $Q_D^*$ & 破壊閾値（比エネルギー） & $\mathrm{J\,kg^{-1}}$ & 式\ref{eq:qdstar_definition} \\
+  $Q_R$ & reduced specific kinetic energy & $\mathrm{J\,kg^{-1}}$ & 式\ref{eq:q_r_definition} \\
+  $F_{LF}$ & 最大残存率（最大残存体質量/総質量） & -- & 式\ref{eq:F_LF_definition} \\
+  $\mu_{\rm LS}$ & 速度外挿に用いる指数 & -- & $v^{-3\mu_{\rm LS}+2}$（既定 0.45） \\
+  $\alpha_{\rm evap}$ & 蒸発（固相では昇華）係数（HKL） & -- & 式\ref{eq:hkl_flux} \\
+  $\mu$ & 分子量（HKL） & $\mathrm{kg\,mol^{-1}}$ & 式\ref{eq:hkl_flux} \\
+\end{longtable}
 
-### B.2 主要定数と惑星パラメータ（参照）
+### A.2 主要定数と惑星パラメータ（参照）
 
-\begin{center}
-  \small
-  \setlength{\tabcolsep}{4pt}
-  \captionof{table}{主要定数と惑星パラメータ}
-  \label{tab:app_symbols_constants}
-  \begin{tabular}{p{0.18\linewidth}p{0.44\linewidth}p{0.18\linewidth}p{0.12\linewidth}}
-	    \hline
-	    記号 & 意味 & 単位 & 備考 \\
-	    \hline
-	    $G$ & 万有引力定数 & $\mathrm{m^{3}\,kg^{-1}\,s^{-2}}$ & 表\ref{tab:method-phys} \\
-	    $c$ & 光速 & $\mathrm{m\,s^{-1}}$ & 表\ref{tab:method-phys} \\
-	    $\sigma_{\rm SB}$ & ステファン--ボルツマン定数 & $\mathrm{W\,m^{-2}\,K^{-4}}$ & 表\ref{tab:method-phys} \\
-	    $R$ & 気体定数 & $\mathrm{J\,mol^{-1}\,K^{-1}}$ & 表\ref{tab:method-phys} \\
-	    $M_{\rm Mars}$ & 火星質量 & $\mathrm{kg}$ & 表\ref{tab:method-phys} \\
-	    $R_{\rm Mars}$ & 火星半径 & $\mathrm{m}$ & 表\ref{tab:method-phys} \\
-	    \hline
-	  \end{tabular}
-\end{center}
+\begin{longtable}{@{}L{0.17\linewidth}L{0.43\linewidth}L{0.18\linewidth}L{0.12\linewidth}@{}}
+  \caption{主要定数と惑星パラメータ}\label{tab:app_symbols_constants}\\
+  \noalign{\small\setlength{\tabcolsep}{3pt}}
+  \hline
+  記号 & 意味 & 単位 & 備考 \\
+  \hline
+  \endfirsthead
+  \hline
+  記号 & 意味 & 単位 & 備考 \\
+  \hline
+  \endhead
+  \hline
+  \multicolumn{4}{r}{次ページへ続く}\\
+  \hline
+  \endfoot
+  \hline
+  \endlastfoot
+  $G$ & 万有引力定数 & $\mathrm{m^{3}\,kg^{-1}\,s^{-2}}$ & 表\ref{tab:method-phys} \\
+  $c$ & 光速 & $\mathrm{m\,s^{-1}}$ & 表\ref{tab:method-phys} \\
+  $\sigma_{\rm SB}$ & ステファン--ボルツマン定数 & $\mathrm{W\,m^{-2}\,K^{-4}}$ & 表\ref{tab:method-phys} \\
+  $R$ & 気体定数 & $\mathrm{J\,mol^{-1}\,K^{-1}}$ & 表\ref{tab:method-phys} \\
+  $M_{\rm Mars}$ & 火星質量 & $\mathrm{kg}$ & 表\ref{tab:method-phys} \\
+  $R_{\rm Mars}$ & 火星半径 & $\mathrm{m}$ & 表\ref{tab:method-phys} \\
+\end{longtable}
 
-### B.3 略語索引
+### A.3 略語索引
 
-\begin{center}
-  \captionof{table}{略語索引}
-  \label{tab:app_abbreviations}
-  \begin{tabular}{p{0.18\textwidth} p{0.44\textwidth} p{0.28\textwidth}}
-    \hline
-    略語 & 日本語 / 英語 & 備考 \\
-    \hline
-    PSD & 粒径分布 / particle size distribution & サイズビン分布 $n(s)$ \\
-    LOS & 視線方向 / line of sight & $\tau_{\rm los}$ に対応 \\
-    IMEX & implicit-explicit & IMEX-BDF(1) に使用 \\
-    BDF & backward differentiation formula & 一次 BDF \\
-    $Q_{\rm pr}$ & 放射圧効率 / radiation pressure efficiency & テーブル入力 \\
-    $Q_D^*$ & 破壊閾値 / critical specific energy & 破壊強度 \\
-    HKL & Hertz--Knudsen--Langmuir & 昇華フラックス \\
-    PR & ポインティング--ロバートソン / Poynting--Robertson & PR ドラッグ \\
-    Mie & ミー散乱 / Mie scattering & $Q_{\rm pr}$ テーブル生成に使用 \\
-    RT & 放射輸送 / radiative transfer & 遮蔽 $\Phi$ の近似に関係 \\
-    RM & 火星半径 / Mars radii & $r_{\rm in},r_{\rm out}$ の規格化に使用 \\
-    1D & one-dimensional & 半径方向セル分割（リング分割） \\
-    \hline
-  \end{tabular}
-\end{center}
+\begin{longtable}{@{}L{0.18\textwidth}L{0.44\textwidth}L{0.28\textwidth}@{}}
+  \caption{略語索引}\label{tab:app_abbreviations}\\
+  \noalign{\small\setlength{\tabcolsep}{3pt}}
+  \hline
+  略語 & 日本語 / 英語 & 備考 \\
+  \hline
+  \endfirsthead
+  \hline
+  略語 & 日本語 / 英語 & 備考 \\
+  \hline
+  \endhead
+  \hline
+  \multicolumn{3}{r}{次ページへ続く}\\
+  \hline
+  \endfoot
+  \hline
+  \endlastfoot
+  PSD & 粒径分布 / particle size distribution & サイズビン分布 $n(s)$ \\
+  LOS & 視線方向 / line of sight & $\tau_{\rm los}$ に対応 \\
+  IMEX & implicit-explicit & IMEX-BDF(1) に使用 \\
+  BDF & backward differentiation formula & 一次 BDF \\
+  $Q_{\rm pr}$ & 放射圧効率 / radiation pressure efficiency & テーブル入力 \\
+  $Q_D^*$ & 破壊閾値 / critical specific energy & 破壊強度 \\
+  HKL & Hertz--Knudsen--Langmuir & 昇華フラックス \\
+  PR & ポインティング--ロバートソン / Poynting--Robertson & PR ドラッグ \\
+  Mie & ミー散乱 / Mie scattering & $Q_{\rm pr}$ テーブル生成に使用 \\
+  RT & 放射輸送 / radiative transfer & 遮蔽 $\Phi$ の近似に関係 \\
+  RM & 火星半径 / Mars radii & $r_{\rm in},r_{\rm out}$ の規格化に使用 \\
+  1D & one-dimensional & 半径方向セル分割（リング分割） \\
+\end{longtable}
+<!--
+document_type: reference
+title: 主要物理過程のコード
+-->
+
+<!--
+実装(.py): marsdisk/physics/radiation.py, marsdisk/physics/shielding.py, marsdisk/physics/collide.py, marsdisk/physics/smol.py, marsdisk/physics/surface.py
+-->
+
+## 付録 B. 主要物理過程のコード
+
+本文で用いた主要物理過程の実装を，代表的な関数単位で掲載する．可読性のため，import 文や周辺の補助関数は省略し，該当部分のみを抜粋して示す．
+
+### B.1 放射圧とブローアウト（R2–R3）
+
+\begin{Verbatim}[breaklines=true, breakanywhere=true, fontsize=\small]
+# marsdisk/physics/radiation.py
+
+def beta(
+    s: float,
+    rho: Optional[float],
+    T_M: Optional[float],
+    Q_pr: Optional[float] = None,
+    table: type_QPr | None = None,
+    interp: type_QPr | None = None,
+) -> float:
+    """Compute the ratio ``β`` of radiation pressure to gravity (R2). [@StrubbeChiang2006_ApJ648_652]
+
+    The expression follows directly from conservation of momentum using the
+    luminosity of Mars ``L_M = 4π R_M^2 σ T_M^4`` and reads
+
+    ``β = 3 L_M ⟨Q_pr⟩ / (16 π c G M_M ρ s)``.
+    """
+    s_val = _validate_size(s)
+    rho_val = _validate_density(rho)
+    T_val = _validate_temperature(T_M)
+    qpr = _resolve_qpr(s_val, T_val, Q_pr, table, interp)
+    numerator = 3.0 * constants.SIGMA_SB * (T_val**4) * (constants.R_MARS**2) * qpr
+    denominator = 4.0 * constants.G * constants.M_MARS * constants.C * rho_val * s_val
+    return float(numerator / denominator)
+
+
+def blowout_radius(
+    rho: Optional[float],
+    T_M: Optional[float],
+    Q_pr: Optional[float] = None,
+    table: type_QPr | None = None,
+    interp: type_QPr | None = None,
+) -> float:
+    """Return the blow-out grain size ``s_blow`` for ``β = 0.5`` (R3). [@StrubbeChiang2006_ApJ648_652]"""
+
+    global _NUMBA_FAILED
+    rho_val = _validate_density(rho)
+    T_val = _validate_temperature(T_M)
+    if Q_pr is not None:
+        qpr = _resolve_qpr(1.0, T_val, Q_pr, table, interp)
+        if _USE_NUMBA_RADIATION and not _NUMBA_FAILED:
+            try:
+                return float(blowout_radius_numba(rho_val, T_val, qpr))
+            except Exception as exc:
+                _NUMBA_FAILED = True
+                warnings.warn(
+                    f"blowout radius numba kernel failed ({exc!r}); falling back to NumPy.",
+                    NumericalWarning,
+                )
+        numerator = 3.0 * constants.SIGMA_SB * (T_val**4) * (constants.R_MARS**2) * qpr
+        denominator = 2.0 * constants.G * constants.M_MARS * constants.C * rho_val
+        return float(numerator / denominator)
+
+    coef = (
+        3.0
+        * constants.SIGMA_SB
+        * (T_val**4)
+        * (constants.R_MARS**2)
+        / (2.0 * constants.G * constants.M_MARS * constants.C * rho_val)
+    )
+    s_val = coef * _resolve_qpr(1.0, T_val, None, table, interp)
+    for _ in range(8):
+        qpr_val = _resolve_qpr(s_val, T_val, None, table, interp)
+        s_new = coef * qpr_val
+        if not np.isfinite(s_new) or s_new <= 0.0:
+            break
+        if abs(s_new - s_val) <= 1.0e-6 * max(s_new, 1.0e-30):
+            s_val = s_new
+            break
+        s_val = s_new
+    return float(s_val)
+\end{Verbatim}
+
+### B.2 自遮蔽と光学的厚さ（S0）
+
+\begin{Verbatim}[breaklines=true, breakanywhere=true, fontsize=\small]
+# marsdisk/physics/shielding.py
+
+def sigma_tau1(kappa_eff: float) -> float:
+    """Return Σ_{τ=1} derived from κ_eff. Self-shielding Φ."""
+
+    if not isinstance(kappa_eff, Real):
+        raise TypeError("effective opacity 'kappa_eff' must be a real number for Σ_{τ=1}")
+    if not np.isfinite(kappa_eff) or kappa_eff <= 0.0:
+        return float(np.inf)
+    return float(1.0 / float(kappa_eff))
+
+
+def apply_shielding(
+    kappa_surf: float,
+    tau: float,
+    w0: float,
+    g: float,
+    interp: type_Phi | None = None,
+) -> Tuple[float, float]:
+    """Return effective opacity and ``Σ_{τ=1}`` for given conditions. Self-shielding Φ."""
+
+    if not isinstance(kappa_surf, Real):
+        raise TypeError("surface opacity 'kappa_surf' must be a real number for Φ lookup")
+    if not np.isfinite(kappa_surf):
+        raise PhysicsError("surface opacity 'kappa_surf' must be finite for Φ lookup")
+    if kappa_surf < 0.0:
+        raise PhysicsError("surface opacity 'kappa_surf' must be greater or equal to 0 for Φ lookup")
+    if not isinstance(tau, Real):
+        raise TypeError("optical depth 'tau' must be a real number for Φ lookup")
+    if not np.isfinite(tau):
+        raise PhysicsError("optical depth 'tau' must be finite for Φ lookup")
+    if not isinstance(w0, Real):
+        raise TypeError("single-scattering albedo 'w0' must be a real number for Φ lookup")
+    if not np.isfinite(w0):
+        raise PhysicsError("single-scattering albedo 'w0' must be finite for Φ lookup")
+    if not isinstance(g, Real):
+        raise TypeError("asymmetry parameter 'g' must be a real number for Φ lookup")
+    if not np.isfinite(g):
+        raise PhysicsError("asymmetry parameter 'g' must be finite for Φ lookup")
+    if interp is not None and not callable(interp):
+        raise TypeError("Φ interpolator 'interp' must be callable")
+
+    func = tables.interp_phi if interp is None else interp
+    if not callable(func):
+        raise TypeError("Φ interpolator must be callable")
+
+    tau_val = float(tau)
+    w0_val = float(w0)
+    g_val = float(g)
+
+    phi_table = _infer_phi_table(func)
+    clamp_msgs: list[str] = []
+    tau_min = tau_max = None
+    if phi_table is not None:
+        tau_vals = np.asarray(getattr(phi_table, "tau_vals"), dtype=float)
+        w0_vals = np.asarray(getattr(phi_table, "w0_vals"), dtype=float)
+        g_vals = np.asarray(getattr(phi_table, "g_vals"), dtype=float)
+        if tau_vals.size:
+            tau_min = float(np.min(tau_vals))
+            tau_max = float(np.max(tau_vals))
+            if tau_val < tau_min or tau_val > tau_max:
+                clamped = float(np.clip(tau_val, tau_min, tau_max))
+                clamp_msgs.append(
+                    f"tau={tau_val:.6e}->{clamped:.6e} (range {tau_min:.6e}–{tau_max:.6e})"
+                )
+                tau_val = clamped
+        if w0_vals.size:
+            w0_min = float(np.min(w0_vals))
+            w0_max = float(np.max(w0_vals))
+            if w0_val < w0_min or w0_val > w0_max:
+                clamped = float(np.clip(w0_val, w0_min, w0_max))
+                clamp_msgs.append(
+                    f"w0={w0_val:.6e}->{clamped:.6e} (range {w0_min:.6e}–{w0_max:.6e})"
+                )
+                w0_val = clamped
+        if g_vals.size:
+            g_min = float(np.min(g_vals))
+            g_max = float(np.max(g_vals))
+            if g_val < g_min or g_val > g_max:
+                clamped = float(np.clip(g_val, g_min, g_max))
+                clamp_msgs.append(
+                    f"g={g_val:.6e}->{clamped:.6e} (range {g_min:.6e}–{g_max:.6e})"
+                )
+                g_val = clamped
+    if clamp_msgs:
+        logger.info("Φ lookup clamped: %s", ", ".join(clamp_msgs))
+
+    def phi_wrapper(val_tau: float) -> float:
+        tau_arg = float(val_tau)
+        if phi_table is not None and tau_min is not None and tau_max is not None:
+            tau_arg = float(np.clip(tau_arg, tau_min, tau_max))
+        return float(func(tau_arg, w0_val, g_val))
+
+    kappa_eff = effective_kappa(float(kappa_surf), tau_val, phi_wrapper)
+    sigma_tau1_limit = sigma_tau1(kappa_eff)
+    return kappa_eff, sigma_tau1_limit
+
+
+def clip_to_tau1(sigma_surf: float, kappa_eff: float) -> float:
+    """Clip ``Σ_surf`` so that it does not exceed ``Σ_{τ=1}``. Self-shielding Φ."""
+
+    if not isinstance(sigma_surf, Real):
+        raise TypeError("surface density 'sigma_surf' must be a real number for τ=1 clipping")
+    if not np.isfinite(sigma_surf):
+        raise PhysicsError("surface density 'sigma_surf' must be finite for τ=1 clipping")
+    if not isinstance(kappa_eff, Real):
+        raise TypeError("effective opacity 'kappa_eff' must be a real number for τ=1 clipping")
+    if not np.isfinite(kappa_eff):
+        raise PhysicsError("effective opacity 'kappa_eff' must be finite for τ=1 clipping")
+
+    sigma_val = float(sigma_surf)
+    kappa_val = float(kappa_eff)
+
+    if kappa_val <= 0.0:
+        if sigma_val < 0.0:
+            logger.info(
+                "Clamped Σ_surf from %e to 0 due to non-positive κ_eff=%e",
+                sigma_val,
+                kappa_val,
+            )
+        return max(0.0, sigma_val)
+
+    if sigma_val < 0.0:
+        logger.info(
+            "Clamped Σ_surf from %e to 0 with κ_eff=%e",
+            sigma_val,
+            kappa_val,
+        )
+        return 0.0
+
+    sigma_tau1_limit = sigma_tau1(kappa_val)
+    if sigma_val > sigma_tau1_limit:
+        logger.info(
+            "Clamped Σ_surf from %e to τ=1 limit %e with κ_eff=%e",
+            sigma_val,
+            sigma_tau1_limit,
+            kappa_val,
+        )
+        return float(sigma_tau1_limit)
+
+    return sigma_val
+\end{Verbatim}
+
+### B.3 衝突カーネルとサブブローアウト生成（C1–C2）
+
+\begin{Verbatim}[breaklines=true, breakanywhere=true, fontsize=\small]
+# marsdisk/physics/collide.py
+
+def compute_collision_kernel_C1(
+    N: Iterable[float],
+    s: Iterable[float],
+    H: Iterable[float],
+    v_rel: float | np.ndarray,
+    workspace: CollisionKernelWorkspace | None = None,
+    *,
+    use_numba: bool | None = None,
+) -> np.ndarray:
+    """Return the symmetric collision kernel :math:`C_{ij}`.
+
+    Parameters
+    ----------
+    N:
+        Number surface densities for each size bin.
+    s:
+        Characteristic sizes of the bins in metres.
+    H:
+        Vertical scale height of each bin in metres.
+    v_rel:
+        Mutual relative velocity between bins.  A scalar applies the same
+        velocity to all pairs while a matrix of shape ``(n, n)`` provides
+        pair-specific values.
+    workspace:
+        Optional size-only precomputations from
+        :func:`prepare_collision_kernel_workspace`. When provided, ``s_sum``
+        and the identity matrix reuse these buffers across calls.
+
+    Returns
+    -------
+    numpy.ndarray
+        Collision kernel matrix with shape ``(n, n)``.
+    """
+
+    global _NUMBA_FAILED
+
+    N_arr = np.asarray(N, dtype=np.float64)
+    s_arr = np.asarray(s, dtype=np.float64)
+    H_arr = np.asarray(H, dtype=np.float64)
+    if N_arr.ndim != 1 or s_arr.ndim != 1 or H_arr.ndim != 1:
+        raise MarsDiskError("inputs must be one-dimensional")
+    if not (len(N_arr) == len(s_arr) == len(H_arr)):
+        raise MarsDiskError("array lengths must match")
+    if np.any(N_arr < 0.0) or np.any(s_arr <= 0.0) or np.any(H_arr <= 0.0):
+        raise MarsDiskError("invalid values in N, s or H")
+
+    n = N_arr.size
+    if workspace is not None:
+        if workspace.s_sum_sq.shape != (n, n) or workspace.delta.shape != (n, n):
+            raise MarsDiskError("workspace has incompatible shape for collision kernel")
+        workspace_s_sum_sq = workspace.s_sum_sq
+        workspace_delta = workspace.delta
+        if workspace.v_mat_full is None or workspace.v_mat_full.shape != (n, n):
+            workspace.v_mat_full = np.zeros((n, n), dtype=np.float64)
+        if workspace.N_outer is None or workspace.N_outer.shape != (n, n):
+            workspace.N_outer = np.zeros((n, n), dtype=np.float64)
+        if workspace.H_sq is None or workspace.H_sq.shape != (n, n):
+            workspace.H_sq = np.zeros((n, n), dtype=np.float64)
+        if workspace.H_ij is None or workspace.H_ij.shape != (n, n):
+            workspace.H_ij = np.zeros((n, n), dtype=np.float64)
+        if workspace.kernel is None or workspace.kernel.shape != (n, n):
+            workspace.kernel = np.zeros((n, n), dtype=np.float64)
+    else:
+        workspace_s_sum_sq = None
+        workspace_delta = None
+    use_matrix_velocity = False
+    if np.isscalar(v_rel):
+        v_scalar = float(v_rel)
+        if not np.isfinite(v_scalar) or v_scalar < 0.0:
+            raise MarsDiskError("v_rel must be finite and non-negative")
+        v_mat = np.zeros((n, n), dtype=np.float64)
+    else:
+        v_mat = np.asarray(v_rel, dtype=np.float64)
+        if v_mat.shape != (n, n):
+            raise MarsDiskError("v_rel has wrong shape")
+        if not np.all(np.isfinite(v_mat)) or np.any(v_mat < 0.0):
+            raise MarsDiskError("v_rel matrix must be finite and non-negative")
+        use_matrix_velocity = True
+        v_scalar = 0.0
+
+    use_jit = _USE_NUMBA and not _NUMBA_FAILED if use_numba is None else bool(use_numba)
+    kernel: np.ndarray | None = None
+    if use_jit:
+        try:
+            kernel = collision_kernel_numba(
+                N_arr, s_arr, H_arr, float(v_scalar), v_mat, bool(use_matrix_velocity)
+            )
+        except Exception as exc:  # pragma: no cover - fallback path
+            _NUMBA_FAILED = True
+            kernel = None
+            warnings.warn(
+                f"compute_collision_kernel_C1: numba kernel failed ({exc!r}); falling back to NumPy.",
+                NumericalWarning,
+            )
+
+    if kernel is None:
+        if workspace is not None:
+            v_mat_full = workspace.v_mat_full
+            if not use_matrix_velocity:
+                v_mat_full.fill(float(v_scalar))
+            else:
+                v_mat_full[:] = v_mat
+            N_outer = workspace.N_outer
+            np.multiply(N_arr[:, None], N_arr[None, :], out=N_outer)
+            s_sum_sq = workspace_s_sum_sq
+            delta = workspace_delta
+            H_sq = workspace.H_sq
+            H2 = H_arr * H_arr
+            np.add(H2[:, None], H2[None, :], out=H_sq)
+            H_ij = workspace.H_ij
+            np.sqrt(H_sq, out=H_ij)
+            kernel = workspace.kernel
+            kernel[:] = N_outer / (1.0 + delta)
+            kernel *= np.pi
+            kernel *= s_sum_sq
+            kernel *= v_mat_full
+            kernel /= (np.sqrt(2.0 * np.pi) * H_ij)
+        else:
+            v_mat_full = (
+                np.full((n, n), float(v_scalar), dtype=np.float64)
+                if not use_matrix_velocity
+                else v_mat
+            )
+            N_outer = np.outer(N_arr, N_arr)
+            s_sum_sq = np.add.outer(s_arr, s_arr) ** 2
+            delta = np.eye(n)
+            H_sq = np.add.outer(H_arr * H_arr, H_arr * H_arr)
+            H_ij = np.sqrt(H_sq)
+            kernel = (
+                N_outer / (1.0 + delta)
+                * np.pi
+                * s_sum_sq
+                * v_mat_full
+                / (np.sqrt(2.0 * np.pi) * H_ij)
+            )
+    if logger.isEnabledFor(logging.DEBUG):
+        logger.debug("compute_collision_kernel_C1: n_bins=%d use_numba=%s", n, use_jit)
+    return kernel
+
+
+def compute_prod_subblow_area_rate_C2(
+    C: np.ndarray, m_subblow: np.ndarray
+) -> float:
+    """Return the production rate of sub-blowout material.
+
+    The rate is defined as ``sum_{i<=j} C_ij * m_subblow_ij``.
+
+    Parameters
+    ----------
+    C:
+        Collision kernel matrix with shape ``(n, n)``.
+    m_subblow:
+        Matrix of sub-blowout mass generated per collision pair.
+
+    Returns
+    -------
+    float
+        Production rate of sub-blowout mass.
+    """
+
+    global _NUMBA_FAILED
+    if C.shape != m_subblow.shape:
+        raise MarsDiskError("shape mismatch between C and m_subblow")
+    if C.ndim != 2 or C.shape[0] != C.shape[1]:
+        raise MarsDiskError("C must be a square matrix")
+    n = C.shape[0]
+    use_jit = _USE_NUMBA and not _NUMBA_FAILED
+    if use_jit:
+        try:
+            rate = float(compute_prod_subblow_area_rate_C2_numba(np.asarray(C, dtype=np.float64), np.asarray(m_subblow, dtype=np.float64)))
+        except Exception:  # pragma: no cover - exercised by fallback
+            use_jit = False
+            _NUMBA_FAILED = True
+            warnings.warn("compute_prod_subblow_area_rate_C2: numba kernel failed; falling back to NumPy.", NumericalWarning)
+    if not use_jit:
+        idx = np.triu_indices(n)
+        rate = float(np.sum(C[idx] * m_subblow[idx]))
+    if logger.isEnabledFor(logging.DEBUG):
+        logger.debug("compute_prod_subblow_area_rate_C2: rate=%e", rate)
+    return rate
+\end{Verbatim}
+
+### B.4 Smoluchowski の IMEX-BDF(1) 更新（C3–C4）
+
+\begin{Verbatim}[breaklines=true, breakanywhere=true, fontsize=\small]
+# marsdisk/physics/smol.py
+
+def step_imex_bdf1_C3(
+    N: Iterable[float],
+    C: np.ndarray,
+    Y: np.ndarray,
+    S: Iterable[float] | None,
+    m: Iterable[float],
+    prod_subblow_mass_rate: float | None,
+    dt: float,
+    *,
+    source_k: Iterable[float] | None = None,
+    S_external_k: Iterable[float] | None = None,
+    S_sublimation_k: Iterable[float] | None = None,
+    extra_mass_loss_rate: float = 0.0,
+    mass_tol: float = 5e-3,
+    safety: float = 0.1,
+    diag_out: MutableMapping[str, float] | None = None,
+    workspace: ImexWorkspace | None = None,
+) -> tuple[np.ndarray, float, float]:
+    """Advance the Smoluchowski system by one time step.
+
+    The integration employs an IMEX-BDF(1) scheme: loss terms are treated
+    implicitly while the gain terms and sink ``S`` are explicit.  In the
+    sublimation-only configuration used by :func:`marsdisk.run.run_zero_d`,
+    this reduces to a pure sink update with ``C=0``, ``Y=0`` and non-zero
+    ``S_sublimation_k``.
+
+    Parameters
+    ----------
+    N:
+        Array of number surface densities for each size bin.
+    C:
+        Collision kernel matrix ``C_{ij}``.
+    Y:
+        Fragment distribution where ``Y[k, i, j]`` is the fraction of mass
+        from a collision ``(i, j)`` placed into bin ``k``.
+    S:
+        Explicit sink term ``S_k`` for each bin.  ``None`` disables the
+        legacy sink input.
+    S_external_k:
+        Optional additional sink term combined with ``S`` (1/s).
+    S_sublimation_k:
+        Optional sublimation sink (1/s) summed with ``S``.  This is the
+        preferred entrypoint for the pure-sink mode.
+    m:
+        Particle mass associated with each bin.
+    prod_subblow_mass_rate:
+        Nominal mass source rate (kg/m^2/s) associated with external supply.
+        When ``source_k`` is provided the per-bin source is mapped back to a
+        mass rate via ``sum(m_k * source_k)`` for the mass budget check.  A
+        ``None`` value defers entirely to that computed rate.
+    source_k:
+        Optional explicit source vector ``F_k`` (1/s) that injects particles
+        into the Smol system.  A zero vector preserves the legacy behaviour.
+    extra_mass_loss_rate:
+        Additional mass flux leaving the system (kg m^-2 s^-1) that should be
+        included in the mass budget check (e.g. sublimation sinks handled
+        outside the explicit ``S`` vector).  This feeds directly into
+        :func:`compute_mass_budget_error_C4`.
+    dt:
+        Initial time step.
+    mass_tol:
+        Tolerance on the relative mass conservation error.
+    safety:
+        Safety factor controlling the maximum allowed step size relative to
+        the minimum collision time.
+    diag_out:
+        Optional dictionary populated with diagnostic mass rates (gain, loss,
+        sink, source) after the step is accepted.
+    workspace:
+        Optional reusable buffers for ``gain`` and ``loss`` vectors to reduce
+        allocations when calling the solver repeatedly.
+
+    Returns
+    -------
+    tuple of ``(N_new, dt_eff, mass_error)``
+        Updated number densities, the actual time step used and the relative
+        mass conservation error as defined in (C4).
+    """
+
+    global _NUMBA_FAILED
+    N_arr = np.asarray(N, dtype=float)
+    S_base = np.zeros_like(N_arr) if S is None else np.asarray(S, dtype=float)
+    m_arr = np.asarray(m, dtype=float)
+    if N_arr.ndim != 1 or S_base.ndim != 1 or m_arr.ndim != 1:
+        raise MarsDiskError("N, S and m must be one-dimensional")
+    if not (len(N_arr) == len(S_base) == len(m_arr)):
+        raise MarsDiskError("array lengths must match")
+    if C.shape != (N_arr.size, N_arr.size):
+        raise MarsDiskError("C has incompatible shape")
+    if Y.shape != (N_arr.size, N_arr.size, N_arr.size):
+        raise MarsDiskError("Y has incompatible shape")
+    if dt <= 0.0:
+        raise MarsDiskError("dt must be positive")
+
+    def _optional_sink(arr: Iterable[float] | None, name: str) -> np.ndarray:
+        if arr is None:
+            return np.zeros_like(N_arr)
+        arr_np = np.asarray(arr, dtype=float)
+        if arr_np.shape != N_arr.shape:
+            raise MarsDiskError(f"{name} has incompatible shape")
+        return arr_np
+
+    source_arr = _optional_sink(source_k, "source_k")
+    S_external_arr = _optional_sink(S_external_k, "S_external_k")
+    S_sub_arr = _optional_sink(S_sublimation_k, "S_sublimation_k")
+    S_arr = S_base + S_external_arr + S_sub_arr
+
+    gain_out = None
+    loss_out = None
+    if workspace is not None:
+        gain_buf = getattr(workspace, "gain", None)
+        loss_buf = getattr(workspace, "loss", None)
+        if isinstance(gain_buf, np.ndarray) and gain_buf.shape == N_arr.shape:
+            gain_out = gain_buf
+        if isinstance(loss_buf, np.ndarray) and loss_buf.shape == N_arr.shape:
+            loss_out = loss_buf
+
+    try_use_numba = _USE_NUMBA and not _NUMBA_FAILED
+    if try_use_numba:
+        try:
+            loss = loss_sum_numba(np.asarray(C, dtype=np.float64))
+        except Exception as exc:  # pragma: no cover - fallback
+            try_use_numba = False
+            _NUMBA_FAILED = True
+            warnings.warn(f"loss_sum_numba failed ({exc!r}); falling back to NumPy.", NumericalWarning)
+    if not try_use_numba:
+        if loss_out is not None:
+            np.sum(C, axis=1, out=loss_out)
+            loss = loss_out
+        else:
+            loss = np.sum(C, axis=1)
+    # C_ij already halves the diagonal, so add it back for the loss coefficient.
+    if C.size:
+        loss = loss + np.diagonal(C)
+    # Convert summed collision rate (includes N_i) to the loss coefficient.
+    safe_N = np.where(N_arr > 0.0, N_arr, 1.0)
+    loss = np.where(N_arr > 0.0, loss / safe_N, 0.0)
+    t_coll = 1.0 / np.maximum(loss, 1e-30)
+    dt_max = safety * float(np.min(t_coll))
+    dt_eff = min(float(dt), dt_max)
+
+    source_mass_rate = float(np.sum(m_arr * source_arr))
+    if prod_subblow_mass_rate is None:
+        prod_mass_rate_budget = source_mass_rate
+    else:
+        prod_mass_rate_budget = float(prod_subblow_mass_rate)
+
+    gain = _gain_tensor(C, Y, m_arr, out=gain_out, workspace=workspace)
+
+    while True:
+        N_new = (N_arr + dt_eff * (gain + source_arr - S_arr * N_arr)) / (1.0 + dt_eff * loss)
+        if np.any(N_new < 0.0):
+            dt_eff *= 0.5
+            continue
+        mass_err = compute_mass_budget_error_C4(
+            N_arr,
+            N_new,
+            m_arr,
+            prod_mass_rate_budget,
+            dt_eff,
+            extra_mass_loss_rate=float(extra_mass_loss_rate),
+        )
+        if not np.isfinite(mass_err):
+            raise MarsDiskError("mass budget error is non-finite; check PSD or kernel inputs")
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug("step_imex_bdf1_C3: dt=%e mass_err=%e", dt_eff, mass_err)
+        if mass_err <= mass_tol:
+            break
+        dt_eff *= 0.5
+
+    if diag_out is not None:
+        diag_out["gain_mass_rate"] = float(np.sum(m_arr * gain))
+        diag_out["loss_mass_rate"] = float(np.sum(m_arr * loss * N_new))
+        diag_out["sink_mass_rate"] = float(np.sum(m_arr * S_arr * N_arr))
+        diag_out["source_mass_rate"] = float(np.sum(m_arr * source_arr))
+
+    return N_new, dt_eff, mass_err
+
+
+def compute_mass_budget_error_C4(
+    N_old: Iterable[float],
+    N_new: Iterable[float],
+    m: Iterable[float],
+    prod_subblow_mass_rate: float,
+    dt: float,
+    *,
+    extra_mass_loss_rate: float = 0.0,
+) -> float:
+    """Return the relative mass budget error according to (C4).
+
+    The budget compares the initial mass to the combination of retained mass
+    and explicit source/sink fluxes:
+
+    ``M_old + dt * prod_subblow_mass_rate = M_new + dt * extra_mass_loss_rate``.
+    """
+
+    global _NUMBA_FAILED
+    N_old_arr = np.asarray(N_old, dtype=float)
+    N_new_arr = np.asarray(N_new, dtype=float)
+    m_arr = np.asarray(m, dtype=float)
+    if not (N_old_arr.shape == N_new_arr.shape == m_arr.shape):
+        raise MarsDiskError("array shapes must match")
+
+    if _USE_NUMBA and not _NUMBA_FAILED:
+        try:
+            err = float(
+                mass_budget_error_numba(
+                    m_arr * 0.0 + N_old_arr,  # ensure contiguous copies
+                    m_arr * 0.0 + N_new_arr,
+                    m_arr,
+                    float(prod_subblow_mass_rate),
+                    float(dt),
+                    float(extra_mass_loss_rate),
+                )
+            )
+        except Exception as exc:  # pragma: no cover - fallback
+            _NUMBA_FAILED = True
+            warnings.warn(
+                f"compute_mass_budget_error_C4: numba kernel failed ({exc!r}); falling back to NumPy.",
+                NumericalWarning,
+            )
+            err = None
+    else:
+        err = None
+
+    if err is None:
+        M_before = float(np.sum(m_arr * N_old_arr))
+        M_after = float(np.sum(m_arr * N_new_arr))
+        prod_term = dt * float(prod_subblow_mass_rate)
+        sink_term = dt * float(extra_mass_loss_rate)
+        if M_before > 0.0:
+            err = abs((M_after + sink_term) - (M_before + prod_term)) / M_before
+        else:
+            err = float("inf")
+    return float(err)
+\end{Verbatim}
+
+### B.5 表層密度の更新と流出（S1）
+
+\begin{Verbatim}[breaklines=true, breakanywhere=true, fontsize=\small]
+# marsdisk/physics/surface.py
+
+def step_surface_density_S1(
+    sigma_surf: float,
+    prod_subblow_area_rate: float,
+    dt: float,
+    Omega: float,
+    *,
+    t_blow: float | None = None,
+    t_coll: float | None = None,
+    t_sink: float | None = None,
+    sigma_tau1: float | None = None,
+    enable_blowout: bool = True,
+) -> SurfaceStepResult:
+    """Advance the surface density by one implicit Euler step (S1).
+
+    Parameters
+    ----------
+    sigma_surf:
+        Current surface mass density ``Σ_surf``.
+        prod_subblow_area_rate:
+        Production rate of sub--blow-out material per unit area after mixing.
+    dt:
+        Time step.
+    Omega:
+        Keplerian angular frequency; sets ``t_blow = 1/Ω``.
+    t_blow:
+        Optional blow-out time-scale. When provided this overrides ``1/Ω``.
+    t_coll:
+        Optional collisional time-scale ``t_coll``.  When provided the
+        loss term ``Σ_surf/t_coll`` is treated implicitly.
+    t_sink:
+        Optional additional sink time-scale representing sublimation or
+        gas drag.  ``None`` disables the term.
+    sigma_tau1:
+        Diagnostic Σ_{τ=1} value passed through for logging; no clipping
+        is applied in the surface ODE.
+    enable_blowout:
+        Toggle for the radiation-pressure loss term.  Disable to remove the
+        ``1/t_blow`` contribution and force the returned outflux to zero.
+
+    Returns
+    -------
+    SurfaceStepResult
+        dataclass holding the updated density and associated fluxes.
+    """
+
+    global _SURFACE_ODE_WARNED
+    if not _SURFACE_ODE_WARNED:
+        warnings.warn(SURFACE_ODE_DEPRECATION_MSG, DeprecationWarning, stacklevel=2)
+        _SURFACE_ODE_WARNED = True
+
+    if dt <= 0.0 or Omega <= 0.0:
+        raise MarsDiskError("dt and Omega must be positive")
+
+    if t_blow is None:
+        t_blow = 1.0 / Omega
+    elif t_blow <= 0.0 or not np.isfinite(t_blow):
+        raise MarsDiskError("t_blow must be positive and finite")
+    loss = 0.0
+    if enable_blowout:
+        loss += 1.0 / t_blow
+    if t_coll is not None and t_coll > 0.0:
+        loss += 1.0 / t_coll
+    if t_sink is not None and t_sink > 0.0:
+        loss += 1.0 / t_sink
+
+    numerator = sigma_surf + dt * prod_subblow_area_rate
+    sigma_new = numerator / (1.0 + dt * loss)
+
+    outflux = sigma_new / t_blow if enable_blowout else 0.0
+    sink_flux = sigma_new / t_sink if (t_sink is not None and t_sink > 0.0) else 0.0
+    if logger.isEnabledFor(logging.DEBUG):
+        logger.debug(
+            "step_surface_density_S1: dt=%e sigma=%e sigma_tau1=%e t_blow=%e t_coll=%e t_sink=%e outflux=%e blowout=%s",
+            dt,
+            sigma_new,
+            sigma_tau1 if sigma_tau1 is not None else float("nan"),
+            t_blow,
+            t_coll if t_coll is not None else float("nan"),
+            t_sink if t_sink is not None else float("nan"),
+            outflux,
+            enable_blowout,
+        )
+    return SurfaceStepResult(sigma_new, outflux, sink_flux)
+\end{Verbatim}
