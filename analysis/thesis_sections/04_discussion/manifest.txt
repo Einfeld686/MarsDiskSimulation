@@ -1,6 +1,4 @@
 # Ordered list of section files to build analysis/thesis/discussion.md.
 01_dominant_factors.md
 02_supply_flux.md
-03_material_uncertainty.md
 04_temperature_atmosphere.md
-
