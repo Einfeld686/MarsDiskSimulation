@@ -349,7 +349,7 @@ def parse_blocks(lines: list[str]) -> list[Block]:
 
 
 def strip_numbered_prefix(text: str) -> str:
-    return re.sub(r"^\s*\d+(?:\.\d+)*\.?\s+", "", text)
+    return re.sub(r"^\s*(?:\d+(?:\.\d+)*|[A-Z]\.\d+(?:\.\d+)*)\.?\s+", "", text)
 
 
 def convert_cite_brackets(text: str) -> str:
@@ -880,10 +880,10 @@ def main() -> int:
         appendix_heading_map = {
             1: "chapter",
             2: "chapter",
-            3: "chapter",
-            4: "section",
-            5: "subsection",
-            6: "subsubsection",
+            3: "section",
+            4: "subsection",
+            5: "subsubsection",
+            6: "paragraph",
         }
         appendix_converter = MarkdownToLatexConverter(appendix_heading_map)
         appendix_md = normalize_appendix_headings(methods_appendix_text)
