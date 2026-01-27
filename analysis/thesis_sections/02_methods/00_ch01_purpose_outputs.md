@@ -27,25 +27,25 @@ M_{\rm in}'=M_{\rm in}(t_0)-M_{\rm loss}(t_{\rm end})
   \setlength{\tabcolsep}{4pt}
   \caption{外部入力（テーブル）とモデル内での役割}
   \label{tab:method_external_inputs}
-  \begin{tabular}{p{0.28\textwidth} p{0.50\textwidth} p{0.18\textwidth}}
+  \begin{tabular}{@{}L{0.28\textwidth} L{0.50\textwidth} L{0.18\textwidth}@{}}
     \hline
     外部入力 & 役割（モデル内での使い方） & 設定キー（代表） \\
     \hline
     火星温度履歴 $T_M(t)$ &
     放射圧（$\beta,\,s_{\rm blow}$）と昇華の外部ドライバ &
-    \texttt{radiation.mars\_temperature\_driver.*} \\
+    \texttt{radiation.\allowbreak mars\_\allowbreak temperature\_\allowbreak driver.\allowbreak *} \\
     Planck 平均 $\langle Q_{\rm pr}\rangle(s,T_M)$ &
     放射圧効率として $\beta$ と $s_{\rm blow}$ を決める &
-    \texttt{radiation.qpr\_table\_path} \\
+    \texttt{radiation.\allowbreak qpr\_\allowbreak table\_\allowbreak path} \\
     遮蔽係数 $\Phi$ &
     $\kappa_{\rm eff}=\Phi\kappa_{\rm surf}$ を通じて自己遮蔽を表現する（遮蔽有効時） &
-    \texttt{shielding.table\_path} \\
+    \texttt{shielding.\allowbreak table\_\allowbreak path} \\
     供給率テーブル $\dot{\Sigma}_{\rm in}(t)$（任意） &
     表層供給率を外部から与える（\texttt{supply.mode=table} のとき） &
-    \texttt{supply.table.path} \\
+    \texttt{supply.\allowbreak table.\allowbreak path} \\
     飽和蒸気圧テーブル $P_{\rm sat}(T)$（任意） &
     昇華フラックスの入力として飽和蒸気圧をテーブル補間で与える &
-    \texttt{sinks.sub\_params.psat\_table\_path} \\
+    \texttt{sinks.\allowbreak sub\_\allowbreak params.\allowbreak psat\_\allowbreak table\_\allowbreak path} \\
     \hline
   \end{tabular}
 \end{table}

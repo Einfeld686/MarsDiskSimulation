@@ -6,3 +6,4 @@
 03_ch04_numerics.md
 04_ch05_reproducibility.md
 09_symbols_transition.md
+11_appendix_code.md

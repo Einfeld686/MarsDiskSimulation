@@ -14,7 +14,7 @@
   \setlength{\tabcolsep}{4pt}
   \caption{再解析に必要な出力（\texttt{OUTDIR/}）}
   \label{tab:method_repro_outputs}
-  \begin{tabular}{p{0.30\textwidth} p{0.14\textwidth} p{0.52\textwidth}}
+\begin{tabular}{@{}L{0.30\textwidth} L{0.14\textwidth} L{0.52\textwidth}@{}}
     \hline
     相対パス & 形式 & 内容（要点） \\
     \hline
@@ -36,7 +36,7 @@
     \texttt{series/diagnostics.parquet} &
     Parquet &
     （任意）遮蔽などの追加診断（設定により出力） \\
-    \texttt{checks/mass\_budget\_cells.csv} &
+    \texttt{checks/\allowbreak mass\_budget\_cells.csv} &
     CSV &
     （任意, 1D）セル別の質量検査ログ（設定により出力） \\
     \texttt{checks/validation.json} &

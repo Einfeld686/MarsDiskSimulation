@@ -26,11 +26,12 @@ $\kappa_{\rm eff}$ は，PSD が与える質量不透明度 $\kappa_{\rm surf}$ 
 基準計算の初期 PSD は，巨大衝突後に形成される溶融滴成分と微細粒子成分の共存を，2成分の対数正規分布の混合で近似した melt lognormal mixture とする\citep{Hyodo2017a_ApJ845_125}．初期 PSD の質量分布形状を $w_{\rm melt}(s)$ として
 \begin{equation}
 \label{eq:initial_psd_lognormal_mixture}
-w_{\rm melt}(s)\propto
-(1-f_{\rm fine})\exp\!\left[-\frac{1}{2}\left(\frac{\ln(s/s_{\rm meter})}{\sigma_{\ln}}\right)^2\right]
-+f_{\rm fine}\exp\!\left[-\frac{1}{2}\left(\frac{\ln(s/s_{\rm fine})}{\sigma_{\ln}}\right)^2\right],
-\qquad
-\sigma_{\ln}={\rm width}_{\rm dex}\ln 10
+\begin{aligned}
+w_{\rm melt}(s)\propto {} &
+(1-f_{\rm fine})\exp\!\left[-\frac{1}{2}\left(\frac{\ln(s/s_{\rm meter})}{\sigma_{\ln}}\right)^2\right] \\
+& + f_{\rm fine}\exp\!\left[-\frac{1}{2}\left(\frac{\ln(s/s_{\rm fine})}{\sigma_{\ln}}\right)^2\right], \\
+\sigma_{\ln} = {} & {\rm width}_{\rm dex}\ln 10
+\end{aligned}
 \end{equation}
 で与える．この形は，代表的な溶融滴と微細粒子の二峰性を，有限個のパラメータで取り扱うための近似である．採用値は表\ref{tab:methods_initial_psd_params}に示す．
 
@@ -58,10 +59,10 @@ A=\pi\left(r_{\rm out}^2-r_{\rm in}^2\right)
 \begin{table}[t]
   \centering
   \small
-  \setlength{\tabcolsep}{4pt}
+  \setlength{\tabcolsep}{3pt}
   \caption{物理定数・惑星定数・粒子物性（基準計算）}
   \label{tab:method-phys}
-  \begin{tabular}{p{0.30\textwidth} p{0.22\textwidth} p{0.12\textwidth} p{0.26\textwidth}}
+  \begin{tabular}{@{}L{0.24\textwidth} L{0.18\textwidth} L{0.14\textwidth} L{0.36\textwidth}@{}}
     \hline
     記号 & 値 & 単位 & 備考 \\
     \hline
@@ -70,7 +71,7 @@ A=\pi\left(r_{\rm out}^2-r_{\rm in}^2\right)
     $\sigma_{\rm SB}$ & $5.670374419\times10^{-8}$ & W\,m$^{-2}$\,K$^{-4}$ & ステファン・ボルツマン定数（CODATA 2018） \\
     $M_{\rm Mars}$ & $6.4171\times10^{23}$ & kg & 火星質量（Horizons physical data） \\
     $R_{\rm Mars}$ & $3.38992\times10^{6}$ & m & 火星体積平均半径（Horizons physical data） \\
-	    $\rho$ & 3270 & kg\,m$^{-3}$ & 粒子密度（フォルステライト） \\
+    $\rho$ & 3270 & kg\,m$^{-3}$ & 粒子密度（フォルステライト） \\
     $R$ & 8.314462618 & J\,mol$^{-1}$\,K$^{-1}$ & 気体定数（CODATA 2018；HKL に使用） \\
     \hline
   \end{tabular}
