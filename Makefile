@@ -75,6 +75,9 @@ analysis-results-update: analysis-results-sync
 analysis-discussion-sync:
 	python -m analysis.tools.merge_discussion_sections --write
 
+analysis-conclusion-sync:
+	python -m analysis.tools.merge_conclusion_sections --write
+
 analysis-discussion-update: analysis-discussion-sync
 	$(MAKE) analysis-update
 	python -m tools.evaluation_system --outdir $(EVAL_OUTDIR)
@@ -153,7 +156,7 @@ plan-lint:
 	python tools/plan_lint.py
 
 # Thesis build (TeX → PDF). Deliverables: paper/out/*.pdf, intermediates: paper/out/build/
-thesis-sync: analysis-abstract-sync analysis-intro-sync analysis-related-work-sync analysis-methods-sync analysis-results-sync analysis-discussion-sync
+thesis-sync: analysis-abstract-sync analysis-intro-sync analysis-related-work-sync analysis-methods-sync analysis-results-sync analysis-discussion-sync analysis-conclusion-sync
 
 thesis-pdf: thesis-sync
 	python tools/build_thesis_draft.py --pdf --outdir paper/out/build --sync-sections off

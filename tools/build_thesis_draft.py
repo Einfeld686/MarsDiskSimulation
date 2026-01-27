@@ -832,6 +832,7 @@ def main() -> int:
             "analysis.tools.merge_methods_sections",
             "analysis.tools.merge_results_sections",
             "analysis.tools.merge_discussion_sections",
+            "analysis.tools.merge_conclusion_sections",
         ):
             run([sys.executable, "-m", module, "--write"], cwd=repo_root)
     abstract_path = (repo_root / args.abstract).resolve()
