@@ -25,9 +25,11 @@
 
 \begin{table}[t]
 \centering
+\small
+\setlength{\tabcolsep}{3pt}
 \caption{スイープ12ケースにおける累積損失 $M_{\rm loss}(t_{\rm end})$ と停止条件}
 \label{tab:results_sweep_massloss_cases}
-\begin{tabular}{cccccc}
+\begin{tabular}{@{}L{0.11\linewidth} L{0.10\linewidth} L{0.12\linewidth} L{0.20\linewidth} L{0.14\linewidth} L{0.22\linewidth}@{}}
 \hline
 $T_{M,0}$ [K] & $\tau_0$ & $\epsilon_{\rm mix}$ & 停止理由 & $t_{\rm end}$ [yr] & $M_{\rm loss}$ [$M_{\rm Mars}$] \\
 \hline
