@@ -53,50 +53,50 @@ $S_{\rm hot}$ は本来 SPH シミュレーション結果に依存するが，�
 ### 1.2 質量損失が衛星形成に与える影響
 
 本研究の短時間シミュレーションが与える放射圧ブローアウトの累積損失 $M_{\rm loss}(t_{\rm end})$ を，長期の衛星形成計算へ接続する際における放射圧による早期損失が，\citet{CanupSalmon2018_SciAdv4_eaar6887} 型の成功条件に与える影響を議論する．
-内側円盤からの放射圧ブローアウトは，パラメータによって $M_{\rm loss}(t_{\rm end})\sim 2\times10^{-8}$ から $1.1\times10^{-4},M_{\rm Mars}$ まで広い範囲を取り得る。また，累積損失が 99% に達する時刻 $t_{99}$ は $0.19$–$0.84$ 年であり，質量流出率も $t\simeq0.05$–$1.3$ 年で十分小さくなる（図\ref{fig:results_cumloss_grid}，図\ref{fig:results_moutdot_grid}）。これは，放射圧ブローアウトがごく初期の短時間でほぼ終わるイベント的損失として現れることを意味する。
-一方で，Canup & Salmon の長期集積モデルでは，ロッシュ限界外側の円盤が $10^4$–$10^5$ 年で衛星へ集積し，内側で成長した比較的大きい衛星が潮汐により $10^5$–$10^6$ 年で内側へ落下するという時間発展が明示されている。したがって，本研究が捉える $t\lesssim1$ 年の損失過程は，長期計算を開始する以前に，初期円盤がすでに削られているとすることができる。
+内側円盤からの放射圧ブローアウトは，パラメータによって $M_{\rm loss}(t_{\rm end})\sim 2\times10^{-8}$ から $1.1\times10^{-4}\,M_{\rm Mars}$ まで広い範囲を取り得る．また，累積損失が $99\%$ に達する時刻 $t_{99}$ は $0.19$–$0.84\,\mathrm{yr}$ であり，質量流出率も $t\simeq0.05$–$1.3\,\mathrm{yr}$ で十分小さくなる（図\ref{fig:results_cumloss_grid}，図\ref{fig:results_moutdot_grid}）．これは，放射圧ブローアウトがごく初期の短時間でほぼ終わるイベント的損失として現れることを意味する．
+一方で，Canup & Salmon の長期集積モデルでは，ロッシュ限界外側の円盤が $10^4$–$10^5$ 年で衛星へ集積し，内側で成長した比較的大きい衛星が潮汐により $10^5$–$10^6$ 年で内側へ落下するという時間発展が明示されている．したがって，本研究が捉える $t\lesssim1\,\mathrm{yr}$ の損失過程は，長期計算を開始する以前に，初期円盤がすでに削られているとすることができる．
 
 ここで，短時間で内側円盤から失われる質量を
 \[
 \Delta M \equiv M_{\rm loss}(t_{\rm end})
 \]
-と置き，これを長期集積計算に入る前の補正項とみなす。本研究の短時間計算が与えるのは内側円盤からの損失であるため，長期計算へ渡す円盤質量の第一近似として，
+と置き，これを長期集積計算に入る前の補正項とみなす．本研究の短時間計算が与えるのは内側円盤からの損失であるため，長期計算へ渡す円盤質量の第一近似として，
 
 \begin{equation}
-M_{\rm disk,eff} ;=; M_{\rm disk,0}-\Delta M
+M_{\rm disk,eff} \equiv M_{\rm disk,0}-\Delta M
 \label{eq:disc-mdisk-eff}
 \end{equation}
 
-と定義する。ここで $M_{\rm disk,0}$ は衝突直後に形成された円盤（内側＋外側を含む）の総質量，$M_{\rm disk,eff}$ は長期集積計算の開始時点で有効に残っている総質量である。
-フォボス・ダイモス級の小衛星を同期軌道近傍に生存させるには，初期円盤質量が $M_{\rm disk}\le 3\times10^{-5}M_{\rm Mars}$ であり，かつ潮汐パラメータが $(Q/k_2)<80$ 程度であることが必要である。この質量上限条件を式\ref{eq:disc-mdisk-eff}で書き換えると，
+と定義する．ここで $M_{\rm disk,0}$ は衝突直後に形成された円盤（内側＋外側を含む）の総質量，$M_{\rm disk,eff}$ は長期集積計算の開始時点で有効に残っている総質量である．
+フォボス・ダイモス級の小衛星を同期軌道近傍に生存させるには，初期円盤質量が $M_{\rm disk}\le 3\times10^{-5}M_{\rm Mars}$ であり，かつ潮汐パラメータが $(Q/k_2)<80$ 程度であることが必要である．この質量上限条件を式\ref{eq:disc-mdisk-eff}で書き換えると，
 \begin{equation}
-M_{\rm disk,0} ;\le; 3\times10^{-5}M_{\rm Mars} + \Delta M
+M_{\rm disk,0} \le 3\times10^{-5}M_{\rm Mars} + \Delta M
 \label{eq:disc-mdisk-upper-shift}
 \end{equation}
-となり，$\Delta M$ だけ衝突直後円盤質量の上限が平行移動する。
-$\Delta M\simeq10^{-5}M_{\rm Mars}$ 程度の早期損失が生じるなら，式\ref{eq:disc-mdisk-upper-shift}は $M_{\rm disk,0}\lesssim 4\times10^{-5}M_{\rm Mars}$ となる。これは Canup & Salmon の集積計算に入れる円盤は $3\times10^{-5}$ 以下とした条件を，衝突直後の円盤に対しては約 33% 緩めることに相当する。
+となり，$\Delta M$ だけ衝突直後円盤質量の上限が平行移動する．
+$\Delta M\simeq10^{-5}M_{\rm Mars}$ 程度の早期損失が生じるなら，式\ref{eq:disc-mdisk-upper-shift}は $M_{\rm disk,0}\lesssim 4\times10^{-5}M_{\rm Mars}$ となる．これは Canup & Salmon の集積計算に入れる円盤は $3\times10^{-5}$ 以下とした条件を，衝突直後の円盤に対しては約 $33\%$ 緩めることに相当する．
 また，初期円盤質量が同期軌道外側に残る質量へどの程度変換されるかを変換効率
 
 \begin{equation}
-\eta ;\equiv; \frac{M(>a_{\rm sync})}{M_{\rm disk}}
+\eta \equiv \frac{M(>a_{\rm sync})}{M_{\rm disk}}
 \label{eq:disc-eta}
 \end{equation}
 
-で定義する。ここで $M(>a_{\rm sync})$ は最終的に同期軌道 $a_{\rm sync}$ の外側に残った衛星の総質量である。
-\citet{CanupSalmon2018_SciAdv4_eaar6887}では，$M_{\rm disk}=10^{-5}M_{\rm Mars}$ の Run 1 では $M(>a_{\rm sync})=2.71\times10^{-8}M_{\rm Mars}$，$M_{\rm disk}=2\times10^{-5}M_{\rm Mars}$ の Run 16 では $1.83\times10^{-8}M_{\rm Mars}$，$M_{\rm disk}=3\times10^{-5}M_{\rm Mars}$ の Run 59 では $4.25\times10^{-8}M_{\rm Mars}$ が得られている。したがって，$\eta$ は概ね $\eta\sim(0.9$–$2.7)\times10^{-3}$（0.1–0.3%）程度と見積もられる。
+で定義する．ここで $M(>a_{\rm sync})$ は最終的に同期軌道 $a_{\rm sync}$ の外側に残った衛星の総質量である．
+\citet{CanupSalmon2018_SciAdv4_eaar6887}では，$M_{\rm disk}=10^{-5}M_{\rm Mars}$ の Run 1 では $M(>a_{\rm sync})=2.71\times10^{-8}M_{\rm Mars}$，$M_{\rm disk}=2\times10^{-5}M_{\rm Mars}$ の Run 16 では $1.83\times10^{-8}M_{\rm Mars}$，$M_{\rm disk}=3\times10^{-5}M_{\rm Mars}$ の Run 59 では $4.25\times10^{-8}M_{\rm Mars}$ が得られている．したがって，$\eta$ は概ね $\eta\sim(0.9$–$2.7)\times10^{-3}$（0.1–0.3\%）程度と見積もられる．
 フォボス＋ダイモスの総質量 $M_{\rm PD}$ を同期軌道外側に残すには，少なくとも
 \[
-M_{\rm disk,eff} ;\gtrsim; \frac{M_{\rm PD}}{\eta}
+M_{\rm disk,eff} \gtrsim \frac{M_{\rm PD}}{\eta}
 \]
-が必要である。上の $\eta$ 範囲を用いると，$M_{\rm disk,eff}$ は概ね $(0.74$–$2.19)\times10^{-5}M_{\rm Mars}$ 程度以上であることが要請される。これを式\ref{eq:disc-mdisk-eff}で衝突直後質量へ戻すと，
+が必要である．上の $\eta$ 範囲を用いると，$M_{\rm disk,eff}$ は概ね $(0.74$–$2.19)\times10^{-5}M_{\rm Mars}$ 程度以上であることが要請される．これを式\ref{eq:disc-mdisk-eff}で衝突直後質量へ戻すと，
 \begin{equation}
-M_{\rm disk,0} ;\gtrsim; \frac{M_{\rm PD}}{\eta} + \Delta M
+M_{\rm disk,0} \gtrsim \frac{M_{\rm PD}}{\eta} + \Delta M
 \label{eq:disc-mdisk-lower-shift}
 \end{equation}
-となり，$\Delta M$ は上限だけでなく 下限も同じだけ押し上げる。
-$\Delta M=10^{-5}M_{\rm Mars}$ を仮定すると，下限は $M_{\rm disk,0}\gtrsim (1.74$–$3.19)\times10^{-5}M_{\rm Mars}$ へ移動し，上限は先の式\ref{eq:disc-mdisk-upper-shift}より $M_{\rm disk,0}\lesssim 4\times10^{-5}M_{\rm Mars}$ となる。結果として，衝突直後円盤質量に対して
+となり，$\Delta M$ は上限だけでなく下限も同じだけ押し上げる．
+$\Delta M=10^{-5}M_{\rm Mars}$ を仮定すると，下限は $M_{\rm disk,0}\gtrsim (1.74$–$3.19)\times10^{-5}M_{\rm Mars}$ へ移動し，上限は先の式\ref{eq:disc-mdisk-upper-shift}より $M_{\rm disk,0}\lesssim 4\times10^{-5}M_{\rm Mars}$ となる．結果として，衝突直後円盤質量に対して
 \[
 M_{\rm disk,0}\sim (1.7\text{–}4.0)\times10^{-5}M_{\rm Mars}
 \]
-程度の許容域を与えることができる。
-早期損失がこれほど影響する理由として，$\sigma$ をほぼ比例的に下げる作用を持つため，式\ref{eq:disc-timescale-scaling}において $(Q/k_2)$ でも潮汐が相対的に効きやすい方向になるからであると考えることができる。\citet{CanupSalmon2018_SciAdv4_eaar6887} の $M_{\rm disk}=3\times10^{-5}M_{\rm Mars}$ のケースにおいて，ロッシュ限界外側の初期質量は $M_{\rm disk}(>a_R)=1.5\times10^{-6}M_{\rm Mars}$ であり，ロッシュ限界内側の元手は $2.85\times10^{-5}M_{\rm Mars}$ 程度である。この内側成分から $\Delta M=10^{-5}M_{\rm Mars}$ が失われると，内側の質量は約 35% 減少する。一次近似として $\sigma$ が同率で下がるとみなすなら，式\ref{eq:disc-timescale-scaling}の支配パラメータ $(Q/k_2)\sigma$ も 35% 減り，Canup & Salmon が境界として示した $(Q/k_2)\simeq80$ は，$\sigma$ が軽くなった円盤に対して $(Q/k_2)\simeq 50$ 程度に相当する方向へ動く。
+程度の許容域を与えることができる．
+早期損失がこれほど影響する理由として，$\sigma$ をほぼ比例的に下げる作用を持つため，式\ref{eq:disc-timescale-scaling}において $(Q/k_2)$ でも潮汐が相対的に効きやすい方向になるからであると考えることができる．\citet{CanupSalmon2018_SciAdv4_eaar6887} の $M_{\rm disk}=3\times10^{-5}M_{\rm Mars}$ のケースにおいて，ロッシュ限界外側の初期質量は $M_{\rm disk}(>a_R)=1.5\times10^{-6}M_{\rm Mars}$ であり，ロッシュ限界内側の元手は $2.85\times10^{-5}M_{\rm Mars}$ 程度である．この内側成分から $\Delta M=10^{-5}M_{\rm Mars}$ が失われると，内側の質量は約 $35\%$ 減少する．一次近似として $\sigma$ が同率で下がるとみなすなら，式\ref{eq:disc-timescale-scaling}の支配パラメータ $(Q/k_2)\sigma$ も $35\%$ 減り，Canup & Salmon が境界として示した $(Q/k_2)\simeq80$ は，$\sigma$ が軽くなった円盤に対して $(Q/k_2)\simeq 50$ 程度に相当する方向へ動く．
